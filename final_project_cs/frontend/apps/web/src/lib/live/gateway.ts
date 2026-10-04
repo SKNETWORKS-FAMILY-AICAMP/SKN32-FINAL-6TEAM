@@ -208,7 +208,7 @@ async function read(tripId: string, language: Language): Promise<Trip> {
   // ★`[2026-10-04]` A trip has an owner: a browser with no session (a link someone kept, or a guest session that ended) is not made a new guest just to be
   //   told "not yours". It is told so at once, with the way back — a login brings an account's trips back; a guest's trips are gone.
   if (!await hasSession(language)) {
-    throw new LiveError("not_found", t("이 여행을 찾지 못했어요. 이 기기에서 한동안 쓰지 않아 게스트 여행이 사라졌을 수 있어요. 계정에 보관한 여행이라면 마이페이지에서 로그인하면 다시 열려요.", "We could not find this trip. A guest trip goes away when this device is not used for a while. If it is kept with an account, sign in on My page to open it again."));
+    throw new LiveError("not_found", t("이 여행을 찾지 못했어요. 창을 닫았거나 시간이 지나 게스트 여행이 사라졌을 수 있어요. 계정에 보관한 여행이라면 마이페이지에서 로그인하면 다시 열려요.", "We could not find this trip. A guest trip cannot be continued after the window is closed, and is deleted after a while. If it is kept with an account, sign in on My page to open it again."));
   }
   const server = await api<ServerTrip>(`/v1/web/trips/${encodeURIComponent(tripId)}`, language);
   // ★이동 항목(kind mobility — 출발 시각 = 다음 일정 시작 − 이동 − 여유)은 일정 목록에 섞지 않고 **다음 일정의 메모**로

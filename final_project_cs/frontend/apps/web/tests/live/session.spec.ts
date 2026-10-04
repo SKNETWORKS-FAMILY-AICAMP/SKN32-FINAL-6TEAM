@@ -45,7 +45,9 @@ test("게스트의 마이페이지: 「로그인 상태」 칸이 사라지는 �
   const status = page.getByRole("group", { name: "로그인 상태" });
   await expect(status).toBeVisible();
   await expect(status).toContainText("게스트로 쓰고 있어요");
-  await expect(status).toContainText("7일 동안 쓰지 않으면");                 // guest_idle_hours 168 → 7일
+  await expect(status).toContainText("창을 닫으면 이어 쓸 수 없고");            // 게스트 쿠키는 브라우저 세션 쿠키다(Max-Age 없음)
+  await expect(status).toContainText("서버에 있는 자료는 7일 뒤에 지워져요");     // guest_idle_hours 168 → 7일
+  await expect(status).toContainText("여행계획서를 내려받아 두세요");
   await expect(status).toContainText("여행을 1개까지");
   await expect(status.getByRole("button", { name: "로그아웃" })).toHaveCount(0);   // 게스트는 로그아웃할 것이 없다
   // 토큰 화면은 없다

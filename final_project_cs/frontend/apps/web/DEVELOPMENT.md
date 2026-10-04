@@ -36,7 +36,7 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - `src/lib/theme.ts`, `src/styles/tokens.css`: 테마 이름과 첫 화면을 그리기 전에 저장된 테마를 거는 스크립트, 두 테마의 색 역할 변수. 화면 CSS에는 색을 직접 적지 않는다(`src/styles/tokens.test.ts`가 검사).
 - `src/lib/profile.ts`, `src/features/profile`: 메뉴·마이페이지가 읽는 사용자 정보와 마이페이지 조회·수정 화면. 연동 상태는 [사용자 정보 연동 대기 항목](PROFILE_CONTRACT.md).
 - `src/features/trip-registration`, `src/features/intake-review`: 등록 입력·초안과 live 접수 확인/편집/등록.
-- `src/features/account`, `src/features/human-check`: 로그인 상태 카드(게스트·회원, 로그아웃)·소셜 계정 연결과 선택적 Turnstile 확인. `[2026-10-04]` 사용자 키 안내·관리 화면은 걷었다(쿠키 세션).
+- `src/features/account`, `src/features/human-check`: 로그인 상태 카드(게스트·회원, 로그아웃)·소셜 계정 연결과 선택적 Turnstile 확인. `[2026-10-04]` 사용자 키 안내·관리 화면은 걷었다(쿠키 세션). 대신 회원용 「에이전트 연결」 카드(`agent-keys.tsx`)가 있다.
 - `src/features/trip`: 여행 홈·목록·삭제·화면용 타입·공통 조회·live 제안/알림/이력.
 - `src/features/map`: 공통 지도 표시 계약·지도 선택·네이버/Google 지도 컴포넌트.
 - `src/lib/gateway.ts`, `src/lib/live`: 연결 선택(`NEXT_PUBLIC_DATA_MODE=live` 하나 — 아니면 `components/server-not-connected.tsx` 한 화면), 실제 사용자 키·접수·여행·상담·제안/알림·삭제 연결. `[2026-10-03]` 데모 어댑터(`lib/demo`)는 없앴다.
@@ -391,3 +391,11 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - **시험**: 단위 292(경로선 읽기·선택 규칙 포함) · mock 서버 시험(화면 반응) `tests/live/route-lines.spec.ts` 5개(실선·점선·출처 문구·404·500·늦게 오기·날 바꾸기) · 구글·네이버는 제공자별로 따로 빌드해 `maps.spec.ts` 에 SDK 선 그리기 확인을 더했다(4/4 · 4/4). 전체 mock 서버 시험 OSM 빌드 211개 통과. **실서버 확인(서버 응답)은 안 했다** — 서버 반영 전에는 404 다.
 - 같이 고친 것: 구글·네이버 지도 대역 시험 3개는 핀 이름에 끝 시각(「09:00–10:00」)이 들어간 변경 뒤로 계속 깨져 있었다(제공자별 빌드로만 돌아 눈에 안 띄었다) — 기대 이름을 맞췄다. 콘솔 오류 시험은 경로선이 있는 서버를 흉내 낸다(옛 서버의 404 는 브라우저가 스스로 기록한다).
 
+
+2026-10-04 (오후). **에이전트 연결 카드 · 게스트 안내문 · 계획서 내려받기** — 서버 `D-CS-012`(에이전트 키)와 `D-CS-011` 정정(게스트 쿠키는 브라우저 세션 쿠키)을 따른다. 서버 쪽 커밋(`463be773`)이 배포되기 전에는 에이전트 키 경로가 없어 404 가 온다 — 그때 화면은 「에이전트 연결은 서버가 준비 중이에요」만 말한다.
+
+- **마이페이지 「에이전트 연결」**(`features/account/agent-keys.tsx`, 호출 `lib/live/agent-keys.ts`): 회원만. 이름(1~60자) · 권한(읽기만 = 추천 · 읽기·쓰기) · 유효 기간(7·30·90일)으로 키를 만든다. 게스트는 「로그인한 사용자만 에이전트를 연결할 수 있어요」와 소셜 계정 카드로 가는 링크만 보고, 목록도 묻지 않는다(서버가 403 `member_only` 로 막는 것과 별개로 화면이 먼저 비켜선다). 사용 중 10개면 만들기를 막고 서버의 409 문장도 그대로 보인다.
+- **키는 만든 직후 한 번만 보인다**: 서버가 해시만 가지므로 다시 볼 수 없다. 키는 컴포넌트 상태에만 있고 저장소·질의 캐시에 두지 않는다(시험이 `localStorage`·`sessionStorage` 를 뒤져 확인). 「따로 보관했어요」를 누르거나 새로고침하면 사라진다. 같이 보이는 연결 명령은 키를 **주소가 아니라 머리말**에 싣는다: `claude mcp add --transport http tripilot <서버>/mcp/ --header "Authorization: Bearer <키>"`. 폐기는 「폐기 → 폐기하기」 두 번.
+- **게스트 안내문**: 「N시간 안 쓰면 사라져요」에서 「창을 닫으면 이어 쓸 수 없고, 서버에 있는 자료는 N일 뒤에 지워져요. 여행계획서를 내려받아 두세요」로 바꿨다(마이페이지 · 소셜 계정 카드 · 내 여행 빈 목록 · 여행을 못 찾을 때의 문장).
+- **계획서 내려받기**(`lib/live/plan-download.ts`, 여행 화면 알림 칸): 「여행계획서 열기」 옆에 같은 주소에 `download=1` 을 붙인 링크. 서버가 `Content-Disposition: attachment` 로 `triPilot-<제목>.html` 을 내려 준다 — 로그인이 필요 없다. http(s) 가 아닌 주소(`javascript:` 등)는 링크를 만들지 않는다.
+- **시험**: 단위 303개 통과(키 읽기·만들기·폐기·404/403 구분·연결 명령·내려받기 주소 10개 추가) · 타입 검사·린트 깨끗. **mock 서버 시험(화면 반응)**: 새 카드 `tests/live/agent-keys.spec.ts` 6개(게스트 안내 · 만들기와 연결 명령 · 저장소에 안 남음 · 폐기 두 단계 · 409 한도 · 404 서버 준비 중) + 게스트 문장·내려받기 링크 시험을 더한 묶음 56/56 통과. **실서버 확인(서버 응답): 안 했다** — 서버 커밋이 배포되기 전이고, 실제 키 발급은 실서버 쓰기라 승인이 먼저다.

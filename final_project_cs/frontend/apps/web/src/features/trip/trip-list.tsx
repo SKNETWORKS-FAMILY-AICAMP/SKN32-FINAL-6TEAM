@@ -229,7 +229,7 @@ export function TripList() {
       ? <Panel className={styles.empty}>
         <p>{t("아직 등록한 여행이 없어요.", "No trips yet.")}</p>
         {/* `[2026-10-04]` 게스트 여행은 한동안 쓰지 않으면 사라지고, 계정에 보관한 여행은 로그인하면 다시 열린다 — 빈 목록이 그 까닭일 수 있다. */}
-        <p className={styles.emptyHint}>{t("전에 만든 여행이 안 보이나요? 게스트로 만든 여행은 이 기기에서 한동안 쓰지 않으면 사라져요. 계정에 보관한 여행이라면 ", "Cannot see a trip you made before? A guest trip goes away when this device is not used for a while. If it is kept with an account, ")}
+        <p className={styles.emptyHint}>{t("전에 만든 여행이 안 보이나요? 게스트로 만든 여행은 창을 닫으면 이어 볼 수 없고 얼마 뒤 서버에서도 지워져요. 계정에 보관한 여행이라면 ", "Cannot see a trip you made before? A guest trip cannot be continued after the window is closed and is deleted from the server after a while. If it is kept with an account, ")}
           <Link href={`${routes.myPage}#accounts`}>{t("마이페이지에서 로그인", "sign in on My page")}</Link>{t("하면 다시 열려요.", " to open it again.")}</p>
       </Panel>
       : <TripRows trips={trips} controls={{ selection, onToggle: toggle, onDelete: (trip, control) => ask([trip.id], trip, control), unsupported, busy: pending }} />}

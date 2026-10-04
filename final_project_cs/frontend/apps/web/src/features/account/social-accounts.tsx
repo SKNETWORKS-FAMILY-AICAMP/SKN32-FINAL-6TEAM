@@ -93,7 +93,7 @@ export function SocialAccounts() {
     return <>
       {hasSession && <div className={styles.row}>
         <p className={styles.explain}>{isGuest
-          ? t("계정을 연결해 두면 이 기기를 한동안 쓰지 않아도 여행이 보관되고, 게스트 제한도 없어져요. 다른 기기에서도 그 계정으로 로그인해 여행을 열 수 있어요. 이메일은 받지 않아요.", "Link an account and your trips are kept even when this device is not used for a while, the guest limits end, and you can sign in with it on another device. We do not take your email.")
+          ? t("계정을 연결해 두면 창을 닫아도 여행이 보관되고, 게스트 제한도 없어져요. 다른 기기에서도 그 계정으로 로그인해 여행을 열 수 있어요. 이메일은 받지 않아요.", "Link an account and your trips are kept even after you close the window, the guest limits end, and you can sign in with it on another device. We do not take your email.")
           : t("연결된 계정으로 어느 기기에서든 로그인해 여행을 열 수 있어요. 이메일은 받지 않아요.", "Sign in with a linked account on any device to open your trips. We do not take your email.")}</p>
         <ul className={styles.providers} aria-label={t("연결할 계정", "Accounts to link")}>{providers.data.map((provider) => <li key={provider}>
           <span className={styles.providerName}>{t(...providerName(provider))}</span>

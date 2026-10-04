@@ -81,6 +81,8 @@ const DEFAULTS = {
   // `[2026-10-04]` the lines between stops (`GET /v1/web/trips/{id}/route-shapes`, mobility session): "off" = an older server (FastAPI 404 `{detail}`)
   //   | "on" (two shapes on day 1: a walk on a road graph, drawn solid; a bus joined by a straight line with no ground, drawn dashed) | "fail" (500) | "slow" ("on" after 3 s).
   routeShapes: "off",
+  // `[2026-10-04]` agent keys (`/v1/web/agent-keys*`, server D-CS-012): "on" | "off" (an older server: FastAPI 404 `{detail}`) | "limit" (making one answers 409 agent_key_limit)
+  agentKeys: "on",
   // the "this trip changed" bell (`GET /v1/web/trips/{id}/events`): "off" = an older server without it (404) | "on"
   bell: "off",
   // the customer's contact details (`GET/PUT /v1/web/profile`): "on" | "off" = an older server without it (404) | "reject" = refuses a save (422)
@@ -126,6 +128,8 @@ let confirmed;
 let keys;
 /** Session cookies this server made (`sid` → {sid, csrf, member}); `known-session` always exists (the browser of a returning visitor). */
 let webSessions;
+/** The agent keys this server made (`GET /v1/web/agent-keys` lists them without the key itself). */
+let agentKeyRows;
 /** Sessions that were signed out or ended by a sign-in. */
 let ended;
 /** The recovery email the server holds (`PUT /v1/web/profile`). */
@@ -165,6 +169,7 @@ function reset() {
   board = freshBoard(scenario.board);
   keys = new Set(["acop_u_known"]);
   webSessions = new Map();
+  agentKeyRows = [];
   ended = new Set();
   recoveryEmail = null;
   tripTitle = "내 여행";
@@ -478,7 +483,13 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     return json(response, 200, { rang: bells.size }, origin);
   }
   if (path === "/__test/hangup") { const closed = bells.size; bells.forEach((stream) => stream.end()); bells.clear(); return json(response, 200, { closed }, origin); }
-  if (path.startsWith("/plan/")) { response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); response.end("<h1>여행계획서(스텁)</h1>"); return; }
+  if (path.startsWith("/plan/")) {
+    // `download=1` → the same page sent as a file (the server writes `Content-Disposition: attachment; filename*=UTF-8''triPilot-<제목>.html`)
+    const file = url.searchParams.get("download") === "1" ? { "Content-Disposition": "attachment; filename*=UTF-8''triPilot-" + encodeURIComponent("내 여행") + ".html" } : {};
+    response.writeHead(200, { "Content-Type": "text/html; charset=utf-8", ...file });
+    response.end("<h1>여행계획서(스텁)</h1>");
+    return;
+  }
   // The free map's tiles in the test build (`serve.mjs` points `NEXT_PUBLIC_OSM_TILE_URL` here): a one-pixel image, so the real map code runs
   // without any test reaching OpenStreetMap. Not logged — a map draws dozens of them.
   if (path.startsWith("/__test/tile/")) { response.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "max-age=3600" }); response.end(TILE_PNG); return; }
@@ -572,6 +583,31 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   if (path === "/v1/web/auth/logout" && request.method === "POST") {
     if (auth.session) ended.add(auth.session.sid);
     return json(response, 200, { status: "signed_out" }, origin, { "Set-Cookie": `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0` });
+  }
+  if (path === "/v1/web/agent-keys" || path.startsWith("/v1/web/agent-keys/")) {
+    if (scenario.agentKeys === "off") return json(response, 404, { detail: "Not Found" }, origin);
+    if (!auth.session) return refuse(403, "cookie_required", "에이전트 키는 브라우저(쿠키)로만 만들어요");
+    if (kindOf(auth.session) !== "member") return json(response, 403, { error: { code: "member_only", message: "로그인한 사용자만 쓸 수 있어요", login_required: true } }, origin);
+    const rowOf = (row) => ({ key_id: row.key_id, name: row.name, scope: row.scope, created_at: row.created_at, expires_at: row.expires_at, last_used_at: row.last_used_at, status: row.status });
+    if (path === "/v1/web/agent-keys" && request.method === "GET") return json(response, 200, { keys: agentKeyRows.map(rowOf) }, origin);
+    if (path === "/v1/web/agent-keys" && request.method === "POST") {
+      const body = JSON.parse(raw || "{}");
+      const days = body.expires_days ?? 90;
+      if (scenario.agentKeys === "limit") return json(response, 409, { error: { code: "agent_key_limit", message: "사용 중인 에이전트 키가 10개예요 — 쓰지 않는 키를 폐기해 주세요" } }, origin);
+      if (typeof body.name !== "string" || !body.name.trim() || body.name.trim().length > 60 || !["read", "write"].includes(body.scope) || !Number.isInteger(days) || days < 1 || days > 90) {
+        return json(response, 422, { error: { code: "invalid_agent_key", message: "이름은 1~60자, 권한은 read|write, 유효 기간은 1~90일이에요" } }, origin);
+      }
+      const made = { key_id: `k-${agentKeyRows.length + 1}`, name: body.name.trim(), scope: body.scope, created_at: at(10), expires_at: at(10, 0, 2), last_used_at: null, status: "active" };
+      agentKeyRows.push(made);
+      return json(response, 201, { ...rowOf(made), key: `acop_a_stub_${agentKeyRows.length}_0123456789abcdef`, notice: "이 키는 지금 한 번만 보여요. 안전한 곳에 따로 보관해 주세요." }, origin);
+    }
+    const revokePath = /^\/v1\/web\/agent-keys\/([^/]+)$/.exec(path);
+    if (revokePath && request.method === "DELETE") {
+      const row = agentKeyRows.find((entry) => entry.key_id === revokePath[1]);
+      if (!row) return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
+      row.status = "revoked";
+      return json(response, 200, { key_id: row.key_id, status: "revoked" }, origin);
+    }
   }
   if (path === "/v1/web/auth/links" && request.method === "GET") return json(response, 200, { links: socialLinks.map((provider) => ({ provider, linked_at: "2026-10-03T10:00:00+09:00" })) }, origin);
   const unlinkMatch = /^\/v1\/web\/auth\/(\w+)$/.exec(path);
