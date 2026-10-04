@@ -61,6 +61,8 @@ _DIRECT = [
     ('JevK5-9B v0.3.3 Q8', '9B/9.5GB · Apache', 'llama.cpp + JevK5 런타임', '—', lambda w: _pk_from_dec('jevk59b', w)),
     ('Plumb-4B v5 Q8', '4B/4.5GB · Apache', 'llama.cpp + JevK5 런타임', '—', lambda w: _pk_from_dec('plumb4b', w)),
     ('decider-chat Qwen3.6-27B bf16', '27B/55GB · Apache', '램+디스크 오프로드', '4.9초', lambda w: _pk_from_dec('decider27ql', w)),
+    ('[기준선] Claude Opus 5.5 — 세트 묶음 풀이(Claude 하위 작업)', '클라우드 모델(로컬 아님)', 'Claude Code 하위 작업 · 세트 전체를 한 번에', '—', lambda w: G[w].get('claude-opus-5.5-묶음')),
+    ('[기준선] Claude Fable 5.1 — 세트 묶음 풀이(Claude 하위 작업)', '클라우드 모델(로컬 아님)', 'Claude Code 하위 작업 · 세트 전체를 한 번에', '—', lambda w: G[w].get('claude-fable-5.1-묶음')),
     ('Qwen3.8 27B (올라마)', '27B/17GB', '쓰던 서버 올라마', '약 45초', lambda w: G[w].get('qwen3.8:27b')),
     ('Decider-35B-A3B bf16', '35B/69GB · 활성 3B', '램+디스크 오프로드', '1.7초', lambda w: _pk_from_dec('decider35bl', w)),
     ('Nimble-9B-v3 Q8', '9B/9.5GB · CC BY-NC', 'llama.cpp', '1.4초', lambda w: _pk_from_dec('nimble9b', w)),
