@@ -225,8 +225,8 @@ class Settings(BaseSettings):
     mobility_local_router: bool = True
     #: 서울 열린데이터광장 키(따릉이 실시간 거치 대수). 비우면 거치 대수는 근거없음. ★제공처가 http 만 받는다(평문 전송)
     seoul_openapi_key: str = ""
-    #: 서울 열린데이터광장 「실시간 지하철 인증키」(하루 1,000건 · 활용사례 등록 심사 뒤 해제) — ★**지금 읽는 코드가 없다**(자리만).
-    #:  환경 파일(`.env.apikeys`)에 이 이름으로 넣어 두면 설정이 모르는 이름이라 **기동이 거부된다**(`extra="forbid"`)(2026-10-05 실제로 났다).
+    #: 서울 열린데이터광장 「실시간 지하철 인증키」(일반 키와 **별개** · 하루 1,000건 · 활용사례 등록 심사 뒤 해제) — 실시간 도착정보
+    #:  (`travel/seoul_subway.py`, `sources.subway_arrival`). ★설정에 없는 이름으로 넣으면 기동이 거부된다(`extra="forbid"` · 2026-10-05 실제로 났다).
     seoul_metro_api_key: str = ""
     #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**
     #:  기록한다(dead_letter). 보낸 것처럼 `delivered` 로 찍지 않는다.
@@ -270,6 +270,8 @@ class Settings(BaseSettings):
     rate_kakao_per_day: int = 1000           # 미확인 - 보수적
     #: 확인(2026-10-04): 서울교통공사 지하철알림정보 개발계정 하루 10,000건(공식 페이지) → 절반만 쓴다(여유 2배). 매 1분 갱신 · 한 번에 최신 100건
     rate_subway_notice_per_day: int = 5000
+    #: 확인(2026-10-04 공식 안내): 서울 「실시간 지하철 인증키」 하루 최대 1,000건 → 절반만(여유 2배). 도착정보는 지금 값이라 캐시를 짧게 둔다
+    rate_seoul_subway_arrival_per_day: int = 500
     #: 국가유산청은 키가 없고 공개된 한도도 못 찾았다. 그래도 스스로 조인다 -
     #: 한도를 모른다는 것이 마음껏 두들겨도 된다는 뜻은 아니다.
     rate_heritage_khs_per_day: int = 1000
@@ -315,6 +317,7 @@ class Settings(BaseSettings):
             "utic": self.rate_utic_per_day,
             "odsay": self.rate_odsay_per_day,
             "subway_notice": self.rate_subway_notice_per_day,
+            "seoul_subway_arrival": self.rate_seoul_subway_arrival_per_day,
             "kakao": self.rate_kakao_per_day,
             "google_places": self.rate_google_places_per_day,
             "google_routes": self.rate_google_routes_per_day,

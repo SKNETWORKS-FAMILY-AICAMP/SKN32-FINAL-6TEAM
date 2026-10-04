@@ -300,6 +300,8 @@ class TravelSources:
     #:  실시간 지하철 운행·UTIC 통제가 붙으면 같은 `affecting()` 모양으로 끼운다.
     route_events: Any | None = None
     transit: Any | None = None
+    #: 서울 열린데이터광장 실시간 지하철 도착정보(「실시간 지하철 인증키」) — **지금 값**. `arrivals(역, line=…)`. 판정에 넣지 않고 같이 놓고 보는 용도(2026-10-05)
+    subway_arrival: Any | None = None
     route: Any | None = None
     #: 키가 없어 못 붙인 소스 이름들. ★조용히 비워 두지 않는다.
     unavailable: dict[str, str] = field(default_factory=dict)
@@ -522,6 +524,15 @@ def build_travel_sources(settings: Any) -> TravelSources:
         sources.unavailable["subway_notice"] = (
             "ACOP_DATA_GO_KR_KEY(또는 ACOP_SUBWAY_NOTICE_API_KEY)가 비어 있다. 공공데이터포털 「서울교통공사_지하철알림정보」 "
             "활용신청 후 .env.apikeys 에 채운다.")
+    # ★`[2026-10-05]` 서울 실시간 지하철 도착정보 — 「실시간 지하철 인증키」(일반 키와 별개 · 하루 1,000건). 못 붙이면 이름으로 남긴다
+    metro_key = (getattr(settings, "seoul_metro_api_key", "") or "").strip()
+    if metro_key:
+        from .seoul_subway import SeoulSubwayArrival
+        sources.subway_arrival = SeoulSubwayArrival(service_key=metro_key, limiter=limiter, cache=cache)
+    else:
+        sources.unavailable["subway_arrival"] = (
+            "ACOP_SEOUL_METRO_API_KEY 가 비어 있다. 서울 열린데이터광장 「실시간 지하철 인증키」를 .env.apikeys 에 채운다. "
+            "★일반 인증키(ACOP_SEOUL_OPENAPI_KEY)와 **다른 키**다.")
     if len(route_event_sources) == 1:
         sources.route_events = route_event_sources[0]
     elif route_event_sources:
