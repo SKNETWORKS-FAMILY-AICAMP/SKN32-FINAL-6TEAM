@@ -1,34 +1,37 @@
 ﻿kind,model,size_storage_active,serving,sec_per_q,fair_comparison,caveat,sets_covered
-direct,Gemma 4 26B-A4B Q4_K_M (올라마),25B/17GB · 활성 3.8B,쓰던 서버 올라마,약 11초,True,,9
-direct,Gemma 4 12B (올라마),12B 밀집/7.6GB · 활성 11.9B,쓰던 서버 올라마,약 3.6초,True,,9
-direct,Gemma 4 E4B QAT (올라마),유효 4B/6.1GB,쓰던 서버 올라마,약 1.3초,True,,9
+direct,Gemma 4 26B-A4B Q4_K_M (올라마),25B/17GB · 활성 3.8B,쓰던 서버 올라마,약 11초,True,,10
+direct,Gemma 4 12B (올라마),12B 밀집/7.6GB · 활성 11.9B,쓰던 서버 올라마,약 3.6초,True,,10
+direct,Gemma 4 E4B QAT (올라마),유효 4B/6.1GB,쓰던 서버 올라마,약 1.3초,True,,10
 direct_reference_unfair,⚠ 공정 비교 아님 · 참고용: Codex luna 직접 — 세트 묶음 풀이,(외부 API),Codex,—,False,Codex 가 세트 전체를 한 번에 푼 묶음 풀이(생각 설정 모름). 로컬(문제 하나씩·생각 끔)과 공정한 비교가 아니다 — 천장 참고용(§14-8),7
 direct_reference_unfair,⚠ 공정 비교 아님 · 참고용: Codex luna + 정의 직접 — 세트 묶음 풀이,(외부 API),Codex,—,False,Codex 가 세트 전체를 한 번에 푼 묶음 풀이(생각 설정 모름). 로컬(문제 하나씩·생각 끔)과 공정한 비교가 아니다 — 천장 참고용(§14-8),7
 direct,Jev 직접 (유료),(외부 API),TypeSafe API,0.23초,True,,7
-direct,OpenJev 26B Q4_K_M,26B/19GB · CC BY-NC,GPU+램 분할,14초,True,,4
-direct,decider-chat Gemma4-31B bf16,31B/62GB · 오프로드,램+디스크 오프로드,4.7초,True,,4
-direct,pplx-decider 27B NF4,27B/약 14GB(4비트),bitsandbytes,2.7초,True,,4
-direct,Decider-12B bf16,12B/24GB · Apache,램 오프로드,1.6초,True,,9
-direct,Decider-12B 8비트,12B/약 13GB · Apache,bitsandbytes 8bit,1.3초,True,,3
+direct,OpenJev 26B Q4_K_M,26B/19GB · CC BY-NC,GPU+램 분할,14초,True,,5
+direct,decider-chat Gemma4-31B bf16,31B/62GB · 오프로드,램+디스크 오프로드,4.7초,True,,5
+direct,pplx-decider 27B NF4,27B/약 14GB(4비트),bitsandbytes,2.7초,True,,5
+direct,Decider-12B bf16,12B/24GB · Apache,램 오프로드,1.6초,True,,10
+direct,Decider-12B 8비트,12B/약 13GB · Apache,bitsandbytes 8bit,1.3초,True,,5
 direct,Decider-12B NF4 4비트,12B/약 8GB · Apache,bitsandbytes 4bit,1.2초,True,,2
-direct,Winnow-12B Q8,12B/12.7GB · Apache,자체 llama.cpp 서버,1.6초,True,,3
-direct,"Cygnet(얼린 Gemma-4-12B-it 글자 읽기, 8비트)",12B/약 13GB(8비트) · Apache+Gemma 정책,레시피 읽기 + bitsandbytes 8bit,2.0초,True,,4
+direct,Winnow-12B Q8,12B/12.7GB · Apache,자체 llama.cpp 서버,1.6초,True,,5
+direct,"Cygnet(얼린 Gemma-4-12B-it 글자 읽기, 8비트)",12B/약 13GB(8비트) · Apache+Gemma 정책,레시피 읽기 + bitsandbytes 8bit,2.0초,True,,5
 direct,"Cygnet bf16 오프로드(램+GPU, 8비트 아님)",12B/24GB · Apache+Gemma 정책,레시피 읽기 + accelerate 오프로드,9.8초,True,,1
 direct,"lev(Interfaze, Qwen3.5-4B + LoRA)",4B/약 9GB · Apache,자체 서버(lev serve),0.6초,True,,3
 direct,Manchego v2.1(4B),4B/약 9GB · Apache,자체 서버(manchego-serve),0.6초,True,,3
 direct,Manchego v3(4B),4B/약 9GB · Apache,자체 서버(manchego-serve),0.6초,True,,3
 direct,Hopper 4B(Qwen3.5-4B + LoRA r16),4B · 연구·시연용(비상업),"자체 서버(hopper-serve, 느린 커널)",0.6초,True,,3
-direct,"Hopper 12B(얼린 Gemma-4-12B-it + LoRA r32, 8비트 적재)",12B/약 13GB · Apache,bitsandbytes 8bit + 어댑터,2.8초,True,,4
-direct,Jev-Omni 묶음 읽기(20개 이하씩),12B/24GB(8비트로 적재) · Apache,bitsandbytes 8bit,1.8초,True,,4
+direct,"Hopper 12B(얼린 Gemma-4-12B-it + LoRA r32, 8비트 적재)",12B/약 13GB · Apache,bitsandbytes 8bit + 어댑터,2.8초,True,,5
+direct,Jev-Omni 묶음 읽기(20개 이하씩),12B/24GB(8비트로 적재) · Apache,bitsandbytes 8bit,1.8초,True,,5
 direct,Jev-Omni(Gemma-4-12B 합병 + 결정 머리),12B/24GB(8비트로 적재) · Apache,bitsandbytes 8bit,—,True,,3
 direct,Winnow-E4B Q8,E4B 유효 4B/8GB · Apache,자체 llama.cpp 서버,—,True,,3
 direct,JevK5 4B v0.3 Q8,4B/4.5GB · Apache,llama.cpp + JevK5 런타임,—,True,,3
 direct,JevK5-9B v0.3.3 Q8,9B/9.5GB · Apache,llama.cpp + JevK5 런타임,—,True,,3
 direct,Plumb-4B v5 Q8,4B/4.5GB · Apache,llama.cpp + JevK5 런타임,—,True,,3
 direct,decider-chat Qwen3.6-27B bf16,27B/55GB · Apache,램+디스크 오프로드,4.9초,True,,3
-direct_reference_unfair,⚠ 공정 비교 아님 · 참고용 기준선: Claude Opus 5.5 — 세트 묶음 풀이 + 생각 설정 통제 불가(켜졌을 수 있음),클라우드 모델(로컬 아님),Claude Code 하위 작업 · 세트 전체를 한 번에,—,False,Claude 하위 작업이 세트 전체를 한 번에 푼 묶음 풀이이고 생각 설정을 통제하지 못했다(켜져 있었을 수 있다). 로컬(문제 하나씩·생각 끔·온도 0)과 공정한 비교가 아니다 — 천장 참고용(§62·§62-2),4
-direct_reference_unfair,⚠ 공정 비교 아님 · 참고용 기준선: Claude Fable 5.1 — 세트 묶음 풀이 + 생각 설정 통제 불가(켜졌을 수 있음),클라우드 모델(로컬 아님),Claude Code 하위 작업 · 세트 전체를 한 번에,—,False,Claude 하위 작업이 세트 전체를 한 번에 푼 묶음 풀이이고 생각 설정을 통제하지 못했다(켜져 있었을 수 있다). 로컬(문제 하나씩·생각 끔·온도 0)과 공정한 비교가 아니다 — 천장 참고용(§62·§62-2),4
-direct,Qwen3.8 27B (올라마),27B/17GB,쓰던 서버 올라마,약 45초,True,,4
+direct_reference_unfair,⚠ 공정 비교 아님 · 참고용 기준선: Claude Opus 5.5 — 세트 묶음 풀이 + 생각 설정 통제 불가(켜졌을 수 있음),클라우드 모델(로컬 아님),Claude Code 하위 작업 · 세트 전체를 한 번에,—,False,Claude 하위 작업이 세트 전체를 한 번에 푼 묶음 풀이이고 생각 설정을 통제하지 못했다(켜져 있었을 수 있다). 로컬(문제 하나씩·생각 끔·온도 0)과 공정한 비교가 아니다 — 천장 참고용(§62·§62-2),5
+direct_reference_unfair,⚠ 공정 비교 아님 · 참고용 기준선: Claude Fable 5.1 — 세트 묶음 풀이 + 생각 설정 통제 불가(켜졌을 수 있음),클라우드 모델(로컬 아님),Claude Code 하위 작업 · 세트 전체를 한 번에,—,False,Claude 하위 작업이 세트 전체를 한 번에 푼 묶음 풀이이고 생각 설정을 통제하지 못했다(켜져 있었을 수 있다). 로컬(문제 하나씩·생각 끔·온도 0)과 공정한 비교가 아니다 — 천장 참고용(§62·§62-2),5
+direct,Qwen3.8 27B (올라마),27B/17GB,쓰던 서버 올라마,약 45초,True,,5
+direct,Granite 4.2 30B (올라마),30B/17GB · Apache,새 서버 올라마,3.3초,True,,4
+direct,Granite 4.2 8B (올라마),8B/5.3GB · Apache,쓰던 서버 올라마,약 1.5초,True,,4
+direct,Granite 4.2 3B (올라마),3B/2.2GB · Apache,쓰던 서버 올라마,0.9초,True,,4
 direct,Decider-35B-A3B bf16,35B/69GB · 활성 3B,램+디스크 오프로드,1.7초,True,,2
 direct,Nimble-9B-v3 Q8,9B/9.5GB · CC BY-NC,llama.cpp,1.4초,True,,2
 direct,Imajev-4B,4B/약 8GB,자체 서버(torch),0.8초,True,,2
@@ -39,31 +42,33 @@ direct,Kev-9B Q8,9B/9.5GB,llama.cpp,1.2초,True,,2
 direct,Kev-4B Q8,4B/4.5GB,llama.cpp,0.9초,True,,2
 direct,Malkuth-4B,4B · CC BY-NC,Kev 엔진,1.1초,True,,2
 direct,Laya Q8,0.5B/0.45GB,llama.cpp,0.02초,True,,2
-combo,B0 기준(e16c),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,9
-combo,V1 앞단 e16d,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,9
-combo,V2 ML 분기,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,9
-combo,V3 그래프 문지기,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,9
-combo,V5 RL 식 정책,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,9
-combo,L1 규칙→E4B QAT,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,9
-combo,L2 규칙→12B,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,9
-combo,L3 규칙→26B,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,9
-combo,"J2 로컬 확신도 앞단(E4B QAT 확신 ≥ τ 이면 그대로, 아니면 12B)",,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,9
-combo,"V9 전문가 구조(Jev 없음, E4B/E4B/12B)",,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,4
-combo,C1 V1 구조(넘김 = OpenJev 26B),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,4
-combo,L5 규칙 → OpenJev 26B(앞단 없음),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,4
-combo,C1 V1 구조(넘김 = pplx-decider 27B),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,4
-combo,L5 규칙 → pplx-decider 27B(앞단 없음),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,4
-combo,C1 V1 구조(넘김 = Cygnet),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,4
-combo,L5 규칙 → Cygnet(앞단 없음),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,4
-combo,C1 V1 구조(넘김 = Hopper 12B),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,4
-combo,L5 규칙 → Hopper 12B(앞단 없음),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,4
-combo,C1 V1 구조(넘김 = Decider-12B),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,4
-combo,L5 규칙 → Decider-12B(앞단 없음),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,4
-combo,C1 V1 구조(넘김 = decider-chat 31B),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,4
-combo,L5 규칙 → decider-chat 31B(앞단 없음),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,4
-combo,Y2 게이트(e16d 임베딩),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,9
-combo,L6 규칙→게이트(e16d 임베딩)→E4B QAT,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,9
-combo,Ens3 다수결(L6 · V9 · L5-Decider-12B),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,4
-combo,H1 L6 → (게이트 음성·E4B 없음)이면 Decider-12B,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,9
-combo,H2 L6 → E4B 확신 < τ 이면 Decider-12B,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,9
-combo,"H4 규칙 → Decider-12B 확신 ≥ τ 이면 그대로, 아니면 L6",,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,9
+combo,B0 기준(e16c),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,10
+combo,V1 앞단 e16d,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,10
+combo,V2 ML 분기,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,10
+combo,V3 그래프 문지기,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,10
+combo,V5 RL 식 정책,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,10
+combo,L1 규칙→E4B QAT,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,10
+combo,L2 규칙→12B,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,10
+combo,L3 규칙→26B,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,10
+combo,"J2 로컬 확신도 앞단(E4B QAT 확신 ≥ τ 이면 그대로, 아니면 12B)",,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,10
+combo,"V9 전문가 구조(Jev 없음, E4B/E4B/12B)",,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,C1 V1 구조(넘김 = OpenJev 26B),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,L5 규칙 → OpenJev 26B(앞단 없음),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,C1 V1 구조(넘김 = pplx-decider 27B),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,L5 규칙 → pplx-decider 27B(앞단 없음),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,C1 V1 구조(넘김 = Cygnet),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,L5 규칙 → Cygnet(앞단 없음),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,C1 V1 구조(넘김 = Hopper 12B),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,L5 규칙 → Hopper 12B(앞단 없음),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,C1 V1 구조(넘김 = Decider-12B),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,L5 규칙 → Decider-12B(앞단 없음),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,C1 V1 구조(넘김 = decider-chat 31B),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,L5 규칙 → decider-chat 31B(앞단 없음),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,C1 V1 구조(넘김 = Winnow-12B),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,L5 규칙 → Winnow-12B(앞단 없음),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,Y2 게이트(e16d 임베딩),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,10
+combo,L6 규칙→게이트(e16d 임베딩)→E4B QAT,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,10
+combo,Ens3 다수결(L6 · V9 · L5-Decider-12B),,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,5
+combo,H1 L6 → (게이트 음성·E4B 없음)이면 Decider-12B,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,10
+combo,H2 L6 → E4B 확신 < τ 이면 Decider-12B,,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,10
+combo,"H4 규칙 → Decider-12B 확신 ≥ τ 이면 그대로, 아니면 L6",,규칙·앞단·게이트·모델 조합,,True,개발 세트(heavy·mix4~7) 값은 문턱·τ 를 고른 세트라 낙관적,10

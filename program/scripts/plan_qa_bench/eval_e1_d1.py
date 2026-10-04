@@ -6,7 +6,7 @@ import json, math, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 R = lambda n: os.path.join(HERE, 'results', n)
-SETS = ['mix8', 'mix9', 'mix10', 'mix11']
+SETS = ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
 GOLD = {w: [x['gold'] for x in json.load(open(os.path.join(HERE, 'fixtures', f'{w}.json'), encoding='utf-8'))['sets'][w]['qs']] for w in SETS}
 
 
@@ -65,13 +65,13 @@ def mcnemar(a, b):
 
 
 N = sum(len(g) for g in GOLD.values())
-print(f'4세트 합산 {N}문제')
+print(f'5세트 합산 {N}문제')
 for n, v in V.items():
     x = vec(v)
     per = ' · '.join(f"{sum(int(v[w][i] == GOLD[w][i]) for i in range(len(GOLD[w])))}/{len(GOLD[w])}" for w in SETS)
     print(f'{n}: {sum(x)}/{N} = {100 * sum(x) / N:.1f}%  ({per})')
 print()
-for label, ss in (('4세트 합산(개발 mix8·mix9 와 탐색에 쓴 mix10 포함 — 낙관적)', SETS), ('mix11 만(후보 고정 뒤 처음 본 세트 — 깨끗한 확인)', ['mix11'])):
+for label, ss in (('5세트 합산(개발 mix8·mix9 와 탐색에 쓴 mix10 포함 — 낙관적)', SETS), ('mix8~mix11 합산(작성자 Codex 네 세트)', SETS[:4]), ('mix11 만(후보 고정 뒤 처음 본 세트 — 깨끗한 확인)', ['mix11']), ('mix12 만(작성자 Claude — 두 번째 깨끗한 확인)', ['mix12'])):
     NN = sum(len(GOLD[w]) for w in ss)
     print(f'--- {label} {NN}문제')
     for n in ('31B 직접', 'Qwen3.8 27B 직접', 'Gemma 26B 직접', 'E1 확률 평균(OpenJev·31B·pplx)', 'D1 Decider-12B → Qwen3.8(τ 0.9)'):
@@ -84,4 +84,4 @@ for label, ss in (('4세트 합산(개발 mix8·mix9 와 탐색에 쓴 mix10 포
             verdict = '이김' if sum(a) > sum(b) and p < 0.025 else ('졌음' if sum(b) > sum(a) and p < 0.025 else '구분되지 않음')
             print(f'  {cand} vs {ref}: {sum(a) - sum(b):+d}문제 (후보만 맞음 {n10} · 기준만 맞음 {n01}, 정확 McNemar p={p:.3f}) → {verdict}')
 calls = sum(1 for w in SETS for i, p in enumerate(P['decider12bl'][w]) if max(norm(p).values()) < 0.9)
-print(f'D1 이 Qwen3.8 로 넘긴 문제(4세트): {calls}/{N} = {100 * calls / N:.1f}%')
+print(f'D1 이 Qwen3.8 로 넘긴 문제(5세트): {calls}/{N} = {100 * calls / N:.1f}%')
