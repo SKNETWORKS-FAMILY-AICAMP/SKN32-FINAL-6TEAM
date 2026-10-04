@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""웹 남용 방어 — 비싼 작업 횟수 · 키 발급 · 사람 확인 · 빈 키 정리. `[2026-09-28]` 사용자 지시
+"""웹 남용 방어 — 비싼 작업 횟수 · 키 발급 · 사람 확인. `[2026-09-28]` 사용자 지시
 
 계획 `wiki/records/plans/2026-09-28_2130_웹_남용방어_실행계획.md` · 계약 `wiki/external/rest-endpoints.md` 「남용 방어」 ·
 저장 `web_usage` · `runtime_limits` · `runtime_limit_events`(마이그레이션 031).
@@ -23,8 +23,6 @@ from datetime import datetime, timedelta
 from typing import Any, Callable
 from uuid import UUID
 from zoneinfo import ZoneInfo
-
-from psycopg.errors import ForeignKeyViolation
 
 import app.core.settings as settings_module
 from app.core.settings import get_guardrails
@@ -96,11 +94,16 @@ def specs() -> dict[str, LimitSpec]:
     out["web.session.per_ip_hour"] = LimitSpec(
         "web.session.per_ip_hour", "키 발급 — 주소당 한 시간", "개", "int",
         int(guard.get("security.web_session_issue_per_hour")), int(session["min"]), int(session["max"]))
-    idle = guard.get("web_guard.bounds.idle_key_days")
-    out["web.idle_key_days"] = LimitSpec("web.idle_key_days", "빈 키 보관 일수", "일", "int",
-                                         int(guard.get("web_guard.idle_key_days")), int(idle["min"]), int(idle["max"]))
-    out["web.idle_key_cleanup_enabled"] = LimitSpec("web.idle_key_cleanup_enabled", "빈 키 정리 켜기", "", "bool",
-                                                    bool(guard.get("web_guard.idle_key_cleanup_enabled")))
+    # ★`[2026-10-04 사용자 결정 — D-CS-011]` 세션 수명 · 게스트 보존 — 관리 콘솔에서 조절한다(시간 단위)
+    hours = guard.get("web_guard.bounds.session_hours")
+    out["web.guest_idle_hours"] = LimitSpec("web.guest_idle_hours", "게스트 보존(마지막 사용 뒤 삭제까지)", "시간", "int",
+                                            int(guard.get("web_guard.guest_idle_hours")), int(hours["min"]), int(hours["max"]))
+    out["web.member_idle_hours"] = LimitSpec("web.member_idle_hours", "회원 세션 유휴 수명", "시간", "int",
+                                             int(guard.get("web_guard.member_idle_hours")), int(hours["min"]), int(hours["max"]))
+    out["web.session_max_hours"] = LimitSpec("web.session_max_hours", "세션 절대 수명(만든 뒤)", "시간", "int",
+                                             int(guard.get("web_guard.session_max_hours")), int(hours["min"]), int(hours["max"]))
+    out["web.guest_cleanup_enabled"] = LimitSpec("web.guest_cleanup_enabled", "게스트 정리 켜기", "", "bool",
+                                                 bool(guard.get("web_guard.guest_cleanup_enabled")))
     # ★`[2026-09-29 사용자 결정]` 화면 안 지도 종류 — 개발 콘솔에서 구글 ↔ 무료 지도(OSM)를 바꾼다. 기본은 무료 지도
     choices = tuple(guard.get("web_guard.map_provider.choices"))
     out["web.map_provider"] = LimitSpec("web.map_provider", "화면 지도 종류", "", "choice",
@@ -252,9 +255,9 @@ def count_session(tenant_id: str, *, ip: str, now: datetime | None = None) -> No
 
 
 def count_auth(tenant_id: str, action: str, *, ip: str, now: datetime | None = None) -> None:
-    """소셜 로그인 `auth_start` · `auth_exchange` — 주소당 한 시간에 **각각** `security.web_auth_per_ip_hour` 번(`[2026-10-03]`). ★늘 켜져 있다(키 발급 한도와 같다 —
-    로그인 시도는 계정 대입 · 가입 폭주의 입구라 개발 중에도 열어 두지 않는다). 막히면 `UsageRefused`(429 `too_many_auth`)."""
-    if action not in ("auth_start", "auth_exchange"):
+    """소셜 로그인 `auth_start` · `auth_exchange` · 옛 키를 쿠키로 옮기는 `auth_adopt`(`[2026-10-04]`) — 주소당 한 시간에 **각각** `security.web_auth_per_ip_hour` 번(`[2026-10-03]`).
+    ★늘 켜져 있다(키 발급 한도와 같다 — 로그인 시도는 계정 대입 · 가입 폭주의 입구라 개발 중에도 열어 두지 않는다). 막히면 `UsageRefused`(429 `too_many_auth`)."""
+    if action not in ("auth_start", "auth_exchange", "auth_adopt"):
         raise ValueError(f"모르는 작업: {action}")
     now = _now(now)
     hour = f"hour:{now:%Y-%m-%dT%H}"
@@ -294,42 +297,6 @@ def prune_usage(conn, tenant_id: str, now: datetime | None = None) -> dict[str, 
     return {"ip_rows_deleted": ips, "usage_rows_deleted": rest}
 
 
-def cleanup_idle_keys(conn, tenant_id: str, now: datetime | None = None) -> dict[str, Any]:
-    """여행을 하나도 안 만든 사용자 키 — 발급 · 마지막 사용 · 마지막 계획 읽기가 모두 `web.idle_key_days` 보다 오래됐으면 지운다.
-
-    ★사용자 행은 **다른 표가 가리키지 않을 때만** 지운다(계획 읽기 등이 남아 있으면 키만 지우고 사용자 행은 둔다).
-      사용자 행을 가리키는 외래키는 전부 「가리키면 거부」다(2026-09-28 `pg_constraint` 조회) — 딸려서 지워지는 데이터가 없다.
-    ★지운 수 · 남긴 수를 센다(조용히 넘기지 않는다). 꺼져 있으면 아무것도 안 지운다.
-    """
-    limits = values(tenant_id)
-    if not limits["web.idle_key_cleanup_enabled"]:
-        return {"skipped": "disabled"}
-    cut = _now(now) - timedelta(days=int(limits["web.idle_key_days"]))
-    out = {"customers": 0, "keys_deleted": 0, "customers_deleted": 0, "customers_kept": 0}
-    with conn.cursor() as cur:
-        cur.execute(
-            "SELECT k.customer_id FROM web_user_keys k WHERE k.tenant_id=%s GROUP BY k.customer_id "
-            "HAVING max(k.created_at) < %s AND coalesce(max(k.last_used_at), max(k.created_at)) < %s "
-            "AND NOT EXISTS (SELECT 1 FROM trips t WHERE t.tenant_id=%s AND t.customer_id=k.customer_id) "
-            "AND NOT EXISTS (SELECT 1 FROM trip_intakes i WHERE i.tenant_id=%s AND i.customer_id=k.customer_id "
-            "                AND i.updated_at >= %s)",
-            (tenant_id, cut, cut, tenant_id, tenant_id, cut))
-        idle = [row[0] for row in cur.fetchall()]
-    out["customers"] = len(idle)
-    for customer in idle:
-        with conn.transaction(), conn.cursor() as cur:
-            cur.execute("DELETE FROM web_user_keys WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer))
-            out["keys_deleted"] += cur.rowcount
-            try:
-                with conn.transaction():          # 저장점 — 가리키는 행이 있으면 이 삭제만 되돌린다
-                    cur.execute("DELETE FROM customers WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer))
-                out["customers_deleted"] += cur.rowcount
-            except ForeignKeyViolation:          # 계획 읽기 등이 이 사용자를 가리킨다 — 키만 지우고 사용자 행은 둔다
-                out["customers_kept"] += 1
-    return out
-
-
-# ── 사람 확인(Cloudflare Turnstile) ────────────────────────────
 class HumanCheckFailed(Exception):
     def __init__(self, reasons: list[str]) -> None:
         super().__init__(", ".join(reasons))
@@ -384,6 +351,6 @@ def human_check(token: str | None, *, ip: str, verify: Verify | None = None) -> 
 
 
 __all__ = ["ACTIONS", "HumanCheckFailed", "HumanCheckUnavailable", "LimitSpec", "UsageRefused",
-           "assert_human_check_configured", "cleanup_idle_keys", "clear_cache", "client_ip", "count",
+           "assert_human_check_configured", "clear_cache", "client_ip", "count",
            "count_auth", "count_session", "human_check", "human_check_required", "ip_token", "overrides", "prune_usage", "specs",
            "usage_today", "values"]

@@ -46,6 +46,7 @@ from app.core.idempotency import idempotency_key
 from app.infrastructure.db.session import get_connection
 from app.presentation.security import Principal, require_scope
 
+from . import guest_policy, trip_delete
 from .itinerary import Item, TripStore
 from .trip_desk import TripDesk
 
@@ -636,6 +637,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                                      "same request_id was used for a different body")
                     created = False
                 else:
+                    # ★`[2026-10-04 D-CS-011]` 게스트는 여행 1개 · 계획 기간 상한 — 같은 트랜잭션에서 사용자 행을 잠가 동시 생성까지 막는다
+                    guest_policy.check_new_trip(conn, tenant_id=tenant, customer_id=request.customer_id,
+                                                starts=[it.starts_at for it in request.items],
+                                                ends=[it.ends_at for it in request.items])
                     trip_id = _insert(conn, store, request, key, body_sha)
                     created = True
             view = _trip_view(conn, store, trip_id)
@@ -949,15 +954,13 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
     # ── 웹(고객 브라우저) — 사용자 식별 키 `X-User-Key` ────────────────────
     #   ★서버용 scope 키를 브라우저에 넣지 않는다. 이 키는 **그 사용자 본인의 여행**만 연다(D-020 · 025).
-    def _web_customer(x_user_key: str | None = Header(default=None)) -> tuple[str, UUID]:
-        from .web_session import resolve
+    #   ★`[2026-10-04 사용자 결정 — D-CS-011]` 브라우저는 **HttpOnly 쿠키 세션**, 에이전트(MCP)·옛 호출자는 키 헤더 — 둘 다 여기서 가른다
+    #     (`web_cookie.authenticate`: 둘이 같이 오면 400, 쿠키로 인증된 쓰기는 Origin + CSRF 토큰).
+    def _web_customer(http: Request) -> tuple[str, UUID]:
+        from .web_cookie import authenticate
 
-        tenant = settings_module.get_settings().tenant_id
-        with get_connection() as conn, conn.transaction():
-            customer = resolve(conn, tenant_id=tenant, raw=x_user_key)
-        if customer is None:
-            raise _error(401, "unauthenticated", "사용자 키가 없거나 맞지 않는다")
-        return tenant, customer
+        who = authenticate(http)
+        return who.tenant_id, who.customer_id
 
     # ── 계획 읽기 (2026-09-27, 설계서 program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md) ──────────────
     #   ★고객 id 는 키에서 — 몸통으로 받지 않는다(`/v1/web/trips` 와 같은 경계). 읽기는 뒤에서 돈다(사진 한 장 ~45초).
@@ -1388,6 +1391,16 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                                    for e in exc.errors()]) from None
         _count("trip_create", tenant, customer, http)
         return _create_trip(tenant, request)
+
+    @router.post("/v1/web/trips/{trip_id}/delete")
+    def web_trip_delete(trip_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
+        """여행 **즉시 완전 삭제**(D-CS-011 · 요청서 「구현 지침」). 남의 여행 · 없는 여행 · 이미 지운 여행은 모두 같은 404 — 웹은 200 · 404 를 둘 다 「지운 것」으로 읽는다."""
+        tenant, customer = who
+        with get_connection() as conn, conn.transaction():
+            counts = trip_delete.delete_trip(conn, tenant_id=tenant, customer_id=customer, trip_id=trip_id)
+        if counts is None:
+            raise _error(404, "not_found", "resource not found")
+        return {"trip_id": str(trip_id), "status": "deleted"}
 
     @router.get("/v1/web/trips/{trip_id}")
     def web_detail(trip_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):

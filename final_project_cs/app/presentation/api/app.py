@@ -57,10 +57,12 @@ def create_app(controller=None, classifier=None, *,
     origins = [o.strip() for o in get_settings().web_allowed_origins.split(",") if o.strip()]
     # ★`[2026-09-28]` 사람 확인 토큰 헤더(`X-Turnstile-Token`, 키 발급)를 받고, 한도 응답의 `Retry-After` 를 화면이 읽게 연다
     # ★`[2026-10-01]` `PUT` 도 연다 — 고객 연락처 저장(`PUT /v1/web/profile`)이 화면(다른 출처)에서 온다
+    # ★`[2026-10-04 D-CS-011]` 브라우저 세션이 쿠키다 — 허용 출처에 **쿠키를 허용**한다(`allow_credentials=True` 는 와일드카드 출처와 못 쓴다 — 목록 그대로).
+    #   쓰기 요청은 `X-CSRF-Token` 을 싣는다. 키 헤더(`X-User-Key`)는 에이전트·옮겨 가는 동안의 호출자용으로 남긴다
     if origins:
         app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST", "PUT", "DELETE"],
-                           allow_headers=["X-User-Key", "Content-Type", "X-Turnstile-Token"],
-                           expose_headers=["Retry-After"], allow_credentials=False)
+                           allow_headers=["X-User-Key", "Content-Type", "X-Turnstile-Token", "X-CSRF-Token"],
+                           expose_headers=["Retry-After"], allow_credentials=True)
     runtime = RuntimeComposition(controller, built_revision)
     app.state.runtime = runtime
     # ★router 는 프록시를 붙잡는다 — reload 로 갈아 끼워도 옛 Controller 를

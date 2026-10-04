@@ -165,6 +165,10 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 
 `[실측]` `039_customer_profiles.sql` — 복구 이메일과 디스코드 웹훅의 저장 자리. 키 (tenant_id, customer_id). 칸: `recovery_email` · `discord_webhook_enc`(**암호화한** 웹훅 URL — 원문은 어디에도 없다) · `discord_hint`(마스킹한 모양) · `discord_status`(`untested`/`ok`/`invalid`) · `discord_checked_at`(상태를 정한 시각) · `discord_tested_at`(마지막 시험 시도 — 시험 발송 간격 제한을 DB 에서 센다). 고객이 지워지면 함께 지운다(`ON DELETE CASCADE`). 웹훅은 서버가 나중에 POST 하는 비밀값이라 암호화 키는 서버 설정에서 파생한다(`customer_profile.py`). ★적용: 이 파일만 적용했다(2026-10-01) — 031 과 같은 이유.
 
+### 웹 브라우저 세션 `web_sessions` `[2026-10-04 · 044]`
+
+`[실측]` `044_web_sessions.sql` — HttpOnly 쿠키 세션. 칸: `session_hash`(쿠키 값의 SHA-256 — 원문은 어디에도 없다 · 기본키) · `tenant_id` · `customer_id`(→ `customers`) · `created_at` · `last_used_at` · `revoked_at`. ★만료 시각 · 종류(게스트/회원) · CSRF 토큰을 **저장하지 않는다** — 쓸 때 `web.*` 설정과 소셜 계정 유무로 계산하고 HMAC 으로 다시 만든다(관리 콘솔이 바꾼 값이 이미 만든 세션에도 곧 적용). 사용자 행을 가리키는 외래키라 게스트 정리가 이 행을 먼저 지운다. 계약 [rest-endpoints.md 「브라우저 세션 쿠키」](../external/rest-endpoints.md) · [D-CS-011](../decisions/D-CS-011-browser-session-cookie.md). 적용은 이 파일만 한 번(전체 실행기 아님 — 폴더에 다른 세션의 작업 중인 파일이 있다).
+
 ## 인덱스
 
 `[실측]` 조회 격리를 받치는 인덱스.

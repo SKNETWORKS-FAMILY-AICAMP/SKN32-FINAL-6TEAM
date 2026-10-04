@@ -150,6 +150,8 @@ def api(monkeypatch):
         cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM web_user_keys WHERE tenant_id=%s", (tenant,))     # 웹 사용자 키(025)
+        for table in ("web_sessions", "web_social_links"):                          # 쿠키 세션(044) · 소셜 계정(043) — 사용자 행을 가리킨다
+            cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s", (tenant,))
         for table in ("web_usage", "runtime_limits", "runtime_limit_state"):   # 웹 남용 방어(031)
             cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM trip_intakes WHERE tenant_id=%s", (tenant,))     # 계획 읽기(028, 원본·값은 따라 지워진다)

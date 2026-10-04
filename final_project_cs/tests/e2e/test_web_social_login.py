@@ -363,18 +363,19 @@ def test_a_browser_on_another_origin_may_call_delete(social):
     assert preflight.status_code == 200 and "DELETE" in preflight.headers["access-control-allow-methods"]
 
 
-def test_a_user_with_an_attached_account_is_not_swept_up_by_the_idle_key_cleanup(social, monkeypatch):
-    """빈 키 정리는 여행 없는 오래된 사용자를 지운다 — 소셜 계정이 붙은 사용자는 사용자 행을 가리키는 외래키 때문에 지워지지 않는다(계정으로 다시 들어올 수 있어야 한다)."""
+def test_a_user_with_an_attached_account_is_not_swept_up_by_the_guest_cleanup(social):
+    """게스트 정리는 로그인 안 한 오래된 사용자를 지운다 — 소셜 계정이 붙은 사용자는 회원이라 건드리지 않는다(계정으로 다시 들어오면 같은 사용자)."""
+    from app.modules.travel_ops.guest_cleanup import cleanup_guests
+
     client, tenant = social["client"], social["tenant"]
-    real = web_guard.values
-    monkeypatch.setattr(web_guard, "values", lambda t: {**real(t), "web.idle_key_cleanup_enabled": True, "web.idle_key_days": 30})
     _exchange(client, _flow(client, "sub-kate")["ticket"])
-    plain = _session(client)                                                                           # 계정이 안 붙은 빈 사용자 — 정리 대상이 맞는지 같이 본다
+    plain = _session(client)                                                                           # 계정이 안 붙은 사용자 — 정리 대상이 맞는지 같이 본다
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("UPDATE web_user_keys SET created_at = now() - interval '400 days', last_used_at = NULL WHERE tenant_id=%s", (tenant,))
+        cur.execute("UPDATE customers SET created_at = now() - interval '400 days' WHERE tenant_id=%s", (tenant,))
     with get_connection() as conn:
-        result = web_guard.cleanup_idle_keys(conn, tenant, now=datetime.now().astimezone())
-    assert result["customers"] == 2 and result["customers_deleted"] == 1 and result["customers_kept"] == 1, result     # 붙은 사용자는 남고 빈 사용자만 지워졌다
+        result = cleanup_guests(conn, tenant)
+    assert result["customers_deleted"] == 1 and result["candidates"] == 1, result                       # 붙은 사용자는 후보에도 안 든다 — 계정 없는 사용자만 지워졌다
     assert client.get("/v1/web/trips", headers=plain).status_code == 401
     signed = _exchange(client, _flow(client, "sub-kate")["ticket"]).json()
     assert signed["outcome"] == "signed_in"                                                            # 같은 사용자가 남아 있다
