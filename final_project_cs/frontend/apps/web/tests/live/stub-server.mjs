@@ -1,4 +1,4 @@
-// 테스트용 목 서버(mock server) — ★실제 서버가 아니다. triPilot 서버의 웹 API(`/v1/web/*`) 모양만 흉내 내어 화면 자동 시험에만 쓴다.
+// 테스트용 mock 서버 — ★실제 서버가 아니다. triPilot 서버의 웹 API(`/v1/web/*`) 모양만 흉내 내어 화면 자동 시험에만 쓴다.
 // 실제 앱(개발 서버 3100 · 배포)은 이 파일을 쓰지 않는다. 실제 서버 확인은 `tests/real/` 이 한다.
 //
 // ★Why a test mock server: registering on the real server sends a notice to the team's chat channel and leaves data behind.
@@ -35,6 +35,7 @@ const DEFAULTS = {
   // answer to choosing a proposal: "ok" | "conflict"
   choose: "ok",
   // chat: "answered" (server gives an answer) | "escalated_bare" (an old server: escalated with no answer)
+  //   | "summary" (a 「요약」 question gets the day's stops as the real server writes them — for the pictures of `scripts/guide-shots.mjs`)
   chat: "answered",
   // intake once read: "items" (has stops, ready) | "empty_plan" (nothing read, the customer asks us to plan)
   //   | "blocked" (has a stop whose place the server could not settle: not ready, one problem)
@@ -798,7 +799,9 @@ function chatReply(body) {
   // a question about where the customer is now: the real server's decision unit says so with `needs_location`
   //   (this test mock server only looks for 「여기서」). With a position it answers from there.
   const here = String(body.message).includes("여기서");
-  const answer = here && body.location ? `지금 계신 곳(${body.location.lat}, ${body.location.lng})에서 도보 12분이에요.`
+  const summary = scenario.chat === "summary" && /요약|Summarize/i.test(String(body.message));
+  const answer = summary ? ["2026-10-01", "1. 08:00 · 아침 식당", "2. 09:30 · 경복궁 관람", "3. 12:00 · 점심 식당"].join("\n")
+    : here && body.location ? `지금 계신 곳(${body.location.lat}, ${body.location.lng})에서 도보 12분이에요.`
     : here ? "현재 위치를 알려 주시면 지금 계신 곳에서 가는 길을 알려 드릴게요." : `서버 답: ${body.message}`;
   tripFailures = scenario.rereadFails;
   // the server records both sides; the answer's time can be a moment before the screen receives it (real server)

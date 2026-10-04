@@ -4,7 +4,7 @@ import { APP, KEY_STORAGE, KNOWN_SESSION, mockServer, SESSION_COOKIE, start, sta
 /**
  * `[2026-10-04 사용자 결정 · 서버 D-CS-011]` 브라우저는 키를 두지 않는다 — 서버가 HttpOnly 쿠키 세션을 주고, 쓰기에는 보안 토큰(X-CSRF-Token)이 따른다.
  * (이 파일은 옛 `keys.spec.ts`(토큰 보기·복사·교체)를 대신한다. 소셜 계정은 `social-login.spec.ts`.)
- * 목 서버 시험이다 — 화면이 무엇을 보내고 어떻게 반응하는지를 본다. 서버 응답 자체는 실서버 확인(`tests/real`)이 따로 본다.
+ * mock 서버 시험이다 — 화면이 무엇을 보내고 어떻게 반응하는지를 본다. 서버 응답 자체는 실서버 확인(`tests/real`)이 따로 본다.
  */
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
