@@ -127,7 +127,7 @@ def test_a_new_terms_version_asks_everyone_again(gate, monkeypatch):
 # ── ③ 기록은 추가만 ─────────────────────────────────────────────
 def test_the_record_is_append_only_and_keeps_the_text_hash_but_no_address(gate):
     _guest(gate)
-    gate["client"].headers["X-Forwarded-For"] = "203.0.113.77"
+    gate["client"].headers["X-Forwarded-For"] = "10.20.30.40"
     _agree_required(gate["client"])
     _post(gate["client"], [_item("location", True, SHA)])
     _post(gate["client"], [_item("location", False, SHA)])
@@ -141,7 +141,7 @@ def test_the_record_is_append_only_and_keeps_the_text_hash_but_no_address(gate):
         dump = "\n".join(row[0] for row in cur.fetchall())
         cur.execute("SELECT ip_hash FROM consent_events WHERE tenant_id=%s LIMIT 1", (gate["tenant"],))
         [(hashed,)] = cur.fetchall()
-    assert "203.0.113.77" not in dump and hashed and len(hashed) == 64                    # 주소 원문은 없고 해시만
+    assert "10.20.30.40" not in dump and hashed and len(hashed) == 64                    # 주소 원문은 없고 해시만
     assert {event[4] for event in _events(gate)} == {"guest"}
 
 
