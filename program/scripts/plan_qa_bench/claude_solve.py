@@ -16,7 +16,8 @@ LIMIT, WORKERS, EFFORT = int(opt('--limit', '0')), int(opt('--workers', '4')), o
 PROTO = '--proto' in args          # 정의 명시: 올라마 직접 짚기의 --proto 와 같은 문장을 질의문 끝에 덧붙인다
 TYPES = [t for t in opt('--types', '').split(',') if t]     # 이 유형의 문제만 푼다(예: compound_intent)
 RULE = '한 문장에 항목이 여럿 나오면 가장 먼저 언급된 항목 하나만 고른다. 「그거·거기·방금 바꾼 것」 같은 말은 앞 대화에서 가리키는 항목으로 푼다. 앞 대화가 없어 대상을 알 수 없으면 null 이다.'
-SUFFIX = ('_proto' if PROTO else '') + ('_' + '+'.join(TYPES) if TYPES else '')
+MULTI = '--multi' in args          # 둘 다 찾기(C): 번호 하나가 아니라 가리키는 항목 번호를 배열로 모두 답하게 한다
+SUFFIX = ('_proto' if PROTO else '') + ('_multi' if MULTI else '') + ('_' + '+'.join(TYPES) if TYPES else '')
 TAG = re.sub(r'[^A-Za-z0-9.]+', '_', MODEL)
 W = '월화수목금토일'
 SYS = '너는 여행 일정 질문 분류기다. 다른 말 없이 JSON 한 줄만 출력한다.'
@@ -36,9 +37,12 @@ def build(job, x):
     if x.get('history'):
         hist = '앞 대화:\n' + '\n'.join(f"{'고객' if h['role'] == 'customer' else '서비스'}: {h['text']}" for h in x['history']) + '\n\n'
     return (f"오늘은 {job['today']} 이다. 고객의 여행 일정(번호. 일차 날짜 시각 [종류] 제목 @ 장소):\n{plan}\n\n{hist}"
-            f"고객 질문: {x['q']}\n\n이 질문이 가리키는 일정 항목 번호 하나를 item 에 넣어라. "
-            "질문이 이 일정에 없는 장소·일반 정보·다른 식당·다른 명소를 묻는다면 null. 확실하지 않으면 null."
-            + (' ' + RULE if PROTO else '') + ' 출력 형식: {"item": 번호 또는 null} 한 줄만.')
+            + (f"고객 질문: {x['q']}\n\n이 질문이 가리키는 일정 항목 번호를 items 배열에 모두 넣어라. 항목이 하나면 하나만, 질문이 여러 항목을 말하면 말한 순서대로 전부 넣는다. "
+               "질문이 이 일정에 없는 장소·일반 정보·다른 식당·다른 명소를 묻는다면 빈 배열. 확실하지 않으면 빈 배열. 출력 형식: {\"items\": [번호, ...]} 한 줄만."
+               if MULTI else
+               f"고객 질문: {x['q']}\n\n이 질문이 가리키는 일정 항목 번호 하나를 item 에 넣어라. "
+               "질문이 이 일정에 없는 장소·일반 정보·다른 식당·다른 명소를 묻는다면 null. 확실하지 않으면 null."
+               + (' ' + RULE if PROTO else '') + ' 출력 형식: {"item": 번호 또는 null} 한 줄만.'))
 
 
 def call(text):
@@ -66,6 +70,9 @@ def parse(res, ids):
     if not m:
         return None, False
     try:
+        if MULTI:
+            v = json.loads(m.group(0)).get('items')
+            return ([i for i in v if i in ids] if isinstance(v, list) else []), True
         v = json.loads(m.group(0)).get('item')
     except Exception:  # noqa: BLE001
         return None, False
@@ -86,7 +93,7 @@ for name in SETS:
         res = call(build(job, qs[k]))
         pick, ok = parse(res.get('result'), ids)
         u = res.get('usage') or {}
-        return k, {'pick': pick, 'parsed': ok, 'raw': (res.get('result') or '')[:200], 'error': res.get('error'),
+        return k, {'pick': (pick[0] if pick else None) if MULTI else pick, 'picks': pick if MULTI else None, 'parsed': ok, 'raw': (res.get('result') or '')[:200], 'error': res.get('error'),
                    'cost': res.get('total_cost_usd'), 'ms': res.get('duration_ms'),
                    'in': (u.get('input_tokens') or 0) + (u.get('cache_creation_input_tokens') or 0) + (u.get('cache_read_input_tokens') or 0), 'out': u.get('output_tokens')}
 
