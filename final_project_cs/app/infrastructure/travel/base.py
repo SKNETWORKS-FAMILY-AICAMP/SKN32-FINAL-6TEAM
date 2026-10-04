@@ -492,11 +492,13 @@ def build_travel_sources(settings: Any) -> TravelSources:
     #   둘이 보는 것이 다르다 — 시내 사고·행사·집회는 UTIC 가 본체다.
     traffic_sources: list[Any] = []
     route_event_sources: list[Any] = []
+    its: Any = None
     # ★ITS 는 공공데이터포털 공통 키가 아니라 **ITS 가 발급한 키**를 쓴다.
     its_key = getattr(settings, "its_api_key", "") or ""
     if its_key:
         from .its_traffic import ItsTrafficEvents
-        traffic_sources.append(ItsTrafficEvents(service_key=its_key, limiter=limiter, cache=cache))
+        its = ItsTrafficEvents(service_key=its_key, limiter=limiter, cache=cache)
+        traffic_sources.append(its)
     else:
         sources.unavailable["traffic_its"] = (
             "ACOP_ITS_API_KEY 가 비어 있다. ITS 국가교통정보센터(its.go.kr/opendata) 에서 "
@@ -510,8 +512,18 @@ def build_travel_sources(settings: Any) -> TravelSources:
         utic = UticIncidents(service_key=utic_key, limiter=limiter, cache=cache)
         traffic_sources.append(utic)
         # ★같은 레코드로 감시 루프의 **경로 사건**(도로 통제)도 답한다 — 요청은 캐시로 나눠 쓴다.
-        route_event_sources.append(UticRouteEvents(utic))
-    else:
+        road_events: Any = UticRouteEvents(utic)
+        if its is not None:
+            # ★`[2026-10-05]` 도로 사건은 UTIC(1차) + ITS(2차)를 **함께** 묻는다 — UTIC 키는 고정 IP 에 묶여 서버 이전·경유 장애 때 통째로 거절되고,
+            #   그 전엔 경로 사건이 곧바로 치명이 됐다(결정 15 의 대체가 이 자리에 없었다). 둘 다 못 읽을 때만 치명.
+            from .its_traffic import ItsRouteEvents
+            from .subway_notice import AlternateRouteEvents
+            road_events = AlternateRouteEvents(road_events, ItsRouteEvents(its))
+        route_event_sources.append(road_events)
+    elif its is not None:
+        from .its_traffic import ItsRouteEvents
+        route_event_sources.append(ItsRouteEvents(its))        # ★UTIC 키가 없어도 ITS 가 도로 사건에 답한다
+    if not utic_key:
         sources.unavailable["traffic_utic"] = (
             f"ACOP_UTIC_API_KEY_{2 if proxied else 1} 가 비어 있다 — "
             f"{'서버 경유' if proxied else '바로 부르는'} 길의 IP 에 등록된 키가 필요하다.")

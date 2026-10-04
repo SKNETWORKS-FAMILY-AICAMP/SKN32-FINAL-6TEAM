@@ -200,5 +200,37 @@ class CompositeRouteEvents:
         return found
 
 
-__all__ = ["ACTIVE_HOURS", "CompositeRouteEvents", "ENDPOINT", "SubwayNotices", "SubwayRouteEvents",
+class AlternateRouteEvents:
+    """**같은 대상**을 1차·2차 두 소스가 맡을 때(도로: UTIC + ITS) — 결정 15 의 「1차가 안 되면 대체로」 `[2026-10-05]`.
+
+    ★둘 다 물어 **합친다**(합집합 · 1차가 겹치면 1차 값). 둘은 서로 다른 사건을 가진다(UTIC = 시내 사고·집회 · ITS = 도시고속도로·국도).
+    ★한쪽만 못 읽으면 읽은 쪽 값으로 답한다 — 그 사실을 `degraded`(못 읽은 소스 이름)에 남긴다(조용히 넘기지 않는다 · 소스의 `misses` 에도 이유가 있다).
+      읽은 쪽이 비어 있으면 「사건 없음」은 **그 소스 기준**이다.
+    ★둘 다 못 읽으면 `None` — 치명(결정 15).
+    """
+
+    def __init__(self, primary: Any, secondary: Any) -> None:
+        self.primary, self.secondary = primary, secondary
+        self.name = f"{getattr(primary, 'name', 'primary')}|{getattr(secondary, 'name', 'secondary')}"
+        self.degraded: list[str] = []
+
+    def unsupported(self, targets: list[str]) -> list[str]:
+        mine = set(self.primary.unsupported(targets)) & set(self.secondary.unsupported(targets))
+        return [target for target in targets if target in mine]
+
+    @staticmethod
+    def _ask(part: Any, targets: list[str], at: datetime | None) -> dict[str, dict[str, Any]] | None:
+        return part.affecting(targets) if at is None else part.affecting(targets, at)
+
+    def affecting(self, targets: list[str], at: datetime | None = None) -> dict[str, dict[str, Any]] | None:
+        got_primary = self._ask(self.primary, targets, at)
+        got_secondary = self._ask(self.secondary, targets, at)
+        self.degraded = [getattr(part, "name", "source") for part, got in
+                         ((self.primary, got_primary), (self.secondary, got_secondary)) if got is None]
+        if got_primary is None and got_secondary is None:
+            return None
+        return {**(got_secondary or {}), **(got_primary or {})}
+
+
+__all__ = ["ACTIVE_HOURS", "AlternateRouteEvents", "CompositeRouteEvents", "ENDPOINT", "SubwayNotices", "SubwayRouteEvents",
            "is_nonstop_start", "mentions_station"]
