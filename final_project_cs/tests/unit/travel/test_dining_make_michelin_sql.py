@@ -1,4 +1,8 @@
-"""make_michelin_sql — 이름이 같을 때만 잇고, 다른 이름은 주소로 맞춘 별칭만 잇는다."""
+"""make_michelin_sql — 이름이 같을 때만 잇고, 다른 이름은 주소로 맞춘 별칭만 잇는다.
+
+데이터 파일을 읽는 시험은 파일이 없으면 건너뛴다. 데이터는 git 밖(datasets/dining/processed)에 있어
+CI 에는 없다 — 팀 드라이브에서 받은 PC 에서만 돈다.
+"""
 from __future__ import annotations
 
 import importlib.util
@@ -30,8 +34,15 @@ def test_주소가_다른_오레노_라멘은_별칭에_없다(mm):
     assert "오레노 라멘" not in mm.ALIAS
 
 
+def _need(*paths: str) -> None:
+    missing = [p for p in paths if not os.path.exists(p)]
+    if missing:
+        pytest.skip(f"데이터 없음(git 밖): {os.path.basename(missing[0])}")
+
+
 def test_목록은_가이드_서울_180곳(mm):
     import csv
+    _need(mm.LIST)
     rows = list(csv.DictReader(open(mm.LIST, encoding="utf-8")))
     assert len(rows) == 180
     assert {r["등급"] for r in rows} == {"3스타", "2스타", "1스타", "빕 구르망", "셀렉티드"}
@@ -63,6 +74,7 @@ def test_편의시설은_표시가_있는_것만_속성으로(mm):
 def test_모은_가게는_목록의_나머지_145곳(mm):
     import csv
     import json
+    _need(mm.FACTS, mm.LIST)
     facts = [json.loads(line) for line in open(mm.FACTS, encoding="utf-8")]
     names = {r["상호"] for r in csv.DictReader(open(mm.LIST, encoding="utf-8"))}
     assert len(facts) == 145 and {f["상호"] for f in facts} <= names
