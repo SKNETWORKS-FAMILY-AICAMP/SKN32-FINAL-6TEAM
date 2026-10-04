@@ -105,7 +105,7 @@ class TravelSource:
             self._limiter.acquire(self.name)
             return True
         except RateLimited as exc:
-            self._miss("rate_limited", f"{exc.wait_seconds:.1f}s remaining")
+            self._miss(getattr(exc, "reason", "rate_limited"), f"{exc.wait_seconds:.1f}s remaining")
             # ★`[2026-09-28]` 얼마나 기다리면 되는지 남긴다 — 위에서 「잠시 뒤 다시」를 초 단위로 말할 수 있게
             self.last_wait_seconds = exc.wait_seconds
             return False
@@ -114,6 +114,11 @@ class TravelSource:
         """★`None` 을 돌려주기 **전에** 반드시 부른다. 이유 없는 모름은 못 고친다."""
         self.misses[reason] += 1
         logger.warning("travel source miss: %s", SourceMiss(self.name, reason, detail))
+        # ★`[2026-10-05]` 한도 때문에 **안 부른** 것(`rate_limited` · `budget_*`)이 아니라 **부른 뒤** 쓸 수 있는 답을 못 받은 것만 DB 에 실패로 센다(키별 여유 확인 — `call_budget.py`)
+        if reason not in _NOT_A_CALL_FAILURE:
+            count = getattr(self._limiter, "record_failure", None)
+            if count is not None:
+                count(self.name)
 
     def _fetch_json(self, url: str, params: dict[str, Any]) -> dict[str, Any] | None:
         """읽고, **본문까지 검사하고**, 실패면 `None`.
@@ -365,6 +370,17 @@ def apply_outbound_proxy(sources: TravelSources, *, url: str, names: str) -> str
                 source._proxy = url
     return None
 
+def _with_db_budget(limiter: Any, limits: dict[str, int], monthly: dict[str, int], names: list[str], *,
+                    on_db_error: str = "allow") -> Any:
+    """안쪽 제한기에 **DB 예산**을 얹는다 — 본체는 `source_budget.with_db_budget`(한도를 모르는 소스는 세지 않는다)."""
+    from .source_budget import with_db_budget
+
+    return with_db_budget(limiter, limits, monthly, names, on_db_error=on_db_error)
+
+
+#: 한도 때문에 부르지 않은 이유 — 부른 뒤의 실패가 아니므로 DB 실패 수에 안 센다(거절 수로 센다)
+_NOT_A_CALL_FAILURE = frozenset({"rate_limited", "budget_exhausted", "budget_unavailable"})
+
 
 def build_travel_sources(settings: Any) -> TravelSources:
     """설정을 보고 붙일 수 있는 것만 붙인다.
@@ -392,6 +408,10 @@ def build_travel_sources(settings: Any) -> TravelSources:
         intervals={name: interval_for(per_day, burst=bursts[name]) for name, per_day in limits.items()},
         bursts=bursts,
         max_wait_seconds=float(getattr(settings, "rate_max_wait_seconds", 5.0)))
+    if guardrails.get("travel.source_budget_shared"):
+        limiter = _with_db_budget(limiter, limits, getattr(settings, "source_monthly_limits", lambda: {})(),
+                                  list(guardrails.get("travel.source_budget_sources") or []),
+                                  on_db_error=str(guardrails.get("travel.source_budget_on_db_error") or "allow"))
     ttl = float(guardrails.get("travel.source_cache_seconds") or 0)
     if ttl > 0 and guardrails.get("travel.source_cache_shared"):
         # ★`[2026-10-03]` 프로세스를 건너 공유한다 — 일꾼은 회차마다 새 프로세스라 메모리 캐시는 틱 사이에 비었다. DB 가 안 되면 메모리로 돌아간다(`DbResponseCache`).
