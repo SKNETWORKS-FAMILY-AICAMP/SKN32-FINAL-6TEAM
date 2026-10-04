@@ -191,17 +191,20 @@ def fold_case(case, *, task_id, basis, case_id=None):
                   "confidence": CONF.get(grade, 0.2), "observed_at": basis["decided_at"]})
 
     # ── answer. to_answer 경고만 문장에 싣는다. 구간마다 [leg_id] 표식(◆10 대비)
-    seen, lines = set(), [f"[{case.get('id')}] 판정 {SAY[verdict]}({grade}) — {case.get('reason', '')}"]
+    # ☆`[2026-10-01 83 E3 · 86]` 문장에는 등급(확정·추정·근거없음)을 싣지 않는다 — 9/22 출력 원칙(등급표는 밖으로 안 낸다 ·
+    #   추정 딱지는 여유값 +@분으로 대체). 앞 판은 「판정 가능(추정) — 예정 10:11 +@10분」처럼 등급이 그대로 나갔다.
+    #   등급은 봉투(evidence·decisions 의 grade · confidence)에 그대로 남는다 — 루프·로그용.
+    seen, lines = set(), [f"[{case.get('id')}] 판정 {SAY[verdict]} — {case.get('reason', '')}"]
     if case.get("relief"):
         lines.append(f"완화 조건: {case['relief']}")
     for i, lg in enumerate(legs, 1):
         lid = _leg_id(lg, i)
         t = f"[{lid}] {lg.get('label', '')} {SAY[VERDICT.get(lg.get('verdict'), 'unknown')]}" \
-            f"({lg.get('grade')}) — 도착 {_fmt(lg.get('arrive_min'))}"
+            f" — 도착 {_fmt(lg.get('arrive_min'))}"
         lines.append(t)
     if tx.get("verdict") == "feasible":
         lines.append(f"[{(with_ev or ['L1'])[-1]}] 택시 대안 {_fmt(tx.get('depart_min'))} 출발 → 도착 {_fmt(tx.get('arrive_min'))} · "
-                     f"{tx.get('reason', '')} ({tx.get('grade')})")
+                     f"{tx.get('reason', '')}")
     for w in warn_all + case_w:
         if w.get("to_answer") and w["code"] not in seen:
             seen.add(w["code"])

@@ -84,7 +84,8 @@ from .bus import BusRoutes                                              # noqa: 
 from .bus_profile import BusSegProfile, worst_not_before_best, board_caps, last_pass_early  # noqa: E402
 from .geo import StationCoords, meters                                  # noqa: E402
 from .exits import StationExits                                         # noqa: E402
-from .candidates import CandidateGraph                                  # noqa: E402
+from .candidates import (CandidateGraph, MixedGenerator, interleave, mix_rule, ride_estimator,  # noqa: E402
+                         MIX_MAX_PROPOSED, MIX_CUTS_PER_ROUTE_PROPOSED)
 from .car import CarGraph, CarService, RouterDown, make_router          # noqa: E402
 from .congestion import Congestion                                       # noqa: E402
 from .bike import (BikeStations, BikeLive, BikeRouter,                  # noqa: E402
@@ -985,8 +986,13 @@ class Verifier:
              if self.bike_router and self.bike_router.available() else None)
         if r:
             dist, basis = r["distance_m"], f"보행망 {r['basis']}"
+            note = ""
+            if r.get("optimistic"):                    # 길 밖 접근 구간이 길어 낙관적일 수 있다 — 직선×계수와 큰 쪽(2026-10-04)
+                factor = B["station_walk_detour"]["value"]
+                dist = max(dist, straight * factor)
+                note = f" · ★길까지 {r.get('quality', {}).get('access_max_m', 0):.0f}m 떨어져 낙관 가능 — 직선×{factor:g} 과 큰 쪽"
             ev = {"source_type": "db", "source_id": r["source_id"], "grade": "추정", "observed_at": None,
-                  "claim": f"도보 {dist:,.0f}m (직선 {straight:,.0f}m · {basis})"}
+                  "claim": f"도보 {dist:,.0f}m (직선 {straight:,.0f}m · {basis}{note})"}
         else:
             factor = B["station_walk_detour"]["value"]
             dist, basis = straight * factor, f"직선×{factor:g}"
@@ -1783,7 +1789,9 @@ class Verifier:
     # ── 다목적 후보 (규칙 v0.5 · 20번 방) ────────────────────────────────
     MULTI_STRIP = ("multi", "expect", "expect_candidates_min", "expect_criteria", "expect_candidate_legs",
                    "expect_candidate_arrive", "expect_tie", "expect_tie_axes", "expect_feasible_max",
-                   "expect_no_line_feasible", "note")
+                   "expect_no_line_feasible", "expect_mixed_min", "expect_mixed_max", "expect_dropped_why", "note")
+    #: (87) 역 기준 혼합 후보를 판정에 넣는 개수(추정 소요 순) — 회귀·CLI 용 opt-in(multi.mixed) 이라 성능 상한만
+    MIX_VERIFY_MAX = 3
 
     def verify_multi(self, case):
         """`multi: {from, to}` 케이스 — 후보를 만들고 **후보마다 verify_case 를 그대로** 돌린다.
@@ -1864,6 +1872,54 @@ class Verifier:
                          "fallback_edges": [], "walk_in": 0, "walk_out": 0})
             ev.append(self._ev_rule("bike.ddareungi.multi_후보", "추정"))
 
+        # ☆`[2026-10-01 87]` 지하철+버스 혼합(환승 1회 · A 버스→지하철 · B 지하철→버스) — **multi.mixed 가 true 일 때만**(회귀·CLI ·
+        #   역 기준). 장소 기준 혼합은 plan.Planner._mixed 가 따로 만든다(plan 은 이 함수의 버스 섞인 후보를 안 쓴다 — 23 결정 4).
+        #   기본(없음)은 앞 판과 같은 후보 집합이다. 판정은 아래 같은 판정기 · 거르기(앞설 축 · 상한)는 판정 뒤.
+        mix_notes = []
+        if case["multi"].get("mixed") and self.bus and self.sc:
+            pa, pb = self.sc.resolve(origin, o_lines), self.sc.resolve(dest, d_lines)
+            if pa and pb and pa.get("lat") is not None and pb.get("lat") is not None:
+                radius = self.rv("alternatives", "정류장_반경_m")
+                wlim = self._walk_limit(party)
+                avoid = {x.get("line") for x in case.get("disruptions") or [] if x.get("kind") == "line_closed"}
+                skip = {(x.get("line"), x.get("station")) for x in case.get("disruptions") or []
+                        if x.get("kind") == "station_skip"}
+
+                ride = ride_estimator(self)
+                gen = MixedGenerator(cg, self.bus, self.sc, self.ex, radius_m=radius, near_m=radius,
+                                     cuts=mix_rule(self.R, "혼합_끊는_지점_최대", MIX_CUTS_PER_ROUTE_PROPOSED), tlim=tlim,
+                                     excluded=self.rv("bus", "route_type_제외") or [], ride_min=ride,
+                                     wayfinding=self.R["transfer"]["wayfinding_addition_min"]["value"] if first_visit else 0,
+                                     walk_speed=self.R["measured_baseline"]["kakao_walk_speed_mps"]["value"],
+                                     detour=self.R["transfer"]["stop_station_walk"]["detour_factor"]["value"],
+                                     avoid_lines=avoid, skip_at=skip)
+                # 끊는 역은 출발·도착 역에서 정류장 반경 밖만(역 기준 — 그 안이면 같은 역 앞에서 버스만 한 번 더 타는 꼴)
+                mc = interleave(gen.bus_to_subway(pa["lat"], pa["lng"], [(dest, d_lines, 0)], wlim, radius),
+                                gen.subway_to_bus([(origin, o_lines, 0)], pb["lat"], pb["lng"], wlim, radius))
+                n_ver = n_over = 0
+                for c in mc:
+                    if n_ver >= self.MIX_VERIFY_MAX:
+                        n_over += 1
+                        continue
+                    if not gen.materialize(c):
+                        continue
+                    n_ver += 1
+                    keep.append({"criteria": [f"혼합{c.shape}"], "legs": c.legs, "est_min": c.est_min,
+                                 "transfers": c.transfers, "walk_min": c.sub_walk_min, "gen_grade": c.grade,
+                                 "fallback_edges": c.fallback_edges,
+                                 "walk_in": c.walk_in_m or 0, "walk_out": c.walk_out_m or 0, "mixed": True,
+                                 "link_m": c.link_m})
+                if n_over:
+                    mix_notes.append({"criteria": ["혼합"], "legs": [], "est_min": None, "transfers": None,
+                                      "walk_min": None, "arrive_min": None,
+                                      "why": f"그 밖 혼합 후보 {n_over}개 — 혼합 판정 {self.MIX_VERIFY_MAX}개(추정 소요 순)를 넘어 판정하지 않음"})
+                air = sorted(set(gen.skipped_airport))
+                if air:
+                    mix_notes.append({"criteria": ["혼합B"], "legs": [], "est_min": None, "transfers": None,
+                                      "walk_min": None, "arrive_min": None, "code": "no_data",
+                                      "why": f"공항행 공항버스 {len(air)}노선({', '.join(air[:5])}{' …' if len(air) > 5 else ''}) — "
+                                             "공항행 시각 근거가 판정기에 없어(37) 혼합 후보로 만들지 않음(no_data)"})
+
         if not keep:
             res = self._finish(case, day_type, [], "unknown",
                                f"{origin}→{dest} 를 잇는 후보(지하철·버스 직행·자전거)를 만들지 못했다",
@@ -1895,7 +1951,9 @@ class Verifier:
                 bus_wait if any(l.get("mode") == "bus" for l in c["legs"])
                 else self.rv("tie_band", "지하철_불확실성_분"))
             walk_total = ((c["walk_min"] or 0) + wm(c["walk_in"]) + wm(c["walk_out"])
-                          + sum((l.walk_min or 0) for l in r.legs))       # 자전거 구간 안 도보(v0.7)
+                          + sum((l.walk_min or 0) for l in r.legs)        # 자전거 구간 안 도보(v0.7)
+                          + (math.ceil(c["link_m"] * self.R["transfer"]["stop_station_walk"]["detour_factor"]["value"]
+                                       / speed / 60) if c.get("mixed") else 0))   # 87 — 정류장↔역 환승 도보(판정기와 같은 식)
             out.append({"n": n, "criteria": c["criteria"], "legs": c["legs"],
                         "label": " → ".join(leg_txt(l) for l in c["legs"]),
                         "verdict": r.verdict, "reason": r.reason, "relief": r.relief, "grade": r.grade,
@@ -1904,7 +1962,7 @@ class Verifier:
                         "transfers": c["transfers"], "walk_min": round(walk_total, 1),
                         "est_min": c["est_min"], "gen_grade": c["gen_grade"],
                         "fallback_edges": c["fallback_edges"],
-                        "uncertainty_min": unc, "warnings": r.warnings, "legs_result": r.legs,
+                        "uncertainty_min": unc, "warnings": r.warnings, "legs_result": r.legs, "mixed": c.get("mixed", False),
                         "evidence": r.evidence, "tie_with": [],
                         # v0.8 — 후보마다의 밖 판(out)과 부품. arrive_min 은 예정, out 은 worst 기준 판정이다.
                         "code": r.code, "arrive_worst_min": r.arrive_worst_min, "margin_min": r.margin_min,
@@ -1932,6 +1990,42 @@ class Verifier:
         if len(kept) != len(out):
             ev.append(self._ev_rule("candidates.버스_직행_최대", "추정"))
         out = kept
+        # 87 — 혼합은 **지하철만·버스만(성립) 후보보다 소요·환승·도보 중 하나라도 앞설 때만** 남긴다. 뒤지거나 성립이 아니면
+        #   dropped_candidates(이유) · 남은 혼합이 상한(candidates.혼합_최대 · 변경안)을 넘으면 추정 소요 순으로 자르고 dropped.
+        if any(c.get("mixed") for c in out) or mix_notes:
+            base_l = [c for c in out if not c.get("mixed") and c["verdict"] == "feasible" and c["arrive_min"] is not None
+                      and not any(l.get("mode") == "bike" for l in c["legs"])]
+            # 소요는 **요청 출발(now)부터** 도착까지 — 후보의 depart_min 은 접근 도보 뒤라 그걸로 빼면 도보 긴 후보가 유리해진다
+            bst = ((min(c["arrive_min"] - now for c in base_l), min(c["transfers"] for c in base_l),
+                    min(c["walk_min"] for c in base_l)) if base_l else None)
+            mmax = mix_rule(self.R, "혼합_최대", MIX_MAX_PROPOSED)
+            ratio = C["허용_소요_배수"]["value"]
+            kept2, nmix = [], 0
+            for c in out:
+                if not c.get("mixed"):
+                    kept2.append(c)
+                    continue
+                d0 = {"criteria": c["criteria"], "legs": c["legs"], "est_min": c["est_min"], "transfers": c["transfers"],
+                      "walk_min": c["walk_min"], "arrive_min": c["arrive_min"]}
+                if c["verdict"] != "feasible" or c["arrive_min"] is None:
+                    dropped.append(dict(d0, why=f"혼합 — 성립 아님({c['verdict']}: {(c['reason'] or '')[:80]})"))
+                    continue
+                eta = c["arrive_min"] - now
+                if bst is not None and eta > bst[0] * ratio:
+                    dropped.append(dict(d0, why=f"혼합 — 소요 {eta}분이 가장 짧은 지하철만·버스만 후보 {bst[0]}분 × 허용_소요_배수 "
+                                                f"{ratio:g} 를 넘는다(환승·도보가 적어도 대표안이 아니다)"))
+                    continue
+                if bst is not None and not (eta < bst[0] or c["transfers"] < bst[1] or c["walk_min"] < bst[2]):
+                    dropped.append(dict(d0, why=f"혼합 — 지하철만·버스만 후보보다 앞서는 축 없음(소요 {eta} vs {bst[0]} · "
+                                                f"환승 {c['transfers']} vs {bst[1]} · 도보 {c['walk_min']} vs {bst[2]})"))
+                    continue
+                if nmix >= mmax:
+                    dropped.append(dict(d0, why=f"혼합 상한 {mmax}개(추정 소요 순)"))
+                    continue
+                nmix += 1
+                kept2.append(c)
+            dropped.extend(mix_notes)
+            out = kept2
         for i, c in enumerate(out, 1):          # 번호를 다시 매긴다 — 목록에 남은 순서로
             c["n"] = i
 
@@ -2721,6 +2815,8 @@ def build_verifier_for_cases(args, cases):
                 pre_legs += cand.legs
     all_legs = [l for c in cases for l in c.get("legs") or []] + pre_legs
     wanted = {(l["line"], nm) for l in all_legs if l.get("line") for nm in (l["from"], l["to"])}
+    # 87 — 혼합 후보(multi.mixed)는 끊는 역이 어디일지 미리 모른다 → 그런 케이스가 있으면 시간표를 통째로 올린다(런타임과 같다)
+    full_tt = any((c.get("multi") or {}).get("mixed") for c in cases)
     lines_of = collections.defaultdict(set)
     for ln, L in lo.doc["lines"].items():
         for st in L["stations"]:
@@ -2738,7 +2834,7 @@ def build_verifier_for_cases(args, cases):
                     for row in seg[:2]:
                         for _d, v in sc.stations_near(row["lat"], row["lng"], radius):
                             wanted |= {(ln, v["station_nm"]) for ln in lines_of[v["station_nm"]]}
-    tt = Timetable.load(args.timetable, wanted)
+    tt = Timetable.load(args.timetable, None if full_tt else wanted)
     # 혼잡도(v0.8) — 케이스에 나오는 (노선, 역)만 올린다. 파일이 없으면 가산 없음(근거없음).
     cg_data = None
     if args.congestion != ["none"]:
@@ -2969,6 +3065,19 @@ def check_expect(c, r, allow_router_down=False):
     if fm is not None and nf > fm:
         miss.append((c["id"], f"성립 후보 {fm}개 이하", f"{nf}개"))
         print(f"  >> MISS 성립 후보 {fm}개 이하 기대 / 실제 {nf}개")
+    # 87 — 혼합 후보 축: 실린 혼합 수 하한·상한 · 뺀 후보 이유에 들어 있어야 할 말
+    nm_ = sum(1 for x in cs if any(cr.startswith("혼합") for cr in x["criteria"]))
+    if c.get("expect_mixed_min") is not None and nm_ < c["expect_mixed_min"]:
+        miss.append((c["id"], f"혼합 후보 {c['expect_mixed_min']}개 이상", f"{nm_}개"))
+        print(f"  >> MISS 혼합 후보 {c['expect_mixed_min']}개 이상 기대 / 실제 {nm_}개")
+    if c.get("expect_mixed_max") is not None and nm_ > c["expect_mixed_max"]:
+        miss.append((c["id"], f"혼합 후보 {c['expect_mixed_max']}개 이하", f"{nm_}개"))
+        print(f"  >> MISS 혼합 후보 {c['expect_mixed_max']}개 이하 기대 / 실제 {nm_}개")
+    for w in c.get("expect_dropped_why") or []:
+        whys = [d.get("why") or "" for d in (r.dropped_candidates or [])]
+        if not any(w in x for x in whys):
+            miss.append((c["id"], f"뺀 후보 이유 '{w}'", str(whys)[:200]))
+            print(f"  >> MISS 뺀 후보 이유에 '{w}' 가 없다 — {str(whys)[:200]}")
     nl = c.get("expect_no_line_feasible")
     if nl:
         bad = [x["label"] for x in cs if x["verdict"] == "feasible"

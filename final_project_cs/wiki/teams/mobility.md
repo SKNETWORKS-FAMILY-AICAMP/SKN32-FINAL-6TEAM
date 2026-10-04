@@ -12,6 +12,8 @@ domain: travel
 
 `[2026-09-28]` **코드 위치가 폴더로 바뀌었다** — `app/modules/travel_ops/mobility/`(본체 `team.py`). 아래에 날짜와 함께 적힌 `mobility.py` 경로·줄 번호는 그때 기록이다. 두는 규칙은 [code-layout.md](code-layout.md).
 
+`[2026-10-04]` **이동 계산기에 서버 없는 길찾기가 붙었다** — 택시·자전거·장소 사이 도보는 GraphHopper 서버를 따로 띄우지 않고 저장소 안 도로 그래프(`datasets/mobility/processed/mobility/road_graph_v1`)를 파이썬이 직접 읽어 최단경로를 구한다(`app/modules/travel_ops/mobility/engine/graph_router.py`). 서비스 런타임은 전엔 택시 서비스를 한 번도 끼우지 않아 택시 대안이 늘 「소요 근거없음」이었는데, 이제 막차 뒤 구간의 택시 대안이 시간·요금 하한을 싣는다. 끄는 법은 설정 `mobility_local_router=false`(`ACOP_MOBILITY_LOCAL_ROUTER`). 정확도·비용·한계·검증은 [리포트](../records/reports/2026-10-04_0400_이동_파이썬_길찾기_서버없이_리포트.md).
+
 ★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/mobility.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
 
 근거는 계획서 v11 §5. `[결정 2026-09-10]` **MVP Team 셋(Activity·Dining·Mobility) 중 하나다** — 5주차에 선제 조정 루프와 함께 붙는다(v11 §9-B).

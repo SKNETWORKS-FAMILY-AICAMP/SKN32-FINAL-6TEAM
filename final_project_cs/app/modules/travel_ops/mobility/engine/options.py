@@ -517,8 +517,10 @@ class TransferCar:
     @classmethod
     def load(cls, path=None):
         if path is None:
-            from .paths import PROCESSED
-            path = PROCESSED / "mobility" / "transfer_car_v1.json"
+            # ☆`[2026-10-04]` cli_processed() — 자료 폴더를 아무도 안 정했으면(시험마다 처음 상태로 초기화한다 · tests/conftest.py) 명령줄 관례로 찾는다.
+            #   PROCESSED 를 바로 읽으면 초기화된 뒤에는 없는 폴더를 가리켜, 표시 칸(transfer_car)이 조용히 빠졌다(test_core_routes_strips_display).
+            from .paths import cli_processed
+            path = cli_processed() / "mobility" / "transfer_car_v1.json"
         p = Path(path)
         if not p.exists():
             return None

@@ -148,7 +148,8 @@ class BikeRouter:
 
     @property
     def source_id(self):
-        return f"osm_bike_graph@{self.pbf_date}"
+        # ☆`[2026-10-04]` 파이썬 로컬 라우터는 자기 자료 식별자를 가진다(근거 칸이 GraphHopper 라고 거짓말하지 않게)
+        return getattr(self.router, "source_id", None) or f"osm_bike_graph@{self.pbf_date}"
 
     @property
     def url(self):
@@ -193,8 +194,12 @@ class BikeRouter:
             self.last_error = {"kind": "bad_response", "error": "음수 거리·시간"}
             return None
         out = {"distance_m": round(dist, 1),
-               "time_s": int(round(tms / 1000)), "basis": "graphhopper",
+               "time_s": int(round(tms / 1000)), "basis": getattr(self.router, "basis", "graphhopper"),
                "source_id": self.source_id}
+        q = p.get("quality")
+        if q:                                          # 로컬 길찾기가 낸 품질 표시(낙관 가능 · 접근 거리 · 큰길 비율)
+            out["quality"] = q
+            out["optimistic"] = bool(q.get("optimistic"))
         if self.record is not None:
             self.record[k] = {"distance_m": out["distance_m"], "time_s": out["time_s"],
                               "source_id": out["source_id"]}

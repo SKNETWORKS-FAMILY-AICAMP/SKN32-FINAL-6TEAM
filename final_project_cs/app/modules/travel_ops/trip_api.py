@@ -1718,6 +1718,20 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                              "rollback": payload.get("rollback"), "consent": bool(payload.get("consent")),
                              "consent_key": payload.get("consent_key"),
                              "at": at.isoformat()} for key, payload, status, at in rows]}
+    @router.get("/v1/web/trips/{trip_id}/route-shapes")
+    def web_route_shapes(trip_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-04]` 지도에 그릴 **경로선** — 이동 항목마다 GeoJSON LineString. 우리 도로 그래프(지도 원본 OSM)로 직접 계산해 내린다 —
+        외부 길찾기 API 를 부르지 않는다(`mobility/route_shape.py`). 그 사용자 본인의 여행만. 못 그린 구간은 직선 + `grade=근거없음` + `note`.
+        지도 원본 출처 표기(ODbL)를 `attribution` 으로 같이 준다 — 화면은 선을 그릴 때 보여야 한다."""
+        tenant, customer = who
+        store = TripStore(tenant)
+        with get_connection() as conn:
+            _trip_or_404(conn, store, trip_id, customer)
+            _trip, items = store.latest(conn, trip_id)
+        from .mobility.route_shape import shapes_for_items
+        return {"trip_id": str(trip_id), "shapes": shapes_for_items(items),
+                "attribution": "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)"}
+
 
     return router
 
