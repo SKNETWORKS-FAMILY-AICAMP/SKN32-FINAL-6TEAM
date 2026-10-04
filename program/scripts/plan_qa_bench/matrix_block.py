@@ -37,8 +37,8 @@ _DIRECT = [
     ('Gemma 4 26B-A4B Q4_K_M (올라마)', '25B/17GB · 활성 3.8B', '쓰던 서버 올라마', '약 11초', _pk_26),
     ('Gemma 4 12B (올라마)', '12B 밀집/7.6GB · 활성 11.9B', '쓰던 서버 올라마', '약 3.6초', _pk_g(M12)),
     ('Gemma 4 E4B QAT (올라마)', '유효 4B/6.1GB', '쓰던 서버 올라마', '약 1.3초', _pk_g(M)),
-    ('Codex luna 직접', '(외부 API)', 'Codex', '—', _pk_luna(False)),
-    ('Codex luna + 정의 직접', '(외부 API)', 'Codex', '—', _pk_luna(True)),
+    ('⚠ 공정 비교 아님 · 참고용: Codex luna 직접 — 세트 묶음 풀이', '(외부 API)', 'Codex', '—', _pk_luna(False)),
+    ('⚠ 공정 비교 아님 · 참고용: Codex luna + 정의 직접 — 세트 묶음 풀이', '(외부 API)', 'Codex', '—', _pk_luna(True)),
     ('Jev 직접 (유료)', '(외부 API)', 'TypeSafe API', '0.23초', _pk_jev),
     ('OpenJev 26B Q4_K_M', '26B/19GB · CC BY-NC', 'GPU+램 분할', '14초', lambda w: _pk_from_dec('openjev26b', w)),
     ('decider-chat Gemma4-31B bf16', '31B/62GB · 오프로드', '램+디스크 오프로드', '4.7초', lambda w: _pk_from_dec('decider31bl', w)),
@@ -61,8 +61,8 @@ _DIRECT = [
     ('JevK5-9B v0.3.3 Q8', '9B/9.5GB · Apache', 'llama.cpp + JevK5 런타임', '—', lambda w: _pk_from_dec('jevk59b', w)),
     ('Plumb-4B v5 Q8', '4B/4.5GB · Apache', 'llama.cpp + JevK5 런타임', '—', lambda w: _pk_from_dec('plumb4b', w)),
     ('decider-chat Qwen3.6-27B bf16', '27B/55GB · Apache', '램+디스크 오프로드', '4.9초', lambda w: _pk_from_dec('decider27ql', w)),
-    ('[기준선] Claude Opus 5.5 — 세트 묶음 풀이(Claude 하위 작업)', '클라우드 모델(로컬 아님)', 'Claude Code 하위 작업 · 세트 전체를 한 번에', '—', lambda w: G[w].get('claude-opus-5.5-묶음')),
-    ('[기준선] Claude Fable 5.1 — 세트 묶음 풀이(Claude 하위 작업)', '클라우드 모델(로컬 아님)', 'Claude Code 하위 작업 · 세트 전체를 한 번에', '—', lambda w: G[w].get('claude-fable-5.1-묶음')),
+    ('⚠ 공정 비교 아님 · 참고용 기준선: Claude Opus 5.5 — 세트 묶음 풀이 + 생각 설정 통제 불가(켜졌을 수 있음)', '클라우드 모델(로컬 아님)', 'Claude Code 하위 작업 · 세트 전체를 한 번에', '—', lambda w: G[w].get('claude-opus-5.5-묶음')),
+    ('⚠ 공정 비교 아님 · 참고용 기준선: Claude Fable 5.1 — 세트 묶음 풀이 + 생각 설정 통제 불가(켜졌을 수 있음)', '클라우드 모델(로컬 아님)', 'Claude Code 하위 작업 · 세트 전체를 한 번에', '—', lambda w: G[w].get('claude-fable-5.1-묶음')),
     ('Qwen3.8 27B (올라마)', '27B/17GB', '쓰던 서버 올라마', '약 45초', lambda w: G[w].get('qwen3.8:27b')),
     ('Decider-35B-A3B bf16', '35B/69GB · 활성 3B', '램+디스크 오프로드', '1.7초', lambda w: _pk_from_dec('decider35bl', w)),
     ('Nimble-9B-v3 Q8', '9B/9.5GB · CC BY-NC', 'llama.cpp', '1.4초', lambda w: _pk_from_dec('nimble9b', w)),
@@ -132,6 +132,7 @@ _hdr_sets = ' | '.join(['heavy(판정)', 'mix4', 'mix5', 'mix6', 'mix7'])
 M_OUT = ['# 모델·구성 × 시험 세트 행렬', '',
          f'생성: eval_final_all.py --matrix (mix8+mix9={tot_n}문제). 칸 = 정답 수/문제 수, 「—」= 그 세트에서 안 잼. ',
          '**개발 5세트**(heavy 판정 88·mix4 88·mix5 88·mix6 130·mix7 173)는 앞단 문턱·τ·게이트 문턱을 고른 세트라 **조합의 개발 칸 값은 낙관적**이다(직접 짚기는 고른 것이 없어 낙관 없음). **판정은 시험 세트 mix8·mix9 의 336문제**.',
+         '> **⚠ 공정 비교 아님 표시가 붙은 행**(Claude Opus 5.5 · Fable 5.1 · Codex 루나)은 **세트 전체를 한 번에 푼 묶음 풀이**이고 생각 설정을 통제하지 못했다(켜져 있었을 수 있다). 로컬 모델·조합은 **문제 하나씩·생각 끔·온도 0·번호만 JSON** 이다. 이 행들은 천장 참고용이며 **로컬과 같은 조건의 점수로 읽지 않는다**(§62·§62-2).', '',
          '「26B 대비」·「Jev 대비」= 짝지은 차이 %p [95% 구간] (그 줄만 맞음 : 기준만 맞음, 정확검정 p). 기준: Gemma 4 26B 직접(311/336) · Jev 직접(319/336).', '']
 
 # ---- 표 1: 직접 짚기
@@ -216,5 +217,8 @@ if _v26 is not None:
               f'**26B 보다 통계로 구분되게 낮은 구성**(p<0.05) {len(_lower_sig)}개:', '', '| 구성 | 합 | 26B 대비 %p [구간] (그 줄만 : 26B 만, p) |', '|---|---:|---|']
     for nm, s_, d, lo_, hi_, a, b, p in _lower_sig:
         M_OUT.append(f'| {nm} | {s_} | {d:+.1f} [{lo_:+.1f}, {hi_:+.1f}] ({a} : {b}, p={p:.3f}) |')
+M_OUT += ['', '> **⚠ 각주**: 「공정 비교 아님」 행은 묶음 풀이 + 생각 설정 통제 불가라 로컬(하나씩·생각 끔)과 같은 조건이 아니다. 같은 조건 비교(Claude 문제별 호출·로컬 생각 켬)는 아직 안 했다 `[안 해본 것]`.']
 open(argv0[argv0.index('--matrix') + 1], 'w', encoding='utf-8').write('\n'.join(M_OUT) + '\n')
+if '--export' in argv0:
+    exec(compile(open(os.path.join(HERE, 'export_block.py'), encoding='utf-8').read(), 'export_block', 'exec'))
 print('행렬 표 저장:', argv0[argv0.index('--matrix') + 1])
