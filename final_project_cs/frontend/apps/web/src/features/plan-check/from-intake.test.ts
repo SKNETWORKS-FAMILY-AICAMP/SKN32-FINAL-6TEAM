@@ -119,7 +119,7 @@ describe("the places the server weighed for one stop (its alternatives on the li
 
   it("maps the result with nothing locked, no details, no first alternative, and never 「changed since the last check」", () => {
     const result = resultOf({ ...view, check: { ready: false, problems: [], filled: [], items: 1, title: "10월 서울 여행", plan: { requested: false, start_date: null, days: null, party_size: null, preferences: "" } } });
-    expect(result.items[0]).toMatchObject({ locked: false, info: null, suggestion: null });
+    expect(result.items[0]).toMatchObject({ locked: false, booked: null, info: null, suggestion: null });
     expect(result).toMatchObject({ dirty: false, rechecking: null });
   });
 });

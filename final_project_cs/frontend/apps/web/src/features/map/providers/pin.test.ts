@@ -38,6 +38,14 @@ describe("where a numbered pin stands beside its coordinate", () => {
     expect(layoutPins(points.map((point) => ({ ...point, x: point.x + 3 })), AREA, first)).toEqual(first);
   });
 
+  it("brings a pushed-off pin back onto its coordinate once a side is free again", () => {
+    const stack = Array.from({ length: 6 }, (_, at) => ({ id: `p${at}`, x: 200, y: 150 }));
+    const crowded = layoutPins(stack, AREA);
+    expect(Object.values(crowded).some((slot) => slot.push > 0)).toBe(true);
+    const spread = layoutPins(stack.map((point, at) => ({ ...point, x: 40 + at * 60 })), AREA, crowded);            // the map was zoomed in: the stops are far apart now
+    expect(Object.values(spread).every((slot) => slot.push === 0)).toBe(true);
+  });
+
   it("keeps the bodies inside the map and out from under the bar over its top", () => {
     const slots = layoutPins([{ id: "a", x: 390, y: 70 }], AREA);                               // near the top-right corner
     const body = pinRect(390, 70, slots.a);

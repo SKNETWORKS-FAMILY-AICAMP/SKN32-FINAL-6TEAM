@@ -38,3 +38,15 @@
 .live :global(.leaflet-control-zoom a.leaflet-disabled) { opacity: .4; }
 @media (prefers-reduced-motion: reduce) { .live :global(.leaflet-control-zoom) { transition: none; } }
 
+
+/* `[2026-10-04 사용자 지시]` 「모든 일정 보기」 — 확대·축소 단추와 같은 둥근 단추. Leaflet 지도는 확대·축소 묶음 안에 같은 단추를 넣고, 구글·네이버 지도는 이 단추를 오른쪽에 둔다. */
+.fitButton {
+  position: absolute; right: 12px; z-index: 5; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; cursor: pointer;
+  border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface); color: var(--color-text);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 20%, transparent);
+  opacity: 0; pointer-events: none; transition: opacity .2s ease;
+}
+.live:hover .fitButton, .live:focus-within .fitButton, .live[data-awake] .fitButton { opacity: 1; pointer-events: auto; }
+.fitButton:hover { background: var(--color-soft); }
+.fitButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .fitButton { transition: none; } }

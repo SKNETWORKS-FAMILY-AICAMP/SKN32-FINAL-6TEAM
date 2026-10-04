@@ -20,7 +20,7 @@ import type { ReviewedIntakeView } from "@/lib/live/intake-review";
 import { getIntakeRouteShapes } from "@/lib/live/route-shapes";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
-import { rows, editsFor } from "./model";
+import { draftOf, editsFor, rows } from "./model";
 import { useIntakeEvents } from "./use-intake-events";
 import styles from "./intake-review.module.css";
 
@@ -184,6 +184,14 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     tripIssues={tripIssuesOf(view)}
     actions={view.review ? server.actions : {
       edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },
+      // `[2026-10-04]` Several stops' new times in ONE request (title · date · place stay as they are; an empty start leaves the start alone).
+      retime: async (changes) => {
+        const edits = changes.flatMap((change) => {
+          const row = rowOf(change.id);
+          return row ? editsFor(row, { ...draftOf(row), start: change.start || draftOf(row).start, end: change.end }) : [];
+        });
+        await send(edits);
+      },
       remove: async (id: string) => { const row = rowOf(id); if (row) await send([{ source_id: row.source.source_id, field: `items[${row.item.index}].removed`, value: true }]); },
       // A place by name: the server looks it up again and checks the plan (an alternative it weighed, or a typed name).
       replace: async (id, choice) => {

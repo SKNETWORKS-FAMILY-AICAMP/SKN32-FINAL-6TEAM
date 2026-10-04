@@ -178,6 +178,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
 
       return {
         update,
+        fit() { needsFit = true; fit(); },
         resize() {
           if (destroyed || !container.clientWidth || !container.clientHeight) return;
           const center = map.getCenter();

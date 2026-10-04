@@ -14,6 +14,7 @@ import {
 import { planCandidate, safePhotoUrl } from "./from-review";
 import type { PlaceInfo } from "./model";
 import type { AutoResult, PlaceChoice, PlanCheckActions } from "./plan-check";
+import { retimeEdits } from "./retime-edits";
 
 /** How many alternatives get their photos fetched (A, B, C) — each is one call to the tourism photo service. */
 const PHOTO_CANDIDATES = 3;
@@ -122,6 +123,13 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const row = rows(plan()).find((entry) => entry.source.source_id === item.source_id && entry.item.index === item.index);
         if (!row) throw gone();
         const edits = editsFor(row, draft);
+        if (!edits.length) return;
+        await save(edits, true);
+        undoEdits.current = null;
+      },
+      // `[2026-10-04]` Several stops' new times in ONE request: the plan is saved and checked once, not once per stop.
+      retime: async (changes) => {
+        const edits = changes.flatMap((change) => retimeEdits(itemOf(change.id), change));
         if (!edits.length) return;
         await save(edits, true);
         undoEdits.current = null;

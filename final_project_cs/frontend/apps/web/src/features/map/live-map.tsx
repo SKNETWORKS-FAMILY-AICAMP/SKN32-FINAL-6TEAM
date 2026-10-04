@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui";
 import type { MapAdapter, MapController, MapViewProps } from "./model";
+import { FIT_ICON, FIT_LABEL } from "./providers/osm";
 import styles from "./map.module.css";
 
 export function MapUnavailable({ message }: { message: string }) {
   return <div className={styles.unavailable} role="alert"><strong>지도를 표시할 수 없어요</strong><p>{message}</p></div>;
 }
 
-export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, topInset }: MapViewProps & { adapter: MapAdapter; name: string }) {
+export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, topInset, fitButton = false }: MapViewProps & { adapter: MapAdapter; name: string; fitButton?: boolean }) {
   const container = useRef<HTMLDivElement>(null);
   const controller = useRef<MapController | null>(null);
   const latest = useRef({ points, selectedId, onSelect, lines, topInset });
@@ -70,6 +71,9 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, to
     <div className={styles.canvas} ref={container} aria-label={`${name} 지도`} />
     {state.status === "loading" && <div className={styles.overlay} role="status">지도를 불러오고 있어요…</div>}
     {state.status === "error" && <div className={styles.overlay} role="alert"><strong>지도를 불러오지 못했어요</strong><p>{state.message}</p><Button variant="secondary" onClick={() => { setState({ status: "loading" }); setAttempt((value) => value + 1); }}>지도 다시 불러오기</Button></div>}
+    {/* The Leaflet map carries this button in its own zoom group; the others get it here, at the right under whatever floats over the map. */}
+    {fitButton && state.status === "ready" && points.length > 1 && <button type="button" className={styles.fitButton} aria-label={FIT_LABEL} title={FIT_LABEL} style={{ top: `${(topInset ?? 0) + 12}px` }}
+      onClick={() => controller.current?.fit()} dangerouslySetInnerHTML={{ __html: FIT_ICON }} />}
     {state.status === "ready" && points.length === 0 && <p className={styles.emptyNotice}>표시할 장소 좌표가 없어요.</p>}
   </div>;
 }

@@ -46,8 +46,9 @@ export function layoutPins(points: readonly { id: string; x: number; y: number }
   const out: Record<string, PinSlot> = {};
   for (const point of points) {
     const candidates: PinSlot[] = [];
+    // A pin keeps the side it had while that still overlaps nothing — but only a side on its coordinate: a pushed-off body goes back as soon as a side is free.
     const before = previous[point.id];
-    if (before) candidates.push(before);
+    if (before && before.push === 0) candidates.push(before);
     for (const push of PUSHES) for (const side of SIDES) candidates.push({ side, push });
     let best = candidates[0], bestCost = Infinity;
     for (const slot of candidates) {

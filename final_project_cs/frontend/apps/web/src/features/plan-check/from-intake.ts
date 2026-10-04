@@ -92,7 +92,7 @@ export function resultOf(intake: IntakeView): PlanCheckView {
     const status = statusOf(row);
     const verdict: Verdict = status === "review" ? "review" : status === "edited" || checks.some((check) => check.result === "filled") ? "adjusted" : "keep";
     return { id: row.key, day: dayOf(row), date: draft.date, startsAt: draft.start, endsAt: draft.end, title: draft.title || place?.name || "",
-      place: draft.place, noPlace: draft.noPlace, coordinates: place?.coordinates ?? null, checks, verdict, locked: false, info: null, suggestion: null };
+      place: draft.place, noPlace: draft.noPlace, coordinates: place?.coordinates ?? null, checks, verdict, locked: false, booked: null, info: null, suggestion: null };
   });
   return { stage: "done", title: intake.check?.title ?? null, days, lines: readingOf(intake).lines.map((line) => ({ ...line })), items, moves: [], dirty: false, rechecking: null };
 }

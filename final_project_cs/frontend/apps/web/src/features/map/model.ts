@@ -51,6 +51,8 @@ export interface MapViewProps {
 
 export interface MapController {
   update(points: MapPoint[], selectedId?: string, lines?: MapLine[]): void;
+  /** `[2026-10-04 사용자 지시]` Back to the whole picture: the place and the zoom where every pin shows (what the map did when the pins first came). */
+  fit(): void;
   resize(): void;
   destroy(): void;
 }

@@ -6,8 +6,8 @@ import type { CheckRow, PlanCheckView, PlanItem, PlanLine, PlanMove } from "./mo
  */
 const row = (kind: CheckRow["kind"], result: CheckRow["result"], text: string): CheckRow => ({ kind, result, text });
 
-const stop = (fields: Omit<PlanItem, "locked" | "info" | "suggestion">, suggestion: string | null): PlanItem =>
-  ({ ...fields, locked: false, info: null, suggestion });
+const stop = (fields: Omit<PlanItem, "locked" | "booked" | "info" | "suggestion">, suggestion: string | null): PlanItem =>
+  ({ ...fields, locked: false, booked: null, info: null, suggestion });
 
 const items: PlanItem[] = [
   stop({ id: "a", day: 1, date: "2026-10-01", startsAt: "10:00", endsAt: "11:30", title: "경복궁", place: "경복궁", noPlace: false, coordinates: { lat: 37.5796, lng: 126.977 }, verdict: "keep",
@@ -23,10 +23,10 @@ const items: PlanItem[] = [
 ];
 
 const moves: PlanMove[] = [
-  { id: "a-b", fromId: "a", toId: "b", day: 1, departAt: "11:30", mode: "도보", summary: "12분 · 0.8km", verdict: "review",
+  { id: "a-b", fromId: "a", toId: "b", day: 1, departAt: "11:30", mode: "도보", summary: "12분 · 0.8km", minutes: 12, arriveAt: "11:42", slackMin: -42, estimated: false, verdict: "review",
     checks: [row("route", "warn", "올리브영 지점이 미정이라 가장 가까운 광화문점 기준이에요"), row("mode", "ok", "도보 12분 · 0.8km · 이 구간은 걷는 게 가장 빨라요"),
       row("arrival", "warn", "관람이 11:30에 끝나면 11:42 도착 · 일정보다 42분 늦어요")] },
-  { id: "b-c", fromId: "b", toId: "c", day: 1, departAt: "12:00", mode: "지하철", summary: "18분 · 1호선 2정거장", verdict: "keep",
+  { id: "b-c", fromId: "b", toId: "c", day: 1, departAt: "12:00", mode: "지하철", summary: "18분 · 1호선 2정거장", minutes: 18, arriveAt: "12:18", slackMin: 12, estimated: false, verdict: "keep",
     checks: [row("route", "ok", "종각역 → 종로5가역 · 1호선 2정거장"), row("mode", "ok", "지하철 18분(걷기 7분 포함) · 택시보다 시간이 일정해요"),
       row("arrival", "ok", "12:00에 나서면 12:18 도착 · 12분 여유")] },
 ];

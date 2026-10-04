@@ -59,6 +59,8 @@ export interface PlanItem {
   verdict: Verdict | null;
   /** Fixed by the customer: kept through re-planning and recommendations (mockup 「잠금」 — 「반드시 포함」). */
   locked: boolean;
+  /** `[2026-10-04]` The plan says the stop is booked (`true`), says it is not (`false`), or says nothing (`null`; also an older server). */
+  booked: boolean | null;
   info: PlaceInfo | null;
   /** The first alternative's name, said under the card's 「자동 추천」 — null when none is known. */
   suggestion: string | null;
@@ -92,6 +94,14 @@ export interface PlanMove {
   mode: string;
   /** One line, e.g. 「12분 · 0.8km」. */
   summary: string;
+  /** `[2026-10-04]` How many minutes the way takes, as the server counts it — null when it did not say. */
+  minutes: number | null;
+  /** `[2026-10-04]` "HH:MM" — arrive at, when leaving at `departAt`; "" when the server gave none. */
+  arriveAt: string;
+  /** `[2026-10-04]` Minutes to spare before the next stop starts (negative = arrives after it started) — null when not known. */
+  slackMin: number | null;
+  /** `[2026-10-04]` The time is a straight-line guess (`basis` estimate), not a timetable — said so on the screen instead of passing it off as exact. */
+  estimated: boolean;
   checks: CheckRow[];
   verdict: Verdict | null;
 }

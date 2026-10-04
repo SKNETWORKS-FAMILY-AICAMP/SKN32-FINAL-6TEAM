@@ -15,6 +15,9 @@ export const OSM_ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyri
   + ' · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener">지도 오류 신고</a>';
 
 const SEOUL = { lat: 37.5665, lng: 126.978 };
+export const FIT_LABEL = "모든 일정 보기";
+/** The four corners of a frame (lucide 「scan」): everything in view. */
+export const FIT_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>';
 
 export function createOsmAdapter(tileUrl: string): MapAdapter {
   return {
@@ -83,6 +86,26 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         } finally { programmatic = false; }
       }
 
+      // ★`[2026-10-04 사용자 지시]` One more button in the zoom group: every pin back in view, at the place and zoom the map first showed them.
+      //   ★Leaflet silently drops a new view while a zoom animation is running (`_animatingZoom`; `fitBounds` answers "done" without moving), so a press that comes a quarter
+      //   of a second after +/- would do nothing - it waits for the zoom to end and then fits.
+      function fitAll() {
+        userMoved = false; needsFit = true;
+        if ((map as unknown as { _animatingZoom?: boolean })._animatingZoom) { map.once("zoomend", () => { if (!destroyed) fit(); }); return; }
+        fit();
+      }
+      const zoomBox = container.querySelector<HTMLElement>(".leaflet-control-zoom");
+      if (zoomBox) {
+        const link = L.DomUtil.create("a", "leaflet-control-zoom-fit", zoomBox);
+        link.href = "#";
+        link.setAttribute("role", "button");
+        link.setAttribute("aria-label", FIT_LABEL);
+        link.title = FIT_LABEL;
+        link.innerHTML = FIT_ICON;
+        L.DomEvent.disableClickPropagation(link);
+        L.DomEvent.on(link, "click", (event) => { L.DomEvent.preventDefault(event); fitAll(); });
+      }
+
       function drawLines(nextLines: MapLine[]) {
         const key = linesKey(nextLines);
         if (key === previousLines) return;
@@ -145,6 +168,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
 
       return {
         update,
+        fit: fitAll,
         resize() {
           if (destroyed || !container.clientWidth || !container.clientHeight) return;
           map.invalidateSize();

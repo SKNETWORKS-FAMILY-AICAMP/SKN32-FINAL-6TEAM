@@ -390,3 +390,27 @@ button.time:focus-visible { outline: 2px solid var(--color-selected); outline-of
 .timeButtons { display: flex; grid-column: 1 / -1; gap: 8px; }
 .timeButtons > * { flex: 1; justify-content: center; }
 .timeEditor .editorError { grid-column: 1 / -1; }
+
+/* ★`[2026-10-04 사용자 지시]` 시간 고치기 — 시간을 누르면 카드 안에 열리는 편집기: 끌개(위로 끌면 일찍, 아래로 끌면 늦게) · 시작/끝 · −5분/+5분 · 앞뒤 일정 함께 밀기. */
+.timeEditor { display: grid; grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: end; margin: 0 12px 12px; padding-top: 10px; border-top: 1px solid var(--color-divider); }
+.timeGrip { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-subtle); color: var(--color-text); cursor: ns-resize; touch-action: none; user-select: none; }
+.timeGrip:active { background: var(--color-selected-soft); border-color: var(--color-selected); }
+.timeGrip:disabled { opacity: .4; cursor: not-allowed; }
+.timeGrip:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.timeSteps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; grid-column: 1 / -1; }
+.timeStep { min-height: 34px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 9px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12.5px; font-weight: 750; cursor: pointer; }
+.timeStep:disabled { opacity: .4; cursor: not-allowed; }
+.timeStep:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.timeRange { margin-left: auto; font-size: 11.5px; font-weight: 650; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.timePush { display: flex; align-items: center; gap: 8px; grid-column: 1 / -1; font-size: 12.5px; color: var(--color-text-secondary); }
+.timeNote { grid-column: 1 / -1; margin: 0; padding: 7px 10px; border-radius: 9px; background: var(--color-adjusted-soft); color: var(--color-adjusted); font-size: 12px; font-weight: 650; line-height: 1.5; }
+button.time[data-adjusted] { color: var(--color-adjusted); }
+/* 바꾼 시간의 「되돌리기」(수정·삭제 앞, 「확인 필요」가 나오는 자리) · 머리의 「시간 초기화」 */
+.undoTime, .resetTimes { display: inline-flex; flex: none; align-items: center; gap: 4px; min-height: 28px; padding: 0 9px; border: 1px solid var(--color-adjusted-border); border-radius: 999px; background: var(--color-surface); color: var(--color-adjusted); font: inherit; font-size: 11.5px; font-weight: 750; white-space: nowrap; cursor: pointer; }
+.undoTime[aria-disabled="true"] { opacity: .4; cursor: not-allowed; }
+.undoTime:focus-visible, .resetTimes:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.resetTimes { margin: 0 auto 0 8px; }
+/* 이동 줄 아래의 여유 — 비는 시간만큼 간격이 벌어지고, 15분 넘게 비면 한 번 연하게 적는다(늦으면 주황으로). */
+.moveCol { display: flex; flex-direction: column; min-width: 0; }
+.free { display: flex; align-items: center; margin: 0; padding: 0 10px; font-size: 11.5px; font-weight: 600; color: var(--color-faint); font-variant-numeric: tabular-nums; }
+.free[data-late] { color: var(--color-warning); font-weight: 750; }

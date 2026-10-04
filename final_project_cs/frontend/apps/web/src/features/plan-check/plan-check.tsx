@@ -2,7 +2,7 @@
 
 import { useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode, type TouchEvent } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, ChevronsDown, ChevronsRight, ChevronsUp, Pencil, Search, X } from "lucide-react";
+import { ArrowLeft, ChevronsDown, ChevronsRight, ChevronsUp, Pencil, Search, Undo2, X } from "lucide-react";
 import { DeviceFrame, HeaderSlot } from "@/components/layout/device-frame";
 import { TripMap } from "@/features/map";
 import { routeNotes, visibleShapes } from "@/features/map/route-lines";
@@ -12,13 +12,16 @@ import type { TripStop } from "@/features/trip/model";
 import type { Language, Translate } from "@/lib/i18n";
 import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
-import { draftOfItem, foundCount, isInstantRow, needs, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type LineFinding, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type ServerProgress, type TripIssue } from "./model";
+import { foundCount, isInstantRow, needs, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type LineFinding, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type ServerProgress, type TripIssue } from "./model";
 import { Act, HeadBadges, letter, reason, type ListFilter } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
+import { dayTimes, withTimes } from "./day-times";
 import { DayList, type RowContext } from "./plan-rows";
 import { ResultFooter, StopEditor, TripIssues, type Registration } from "./result-parts";
 import { useFollowScroll } from "./use-follow-scroll";
 import { usePullPastEnd } from "./use-pull-past-end";
+import { formatHm, moveStop, parseHm, type Retime } from "./time-plan";
+import { useTimeEdit } from "./use-time-edit";
 import { REVEAL_MS, useReveal } from "./use-reveal";
 import styles from "./plan-check.module.css";
 
@@ -67,6 +70,11 @@ export interface AutoResult {
 export interface PlanCheckActions {
   /** Save one stop's details as drafted (the server looks a typed place up again and checks the plan again). */
   edit?: (id: string, draft: ItemDraft) => Promise<void>;
+  /**
+   * `[2026-10-04]` Move several stops in time at once: each change is one stop's new start and end ("HH:MM"; `end` "" = no end time).
+   * All changes go to the server in ONE request, so the plan is saved and checked again once. A change that changes nothing is skipped.
+   */
+  retime?: (changes: { id: string; start: string; end: string }[]) => Promise<void>;
   /** Take one stop out. */
   remove?: (id: string) => Promise<void>;
   /** Answer a trip-wide detail. */
@@ -145,7 +153,9 @@ function ProgressBar({ view }: { view: PlanCheckView }) {
   const exact = progress(view);
   const value = Math.round(exact);
   // The line is as far as the points it has reached: point `i` of four sits at `i / 3` of the line (`stops`), and is reached when the line is that far.
-  const reached = (index: number) => view.stage === "done" || (index === 0 ? view.stage !== "received" : exact >= (index / (labels.length - 1)) * 100 - 0.05);
+  //   The last point is the screen having drawn everything (the stage 「정리 완료」), however far the server's own count says it is.
+  const last = labels.length - 1;
+  const reached = (index: number) => view.stage === "done" || (index === 0 ? view.stage !== "received" : index === last ? false : exact >= (index / last) * 100 - 0.05);
   const waitingAt = labels.findIndex((_, index) => !reached(index));
   // ★`[2026-10-03]` The server's "장소 3/14 · 광장시장" count comes while it reads, so the big bar says it too.
   const at = view.serverProgress ? serverProgressText(view.serverProgress, t) : null;
@@ -279,7 +289,7 @@ const COMPACT_BELOW = 190;
 /** The least the sheet can be dragged to: the handle and the buttons. */
 const SHEET_MIN = 104;
 
-interface Toast { text: string; sub?: string; undo?: boolean }
+interface Toast { text: string; sub?: string; undo?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void }
 
 type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes">;
 
@@ -334,8 +344,6 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   // `[2026-10-04]` Stops changed since the plan was last sent (and what each had been); stops marked for deletion (really taken out when the plan is sent again).
   const [changed, setChanged] = useState<Record<string, string>>({});
   const [removed, setRemoved] = useState<string[]>([]);
-  // The stop whose times are being edited in place (its time was pressed), and in which of the two lists.
-  const [timeAt, setTimeAt] = useState<{ list: "before" | "after"; id: string } | null>(null);
   const removedSet = useMemo(() => new Set(removed), [removed]);
   // `[2026-10-04 사용자]` 한 번 더 확인할 때 바뀐 곳만 확인 표시가 다시 하나씩 켜진다.
   const [replay, setReplay] = useState<{ ids: string[]; at: number } | null>(null);
@@ -369,7 +377,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   // ★A stop stands in both lists while a proposal is under the plan: what is open, and what is being edited, belongs to ONE of them — never both (opening the one out of sight would push the one in view).
   const setOpen = (id: string | null, list: "before" | "after" = "before") => setOpenAt(id === null ? null : { list, id });
   const closeOpen = (id: string) => setOpenAt((current) => current?.id === id ? null : current);
-  useEffect(() => { if (!previewing) { setOpenAt((current) => current?.list === "after" ? { ...current, list: "before" } : current); setTimeAt((current) => current?.list === "after" ? { ...current, list: "before" } : current); } }, [previewing]);
+  useEffect(() => { if (!previewing) { setOpenAt((current) => current?.list === "after" ? { ...current, list: "before" } : current); } }, [previewing]);
   /** The plan the sheet, the map and the buttons are about: the proposed one while it is in view. */
   const shown: PlanCheckView = previewing && side === "after" ? previewView! : view;
   const registered = Boolean(registration?.registeredHref);
@@ -427,6 +435,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
 
   /** ⑤ Open the change screen for one stop: the map shows it and its alternatives, the top bar becomes a search. */
   async function startChange(item: PlanItem) {
+    timeEdit.close();
     setOpen(item.id); setSelected(item.id); setChosenDay(item.day);
     if (sheet === "peek") setSheet("half");
     setQuery(""); setDetails(false);
@@ -525,18 +534,67 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     setRemoved((current) => current.filter((id) => id !== item.id));
     refocus(item.id, "delete");
   }
-  /** ★`[2026-10-04 사용자 지시]` Pressing the time of a stop changes it: start and end, saved like any other edit of the stop (the server checks the plan again). */
-  async function saveTime(item: PlanItem, start: string, end: string) {
-    const was = `${item.startsAt || t("시간 없음", "no time")}${item.endsAt ? `–${item.endsAt}` : ""}`;
+  // ★`[2026-10-04 사용자 지시]` The time at the left of a stop is changed in place (`useTimeEdit`): typed, dragged by the grip or stepped, the stops around it pushed along if the switch is on.
+  //   What it looked like when the screen opened is kept (`baseline`): a stop whose time differs has 「되돌리기」, and the head has 「시간 초기화」.
+  const baseline = useRef<Record<string, { start: string; end: string }>>({});
+  useEffect(() => {
+    if (done && view.items.length && !Object.keys(baseline.current).length) baseline.current = Object.fromEntries(view.items.map((item) => [item.id, { start: item.startsAt, end: item.endsAt }]));
+  }, [done, view.items]);
+  const adjustedIn = (plan: PlanCheckView | null) => new Set((plan?.items ?? []).filter((item) => {
+    const first = baseline.current[item.id];
+    return first !== undefined && (first.start !== item.startsAt || first.end !== item.endsAt);
+  }).map((item) => item.id));
+  const timesOf = (plan: PlanCheckView, id: string): Retime | null => {
+    const item = plan.items.find((entry) => entry.id === id);
+    const start = parseHm(item?.startsAt ?? "");
+    return item && start !== null ? { id, start, end: parseHm(item.endsAt) } : null;
+  };
+  /** Send a batch of new times - ONE request, however many stops move - and say what was done; the toast's 「되돌리기」 sends the old times back. */
+  async function sendTimes(list: "before" | "after", changes: Retime[], text: string, quiet = false): Promise<void> {
+    const plan = list === "after" && previewView ? previewView : view;
+    const was = changes.flatMap((change) => { const old = timesOf(plan, change.id); return old ? [old] : []; });
+    const title = (id: string) => plan.items.find((entry) => entry.id === id)?.title ?? id;
+    const clock = (change: Retime) => `${formatHm(change.start)}${change.end === null ? "" : `–${formatHm(change.end)}`}`;
     setWorking(true);
     try {
-      if (previewing && side === "after") await settle();
-      await actions.edit!(item.id, { ...draftOfItem(item), start, end });
-      markChanged(item.id, was);
+      if (list === "after" && previewing) await settle();
+      await actions.retime!(changes.map((change) => ({ id: change.id, start: formatHm(change.start), end: change.end === null ? "" : formatHm(change.end) })));
+      for (const change of changes) { const old = was.find((entry) => entry.id === change.id); markChanged(change.id, old ? clock(old) : ""); }
       leaveRecommended();
-      setTimeAt(null);
-      setToast({ text: t("시간을 바꿨어요", "Changed the time"), sub: t("서버가 일정과 앞뒤 이동을 다시 확인했어요", "The server checked the plan and the moves either side again") });
+      setToast({
+        text, sub: changes.slice(0, 2).map((change) => `${title(change.id)} → ${clock(change)}`).join(" · ") + (changes.length > 2 ? t(` 외 ${changes.length - 2}곳`, ` and ${changes.length - 2} more`) : ""),
+        revert: quiet || !was.length ? undefined : () => { setToast(null); void sendTimes("before", was, t("시간을 되돌렸어요", "Put the times back"), true).catch((error: unknown) => setToast({ text: reason(error) })); },
+      });
     } finally { setWorking(false); }
+  }
+  const timeEdit = useTimeEdit({
+    views: { before: view, after: previewing ? previewView : null },
+    commit: (list, changes) => sendTimes(list, changes, t(`${changes.length}개 일정의 시간을 바꿨어요`, `Changed the time of ${changes.length} stop${changes.length > 1 ? "s" : ""}`)),
+  });
+  /** One stop back to the time it had when the screen opened (the stops around it are pushed only if that is needed to make room). */
+  function revertTime(item: PlanItem) {
+    const first = baseline.current[item.id];
+    const list = previewing && side === "after" ? "after" : "before";
+    const plan = list === "after" && previewView ? previewView : view;
+    const times = dayTimes(plan, item.day);
+    const index = times.indexOf.get(item.id);
+    const start = parseHm(first?.start ?? "");
+    if (!first || index === undefined || start === null) return;
+    const end = parseHm(first.end);
+    const moved = moveStop(times.stops, times.legs, index, start, { push: true, step: 1 }).changes.filter((change) => change.id !== item.id);
+    void sendTimes(list, [...moved, { id: item.id, start, end }], t(`${item.title} 시간을 처음으로 되돌렸어요`, `Put the time of ${item.title} back`), true).catch((error: unknown) => setToast({ text: reason(error) }));
+  }
+  /** Every stop whose time was changed back to the time it had when the screen opened, in one request. */
+  function resetTimes() {
+    const list = previewing && side === "after" ? "after" : "before";
+    const plan = list === "after" && previewView ? previewView : view;
+    const changes = [...adjustedIn(plan)].flatMap((id): Retime[] => {
+      const first = baseline.current[id];
+      const start = parseHm(first?.start ?? "");
+      return first && start !== null ? [{ id, start, end: parseHm(first.end) }] : [];
+    });
+    if (!changes.length) return;
+    void sendTimes(list, changes, t("시간을 모두 처음으로 되돌렸어요", "Put every time back"), true).catch((error: unknown) => setToast({ text: reason(error) }));
   }
   /** What the recommendation did or would do, as the line under the toast title. */
   const changesLine = (outcome: AutoResult) => outcome.changes.slice(0, 2).join(" · ") + (outcome.changes.length > 2 ? t(` 외 ${outcome.changes.length - 2}곳`, ` and ${outcome.changes.length - 2} more`) : "")
@@ -785,6 +843,16 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   /** The rows of a list, for the plan as it is and for the proposed one. */
   const visibleIn = (changedIds: ReadonlySet<string>) => (entry: ReturnType<typeof timeline>[number]) =>
     !filtering || (filter === "needs" ? (entry.type === "item" ? entry.item.verdict : entry.move.verdict) === "review" : entry.type === "item" && changedIds.has(entry.item.id));
+  /** What the time editor shows, for the list it is open on. */
+  const timeUi = (list: "before" | "after"): RowContext["time"] => {
+    const { edit, preview } = timeEdit;
+    if (!edit || edit.list !== list || !preview) return null;
+    return {
+      id: edit.id, start: edit.start, end: edit.end, push: edit.push, busy: timeEdit.busy, problem: preview.problem,
+      range: { min: formatHm(preview.range.min), max: formatHm(preview.range.max) }, along: preview.along, count: preview.changes.length,
+      setStart: timeEdit.setStart, setEnd: timeEdit.setEnd, setPush: timeEdit.setPush, step: timeEdit.step, apply: () => void timeEdit.apply(), cancel: timeEdit.close, grip: timeEdit.grip,
+    };
+  };
   const contextFor = (was: Readonly<Record<string, string>>, list: "before" | "after"): RowContext => ({
     done, open: openAt?.list === list ? openAt.id : null, selected, frozen, actions, explain, rechecking: null, changed: new Set(Object.keys(was)), was, removed: removedSet, rowsFor,
     prefix: list === "after" ? "after-" : "",
@@ -795,16 +863,21 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     onRestore: restore,
     onLock: lock,
     onRecommend: recommend,
-    timeEditing: timeAt?.list === list ? timeAt.id : null,
-    onEditTime: (item) => setTimeAt((current) => current?.id === item.id && current.list === list ? null : { list, id: item.id }),
-    onSaveTime: saveTime,
-    onCancelTime: () => setTimeAt(null),
+    time: timeUi(list),
+    onOpenTime: (item) => timeEdit.open(item, list),
+    timeAdjusted: adjustedIn(list === "after" ? previewView : view),
+    onRevertTime: revertTime,
     visible: visibleIn(new Set(Object.keys(was))),
   });
+  // The plan as it would be with the time being edited (nothing saved): the editor's list is drawn from it, so the gaps move with the fingers.
+  const editing = timeEdit.preview && !timeEdit.preview.problem ? timeEdit.preview.changes : [];
+  const listBefore = timeEdit.edit?.list === "before" ? withTimes(view, editing) : view;
+  const listAfter = previewView && timeEdit.edit?.list === "after" ? withTimes(previewView, editing) : previewView;
   const contextBefore = contextFor(changed, "before");
   const contextAfter = contextFor({ ...changed, ...(recommended?.was ?? {}) }, "after");
   const heading = (day: PlanDay) => dayHeading(day, language, t);
   const nextDay = typeof listDay === "number" && dayAt >= 0 && dayAt < days.length - 1 && !changing ? days[dayAt + 1] : null;
+  const adjustedNow = adjustedIn(previewing && side === "after" ? previewView : view).size;
   const sheetTitle = registered ? t("등록 완료", "Registered") : !done ? t("장소·운영시간 확인", "Places & hours") : previewing && side === "after" ? t("수정안", "Proposed plan") : t("계획 확인", "Plan check");
   const rechecking = view.rechecking ? (() => {
     const order = view.days.flatMap((day) => view.items.filter((item) => item.day === day.day).map((item) => item.id));
@@ -863,6 +936,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
         : <>
           <header className={styles.sheetHead} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
             <h2 id="plan-check-sheet-title" className={styles.sheetTitle}>{sheetTitle}</h2>
+            {done && !registered && adjustedNow > 0 && <button type="button" className={styles.resetTimes} onClick={resetTimes} aria-label={t(`시간 조정 ${adjustedNow}곳 모두 처음으로`, `Put the ${adjustedNow} changed time${adjustedNow > 1 ? "s" : ""} back`)} title={t("바꾼 시간을 모두 처음으로", "Put every changed time back")}><Undo2 size={13} strokeWidth={1.8} aria-hidden="true" />{t("시간 초기화", "Reset times")}</button>}
             <p className={styles.count}>{done
               ? <HeadBadges needs={needCount} changed={changedCount} filter={filtering ? filter : null} onFilter={setFilter} registered={registered} rechecking={rechecking} />
               : countText(view, t)}</p>
@@ -889,7 +963,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
             {filtering && <p className={styles.filterNote} role="status">{filter === "changed" ? t("바뀐 곳만 보는 중이에요", "Showing only what changed") : t("확인이 필요한 곳만 보는 중이에요", "Showing only what needs a look")}
               <button type="button" onClick={() => setFilter(null)}>{t("전체 보기", "Show all")}</button></p>}
             <div key={String(listDay)} className={styles.page} data-slide={slide ?? undefined}>
-              <DayList view={view} days={days} listDay={listDay} ctx={contextBefore} mapDay={mapDay} onShowDay={showDay} heading={heading} />
+              <DayList view={listBefore} days={days} listDay={listDay} ctx={contextBefore} mapDay={mapDay} onShowDay={showDay} heading={heading} />
             </div>
             {previewing && previewView && <>
               <div ref={junction} className={styles.junction} role="separator" aria-label={t("여기부터 수정안", "The proposed plan starts here")}>
@@ -898,7 +972,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
                 <p className={styles.junctionNote}><ChevronsUp size={14} strokeWidth={1.8} aria-hidden="true" />{t("여기부터 수정안 · 계속 올리면 변경 전 일정이에요", "The proposed plan starts here · keep going up for the plan as it was")}</p>
               </div>
               <div className={styles.page} data-proposed>
-                <DayList view={previewView} days={previewView.days.filter((day) => previewView.items.some((item) => item.day === day.day))} listDay={listDay} ctx={contextAfter} mapDay={mapDay} onShowDay={showDay} heading={heading} />
+                <DayList view={listAfter ?? previewView} days={previewView.days.filter((day) => previewView.items.some((item) => item.day === day.day))} listDay={listDay} ctx={contextAfter} mapDay={mapDay} onShowDay={showDay} heading={heading} />
               </div>
             </>}
             {/* ★`[2026-10-03 사용자]` 출처 줄이 「계속 내리면 …」 안내 위에 있어야, 목록 맨 끝에 그 안내가 보여 「내리면 다음이 나온다」가 읽힌다. */}
@@ -920,7 +994,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     </section>
     <div className={styles.toast} role="status" data-shown={toast ? true : undefined}>
       {toast && <><span className={styles.toastText}>{toast.text}{toast.sub && <small>{toast.sub}</small>}</span>
-        {toast.undo && <button type="button" className={styles.undo} onClick={undo}>{t("되돌리기", "Undo")}</button>}</>}
+        {(toast.undo || toast.revert) && <button type="button" className={styles.undo} onClick={toast.revert ?? undo}>{t("되돌리기", "Undo")}</button>}</>}
     </div>
   </div>;
 }

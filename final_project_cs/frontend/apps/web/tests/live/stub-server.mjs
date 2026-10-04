@@ -292,6 +292,29 @@ function settle(items) {
     ? { ...item, status: "adjusted", place_state: "customer", rows: [row("place", "ok", "서버가 검증한 대체 후보"), row("hours", "ok", "10:00–22:00 안에 머물러요")] } : item);
 }
 
+/**
+ * `[2026-10-04]` After a stop's start or end changed, the legs follow it, like the server's timetable does: a leg leaves when the stop before it ends
+ * (60 minutes after it starts when it has no end), arrives `minutes` later, and has `slack_min` = the next stop's start − that arrival.
+ * Late (negative slack) = `review`, otherwise `keep`; the leg's arrival line says it in the server's words.
+ */
+function followTimes(b) {
+  const toMin = (hhmm) => { const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm ?? ""); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+  const toText = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+  for (const move of b.moves) {
+    const from = b.items.find((entry) => entry.id === move.from), to = b.items.find((entry) => entry.id === move.to);
+    const start = toMin(from?.starts_at), next = toMin(to?.starts_at);
+    if (start === null || next === null || typeof move.minutes !== "number") continue;
+    const leave = toMin(from.ends_at) ?? start + 60;
+    const arrive = leave + move.minutes;
+    move.depart = toText(leave);
+    move.arrive = toText(arrive);
+    move.slack_min = next - arrive;
+    move.status = move.slack_min < 0 ? "review" : "keep";
+    const line = row("arrival", move.slack_min < 0 ? "warn" : "ok", move.slack_min < 0 ? `일정보다 ${-move.slack_min}분 늦어요` : `${move.slack_min}분 여유`);
+    move.rows = move.rows.some((entry) => entry.row === "arrival") ? move.rows.map((entry) => entry.row === "arrival" ? line : entry) : [...move.rows, line];
+  }
+}
+
 function reviewOf(b) {
   const needsItems = b.items.filter((item) => item.status === "review").length;
   const needsMoves = b.moves.filter((move) => move.status === "review").length;
@@ -765,6 +788,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     if (scenario.edits === "not_found") return json(response, 422, { error: { code: "place_not_found", message: "「없는 곳」: 이 이름으로 장소를 찾지 못했어요" } }, origin);
     const { edits = [] } = JSON.parse(raw || "{}");
     if (scenario.editRefusal === "locked" && edits.some((edit) => !edit.field.endsWith(".locked"))) return json(response, 409, { error: { code: "item_locked", message: "고정한 일정이라 바꿀 수 없어요" } }, origin);
+    let retimed = false;
     for (const edit of edits) {
       if (edit.field === "trip.title" && typeof edit.value === "string") tripTitle = edit.value.trim().slice(0, 80) || tripTitle;
       const m = /^items\[(\d+)\]\.(\w+)$/.exec(edit.field);
@@ -775,8 +799,8 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
       else if (m[2] === "removed") { if (edit.value === true) board.removed = [...(board.removed ?? []), item]; board.items = edit.value === true ? board.items.filter((entry) => entry !== item) : board.items; }
       else if (m[2] === "place" && edit.value?.name) { item.place = place(edit.value.name, edit.value.latitude ?? 37.57, edit.value.longitude ?? 126.98, { source: edit.value.source ?? "kakao" }); item.status = "adjusted"; item.place_state = "customer"; item.rows = [row("place", "ok", "직접 고른 곳이에요")]; }
       else if (m[2] === "place" && edit.value?.none === true) { item.place = null; item.place_state = "none"; item.status = "adjusted"; item.rows = [row("place", "ok", "장소 없이 자유 시간으로 두었어요")]; }
-      else if (m[2] === "starts_at") item.starts_at = edit.value;
-      else if (m[2] === "ends_at") item.ends_at = edit.value;
+      else if (m[2] === "starts_at") { item.starts_at = edit.value; retimed = true; }
+      else if (m[2] === "ends_at") { item.ends_at = edit.value || null; retimed = true; }       // "" = no end time, as the stop editor sends it
     }
     // a removed stop comes back when the edit says `removed: false`
     for (const edit of edits) {
@@ -786,6 +810,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
         if (back) { board.items = [...board.items, back].sort((a, b) => a.index - b.index); board.removed = board.removed.filter((entry) => entry !== back); }
       }
     }
+    if (retimed) followTimes(board);                       // the legs follow the new times (other edits leave them as they are)
     board.revision += 1;
     return json(response, 200, intakeView(board.revision), origin);
   }

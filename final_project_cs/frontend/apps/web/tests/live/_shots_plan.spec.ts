@@ -14,18 +14,11 @@ test("촬영: 읽는 중 → 확인 재생 → 결과", async ({ page, request }
   const server = mockServer(request);
   await server.scenario({ review: "on", board: "rich", intakeEvents: "on", readingPolls: 1, intakeRoutes: "on" });
   await start(page);
-  await page.goto(`/intakes/${INTAKE}`);
-  await page.waitForTimeout(1500);
-  await shot(page, "01_reading_a");
-  await page.waitForTimeout(1800);
-  await shot(page, "02_reading_b");
-  await page.waitForTimeout(2500);
-  await shot(page, "03_checking_a");
-  await page.waitForTimeout(1800);
-  await shot(page, "04_checking_b");
-  await page.getByText("계획 확인", { exact: true }).first().waitFor({ timeout: 40_000 });
-  await page.waitForTimeout(1200);
-  await shot(page, "05_done");
+  await page.goto(`/intakes/${INTAKE}`, { waitUntil: "commit" });
+  for (let at = 0; at < 14; at += 1) {
+    await page.waitForTimeout(450);
+    await shot(page, `0${String(at).padStart(2, "0")}_flow`);
+  }
 });
 
 test("촬영: 결과 화면의 여러 모습", async ({ page, request }) => {

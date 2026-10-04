@@ -127,17 +127,18 @@ test("카드를 다시 누르면 강조가 풀리고, 지도의 핀도 다시 �
 
 // ── 시간 고치기 ────────────────────────────────────────────────────────────────
 
-test("카드 왼쪽의 시간을 누르면 그 자리에서 시작·끝 시각을 고치고, 고친 값만 서버로 간다", async ({ page, request }) => {
+test("카드 왼쪽의 시간을 누르면 그 자리에 시간 편집기가 열린다: 끝이 시작보다 빠르면 보내기 전에 막고, 고친 값만 서버로 간다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   await page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ }).click();
   const form = page.getByRole("form", { name: "경복궁 관람 시간 고치기" });
-  await form.getByLabel("끝").fill("08:00");                                                         // 시작(09:00)보다 빠르다
-  await form.getByRole("button", { name: "저장" }).click();
+  await form.getByLabel("끝", { exact: true }).fill("08:00");                                                         // 시작(09:00)보다 빠르다
   await expect(form.getByRole("alert")).toHaveText("끝 시각이 시작보다 빨라요.");
+  await expect(form.getByRole("button", { name: "적용" })).toBeDisabled();
   expect(await server.received("POST", "/edits")).toHaveLength(0);                                   // 화면이 먼저 막았다
-  await form.getByLabel("끝").fill("11:00");
-  await form.getByRole("button", { name: "저장" }).click();
-  await expect(toast(page, "시간을 바꿨어요")).toBeVisible();
+  await form.getByLabel("끝", { exact: true }).fill("11:00");
+  await expect(form.getByRole("alert")).toHaveCount(0);
+  await form.getByRole("button", { name: "적용" }).click();
+  await expect(toast(page, "1개 일정의 시간을 바꿨어요")).toBeVisible();
   const [edit] = await server.received("POST", "/edits");
   expect(edit.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].ends_at", value: "11:00" }] });
   await expect(card(page, "경복궁 관람")).toContainText("변경 완료");
@@ -236,10 +237,11 @@ test("수정안을 보다가 일정을 직접 고치면 수정안이 먼저 저�
   await expect(page.getByRole("heading", { name: "수정안" })).toBeVisible();
   await page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ }).last().click();
   const form = page.getByRole("form", { name: "경복궁 관람 시간 고치기" });
-  await form.getByLabel("끝").fill("11:00");
-  await form.getByRole("button", { name: "저장" }).click();
-  await expect(toast(page, "시간을 바꿨어요")).toBeVisible();
-  expect(await server.received("POST", "/autofix")).toHaveLength(2);                                  // 미리 보기 + 저장
+  await form.getByLabel("끝", { exact: true }).fill("11:00");
+  await form.getByRole("button", { name: "적용" }).click();
+  await expect(toast(page, "1개 일정의 시간을 바꿨어요")).toBeVisible();
+  const autofix = await server.received("POST", "/autofix");
+  expect(autofix.filter((entry) => !(entry.body as { dry_run?: boolean }).dry_run)).toHaveLength(1);    // 수정안 저장은 한 번(미리 보기 요청은 dry_run — 새 판을 미리 데워 두는 요청이 더 붙을 수 있다)
   const [edit] = await server.received("POST", "/edits");
   expect(edit.body).toMatchObject({ revision: 2 });                                                   // 저장된 수정안의 판 위에서 고쳤다
   await expect(page.getByRole("button", { name: "다시 제출" })).toBeVisible();                         // 손으로 고쳤으니 다시 제출
@@ -280,4 +282,151 @@ test("같은 자리에 있는 장소의 핀도 서로 겹치지 않는다(꼭짓
     expect(overlap, `핀 ${one + 1} 과 ${other + 1} 이 겹친다`).toBe(false);
   }
   await expect(sheet(page)).toBeVisible();
+});
+
+test("지도에 「모든 일정 보기」 단추가 확대·축소 단추 옆에 있어, 확대하거나 옮긴 지도를 모든 핀이 보이는 처음 위치·배율로 되돌린다", async ({ page, request }) => {
+  await openFinished(page, request);
+  const first = pin(page, "1. 경복궁 관람");
+  await expect(first).toBeVisible();
+  const where = async () => { const box = (await first.boundingBox())!; return `${Math.round(box.x)},${Math.round(box.y)}`; };
+  await expect.poll(async () => { const one = await where(); await page.waitForTimeout(500); return one === (await where()); }, { timeout: 10_000 }).toBe(true);   // 시트가 자리를 잡고 지도가 맞춰질 때까지(처음 위치는 그 뒤에 잰다)
+  const before = (await first.boundingBox())!;
+  const map = page.getByRole("region", { name: "여행 지도" });
+  await map.hover({ position: { x: 200, y: 100 } });                                              // 단추는 지도에 포인터가 있을 때 보인다
+  const zoom = page.locator(".leaflet-control-zoom");
+  await expect(zoom.getByRole("button", { name: "모든 일정 보기" })).toBeVisible();                   // 확대·축소와 같은 묶음 안
+  await zoom.getByRole("button", { name: "Zoom in" }).click();
+  await zoom.getByRole("button", { name: "Zoom in" }).click();
+  await expect.poll(async () => Math.abs((await first.boundingBox())!.x - before.x)).toBeGreaterThan(20);   // 확대하니 핀이 제자리에서 멀어졌다
+  await zoom.getByRole("button", { name: "모든 일정 보기" }).click();
+  await expect.poll(async () => { const now = (await first.boundingBox())!; return Math.abs(now.x - before.x) + Math.abs(now.y - before.y); }, { timeout: 8_000 }).toBeLessThan(4);   // 처음 자리로
+  for (const label of ["2. 올리브영", "3. 광장시장"]) await expect(pin(page, label)).toBeInViewport();                 // 모든 핀이 보인다
+});
+
+// ── 2026-10-04 사용자 지시: 시간 끌기 · 입력 · 밀기 · 여유 간격 · 되돌리기 · 시간 초기화 ──────────────────────────────────────────────
+
+/** 시간 편집기를 연다(광장시장 12:30–13:30: 앞 올리브영 11:00–12:00 에서 이동 16분 → 12:16 이전으로는 못 당긴다). */
+async function openTime(page: Page, title: string) {
+  await page.getByRole("button", { name: new RegExp(`^${title} 시간 고치기`) }).click();
+  return page.getByRole("form", { name: `${title} 시간 고치기` });
+}
+const editsOf = async (server: ReturnType<typeof mockServer>) => (await server.received("POST", "/edits")).map((entry) => entry.body as { revision: number; edits: { field: string; value: unknown }[] });
+const fieldsOf = (body: { edits: { field: string; value: unknown }[] }) => Object.fromEntries(body.edits.map((edit) => [edit.field, edit.value]));
+
+test("일정 사이 간격은 비는 시간만큼 벌어지고, 15분 넘게 비면 「여유 N분」을 한 번 연하게 적는다", async ({ page, request }) => {
+  await openFinished(page, request);
+  await expect(page.getByText("여유 21분")).toBeVisible();                                            // 경복궁 → 올리브영: 11:00 − (10:30 + 이동 9분) = 21분
+  await expect(page.getByText(/^여유 /)).toHaveCount(1);                                              // 올리브영 → 광장시장은 14분이라 말은 없다(간격만)
+  const spaces = await page.locator("p[class*=free]").evaluateAll((elements) => elements.map((element) => Math.round(element.getBoundingClientRect().height)));
+  expect(spaces[0]).toBeGreaterThanOrEqual(15);                                                        // 21분이면 기본 간격(14px)에 더해 19px 가량 더 벌어진다
+});
+
+test("시간 편집기에 시각을 적으면 밀리는 일정이 미리 보이고, 적용하면 모든 일정이 요청 하나로 간다", async ({ page, request }) => {
+  const server = await openFinished(page, request);
+  const form = await openTime(page, "광장시장");
+  await expect(form.getByText("가능한 시각 02:55 ~ 23:00")).toBeVisible();                              // 앞 일정들을 하루 맨 앞까지 밀 수 있는 만큼
+  await form.getByLabel("시작", { exact: true }).fill("11:30");                                                          // 앞 올리브영(12:00 끝)과 겹치니 앞 일정들이 밀린다
+  await expect(form.getByRole("status")).toContainText("함께 바뀌는 일정 2개");
+  await expect(form.getByRole("status")).toContainText("올리브영");
+  await expect(page.getByRole("button", { name: /^광장시장 시간 고치기 · 지금 11:30/ })).toBeVisible();       // 목록이 미리 보인다
+  expect(await server.received("POST", "/edits")).toHaveLength(0);                                     // 아직 서버로 가지 않았다
+  await form.getByRole("button", { name: "적용" }).click();
+  await expect(toast(page, "3개 일정의 시간을 바꿨어요")).toBeVisible();
+  const bodies = await editsOf(server);
+  expect(bodies).toHaveLength(1);                                                                      // 요청 하나
+  const fields = fieldsOf(bodies[0]);
+  expect(fields["items[2].starts_at"]).toBe("11:30");
+  expect(fields["items[2].ends_at"]).toBe("12:30");                                                    // 수행 시간 60분은 그대로
+  expect(fields["items[1].starts_at"]).toBe("10:14");                                                  // 올리브영이 밀려 올라갔다(12:30 − … )
+  expect(fields["items[0].starts_at"]).toBeDefined();
+});
+
+test("「앞뒤 일정도 함께 밀기」를 끄면 자기 앞뒤 여유 안에서만 입력할 수 있고, 벗어나면 이유와 범위를 말한다", async ({ page, request }) => {
+  const server = await openFinished(page, request);
+  const form = await openTime(page, "광장시장");
+  await form.getByLabel("앞뒤 일정도 함께 밀기").uncheck();
+  await expect(form.getByText("가능한 시각 12:16 ~ 23:00")).toBeVisible();                              // 앞 일정 끝(12:00) + 이동 16분
+  await form.getByLabel("시작", { exact: true }).fill("12:10");
+  await expect(form.getByRole("alert")).toContainText("가능한 시각은 12:16 ~ 23:00이에요");
+  await expect(form.getByRole("button", { name: "적용" })).toBeDisabled();
+  await form.getByLabel("시작", { exact: true }).fill("12:20");
+  await expect(form.getByRole("alert")).toHaveCount(0);
+  await form.getByRole("button", { name: "적용" }).click();
+  await expect(toast(page, "1개 일정의 시간을 바꿨어요")).toBeVisible();
+  expect(fieldsOf((await editsOf(server))[0])).toEqual({ "items[2].starts_at": "12:20", "items[2].ends_at": "13:20" });
+});
+
+test("−5분 · +5분 단추는 시작을 5분씩 옮기고, 범위 끝에서 멈춘다", async ({ page, request }) => {
+  const server = await openFinished(page, request);
+  const form = await openTime(page, "광장시장");
+  await form.getByLabel("앞뒤 일정도 함께 밀기").uncheck();
+  await form.getByRole("button", { name: "+5분" }).click();
+  await form.getByRole("button", { name: "+5분" }).click();
+  await expect(form.getByLabel("시작", { exact: true })).toHaveValue("12:40");
+  await expect(form.getByLabel("끝", { exact: true })).toHaveValue("13:40");                              // 끝 칸도 같은 만큼 따라가 머무는 시간(60분)이 그대로다
+  for (let at = 0; at < 6; at += 1) await form.getByRole("button", { name: "−5분" }).click();           // 12:10 을 지나 12:16 에서 멈춘다
+  await expect(form.getByLabel("시작", { exact: true })).toHaveValue("12:16");
+  await form.getByRole("button", { name: "+5분" }).click();
+  await form.getByRole("button", { name: "적용" }).click();
+  await expect.poll(async () => (await editsOf(server)).length).toBe(1);
+  expect(fieldsOf((await editsOf(server))[0])["items[2].starts_at"]).toBe("12:21");
+});
+
+test("끌개를 아래로 끌면 시작이 늦어지고(10px = 5분) 손을 떼면 바로 적용된다 — 위로 끌면 일찍, 범위 밖은 끝에서 멈춘다", async ({ page, request }) => {
+  const server = await openFinished(page, request);
+  const form = await openTime(page, "광장시장");
+  await form.getByLabel("앞뒤 일정도 함께 밀기").uncheck();
+  const grip = form.getByRole("button", { name: /끌어서 시작 시각 바꾸기/ });
+  const box = (await grip.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 + 40, { steps: 6 });             // 40px = 20분
+  await expect(form.getByLabel("시작", { exact: true })).toHaveValue("12:50");                                           // 끄는 동안 미리 보인다
+  await expect(form.getByLabel("끝", { exact: true })).toHaveValue("13:50");
+  expect(await server.received("POST", "/edits")).toHaveLength(0);
+  await page.mouse.up();
+  await expect(toast(page, "1개 일정의 시간을 바꿨어요")).toBeVisible();
+  expect(fieldsOf((await editsOf(server))[0])["items[2].starts_at"]).toBe("12:50");
+
+  const again = await openTime(page, "광장시장");
+  await again.getByLabel("앞뒤 일정도 함께 밀기").uncheck();
+  const grip2 = again.getByRole("button", { name: /끌어서 시작 시각 바꾸기/ });
+  const box2 = (await grip2.boundingBox())!;
+  await page.mouse.move(box2.x + box2.width / 2, box2.y + box2.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box2.x + box2.width / 2, box2.y + box2.height / 2 - 400, { steps: 8 });         // 한참 위로: 12:16 에서 멈춘다
+  await expect(again.getByLabel("시작", { exact: true })).toHaveValue("12:16");
+  await page.mouse.up();
+});
+
+test("잠근 일정은 시간이 못 움직이는 벽이다: 그 일정에 막혀 앞으로는 더 못 당긴다", async ({ page, request }) => {
+  await openFinished(page, request);
+  await page.getByRole("button", { name: "경복궁 관람 꼭 넣을 일정으로 고정" }).click();
+  await expect(page.getByRole("button", { name: "경복궁 관람 고정 풀기" })).toBeVisible();
+  const form = await openTime(page, "올리브영");
+  await expect(form.getByText("가능한 시각 10:39 ~ ")).toBeVisible();                                    // 잠근 경복궁(10:30 끝) + 이동 9분 아래로는 못 당긴다
+  await page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ }).click({ force: true });
+  await expect(toast(page, "고정한 일정이라 바꿀 수 없어요")).toBeVisible();
+});
+
+test("바꾼 시간에는 「되돌리기」가 붙고(수정·삭제 앞), 누르면 그 일정만 처음 시간으로 돌아오며, 머리의 「시간 초기화」는 바꾼 시간 모두를 한 번에 되돌린다", async ({ page, request }) => {
+  const server = await openFinished(page, request);
+  const form = await openTime(page, "광장시장");
+  await form.getByLabel("시작", { exact: true }).fill("11:30");
+  await form.getByRole("button", { name: "적용" }).click();
+  await expect(toast(page, "3개 일정의 시간을 바꿨어요")).toBeVisible();
+  const undo = page.getByRole("button", { name: "광장시장 시간 되돌리기" });
+  await expect(undo).toBeVisible();
+  await expect(page.getByRole("button", { name: "경복궁 관람 시간 되돌리기" })).toBeVisible();          // 함께 밀린 일정에도 붙는다
+  const reset = page.getByRole("button", { name: /^시간 조정 3곳 모두 처음으로/ });
+  await expect(reset).toBeVisible();
+  const before = (await editsOf(server)).length;
+  await reset.click();
+  await expect.poll(async () => (await editsOf(server)).length).toBe(before + 1);                       // 요청 하나
+  const back = fieldsOf((await editsOf(server)).at(-1)!);
+  expect(back["items[2].starts_at"]).toBe("12:30");
+  expect(back["items[1].starts_at"]).toBe("11:00");
+  expect(back["items[0].starts_at"]).toBe("09:00");
+  await expect(undo).toHaveCount(0);                                                                    // 처음 시간이 되면 표시가 없다
+  await expect(reset).toHaveCount(0);
 });

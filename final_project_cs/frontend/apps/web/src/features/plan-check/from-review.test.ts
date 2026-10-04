@@ -53,8 +53,30 @@ describe("the finished check, from the server's review", () => {
   it("turns a leg into the way from one stop to the next, with its own check lines", () => {
     expect(view.moves).toEqual([{
       id: "0-0:0-1", fromId: "0-0", toId: "0-1", day: 1, departAt: "11:05", mode: "지하철", summary: "12분 · 3.1km", verdict: "keep",
+      minutes: 12, arriveAt: "11:17", slackMin: 8, estimated: false,
       checks: [{ kind: "route", result: "ok", text: "경복궁 → 광장시장" }, { kind: "arrival", result: "ok", text: "8분 여유" }],
     }]);
+  });
+
+  it("carries a leg's minutes, arrival and slack; a straight-line guess (basis estimate) is marked estimated", () => {
+    const legs = reviewResultOf(intake("review", "review", { review: { ...review, moves: [
+      move({ basis: "estimate", minutes: 25, depart: "11:00", arrive: "11:25", slack_min: -5 }),
+      move({ from: "0-1", to: "0-2", basis: "timetable" }),
+    ] } }), readingOf(intake("review", "review")))!;
+    expect(legs.moves[0]).toMatchObject({ minutes: 25, departAt: "11:00", arriveAt: "11:25", slackMin: -5, estimated: true });
+    expect(legs.moves[1]).toMatchObject({ estimated: false });
+  });
+
+  it("leaves what the server did not say empty: no arrival is 「」, no minutes or slack is null, no basis is not an estimate", () => {
+    const legs = reviewResultOf(intake("review", "review", { review: { ...review, moves: [move({ minutes: null, depart: null, arrive: null, slack_min: null, basis: null })] } }), readingOf(intake("review", "review")))!;
+    expect(legs.moves[0]).toMatchObject({ departAt: "", arriveAt: "", minutes: null, slackMin: null, estimated: false });
+  });
+
+  it("carries the booked flag of a stop: true, false, or null when the plan (or an older server) says nothing", () => {
+    const booked = reviewResultOf(intake("review", "review", { review: { ...review, moves: [], items: [
+      item({ id: "0-0", booked: true }), item({ id: "0-1", index: 1, booked: false }), item({ id: "0-2", index: 2, booked: null }), item({ id: "0-3", index: 3 }),
+    ] } }), readingOf(intake("review", "review")))!;
+    expect(booked.items.map((entry) => entry.booked)).toEqual([true, false, null, null]);
   });
 
   it("gives a stop with no coordinates no pin and a stop with no place the 「장소 없음」 flag", () => {
