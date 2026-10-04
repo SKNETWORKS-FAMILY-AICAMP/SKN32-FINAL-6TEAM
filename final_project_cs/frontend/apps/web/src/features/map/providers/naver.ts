@@ -1,5 +1,6 @@
-import type { MapAdapter, MapLine, MapPoint } from "../model";
+import type { Coordinates, MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
+import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_BOX, ME_LABEL, meKey, STAY_BOX, staysKey } from "./me";
 import { createPin, geometryKey, layoutPins, PIN_BOX, placePin, pointLabel, setPinSelected, type PinSlot } from "./pin";
 import { createSdkLoader } from "./sdk-loader";
 
@@ -13,12 +14,20 @@ interface NaverMap {
   setCenter(position: NaverLatLng): void;
   getCenter(): NaverLatLng;
   setZoom(zoom: number): void;
+  getZoom?(): number;
   fitBounds(points: NaverLatLng[], margins: { top: number; right: number; bottom: number; left: number; maxZoom: number }): void;
   setSize(size: NaverSize): void;
   destroy(): void;
 }
-interface NaverMarker { setMap(map: NaverMap | null): void; setZIndex(zIndex: number): void }
+/** `setPosition` is optional: without it 「내 위치」 is moved by making its marker again. */
+interface NaverMarker { setMap(map: NaverMap | null): void; setZIndex(zIndex: number): void; setPosition?(position: NaverLatLng): void }
 interface NaverPolyline { setMap(map: NaverMap | null): void }
+/** `[2026-10-05]` The accuracy circle of 「내 위치」 (`naver.maps.Circle`, radius in metres). */
+interface NaverCircle { setMap(map: NaverMap | null): void; setCenter(center: NaverLatLng): void; setRadius(radius: number): void }
+interface NaverCircleOptions {
+  map: NaverMap; center: NaverLatLng; radius: number; strokeColor: string; strokeOpacity: number; strokeWeight: number;
+  fillColor: string; fillOpacity: number; clickable: boolean; zIndex: number;
+}
 interface NaverPolylineOptions {
   map: NaverMap; path: NaverLatLng[]; strokeColor: string; strokeOpacity: number; strokeWeight: number;
   strokeStyle: "solid" | "shortdash"; strokeLineCap: "round"; strokeLineJoin: "round"; clickable: boolean;
@@ -29,10 +38,14 @@ interface NaverSdk {
   LatLng: new (lat: number, lng: number) => NaverLatLng;
   /** Optional: a build of the SDK without lines still shows the pins. */
   Polyline?: new (options: NaverPolylineOptions) => NaverPolyline;
+  /** Optional: without it 「내 위치」 is the dot alone. */
+  Circle?: new (options: NaverCircleOptions) => NaverCircle;
   Size: new (width: number, height: number) => NaverSize;
   Marker: new (options: {
     map: NaverMap; position: NaverLatLng; title: string;
     icon: { content: HTMLElement; size: NaverSize; anchor: { x: number; y: number } };
+    /** `[2026-10-05]` 「내 위치」 and the stays take no press. */
+    clickable?: boolean; zIndex?: number;
   }) => NaverMarker;
   Event: {
     addListener(target: NaverMarker | NaverMap, event: "click" | "idle", callback: () => void): NaverListener;
@@ -63,6 +76,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
       let previousGeometry = "";
       let selectedId: string | undefined;
       let needsFit = false;
+      let centredOnMe = false;           // [2026-10-05] an empty map is centred on the customer once; pins (a different set of them) reset it
       let markers: { id: string; marker: NaverMarker; pin: HTMLElement; listener: NaverListener; onKey: (event: KeyboardEvent) => void }[] = [];
       let routes: NaverPolyline[] = [];
       let previousLines = "";
@@ -81,6 +95,8 @@ export function createNaverAdapter(clientId: string): MapAdapter {
         markers.forEach(({ id, pin }) => { if (slots[id]) placePin(pin, slots[id]); });
       }
       const idleListener = sdk.Event.addListener(map, "idle", relayout);
+      // [2026-10-05] The zoom level goes to the screen (it asks for the detailed route lines when zoomed in).
+      const zoomListener = sdk.Event.addListener(map, "idle", () => { const zoom = map.getZoom?.(); if (typeof zoom === "number") options.onZoom?.(zoom); });
 
       function clearMarkers() {
         markers.forEach(({ marker, pin, listener, onKey }) => {
@@ -91,8 +107,45 @@ export function createNaverAdapter(clientId: string): MapAdapter {
         markers = [];
       }
 
+      // ★`[2026-10-05 사용자 지시]` 「내 위치」: a marker that takes no press, under the pins (`zIndex` 0; pins are 1 and 100; stays −1), and its accuracy circle.
+      let me: MyLocation | null = null;
+      let meMarker: NaverMarker | null = null;
+      let meCircle: NaverCircle | null = null;
+      let previousMe = "";
+      let stayMarkers: NaverMarker[] = [];
+      let previousStays = "";
+      const latLng = ({ lat, lng }: Coordinates) => new sdk.LatLng(lat, lng);
+
+      function quietMarker(position: Coordinates, title: string, content: HTMLElement, size: number, zIndex: number): NaverMarker {
+        return new sdk.Marker({
+          map, position: latLng(position), title, clickable: false, zIndex,
+          icon: { content, size: new sdk.Size(size, size), anchor: { x: size / 2, y: size / 2 } },
+        });
+      }
+
+      function removeMe() {
+        meMarker?.setMap(null);
+        meCircle?.setMap(null);
+        meMarker = null;
+        meCircle = null;
+      }
+
+      function clearStays() {
+        stayMarkers.forEach((marker) => marker.setMap(null));
+        stayMarkers = [];
+      }
+
       function fit() {
-        if (!needsFit || !container.clientWidth || !container.clientHeight || !points.length) return;
+        if (!needsFit || !container.clientWidth || !container.clientHeight) return;
+        // `[2026-10-05]` No pins: the customer's own position is the picture (once — the map does not chase them); nothing at all: wait.
+        if (!points.length) {
+          if (!me) return;
+          needsFit = false;
+          centredOnMe = true;
+          map.setCenter(latLng(me.coordinates));
+          map.setZoom(15);
+          return;
+        }
         needsFit = false;
         const positions = points.map(({ coordinates }) => new sdk.LatLng(coordinates.lat, coordinates.lng));
         if (positions.length === 1) {
@@ -165,6 +218,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
         if (changed) {
           previousGeometry = geometry;
           needsFit = true;
+          centredOnMe = false;          // [2026-10-05] a different set of pins: an empty day after it centres on the customer again
           fit();
         } else if (nextSelectedId !== selectedId) {
           const selected = points.find(({ id }) => id === nextSelectedId);
@@ -173,11 +227,49 @@ export function createNaverAdapter(clientId: string): MapAdapter {
         selectedId = nextSelectedId;
       }
 
-      try { update(options.points, options.selectedId, options.lines); }
-      catch (error) { clearMarkers(); clearLines(); sdk.Event.removeListener(idleListener); unwatch(); map.destroy(); throw error; }
+      function setMe(next: MyLocation | null) {
+        if (destroyed) return;
+        me = next;
+        const key = meKey(next);
+        if (key === previousMe) return;
+        previousMe = key;
+        if (!next) { removeMe(); return; }
+        if (meMarker?.setPosition) meMarker.setPosition(latLng(next.coordinates));
+        else {
+          meMarker?.setMap(null);
+          meMarker = quietMarker(next.coordinates, ME_LABEL, createMeDot(), ME_BOX, 0);
+        }
+        const radius = accuracyRadius(next);
+        if (radius === null) { meCircle?.setMap(null); meCircle = null; }
+        else if (meCircle) { meCircle.setCenter(latLng(next.coordinates)); meCircle.setRadius(radius); }
+        else if (sdk.Circle) {
+          meCircle = new sdk.Circle({
+            map, center: latLng(next.coordinates), radius, strokeColor: ACCURACY_STYLE.color, strokeOpacity: ACCURACY_STYLE.opacity, strokeWeight: ACCURACY_STYLE.weight,
+            fillColor: ACCURACY_STYLE.color, fillOpacity: ACCURACY_STYLE.fillOpacity, clickable: false, zIndex: 0,
+          });
+        }
+        if (!points.length && !centredOnMe) needsFit = true;          // [2026-10-05] a map that never had pins was never fitted: the first position it learns centres it, once
+        if (!points.length && needsFit) fit();
+      }
+
+      function setStays(stays: StayPoint[]) {
+        if (destroyed) return;
+        const key = staysKey(stays);
+        if (key === previousStays) return;
+        previousStays = key;
+        clearStays();
+        stayMarkers = stays.map((stay) => quietMarker(stay.coordinates, stay.label, createStayDot(stay), STAY_BOX, -1));
+      }
+
+      function cleanUp() { clearMarkers(); clearLines(); removeMe(); clearStays(); sdk.Event.removeListener(idleListener); sdk.Event.removeListener(zoomListener); unwatch(); map.destroy(); }
+
+      try { update(options.points, options.selectedId, options.lines); setMe(options.me ?? null); setStays(options.stays ?? []); }
+      catch (error) { cleanUp(); throw error; }
 
       return {
         update,
+        setMe,
+        setStays,
         fit() { needsFit = true; fit(); },
         resize() {
           if (destroyed || !container.clientWidth || !container.clientHeight) return;
@@ -189,11 +281,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
         destroy() {
           if (destroyed) return;
           destroyed = true;
-          clearMarkers();
-          clearLines();
-          sdk.Event.removeListener(idleListener);
-          unwatch();
-          map.destroy();
+          cleanUp();
         },
       };
     },

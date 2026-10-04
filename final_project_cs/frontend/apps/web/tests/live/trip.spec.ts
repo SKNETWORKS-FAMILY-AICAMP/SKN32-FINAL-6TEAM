@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { APP, start, mockServer, TRIP_ID } from "./helpers";
+import { alsoAgree, APP, start, mockServer, TRIP_ID } from "./helpers";
 
 test.beforeEach(async ({ page, request }) => {
   await mockServer(request).reset();
@@ -247,7 +247,8 @@ test("주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 
   // bell "on": the server this screen is built for has the change bell. An older server answers its address with a 404,
   // which the browser logs by itself — that one is expected there (the screen falls back to re-reading every 30 s).
   // The same for the route lines (`routeShapes: "on"`): a server without `route-shapes` answers 404 and the browser logs it — the screen then draws pins only.
-  await server.scenario({ proposals: "open", bell: "on", routeShapes: "on" });
+  // And for the consent record (`consents: "on"`): an older server without it answers 404 and the browser logs that (the screen then keeps the browser's own copy).
+  await server.scenario({ proposals: "open", bell: "on", routeShapes: "on", consents: "on" });
   const problems: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") problems.push(`console: ${message.text()}`); });
   page.on("pageerror", (error) => problems.push(`exception: ${error.message}`));
@@ -345,8 +346,9 @@ test("채팅: 보내기가 실패해 「다시 보내기」를 누르면 같은 
 });
 
 // 2026-09-30 user decision: where the customer is comes from the browser's Geolocation API, asked only on a press.
-test("채팅: 서버가 현재 위치가 필요하다고 하면 버튼을 누를 때만 브라우저 위치를 얻어 같은 질문을 다시 보낸다", async ({ page, request, context }) => {
+test("채팅: 서버가 현재 위치가 필요하다고 하면 버튼을 누를 때만(그리고 위치 동의가 있을 때만) 브라우저 위치를 얻어 같은 질문을 다시 보낸다", async ({ page, request, context }) => {
   const server = mockServer(request);
+  await alsoAgree(page, { location: true });                                                     // ★`[2026-10-05]` 위치로 묻는 것은 선택 동의(`location`)를 한 사람만 - 동의 없는 쪽은 consent.spec
   await context.grantPermissions(["geolocation"], { origin: APP });
   await context.setGeolocation({ latitude: 37.5704, longitude: 126.9921, accuracy: 25 });
   await openTrip(page);

@@ -284,8 +284,22 @@ button.moveHead { cursor: pointer; }
 .cardWritten[data-changed] { color: var(--color-adjusted); font-weight: 750; }
 
 /* The second page of the list: the plan with the recommended fixes applied (opened by pushing past the end of the list). */
-.page[data-proposed] { animation: pageIn .45s cubic-bezier(.3, .7, .4, 1); }
-@keyframes pageIn { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+/* [2026-10-05] The plan as it was and the proposed plan are two pages. The page in view follows the finger while the pull fills (it gives way up at the end of the list, down at the top
+   of the proposed plan) and springs back if it is let go early; past the threshold the next page comes in from below (forward) or from above (back). */
+.page[data-pull] { transform: translateY(calc(var(--pull, 0) * var(--pull-dir, -1) * 26px)); transition: transform .12s linear; }
+.page[data-pull="start"] { --pull-dir: 1; }
+.page[data-turn="forward"] { animation: turnForward .38s cubic-bezier(.3, .7, .4, 1); }
+.page[data-turn="back"] { animation: turnBack .38s cubic-bezier(.3, .7, .4, 1); }
+@keyframes turnForward { from { opacity: 0; transform: translateY(64px); } to { opacity: 1; transform: none; } }
+@keyframes turnBack { from { opacity: 0; transform: translateY(-64px); } to { opacity: 1; transform: none; } }
+/* The dots under the list say which of the two pages is in view (and turn to it when pressed), like the dots of the first screens. */
+.pager { display: flex; justify-content: center; gap: 2px; flex: none; padding: 0 0 2px; }
+.pagerDot { padding: 10px 4px; background: none; border: 0; cursor: pointer; }
+.pagerDot > span { display: block; width: 6px; height: 6px; border-radius: 10px; background: var(--color-faint); transition: width .25s, background .25s; }
+.pagerDot[aria-current="step"] > span { width: 22px; background: var(--color-primary); }
+.pagerDot:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; border-radius: 8px; }
+.pullHintTop { composes: pullHint; margin: 6px 0 14px; }
+@media (prefers-reduced-motion: reduce) { .page[data-turn] { animation: none; } .page[data-pull] { transition: none; } .pagerDot > span { transition: none; } }
 .pullHint:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 /* At the end of the list: a hint that fills as the customer keeps pushing, and opens the next page when it is full. */
 .pullHint { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 14px 0 4px; padding: 12px 10px 14px; border: 1px dashed var(--color-border-strong); border-radius: 12px; background: var(--color-subtle); color: var(--color-muted); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; overflow: hidden; }
@@ -376,9 +390,6 @@ button.headBadge { cursor: pointer; }
 .icon[data-restore]:hover { background: var(--color-text); color: var(--color-surface); }
 
 /* The seam between the plan as it is and the proposed plan under it: the line runs on through it. */
-.junction { display: grid; grid-template-columns: 40px 18px minmax(0, 1fr); column-gap: 6px; align-items: center; min-height: 44px; animation: rise .35s ease-out; }
-.junction .rail { align-self: stretch; }
-.junctionNote { display: flex; align-items: center; gap: 6px; margin: 6px 0; padding: 7px 10px; border: 1px dashed var(--color-adjusted-border); border-radius: 10px; background: var(--color-adjusted-soft); color: var(--color-adjusted); font-size: 12px; font-weight: 700; line-height: 1.4; }
 .dayHint { display: flex; align-items: center; justify-content: center; gap: 4px; margin: 8px 0 2px; font-size: 12px; font-weight: 650; color: var(--color-muted); }
 
 /* ★`[2026-10-04 사용자 지시]` 카드 왼쪽의 시간을 누르면 그 자리에서 시작·끝 시각을 고친다. */

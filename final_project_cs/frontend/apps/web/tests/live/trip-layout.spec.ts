@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { mockServer, noHorizontalScroll, registerStubTrip, useKorean } from "./helpers";
+import { agree, mockServer, noHorizontalScroll, registerStubTrip, useKorean } from "./helpers";
 
 // The trip screen's data and chat are in `trip.spec.ts`; this keeps the layout checks the old demo suite held.
-test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); });
+test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); await agree(page); });
 
 test("375px와 320px에서 하단 탭으로 일정·지도·채팅을 바꾸고 가로로 넘치지 않으며, 빈 메시지는 막는다", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });

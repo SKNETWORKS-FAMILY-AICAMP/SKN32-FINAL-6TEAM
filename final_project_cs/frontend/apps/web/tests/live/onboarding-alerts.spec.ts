@@ -165,7 +165,7 @@ test("카드를 오가도 초안이 남는다 — 이 브라우저 저장소에�
   await expect(page.getByText(/마이페이지에서 언제든 추가하거나 바꿀 수 있어요\. 첫 여행을 등록하면 서버에 저장돼요\./)).toBeVisible();
   await webhook(page).fill(WEBHOOK);
   await page.getByRole("button", { name: "계속" }).click();
-  await agreeTerms(page);
+  await agreeTerms(page, ["alert_channel"]);                         // ★입력한 주소는 알림 채널 동의를 해야 남는다(동의하지 않으면 버려진다 - consent.spec)
   await page.getByRole("button", { name: "시작하기" }).click();
   await expect(page.locator("#question-title-0")).toBeFocused();   // 「시작하기」의 넘김이 끝나야 다음 누름을 받는다
   await page.getByRole("button", { name: "응답하지 않고 넘어가기" }).click();

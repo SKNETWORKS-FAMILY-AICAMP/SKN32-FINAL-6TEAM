@@ -37,6 +37,11 @@ export interface WebSession {
 
 /** Fired on this page whenever the session is made, ended or changes, so the screen re-reads it. */
 export const SESSION_CHANGED_EVENT = "tripilot:session-changed";
+/**
+ * `[2026-10-05]` The server refused a call because the required consents are not on record (403 `consent_required`): tells the app (`ConsentGate`), which checks the
+ * record again and, if the customer has not consented to the current terms, brings them to the terms screen.
+ */
+export const CONSENT_REQUIRED_EVENT = "tripilot:consent-required";
 
 /** `probed`: the server was asked once. `failed`: it could not be asked (the screen says so instead of waiting for ever). */
 export interface SessionSnapshot { probed: boolean; failed: boolean; session: WebSession | null }
@@ -296,6 +301,7 @@ export async function api<T>(path: string, language: Language, init: RequestInit
         const fresh = await probeSession(language, true);
         if (fresh) { session = fresh; continue; }
       }
+      if (error instanceof LiveError && error.code === "consent_required" && typeof window !== "undefined") window.dispatchEvent(new Event(CONSENT_REQUIRED_EVENT));
       throw sessionChecked(error, language);
     }
   }

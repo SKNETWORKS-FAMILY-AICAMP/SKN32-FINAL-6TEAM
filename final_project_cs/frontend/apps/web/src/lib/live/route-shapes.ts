@@ -62,6 +62,12 @@ function shapeOf(entry: unknown): RouteShape | null {
   };
 }
 
+/**
+ * `[2026-10-05 사용자 지시 · 이동 세션 계약]` `?detail=true` asks for the DETAILED lines (error 0.5 m, up to 5,000 points a line) for a map zoomed in; without it the lines are the short ones
+ * (error 2 m, up to 240 points) that are enough zoomed out. The server's answer says which it is (`detail`).
+ */
+const detailQuery = (options: { detail?: boolean }) => options.detail ? "?detail=true" : "";
+
 /** The server says nothing about this route yet (an older server: 404/405) — that is not an error, there are simply no lines. */
 const unsupported = (error: unknown) => error instanceof LiveError && ["not_found", "method_not_allowed", "HTTP_404", "HTTP_405"].includes(error.code);
 
@@ -76,9 +82,9 @@ export function readRouteShapes(body: unknown): RouteShapes {
  * ★The stops are the check screen's (`review.items[].id`); it reads only the check the server stored, so a plan it has not checked has none (`shapes: []`).
  * `null` = the server has no such route (an older one).
  */
-export async function getIntakeRouteShapes(intakeId: string, language: Language): Promise<RouteShapes | null> {
+export async function getIntakeRouteShapes(intakeId: string, language: Language, options: { detail?: boolean } = {}): Promise<RouteShapes | null> {
   try {
-    return readRouteShapes(await api<unknown>(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/route-shapes`, language));
+    return readRouteShapes(await api<unknown>(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/route-shapes${detailQuery(options)}`, language));
   } catch (error) {
     if (unsupported(error)) return null;
     throw error;
@@ -86,9 +92,9 @@ export async function getIntakeRouteShapes(intakeId: string, language: Language)
 }
 
 /** `null` = the server has no such route. The first call after a server restart can wait several seconds while it loads its road data. */
-export async function getRouteShapes(tripId: string, language: Language): Promise<RouteShapes | null> {
+export async function getRouteShapes(tripId: string, language: Language, options: { detail?: boolean } = {}): Promise<RouteShapes | null> {
   try {
-    return readRouteShapes(await api<unknown>(`/v1/web/trips/${encodeURIComponent(tripId)}/route-shapes`, language));
+    return readRouteShapes(await api<unknown>(`/v1/web/trips/${encodeURIComponent(tripId)}/route-shapes${detailQuery(options)}`, language));
   } catch (error) {
     if (unsupported(error)) return null;
     throw error;

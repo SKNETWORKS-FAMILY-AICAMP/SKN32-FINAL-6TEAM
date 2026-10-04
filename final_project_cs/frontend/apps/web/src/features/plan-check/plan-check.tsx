@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode, type TouchEvent } from "react";
+import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode, type TouchEvent } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, ChevronsDown, ChevronsRight, ChevronsUp, Pencil, Search, Undo2, X } from "lucide-react";
 import { DeviceFrame, HeaderSlot } from "@/components/layout/device-frame";
@@ -49,6 +49,8 @@ export interface PlanCheckProps {
   previewView?: PlanCheckView | null;
   /** `[2026-10-04]` The lines between the stops for the plan as it is (the server's `route-shapes` for the intake); null = none (an older server, or nothing to draw). */
   routes?: RouteShapes | null;
+  /** `[2026-10-05]` The zoom level of the map: the screen above asks for the detailed route lines once it is zoomed in (`features/map/use-route-detail.ts`). */
+  onMapZoom?: (zoom: number) => void;
 }
 
 /** A place for one stop: an alternative or a search result, or just a name the server looks up. */
@@ -291,7 +293,7 @@ const SHEET_MIN = 104;
 
 interface Toast { text: string; sub?: string; undo?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void }
 
-type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes">;
+type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "onMapZoom">;
 
 /** What still needs a look in a plan, leaving out the stops marked for deletion (they are leaving) and the legs that end at one. */
 function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: ReadonlySet<string>): { places: number; moves: number; total: number } {
@@ -301,7 +303,7 @@ function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: Readon
 }
 
 /** ③④⑤ The map under a floating bar, the sheet over it. Once done, the list and the map are worked together. */
-function Checking({ view, actions = {}, registration, tripIssues = [], previewView = null, routes = null }: { view: PlanCheckView } & ResultProps) {
+function Checking({ view, actions = {}, registration, tripIssues = [], previewView = null, routes = null, onMapZoom }: { view: PlanCheckView } & ResultProps) {
   const t = useT();
   const { language, skipAnimation } = useSettings();
   const done = view.stage === "done";
@@ -328,7 +330,11 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const checkingBox = useRef<HTMLDivElement>(null);
   const sheetBox = useRef<HTMLElement>(null);
   const bodyBox = useRef<HTMLDivElement>(null);
-  const junction = useRef<HTMLDivElement>(null);
+  // `[2026-10-05 사용자 지시]` The plan as it was and the proposed plan are TWO PAGES, like the first screens of the app: one is shown at a time, and the turn from one to the other
+  //   happens past a threshold (the pull at the end / the start of the list fills a bar, let go early and it springs back) with the dots to say where we are - not one list glued
+  //   together. Where the customer had got to on the plan as it was is kept (`pageAt`) for the way back.
+  const pageAt = useRef(0);
+  const [turn, setTurn] = useState<"forward" | "back" | null>(null);
   const grab = useRef<{ y: number; height: number; moved: boolean } | null>(null);
   const justDragged = useRef(false);
   /**
@@ -642,31 +648,26 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
       const outcome = await actions.previewRecommendAll!();
       if (!outcome.changes.length) return noAlternative(outcome);
       setRecommended({ count: outcome.changes.length, was: wasOf(outcome) });
+      pageAt.current = bodyBox.current?.scrollTop ?? 0;
+      setTurn(skipAnimation ? null : "forward");
       setSide("after");
       return { text: t(`확인이 필요한 일정 ${outcome.changes.length}곳을 바꾼 수정안이에요`, `The proposed plan changes ${outcome.changes.length} stop${outcome.changes.length > 1 ? "s" : ""}`),
         sub: `${changesLine(outcome)} · ${t("아직 저장하지 않았어요 · 위로 올리면 변경 전이에요", "not saved yet · scroll up for the plan as it was")}` };
     }, true);
   }
-  // The list scrolls on into the proposed plan the moment it is there: the hint gives way, the line runs on, the changed first day comes up.
-  useEffect(() => {
-    if (!previewing) return;
-    const frame = requestAnimationFrame(() => requestAnimationFrame(() => {
-      const box = bodyBox.current, seam = junction.current;
-      if (!box || !seam) return;
-      const top = seam.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop;
-      box.scrollTo({ top: Math.max(0, top - 56), behavior: skipAnimation ? "auto" : "smooth" });
-    }));
-    return () => cancelAnimationFrame(frame);
-  }, [previewing, skipAnimation]);
-  /** Which of the two plans is in view: the seam above the middle of the list = the proposed one. */
-  function watchSide() {
-    if (!previewing) return;
-    const box = bodyBox.current, seam = junction.current;
-    if (!box || !seam) return;
-    const seamAt = seam.getBoundingClientRect().top - box.getBoundingClientRect().top;
-    const next = seamAt < box.clientHeight * 0.42 ? "after" : "before";
-    setSide((current) => current === next ? current : next);
+  /** Turn to the other page (the dots, the pull past the end of the list, 「계속 내리면」). The way back finds the plan as it was where the customer left it. */
+  function flip(next: "before" | "after") {
+    if (next === side) return;
+    if (side === "before") pageAt.current = bodyBox.current?.scrollTop ?? 0;
+    setTurn(skipAnimation ? null : next === "after" ? "forward" : "back");
+    setSide(next);
   }
+  const turnTo = (next: "before" | "after") => { if (previewing) flip(next); };
+  // The page that comes in starts at its top (the proposed plan) or where the customer was (the plan as it was).
+  useLayoutEffect(() => {
+    const box = bodyBox.current;
+    if (box) box.scrollTop = side === "after" ? 0 : pageAt.current;
+  }, [side]);
   /** `[2026-10-03 사용자 지시]` The plan's own name (the header says 「내 여행」 until the customer names it): saved as the server's `trip.title`. */
   function renameTrip(value: string) {
     return run(async () => {
@@ -810,9 +811,10 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
 
   // Pushing on past the end of the list shows the plan with the recommended fixes under it. ★`[2026-10-04 사용자 지시]` At the end of any day (or of the whole list), not only the last.
   const canRecommend = Boolean(actions.previewRecommendAll) && done && !changing && !registered && !recommended && needsLeft(view, removedSet).total > 0;
+  // `[2026-10-05]` Past the end of the plan as it was, with a proposal ready: the next page. At the top of the proposed plan: back. (No proposal yet: it is asked for, as before.)
   const pull = usePullPastEnd(bodyBox, {
-    onEnd: canRecommend && !frozen ? recommendAll : undefined,
-    onStart: undefined,
+    onEnd: previewing && side === "before" ? () => flip("after") : canRecommend && !frozen ? recommendAll : undefined,
+    onStart: previewing && side === "after" ? () => flip("before") : undefined,
   });
   // `[2026-10-03 사용자]` While the check is drawn row by row the list follows the newest row (it stayed at the top while rows were added below).
   const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view);
@@ -887,7 +889,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   return <div ref={checkingBox} className={styles.checking} data-sheet={custom !== null ? "custom" : sheet} data-changing={changing ? true : undefined} data-dragging={dragging || undefined} data-compact={compact && done && !changing ? true : undefined}
     style={custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
     <div className={styles.map}>
-      <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" topInset={64} routes={lineShapes} onSelect={onPin} />
+      <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" topInset={64} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin} />
     </div>
     {unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
     {changing && headerSlot && createPortal(
@@ -958,36 +960,41 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
               </button>;
             })}
           </div>}
-          <div ref={bodyBox} className={styles.sheetBody} {...follow.handlers} onScroll={() => { follow.handlers.onScroll(); watchSide(); }} onTouchStart={swipeStart} onTouchEnd={swipeEnd}>
+          <div ref={bodyBox} className={styles.sheetBody} {...follow.handlers} onScroll={follow.handlers.onScroll} onTouchStart={swipeStart} onTouchEnd={swipeEnd}>
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
             {filtering && <p className={styles.filterNote} role="status">{filter === "changed" ? t("바뀐 곳만 보는 중이에요", "Showing only what changed") : t("확인이 필요한 곳만 보는 중이에요", "Showing only what needs a look")}
               <button type="button" onClick={() => setFilter(null)}>{t("전체 보기", "Show all")}</button></p>}
-            <div key={String(listDay)} className={styles.page} data-slide={slide ?? undefined}>
-              <DayList view={listBefore} days={days} listDay={listDay} ctx={contextBefore} mapDay={mapDay} onShowDay={showDay} heading={heading} />
-            </div>
-            {previewing && previewView && <>
-              <div ref={junction} className={styles.junction} role="separator" aria-label={t("여기부터 수정안", "The proposed plan starts here")}>
-                <span className={styles.time} aria-hidden="true" />
-                <span className={styles.rail} aria-hidden="true" />
-                <p className={styles.junctionNote}><ChevronsUp size={14} strokeWidth={1.8} aria-hidden="true" />{t("여기부터 수정안 · 계속 올리면 변경 전 일정이에요", "The proposed plan starts here · keep going up for the plan as it was")}</p>
-              </div>
-              <div className={styles.page} data-proposed>
-                <DayList view={listAfter ?? previewView} days={previewView.days.filter((day) => previewView.items.some((item) => item.day === day.day))} listDay={listDay} ctx={contextAfter} mapDay={mapDay} onShowDay={showDay} heading={heading} />
-              </div>
-            </>}
+            {(() => {
+              const proposed = previewing && side === "after" && previewView;
+              return <div key={`${proposed ? "after" : "before"}:${String(listDay)}`} className={styles.page} data-slide={slide ?? undefined} data-proposed={proposed ? true : undefined} data-turn={turn ?? undefined}
+                data-pull={pull.edge ?? undefined} style={{ "--pull": pull.progress } as CSSProperties} onAnimationEnd={() => setTurn(null)}>
+                {proposed && <Act className={styles.pullHintTop} why={frozen} explain={explain} onPress={() => flip("before")} data-edge={pull.edge ?? undefined} style={{ "--pull": pull.edge === "start" ? pull.progress : 0 } as CSSProperties}>
+                  <ChevronsUp size={16} strokeWidth={1.8} aria-hidden="true" />
+                  <span>{t("계속 올리면 변경 전 일정이에요", "Keep going up for the plan as it was")}</span>
+                  <span className={styles.pullBar} aria-hidden="true"><span /></span>
+                </Act>}
+                {proposed
+                  ? <DayList view={listAfter ?? previewView} days={previewView.days.filter((day) => previewView.items.some((item) => item.day === day.day))} listDay={listDay} ctx={contextAfter} mapDay={mapDay} onShowDay={showDay} heading={heading} />
+                  : <DayList view={listBefore} days={days} listDay={listDay} ctx={contextBefore} mapDay={mapDay} onShowDay={showDay} heading={heading} />}
+              </div>;
+            })()}
             {/* ★`[2026-10-03 사용자]` 출처 줄이 「계속 내리면 …」 안내 위에 있어야, 목록 맨 끝에 그 안내가 보여 「내리면 다음이 나온다」가 읽힌다. */}
             {done && view.items.length > 0 && <p className={styles.credit}>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a>
               {drawn.length > 0 && <><br />{lineShapes?.attribution}{routeNotes(drawn).map((note) => <span key={note} data-route-note><br />{note}</span>)}</>}</p>}
             {nextDay && <p className={styles.dayHint}>{t(`옆으로 밀면 ${nextDay.day}일차${nextDay.date ? ` ${dayLabel(nextDay.date, language)}` : ""} 일정이 나와요`, `Swipe sideways for day ${nextDay.day}`)}<ChevronsRight size={15} strokeWidth={1.8} aria-hidden="true" /></p>}
-            {canRecommend && <Act className={styles.pullHint} why={frozen} explain={explain} onPress={recommendAll} data-edge={pull.edge ?? undefined}
+            {(canRecommend || (previewing && side === "before")) && <Act className={styles.pullHint} why={frozen} explain={explain} onPress={previewing ? () => flip("after") : recommendAll} data-edge={pull.edge ?? undefined}
               style={{ "--pull": pull.progress } as CSSProperties}>
               <ChevronsDown size={16} strokeWidth={1.8} aria-hidden="true" />
-              <span>{t("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요", "Keep scrolling to see the plan with the recommended fixes")}</span>
+              <span>{previewing ? t("계속 내리면 수정안이에요", "Keep going down for the proposed plan") : t("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요", "Keep scrolling to see the plan with the recommended fixes")}</span>
               <span className={styles.pullBar} aria-hidden="true"><span /></span>
             </Act>}
             {done && !view.items.length && <p className={styles.empty}>{t("남은 일정이 없어요", "No stops left")}</p>}
             {!done && !follow.following && <button type="button" className={styles.followPill} onClick={follow.resume}><ChevronsDown size={14} strokeWidth={1.8} aria-hidden="true" />{t("확인 중인 곳으로", "Follow the check")}</button>}
           </div>
+          {done && previewing && <div className={styles.pager} role="group" aria-label={t("보는 일정", "Plan shown")}>
+            <button type="button" className={styles.pagerDot} aria-current={side === "before" ? "step" : undefined} aria-label={t("1. 변경 전 일정", "1. The plan as it was")} onClick={() => turnTo("before")}><span aria-hidden="true" /></button>
+            <button type="button" className={styles.pagerDot} aria-current={side === "after" ? "step" : undefined} aria-label={t("2. 수정안", "2. The proposed plan")} onClick={() => turnTo("after")}><span aria-hidden="true" /></button>
+          </div>}
           {done && <ResultFooter view={shown} registration={registration} frozen={frozen} explain={explain} needsTotal={needCount} pendingRemovals={removed.length}
             previewing={previewing && side === "after"} onAutoAll={actions.previewRecommendAll && recommendAll} onRecheck={actions.recheck || actions.remove ? recheck : undefined} onRegisterPreview={registerPreview} />}
         </>}

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { fillPlanAsk, finishOnboarding, openRegistration, start, mockServer, TRIP_ID, weekAhead } from "./helpers";
+import { agree, fillPlanAsk, finishOnboarding, openRegistration, start, mockServer, TRIP_ID, weekAhead } from "./helpers";
 import { needsBadge } from "./plan-check-kit";
 
 const PLAN = "10/1 09:00 경복궁 관람";
@@ -10,6 +10,7 @@ test("첫 방문: 계획을 올리면 게스트 세션이 만들어지고(쿠키
   const server = mockServer(request);
   await server.scenario({ trips: "none" });
   await start(page, null);
+  await agree(page);                                                                     // 이 시험의 주제는 첫 등록이다 - 약관에는 이미 동의한 사람
 
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
@@ -97,7 +98,7 @@ test("온보딩 설문을 마친 뒤 등록하면 설문이 확인 요청에 실
 
 const WEBHOOK = "https://discord.com/api/web" + "hooks/123456789012345678/AbC-def_123456789012345";
 
-test("디스코드 알림 카드의 웹훅은 세션이 없는 첫 방문이면 페이지 안에만 두었다가, 첫 등록으로 세션이 생기면 서버로 가고 브라우저 저장소에는 남지 않는다", async ({ page, request }) => {
+test("디스코드 알림 카드의 웹훅은 알림 채널 동의와 함께 약관 단계를 지날 때 서버로 가고(동의를 기록하며 게스트 세션이 이미 생겼다), 브라우저 저장소에는 남지 않는다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ trips: "none" });
   await start(page, null);
@@ -107,22 +108,21 @@ test("디스코드 알림 카드의 웹훅은 세션이 없는 첫 방문이면 
     await page.getByRole("textbox", { name: "디스코드 웹훅 URL" }).fill(WEBHOOK);
     await head.click();                                              // fold it; the terms step checks the field and passes
     await expect(head).toContainText("입력했어요 · 마이페이지에서 바꿀 수 있어요");
-  });
-  // No session yet: nothing went up (saving would create a server user just for the webhook).
-  expect(await server.received("PUT", "/v1/web/profile")).toHaveLength(0);
+  }, ["alert_channel"]);                                             // ★알림 채널 정보는 그 선택 동의를 해야 보낸다(`alert_channel`)
+  // ★`[2026-10-05]` Agreeing to the terms records the consent on the server, which makes the guest session; the webhook (agreed to as the alert-channel item) goes up right behind it:
+  //   no waiting in page memory for a first plan any more. Once, with the cookie and the CSRF token, no key.
+  await expect.poll(async () => (await server.received("PUT", "/v1/web/profile")).map((entry) => [entry.session, entry.key, entry.body])).toEqual([["stub-session-1", null, { discord_webhook_url: WEBHOOK }]]);
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
-
-  // The first call made the session; the webhook went up with it (cookie and CSRF token, no key), once.
-  await expect.poll(async () => (await server.received("PUT", "/v1/web/profile")).map((entry) => [entry.session, entry.key, entry.body])).toEqual([["stub-session-1", null, { discord_webhook_url: WEBHOOK }]]);
+  expect(await server.received("PUT", "/v1/web/profile")).toHaveLength(1);                           // 등록 때 다시 보내지 않는다
   const token = WEBHOOK.split("/").pop() ?? "";
   expect(await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))).not.toContain(token);
 });
 
-test("세션이 이미 있으면 웹훅은 디스코드 알림 카드를 떠날 때 바로 서버로 가고, 비워 두면 저장된 웹훅을 건드리지 않는다", async ({ page, request }) => {
+test("세션이 이미 있으면 웹훅은 알림 채널 동의와 함께 약관 단계를 지날 때 서버로 가고, 동의하지 않으면 입력한 주소는 버려지며, 비워 두면 저장된 웹훅을 건드리지 않는다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page, "acop_u_known");
   await finishOnboarding(page, async () => {
@@ -130,7 +130,7 @@ test("세션이 이미 있으면 웹훅은 디스코드 알림 카드를 떠날 
     await head.click();
     await page.getByRole("textbox", { name: "디스코드 웹훅 URL" }).fill(WEBHOOK);
     await head.click();
-  });
+  }, ["alert_channel"]);
   await expect.poll(async () => (await server.received("PUT", "/v1/web/profile")).map((entry) => entry.body)).toEqual([{ discord_webhook_url: WEBHOOK }]);
 
   // Back on the card with the field cleared: leaving it again sends nothing (blank is "not entered", not "remove").
@@ -269,6 +269,7 @@ test("고치는 사이 계획이 바뀌어 서버가 거절해도(409 stale_revi
 test("새 세션 시작이 한도에 걸리면(429) 서버 문장 그대로 알리고 계획 입력은 지켜진다", async ({ page, request }) => {
   await mockServer(request).scenario({ session: "limited" });
   await start(page, null);
+  await agree(page);                                                                     // 이 시험의 주제는 세션 한도다 - 약관에는 이미 동의한 사람
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer, start } from "./helpers";
+import { agree, mockServer, start } from "./helpers";
 
 /**
  * `[2026-10-05 사용자 지시]` 마이페이지 「디스코드로 연결」 — 웹훅 주소를 복사해 붙여넣는 대신 디스코드 창에서 서버·채널을 고르면 서버가 웹훅을 받아 저장한다.
@@ -11,6 +11,7 @@ const SECRET = "abcdefghijklmnopqrstuvwxyz0123456789ABCD";
 
 test.beforeEach(async ({ page, request }) => {
   await mockServer(request).reset();
+  await agree(page, { alert_channel: true });          // 알림 채널을 연결하려면 선택 동의(`alert_channel`)가 먼저다 - 이 시험들은 이미 동의한 고객이다
   await start(page);
 });
 

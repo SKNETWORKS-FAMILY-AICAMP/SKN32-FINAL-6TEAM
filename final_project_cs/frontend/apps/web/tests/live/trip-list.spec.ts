@@ -95,6 +95,7 @@ test("첫 화면 카드·메뉴의 여행 목록 보기·전체 목록이 같은
 });
 
 test("첫 장에는 등록 버튼과 소개 건너뛰기 없이 아래로 가는 안내만 있고, 마지막 장의 시작 버튼은 약관·취향 설정으로 간다", async ({ page }) => {
+  await page.addInitScript(() => localStorage.removeItem("tripilot.web.consent.v1"));      // 약관에 아직 동의하지 않은 사람(앞서 심은 동의 사본을 지운다)
   await page.goto("/");
   const hero = page.locator("main > section").first();
   await expect(card(page)).toBeVisible();

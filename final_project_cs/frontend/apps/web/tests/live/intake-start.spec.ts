@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer, start } from "./helpers";
+import { agree, mockServer, start } from "./helpers";
 import { needsBadge } from "./plan-check-kit";
 
 /**
@@ -110,6 +110,7 @@ test("세션이 없는 첫 방문도 누르는 순간 진행 화면으로 넘어
   const server = mockServer(request);
   await server.scenario({ intakeDelay: 1500, review: "on", board: "rich", readingPolls: 1 });
   await start(page, null);
+  await agree(page);                                                                     // 세션은 없지만 약관에는 이미 동의했다(이 시험의 주제는 세션이 만들어지는 때)
   await fillAndSend(page);
   await expect(page).toHaveURL(/\/intakes\/starting$/);
   await expect(page.getByText("계획을 서버로 보내는 중이에요…")).toBeVisible();

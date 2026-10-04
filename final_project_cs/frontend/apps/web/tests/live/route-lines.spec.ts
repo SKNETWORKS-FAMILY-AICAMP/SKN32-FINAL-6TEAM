@@ -81,3 +81,26 @@ test("다른 날로 바꾸면 그 날 장소 사이의 선만 남는다(둘째 �
   await expect(lines(page)).toHaveCount(0);
   await expect(caption(page)).not.toContainText("ODbL");               // no line, no data-source line
 });
+
+test("확대하면 상세 경로선을 따로 한 번 받아 그린다: 축소 상태는 짧은 선, 확대 수준 15 이상에서 상세 선으로 바뀌고, 다시 줄여도 상세 선이 남는다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ routeShapes: "on" });
+  await openMap(page);
+  // ★점 개수는 지도가 그리는 길이 아니라 서버가 준 점으로 가린다: 지도는 화면 밖 구간을 자르고 한 점에 가까운 점은 줄여 그린다. 그래서 서버가 쓴 설명(상세 선이면 「(상세 선)」)으로 본다.
+  const used = async () => ((await caption(page).innerText()).includes("(상세 선)") ? "detail" : "short");
+  const asked = async () => (await server.received("GET", "/route-shapes")).map((entry) => entry.query);
+  expect(await asked()).toEqual([null]);                                                  // 처음에는 짧은 선만(축소용)
+  expect(await used()).toBe("short");
+  const zoomIn = page.locator("#trip-pane-map .leaflet-control-zoom-in");
+  for (let at = 0; at < 6 && (await asked()).length < 2; at += 1) {                      // 확대 수준 15에 닿을 때까지 한 단계씩
+    await page.locator("#trip-pane-map").hover({ position: { x: 100, y: 100 } });
+    await zoomIn.click({ force: true });
+    await page.waitForTimeout(450);
+  }
+  await expect.poll(asked).toEqual([null, "?detail=true"]);                                // 상세 선은 한 번만 따로 받는다
+  await expect.poll(used).toBe("detail");                                                  // 받은 상세 선으로 바뀌어 그려진다(웹은 점을 줄이지 않는다)
+  const zoomOut = page.locator("#trip-pane-map .leaflet-control-zoom-out");
+  for (let at = 0; at < 3; at += 1) { await page.locator("#trip-pane-map").hover({ position: { x: 100, y: 100 } }); await zoomOut.click({ force: true }); await page.waitForTimeout(450); }
+  expect(await used()).toBe("detail");                                                     // 줄여도 상세 선은 그대로(어느 확대에서도 맞고, 바뀌면 선이 튄다)
+  expect(await asked()).toEqual([null, "?detail=true"]);
+});

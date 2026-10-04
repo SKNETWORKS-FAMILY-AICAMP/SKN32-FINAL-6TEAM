@@ -1,4 +1,5 @@
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import { TERMS_VERSION } from "../../src/features/consent/terms-content";
 
 export const STUB = `http://127.0.0.1:${process.env.STUB_PORT ?? 8043}`;
 /** The web app under test (`tests/live/serve.mjs`). */
@@ -7,13 +8,15 @@ export const TRIP_ID = "11111111-2222-3333-4444-555555555555";
 export const KEY_STORAGE = "tripilot.web.user-key.v1";
 
 /** `key`: the legacy `X-User-Key` header (agents, an older page); `session`: the session cookie's value; `csrf`: the `X-CSRF-Token` header. */
-export interface LoggedRequest { method: string; path: string; key: string | null; session: string | null; csrf: string | null; accept: string | null; body: Record<string, unknown> | null }
+export interface LoggedRequest { method: string; path: string; /** `[2026-10-05]` The query string ("?detail=true"), null when there is none. */ query: string | null; key: string | null; session: string | null; csrf: string | null; accept: string | null; body: Record<string, unknown> | null }
 
 /** Talks to the test mock server's test control (never part of the real API). */
 export function mockServer(request: APIRequestContext) {
   return {
     reset: async () => { await request.post(`${STUB}/__test/reset`); },
     scenario: async (change: Record<string, unknown>) => { await request.post(`${STUB}/__test/scenario`, { data: change }); },
+    /** `[2026-10-05]` What the server's consent record says (another device agreed or withdrew): `{ privacy: false }`. Needs the scenario `consents: "on" | "gate"`. */
+    consents: async (items: ConsentSeed, version?: string) => { await request.post(`${STUB}/__test/consents`, { data: { items, version } }); },
     log: async (): Promise<LoggedRequest[]> => (await request.get(`${STUB}/__test/log`)).json(),
     /** Ring the "this trip changed" bell on every open stream; returns how many streams were open. */
     ring: async (kinds?: string[]): Promise<number> => (await (await request.post(`${STUB}/__test/ring`, { data: kinds ? { kinds } : {} })).json()).rang,
@@ -30,16 +33,44 @@ export function mockServer(request: APIRequestContext) {
 export const KNOWN_SESSION = "known-session";
 export const SESSION_COOKIE = "tripilot_sid_dev";
 
+export const CONSENT_STORAGE = "tripilot.web.consent.v1";
+export type ConsentSeed = Partial<Record<"service_terms" | "privacy" | "sensitive" | "location" | "alert_channel", boolean>>;
+
+/**
+ * `[2026-10-05]` The customer has already agreed to the CURRENT terms in this browser: the required items (and `extra` ones, e.g. `{ location: true }`), recorded as the
+ * server's record too (`synced`). Put in before the page loads, only when this browser has no consent record yet - so a test can seed its own and keep it.
+ * ★The app is closed to anyone who has not agreed (`ConsentGate`); a test of a returning customer starts with this, a test of a FIRST visit does not.
+ */
+export async function agree(page: Page, extra: ConsentSeed = {}) {
+  await page.addInitScript(([key, version, items]) => {
+    if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ version, items: { service_terms: true, privacy: true, sensitive: false, location: false, alert_channel: false, ...items }, at: "2026-10-05T09:00:00.000Z", synced: true }));
+  }, [CONSENT_STORAGE, TERMS_VERSION, extra] as const);
+}
+
+/**
+ * `[2026-10-05]` Turn optional consents ON in the record this browser already carries (the one `start` put in): for a test whose `beforeEach` has already called `start`,
+ * where `agree(page, { location: true })` would come too late (it keeps a record that is there). Runs after the earlier init scripts, so it sees the record they wrote.
+ */
+export async function alsoAgree(page: Page, extra: ConsentSeed) {
+  await page.addInitScript(([key, items]) => {
+    const stored = JSON.parse(localStorage.getItem(key) ?? "null") as { items?: Record<string, boolean> } | null;
+    if (stored) localStorage.setItem(key, JSON.stringify({ ...stored, items: { ...stored.items, ...items } }));
+  }, [CONSENT_STORAGE, extra] as const);
+}
+
 /**
  * Korean UI, and — unless `session` is null (a first visit) — a session cookie in this browser. ★`[2026-10-04]` The page keeps no key any more:
  * the server's cookie is what makes a browser a returning one. `"acop_u_known"` (the old name of the known key) means the known session; any other string
  * is a cookie value the mock server does not know (an ended session).
  */
-export async function start(page: Page, session: string | null = "acop_u_known") {
+export async function start(page: Page, session: string | null = "acop_u_known", seedConsent = true) {
   await page.addInitScript(() => {
     if (!localStorage.getItem("tripilot.web.settings.v1")) localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko", navigation: "fixed" }));
   });
-  if (session) await page.context().addCookies([{ name: SESSION_COOKIE, value: session === "acop_u_known" ? KNOWN_SESSION : session, url: STUB }]);
+  if (session) {
+    await page.context().addCookies([{ name: SESSION_COOKIE, value: session === "acop_u_known" ? KNOWN_SESSION : session, url: STUB }]);
+    if (seedConsent) await agree(page);                  // a returning customer has agreed to the terms; a first visit (no session) has not
+  }
 }
 
 /** Korean UI, no cookie, and a user key an older version of the page kept in this browser (the mock server knows `acop_u_known`). */
@@ -49,15 +80,11 @@ export async function startWithOldKey(page: Page, key = "acop_u_known") {
 }
 
 /** Finish the onboarding: agree to the terms, skip every question but the last, answer that one. Leaves the summary open. */
-export async function finishOnboarding(page: Page, beforeTerms?: () => Promise<void>) {
+export async function finishOnboarding(page: Page, beforeTerms?: () => Promise<void>, optional: Array<"sensitive" | "location" | "alert_channel"> = []) {
   await page.goto("/start");
   await beforeTerms?.();
   await page.getByRole("button", { name: /약관 동의/ }).click();
-  await page.getByRole("button", { name: /전체 약관 읽기/ }).click();
-  const reader = page.getByRole("dialog", { name: "서비스 이용 및 개인정보 안내" });
-  await reader.getByRole("article").evaluate((element) => { element.scrollTop = element.scrollHeight; });
-  await reader.getByText(/^\[필수\]/).click();
-  await page.getByRole("button", { name: "동의하고 다음으로" }).click();
+  await agreeTerms(page, optional);
   await page.getByRole("button", { name: "시작하기" }).click();
   await expect(page.locator("#question-title-0")).toBeFocused();   // 「시작하기」의 넘김이 끝나야 다음 누름을 받는다
   const skip = page.getByRole("button", { name: "응답하지 않고 넘어가기" });
@@ -121,13 +148,21 @@ export async function noHorizontalScroll(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 }
 
-/** Terms card open on /start: read the full terms, agree, go on to the preferences. */
-export async function agreeTerms(page: Page) {
+/**
+ * Terms card open on /start: read each REQUIRED document to the end and tick it (the reader closes once ticked; optional items are left unticked unless `optional` names
+ * them), then go on to the preferences. `[2026-10-05]` Consent is per item: 서비스 이용약관 and 개인정보 수집·이용 are required.
+ */
+export async function agreeTerms(page: Page, optional: Array<"sensitive" | "location" | "alert_channel"> = []) {
   await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
-  await page.getByRole("button", { name: /전체 약관 읽기/ }).click();
-  const reader = page.getByRole("dialog", { name: "서비스 이용 및 개인정보 안내" });
-  await reader.getByRole("article").evaluate((element) => { element.scrollTop = element.scrollHeight; });
-  await reader.getByText(/^\[필수\]/).click();
+  for (const code of ["service_terms", "privacy"]) {
+    if (await page.locator(`#consent-${code}`).isChecked()) continue;                       // a returning customer's boxes are already on - ticking again would untick
+    await page.locator(`[data-action="read-terms"][data-doc="${code}"]`).click();
+    const reader = page.getByRole("dialog");
+    await reader.getByRole("article").evaluate((element) => { element.scrollTop = element.scrollHeight; });
+    await reader.getByText(/^\[필수\]/).click();
+    await expect(reader).toHaveCount(0);
+  }
+  for (const code of optional) await page.locator(`#consent-${code}`).evaluate((input: HTMLInputElement) => { if (!input.checked) input.click(); });
   await page.getByRole("button", { name: "동의하고 다음으로" }).click();
 }
 

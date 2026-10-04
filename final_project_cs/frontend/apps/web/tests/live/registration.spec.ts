@@ -1,18 +1,18 @@
 import { expect, test } from "@playwright/test";
-import { hydrated, mockServer, noHorizontalScroll, openRegistration, useKorean } from "./helpers";
+import { agree, hydrated, mockServer, noHorizontalScroll, openRegistration, useKorean } from "./helpers";
 
-test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); });
+test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); await agree(page); });
 
 // The registration page's three panels, 「계획 확인하기」 being off while the chosen one is empty, what is sent and how a refusal comes back are
 // in `registration-panels.spec.ts`, `flow.spec.ts` and `intake-start.spec.ts`. These two keep what only the old demo suite held.
 
-test("작성 중인 계획은 화면을 오가도·새로고침해도 보존되고, 「이전」은 시작 화면(약관 전)으로 간다", async ({ page }) => {
+test("작성 중인 계획은 화면을 오가도·새로고침해도 보존되고, 「이전」은 소개 화면(약관 동의 뒤)으로 간다", async ({ page }) => {
   await openRegistration(page);
   const plan = page.getByLabel("나의 여행 계획");
   const valid = "1일차 · 2026-10-03\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음";
   await plan.fill(valid);
   await page.locator("form").getByRole("link", { name: "이전", exact: true }).click();
-  await expect(page).toHaveURL(/\/start$/);
+  await expect(page).toHaveURL(/\/$/);                                                  // 약관에 동의했으니 시작 화면이 아니라 소개 화면으로
   await page.goBack();
   await expect(plan).toHaveValue(valid);
   await page.reload();
@@ -43,7 +43,7 @@ test("320px에서 홈과 등록 화면이 가로로 넘치지 않는다", async 
   await noHorizontalScroll(page);
   await page.getByRole("button", { name: "3. 일정 시작" }).click();
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
-  await expect(page).toHaveURL(/\/start$/);
+  await expect(page).toHaveURL(/\/trips\/new$/);                                          // 약관에 동의한 사람은 시작 화면을 건너뛰고 바로 등록 화면으로
   await noHorizontalScroll(page);
   await openRegistration(page);
   await page.getByRole("button", { name: "예시 불러오기" }).click();

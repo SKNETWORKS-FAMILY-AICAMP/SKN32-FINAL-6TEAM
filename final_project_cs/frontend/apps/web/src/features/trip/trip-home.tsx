@@ -10,6 +10,8 @@ import type { Translate } from "@/lib/i18n";
 import { undoChange, warmup } from "@/lib/live/extras";
 import { LiveError } from "@/lib/live/client";
 import { progressText, type OpProgress } from "@/lib/live/stream";
+import { readConsents } from "@/features/consent/consent-store";
+import { OptionalConsentPrompt } from "@/features/consent/optional-consent-prompt";
 import { currentLocation, locationFailureText, type LocationFix } from "@/lib/location";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
@@ -17,6 +19,8 @@ import { LinkedText } from "./linked-text";
 import { TripAttention } from "./trip-attention";
 import { tripKey, useTrip } from "./use-trip";
 import { useRouteShapes } from "./use-route-shapes";
+import { useRouteDetail } from "@/features/map/use-route-detail";
+import { getRouteShapes } from "@/lib/live/route-shapes";
 import { noticesKey, proposalsKey } from "./use-trip-extras";
 import type { Trip, TripMessage, TripStop } from "./model";
 import styles from "./trip-home.module.css";
@@ -70,6 +74,8 @@ function TripWorkspace({ trip }: { trip: Trip }) {
   // `[2026-10-04]` The lines between the stops, asked once the trip is open (and again when the plan changes). They never hold the page up: the first
   //   call after the server restarted can wait several seconds while it loads its road data, and the pins are already there.
   const routeShapes = useRouteShapes(trip.id, trip.version);
+  // `[2026-10-05 사용자 지시]` Zoomed in, the detailed lines (`?detail=true`) replace these short ones - they follow the streets.
+  const routeDetail = useRouteDetail(routeShapes.data, ["trip", trip.id, trip.version ?? 0, language], () => getRouteShapes(trip.id, language, { detail: true }));
   const days = [...new Set(trip.stops.map((stop) => stop.date))].sort();
   const [day, setDay] = useState(days[0]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -89,6 +95,8 @@ function TripWorkspace({ trip }: { trip: Trip }) {
   const [rereading, setRereading] = useState(false);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState("");
+  // A question waiting for the customer's agreement to use their location (asked in place, see `askWithLocation`).
+  const [locationQuestion, setLocationQuestion] = useState<string | null>(null);
   // What the server says it is doing with the message now (live progress stream); null until it says.
   const [progress, setProgress] = useState<OpProgress | null>(null);
   const message = useMutation({
@@ -190,8 +198,11 @@ function TripWorkspace({ trip }: { trip: Trip }) {
 
   // ★The server said the answer needs where the customer is. The browser is asked only now, on this press
   //   (user decision 2026-09-30: location comes from the Geolocation API) — never as the page opens.
+  //   ★`[2026-10-05]` And only with the customer's agreement to the personal-location item (`location`, optional): without it the question waits and the agreement is asked right here.
   async function askWithLocation(question: string) {
     setLocationError("");
+    if (!readConsents().location) { setLocationQuestion(question); return; }
+    setLocationQuestion(null);
     setLocating(true);
     const result = await currentLocation();
     setLocating(false);
@@ -273,7 +284,8 @@ function TripWorkspace({ trip }: { trip: Trip }) {
     </section>
     <section className={`${styles.pane} ${styles.mapPane}`} id="trip-pane-map" hidden={pane !== "map"} aria-labelledby="trip-map-heading">
       <header className={styles.panehead}><h2 id="trip-map-heading">{t("지도", "Map")}</h2><span className={styles.muted}>{dayText}</span></header>
-      <TripMap stops={stops} selectedId={selected?.id} dayNumber={dayIndex + 1} onSelect={(stopId) => setSelectedId(stopId)} routes={routeShapes.data}
+      {/* `[2026-10-05 사용자 지시]` `tripId`: with the location consent, this map shows 「내 위치」, sends the positions it reads and draws where the server found the customer stayed. */}
+      <TripMap stops={stops} selectedId={selected?.id} dayNumber={dayIndex + 1} onSelect={(stopId) => setSelectedId(stopId)} routes={routeDetail.routes} onZoom={routeDetail.onZoom} tripId={trip.id} date={activeDay}
         routesError={routeShapes.isError ? t("경로선을 불러오지 못했어요. 장소 핀은 그대로 보여 드려요.", "Could not load the route lines. The pins are still shown.") : undefined} />
       {(trip.dayRoutes?.[activeDay] ?? []).length > 0 && <div className={styles.detailActions}>{(trip.dayRoutes?.[activeDay] ?? []).map((url, index, all) =>
         <ButtonLink key={url} href={url} target="_blank" rel="noopener noreferrer"><Navigation {...icon} />{all.length > 1
@@ -309,6 +321,8 @@ function TripWorkspace({ trip }: { trip: Trip }) {
           {item.needsLocation && index === trip.messages.length - 1 && trip.messages[index - 1]?.role === "user" && <div className={styles.choices}>
             <Button variant="quiet" disabled={message.isPending || locating} onClick={() => void askWithLocation(trip.messages[index - 1].text)}><LocateFixed {...icon} />{locating ? t("위치 찾는 중…", "Finding your location…") : t("내 위치 알려 주고 다시 묻기", "Share my location and ask again")}</Button>
             <span className={styles.undoHint}>{t("누르면 브라우저가 위치 권한을 물어요. 위치는 이 질문에 답하는 데 써요.", "Your browser will ask first. The location is used to answer this question.")}</span></div>}</article>)}
+        {locationQuestion !== null && <OptionalConsentPrompt code="location" why={t("내 위치로 답하려면 개인위치정보 수집·이용에 동의해야 해요.", "To answer from where you are, we need your agreement to the personal location item.")}
+          onAgreed={() => void askWithLocation(locationQuestion)} onCancel={() => setLocationQuestion(null)} />}
         {locationError && <p className={styles.error} role="alert">{locationError}</p>}
         {undo.error && <p className={styles.error} role="alert">{undo.error instanceof LiveError && ["stale_itinerary", "stale", "invalid_version"].includes(undo.error.code)
           ? t("그 사이 일정이 다시 바뀌어 되돌리지 않았어요.", "The plan changed again meanwhile, so nothing was undone.") : undo.error.message}</p>}
