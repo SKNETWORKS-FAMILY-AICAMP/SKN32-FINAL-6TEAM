@@ -106,6 +106,10 @@ class Settings(BaseSettings):
     #:  ★둘 다 있어야 그 업체가 켜진다(`GET /v1/web/auth/providers` 에 나온다). 하나라도 비면 목록에서 빠진다 — 반쯤 켜진 채 뜨지 않게.
     google_client_id: str = ""
     google_client_secret: str = ""
+    #:  `[2026-10-05]` 「디스코드로 연결」(알림 웹훅 자동 연결) — 디스코드 개발자 포털에서 만든 앱의 **클라이언트 ID · 비밀값**(`ACOP_DISCORD_CLIENT_ID` · `ACOP_DISCORD_CLIENT_SECRET`).
+    #:  ★둘 다 있어야 켜진다(`GET /v1/web/profile` 의 `discord_connect.available`). 소셜 로그인용 디스코드 앱을 만들게 되면 같은 앱을 써도 된다. git 밖 환경 파일에만 둔다.
+    discord_client_id: str = ""
+    discord_client_secret: str = ""
     #:  로그인이 끝나면 브라우저를 돌려보낼 **웹 주소(출처만)**. ★서버 설정이고 요청 값으로 바꿀 수 없다(열린 리디렉션 금지).
     #:  비어 있으면 `web_allowed_origins` 의 첫 값.
     web_origin: str = ""

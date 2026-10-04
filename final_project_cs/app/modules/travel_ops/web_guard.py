@@ -270,6 +270,18 @@ def count_auth(tenant_id: str, action: str, *, ip: str, now: datetime | None = N
                                retry_after=_seconds_to(next_hour, now))
 
 
+def count_per_key_hour(tenant_id: str, action: str, *, customer_id: UUID | str, cap: int, now: datetime | None = None) -> None:
+    """사용자(키·세션의 고객) 한 명이 한 시간에 `action` 을 `cap` 번까지만 — `[2026-10-05]` 디스코드 연결 시작(`discord_connect_start`)이 쓴다.
+    ★늘 켜져 있다(주소가 아니라 **사용자** 단위라 한 집에서 여럿이 써도 서로 안 막는다). 막히면 `UsageRefused`(429 `too_many_requests`)."""
+    now = _now(now)
+    hour = f"hour:{now:%Y-%m-%dT%H}"
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        if _bump(cur, tenant_id, "key", str(customer_id), action, hour, cap) is None:
+            next_hour = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+            raise UsageRefused(status=429, code="too_many_requests", limit="per_key_hour", action=action, used=cap, cap=cap,
+                               retry_after=_seconds_to(next_hour, now))
+
+
 def usage_today(conn, tenant_id: str, now: datetime | None = None) -> dict[str, Any]:
     """서비스 전체 오늘 사용량만 — 키·주소별은 싣지 않는다(개인정보)."""
     day = f"day:{_now(now):%Y-%m-%d}"
