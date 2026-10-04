@@ -257,6 +257,7 @@ class Planner:
         self.stage = stage
         self.speed = self.v.R["measured_baseline"]["kakao_walk_speed_mps"]["value"]
         self.detour = self.v.R["transfer"]["stop_station_walk"]["detour_factor"]["value"]
+        self._eff_cache = {}                 # #13 — 접근 걷기 길 거리(직선 환산) 캐시 · 이 플래너 수명
         # 표시 전용 필드(◆칸 — 답 전엔 만들어만 둔다). 켜면 transfer_car 를 options 에 싣는다(새 키 · 스펙 밖).
         self.display = display
         self._tc = O.TransferCar.load() if display else None
@@ -294,6 +295,40 @@ class Planner:
     def _walk(self, straight_m):
         """장소 도보 분 = 직선 × 우회계수 ÷ 1.04 m/s (rules transfer.stop_station_walk — 정류장↔역과 같은 식)."""
         return math.ceil(straight_m * self.detour / self.speed / 60) if straight_m else 0
+
+    def _eff(self, lat1, lng1, lat2, lng2, straight_m):
+        """역·정류장 **접근 걷기**를 도로 그래프로 잰 값 — 「직선 환산 m」(실제 걷는 거리 ÷ 우회계수)로 돌려준다.
+
+        ☆`[2026-10-04 #13]` 장소↔역·정류장 걷기는 직선 × 우회계수(1.3 안팎)였다. 걷는 거리는 30곳 넘는 자리에서
+        `직선 m` 로 다뤄지고(도보 상한도 직선 m) 식은 `_walk` 한 곳이 `× detour` 하므로, 길 거리를 detour 로 나눠
+        **같은 칸에 넣으면** 호출부를 안 바꾸고 `_walk` 가 길 거리 × 속도 로 나온다.
+        파이썬 로컬 라우터(`is_local` — 호출 비용 0)가 있을 때만 쓴다 — 서버 라우터면 후보마다 HTTP 가 나간다.
+        길을 못 찾거나(no_path 포함 — 걷기가 불가능하다는 근거가 못 된다) 라우터가 없으면 직선 그대로(종전 식).
+        낙관 표시(길 밖 접근이 길어 짧게 나올 수 있는 값)는 직선 × 우회계수와 큰 쪽(_walk_net 과 같은 규칙)."""
+        br = getattr(self.v, "bike_router", None)
+        if not straight_m or br is None or not getattr(getattr(br, "router", None), "is_local", False) or not br.available():
+            return straight_m
+        key = (lat1, lng1, lat2, lng2)          # 정확한 좌표 쌍 — 담장 양쪽의 가까운 두 점을 한 키로 합치지 않는다
+        got = self._eff_cache.get(key)
+        if got is None:
+            prof = ((self.v.R.get("bike") or {}).get("ddareungi") or {}).get("ride", {}).get("walk_profile", "foot")
+            r = br.route(prof, lat1, lng1, lat2, lng2)
+            if not r:
+                got = float(straight_m)
+            else:
+                routed = float(r["distance_m"])
+                if r.get("optimistic"):
+                    routed = max(routed, straight_m * self.detour)
+                got = routed / self.detour
+            self._eff_cache[key] = got
+        return got
+
+    def _stop_walk(self, place, stop, straight_m):
+        """장소 → 정류장 접근 걷기(직선 환산 m) — `_eff` 로 길 기준. 직선 도보 상한·후보 가르기는 **종전대로 직선 m** 로 하고,
+        이 값은 그 거름을 통과한 후보에만 쓴다(코덱스 지적: 환산값을 상한과 비교하면 후보가 잘못 탈락하고, 거르기 전 라우팅은 낭비)."""
+        if stop.get("lat") is None or stop.get("lng") is None:
+            return straight_m
+        return round(self._eff(place["lat"], place["lon"], stop["lat"], stop["lng"], straight_m))
 
     def _walk_net(self, a_place, b_place, straight_m):
         """장소↔장소 도보 거리(m) — 보행망 라우터 foot 거리 → 없으면 직선 × 우회계수. (거리, 길 없음 여부).
@@ -347,10 +382,14 @@ class Planner:
                 continue
             nm = rec["station_nm"]
             lines = (sorted(sc.group_lines(rec)) if getattr(sc, "is_ambiguous", None) and sc.is_ambiguous(nm) else None)
+            tlat, tlon = rec.get("lat"), rec.get("lng", rec.get("lon"))
             if self.v.ex is not None:
                 e = self.v.ex.nearest(nm, place["lat"], place["lon"], rec.get("line"))
                 if e is not None:
                     d = e[0]
+                    tlat, tlon = e[1]["lat"], e[1]["lng"]
+            if tlat is not None and tlon is not None:
+                d = self._eff(place["lat"], place["lon"], tlat, tlon, d)     # #13 — 출구(없으면 역)까지 길로
             out.append((nm, d, lines))
             if len(out) >= k:
                 break
@@ -382,6 +421,7 @@ class Planner:
                 a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], radius)):
             if r.route_type_nm in excluded or max(da, db) > wlim:
                 continue
+            da, db = self._stop_walk(a_place, x, da), self._stop_walk(b_place, y, db)      # #13 — 거른 뒤에만 길로
             legs = [{"mode": "bus", "route": r.route_nm, "from": x["station_nm"], "to": y["station_nm"]}]
             wi, wo = self._walk(da), self._walk(db)
             st_date, by_stop = service_day(arrive_dt - timedelta(minutes=wo))
@@ -1023,6 +1063,7 @@ class Planner:
                     a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], radius)):
                 if r_.route_type_nm in excluded or max(da, db) > wlim:
                     continue
+                da, db = self._stop_walk(a_place, x, da), self._stop_walk(b_place, y, db)  # #13 — 거른 뒤에만 길로
                 def bus(m, i=i, legs=[{"mode": "bus", "route": r_.route_nm, "from": x["station_nm"], "to": y["station_nm"]}],
                         wi=self._walk(da), wo=self._walk(db)):
                     day, dm, off = at(m, wi)
@@ -1471,6 +1512,9 @@ class Planner:
                 o["walk_m"] = int(round(o["_walk_m"]))
             if o["_fare"] is not None:
                 o["fare_krw"] = int(o["_fare"])
+                if o["_legs"] and o.get("_lr") is not None and O.fare_is_est(self.v, o["_legs"], o["_lr"]):
+                    # ☆#21 — 공표 역간거리가 없는 구간(9호선·코레일 등)은 OSM 선로 길이 추정으로 낸 값이다. 확정처럼 보이지 않게 밝힌다
+                    o["label"] = o["label"] + " · 요금은 선로 길이 추정"
             elif o["_legs"] and o.get("_lr") is not None:
                 # ☆#20 — 버스가 섞인 환승은 합성 요금 근거가 없다 → 확정 규칙(탈것별 요금의 합 상한)으로 상한을 싣고 밝힌다
                 up = O.fare_upper_of(self.v, o["_legs"], o["_lr"])

@@ -237,47 +237,12 @@ class GraphHopperClient:
             return None
 
 
-class FixtureRouter:
-    """시험용 — 합성 경로 파일에서 꺼낸다. 키 = 'lng,lat|lng,lat'(소수 4자리) 또는 케이스 id.
-    실제 API 응답을 담는 자리가 아니다: 18번의 합성 시험(TOPIS 링크 체인)과 같은 종류의 픽스처만 둔다."""
-
-    def __init__(self, path):
-        self.doc = json.loads(Path(path).read_text(encoding="utf-8"))
-        self.routes = self.doc["routes"]
-        self.calls = 0
-
-    @staticmethod
-    def key(s, e):
-        return f"{s[0]:.4f},{s[1]:.4f}|{e[0]:.4f},{e[1]:.4f}"
-
-    def route(self, s, e, profile="car", via=None):
-        self.calls += 1
-        r = self.routes.get(self.key(s, e))
-        if r is None:
-            raise RouterDown(f"픽스처에 경로가 없다: {self.key(s, e)}")
-        if r.get("down"):
-            raise RouterDown("픽스처가 라우터 다운을 흉내낸다")
-        return r
-
-    def info(self):
-        return {"version": "fixture"}
-
-
-class NoRouter:
-    """라우터를 쓰지 않기로 한 실행(--gh-url none). 매번 RouterDown."""
-    calls = 0
-
-    def route(self, *a, **k):
-        raise RouterDown("라우터 없이 실행 중(--gh-url none)")
-
-    def info(self):
-        return None
-
-
 def make_router(spec):
     if not spec or spec == "none":
+        from .car_fixtures import NoRouter
         return NoRouter()
     if spec.startswith("fixture:"):
+        from .car_fixtures import FixtureRouter
         return FixtureRouter(spec[len("fixture:"):])
     if spec == "local" or spec.startswith("local:"):
         # ☆`[2026-10-04]` 서버 없이 파이썬으로 — road_graph_v1 위 최단경로(graph_router.py). local:<폴더> 로 자료 위치를 줄 수 있다
@@ -364,3 +329,12 @@ class CarService:
                         "night_rate": taxi_rate(self.F, kind, hhmm), "out_of_city": None,
                         "fare_basis": "호출료·정차·시계외 미포함 하한"})
         return out
+
+
+# ☆`[2026-10-04 문제목록 #59]` 시험·명령줄에서만 쓰는 라우터(FixtureRouter · NoRouter)는 car_fixtures.py 로 옮겼다 — 서비스 경로(CarGraph ·
+#   CarService · 라우터 클라이언트)만 이 파일에 남는다. 옛 이름은 첫 접근 때 새 파일에서 이어 준다.
+def __getattr__(name):
+    if name in ("FixtureRouter", "NoRouter"):
+        from . import car_fixtures
+        return getattr(car_fixtures, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
