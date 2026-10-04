@@ -258,7 +258,7 @@ test("휴지통은 상세로 가지 않고 확인창을 열며, 확인창 취소
   expect(await shownIds(page)).toEqual([ids[0], ids[2]]);
   // 서버에는 가운데 여행의 id 로 딱 한 번 요청이 갔고, 새로고침해도 그대로다(서버가 정말 지웠다).
   expect(await asked(server)).toEqual([ids[1]]);
-  expect(await page.evaluate((key) => [localStorage.getItem(key), JSON.parse(localStorage.getItem("tripilot.web.settings.v1")!).language], KEY_STORAGE)).toEqual(["acop_u_known", "ko"]);
+  expect(await page.evaluate((key) => [localStorage.getItem(key), JSON.parse(localStorage.getItem("tripilot.web.settings.v1")!).language], KEY_STORAGE)).toEqual([null, "ko"]);   // 키는 저장소에 없다 — 세션은 쿠키다
   await expect(page.getByRole("button", { name: "선택 삭제" })).toBeFocused();
   await page.reload();
   await expect(rows(page)).toHaveCount(2);

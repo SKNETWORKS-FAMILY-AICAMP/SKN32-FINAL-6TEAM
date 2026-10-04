@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { clearFlow, exchangeTicket, getAuthProviders, getLinks, isSocialUnsupported, localPath, pendingFlow, socialErrorText, startSocial, unlinkSocial } from "./auth";
-import { LiveError } from "./client";
+import { currentSession, LiveError, resetSessionState } from "./client";
+import { answeringSession, CSRF, sessionBody, sessionCalls } from "./session-kit";
 
 function memory(initial: Record<string, string> = {}) {
   const items = new Map<string, string>(Object.entries(initial));
@@ -15,22 +16,28 @@ describe("social sign-in calls", () => {
   let replies: Response[];
   let session: ReturnType<typeof memory>;
 
+  /** `has`: this browser already has a session cookie (a guest's). */
+  function stub(has = true) {
+    vi.stubGlobal("fetch", answeringSession(async (url, init) => { calls.push({ url, init }); return replies.shift() ?? json({}); }, { has }));
+  }
+
   beforeEach(() => {
     calls = [];
     replies = [];
     session = memory();
-    vi.stubGlobal("window", { localStorage: memory({ "tripilot.web.user-key.v1": "acop_u_mine" }), sessionStorage: session, dispatchEvent: () => true });
-    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => { calls.push({ url, init }); return replies.shift() ?? json({}); });
+    vi.stubGlobal("window", { localStorage: memory(), sessionStorage: session, dispatchEvent: () => true });
+    stub();
   });
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => { vi.unstubAllGlobals(); resetSessionState(); });
 
   const headerOf = (index: number, name: string) => (calls[index].init.headers as Record<string, string> | undefined)?.[name];
 
-  it("asks which providers the server has without a key, keeps the names it knows and drops the rest", async () => {
+  it("asks which providers the server has without making a session, keeps the names it knows and drops the rest", async () => {
     replies.push(json({ providers: [{ id: "google" }, { id: "weird" }, { id: "kakao" }, {}] }));
     expect(await getAuthProviders("ko")).toEqual(["google", "kakao"]);
     expect(calls[0].url).toMatch(/\/v1\/web\/auth\/providers$/);
     expect(headerOf(0, "X-User-Key")).toBeUndefined();
+    expect(sessionCalls).toHaveLength(0);                                     // asking which methods exist makes no user
     replies.push(json({}));
     expect(await getAuthProviders("ko")).toEqual([]);                      // none set up is an empty list, not an error
   });
@@ -42,20 +49,24 @@ describe("social sign-in calls", () => {
     expect(isSocialUnsupported(new LiveError("timeout", "느려요"))).toBe(false);
   });
 
-  it("starts a link with the key of this browser and a nonce, and keeps the flow for the page it comes back to", async () => {
+  it("starts a link with the session of this browser (cookie and CSRF token) and a nonce, and keeps the flow for the page it comes back to", async () => {
     replies.push(json({ authorize_url: "https://accounts.example/o/auth?x=1" }));
     expect(await startSocial("google", "link", "/mypage#accounts", "ko")).toBe("https://accounts.example/o/auth?x=1");
-    expect(headerOf(0, "X-User-Key")).toBe("acop_u_mine");
+    expect(calls[0].init.credentials).toBe("include");
+    expect(headerOf(0, "X-CSRF-Token")).toBe(CSRF);
+    expect(headerOf(0, "X-User-Key")).toBeUndefined();
     const body = JSON.parse(String(calls[0].init.body));
     expect(body).toMatchObject({ mode: "link" });
     expect(body.client_nonce).toMatch(/^[0-9a-f]{64}$/);
     expect(pendingFlow()).toEqual({ provider: "google", mode: "link", nonce: body.client_nonce, returnTo: "/mypage#accounts" });
   });
 
-  it("starts a login WITHOUT any key (asking to sign in must not create a user) and sends the human-check token when given", async () => {
+  it("starts a login WITHOUT making a session (asking to sign in must not create a user) and sends the human-check token when given", async () => {
+    stub(false);
     replies.push(json({ authorize_url: "https://kauth.example/oauth" }));
     await startSocial("kakao", "login", "/mypage", "ko", "TOKEN");
     expect(headerOf(0, "X-User-Key")).toBeUndefined();
+    expect(sessionCalls).toHaveLength(0);
     expect(JSON.parse(String(calls[0].init.body))).toMatchObject({ mode: "login", turnstile_token: "TOKEN" });
   });
 
@@ -79,20 +90,29 @@ describe("social sign-in calls", () => {
     expect(session.getItem(FLOW)).toBeNull();
   });
 
-  it("swaps the ticket with the nonce, and brings back a key only for a sign-in", async () => {
-    replies.push(json({ outcome: "signed_in", provider: "google", user_key: "acop_u_account", notice: "보관해 주세요", trips: 2 }));
-    expect(await exchangeTicket("T", "n".repeat(64), "ko")).toEqual({ outcome: "signed_in", provider: "google", userKey: "acop_u_account", notice: "보관해 주세요", trips: 2 });
-    expect(JSON.parse(String(calls[0].init.body))).toEqual({ ticket: "T", client_nonce: "n".repeat(64) });
+  it("swaps the ticket with the nonce asking for a cookie session, and takes the member's session from a sign-in", async () => {
+    replies.push(json({ outcome: "signed_in", provider: "google", trips: 2, ...sessionBody("member") }));
+    expect(await exchangeTicket("T", "n".repeat(64), "ko")).toEqual({ outcome: "signed_in", provider: "google", trips: 2 });
+    expect(JSON.parse(String(calls[0].init.body))).toEqual({ ticket: "T", client_nonce: "n".repeat(64), session: "cookie" });
     expect(headerOf(0, "X-User-Key")).toBeUndefined();
-    replies.push(json({ outcome: "linked", provider: "kakao", user_key: "acop_u_ignored", trips: 1 }));
-    expect(await exchangeTicket("T2", "n".repeat(64), "ko")).toMatchObject({ outcome: "linked", userKey: null });   // a link never changes the key
+    expect(calls[0].init.credentials).toBe("include");                        // the guest cookie goes along: the server ends that session
+    expect(currentSession()).toMatchObject({ kind: "member", csrf: CSRF });
   });
 
-  it("refuses an answer it cannot trust: an unknown outcome, or a sign-in with no key", async () => {
+  it("reads the session again after a link (it keeps the session, which is a member's now), and brings no new one", async () => {
+    stub(true);
+    replies.push(json({ outcome: "linked", provider: "kakao", trips: 1 }));
+    expect(await exchangeTicket("T2", "n".repeat(64), "ko")).toEqual({ outcome: "linked", provider: "kakao", trips: 1 });
+    expect(sessionCalls.map((call) => new URL(call.url).pathname)).toEqual(["/v1/web/auth/me"]);
+  });
+
+  it("refuses an answer it cannot trust: an unknown outcome, or a sign-in with no session", async () => {
     replies.push(json({ outcome: "weird", provider: "google" }));
     await expect(exchangeTicket("T", "n".repeat(64), "ko")).rejects.toMatchObject({ code: "bad_exchange" });
+    stub(false);                                                              // no cookie came with it, and none can be read back
     replies.push(json({ outcome: "signed_in", provider: "google" }));
     await expect(exchangeTicket("T", "n".repeat(64), "ko")).rejects.toMatchObject({ code: "bad_exchange" });
+    expect(currentSession()).toBeNull();
   });
 
   it("passes the refusal of a used or foreign ticket on as it is (410 ticket_invalid)", async () => {
@@ -100,21 +120,23 @@ describe("social sign-in calls", () => {
     await expect(exchangeTicket("T", "n".repeat(64), "ko")).rejects.toMatchObject({ code: "ticket_invalid" });
   });
 
-  it("lists and unlinks with the key, keeping only providers it knows", async () => {
+  it("lists and unlinks with the session, keeping only providers it knows (the write carries the CSRF token)", async () => {
     replies.push(json({ links: [{ provider: "google", linked_at: "2026-10-03T10:00:00+09:00" }, { provider: "weird" }] }));
     expect(await getLinks("ko")).toEqual([{ provider: "google", linkedAt: "2026-10-03T10:00:00+09:00" }]);
-    expect(headerOf(0, "X-User-Key")).toBe("acop_u_mine");
+    expect(calls[0].init.credentials).toBe("include");
+    expect(headerOf(0, "X-CSRF-Token")).toBeUndefined();
     replies.push(json({ links: [] }));
     expect(await unlinkSocial("google", "ko")).toEqual([]);
     expect(calls[1].url).toMatch(/\/v1\/web\/auth\/google$/);
     expect(calls[1].init.method).toBe("DELETE");
+    expect(headerOf(1, "X-CSRF-Token")).toBe(CSRF);
   });
 });
 
 describe("what the sign-in page says", () => {
   it("says each reason plainly, and an unknown reason as a failure, never as a success", () => {
     expect(socialErrorText("cancelled", ko)).toContain("취소");
-    expect(socialErrorText("already_linked_elsewhere", ko)).toContain("이미 다른 토큰에 연결");
+    expect(socialErrorText("already_linked_elsewhere", ko)).toContain("이미 다른 여행 기록에 연결");
     expect(socialErrorText("ticket_invalid", ko)).toContain("처음부터 다시");
     expect(socialErrorText("something_new", ko)).toContain("로그인하지 못했어요");
   });

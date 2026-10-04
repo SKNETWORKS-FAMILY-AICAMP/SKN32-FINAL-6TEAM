@@ -1,6 +1,6 @@
 import type { Trip, TripChange, TripGateway, TripMessage, TripStop, TripWarning } from "../../features/trip/model";
 import { translator, type Language, type Translate } from "../i18n";
-import { api, currentKey, LiveError } from "./client";
+import { api, hasSession, LiveError } from "./client";
 import { streamApi } from "./stream";
 
 /** Server trip view (`GET /v1/web/trips/{id}`) — only the fields the web reads. */
@@ -205,6 +205,11 @@ function replyFor(result: { status?: string; case_status?: string; answer?: stri
 
 async function read(tripId: string, language: Language): Promise<Trip> {
   const t = translator(language);
+  // ★`[2026-10-04]` A trip has an owner: a browser with no session (a link someone kept, or a guest session that ended) is not made a new guest just to be
+  //   told "not yours". It is told so at once, with the way back — a login brings an account's trips back; a guest's trips are gone.
+  if (!await hasSession(language)) {
+    throw new LiveError("not_found", t("이 여행을 찾지 못했어요. 이 기기에서 한동안 쓰지 않아 게스트 여행이 사라졌을 수 있어요. 계정에 보관한 여행이라면 마이페이지에서 로그인하면 다시 열려요.", "We could not find this trip. A guest trip goes away when this device is not used for a while. If it is kept with an account, sign in on My page to open it again."));
+  }
   const server = await api<ServerTrip>(`/v1/web/trips/${encodeURIComponent(tripId)}`, language);
   // ★이동 항목(kind mobility — 출발 시각 = 다음 일정 시작 − 이동 − 여유)은 일정 목록에 섞지 않고 **다음 일정의 메모**로
   //   붙인다. 출발 알림은 서버가 그 시각에 보낸다(D-020). ☆2026-09-28 실제 화면: 「A → B」가 일정처럼 끼어 보였다.
@@ -269,9 +274,9 @@ async function removeTrip(tripId: string, language: Language): Promise<void> {
 export function createLiveGateway(): TripGateway {
   return {
     async listTrips(language) {
-      // ★No stored key means this browser has registered nothing. Asking would issue a key — a new server user — only to
-      //   list nothing, so we do not ask.
-      if (!currentKey()) return [];
+      // ★No session means this browser has registered nothing. Asking with the list would make a guest session — a new server user —
+      //   only to list nothing, so we only ask who this browser is (`hasSession`) and stop there when nobody.
+      if (!await hasSession(language)) return [];
       const { trips } = await api<{ trips: ServerTripRow[] }>("/v1/web/trips", language);
       return trips.map((row) => ({ id: row.trip_id, title: row.title, createdAt: row.created_at, version: row.version }));
     },

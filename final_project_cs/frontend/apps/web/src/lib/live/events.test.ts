@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { resetSessionState } from "./client";
 import { eventStreamParser, toTripEvent, watchTrip, type TripEvent } from "./events";
+import { answeringSession } from "./session-kit";
 
 function memory(initial: Record<string, string> = {}) {
   const items = new Map<string, string>(Object.entries(initial));
@@ -34,19 +36,20 @@ describe("the server's change bell", () => {
 
     beforeEach(() => {
       calls = [];
-      vi.stubGlobal("window", { localStorage: memory({ "tripilot.web.user-key.v1": "acop_u_mine" }), sessionStorage: memory() });
-      vi.stubGlobal("fetch", async (url: string, init: RequestInit) => { calls.push({ url, init }); return reply(); });
+      vi.stubGlobal("window", { localStorage: memory(), sessionStorage: memory() });
+      vi.stubGlobal("fetch", answeringSession(async (url, init) => { calls.push({ url, init }); return reply(); }));
     });
-    afterEach(() => vi.unstubAllGlobals());
+    afterEach(() => { vi.unstubAllGlobals(); resetSessionState(); });
 
-    it("sends the key in a header (never the URL) and passes the server's events on", async () => {
+    it("sends the session cookie (credentials, never the URL or a key header) and passes the server's events on", async () => {
       reply = () => new Response(streamOf(["event: ready\ndata: {\"version\":1}\n\n", "event: trip.changed\ndata: {\"kinds\":[\"itinerary\"],\"version\":2}\n\n"]), { status: 200, headers: { "Content-Type": "text/event-stream" } });
       const events: TripEvent[] = [];
       const end = await watchTrip("trip 1", "ko", (event) => events.push(event), new AbortController().signal);
       expect(end).toBe("closed");
       expect(calls[0].url).toMatch(/\/v1\/web\/trips\/trip%201\/events$/);
-      expect(calls[0].url).not.toContain("acop_u_mine");
-      expect(new Headers(calls[0].init.headers).get("X-User-Key")).toBe("acop_u_mine");
+      expect(calls[0].init.credentials).toBe("include");
+      expect(new Headers(calls[0].init.headers).get("X-User-Key")).toBeNull();
+      expect(new Headers(calls[0].init.headers).get("Accept")).toBe("text/event-stream");
       expect(events).toEqual([{ type: "ready", version: 1 }, { type: "changed", kinds: ["itinerary"], version: 2 }]);
     });
 

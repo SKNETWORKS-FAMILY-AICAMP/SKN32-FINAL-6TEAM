@@ -1,5 +1,5 @@
 import type { Language } from "../i18n";
-import { API_BASE, userKey } from "./client";
+import { API_BASE, sessionInit } from "./client";
 import { eventStreamParser, type WatchEnd } from "./events";
 import type { CheckLine, CheckResult, ItemRow, ReviewItem, ReviewMove, ReviewNeeds } from "./intake-review";
 
@@ -227,12 +227,11 @@ export function reduceStream(previous: StreamState, event: IntakeStreamEvent): S
 export async function watchIntake(intakeId: string, language: Language, onEvent: (event: IntakeStreamEvent) => void, signal: AbortSignal): Promise<WatchEnd> {
   let response: Response;
   try {
-    const key = await userKey(language);
-    response = await fetch(`${API_BASE}/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/events`, {
-      headers: { "X-User-Key": key, Accept: "text/event-stream" },
+    response = await fetch(`${API_BASE}/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/events`, await sessionInit(language, {
+      headers: { Accept: "text/event-stream" },
       cache: "no-store",
       signal,
-    });
+    }));
   } catch {
     return signal.aborted ? "closed" : "failed";
   }

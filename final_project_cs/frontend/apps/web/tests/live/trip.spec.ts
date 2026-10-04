@@ -266,7 +266,7 @@ test("여행 화면을 열면 채팅 모델 예열을 서버에 한 번 청하�
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
   await expect.poll(async () => (await server.received("POST", "/v1/web/warmup")).length).toBe(1);
-  expect((await server.received("POST", "/v1/web/warmup"))[0].key).toBe("acop_u_known");
+  expect((await server.received("POST", "/v1/web/warmup"))[0]).toMatchObject({ session: "known-session", csrf: "csrf-known", key: null });
 
   await server.reset();
   const fresh = await page.context().browser()!.newContext();

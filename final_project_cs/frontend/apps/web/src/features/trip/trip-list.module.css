@@ -48,3 +48,5 @@ label.row { cursor: pointer; }
 .compact .text strong { font-size: 13px; }
 .compact .text small { font-size: 11px; }
 .compact .row:focus-visible { outline-offset: 0; }
+.emptyHint { margin-top: 8px; line-height: 1.7; }
+.emptyHint a { color: var(--color-primary); font-weight: 700; text-decoration: underline; }

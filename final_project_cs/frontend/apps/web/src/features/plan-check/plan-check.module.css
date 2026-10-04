@@ -359,3 +359,6 @@ button.moveHead { cursor: pointer; }
 /* 한국관광공사 출처 표시 — 확인 목록의 맨 아래 */
 .credit { margin: 14px 0 4px; font-size: 11.5px; line-height: 1.6; color: var(--color-muted); text-align: center; }
 .credit a { color: inherit; text-decoration: underline; }
+/* `[2026-10-04]` 게스트 제한에 걸리면 등록 줄 위 오류에 붙는 「계정 연결」 안내. */
+.loginHint { margin: 6px 0 0; font-size: 12px; line-height: 1.6; color: var(--color-muted); }
+.loginHint a { color: var(--color-primary); font-weight: 750; text-decoration: underline; }

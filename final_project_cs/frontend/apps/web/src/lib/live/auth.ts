@@ -1,9 +1,11 @@
 import type { Language } from "../i18n";
-import { api, LiveError, openApi } from "./client";
+import { api, LiveError, openApi, sessionOf, takeSession, probeSession } from "./client";
 
 /**
- * Social sign-in (`wiki/records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md`). The user key stays the identity of every call;
- * a social account is a second way to get that key back — it is linked to a key (`link`), or it brings the key to a new browser (`login`).
+ * Social sign-in (`wiki/records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md`). `[2026-10-04]` The identity of every call is the session
+ * cookie; a social account is what makes a guest session a member's — it is linked to this browser's session (`link`: the session, and
+ * its trips, are kept and now outlive the browser), or it opens an account's session in this browser (`login`: the guest session this
+ * browser had is ended by the server, and its trips with it).
  *
  * ★The server does the whole OAuth dance (state, PKCE, the provider's code). This side only starts it, is sent back with a
  *   one-time ticket, and swaps the ticket for the result. The ticket is worth nothing without `clientNonce`, which only the
@@ -69,7 +71,7 @@ export async function startSocial(provider: SocialProvider, mode: SocialMode, re
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ mode, client_nonce: nonce, ...(humanToken ? { turnstile_token: humanToken } : {}) }),
   };
-  // `link` belongs to this browser's key; `login` is asked without one (so no user is created just by looking).
+  // `link` belongs to this browser's session; `login` is asked without making one (so no user is created just by looking).
   const answer = mode === "link"
     ? await api<{ authorize_url?: unknown }>(`/v1/web/auth/${provider}/start`, language, init)
     : await openApi<{ authorize_url?: unknown }>(`/v1/web/auth/${provider}/start`, language, init);
@@ -80,22 +82,30 @@ export async function startSocial(provider: SocialProvider, mode: SocialMode, re
 }
 
 export type SocialOutcome = "signed_in" | "created" | "linked";
-export interface SocialResult { outcome: SocialOutcome; provider: SocialProvider; userKey: string | null; notice: string | null; trips: number | null }
+export interface SocialResult { outcome: SocialOutcome; provider: SocialProvider; trips: number | null }
 
-/** Swap the ticket for the result (`POST /auth/exchange`). A ticket that is old, used or not this browser's is refused (410 `ticket_invalid`). */
+/**
+ * Swap the ticket for the result (`POST /auth/exchange`). A ticket that is old, used or not this browser's is refused (410 `ticket_invalid`).
+ * ★Asked with `session: "cookie"`: a sign-in (`signed_in` · `created`) then sets the member's session cookie and brings its CSRF token; the
+ *   guest session this browser had (the cookie goes along) is ended by the server. A link keeps the session — it is read again to learn it is a member's now.
+ */
 export async function exchangeTicket(ticket: string, nonce: string, language: Language): Promise<SocialResult> {
-  const body = await openApi<{ outcome?: unknown; provider?: unknown; user_key?: unknown; notice?: unknown; trips?: unknown }>("/v1/web/auth/exchange", language, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ticket, client_nonce: nonce }),
+  const body = await openApi<{ outcome?: unknown; provider?: unknown; trips?: unknown; kind?: unknown; csrf_token?: unknown }>("/v1/web/auth/exchange", language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ticket, client_nonce: nonce, session: "cookie" }),
   });
   const outcome = (["signed_in", "created", "linked"] as const).find((value) => value === body.outcome);
   if (!outcome || !isProvider(body.provider)) throw new LiveError("bad_exchange", "서버 답을 읽지 못했어요.");
-  const key = typeof body.user_key === "string" && body.user_key ? body.user_key : null;
-  // A sign-in without a key would leave this browser with nothing: never claim it worked.
-  if (outcome !== "linked" && !key) throw new LiveError("bad_exchange", "서버가 토큰을 주지 않았어요.");
-  return { outcome, provider: body.provider, userKey: outcome === "linked" ? null : key, notice: typeof body.notice === "string" ? body.notice : null, trips: typeof body.trips === "number" ? body.trips : null };
+  if (outcome === "linked") await probeSession(language, true).catch(() => null);
+  else {
+    // A sign-in that brings no session would leave this browser with nothing: never claim it worked.
+    const session = sessionOf(body) ?? await probeSession(language, true).catch(() => null);
+    if (!session) throw new LiveError("bad_exchange", "서버가 로그인 세션을 주지 않았어요.");
+    takeSession(session);
+  }
+  return { outcome, provider: body.provider, trips: typeof body.trips === "number" ? body.trips : null };
 }
 
-/** The providers linked to this browser's key (`GET /auth/links`). */
+/** The providers linked to this browser's session (`GET /auth/links`). */
 export async function getLinks(language: Language): Promise<{ provider: SocialProvider; linkedAt: string | null }[]> {
   return linksOf(await api<{ links?: { provider?: unknown; linked_at?: unknown }[] }>("/v1/web/auth/links", language));
 }
@@ -114,7 +124,7 @@ export function socialErrorText(code: string, t: (ko: string, en: string) => str
   switch (code) {
     case "cancelled": return t("로그인을 취소했어요.", "You cancelled the sign-in.");
     case "denied": return t("로그인 업체가 접근을 허락하지 않았어요.", "The sign-in provider did not allow access.");
-    case "already_linked_elsewhere": return t("이 계정은 이미 다른 토큰에 연결돼 있어요. 그 계정으로 「로그인」하면 그 토큰의 여행을 열 수 있어요. 이 브라우저의 토큰과 여행은 그대로예요.", "This account is already linked to another token. Use “Sign in” with it to open that token's trips. This browser's token and trips are unchanged.");
+    case "already_linked_elsewhere": return t("이 계정은 이미 다른 여행 기록에 연결돼 있어요. 그 계정으로 「로그인」하면 그 여행을 열 수 있어요. 이 브라우저의 지금 여행은 그대로예요.", "This account is already linked to other trips. Use “Sign in” with it to open them. The trips in this browser are unchanged.");
     case "ticket_invalid": return t("로그인 확인이 만료됐거나 이 브라우저에서 시작한 것이 아니에요. 처음부터 다시 해 주세요.", "The sign-in check expired or was not started in this browser. Please start again.");
     default: return t("로그인하지 못했어요. 잠시 뒤 다시 해 주세요.", "Could not sign in. Please try again shortly.");
   }

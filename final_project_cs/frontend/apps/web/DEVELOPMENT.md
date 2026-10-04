@@ -36,7 +36,7 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - `src/lib/theme.ts`, `src/styles/tokens.css`: 테마 이름과 첫 화면을 그리기 전에 저장된 테마를 거는 스크립트, 두 테마의 색 역할 변수. 화면 CSS에는 색을 직접 적지 않는다(`src/styles/tokens.test.ts`가 검사).
 - `src/lib/profile.ts`, `src/features/profile`: 메뉴·마이페이지가 읽는 사용자 정보와 마이페이지 조회·수정 화면. 연동 상태는 [사용자 정보 연동 대기 항목](PROFILE_CONTRACT.md).
 - `src/features/trip-registration`, `src/features/intake-review`: 등록 입력·초안과 live 접수 확인/편집/등록.
-- `src/features/account`, `src/features/human-check`: 사용자 키 안내·관리와 선택적 Turnstile 확인.
+- `src/features/account`, `src/features/human-check`: 로그인 상태 카드(게스트·회원, 로그아웃)·소셜 계정 연결과 선택적 Turnstile 확인. `[2026-10-04]` 사용자 키 안내·관리 화면은 걷었다(쿠키 세션).
 - `src/features/trip`: 여행 홈·목록·삭제·화면용 타입·공통 조회·live 제안/알림/이력.
 - `src/features/map`: 공통 지도 표시 계약·지도 선택·네이버/Google 지도 컴포넌트.
 - `src/lib/gateway.ts`, `src/lib/live`: 연결 선택(`NEXT_PUBLIC_DATA_MODE=live` 하나 — 아니면 `components/server-not-connected.tsx` 한 화면), 실제 사용자 키·접수·여행·상담·제안/알림·삭제 연결. `[2026-10-03]` 데모 어댑터(`lib/demo`)는 없앴다.
@@ -44,11 +44,11 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 
 여행 목록·조회·대화는 `TripGateway`, live 접수·확인·계획 생성·제안/알림은 `lib/live`의 별도 함수로 요청한다. 여행 캐시는 ID·화면 언어별로 나눈다. 서버 문장·오류를 자동 번역하지 않는다. 선택 언어는 현재 접수 요청에 전달하지 않으며 서버의 접수 조립·계획 생성은 `locale="ko"`다.
 
-언어(기본 한국어 — 2026-10-03 사용자 결정, 앞서는 English)·내비게이션(기본 fixed)은 `localStorage`의 `tripilot.web.settings.v1`에 보관한다. 사용자 키와 발급 안내도 `localStorage`, 등록 글 초안과 대화 표시 이력은 `sessionStorage`를 사용한다. 온보딩 답·약관 동의·복구 이메일 초안은 페이지 메모리에만 있어 새로고침하면 사라진다. 완료한 설문은 demo `createTrip`에서 검사하고, live `/confirm`·`/plan`에서 서버로 보낸다([설문 대응](PREFERENCES_CONTRACT.md)). 이메일 초안은 보내지 않는다.
+언어(기본 한국어 — 2026-10-03 사용자 결정, 앞서는 English)·내비게이션(기본 fixed)은 `localStorage`의 `tripilot.web.settings.v1`에 보관한다. 등록 글 초안과 대화 표시 이력은 `sessionStorage`를 사용한다. `[2026-10-04]` 사용자 키는 브라우저가 더는 두지 않는다 — 서버의 HttpOnly 쿠키 세션이고, 쓰기에 붙는 보안 토큰(`X-CSRF-Token`)은 페이지 메모리에만 있다. 옛 버전이 `localStorage` 에 남긴 키는 처음 열 때 세션으로 옮기고 지운다. 온보딩 답·약관 동의·복구 이메일 초안은 페이지 메모리에만 있어 새로고침하면 사라진다. 완료한 설문은 demo `createTrip`에서 검사하고, live `/confirm`·`/plan`에서 서버로 보낸다([설문 대응](PREFERENCES_CONTRACT.md)). 이메일 초안은 보내지 않는다.
 
 ## 실제 연동 경계
 
-`NEXT_PUBLIC_DATA_MODE=live`는 `NEXT_PUBLIC_API_BASE`의 `/v1/web/*`에 연결한다. 사용자 키 발급·회전, 글/파일 접수·근거 확인·편집·확인 등록/일정 생성, 여행 목록·조회·상담·제안 선택·알림을 구현했다. 서버 기준은 `app/modules/travel_ops/trip_api.py`이며 UI에서 예약 변경·업무 판정·실제 시간 계산을 대신 구현하지 않는다. 실패를 데모 성공으로 바꾸지 않는다.
+`NEXT_PUBLIC_DATA_MODE=live`는 `NEXT_PUBLIC_API_BASE`의 `/v1/web/*`에 연결한다. 쿠키 세션(게스트 시작·로그아웃·옛 키 이전), 글/파일 접수·근거 확인·편집·확인 등록/일정 생성, 여행 목록·조회·상담·제안 선택·알림을 구현했다. 서버 기준은 `app/modules/travel_ops/trip_api.py`이며 UI에서 예약 변경·업무 판정·실제 시간 계산을 대신 구현하지 않는다. 실패를 데모 성공으로 바꾸지 않는다.
 
 `Trip`·`TripStop`은 프론트 표시 모델이다. live 어댑터가 서버 `trip_id/items`를 변환하고 서울 시각으로 표시한다. 별도 검증 퍼센트 API는 없다. 접수 읽기만 서버 실시간 진행(SSE, `GET /v1/web/trip-intakes/{id}/events`)을 구독하고(안 열리면 폴링으로 되돌아감), 여행 화면의 변경 알림은 `GET …/trips/{id}/events` 종을 따로 듣는다. live 등록 시 서버가 판정하며 이후 살펴볼 점·알림·이력은 여행 화면에서 확인한다. demo 진행 조회와 가짜 서버 시험을 실제 운영 검증으로 해석하지 않는다.
 
@@ -360,4 +360,15 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - 하루씩 볼 때 **마지막이 아닌 날의 끝**에는 「다음 · 2일차 10.11 일 ›」 단추가 있고, 「계속 내리면 권장 수정안…」(끝에서 밀기)은 **마지막 날의 끝**(또는 전체 보기)에만 나온다. 권장 수정안 미리 보기를 열면 바뀐 곳이 어느 날이든 보이도록 「전체」로 바뀐다. 「바꿀 대체 일정이 없어요」일 때 고칠 곳이 있는 날로 넘어가서 그 곳으로 옮긴다.
 - 구현: `plan-check.tsx` 의 `dayChoice`(전체/지도 날짜 따라가기) · `listDay` · `goDay`/`stepDay`/`swipeStart`/`swipeEnd`, 날짜가 바뀌면 목록이 새로 그려지며 옆에서 미끄러져 들어온다(`data-slide`).
 - 시험: 목 서버 시험(화면 반응) 204개 통과 — 칩 줄·하루씩 보기·표시·「다음」 단추·끝에서 밀기 안내·좌우 쓸기(터치 이벤트를 직접 보냄)·하루 계획 시험을 더했다. 단위 273. 실서버 확인(서버 응답)은 이 변경에는 아직 없다 — 목 서버 시험은 화면 반응만 본다.
+
+2026-10-04 (오전). **쿠키 로그인으로 전환** — 사용자 결정(서버 `D-CS-011`): 브라우저는 키를 저장소에 두지 않고, 서버가 주는 HttpOnly 쿠키 세션으로 말한다. 서버 계약은 `wiki/external/rest-endpoints.md` 「브라우저 세션 쿠키」「게스트 · 여행 삭제 · 게스트 정리」.
+
+- **호출 계층**(`src/lib/live/client.ts`): 모든 호출에 `credentials: "include"`, 쓰기(POST·PUT·PATCH·DELETE)에 `X-CSRF-Token`(세션을 받을 때 함께 오는 값, 메모리에만). 첫 사용 때 `GET /auth/me`로 누구인지만 묻고(**새 사용자를 만들지 않는다**), 아무도 아니면 `POST /auth/session`으로 게스트 세션을 만든다(사람 확인 토큰은 본문에). 쓰기가 보안 토큰 때문에 거절되면(403 `csrf_failed`) 토큰을 `me`로 다시 받아 **한 번만** 다시 보낸다. 401 은 「세션이 끝났어요」(`session_expired`)로 알리고 조용히 새 게스트가 되지 않는다. 쿠키와 `X-User-Key` 를 한 요청에 섞지 않는다(서버가 400 `ambiguous_credentials`).
+- **옛 키 이전**: `localStorage` 에 옛 키가 남은 브라우저는 처음 누구인지 물을 때 `POST /auth/adopt`(키만, 쿠키 없이)로 **같은 사용자를** 세션으로 옮기고 키를 지운다. 서버가 모르는 키면 지우고 새 시작, 그 밖의 오류는 키를 지키고 알린다. 여행 목록만 보는 방문자에게도 똑같이 적용된다.
+- **스트림 셋**(`events.ts` · `intake-events.ts` · `stream.ts`): 키 머리말 대신 쿠키(와 쓰기에는 보안 토큰)로 연다 — `sessionInit()`.
+- **소셜 로그인**(`auth.ts`): 교환은 `session: "cookie"` 를 요청한다 — 로그인(`signed_in`·`created`)은 회원 세션 쿠키와 보안 토큰을 주고, 이 브라우저의 게스트 세션은 서버가 거둔다(그 여행도 함께). 연결(`linked`)은 같은 세션이 회원이 되고 게스트 제한이 풀린다. 마이페이지 소셜 카드는 게스트에게 「로그인하면 게스트 여행은 사라져요 · 지키려면 위의 연결하기」 경고를 먼저 보인다.
+- **화면**: 마이페이지의 「발급된 토큰」·「토큰 관리」·새 키 안내는 없앴다(`features/account/key-*.tsx` 는 `frontend/_backup/2026-10-04_1150_쿠키전환_키화면_옛판/`). 대신 「로그인 상태」 카드(`session-card.tsx`) — 게스트면 「이 기기에서 N시간(기본 168 = 7일) 쓰지 않으면 여행과 함께 사라져요」와 제한(여행 1개 · 오늘부터 1년 안에 시작 · 7일 이내 · 일정 알림 없음), 회원이면 로그아웃. 메뉴 이름 줄은 「게스트」/「로그인한 사용자」. 웹훅 줄은 게스트에게 「일정 알림을 받지 않아요」를 말한다.
+- **게스트 제한 거절**(403 `guest_trip_limit`·`guest_trip_too_far`·`guest_trip_too_long`, `login_required`): 서버 문장 그대로 + 「마이페이지에서 계정을 연결하기」 길(읽은 계획은 그대로). 여행을 직접 열었는데 세션이 없으면 새 게스트를 만들지 않고 「게스트 여행은 사라졌을 수 있어요 · 계정에 보관한 여행이면 로그인하세요」라고 알린다.
+- **시험**: 단위 283개 통과(`session-kit.ts` — 세션 호출에 서버처럼 답하는 시험용 fetch). 목 서버(`tests/live/stub-server.mjs`)에 쿠키 세션·보안 토큰 검사·게스트 제한·로그아웃·옛 키 이전·CORS 자격 허용을 더했고, 옛 `keys.spec.ts`(토큰 보기·복사·교체)는 `session.spec.ts` 로 바꿨다. 이 시험은 **목 서버 시험(화면 반응)** 이다. **실서버 확인(서버 응답)은 아직 하지 않았다** — `tests/real/real-server.spec.ts` 를 쿠키 기준으로 고쳐 두었을 뿐 돌리지 않았다(여행을 실제로 등록하고 팀 채널에 알림이 간다).
+- **알려진 한계**: HttpOnly 쿠키는 페이지가 읽지 못하므로, 세션이 끝났는지는 서버를 불러 봐야 안다(끝난 게스트는 「아직 시작하지 않았어요」로 보인다). 개발 PC 에서는 `localhost` 와 `127.0.0.1` 을 섞으면 쿠키가 가지 않는다(둘 다 `127.0.0.1`). 배포는 웹과 API 가 같은 주소여야 한다(`NEXT_PUBLIC_API_BASE`).
 

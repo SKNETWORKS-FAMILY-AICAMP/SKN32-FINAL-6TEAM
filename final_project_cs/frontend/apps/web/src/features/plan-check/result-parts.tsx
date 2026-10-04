@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui";
+import { routes } from "@/lib/routes";
 import { useT } from "@/lib/settings";
 import { draftOfItem, draftProblem, needs, type ItemDraft, type PlanCheckView, type PlanItem, type TripIssue } from "./model";
 import { Act, reason } from "./parts";
@@ -144,6 +145,8 @@ export interface Registration {
   /** A refusal, in the server's words, with its listed problems. */
   error: string | null;
   problems: string[];
+  /** `[2026-10-04]` The refusal is a guest's limit (`guest_*`, `login_required`): logging in lifts it, so the screen says where. */
+  loginRequired?: boolean;
   /** Set once registered: where the trip opens. */
   registeredHref: string | null;
 }
@@ -169,7 +172,10 @@ export function ResultFooter({ view, registration, frozen, explain, previewing =
   const registered = Boolean(registration?.registeredHref);
   let status: ReactNode = null;
   if (registration?.error) {
-    status = <div role="alert"><p>{registration.error}</p>{registration.problems.length > 0 && <ul>{registration.problems.map((problem, index) => <li key={index}>{problem}</li>)}</ul>}</div>;
+    status = <div role="alert"><p>{registration.error}</p>{registration.problems.length > 0 && <ul>{registration.problems.map((problem, index) => <li key={index}>{problem}</li>)}</ul>}
+      {registration.loginRequired && <p className={styles.loginHint}>
+        <Link href={`${routes.myPage}#accounts`}>{t("마이페이지에서 계정을 연결하기", "Link an account on My page")}</Link>
+        {t(" — 연결한 뒤 이 화면으로 돌아와 다시 눌러 주세요. 읽은 계획은 그대로 있어요.", " — then come back here and press again. The plan that was read stays.")}</p>}</div>;
   }
   const autoWhy = !onAutoAll ? t("전체 자동 추천은 준비 중이에요", "Recommending all is coming")
     : frozen ?? (total === 0 ? t("고칠 곳이 없어요", "Nothing to fix") : null);

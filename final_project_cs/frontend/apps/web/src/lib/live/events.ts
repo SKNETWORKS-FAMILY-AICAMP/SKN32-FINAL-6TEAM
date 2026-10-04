@@ -1,5 +1,5 @@
 import type { Language } from "../i18n";
-import { API_BASE, userKey } from "./client";
+import { API_BASE, sessionInit } from "./client";
 
 /**
  * The server's "this trip changed" bell (`GET /v1/web/trips/{id}/events`, text/event-stream).
@@ -67,12 +67,11 @@ export function eventStreamParser(onEvent: (name: string, data: string) => void)
 export async function watchTrip(tripId: string, language: Language, onEvent: (event: TripEvent) => void, signal: AbortSignal): Promise<WatchEnd> {
   let response: Response;
   try {
-    const key = await userKey(language);
-    response = await fetch(`${API_BASE}/v1/web/trips/${encodeURIComponent(tripId)}/events`, {
-      headers: { "X-User-Key": key, Accept: "text/event-stream" },
+    response = await fetch(`${API_BASE}/v1/web/trips/${encodeURIComponent(tripId)}/events`, await sessionInit(language, {
+      headers: { Accept: "text/event-stream" },
       cache: "no-store",
       signal,
-    });
+    }));
   } catch {
     return signal.aborted ? "closed" : "failed";
   }

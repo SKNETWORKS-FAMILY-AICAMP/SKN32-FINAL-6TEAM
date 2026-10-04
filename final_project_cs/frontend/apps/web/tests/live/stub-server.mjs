@@ -1,4 +1,4 @@
-// 테스트용 모방 서버 — ★실제 서버가 아니다. triPilot 서버의 웹 API(`/v1/web/*`) 모양만 흉내 내어 화면 자동 시험에만 쓴다.
+// 테스트용 목 서버(mock server) — ★실제 서버가 아니다. triPilot 서버의 웹 API(`/v1/web/*`) 모양만 흉내 내어 화면 자동 시험에만 쓴다.
 // 실제 앱(개발 서버 3100 · 배포)은 이 파일을 쓰지 않는다. 실제 서버 확인은 `tests/real/` 이 한다.
 //
 // ★Why a test mock server: registering on the real server sends a notice to the team's chat channel and leaves data behind.
@@ -61,8 +61,14 @@ const DEFAULTS = {
   // "stale": the server refuses an edit because the plan moved on (409 stale_revision)
   //   | "not_found": the server finds no place by the typed name (422 place_not_found)
   edits: "ok",
-  // "limited": too many new keys from this address (429 too_many_sessions)
+  // "limited": too many new sessions from this address (429 too_many_sessions)
   session: "ok",
+  // `[2026-10-04]` the session this browser has (server D-CS-011): "guest" | "member" (a linked account makes any session a member's)
+  sessionKind: "guest",
+  // a guest's limits: "" | "trip_limit" | "too_far" | "too_long" — registering (`/confirm`) is refused with 403 guest_* and `login_required`
+  guestLimit: "",
+  // how many writes are refused once for their CSRF token (403 csrf_failed); the page reads the token again from `/auth/me` and sends it once more
+  csrfRefuse: 0,
   // an automatic change the customer can undo: "none" | "open" (latest change notice carries an undo) | "stale" (undo is refused: 409)
   undo: "none",
   // "missing": there is no such trip
@@ -111,10 +117,13 @@ let scenario;
 /** The check of the plan the customer is working on (items, legs), changed by edits. */
 let board;
 let log;
-let sessions;
 let polls;
 let confirmed;
 let keys;
+/** Session cookies this server made (`sid` → {sid, csrf, member}); `known-session` always exists (the browser of a returning visitor). */
+let webSessions;
+/** Sessions that were signed out or ended by a sign-in. */
+let ended;
 /** The recovery email the server holds (`PUT /v1/web/profile`). */
 let recoveryEmail = null;
 /** The name the customer gave the plan (`trip.title` edit); the check says 「내 여행」 until then. */
@@ -147,11 +156,12 @@ function reset() {
   tripFailures = 0;
   turns = [];
   log = [];
-  sessions = 0;
   polls = 0;
   confirmed = false;
   board = freshBoard(scenario.board);
   keys = new Set(["acop_u_known"]);
+  webSessions = new Map();
+  ended = new Set();
   recoveryEmail = null;
   tripTitle = "내 여행";
   socialLinks = [];
@@ -348,10 +358,34 @@ function intakeView(revision) {
   };
 }
 
-function json(response, status, body, origin) {
-  response.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": origin ?? "*", Vary: "Origin" });
+/** CORS with credentials: the page sends its cookie, so the origin is named (never "*") and credentials are allowed. */
+const cors = (origin) => ({ "Access-Control-Allow-Origin": origin ?? "*", "Access-Control-Allow-Credentials": "true", Vary: "Origin" });
+
+function json(response, status, body, origin, extra = {}) {
+  response.writeHead(status, { "Content-Type": "application/json; charset=utf-8", ...cors(origin), ...extra });
   response.end(JSON.stringify(body));
 }
+
+// ── the browser session (server D-CS-011) ───────────────────────────────────────────────────────
+const COOKIE = "tripilot_sid_dev";
+const cookieOf = (request) => { const found = new RegExp(`(?:^|; )${COOKIE}=([^;]*)`).exec(request.headers.cookie ?? ""); return found ? decodeURIComponent(found[1]) : null; };
+const setCookie = (sid) => `${COOKIE}=${encodeURIComponent(sid)}; Path=/; HttpOnly; SameSite=Lax`;
+const KNOWN_SESSION = { sid: "known-session", csrf: "csrf-known", member: false };
+function lookupSession(sid) {
+  if (ended.has(sid)) return null;
+  return sid === KNOWN_SESSION.sid ? KNOWN_SESSION : webSessions.get(sid) ?? null;
+}
+function makeSession(kind) {
+  const number = webSessions.size + 1;                                // starts again at 1 with every reset (`webSessions` is cleared there)
+  const sid = kind === "member" ? `member-session-${number}` : `stub-session-${number}`;
+  const made = { sid, csrf: `csrf-${sid}`, member: kind === "member" };
+  webSessions.set(sid, made);
+  return made;
+}
+/** A linked social account (or the scenario) makes a session a member's — the same session, from its next request on. */
+const kindOf = (session) => session.member || scenario.sessionKind === "member" || socialLinks.length > 0 ? "member" : "guest";
+const sessionBody = (session) => ({ kind: kindOf(session), csrf_token: session.csrf, ...(kindOf(session) === "guest" ? { guest_idle_hours: 168 } : {}),
+  idle_expires_at: at(23), absolute_expires_at: at(23) });
 
 /** The server's stage words (`op_stream.STAGES`) and what each waits on. */
 const STAGES = {
@@ -360,7 +394,7 @@ const STAGES = {
 };
 
 function openStream(response, origin) {
-  response.writeHead(200, { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache", "Access-Control-Allow-Origin": origin ?? "*", Vary: "Origin" });
+  response.writeHead(200, { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache", ...cors(origin) });
   return (event, data) => { if (!response.writableEnded) response.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); };
 }
 
@@ -411,8 +445,8 @@ createServer(async (request, response) => {
 
   if (request.method === "OPTIONS") {
     response.writeHead(200, {
-      "Access-Control-Allow-Origin": origin ?? "*", "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE", Vary: "Origin",
-      "Access-Control-Allow-Headers": "Accept, Accept-Language, Content-Language, Content-Type, X-User-Key", "Access-Control-Max-Age": "600",
+      ...cors(origin), "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE",
+      "Access-Control-Allow-Headers": "Accept, Accept-Language, Content-Language, Content-Type, X-User-Key, X-CSRF-Token", "Access-Control-Max-Age": "600",
     });
     response.end();
     return;
@@ -445,17 +479,48 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   // without any test reaching OpenStreetMap. Not logged — a map draws dozens of them.
   if (path.startsWith("/__test/tile/")) { response.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "max-age=3600" }); response.end(TILE_PNG); return; }
 
-  const key = request.headers["x-user-key"];
+  const key = request.headers["x-user-key"] ?? null;                 // the legacy header (agents, an older page) — the page itself sends the cookie
+  const sid = cookieOf(request);
   const isJson = (request.headers["content-type"] ?? "").includes("json");
-  log.push({ method: request.method, path, key: key ?? null, accept: request.headers.accept ?? null, body: isJson && raw ? JSON.parse(raw) : raw ? { multipart: raw } : null });
+  log.push({ method: request.method, path, key, session: sid, csrf: request.headers["x-csrf-token"] ?? null, accept: request.headers.accept ?? null, body: isJson && raw ? JSON.parse(raw) : raw ? { multipart: raw } : null });
+  const write = ["POST", "PUT", "PATCH", "DELETE"].includes(request.method);
 
-  // ── session (the only route that needs no key) ───────────────────
-  if (request.method === "POST" && path === "/v1/web/session") {
-    if (scenario.session === "limited") return json(response, 429, { error: { code: "too_many_sessions", message: "새 키를 너무 많이 받았다 — 잠시 뒤에 다시 하거나 가진 키를 넣는다", retry_after_seconds: 60 } }, origin);
-    sessions += 1;
-    const issued = `acop_u_stub_${sessions}`;
-    keys.add(issued);
-    return json(response, 201, { customer_id: "cust-1", user_key: issued, notice: "이 키를 따로 잘 보관해 주세요. 다시 보여 드리지 않아요 — 다른 기기에서 이어 쓸 때 필요합니다." }, origin);
+  // ── the browser session: a cookie the page cannot read, and a CSRF token it keeps in memory ────────
+  const found = sid ? lookupSession(sid) : null;
+  const clear = sid && !found ? { "Set-Cookie": `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0` } : {};
+  const refuse = (status, code, message) => json(response, status, { error: { code, message } }, origin, clear);
+  const ambiguous = () => refuse(400, "ambiguous_credentials", "쿠키와 사용자 키를 함께 보낼 수 없어요");
+  /** Who is asking, or why not: a cookie (a write also needs the CSRF token), or — for an agent or an older page — the key; never both. */
+  const authenticate = () => {
+    if (key && sid) return { denied: ambiguous };
+    if (sid) {
+      if (!found) return { denied: () => refuse(401, "unauthenticated", "로그인 상태가 아니에요") };
+      if (write) {
+        if (scenario.csrfRefuse > 0) { scenario.csrfRefuse -= 1; return { denied: () => refuse(403, "csrf_failed", "보안 토큰이 맞지 않아요") }; }
+        if (request.headers["x-csrf-token"] !== found.csrf) return { denied: () => refuse(403, "csrf_failed", "보안 토큰이 맞지 않아요") };
+      }
+      return { session: found };
+    }
+    if (key && keys.has(key)) return { legacy: true };
+    return { denied: () => refuse(401, "unauthenticated", "로그인 상태가 아니에요") };
+  };
+  if (path === "/v1/web/auth/session" && request.method === "POST") {
+    if (key && sid) return ambiguous();
+    if (found) return json(response, 200, sessionBody(found), origin);
+    if (scenario.session === "limited") return json(response, 429, { error: { code: "too_many_sessions", message: "새 세션을 너무 많이 받았다 — 잠시 뒤에 다시 해 주세요", retry_after_seconds: 60 } }, origin, clear);
+    const made = makeSession("guest");
+    return json(response, 201, sessionBody(made), origin, { "Set-Cookie": setCookie(made.sid) });
+  }
+  if (path === "/v1/web/auth/me" && request.method === "GET") {
+    if (key && sid) return ambiguous();
+    if (!found) return refuse(401, "unauthenticated", "로그인 상태가 아니에요");
+    return json(response, 200, sessionBody(found), origin);
+  }
+  if (path === "/v1/web/auth/adopt" && request.method === "POST") {
+    if (sid) return ambiguous();                                       // the key alone, no cookie
+    if (!key || !keys.has(key)) return refuse(401, "unauthenticated", "사용자 키가 없거나 맞지 않는다");
+    const made = makeSession("guest");
+    return json(response, 201, sessionBody(made), origin, { "Set-Cookie": setCookie(made.sid) });
   }
   // ── social sign-in: the provider's page (a browser move, no CORS) and the calls that need no key ─────────
   const oauthPage = /^\/__test\/oauth\/(\w+)$/.exec(path);
@@ -473,7 +538,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   const startMatch = /^\/v1\/web\/auth\/(\w+)\/start$/.exec(path);
   if (startMatch && request.method === "POST") {
     const { mode, client_nonce: nonce, turnstile_token: token } = JSON.parse(raw || "{}");
-    if (mode === "link" && (!key || !keys.has(key))) return json(response, 401, { error: { code: "unauthenticated", message: "사용자 키가 없거나 맞지 않는다" } }, origin);
+    if (mode === "link") { const who = authenticate(); if (who.denied) return who.denied(); }
     if (mode === "login" && scenario.socialHumanCheck === "required" && !token) return json(response, 422, { error: { code: "human_check_required", message: "사람인지 확인해 주세요" } }, origin);
     if (!["google", "kakao"].includes(startMatch[1])) return json(response, 404, { error: { code: "provider_not_enabled", message: "이 로그인 방법은 아직 쓸 수 없어요" } }, origin);
     const id = String(socialFlows.size + 1);
@@ -481,7 +546,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     return json(response, 200, { authorize_url: `http://127.0.0.1:${PORT}/__test/oauth/${startMatch[1]}?flow=${id}` }, origin);
   }
   if (path === "/v1/web/auth/exchange" && request.method === "POST") {
-    const { ticket, client_nonce: nonce } = JSON.parse(raw || "{}");
+    const { ticket, client_nonce: nonce, session: wanted } = JSON.parse(raw || "{}");
     const flow = [...socialFlows.values()].find((entry) => entry.ticket && entry.ticket === ticket);
     // one use only, and only with the nonce the starting browser made
     if (!flow || flow.used || flow.nonce !== nonce) return json(response, 410, { error: { code: "ticket_invalid", message: "로그인 확인이 만료됐거나 맞지 않아요" } }, origin);
@@ -490,10 +555,20 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
       if (!socialLinks.includes(flow.provider)) socialLinks.push(flow.provider);
       return json(response, 200, { outcome: "linked", provider: flow.provider, trips: 1 }, origin);
     }
+    if (wanted === "cookie") {
+      if (sid) ended.add(sid);                                         // the guest session this browser had is ended by the server (session fixation)
+      const member = makeSession("member");
+      return json(response, 200, { outcome: "signed_in", provider: flow.provider, trips: 2, ...sessionBody(member) }, origin, { "Set-Cookie": setCookie(member.sid) });
+    }
     keys.add("acop_u_social_account");
     return json(response, 200, { outcome: "signed_in", provider: flow.provider, user_key: "acop_u_social_account", notice: "이 계정의 키예요. 따로 보관해 주세요.", trips: 2 }, origin);
   }
-  if (!key || !keys.has(key)) return json(response, 401, { error: { code: "unauthenticated", message: "사용자 키가 없거나 맞지 않는다" } }, origin);
+  const auth = authenticate();
+  if (auth.denied) return auth.denied();
+  if (path === "/v1/web/auth/logout" && request.method === "POST") {
+    if (auth.session) ended.add(auth.session.sid);
+    return json(response, 200, { status: "signed_out" }, origin, { "Set-Cookie": `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0` });
+  }
   if (path === "/v1/web/auth/links" && request.method === "GET") return json(response, 200, { links: socialLinks.map((provider) => ({ provider, linked_at: "2026-10-03T10:00:00+09:00" })) }, origin);
   const unlinkMatch = /^\/v1\/web\/auth\/(\w+)$/.exec(path);
   if (unlinkMatch && request.method === "DELETE") {
@@ -527,12 +602,6 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
 
   // Google Maps only after the server allows this load (`POST /v1/web/map-load`); this mock always allows it (the `google` build of `maps.spec.ts`).
   if (request.method === "POST" && path === "/v1/web/map-load") return json(response, 200, { allowed: true, provider: "google", reason: null, used: { day: 1, month: 1 }, cap: { day: 312, month: 9688 } }, origin);
-  if (request.method === "POST" && path === "/v1/web/session/rotate") {
-    keys.delete(key);
-    const rotated = `acop_u_rotated_${Date.now()}`;
-    keys.add(rotated);
-    return json(response, 200, { customer_id: "cust-1", user_key: rotated, notice: "새 키예요. 옛 키는 더 이상 쓸 수 없어요 — 따로 잘 보관해 주세요." }, origin);
-  }
   // ★true once it has answered with the failure — the caller must stop there, or it would answer twice and crash this server
   const broken = (name) => {
     if (scenario.fail !== name) return false;
@@ -566,7 +635,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   }
   if (path === `/v1/web/trips/${TRIP_ID}/proposals` && request.method === "GET") return broken("proposals") || json(response, 200, proposals(), origin);
   if (path === `/v1/web/trips/${TRIP_ID}/events` && request.method === "GET" && scenario.bell === "on") {
-    response.writeHead(200, { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache", "Access-Control-Allow-Origin": origin ?? "*", Vary: "Origin" });
+    response.writeHead(200, { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache", ...cors(origin) });
     response.write(`: connected
 
 event: ready
@@ -618,7 +687,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     if (scenario.intakeEvents === "off") return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
     // Without the server's own check there is no content to stream: only the stage (and "stalled"), as an older server did.
     if (scenario.review !== "on" || scenario.intakeEvents === "stalled") return intakeEvents(request, response, origin);
-    response.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Access-Control-Allow-Origin": origin ?? "*", Vary: "Origin" });
+    response.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", ...cors(origin) });
     const chunks = scenario.intakeEvents === "silent" ? intakeStream().slice(0, 1) : intakeStream();
     chunks.forEach((chunk) => response.write(chunk));
     if (scenario.intakeEvents !== "silent") response.end();                  // "silent" leaves the line open and says nothing more
@@ -693,6 +762,10 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   if ((path === `/v1/web/trip-intakes/${INTAKE_ID}/confirm` || path === `/v1/web/trip-intakes/${INTAKE_ID}/plan`) && request.method === "POST") {
     const planning = path.endsWith("/plan");
     if (!planning && broken("confirm")) return;
+    if (!planning && scenario.guestLimit && auth.session && kindOf(auth.session) === "guest") {
+      const why = { trip_limit: "게스트는 여행을 1개까지 만들 수 있어요. 로그인하면 더 만들 수 있어요.", too_far: "게스트는 오늘부터 1년 안에 시작하는 여행만 만들 수 있어요.", too_long: "게스트는 7일 이내의 여행만 만들 수 있어요." }[scenario.guestLimit];
+      return json(response, 403, { error: { code: `guest_${scenario.guestLimit}`, message: why, login_required: true } }, origin);
+    }
     if (planning && scenario.planRefusal) return json(response, 422, { error: { code: "plan_refused", message: scenario.planRefusal } }, origin);
     const register = () => {
       confirmed = true;

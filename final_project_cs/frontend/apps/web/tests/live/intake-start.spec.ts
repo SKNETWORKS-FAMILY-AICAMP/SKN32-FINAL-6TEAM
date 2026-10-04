@@ -106,7 +106,7 @@ test("보내는 중에 새로고침하면(보내던 계획은 메모리에만 �
   await expect(page.getByLabel("나의 여행 계획")).toHaveValue(PLAN);
 });
 
-test("키가 없는 첫 방문도 누르는 순간 진행 화면으로 넘어가고, 키는 그 사이에 발급된다", async ({ page, request }) => {
+test("세션이 없는 첫 방문도 누르는 순간 진행 화면으로 넘어가고, 게스트 세션은 그 사이에 만들어진다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ intakeDelay: 1500, review: "on", board: "rich", readingPolls: 1 });
   await start(page, null);
@@ -115,8 +115,8 @@ test("키가 없는 첫 방문도 누르는 순간 진행 화면으로 넘어가
   await expect(page.getByText("계획을 서버로 보내는 중이에요…")).toBeVisible();
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]{36}$/, { timeout: 15_000 });
   await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible({ timeout: 40_000 });
-  expect((await server.received("POST", "/v1/web/session")).length).toBe(1);
-  // 새 키 안내는 계획 화면 위에 뜨지 않는다
+  expect((await server.received("POST", "/v1/web/auth/session")).length).toBe(1);
+  // 키 안내는 어디에도 없다
   await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
 });
 

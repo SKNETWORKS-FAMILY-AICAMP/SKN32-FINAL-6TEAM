@@ -5,7 +5,7 @@ const PLAN = "10/1 09:00 경복궁 관람";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
-test("첫 방문: 계획을 올리면 키가 발급되고(안내는 계획 화면 위가 아니라 마이페이지에서 한 번만 보임), 읽은 결과를 확인해 등록하면 여행 화면으로 간다", async ({ page, request }) => {
+test("첫 방문: 계획을 올리면 게스트 세션이 만들어지고(쿠키 · 토큰 안내는 없음), 읽은 결과를 확인해 등록하면 여행 화면으로 간다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ trips: "none" });
   await start(page, null);
@@ -21,7 +21,7 @@ test("첫 방문: 계획을 올리면 키가 발급되고(안내는 계획 화�
   await card.getByRole("heading").getByRole("button").click();
   await expect(card.getByText("경복궁", { exact: true })).toBeVisible();
 
-  // 키가 방금 발급됐다. `[2026-10-03 사용자 지시]` 계획 화면 위에는 안내를 띄우지 않는다(마이페이지에서 한다).
+  // 세션이 방금 만들어졌다. `[2026-10-04 사용자 결정]` 키를 보관하라는 안내는 어디에도 없다.
   await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
   await page.reload();
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
@@ -36,19 +36,17 @@ test("첫 방문: 계획을 올리면 키가 발급되고(안내는 계획 화�
   expect(String(intake.body?.multipart)).toContain(PLAN);
   const [confirm] = await server.received("POST", "/confirm");
   expect(confirm.body).toEqual({ revision: 1 });
-  expect(confirm.key).toBe("acop_u_stub_1");
+  // ★세션 쿠키와 보안 토큰으로 갔다 — 키 헤더는 없다.
+  expect(confirm.session).toBe("stub-session-1");
+  expect(confirm.csrf).toBe("csrf-stub-session-1");
+  expect(confirm.key).toBeNull();
+  expect(await server.received("POST", "/v1/web/auth/session")).toHaveLength(1);       // 게스트 세션은 한 번만 만들어졌다
 
-  // 마이페이지: 서버의 안내 문장과 함께 한 번 보이고, 「따로 보관했어요」로 닫힌다.
+  // 마이페이지: 게스트라고 말하고, 키는 보여 주지도 받지도 않는다.
   await page.goto("/mypage");
-  const notice = page.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
-  await expect(notice).toBeVisible();
-  await expect(notice).toContainText("다시 보여 드리지 않아요");
-  await expect(notice.getByRole("textbox")).toHaveValue(/^acop_u_stub_1$/);
-  await notice.getByRole("button", { name: "따로 보관했어요" }).click();
-  await expect(notice).toHaveCount(0);
-  await page.reload();
-  await expect(page.getByRole("heading", { name: "마이페이지" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "로그인 상태" })).toContainText("게스트로 쓰고 있어요");
   await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
+  await expect(page.getByText("발급된 토큰")).toHaveCount(0);
 });
 
 test("서버가 읽는 동안 새 계획 확인 화면이 서버의 원문 줄을 읽는 중으로 보이고, 읽기가 끝나면 확인 화면으로 넘어간다", async ({ page, request }) => {
@@ -98,7 +96,7 @@ test("온보딩 설문을 마친 뒤 등록하면 설문이 확인 요청에 실
 
 const WEBHOOK = "https://discord.com/api/web" + "hooks/123456789012345678/AbC-def_123456789012345";
 
-test("디스코드 알림 카드의 웹훅은 키가 없는 첫 방문이면 페이지 안에만 두었다가, 첫 등록으로 키가 생기면 서버로 가고 브라우저 저장소에는 남지 않는다", async ({ page, request }) => {
+test("디스코드 알림 카드의 웹훅은 세션이 없는 첫 방문이면 페이지 안에만 두었다가, 첫 등록으로 세션이 생기면 서버로 가고 브라우저 저장소에는 남지 않는다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ trips: "none" });
   await start(page, null);
@@ -109,7 +107,7 @@ test("디스코드 알림 카드의 웹훅은 키가 없는 첫 방문이면 페
     await head.click();                                              // fold it; the terms step checks the field and passes
     await expect(head).toContainText("입력했어요 · 마이페이지에서 바꿀 수 있어요");
   });
-  // No key yet: nothing went up (saving would create a server user just for the webhook).
+  // No session yet: nothing went up (saving would create a server user just for the webhook).
   expect(await server.received("PUT", "/v1/web/profile")).toHaveLength(0);
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
@@ -117,13 +115,13 @@ test("디스코드 알림 카드의 웹훅은 키가 없는 첫 방문이면 페
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
 
-  // The first call issued the key; the webhook went up with it, once.
-  await expect.poll(async () => (await server.received("PUT", "/v1/web/profile")).map((entry) => [entry.key, entry.body])).toEqual([["acop_u_stub_1", { discord_webhook_url: WEBHOOK }]]);
+  // The first call made the session; the webhook went up with it (cookie and CSRF token, no key), once.
+  await expect.poll(async () => (await server.received("PUT", "/v1/web/profile")).map((entry) => [entry.session, entry.key, entry.body])).toEqual([["stub-session-1", null, { discord_webhook_url: WEBHOOK }]]);
   const token = WEBHOOK.split("/").pop() ?? "";
   expect(await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))).not.toContain(token);
 });
 
-test("키가 이미 있으면 웹훅은 디스코드 알림 카드를 떠날 때 바로 서버로 가고, 비워 두면 저장된 웹훅을 건드리지 않는다", async ({ page, request }) => {
+test("세션이 이미 있으면 웹훅은 디스코드 알림 카드를 떠날 때 바로 서버로 가고, 비워 두면 저장된 웹훅을 건드리지 않는다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page, "acop_u_known");
   await finishOnboarding(page, async () => {
@@ -267,13 +265,13 @@ test("고치는 사이 계획이 바뀌어 서버가 거절해도(409 stale_revi
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
 });
 
-test("새 키 발급이 한도에 걸리면(429) 서버 문장 그대로 알리고 계획 입력은 지켜진다", async ({ page, request }) => {
+test("새 세션 시작이 한도에 걸리면(429) 서버 문장 그대로 알리고 계획 입력은 지켜진다", async ({ page, request }) => {
   await mockServer(request).scenario({ session: "limited" });
   await start(page, null);
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
-  await expect(page.getByText("새 키를 너무 많이 받았다")).toBeVisible();
+  await expect(page.getByText("새 세션을 너무 많이 받았다")).toBeVisible();
   await expect(page.getByLabel("나의 여행 계획")).toHaveValue(PLAN);
 });
 

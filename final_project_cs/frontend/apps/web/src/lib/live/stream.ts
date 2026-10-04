@@ -1,5 +1,5 @@
 import { translator, type Language, type Translate } from "../i18n";
-import { API_BASE, answerWithin, keyChecked, LiveError, refusal, userKey } from "./client";
+import { API_BASE, answerWithin, LiveError, refusal, sessionChecked, sessionInit } from "./client";
 import { eventStreamParser } from "./events";
 
 /**
@@ -63,7 +63,7 @@ type Attempt<T> = { kind: "done"; value: T } | { kind: "lost" };
 async function attempt<T>(path: string, language: Language, init: RequestInit, timing: StreamTiming,
   report: (next: Partial<OpProgress>) => void): Promise<Attempt<T>> {
   const t = translator(language);
-  const key = await userKey(language);
+  const sent = await sessionInit(language, { ...init, headers: { ...(init.headers as Record<string, string> | undefined), Accept: "text/event-stream" } });
   const url = `${API_BASE}${path}`;
   const controller = new AbortController();
   // ★Until the answer starts, the usual limit holds — a server without streams answers once, after the whole task.
@@ -71,15 +71,14 @@ async function attempt<T>(path: string, language: Language, init: RequestInit, t
   const headerLimit = setTimeout(() => { headerTimeout = true; controller.abort(); }, answerWithin(url));
   let response: Response;
   try {
-    response = await fetch(url, { ...init, cache: "no-store", signal: controller.signal,
-      headers: { ...(init.headers ?? {}), "X-User-Key": key, Accept: "text/event-stream" } });
+    response = await fetch(url, { ...sent, cache: "no-store", signal: controller.signal });
   } catch {
     clearTimeout(headerLimit);
     if (headerTimeout) throw new LiveError("timeout", t("서버가 응답하지 않아요. 잠시 뒤 다시 시도해 주세요.", "The server is not answering. Please try again shortly."));
     return { kind: "lost" };
   }
   clearTimeout(headerLimit);
-  if (!response.ok) throw keyChecked(await refusal(response, language), language);
+  if (!response.ok) throw sessionChecked(await refusal(response, language), language);
   if (!(response.headers.get("content-type") ?? "").includes("text/event-stream") || !response.body) {
     return { kind: "done", value: await response.json() as T };
   }
@@ -192,10 +191,9 @@ export async function watchIntake(intakeId: string, language: Language, onEvent:
   try {
     let response: Response;
     try {
-      const key = await userKey(language);
-      response = await fetch(`${API_BASE}/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/events`, {
-        headers: { "X-User-Key": key, Accept: "text/event-stream" }, cache: "no-store", signal: controller.signal,
-      });
+      response = await fetch(`${API_BASE}/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/events`, await sessionInit(language, {
+        headers: { Accept: "text/event-stream" }, cache: "no-store", signal: controller.signal,
+      }));
     } catch {
       return signal.aborted ? "closed" : "lost";
     }
