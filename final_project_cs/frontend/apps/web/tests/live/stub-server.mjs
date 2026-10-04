@@ -89,6 +89,9 @@ const DEFAULTS = {
   bell: "off",
   // the customer's contact details (`GET/PUT /v1/web/profile`): "on" | "off" = an older server without it (404) | "reject" = refuses a save (422)
   profile: "on",
+  // `[2026-10-05]` 「디스코드로 연결」 (`POST /v1/web/profile/discord/connect/start`, the profile's `discord_connect.available`): "off" = an older server (the profile does not say) | "on"
+  //   | "cancelled" | "expired" | "failed" (the mock Discord window sends the browser back with that word) | "start_fails" (the start answers 500) | "bad_address" (the start hands out an address that is not Discord's)
+  discordConnect: "off",
   // how many times the trip itself fails to load (500) right after the server answered a chat message
   rereadFails: 0,
   // chat and planning asked as a stream: "on" | "off" (an older server: JSON once) | "slow" (a `slow` beat first)
@@ -144,6 +147,8 @@ let socialFlows = new Map();
 /** The Discord webhook the server holds (never answered back — only a masked form) and what its last test said. */
 let webhook = null;
 let webhookStatus = null;
+/** `[2026-10-05]` 「디스코드로 연결」: the flows started (id → the web origin to come back to). */
+let discordFlows = new Map();
 /** How many times each `request_id` came as a stream (the "drop" scenario answers only the second). */
 let attempts = new Map();
 
@@ -179,6 +184,7 @@ function reset() {
   socialFlows = new Map();
   webhook = null;
   webhookStatus = null;
+  discordFlows = new Map();
   attempts = new Map();
 }
 
@@ -562,6 +568,16 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     const made = makeSession("guest");
     return json(response, 201, sessionBody(made), origin, { "Set-Cookie": setCookie(made.sid) });
   }
+  // ── 「디스코드로 연결」: Discord's own window (a browser move, no CORS). Choosing a channel there gives the SERVER a webhook; the browser goes back to My page. ──
+  if (path === "/__test/discord-connect" && request.method === "GET") {
+    const flow = discordFlows.get(url.searchParams.get("flow") ?? "");
+    if (!flow) { response.writeHead(404); response.end(); return; }
+    const goBack = (word) => { response.writeHead(302, { Location: `${flow.origin}/mypage?discord=${word}` }); response.end(); };
+    if (["cancelled", "expired", "failed"].includes(scenario.discordConnect)) return goBack(scenario.discordConnect);
+    webhook = "https://discord.com/api/web" + "hooks/123456789012345678/abcdefghijklmnopqrstuvwxyz0123456789ABCD";      // what Discord handed the server
+    webhookStatus = "untested";
+    return goBack("connected");
+  }
   // ── social sign-in: the provider's page (a browser move, no CORS) and the calls that need no key ─────────
   const oauthPage = /^\/__test\/oauth\/(\w+)$/.exec(path);
   if (oauthPage && request.method === "GET") {
@@ -657,6 +673,14 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
       if (hook !== undefined) { webhook = hook || null; webhookStatus = hook ? "untested" : null; }
       return json(response, 200, profileView(), origin);
     }
+  }
+  if (path === "/v1/web/profile/discord/connect/start" && request.method === "POST") {
+    if (scenario.discordConnect === "off") return json(response, 404, { detail: "Not Found" }, origin);
+    if (scenario.discordConnect === "start_fails") return json(response, 500, { error: { code: "internal_error", message: "디스코드 연결을 시작하지 못했어요" } }, origin);
+    if (scenario.discordConnect === "bad_address") return json(response, 200, { authorize_url: "https://evil.example/oauth2/authorize" }, origin);
+    const id = String(discordFlows.size + 1);
+    discordFlows.set(id, { id, origin: origin ?? "" });
+    return json(response, 200, { authorize_url: `http://127.0.0.1:${PORT}/__test/discord-connect?flow=${id}` }, origin);
   }
   if (path === "/v1/web/profile/discord/test" && request.method === "POST" && scenario.profile !== "off") {
     if (!webhook) return json(response, 409, { error: { code: "no_webhook", message: "저장된 디스코드 웹훅이 없어요" } }, origin);
@@ -914,7 +938,8 @@ function profileView() {
   const id = webhook ? DISCORD.exec(webhook)?.[1] ?? "" : "";
   return { recovery_email: recoveryEmail,
     discord_webhook: webhook ? { set: true, masked: `https://discord.com/api/webhooks/${id.slice(0, 4)}…/••••`, status: webhookStatus, checked_at: webhookStatus === "untested" ? null : new Date().toISOString() }
-      : { set: false, masked: null, status: null, checked_at: null }, updated_at: null };
+      : { set: false, masked: null, status: null, checked_at: null },
+    ...(scenario.discordConnect === "off" ? {} : { discord_connect: { available: true } }), updated_at: null };
 }
 
 /** The intake reading stream, like `op_stream.watch`: the state, never what was read. The screen re-reads the intake on each event. */

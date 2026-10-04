@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, ButtonLink } from "@/components/ui";
 import { discordWebhookProblem } from "@/features/onboarding/model";
 import { DATA_MODE } from "@/lib/data-mode";
 import type { Language, Translate } from "@/lib/i18n";
 import { LiveError } from "@/lib/live/client";
+import { readDiscordReturn, startDiscordConnect, type DiscordReturn } from "@/lib/live/discord-connect";
 import { getProfile, isUnsupported, testDiscordWebhook, type ServerProfile, type WebhookTestResult } from "@/lib/live/profile";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
@@ -35,6 +37,16 @@ function testText(result: WebhookTestResult, t: Translate): string {
   }
 }
 
+/** What the page says after the trip to Discord and back (`?discord=…`, sent by the server's callback). */
+function returnText(result: DiscordReturn, t: Translate): { ok: boolean; text: string } {
+  switch (result) {
+    case "connected": return { ok: true, text: t("디스코드 채널이 연결됐어요. 「시험 메시지 보내기」로 알림이 오는지 확인해 보세요.", "The Discord channel is connected. Press “Send a test message” to see that alerts arrive.") };
+    case "cancelled": return { ok: false, text: t("연결을 취소했어요. 바뀐 것은 없어요.", "Connecting was cancelled. Nothing changed.") };
+    case "expired": return { ok: false, text: t("연결 시간이 지났어요. 「디스코드로 연결」을 다시 눌러 주세요.", "The connection took too long. Press “Connect with Discord” again.") };
+    default: return { ok: false, text: t("디스코드 연결에 실패했어요. 잠시 뒤 다시 해 보세요.", "Could not connect to Discord. Try again shortly.") };
+  }
+}
+
 /**
  * My page's Discord webhook row: whether one is saved (masked — the server never returns the address), whether Discord
  * took the last test, and a test message on request. Alerts about plan changes are the server's next step, not built yet.
@@ -52,7 +64,27 @@ export function WebhookView({ hasSession, guest = false }: { hasSession: boolean
   const later = <span className={styles.note}>{guest
     ? t("게스트는 일정 알림을 받지 않아요. 아래 소셜 계정을 연결하면 알림을 받을 수 있어요.", "Guests get no schedule alerts. Link a social account below to get them.")
     : t("일정이 바뀔 때 디스코드로 알림을 보내는 기능은 준비 중이에요.", "Alerts about plan changes through Discord are still being prepared.")}</span>;
-  const add = <ButtonLink href={routes.myPageEdit} variant="quiet">{t("웹훅 등록하기", "Add a webhook")}</ButtonLink>;
+  // ★`[2026-10-05 사용자 지시]` 「디스코드로 연결」: 서버가 연결할 수 있다고 말할 때만(`discord_connect.available`) 단추가 있다. 디스코드 창에서 서버·채널을 고르면 서버가 웹훅을 받아 저장한다.
+  const [returned, setReturned] = useState<DiscordReturn | null>(null);
+  useEffect(() => {
+    const found = readDiscordReturn(window.location.search);
+    if (found === null) return;
+    window.history.replaceState(null, "", window.location.pathname);          // 돌아왔다는 표시는 주소창에 남기지 않는다
+    void Promise.resolve().then(() => {                                       // 화면을 바꾸는 것은 이 효과가 끝난 뒤에(개발 모드에서 효과가 두 번 돌아도 메시지는 한 번)
+      setReturned(found);
+      if (found === "connected") void queryClient.invalidateQueries({ queryKey: ["server-profile"] });
+    });
+  }, [queryClient]);
+  const connect = useMutation({ mutationFn: async () => { window.location.assign(await startDiscordConnect(language)); } });
+  const connectable = profile.data?.discordConnect === true;
+  const back = returned && returnText(returned, t);
+  const connectLine = (label: string, primary: boolean) => <>
+    <Button variant={primary ? "primary" : "quiet"} disabled={connect.isPending} onClick={() => { setReturned(null); connect.mutate(); }}>
+      {connect.isPending ? t("디스코드로 가는 중…", "Going to Discord…") : label}</Button>
+    {connect.isError && <span className={styles.failed} role="alert">{connect.error instanceof LiveError ? connect.error.message : t("연결을 시작하지 못했어요. 잠시 뒤 다시 해 보세요.", "Could not start connecting. Try again shortly.")}</span>}
+  </>;
+  const backLine = back && <span className={back.ok ? styles.note : styles.failed} role={back.ok ? "status" : "alert"}>{back.text}</span>;
+  const add = <ButtonLink href={routes.myPageEdit} variant="quiet">{connectable ? t("주소 직접 넣기", "Paste the address") : t("웹훅 등록하기", "Add a webhook")}</ButtonLink>;
 
   if (DATA_MODE !== "live") return <span className={styles.muted}>{t("실제 서버에 연결됐을 때만 등록할 수 있어요.", "Can be added only when connected to the real server.")}</span>;
   if (!hasSession) return <>
@@ -67,14 +99,24 @@ export function WebhookView({ hasSession, guest = false }: { hasSession: boolean
     {!isUnsupported(profile.error) && <Button variant="quiet" onClick={() => void profile.refetch()}>{t("다시 불러오기", "Try again")}</Button>}
   </>;
   const hook = profile.data.webhook;
-  if (!hook.set) return <><span className={styles.muted}>{t("등록된 웹훅이 없어요.", "No webhook registered.")}</span>{add}{later}</>;
+  if (!hook.set) return <>
+    {backLine}
+    <span className={styles.muted}>{t("등록된 웹훅이 없어요.", "No webhook registered.")}</span>
+    {connectable && <>
+      {connectLine(t("디스코드로 연결", "Connect with Discord"), true)}
+      <span className={styles.note}>{t("버튼을 누르면 디스코드 창이 열려요. 알림을 받을 서버와 채널을 고르고 승인하면 끝이에요 — 주소를 복사해 붙여넣을 필요가 없어요. 알림을 받을 서버가 없으면 디스코드 앱에서 「서버 만들기」로 내 서버를 먼저 만들어 주세요(무료).", "Press the button and Discord opens a window. Pick the server and channel that should get the alerts and approve - no address to copy. No server yet? Make your own in the Discord app first (free).")}</span>
+    </>}
+    {add}{later}
+  </>;
   return <>
+    {backLine}
     <code className={styles.line}>{hook.masked}</code>
     {hook.status && <span className={hook.status === "invalid" ? styles.failed : styles.note}>{t(...STATUS[hook.status])}</span>}
     <Button variant="quiet" disabled={test.isPending} onClick={() => test.mutate()}>{test.isPending ? t("보내는 중…", "Sending…") : t("시험 메시지 보내기", "Send a test message")}</Button>
     <span className={test.isError || (test.data && test.data.result !== "ok") ? styles.failed : styles.note} role="status">{test.isError
       ? (test.error instanceof LiveError ? test.error.message : t("보내지 못했어요. 잠시 뒤 다시 해 보세요.", "Could not send it. Try again shortly."))
       : test.data ? testText(test.data.result, t) : ""}</span>
+    {connectable && connectLine(t("다른 채널로 바꾸기", "Switch to another channel"), false)}
     {later}
   </>;
 }
@@ -88,6 +130,7 @@ export function WebhookField({ hasSession, value, remove, touched, onValue, onRe
   const profile = useServerProfile(hasSession);
   const live = DATA_MODE === "live";
   const saved = profile.data?.webhook.set ? profile.data.webhook.masked : null;
+  const easier = live && profile.data?.discordConnect === true;
   const error = touched && !remove && Boolean(discordWebhookProblem(value));
   return <div className={styles.field}>
     <label htmlFor="profile-webhook">{t("디스코드 웹훅 URL", "Discord webhook URL")} <small>{t("(선택)", "(optional)")}</small></label>
@@ -100,6 +143,7 @@ export function WebhookField({ hasSession, value, remove, touched, onValue, onRe
       : saved
         ? t("새 주소를 넣고 저장하면 바뀌어요. 비워 두면 등록된 웹훅을 그대로 둬요. 주소는 서버에만 있고 다시 보여 드리지 않아요.", "Enter a new address and save to replace it; leave it blank to keep the saved one. The address stays on the server and is not shown again.")
         : t("알림을 받을 디스코드 채널에서 만든 웹훅 주소를 붙여 넣어 주세요. 이 브라우저에는 남기지 않아요.", "Paste the webhook URL made in the Discord channel that should get the alerts. It is not kept in this browser.")}</p>
+    {easier && <p className={styles.note}>{t("주소를 직접 만들기 어렵다면 마이페이지의 「디스코드로 연결」을 쓰면 디스코드 창에서 서버와 채널만 고르면 돼요.", "If making the address is hard, use “Connect with Discord” on My page - just pick the server and channel in Discord's window.")}</p>}
     {error && <p id="profile-webhook-error" className={styles.failed}>{t("디스코드 웹훅 주소를 확인해 주세요. 예: https://discord.com/api/webhooks/…", "Please check the Discord webhook URL, e.g. https://discord.com/api/webhooks/…")}</p>}
     {live && saved && <label className={styles.check}><input type="checkbox" checked={remove} onChange={(event) => onRemove(event.target.checked)} />{t("등록된 웹훅 지우기", "Remove the saved webhook")}</label>}
   </div>;

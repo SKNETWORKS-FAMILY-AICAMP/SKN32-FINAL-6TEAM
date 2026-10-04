@@ -52,6 +52,7 @@ tags: [ui, api]
 | 등록 여부·가린 주소·상태 | `GET /v1/web/profile`의 `discord_webhook{set, masked, status}` — 키가 있을 때만 묻는다 | 모방 서버 시험 · 로컬 실서버 확인(리포트) |
 | 등록·바꾸기·지우기 | `PUT /v1/web/profile` `discord_webhook_url`(값 / `null`). 수정 화면은 등록된 주소를 다시 보여 주지 않고(서버도 주지 않음), 비워 두면 그대로, 「등록된 웹훅 지우기」로 `null` | 모방 서버 시험: 형식 오류 시 저장 막음, 등록 → 가린 모양, 지우기 → 없음 |
 | 시험 메시지 | `POST /v1/web/profile/discord/test` → `ok`·`invalid`·`rate_limited`·`failed`, 409 `no_webhook`·`unreadable`, 429 `too_soon` | 모방 서버 시험: 결과 문장·상태 갱신·429 문장. **실서버에서는 누르지 않음**(디스코드로 바깥 요청이 나감) |
+| `[2026-10-05]` 「디스코드로 연결」 | `GET /v1/web/profile` 의 `discord_connect.available` 이 `true` 일 때만 단추를 둔다 → `POST /v1/web/profile/discord/connect/start` → `{authorize_url}`(디스코드 주소만 따라감) → 디스코드 창에서 서버·채널 선택 → 서버 콜백이 웹훅을 받아 저장 → `{web}/mypage?discord=connected\|cancelled\|expired\|failed` | **서버 미구현 — 요청서 [2026-10-05_디스코드_연결버튼_백엔드_요청.md](../records/plans/2026-10-05_디스코드_연결버튼_백엔드_요청.md)**. 웹은 계약대로 연결함. mock 서버 시험(화면 반응) 9개. 실서버 확인(서버 응답): 안 했음(서버 구현 전) |
 
 ## 소셜 로그인 `/mypage#accounts` · `/auth/done`
 
