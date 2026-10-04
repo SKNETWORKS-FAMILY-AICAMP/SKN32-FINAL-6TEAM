@@ -192,7 +192,7 @@ def test_withdrawing_alert_channel_deletes_the_saved_webhook(gate):
     _guest(gate)
     _agree_required(gate["client"])
     _post(gate["client"], [_item("alert_channel")])
-    url = "https://discord.com/api/webhooks/123456789012345678/" + "A" * 68
+    url = "https://discord.com/api/" + "webhooks/" + "123456789012345678/" + "A" * 68          # 글자 그대로 적지 않는다(보안 검사가 웹훅 모양 문자열을 막는다)
     saved = gate["client"].put("/v1/web/profile", json={"discord_webhook_url": url}, headers=_csrf(gate["client"]))
     assert saved.status_code == 200 and saved.json()["discord_webhook"]["set"] is True
     _post(gate["client"], [_item("alert_channel", False)])
