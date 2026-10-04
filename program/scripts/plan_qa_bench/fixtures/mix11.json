@@ -1,0 +1,1631 @@
+{
+ "sets": {
+  "mix11": {
+   "today": "2027-09-30",
+   "items": [
+    {
+     "id": 1,
+     "date": "2027-10-05",
+     "start": "10:00",
+     "kind": "mobility",
+     "title": "택시로 시내 이동",
+     "place": "김포공항 국내선청사"
+    },
+    {
+     "id": 2,
+     "date": "2027-10-05",
+     "start": "11:30",
+     "kind": "lodging",
+     "title": "호텔 체크인",
+     "place": "호텔 피제이 명동"
+    },
+    {
+     "id": 3,
+     "date": "2027-10-05",
+     "start": "12:30",
+     "kind": "dining",
+     "title": "황평집에서 점심",
+     "place": "황평집"
+    },
+    {
+     "id": 4,
+     "date": "2027-10-05",
+     "start": "14:30",
+     "kind": "activity",
+     "title": "정동제일교회 둘러보기",
+     "place": "정동제일교회"
+    },
+    {
+     "id": 5,
+     "date": "2027-10-05",
+     "start": "16:00",
+     "kind": "activity",
+     "title": "성공회 서울주교좌성당 관람",
+     "place": "성공회 서울주교좌성당"
+    },
+    {
+     "id": 6,
+     "date": "2027-10-05",
+     "start": "18:00",
+     "kind": "dining",
+     "title": "한가람 본점에서 저녁",
+     "place": "한가람 본점"
+    },
+    {
+     "id": 7,
+     "date": "2027-10-06",
+     "start": "09:30",
+     "kind": "activity",
+     "title": "칠궁 관람",
+     "place": "칠궁"
+    },
+    {
+     "id": 8,
+     "date": "2027-10-06",
+     "start": "11:30",
+     "kind": "dining",
+     "title": "황생가칼국수에서 점심",
+     "place": "황생가칼국수"
+    },
+    {
+     "id": 9,
+     "date": "2027-10-06",
+     "start": "13:00",
+     "kind": "activity",
+     "title": "석파정 둘러보기",
+     "place": "석파정"
+    },
+    {
+     "id": 10,
+     "date": "2027-10-06",
+     "start": "14:30",
+     "kind": "activity",
+     "title": "창의문 앞에서 쉬기",
+     "place": "창의문"
+    },
+    {
+     "id": 11,
+     "date": "2027-10-06",
+     "start": "16:00",
+     "kind": "dining",
+     "title": "차 마시는 뜰에서 차 한잔",
+     "place": "차 마시는 뜰"
+    },
+    {
+     "id": 12,
+     "date": "2027-10-06",
+     "start": "18:00",
+     "kind": "dining",
+     "title": "북촌도담에서 저녁",
+     "place": "북촌도담"
+    },
+    {
+     "id": 13,
+     "date": "2027-10-07",
+     "start": "09:30",
+     "kind": "activity",
+     "title": "의릉 산책",
+     "place": "의릉"
+    },
+    {
+     "id": 14,
+     "date": "2027-10-07",
+     "start": "11:00",
+     "kind": "activity",
+     "title": "장위전통시장 구경",
+     "place": "장위전통시장"
+    },
+    {
+     "id": 15,
+     "date": "2027-10-07",
+     "start": "12:30",
+     "kind": "dining",
+     "title": "성북동 누룽지백숙에서 점심",
+     "place": "성북동 누룽지백숙"
+    },
+    {
+     "id": 16,
+     "date": "2027-10-07",
+     "start": "14:00",
+     "kind": "activity",
+     "title": "최순우 옛집 관람",
+     "place": "최순우 옛집"
+    },
+    {
+     "id": 17,
+     "date": "2027-10-07",
+     "start": "15:30",
+     "kind": "activity",
+     "title": "성북선잠박물관 관람",
+     "place": "성북선잠박물관"
+    },
+    {
+     "id": 18,
+     "date": "2027-10-07",
+     "start": "18:00",
+     "kind": "dining",
+     "title": "성북동집에서 저녁",
+     "place": "성북동집"
+    },
+    {
+     "id": 19,
+     "date": "2027-10-08",
+     "start": "09:00",
+     "kind": "lodging",
+     "title": "호텔 체크아웃",
+     "place": "호텔 피제이 명동"
+    },
+    {
+     "id": 20,
+     "date": "2027-10-08",
+     "start": "09:30",
+     "kind": "mobility",
+     "title": "택시로 송파 이동",
+     "place": "송파구청"
+    },
+    {
+     "id": 21,
+     "date": "2027-10-08",
+     "start": "11:30",
+     "kind": "dining",
+     "title": "산들해 송파점에서 점심",
+     "place": "산들해 송파점"
+    },
+    {
+     "id": 22,
+     "date": "2027-10-08",
+     "start": "13:00",
+     "kind": "activity",
+     "title": "몽촌역사관 관람",
+     "place": "몽촌역사관"
+    },
+    {
+     "id": 23,
+     "date": "2027-10-08",
+     "start": "15:00",
+     "kind": "lodging",
+     "title": "호텔 체크인",
+     "place": "서울 올림픽 파크텔"
+    },
+    {
+     "id": 24,
+     "date": "2027-10-08",
+     "start": "16:00",
+     "kind": "activity",
+     "title": "방이동 생태경관보전지역 산책",
+     "place": "방이동 생태경관보전지역"
+    },
+    {
+     "id": 25,
+     "date": "2027-10-08",
+     "start": "18:00",
+     "kind": "dining",
+     "title": "산들해 송파점에서 저녁",
+     "place": "산들해 송파점"
+    },
+    {
+     "id": 26,
+     "date": "2027-10-09",
+     "start": "09:30",
+     "kind": "activity",
+     "title": "암사종합시장 구경",
+     "place": "암사종합시장"
+    },
+    {
+     "id": 27,
+     "date": "2027-10-09",
+     "start": "11:00",
+     "kind": "activity",
+     "title": "길동생태공원 산책",
+     "place": "길동생태공원"
+    },
+    {
+     "id": 28,
+     "date": "2027-10-09",
+     "start": "12:30",
+     "kind": "dining",
+     "title": "고덕동 두부마을에서 점심",
+     "place": "고덕동 두부마을"
+    },
+    {
+     "id": 29,
+     "date": "2027-10-09",
+     "start": "14:00",
+     "kind": "activity",
+     "title": "강동 허브천문공원 산책",
+     "place": "강동 허브천문공원"
+    },
+    {
+     "id": 30,
+     "date": "2027-10-09",
+     "start": "16:00",
+     "kind": "activity",
+     "title": "광진교 걷기",
+     "place": "광진교"
+    },
+    {
+     "id": 31,
+     "date": "2027-10-09",
+     "start": "18:00",
+     "kind": "dining",
+     "title": "성수족발에서 저녁",
+     "place": "성수족발"
+    },
+    {
+     "id": 32,
+     "date": "2027-10-10",
+     "start": "09:30",
+     "kind": "activity",
+     "title": "길동생태공원 다시 걷기",
+     "place": "길동생태공원"
+    },
+    {
+     "id": 33,
+     "date": "2027-10-10",
+     "start": "11:00",
+     "kind": "activity",
+     "title": "암사종합시장 다시 구경",
+     "place": "암사종합시장"
+    },
+    {
+     "id": 34,
+     "date": "2027-10-10",
+     "start": "12:00",
+     "kind": "dining",
+     "title": "암사종합시장에서 점심",
+     "place": "암사종합시장"
+    },
+    {
+     "id": 35,
+     "date": "2027-10-10",
+     "start": "14:00",
+     "kind": "activity",
+     "title": "광진교 다시 걷기",
+     "place": "광진교"
+    },
+    {
+     "id": 36,
+     "date": "2027-10-10",
+     "start": "15:30",
+     "kind": "activity",
+     "title": "구의시장 구경",
+     "place": "구의시장"
+    },
+    {
+     "id": 37,
+     "date": "2027-10-10",
+     "start": "18:00",
+     "kind": "dining",
+     "title": "구의동 할머니손칼국수에서 저녁",
+     "place": "구의동 할머니손칼국수"
+    },
+    {
+     "id": 38,
+     "date": "2027-10-11",
+     "start": "09:00",
+     "kind": "lodging",
+     "title": "호텔 체크아웃",
+     "place": "서울 올림픽 파크텔"
+    },
+    {
+     "id": 39,
+     "date": "2027-10-11",
+     "start": "10:00",
+     "kind": "activity",
+     "title": "풍납시장 구경",
+     "place": "풍납시장"
+    },
+    {
+     "id": 40,
+     "date": "2027-10-11",
+     "start": "11:30",
+     "kind": "dining",
+     "title": "송파나루에서 점심",
+     "place": "송파나루"
+    },
+    {
+     "id": 41,
+     "date": "2027-10-11",
+     "start": "13:00",
+     "kind": "activity",
+     "title": "광진교에서 마지막 산책",
+     "place": "광진교"
+    },
+    {
+     "id": 42,
+     "date": "2027-10-11",
+     "start": "14:00",
+     "kind": "dining",
+     "title": "차 마시는 뜰에서 차 한잔",
+     "place": "차 마시는 뜰"
+    },
+    {
+     "id": 43,
+     "date": "2027-10-11",
+     "start": "15:00",
+     "kind": "mobility",
+     "title": "택시로 공항 이동",
+     "place": "김포공항 국내선청사"
+    }
+   ],
+   "qs": [
+    {
+     "q": "그 집 점심 맞죠?",
+     "gold": 8,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "수요일 점심 어디예요?"
+      },
+      {
+       "role": "service",
+       "text": "황생가칼국수입니다."
+      }
+     ]
+    },
+    {
+     "q": "그거 천천히 봐도 돼요?",
+     "gold": 17,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "목요일 오후 마지막 관람은요?"
+      },
+      {
+       "role": "service",
+       "text": "15시 30분 성북선잠박물관 관람입니다."
+      }
+     ]
+    },
+    {
+     "q": "뒤에 거 몇 시죠?",
+     "gold": 5,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "첫날 오후 두 곳 말해줘요"
+      },
+      {
+       "role": "service",
+       "text": "정동제일교회 14시 30분, 성공회 서울주교좌성당 16시입니다."
+      }
+     ]
+    },
+    {
+     "q": "가운데 거는 쉬엄쉬엄 가죠?",
+     "gold": 29,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "토요일 점심부터 오후 일정 세 개요"
+      },
+      {
+       "role": "service",
+       "text": "고덕동 두부마을 점심, 강동 허브천문공원 산책, 광진교 걷기입니다."
+      }
+     ]
+    },
+    {
+     "q": "거기 오래 걸어요?",
+     "gold": 24,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "금요일 호텔 들어간 뒤 어디죠?"
+      },
+      {
+       "role": "service",
+       "text": "방이동 생태경관보전지역을 산책합니다."
+      }
+     ]
+    },
+    {
+     "q": "마지막 거 예약돼 있나요?",
+     "gold": 12,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "수요일 늦은 오후부터요"
+      },
+      {
+       "role": "service",
+       "text": "차 마시는 뜰에서 차를 마시고 북촌도담에서 저녁을 먹습니다."
+      }
+     ]
+    },
+    {
+     "q": "그 호텔 몇 시 입실이죠?",
+     "gold": 23,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "바꾸는 호텔 알려줘요"
+      },
+      {
+       "role": "service",
+       "text": "서울 올림픽 파크텔 체크인은 금요일 15시입니다."
+      }
+     ]
+    },
+    {
+     "q": "그 시장에서 밥도 먹나요?",
+     "gold": 34,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "일요일 점심은 어디서 먹어요?"
+      },
+      {
+       "role": "service",
+       "text": "암사종합시장에서 점심을 먹습니다."
+      }
+     ]
+    },
+    {
+     "q": "그거 첫 방문이에요?",
+     "gold": 27,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "토요일 오전 산책은요?"
+      },
+      {
+       "role": "service",
+       "text": "길동생태공원 산책입니다."
+      }
+     ]
+    },
+    {
+     "q": "그 집 저녁은 몇 시?",
+     "gold": 25,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "금요일 저녁 어디예요?"
+      },
+      {
+       "role": "service",
+       "text": "산들해 송파점에서 저녁을 먹습니다."
+      }
+     ]
+    },
+    {
+     "q": "그 앞에 거는 몇 시예요?",
+     "gold": 33,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "일요일 오전 순서 알려줘요"
+      },
+      {
+       "role": "service",
+       "text": "암사종합시장 구경 뒤에 시장에서 점심을 먹습니다."
+      }
+     ]
+    },
+    {
+     "q": "그걸로 공항 가나요?",
+     "gold": 43,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "귀국날 마지막 이동은요?"
+      },
+      {
+       "role": "service",
+       "text": "15시에 택시로 공항에 이동합니다."
+      }
+     ]
+    },
+    {
+     "q": "거기 차만 마시나요?",
+     "gold": 42,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "마지막 날 오후 쉬는 곳은요?"
+      },
+      {
+       "role": "service",
+       "text": "차 마시는 뜰에서 14시에 차를 마십니다."
+      }
+     ]
+    },
+    {
+     "q": "토요일 길동생태공원 몇 시?",
+     "gold": 27,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "일요일 길동생태공원 다시 가는 거요",
+     "gold": 32,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "토요일 암사종합시장 구경 시간?",
+     "gold": 26,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "암사종합시장 점심 몇 시죠?",
+     "gold": 34,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "토요일 광진교 산책은?",
+     "gold": 30,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "일요일 광진교 다시 걷는 시간?",
+     "gold": 35,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "월요일 광진교 마지막 산책요",
+     "gold": 41,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "금요일 산들해 송파점 점심은요?",
+     "gold": 21,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "산들해 송파점 저녁 시간?",
+     "gold": 25,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "첫날 차 마시는 뜰 말고 수요일 차요",
+     "gold": 11,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "월요일 차 마시는 뜰은 몇 시?",
+     "gold": 42,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "호텔 피제이 명동 입실 시간?",
+     "gold": 2,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "호텔 피제이 명동 퇴실은 금요일이죠?",
+     "gold": 19,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "서울 올림픽 파크텔 체크인은?",
+     "gold": 23,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "서울 올림픽 파크텔 월요일 체크아웃요",
+     "gold": 38,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "황평집 점심 알려줘요",
+     "gold": 3,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "황생가칼국수 시간은?",
+     "gold": 8,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "성북선잠박물관 몇 시?",
+     "gold": 17,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "몽촌역사관 관람 시간?",
+     "gold": 22,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "정동제일교회 어디쯤?",
+     "gold": 4,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "성공회 서울주교좌성당은요?",
+     "gold": 5,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "창의문 쉬는 일정 맞나요?",
+     "gold": 10,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "칠궁 보는 시간은?",
+     "gold": 7,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "석파정 관람은 몇 시?",
+     "gold": 9,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "의릉 산책 시간요",
+     "gold": 13,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "장위전통시장 일정 알려줘요",
+     "gold": 14,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "구의시장 방문 몇 시죠?",
+     "gold": 36,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "강동 허브천문공원은요?",
+     "gold": 29,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "성북생활사박물관 시간은?",
+     "gold": null,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "몽촌민속관도 들르나요?",
+     "gold": null,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "칠궁 취소하고 석파정 시간 알려줘요",
+     "gold": 7,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "황평집 예약하고 한가람 시간도요",
+     "gold": 3,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "의릉 먼저 보고 장위전통시장도 갈게요",
+     "gold": 13,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "호텔 피제이 명동 체크인 확인하고 점심도요",
+     "gold": 2,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "정동제일교회 빼고 성당은 남겨줘요",
+     "gold": 4,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "석파정 늦추고 창의문도 늦춰줘요",
+     "gold": 9,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "최순우 옛집 시간하고 박물관 위치요",
+     "gold": 16,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "금요일 호텔 체크아웃 확인, 택시도 알려줘요",
+     "gold": 19,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "몽촌역사관 보고 호텔 체크인할게요",
+     "gold": 22,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "허브천문공원 취소, 광진교는 갈게요",
+     "gold": 29,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "성수족발 예약하고 내일 공원도 확인해줘요",
+     "gold": 31,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "구의시장 줄이고 저녁은 그대로요",
+     "gold": 36,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "풍납시장부터 보고 송파나루에서 먹죠",
+     "gold": 39,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "마지막 차 시간 알려주고 공항 택시도요",
+     "gold": 42,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "황평집 말고 한가람 몇 시예요?",
+     "gold": 6,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "정동제일교회 아니고 성당 시간이요",
+     "gold": 5,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "칠궁 말고 석파정 알려줘요",
+     "gold": 9,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "의릉 아니고 장위전통시장 시간",
+     "gold": 14,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "최순우 옛집 말고 성북선잠박물관요",
+     "gold": 17,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "성북동집 말고 누룽지백숙 점심요",
+     "gold": 15,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "몽촌역사관 말고 금요일 호텔 체크인",
+     "gold": 23,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "방이동 산책 아니고 저녁 식사요",
+     "gold": 25,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "토요일 시장 말고 길동생태공원",
+     "gold": 27,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "두부마을 아니고 허브천문공원요",
+     "gold": 29,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "일요일 시장 구경 말고 시장 점심",
+     "gold": 34,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "광진교 말고 구의시장 시간요",
+     "gold": 36,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "월요일 풍납시장 아니고 송파나루요",
+     "gold": 40,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "마지막 차 말고 공항 택시요",
+     "gold": 43,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "호텔 입실 말고 첫날 점심이요",
+     "gold": 3,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "황평집몇시임?",
+     "gold": 3,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "칠궁ㄱㄱ 시간?",
+     "gold": 7,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "석파정몇시에여",
+     "gold": 9,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "의릉산책ㅇㅇ?",
+     "gold": 13,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "장위전통시장 몇시쯤용",
+     "gold": 14,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "최순우옛집 몇시져",
+     "gold": 16,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "성북선잠박물관 시간좀ㅠ",
+     "gold": 17,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "몽촌역사관 몇시임",
+     "gold": 22,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "방이동생태 산책 몇시?",
+     "gold": 24,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "두부마을 점심몇시에용",
+     "gold": 28,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "허브천문공원 ㄱㅏ는시간",
+     "gold": 29,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "일욜 길동생태공원 몇시",
+     "gold": 32,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "구의시장몇시쥬",
+     "gold": 36,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "풍납시장 월욜 맞쥬?",
+     "gold": 39,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "오늘 날씨 어때요?",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "고마워요!",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "안녕하세요 ㅎㅎ",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "너는 누가 만들었어?",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "비트코인 가격 알아?",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "파이썬 코드 짜줄래?",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "배터리 20퍼 남았네",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "ㅋㅋㅋㅋㅋ",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "오늘 무슨 요일이야?",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "환율이 얼마죠?",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "노래 하나 추천해줘",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "잠이 안 오네요",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "영어로 인사해봐",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "서울 인구는 몇 명?",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "아이고 피곤하다",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "사진 잘 찍는 법 알려줘",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "왕실 후궁들 모신 곳 몇 시예요?",
+     "gold": 7,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "옛 왕족 별장 같은 곳은요?",
+     "gold": 9,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "성벽의 작은 문 앞에서 쉬는 건?",
+     "gold": 10,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "왕과 왕비 무덤 사이 걷는 건?",
+     "gold": 13,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "목요일 오전 재래 장터는요?",
+     "gold": 14,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "옛 미술사학자 살던 집은?",
+     "gold": 16,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "비단 짜던 역사 보는 곳은요?",
+     "gold": 17,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "백제 유물 보는 실내 관람은?",
+     "gold": 22,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "새들이 머무는 습지 걷는 건요?",
+     "gold": 24,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "토요일 낮 콩 요리 먹는 곳은?",
+     "gold": 28,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "향기 나는 식물 보며 걷는 곳?",
+     "gold": 29,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "일요일 오전 나무 많은 생태 산책은?",
+     "gold": 32,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "일요일 오후 동네 장 구경은?",
+     "gold": 36,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "월요일 낮 마지막 한식은요?",
+     "gold": 40,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "귀국 전에 마시는 마지막 차는?",
+     "gold": 42,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "화요일 첫 일정 뭐예요?",
+     "gold": 1,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "화요일 첫 식사는요?",
+     "gold": 3,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "첫날 마지막 일정은?",
+     "gold": 6,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "둘째 날 첫 일정요",
+     "gold": 7,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "수요일 세 번째 일정은?",
+     "gold": 9,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "수요일 마지막은 어디죠?",
+     "gold": 12,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "목요일 두 번째 일정?",
+     "gold": 14,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "목요일 점심 바로 다음은?",
+     "gold": 16,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "금요일 첫 일정 알려줘요",
+     "gold": 19,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "금요일 점심 뒤 일정은?",
+     "gold": 22,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "금요일 호텔 입실 다음은?",
+     "gold": 24,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "토요일 세 번째는요?",
+     "gold": 28,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "토요일 마지막 일정?",
+     "gold": 31,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "일요일 첫 일정은?",
+     "gold": 32,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "월요일 첫 일정 알려줘요",
+     "gold": 38,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "여행 맨 마지막 일정은?",
+     "gold": 43,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "황평집 점심 30분 미뤄줘요",
+     "gold": 3,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "정동제일교회 방문 빼줘요",
+     "gold": 4,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "칠궁 관람 한 시간 늦춰요",
+     "gold": 7,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "석파정은 취소할게요",
+     "gold": 9,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "의릉 산책 좀 짧게 해줘요",
+     "gold": 13,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "성북선잠박물관 20분 당겨줘요",
+     "gold": 17,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "몽촌역사관은 빼주세요",
+     "gold": 22,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "토요일 두부마을 점심 늦춰줘",
+     "gold": 28,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "일요일 구의시장 취소요",
+     "gold": 36,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "풍납시장 30분만 당겨줘요",
+     "gold": 39,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "그거 30분 미뤄줘요",
+     "gold": 16,
+     "type": "change_request",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "목요일 점심 뒤 어디 가요?"
+      },
+      {
+       "role": "service",
+       "text": "최순우 옛집을 관람합니다."
+      }
+     ]
+    },
+    {
+     "q": "거긴 빼주세요",
+     "gold": 24,
+     "type": "change_request",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "금요일 호텔 체크인 뒤 일정은요?"
+      },
+      {
+       "role": "service",
+       "text": "방이동 생태경관보전지역 산책입니다."
+      }
+     ]
+    },
+    {
+     "q": "30분 늦춰줘요",
+     "gold": null,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "그 일정 취소할게요",
+     "gold": null,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "내일 거 빼줘요",
+     "gold": null,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "경복궁 수문장 교대식 보나요?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "창덕궁 후원 예약했나요?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "덕수궁 야간 관람은요?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "종묘 해설 시간 알려줘요",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "광장시장 빈대떡 먹나요?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "남대문시장 구경 언제죠?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "북촌한옥마을 산책도 있나요?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "국립중앙박물관 몇 시예요?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "서울역사박물관 들르나요?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "남산서울타워 올라가요?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "인사동길 찻집은 언제죠?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "통인시장 도시락도 해요?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "청계천 저녁 산책 있나요?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "서울식물원 온실 관람은?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "서오릉 걷는 날 언제예요?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    }
+   ]
+  }
+ }
+}
