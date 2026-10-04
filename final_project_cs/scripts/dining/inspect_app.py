@@ -111,7 +111,12 @@ def api_places(q: str = "", limit: int = 300):
         cur.execute("""
             SELECT p.place_uid, p.name_ko, p.area, p.record_status,
                    (SELECT count(*) FROM dining.v_closure_rule_active c
-                     WHERE c.place_uid = p.place_uid)
+                     WHERE c.place_uid = p.place_uid),
+                   dining.meets_condition(p.place_uid, 'vegetarian_menu') IS TRUE,
+                   dining.meets_condition(p.place_uid, 'halal') IS TRUE,
+                   (SELECT a.value_detail::text FROM dining.dn_attribute a
+                     WHERE a.place_uid = p.place_uid AND a.attr_code = 'michelin'
+                       AND a.retired_at IS NULL LIMIT 1)
             FROM dining.dn_place p
             WHERE (%s = '' OR p.name_ko ILIKE '%%' || %s || '%%'
                            OR p.area ILIKE '%%' || %s || '%%'
@@ -119,8 +124,23 @@ def api_places(q: str = "", limit: int = 300):
             ORDER BY p.area, p.name_ko
             LIMIT %s""", (q, q, q, q, limit))
         rows = cur.fetchall()
-    return [{"uid": str(u), "name": n, "area": a, "status": s, "closures": c}
-            for u, n, a, s, c in rows]
+    return [{"uid": str(u), "name": n, "area": a, "status": s, "closures": c,
+             "badges": badges(veg, halal, star)}
+            for u, n, a, s, c, veg, halal, star in rows]
+
+
+def badges(veg: bool, halal: bool, michelin: str | None) -> list[str]:
+    """가게 이름 옆 표시. 맞다고 확인된 것만 — 모르는 것은 표시하지 않는다."""
+    out = []
+    if michelin:
+        # 「1스타 (2026)」 → 「미쉐린 1스타」. 에디션은 목록에서 뺀다.
+        grade = michelin.strip('"').split(" (")[0]
+        out.append(f"미쉐린 {grade}" if "스타" in grade else grade)
+    if veg:
+        out.append("비건·채식")
+    if halal:
+        out.append("할랄")
+    return out
 
 
 #: 대체 후보의 「다음 일정」 자리에 넣어 볼 곳. 합성 일정이며 좌표만 실제다.
@@ -321,6 +341,10 @@ main{display:grid;grid-template-columns:270px 1fr;gap:0;min-height:calc(100vh - 
 .item.on{background:var(--accent);color:#fff}
 .item .a{color:var(--dim);font-size:11.5px;margin-left:5px}
 .item.on .a{color:#dbe8f4}
+.badge{display:inline-block;font-size:10.5px;padding:0 5px;margin-left:4px;border-radius:8px;
+  border:1px solid var(--line);color:var(--dim)}
+.badge.m{border-color:#c0392b;color:#c0392b}.badge.v{border-color:#2e8b57;color:#2e8b57}
+.badge.h{border-color:#2a6fb0;color:#2a6fb0}.item.on .badge{color:#fff;border-color:#fff}
 #pane{padding:16px 18px;overflow:auto}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;
       padding:13px 15px;margin-bottom:13px}
@@ -412,6 +436,7 @@ async function loadList(){
     // record_status 는 대부분 unknown 이다. 인허가 자료를 아직 안 붙였기 때문이며
     // 영업 여부와 무관하다. 폐업일 때만 눈에 띄게 한다.
     `<div class="item${r.uid===cur?' on':''}" data-uid="${r.uid}">${esc(r.name)}`
+    +(r.badges||[]).map(b=>`<span class="badge ${b.startsWith('할랄')?'h':b.startsWith('비건')?'v':'m'}">${esc(b)}</span>`).join('')
     +`<span class="a">${esc(r.area)}${r.status==='closed'?' · 폐업':''}</span></div>`).join('');
   $('#items').querySelectorAll('.item').forEach(el=>
     el.onclick=()=>{cur=el.dataset.uid; loadList(); loadPlace();});

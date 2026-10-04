@@ -15,7 +15,7 @@
     evidence 칸에 남긴다. 다음 사람이 이 전제를 확인할 수 있어야 한다.
 
 사용법:  python scripts/dining/make_truth_sql.py
-출력:    data/dining/_build/truth.sql
+출력:    datasets/dining/processed/_build/truth.sql
 """
 from __future__ import annotations
 
@@ -27,8 +27,10 @@ import uuid
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))          # final_project_cs
-DATA = os.path.join(ROOT, "data", "dining")
+DATA = DINING_DATA
 OUT = os.path.join(DATA, "_build")
 
 SHEET = os.path.join(DATA, "truth", "대조표100_검수_2026-09-21.csv")

@@ -50,6 +50,14 @@ def _clock(text: Any) -> time | None:
     return time(hour, minute)
 
 
+def _same_day_close(opens: time, closes: time) -> time:
+    """닫는 시각이 여는 시각보다 앞이거나 같으면(「08:00~00:00」·「00:00~00:00」·「18:00~02:00」) 그날 끝까지로 본다.
+
+    ★`[2026-10-01]` 전에는 00:00 을 같은 날 0시로 읽어 **자정에 닫는 곳이 항상 닫힘**이었다 — 팀 데이터(올리브영·다이소
+      등 브랜드 매장 687곳이 이 모양)로 두 코드를 돌려 보다 찾았다. 새벽까지 여는 곳은 그날 자정까지만 인정한다(보수적)."""
+    return closes if closes > opens else time(23, 59)
+
+
 def hours_on(attributes: Mapping[str, Any] | None, day: date) -> DayHours | str | None:
     """그날의 영업시간. `"closed"`(쉬는 날) · `DayHours` · `None`(모름).
 
@@ -63,12 +71,13 @@ def hours_on(attributes: Mapping[str, Any] | None, day: date) -> DayHours | str 
         if isinstance(entry, Mapping):
             opens, closes = _clock(entry.get("open")), _clock(entry.get("close"))
             if opens and closes:
-                return DayHours(opens, closes, _clock(entry.get("last_entry")) if entry.get("last_entry") else None)
+                return DayHours(opens, _same_day_close(opens, closes),
+                                _clock(entry.get("last_entry")) if entry.get("last_entry") else None)
     hours = attributes.get("hours")
     if isinstance(hours, (list, tuple)) and len(hours) == 2:
         opens, closes = _clock(hours[0]), _clock(hours[1])
         if opens and closes:
-            return DayHours(opens, closes)
+            return DayHours(opens, _same_day_close(opens, closes))
     return None
 
 

@@ -45,7 +45,7 @@ final_project_cs/
     make_operator_sql.py       검수한 실제 값을 원장으로
     run_quality.py             채점하고 실행끼리 비교
     report_quality.py          품질 결과를 문서로
-  data/dining/
+  datasets/dining/processed/
     tourapi_음식점_소개정보.json     영업시간 원문 200건
     tourapi_서울_음식점_목록.json    좌표와 주소 990건
     holidays_2026_2027.json          공휴일 달력 46일
@@ -131,7 +131,7 @@ psql ... -f app/infrastructure/db/migrations/208_dining_quality.sql
 python scripts/dining/parse_hours.py
 ```
 
-`data/dining/tourapi_음식점_소개정보.json` 을 읽어 `data/dining/_build/parsed_hours.json` 을 만든다.
+`datasets/dining/processed/tourapi_음식점_소개정보.json` 을 읽어 `datasets/dining/processed/_build/parsed_hours.json` 을 만든다.
 표본 200건 기준으로 이런 값이 나온다.
 
 | 항목 | 값 |
@@ -146,7 +146,7 @@ python scripts/dining/parse_hours.py
 
 ```
 python scripts/dining/make_load_sql.py
-psql -h 127.0.0.1 -p 5433 -U postgres -d <DB> -v ON_ERROR_STOP=1 -f data/dining/_build/load_200.sql
+psql -h 127.0.0.1 -p 5433 -U postgres -d <DB> -v ON_ERROR_STOP=1 -f datasets/dining/processed/_build/load_200.sql
 ```
 
 장소와 레코드의 식별자를 관광공사 `contentid` 에서 만들기 때문에 같은 파일을 다시 돌려도 결과가 같다.
@@ -184,10 +184,10 @@ SELECT reason, count(*) FROM dining.v_link_gap GROUP BY reason;
 
 ```
 python scripts/dining/make_holiday_sql.py
-psql ... -f data/dining/_build/holidays.sql
+psql ... -f datasets/dining/processed/_build/holidays.sql
 ```
 
-`data/dining/holidays_2026_2027.json` 을 읽어 `_build/holidays.sql` 을 만든다.
+`datasets/dining/processed/holidays_2026_2027.json` 을 읽어 `_build/holidays.sql` 을 만든다.
 46일이 들어가고 그중 13일이 명절로 잡힌다.
 
 확인.
@@ -412,7 +412,7 @@ python scripts/dining/catchtable_auto.py --place 메이플탑 --i-know --show --
 | 판단하지 않는다 | 글자만 건져 `catchtable.write_answer` 로 넘긴다 |
 | 읽고 바로 적는다 | DB 에 닿으면 곧바로 적는다. 닿지 않으면 파일만 놓고 `run_check.py pickup` |
 
-로그인 상태는 `data/dining/_build/catchtable_profile/` 에 남는다. `_build/` 가
+로그인 상태는 `datasets/dining/processed/_build/catchtable_profile/` 에 남는다. `_build/` 가
 `.gitignore` 에 있으므로 저장소에 올라가지 않는다.
 
 **무인 반복은 이 파일의 용도가 아니다.** 시연에서 한 번 보일 때만 켠다.
@@ -502,13 +502,13 @@ dn_quality_result  그 실행의 건별 결과
 
 ```bash
 python scripts/dining/make_truth_sql.py            # 검수 결과를 정답셋으로
-psql ... -f data/dining/_build/truth.sql
+psql ... -f datasets/dining/processed/_build/truth.sql
 
 python scripts/dining/run_quality.py               # 채점하고 기록
 
 python scripts/dining/make_operator_sql.py --dry   # 무엇이 바뀌는지 먼저 본다
 python scripts/dining/make_operator_sql.py
-psql ... -f data/dining/_build/operator.sql
+psql ... -f datasets/dining/processed/_build/operator.sql
 
 python scripts/dining/run_quality.py               # 다시 채점
 python scripts/dining/run_quality.py --delta       # 무엇이 고쳐지고 깨졌나
@@ -533,7 +533,7 @@ python scripts/dining/report_quality.py --save     # 문서로
 때문이며, 그 사실을 `dn_truth.evidence` 에 적어 두었다. 이 전제가 바뀌면
 숫자가 통째로 달라지므로 다음 사람이 확인할 수 있어야 한다.
 
-원본은 `data/dining/truth/` 에 있다. 저장소 밖에만 두면 다음에 잃어버린다.
+원본은 `datasets/dining/processed/truth/` 에 있다. 저장소 밖에만 두면 다음에 잃어버린다.
 
 ---
 

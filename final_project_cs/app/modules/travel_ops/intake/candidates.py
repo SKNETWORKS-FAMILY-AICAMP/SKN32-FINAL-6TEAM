@@ -27,8 +27,8 @@ from ..itinerary_checks import Part, check_itinerary
 from .hours import _tenants, facts_for
 from .moves import leg_between, late_text
 from .terms import category_label
-from .places import distance_m, normalize_full
-from .review import (KST, SOURCE_LABEL, _Budgeted, _dt, _hours_lines, _line, _worst, default_engine, public_place)
+from .places import distance_m, normalize, normalize_full
+from .review import (KST, SOURCE_LABEL, _Budgeted, _dt, _hours_lines, _line, _worst, default_engine, gwa, public_place)
 
 LIMIT = 3                    #: 목업의 후보 A · B · C
 POOL_EXTRA = 2               #: 최종 셋을 고르기 전에 이동 계산기로 더 재 보는 후보 수

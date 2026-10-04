@@ -1,7 +1,7 @@
 """운영자가 고른 비건 식당 목록을 원장에 넣는 SQL 로 바꾼다.
 
 무엇을 넣는가.
-    data/dining/vegan/ 의 두 파일을 읽는다.
+    datasets/dining/processed/vegan/ 의 두 파일을 읽는다.
       비건식당_*.csv       식당 목록. 상호·자치구·주소·네이버 플레이스 ID·좌표
       비건식당_근거_*.csv   식당마다 영업을 무엇으로 확인했는가. 인허가 관리번호 또는 운영자 확인
 
@@ -32,7 +32,7 @@
     dn_closure_coverage 에 쓰므로 030 마이그레이션이 먼저 있어야 한다.
 
 사용법:  python scripts/dining/make_vegan_sql.py [--dry] [--sheet 시트.csv] [--out 출력.sql]
-출력:    data/dining/_build/vegan.sql
+출력:    datasets/dining/processed/_build/vegan.sql
 """
 from __future__ import annotations
 
@@ -45,9 +45,11 @@ import uuid
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))
-DATA = os.path.join(ROOT, "data", "dining", "vegan")
-OUT = os.path.join(ROOT, "data", "dining", "_build")
+DATA = os.path.join(DINING_DATA, "vegan")
+OUT = os.path.join(DINING_DATA, "_build")
 LIST = os.path.join(DATA, "비건식당_2026-09-23.csv")
 EVIDENCE = os.path.join(DATA, "비건식당_근거_2026-09-23.csv")
 
@@ -153,7 +155,8 @@ def full_address(addr: str) -> str:
 #
 #   요일 칸   11:30-20:00  /  11:30-15:00, 17:00-20:00 (브레이크는 구간 둘)
 #             휴무  /  모름  /  빈칸(아직 안 봄 — 적재하지 않는다)
-#   라스트오더  20:30  /  마감 30분 전  /  없음  /  빈칸(모름)
+#   라스트오더  20:30  /  마감 30분 전  /  없음  /  모름 · 빈칸
+#             점심 14:00, 저녁 20:30  (구간마다)  /  20:00(일요일 13:00)  (요일 예외)
 #   정기휴무 외  매월 둘째 주 화요일 · 명절 당일 · 공휴일 · 연중무휴 · 없음
 #
 # 확인일이 적힌 행만 넣는다. 확인일이 없으면 아직 보지 않은 것이다.
@@ -191,23 +194,64 @@ def parse_day(cell: str) -> tuple[str, list[tuple[int, int]]]:
     return "intervals", spans
 
 
-def parse_last_order(cell: str, spans: list[tuple[int, int]]) -> tuple[str, int | None]:
-    """라스트오더는 그날 마지막 구간에 붙인다. 앞 구간은 모름으로 둔다."""
+RE_TIME = re.compile(r"(조식|점심|런치|저녁|디너)?\s*(\d{1,2}):(\d{2})")
+RE_DAY_EXCEPTION = re.compile(r"\(([^)]*)\)")
+
+
+def _times(text: str) -> list[int]:
+    """「점심 14:00, 저녁 8:40」 → 분. 저녁 · 디너에 12시 전 숫자를 적었으면 오후로 본다."""
+    out = []
+    for label, hh, mm in RE_TIME.findall(text):
+        minute = int(hh) * 60 + int(mm)
+        if label in ("저녁", "디너") and int(hh) < 12:
+            minute += 720
+        out.append(minute)
+    return out
+
+
+def _exception_days(inner: str) -> set[int]:
+    """괄호 안 「토, 일」 「일요일」 → 요일 번호(월=1)."""
+    return {DAYS.index(ch) + 1 for ch in re.sub(r"\d{1,2}:\d{2}|요일", "", inner) if ch in DAYS}
+
+
+def parse_last_order(cell: str, spans: list[tuple[int, int]],
+                     weekday: int | None = None) -> list[tuple[str, int | None]]:
+    """라스트오더 칸 → 구간마다 (상태, 분). 구간 수만큼 돌려준다.
+
+        빈칸 · 모름              모든 구간 모름
+        없음 · 마감 N분 전 · 20:30   마지막 구간에만 붙인다. 앞 구간은 모름
+        점심 14:00, 저녁 20:30   시각이 들어가는 구간에 붙인다. 들어갈 구간이 없는 구간은 모름
+        20:00(일요일 13:00)      괄호의 요일은 괄호 안 시각을 쓴다
+    """
     cell = cell.strip()
-    if not cell:
-        return "unknown", None
+    unknown = [("unknown", None)] * len(spans)
+    if not cell or cell == "모름":
+        return unknown
     if cell == "없음":
-        return "none", None
+        return unknown[:-1] + [("none", None)]
     m = RE_BEFORE.search(cell)
     if m:
-        return "present", spans[-1][1] - int(m.group(1))
+        return unknown[:-1] + [("present", spans[-1][1] - int(m.group(1)))]
     m = RE_HHMM.match(cell)
     if m:
         lo = int(m.group(1)) * 60 + int(m.group(2))
         if lo < spans[-1][0]:       # 00:30 처럼 적은 자정 넘김
             lo += 1440
-        return "present", lo
-    raise ValueError(f"라스트오더를 읽지 못함: {cell!r}")
+        if not spans[-1][0] <= lo <= spans[-1][1]:
+            raise ValueError(f"라스트오더가 구간 밖: {cell!r}")
+        return unknown[:-1] + [("present", lo)]
+
+    times = _times(RE_DAY_EXCEPTION.sub("", cell))
+    for inner in RE_DAY_EXCEPTION.findall(cell):
+        if weekday in _exception_days(inner):
+            times = _times(inner)
+    if not times:
+        raise ValueError(f"라스트오더를 읽지 못함: {cell!r}")
+    out = []
+    for start, end in spans:
+        hit = next((t for t in times for t in (t, t + 1440) if start <= t <= end), None)
+        out.append(("present", hit) if hit is not None else ("unknown", None))
+    return out
 
 
 def parse_extra_closure(cell: str) -> tuple[str, list[dict]]:
@@ -296,13 +340,11 @@ def hours_sql(place_of: dict[str, str], existing: set[str], sheet: str, *, tag: 
             n["영업 규칙"] += 1
             if coverage != "intervals":
                 continue
-            lo_state, lo_min = parse_last_order(row["라스트오더"], spans)
-            for seq, (start, end) in enumerate(spans, 1):
-                last = seq == len(spans)
-                state = lo_state if last else "unknown"
-                lo = lo_min if last else None
-                if lo is not None and not start <= lo <= end:
-                    raise ValueError(f"{label} {DAYS[weekday - 1]}: 라스트오더가 구간 밖")
+            try:
+                orders = parse_last_order(row["라스트오더"], spans, weekday)
+            except ValueError as err:
+                raise ValueError(f"{label} {DAYS[weekday - 1]}: {err}") from None
+            for seq, ((start, end), (state, lo)) in enumerate(zip(spans, orders, strict=True), 1):
                 body.append(
                     "INSERT INTO dining.dn_hours_interval (rule_id, seq, open_min, close_min, "
                     f"last_order_min, last_order_state) VALUES ('{rule_id}', {seq}, {start}, {end}, "
@@ -345,7 +387,7 @@ def hours_sql(place_of: dict[str, str], existing: set[str], sheet: str, *, tag: 
     head = ("INSERT INTO dining.dn_load_meta (load_id, source_code, fetched_at, schema_version, scope, "
             f"row_count, raw_uri, status) VALUES ('{load_id}', 'operator_check', now(), '{tag}-sheet-v1', "
             f"{q(scope)}, {n['식당']}, "
-            f"{q(f'data/dining/{folder}/' + os.path.basename(sheet))}, 'loaded')"
+            f"{q(f'datasets/dining/processed/{folder}/' + os.path.basename(sheet))}, 'loaded')"
             " ON CONFLICT (load_id) DO UPDATE SET row_count = EXCLUDED.row_count, fetched_at = now();")
     # load_meta 가 먼저 있어야 source_record 가 붙는다. DELETE 보다 앞에 둔다.
     return [head] + body, n
@@ -429,7 +471,7 @@ def main() -> None:
             "INSERT INTO dining.dn_load_meta (load_id, source_code, fetched_at, schema_version, "
             "scope, row_count, raw_uri, status) VALUES ("
             f"'{load_id}', '{source}', '{CHECKED} 12:00+09', 'vegan-list-v1', '서울 비건 식당 목록', "
-            f"{by_source[source]}, {q('data/dining/vegan/' + os.path.basename(LIST))}, 'loaded')"
+            f"{by_source[source]}, {q('datasets/dining/processed/vegan/' + os.path.basename(LIST))}, 'loaded')"
             " ON CONFLICT (load_id) DO NOTHING;")
     sheet = arg("--sheet", SHEET)
     hours, counted = hours_sql(place_of, set(EXISTING.values()), sheet)

@@ -31,13 +31,14 @@
     python -m ml.dining_similarity score-sheet    채운 시트로 방법별 적합률을 낸다
 
 모델·중간 산출물은 저장소 밖 datasets/ml/dining_sim/ 에 쓴다(ml/__init__.py).
-판정 시트와 지표(metrics.json · train_info.json 사본)는 data/dining/similarity/ 에 둔다.
+판정 시트와 지표(metrics.json · train_info.json 사본)는 datasets/dining/processed/similarity/ 에 둔다.
 """
 from __future__ import annotations
 
 import argparse
 import csv
 import json
+import os
 import random
 import sys
 import time
@@ -63,7 +64,7 @@ def out_dir() -> Path:
 
 def sheet_dir() -> Path:
     """사람이 채우는 판정 시트는 저장소 안에 둔다 — 팀이 같이 채운다."""
-    path = Path(__file__).resolve().parents[1] / "data" / "dining" / "similarity"
+    path = Path(os.environ.get("DINING_DATA") or Path(__file__).resolve().parents[2] / "datasets" / "dining" / "processed") / "similarity"
     path.mkdir(parents=True, exist_ok=True)
     return path
 

@@ -257,3 +257,43 @@ def test_auto_with_no_alternative_asks_instead_of_going_silent(api):
     tick = api["tick"]("09:00")
     assert tick.adjusted == [] and [a["reason"] for a in tick.asked] == [CONSENT_REASON]
     assert _detail(api, trip_id)["version"] == 1
+
+
+def test_catalog_candidates_use_the_hours_already_read_in_the_db(api):
+    """★`[2026-10-01]` DB 에 읽어 둔 운영시간(`catalog_hours` — 새벽 작업·팀 자료 옮김)이 있는 목록 후보는 **휴무면 걸러지고,
+    열면 「영업을 확인할 수 없다」 경고 없이** 나온다. 읽어 둔 값이 없는 후보는 그대로 경고와 함께 나온다(바깥을 부르지 않는다)."""
+    import json as _json
+
+    always = {day: {"open": "00:00", "close": "23:59", "last_entry": None}
+              for day in ("mon", "tue", "wed", "thu", "fri", "sat", "sun")}
+    never = {day: "closed" for day in always}
+    rows = [("t-open", "시험 열린 전시관", 37.5140, always), ("t-shut", "시험 쉬는 전시관", 37.5141, never),
+            ("t-unknown", "시험 모르는 전시관", 37.5142, None)]
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        for cid, title, lat, week in rows:
+            cur.execute("INSERT INTO place_catalog (tenant_id, source, content_id, content_type_id, title, latitude, "
+                        "longitude, raw_json) VALUES (%s,'tour_api',%s,'14',%s,%s,%s,%s)",
+                        (api["tenant"], cid, title, lat, 127.1030,
+                         _json.dumps({"lclsSystm1": "VE", "lclsSystm2": "VE07", "lclsSystm3": "VE070100",
+                                      "sigungucode": "18"})))
+            if week is not None:
+                cur.execute("INSERT INTO catalog_hours (tenant_id, source, content_id, hours_week, hours_read, read_at) "
+                            "VALUES (%s,'tour_api',%s,%s,%s, now())",
+                            (api["tenant"], cid, _json.dumps(week), _json.dumps({"method": "csv_rule"})))
+    try:
+        trip_id = _create_with(api, {"payment": "card"}, request_id="catalog-hours")
+        api["tick"]("09:00")
+        [asked] = _proposals(api, trip_id)
+        _choose(api, trip_id, asked["proposal_id"], CONSENT_KEY)
+        [proposal] = _proposals(api, trip_id)
+        options = {o["name"]: o for o in proposal["options_json"]}
+        assert "시험 쉬는 전시관" not in options                                  # 쉬는 곳은 걸러진다
+        assert "시험 열린 전시관" in options
+        assert not any("영업" in w for w in options["시험 열린 전시관"].get("warnings", []))
+        assert options["시험 열린 전시관"]["catalog_place"]["attributes"]["hours_week"]["mon"]["open"] == "00:00"
+        if "시험 모르는 전시관" in options:
+            assert any("영업" in w for w in options["시험 모르는 전시관"].get("warnings", []))
+    finally:
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("DELETE FROM catalog_hours WHERE tenant_id=%s", (api["tenant"],))
+            cur.execute("DELETE FROM place_catalog WHERE tenant_id=%s", (api["tenant"],))

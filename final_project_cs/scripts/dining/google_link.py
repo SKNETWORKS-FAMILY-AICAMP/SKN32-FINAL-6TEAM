@@ -31,6 +31,10 @@
     python scripts/dining/google_link.py --place 닥터비건
     python scripts/dining/google_link.py --retry                전에 못 붙인 가게도 다시 본다
     python scripts/dining/google_link.py --by 홍길동             entered_by 에 남는 이름(기본 google_link)
+    python scripts/dining/google_link.py --to-sql               구글_연결.csv → 적재 SQL(키 없이, rebuild 가 부른다)
+
+붙인 것은 DB 와 datasets/dining/processed/google/구글_연결.csv 에 함께 남는다. rebuild 는 DB 를 새로 만들므로
+CSV 가 원본이다. 열어 보고 맞으면 CSV 의 확인자 · 확인일을 채운다 → 다시 세우면 valid.
 
 키는 ACOP_GOOGLE_MAPS_API_KEY. 접속은 run_check.py 와 같다.
 """
@@ -50,6 +54,8 @@ from datetime import date
 from typing import Any, Callable
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 
 if hasattr(sys.stdout, "reconfigure"):      # 시험에서 불러올 때는 없다
     sys.stdout.reconfigure(encoding="utf-8")
@@ -65,7 +71,12 @@ MAX_DISTANCE_M = 150
 #: 찾을 때 이 반경 안을 먼저 본다. 판정 거리보다 넓게 잡아 후보를 놓치지 않는다.
 BIAS_RADIUS_M = 500
 #: 못 붙인 가게. 우리 uid 와 우리 판정만 적는다. 구글이 돌려준 내용은 적지 않는다.
-MISSES = os.path.join(HERE, "..", "..", "data", "dining", "_build", "google_link_misses.json")
+MISSES = os.path.join(DINING_DATA, "_build", "google_link_misses.json")
+#: 붙인 연결의 원본. DB 는 rebuild 때 지워지므로 여기에 남기고 --to-sql 로 다시 넣는다.
+#: place_id 와 링크만 적는다(약관). 사람이 열어 보고 맞으면 확인자 · 확인일을 적는다 → valid.
+LINKS = os.path.join(DINING_DATA, "google", "구글_연결.csv")
+LINK_HEAD = ["place_uid", "상호", "place_id", "url", "판정 근거", "붙인 날", "확인자", "확인일", "메모"]
+LINKS_SQL = os.path.join(DINING_DATA, "_build", "google_links.sql")
 DEFAULT_LIMIT = int(os.environ.get("ACOP_RATE_GOOGLE_PLACES_PER_DAY", "16"))
 
 
@@ -101,10 +112,22 @@ def distance_m(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     return 2 * r * math.asin(math.sqrt(a))
 
 
+#: 상호가 아니라 회사 형태를 적은 말. 「(주)죠티인도레스토랑」 과 「죠티인도레스토랑」 은 같은 이름이다.
+CORP_MARKS = re.compile(r"\(주\)|\(유\)|㈜|주식회사|유한회사")
+#: 도로명과 건물번호. 「아리수로61길 33」 → ("아리수로61길", "33")
+ROAD = re.compile(r"([가-힣0-9]+(?:로|길))\s*(\d+(?:-\d+)?)")
+
+
 def name_key(name: str) -> str:
-    """이름 비교용. 공백, 기호, 대소문자를 뗀다. 지점명은 same_name 의 포함 검사가 맡는다."""
-    text = unicodedata.normalize("NFKC", name or "").lower()
+    """이름 비교용. 회사 형태, 공백, 기호, 대소문자를 뗀다. 지점명은 same_name 의 포함 검사가 맡는다."""
+    text = CORP_MARKS.sub("", unicodedata.normalize("NFKC", name or "")).lower()
     return re.sub(r"[\s\W_]+", "", text)
+
+
+def road_key(address: str | None) -> tuple[str, str] | None:
+    """도로명 주소에서 (도로명, 건물번호). 못 읽으면 None."""
+    m = ROAD.search(address or "")
+    return (m.group(1), m.group(2)) if m else None
 
 
 def same_name(ours: str, theirs: str) -> bool:
@@ -127,6 +150,28 @@ def judge(place: Place, candidates: list[dict[str, Any]],
         closest_named = d if closest_named is None else min(closest_named, d)
         if d <= MAX_DISTANCE_M:
             near_named.append((d, cand))
+
+    if not near_named and closest_named is None:
+        # 이름이 달라도 도로명 · 건물번호가 같고 가까우면 같은 가게로 본다.
+        # 「33Acre」 와 「33에이커」 처럼 표기만 다른 경우. 같은 건물에 둘 이상이면 고르지 않는다.
+        ours = road_key(place.address)
+        same_addr = []
+        for cand in candidates:
+            loc = cand.get("location") or {}
+            if ours and "latitude" in loc and road_key(cand.get("formattedAddress")) == ours:
+                d = distance_m(place.lat, place.lng, loc["latitude"], loc["longitude"])
+                if d <= MAX_DISTANCE_M:
+                    same_addr.append((d, cand))
+        if len({c["id"] for _, c in same_addr}) > 1:
+            return Verdict("ambiguous", reason=f"같은 주소에 {len(same_addr)}곳이 있다")
+        if same_addr:
+            d, cand = same_addr[0]
+            try:
+                url = normalize("google_place", cand.get("googleMapsUri") or "")
+            except ValueError as exc:
+                return Verdict("none", reason=f"가게 주소를 다듬지 못했다: {exc}")
+            return Verdict("matched", place_id=cand["id"], url=url, distance_m=d,
+                           reason=f"주소 일치 · 이름 표기 다름, {d:.0f}m")
 
     if not near_named:
         if closest_named is not None:
@@ -249,6 +294,68 @@ def insert(cur, place: Place, v: Verdict, by: str) -> str | None:
     return str(cur.fetchone()[0])
 
 
+def append_link(place: Place, v: Verdict, path: str = LINKS, day: str | None = None) -> None:
+    import csv
+    new = not os.path.exists(path)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "a", encoding="utf-8-sig" if new else "utf-8", newline="") as fh:
+        w = csv.writer(fh)
+        if new:
+            w.writerow(LINK_HEAD)
+        w.writerow([place.place_uid, place.name, v.place_id, v.url, v.reason,
+                    day or date.today().isoformat(), "", "", ""])
+
+
+def sync_links(cur, path: str = LINKS) -> int:
+    """DB 에는 있는데 CSV 에 없는 연결을 CSV 에 더한다. 파일이 잠겨 못 적은 것을 메운다."""
+    import csv
+    have = set()
+    if os.path.exists(path):
+        have = {r["place_uid"] for r in csv.DictReader(open(path, encoding="utf-8-sig"))}
+    cur.execute("SELECT r.place_uid::text, p.name_ko, r.provider_id, r.url, "
+                "replace(coalesce(r.note, ''), 'google_link 자동 연결: ', ''), r.entered_at::date "
+                "FROM dining.dn_external_ref r JOIN dining.dn_place p USING (place_uid) "
+                "WHERE r.kind = 'google_place' AND r.retired_at IS NULL ORDER BY p.name_ko")
+    added = 0
+    for uid, name, pid, url, reason, day in cur.fetchall():
+        if uid not in have:
+            append_link(Place(uid, name, None, 0.0, 0.0),
+                        Verdict("matched", place_id=pid, url=url, reason=reason), path, day=str(day))
+            added += 1
+    return added
+
+
+def to_sql(path: str = LINKS, out: str = LINKS_SQL) -> int:
+    """구글_연결.csv → 적재 SQL. 확인일이 있으면 valid, 없으면 candidate. 키가 필요 없다."""
+    import csv
+    q = lambda s: "'" + s.replace("'", "''") + "'"          # noqa: E731
+    lines = ["-- 구글 연결. 만든 것: scripts/dining/google_link.py --to-sql", "BEGIN;"]
+    n = {"candidate": 0, "valid": 0}
+    if os.path.exists(path):
+        for r in csv.DictReader(open(path, encoding="utf-8-sig")):
+            uid, pid, url = r["place_uid"].strip(), r["place_id"].strip(), r["url"].strip()
+            if not (uid and pid and url):
+                continue
+            by, day = (r.get("확인자") or "").strip(), (r.get("확인일") or "").strip()
+            valid = bool(by and day)
+            n["valid" if valid else "candidate"] += 1
+            lines.append(
+                "INSERT INTO dining.dn_external_ref (place_uid, kind, url, provider_id, status, entered_by, "
+                "entered_at, verified_by, verified_at, note) "
+                f"SELECT {q(uid)}, 'google_place', {q(url)}, {q(pid)}, "
+                f"'{'valid' if valid else 'candidate'}', 'google_link', {q(r['붙인 날'] or date.today().isoformat())}, "
+                f"{q(by) if valid else 'NULL'}, {q(day) if valid else 'NULL'}, {q('google_link 자동 연결: ' + r['판정 근거'])} "
+                f"WHERE EXISTS (SELECT 1 FROM dining.dn_place WHERE place_uid = {q(uid)}) "
+                "AND NOT EXISTS (SELECT 1 FROM dining.dn_external_ref x WHERE x.kind = 'google_place' "
+                f"AND x.retired_at IS NULL AND (x.place_uid = {q(uid)} OR x.provider_id = {q(pid)}));")
+    lines += ["COMMIT;", ""]
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(lines))
+    print(f"구글 연결 {n} → {out}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--place", help="가게 이름이나 place_uid 하나만")
@@ -256,7 +363,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--by", default="google_link")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--retry", action="store_true", help="전에 못 붙인 가게도 다시 본다")
+    ap.add_argument("--sync-csv", action="store_true", help="DB 의 연결 중 CSV 에 없는 것을 적는다")
+    ap.add_argument("--to-sql", action="store_true", help="구글_연결.csv 를 적재 SQL 로(rebuild 가 부른다)")
     args = ap.parse_args(argv)
+    if args.to_sql:
+        return to_sql()
 
     key = os.environ.get("ACOP_GOOGLE_MAPS_API_KEY", "")
     if not key:
@@ -264,6 +375,10 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     place_link, run_check = _modules()
+    if args.sync_csv:
+        with run_check.connect() as conn, conn.cursor() as cur:
+            print(f"CSV 에 더한 연결 {sync_links(cur)}곳")
+        return 0
     counts: dict[str, int] = {}
     misses = load_misses()
     with run_check.connect() as conn, conn.cursor() as cur:
@@ -278,6 +393,10 @@ def main(argv: list[str] | None = None) -> int:
             ref_id = insert(cur, place, v, args.by) if v.status == "matched" else None
             if ref_id:
                 conn.commit()
+                try:
+                    append_link(place, v)
+                except PermissionError:
+                    print("  CSV 가 잠겨 있다(엑셀?). 끝에서 DB 기준으로 다시 적는다")
                 misses.pop(place.place_uid, None)
                 print(f"  candidate ref={ref_id}  {v.url}")
             else:
@@ -285,6 +404,13 @@ def main(argv: list[str] | None = None) -> int:
                 misses[place.place_uid] = {"name": place.name, "status": status,
                                            "reason": v.reason, "at": date.today().isoformat()}
             save_misses(misses)
+        if not args.dry_run:
+            try:
+                added = sync_links(cur)
+                if added:
+                    print(f"CSV 에 빠진 연결 {added}곳을 DB 기준으로 적었다")
+            except PermissionError:
+                print("CSV 가 잠겨 있어 맞추지 못했다. 파일을 닫고 --sync-csv 로 다시 맞춘다")
     print("합계: " + ", ".join(f"{k} {n}" for k, n in sorted(counts.items())) if counts else "합계: 없음")
     if counts.get("matched") and not args.dry_run:
         print("열어 보고 맞으면: python scripts/dining/place_link.py verify --ref <ref_id> --by 이름")

@@ -68,8 +68,9 @@ SEARCH_URL = "https://app.catchtable.co.kr/  (검색창에 「{q}」)"
 
 def _build_dir() -> str:
     here = os.path.dirname(os.path.abspath(__file__))
-    root = os.path.dirname(os.path.dirname(here))          # final_project_cs
-    path = os.path.join(root, "data", "dining", "_build", "catchtable")
+    data = os.environ.get("DINING_DATA") or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(here))), "datasets", "dining", "processed")
+    path = os.path.join(data, "_build", "catchtable")
     os.makedirs(path, exist_ok=True)
     return path
 

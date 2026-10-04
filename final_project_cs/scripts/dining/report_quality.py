@@ -6,7 +6,7 @@
     python scripts/dining/report_quality.py            화면에 보인다
     python scripts/dining/report_quality.py --save     파일로도 남긴다
 
-출력: data/dining/_build/품질리포트.md
+출력: datasets/dining/processed/_build/품질리포트.md
 """
 from __future__ import annotations
 
@@ -15,8 +15,10 @@ import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))
-OUT = os.path.join(ROOT, "data", "dining", "_build")
+OUT = os.path.join(DINING_DATA, "_build")
 
 
 def connect():

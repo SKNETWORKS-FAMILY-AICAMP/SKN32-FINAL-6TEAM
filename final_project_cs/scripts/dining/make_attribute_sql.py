@@ -18,7 +18,7 @@
   메뉴에 「아동 요금」이 있으면 아이를 받는 집이다. yes
   「노키즈」가 적혀 있으면 no. 지금 원문에는 한 곳도 없다.
 
-  노키즈존 검수 시트(data/dining/kids/노키즈존_검수.csv)에서 사람이 확인한 행이 원문보다 앞선다.
+  노키즈존 검수 시트(datasets/dining/processed/kids/노키즈존_검수.csv)에서 사람이 확인한 행이 원문보다 앞선다.
     [확인] 아이 동반  가능 → yes · 노키즈 → no · 일부 → limited(조건을 상세에) · 모름·빈칸 → 넣지 않음
     확인일이 적힌 행만 넣는다. 원문 판정이 있던 가게는 시트 판정으로 바꾼다.
   노키즈존을 한꺼번에 알 수 있는 공개 자료는 없다(2026-09-28 조사). 가게마다 네이버·캐치테이블의
@@ -26,7 +26,7 @@
 「가능(일부 메뉴)」처럼 단서가 붙은 것은 limited 로 두고 원문을 함께 남긴다.
 
 사용법:  python scripts/dining/make_attribute_sql.py
-출력:    data/dining/_build/attributes.sql
+출력:    datasets/dining/processed/_build/attributes.sql
 """
 from __future__ import annotations
 
@@ -40,9 +40,11 @@ from datetime import date
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))   # final_project_cs
-DATA = os.path.join(ROOT, "data", "dining")
-OUT = os.path.join(ROOT, "data", "dining", "_build")
+DATA = DINING_DATA
+OUT = os.path.join(DINING_DATA, "_build")
 
 NS = uuid.UUID("6f1c0d2e-0000-4000-8000-000000000001")
 SOURCE = "tourapi_kor_food"
@@ -127,7 +129,7 @@ def main() -> None:
     rows = json.load(open(os.path.join(DATA, "tourapi_음식점_소개정보.json"), encoding="utf-8"))
 
     lines = ["-- 매장 속성 적재. 생성 파일이므로 직접 고치지 않는다.",
-             "-- 원본: data/dining/tourapi_음식점_소개정보.json",
+             "-- 원본: datasets/dining/processed/tourapi_음식점_소개정보.json",
              "BEGIN;", "",
              "-- 같은 적재를 다시 돌려도 쌓이지 않게 이 출처의 것을 먼저 비운다.",
              f"DELETE FROM dining.dn_attribute WHERE source_code = '{SOURCE}';", ""]

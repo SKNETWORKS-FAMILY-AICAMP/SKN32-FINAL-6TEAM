@@ -53,6 +53,8 @@ import sys
 if hasattr(sys.stdout, "reconfigure"):      # 시험에서 불러올 때는 없다
     sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 sys.path.insert(0, HERE)
 
 import catchtable                                    # noqa: E402
@@ -62,7 +64,7 @@ HOME = "https://app.catchtable.co.kr/"
 
 #: 사람이 로그인해 둔 상태가 사는 곳. 여기만 있으면 다시 로그인하지 않는다.
 #: 저장소 밖이 아니라 _build 아래에 둔다. .gitignore 가 이미 _build 를 막는다.
-PROFILE = os.path.join(ROOT, "data", "dining", "_build", "catchtable_profile")
+PROFILE = os.path.join(DINING_DATA, "_build", "catchtable_profile")
 
 #: 한 걸음마다 기다리는 상한. 넘으면 모름으로 끝낸다. 매달리지 않는다.
 STEP_MS = 15000

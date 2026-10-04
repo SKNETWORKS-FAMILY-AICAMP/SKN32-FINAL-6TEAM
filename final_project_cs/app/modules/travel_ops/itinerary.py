@@ -109,9 +109,16 @@ def _place(row: tuple) -> dict[str, Any]:
 #:    실내  VE06 공연장 · VE07 전시관·갤러리·박물관 · VE09 문화원·도서관
 #:  섞인 갈래(VE02 테마파크 — 아쿠아리움과 공원 · VE10 체육시설 · 역사 HS · 쇼핑 SH …)는 넣지 않는다 —
 #:  분류만으로 정하면 멀쩡한 일정이 바뀐다(코덱스 합의). 남은 모름은 날씨 사건 때 **먼저 묻는다**(`pending.needs_consent`)
+#:  ★`[2026-10-01]` 활동 팀(조직 develop `csv_places.py`)의 표와 맞대어 **이름을 눈으로 확인한 것만** 더했다 —
+#:    야외 +LS03 항공레저(한강드론공원) · +EX03 농산어촌체험  /  실내 +SH01 백화점 · +SH02 쇼핑몰 · +SH04 전문매장(4,104곳) ·
+#:    +EX02 공예체험(공방) · +EX05 웰니스(스파·온천) · +VE12 기타 문화(서점·문화센터).
+#:    ☆팀 표에서 **안 가져온 것**: LS02(「실내수영장」과 「한강시민공원 수영장(실외)」이 섞임) · HS 역사(경복궁과 덕수궁 중명전이 같은
+#:    분류) · SH05 상가·SH06 시장(노천 섞임) · SH07 — 야외로 잘못 읽으면 실내 일정이 비에 바뀌고(자동 고객), 실내로 잘못 읽으면
+#:    비 위험을 놓친다. 모르는 것은 먼저 묻는 길(`pending.needs_consent`)이 이미 있다.
 WEATHER_BY_LARGE_CLASS = {"NA": True}
-WEATHER_BY_MIDDLE_CLASS = {"VE01": True, "VE03": True, "VE04": True,
-                           "VE06": False, "VE07": False, "VE09": False}
+WEATHER_BY_MIDDLE_CLASS = {"VE01": True, "VE03": True, "VE04": True, "LS03": True, "EX03": True,
+                           "VE06": False, "VE07": False, "VE09": False, "VE12": False,
+                           "SH01": False, "SH02": False, "SH04": False, "EX02": False, "EX05": False}
 
 
 def weather_case_sql() -> str:
@@ -154,7 +161,8 @@ def catalog_activity_places(conn, tenant_id: str, trip_id: UUID, *, near: dict[s
     ☆왜 — 비 올 때 대체 후보가 등록된 장소(공용 소수 + 이 여행 것)에서만 나와, 경복궁 600m 안 후보가 0이었다(브라우저 시험).
     ★`place_id` 는 (테넌트·여행·관광공사 id) 로 정해지는 UUID 다 — 고객이 고르면 **그때** 이 id 로 그 여행 전용 행을
       등록한다(`TripStore.add_catalog_place`). 미리 등록하지 않는다(코덱스 합의 — 고아 행을 만들지 않는다).
-    ★영업시간·가격은 목록에 없다 — 모른다. 제안(고객이 고른다)에만 경고와 함께 쓰고 자동 적용에는 쓰지 않는다.
+    ★영업시간은 DB 에 읽어 둔 곳(`catalog_hours`)만 안다 — 그 밖과 가격은 모른다. 모르는 곳은 제안(고객이 고른다)에만
+      경고와 함께 쓰고 자동 적용에는 쓰지 않는다. 아는 곳은 휴무 요일·영업 시간 밖이면 걸러진다.
     ★이미 우리 장소에 같은 이름이 있으면 뺀다(`exclude_names`) — 같은 곳을 두 행으로 만들지 않는다.
     """
     import math
@@ -166,33 +174,41 @@ def catalog_activity_places(conn, tenant_id: str, trip_id: UUID, *, near: dict[s
     dlat = radius_m / 111_000
     dlon = radius_m / (111_000 * max(0.1, math.cos(math.radians(float(lat)))))
     with conn.cursor() as cur:
+        # ★`[2026-10-01]` 운영시간은 **DB 에 읽어 둔 값**(`catalog_hours` — 새벽 작업·팀 자료 옮김)만 붙인다. 바깥을 부르지 않는다.
         cur.execute(
-            "SELECT content_id, content_type_id, title, latitude, longitude, raw_json->>'lclsSystm1', "
-            "raw_json->>'lclsSystm2', raw_json->>'lclsSystm3', raw_json->>'sigungucode' FROM place_catalog "
-            "WHERE tenant_id=%s AND source='tour_api' AND latitude BETWEEN %s AND %s "
-            "AND longitude BETWEEN %s AND %s AND COALESCE(raw_json->>'lclsSystm1','') <> ALL(%s) "
-            "ORDER BY content_id LIMIT %s",
+            "SELECT pc.content_id, pc.content_type_id, pc.title, pc.latitude, pc.longitude, pc.raw_json->>'lclsSystm1', "
+            "pc.raw_json->>'lclsSystm2', pc.raw_json->>'lclsSystm3', pc.raw_json->>'sigungucode', pc.raw_json->>'brand', "
+            "ch.hours_week, ch.hours_read FROM place_catalog pc "
+            "LEFT JOIN catalog_hours ch ON ch.tenant_id = pc.tenant_id AND ch.source = pc.source "
+            "AND ch.content_id = pc.content_id AND ch.hours_week IS NOT NULL "
+            "WHERE pc.tenant_id=%s AND pc.source='tour_api' AND pc.latitude BETWEEN %s AND %s "
+            "AND pc.longitude BETWEEN %s AND %s AND COALESCE(pc.raw_json->>'lclsSystm1','') <> ALL(%s) "
+            "ORDER BY pc.content_id LIMIT %s",
             (tenant_id, float(lat) - dlat, float(lat) + dlat, float(lon) - dlon, float(lon) + dlon,
              list(_NOT_ACTIVITY), limit))
         rows = cur.fetchall()
     out = []
-    for content_id, type_id, title, plat, plon, l1, l2, l3, sgg in rows:
+    for content_id, type_id, title, plat, plon, l1, l2, l3, sgg, brand, week, hours_read in rows:
         if not title or title in exclude_names or plat is None or plon is None:
             continue
         pid = uuid5(NAMESPACE_URL, f"tripilot:catalog:{tenant_id}:{trip_id}:tour_api:{content_id}")
+        attributes = {"source": "tour_api", "source_content_id": str(content_id),
+                      **({"source_content_type_id": str(type_id)} if type_id else {}),
+                      "catalog_pending": True}
+        if week:
+            attributes["hours_week"] = week
+            attributes["hours_read"] = {**(hours_read or {}), "from": "catalog_hours"}
         out.append({"place_id": str(pid), "name": title, "kind": "activity",
                     "latitude": float(plat), "longitude": float(plon),
                     "weather_sensitive": weather_from_class(l1, l2),
-                    "attributes": {"source": "tour_api", "source_content_id": str(content_id),
-                                   **({"source_content_type_id": str(type_id)} if type_id else {}),
-                                   "catalog_pending": True},
-                    "catalog_class": _catalog_class((l1, l2, l3, sgg)), "trip_scope": str(trip_id)})
+                    "attributes": attributes,
+                    "catalog_class": _catalog_class((l1, l2, l3, sgg, brand)), "trip_scope": str(trip_id)})
     return out
 
 
 def _catalog_class(values: tuple) -> dict[str, str] | None:
-    """관광공사 분류 네 값 → `{"lcls1", "lcls2", "lcls3", "sigungu"}`. 넷 다 없으면 None(모름)."""
-    keys = ("lcls1", "lcls2", "lcls3", "sigungu")
+    """관광공사 분류 네 값 + 브랜드 → `{"lcls1", "lcls2", "lcls3", "sigungu", "brand"}`. 다 없으면 None(모름)."""
+    keys = ("lcls1", "lcls2", "lcls3", "sigungu", "brand")
     found = {key: str(value) for key, value in zip(keys, values) if value}
     return found or None
 
@@ -382,7 +398,7 @@ class TripStore:
         with conn.cursor() as cur:
             cur.execute("SELECT " + ", ".join("p." + column for column in PLACE_COLUMNS)
                         + ", p.trip_scope, pc.raw_json->>'lclsSystm1', pc.raw_json->>'lclsSystm2',"
-                        " pc.raw_json->>'lclsSystm3', pc.raw_json->>'sigungucode'"
+                        " pc.raw_json->>'lclsSystm3', pc.raw_json->>'sigungucode', pc.raw_json->>'brand'"
                         " FROM places p LEFT JOIN place_catalog pc ON pc.tenant_id = p.tenant_id"
                         " AND pc.source = 'tour_api'"
                         " AND pc.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id')"

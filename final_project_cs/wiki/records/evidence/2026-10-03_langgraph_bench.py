@@ -208,6 +208,8 @@ def main() -> int:
     ap.add_argument("--rounds", type=int, default=30)
     ap.add_argument("--throughput", type=int, default=0,
                     help="건수를 이만큼 연달아 밀어 넣어 처리량을 잰다")
+    ap.add_argument("--tp-repeats", type=int, default=3,
+                    help="처리량을 몇 번 반복해 평균낼지 — 한 번만 재면 그날 상태를 본 것이다")
     args = ap.parse_args()
 
     os.chdir(BASE)
@@ -266,19 +268,54 @@ def main() -> int:
             tp = {}
             if args.throughput:
                 n = args.throughput
-                t0 = time.perf_counter()
-                for _ in range(n):
-                    run_ours(conn, customer_id)
-                conn.commit()
-                ours_s = time.perf_counter() - t0
-                t0 = time.perf_counter()
-                for _ in range(n):
-                    run_theirs(graph)
-                theirs_s = time.perf_counter() - t0
-                tp = {"건수": n,
-                      "ours": {"초": round(ours_s, 2), "초당 건": round(n / ours_s, 1)},
-                      "langgraph": {"초": round(theirs_s, 2), "초당 건": round(n / theirs_s, 1)},
-                      "비고": "우리 쪽은 한 트랜잭션으로 묶어 커밋했다 — 그만큼 유리하다"}
+
+                # ★`[2026-10-04 고침]` 전에는 우리 쪽만 **한 트랜잭션으로 묶어** 마지막에
+                #   한 번 커밋하고 LangGraph 는 건마다 checkpoint 를 썼다. 조건이 달라
+                #   비교가 아니라 변호였다. 이제 **건마다 커밋**해 맞춘다.
+                #   ★참고로 묶어 커밋한 값도 같이 낸다 — 둘이 얼마나 다른지가 정보다.
+                def ours_each():
+                    for _ in range(n):
+                        run_ours(conn, customer_id)
+                        conn.commit()          # 건마다 — LangGraph 와 같은 조건
+
+                def ours_batch():
+                    for _ in range(n):
+                        run_ours(conn, customer_id)
+                    conn.commit()              # 묶어서 — 우리에게 유리한 조건
+
+                def tp_theirs():
+                    for _ in range(n):
+                        run_theirs(graph)
+
+                # ★교대로 잰다. 한쪽을 먼저 다 돌리면 뒤가 손해를 본다.
+                # ★쌍마다 따로 재고 **중앙값과 사분위 범위**를 낸다 — 평균 하나로 뭉치면
+                #   그날 한 번 튄 값이 결론을 흔든다(코덱스 지적, 2026-10-04).
+                rates: dict[str, list[float]] = {"each": [], "theirs": [], "batch": []}
+                ratios: list[float] = []
+                for i in range(args.tp_repeats):
+                    order = ([("each", ours_each), ("theirs", tp_theirs)] if i % 2 == 0
+                             else [("theirs", tp_theirs), ("each", ours_each)])
+                    for name, fn in order:
+                        t0 = time.perf_counter()
+                        fn()
+                        rates[name].append(n / (time.perf_counter() - t0))
+                    t0 = time.perf_counter()
+                    ours_batch()
+                    rates["batch"].append(n / (time.perf_counter() - t0))
+                    ratios.append(rates["each"][-1] / rates["theirs"][-1])
+
+                def spread(xs: list[float]) -> dict:
+                    lo, hi = (statistics.quantiles(xs, n=4)[0],
+                              statistics.quantiles(xs, n=4)[-1]) if len(xs) > 3 else (min(xs), max(xs))
+                    return {"중앙값_초당건": round(statistics.median(xs), 1),
+                            "사분위범위": [round(lo, 1), round(hi, 1)]}
+
+                tp = {"건수": n, "쌍": args.tp_repeats,
+                      "ours_건마다_커밋": spread(rates["each"]),
+                      "langgraph": spread(rates["theirs"]),
+                      "배수_중앙값": round(statistics.median(ratios), 2),
+                      "ours_묶어_커밋(참고)": spread(rates["batch"]),
+                      "비고": "건마다 커밋이 공정한 비교다. 묶어 커밋은 우리에게 유리한 조건이라 참고로만 둔다"}
 
         after = sizes(conn)
 

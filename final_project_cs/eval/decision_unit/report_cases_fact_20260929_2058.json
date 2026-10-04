@@ -1,0 +1,899 @@
+{
+ "summary": {
+  "cases": 34,
+  "good": 33,
+  "accuracy": 0.971,
+  "wrong_target_changes": 0,
+  "clarify_with_right_choice": 0,
+  "unnecessary_clarify": 0,
+  "fact_labeled": 34,
+  "fact_correct": 33,
+  "p50": 1.98,
+  "p95": 2.53,
+  "p99": 3.86,
+  "max": 3.86
+ },
+ "rows": [
+  {
+   "trip": "e71ee6ab",
+   "history": [
+    [
+     "고객",
+     "첫 활동 알려줘"
+    ],
+    [
+     "triPilot",
+     "경복궁 일정이에요 — 1일차 10:10~11:40 · 활동\n· 장소: 경복궁 · 종로구\n· 다음 일정: 1일차 12:00 금용문"
+    ]
+   ],
+   "selected": null,
+   "message": "그건 어딧는거야",
+   "action": "answer_fact",
+   "item": "i2",
+   "change": null,
+   "fact": "address",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i2",
+    "change": "c2",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 3.86
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [
+    [
+     "고객",
+     "첫 활동 알려줘"
+    ],
+    [
+     "triPilot",
+     "경복궁 일정이에요 — 1일차 10:10~11:40 · 활동\n· 장소: 경복궁 · 종로구\n· 다음 일정: 1일차 12:00 금용문"
+    ]
+   ],
+   "selected": null,
+   "message": "거기 어디야",
+   "action": "answer_fact",
+   "item": "i2",
+   "change": null,
+   "fact": "address",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i2",
+    "change": "c2",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.98
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": "i2",
+   "message": "위치 알려줘",
+   "action": "answer_fact",
+   "item": "i2",
+   "change": null,
+   "fact": "address",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i2",
+    "change": "c2",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.58
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "경복궁 어디 있어",
+   "action": "answer_fact",
+   "item": "i2",
+   "change": null,
+   "fact": "address",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i2",
+    "change": "c2",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.53
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [
+    [
+     "고객",
+     "점심 어디서 먹어"
+    ],
+    [
+     "triPilot",
+     "1일차 12:00 금용문에서 점심이에요."
+    ]
+   ],
+   "selected": null,
+   "message": "그 식당 위치가 어디야",
+   "action": "answer_fact",
+   "item": "i3",
+   "change": null,
+   "fact": "address",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i3",
+    "change": "none",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.02
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "둘째 날 첫 활동 주소 알려줘",
+   "action": "answer_fact",
+   "item": "i7",
+   "change": null,
+   "fact": "address",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i7",
+    "change": "none",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.03
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": "i9",
+   "message": "여기 어딨어?",
+   "action": "answer_fact",
+   "item": "i9",
+   "change": null,
+   "fact": "address",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i9",
+    "change": "none",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.01
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "저녁 먹는 곳 어디쯤이야",
+   "action": "answer_fact",
+   "item": "i5",
+   "change": null,
+   "fact": "address",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i5",
+    "change": "none",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.99
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [
+    [
+     "고객",
+     "점심 어디서 먹어"
+    ],
+    [
+     "triPilot",
+     "1일차 12:00 금용문에서 점심이에요."
+    ]
+   ],
+   "selected": null,
+   "message": "그 식당 몇 시까지 해",
+   "action": "answer_fact",
+   "item": "i3",
+   "change": null,
+   "fact": "hours",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i3",
+    "change": "none",
+    "fact": "hours",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.97
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "경희궁 몇 시에 열어",
+   "action": "answer_fact",
+   "item": "i4",
+   "change": null,
+   "fact": "hours",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i4",
+    "change": "none",
+    "fact": "hours",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.98
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": "i7",
+   "message": "여기 언제 문 닫아?",
+   "action": "answer_fact",
+   "item": "i7",
+   "change": null,
+   "fact": "hours",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i7",
+    "change": "none",
+    "fact": "hours",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.11
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "광희문 쉬는 날 있어?",
+   "action": "answer_fact",
+   "item": "i9",
+   "change": null,
+   "fact": "hours",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i9",
+    "change": "none",
+    "fact": "hours",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.05
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "송원 전화번호 알려줘",
+   "action": "answer_fact",
+   "item": "i10",
+   "change": null,
+   "fact": "phone",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i10",
+    "change": "none",
+    "fact": "phone",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.0
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [
+    [
+     "고객",
+     "점심 어디서 먹어"
+    ],
+    [
+     "triPilot",
+     "1일차 12:00 금용문에서 점심이에요."
+    ]
+   ],
+   "selected": null,
+   "message": "거기 연락처 뭐야",
+   "action": "answer_fact",
+   "item": "i3",
+   "change": null,
+   "fact": "phone",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i3",
+    "change": "none",
+    "fact": "phone",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.97
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "경복궁에서 금용문까지 어떻게 가",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "move",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "none",
+    "change": "none",
+    "fact": "move",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.94
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "첫 식당에서 경복궁까지 얼마나 걸려",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "move",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i1",
+    "change": "none",
+    "fact": "move",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.0
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "경희궁은 몇 시에 가?",
+   "action": "answer_fact",
+   "item": "i4",
+   "change": null,
+   "fact": "time",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i4",
+    "change": "none",
+    "fact": "time",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.95
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "둘째 날 점심 몇 시야",
+   "action": "answer_fact",
+   "item": "i8",
+   "change": null,
+   "fact": "time",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i8",
+    "change": "none",
+    "fact": "time",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.02
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "다음 일정 뭐야",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "next",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i3",
+    "change": "none",
+    "fact": "next",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.95
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "경복궁 다음엔 어디 가",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "next",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i2",
+    "change": "c2",
+    "fact": "next",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.98
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "송원 예약돼 있어?",
+   "action": "answer_fact",
+   "item": "i10",
+   "change": null,
+   "fact": "booking",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i10",
+    "change": "none",
+    "fact": "booking",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.99
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "첫날 일정 요약해줘",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "day",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "none",
+    "change": "none",
+    "fact": "day",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.94
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "내일 뭐 해",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "day",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "none",
+    "change": "none",
+    "fact": "day",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.94
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "경복궁 알려줘",
+   "action": "answer_fact",
+   "item": "i2",
+   "change": null,
+   "fact": "detail",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i2",
+    "change": "c2",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.0
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": "i4",
+   "message": "이 일정 자세히",
+   "action": "answer_fact",
+   "item": "i4",
+   "change": null,
+   "fact": "detail",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i4",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.09
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "금용문은 어떤 곳이야",
+   "action": "answer_fact",
+   "item": "i3",
+   "change": null,
+   "fact": "detail",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i3",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.06
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "관훈동 민씨 가옥 세부정보",
+   "action": "answer_fact",
+   "item": "i7",
+   "change": null,
+   "fact": "detail",
+   "label_by": "cs세션 표기(2026-09-29, ui 세션 결함 보고 0cfc8888 계기)",
+   "got": {
+    "action": "answer_fact",
+    "item": "i7",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.97
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [
+    [
+     "고객",
+     "점심 식당 다른 걸로 바꿔"
+    ],
+    [
+     "triPilot",
+     "요청하신 대로 금용문 대신 두가헌 레스토랑(으)로 바꿨습니다(12:00 시작). 다른 안: 1) 다음 일정 근처 엘 샌드위치 · 2) 5km 안으로 넓히면 로씨니 — 다른 곳이 좋으면 고르세요."
+    ]
+   ],
+   "selected": null,
+   "message": "경복궁 알려줘",
+   "action": "answer_fact",
+   "item": "i2",
+   "change": null,
+   "fact": "detail",
+   "label_by": "ui세션 실서버 보고(2026-09-29 20:54, case c74bcaa2) 계기 — cs세션 표기",
+   "got": {
+    "action": "answer_fact",
+    "item": "i2",
+    "change": "c2",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 1.98
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [
+    [
+     "고객",
+     "점심 식당 다른 걸로 바꿔"
+    ],
+    [
+     "triPilot",
+     "요청하신 대로 금용문 대신 두가헌 레스토랑(으)로 바꿨습니다(12:00 시작). 다른 안: 1) 다음 일정 근처 엘 샌드위치 · 2) 5km 안으로 넓히면 로씨니 — 다른 곳이 좋으면 고르세요."
+    ]
+   ],
+   "selected": null,
+   "message": "경희궁 알려줘",
+   "action": "answer_fact",
+   "item": "i4",
+   "change": null,
+   "fact": "detail",
+   "label_by": "ui세션 실서버 보고(2026-09-29 20:54, case c74bcaa2) 계기 — cs세션 표기",
+   "got": {
+    "action": "answer_fact",
+    "item": "i4",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.97
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [
+    [
+     "고객",
+     "점심 식당 다른 걸로 바꿔"
+    ],
+    [
+     "triPilot",
+     "요청하신 대로 금용문 대신 두가헌 레스토랑(으)로 바꿨습니다(12:00 시작). 다른 안: 1) 다음 일정 근처 엘 샌드위치 · 2) 5km 안으로 넓히면 로씨니 — 다른 곳이 좋으면 고르세요."
+    ]
+   ],
+   "selected": null,
+   "message": "광희문 알려줘",
+   "action": "answer_fact",
+   "item": "i9",
+   "change": null,
+   "fact": "detail",
+   "label_by": "ui세션 실서버 보고(2026-09-29 20:54, case c74bcaa2) 계기 — cs세션 표기",
+   "got": {
+    "action": "answer_fact",
+    "item": "i9",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.94
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [
+    [
+     "고객",
+     "경복궁 어디 있어"
+    ],
+    [
+     "triPilot",
+     "경복궁 주소는 서울특별시 종로구 사직로 161 (세종로)예요(출처 관광공사).\n지도에서 보기: https://www.google.com/maps/search/?api=1&query=경복궁"
+    ]
+   ],
+   "selected": null,
+   "message": "경희궁 알려줘",
+   "action": "answer_fact",
+   "item": "i4",
+   "change": null,
+   "fact": "detail",
+   "label_by": "ui세션 실서버 보고(2026-09-29 20:54, case c74bcaa2) 계기 — cs세션 표기",
+   "got": {
+    "action": "answer_fact",
+    "item": "i4",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.95
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [
+    [
+     "고객",
+     "경복궁 어디 있어"
+    ],
+    [
+     "triPilot",
+     "경복궁 주소는 서울특별시 종로구 사직로 161 (세종로)예요(출처 관광공사).\n지도에서 보기: https://www.google.com/maps/search/?api=1&query=경복궁"
+    ]
+   ],
+   "selected": null,
+   "message": "송원 알려줘",
+   "action": "answer_fact",
+   "item": "i10",
+   "change": null,
+   "fact": "detail",
+   "label_by": "ui세션 실서버 보고(2026-09-29 20:54, case c74bcaa2) 계기 — cs세션 표기",
+   "got": {
+    "action": "answer_fact",
+    "item": "i10",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.97
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "관훈동 민씨 가옥 알려줘",
+   "action": "answer_fact",
+   "item": "i7",
+   "change": null,
+   "fact": "detail",
+   "label_by": "ui세션 실서버 보고(2026-09-29 20:54, case c74bcaa2) 계기 — cs세션 표기",
+   "got": {
+    "action": "answer_fact",
+    "item": "i7",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.97
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [
+    [
+     "고객",
+     "점심 식당 다른 걸로 바꿔"
+    ],
+    [
+     "triPilot",
+     "요청하신 대로 금용문 대신 두가헌 레스토랑(으)로 바꿨습니다(12:00 시작). 다른 안: 1) 다음 일정 근처 엘 샌드위치 · 2) 5km 안으로 넓히면 로씨니 — 다른 곳이 좋으면 고르세요."
+    ]
+   ],
+   "selected": null,
+   "message": "첫날 저녁 식당 알려줘",
+   "action": "answer_fact",
+   "item": "i5",
+   "change": null,
+   "fact": "detail",
+   "label_by": "ui세션 실서버 보고(2026-09-29 20:54, case c74bcaa2) 계기 — cs세션 표기",
+   "got": {
+    "action": "answer_fact",
+    "item": "i5",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.95
+  }
+ ]
+}

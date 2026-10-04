@@ -99,3 +99,27 @@ def test_못_붙인_가게_기록은_되읽힌다(gl, tmp_path):
     gl.save_misses({"uid": {"name": "x", "status": "none", "reason": "r", "at": "2026-09-23"}}, path)
     assert json.load(open(path, encoding="utf-8"))["uid"]["status"] == "none"
     assert gl.load_misses(path)["uid"]["name"] == "x"
+
+
+def test_회사_표기는_이름에서_뗀다(gl, normalize):
+    ours = dict(OURS, name="(주)닥터비건")
+    v = gl.judge(gl.Place(**ours), [cand("ChIJa", "닥터비건 성수점", 37.5441, 127.0561)], normalize)
+    assert v.status == "matched"
+
+
+def test_이름이_달라도_도로명_번지가_같고_가까우면_붙인다(gl, normalize):
+    c = dict(cand("ChIJa", "Doctor Vegan", 37.5441, 127.0561), formattedAddress="서울특별시 성동구 연무장길 1")
+    v = gl.judge(gl.Place(**OURS), [c], normalize)
+    assert v.status == "matched"
+    assert "Doctor" not in v.reason          # 구글 이름을 남기지 않는다
+
+
+def test_같은_주소에_둘이면_고르지_않는다(gl, normalize):
+    a = dict(cand("ChIJa", "1층 카페", 37.5441, 127.0561, "1"), formattedAddress="서울 성동구 연무장길 1")
+    b = dict(cand("ChIJb", "2층 식당", 37.5441, 127.0561, "2"), formattedAddress="서울 성동구 연무장길 1")
+    assert gl.judge(gl.Place(**OURS), [a, b], normalize).status == "ambiguous"
+
+
+def test_주소가_같아도_멀면_붙이지_않는다(gl, normalize):
+    c = dict(cand("ChIJa", "Doctor Vegan", 37.5540, 127.0560), formattedAddress="서울 성동구 연무장길 1")
+    assert gl.judge(gl.Place(**OURS), [c], normalize).status == "none"

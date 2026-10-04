@@ -240,7 +240,9 @@ class PlaceCatalogSync:
                     "address=EXCLUDED.address, latitude=EXCLUDED.latitude, "
                     "longitude=EXCLUDED.longitude, "
                     "source_modified_at=EXCLUDED.source_modified_at, "
-                    "raw_json=EXCLUDED.raw_json, fetched_at=now()",
+                    # ★`[2026-10-01]` 합친다 — 우리가 덧붙인 키(`brand` 등, 활동 팀 자료 옮김)를 다음 동기화가 지우지 않게.
+                    #   목록 응답에 있는 키는 새 값으로 바뀐다(기존처럼).
+                    "raw_json=place_catalog.raw_json || EXCLUDED.raw_json, fetched_at=now()",
                     (self.tenant_id, self.source.name, content_id,
                      row.get("content_type_id"), row.get("area_code"),
                      row.get("title"), row.get("address"),
