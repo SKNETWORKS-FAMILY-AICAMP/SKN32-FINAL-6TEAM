@@ -1016,6 +1016,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             found = view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
         if found is None:
             raise _error(404, "not_found", "resource not found")
+        return found
+
     @router.get("/v1/web/trip-intakes/{intake_id}/route-shapes")
     def web_intake_route_shapes(intake_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
         """★`[2026-10-04]` 접수 **확인 화면**의 지도에 그릴 경로선 — 이동마다 GeoJSON LineString(등록 여행용 `/trips/{id}/route-shapes` 와 같은 모양,
@@ -1035,8 +1037,6 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         from .mobility.route_shape import shapes_for_review
         return {"intake_id": str(intake_id), "revision": revision, "shapes": shapes_for_review(stored),
                 "attribution": "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)"}
-
-        return found
 
     @router.get("/v1/web/trip-intakes/{intake_id}/events")
     async def web_intake_events(intake_id: UUID, http: Request, who: tuple[str, UUID] = Depends(_web_customer)):
