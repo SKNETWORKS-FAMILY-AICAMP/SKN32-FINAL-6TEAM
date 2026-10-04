@@ -731,7 +731,7 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 | `shapes[]` | `{item_id, from_item_id, to_item_id, from, to, mode, line, source, grade, distance_m, note}` | 같은 모양, **`item_id` 없음**. `from_item_id`·`to_item_id` 는 확인 화면 `review.items[].id`(「0-3」) |
 
 - `mode`: walk · bike · taxi · subway · bus · mixed · unknown. `source`: `local_road_graph`(도로 그래프) · `stations`(탄 역 좌표 순서 + 양 끝 걸음) · `straight_line`(직선 — 이유는 `note`). `grade`: 추정 · 근거없음(확정은 없다).
-- 좌표 없는 장소가 낀 이동은 건너뛴다. 접수용은 저장된 검사에 탄 역 정보(`uses`)가 없는 **옛 검사**의 지하철·대중교통을 직선 + `note` 로 내린다 — 이동을 다시 계산한(고치거나 다시 검사한) 뒤에는 역 좌표를 따라 그린다.
+- 좌표 없는 장소가 낀 이동은 건너뛴다. 접수용은 저장된 검사에 탄 역 정보(`uses`)가 없는 **옛 검사**의 지하철·대중교통을 직선 + `note` 로 내린다 — **새로 접수한** 검사부터 역 좌표를 따라 그린다(고쳐도 바뀌지 않은 이동은 저장된 값을 다시 쓰므로 옛 검사는 그대로 직선).
 - `attribution`(「지도 데이터 © OpenStreetMap contributors (ODbL)」)은 선을 그릴 때 화면이 보여야 한다.
 
 ## 위임 — `/v1/delegations/*` `[2026-09-22]`

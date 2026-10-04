@@ -207,7 +207,7 @@ def shapes_for_review(review: dict[str, Any] | None) -> list[dict[str, Any]]:
         uses = m.get("uses") or []
         if mode in ("subway", "transit") and not uses:
             shape = build_shape(a, b, None, router=router, sc=sc)
-            shape["note"] = "저장된 검사에 탄 역 정보가 없어 직선으로 잇는다(고치거나 다시 검사하면 생긴다)"
+            shape["note"] = "저장된 검사에 탄 역 정보가 없어 직선으로 잇는다(새로 접수하면 역 좌표를 따라 그린다)"
         else:
             opt_id = _REVIEW_MODE_ID.get(mode)
             route_def = ({"planned": opt_id, "options": [{"id": opt_id, "uses": uses}]} if opt_id else None)

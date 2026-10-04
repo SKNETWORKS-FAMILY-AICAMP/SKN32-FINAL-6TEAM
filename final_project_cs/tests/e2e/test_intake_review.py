@@ -244,6 +244,7 @@ def test_the_review_map_gets_a_route_line_per_move_from_the_stored_review_and_on
     assert client.get(f"/v1/web/trip-intakes/{view['intake_id']}/route-shapes", headers=other).status_code == 404
 
 
+def test_opening_hours_and_closing_days_come_from_what_is_stored_and_use_the_registration_judge(rv):
     _hours(rv, "126508", TUE_CLOSED)
     client, _, _ = _client()
     headers = _key(client)
