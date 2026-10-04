@@ -40,11 +40,16 @@ def build(job, x):
 def call(text):
     cmd = ['claude', '-p', '--model', MODEL, '--effort', EFFORT, '--tools', '', '--disable-slash-commands', '--no-session-persistence',
            '--setting-sources', 'project', '--system-prompt', SYS, '--output-format', 'json']
+    env = dict(os.environ, MAX_THINKING_TOKENS='0')     # 확장 생각을 끈다(로컬 모델의 think False 에 해당)
     for n in range(4):
         try:
-            r = subprocess.run(cmd, input=text, capture_output=True, text=True, encoding='utf-8', timeout=600, cwd=CWD, shell=(os.name == 'nt'))
-            if r.returncode == 0 and r.stdout.strip():
-                return json.loads(r.stdout)
+            r = subprocess.run(cmd, input=text, capture_output=True, text=True, encoding='utf-8', timeout=600, cwd=CWD, env=env, shell=(os.name == 'nt'))
+            if r.stdout.strip():
+                res = json.loads(r.stdout)
+                if res.get('is_error') and 'authenticate' in (res.get('result') or ''):
+                    sys.exit('클로드 CLI 로그인이 안 돼 있다 — 터미널에서 `claude auth login` 으로 로그인한 뒤 다시 실행한다: ' + res['result'])
+                if r.returncode == 0:
+                    return res
             err = (r.stderr or r.stdout)[:300]
         except Exception as e:  # noqa: BLE001
             err = str(e)[:300]
