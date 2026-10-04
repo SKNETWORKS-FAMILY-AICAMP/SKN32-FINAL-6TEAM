@@ -218,6 +218,31 @@ def test_between_places_the_move_is_measured_and_a_late_arrival_is_flagged(rv):
     assert view["review"]["ready"] is False
 
 
+def test_the_review_map_gets_a_route_line_per_move_from_the_stored_review_and_only_for_the_owner(rv):
+    """★`[2026-10-04]` 등록 전 확인 화면 지도용 경로선 — 저장된 검사의 이동마다 하나, 확인 화면 `items[].id` 로 앞뒤 장소를 가리킨다.
+    계산기가 꺼져 있으면(어림) 직선 + 이유다. 남의 접수는 404. 확인 화면 응답 모양은 그대로(`uses` 는 안 싣는다)."""
+    client, _, _ = _client()
+    headers = _key(client)
+    view = _send(client, headers)
+    moves = view["review"]["moves"]
+    assert moves and all("uses" not in m for m in moves), "내부 칸(uses)은 확인 화면 응답에 싣지 않는다"
+    got = client.get(f"/v1/web/trip-intakes/{view['intake_id']}/route-shapes", headers=headers)
+    assert got.status_code == 200, got.text
+    body = got.json()
+    assert body["intake_id"] == view["intake_id"] and body["revision"] == view["revision"]
+    assert "OpenStreetMap" in body["attribution"]
+    shapes = body["shapes"]
+    assert [(s["from_item_id"], s["to_item_id"]) for s in shapes] == [(m["from"], m["to"]) for m in moves]
+    for shape in shapes:
+        assert "item_id" not in shape
+        line = shape["line"]
+        assert line["type"] == "LineString" and len(line["coordinates"]) >= 2
+        assert shape["grade"] == "근거없음" and shape["source"] == "straight_line" and shape["note"], "계산기가 꺼져 있으면 직선 + 이유"
+        assert shape["from"] and shape["to"] and shape["distance_m"] >= 0
+    other = _key(client)
+    assert client.get(f"/v1/web/trip-intakes/{view['intake_id']}/route-shapes", headers=other).status_code == 404
+
+
 def test_opening_hours_and_closing_days_come_from_what_is_stored_and_use_the_registration_judge(rv):
     _hours(rv, "126508", TUE_CLOSED)
     client, _, _ = _client()

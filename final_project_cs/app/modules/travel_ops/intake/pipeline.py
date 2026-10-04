@@ -875,7 +875,8 @@ def _nameless_rows(index: int, parts: Any, item: dict[str, Any], rows: list[dict
     if public["kind"] and not any(r["field"] == f"items[{index}].kind" for r in rows):
         out.append({"field": f"items[{index}].kind", "value": public["kind"], "method": "lookup",
                     "evidence": {"source": "rule", "rule": "line_parts", "line": item["line"]}, "needs_review": False,
-                    "note": f"「{public['label']}」을 뜻하는 말이라 {'식사' if public['kind'] == 'dining' else '활동'} 일정으로 본다"})
+                    "note": (f"「{public['label']}」에서 하는 {public['meal'] or '끼니'} 말이 있어 식사 일정으로 본다" if public.get("lodging_meal")
+                             else f"「{public['label']}」을 뜻하는 말이라 {'식사' if public['kind'] == 'dining' else '활동'} 일정으로 본다")})
     return out
 
 

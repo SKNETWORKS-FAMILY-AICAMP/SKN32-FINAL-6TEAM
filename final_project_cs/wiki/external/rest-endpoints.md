@@ -657,7 +657,7 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 **`GET …/place-search?q=(2자 이상)&source_id=&index=[&revision=]`** — 수정 화면의 장소 검색. 관광공사 목록 · 요식 원장(DB)과 카카오를 함께 찾아 이름이 검색어로 시작하는 곳 먼저, 앞뒤 일정에서 가까운 순으로 최대 8곳, 각각 같은 검사 줄을 붙인다. 응답 `{revision, item, query, results[], notes}`(`results[]` 는 `candidates[]` 와 같은 모양).
 **이름 없는 줄(종류 + 지역만)** `[2026-10-03 ui 세션 요청서 「장소 해석 개선」]` — 「성수 예약 식당 · 예약 있음」 · 「서울역 인근 저녁 식당」 · 「이태원 소품숍」 · 「호텔 조식」처럼 **가게 이름이 없는 줄**.
   ☆전에는 이런 줄도 가게 이름으로 찾았고(없는 가게를 글자를 줄여 가며) 종류를 활동으로 읽었고 후보를 앞뒤 일정의 한가운데에서 찾았다 — 성수 식당 자리에 동대문 활동이 권해졌고 예약한 식당을 바꾸자고 했다(실서버 실측).
-  - **읽는 법**(`intake/line_parts.py`): 줄을 띄어쓰기로 나눠 조각마다 **말 표**(`config/place_terms.yaml` — 종류 · 끼니 · 근처 · 예약 말 · 군더더기)와 **지명 사전**(`intake/areas.py` — 요식 원장의 허브 · 관광공사 목록 주소의 동 · 구에서 DB 로 만든 지역별 중앙값 좌표 + 반경, 한 시간 기억)의 말로 **전부 설명되면** 일반 말이다. 남는 조각(= 고유 이름)이 있으면 이름 있는 줄(지금처럼 이름으로 찾는다). 종류 말이나 끼니 말이 있고 남는 조각이 없으면 이름 없는 줄 — **가게 이름으로 찾지 않는다**. 끼니 말이 종류 말을 이긴다(호텔 조식 = 식사). 새 말은 **표에 한 줄을 더하는 것만으로** 같은 길을 탄다(코드 수정 없음).
+  - **읽는 법**(`intake/line_parts.py`): 줄을 띄어쓰기로 나눠 조각마다 **말 표**(`config/place_terms.yaml` — 종류 · 끼니 · 근처 · 예약 말 · 군더더기)와 **지명 사전**(`intake/areas.py` — 요식 원장의 허브 · 관광공사 목록 주소의 동 · 구에서 DB 로 만든 지역별 중앙값 좌표 + 반경, 한 시간 기억)의 말로 **전부 설명되면** 일반 말이다. 남는 조각(= 고유 이름)이 있으면 이름 있는 줄(지금처럼 이름으로 찾는다). 종류 말이나 끼니 말이 있고 남는 조각이 없으면 이름 없는 줄 — **가게 이름으로 찾지 않는다**. 끼니 말이 종류 말을 이긴다 — ★`[2026-10-04 사용자 지적 「그거 호텔인데 왜 식당이야?」]` **단 숙소 말 + 끼니 말(「호텔 조식」)은 예외**: 일정 `kind` 는 식사(`dining`)지만 **장소는 숙소**다 — `parts.label` 은 「숙소」, `parts.lodging_meal: true`, `parts.content_type` 은 숙박 분류(`32`). 화면 문장은 「숙소에서 하는 식사예요 — 숙소의 이름이 적혀 있지 않아요 · 숙소 이름을 알려 주세요(식당으로 바꾸지 않아요)」이고, 후보 · 장소 검색 · 전체 자동 추천은 **식당 목록과 식당 지도 검색을 쓰지 않는다**(결과 `kind` 는 `activity`, 숙박 후보가 없으면 빈 목록 — 호텔 줄을 식당으로 바꾸지 않는다). 앞 판은 식당으로 읽었다. 새 말은 **표에 한 줄을 더하는 것만으로** 같은 길을 탄다(코드 수정 없음).
   - **항목 새 칸**: `booked` = `true`(예약 있음 · 예약번호) · `false`(예약 없음) · `null`(말 없음) · `parts` = 이름 없는 줄일 때만 `{label: "식당"|"쇼핑"|…, kind, content_type, meal, near, area: {name, kind: hub|dong|district, latitude, longitude, radius_m}|null}`(그 밖은 `null`). 일정 `kind` 는 식당 · 끼니 말이면 `dining`.
   - **후보 · 검색의 약속**(시험으로 막는다): ①결과의 `kind` 는 일정의 `kind` 와 **같다** — 맞는 것이 없으면 다른 종류로 채우지 않고 빈 목록 + `notes: ["no_same_kind"]` ②`needs_choice` 후보의 중심은 **줄의 지역**(`reference.area` · 각 후보의 `reference` 도 그 지역 이름 · 반경은 `area.radius_m`) — 지역이 없으면 앞뒤 일정의 한가운데 ③`needs_name` 은 `candidates: []` + `notes: ["booked_needs_name"]`(검색 · 직접 입력은 열려 있다) ④앞뒤도 지역도 없어 중심이 없으면 `no_reference_point` · 지역 둘레에 같은 종류가 하나도 없으면 `no_candidates_in_area`. 카카오가 음식점 · 카페가 아닌 곳을 식사로 태그하던 것을 고쳤다(식당 자리 검색에 약국 · 공원이 섞이던 원인).
   - **전체 자동 추천**: 예약했다고 적힌 일정은 **장소도 시각도 바꾸지 않고** `kept: [{id, title, reason: "booked"}]`. `needs_choice` 는 같은 종류 · 지역 안의 후보로 채운다.
@@ -718,6 +718,21 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 **여행 조회 항목에 더한 칸** `[2026-09-27]` — `lat`·`lon`(그 고객 자신의 여행 장소 좌표, 웹 지도 핀) · `booked`(예약 표 연결 또는
 `detail.booking`). **웹 메시지 응답**에는 「바꾸지 않아도 되는 결과」(`no_meal` · `still_fits` · `no_alternate` · `clear` · `gone`)일 때
 대화 경로와 **같은 문장표**(`itinerary_team.ANSWERS`)의 `answer` 가 실린다 — 웹이 문장을 지어내지 않게.
+
+### 지도 경로선 — `/v1/web/trips/{trip_id}/route-shapes` · `/v1/web/trip-intakes/{intake_id}/route-shapes` `[2026-10-04]`
+
+이동 하나마다 지도에 그릴 GeoJSON `LineString` 을 우리 도로 그래프(OSM)로 계산해 내린다 — 외부 길찾기 API 를 부르지 않는다. 읽기 전용, 사용자 키/쿠키, **본인 것만**(남의 것은 404).
+
+| | 등록된 여행 | 접수 확인 화면(등록 전) |
+|---|---|---|
+| 경로 | `GET /v1/web/trips/{trip_id}/route-shapes` | `GET /v1/web/trip-intakes/{intake_id}/route-shapes` |
+| 응답 | `{trip_id, shapes[], attribution}` | `{intake_id, revision, shapes[], attribution}` |
+| 원천 | 여행 항목의 `route_def` | **저장된 확인 검사**(`items[]` · `moves[]`) — 없으면 이동을 다시 계산하지 않고 `shapes: []` |
+| `shapes[]` | `{item_id, from_item_id, to_item_id, from, to, mode, line, source, grade, distance_m, note}` | 같은 모양, **`item_id` 없음**. `from_item_id`·`to_item_id` 는 확인 화면 `review.items[].id`(「0-3」) |
+
+- `mode`: walk · bike · taxi · subway · bus · mixed · unknown. `source`: `local_road_graph`(도로 그래프) · `stations`(탄 역 좌표 순서 + 양 끝 걸음) · `straight_line`(직선 — 이유는 `note`). `grade`: 추정 · 근거없음(확정은 없다).
+- 좌표 없는 장소가 낀 이동은 건너뛴다. 접수용은 저장된 검사에 탄 역 정보(`uses`)가 없는 **옛 검사**의 지하철·대중교통을 직선 + `note` 로 내린다 — **새로 접수한** 검사부터 역 좌표를 따라 그린다(고쳐도 바뀌지 않은 이동은 저장된 값을 다시 쓰므로 옛 검사는 그대로 직선).
+- `attribution`(「지도 데이터 © OpenStreetMap contributors (ODbL)」)은 선을 그릴 때 화면이 보여야 한다.
 
 ## 위임 — `/v1/delegations/*` `[2026-09-22]`
 

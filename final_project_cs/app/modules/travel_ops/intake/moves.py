@@ -37,6 +37,8 @@ class Leg:
     verified: bool = True
     #: 계산기가 낸 「다음 일정에 닿는 가장 늦은 출발」 — 시각을 맞추는 쪽(자동 추천)이 얼마나 미룰지 알 때 쓴다
     latest_depart: datetime | None = None
+    #: 계산기가 고른 경로 후보의 `uses`(「2호선:을지로입구」 · 「버스:103」) — 지도에 경로선을 그릴 때 탄 역을 알려고 저장한다(응답에는 안 싣는다)
+    uses: tuple[str, ...] = ()
 
     @property
     def tight(self) -> bool:
@@ -136,7 +138,8 @@ def leg_between(engine: Any, a: dict[str, Any], b: dict[str, Any], a_end: dateti
         depart, arrive = got["starts_at"], got["ends_at"]
     km = (option.get("walk_m") / 1000) if code == "walk" and option.get("walk_m") is not None else straight_km(a, b)
     return Leg(code, label, str(option.get("label") or f"{a['name']} → {b['name']}"), minutes, round(km, 1), depart, arrive,
-               int((b_start - arrive).total_seconds() // 60), "timetable", None, option.get("fare_krw"), verified, latest)
+               int((b_start - arrive).total_seconds() // 60), "timetable", None, option.get("fare_krw"), verified, latest,
+               tuple(str(u) for u in option.get("uses") or ()))
 
 
 def late_text(slack: int) -> str:

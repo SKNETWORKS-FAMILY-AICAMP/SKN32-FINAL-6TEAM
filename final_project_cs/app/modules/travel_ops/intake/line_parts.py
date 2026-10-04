@@ -8,7 +8,9 @@
     종류 말(식당 · 쇼핑 …) · 끼니 말(조식 · 저녁 …) · 지역 말(성수 · 이촌동 · 서울역) · 근처 말(인근 …) · 예약 말 · 군더더기(조사)
   한 조각이라도 어디에도 안 맞으면 그것이 **고유 이름**(`residue`)이다 → 이름이 있는 줄(지금처럼 이름으로 찾는다 — 「토속촌삼계탕」 · 「광장시장 빈대떡」).
 ★**이름 없는 줄** = 종류 말이나 끼니 말이 있고 + 남는 조각이 없다. 지역만 있는 줄(「경복궁 관람」)은 이름이 있는 줄이다 — 경복궁은 지역 말이기도 하지만 장소 이름이다.
-★끼니 말과 종류 말이 부딪히면(「호텔 조식」: 숙소 + 아침) **끼니 말이 이긴다** — 아침을 먹는 일정이다. 종류 말들이 서로 다른 종류면(식당 + 쇼핑) 읽지 않는다(이름 있는 줄로 둔다).
+★`[2026-10-04 사용자 지적 「그거 호텔인데 왜 식당이야?」]` **숙소 말 + 끼니 말(「호텔 조식」)은 식사 일정이지만 장소는 숙소다** — 일정 종류는 식사(`dining`)로 두되
+  이름표는 「숙소」, 후보 · 자동 추천은 **식당이 아니라 숙소**에서만 고른다(`lodging_meal`). 「식당의 이름이 적혀 있지 않아요 — 후보에서 골라 주세요」로 호텔을 식당에 바꾸자던 것이 틀렸다.
+★(앞 판) 끼니 말과 종류 말이 부딪히면(「호텔 조식」: 숙소 + 아침) **끼니 말이 이긴다** — 아침을 먹는 일정이다. 종류 말들이 서로 다른 종류면(식당 + 쇼핑) 읽지 않는다(이름 있는 줄로 둔다).
 ★알려진 한계: 이름이 통째로 일반 말로만 된 가게(「성수커피」 = 성수 + 커피)는 이름 없는 줄로 읽힌다. 고객은 후보 · 검색에서 그 가게를 직접 고른다(고른 값은 언제나 이긴다).
 """
 from __future__ import annotations
@@ -20,6 +22,8 @@ from .areas import Area, AreaIndex
 from .places import normalize_full
 from .terms import Category, Terms, load_terms
 
+#: 관광공사 숙박 분류 번호(`config/place_terms.yaml` 의 「숙소」) — 숙소 말 + 끼니 말을 알아보는 데 쓴다
+LODGING_CONTENT_TYPE = "32"
 #: 한 글자 조각으로 받는 역할 — 나머지 역할은 두 글자 이상이어야 한다(한 글자가 이름 조각과 우연히 맞는 것을 막는다)
 _SHORT_OK = ("near", "filler")
 
@@ -45,8 +49,15 @@ class LineParts:
         return self.category.kind if self.category else None
 
     @property
+    def lodging_meal(self) -> bool:
+        """숙소 말 + 끼니 말(「호텔 조식」) — 식사 일정이지만 장소는 **숙소 안**이다. 식당 후보를 권하지 않는다."""
+        return bool(self.category and self.category.content_type == LODGING_CONTENT_TYPE and (self.meal or self.dining_hint))
+
+    @property
     def content_type(self) -> str | None:
-        """같은 분류로 거를 관광공사 번호 — 종류 말의 분류가 줄의 종류와 같을 때만(호텔 조식은 숙박이 아니라 식사다)."""
+        """같은 분류로 거를 관광공사 번호 — 종류 말의 분류가 줄의 종류와 같을 때만. 숙소 + 끼니(`lodging_meal`)는 일정이 식사여도 **숙박 분류**다(식당 후보를 안 권한다)."""
+        if self.lodging_meal:
+            return self.category.content_type if self.category else None
         return self.category.content_type if self.category and self.category.kind == self.kind else None
 
     @property
@@ -56,6 +67,8 @@ class LineParts:
     @property
     def label(self) -> str:
         """화면에 보일 종류 이름 — 「식당」 · 「쇼핑」. 끼니만 있으면 「식당」을 종류 말에서 못 얻으므로 끼니 이름 대신 일반 말."""
+        if self.lodging_meal:
+            return self.category.label if self.category else "숙소"          # 「숙소」 — 식당이 아니다
         if self.category and self.category.kind == self.kind:
             return self.category.label
         return "식당" if self.kind == "dining" else "장소"
@@ -63,7 +76,7 @@ class LineParts:
     def public(self) -> dict[str, Any]:
         """응답에 싣는 모양 — 확인 화면이 「성수 지역 식당」 같은 문장을 만드는 재료(지역은 이름 · 중심 · 반경)."""
         return {"label": self.label, "kind": self.kind, "content_type": self.content_type, "meal": self.meal,
-                "near": self.near, "area": self.area.as_dict() if self.area else None}
+                "near": self.near, "area": self.area.as_dict() if self.area else None, "lodging_meal": self.lodging_meal}
 
 
 def _role(piece: str, terms: Terms, areas: AreaIndex | None) -> str | None:

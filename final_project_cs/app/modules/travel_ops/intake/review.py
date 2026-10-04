@@ -115,6 +115,12 @@ def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -
         parts = evidence.get("parts") or {}
         what = parts.get("label") or "장소"
         area = (parts.get("area") or {}).get("name")
+        if parts.get("lodging_meal"):
+            # ★`[2026-10-04]` 「호텔 조식」 — 식당이 아니다. 왜 식사로 읽었는지(끼니 말)를 밝히고 식당 후보로 바꾸지 않는다고 말한다
+            meal = f"{parts['meal']} 식사" if parts.get("meal") else "식사"
+            if state == "needs_name":
+                return _line("place", "bad", f"예약하신 숙소의 이름이 적혀 있지 않아요 — 이름을 알려 주세요 · 숙소에서 하는 {meal}예요")
+            return _line("place", "bad", f"숙소에서 하는 {meal}예요 — {area + ' 지역 ' if area else ''}숙소의 이름이 적혀 있지 않아요 · 숙소 이름을 알려 주세요(식당으로 바꾸지 않아요)")
         if state == "needs_name":
             return _line("place", "bad", f"예약하신 {what}의 이름이 적혀 있지 않아요 — 이름을 알려 주세요")
         return _line("place", "bad", f"{area + ' 지역 ' if area else ''}{what}의 이름이 적혀 있지 않아요 — 후보에서 골라 주세요")
@@ -492,7 +498,9 @@ def public(payload: dict[str, Any] | None) -> dict[str, Any] | None:
     for it in payload.get("items", []):
         place = it.get("place")
         items.append({**it, "place": public_place(place)})
-    return {**payload, "items": items, "moves": [{k: v for k, v in m.items() if k != "sig"} for m in payload.get("moves", [])]}
+    # `uses` 는 경로선을 그리는 쪽(`/route-shapes`)이 저장본에서 읽는다 — 확인 화면 응답 모양은 그대로 둔다
+    return {**payload, "items": items,
+            "moves": [{k: v for k, v in m.items() if k not in ("sig", "uses")} for m in payload.get("moves", [])]}
 
 
 def _waiting_move(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]:
@@ -522,7 +530,7 @@ def _move(a: dict[str, Any], b: dict[str, Any], leg: Leg, provisional: list[str]
             "mode": leg.mode, "mode_label": leg.mode_label, "minutes": leg.minutes, "km": leg.km,
             "depart": _hm(leg.depart), "arrive": _hm(leg.arrive), "slack_min": leg.slack_min, "basis": leg.basis,
             "summary": f"{leg.mode_label} {leg.minutes}분 · {leg.km}km" + (" [추정]" if estimate else ""),
-            "fare_krw": leg.fare_krw, "sig": sig, "rows": [route, mode, arrival]}
+            "fare_krw": leg.fare_krw, "sig": sig, "uses": list(leg.uses), "rows": [route, mode, arrival]}
 
 
 # ── 저장 · 읽기 ──────────────────────────────────────────────────

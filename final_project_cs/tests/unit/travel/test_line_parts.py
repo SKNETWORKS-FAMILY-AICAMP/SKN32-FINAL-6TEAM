@@ -36,7 +36,7 @@ AREAS = AreaIndex.from_rows(ROWS, load_terms())
 # 평가 줄 — (제목, 이름 없는 줄인가, 일정 종류, 종류 이름, 지역 이름, 끼니, 근처 말, 말로 적은 예약, 식사 힌트)
 #  ★앞 네 줄은 2026-10-03 실서버에서 틀렸던 줄이다.
 LINES = [
-    ("호텔 조식", True, "dining", "식당", None, "아침", False, None, False),
+    ("호텔 조식", True, "dining", "숙소", None, "아침", False, None, False),                    # ★`[2026-10-04]` 식사 일정이지만 장소는 숙소다(식당이 아니다)
     ("성수동 쇼핑", True, "activity", "쇼핑", "성수동", None, False, None, False),
     ("성수 예약 식당", True, "dining", "식당", "성수", None, False, None, False),
     ("서울역 인근 저녁 식당", True, "dining", "식당", "서울역", "저녁", True, None, False),
@@ -105,10 +105,20 @@ def test_there_are_enough_evaluation_lines_and_the_four_measured_ones_come_first
     assert [row[0] for row in LINES[:4]] == ["호텔 조식", "성수동 쇼핑", "성수 예약 식당", "서울역 인근 저녁 식당"]
 
 
-def test_a_meal_word_beats_a_category_word_and_the_filter_follows_the_kind():
-    """「호텔 조식」 — 숙소 + 아침 → 아침을 먹는 일정이다. 후보를 거르는 분류도 숙박(32)이 아니라 식사다."""
+def test_a_lodging_word_with_a_meal_word_is_a_meal_in_the_lodging_not_a_restaurant():
+    """★`[2026-10-04 사용자 지적 「그거 호텔인데 왜 식당이야?」]` 「호텔 조식」 — 일정은 식사(아침)지만 **장소는 숙소**다. 이름표는 「숙소」, 후보를 거르는 분류는 숙박(32)이다.
+    (앞 판은 끼니 말이 이겨 「식당」 · 식당 후보로 읽었고, 자동 추천이 호텔 줄을 식당으로 바꿨다.)"""
     got = parse("호텔 조식", terms=load_terms(), areas=AREAS)
-    assert got.kind == "dining" and got.content_type is None                       # 숙소의 분류는 식사 일정에 쓰지 않는다
+    assert got.kind == "dining" and got.label == "숙소" and got.content_type == "32" and got.lodging_meal and got.meal == "아침"
+    assert got.public()["lodging_meal"] is True and got.public()["label"] == "숙소"
+    # 규칙이 끼니 말을 떼고 제목만 「호텔」로 남긴 줄(식사 힌트)도 같다 — 화면에서 본 「09:00 호텔」
+    hinted = parse("호텔", terms=load_terms(), areas=AREAS, kind_hint="dining")
+    assert hinted.kind == "dining" and hinted.label == "숙소" and hinted.lodging_meal and hinted.content_type == "32"
+    # 끼니 말이 없으면 숙소는 그냥 활동 줄이다 · 식당 줄은 그대로 식당이다
+    plain = parse("호텔", terms=load_terms(), areas=AREAS)
+    assert plain.kind == "activity" and plain.label == "숙소" and not plain.lodging_meal and plain.content_type == "32"
+    dinner = parse("성수 저녁 식당", terms=load_terms(), areas=AREAS)
+    assert dinner.label == "식당" and not dinner.lodging_meal and dinner.content_type == "39"
     shop = parse("성수동 쇼핑", terms=load_terms(), areas=AREAS)
     assert shop.kind == "activity" and shop.content_type == "38"                   # 같은 종류면 그 분류로 거른다
 

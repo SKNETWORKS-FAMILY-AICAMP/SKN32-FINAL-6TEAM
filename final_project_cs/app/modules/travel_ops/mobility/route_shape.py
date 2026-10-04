@@ -177,3 +177,42 @@ def shapes_for_items(items) -> list[dict[str, Any]]:
                     "from": (before.place or {}).get("name") or before.title, "to": (after.place or {}).get("name") or after.title,
                     **shape})
     return out
+
+
+#: 접수 확인 화면 `moves[].mode`(계산기가 고른 후보의 종류) → `build_shape` 가 읽는 후보 id 접두. estimate(직선 어림)는 직선으로 내린다
+_REVIEW_MODE_ID = {"walk": "walk", "subway": "subway", "bus": "bus", "transit": "subway_bus"}
+
+
+def shapes_for_review(review: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """★`[2026-10-04]` 접수 **확인 화면**(등록 전)의 이동마다 경로선 하나 — 저장된 검사(`items[]` · `moves[]`)에서 만든다. 등록 여행용
+    `shapes_for_items` 와 같은 모양(`item_id` 만 없다). `from_item_id`·`to_item_id` 는 확인 화면의 `items[].id`(「0-3」)다.
+    좌표 없는 장소가 낀 이동은 건너뛴다. 저장본에 탄 역 정보(`uses`)가 없는 옛 검사의 지하철·대중교통은 직선 + 이유로 내린다."""
+    if not review:
+        return []
+    items = {it.get("id"): it for it in review.get("items") or [] if it.get("id") is not None}
+
+    def xy(it):
+        p = (it or {}).get("place") or {}
+        lat, lon = p.get("latitude"), p.get("longitude")
+        return (float(lon), float(lat)) if lat is not None and lon is not None else None
+
+    router, sc = _engine()
+    out = []
+    for m in review.get("moves") or []:
+        a_it, b_it = items.get(m.get("from")), items.get(m.get("to"))
+        a, b = xy(a_it), xy(b_it)
+        if a is None or b is None:
+            continue
+        mode = m.get("mode")
+        uses = m.get("uses") or []
+        if mode in ("subway", "transit") and not uses:
+            shape = build_shape(a, b, None, router=router, sc=sc)
+            shape["note"] = "저장된 검사에 탄 역 정보가 없어 직선으로 잇는다(새로 접수하면 역 좌표를 따라 그린다)"
+        else:
+            opt_id = _REVIEW_MODE_ID.get(mode)
+            route_def = ({"planned": opt_id, "options": [{"id": opt_id, "uses": uses}]} if opt_id else None)
+            shape = build_shape(a, b, route_def, router=router, sc=sc)
+        out.append({"from_item_id": str(m["from"]), "to_item_id": str(m["to"]),
+                    "from": (a_it.get("place") or {}).get("name") or a_it.get("title"),
+                    "to": (b_it.get("place") or {}).get("name") or b_it.get("title"), **shape})
+    return out
