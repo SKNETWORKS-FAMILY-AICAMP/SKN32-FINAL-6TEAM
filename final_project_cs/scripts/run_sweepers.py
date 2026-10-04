@@ -162,12 +162,14 @@ def _run_catalog_hours(tenant_id: str) -> dict[str, object]:
 
 
 def _run_web_guard(tenant_id: str) -> dict[str, object]:
+    from app.modules.travel_ops.consents import purge_expired
     from app.modules.travel_ops.guest_cleanup import cleanup_guests
     from app.modules.travel_ops.web_guard import prune_usage
 
     with get_connection() as conn:
         # ★`[2026-10-04 D-CS-011]` 옛 「빈 키 정리」를 게스트 정리가 대신한다 — 마지막 사용 뒤 `web.guest_idle_hours` 가 지난 게스트의 여행 · 세션 · 키 · 사용자
-        return {**prune_usage(conn, tenant_id), "guests": cleanup_guests(conn, tenant_id)}
+        # ★`[2026-10-05]` 보관 기간(`consent.evidence_retention_days`)이 지난 동의 기록도 여기서 지운다 — 동의 기록을 지우는 곳은 이 함수 하나뿐이다
+        return {**prune_usage(conn, tenant_id), "guests": cleanup_guests(conn, tenant_id), "consent_events_purged": purge_expired(conn, tenant_id)}
 
 
 def _run_trip_places(tenant_id: str) -> dict[str, object]:

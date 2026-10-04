@@ -29,6 +29,7 @@ from app.infrastructure.db.session import get_connection
 
 from . import web_agent_keys, web_auth, web_cookie, web_guard
 from .web_agent_keys_api import build_agent_keys_router
+from .consents_api import build_consents_router
 from .web_session import add_key, new_customer
 
 #: 콜백이 웹으로 돌려보낼 때 쓰는 오류 코드(요청서) — 이 밖의 이유는 전부 `failed`
@@ -61,6 +62,7 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
     `human_verify` — 사람 확인(Turnstile)을 갈아 끼우는 자리(시험)."""
     router = APIRouter()
     router.include_router(build_agent_keys_router())        # `[2026-10-04 D-CS-012]` 에이전트 키(쿠키 로그인한 회원만)
+    router.include_router(build_consents_router())          # `[2026-10-05]` 약관 동의 기록 · 사용 조건(게이트는 `web_cookie.authenticate`)
 
     def _tenant() -> str:
         return settings_module.get_settings().tenant_id
