@@ -31,6 +31,9 @@ def call(body):
 for name in os.environ['SETS'].split(','):
     job = json.load(open(f'{name}.json', encoding='utf-8'))['sets'][name]
     items = sorted(job['items'], key=lambda i: (i['date'], i['start']))
+    if os.environ.get('ROT'):                       # 일정 목록을 k칸 순환 회전(확률 평균용) — 키 이름은 그대로라 채점은 같다
+        _k = int(os.environ['ROT']) % len(items)
+        items = items[_k:] + items[:_k]
     ids = [i['id'] for i in items]
     rows, t0, errs, tok, first_err = [], time.time(), 0, 0, None
     for x in job['qs']:
