@@ -28,7 +28,7 @@ from app.presentation.api.app import create_app
 
 DATA = paths.REPO_ROOT / "datasets" / "mobility" / "processed"
 pytestmark = pytest.mark.skipif(
-    not (DATA / "mobility" / "timetable_v1.jsonl").exists(),
+    not paths.timetable_file(DATA / "mobility").exists(),                 # gz 도 인정 — develop 자료는 gz 만 있다(텍스트만 찾으면 조용히 건너뛴다)
     reason="이동 자료(datasets/mobility/processed)가 없다 — 이동 담당이 develop 에 올린 자료를 받아야 돈다")
 
 #: 서울 안에서 서로 **먼** 곳 — 도보 상한(1,200 m) 밖이라 지하철·버스 경로가 나온다
