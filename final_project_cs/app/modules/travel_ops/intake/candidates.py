@@ -335,6 +335,8 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     found: list[dict[str, Any]] = []
     branch = item["place_state"] in ("picked_nearest", "unresolved")
     area = area_of(item)
+    # ★`[2026-10-04]` 「호텔 조식」 — 일정은 식사지만 장소는 숙소다. 식당 후보 · 지도 식당 검색으로 채우지 않고 숙박 분류 후보만 본다(없으면 비워 둔다)
+    lodging = bool((item.get("parts") or {}).get("lodging_meal"))
     if item["place_state"] == "needs_name":
         # ★예약했다고 적힌 이름 없는 줄 — 후보를 권하지 않는다(예약한 곳을 다른 곳으로 바꾸자고 하지 않는다). 이름은 검색 · 직접 입력으로 알려 준다
         notes.append("booked_needs_name")
@@ -342,12 +344,12 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         parts = item.get("parts") or {}
         if ref is None:
             notes.append("no_reference_point")
-        elif item["kind"] == "dining":
+        elif item["kind"] == "dining" and not lodging:
             found += _ledger_places(conn, tenant_id, ref, radius_m=int(area["radius_m"]) if area else 2000)
         else:
             found += _catalog_places(conn, tenant_id, ref, parts.get("content_type"), now,
                                      radius_m=float(area["radius_m"]) if area else RADIUS_M)
-        if ref is not None and len(found) < limit + POOL_EXTRA:
+        if ref is not None and len(found) < limit + POOL_EXTRA and not lodging:
             # 우리 목록이 모자라면 카카오 지도로 채운다 — 「성수 식당」 같은 말 그대로 지역 중심 둘레에서
             words = " ".join(w for w in ((area or {}).get("name"), parts.get("label")) if w)
             found += _kakao_places(kakao, words, ref, item["kind"], notes)
@@ -373,7 +375,7 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     found = _dedupe(found, taken)
     # ★후보의 종류는 일정의 종류와 같다 — 맞는 것이 없으면 다른 종류로 채우지 않는다(식사 자리에 약국 · 활동 자리에 식당)
     before = len(found)
-    found = [p for p in found if p.get("kind") == item["kind"]]
+    found = [p for p in found if p.get("kind") == ("activity" if lodging else item["kind"])]
     if before and not found and "no_same_kind" not in notes:
         notes.append("no_same_kind")
     if engine is None and use_engine:
@@ -416,10 +418,12 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
     notes: list[str] = []
     area = area_of(item)
     taken = _taken(items, item, include_self=False)
+    # ★`[2026-10-04]` 숙소 + 끼니(「호텔 조식」)는 식사 일정이지만 장소는 숙소 — 숙소를 찾는 검색이라 식당 목록은 안 섞는다
+    lodging = bool((item.get("parts") or {}).get("lodging_meal"))
     found = _db_places_by_name(conn, tenant_id, q, ref, now)
-    if ref:
+    if ref and not lodging:
         found += _ledger_places(conn, tenant_id, ref, query=q, radius_m=5000)
-    found += _kakao_places(kakao, q, ref, item["kind"], notes, size=10)
+    found += _kakao_places(kakao, q, ref, "activity" if lodging else item["kind"], notes, size=10)
     key = normalize_full(q)
     current = item["place"]
     if current and key in normalize_full(current["name"]):
@@ -431,7 +435,7 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
     found = _dedupe(found, taken)
     # ★검색 결과도 일정의 종류와 같은 곳만 — 식당 자리를 찾는데 약국 · 공원이 섞이지 않게(맞는 것이 없으면 이유가 `no_same_kind`)
     before = len(found)
-    found = [p for p in found if p.get("kind") == item["kind"]]
+    found = [p for p in found if p.get("kind") == ("activity" if lodging else item["kind"])]
     if before and not found:
         notes.append("no_same_kind")
     # 이름이 검색어로 시작하는 곳 먼저, 그 안에서 **일정에 맞는 곳**(휴무 · 운영시간 밖이 아닌 곳)이 앞, 같으면 앞뒤 일정에서 가까운 순

@@ -109,6 +109,10 @@ def test_a_line_with_only_a_kind_and_an_area_is_never_looked_up_as_a_shop_name(s
     # ④예약
     assert booked["booked"] is True and plain["booked"] is None and palace["booked"] is True
     assert (_row(booked, "booking")["result"], _row(plain, "booking")["result"], _row(palace, "booking")["result"]) == ("warn", "unknown", "ok")
+    assert hotel["parts"]["lodging_meal"] is True and hotel["parts"]["label"] == "숙소" and station["parts"]["lodging_meal"] is False
+    # ★`[2026-10-04]` 「호텔 조식」은 식당이 아니다 — 문장에 숙소라고 말하고 왜 식사로 읽었는지(아침)를 밝히며, 식당으로 바꾸지 않는다고 말한다
+    hotel_text = _row(hotel, "place")["text"]
+    assert "숙소에서 하는 식사예요" in hotel_text and "식당으로 바꾸지 않아요" in hotel_text and "식당의 이름" not in hotel_text, hotel_text
     assert "예약하신 식당의 이름이 적혀 있지 않아요" in _row(booked, "place")["text"]
     assert "성수 지역 식당의 이름이 적혀 있지 않아요" in _row(plain, "place")["text"] and _row(plain, "place")["result"] == "bad"
     assert "booking" not in [r["row"] for r in shop["rows"]]                                                  # 예약 말이 없는 활동 줄에는 예약 행이 없다
@@ -133,6 +137,24 @@ def test_candidates_are_the_same_kind_around_the_area_named_in_the_line(seongsu)
     # 지역 둘레에 같은 종류가 하나도 없으면 다른 곳으로 채우지 않고 이유를 말한다(서울역 둘레에는 시험이 넣은 식당이 없다)
     station = _candidates(client, headers, view, _item(view, "서울역 인근 저녁 식당"))
     assert station["candidates"] == [] and "no_candidates_in_area" in station["notes"] and station["reference"]["area"] == "서울역"
+
+
+def test_a_hotel_breakfast_line_is_never_offered_restaurants_by_candidates_search_or_auto_fix(seongsu):
+    """★`[2026-10-04 사용자 지적 「그거 호텔인데 왜 식당이야?」]` 후보 · 장소 검색 · 전체 자동 추천 어디서도 호텔 조식 줄이 식당으로 바뀌지 않는다."""
+    client, headers, _, _, view = _view(seongsu)
+    hotel = _item(view, "호텔")
+    got = _candidates(client, headers, view, hotel)
+    restaurant_names = {n for n, _, _ in LEDGER_SEONGSU} | {FAR_DONGDAEMUN[0]}
+    assert not ({c["place"]["name"] for c in got["candidates"]} & restaurant_names), got["candidates"]
+    assert all(c["place"]["kind"] == "activity" for c in got["candidates"])                         # 있어도 숙소 쪽(식당이 아니다)
+    searched = _search(client, headers, view, hotel, "성수")
+    assert not ({c["place"]["name"] for c in searched["results"]} & restaurant_names)
+    response = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/autofix", headers=headers, json={"revision": view["revision"]})
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert hotel["id"] not in {c["id"] for c in body["changed"]}, body["changed"]                    # 자동 추천이 호텔 줄을 식당으로 바꾸지 않았다
+    after = {i["id"]: i for i in body["view"]["review"]["items"]}
+    assert after[hotel["id"]]["place"] is None or after[hotel["id"]]["place"]["kind"] != "dining"
 
 
 def test_a_booked_nameless_line_gets_no_candidates_only_the_question_for_a_name(seongsu):

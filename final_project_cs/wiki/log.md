@@ -9,6 +9,10 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 # 문서 변경 이력 (cs)
 
+## 2026-10-04 — 「호텔 조식」을 식당으로 읽던 것 고침
+
+숙소 말 + 끼니 말(「호텔 조식」)은 식사 일정이지만 **장소는 숙소**로 읽고, 후보 · 장소 검색 · 전체 자동 추천이 호텔 줄을 식당으로 바꾸지 않는다(사용자 「그거 호텔인데 왜 식당이야?」, uiux 세션 전달). 계약 [rest-endpoints.md 「이름 없는 줄」](external/rest-endpoints.md). 시험 `test_line_parts.py` · `test_intake_nameless_lines.py`.
+
 ## 2026-10-04 — 에이전트 키 · 게스트 쿠키 정정 · 계획서 내려받기
 
 에이전트(MCP · API)는 쿠키 대신 **에이전트 키**(회원만 · 이름 · 90일 만료 · 개별 폐기 · 권한 범위 · 계정 관리 못 함)로 붙이고, 2단계는 MCP OAuth([결정 D-CS-012](decisions/D-CS-012-agent-auth-claude-style.md)). 게스트 쿠키는 브라우저 세션 쿠키로 바꾸고 계획서를 파일로 내려받게 했다([D-CS-011 정정](decisions/D-CS-011-browser-session-cookie.md)). [리포트](records/reports/2026-10-04_0500_브라우저세션_쿠키_게스트정리_리포트.md) 6절.
