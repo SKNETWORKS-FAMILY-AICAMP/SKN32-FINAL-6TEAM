@@ -1,0 +1,157 @@
+{
+  "model_hashes": [
+    {
+      "file": "sentiment/config.json",
+      "sha256": "ee25d2c301d2da5973ba372a9f603c4d3d543d5177b563070ad28b1d836240cb",
+      "result": "OK"
+    },
+    {
+      "file": "sentiment/model.safetensors",
+      "sha256": "0643492761ba8a6f090365a29b17c48a7ecbc65a61ea18a1088abc2c24e52595",
+      "result": "OK"
+    },
+    {
+      "file": "sentiment/tokenizer.json",
+      "sha256": "940a1eac3be32bc073b7da1ac0a073d343dbd5dc409e71327395634749ab5eea",
+      "result": "OK"
+    },
+    {
+      "file": "sentiment/tokenizer_config.json",
+      "sha256": "0fe650d7e0e9121581b26ef7fd5a3ae296efff1f5eafbce334be6c58ec386adf",
+      "result": "OK"
+    },
+    {
+      "file": "sentiment/metrics.json",
+      "sha256": "5684763a42c1c2192c76bcc2b12e48b6c717cf8d0bf3e33e99533463691e6862",
+      "result": "OK"
+    },
+    {
+      "file": "intent/config.json",
+      "sha256": "ca9616e3ea14d9441dacb4016763dbef8d2405e25bf08c5281933cce0dda9fb6",
+      "result": "OK"
+    },
+    {
+      "file": "intent/model.safetensors",
+      "sha256": "ae686b2658f143818f64e2eed2498f1e0529ee4afb38b345e726fc8221405229",
+      "result": "OK"
+    },
+    {
+      "file": "intent/tokenizer.json",
+      "sha256": "940a1eac3be32bc073b7da1ac0a073d343dbd5dc409e71327395634749ab5eea",
+      "result": "OK"
+    },
+    {
+      "file": "intent/tokenizer_config.json",
+      "sha256": "0fe650d7e0e9121581b26ef7fd5a3ae296efff1f5eafbce334be6c58ec386adf",
+      "result": "OK"
+    },
+    {
+      "file": "intent/metrics.json",
+      "sha256": "f89ad2838e8d6f8e7bc82f3877ecb5a013f5d2f8e2d0e9a2eb682114e2c4303d",
+      "result": "OK"
+    },
+    {
+      "file": "issue_code/config.json",
+      "sha256": "d8cf32f45a0b0a191c97fcb98df094dcf1b66368cd66bb8c933dc9f8ca9e47bb",
+      "result": "OK"
+    },
+    {
+      "file": "issue_code/model.safetensors",
+      "sha256": "07aa5d630a5b622a97f2b113cc9fdf5c185bdb3c014b01512344b881f60ac148",
+      "result": "OK"
+    },
+    {
+      "file": "issue_code/tokenizer.json",
+      "sha256": "940a1eac3be32bc073b7da1ac0a073d343dbd5dc409e71327395634749ab5eea",
+      "result": "OK"
+    },
+    {
+      "file": "issue_code/tokenizer_config.json",
+      "sha256": "0fe650d7e0e9121581b26ef7fd5a3ae296efff1f5eafbce334be6c58ec386adf",
+      "result": "OK"
+    },
+    {
+      "file": "issue_code/metrics.json",
+      "sha256": "94e1fe5c9903b4e0905dfd90253c73c3a762cc3325ed05a74684d9d7ed51de9e",
+      "result": "OK"
+    },
+    {
+      "file": "tfidf_baseline/metrics.json",
+      "sha256": "ef53a7e50763e9238a8a727ccd0c639d6bcbe3b50e416b5a04d0bfbe13735930",
+      "result": "OK"
+    },
+    {
+      "file": "tfidf_baseline/model.joblib",
+      "sha256": "8deae3aef673d1b4385cc5aad8e3277d3dc65f84b32b1fd23f417c95ea3ba6c0",
+      "result": "OK"
+    }
+  ],
+  "docx_reopen_checks": "PASS",
+  "documents": [
+    {
+      "file": "[데이터 전처리] 데이터 전처리 결과서_4차_여행.docx",
+      "reopen": "PASS",
+      "banned_characters": "PASS",
+      "template_leftovers": "PASS",
+      "private_identifiers": "PASS",
+      "history": "PASS",
+      "figure_size": "PASS",
+      "figure_fonts": [
+        {
+          "figure": "그림1_전처리흐름.png",
+          "font_pt": 10.93
+        },
+        {
+          "figure": "그림5_계획읽기.png",
+          "font_pt": 10.15
+        }
+      ]
+    },
+    {
+      "file": "[데이터 전처리] 머신러닝_딥러닝 학습 결과서_4차_여행.docx",
+      "reopen": "PASS",
+      "banned_characters": "PASS",
+      "template_leftovers": "PASS",
+      "private_identifiers": "PASS",
+      "history": "PASS",
+      "figure_size": "PASS",
+      "figure_fonts": [
+        {
+          "figure": "그림2_실험흐름.png",
+          "font_pt": 9.37
+        }
+      ]
+    },
+    {
+      "file": "[데이터 전처리] 학습한 ML_DL 모델_4차_여행.docx",
+      "reopen": "PASS",
+      "banned_characters": "PASS",
+      "template_leftovers": "PASS",
+      "private_identifiers": "PASS",
+      "history": "PASS",
+      "figure_size": "PASS",
+      "figure_fonts": [
+        {
+          "figure": "그림3_학습데이터와의존라이브러리.png",
+          "font_pt": 6.37
+        },
+        {
+          "figure": "그림4_추론구조.png",
+          "font_pt": 8.2
+        }
+      ]
+    }
+  ],
+  "EXP_01_21_unchanged": true,
+  "review_R1_R7": {
+    "R1": "PASS",
+    "R2": "PASS",
+    "R3": "PASS",
+    "R4": "PASS",
+    "R5": "PASS",
+    "R6": "PASS",
+    "R7": "PASS"
+  },
+  "internal_memo_mentions_in_docx_and_review_md": 0,
+  "render_status": "NOT_VERIFIED: bundled LibreOffice unavailable"
+}

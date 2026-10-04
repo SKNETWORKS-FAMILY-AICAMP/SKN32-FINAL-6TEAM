@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1400 2176" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="tp-b-title tp-b-desc">
+<title id="tp-b-title">그림 B — 감시가 새로 연 문제 한 건이 지나가는 길</title>
+<desc id="tp-b-desc">타이머가 감시를 다시 돌리고, 감시가 곧 시작할 항목에서 새 문제를 찾으면 문제 처리 건을 연다. 처리 총괄(규칙)이 담당 하나를 정해 식사 항목은 요식 워커, 활동 항목은 액티비티 워커에 할 일 묶음을 넘긴다. 워커는 규칙 코드로 허용 툴만 불러 다시 점검하고, 후보를 하나씩 다시 점검해 결과를 돌려준다. 처리 총괄이 결과를 나누고 대조한 뒤 일정 반영 전 확인을 거쳐, 물어볼 조건이면 선택 요청을, 아니면 새 일정 판을 저장하고 알림을 기록한다. 배달은 따로 도는 작업이 한다.</desc>
+<defs><style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;display=swap');</style><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b7488"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a8720c"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5bd8"/></marker><marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8599"/></marker><style>.name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#161c28;text-anchor:middle}.focal-name{fill:#a8720c}.sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#6b7488;text-anchor:middle}.io{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#161c28}.io-k{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;font-weight:600;fill:#7a8599}.tag{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;font-weight:500;letter-spacing:0.08em;text-anchor:middle}.lab{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:500;text-anchor:middle}.lab-mono{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;letter-spacing:0.14em;text-anchor:middle}.tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28;text-anchor:middle}.zone{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#6b7488}.leg{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.hub-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#fbfcfd;text-anchor:middle}.hub-sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:rgba(251,252,253,0.78);text-anchor:middle}.layer-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#161c28}.layer-note{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.layer-tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28}</style></defs>
+<rect width="1400" height="2176" fill="#fbfcfd"/>
+<rect x="24" y="24" width="1304" height="176" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="40" y="44" class="zone">① 감시 — 규칙 코드</text>
+<rect x="24" y="216" width="1304" height="288" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="40" y="236" class="zone">② 처리 총괄 — 규칙으로 담당 하나를 정하고 할 일을 묶어 넘긴다</text>
+<rect x="24" y="552" width="1304" height="704" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="328" y="572" class="zone">③ 워커 에이전트 둘 — 판단은 규칙 코드 · 허용 툴만 부른다 · 서로 부르지 않는다</text>
+<rect x="24" y="1272" width="1304" height="656" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="184" y="1292" class="zone">④ 결과 나누기 · 대조 · 일정 반영 전 확인 — 처리 총괄</text>
+<rect x="24" y="1944" width="1304" height="168" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="184" y="1964" class="zone">⑤ 알림 배달 — 따로 도는 1분 작업 · 도착 시간 보장 아님</text>
+<!-- 화살표 먼저 -->
+<path d="M960 112 L860 112" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<path d="M700 168 L700 248" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 344 L700 376" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M540 296 L48 296 A8 8 0 0 0 40 304 L40 1432 A8 8 0 0 0 48 1440 L80 1440" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M620 488 L620 520 A8 8 0 0 1 612 528 L308 528 A8 8 0 0 0 300 536 L300 584" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M780 488 L780 520 A8 8 0 0 0 788 528 L1092 528 A8 8 0 0 1 1100 536 L1100 584" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M300 680 L300 712" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M300 808 L300 840" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M80 760 L68 760 A8 8 0 0 0 60 768 L60 1152 A8 8 0 0 0 68 1160 L80 1160" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M300 936 L300 968" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M520 1040 L544 1040 A8 8 0 0 0 552 1032 L552 1000 A8 8 0 0 0 544 992 L520 992" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<path d="M520 1056 L592 1056 A8 8 0 0 0 600 1048 L600 896 A8 8 0 0 0 592 888 L520 888" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<path d="M300 1064 L300 1112" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1100 680 L1100 712" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1100 808 L1100 840" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1320 760 L1360 760 A8 8 0 0 1 1368 768 L1368 1168 A8 8 0 0 1 1360 1176 L1320 1176" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1100 936 L1100 968" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1320 888 L1336 888 A8 8 0 0 1 1344 896 L1344 1136 A8 8 0 0 1 1336 1144 L1320 1144" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M880 1040 L856 1040 A8 8 0 0 1 848 1032 L848 1000 A8 8 0 0 1 856 992 L880 992" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<path d="M1100 1080 L1100 1112" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M300 1208 L300 1224 A8 8 0 0 0 308 1232 L652 1232 A8 8 0 0 1 660 1240 L660 1288" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1100 1208 L1100 1224 A8 8 0 0 1 1092 1232 L748 1232 A8 8 0 0 0 740 1240 L740 1288" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M540 1324 L440 1324" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M540 1360 L488 1360 A8 8 0 0 0 480 1368 L480 1432 A8 8 0 0 1 472 1440 L440 1440" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 1384 L700 1416" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M540 1488 L324 1488 A4 4 0 0 1 320 1484 L320 1480" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 1512 L700 1544" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M540 1608 L208 1608 A8 8 0 0 1 200 1600 L200 1480" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M860 1576 L1092 1576 A8 8 0 0 1 1100 1584 L1100 1640" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 1656 L700 1688" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 1768 L700 1800" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M820 1728 L920 1728" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 1912 L700 1968" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1100 1768 L1100 2000 A8 8 0 0 1 1092 2008 L860 2008" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M540 2040 L440 2040" fill="none" stroke="#2f5bd8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<!-- 이름표 -->
+<rect x="880" y="88" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="912" y="100" class="lab" fill="#a8720c">다시 실행</text>
+<rect x="708" y="192" width="84" height="16" rx="2" fill="#fbfcfd"/><text x="750" y="204" class="lab" fill="#6b7488">새 건만 실행</text>
+<rect x="708" y="352" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="740" y="364" class="lab" fill="#6b7488">담당 하나</text>
+<rect x="220" y="272" width="156" height="16" rx="2" fill="#fbfcfd"/><text x="298" y="284" class="lab" fill="#6b7488">담당 없음 · 여럿 → 중단</text>
+<rect x="364" y="504" width="148" height="16" rx="2" fill="#fbfcfd"/><text x="438" y="516" class="lab" fill="#6b7488">식사 항목 → 할 일 묶음</text>
+<rect x="884" y="504" width="148" height="16" rx="2" fill="#fbfcfd"/><text x="958" y="516" class="lab" fill="#6b7488">활동 항목 → 할 일 묶음</text>
+<rect x="308" y="816" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="340" y="828" class="lab" fill="#6b7488">문제 지속</text>
+<rect x="524" y="968" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="556" y="980" class="lab" fill="#a8720c">다음 후보</text>
+<rect x="608" y="912" width="220" height="16" rx="2" fill="#fbfcfd"/><text x="718" y="924" class="lab" fill="#a8720c">후보 표 전부 탈락 → 장소 목록 1번</text>
+<rect x="608" y="936" width="152" height="16" rx="2" fill="#fbfcfd"/><text x="684" y="948" class="lab" fill="#a8720c">(남은 점검 횟수 안에서)</text>
+<rect x="1108" y="816" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="1140" y="828" class="lab" fill="#6b7488">문제 지속</text>
+<rect x="1108" y="944" width="44" height="16" rx="2" fill="#fbfcfd"/><text x="1130" y="956" class="lab" fill="#6b7488">아니오</text>
+<rect x="1236" y="1088" width="100" height="16" rx="2" fill="#fbfcfd"/><text x="1286" y="1100" class="lab" fill="#6b7488">예 → 바꿀까요?</text>
+<rect x="812" y="968" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="844" y="980" class="lab" fill="#a8720c">다음 후보</text>
+<rect x="448" y="1240" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="480" y="1252" class="lab" fill="#6b7488">결과 반환</text>
+<rect x="888" y="1240" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="920" y="1252" class="lab" fill="#6b7488">결과 반환</text>
+<rect x="468" y="1300" width="44" height="16" rx="2" fill="#fbfcfd"/><text x="490" y="1312" class="lab" fill="#6b7488">그대로</text>
+<rect x="488" y="1392" width="32" height="16" rx="2" fill="#fbfcfd"/><text x="504" y="1404" class="lab" fill="#6b7488">중단</text>
+<rect x="708" y="1392" width="124" height="16" rx="2" fill="#fbfcfd"/><text x="770" y="1404" class="lab" fill="#6b7488">변경안 · 바꿀까요?</text>
+<rect x="400" y="1496" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="432" y="1508" class="lab" fill="#6b7488">대조 실패</text>
+<rect x="296" y="1616" width="128" height="16" rx="2" fill="#fbfcfd"/><text x="360" y="1628" class="lab" fill="#6b7488">거부 · 최신 판 아님</text>
+<rect x="948" y="1552" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="980" y="1564" class="lab" fill="#6b7488">바꿀까요?</text>
+<rect x="708" y="1664" width="44" height="16" rx="2" fill="#fbfcfd"/><text x="730" y="1676" class="lab" fill="#6b7488">변경안</text>
+<rect x="708" y="1776" width="124" height="16" rx="2" fill="#fbfcfd"/><text x="770" y="1788" class="lab" fill="#6b7488">아니오 → 자동 변경</text>
+<rect x="856" y="1704" width="20" height="16" rx="2" fill="#fbfcfd"/><text x="866" y="1716" class="lab" fill="#6b7488">예</text>
+<rect x="708" y="1920" width="96" height="16" rx="2" fill="#fbfcfd"/><text x="756" y="1932" class="lab" fill="#6b7488">변경 알림 기록</text>
+<rect x="908" y="1984" width="140" height="16" rx="2" fill="#fbfcfd"/><text x="978" y="1996" class="lab" fill="#6b7488">선택 · 안전 알림 기록</text>
+<rect x="476" y="2016" width="32" height="16" rx="2" fill="#fbfcfd"/><text x="492" y="2028" class="lab" fill="#2f5bd8">배달</text>
+<!-- 상자 -->
+<rect x="960" y="56" width="320" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="960" y="56" width="320" height="112" rx="6" fill="rgba(22,28,40,0.05)" stroke="#6b7488" stroke-width="1"/>
+<text x="1120" y="89" class="name">타이머</text>
+<text x="1120" y="109" class="sub">지금 코드 1분마다 · 팀 결정은 3분</text>
+<text x="1120" y="127" class="sub">감시 → 새벽 확인 → 정기 안내 만들기</text>
+<text x="1120" y="145" class="sub">같은 원인의 기존 건은 다시 안 돎</text>
+<rect x="540" y="56" width="320" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="540" y="56" width="320" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="92" class="name">감시</text>
+<text x="556" y="112" class="io-k">I</text>
+<text x="574" y="112" class="io">90분 안에 시작할 항목 · 외부 6범주</text>
+<text x="556" y="132" class="io-k">O</text>
+<text x="574" y="132" class="io">새 문제 → 문제 처리 건 1개</text>
+<text x="556" y="152" class="io-k">※</text>
+<text x="574" y="152" class="io">고객 고정 항목은 지금 건너뜀</text>
+<rect x="540" y="248" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="540" y="248" width="320" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="284" class="name">담당 정하기</text>
+<text x="556" y="304" class="io-k">I</text>
+<text x="574" y="304" class="io">문제 처리 건의 종류</text>
+<text x="556" y="324" class="io-k">O</text>
+<text x="574" y="324" class="io">담당 하나 (없음 · 여럿 → 중단)</text>
+<rect x="540" y="376" width="320" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="540" y="376" width="320" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="412" class="name">할 일 묶음 만들기</text>
+<text x="556" y="432" class="io-k">I</text>
+<text x="574" y="432" class="io">처리 건 · 대상 · 지금 상태</text>
+<text x="556" y="452" class="io-k">O</text>
+<text x="574" y="452" class="io">할 일 · 대상 · 상태 · 근거 · 툴 · 90초</text>
+<text x="556" y="472" class="io-k">※</text>
+<text x="574" y="472" class="io">90초는 설정값 · 실제 종료 보장 아님</text>
+<rect x="80" y="584" width="440" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="80" y="584" width="440" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="2.2"/>
+<text x="300" y="620" class="name">요식 워커 에이전트 — 식사 항목</text>
+<text x="96" y="640" class="io-k">I</text>
+<text x="114" y="640" class="io">식사 항목 · 할 일 묶음</text>
+<text x="96" y="660" class="io-k">O</text>
+<text x="114" y="660" class="io">그대로 / 변경안 / 중단</text>
+<rect x="80" y="712" width="440" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="80" y="712" width="440" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="300" y="746" class="name">1. 일정 읽기 + 그 항목 다시 점검</text>
+<text x="300" y="766" class="tech">read.itinerary · read.disruptions</text>
+<text x="300" y="784" class="sub">문제 없음 → 그대로 · 조회 실패 → 중단 (4로)</text>
+<rect x="80" y="840" width="440" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="80" y="840" width="440" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="300" y="874" class="name">2. 후보 만들기 + 그 시각 영업 판정</text>
+<text x="300" y="894" class="tech">read.dining_alternatives · read.dining_state</text>
+<text x="300" y="912" class="sub">후보 표가 없거나 모두 탈락 → 장소 목록에서</text>
+<rect x="80" y="968" width="440" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="80" y="968" width="440" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="300" y="1002" class="name">3. 앞 순위 후보 다시 점검</text>
+<text x="300" y="1022" class="tech">read.disruptions</text>
+<text x="300" y="1040" class="sub">모두 합쳐 최대 3곳 · 못 본 곳은 고르지 않음</text>
+<rect x="80" y="1112" width="440" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="80" y="1112" width="440" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="300" y="1146" class="name">4. 결과</text>
+<text x="300" y="1166" class="sub">1단계 그대로 · 중단도 여기서 돌려줌</text>
+<text x="300" y="1184" class="sub">통과 중 최선 1 + 다른 안 최대 2 → 변경안 · 0곳 → 중단</text>
+<rect x="880" y="584" width="440" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="880" y="584" width="440" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="2.2"/>
+<text x="1100" y="620" class="name">액티비티 워커 에이전트 — 활동 항목</text>
+<text x="896" y="640" class="io-k">I</text>
+<text x="914" y="640" class="io">활동 항목 · 설문 · 할 일 묶음</text>
+<text x="896" y="660" class="io-k">O</text>
+<text x="914" y="660" class="io">그대로 / 변경안 / 바꿀까요? / 중단</text>
+<rect x="880" y="712" width="440" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="880" y="712" width="440" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1100" y="746" class="name">1. 일정 읽기 + 그 항목 다시 점검</text>
+<text x="1100" y="766" class="tech">read.itinerary · read.disruptions</text>
+<text x="1100" y="784" class="sub">문제 없음 → 그대로 · 조회 실패 → 중단 (4로)</text>
+<rect x="880" y="840" width="440" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="880" y="840" width="440" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1100" y="874" class="name">2. 먼저 물을 조건인가?</text>
+<text x="1100" y="894" class="sub">안전 사건 없이 예보 · 특보 · 대기질만</text>
+<text x="1100" y="912" class="sub">+ 실내 모름 또는 자동 교체 직접 선택 안 함</text>
+<rect x="880" y="968" width="440" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="880" y="968" width="440" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1100" y="1001" class="name">3. 조건 통과 후보를 하나씩 점검</text>
+<text x="1100" y="1021" class="tech">read.place_catalog · read.disruptions</text>
+<text x="1100" y="1039" class="sub">점검 뒤 순위: 변경량 · 비용 · 시간 · 도보</text>
+<text x="1100" y="1057" class="sub">되돌리기 · 경고 · 비슷함 · 거리</text>
+<rect x="880" y="1112" width="440" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="880" y="1112" width="440" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1100" y="1146" class="name">4. 결과</text>
+<text x="1100" y="1166" class="sub">먼저 물을 조건 → 후보 없이 바꿀까요? · 찾음 → 변경안</text>
+<text x="1100" y="1184" class="sub">없음 + 날씨류만 → 바꿀까요? · 그 밖 · 1단계 → 그대로/중단</text>
+<rect x="540" y="1288" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="540" y="1288" width="320" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="1324" class="name">결과 나누기</text>
+<text x="556" y="1344" class="io-k">I</text>
+<text x="574" y="1344" class="io">그대로 · 변경안 · 바꿀까요? · 중단</text>
+<text x="556" y="1364" class="io-k">O</text>
+<text x="574" y="1364" class="io">완료 · 대조 · 중단 기록</text>
+<rect x="80" y="1296" width="360" height="56" rx="28" fill="#fbfcfd"/>
+<rect x="80" y="1296" width="360" height="56" rx="28" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="260" y="1319" class="name">완료 — 바꿀 것 없음</text>
+<text x="260" y="1337" class="sub">이 결과의 고객 알림 없음</text>
+<rect x="80" y="1400" width="360" height="80" rx="40" fill="#fbfcfd"/>
+<rect x="80" y="1400" width="360" height="80" rx="40" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="260" y="1426" class="name">중단 — 일정 그대로</text>
+<text x="260" y="1444" class="sub">실패 기록 · 이 중단의 고객 알림 없음</text>
+<text x="260" y="1462" class="sub">다음 감시가 다시 하지 않음</text>
+<rect x="540" y="1416" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="540" y="1416" width="320" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="1450" class="name">참조 · 소유 · 근거 표시 대조</text>
+<text x="700" y="1470" class="sub">근거를 다 못 모았으면 자동 실행 금지</text>
+<text x="700" y="1488" class="sub">교체 내용 · 외부 사실 전체 검증은 아님</text>
+<rect x="540" y="1544" width="320" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="540" y="1544" width="320" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="1577" class="name">일정 반영 전 확인</text>
+<text x="700" y="1597" class="sub">공통: 고객 소유 · 최신 일정 판</text>
+<text x="700" y="1615" class="sub">바꿀까요?: 현재 항목만 → 바로 선택 요청</text>
+<text x="700" y="1633" class="sub">변경안: 항목 · 앞뒤 이동 계산 · 새 장소</text>
+<polygon points="700,1688 820,1728 700,1768 580,1728" fill="#fbfcfd"/>
+<polygon points="700,1688 820,1728 700,1768 580,1728" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="1732" class="name">물어볼 조건?</text>
+<rect x="540" y="1800" width="320" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="540" y="1800" width="320" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="1833" class="name">새 일정 판 저장</text>
+<text x="700" y="1853" class="sub">이전 판 보존 · 계산한 앞뒤 이동과 함께</text>
+<text x="700" y="1871" class="sub">경로 실패: 가까우면 기존 경로 · 이름 갱신</text>
+<text x="700" y="1889" class="sub">멀면 어림값 · 자동 변경엔 되돌리기 버튼</text>
+<rect x="920" y="1640" width="360" height="128" rx="6" fill="#fbfcfd"/>
+<rect x="920" y="1640" width="360" height="128" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1100" y="1672" class="name">선택 요청 열기</text>
+<text x="1100" y="1692" class="sub">보호 항목 → 묻기 (안전 사건이면 안전 표시)</text>
+<text x="1100" y="1710" class="sub">보호 아님 + 먼저 물어봐 + 안전 → 안전 안내</text>
+<text x="1100" y="1728" class="sub">먼저 물어봐 → 묻기</text>
+<text x="1100" y="1746" class="sub">후보 없는 바꿀까요? → 안 없이 묻기</text>
+<rect x="540" y="1968" width="320" height="128" rx="6" fill="#fbfcfd"/>
+<rect x="540" y="1968" width="320" height="128" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="2004" class="name">알림 배달</text>
+<text x="556" y="2024" class="io-k">I</text>
+<text x="574" y="2024" class="io">새 판 · 선택 요청 · 안전 · 정기 안내 기록</text>
+<text x="556" y="2044" class="io-k">O</text>
+<text x="574" y="2044" class="io">Discord 발송 시도 + 계획서 링크</text>
+<text x="556" y="2064" class="io-k">※</text>
+<text x="574" y="2064" class="io">일반 오류: 첫 시도 포함 최대 3번</text>
+<text x="556" y="2084" class="io-k">※</text>
+<text x="574" y="2084" class="io">시간 초과 · 연결 오류: 수신 불명 기록</text>
+<rect x="80" y="1976" width="360" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="80" y="1976" width="360" height="112" rx="6" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="260" y="2018" class="name">고객</text>
+<text x="260" y="2038" class="sub">알림 · 계획서 링크 확인</text>
+<text x="260" y="2056" class="sub">응답(안 고르기 · 바꿔 줘)은 그림 C</text>
+<line x1="32" y1="2112" x2="1368" y2="2112" stroke="rgba(22,28,40,0.12)" stroke-width="0.8"/>
+<text x="32" y="2132" class="lab-mono" fill="#6b7488" text-anchor="start">LEGEND</text>
+<rect x="104" y="2120" width="28" height="16" rx="3" fill="rgba(22,28,40,0.05)" stroke="#6b7488" stroke-width="1"/>
+<text x="140" y="2132" class="leg">타이머</text>
+<rect x="204" y="2120" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="240" y="2132" class="leg">규칙 코드</text>
+<rect x="324" y="2120" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="2.2"/>
+<text x="360" y="2132" class="leg">워커 에이전트(규칙)</text>
+<rect x="508" y="2120" width="28" height="16" rx="3" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="544" y="2132" class="leg">사람</text>
+<polygon points="610,2120 624,2128 610,2136 596,2128" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="632" y="2132" class="leg">판단</text>
+<line x1="684" y1="2128" x2="712" y2="2128" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<text x="720" y="2132" class="leg">되돌아가는 반복</text>
+<line x1="840" y1="2128" x2="868" y2="2128" stroke="#2f5bd8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<text x="876" y="2132" class="leg">고객에게</text>
+</svg>

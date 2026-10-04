@@ -1,0 +1,31 @@
+digraph UC {
+  graph [rankdir=LR, splines=spline, nodesep=0.42, ranksep=0.9, pad=0.2, fontname="Malgun Gothic", bgcolor="transparent", ordering=out];
+  node [fontname="Malgun Gothic", fontsize=13];
+  edge [fontname="Malgun Gothic", fontsize=11, color="#5f6b64", penwidth=1.4, arrowhead=none, arrowsize=0.9];
+  { rank=min; traveler [shape=none, margin=0, label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="2"><TR><TD><IMG SRC="actor.png"/></TD></TR><TR><TD><B>여행자</B></TD></TR></TABLE>>]; aiapp [shape=box, style="rounded,filled", fillcolor="#f6ead4", color="#c8913a", penwidth=1.6, label=<<FONT POINT-SIZE="11" COLOR="#8a5f1c">«시스템»</FONT><BR/><B>개인 AI 비서 앱</B><BR/><FONT POINT-SIZE="11" COLOR="#5f6b64">우리 API로 연결</FONT>>]; }
+  subgraph cluster_sys { label=<<B>triPilot · 2 여행 중 요청</B>>; fontsize=16; fontcolor="#2d5f48"; style="rounded"; color="#2d5f48"; penwidth=2.2; margin=20;
+    u06 [shape=ellipse, style="filled", fillcolor="#fffdf7", color="#7f8f86", penwidth=1.6, margin="0.12,0.04", label=<<FONT POINT-SIZE="10" COLOR="#7d867f">UC-06</FONT><BR/>채팅으로 묻기<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">하루 요약 · 다음 이동 · 규정</FONT>>];
+    u07 [shape=ellipse, style="filled", fillcolor="#fffdf7", color="#7f8f86", penwidth=1.6, margin="0.12,0.04", label=<<FONT POINT-SIZE="10" COLOR="#7d867f">UC-07</FONT><BR/>바꿔 달라고 하기<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">바로 바꾸고 다른 안 셋까지</FONT>>];
+    u08 [shape=ellipse, style="filled", fillcolor="#fffdf7", color="#7f8f86", penwidth=1.6, margin="0.12,0.04", label=<<FONT POINT-SIZE="10" COLOR="#7d867f">UC-08</FONT><BR/>문제 알리기<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">늦음 · 휴무</FONT>>];
+    u09 [shape=ellipse, style="filled", fillcolor="#fffdf7", color="#7f8f86", penwidth=1.6, margin="0.12,0.04", label=<<FONT POINT-SIZE="10" COLOR="#7d867f">UC-09</FONT><BR/>다른 안 고르기 · 되돌리기<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">「선택이 필요해요」 · 앞 판으로</FONT>>];
+    q [shape=ellipse, style="filled", fillcolor="#e5efe8", color="#2d5f48", penwidth=1.6, margin="0.12,0.04", label=<<B>요청 읽기</B><BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">요청 종류 5 · 대상 항목 · 문제 코드</FONT>>];
+    g [shape=ellipse, style="filled", fillcolor="#f3f6f1", color="#9fb0a6", penwidth=1.6, margin="0.12,0.04", label=<근거 찾기<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">여행 규정 · 예약 취소 조건</FONT>>];
+    v [shape=ellipse, style="filled", fillcolor="#f3f6f1", color="#9fb0a6", penwidth=1.6, margin="0.12,0.04", label=<새 판 저장<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">기준 판이 그대로일 때만</FONT>>];
+  }
+  { rank=max; ai [shape=box, style="rounded,filled", fillcolor="#f6ead4", color="#c8913a", penwidth=1.6, label=<<FONT POINT-SIZE="11" COLOR="#8a5f1c">«시스템»</FONT><BR/><B>AI 모델</B><BR/><FONT POINT-SIZE="11" COLOR="#5f6b64">같은 액터 · 시험 중</FONT>>]; }
+  req [shape=none, margin=0, label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="2"><TR><TD><IMG SRC="actor.png"/></TD></TR><TR><TD><B>요청하는 쪽</B></TD></TR><TR><TD><FONT POINT-SIZE="10" COLOR="#5f6b64">여행자 · AI 비서 앱</FONT></TD></TR></TABLE>>];
+  traveler -> req [arrowhead=empty, arrowsize=1.3, penwidth=1.5];
+  aiapp -> req [arrowhead=empty, arrowsize=1.3, penwidth=1.5];
+  req -> u06;
+  req -> u07;
+  req -> u08;
+  req -> u09;
+  u06 -> q [style=dashed, arrowhead=vee, label="«include»", fontcolor="#2d5f48", color="#2d5f48"];
+  u06 -> g [style=dashed, arrowhead=vee, label="«include»", fontcolor="#2d5f48", color="#2d5f48"];
+  u07 -> q [style=dashed, arrowhead=vee, label="«include»", fontcolor="#2d5f48", color="#2d5f48"];
+  u08 -> q [style=dashed, arrowhead=vee, label="«include»", fontcolor="#2d5f48", color="#2d5f48"];
+  u09 -> v [style=dashed, arrowhead=vee, label="«include»", fontcolor="#2d5f48", color="#2d5f48"];
+  q -> ai;
+  g -> ai;
+  u06 -> u07 -> u08 -> u09 [style=invis, constraint=false];
+}

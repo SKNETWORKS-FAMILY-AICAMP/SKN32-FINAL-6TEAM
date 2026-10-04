@@ -1,0 +1,435 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>triPilot 에이전트 흐름 v13</title><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet"><style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--paper:#fbfcfd;--paper-2:#f1f4f8;--ink:#161c28;--muted:#6b7488;--soft:#7a8599;--rule:rgba(22,28,40,.12);
+--accent:#a8720c;--accent-tint:rgba(168,114,12,.10);--link:#2f5bd8;
+--sans:'Geist','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;--serif:'Instrument Serif','Noto Serif KR',serif;--mono:'Geist Mono',ui-monospace,monospace}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.7;font-size:15px;padding:3rem 2rem}
+.frame{max-width:1200px;margin:0 auto}
+.eyebrow{font-family:var(--mono);font-size:.66rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
+h1{font-family:var(--serif);font-size:2rem;font-weight:400;letter-spacing:-.01em;line-height:1.2;margin-bottom:1rem}
+h2{font-family:var(--serif);font-size:1.5rem;font-weight:400;margin:3rem 0 .5rem;padding-top:1.25rem;border-top:1px solid var(--rule)}
+p{max-width:860px;margin:0 0 .9rem}
+.lead{font-size:16px}
+strong{font-weight:600}
+code{font-family:var(--mono);font-size:.86em;background:var(--paper-2);padding:.1em .35em;border-radius:4px}
+figure{margin:1.25rem 0 0}
+figure svg{width:100%;display:block}
+figcaption{font-size:13px;color:var(--muted);margin-top:.5rem;max-width:860px}
+.fig-wide svg{min-width:900px}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:1rem 0;background:#fff}
+th,td{border:1px solid var(--rule);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:var(--paper-2);font-weight:600}
+td:first-child{font-weight:600;white-space:nowrap}
+.cards{display:grid;grid-template-columns:1.2fr 1fr .9fr;gap:16px;margin:1.25rem 0}
+.card{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:1.25rem}
+.card h3{font-size:15px;font-weight:600;margin-bottom:.5rem;display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;background:var(--ink)}
+.dot.accent{background:var(--accent)}.dot.link{background:var(--link)}.dot.soft{background:var(--soft)}
+.card ul{padding-left:1.1rem;font-size:14px}
+.status{border-left:3px solid var(--accent);background:var(--accent-tint);padding:.9rem 1.1rem;border-radius:0 6px 6px 0;font-size:14px;max-width:none}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11px;color:var(--muted)}
+@media (max-width:760px){.cards{grid-template-columns:1fr}body{padding:2rem 1rem}}
+ .card-table td:first-child{width:180px;white-space:nowrap} h3{margin:1.5rem 0 .4rem;font-size:16px}</style></head><body><div class="frame"><p class="eyebrow">triPilot · Agent Flow · v13 · 2026-10-03 · 멘토링 문서 「유스케이스 &amp; 멀티 에이전트 다이어그램」 규칙 반영</p>
+<h1>triPilot 에이전트 흐름 — 누가 다음 단계를 정하나</h1>
+<p class="lead">멘토링 문서의 말대로 이 구조는 <strong>워크플로</strong>입니다 — 코드가 정한 경로 안에서 단계가 돌고, 요식 · 액티비티 「워커 에이전트」는 <strong>자기 역할 · 허용 도구 · 할 일 계약을 받는 규칙 코드</strong>이며 LLM 이 다음 행동을 고르는 루프가 아닙니다. 문서는 이런 단계도 「○○ 에이전트」로 부르는 것은 괜찮되 <strong>누가 다음 단계를 정하는지(코드인가 LLM 인가)</strong>를 그림에서 가르라고 합니다 — 그래서 모든 노드에 [코드] · [LLM] · [규칙 + 도구] · ⏸ 를 붙였고, 마름모(판단)는 전부 코드입니다.</p>
+<h2>멘토링 문서 규칙 → 이 그림에서</h2>
+<table><thead><tr><th>규칙(문서 7~14쪽)</th><th>이 그림에서</th></tr></thead><tbody><tr><td>시작과 끝</td><td>정상 완료 · 등록 안 함 · 처리 중단의 끝을 표시한다. 이동은 범위 밖 출구, 무응답은 끝이 아니라 「미완료 — 열린 채」(점선)로 둔다</td></tr><tr><td>노드 종류 — LLM / 결정적 코드 / 사람 / 분기</td><td>[코드] · [코드 → 외부 API] · [LLM] · [규칙 + 도구] · ⏸ 사람 · 마름모(코드 판단)</td></tr><tr><td>분기 조건은 조건식 이름표로</td><td>문제코드 = dining_* · 같은 지문 = 기존 건 · 동의 요청 ∨ 보호 ∨ 먼저 물어봐 · 도구 12번 초과 등</td></tr><tr><td>병렬 구간 fan-out / fan-in</td><td>장소 있는 항목의 외부 6범주를 동시에 점검 → 합치기(실패 범주 있음 → 확인 불가, 아니면 사건 있음 → 깨짐, 주의보만 · 해당 없음 · 미연결 → 문제 없음). 워커 둘은 병렬이 아니라 둘 중 하나</td></tr><tr><td>루프의 종료 조건 · 최대 횟수 · 상한 도달 경로</td><td>요식: 외부 재점검 최대 3곳 → 통과 후보 있으면 변경안 · 없으면 중단 / 액티비티: 도구 합계 12번 → 넘으면 예외로 실행 실패 / 동의 후 후보 계산: 한 번 · 거리마다 최대 6곳 → 후보 있으면 같은 요청에 선택지 저장 후 안 선택 대기 · 없으면 요청 닫음 / UC-1 수정: 횟수 상한을 코드에서 찾지 못함</td></tr><tr><td>사람 개입(⏸)과 선택지</td><td>UC-1 확인 화면(수정 · 등록 요청 · 떠남/다시 올리기) · UC-2 고객 선택(안 번호 · 바꿔 줘[동의 요청만] · 그대로, 무응답은 열린 채)</td></tr><tr><td>누가 다음 단계를 정하나 — 코드인가 LLM 인가</td><td>모든 마름모는 코드. LLM 은 정해진 자리에서 읽기 보조 · 번역만 한다</td></tr><tr><td>구간마다 패턴 이름</td><td>병렬 점검(fan-out / fan-in, P3) · 라우팅(코드, P2) · 순차 + 코드 게이트(P1) · 사람 개입(HITL). 중앙 LLM 위임(P4) · LLM 평가 반복(P8)은 없다</td></tr><tr><td>랭그래프면 노드 · 엣지가 코드와 1:1</td><td>해당 없음 — 코드가 랭그래프를 쓰지 않는다(아래 「랭그래프 확인」). 대신 명세 카드마다 「코드 위치」 줄을 붙였다</td></tr></tbody></table>
+<h2>UC-2 여행 중 깨진 일정을 고쳐 받는다</h2><p>주 액터는 고객, 시작은 <strong>시간(타이머)</strong>입니다. 감시가 장소 있는 항목마다 외부 6범주를 <strong>동시에</strong> 점검해 하나의 판정으로 합치고(fan-out / fan-in), 깨졌고 <strong>새 건</strong>이면 코드 라우터가 문제 코드로 <strong>워커 하나</strong>를 고릅니다(이동 항목은 경로 사건을 따로 점검해 이동 문제 건으로 — 이 그림 밖). 워커는 후보를 정해진 한도 안에서 다시 점검하고(루프), 결과는 코드가 대조 · 확인합니다. 물어볼 조건이면 고객에게 묻고 <strong>⏸ 기다리며</strong>, 아니면 새 일정 판을 저장하고 알림을 기록합니다(배달은 따로 도는 작업).</p><figure class="fig-wide"><svg viewBox="0 0 1760 2192" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="tp-uc2-title tp-uc2-desc">
+<title id="tp-uc2-title">UC-2 여행 중 깨진 일정을 고쳐 받는다 — 에이전트 흐름</title>
+<desc id="tp-uc2-desc">타이머가 감시를 시작하면 감시가 장소 있는 항목마다 외부 6범주를 동시에 점검해 하나의 판정으로 합친다. 깨졌고 새 건이면 코드 라우터가 식사는 요식 워커, 활동은 액티비티 워커 하나에 맡긴다. 워커는 규칙과 도구로 후보를 다시 점검해 결과를 돌려주고, 코드가 대조 · 확인한 뒤 물어볼 조건이면 고객에게 묻고 기다리며, 아니면 새 일정 판을 저장하고 알림을 기록한다. 다음 단계는 모두 코드가 정한다.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b7488"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a8720c"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5bd8"/></marker><marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8599"/></marker><style>.name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#161c28;text-anchor:middle}.focal-name{fill:#a8720c}.sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#6b7488;text-anchor:middle}.io{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#161c28}.io-k{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;font-weight:600;fill:#7a8599}.tag{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;font-weight:500;letter-spacing:0.08em;text-anchor:middle}.lab{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:500;text-anchor:middle}.lab-mono{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;letter-spacing:0.14em;text-anchor:middle}.tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28;text-anchor:middle}.zone{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#6b7488}.leg{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.hub-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#fbfcfd;text-anchor:middle}.hub-sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:rgba(251,252,253,0.78);text-anchor:middle}.layer-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#161c28}.layer-note{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.layer-tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28}</style></defs>
+<rect width="1760" height="2192" fill="#fbfcfd"/>
+<rect x="24" y="24" width="1712" height="608" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="40" y="44" class="zone">① 감시 — 6범주 병렬 점검(fan-out / fan-in)</text>
+<rect x="24" y="648" width="1712" height="640" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="40" y="668" class="zone">② 라우팅(코드) → 워커 에이전트 둘 중 하나 — 병렬 아님 · 워커 안은 규칙 + 도구</text>
+<rect x="24" y="1304" width="940" height="872" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="40" y="1324" class="zone">③ 검증 · 저장 · 알림 — 순차 + 코드 게이트</text>
+<rect x="968" y="1528" width="768" height="648" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="984" y="1548" class="zone">④ 사람 개입(HITL) — ⏸ 비동기 대기</text>
+<!-- 화살표 먼저 -->
+<path d="M780 96 L780 128" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M960 164 L1280 164" fill="none" stroke="#6b7488" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M620 216 L620 224 A8 8 0 0 1 612 232 L208 232 A8 8 0 0 0 200 240 L200 272" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M640 216 L640 236 A8 8 0 0 1 632 244 L440 244 A8 8 0 0 0 432 252 L432 272" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M664 216 L664 272" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M896 216 L896 272" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M920 216 L920 236 A8 8 0 0 0 928 244 L1120 244 A8 8 0 0 1 1128 252 L1128 272" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M940 216 L940 224 A8 8 0 0 0 948 232 L1352 232 A8 8 0 0 1 1360 240 L1360 272" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M200 328 L200 364 A8 8 0 0 0 208 372 L612 372 A8 8 0 0 1 620 380 L620 400" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M432 328 L432 348 A8 8 0 0 0 440 356 L632 356 A8 8 0 0 1 640 364 L640 400" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M664 328 L664 400" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M896 328 L896 400" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1128 328 L1128 348 A8 8 0 0 1 1120 356 L928 356 A8 8 0 0 0 920 364 L920 400" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1360 328 L1360 364 A8 8 0 0 1 1352 372 L948 372 A8 8 0 0 0 940 380 L940 400" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M780 496 L780 536" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M660 576 L440 576" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M900 576 L1120 576" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M780 616 L780 672" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M660 712 L440 712" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M780 752 L780 808" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M660 848 L328 848 A8 8 0 0 0 320 856 L320 944" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M900 848 L1232 848 A8 8 0 0 1 1240 856 L1240 944" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M780 888 L780 944" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M140 1072 L140 1096 A8 8 0 0 1 132 1104 L108 1104 A8 8 0 0 1 100 1096 L100 1072" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<path d="M1420 1072 L1420 1096 A8 8 0 0 0 1428 1104 L1452 1104 A8 8 0 0 0 1460 1096 L1460 1072" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<path d="M1480 1000 L1612 1000 A8 8 0 0 1 1620 1008 L1620 1136" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M320 1072 L320 1144 A8 8 0 0 0 328 1152 L772 1152" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1240 1072 L1240 1144 A8 8 0 0 1 1232 1152 L788 1152" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M780 1160 L780 1192" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M660 1232 L440 1232" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M900 1232 L1120 1232" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M780 1272 L780 1320" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M960 1360 L1280 1360 A8 8 0 0 0 1288 1352 L1288 1264" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M780 1432 L780 1456" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M900 1496 L1292 1496 A8 8 0 0 1 1300 1504 L1300 1560" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M780 1536 L780 1584" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M780 1664 L780 1712" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M780 1824 L780 1880" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1520 1576 L1576 1576" fill="none" stroke="#6b7488" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M1300 1688 L1300 1728" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1200 1768 L1136 1768" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1040 1728 L1040 1632 A8 8 0 0 0 1032 1624 L960 1624" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1056 1808 L1056 1864" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1300 1808 L1300 1864" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1400 1768 L1512 1768" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1300 1944 L1300 2000" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1424 1904 L1712 1904 A8 8 0 0 0 1720 1896 L1720 1648 A8 8 0 0 0 1712 1640 L1520 1640" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<!-- 이름표 -->
+<rect x="1088" y="140" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="1120" y="152" class="lab" fill="#6b7488">이동 항목</text>
+<rect x="1000" y="208" width="176" height="16" rx="2" fill="#fbfcfd"/><text x="1088" y="220" class="lab" fill="#6b7488">fan-out · 6범주 동시 점검</text>
+<rect x="1000" y="380" width="140" height="16" rx="2" fill="#fbfcfd"/><text x="1070" y="392" class="lab" fill="#6b7488">fan-in · 하나로 합침</text>
+<rect x="520" y="552" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="552" y="564" class="lab" fill="#6b7488">확인 불가</text>
+<rect x="976" y="552" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="1008" y="564" class="lab" fill="#6b7488">문제 없음</text>
+<rect x="788" y="632" width="128" height="16" rx="2" fill="#fbfcfd"/><text x="852" y="644" class="lab" fill="#6b7488">깨짐 → 처리 건 열기</text>
+<rect x="488" y="688" width="128" height="16" rx="2" fill="#fbfcfd"/><text x="552" y="700" class="lab" fill="#6b7488">같은 지문 = 기존 건</text>
+<rect x="788" y="768" width="84" height="16" rx="2" fill="#fbfcfd"/><text x="830" y="780" class="lab" fill="#6b7488">새 건만 실행</text>
+<rect x="412" y="824" width="136" height="16" rx="2" fill="#fbfcfd"/><text x="480" y="836" class="lab" fill="#6b7488">문제코드 = dining_*</text>
+<rect x="224" y="888" width="88" height="16" rx="2" fill="#fbfcfd"/><text x="268" y="900" class="lab" fill="#6b7488">할 일 묶음 →</text>
+<rect x="996" y="824" width="152" height="16" rx="2" fill="#fbfcfd"/><text x="1072" y="836" class="lab" fill="#6b7488">문제코드 = activity_*</text>
+<rect x="1248" y="888" width="88" height="16" rx="2" fill="#fbfcfd"/><text x="1292" y="900" class="lab" fill="#6b7488">할 일 묶음 →</text>
+<rect x="788" y="904" width="112" height="16" rx="2" fill="#fbfcfd"/><text x="844" y="916" class="lab" fill="#6b7488">담당 없음 · 여럿</text>
+<rect x="60" y="1112" width="212" height="16" rx="2" fill="#fbfcfd"/><text x="166" y="1124" class="lab" fill="#a8720c">다음 후보 (외부 재점검 최대 3곳)</text>
+<rect x="1280" y="1112" width="196" height="16" rx="2" fill="#fbfcfd"/><text x="1378" y="1124" class="lab" fill="#a8720c">다음 후보 (도구 합계 12번 안)</text>
+<rect x="1628" y="1040" width="100" height="16" rx="2" fill="#fbfcfd"/><text x="1678" y="1052" class="lab" fill="#6b7488">도구 12번 초과</text>
+<rect x="448" y="1128" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="480" y="1140" class="lab" fill="#6b7488">결과 반환</text>
+<rect x="528" y="1208" width="44" height="16" rx="2" fill="#fbfcfd"/><text x="550" y="1220" class="lab" fill="#6b7488">그대로</text>
+<rect x="992" y="1208" width="32" height="16" rx="2" fill="#fbfcfd"/><text x="1008" y="1220" class="lab" fill="#6b7488">중단</text>
+<rect x="788" y="1280" width="124" height="16" rx="2" fill="#fbfcfd"/><text x="850" y="1292" class="lab" fill="#6b7488">변경안 ∨ 동의 요청</text>
+<rect x="1064" y="1336" width="112" height="16" rx="2" fill="#fbfcfd"/><text x="1120" y="1348" class="lab" fill="#6b7488">확인 실패 → 중단</text>
+<rect x="1000" y="1472" width="200" height="16" rx="2" fill="#fbfcfd"/><text x="1100" y="1484" class="lab" fill="#6b7488">동의 요청 ∨ 보호 ∨ 먼저 물어봐</text>
+<rect x="788" y="1552" width="116" height="16" rx="2" fill="#fbfcfd"/><text x="846" y="1564" class="lab" fill="#6b7488">그 밖 → 자동 변경</text>
+<rect x="788" y="1680" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="820" y="1692" class="lab" fill="#6b7488">변경 알림</text>
+<rect x="1524" y="1552" width="44" height="16" rx="2" fill="#fbfcfd"/><text x="1546" y="1564" class="lab" fill="#6b7488">무응답</text>
+<rect x="1140" y="1744" width="52" height="16" rx="2" fill="#fbfcfd"/><text x="1166" y="1756" class="lab" fill="#6b7488">안 번호</text>
+<rect x="1000" y="1664" width="32" height="16" rx="2" fill="#fbfcfd"/><text x="1016" y="1676" class="lab" fill="#6b7488">통과</text>
+<rect x="1064" y="1824" width="32" height="16" rx="2" fill="#fbfcfd"/><text x="1080" y="1836" class="lab" fill="#6b7488">거절</text>
+<rect x="1308" y="1824" width="52" height="16" rx="2" fill="#fbfcfd"/><text x="1334" y="1836" class="lab" fill="#6b7488">바꿔 줘</text>
+<rect x="1432" y="1744" width="44" height="16" rx="2" fill="#fbfcfd"/><text x="1454" y="1756" class="lab" fill="#6b7488">그대로</text>
+<rect x="1308" y="1960" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="1340" y="1972" class="lab" fill="#6b7488">후보 없음</text>
+<rect x="1388" y="1824" width="324" height="16" rx="2" fill="#fbfcfd"/><text x="1550" y="1836" class="lab" fill="#a8720c">후보 있음 → 같은 요청에 선택지 저장 → 안 선택 대기</text>
+<!-- 상자 -->
+<rect x="600" y="40" width="360" height="56" rx="28" fill="#fbfcfd"/>
+<rect x="600" y="40" width="360" height="56" rx="28" fill="rgba(22,28,40,0.05)" stroke="#6b7488" stroke-width="1"/>
+<text x="780" y="72" class="name">시작 — 타이머 (지금 1분 · 결정 3분)</text>
+<rect x="600" y="128" width="360" height="88" rx="6" fill="#fbfcfd"/>
+<rect x="600" y="128" width="360" height="88" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="780" y="158" class="name">⑤ 감시 [코드]</text>
+<text x="780" y="178" class="sub">장소 있는 항목마다 · 고객 고정 항목은 건너뜀</text>
+<text x="780" y="196" class="sub">식사 · 활동 · 이동 밖 항목은 집계만</text>
+<rect x="1280" y="128" width="440" height="72" rx="36" fill="#fbfcfd"/>
+<rect x="1280" y="128" width="440" height="72" rx="36" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1500" y="159" class="name">이 그림 밖 — 이동 문제 건</text>
+<text x="1500" y="177" class="sub">경로 사건을 따로 점검해 처리 건을 연다</text>
+<rect x="100" y="272" width="200" height="56" rx="6" fill="#fbfcfd"/>
+<rect x="100" y="272" width="200" height="56" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="200" y="295" class="name">기상 예보</text>
+<text x="200" y="315" class="sub">[코드 → 외부 API]</text>
+<rect x="332" y="272" width="200" height="56" rx="6" fill="#fbfcfd"/>
+<rect x="332" y="272" width="200" height="56" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="432" y="295" class="name">기상 특보</text>
+<text x="432" y="315" class="sub">[코드 → 외부 API]</text>
+<rect x="564" y="272" width="200" height="56" rx="6" fill="#fbfcfd"/>
+<rect x="564" y="272" width="200" height="56" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="664" y="295" class="name">재난문자</text>
+<text x="664" y="315" class="sub">[코드 → 외부 API]</text>
+<rect x="796" y="272" width="200" height="56" rx="6" fill="#fbfcfd"/>
+<rect x="796" y="272" width="200" height="56" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="896" y="295" class="name">교통 통제</text>
+<text x="896" y="315" class="sub">[코드 → 외부 API]</text>
+<rect x="1028" y="272" width="200" height="56" rx="6" fill="#fbfcfd"/>
+<rect x="1028" y="272" width="200" height="56" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1128" y="295" class="name">대기질</text>
+<text x="1128" y="315" class="sub">[코드 → 외부 API]</text>
+<rect x="1260" y="272" width="200" height="56" rx="6" fill="#fbfcfd"/>
+<rect x="1260" y="272" width="200" height="56" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1360" y="295" class="name">지진</text>
+<text x="1360" y="315" class="sub">[코드 → 외부 API]</text>
+<rect x="600" y="400" width="360" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="600" y="400" width="360" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="780" y="425" class="name">합치기 [코드]</text>
+<text x="780" y="445" class="sub">실패 범주 있음 → 확인 불가</text>
+<text x="780" y="463" class="sub">아니면 사건 있음 → 깨짐</text>
+<text x="780" y="481" class="sub">주의보만 · 해당 없음 · 미연결 → 문제 없음</text>
+<polygon points="780,536 900,576 780,616 660,576" fill="#fbfcfd"/>
+<polygon points="780,536 900,576 780,616 660,576" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="780" y="580" class="name">판정?</text>
+<rect x="100" y="544" width="340" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="100" y="544" width="340" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="270" y="571" class="name">끝 — 이 항목 이번엔 안 바꿈</text>
+<text x="270" y="589" class="sub">실패 집계 · 다른 항목 점검은 계속</text>
+<rect x="1120" y="544" width="340" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="1120" y="544" width="340" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1290" y="571" class="name">끝 — 이 항목 문제 없음</text>
+<text x="1290" y="589" class="sub">다음 실행을 기다림</text>
+<polygon points="780,672 900,712 780,752 660,712" fill="#fbfcfd"/>
+<polygon points="780,672 900,712 780,752 660,712" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="780" y="716" class="name">새 처리 건?</text>
+<rect x="100" y="680" width="340" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="100" y="680" width="340" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="270" y="707" class="name">끝 — 기존 건에 모음</text>
+<text x="270" y="725" class="sub">같은 항목 · 원인 · 다시 실행 안 함</text>
+<polygon points="780,808 900,848 780,888 660,848" fill="#fbfcfd"/>
+<polygon points="780,808 900,848 780,888 660,848" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="780" y="852" class="name">담당 정하기?</text>
+<rect x="620" y="944" width="320" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="620" y="944" width="320" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="780" y="971" class="name">끝 — 라우팅 실패</text>
+<text x="780" y="989" class="sub">일정 유지 · 실패 기록</text>
+<rect x="80" y="944" width="480" height="128" rx="6" fill="#fbfcfd"/>
+<rect x="80" y="944" width="480" height="128" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="2.2"/>
+<text x="320" y="985" class="name">⑥-a 요식 워커 에이전트</text>
+<text x="320" y="1005" class="sub">[규칙 + 도구 · LLM 안 씀]</text>
+<text x="320" y="1023" class="sub">후보마다 외부 재점검 · 최대 3곳 · 못 본 곳 제외</text>
+<text x="320" y="1041" class="tech">read.itinerary · read.disruptions · read.dining_*</text>
+<rect x="1000" y="944" width="480" height="128" rx="6" fill="#fbfcfd"/>
+<rect x="1000" y="944" width="480" height="128" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="2.2"/>
+<text x="1240" y="985" class="name">⑥-b 액티비티 워커 에이전트</text>
+<text x="1240" y="1005" class="sub">[규칙 + 도구 · LLM 안 씀]</text>
+<text x="1240" y="1023" class="sub">먼저 물을 조건이면 후보 없이 「바꿀까요?」</text>
+<text x="1240" y="1041" class="tech">read.itinerary · read.disruptions · read.place_catalog</text>
+<rect x="1504" y="1136" width="232" height="80" rx="40" fill="#fbfcfd"/>
+<rect x="1504" y="1136" width="232" height="80" rx="40" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1620" y="1162" class="name">끝 — 실행 실패(예외)</text>
+<text x="1620" y="1180" class="sub">실행 실패 기록 · 예외 재전파</text>
+<text x="1620" y="1198" class="sub">이번 회차 남은 건도 끊김</text>
+<circle cx="780" cy="1152" r="6" fill="#6b7488"/>
+<polygon points="780,1192 900,1232 780,1272 660,1232" fill="#fbfcfd"/>
+<polygon points="780,1192 900,1232 780,1272 660,1232" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="780" y="1236" class="name">워커 결과?</text>
+<rect x="100" y="1200" width="340" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="100" y="1200" width="340" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="270" y="1227" class="name">끝 — 완료</text>
+<text x="270" y="1245" class="sub">바꿀 것 없음 · 고객 알림 없음</text>
+<rect x="1120" y="1200" width="340" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="1120" y="1200" width="340" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1290" y="1227" class="name">끝 — 일정 그대로</text>
+<text x="1290" y="1245" class="sub">중단 · 실패 기록 · 고객 알림 없음</text>
+<rect x="600" y="1320" width="360" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="600" y="1320" width="360" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="780" y="1344" class="name">⑦ 대조 + 반영 전 확인 [코드]</text>
+<text x="780" y="1364" class="sub">공통: 소유 · 최신 판 · 근거 대조(설정 시)</text>
+<text x="780" y="1382" class="sub">동의 요청: 현재 항목만</text>
+<text x="780" y="1400" class="sub">변경안: 항목 · 앞뒤 이동 계산 · 새 장소</text>
+<text x="780" y="1418" class="sub">전체 일정 재검증 없음</text>
+<polygon points="780,1456 900,1496 780,1536 660,1496" fill="#fbfcfd"/>
+<polygon points="780,1456 900,1496 780,1536 660,1496" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="780" y="1500" class="name">물어볼 조건?</text>
+<rect x="600" y="1584" width="360" height="80" rx="6" fill="#fbfcfd"/>
+<rect x="600" y="1584" width="360" height="80" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="780" y="1610" class="name">⑨ 새 일정 판 저장 [코드 → DB]</text>
+<text x="780" y="1630" class="sub">확인한 교체안 + 계산한 앞뒤 이동</text>
+<text x="780" y="1648" class="sub">이전 판 보존 · 자동 변경엔 되돌리기</text>
+<rect x="600" y="1712" width="360" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="600" y="1712" width="360" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="780" y="1763" class="name">⑩ 알림 기록 → 배달 [코드 → Discord]</text>
+<text x="780" y="1783" class="sub">일반 오류 최대 3번 · 시간 초과는 재시도 안 함</text>
+<rect x="620" y="1788" width="320" height="24" rx="4" fill="rgba(47,91,216,0.06)" stroke="#2f5bd8" stroke-width="1" stroke-dasharray="5,3"/><text x="780" y="1804" class="lab" fill="#2f5bd8">LLM: 고객 언어로 번역 · 실패 시 원문</text>
+<rect x="620" y="1880" width="320" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="620" y="1880" width="320" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="780" y="1907" class="name">끝 — 발송 시도 기록</text>
+<text x="780" y="1925" class="sub">도착 시간 보장 안 함</text>
+<rect x="1080" y="1560" width="440" height="128" rx="6" fill="#fbfcfd"/>
+<rect x="1080" y="1560" width="440" height="128" rx="6" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="1300" y="1601" class="name">⑧ ⏸ 고객 선택 대기 — 사람 개입</text>
+<text x="1300" y="1621" class="sub">제안 · 선택지 · 기준 판 저장 + 알림 기록</text>
+<text x="1300" y="1639" class="sub">보호 아님 + 먼저 물어봐 + 안전 → 안전 안내</text>
+<text x="1300" y="1657" class="sub">선택지: 안 번호 · 바꿔 줘(동의 요청) · 그대로</text>
+<rect x="1576" y="1544" width="160" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="1576" y="1544" width="160" height="64" rx="32" fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.20)" stroke-width="1"/>
+<text x="1656" y="1571" class="name">미완료 — 열린 채</text>
+<text x="1656" y="1589" class="sub">만료 미연결</text>
+<polygon points="1300,1728 1400,1768 1300,1808 1200,1768" fill="#fbfcfd"/>
+<polygon points="1300,1728 1400,1768 1300,1808 1200,1768" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1300" y="1772" class="name">고객 응답?</text>
+<rect x="976" y="1728" width="160" height="80" rx="6" fill="#fbfcfd"/>
+<rect x="976" y="1728" width="160" height="80" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1056" y="1754" class="name">다시 확인 [코드]</text>
+<text x="1056" y="1774" class="sub">제안·판·항목·장소</text>
+<text x="1056" y="1792" class="sub">활동만 외부 재점검</text>
+<rect x="976" y="1864" width="160" height="80" rx="40" fill="#fbfcfd"/>
+<rect x="976" y="1864" width="160" height="80" rx="40" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1056" y="1890" class="name">끝 — 요청 거절</text>
+<text x="1056" y="1908" class="sub">변경 없음</text>
+<text x="1056" y="1926" class="sub">제안 상태 유지</text>
+<rect x="1176" y="1864" width="248" height="80" rx="6" fill="#fbfcfd"/>
+<rect x="1176" y="1864" width="248" height="80" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1300" y="1890" class="name">후보 계산 [코드] · 한 번</text>
+<text x="1300" y="1910" class="sub">동의 요청만 · 600m → 1.5km</text>
+<text x="1300" y="1928" class="sub">거리마다 최대 6곳 점검</text>
+<rect x="1512" y="1736" width="200" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="1512" y="1736" width="200" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1612" y="1763" class="name">끝 — 요청 닫음</text>
+<text x="1612" y="1781" class="sub">일정 유지</text>
+<rect x="1176" y="2000" width="248" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="1176" y="2000" width="248" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1300" y="2027" class="name">끝 — 요청 닫음 · 유지</text>
+<text x="1300" y="2045" class="sub">두 거리 모두 후보 없음</text>
+<line x1="32" y1="2128" x2="1728" y2="2128" stroke="rgba(22,28,40,0.12)" stroke-width="0.8"/>
+<text x="32" y="2148" class="lab-mono" fill="#6b7488" text-anchor="start">LEGEND</text>
+<rect x="104" y="2136" width="28" height="16" rx="8" fill="rgba(22,28,40,0.05)" stroke="#6b7488" stroke-width="1"/>
+<text x="140" y="2148" class="leg">시작</text>
+<rect x="192" y="2136" width="28" height="16" rx="8" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="228" y="2148" class="leg">끝</text>
+<rect x="268" y="2136" width="28" height="16" rx="8" fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="304" y="2148" class="leg">미완료</text>
+<rect x="368" y="2136" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="404" y="2148" class="leg">코드</text>
+<rect x="456" y="2136" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="2.2"/>
+<text x="492" y="2148" class="leg">워커(규칙+도구)</text>
+<rect x="616" y="2136" width="28" height="16" rx="3" fill="rgba(47,91,216,0.03)" stroke="#2f5bd8" stroke-width="1" stroke-dasharray="5,3"/>
+<text x="652" y="2148" class="leg">LLM 호출</text>
+<rect x="736" y="2136" width="28" height="16" rx="3" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="772" y="2148" class="leg">사람 ⏸</text>
+<rect x="840" y="2136" width="28" height="16" rx="3" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="876" y="2148" class="leg">외부 API</text>
+<polygon points="974,2136 988,2144 974,2152 960,2144" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="996" y="2148" class="leg">판단(코드)</text>
+<line x1="1088" y1="2144" x2="1116" y2="2144" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<text x="1124" y="2148" class="leg">루프</text>
+</svg><figcaption>이 그림으로 답할 수 있는 질문 — 누가 다음 단계를 정하나(코드 · LLM 아님) · 무엇이 병렬인가(외부 6범주 점검, 워커 둘은 아님) · 루프는 언제 끝나나(요식 3곳 · 액티비티 도구 12번 · 동의 후 후보 계산은 한 번 — 있으면 선택지를 붙여 다시 묻고 없으면 요청 닫음) · 한도에 닿으면(요식: 남은 통과 후보로 변경안 또는 중단 / 액티비티: 예외로 실행 실패) · 사람은 어디서 개입하나(⑧ 고객 선택 — 무응답이면 열린 채로 남음).</figcaption></figure>
+<h2>UC-1 여행 계획을 확인받는다</h2><p>주 액터는 고객(또는 고객이 연결한 개인 AI). 코드가 먼저 읽고 남은 원문만 LLM 이 돕습니다. 고객은 <strong>⏸ 확인 화면</strong>에서 항목을 <strong>수정</strong>(새 판 저장 · 재검사 → 확인 화면에 남음)하거나 <strong>등록을 요청</strong>합니다. 등록 요청이면 코드가 체크리스트로 판정하고, 안 되면 이유와 고칠 방법을 확인 화면에 보여 줍니다(루프). 개인 AI 의 제출은 읽기 · 확인 화면 없이 등록 판정으로 가고, 실패는 오류 · 문제 목록으로 개인 AI 가 받습니다. 한도 거절에는 재시도 가능 시각이 붙고, 저장 단계의 실패는 따로 오류로 끝납니다.</p><figure class="fig-wide"><svg viewBox="0 0 1400 1328" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="tp-uc1-title tp-uc1-desc">
+<title id="tp-uc1-title">UC-1 여행 계획을 확인받는다 — 에이전트 흐름</title>
+<desc id="tp-uc1-desc">고객이 계획을 올리면 코드가 먼저 읽고 남은 원문만 LLM 이 돕는다. 고객은 확인 화면에서 항목을 수정(새 판 저장 · 재검사)하거나 등록을 요청한다. 등록 요청이면 코드가 체크리스트로 판정하고, 안 되면 이유와 고칠 방법을 확인 화면에 보여 준다. 되면 첫 판을 저장하고 계획서 링크를 알린다. 개인 AI 는 읽은 일정을 바로 등록 판정에 내고, 실패하면 오류를 개인 AI 가 받는다.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b7488"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a8720c"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5bd8"/></marker><marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8599"/></marker><style>.name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#161c28;text-anchor:middle}.focal-name{fill:#a8720c}.sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#6b7488;text-anchor:middle}.io{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#161c28}.io-k{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;font-weight:600;fill:#7a8599}.tag{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;font-weight:500;letter-spacing:0.08em;text-anchor:middle}.lab{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:500;text-anchor:middle}.lab-mono{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;letter-spacing:0.14em;text-anchor:middle}.tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28;text-anchor:middle}.zone{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#6b7488}.leg{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.hub-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#fbfcfd;text-anchor:middle}.hub-sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:rgba(251,252,253,0.78);text-anchor:middle}.layer-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#161c28}.layer-note{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.layer-tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28}</style></defs>
+<rect width="1400" height="1328" fill="#fbfcfd"/>
+<rect x="24" y="24" width="1352" height="1224" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="40" y="44" class="zone">UC-1 — 순차 + 코드 게이트 + 사람 확인 · 다음 단계는 코드가 정한다</text>
+<!-- 화살표 먼저 -->
+<path d="M700 112 L700 152" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M520 216 L440 216" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 280 L700 344" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 456 L700 496" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M600 536 L268 536 A8 8 0 0 1 260 528 L260 456" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M440 400 L520 400" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<path d="M800 536 L960 536" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 576 L700 632" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 744 L700 776" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 856 L700 904" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M600 816 L48 816 A8 8 0 0 1 40 808 L40 328 A8 8 0 0 1 48 320 L552 320 A8 8 0 0 1 560 328 L560 344" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<path d="M800 816 L960 816" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M880 944 L960 944" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 984 L700 1032" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 1112 L700 1160" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1280 120 L1280 680 A8 8 0 0 1 1272 688 L880 688" fill="none" stroke="#6b7488" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<!-- 이름표 -->
+<rect x="448" y="192" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="480" y="204" class="lab" fill="#6b7488">읽기 실패</text>
+<rect x="708" y="296" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="740" y="308" class="lab" fill="#6b7488">읽은 항목</text>
+<rect x="416" y="544" width="32" height="16" rx="2" fill="#fbfcfd"/><text x="432" y="556" class="lab" fill="#6b7488">수정</text>
+<rect x="464" y="376" width="32" height="16" rx="2" fill="#fbfcfd"/><text x="480" y="388" class="lab" fill="#a8720c">다시</text>
+<rect x="816" y="512" width="124" height="16" rx="2" fill="#fbfcfd"/><text x="878" y="524" class="lab" fill="#6b7488">떠남 ∨ 다시 올리기</text>
+<rect x="708" y="592" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="740" y="604" class="lab" fill="#6b7488">등록 요청</text>
+<rect x="708" y="872" width="60" height="16" rx="2" fill="#fbfcfd"/><text x="738" y="884" class="lab" fill="#6b7488">위반 0건</text>
+<rect x="48" y="640" width="180" height="16" rx="2" fill="#fbfcfd"/><text x="138" y="652" class="lab" fill="#a8720c">웹: 필수값 부족 ∨ 수행 불가</text>
+<rect x="48" y="664" width="212" height="16" rx="2" fill="#fbfcfd"/><text x="154" y="676" class="lab" fill="#a8720c">→ 이유 + 고칠 방법을 확인 화면에</text>
+<rect x="812" y="792" width="132" height="16" rx="2" fill="#fbfcfd"/><text x="878" y="804" class="lab" fill="#6b7488">개인 AI 실패 ∨ 한도</text>
+<rect x="888" y="920" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="920" y="932" class="lab" fill="#6b7488">저장 실패</text>
+<rect x="1100" y="288" width="172" height="16" rx="2" fill="#fbfcfd"/><text x="1186" y="300" class="lab" fill="#6b7488">원문 읽기 · 확인 화면 없이</text>
+<!-- 상자 -->
+<rect x="520" y="56" width="360" height="56" rx="28" fill="#fbfcfd"/>
+<rect x="520" y="56" width="360" height="56" rx="28" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="700" y="88" class="name">시작 — 고객이 계획을 올린다</text>
+<rect x="960" y="56" width="400" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="960" y="56" width="400" height="64" rx="32" fill="rgba(47,91,216,0.08)" stroke="#2f5bd8" stroke-width="1"/>
+<text x="1160" y="83" class="name">시작 — 개인 AI 가 일정 제출</text>
+<text x="1160" y="101" class="sub">읽은 일정 · 쓰기 허용 시</text>
+<rect x="520" y="152" width="360" height="128" rx="6" fill="#fbfcfd"/>
+<rect x="520" y="152" width="360" height="128" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="202" class="name">① 계획 읽기 [코드 + LLM 보조]</text>
+<text x="700" y="222" class="sub">규칙으로 먼저 읽고 날짜 · 장소 확인</text>
+<text x="700" y="240" class="sub">진행: 서버 SSE · 웹은 지금 1.5초 조회</text>
+<rect x="540" y="248" width="320" height="24" rx="4" fill="rgba(47,91,216,0.06)" stroke="#2f5bd8" stroke-width="1" stroke-dasharray="5,3"/><text x="700" y="264" class="lab" fill="#2f5bd8">LLM: 남은 원문 줄 위치 · 사진 받아쓰기</text>
+<rect x="80" y="184" width="360" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="80" y="184" width="360" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="260" y="211" class="name">끝 — 읽기 실패</text>
+<text x="260" y="229" class="sub">이유 표시 · 다시 올리기</text>
+<rect x="520" y="344" width="360" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="520" y="344" width="360" height="112" rx="6" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="700" y="386" class="name">② ⏸ 확인 화면 — 고객</text>
+<text x="700" y="406" class="sub">접수 · 읽은 값 · 판 번호 보존 · 요청 대기</text>
+<text x="700" y="424" class="sub">거절 이유가 있으면 함께 보임</text>
+<rect x="80" y="344" width="360" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="80" y="344" width="360" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="260" y="386" class="name">수정 → 새 판 저장 · 재검사 [코드]</text>
+<text x="260" y="406" class="sub">수정 횟수 상한은 코드에서 못 찾음</text>
+<text x="260" y="424" class="sub">확인 화면에 그대로 남음</text>
+<polygon points="700,496 800,536 700,576 600,536" fill="#fbfcfd"/>
+<polygon points="700,496 800,536 700,576 600,536" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="540" class="name">고객 요청?</text>
+<rect x="960" y="504" width="280" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="960" y="504" width="280" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1100" y="531" class="name">끝 — 등록 안 함</text>
+<text x="1100" y="549" class="sub">접수는 유지 · 다시 올리면 새 접수</text>
+<rect x="520" y="632" width="360" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="520" y="632" width="360" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="674" class="name">③ 등록 판정 [코드 — 체크리스트]</text>
+<text x="700" y="694" class="sub">시각 순서 · 겹침 · 이동 시간 · 환승 · 결제 · 예산</text>
+<text x="700" y="712" class="sub">(값 있으면) 휴무 · 영업 · 입장 · 입력 · 소유 · 한도</text>
+<polygon points="700,776 800,816 700,856 600,816" fill="#fbfcfd"/>
+<polygon points="700,776 800,816 700,856 600,816" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="820" class="name">등록 가능?</text>
+<rect x="960" y="776" width="400" height="80" rx="40" fill="#fbfcfd"/>
+<rect x="960" y="776" width="400" height="80" rx="40" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1160" y="802" class="name">끝 — 거절</text>
+<text x="1160" y="820" class="sub">개인 AI: 오류 · 문제 목록 반환 → 고쳐 다시 제출</text>
+<text x="1160" y="838" class="sub">한도 초과(설정 시): 재시도 가능 시각 반환</text>
+<rect x="960" y="912" width="320" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="960" y="912" width="320" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1120" y="939" class="name">끝 — 저장 실패</text>
+<text x="1120" y="957" class="sub">오류 반환 · 등록 안 됨</text>
+<rect x="520" y="904" width="360" height="80" rx="6" fill="#fbfcfd"/>
+<rect x="520" y="904" width="360" height="80" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="939" class="name">④ 등록 + 첫 판 저장 [코드 → DB]</text>
+<text x="700" y="959" class="sub">감시 대상이 된다</text>
+<rect x="520" y="1032" width="360" height="80" rx="6" fill="#fbfcfd"/>
+<rect x="520" y="1032" width="360" height="80" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="1067" class="name">⑤ 등록 알림 [코드 → Discord]</text>
+<text x="700" y="1087" class="sub">계획서 링크 (로그인 없이 열림)</text>
+<rect x="540" y="1160" width="320" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="540" y="1160" width="320" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="700" y="1187" class="name">끝 — 등록 완료</text>
+<text x="700" y="1205" class="sub">여행 중엔 UC-2 가 지킨다</text>
+<line x1="32" y1="1264" x2="1368" y2="1264" stroke="rgba(22,28,40,0.12)" stroke-width="0.8"/>
+<text x="32" y="1284" class="lab-mono" fill="#6b7488" text-anchor="start">LEGEND</text>
+<rect x="104" y="1272" width="28" height="16" rx="8" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="140" y="1284" class="leg">시작(사람)</text>
+<rect x="232" y="1272" width="28" height="16" rx="8" fill="rgba(47,91,216,0.08)" stroke="#2f5bd8" stroke-width="1"/>
+<text x="268" y="1284" class="leg">시작(개인 AI)</text>
+<rect x="384" y="1272" width="28" height="16" rx="8" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="420" y="1284" class="leg">끝</text>
+<rect x="460" y="1272" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="496" y="1284" class="leg">코드</text>
+<rect x="548" y="1272" width="28" height="16" rx="3" fill="rgba(47,91,216,0.03)" stroke="#2f5bd8" stroke-width="1" stroke-dasharray="5,3"/>
+<text x="584" y="1284" class="leg">LLM 호출</text>
+<rect x="668" y="1272" width="28" height="16" rx="3" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="704" y="1284" class="leg">사람 ⏸</text>
+<polygon points="786,1272 800,1280 786,1288 772,1280" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="808" y="1284" class="leg">판단(코드)</text>
+<line x1="900" y1="1280" x2="928" y2="1280" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<text x="936" y="1284" class="leg">루프</text>
+</svg><figcaption>이 그림으로 답할 수 있는 질문 — 누가 판정하나(코드 체크리스트 · LLM 아님) · LLM 은 어디서 쓰나(남은 원문 줄 위치 · 사진 받아쓰기) · 사람은 어디서 개입하나(② 확인 화면) · 루프는 언제 끝나나(위반 0건이 되거나 고객이 떠날 때 — 수정 횟수 상한은 코드에서 찾지 못했고, 재접수 · 등록 요청은 하루 한도를 설정할 수 있지만 기본은 꺼져 있다).</figcaption></figure>
+<h2>에이전트 명세 카드 — 그림이 못 담는 것</h2><p>문서 10쪽 14항목에 「코드 위치」 줄을 더했다. 워커 둘과, 이 두 그림 안의 LLM 단계 둘(계획 읽기 보조 · 알림 번역)의 카드다. 채팅 할 일 고르기 LLM 은 v12 그림 C 의 길이라 여기 없다.</p>
+<h3>요식 워커 에이전트 (AG-DINING)</h3><table class="card-table"><tbody><tr><td>책임 (한 문장)</td><td>깨진 식사 항목 하나를 다시 점검하고, 그 시각에 여는 근처 대체 식당을 골라 변경안을 낸다</td></tr><tr><td>하지 않는 일</td><td>일정에 직접 쓰기 · 고객에게 직접 알리기 · 다른 워커 부르기 · LLM 호출 · 업체 예약 변경</td></tr><tr><td>호출 주체 / 트리거</td><td>처리 총괄(코드) — 감시가 새로 연 식사 문제 건(문제코드 dining_*) · ⑥-a 단계</td></tr><tr><td>입력</td><td>TeamTask — 처리 건 · 실행 식별자 · 할 일 종류(dining.itinerary) · 처리 건 버전 · 입력 문장 · 근거 묶음(현재 상태 · 트리거: 항목 · 시각 · 원인 범주) · 허용 도구 · 마감 시각</td></tr><tr><td>출력 (스키마)</td><td>TeamResult · ActionProposal(Pydantic 계약) — 다음 행동(답 / 중단) · 답 문장 · 결정 · 근거 · 변경 제안 itinerary.apply {trip_id, base_version, reason, causes, notice, summary, replacements[{item_id, item}]} (승인 불요 · 위험 낮음)</td></tr><tr><td>모델 / 설정</td><td>없음 — 규칙 코드(LLM 안 씀)</td></tr><tr><td>도구 / 권한</td><td>읽기만 11개: read.itinerary · read.disruptions · read.place_catalog · read.dining_alternatives · read.dining_state · read.place · read.policy · read.booking · read.booking_terms · read.itinerary_version · read.customer_report</td></tr><tr><td>보는 컨텍스트</td><td>할 일 묶음 + 도구 결과. 다른 워커의 출력은 보지 않는다</td></tr><tr><td>상태 / 메모리</td><td>실행 사이 메모리 없음. 실행 중에는 부른 도구 목록 · 횟수 · 근거를 들고 있다. 결과 기록은 처리 총괄이 한다</td></tr><tr><td>종료 조건</td><td>정상: 결과 1건(그대로 / 변경안 / 중단). 예외가 나면 처리 총괄이 실행 실패로 닫는다</td></tr><tr><td>실패 처리</td><td>원래 항목 재점검 실패(없음 · fatal) → 중단 · 후보 표 조회 실패 → 장소 목록으로 · 외부 재점검 3곳을 쓰면 나머지 후보는 「안 봄」으로 제외 → 통과 후보가 있으면 변경안, 없으면 중단 · 마감(90초 설정)을 넘기면 처리 총괄이 중단 — 동기 도구 호출의 실제 종료 시간은 보장 안 함</td></tr><tr><td>가드레일</td><td>허용 목록 밖 거부 · 같은 도구 + 같은 인자 다시 부르면 거부 · 한 실행 도구 12번 · 모르면 모른다(지어내지 않음) · 제안까지만(실행 안 함)</td></tr><tr><td>관측 / 평가</td><td>실행 기록 · 근거 · 실패 코드를 남긴다. 평가 지표 · 기준 [미확보 — 정할 것]</td></tr><tr><td>지연 · 비용 예산</td><td>마감 90초(설정값 · 실제 종료 보장 아님) · 외부 재점검 최대 3곳 · 외부 API 는 무료 한도. 정량 비용 예산 [미확보]</td></tr><tr><td>코드 위치</td><td>dining/team.py:61–131 · itinerary_changes.py:547–565, 725–781 · replan.py:383–409 · itinerary_team.py:254–280 · contracts.py:165–242</td></tr></tbody></table>
+<h3>액티비티 워커 에이전트 (AG-ACTIVITY)</h3><table class="card-table"><tbody><tr><td>책임 (한 문장)</td><td>깨진 활동 항목 하나를 다시 점검하고, 먼저 물을 조건이면 「바꿀까요?」를, 아니면 조건을 통과한 대체 활동을 골라 변경안을 낸다</td></tr><tr><td>하지 않는 일</td><td>일정에 직접 쓰기 · 고객에게 직접 알리기 · 다른 워커 부르기 · LLM 호출 · 업체 예약 변경</td></tr><tr><td>호출 주체 / 트리거</td><td>처리 총괄(코드) — 감시가 새로 연 활동 문제 건(문제코드 activity_*) · ⑥-b 단계</td></tr><tr><td>입력</td><td>TeamTask(할 일 종류 activity.itinerary) — 설문(자동 교체 선택 여부 · 선호)은 별도 인자가 아니라 읽어 온 여행 정보에서 쓴다</td></tr><tr><td>출력 (스키마)</td><td>TeamResult · ActionProposal — 변경 제안 itinerary.apply(요식과 같은 인자) / 동의 요청 itinerary.apply {trip_id, base_version, consent{item_id, indoor_unknown}, causes} (대체안 없음) / 그대로 / 중단</td></tr><tr><td>모델 / 설정</td><td>없음 — 규칙 코드(LLM 안 씀)</td></tr><tr><td>도구 / 권한</td><td>읽기만 9개: read.itinerary · read.disruptions · read.place_catalog · read.place · read.policy · read.booking · read.booking_terms · read.itinerary_version · read.customer_report</td></tr><tr><td>보는 컨텍스트</td><td>할 일 묶음 + 도구 결과 + 여행 설문. 다른 워커의 출력은 보지 않는다</td></tr><tr><td>상태 / 메모리</td><td>실행 사이 메모리 없음. 실행 중에는 부른 도구 목록 · 횟수를 들고 있다</td></tr><tr><td>종료 조건</td><td>정상: 결과 1건. ★도구 12번을 넘기면 예외가 처리 총괄로 올라가 실행 실패로 닫힌다 — 앞 후보가 통과했어도 변경안을 못 낸다</td></tr><tr><td>실패 처리</td><td>원래 항목 재점검 실패 → 중단 · 못 찾고 날씨류만 → 「바꿀까요?」 · 그 밖 못 찾음 → 중단 · 도구 예산 초과 → 예외(위) · 마감 넘기면 처리 총괄이 중단</td></tr><tr><td>가드레일</td><td>먼저 물을 조건: 안전 사건 없이 예보 · 특보 · 대기질만 + (실내 모름 또는 자동 교체 직접 선택 안 함) · 도구 규칙은 요식과 같다</td></tr><tr><td>관측 / 평가</td><td>실행 기록 · 근거 · 실패 코드. 평가 지표 · 기준 [미확보 — 정할 것]</td></tr><tr><td>지연 · 비용 예산</td><td>마감 90초(설정값) · 도구 합계 12번(일정 읽기 · 원래 항목 점검 · 목록 읽기 포함). 정량 비용 예산 [미확보]</td></tr><tr><td>코드 위치</td><td>activity/team.py:55–150 · pending.py:90–118 · read_tools.py:535–562 · itinerary_changes.py:399–408 · controller.py:181–198, 299–308</td></tr></tbody></table>
+<h3>계획 읽기 보조 [LLM]</h3><table class="card-table"><tbody><tr><td>책임 (한 문장)</td><td>규칙이 못 읽은 원문 줄에서 장소 · 시각 조각을 가리키고, 사진 · 스캔의 글자를 옮겨 적는다</td></tr><tr><td>하지 않는 일</td><td>일정 판정 · 값 만들기(원문에 없는 인용) · 등록 결정</td></tr><tr><td>호출 주체 / 트리거</td><td>계획 읽기 파이프라인(코드) — UC-1 ① 단계, 규칙이 남긴 줄이 있거나 사진 · 스캔일 때</td></tr><tr><td>입력</td><td>남은 줄 번호와 원문 / 이미지와 받아쓰기 지시</td></tr><tr><td>출력 (스키마)</td><td>조각 지정: {spans:[{line, quote, role}]} — 서버가 줄 · 역할 허용 목록과 원문 부분 문자열 일치를 검사 / 받아쓰기: 원문 줄을 옮긴 문자열</td></tr><tr><td>모델 / 설정</td><td>로컬 Ollama(설정값 ollama_model · 기본 gemma4:12b) · 온도 0 · think 끔 · 비전 호출 시간 제한 240초 — 모델은 비교 시험 중</td></tr><tr><td>도구 / 권한</td><td>없음 — 입력만 읽는다</td></tr><tr><td>보는 컨텍스트</td><td>그 접수의 원문 · 이미지</td></tr><tr><td>상태 / 메모리</td><td>상태 없음</td></tr><tr><td>종료 조건</td><td>조각 목록 또는 받아쓰기 1건 반환</td></tr><tr><td>실패 처리</td><td>모델 실패 → 그 보조만 건너뛰고 오류 기록 · 파일 형식 · 받아쓰기 실패 → 읽기 fatal(이유 표시 · 다시 올리기)</td></tr><tr><td>가드레일</td><td>목록 안의 줄 · 역할만 · 원문에 실제로 있는 문자열만 받는다</td></tr><tr><td>관측 / 평가</td><td>읽기 결과 · 실패 이유 기록. 평가 지표 [미확보 — 정할 것]</td></tr><tr><td>지연 · 비용 예산</td><td>비전 호출 240초 · 비용 예산 [미확보]</td></tr><tr><td>코드 위치</td><td>intake/llm_spans.py:19–99 · intake/pipeline.py:154–160, 615–623 · intake/sources.py:9–30 · ollama_chat.py:122–143</td></tr></tbody></table>
+<h3>알림 번역 [LLM]</h3><table class="card-table"><tbody><tr><td>책임 (한 문장)</td><td>한국어 알림 문구를 고객 언어로 옮긴다(한국어 고객이면 안 부름)</td></tr><tr><td>하지 않는 일</td><td>시각 · 금액 · 고유명사 · 예약번호 · 버전 번호 만들기, 보낼지 말지 정하기</td></tr><tr><td>호출 주체 / 트리거</td><td>알림 배달 작업(코드) — ⑩ 단계. 문구틀 · 언어가 캐시에 있으면 호출 안 함</td></tr><tr><td>입력</td><td>문구틀(값을 나중에 채우는 자리표시 {name} 포함) 또는 캐시에 없는 문구 + 여행 언어 태그(예: zh-TW)</td></tr><tr><td>출력 (스키마)</td><td>번역 문자열 → 자리표시 검사 뒤 값을 채워 발송</td></tr><tr><td>모델 / 설정</td><td>로컬 Ollama(주소 설정 시) · 기본 gemma4:12b · 온도 0 · think 끔 · 기본 HTTP 시간 제한 60초 · 출력 토큰 상한은 코드에 명시 안 됨 — 모델은 비교 시험 중</td></tr><tr><td>도구 / 권한</td><td>없음 — 입력만 읽는다</td></tr><tr><td>보는 컨텍스트</td><td>그 알림 문구 하나</td></tr><tr><td>상태 / 메모리</td><td>LLM 호출은 상태 없음. 번역 단계는 문구틀 · 언어 캐시를 재사용한다</td></tr><tr><td>종료 조건</td><td>번역 1건 반환 또는 실패 시 한국어 원문</td></tr><tr><td>실패 처리</td><td>모델 오류 · 빈 응답 · 숫자 검사 실패 · 자리표시 개수 불일치 → 실패 집계 + 「[번역 실패 — 한국어 원문]」으로 발송(안 보내는 것보다 낫다)</td></tr><tr><td>가드레일</td><td>숫자는 원문 숫자 문자열이 번역에 모두 남았는지(집합 포함) 검사 — 같은 숫자의 중복 누락 · 새 숫자 추가는 못 막는다 · 자리표시는 이름별 개수 검사</td></tr><tr><td>관측 / 평가</td><td>실패 카운터 · 로그 · 캐시 적중/빗나감/거절 기록이 있다. 품질 평가 지표 [미확보]</td></tr><tr><td>지연 · 비용 예산</td><td>HTTP 60초 · 비용 · p95 목표 [미확보]</td></tr><tr><td>코드 위치</td><td>notify/translate.py:33–45 · notify/phrase.py:57–130 · notify/discord.py:145–160 · scripts/run_outbox_worker.py:33–46</td></tr></tbody></table>
+<h2>랭그래프 확인 — 원래 계획에 있었나, 왜 지금 없나</h2>
+<table><thead><tr><th>질문</th><th>답</th></tr></thead><tbody><tr><td>계획에 있었나</td><td>있었다. 구현계획서 v9(쇼핑몰 CS 시절)에 11번 — 「Top-Level LangGraph 가 Coordination 계층에 있고 팀마다 Subgraph 를 가질 수 있다」(v9:292, 417, 451), MVP 기술 스택(v9:1054), 8월 실행계획서 v1 의 완료 기준 · 산출물(「LangGraph checkpoint 와 업무 상태 분리」, 「LangGraph 그래프」 — :48, :161).</td></tr><tr><td>지금 계획에는</td><td>없다. 여행으로 바꾼 v10 · 지금 기준선 v11 에 LangGraph 0번(파일 전체 문자열 개수 검색).</td></tr><tr><td>코드에 들어온 적이 있나</td><td>확인한 범위에서는 없다. 현재 workspace 저장소의 접근 가능한 전체 ref 이력에서 「from langgraph」「import langgraph」 -S 검색 결과 0건, 파이썬 파일 -G 검색도 0건. 지금 파일 기준으로도 cs · sample(안의 composer 포함) 파이썬 파일에 import 0. 최초 확인 가능한 커밋 00622110 의 requirements.txt 에도 langgraph==1.2.8 이 있었다(설치 목록에만 있음).</td></tr><tr><td>그럼 흐름은 무엇이 정하나</td><td>직접 짠 처리 총괄(app/application/controller.py:235–354)과 처리 건 상태 전이(transition_case). DoD-04 는 이름만 「LangGraph checkpoint」이고 자체 CaseService.checkpoint 와 실행 판 번호(graph_revision)로 2026-08-14 통과 판정을 받았다(실제 되돌리기 · 동시 실행 검증은 한계로 기록).</td></tr><tr><td>왜 안 들어갔나</td><td>확인하지 못했다. 루트 · 제품 wiki/decisions 전체에서 LangGraph 를 쓰지 않기로 한 결정이나 이유를 찾지 못했다(D-003 에는 구현 사실 정정만). 2026-09-10 에 「import 0곳」을 발견하고 문서 문장을 정정했을 뿐, 뺀 것인지 빠진 것인지는 정하지 않았다(루트 CLAUDE.md 사실표). 자체 Controller 가 상태 전이 · 동시성 · 멱등 · 알림 적재를 하는 것은 확인했지만, 그것이 미도입의 이유였는지는 기록이 없다.</td></tr></tbody></table>
+<h2>이번 검토로 드러난 제품 결함 — 그림에 그대로 적었다</h2>
+<div class="status"><ul><li>액티비티 워커가 도구 12번을 넘기면 예외가 처리 총괄로 올라가 실행 실패로 닫힌다 — 앞 후보가 통과했어도 변경안을 못 내고, 감시 실행 반복에 예외 포착이 없어 이번 회차의 남은 처리 건까지 끊길 수 있다(activity/team.py · read_tools.py:535–562 · trip_watch_cases.py:110–114).</li><li>고객이 답하지 않은 선택 요청을 끝난 일정에 맞춰 닫는 처리가 기본 감시에 연결돼 있지 않다(pending.py:264–270 · run_sweepers.py:98–103).</li><li>열린 제안에서 고른 안의 확인이 실패하면 요청은 닫히지 않고 열린 채 남는다(없는 제안 · 이미 닫힌 제안은 그 상태 그대로)(pending.py:288–319 · trip_api.py:902–920).</li><li>알림 번역의 숫자 검사는 집합 포함만 봐서 같은 숫자의 중복 누락 · 새 숫자 추가를 못 막는다(translate.py:41–44).</li><li>UC-1 진행 표시는 서버가 SSE 를 주지만 웹 확인 화면은 아직 1.5초 조회를 쓴다(intake-review.tsx:77–110).</li></ul></div>
+<footer>triPilot · A-COPilot · 그림: diagram-design 스킬(acop 스킨) · 사실: v12 합의본 + 코드 · v13</footer></div></body></html>
