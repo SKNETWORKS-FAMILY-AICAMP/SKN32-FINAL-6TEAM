@@ -124,6 +124,32 @@ def test_a_plan_is_moved_by_the_real_timetable_and_registers(flow):
     assert all(it["map_url"] for it in stored), "이동마다 지도 길찾기 링크가 있다"
 
 
+def test_a_registered_plan_gets_route_lines_from_our_own_road_graph(flow):
+    """★`[2026-10-04]` 화면이 이동 항목마다 지도에 경로선을 그릴 수 있게 — 외부 길찾기 API 없이 우리 도로 그래프·역 좌표로 만든 형상.
+    계획 짜기 → 등록 → 저장된 항목에서 경로선을 뽑는다. 선은 두 장소 좌표에서 시작해 끝나고, 점이 둘 넘는 실제 길이어야 한다(직선 둘이 아니다)."""
+    from app.modules.travel_ops.mobility.route_shape import shapes_for_items
+    from app.modules.travel_ops.itinerary import TripStore
+
+    body = flow["ask"](date(2026, 10, 5), request_id="mf-shape").json()
+    assert body["status"] == "drafted", body
+    created = flow["client"].post("/v1/trips", headers=flow["auth"]("trip:write"),
+                                  json={"request_id": "mf-shape-reg", "customer_id": str(flow["customer"]), **body["draft"]})
+    assert created.status_code == 201, created.text
+    from uuid import UUID
+    with get_connection() as conn:
+        _trip, items = TripStore(flow["tenant"]).latest(conn, UUID(created.json()["trip_id"]))
+    shapes = shapes_for_items(items)
+    moves = [it for it in items if it.kind == "mobility"]
+    assert shapes and len(shapes) <= len(moves)
+    drawn = [s for s in shapes if s["source"] != "straight_line"]
+    assert drawn, "적어도 한 이동은 도로 그래프·역 좌표로 그려진다 — 전부 직선이면 길찾기가 안 닿은 것이다"
+    for s in drawn:
+        coords = s["line"]["coordinates"]
+        assert s["line"]["type"] == "LineString" and len(coords) > 2 and s["grade"] == "추정"
+        assert 50 < s["distance_m"] < 40_000, "서울 안 이동 거리(걸어갈 만한 가까운 곳 사이도 있다)"
+        assert all(126.7 < lng < 127.3 and 37.3 < lat < 37.8 for lng, lat in coords), "서울 범위 밖 좌표가 섞였다"
+
+
 def test_a_date_the_holiday_table_does_not_cover_falls_back_to_estimates_not_a_crash(flow):
     """공휴일표(2026~2027) 밖의 해 — 계산기는 평일·휴일을 짐작하지 않고 멈춘다. 계획 짜기가 그 오류로 터지지 않고
     종전 어림값(추정)으로 짜야 한다(계산기가 못 채움 → 대체 값, 이유는 남는다)."""

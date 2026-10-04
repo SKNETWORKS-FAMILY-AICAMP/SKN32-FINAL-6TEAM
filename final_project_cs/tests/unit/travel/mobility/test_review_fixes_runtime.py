@@ -172,6 +172,45 @@ def test_32_stale_timetable_is_flagged(tmp_path):
         paths._layout(before[1], before[0])
 
 
+def _iso_days_ago(n):
+    from datetime import datetime, timedelta, timezone
+    return (datetime.now(timezone(timedelta(hours=9))) - timedelta(days=n)).isoformat(timespec="seconds")
+
+
+@pytest.mark.parametrize("built_ago, tago_ago, seoul_ago, stale", [
+    (1, 40, 40, True),      # 89: 옛 원자료를 어제 다시 빌드 — 수집이 40일 전이면 오래됐다(앞 판은 built_at 을 봐 신선으로 냈다)
+    (40, 2, 2, False),      # 빌드는 오래됐어도 원천을 이틀 전에 받았으면 신선
+    (1, 2, 40, True),       # 원천 중 가장 오래된 것이 기준(서울 보충분만 낡아도 경고)
+])
+def test_89_staleness_uses_collection_date_not_build_time(tmp_path, built_ago, tago_ago, seoul_ago, stale):
+    from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+    before = (paths.SOURCE, paths.DATA_DIR)
+    m = _write_mini_data(tmp_path, built_at=_iso_days_ago(built_ago))
+    (m / "timetable_v1_meta.json").write_text(json.dumps({
+        "built_at": _iso_days_ago(built_ago),
+        "tago_fetched_at": _iso_days_ago(tago_ago)[:10], "seoul_fetched_at": _iso_days_ago(seoul_ago)[:10]}), encoding="utf-8")
+    try:
+        rt = build_verifier(quiet=True, data_dir=tmp_path, gh_url="", seoul_key="")
+        assert rt.timetable_stale is stale
+        assert rt.stats["timetable_age_basis"] == "meta_fetched"
+        assert rt.timetable_built_at.startswith("built:"), "판 표시(built_at)는 그대로 — 나이 기준만 바뀐다"
+    finally:
+        paths._layout(before[1], before[0])
+
+
+def test_89_staleness_falls_back_to_row_fetched_at(tmp_path):
+    """meta 에 수집일이 없으면 행 fetched_at — 만든 시각(built_at)으로 신선하다고 하지 않는다."""
+    from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+    before = (paths.SOURCE, paths.DATA_DIR)
+    m = _write_mini_data(tmp_path, built_at="2026-01-01T00:00:00+09:00")          # 행 fetched_at = 1/1
+    (m / "timetable_v1_meta.json").write_text(json.dumps({"built_at": _iso_days_ago(1)}), encoding="utf-8")
+    try:
+        rt = build_verifier(quiet=True, data_dir=tmp_path, gh_url="", seoul_key="")
+        assert rt.timetable_stale and rt.stats["timetable_age_basis"] == "row_fetched"
+    finally:
+        paths._layout(before[1], before[0])
+
+
 def test_32_get_verifier_reloads_when_source_changes(mini, monkeypatch):
     from app.modules.travel_ops.mobility.engine import runtime as RT
     monkeypatch.setattr(RT, "_SINGLETON", None)

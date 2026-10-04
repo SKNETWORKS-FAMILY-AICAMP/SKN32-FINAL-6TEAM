@@ -48,7 +48,7 @@ class MobilityUnavailable(RuntimeError):
 
 def configure(*, data_dir: str | None, gh_url: str = "", seoul_key: str = "",
               guardrails_path: str | Path | None = None, preload: bool = True,
-              verify_hash: bool = True) -> dict[str, Any]:
+              verify_hash: bool = True, local_router: bool = True, warm_router: bool = False) -> dict[str, Any]:
     """계산기를 켜거나 끈다. 켤 때는 자료를 확인하고(없거나 다르면 MobilityUnavailable) 적재까지 한다."""
     if not data_dir:
         paths.disable()
@@ -64,7 +64,7 @@ def configure(*, data_dir: str | None, gh_url: str = "", seoul_key: str = "",
         raise MobilityUnavailable(f"이동 자료 확인 실패 - 서버를 띄우지 않는다(결정 15): 없음 {dc['missing']} · "
                                   f"다름 {dc['mismatched']} · 자료 폴더 {dc['data_dir']}")
     kw = {"quiet": True, "data_dir": data_dir, "gh_url": gh_url or "", "seoul_key": seoul_key or "",
-          "guardrails_path": str(guardrails_path) if guardrails_path else None}
+          "guardrails_path": str(guardrails_path) if guardrails_path else None, "local_router": bool(local_router)}
     _STATE.update(mode="enabled", kw=kw, datacheck=dc)
     if preload:
         started = time.monotonic()
@@ -74,7 +74,30 @@ def configure(*, data_dir: str | None, gh_url: str = "", seoul_key: str = "",
                   paths.DATA_DIR, paths.SOURCE, Path(dc["manifest"]).name if dc.get("manifest") else "없음",
                   getattr(rt, "timetable_built_at", "?"), " · ★오래됨" if getattr(rt, "timetable_stale", False) else "",
                   time.monotonic() - started)
+        if warm_router:
+            _warm_local_router(rt)
     return {"mode": "enabled", "datacheck": dc}
+
+
+def _warm_local_router(rt) -> None:
+    """☆`[2026-10-04]` 파이썬 로컬 라우터(도로 그래프)를 백그라운드로 미리 올린다 - 서버를 띄운 직후 첫 택시·도보 물음이 10초 멈추지 않게.
+
+    스레드는 기동을 막지 않는다(daemon). 올리다 실패해도 서버는 산다 - 라우터는 첫 호출 때 다시 올려 보고, 안 되면 RouterDown 으로 근거없음이다."""
+    router = getattr(getattr(getattr(rt, "_v", None), "bike_router", None), "router", None)
+    if router is None or not hasattr(router, "warm") or getattr(router, "_warm_started", False):
+        return                                                   # 라우터는 프로세스당 하나를 나눠 쓰므로 스레드도 한 번만
+    router._warm_started = True
+
+    def run():
+        started = time.monotonic()
+        try:
+            router.warm()
+            _announce(("router_warm", id(router)), "이동 계산기 길찾기(로컬 도로 그래프) 준비됨 - %.1f초", time.monotonic() - started)
+        except Exception as ex:                                  # noqa: BLE001 - 서버를 죽이지 않는다(원인은 로그에)
+            _SERVER_LOG.warning("이동 계산기 길찾기 미리 올리기 실패(첫 호출 때 다시 시도): %s", type(ex).__name__)
+
+    import threading
+    threading.Thread(target=run, name="mobility-router-warm", daemon=True).start()
 
 
 def configure_from_settings(settings: Any, *, preload: bool = True) -> dict[str, Any]:
@@ -85,22 +108,24 @@ def configure_from_settings(settings: Any, *, preload: bool = True) -> dict[str,
         gp = CS_ROOT / gp
     return configure(data_dir=getattr(settings, "mobility_data_dir", ""),
                      gh_url=getattr(settings, "mobility_gh_url", ""),
-                     seoul_key=getattr(settings, "seoul_openapi_key", ""), guardrails_path=gp, preload=preload)
+                     seoul_key=getattr(settings, "seoul_openapi_key", ""), guardrails_path=gp, preload=preload,
+                     local_router=getattr(settings, "mobility_local_router", True),
+                     warm_router=getattr(settings, "mobility_local_router", True))
 
 
 def mode() -> str:
     return _STATE["mode"]
 
 
-#: 설문 우선순위 「이동」 세부 코드(화면 PREFERENCES_CONTRACT) → 계산기 수단. 렌트카·택시는 계산기가 아직 못 다룬다(#47)
-SURVEY_MODES = {"public": ("subway", "bus"), "walk": ("walk",)}
+#: 설문 우선순위 「이동」 세부 코드(화면 PREFERENCES_CONTRACT) → 계산기 수단. 택시는 `[2026-10-04 #47]` 부터 넣는다. 렌트카(car)는 아직 못 다룬다
+SURVEY_MODES = {"public": ("subway", "bus"), "walk": ("walk",), "taxi": ("taxi",)}
 
 
 def modes_from_survey(constraints: dict[str, Any] | None) -> list[str] | None:
     """☆`[2026-09-29 문제목록 #46]` 설문의 이동 선호를 계산기 수단으로. 앞 판은 받아 두기만 했다.
 
     화면은 `preferred_mobility[]` 를 보내지 않고 `priority_details.mobility`(public·walk·car·taxi)로 보낸다 — 둘 다 본다.
-    옮길 수 있는 것이 하나도 없으면(렌트카·택시만) None — 계산기 기본 수단(지하철·버스·도보). 도보는 늘 넣는다
+    옮길 수 있는 것이 하나도 없으면(렌트카만) None — 계산기 기본 수단(지하철·버스·도보). 도보는 늘 넣는다
     (역·정류장까지 걷기는 어느 수단에도 들어간다)."""
     survey = (constraints or {}).get("survey") or {}
     codes = list(((survey.get("priority_details") or {}).get("mobility") or []))

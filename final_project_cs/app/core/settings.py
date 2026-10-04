@@ -217,6 +217,9 @@ class Settings(BaseSettings):
     mobility_data_dir: str = ""
     #: 자전거·도보 경로 서버(GraphHopper) 주소. 비우면 자전거 소요는 근거없음으로 낸다. 실제 주소는 `.env` 에만.
     mobility_gh_url: str = ""
+    #: ☆`[2026-10-04]` GraphHopper 주소가 없을 때 저장소 안 도로 그래프(`road_graph_v2` 걸음 길 포함 · 없으면 `v1`)로 파이썬이 직접 길을 찾는다 — 택시·자전거·장소 사이 도보.
+    #:  서버를 따로 띄우지 않는다(첫 길 묻기 때 자료를 한 번 올린다 · 약 7~16초 · 250~350MB). 끄려면 false — 도보는 직선×우회계수, 택시·자전거는 근거없음.
+    mobility_local_router: bool = True
     #: 서울 열린데이터광장 키(따릉이 실시간 거치 대수). 비우면 거치 대수는 근거없음. ★제공처가 http 만 받는다(평문 전송)
     seoul_openapi_key: str = ""
     #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**

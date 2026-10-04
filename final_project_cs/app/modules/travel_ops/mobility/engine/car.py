@@ -279,6 +279,10 @@ def make_router(spec):
         return NoRouter()
     if spec.startswith("fixture:"):
         return FixtureRouter(spec[len("fixture:"):])
+    if spec == "local" or spec.startswith("local:"):
+        # ☆`[2026-10-04]` 서버 없이 파이썬으로 — road_graph_v1 위 최단경로(graph_router.py). local:<폴더> 로 자료 위치를 줄 수 있다
+        from .graph_router import GraphRouter
+        return GraphRouter(spec[len("local:"):]) if spec.startswith("local:") else GraphRouter.default()
     return GraphHopperClient(spec)
 
 

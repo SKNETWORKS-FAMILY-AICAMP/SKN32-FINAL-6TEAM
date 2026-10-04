@@ -139,11 +139,27 @@ def test_full_nearest_skipped_gives_next_station_route():
 
 @pytest.mark.mobility_full
 def test_full_only_blocked_stations_is_no_service():
+    """(87 갱신) 걸어갈 역이 모두 막혀도 **지하철 → 버스 혼합(B)** 이 대안 2단으로 나온다 — 85 판은 「대중교통 안 냄 ·
+    no_service」였다(본인 10/1: 다음 역이나 내려서 버스로 가는 경로를 줘야 한다). 막힌 노선(2호선·수인분당선)은 안 탄다.
+    혼합까지 없을 때의 no_service 는 `test_full_blocked_without_bus_is_no_service`(modes 에 버스 없음)가 잠근다."""
     closed = ({"kind": "line_closed", "line": "02호선"}, {"kind": "line_closed", "line": "수인분당선"})
     planned, why = _leg(closed)
-    assert planned is None or not planned["uses"], "막힌 역만 있으면 대중교통 경로를 내지 않는다"
-    if planned is None:
-        assert why["code"] == P.STATION_BLOCKED_CODE and SEONGSU["name"] in why["reason"], why
+    assert planned is not None, f"혼합(B) 대안이 나와야 한다 — {why}"
+    assert planned["id"].startswith("subway_bus"), planned
+    assert planned["uses"][-1].startswith("버스:"), planned
+    assert not any(u.startswith(("2호선:", "수인분당선:")) for u in planned["uses"]), planned
+
+
+@pytest.mark.mobility_full
+def test_full_blocked_without_bus_is_no_service():
+    """85 축 유지 — 버스를 못 쓰면(modes 지하철·도보) 걸어갈 역이 모두 막힌 구간은 no_service · 문구는 87 에서 좁힘."""
+    closed = ({"kind": "line_closed", "line": "02호선"}, {"kind": "line_closed", "line": "수인분당선"})
+    pl = P.Planner(_runtime(), stage="planning", modes=["subway", "walk"])
+    pl.disruptions = closed
+    got, why = pl.leg(AQUARIUM, SEONGSU, ARRIVE, P.party_of(None, {}), True, "aq_to_ss")
+    assert got is None, got
+    assert why["code"] == P.STATION_BLOCKED_CODE and SEONGSU["name"] in why["reason"], why
+    assert "버스 직행·혼합 후보도 없다" in why["reason"], why
 
 
 def test_blocked_code_matches_room_spec():
