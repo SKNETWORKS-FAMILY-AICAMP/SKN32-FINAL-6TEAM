@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import datetime, timedelta, timezone
 
 import httpx
 import pytest
@@ -57,7 +58,8 @@ def test_a_new_user_has_an_empty_profile(api):
     me = _session(api)
     body = _get(api, me).json()
     assert body == {"recovery_email": None, "discord_webhook": {"set": False, "masked": None, "status": None,
-                                                                "checked_at": None}, "updated_at": None}
+                                                                "checked_at": None}, "updated_at": None,
+                    "discord_connect": {"available": False}}        # `[2026-10-05]` 디스코드 앱이 설정되지 않은 서버 — 단추를 보이지 않는다
 
 
 def test_saving_returns_and_reads_back_only_the_masked_webhook(api):

@@ -1,16 +1,21 @@
 import type { Coordinates, MapAdapter, MapLine, MapPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
-import { createPin, geometryKey, pointLabel, setPinSelected } from "./pin";
+import { createPin, geometryKey, layoutPins, placePin, pointLabel, setPinSelected, type PinSlot } from "./pin";
 import { createSdkLoader } from "./sdk-loader";
 
 interface GoogleBounds { extend(position: Coordinates): void }
 interface GoogleLatLng { lat(): number; lng(): number }
+/** The world-coordinate projection of the map (Mercator, 256 px at zoom 0): enough to work out where a coordinate stands on screen. */
+interface GoogleProjection { fromLatLngToPoint(position: Coordinates | GoogleLatLng): { x: number; y: number } | null }
 interface GoogleMap {
   panTo(position: Coordinates): void;
   setCenter(position: Coordinates | GoogleLatLng): void;
   getCenter(): GoogleLatLng | undefined;
   setZoom(zoom: number): void;
-  fitBounds(bounds: GoogleBounds, padding: number): void;
+  /** Optional: a build of the SDK without them still shows the pins (they then keep their first side). */
+  getZoom?(): number | undefined;
+  getProjection?(): GoogleProjection | undefined;
+  fitBounds(bounds: GoogleBounds, padding: number | { top: number; right: number; bottom: number; left: number }): void;
   unbindAll(): void;
 }
 interface GoogleMarker extends HTMLElement { map: GoogleMap | null; zIndex: number }
@@ -30,7 +35,7 @@ interface GoogleSdk {
   marker: {
     AdvancedMarkerElement: new (options: { map: GoogleMap; position: Coordinates; title: string; gmpClickable: boolean }) => GoogleMarker;
   };
-  event: { trigger(target: GoogleMap, event: "resize"): void; clearInstanceListeners(target: GoogleMap): void };
+  event: { trigger(target: GoogleMap, event: "resize"): void; clearInstanceListeners(target: GoogleMap): void; addListener?(target: GoogleMap, event: "idle", callback: () => void): unknown };
 }
 
 const loader = createSdkLoader<GoogleSdk>({
@@ -65,6 +70,22 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
       let previousLines = "";
       const unwatch = loader.watchAuthFailure(options.onError);
 
+      // ★`[2026-10-04]` Each pin stands on the side of its coordinate where it overlaps the fewest others (`layoutPins`); worked out again when the map comes to rest.
+      let slots: Record<string, PinSlot> = {};
+      function relayout() {
+        const projection = map.getProjection?.(), center = map.getCenter(), zoom = map.getZoom?.();
+        const middle = projection && center ? projection.fromLatLngToPoint(center) : null;
+        if (destroyed || !projection || !middle || typeof zoom !== "number" || !markers.length || !container.clientWidth || !container.clientHeight) return;
+        const scale = 2 ** zoom;
+        const placed = points.flatMap((point) => {
+          const world = projection.fromLatLngToPoint(point.coordinates);
+          return world ? [{ id: point.id, x: (world.x - middle.x) * scale + container.clientWidth / 2, y: (world.y - middle.y) * scale + container.clientHeight / 2 }] : [];
+        });
+        slots = layoutPins(placed, { width: container.clientWidth, height: container.clientHeight, top: options.topInset ?? 0 }, slots);
+        markers.forEach(({ id, pin }) => { if (slots[id]) placePin(pin, slots[id]); });
+      }
+      sdk.event.addListener?.(map, "idle", relayout);
+
       function clearMarkers() {
         markers.forEach(({ marker, onClick }) => {
           marker.removeEventListener("gmp-click", onClick);
@@ -83,7 +104,7 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
         } else {
           const bounds = new sdk.LatLngBounds();
           points.forEach(({ coordinates }) => bounds.extend(coordinates));
-          map.fitBounds(bounds, 50);
+          map.fitBounds(bounds, { top: 50 + (options.topInset ?? 0), right: 50, bottom: 50, left: 50 });
         }
       }
 
@@ -121,6 +142,7 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
           clearMarkers();
           points.forEach((point) => {
             const pin = createPin(point);
+            pin.style.transform = "translateY(50%)";          // the marker puts the middle of its bottom edge on the coordinate: the pin's box is centred on it instead
             const marker = new sdk.marker.AdvancedMarkerElement({
               map, position: point.coordinates, title: pointLabel(point), gmpClickable: true,
             });
@@ -131,6 +153,7 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
             markers.push({ id: point.id, marker, pin, onClick });
           });
           previousData = data;
+          relayout();
         }
         markers.forEach(({ id, pin, marker }) => {
           const selected = id === nextSelectedId;
@@ -163,6 +186,7 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
 
       return {
         update,
+        fit() { needsFit = true; fit(); },
         resize() {
           if (destroyed || !container.clientWidth || !container.clientHeight) return;
           const center = map.getCenter();

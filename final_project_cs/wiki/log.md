@@ -9,6 +9,10 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 # 문서 변경 이력 (cs)
 
+## 2026-10-05 — 「디스코드로 연결」 서버 쪽
+
+웹훅을 붙여넣지 않고 디스코드 창에서 서버 · 채널을 고르면 디스코드가 웹훅 주소를 서버에 돌려주는 흐름(`POST …/discord/connect/start` · `GET …/callback`, `GET /v1/web/profile` 의 `discord_connect.available`). 받은 주소는 붙여넣은 것과 같은 경로로 저장하고 토큰은 버린다. 디스코드 앱(클라이언트 ID · 비밀값)은 사람이 만들어 환경 파일에 넣어야 켜진다 ([REST 명세](external/rest-endpoints.md) · 요청서 `records/plans/2026-10-05_디스코드_연결버튼_백엔드_요청.md`). 시험은 mock 서버로 28건 — 실제 디스코드 확인은 앱을 만든 뒤.
+
 ## 2026-10-04 — 「호텔 조식」을 식당으로 읽던 것 고침
 
 숙소 말 + 끼니 말(「호텔 조식」)은 식사 일정이지만 **장소는 숙소**로 읽고, 후보 · 장소 검색 · 전체 자동 추천이 호텔 줄을 식당으로 바꾸지 않는다(사용자 「그거 호텔인데 왜 식당이야?」, uiux 세션 전달). 계약 [rest-endpoints.md 「이름 없는 줄」](external/rest-endpoints.md). 시험 `test_line_parts.py` · `test_intake_nameless_lines.py`.

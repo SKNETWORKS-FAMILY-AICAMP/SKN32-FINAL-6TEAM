@@ -14,6 +14,7 @@ import {
 import { planCandidate, safePhotoUrl } from "./from-review";
 import type { PlaceInfo } from "./model";
 import type { AutoResult, PlaceChoice, PlanCheckActions } from "./plan-check";
+import { retimeEdits } from "./retime-edits";
 
 /** How many alternatives get their photos fetched (A, B, C) — each is one call to the tourism photo service. */
 const PHOTO_CANDIDATES = 3;
@@ -126,6 +127,13 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         await save(edits, true);
         undoEdits.current = null;
       },
+      // `[2026-10-04]` Several stops' new times in ONE request: the plan is saved and checked once, not once per stop.
+      retime: async (changes) => {
+        const edits = changes.flatMap((change) => retimeEdits(itemOf(change.id), change));
+        if (!edits.length) return;
+        await save(edits, true);
+        undoEdits.current = null;
+      },
       remove: async (id) => {
         const item = itemOf(id);
         await save([itemEdit.remove(targetOf(item), true)], true);
@@ -185,10 +193,9 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       // Save what the preview showed: the same call without `dry_run` — the server makes the plan it showed.
       applyRecommended: async (): Promise<AutoResult> => {
         const result = await autofixIntake(intakeId, plan().revision, language).catch(staleThenRethrow);
-        if (result.changed.length) {
-          undoEdits.current = autofixUndo(result.changed);          // null when it cannot put ALL of it back
-          setDirty(true);                                           // before the new plan is drawn (see `save`)
-        }
+        // ★`[2026-10-04 사용자 지시]` The server checked the plan it made (the dry run the customer was looking at): saving it is not a change the customer has to send again,
+        //   so the plan is not marked 「changed since the last check」 — 「여행 등록」 stays open. (A change by hand still is: `save(edits, true)`.)
+        if (result.changed.length) undoEdits.current = autofixUndo(result.changed);          // null when it cannot put ALL of it back
         take(result.view);
         return autoResultOf(result, t);
       },
@@ -204,8 +211,9 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         await save(edits, true);
         undoEdits.current = null;                     // only once it went through: a refused undo can be tried again
       },
-      recheck: async () => {
-        const ids = plan().review?.items.map((entry) => entry.id) ?? [];
+      // ★`[2026-10-04 사용자 지시]` Only the stops that were changed are shown being checked again (`only`); the server checks the whole plan either way.
+      recheck: async (only) => {
+        const ids = only ?? plan().review?.items.map((entry) => entry.id) ?? [];
         let at = 0;
         setRechecking(ids[0] ?? null);
         const ticker = ids.length > 1 ? setInterval(() => { at = (at + 1) % ids.length; setRechecking(ids[at]); }, RECHECK_STEP_MS) : undefined;

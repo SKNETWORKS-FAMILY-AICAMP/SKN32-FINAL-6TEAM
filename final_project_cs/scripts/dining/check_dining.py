@@ -20,7 +20,7 @@
 
     python scripts/dining/check_dining.py                 rebuild.py 가 세운 dining_rebuild 를 본다
     python scripts/dining/check_dining.py --no-tests      시험은 빼고 원장만
-    python scripts/dining/check_dining.py --save          data/dining/_build/점검표.md 로도 남긴다
+    python scripts/dining/check_dining.py --save          datasets/dining/processed/_build/점검표.md 로도 남긴다
     DINING_DSN=postgresql://postgres@localhost:5433/다른DB   다른 DB 를 본다
 """
 from __future__ import annotations
@@ -40,6 +40,8 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))          # final_project_cs
 sys.path.insert(0, ROOT)
 
@@ -48,7 +50,7 @@ import core_db  # noqa: E402  ★`[2026-09-28 cs]` 기본은 코어 DB(`core_db.
 
 DSN = core_db.dsn()
 KST = timezone(timedelta(hours=9))
-SAVE = os.path.join(ROOT, "data", "dining", "_build", "점검표.md")
+SAVE = os.path.join(DINING_DATA, "_build", "점검표.md")
 
 #: 기준. 넘으면 통과다. 숫자를 바꿀 때는 이유를 같이 적는다.
 MIN_PLACES = 1000
@@ -147,7 +149,7 @@ def csv_rows(path: str, skip_example: bool = False) -> int:
 
 def check_loaded(cur, s: Sheet) -> None:
     step = "1-2 넣은 데이터"
-    data = os.path.join(ROOT, "data", "dining")
+    data = DINING_DATA
     cur.execute("SELECT source_code, count(*) FROM dining.dn_source_record GROUP BY 1")
     rec = dict(cur.fetchall())
 

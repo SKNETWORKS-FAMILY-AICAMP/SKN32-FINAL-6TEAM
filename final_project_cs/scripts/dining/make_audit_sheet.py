@@ -9,9 +9,13 @@
 사용법:  python make_audit_sheet.py
 출력:    오추출_대조표_100.csv  (엑셀에서 열어 표시)
          오추출_대조표_100.html (눈으로 읽기)
+
+표본을 늘릴 때는 앞 표본을 빼고 다른 씨앗으로 뽑는다. 같은 가게를 두 번 세지 않는다.
+    python make_audit_sheet.py --seed 20260930 --exclude <앞 대조표.csv> --name 대조표2차_100 --out <폴더>
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import html
 import json
@@ -21,9 +25,11 @@ import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))   # final_project_cs
-DATA = os.path.join(ROOT, "data", "dining")     # 원본 데이터
-OUT = os.path.join(ROOT, "data", "dining", "_build")  # 생성물
+DATA = DINING_DATA     # 원본 데이터
+OUT = os.path.join(DINING_DATA, "_build")  # 생성물
 SAMPLE = 100
 SEED = 20260921
 
@@ -134,12 +140,24 @@ def csv_safe(value) -> str:
 BLANKS = ["시작", "종료", "브레이크", "라스트오더", "요일", "휴무", "틀린방향", "메모"]
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    ap = argparse.ArgumentParser(description="오추출률 측정용 대조표를 만든다")
+    ap.add_argument("--size", type=int, default=SAMPLE)
+    ap.add_argument("--seed", type=int, default=SEED)
+    ap.add_argument("--exclude", action="append", default=[], help="이미 검수한 대조표. 그 상호는 뽑지 않는다")
+    ap.add_argument("--name", default="오추출_대조표_100", help="출력 파일 이름(확장자 없이)")
+    ap.add_argument("--out", default=OUT, help="출력 폴더")
+    args = ap.parse_args(argv)
+
     rows = json.load(open(os.path.join(OUT, "parsed_hours.json"), encoding="utf-8"))
     rows = [r for r in rows if r["hours_text"]]
+    done = set()
+    for sheet in args.exclude:
+        done |= {(r.get("상호") or "").strip() for r in csv.DictReader(open(sheet, encoding="utf-8-sig"))}
+    rows = [r for r in rows if (r["title"] or "").strip() not in done]
 
-    random.seed(SEED)
-    picked = random.sample(rows, min(SAMPLE, len(rows)))
+    random.seed(args.seed)
+    picked = random.sample(rows, min(args.size, len(rows)))
     picked.sort(key=lambda r: (r["area"] or "", r["title"] or ""))
 
     header = ["번호", "지역", "상호", "유형", "원문(영업시간)", "적재된 영업시간",
@@ -154,7 +172,8 @@ def main() -> None:
             " / ".join(row["notes"]),
         ] + [""] * len(BLANKS))
 
-    csv_path = os.path.join(OUT, "오추출_대조표_100.csv")
+    os.makedirs(args.out, exist_ok=True)
+    csv_path = os.path.join(args.out, f"{args.name}.csv")
     with open(csv_path, "w", encoding="utf-8-sig", newline="") as fp:
         writer = csv.writer(fp)
         writer.writerow(header)
@@ -200,12 +219,12 @@ def main() -> None:
         out.append("</tr>")
     out.append("</tbody></table>")
 
-    html_path = os.path.join(OUT, "오추출_대조표_100.html")
+    html_path = os.path.join(args.out, f"{args.name}.html")
     open(html_path, "w", encoding="utf-8").write("\n".join(out))
 
     from collections import Counter
     spread = Counter(t for row in picked for t in tags(row).split(","))
-    print(f"표본 {len(picked)}건")
+    print(f"표본 {len(picked)}건 (씨앗 {args.seed}, 뺀 상호 {len(done)})")
     for name, count in spread.most_common():
         print(f"  {name:10s} {count:4d}  {count*100/len(picked):5.1f}%")
     print(f"\n저장: {csv_path}\n      {html_path}")

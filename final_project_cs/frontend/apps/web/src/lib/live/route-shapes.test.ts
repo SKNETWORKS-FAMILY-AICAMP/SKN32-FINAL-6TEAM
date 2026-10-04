@@ -26,14 +26,18 @@ describe("reading the route lines the server gives", () => {
     const { shapes } = readRouteShapes({ shapes: [
       shape({ line: { type: "Point", coordinates: [126.9, 37.5] } }),               // not a LineString
       shape({ from_item_id: null }),                                                // no start stop
-      shape({ item_id: "" }),
       shape({ item_id: "ok" }),
       null,
     ] });
     expect(shapes.map((entry) => entry.itemId)).toEqual(["ok"]);
   });
 
-  it("reads a kind it does not know as 'unknown' — never as a good road — and keeps the attribution text, with a fallback when the server leaves it out", () => {
+  it("names a shape of a plan not registered yet (no move item) by the two stops around it", () => {
+    const { shapes } = readRouteShapes({ shapes: [shape({ item_id: undefined }), shape({ item_id: "", from_item_id: "0-1", to_item_id: "0-2" }), shape({ item_id: undefined, to_item_id: "" })] });
+    expect(shapes.map((entry) => entry.itemId)).toEqual(["a:b", "0-1:0-2"]);        // the third has no second stop: nothing to draw
+  });
+
+  it("reads a kind it does not know as 'unknown'' — never as a good road — and keeps the attribution text, with a fallback when the server leaves it out", () => {
     const { attribution, shapes } = readRouteShapes({ shapes: [shape({ mode: "hover", source: "magic", grade: "great", distance_m: -5, note: "  " })] });
     expect(shapes[0]).toMatchObject({ mode: "unknown", source: "unknown", grade: "unknown", distanceM: null, note: null });
     expect(attribution).toContain("OpenStreetMap");

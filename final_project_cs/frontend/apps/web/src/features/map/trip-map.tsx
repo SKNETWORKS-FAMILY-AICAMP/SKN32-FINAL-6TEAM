@@ -26,6 +26,8 @@ export interface TripMapProps {
   routes?: RouteShapes | null;
   /** The lines could not be read (not "there are none"): said in the caption, the pins still show. */
   routesError?: string;
+  /** `[2026-10-04]` Px at the top of the map that a bar floats over (`MapViewProps.topInset`). */
+  topInset?: number;
 }
 
 export function TripMap(props: TripMapProps) {
@@ -36,7 +38,7 @@ export function TripMap(props: TripMapProps) {
   const selectedMissing = props.selectedId && props.stops.some((stop) => stop.id === props.selectedId) && !points.some((point) => point.id === props.selectedId);
   const shapes = visibleShapes(props.routes?.shapes, props.stops);
   const lines = toMapLines(shapes);
-  const viewProps = { points, selectedId: props.selectedId, onSelect: props.onSelect, lines };
+  const viewProps = { points, selectedId: props.selectedId, onSelect: props.onSelect, lines, topInset: props.topInset };
   const fill = props.variant === "fill";
   return <div className={`${styles.frame} ${fill ? styles.fill : ""}`}>
     {mapConfiguration.provider === "naver" ? <NaverMap {...viewProps} clientId={mapConfiguration.clientId} />

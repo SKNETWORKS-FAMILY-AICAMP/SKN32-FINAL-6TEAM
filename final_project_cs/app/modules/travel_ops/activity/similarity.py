@@ -18,7 +18,8 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Mapping
 
-#: 원래 장소·후보가 들고 오는 분류 값의 키(`TripStore.places` 가 `catalog_class` 로 붙인다).
+#: 원래 장소·후보가 들고 오는 분류 값의 키(`TripStore.places` 가 `catalog_class` 로 붙인다). `brand` 는 점수 필드가 아니라
+#: 「같은 브랜드·같은 구」 앞세우기에만 쓴다(`_same_brand_nearby`).
 FIELDS = ("lcls1", "lcls2", "lcls3", "sigungu")
 
 #: 선호별 필드 순서 — 앞이 무겁다. PR #6 `alternatives.FIELD_PRIORITY` 에서 `contenttypeid` 만 뺐다
@@ -39,6 +40,15 @@ def preference_of(constraints: Mapping[str, Any] | None) -> str | None:
     return None
 
 
+def _same_brand_nearby(origin: Mapping[str, Any] | None, candidate: Mapping[str, Any] | None) -> bool:
+    """원래 장소가 브랜드 매장이고 후보가 **같은 브랜드 · 같은 시군구**인가. 둘 중 하나라도 모르면 False.
+
+    ★출처: 활동 팀(조직 develop `alternatives.same_brand_nearby`). 올리브영을 못 가면 같은 구의 다른 올리브영이 가장 비슷한
+      대체다. **같은 구 안**일 때만 앞세운다 — 구 밖 같은 브랜드보다 더 가까운 다른 매장이 낫다(거리는 순위 뒷단이 본다)."""
+    brand, gu = _value(origin, "brand"), _value(origin, "sigungu")
+    return bool(brand and gu and _value(candidate, "brand") == brand and _value(candidate, "sigungu") == gu)
+
+
 def _value(classes: Mapping[str, Any] | None, field: str) -> str:
     return str((classes or {}).get(field) or "").strip()
 
@@ -49,6 +59,8 @@ def score(origin: Mapping[str, Any] | None, candidate: Mapping[str, Any] | None,
     order: Iterable[str] = ORDER.get(preference or DEFAULT_PREFERENCE, ORDER[DEFAULT_PREFERENCE])
     order = tuple(order)
     total = 0
+    if _same_brand_nearby(origin, candidate):
+        total += 1 << len(order)       # 분류·구가 모두 같은 것보다 무겁다 — 맨 앞 기준
     for i, field in enumerate(order):
         mine, theirs = _value(origin, field), _value(candidate, field)
         if mine and mine == theirs:

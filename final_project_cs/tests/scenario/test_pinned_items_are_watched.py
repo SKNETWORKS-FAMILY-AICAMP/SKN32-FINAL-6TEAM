@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from uuid import UUID
 
 from app.infrastructure.db.session import get_connection
 

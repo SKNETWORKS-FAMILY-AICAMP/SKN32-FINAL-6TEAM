@@ -85,6 +85,8 @@ CONTRACT_V1_PATHS = {
     # ★2026-10-01 고객 연락처(복구 이메일 · 디스코드 웹훅) — 사용자 키. `wiki/external/rest-endpoints.md`
     "/v1/web/profile",
     "/v1/web/profile/discord/test",
+    "/v1/web/profile/discord/connect/start",
+    "/v1/web/profile/discord/connect/callback",
     # ★2026-09-27 계획 읽기 — 글·사진·PDF·docx·xlsx 를 받아 확인 화면용 값으로(설계서 program/plan/…고객계획_읽기_설계…).
     #   고객 id 는 키에서, 남의 접수는 404. 읽기는 뒤에서 돈다.
     "/v1/web/trip-intakes",

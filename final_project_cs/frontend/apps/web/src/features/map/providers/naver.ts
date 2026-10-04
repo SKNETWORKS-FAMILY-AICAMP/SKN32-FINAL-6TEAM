@@ -1,11 +1,14 @@
 import type { MapAdapter, MapLine, MapPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
-import { createPin, geometryKey, pointLabel, setPinSelected } from "./pin";
+import { createPin, geometryKey, layoutPins, PIN_BOX, placePin, pointLabel, setPinSelected, type PinSlot } from "./pin";
 import { createSdkLoader } from "./sdk-loader";
 
 interface NaverLatLng { lat(): number; lng(): number }
 interface NaverSize { width: number; height: number }
+/** Optional: a build of the SDK without it still shows the pins (they then keep their first side). */
+interface NaverProjection { fromCoordToOffset(position: NaverLatLng): { x: number; y: number } }
 interface NaverMap {
+  getProjection?(): NaverProjection | undefined;
   panTo(position: NaverLatLng): void;
   setCenter(position: NaverLatLng): void;
   getCenter(): NaverLatLng;
@@ -32,7 +35,7 @@ interface NaverSdk {
     icon: { content: HTMLElement; size: NaverSize; anchor: { x: number; y: number } };
   }) => NaverMarker;
   Event: {
-    addListener(target: NaverMarker, event: "click", callback: () => void): NaverListener;
+    addListener(target: NaverMarker | NaverMap, event: "click" | "idle", callback: () => void): NaverListener;
     removeListener(listener: NaverListener): void;
   };
 }
@@ -65,6 +68,20 @@ export function createNaverAdapter(clientId: string): MapAdapter {
       let previousLines = "";
       const unwatch = loader.watchAuthFailure(options.onError);
 
+      // ★`[2026-10-04]` Each pin stands on the side of its coordinate where it overlaps the fewest others (`layoutPins`); worked out again when the map comes to rest.
+      let slots: Record<string, PinSlot> = {};
+      function relayout() {
+        const projection = map.getProjection?.();
+        if (destroyed || !projection || !markers.length || !container.clientWidth || !container.clientHeight) return;
+        const placed = points.map((point) => {
+          const at = projection.fromCoordToOffset(new sdk.LatLng(point.coordinates.lat, point.coordinates.lng));
+          return { id: point.id, x: at.x, y: at.y };
+        });
+        slots = layoutPins(placed, { width: container.clientWidth, height: container.clientHeight, top: options.topInset ?? 0 }, slots);
+        markers.forEach(({ id, pin }) => { if (slots[id]) placePin(pin, slots[id]); });
+      }
+      const idleListener = sdk.Event.addListener(map, "idle", relayout);
+
       function clearMarkers() {
         markers.forEach(({ marker, pin, listener, onKey }) => {
           sdk.Event.removeListener(listener);
@@ -82,7 +99,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
           map.setCenter(positions[0]);
           map.setZoom(15);
         } else {
-          map.fitBounds(positions, { top: 80, right: 80, bottom: 80, left: 80, maxZoom: 16 });
+          map.fitBounds(positions, { top: 80 + (options.topInset ?? 0), right: 80, bottom: 80, left: 80, maxZoom: 16 });
         }
       }
 
@@ -123,7 +140,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
             pin.tabIndex = 0;
             const marker = new sdk.Marker({
               map, position: new sdk.LatLng(point.coordinates.lat, point.coordinates.lng), title: pointLabel(point),
-              icon: { content: pin, size: new sdk.Size(44, 44), anchor: { x: 22, y: 44 } },
+              icon: { content: pin, size: new sdk.Size(PIN_BOX, PIN_BOX), anchor: { x: PIN_BOX / 2, y: PIN_BOX / 2 } },
             });
             const listener = sdk.Event.addListener(marker, "click", () => options.onSelect(point.id));
             const onKey = (event: KeyboardEvent) => {
@@ -137,6 +154,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
             markers.push({ id: point.id, marker, pin, listener, onKey });
           });
           previousData = data;
+          relayout();
         }
         markers.forEach(({ id, pin, marker }) => {
           const selected = id === nextSelectedId;
@@ -156,10 +174,11 @@ export function createNaverAdapter(clientId: string): MapAdapter {
       }
 
       try { update(options.points, options.selectedId, options.lines); }
-      catch (error) { clearMarkers(); clearLines(); unwatch(); map.destroy(); throw error; }
+      catch (error) { clearMarkers(); clearLines(); sdk.Event.removeListener(idleListener); unwatch(); map.destroy(); throw error; }
 
       return {
         update,
+        fit() { needsFit = true; fit(); },
         resize() {
           if (destroyed || !container.clientWidth || !container.clientHeight) return;
           const center = map.getCenter();
@@ -172,6 +191,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
           destroyed = true;
           clearMarkers();
           clearLines();
+          sdk.Event.removeListener(idleListener);
           unwatch();
           map.destroy();
         },

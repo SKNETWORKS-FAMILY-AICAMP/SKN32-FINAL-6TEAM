@@ -17,9 +17,10 @@ import { LiveError, loginRequired } from "@/lib/live/client";
 import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/lib/live/intake-events";
 import { confirmIntake, editIntake, getIntake, type IntakeEdit } from "@/lib/live/intake";
 import type { ReviewedIntakeView } from "@/lib/live/intake-review";
+import { getIntakeRouteShapes } from "@/lib/live/route-shapes";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
-import { rows, editsFor } from "./model";
+import { draftOf, editsFor, rows } from "./model";
 import { useIntakeEvents } from "./use-intake-events";
 import styles from "./intake-review.module.css";
 
@@ -89,9 +90,11 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   //   Without one (`review: null` — the check failed — or an older server), it says only what the read values say.
   const apply = useCallback((next: ReviewedIntakeView) => { queryClient.setQueryData(["intake", intakeId, language], next); }, [queryClient, intakeId, language]);
   const server = useServerReview({ intakeId, view: query.data, language, apply, reread });
-  // ★`[2026-10-03]` While 「전체 자동 추천」 is only previewed (`server.preview`, nothing saved) the screen draws that plan; every call still goes with the real one.
-  const shown = server.preview ?? query.data;
+  // ★`[2026-10-03]` While 「전체 자동 추천」 is only previewed (`server.preview`, nothing saved) the screen also draws that plan; every call still goes with the real one.
+  // ★`[2026-10-04 사용자 지시]` The two are held side by side — the plan as it is (`reviewed`) and the one the server proposed (`previewed`) — so the list can scroll from one into the other.
+  const shown = query.data;
   const reviewed = useMemo(() => shown && shown.status !== "reading" ? reviewResultOf(shown, readingOf(shown), server.infos) : null, [shown, server.infos]);
+  const previewed = useMemo(() => server.preview && server.preview.status !== "reading" ? reviewResultOf(server.preview, readingOf(server.preview), server.infos) : null, [server.preview, server.infos]);
   // ★`[2026-10-03]` While the screen still draws what the server did (the intake is already `review` but the rows are being caught up), the last
   //   count the server sent stays on the bar — it would otherwise vanish the moment the server finishes, however many rows are left to draw.
   const reading = useMemo(() => {
@@ -105,6 +108,16 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     if (!query.data || query.data.status === "reading" || query.data.status === "fatal") return null;
     return reviewed ? { ...reviewed, dirty: server.dirty, rechecking: server.rechecking } : resultOf(query.data);
   }, [query.data, reviewed, server.dirty, server.rechecking]);
+  // ★`[2026-10-04 사용자 지시]` The lines to draw between the stops on the map (`trip-intakes/{id}/route-shapes`): asked once the check is on screen and again when the plan moves on
+  //   (`revision`). A failure or an older server (404) just means no lines — the pins are the map.
+  const routeShapes = useQuery({
+    queryKey: ["intake-route-shapes", intakeId, query.data?.revision ?? 0, language],
+    queryFn: () => getIntakeRouteShapes(intakeId, language).catch(() => null),
+    enabled: Boolean(reviewed),
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 10 * 60_000,
+  });
   const [readingSeen, setReadingSeen] = useState(false);
   const [readingDrawn, setReadingDrawn] = useState(false);
   if (query.data?.status === "reading" && !readingSeen) setReadingSeen(true);
@@ -167,10 +180,18 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const unchecked = view.review_error ? <p className={styles.streamNote} role="status">{t("서버가 장소·운영시간·이동 확인 결과를 만들지 못했어요. 읽은 값만 보여 드려요 — 등록할 때 서버가 다시 확인해요.", "The server could not build the place, hours and route check. Only what it read is shown — it checks again when you register.")}</p> : null;
   // The text also asked us to plan, but stops were read too: only the stops are shown, so say where the planning is.
   const asked = view.check?.plan.requested ? <p className={styles.streamNote} role="status">{t("글에 일정을 짜 달라는 말도 있었어요. 읽은 일정만 보여 드려요 — 대신 짜 받으려면 등록 화면의 「계획 짜 주기」를 써 주세요.", "The text also asked us to plan. Only the stops it lists are shown — to have a trip planned, use “Plan it for me” on the registration page.")}</p> : null;
-  return <PlanCheck key="plan" view={result} notice={<>{unchecked}{asked}</>} onBack={() => router.push(routes.newTrip)}
+  return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeShapes.data ?? null} notice={<>{unchecked}{asked}</>} onBack={() => router.push(routes.newTrip)}
     tripIssues={tripIssuesOf(view)}
     actions={view.review ? server.actions : {
       edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },
+      // `[2026-10-04]` Several stops' new times in ONE request (title · date · place stay as they are; an empty start leaves the start alone).
+      retime: async (changes) => {
+        const edits = changes.flatMap((change) => {
+          const row = rowOf(change.id);
+          return row ? editsFor(row, { ...draftOf(row), start: change.start || draftOf(row).start, end: change.end }) : [];
+        });
+        await send(edits);
+      },
       remove: async (id: string) => { const row = rowOf(id); if (row) await send([{ source_id: row.source.source_id, field: `items[${row.item.index}].removed`, value: true }]); },
       // A place by name: the server looks it up again and checks the plan (an alternative it weighed, or a typed name).
       replace: async (id, choice) => {
@@ -181,7 +202,9 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       editTrip: (field, value) => send([{ field: `trip.${field}`, value }]),
     }}
     registration={{
-      ready: view.review ? view.review.ready : Boolean(view.check?.ready), busy: confirm.isPending, onRegister: () => confirm.mutate(view.revision),
+      ready: view.review ? view.review.ready : Boolean(view.check?.ready), previewReady: server.preview?.review ? server.preview.review.ready : undefined, busy: confirm.isPending,
+      // The plan the server holds when it is pressed — a plan saved a moment before (the proposed one, registered from) has a newer revision than this render's.
+      onRegister: () => confirm.mutate(queryClient.getQueryData<ReviewedIntakeView>(key)?.revision ?? view.revision),
       error: confirm.error?.message ?? null, problems: refusal?.problems?.map((problem) => problem.message ?? `${problem.field}: ${problem.reason}`) ?? [],
       loginRequired: loginRequired(confirm.error),
       registeredHref: view.status === "confirmed" && view.trip_id ? routes.trip(view.trip_id) : null,

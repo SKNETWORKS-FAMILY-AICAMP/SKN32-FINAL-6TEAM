@@ -254,9 +254,7 @@ def _place_view(key: str | None, places: list[Any]) -> dict[str, Any] | None:
     return None
 
 
-# ★`status` 를 **위치 전용**(`/`)으로 받는다 — `**extra` 에 상세로 `status` 가 들어오면(예: 아직 등록할 수 없는 접수의 현재 상태
-#   `IntakeConflict(..., status=...)`) 같은 이름이 둘이라 `TypeError: got multiple values for argument 'status'` 로 409 가 서버 오류(500)가 됐다.
-def _error(status: int, code: str, message: str, /, **extra: Any) -> HTTPException:
+def _error(status: int, code: str, message: str, **extra: Any) -> HTTPException:
     return HTTPException(status, {"error": {"code": code, "message": message, **extra}})
 
 
@@ -349,7 +347,7 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
             "version": trip["version"],
             "items": views, "map": map_view(views),
             "history": history, "plan_url": plan_url(store.tenant_id, trip["trip_id"]),
-            # ★`[2026-10-03]` 「살펴볼 점」 — 밀도 경고 + 일정 품질 경고(같은 곳 두 번 · 끼니 빠짐 · 왔다 갔다 · 하루 마감 · 식당 라스트오더). 둘 다 거절이 아니라 알림이다
+            # ★`[2026-10-03]` 「살펴볼 점」 — 밀도 경고 + 일정 품질 경고(같은 곳 두 번 · 끼니 빠짐 · 왔다 갔다). 둘 다 거절이 아니라 알림이다
             **measured, "warnings": [*measured["warnings"], *quality_warnings(parts, trip.get("constraints") or {})]}
 
 
@@ -1660,7 +1658,13 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
         tenant, customer = who
         with get_connection() as conn:
-            return customer_profile.read(conn, tenant, customer).as_dict()
+            return _profile_body(customer_profile.read(conn, tenant, customer))
+
+    def _profile_body(view: Any) -> dict[str, Any]:
+        """고객 연락처 응답 — ★`discord_connect` 는 조회 · 갱신 · 시험 **어느 응답에나** 싣는다(웹이 응답마다 같은 모양으로 읽는다 — 저장 직후 단추가 사라지지 않게)."""
+        from . import discord_connect
+
+        return {**view.as_dict(), "discord_connect": discord_connect.public_state()}
 
     @router.put("/v1/web/profile")
     def web_profile_update(body: dict[str, Any] = Body(...), who: tuple[str, UUID] = Depends(_web_customer)):
@@ -1670,9 +1674,45 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         tenant, customer = who
         try:
             with get_connection() as conn:
-                return customer_profile.update(conn, tenant, customer, body).as_dict()
+                return _profile_body(customer_profile.update(conn, tenant, customer, body))
         except customer_profile.ProfileError as refused:
             raise _error(refused.status, refused.code, refused.message) from None
+
+    # ★`[2026-10-05 ui 세션 요청서 「디스코드 연결 버튼」]` 웹훅을 **붙여넣지 않고** 디스코드 창에서 서버·채널을 고르면 디스코드가 웹훅 주소를 서버에 돌려준다(`discord_connect.py`).
+    @router.post("/v1/web/profile/discord/connect/start")
+    def web_profile_discord_connect_start(who: tuple[str, UUID] = Depends(_web_customer)):
+        """`{authorize_url}` — 웹이 그 주소(`https://discord.com…`)로 브라우저를 보낸다. 디스코드 앱 설정이 없으면 404. 사용자당 한 시간 한도(429 `too_many_requests`)."""
+        from . import discord_connect, web_guard
+
+        tenant, customer = who
+        if not discord_connect.available():
+            raise _error(404, "not_found", "디스코드 연결을 쓸 수 없다 — 붙여넣기로 연결한다")
+        try:
+            discord_connect.count_start(tenant, customer)
+        except web_guard.UsageRefused as refused:
+            error = _error(429, "too_many_requests", "디스코드 연결을 너무 자주 시도했다 — 잠시 뒤에 다시 한다", retry_after_seconds=refused.retry_after)
+            error.headers = {"Retry-After": str(refused.retry_after)}
+            raise error from None
+        with get_connection() as conn, conn.transaction():
+            state = discord_connect.begin(conn, tenant_id=tenant, customer_id=customer)
+        return JSONResponse({"authorize_url": discord_connect.authorize_url(state)}, headers={"Cache-Control": "no-store"})
+
+    @router.get("/v1/web/profile/discord/connect/callback")
+    def web_profile_discord_connect_callback(code: str | None = Query(default=None), state: str | None = Query(default=None),
+                                             error: str | None = Query(default=None)):
+        """디스코드가 고객 브라우저를 돌려보내는 곳(인증 없음 — 다른 사이트에서 오는 이동이라 쿠키에 기대지 않고 `state` 가 사용자를 정한다).
+        어떤 실패든 **웹으로 302 + `?discord=connected|cancelled|expired|failed`** 다(브라우저 이동이라 JSON 오류를 못 읽는다)."""
+        from fastapi.responses import RedirectResponse
+
+        from . import discord_connect
+
+        origin = discord_connect.web_origin()
+        if not origin:
+            raise _error(503, "web_origin_not_configured", "연결 뒤 돌아갈 웹 주소가 설정되지 않았다")
+        with get_connection() as conn:
+            result = discord_connect.finish(conn, tenant_id=settings_module.get_settings().tenant_id, state=state, code=code, error=error)
+        return RedirectResponse(f"{origin}/mypage?discord={result}", status_code=302,
+                                headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})
 
     @router.post("/v1/web/profile/discord/test")
     def web_profile_discord_test(who: tuple[str, UUID] = Depends(_web_customer)):
@@ -1690,7 +1730,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             if refused.retry_after:
                 error.headers = {"Retry-After": str(refused.retry_after)}
             raise error from None
-        return {"result": result, "profile": view.as_dict()}
+        return {"result": result, "profile": _profile_body(view)}
 
     @router.get("/v1/web/trips/{trip_id}/events")
     async def web_trip_events(trip_id: UUID, http: Request, who: tuple[str, UUID] = Depends(_web_customer)):
@@ -1750,6 +1790,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                              "rollback": payload.get("rollback"), "consent": bool(payload.get("consent")),
                              "consent_key": payload.get("consent_key"),
                              "at": at.isoformat()} for key, payload, status, at in rows]}
+
     @router.get("/v1/web/trips/{trip_id}/route-shapes")
     def web_route_shapes(trip_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
         """★`[2026-10-04]` 지도에 그릴 **경로선** — 이동 항목마다 GeoJSON LineString. 우리 도로 그래프(지도 원본 OSM)로 직접 계산해 내린다 —
@@ -1763,7 +1804,6 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         from .mobility.route_shape import shapes_for_items
         return {"trip_id": str(trip_id), "shapes": shapes_for_items(items),
                 "attribution": "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)"}
-
 
     return router
 

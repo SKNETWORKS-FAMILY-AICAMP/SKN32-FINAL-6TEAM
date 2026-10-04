@@ -13,14 +13,18 @@ import styles from "./device-frame.module.css";
  */
 export const HeaderSlot = createContext<HTMLElement | null>(null);
 
-/** Phone-sized frame of the intro and onboarding. Fixed-position children stay inside it. */
-export function DeviceFrame({ children, onBrand, headerInert = false }: { children: ReactNode; onBrand?: () => void; headerInert?: boolean }) {
+/**
+ * Phone-sized frame of the intro and onboarding. Fixed-position children stay inside it.
+ * `floating` (★`[2026-10-04 사용자 지시]` the plan check's map): the header has no bar of its own — the screen under it reaches the top of the frame and the home mark, what a screen
+ * puts in the slot (the plan's name) and the menu button each float over it as a small chip.
+ */
+export function DeviceFrame({ children, onBrand, headerInert = false, floating = false }: { children: ReactNode; onBrand?: () => void; headerInert?: boolean; floating?: boolean }) {
   const t = useT();
   const [overlay, setOverlay] = useState<HTMLElement | null>(null);
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const brand = <><span className={styles.mark} aria-hidden="true">t</span>triPilot</>;
   return <div className={styles.stage}>
-    <div className={styles.device}>
+    <div className={styles.device} data-floating={floating || undefined}>
       <OverlayRoot.Provider value={overlay}>
         <HeaderSlot.Provider value={slot}>
         <header className={styles.header} inert={headerInert}>

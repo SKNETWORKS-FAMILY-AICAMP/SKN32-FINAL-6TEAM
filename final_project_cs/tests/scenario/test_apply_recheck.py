@@ -20,6 +20,7 @@ import pytest
 
 from app.core.actions import ActionRejected
 from app.infrastructure.db.session import get_connection
+from app.modules.travel_ops.itinerary import item_to_dict
 from app.modules.travel_ops.itinerary_actions import (ACTION_TYPE, RECHECK_FAILED, ItineraryApply, change_arguments,
                                                       introduced_violations)
 from app.modules.travel_ops.itinerary_changes import ItineraryChange

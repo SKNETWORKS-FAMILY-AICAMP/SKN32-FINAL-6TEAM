@@ -59,6 +59,8 @@ export interface PlanItem {
   verdict: Verdict | null;
   /** Fixed by the customer: kept through re-planning and recommendations (mockup 「잠금」 — 「반드시 포함」). */
   locked: boolean;
+  /** `[2026-10-04]` The plan says the stop is booked (`true`), says it is not (`false`), or says nothing (`null`; also an older server). */
+  booked: boolean | null;
   info: PlaceInfo | null;
   /** The first alternative's name, said under the card's 「자동 추천」 — null when none is known. */
   suggestion: string | null;
@@ -92,6 +94,14 @@ export interface PlanMove {
   mode: string;
   /** One line, e.g. 「12분 · 0.8km」. */
   summary: string;
+  /** `[2026-10-04]` How many minutes the way takes, as the server counts it — null when it did not say. */
+  minutes: number | null;
+  /** `[2026-10-04]` "HH:MM" — arrive at, when leaving at `departAt`; "" when the server gave none. */
+  arriveAt: string;
+  /** `[2026-10-04]` Minutes to spare before the next stop starts (negative = arrives after it started) — null when not known. */
+  slackMin: number | null;
+  /** `[2026-10-04]` The time is a straight-line guess (`basis` estimate), not a timetable — said so on the screen instead of passing it off as exact. */
+  estimated: boolean;
   checks: CheckRow[];
   verdict: Verdict | null;
 }
@@ -152,8 +162,14 @@ function checkOrder(view: PlanCheckView): ({ type: "item"; id: string } | { type
   return days.flatMap((day) => timeline(view, day).map((entry) => entry.type === "item" ? { type: "item" as const, id: entry.item.id } : { type: "move" as const, id: entry.move.id }));
 }
 
+/**
+ * ★`[2026-10-04 사용자 지시]` 빨강(못 찾음·고쳐야 함)과 회색(–, 아직 모름)은 어차피 확인이 안 된 것이라 「확인 중」 애니메이션 없이 처음부터 그 모양으로 나온다.
+ * 천천히 켜지는 것은 통과(✓)·채움(✎)·주의(!)뿐이다 — 사용자가 「이건 확인됐구나」를 알아볼 수 있는 속도로.
+ */
+export const isInstantRow = (row: CheckRow) => row.result === "bad" || row.result === "unknown";
+
 const pendingCopy = <T extends { checks: CheckRow[]; verdict: Verdict | null }>(entity: T): T =>
-  ({ ...entity, checks: entity.checks.map((row) => ({ ...row, result: "pending" as const, text: "" })), verdict: null });
+  ({ ...entity, checks: entity.checks.map((row) => isInstantRow(row) ? row : { ...row, result: "pending" as const, text: "" }), verdict: null });
 
 /**
  * One visible change from `shown` toward `target`, or null when they already match.
@@ -164,7 +180,7 @@ const pendingCopy = <T extends { checks: CheckRow[]; verdict: Verdict | null }>(
  *   verdict) → done → title.
  *   Anything the screen cannot step toward (something removed, a line changed) jumps straight to `target`.
  */
-export function nextStep(shown: PlanCheckView, target: PlanCheckView): PlanCheckView | null {
+export function nextStep(shown: PlanCheckView, target: PlanCheckView, coarse = false): PlanCheckView | null {
   if (JSON.stringify(shown) === JSON.stringify(target)) return null;
   const jump = () => target;
   if (stageIndex(target.stage) < stageIndex(shown.stage)) return jump();
@@ -190,14 +206,15 @@ export function nextStep(shown: PlanCheckView, target: PlanCheckView): PlanCheck
     if (entry.type === "item") {
       const want = target.items.find((item) => item.id === entry.id)!;
       const have = shown.items.find((item) => item.id === entry.id);
-      const step = advance(have, want);
+      const step = advance(have, want, coarse ? "whole" : "rows");
       if (step === undefined) continue;
       const items = have ? shown.items.map((item) => item.id === want.id ? step : item) : insertInOrder(shown.items, step, target.items);
       return { ...shown, items };
     }
     const want = target.moves.find((move) => move.id === entry.id)!;
     const have = shown.moves.find((move) => move.id === entry.id);
-    const step = advance(have, want);
+    // A move is one line whose only visible part is its mark: its own checks (shown only when opened) are not ticked in one by one.
+    const step = advance(have, want, "whole");
     if (step === undefined) continue;
     const moves = have ? shown.moves.map((move) => move.id === want.id ? step : move) : [...shown.moves, step];
     return { ...shown, moves };
@@ -208,14 +225,29 @@ export function nextStep(shown: PlanCheckView, target: PlanCheckView): PlanCheck
   return jump();
 }
 
-/** The next state of one place or move toward `want`, or undefined when it already matches. */
-function advance<T extends { checks: CheckRow[]; verdict: Verdict | null }>(have: T | undefined, want: T): T | undefined {
-  if (!have) return pendingCopy(want);
+/**
+ * The next state of one place or move toward `want`, or undefined when it already matches.
+ * `rows`: a place appears with its checks waiting, then one drawn check at a time (the red and grey ones come with the check before them, at once),
+ * the verdict with the last. `whole`: it appears finished — a move (its only visible part is its mark: no pretended search is replayed after the
+ * server has answered) or, in a big plan, a card (drawn card by card instead of line by line).
+ */
+function advance<T extends { checks: CheckRow[]; verdict: Verdict | null }>(have: T | undefined, want: T, grain: "rows" | "whole"): T | undefined {
+  if (!have) return grain === "whole" ? want : pendingCopy(want);
   if (JSON.stringify(have) === JSON.stringify(want)) return undefined;
   if (have.checks.length !== want.checks.length || have.checks.some((row, at) => row.kind !== want.checks[at].kind)) return want;
-  const at = have.checks.findIndex((row, index) => JSON.stringify(row) !== JSON.stringify(want.checks[index]));
-  if (at >= 0) return { ...have, checks: have.checks.map((row, index) => index === at ? want.checks[at] : row) };
-  return { ...have, ...want };
+  if (grain === "whole") return { ...have, ...want };
+  const checks = have.checks.slice();
+  let ticked = false;
+  for (let at = 0; at < checks.length; at += 1) {
+    if (JSON.stringify(checks[at]) === JSON.stringify(want.checks[at])) continue;
+    if (!isInstantRow(want.checks[at])) {
+      if (ticked) break;
+      ticked = true;
+    }
+    checks[at] = want.checks[at];
+  }
+  const left = checks.some((row, at) => JSON.stringify(row) !== JSON.stringify(want.checks[at]));
+  return left ? { ...have, checks } : { ...have, ...want };
 }
 
 /** Put `item` where it stands in `order` (the server's order), among the items already shown. */

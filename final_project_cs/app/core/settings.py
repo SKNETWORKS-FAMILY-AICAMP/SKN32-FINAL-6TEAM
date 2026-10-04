@@ -106,6 +106,10 @@ class Settings(BaseSettings):
     #:  ★둘 다 있어야 그 업체가 켜진다(`GET /v1/web/auth/providers` 에 나온다). 하나라도 비면 목록에서 빠진다 — 반쯤 켜진 채 뜨지 않게.
     google_client_id: str = ""
     google_client_secret: str = ""
+    #:  `[2026-10-05]` 「디스코드로 연결」(알림 웹훅 자동 연결) — 디스코드 개발자 포털에서 만든 앱의 **클라이언트 ID · 비밀값**(`ACOP_DISCORD_CLIENT_ID` · `ACOP_DISCORD_CLIENT_SECRET`).
+    #:  ★둘 다 있어야 켜진다(`GET /v1/web/profile` 의 `discord_connect.available`). 소셜 로그인용 디스코드 앱을 만들게 되면 같은 앱을 써도 된다. git 밖 환경 파일에만 둔다.
+    discord_client_id: str = ""
+    discord_client_secret: str = ""
     #:  로그인이 끝나면 브라우저를 돌려보낼 **웹 주소(출처만)**. ★서버 설정이고 요청 값으로 바꿀 수 없다(열린 리디렉션 금지).
     #:  비어 있으면 `web_allowed_origins` 의 첫 값.
     web_origin: str = ""
@@ -153,6 +157,9 @@ class Settings(BaseSettings):
     #: 행정안전부 긴급재난문자 — 호우·통제·화재 등 지역 재난문자       data.go.kr/data/15134001
     #:  ★2026-09-14 키 발급. 그전까지는 샘플 CSV 판(`disaster_msg.py`)으로 돌았다.
     disaster_msg_api_key: str = ""
+    #: 서울교통공사 지하철알림정보 — 무정차 통과 감시(문제목록 #36)  data.go.kr/data/15144070
+    #:  ★공통 키로 충분하다. 이 칸은 다른 계정을 쓸 때만 채운다.
+    subway_notice_api_key: str = ""
     #: 한국천문연구원 특일 정보 — ★공휴일 휴무 판정 data.go.kr/data/15012690
     holiday_api_key: str = ""
     #: 국토교통부 TAGO — 버스·지하철·열차 운행      data.go.kr/data/15098530
@@ -222,6 +229,9 @@ class Settings(BaseSettings):
     mobility_local_router: bool = True
     #: 서울 열린데이터광장 키(따릉이 실시간 거치 대수). 비우면 거치 대수는 근거없음. ★제공처가 http 만 받는다(평문 전송)
     seoul_openapi_key: str = ""
+    #: 서울 열린데이터광장 「실시간 지하철 인증키」(일반 키와 **별개** · 하루 1,000건 · 활용사례 등록 심사 뒤 해제) — 실시간 도착정보
+    #:  (`travel/seoul_subway.py`, `sources.subway_arrival`). ★설정에 없는 이름으로 넣으면 기동이 거부된다(`extra="forbid"` · 2026-10-05 실제로 났다).
+    seoul_metro_api_key: str = ""
     #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**
     #:  기록한다(dead_letter). 보낸 것처럼 `delivered` 로 찍지 않는다.
     discord_webhook_url: str = ""
@@ -258,8 +268,14 @@ class Settings(BaseSettings):
     rate_disaster_msg_per_day: int = 1000    # 확인: 사용자 제공(2026-09-15) 재난문자 하루 1,000
     #                                          ☆그전 값 100 은 같은 플랫폼 다른 API 사용기에서 옮긴 추정이었다
     rate_utic_per_day: int = 1000            # 미확인 - 보수적(UTIC 한도 문서 못 봄)
-    rate_odsay_per_day: int = 1000           # 미확인 - 무료 구간 한도 못 찾음
+    #: ★확인(2026-10-04): ODsay LAB 운영정책 「Basic 서비스 30 / 일 · 기간 제한 없음」 — 이 계정으로 30회 안팎에서 `Daily quota exceeded` 를 실측했다.
+    #:  ☆앞 값 1000 은 근거 없는 추정이었다(「미확인」). 어댑터가 없어 지금은 호출 코드가 없다 — 붙일 때 이 한도를 그대로 쓴다.
+    rate_odsay_per_day: int = 30
     rate_kakao_per_day: int = 1000           # 미확인 - 보수적
+    #: 확인(2026-10-04): 서울교통공사 지하철알림정보 개발계정 하루 10,000건(공식 페이지) → 절반만 쓴다(여유 2배). 매 1분 갱신 · 한 번에 최신 100건
+    rate_subway_notice_per_day: int = 5000
+    #: 확인(2026-10-04 공식 안내): 서울 「실시간 지하철 인증키」 하루 최대 1,000건 → 절반만(여유 2배). 도착정보는 지금 값이라 캐시를 짧게 둔다
+    rate_seoul_subway_arrival_per_day: int = 500
     #: 국가유산청은 키가 없고 공개된 한도도 못 찾았다. 그래도 스스로 조인다 -
     #: 한도를 모른다는 것이 마음껏 두들겨도 된다는 뜻은 아니다.
     rate_heritage_khs_per_day: int = 1000
@@ -304,6 +320,8 @@ class Settings(BaseSettings):
             "disaster_msg": self.rate_disaster_msg_per_day,
             "utic": self.rate_utic_per_day,
             "odsay": self.rate_odsay_per_day,
+            "subway_notice": self.rate_subway_notice_per_day,
+            "seoul_subway_arrival": self.rate_seoul_subway_arrival_per_day,
             "kakao": self.rate_kakao_per_day,
             "google_places": self.rate_google_places_per_day,
             "google_routes": self.rate_google_routes_per_day,

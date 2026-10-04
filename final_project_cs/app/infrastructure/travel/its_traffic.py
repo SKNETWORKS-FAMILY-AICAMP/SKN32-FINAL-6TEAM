@@ -112,6 +112,31 @@ class ItsTrafficEvents(TravelSource):
             return None if str(code) == "0" else f'{code} {header.get("resultMsg", "")}'.strip()
         return TravelSource._body_error(payload)
 
+    def records(self) -> list[dict[str, Any]] | None:
+        """서울 상자 전체의 돌발 목록(캐시를 나눠 쓴다). 못 읽으면 `None` — `UticIncidents.records()` 와 같은 모양(2026-10-05 · 경로 사건 2차 소스용)."""
+        payload = self._fetch_json(ENDPOINT, {
+            "apiKey": self._key, "type": "all", "eventType": "all",
+            "minX": SEOUL_BOX[0], "maxX": SEOUL_BOX[1], "minY": SEOUL_BOX[2], "maxY": SEOUL_BOX[3], "getType": "json"})
+        if payload is None:
+            return None
+        body = payload.get("body")
+        items = body.get("items") if isinstance(body, dict) else None
+        if items in (None, ""):
+            items = []
+        if not isinstance(items, list):
+            self._miss("unexpected_shape", type(items).__name__)
+            return None
+        return [item for item in items if isinstance(item, dict)]
+
+    def active_at(self, item: dict[str, Any], at: datetime) -> bool:
+        """그 시각에 걸리는 돌발인가 — 시작 전 · 끝난 뒤 · 끝 모르는 먼 미래는 아니다."""
+        start, end = _parse_time(item.get("startDate")), _parse_time(item.get("endDate"))
+        if start is not None and at < start:
+            return False
+        if end is not None and at > end:
+            return False
+        return not (end is None and at > self._now() + timedelta(hours=OPEN_ENDED_HOURS))
+
     def near(self, *, latitude: float, longitude: float, at: datetime,
              radius_m: int = DEFAULT_RADIUS_M) -> dict[str, Any] | None:
         """장소 반경 안에서 `at` 시각에 걸리는 돌발. 못 읽었으면 `None`."""
@@ -169,4 +194,49 @@ class ItsTrafficEvents(TravelSource):
                           source=self.name)
 
 
-__all__ = ["DEFAULT_RADIUS_M", "ENDPOINT", "ItsTrafficEvents", "SEOUL_BOX", "classify", "parse_message"]
+class ItsRouteEvents:
+    """감시 루프의 **경로 사건** 2차 소스 — `UticRouteEvents` 와 같은 모양(`unsupported()` · `affecting()`) `[2026-10-05]`.
+
+    UTIC 가 멈추면(키가 IP 에 묶여 거절 · 한도 · 장애) 경로 사건이 곧바로 치명이 되던 자리를 ITS 가 받는다 — 결정 15 의 「1차가 안 되면 대체로」.
+    ★답하는 대상은 **도로(`도로:이름`)뿐**이다. 도로 이름은 응답의 `roadName` 또는 메시지(`<종류>::도로::…`)에서 맞춘다.
+    ★ITS 는 고속도로·도시고속도로가 강하고 시내 사고·집회는 UTIC 가 본체다(머리말) — 그래서 UTIC 를 **대신하지 않고 함께** 묻는다(합집합).
+    """
+
+    ROAD = "도로:"
+
+    def __init__(self, source: ItsTrafficEvents) -> None:
+        self.source = source
+        self.name = "its_route_events"
+
+    def unsupported(self, targets: list[str]) -> list[str]:
+        return [target for target in targets if not target.startswith(self.ROAD)]
+
+    def affecting(self, targets: list[str], at: datetime | None = None) -> dict[str, dict[str, Any]] | None:
+        roads = [t for t in targets if t.startswith(self.ROAD)]
+        if not roads:
+            return {}
+        records = self.source.records()
+        if records is None:
+            return None
+        moment = at or self.source._now()
+        moment = moment if moment.tzinfo else moment.replace(tzinfo=KST)
+        found: dict[str, dict[str, Any]] = {}
+        for target in roads:
+            road = target[len(self.ROAD):]
+            for item in records:
+                if road not in str(item.get("roadName") or "") and road not in str(item.get("message") or ""):
+                    continue
+                level, reason = classify(item)
+                if level != "disruption" or not self.source.active_at(item, moment):
+                    continue
+                end = _parse_time(item.get("endDate"))
+                found[target] = self.source.stamp({
+                    "effect": "road_control", "reason": reason,
+                    "summary": f"{road} {reason}(국토교통부 ITS 돌발정보)",
+                    "title": str(item.get("message") or "").strip()[:120], "incident_id": item.get("eventId") or item.get("linkId"),
+                    "ends_at": end.isoformat() if end else None}, source="its")
+                break
+        return found
+
+
+__all__ = ["DEFAULT_RADIUS_M", "ENDPOINT", "ItsRouteEvents", "ItsTrafficEvents", "SEOUL_BOX", "classify", "parse_message"]

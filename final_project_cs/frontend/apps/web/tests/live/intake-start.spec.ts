@@ -1,12 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockServer, start } from "./helpers";
+import { needsBadge } from "./plan-check-kit";
 
 /**
  * `[2026-10-03 사용자 지시]` 「계획 확인하기」를 누르면 서버가 답하기를 기다리지 않고 곧바로 진행 화면(`/intakes/starting`)으로 넘어가고,
  * 서버가 접수 번호를 주면 그 접수의 화면에서 서버의 진행 알림(SSE)을 따라 이어진다. 테스트용 모방 서버로 도는 자동 시험(실제 서버 아님).
  */
 const PLAN = "10/1 09:00 경복궁 관람\n12:00 광장시장 점심";
-const SUMMARY = "장소 1곳 · 이동 1구간 확인 필요";
 const LOADING = "여행 정보를 불러오고 있어요";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
@@ -52,7 +52,7 @@ test("누르면 서버의 답을 기다리지 않고 곧바로 진행 화면으�
 
   // 서버가 받으면 접수 번호의 화면으로 바뀌고(주소가 바뀐다), 서버의 진행 알림으로 이어져 결과가 나온다
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]{36}$/, { timeout: 15_000 });
-  await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible({ timeout: 40_000 });
+  await expect(needsBadge(page)).toBeVisible({ timeout: 40_000 });
   expect((await server.received("GET", "/events")).length).toBeGreaterThan(0);
   expect((await server.received("POST", "/v1/web/trip-intakes")).length).toBe(1);
   expect(await sawLoadingScreen(page)).toBe(false);                             // 「여행 정보를 불러오고 있어요」 화면은 한 번도 뜨지 않았다
@@ -114,7 +114,7 @@ test("세션이 없는 첫 방문도 누르는 순간 진행 화면으로 넘어
   await expect(page).toHaveURL(/\/intakes\/starting$/);
   await expect(page.getByText("계획을 서버로 보내는 중이에요…")).toBeVisible();
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]{36}$/, { timeout: 15_000 });
-  await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible({ timeout: 40_000 });
+  await expect(needsBadge(page)).toBeVisible({ timeout: 40_000 });
   expect((await server.received("POST", "/v1/web/auth/session")).length).toBe(1);
   // 키 안내는 어디에도 없다
   await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
@@ -129,5 +129,5 @@ test("서버가 몇 초 넘게 답이 없으면 진행 화면이 「서버가 �
   await expect(page.getByText("계획을 서버로 보내는 중이에요…")).toBeVisible();
   await expect(page.getByText("서버가 답하는 데 시간이 걸리고 있어요")).toBeVisible({ timeout: 8_000 });     // 4초쯤 뒤
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]{36}$/, { timeout: 15_000 });
-  await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible({ timeout: 40_000 });
+  await expect(needsBadge(page)).toBeVisible({ timeout: 40_000 });
 });

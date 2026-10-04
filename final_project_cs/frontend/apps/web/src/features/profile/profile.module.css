@@ -39,3 +39,6 @@
 /* The edit screen's 「remove the saved webhook」 box. */
 .field .check { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 13px; font-weight: 500; color: var(--color-text); }
 .field .check input { width: auto; min-height: 0; padding: 0; flex: none; }
+/* `[2026-10-05]` 「디스코드로 연결」 줄: 단추와 안내·오류가 한 칸 안에서 줄을 바꿔 서도록 한다. */
+.fields dd .failed { display: block; margin-top: 6px; }
+.fields dd > .muted { display: block; margin-bottom: 4px; }

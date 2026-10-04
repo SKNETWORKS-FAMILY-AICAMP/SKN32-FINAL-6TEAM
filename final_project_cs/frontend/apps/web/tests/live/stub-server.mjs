@@ -81,12 +81,17 @@ const DEFAULTS = {
   // `[2026-10-04]` the lines between stops (`GET /v1/web/trips/{id}/route-shapes`, mobility session): "off" = an older server (FastAPI 404 `{detail}`)
   //   | "on" (two shapes on day 1: a walk on a road graph, drawn solid; a bus joined by a straight line with no ground, drawn dashed) | "fail" (500) | "slow" ("on" after 3 s).
   routeShapes: "off",
+  // `[2026-10-04]` the same for a plan not registered yet (`GET /v1/web/trip-intakes/{id}/route-shapes`, mobility session): "off" (404) | "on" (the board's first leg joined by a straight line with no ground, the second on a road) | "fail" (500)
+  intakeRoutes: "off",
   // `[2026-10-04]` agent keys (`/v1/web/agent-keys*`, server D-CS-012): "on" | "off" (an older server: FastAPI 404 `{detail}`) | "limit" (making one answers 409 agent_key_limit)
   agentKeys: "on",
   // the "this trip changed" bell (`GET /v1/web/trips/{id}/events`): "off" = an older server without it (404) | "on"
   bell: "off",
   // the customer's contact details (`GET/PUT /v1/web/profile`): "on" | "off" = an older server without it (404) | "reject" = refuses a save (422)
   profile: "on",
+  // `[2026-10-05]` 「디스코드로 연결」 (`POST /v1/web/profile/discord/connect/start`, the profile's `discord_connect.available`): "off" = an older server (the profile does not say) | "on"
+  //   | "cancelled" | "expired" | "failed" (the mock Discord window sends the browser back with that word) | "start_fails" (the start answers 500) | "bad_address" (the start hands out an address that is not Discord's)
+  discordConnect: "off",
   // how many times the trip itself fails to load (500) right after the server answered a chat message
   rereadFails: 0,
   // chat and planning asked as a stream: "on" | "off" (an older server: JSON once) | "slow" (a `slow` beat first)
@@ -142,6 +147,8 @@ let socialFlows = new Map();
 /** The Discord webhook the server holds (never answered back — only a masked form) and what its last test said. */
 let webhook = null;
 let webhookStatus = null;
+/** `[2026-10-05]` 「디스코드로 연결」: the flows started (id → the web origin to come back to). */
+let discordFlows = new Map();
 /** How many times each `request_id` came as a stream (the "drop" scenario answers only the second). */
 let attempts = new Map();
 
@@ -177,6 +184,7 @@ function reset() {
   socialFlows = new Map();
   webhook = null;
   webhookStatus = null;
+  discordFlows = new Map();
   attempts = new Map();
 }
 
@@ -288,6 +296,29 @@ function freshRichBoard() {
 function settle(items) {
   return items.map((item) => item.status === "review"
     ? { ...item, status: "adjusted", place_state: "customer", rows: [row("place", "ok", "서버가 검증한 대체 후보"), row("hours", "ok", "10:00–22:00 안에 머물러요")] } : item);
+}
+
+/**
+ * `[2026-10-04]` After a stop's start or end changed, the legs follow it, like the server's timetable does: a leg leaves when the stop before it ends
+ * (60 minutes after it starts when it has no end), arrives `minutes` later, and has `slack_min` = the next stop's start − that arrival.
+ * Late (negative slack) = `review`, otherwise `keep`; the leg's arrival line says it in the server's words.
+ */
+function followTimes(b) {
+  const toMin = (hhmm) => { const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm ?? ""); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+  const toText = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+  for (const move of b.moves) {
+    const from = b.items.find((entry) => entry.id === move.from), to = b.items.find((entry) => entry.id === move.to);
+    const start = toMin(from?.starts_at), next = toMin(to?.starts_at);
+    if (start === null || next === null || typeof move.minutes !== "number") continue;
+    const leave = toMin(from.ends_at) ?? start + 60;
+    const arrive = leave + move.minutes;
+    move.depart = toText(leave);
+    move.arrive = toText(arrive);
+    move.slack_min = next - arrive;
+    move.status = move.slack_min < 0 ? "review" : "keep";
+    const line = row("arrival", move.slack_min < 0 ? "warn" : "ok", move.slack_min < 0 ? `일정보다 ${-move.slack_min}분 늦어요` : `${move.slack_min}분 여유`);
+    move.rows = move.rows.some((entry) => entry.row === "arrival") ? move.rows.map((entry) => entry.row === "arrival" ? line : entry) : [...move.rows, line];
+  }
 }
 
 function reviewOf(b) {
@@ -537,6 +568,16 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     const made = makeSession("guest");
     return json(response, 201, sessionBody(made), origin, { "Set-Cookie": setCookie(made.sid) });
   }
+  // ── 「디스코드로 연결」: Discord's own window (a browser move, no CORS). Choosing a channel there gives the SERVER a webhook; the browser goes back to My page. ──
+  if (path === "/__test/discord-connect" && request.method === "GET") {
+    const flow = discordFlows.get(url.searchParams.get("flow") ?? "");
+    if (!flow) { response.writeHead(404); response.end(); return; }
+    const goBack = (word) => { response.writeHead(302, { Location: `${flow.origin}/mypage?discord=${word}` }); response.end(); };
+    if (["cancelled", "expired", "failed"].includes(scenario.discordConnect)) return goBack(scenario.discordConnect);
+    webhook = "https://discord.com/api/web" + "hooks/123456789012345678/abcdefghijklmnopqrstuvwxyz0123456789ABCD";      // what Discord handed the server
+    webhookStatus = "untested";
+    return goBack("connected");
+  }
   // ── social sign-in: the provider's page (a browser move, no CORS) and the calls that need no key ─────────
   const oauthPage = /^\/__test\/oauth\/(\w+)$/.exec(path);
   if (oauthPage && request.method === "GET") {
@@ -632,6 +673,14 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
       if (hook !== undefined) { webhook = hook || null; webhookStatus = hook ? "untested" : null; }
       return json(response, 200, profileView(), origin);
     }
+  }
+  if (path === "/v1/web/profile/discord/connect/start" && request.method === "POST") {
+    if (scenario.discordConnect === "off") return json(response, 404, { detail: "Not Found" }, origin);
+    if (scenario.discordConnect === "start_fails") return json(response, 500, { error: { code: "internal_error", message: "디스코드 연결을 시작하지 못했어요" } }, origin);
+    if (scenario.discordConnect === "bad_address") return json(response, 200, { authorize_url: "https://evil.example/oauth2/authorize" }, origin);
+    const id = String(discordFlows.size + 1);
+    discordFlows.set(id, { id, origin: origin ?? "" });
+    return json(response, 200, { authorize_url: `http://127.0.0.1:${PORT}/__test/discord-connect?flow=${id}` }, origin);
   }
   if (path === "/v1/web/profile/discord/test" && request.method === "POST" && scenario.profile !== "off") {
     if (!webhook) return json(response, 409, { error: { code: "no_webhook", message: "저장된 디스코드 웹훅이 없어요" } }, origin);
@@ -734,6 +783,20 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     return json(response, 202, { intake_id: INTAKE_ID, status: "reading", stage: "received" }, origin);
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}` && request.method === "GET") { polls += 1; return json(response, 200, intakeView(board.revision), origin); }
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/route-shapes` && request.method === "GET" && scenario.intakeRoutes !== "off") {
+    if (scenario.intakeRoutes === "fail") return json(response, 500, { error: { code: "internal_error", message: "서버 오류" } }, origin);
+    const byId = new Map(board.items.map((item) => [item.id, item]));
+    const shapes = board.moves.flatMap((move, at) => {
+      const a = byId.get(move.from), b = byId.get(move.to);
+      if (typeof a?.place?.latitude !== "number" || typeof b?.place?.latitude !== "number") return [];
+      const from = [a.place.longitude, a.place.latitude], to = [b.place.longitude, b.place.latitude];
+      const straight = at === 0;
+      return [{ from_item_id: move.from, to_item_id: move.to, from: a.title, to: b.title, mode: straight ? "subway" : "walk",
+        line: { type: "LineString", coordinates: straight ? [from, to] : [from, [(from[0] + to[0]) / 2 + 0.002, (from[1] + to[1]) / 2 - 0.001], to] },
+        source: straight ? "straight_line" : "local_road_graph", grade: straight ? "근거없음" : "추정", distance_m: 900 + at * 300, note: straight ? "탄 역 정보가 없어 직선으로 이었어요" : null }];
+    });
+    return json(response, 200, { intake_id: INTAKE_ID, revision: board.revision, shapes, attribution: "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)" }, origin);
+  }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/events` && request.method === "GET") {
     if (scenario.intakeEvents === "off") return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
     // Without the server's own check there is no content to stream: only the stage (and "stalled"), as an older server did.
@@ -749,6 +812,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     if (scenario.edits === "not_found") return json(response, 422, { error: { code: "place_not_found", message: "「없는 곳」: 이 이름으로 장소를 찾지 못했어요" } }, origin);
     const { edits = [] } = JSON.parse(raw || "{}");
     if (scenario.editRefusal === "locked" && edits.some((edit) => !edit.field.endsWith(".locked"))) return json(response, 409, { error: { code: "item_locked", message: "고정한 일정이라 바꿀 수 없어요" } }, origin);
+    let retimed = false;
     for (const edit of edits) {
       if (edit.field === "trip.title" && typeof edit.value === "string") tripTitle = edit.value.trim().slice(0, 80) || tripTitle;
       const m = /^items\[(\d+)\]\.(\w+)$/.exec(edit.field);
@@ -759,8 +823,8 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
       else if (m[2] === "removed") { if (edit.value === true) board.removed = [...(board.removed ?? []), item]; board.items = edit.value === true ? board.items.filter((entry) => entry !== item) : board.items; }
       else if (m[2] === "place" && edit.value?.name) { item.place = place(edit.value.name, edit.value.latitude ?? 37.57, edit.value.longitude ?? 126.98, { source: edit.value.source ?? "kakao" }); item.status = "adjusted"; item.place_state = "customer"; item.rows = [row("place", "ok", "직접 고른 곳이에요")]; }
       else if (m[2] === "place" && edit.value?.none === true) { item.place = null; item.place_state = "none"; item.status = "adjusted"; item.rows = [row("place", "ok", "장소 없이 자유 시간으로 두었어요")]; }
-      else if (m[2] === "starts_at") item.starts_at = edit.value;
-      else if (m[2] === "ends_at") item.ends_at = edit.value;
+      else if (m[2] === "starts_at") { item.starts_at = edit.value; retimed = true; }
+      else if (m[2] === "ends_at") { item.ends_at = edit.value || null; retimed = true; }       // "" = no end time, as the stop editor sends it
     }
     // a removed stop comes back when the edit says `removed: false`
     for (const edit of edits) {
@@ -770,6 +834,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
         if (back) { board.items = [...board.items, back].sort((a, b) => a.index - b.index); board.removed = board.removed.filter((entry) => entry !== back); }
       }
     }
+    if (retimed) followTimes(board);                       // the legs follow the new times (other edits leave them as they are)
     board.revision += 1;
     return json(response, 200, intakeView(board.revision), origin);
   }
@@ -873,7 +938,8 @@ function profileView() {
   const id = webhook ? DISCORD.exec(webhook)?.[1] ?? "" : "";
   return { recovery_email: recoveryEmail,
     discord_webhook: webhook ? { set: true, masked: `https://discord.com/api/webhooks/${id.slice(0, 4)}…/••••`, status: webhookStatus, checked_at: webhookStatus === "untested" ? null : new Date().toISOString() }
-      : { set: false, masked: null, status: null, checked_at: null }, updated_at: null };
+      : { set: false, masked: null, status: null, checked_at: null },
+    ...(scenario.discordConnect === "off" ? {} : { discord_connect: { available: true } }), updated_at: null };
 }
 
 /** The intake reading stream, like `op_stream.watch`: the state, never what was read. The screen re-reads the intake on each event. */

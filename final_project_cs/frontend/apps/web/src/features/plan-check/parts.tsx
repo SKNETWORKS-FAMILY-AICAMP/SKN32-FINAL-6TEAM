@@ -21,9 +21,10 @@ export function Checks({ id, rows }: { id?: string; rows: CheckRow[] }) {
     </li>)}</ul>;
 }
 
+/** ★`[2026-10-04 사용자 지시]` Only 「확인 필요」 is said: a stop that is simply fine (or was adjusted a little by the server) carries no word — the old 「조정」 told no one anything. */
 export function VerdictPill({ verdict }: { verdict: Verdict }) {
   const t = useT();
-  return <span className={styles.pill} data-verdict={verdict}>{verdictLabel(verdict, t)}</span>;
+  return verdict === "review" ? <span className={styles.pill} data-state="review">{verdictLabel(verdict, t)}</span> : null;
 }
 
 export function VerdictMark({ verdict }: { verdict: Verdict }) {
@@ -101,3 +102,29 @@ export function Act({ why, onPress, explain, className, children, title, ...rest
 
 /** 「A」 「B」 「C」 for the change screen's cards and pins (the current stop is card 0). */
 export const letter = (index: number) => "ABCDEFGH"[index - 1] ?? String(index);
+
+/** What the list can be narrowed to by pressing a count in the sheet's head: only what needs a look, or only what was changed. */
+export type ListFilter = "needs" | "changed";
+
+/**
+ * ★`[2026-10-04 사용자 지시]` The sheet's head says the state in marks and numbers, not a sentence that wrapped to a second line (「장소 3곳 확인 필요」):
+ * 「! 3」 = three need a look, 「✎ 2」 = two were changed — each can be pressed to see only those. Nothing to say: a single ✓.
+ */
+export function HeadBadges({ needs, changed, filter, onFilter, registered, rechecking }: {
+  needs: number; changed: number; filter: ListFilter | null; onFilter: (next: ListFilter | null) => void;
+  registered: boolean; rechecking: { at: number; of: number } | null;
+}) {
+  const t = useT();
+  if (registered) return <span className={styles.headBadge} data-kind="ok"><span className={styles.mark} data-result="ok" aria-hidden="true">✓</span>{t("등록 완료", "Registered")}</span>;
+  if (rechecking) return <span className={styles.headBadge} data-kind="wait" role="status"><span className={styles.spinner} aria-hidden="true" />{rechecking.at}/{rechecking.of}<span className="sr-only">{t("재검증 중", "Checking again")}</span></span>;
+  const toggle = (kind: ListFilter) => onFilter(filter === kind ? null : kind);
+  return <span className={styles.headBadges}>
+    {needs > 0 && <button type="button" className={styles.headBadge} data-kind="needs" aria-pressed={filter === "needs"} onClick={() => toggle("needs")}
+      aria-label={t(`확인 필요 ${needs}곳`, `${needs} to check`)} title={filter === "needs" ? t("눌러서 전체 일정 보기", "Press to show every stop") : t("눌러서 확인이 필요한 곳만 모아 보기", "Press to show only what needs a look")}>
+      <span className={styles.mark} data-result="warn" aria-hidden="true">!</span><b>{needs}</b></button>}
+    {changed > 0 && <button type="button" className={styles.headBadge} data-kind="changed" aria-pressed={filter === "changed"} onClick={() => toggle("changed")}
+      aria-label={t(`바뀐 일정 ${changed}곳`, `${changed} changed`)} title={filter === "changed" ? t("눌러서 전체 일정 보기", "Press to show every stop") : t("눌러서 바뀐 곳만 모아 보기", "Press to show only what changed")}>
+      <span className={styles.mark} data-result="filled" aria-hidden="true">✎</span><b>{changed}</b></button>}
+    {needs === 0 && changed === 0 && <span className={styles.headBadge} data-kind="ok"><span className={styles.mark} data-result="ok" aria-hidden="true">✓</span><span className="sr-only">{t("고칠 곳이 없어요", "Nothing to fix")}</span></span>}
+  </span>;
+}

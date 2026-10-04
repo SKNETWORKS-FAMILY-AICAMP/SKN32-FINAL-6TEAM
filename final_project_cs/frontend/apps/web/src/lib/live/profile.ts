@@ -9,11 +9,14 @@ import { api, LiveError } from "./client";
  */
 export interface ServerProfile {
   webhook: { set: boolean; masked: string | null; status: "untested" | "ok" | "invalid" | null; checkedAt: string | null };
+  /** `[2026-10-05]` The server can connect a Discord channel through Discord's own window (`discord_connect.available`); an older server does not say, so false. */
+  discordConnect: boolean;
   updatedAt: string | null;
 }
 
 interface Wire {
   discord_webhook?: { set?: boolean; masked?: string | null; status?: string | null; checked_at?: string | null } | null;
+  discord_connect?: { available?: boolean } | null;
   updated_at?: string | null;
 }
 
@@ -24,6 +27,7 @@ function read(wire: Wire): ServerProfile {
   const status = STATUSES.find((value) => value === hook.status) ?? null;
   return {
     webhook: { set: hook.set === true, masked: typeof hook.masked === "string" ? hook.masked : null, status, checkedAt: hook.checked_at ?? null },
+    discordConnect: wire.discord_connect?.available === true,
     updatedAt: wire.updated_at ?? null,
   };
 }

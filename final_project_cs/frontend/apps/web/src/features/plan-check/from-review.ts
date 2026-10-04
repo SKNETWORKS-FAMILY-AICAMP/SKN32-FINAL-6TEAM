@@ -45,7 +45,7 @@ function planItem(item: ReviewItem, day: number, info: PlaceInfo | null): PlanIt
     id: item.id, day, date: item.date ?? "", startsAt: item.starts_at ?? "", endsAt: item.ends_at ?? "",
     title: picked ?? item.title, ...(picked && { written: item.title }), place: item.place?.name ?? "", noPlace: item.place_state === "none",
     coordinates: located(item.place) ? { lat: item.place.latitude, lng: item.place.longitude } : null,
-    checks: (item.rows ?? []).map(row), verdict: verdictOf(item.status), locked: item.locked, info, suggestion: null,
+    checks: (item.rows ?? []).map(row), verdict: verdictOf(item.status), locked: item.locked, booked: item.booked ?? null, info, suggestion: null,
   };
 }
 
@@ -53,6 +53,7 @@ function planMove(move: ReviewMove, dayOf: Map<string, number>): PlanMove {
   return {
     id: `${move.from}:${move.to}`, fromId: move.from, toId: move.to, day: dayOf.get(move.from) ?? move.day ?? 1,
     departAt: move.depart ?? "", mode: move.mode_label ?? "", summary: move.summary,
+    minutes: move.minutes ?? null, arriveAt: move.arrive ?? "", slackMin: move.slack_min ?? null, estimated: move.basis === "estimate",
     checks: move.rows.map(row), verdict: verdictOf(move.status),
   };
 }
