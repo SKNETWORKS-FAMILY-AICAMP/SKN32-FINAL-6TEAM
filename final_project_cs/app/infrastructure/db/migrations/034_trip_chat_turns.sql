@@ -6,6 +6,10 @@
 --   append-only 로 쓴다 — 고치지 않는다(기록이다).
 -- ★보류 제안 이유 `requested_options` — 「다른 데 알아봐 줘 · 추천해 줘」는 바꾸지 않고 후보를 보여 **고르게** 한다.
 -- ★다시 돌려도 안전하다.
+-- ☆`[2026-10-05]` 위 「다시 돌려도 안전하다」는 **틀린 말**이었다. 이 파일들은 번호 순서대로 **매번 전부** 다시 돌고(`migrate.py`),
+--   각자 자기 시점의 값 목록으로 제약을 다시 건다. 뒤 마이그레이션(033~035)이 값을 넓힌 뒤에 032 가 좁은 목록을 다시 걸면
+--   이미 들어 있는 `relaxed`·`requested_options`·`other_options` 행이 제약을 어겨 마이그레이션 전체가 멈춘다(CheckViolation).
+--   그래서 **제약이 이미 이 파일의 값을 허용하면 건드리지 않는다**(좁히지 않는다). 새 DB 에서는 번호 순서대로 넓어진다.
 
 CREATE TABLE IF NOT EXISTS trip_chat_turns (
     turn_id     bigserial PRIMARY KEY,
@@ -20,10 +24,13 @@ CREATE INDEX IF NOT EXISTS trip_chat_turns_trip_idx ON trip_chat_turns (tenant_i
 
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'pending_changes_reason_check') THEN
-        ALTER TABLE pending_changes DROP CONSTRAINT pending_changes_reason_check;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'pending_changes_reason_check'
+                    AND pg_get_constraintdef(oid) LIKE '%''requested_options''%') THEN
+        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'pending_changes_reason_check') THEN
+            ALTER TABLE pending_changes DROP CONSTRAINT pending_changes_reason_check;
+        END IF;
+        ALTER TABLE pending_changes ADD CONSTRAINT pending_changes_reason_check
+            CHECK (reason IN ('ask_first', 'protected', 'safety_alert',
+                              'indoor_unknown', 'indoor_unknown_options', 'relaxed', 'requested_options'));
     END IF;
-    ALTER TABLE pending_changes ADD CONSTRAINT pending_changes_reason_check
-        CHECK (reason IN ('ask_first', 'protected', 'safety_alert',
-                          'indoor_unknown', 'indoor_unknown_options', 'relaxed', 'requested_options'));
 END $$;
