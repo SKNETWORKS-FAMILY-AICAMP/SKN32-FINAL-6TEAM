@@ -230,6 +230,45 @@ def fig5():
     plt.close(fig)
 
 
+# ───────────────── 6. 코랩을 GPU 일꾼으로 ─────────────────
+def fig6():
+    H = 1500
+    fig, ax = canvas(H)
+    head(ax, '코랩을 GPU 일꾼으로 쓰는 방법', '무료 서버는 접수만, 코랩은 일감을 가져가 계산하고 결과를 돌려준다')
+    for x, k, a, b in ((40, 'done', '고객·에이전트', '채팅·API 요청'), (390, 'now', '무료 서버', '접수 · 대기줄 · 앱'), (740, 'gpu', '코랩 일꾼', 'GPU 계산')):
+        box(ax, x, 180, 300, 120, k, 18, 2.4)
+        t(ax, x + 150, 222, a, 20, PAL[k][2], True, 'center')
+        t(ax, x + 150, 264, b, 15, PAL[k][2], False, 'center')
+    ax.annotate('', xy=(390, 240), xytext=(340, 240), arrowprops=dict(arrowstyle='-|>', color=SUB, lw=2.4, mutation_scale=22))
+    ax.annotate('', xy=(690, 214), xytext=(740, 214), arrowprops=dict(arrowstyle='-|>', color='#534ab7', lw=2.4, mutation_scale=22))
+    ax.annotate('', xy=(690, 266), xytext=(740, 266), arrowprops=dict(arrowstyle='-|>', color='#534ab7', lw=2.4, mutation_scale=22))
+    t(ax, 715, 330, '① 코랩이 먼저 「일감 있나요?」 하고 가져감', 14.5, '#534ab7', True, 'center')
+    t(ax, 715, 362, '② 계산한 결과를 서버에 올림', 14.5, '#534ab7', True, 'center')
+    t(ax, 40, 420, '코랩은 밖으로만 연락하므로 공개 주소·터널이 필요 없다 (이 점은 약관의 「웹 서비스 제공」과 다름)', 14.5, SUB)
+    box(ax, 30, 470, 1020, 200, 'now', 18, 2.4)
+    t(ax, 56, 508, '되는 점', 19, PAL['now'][2], True)
+    for i, s in enumerate(['· 비용: T4 기준 시간당 약 0.12달러 → 상시 흉내 내면 월 약 12만원', '  (RunPod 상시 약 24.5만원의 절반 정도)', '· 우리 앱은 무료 서버 하나에 그대로 두면 됨', '· 코랩이 끊겨도 일감은 서버 대기줄에 남음']):
+        t(ax, 56, 548 + i * 33, s, 14.5, PAL['now'][2])
+    box(ax, 30, 700, 1020, 430, 'bad', 18, 2.4)
+    t(ax, 56, 738, '막히는 점 (공식 FAQ 확인)', 19, PAL['bad'][2], True)
+    items = ['· 하루마다 끊김: 무료 최대 12시간, Pro+ 연속 최대 24시간', '  끊길 때마다 노트북을 다시 열어 실행해야 함 (자동 재시작은 못 찾음)', '· GPU 종류 보장 없음: T4가 걸리면 속도가 달라지고 바뀔 수 있음',
+             '· 잔액이 떨어지면 무료 정책으로 돌아가 시간·사용량이 더 줄어듦', '· 약관 회색지대: 「웹 서비스 제공」 금지에는 안 걸리지만,', '  무료는 「분산 컴퓨팅 일꾼」이 명시 금지, 상시 고객 처리용은 취지와 어긋남', '· 끊기는 동안 고객 요청이 쌓임 → 「멈추면 서버를 끈다」는 결정과 충돌']
+    for i, s in enumerate(items):
+        t(ax, 56, 780 + i * 44, s, 14.5, PAL['bad'][2])
+    box(ax, 30, 1160, 500, 300, 'gpu', 18, 2.4)
+    t(ax, 56, 1198, '어울리는 일', 18, PAL['gpu'][2], True)
+    for i, s in enumerate(['· 평가·학습 같은 배치', '  (끊겨도 이어서 하면 됨)', '· 우리 연구 시험을 코랩에', '  나눠 맡기는 것']):
+        t(ax, 56, 1250 + i * 38, s, 14.5, PAL['gpu'][2])
+    t(ax, 280, 1425, '→ 보조 용도 추천', 17, PAL['gpu'][2], True, 'center')
+    box(ax, 550, 1160, 500, 300, 'warn', 18, 2.4)
+    t(ax, 576, 1198, '어울리지 않는 일', 18, PAL['warn'][2], True)
+    for i, s in enumerate(['· 고객 요청을 실시간으로', '  분류하는 경로', '· 하루 24시간 끊김 없이', '  돌아야 하는 서비스']):
+        t(ax, 576, 1250 + i * 38, s, 14.5, PAL['warn'][2])
+    t(ax, 800, 1425, '→ 쓰지 않기 추천', 17, PAL['warn'][2], True, 'center')
+    fig.savefig(os.path.join(OUT, 'fig6_코랩_일꾼_방식.png'))
+    plt.close(fig)
+
+
 if __name__ == '__main__':
-    fig1(); fig2(); fig3(); fig4(); fig5()
+    fig1(); fig2(); fig3(); fig4(); fig5(); fig6()
     print('done', sorted(f for f in os.listdir(OUT) if f.endswith('.png')))
