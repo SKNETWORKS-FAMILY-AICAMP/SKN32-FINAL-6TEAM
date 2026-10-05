@@ -15,6 +15,7 @@ args = sys.argv[1:]
 MODEL, SETS = args[0], args[1].split(',')
 opt = lambda k, d: args[args.index(k) + 1] if k in args else d
 LIMIT, WORKERS, EFFORT = int(opt('--limit', '0')), int(opt('--workers', '3')), opt('--effort', 'low')
+PREFIX = opt('--out-prefix', 'codex')   # 결과 파일 이름 앞부분. 예전 Codex 묶음 풀이 결과(codex_gpt-6-luna_mix8·mix9 등, 형식이 다름)와 이름이 겹치면 --out-prefix codexcli 로 피한다
 W = '월화수목금토일'
 WORK = os.path.join(tempfile.gettempdir(), 'codex_solve_work_' + MODEL)
 os.makedirs(WORK, exist_ok=True)
@@ -84,8 +85,10 @@ for name in SETS:
     job = json.load(open(os.path.join(HERE, 'fixtures', f'{name}.json'), encoding='utf-8'))['sets'][name]
     qs = job['qs'][:LIMIT] if LIMIT else job['qs']
     ids = {i['id'] for i in job['items']}
-    outf = os.path.join(HERE, 'results', f'codex_{MODEL}_{name}{"_smoke" if LIMIT else ""}.json')
+    outf = os.path.join(HERE, 'results', f'{PREFIX}_{MODEL}_{name}{"_smoke" if LIMIT else ""}.json')
     done = json.load(open(outf, encoding='utf-8')) if os.path.exists(outf) else {'rows': {}}
+    if 'rows' not in done:
+        sys.exit(f'{outf} 는 다른 형식의 예전 결과 파일이다 — 덮어쓰지 않고 멈춘다. --out-prefix codexcli 처럼 다른 이름을 쓴다.')
     rows = done['rows']
     todo = [k for k in range(len(qs)) if str(k) not in rows or rows[str(k)].get('error')]
     t0 = time.time()

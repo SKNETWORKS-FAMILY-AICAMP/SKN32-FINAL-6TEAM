@@ -1,7 +1,7 @@
 # 서버에서: 증류 파일럿 — 학생 모델(Gemma 4 E4B)을 4비트(NF4)로 올리고 LoRA 만 학습한다(QLoRA). 정답 토큰에만 손실을 준다.
 #  입력: train.jsonl(prompt · completion) — 로컬 distill_assemble.py 가 만든 것. 모델은 HF 형식 폴더.
 #  메모리: 어휘가 26만이라 전 위치에 로짓을 만들면 2GB 가 넘는다 → 정답이 끝에 있으므로 logits_to_keep 으로 끝 몇 토큰만 만든다.
-# 사용: python3 qlora_train.py <모델폴더> <train.jsonl> <어댑터 출력 폴더> [--epochs 2] [--lr 2e-4] [--rank 16] [--accum 8] [--limit N] [--maxlen 3072]
+# 사용: python3 qlora_train.py <모델폴더> <train.jsonl> <어댑터 출력 폴더> [--epochs 2] [--lr 2e-4] [--rank 16] [--accum 8] [--limit N] [--maxlen 3072] [--seed 20261005]
 import json, math, os, random, sys, time
 import torch
 from peft import LoraConfig, get_peft_model
@@ -15,9 +15,9 @@ def opt(name, default, cast=float):
     return cast(a[a.index(name) + 1]) if name in a else default
 
 
-EPOCHS, LR, RANK, ACCUM, LIMIT, MAXLEN = opt('--epochs', 2, int), opt('--lr', 2e-4), opt('--rank', 16, int), opt('--accum', 8, int), opt('--limit', 0, int), opt('--maxlen', 3072, int)
-random.seed(20261005)
-torch.manual_seed(20261005)
+EPOCHS, LR, RANK, ACCUM, LIMIT, MAXLEN, SEED = opt('--epochs', 2, int), opt('--lr', 2e-4), opt('--rank', 16, int), opt('--accum', 8, int), opt('--limit', 0, int), opt('--maxlen', 3072, int), opt('--seed', 20261005, int)
+random.seed(SEED)
+torch.manual_seed(SEED)
 tok = AutoTokenizer.from_pretrained(MODEL)
 rows = [json.loads(l) for l in open(TRAIN, encoding='utf-8')]
 if LIMIT:
