@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS places (
 def linkable(conn):
     """코어 places 와 매칭기(202) · 판정 때 잇기(220)를 올린다. conftest 는 202 를 뺀다."""
     conn.execute(PLACES)
-    for name in ("202_dining_matcher.sql", "220_dining_runtime_link.sql"):
+    for name in ("202_dining_matcher.sql", "224_dining_runtime_link.sql"):
         conn.execute(open(os.path.join(MIGRATIONS, name), encoding="utf-8").read())
     return conn
 

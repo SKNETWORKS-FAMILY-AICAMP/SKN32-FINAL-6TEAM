@@ -1,4 +1,4 @@
--- 224  요식 알림 기록을 (★원래 220 — 팀의 220_dining_runtime_link 와 번호가 겹쳐 2026-10-05 에 옮겼다) 여행마다 나눈다 (2026-09-28 cs)
+-- 220  요식 알림 기록을 여행마다 나눈다 (2026-09-28 cs)
 --
 -- 왜.
 --   212 의 dn_notice 는 「같은 식당 · 같은 시각 · 같은 종류는 한 번」이었다(UNIQUE place_uid, target_at, kind).
@@ -20,8 +20,8 @@
 ALTER TABLE dining.dn_notice ADD COLUMN IF NOT EXISTS tenant_id text;
 ALTER TABLE dining.dn_notice ADD COLUMN IF NOT EXISTS trip_id   uuid;
 
-COMMENT ON COLUMN dining.dn_notice.tenant_id IS '어느 테넌트의 여행에 간 말인가. 옛 행(224 전)은 비어 있다.';
-COMMENT ON COLUMN dining.dn_notice.trip_id   IS '어느 여행에 간 말인가. 옛 행(224 전)은 비어 있다.';
+COMMENT ON COLUMN dining.dn_notice.tenant_id IS '어느 테넌트의 여행에 간 말인가. 옛 행(220 전)은 비어 있다.';
+COMMENT ON COLUMN dining.dn_notice.trip_id   IS '어느 여행에 간 말인가. 옛 행(220 전)은 비어 있다.';
 
 ALTER TABLE dining.dn_notice DROP CONSTRAINT IF EXISTS dn_notice_once;
 
