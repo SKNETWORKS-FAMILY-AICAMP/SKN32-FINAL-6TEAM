@@ -20,7 +20,7 @@ from uuid import UUID
 
 from app.core.contracts import CaseStatus
 from app.core.transition import transition_case
-from app.domain.events import REQUIRED_PAYLOAD_KEYS, TRANSITIONS, EventType
+from app.core.case_lifecycle.events import REQUIRED_PAYLOAD_KEYS, TRANSITIONS, EventType
 
 REASON = "trip_deleted"
 ACTOR_TYPE, ACTOR_ID = "system", "trip_delete"

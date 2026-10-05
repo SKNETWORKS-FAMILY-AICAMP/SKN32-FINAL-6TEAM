@@ -31,7 +31,7 @@ from app.application.classification import REQUIRED_LABELS, classify_case
 from app.core.idempotency import idempotency_key as make_idempotency_key
 from app.core.subjects import SubjectNotFound, SubjectUnsupported
 from app.core.transition import transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 
 
 class IdempotencyConflict(RuntimeError):

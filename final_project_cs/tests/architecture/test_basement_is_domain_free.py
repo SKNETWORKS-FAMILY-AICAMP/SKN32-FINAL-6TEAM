@@ -6,7 +6,7 @@
 
 그래서 지켜야 할 경계가 있다:
 
-    basement (도메인을 몰라야 함)      app/core, app/domain, app/application,
+    basement (도메인을 몰라야 함)      app/core(Case 상태 규칙 app/core/case_lifecycle 포함), app/application,
                                        app/infrastructure, app/presentation
     도메인 자리 (알아도 됨)            app/modules/**, config/**, 도메인 마이그레이션
 
@@ -27,7 +27,9 @@ import pytest
 APP = Path("app")
 
 #: basement — 업무 도메인 어휘가 있으면 안 되는 곳
-BASEMENT_DIRS = ("core", "domain", "application", "infrastructure", "presentation")
+#: ★`[2026-10-06]` 옛 `app/domain/`(Case 상태 규칙 두 파일)을 `app/core/case_lifecycle/` 로 옮겼다 —
+#:  업무 도메인 묶음 폴더 이름과 「domain」이 겹치지 않게. `core` 가 그 자리를 덮는다.
+BASEMENT_DIRS = ("core", "application", "infrastructure", "presentation")
 
 #: 도메인 자리 — 여기서는 도메인을 알아도 된다
 DOMAIN_DIRS = ("modules",)

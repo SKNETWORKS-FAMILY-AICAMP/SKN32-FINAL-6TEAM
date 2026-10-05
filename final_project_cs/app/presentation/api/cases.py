@@ -16,7 +16,7 @@ from app.application.controller import ControllerError
 from app.core.subjects import SubjectNotFound, SubjectUnsupported
 from app.core.idempotency import idempotency_key
 from app.core.transition import transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
 from app.application.classification import classify_case

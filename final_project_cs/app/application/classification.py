@@ -28,7 +28,7 @@ from typing import Any, Protocol
 from uuid import UUID
 
 from app.core.transition import transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.presentation.security import masked
 
 logger = logging.getLogger(__name__)

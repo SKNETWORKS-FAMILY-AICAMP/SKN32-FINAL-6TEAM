@@ -229,7 +229,7 @@ def _finish_fact_case(*, tenant: str, case_id: UUID, trip_id: UUID, message: str
     from app.application.classification import classify_case
     from app.application.routing import case_type_of
     from app.core.transition import transition_case
-    from app.domain.events import EventType
+    from app.core.case_lifecycle.events import EventType
     from app.infrastructure.db import repository
 
     try:
@@ -280,7 +280,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
     from app.application.classification import classify_case
     from app.application.routing import case_type_of
     from app.core.transition import transition_case
-    from app.domain.events import EventType
+    from app.core.case_lifecycle.events import EventType
     from app.infrastructure.db import repository
     from app.infrastructure.ollama_chat import OllamaError
 
@@ -564,7 +564,7 @@ def _try_decide(conn, *, store: TripStore, tenant: str, trip_id: UUID, items: li
 def _open_message_case(conn, *, tenant: str, trip: dict[str, Any], message: str, marker: dict[str, Any],
                        selected: UUID | None, actor_id: str, extra: dict[str, Any]) -> UUID:
     from app.core.transition import transition_case
-    from app.domain.events import EventType
+    from app.core.case_lifecycle.events import EventType
     from app.infrastructure.db import repository
 
     case_id = repository.create_case(conn, tenant_id=tenant, customer_id=trip["customer_id"], subject=message,
@@ -596,7 +596,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     from app.application.classification import classify_case
     from app.core.settings import get_guardrails
     from app.core.transition import transition_case
-    from app.domain.events import EventType
+    from app.core.case_lifecycle.events import EventType
     from app.infrastructure.db import repository
 
     from . import trip_facts, trip_replies

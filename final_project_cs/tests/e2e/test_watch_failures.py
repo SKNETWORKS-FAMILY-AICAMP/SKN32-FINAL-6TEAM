@@ -21,7 +21,7 @@ import pytest
 
 from app.core import settings as settings_module
 from app.core.transition import transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
 from app.modules.travel_ops import pending as pending_module

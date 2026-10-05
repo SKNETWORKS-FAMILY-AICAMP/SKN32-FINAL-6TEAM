@@ -29,7 +29,7 @@
   처음엔 `app/infrastructure/travel/watch.py` 에 뒀는데
   `tests/architecture/test_basement_is_domain_free.py` 가 잡았다 —
   이 파일은 `bookings`·`lodging`·`dining` 같은 **도메인 어휘를 쓴다.**
-  basement(`app/core`·`app/domain`·`app/application`·`app/infrastructure`)는
+  basement(`app/core`·`app/core/case_lifecycle`·`app/application`·`app/infrastructure`)는
   도메인을 몰라야 한다(`CLAUDE.md` §6).
 
   **가드를 끄지 않고 파일을 옮겼다.** 「무엇을 감시할지」는 도메인 지식이고

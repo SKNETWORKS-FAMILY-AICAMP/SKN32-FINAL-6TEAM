@@ -4,7 +4,7 @@
 ★**Registry 등록형이라 코어는 한 줄도 안 바뀐다** — 이 아키텍처가 도메인 교체를
   견딘다는 주장을 실제로 시험한 자리다. 2026-09-09 에 등록을 여기로 옮기고
   2026-09-10 에 커머스 구현(`app/modules/customer_ops/`, 1,585줄)을 걷어냈는데,
-  `app/core`·`app/domain`·`app/application` 은 **라우팅 축 한 줄**을 빼고
+  `app/core`·`app/core/case_lifecycle`·`app/application` 은 **라우팅 축 한 줄**을 빼고
   손대지 않았다(`app/application/routing.py`, v11 §5-B).
 
   실측(2026-09-09): 교체 대상은 `app/modules` 1,585줄 = 저장소의 5.9% 이고

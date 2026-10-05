@@ -15,7 +15,7 @@ from app.core.idempotency import idempotency_key, request_id_for_case
 from app.core.registry import TeamRegistry, RegistryError
 from app.core.settings import get_guardrails
 from app.core.transition import OutboxMessage, transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.core.verification import Mismatch
 from app.application.case_service import CaseService, ResumeTokenError
 from app.application.proposal_guard import audit_payload, check_proposal, describe

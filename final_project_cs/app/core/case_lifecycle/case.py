@@ -13,7 +13,7 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from app.core.contracts import CaseStatus, InvalidTransition
-from app.domain.events import (
+from app.core.case_lifecycle.events import (
     REQUIRED_PAYLOAD_KEYS,
     EventType,
     allowed_events,

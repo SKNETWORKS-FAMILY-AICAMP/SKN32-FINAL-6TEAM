@@ -33,7 +33,7 @@ domain_note: 조립 기제는 도메인 무관이다. 예시로 커머스·여�
 
 | 컴포넌트 | 위치 | 필수 의존 |
 |---|---|---|
-| Case lifecycle · `transition_case()` | `app/core/transition.py`, `app/domain/{case,events}.py` | 상태 변경의 단일 진입점; API의 Case 생성·분류가 이벤트에 의존 |
+| Case lifecycle · `transition_case()` | `app/core/transition.py`, `app/core/case_lifecycle/{case,events}.py` | 상태 변경의 단일 진입점; API의 Case 생성·분류가 이벤트에 의존 |
 | 계약 모델 | `app/core/contracts.py` | Controller·Team·평가가 `TeamTask`·`TeamResult`·`TeamManifest`·`TeamModule`·`ContextPack`·`Evidence` 사용 |
 | Team Registry | `app/core/registry.py` | capability 해석의 유일한 경로 |
 | Context Broker | `app/core/context.py` | 12,000 토큰 예산·절삭·`degraded` 신호 |
@@ -185,6 +185,10 @@ teams:
 ## 만드는 순서 · 공통 뼈대
 
 만드는 순서는 [build-order.md](build-order.md). 반복되는 네 가지를 조합형 유틸로 빼는 설계는 [common-utils.md](common-utils.md)에 있고 `[정정 2026-09-10]` 「아직 구현은 없다」(09-03)는 낡았다 — **`app/modules/travel_ops/_base.py` 가 생겼다**(작업 트리, 커밋 전). common-utils 설계의 네 가지를 다 담았는지는 대조하지 않았다.
+
+## 폴더 구조
+
+`[2026-10-06]` 업무 도메인 코드를 이 문서의 구성 단위대로 칸을 나눠 두는 구조는 [D-CS-013](../decisions/D-CS-013-domain-folder-layout.md). 0단계(옛 `app/domain/` → `app/core/case_lifecycle/`)만 끝났고 나머지는 단계별로 옮긴다.
 
 ## 관계
 

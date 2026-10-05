@@ -1,5 +1,5 @@
 <!-- 이 파일은 `python -m scripts.make_state_diagram` 이 만든다. 손으로 고치지 않는다. -->
-<!-- 출처: app/domain/events.py:TRANSITIONS -->
+<!-- 출처: app/core/case_lifecycle/events.py:TRANSITIONS -->
 
 # Case 상태 전이도 (자동 생성)
 

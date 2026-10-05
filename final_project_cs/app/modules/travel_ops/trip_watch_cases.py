@@ -180,7 +180,7 @@ class TripWatchCaseOpener:
         """예외로 터진 Case — **죽은 채 `running` 으로 남기지 않고** `escalated`(`team_error`)로 닫는다. 운영자가 오류로 본다.
         (Controller 는 예외가 나면 그 실행 기록만 실패로 닫고 Case 는 그대로 둔다 — 다시 실행되지도, 사람 눈에 띄지도 않았다.)"""
         from app.core.transition import transition_case
-        from app.domain.events import CaseStatus, EventType
+        from app.core.case_lifecycle.events import CaseStatus, EventType
 
         try:
             with self._connect() as conn, conn.transaction():
