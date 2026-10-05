@@ -191,7 +191,8 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
         # ★`[2026-10-05]` 따릉이 실시간 조회의 호출 한도 문(env 하루 한도 + DB 예산) — 이동 쪽은 infrastructure 를 import 하지 않으니 여기서 만들어 넘긴다.
         #   못 만들면 문 없이 부르지 않고 실시간을 끈다(이동 쪽이 처리).
         _bike_gate = None
-        if get_settings().seoul_openapi_key:
+        # ★설정 객체에 그 칸이 없을 수 있다(시험이 넣는 일부 칸짜리 대역) — 칸이 없으면 키가 없는 것과 같다(`wiring.configure_from_settings` 와 같은 규칙)
+        if getattr(get_settings(), "seoul_openapi_key", ""):
             try:
                 from app.infrastructure.travel.source_budget import build_gate
 
