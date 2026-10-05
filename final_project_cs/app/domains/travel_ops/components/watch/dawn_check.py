@@ -34,7 +34,7 @@ from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore, visible_to
-from app.domains.travel_ops.instances.dining.ledger import dining_states
+from app.domains.travel_ops.components.team_hooks import dining_ledger
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, NoChange, plan_activity_closed_on_day, plan_closed_on_day
 from app.domains.travel_ops.components.planning.pending import apply_or_ask
 
@@ -160,15 +160,12 @@ class DawnCheck:
                                               detail=detail, checked_at=checked_at,
                                               exclude=self._closed_places(conn, day),
                                               price_lookup=self._price_lookup(),
-                                              state_lookup=lambda slots: dining_states(conn, self.store.tenant_id,
-                                                                                       slots))
+                                              state_lookup=dining_ledger.state_lookup(conn, self.store.tenant_id))
                 plan = replan(places)
                 # ★`[2026-10-01]` 대체 후보가 코어 장소에서만 나와 비던 것 — 근처 원장 가게를 그 여행 전용으로 들여놓고 다시
                 # ★`[2026-10-05]` 대체 후보 = 근처 원장 가게(`add_nearby`) + 원장 판정(`state_lookup`) — 요식 원장이 정본이다(A 방식 `ledger=` 는 걷었다)
                 if isinstance(plan, ItineraryChange) or (isinstance(plan, NoChange) and plan.status == "unresolved"):
-                    from app.domains.travel_ops.instances.dining import nearby
-
-                    more = nearby.add_nearby(conn, self.store, trip_id, [meal], places)
+                    more = dining_ledger.add_nearby(conn, self.store, trip_id, [meal], places)
                     if more != places:
                         plan = replan(more)
             self._insert_check(conn, trip_id, meal, day, "closed", detail)

@@ -29,6 +29,7 @@ from datetime import datetime, timedelta
 from typing import Any, Callable
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore, visible_to
+from app.domains.travel_ops.components.team_hooks import similarity
 from app.domains.travel_ops.components.itinerary.itinerary_changes import (ItineraryChange, NoChange, next_after, place_before, plan_activity_adjustment,
                                 plan_route_adjustment, planned_option, route_of, route_targets)
 from app.domains.travel_ops.components.planning.pending import PendingStore, apply_or_ask, ask_consent, needs_consent, weather_only
@@ -118,14 +119,13 @@ class TripWatcher:
             # ★`[2026-09-29]` 대체 활동은 「비슷한 곳 → 가까운 곳」 순(설문 없이 기본 선호). Case 경로는
             #   `ActivityTeam.handle_trigger` 가 설문 선호까지 넘긴다.
             #   ★`[2026-10-05]` 이 경로도 설문 선호를 읽는다 — 이동 중요면 분류보다 거리가 앞선다(코덱스 합의)
-            from functools import partial
-
-            from app.domains.travel_ops.instances.activity.similarity import distance_first, preference_of, score
-            preference = preference_of(constraints)
+            #   ★`[2026-10-06]` 활동 팀을 지깍 부르지 않는다 — 팀이 조립 때 겊은 자리에서 받는다(D-CS-013).
+            #   활동 팀이 없으면 유사도는 `None` 이고 거리만 본다 — 지어낸 점수를 사용하지 않는다
+            preference = similarity.preference_of(constraints)
             plan = plan_activity_adjustment(item=item, report=report, places=visible_to(places, trip_id),
                                             check=self.check, now=now,
-                                            similarity=partial(score, preference=preference),
-                                            distance_first=distance_first(preference))
+                                            similarity=similarity.scorer(preference),
+                                            distance_first=similarity.distance_first(preference))
             if isinstance(plan, NoChange) and plan.status == "unresolved" and weather_only(report):
                 # ★`[2026-09-29]` 자동으로 못 찾았으면 조용히 끝내지 않는다 — 「바꿀까요?」로 넘겨, 「바꿔 줘」면 관광공사
                 #   목록까지 뒤진다(`pending._consented`). 전에는 `unresolved` 목록에만 남고 고객은 아무 말도 못 들었다

@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 
 from app.domains.travel_ops.instances.dining import DiningTeam
+from app.domains.travel_ops.instances.dining import ledger as dining_ledger_impl
 from app.domains.travel_ops.components.itinerary.itinerary import Item
 from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_closed, plan_closed_on_day, plan_delay
 from app.domains.travel_ops.components.planning.replan import dining_candidates, dining_fits
@@ -201,11 +202,13 @@ def test_dawn_check_wires_ledger_without_calling_google_for_alternatives(monkeyp
         google_calls.append((provider_id, start, end))
         return "closed", "closed"
 
-    def states(connection, tenant_id, slots):
+    def states(connection, tenant_id, slots, **_):
         ledger_calls.append((connection, tenant_id, slots))
         return {s["place_id"]: {"linked": True, "open_at_slot": True} for s in slots}
 
-    monkeypatch.setattr(dawn_check, "dining_states", states)
+    # ★`[2026-10-06]` 새벽 점검은 요식 팀을 직접 부르지 않는다 — 조립이 꽂아 둔 자리를 거친다(D-CS-013).
+    #   그래서 **꽂는 쪽**(요식 원장)을 바꿔 끼운다. 자리가 호출 때 모듈에서 읽으므로 그대로 먹는다.
+    monkeypatch.setattr(dining_ledger_impl, "dining_states", states)
     monkeypatch.setattr(dawn_check, "apply_or_ask", lambda *_, **__: {"status": "adjusted", "version": 2})
     checker = dawn_check.DawnCheck(
         store=store, connection_factory=lambda: nullcontext(conn), clock=lambda: at("03:00"),

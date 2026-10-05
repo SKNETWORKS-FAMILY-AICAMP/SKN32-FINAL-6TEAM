@@ -837,9 +837,11 @@ def _answer_here(conn, *, kind: str, fix: Any, trip: dict[str, Any], items: list
         if dest is None:
             text = "어느 곳까지 가는 길을 알려 드릴까요? 일정에 있는 곳 이름을 말씀해 주세요."
         else:
-            from app.domains.travel_ops.instances.mobility.wiring import leg_planner
+            # ★`[2026-10-06]` 이동 팀을 직접 부르지 않는다 — 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013)
+            from app.domains.travel_ops.components.team_hooks import legs
 
-            text = trip_here.route_here(fix, dest, now=at, leg=leg_planner(trip.get("party_size"), trip.get("constraints")))
+            text = trip_here.route_here(fix, dest, now=at,
+                                        leg=legs.leg_planner(trip.get("party_size"), trip.get("constraints")))
     else:
         from app.domains.travel_ops.components.itinerary.itinerary_changes import plan_nearby
 
@@ -861,17 +863,13 @@ def _answer_here(conn, *, kind: str, fix: Any, trip: dict[str, Any], items: list
             #   ★반경은 1.5km 까지만 들여놓는다(3km 는 한 번에 수백~수천 곳이라 여행 전용 장소 표를 부풀린다 · 우리가 고른 값).
             from types import SimpleNamespace
 
-            from app.domains.travel_ops.instances.dining import nearby
-            from app.domains.travel_ops.instances.dining.ledger import dining_states
+            # ★`[2026-10-06]` 요식 팀을 직접 부르지 않는다 — 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013)
+            from app.domains.travel_ops.components.team_hooks import dining_ledger
 
-            places = nearby.add_nearby(conn, store, trip_id,
-                                       [SimpleNamespace(kind="dining", place=fix.as_origin())], places,
-                                       radius_m=NEARBY_HERE_RADIUS_M)
-
-            def here_states(slots: list[dict[str, Any]]) -> Any:
-                return dining_states(conn, store.tenant_id, slots)
-
-            state_lookup = here_states
+            places = dining_ledger.add_nearby(conn, store, trip_id,
+                                              [SimpleNamespace(kind="dining", place=fix.as_origin())], places,
+                                              radius_m=NEARBY_HERE_RADIUS_M)
+            state_lookup = dining_ledger.state_lookup(conn, store.tenant_id)
         found, radius, sought = plan_nearby(wanted, trip=trip, places=places, origin=fix.as_origin(), at=at,
                                             state_lookup=state_lookup)
         text = trip_here.nearby(kind, fix, found=found, radius_m=radius, sought=sought)

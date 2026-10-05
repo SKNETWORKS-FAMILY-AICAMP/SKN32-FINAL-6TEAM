@@ -305,6 +305,7 @@ def build_controller(*, registry: TeamRegistry | None = None,
       **읽었던 revision 을 실행 중인 것으로 잘못 적게** 된다.
     """
     wire_optional_features()                      # 끌 수 있는 기능이 끼움 자리에 규칙을 꽂는다(2026-10-06)
+    wire_domain_teams()                           # 팀이 자기 계산을 부품의 끼움 자리에 꽂는다(동)
     config = config if config is not None else load_project_config(config_path)
     _validate_modules(config)
     if llm is None:
@@ -377,7 +378,68 @@ def wire_optional_features() -> list[str]:
     from app.domains.travel_ops.modules.live_progress import op_stream
 
     progress_hook.register(op_stream.sse)
-    return list(trip_scope.registered()) + (["settings"] if settings_hook.is_registered() else [])
+    return (list(trip_scope.registered())
+            + (["settings"] if settings_hook.is_registered() else [])
+            + (["progress"] if progress_hook.is_registered() else []))
+
+
+def wire_domain_teams() -> list[str]:
+    """**팀이 자기 계산을 부품의 끼움 자리에 꽂는 곳.** `[2026-10-06]` D-CS-013
+
+    ★왜 여기인가. 감시 · 대화 · 계획 · 접수 부품이 요식 · 이동 · 활동 팀 **내부**를 직접 가져다
+      썼다(14곳). 그러면 「팀은 꽂고 뺄 수 있다」가 거짓이 된다 — 팀 하나를 빼면 부품이 import
+      단계에서 깨진다. 방향을 뒤집어 팀이 조립 때 등록하고, 부품은 자리만 본다.
+
+    ★꽂지 않으면 부품은 그 팀이 없을 때의 길로 간다 — 이동은 어림값, 요식 판정은 모름,
+      활동 유사도 없음, 그 종류의 감시는 건너뜀. **값을 지어내지 않는다**(`components/team_hooks/`).
+    """
+    from app.domains.travel_ops.components.team_hooks import dining_ledger, legs, similarity, watch_planners
+
+    # 이동 — 두 지점 사이 시간 · 노선 · 사고 반영. 도보 상한은 이동 팀의 가드레일에 있다.
+    from app.domains.travel_ops.instances.mobility import wiring as mobility_wiring
+    from app.domains.travel_ops.instances.mobility.engine import guardrails as mobility_guardrails
+
+    def walk_limit_m() -> float | None:
+        """`mobility.limits.walk_m.default`. 선언에 없으면 None — 부르는 쪽이 보수적으로 간다."""
+        try:
+            return float(mobility_guardrails.lookup("mobility.limits.walk_m.default"))
+        except mobility_guardrails.GuardrailMissing:
+            return None
+
+    # ★함수를 **그 자리에서 쥐지 않고** 부를 때 모듈에서 읽는다 — 이동 계산기는 켜짐/꺼짐이 실행 중에
+    #   바뀌고(`wiring.configure`), 시험이 팀 함수를 바꿔 끼우기도 한다. 객체를 쥐면 옛 것을 계속 쓴다.
+    legs.register(leg_planner=lambda *a, **kw: mobility_wiring.leg_planner(*a, **kw),
+                  disruptions_from_events=lambda events: mobility_wiring.disruptions_from_events(events),
+                  walk_limit_m=walk_limit_m)
+
+    # 요식 — 원장이 식당의 정본이다(근처 들여놓기 · 시간대 판정 · 이름으로 찾기).
+    from app.domains.travel_ops.instances.dining import ledger as dining_ledger_impl
+    from app.domains.travel_ops.instances.dining import nearby as dining_nearby
+
+    dining_ledger.register(add_nearby=lambda *a, **kw: dining_nearby.add_nearby(*a, **kw),
+                           states=lambda *a, **kw: dining_ledger_impl.dining_states(*a, **kw),
+                           state=lambda *a, **kw: dining_ledger_impl.dining_state(*a, **kw),
+                           find_by_name=lambda *a, **kw: dining_ledger_impl.find_place_by_name(*a, **kw))
+
+    # 활동 — 비슷한 곳 순서와 설문 선호.
+    from app.domains.travel_ops.instances.activity import similarity as activity_similarity
+
+    similarity.register(score=lambda *a, **kw: activity_similarity.score(*a, **kw),
+                        preference_of=lambda c: activity_similarity.preference_of(c),
+                        distance_first=lambda pref: activity_similarity.distance_first(pref))
+
+    # 감시 묶음 — 항목 종류마다 그 팀의 점검 계산.
+    from app.domains.travel_ops.instances.activity import team as activity_team
+    from app.domains.travel_ops.instances.dining import team as dining_team
+    from app.domains.travel_ops.instances.mobility import team as mobility_team
+
+    watch_planners.register("activity", lambda *a, **kw: activity_team.plan_activity_trigger(*a, **kw))
+    watch_planners.register("dining", lambda *a, **kw: dining_team.plan_dining_trigger(*a, **kw))
+    watch_planners.register("mobility", lambda *a, **kw: mobility_team.plan_mobility_trigger(*a, **kw))
+
+    return ([name for name, hook in (("legs", legs), ("dining_ledger", dining_ledger),
+                                     ("similarity", similarity)) if hook.is_registered()]
+            + [f"watch:{kind}" for kind in watch_planners.registered()])
 
 
 def build_domain_routers() -> list:
@@ -392,6 +454,7 @@ def build_domain_routers() -> list:
       바깥 소스(기상·교통·대기) 조립을 기다리지 않게.
     """
     wire_optional_features()                      # 동(고객 API 앱 경로)
+    wire_domain_teams()                           # 동
     from app.domains.travel_ops.entry.trip_api import build_trip_router
 
     def check_factory():

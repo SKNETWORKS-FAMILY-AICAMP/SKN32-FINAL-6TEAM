@@ -48,6 +48,7 @@ from app.domains.travel_ops.components.actions.itinerary_actions import ACTION_T
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, NoChange, refresh_moves_around
 from app.domains.travel_ops.components.itinerary.itinerary_fit import fit_change
 from app.domains.travel_ops.instances._shared.itinerary_team import Consent
+from app.domains.travel_ops.components.team_hooks import watch_planners
 from app.domains.travel_ops.components.planning.pending import Decision, _cause_text as cause_text, cause_fingerprint, decide, is_safety
 
 logger = logging.getLogger(__name__)
@@ -76,16 +77,11 @@ class Outcome:
 
 
 def _planner(kind: str):
-    """항목 종류 → 계산 함수. ★늦게 불러온다 — 세 Team 모듈이 `itinerary_team` 을 불러 순환이 생긴다."""
-    if kind == "activity":
-        from app.domains.travel_ops.instances.activity.team import plan_activity_trigger as plan
-    elif kind == "dining":
-        from app.domains.travel_ops.instances.dining.team import plan_dining_trigger as plan
-    elif kind == "mobility":
-        from app.domains.travel_ops.instances.mobility.team import plan_mobility_trigger as plan
-    else:
-        return None
-    return plan
+    """항목 종류 → 계산 함수. ★`[2026-10-06]` 세 팀을 직접 부르지 않는다 — 팀이 조립 때 꽂은
+    자리에서 받는다(D-CS-013 `components/team_hooks/watch_planners.py`). 그 팀이 조립에 없으면
+    `None` 이고, 그 종류의 문제는 처리되지 않는다 — **다른 팀 계산으로 대신하지 않는다.**
+    ☆전에는 세 팀 모듈이 `itinerary_team` 을 불러 순환이 생겨 함수 안에서 늦게 불러야 했다."""
+    return watch_planners.planner(kind)
 
 
 # ── 고객에게 보일 문장 ─────────────────────────────────────────

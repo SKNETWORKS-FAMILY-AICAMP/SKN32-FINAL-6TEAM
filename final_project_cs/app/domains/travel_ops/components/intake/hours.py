@@ -130,12 +130,13 @@ def _catalog_week(conn, tenant_id: str, content_id: str) -> dict[str, Any] | Non
 
 def _apply_ledger(conn, tenant_id: str, core_id: str, start: datetime, end: datetime | None,
                   out: HoursFacts) -> None:
-    from app.domains.travel_ops.instances.dining.ledger import dining_state
+    # ★`[2026-10-06]` 요식 팀을 직접 부르지 않는다 — 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013 `team_hooks/dining_ledger.py`)
+    from app.domains.travel_ops.components.team_hooks import dining_ledger
 
     try:
         # ★세이브포인트 안에서 부른다 — DB 오류가 바깥 트랜잭션을 망가뜨리지 않는다(바깥이 `conn.transaction()` 이면 `conn.rollback()` 은 금지다)
         with conn.transaction():
-            state = dining_state(conn, tenant_id, core_id, start, end or start, order_margin_min=ORDER_MARGIN_MIN)
+            state = dining_ledger.state(conn, tenant_id, core_id, start, end or start, order_margin_min=ORDER_MARGIN_MIN)
     except Exception as exc:                    # noqa: BLE001 — 원장 표가 없는 DB(시험 · 다른 조립)면 원장 없이 간다
         if type(exc).__name__ not in ("UndefinedTable", "UndefinedFunction", "InvalidSchemaName"):
             raise
@@ -148,10 +149,10 @@ def _apply_ledger(conn, tenant_id: str, core_id: str, start: datetime, end: date
 def _ledger_uid(conn, content_id: str | None, place: dict[str, Any]) -> str | None:
     """읽은 장소 → 원장 가게 번호. 관광공사 번호(`tourapi_kor_food`)가 하나의 가게로 이어질 때만, 번호가 없으면 이름이 원장에서 하나로 정해질 때만.
     둘 이상이면 고르지 않는다(모름) — 다른 가게의 영업시간으로 판정하는 것이 가장 나쁘다(`ledger.slot_verdicts` · `find_place_by_name` 과 같은 규칙)."""
-    from app.domains.travel_ops.instances.dining.ledger import find_place_by_name
+    from app.domains.travel_ops.components.team_hooks import dining_ledger
 
     if not content_id:
-        found = find_place_by_name(conn, str(place.get("name") or ""))
+        found = dining_ledger.find_by_name(conn, str(place.get("name") or ""))
         content_id = str(found["content_id"]) if found else None
     if not content_id:
         return None

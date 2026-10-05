@@ -304,11 +304,12 @@ class _Budgeted:
 
 
 def default_engine(party_size: int | None) -> Callable[..., Any] | None:
-    """이동 계산기(시간표 판정). 꺼져 있으면 None."""
+    """이동 계산기(시간표 판정). 꺼져 있거나 이동 팀이 조립에 없으면 None.
+    ★`[2026-10-06]` 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013 `team_hooks/legs.py`)."""
     try:
-        from app.domains.travel_ops.instances.mobility.wiring import leg_planner
+        from app.domains.travel_ops.components.team_hooks import legs
 
-        return leg_planner(party_size, {})
+        return legs.leg_planner(party_size, {})
     except Exception:                                     # noqa: BLE001 — 계산기 장애가 확인 화면을 막지 않는다
         return None
 

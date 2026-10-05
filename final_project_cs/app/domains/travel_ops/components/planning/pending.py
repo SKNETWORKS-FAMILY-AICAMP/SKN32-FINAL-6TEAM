@@ -407,7 +407,8 @@ def _consented(conn, *, store: TripStore, pending: "PendingStore", trip_id: UUID
     ★계산은 감시와 같은 것(`plan_activity_adjustment` — 실내 후보 · 그 시각 영업 · 후보마다 재점검 · 비슷한 곳 순).
     ★점검기가 없으면(`check=None`) 계산하지 않는다 — 재점검 없이 고른 곳을 내밀지 않는다.
     """
-    from app.domains.travel_ops.instances.activity.similarity import distance_first, preference_of, score
+    # ★`[2026-10-06]` 활동 팀이 조립 때 겊은 자리에서 받는다(D-CS-013 `team_hooks/similarity.py`)
+    from app.domains.travel_ops.components.team_hooks import similarity
     from app.domains.travel_ops.components.itinerary.itinerary_changes import plan_activity_adjustment
 
     causes = list(proposal["cause_json"] or [])
@@ -415,7 +416,6 @@ def _consented(conn, *, store: TripStore, pending: "PendingStore", trip_id: UUID
         pending.close(conn, proposal["proposal_id"], status="kept", by="system:no_check")
         return {"status": "no_alternate", "reason": "대체안을 계산할 수 없는 일정이에요"}
     from datetime import datetime as _dt
-    from functools import partial
     from zoneinfo import ZoneInfo
 
     from app.domains.travel_ops.components.itinerary.itinerary import catalog_activity_places
@@ -426,14 +426,15 @@ def _consented(conn, *, store: TripStore, pending: "PendingStore", trip_id: UUID
     plan = NoChange("unresolved", {})
     # ★`[2026-09-29]` 등록된 장소 + **관광공사 목록**(가상 행 — 고르면 그때 등록). 재점검은 앞 순위 6곳만(바깥 호출 비용).
     #   600m 에서 못 찾으면 1.5km 까지 넓힌다(채팅 「다른 곳으로 바꿔 줘」와 같은 생각)
+    preference = similarity.preference_of(trip.get("constraints"))
     for radius in (600, 1500):
         pool = registered + catalog_activity_places(conn, store.tenant_id, trip_id, near=current.place,
                                                     radius_m=radius, exclude_names=names)
         plan = plan_activity_adjustment(
             item=current, report={"disruptions": causes}, places=pool, check=check,
             now=_dt.now(ZoneInfo("Asia/Seoul")), items=items,
-            similarity=partial(score, preference=preference_of(trip.get("constraints"))),
-            distance_first=distance_first(preference_of(trip.get("constraints"))),
+            similarity=similarity.scorer(preference),
+            distance_first=similarity.distance_first(preference),
             proposal=True, limit=6, radius_m=radius)
         if not isinstance(plan, NoChange):
             break
