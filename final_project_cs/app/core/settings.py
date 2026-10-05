@@ -110,6 +110,11 @@ class Settings(BaseSettings):
     #:  ★둘 다 있어야 켜진다(`GET /v1/web/profile` 의 `discord_connect.available`). 소셜 로그인용 디스코드 앱을 만들게 되면 같은 앱을 써도 된다. git 밖 환경 파일에만 둔다.
     discord_client_id: str = ""
     discord_client_secret: str = ""
+    #:  `[2026-10-05]` 텔레그램으로 알림 받기 — @BotFather 에서 사람이 만든 봇의 **토큰 · 아이디(`…bot` 으로 끝남)** 와 웹훅 **비밀값**(`setWebhook` 의 `secret_token`: `A-Z a-z 0-9 _ -` 1~256자, 우리가 정한다).
+    #:  ★셋 다 있어야 켜진다(`GET /v1/web/profile` 의 `telegram_connect.available`). 운영 봇과 시험 봇은 **환경 파일이 따로**다(시험 봇 토큰은 개발 환경에만). 토큰은 로그 · 응답 · 문서 · 커밋에 쓰지 않는다.
+    telegram_bot_token: str = ""
+    telegram_bot_username: str = ""
+    telegram_webhook_secret: str = ""
     #:  로그인이 끝나면 브라우저를 돌려보낼 **웹 주소(출처만)**. ★서버 설정이고 요청 값으로 바꿀 수 없다(열린 리디렉션 금지).
     #:  비어 있으면 `web_allowed_origins` 의 첫 값.
     web_origin: str = ""

@@ -149,6 +149,12 @@ def finish(conn, *, tenant_id: str, state: str | None, code: str | None, error: 
         return "expired"
     if error or not code or len(code) > MAX_CODE:
         return "failed"
+    from . import consents
+
+    try:
+        consents.require(conn, tenant_id, started["customer_id"], "alert_channel")           # 게이트가 켜져 있으면 알림 채널 동의 없이는 저장하지 않는다
+    except consents.ConsentError:
+        return "failed"
     try:
         url = exchange_webhook_url(code)
         customer_profile.update(conn, tenant_id, started["customer_id"], {"discord_webhook_url": url})     # 붙여넣은 주소와 같은 경로 — 검사 · 암호화 · 가림 · untested

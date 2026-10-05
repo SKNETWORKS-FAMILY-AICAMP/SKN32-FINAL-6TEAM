@@ -53,18 +53,19 @@ class OutboxWorker:
                 with conn.cursor() as cur:
                     scope = "AND tenant_id=%s " if self.tenant_id else ""
                     params = (self.tenant_id,) if self.tenant_id else ()
-                    cur.execute("SELECT message_id,topic,payload_json,attempts,tenant_id FROM outbox "
+                    cur.execute("SELECT message_id,topic,payload_json,attempts,tenant_id,dedupe_key FROM outbox "
                                 "WHERE status='pending' "
                                 f"AND available_at<=now() {scope}"
                                 "ORDER BY available_at FOR UPDATE SKIP LOCKED LIMIT 1", params)
                     row = cur.fetchone()
                     if row is None:
                         return False
-                    message_id, topic, payload, attempts, tenant_id = row
+                    message_id, topic, payload, attempts, tenant_id, dedupe_key = row
                     cur.execute("UPDATE outbox SET status='processing',attempts=attempts+1,locked_at=now() WHERE message_id=%s", (message_id,))
             try:
+                # ★`[2026-10-05]` `dedupe_key` 도 넘긴다 — 여행 알림(`trip.notice`)의 키는 `{여행 번호}:…` 라서 **누구의 알림인지**(고객별 발송)를 여기서 안다
                 self.publisher({"message_id": str(message_id), "topic": topic, "payload": payload,
-                                "tenant_id": tenant_id})
+                                "tenant_id": tenant_id, "dedupe_key": dedupe_key})
             except NoticeSuppressed as exc:
                 # ★`[2026-09-22]` **보내면 안 되는 것**이다(시연·시험 테넌트). `delivered` 로 찍으면
                 #   보낸 적 없는 알림이 보낸 것으로 남는다. 다시 집지도 않는다 — 사유와 함께 남긴다.

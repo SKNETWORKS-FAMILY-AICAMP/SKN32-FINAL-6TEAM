@@ -9,6 +9,10 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 # 문서 변경 이력 (cs)
 
+## 2026-10-05 — 텔레그램으로 알림 받기 · 알림 받는 곳 · 고객별 알림 발송
+
+고객이 마이페이지에서 「텔레그램으로 연결」 → 텔레그램 「시작」 한 번으로 연결되고(`POST …/telegram/connect/start` · 텔레그램이 부르는 `POST /v1/telegram/webhook`), 알림 받는 곳은 **한 번에 한 곳**(`notice_channel` — 디스코드 · 텔레그램, 마지막에 연결한 곳이 활성)이다. 봇은 알림만 하고 글에는 고정 문장으로만 답한다(모델 0 · 글 저장 없음). ★확인하다 발견: 바깥함 일꾼은 원래 **운영자 채널 하나**로만 보내고 고객이 저장한 웹훅으로는 보내는 코드가 없었다 → **고객별 발송**(`notice_routing.py`)도 같이 만들었다 — 스위치 `travel.notice_per_customer_enabled` **기본 꺼짐**(켜는 것은 사용자 승인 뒤). 알림 채널 동의 철회가 텔레그램 대화 번호도 지우도록 고쳤다. 마이그레이션 048 · 웹훅 등록 스크립트 `scripts/telegram_set_webhook.py` · 운영 문서 [telegram-setup.md](operations/telegram-setup.md) · 계약 [rest-endpoints.md](external/rest-endpoints.md) · 요청서 `records/plans/2026-10-05_텔레그램_연결_백엔드_요청.md`. 시험은 mock 서버로 167건 — **실제 텔레그램 확인은 봇을 만든 뒤**(사람이 할 일은 열린 항목에).
+
 ## 2026-10-05 — 외부 API 호출 한도를 DB 로 세어 막기 · 키별 사용량 추적
 
 키마다 하루·월 상한을 프로세스를 건너 DB 로 세어(한국 시각 자정 기준) 차면 호출하지 않고, 소스별 사용 · 실패 · 거절 수를 남겨 여유율을 본다(`scripts/report_source_budget.py`). 이동 세션이 초안(`source_budget.py`)을 넘겼고 코어가 시험 · 실패/거절 추적 · 여유 단계 · 따릉이용 문(`build_gate`)을 더했다. DB 오류 때 동작(`allow`/`refuse`)은 사용자 결정 대기 — 기본 `allow`. ([운영 문서](operations/call-budget.md))
