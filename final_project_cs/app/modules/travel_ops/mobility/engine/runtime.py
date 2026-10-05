@@ -134,7 +134,7 @@ class _LazyCar:
 
 
 def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_url=None, seoul_key=None,
-                   guardrails_path=None, local_router=False):
+                   guardrails_path=None, local_router=False, bike_gate=None):
     """전부 올려 Runtime 을 만든다. 약 33초.
 
     paths  : 경로 일부만 바꿔 끼울 수 있다(시험용)
@@ -186,7 +186,7 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
     bk = vt.BikeStations.load(str(P["bike_stations"]))
     import os
     # #48 — 서버는 설정 값(seoul_key)을 넘긴다. "" 는 끔, None 은 명령줄 관례(환경변수)
-    bike_live = (vt.BikeLive(key=seoul_key) if seoul_key else None) if seoul_key is not None else vt.BikeLive.from_env()
+    bike_live = (vt.BikeLive(key=seoul_key, gate=bike_gate) if seoul_key else None) if seoul_key is not None else vt.BikeLive.from_env()
     # 라우터는 21번 car.py 의 make_router 로 — 23 이 CarService 를 끼울 때 같은 객체를 나눠 쓴다.
     gh = (gh_url if gh_url is not None else os.environ.get("MOBILITY_GH_URL"))         or (None if gh_url == "" else ((rules.get("car") or {}).get("graphhopper") or {}).get("url", {}).get("value"))
     bike_router = None
@@ -284,7 +284,7 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
                    rules_version=rules["rules_version"], stats=stats, source_mtimes=mtimes,
                    build_kw={"paths": paths, "wanted": wanted, "quiet": True, "data_dir": data_dir,
                              "gh_url": gh_url, "seoul_key": seoul_key, "guardrails_path": guardrails_path,
-                             "local_router": local_router})
+                             "local_router": local_router, "bike_gate": bike_gate})
 
 
 def get_verifier(**kw):
