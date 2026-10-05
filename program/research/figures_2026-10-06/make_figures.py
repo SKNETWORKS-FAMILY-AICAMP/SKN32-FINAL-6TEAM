@@ -269,6 +269,143 @@ def fig6():
     plt.close(fig)
 
 
+# ───────────────── 7. GPU 한 대가 감당하는 양을 넣은 비용 ─────────────────
+def fig7():
+    apis = {'Luna': ('#1d9e75', 0.25, 0.06), 'Sol': ('#ba7517', 4.93, 1.15), 'Astra': ('#c0392b', 24.64, 5.74)}
+    fig = plt.figure(figsize=(10.8, 12.4), dpi=100)
+    fig.patch.set_facecolor('white')
+    fig.text(0.037, 0.972, 'GPU 한 대로 그 사용량을 감당할 수 있나?', fontsize=26, fontweight='bold', color=INK, va='center')
+    fig.text(0.037, 0.943, '한 대는 월 약 100만 건까지 → 넘으면 대수가 늘어 비용이 계단처럼 오른다', fontsize=15, color=SUB, va='center')
+    ax = fig.add_axes([0.13, 0.46, 0.82, 0.455])
+    n = np.logspace(4, 7, 400)
+    for name, (c, hi, lo) in apis.items():
+        ax.fill_between(n, n * lo / 1e4, n * hi / 1e4, color=c, alpha=0.16, lw=0)
+        ax.plot(n, n * hi / 1e4, color=c, lw=2.2)
+        ax.plot(n, n * lo / 1e4, color=c, lw=2.2, ls='--')
+    cost = np.ceil(n / 1e6) * 24.5
+    ax.step(n, cost, where='pre', color='#534ab7', lw=4.2)
+    ax.axvline(1e6, color='#534ab7', lw=1.4, ls=':')
+    ax.axvline(2e6, color='#9aa3ad', lw=1.4, ls=':')
+    ax.axvline(1e4, color='#374151', lw=1.4, ls='--')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlim(1e4, 1e7)
+    ax.set_ylim(0.1, 1000)
+    ax.set_xticks([1e4, 1e5, 1e6, 1e7])
+    ax.set_xticklabels(['1만', '10만', '100만', '1,000만'], fontsize=15)
+    ax.set_yticks([0.1, 1, 10, 100, 1000])
+    ax.set_yticklabels(['0.1', '1', '10', '100', '1,000'], fontsize=14)
+    ax.set_xlabel('월 질문 수 (건)', fontsize=15, labelpad=6)
+    ax.set_ylabel('월 비용 (만원)', fontsize=15, labelpad=6)
+    ax.grid(True, which='major', color='#e5e7eb', lw=1)
+    for s in ('top', 'right'):
+        ax.spines[s].set_visible(False)
+    bb = dict(fc='white', ec='none', pad=2, alpha=0.9)
+    ax.text(1.1e4, 38, 'GPU: 1대 24.5만원 → 2대 49만 → 3대 73.5만…', color='#534ab7', fontsize=13.5, fontweight='bold', zorder=6, bbox=bb)
+    ax.text(1.04e6, 0.14, '한 대 안전선\n100만', color='#534ab7', fontsize=12.5, zorder=6, bbox=bb)
+    ax.text(2.08e6, 0.14, '이론 최대\n200만', color='#6b7280', fontsize=12.5, zorder=6, bbox=bb)
+    ax.text(1.1e4, 0.14, '가정\n월 1만 건', color='#374151', fontsize=12.5, zorder=6, bbox=bb)
+    ax.text(3.2e6, 2.2, 'Luna', color='#1d9e75', fontsize=16, fontweight='bold')
+    ax.text(2.4e5, 14, 'Sol', color='#ba7517', fontsize=16, fontweight='bold')
+    ax.text(3.0e4, 150, 'Astra', color='#c0392b', fontsize=16, fontweight='bold')
+    fig.text(0.037, 0.405, '월 질문 수별로 GPU 한 대가 얼마나 바쁜가', fontsize=17, fontweight='bold', color=INK)
+    rows = [('Astra 손익분기', '월 1만~4.3만 건', '0.5~2%', '여유'), ('Sol 손익분기', '월 5만~21만 건', '2.5~10%', '여유'), ('Luna 손익분기', '월 100만 건', '약 50%', '안전선 끝'), ('Luna(캐시) 손익분기', '월 427만 건', '약 211%', '한 대로 불가')]
+    y = 0.368
+    cols = (0.04, 0.34, 0.64, 0.80)
+    for h, x in zip(('구간', '질문 수', '가동률', '감당'), cols):
+        fig.text(x, y, h, fontsize=14, color=SUB, fontweight='bold')
+    y -= 0.032
+    for r in rows:
+        col = '#c0392b' if r[3] == '한 대로 불가' else INK
+        for v, x in zip(r, cols):
+            fig.text(x, y, v, fontsize=15.5, color=col, fontweight='bold' if x == cols[3] else 'normal')
+        y -= 0.036
+    fig.text(0.037, 0.178, '근거와 가정', fontsize=15.5, fontweight='bold', color=INK)
+    for i, s in enumerate(['· 처리 속도: Gemma E4B 문제당 1.17~1.42초 (RTX 2000 Ada, 한 번에 한 건, 실측)',
+                           '  → 24시간 풀가동 시 월 약 200만 건이 이론 최대',
+                           '· 안전선 100만 = 가동률 50% (낮·밤 편차와 몰리는 시간 대비, 가정)',
+                           '· 여러 건을 묶어 처리하면 더 늘 수 있음 (측정 안 함)',
+                           '· 질문 수가 100만을 넘으면 Luna API가 GPU보다 싸짐 (정확도는 별개, 미측정)']):
+        fig.text(0.037, 0.148 - i * 0.029, s, fontsize=13.5, color=SUB)
+    fig.savefig(os.path.join(OUT, 'fig7_GPU_한_대_감당량.png'))
+    plt.close(fig)
+
+
+# ───────────────── 8. 증류 중간 결과 ─────────────────
+def fig8():
+    H = 1380
+    fig, ax = canvas(H)
+    head(ax, '가르친 결과 (중간)', '같은 작은 모델(Gemma E4B)을 가르치기 전과 후에 같은 문제로 채점 · 시험지 5세트 중 1세트까지')
+    groups = [('새 여행자 일정 검증 325문제', 265 / 325 * 100, 320 / 325 * 100, '기준선만 맞음 1 · 가르친 쪽만 맞음 56', 'p < 0.0001'),
+              ('시험지 mix10 160문제 (Codex가 쓴 문제)', 147 / 160 * 100, 158 / 160 * 100, '기준선만 맞음 0 · 가르친 쪽만 맞음 11', 'p = 0.001')]
+    y = 190
+    for name, b, l, d, p in groups:
+        t(ax, 40, y, name, 19, INK, True)
+        sc, x0 = 7.5, 190
+        t(ax, 40, y + 62, '가르치기 전', 15.5, SUB)
+        box(ax, x0, y + 38, b * sc, 50, 'done', 8, 2)
+        t(ax, x0 + b * sc + 12, y + 63, f'{b:.1f}%', 17, INK, True)
+        t(ax, 40, y + 128, '가르친 후', 15.5, SUB)
+        box(ax, x0, y + 104, l * sc, 50, 'now', 8, 2)
+        t(ax, x0 + l * sc + 12, y + 129, f'{l:.1f}%', 17, PAL['now'][2], True)
+        t(ax, 40, y + 188, f'+{l - b:.1f}%p · {d} · {p}', 14.5, SUB)
+        y += 270
+    box(ax, 30, y - 10, 1020, 270, 'plain', 18, 2)
+    t(ax, 56, y + 28, '같은 mix10에서 다른 모델과 나란히 (Gemma 12B·26B는 올라마)', 17, INK, True)
+    refs = [('Gemma E4B 기준선', 91.9, 'done'), ('Gemma 12B', 92.5, 'done'), ('Gemma 26B-A4B', 94.4, 'done'), ('E4B + 가르침', 98.8, 'now')]
+    yy = y + 70
+    for nm, v, k in refs:
+        t(ax, 56, yy + 17, nm, 14.5, INK)
+        box(ax, 300, yy, (v - 85) * 40, 34, k, 6, 2)
+        t(ax, 300 + (v - 85) * 40 + 10, yy + 17, f'{v:.1f}%', 15, INK, True)
+        yy += 48
+    box(ax, 30, y + 275, 1020, 300, 'warn', 18, 2)
+    t(ax, 56, y + 312, '아직 확정이 아닌 이유', 18, PAL['warn'][2], True)
+    for i, s in enumerate(['· 시험지 5세트 중 mix10 한 세트뿐 (mix11·12·8·9 남음)', '· 성공 기준은 769문제(요청 둘 제외) 전체로 판정 — 아직 판정 전',
+                           '· 요청 둘 유형은 「먼저 말한 항목」 규칙까지 같이 배움 (제외 점수: mix10 92.7→98.7%)', '· 가르친 자료는 Claude가 만들었고 mix12도 Claude가 씀 → mix12는 유리할 수 있어 따로 봄']):
+        t(ax, 56, y + 356 + i * 48, s, 14, PAL['warn'][2])
+    fig.savefig(os.path.join(OUT, 'fig8_가르친_결과_중간.png'))
+    plt.close(fig)
+
+
+# ───────────────── 9. 하루 건수 시나리오 ─────────────────
+def fig9():
+    cap = 86400 / 1.28           # 한 대 하루 이론 최대 ≈ 67,500건 (Gemma E4B 문제당 1.28초 · RTX 2000 Ada · 한 번에 한 건)
+    cards = [('Astra', '하루 1,000건', 1000, '월 3만 건', 'now', '한 대로 충분', '24.5만원 (1대)', '73.9만원', '17.2만원'),
+             ('Sol', '하루 5,000건', 5000, '월 15만 건', 'now', '한 대로 충분', '24.5만원 (1대)', '73.9만원', '17.2만원'),
+             ('Luna', '하루 10만 건', 100000, '월 300만 건', 'bad', '한 대로 불가 — 2대~3대 필요', '49만~73.5만원 (2~3대)', '73.9만원', '17.2만원')]
+    H = 190 + 3 * 372 + 330
+    fig, ax = canvas(H)
+    head(ax, '하루 요청 수 시나리오 — RTX 2000 Ada 한 대로 되나?', '손익분기가 Luna 10만 · Sol 5천 · Astra 1천 건/일이라고 칠 때 (한 달 30일)')
+    y = 160
+    for name, day, n, mon, kind, verdict, gcost, a_hi, a_lo in cards:
+        box(ax, 30, y, 1020, 356, 'plain' if kind != 'bad' else 'bad', 18, 2.2)
+        t(ax, 56, y + 38, f'{name} — {day}', 22, INK, True)
+        t(ax, 1024, y + 38, mon, 17, SUB, True, 'right')
+        pct = 100 * n / cap
+        t(ax, 56, y + 90, 'GPU 한 대가 하루 중 일하는 비율', 15, SUB)
+        bx, bw, scale = 56, 880, 880 / 160
+        ax.add_patch(Rectangle((bx, y + 112), bw, 30, fc='#e5e7eb', ec='none'))
+        ax.add_patch(Rectangle((bx, y + 112), min(pct, 160) * scale, 30, fc=PAL[kind][1], ec='none'))
+        for mark, lab in ((50, '안전선 50%'), (100, '이론 최대 100%')):
+            ax.plot([bx + mark * scale] * 2, [y + 104, y + 150], color='#374151', lw=1.6, ls='--')
+            t(ax, bx + mark * scale, y + 164, lab, 12.5, SUB, False, 'center')
+        t(ax, (bx + min(pct, 160) * scale + 12) if pct < 30 else bx + 10, y + 127, f'{pct:.1f}%' if pct < 100 else f'{pct:.0f}% (한 대 한계 초과)', 15, INK if pct < 30 else 'white', True)
+        box(ax, 56, y + 190, 440, 48, kind, 12, 2)
+        t(ax, 276, y + 214, verdict, 16, PAL[kind][2], True, 'center')
+        t(ax, 56, y + 276, f'GPU 월 비용   {gcost}', 16, INK, True)
+        t(ax, 56, y + 314, f'API 월 비용   {a_hi} (캐시 없음) ~ {a_lo} (캐시 있음)', 16, INK, True)
+        y += 372
+    box(ax, 30, y + 4, 1020, 300, 'warn', 18, 2.2)
+    t(ax, 56, y + 40, '읽는 법과 주의', 18, PAL['warn'][2], True)
+    for i, s in enumerate(['· 세 시나리오는 API 비용이 모두 같음(질문 수 × 단가가 같아짐): 약 74만원 / 캐시가 걸리면 약 17만원', '· Astra·Sol 규모는 한 대로 충분, Luna 규모(하루 10만)는 한 대로는 밀림',
+                           '· 한 대 한계: 문제당 1.28초로 하루 86,400초 → 최대 6.75만 건 (이론). 평균 초당 1.16건이 넘으면 대기줄이 계속 쌓임', '· 캐시는 같은 일정이 몇 분 안에 다시 올 때만 걸림 → 팀당 질문이 드물면 「캐시 없음」이 현실에 가까움',
+                           '· 정확도는 비교 밖: 가르친 E4B는 mix10 98.8%, Luna·Sol·Astra는 문제별로 못 잼']):
+        t(ax, 56, y + 82 + i * 40, s, 13.5, PAL['warn'][2])
+    fig.savefig(os.path.join(OUT, 'fig9_하루_건수_시나리오.png'))
+    plt.close(fig)
+
+
 if __name__ == '__main__':
-    fig1(); fig2(); fig3(); fig4(); fig5(); fig6()
+    fig1(); fig2(); fig3(); fig4(); fig5(); fig6(); fig7(); fig8(); fig9()
     print('done', sorted(f for f in os.listdir(OUT) if f.endswith('.png')))
