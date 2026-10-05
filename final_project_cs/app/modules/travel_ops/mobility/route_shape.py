@@ -98,6 +98,18 @@ def _engine():
     return getattr(br, "router", None), getattr(v, "sc", None)
 
 
+def _line_order():
+    """호선별 역 순서(`LineOrder`) | None. 이동 계산기가 꺼져 있으면 None — 그때는 일정에 담긴 역만 잇는다."""
+    from . import wiring
+    if wiring.mode() != "enabled":
+        return None
+    from .engine import runtime as engine_runtime
+    try:
+        return getattr(engine_runtime.get_verifier(**wiring._STATE["kw"])._v, "lo", None)
+    except Exception:                              # noqa: BLE001 — 형상은 보조 정보라 계산기 오류로 화면 전체를 막지 않는다
+        return None
+
+
 def _route(router, a, b, profile):
     """라우터 형상 [[lng, lat], …] 와 이유. a, b = (lng, lat). 못 구하면 (None, 이유)."""
     if router is None:
@@ -130,22 +142,69 @@ def _kind(option: dict | None) -> str:
     return "unknown"
 
 
-def _stations(option: dict | None, sc) -> list[list[float]]:
-    """계획 후보의 `uses`(「2호선:을지로입구」 …)를 탄 순서대로 역 좌표 [[lng, lat], …] 로. 좌표를 못 찾는 역은 건너뛴다."""
-    if sc is None:
-        return []
+def _ride_names(lo, line: str, a: str, b: str) -> tuple[list[str], str | None]:
+    """한 호선에서 탄 역 a → 내린 역 b 사이의 **모든 역 이름**(양 끝 포함)과 주의 문구. 노선 순서를 못 찾으면 [a, b] 그대로."""
     from .wiring import engine_line
-    out: list[list[float]] = []
+    if lo is None or a == b:
+        return [a, b], None
+    el = engine_line(line)
+    for x, y in ((a, b), (a + "역", b), (a, b + "역"), (a + "역", b + "역")):
+        try:
+            names = lo.path(el, x, y)
+        except Exception:                          # noqa: BLE001 — 노선 순서 자료의 어떤 오류도 형상을 막지 않는다
+            names = None
+        if names and len(names) >= 2:
+            warn = None
+            try:
+                if lo.is_loop(el):
+                    warn = f"{line}은 순환선이라 짧은 쪽 방향으로 잇는다(실제 운행 방향과 다를 수 있다)"
+            except Exception:                      # noqa: BLE001
+                pass
+            return list(names), warn
+    return [a, b], None
+
+
+def _stations(option: dict | None, sc, lo=None) -> tuple[list[list[float]], list[dict], list[str]]:
+    """계획 후보의 `uses`(「2호선:을지로입구」 …)를 탄 순서대로 역 좌표 [[lng, lat], …] 로.
+
+    ★`uses` 는 탄 역·갈아탄 역·내린 역뿐이다(`plan.uses_of`). `lo`(호선별 역 순서)가 있으면 **탄 역과 내린 역 사이의 모든 역**을 채운다 —
+      전에는 그 사이가 직선 한 줄이라 확대해도 같았다. 좌표를 못 찾는 역은 건너뛴다(선은 끊기지 않는다).
+    돌려주는 것: (좌표 목록, 탄 구간별 요약 `rides`, 주의 문구 목록)."""
+    if sc is None:
+        return [], [], []
+    from .wiring import engine_line
+    # 같은 호선이 이어지는 항목을 (탄 역, 내린 역) 짝으로 묶는다
+    groups: list[tuple[str, list[str]]] = []
     for u in (option or {}).get("uses") or []:
         line, sep, name = str(u).partition(":")
         if not sep or line.startswith("버스") or line.startswith("도로") or not name:
             continue
-        rec = sc.get(engine_line(line), name)
-        if rec and rec.get("lat") is not None and rec.get("lng") is not None:
-            pt = [float(rec["lng"]), float(rec["lat"])]
-            if not out or out[-1] != pt:
-                out.append(pt)
-    return out
+        if groups and groups[-1][0] == line:
+            groups[-1][1].append(name)
+        else:
+            groups.append((line, [name]))
+    out: list[list[float]] = []
+    rides: list[dict] = []
+    warns: list[str] = []
+    for line, names in groups:
+        pairs = [(names[i], names[i + 1]) for i in range(0, len(names) - 1, 2)] or [(names[0], names[0])]
+        if len(names) % 2 == 1 and len(names) > 1:          # 짝이 안 맞으면(중복 제거 탓) 안전하게 일정에 담긴 역만
+            pairs = [(names[i], names[i + 1]) for i in range(len(names) - 1)]
+        for a, b in pairs:
+            full, warn = _ride_names(lo, line, a, b)
+            if warn and warn not in warns:
+                warns.append(warn)
+            kept = []
+            for nm in full:
+                rec = sc.get(engine_line(line), nm)
+                if rec and rec.get("lat") is not None and rec.get("lng") is not None:
+                    pt = [float(rec["lng"]), float(rec["lat"])]
+                    kept.append(nm)
+                    if not out or out[-1] != pt:
+                        out.append(pt)
+            rides.append({"line": line, "from": a, "to": b, "stations": kept, "count": len(kept),
+                          "filled": len(full) > 2})
+    return out, rides, warns
 
 
 def _planned(route_def: dict | None) -> dict | None:
@@ -155,7 +214,7 @@ def _planned(route_def: dict | None) -> dict | None:
 
 
 def build_shape(a: tuple[float, float], b: tuple[float, float], route_def: dict | None, *, router, sc,
-                detail: bool = False) -> dict[str, Any]:
+                detail: bool = False, lo=None) -> dict[str, Any]:
     """장소 a → b (둘 다 (경도, 위도)) 한 구간의 경로선. 계획 수단(route_def.planned)을 따른다.
 
     `detail=False` 는 축소용(모양 오차 2 m 안 · 점 최대 `MAX_POINTS`), `True` 는 확대용 상세 선(원본에 가깝게 · 최대 `MAX_POINTS_DETAIL`)."""
@@ -170,7 +229,7 @@ def build_shape(a: tuple[float, float], b: tuple[float, float], route_def: dict 
         else:
             line, source, grade, note = straight, "straight_line", "근거없음", f"길찾기로 못 그려 직선으로 잇는다 — {why}"
     elif mode in ("subway", "mixed"):
-        stops = _stations(option, sc)
+        stops, rides, warns = _stations(option, sc, lo)
         if len(stops) >= 2:
             head, why_h = _route(router, a, tuple(stops[0]), "foot")
             tail, why_t = _route(router, tuple(stops[-1]), b, "foot")
@@ -183,7 +242,12 @@ def build_shape(a: tuple[float, float], b: tuple[float, float], route_def: dict 
                 parts.append(f"역→도착 장소 걸음은 직선({why_t})")
             if mode == "mixed":
                 parts.append("버스 구간은 정류장 목록이 없어 직선으로 잇는다")
-            parts.append("역 사이는 역 좌표를 순서대로 잇는다(실제 선로 곡선이 아님)")
+            filled = sum(1 for r in rides if r["filled"])
+            if filled:
+                parts.append("탄 역~내린 역 사이의 모든 역을 순서대로 잇는다(실제 선로 곡선이 아님)")
+            else:
+                parts.append("일정에 담긴 역만 순서대로 잇는다 — 중간 역을 못 채웠다(실제 선로 곡선이 아님)")
+            parts.extend(warns)
             note = " · ".join(parts)
         else:
             line, source, grade, note = straight, "straight_line", "근거없음", "탄 역 좌표를 못 찾아 직선으로 잇는다"
@@ -192,7 +256,8 @@ def build_shape(a: tuple[float, float], b: tuple[float, float], route_def: dict 
     else:
         line, source, grade, note = straight, "straight_line", "근거없음", "계획 수단을 몰라 직선으로 잇는다"
     line = _fit(line, MAX_POINTS_DETAIL if detail else MAX_POINTS, tol_m=0.5 if detail else SIMPLIFY_TOLERANCE_M)
-    return {"mode": mode, "line": {"type": "LineString", "coordinates": line}, "source": source, "grade": grade,
+    extra = {"rides": rides} if mode in ("subway", "mixed") and source == "stations" else {}
+    return {**extra, "mode": mode, "line": {"type": "LineString", "coordinates": line}, "source": source, "grade": grade,
             "distance_m": round(_length(line)), "note": note}
 
 
@@ -206,6 +271,7 @@ def shapes_for_items(items, *, detail: bool = False) -> list[dict[str, Any]]:
         return (float(lon), float(lat)) if lat is not None and lon is not None else None
 
     router, sc = _engine()
+    lo = _line_order()
     out = []
     for n, it in enumerate(ordered):
         if it.kind != "mobility":
@@ -214,7 +280,7 @@ def shapes_for_items(items, *, detail: bool = False) -> list[dict[str, Any]]:
         after = next((x for x in ordered[n + 1:] if x.kind != "mobility" and xy(x)), None)
         if before is None or after is None:
             continue
-        shape = build_shape(xy(before), xy(after), (it.detail or {}).get("route_def"), router=router, sc=sc, detail=detail)
+        shape = build_shape(xy(before), xy(after), (it.detail or {}).get("route_def"), router=router, sc=sc, detail=detail, lo=lo)
         out.append({"item_id": str(it.item_id), "from_item_id": str(before.item_id), "to_item_id": str(after.item_id),
                     "from": (before.place or {}).get("name") or before.title, "to": (after.place or {}).get("name") or after.title,
                     **shape})
@@ -239,6 +305,7 @@ def shapes_for_review(review: dict[str, Any] | None, *, detail: bool = False) ->
         return (float(lon), float(lat)) if lat is not None and lon is not None else None
 
     router, sc = _engine()
+    lo = _line_order()
     out = []
     for m in review.get("moves") or []:
         a_it, b_it = items.get(m.get("from")), items.get(m.get("to"))
@@ -248,12 +315,12 @@ def shapes_for_review(review: dict[str, Any] | None, *, detail: bool = False) ->
         mode = m.get("mode")
         uses = m.get("uses") or []
         if mode in ("subway", "transit") and not uses:
-            shape = build_shape(a, b, None, router=router, sc=sc, detail=detail)
+            shape = build_shape(a, b, None, router=router, sc=sc, detail=detail, lo=lo)
             shape["note"] = "저장된 검사에 탄 역 정보가 없어 직선으로 잇는다(새로 접수하면 역 좌표를 따라 그린다)"
         else:
             opt_id = _REVIEW_MODE_ID.get(mode)
             route_def = ({"planned": opt_id, "options": [{"id": opt_id, "uses": uses}]} if opt_id else None)
-            shape = build_shape(a, b, route_def, router=router, sc=sc, detail=detail)
+            shape = build_shape(a, b, route_def, router=router, sc=sc, detail=detail, lo=lo)
         out.append({"from_item_id": str(m["from"]), "to_item_id": str(m["to"]),
                     "from": (a_it.get("place") or {}).get("name") or a_it.get("title"),
                     "to": (b_it.get("place") or {}).get("name") or b_it.get("title"), **shape})
