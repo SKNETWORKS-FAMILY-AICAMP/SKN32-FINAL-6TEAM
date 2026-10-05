@@ -176,7 +176,7 @@
     "reverts": true
    },
    "invariant": "분류가 실패하면 조용히 넘기지 않는다 — 잘못된 라벨은 거부한다",
-   "path": "app/modules/travel_ops/feedback.py",
+   "path": "app/domains/travel_ops/components/core_hooks/feedback.py",
    "summary": "5 failed, 1125 passed, 4 skipped, 7 deselected, 36 warnings in 95.12s (0:01:35)",
    "title": "분류 라벨 검사가 or 에서 and 로 바뀌었다",
    "unique_failures": [
@@ -194,7 +194,7 @@
     "reverts": true
    },
    "invariant": "Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
-   "path": "app/modules/travel_ops/_base.py",
+   "path": "app/domains/travel_ops/instances/_shared/_base.py",
    "summary": "4 failed, 1161 passed, 4 skipped, 7 deselected, 36 warnings in 129.60s (0:02:09)",
    "title": "capability 검사를 Team 에서 뺀다"
   },
@@ -423,7 +423,7 @@
     "reverts": true
    },
    "invariant": "state_json 은 덮어쓰기가 아니라 병합이다 — 이전 근거를 지우지 않는다",
-   "path": "app/domain/case.py",
+   "path": "app/core/case_lifecycle/case.py",
    "summary": "19 failed, 1111 passed, 4 skipped, 7 deselected, 36 warnings in 75.63s (0:01:15)",
    "title": "상태 병합이 덮어쓰기가 됐다",
    "unique_failures": [
@@ -706,7 +706,7 @@
     "reverts": true
    },
    "invariant": "상태표에 없는 전이는 거부한다",
-   "path": "app/domain/events.py",
+   "path": "app/core/case_lifecycle/events.py",
    "summary": "6 failed, 1124 passed, 4 skipped, 7 deselected, 36 warnings in 121.52s (0:02:01)",
    "title": "전이표에 없는 전이가 기본값으로 통과한다",
    "unique_failures": [
@@ -730,7 +730,7 @@
     "reverts": true
    },
    "invariant": "이벤트별 필수 키를 검사한다 — 없는 키를 조용히 넘기지 않는다",
-   "path": "app/domain/case.py",
+   "path": "app/core/case_lifecycle/case.py",
    "summary": "6 failed, 1124 passed, 4 skipped, 7 deselected, 36 warnings in 133.53s (0:02:13)",
    "title": "이벤트 payload 의 필수 키 검사가 사라졌다",
    "unique_failures": [
@@ -752,7 +752,7 @@
     "reverts": true
    },
    "invariant": "payload schema 가 등록되지 않은 이벤트는 거부한다",
-   "path": "app/domain/case.py",
+   "path": "app/core/case_lifecycle/case.py",
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 167.84s (0:02:47)",
    "title": "등록되지 않은 이벤트가 조용히 통과한다",
    "unique_failures": [
@@ -956,7 +956,7 @@
     "reverts": true
    },
    "invariant": "분류가 실패하면 조용히 넘기지 않는다 — 필드가 빠지면 거부한다",
-   "path": "app/modules/travel_ops/feedback.py",
+   "path": "app/domains/travel_ops/components/core_hooks/feedback.py",
    "summary": "7 failed, 1123 passed, 4 skipped, 7 deselected, 36 warnings in 104.41s (0:01:44)",
    "title": "분류 필수 필드 검사가 any 에서 all 로 바뀌었다",
    "unique_failures": [
@@ -976,7 +976,7 @@
     "reverts": true
    },
    "invariant": "ContextPack 이 축소됐으면(degraded) 확정 답변을 만들지 않는다",
-   "path": "app/modules/travel_ops/_base.py",
+   "path": "app/domains/travel_ops/instances/_shared/_base.py",
    "summary": "4 failed, 1161 passed, 4 skipped, 7 deselected, 36 warnings in 127.44s (0:02:07)",
    "title": "degraded 검사를 Team 에서 뺀다"
   },

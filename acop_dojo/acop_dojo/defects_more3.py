@@ -68,7 +68,7 @@ MORE3: list[Defect] = [
         defect_id="INV-MERGE-001",
         title="상태 병합이 덮어쓰기가 됐다",
         invariant="state_json 은 덮어쓰기가 아니라 병합이다 — 이전 근거를 지우지 않는다",
-        path="app/domain/case.py",
+        path="app/core/case_lifecycle/case.py",
         old="    state = dict(current.state_json)",
         new="    state = {}",
         lesson=(
@@ -136,7 +136,7 @@ MORE3: list[Defect] = [
         defect_id="INV-CLASSIFY-001",
         title="분류 라벨 검사가 or 에서 and 로 바뀌었다",
         invariant="분류가 실패하면 조용히 넘기지 않는다 — 잘못된 라벨은 거부한다",
-        path="app/modules/travel_ops/feedback.py",
+        path="app/domains/travel_ops/components/core_hooks/feedback.py",
         old="    if result.intent not in INTENTS or result.sentiment not in SENTIMENTS:",
         new="    if result.intent not in INTENTS and result.sentiment not in SENTIMENTS:",
         lesson=(

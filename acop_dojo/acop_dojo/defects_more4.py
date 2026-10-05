@@ -11,7 +11,7 @@ MORE4: list[Defect] = [
         defect_id="INV-VOC-001",
         title="분류 필수 필드 검사가 any 에서 all 로 바뀌었다",
         invariant="분류가 실패하면 조용히 넘기지 않는다 — 필드가 빠지면 거부한다",
-        path="app/modules/travel_ops/feedback.py",
+        path="app/domains/travel_ops/components/core_hooks/feedback.py",
         old="    if any(not isinstance(raw.get(key), str) or not raw[key].strip() for key in required):",
         new="    if all(not isinstance(raw.get(key), str) or not raw[key].strip() for key in required):",
         lesson=(
@@ -77,7 +77,7 @@ MORE4: list[Defect] = [
         defect_id="INV-VOC-002",
         title="degraded 검사를 Team 에서 뺀다",
         invariant="ContextPack 이 축소됐으면(degraded) 확정 답변을 만들지 않는다",
-        path="app/modules/travel_ops/_base.py",
+        path="app/domains/travel_ops/instances/_shared/_base.py",
         old=("        if task.context.degraded:" + chr(10)
              + '            return self._escalate(task, "degraded_context")' + chr(10)),
         new="",
@@ -106,7 +106,7 @@ MORE4: list[Defect] = [
         defect_id="INV-COMMERCE-005",
         title="capability 검사를 Team 에서 뺀다",
         invariant="Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
-        path="app/modules/travel_ops/_base.py",
+        path="app/domains/travel_ops/instances/_shared/_base.py",
         old=("        if task.capability not in self.manifest.capabilities:" + chr(10)
              + '            return self._escalate(task, "unsupported_capability")' + chr(10)),
         new="",

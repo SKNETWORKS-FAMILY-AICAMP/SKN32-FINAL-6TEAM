@@ -12,7 +12,7 @@ MORE: list[Defect] = [
         defect_id="INV-STATE-003",
         title="이벤트 payload 의 필수 키 검사가 사라졌다",
         invariant="이벤트별 필수 키를 검사한다 — 없는 키를 조용히 넘기지 않는다",
-        path="app/domain/case.py",
+        path="app/core/case_lifecycle/case.py",
         old="    missing = [key for key in required if key not in payload]",
         new="    missing = []",
         lesson=(
@@ -25,7 +25,7 @@ MORE: list[Defect] = [
         defect_id="INV-STATE-004",
         title="등록되지 않은 이벤트가 조용히 통과한다",
         invariant="payload schema 가 등록되지 않은 이벤트는 거부한다",
-        path="app/domain/case.py",
+        path="app/core/case_lifecycle/case.py",
         old="    required = REQUIRED_PAYLOAD_KEYS.get(event_type)",
         new="    required = REQUIRED_PAYLOAD_KEYS.get(event_type, ())",
         lesson=(

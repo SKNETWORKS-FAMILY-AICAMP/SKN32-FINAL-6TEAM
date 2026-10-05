@@ -114,7 +114,7 @@ domain: neutral
 
 `[결정 2026-09-14]` 도장은 베이스먼트(도메인을 모르는 코어)만 다룬다. 커머스는 지우지 않고 중지했다. 결함 10은 `catalog.json` 의 `parked`, 시나리오 8은 `scenarios.py` 의 `PARKED_SCENARIO_IDS`, 트랙 3은 `tracks.py` 의 `PARKED_TRACK_IDS`, 원장 규칙 5는 `status: parked`에 남아 있다.
 
-`[결정 2026-09-21]` 여행 Team 트랙(`team-travel`)을 열었다. 시나리오 하나(`travel-team-keeps-every-evidence-v1`, DB 없이 도는 회귀 테스트)로 좁게 시작한다. 중지했던 결함 중 조각이 여행 코드에 남은 넷(INV-CLASSIFY-001 · INV-VOC-001 · INV-VOC-002 · INV-COMMERCE-005)도 `app/modules/travel_ops/` 경로로 옮겼다. 규칙은 도메인이 바뀌어도 같다. 남은 중지는 6건이다. 여행 Team 코드는 자주 바뀌므로 `patches`(4초)로 자주 본다.
+`[결정 2026-09-21]` 여행 Team 트랙(`team-travel`)을 열었다. 시나리오 하나(`travel-team-keeps-every-evidence-v1`, DB 없이 도는 회귀 테스트)로 좁게 시작한다. 중지했던 결함 중 조각이 여행 코드에 남은 넷(INV-CLASSIFY-001 · INV-VOC-001 · INV-VOC-002 · INV-COMMERCE-005)도 `app/domains/travel_ops/` 경로로 옮겼다. 규칙은 도메인이 바뀌어도 같다. 남은 중지는 6건이다. 여행 Team 코드는 자주 바뀌므로 `patches`(4초)로 자주 본다.
 
 `[실측]` 이 표가 "7개"라면서 `front`를 빼고 6개만 적고 있었다(2026-09-06 정정). 트랙마다 자기 시나리오·결함·지도가 붙는다. `--track core2`처럼 지정한다.
 

@@ -35,6 +35,12 @@ def validate_all(target: Path, *, verbose: bool = True,
             print("    대상 저장소에서 끝나지 않는 테스트를 먼저 찾는다 — pytest -v 로 마지막 줄을 본다.")
             report["baseline"] = {"summary": baseline.summary, "failed": []}
             return report
+        if " passed" not in baseline.summary:
+            # 시험이 하나도 안 돌았다(불러오기에서 멈춤 등). 이 상태로는 무엇이 새 실패인지 모른다.
+            # 2026-10-06 — 이걸 모르고 진행해 결함 8개를 「안 잡힘」으로 저장했다.
+            print(f"  ✗ 기준선에서 시험이 돌지 않았다: {baseline.summary}. 결함 판정을 시작하지 않는다.")
+            report["baseline"] = {"summary": baseline.summary, "failed": []}
+            return report
         sandbox.sweep()
         report["baseline"] = {"summary": baseline.summary, "failed": baseline.failed}
         # ★기준선의 실패는 결함 판정에서 뺀다. 공유 저장소는 다른 작업 때문에 늘 몇 건이
@@ -86,6 +92,11 @@ def validate_all(target: Path, *, verbose: bool = True,
 
             result = sandbox.pytest()
             sandbox.sweep()
+            if " passed" not in result.summary and " failed" not in result.summary:
+                # 시험이 하나도 안 돌았으면 「안 잡힘」이 아니라 「판정 못 함」이다. 카탈로그에 넣지 않는다.
+                print(f"  ? 시험이 돌지 않아 판정하지 못했다: {result.summary}")
+                sandbox.apply(patch, reverse=True)
+                continue
             new_failures = sorted(set(result.failed) - known_broken)
             entry["failed"] = new_failures
             entry["summary"] = result.summary

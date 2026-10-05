@@ -213,7 +213,7 @@ def _layer_question(labels: list[str]) -> Callable[[], bool]:
                   for label in labels)
 
     def ask() -> bool:
-        ok = _yes_no("이 트레이스(실행 기록)에 app/modules/ 아래의 Team(작업 수행 모듈) 코드가 나오는가?",
+        ok = _yes_no("이 트레이스(실행 기록)에 app/domains/ 아래의 Team(작업 수행 모듈) 코드가 나오는가?",
                      hints=["위 목록에서 파일 이름을 확인한다.", "모든 단계가 같은 파일에 있는지 확인한다."]) == appears
         print(f"  {'맞다.' if ok else '아니다.'}  {'나온다.' if appears else '나오지 않는다.'}")
         print("  위 실행 지점은 모두 verification.py 안에 있다. 검증은 Team(작업 수행 모듈)이 아니라 코어가 한다.")
