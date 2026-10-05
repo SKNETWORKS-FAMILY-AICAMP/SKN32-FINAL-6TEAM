@@ -24,31 +24,34 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
 
   await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toBeDisabled();
   await page.getByRole("button", { name: /약관 동의/ }).click();
-  // ★`[2026-10-05]` 동의는 항목별이다: 필수(서비스 이용약관 · 개인정보 수집·이용)는 전문을 끝까지 읽어야 체크할 수 있고, 선택(민감정보 · 위치 · 알림 채널)은 바로 고를 수 있다.
+  // ★`[2026-10-05]` 동의는 항목별이다: 필수(서비스 이용약관 · 개인정보 수집·이용)도 선택(민감정보 · 위치 · 알림 채널)도 바로 체크할 수 있다(`[사용자 지시]` 끝까지 읽기 잠금을 뺐다). 전문은 카드 안 상자에서 내려 읽고, 「전문 보기」는 크게 보여 줄 뿐이다.
   const serviceCheck = page.locator("#consent-service_terms");
   const privacyCheck = page.locator("#consent-privacy");
   const proceed = page.getByRole("button", { name: "동의하고 다음으로" });
-  await expect(serviceCheck).toBeDisabled();
-  await expect(privacyCheck).toBeDisabled();
-  for (const code of ["sensitive", "location", "alert_channel"]) {
-    await expect(page.locator(`#consent-${code}`)).toBeEnabled();                       // 선택: 읽지 않아도 고를 수 있다
+  for (const code of ["service_terms", "privacy", "sensitive", "location", "alert_channel"]) {
+    await expect(page.locator(`#consent-${code}`)).toBeEnabled();                       // 필수도 선택도 읽지 않고 바로 고를 수 있다
     await expect(page.locator(`#consent-${code}`)).not.toBeChecked();                   // 그리고 처음에는 비어 있다(미리 체크해 두지 않는다)
   }
   await expect(proceed).toBeDisabled();
-  await page.locator('[data-action="read-terms"][data-doc="service_terms"]').click();
+  // 전문이 카드 안 상자에 있고, 상자는 제 안에서 스크롤된다(내용이 상자보다 길다)
+  const box = page.locator('li[data-doc="service_terms"]').getByRole("region", { name: /전문/ });
+  await expect(box).toBeVisible();
+  const scrollable = await box.evaluate((element) => ({ over: element.scrollHeight > element.clientHeight + 20, auto: getComputedStyle(element).overflowY }));
+  expect(scrollable).toEqual({ over: true, auto: "auto" });
+  await box.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  expect(await box.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await page.locator('li[data-doc="service_terms"] label').click();                      // 읽지 않아도 필수를 바로 체크
+  await expect(serviceCheck).toBeChecked();
+  await expect(proceed).toBeDisabled();                                                  // 필수 하나만으로는 아직
+  // 「전문 보기」는 크게 보여 줄 뿐: 열어도 체크 상태가 바뀌지 않고, 창 안 상자에서 바로 체크할 수 있다
+  await page.locator('[data-action="read-terms"][data-doc="privacy"]').click();
   const reader = page.getByRole("dialog");
   await expect(reader).toBeVisible();
-  await expect(reader.getByRole("checkbox")).toBeDisabled();
-  await reader.getByRole("article").evaluate((element) => { element.scrollTop = element.scrollHeight; });
-  await expect(reader.getByRole("status")).toHaveText("내용을 확인했어요. 동의 여부를 선택해 주세요.");
-  await reader.getByText(/^\[필수\]/).click();
+  await expect(privacyCheck).not.toBeChecked();
+  await expect(reader.getByRole("checkbox")).toBeEnabled();
+  await expect(reader.getByRole("status")).toHaveText("필수 항목이에요. 동의 여부를 선택해 주세요.");
+  await reader.getByText(/^\[필수\].*만 14세 이상/).click();                              // 개인정보 항목은 만 14세 이상 확인을 함께 담는다
   await expect(reader).toHaveCount(0);
-  await expect(serviceCheck).toBeChecked();
-  await expect(serviceCheck).toBeFocused();
-  await expect(proceed).toBeDisabled();                                                  // 필수 하나만으로는 아직
-  await page.locator('[data-action="read-terms"][data-doc="privacy"]').click();
-  await page.getByRole("dialog").getByRole("article").evaluate((element) => { element.scrollTop = element.scrollHeight; });
-  await page.getByRole("dialog").getByText(/^\[필수\].*만 14세 이상/).click();           // 개인정보 항목은 만 14세 이상 확인을 함께 담는다
   await expect(privacyCheck).toBeChecked();
   await expect(proceed).toBeEnabled();
   await proceed.click();

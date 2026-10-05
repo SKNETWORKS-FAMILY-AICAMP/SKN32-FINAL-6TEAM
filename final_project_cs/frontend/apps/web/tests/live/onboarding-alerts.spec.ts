@@ -52,7 +52,9 @@ test("디스코드 알림 카드를 한 번도 열지 않고 약관 → 취향 �
   await expect(alertsHead(page)).toHaveAttribute("aria-expanded", "false");
   await expect(alertsHead(page)).toContainText("선택");
   await expect(alertsHead(page)).toContainText("여행 알림을 받을 디스코드 채널.");
-  await expect(page.getByText("이메일")).toHaveCount(0);           // no email anywhere on the start screen
+  // no email input or label anywhere on the start screen (the terms boxes may MENTION an email address - the company's contact - so their text is left out)
+  await expect(page.getByRole("textbox", { name: /이메일/ })).toHaveCount(0);
+  expect(await page.locator("main").evaluate((main) => { const copy = main.cloneNode(true) as HTMLElement; copy.querySelectorAll('[role="region"]').forEach((box) => box.remove()); return (copy.textContent ?? "").includes("이메일"); })).toBe(false);
   await expect(termsHead(page)).toContainText("01");
   await expect(preferencesHead(page)).toContainText("02");
   // Collapsed and never asking: no focus is taken.

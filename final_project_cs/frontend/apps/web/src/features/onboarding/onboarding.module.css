@@ -223,6 +223,13 @@
 .consentItem { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-subtle); }
 .consentItem .termsCheck { min-height: 0; margin: 0 !important; font-size: 13px; font-weight: 600; color: var(--color-text); }
 .consentSummary { margin: 0 0 0 28px; font-size: 12px; line-height: 1.75; color: var(--color-muted); }
+/* `[2026-10-05]` The full text, in the card, in a box that scrolls by itself. */
+.consentText { margin: 6px 0 2px 28px; max-height: 132px; overflow-y: auto; overscroll-behavior: contain; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); scrollbar-gutter: stable; }
+.consentText:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+.consentText h3 { font-size: 12px; margin: 14px 0 4px; color: var(--color-text); }
+.consentText p, .consentText li { font-size: 12px; line-height: 1.75; color: var(--color-text-secondary); }
+.consentText p { margin: 0 0 6px; }
+.consentText ul { margin: 4px 0 8px; padding-left: 18px; }
 .consentHint { margin: 0 0 0 28px; font-size: 11px; line-height: 1.6; color: var(--color-warning); }
 .consentRead { justify-self: start; min-height: 36px; margin-left: 28px; padding: 0; background: none; border: 0; font-size: 12px; font-weight: 650; color: var(--color-primary); cursor: pointer; }
 .termsScroll ul { margin: 8px 0; padding-left: 20px; font-size: 13px; line-height: 1.95; color: var(--color-text-secondary); }

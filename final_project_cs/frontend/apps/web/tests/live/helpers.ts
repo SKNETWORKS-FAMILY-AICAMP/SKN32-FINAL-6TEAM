@@ -149,18 +149,15 @@ export async function noHorizontalScroll(page: Page) {
 }
 
 /**
- * Terms card open on /start: read each REQUIRED document to the end and tick it (the reader closes once ticked; optional items are left unticked unless `optional` names
- * them), then go on to the preferences. `[2026-10-05]` Consent is per item: 서비스 이용약관 and 개인정보 수집·이용 are required.
+ * Terms card open on /start: tick each REQUIRED item (optional items are left unticked unless `optional` names them), then go on to the preferences.
+ * `[2026-10-05]` Consent is per item: 서비스 이용약관 and 개인정보 수집·이용 are required. `[2026-10-05 사용자 지시]` A required item is ticked at once - no reading to the end first.
  */
 export async function agreeTerms(page: Page, optional: Array<"sensitive" | "location" | "alert_channel"> = []) {
   await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
   for (const code of ["service_terms", "privacy"]) {
     if (await page.locator(`#consent-${code}`).isChecked()) continue;                       // a returning customer's boxes are already on - ticking again would untick
-    await page.locator(`[data-action="read-terms"][data-doc="${code}"]`).click();
-    const reader = page.getByRole("dialog");
-    await reader.getByRole("article").evaluate((element) => { element.scrollTop = element.scrollHeight; });
-    await reader.getByText(/^\[필수\]/).click();
-    await expect(reader).toHaveCount(0);
+    await page.locator(`li[data-doc="${code}"] label`).click();
+    await expect(page.locator(`#consent-${code}`)).toBeChecked();
   }
   for (const code of optional) await page.locator(`#consent-${code}`).evaluate((input: HTMLInputElement) => { if (!input.checked) input.click(); });
   await page.getByRole("button", { name: "동의하고 다음으로" }).click();
