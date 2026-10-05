@@ -16,7 +16,7 @@ JOB = os.environ.get('JOB', 'heavy')     # 세트 이름(heavy·mix4 …): <JOB>
 job = json.load(open(f'{JOB}.json', encoding='utf-8'))['sets'][JOB]
 OUTF = f'llm_{JOB}_multi_out.json'
 W = '월화수목금토일'
-S = {'type': 'object', 'properties': {'items': {'type': 'array', 'items': {'type': 'integer'}}}, 'required': ['items']}
+S = {'type': 'object', 'properties': {'items': {'type': 'array', 'items': {'type': 'integer'}, 'maxItems': 4}}, 'required': ['items']}   # maxItems: 상한이 없으면 같은 숫자를 끝없이 뱉어 한 문제에 수 분이 걸린다(2026-10-06 실측)
 items_all = sorted(job['items'], key=lambda i: (i['date'], i['start']))
 days = sorted({i['date'] for i in items_all})
 ids_all = {i['id'] for i in items_all}
@@ -50,7 +50,7 @@ for model in models:
         text = (f"오늘은 {job['today']} 이다. 고객의 여행 일정(번호. 일차 날짜 시각 [종류] 제목 @ 장소):\n{plan}\n\n{hist}"
                 f"고객 질문: {x['q']}\n\n이 질문이 가리키는 일정 항목 번호를 items 배열에 모두 넣어라. 항목이 하나면 하나만, 질문이 여러 항목을 말하면 말한 순서대로 전부 넣는다. "
                 "질문이 이 일정에 없는 장소·일반 정보·다른 식당·다른 명소를 묻는다면 빈 배열. 확실하지 않으면 빈 배열." + (' ' + RULE if PROTO else ''))
-        b = {'model': model, 'stream': False, 'format': S, 'options': {'temperature': 0}, 'think': False,
+        b = {'model': model, 'stream': False, 'format': S, 'options': {'temperature': 0, 'num_predict': 60}, 'think': False,
              'messages': [{'role': 'user', 'content': text}]}
         r = post(b)
         errors += 'error' in r
