@@ -28,8 +28,10 @@ for s in SETS:
     d = json.load(open(f, encoding='utf-8'))
     qs = FX[s]['qs']
     non = [i for i, q in enumerate(qs) if q['type'] != 'compound_intent']
-    ok_n = sum(1 for i in non if d['picks'][i] == qs[i]['gold'])
-    ok_a = sum(1 for i in range(len(qs)) if d['picks'][i] == qs[i]['gold'])
+    # 읽기 실패(빈 응답)는 null 로 기록돼 정답이 null 인 문제에서 우연히 맞게 세어진다 → 엄격히 틀린 것으로 센다
+    good = lambda i: '"item"' in d['rows'][i]['raw'] and d['picks'][i] == qs[i]['gold']
+    ok_n = sum(1 for i in non if good(i))
+    ok_a = sum(1 for i in range(len(qs)) if good(i))
     warm = [r['wall_s'] for r in d['rows'][1:]]
     cold_all.append(d['rows'][0]['wall_s'])
     warm_all += warm
