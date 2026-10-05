@@ -46,6 +46,8 @@ for name in os.environ['SETS'].split(','):
         if x.get('history'):
             state['previous_conversation'] = [f"{'고객' if h['role'] == 'customer' else '서비스'}: {h['text']}" for h in x['history']]
         body = {'state': state, 'questions': {'target': {'type': 'choice', 'instructions': INSTR, 'criteria': crit}}}
+        if os.environ.get('DEC_MODEL'):          # 올라마 /v1/systemone 은 model 필드가 필요하다(Clef 등)
+            body['model'] = os.environ['DEC_MODEL']
         r, err = call(body)
         if r is None:
             errs += 1
