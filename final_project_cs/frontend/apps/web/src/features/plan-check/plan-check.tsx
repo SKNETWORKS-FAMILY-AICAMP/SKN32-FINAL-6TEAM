@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode, type TouchEvent } from "react";
+import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, ChevronsDown, ChevronsRight, ChevronsUp, Pencil, Search, Undo2, X } from "lucide-react";
 import { DeviceFrame, HeaderSlot } from "@/components/layout/device-frame";
@@ -20,11 +20,19 @@ import { DayList, type RowContext } from "./plan-rows";
 import { ResultFooter, StopEditor, TripIssues, type Registration } from "./result-parts";
 import { useFollowScroll } from "./use-follow-scroll";
 import { usePullPastEnd } from "./use-pull-past-end";
+import { useDayGestures } from "./use-day-gestures";
 import { formatHm, moveStop, parseHm, type Retime } from "./time-plan";
 import { TimeDragOverlay } from "./time-drag-overlay";
 import { heldTexts, useTimeEdit } from "./use-time-edit";
 import { REVEAL_MS, useReveal } from "./use-reveal";
 import styles from "./plan-check.module.css";
+
+/** `[2026-10-05]` The size of the day list the customer pinched it to is kept in this browser (a convenience: the screen is the same without it). */
+const ZOOM_KEY = "triPilot.planListZoom";
+function readListZoom(): number {
+  try { const value = Number(window.localStorage.getItem(ZOOM_KEY)); return Number.isFinite(value) && value >= 0.8 && value <= 1.3 ? value : 1; } catch { return 1; }
+}
+function writeListZoom(value: number) { try { window.localStorage.setItem(ZOOM_KEY, String(value)); } catch { /* private window: it just is not kept */ } }
 
 export interface PlanCheckProps {
   /** The latest snapshot. The screen paces the changes between snapshots itself (`useReveal`). */
@@ -372,7 +380,15 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const [dayChoice, setDayChoice] = useState<"all" | null>(null);
   // Which way the last move between days went (for the slide in); null when the list was not moved from one day to another.
   const [slide, setSlide] = useState<"next" | "prev" | null>(null);
-  const swipe = useRef<{ x: number; y: number } | null>(null);
+  // ★`[2026-10-05 사용자 요청]` The day list follows the finger sideways with the neighbouring day beside it (`peek`), the chips' marker slides with it, two fingers pinching zoom the list (`listZoom`, kept for the
+  //   customer) and pinched as far in as it goes it becomes the overview of every day (「전체」) and the other way back (`swap` names the animation of that turn). See `use-day-gestures.ts`.
+  const [peek, setPeek] = useState<{ side: -1 | 0 | 1; top: number; edge: boolean }>({ side: 0, top: 0, edge: false });
+  const [listZoom, setListZoom] = useState(readListZoom);
+  const [swap, setSwap] = useState<"overview" | "day" | null>(null);
+  const trackBox = useRef<HTMLDivElement>(null);
+  const zoomBox = useRef<HTMLDivElement>(null);
+  const stripBox = useRef<HTMLDivElement>(null);
+  const markerBox = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(null), toast.undo ? 4500 : 2800);
@@ -820,29 +836,66 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const dayAt = days.findIndex((day) => day.day === listDay);
   const needsOfDay = (day: number) => timeline(shown, day).filter((entry) => (entry.type === "item" ? entry.item.verdict : entry.move.verdict) === "review"
     && !(entry.type === "item" ? removedSet.has(entry.item.id) : removedSet.has(entry.move.fromId) || removedSet.has(entry.move.toId))).length;
-  function goDay(day: number) {
+  function goDay(day: number, animate = true) {
     const to = days.findIndex((entry) => entry.day === day);
-    setSlide(dayAt >= 0 && to >= 0 && to !== dayAt ? (to > dayAt ? "next" : "prev") : null);
+    setSlide(animate && dayAt >= 0 && to >= 0 && to !== dayAt ? (to > dayAt ? "next" : "prev") : null);
     setFilter(null);
     setDayChoice(null);
     showDay(day);
     bodyBox.current?.scrollTo({ top: 0 });
   }
-  function stepDay(delta: 1 | -1) {
+  function stepDay(delta: 1 | -1, animate = true) {
     if (dayAt < 0) return;
     const next = days[dayAt + delta];
-    if (next) goDay(next.day);
+    if (next) goDay(next.day, animate);
   }
   function chooseAllDays() { setSlide(null); setFilter(null); setDayChoice("all"); bodyBox.current?.scrollTo({ top: 0 }); }
-  /** Sideways swipes on the list move to the next day (left) or the previous (right); mostly-vertical moves are the list's own scrolling. */
-  const swipeStart = (event: TouchEvent<HTMLElement>) => { swipe.current = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null; };
-  const swipeEnd = (event: TouchEvent<HTMLElement>) => {
-    const start = swipe.current;
-    swipe.current = null;
-    if (!start || listDay === "all") return;
-    const dx = event.changedTouches[0].clientX - start.x, dy = event.changedTouches[0].clientY - start.y;
-    if (Math.abs(dx) >= 60 && Math.abs(dx) >= Math.abs(dy) * 1.6) stepDay(dx < 0 ? 1 : -1);
-  };
+  const neighbourOf = (side: -1 | 1) => (dayAt < 0 ? undefined : days[dayAt + side]);
+  /** Where the marker under the day chips stands: on the chip of the day shown, or between it and its neighbour while the list is dragged (`shift` of `width`: negative = toward the next day). */
+  function placeMarker(shift = 0, width = 1) {
+    const strip = stripBox.current, marker = markerBox.current;
+    if (!strip || !marker) return;
+    const tabs = Array.from(strip.querySelectorAll<HTMLElement>('[role="tab"]'));
+    const at = listDay === "all" ? 0 : dayAt + 1;
+    const here = tabs[at];
+    if (!here) return;
+    const toward = shift < 0 ? tabs[at + 1] : shift > 0 ? tabs[at - 1] : undefined;
+    const part = toward ? Math.min(1, Math.abs(shift) / (width * 0.4)) : 0;
+    const left = here.offsetLeft + (toward ? (toward.offsetLeft - here.offsetLeft) * part : 0);
+    const wide = here.offsetWidth + (toward ? (toward.offsetWidth - here.offsetWidth) * part : 0);
+    marker.style.transform = `translateX(${left}px)`;
+    marker.style.width = `${wide}px`;
+    strip.toggleAttribute("data-dragging", shift !== 0);
+    tabs.forEach((tab, index) => tab.toggleAttribute("data-lit", index === (toward && part > 0.5 ? at + (shift < 0 ? 1 : -1) : at)));
+  }
+  // The marker (and the lit chip) stand on the day shown; the chip row scrolls to keep it in view.
+  useLayoutEffect(() => {
+    placeMarker();
+    const tab = stripBox.current?.querySelectorAll<HTMLElement>('[role="tab"]')[listDay === "all" ? 0 : dayAt + 1];
+    tab?.scrollIntoView?.({ inline: "center", block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `placeMarker` reads the current day itself
+  }, [listDay, dayStrip, days.length, language]);
+  /** Pinched as far in as it goes, the day list becomes the overview of every day; pinched as far out as it goes from the overview, one day. Between: the size the customer asked for stays. */
+  function endPinch(zoom: number) {
+    const zoomEl = zoomBox.current;
+    const setZoom = (value: number) => { if (zoomEl) zoomEl.style.zoom = value === 1 ? "" : String(value); setListZoom(value); writeListZoom(value); };
+    if (listDay !== "all" && zoom <= 0.7 && days.length > 1) { setZoom(1); setSwap("overview"); chooseAllDays(); return; }
+    if (listDay === "all" && !filtering && zoom >= 1.45 && days.length > 1) { setZoom(1); setSwap("day"); goDay(mapDay, false); return; }
+    setZoom(Math.round(Math.min(1.3, Math.max(0.8, zoom)) * 20) / 20);
+  }
+  useDayGestures(bodyBox, {
+    swipe: dayStrip && listDay !== "all" && !filtering,
+    hasPrev: dayAt > 0,
+    hasNext: dayAt >= 0 && dayAt < days.length - 1,
+    track: () => trackBox.current,
+    onPeek: (side, top, edge) => setPeek({ side, top, edge }),
+    onProgress: (shift, width) => placeMarker(shift, width),
+    onTurn: (delta) => stepDay(delta, false),
+    pinch: done && !changing,
+    zoom: listZoom,
+    onPinch: (zoom) => { if (zoomBox.current) zoomBox.current.style.zoom = String(zoom); },
+    onPinchEnd: endPinch,
+  });
 
   // Pushing on past the end of the list shows the plan with the recommended fixes under it. ★`[2026-10-04 사용자 지시]` At the end of any day (or of the whole list), not only the last.
   const canRecommend = Boolean(actions.previewRecommendAll) && done && !changing && !registered && !recommended && needsLeft(view, removedSet).total > 0;
@@ -1000,7 +1053,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
               ? <HeadBadges needs={needCount} changed={changedCount} filter={filtering ? filter : null} onFilter={setFilter} registered={registered} rechecking={rechecking} />
               : countText(view, t)}</p>
           </header>
-          {dayStrip && <div className={styles.dayStrip} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
+          {dayStrip && <div ref={stripBox} className={styles.dayStrip} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
             onKeyDown={(event) => {
               if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
               const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]'));
@@ -1008,6 +1061,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
               const next = tabs[at + (event.key === "ArrowRight" ? 1 : -1)];
               if (next) { event.preventDefault(); next.focus(); next.click(); }
             }}>
+            <span ref={markerBox} className={styles.dayMarker} aria-hidden="true" />
             <button type="button" role="tab" className={styles.dayChip} aria-selected={listDay === "all"} tabIndex={listDay === "all" ? 0 : -1} onClick={chooseAllDays}>{t("전체", "All")}</button>
             {days.map((day) => {
               const wait = needsOfDay(day.day);
@@ -1017,22 +1071,35 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
               </button>;
             })}
           </div>}
-          <div ref={bodyBox} className={styles.sheetBody} {...follow.handlers} onScroll={follow.handlers.onScroll} onTouchStart={swipeStart} onTouchEnd={swipeEnd}>
+          <div ref={bodyBox} className={styles.sheetBody} {...follow.handlers} onScroll={follow.handlers.onScroll}>
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
             {filtering && <p className={styles.filterNote} role="status">{filter === "changed" ? t("바뀐 곳만 보는 중이에요", "Showing only what changed") : t("확인이 필요한 곳만 보는 중이에요", "Showing only what needs a look")}
               <button type="button" onClick={() => setFilter(null)}>{t("전체 보기", "Show all")}</button></p>}
             {(() => {
               const proposed = previewing && side === "after" && previewView;
-              return <div key={`${proposed ? "after" : "before"}:${String(listDay)}`} className={styles.page} data-slide={slide ?? undefined} data-proposed={proposed ? true : undefined} data-turn={turn ?? undefined}
+              /** A day of the list as the page shows it (also drawn beside the page while it is dragged). */
+              const dayList = (which: number | "all") => proposed
+                ? <DayList view={listAfter ?? previewView} days={previewView.days.filter((day) => previewView.items.some((item) => item.day === day.day))} listDay={which} ctx={contextAfter} mapDay={mapDay} onShowDay={showDay} heading={heading} />
+                : <DayList view={listBefore} days={days} listDay={which} ctx={contextBefore} mapDay={mapDay} onShowDay={showDay} heading={heading} />;
+              const near = peek.side === 0 ? undefined : neighbourOf(peek.side);
+              const zoomStyle = listZoom === 1 ? undefined : { zoom: listZoom };
+              return <div ref={trackBox} className={styles.dayTrack}>
+                {near && <div className={styles.peek} data-side={peek.side} style={{ top: peek.top, ...zoomStyle }} aria-hidden="true" inert>
+                  <span className={styles.peekBadge}>{t(`놓으면 ${near.day}일차`, `Let go for day ${near.day}`)}</span>
+                  {dayList(near.day)}
+                </div>}
+                {peek.side !== 0 && peek.edge && <p className={styles.edgeNote} data-side={peek.side} style={{ top: peek.top + 28 }} aria-hidden="true">{peek.side === 1 ? t("마지막 날이에요", "Last day") : t("첫날이에요", "First day")}</p>}
+                <div ref={zoomBox} className={styles.dayZoom} data-swap={swap ?? undefined} style={zoomStyle} onAnimationEnd={(event) => { if (event.target === event.currentTarget) setSwap(null); }}>
+              <div key={`${proposed ? "after" : "before"}:${String(listDay)}`} className={styles.page} data-slide={slide ?? undefined} data-proposed={proposed ? true : undefined} data-turn={turn ?? undefined}
                 data-pull={pull.edge ?? undefined} data-shake={shake || undefined} style={{ "--pull": pull.progress } as CSSProperties} onAnimationEnd={() => setTurn(null)}>
                 {proposed && <Act className={styles.pullHintTop} why={frozen} explain={explain} onPress={() => flip("before")} data-edge={pull.edge ?? undefined} style={{ "--pull": pull.edge === "start" ? pull.progress : 0 } as CSSProperties}>
                   <ChevronsUp size={16} strokeWidth={1.8} aria-hidden="true" />
                   <span>{t("계속 올리면 변경 전 일정이에요", "Keep going up for the plan as it was")}</span>
                   <span className={styles.pullBar} aria-hidden="true"><span /></span>
                 </Act>}
-                {proposed
-                  ? <DayList view={listAfter ?? previewView} days={previewView.days.filter((day) => previewView.items.some((item) => item.day === day.day))} listDay={listDay} ctx={contextAfter} mapDay={mapDay} onShowDay={showDay} heading={heading} />
-                  : <DayList view={listBefore} days={days} listDay={listDay} ctx={contextBefore} mapDay={mapDay} onShowDay={showDay} heading={heading} />}
+                {dayList(listDay)}
+              </div>
+                </div>
               </div>;
             })()}
             {/* ★`[2026-10-03 사용자]` 출처 줄이 「계속 내리면 …」 안내 위에 있어야, 목록 맨 끝에 그 안내가 보여 「내리면 다음이 나온다」가 읽힌다. */}
