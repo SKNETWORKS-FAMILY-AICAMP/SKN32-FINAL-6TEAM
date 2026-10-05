@@ -59,7 +59,9 @@ def test_a_new_user_has_an_empty_profile(api):
     body = _get(api, me).json()
     assert body == {"recovery_email": None, "discord_webhook": {"set": False, "masked": None, "status": None,
                                                                 "checked_at": None}, "updated_at": None,
-                    "discord_connect": {"available": False}}        # `[2026-10-05]` 디스코드 앱이 설정되지 않은 서버 — 단추를 보이지 않는다
+                    "discord_connect": {"available": False},        # `[2026-10-05]` 디스코드 앱이 설정되지 않은 서버 — 단추를 보이지 않는다
+                    "telegram_connect": {"available": False}, "telegram": {"connected": False, "status": None, "connected_at": None},
+                    "notice_channel": None}                         # 텔레그램 봇이 설정되지 않은 서버 — 텔레그램 줄을 통째로 숨긴다
 
 
 def test_saving_returns_and_reads_back_only_the_masked_webhook(api):

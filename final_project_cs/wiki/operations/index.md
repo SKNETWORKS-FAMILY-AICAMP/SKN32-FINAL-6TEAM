@@ -20,6 +20,7 @@ domain: neutral
 | [move-to-server.md](move-to-server.md) | 이 PC 에서 서비스로 · 항상 켜진 서버로 — 절차와 되돌리기 |
 | [google-login-setup.md](google-login-setup.md) | 구글 로그인 켜기 — 콘솔에서 사람이 할 일 · 서버 설정 · 확인 · 되돌리기 |
 | [call-budget.md](call-budget.md) | 외부 API 키마다 하루·월 호출 한도를 어떻게 DB 로 세어 막고, 여유를 어떻게 보나 |
+| [telegram-setup.md](telegram-setup.md) | 텔레그램 알림 연결을 서버에서 어떻게 켜고(환경 파일 · 웹훅 등록 · 스위치), 막히면 어디를 보고, 어떻게 되돌리나 |
 
 ## 자주 쓰는 명령
 

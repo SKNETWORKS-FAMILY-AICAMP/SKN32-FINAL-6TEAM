@@ -86,6 +86,10 @@ CONTRACT_V1_PATHS = {
     "/v1/web/profile",
     "/v1/web/profile/discord/test",
     "/v1/web/profile/discord/connect/start",
+    "/v1/web/profile/telegram/connect/start",
+    "/v1/web/profile/telegram/test",
+    "/v1/web/profile/telegram",
+    "/v1/telegram/webhook",
     "/v1/web/profile/discord/connect/callback",
     # ★2026-09-27 계획 읽기 — 글·사진·PDF·docx·xlsx 를 받아 확인 화면용 값으로(설계서 program/plan/…고객계획_읽기_설계…).
     #   고객 id 는 키에서, 남의 접수는 404. 읽기는 뒤에서 돈다.
@@ -133,7 +137,9 @@ CONTRACT_V1_PATHS = {
 #   `/v1/web/auth/{provider}/start`: 로그인 시작은 인증 없이 열린다(`link` 모드는 함수 안에서 인증을 확인한다 — 사람 확인 · 주소당 한도).
 #   `/v1/web/auth/exchange`: 일회용 표 + 시작한 브라우저의 `client_nonce` 가 인증이다(로그인 CSRF 막기).
 #   `/v1/web/auth/adopt`: 옛 키를 쿠키로 옮기는 자리 — 함수 안에서 키를 확인한다(쿠키와 같이 오면 400, 주소당 한도).
-OPEN_WRITE_PATHS = {"/v1/web/session", "/v1/web/auth/session", "/v1/web/auth/{provider}/start", "/v1/web/auth/exchange", "/v1/web/auth/adopt"}
+#   `/v1/telegram/webhook`: 텔레그램이 부르는 곳 — 사용자 인증이 아니라 **비밀 헤더**(`X-Telegram-Bot-Api-Secret-Token` = 서버 비밀값, 상수 시간 비교)가 인증이다. 틀리면 401 이고 아무것도 안 바뀐다(`telegram_connect.verify_secret`).
+OPEN_WRITE_PATHS = {"/v1/web/session", "/v1/web/auth/session", "/v1/web/auth/{provider}/start", "/v1/web/auth/exchange", "/v1/web/auth/adopt",
+                    "/v1/telegram/webhook"}
 
 # 인증으로 치는 의존성 — scope 키(`require_scope`) 또는 웹 사용자 키(`_web_customer`)
 AUTH_DEPENDENCIES = ("require_scope.", "._web_customer", "require_identity")

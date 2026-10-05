@@ -9,7 +9,7 @@
   주소는 원문이 아니라 서버 비밀로 만든 해시(`ip_hash`)만 둔다. 사용자 행에는 외래키를 걸지 않는다 — 게스트가 정리돼도 증빙은 보관 기간 동안 남는다.
 ★게이트(`gate_check`)는 설정 `consent.gate_enabled` 가 **켜져 있을 때만** 막는다(기본 꺼짐 — 웹이 동의 화면을 내보내기 전에 켜면 모두 갇힌다). 켜면 게스트 · 회원 · 옛 키 · 에이전트 키 모두
   **사용자의 동의 상태**를 따른다(에이전트 키는 키 주인). 동의 · 로그인 · 세션 만들기 길은 면제다(`EXEMPT_PREFIXES`) — 그래야 동의하러 갈 수 있다.
-★철회 효과: `alert_channel` → 저장한 알림 채널(디스코드 웹훅)을 지운다 · `sensitive` → 여행의 식사 제한 · 설문 음식 답(`trips.constraints`)을 지운다 ·
+★철회 효과: `alert_channel` → 저장한 알림 채널(디스코드 웹훅 · 텔레그램 대화 번호)을 지운다 · `sensitive` → 여행의 식사 제한 · 설문 음식 답(`trips.constraints`)을 지운다 ·
   `location` → 위치 점(2단계 구현이 `PURGERS["location"]` 에 등록한다). 효과는 **동의 기록과 한 트랜잭션**에서 일어난다 — 기록만 남고 삭제가 안 됐거나 그 반대가 되지 않게.
   `[미확인]` 설문 답이 다른 복사본(일정 버전 스냅샷 · 접수 원문)에도 남는지는 이번에 확인하지 않았다.
 """
@@ -142,14 +142,19 @@ def record(conn, *, tenant_id: str, user_id: UUID, session_kind: str, version: A
 
 # ── 철회 효과 ───────────────────────────────────────────────────
 def _purge_alert_channel(conn, tenant_id: str, user_id: UUID) -> int:
-    """저장한 알림 채널(디스코드 웹훅)을 지운다 — 같은 경로(`customer_profile.update`)로 null 을 준다."""
-    from . import customer_profile
+    """저장한 알림 채널(디스코드 웹훅 · 텔레그램 대화 번호)을 모두 지운다 — 같은 경로(`customer_profile.update` · `telegram_connect.disconnect`)를 쓴다.
+    ★`[2026-10-05]` 텔레그램을 먼저 푼다 — 그러면 알림 받는 곳이 디스코드로 옮겨 갔다가 이어서 웹훅이 지워질 때 없음(null)이 된다."""
+    from . import customer_profile, telegram_connect
 
     view = customer_profile.read(conn, tenant_id, user_id)
-    if not view.webhook_set:
-        return 0
-    customer_profile.update(conn, tenant_id, user_id, {"discord_webhook_url": None})
-    return 1
+    purged = 0
+    if view.telegram_connected:
+        telegram_connect.disconnect(conn, tenant_id, user_id)
+        purged += 1
+    if view.webhook_set:
+        customer_profile.update(conn, tenant_id, user_id, {"discord_webhook_url": None})
+        purged += 1
+    return purged
 
 
 def _purge_sensitive(conn, tenant_id: str, user_id: UUID) -> int:
@@ -168,6 +173,15 @@ PURGERS.setdefault("sensitive", []).append(_purge_sensitive)
 def purge(conn, tenant_id: str, user_id: UUID, code: str) -> int:
     """이 항목의 철회 효과를 실행한다 — 지운 개수의 합. 하나가 실패하면 예외가 올라가 **동의 기록도 함께 되돌아간다**."""
     return sum(fn(conn, tenant_id, user_id) for fn in PURGERS.get(code, []))
+
+
+def require(conn, tenant_id: str, user_id: UUID, code: str) -> None:
+    """이 선택 동의(`location` · `alert_channel` …)가 **지금 버전으로** 있어야 쓰는 일 앞에서 부른다. ★게이트가 꺼져 있으면(기본) 아무것도 안 막는다(웹이 동의 화면을 내보내기 전).
+    켜져 있고 동의가 없으면 403 `consent_required`(응답에 어느 항목인지 `item` 을 싣는다)."""
+    if not gate_enabled() or has(conn, tenant_id, user_id, code):
+        return
+    # ★항목 이름은 `item` 으로 싣는다 — 오류 본문의 `code` 는 오류 종류(`consent_required`)라 같은 이름을 못 쓴다
+    raise ConsentError(403, "consent_required", "이 기능을 쓰려면 동의가 필요해요", item=code, current_version=current_version())
 
 
 # ── 사용 조건(게이트) ───────────────────────────────────────────
@@ -194,4 +208,4 @@ def purge_expired(conn, tenant_id: str, now: datetime | None = None) -> int:
 
 
 __all__ = ["CODES", "ConsentError", "EXEMPT_PREFIXES", "PURGERS", "current_version", "gate_check", "gate_enabled", "has", "ip_hash",
-           "is_ok", "purge", "purge_expired", "record", "required_codes", "state"]
+           "is_ok", "purge", "purge_expired", "record", "require", "required_codes", "state"]

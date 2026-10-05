@@ -188,7 +188,19 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
         #   설정 mobility_data_dir 가 비면 꺼짐. 도구를 주입한 조립(시험)은 건너뛴다.
         from app.modules.travel_ops.mobility import wiring as mobility_wiring
 
-        mobility_wiring.configure_from_settings(get_settings())
+        # ★`[2026-10-05]` 따릉이 실시간 조회의 호출 한도 문(env 하루 한도 + DB 예산) — 이동 쪽은 infrastructure 를 import 하지 않으니 여기서 만들어 넘긴다.
+        #   못 만들면 문 없이 부르지 않고 실시간을 끈다(이동 쪽이 처리).
+        _bike_gate = None
+        if get_settings().seoul_openapi_key:
+            try:
+                from app.infrastructure.travel.source_budget import build_gate
+
+                _bike_gate = build_gate(get_settings(), ["seoul_bike"])
+            except Exception as exc:  # noqa: BLE001 — 문을 못 만들면 실시간만 끈다(서비스는 계속)
+                import logging
+
+                logging.getLogger(__name__).warning("따릉이 실시간 한도 문을 못 만들었다: %s: %s", type(exc).__name__, exc)
+        mobility_wiring.configure_from_settings(get_settings(), bike_gate=_bike_gate)
     teams = []
     capabilities: dict[str, str] = {}
     for declaration in config.teams:

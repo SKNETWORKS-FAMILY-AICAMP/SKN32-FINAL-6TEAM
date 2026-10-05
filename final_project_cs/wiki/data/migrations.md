@@ -173,6 +173,10 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 
 `[실측]` `047_call_budget_outcomes.sql` — 027 의 호출 예산 표(`meter` · `period` · `used` · `cap`)에 `failed`(부른 뒤 쓸 수 있는 답을 못 받은 수 — `used` 의 부분집합) · `rejected`(한도가 차서 **안 부른** 수 — `used` 에 안 들어감)를 더한다. 기존 줄은 0 으로 채워진다 · 재실행 안전. 읽는 곳: `scripts/report_source_budget.py` · [운영 문서](../operations/call-budget.md).
 
+### 텔레그램 연결 · 알림 받는 곳 `customer_profiles` · `telegram_link_codes` · `telegram_seen_updates` `[2026-10-05 · 048]`
+
+`[실측]` `048_telegram_connect.sql` — ①`customer_profiles` 에 칸 7개: `telegram_chat_enc`(**암호화한** 대화 번호 — 원문은 어디에도 없다) · `telegram_chat_hash`(서버 비밀 HMAC — 같은 대화가 두 사용자에게 묶이는 것을 막는 **부분 유일 색인** `uq_customer_profiles_telegram_chat (tenant_id, telegram_chat_hash) WHERE … IS NOT NULL`) · `telegram_status`(`untested`/`ok`/`blocked`) · `telegram_connected_at` · `telegram_checked_at` · `telegram_tested_at`(시험 발송 간격을 DB 에서 센다) · `notice_channel`(`discord`/`telegram`/NULL — **알림 받는 곳, 한 번에 한 곳**) ②`telegram_link_codes`(연결 링크의 일회용 코드 — `code_hash` 기본키(**원문 없음**) · `tenant_id` · `customer_id`(→ `customers` **ON DELETE CASCADE** — 게스트 정리를 막지 않는다) · `created_at` · `used_at`) ③`telegram_seen_updates`(`update_id` 기본키 · `seen_at` — 텔레그램이 같은 업데이트를 다시 보내도 두 번 처리하지 않으려고 이틀 동안 기억). 저장하는 것은 대화 번호 · 연결 시각 · 상태뿐이다(텔레그램 이름 · 사용자명 · 전화 · 사진은 받아도 저장하지 않는다). 칸 · 표 모두 `IF NOT EXISTS` — **재실행 안전**. 읽고 쓰는 곳: `app/modules/travel_ops/telegram_connect.py` · `customer_profile.py` · `notice_routing.py` · 계약 [rest-endpoints.md 「텔레그램으로 알림 받기」](../external/rest-endpoints.md) · [운영 문서](../operations/telegram-setup.md). ★적용: 이 파일만 한 번(2026-10-05, 전체 실행기 아님 — 폴더에 다른 세션의 작업 중인 파일이 있다). 동의 `alert_channel` 철회가 대화 번호도 지운다(`consents.py`).
+
 ### 호출 예산의 제공처 한도 초과 표시 `external_call_budget` `[2026-10-05 · 049]`
 
 `[실측]` `049_call_budget_provider_exhausted.sql` — `exhausted_at`(제공처가 「한도 초과」를 알린 시각 — 그날 한국 자정까지 그 소스를 안 부른다) · `learned_cap`(그때까지 센 사용 수 = 제공처가 허락한 한도의 관측값)을 더한다. 달이 바뀌면 새 줄이라 자동으로 풀린다 · 재실행 안전.

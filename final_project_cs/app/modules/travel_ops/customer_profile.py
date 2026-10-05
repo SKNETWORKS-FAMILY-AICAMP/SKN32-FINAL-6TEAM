@@ -15,6 +15,8 @@
 ★이메일은 형식만 본다(인증 메일은 이번에 안 보낸다). 공백만 있으면 지움으로 본다.
 ★한계: 서버는 호스트 **이름**만 허용 목록으로 검사한다 — DNS 가 바뀌어 다른 주소로 풀리는 공격(DNS 재결합)까지는 막지 않는다.
   허용 목록이 디스코드 공식 도메인뿐이라 위험은 작다. 배포 때 바깥 호출을 허용 목록 프록시로 보내면 닫힌다.
+★`[2026-10-05]` **알림 받는 곳**(`notice_channel` = discord | telegram | 없음)은 한 번에 한 곳이다 — 마지막에 **연결한** 곳이 활성이다(웹훅을 넣거나 「디스코드로 연결」하면 discord · 텔레그램을 연결하면 telegram
+  — `telegram_connect.py`). 연결을 풀면 남은 쪽으로 넘어가고, 둘 다 없으면 없음. 고객이 `PUT {notice_channel}` 로 바꿀 수 있다(연결 안 된 곳이면 422 `channel_not_connected`).
 ★`secret_key` 를 바꾸면 저장된 웹훅을 못 푼다 — 고객이 다시 넣어야 한다(`unreadable`). 값에 판 이름(`v1:`)을 붙여 키 교체 때 구분한다.
 """
 from __future__ import annotations
@@ -151,6 +153,15 @@ class View:
     status: str | None
     checked_at: datetime | None
     updated_at: datetime | None
+    #: `[2026-10-05]` 텔레그램 연결 — 대화 번호는 어디에도 돌려주지 않는다(「연결됨」과 상태 · 시각뿐)
+    telegram_connected: bool = False
+    telegram_status: str | None = None
+    telegram_connected_at: datetime | None = None
+    notice_channel: str | None = None
+
+    def telegram_dict(self) -> dict[str, Any]:
+        return {"connected": self.telegram_connected, "status": self.telegram_status if self.telegram_connected else None,
+                "connected_at": self.telegram_connected_at.isoformat() if self.telegram_connected and self.telegram_connected_at else None}
 
     def as_dict(self) -> dict[str, Any]:
         return {"recovery_email": self.recovery_email,
@@ -163,7 +174,8 @@ class View:
 def read(conn, tenant_id: str, customer_id: UUID) -> View:
     with conn.cursor() as cur:
         cur.execute("SELECT recovery_email, discord_webhook_enc IS NOT NULL, discord_hint, discord_status, "
-                    "discord_checked_at, updated_at FROM customer_profiles WHERE tenant_id=%s AND customer_id=%s",
+                    "discord_checked_at, updated_at, telegram_chat_enc IS NOT NULL, telegram_status, telegram_connected_at, notice_channel "
+                    "FROM customer_profiles WHERE tenant_id=%s AND customer_id=%s",
                     (tenant_id, customer_id))
         row = cur.fetchone()
     if row is None:
@@ -172,11 +184,15 @@ def read(conn, tenant_id: str, customer_id: UUID) -> View:
 
 
 def update(conn, tenant_id: str, customer_id: UUID, body: dict[str, Any]) -> View:
-    """부분 갱신. ★칸이 없으면 안 건드리고, null(또는 공백만)이면 지운다. 모르는 칸은 거절 — 칸 **이름**만 알린다(값은 싣지 않는다)."""
-    unknown = sorted(set(body) - {"recovery_email", "discord_webhook_url"})
+    """부분 갱신. ★칸이 없으면 안 건드리고, null(또는 공백만)이면 지운다. 모르는 칸은 거절 — 칸 **이름**만 알린다(값은 싣지 않는다).
+
+    `[2026-10-05]` `notice_channel`(`discord` | `telegram`)로 알림 받는 곳을 바꾼다 — 연결 안 된 곳이면 422 `channel_not_connected`. 웹훅을 넣으면 그 순간 알림 받는 곳이 discord 가 되고,
+    웹훅을 지웠을 때 활성이 discord 였으면 텔레그램이 연결돼 있으면 telegram · 아니면 없음이 된다. **검사는 모두 쓰기 전에** 한다(하나라도 틀리면 아무것도 안 바뀐다)."""
+    unknown = sorted(set(body) - {"recovery_email", "discord_webhook_url", "notice_channel"})
     if unknown:
         raise ProfileError("unknown_field", "모르는 칸이 있어요: " + ", ".join(k[:40] for k in unknown))
     sets: dict[str, Any] = {}
+    webhook_after: bool | None = None                              # None = 웹훅을 안 건드린다
     if "recovery_email" in body:
         value = body["recovery_email"]
         if value is not None and not isinstance(value, str):
@@ -189,19 +205,40 @@ def update(conn, tenant_id: str, customer_id: UUID, body: dict[str, Any]) -> Vie
         if value is None or not value.strip():
             sets.update(discord_webhook_enc=None, discord_hint=None, discord_status="untested",
                         discord_checked_at=None, discord_tested_at=None)
+            webhook_after = False
         else:
             parsed = parse_webhook(value)
             sets.update(discord_webhook_enc=encrypt(canonical(parsed)), discord_hint=mask(parsed),
                         discord_status="untested", discord_checked_at=None, discord_tested_at=None)
-    if sets:
+            webhook_after = True
+    explicit: str | None = None
+    if "notice_channel" in body:
+        value = body["notice_channel"]
+        if value not in ("discord", "telegram"):
+            raise ProfileError("invalid_notice_channel", "알림 받는 곳은 discord 또는 telegram 이어야 해요")
+        current = read(conn, tenant_id, customer_id)
+        has_discord = current.webhook_set if webhook_after is None else webhook_after
+        if (value == "discord" and not has_discord) or (value == "telegram" and not current.telegram_connected):
+            raise ProfileError("channel_not_connected", "그 알림 채널이 연결돼 있지 않아요")
+        explicit = value
+    if sets or explicit:
         columns = list(sets)
         with conn.transaction(), conn.cursor() as cur:
-            cur.execute(
-                f"INSERT INTO customer_profiles (tenant_id, customer_id, {', '.join(columns)}) "
-                f"VALUES (%s, %s, {', '.join(['%s'] * len(columns))}) "
-                f"ON CONFLICT (tenant_id, customer_id) DO UPDATE SET "
-                + ", ".join(f"{c}=EXCLUDED.{c}" for c in columns) + ", updated_at=now()",
-                (tenant_id, customer_id, *sets.values()))
+            if columns:
+                cur.execute(
+                    f"INSERT INTO customer_profiles (tenant_id, customer_id, {', '.join(columns)}) "
+                    f"VALUES (%s, %s, {', '.join(['%s'] * len(columns))}) "
+                    f"ON CONFLICT (tenant_id, customer_id) DO UPDATE SET "
+                    + ", ".join(f"{c}=EXCLUDED.{c}" for c in columns) + ", updated_at=now()",
+                    (tenant_id, customer_id, *sets.values()))
+            if explicit:                                          # 고객이 고른 곳이 이긴다(같은 요청에 웹훅이 같이 와도)
+                cur.execute("UPDATE customer_profiles SET notice_channel=%s, updated_at=now() WHERE tenant_id=%s AND customer_id=%s",
+                            (explicit, tenant_id, customer_id))
+            elif webhook_after is True:                           # 마지막에 연결한 곳이 활성이다
+                cur.execute("UPDATE customer_profiles SET notice_channel='discord' WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))
+            elif webhook_after is False:                          # 지웠다 — 활성이 discord 였으면 텔레그램으로 · 없으면 없음
+                cur.execute("UPDATE customer_profiles SET notice_channel = CASE WHEN telegram_chat_enc IS NOT NULL THEN 'telegram' ELSE NULL END "
+                            "WHERE tenant_id=%s AND customer_id=%s AND notice_channel='discord'", (tenant_id, customer_id))
     return read(conn, tenant_id, customer_id)
 
 

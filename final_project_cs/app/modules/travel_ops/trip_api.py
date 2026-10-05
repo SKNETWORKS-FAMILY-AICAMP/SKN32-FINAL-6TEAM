@@ -1017,7 +1017,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return found
 
     @router.get("/v1/web/trip-intakes/{intake_id}/route-shapes")
-    def web_intake_route_shapes(intake_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
+    def web_intake_route_shapes(intake_id: UUID, detail: bool = False, who: tuple[str, UUID] = Depends(_web_customer)):
         """★`[2026-10-04]` 접수 **확인 화면**의 지도에 그릴 경로선 — 이동마다 GeoJSON LineString(등록 여행용 `/trips/{id}/route-shapes` 와 같은 모양,
         `item_id` 만 없다). `from_item_id`·`to_item_id` 는 확인 화면 `review.items[].id`. **저장된 검사만 읽는다**(없으면 이동을 다시 계산하지 않고
         빈 목록) — 우리 도로 그래프로 계산하고 외부 길찾기는 부르지 않는다. ★남의 접수는 404."""
@@ -1033,7 +1033,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             status, revision = row
             stored = review_module.load(conn, tenant, intake_id, revision) if status in ("review", "confirmed") else None
         from .mobility.route_shape import shapes_for_review
-        return {"intake_id": str(intake_id), "revision": revision, "shapes": shapes_for_review(stored),
+        return {"intake_id": str(intake_id), "revision": revision, "detail": detail,
+                "shapes": shapes_for_review(stored, detail=detail),
                 "attribution": "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)"}
 
     @router.get("/v1/web/trip-intakes/{intake_id}/events")
@@ -1662,9 +1663,21 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
     def _profile_body(view: Any) -> dict[str, Any]:
         """고객 연락처 응답 — ★`discord_connect` 는 조회 · 갱신 · 시험 **어느 응답에나** 싣는다(웹이 응답마다 같은 모양으로 읽는다 — 저장 직후 단추가 사라지지 않게)."""
-        from . import discord_connect
+        from . import discord_connect, telegram_connect
 
-        return {**view.as_dict(), "discord_connect": discord_connect.public_state()}
+        # ★`[2026-10-05]` 텔레그램 칸도 같은 자리에서 — 어느 응답에나 빠짐없이(웹이 응답마다 같은 모양으로 읽는다). 대화 번호는 어디에도 안 준다
+        return {**view.as_dict(), "discord_connect": discord_connect.public_state(), "telegram_connect": telegram_connect.public_state(),
+                "telegram": view.telegram_dict(), "notice_channel": view.notice_channel}
+
+    def _require_consent(tenant: str, customer: UUID, code: str) -> None:
+        """게이트가 켜져 있으면 이 선택 동의(`alert_channel` 등)가 있어야 한다 — 없으면 403 `consent_required`(항목 `code` 를 싣는다). 게이트가 꺼져 있으면(기본) 아무것도 안 막는다."""
+        from . import consents
+
+        try:
+            with get_connection() as conn:
+                consents.require(conn, tenant, customer, code)
+        except consents.ConsentError as refused:
+            raise _error(refused.status, refused.code, refused.message, **refused.extra) from None
 
     @router.put("/v1/web/profile")
     def web_profile_update(body: dict[str, Any] = Body(...), who: tuple[str, UUID] = Depends(_web_customer)):
@@ -1672,6 +1685,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         from . import customer_profile
 
         tenant, customer = who
+        if str(body.get("discord_webhook_url") or "").strip() or body.get("notice_channel"):
+            _require_consent(tenant, customer, "alert_channel")                # 알림 채널을 **저장하는** 일은 동의가 있어야 한다(지우기는 늘 된다)
         try:
             with get_connection() as conn:
                 return _profile_body(customer_profile.update(conn, tenant, customer, body))
@@ -1687,6 +1702,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         tenant, customer = who
         if not discord_connect.available():
             raise _error(404, "not_found", "디스코드 연결을 쓸 수 없다 — 붙여넣기로 연결한다")
+        _require_consent(tenant, customer, "alert_channel")
         try:
             discord_connect.count_start(tenant, customer)
         except web_guard.UsageRefused as refused:
@@ -1713,6 +1729,75 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             result = discord_connect.finish(conn, tenant_id=settings_module.get_settings().tenant_id, state=state, code=code, error=error)
         return RedirectResponse(f"{origin}/mypage?discord={result}", status_code=302,
                                 headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})
+
+    # ── 텔레그램으로 알림 받기 (2026-10-05 사용자 지시 — ui 세션 요청서) ──────────────────────────────────
+    #   고객이 「텔레그램으로 연결」 → 일회용 코드가 든 링크 → 텔레그램에서 「시작」 → 텔레그램이 아래 웹훅으로 `/start <코드>` 를 보냄 → 대화 번호를 그 사용자에 묶는다(`telegram_connect.py`). 알림만 한다.
+    @router.post("/v1/web/profile/telegram/connect/start")
+    def web_profile_telegram_connect_start(who: tuple[str, UUID] = Depends(_web_customer)):
+        """`{link, expires_at}` — 웹이 그 링크(`https://t.me/<봇>?start=<코드>`)를 연다. 봇 설정이 없으면 404 `not_found` · 사용자당 한 시간 한도(429 `too_many_requests`)."""
+        from . import telegram_connect, web_guard
+
+        tenant, customer = who
+        if not telegram_connect.available():
+            raise _error(404, "not_found", "텔레그램 연결을 쓸 수 없다")
+        _require_consent(tenant, customer, "alert_channel")
+        try:
+            telegram_connect.count_start(tenant, customer)
+        except web_guard.UsageRefused as refused:
+            error = _error(429, "too_many_requests", "텔레그램 연결을 너무 자주 시도했다 — 잠시 뒤에 다시 한다", retry_after_seconds=refused.retry_after)
+            error.headers = {"Retry-After": str(refused.retry_after)}
+            raise error from None
+        with get_connection() as conn, conn.transaction():
+            link = telegram_connect.begin(conn, tenant_id=tenant, customer_id=customer)
+        return JSONResponse(link, headers={"Cache-Control": "no-store"})
+
+    @router.post("/v1/web/profile/telegram/test")
+    def web_profile_telegram_test(who: tuple[str, UUID] = Depends(_web_customer)):
+        """연결된 대화로 시험 메시지 한 줄 — 고객이 누를 때만. `{result: ok|blocked|rate_limited|failed, profile}`. 연결이 없으면 409 `no_telegram` · 너무 자주면 429 `too_soon`."""
+        from . import customer_profile, telegram_connect
+
+        tenant, customer = who
+        interval = float(settings_module.get_guardrails().get("travel.profile.test_interval_seconds"))
+        try:
+            with get_connection() as conn:
+                result, view = telegram_connect.send_test(conn, tenant, customer, min_interval_seconds=interval)
+        except customer_profile.ProfileError as refused:
+            error = _error(refused.status, refused.code, refused.message)
+            if refused.retry_after:
+                error.headers = {"Retry-After": str(refused.retry_after)}
+            raise error from None
+        return {"result": result, "profile": _profile_body(view)}
+
+    @router.delete("/v1/web/profile/telegram")
+    def web_profile_telegram_disconnect(who: tuple[str, UUID] = Depends(_web_customer)):
+        """연결 풀기 — 대화 번호를 지운다. 알림 받는 곳이 텔레그램이었으면 디스코드가 있으면 디스코드로 · 없으면 없음. → `{profile}`."""
+        from . import telegram_connect
+
+        tenant, customer = who
+        with get_connection() as conn:
+            return {"profile": _profile_body(telegram_connect.disconnect(conn, tenant, customer))}
+
+    @router.post("/v1/telegram/webhook")
+    async def telegram_webhook(http: Request):
+        """텔레그램이 업데이트를 보내는 곳(인증은 **비밀 헤더**). 헤더가 서버 비밀값과 다르면 401 — 아무것도 안 바뀐다. 맞으면 처리하고 **늘 빠르게 200**(텔레그램은 2xx 가 아니면 같은 업데이트를 다시 보낸다)."""
+        from starlette.concurrency import run_in_threadpool
+
+        from . import telegram_connect
+
+        if not telegram_connect.verify_secret(http.headers.get("X-Telegram-Bot-Api-Secret-Token")):
+            raise _error(401, "unauthenticated", "인증하지 못했다")
+        try:
+            update = await http.json()
+        except Exception:                                    # noqa: BLE001 — 텔레그램은 항상 올바른 JSON 을 보낸다
+            raise _error(400, "invalid_json", "본문이 JSON 이 아니다") from None
+        tenant = settings_module.get_settings().tenant_id
+
+        def work() -> None:
+            with get_connection() as conn:
+                telegram_connect.handle_update(conn, tenant_id=tenant, update=update, send=telegram_connect.real_send)
+
+        await run_in_threadpool(work)
+        return {"ok": True}
 
     @router.post("/v1/web/profile/discord/test")
     def web_profile_discord_test(who: tuple[str, UUID] = Depends(_web_customer)):
@@ -1792,7 +1877,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                              "at": at.isoformat()} for key, payload, status, at in rows]}
 
     @router.get("/v1/web/trips/{trip_id}/route-shapes")
-    def web_route_shapes(trip_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
+    def web_route_shapes(trip_id: UUID, detail: bool = False, who: tuple[str, UUID] = Depends(_web_customer)):
         """★`[2026-10-04]` 지도에 그릴 **경로선** — 이동 항목마다 GeoJSON LineString. 우리 도로 그래프(지도 원본 OSM)로 직접 계산해 내린다 —
         외부 길찾기 API 를 부르지 않는다(`mobility/route_shape.py`). 그 사용자 본인의 여행만. 못 그린 구간은 직선 + `grade=근거없음` + `note`.
         지도 원본 출처 표기(ODbL)를 `attribution` 으로 같이 준다 — 화면은 선을 그릴 때 보여야 한다."""
@@ -1802,7 +1887,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             _trip_or_404(conn, store, trip_id, customer)
             _trip, items = store.latest(conn, trip_id)
         from .mobility.route_shape import shapes_for_items
-        return {"trip_id": str(trip_id), "shapes": shapes_for_items(items),
+        return {"trip_id": str(trip_id), "detail": detail, "shapes": shapes_for_items(items, detail=detail),
                 "attribution": "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)"}
 
     return router
