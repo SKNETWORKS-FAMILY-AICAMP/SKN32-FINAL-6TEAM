@@ -9,7 +9,10 @@ OUT, SETS = sys.argv[1], sys.argv[2].split(',')
 os.makedirs(OUT, exist_ok=True)
 W = '월화수목금토일'
 for name in SETS:
-    job = json.load(open(os.path.join(HERE, 'fixtures', f'{name}.json'), encoding='utf-8'))['sets'][name]
+    _f = os.path.join(HERE, 'fixtures', f'{name}.json')
+    if not os.path.exists(_f):
+        _f = os.path.join(HERE, 'fixtures', 'distill', f'{name}.json')
+    job = json.load(open(_f, encoding='utf-8'))['sets'][name]
     items = sorted(job['items'], key=lambda i: (i['date'], i['start']))
     days = sorted({i['date'] for i in items})
 
