@@ -537,12 +537,11 @@ def _decision_mode(chat: Any, tenant: str | None = None) -> str:
     # ★YAML 은 따옴표 없는 on/off 를 참/거짓으로 읽는다 — 그래서 한 번 꺼진 채로 돌았다(2026-09-29 실서버)
     mode = {True: "on", False: "off"}.get(raw, str(raw or "off")) if isinstance(raw, bool) else str(raw or "off")
     if tenant:
-        try:
-            from app.domains.travel_ops.modules.web_account import web_guard
+        # ★`[2026-10-06]` 전에는 웹 남용 방어 설정 표를 직접 읽었다(D-CS-013 칸끼리 규칙 위반) —
+        #   운영자 조정값을 **주는 쪽**이 조립 때 꽂는다. 아무도 안 꽂으면 가드레일 기본값 그대로.
+        from app.domains.travel_ops.components.settings_hook import operator_setting
 
-            mode = str(web_guard.values(tenant).get("chat.decision_mode") or mode)
-        except Exception:                               # noqa: BLE001 — 설정 표를 못 읽으면 가드레일 기본값
-            pass
+        mode = str(operator_setting(tenant, "chat.decision_mode") or mode)
     return mode if mode in ("off", "shadow", "on") else "off"
 
 

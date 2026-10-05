@@ -19,7 +19,7 @@ import httpx
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.domains.travel_ops.modules.web_account import customer_profile as profile
+from app.domains.travel_ops.components.customer import profile
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
 from .test_web_api import _fresh_limit_cache, _h, _session  # noqa: F401

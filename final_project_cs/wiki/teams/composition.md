@@ -195,7 +195,7 @@ app/domains/travel_ops/
 ├─ modules/      모듈 — 꺼도 나머지가 도는 기능 (web_account · mcp · live_progress)
 ├─ instances/    인스턴스 — 에이전트 팀. 팀 하나 = 폴더 하나 (activity · dining · mobility · booking_handoff · locked + _shared)
 ├─ components/   컴포넌트 — 빼면 여행 서비스가 안 도는 부품 (itinerary · planning · places · intake · conversation · actions · booking · watch · core_hooks)
-├─ ports/        Port — 바꿔 끼우는 자리 (notify_channels · data_sources)
+├─ ports/        Port — 바꿔 끼우는 자리 (data_sources)
 ├─ entry/        고객 입구 — HTTP 경로
 └─ scenarios/    시연 · 하루 대조 시험용 조립
 ```

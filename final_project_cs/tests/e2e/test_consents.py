@@ -24,7 +24,7 @@ from uuid import uuid4
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.domains.travel_ops.modules.web_account import consents
+from app.domains.travel_ops.components.customer import consents
 
 from .test_guest_and_trip_delete import _customer_of, _link, _make_trip
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다

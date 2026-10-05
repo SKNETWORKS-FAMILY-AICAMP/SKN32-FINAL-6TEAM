@@ -1752,7 +1752,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     #   응답에는 마스킹만 돌려준다(`customer_profile.py` 머리). 남의 키로는 남의 값이 안 보인다(키 → 고객).
     @router.get("/v1/web/profile")
     def web_profile(who: tuple[str, UUID] = Depends(_web_customer)):
-        from app.domains.travel_ops.modules.web_account import customer_profile
+        from app.domains.travel_ops.components.customer import profile as customer_profile
 
         tenant, customer = who
         with get_connection() as conn:
@@ -1760,8 +1760,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
     def _profile_body(view: Any) -> dict[str, Any]:
         """고객 연락처 응답 — ★`discord_connect` 는 조회 · 갱신 · 시험 **어느 응답에나** 싣는다(웹이 응답마다 같은 모양으로 읽는다 — 저장 직후 단추가 사라지지 않게)."""
-        from app.domains.travel_ops.ports.notify_channels import discord_connect
-        from app.domains.travel_ops.ports.notify_channels import telegram_connect
+        from app.domains.travel_ops.modules.web_account import discord_connect
+        from app.domains.travel_ops.modules.web_account import telegram_connect
 
         # ★`[2026-10-05]` 텔레그램 칸도 같은 자리에서 — 어느 응답에나 빠짐없이(웹이 응답마다 같은 모양으로 읽는다). 대화 번호는 어디에도 안 준다
         return {**view.as_dict(), "discord_connect": discord_connect.public_state(), "telegram_connect": telegram_connect.public_state(),
@@ -1769,7 +1769,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
     def _require_consent(tenant: str, customer: UUID, code: str) -> None:
         """게이트가 켜져 있으면 이 선택 동의(`alert_channel` 등)가 있어야 한다 — 없으면 403 `consent_required`(항목 `code` 를 싣는다). 게이트가 꺼져 있으면(기본) 아무것도 안 막는다."""
-        from app.domains.travel_ops.modules.web_account import consents
+        from app.domains.travel_ops.components.customer import consents
 
         try:
             with get_connection() as conn:
@@ -1780,7 +1780,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.put("/v1/web/profile")
     def web_profile_update(body: dict[str, Any] = Body(...), who: tuple[str, UUID] = Depends(_web_customer)):
         """부분 갱신 — 칸이 없으면 안 건드리고 null(또는 공백만)이면 지운다. 모르는 칸 · 틀린 값은 422(받은 값을 되돌려 싣지 않는다)."""
-        from app.domains.travel_ops.modules.web_account import customer_profile
+        from app.domains.travel_ops.components.customer import profile as customer_profile
 
         tenant, customer = who
         if str(body.get("discord_webhook_url") or "").strip() or body.get("notice_channel"):
@@ -1795,7 +1795,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.post("/v1/web/profile/discord/connect/start")
     def web_profile_discord_connect_start(who: tuple[str, UUID] = Depends(_web_customer)):
         """`{authorize_url}` — 웹이 그 주소(`https://discord.com…`)로 브라우저를 보낸다. 디스코드 앱 설정이 없으면 404. 사용자당 한 시간 한도(429 `too_many_requests`)."""
-        from app.domains.travel_ops.ports.notify_channels import discord_connect
+        from app.domains.travel_ops.modules.web_account import discord_connect
         from app.domains.travel_ops.modules.web_account import web_guard
 
         tenant, customer = who
@@ -1819,7 +1819,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         어떤 실패든 **웹으로 302 + `?discord=connected|cancelled|expired|failed`** 다(브라우저 이동이라 JSON 오류를 못 읽는다)."""
         from fastapi.responses import RedirectResponse
 
-        from app.domains.travel_ops.ports.notify_channels import discord_connect
+        from app.domains.travel_ops.modules.web_account import discord_connect
 
         origin = discord_connect.web_origin()
         if not origin:
@@ -1834,7 +1834,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.post("/v1/web/profile/telegram/connect/start")
     def web_profile_telegram_connect_start(who: tuple[str, UUID] = Depends(_web_customer)):
         """`{link, expires_at}` — 웹이 그 링크(`https://t.me/<봇>?start=<코드>`)를 연다. 봇 설정이 없으면 404 `not_found` · 사용자당 한 시간 한도(429 `too_many_requests`)."""
-        from app.domains.travel_ops.ports.notify_channels import telegram_connect
+        from app.domains.travel_ops.modules.web_account import telegram_connect
         from app.domains.travel_ops.modules.web_account import web_guard
 
         tenant, customer = who
@@ -1854,8 +1854,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.post("/v1/web/profile/telegram/test")
     def web_profile_telegram_test(who: tuple[str, UUID] = Depends(_web_customer)):
         """연결된 대화로 시험 메시지 한 줄 — 고객이 누를 때만. `{result: ok|blocked|rate_limited|failed, profile}`. 연결이 없으면 409 `no_telegram` · 너무 자주면 429 `too_soon`."""
-        from app.domains.travel_ops.modules.web_account import customer_profile
-        from app.domains.travel_ops.ports.notify_channels import telegram_connect
+        from app.domains.travel_ops.components.customer import profile as customer_profile
+        from app.domains.travel_ops.modules.web_account import telegram_connect
 
         tenant, customer = who
         interval = float(settings_module.get_guardrails().get("travel.profile.test_interval_seconds"))
@@ -1872,7 +1872,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.delete("/v1/web/profile/telegram")
     def web_profile_telegram_disconnect(who: tuple[str, UUID] = Depends(_web_customer)):
         """연결 풀기 — 대화 번호를 지운다. 알림 받는 곳이 텔레그램이었으면 디스코드가 있으면 디스코드로 · 없으면 없음. → `{profile}`."""
-        from app.domains.travel_ops.ports.notify_channels import telegram_connect
+        from app.domains.travel_ops.modules.web_account import telegram_connect
 
         tenant, customer = who
         with get_connection() as conn:
@@ -1883,7 +1883,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         """텔레그램이 업데이트를 보내는 곳(인증은 **비밀 헤더**). 헤더가 서버 비밀값과 다르면 401 — 아무것도 안 바뀐다. 맞으면 처리하고 **늘 빠르게 200**(텔레그램은 2xx 가 아니면 같은 업데이트를 다시 보낸다)."""
         from starlette.concurrency import run_in_threadpool
 
-        from app.domains.travel_ops.ports.notify_channels import telegram_connect
+        from app.domains.travel_ops.modules.web_account import telegram_connect
 
         if not telegram_connect.verify_secret(http.headers.get("X-Telegram-Bot-Api-Secret-Token")):
             raise _error(401, "unauthenticated", "인증하지 못했다")
@@ -1904,7 +1904,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     def web_profile_discord_test(who: tuple[str, UUID] = Depends(_web_customer)):
         """저장된 웹훅으로 시험 메시지 한 줄 — 고객이 누를 때만. `{result: ok|invalid|rate_limited|failed, profile: {…}}`.
         마지막 시도에서 `travel.profile.test_interval_seconds` 안이면 429 `too_soon`."""
-        from app.domains.travel_ops.modules.web_account import customer_profile
+        from app.domains.travel_ops.components.customer import profile as customer_profile
 
         tenant, customer = who
         interval = float(settings_module.get_guardrails().get("travel.profile.test_interval_seconds"))

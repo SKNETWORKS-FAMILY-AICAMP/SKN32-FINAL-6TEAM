@@ -212,7 +212,7 @@ def authenticate(request: Request, *, required: bool = True, csrf: bool = True) 
 
 
 def _consent_gate(request: Request, identity: Identity) -> None:
-    from app.domains.travel_ops.modules.web_account import consents
+    from app.domains.travel_ops.components.customer import consents
 
     if not consents.gate_enabled():
         return

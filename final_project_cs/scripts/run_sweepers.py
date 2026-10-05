@@ -162,7 +162,7 @@ def _run_catalog_hours(tenant_id: str) -> dict[str, object]:
 
 
 def _run_web_guard(tenant_id: str) -> dict[str, object]:
-    from app.domains.travel_ops.modules.web_account.consents import purge_expired
+    from app.domains.travel_ops.components.customer.consents import purge_expired
     from app.domains.travel_ops.modules.web_account.guest_cleanup import cleanup_guests
     from app.domains.travel_ops.modules.web_account.web_guard import prune_usage
 

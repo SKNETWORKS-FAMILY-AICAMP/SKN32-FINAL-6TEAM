@@ -32,7 +32,7 @@ import httpx
 import app.core.settings as settings_module
 from app.core.settings import get_guardrails
 
-from app.domains.travel_ops.modules.web_account import customer_profile
+from app.domains.travel_ops.components.customer import profile as customer_profile
 from app.domains.travel_ops.modules.web_account import web_auth
 
 log = logging.getLogger(__name__)
@@ -150,7 +150,7 @@ def finish(conn, *, tenant_id: str, state: str | None, code: str | None, error: 
         return "expired"
     if error or not code or len(code) > MAX_CODE:
         return "failed"
-    from app.domains.travel_ops.modules.web_account import consents
+    from app.domains.travel_ops.components.customer import consents
 
     try:
         consents.require(conn, tenant_id, started["customer_id"], "alert_channel")           # 게이트가 켜져 있으면 알림 채널 동의 없이는 저장하지 않는다

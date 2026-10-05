@@ -32,9 +32,9 @@ import app.core.settings as settings_module
 from app.core.settings import get_guardrails
 from app.infrastructure.notify import telegram as client
 
-from app.domains.travel_ops.modules.web_account import consents
-from app.domains.travel_ops.modules.web_account import customer_profile
-from app.domains.travel_ops.modules.web_account.customer_profile import ProfileError
+from app.domains.travel_ops.components.customer import consents
+from app.domains.travel_ops.components.customer import profile as customer_profile
+from app.domains.travel_ops.components.customer.profile import ProfileError
 
 log = logging.getLogger(__name__)
 
@@ -53,56 +53,10 @@ SAY_OTHER = "알림 전용 봇이에요. 일정 수정과 질문은 웹이나 �
 #: 시험이 바깥 호출을 가로채는 자리는 `infrastructure/notify/telegram.TRANSPORT` 다
 
 
-# ── 설정 ────────────────────────────────────────────────────────
-def config() -> tuple[str, str, str] | None:
-    """(봇 토큰, 봇 아이디, 웹훅 비밀값) — **셋 다** 있어야 켜진다. 반쯤 켜진 채 뜨지 않게."""
-    settings = settings_module.get_settings()
-    token = (getattr(settings, "telegram_bot_token", "") or "").strip()
-    username = (getattr(settings, "telegram_bot_username", "") or "").strip().lstrip("@")
-    secret = (getattr(settings, "telegram_webhook_secret", "") or "").strip()
-    return (token, username, secret) if token and username and secret else None
-
-
-def available() -> bool:
-    return config() is not None
-
-
-def public_state() -> dict[str, Any]:
-    """프로필 응답에 싣는 모양 — 봇 설정이 있을 때만 `available: true`(없으면 웹이 텔레그램 줄을 통째로 숨긴다)."""
-    return {"available": available()}
-
-
-def verify_secret(provided: str | None) -> bool:
-    """웹훅 비밀 헤더 확인 — 상수 시간 비교. 설정이 없으면 늘 거짓(열려 있는 웹훅을 만들지 않는다)."""
-    cfg = config()
-    return bool(cfg and provided and hmac.compare_digest(provided.encode("utf-8"), cfg[2].encode("utf-8")))
-
-
-# ── 대화 번호 암호화 · 해시 ─────────────────────────────────────
-def _fernet() -> Fernet:
-    secret = settings_module.get_settings().secret_key.encode()
-    return Fernet(base64.urlsafe_b64encode(hashlib.sha256(b"acop:customer-profile:telegram:" + secret).digest()))
-
-
-def encrypt_chat(chat_id: int) -> str:
-    return f"{ENC_VERSION}:" + _fernet().encrypt(str(chat_id).encode()).decode()
-
-
-def decrypt_chat(stored: str) -> int:
-    """못 풀면 `ProfileError('unreadable')` — `secret_key` 가 바뀌었거나 값이 깨졌다. 고객이 다시 연결해야 한다."""
-    version, _, body = stored.partition(":")
-    try:
-        if version != ENC_VERSION:
-            raise InvalidToken
-        return int(_fernet().decrypt(body.encode()).decode())
-    except (InvalidToken, ValueError):
-        raise ProfileError("unreadable", "저장된 텔레그램 연결을 읽을 수 없어요 — 다시 연결해 주세요", status=409) from None
-
-
-def chat_hash(tenant_id: str, chat_id: int) -> str:
-    """같은 대화가 다른 사용자에게 묶이는 것을 막는 유일 확인용 — 서버 비밀 HMAC(원문 대화 번호는 여기서도 안 남는다)."""
-    secret = settings_module.get_settings().secret_key.encode()
-    return hmac.new(secret, f"telegram-chat:{tenant_id}:{chat_id}".encode(), hashlib.sha256).hexdigest()
+# ★`[2026-10-06]` 설정·암복호는 `components/customer/channels.py` 로 옮겼다 — 알림 발송(필수 부품)이
+#   이 파일(끌 수 있는 기능)을 부르지 않게 하려는 것이다(D-CS-013). 여기서는 다시 내보내기만 한다.
+from app.domains.travel_ops.components.customer.channels import (      # noqa: E402
+    available, chat_hash, config, decrypt_chat, disconnect, encrypt_chat, public_state, verify_secret)
 
 
 def _h(text: str) -> str:
@@ -248,17 +202,6 @@ def real_send(chat_id: int, text: str) -> None:
 
 
 # ── 연결 풀기 · 시험 발송 ───────────────────────────────────────
-def disconnect(conn, tenant_id: str, customer_id: UUID) -> customer_profile.View:
-    """대화 번호를 지운다. 알림 받는 곳이 텔레그램이었으면 디스코드가 있으면 디스코드로 · 없으면 없음."""
-    with conn.transaction(), conn.cursor() as cur:
-        cur.execute(
-            "UPDATE customer_profiles SET telegram_chat_enc=NULL, telegram_chat_hash=NULL, telegram_status=NULL, telegram_connected_at=NULL, "
-            "telegram_checked_at=NULL, telegram_tested_at=NULL, "
-            "notice_channel = CASE WHEN notice_channel='telegram' THEN (CASE WHEN discord_webhook_enc IS NOT NULL THEN 'discord' ELSE NULL END) "
-            "ELSE notice_channel END, updated_at=now() WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))
-    return customer_profile.read(conn, tenant_id, customer_id)
-
-
 def send_test(conn, tenant_id: str, customer_id: UUID, *, min_interval_seconds: float,
               now: datetime | None = None) -> tuple[str, customer_profile.View]:
     """연결된 대화로 시험 메시지 한 줄. 돌려주는 것 = (결과, 갱신된 조회 모양). 결과: ok · blocked · rate_limited · failed.

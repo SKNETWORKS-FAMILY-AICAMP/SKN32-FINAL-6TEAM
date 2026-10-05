@@ -144,8 +144,8 @@ def record(conn, *, tenant_id: str, user_id: UUID, session_kind: str, version: A
 def _purge_alert_channel(conn, tenant_id: str, user_id: UUID) -> int:
     """저장한 알림 채널(디스코드 웹훅 · 텔레그램 대화 번호)을 모두 지운다 — 같은 경로(`customer_profile.update` · `telegram_connect.disconnect`)를 쓴다.
     ★`[2026-10-05]` 텔레그램을 먼저 푼다 — 그러면 알림 받는 곳이 디스코드로 옮겨 갔다가 이어서 웹훅이 지워질 때 없음(null)이 된다."""
-    from app.domains.travel_ops.modules.web_account import customer_profile
-    from app.domains.travel_ops.ports.notify_channels import telegram_connect
+    from app.domains.travel_ops.components.customer import profile as customer_profile
+    from app.domains.travel_ops.components.customer import channels as telegram_connect
 
     view = customer_profile.read(conn, tenant_id, user_id)
     purged = 0

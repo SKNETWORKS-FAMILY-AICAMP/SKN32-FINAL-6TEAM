@@ -16,7 +16,7 @@ from fastapi.responses import JSONResponse
 
 from app.infrastructure.db.session import get_connection
 
-from app.domains.travel_ops.modules.web_account import consents
+from app.domains.travel_ops.components.customer import consents
 from app.domains.travel_ops.modules.web_account import web_cookie
 from app.domains.travel_ops.modules.web_account import web_guard
 
