@@ -9,6 +9,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 MODEL, ADAPTER, TAG, SETS = sys.argv[1:5]
 BASE = '--base' in sys.argv
+LIMIT = int(os.environ.get('LIMIT', '0'))   # 스모크용: 세트마다 앞 N문제만
 W = '월화수목금토일'
 SFX = '\n\n답은 JSON 한 줄로만: {"item": 번호} 또는 {"item": null}'
 tok = AutoTokenizer.from_pretrained(MODEL)
@@ -50,7 +51,11 @@ def solve(prompt, valid):
 
 def run(name, qs_iter, mode):
     picks, errs, t0, shown = [], 0, time.time(), 0
-    for prompt, valid in qs_iter:
+    for n, (prompt, valid) in enumerate(qs_iter):
+        if LIMIT and n >= LIMIT:
+            break
+        if (n + 1) % 50 == 0:
+            print(f'  {name} {mode} {n + 1}문제 · {(time.time() - t0) / (n + 1):.2f}s/q', flush=True)
         if mode == 'base':
             with model.disable_adapter():
                 v, e, s = solve(prompt, valid)
