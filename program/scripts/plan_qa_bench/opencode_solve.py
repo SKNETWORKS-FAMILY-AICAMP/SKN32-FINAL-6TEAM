@@ -15,6 +15,7 @@ args = sys.argv[1:]
 SETS = args[0].split(',')
 opt = lambda k, d: args[args.index(k) + 1] if k in args else d
 LIMIT, WORKERS, MODEL = int(opt('--limit', '0')), int(opt('--workers', '3')), opt('--model', 'opencode/muse-spark-1.3-contributor-free')
+TMO, TRIES = int(opt('--timeout', '300')), int(opt('--tries', '4'))   # 「없는 장소」 유형에서 에이전트가 도구를 쓰려는 듯 한 문제에 수 분씩 걸려 짧게 줄여 쓴다(2026-10-06). 시간 초과 행은 오류로 남아 틀린 것으로 센다
 TAG = re.sub(r'[^A-Za-z0-9.]+', '_', MODEL.split('/')[-1])
 W = '월화수목금토일'
 CWD = os.path.join(tempfile.gettempdir(), 'opencode_solve_empty')
@@ -46,10 +47,10 @@ def call(text):
     cmd = [exe if os.path.exists(exe) else 'opencode', 'run', '-m', MODEL, '--format', 'json']
     env = {k: v for k, v in os.environ.items() if k not in ('OPENCODE_CONFIG', 'OPENCODE_PERMISSION')}   # 설정을 바꾸면 무료 구간이 막힌다
     err = ''
-    for n in range(4):
+    for n in range(TRIES):
         try:
             t0 = time.time()
-            r = subprocess.run(cmd, input=text, capture_output=True, text=True, encoding='utf-8', timeout=300, cwd=CWD, env=env, shell=(os.name == 'nt' and not os.path.exists(exe)))
+            r = subprocess.run(cmd, input=text, capture_output=True, text=True, encoding='utf-8', timeout=TMO, cwd=CWD, env=env, shell=(os.name == 'nt' and not os.path.exists(exe)))
             txt, tok, errs = '', {}, []
             for line in r.stdout.splitlines():
                 try:

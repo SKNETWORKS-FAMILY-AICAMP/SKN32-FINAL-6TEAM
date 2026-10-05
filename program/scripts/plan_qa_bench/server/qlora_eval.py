@@ -10,6 +10,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 MODEL, ADAPTER, TAG, SETS = sys.argv[1:5]
 BASE = '--base' in sys.argv
 LIMIT = int(os.environ.get('LIMIT', '0'))   # 스모크용: 세트마다 앞 N문제만
+CONF = os.environ.get('CONF') == '1'        # 1 이면 문제마다 짚은 답의 확신도(답 토큰 확률의 곱)를 같이 저장 — 확신 낮은 문제만 큰 모델에 넘기는 위임 모의용
+LAST_CONF = [None]
 W = '월화수목금토일'
 SFX = '\n\n답은 JSON 한 줄로만: {"item": 번호} 또는 {"item": null}'
 tok = AutoTokenizer.from_pretrained(MODEL)
@@ -40,8 +42,22 @@ def solve(prompt, valid):
     p = tok.apply_chat_template([{'role': 'user', 'content': prompt}], add_generation_prompt=True, tokenize=False)
     ids = tok(p, add_special_tokens=False, return_tensors='pt').to('cuda')
     with torch.inference_mode():
-        out = model.generate(**ids, max_new_tokens=12, do_sample=False)
+        if CONF:
+            gen_out = model.generate(**ids, max_new_tokens=12, do_sample=False, output_scores=True, return_dict_in_generate=True)
+            out = gen_out.sequences
+        else:
+            out = model.generate(**ids, max_new_tokens=12, do_sample=False)
     s = tok.decode(out[0, ids['input_ids'].shape[1]:], skip_special_tokens=True)
+    if CONF:
+        import math
+        lp = 0.0
+        for step, tid in enumerate(out[0, ids['input_ids'].shape[1]:]):
+            if step >= len(gen_out.scores):
+                break
+            lp += torch.log_softmax(gen_out.scores[step][0].float(), -1)[tid].item()
+            if tok.decode([tid.item()]).strip().endswith('}'):
+                break
+        LAST_CONF[0] = math.exp(lp)
     m = re.search(r'"item"\s*:\s*(null|\d+)', s)
     if not m:
         return None, True, s
@@ -50,7 +66,7 @@ def solve(prompt, valid):
 
 
 def run(name, qs_iter, mode):
-    picks, errs, t0, shown = [], 0, time.time(), 0
+    picks, errs, t0, shown, confs = [], 0, time.time(), 0, []
     for n, (prompt, valid) in enumerate(qs_iter):
         if LIMIT and n >= LIMIT:
             break
@@ -62,13 +78,14 @@ def run(name, qs_iter, mode):
         else:
             v, e, s = solve(prompt, valid)
         picks.append(v)
+        confs.append(LAST_CONF[0])
         errs += e
         if e and shown < 3:
             print('  읽기 실패 예:', repr(s[:80]), flush=True)
             shown += 1
     sec = (time.time() - t0) / max(1, len(picks))
     print(f'{name} {mode} {len(picks)}문제 {sec:.2f}s/q 읽기실패 {errs}', flush=True)
-    return {'picks': picks, '_sec_per_q': sec, '_errors': errs}
+    return {'picks': picks, '_sec_per_q': sec, '_errors': errs, **({'_confs': confs} if CONF else {})}
 
 
 modes = (['base'] if BASE else []) + (['lora'] if ADAPTER != '-' else [])
