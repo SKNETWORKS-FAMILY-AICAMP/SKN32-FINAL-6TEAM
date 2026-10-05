@@ -136,6 +136,78 @@ def validate_all(target: Path, *, verbose: bool = True,
     return report
 
 
+def _runnable(nodeid: str, root: Path) -> bool:
+    """지금 코드에 아직 있는 시험인가. 없는 이름을 넘기면 pytest 가 통째로 멈춘다."""
+    file_part = nodeid.split("::")[0]
+    path = root / file_part
+    if not path.is_file() or "::" not in nodeid:
+        return False
+    name = nodeid.split("::")[-1].split("[")[0]
+    return f"def {name}(" in path.read_text(encoding="utf-8", errors="replace")
+
+
+def recheck_all(target: Path, *, only: list[str] | None = None) -> dict[str, Any]:
+    """결함마다 지난번에 그 결함을 잡은 시험만 다시 돌려, 지금 코드에서도 우는지 본다.
+
+    전체 관문은 결함마다 cs 시험 전체를 돌린다. 시험이 4,005개로 늘자 한 바퀴가 11분,
+    43개면 8시간쯤 걸린다(2026-10-06 실측 656초 × 43, 예상). 재확인은 빠른 대신 보는 것이 좁다 —
+    새로 생긴 다른 시험이 그 결함을 잡는지는 보지 않는다. 카탈로그의 전체 관문 결과는 바꾸지 않고
+    entries[id]["recheck"] 에만 적는다.
+    """
+    catalog = defects_mod.load_catalog()
+    entries = catalog.get("entries", {})
+    report: dict[str, Any] = {"entries": {}, "baseline": None}
+    with Sandbox(target) as sandbox:
+        assert sandbox.root is not None
+        plan: dict[str, list[str]] = {}
+        dropped: dict[str, int] = {}
+        for defect in defects_mod.DEFECTS:
+            if only is not None and defect.defect_id not in only:
+                continue
+            old = entries.get(defect.defect_id, {}).get("failed", [])
+            keep = [n for n in old if _runnable(n, sandbox.root)]
+            plan[defect.defect_id] = keep
+            dropped[defect.defect_id] = len(old) - len(keep)
+        union = sorted({n for ids in plan.values() for n in ids})
+        print(f"재확인 — 결함 {len(plan)}개, 다시 돌릴 시험 {len(union)}개(지난번에 결함을 잡은 시험 중 지금도 있는 것)")
+        baseline = sandbox.pytest(union) if union else None
+        if baseline is None or (" passed" not in baseline.summary and " failed" not in baseline.summary):
+            print(f"  ✗ 기준선에서 시험이 돌지 않았다: {baseline.summary if baseline else '돌릴 시험 없음'}")
+            return report
+        sandbox.sweep()
+        known_broken = set(baseline.failed)
+        report["baseline"] = {"summary": baseline.summary, "failed": sorted(known_broken)}
+        print(f"  기준선 {baseline.summary}" + (f" — 결함 없이도 {len(known_broken)}건 실패, 판정에서 뺀다"
+                                              if known_broken else ""))
+        for defect_id, selection in plan.items():
+            defect = defects_mod.by_id(defect_id)
+            patch = defects_mod.PATCH_DIR / f"{defect_id}.patch"
+            usable = [n for n in selection if n not in known_broken]
+            if not usable:
+                print(f"\n{defect_id}  ? 다시 돌릴 시험이 없다(사라졌거나 결함 없이도 실패) — 전체 관문으로만 판정할 수 있다")
+                report["entries"][defect_id] = {"state": "no_tests", "dropped": dropped[defect_id]}
+                continue
+            applied, message = sandbox.apply(patch)
+            if not applied:
+                print(f"\n{defect_id}  X 적용 실패: {message}")
+                report["entries"][defect_id] = {"state": "apply_failed", "error": message}
+                continue
+            result = sandbox.pytest(usable)
+            sandbox.sweep()
+            sandbox.apply(patch, reverse=True)
+            if " passed" not in result.summary and " failed" not in result.summary:
+                print(f"\n{defect_id}  ? 시험이 돌지 않았다: {result.summary}")
+                report["entries"][defect_id] = {"state": "not_run", "summary": result.summary}
+                continue
+            caught = sorted(set(result.failed) & set(usable))
+            mark = "✓" if caught else "✗"
+            print(f"\n{defect_id}  {mark} 다시 돌린 {len(usable)}개 중 {len(caught)}개가 울었다  {defect.title}")
+            report["entries"][defect_id] = {"state": "caught" if caught else "missed",
+                                             "ran": len(usable), "caught": len(caught),
+                                             "dropped": dropped[defect_id], "summary": result.summary}
+    return report
+
+
 def _normalize(patch_text: str) -> str:
     """hunk 헤더의 줄 번호처럼 의미 없는 차이는 무시한다."""
     lines = []
