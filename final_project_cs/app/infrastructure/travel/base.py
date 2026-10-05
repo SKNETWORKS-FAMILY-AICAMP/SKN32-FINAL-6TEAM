@@ -124,8 +124,10 @@ class TravelSource:
         """★`None` 을 돌려주기 **전에** 반드시 부른다. 이유 없는 모름은 못 고친다."""
         self.misses[reason] += 1
         logger.warning("travel source miss: %s", SourceMiss(self.name, reason, detail))
-        # ★`[2026-10-05]` 한도 때문에 **안 부른** 것(`rate_limited` · `budget_*`)이 아니라 **부른 뒤** 쓸 수 있는 답을 못 받은 것만 DB 에 실패로 센다(키별 여유 확인 — `call_budget.py`)
-        if reason not in _NOT_A_CALL_FAILURE:
+        # ★`[2026-10-05]` **부른 뒤** 쓸 수 있는 답을 못 받은 것(`_is_call_failure`)만 DB 에 실패로 센다(키별 여유 확인 — `call_budget.py`).
+        #   ☆같은 날 x600 서버에서 `tour_api` 줄이 used 15 · failed 15 로 나왔다 — 처음 판은 「한도 때문에 안 부른 것」만 빼고 전부 실패로 세어, 정상 응답인데 찾는 장소가 없는
+        #   경우(`not_found` · `no_exact_title` · `ambiguous`)와 부르기 전에 막힌 경우(`no_service_key`)까지 실패로 셌다. 허용 목록으로 뒤집었다
+        if _is_call_failure(reason):
             count = getattr(self._limiter, "record_failure", None)
             if count is not None:
                 count(self.name)
@@ -391,8 +393,15 @@ def _with_db_budget(limiter: Any, limits: dict[str, int], monthly: dict[str, int
     return with_db_budget(limiter, limits, monthly, names, on_db_error=on_db_error)
 
 
-#: 한도 때문에 부르지 않은 이유 — 부른 뒤의 실패가 아니므로 DB 실패 수에 안 센다(거절 수로 센다)
-_NOT_A_CALL_FAILURE = frozenset({"rate_limited", "budget_exhausted", "budget_unavailable"})
+#: 부른 뒤 **쓸 수 있는 답을 못 받은** 이유 — 응답이 오지 않았거나(시간 초과 · 연결 오류 · HTTP 오류) 와도 읽을 수 없었다(JSON · XML 이 아님 · 모양이 다름 · 본문이 오류).
+#: ★이 목록에 없는 것은 DB 실패 수에 안 센다 — 한도 때문에 **안 부른** 것(`rate_limited` · `budget_*`, 거절 수로 센다) · 부르기 전에 막힌 것(`no_service_key` · `no_*`) ·
+#:  **답은 잘 왔는데 찾는 것이 없거나 애매한** 것(`not_found` · `no_exact_title` · `ambiguous` · `empty_*`)은 정상 호출이다. 새 이유를 더할 때는 「응답을 못 받았거나 못 읽었나」로만 가른다.
+_CALL_FAILURE_REASONS = frozenset({"timeout", "transport_error", "not_json", "not_xml", "xml_parse_error", "bad_xml",
+                                   "unexpected_shape", "unexpected_envelope", "body_error"})
+
+
+def _is_call_failure(reason: str) -> bool:
+    return reason in _CALL_FAILURE_REASONS or reason.startswith("http_")
 
 
 def build_travel_sources(settings: Any) -> TravelSources:
