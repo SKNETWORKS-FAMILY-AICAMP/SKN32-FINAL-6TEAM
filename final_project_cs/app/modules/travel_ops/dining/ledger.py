@@ -377,6 +377,49 @@ def find_place_by_name(conn, name: str | None) -> dict[str, Any] | None:
             "latitude": float(lat), "longitude": float(lng), "address": address}
 
 
+def find_license_shop_by_name(conn, name: str | None, *, near: tuple[float, float] | None = None) -> dict[str, Any] | None:
+    """원장에 없는 식당을 인허가(사업자 등록) 영업 중 식당에서 이름으로 찾는다 — **이름 찾기 전용**. `[2026-10-05 사용자 지시]`
+
+    ★영업시간을 모른다. 대체 후보 · 영업 판정에는 쓰지 않는다(`dn_license_shop` 마이그레이션 225).
+    ★이름이 같은 가게가 하나뿐이면 그것. 여럿이면(체인 · 흔한 이름) `near`(앞 일정의 좌표)가 있을 때만 — 가장 가까운 것이 3km 안이고
+      두 번째보다 2배 이상 가까울 때 고른다. 아니면 고르지 않는다(다른 가게로 일정을 짜는 것이 가장 나쁘다).
+    ★표가 없거나 못 읽으면 None(「못 찾음」) — 경고 로그는 남긴다.
+    """
+    key = re.sub(r"[^가-힣a-z0-9]", "", (name or "").lower())
+    if len(key) < 2:
+        return None
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT mgt_no, name_ko, lat, lng, coalesce(road_address, jibun_address), category "
+                        "FROM dining.dn_license_shop WHERE name_key = %s AND lat IS NOT NULL AND lng IS NOT NULL LIMIT 25", (key,))
+            rows = cur.fetchall()
+    except Exception as exc:   # noqa: BLE001 — 드라이버를 import 하지 않는다(Team 경계)
+        logger.warning("dining find_license_shop_by_name not read reason=%s", type(exc).__name__)
+        return None
+    if not rows:
+        return None
+    if len(rows) > 1:
+        if near is None:
+            return None
+        import math
+
+        def meters(row) -> float:
+            p = math.pi / 180
+            h = (math.sin((row[2] - near[0]) * p / 2) ** 2
+                 + math.cos(near[0] * p) * math.cos(row[2] * p) * math.sin((row[3] - near[1]) * p / 2) ** 2)
+            return 12742000 * math.asin(math.sqrt(h))
+
+        ranked = sorted(rows, key=meters)
+        if meters(ranked[0]) > 3000 or (meters(ranked[1]) < 2 * max(meters(ranked[0]), 50)):
+            return None
+        rows = [ranked[0]]
+    mgt_no, title, lat, lng, address, category = rows[0]
+    if not str(address or "").startswith("서울"):
+        return None
+    return {"content_id": str(mgt_no), "content_type_id": "39", "matched_title": title, "latitude": float(lat),
+            "longitude": float(lng), "address": address, "license": True, "category": category}
+
+
 def nearby_shops(conn, tenant_id: str, around: list[tuple[float, float]], *, radius_m: int, limit: int | None = None,
                  visible_core_ids: list[str] | None = None) -> list[dict[str, Any]]:
     """대체 식당 후보 — 기준 좌표들 중 하나에서 `radius_m` 안의 원장 가게, 가까운 순. 읽기만 한다.

@@ -74,7 +74,7 @@ class Resolved:
 
     def evidence(self) -> dict[str, Any]:
         source = {"places": "places", "typo": "places", "tour_api": "tour_api", "kakao": "kakao",
-                  "dining_ledger": "dining_ledger"}.get(self.method or "")
+                  "dining_ledger": "dining_ledger", "dining_license": "dining_license"}.get(self.method or "")
         return {"source": source, "method": self.method, "name": self.name, "query": self.query,
                 "place_id": self.place_id, "content_id": self.content_id, "tried": self.tried,
                 "blocked": self.blocked}
@@ -181,7 +181,9 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                 found = _tour(dining, query, blocked, label="dining_ledger")
                 tried.append(f"dining_ledger:{query}")
                 if found is not None:
-                    return _from_tour(found, query, title, tried, method="dining_ledger")
+                    # ★`[2026-10-05]` 원장에 없어 인허가(사업자 등록) 자료에서 찾은 가게는 출처가 따로다 — 영업시간을 모른다
+                    return _from_tour(found, query, title, tried,
+                                      method="dining_license" if found.get("license") else "dining_ledger")
                 continue
             found = _tour(tour, query, blocked)
             tried.append(f"tour_api:{query}")
@@ -220,7 +222,8 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                                  if dining is not None and match["name"] != query else None)
                         if again is not None:
                             tried.append(f"dining_ledger:{match['name']}")
-                            return _from_tour(again, query, title, tried, via=match["name"], method="dining_ledger")
+                            return _from_tour(again, query, title, tried, via=match["name"],
+                                              method="dining_license" if again.get("license") else "dining_ledger")
                         continue
                     again = _tour(tour, match["name"], blocked) if match["name"] != query else None
                     if again is not None:
@@ -295,7 +298,9 @@ def _from_tour(found: dict[str, Any], query: str, title: str, tried: list[str], 
     if query != title:
         note.append(f"원문 「{title}」에서 「{query}」로 좁혔다")
     if via:
-        note.append(f"카카오로 「{via}」를 찾아 {'요식 원장' if method == 'dining_ledger' else '관광공사'}에서 확인했다")
+        note.append(f"카카오로 「{via}」를 찾아 {'요식 원장' if method == 'dining_ledger' else '인허가 자료' if method == 'dining_license' else '관광공사'}에서 확인했다")
+    if method == "dining_license":
+        note.append("인허가(사업자 등록) 자료에서 찾은 식당이라 영업시간은 아직 모른다")
     return Resolved("resolved", method, found.get("matched_title"), query,
                     KIND_BY_CONTENT_TYPE.get(str(found.get("content_type_id")), "activity"),
                     found.get("latitude"), found.get("longitude"), content_id=found.get("content_id"),

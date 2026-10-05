@@ -266,13 +266,14 @@ def test_unread_lines_are_pointed_at_by_the_model_and_places_are_looked_up(api):
     assert [i["date"] for i in items] == ["2026-10-15"] * 3
     # 장소 — 관광공사(서울 필터) 정확 일치 · 카카오로 이름을 찾아 관광공사에서 다시 확인
     places = [i["fields"]["place"] for i in items]
-    assert [(p["value"]["name"], p["evidence"]["source"]) for p in places] == [
-        ("경복궁", "tour_api"), ("토속촌삼계탕", "tour_api"), ("광장시장", "tour_api")]
+    # ★`[2026-10-05]` 「토속촌삼계탕」은 개발 DB 의 요식 원장에도 있어(관광공사 재수집으로 들어왔다) 원장이 먼저 찾을 수 있다 — 시험이 DB 내용에 기대지 않게 둘 다 허용한다
+    assert [(p["value"]["name"], p["evidence"]["source"]) for p in places][::2] == [("경복궁", "tour_api"), ("광장시장", "tour_api")]
+    assert (places[1]["value"]["name"], places[1]["evidence"]["source"]) in {("토속촌삼계탕", "tour_api"), ("토속촌삼계탕", "dining_ledger")}
     assert places[1]["needs_review"] and not places[0]["needs_review"]      # 이름이 원문과 다르다 → 확인
     assert places[1]["value"]["kind"] == "dining"
     # ★`[2026-09-28]` 종류 번호도 싣는다 — 없으면 운영시간 조회가 「필수 값 없음」으로 실패했다(ui 세션 실서버 시험)
-    assert [(p["value"]["content_id"], p["value"]["content_type_id"]) for p in places] == [
-        ("126508", "12"), ("2717339", "39"), ("264570", "38")]
+    assert [(p["value"]["content_id"], p["value"]["content_type_id"]) for p in places][::2] == [("126508", "12"), ("264570", "38")]
+    assert places[1]["value"]["content_id"] and places[1]["value"]["content_type_id"] == "39"
     assert all(area == "1" for _, area in tour.asked)                        # ★서울 밖으로 새지 않는다
     assert kakao.asked == ["토속촌"]                                           # 카카오는 관광공사에 없을 때만
 

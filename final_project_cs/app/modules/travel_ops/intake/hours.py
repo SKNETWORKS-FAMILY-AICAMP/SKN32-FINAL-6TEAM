@@ -90,6 +90,8 @@ def facts_for(conn, tenant_id: str, place: dict[str, Any] | None, kind: str, sta
 
 def _why_unknown(place: dict[str, Any], kind: str, content_id: str | None) -> str:
     source = str(place.get("source") or "")
+    if source == "dining_license":
+        return "인허가(사업자 등록) 자료에서 찾은 식당이라 영업시간은 아직 몰라요"
     if source == "kakao" and not content_id:
         return "카카오 지도 정보에는 운영시간이 없어요"
     if content_id or source == "tour_api":

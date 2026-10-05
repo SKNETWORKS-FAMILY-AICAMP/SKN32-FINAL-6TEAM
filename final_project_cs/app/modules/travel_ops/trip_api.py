@@ -102,7 +102,7 @@ def _dining_lookup(ctx: _PlaceCtx | None = None) -> Any:
             except (KeyError, TypeError, ValueError):
                 pass
 
-    return LedgerPlaceLookup(get_connection, on_found=found)
+    return LedgerPlaceLookup(get_connection, on_found=found, near=ctx.get_near if ctx is not None else None)
 
 
 #: ★대상 도시는 서울 하나다(v11 §1). 시간대 없이 온 시각은 서울 시각으로 읽는다.
@@ -131,7 +131,9 @@ EXTERNAL_PLACE_SOURCES = frozenset({"tour_api", "kakao", "google_places",
                                     "customer_pick",
                                     # ★`[2026-10-01 · 10-05 병합]` 요식 원장(`dining_ledger`)에서 찾은 가게도 여행 전용 행이다 — 공용 표에 쌓으면
                                     #   일정 접수의 이름 찾기 · 오타 교정이 그 이름들을 먼저 보게 된다(액티비티 항목까지 영향)
-                                    "dining_ledger"})
+                                    "dining_ledger",
+                                    # ★`[2026-10-05]` 인허가(사업자 등록) 자료에서 이름으로 찾은 식당 — 역시 그 여행 전용 행(영업시간 모름)
+                                    "dining_license"})
 
 
 class ItemIn(BaseModel):
