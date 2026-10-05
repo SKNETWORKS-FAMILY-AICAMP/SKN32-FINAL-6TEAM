@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { Avatar, Button, ButtonLink, Panel } from "@/components/ui";
 import { AgentKeys } from "@/features/account/agent-keys";
+import { ConsentManager } from "@/features/consent/consent-manager";
 import { SessionCard } from "@/features/account/session-card";
 import { SocialAccounts } from "@/features/account/social-accounts";
 import { answerLines, questions } from "@/features/onboarding/model";
@@ -18,6 +19,7 @@ import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { saveDiscordWebhook } from "@/lib/webhook";
 import { checkDraft, type ProfileDraft } from "./model";
+import { TelegramRow } from "./telegram";
 import { serverProfileKey, WebhookField, WebhookView } from "./webhook";
 import styles from "./profile.module.css";
 
@@ -33,10 +35,10 @@ function Identity({ children }: { children: ReactNode }) {
 function PreferencesCard() {
   const t = useT();
   const router = useRouter();
-  const [{ complete, answers }, setOnboarding] = useOnboarding();
+  const [{ complete, answers, agreed }, setOnboarding] = useOnboarding();
   const ready = useOnboardingReady();
   function edit() {
-    setOnboarding((current) => ({ ...current, open: current.agreed ? 2 : null }));
+    setOnboarding((current) => ({ ...current, open: agreed ? 2 : null }));      // ★`agreed` comes from the consent store (derived), not from this raw state
     router.push(routes.start);
   }
   return <Panel className={styles.card}>
@@ -75,6 +77,8 @@ export function MyPage() {
         ? <p className={styles.muted} role="status">{t("사용자 정보를 불러오고 있어요.", "Loading your details.")}</p>
         : <dl className={styles.fields}>
           <div><dt>{t("디스코드 웹훅", "Discord webhook")}</dt><dd><WebhookView hasSession={Boolean(profile.session)} guest={profile.session?.kind === "guest"} /></dd></div>
+          {/* ★`[2026-10-05 사용자 지시]` 「텔레그램으로 연결」(알림만) - 서버가 연결할 수 있다고 말할 때만 이 줄이 있다(없으면 줄째 없음). */}
+          <TelegramRow hasSession={Boolean(profile.session)} guest={profile.session?.kind === "guest"} />
         </dl>}
     </Panel>
     <PreferencesCard />
@@ -82,6 +86,8 @@ export function MyPage() {
     {DATA_MODE === "live" && profile !== undefined && <Panel className={styles.card}><SessionCard profile={profile} /></Panel>}
     {/* ★`[2026-10-03 사용자 지시]` 소셜 계정으로 로그인·연결. 서버가 준비한 업체만 단추가 생기고, 아니면 「서버 준비 중」이라고만 말한다. */}
     {DATA_MODE === "live" && <Panel className={styles.card}><SocialAccounts /></Panel>}
+    {/* ★`[2026-10-05 사용자 지시]` 약관 동의 관리 - 무엇에 동의했는지 보고, 전문을 다시 읽고, 선택 항목을 켜고 끈다(필수 철회는 서비스 중단이라 한 번 더 확인). */}
+    {DATA_MODE === "live" && <Panel className={styles.card}><ConsentManager /></Panel>}
     {/* ★`[2026-10-04 사용자 지시]` 에이전트 연결 — 로그인한 사용자(회원)만. 게스트에게는 「로그인하면 쓸 수 있어요」. */}
     {DATA_MODE === "live" && <Panel className={styles.card}><AgentKeys /></Panel>}
   </>;

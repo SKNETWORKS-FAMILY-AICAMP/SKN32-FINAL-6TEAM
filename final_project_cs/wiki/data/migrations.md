@@ -169,6 +169,18 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 
 `[실측]` `044_web_sessions.sql` — HttpOnly 쿠키 세션. 칸: `session_hash`(쿠키 값의 SHA-256 — 원문은 어디에도 없다 · 기본키) · `tenant_id` · `customer_id`(→ `customers`) · `created_at` · `last_used_at` · `revoked_at`. ★만료 시각 · 종류(게스트/회원) · CSRF 토큰을 **저장하지 않는다** — 쓸 때 `web.*` 설정과 소셜 계정 유무로 계산하고 HMAC 으로 다시 만든다(관리 콘솔이 바꾼 값이 이미 만든 세션에도 곧 적용). 사용자 행을 가리키는 외래키라 게스트 정리가 이 행을 먼저 지운다. 계약 [rest-endpoints.md 「브라우저 세션 쿠키」](../external/rest-endpoints.md) · [D-CS-011](../decisions/D-CS-011-browser-session-cookie.md). 적용은 이 파일만 한 번(전체 실행기 아님 — 폴더에 다른 세션의 작업 중인 파일이 있다).
 
+### 호출 예산의 실패 · 거절 수 `external_call_budget` `[2026-10-05 · 047]`
+
+`[실측]` `047_call_budget_outcomes.sql` — 027 의 호출 예산 표(`meter` · `period` · `used` · `cap`)에 `failed`(부른 뒤 쓸 수 있는 답을 못 받은 수 — `used` 의 부분집합) · `rejected`(한도가 차서 **안 부른** 수 — `used` 에 안 들어감)를 더한다. 기존 줄은 0 으로 채워진다 · 재실행 안전. 읽는 곳: `scripts/report_source_budget.py` · [운영 문서](../operations/call-budget.md).
+
+### 호출 예산의 제공처 한도 초과 표시 `external_call_budget` `[2026-10-05 · 049]`
+
+`[실측]` `049_call_budget_provider_exhausted.sql` — `exhausted_at`(제공처가 「한도 초과」를 알린 시각 — 그날 한국 자정까지 그 소스를 안 부른다) · `learned_cap`(그때까지 센 사용 수 = 제공처가 허락한 한도의 관측값)을 더한다. 달이 바뀌면 새 줄이라 자동으로 풀린다 · 재실행 안전.
+
+### 약관 동의 기록 `consent_events` · `consent_current` `[2026-10-05 · 046]`
+
+`[실측]` `046_consents.sql` — 추가만 하는 사건 표(`consent_events`: `event_id` · `tenant_id` · `user_id`(**외래키 없음** — 게스트가 정리돼도 증빙은 보관 기간 동안 남는다) · `session_kind` guest|member|key · `code` · `agreed` · `terms_version` · `text_sha256` · `at` · `ip_hash`(서버 비밀 HMAC — 주소 원문 없음) · `user_agent`) + 현재 상태 뷰(`consent_current` — 사용자 · 코드별 가장 최근 줄). **트리거 `consent_events_no_change` 가 UPDATE 를 늘 거절하고, DELETE 는 트랜잭션이 `SET LOCAL app.consent_purge = 'on'` 을 켰을 때(보관 기간 정리)만 허용한다.** 인덱스 `(tenant_id, user_id, code, at DESC, event_id DESC)` · `(at)`. 재실행 안전.
+
 ### 에이전트 키 `web_agent_keys` `[2026-10-04 · 045]`
 
 `[실측]` `045_web_agent_keys.sql` — 개인 AI(MCP · 사용자 API)가 본인 여행의 작업만 하는 키. 칸: `key_id` · `tenant_id` · `customer_id`(→ `customers`) · `name`(1~60자) · `key_hash`(SHA-256 — 원문은 어디에도 없다 · UNIQUE) · `scope`(`read`/`write`) · `created_at` · `expires_at`(NOT NULL — 기본·최대 90일) · `last_used_at` · `revoked_at`. 옛 사용자 키(`web_user_keys`)와 달리 **만료 · 개별 폐기**가 있다. 계약 [rest-endpoints.md 「에이전트 키」](../external/rest-endpoints.md) · [D-CS-012](../decisions/D-CS-012-agent-auth-claude-style.md). 적용은 이 파일만 한 번(전체 실행기 아님).

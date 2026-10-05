@@ -12,6 +12,8 @@ export interface MapSdkSnapshot {
   markers: { title: string; position: Position; attached: boolean }[];
   /** Route lines the page drew: the path in order, whether it is dashed, and whether it is still on the map. */
   lines: { path: Position[]; dashed: boolean; attached: boolean }[];
+  /** `[2026-10-05]` Circles the page drew (「내 위치」's accuracy): centre, radius in metres, and whether it is still on the map. */
+  circles: { center: Position; radius: number; attached: boolean }[];
 }
 
 declare global {
@@ -23,7 +25,7 @@ declare global {
 
 /** SDK contract doubles only: these tests do not claim real provider authentication or tiles. */
 function installSdkDouble(provider: TestMapProvider) {
-  const state: MapSdkSnapshot = { provider, maps: 0, fits: [], pans: [], resizes: 0, markers: [], lines: [] };
+  const state: MapSdkSnapshot = { provider, maps: 0, fits: [], pans: [], resizes: 0, markers: [], lines: [], circles: [] };
   window.__mapSdkDouble = state;
   type LatLngLike = Position | LatLng;
 
@@ -125,6 +127,8 @@ function installSdkDouble(provider: TestMapProvider) {
     }
     setMap(map: SdkMap | null) { this.map = map; }
     setZIndex() {}
+    /** `[2026-10-05]` naver `Marker.setPosition` — 「내 위치」 moves its marker instead of making a new one. */
+    setPosition(value: LatLngLike) { this.record.position = position(value); }
     addListener(name: string, callback: () => void) { return events.addListener(this, name, callback); }
   }
 
@@ -158,6 +162,21 @@ function installSdkDouble(provider: TestMapProvider) {
       if (map) map.container.append(this);
       else this.remove();
     }
+    /** `[2026-10-05]` google `AdvancedMarkerElement.position` — 「내 위치」 moves its marker by setting it. */
+    get position() { return this.record.position; }
+    set position(value: LatLngLike) { this.record.position = position(value); }
+  }
+
+  /** `[2026-10-05]` Both providers draw 「내 위치」's accuracy the same way for this test: a centre, a radius in metres, a map to be on. */
+  class Circle {
+    private record: MapSdkSnapshot["circles"][number];
+    constructor(options: { map?: SdkMap; center: LatLngLike; radius: number }) {
+      this.record = { center: position(options.center), radius: options.radius, attached: Boolean(options.map) };
+      state.circles.push(this.record);
+    }
+    setMap(map: SdkMap | null) { this.record.attached = Boolean(map); }
+    setCenter(value: LatLngLike) { this.record.center = position(value); }
+    setRadius(radius: number) { this.record.radius = radius; }
   }
 
   /** Both providers draw a line the same way for this test: a path, a map to be on, and a dash (naver `strokeStyle`, google an icon repeated along it). */
@@ -172,7 +191,7 @@ function installSdkDouble(provider: TestMapProvider) {
 
   class Point { constructor(public x: number, public y: number) {} }
   class Size { constructor(public width: number, public height: number) {} }
-  const common = { Map: SdkMap, LatLng, LatLngBounds, Polyline };
+  const common = { Map: SdkMap, LatLng, LatLngBounds, Polyline, Circle };
   const globals = window as unknown as Record<string, unknown>;
   if (provider === "naver") globals.naver = { maps: { ...common, Marker, Point, Size, Event: events } };
   else {

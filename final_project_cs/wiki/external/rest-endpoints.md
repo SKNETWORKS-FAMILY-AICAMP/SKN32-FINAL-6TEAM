@@ -545,6 +545,17 @@ GET   /admin/limits/events?limit=50      scope limits:read
 - 옛 사용자 키(`acop_u_…`, 만료 없음)는 그대로 둔다(웹이 쿠키로 옮겨 가는 동안) — 에이전트용으로는 새 키를 쓰게 안내한다.
 - 2단계 OAuth(`/.well-known/*` · `/oauth/*`)는 [D-CS-012](../decisions/D-CS-012-agent-auth-claude-style.md) 에 설계만 있다 — 에이전트 키와 같은 검증 · 권한 판정으로 합칠 예정.
 
+### 약관 동의 기록 · 사용 조건 — `/v1/web/consents` `[2026-10-05 사용자 지시 — ui 세션 요청서]`
+
+- **항목 다섯**: 필수 `service_terms`(서비스 이용약관) · `privacy`(개인정보 수집·이용) / 선택 `sensitive`(민감정보 — 종교 · 식사 제한) · `location`(개인위치정보) · `alert_channel`(알림 채널 정보 — 디스코드 웹훅 · 텔레그램 대화). 약관은 **버전**(`consent.terms_version`)을 갖고, 버전이 오르면 필수가 `ok:false` 로 돌아가 **다시 동의**해야 한다. 선택 항목은 앱을 막지 않는다 `[법무 확인 필요 — 개인정보 보호법 조문을 읽어 확인하지 않았다]`.
+- `GET /v1/web/consents` → `{current_version, required: ["service_terms","privacy"], items: [{code, agreed, version, agreed_at}…다섯], ok}` — `ok` = 필수가 모두 **지금 버전으로** 동의됨. 기록이 없는 항목은 `agreed:false`.
+- `POST /v1/web/consents` 본문 `{version, items: [{code, agreed, text_sha256}]}` — **보낸 항목만 바꾼다.** `text_sha256` = 동의할 때 화면에 보여 준 약관 전문의 sha256(소문자 16진수 64자 — 증빙으로 저장). 오류: 버전이 지금과 다르면 409 `terms_version_changed`(응답에 `current_version`) · 모르는 코드 422 `unknown_code` · 해시 모양 422 `invalid_text_sha256` · 그 밖의 모양 422 `invalid_items` — **하나라도 틀리면 하나도 기록하지 않는다.** 바뀐 것이 없는 항목은 줄을 더하지 않는다. 필수 항목을 `agreed:false` 로 보내면 기록하고 `ok:false`.
+- **세션이 있으면 된다**(게스트 · 회원 · 옛 키) — 쿠키로 쓰면 CSRF 까지 본다. **에이전트 키로는 못 한다**(`403 agent_forbidden` — 동의는 사람이 브라우저에서 한다).
+- **기록은 추가만 한다**(`consent_events` · 마이그레이션 046): `tenant_id · user_id · session_kind(guest|member|key) · code · agreed · terms_version · text_sha256 · at · ip_hash · user_agent`. 철회도 새 줄. **DB 트리거가 UPDATE 를 늘 거절하고 DELETE 는 보관 기간 정리만 허용한다.** 현재 상태는 사용자 · 코드별 가장 최근 줄(`consent_current` 뷰). 주소는 원문이 아니라 서버 비밀로 만든 해시(`ip_hash`)뿐 · 사용자 행에는 외래키를 걸지 않는다(게스트가 정리돼도 증빙이 남는다). 보관 `consent.evidence_retention_days`(기본 1,825일 = 5년 — ui 세션 추천값, 법무 확인 전) 뒤 상시 정리 작업(`run_sweepers` 의 웹 방어 단계)이 지운다.
+- **사용 조건(게이트)**: 설정 `consent.gate_enabled`(**기본 꺼짐** — 웹이 동의 화면을 내보낸 뒤에 켠다. 켜기 전에는 아무것도 안 바뀐다). 켜면 필수 동의가 **지금 버전으로** 없는 사용자의 호출은 `403 {"error": {"code": "consent_required", "message": "약관에 동의해야 쓸 수 있어요", "current_version", "required"}}` — 게스트 · 회원 · 옛 키 · 에이전트 키(**키 주인의 동의**를 따른다 — 주인이 철회하면 키도 막히고 다시 동의하면 풀린다) 모두. MCP 도구는 같은 REST 를 부르므로 같은 규칙을 탄다. **면제**: `/v1/web/consents` · `/v1/web/auth/*`(소셜 로그인 · 세션 만들기) · `/v1/web/session` · 건강 확인 · 공개 여행계획서 링크 · 메신저 웹훅(이들은 사용자 인증을 거치지 않아 게이트에 닿지 않는다).
+- **철회 효과**(동의 기록과 **한 트랜잭션** — 기록만 남고 삭제가 안 되거나 그 반대가 되지 않는다): `alert_channel` → 저장한 디스코드 웹훅 삭제 · `sensitive` → 여행의 식사 제한(`trips.constraints.dietary`)과 설문 음식 답(`survey.priority_details.food`) 삭제(다른 칸은 그대로) · `location` → 위치 점 삭제(위치 수집 구현이 `consents.PURGERS["location"]` 에 등록 — 아직 없다). `[미확인]` 설문 답이 다른 복사본(일정 버전 스냅샷 · 접수 원문)에도 남는지는 확인하지 않았다.
+- **아직 없는 것**: 위치 받기 `POST·DELETE /v1/web/trips/{id}/location` · 멈춘 지점 `GET …/location/stops`(같은 요청서의 2·3부) · 텔레그램 연결 삭제 효과. 약관 전문의 법적 검토는 **변호사 검토 전**(약관 초안은 웹 쪽 작업).
+
 ### 계획 읽기 — `/v1/web/trip-intakes` `[2026-09-27]`
 
 `[실측]` `app/modules/travel_ops/intake/`(`pipeline.py` · `sources.py` · `rules.py` · `llm_spans.py` · `dates.py` · `places.py`) ·

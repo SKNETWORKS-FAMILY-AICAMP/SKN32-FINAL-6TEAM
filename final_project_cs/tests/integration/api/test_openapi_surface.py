@@ -120,6 +120,7 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trips/{trip_id}/delete",
     # ★2026-10-04 에이전트 키(D-CS-012) — 쿠키 로그인한 회원만 만들고 관리한다
     "/v1/web/agent-keys",
+    "/v1/web/consents",
     "/v1/web/agent-keys/{key_id}",
     # ★2026-10-04 이동 경로선(이동 세션 255a873f) — 화면이 이동 항목의 경로선을 그린다(읽기, 사용자 키/쿠키). 계약 `wiki/records/reports/2026-10-04_0400_이동_파이썬_길찾기_서버없이_리포트.md`
     "/v1/web/trips/{trip_id}/route-shapes",

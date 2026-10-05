@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { start, mockServer } from "./helpers";
+import { agree, start, mockServer } from "./helpers";
 
 // `[2026-10-03]` The Discord webhook on My page: the server keeps it (encrypted) and answers only a masked form; the
 // customer can send a test message, replace it or remove it. The address is never kept in this browser.
@@ -9,6 +9,7 @@ const TOKEN = WEBHOOK.split("/").pop() ?? "";
 
 test.beforeEach(async ({ page, request }) => {
   await mockServer(request).reset();
+  await agree(page, { alert_channel: true });          // 알림 채널을 연결하려면 선택 동의(`alert_channel`)가 먼저다 - 이 시험들은 이미 동의한 고객이다
   await start(page);
 });
 

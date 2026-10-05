@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
+import { requiredAgreed, type ConsentCode } from "@/features/consent/consent-model";
+import { saveConsents } from "@/features/consent/consent-sync";
 import { Scene, type ScenePulse, type SceneStage } from "@/components/layout/scene";
 import { useTrips } from "@/features/trip/use-trip";
 import { saveDiscordWebhook, webhookWaiting } from "@/lib/webhook";
@@ -14,7 +16,7 @@ import { OnboardingIcon } from "./icons";
 import { discordWebhookProblem, INTRO_STEP, questions } from "./model";
 import { useOnboarding } from "./onboarding-state";
 import { PreferencesSummary, QuestionCarousel } from "./preferences";
-import { TermsCardBody, TermsReader } from "./terms";
+import { TermsCardBody, TermsReader, termsDoc } from "./terms";
 import styles from "./onboarding.module.css";
 
 /** Discord alerts, terms and travel preferences before the first plan. Everything stays in page state. */
@@ -25,7 +27,9 @@ export function Onboarding() {
   const [state, setState] = useOnboarding();
   // ★「Continue my trip」 follows the server's list (newest first), not a value this page happened to see: another tab or device counts too.
   const latestTrip = useTrips().data?.[0];
-  const [termsOpen, setTermsOpen] = useState(false);
+  // The document whose full text is open (null = none). `termsOpen` is what the rest of the screen reacts to.
+  const [readerCode, setReaderCode] = useState<ConsentCode | null>(null);
+  const termsOpen = readerCode !== null;
   const [firstRender] = useState(() => !state.agreed && state.open === null);
   const [sceneStage, setSceneStage] = useState<SceneStage>(state.open ?? 0);
   const [pulse, setPulse] = useState<ScenePulse>();
@@ -64,11 +68,23 @@ export function Onboarding() {
     }
     const webhook = state.webhook.trim();
     if (state.webhook !== webhook) setState((current) => ({ ...current, webhook: current.webhook.trim() }));
+    return true;
+  }
+
+  /**
+   * ★`[2026-10-05]` The Discord address is sent to the server only once the customer has agreed to the alert-channel item (`alert_channel`): it is personal data the
+   *   customer chooses to hand over, so it is collected after the consent, not before. Typed without that consent, it is dropped here (and the card said so).
+   */
+  function flushWebhook(allowed: boolean) {
+    const webhook = state.webhook.trim();
+    if (!allowed) {
+      if (webhook) setState((current) => ({ ...current, webhook: "" }));
+      return;
+    }
     if ((webhook || webhookWaiting()) && webhook !== sentWebhook.current) {
       sentWebhook.current = webhook;
       saveDiscordWebhook(webhook || null, language).catch(() => { sentWebhook.current = null; });
     }
-    return true;
   }
 
   function openCard(card: 0 | 1 | 2 | null) {
@@ -107,18 +123,31 @@ export function Onboarding() {
     return () => document.removeEventListener("keydown", escape);
   }, [opened, termsOpen, setState]);
 
-  const markRead = useCallback(() => setState((current) => current.read ? current : { ...current, read: true }), [setState]);
+  const markRead = useCallback(() => setState((current) => !readerCode || current.readDocs[readerCode] ? current : { ...current, readDocs: { ...current.readDocs, [readerCode]: true } }), [setState, readerCode]);
 
-  function agree(checked: boolean) {
-    if (!state.read) return;
-    setState((current) => ({ ...current, agreed: checked, open: 1, complete: checked ? current.complete : false }));
+  /** Tick or untick one item. A required item can be ticked only after its full text was read to the end. */
+  function toggle(code: ConsentCode, checked: boolean) {
+    const doc = termsDoc(code);
+    if (checked && doc?.required && !state.readDocs[code]) return;
+    setState((current) => ({ ...current, choices: { ...current.choices, [code]: checked }, open: 1 }));
     setConsentMotion(checked);
     feedback(checked ? "complete" : "soft");
   }
 
+  /** 「동의하고 다음으로」: this press is what records the consent (the browser's copy at once, the server's record right behind it). */
+  function continueTerms() {
+    if (!requiredAgreed(state.choices)) return;
+    void saveConsents(state.choices, language);
+    flushWebhook(state.choices.alert_channel);
+    setState((current) => ({ ...current, open: 2 }));
+    setSceneStage(2);
+    feedback("complete");
+  }
+
   function closeTerms() {
-    setTermsOpen(false);
-    requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-action="read-terms"]')?.focus({ preventScroll: true }));
+    const code = readerCode;
+    setReaderCode(null);
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(code ? `[data-action="read-terms"][data-doc="${code}"]` : '[data-action="read-terms"]')?.focus({ preventScroll: true }));
   }
 
   function complete() {
@@ -159,7 +188,8 @@ export function Onboarding() {
                 onWebhook={editWebhook} onContinue={() => openCard(1)} />)}
             {card(1, state.agreed,
               cardHead(1, t("약관 동의", "Terms & consent"), state.agreed ? t("필수 내용을 확인했어요.", "Required consent completed.") : t("시작하기 전에 확인해 주세요.", "A quick check before you begin."), false, state.agreed),
-              <TermsCardBody t={t} read={state.read} agreed={state.agreed} consentMotion={consentMotion} onReadTerms={() => setTermsOpen(true)} onAgree={agree} onContinue={() => { if (state.agreed) openCard(2); }} />)}
+              <TermsCardBody t={t} choices={state.choices} readDocs={state.readDocs} consentMotion={consentMotion} alertTyped={Boolean(state.webhook.trim())}
+                onReadDoc={setReaderCode} onToggle={toggle} onContinue={continueTerms} />)}
             {card(2, state.complete,
               cardHead(2, t("여행 취향 알아보기", "Your travel preferences"), state.complete ? t(`${questions.length}가지 질문을 모두 마쳤어요.`, `All ${questions.length} questions completed.`) : t(`${questions.length}가지 질문으로 더 나다운 여행.`, `${questions.length} questions for a trip that fits you.`), !state.agreed, state.complete),
               state.complete
@@ -174,8 +204,8 @@ export function Onboarding() {
           <footer className={styles.bottomNote} inert={expanded}><span className={styles.leaf}><OnboardingIcon name="leaf" size={17} /></span>{t("정답은 없어요. 당신이 좋아하는 여행이면 충분해요.", "There’s no right answer. Just the journey you love.")}</footer>
         </main>
       </div>
-      {termsOpen && <TermsReader t={t} read={state.read} agreed={state.agreed} onRead={markRead} onClose={closeTerms}
-        onAgree={(checked) => { agree(checked); if (checked) { setTermsOpen(false); requestAnimationFrame(() => document.getElementById("terms-check")?.focus({ preventScroll: true })); } }} />}
+      {readerCode && termsDoc(readerCode) && <TermsReader t={t} doc={termsDoc(readerCode)!} read={Boolean(state.readDocs[readerCode])} agreed={state.choices[readerCode]} onRead={markRead} onClose={closeTerms}
+        onAgree={(checked) => { const code = readerCode; toggle(code, checked); if (checked) { setReaderCode(null); requestAnimationFrame(() => document.getElementById(`consent-${code}`)?.focus({ preventScroll: true })); } }} />}
       <div className="sr-only" aria-live="polite">{message}</div>
     </div>
   </DeviceFrame>;

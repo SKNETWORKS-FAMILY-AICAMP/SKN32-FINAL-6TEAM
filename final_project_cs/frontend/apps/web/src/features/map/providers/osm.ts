@@ -1,5 +1,6 @@
-import type { MapAdapter, MapLine, MapPoint } from "../model";
+import type { MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
+import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_BOX, meKey, STAY_BOX, staysKey } from "./me";
 import { createPin, geometryKey, layoutPins, PIN_BOX, placePin, pointLabel, setPinSelected, type PinSlot } from "./pin";
 
 /**
@@ -46,6 +47,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       let previousGeometry = "";
       let selectedId: string | undefined;
       let needsFit = false;
+      let centredOnMe = false;           // [2026-10-05] an empty map is centred on the customer once; pins (a different set of them) reset it
       // ★The box can change size after the first fit (the sheet over the map goes up and down, a tab opens). Until the customer
       //   moves or zooms the map themselves, a new size fits the pins again; after that the map stays where they put it.
       let userMoved = false;
@@ -75,9 +77,34 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         markers.forEach(({ id, pin }) => { if (slots[id]) placePin(pin, slots[id]); });
       }
       map.on("moveend zoomend resize", relayout);
+      // [2026-10-05] The zoom level goes to the screen (it asks for the detailed route lines when zoomed in).
+      const sayZoom = () => options.onZoom?.(map.getZoom());
+      map.on("zoomend", sayZoom);
+      sayZoom();
+
+      // ★`[2026-10-05 사용자 지시]` 「내 위치」: a dot under the pins (a marker that takes no press) and the accuracy circle in the vector layer.
+      let me: MyLocation | null = null;
+      let meMarker: ReturnType<typeof L.marker> | null = null;
+      let meCircle: ReturnType<typeof L.circle> | null = null;
+      let previousMe = "";
+      const stayLayer = L.layerGroup().addTo(map);
+      let previousStays = "";
 
       function fit() {
-        if (!needsFit || !container.clientWidth || !container.clientHeight || !points.length) return;
+        if (!needsFit || !container.clientWidth || !container.clientHeight) return;
+        // ★`[2026-10-05]` Leaflet drops a new view while a zoom animation runs (`_animatingZoom`), and a map's first fit is such an animation (zoom 14 → the pins' zoom):
+        //   a day opened in the quarter second after it kept the old view. A fit that comes then waits for the animation to end (found with an empty day that never
+        //   centred on 「내 위치」 - its `setView` had been dropped).
+        if ((map as unknown as { _animatingZoom?: boolean })._animatingZoom) { map.once("zoomend", () => { if (!destroyed) fit(); }); return; }
+        // `[2026-10-05]` No pins:the customer's own position is the picture (once — the map does not chase them); nothing at all: wait.
+        if (!points.length) {
+          if (!me) return;
+          needsFit = false;
+          centredOnMe = true;
+          programmatic = true;
+          try { map.setView(me.coordinates, 15); } finally { programmatic = false; }
+          return;
+        }
         needsFit = false;
         programmatic = true;
         try {
@@ -91,8 +118,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       //   of a second after +/- would do nothing - it waits for the zoom to end and then fits.
       function fitAll() {
         userMoved = false; needsFit = true;
-        if ((map as unknown as { _animatingZoom?: boolean })._animatingZoom) { map.once("zoomend", () => { if (!destroyed) fit(); }); return; }
-        fit();
+        fit();                                                       // (it waits by itself while a zoom animation runs)
       }
       const zoomBox = container.querySelector<HTMLElement>(".leaflet-control-zoom");
       if (zoomBox) {
@@ -153,6 +179,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         if (changed) {
           previousGeometry = geometry;
           needsFit = true;
+          centredOnMe = false;          // [2026-10-05] a different set of pins: an empty day after it centres on the customer again
           userMoved = false;            // different pins: the old view means nothing
           fit();
           relayout();
@@ -163,11 +190,58 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         selectedId = nextSelectedId;
       }
 
-      try { update(options.points, options.selectedId, options.lines); }
+      function setMe(next: MyLocation | null) {
+        if (destroyed) return;
+        me = next;
+        const key = meKey(next);
+        if (key === previousMe) return;
+        previousMe = key;
+        if (!next) {
+          meMarker?.remove(); meCircle?.remove();
+          meMarker = meCircle = null;
+          return;
+        }
+        const at: [number, number] = [next.coordinates.lat, next.coordinates.lng];
+        if (meMarker) meMarker.setLatLng(at);
+        else {
+          const icon = L.divIcon({ html: createMeDot(), className: "", iconSize: [ME_BOX, ME_BOX], iconAnchor: [ME_BOX / 2, ME_BOX / 2] });
+          // Not interactive and far under the pins (`zIndexOffset`): a pin on top of it is pressed, never the dot.
+          meMarker = L.marker(at, { icon, interactive: false, keyboard: false, zIndexOffset: -1000 }).addTo(map);
+          const element = meMarker.getElement();
+          if (element) element.style.pointerEvents = "none";
+        }
+        const radius = accuracyRadius(next);
+        if (radius === null) { meCircle?.remove(); meCircle = null; }
+        else if (meCircle) { meCircle.setLatLng(at); meCircle.setRadius(radius); }
+        else {
+          meCircle = L.circle(at, { radius, interactive: false, color: ACCURACY_STYLE.color, weight: ACCURACY_STYLE.weight, opacity: ACCURACY_STYLE.opacity,
+            fillColor: ACCURACY_STYLE.color, fillOpacity: ACCURACY_STYLE.fillOpacity, className: "my-location-accuracy" }).addTo(map);
+        }
+        if (!points.length && !centredOnMe) needsFit = true;          // [2026-10-05] a map that never had pins was never fitted: the first position it learns centres it, once
+        if (!points.length && needsFit) fit();
+      }
+
+      function setStays(stays: StayPoint[]) {
+        if (destroyed) return;
+        const key = staysKey(stays);
+        if (key === previousStays) return;
+        previousStays = key;
+        stayLayer.clearLayers();
+        stays.forEach((stay) => {
+          const icon = L.divIcon({ html: createStayDot(stay), className: "", iconSize: [STAY_BOX, STAY_BOX], iconAnchor: [STAY_BOX / 2, STAY_BOX / 2] });
+          const marker = L.marker(stay.coordinates, { icon, interactive: false, keyboard: false, zIndexOffset: -2000 }).addTo(stayLayer);
+          const element = marker.getElement();
+          if (element) element.style.pointerEvents = "none";
+        });
+      }
+
+      try { update(options.points, options.selectedId, options.lines); setMe(options.me ?? null); setStays(options.stays ?? []); }
       catch (error) { clearMarkers(); map.remove(); throw error; }
 
       return {
         update,
+        setMe,
+        setStays,
         fit: fitAll,
         resize() {
           if (destroyed || !container.clientWidth || !container.clientHeight) return;

@@ -18,6 +18,7 @@ import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/li
 import { confirmIntake, editIntake, getIntake, type IntakeEdit } from "@/lib/live/intake";
 import type { ReviewedIntakeView } from "@/lib/live/intake-review";
 import { getIntakeRouteShapes } from "@/lib/live/route-shapes";
+import { useRouteDetail } from "@/features/map/use-route-detail";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { draftOf, editsFor, rows } from "./model";
@@ -118,6 +119,8 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     refetchOnWindowFocus: false,
     staleTime: 10 * 60_000,
   });
+  // `[2026-10-05 사용자 지시]` Zoomed in, the detailed lines (`?detail=true`) replace these short ones - they follow the streets.
+  const routeDetail = useRouteDetail(routeShapes.data, ["intake", intakeId, query.data?.revision ?? 0, language], () => getIntakeRouteShapes(intakeId, language, { detail: true }));
   const [readingSeen, setReadingSeen] = useState(false);
   const [readingDrawn, setReadingDrawn] = useState(false);
   if (query.data?.status === "reading" && !readingSeen) setReadingSeen(true);
@@ -180,7 +183,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const unchecked = view.review_error ? <p className={styles.streamNote} role="status">{t("서버가 장소·운영시간·이동 확인 결과를 만들지 못했어요. 읽은 값만 보여 드려요 — 등록할 때 서버가 다시 확인해요.", "The server could not build the place, hours and route check. Only what it read is shown — it checks again when you register.")}</p> : null;
   // The text also asked us to plan, but stops were read too: only the stops are shown, so say where the planning is.
   const asked = view.check?.plan.requested ? <p className={styles.streamNote} role="status">{t("글에 일정을 짜 달라는 말도 있었어요. 읽은 일정만 보여 드려요 — 대신 짜 받으려면 등록 화면의 「계획 짜 주기」를 써 주세요.", "The text also asked us to plan. Only the stops it lists are shown — to have a trip planned, use “Plan it for me” on the registration page.")}</p> : null;
-  return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeShapes.data ?? null} notice={<>{unchecked}{asked}</>} onBack={() => router.push(routes.newTrip)}
+  return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} notice={<>{unchecked}{asked}</>} onBack={() => router.push(routes.newTrip)}
     tripIssues={tripIssuesOf(view)}
     actions={view.review ? server.actions : {
       edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },

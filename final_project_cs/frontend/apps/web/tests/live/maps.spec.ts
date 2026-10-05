@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockServer, noHorizontalScroll, start, TRIP_ID } from "./helpers";
+import { allowLocation, startWithLocationConsent } from "./location-kit";
 import { readMapSdk, stubMapSdk, type TestMapProvider } from "./map-sdk";
 
 const configuredProvider = process.env.MAP_TEST_PROVIDER;
@@ -156,5 +157,28 @@ test.describe(`${provider} 지도 어댑터 · SDK 계약 대역`, () => {
     await page.getByRole("button", { name: /^2일차/ }).click();
     await showPane(page, "지도");
     await expect.poll(async () => (await readMapSdk(page))?.lines.filter((line) => line.attached).length).toBe(0);
+  });
+
+  test("「내 위치」(위치 동의가 있을 때): 누를 수 없는 표시와 정확도 원을 그리고, 위치가 바뀌면 같은 표시를 옮기며 500 m 보다 나쁜 원은 뺀다", async ({ page, request, context }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await allowLocation(context, { latitude: 37.575, longitude: 127, accuracy: 40 });
+    await stubMapSdk(page, provider);
+    await mockServer(request).scenario({ tripItems: "map" });
+    await startWithLocationConsent(page, true);
+    await page.goto(`/trips/${TRIP_ID}`);
+    await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+    await showPane(page, "지도");
+    const region = page.getByRole("region", { name: "여행 지도", exact: true });
+    const me = async () => (await readMapSdk(page))?.markers.filter((item) => item.attached && item.title === "내 위치").map((item) => item.position);
+    await expect(region.getByRole("img", { name: "내 위치", exact: true })).toBeVisible();
+    await expect.poll(me).toEqual([{ lat: 37.575, lng: 127 }]);
+    await expect.poll(async () => (await readMapSdk(page))?.circles.filter((circle) => circle.attached).map((circle) => circle.radius)).toEqual([40]);
+    await expect(region.getByRole("button", { name: /내 위치/ })).toHaveCount(0);                        // 핀이 아니다: 누르는 단추가 아니다
+    await expect(marker(page, "1. 첫 지도 장소 · 2026-10-01 09:00–10:00")).toBeVisible();
+    const fitsBefore = (await readMapSdk(page))?.fits.length ?? 0;
+    await context.setGeolocation({ latitude: 37.58, longitude: 127.005, accuracy: 900 });
+    await expect.poll(me, { timeout: 10_000 }).toEqual([{ lat: 37.58, lng: 127.005 }]);                // 같은 표시가 옮겨 갔다(하나 더 생기지 않았다)
+    await expect.poll(async () => (await readMapSdk(page))?.circles.filter((circle) => circle.attached)).toEqual([]);
+    expect((await readMapSdk(page))?.fits.length ?? 0).toBe(fitsBefore);                               // 지도는 고객을 쫓아 다시 맞추지 않는다
   });
 });

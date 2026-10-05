@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { KEY_STORAGE, mockServer, SESSION_COOKIE, start, STUB } from "./helpers";
+import { agree, KEY_STORAGE, mockServer, SESSION_COOKIE, start, STUB } from "./helpers";
 
 // `[2026-10-03 사용자 지시]` Social sign-in (`wiki/records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md`): the card on My page, the menu
 // row, and the page the provider sends the browser back to (`/auth/done`). The mock server plays the server AND the provider's page.
@@ -60,6 +60,7 @@ test("연결: 세션이 있는 브라우저에서 「구글 연결하기」를 �
 test("로그인: 세션이 없는 브라우저는 「구글 로그인」으로 그 계정의 세션 쿠키를 받고, 마이페이지에서 로그인한 계정이라고 보인다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page, null);
+  await agree(page);                                                       // 약관에는 이미 동의한 사람 - 이 시험의 주제는 로그인이다
   await page.goto("/mypage");
   await expect(card(page)).not.toContainText("연결하기");                         // nothing to link without a session
   await row(page, "구글").getByRole("button", { name: "로그인" }).click();
@@ -160,6 +161,7 @@ test("메뉴에 「계정 연결 · 로그인」 줄이 있고 누르면 마이�
 test("세션 없는 로그인에 서버가 사람 확인을 요구했는데 확인 화면이 꺼져 있으면 서버 문장을 그대로 보인다", async ({ page, request }) => {
   await mockServer(request).scenario({ socialHumanCheck: "required" });
   await start(page, null);
+  await agree(page);                                                       // 약관에는 이미 동의한 사람 - 이 시험의 주제는 로그인이다
   await page.goto("/mypage");
   await row(page, "구글").getByRole("button", { name: "로그인" }).click();
   await expect(card(page).getByRole("alert")).toContainText("사람인지 확인해 주세요");

@@ -216,3 +216,13 @@
   .chip:active, .next:active, .previous:active { transform: none !important; }
   .successSymbol.completionMotion::after { display: none; }
 }
+
+/* `[2026-10-05]` 약관 동의 카드: 항목별 체크(필수·선택), 요약, 전문 보기. 초안 표시. */
+.termsDraft { margin: 0 0 12px; padding: 9px 12px; border: 1px solid var(--color-warning-border); border-radius: 10px; background: var(--color-warning-soft); font-size: 11px; line-height: 1.7; color: var(--color-warning); }
+.consentList { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.consentItem { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-subtle); }
+.consentItem .termsCheck { min-height: 0; margin: 0 !important; font-size: 13px; font-weight: 600; color: var(--color-text); }
+.consentSummary { margin: 0 0 0 28px; font-size: 12px; line-height: 1.75; color: var(--color-muted); }
+.consentHint { margin: 0 0 0 28px; font-size: 11px; line-height: 1.6; color: var(--color-warning); }
+.consentRead { justify-self: start; min-height: 36px; margin-left: 28px; padding: 0; background: none; border: 0; font-size: 12px; font-weight: 650; color: var(--color-primary); cursor: pointer; }
+.termsScroll ul { margin: 8px 0; padding-left: 20px; font-size: 13px; line-height: 1.95; color: var(--color-text-secondary); }

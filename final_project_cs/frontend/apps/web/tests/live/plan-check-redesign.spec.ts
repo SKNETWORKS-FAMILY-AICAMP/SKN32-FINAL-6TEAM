@@ -196,26 +196,52 @@ test("고친 게 있으면 「다시 제출」, 없고 확인할 것도 없으�
 
 // ── 수정안: 변경 전·후를 둘 다 들고 있다가 이어서 보여 준다 ─────────────────────────
 
-test("계속 내리면: 안내가 수정안으로 이어지고, 제목이 「수정안」이 되며, 위로 올리면 변경 전 일정과 「계획 확인」이 다시 나온다 — 파란 안내 상자는 없다", async ({ page, request }) => {
+test("수정안은 변경 전 일정에 이어 붙은 목록이 아니라 쪽이 따로다: 한 번에 한 쪽만 보이고, 점이 어느 쪽인지 말하며, 제목이 「수정안」이 된다 — 파란 안내 상자도 이음매도 없다", async ({ page, request }) => {
   await openFinished(page, request);
   const hint = page.getByText("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요");
   await expect(hint).toBeVisible();
   await expect(page.getByRole("heading", { name: "계획 확인" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "보는 일정" })).toHaveCount(0);                         // 수정안이 없는 동안은 점도 없다
   await page.getByRole("button", { name: /^전체 자동 추천/ }).click();
   await expect(page.getByRole("heading", { name: "수정안" })).toBeVisible();                          // 수정안을 보는 동안의 제목
-  await expect(page.getByRole("separator", { name: "여기부터 수정안" })).toBeAttached();
-  await expect(page.getByText("계속 올리면 변경 전 일정이에요", { exact: false })).toBeAttached();
+  const dots = page.getByRole("group", { name: "보는 일정" });
+  await expect(dots.getByRole("button", { name: "2. 수정안" })).toHaveAttribute("aria-current", "step");
+  await expect(dots.getByRole("button", { name: "1. 변경 전 일정" })).not.toHaveAttribute("aria-current", "step");
+  await expect(page.getByRole("separator")).toHaveCount(0);                                           // 두 목록을 잇는 이음매(옛 「여기부터 수정안」)는 없다
+  await expect(page.getByText("계속 올리면 변경 전 일정이에요", { exact: false })).toBeVisible();      // 이 쪽 맨 위의 안내
   await expect(page.getByRole("button", { name: "적용하기" })).toHaveCount(0);                         // 예전 안내 상자(적용하기·그대로 두기)는 없다
   await expect(page.getByRole("button", { name: "그대로 두기" })).toHaveCount(0);
-  await expect(hint).toHaveCount(0);                                                                  // 아래로 밀어 본 뒤에는 그 안내 자리가 이어진 목록이다
-  await expect(card(page, "올리브영 인사동점")).toBeVisible();                                         // 수정안의 바뀐 일정(서버가 고른 장소 이름이 카드 이름이 된다)
+  await expect(hint).toHaveCount(0);
+  await expect(card(page, "올리브영 인사동점")).toBeVisible();                                         // 수정안의 바뀐 일정(서버가 고른 장소 이름이 카드 이름이다)
+  await expect(card(page, "올리브영")).toHaveCount(0);                                                 // 변경 전 쪽의 카드는 이 쪽에 없다 - 한 목록으로 이어지지 않았다
   await expect(page.getByText(/바뀜 · 이전/).first()).toBeVisible();
   await expect(changedBadge(page)).toHaveText("✎1");
   expect(await mockServer(request).received("POST", "/autofix")).toHaveLength(1);                     // 미리 보기일 뿐 — 저장하지 않았다
-  await bodyOf(page).evaluate((element) => element.scrollTo({ top: 0 }));                              // 위로 올리면 변경 전
+  await dots.getByRole("button", { name: "1. 변경 전 일정" }).click();                                 // 점으로 변경 전 쪽으로
   await expect(page.getByRole("heading", { name: "계획 확인" })).toBeVisible();
+  await expect(dots.getByRole("button", { name: "1. 변경 전 일정" })).toHaveAttribute("aria-current", "step");
   await expect(needsBadge(page)).toHaveText("!2");
-  await expect(card(page, "올리브영")).toBeVisible();                                                  // 변경 전의 올리브영이 그대로 있다(수정안에서는 장소 이름이 카드 이름이다)
+  await expect(card(page, "올리브영")).toBeVisible();                                                  // 변경 전의 올리브영이 그대로 있다
+  await expect(card(page, "올리브영 인사동점")).toHaveCount(0);
+  await expect(page.getByText("계속 내리면 수정안이에요")).toBeVisible();                                // 이 쪽 맨 끝의 안내
+  await dots.getByRole("button", { name: "2. 수정안" }).click();                                        // 다시 수정안 쪽으로(서버를 또 부르지 않는다)
+  await expect(page.getByRole("heading", { name: "수정안" })).toBeVisible();
+  expect(await mockServer(request).received("POST", "/autofix")).toHaveLength(1);
+});
+
+test("쪽 넘김에는 기준이 있다: 수정안 쪽 맨 위에서 조금만 밀어 올리면 제자리로 돌아오고, 기준을 넘게 밀면 변경 전 쪽으로 넘어간다", async ({ page, request }) => {
+  await openFinished(page, request);
+  await page.getByRole("button", { name: /^전체 자동 추천/ }).click();
+  await expect(page.getByRole("heading", { name: "수정안" })).toBeVisible();
+  const box = (await bodyOf(page).boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.waitForTimeout(1100);                                                                    // 방금 넘어온 쪽의 관성·재움직임 시간이 지나야 새 밀기로 센다
+  await page.mouse.wheel(0, -40);                                                                     // 기준(110px)에 못 미친다
+  await page.waitForTimeout(700);
+  await expect(page.getByRole("heading", { name: "수정안" })).toBeVisible();                          // 제자리
+  for (let push = 0; push < 4; push += 1) { await page.mouse.wheel(0, -40); await page.waitForTimeout(50); }
+  await expect(page.getByRole("heading", { name: "계획 확인" })).toBeVisible();                       // 기준을 넘었다
+  await expect(page.getByRole("group", { name: "보는 일정" }).getByRole("button", { name: "1. 변경 전 일정" })).toHaveAttribute("aria-current", "step");
 });
 
 test("수정안을 보다가 「여행 등록」을 누르면 그 수정안을 저장한 뒤 바로 등록한다(적용하기를 따로 누르지 않는다)", async ({ page, request }) => {

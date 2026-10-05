@@ -42,3 +42,7 @@
 /* `[2026-10-05]` 「디스코드로 연결」 줄: 단추와 안내·오류가 한 칸 안에서 줄을 바꿔 서도록 한다. */
 .fields dd .failed { display: block; margin-top: 6px; }
 .fields dd > .muted { display: block; margin-bottom: 4px; }
+/* `[2026-10-05]` 알림 채널(디스코드·텔레그램): 「알림을 받는 곳」 꼬리표, 그리고 단추 둘이 한 줄에 서는 자리(예: 「정말 풀기」 + 「취소」). */
+.tag { display: inline-block; padding: 2px 9px; border-radius: 999px; background: var(--color-soft); color: var(--color-primary); font-size: 11px; font-weight: 650; line-height: 1.7; }
+.fields dd > .tag { margin-top: 6px; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }

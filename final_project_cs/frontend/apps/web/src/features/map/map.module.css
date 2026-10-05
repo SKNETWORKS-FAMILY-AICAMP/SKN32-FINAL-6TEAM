@@ -15,8 +15,13 @@
   .live { min-height: 290px; }
 }
 /* Fills a box another screen sizes (plan check: under the floating bar, behind the sheet) — no caption, no minimum. */
-.frame.fill { height: 100%; min-height: 0; }
+.frame.fill { position: relative; height: 100%; min-height: 0; }
 .frame.fill .live { min-height: 0; }
+/* `[2026-10-05]` A map with no caption (plan check) says why 「내 위치」 is not shown in one line over its top-left, under the floating bar; it takes no press. */
+.meNoticeFloat {
+  position: absolute; left: 12px; right: 64px; z-index: 4; margin: 0; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 6px;
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent); color: var(--color-warning); font-size: 11px; line-height: 1.6; pointer-events: none;
+}
 
 /*
  * `[2026-10-03 사용자 지시]` 지도의 확대·축소(+/−) 버튼: 화면의 다른 둥근 단추와 같은 모양으로, 지도 위에 포인터가 있거나(`:hover`) 지도를 막 눌렀을 때(`data-awake`,

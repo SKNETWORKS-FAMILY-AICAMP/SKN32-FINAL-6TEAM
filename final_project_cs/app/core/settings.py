@@ -263,6 +263,9 @@ class Settings(BaseSettings):
     rate_airport_per_day: int = 1000         # 미확인 - 보수적
     rate_mofa_per_day: int = 1000            # 미확인 - 보수적
     rate_its_per_day: int = 1000             # 미확인 - 보수적(ITS 공개 한도 못 찾음)
+    #: ★ITS 는 응답이 「월간 API 호출 한도 초과」(4001)다 — 월 한도의 크기는 포털(국가교통정보센터 인증키 상세정보)에서 확인해 넣는다.
+    #:  0 = 모른다(세기만 하고 월로는 막지 않는다 — 하루 줄로만 막는다). 2026-10-05 기준 `[미확인]`.
+    rate_its_per_month: int = 0
     rate_kma_earthquake_per_day: int = 1000  # 미확인 - 보수적(지진정보 상세 한도 안 봄)
     rate_open_meteo_air_per_day: int = 2000  # 미확인 - 보수적(Open-Meteo 한도를 API 끼리 나눠 쓰는지 안 봄)
     rate_disaster_msg_per_day: int = 1000    # 확인: 사용자 제공(2026-09-15) 재난문자 하루 1,000
@@ -276,6 +279,9 @@ class Settings(BaseSettings):
     rate_subway_notice_per_day: int = 5000
     #: 확인(2026-10-04 공식 안내): 서울 「실시간 지하철 인증키」 하루 최대 1,000건 → 절반만(여유 2배). 도착정보는 지금 값이라 캐시를 짧게 둔다
     rate_seoul_subway_arrival_per_day: int = 500
+    #: 서울 열린데이터광장 **일반 인증키**(따릉이 실시간 거치 대수 `bikeList`) 하루 상한 — ★공식 하루 한도를 못 찾았다(안내에 숫자 없음 · 「이용 제약 없이 쓰려면 활용사례 등록」)
+    #:  `[미확인]` 그래서 **우리가 고른 보수적 값**이다. 이 값에서 막히면 따릉이 거치 대수가 「근거없음」이 되고(후보는 유지) 서비스는 계속된다. 0 = 제한 없음
+    rate_seoul_bike_per_day: int = 1000
     #: 국가유산청은 키가 없고 공개된 한도도 못 찾았다. 그래도 스스로 조인다 -
     #: 한도를 모른다는 것이 마음껏 두들겨도 된다는 뜻은 아니다.
     rate_heritage_khs_per_day: int = 1000
@@ -296,6 +302,10 @@ class Settings(BaseSettings):
     #: 간격이 안 찼을 때 기다려 볼 최대 시간(초). 고객 요청이 여기서 멈춘다.
     #:  넘으면 기다리지 않고 거부하고, Team 은 「모름」으로 넘어간다.
     rate_max_wait_seconds: float = 5.0
+
+    def source_monthly_limits(self) -> dict[str, int]:
+        """`TravelSource.name` -> 월 한도(알려진 것만). DB 예산(`source_budget.py`)이 월 줄로 쓴다."""
+        return {name: value for name, value in {"its": self.rate_its_per_month}.items() if value and value > 0}
 
     def source_rate_limits(self) -> dict[str, int]:
         """`TravelSource.name` -> 하루 한도. 어댑터 이름과 정확히 맞춘다.
@@ -322,6 +332,7 @@ class Settings(BaseSettings):
             "odsay": self.rate_odsay_per_day,
             "subway_notice": self.rate_subway_notice_per_day,
             "seoul_subway_arrival": self.rate_seoul_subway_arrival_per_day,
+            "seoul_bike": self.rate_seoul_bike_per_day,
             "kakao": self.rate_kakao_per_day,
             "google_places": self.rate_google_places_per_day,
             "google_routes": self.rate_google_routes_per_day,

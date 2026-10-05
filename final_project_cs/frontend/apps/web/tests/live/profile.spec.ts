@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer, noHorizontalScroll, start, useKorean } from "./helpers";
+import { mockServer, noHorizontalScroll, start, useKorean, agree } from "./helpers";
 
 /**
  * My page and the profile edit screen, on the test mock server. (Ported from the old demo-build suite, 2026-10-03: the parts that were
@@ -67,6 +67,7 @@ test("메뉴 프로필 → 마이페이지 조회 → 수정 → 취소: 이미�
 
 test("세션이 없으면 「아직 시작하지 않았어요」로 보이고, 마이페이지를 봐도 새 사용자(게스트 세션)를 만들지 않는다", async ({ page, request }) => {
   await useKorean(page);
+  await agree(page);                                                                  // 약관에는 동의했지만 세션은 아직 없는 사람(동의만으로는 서버가 사용자를 만들지 않는다: 서버에 보낼 때 만들어진다)
   await page.goto("/mypage");
   await expect(page.getByRole("group", { name: "로그인 상태" })).toContainText("아직 시작하지 않았어요");
   await page.getByRole("link", { name: "수정", exact: true }).click();

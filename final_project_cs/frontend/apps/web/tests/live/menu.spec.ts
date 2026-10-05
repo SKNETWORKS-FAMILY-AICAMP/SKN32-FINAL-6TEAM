@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { mockServer, registerStubTrip, useKorean } from "./helpers";
+import { agree, mockServer, registerStubTrip, useKorean } from "./helpers";
 
-test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); });
+test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); await agree(page); });
 
 test("메뉴는 프로필·여행 목록·언어·테마·플로팅 스위치 순서이고, Tab 순환과 Esc(언어 목록 먼저, 메뉴 다음)·포커스 복귀를 지키며, 링크는 메뉴를 닫는다", async ({ page, request }) => {
   // The six base rows (profile · trips · language · theme · floating switch · skip-animation switch): with a social sign-in provider set up the menu has a seventh (「계정 연결 · 로그인」, covered by social-login.spec).

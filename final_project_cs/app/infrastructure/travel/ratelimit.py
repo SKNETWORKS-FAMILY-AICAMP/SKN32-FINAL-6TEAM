@@ -61,6 +61,9 @@ class RateLimited(RuntimeError):
     """간격이 안 찼고 기다릴 수 있는 시간도 넘었다. ★예외지만 **정상 갈래**다 —
     어댑터가 잡아서 `None`(모름)으로 바꾼다. 위로 던지지 않는다."""
 
+    #: 소스 미스에 남기는 이유 이름 — `source_budget.BudgetExhausted` 가 바꾼다
+    reason = "rate_limited"
+
     def __init__(self, source: str, wait_seconds: float) -> None:
         super().__init__(
             f"{source}: 다음 호출까지 {wait_seconds:.1f}초 남았다 "

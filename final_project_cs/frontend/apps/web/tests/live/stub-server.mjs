@@ -92,6 +92,20 @@ const DEFAULTS = {
   // `[2026-10-05]` 「디스코드로 연결」 (`POST /v1/web/profile/discord/connect/start`, the profile's `discord_connect.available`): "off" = an older server (the profile does not say) | "on"
   //   | "cancelled" | "expired" | "failed" (the mock Discord window sends the browser back with that word) | "start_fails" (the start answers 500) | "bad_address" (the start hands out an address that is not Discord's)
   discordConnect: "off",
+  // ── 텔레그램 연결 (2026-10-05) ── 시작
+  // `[2026-10-05]` 「텔레그램으로 연결」 (`POST /v1/web/profile/telegram/connect/start`, the profile's `telegram_connect` · `telegram` · `notice_channel`;
+  //   contract `wiki/records/plans/2026-10-05_텔레그램_연결_백엔드_요청.md`): "off" = an older server (the profile carries no telegram words; the start answers 404 `{detail}`) | "on"
+  //   | "start_fails" (the start answers 500) | "bad_link" (the start hands out an address that is not Telegram's) | "short" (the code stops working 2 s after the start)
+  //   | "blocked" (the test message finds the bot blocked) | "too_soon" (the test message is refused: 429 pressed again within 20 s).
+  //   Tapping 「시작」 in Telegram is played by opening the link (`GET /__test/telegram-open?code=…`, no session - a browser move, as Telegram's webhook is the server's business).
+  telegram: "off",
+  // ── 텔레그램 연결 (2026-10-05) ── 끝
+  // ── 동의 기록 (2026-10-05) ── 시작
+  // `[2026-10-05]` The consent record (`GET/POST /v1/web/consents`, contract `wiki/records/plans/2026-10-05_동의기록_위치수집_백엔드_요청.md`): "off" = an older server (404 `{detail}`)
+  //   | "on" (records, nobody is turned away) | "gate" (records, and every other `/v1/web/*` call is refused with 403 `consent_required` until the REQUIRED items are on record for the current version).
+  //   "server_ahead" = the server's terms are a NEWER version than the page carries (the GET says so, a POST answers 409 `terms_version_changed`).
+  consents: "off",
+  // ── 동의 기록 (2026-10-05) ── 끝
   // how many times the trip itself fails to load (500) right after the server answered a chat message
   rereadFails: 0,
   // chat and planning asked as a stream: "on" | "off" (an older server: JSON once) | "slow" (a `slow` beat first)
@@ -116,6 +130,12 @@ const DEFAULTS = {
   socialResult: "ok",
   //   "required" = a sign-in with no key is first refused with `human_check_required`
   socialHumanCheck: "off",
+  // ── 위치 점 (2026-10-05) ── 시작
+  // the customer's positions (`POST|DELETE /v1/web/trips/{id}/location`, `GET …/location/stops` — `wiki/records/plans/2026-10-05_동의기록_위치수집_백엔드_요청.md` §2·§3):
+  //   "off" = an older server without the routes (FastAPI 404 `{detail}`) | "on" (keeps the points, finds no stay) | "no_consent" (403 consent_required)
+  //   | "stops" (keeps the points, and says the customer stayed once — near 경복궁, on day 1 of the default trip)
+  location: "off",
+  // ── 위치 점 (2026-10-05) ── 끝
 };
 
 /** Trip loads still to fail after a chat answer (see `rereadFails`). */
@@ -149,8 +169,61 @@ let webhook = null;
 let webhookStatus = null;
 /** `[2026-10-05]` 「디스코드로 연결」: the flows started (id → the web origin to come back to). */
 let discordFlows = new Map();
+// ── 텔레그램 연결 (2026-10-05) ── 시작
+/**
+ * The Telegram chat the server holds (never answered back - only `connected`, a status and a time), the one-time code the last start made, and where alerts go now
+ * (`notice_channel`: ONE place, the one connected last). Declared before `reset()` is first called (below), which sets it all up.
+ */
+let tg = { connected: false, status: null, at: null, code: null, codeUntil: 0, codes: 0, notice: null };
+function telegramReset() { tg = { connected: false, status: null, at: null, code: null, codeUntil: 0, codes: 0, notice: null }; }
+/** A Discord webhook was saved or connected: Discord is where alerts go now (the one connected last). Removing it hands alerts to Telegram when it is connected. */
+function telegramAfterWebhook(saved) {
+  if (saved === undefined) return;
+  if (saved) tg.notice = "discord";
+  else if (tg.notice === "discord") tg.notice = tg.connected ? "telegram" : null;
+}
+/** The words the profile carries about Telegram. An older server ("off") says none of them. */
+function telegramProfile() {
+  if (scenario.telegram === "off") return {};
+  return { telegram_connect: { available: true }, telegram: { connected: tg.connected, status: tg.connected ? tg.status : null, connected_at: tg.connected ? tg.at : null }, notice_channel: tg.notice };
+}
+/** `PUT /v1/web/profile` `{notice_channel}`: a place that is not connected is refused (422 `channel_not_connected`); null = fine. */
+function telegramChannelRefusal(body) {
+  if (!("notice_channel" in body)) return null;
+  const wanted = body.notice_channel;
+  const there = wanted === "telegram" ? tg.connected : wanted === "discord" ? Boolean(webhook) : null;
+  if (there === null) return { error: { code: "invalid_notice_channel", message: "알림을 받는 곳은 discord 또는 telegram 이에요" } };
+  return there ? null : { error: { code: "channel_not_connected", message: "연결되지 않은 곳이에요 - 먼저 연결해 주세요" } };
+}
+// ── 텔레그램 연결 (2026-10-05) ── 끝
 /** How many times each `request_id` came as a stream (the "drop" scenario answers only the second). */
 let attempts = new Map();
+// ── 동의 기록 (2026-10-05) ── 시작
+/** The terms version the page under test carries (`src/features/consent/terms-content.ts` `TERMS_VERSION`) - keep the two the same; a different one is what "server_ahead" plays. */
+const TERMS_VERSION = "2026-10-05";
+const CONSENT_CODES = ["service_terms", "privacy", "sensitive", "location", "alert_channel"];
+const CONSENT_REQUIRED = ["service_terms", "privacy"];
+/** code → { agreed, version, at } - the latest line of the append-only record (the stub keeps only that; the requests it received are the log). */
+let consentRecords = new Map();
+function consentReset() { consentRecords = new Map(); }
+const consentVersion = () => scenario.consents === "server_ahead" ? "2099-01-01" : TERMS_VERSION;
+function consentView() {
+  const items = CONSENT_CODES.map((code) => {
+    const row = consentRecords.get(code);
+    return { code, agreed: row?.agreed === true, version: row?.version ?? null, agreed_at: row?.at ?? null };
+  });
+  return { current_version: consentVersion(), required: CONSENT_REQUIRED, ok: CONSENT_REQUIRED.every((code) => items.find((item) => item.code === code)?.agreed === true && items.find((item) => item.code === code)?.version === consentVersion()), items };
+}
+/** What withdrawing an item takes with it. */
+function consentWithdrawn(code) {
+  if (code === "alert_channel") { webhook = null; webhookStatus = null; tg.connected = false; tg.status = null; tg.notice = null; }
+  if (code === "location") locationPoints = new Map();
+}
+// ── 동의 기록 (2026-10-05) ── 끝
+// ── 위치 점 (2026-10-05) ── 시작
+/** The positions the server kept: `trip_id` → (`at` → point) — one per `(trip_id, at)`, as the contract says. */
+let locationPoints = new Map();
+// ── 위치 점 (2026-10-05) ── 끝
 
 /** The conversation record the server keeps (`GET /v1/web/trips/{id}/chat`), oldest first. */
 let turns = [];
@@ -185,7 +258,10 @@ function reset() {
   webhook = null;
   webhookStatus = null;
   discordFlows = new Map();
+  telegramReset();                                  // 텔레그램 연결 (2026-10-05)
+  consentReset();                                   // 동의 기록 (2026-10-05)
   attempts = new Map();
+  locationPoints = new Map();                       // 위치 점 (2026-10-05)
 }
 
 const at = (hour, minute = 0, day = 1) => `2026-10-0${day}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00+09:00`;
@@ -504,6 +580,12 @@ createServer(async (request, response) => {
     return json(response, 200, scenario, origin);
   }
   if (path === "/__test/log") return json(response, 200, log, origin);
+  // 동의 기록 (2026-10-05): the test sets what the server's record says (another device agreed or withdrew) - `{ "items": { "privacy": false }, "version"?: "…" }`.
+  if (path === "/__test/consents" && request.method === "POST") {
+    const body = JSON.parse(raw || "{}");
+    for (const [code, agreed] of Object.entries(body.items ?? {})) consentRecords.set(code, { agreed: agreed === true, version: body.version ?? consentVersion(), at: new Date().toISOString() });
+    return json(response, 200, consentView(), origin);
+  }
   if (path === "/__test/ring") {
     const { kinds } = JSON.parse(raw || "{}");
     const line = `event: trip.changed
@@ -528,7 +610,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   const key = request.headers["x-user-key"] ?? null;                 // the legacy header (agents, an older page) — the page itself sends the cookie
   const sid = cookieOf(request);
   const isJson = (request.headers["content-type"] ?? "").includes("json");
-  log.push({ method: request.method, path, key, session: sid, csrf: request.headers["x-csrf-token"] ?? null, accept: request.headers.accept ?? null, body: isJson && raw ? JSON.parse(raw) : raw ? { multipart: raw } : null });
+  log.push({ method: request.method, path, query: url.search || null, key, session: sid, csrf: request.headers["x-csrf-token"] ?? null, accept: request.headers.accept ?? null, body: isJson && raw ? JSON.parse(raw) : raw ? { multipart: raw } : null });
   const write = ["POST", "PUT", "PATCH", "DELETE"].includes(request.method);
 
   // ── the browser session: a cookie the page cannot read, and a CSRF token it keeps in memory ────────
@@ -576,8 +658,20 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     if (["cancelled", "expired", "failed"].includes(scenario.discordConnect)) return goBack(scenario.discordConnect);
     webhook = "https://discord.com/api/web" + "hooks/123456789012345678/abcdefghijklmnopqrstuvwxyz0123456789ABCD";      // what Discord handed the server
     webhookStatus = "untested";
+    telegramAfterWebhook(webhook);                  // 텔레그램 연결 (2026-10-05): the channel connected last gets the alerts
     return goBack("connected");
   }
+  // ── 텔레그램 연결 (2026-10-05) ── 시작
+  // The customer taps 「시작」 in Telegram (a browser move to the link the start handed out, no session, no CORS): Telegram would tell the server's webhook, here the page itself does.
+  // A right code that has not run out connects the chat (`untested`, and alerts go to Telegram now); anything else is the bot's "link ran out / already used" answer.
+  if (path === "/__test/telegram-open" && request.method === "GET") {
+    const right = scenario.telegram !== "off" && tg.code !== null && url.searchParams.get("code") === tg.code && Date.now() < tg.codeUntil;
+    if (right) { tg.connected = true; tg.status = "untested"; tg.at = new Date().toISOString(); tg.notice = "telegram"; tg.code = null; }
+    response.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+    response.end(right ? "<h1>텔레그램 연결됨 (mock 서버)</h1>" : "<h1>연결 시간이 지났거나 이미 쓴 링크예요 (mock 서버)</h1>");
+    return;
+  }
+  // ── 텔레그램 연결 (2026-10-05) ── 끝
   // ── social sign-in: the provider's page (a browser move, no CORS) and the calls that need no key ─────────
   const oauthPage = /^\/__test\/oauth\/(\w+)$/.exec(path);
   if (oauthPage && request.method === "GET") {
@@ -621,6 +715,33 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   }
   const auth = authenticate();
   if (auth.denied) return auth.denied();
+  // ── 동의 기록 (2026-10-05) ── 시작
+  if (path === "/v1/web/consents") {
+    if (scenario.consents === "off") return json(response, 404, { detail: "Not Found" }, origin);
+    if (request.method === "GET") return json(response, 200, consentView(), origin);
+    if (request.method === "POST") {
+      const body = JSON.parse(raw || "{}");
+      if (body.version !== consentVersion()) return json(response, 409, { error: { code: "terms_version_changed", message: "약관이 새 버전이에요", current_version: consentVersion() } }, origin);
+      const items = Array.isArray(body.items) ? body.items : null;
+      if (!items) return json(response, 422, { error: { code: "invalid_items", message: "items 가 필요해요" } }, origin);
+      for (const item of items) {
+        if (!CONSENT_CODES.includes(item?.code)) return json(response, 422, { error: { code: "unknown_code", message: String(item?.code) } }, origin);
+        if (typeof item.agreed !== "boolean") return json(response, 422, { error: { code: "invalid_items", message: "agreed 는 true/false 예요" } }, origin);
+        if (typeof item.text_sha256 !== "string" || !/^[0-9a-f]{64}$/.test(item.text_sha256)) return json(response, 422, { error: { code: "invalid_text_sha256", message: "소문자 16진수 64자예요" } }, origin);
+      }
+      for (const item of items) {
+        const before = consentRecords.get(item.code);
+        consentRecords.set(item.code, { agreed: item.agreed, version: body.version, at: new Date().toISOString() });
+        if (before?.agreed === true && item.agreed === false) consentWithdrawn(item.code);       // a withdrawn item takes its data with it
+      }
+      return json(response, 200, consentView(), origin);
+    }
+  }
+  // The gate: until the required items are on record, every other call is refused (the sign-in calls and the record itself stay open).
+  if (scenario.consents === "gate" && path.startsWith("/v1/web/") && !path.startsWith("/v1/web/auth/") && !consentView().ok) {
+    return json(response, 403, { error: { code: "consent_required", message: "약관에 동의해야 쓸 수 있어요", current_version: consentVersion(), required: CONSENT_REQUIRED } }, origin);
+  }
+  // ── 동의 기록 (2026-10-05) ── 끝
   if (path === "/v1/web/auth/logout" && request.method === "POST") {
     if (auth.session) ended.add(auth.session.sid);
     return json(response, 200, { status: "signed_out" }, origin, { "Set-Cookie": `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0` });
@@ -664,13 +785,17 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     if (request.method === "PUT") {
       if (scenario.profile === "reject") return json(response, 422, { error: { code: "invalid_email", message: "이메일 형식이 맞지 않아요." } }, origin);
       const body = JSON.parse(raw || "{}");
-      const unknown = Object.keys(body).find((name) => !["recovery_email", "discord_webhook_url"].includes(name));
+      const unknown = Object.keys(body).find((name) => !["recovery_email", "discord_webhook_url", ...(scenario.telegram === "off" ? [] : ["notice_channel"])].includes(name));   // 텔레그램 연결 (2026-10-05): notice_channel
       if (unknown) return json(response, 422, { error: { code: "unknown_field", message: unknown } }, origin);
       const hook = "discord_webhook_url" in body ? String(body.discord_webhook_url ?? "").trim() : undefined;
       // like the server: one wrong value refuses the whole update, and the refused value is not sent back
       if (hook && !DISCORD.test(hook)) return json(response, 422, { error: { code: "invalid_webhook", message: "디스코드 웹훅 주소 모양이 아니에요" } }, origin);
+      const channelRefusal = telegramChannelRefusal(body);                                    // 텔레그램 연결 (2026-10-05)
+      if (channelRefusal) return json(response, 422, channelRefusal, origin);
       if ("recovery_email" in body) recoveryEmail = String(body.recovery_email ?? "").trim() || null;
       if (hook !== undefined) { webhook = hook || null; webhookStatus = hook ? "untested" : null; }
+      telegramAfterWebhook(hook);                                                             // 텔레그램 연결 (2026-10-05): a saved webhook is where alerts go now
+      if ("notice_channel" in body) tg.notice = body.notice_channel;                          // 텔레그램 연결 (2026-10-05): the customer chose
       return json(response, 200, profileView(), origin);
     }
   }
@@ -688,6 +813,31 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     webhookStatus = scenario.webhookTest === "invalid" ? "invalid" : "ok";
     return json(response, 200, { result: webhookStatus, profile: profileView() }, origin);
   }
+  // ── 텔레그램 연결 (2026-10-05) ── 시작
+  if (path.startsWith("/v1/web/profile/telegram")) {
+    if (scenario.telegram === "off") return json(response, 404, { detail: "Not Found" }, origin);        // an older server: FastAPI's own 404
+    if (path === "/v1/web/profile/telegram/connect/start" && request.method === "POST") {
+      if (scenario.telegram === "start_fails") return json(response, 500, { error: { code: "internal_error", message: "텔레그램 연결을 시작하지 못했어요" } }, origin);
+      const until = Date.now() + (scenario.telegram === "short" ? 2000 : 10 * 60 * 1000);
+      tg.codes += 1;
+      tg.code = `tg-code-${tg.codes}-${Math.random().toString(36).slice(2, 10)}`;                      // one-time, and only the latest works
+      tg.codeUntil = until;
+      const link = scenario.telegram === "bad_link" ? `https://t.me.evil.example/tripilot_alert_bot?start=${tg.code}` : `http://127.0.0.1:${PORT}/__test/telegram-open?code=${tg.code}`;
+      return json(response, 200, { link, expires_at: new Date(until).toISOString() }, origin);
+    }
+    if (path === "/v1/web/profile/telegram/test" && request.method === "POST") {
+      if (!tg.connected) return json(response, 409, { error: { code: "no_telegram", message: "연결된 텔레그램이 없어요" } }, origin);
+      if (scenario.telegram === "too_soon") return json(response, 429, { error: { code: "too_soon", message: "방금 보냈어요 — 20초 뒤에 다시 해 주세요" } }, origin);
+      tg.status = scenario.telegram === "blocked" ? "blocked" : "ok";
+      return json(response, 200, { result: tg.status, profile: profileView() }, origin);
+    }
+    if (path === "/v1/web/profile/telegram" && request.method === "DELETE") {
+      tg.connected = false; tg.status = null; tg.at = null;
+      if (tg.notice === "telegram") tg.notice = webhook ? "discord" : null;                           // alerts go to Discord when it is connected, else nowhere
+      return json(response, 200, { profile: profileView() }, origin);
+    }
+  }
+  // ── 텔레그램 연결 (2026-10-05) ── 끝
 
   // Google Maps only after the server allows this load (`POST /v1/web/map-load`); this mock always allows it (the `google` build of `maps.spec.ts`).
   if (request.method === "POST" && path === "/v1/web/map-load") return json(response, 200, { allowed: true, provider: "google", reason: null, used: { day: 1, month: 1 }, cap: { day: 312, month: 9688 } }, origin);
@@ -716,13 +866,59 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   if (shapesPath && request.method === "GET" && scenario.routeShapes !== "off") {
     if (scenario.routeShapes === "fail") return json(response, 500, { error: { code: "internal_error", message: "서버 오류" } }, origin);
     if (scenario.routeShapes === "slow") await wait(3000);
-    return json(response, 200, { trip_id: shapesPath[1], attribution: "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)", shapes: [
+    // `[2026-10-05]` `?detail=true` (mobility session): the same line with many more points (a zoomed-in map follows the streets); the answer says `detail`.
+    const detailed = url.searchParams.get("detail") === "true";
+    const dense = (coordinates) => detailed ? coordinates.flatMap((point, at) => {
+      const next = coordinates[at + 1];
+      return next ? [0, 1, 2, 3, 4].map((step) => [point[0] + (next[0] - point[0]) * step / 5 + (step % 2 ? 0.0002 : 0), point[1] + (next[1] - point[1]) * step / 5]) : [point];
+    }) : coordinates;
+    return json(response, 200, { trip_id: shapesPath[1], detail: detailed, attribution: "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)", shapes: [
       { item_id: "i-m", from_item_id: "i-b", to_item_id: "i-c", from: "경복궁", to: "점심 식당", mode: "walk",
-        line: { type: "LineString", coordinates: [[126.977, 37.5796], [126.983, 37.575], [126.99, 37.57]] }, source: "local_road_graph", grade: "추정", distance_m: 1250, note: null },
+        line: { type: "LineString", coordinates: dense([[126.977, 37.5796], [126.981, 37.5745], [126.99, 37.57]]) }, source: "local_road_graph", grade: "추정", distance_m: 1250, note: null },
       { item_id: "i-m0", from_item_id: "i-a", to_item_id: "i-b", from: "아침 식당", to: "경복궁", mode: "bus",
-        line: { type: "LineString", coordinates: [[126.98, 37.575], [126.977, 37.5796]] }, source: "straight_line", grade: "근거없음", distance_m: 640, note: "정류장 정보가 없어 직선으로 이었어요" },
+        line: { type: "LineString", coordinates: [[126.98, 37.575], [126.977, 37.5796]] }, source: "straight_line", grade: "근거없음", distance_m: 640, note: detailed ? "정류장 정보가 없어 직선으로 이었어요 (상세 선)" : "정류장 정보가 없어 직선으로 이었어요" },
     ] }, origin);
   }
+  // ── 위치 점 (2026-10-05) ── 시작
+  // The customer's positions and where they stayed (contract §2·§3). "off" falls through to the 404 below, as a server without the routes answers.
+  // ★Like the real server, nothing here writes a position to the console; a test reads what came in through `/__test/log`.
+  const locationPath = /^\/v1\/web\/trips\/([^/]+)\/location(\/stops)?$/.exec(path);
+  if (locationPath && scenario.location !== "off") {
+    const id = locationPath[1];
+    const known = (id === TRIP_ID || rows.some((entry) => entry.trip_id === id)) && !deleted.has(id);
+    if (!known) return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
+    const noConsent = () => json(response, 403, { error: { code: "consent_required", message: "위치 정보 수집·이용에 동의해야 쓸 수 있어요", current_version: "2026-10-05", required: ["location"] } }, origin);
+    const kept = locationPoints.get(id) ?? new Map();
+    if (!locationPath[2] && request.method === "POST") {
+      if (scenario.location === "no_consent") return noConsent();
+      const { fixes } = JSON.parse(raw || "{}");
+      const point = (fix) => fix && Number.isFinite(fix.lat) && Number.isFinite(fix.lng) && typeof fix.at === "string" && Number.isFinite(Date.parse(fix.at));
+      if (!Array.isArray(fixes) || fixes.length < 1 || fixes.length > 20 || !fixes.every(point)) return json(response, 422, { error: { code: "invalid_fixes", message: "위치 점은 1~20개, 각 점에 lat·lng·at 이 있어야 해요" } }, origin);
+      let saved = 0, skipped = 0;
+      for (const fix of fixes) {
+        const inKorea = fix.lat >= 33 && fix.lat <= 39 && fix.lng >= 124 && fix.lng <= 132;
+        if (!inKorea || (Number.isFinite(fix.accuracy_m) && fix.accuracy_m > 500)) { skipped += 1; continue; }
+        if (kept.has(fix.at)) continue;                                   // the same (trip_id, at) is kept once
+        kept.set(fix.at, { lat: fix.lat, lng: fix.lng, accuracy_m: fix.accuracy_m ?? null, at: fix.at });
+        saved += 1;
+      }
+      locationPoints.set(id, kept);
+      return json(response, 200, { saved, skipped }, origin);
+    }
+    if (!locationPath[2] && request.method === "DELETE") {
+      locationPoints.delete(id);
+      return json(response, 200, { deleted: kept.size }, origin);
+    }
+    if (locationPath[2] && request.method === "GET") {
+      if (scenario.location === "no_consent") return noConsent();
+      const last = [...kept.values()].sort((a, b) => Date.parse(a.at) - Date.parse(b.at)).at(-1) ?? null;
+      const stops = scenario.location === "stops"
+        ? [{ stop_id: "stay-1", lat: 37.579, lng: 126.9772, started_at: at(9, 32), ended_at: at(10, 50), radius_m: 35, points: 12, matched_item_id: "i-b" }]
+        : [];
+      return json(response, 200, { stops, last_fix: last, computed_at: at(11) }, origin);
+    }
+  }
+  // ── 위치 점 (2026-10-05) ── 끝
   const deletePath = /^\/v1\/web\/trips\/([^/]+)\/delete$/.exec(path);
   if (deletePath && request.method === "POST" && scenario.tripDelete !== "unsupported") {
     const id = deletePath[1];
@@ -939,7 +1135,7 @@ function profileView() {
   return { recovery_email: recoveryEmail,
     discord_webhook: webhook ? { set: true, masked: `https://discord.com/api/webhooks/${id.slice(0, 4)}…/••••`, status: webhookStatus, checked_at: webhookStatus === "untested" ? null : new Date().toISOString() }
       : { set: false, masked: null, status: null, checked_at: null },
-    ...(scenario.discordConnect === "off" ? {} : { discord_connect: { available: true } }), updated_at: null };
+    ...(scenario.discordConnect === "off" ? {} : { discord_connect: { available: true } }), ...telegramProfile(), updated_at: null };   // telegramProfile: 텔레그램 연결 (2026-10-05)
 }
 
 /** The intake reading stream, like `op_stream.watch`: the state, never what was read. The screen re-reads the intake on each event. */

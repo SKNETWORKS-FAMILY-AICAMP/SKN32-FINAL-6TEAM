@@ -199,13 +199,13 @@ test("목록 끝에서 한 번 더 밀면 서버의 전체 자동 추천을 한 
   expect((await server.received("POST", "/edits")).length).toBe(0);
 });
 
-test("전체 자동 추천은 저장 없이 수정안만 보여 주고, 위로 올리면 변경 전 모습이 그대로 있다 — 서버에는 아무것도 저장되지 않았다", async ({ page, request }) => {
+test("전체 자동 추천은 저장 없이 수정안만 보여 주고, 변경 전 쪽으로 돌아가면 변경 전 모습이 그대로 있다 — 서버에는 아무것도 저장되지 않았다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   const auto = page.getByRole("button", { name: /전체 자동 추천/ });
   await auto.click();
   await expect(page.getByRole("heading", { name: "수정안" })).toBeVisible();
   await expect(page.getByText(/바뀜 · 이전/).first()).toBeVisible();
-  await page.locator("div[class*=sheetBody]").evaluate((element) => element.scrollTo({ top: 0 }));       // 변경 전으로 올라간다
+  await page.getByRole("group", { name: "보는 일정" }).getByRole("button", { name: "1. 변경 전 일정" }).click();   // 변경 전 쪽으로 돌아간다
   await expect(page.getByRole("heading", { name: "계획 확인" })).toBeVisible();
   await expect(auto).toContainText("2");                                           // 고칠 항목 2건이 그대로 — 아무것도 저장되지 않았다
   const calls = await server.received("POST", "/autofix");

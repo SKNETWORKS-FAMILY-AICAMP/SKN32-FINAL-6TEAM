@@ -36,7 +36,7 @@ PLAIN_COOKIE = "tripilot_sid_dev"
 CSRF_HEADER = "x-csrf-token"
 UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 #: ★`[2026-10-04 D-CS-012]` 에이전트 키로는 **계정 관리 경로를 못 연다** — 로그인 · 연동 · 키 만들기 · 연락처는 브라우저 로그인에서만
-AGENT_FORBIDDEN_PREFIXES = ("/v1/web/auth", "/v1/web/session", "/v1/web/profile", "/v1/web/agent-keys")
+AGENT_FORBIDDEN_PREFIXES = ("/v1/web/auth", "/v1/web/session", "/v1/web/profile", "/v1/web/agent-keys", "/v1/web/consents")
 #: 쿠키 원문 길이 상한(`token_urlsafe(32)` = 43자) — 터무니없이 긴 값은 해시하지 않고 버린다
 MAX_COOKIE_CHARS = 200
 
@@ -202,6 +202,27 @@ def _check_agent(request: Request, agent: web_agent_keys.AgentKey) -> None:
 
 
 def authenticate(request: Request, *, required: bool = True, csrf: bool = True) -> Identity | None:
+    """누구인지 가린 뒤(`_identify`) **약관 동의 게이트**(`consents.gate_check`)를 건다 — `[2026-10-05]` 설정 `consent.gate_enabled` 가 켜져 있고 이 길이 면제(동의 · 로그인 · 세션 만들기)가 아니면,
+    필수 동의가 지금 약관 버전으로 없는 사용자는 403 `consent_required`. 게스트 · 회원 · 옛 키 · 에이전트 키(키 주인의 동의) 모두 같다. 꺼져 있으면(기본) 아무것도 안 바뀐다."""
+    identity = _identify(request, required=required, csrf=csrf)
+    if identity is not None:
+        _consent_gate(request, identity)
+    return identity
+
+
+def _consent_gate(request: Request, identity: Identity) -> None:
+    from . import consents
+
+    if not consents.gate_enabled():
+        return
+    try:
+        with get_connection() as conn:
+            consents.gate_check(conn, tenant_id=identity.tenant_id, user_id=identity.customer_id, path=request.url.path)
+    except consents.ConsentError as refused:
+        raise refuse(refused.status, refused.code, refused.message, **refused.extra) from None
+
+
+def _identify(request: Request, *, required: bool = True, csrf: bool = True) -> Identity | None:
     """① 쿠키와 키가 같이 오면 400 `ambiguous_credentials` ② 쿠키만 → 세션(만료·거둠·모름 = 401 + 쿠키 지우기, 쓰기는 CSRF) ③ 키만 → 지금까지처럼(CSRF 면제)
     ④ 둘 다 없음 → 401. `required=False`(로그인 시작처럼 인증 없이도 되는 자리)이면 ④와 무효 자격은 None — **단 ①은 그래도 거부**한다."""
     tenant = settings_module.get_settings().tenant_id
