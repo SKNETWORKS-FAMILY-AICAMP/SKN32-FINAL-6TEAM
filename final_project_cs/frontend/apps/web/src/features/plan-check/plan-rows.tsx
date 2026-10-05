@@ -10,7 +10,7 @@ import { timeline, type CheckRow, type PlanCheckView, type PlanDay, type PlanIte
 import { Act, Checks, VerdictMark } from "./parts";
 import type { PlanCheckActions } from "./plan-check";
 import { gapPx, GAP_BASE_PX } from "./time-plan";
-import type { TimeEditHandles } from "./use-time-edit";
+import type { TimeEditHandles, TimeKind } from "./use-time-edit";
 import styles from "./plan-check.module.css";
 
 /** Everything a row of the list needs from the screen, in one place (the list is drawn twice when a preview stands under the plan). */
@@ -44,6 +44,8 @@ export interface RowContext {
    */
   time: TimeEditUi | null;
   onOpenTime: (item: PlanItem) => void;
+  /** `[2026-10-05]` The time of LEAVING a stop (the time at the left of the leg after it) is pressed: its end changes (free time first, then the next stops are pushed). Takes the id of that stop. */
+  onOpenDepart: (fromId: string) => void;
   timeAdjusted: ReadonlySet<string>;
   onRevertTime: (item: PlanItem) => void;
   /** `""` for the plan as it is, `"after-"` for the proposed one: the same stop stands in both lists, and an id is one element's. */
@@ -54,6 +56,8 @@ export interface RowContext {
 
 /** What the time editor of one stop shows and does (built from `useTimeEdit` by the screen). */
 export interface TimeEditUi {
+  /** What is changed: the start of the stop, or the time of leaving it (its end). */
+  kind: TimeKind;
   id: string; start: string; end: string; push: boolean; busy: boolean; problem: string;
   /** The earliest and latest start the switch allows, as 「HH:MM」. */
   range: { min: string; max: string };
@@ -85,7 +89,7 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading }
         const times = dayTimes(view, day.day);
         return timeline(view, day.day).filter(ctx.visible).map((entry) => entry.type === "item"
           ? <ItemRow key={entry.item.id} item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
-          : <MoveRow key={entry.move.id} move={entry.move} ctx={ctx} slack={moveSlack(times, entry.move)} dim={ctx.removed.has(entry.move.fromId) || ctx.removed.has(entry.move.toId)} />);
+          : <MoveRow key={entry.move.id} move={entry.move} from={view.items.find((item) => item.id === entry.move.fromId)} ctx={ctx} slack={moveSlack(times, entry.move)} dim={ctx.removed.has(entry.move.fromId) || ctx.removed.has(entry.move.toId)} />);
       })()}</ol>
     </section>)}</>;
 }
@@ -129,7 +133,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
   const adjusted = ctx.timeAdjusted.has(item.id) && !removed;
   return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-verdict={item.verdict ?? "checking"} data-selected={selected || undefined} data-changed={changed || undefined} data-removed={removed || undefined}>
     {done
-      ? <Act className={styles.time} data-editing={ctx.time?.id === item.id || undefined} data-adjusted={adjusted || undefined} why={timeWhy} explain={explain} onPress={() => ctx.onOpenTime(item)}
+      ? <Act className={styles.time} data-editing={(ctx.time?.id === item.id && ctx.time.kind === "start") || undefined} data-adjusted={adjusted || undefined} why={timeWhy} explain={explain} onPress={() => ctx.onOpenTime(item)}
           title={t("눌러서 시간 고치기", "Press to change the time")} aria-label={t(`${item.title} 시간 고치기 · 지금 ${item.startsAt || "시간 없음"}`, `Change the time of ${item.title} · now ${item.startsAt || "no time"}`)}>{item.startsAt || "–"}</Act>
       : <span className={styles.time}>{item.startsAt || "–"}</span>}
     <span className={styles.rail} aria-hidden="true"><span className={styles.dot} /></span>
@@ -154,7 +158,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
               : <Act id={`${ctx.prefix}plan-delete-${item.id}`} className={styles.icon} why={deleteWhy} explain={explain} onPress={() => ctx.onDelete(item)} aria-label={t(`${item.title} 삭제`, `Delete ${item.title}`)}><Trash2 size={16} strokeWidth={1.8} aria-hidden="true" /></Act>}
           </div>
         : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
-      {done && ctx.time?.id === item.id && !removed && <TimeEditor item={item} ui={ctx.time} />}
+      {done && ctx.time?.id === item.id && ctx.time.kind === "start" && !removed && <TimeEditor item={item} ui={ctx.time} />}
       {open && !removed && <div id={`${ctx.prefix}plan-item-${item.id}-checks`}>
         {rows.length
           ? <Checks rows={rows} />
@@ -178,20 +182,26 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
  */
 function TimeEditor({ item, ui }: { item: PlanItem; ui: TimeEditUi }) {
   const t = useT();
+  const leaving = ui.kind === "depart";
   const along = ui.along.slice(0, 3).map((stop) => `${stop.title} ${stop.minutes > 0 ? "+" : "−"}${Math.abs(stop.minutes)}분`).join(" · ");
-  return <form className={styles.timeEditor} aria-label={t(`${item.title} 시간 고치기`, `Change the time of ${item.title}`)} noValidate
+  return <form className={styles.timeEditor} data-kind={ui.kind} aria-label={leaving ? t(`${item.title}에서 나서는 시각 고치기`, `Change when to leave ${item.title}`) : t(`${item.title} 시간 고치기`, `Change the time of ${item.title}`)} noValidate
     onSubmit={(event) => { event.preventDefault(); ui.apply(); }}
     onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); ui.cancel(); } }}>
-    <button type="button" className={styles.timeGrip} {...ui.grip} disabled={ui.busy} aria-label={t("끌어서 시작 시각 바꾸기 · 위아래 화살표로도 바꿔요", "Drag to change the start · the arrow keys work too")} title={t("위로 끌면 일찍, 아래로 끌면 늦게 (10px = 5분)", "Drag up for earlier, down for later (10 px = 5 minutes)")}>
+    <button type="button" className={styles.timeGrip} {...ui.grip} disabled={ui.busy}
+      aria-label={leaving ? t("끌어서 출발 시각 바꾸기 · 위아래 화살표로도 바꿔요", "Drag to change when to leave · the arrow keys work too") : t("끌어서 시작 시각 바꾸기 · 위아래 화살표로도 바꿔요", "Drag to change the start · the arrow keys work too")}
+      title={t("위로 끌면 일찍, 아래로 끌면 늦게 (10px = 5분) · 여유를 다 쓰면 한 번 멈춰요", "Drag up for earlier, down for later (10 px = 5 minutes) · it stops once when the free time is used up")}>
       <ChevronsUpDown size={20} strokeWidth={1.8} aria-hidden="true" /></button>
-    <label className={styles.field}>{t("시작", "Start")}<input type="time" value={ui.start} aria-invalid={Boolean(ui.problem)} autoFocus onChange={(event) => ui.setStart(event.target.value)} /></label>
-    <label className={styles.field}>{t("끝", "End")}<input type="time" value={ui.end} aria-invalid={Boolean(ui.problem)} onChange={(event) => ui.setEnd(event.target.value)} /></label>
+    {leaving
+      ? <label className={styles.field}>{t("출발", "Leave")}<input type="time" value={ui.end} aria-invalid={Boolean(ui.problem)} autoFocus onChange={(event) => ui.setEnd(event.target.value)} /></label>
+      : <>
+        <label className={styles.field}>{t("시작", "Start")}<input type="time" value={ui.start} aria-invalid={Boolean(ui.problem)} autoFocus onChange={(event) => ui.setStart(event.target.value)} /></label>
+        <label className={styles.field}>{t("끝", "End")}<input type="time" value={ui.end} aria-invalid={Boolean(ui.problem)} onChange={(event) => ui.setEnd(event.target.value)} /></label></>}
     <div className={styles.timeSteps}>
       <button type="button" className={styles.timeStep} onClick={() => ui.step(-5)} disabled={ui.busy}>{t("−5분", "−5 min")}</button>
       <button type="button" className={styles.timeStep} onClick={() => ui.step(5)} disabled={ui.busy}>{t("+5분", "+5 min")}</button>
       <span className={styles.timeRange}>{t(`가능한 시각 ${ui.range.min} ~ ${ui.range.max}`, `Possible: ${ui.range.min} – ${ui.range.max}`)}</span>
     </div>
-    <label className={styles.timePush}><input type="checkbox" checked={ui.push} onChange={(event) => ui.setPush(event.target.checked)} />{t("앞뒤 일정도 함께 밀기", "Push the stops around it along")}</label>
+    <label className={styles.timePush}><input type="checkbox" checked={ui.push} onChange={(event) => ui.setPush(event.target.checked)} />{leaving ? t("다음 일정도 함께 밀기", "Push the next stops along") : t("앞뒤 일정도 함께 밀기", "Push the stops around it along")}</label>
     {ui.count > 1 && !ui.problem && <p className={styles.timeNote} role="status">{t(`함께 바뀌는 일정 ${ui.count - 1}개 · ${along}${ui.along.length > 3 ? ` 외 ${ui.along.length - 3}개` : ""}`, `${ui.count - 1} more stop${ui.count > 2 ? "s" : ""} move: ${along}`)}</p>}
     <div className={styles.timeButtons}>
       <Button onClick={ui.cancel} disabled={ui.busy}>{t("취소", "Cancel")}</Button>
@@ -225,7 +235,7 @@ export function legText(summary: string): string {
  * `slack` = the free minutes after this leg (next stop's start minus the time the traveller gets there). ★`[2026-10-04 사용자 지시]` The space after a leg grows with it
  * (`gapPx`), and 15 minutes or more is said once, quietly (「여유 1시간 42분」); a leg that arrives late says so instead (「10분 늦어요」).
  */
-function MoveRow({ move, ctx, slack, dim }: { move: PlanMove; ctx: RowContext; slack: number | null; dim: boolean }) {
+function MoveRow({ move, from, ctx, slack, dim }: { move: PlanMove; from: PlanItem | undefined; ctx: RowContext; slack: number | null; dim: boolean }) {
   const t = useT();
   const { done } = ctx;
   const open = done && ctx.open === move.id;
@@ -239,8 +249,18 @@ function MoveRow({ move, ctx, slack, dim }: { move: PlanMove; ctx: RowContext; s
   const extra = gapPx(slack) - GAP_BASE_PX;
   const free = freeText(slack);
   const late = slack !== null && slack < 0;
+  // ★`[2026-10-05 사용자 지시]` The time of leaving can be changed like the time of a stop: leaving later uses the free time first, then the next stops are pushed.
+  const leaving = <><b>{move.departAt}</b><small>{t("출발", "leave")}</small></>;
+  const leaveWhy = !from ? null : dim ? t("삭제할 일정 앞뒤의 이동이라 바꿀 수 없어요", "This leg belongs to a stop marked for deletion")
+    : !ctx.actions.retime && !ctx.actions.edit ? t("시간 고치기는 준비 중이에요", "Changing the time is coming")
+      : from.locked ? t("고정한 일정에서 나서는 시각이라 바꿀 수 없어요 · 잠금을 풀면 수정할 수 있어요", "Locked · unlock the stop to change when to leave")
+        : from.booked === true ? t("예약한 일정에서 나서는 시각이라 바꿀 수 없어요", "Booked: when to leave cannot be changed") : ctx.frozen;
+  const leaveEditing = ctx.time?.id === move.fromId && ctx.time.kind === "depart";
   return <li className={styles.entry} data-type="move" data-entry-id={move.id} data-verdict={move.verdict ?? "checking"} data-dim={dim || undefined}>
-    <span className={styles.time}>{!checking && <><b>{move.departAt}</b><small>{t("출발", "leave")}</small></>}</span>
+    {done && !checking && from
+      ? <Act className={styles.time} data-editing={leaveEditing || undefined} why={leaveWhy} explain={ctx.explain} onPress={() => ctx.onOpenDepart(move.fromId)}
+          title={t("눌러서 출발 시각 고치기", "Press to change when to leave")} aria-label={t(`${from.title}에서 나서는 시각 고치기 · 지금 ${move.departAt || "시간 없음"}`, `Change when to leave ${from.title} · now ${move.departAt || "no time"}`)}>{leaving}</Act>
+      : <span className={styles.time}>{!checking && leaving}</span>}
     <span className={styles.rail} aria-hidden="true"><span className={styles.dot} /></span>
     <div className={styles.moveCol}>
     <div className={styles.move} data-open={open || undefined}>{checking
@@ -249,6 +269,7 @@ function MoveRow({ move, ctx, slack, dim }: { move: PlanMove; ctx: RowContext; s
         ? <><button type="button" className={styles.moveHead} aria-expanded={open} aria-controls={`${ctx.prefix}plan-move-${move.id}-checks`} onClick={() => ctx.onToggleMove(move.id)}>{line}</button>
           {open && <Checks id={`${ctx.prefix}plan-move-${move.id}-checks`} rows={move.checks} />}</>
         : <div className={styles.moveHead}>{line}</div>}</div>
+    {done && !checking && leaveEditing && from && <TimeEditor item={from} ui={ctx.time!} />}
     {done && !checking && (extra > 0 || late) && <p className={styles.free} data-late={late || undefined} style={{ minHeight: `${extra}px` }}>
       {late ? t(`${Math.abs(slack!)}분 늦어요`, `${Math.abs(slack!)} min late`) : free ? t(`여유 ${free}`, `${free} free`) : null}</p>}
     </div>

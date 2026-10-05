@@ -21,7 +21,8 @@ import { ResultFooter, StopEditor, TripIssues, type Registration } from "./resul
 import { useFollowScroll } from "./use-follow-scroll";
 import { usePullPastEnd } from "./use-pull-past-end";
 import { formatHm, moveStop, parseHm, type Retime } from "./time-plan";
-import { useTimeEdit } from "./use-time-edit";
+import { TimeDragOverlay } from "./time-drag-overlay";
+import { heldTexts, useTimeEdit } from "./use-time-edit";
 import { REVEAL_MS, useReveal } from "./use-reveal";
 import styles from "./plan-check.module.css";
 
@@ -576,6 +577,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const timeEdit = useTimeEdit({
     views: { before: view, after: previewing ? previewView : null },
     commit: (list, changes) => sendTimes(list, changes, t(`${changes.length}개 일정의 시간을 바꿨어요`, `Changed the time of ${changes.length} stop${changes.length > 1 ? "s" : ""}`)),
+    // `[2026-10-05]` The free time is used up while dragging: said once, with the notice the screen already has.
+    onNotice: (kind, held) => setToast({ text: t(...heldTexts(kind, held)) }),
   });
   /** One stop back to the time it had when the screen opened (the stops around it are pushed only if that is needed to make room). */
   function revertTime(item: PlanItem) {
@@ -850,7 +853,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     const { edit, preview } = timeEdit;
     if (!edit || edit.list !== list || !preview) return null;
     return {
-      id: edit.id, start: edit.start, end: edit.end, push: edit.push, busy: timeEdit.busy, problem: preview.problem,
+      kind: edit.kind, id: edit.id, start: edit.start, end: edit.end, push: edit.push, busy: timeEdit.busy, problem: preview.problem,
       range: { min: formatHm(preview.range.min), max: formatHm(preview.range.max) }, along: preview.along, count: preview.changes.length,
       setStart: timeEdit.setStart, setEnd: timeEdit.setEnd, setPush: timeEdit.setPush, step: timeEdit.step, apply: () => void timeEdit.apply(), cancel: timeEdit.close, grip: timeEdit.grip,
     };
@@ -867,6 +870,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     onRecommend: recommend,
     time: timeUi(list),
     onOpenTime: (item) => timeEdit.open(item, list),
+    onOpenDepart: (fromId) => { const item = (list === "after" && previewView ? previewView : view).items.find((entry) => entry.id === fromId); if (item) timeEdit.open(item, list, "depart"); },
     timeAdjusted: adjustedIn(list === "after" ? previewView : view),
     onRevertTime: revertTime,
     visible: visibleIn(new Set(Object.keys(was))),
@@ -999,6 +1003,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
             previewing={previewing && side === "after"} onAutoAll={actions.previewRecommendAll && recommendAll} onRecheck={actions.recheck || actions.remove ? recheck : undefined} onRegisterPreview={registerPreview} />}
         </>}
     </section>
+    {timeEdit.drag && <TimeDragOverlay drag={timeEdit.drag} />}
     <div className={styles.toast} role="status" data-shown={toast ? true : undefined}>
       {toast && <><span className={styles.toastText}>{toast.text}{toast.sub && <small>{toast.sub}</small>}</span>
         {(toast.undo || toast.revert) && <button type="button" className={styles.undo} onClick={toast.revert ?? undo}>{t("되돌리기", "Undo")}</button>}</>}

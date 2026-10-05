@@ -407,6 +407,23 @@ button.time:focus-visible { outline: 2px solid var(--color-selected); outline-of
 .timeGrip { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-subtle); color: var(--color-text); cursor: ns-resize; touch-action: none; user-select: none; }
 .timeGrip:active { background: var(--color-selected-soft); border-color: var(--color-selected); }
 .timeGrip:disabled { opacity: .4; cursor: not-allowed; }
+/* `[2026-10-05 사용자 지시]` While a time is dragged: what moves and by how much, the notice at the end of the free time, and the whole day as a strip (outline = where it was, filled = where it would be). */
+.dragOverlay { position: absolute; left: 12px; right: 12px; top: 64px; z-index: 16; display: grid; gap: 5px; padding: 10px 12px 9px; border: 1px solid var(--color-border-strong); border-radius: 14px; background: color-mix(in srgb, var(--color-surface) 95%, transparent); box-shadow: 0 8px 24px color-mix(in srgb, var(--color-text) 20%, transparent); pointer-events: none; }
+.dragHead { display: flex; align-items: baseline; gap: 8px; margin: 0; font-size: 13px; }
+.dragHead strong { min-width: 0; overflow: hidden; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+.dragHead span { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--color-primary); white-space: nowrap; }
+.dragHeld { margin: 0; padding: 4px 8px; border-radius: 8px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 12px; font-weight: 650; }
+.miniTrack { position: relative; height: 30px; overflow: hidden; border-radius: 8px; background: var(--color-subtle); }
+.miniBlock, .miniGhost { position: absolute; top: 6px; bottom: 6px; border-radius: 4px; }
+.miniBlock { background: var(--color-border-strong); }
+.miniBlock[data-moved] { background: var(--color-warning); }
+.miniBlock[data-active] { background: var(--color-primary); }
+.miniBlock[data-fixed] { opacity: .55; }
+.miniGhost { border: 1px dashed var(--color-muted); }
+.miniAxis { display: flex; justify-content: space-between; margin: 0; font-size: 11px; font-variant-numeric: tabular-nums; color: var(--color-muted); }
+.dragSum { margin: 0; font-size: 12px; line-height: 1.5; color: var(--color-text-secondary); }
+.timeEditor[data-kind="depart"] { grid-template-columns: 44px minmax(0, 1fr); }
+
 .timeGrip:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 .timeSteps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; grid-column: 1 / -1; }
 .timeStep { min-height: 34px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 9px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12.5px; font-weight: 750; cursor: pointer; }
