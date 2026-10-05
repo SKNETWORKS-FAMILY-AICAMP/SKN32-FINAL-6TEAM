@@ -68,6 +68,7 @@ test("위로 끌어도 같다: 앞 일정과 붙는 곳에서 한 번 멈추고,
   await openFinished(page, request);
   const form = await openStart(page, "광장시장");                                                   // 올리브영(12:00 끝) + 이동 16분 = 12:16 이 여유의 앞 끝
   const grip = form.getByRole("button", { name: /끌어서 시작 시각 바꾸기/ });
+  await grip.scrollIntoViewIfNeeded();                                                              // 끌개는 폼의 둘째 줄이라 아래 단추 줄에 가려질 수 있다
   const box = (await grip.boundingBox())!;
   const x = box.x + box.width / 2, y = box.y + box.height / 2;
   await page.mouse.move(x, y);

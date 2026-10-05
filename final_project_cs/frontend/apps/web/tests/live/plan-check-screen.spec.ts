@@ -390,8 +390,8 @@ test("「직접 고치기」에서 「장소 없음」으로 저장하면 서버
 
 test("지도의 확대·축소(+/−) 버튼은 둥근 단추이고, 지도에 포인터를 올려 두는 동안에만 보인다", async ({ page, request }) => {
   await openFinished(page, request);
-  const zoom = page.locator(".leaflet-control-zoom");
-  const plus = zoom.getByRole("button", { name: "Zoom in" });
+  const zoom = page.getByRole("group", { name: "지도 단추" });
+  const plus = zoom.getByRole("button", { name: "확대" });
   await expect(zoom).toHaveCSS("opacity", "0");                                         // 평소에는 지도를 가리지 않는다
   await page.getByRole("region", { name: "여행 지도" }).hover({ position: { x: 150, y: 150 } });
   await expect(zoom).toHaveCSS("opacity", "1");

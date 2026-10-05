@@ -190,6 +190,14 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         setPreviewed(result.view.preview && result.changed.length ? { view: result.view, base } : null);
         return autoResultOf(result, t);
       },
+      // `[2026-10-05]` Is there anything to recommend? Read from the warm dry run above - and shown nowhere (the preview page is not opened by it). null = not asked for yet.
+      hasRecommendation: async (): Promise<boolean | null> => {
+        // The effect of the screen can run before this hook has taken the plan (`latest` is set after the first paint): not known yet, not an error.
+        const base = latest.current?.revision;
+        const ask = base !== undefined && warmed.current?.base === base ? warmed.current.ask : null;
+        if (!ask) return null;
+        return ask.then((result) => result.changed.length > 0, () => null);
+      },
       // Save what the preview showed: the same call without `dry_run` — the server makes the plan it showed.
       applyRecommended: async (): Promise<AutoResult> => {
         const result = await autofixIntake(intakeId, plan().revision, language).catch(staleThenRethrow);

@@ -59,6 +59,12 @@ export interface StayPoint {
   label: string;
 }
 
+/**
+ * `[2026-10-05]` What the map shows right now: the corners of the view (degrees) and its size in px. Every provider says it the same way, so the buttons the page draws over the map (the scale ruler,
+ * the chips for stops out of view) are worked out from it alone (`map-geometry.ts`). A provider that cannot say it says nothing - those parts are then left out, never guessed.
+ */
+export interface MapView { south: number; west: number; north: number; east: number; width: number; height: number; zoom: number }
+
 export interface MapViewProps {
   points: MapPoint[];
   selectedId?: string;
@@ -67,12 +73,18 @@ export interface MapViewProps {
   lines?: MapLine[];
   /** `[2026-10-04]` Px at the top of the map that a bar floats over: the camera fits the pins below it and no pin is put under it. */
   topInset?: number;
+  /** `[2026-10-05]` Px at the bottom of the map that the rounded top of a sheet floats over: no chip for a stop out of view stands there. */
+  bottomInset?: number;
   /** `[2026-10-05]` 「내 위치」 — null/absent: nothing is drawn. */
   me?: MyLocation | null;
   /** `[2026-10-05]` Where the server says the customer stayed — absent/empty: nothing is drawn. */
   stays?: StayPoint[];
   /** `[2026-10-05 사용자 지시]` The zoom level, said once the map is up and each time it changes - a screen asks for the detailed route lines when it is zoomed in (`use-route-detail.ts`). Keep it the same function between renders. */
   onZoom?: (zoom: number) => void;
+  /** `[2026-10-05]` What the map shows, said once the map is up and each time it comes to rest after being moved, zoomed or resized. */
+  onView?: (view: MapView) => void;
+  /** `[2026-10-05]` The customer agreed to share their place: the map has a 「내 위치로」 button (it waits, greyed, for the first fix). Absent/false: no such button, and nothing said about it. */
+  meAvailable?: boolean;
 }
 
 export interface MapController {
@@ -86,6 +98,10 @@ export interface MapController {
   setMe(me: MyLocation | null): void;
   /** `[2026-10-05]` Draw the places the server says the customer stayed (replaces what was there). */
   setStays(stays: StayPoint[]): void;
+  /** `[2026-10-05]` One zoom level in (`1`) or out (`-1`) - the map's own buttons are drawn by the page. The camera is then the customer's: a new size no longer fits the pins again. */
+  zoomBy(delta: 1 | -1): void;
+  /** `[2026-10-05]` The camera to a place: for 「내 위치」 at least a street-level zoom; with `keepZoom` (a chip for a stop out of view) only the place changes. The customer's own camera from then on. */
+  centerOn(at: Coordinates, keepZoom?: boolean): void;
   resize(): void;
   destroy(): void;
 }

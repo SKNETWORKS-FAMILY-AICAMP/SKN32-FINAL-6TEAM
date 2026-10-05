@@ -31,6 +31,8 @@ export interface TripMapProps {
   routesError?: string;
   /** `[2026-10-04]` Px at the top of the map that a bar floats over (`MapViewProps.topInset`). */
   topInset?: number;
+  /** `[2026-10-05]` Px at the bottom that a sheet floats over (`MapViewProps.bottomInset`). */
+  bottomInset?: number;
   /**
    * `[2026-10-05 사용자 지시]` The trip this map belongs to — only a trip's own screen gives it. With it (and the location consent) the positions the
    * map reads go to the server, and the places the server found the customer stayed are drawn. Without it (the plan check) only 「내 위치」 shows.
@@ -60,7 +62,7 @@ export function TripMap(props: TripMapProps) {
   const selectedMissing = props.selectedId && props.stops.some((stop) => stop.id === props.selectedId) && !points.some((point) => point.id === props.selectedId);
   const shapes = visibleShapes(props.routes?.shapes, props.stops);
   const lines = toMapLines(shapes);
-  const viewProps = { points, selectedId: props.selectedId, onSelect: props.onSelect, lines, topInset: props.topInset, me, stays, onZoom: props.onZoom };
+  const viewProps = { points, selectedId: props.selectedId, onSelect: props.onSelect, lines, topInset: props.topInset, bottomInset: props.bottomInset, me, stays, onZoom: props.onZoom, meAvailable: agreed };
   const fill = props.variant === "fill";
   // Said only when the customer agreed and the browser could not give it — never a word without the consent (it is optional).
   const meNotice = failure ? locationFailureText(failure, t, "map") : null;

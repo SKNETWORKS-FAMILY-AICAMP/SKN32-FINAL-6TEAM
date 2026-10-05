@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import type { Translate } from "@/lib/i18n";
 import { useT } from "@/lib/settings";
 import type { CheckKind, CheckResult, CheckRow, PlaceInfo, Verdict } from "./model";
+import type { Grab } from "./use-time-edit";
 import styles from "./plan-check.module.css";
 
 /** Shared by the result's cards and the change screen's cards. */
@@ -95,6 +96,8 @@ export const reason = (error: unknown) => error instanceof Error ? error.message
 export function Act({ why, onPress, explain, className, children, title, ...rest }: {
   why: string | null; onPress: () => void; explain: (why: string) => void; className?: string; children: ReactNode;
   id?: string; title?: string; "aria-label"?: string; "aria-pressed"?: boolean; "data-primary"?: boolean; "data-edge"?: string; style?: CSSProperties;
+  /** `[2026-10-05]` Something a time is dragged by: the pointer handlers of a drag, and the mark for the cursor and the touch (`data-grab`). */
+  "data-grab"?: boolean; onPointerDown?: Grab["onPointerDown"]; onPointerMove?: Grab["onPointerMove"]; onPointerUp?: Grab["onPointerUp"]; onPointerCancel?: Grab["onPointerCancel"];
 }) {
   return <button type="button" className={className} aria-disabled={why ? true : undefined} title={why ?? title} {...rest}
     onClick={() => why ? explain(why) : onPress()}>{children}</button>;

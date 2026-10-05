@@ -91,7 +91,7 @@ test("확대하면 상세 경로선을 따로 한 번 받아 그린다: 축소 �
   const asked = async () => (await server.received("GET", "/route-shapes")).map((entry) => entry.query);
   expect(await asked()).toEqual([null]);                                                  // 처음에는 짧은 선만(축소용)
   expect(await used()).toBe("short");
-  const zoomIn = page.locator("#trip-pane-map .leaflet-control-zoom-in");
+  const zoomIn = page.locator("#trip-pane-map").getByRole("button", { name: "확대" });
   for (let at = 0; at < 6 && (await asked()).length < 2; at += 1) {                      // 확대 수준 15에 닿을 때까지 한 단계씩
     await page.locator("#trip-pane-map").hover({ position: { x: 100, y: 100 } });
     await zoomIn.click({ force: true });
@@ -99,7 +99,7 @@ test("확대하면 상세 경로선을 따로 한 번 받아 그린다: 축소 �
   }
   await expect.poll(asked).toEqual([null, "?detail=true"]);                                // 상세 선은 한 번만 따로 받는다
   await expect.poll(used).toBe("detail");                                                  // 받은 상세 선으로 바뀌어 그려진다(웹은 점을 줄이지 않는다)
-  const zoomOut = page.locator("#trip-pane-map .leaflet-control-zoom-out");
+  const zoomOut = page.locator("#trip-pane-map").getByRole("button", { name: "축소" });
   for (let at = 0; at < 3; at += 1) { await page.locator("#trip-pane-map").hover({ position: { x: 100, y: 100 } }); await zoomOut.click({ force: true }); await page.waitForTimeout(450); }
   expect(await used()).toBe("detail");                                                     // 줄여도 상세 선은 그대로(어느 확대에서도 맞고, 바뀌면 선이 튄다)
   expect(await asked()).toEqual([null, "?detail=true"]);

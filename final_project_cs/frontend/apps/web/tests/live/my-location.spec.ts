@@ -49,7 +49,7 @@ test("위치 동의가 있으면 여행 지도를 열자마자 「내 위치」�
   const dot = meDot(mapPane(page));
   await expect(dot).toBeVisible();
   await expect(mapPane(page).locator("path.my-location-accuracy")).toHaveCount(1);                 // 25 m 정확도 원
-  await expect(mapPane(page).getByRole("button", { name: /내 위치/ })).toHaveCount(0);             // 핀(누르는 단추)이 아니다
+  await expect(mapPane(page).locator(".leaflet-marker-icon").getByRole("button", { name: /내 위치/ })).toHaveCount(0);   // 지도 위의 표시는 핀(누르는 단추)이 아니다 (지도 단추 묶음의 「내 위치로」는 별개)
   await expect(dot).toHaveText("");                                                                 // 번호가 없다(핀은 번호 물방울)
   expect(await dot.locator("span").evaluate((element) => getComputedStyle(element).borderRadius)).toBe("50%");   // 둥근 점
   await settled(dot);
@@ -218,16 +218,43 @@ test("「모든 일정 보기」는 핀만 맞춘다 — 멀리 있는 내 위�
   const dot = meDot(mapPane(page));
   await expect(dot).toHaveCount(1);
   const map = page.getByRole("region", { name: "여행 지도", exact: true });
-  const zoom = mapPane(page).locator(".leaflet-control-zoom");
+  const zoom = mapPane(page).getByRole("group", { name: "지도 단추" });
   await map.hover({ position: { x: 200, y: 120 } });                                                 // 단추는 지도에 포인터가 있을 때 보인다
-  await zoom.getByRole("button", { name: "Zoom out" }).click();
-  await zoom.getByRole("button", { name: "Zoom out" }).click();
+  await zoom.getByRole("button", { name: "축소" }).click();
+  await zoom.getByRole("button", { name: "축소" }).click();
   await zoom.getByRole("button", { name: "모든 일정 보기" }).click();
   for (const label of ["1. 아침 식당", "2. 경복궁 관람", "3. 점심 식당"]) await expect(tripPin(page, label)).toBeInViewport();
   await expect(dot).not.toBeInViewport();                                                            // 내 위치는 맞추기에 들지 않는다
   await settled(tripPin(page, "3. 점심 식당"));
   const first = (await tripPin(page, "1. 아침 식당").boundingBox())!, last = (await tripPin(page, "3. 점심 식당").boundingBox())!;
   expect(Math.hypot(last.x - first.x, last.y - first.y)).toBeGreaterThan(100);                      // 핀이 한 점으로 쪼그라들지 않았다
+});
+
+test("지도 단추의 「내 위치로」: 위치 동의가 있으면 보이고 누르면 지도가 내 위치로 가고, 동의가 없으면 단추도 말도 없다", async ({ page, context }) => {
+  await allowLocation(context, { latitude: 37.5512, longitude: 126.9882 });                         // 일정에서 조금 떨어진 남산 쪽
+  await openTripMap(page, true);
+  const dot = meDot(mapPane(page));
+  await expect(dot).toHaveCount(1);
+  const map = page.getByRole("region", { name: "여행 지도", exact: true });
+  await map.hover({ position: { x: 200, y: 120 } });
+  const locate = mapPane(page).getByRole("group", { name: "지도 단추" }).getByRole("button", { name: "내 위치로" });
+  await expect(locate).toBeVisible();
+  await locate.click();
+  await settled(dot);
+  const view = page.viewportSize()!;
+  const box = (await dot.boundingBox())!;
+  expect(box.x + box.width / 2).toBeGreaterThan(0);
+  expect(box.x + box.width / 2).toBeLessThan(view.width);                                            // 내 위치가 화면 안에 들어왔다
+  await expect(dot).toBeInViewport();
+});
+
+test("위치 동의가 없으면 지도 단추에 「내 위치로」가 없다", async ({ page }) => {
+  await openTripMap(page, false);
+  const map = page.getByRole("region", { name: "여행 지도", exact: true });
+  await map.hover({ position: { x: 200, y: 120 } });
+  const buttons = mapPane(page).getByRole("group", { name: "지도 단추" });
+  await expect(buttons.getByRole("button", { name: "확대" })).toBeVisible();
+  await expect(buttons.getByRole("button", { name: /내 위치/ })).toHaveCount(0);
 });
 
 test("핀이 하나도 없는 날은 내 위치로 지도 가운데를 맞춘다", async ({ page, context, request }) => {

@@ -1,7 +1,7 @@
 import type { MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_BOX, meKey, STAY_BOX, staysKey } from "./me";
-import { createPin, geometryKey, layoutPins, PIN_BOX, placePin, pointLabel, setPinSelected, type PinSlot } from "./pin";
+import { createPin, geometryKey, layoutPins, PIN_BOX, placePin, pointLabel, pulsePin, setPinSelected, type PinSlot } from "./pin";
 
 /**
  * Free map: OpenStreetMap standard tiles drawn with Leaflet.
@@ -16,19 +16,13 @@ export const OSM_ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyri
   + ' · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener">지도 오류 신고</a>';
 
 const SEOUL = { lat: 37.5665, lng: 126.978 };
-export const FIT_LABEL = "모든 일정 보기";
-/** The four corners of a frame (lucide 「scan」): everything in view. */
-export const FIT_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>';
 
 export function createOsmAdapter(tileUrl: string): MapAdapter {
   return {
     async create(container, options) {
       const L = (await import("leaflet")).default;
-      // ★`[2026-10-04]` The zoom buttons stand at the right, under the bar that floats over the map (they were at the top-left, under the home mark).
+      // ★`[2026-10-05 사용자 선택]` The map's buttons (+ − the scale ruler, all stops, my place) are drawn by the page over every provider the same way (`map-controls.tsx`): no Leaflet control here.
       const map = L.map(container, { center: options.points[0]?.coordinates ?? SEOUL, zoom: 14, minZoom: 3, maxZoom: 18, zoomControl: false });
-      L.control.zoom({ position: "topright" }).addTo(map);
-      const topRight = container.querySelector<HTMLElement>(".leaflet-top.leaflet-right");
-      if (topRight && options.topInset) topRight.style.top = `${options.topInset}px`;
       const layer = L.tileLayer(tileUrl, { maxZoom: 19, attribution: OSM_ATTRIBUTION, crossOrigin: false });
       // ★One missing tile is not a broken map (the pins still show). Only when nothing has loaded after a few failures
       //   does the screen say the map could not be shown — never a blank grey box that looks like a map.
@@ -81,6 +75,13 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       const sayZoom = () => options.onZoom?.(map.getZoom());
       map.on("zoomend", sayZoom);
       sayZoom();
+      // [2026-10-05] What the map shows goes to the screen, for the scale ruler and the chips of the stops out of view.
+      const sayView = () => {
+        if (destroyed || !container.clientWidth || !container.clientHeight) return;
+        const bounds = map.getBounds();
+        options.onView?.({ south: bounds.getSouth(), west: bounds.getWest(), north: bounds.getNorth(), east: bounds.getEast(), width: container.clientWidth, height: container.clientHeight, zoom: map.getZoom() });
+      };
+      map.on("moveend zoomend resize", sayView);
 
       // ★`[2026-10-05 사용자 지시]` 「내 위치」: a dot under the pins (a marker that takes no press) and the accuracy circle in the vector layer.
       let me: MyLocation | null = null;
@@ -113,23 +114,23 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         } finally { programmatic = false; }
       }
 
-      // ★`[2026-10-04 사용자 지시]` One more button in the zoom group: every pin back in view, at the place and zoom the map first showed them.
+      // ★`[2026-10-04 사용자 지시]` 「모든 일정 보기」: every pin back in view, at the place and zoom the map first showed them.
       //   ★Leaflet silently drops a new view while a zoom animation is running (`_animatingZoom`; `fitBounds` answers "done" without moving), so a press that comes a quarter
       //   of a second after +/- would do nothing - it waits for the zoom to end and then fits.
       function fitAll() {
         userMoved = false; needsFit = true;
         fit();                                                       // (it waits by itself while a zoom animation runs)
       }
-      const zoomBox = container.querySelector<HTMLElement>(".leaflet-control-zoom");
-      if (zoomBox) {
-        const link = L.DomUtil.create("a", "leaflet-control-zoom-fit", zoomBox);
-        link.href = "#";
-        link.setAttribute("role", "button");
-        link.setAttribute("aria-label", FIT_LABEL);
-        link.title = FIT_LABEL;
-        link.innerHTML = FIT_ICON;
-        L.DomEvent.disableClickPropagation(link);
-        L.DomEvent.on(link, "click", (event) => { L.DomEvent.preventDefault(event); fitAll(); });
+      // `[2026-10-05 사용자 선택 — 첫 지도 시점 안 C]` A day is shown whole and its first stop is pointed out once, when the camera has come to rest.
+      let pulseTimer: ReturnType<typeof setTimeout> | undefined;
+      function pulseFirst() {
+        clearTimeout(pulseTimer);
+        pulseTimer = setTimeout(() => {
+          if (destroyed) return;
+          const first = points.find((point) => point.order === 1 && !point.tone);
+          const marker = first && markers.find((entry) => entry.id === first.id);
+          if (marker) pulsePin(marker.pin);
+        }, 900);
       }
 
       function drawLines(nextLines: MapLine[]) {
@@ -183,6 +184,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
           userMoved = false;            // different pins: the old view means nothing
           fit();
           relayout();
+          pulseFirst();
         } else if (nextSelectedId !== selectedId) {
           const selected = points.find(({ id }) => id === nextSelectedId);
           if (selected) map.panTo(selected.coordinates);
@@ -235,14 +237,27 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         });
       }
 
+      // `[2026-10-05]` 「내 위치」 button: the camera to the customer, at least street level, and from then on the customer's own camera.
+      function centerOn(at: { lat: number; lng: number }, keepZoom = false) {
+        if (destroyed) return;
+        // Leaflet drops a new view while a zoom animation runs: wait for it to end.
+        if ((map as unknown as { _animatingZoom?: boolean })._animatingZoom) { map.once("zoomend", () => centerOn(at, keepZoom)); return; }
+        userMoved = true;
+        if (keepZoom) map.panTo([at.lat, at.lng]);
+        else map.setView([at.lat, at.lng], Math.max(map.getZoom(), 15));
+      }
+
       try { update(options.points, options.selectedId, options.lines); setMe(options.me ?? null); setStays(options.stays ?? []); }
       catch (error) { clearMarkers(); map.remove(); throw error; }
+      sayView();
 
       return {
         update,
         setMe,
         setStays,
         fit: fitAll,
+        zoomBy(delta) { if (!destroyed) { if (delta > 0) map.zoomIn(); else map.zoomOut(); } },
+        centerOn,
         resize() {
           if (destroyed || !container.clientWidth || !container.clientHeight) return;
           map.invalidateSize();
@@ -252,6 +267,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         destroy() {
           if (destroyed) return;
           destroyed = true;
+          clearTimeout(pulseTimer);
           clearMarkers();
           map.remove();
           container.replaceChildren();

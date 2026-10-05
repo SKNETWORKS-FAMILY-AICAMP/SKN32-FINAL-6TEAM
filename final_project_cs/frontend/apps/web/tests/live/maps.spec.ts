@@ -56,7 +56,7 @@ test.describe(`${provider} 지도 어댑터 · SDK 계약 대역`, () => {
     await showPane(page, "지도");
     await expect(thirdMarker).toHaveAttribute("aria-pressed", "true");
     await expect.poll(async () => (await readMapSdk(page))?.pans.at(-1)).toEqual({ lat: 37.57, lng: 127.01 });
-    await firstMarker.click();
+    await firstMarker.locator("[data-pin-body]").click();                                          // 핀 상자의 한가운데는 좌표 자리(눌리지 않는 곳) — 누르는 곳은 물방울 몸통이다
     await expect(firstMarker).toHaveAttribute("aria-pressed", "true");
     await showPane(page, "일정");
     await expect(timeline.locator('article[data-selected="true"]')).toContainText("첫 지도 장소");
@@ -129,7 +129,7 @@ test.describe(`${provider} 지도 어댑터 · SDK 계약 대역`, () => {
     await expect(firstMarker).toBeVisible();
     await expect.poll(async () => (await readMapSdk(page))?.resizes ?? 0).toBeGreaterThan(initialResizes);
     await noHorizontalScroll(page);
-    await marker(page, `3. ${literalTitle} · 2026-10-01 12:00–13:00`).click();
+    await marker(page, `3. ${literalTitle} · 2026-10-01 12:00–13:00`).locator("[data-pin-body]").click();
     await page.locator("#trip-pane-map").getByRole("button", { name: "일정 상세 보기", exact: true }).click();
     await expect(page.getByRole("button", { name: "일정", exact: true })).toHaveAttribute("aria-pressed", "true");
     await expect(page.locator('#trip-pane-schedule article[data-selected="true"]')).toContainText(literalTitle);
@@ -148,7 +148,7 @@ test.describe(`${provider} 지도 어댑터 · SDK 계약 대역`, () => {
     await expect.poll(async () => (await readMapSdk(page))?.lines.filter((line) => line.attached).length).toBe(2);
     const drawn = (await readMapSdk(page))?.lines.filter((line) => line.attached) ?? [];
     const road = drawn.find((line) => !line.dashed)!, guess = drawn.find((line) => line.dashed)!;
-    expect(road.path).toEqual([{ lat: 37.5796, lng: 126.977 }, { lat: 37.575, lng: 126.983 }, { lat: 37.57, lng: 126.99 }]);   // the server sent [lng, lat]
+    expect(road.path).toEqual([{ lat: 37.5796, lng: 126.977 }, { lat: 37.5745, lng: 126.981 }, { lat: 37.57, lng: 126.99 }]);   // the server sent [lng, lat]
     expect(guess.path).toEqual([{ lat: 37.575, lng: 126.98 }, { lat: 37.5796, lng: 126.977 }]);
     await expect(page.locator("#trip-pane-map")).toContainText("경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)");
     await expect(page.locator("#trip-pane-map")).toContainText("점선은 길을 몰라 두 곳을 직선으로 이은 구간이에요.");
@@ -173,7 +173,7 @@ test.describe(`${provider} 지도 어댑터 · SDK 계약 대역`, () => {
     await expect(region.getByRole("img", { name: "내 위치", exact: true })).toBeVisible();
     await expect.poll(me).toEqual([{ lat: 37.575, lng: 127 }]);
     await expect.poll(async () => (await readMapSdk(page))?.circles.filter((circle) => circle.attached).map((circle) => circle.radius)).toEqual([40]);
-    await expect(region.getByRole("button", { name: /내 위치/ })).toHaveCount(0);                        // 핀이 아니다: 누르는 단추가 아니다
+    await expect(region.getByRole("button", { name: "내 위치", exact: true })).toHaveCount(0);                        // 핀이 아니다: 누르는 단추가 아니다
     await expect(marker(page, "1. 첫 지도 장소 · 2026-10-01 09:00–10:00")).toBeVisible();
     const fitsBefore = (await readMapSdk(page))?.fits.length ?? 0;
     await context.setGeolocation({ latitude: 37.58, longitude: 127.005, accuracy: 900 });

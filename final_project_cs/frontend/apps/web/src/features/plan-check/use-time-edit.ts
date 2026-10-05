@@ -16,6 +16,8 @@ export interface TimeEdit {
   endTouched: boolean;
   /** The stop as it was when the editor opened - what the end is carried along from. */
   first: { start: number | null; end: number | null };
+  /** `[2026-10-05]` Dragged straight from the time (or its dot) with no form open: the form stays shut while the time is held, and opens only when what was dragged cannot be sent. */
+  direct?: boolean;
 }
 
 /** What the maths says about that: the stops that would change (the stop itself first in day order), what is allowed, and why not when it is not. */
@@ -45,6 +47,11 @@ export const heldTexts = (kind: TimeKind, held: Exclude<Held, null>): readonly [
     : ["여유를 다 썼어요 · 더 늦추면 뒤 일정이 밀려요", "The free time is used up · going on pushes the stops behind"])
   : ["앞 일정과 붙었어요 · 더 당기면 앞 일정이 당겨져요", "Touching the stop before · going on pulls it earlier"];
 
+/** The pointer handlers of something a time is dragged by (the grip in the form, the time itself, its dot). */
+export interface Grab { onPointerDown: (event: PointerEvent<HTMLElement>) => void; onPointerMove: (event: PointerEvent<HTMLElement>) => void; onPointerUp: (event: PointerEvent<HTMLElement>) => void; onPointerCancel: (event: PointerEvent<HTMLElement>) => void }
+/** A press that moves this far (px) up or down is a drag; one that does not is a tap (it opens the form). */
+const LIFT_PX = 6;
+
 export interface TimeEditHandles {
   edit: TimeEdit | null;
   preview: TimePreview | null;
@@ -61,7 +68,13 @@ export interface TimeEditHandles {
   /** Send what is previewed (the screen decides how: it may have to save the proposed plan first). */
   apply: () => Promise<void>;
   /** Handlers for the grip: drag up and down, or arrow keys for 5 minutes (Shift 30). A release applies. */
-  grip: { onPointerDown: (event: PointerEvent<HTMLElement>) => void; onPointerMove: (event: PointerEvent<HTMLElement>) => void; onPointerUp: (event: PointerEvent<HTMLElement>) => void; onPointerCancel: (event: PointerEvent<HTMLElement>) => void; onKeyDown: (event: KeyboardEvent<HTMLElement>) => void };
+  grip: Grab & { onKeyDown: (event: KeyboardEvent<HTMLElement>) => void };
+  /**
+   * `[2026-10-05 사용자 선택 — 시간 조정 합친 안]` The time of a stop (or of leaving it) and its dot can be taken and dragged AT ONCE, no tap first: up = earlier, down = later, the same rules as the grip.
+   * A press that does not move is a tap and opens the form as before (`dragEnded` says the click that ends a drag is not one of those).
+   */
+  handle: (item: PlanItem, list: List, kind?: TimeKind) => Grab;
+  dragEnded: () => boolean;
 }
 
 /**
@@ -141,19 +154,21 @@ export function useTimeEdit({ views, commit, onNotice }: {
     return { changes, range, along: alongOf(changes), problem: "", day: times, title: item.title };
   }, [edit, subject, limits]);
 
+  /** What the editor starts as for a stop: its start, or - for the time of leaving - its end. A stop with no end leaves after the length the maths assumes for it. */
+  const build = (item: PlanItem, list: List, kind: TimeKind, direct = false): TimeEdit => {
+    const start = parseHm(item.startsAt);
+    const end = parseHm(item.endsAt);
+    const leaves = start === null ? null : end !== null && end > start ? end : start + ASSUMED_MINUTES;
+    return kind === "depart"
+      ? { id: item.id, list, kind, start: item.startsAt, end: leaves === null ? "" : formatHm(leaves), push: true, endTouched: true, first: { start, end: leaves }, direct }
+      : { id: item.id, list, kind, start: item.startsAt, end: item.endsAt, push: true, endTouched: false, first: { start, end }, direct };
+  };
   const open = (item: PlanItem, list: List, kind: TimeKind = "start") => {
     setFailure("");
-    setEdit((current) => {
-      if (current?.id === item.id && current.list === list && current.kind === kind) return null;
-      const start = parseHm(item.startsAt);
-      const end = parseHm(item.endsAt);
-      // A stop with no end leaves after the length the maths assumes for it.
-      const leaves = start === null ? null : end !== null && end > start ? end : start + ASSUMED_MINUTES;
-      return kind === "depart"
-        ? { id: item.id, list, kind, start: item.startsAt, end: leaves === null ? "" : formatHm(leaves), push: true, endTouched: true, first: { start, end: leaves } }
-        : { id: item.id, list, kind, start: item.startsAt, end: item.endsAt, push: true, endTouched: false, first: { start, end } };
-    });
+    setEdit((current) => current?.id === item.id && current.list === list && current.kind === kind ? null : build(item, list, kind));
   };
+  /** What was dragged cannot be sent as it stands: the form opens, to say why and to be fixed by hand. */
+  const showForm = () => setEdit((current) => current?.direct ? { ...current, direct: false } : current);
   const close = () => { grabbed.current = null; heldBefore.current = null; setDragging(false); setHeld(null); setFailure(""); setEdit(null); };
   const patch = (change: Partial<TimeEdit>) => { setFailure(""); setEdit((current) => current && { ...current, ...change }); };
   /** A new start: the end field follows it by the same distance until the customer types an end of his own. */
@@ -173,11 +188,11 @@ export function useTimeEdit({ views, commit, onNotice }: {
 
   async function apply() {
     if (!edit || !preview) return;
-    if (preview.problem) return;
+    if (preview.problem) { showForm(); return; }
     if (!preview.changes.length) { close(); return; }
     setBusy(true);
     try { await commit(edit.list, preview.changes); close(); }
-    catch (error) { setFailure(error instanceof Error ? error.message : String(error)); }
+    catch (error) { setFailure(error instanceof Error ? error.message : String(error)); showForm(); }
     finally { setBusy(false); }
   }
 
@@ -258,9 +273,53 @@ export function useTimeEdit({ views, commit, onNotice }: {
     },
   };
 
+  // ★`[2026-10-05]` Taking the time (or its dot) and dragging with no tap first. The edit opens (shut form: `direct`) when the press has moved `LIFT_PX`; from then on it is the grip's own drag.
+  const lift = useRef<{ id: string; kind: TimeKind; list: List; y: number; origin: number; moved: boolean } | null>(null);
+  const swallow = useRef(false);
+  const handle = (item: PlanItem, list: List, kind: TimeKind = "start"): Grab => ({
+    onPointerDown: (event) => {
+      swallow.current = false;
+      if (busy || (event.pointerType === "mouse" && event.button !== 0)) return;
+      const already = edit?.id === item.id && edit.list === list && edit.kind === kind;
+      const origin = already ? valueMinutes() : parseHm(kind === "depart" ? build(item, list, kind).end : item.startsAt);
+      if (origin === null) return;
+      lift.current = { id: item.id, kind, list, y: event.clientY, origin, moved: false };
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    onPointerMove: (event) => {
+      const taken = lift.current;
+      if (!taken) return;
+      if (!taken.moved) {
+        if (Math.abs(event.clientY - taken.y) < LIFT_PX) return;
+        taken.moved = true;
+        swallow.current = true;                                              // the click that follows this drag is not a tap
+        if (!(edit?.id === item.id && edit.list === list && edit.kind === kind)) { setFailure(""); setEdit(build(item, list, kind, true)); }
+        grabbed.current = { y: taken.y, origin: taken.origin };
+        heldBefore.current = null;
+        setDragging(true);
+        return;
+      }
+      grip.onPointerMove(event);
+    },
+    onPointerUp: (event) => {
+      const taken = lift.current;
+      lift.current = null;
+      if (!taken?.moved) { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); return; }
+      grip.onPointerUp(event);
+    },
+    onPointerCancel: (event) => {
+      const taken = lift.current;
+      lift.current = null;
+      if (!taken?.moved) return;
+      grip.onPointerCancel(event);
+      close();
+    },
+  });
+  const dragEnded = () => { const was = swallow.current; swallow.current = false; return was; };
+
   const shown = preview && failure ? { ...preview, problem: failure } : preview;
   const drag: TimeDrag | null = dragging && edit && shown && shown.day && !shown.problem
     ? { id: edit.id, kind: edit.kind, title: shown.title, from: edit.kind === "depart" ? edit.first.end : edit.first.start, to: valueMinutes(), held, day: shown.day, changes: shown.changes }
     : null;
-  return { edit, preview: shown, busy, drag, open, close, setStart: moveStart, setEnd: (end) => patch({ end, endTouched: true }), setPush: (push) => patch({ push }), step, apply, grip };
+  return { edit, preview: shown, busy, drag, open, close, setStart: moveStart, setEnd: (end) => patch({ end, endTouched: true }), setPush: (push) => patch({ push }), step, apply, grip, handle, dragEnded };
 }

@@ -1,19 +1,22 @@
 import type { Coordinates, MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_BOX, ME_LABEL, meKey, STAY_BOX, staysKey } from "./me";
-import { createPin, geometryKey, layoutPins, PIN_BOX, placePin, pointLabel, setPinSelected, type PinSlot } from "./pin";
+import { createPin, geometryKey, layoutPins, PIN_BOX, placePin, pointLabel, pulsePin, setPinSelected, type PinSlot } from "./pin";
 import { createSdkLoader } from "./sdk-loader";
 
 interface NaverLatLng { lat(): number; lng(): number }
 interface NaverSize { width: number; height: number }
 /** Optional: a build of the SDK without it still shows the pins (they then keep their first side). */
 interface NaverProjection { fromCoordToOffset(position: NaverLatLng): { x: number; y: number } }
+/** Optional, every method: whatever this build of the SDK has is used, and nothing is guessed. */
+interface NaverBounds { south?(): number; west?(): number; north?(): number; east?(): number; getNE?(): NaverLatLng; getSW?(): NaverLatLng }
 interface NaverMap {
   getProjection?(): NaverProjection | undefined;
+  getBounds?(): NaverBounds | undefined;
   panTo(position: NaverLatLng): void;
   setCenter(position: NaverLatLng): void;
   getCenter(): NaverLatLng;
-  setZoom(zoom: number): void;
+  setZoom(zoom: number, effect?: boolean): void;
   getZoom?(): number;
   fitBounds(points: NaverLatLng[], margins: { top: number; right: number; bottom: number; left: number; maxZoom: number }): void;
   setSize(size: NaverSize): void;
@@ -68,7 +71,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
       const sdk = await loader.load(clientId);
       const initial = options.points[0]?.coordinates ?? { lat: 37.5665, lng: 126.978 };
       const map = new sdk.Map(container, {
-        center: new sdk.LatLng(initial.lat, initial.lng), zoom: 14, minZoom: 3, maxZoom: 18, zoomControl: true,
+        center: new sdk.LatLng(initial.lat, initial.lng), zoom: 14, minZoom: 3, maxZoom: 18, zoomControl: false,        // [2026-10-05] the page draws the map's buttons itself (`map-controls.tsx`)
       });
       let destroyed = false;
       let points: MapPoint[] = [];
@@ -97,6 +100,15 @@ export function createNaverAdapter(clientId: string): MapAdapter {
       const idleListener = sdk.Event.addListener(map, "idle", relayout);
       // [2026-10-05] The zoom level goes to the screen (it asks for the detailed route lines when zoomed in).
       const zoomListener = sdk.Event.addListener(map, "idle", () => { const zoom = map.getZoom?.(); if (typeof zoom === "number") options.onZoom?.(zoom); });
+      // [2026-10-05] What the map shows goes to the screen (the scale ruler, the chips for stops out of view) - nothing when this build of the SDK cannot say it.
+      const sayView = () => {
+        const bounds = map.getBounds?.(), zoom = map.getZoom?.();
+        const ne = bounds?.getNE?.(), sw = bounds?.getSW?.();
+        const south = bounds?.south?.() ?? sw?.lat(), west = bounds?.west?.() ?? sw?.lng(), north = bounds?.north?.() ?? ne?.lat(), east = bounds?.east?.() ?? ne?.lng();
+        if (destroyed || [south, west, north, east, zoom].some((value) => typeof value !== "number") || !container.clientWidth || !container.clientHeight) return;
+        options.onView?.({ south: south!, west: west!, north: north!, east: east!, width: container.clientWidth, height: container.clientHeight, zoom: zoom! });
+      };
+      const viewListener = sdk.Event.addListener(map, "idle", sayView);
 
       function clearMarkers() {
         markers.forEach(({ marker, pin, listener, onKey }) => {
@@ -160,6 +172,17 @@ export function createNaverAdapter(clientId: string): MapAdapter {
         routes.forEach((route) => route.setMap(null));
         routes = [];
       }
+      // `[2026-10-05 사용자 선택 — 첫 지도 시점 안 C]` A day is shown whole and its first stop is pointed out once, when the camera has come to rest.
+      let pulseTimer: ReturnType<typeof setTimeout> | undefined;
+      function pulseFirst() {
+        clearTimeout(pulseTimer);
+        pulseTimer = setTimeout(() => {
+          if (destroyed) return;
+          const first = points.find((point) => point.order === 1 && !point.tone);
+          const marker = first && markers.find((entry) => entry.id === first.id);
+          if (marker) pulsePin(marker.pin);
+        }, 900);
+      }
 
       function drawLines(nextLines: MapLine[]) {
         const key = linesKey(nextLines);
@@ -220,6 +243,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
           needsFit = true;
           centredOnMe = false;          // [2026-10-05] a different set of pins: an empty day after it centres on the customer again
           fit();
+          pulseFirst();
         } else if (nextSelectedId !== selectedId) {
           const selected = points.find(({ id }) => id === nextSelectedId);
           if (selected) map.panTo(new sdk.LatLng(selected.coordinates.lat, selected.coordinates.lng));
@@ -261,7 +285,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
         stayMarkers = stays.map((stay) => quietMarker(stay.coordinates, stay.label, createStayDot(stay), STAY_BOX, -1));
       }
 
-      function cleanUp() { clearMarkers(); clearLines(); removeMe(); clearStays(); sdk.Event.removeListener(idleListener); sdk.Event.removeListener(zoomListener); unwatch(); map.destroy(); }
+      function cleanUp() { clearTimeout(pulseTimer); clearMarkers(); clearLines(); removeMe(); clearStays(); sdk.Event.removeListener(idleListener); sdk.Event.removeListener(zoomListener); sdk.Event.removeListener(viewListener); unwatch(); map.destroy(); }
 
       try { update(options.points, options.selectedId, options.lines); setMe(options.me ?? null); setStays(options.stays ?? []); }
       catch (error) { cleanUp(); throw error; }
@@ -271,6 +295,13 @@ export function createNaverAdapter(clientId: string): MapAdapter {
         setMe,
         setStays,
         fit() { needsFit = true; fit(); },
+        zoomBy(delta) { const zoom = map.getZoom?.(); if (!destroyed && typeof zoom === "number") map.setZoom(zoom + delta, true); },
+        centerOn(at, keepZoom) {
+          if (destroyed) return;
+          if (keepZoom) { map.panTo(latLng(at)); return; }
+          map.setCenter(latLng(at));
+          map.setZoom(Math.max(map.getZoom?.() ?? 15, 15));
+        },
         resize() {
           if (destroyed || !container.clientWidth || !container.clientHeight) return;
           const center = map.getCenter();

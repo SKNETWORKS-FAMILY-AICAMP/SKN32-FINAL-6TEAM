@@ -7,5 +7,5 @@ import { createNaverAdapter } from "./providers/naver";
 
 export function NaverMap({ clientId, ...props }: MapViewProps & { clientId: string }) {
   const adapter = useMemo(() => createNaverAdapter(clientId), [clientId]);
-  return clientId.trim() ? <LiveMap {...props} adapter={adapter} name="네이버" fitButton /> : <MapUnavailable message="네이버지도 연결 설정이 필요해요." />;
+  return clientId.trim() ? <LiveMap {...props} adapter={adapter} name="네이버" /> : <MapUnavailable message="네이버지도 연결 설정이 필요해요." />;
 }

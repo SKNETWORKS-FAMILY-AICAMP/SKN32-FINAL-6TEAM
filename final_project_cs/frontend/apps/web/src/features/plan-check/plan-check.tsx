@@ -97,6 +97,11 @@ export interface PlanCheckActions {
    * by `applyRecommended` or let go by `discardPreview`. `[2026-10-03]` Pushing past the end of the list or pressing the button never changes the plan.
    */
   previewRecommendAll?: () => Promise<AutoResult>;
+  /**
+   * `[2026-10-05]` Whether 「전체 자동 추천」 has anything to change - read from the dry run that is already asked for in the background, and shown nowhere.
+   * `null` = not known yet (never read as 「nothing」): the hint at the end of the list stays as it is until it is.
+   */
+  hasRecommendation?: () => Promise<boolean | null>;
   applyRecommended?: () => Promise<AutoResult>;
   discardPreview?: () => void;
   /** Fix a stop so re-planning and recommendations keep it (「잠금」 — 「반드시 포함」). */
@@ -347,6 +352,13 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
    */
   const [recommended, setRecommended] = useState<{ count: number; was: Record<string, string> } | null>(null);
   const previewing = Boolean(recommended && previewView);
+  // ★`[2026-10-05 사용자 선택 — 스크롤 끝 안 A]` The server said there is nothing to recommend for the plan AS IT IS (`noFix` holds that plan's mark; a change of the plan makes it stale):
+  //   the hint at the end of the list is switched off and says why, and pushing on does not take the customer anywhere - the list stays where it is, shakes a little and says it once.
+  const [noFix, setNoFix] = useState<string | null>(null);
+  const [shake, setShake] = useState(false);
+  const nudging = useRef(false);
+  const planKey = useMemo(() => view.items.map((item) => [item.id, item.verdict ?? "", item.startsAt, item.endsAt, item.place, item.locked ? 1 : 0].join("|")).join(";"), [view.items]);
+  const noFixNow = noFix === planKey;
   const [side, setSide] = useState<"before" | "after">("before");
   // The counts in the head, pressed, narrow the list to what needs a look / what was changed.
   const [filter, setFilter] = useState<ListFilter | null>(null);
@@ -648,10 +660,15 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
    * ★`[2026-10-03]` 「전체 자동 추천」 (the button, and one more push past the end of the list) only SHOWS the plan as it would be: the dry run of the server saves nothing.
    * ★`[2026-10-04]` It stands under the plan as it is, and the list scrolls on into it.
    */
-  function recommendAll() {
+  function recommendAll(source: "button" | "pull" = "button") {
     void run(async () => {
       const outcome = await actions.previewRecommendAll!();
-      if (!outcome.changes.length) return noAlternative(outcome);
+      if (!outcome.changes.length) {
+        setNoFix(planKey);
+        // ★The button leads to what needs fixing by hand (2026-10-03). Pushing past the end does not: the list stays where it is, and says so.
+        if (source === "pull") { nudge(); return null; }
+        return noAlternative(outcome);
+      }
       setRecommended({ count: outcome.changes.length, was: wasOf(outcome) });
       pageAt.current = bodyBox.current?.scrollTop ?? 0;
       setTurn(skipAnimation ? null : "forward");
@@ -659,6 +676,19 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
       return { text: t(`확인이 필요한 일정 ${outcome.changes.length}곳을 바꾼 수정안이에요`, `The proposed plan changes ${outcome.changes.length} stop${outcome.changes.length > 1 ? "s" : ""}`),
         sub: `${changesLine(outcome)} · ${t("아직 저장하지 않았어요 · 위로 올리면 변경 전이에요", "not saved yet · scroll up for the plan as it was")}` };
     }, true);
+  }
+  const noFixWhy = t("권장 수정안이 없어요", "No recommended fix");
+  /**
+   * The list shakes a little where it stands and the notice says why - ONCE: another push or press while the notice is up (and a moment after) is ignored,
+   * so notices do not pile up and the list does not keep trembling.
+   */
+  function nudge() {
+    if (nudging.current) return;
+    nudging.current = true;
+    setShake(true);
+    setToast({ text: noFixWhy, sub: t("확인이 필요한 곳은 직접 고쳐 주세요", "Fix what needs a look by hand") });
+    setTimeout(() => setShake(false), 480);
+    setTimeout(() => { nudging.current = false; }, 3100);
   }
   /** Turn to the other page (the dots, the pull past the end of the list, 「계속 내리면」). The way back finds the plan as it was where the customer left it. */
   function flip(next: "before" | "after") {
@@ -816,9 +846,22 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
 
   // Pushing on past the end of the list shows the plan with the recommended fixes under it. ★`[2026-10-04 사용자 지시]` At the end of any day (or of the whole list), not only the last.
   const canRecommend = Boolean(actions.previewRecommendAll) && done && !changing && !registered && !recommended && needsLeft(view, removedSet).total > 0;
+  // `[2026-10-05]` The hint is switched off from the start when the dry run (asked for in the background) found nothing to change - not only after the first push.
+  useEffect(() => {
+    if (!canRecommend || noFixNow || !actions.hasRecommendation) return;
+    let live = true;
+    let tries = 0;
+    const ask = () => void actions.hasRecommendation!().then((has) => {
+      if (!live) return;
+      if (has === false) setNoFix(planKey);
+      else if (has === null && tries++ < 6) setTimeout(ask, 500);           // not read yet: ask again shortly
+    }, () => undefined);
+    ask();
+    return () => { live = false; };
+  }, [actions, canRecommend, noFixNow, planKey]);
   // `[2026-10-05]` Past the end of the plan as it was, with a proposal ready: the next page. At the top of the proposed plan: back. (No proposal yet: it is asked for, as before.)
   const pull = usePullPastEnd(bodyBox, {
-    onEnd: previewing && side === "before" ? () => flip("after") : canRecommend && !frozen ? recommendAll : undefined,
+    onEnd: previewing && side === "before" ? () => flip("after") : canRecommend && !frozen ? (noFixNow ? nudge : () => recommendAll("pull")) : undefined,
     onStart: previewing && side === "after" ? () => flip("before") : undefined,
   });
   // `[2026-10-03 사용자]` While the check is drawn row by row the list follows the newest row (it stayed at the top while rows were added below).
@@ -858,6 +901,12 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
       kind: edit.kind, id: edit.id, start: edit.start, end: edit.end, push: edit.push, busy: timeEdit.busy, problem: preview.problem,
       range: { min: formatHm(preview.range.min), max: formatHm(preview.range.max) }, along: preview.along, count: preview.changes.length,
       setStart: timeEdit.setStart, setEnd: timeEdit.setEnd, setPush: timeEdit.setPush, step: timeEdit.step, apply: () => void timeEdit.apply(), cancel: timeEdit.close, grip: timeEdit.grip,
+      direct: Boolean(edit.direct),
+      undo: (() => {
+        const plan = list === "after" && previewView ? previewView : view;
+        const item = plan.items.find((entry) => entry.id === edit.id);
+        return item && adjustedIn(plan).has(item.id) ? () => { timeEdit.close(); revertTime(item); } : null;
+      })(),
     };
   };
   const contextFor = (was: Readonly<Record<string, string>>, list: "before" | "after"): RowContext => ({
@@ -872,6 +921,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     onRecommend: recommend,
     time: timeUi(list),
     onOpenTime: (item) => timeEdit.open(item, list),
+    timeHandle: (item, kind) => timeEdit.handle(item, list, kind),
+    dragEnded: timeEdit.dragEnded,
     onOpenDepart: (fromId) => { const item = (list === "after" && previewView ? previewView : view).items.find((entry) => entry.id === fromId); if (item) timeEdit.open(item, list, "depart"); },
     timeAdjusted: adjustedIn(list === "after" ? previewView : view),
     onRevertTime: revertTime,
@@ -895,7 +946,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   return <div ref={checkingBox} className={styles.checking} data-sheet={custom !== null ? "custom" : sheet} data-changing={changing ? true : undefined} data-dragging={dragging || undefined} data-compact={compact && done && !changing ? true : undefined}
     style={custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
     <div className={styles.map}>
-      <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" topInset={64} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin} />
+      <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" topInset={64} bottomInset={24} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin} />
     </div>
     {unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
     {changing && headerSlot && createPortal(
@@ -973,7 +1024,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
             {(() => {
               const proposed = previewing && side === "after" && previewView;
               return <div key={`${proposed ? "after" : "before"}:${String(listDay)}`} className={styles.page} data-slide={slide ?? undefined} data-proposed={proposed ? true : undefined} data-turn={turn ?? undefined}
-                data-pull={pull.edge ?? undefined} style={{ "--pull": pull.progress } as CSSProperties} onAnimationEnd={() => setTurn(null)}>
+                data-pull={pull.edge ?? undefined} data-shake={shake || undefined} style={{ "--pull": pull.progress } as CSSProperties} onAnimationEnd={() => setTurn(null)}>
                 {proposed && <Act className={styles.pullHintTop} why={frozen} explain={explain} onPress={() => flip("before")} data-edge={pull.edge ?? undefined} style={{ "--pull": pull.edge === "start" ? pull.progress : 0 } as CSSProperties}>
                   <ChevronsUp size={16} strokeWidth={1.8} aria-hidden="true" />
                   <span>{t("계속 올리면 변경 전 일정이에요", "Keep going up for the plan as it was")}</span>
@@ -988,12 +1039,17 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
             {done && view.items.length > 0 && <p className={styles.credit}>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a>
               {drawn.length > 0 && <><br />{lineShapes?.attribution}{routeNotes(drawn).map((note) => <span key={note} data-route-note><br />{note}</span>)}</>}</p>}
             {nextDay && <p className={styles.dayHint}>{t(`옆으로 밀면 ${nextDay.day}일차${nextDay.date ? ` ${dayLabel(nextDay.date, language)}` : ""} 일정이 나와요`, `Swipe sideways for day ${nextDay.day}`)}<ChevronsRight size={15} strokeWidth={1.8} aria-hidden="true" /></p>}
-            {(canRecommend || (previewing && side === "before")) && <Act className={styles.pullHint} why={frozen} explain={explain} onPress={previewing ? () => flip("after") : recommendAll} data-edge={pull.edge ?? undefined}
-              style={{ "--pull": pull.progress } as CSSProperties}>
-              <ChevronsDown size={16} strokeWidth={1.8} aria-hidden="true" />
-              <span>{previewing ? t("계속 내리면 수정안이에요", "Keep going down for the proposed plan") : t("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요", "Keep scrolling to see the plan with the recommended fixes")}</span>
-              <span className={styles.pullBar} aria-hidden="true"><span /></span>
-            </Act>}
+            {(canRecommend || (previewing && side === "before")) && (canRecommend && !previewing && noFixNow
+              ? <Act className={styles.pullHint} why={frozen ?? noFixWhy} explain={frozen ? explain : nudge} onPress={nudge}>
+                <ChevronsDown size={16} strokeWidth={1.8} aria-hidden="true" />
+                <span>{t("권장 수정안이 없어서 더 보여 드릴 게 없어요", "No recommended fix, so there is nothing more to show")}</span>
+              </Act>
+              : <Act className={styles.pullHint} why={frozen} explain={explain} onPress={previewing ? () => flip("after") : () => recommendAll("button")} data-edge={pull.edge ?? undefined}
+                style={{ "--pull": pull.progress } as CSSProperties}>
+                <ChevronsDown size={16} strokeWidth={1.8} aria-hidden="true" />
+                <span>{previewing ? t("계속 내리면 수정안이에요", "Keep going down for the proposed plan") : t("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요", "Keep scrolling to see the plan with the recommended fixes")}</span>
+                <span className={styles.pullBar} aria-hidden="true"><span /></span>
+              </Act>)}
             {done && !view.items.length && <p className={styles.empty}>{t("남은 일정이 없어요", "No stops left")}</p>}
             {!done && !follow.following && <button type="button" className={styles.followPill} onClick={follow.resume}><ChevronsDown size={14} strokeWidth={1.8} aria-hidden="true" />{t("확인 중인 곳으로", "Follow the check")}</button>}
           </div>
@@ -1002,7 +1058,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
             <button type="button" className={styles.pagerDot} aria-current={side === "after" ? "step" : undefined} aria-label={t("2. 수정안", "2. The proposed plan")} onClick={() => turnTo("after")}><span aria-hidden="true" /></button>
           </div>}
           {done && <ResultFooter view={shown} registration={registration} frozen={frozen} explain={explain} needsTotal={needCount} pendingRemovals={removed.length}
-            previewing={previewing && side === "after"} onAutoAll={actions.previewRecommendAll && recommendAll} onRecheck={actions.recheck || actions.remove ? recheck : undefined} onRegisterPreview={registerPreview} />}
+            previewing={previewing && side === "after"} onAutoAll={actions.previewRecommendAll && (() => recommendAll("button"))} onRecheck={actions.recheck || actions.remove ? recheck : undefined} onRegisterPreview={registerPreview} />}
         </>}
     </section>
     {timeEdit.drag && <TimeDragOverlay drag={timeEdit.drag} />}

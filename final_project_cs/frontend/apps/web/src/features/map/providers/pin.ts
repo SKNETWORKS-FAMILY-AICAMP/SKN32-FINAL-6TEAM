@@ -146,6 +146,26 @@ export function setPinSelected(pin: HTMLElement, selected: boolean) {
   body.style.pointerEvents = "auto";
 }
 
+/**
+ * `[2026-10-05 사용자 선택 — 첫 지도 시점 안 C]` A day is shown whole, and its FIRST stop is pointed out once: its pin swells a little and a ring spreads from it, twice. Done with the browser's own
+ * animation API so it needs no stylesheet; a screen that asks for less motion gets no animation.
+ */
+export function pulsePin(pin: HTMLElement) {
+  if (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const body = bodyOf(pin);
+  if (!body || typeof body.animate !== "function") return;
+  const ring = document.createElement("span");
+  ring.dataset.pinPulse = "";
+  Object.assign(ring.style, {
+    position: "absolute", left: body.style.left, top: body.style.top, width: `${PIN_BODY}px`, height: `${PIN_BODY}px`, boxSizing: "border-box",
+    border: "3px solid var(--color-selected)", borderRadius: "50%", pointerEvents: "none", opacity: "0",
+  });
+  pin.append(ring);
+  const timing = { duration: 900, iterations: 2, easing: "ease-out" } as const;
+  ring.animate([{ transform: "scale(1)", opacity: 0.85 }, { transform: "scale(2.3)", opacity: 0 }], timing).onfinish = () => ring.remove();
+  body.animate([{ transform: body.style.transform || "none" }, { transform: "scale(1.22)" }, { transform: body.style.transform || "none" }], { ...timing, duration: 900 });
+}
+
 /** Presentation-only updates must not reset the user's camera. */
 export function geometryKey(points: MapPoint[]) {
   return JSON.stringify(points.map(({ id, coordinates }) => [id, coordinates.lat, coordinates.lng]));

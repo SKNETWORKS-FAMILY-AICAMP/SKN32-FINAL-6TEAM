@@ -330,10 +330,10 @@ test("지도에 「모든 일정 보기」 단추가 확대·축소 단추 옆�
   const before = (await first.boundingBox())!;
   const map = page.getByRole("region", { name: "여행 지도" });
   await map.hover({ position: { x: 200, y: 100 } });                                              // 단추는 지도에 포인터가 있을 때 보인다
-  const zoom = page.locator(".leaflet-control-zoom");
+  const zoom = page.getByRole("group", { name: "지도 단추" });
   await expect(zoom.getByRole("button", { name: "모든 일정 보기" })).toBeVisible();                   // 확대·축소와 같은 묶음 안
-  await zoom.getByRole("button", { name: "Zoom in" }).click();
-  await zoom.getByRole("button", { name: "Zoom in" }).click();
+  await zoom.getByRole("button", { name: "확대" }).click();
+  await zoom.getByRole("button", { name: "확대" }).click();
   await expect.poll(async () => Math.abs((await first.boundingBox())!.x - before.x)).toBeGreaterThan(20);   // 확대하니 핀이 제자리에서 멀어졌다
   await zoom.getByRole("button", { name: "모든 일정 보기" }).click();
   await expect.poll(async () => { const now = (await first.boundingBox())!; return Math.abs(now.x - before.x) + Math.abs(now.y - before.y); }, { timeout: 8_000 }).toBeLessThan(4);   // 처음 자리로

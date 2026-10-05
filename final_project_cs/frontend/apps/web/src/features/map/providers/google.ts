@@ -1,7 +1,7 @@
 import type { Coordinates, MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_LABEL, meKey, staysKey } from "./me";
-import { createPin, geometryKey, layoutPins, placePin, pointLabel, setPinSelected, type PinSlot } from "./pin";
+import { createPin, geometryKey, layoutPins, placePin, pointLabel, pulsePin, setPinSelected, type PinSlot } from "./pin";
 import { createSdkLoader } from "./sdk-loader";
 
 interface GoogleBounds { extend(position: Coordinates): void }
@@ -16,6 +16,8 @@ interface GoogleMap {
   /** Optional: a build of the SDK without them still shows the pins (they then keep their first side). */
   getZoom?(): number | undefined;
   getProjection?(): GoogleProjection | undefined;
+  /** Optional: without it the page draws no scale ruler and no chips for stops out of view. */
+  getBounds?(): { toJSON(): { south: number; west: number; north: number; east: number } } | undefined;
   fitBounds(bounds: GoogleBounds, padding: number | { top: number; right: number; bottom: number; left: number }): void;
   unbindAll(): void;
 }
@@ -34,7 +36,7 @@ interface GooglePolylineOptions {
 interface GoogleSdk {
   Map: new (container: HTMLElement, options: {
     center: Coordinates; zoom: number; minZoom: number; maxZoom: number; mapId: string;
-    mapTypeControl: boolean; streetViewControl: boolean; fullscreenControl: boolean; gestureHandling: string;
+    mapTypeControl: boolean; streetViewControl: boolean; fullscreenControl: boolean; zoomControl: boolean; gestureHandling: string;
   }) => GoogleMap;
   LatLngBounds: new () => GoogleBounds;
   /** Optional: a build of the SDK without lines still shows the pins. */
@@ -66,7 +68,7 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
       const map = new sdk.Map(container, {
         center: options.points[0]?.coordinates ?? { lat: 37.5665, lng: 126.978 },
         zoom: 14, minZoom: 3, maxZoom: 18, mapId,
-        mapTypeControl: false, streetViewControl: false, fullscreenControl: false, gestureHandling: "cooperative",
+        mapTypeControl: false, streetViewControl: false, fullscreenControl: false, zoomControl: false, gestureHandling: "cooperative",
       });
       let destroyed = false;
       let points: MapPoint[] = [];
@@ -97,6 +99,13 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
       sdk.event.addListener?.(map, "idle", relayout);
       // [2026-10-05] The zoom level goes to the screen (it asks for the detailed route lines when zoomed in).
       sdk.event.addListener?.(map, "idle", () => { const zoom = map.getZoom?.(); if (typeof zoom === "number") options.onZoom?.(zoom); });
+      // [2026-10-05] What the map shows goes to the screen (the scale ruler, the chips for stops out of view) - nothing when this build of the SDK cannot say it.
+      const sayView = () => {
+        const bounds = map.getBounds?.()?.toJSON(), zoom = map.getZoom?.();
+        if (destroyed || !bounds || typeof zoom !== "number" || !container.clientWidth || !container.clientHeight) return;
+        options.onView?.({ ...bounds, width: container.clientWidth, height: container.clientHeight, zoom });
+      };
+      sdk.event.addListener?.(map, "idle", sayView);
 
       function clearMarkers() {
         markers.forEach(({ marker, onClick }) => {
@@ -162,6 +171,17 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
         routes.forEach((route) => route.setMap(null));
         routes = [];
       }
+      // `[2026-10-05 사용자 선택 — 첫 지도 시점 안 C]` A day is shown whole and its first stop is pointed out once, when the camera has come to rest.
+      let pulseTimer: ReturnType<typeof setTimeout> | undefined;
+      function pulseFirst() {
+        clearTimeout(pulseTimer);
+        pulseTimer = setTimeout(() => {
+          if (destroyed) return;
+          const first = points.find((point) => point.order === 1 && !point.tone);
+          const marker = first && markers.find((entry) => entry.id === first.id);
+          if (marker) pulsePin(marker.pin);
+        }, 900);
+      }
 
       function drawLines(nextLines: MapLine[]) {
         const key = linesKey(nextLines);
@@ -216,6 +236,7 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
           needsFit = true;
           centredOnMe = false;          // [2026-10-05] a different set of pins: an empty day after it centres on the customer again
           fit();
+          pulseFirst();
         } else if (nextSelectedId !== selectedId) {
           const selected = points.find(({ id }) => id === nextSelectedId);
           if (selected) map.panTo(selected.coordinates);
@@ -273,6 +294,13 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
         setMe,
         setStays,
         fit() { needsFit = true; fit(); },
+        zoomBy(delta) { const zoom = map.getZoom?.(); if (!destroyed && typeof zoom === "number") map.setZoom(zoom + delta); },
+        centerOn(at, keepZoom) {
+          if (destroyed) return;
+          if (keepZoom) { map.panTo(at); return; }
+          map.setCenter(at);
+          map.setZoom(Math.max(map.getZoom?.() ?? 15, 15));
+        },
         resize() {
           if (destroyed || !container.clientWidth || !container.clientHeight) return;
           const center = map.getCenter();
@@ -283,6 +311,7 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
         destroy() {
           if (destroyed) return;
           destroyed = true;
+          clearTimeout(pulseTimer);
           cleanMap();
         },
       };

@@ -24,34 +24,34 @@
 }
 
 /*
- * `[2026-10-03 사용자 지시]` 지도의 확대·축소(+/−) 버튼: 화면의 다른 둥근 단추와 같은 모양으로, 지도 위에 포인터가 있거나(`:hover`) 지도를 막 눌렀을 때(`data-awake`,
- * 몇 초) 또는 키보드 초점이 그 안에 있을 때만 보인다. 평소에는 지도를 가리지 않는다.
+ * `[2026-10-05 사용자 선택]` 지도의 단추(＋ · 거리 눈금 · － · 모든 일정 보기 · 내 위치)는 세 지도(무료·구글·네이버) 모두 이 화면이 같은 모양으로 그린다. 옛 Leaflet 확대·축소 묶음과 따로 두던 「모든 일정 보기」는 없앴다.
+ * `[2026-10-03 사용자 지시]` 평소에는 지도를 가리지 않는다 — 지도 위에 포인터가 있거나(`:hover`) 막 눌렀을 때(`data-awake`, 몇 초) 또는 키보드 초점이 그 안에 있을 때만 보인다. 접은 탭은 흐리게 늘 남아 다시 펼칠 수 있다.
+ * 높이가 넉넉하면 세로로, 목록 창을 크게 열어 지도가 낮으면 같은 단추가 가로 한 줄로 펼쳐진다(`data-layout`).
  */
-.live :global(.leaflet-control-zoom) {
-  display: grid; gap: 8px; margin: 12px 0 0 12px !important; border: 0 !important; background: none !important; box-shadow: none !important;
-  opacity: 0; pointer-events: none; transition: opacity .2s ease;
-}
-.live:hover :global(.leaflet-control-zoom), .live:focus-within :global(.leaflet-control-zoom), .live[data-awake] :global(.leaflet-control-zoom) { opacity: 1; pointer-events: auto; }
-.live :global(.leaflet-control-zoom a) {
-  display: grid; place-items: center; width: 40px !important; height: 40px !important; padding: 0; line-height: 1 !important;
-  border: 1px solid var(--color-border) !important; border-radius: 50% !important; background: var(--color-surface) !important; color: var(--color-text) !important;
-  font: 600 22px/1 system-ui, sans-serif !important; text-indent: 0 !important;
+.controls { position: absolute; right: 16px; z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+.controls[data-layout="row"] { flex-direction: row-reverse; }
+.live:hover .controls, .live:focus-within .controls, .live[data-awake] .controls { opacity: 1; pointer-events: auto; }
+.controls[data-folded] { opacity: .7; pointer-events: auto; }
+.round, .fold {
+  display: grid; place-items: center; padding: 0; cursor: pointer; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text);
   box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 20%, transparent);
 }
-.live :global(.leaflet-control-zoom a:hover) { background: var(--color-soft) !important; }
-.live :global(.leaflet-control-zoom a:focus-visible) { outline: 2px solid var(--color-selected); outline-offset: 2px; }
-.live :global(.leaflet-control-zoom a.leaflet-disabled) { opacity: .4; }
-@media (prefers-reduced-motion: reduce) { .live :global(.leaflet-control-zoom) { transition: none; } }
-
-
-/* `[2026-10-04 사용자 지시]` 「모든 일정 보기」 — 확대·축소 단추와 같은 둥근 단추. Leaflet 지도는 확대·축소 묶음 안에 같은 단추를 넣고, 구글·네이버 지도는 이 단추를 오른쪽에 둔다. */
-.fitButton {
-  position: absolute; right: 12px; z-index: 5; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; cursor: pointer;
-  border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface); color: var(--color-text);
-  box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 20%, transparent);
-  opacity: 0; pointer-events: none; transition: opacity .2s ease;
+.round { width: 40px; height: 40px; border-radius: 50%; }
+.round:hover, .fold:hover { background: var(--color-soft); }
+.round[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+.fold { width: 28px; height: 28px; border-radius: 50%; }
+.round:focus-visible, .fold:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+/* The scale ruler between ＋ and －: a bar as long as the distance written under it. */
+.scale { display: grid; justify-items: center; align-content: center; gap: 2px; min-width: 40px; padding: 4px 3px; border-radius: 12px; background: color-mix(in srgb, var(--color-surface) 90%, transparent); color: var(--color-text-secondary); font-size: 10.5px; font-weight: 750; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.scaleBar { display: block; height: 5px; border: 2px solid var(--color-text-secondary); border-top: 0; }
+.controls[data-layout="row"] .scale { min-width: 52px; }
+/* A stop out of view: a chip at the edge of the map pointing at it, with how far it is (stops close together share one). */
+.edgeChip {
+  position: absolute; z-index: 4; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 4px; max-width: 150px; padding: 5px 10px 5px 8px; cursor: pointer;
+  border: 1.5px solid var(--color-text); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: 800 12px/1 system-ui, sans-serif; white-space: nowrap;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 22%, transparent);
 }
-.live:hover .fitButton, .live:focus-within .fitButton, .live[data-awake] .fitButton { opacity: 1; pointer-events: auto; }
-.fitButton:hover { background: var(--color-soft); }
-.fitButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { .fitButton { transition: none; } }
+.edgeChip small { font-size: 10.5px; font-weight: 700; color: var(--color-muted); }
+.edgeChip:hover { background: var(--color-soft); }
+.edgeChip:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .controls { transition: none; } }
