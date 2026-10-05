@@ -103,6 +103,15 @@ class ItsTrafficEvents(TravelSource):
         self._key = service_key
         self._now = now or (lambda: datetime.now(KST))
 
+    def _quota_signal(self, response: Any) -> str | None:
+        """ITS 는 월 한도가 차면 **HTTP 401 + `header.resultCode 4001`**(「월간 API 호출 한도를 초과하였습니다」)로 답한다(2026-09-30 · 10-02 실측) — 월 줄을 멈춘다.
+        글자(한글)가 아니라 **숫자 코드**로 알아본다(인코딩이 달라도 같은 결과)."""
+        try:
+            compact = response.text.replace(" ", "")
+        except Exception:                                  # noqa: BLE001
+            return None
+        return "month" if response.status_code == 401 and '"resultCode":4001' in compact else None
+
     @staticmethod
     def _body_error(payload: dict[str, Any]) -> str | None:
         """ITS 는 `header.resultCode` 가 **숫자 0** 일 때만 성공이다."""

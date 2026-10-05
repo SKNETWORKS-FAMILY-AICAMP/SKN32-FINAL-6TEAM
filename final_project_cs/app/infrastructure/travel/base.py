@@ -110,6 +110,16 @@ class TravelSource:
             self.last_wait_seconds = exc.wait_seconds
             return False
 
+    def _quota_signal(self, response: httpx.Response) -> str | None:
+        """응답이 「제공처 한도 초과」를 알리는가 — 맞으면 그 한도의 기간(`day` · `month`), 아니면 None. 하위 클래스가 자기 공급자의 신호를 안다(기본: 없음)."""
+        return None
+
+    def _provider_quota(self, scope: str) -> None:
+        """제공처가 한도 초과를 알렸다 — 그 기간 줄에 표시해 더 부르지 않게 한다(`call_budget.mark_provider_exhausted`). 한도 층이 없으면 아무것도 안 한다."""
+        mark = getattr(self._limiter, "mark_provider_exhausted", None)
+        if mark is not None:
+            mark(self.name, scope)
+
     def _miss(self, reason: str, detail: str = "") -> None:
         """★`None` 을 돌려주기 **전에** 반드시 부른다. 이유 없는 모름은 못 고친다."""
         self.misses[reason] += 1
@@ -142,6 +152,9 @@ class TravelSource:
             return None
 
         if response.status_code != 200:
+            scope = self._quota_signal(response)
+            if scope:
+                self._provider_quota(scope)
             self._miss(f"http_{response.status_code}", response.text[:200])
             return None
 

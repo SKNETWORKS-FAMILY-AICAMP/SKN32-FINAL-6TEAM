@@ -7,6 +7,8 @@
 
 ★무엇을 보나: `external_call_budget`(DB — 모든 프로세스가 같이 센다)의 **오늘(한국 시각)** 줄과 **이번 달** 줄. 소스마다 사용 / 상한(여유율) · 실패 수 · 거절 수(한도가 차서 안 부른 수).
   단계: ok · 경보(≥80%) · 위험(≥95%) · 찼음. 상한이 「모름」(월 한도 env 가 0)인 월 줄은 세기만 한다(`—`).
+★`⛔제공처 한도 초과`: 제공처(예: ITS 월 한도 4001)가 한도 초과를 알려 그 기간 호출을 **그날 한국 자정까지 멈춘** 상태. 표의 사용 수가 **제공처가 실제로 허락한 한도의 관측값**이다
+  (포털에서 한도를 조회하는 API 는 없고, ITS 공식 매뉴얼에도 숫자가 없다 — 월 한도는 로그인한 포털의 인증키 상세정보에만 있다).
 ★이 PC 의 DB 와 서버의 DB 는 **따로**다 — 같은 키를 두 곳이 쓰면 이 표는 **이 DB 에서 센 만큼**만 보인다(합이 키 한도를 넘을 수 있다 — 환경별로 한도를 나눠 둔다).
 ★소스 목록은 설정 `travel.source_budget_sources` + 따릉이(`seoul_bike`). 한도 env 가 0 이하인 소스는 안 센다.
 """
@@ -37,7 +39,9 @@ def build_report(only: list[str] | None = None, *, now: datetime | None = None) 
 def _cell(part: dict) -> str:
     cap = "—" if part["cap"] >= UNLIMITED else str(part["cap"])
     pct = "" if part["ratio"] is None else f" ({part['ratio'] * 100:.0f}%)"
-    return f"{part['used']}/{cap}{pct}"
+    # ★제공처가 오늘 「한도 초과」를 알렸으면 우리 상한과 상관없이 멈춘 상태다 — 그때까지 센 사용 수가 제공처가 허락한 한도의 관측값(`learned_cap`)이다
+    seen = f" ⛔제공처 한도 초과(관측 한도 {part['learned_cap']})" if part.get("provider_exhausted") else ""
+    return f"{part['used']}/{cap}{pct}{seen}"
 
 
 def render(rows: list[dict]) -> str:

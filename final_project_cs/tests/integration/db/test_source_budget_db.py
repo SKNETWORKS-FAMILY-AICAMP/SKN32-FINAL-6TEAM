@@ -132,7 +132,8 @@ def test_report_gives_ratio_and_level_and_shows_a_source_with_no_rows_as_zero(me
         mine.try_reserve(meter)
     mine.record_failure(meter)
     report = mine.report([meter])
-    assert report[0]["meter"] == meter and report[0]["day"] == {"used": 8, "cap": 10, "failed": 1, "rejected": 0, "ratio": 0.8, "level": "warn"}
+    assert report[0]["meter"] == meter and report[0]["day"] == {"used": 8, "cap": 10, "failed": 1, "rejected": 0, "ratio": 0.8, "level": "warn",
+                                                                 "provider_exhausted": False, "learned_cap": None}
     assert report[0]["month"]["level"] == "ok" and report[0]["level"] == "warn"
     for _ in range(2):
         mine.try_reserve(meter)
@@ -141,7 +142,7 @@ def test_report_gives_ratio_and_level_and_shows_a_source_with_no_rows_as_zero(me
     assert full["day"]["level"] == "exhausted" and full["day"]["rejected"] == 1 and full["level"] == "exhausted"
     ghost = "t_" + uuid4().hex[:10]
     empty = CallBudget(connection_factory=get_connection, caps={ghost: {"day": 7, "month": 70}}, tz=KST).report([ghost])[0]
-    assert empty["day"] == {"used": 0, "cap": 7, "failed": 0, "rejected": 0, "ratio": 0.0, "level": "ok"}
+    assert empty["day"] == {"used": 0, "cap": 7, "failed": 0, "rejected": 0, "ratio": 0.0, "level": "ok", "provider_exhausted": False, "learned_cap": None}
 
 
 # ── ⑥ 일꾼 경로 · 조립 · 문 ─────────────────────────────────────
@@ -184,3 +185,40 @@ def test_build_gate_serves_code_that_calls_outbound_without_a_travel_source(mete
     assert caught.value.reason == "budget_exhausted"
     unknown = build_gate(settings, ["no_such_limit"])                          # 한도를 모르는 이름은 센 줄이 없다 — 통과
     unknown.acquire("no_such_limit")
+
+
+# ── ⑦ 제공처가 「한도 초과」를 알렸을 때 ────────────────────────
+def test_provider_exhaustion_blocks_until_korean_midnight_then_probes_again(meter):
+    """제공처가 월 한도 초과를 알리면 그날 한국 자정까지 안 부르고, 그때까지 센 사용 수를 한도로 기록한다 — 다음 날 첫 호출이 한 번 시험한다."""
+    noon = datetime(2026, 10, 5, 3, 0, 0, tzinfo=timezone.utc)                  # 한국 12:00
+    tomorrow = datetime(2026, 10, 5, 15, 30, 0, tzinfo=timezone.utc)            # 한국 다음 날 00:30
+    today = budget(meter, day=1000, month=10000, now=noon)
+    for _ in range(7):
+        assert today.try_reserve(meter) is True
+    today.mark_provider_exhausted(meter, "month")
+    assert today.try_reserve(meter) is False                                     # 오늘은 더 안 부른다
+    assert budget(meter, day=1000, month=10000, now=noon).try_reserve(meter) is False         # 다른 프로세스도 같다
+    month = rows_full(meter)["month:2026-10"]
+    assert month["used"] == 7 and month["learned_cap"] == 7 and month["exhausted_at"] is not None     # 관측한 한도 = 7
+    report = today.report([meter])[0]["month"]
+    assert report["provider_exhausted"] is True and report["level"] == "exhausted" and report["learned_cap"] == 7
+    later = budget(meter, day=1000, month=10000, now=tomorrow)
+    assert later.try_reserve(meter) is True                                      # 다음 날 첫 호출이 한 번 시험한다(풀렸을 수 있다)
+    later.mark_provider_exhausted(meter, "month")                                # 여전히 초과면 다시 표시 — 그날은 다시 멈춘다
+    assert later.try_reserve(meter) is False
+
+
+def test_next_month_is_a_new_row_so_the_block_lifts_by_itself(meter):
+    last_day = datetime(2026, 10, 31, 3, 0, 0, tzinfo=timezone.utc)
+    first_day = datetime(2026, 11, 1, 3, 0, 0, tzinfo=timezone.utc)
+    october = budget(meter, day=1000, month=10000, now=last_day)
+    october.try_reserve(meter)
+    october.mark_provider_exhausted(meter, "month")
+    assert october.try_reserve(meter) is False
+    assert budget(meter, day=1000, month=10000, now=first_day).try_reserve(meter) is True      # 11월 줄은 새로 시작
+
+
+def rows_full(name: str) -> dict[str, dict]:
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT period, used, cap, exhausted_at, learned_cap FROM external_call_budget WHERE meter=%s", (name,))
+        return {r[0]: {"used": r[1], "cap": r[2], "exhausted_at": r[3], "learned_cap": r[4]} for r in cur.fetchall()}

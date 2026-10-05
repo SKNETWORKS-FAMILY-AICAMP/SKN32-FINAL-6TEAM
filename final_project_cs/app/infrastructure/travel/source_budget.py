@@ -128,6 +128,13 @@ class BudgetedLimiter:
                            used, cap, 100 * (worst_ratio or 0),
                            f"위험(≥{CRITICAL_RATIO:.0%}) — 비필수 호출을 줄인다" if worst == "critical" else f"경보(≥{WARN_RATIO:.0%})")
 
+    def mark_provider_exhausted(self, source: str, scope: str = "day") -> None:
+        """제공처가 「한도 초과」를 알렸다(`TravelSource._provider_quota` 가 부른다) — 그 기간 줄에 표시해 이후 호출을 멈춘다(`call_budget.mark_provider_exhausted`)."""
+        if source in self.meters:
+            self._budget.mark_provider_exhausted(source, scope)
+            with self._lock:
+                self.levels[source] = "exhausted"
+
     def record_failure(self, source: str) -> None:
         """부른 뒤 쓸 수 있는 답을 못 받았다 — 이 소스의 실패 수를 DB 에 센다(`TravelSource._miss` 가 부른다). 세지 못해도 흐름을 막지 않는다."""
         if source in self.meters:

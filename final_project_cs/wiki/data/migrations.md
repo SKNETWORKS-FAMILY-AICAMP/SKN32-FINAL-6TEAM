@@ -173,6 +173,10 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 
 `[실측]` `047_call_budget_outcomes.sql` — 027 의 호출 예산 표(`meter` · `period` · `used` · `cap`)에 `failed`(부른 뒤 쓸 수 있는 답을 못 받은 수 — `used` 의 부분집합) · `rejected`(한도가 차서 **안 부른** 수 — `used` 에 안 들어감)를 더한다. 기존 줄은 0 으로 채워진다 · 재실행 안전. 읽는 곳: `scripts/report_source_budget.py` · [운영 문서](../operations/call-budget.md).
 
+### 호출 예산의 제공처 한도 초과 표시 `external_call_budget` `[2026-10-05 · 049]`
+
+`[실측]` `049_call_budget_provider_exhausted.sql` — `exhausted_at`(제공처가 「한도 초과」를 알린 시각 — 그날 한국 자정까지 그 소스를 안 부른다) · `learned_cap`(그때까지 센 사용 수 = 제공처가 허락한 한도의 관측값)을 더한다. 달이 바뀌면 새 줄이라 자동으로 풀린다 · 재실행 안전.
+
 ### 약관 동의 기록 `consent_events` · `consent_current` `[2026-10-05 · 046]`
 
 `[실측]` `046_consents.sql` — 추가만 하는 사건 표(`consent_events`: `event_id` · `tenant_id` · `user_id`(**외래키 없음** — 게스트가 정리돼도 증빙은 보관 기간 동안 남는다) · `session_kind` guest|member|key · `code` · `agreed` · `terms_version` · `text_sha256` · `at` · `ip_hash`(서버 비밀 HMAC — 주소 원문 없음) · `user_agent`) + 현재 상태 뷰(`consent_current` — 사용자 · 코드별 가장 최근 줄). **트리거 `consent_events_no_change` 가 UPDATE 를 늘 거절하고, DELETE 는 트랜잭션이 `SET LOCAL app.consent_purge = 'on'` 을 켰을 때(보관 기간 정리)만 허용한다.** 인덱스 `(tenant_id, user_id, code, at DESC, event_id DESC)` · `(at)`. 재실행 안전.

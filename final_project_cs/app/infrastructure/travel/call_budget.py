@@ -14,6 +14,9 @@
   (여유 = 월 상한과 무료 한도의 차 ≥ 하루 상한). 무료 한도 표는 가드레일 `travel.google_budget.free_monthly`,
   상한은 `caps_from_free` 한 규칙으로 계산한다.
 
+★`[2026-10-05]` **제공처가 「한도 초과」를 알리면**(ITS `resultCode 4001` 「월간 API 호출 한도 초과」) `mark_provider_exhausted` 가 그 기간 줄에 표시한다(`exhausted_at` · `learned_cap` = 그때까지 센 사용 수 —
+  **제공처가 실제로 허락한 한도의 관측값**이다. 포털에서 한도를 조회하는 API 는 못 찾았다). 표시된 줄은 **그날 한국 자정까지** 호출하지 않고(헛호출을 하루 800건씩 하던 것을 막는다), 다음 날 첫 호출이 한 번 시험한다 —
+  여전히 초과면 다시 표시하고, 풀렸으면(한도를 늘렸거나 달이 바뀜) 그대로 쓴다. 달이 바뀌면 새 줄이라 자동으로 풀린다(마이그레이션 049).
 ★`[2026-10-05]` 줄마다 **실패 수**(`failed` — 부른 뒤 쓸 수 있는 답을 못 받음 · `used` 의 부분집합)와 **거절 수**(`rejected` — 한도가 차서 **부르지 않음** · `used` 에 안 들어감)도 센다
   (마이그레이션 047). `report()` 가 소스(=키)마다 하루·월 사용 / 상한 / 여유율과 80% 경보 · 95% 위험 단계를 돌려준다(`scripts/report_source_budget.py`).
 """
@@ -58,10 +61,17 @@ class CallBudget:
         now = self.clock().astimezone(self._tz)
         rows = [(f"month:{now:%Y-%m}", int(cap["month"])), (f"day:{now:%Y-%m-%d}", int(cap["day"]))]
         after: dict[str, tuple[int, int]] = {}
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         with self._connect() as conn, conn.transaction(), conn.cursor() as cur:
             for period, limit in rows:
                 cur.execute("INSERT INTO external_call_budget (meter, period, used, cap) VALUES (%s,%s,0,%s) "
                             "ON CONFLICT (meter, period) DO NOTHING", (meter, period, limit))
+            # ★제공처가 오늘 이미 「한도 초과」를 알렸으면(`exhausted_at` 이 오늘 한국 자정 이후) 더 부르지 않는다 — 다음 날 첫 호출이 한 번 시험한다
+            cur.execute("SELECT period FROM external_call_budget WHERE meter=%s AND period IN (%s,%s) AND exhausted_at >= %s",
+                        (meter, rows[0][0], rows[1][0], today_start))
+            blocked = cur.fetchone()
+            if blocked is not None:
+                raise _Exhausted(meter, blocked[0])
             for period, limit in rows:
                 # ★상한은 **지금 설정값**으로 본다 — 줄에 남은 옛 cap 이 더 커도 새 값이 이긴다
                 cur.execute("UPDATE external_call_budget SET used = used + 1, cap = %s, updated_at = now() "
@@ -81,6 +91,21 @@ class CallBudget:
             self.refused[meter] = self.refused.get(meter, 0) + 1
             self._count(meter, "rejected")                # 한도가 차서 부르지 않은 것도 DB 에 센다(여유 확인용)
             return False
+
+    def mark_provider_exhausted(self, meter: str, scope: str = "day") -> None:
+        """제공처가 「한도 초과」를 알렸다 — `scope`(`day` · `month`)의 지금 줄에 `exhausted_at` 을 찍고 `learned_cap` 에 그때까지 센 사용 수를 남긴다. ★세지 못해도 호출 흐름을 막지 않는다(DB 오류는 로그만)."""
+        assert scope in ("day", "month")
+        now = self.clock().astimezone(self._tz)
+        period = f"month:{now:%Y-%m}" if scope == "month" else f"day:{now:%Y-%m-%d}"
+        cap = int(((self.caps.get(meter) or {}).get(scope)) or UNLIMITED)
+        try:
+            with self._connect() as conn, conn.transaction(), conn.cursor() as cur:
+                # ★시각은 DB 가 아니라 **이 객체의 시계**로 찍는다 — 「그날 자정까지」를 가르는 시계와 같아야 한다(시험이 시계를 주입한다)
+                cur.execute("INSERT INTO external_call_budget (meter, period, used, cap, exhausted_at, learned_cap) VALUES (%s,%s,0,%s,%s,0) "
+                            "ON CONFLICT (meter, period) DO UPDATE SET exhausted_at = %s, learned_cap = external_call_budget.used, updated_at = now()",
+                            (meter, period, cap, now, now))
+        except Exception as exc:                          # noqa: BLE001
+            logger.warning("call budget provider-exhausted mark failed (%s): %s: %s", meter, type(exc).__name__, exc)
 
     def record_failure(self, meter: str) -> None:
         """부른 뒤 쓸 수 있는 답을 못 받았다 — 이 소스의 하루·월 줄의 `failed` 를 +1. ★세지 못해도 호출 흐름을 막지 않는다(DB 오류는 로그만)."""
@@ -136,7 +161,7 @@ def usage_report(connection_factory: Callable[[], Any], *, now: datetime, meters
                  caps: dict[str, dict[str, int]] | None = None) -> list[dict[str, Any]]:
     """`CallBudget.report` 의 본체 — `now` 는 줄을 가르는 시간대의 현재 시각(그 시간대의 일 · 월 줄을 읽는다)."""
     periods = {"month": f"month:{now:%Y-%m}", "day": f"day:{now:%Y-%m-%d}"}
-    sql = "SELECT meter, period, used, cap, failed, rejected FROM external_call_budget WHERE period IN (%s,%s)"
+    sql = "SELECT meter, period, used, cap, failed, rejected, exhausted_at, learned_cap FROM external_call_budget WHERE period IN (%s,%s)"
     params: list[Any] = [periods["month"], periods["day"]]
     if meters:
         sql += " AND meter = ANY(%s)"
@@ -151,10 +176,14 @@ def usage_report(connection_factory: Callable[[], Any], *, now: datetime, meters
         worst = "ok"
         for kind, period in periods.items():
             default_cap = int(((caps or {}).get(meter) or {}).get(kind, UNLIMITED))
-            used, cap, failed, rejected = found.get((meter, period), (0, default_cap, 0, 0))
+            used, cap, failed, rejected, exhausted_at, learned = found.get((meter, period), (0, default_cap, 0, 0, None, None))
             ratio, level = level_of(int(used), int(cap))
+            blocked = exhausted_at is not None and exhausted_at >= now.replace(hour=0, minute=0, second=0, microsecond=0)
+            if blocked:
+                level = "exhausted"                      # 제공처가 오늘 「한도 초과」를 알렸다 — 우리 상한과 상관없이 멈춘 상태
             item[kind] = {"used": int(used), "cap": int(cap), "failed": int(failed), "rejected": int(rejected),
-                          "ratio": None if ratio is None else round(ratio, 4), "level": level}
+                          "ratio": None if ratio is None else round(ratio, 4), "level": level,
+                          "provider_exhausted": bool(blocked), "learned_cap": None if learned is None else int(learned)}
             if _ORDER[level] > _ORDER[worst]:
                 worst = level
         item["level"] = worst

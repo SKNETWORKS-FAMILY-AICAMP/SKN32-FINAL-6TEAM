@@ -206,3 +206,44 @@ def test_a_source_without_a_limiter_still_works_and_counts_nothing():
     source = Probe(transport=lambda url, params: httpx.Response(500, text="boom"))
     assert source._fetch_json("http://example.test", {}) is None          # 한도 층이 없어도 터지지 않는다
     assert source.misses["http_500"] == 1
+
+
+# ── ⑥ 제공처가 「한도 초과」를 알렸을 때 ────────────────────────
+from app.infrastructure.travel.its_traffic import ItsTrafficEvents  # noqa: E402
+
+
+class FakeBudgetWithMarks(FakeBudget):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.marks: list[tuple[str, str]] = []
+
+    def mark_provider_exhausted(self, meter: str, scope: str = "day") -> None:
+        self.marks.append((meter, scope))
+
+
+def _its(status: int, body: str, budget: FakeBudgetWithMarks):
+    limiter, _inner, _ = make(budget=budget)
+    return ItsTrafficEvents(service_key="k", limiter=limiter,
+                            transport=lambda url, params: httpx.Response(status, content=body.encode("utf-8")))
+
+
+def test_its_quota_signal_marks_the_month_row_and_stops_further_calls():
+    """ITS 는 월 한도가 차면 HTTP 401 + resultCode 4001 로 답한다 — 숫자 코드로 알아보고 월 줄을 멈춘다."""
+    budget = FakeBudgetWithMarks()
+    source = _its(401, '{"header":{"resultCode":4001,"resultMsg":"월간 API 호출 한도를 초과하였습니다."},"body":""}', budget)
+    assert source.records() is None
+    assert budget.marks == [("its", "month")]                           # 월 줄에 표시 — 이 소스를 오늘 더 부르지 않게
+    assert source.misses["http_401"] == 1
+
+
+def test_a_plain_401_or_other_codes_do_not_mark_the_budget():
+    budget = FakeBudgetWithMarks()
+    assert _its(401, '{"header":{"resultCode":4002,"resultMsg":"키가 틀림"}}', budget).records() is None
+    assert _its(401, "unauthorized", budget).records() is None
+    assert _its(500, '{"header":{"resultCode":4001}}', budget).records() is None                        # 401 이 아니면 신호로 안 본다
+    assert budget.marks == []
+
+
+def test_a_source_without_the_budget_layer_ignores_the_signal_safely():
+    source = ItsTrafficEvents(service_key="k", transport=lambda url, params: httpx.Response(401, text='{"header":{"resultCode":4001}}'))
+    assert source.records() is None                                                                        # 한도 층이 없어도 터지지 않는다
