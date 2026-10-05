@@ -3,9 +3,11 @@
 import { createContext, useContext, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronRight, Menu, X } from "lucide-react";
 import { Avatar } from "@/components/ui";
 import { useAuthProviders } from "@/features/account/use-auth-providers";
+import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { LanguagePicker } from "@/components/ui/language-picker";
 import { ThemePicker } from "@/components/ui/theme-picker";
 import { nicknameLabel, useProfile } from "@/lib/profile";
@@ -24,6 +26,8 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
   // `[2026-10-03 사용자 지시]` 「계정 연결 · 로그인」 줄은 서버가 로그인 방법을 하나라도 설정했을 때만 있다(메뉴를 열 때 한 번 물어본다).
   const providers = useAuthProviders(open);
   const root = useContext(OverlayRoot);
+  const router = useRouter();
+  const [{ agreed }, setOnboarding] = useOnboarding();
   const button = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const first = useRef<HTMLAnchorElement>(null);
@@ -36,6 +40,16 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
   function close() {
     setOpen(false);
     button.current?.focus({ preventScroll: true });
+  }
+
+  /**
+   * `[2026-10-06 사용자 지시]` 취향 설문은 첫 진행에서 빠졌다 — 따로 하고 싶을 때 이 메뉴에서 연다(마이페이지의 「여행 취향」과 같은 화면: 시작 화면의 취향 카드).
+   * 약관에 아직 동의하지 않았으면 카드를 열지 않고 시작 화면(약관)으로 간다.
+   */
+  function openSurvey() {
+    setOnboarding((current) => ({ ...current, open: agreed ? 2 : null }));      // ★`agreed` 는 동의 저장소에서 온 파생 값이다
+    setOpen(false);
+    router.push(routes.start);
   }
 
   function trapFocus(event: KeyboardEvent<HTMLDivElement>) {
@@ -63,6 +77,7 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
           <ChevronRight size={18} aria-hidden="true" />
         </Link>
         <Link href={routes.trips} className={styles.link} onClick={close}>{t("여행 목록 보기", "View trip list")}<ChevronRight size={18} aria-hidden="true" /></Link>
+        <button type="button" className={styles.link} onClick={openSurvey}>{t("여행 취향 설문", "Travel preferences survey")}<ChevronRight size={18} aria-hidden="true" /></button>
         {(providers.data?.length ?? 0) > 0 && <Link href={`${routes.myPage}#accounts`} className={styles.link} onClick={close}>{t("계정 연결 · 로그인", "Link account · Sign in")}<ChevronRight size={18} aria-hidden="true" /></Link>}
         {/* The same card as the home intro, caption included. */}
         <LanguagePicker caption={<>LANGUAGE · <span lang="ko">언어</span></>} />

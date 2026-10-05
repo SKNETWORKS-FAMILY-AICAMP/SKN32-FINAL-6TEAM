@@ -15,6 +15,9 @@
 .board :is(a, button):focus-visible { outline-offset: -3px; }
 .link { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 56px; padding: 12px 15px; color: var(--color-primary); font-size: 14px; font-weight: 650; text-decoration: none; }
 .link:hover { background: var(--color-soft); }
+/* The survey row is a button (it opens the start screen's preferences card), drawn like the links. */
+button.link { width: 100%; border: 0; background: transparent; font-family: inherit; text-align: left; cursor: pointer; }
+button.link:hover { background: var(--color-soft); }
 .profile { display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 12px 15px; color: var(--color-text); text-decoration: none; }
 .profile:hover { background: var(--color-soft); }
 .profile > svg { flex: none; color: var(--color-muted); }

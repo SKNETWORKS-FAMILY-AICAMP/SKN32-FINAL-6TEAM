@@ -30,6 +30,8 @@ const rows = (card: Locator) => card.locator("strong").evaluateAll((values) => v
 const settled = (page: Page, index: number) => expect(page.locator(`#question-title-${index}`)).toBeFocused();
 
 async function openSurvey(page: Page) {
+  // [2026-10-06] 처음 동의하면 계획 화면을 거쳐 취향으로 돌아오므로, 그 사이 서버 쪽 세션이 생긴다 - 그 세션에 여행은 아직 없다(「여행 계획 등록하기」가 보이는 처음 모양).
+  await mockServer(page.request).scenario({ trips: "none" });
   await page.goto("/start");
   // ★`[2026-10-01]` The start screen keeps its answers in this browser; every run here starts from the first-time screen.
   await forgetStartScreen(page);

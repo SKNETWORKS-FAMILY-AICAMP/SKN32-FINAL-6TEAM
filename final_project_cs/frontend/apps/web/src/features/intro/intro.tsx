@@ -26,8 +26,8 @@ const copy: Record<Language, Record<string, string>> = {
     guide: "How to use triPilot", shot: "App screen", swipe: "Swipe to see each step", prevStep: "Previous step", nextStep: "Next step",
     start: "Your next journey\nstarts right here.",
     startDescription: "The places you dream of. The moments you love.\nTell us what your next trip looks like.",
-    taste: "Your style", trip: "Your trip", cta: "Start my itinerary",
-    actionNote: "Review the terms, then tell us your travel preferences.",
+    taste: "Your plan", trip: "Your trip", cta: "Start my itinerary",
+    actionNote: "Review the terms, then add your plan.",
     actionNoteDone: "You have already set up. Change your preferences any time on My page.",
     scrollHint: "Scroll down to explore", skip: "Skip intro", next: "Next screen",
     pages: "triPilot introduction. Scroll down to move to the next screen.", navigation: "Introduction screens",
@@ -46,8 +46,8 @@ const copy: Record<Language, Record<string, string>> = {
     guide: "triPilot 이용 방법", shot: "앱 화면", swipe: "옆으로 넘겨 단계별로 확인하세요", prevStep: "이전 단계", nextStep: "다음 단계",
     start: "다음 여행의 첫걸음,\n여기서 시작해요.",
     startDescription: "가고 싶은 곳, 좋아하는 순간.\n당신의 여행 이야기를 들려주세요.",
-    taste: "나의 취향", trip: "나의 여행", cta: "내 일정 시작하기",
-    actionNote: "약관 확인과 여행 취향 설정부터 함께할게요.",
+    taste: "나의 계획", trip: "나의 여행", cta: "내 일정 시작하기",
+    actionNote: "약관 확인부터 함께할게요.",
     actionNoteDone: "이미 설정을 마치셨어요. 취향과 디스코드 알림은 마이페이지에서 바꿀 수 있어요.",
     scrollHint: "아래로 스크롤하며 만나보세요", skip: "소개 건너뛰기", next: "다음 화면",
     pages: "triPilot 서비스 소개. 아래로 스크롤하면 다음 화면으로 이동합니다.", navigation: "소개 화면 이동",
@@ -82,8 +82,9 @@ export function Intro() {
   const { language } = useSettings();
   const text = copy[language];
   const router = useRouter();
-  // ★`[2026-10-01 user decision]` The start screen (Discord alerts, terms, preferences) is asked once. Once the terms are agreed,
-  //   the button goes straight to registering a plan; the answers can be changed later on My page.
+  // ★`[2026-10-06 user decision]` The button always goes straight to registering a plan. The terms are still required: a visitor who has not
+  //   agreed is sent to the start screen by `ConsentGate` and, once they agree there, on to the plan (`onboarding.tsx`). The preference survey is
+  //   no longer part of the first run — it is done on its own from the menu / My page.
   const [{ agreed }] = useOnboarding();
   const pages = useRef<HTMLElement>(null);
   const [shown, setShown] = useState<boolean[]>([true, false, false]);
@@ -247,7 +248,7 @@ export function Intro() {
           <div className={styles.ticketBottom}><span>TRAVEL PARTNER</span><span>triPilot</span></div>
         </div>
         <div className={styles.actionArea} data-fx="up" style={delay(.95)}>
-          <button type="button" className={styles.primary} onClick={() => router.push(agreed ? routes.newTrip : routes.start)}><span>{text.cta}</span><span aria-hidden="true">↗</span></button>
+          <button type="button" className={styles.primary} onClick={() => router.push(routes.newTrip)}><span>{text.cta}</span><span aria-hidden="true">↗</span></button>
           <p className={styles.actionNote}>{agreed ? text.actionNoteDone : text.actionNote}</p>
         </div>
       </section>

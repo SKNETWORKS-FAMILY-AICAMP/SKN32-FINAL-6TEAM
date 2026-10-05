@@ -130,14 +130,20 @@ export function Onboarding() {
     feedback(checked ? "complete" : "soft");
   }
 
-  /** 「동의하고 다음으로」: this press is what records the consent (the browser's copy at once, the server's record right behind it). */
+  /**
+   * 「동의하고 다음으로」: this press is what records the consent (the browser's copy at once, the server's record right behind it).
+   * ★`[2026-10-06 사용자 지시]` The first agreement goes straight on to registering a plan — the preference survey is no longer part of the first run
+   *   (it stays here as the third card, opened from the menu / My page). A customer who already agreed and only changes their boxes stays on this screen.
+   */
   function continueTerms() {
     if (!requiredAgreed(state.choices)) return;
+    const firstAgreement = !state.agreed;
     void saveConsents(state.choices, language);
     flushWebhook(state.choices.alert_channel);
+    feedback("complete");
+    if (firstAgreement) { router.push(routes.newTrip); return; }
     setState((current) => ({ ...current, open: 2 }));
     setSceneStage(2);
-    feedback("complete");
   }
 
   function closeTerms() {

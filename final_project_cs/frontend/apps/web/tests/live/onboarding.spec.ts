@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { agree, agreeTerms, hydrated, mockServer, noHorizontalScroll, openPreferencesFromMyPage, pickMenuLanguage, registerStubTrip, useKorean } from "./helpers";
+import { agree, agreeTerms, hydrated, mockServer, noHorizontalScroll, openPreferencesFromMenu, openPreferencesFromMyPage, pickMenuLanguage, registerStubTrip, useKorean } from "./helpers";
 
 /** Write a plan and press 「계획 확인하기」: the app goes to the plan-check screen of the mock server's intake. */
 async function sendPlan(page: Page) {
@@ -55,6 +55,10 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
   await expect(privacyCheck).toBeChecked();
   await expect(proceed).toBeEnabled();
   await proceed.click();
+  // ★`[2026-10-06 사용자 지시]` 처음 동의하면 취향 설문 없이 바로 계획 올리는 화면으로 간다. 취향 설문은 메뉴의 「여행 취향 설문」에서 따로 연다.
+  await expect(page).toHaveURL(/\/trips\/new$/);
+  await expect(page.locator("#plan-source")).toBeVisible();
+  await openPreferencesFromMenu(page);
 
   const heading = (name: string) => page.getByRole("heading", { name, exact: true });
   // ★카드가 넘어가는 동안의 누름은 화면이 무시한다. 제목이 「보이는」 것은 넘김 중에도 참이라 신호가 못 된다 —
@@ -283,11 +287,31 @@ test("시작 화면은 한 번만: 마친 뒤 새로고침해도 약관·취향�
   await expect(page.getByRole("heading", { name: "여행 취향 설정 완료", exact: true })).toBeVisible();
 });
 
+test("소개의 첫 단어는 「나의 계획」이고, 처음 동의하면 취향 설문 없이 바로 계획 올리는 화면으로 가며, 취향 설문은 메뉴에서 따로 연다 (2026-10-06 사용자 지시)", async ({ page, request }) => {
+  await mockServer(request).scenario({ trips: "none" });
+  await useKorean(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: "3. 일정 시작" }).click();
+  await expect(page.getByText("나의 계획", { exact: true })).toBeVisible();
+  await expect(page.getByText("나의 취향", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "내 일정 시작하기" }).click();
+  await expect(page).toHaveURL(/\/start$/);                                    // 약관에 동의하지 않았으면 문이 약관 화면으로 보낸다
+  await page.getByRole("button", { name: /약관 동의/ }).click();
+  for (const code of ["service_terms", "privacy"]) await page.locator(`li[data-doc="${code}"] label`).click();
+  await page.getByRole("button", { name: "동의하고 다음으로" }).click();
+  await expect(page).toHaveURL(/\/trips\/new$/);                              // 취향 설문이 아니라 계획 올리는 화면
+  await expect(page.locator("#plan-source")).toBeVisible();
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  await page.getByRole("dialog", { name: "메뉴" }).getByRole("button", { name: "여행 취향 설문" }).click();
+  await expect(page).toHaveURL(/\/start$/);
+  await expect(page.getByRole("heading", { name: "여행 취향 설문을 시작할게요", exact: true })).toBeVisible();
+});
+
 test("약관에 동의하지 않았으면 소개 버튼은 시작 화면으로 가고, 다른 화면은 열리지 않고 약관 화면으로 돌아가며, 동의한 뒤에는 마이페이지의 여행 취향이 설정 전이라고 알린다", async ({ page }) => {
   await useKorean(page);
   await page.goto("/");
   await page.getByRole("button", { name: "3. 일정 시작" }).click();
-  await expect(page.getByText("약관 확인과 여행 취향 설정부터 함께할게요.")).toBeVisible();
+  await expect(page.getByText("약관 확인부터 함께할게요.")).toBeVisible();
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
   await expect(page).toHaveURL(/\/start$/);
   // ★`[2026-10-05 사용자 지시]` 필수 약관에 동의하지 않으면 앱을 쓸 수 없다: 마이페이지로 곧장 가도 약관 화면으로 돌아온다.
