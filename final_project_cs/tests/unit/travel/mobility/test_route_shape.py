@@ -7,7 +7,7 @@ from uuid import uuid4
 
 import pytest
 
-from app.modules.travel_ops.mobility import route_shape as RS
+from app.domains.travel_ops.instances.mobility import route_shape as RS
 
 A, B = (126.9770, 37.5796), (127.0557, 37.5433)          # (경도, 위도) 경복궁 · 성수
 

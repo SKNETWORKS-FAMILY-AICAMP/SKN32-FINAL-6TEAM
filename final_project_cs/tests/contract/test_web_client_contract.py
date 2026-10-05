@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Literal, get_args, get_origin
 
 from app import composition
-from app.modules.travel_ops.survey import SURVEY_VERSION, TripSurvey
+from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION, TripSurvey
 
 WEB = Path(__file__).resolve().parents[2] / "frontend" / "apps" / "web"
 LIVE = WEB / "src" / "lib" / "live"

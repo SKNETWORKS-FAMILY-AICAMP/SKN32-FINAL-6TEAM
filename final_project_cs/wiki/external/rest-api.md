@@ -22,7 +22,7 @@ domain: travel
 |---|---|---|
 | Case | `/v1/cases*` — 문의 · 조회 · 추가 메시지 · 제안 승인 | [필드 계약](rest-endpoints.md), [Case 라우터](../../app/presentation/api/cases.py) |
 | outbox | `/v1/outbox/{message_id}/resolve` — 불명확한 배달 결과를 사람이 확인한 근거 기록 | [필드 계약](rest-endpoints.md), [outbox](../actions/outbox.md) |
-| 여행 · 계획 | `/v1/trips*` — 등록 · 생성 · 조회 · 신고 · 상담 · 제안 · 되돌리기 (+ 토큰 링크 `/plan/{trip_id}` · `/booking-change/{booking_id}`) | [여행 계약](rest-endpoints.md), [여행 라우터](../../app/modules/travel_ops/trip_api.py) |
+| 여행 · 계획 | `/v1/trips*` — 등록 · 생성 · 조회 · 신고 · 상담 · 제안 · 되돌리기 (+ 토큰 링크 `/plan/{trip_id}` · `/booking-change/{booking_id}`) | [여행 계약](rest-endpoints.md), [여행 라우터](../../app/domains/travel_ops/entry/trip_api.py) |
 | 고객 웹 | `/v1/web/*` — 세션(쿠키 · 키) · 로그인 · 내 여행 · 상담 · 제안 선택 · 알림 · 프로필 · 동의 · 에이전트 키 · 모델 예열 · 지도 | [웹 계약](rest-endpoints.md) |
 | 계획 접수 | `/v1/web/trip-intakes*` — 자료 읽기 · 수정 · 확인 · 계획 생성 | [접수 계약](rest-endpoints.md) |
 | 위임 | `/v1/delegations*` — 권한 조회 · 부여 · 철회 | [필드 계약](rest-endpoints.md) |

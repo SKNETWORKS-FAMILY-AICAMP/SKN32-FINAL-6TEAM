@@ -82,8 +82,8 @@ def kakao():
     sys.path.insert(0, ROOT)
     from app.core.settings import get_settings
     from app.infrastructure.db.session import get_connection
-    from app.infrastructure.travel.call_budget import CallBudget, kakao_caps
-    from app.infrastructure.travel.kakao_local import KakaoLocal
+    from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget, kakao_caps
+    from app.domains.travel_ops.ports.data_sources.kakao_local import KakaoLocal
 
     key = get_settings().kakao_rest_api_key
     if not key:

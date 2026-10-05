@@ -21,7 +21,7 @@ from fastapi.testclient import TestClient
 
 from app.infrastructure.db.session import get_connection
 from app.presentation.api.app import create_app
-from app.modules.travel_ops.trip_api import build_trip_router
+from app.domains.travel_ops.entry.trip_api import build_trip_router
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
 
@@ -306,7 +306,7 @@ def _full_client():
 
 def _stored(api, trip):
     """등록된 항목(내부 모양 — `detail` 포함). 공개 조회는 `detail` 을 싣지 않는다."""
-    from app.modules.travel_ops.itinerary import TripStore
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
     with get_connection() as conn:
         return TripStore(api["tenant"]).latest(conn, UUID(trip["trip_id"]))[1]
@@ -398,7 +398,7 @@ def test_an_unfound_place_is_fixed_by_name_or_left_without_a_place(api):
 
 
 def test_a_booking_number_is_carried_and_protects_the_item(api):
-    from app.modules.travel_ops.pending import protected_reason
+    from app.domains.travel_ops.components.planning.pending import protected_reason
 
     client, _, _ = _full_client()
     headers = _key(client)
@@ -470,8 +470,8 @@ def test_a_place_the_customer_fixed_is_never_used_for_another_customer(api):
     # ③ 누가 고쳤는지 모르는 옛 행(마이그레이션 038 앞에 쌓인 것 — 고객 번호가 없다)은 아무에게도 안 쓰인다: 조회는 고객 번호가 같은 행만 고른다.
     #    그런 행을 새로 만들 수도 없다(고객이 고친 행은 번호가 있어야 한다).
     import psycopg
-    from app.modules.travel_ops.intake.pipeline import SEED_ALIASES, load_aliases
-    from app.modules.travel_ops.intake.places import normalize
+    from app.domains.travel_ops.components.intake.pipeline import SEED_ALIASES, load_aliases
+    from app.domains.travel_ops.components.intake.places import normalize
 
     with get_connection() as conn:
         with pytest.raises(psycopg.errors.CheckViolation), conn.transaction(), conn.cursor() as cur:
@@ -487,7 +487,7 @@ def test_a_place_the_customer_fixed_is_never_used_for_another_customer(api):
 
 def test_the_survey_sent_with_confirm_is_checked_and_stays_on_the_trip(api):
     """★`[2026-09-28]` 「등록하고 관리 시작」에도 설문을 싣는다 — `/v1/web/trips` 와 같은 검사(`_create_trip`)."""
-    from app.modules.travel_ops.survey import SURVEY_VERSION
+    from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
 
     client, _, _ = _full_client()
     headers = _key(client)

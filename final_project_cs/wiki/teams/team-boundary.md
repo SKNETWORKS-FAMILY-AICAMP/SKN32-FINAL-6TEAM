@@ -47,7 +47,7 @@ Team은 `ActionProposal`만 반환한다. 실행은 [../actions/index.md](../act
 
 ### ★ [2026-09-10] 코드가 이 규칙과 다르게 돈다 — 어느 쪽이 맞는지 안 정해졌다
 
-`[실측 2026-09-10 작업 트리]` **여행 Team 은 read 도구를 직접 부른다.** `travel_ops/_base.py:68` 의 `_read()` 가 `self.tools.call(name, context, arguments, allowed_tools, seen, budget=max_steps)` 를 호출하고, **허용 목록과 단계 예산은 `ReadToolbox.call()` 이 강제한다**(`app/tools/read_tools.py:279`).
+`[실측 2026-09-10 작업 트리]` **여행 Team 은 read 도구를 직접 부른다.** `travel_ops/instances/_shared/_base.py:68` 의 `_read()` 가 `self.tools.call(name, context, arguments, allowed_tools, seen, budget=max_steps)` 를 호출하고, **허용 목록과 단계 예산은 `ReadToolbox.call()` 이 강제한다**(`app/tools/read_tools.py:279`).
 
 | | 이 절이 말하던 설계 | 지금 코드 |
 |---|---|---|

@@ -12,10 +12,10 @@ import pytest
 
 from app.core.context import PolicyChunk
 from app.core.contracts import ContextPack, NextAction, ToolNotAllowed
-from app.infrastructure.travel.base import TravelSources
-from app.infrastructure.travel.kma_warning import KmaWarningSource, parse_status
-from app.infrastructure.travel.mofa import MofaTravelAlarm
-from app.modules.travel_ops.activity import ActivityTeam
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.kma_warning import KmaWarningSource, parse_status
+from app.domains.travel_ops.ports.data_sources.mofa import MofaTravelAlarm
+from app.domains.travel_ops.instances.activity import ActivityTeam
 from app.tools.read_tools import ReadToolbox, ToolContext
 
 from .helpers import FakeTools, in_hours, pack, task

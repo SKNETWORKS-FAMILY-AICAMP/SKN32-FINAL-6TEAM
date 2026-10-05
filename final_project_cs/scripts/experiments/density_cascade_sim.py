@@ -27,7 +27,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))    # 저장소 루트 — 제품 판정 코드를 그대로 쓴다
 
-from app.modules.travel_ops.itinerary_checks import Part, check_itinerary   # noqa: E402
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary   # noqa: E402
 
 KST = ZoneInfo("Asia/Seoul")
 DAY = datetime(2026, 9, 23, tzinfo=KST)

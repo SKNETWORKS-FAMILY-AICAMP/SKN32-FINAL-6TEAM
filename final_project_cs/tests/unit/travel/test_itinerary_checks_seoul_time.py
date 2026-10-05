@@ -16,7 +16,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.itinerary_checks import Part, check_itinerary
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
 
 KST = ZoneInfo("Asia/Seoul")
 UTC = timezone.utc

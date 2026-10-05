@@ -14,7 +14,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import web_guard
+from app.domains.travel_ops.modules.web_account import web_guard
 
 from .test_trip_api import _body, api  # noqa: F401 — 픽스처를 그대로 쓴다
 
@@ -29,8 +29,8 @@ def _fresh_cache():
 
 
 def _client(verify=None, chat=None):
-    from app.modules.travel_ops.trip_api import build_trip_router
-    from app.modules.travel_ops.web_limits_api import build_limits_router
+    from app.domains.travel_ops.entry.trip_api import build_trip_router
+    from app.domains.travel_ops.modules.web_account.web_limits_api import build_limits_router
     from app.presentation.api.app import create_app
 
     return TestClient(create_app(
@@ -58,7 +58,7 @@ def _member(api, headers: dict) -> dict:
     """소셜 계정이 붙은 사용자(회원) — 게스트는 여행 1개뿐이라(D-CS-011) 한도보다 많이 만드는 시험은 회원으로 한다."""
     from uuid import uuid4
 
-    from app.modules.travel_ops.web_session import resolve
+    from app.domains.travel_ops.modules.web_account.web_session import resolve
 
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         customer = resolve(conn, tenant_id=api["tenant"], raw=headers["X-User-Key"])
@@ -399,7 +399,7 @@ class _Model:
 
 @pytest.fixture()
 def _fresh_warmup():
-    from app.modules.travel_ops import model_warmup
+    from app.domains.travel_ops.modules.live_progress import model_warmup
 
     model_warmup.reset()
     yield model_warmup

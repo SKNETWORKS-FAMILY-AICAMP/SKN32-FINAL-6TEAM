@@ -28,7 +28,7 @@ python scripts/dining/preflight.py
 시각을 받는 도구를 하나 더 둔다.
 
 ```python
-from app.modules.travel_ops.dining.ledger import dining_state as _dining_state
+from app.domains.travel_ops.instances.dining.ledger import dining_state as _dining_state
 ```
 
 `_travel_tools()` 의 표에 한 줄:
@@ -140,12 +140,12 @@ python scripts/dining/run_quality.py
 | 파일 | 왜 | 누구와 |
 |---|---|---|
 | `app/tools/read_tools.py` | 위 패치 두 줄 | 코어 |
-| `app/modules/travel_ops/dining/` | `dining.py` 를 폴더로 바꿨다 | 코어 |
-| `app/modules/travel_ops/replan.py` | 후보 고르는 방식이 다르다 | **전원** |
+| `app/domains/travel_ops/instances/dining/` | `dining.py` 를 폴더로 바꿨다 | 코어 |
+| `app/domains/travel_ops/components/planning/replan.py` | 후보 고르는 방식이 다르다 | **전원** |
 | `migrations/` | 번호 구간 | 전원 |
 
 `dining.py` → `dining/` 은 등록 문자열
-`app.modules.travel_ops.dining:DiningTeam` 이 그대로 풀리도록
+`app.domains.travel_ops.instances.dining:DiningTeam` 이 그대로 풀리도록
 `__init__.py` 가 재수출한다. 네 곳에서 이 이름을 쓰고 있고 전부 안 고쳤다.
 
 ---
@@ -175,7 +175,7 @@ python scripts/dining/run_quality.py
 든 크론이든 버튼이든 상관없고, 무엇으로 바뀌어도 요식은 고치지 않는다.
 
 ```python
-from app.modules.travel_ops.dining.tick import tick_once
+from app.domains.travel_ops.instances.dining.tick import tick_once
 
 items = [(place_uid, starts_at), ...]    # 일정의 식사 항목. 코어가 꺼내 준다
 for r in tick_once(conn, now, items, fetch=읽는쪽, trial=False):

@@ -115,7 +115,7 @@ return.request · refund.request · voc.escalate
 
 ### ★ [2026-09-10] 도메인이 바뀌어 어휘가 통째로 갈렸다
 
-`[실측 2026-09-10]` `app/modules/travel_ops/` 에서 직접 센 여행 어휘다. **위 커머스 9종은 코드에 없다.**
+`[실측 2026-09-10]` `app/domains/travel_ops/` 에서 직접 센 여행 어휘다. **위 커머스 9종은 코드에 없다.**
 
 | 접두 | Action |
 |---|---|

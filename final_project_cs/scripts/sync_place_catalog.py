@@ -7,7 +7,7 @@
     python -m scripts.sync_place_catalog --area 1 --mode delta
     python -m scripts.sync_place_catalog --area 1 --mode audit --max-pages 30
 
-★출처: 활동 팀(조직 develop `scripts/sync_place_catalog.py`)의 실행 껍데기. 우리 `PlaceCatalogSync`(`infrastructure/travel/catalog_sync.py`)는
+★출처: 활동 팀(조직 develop `scripts/sync_place_catalog.py`)의 실행 껍데기. 우리 `PlaceCatalogSync`(`domains/travel_ops/ports/data_sources/catalog_sync.py`)는
   이미 있었는데 **돌리는 길이 없었다** — 장소 목록을 새로 받거나 이어받을 방법이 코드로는 없었다. 이 스크립트가 그 길이다.
 ★우리 표에는 대분류 칸(`large_class_code`)이 없다 — 팀 판의 마지막 「대분류별 건수」는 `raw_json` 의 `lclsSystm1` 로 센다.
 ★**재실행 안전.** `ON CONFLICT DO UPDATE` 로 덮어쓰고(키 · 목록 응답 값만 바뀐다 — 우리가 덧붙인 `brand` 같은 키는 남는다),
@@ -35,7 +35,7 @@ AREA_NAMES = {
 
 def _load_source():
     from app.core.settings import get_settings
-    from app.infrastructure.travel.tour_api import TourApiPlace
+    from app.domains.travel_ops.ports.data_sources.tour_api import TourApiPlace
 
     key = getattr(get_settings(), "tour_api_key", "") or ""
     if not key:
@@ -46,7 +46,7 @@ def _load_source():
 
 def _make_syncer(source, tenant_id: str, page_size: int):
     from app.infrastructure.db.session import get_connection
-    from app.infrastructure.travel.catalog_sync import PlaceCatalogSync
+    from app.domains.travel_ops.ports.data_sources.catalog_sync import PlaceCatalogSync
 
     return PlaceCatalogSync(source=source, connection_factory=get_connection, tenant_id=tenant_id,
                             page_size=page_size)

@@ -10,8 +10,8 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.trip_messages import owner_team
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.conversation.trip_messages import owner_team
 
 KST = ZoneInfo("Asia/Seoul")
 DAY = datetime(2026, 9, 30, tzinfo=KST)

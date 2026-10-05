@@ -18,10 +18,10 @@ from __future__ import annotations
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.pending import (CONSENT_KEY, CONSENT_REASON, PendingStore, ProposalRefused, choose, decide,
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.planning.pending import (CONSENT_KEY, CONSENT_REASON, PendingStore, ProposalRefused, choose, decide,
                                             is_safety)
-from app.modules.travel_ops.survey import SURVEY_VERSION
+from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
 
 from .test_trip_api import SCENARIO, _create, _detail, _slot, api  # noqa: F401 — 픽스처를 그대로 쓴다
 

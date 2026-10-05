@@ -21,11 +21,11 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from app.modules.travel_ops import trip_watch_batch
-from app.modules.travel_ops.activity import ActivityTeam
-from app.modules.travel_ops.itinerary import Item, item_to_dict
-from app.modules.travel_ops.itinerary_checks import Violation
-from app.modules.travel_ops.trip_watch_batch import Outcome, WatchBatch, digest
+from app.domains.travel_ops.components.watch import trip_watch_batch
+from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.components.itinerary.itinerary import Item, item_to_dict
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Violation
+from app.domains.travel_ops.components.watch.trip_watch_batch import Outcome, WatchBatch, digest
 
 from ..helpers import FakeTools, pack, task
 
@@ -171,7 +171,7 @@ async def test_one_failed_source_does_not_stop_the_healthy_items_from_being_appl
 
 def test_the_merged_result_is_checked_once_more_and_the_latest_change_is_dropped_until_it_passes(monkeypatch):
     items = [_item(1, "activity", "가", 10, _place("가나다 전망대", 0)), _item(2, "activity", "나", 13, _place("마바사 정원", 1))]
-    from app.modules.travel_ops.itinerary_changes import ItineraryChange
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
 
     def change(item, name):
         return ItineraryChange(reason="auto_adjusted", causes=[], notice={"text": f"{name}로 바꿨어요"},
@@ -210,7 +210,7 @@ async def test_weather_only_with_unknown_indoor_is_asked_not_changed():
 # ── 알림 문장 ─────────────────────────────────────────────────────
 
 def test_the_digest_puts_the_safety_line_first_and_never_promises_a_human():
-    from app.modules.travel_ops.itinerary_changes import ItineraryChange
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
 
     plain = _item(1, "activity", "활동 가", 10, _place("가나다 전망대", 0))
     fire = _item(2, "dining", "점심", 12, _place("마바사 식당", 1))
@@ -258,7 +258,7 @@ async def test_an_exception_in_one_item_does_not_block_the_others_and_that_item_
 
 def test_a_move_that_was_believed_replaced_but_is_still_there_after_the_change_was_dropped_is_retried(monkeypatch):
     """활동을 바꾸면 옆 이동이 새로 만들어져 그 이동 항목은 `gone`(이미 바뀜)으로 처리된다. 마지막 재판정에서 그 활동 변경이 빠지면 이동은 **그대로 남는다** — 아무도 계산한 적이 없으니 다시 연다."""
-    from app.modules.travel_ops.itinerary_changes import ItineraryChange
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
 
     activity = _item(1, "activity", "활동", 10, _place("가나다 전망대", 0))
     move = _item(2, "mobility", "활동 → 식당", 11, None, minutes=15)

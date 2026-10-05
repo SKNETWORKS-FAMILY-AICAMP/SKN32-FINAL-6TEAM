@@ -2,8 +2,8 @@ from datetime import datetime
 
 import pytest
 
-from app.modules.travel_ops.density import measure_density
-from app.modules.travel_ops.itinerary_checks import Part, check_itinerary
+from app.domains.travel_ops.components.itinerary.density import measure_density
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
 
 
 def at(clock):

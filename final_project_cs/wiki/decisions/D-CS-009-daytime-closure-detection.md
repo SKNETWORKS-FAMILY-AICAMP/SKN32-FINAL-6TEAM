@@ -25,7 +25,7 @@ domain: travel
 ## 아직 정하지 않은 것 (구현 때 정한다)
 
 - **무엇으로 확인하나** — 후보: 구글 장소의 영업 상태(유료, 무료 한도 안), 요식 쪽 방문 60·20분 전 확인
-  (`app/modules/travel_ops/dining/tick.py` — 만들어 두었지만 깨우는 쪽이 없다. 읽는 쪽 `fetch` 가 비어 있다).
+  (`app/domains/travel_ops/instances/dining/tick.py` — 만들어 두었지만 깨우는 쪽이 없다. 읽는 쪽 `fetch` 가 비어 있다).
   활동은 아직 낮 확인 소스가 없다.
 - **언제 몇 번** — 비용 상한(`program/plan/A-COP_비용과_수익구조.md` §4-A: 유료 소스는 2분 폴링 금지 — 장소 한 곳에
   상품가의 3.1배)을 넘지 않는 횟수. 방문 전 한두 번이 출발점이다.
@@ -39,4 +39,4 @@ domain: travel
 ## 관계
 
 - [../teams/dining.md](../teams/dining.md) — 식당 Team 의 감시 처리
-- `app/modules/travel_ops/dawn_check.py` 머리 — 2026-09-24 팀 결정 원문(이 결정으로 낮 부분이 바뀐다)
+- `app/domains/travel_ops/components/watch/dawn_check.py` 머리 — 2026-09-24 팀 결정 원문(이 결정으로 낮 부분이 바뀐다)

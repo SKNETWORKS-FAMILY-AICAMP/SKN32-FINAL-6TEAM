@@ -13,8 +13,8 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from app.core.contracts import NextAction
-from app.modules.travel_ops.activity import ActivityTeam
-from app.modules.travel_ops.activity import failure_codes as fc
+from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.instances.activity import failure_codes as fc
 
 from ..helpers import FakeTools, in_hours, pack, task
 

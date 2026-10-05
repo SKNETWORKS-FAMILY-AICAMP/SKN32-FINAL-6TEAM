@@ -45,7 +45,7 @@ from zoneinfo import ZoneInfo
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 ROOT = Path(__file__).resolve().parents[1]
-SCENARIO_PATH = ROOT / "app" / "modules" / "travel_ops" / "scenarios" / "seoul_day_taiwan_friends.json"
+SCENARIO_PATH = ROOT / "app" / "domains" / "travel_ops" / "scenarios" / "seoul_day_taiwan_friends.json"
 DEFAULT_OUT = ROOT / "wiki" / "records" / "evidence" / "notice_phrase_reuse.json"
 KST = ZoneInfo("Asia/Seoul")
 
@@ -118,7 +118,7 @@ def _seed(tenant: str, data: dict[str, Any], *, locales: list[str], days: int):
       §4 의 대조가 아무것도 증명하지 못하게 된다.
     """
     from app.infrastructure.db.session import get_connection
-    from app.modules.travel_ops.itinerary import Item, TripStore
+    from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
 
     day0 = date.fromisoformat(str(data["trip"]["date"]))
 
@@ -312,10 +312,10 @@ def _change_notice_contrast(notices: list[dict[str, Any]], *, locales: list[str]
 
 
 def run(*, days: int, locales: list[str], keep: bool, workdir: Path) -> dict[str, Any]:
-    from app.modules.travel_ops.case_engine import cleanup_tenant
+    from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
     from app.infrastructure.db.session import get_connection
-    from app.modules.travel_ops.plan_link import plan_url
-    from app.modules.travel_ops.trip_reminders import ReminderRules, TripReminders
+    from app.domains.travel_ops.components.itinerary.plan_link import plan_url
+    from app.domains.travel_ops.components.watch.trip_reminders import ReminderRules, TripReminders
 
     data = json.loads(SCENARIO_PATH.read_text(encoding="utf-8"))
     tenant = "phrase_" + uuid4().hex[:10]

@@ -20,7 +20,7 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import web_agent_keys
+from app.domains.travel_ops.modules.web_account import web_agent_keys
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
 from .test_web_cookie_session import WEB, _guest, cookies  # noqa: F401
@@ -80,7 +80,7 @@ def test_making_a_key_needs_the_csrf_token_and_a_cookie_session(cookies):
     assert client.post("/v1/web/agent-keys", json={"name": "x", "scope": "read"}, headers={"Origin": WEB}).status_code == 403   # CSRF 토큰 없음
     old_key = _agent(cookies)
     with get_connection() as conn, conn.transaction():
-        from app.modules.travel_ops.web_session import issue
+        from app.domains.travel_ops.modules.web_account.web_session import issue
         customer, raw = issue(conn, tenant_id=cookies["tenant"])
     assert old_key.post("/v1/web/agent-keys", json={"name": "x", "scope": "read"}, headers={"X-User-Key": raw}).status_code == 403   # 옛 키로는 못 만든다
     assert client.get("/v1/web/agent-keys").status_code == 200

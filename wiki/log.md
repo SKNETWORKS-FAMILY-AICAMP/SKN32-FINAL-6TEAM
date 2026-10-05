@@ -111,7 +111,7 @@ program/
 - **MCP 도구가 정확히 3개이고 전부 `mcp:read`.** 개수가 테스트로 고정돼 있다
 - **Response Review Team이 실제로 죽어 있었다.** 테스트가 문제의 경로를 건너뛰어 발견이 늦었다
 - **Context Broker가 설정 오류에 기동 시 죽는다.** 섹션 예산 합이 12,000과 다르면 예외
-- **Registry가 Team을 import하지 않고 주입받는다.** docstring이 `never imports app.modules`
+- **Registry가 Team을 import하지 않고 주입받는다.** docstring이 `never imports app.domains`
 
 ### 남은 것
 

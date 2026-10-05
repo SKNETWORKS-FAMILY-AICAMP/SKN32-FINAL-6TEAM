@@ -17,9 +17,9 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.itinerary_changes import ItineraryChange
-from app.modules.travel_ops.pending import apply_or_ask
-from app.modules.travel_ops.trip_watch import TripTickResult, TripWatcher
+from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
+from app.domains.travel_ops.components.planning.pending import apply_or_ask
+from app.domains.travel_ops.components.watch.trip_watch import TripTickResult, TripWatcher
 
 from .test_case_version_day import case_world  # noqa: F401 — 픽스처를 그대로 쓴다
 

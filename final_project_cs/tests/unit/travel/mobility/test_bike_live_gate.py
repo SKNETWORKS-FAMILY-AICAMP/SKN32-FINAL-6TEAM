@@ -10,9 +10,9 @@ import urllib.request
 
 import pytest
 
-from app.infrastructure.travel.source_budget import BudgetExhausted, BudgetUnavailable
-from app.modules.travel_ops.mobility import wiring
-from app.modules.travel_ops.mobility.engine.bike import BikeLive
+from app.domains.travel_ops.ports.data_sources.source_budget import BudgetExhausted, BudgetUnavailable
+from app.domains.travel_ops.instances.mobility import wiring
+from app.domains.travel_ops.instances.mobility.engine.bike import BikeLive
 
 
 class Gate:
@@ -115,6 +115,6 @@ def test_wiring_needs_no_gate_without_a_key(monkeypatch):
 def test_the_real_gate_for_the_bike_meter_can_be_built():
     """조립이 쓰는 실제 `build_gate` 가 따릉이 이름으로 만들어진다(하루 한도 이름이 settings 와 맞는다)."""
     from app.core.settings import get_settings
-    from app.infrastructure.travel.source_budget import build_gate
+    from app.domains.travel_ops.ports.data_sources.source_budget import build_gate
     assert "seoul_bike" in get_settings().source_rate_limits()
     assert build_gate(get_settings(), ["seoul_bike"]) is not None

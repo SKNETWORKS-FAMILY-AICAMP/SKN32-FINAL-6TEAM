@@ -9,8 +9,8 @@ ODsay 응답은 요금·노선 숫자만 쓰고 파일로 저장하지 않는다
 import json, os, random, re, statistics as st, sys, time, urllib.parse, urllib.request, urllib.error
 from pathlib import Path
 sys.path.insert(0, ".")
-from app.modules.travel_ops.mobility.engine.runtime import build_verifier
-from app.modules.travel_ops.mobility.engine import options as O
+from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
+from app.domains.travel_ops.instances.mobility.engine import options as O
 
 ENV = {}
 for f in (Path(".env.apikeys"), Path(".env")):

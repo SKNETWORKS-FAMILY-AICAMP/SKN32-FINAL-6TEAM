@@ -6,7 +6,7 @@ from pathlib import Path
 from datetime import date
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[5] / "final_project_cs"))
-from app.modules.travel_ops.mobility.engine.timeutil import (to_min, to_service_min, fmt_min, fmt_wall,
+from app.domains.travel_ops.instances.mobility.engine.timeutil import (to_min, to_service_min, fmt_min, fmt_wall,
                                        normalize_raw, day_type_of, is_next_day)
 
 CASES = []

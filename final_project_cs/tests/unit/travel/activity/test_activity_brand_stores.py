@@ -11,9 +11,9 @@ from datetime import datetime, timedelta
 from functools import partial
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.activity.similarity import score
-from app.modules.travel_ops.itinerary_changes import _same_activity_site
-from app.modules.travel_ops.replan import BRAND_NEARBY_M, activity_candidates, brand_of, choose, same_brand_nearby
+from app.domains.travel_ops.instances.activity.similarity import score
+from app.domains.travel_ops.components.itinerary.itinerary_changes import _same_activity_site
+from app.domains.travel_ops.components.planning.replan import BRAND_NEARBY_M, activity_candidates, brand_of, choose, same_brand_nearby
 
 AT = datetime(2026, 10, 7, 14, tzinfo=ZoneInfo("Asia/Seoul"))
 SHOP = {"lcls1": "SH", "lcls2": "SH04", "lcls3": "SH040100", "sigungu": "1"}

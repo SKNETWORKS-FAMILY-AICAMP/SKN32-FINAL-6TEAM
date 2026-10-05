@@ -11,9 +11,9 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from app.infrastructure.travel.its_traffic import ItsRouteEvents, ItsTrafficEvents
-from app.infrastructure.travel.subway_notice import AlternateRouteEvents, CompositeRouteEvents
-from app.infrastructure.travel.utic import UticIncidents, UticRouteEvents
+from app.domains.travel_ops.ports.data_sources.its_traffic import ItsRouteEvents, ItsTrafficEvents
+from app.domains.travel_ops.ports.data_sources.subway_notice import AlternateRouteEvents, CompositeRouteEvents
+from app.domains.travel_ops.ports.data_sources.utic import UticIncidents, UticRouteEvents
 
 KST = ZoneInfo("Asia/Seoul")
 NOW = datetime(2026, 10, 5, 8, 30, tzinfo=KST)
@@ -87,7 +87,7 @@ def test_both_down_is_fatal_none_and_unsupported_is_the_intersection():
 
 
 def test_composite_with_subway_still_asks_each_source_only_its_own_targets():
-    from app.infrastructure.travel.subway_notice import SubwayNotices, SubwayRouteEvents
+    from app.domains.travel_ops.ports.data_sources.subway_notice import SubwayNotices, SubwayRouteEvents
     subway = SubwayRouteEvents(SubwayNotices(service_key="k", now=lambda: NOW, transport=lambda url, params: httpx.Response(
         200, json={"header": {"resultCode": "00"}, "body": {"items": {"item": []}}}, request=httpx.Request("GET", url))))
     comp = CompositeRouteEvents([AlternateRouteEvents(_utic(text=UTIC_DOWN), _its(_item("<교통사고>::강변북로::a::b::전체차로::[사고]"))), subway])

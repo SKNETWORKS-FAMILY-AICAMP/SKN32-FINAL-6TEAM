@@ -6,10 +6,10 @@ from uuid import uuid4
 
 import pytest
 
-from app.modules.travel_ops.dining import DiningTeam
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.itinerary_changes import NoChange, plan_closed, plan_closed_on_day, plan_delay
-from app.modules.travel_ops.replan import dining_candidates, dining_fits
+from app.domains.travel_ops.instances.dining import DiningTeam
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_closed, plan_closed_on_day, plan_delay
+from app.domains.travel_ops.components.planning.replan import dining_candidates, dining_fits
 
 from .helpers import FakeTools, pack, task
 
@@ -141,8 +141,8 @@ def test_trip_desk_uses_its_tenant_when_reading_alternative_states(monkeypatch):
     from contextlib import nullcontext
     from types import SimpleNamespace
 
-    from app.modules.travel_ops.dining import ledger
-    from app.modules.travel_ops.trip_desk import TripDesk
+    from app.domains.travel_ops.instances.dining import ledger
+    from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
 
     origin, candidate = place(), place(hours=False)
     item = meal(origin)
@@ -165,7 +165,7 @@ def test_trip_desk_uses_its_tenant_when_reading_alternative_states(monkeypatch):
 def test_batch_read_tool_uses_scope_tenant_and_existing_ledger_lookup(monkeypatch):
     from contextlib import nullcontext
 
-    from app.modules.travel_ops.dining import ledger
+    from app.domains.travel_ops.instances.dining import ledger
     from app.tools.read_tools import ReadToolbox
 
     conn, seen = object(), []
@@ -189,7 +189,7 @@ def test_dawn_check_wires_ledger_without_calling_google_for_alternatives(monkeyp
     from contextlib import nullcontext
     from types import SimpleNamespace
 
-    from app.modules.travel_ops import dawn_check
+    from app.domains.travel_ops.components.watch import dawn_check
 
     origin, candidate = place(), place(hours=False)
     item = meal(origin)

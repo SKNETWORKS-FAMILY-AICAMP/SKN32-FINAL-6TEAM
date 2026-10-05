@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 from app.core.settings import Settings
-from app.infrastructure.travel.base import build_travel_sources
+from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
 
 
 def _build(**overrides):

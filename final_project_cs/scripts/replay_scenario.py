@@ -22,16 +22,16 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from app.infrastructure.db.session import get_connection
-from app.infrastructure.travel.base import TravelSources
-from app.infrastructure.travel.disruptions import DisruptionCheck
-from app.infrastructure.travel.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+from app.domains.travel_ops.ports.data_sources.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
                                               ReplayWarning, ReplayWeather)
-from app.modules.travel_ops.itinerary import Item, TripStore
-from app.modules.travel_ops.trip_desk import TripDesk
-from app.modules.travel_ops.trip_watch import TripWatcher
+from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
+from app.domains.travel_ops.components.watch.trip_watch import TripWatcher
 
 KST = ZoneInfo("Asia/Seoul")
-SCENARIO_PATH = (Path(__file__).resolve().parents[1] / "app" / "modules" / "travel_ops"
+SCENARIO_PATH = (Path(__file__).resolve().parents[1] / "app" / "domains" / "travel_ops"
                  / "scenarios" / "seoul_day_taiwan_friends.json")
 
 

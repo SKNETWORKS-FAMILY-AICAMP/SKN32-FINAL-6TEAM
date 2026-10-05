@@ -10,7 +10,7 @@ import logging
 
 import httpx
 
-from app.infrastructure.travel.seoul_subway import SeoulSubwayArrival, clean_station
+from app.domains.travel_ops.ports.data_sources.seoul_subway import SeoulSubwayArrival, clean_station
 
 KEY = "SECRETKEY123456"
 

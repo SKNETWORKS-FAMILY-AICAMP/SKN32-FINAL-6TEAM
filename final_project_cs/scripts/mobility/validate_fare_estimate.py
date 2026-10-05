@@ -5,14 +5,14 @@
 자료: ../datasets/mobility/processed/mobility/rail_edge_track_v1.jsonl.gz (datasets/mobility/scripts/build_rail_edge_distance_v1.py 가 만든다)"""
 import copy, gzip, json, math, random, sys
 sys.path.insert(0, ".")
-from app.modules.travel_ops.mobility.engine import options as O
-from app.modules.travel_ops.mobility.engine.line_order import LineOrder
-from app.modules.travel_ops.mobility.engine.geo import StationCoords
+from app.domains.travel_ops.instances.mobility.engine import options as O
+from app.domains.travel_ops.instances.mobility.engine.line_order import LineOrder
+from app.domains.travel_ops.instances.mobility.engine.geo import StationCoords
 from pathlib import Path
 D = Path("../datasets/mobility/processed/mobility")
 lo = LineOrder.load(str(D / "line_station_order_v1.json"))
 sc = StationCoords.load(str(D / "station_coords.json")) if hasattr(StationCoords, "load") else None
-rule = json.load(open("app/modules/travel_ops/mobility/engine/rules/rules_v0.3.json", encoding="utf-8"))["fare"]
+rule = json.load(open("app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.json", encoding="utf-8"))["fare"]
 tau = rule["subway"]["distance_estimate"]["value"]["tolerance"]
 # 추정 간선(공표 행 포함) — 검증용으로 공표 간선도 선로 길이로
 est_all = {}

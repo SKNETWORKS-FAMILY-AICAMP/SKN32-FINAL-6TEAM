@@ -16,8 +16,8 @@ from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.dining.ledger import slot_verdicts
-from app.modules.travel_ops.trip_api import build_trip_router
+from app.domains.travel_ops.instances.dining.ledger import slot_verdicts
+from app.domains.travel_ops.entry.trip_api import build_trip_router
 from app.presentation import security
 from app.presentation.api.app import create_app
 

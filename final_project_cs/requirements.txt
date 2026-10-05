@@ -41,7 +41,7 @@ PyJWT==2.13.0   # 소셜 로그인 토큰 확인 — app/infrastructure/oauth_pr
 cryptography==43.0.0   # 고객 디스코드 웹훅을 암호화해 저장 — customer_profile.py (설치만 돼 있고 목록에 없었다 — 도커 이미지에는 빠진다)
 socksio==1.0.0   # httpx SOCKS 프록시 — 고정 IP 서버 경유(ACOP_OUTBOUND_PROXY_URL)
 
-# ── 고객 계획 읽기 — 올린 파일을 글자로 (app/modules/travel_ops/intake/sources.py) ──
+# ── 고객 계획 읽기 — 올린 파일을 글자로 (app/domains/travel_ops/components/intake/sources.py) ──
 # ★2026-09-28 추가: 함수 안에서만 import 해서 로컬(따로 설치돼 있음)에서는 안 드러났고,
 #   main CI 가 처음 돌며 No module named 'PIL'·'docx' 로 드러났다. 판은 로컬 설치판.
 python-docx==1.2.0        # .docx

@@ -4,7 +4,7 @@
     python -m scripts.verify_travel_eval_datasets
 
 쇼핑몰 시절 검사기(`verify_eval_datasets.py`)를 대체한다 — 그쪽은 주문 · 배송 · 반품 · 교환 어휘를 허용 목록으로 갖고 있었다. 여기는 **서버가 실제로 쓰는 어휘**
-(`app/modules/travel_ops/feedback.py` 의 `INTENTS` · `ISSUE_CODES` · `SENTIMENTS` · `SEVERITIES`)를 그대로 불러와 대조한다 — 따로 적은 목록은 어긋난다.
+(`app/domains/travel_ops/components/core_hooks/feedback.py` 의 `INTENTS` · `ISSUE_CODES` · `SENTIMENTS` · `SEVERITIES`)를 그대로 불러와 대조한다 — 따로 적은 목록은 어긋난다.
 """
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from app.modules.travel_ops.feedback import INTENTS, ISSUE_CODES, SENTIMENTS, SEVERITIES
+from app.domains.travel_ops.components.core_hooks.feedback import INTENTS, ISSUE_CODES, SENTIMENTS, SEVERITIES
 
 ROOT = Path(__file__).resolve().parents[1]
 GOLDEN = ROOT / "eval/datasets/travel_golden.jsonl"

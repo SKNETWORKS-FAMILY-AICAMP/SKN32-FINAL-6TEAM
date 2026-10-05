@@ -41,7 +41,7 @@ Agentic Controller ──── Team Registry ──── Agent Team
 |---|---|
 | [runtime/](runtime/index.md) | `app/core/` (평면) |
 | [actions/](actions/index.md) | `app/core/` (평면) |
-| [teams/](teams/index.md) | `app/modules/travel_ops/` — `[실측 2026-09-10]` 작업 트리 기준. git 에는 아직 `customer_ops/` 다(삭제·추가가 커밋 전) |
+| [teams/](teams/index.md) | `app/domains/travel_ops/` — `[실측 2026-09-10]` 작업 트리 기준. git 에는 아직 `customer_ops/` 다(삭제·추가가 커밋 전) |
 | [context/](context/index.md) | `app/core/context.py`, `app/infrastructure/rag/` |
 | [external/](external/index.md) | `app/presentation/` |
 | [data/](data/index.md) | `app/infrastructure/db/` |

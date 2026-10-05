@@ -20,10 +20,10 @@ import pytest
 
 from app.core.actions import ActionRejected
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.itinerary import item_to_dict
-from app.modules.travel_ops.itinerary_actions import (ACTION_TYPE, RECHECK_FAILED, ItineraryApply, change_arguments,
+from app.domains.travel_ops.components.itinerary.itinerary import item_to_dict
+from app.domains.travel_ops.components.actions.itinerary_actions import (ACTION_TYPE, RECHECK_FAILED, ItineraryApply, change_arguments,
                                                       introduced_violations)
-from app.modules.travel_ops.itinerary_changes import ItineraryChange
+from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
 
 from .test_case_version_day import case_world  # noqa: F401 — 픽스처를 그대로 쓴다
 
@@ -83,7 +83,7 @@ def test_an_automatic_change_that_breaks_the_whole_itinerary_is_not_applied(case
 
 def test_the_customer_chosen_reasons_do_not_go_through_the_gate():
     """고객이 직접 고른 변경(다른 안으로 · 되돌리기 · 제안 고르기)은 그 자체가 답이다 — 문 목록이 코드에 그대로 있다."""
-    from app.modules.travel_ops.itinerary_actions import CHOSEN_BY_CUSTOMER
+    from app.domains.travel_ops.components.actions.itinerary_actions import CHOSEN_BY_CUSTOMER
 
     assert CHOSEN_BY_CUSTOMER == {"customer_request", "rollback", "customer_choice"}
     import inspect

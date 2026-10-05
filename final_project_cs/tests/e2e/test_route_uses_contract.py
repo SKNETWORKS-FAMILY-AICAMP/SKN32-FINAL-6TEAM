@@ -20,12 +20,12 @@ from pathlib import Path
 
 import pytest
 
-from app.modules.travel_ops.route_uses import problem, route_problems
+from app.domains.travel_ops.components.itinerary.route_uses import problem, route_problems
 
 from .test_trip_api import _body, api  # noqa: F401 — 픽스처를 그대로 쓴다
 
 # ★`[2026-09-30]` 시연 모드(`scenario_mode`)를 떼어, 대본 파일은 다른 시험처럼 경로로 직접 읽는다
-SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "modules" / "travel_ops"
+SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "domains" / "travel_ops"
                        / "scenarios" / "seoul_day_taiwan_friends.json").read_text(encoding="utf-8"))
 
 

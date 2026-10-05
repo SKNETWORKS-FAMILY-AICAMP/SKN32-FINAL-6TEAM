@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import httpx
 
-from app.infrastructure.travel.heritage import HeritageSource
-from app.infrastructure.travel.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.heritage import HeritageSource
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
 from app.tools.read_tools import ReadToolbox
 
 LIST_ONE = '<?xml version="1.0"?><result><item><ccbaKdcd>11</ccbaKdcd>' \

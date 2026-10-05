@@ -10,7 +10,7 @@ for _p in (REPO / "final_project_cs",):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from app.modules.travel_ops.mobility.engine.bus_profile import BusSegProfile, worst_not_before_best, board_caps  # noqa: E402
+from app.domains.travel_ops.instances.mobility.engine.bus_profile import BusSegProfile, worst_not_before_best, board_caps  # noqa: E402
 
 
 def H(v, hour=None, n=30):

@@ -27,7 +27,7 @@ domain: neutral
 
 ## 아래층 — 동작과 선택
 
-**어디에 걸리나.** `TravelSource._allow` → 제한기 `acquire(이름)` 한 곳. 안쪽(프로세스 안) 제한기를 먼저 통과한 뒤 DB 한 칸을 확보한다(`app/infrastructure/travel/source_budget.py`). 캐시 적중은 바깥으로 안 나가니 한도를 안 쓴다. `TravelSource` 를 거치지 않고 직접 부르는 코드(따릉이 `urllib`)는 `build_gate(settings, ["seoul_bike"])` 로 같은 문을 쓴다.
+**어디에 걸리나.** `TravelSource._allow` → 제한기 `acquire(이름)` 한 곳. 안쪽(프로세스 안) 제한기를 먼저 통과한 뒤 DB 한 칸을 확보한다(`app/domains/travel_ops/ports/data_sources/source_budget.py`). 캐시 적중은 바깥으로 안 나가니 한도를 안 쓴다. `TravelSource` 를 거치지 않고 직접 부르는 코드(따릉이 `urllib`)는 `build_gate(settings, ["seoul_bike"])` 로 같은 문을 쓴다.
 
 **제공처가 「한도 초과」를 알릴 때.** ITS 는 월 한도가 차면 HTTP 401 + `resultCode 4001` 로 답한다. 어댑터가 그 숫자 코드를 알아보면(`_quota_signal`) 그 달 줄에 `exhausted_at` · `learned_cap`(그때까지 센 사용 수 = 제공처가 허락한 한도의 **관측값**)을 남기고(마이그레이션 049), **그날 한국 자정까지 그 소스를 부르지 않는다**(한도가 차 있던 날 하루 800~900건을 헛호출하던 것을 막는다 — 9/30 937건 · 10/2 825건). 다음 날 첫 호출이 한 번 시험해 — 여전히 초과면 다시 표시하고, 풀렸으면(한도 증설 · 달 바뀜) 그대로 쓴다. 달이 바뀌면 새 줄이라 자동으로 풀린다. 새 소스의 신호는 어댑터에 `_quota_signal` 한 메서드만 더하면 된다(공급자마다 신호가 다르다).
 
@@ -43,4 +43,4 @@ domain: neutral
 
 **따릉이.** 서울 열린데이터광장 일반 키로 부르는 따릉이 거치 대수의 하루 상한은 `ACOP_RATE_SEOUL_BIKE_PER_DAY`(기본 1,000 — 공식 하루 한도를 못 찾아 **우리가 고른 보수적 값** `[미확인]`). 이동 모듈이 `bike.py` 에서 위 문을 쓰도록 잇는 일은 이동 세션 몫이다.
 
-관련: [rest-endpoints](../external/rest-endpoints.md)(외부 소스는 REST 가 아니라 여기) · 코드 `app/infrastructure/travel/call_budget.py` · `source_budget.py` · 보고 `scripts/report_source_budget.py` · 시험 `tests/unit/travel/test_source_budget.py` · `tests/integration/db/test_source_budget_db.py`.
+관련: [rest-endpoints](../external/rest-endpoints.md)(외부 소스는 REST 가 아니라 여기) · 코드 `app/domains/travel_ops/ports/data_sources/call_budget.py` · `source_budget.py` · 보고 `scripts/report_source_budget.py` · 시험 `tests/unit/travel/test_source_budget.py` · `tests/integration/db/test_source_budget_db.py`.

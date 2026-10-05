@@ -22,15 +22,15 @@ CHECKS = [
      r"DROP INDEX[^;]*places_shared_name_kind_uq", None),   # 옛 유일 조건(029)을 걷어 내야 된 것
     ("2", "코어 장소가 요식 번호(place_uid)를 쓴다", "app/infrastructure/db/migrations/",
      r"place_uid", None),
-    ("3", "일정 짜기 · 대체 판정이 영업시간을 요식 표에서 읽는다", "app/modules/travel_ops/",
+    ("3", "일정 짜기 · 대체 판정이 영업시간을 요식 표에서 읽는다", "app/domains/travel_ops/",
      r"dining\.(open_at_slot|day_intervals|v_hours_rule_active)", None),
-    ("6", "동행 조건 판정이 요식 속성을 읽는다", "app/modules/travel_ops/",
+    ("6", "동행 조건 판정이 요식 속성을 읽는다", "app/domains/travel_ops/",
      r"dining\.(meets_condition|v_attribute_active)", None),
-    ("7", "여행 등록이 요식 목록을 먼저 찾는다", "app/modules/travel_ops/intake/",
+    ("7", "여행 등록이 요식 목록을 먼저 찾는다", "app/domains/travel_ops/components/intake/",
      r"dining\.|dn_place", None),
     ("8", "다시 적재가 코어 DB 를 지우지 않는다", "scripts/dining/rebuild.py",
      r"--target", None),
-    ("제안 A", "휴무 · 지연 대안에 요식 원장 대안을 쓴다", "app/modules/travel_ops/itinerary_changes.py",
+    ("제안 A", "휴무 · 지연 대안에 요식 원장 대안을 쓴다", "app/domains/travel_ops/components/itinerary/itinerary_changes.py",
      r"suggest_alternatives|alternative_pool", None),
     ("제안 B", "당일 점검(tick_once)을 코어가 부른다", "app/",
      r"tick_once", None),
@@ -39,7 +39,7 @@ CHECKS = [
 ]
 
 #: 요식 자기 파일은 「코어가 쓴다」의 근거가 아니다.
-OWN = ("app/modules/travel_ops/dining/", "app/infrastructure/db/migrations/2")
+OWN = ("app/domains/travel_ops/instances/dining/", "app/infrastructure/db/migrations/2")
 
 
 def grep(ref: str, pattern: str, path: str) -> list[str]:

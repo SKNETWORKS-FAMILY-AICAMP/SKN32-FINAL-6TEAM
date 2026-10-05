@@ -28,8 +28,8 @@ v11 은 읽기 전용이라 고치지 않고 이 문서가 그 자리를 대신�
 | 층 | 언제 | 무엇을 한다 | 코드 |
 |---|---|---|---|
 | **조립(기동)** | 선언한 포트·Team 을 만들 수 없다 | `CompositionError` 로 **기동 거부** | `final_project_cs/app/composition.py:102`·`:106`·`:112`·`:192`·`:200` |
-| 조립(기동) | 외부 소스 키가 없다 | 그 소스만 빠지고 기동은 된다. 무엇이 왜 빠졌는지 `unavailable` 에 남고 `/ui/admin` 이 보여 준다 | `app/infrastructure/travel/base.py:365`·`:411`~`:503` |
-| **실행(Case)** | 1차·대체 소스가 모두 값을 못 냈다 | `verdict="fatal"` → 일정을 바꾸지 않고 `escalated(fatal_source_failure)` 로 **사람 인계** | `app/infrastructure/travel/disruptions.py:117`·`:148`, `app/modules/travel_ops/activity.py:83`, `mobility.py:69`, `itinerary_team.py:179` |
+| 조립(기동) | 외부 소스 키가 없다 | 그 소스만 빠지고 기동은 된다. 무엇이 왜 빠졌는지 `unavailable` 에 남고 `/ui/admin` 이 보여 준다 | `app/domains/travel_ops/ports/data_sources/base.py:365`·`:411`~`:503` |
+| **실행(Case)** | 1차·대체 소스가 모두 값을 못 냈다 | `verdict="fatal"` → 일정을 바꾸지 않고 `escalated(fatal_source_failure)` 로 **사람 인계** | `app/domains/travel_ops/ports/data_sources/disruptions.py:117`·`:148`, `app/domains/travel_ops/instances/activity.py:83`, `mobility.py:69`, `itinerary_team.py:179` |
 | **배치(스위퍼)** | 회차 안에 `fatal` 이 하나라도 있다 | stderr 로 사유를 내고 `--once` 는 **exit 1** — cron 이 실패로 본다 | `scripts/run_sweepers.py:186`·`:214` |
 
 ## 선택지와 이유
@@ -50,10 +50,10 @@ v11 은 읽기 전용이라 고치지 않고 이 문서가 그 자리를 대신�
 
 `[실측 2026-09-21]` 코드를 직접 읽어 확인했다. 검증 기록은 `final_project_cs/wiki/records/reports/2026-09-21_0100_결정15_적용경로_실측.md`.
 
-- `app/infrastructure/travel/base.py:368` — 「키가 없으면 **그 소스만** 빠진다. 앱이 죽지도 않고, 가짜로 채우지도 않는다」
-- `app/infrastructure/travel/disruptions.py:148` — 「1차·대체 소스가 모두 값을 못 냈다」 → `status="failed"` → 같은 파일 `:117` 에서 `verdict="fatal"`
-- `app/modules/travel_ops/activity.py:85` · `mobility.py:69` — `self._escalate(task, "fatal_source_failure", …)`
-- `app/modules/travel_ops/scenario_mode.py:209` — 「점검 소스가 답하지 않은 항목이 … 일정을 바꾸지 않고 사람에게 넘겼어요(결정 15)」
+- `app/domains/travel_ops/ports/data_sources/base.py:368` — 「키가 없으면 **그 소스만** 빠진다. 앱이 죽지도 않고, 가짜로 채우지도 않는다」
+- `app/domains/travel_ops/ports/data_sources/disruptions.py:148` — 「1차·대체 소스가 모두 값을 못 냈다」 → `status="failed"` → 같은 파일 `:117` 에서 `verdict="fatal"`
+- `app/domains/travel_ops/instances/activity.py:85` · `mobility.py:69` — `self._escalate(task, "fatal_source_failure", …)`
+- `app/domains/travel_ops/scenario_mode.py:209` — 「점검 소스가 답하지 않은 항목이 … 일정을 바꾸지 않고 사람에게 넘겼어요(결정 15)」
 - `scripts/run_sweepers.py:186` — 「결정 15 — 대체 소스까지 실패한 치명은 **사람이 봐야 한다.** 세기만 하고 넘기지 않는다」, `:214` — `return 1 if _report_errors(result) else 0`
 
 ## 아직 정하지 않은 것

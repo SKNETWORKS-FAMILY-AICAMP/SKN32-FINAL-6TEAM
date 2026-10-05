@@ -16,10 +16,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.modules.travel_ops.mobility.engine import plan as P
-from app.modules.travel_ops.mobility.engine.paths import RULES_DIR
-from app.modules.travel_ops.mobility.engine.runtime import Runtime
-from app.modules.travel_ops.mobility.engine.verify_time import Timetable, Verifier
+from app.domains.travel_ops.instances.mobility.engine import plan as P
+from app.domains.travel_ops.instances.mobility.engine.paths import RULES_DIR
+from app.domains.travel_ops.instances.mobility.engine.runtime import Runtime
+from app.domains.travel_ops.instances.mobility.engine.verify_time import Timetable, Verifier
 
 RULES = json.loads((RULES_DIR / "rules_v0.3.json").read_text(encoding="utf-8"))
 
@@ -101,7 +101,7 @@ _RT = None
 def _runtime():
     global _RT
     if _RT is None:
-        from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+        from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
         try:
             _RT = build_verifier(quiet=True)
         except RuntimeError as e:
@@ -182,7 +182,7 @@ def test_blocked_only_gate_synthetic():
 # ── 게이트 — GPT 85 대조로 더한 축 ─────────────────────────────────────
 def test_ambiguous_station_skip_blocks_only_that_physical_station():
     """동명이역(양평 5호선 ↔ 경의중앙선 양평) — 실제 StationCoords 로. 5호선 양평 무정차는 5호선 양평만 막는다."""
-    from app.modules.travel_ops.mobility.engine.geo import StationCoords
+    from app.domains.travel_ops.instances.mobility.engine.geo import StationCoords
     sc = StationCoords({"stations": {
         "양평|05호선": {"station_key": "양평|05호선", "station_nm": "양평", "line": "05호선", "lat": 37.5343, "lng": 126.8859},
         "양평|경의선": {"station_key": "양평|경의선", "station_nm": "양평", "line": "경의선", "lat": 37.4925, "lng": 127.4917}}},

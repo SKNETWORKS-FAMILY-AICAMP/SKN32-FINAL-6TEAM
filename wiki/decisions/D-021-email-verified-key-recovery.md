@@ -63,7 +63,7 @@ D-020 이 이미 약속했고 아직 없다. 이메일을 붙이든 안 붙이�
 
 ### 서버 — 되어 있다
 
-`app/modules/travel_ops/web_session.py` · 저장 `web_user_keys`(마이그레이션 025).
+`app/domains/travel_ops/modules/web_account/web_session.py` · 저장 `web_user_keys`(마이그레이션 025).
 
 | 하는 일 | 함수 | 상태 |
 |---|---|---|

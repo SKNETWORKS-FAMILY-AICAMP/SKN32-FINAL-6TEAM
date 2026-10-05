@@ -25,9 +25,9 @@ from uuid import UUID
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.intake import areas as areas_module
-from app.modules.travel_ops.intake import pipeline, stream
-from app.modules.travel_ops.intake.areas import AreaIndex
+from app.domains.travel_ops.components.intake import areas as areas_module
+from app.domains.travel_ops.components.intake import pipeline, stream
+from app.domains.travel_ops.components.intake.areas import AreaIndex
 
 from .test_intake_review import OPEN_ALL, _catalog, _client, _edit, _field, _hours, _item, _key, _row, _send, rv  # noqa: F401
 from .test_trip_api import api  # noqa: F401

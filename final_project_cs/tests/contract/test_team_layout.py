@@ -1,12 +1,12 @@
 """Team 이 파일 하나로 살든 폴더로 살든 같은 등록 문자열로 불린다 (2026-09-28).
 
-팀마다 코드를 `app/modules/travel_ops/` 아래에 두는 방식이 셋이다. 셋 다 허용한다.
+팀마다 코드를 `app/domains/travel_ops/instances/` 아래에 두는 방식이 셋이다. 셋 다 허용한다.
 
     파일 하나      activity.py                     (예전 방식)
     폴더           activity/__init__.py · team.py  (본체는 어느 쪽에 둬도 된다)
     파일 + 엔진    mobility.py + mobility_engine/  (엔진을 다른 이름 폴더로 옆에 둔다)
 
-어느 방식이든 등록 문자열은 `app.modules.travel_ops.<팀>:<클래스>` 그대로다.
+어느 방식이든 등록 문자열은 `app.domains.travel_ops.instances.<팀>:<클래스>` 그대로다.
 여기서는 방식이 섞여 **조용히 틀리는** 경우만 막는다.
 """
 from __future__ import annotations
@@ -19,7 +19,8 @@ import pytest
 
 from app.core.project_config import load_project_config
 
-TRAVEL_OPS = Path("app/modules/travel_ops")
+#: ★`[2026-10-06]` 팀은 `app/domains/travel_ops/instances/` 칸에 산다(D-CS-013). 그 전에는 travel_ops 바로 아래였다.
+TRAVEL_OPS = Path("app/domains/travel_ops/instances")
 
 
 def _teams():
@@ -61,5 +62,5 @@ def test_the_registered_class_is_reachable_the_same_way(team_id: str, ref: str):
         f"`__init__.py` 에서 `from .team import {class_name}` 로 다시 내보낸다.")
     assert cls.manifest.team_id == team_id
     source = Path(inspect.getsourcefile(cls)).resolve()
-    assert (Path.cwd() / "app" / "modules").resolve() in source.parents, (
-        f"{ref} 의 클래스가 app/modules 밖에 정의돼 있다: {source}")
+    assert (Path.cwd() / "app" / "domains").resolve() in source.parents, (
+        f"{ref} 의 클래스가 app/domains 밖에 정의돼 있다: {source}")

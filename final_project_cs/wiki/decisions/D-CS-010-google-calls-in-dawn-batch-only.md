@@ -31,7 +31,7 @@ domain: travel
 
 ## 코드
 
-- 채팅 장소 조회 `app/modules/travel_ops/trip_facts.py` `look_up_place` — 요식 원장 → 관광공사까지만. 시험
+- 채팅 장소 조회 `app/domains/travel_ops/components/conversation/trip_facts.py` `look_up_place` — 요식 원장 → 관광공사까지만. 시험
   `tests/integration/travel/test_place_info.py::test_the_chat_never_calls_google_even_when_the_hours_are_unknown`.
 - 구글을 부르는 곳(코드 검색 기준): `scripts/run_sweepers.py` 의 새벽 확인 조립 하나. 요식 세션의 수동 스크립트
   `scripts/dining/google_link.py`(가게에 구글 식별자를 붙이는 일회성 작업, 사람이 돌린다)는 별도다 — 이 결정에 맞출지 팀이 본다.

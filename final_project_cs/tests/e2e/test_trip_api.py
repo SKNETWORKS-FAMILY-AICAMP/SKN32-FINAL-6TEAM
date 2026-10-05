@@ -21,18 +21,18 @@ from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
-from app.infrastructure.travel.base import TravelSources
-from app.infrastructure.travel.disruptions import DisruptionCheck
-from app.infrastructure.travel.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+from app.domains.travel_ops.ports.data_sources.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
                                               ReplayWarning, ReplayWeather)
-from app.modules.travel_ops.itinerary import TripStore
-from app.modules.travel_ops.trip_api import build_trip_router, plan_token
-from app.modules.travel_ops.trip_watch import TripWatcher
+from app.domains.travel_ops.components.itinerary.itinerary import TripStore
+from app.domains.travel_ops.entry.trip_api import build_trip_router, plan_token
+from app.domains.travel_ops.components.watch.trip_watch import TripWatcher
 from app.presentation import security
 from app.presentation.api.app import create_app
 
 KST = ZoneInfo("Asia/Seoul")
-SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "modules" / "travel_ops"
+SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "domains" / "travel_ops"
                        / "scenarios" / "seoul_day_taiwan_friends.json").read_text(encoding="utf-8"))
 DAY = SCENARIO["trip"]["date"]
 REPORTS = {report["type"]: report for report in SCENARIO["customer_reports"]}
@@ -95,7 +95,7 @@ def api(monkeypatch):
     watcher = TripWatcher(store=store, check=check, connection_factory=get_connection,
                           clock=clock, routes=None, route_events=ReplayRouteEvents(timeline))
     # ★`[2026-10-02 결함 인계 #2]` 제안 고르기는 그 일정이 **끝났으면** 못 고른다(`pending.choose`) — 대본 날짜는 지난 날이라 실시간으로 보면 전부 끝난 것이 된다. 시계를 대본의 것으로
-    from app.modules.travel_ops import pending as pending_module
+    from app.domains.travel_ops.components.planning import pending as pending_module
 
     monkeypatch.setattr(pending_module, "wall_clock", lambda: clock.now)
 
@@ -280,8 +280,8 @@ def test_places_from_outside_services_stay_with_their_own_trip(api):
     """★`[2026-09-27]` 관광공사·카카오에서 받은 장소는 공용 표에 쌓아 다른 고객에게 재사용하지 않는다
     (콘텐츠랩 「로컬서버 저장 금지」 · 카카오 운영정책 제5조 — 마이그레이션 029). 그 여행 전용 행이 되고,
     그 여행의 감시·대체 일정에서는 보이고, 공용 목록·다른 여행에서는 안 보인다."""
-    from app.modules.travel_ops.itinerary import TripStore
-    from app.modules.travel_ops.planner import load_candidates
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
+    from app.domains.travel_ops.components.planning.planner import load_candidates
 
     outside = {"key": "market", "name": "광장시장", "kind": "activity", "lat": 37.5700, "lon": 126.9996,
                "weather_sensitive": False,
@@ -525,8 +525,8 @@ def test_the_confirmed_day_is_accepted_as_submitted(api):
 
 def test_a_plan_link_opens_for_a_trip_in_another_tenant(api):
     """★시나리오 모드처럼 **다른 테넌트**의 여행도 링크로 열린다 — 통지에 실린 링크가 404 였다."""
-    from app.modules.travel_ops.itinerary import Item, TripStore
-    from app.modules.travel_ops.trip_api import plan_token
+    from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+    from app.domains.travel_ops.entry.trip_api import plan_token
 
     other = "planlink_" + uuid4().hex[:10]
     with get_connection() as conn:
@@ -616,7 +616,7 @@ def test_places_of_an_ended_trip_lose_outside_values_but_keep_their_name(api):
     끝나기 전 · 공용 행은 그대로다. 다시 돌려도 같은 행을 두 번 비우지 않는다."""
     from datetime import timedelta
 
-    from app.modules.travel_ops.trip_places import scrub_ended
+    from app.domains.travel_ops.components.itinerary.trip_places import scrub_ended
 
     body = _body(api["customer"], request_id="scrub-1")
     body["places"].append({"key": "market", "name": "광장시장", "kind": "activity", "lat": 37.57, "lon": 126.9996,

@@ -10,7 +10,7 @@ domain: travel
 
 # Booking Handoff Team
 
-★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/booking_handoff.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
+★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/domains/travel_ops/instances/booking_handoff/__init__.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
 
 근거는 계획서 v11 §5·§4-C.
 
@@ -88,7 +88,7 @@ domain: travel
 
 ### 변경 링크 `[2026-09-22]` — 이 절도 명세였다가 사실이 됐다
 
-`[실측 2026-09-22]` `GET /booking-change/{booking_id}?t=…` — 구현은 [`app/modules/travel_ops/change_link.py`](../../app/modules/travel_ops/change_link.py), 라우트는 `trip_api.py`. **모양은 계획서 링크를 본떴다** — 로그인 없음 · **예약별** HMAC 토큰 · 토큰을 저장하지 않고 비밀 키로 다시 계산 · 틀리면 `404`(있는지도 말하지 않는다).
+`[실측 2026-09-22]` `GET /booking-change/{booking_id}?t=…` — 구현은 [`app/domains/travel_ops/components/booking/change_link.py`](../../app/domains/travel_ops/components/booking/change_link.py), 라우트는 `trip_api.py`. **모양은 계획서 링크를 본떴다** — 로그인 없음 · **예약별** HMAC 토큰 · 토큰을 저장하지 않고 비밀 키로 다시 계산 · 틀리면 `404`(있는지도 말하지 않는다).
 
 ★**이 경로는 승인이 필요 없다.** 아무것도 쓰지 않는다 — 읽기만 하고, **업체 예약을 바꾸는 것은 고객이 업체 쪽에서** 한다. 승인이 필요한 것은 우리 예약을 `change_requested` 로 옮기는 **기록** 쪽이고, 그 기록(`booking.change` 적용기)이 이 링크를 인계 메시지에 싣는다.
 
@@ -152,10 +152,10 @@ domain: travel
 - 한 Case 의 제안 둘 중 하나가 범위 밖이면 **첫째까지 되돌린다** — 위임 없는 상태에서 원장에 한 건이라도 남는 쪽이 더 나쁘다.
 - 되돌린 건을 누적 합에서 **빼지 않는다.** 빼면 「취소 → 되돌림」을 반복해 상한을 무한히 쓸 수 있다.
 - 판정 근거(무엇을 무엇과 비교했나)는 성공한 건의 `action_requests.delegation_json` 에, 거부된 건은 `case_events` 에 남는다.
-- 구현: [`app/modules/travel_ops/delegation.py`](../../app/modules/travel_ops/delegation.py) · 마이그레이션 [019](../../app/infrastructure/db/migrations/019_delegation_and_execution_record.sql).
+- 구현: [`app/domains/travel_ops/components/booking/delegation.py`](../../app/domains/travel_ops/components/booking/delegation.py) · 마이그레이션 [019](../../app/infrastructure/db/migrations/019_delegation_and_execution_record.sql).
 - 재는 것: `python -m scripts.measure_delegation_scope` — **실측 13건을 흘려 범위 밖 10건 중 자동 실행 0건**(분모는 범위 밖 시도 10건). 같이 본 것 — 범위 안인데 막힌 건수 0/3.
 - 시험: [`tests/integration/controller/test_delegation_scope.py`](../../tests/integration/controller/test_delegation_scope.py)(13). 근거 → [evidence](../records/evidence/DoD-v11-18-21_위임범위와_되돌림.md) · [리포트](../records/reports/2026-09-22_1450_DoD-18-21_위임범위와_되돌림_리포트.md)
-- ~~**아직 없는 것**: 위임을 주고 거두는 **화면·API**~~ → `[2026-09-22 해결]` **생겼다** — REST `/v1/delegations/*` 넷([`delegation_api.py`](../../app/modules/travel_ops/delegation_api.py))과 운영 화면 `/ui/delegations`. scope 는 `delegation:read`·`delegation:write` 로 **`action:approve` 와 나눴다**(승인은 제안 한 건, 위임은 거둘 때까지 서 있는 권한). 주고 거둔 **이력**은 마이그레이션 [021](../../app/infrastructure/db/migrations/021_delegation_audit_trail.sql) `delegation_events` 에 덧붙는다 — 019 만으로는 **다시 주기가 「누가 거뒀나」를 덮어 지웠다**. → [../actions/approval.md](../actions/approval.md#위임을-누가-주고-거두나-2026-09-22)
+- ~~**아직 없는 것**: 위임을 주고 거두는 **화면·API**~~ → `[2026-09-22 해결]` **생겼다** — REST `/v1/delegations/*` 넷([`delegation_api.py`](../../app/domains/travel_ops/entry/delegation_api.py))과 운영 화면 `/ui/delegations`. scope 는 `delegation:read`·`delegation:write` 로 **`action:approve` 와 나눴다**(승인은 제안 한 건, 위임은 거둘 때까지 서 있는 권한). 주고 거둔 **이력**은 마이그레이션 [021](../../app/infrastructure/db/migrations/021_delegation_audit_trail.sql) `delegation_events` 에 덧붙는다 — 019 만으로는 **다시 주기가 「누가 거뒀나」를 덮어 지웠다**. → [../actions/approval.md](../actions/approval.md#위임을-누가-주고-거두나-2026-09-22)
 - **아직 없는 것**: 위임 범위를 **Trip 단위**로 좁히는 것 — `bookings` 에 `trip_id` 가 없어 고객 단위로 뒀고, 그쪽이 상한을 **더 빨리 채우는**(안전한) 방향이다.
 
 ### ② 감시 소스 · ③ 재계획 후보
@@ -197,7 +197,7 @@ issue_code `booking_revert_request` → capability `booking.prepare_revert` → 
 
 ## manifest — 실제 구현
 
-`[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/booking_handoff.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
+`[실측 2026-09-10 작업 트리]` `app/domains/travel_ops/instances/booking_handoff/__init__.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
 
 ```python
 capabilities          = ["booking.verify",           # 예약이 실재하고 우리가 아는 것과 같은가

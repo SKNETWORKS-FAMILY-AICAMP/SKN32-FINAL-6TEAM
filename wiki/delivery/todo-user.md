@@ -65,7 +65,7 @@ git pull --rebase origin role-manager; if ($?) { python program/scripts/check_wi
 |---|---|
 | **★여행 Case 가 라우팅되지 않는다** | 여행 Team 여섯이 등록됐는데 분류기 어휘가 쇼핑몰이라 **아무도 안 불린다.** 이게 안 풀리면 시연할 게 없다 |
 | **구현 카탈로그를 손으로 유지하는 목록 둘** | 새 Team 을 붙일 때 코어 파일 둘을 손으로 고쳐야 한다. 안 고치면 조립은 뜨는데 **Composer 로 저장이 안 된다.** 안은 나왔다 → [D-015](../decisions/D-015-implementation-catalog.md) |
-| ~~**`business_subject` 3단 폴백**~~ Core의 최종 키 대상 고정 | ~~`travel_ops/_base.py:169` 이 `case_id` 로 떨어진다. **한 사건이 여러 예약을 바꿀 때 둘째가 조용히 합쳐진다.**~~ `[정정 2026-09-10]` Team의 3단 폴백 값은 최종 키에 쓰이지 않고 Core가 `app/application/controller.py:371-374`에서 `business_subject=str(case["case_id"])`로 고정하므로, Core가 서버에서 검증한 대상 객체 id를 쓰도록 고쳐야 한다(v11 §4-E 미구현; 2026-09-10 실측). **DoD-24 가 이걸 검사한다** |
+| ~~**`business_subject` 3단 폴백**~~ Core의 최종 키 대상 고정 | ~~`travel_ops/instances/_shared/_base.py:169` 이 `case_id` 로 떨어진다. **한 사건이 여러 예약을 바꿀 때 둘째가 조용히 합쳐진다.**~~ `[정정 2026-09-10]` Team의 3단 폴백 값은 최종 키에 쓰이지 않고 Core가 `app/application/controller.py:371-374`에서 `business_subject=str(case["case_id"])`로 고정하므로, Core가 서버에서 검증한 대상 객체 id를 쓰도록 고쳐야 한다(v11 §4-E 미구현; 2026-09-10 실측). **DoD-24 가 이걸 검사한다** |
 | ~~도메인 무관 가드가 여행 어휘를 모른다~~ | **닫힘 (2026-09-10).** `booking`·`itinerary`·`lodging`·`supplier_booking`·`traveller` 가 들어갔고 옛 어휘는 안 지웠다 |
 | 분류기 정렬 가드가 헛돈다 | `test_feedback_intent_alignment.py` 가 등록조차 안 된 팀 하나를 본다. **등록표를 읽어야 한다** |
 

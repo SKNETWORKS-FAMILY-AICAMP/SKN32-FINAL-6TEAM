@@ -2,8 +2,8 @@
 from datetime import datetime
 from uuid import uuid4
 
-from app.modules.travel_ops.dining.ledger import dining_states
-from app.modules.travel_ops.replan import dining_candidates
+from app.domains.travel_ops.instances.dining.ledger import dining_states
+from app.domains.travel_ops.components.planning.replan import dining_candidates
 
 from tests.integration.dining.test_dining_judgment import add_hours
 

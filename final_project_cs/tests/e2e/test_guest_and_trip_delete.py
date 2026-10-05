@@ -24,9 +24,9 @@ from uuid import UUID, uuid4
 from fastapi.testclient import TestClient
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import web_guard
-from app.modules.travel_ops.guest_cleanup import cleanup_guests
-from app.modules.travel_ops.itinerary import TripStore
+from app.domains.travel_ops.modules.web_account import web_guard
+from app.domains.travel_ops.modules.web_account.guest_cleanup import cleanup_guests
+from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
 from .test_trip_api import _body, api  # noqa: F401 — 픽스처를 그대로 쓴다
 from .test_web_cookie_session import WEB, _guest, cookies  # noqa: F401
@@ -175,7 +175,7 @@ def test_every_table_that_carries_a_trip_number_is_accounted_for():
 # ── 계획서 내려받기 ───────────────────────────────────────────────
 def test_the_plan_link_can_be_downloaded_as_a_file_without_logging_in(cookies):
     """게스트 데이터는 보존 시간 뒤 지워진다 — 계획서 링크에 `download=1` 을 붙이면 같은 페이지를 **파일로** 받는다(로그인 없음 · 링크가 곧 자격)."""
-    from app.modules.travel_ops.plan_link import plan_token
+    from app.domains.travel_ops.components.itinerary.plan_link import plan_token
 
     _guest(cookies)
     status, trip = _make_trip(cookies)
@@ -220,7 +220,7 @@ def test_two_simultaneous_creations_make_only_one_trip_for_a_guest(cookies):
 
 def test_guest_trip_dates_are_bounded(cookies):
     """시작이 너무 먼 여행 · 너무 긴 여행 — 규칙 함수를 직접 부른다(API 는 일정 판정이 먼저라 이 규칙까지 못 오는 몸통이 있다)."""
-    from app.modules.travel_ops import guest_policy
+    from app.domains.travel_ops.modules.web_account import guest_policy
 
     _guest(cookies)
     customer = _customer_of(cookies)

@@ -10,9 +10,9 @@ from uuid import UUID
 
 import pytest
 
-from app.modules.travel_ops.itinerary_changes import NoChange, plan_closed, plan_closed_on_day
-from app.modules.travel_ops.pending import options_from
-from app.modules.travel_ops.replan import alternate_record, choose, dining_candidates
+from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_closed, plan_closed_on_day
+from app.domains.travel_ops.components.planning.pending import options_from
+from app.domains.travel_ops.components.planning.replan import alternate_record, choose, dining_candidates
 
 from .test_dining_alternative_opening import at, meal, place
 

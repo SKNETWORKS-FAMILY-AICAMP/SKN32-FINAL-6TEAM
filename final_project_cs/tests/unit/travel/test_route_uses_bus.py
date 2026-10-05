@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.modules.travel_ops.route_uses import problem
+from app.domains.travel_ops.components.itinerary.route_uses import problem
 
 A_OR_B = ["01A", "01B", "702A", "702B", "750A", "750B", "2312A", "2312B", "6640A", "6640B",
           "7013A", "7013B", "6705A"]                                                        # 13

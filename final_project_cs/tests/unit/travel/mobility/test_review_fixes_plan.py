@@ -10,11 +10,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.modules.travel_ops.mobility.engine import plan as P
-from app.modules.travel_ops.mobility.engine.errors import CaseInputError
-from app.modules.travel_ops.mobility.engine.paths import RULES_DIR
-from app.modules.travel_ops.mobility.engine.runtime import Runtime
-from app.modules.travel_ops.mobility.engine.verify_time import Timetable, Verifier
+from app.domains.travel_ops.instances.mobility.engine import plan as P
+from app.domains.travel_ops.instances.mobility.engine.errors import CaseInputError
+from app.domains.travel_ops.instances.mobility.engine.paths import RULES_DIR
+from app.domains.travel_ops.instances.mobility.engine.runtime import Runtime
+from app.domains.travel_ops.instances.mobility.engine.verify_time import Timetable, Verifier
 
 RULES = json.loads((RULES_DIR / "rules_v0.3.json").read_text(encoding="utf-8"))
 PLACES = [{"key": "P1", "name": "첫 장소", "lat": 37.5700, "lon": 126.9800},
@@ -120,9 +120,9 @@ def test_29_dropped_transit_candidates_are_listed_with_reason():
 
 # ── #20 버스가 섞인 환승 — 확정 규칙(탈것별 요금 합)으로 상한 ─────────────
 def test_20_mixed_bus_transfer_gets_sum_of_single_upper_bound():
-    from app.modules.travel_ops.mobility.engine import options as O
-    from app.modules.travel_ops.mobility.engine.bus import BusRoutes
-    from app.modules.travel_ops.mobility.engine.verify_time import LegResult
+    from app.domains.travel_ops.instances.mobility.engine import options as O
+    from app.domains.travel_ops.instances.mobility.engine.bus import BusRoutes
+    from app.domains.travel_ops.instances.mobility.engine.verify_time import LegResult
     routes = [{"route_id": "R1", "route_nm": "101", "route_type_nm": "간선", "term_min": 10,
                "first_time": "05:00", "last_time": "23:00"},
               {"route_id": "R2", "route_nm": "2", "route_type_nm": "마을", "term_min": 10,
@@ -179,7 +179,7 @@ def test_13_no_walk_path_drops_walk_with_reason():
 
 
 def test_13_router_down_falls_back_to_straight_line_estimate():
-    from app.modules.travel_ops.mobility.engine.geo import meters
+    from app.domains.travel_ops.instances.mobility.engine.geo import meters
     got, why = _walk_leg(_FootRouter(None, {"kind": "router_down", "error": "x"}))
     walk = next(o for o in got[0]["options"] if o["id"] == "walk")
     straight = meters(PLACES[0]["lat"], PLACES[0]["lon"], PLACES[1]["lat"], PLACES[1]["lon"])

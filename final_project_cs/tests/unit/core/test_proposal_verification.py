@@ -9,7 +9,7 @@
 
 ★엔진(`app/core/verification.py`)은 **한 줄도 안 바뀌었다.** 커머스 →  여행
   교체로 바뀐 것은 이 파일이 주입하는 **선언**뿐이다
-  (`app/modules/travel_ops/verification_policy.py`). 코어가 도메인을 모른다는
+  (`app/domains/travel_ops/components/core_hooks/verification_policy.py`). 코어가 도메인을 모른다는
   주장을 실제로 시험하는 자리다 — 커머스판은 같은 엔진에 `orders`·`shipments`
   를 주입했었다.
 """
@@ -20,7 +20,7 @@ from decimal import Decimal
 import pytest
 
 from app.core.verification import Facts, verify_proposal
-from app.modules.travel_ops.verification_policy import TRAVEL_OPS_POLICY
+from app.domains.travel_ops.components.core_hooks.verification_policy import TRAVEL_OPS_POLICY
 
 BOOKING = "11111111-1111-4111-8111-111111111111"
 OTHER_BOOKING = "22222222-2222-4222-8222-222222222222"

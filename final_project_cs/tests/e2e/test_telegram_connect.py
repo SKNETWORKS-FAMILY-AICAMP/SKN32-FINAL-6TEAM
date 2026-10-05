@@ -33,7 +33,8 @@ import pytest
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
 from app.infrastructure.notify import telegram as client
-from app.modules.travel_ops import consents, telegram_connect
+from app.domains.travel_ops.modules.web_account import consents
+from app.domains.travel_ops.ports.notify_channels import telegram_connect
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
 from .test_web_api import _h

@@ -10,9 +10,9 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.itinerary_changes import NoChange, plan_closed_on_day
-from app.modules.travel_ops.replan import (LAST_ORDER_WARN_MIN, ORDER_MARGIN_MIN, choose,
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_closed_on_day
+from app.domains.travel_ops.components.planning.replan import (LAST_ORDER_WARN_MIN, ORDER_MARGIN_MIN, choose,
                                            dining_candidates, dining_fits, dining_warnings)
 
 KST = ZoneInfo("Asia/Seoul")

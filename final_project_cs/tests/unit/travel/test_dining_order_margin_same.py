@@ -5,10 +5,10 @@
 import importlib.util
 import os
 
-from app.modules.travel_ops import replan
+from app.domains.travel_ops.components.planning import replan
 
 LEDGER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
-                      "app", "modules", "travel_ops", "dining", "ledger.py")
+                      "app", "domains", "travel_ops", "instances", "dining", "ledger.py")
 
 
 def test_the_ledger_default_order_margin_equals_the_replan_rule():

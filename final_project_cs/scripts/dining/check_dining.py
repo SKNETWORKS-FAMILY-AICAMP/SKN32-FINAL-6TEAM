@@ -390,7 +390,7 @@ def check_core(conn, cur, s: Sheet, day: date) -> None:
     if not cur.fetchone()[0]:
         s.add(step, None, "코어 places 가 있다", "이 DB 에는 코어가 없다 — rebuild.py 를 --no-core 없이")
         return
-    from app.modules.travel_ops.dining.ledger import dining_state
+    from app.domains.travel_ops.instances.dining.ledger import dining_state
 
     cur.execute("""SELECT l.tenant_id, l.core_place_id, p.name
                    FROM dining.dn_core_place_link l JOIN public.places p ON p.place_id = l.core_place_id

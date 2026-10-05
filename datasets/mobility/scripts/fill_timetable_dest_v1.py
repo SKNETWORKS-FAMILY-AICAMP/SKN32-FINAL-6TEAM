@@ -153,7 +153,7 @@ def _guard_targets(a):
     ① 저장소 안 datasets/(git 데이터) 를 고치게 되는 경우 — 엔진의 읽기용 기본값(출처 repo_datasets)을 쓰기에 쓰지 않는다
     ② .env 에 DATA_DIR 이 없는데 --timetable 도 안 준 경우(해석된 기본 자리가 정본이라는 보장이 없다)
     ③ 옆에 timetable_v1.jsonl.gz 가 있는 경우 — 엔진은 .gz 를 먼저 읽으므로 .jsonl 을 고쳐도 판정에 안 들어간다"""
-    from app.modules.travel_ops.mobility.engine import paths as _p
+    from app.domains.travel_ops.instances.mobility.engine import paths as _p
     ds = (_p.REPO_ROOT / "datasets").resolve()
     tt = Path(a.timetable).resolve()
     outs = [Path(a.report).resolve()] + ([] if a.dry_run else [tt, Path(a.backup_dir).resolve(), tt.with_name("timetable_v1_meta.json")])
@@ -167,7 +167,7 @@ def _guard_targets(a):
 
 
 def main():
-    from app.modules.travel_ops.mobility.engine.paths import cli_processed
+    from app.domains.travel_ops.instances.mobility.engine.paths import cli_processed
     PROCESSED = cli_processed()       # #48 뒤 — import 로는 .env 를 안 읽는다
     M = PROCESSED / "mobility"
     ap = argparse.ArgumentParser(description="시간표 행선지 빈칸 채우기(열차 잇기)")

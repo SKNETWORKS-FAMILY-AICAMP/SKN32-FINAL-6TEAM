@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from app.core.settings import get_settings
-from app.infrastructure.travel.kma_warning import KmaWarningSource
-from app.infrastructure.travel.mofa import MofaTravelAlarm
+from app.domains.travel_ops.ports.data_sources.kma_warning import KmaWarningSource
+from app.domains.travel_ops.ports.data_sources.mofa import MofaTravelAlarm
 
 pytestmark = pytest.mark.live
 

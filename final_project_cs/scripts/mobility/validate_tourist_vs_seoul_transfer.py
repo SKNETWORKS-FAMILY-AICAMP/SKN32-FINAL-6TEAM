@@ -8,9 +8,9 @@
 import json, math, random, re, statistics as st, sys, time, urllib.parse, urllib.request, urllib.error
 from pathlib import Path
 sys.path.insert(0, ".")
-from app.modules.travel_ops.mobility.engine.runtime import build_verifier
-from app.modules.travel_ops.mobility.engine.plan_estimate import Estimator
-from app.modules.travel_ops.mobility.engine.car import hav
+from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
+from app.domains.travel_ops.instances.mobility.engine.plan_estimate import Estimator
+from app.domains.travel_ops.instances.mobility.engine.car import hav
 ENV = {}
 for f in (Path(".env.apikeys"), Path(".env")):
     if f.exists():

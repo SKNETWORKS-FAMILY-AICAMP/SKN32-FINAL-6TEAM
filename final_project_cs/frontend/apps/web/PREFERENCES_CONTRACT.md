@@ -6,7 +6,7 @@
 
 수정: 2026-09-28. 사용자 지시로 설문을 6문항으로 바꿨다 — 독립 이동수단 질문을 빼고(내국인 여부는 `develop` 에서 먼저 뺐다), 두 우선순위 질문을 순위를 매기는 한 카드로 합치고, 여행자 구성 `기타`에 직접 입력을 더했다. 백엔드 계약(판 `2026-09-24.v1`)은 그대로이고 바꾸지 않았다(`party`는 자유 문자열, `priority`는 `list[Area]`, `priority_details`는 `dict[Area, list[str]]` — `role-eval-ui`·`develop` 모두 같음).
 
-**계약의 정본은 백엔드다.** `final_project_cs/app/modules/travel_ops/survey.py`의 `TripSurvey`(판 `2026-09-24.v1`), 결정 `wiki/decisions/D-020-trip-survey-and-ask-first.md`, 계약 문서 `final_project_cs/wiki/external/rest-endpoints.md` 「`constraints.survey`」. 이 문서는 웹 화면의 답이 그 칸으로 어떻게 가는지만 적는다. 프론트의 Zod 거울은 [`src/features/onboarding/payload.ts`](src/features/onboarding/payload.ts)의 `tripSurveySchema`이고, 데모가 서버처럼 거절하게 하려고 둔다. 백엔드가 바뀌면 이쪽을 따라 고친다.
+**계약의 정본은 백엔드다.** `final_project_cs/app/domains/travel_ops/components/planning/survey.py`의 `TripSurvey`(판 `2026-09-24.v1`), 결정 `wiki/decisions/D-020-trip-survey-and-ask-first.md`, 계약 문서 `final_project_cs/wiki/external/rest-endpoints.md` 「`constraints.survey`」. 이 문서는 웹 화면의 답이 그 칸으로 어떻게 가는지만 적는다. 프론트의 Zod 거울은 [`src/features/onboarding/payload.ts`](src/features/onboarding/payload.ts)의 `tripSurveySchema`이고, 데모가 서버처럼 거절하게 하려고 둔다. 백엔드가 바뀌면 이쪽을 따라 고친다.
 
 ## 1. 언제 보내나
 
@@ -28,7 +28,7 @@
 | 6 | 여유(16번) | 하나 | `pace` | `relaxed` · `moderate` · `packed` |
 
 - ★`[2026-09-28 사용자 지시]` **내국인 여부(`domestic`)는 묻지 않는다.** 문항 삭제는 09-28 결정이다. 09-29 코드에는 이동 계산기의 `party_of`가 `domestic`을 `foreign`으로 변환하는 처리가 생겼지만, 현재 웹은 여전히 보내지 않는다. 백엔드 칸(`TripSurvey.domestic`)은 선택 값이라 안 보내도 된다. 프론트 Zod 거울에는 백엔드와 같게 칸만 남겼고 보내지는 않는다.
-- 현재 사용 경로: 5번 `on_disruption`은 일정 변경 처리, 6번 `pace`는 밀도 목표에 사용한다. **3번 이동 세부도 계산기 활성화 시 사용한다**(`app/modules/travel_ops/mobility/wiring.py`의 `modes_from_survey`·`leg_planner`). `public`은 지하철·버스, `walk`는 도보로 바꾸며 도보를 포함한다. `car`·`taxi`만 고르면 변환 가능한 값이 없어 계산기 기본 수단을 사용한다. 선택 순위대로 이동수단을 평가한다는 뜻은 아니다. 테마·여행자 구성·음식/활동 세부·실내외를 판정에 쓰는 연결은 확인하지 못했다.
+- 현재 사용 경로: 5번 `on_disruption`은 일정 변경 처리, 6번 `pace`는 밀도 목표에 사용한다. **3번 이동 세부도 계산기 활성화 시 사용한다**(`app/domains/travel_ops/instances/mobility/wiring.py`의 `modes_from_survey`·`leg_planner`). `public`은 지하철·버스, `walk`는 도보로 바꾸며 도보를 포함한다. `car`·`taxi`만 고르면 변환 가능한 값이 없어 계산기 기본 수단을 사용한다. 선택 순위대로 이동수단을 평가한다는 뜻은 아니다. 테마·여행자 구성·음식/활동 세부·실내외를 판정에 쓰는 연결은 확인하지 못했다.
 - 백엔드 `survey.py` 머리 설명의 「둘뿐」은 최신 이동 연결을 반영하지 않았다. 위 설명은 실제 소비 코드와 대조한 결과이며, 이 작업에서 백엔드 코드·팀 결정 문서를 바꾸지 않는다.
 - 1·2·3번의 세부 값은 D-020이 「담당 팀이 정할 값」으로 두어 백엔드가 문자열로 받는다. 화면 값은 지금 예시다.
 - `preferred_mobility[]`는 독립 이동수단 질문을 빼서 **보내지 않는다.** 백엔드 칸은 그대로 둔다(빈 목록이 기본값). 이동의 선호는 3번 우선순위의 `mobility` 세부로 받는다.

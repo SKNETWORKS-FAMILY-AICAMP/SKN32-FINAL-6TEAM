@@ -45,7 +45,7 @@ def chat():
 
 @pytest.mark.parametrize("message, kinds, values", CASES, ids=[c[0] for c in CASES])
 def test_the_real_model_reads_a_customer_sentence(chat, message, kinds, values):
-    from app.modules.travel_ops.trip_intake import extract
+    from app.domains.travel_ops.components.conversation.trip_intake import extract
 
     report = extract(message, chat)
     assert report is not None, f"모델이 쓸 수 없는 답을 냈다: {message}"
@@ -57,7 +57,7 @@ def test_the_real_model_reads_a_customer_sentence(chat, message, kinds, values):
 @pytest.mark.parametrize("message", ["식당에 30분 늦을 것 같아요", "취소하면 위약금 있어요?", "안녕하세요"])
 def test_the_real_classifier_gives_all_three_labels(chat, message):
     """모든 Case 가 거치는 분류(의도 · 이슈 코드 · 감정) — 빈 라벨이면 분류 실패로 사람 대기가 된다."""
-    from app.modules.travel_ops.feedback import classify
+    from app.domains.travel_ops.components.core_hooks.feedback import classify
 
     result = classify(message)
     assert result.intent and result.issue_code and result.sentiment, (message, result)

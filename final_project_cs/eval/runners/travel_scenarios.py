@@ -7,7 +7,7 @@
 ★`[2026-09-22]` 전에는 이 항목이 **미측정**이었다. 골든셋 72건은 쇼핑몰 시절 것이고 여행용은 0건이라,
   「평가 시나리오에서 필수 조건 위반 0건」을 잴 분모 자체가 없었다.
 
-★**무엇을 재나.** 확정 시나리오 하루(`app/modules/travel_ops/scenarios/seoul_day_taiwan_friends.json`)를
+★**무엇을 재나.** 확정 시나리오 하루(`app/domains/travel_ops/scenarios/seoul_day_taiwan_friends.json`)를
   변형해 흘리고, 우리가 **만든 모든 일정 버전**을 등록 때와 **같은 판정기**(`itinerary_checks`)로 다시 본다.
   고친 결과가 규정을 깨면 그 자리에서 잡힌다 — 겹침 · 이동 소요 · 영업시간 · 브레이크 · 결제 수단 · 예산.
 
@@ -29,7 +29,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[2]
-SCENARIO_PATH = ROOT / "app" / "modules" / "travel_ops" / "scenarios" / "seoul_day_taiwan_friends.json"
+SCENARIO_PATH = ROOT / "app" / "domains" / "travel_ops" / "scenarios" / "seoul_day_taiwan_friends.json"
 DATASET = ROOT / "eval" / "datasets" / "travel_scenarios.jsonl"
 REPORTS = ROOT / "eval" / "reports"
 KST = ZoneInfo("Asia/Seoul")
@@ -78,7 +78,7 @@ def _extractor_for(data: dict[str, Any]):
 def _seed(tenant: str, data: dict[str, Any], constraints: dict[str, Any]):
     """확정 시나리오의 장소·일정을 이 테넌트에 넣는다(등록 API 와 같은 모양)."""
     from app.infrastructure.db.session import get_connection
-    from app.modules.travel_ops.itinerary import Item, TripStore
+    from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
 
     day = data["trip"]["date"]
 
@@ -130,11 +130,11 @@ def _calm_or_drop(event: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def _engine(tenant: str, data: dict[str, Any], drop_scenes: list[str], clock: Clock):
-    from app.infrastructure.travel.base import TravelSources
-    from app.infrastructure.travel.disruptions import DisruptionCheck
-    from app.infrastructure.travel.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
+    from app.domains.travel_ops.ports.data_sources.base import TravelSources
+    from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+    from app.domains.travel_ops.ports.data_sources.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
                                                   ReplayWarning, ReplayWeather)
-    from app.modules.travel_ops.case_engine import CaseEngine
+    from app.domains.travel_ops.scenarios.case_engine import CaseEngine
 
     # ★**사건만 뺀다**(`_scene` 이 붙은 항목). 종류를 통째로 빼면 그 소스가 **답하지 않는 것**이 되어
     #   대체까지 실패(결정 15 의 치명)로 읽힌다 — 첫 실행에서 실제로 그렇게 났다. 평상값은 남긴다.
@@ -157,7 +157,7 @@ def _engine(tenant: str, data: dict[str, Any], drop_scenes: list[str], clock: Cl
 def _violations(store, trip_id, data) -> list[dict[str, Any]]:
     """★적용된 **모든 버전**을 등록 때와 같은 판정기로 다시 본다 — 마지막 것만 보면 중간에 깬 것을 놓친다."""
     from app.infrastructure.db.session import get_connection
-    from app.modules.travel_ops.itinerary_checks import check_itinerary, parts_from_items
+    from app.domains.travel_ops.components.itinerary.itinerary_checks import check_itinerary, parts_from_items
 
     trip_constraints, found = None, []
     with get_connection() as conn:
@@ -174,7 +174,7 @@ def _violations(store, trip_id, data) -> list[dict[str, Any]]:
 
 def run_case(spec: dict[str, Any], *, keep: bool = False) -> dict[str, Any]:
     from app.infrastructure.db.session import get_connection
-    from app.modules.travel_ops.case_engine import cleanup_tenant
+    from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
 
     data = json.loads(SCENARIO_PATH.read_text(encoding="utf-8"))
     reports = {report["type"]: report for report in data["customer_reports"]}

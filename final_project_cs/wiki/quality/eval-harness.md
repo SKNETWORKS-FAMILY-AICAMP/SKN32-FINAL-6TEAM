@@ -37,7 +37,7 @@ python -m eval.runners.travel_scenarios              # 전체 10건, 보고서�
 python -m eval.runners.travel_scenarios --case t-cash-only --keep
 ```
 
-확정 시나리오 하루를 변형해 흘리고(감시 사건 넣기·빼기 · 고객 신고 · 재요청 · 여행 제약 교체), **적용된 모든 일정 버전**을 등록 때와 **같은 판정기**(`app/modules/travel_ops/itinerary_checks.py`)로 다시 본다 — 겹침 · 이동 소요 · 영업시간 · 브레이크 · 결제 수단 · 예산. v11 DoD-22 「필수 조건 위반 0건」이 이것이다.
+확정 시나리오 하루를 변형해 흘리고(감시 사건 넣기·빼기 · 고객 신고 · 재요청 · 여행 제약 교체), **적용된 모든 일정 버전**을 등록 때와 **같은 판정기**(`app/domains/travel_ops/components/itinerary/itinerary_checks.py`)로 다시 본다 — 겹침 · 이동 소요 · 영업시간 · 브레이크 · 결제 수단 · 예산. v11 DoD-22 「필수 조건 위반 0건」이 이것이다.
 
 | | |
 |---|---|

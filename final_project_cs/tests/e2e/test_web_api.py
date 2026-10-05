@@ -17,7 +17,7 @@ import copy
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.survey import SURVEY_VERSION
+from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
 
 from .test_trip_api import DAY, SCENARIO, _body, api  # noqa: F401 — 픽스처를 그대로 쓴다
 
@@ -26,7 +26,7 @@ from .test_trip_api import DAY, SCENARIO, _body, api  # noqa: F401 — 픽스처
 def _fresh_limit_cache():
     """제한값은 프로세스가 잠깐 캐시한다(`web_guard.values`) — 시험끼리 섞이지 않게 비운다.
     ★사용량은 DB(`web_usage`)에서 **테넌트별로** 센다 — 시험마다 새 테넌트라 쌓이지 않는다."""
-    from app.modules.travel_ops import web_guard
+    from app.domains.travel_ops.modules.web_account import web_guard
 
     web_guard.clear_cache()
     yield
@@ -37,7 +37,7 @@ def _override(api, name, value):
     """운영자가 바꾼 값처럼 넣는다(`runtime_limits`) — 운영 API 를 거치지 않는 짧은 길."""
     from psycopg.types.json import Json
 
-    from app.modules.travel_ops import web_guard
+    from app.domains.travel_ops.modules.web_account import web_guard
 
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("INSERT INTO runtime_limits (tenant_id, name, value, updated_by) VALUES (%s,%s,%s,'test') "
@@ -59,7 +59,7 @@ def _member(api, user_key: str) -> None:
     """이 키의 사용자에게 소셜 계정을 붙인다 — **회원**이다. 게스트(로그인 안 한 웹 사용자)는 여행 1개 · 감시 불가라서(D-CS-011), 여러 여행을 만들거나 감시를 받는 시험은 회원으로 한다."""
     from uuid import uuid4
 
-    from app.modules.travel_ops.web_session import resolve
+    from app.domains.travel_ops.modules.web_account.web_session import resolve
 
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         customer = resolve(conn, tenant_id=api["tenant"], raw=user_key)
@@ -137,7 +137,7 @@ def test_someone_elses_trip_does_not_exist_for_you(api):
 def test_a_no_change_result_carries_the_same_answer_as_the_conversation_path(api):
     """★`[2026-09-27]` 웹 채팅이 상태값(`no_meal`)만 받아 원래 이름을 그대로 보였다(실제 화면). 대화 경로와 같은
     문장표(`itinerary_team.ANSWERS`)의 답을 싣는다 — 웹이 문장을 지어내지 않게. 항목에는 지도 핀 좌표가 붙는다."""
-    from app.modules.travel_ops.itinerary_team import ANSWERS
+    from app.domains.travel_ops.instances._shared.itinerary_team import ANSWERS
 
     me = _session(api)
     trip = api["client"].post("/v1/web/trips", json=_web_body(api), headers=_h(me["user_key"])).json()
@@ -156,7 +156,7 @@ def test_a_no_change_result_carries_the_same_answer_as_the_conversation_path(api
 def dev_mode(monkeypatch):
     """★`[2026-09-29 사용자 지시]` 근거(`basis`)·해석 결과(`decision`)는 개발 모드(`web.dev_mode = on`)일 때만 웹에 실린다 —
     그 칸을 읽는 시험은 개발 모드를 켜고 본다."""
-    from app.modules.travel_ops import web_guard
+    from app.domains.travel_ops.modules.web_account import web_guard
 
     real = web_guard.values
     monkeypatch.setattr(web_guard, "values", lambda tenant: {**real(tenant), "web.dev_mode": "on"})
@@ -231,7 +231,7 @@ def _first_key(api) -> str:
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT customer_id FROM web_user_keys WHERE tenant_id=%s LIMIT 1", (api["tenant"],))
         [customer] = cur.fetchone()
-    from app.modules.travel_ops.web_session import rotate
+    from app.domains.travel_ops.modules.web_account.web_session import rotate
 
     with get_connection() as conn, conn.transaction():
         return rotate(conn, tenant_id=api["tenant"], customer_id=customer)
@@ -259,7 +259,7 @@ class _Talk:
 def _chat_client(api, search=None, place=None, classifier_down=False):
     from fastapi.testclient import TestClient
 
-    from app.modules.travel_ops.trip_api import build_trip_router
+    from app.domains.travel_ops.entry.trip_api import build_trip_router
     from app.presentation.api.app import create_app
 
     def classify(message):
@@ -289,7 +289,7 @@ def _say(client, key, trip_id, text, request_id):
 def test_a_policy_question_is_answered_with_the_customer_line_of_that_rule_not_the_staff_text(api):
     """★`[2026-09-28 사용자 결정]` 규정 문서는 직원에게 쓴 글이다 — 조각 원문이 아니라 그 절의 **고객용 문장**을 싣는다
     (ui 세션 실서버 시험: 「여기에 위약금 문장을 붙이면 없는 비용을 만들어 말하는 것」이 고객 답에 나갔다)."""
-    from app.modules.travel_ops.itinerary_team import customer_lines
+    from app.domains.travel_ops.instances._shared.itinerary_team import customer_lines
 
     found = []
 
@@ -315,7 +315,7 @@ def test_a_policy_question_is_answered_with_the_customer_line_of_that_rule_not_t
 
 
 def test_the_basis_is_shown_only_in_dev_mode(api, monkeypatch):
-    from app.modules.travel_ops import web_guard
+    from app.domains.travel_ops.modules.web_account import web_guard
 
     def search(**kwargs):
         return [_Chunk("직원용 원문", "t_doc_02#c5", 0.71)]
@@ -333,7 +333,7 @@ def test_a_rule_section_with_no_customer_line_is_not_shown_and_counts_as_not_fou
     """내부 절차 절(고객용 문장 없음)만 걸리면 규정을 못 찾은 것이다 — 원문을 대신 싣지 않는다."""
     from knowledge.ingest import load_corpus
 
-    from app.modules.travel_ops.itinerary_team import customer_lines
+    from app.domains.travel_ops.instances._shared.itinerary_team import customer_lines
 
     manifest = Path(__file__).resolve().parents[2] / "knowledge" / "travel" / "manifest.json"
     internal = next(f"{d.frontmatter['document_id']}#c{s.number}" for d in load_corpus(manifest)
@@ -381,7 +381,7 @@ def test_a_change_request_still_answers_with_what_happened(api):
     trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-5"), headers=_h(me["user_key"])).json()
     body = _say(client, me["user_key"], trip["trip_id"], "식당에 30분 늦을 것 같아요", "late-1")
     # ★「답이 있다」만 보지 않는다 — 그 처리 결과의 문장이어야 한다(`trip_replies.outcome_reply`)
-    from app.modules.travel_ops.trip_replies import outcome_reply
+    from app.domains.travel_ops.components.conversation.trip_replies import outcome_reply
 
     assert body["report"]["type"] == "delay" and body["report"]["minutes"] == 30
     assert body["answer"] == outcome_reply(body["status"], body["outcome"], "식당에 30분 늦을 것 같아요"), body
@@ -466,7 +466,7 @@ class _TourStub:
 
 def test_address_and_opening_hours_come_from_the_tourism_record_as_written(dev_mode, api):
     """★주소·운영시간은 저장하지 않는다(약관) — 물으면 관광공사 상세를 그때 읽어 **원문 그대로** 싣는다."""
-    from app.modules.travel_ops import trip_facts
+    from app.domains.travel_ops.components.conversation import trip_facts
 
     trip_facts._CACHE.clear()
     tour = _TourStub()
@@ -488,7 +488,7 @@ def test_address_and_opening_hours_come_from_the_tourism_record_as_written(dev_m
 
 
 def test_a_change_sentence_is_not_taken_as_a_fact_question(api):
-    from app.modules.travel_ops.trip_facts import fact_question
+    from app.domains.travel_ops.components.conversation.trip_facts import fact_question
 
     for text in ("경복궁 다음 일정을 바꿔 주세요", "저녁 식당이 문을 닫았어요", "30분 늦을 것 같아요",
                  "2번 일정으로 되돌려 주세요", "취소하면 위약금 있어요?", "예약 취소하면 환불돼요?"):
@@ -519,7 +519,7 @@ class _NamedTour(_TourStub):
 def test_a_stop_without_a_tourism_id_is_found_by_name_and_place_before_answering(api):
     """★`[2026-09-28]` 고객 글의 이름으로 붙은 장소(공용 장소 행)는 관광공사 식별자가 없어 주소·운영시간이 늘 「모름」이었다
     (ui 세션 실서버 시험 — 「경복궁」). 같은 이름·종류로 찾고 **좌표가 500m 안일 때만** 같은 곳으로 본다."""
-    from app.modules.travel_ops import trip_facts
+    from app.domains.travel_ops.components.conversation import trip_facts
 
     for far, expected in ((False, "서울특별시 송파구 올림픽로 300"), (True, "떨어져 있어 같은 곳으로 보지 않았다")):
         trip_facts._CACHE.clear()
@@ -634,13 +634,13 @@ def test_the_google_map_is_loaded_only_while_the_budget_allows(api, monkeypatch)
     ★실제 사용량 줄을 건드리지 않게 2099년 날짜로 세고 끝나면 지운다."""
     from datetime import UTC, datetime
 
-    from app.infrastructure.travel.call_budget import CallBudget
-    from app.modules.travel_ops import trip_api
+    from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget
+    from app.domains.travel_ops.entry import trip_api
 
     far = lambda: datetime(2099, 1, 2, tzinfo=UTC)
     monkeypatch.setattr(trip_api, "map_budget", lambda: CallBudget(
         connection_factory=get_connection, caps={trip_api.MAP_METER: {"month": 5, "day": 2}}, clock=far))
-    from app.modules.travel_ops import web_guard
+    from app.domains.travel_ops.modules.web_account import web_guard
 
     me = _session(api)
     try:

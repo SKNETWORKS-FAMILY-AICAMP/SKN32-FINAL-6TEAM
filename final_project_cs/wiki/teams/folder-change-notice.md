@@ -17,14 +17,14 @@ domain: travel
 각 팀 코드는 이제 **자기 팀 폴더** 안에 둔다. `develop` 은 이미 이렇게 바뀌어 있다.
 
 ```
-final_project_cs/app/modules/travel_ops/
+final_project_cs/app/domains/travel_ops/
   activity/   __init__.py  team.py   ← Activity 팀 폴더
   dining/     __init__.py  team.py   ← Dining 팀 폴더
   mobility/   __init__.py  team.py   ← Mobility 팀 폴더
 ```
 
 - `team.py` 에 팀 본체(`ActivityTeam` 등)가 있다. `__init__.py` 는 그 클래스를 밖으로 다시 내보내기만 한다.
-- 바깥에서 부르는 방법은 그대로다 — `from app.modules.travel_ops.activity import ActivityTeam` 같은 import 와 `config/project.yaml` 의 등록 문자열을 고칠 필요가 없다.
+- 바깥에서 부르는 방법은 그대로다 — `from app.domains.travel_ops.instances.activity import ActivityTeam` 같은 import 와 `config/project.yaml` 의 등록 문자열을 고칠 필요가 없다.
 - 팀 폴더 안에 도우미 파일(`xxx.py`)이나 하위 폴더를 자유롭게 더 둬도 된다.
 
 `travel_ops/` 바로 아래의 다른 `.py`(`itinerary.py`·`trip_api.py`·`planner.py` 등)와 `intake/`·`scenarios/`·`static/` 은 팀 코드가 아니라 **세 팀과 여행 API 가 함께 쓰는 공용 코드**다. 팀이 고칠 곳이 아니다.

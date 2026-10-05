@@ -74,7 +74,7 @@ domain: travel
 | 알림 채널 | 고객·운영자 알림 **두 종류** — 변경 통지 · **일정 안내** | Outbox 경유 → [`notifications.md`](notifications.md) |
 | A2A Remote Agent | Task 위임 | Artifact 근거를 Context/DB와 대조 |
 
-★`[실측 2026-09-10]` **「공급자」 행의 조회 셋 중 지금 붙는 것은 일부다.** 이동 시간·운행(`read.route`·`read.transit`)은 항상 값 없음이고, `build_travel_sources()` 가 import 하는 **`kma.py`(기상 대안)·`odsay.py`(대중교통)는 파일이 없다** — `weather_provider=kma` 에 **기상청 키나 공공데이터포털 공통 키가 있을 때**, 또는 `ACOP_ODSAY_API_KEY` 를 넣으면 **조립이 `ModuleNotFoundError` 로 깨진다**(실행 확인). 키가 없으면 import 까지 가지 않고 그 소스만 빠진 채 기동한다(`final_project_cs/app/infrastructure/travel/base.py:276~287`). 인천공항 모듈은 있으나 조립되지 않는다. 코드 담당에게 넘겼다 → [인계](../../program/산출물양식/w2/아키텍처/인계_코드와_계획서.md)
+★`[실측 2026-09-10]` **「공급자」 행의 조회 셋 중 지금 붙는 것은 일부다.** 이동 시간·운행(`read.route`·`read.transit`)은 항상 값 없음이고, `build_travel_sources()` 가 import 하는 **`kma.py`(기상 대안)·`odsay.py`(대중교통)는 파일이 없다** — `weather_provider=kma` 에 **기상청 키나 공공데이터포털 공통 키가 있을 때**, 또는 `ACOP_ODSAY_API_KEY` 를 넣으면 **조립이 `ModuleNotFoundError` 로 깨진다**(실행 확인). 키가 없으면 import 까지 가지 않고 그 소스만 빠진 채 기동한다(`final_project_cs/app/domains/travel_ops/ports/data_sources/base.py:276~287`). 인천공항 모듈은 있으나 조립되지 않는다. 코드 담당에게 넘겼다 → [인계](../../program/산출물양식/w2/아키텍처/인계_코드와_계획서.md)
 
 **나가는 모든 것은 Action Layer를 거친다.** side effect가 일어나는 유일한 경로다.
 

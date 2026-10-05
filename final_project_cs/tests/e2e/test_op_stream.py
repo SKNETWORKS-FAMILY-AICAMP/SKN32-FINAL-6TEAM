@@ -20,7 +20,7 @@ from typing import Any
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import op_stream
+from app.domains.travel_ops.modules.live_progress import op_stream
 
 # ★픽스처가 둘이다 — 일정 짜기는 장소가 심어진 플래너 쪽(`plan_api`), 채팅은 Case 를 지우는 정리가 있는 여행 API 쪽(`trip_api`)
 from .test_trip_api import api as trip_api  # noqa: F401

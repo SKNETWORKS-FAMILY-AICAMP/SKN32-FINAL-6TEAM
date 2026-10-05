@@ -73,11 +73,11 @@ class _Decider:
 def decided(api, monkeypatch):
     from fastapi.testclient import TestClient
 
-    from app.modules.travel_ops import trip_messages
-    from app.modules.travel_ops.trip_api import build_trip_router
+    from app.domains.travel_ops.components.conversation import trip_messages
+    from app.domains.travel_ops.entry.trip_api import build_trip_router
     from app.presentation.api.app import create_app
 
-    from app.modules.travel_ops import web_guard
+    from app.domains.travel_ops.modules.web_account import web_guard
 
     decider = _Decider()
     monkeypatch.setattr(trip_messages, "_decision_mode", lambda chat, tenant=None: "on")
@@ -152,7 +152,8 @@ def test_a_model_failure_or_an_id_outside_the_list_changes_nothing_and_does_not_
 def test_the_configured_mode_is_really_on_and_a_bare_yaml_on_is_not_read_as_off():
     """`[2026-09-29]` 설정의 `mode: on` 이 YAML 에서 참(True)으로 읽혀 결정 단위가 꺼진 채로 돌았다(실서버)."""
     from app.core.settings import get_guardrails
-    from app.modules.travel_ops import trip_messages, web_guard
+    from app.domains.travel_ops.components.conversation import trip_messages
+    from app.domains.travel_ops.modules.web_account import web_guard
 
     assert get_guardrails().get("travel.decision_unit.mode") == "on"
     assert web_guard._mode_text(True) == "on" and web_guard._mode_text("shadow") == "shadow"
@@ -307,7 +308,7 @@ def test_a_location_question_without_a_location_asks_for_it_and_changes_nothing(
 
 def test_the_location_is_the_origin_of_the_route(decided, monkeypatch):
     """②: 위치를 실으면 그 좌표가 이동 계산기의 출발지로 쓰인다."""
-    from app.modules.travel_ops.mobility import wiring
+    from app.domains.travel_ops.instances.mobility import wiring
 
     seen = []
 
@@ -390,12 +391,12 @@ def test_the_location_module_neither_stores_nor_logs():
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[2]
-    tree = ast.parse((root / "app/modules/travel_ops/trip_here.py").read_text(encoding="utf-8"))
+    tree = ast.parse((root / "app/domains/travel_ops/components/conversation/trip_here.py").read_text(encoding="utf-8"))
     imported = {a.name for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
     imported |= {n.module or "" for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)}
     assert not {"logging", "psycopg", "sqlite3", "json", "pickle"} & imported
     assert not any(m.startswith(("app.infrastructure", "app.core.settings")) for m in imported)
-    from app.modules.travel_ops.trip_here import Fix
+    from app.domains.travel_ops.components.conversation.trip_here import Fix
 
     assert "37.5" not in repr(Fix(lat=37.544719, lon=127.055731))
 
@@ -403,7 +404,7 @@ def test_the_location_module_neither_stores_nor_logs():
 def test_the_nearby_sentence_reads_naturally_and_leaves_out_price_warnings():
     from types import SimpleNamespace as S
 
-    from app.modules.travel_ops.trip_here import Fix, nearby
+    from app.domains.travel_ops.components.conversation.trip_here import Fix, nearby
 
     fix = Fix(lat=37.5, lon=127.0)
     sights = [S(place={"name": "덕수궁"}, name="덕수궁", walk_min=None, distance_m=640.0,

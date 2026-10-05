@@ -77,7 +77,7 @@ domain: travel
 | 항목 | 실측 |
 |---|---|
 | `config/project.yaml` 등록 Team | **여행 6종** — `activity`·`booking_handoff`·`mobility`·`dining`·`lodging`·`flight`. 커머스 6종은 **등록에서 빠졌다**(소스는 `app/modules/customer_ops/` 에 남아 있다) |
-| 모듈 | `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/*.py` **10개** (`watch.py` 가 더해졌다) — `_base`·`activity`·`booking_handoff`·`dining`·`mobility`·`locked_bookings`·`feedback`·`verification_policy`·`__init__`. **`[실측 git]` 전부 미추적이다** |
+| 모듈 | `[실측 2026-09-10 작업 트리]` `app/domains/travel_ops/*.py` **10개** (`watch.py` 가 더해졌다) — `_base`·`activity`·`booking_handoff`·`dining`·`mobility`·`locked_bookings`·`feedback`·`verification_policy`·`__init__`. **`[실측 git]` 전부 미추적이다** |
 | v10 이 계약을 바꿨나 | **안 바꿨다** — §0-2 "통합 계약 승계. 필드 변경 없음" |
 
 ### ★ 판정 — 「Registry 등록만으로 끝난다」는 그대로는 못 쓴다
@@ -100,7 +100,7 @@ domain: travel
 | ① | 그대로 코어에 손으로 둔다 | 문제가 재발한다 (이번에 재발했다) |
 | ② | `config/` 선언 파일로 뺀다 | 코어는 안 고치지만 **UI 관리는 안 된다** |
 | ③ | 콘솔에서 ref 를 직접 등록 | **기각** — [D-013](../decisions/D-013-declarative-team.md) 이 임의 import 를 원격 코드 실행으로 판정했다 |
-| ④ | **배포된 `app/modules/` 를 스캔해 계산한다** | **권고.** 손으로 유지하는 목록이 없어진다 |
+| ④ | **배포된 `app/domains/` 를 스캔해 계산한다** | **권고.** 손으로 유지하는 목록이 없어진다 |
 
 ★**목록을 UI 로 옮기는 게 아니라 목록을 없애는 쪽이다.** UI 는 대신 **드리프트 보기**(배포됐는데 선언에 없는 것 / 선언에 있는데 파일이 없는 것)를 맡는다 — 2026-09-09 사고가 정확히 첫째였고 **아무 화면에도 안 보였다.**
 
@@ -180,7 +180,7 @@ Core 파일을 하나라도 고쳐야 하면 실패다.
 
 ★**하루 전까지 여행 Case 가 안 돌았다.** 분류기 어휘가 쇼핑몰이라 여행 라벨이 `ClassificationFailed` 로 떨어졌다(2026-09-09 실측).
 
-`[실측 2026-09-10 작업 트리]` **여행 분류 어휘와 두 축 라우팅이 이미 적용돼 있다** — `app/modules/travel_ops/feedback.py` 의 `INTENTS` 다섯이 슬러그이고 `ISSUE_CODES` 가 여행 17개이며, `app/application/controller.py:73,176` 이 `case_type_of(issue_code)` 와 `intent` 를 **둘 다** 넘긴다. **`[실측 2026-09-10 git]` 이 구현은 아직 커밋 전이다** — 되돌려지면 다시 막힌다.
+`[실측 2026-09-10 작업 트리]` **여행 분류 어휘와 두 축 라우팅이 이미 적용돼 있다** — `app/domains/travel_ops/components/core_hooks/feedback.py` 의 `INTENTS` 다섯이 슬러그이고 `ISSUE_CODES` 가 여행 17개이며, `app/application/controller.py:73,176` 이 `case_type_of(issue_code)` 와 `intent` 를 **둘 다** 넘긴다. **`[실측 2026-09-10 git]` 이 구현은 아직 커밋 전이다** — 되돌려지면 다시 막힌다.
 
 ★**이 문서를 읽을 때 작업 트리와 git 을 가려서 본다.** 여행 구현 전체가 아직 커밋 전이다 → [../governance/evidence-grades.md](../governance/evidence-grades.md)
 

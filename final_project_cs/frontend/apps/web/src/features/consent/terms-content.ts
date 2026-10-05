@@ -43,7 +43,7 @@ export type Bilingual = readonly [ko: string, en: string];
  * - ★정해지지 않은 값은 「【확정 필요: …】」 + 「추천값(확정 전)」으로 둔다 — 사용자(운영 주체)가 정하면 값만 바꾼다(정하면 `TERMS_VERSION` 을 올린다).
  */
 export const RETENTION = {
-  /** 근거: `config/guardrails.yaml` `web_guard.guest_idle_hours: 168` · `guest.trip_grace_days: 3` · `guest.trip_keep_max_days: 180`, 계산 `travel_ops/guest_cleanup.py:8-10,88`. */
+  /** 근거: `config/guardrails.yaml` `web_guard.guest_idle_hours: 168` · `guest.trip_grace_days: 3` · `guest.trip_keep_max_days: 180`, 계산 `travel_ops/modules/web_account/guest_cleanup.py:8-10,88`. */
   guestData: [
     "마지막 이용 후 7일(아직 끝나지 않은 여행 일정이 있으면 그 일정이 끝난 뒤 3일까지 두되, 마지막 이용 후 183일을 넘기지 않음)",
     "7 days after the last use (if a trip has not ended yet, until 3 days after it ends, but never more than 183 days after the last use)",

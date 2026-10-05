@@ -18,9 +18,9 @@ import pytest
 
 from app.core.context import PolicyChunk
 from app.core.contracts import NextAction
-from app.modules.travel_ops.activity import ActivityTeam
-from app.modules.travel_ops.activity.similarity import preference_of, score
-from app.modules.travel_ops.replan import activity_candidates, choose
+from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.instances.activity.similarity import preference_of, score
+from app.domains.travel_ops.components.planning.replan import activity_candidates, choose
 
 from ..helpers import FakeTools, in_hours, pack, task
 
@@ -142,7 +142,7 @@ def test_booking_change_has_a_registered_executor():
 # ── 비교 중 찾은 우리 쪽 약점 — 영업시간은 서울 시각으로 본다 ──────────
 def test_opening_hours_are_read_in_seoul_time_whatever_the_timezone():
     """같은 순간(서울 14:00)이 UTC 로 들어와도 「영업 중」. 전에는 05:00 으로 읽어 「영업 전」이었다."""
-    from app.modules.travel_ops.place_hours import fits
+    from app.domains.travel_ops.components.places.place_hours import fits
 
     attributes = {"hours": ["09:00", "18:00"]}
     in_utc = AT.astimezone(UTC)
@@ -168,7 +168,7 @@ def test_activity_first_keeps_the_alike_place_in_front():
 
 
 def test_mobility_first_puts_the_nearest_place_in_front():
-    from app.modules.travel_ops.activity.similarity import distance_first
+    from app.domains.travel_ops.instances.activity.similarity import distance_first
 
     assert distance_first("mobility") is True and distance_first("activity") is False and distance_first(None) is False
     assert _preference_order("mobility", True) == ["other_near", "alike_far"]
@@ -176,7 +176,7 @@ def test_mobility_first_puts_the_nearest_place_in_front():
 
 # ── ⑥ 추천 이유 한 줄 — 잰 값만 `[2026-10-05]` ─────────────────────
 def test_the_reason_line_states_only_measured_values():
-    from app.modules.travel_ops.replan import alternate_record, reason_line
+    from app.domains.travel_ops.components.planning.replan import alternate_record, reason_line
 
     place = _place("p", lat=37.5740, lon=126.9800, cls={"lcls1": "VE", "lcls2": "VE01", "lcls3": "VE0199"})
     line = reason_line(ORIGIN, place, 445.0, brand_nearby=False, opened=True)

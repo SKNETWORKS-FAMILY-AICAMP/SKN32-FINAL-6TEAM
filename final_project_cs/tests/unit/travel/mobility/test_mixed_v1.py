@@ -21,10 +21,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.modules.travel_ops.mobility.engine import candidates as CD
-from app.modules.travel_ops.mobility.engine import plan as P
-from app.modules.travel_ops.mobility.engine.candidates import CandidateGraph, MixedGenerator
-from app.modules.travel_ops.mobility.engine.paths import RULES_DIR
+from app.domains.travel_ops.instances.mobility.engine import candidates as CD
+from app.domains.travel_ops.instances.mobility.engine import plan as P
+from app.domains.travel_ops.instances.mobility.engine.candidates import CandidateGraph, MixedGenerator
+from app.domains.travel_ops.instances.mobility.engine.paths import RULES_DIR
 
 RULES = json.loads((RULES_DIR / "rules_v0.3.json").read_text(encoding="utf-8"))
 
@@ -336,7 +336,7 @@ def test_station_cache_is_per_exit_table():
             self.exits = {"S3": [{"lat": lat, "lng": 127.0, "ref": "1"}]}
 
         def nearest(self, nm, lat, lng, line=None):
-            from app.modules.travel_ops.mobility.engine.geo import meters
+            from app.domains.travel_ops.instances.mobility.engine.geo import meters
             es = self.exits.get(nm, [])
             return min(((meters(lat, lng, e["lat"], e["lng"]), e) for e in es), default=None, key=lambda t: t[0])
     sc, bus, cg = _SC(), _Bus(), CandidateGraph(_LO(), None, RULES, True)
@@ -385,7 +385,7 @@ _RT = None
 def _runtime():
     global _RT
     if _RT is None:
-        from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+        from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
         try:
             _RT = build_verifier(quiet=True)
         except RuntimeError as e:

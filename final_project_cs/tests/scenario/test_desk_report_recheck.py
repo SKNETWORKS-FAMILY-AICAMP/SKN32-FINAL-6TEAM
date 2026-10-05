@@ -16,8 +16,8 @@ from __future__ import annotations
 from datetime import timedelta
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.itinerary_changes import ItineraryChange
-from app.modules.travel_ops.trip_desk import TripDesk
+from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
+from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
 
 from .test_case_version_day import case_world  # noqa: F401 — 픽스처를 그대로 쓴다
 

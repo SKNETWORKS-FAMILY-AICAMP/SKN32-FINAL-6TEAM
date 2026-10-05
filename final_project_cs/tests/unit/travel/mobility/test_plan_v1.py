@@ -23,7 +23,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3]))
 
-from app.modules.travel_ops.mobility.engine.plan import (  # noqa: E402
+from app.domains.travel_ops.instances.mobility.engine.plan import (  # noqa: E402
     iso_of, label_of, line_name, party_of, plan, service_day, station_name, uses_of)
 
 KST = timezone(timedelta(hours=9))
@@ -99,7 +99,7 @@ _RT = None
 def _runtime():
     global _RT
     if _RT is None:
-        from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+        from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
         try:
             _RT = build_verifier(quiet=True)
         except RuntimeError as e:          # 시간표가 없는 기기 — 데이터 축은 SKIP
@@ -195,7 +195,7 @@ def s_ok(mob, prev):
 
 def test_core_itinerary_checks():
     _skip_if_no_data()
-    from app.modules.travel_ops.itinerary_checks import Part, check_itinerary
+    from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
     doc, got = _run()
     places = {p["key"]: p for p in doc["places"]}
     parts = [Part(seq=it["seq"], kind=it["kind"], title=it["title"],
@@ -338,7 +338,7 @@ def test_recheck_carries_context(monkeypatch):
     """73 후속(GPT Q5) — 첫 판정과 재판정(_recheck_at · 공통 출발)이 같은 문맥을 싣는다: 인원·피로(환승 상한)·국적·초행·stage.
     판정기로 가는 모든 케이스를 잡아 본다."""
     _skip_if_no_data()
-    from app.modules.travel_ops.mobility.engine import plan as P
+    from app.domains.travel_ops.instances.mobility.engine import plan as P
     seen = []
     orig = P.Planner._vc
 
@@ -481,7 +481,7 @@ def test_recheck_catches_tampering():
 def test_cli_passes_routes():
     """GPT 2차 #1 — CLI(plan_doc)도 입력의 기존 routes 키를 새 키로 안 쓴다 · 함수 호출과 결과가 같다."""
     _skip_if_no_data()
-    from app.modules.travel_ops.mobility.engine.plan import plan_doc
+    from app.domains.travel_ops.instances.mobility.engine.plan import plan_doc
     doc = {"places": _GS, "items": _two("2026-09-29T10:00:00+09:00", "2026-09-29T11:00:00+09:00",
                                         "2026-09-29T13:00:00+09:00"),
            "party_size": 1, "constraints": {}, "routes": {"g_to_s": {"from": "옛", "to": "옛", "planned": "x",
@@ -568,8 +568,8 @@ def test_option_ids_mode_tag():
 def test_uses_self_check():
     """41 넘김 — 모든 uses 가 팀 route_uses.problem() 을 통과. 실패 장면: 표기가 틀린 후보는 싣지 않고 left_out(uses_format)."""
     _skip_if_no_data()
-    from app.modules.travel_ops.route_uses import problem
-    from app.modules.travel_ops.mobility.engine import plan as P
+    from app.domains.travel_ops.components.itinerary.route_uses import problem
+    from app.domains.travel_ops.instances.mobility.engine import plan as P
     for got in (_run()[1], _ns_it(modes=MODES_ALL)[1]):
         bad = [(u, problem(u)) for r in got["routes"].values() for o in r["options"] for u in o["uses"] if problem(u)]
         assert not bad, bad
@@ -587,7 +587,7 @@ def test_uses_self_check():
 def test_line_names_contract():
     """경의선 외 노선명 — 시간표의 모든 노선 이름이 계약 표기(route_uses)로 바뀐다."""
     _skip_if_no_data()
-    from app.modules.travel_ops.route_uses import problem
+    from app.domains.travel_ops.components.itinerary.route_uses import problem
     lines = list(_runtime()._v.lo.doc["lines"])
     bad = [(ln, line_name(ln), problem(f"{line_name(ln)}:가")) for ln in lines if problem(f"{line_name(ln)}:가")]
     assert not bad, f"계약 밖 노선명: {bad}"
@@ -610,7 +610,7 @@ def test_reasons_axis():
 
 def test_reasons_unit():
     """혼잡 이유 — 극심 경고가 있는 후보 옆에서만 「혼잡 자료상 극심 구간 없음」, 혼잡 자료가 없는 후보(버스)는 말하지 않는다 · 9호선 단서."""
-    from app.modules.travel_ops.mobility.engine.options import CAVEAT_LINE9, add_reasons
+    from app.domains.travel_ops.instances.mobility.engine.options import CAVEAT_LINE9, add_reasons
     base = {"eta_min": 30, "_transfers": 1, "_walk_min": 5, "_severe": [], "_covered": False, "_legs": []}
     opts = [dict(base, _route="A", _severe=["2호선 사당 출발 열차가 극심 혼잡(144.6%)이다"], _covered=True,
                  _legs=[{"line": "02호선"}]),
@@ -628,19 +628,19 @@ def test_reasons_unit():
 def test_walk_m_and_fare():
     """walk_m = 장소↔역(직선×우회) + 환승 거리표 m · 거리표 밖 환승이면 키를 뺀다 · 요금은 규칙 근거가 있을 때만(54 — 지하철 1,550)."""
     _skip_if_no_data()
-    from app.modules.travel_ops.mobility.engine.options import transfer_walk_m
+    from app.domains.travel_ops.instances.mobility.engine.options import transfer_walk_m
     v = _runtime()._v
     _, got = _run()
     w = got["routes"]["dinner_to_lotte_mart"]["options"][0]
     assert w["id"] == "walk" and w["fare_krw"] == 0 and w["walk_m"] > 0
-    from app.modules.travel_ops.mobility.engine.options import fare_of
+    from app.domains.travel_ops.instances.mobility.engine.options import fare_of
     for rr in got["routes"].values():
         for o in rr["options"]:
             if o["id"].startswith("subway"):
                 assert o.get("fare_krw") == 1550, f"도심 10km 안 지하철은 1,550(규칙 fare) — {o}"
             assert isinstance(o.get("fare_krw", 0), int)
     # ☆`[2026-10-04 #21]` 9호선처럼 공표 거리가 없는 노선은 OSM 선로 길이 추정으로 요금을 낸다(추정 — 응답 label 에 밝힌다)
-    from app.modules.travel_ops.mobility.engine.options import fare_is_est
+    from app.domains.travel_ops.instances.mobility.engine.options import fare_is_est
     l9 = [{"line": "09호선", "from": "노량진", "to": "신논현"}]
     r9 = [_FLR("09호선 노량진→신논현", 600)]
     if v.lo.est_edges:
@@ -689,11 +689,11 @@ def test_transfer_car_display():
     doc = json.loads(IN.read_text(encoding="utf-8"))
     off = plan(doc["places"], doc["items"], 2, doc.get("constraints"), runtime=_runtime(), modes=MODES)
     assert not any("transfer_car" in o for r in off["routes"].values() for o in r["options"])
-    from app.modules.travel_ops.mobility.engine.options import TransferCar
+    from app.domains.travel_ops.instances.mobility.engine.options import TransferCar
     tc = TransferCar.load()
     if tc is None:
         return                                              # 46 산출이 없는 기기 — 표시 축만 SKIP
-    E = json.loads((Path(__import__("app.modules.travel_ops.mobility.engine.paths", fromlist=["PROCESSED"]).PROCESSED)
+    E = json.loads((Path(__import__("app.domains.travel_ops.instances.mobility.engine.paths", fromlist=["PROCESSED"]).PROCESSED)
                     / "mobility" / "transfer_car_v1.json").read_text(encoding="utf-8"))["entries"]
     on = plan(_GS, _two("2026-09-29T10:00:00+09:00", "2026-09-29T11:00:00+09:00", "2026-09-29T13:30:00+09:00"),
               1, {}, runtime=_runtime(), modes=MODES, display=True)
@@ -720,7 +720,7 @@ def test_transfer_car_display():
 # ── GPT 대조 1차(23) 반영 ─────────────────────────────────────────────────
 def test_make_id_same_route():
     """GPT 23 #9 — 같은 노선의 다른 승하차 두 후보 → bus_405 · bus_405_2."""
-    from app.modules.travel_ops.mobility.engine.options import make_id
+    from app.domains.travel_ops.instances.mobility.engine.options import make_id
     taken = set()
     a = make_id([{"mode": "bus", "route": "405", "from": "a", "to": "b"}], taken)
     taken.add(a)
@@ -758,7 +758,7 @@ class _FakeV:
 
 def test_ridden_path_synthetic():
     """GPT 23 #4 — 같은 분 다른 경로 → None · 다른 종착이지만 목적지까지 같은 역열 → 경로 · 다음 편(혼잡) → 그 분 · 맞는 편성 없음 → None."""
-    from app.modules.travel_ops.mobility.engine.options import ridden_path
+    from app.domains.travel_ops.instances.mobility.engine.options import ridden_path
     leg = {"line": "02호선", "from": "A", "to": "C"}
     loop = _FakeV([(_D(10), ["A", "B", "C"]), (_D(10, "D"), ["A", "Y", "C"])])
     assert ridden_path(loop, leg, _LR("02호선 A→C", 10, 14), "weekday") is None
@@ -771,7 +771,7 @@ def test_ridden_path_synthetic():
 
 def test_ride_results_duplicate_label():
     """GPT 23 #5 — 같은 표기의 구간이 두 번이면 순서로 짝짓는다(첫 결과를 두 번 쓰지 않는다)."""
-    from app.modules.travel_ops.mobility.engine.options import ride_results
+    from app.domains.travel_ops.instances.mobility.engine.options import ride_results
     legs = [{"line": "02호선", "from": "A", "to": "B"}, {"line": "03호선", "from": "B", "to": "C"},
             {"line": "02호선", "from": "A", "to": "B"}]
     lrs = [_LR("02호선 A→B", 10, 12), _LR("환승 B", None, None), _LR("03호선 B→C", 15, 20),
@@ -785,7 +785,7 @@ def test_ride_results_duplicate_label():
 
 def test_transfer_car_collision():
     """GPT 23 #6 — 조회 키가 같은데 칸이 다르면 키를 뺀다(행 순서로 값이 바뀌면 안 된다) · 같으면 그대로."""
-    from app.modules.travel_ops.mobility.engine.options import TransferCar
+    from app.domains.travel_ops.instances.mobility.engine.options import TransferCar
     base = {"station_nm": "S", "line": "L1", "prev_nm": "P", "to_line": "L2", "to_station_nm": "S", "to_next_nm": "N"}
     e1 = dict(base, next_nm="Q1", positions=[{"car_door": "1-1"}])
     e2 = dict(base, next_nm="Q2", positions=[{"car_door": "9-4"}])
@@ -822,7 +822,7 @@ def test_left_out_rechecked():
 def test_bus_cap_after_eligibility():
     """GPT 23 #2 — 버스 상한은 자격 검사(앞 일정·uses) 뒤에 자른다. 도보 짧은 버스 셋이 앞 일정과 겹쳐도 넷째가 실린다."""
     _skip_if_no_data()
-    from app.modules.travel_ops.mobility.engine import plan as P
+    from app.domains.travel_ops.instances.mobility.engine import plan as P
     rt = _runtime()
     pl = P.Planner(rt, modes=["bus"])
     arrive = datetime(2026, 9, 29, 15, 0, tzinfo=KST)
@@ -859,7 +859,7 @@ def test_recheck_revives():
     """GPT 23 2차 #1·#3 — 역산 출발이 앞 일정과 겹쳐도(더 이르게 나와도) 계획 출발에서 다시 보면 성립하는 후보는 살린다.
     살린 후보의 eta·편성·요금은 재판정 결과를 따른다(출력 eta = 독립 재판정 eta)."""
     _skip_if_no_data()
-    from app.modules.travel_ops.mobility.engine import plan as P
+    from app.domains.travel_ops.instances.mobility.engine import plan as P
     rt = _runtime()
     pl = P.Planner(rt, modes=["bus"])
     arrive = datetime(2026, 9, 29, 15, 0, tzinfo=KST)
@@ -886,7 +886,7 @@ def test_recheck_revives():
 def test_core_routes_strips_display():
     """GPT 23 #10 — display 로 뽑은 결과도 core_routes() 를 거치면 계약 칸만 남는다(= display 끈 결과)."""
     _skip_if_no_data()
-    from app.modules.travel_ops.mobility.engine.plan import core_routes
+    from app.domains.travel_ops.instances.mobility.engine.plan import core_routes
     items = _two("2026-09-29T10:00:00+09:00", "2026-09-29T11:00:00+09:00", "2026-09-29T13:30:00+09:00")
     on = plan(_GS, items, 1, {}, runtime=_runtime(), modes=MODES, display=True)
     off = plan(_GS, items, 1, {}, runtime=_runtime(), modes=MODES)
@@ -901,7 +901,7 @@ def test_replan_fare_known_locked():
     """54 — GPT 23 #8 잠금을 뒤집었다: 지하철·버스 옵션에 요금이 실려 코어 재계획(route_candidates)이 「요금을 몰라」로
     떨어뜨리지 않는다. 405 무정차 → 지하철이 대안으로 뽑히고 추가 비용 = 1,550 − 1,500 = 50(티머니 실측 환승 +50 과 같은 값)."""
     _skip_if_no_data()
-    from app.modules.travel_ops.replan import choose, route_candidates
+    from app.domains.travel_ops.components.planning.replan import choose, route_candidates
     items, got = _ns_it(modes=MODES_ALL)
     route = got["routes"]["ns_to_it"]
     fares = {o["id"]: o.get("fare_krw") for o in route["options"]}
@@ -951,7 +951,7 @@ class _FakeCg:
 def test_congestion_checked_needs_cell():
     """GPT 23 #1 — 「혼잡 자료상 극심 구간 없음」은 **실제 탄 편성의 셀**(노선·역·방향·요일·30분)이 있을 때만.
     셀 없음 · 방향이 하나로 안 모임 · 지하철 밖 구간 → False."""
-    from app.modules.travel_ops.mobility.engine.options import congestion_checked
+    from app.domains.travel_ops.instances.mobility.engine.options import congestion_checked
     leg = {"line": "09호선", "from": "A", "to": "C"}
     lr = [_LR("09호선 A→C", 10, 14)]
     one = _FakeV([(_D(10, "U"), ["A", "B", "C"])])
@@ -975,7 +975,7 @@ def test_recheck_at_offsets():
     ☆ 73 후속 — 04:00 정각은 팀장 #45 뒤 새 운행일이라 이동을 안 만든다(trace 빔 · tr[0] IndexError) → 03:59 로.
     trace 의 후보를 그 출발에서 _recheck_at 으로 다시 보면 같은 출발·같은 eta 가 나와야 한다."""
     _skip_if_no_data()
-    from app.modules.travel_ops.mobility.engine import plan as P
+    from app.domains.travel_ops.instances.mobility.engine import plan as P
     rt = _runtime()
     for items in (_two("2026-09-28T22:00:00+09:00", "2026-09-28T23:00:00+09:00", "2026-09-29T03:59:00+09:00"),
                   _two("2026-09-29T22:30:00+09:00", "2026-09-29T23:30:00+09:00", "2026-09-30T00:30:00+09:00")):
@@ -1018,7 +1018,7 @@ class _FLR:
 
 
 def _rules():
-    from app.modules.travel_ops.mobility.engine.paths import RULES_DIR
+    from app.domains.travel_ops.instances.mobility.engine.paths import RULES_DIR
     return json.loads((RULES_DIR / "rules_v0.3.json").read_text(encoding="utf-8"))
 
 
@@ -1041,7 +1041,7 @@ def test_fare_rules_have_basis():
 def test_fare_no_hardcode():
     """하드코딩 금지(27 규칙 14) — options.py 에 요금 숫자가 없다. 규칙 값을 바꾸면 결과가 따라 바뀐다."""
     import re
-    from app.modules.travel_ops.mobility.engine import options as O
+    from app.domains.travel_ops.instances.mobility.engine import options as O
     src = Path(O.__file__).read_text(encoding="utf-8")
     assert not re.search(r"\b(1550|1500|1400|1200|2500|3000|10000|5000|8000|50000|390)\b", src), "요금 값이 코드에 있다"
     F = _rules()["fare"]
@@ -1051,7 +1051,7 @@ def test_fare_no_hardcode():
 
 def test_fare_distance_steps():
     """거리 추가운임 경계 — 10km 까지 기본 · 5km 마다 100(올림) · 50km 넘으면 8km 마다 100 · 조조는 기본운임만 20%."""
-    from app.modules.travel_ops.mobility.engine.options import subway_fare_at
+    from app.domains.travel_ops.instances.mobility.engine.options import subway_fare_at
     F = _rules()["fare"]
     want = {0: 1550, 10000: 1550, 10001: 1650, 15000: 1650, 15001: 1750, 50000: 2350, 50001: 2450,
             58000: 2450, 58001: 2550}
@@ -1065,7 +1065,7 @@ def test_fare_distance_steps():
 def test_fare_transfer_tmoney():
     """통합환승 합성 — 티머니 실측 태그(25 · 9/08~10 퇴근): 버스 1,500 → 지하철 +50 · 버스→버스 0.
     창 초과 · 광역·심야 · 거리 모름 · 6회 승차 → None."""
-    from app.modules.travel_ops.mobility.engine.options import transfer_fare
+    from app.domains.travel_ops.instances.mobility.engine.options import transfer_fare
     F = _rules()["fare"]
     bus = lambda typ, m, b, a: {"kind": typ, "base": F["bus"]["by_type"]["value"].get(typ), "m": m, "board": b, "alight": a}
     sub = lambda m, b, a: {"kind": "subway", "base": F["subway"]["base"]["value"]["won"], "m": m, "board": b, "alight": a}
@@ -1103,7 +1103,7 @@ class _FFareV:
 
 def test_fare_bus_single():
     """버스 한 번 — 유형별 단일요금 · 공항·투어·모르는 노선 → 없음 · 조조는 승차 창 [정류장 도착, +배차] 이 06:30 한쪽일 때만 · 심야 조조 없음."""
-    from app.modules.travel_ops.mobility.engine.options import fare_of
+    from app.domains.travel_ops.instances.mobility.engine.options import fare_of
     leg = [{"mode": "bus", "route": "405", "from": "a", "to": "b"}]
     lab = "버스 405 a→b"
     ok = lambda typ, dep, wait=3, term=10: fare_of(_FFareV(typ, term), leg, [_FLR(lab, dep, wait)])
@@ -1120,7 +1120,7 @@ def test_fare_bus_single():
 def test_fare_mixed_is_unknown():
     """버스가 섞인 환승 — 버스 운임거리 근거가 없어(fare.transfer.bus_distance 근거없음) 값을 안 낸다."""
     _skip_if_no_data()
-    from app.modules.travel_ops.mobility.engine.options import fare_of
+    from app.domains.travel_ops.instances.mobility.engine.options import fare_of
     v = _runtime()._v
     legs = [{"mode": "bus", "route": "405", "from": "a", "to": "b"}, {"line": "06호선", "from": "삼각지", "to": "이태원"}]
     lrs = [_FLR("버스 405 a→b", 600, 3), _FLR("06호선 삼각지→이태원", 620)]
@@ -1132,7 +1132,7 @@ def test_fare_subway_bracket():
     """지하철 운임거리 괄호 — 카드는 승하차역만 안다 → 최단거리 요금. 하한 = 상한 요금일 때만 값.
     티머니 T16·T19(남부터미널→남성 1,550) 대조 · 최단보다 긴 후보도 같은 요금 · 거리 모르는 노선은 없음 · 경계에 걸리면 없음."""
     _skip_if_no_data()
-    from app.modules.travel_ops.mobility.engine import options as O
+    from app.domains.travel_ops.instances.mobility.engine import options as O
     v = _runtime()._v
     net = O.fare_net(v)
     f = lambda legs, dep=600: O.fare_of(v, legs, [_FLR(O.leg_txt(x), dep) for x in legs])
@@ -1163,7 +1163,7 @@ def test_fare_ub_join_same_name_only():
     """상한 그래프의 환승은 서울교통공사 환승역거리 표의 쌍만 — 역명·좌표로 이으면 `경의선|양평` 좌표 결함(5호선 좌표)
     때문에 다른 역(경의중앙 양평 ↔ 5호선 양평)이 이어져 상한이 가짜로 짧아진다(54 발견)."""
     _skip_if_no_data()
-    from app.modules.travel_ops.mobility.engine import options as O
+    from app.domains.travel_ops.instances.mobility.engine import options as O
     v = _runtime()._v
     net = O.fare_net(v)
     a, b = ("경의선", "양평"), ("05호선", "양평")
@@ -1178,7 +1178,7 @@ def test_fare_lb_unknown_zero():
     """GPT 54 #2 — 하한 그래프에서 거리 모르는 간선은 0(좌표 직선은 공표 거리보다 길 수 있어 하한이 아니다 —
     확정 간선 270개 중 96개가 직선 > 공표). 거리 확정 간선은 공표 값 그대로."""
     _skip_if_no_data()
-    from app.modules.travel_ops.mobility.engine import options as O
+    from app.domains.travel_ops.instances.mobility.engine import options as O
     v = _runtime()._v
     net = O.fare_net(v)
     k = n = 0
@@ -1196,7 +1196,7 @@ def test_fare_lb_unknown_zero():
 
 def test_fare_early_bird_gate():
     """GPT 54 #4 — 조조 기준은 개찰 태그. 태그 창 [열차 − 15, 열차] 이 06:30(390) 을 가로지르면 모른다."""
-    from app.modules.travel_ops.mobility.engine.options import early_bird
+    from app.domains.travel_ops.instances.mobility.engine.options import early_bird
     W = _rules()["fare"]["subway"]["early_bird_gate_window"]["value"]
     assert early_bird(389, 390, W) is True
     assert early_bird(390, 390, W) is None and early_bird(390 + W - 1, 390, W) is None

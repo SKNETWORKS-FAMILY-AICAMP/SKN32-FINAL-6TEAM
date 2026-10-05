@@ -48,7 +48,7 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 
 ## 실제 연동 경계
 
-`NEXT_PUBLIC_DATA_MODE=live`는 `NEXT_PUBLIC_API_BASE`의 `/v1/web/*`에 연결한다. 쿠키 세션(게스트 시작·로그아웃·옛 키 이전), 글/파일 접수·근거 확인·편집·확인 등록/일정 생성, 여행 목록·조회·상담·제안 선택·알림을 구현했다. 서버 기준은 `app/modules/travel_ops/trip_api.py`이며 UI에서 예약 변경·업무 판정·실제 시간 계산을 대신 구현하지 않는다. 실패를 데모 성공으로 바꾸지 않는다.
+`NEXT_PUBLIC_DATA_MODE=live`는 `NEXT_PUBLIC_API_BASE`의 `/v1/web/*`에 연결한다. 쿠키 세션(게스트 시작·로그아웃·옛 키 이전), 글/파일 접수·근거 확인·편집·확인 등록/일정 생성, 여행 목록·조회·상담·제안 선택·알림을 구현했다. 서버 기준은 `app/domains/travel_ops/entry/trip_api.py`이며 UI에서 예약 변경·업무 판정·실제 시간 계산을 대신 구현하지 않는다. 실패를 데모 성공으로 바꾸지 않는다.
 
 `Trip`·`TripStop`은 프론트 표시 모델이다. live 어댑터가 서버 `trip_id/items`를 변환하고 서울 시각으로 표시한다. 별도 검증 퍼센트 API는 없다. 접수 읽기만 서버 실시간 진행(SSE, `GET /v1/web/trip-intakes/{id}/events`)을 구독하고(안 열리면 폴링으로 되돌아감), 여행 화면의 변경 알림은 `GET …/trips/{id}/events` 종을 따로 듣는다. live 등록 시 서버가 판정하며 이후 살펴볼 점·알림·이력은 여행 화면에서 확인한다. demo 진행 조회와 가짜 서버 시험을 실제 운영 검증으로 해석하지 않는다.
 

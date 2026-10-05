@@ -24,8 +24,8 @@ import pytest
 from app.core import settings as settings_module
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.case_engine import CaseEngine
-from app.modules.travel_ops.pending import PendingStore
+from app.domains.travel_ops.scenarios.case_engine import CaseEngine
+from app.domains.travel_ops.components.planning.pending import PendingStore
 
 from .test_case_version_day import _classifier, _extractor, case_world  # noqa: F401 — 픽스처를 그대로 쓴다
 

@@ -16,7 +16,7 @@ from datetime import date, datetime, timezone
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.itinerary import Item
+from app.domains.travel_ops.components.itinerary.itinerary import Item
 
 KST = ZoneInfo("Asia/Seoul")
 UTC = timezone.utc
@@ -31,14 +31,14 @@ def _item(seq, kind, title, hhmm, *, day=6, tz=UTC):
 
 
 def test_the_seoul_helper_converts_a_zoned_time_and_attaches_seoul_to_a_naive_one():
-    from app.modules.travel_ops.trip_api import _seoul
+    from app.domains.travel_ops.entry.trip_api import _seoul
 
     assert _seoul(datetime(2026, 10, 6, 3, 0, tzinfo=UTC)).hour == 12 and _seoul(datetime(2026, 10, 6, 3, 0, tzinfo=UTC)).tzinfo is not None
     assert _seoul(datetime(2026, 10, 6, 12, 0)).hour == 12 and _seoul(None) is None
 
 
 def test_the_meal_label_is_the_same_whatever_zone_the_time_arrives_in():
-    from app.modules.travel_ops.trip_api import _meal_label
+    from app.domains.travel_ops.entry.trip_api import _meal_label
 
     for tz in (KST, UTC):
         assert _meal_label(_item(1, "dining", "아침", "07:30", tz=tz)) == "아침"
@@ -47,7 +47,7 @@ def test_the_meal_label_is_the_same_whatever_zone_the_time_arrives_in():
 
 
 def test_the_rollback_slot_name_is_in_seoul_time():
-    from app.modules.travel_ops.itinerary_changes import _slot
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import _slot
 
     first_day = date(2026, 10, 6)
     for tz in (KST, UTC):
@@ -57,7 +57,7 @@ def test_the_rollback_slot_name_is_in_seoul_time():
 
 
 def test_a_meal_word_in_a_question_finds_the_meal_whatever_zone_the_times_are_in():
-    from app.modules.travel_ops.itinerary_team import mentioned_item
+    from app.domains.travel_ops.instances._shared.itinerary_team import mentioned_item
 
     for tz in (KST, UTC):
         lunch, dinner = _item(1, "dining", "한식당", "12:00", tz=tz), _item(2, "dining", "고깃집", "19:00", tz=tz)
@@ -66,7 +66,7 @@ def test_a_meal_word_in_a_question_finds_the_meal_whatever_zone_the_times_are_in
 
 
 def test_the_change_target_finds_the_meal_by_its_meal_word_in_seoul_time():
-    from app.modules.travel_ops.trip_messages import _change_target
+    from app.domains.travel_ops.components.conversation.trip_messages import _change_target
 
     at = datetime(2026, 10, 6, 9, 0, tzinfo=KST)
     for tz in (KST, UTC):
@@ -81,7 +81,7 @@ def test_customer_notice_texts_format_clock_times_in_seoul():
     import re
     from pathlib import Path
 
-    from app.modules.travel_ops import itinerary_changes
+    from app.domains.travel_ops.components.itinerary import itinerary_changes
 
     source = Path(itinerary_changes.__file__).read_text(encoding="utf-8")
     bare = [line.strip() for line in source.splitlines() if re.search(r"\b\w+\.(starts_at|ends_at):%", line)]
@@ -90,7 +90,7 @@ def test_customer_notice_texts_format_clock_times_in_seoul():
 
 # ── 검증 세션의 두 번째 지적(알림 문구 · 지도 날짜 · 변경 링크 · 날씨) ──────────────────
 def test_the_replan_clock_helpers_read_seoul_time():
-    from app.modules.travel_ops.replan import _hm, _part_of_day
+    from app.domains.travel_ops.components.planning.replan import _hm, _part_of_day
 
     noon_in_utc = datetime(2026, 10, 6, 3, 0, tzinfo=UTC)                  # 서울 12:00
     assert _hm(noon_in_utc) == "12:00" and _part_of_day(noon_in_utc) == "오후"
@@ -99,7 +99,7 @@ def test_the_replan_clock_helpers_read_seoul_time():
 
 def test_the_item_view_carries_seoul_times_so_the_map_groups_days_in_seoul():
     """지도의 날짜 묶음은 `starts_at[:10]` 이다 — UTC 로 적힌 서울 아침 8시(전날 23:00Z)가 전날로 묶이던 것을 막는다."""
-    from app.modules.travel_ops.trip_api import _item_view
+    from app.domains.travel_ops.entry.trip_api import _item_view
 
     morning = _item(1, "activity", "경복궁", "08:00", day=6, tz=UTC)
     view = _item_view(morning)
@@ -107,7 +107,7 @@ def test_the_item_view_carries_seoul_times_so_the_map_groups_days_in_seoul():
 
 
 def test_the_change_link_page_prints_seoul_clock_times():
-    from app.modules.travel_ops.change_link import _when
+    from app.domains.travel_ops.components.booking.change_link import _when
 
     start = datetime(2026, 10, 6, 3, 0, tzinfo=UTC).isoformat()            # 서울 12:00
     end = datetime(2026, 10, 6, 4, 0, tzinfo=UTC).isoformat()              # 서울 13:00
@@ -119,7 +119,7 @@ def test_the_change_link_page_prints_seoul_clock_times():
 def test_the_open_meteo_source_picks_the_forecast_slot_in_seoul_time(monkeypatch):
     """`astimezone()`(인자 없음)은 **서버 PC 의 시간대**로 바꾼다 — 서울이 아닌 서버에서는 예보 칸이 어긋난다. 서울로 바꿔 고른다.
     (이 PC 가 서울이라 옛 코드도 여기서는 통과한다 — 서울이 아닌 서버를 흉내 낼 수 없어, 고른 칸의 시각을 직접 본다.)"""
-    from app.infrastructure.travel.open_meteo import OpenMeteoWeather
+    from app.domains.travel_ops.ports.data_sources.open_meteo import OpenMeteoWeather
 
     seen = []
     source = OpenMeteoWeather.__new__(OpenMeteoWeather)
@@ -135,7 +135,8 @@ def test_no_notice_text_formats_a_zoned_time_without_converting_it_to_seoul():
     import re
     from pathlib import Path
 
-    from app.modules.travel_ops import itinerary_changes, replan
+    from app.domains.travel_ops.components.itinerary import itinerary_changes
+    from app.domains.travel_ops.components.planning import replan
 
     allowed = ("{first:%H:%M} {later[0].title}", "{arrival:%H:%M}(으)로 늦어져", "{start:%H:%M} 일정")
     bare = []
@@ -150,7 +151,7 @@ def test_no_notice_text_formats_a_zoned_time_without_converting_it_to_seoul():
 def test_the_open_meteo_forecast_range_counts_days_from_seoul_today(monkeypatch):
     """예보 범위(`_days_needed`)가 **서버 PC 의 오늘**(`datetime.now()`)로 센다 — 서버가 UTC 면 서울이 이미 다음 날인 시각(서울 07:00 = UTC 전날 22:00)에 하루 늦게 센다.
     서버 시계를 UTC 로 흉내 내 재현한다(이 PC 가 서울이라 진짜 시간대로는 안 된다)."""
-    from app.infrastructure.travel import open_meteo
+    from app.domains.travel_ops.ports.data_sources import open_meteo
 
     class UtcServerClock(datetime):
         @classmethod

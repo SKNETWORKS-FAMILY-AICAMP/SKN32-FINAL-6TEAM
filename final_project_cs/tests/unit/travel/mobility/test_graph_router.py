@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from app.modules.travel_ops.mobility.engine.car import RouterDown, hav
-from app.modules.travel_ops.mobility.engine.graph_router import GraphRouter, decode_polyline
+from app.domains.travel_ops.instances.mobility.engine.car import RouterDown, hav
+from app.domains.travel_ops.instances.mobility.engine.graph_router import GraphRouter, decode_polyline
 
 
 def encode_polyline(coords, precision=1e6):
@@ -215,7 +215,7 @@ def test_response_has_the_graphhopper_shape_the_callers_read():
     assert [w[0] for w in ways][1:] == [w[1] for w in ways][:-1], "구간이 끊김 없이 이어져야 한다(앞 구간 끝 = 다음 구간 처음)"
     assert all(c[2] == "residential" for c in p["details"]["road_class"])
     # 이동 판정기가 읽는 어댑터를 그대로 통과한다 — 거리·시간만 남기고 형상은 버린다
-    from app.modules.travel_ops.mobility.engine.bike import BikeRouter
+    from app.domains.travel_ops.instances.mobility.engine.bike import BikeRouter
     br = BikeRouter(gr, {}, "2026-09-18")
     r = br.route("foot", xy(0, 0)[1], xy(0, 0)[0], xy(0, 3)[1], xy(0, 3)[0])
     assert r["basis"] == "로컬 도로그래프" and r["source_id"] == "osm_road_graph@2026-09-18" and r["distance_m"] > 250
@@ -272,7 +272,7 @@ def test_far_off_network_points_are_flagged_optimistic_and_the_adapter_passes_it
     q_near = gr.route(near, xy(0, 3), profile="foot")["paths"][0]["quality"]
     assert q_far["optimistic"] is True and q_far["access_max_m"] > 90
     assert q_near["optimistic"] is False and q_near["access_max_m"] < 30
-    from app.modules.travel_ops.mobility.engine.bike import BikeRouter
+    from app.domains.travel_ops.instances.mobility.engine.bike import BikeRouter
     br = BikeRouter(gr, {}, "2026-09-18")
     r = br.route("foot", far[1], far[0], xy(0, 3)[1], xy(0, 3)[0])
     assert r["optimistic"] is True and r["quality"]["access_max_m"] > 90
@@ -294,7 +294,7 @@ HERE = Path(__file__).resolve().parent
 
 @pytest.fixture(scope="module")
 def real_graph():
-    from app.modules.travel_ops.mobility.engine import paths
+    from app.domains.travel_ops.instances.mobility.engine import paths
     before = (paths.DATA_DIR, paths.SOURCE)
     if paths.SOURCE in ("unset", "disabled"):
         paths.load_cli_env()

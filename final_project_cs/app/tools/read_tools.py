@@ -70,7 +70,7 @@ class ReadToolbox:
 
     connection_factory: Callable[[], Any]
     policy_search: Callable[..., list[Any]] = search_policy
-    #: 바깥 데이터 소스 묶음(`app/infrastructure/travel/`). ★기본값이 `None` 이다 —
+    #: 바깥 데이터 소스 묶음(`app/domains/travel_ops/ports/data_sources/`). ★기본값이 `None` 이다 —
     #:  **안 넣으면 여행 도구가 전부 「모름」을 돌려주고 네트워크를 타지 않는다.**
     #:  테스트가 조용히 바깥으로 나가는 사고를 구조로 막는다.
     travel: Any | None = None
@@ -109,7 +109,7 @@ class ReadToolbox:
     #
     # ★기록해 둔다 — `wiki/records/handoff/10_도메인_교체_가이드.md` §1 은 이
     #   파일을 교체 지점으로 놓지 않았다. basement 순수성 게이트가 `app/tools/`
-    #   를 대상에서 빼먹었기 때문이다. 실제로 이 파일은 `app/modules/` 와
+    #   를 대상에서 빼먹었기 때문이다. 실제로 이 파일은 `app/domains/` 와
     #   마찬가지로 **도메인을 안다.** 게이트 확장은 별도 작업으로 남아 있다.
     def policy(self, scope: ToolContext, *, query: str, **_: Any) -> list[Any]:
         return self.policy_search(scope.tenant_id, query, scope.knowledge_scope)
@@ -281,7 +281,7 @@ class ReadToolbox:
         """
         if not self.dining_ledger:
             return None
-        from app.modules.travel_ops.dining.ledger import dining_state
+        from app.domains.travel_ops.instances.dining.ledger import dining_state
         with self.connection_factory() as conn:
             return dining_state(conn, scope.tenant_id, place_id, at, until,
                                 order_margin_min=order_margin_min)
@@ -295,7 +295,7 @@ class ReadToolbox:
         """
         if not self.dining_ledger:
             return None
-        from app.modules.travel_ops.dining.ledger import dining_states
+        from app.domains.travel_ops.instances.dining.ledger import dining_states
 
         with self.connection_factory() as conn:
             if order_margin_min is None:
@@ -317,7 +317,7 @@ class ReadToolbox:
 
         if not google_price_enabled():
             return None
-        from app.infrastructure.travel.google_places import prices_for
+        from app.domains.travel_ops.ports.data_sources.google_places import prices_for
 
         return prices_for(self.connection_factory, scope.tenant_id, self.google_places, list(place_ids))
 
@@ -392,7 +392,7 @@ class ReadToolbox:
 
     # ── 일정(Trip) ──────────────────────────────────────────────
     def _trip_store(self, scope: ToolContext):
-        from app.modules.travel_ops.itinerary import TripStore
+        from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
         return TripStore(scope.tenant_id)
 
@@ -401,7 +401,7 @@ class ReadToolbox:
         """그 여행의 **최신 일정 버전**. 이 고객의 여행이 아니면 `None`(있는지도 말하지 않는다)."""
         if not trip_id:
             return None
-        from app.modules.travel_ops.itinerary import item_to_dict
+        from app.domains.travel_ops.components.itinerary.itinerary import item_to_dict
 
         store = self._trip_store(scope)
         with self.connection_factory() as conn:
@@ -421,7 +421,7 @@ class ReadToolbox:
         """옛 일정 버전의 항목(되돌림용). 이 고객의 여행이 아니거나 없는 버전이면 `None`."""
         if not trip_id or version is None:
             return None
-        from app.modules.travel_ops.itinerary import item_to_dict
+        from app.domains.travel_ops.components.itinerary.itinerary import item_to_dict
 
         store = self._trip_store(scope)
         with self.connection_factory() as conn:
@@ -503,7 +503,7 @@ class ReadToolbox:
             return self.check(place=place, starts_at=_as_datetime(starts_at), region=str(region))
         if self.travel is None:
             return None
-        from app.infrastructure.travel.disruptions import DisruptionCheck
+        from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
 
         return DisruptionCheck(self.travel).check(
             place=place, starts_at=_as_datetime(starts_at), region=str(region))

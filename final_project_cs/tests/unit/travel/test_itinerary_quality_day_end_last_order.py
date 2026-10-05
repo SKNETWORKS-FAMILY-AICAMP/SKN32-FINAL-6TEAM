@@ -16,8 +16,8 @@ from __future__ import annotations
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.itinerary_checks import Part
-from app.modules.travel_ops.itinerary_quality import quality_warnings
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Part
+from app.domains.travel_ops.components.itinerary.itinerary_quality import quality_warnings
 
 KST = ZoneInfo("Asia/Seoul")
 

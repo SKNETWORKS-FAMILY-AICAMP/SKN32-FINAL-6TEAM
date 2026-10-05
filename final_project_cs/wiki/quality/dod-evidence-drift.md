@@ -79,7 +79,7 @@ python -m pytest tests/unit/infrastructure/test_sql_graph_adapter.py -q
 
 | 축 | 인용한 근거 | 지금 |
 |---|---|---|
-| **정적 (AST)** | `app/modules/**` 의 import 를 파싱해 금지 대상 0건 | **`test_core_isolation.py` 는 `app/core` 만 훑는다** (`root = Path("app/core")`) |
+| **정적 (AST)** | `app/domains/**` 의 import 를 파싱해 금지 대상 0건 | **`test_core_isolation.py` 는 `app/core` 만 훑는다** (`root = Path("app/core")`) |
 | **런타임 (spy)** | `pytest.raises(ToolNotAllowed)` 로 실제 차단 관측 | **소스가 없다** |
 
 ### `ToolNotAllowed` 를 검사하는 테스트가 `.pyc` 에만 있다

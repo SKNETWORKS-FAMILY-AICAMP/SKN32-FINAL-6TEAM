@@ -26,9 +26,9 @@ import pytest
 
 from app.core import settings as settings_module
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import watch_relaxed
-from app.modules.travel_ops.replan import WEATHER_LIKE
-from app.modules.travel_ops.trip_watch_cases import Issue, TripWatchCaseOpener
+from app.domains.travel_ops.components.watch import watch_relaxed
+from app.domains.travel_ops.components.planning.replan import WEATHER_LIKE
+from app.domains.travel_ops.components.watch.trip_watch_cases import Issue, TripWatchCaseOpener
 
 from .test_ask_first import _proposals
 from .test_trip_api import _at, _create, api  # noqa: F401 — 픽스처를 그대로 쓴다
@@ -212,7 +212,7 @@ def test_in_a_batch_the_asked_items_leave_the_unchanged_notice_and_only_the_unso
               Issue(world["trip_id"], other, DISRUPTED["disruptions"], "activity_other", "place")]
     observed = " ".join(f"outcome:{i.item.item_id}:no_alternate" for i in issues)
     opener._escalation = lambda case_id: ("itinerary_unresolved", observed)           # 묶음 Team 이 항목별 표지를 남기고 끝난 것
-    from app.modules.travel_ops.trip_watch_cases import CaseTickResult
+    from app.domains.travel_ops.components.watch.trip_watch_cases import CaseTickResult
 
     result = CaseTickResult()
     opener._after_batch(UUID(int=1), {"trip_id": world["trip_id"], "batch": issues}, result)

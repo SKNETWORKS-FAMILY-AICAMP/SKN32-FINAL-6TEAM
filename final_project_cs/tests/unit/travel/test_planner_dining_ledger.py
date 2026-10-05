@@ -11,8 +11,8 @@ from __future__ import annotations
 
 from datetime import date, datetime, time
 
-from app.modules.travel_ops import planner
-from app.modules.travel_ops.planner import Cand, PlanRequest
+from app.domains.travel_ops.components.planning import planner
+from app.domains.travel_ops.components.planning.planner import Cand, PlanRequest
 
 KST = planner.KST
 DAY = date(2026, 10, 5)
@@ -65,7 +65,7 @@ def test_restaurants_are_not_taken_from_the_live_tour_api():
 
 
 def test_restaurants_are_not_read_from_the_place_catalog(monkeypatch):
-    from app.infrastructure.travel import catalog_sync
+    from app.domains.travel_ops.ports.data_sources import catalog_sync
 
     monkeypatch.setattr(catalog_sync.PlaceCatalogSync, "enabled", staticmethod(lambda: True))
     seen = []

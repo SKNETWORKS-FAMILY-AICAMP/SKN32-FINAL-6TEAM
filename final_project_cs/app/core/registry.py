@@ -29,7 +29,7 @@ class RegisteredTeam:
 
 
 class TeamRegistry:
-    """Maps capabilities to injected Team modules; never imports app.modules."""
+    """Maps capabilities to injected Team modules; never imports app.domains."""
 
     def __init__(self, teams: list[TeamModule] | None = None, *, contract_version: str = "1.0") -> None:
         self.contract_version = contract_version
@@ -93,7 +93,7 @@ class TeamRegistry:
         #   구체 사례는 docs/reports/debugs/
         #   2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md 를 본다
         #   (basement 는 그 사례의 업무 어휘를 여기 적지 않는다 — 도메인은
-        #   app/modules/ 에 남긴다).
+        #   app/domains/ 에 남긴다).
         #
         #   Registry가 문자열 네임스페이스로 대신 추측하지 않는다 — 팀이
         #   자기 capability의 의미를 안다. entry.module이 선택적으로

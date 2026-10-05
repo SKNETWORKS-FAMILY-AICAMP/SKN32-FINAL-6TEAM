@@ -9,8 +9,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.trip_reminders import build_departure
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.watch.trip_reminders import build_departure
 
 KST = timezone(timedelta(hours=9))
 T = lambda hm: datetime.fromisoformat(f"2026-10-07T{hm}:00+09:00")  # noqa: E731
@@ -48,7 +48,7 @@ def test_a_route_with_checked_targets_still_says_so():
 
 def test_estimate_labels_carry_the_marker_the_same_way_everywhere():
     """일정 생성(planner)과 장소 교체(itinerary_changes)가 어림값을 같은 모양(「… [추정]」)으로 적는다."""
-    from app.modules.travel_ops.planner import Cand, _transfer_minutes
+    from app.domains.travel_ops.components.planning.planner import Cand, _transfer_minutes
 
     def cand(key, lat, lon):
         return Cand(key=key, name=key, kind="activity", lat=lat, lon=lon, attributes={}, origin="places")

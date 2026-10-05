@@ -12,10 +12,10 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.modules.travel_ops.dining.ledger import dining_state, dining_states, nearby_shops
-from app.modules.travel_ops.dining.nearby import add_nearby
-from app.modules.travel_ops.itinerary import Item, TripStore
-from app.modules.travel_ops.itinerary_changes import NoChange, plan_closed
+from app.domains.travel_ops.instances.dining.ledger import dining_state, dining_states, nearby_shops
+from app.domains.travel_ops.instances.dining.nearby import add_nearby
+from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_closed
 
 from tests.integration.dining.conftest import MIGRATIONS
 from tests.integration.dining.test_dining_judgment import add_hours

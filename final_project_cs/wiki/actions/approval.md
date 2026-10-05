@@ -70,7 +70,7 @@ v11 §4-C — **업체 예약은 승인 없이 실행하지 않는다. 먼저 �
 
 - 적용기는 `auto_apply=False` 로 선언한다 — 승인 없이 오면 위 절의 규칙이 `action_requires_approval` 로 막는다.
 - 승인 직전 재검증은 승인 API 가 이미 한다(아래 「승인 전 재검증」). 적용기는 적용 순간 대상을 **한 번 더** 잠가 확인한다.
-- 여행: `booking.cancel` 은 **시연용 Mock 공급자**(`supplier_bookings`)와 우리 예약을 함께 `cancelled` 로, `booking.change` 는 바꿀 내용이 인자에 없어 **지어내지 않고 인계**한다(예약 `change_requested` + 바깥함 `booking.handoff`). `app/modules/travel_ops/booking_actions.py`.
+- 여행: `booking.cancel` 은 **시연용 Mock 공급자**(`supplier_bookings`)와 우리 예약을 함께 `cancelled` 로, `booking.change` 는 바꿀 내용이 인자에 없어 **지어내지 않고 인계**한다(예약 `change_requested` + 바깥함 `booking.handoff`). `app/domains/travel_ops/components/actions/booking_actions.py`.
 - `[2026-09-22]` 그 인계 메시지에 **변경 링크**(`change_url`)가 실린다 — 고객이 바뀔 항목·대안·차액을 보고 **업체 쪽에서 직접** 진행한다(v11 §4-C · DoD-16·17). ★**링크를 만들고 여는 경로에는 승인이 없다** — 아무것도 쓰지 않기 때문이다. 승인이 필요한 것은 우리 예약을 `change_requested` 로 옮기는 기록 쪽이다. → [../teams/booking-handoff.md](../teams/booking-handoff.md#변경-링크-2026-09-22--이-절도-명세였다가-사실이-됐다)
 - `[2026-09-22]` ★**승인이 나도 실제 공급자 원장은 안 바꾼다.** `booking.cancel` 은 `supplier_bookings.tier == 'simulated'` 일 때만 원장을 건드리고, 그 밖(기본값 `real`)이면 `ActionRejected` → 전부 되돌리고 `action_rejected` 로 사람에게 간다. **승인은 "이 변경을 해도 된다" 이지 "실제 업체에 직접 질러도 된다" 가 아니다**(v11 §4-C · DoD-14·15). → [../teams/booking-handoff.md](../teams/booking-handoff.md#2026-09-22-게이트가-생겼다--이-절이-명세였다가-사실이-됐다)
 - `[2026-09-22]` ★**문이 하나 더 있다 — 위임 범위.** 등급 게이트를 지나도 **금액·대상 종류·횟수·되돌림 조건**을 벗어나면 원장을 건드리지 않고 `action_rejected` 로 사람에게 간다(v11 §12 DoD-18·19). 등급이 「누구의 원장인가」라면 위임은 「얼마까지 맡겼나」다. 판정은 **적용 순간에** 하므로 승인과 적용 사이에 위임이 철회되면 그 건은 열리지 않는다. → [../teams/booking-handoff.md](../teams/booking-handoff.md#위임-범위--1번에서만-쓴다)
@@ -81,7 +81,7 @@ v11 §4-C — **업체 예약은 승인 없이 실행하지 않는다. 먼저 �
 ### 위임을 누가 주고 거두나 `[2026-09-22]`
 
 `[실측]` **운영자다.** 자리는 REST `/v1/delegations/*` 와 운영 화면 `/ui/delegations` 다
-(구현 [`app/modules/travel_ops/delegation_api.py`](../../app/modules/travel_ops/delegation_api.py) ·
+(구현 [`app/domains/travel_ops/entry/delegation_api.py`](../../app/domains/travel_ops/entry/delegation_api.py) ·
 화면 `app/presentation/ui/routes.py`). **전에는 자리가 없었다** — 판정(`delegation.py`)과
 `delegations` 표(019)는 있는데 주고 거두는 경로가 없어 사람이 손으로 SQL 을 쳐야 했다.
 「위임은 언제든 철회할 수 있다」가 그동안 말뿐이었다는 뜻이다.

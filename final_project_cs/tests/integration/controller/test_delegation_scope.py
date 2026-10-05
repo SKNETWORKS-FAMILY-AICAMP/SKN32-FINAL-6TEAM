@@ -36,8 +36,8 @@ from app.core.transition import transition_case
 from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import delegation
-from app.modules.travel_ops.booking_handoff import BookingHandoffTeam
+from app.domains.travel_ops.components.booking import delegation
+from app.domains.travel_ops.instances.booking_handoff import BookingHandoffTeam
 from app.tools.read_tools import ReadToolbox
 from scripts import measure_delegation_scope as measure
 

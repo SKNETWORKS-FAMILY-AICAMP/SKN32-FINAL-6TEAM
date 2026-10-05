@@ -19,7 +19,7 @@ import pytest
 
 from app.application.routing import case_type_of
 from app.composition import build_registry
-from app.modules.travel_ops.feedback import INTENTS, ISSUE_CODES
+from app.domains.travel_ops.components.core_hooks.feedback import INTENTS, ISSUE_CODES
 
 
 def _registered_case_types() -> set[str]:
@@ -45,7 +45,7 @@ def test_every_routable_case_type_has_at_least_one_issue_code():
     assert not unreachable, (
         f"등록됐지만 분류기가 도달시킬 수 없는 Team 의 case_type: {unreachable}\n"
         f"  분류기가 낼 수 있는 접두: {sorted(producible)}\n"
-        f"  → `app/modules/travel_ops/feedback.py::ISSUE_CODES` 에 그 접두의 "
+        f"  → `app/domains/travel_ops/components/core_hooks/feedback.py::ISSUE_CODES` 에 그 접두의 "
         f"코드를 넣거나, 그 팀을 등록에서 뺀다.")
 
 

@@ -29,8 +29,8 @@ def _isolate_mobility_engine_state():
       켜짐이 아니면 어림값으로 가므로(`leg_planner`·`team_result` 가 None) 처음 상태와 꺼짐은 같게 동작한다. 이동 시험은 명령줄
       관례(저장소 안 자료 폴더)로 자기 계산기를 올리고, 켜야 하는 시험은 스스로 켠다. 설정 기본값·CI 환경변수는 건드리지 않는다.
     """
-    from app.modules.travel_ops.mobility import wiring
-    from app.modules.travel_ops.mobility.engine import paths
+    from app.domains.travel_ops.instances.mobility import wiring
+    from app.domains.travel_ops.instances.mobility.engine import paths
 
     def reset():
         paths._layout(paths.UNSET_DIR, "unset")

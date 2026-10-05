@@ -13,7 +13,7 @@ from datetime import datetime
 
 import pytest
 
-from app.modules.travel_ops.dining.ledger import dining_state
+from app.domains.travel_ops.instances.dining.ledger import dining_state
 
 from tests.integration.dining.conftest import MIGRATIONS
 

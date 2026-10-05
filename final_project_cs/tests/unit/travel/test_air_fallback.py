@@ -11,9 +11,9 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from app.infrastructure.travel.air_quality import FallbackAir, MODEL_BASIS, OpenMeteoAir
-from app.infrastructure.travel.base import TravelSources
-from app.infrastructure.travel.disruptions import DisruptionCheck
+from app.domains.travel_ops.ports.data_sources.air_quality import FallbackAir, MODEL_BASIS, OpenMeteoAir
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
 
 KST = ZoneInfo("Asia/Seoul")
 AT = datetime(2026, 9, 14, 13, 20, tzinfo=KST)

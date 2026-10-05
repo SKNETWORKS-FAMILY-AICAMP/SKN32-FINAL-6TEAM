@@ -15,8 +15,8 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from app.modules.travel_ops.intake import autofix, candidates, hours, moves, pipeline, places, review
-from app.modules.travel_ops.intake.rules import read_plan
+from app.domains.travel_ops.components.intake import autofix, candidates, hours, moves, pipeline, places, review
+from app.domains.travel_ops.components.intake.rules import read_plan
 
 KST = ZoneInfo("Asia/Seoul")
 
@@ -251,7 +251,7 @@ def test_nothing_stored_means_unknown_with_a_reason_never_open():
 
 
 def test_the_dining_ledger_supplies_the_days_hours_break_and_closed_day(monkeypatch):
-    from app.modules.travel_ops.dining import ledger
+    from app.domains.travel_ops.instances.dining import ledger
 
     state = {"linked": True, "available": True, "open_at_slot": True, "order_ok": False, "needs_check": True,
              "attributes": {"hours": ["11:30", "22:30"], "break": ["14:00", "17:30"]}, "holiday_context": "추석 연휴"}
@@ -391,8 +391,8 @@ class _Reply:
 
 
 def test_tour_photos_are_fetched_once_cached_only_in_memory_and_unsafe_links_are_dropped():
-    from app.infrastructure.travel.cache import ResponseCache
-    from app.infrastructure.travel.tour_api import TourApiPlace
+    from app.domains.travel_ops.ports.data_sources.cache import ResponseCache
+    from app.domains.travel_ops.ports.data_sources.tour_api import TourApiPlace
 
     asked = []
 

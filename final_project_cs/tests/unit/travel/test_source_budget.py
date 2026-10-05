@@ -19,10 +19,10 @@ import logging
 import httpx
 import pytest
 
-from app.infrastructure.travel.base import TravelSource
-from app.infrastructure.travel.call_budget import level_of, UNLIMITED
-from app.infrastructure.travel.ratelimit import RateLimited
-from app.infrastructure.travel.source_budget import (BudgetExhausted, BudgetUnavailable, BudgetedLimiter, RETRY_AFTER_SECONDS)
+from app.domains.travel_ops.ports.data_sources.base import TravelSource
+from app.domains.travel_ops.ports.data_sources.call_budget import level_of, UNLIMITED
+from app.domains.travel_ops.ports.data_sources.ratelimit import RateLimited
+from app.domains.travel_ops.ports.data_sources.source_budget import (BudgetExhausted, BudgetUnavailable, BudgetedLimiter, RETRY_AFTER_SECONDS)
 
 
 class FakeInner:
@@ -205,7 +205,7 @@ def test_a_call_that_went_out_and_failed_is_counted_as_a_failure():
 def test_a_good_answer_with_nothing_found_is_not_counted_as_a_call_failure():
     """★`[2026-10-05 실서버 발견]` 관광공사가 정상으로 답했는데 「찾는 장소가 없다」(`not_found`)인 것까지 실패로 세서, 키별 여유 확인의 `failed` 가 호출 수와 같게 보였다.
     부른 뒤 **답을 못 받았거나 읽을 수 없는** 것만 호출 실패다 — 찾는 것이 없거나 애매한 것은 정상 호출이다."""
-    from app.infrastructure.travel.tour_api import TourApiPlace
+    from app.domains.travel_ops.ports.data_sources.tour_api import TourApiPlace
 
     empty = {"response": {"header": {"resultCode": "0000", "resultMsg": "OK"}, "body": {"items": "", "totalCount": 0}}}
     limiter, _inner, budget = make(budget=FakeBudget(), meters=("tour_api",))
@@ -217,7 +217,7 @@ def test_a_good_answer_with_nothing_found_is_not_counted_as_a_call_failure():
 
 def test_a_miss_before_any_call_is_not_counted_as_a_call_failure():
     """키가 없으면 바깥으로 나가기도 전에 막힌다 — 호출이 없었으니 실패 수가 호출 수를 넘을 수 없다."""
-    from app.infrastructure.travel.tour_api import TourApiPlace
+    from app.domains.travel_ops.ports.data_sources.tour_api import TourApiPlace
 
     limiter, _inner, budget = make(budget=FakeBudget(), meters=("tour_api",))
     source = TourApiPlace(service_key="", limiter=limiter, transport=lambda url, params: pytest.fail("no call expected"))
@@ -231,7 +231,7 @@ def test_a_miss_before_any_call_is_not_counted_as_a_call_failure():
     (503, "unavailable", "http_503"),
 ])
 def test_an_unusable_answer_is_still_counted_as_a_call_failure(status, body, reason):
-    from app.infrastructure.travel.tour_api import TourApiPlace
+    from app.domains.travel_ops.ports.data_sources.tour_api import TourApiPlace
 
     limiter, _inner, budget = make(budget=FakeBudget(), meters=("tour_api",))
     source = TourApiPlace(service_key="k", limiter=limiter, transport=lambda url, params: httpx.Response(status, content=body.encode("utf-8")))
@@ -246,7 +246,7 @@ def test_a_source_without_a_limiter_still_works_and_counts_nothing():
 
 
 # ── ⑥ 제공처가 「한도 초과」를 알렸을 때 ────────────────────────
-from app.infrastructure.travel.its_traffic import ItsTrafficEvents  # noqa: E402
+from app.domains.travel_ops.ports.data_sources.its_traffic import ItsTrafficEvents  # noqa: E402
 
 
 class FakeBudgetWithMarks(FakeBudget):

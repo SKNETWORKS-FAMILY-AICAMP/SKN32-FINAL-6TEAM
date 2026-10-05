@@ -16,7 +16,7 @@ from datetime import date
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.survey import SURVEY_VERSION, apply_survey, on_disruption
+from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION, apply_survey, on_disruption
 
 from .test_trip_api import DAY, _body, api  # noqa: F401 — 픽스처를 그대로 쓴다
 

@@ -9,10 +9,10 @@ import asyncio
 
 import pytest
 
-from app.modules.travel_ops.mobility import wiring
-from app.modules.travel_ops.mobility.engine import paths
-from app.modules.travel_ops.mobility.engine import runtime as RT
-from app.modules.travel_ops.mobility.team import MobilityTeam
+from app.domains.travel_ops.instances.mobility import wiring
+from app.domains.travel_ops.instances.mobility.engine import paths
+from app.domains.travel_ops.instances.mobility.engine import runtime as RT
+from app.domains.travel_ops.instances.mobility.team import MobilityTeam
 
 from ..helpers import FakeTools, pack, task
 from .test_review_fixes_runtime import _write_mini_data

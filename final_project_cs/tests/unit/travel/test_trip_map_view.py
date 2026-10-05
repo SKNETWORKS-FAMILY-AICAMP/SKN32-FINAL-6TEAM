@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from urllib.parse import parse_qs, urlparse
 
-from app.modules.travel_ops.trip_api import map_view
+from app.domains.travel_ops.entry.trip_api import map_view
 
 
 def _view(n, day="2030-01-01", kind="activity", address=None):

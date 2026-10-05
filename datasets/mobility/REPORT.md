@@ -30,7 +30,7 @@
 
 ## 어떤 코드가 읽나
 
-- `final_project_cs/app/modules/travel_ops/mobility/engine/runtime.py default_paths()` · `verify_time.py build_verifier_for_cases()` · `car.py CarGraph` · `options.py TransferCar` — 경로는 `engine/paths.py`(`PROCESSED / "mobility"`).
+- `final_project_cs/app/domains/travel_ops/instances/mobility/engine/runtime.py default_paths()` · `verify_time.py build_verifier_for_cases()` · `car.py CarGraph` · `options.py TransferCar` — 경로는 `engine/paths.py`(`PROCESSED / "mobility"`).
 - 시험: `final_project_cs/tests/unit/travel/mobility/test_regression_cases.py`(회귀 게이트 21 · 전체층 156) · `test_plan_*`.
 - `road_graph_v1/` 은 아직 코드가 읽지 않는다 — 서버 없는 파이썬 라우터(다음 코드 방)가 읽을 입력. 열 뜻은 `road_graph_v1/README.md`.
 - 규칙 파일 2(`engine/rules/rules_v0.3.json` · `holidays_2026_2027.json`)는 코드 옆.

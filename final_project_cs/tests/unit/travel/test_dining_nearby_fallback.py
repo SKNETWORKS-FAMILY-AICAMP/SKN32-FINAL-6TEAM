@@ -7,8 +7,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.modules.travel_ops.dining import nearby
-from app.modules.travel_ops.itinerary import Item
+from app.domains.travel_ops.instances.dining import nearby
+from app.domains.travel_ops.components.itinerary.itinerary import Item
 
 KST = timezone(timedelta(hours=9))
 
@@ -43,7 +43,7 @@ def _desk(monkeypatch, items, places, added, closed=()):
     from contextlib import nullcontext
     from types import SimpleNamespace
 
-    from app.modules.travel_ops.trip_desk import TripDesk
+    from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
 
     calls = []
 
@@ -84,7 +84,7 @@ def test_a_closed_report_finds_an_alternative_from_the_ledger(monkeypatch):
 
 
 def test_a_closed_report_replans_when_the_ledger_removes_an_existing_alias(monkeypatch):
-    from app.modules.travel_ops.itinerary_changes import NoChange
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange
 
     lunch, alias = _place("원래 식당"), _place("원장 별칭")
     desk, _ = _desk(monkeypatch, [_item(lunch, "12:00")], [lunch, alias], [])
@@ -133,7 +133,7 @@ def test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_
     from contextlib import nullcontext
     from types import SimpleNamespace
 
-    from app.modules.travel_ops import dawn_check
+    from app.domains.travel_ops.components.watch import dawn_check
 
     lunch, alt = _place("토속촌삼계탕"), _place("마지", 37.5778, 126.9716)
     item = _item(lunch, "12:00")

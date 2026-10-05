@@ -5,9 +5,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.itinerary_changes import ItineraryChange
-from app.modules.travel_ops.mobility import wiring
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
+from app.domains.travel_ops.instances.mobility import wiring
 
 KST = timezone(timedelta(hours=9))
 T = lambda hm: datetime.fromisoformat(f"2026-10-07T{hm}:00+09:00")  # noqa: E731
@@ -105,7 +105,7 @@ def test_44_swap_next_door_is_rejudged_when_the_engine_is_on(monkeypatch):
 def test_44_the_basis_text_follows_the_new_state_so_chat_does_not_overclaim(monkeypatch):
     """☆`[2026-09-29]` 장소를 바꾼 뒤 이동의 산출 근거가 옛 「시간표 판정」으로 남아, 채팅이 어림값 경로를 시간표로 판정했다고 답했다.
     (멀리 바뀌어 어림값이 됐는데도 「약 36분 (시간표 판정(이동 계산기))」)"""
-    from app.modules.travel_ops import trip_facts
+    from app.domains.travel_ops.components.conversation import trip_facts
     act, move, meal = _items()
     monkeypatch.setitem(wiring._STATE, "mode", "disabled")
     for name, (lat, lon), basis, must in (("멀리", (37.590, 127.000), "estimate", "직선"),

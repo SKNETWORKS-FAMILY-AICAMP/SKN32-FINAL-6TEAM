@@ -38,7 +38,7 @@ def search_policy(
 
 Team manifest의 `knowledge_scope`가 검색 범위를 정한다.
 
-`[실측 2026-09-22 작업 트리]` 예: Activity Team(`app/modules/travel_ops/activity.py`)
+`[실측 2026-09-22 작업 트리]` 예: Activity Team(`app/domains/travel_ops/instances/activity.py`)
 
 ```python
 knowledge_scope = ["travel_activity", "travel_weather", "travel_cancellation", "travel_access"]

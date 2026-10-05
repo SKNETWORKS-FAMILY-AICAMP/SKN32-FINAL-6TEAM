@@ -21,7 +21,7 @@ from app.infrastructure.db.session import get_connection
 
 from .test_case_version_day import _at, case_world  # noqa: F401 — 픽스처를 그대로 쓴다
 
-from app.modules.travel_ops.case_engine import CaseEngine
+from app.domains.travel_ops.scenarios.case_engine import CaseEngine
 from tests.scenario.test_case_version_day import _classifier, _extractor, _sources  # noqa: F401
 
 CLOSED = {"verdict": "disrupted", "disruptions": [{"category": "traffic_control", "kind": "road_closed"}]}
@@ -61,7 +61,7 @@ def _notices(world):
 
 
 def _proposals(world):
-    from app.modules.travel_ops.pending import PendingStore
+    from app.domains.travel_ops.components.planning.pending import PendingStore
 
     with get_connection() as conn:
         return PendingStore(world["tenant"]).list(conn, world["trip_id"])

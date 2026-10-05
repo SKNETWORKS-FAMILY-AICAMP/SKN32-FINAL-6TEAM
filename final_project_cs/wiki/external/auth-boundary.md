@@ -22,7 +22,7 @@ domain: neutral
 
 `[실측]` 고객 웹 `/v1/web/*`는 아래 서버용 Bearer/scope 키를 쓰지 않는다. 브라우저는 서버가 내려주는 HttpOnly 쿠키 세션(쓰기 요청은 `X-CSRF-Token` 까지), 에이전트 · 옛 호출자는 사용자 키 `X-User-Key`(`acop_u_…` · 에이전트 키 `acop_a_…`)로 고객을 식별한다. 세션 · 키 발급은 인증 없이 열려 있고(사람 확인 + 주소당 한도) 나머지 웹 경로는 `_web_customer`(`web_cookie.authenticate`)가 확인한다. 여행 · 접수 조회는 그 고객의 자료로 제한한다(남의 것은 404). 계약은 [웹 API 명세](rest-endpoints.md)의 「브라우저 세션 쿠키」 · 「에이전트 키」 절을 따른다.
 
-브라우저에 서버용 scope 키를 넣지 않는다. CORS 의 허용 출처 · 메서드 · 헤더와 키 거절 처리는 [앱 조립](../../app/presentation/api/app.py) · [웹 라우터](../../app/modules/travel_ops/trip_api.py)를 함께 확인한다. 아래 Bearer/scope 설명을 고객 웹의 인증 방식으로 복사하지 않는다.
+브라우저에 서버용 scope 키를 넣지 않는다. CORS 의 허용 출처 · 메서드 · 헤더와 키 거절 처리는 [앱 조립](../../app/presentation/api/app.py) · [웹 라우터](../../app/domains/travel_ops/entry/trip_api.py)를 함께 확인한다. 아래 Bearer/scope 설명을 고객 웹의 인증 방식으로 복사하지 않는다.
 `[2026-10-05]` 이 절은 팀 저장소 develop 의 「고객 웹의 인증 경계」를 읽고, 쿠키 세션 이전 판이던 `X-User-Key` 만의 서술을 우리 쿠키 세션 판으로 고쳐 가져왔다.
 
 ## 세 겹

@@ -11,7 +11,7 @@ import pytest
 
 from app.infrastructure.ml.sentiment import (SENTIMENTS, LocalSentiment,
                                              SentimentUnavailable)
-from app.modules.travel_ops.feedback import SENTIMENTS as PRODUCT_SENTIMENTS
+from app.domains.travel_ops.components.core_hooks.feedback import SENTIMENTS as PRODUCT_SENTIMENTS
 
 
 def _baseline() -> LocalSentiment:

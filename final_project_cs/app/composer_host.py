@@ -132,37 +132,37 @@ IMPLEMENTATIONS: tuple[Implementation, ...] = (
     # ── 여행 (v10 §5) — 2026-09-09 등록분 ──────────────────────────────
     Implementation(
         id="team.activity",
-        ref="app.modules.travel_ops.activity:ActivityTeam",
+        ref="app.domains.travel_ops.instances.activity:ActivityTeam",
         display_name="Activity Team",
         description="활동 예약의 취소 가능 여부·실행 가능 여부. 변경은 제안까지다.",
     ),
     Implementation(
         id="team.booking_handoff",
-        ref="app.modules.travel_ops.booking_handoff:BookingHandoffTeam",
+        ref="app.domains.travel_ops.instances.booking_handoff:BookingHandoffTeam",
         display_name="Booking Handoff Team",
         description="공급자 원장과 대조하고 변경·취소를 승인 대기로 넘긴다.",
     ),
     Implementation(
         id="team.mobility",
-        ref="app.modules.travel_ops.mobility:MobilityTeam",
+        ref="app.domains.travel_ops.instances.mobility:MobilityTeam",
         display_name="Mobility Team",
         description="구간 이동이 일정 안에 들어가는지 계산한다.",
     ),
     Implementation(
         id="team.dining",
-        ref="app.modules.travel_ops.dining:DiningTeam",
+        ref="app.domains.travel_ops.instances.dining:DiningTeam",
         display_name="Dining Team",
         description="그 일정 시각에 여는지와 동행 조건을 확인한다.",
     ),
     Implementation(
         id="team.lodging",
-        ref="app.modules.travel_ops.locked_bookings:LodgingTeam",
+        ref="app.domains.travel_ops.instances.locked:LodgingTeam",
         display_name="Lodging Team (등록만)",
         description="잠긴 예약으로만 취급한다. 조정 제안을 만들지 않는다.",
     ),
     Implementation(
         id="team.flight",
-        ref="app.modules.travel_ops.locked_bookings:FlightTeam",
+        ref="app.domains.travel_ops.instances.locked:FlightTeam",
         display_name="Flight Team (등록만)",
         description="잠긴 예약으로만 취급한다. 조정 제안을 만들지 않는다.",
     ),

@@ -18,9 +18,9 @@ from __future__ import annotations
 import pytest
 
 from app.core.context import PolicyChunk
-from app.modules.travel_ops.activity import ActivityTeam
-from app.modules.travel_ops.booking_handoff import BookingHandoffTeam
-from app.modules.travel_ops.dining import DiningTeam
+from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.instances.booking_handoff import BookingHandoffTeam
+from app.domains.travel_ops.instances.dining import DiningTeam
 
 from .helpers import FakeTools, in_hours, pack, task
 

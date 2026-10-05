@@ -15,9 +15,9 @@ domain: travel
 요식 적재 도구는 코어 DB 에서 전용 계정 `dining_loader`(223 — `dining` 칸만 쓰고 코어는 장소 넣기·고치기까지)로 돈다. DB 는 떼지 않는다(사용자 결정).
 계획·교차검증: [2026-09-28_2108_요식데이터_코어통합_실행계획](../records/plans/2026-09-28_2108_요식데이터_코어통합_실행계획.md) · 리포트: [2026-09-28_2150_요식데이터_코어통합_리포트](../records/reports/2026-09-28_2150_요식데이터_코어통합_리포트.md). 지킬 규칙 — 요식 표 구조는 요식팀 SQL 파일로만 바뀐다 · 요식 코드를 받으면 전체 시험.
 
-`[2026-09-28]` **코드 위치가 폴더로 바뀌었다** — `app/modules/travel_ops/dining/`(본체 `team.py`). 아래에 날짜와 함께 적힌 `dining.py` 경로·줄 번호는 그때 기록이다. 두는 규칙은 [code-layout.md](code-layout.md).
+`[2026-09-28]` **코드 위치가 폴더로 바뀌었다** — `app/domains/travel_ops/instances/dining/`(본체 `team.py`). 아래에 날짜와 함께 적힌 `dining.py` 경로·줄 번호는 그때 기록이다. 두는 규칙은 [code-layout.md](code-layout.md).
 
-★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/dining.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
+★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/domains/travel_ops/instances/dining.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
 
 근거는 계획서 v11 §5. `[결정 2026-09-10]` **MVP Team 셋(Activity·Dining·Mobility) 중 하나다** — 일정은 v11 §9-B 4주차.
 
@@ -119,7 +119,7 @@ Dining: "19시 → 20시" 또는 "다른 가게" 후보를 낸다
 
 ## manifest — 실제 구현
 
-`[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/dining.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
+`[실측 2026-09-10 작업 트리]` `app/domains/travel_ops/instances/dining.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
 
 ```python
 capabilities          = ["dining.check_open", "dining.check_conditions",
@@ -160,7 +160,7 @@ default_capability    = "dining.check_open"
 - ★`[2026-09-29]` **낮 감시 Case**(`handle_trigger`) — 감시(1분마다 · 90분 앞)의 성립 점검이 식사 항목을 `disrupted` 로 보면(재난문자 중 화재·통제처럼 모든 장소에 걸리는 것 · 지진 · 도로 통제) `dining_other` Case 가 열리고, 이 Team 이 **다시 점검**한 뒤 **계획한 시각 그대로** 700m 안의 식당으로 바꾼다(`plan_dining_disrupted`, 원장 후보 먼저). 후보도 같은 점검을 다시 통과해야 한다 — 재난문자는 구 단위라 같은 구의 옆집도 걸린다. 순위 순으로 3곳(`DINING_RECHECK_LIMIT`)까지 보고, 못 본 곳은 고르지 않는다. 바꿀 곳이 없으면 바꾸지 않는다(escalated). ☆전에는 감시가 식사 항목을 `unhandled` 로 세기만 했다. 시험 `tests/scenario/test_case_watch_dining.py`.
 - ★**낮의 임시휴무는 시스템이 찾아야 한다 — 구현 대상**(`[결정 2026-09-29 사용자]`, [../decisions/D-CS-009-daytime-closure-detection.md](../decisions/D-CS-009-daytime-closure-detection.md)). 09-24 팀 결정(새벽 3시 구글 확인 한 번 + 고객 신고)을 바꾼다. **지금 코드는 아직 전 결정 그대로다** — 방문 60·20분 전 조회(`dining/tick.py`)는 만들어 두었지만 깨우는 쪽과 읽는 쪽이 없다.
 
-- 계산은 `app/modules/travel_ops/itinerary_changes.py` — 시나리오용 버전과 **같은 함수**다(문구·판단이 갈리지 않는다).
+- 계산은 `app/domains/travel_ops/components/itinerary/itinerary_changes.py` — 시나리오용 버전과 **같은 함수**다(문구·판단이 갈리지 않는다).
 - 쓰지 않는다. 새 일정 버전을 `itinerary.apply` 제안(승인 불요 · 위험 낮음)으로 내고, 코어가 Case 완료와 한 트랜잭션으로 적용·통지한다 → [../actions/approval.md](../actions/approval.md) 「승인 없이 적용되는 제안」.
 - `required_context` 에서 `policy` 를 뺐다 — 선언에 두면 정책 검색 0건이 Case 전체를 degraded 로 만든다. `max_steps` 는 대안 후보마다 재점검하느라 12 로 올렸다.
 
@@ -196,7 +196,7 @@ subject = 객체 id    →  다른 키
 
 ### ★ [2026-09-09] 코드가 이 규칙을 안 지킨다
 
-`[실측]` `app/modules/travel_ops/_base.py:169` — 여행 Team 공용 기반이 **3단 폴백**을 쓴다. `[정정 2026-09-10]` 위 「business_subject」 절의 정정 참조 — Team 코드 관찰이며 최종 키 결함 자리는 Core다.
+`[실측]` `app/domains/travel_ops/instances/_shared/_base.py:169` — 여행 Team 공용 기반이 **3단 폴백**을 쓴다. `[정정 2026-09-10]` 위 「business_subject」 절의 정정 참조 — Team 코드 관찰이며 최종 키 결함 자리는 Core다.
 
 ```python
 subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.case_id)

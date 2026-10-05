@@ -87,7 +87,7 @@ LOAD_KEYS = ("timetable", "gh_url", "bike_fixture", "bus_profile")
 def _processed():
     # #48(9/29 · 팀장): paths 는 import 때 .env 를 안 읽는다 — 시험은 cli_processed() 로 저장소 맨 위 .env 의 DATA_DIR 을 받는다
     #   (환경변수 DATA_DIR 이 있으면 그것이 이김 · 서버가 configure/disable 한 뒤에는 건드리지 않음).
-    from app.modules.travel_ops.mobility.engine.paths import cli_processed
+    from app.domains.travel_ops.instances.mobility.engine.paths import cli_processed
     return cli_processed() / "mobility"
 
 
@@ -95,7 +95,7 @@ def _skip_if_missing(bundle):
     need = NEED_SYNTH if bundle == "synthetic" else NEED_REAL
     p = _processed()
     # 75(9/30): 저장소 데이터의 실 시간표는 `.gz` — 판정기와 같은 규칙(paths.timetable_file · .gz 우선)으로 있는지 본다
-    from app.modules.travel_ops.mobility.engine.paths import timetable_file
+    from app.domains.travel_ops.instances.mobility.engine.paths import timetable_file
     missing = [n for n in need if not ((timetable_file(p) if n == "timetable_v1.jsonl" else p / n).exists())]
     if missing:
         pytest.skip(f"data not present: {p} — {missing}")
@@ -108,7 +108,7 @@ def _load_cfg(bundle):
 
 def _args(bundle):
     b = BUNDLES[bundle]
-    from app.modules.travel_ops.mobility.engine.verify_time import RULES_DIR
+    from app.domains.travel_ops.instances.mobility.engine.verify_time import RULES_DIR
     fx = lambda k: str(HERE / b[k]) if b.get(k) else None            # noqa: E731
     # ★ 라우터(GraphHopper)는 pytest 에서 **항상 끈다**(GPT 대조 ①). 안 끄면 .env 의 MOBILITY_GH_URL 이나 규칙의 주소로
     #   살아 있는 라우터를 잡아 기기마다 결과가 달라진다. 라우터 값(alt 의 expect_taxi 등)은 종전대로 ps1/CLI 로 GH 있는
@@ -132,7 +132,7 @@ def _verifier(bundle, layer_ids):
     cfg = _load_cfg(bundle)
     key = (cfg, id(layer_ids))
     if key not in _CACHE:
-        from app.modules.travel_ops.mobility.engine.verify_time import build_verifier_for_cases
+        from app.domains.travel_ops.instances.mobility.engine.verify_time import build_verifier_for_cases
         cases = []
         for name, b in BUNDLES.items():
             if _load_cfg(name) == cfg and b["file"] in layer_ids:
@@ -144,7 +144,7 @@ def _verifier(bundle, layer_ids):
 
 def _run(file, case_id, layer_ids):
     """케이스 하나를 CLI 와 같은 방식으로 판정·대조한다. MISS 가 있으면 실패."""
-    from app.modules.travel_ops.mobility.engine.verify_time import check_expect
+    from app.domains.travel_ops.instances.mobility.engine.verify_time import check_expect
     bundle = FILE2BUNDLE[file]
     _skip_if_missing(bundle)
     v = _verifier(bundle, layer_ids)

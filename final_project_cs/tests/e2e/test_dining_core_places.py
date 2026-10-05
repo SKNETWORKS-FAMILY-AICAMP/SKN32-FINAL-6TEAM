@@ -11,7 +11,7 @@ from uuid import uuid4
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.dining.ledger import ledger_ready
+from app.domains.travel_ops.instances.dining.ledger import ledger_ready
 
 
 @pytest.fixture()

@@ -14,9 +14,9 @@ from datetime import datetime
 
 import pytest
 
-from app.modules.travel_ops.activity.hours_text import closed_weekdays, read_week
-from app.modules.travel_ops.itinerary import weather_from_class
-from app.modules.travel_ops.place_hours import fits
+from app.domains.travel_ops.instances.activity.hours_text import closed_weekdays, read_week
+from app.domains.travel_ops.components.itinerary.itinerary import weather_from_class
+from app.domains.travel_ops.components.places.place_hours import fits
 
 
 def _week(business, closed):

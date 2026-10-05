@@ -134,7 +134,7 @@ python -m pytest tests/architecture -q
 python -m pytest -q
 ```
 
-`[실측]` **아키텍처 테스트가 실패하면 그 파일을 `app/modules/` 로 옮기거나 선언으로 뺀다.** basement 에 도메인 어휘가 샌 것이다.
+`[실측]` **아키텍처 테스트가 실패하면 그 파일을 `app/domains/` 로 옮기거나 선언으로 뺀다.** basement 에 도메인 어휘가 샌 것이다.
 
 ### ★ [2026-09-09] 가드가 여행 어휘를 모른다
 

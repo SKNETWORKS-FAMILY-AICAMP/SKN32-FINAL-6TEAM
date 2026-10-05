@@ -15,7 +15,7 @@ def _load(name, rel):
 
 
 loader = _load("load_license_mod", ("scripts", "dining", "load_license.py"))
-ledger = _load("dining_ledger_license", ("app", "modules", "travel_ops", "dining", "ledger.py"))
+ledger = _load("dining_ledger_license", ("app", "domains", "travel_ops", "instances", "dining", "ledger.py"))
 
 
 class _Tx:
@@ -98,7 +98,7 @@ def test_only_open_seoul_food_shops_are_loaded(tmp_path):
 
 
 def test_the_intake_lookup_falls_back_to_the_license_table_when_the_ledger_misses(monkeypatch):
-    from app.modules.travel_ops.dining import place_lookup
+    from app.domains.travel_ops.instances.dining import place_lookup
 
     monkeypatch.setattr(place_lookup, "find_place_by_name", lambda conn, name: None)
     seen = {}

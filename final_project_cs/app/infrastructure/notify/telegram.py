@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """텔레그램 봇 — 메시지 한 건 보내기. `[2026-10-05 사용자 지시 「텔레그램만 붙여 · 알림만」 — ui 세션 요청서]`
 
-★이 층은 **텔레그램과 말하는 일**만 한다(`sendMessage`). 누구에게 무엇을 보내는지는 `travel_ops/notice_routing.py` · `telegram_connect.py` 가 정한다.
+★이 층은 **텔레그램과 말하는 일**만 한다(`sendMessage`). 누구에게 무엇을 보내는지는 `travel_ops/components/watch/notice_routing.py` · `telegram_connect.py` 가 정한다.
 ★실패의 모양은 `DiscordWebhook` 의 규칙을 그대로 따른다(바깥함 일꾼이 읽는 예외):
 
     전송 성공(2xx)                       → 반환

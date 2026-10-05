@@ -17,7 +17,7 @@ domain_note: 코드가 아직 커머스다 — 여행 전환 층 7(입구 — �
 
 ## ★★ 지금의 MCP — 여행 도구 `[2026-10-02 사용자 지시]`
 
-`app/modules/travel_ops/mcp_server.py` · 고객 API 앱에 `/mcp/` 로 붙는다(Streamable HTTP, 무상태). 아래 「옛 도구 3종」(쇼핑몰 시절 Case 도구)은 **연결된 적이 없고 지금도 안 붙는다** — 이 절이 현재의 MCP 다.
+`app/domains/travel_ops/modules/mcp/mcp_server.py` · 고객 API 앱에 `/mcp/` 로 붙는다(Streamable HTTP, 무상태). 아래 「옛 도구 3종」(쇼핑몰 시절 Case 도구)은 **연결된 적이 없고 지금도 안 붙는다** — 이 절이 현재의 MCP 다.
 
 **왜 새로 만들었나.** 옛 도구는 git 이력 전체(모든 브랜치) · sample 저장소를 봐도 **띄우는 곳이 한 번도 없었고**, 여행(trips) 도구가 없었으며, 그대로 띄우면 호출 주체가 고정(`mcp:read`)이고 `customer_id` 를 호출자가 정해 **남의 문의를 읽는 구멍**이었다. 경쟁 서비스(Wanderlog · Tripsy · Trvlrr · Trip Planner MCP)는 전부 「AI 가 일정 내용을 편집」하는 CRUD 도구다. 우리는 일정을 **검증하고 지켜보고 틀어지면 고치는** 서비스라 도구도 그 동사다.
 
@@ -41,7 +41,7 @@ domain_note: 코드가 아직 커머스다 — 여행 전환 층 7(입구 — �
 **접속.**
 ```
 원격(Claude Code)   claude mcp add --transport http tripilot https://<주소>/mcp/ --header "Authorization: Bearer <사용자 키>"
-로컬(stdio 프록시)  TRIPILOT_USER_KEY=<사용자 키> python -m app.modules.travel_ops.mcp_server --base-url http://127.0.0.1:8042 [--write]
+로컬(stdio 프록시)  TRIPILOT_USER_KEY=<사용자 키> python -m app.domains.travel_ops.modules.mcp.mcp_server --base-url http://127.0.0.1:8042 [--write]
 ```
 사용자 키는 웹에 처음 접속할 때 한 번 보여 준다(`POST /v1/web/session`). 시험 `tests/e2e/test_mcp_server.py` 는 **MCP 프로토콜로 실제 접속**한다(initialize → 도구 호출) — 도구 이름 개수만 세던 옛 검사가 못 보던 것이다. 실제 서버(uvicorn)에 SDK 클라이언트로 HTTP 접속해 `/mcp/` · `/mcp` 둘 다 열리고 키 없이는 401 임을 확인했다(2026-10-02).
 `[미확보]` 외부 개인 AI(Claude · ChatGPT)의 **종단 접속 기록**은 아직 없다 · 이 서버는 OAuth 를 구현하지 않았다(헤더 키 방식 — OAuth 만 받는 클라이언트는 못 붙는다) · 쓰기 도구의 별도 호출 한도는 웹 남용 방어(`message` 횟수)를 그대로 쓴다.
@@ -95,7 +95,7 @@ def open_support_case(customer_id: str, message: str, channel: str = "mcp") -> d
 
 **가운데 단계가 `open_support_case`가 사는 자리다.** 되돌릴 수 있고 조건이 붙는다.
 
-`[실측 2026-09-10]` **지금 코드는 이 표보다 느슨하다.** 쓰기인 `open_support_case` 도 `mcp:read` scope 로 열린다(`app/presentation/api/mcp.py:17`) — 별도 쓰기 scope 가 없다. MCP 경로의 rate limit 도 없다 — `app/` 에서 rate limit 을 찾았고 여행 외부 소스 조회용(`app/infrastructure/travel/`)만 나왔다. 다른 이름의 제한은 이 검색이 놓칠 수 있다. 위 표는 **목표 조건**으로 읽는다.
+`[실측 2026-09-10]` **지금 코드는 이 표보다 느슨하다.** 쓰기인 `open_support_case` 도 `mcp:read` scope 로 열린다(`app/presentation/api/mcp.py:17`) — 별도 쓰기 scope 가 없다. MCP 경로의 rate limit 도 없다 — `app/` 에서 rate limit 을 찾았고 여행 외부 소스 조회용(`app/domains/travel_ops/ports/data_sources/`)만 나왔다. 다른 이름의 제한은 이 검색이 놓칠 수 있다. 위 표는 **목표 조건**으로 읽는다.
 
 **아래 단계는 MCP로 절대 안 간다.** 결제·환불·주문상태·구독·권한 부여.
 

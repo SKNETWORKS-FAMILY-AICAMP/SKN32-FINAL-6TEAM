@@ -19,8 +19,8 @@ from uuid import UUID
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import trip_events
-from app.modules.travel_ops.itinerary import TripStore
+from app.domains.travel_ops.components.watch import trip_events
+from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
 from .test_web_api import _fresh_limit_cache, _h, _session, _web_body  # noqa: F401
@@ -185,10 +185,14 @@ def test_a_failing_signal_does_not_stop_the_change_and_the_stream_just_closes(ap
 
 def test_the_change_paths_never_import_the_signal_module():
     """③의 구조 보장 — 일정을 바꾸는 코드(감시 · 되돌리기 · 고르기 · 채팅)는 초인종 모듈을 모른다. 신호가 변경을 막을 길이 없다."""
-    changers = ["trip_watch.py", "trip_watch_cases.py", "trip_desk.py", "pending.py", "itinerary.py", "itinerary_changes.py",
-                "trip_messages.py", "dawn_check.py", "trip_reminders.py", "case_engine.py"]
+    # ★`[2026-10-06]` 여행 폴더를 칸으로 나눠(D-CS-013) 파일 이름만으로는 못 찾는다 — 칸 경로까지 적는다.
+    changers = ["components/watch/trip_watch.py", "components/watch/trip_watch_cases.py",
+                "components/conversation/trip_desk.py", "components/planning/pending.py",
+                "components/itinerary/itinerary.py", "components/itinerary/itinerary_changes.py",
+                "components/conversation/trip_messages.py", "components/watch/dawn_check.py",
+                "components/watch/trip_reminders.py", "scenarios/case_engine.py"]
     for name in changers:
-        tree = ast.parse((ROOT / "app/modules/travel_ops" / name).read_text(encoding="utf-8"))
+        tree = ast.parse((ROOT / "app/domains/travel_ops" / name).read_text(encoding="utf-8"))
         imported = {a.name for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
         imported |= {n.module or "" for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)}
         imported |= {f"{n.module}.{a.name}" for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) for a in n.names}

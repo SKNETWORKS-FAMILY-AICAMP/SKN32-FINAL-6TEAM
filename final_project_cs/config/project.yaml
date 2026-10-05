@@ -23,23 +23,23 @@ teams:
 #     2026-09-10 이전 커밋에서 `app/modules/customer_ops/` 를 되살려야 한다.
 - team_id: activity
   active: true
-  implementation_ref: app.modules.travel_ops.activity:ActivityTeam
+  implementation_ref: app.domains.travel_ops.instances.activity:ActivityTeam
 - team_id: booking_handoff
   active: true
-  implementation_ref: app.modules.travel_ops.booking_handoff:BookingHandoffTeam
+  implementation_ref: app.domains.travel_ops.instances.booking_handoff:BookingHandoffTeam
 - team_id: mobility
   active: true
-  implementation_ref: app.modules.travel_ops.mobility:MobilityTeam
+  implementation_ref: app.domains.travel_ops.instances.mobility:MobilityTeam
 - team_id: dining
   active: true
-  implementation_ref: app.modules.travel_ops.dining:DiningTeam
+  implementation_ref: app.domains.travel_ops.instances.dining:DiningTeam
 # 등록만 — 로직 없음. 잠긴 예약으로만 취급한다.
 - team_id: lodging
   active: true
-  implementation_ref: app.modules.travel_ops.locked_bookings:LodgingTeam
+  implementation_ref: app.domains.travel_ops.instances.locked:LodgingTeam
 - team_id: flight
   active: true
-  implementation_ref: app.modules.travel_ops.locked_bookings:FlightTeam
+  implementation_ref: app.domains.travel_ops.instances.locked:FlightTeam
 response_review:
   # ★[미확보] 여행 도메인에 응답 검토 Team 이 **아직 없다**(2026-09-10).
   #   커머스판(`ResponseGenerationReviewTeam`)은 구현과 함께 걷어냈고, 이 절은

@@ -158,7 +158,7 @@ def main():
     ap.add_argument("--raw-dir", default=str(RAW_MOBILITY / "bus_speed") if RAW_MOBILITY else None)
     ap.add_argument("--stops", default=str(PROCESSED / "mobility" / "bus_stops_v1.jsonl") if PROCESSED else None)
     ap.add_argument("--routes", default=str(PROCESSED / "mobility" / "bus_route_v1.jsonl") if PROCESSED else None)
-    ap.add_argument("--holidays", default=str(REPO_ROOT / "final_project_cs/app/modules/travel_ops/mobility/engine/rules/holidays_2026_2027.json") if REPO_ROOT else None)
+    ap.add_argument("--holidays", default=str(REPO_ROOT / "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/holidays_2026_2027.json") if REPO_ROOT else None)
     ap.add_argument("--out", default=str(PROCESSED / "mobility" / "bus_seg_profile_v1.jsonl.gz") if PROCESSED else None)
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()

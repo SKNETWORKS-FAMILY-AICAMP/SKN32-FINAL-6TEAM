@@ -28,10 +28,10 @@ import httpx
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.infrastructure.travel.base import TravelSource, build_travel_sources
-from app.infrastructure.travel.call_budget import CallBudget
-from app.infrastructure.travel.ratelimit import RateLimiter
-from app.infrastructure.travel.source_budget import BudgetExhausted, BudgetedLimiter, build_gate, with_db_budget
+from app.domains.travel_ops.ports.data_sources.base import TravelSource, build_travel_sources
+from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget
+from app.domains.travel_ops.ports.data_sources.ratelimit import RateLimiter
+from app.domains.travel_ops.ports.data_sources.source_budget import BudgetExhausted, BudgetedLimiter, build_gate, with_db_budget
 
 KST = ZoneInfo("Asia/Seoul")
 

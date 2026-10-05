@@ -13,7 +13,7 @@ from uuid import uuid4
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.place_info import ledger_info, place_info
+from app.domains.travel_ops.components.places.place_info import ledger_info, place_info
 
 
 @pytest.fixture()
@@ -69,7 +69,7 @@ def test_a_place_outside_the_ledger_falls_back_to_its_own_attributes():
 
 
 def test_the_chat_answers_the_address_from_the_ledger_first(ledger_place):
-    from app.modules.travel_ops.trip_facts import look_up_place
+    from app.domains.travel_ops.components.conversation.trip_facts import look_up_place
 
     found = look_up_place({"place_id": uuid4(), "name": "시험 한식당", "kind": "dining",
                            "attributes": {"dining_place_uid": ledger_place}}, source=None)
@@ -124,9 +124,9 @@ def test_the_minute_job_reads_hours_and_phone_once_for_places_in_a_live_trip():
     from datetime import datetime, timedelta
     from zoneinfo import ZoneInfo
 
-    from app.modules.travel_ops.case_engine import cleanup_tenant
-    from app.modules.travel_ops.itinerary import Item, TripStore
-    from app.modules.travel_ops.place_info import fill_missing_facts
+    from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
+    from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+    from app.domains.travel_ops.components.places.place_info import fill_missing_facts
 
     tenant = "pfill_" + uuid4().hex[:8]
     now = datetime.now(ZoneInfo("Asia/Seoul"))
@@ -183,7 +183,7 @@ class _NoTour:
 
 def test_the_chat_never_calls_google_even_when_the_hours_are_unknown(ledger_place):
     """`[2026-09-29 사용자 결정]` 구글 호출은 새벽 3시 확인 창에 몰아서만 — 채팅 답은 원장 · 관광공사까지만 본다."""
-    from app.modules.travel_ops.trip_facts import look_up_place
+    from app.domains.travel_ops.components.conversation.trip_facts import look_up_place
 
     place = {"place_id": uuid4(), "name": "시험 한식당", "kind": "dining", "latitude": 37.57, "longitude": 126.98,
              "attributes": {"dining_place_uid": ledger_place}}

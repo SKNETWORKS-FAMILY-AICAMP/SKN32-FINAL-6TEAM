@@ -12,7 +12,7 @@ from datetime import UTC, datetime
 import pytest
 
 from app.core.contracts import ToolNotAllowed
-from app.infrastructure.travel.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
 from app.tools.read_tools import ReadToolbox, ToolContext
 
 SCOPE = ToolContext(tenant_id="t", customer_id=__import__("uuid").uuid4(),

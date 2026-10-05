@@ -35,7 +35,7 @@ from psycopg.types.json import Json
 
 from app.core.settings import get_settings
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.activity.hours_text import read_week
+from app.domains.travel_ops.instances.activity.hours_text import read_week
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BRAND_ID_PREFIXES = ("OY", "DS", "AB", "MS")

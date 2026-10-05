@@ -32,7 +32,7 @@ import pytest
 from app.composition import build_registry
 from app.core.context import PolicyChunk
 from app.core.contracts import ContextPack, TeamTask
-from app.modules.travel_ops.verification_policy import TRAVEL_OPS_POLICY
+from app.domains.travel_ops.components.core_hooks.verification_policy import TRAVEL_OPS_POLICY
 
 DECLARED = (set(TRAVEL_OPS_POLICY.references)
             | TRAVEL_OPS_POLICY.quantity_fields
@@ -120,7 +120,7 @@ def test_every_proposal_field_is_declared(team_id: str, capability: str):
         assert not undeclared, (
             f"{team_id}.{capability} 의 '{proposal.action_type}' 제안이 검증 정책에 "
             f"없는 필드를 싣는다: {undeclared}\n"
-            f"  → `app/modules/travel_ops/verification_policy.py` 에 넣는다. "
+            f"  → `app/domains/travel_ops/components/core_hooks/verification_policy.py` 에 넣는다. "
             f"대조 가능하면 references/quantities, 설명값이면 ignored, "
             f"대조 수단이 없으면 opaque.\n"
             f"  ★넣지 않으면 승인 직전 재검증이 **이 제안을 통째로 막는다.**")

@@ -10,7 +10,7 @@ from datetime import datetime
 
 import pytest
 
-from app.modules.travel_ops.dining.ledger import find_place_by_name
+from app.domains.travel_ops.instances.dining.ledger import find_place_by_name
 
 
 @pytest.fixture

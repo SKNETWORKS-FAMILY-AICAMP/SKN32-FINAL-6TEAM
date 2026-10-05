@@ -12,7 +12,7 @@ import pytest
 
 from app.application.feedback_job import is_surge, run_daily_feedback
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.feedback import ClassificationFailed, classify
+from app.domains.travel_ops.components.core_hooks.feedback import ClassificationFailed, classify
 
 
 def test_classifier_returns_all_four_fields_from_injected_llm():

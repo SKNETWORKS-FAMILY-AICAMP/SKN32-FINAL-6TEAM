@@ -52,7 +52,7 @@ Case 생명주기, Shared State, Controller, 충돌 처리, 메시지 배달.
 **이 영역은 도메인을 모른다.** 환불이든 배송이든 여행 일정 조정이든 다 같은 Case다 — 그래서 여행 판올림에서 **그대로 승계한다**(v11 §6). 다만 Case를 시스템도 만든다는 것이 새로 붙는다(`trigger_source`).
 
 ### [teams/](teams/index.md) — 업무 책임 단위
-`app/modules/travel_ops/`
+`app/domains/travel_ops/`
 Team 계약, Registry, 경계, 개별 Team 페이지.
 `[실측 2026-09-10]` **개별 Team 문서는 여행 넷이다** — [activity](teams/activity.md)·[booking-handoff](teams/booking-handoff.md)·[dining](teams/dining.md)·[mobility](teams/mobility.md). **쇼핑몰 7종은 [records/legacy/teams/](records/legacy/teams/) 로 옮겼다.** 계약·Registry·경계 문서는 도메인과 무관하게 유효하다 → v11 §5.
 

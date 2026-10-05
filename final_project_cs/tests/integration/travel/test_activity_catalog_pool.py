@@ -15,10 +15,10 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.case_engine import cleanup_tenant
-from app.modules.travel_ops.itinerary import Item, TripStore
-from app.modules.travel_ops.pending import PendingStore
-from app.modules.travel_ops.trip_desk import TripDesk
+from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
+from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+from app.domains.travel_ops.components.planning.pending import PendingStore
+from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
 
 KST = ZoneInfo("Asia/Seoul")
 LAT, LON = 34.0000, 124.0000          # 서울 밖(바다) — 실제 목록과 안 겹친다
@@ -83,7 +83,7 @@ NIGHT = datetime(2030, 1, 1, 3, 30, tzinfo=KST)
 
 def _night(tenant, tour, *, now=NIGHT, per_night=600, per_tick=10, chat=None):
     """새벽 작업 한 틱 — 설정값은 가드레일과 같은 모양."""
-    from app.modules.travel_ops.catalog_hours import prefill
+    from app.domains.travel_ops.components.places.catalog_hours import prefill
 
     with get_connection() as conn:
         return prefill(conn, tenant_id=tenant, source=tour, chat=chat, now=now, start="03:00", until="08:00",
@@ -204,7 +204,7 @@ def test_the_night_job_reads_only_new_or_changed_places_within_its_window_and_bu
 def test_scenario_seed_places_are_not_candidates_in_the_service_tenant(monkeypatch):
     """☆`[2026-09-29 ui 세션 지적]` 대본의 가짜 지점(「명동 대형마트(시나리오 지점)」)이 실제 고객의 바꾸기에 뽑혔다.
     실서비스 테넌트에서는 뺀다 — 이미 그 여행 일정에 든 것은 남긴다. 시나리오 · 시험 테넌트는 그대로."""
-    from app.modules.travel_ops import itinerary
+    from app.domains.travel_ops.components.itinerary import itinerary
 
     tenant = "pool_" + uuid4().hex[:8]
     try:

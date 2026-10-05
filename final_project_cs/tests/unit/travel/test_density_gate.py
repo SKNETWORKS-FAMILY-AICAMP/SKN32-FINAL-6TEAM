@@ -22,12 +22,12 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from app.core.settings import get_guardrails
-from app.modules.travel_ops import itinerary_fit
-from app.modules.travel_ops.density import density_regressions
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.itinerary_changes import ItineraryChange, _with_fallbacks
-from app.modules.travel_ops.itinerary_checks import parts_from_items
-from app.modules.travel_ops.itinerary_fit import fit_change
+from app.domains.travel_ops.components.itinerary import itinerary_fit
+from app.domains.travel_ops.components.itinerary.density import density_regressions
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, _with_fallbacks
+from app.domains.travel_ops.components.itinerary.itinerary_checks import parts_from_items
+from app.domains.travel_ops.components.itinerary.itinerary_fit import fit_change
 
 KST = ZoneInfo("Asia/Seoul")
 DAY = datetime(2026, 10, 6, 10, 0, tzinfo=KST)
@@ -64,7 +64,7 @@ def _ranked(*changes):
 
 
 def _ratio(items):
-    from app.modules.travel_ops.density import measure_density
+    from app.domains.travel_ops.components.itinerary.density import measure_density
 
     return measure_density(parts_from_items(items), TRIP["constraints"])["density"][0]
 

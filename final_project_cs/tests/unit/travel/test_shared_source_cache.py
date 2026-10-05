@@ -22,9 +22,9 @@ import httpx
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.infrastructure.travel import its_traffic
-from app.infrastructure.travel.cache import DbResponseCache, ResponseCache
-from app.infrastructure.travel.its_traffic import KST, ItsTrafficEvents
+from app.domains.travel_ops.ports.data_sources import its_traffic
+from app.domains.travel_ops.ports.data_sources.cache import DbResponseCache, ResponseCache
+from app.domains.travel_ops.ports.data_sources.its_traffic import KST, ItsTrafficEvents
 
 NOW = datetime(2026, 10, 3, 12, 0, tzinfo=KST)
 

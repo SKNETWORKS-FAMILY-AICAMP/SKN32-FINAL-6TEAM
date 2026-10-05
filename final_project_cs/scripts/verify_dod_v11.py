@@ -140,7 +140,7 @@ ITEMS: tuple[Item, ...] = (
         T + "e2e/test_booking_change_link.py::test_a_wrong_token_never_says_whether_the_booking_exists",
     ), mvp=False,
          note="`[2026-09-22]` 변경 링크가 생겼다 — `GET /booking-change/{booking_id}?t=…` "
-              "(`app/modules/travel_ops/change_link.py`, 예약별 HMAC 토큰·로그인 없음·토큰이 틀리면 "
+              "(`app/domains/travel_ops/components/booking/change_link.py`, 예약별 HMAC 토큰·로그인 없음·토큰이 틀리면 "
               "404). **아무것도 쓰지 않으므로 승인도 scope 도 없다.** `booking.change` 적용기는 "
               "공급자 원장을 어느 등급에서도 건드리지 않고 그 링크를 인계 메시지(`booking.handoff`)에 "
               "싣는다 — 등급 `real` 로 두고 원장이 한 글자도 안 바뀌는 것을 실측한다"),

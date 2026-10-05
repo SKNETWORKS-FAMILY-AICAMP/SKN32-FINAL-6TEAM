@@ -19,7 +19,7 @@
 | 중복 확인(sha256 동일) | `bus_route_v2 = v1` · `bus_stops_v2 = v1` · `bus_stop_coords_v2 = bus_stop_coords` → v1 만 올림(v2 는 정본에서도 백업으로 옮김 · 9/30) |
 | 검증 | 줄인 판으로 이동 회귀 전체 · pytest 게이트 — 정본과 같은 값(§7) |
 
-## 1. 누가 무엇을 읽나 (엔진 `final_project_cs/app/modules/travel_ops/mobility/engine/`)
+## 1. 누가 무엇을 읽나 (엔진 `final_project_cs/app/domains/travel_ops/instances/mobility/engine/`)
 
 경로의 정본은 `runtime.py default_paths()` 와 `verify_time.py build_verifier_for_cases()` — 둘 다 `paths.PROCESSED / "mobility"` 아래 같은 이름. 시간표는 `paths.timetable_file()` 이 `.gz` 를 먼저 찾는다.
 

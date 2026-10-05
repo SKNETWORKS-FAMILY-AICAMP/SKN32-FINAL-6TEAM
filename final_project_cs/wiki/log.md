@@ -116,7 +116,7 @@ x600 서버에서 `tour_api` 오늘 줄이 사용 15 · 실패 15 로 보였다.
 
 ## 2026-09-21 (오후) — 일정을 받을 때 코드로 판정하고, 불가능하면 이유·완화 조건을 붙여 거절
 
-`app/modules/travel_ops/itinerary_checks.py` 신설 — 겹침·이동 소요·영업시간·브레이크·결제·예산을 보낸 값으로 판정한다. 모르는 칸은 판정하지 않는다(결정 15). `POST /v1/trips` 가 `422 itinerary_infeasible` + `violations[]`(`reason`·`remedy`)로 거절한다(`external/rest-endpoints.md`). v11 DoD-2·3 이 미측정에서 통과로 — 전체 17/26, MVP 17/18.
+`app/domains/travel_ops/components/itinerary/itinerary_checks.py` 신설 — 겹침·이동 소요·영업시간·브레이크·결제·예산을 보낸 값으로 판정한다. 모르는 칸은 판정하지 않는다(결정 15). `POST /v1/trips` 가 `422 itinerary_infeasible` + `violations[]`(`reason`·`remedy`)로 거절한다(`external/rest-endpoints.md`). v11 DoD-2·3 이 미측정에서 통과로 — 전체 17/26, MVP 17/18.
 
 ## 2026-09-21 — v11 26항목을 실행으로 세는 DoD 검사기
 

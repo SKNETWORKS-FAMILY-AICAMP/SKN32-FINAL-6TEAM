@@ -19,7 +19,7 @@ _MODULES = {"vector_rag": {"enabled": True}, "graph_store": {"enabled": True},
             "voc": {"enabled": True}, "ops_ui": {"enabled": True}}
 _PORTS = {"team_executor": "local", "message_broker": "outbox", "graph_store": "sql"}
 _TEAM = {"team_id": "activity", "active": True,
-         "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"}
+         "implementation_ref": "app.domains.travel_ops.instances.activity:ActivityTeam"}
 
 
 def _config(review: dict, *, teams=None):
@@ -48,6 +48,6 @@ def test_disabled_with_a_stale_owner_is_accepted():
 def test_an_inactive_owner_does_not_count_as_registered():
     """★`active: false` 인 팀은 조립이 라우팅에 쓰지 않는다. 검토 팀도 마찬가지다."""
     teams = [_TEAM, {"team_id": "dining", "active": False,
-                     "implementation_ref": "app.modules.travel_ops.dining:DiningTeam"}]
+                     "implementation_ref": "app.domains.travel_ops.instances.dining:DiningTeam"}]
     with pytest.raises(ValidationError, match="owner_team_id"):
         _config({"enabled": True, "owner_team_id": "dining"}, teams=teams)

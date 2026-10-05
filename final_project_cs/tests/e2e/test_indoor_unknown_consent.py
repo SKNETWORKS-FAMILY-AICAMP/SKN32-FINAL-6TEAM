@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.pending import (CONSENT_KEY, CONSENT_REASON, PendingStore, ProposalRefused, choose,
+from app.domains.travel_ops.components.planning.pending import (CONSENT_KEY, CONSENT_REASON, PendingStore, ProposalRefused, choose,
                                             needs_consent)
 
 from .test_trip_api import SCENARIO, _body, _detail, _slot, api  # noqa: F401 — 픽스처를 그대로 쓴다

@@ -11,7 +11,7 @@
 """
 from __future__ import annotations
 
-from app.modules.travel_ops.survey import SURVEY_VERSION
+from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
 
 from .test_trip_api import SCENARIO, _body, _detail, _report, _say, api  # noqa: F401
 

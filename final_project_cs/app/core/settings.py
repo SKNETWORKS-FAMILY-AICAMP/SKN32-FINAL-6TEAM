@@ -179,7 +179,7 @@ class Settings(BaseSettings):
     #:  ★(구)바다누리 자체 OpenAPI 는 종료 예정이라 공통 키로 충분하다.
     khoa_api_key: str = ""
     #: 국가유산청 — ★**키가 필요 없다**(2026-09-10 실호출 확인). 그래서 이 칸은
-    #:  비워 둔다. 어댑터(`app/infrastructure/travel/heritage.py`)가 인증
+    #:  비워 둔다. 어댑터(`app/domains/travel_ops/ports/data_sources/heritage.py`)가 인증
     #:  파라미터 없이 부른다. 공공데이터포털 쪽 문화재 공간정보
     #:  (data.go.kr/data/3070426)를 따로 쓸 때만 채운다.
     heritage_api_key: str = ""
@@ -230,7 +230,7 @@ class Settings(BaseSettings):
     #   결과는 저장하지 않는다(보여 줄 때만 불러온다).
     naver_search_client_id: str = ""
     naver_search_client_secret: str = ""
-    # ── 이동 계산기(app/modules/travel_ops/mobility/engine) — `[2026-09-29 이동 계산기 문제목록 #48]` ──
+    # ── 이동 계산기(app/domains/travel_ops/instances/mobility/engine) — `[2026-09-29 이동 계산기 문제목록 #48]` ──
     #   계산기가 저장소 맨 위 `.env` 를 import 때 직접 읽던 것을 여기로 모은다. 서버는 기동 때 이 값을 계산기에 넘긴다.
     #: 시간표·역 순서·환승 거리 등 가공 자료가 있는 폴더(이동 담당의 DATA_DIR · git 밖 · 약 195MB).
     #:  비우면 이동 계산기를 쓰지 않는다(연결부가 대체 경로로 간다). 실제 경로는 `.env` 에만 적는다.

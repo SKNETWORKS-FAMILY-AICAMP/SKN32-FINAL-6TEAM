@@ -101,7 +101,7 @@ flowchart TB
 | Presentation | REST, MCP, A2A, 운영 UI, 인증 경계 | `final_project_cs/app/presentation/` |
 | Application | Case 접수·분류·라우팅·Controller·배치 | `final_project_cs/app/application/` |
 | Core/Domain | 계약, 상태 전이, Registry, 멱등성, 안전 규칙 | `final_project_cs/app/core/`, `app/domain/` |
-| Teams | 여행 도메인 판정과 제안 | `final_project_cs/app/modules/travel_ops/` |
+| Teams | 여행 도메인 판정과 제안 | `final_project_cs/app/domains/travel_ops/` |
 | Infrastructure | PostgreSQL, pgvector, 외부 API, LLM, outbox | `final_project_cs/app/infrastructure/` |
 | Knowledge | 정책 원문, manifest, ingest | `final_project_cs/knowledge/` |
 

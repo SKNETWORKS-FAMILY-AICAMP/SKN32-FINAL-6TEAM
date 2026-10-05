@@ -4,7 +4,7 @@ DB 없이 돈다. 커서를 가짜로 세워 「무엇을 물었고 무엇을 �
 판정 자체는 SQL 함수가 하고 그쪽은 별도로 시험한다. 여기서 지키는 것은
 모양과 경계다 — 모르는 것을 모름으로 두는가, 아는 값을 덮지 않는가.
 
-ledger.py 는 경로로 읽는다. app.modules.travel_ops 를 import 하면
+ledger.py 는 경로로 읽는다. app.domains.travel_ops 를 import 하면
 다른 팀 모듈과 openai 까지 딸려 와서 이 시험이 그것들에 매이게 된다.
 ledger.py 자체는 psycopg 도 import 하지 않으므로 경로로 읽는 편이 맞다.
 """
@@ -19,7 +19,7 @@ import pytest
 KST = timezone(timedelta(hours=9))
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-LEDGER = os.path.join(ROOT, "app", "modules", "travel_ops", "dining", "ledger.py")
+LEDGER = os.path.join(ROOT, "app", "domains", "travel_ops", "instances", "dining", "ledger.py")
 
 _spec = importlib.util.spec_from_file_location("dining_ledger", LEDGER)
 ledger = importlib.util.module_from_spec(_spec)

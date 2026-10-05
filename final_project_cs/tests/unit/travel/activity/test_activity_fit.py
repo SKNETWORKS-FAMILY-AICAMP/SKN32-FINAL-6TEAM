@@ -20,10 +20,10 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from app.core.contracts import NextAction
-from app.modules.travel_ops.activity import ActivityTeam
-from app.modules.travel_ops.itinerary import Item, item_to_dict
-from app.modules.travel_ops.itinerary_changes import ItineraryChange, _with_fallbacks
-from app.modules.travel_ops.itinerary_fit import fit_change
+from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.components.itinerary.itinerary import Item, item_to_dict
+from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, _with_fallbacks
+from app.domains.travel_ops.components.itinerary.itinerary_fit import fit_change
 
 from ..helpers import pack, task
 from .test_activity_trigger_budget import ALLOWED, _Tools

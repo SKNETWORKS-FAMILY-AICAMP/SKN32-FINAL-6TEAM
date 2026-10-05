@@ -35,7 +35,7 @@ domain_note: Tool Gateway 기제는 도메인 무관이다. read 도구 목록�
 | Mobility | `read.route` `read.transit` `read.policy` |
 | Lodging / Flight (등록만) | `read.booking` |
 
-`[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/*.py` 의 `allowed_tools` 를 직접 셌다. **`[실측 git]` 미커밋이다.**
+`[실측 2026-09-10 작업 트리]` `app/domains/travel_ops/*.py` 의 `allowed_tools` 를 직접 셌다. **`[실측 git]` 미커밋이다.**
 
 **read 도구는 7종뿐이고 결제 조회는 없다.**
 
