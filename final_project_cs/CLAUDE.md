@@ -248,7 +248,7 @@ final_workspace/.tmp/        ← 변환·렌더링 등 워크스페이스 임시
 & "$env:USERPROFILE\anaconda3\envs\pgv\Library\bin\psql.exe" -h 127.0.0.1 -p 5433 -U postgres -d acop
 
 # 검증
-python -m scripts.verify_dod                  # DoD + evidence 존재 검사
+python -m scripts.verify_dod_v11              # DoD 26항목(v11)을 시험 실행으로 센다
 python -m pytest tests/contract -q            # 계약 테스트
 python -m pytest tests/security -q            # scope / PII / tenant 격리
 python -m pytest -q                           # 전체

@@ -18,16 +18,14 @@ if hasattr(sys.stdout, "reconfigure"):
 STAGE = "wiki/_migration/datasets"
 
 #: 분할본 → 원본. codex 가 낸 파일명이 원본과 달라 손으로 맺는다.
+#: ★`[2026-10-06]` 쇼핑몰(commerce) 셋을 뺐다 — 원본 `datasets/commerce/` 를 압축 백업 후 지웠다(D-023).
 PAIRS = {
     "voc/sources_catalog": "PLAN.md",
     "mt/olist_reviews_mt_bench": "REPORT.md",
-    "commerce/naver_order_history": "REPORT.md",
-    "commerce/courier_tracking": "REPORT.md",
     "voc/aihub_102_smb_order_qa": "REPORT.md",
     "voc/aihub_30716_callcenter_qa": "REPORT.md",
     "voc/aihub_71603_aspect_sentiment": "REPORT.md",
     "voc/aihub_71844_llm_instruction_tuning": "REPORT.md",
-    "commerce/coupang_order_history/docs": "실제HTML_페이지네이션.md",
 }
 
 

@@ -94,11 +94,10 @@ v9 기준 표가 필요하면 `program/plan/A-COP_구현계획서_v9.md` §0 을
 
 | 데이터셋 | 무엇인가 | triPilot에서 쓰는 곳 |
 |---|---|---|
-| [`commerce/coupang_order_history`](datasets/commerce/coupang_order_history/) | 쿠팡 주문·배송 기록 | Core 1 Context Broker의 주문 정보 |
-| [`commerce/naver_order_history`](datasets/commerce/naver_order_history/) | 네이버 주문 기록 | 동. 쇼핑몰 두 곳으로 구조 편향을 막는다 |
-| [`commerce/courier_tracking`](datasets/commerce/courier_tracking/) | 택배 배송 이력 조회 도구 | Core 2의 배송조회 Action 실행부 |
 | [`voc/*`](datasets/voc/) | 고객 문의·응대 공개 데이터 | Core 1의 RAG 지식 재료 |
 | [`mt/*`](datasets/mt/) | 번역 성능 비교 | 다국어 응대 검토용 |
+
+`[2026-10-06 변경]` **쇼핑몰 원본 데이터(`datasets/commerce/` — 쿠팡·네이버 주문 기록 · 택배 조회)는 압축 백업 후 지웠다**(D-023 · 백업 `datasets/_archive/2026-10-06_commerce_removal/`). 위 표에서도 세 줄을 뺐다.
 
 `[2026-09-14 변경]` **`datasets/` 폴더는 통째로 git에 올리지 않는다**(루트 `.gitignore`의 `/datasets/`). 실제 주문 페이지를 복사한 테스트 파일·문서에 배송지 조각(가린 이름·연락처 끝자리·우편번호·도로명)이 섞여 공개 저장소에 올라간 일이 있었다. 이전 규칙은 `raw/`·`processed/`만 막고 스크립트·스키마·`REPORT.md`는 올리는 것이었다.
 

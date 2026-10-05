@@ -50,7 +50,7 @@ SKIP_DIRS = (
     # ★9차. CLAUDE.md — datasets 의 raw/ processed/ 는 본인 실제 구매 기록이라
     #   git 에 올리지 않는다. 버전관리 밖이므로 이관 대상이 아니다.
     #   (final_project_sample/ 도 gitignore 이지만 그건 자체 저장소라서다. 다르다)
-    "datasets/commerce/coupang_order_history/raw/",
+    # ★`[2026-10-06]` datasets/commerce/ 는 압축 백업 후 삭제했다(D-023) — 셀 대상이 없다
     "datasets/voc/nikl_ne_2022/processed/",
 )
 

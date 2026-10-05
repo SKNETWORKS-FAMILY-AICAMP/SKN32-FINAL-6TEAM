@@ -42,7 +42,7 @@ python -m pytest -m live -q
 ## DoD 검증
 
 ```bash
-python -m scripts.verify_dod
+python -m scripts.verify_dod_v11
 ```
 
 DoD 항목과 evidence 파일 존재를 검사한다.
