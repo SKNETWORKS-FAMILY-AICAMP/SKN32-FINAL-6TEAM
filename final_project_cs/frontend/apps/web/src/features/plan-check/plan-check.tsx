@@ -201,8 +201,10 @@ export function serverProgressText(at: ServerProgress, t: Translate): string {
 }
 
 /**
- * The plan's name in the header. ★`[2026-10-04 사용자 지시]` The name has the room (the home mark is only the mark now) and no pencil stands by it all the time: pressing the name shows the whole
- * name and a pencil for a few seconds; the pencil turns it into a field (Enter or leaving it saves, Esc keeps the name). Without a way to save it is plain text.
+ * The plan's name in the header. ★`[2026-10-04 사용자 지시]` No pencil stands by it all the time: pressing the name shows the whole name and a pencil for a few seconds; the pencil turns it into
+ * a field (Enter or leaving it saves, Esc keeps the name). Without a way to save it is plain text.
+ * ★`[2026-10-05 사용자 지시 · 내 여행 칩 안 A]` The chip is as long as its text and stands at the left (it no longer takes the whole line); pressing it grows it to the right to show the whole
+ *   name, and pressing the name again opens the field (the keyboard comes up) - the pencil is the same step for those who look for it.
  */
 function TripTitle({ title, onSave }: { title: string; onSave?: (value: string) => Promise<void> }) {
   const t = useT();
@@ -232,7 +234,7 @@ function TripTitle({ title, onSave }: { title: string; onSave?: (value: string) 
     </form>;
   }
   return <h1 className={styles.headTitle} data-armed={armed || undefined}>
-    <button type="button" className={styles.titleButton} onClick={() => setArmed((current) => !current)} aria-expanded={armed} aria-label={t(`계획 이름 · ${title}`, `Plan name · ${title}`)}>
+    <button type="button" className={styles.titleButton} onClick={() => { if (armed) { setDraft(title); setEditing(true); setArmed(false); } else setArmed(true); }} aria-expanded={armed} aria-label={t(`계획 이름 · ${title}`, `Plan name · ${title}`)}>
       <span>{title}</span>
     </button>
     {armed && <button type="button" className={styles.titleEdit} onClick={() => { setDraft(title); setEditing(true); setArmed(false); }} aria-label={t(`계획 이름 바꾸기 · 지금 이름은 ${title}`, `Rename the plan · now ${title}`)}>
@@ -909,7 +911,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
         </div>
       </div>, headerSlot)}
     {!changing && headerSlot && createPortal(
-      <div className={styles.headInfo}>
+      <div className={styles.headInfo} data-title={(done && view.title) ? true : undefined}>
         {done && view.title
           ? <TripTitle title={view.title} onSave={actions.editTrip && !frozen && !registered ? renameTrip : undefined} />
           : <><h1 className="sr-only">{t("계획을 확인하고 있어요", "Checking your plan")}</h1><HeaderProgress view={view} /></>}

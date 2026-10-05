@@ -242,13 +242,17 @@ function MoveRow({ move, from, ctx, slack, dim }: { move: PlanMove; from: PlanIt
   const checking = move.verdict === null;
   // Only a leg that needs a look is marked: a fine one stays quiet, so the eye goes to the stops first.
   const mark = checking || move.verdict !== "review" ? null : <VerdictMark verdict={move.verdict} />;
-  const line = checking ? null : <>
-    <span className={styles.modeIcon}><ModeIcon mode={move.mode} /></span>
-    <span className="sr-only">{move.mode}</span>
-    <span className={styles.moveText}>{legText(move.summary)}</span>{mark}</>;
   const extra = gapPx(slack) - GAP_BASE_PX;
   const free = freeText(slack);
   const late = slack !== null && slack < 0;
+  // ★`[2026-10-05 사용자 지시]` One line says it all: the way, how long, how far - and how much time is left after it (「지하철 4호선 50분 · 3.5km  여유 1시간 40분」). The free time was a second line
+  //   under the leg that took room and said nothing the first line could not; the space between the stops still grows with it (`freeGap`).
+  const freeSays = done && !checking ? (late ? t(`${Math.abs(slack!)}분 늦어요`, `${Math.abs(slack!)} min late`) : free ? t(`여유 ${free}`, `${free} free`) : null) : null;
+  const line = checking ? null : <>
+    <span className={styles.modeIcon}><ModeIcon mode={move.mode} /></span>
+    {!move.summary.includes(move.mode) && <span className="sr-only">{move.mode}</span>}
+    <span className={styles.moveText}>{move.summary}</span>
+    {freeSays && <span className={styles.moveFree} data-late={late || undefined}>{freeSays}</span>}{mark}</>;
   // ★`[2026-10-05 사용자 지시]` The time of leaving can be changed like the time of a stop: leaving later uses the free time first, then the next stops are pushed.
   const leaving = <><b>{move.departAt}</b><small>{t("출발", "leave")}</small></>;
   const leaveWhy = !from ? null : dim ? t("삭제할 일정 앞뒤의 이동이라 바꿀 수 없어요", "This leg belongs to a stop marked for deletion")
@@ -270,8 +274,7 @@ function MoveRow({ move, from, ctx, slack, dim }: { move: PlanMove; from: PlanIt
           {open && <Checks id={`${ctx.prefix}plan-move-${move.id}-checks`} rows={move.checks} />}</>
         : <div className={styles.moveHead}>{line}</div>}</div>
     {done && !checking && leaveEditing && from && <TimeEditor item={from} ui={ctx.time!} />}
-    {done && !checking && (extra > 0 || late) && <p className={styles.free} data-late={late || undefined} style={{ minHeight: `${extra}px` }}>
-      {late ? t(`${Math.abs(slack!)}분 늦어요`, `${Math.abs(slack!)} min late`) : free ? t(`여유 ${free}`, `${free} free`) : null}</p>}
+    {done && !checking && extra > 0 && <div className={styles.freeGap} aria-hidden="true" style={{ height: `${extra}px` }} />}
     </div>
   </li>;
 }
