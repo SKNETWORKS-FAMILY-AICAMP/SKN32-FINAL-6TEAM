@@ -741,13 +741,15 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 | | 등록된 여행 | 접수 확인 화면(등록 전) |
 |---|---|---|
 | 경로 | `GET /v1/web/trips/{trip_id}/route-shapes` | `GET /v1/web/trip-intakes/{intake_id}/route-shapes` |
-| 응답 | `{trip_id, shapes[], attribution}` | `{intake_id, revision, shapes[], attribution}` |
+| 응답 | `{trip_id, detail, shapes[], attribution}` | `{intake_id, revision, detail, shapes[], attribution}` |
 | 원천 | 여행 항목의 `route_def` | **저장된 확인 검사**(`items[]` · `moves[]`) — 없으면 이동을 다시 계산하지 않고 `shapes: []` |
 | `shapes[]` | `{item_id, from_item_id, to_item_id, from, to, mode, line, source, grade, distance_m, note}` | 같은 모양, **`item_id` 없음**. `from_item_id`·`to_item_id` 는 확인 화면 `review.items[].id`(「0-3」) |
 
 - `mode`: walk · bike · taxi · subway · bus · mixed · unknown. `source`: `local_road_graph`(도로 그래프) · `stations`(탄 역 좌표 순서 + 양 끝 걸음) · `straight_line`(직선 — 이유는 `note`). `grade`: 추정 · 근거없음(확정은 없다).
 - 좌표 없는 장소가 낀 이동은 건너뛴다. 접수용은 저장된 검사에 탄 역 정보(`uses`)가 없는 **옛 검사**의 지하철·대중교통을 직선 + `note` 로 내린다 — **새로 접수한** 검사부터 역 좌표를 따라 그린다(고쳐도 바뀌지 않은 이동은 저장된 값을 다시 쓰므로 옛 검사는 그대로 직선).
 - `attribution`(「지도 데이터 © OpenStreetMap contributors (ODbL)」)은 선을 그릴 때 화면이 보여야 한다.
+- ★`[2026-10-05]` **점 줄이기와 확대용 상세 선(`?detail=true`).** 기본 응답(`detail=false`)은 **모양을 지키며**(Douglas–Peucker, 원본이 줄인 선에서 **최대 2 m**) 점을 줄이고 한 선 최대 240점이다. 전에는 점을 **고르게 건너뛰어** 모퉁이가 잘려 확대하면 직선처럼 보였다 — 이 PC 도로 그래프 실측: 택시 8 km 최대 8.1 m · 15 km 최대 14.0 m 벗어남 → 지금은 둘 다 2.0 m 안(점 수는 333→75 · 365→145로 오히려 줄었다). `?detail=true` 는 원본에 가깝게(오차 0.5 m · 한 선 최대 5,000점) 내려 확대용으로 쓴다. 응답의 `detail` 이 어느 쪽인지 말한다. ★도로 그래프(`local_road_graph`) 경로는 원본이 OSM 모양점을 보존한다(선분 중앙 10~30 m, 이 PC 실측 4경로) — 확대해서도 곧아 보이는 것은 **지하철(`stations`)과 버스·혼합이 직선으로 내려가는 구간**이다(아래 한계).
+- ★한계(실측 2026-10-05): 지하철은 **탄 역·갈아탄 역·내린 역만** 좌표로 잇는다(`plan.uses_of`) — 중간 역과 실제 선로 곡선이 없어 그 사이는 직선이다. 버스는 정류장 목록이 일정에 없어 항상 직선이다.
 
 ## 위임 — `/v1/delegations/*` `[2026-09-22]`
 
