@@ -74,6 +74,27 @@ test("회원의 마이페이지: 로그아웃하면 보안 토큰과 함께 서�
   await expect(page.getByRole("region", { name: "내 여행", exact: true })).toContainText("아직 등록한 여행이 없어요.");
 });
 
+test("로그아웃하면 이전 계정의 여행이 화면 캐시에 남지 않는다: 앱 안에서 뒤로 가도 옛 일정이 먼저 보이지 않고 다시 읽는 동안은 읽는 중이다 (`[2026-10-05 · 팀 develop 점검]`)", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ sessionKind: "member" });
+  await start(page);
+  await page.goto("/");
+  await page.getByRole("region", { name: "내 여행", exact: true }).getByRole("link").click();
+  await expect(page.locator("#trip-pane-schedule").getByText("경복궁 관람")).toBeVisible();
+  await page.evaluate(() => { (window as unknown as { __stayed?: boolean }).__stayed = true; });                   // 이 표시가 남아 있으면 페이지를 새로 읽지 않은 것이다
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  await page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: /마이페이지/ }).click();             // 앱 안에서 옮긴다(새로 읽지 않는다)
+  const status = page.getByRole("group", { name: "로그인 상태" });
+  await status.getByRole("button", { name: "로그아웃" }).click();
+  await expect(status.getByRole("status")).toContainText("로그아웃했어요");
+  await page.route((url) => url.pathname.endsWith(`/v1/web/trips/${TRIP_ID}`), async (route) => { await new Promise((resolve) => setTimeout(resolve, 4_000)); await route.abort(); });   // 다시 읽기를 붙잡아 둔다
+  await page.goBack();                                                                                              // 재로딩 없는 뒤로가기
+  await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
+  expect(await page.evaluate(() => (window as unknown as { __stayed?: boolean }).__stayed)).toBe(true);              // 재로딩이 아니라 앱 안의 이동이었다
+  await expect(page.locator("#trip-pane-schedule").getByText("경복궁 관람")).toHaveCount(0);                          // 옛 계정의 일정이 캐시로 먼저 보이지 않는다
+  // ★이 시험은 로그아웃에서 화면 캐시를 비우기 전의 코드(`invalidateQueries` 만)로도 통과했다 - 팀 develop 점검의 「옛 계정 여행이 먼저 보인다」는 재현하지 못했다. 캐시를 비우는 것은 방어적 반영이고, 이 시험은 그 모습을 지키는 회귀 시험이다.
+});
+
 test("옛 키만 있는 브라우저: 처음 열 때 키 하나로 세션으로 옮겨지고(쿠키 없이), 키는 지워지고, 여행 목록이 그대로 열린다", async ({ page, request }) => {
   const server = mockServer(request);
   await startWithOldKey(page);

@@ -35,7 +35,9 @@ export function SessionCard({ profile }: { profile: Profile }) {
     setMessage(null);
     try {
       await logout(language);
-      void queryClient.invalidateQueries();
+      // `[2026-10-05 · 팀 develop 점검]` Not only marked old: dropped. Marked old they stayed on screen (the previous account's trips and chat) until a re-read, and a failed re-read left them.
+      await queryClient.cancelQueries();
+      queryClient.clear();
       setMessage({ ok: true, text: t("로그아웃했어요. 다시 로그인하면 이 계정의 여행을 열 수 있어요.", "Signed out. Sign in again to open this account's trips.") });
     } catch (error) {
       setMessage({ ok: false, text: error instanceof LiveError || error instanceof Error ? error.message : String(error) });

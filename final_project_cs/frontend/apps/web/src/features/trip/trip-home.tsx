@@ -61,13 +61,16 @@ export function TripHome({ tripId }: { tripId: string }) {
   const query = useTrip(tripId);
   // ★A failed re-read keeps the plan already on screen (react-query keeps the last data). Only a trip that never
   //   loaded shows the error page — the change bell re-reads often, and a brief outage must not blank the trip.
-  if (query.isPending || !query.data) {
+  // ★`[2026-10-05 · 팀 develop e58cefca 점검]` But the screen SAYS the re-read failed (the banner below), and a trip that is gone (`not_found`) or a session that ended (`session_expired`)
+  //   is not drawn from the cache: the old plan of another account must not stay on the screen.
+  const gone = query.error instanceof LiveError && ["not_found", "session_expired"].includes(query.error.code);
+  if (query.isPending || !query.data || gone) {
     return <QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />;
   }
-  return <TripWorkspace key={query.data.id} trip={query.data} />;
+  return <TripWorkspace key={query.data.id} trip={query.data} stale={query.isError ? { reload: () => void query.refetch(), fetching: query.isFetching } : null} />;
 }
 
-function TripWorkspace({ trip }: { trip: Trip }) {
+function TripWorkspace({ trip, stale }: { trip: Trip; stale: { reload: () => void; fetching: boolean } | null }) {
   const t = useT();
   const { language, navigation } = useSettings();
   const queryClient = useQueryClient();
@@ -233,6 +236,8 @@ function TripWorkspace({ trip }: { trip: Trip }) {
       <p className={styles.tripmeta}><CalendarDays {...icon} /><span>{days.length > 1 ? `${days[0]} – ${days.at(-1)}` : days[0]}<br />{t(`${days.length}일 · ${trip.stops.length}개 일정`, `${days.length} days · ${trip.stops.length} stops`)}</span></p>
     </section>
     <div className={styles.watchbar}><strong><Check {...icon} />{t("여행 관리 화면", "Your travel workspace")}</strong><span>{t("등록한 일정을 여행이 끝날 때까지 지켜봐요", "We watch your registered itinerary until the trip ends")}</span></div>
+    {stale && <div className={styles.error} role="alert"><p>{t("최신 여행 정보를 불러오지 못했어요. 마지막으로 확인한 내용을 보여 드리고 있어요.", "The latest trip could not be loaded. This is what we last saw.")}</p>
+      <Button onClick={stale.reload} disabled={stale.fetching}>{t("다시 불러오기", "Reload")}</Button></div>}
     <TripAttention trip={trip} />
     <div className={styles.daybar}>
       <div className={styles.dayTabs} role="group" aria-label={t("여행 일차", "Travel days")}>{days.map((date, index) => (

@@ -167,6 +167,13 @@ describe("the session the browser has (cookie, never a key it keeps)", () => {
     await expect(api("/v1/web/trip-intakes", "ko", { method: "POST" })).rejects.toMatchObject({ code: "service_daily_cap", message: "오늘은 더 받지 않는다 (2분 뒤에 다시 할 수 있어요.)" });
   });
 
+  it("carries the HTTP status of a refusal (a lost connection has none): the trip screen tells an outage from a refusal by it", async () => {
+    stub({ has: true });
+    replies.push(json({ error: { code: "internal_error", message: "서버 오류" } }, 502));
+    await expect(api("/v1/web/trips", "ko")).rejects.toMatchObject({ code: "internal_error", status: 502 });
+    expect(new LiveError("network", "x").status).toBeUndefined();
+  });
+
   it("tells a guest's limit from other refusals: the guest_* codes and login_required ask for a login", async () => {
     stub({ has: true });
     replies.push(json({ error: { code: "guest_trip_limit", message: "게스트는 여행을 1개까지 만들 수 있어요", login_required: true, cap: 1, existing: 1 } }, 403));

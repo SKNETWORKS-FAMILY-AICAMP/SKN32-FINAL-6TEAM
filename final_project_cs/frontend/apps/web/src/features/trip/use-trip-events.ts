@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { watchTrip, type ChangeKind } from "@/lib/live/events";
 import { useSettings } from "@/lib/settings";
 import { tripKey } from "../../lib/gateway";
+import type { Trip } from "./model";
 import { noticesKey, proposalsKey } from "./use-trip-extras";
 import { setWatchMode } from "./watch-mode";
 
@@ -66,7 +67,10 @@ export function useTripEvents(tripId: string) {
           if (event.type === "ready") {
             setWatchMode(tripId, "bell");
             // The first connection comes right after the screen read everything; later ones follow a gap.
-            if (everReady) rereadAll();
+            // `[2026-10-05 · 팀 develop 점검]` The first one can follow a gap too: the trip was read, then changed before the bell was up. Its `ready` carries the version the server has now - when the
+            //   trip on screen is another one, read everything again.
+            const known = queryClient.getQueryData<Trip>(tripKey(tripId, language))?.version;
+            if (everReady || (typeof event.version === "number" && typeof known === "number" && event.version !== known)) rereadAll();
             everReady = true;
             failures = 0;
           } else {

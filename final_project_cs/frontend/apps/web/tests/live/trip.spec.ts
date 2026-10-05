@@ -220,6 +220,37 @@ test("옛 검증 결과·진행 주소는 그 여행 화면으로 보낸다 — 
   }
 });
 
+test("여행을 다시 읽다 실패하면(연결·서버 오류) 보이던 일정과 채팅 초안은 그대로 두고 「마지막으로 확인한 내용」이라 알리며, 다시 불러오면 알림이 사라진다", async ({ page }) => {
+  await openTrip(page);
+  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  await page.locator("#trip-chat-message").fill("초안으로 남겨 둘 질문");                              // 보내지 않은 초안
+  let failing = true;
+  await page.route((url) => url.pathname.endsWith(`/v1/web/trips/${TRIP_ID}`), async (route) => {
+    if (route.request().method() === "GET" && failing) await route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: { code: "internal_error", message: "서버가 잠깐 불안정해요" } }) });
+    else await route.continue();
+  });
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));                  // 탭이 앞으로 돌아온 것과 같다: 여행을 다시 읽는다
+  const banner = page.getByRole("alert").filter({ hasText: "최신 여행 정보를 불러오지 못했어요" });
+  await expect(banner).toBeVisible();
+  await expect(page.locator("#trip-chat-message")).toHaveValue("초안으로 남겨 둘 질문");             // 쓰던 초안도 그대로
+  failing = false;
+  await banner.getByRole("button", { name: "다시 불러오기" }).click();
+  await expect(banner).toHaveCount(0);
+  await page.getByRole("button", { name: "일정", exact: true }).click();
+  await expect(page.locator("#trip-pane-schedule").getByText("경복궁 관람")).toBeVisible();          // 보이던 일정은 그대로
+});
+
+test("여행이 사라졌거나(404) 세션이 끝났으면 다시 읽을 때 옛 일정을 그리지 않고 오류 화면을 보인다", async ({ page }) => {
+  await openTrip(page);
+  await page.route((url) => url.pathname.endsWith(`/v1/web/trips/${TRIP_ID}`), async (route) => {
+    if (route.request().method() === "GET") await route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ error: { code: "not_found", message: "그 여행을 찾을 수 없어요" } }) });
+    else await route.continue();
+  });
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await expect(page.locator("#trip-pane-schedule").getByText("경복궁 관람")).toHaveCount(0);        // 지워진 여행(남의 계정의 옛 여행)이 캐시로 남지 않는다
+  await expect(page.getByText("그 여행을 찾을 수 없어요")).toBeVisible();
+});
+
 test("선택·알림을 읽지 못해도(서버 500) 여행 화면은 그대로 뜨고, 읽지 못했다고 알린다", async ({ page, request }) => {
   await mockServer(request).scenario({ fail: "proposals" });
   await openTrip(page);

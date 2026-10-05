@@ -7,7 +7,7 @@ import { JourneyShell } from "@/components/layout/journey-shell";
 import { ButtonLink, Eyebrow, Panel, QueryState } from "@/components/ui";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
-import { candidatesOf, readingOf, resultOf, tripIssuesOf } from "@/features/plan-check/from-intake";
+import { assumedYear, candidatesOf, readingOf, resultOf, tripIssuesOf } from "@/features/plan-check/from-intake";
 import { reviewResultOf, streamingViewOf } from "@/features/plan-check/from-review";
 import { useServerReview } from "@/features/plan-check/use-server-review";
 import type { ItemDraft } from "@/features/plan-check/model";
@@ -183,7 +183,10 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const unchecked = view.review_error ? <p className={styles.streamNote} role="status">{t("서버가 장소·운영시간·이동 확인 결과를 만들지 못했어요. 읽은 값만 보여 드려요 — 등록할 때 서버가 다시 확인해요.", "The server could not build the place, hours and route check. Only what it read is shown — it checks again when you register.")}</p> : null;
   // The text also asked us to plan, but stops were read too: only the stops are shown, so say where the planning is.
   const asked = view.check?.plan.requested ? <p className={styles.streamNote} role="status">{t("글에 일정을 짜 달라는 말도 있었어요. 읽은 일정만 보여 드려요 — 대신 짜 받으려면 등록 화면의 「계획 짜 주기」를 써 주세요.", "The text also asked us to plan. Only the stops it lists are shown — to have a trip planned, use “Plan it for me” on the registration page.")}</p> : null;
-  return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} notice={<>{unchecked}{asked}</>} onBack={() => router.push(routes.newTrip)}
+  // `[2026-10-05]` A date written without a year: the server took one (and says so in its own note) - the screen says which, so the customer can correct it.
+  const year = assumedYear(view);
+  const yearNote = year ? <p className={styles.streamNote} role="note">{t(`날짜에 해가 적혀 있지 않아 ${year}년으로 두었어요. 다르면 일정의 날짜를 고쳐 주세요.`, `Some dates had no year, so ${year} was assumed. Change the date of a stop if that is wrong.`)}</p> : null;
+  return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} notice={<>{unchecked}{asked}{yearNote}</>} onBack={() => router.push(routes.newTrip)}
     tripIssues={tripIssuesOf(view)}
     actions={view.review ? server.actions : {
       edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },

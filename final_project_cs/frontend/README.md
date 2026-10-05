@@ -8,7 +8,7 @@
 
 | 앱 | 위치 | 기술스택 | 상태 |
 |---|---|---|---|
-| 사용자 웹 | [apps/web](apps/web/README.md) | Next.js 16 + React 19 + TypeScript | 2026-09-23 목업 기준 소개·온보딩·5개 화면 구현, 한/영 전환, 명시적인 데모 어댑터로 실행 |
+| 사용자 웹 | [apps/web](apps/web/README.md) | Next.js 16 + React 19 + TypeScript | 소개·온보딩·계획 확인·여행·목록·마이페이지 구현. 실제 서버(`/v1/web/*`)에만 붙는다(데모 없음, 2026-10-03). 저장·삭제 등 제한은 앱 README 참조 |
 | 개발팀 콘솔 | [apps/dev-console](apps/dev-console/README.md) | Next.js 16 + React 19 + TypeScript | 팀별·코어 통합 테스트, 사례·A/B 비교, 샘플 어댑터 구현 |
 | 관리자 웹 | [apps/admin](apps/admin/README.md) | Next.js + React + TypeScript | 웹 개발 범위. 폴더 준비, 앱 초기화 전 |
 | 모바일 앱 | [apps/mobile](apps/mobile/README.md) | Expo + React Native + TypeScript — 기존 선택 보존 | 3순위 보류. 폴더만 예약, 이번 초기화·개발·배포 제외 |
@@ -22,7 +22,7 @@
 
 ## 앱별 개발 기준
 
-사용자 웹은 Node.js 22·npm, 개발 포트 3100을 사용한다. CSS Modules·공통 토큰·재사용 UI·기능 모듈·데이터 어댑터로 구성하며, [개발 기준](apps/web/DEVELOPMENT.md)과 [실행 안내](apps/web/README.md)를 따른다. 로그인·회원가입·서비스 결제는 웹 MVP 1차에 포함하지 않는다. 실제 여행 API 연동은 아직 완료하지 않았다.
+사용자 웹은 Node.js 22·npm, 개발 포트 3100을 사용한다. CSS Modules·공통 토큰·재사용 UI·기능 모듈·데이터 어댑터로 구성하며, [개발 기준](apps/web/DEVELOPMENT.md)과 [실행 안내](apps/web/README.md)를 따른다. 로그인·회원가입·서비스 결제는 웹 MVP 1차에 포함하지 않는다. 사용자 키·접수·여행 조회·채팅·제안 선택·알림·여행 삭제·마이페이지(프로필·웹훅)는 실제 서버에 연결돼 있다. 연결 상태와 검증 근거는 [사용자 웹 연동](../wiki/external/web-screen-api.md)을 본다. 앱 문서의 구현 상태와 운영 검증을 구분한다..
 
 관리자 웹 초기화 시 다음을 정한다. 모바일 앱은 보류 상태다.
 

@@ -40,6 +40,18 @@ export function sendingOf(text: string): PlanCheckView {
   return { stage: "received", title: null, days: [], lines: parts.map((line, index) => ({ no: index + 1, text: line, read: false, found: null })), items: [], moves: [], dirty: false, rechecking: null };
 }
 
+/**
+ * `[2026-10-05 · 팀 develop 점검]` The year the server only ASSUMED (a date written without one - `how: "year_filled"`), or null when no date was. A date the customer set does not count.
+ * The plan check does not flag an assumed year (`flagged` below), so this is the one place that says it: 「해가 적혀 있지 않아 N년으로 두었어요」.
+ */
+export function assumedYear(view: IntakeView): string | null {
+  for (const row of rows(view)) {
+    const date = row.item.fields.date;
+    if (date && date.method !== "customer" && String(date.evidence.how) === "year_filled" && typeof date.value === "string" && /^\d{4}/.test(date.value)) return date.value.slice(0, 4);
+  }
+  return null;
+}
+
 /** A field the server flagged for a look — not one the customer set, nor a year or day it only assumed. */
 const flagged = (row: ReviewRow, names: readonly string[]) => names.map((name) => row.item.fields[name as keyof IntakeItem["fields"]])
   .filter((field) => field?.needs_review && field.method !== "customer" && !["year_filled", "day_offset"].includes(String(field.evidence.how)));
