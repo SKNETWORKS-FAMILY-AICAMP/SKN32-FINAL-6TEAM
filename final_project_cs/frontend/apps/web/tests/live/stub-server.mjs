@@ -200,7 +200,7 @@ function telegramChannelRefusal(body) {
 let attempts = new Map();
 // ── 동의 기록 (2026-10-05) ── 시작
 /** The terms version the page under test carries (`src/features/consent/terms-content.ts` `TERMS_VERSION`) - keep the two the same; a different one is what "server_ahead" plays. */
-const TERMS_VERSION = "2026-10-05";
+const TERMS_VERSION = "2026-10-05.1";
 const CONSENT_CODES = ["service_terms", "privacy", "sensitive", "location", "alert_channel"];
 const CONSENT_REQUIRED = ["service_terms", "privacy"];
 /** code → { agreed, version, at } - the latest line of the append-only record (the stub keeps only that; the requests it received are the log). */
