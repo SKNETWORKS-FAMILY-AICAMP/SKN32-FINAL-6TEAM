@@ -21,9 +21,9 @@ from uuid import uuid4
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.infrastructure.travel.base import TravelSources
-from app.infrastructure.travel.disruptions import DisruptionCheck
-from app.modules.travel_ops.case_engine import CaseEngine, cleanup_tenant
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+from app.domains.travel_ops.scenarios.case_engine import CaseEngine, cleanup_tenant
 
 from .test_case_version_day import SCENARIO, Clock, _at, _classifier, _extractor, _seed
 

@@ -12,10 +12,10 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.case_engine import cleanup_tenant
-from app.modules.travel_ops.itinerary import Item, TripStore
-from app.modules.travel_ops.pending import PendingStore, choose
-from app.modules.travel_ops.trip_desk import TripDesk
+from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
+from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+from app.domains.travel_ops.components.planning.pending import PendingStore, choose
+from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
 
 KST = ZoneInfo("Asia/Seoul")
 

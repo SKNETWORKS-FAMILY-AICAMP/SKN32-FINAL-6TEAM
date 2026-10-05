@@ -22,9 +22,9 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from app.core.contracts import NextAction
-from app.modules.travel_ops.activity import ActivityTeam
-from app.modules.travel_ops.itinerary import Item, item_to_dict
-from app.modules.travel_ops.itinerary_changes import ACTIVITY_RECHECK_LIMIT
+from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.components.itinerary.itinerary import Item, item_to_dict
+from app.domains.travel_ops.components.itinerary.itinerary_changes import ACTIVITY_RECHECK_LIMIT
 
 from ..helpers import FakeTools, pack, task
 
@@ -96,7 +96,7 @@ async def test_only_the_top_ranked_candidates_are_rechecked():
 async def test_when_the_budget_runs_out_first_a_candidate_not_checked_is_never_chosen(monkeypatch):
     """예산이 후보 점검보다 먼저 바닥나는 경우(한도를 풀어 둔 상태) — 못 본 곳은 **고르지 않는다**.
     전부 못 봤으면 변경안이 아니라 「못 풀었다」(escalate)로 끝난다 — 예외가 아니다."""
-    from app.modules.travel_ops.activity import team as team_module
+    from app.domains.travel_ops.instances.activity import team as team_module
 
     monkeypatch.setattr(team_module, "ACTIVITY_RECHECK_LIMIT", 50)
     monkeypatch.setattr(ActivityTeam.manifest, "max_steps", 4)      # 읽기 셋(일정 · 점검 · 목록) 뒤 후보 점검 한 번이면 끝

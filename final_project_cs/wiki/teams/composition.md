@@ -33,7 +33,7 @@ domain_note: 조립 기제는 도메인 무관이다. 예시로 커머스·여�
 
 | 컴포넌트 | 위치 | 필수 의존 |
 |---|---|---|
-| Case lifecycle · `transition_case()` | `app/core/transition.py`, `app/domain/{case,events}.py` | 상태 변경의 단일 진입점; API의 Case 생성·분류가 이벤트에 의존 |
+| Case lifecycle · `transition_case()` | `app/core/transition.py`, `app/core/case_lifecycle/{case,events}.py` | 상태 변경의 단일 진입점; API의 Case 생성·분류가 이벤트에 의존 |
 | 계약 모델 | `app/core/contracts.py` | Controller·Team·평가가 `TeamTask`·`TeamResult`·`TeamManifest`·`TeamModule`·`ContextPack`·`Evidence` 사용 |
 | Team Registry | `app/core/registry.py` | capability 해석의 유일한 경로 |
 | Context Broker | `app/core/context.py` | 12,000 토큰 예산·절삭·`degraded` 신호 |
@@ -78,7 +78,7 @@ domain_note: 조립 기제는 도메인 무관이다. 예시로 커머스·여�
 | 책임 | 위치 | 소유 |
 |---|---|---|
 | 호출 시점·실패 처리·상태 전이 | `app/application/classification.py` | 코어 1 |
-| 라벨 어휘·프롬프트·provider 호출 | `app/modules/travel_ops/feedback.py`(작업 트리. git 에는 아직 `customer_ops/feedback.py`) | 모델 |
+| 라벨 어휘·프롬프트·provider 호출 | `app/domains/travel_ops/components/core_hooks/feedback.py`(작업 트리. git 에는 아직 `customer_ops/feedback.py`) | 모델 |
 
 근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:112-152`
 
@@ -184,7 +184,25 @@ teams:
 
 ## 만드는 순서 · 공통 뼈대
 
-만드는 순서는 [build-order.md](build-order.md). 반복되는 네 가지를 조합형 유틸로 빼는 설계는 [common-utils.md](common-utils.md)에 있고 `[정정 2026-09-10]` 「아직 구현은 없다」(09-03)는 낡았다 — **`app/modules/travel_ops/_base.py` 가 생겼다**(작업 트리, 커밋 전). common-utils 설계의 네 가지를 다 담았는지는 대조하지 않았다.
+만드는 순서는 [build-order.md](build-order.md). 반복되는 네 가지를 조합형 유틸로 빼는 설계는 [common-utils.md](common-utils.md)에 있고 `[정정 2026-09-10]` 「아직 구현은 없다」(09-03)는 낡았다 — **`app/domains/travel_ops/instances/_shared/_base.py` 가 생겼다**(작업 트리, 커밋 전). common-utils 설계의 네 가지를 다 담았는지는 대조하지 않았다.
+
+## 폴더 구조
+
+`[2026-10-06]` 업무 도메인 코드는 `app/domains/<도메인>/` 에만 있고, 그 안을 위의 구성 단위대로 칸을 나눴다 — [D-CS-013](../decisions/D-CS-013-domain-folder-layout.md).
+
+```
+app/domains/travel_ops/
+├─ modules/      모듈 — 꺼도 나머지가 도는 기능 (web_account · mcp · live_progress)
+├─ instances/    인스턴스 — 에이전트 팀. 팀 하나 = 폴더 하나 (activity · dining · mobility · booking_handoff · locked + _shared)
+├─ components/   컴포넌트 — 빼면 여행 서비스가 안 도는 부품 (itinerary · planning · places · intake · conversation · actions · booking · watch · core_hooks)
+├─ ports/        Port — 바꿔 끼우는 자리 (notify_channels · data_sources)
+├─ entry/        고객 입구 — HTTP 경로
+└─ scenarios/    시연 · 하루 대조 시험용 조립
+```
+
+★위 「필수 컴포넌트」 표는 **플랫폼 코어**(여행을 모르는 공통 층 — `app/core` · `app/application` · `app/infrastructure` · `app/presentation`)의 필수 부품이다. 여행 묶음 안의 `components/` 는 **여행 서비스의 필수 부품**이라 층이 다르다.
+
+칸끼리 누가 누구를 부르는지는 `tests/architecture/test_travel_ops_cells.py` 가 센다. 2026-10-06 실측: 팀 → 다른 팀 속 **0** · 필수 부품 → 팀 속 14 · 필수 부품 → 끌 수 있는 기능 4 · 바꿔 끼우는 자리 → 웹 계정 2. 0 이 아닌 셋은 그날 수를 상한으로 박고 줄여 나간다 — 특히 **웹 계정 기능은 지금 실제로는 끌 수 없다**(일정 저장 · 대화 · 알림 발송이 게스트 제한 · 남용 방어를 부른다).
 
 ## 관계
 

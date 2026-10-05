@@ -8,7 +8,7 @@ import pytest
 from psycopg.types.json import Json
 
 from app.core.transition import OutboxMessage, transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db.session import get_connection
 from app.infrastructure.messaging.mock_payment_publisher import MockProviderPublisher
 from app.infrastructure.messaging.outbox import OutboxBrokerAdapter

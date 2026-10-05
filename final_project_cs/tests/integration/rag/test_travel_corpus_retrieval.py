@@ -146,7 +146,7 @@ def test_the_planner_grounds_a_request_in_travel_rules_only(preferences):
     """
     from datetime import date
 
-    from app.modules.travel_ops.planner import PlanRequest, ground_request, grounding_text
+    from app.domains.travel_ops.components.planning.planner import PlanRequest, ground_request, grounding_text
 
     found = ground_request(
         tenant_id="demo",
@@ -166,7 +166,7 @@ def test_grounding_never_reaches_into_the_commerce_corpus():
     """★상품 범위 밖의 말을 해도 쇼핑몰 문서를 끌어오면 안 된다."""
     from datetime import date
 
-    from app.modules.travel_ops.planner import PlanRequest, ground_request
+    from app.domains.travel_ops.components.planning.planner import PlanRequest, ground_request
 
     found = ground_request(
         tenant_id="demo",

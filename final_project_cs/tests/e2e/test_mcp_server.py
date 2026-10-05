@@ -22,7 +22,7 @@ import pytest
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
-from app.modules.travel_ops import mcp_server
+from app.domains.travel_ops.modules.mcp import mcp_server
 
 from .test_trip_api import _report, api  # noqa: F401 — 픽스처를 그대로 쓴다
 from .test_web_api import _fresh_limit_cache, _h, _session, _web_body  # noqa: F401

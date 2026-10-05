@@ -3,8 +3,8 @@
 식당이 그 일정 시각에 문을 여는지 판정한다. 관광공사 영업시간 원문을 구조로 바꿔 쌓고,
 코어가 읽는 `places.open_at_slot` 에 넣을 값을 계산한다.
 
-코어가 이 자리를 비워두고 있다. `modules/travel_ops/dining.py` 는 `open_at_slot` 한 칸만 읽어
-답을 만들고, `infrastructure/travel/tour_api.py` 는 `answers_open_at_slot=False` 로 원문만 넘긴다.
+코어가 이 자리를 비워두고 있다. `domains/travel_ops/instances/dining/`(그때 `modules/travel_ops/dining.py`) 는 `open_at_slot` 한 칸만 읽어
+답을 만들고, `domains/travel_ops/ports/data_sources/tour_api.py` 는 `answers_open_at_slot=False` 로 원문만 넘긴다.
 그 사이를 채우는 것이 이 저장소다.
 
 상태는 초안이다. 팀 합의와 코어 협의가 끝나지 않았다.
@@ -25,7 +25,7 @@ final_project_cs/
     206_dining_live_check.sql  현장 확인 기록과 물음 만들기
     207_dining_alternatives.sql 대체 후보 세 축
     208_dining_quality.sql     정답셋과 품질 측정
-  app/modules/travel_ops/dining/
+  app/domains/travel_ops/instances/dining/
     __init__.py                DiningTeam 재수출만
     team.py                    DiningTeam 본체
     ledger.py                  원장을 코어가 읽을 모양으로

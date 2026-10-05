@@ -21,7 +21,7 @@ from fastapi.testclient import TestClient
 
 from app.infrastructure.db.session import get_connection
 from app.presentation.api.app import create_app
-from app.modules.travel_ops.trip_api import build_trip_router
+from app.domains.travel_ops.entry.trip_api import build_trip_router
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
 
@@ -170,6 +170,17 @@ def test_unknown_files_are_refused_at_the_door_and_photos_need_a_reader(api):
     assert view["status"] == "fatal" and view["fatal"]["code"] == "unsupported_format", view
 
 
+def test_confirming_an_intake_that_could_not_be_read_is_a_409_not_a_server_error(api):
+    """★`[2026-10-05 팀 저장소 develop 을 읽고 가져온 수정]` 「읽지 못했어요」 접수에 「등록하고 관리 시작」을 눌러도 서버 오류(500)가 아니라 409 와 현재 상태를 돌려준다.
+    전에는 `_error(409, code, message, **{"status": …})` 가 `status` 를 두 번 받아 `TypeError` → 500 이었다(`trip_api._error` 의 `status` 를 위치 전용으로 고침)."""
+    client = _client()                                       # 받아쓰기 모델이 없어 사진은 읽지 못함(fatal)
+    headers = _key(client)
+    view = _send(client, headers, files=[("plan.png", PHOTO.read_bytes())])
+    assert view["status"] == "fatal", view
+    body = _confirm(client, headers, view["intake_id"], view["revision"], status=409)
+    assert body["error"]["code"] == "intake_not_ready" and body["error"]["status"] == "fatal", body
+
+
 def test_an_intake_is_yours_only(api):
     client = _client()
     mine = _key(client)
@@ -255,13 +266,14 @@ def test_unread_lines_are_pointed_at_by_the_model_and_places_are_looked_up(api):
     assert [i["date"] for i in items] == ["2026-10-15"] * 3
     # 장소 — 관광공사(서울 필터) 정확 일치 · 카카오로 이름을 찾아 관광공사에서 다시 확인
     places = [i["fields"]["place"] for i in items]
-    assert [(p["value"]["name"], p["evidence"]["source"]) for p in places] == [
-        ("경복궁", "tour_api"), ("토속촌삼계탕", "tour_api"), ("광장시장", "tour_api")]
+    # ★`[2026-10-05]` 「토속촌삼계탕」은 개발 DB 의 요식 원장에도 있어(관광공사 재수집으로 들어왔다) 원장이 먼저 찾을 수 있다 — 시험이 DB 내용에 기대지 않게 둘 다 허용한다
+    assert [(p["value"]["name"], p["evidence"]["source"]) for p in places][::2] == [("경복궁", "tour_api"), ("광장시장", "tour_api")]
+    assert (places[1]["value"]["name"], places[1]["evidence"]["source"]) in {("토속촌삼계탕", "tour_api"), ("토속촌삼계탕", "dining_ledger")}
     assert places[1]["needs_review"] and not places[0]["needs_review"]      # 이름이 원문과 다르다 → 확인
     assert places[1]["value"]["kind"] == "dining"
     # ★`[2026-09-28]` 종류 번호도 싣는다 — 없으면 운영시간 조회가 「필수 값 없음」으로 실패했다(ui 세션 실서버 시험)
-    assert [(p["value"]["content_id"], p["value"]["content_type_id"]) for p in places] == [
-        ("126508", "12"), ("2717339", "39"), ("264570", "38")]
+    assert [(p["value"]["content_id"], p["value"]["content_type_id"]) for p in places][::2] == [("126508", "12"), ("264570", "38")]
+    assert places[1]["value"]["content_id"] and places[1]["value"]["content_type_id"] == "39"
     assert all(area == "1" for _, area in tour.asked)                        # ★서울 밖으로 새지 않는다
     assert kakao.asked == ["토속촌"]                                           # 카카오는 관광공사에 없을 때만
 
@@ -294,7 +306,7 @@ def _full_client():
 
 def _stored(api, trip):
     """등록된 항목(내부 모양 — `detail` 포함). 공개 조회는 `detail` 을 싣지 않는다."""
-    from app.modules.travel_ops.itinerary import TripStore
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
     with get_connection() as conn:
         return TripStore(api["tenant"]).latest(conn, UUID(trip["trip_id"]))[1]
@@ -386,7 +398,7 @@ def test_an_unfound_place_is_fixed_by_name_or_left_without_a_place(api):
 
 
 def test_a_booking_number_is_carried_and_protects_the_item(api):
-    from app.modules.travel_ops.pending import protected_reason
+    from app.domains.travel_ops.components.planning.pending import protected_reason
 
     client, _, _ = _full_client()
     headers = _key(client)
@@ -458,8 +470,8 @@ def test_a_place_the_customer_fixed_is_never_used_for_another_customer(api):
     # ③ 누가 고쳤는지 모르는 옛 행(마이그레이션 038 앞에 쌓인 것 — 고객 번호가 없다)은 아무에게도 안 쓰인다: 조회는 고객 번호가 같은 행만 고른다.
     #    그런 행을 새로 만들 수도 없다(고객이 고친 행은 번호가 있어야 한다).
     import psycopg
-    from app.modules.travel_ops.intake.pipeline import SEED_ALIASES, load_aliases
-    from app.modules.travel_ops.intake.places import normalize
+    from app.domains.travel_ops.components.intake.pipeline import SEED_ALIASES, load_aliases
+    from app.domains.travel_ops.components.intake.places import normalize
 
     with get_connection() as conn:
         with pytest.raises(psycopg.errors.CheckViolation), conn.transaction(), conn.cursor() as cur:
@@ -475,7 +487,7 @@ def test_a_place_the_customer_fixed_is_never_used_for_another_customer(api):
 
 def test_the_survey_sent_with_confirm_is_checked_and_stays_on_the_trip(api):
     """★`[2026-09-28]` 「등록하고 관리 시작」에도 설문을 싣는다 — `/v1/web/trips` 와 같은 검사(`_create_trip`)."""
-    from app.modules.travel_ops.survey import SURVEY_VERSION
+    from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
 
     client, _, _ = _full_client()
     headers = _key(client)

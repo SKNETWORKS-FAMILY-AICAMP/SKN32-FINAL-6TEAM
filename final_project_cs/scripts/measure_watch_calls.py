@@ -23,8 +23,8 @@ sys.path.insert(0, ".")
 import httpx
 
 from app.core.settings import get_settings
-from app.infrastructure.travel.base import TravelSource, build_travel_sources
-from app.infrastructure.travel.disruptions import DisruptionCheck
+from app.domains.travel_ops.ports.data_sources.base import TravelSource, build_travel_sources
+from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
 
 KST = ZoneInfo("Asia/Seoul")
 calls: list[tuple[str, str, str]] = []

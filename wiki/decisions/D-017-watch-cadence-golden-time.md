@@ -185,7 +185,7 @@ v11 §7-C(1322줄) 「최소 84초, 기본 2분」과 **다르다** — v11 은 
 ## 근거
 
 - `[문서 근거]` v11 `program/plan/A-COP_구현계획서_v11.md` — 1322(최소 84초 · 기본 2분), 1332~1333(2분은 무료만, Places 2분이면 상품가 3.1배), 1444(한 스윕·한 여행 = 사건 하나), 1110(부분 반영 금지), 1558(사건당 LLM 3.03~4.06원), 1560(한 번 돌 때 5곳씩 돌아가며 확인)
-- `[코드 확인]` `final_project_cs/app/core/settings.py:154~` 소스별 하루 한도와 확인/미확인 주석, `app/infrastructure/travel/ratelimit.py:48` 간격 계산, `app/modules/travel_ops/trip_watch.py:31` 90분 창
+- `[코드 확인]` `final_project_cs/app/core/settings.py:154~` 소스별 하루 한도와 확인/미확인 주석, `app/domains/travel_ops/ports/data_sources/ratelimit.py:48` 간격 계산, `app/domains/travel_ops/components/watch/trip_watch.py:31` 90분 창
 - `[codex 검수 인용]` `install_sweeper_task.py:43`, `run_sweepers.py:82`, `ratelimit.py:72`, `trip_watch.py:59` · `:177`, `watch.py:95` · `:184~259`, `012_watch_observations.sql:16`
 - `[외부]` Google Maps Platform 가격표 https://developers.google.com/maps/billing-and-pricing/pricing · Places 필드 등급 https://developers.google.com/maps/documentation/places/web-service/data-fields · Routes 요금 https://developers.google.com/maps/documentation/routes/usage-and-billing (2026-09-15 조회)
 - `[사용자 제공]` 재난문자 하루 1,000건

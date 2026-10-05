@@ -18,9 +18,9 @@ import pytest
 
 from app.core.context import PolicyChunk
 from app.core.contracts import NextAction
-from app.modules.travel_ops.activity import ActivityTeam
-from app.modules.travel_ops.activity.similarity import preference_of, score
-from app.modules.travel_ops.replan import activity_candidates, choose
+from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.instances.activity.similarity import preference_of, score
+from app.domains.travel_ops.components.planning.replan import activity_candidates, choose
 
 from ..helpers import FakeTools, in_hours, pack, task
 
@@ -51,12 +51,12 @@ def test_the_first_field_outweighs_all_later_fields():
     assert score(ORIGIN["catalog_class"], same_class) > score(ORIGIN["catalog_class"], same_rest)
 
 
-def test_mobility_first_puts_the_district_first():
-    near = {"sigungu": "23"}
-    alike = {"lcls1": "VE"}
+def test_the_district_no_longer_counts_toward_similarity():
+    """★`[2026-10-05]` 구(시군구)는 점수에서 뺐다 — 같은 구의 먼 곳이 옆 구의 가까운 곳보다 앞서는 경계 문제(활동 팀 10/2 와 같은 이유)."""
     origin = ORIGIN["catalog_class"]
-    assert score(origin, near, "mobility") > score(origin, alike, "mobility")
-    assert score(origin, alike, "activity") > score(origin, near, "activity")
+    assert score(origin, {"sigungu": "23"}) == 0
+    assert score(origin, {"sigungu": "23"}, "mobility") == 0
+    assert score(origin, {"lcls1": "VE"}, "mobility") == score(origin, {"lcls1": "VE"}, "activity")
 
 
 def test_preference_follows_the_survey_priority():
@@ -81,7 +81,7 @@ def _candidates(similarity):
 def test_similar_place_comes_first_then_distance():
     best, alternates, rejected = choose(_candidates(partial(score, preference="activity")))
     assert not rejected
-    assert [best.key, *[c.key for c in alternates]] == ["far_alike", "near_other", "no_class"]
+    assert [best.key, *[c.key for c in alternates]] == ["far_alike", "no_class", "near_other"]   # 구는 안 본다 — 가까운 순
 
 
 def test_without_similarity_the_closest_wins_and_nobody_is_dropped():
@@ -142,10 +142,48 @@ def test_booking_change_has_a_registered_executor():
 # ── 비교 중 찾은 우리 쪽 약점 — 영업시간은 서울 시각으로 본다 ──────────
 def test_opening_hours_are_read_in_seoul_time_whatever_the_timezone():
     """같은 순간(서울 14:00)이 UTC 로 들어와도 「영업 중」. 전에는 05:00 으로 읽어 「영업 전」이었다."""
-    from app.modules.travel_ops.place_hours import fits
+    from app.domains.travel_ops.components.places.place_hours import fits
 
     attributes = {"hours": ["09:00", "18:00"]}
     in_utc = AT.astimezone(UTC)
     assert in_utc.hour == 5
     assert fits(attributes, in_utc, in_utc) is True
     assert fits(attributes, AT, AT) is True
+
+
+# ── ⑤ 이동 중요면 분류보다 거리 `[2026-10-05]` ─────────────────────
+def _preference_order(preference, distance_first):
+    places = [
+        _place("alike_far", lat=37.5740, lon=126.9800, cls={"lcls1": "VE", "lcls2": "VE01", "sigungu": "23"}),   # 약 445m · 비슷
+        _place("other_near", lat=37.5702, lon=126.9800, cls={"lcls1": "SH"}),                                    # 약 22m · 다른 종류
+    ]
+    out = activity_candidates(original=ORIGIN, places=places, start=AT, end=AT + timedelta(hours=1), causes=[],
+                              similarity=partial(score, preference=preference), distance_first=distance_first)
+    best, alternates, _ = choose(out)
+    return [best.key, *[c.key for c in alternates]]
+
+
+def test_activity_first_keeps_the_alike_place_in_front():
+    assert _preference_order("activity", False) == ["alike_far", "other_near"]
+
+
+def test_mobility_first_puts_the_nearest_place_in_front():
+    from app.domains.travel_ops.instances.activity.similarity import distance_first
+
+    assert distance_first("mobility") is True and distance_first("activity") is False and distance_first(None) is False
+    assert _preference_order("mobility", True) == ["other_near", "alike_far"]
+
+
+# ── ⑥ 추천 이유 한 줄 — 잰 값만 `[2026-10-05]` ─────────────────────
+def test_the_reason_line_states_only_measured_values():
+    from app.domains.travel_ops.components.planning.replan import alternate_record, reason_line
+
+    place = _place("p", lat=37.5740, lon=126.9800, cls={"lcls1": "VE", "lcls2": "VE01", "lcls3": "VE0199"})
+    line = reason_line(ORIGIN, place, 445.0, brand_nearby=False, opened=True)
+    assert line == "445m · 같은 중분류 · 영업 시간 확인"            # 소분류 값이 달라 중분류까지만 같다고 말한다
+    assert reason_line(ORIGIN, place, 1_250.0, brand_nearby=True, opened=None).startswith("1.2km · 같은 중분류 · 같은 브랜드(")
+    assert "영업" not in reason_line(ORIGIN, place, 445.0, brand_nearby=False, opened=None)   # 모르면 말하지 않는다
+    assert reason_line(None, {"catalog_class": None}, 80.0, brand_nearby=False, opened=False) == "80m"   # 분류를 모르면 말하지 않는다
+    out = activity_candidates(original=ORIGIN, places=[place], start=AT, end=AT + timedelta(hours=1), causes=[],
+                              similarity=partial(score, preference="activity"))
+    assert alternate_record(out[0])["reason"].startswith("445m")

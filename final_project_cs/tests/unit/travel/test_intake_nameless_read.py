@@ -14,10 +14,10 @@ from __future__ import annotations
 
 from datetime import date
 
-from app.modules.travel_ops.intake.areas import AreaIndex
-from app.modules.travel_ops.intake.pipeline import read_source
-from app.modules.travel_ops.intake.places import normalize
-from app.modules.travel_ops.intake.terms import load_terms
+from app.domains.travel_ops.components.intake.areas import AreaIndex
+from app.domains.travel_ops.components.intake.pipeline import read_source
+from app.domains.travel_ops.components.intake.places import normalize
+from app.domains.travel_ops.components.intake.terms import load_terms
 
 AREAS = AreaIndex.from_rows([("hub", "성수", 37.5449, 127.0512), ("hub", "서울역", 37.5569, 126.9749)], load_terms())
 TODAY = date(2026, 10, 3)

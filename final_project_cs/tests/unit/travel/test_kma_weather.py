@@ -10,9 +10,9 @@ from datetime import datetime
 import httpx
 import pytest
 
-from app.infrastructure.travel.kma import (
+from app.domains.travel_ops.ports.data_sources.kma import (
     KST, KmaWeather, latest_issue, parse_precipitation, to_grid)
-from app.infrastructure.travel.weather_chain import FallbackWeather
+from app.domains.travel_ops.ports.data_sources.weather_chain import FallbackWeather
 
 NOW = datetime(2026, 9, 14, 9, 30, tzinfo=KST)
 

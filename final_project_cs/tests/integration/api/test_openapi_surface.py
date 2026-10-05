@@ -31,7 +31,7 @@ CONTRACT_V1_PATHS = {
     "/v1/cases/{case_id}/messages",
     "/v1/cases/{case_id}/actions/{action_id}/approve",
     "/v1/outbox/{message_id}/resolve",
-    # ★2026-09-14 여행 API(`app/modules/travel_ops/trip_api.py`) — 등록·조회·신고·재요청.
+    # ★2026-09-14 여행 API(`app/domains/travel_ops/entry/trip_api.py`) — 등록·조회·신고·재요청.
     #   scope `trip:read`·`trip:write`, 등록은 request_id 멱등, 신고·재요청은 원인 칸의
     #   request_id 로 중복을 막는다.
     "/v1/trips",
@@ -41,13 +41,13 @@ CONTRACT_V1_PATHS = {
     "/v1/trips/{trip_id}/rollback",
     # ★2026-09-14 고객 자유 문장 → Case → 분류 → 여행 창구
     "/v1/trips/{trip_id}/messages",
-    # ★★2026-09-22 **일정 생성**(`app/modules/travel_ops/planner.py`) — 요청 → 초안 → 판정
+    # ★★2026-09-22 **일정 생성**(`app/domains/travel_ops/components/planning/planner.py`) — 요청 → 초안 → 판정
     #   통과 → (`register:true` 면) 등록. scope `trip:write`, 등록까지 가면 `/v1/trips` 와
     #   **같은 멱등 키**를 쓴다. 이 경로는 v11 §4-A(「계획 생성은 우리 일이 아니다」)를
     #   뒤집는 것이고, 사용자 지시로 만들었다 —
     #   `wiki/records/reports/2026-09-22_2205_일정생성기_v11-4A를_뒤집는다.md`.
     "/v1/trips/plan",
-    # ★2026-09-22 위임(`app/modules/travel_ops/delegation_api.py`) — 승인 뒤 자동 실행을
+    # ★2026-09-22 위임(`app/domains/travel_ops/entry/delegation_api.py`) — 승인 뒤 자동 실행을
     #   여는 둘째 문을 주고 거두는 자리. scope `delegation:read`·`delegation:write`
     #   (`action:approve` 와 나눈다 — 승인은 제안 한 건, 위임은 거둘 때까지 서 있는 권한),
     #   상태 변경은 누가·왜 를 필수로 받고 `delegation_events`(021)에 덧붙여 기록한다.

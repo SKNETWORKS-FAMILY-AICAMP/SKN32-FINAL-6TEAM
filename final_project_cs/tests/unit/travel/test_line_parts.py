@@ -18,9 +18,9 @@ from __future__ import annotations
 
 import pytest
 
-from app.modules.travel_ops.intake.areas import AreaIndex
-from app.modules.travel_ops.intake.line_parts import parse
-from app.modules.travel_ops.intake.terms import Terms, category_label, load_terms
+from app.domains.travel_ops.components.intake.areas import AreaIndex
+from app.domains.travel_ops.components.intake.line_parts import parse
+from app.domains.travel_ops.components.intake.terms import Terms, category_label, load_terms
 
 #: 실제 지명 사전의 모양을 흉내 낸 작은 사전 — (출처, 이름, 위도, 경도)
 ROWS = [

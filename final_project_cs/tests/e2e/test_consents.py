@@ -24,7 +24,7 @@ from uuid import uuid4
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import consents
+from app.domains.travel_ops.modules.web_account import consents
 
 from .test_guest_and_trip_delete import _customer_of, _link, _make_trip
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
@@ -34,7 +34,9 @@ from .test_web_cookie_session import WEB, _guest, cookies  # noqa: F401
 
 SHA = "a" * 64
 SHA2 = "b" * 64
-VERSION = "2026-10-05"
+# ★`[2026-10-05]` 설정에서 읽는다 — 상수로 박아 두었더니 약관 버전을 올린 커밋(2026-10-05.1)에서 21건이 한꺼번에 깨졌다.
+#   약관 버전은 웹 `TERMS_VERSION` 과 같이 올리는 값이라 시험이 따라가야 한다.
+VERSION = consents.get_guardrails().get("consent.terms_version")
 
 
 @pytest.fixture()

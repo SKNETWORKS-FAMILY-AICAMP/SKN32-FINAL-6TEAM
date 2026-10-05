@@ -455,6 +455,14 @@ def main() -> int:
         say("!!", "채점 실패")
         return 1
 
+    # ★`[2026-10-05]` 인허가(사업자 등록) 영업 식당을 이름 찾기용 표에 적재한다(`load_license.py`). 인허가 CSV 가 없으면 건너뛴다 —
+    #   없어도 원장은 쓸 수 있다(이름 찾기가 원장까지만 간다). 실패해도 재적재를 실패로 치지 않는다.
+    if args.target == "core" and glob.glob(os.path.join(os.path.dirname(ROOT), "datasets", "dining", "raw", "서울시 일반음식점 인허가 정보_*.csv")):
+        loaded = subprocess.run([sys.executable, os.path.join(HERE, "load_license.py")], capture_output=True, text=True,
+                                encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
+        last = ((loaded.stdout or "") + (loaded.stderr or "")).strip().splitlines()[-1:] or [""]
+        say("OK" if loaded.returncode == 0 else "!!", f"인허가 식당 적재 {last[0]}")
+
     print()
     say("OK", f"{time.time() - started:.0f}초 걸렸다")
     print()

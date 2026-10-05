@@ -50,4 +50,4 @@ Mobility(이동) 팀이 쓰는 데이터를 모으는 자리다(2026-09-29 신�
 | `DATA_IN_GIT.md` | 올린 21파일 상세 — 읽는 코드 · 열 뜻 · 한 행 예시 · 원자료 · 생성 스크립트 · 등급 · 줄인 방법 · 검증 | 올림 |
 | `DATA_NOT_IN_GIT.md` | 안 올린 것 — 원자료 · 개인 실측 · 라우터 캐시 · 로그 · 줄인 판에서 뺀 열·행 · 이유 · 드라이브 위치 | 올림 |
 
-**읽는 코드**: `final_project_cs/app/modules/travel_ops/mobility/engine/paths.py` — 명령줄·시험은 `.env` 의 `DATA_DIR` 이 없으면 이 폴더(`datasets/mobility/processed`)를 자동으로 쓴다(pull 만 하면 `pytest tests/unit/travel/mobility` 회귀 게이트가 skip 없이 돈다). 서버는 `.env` 에 `ACOP_MOBILITY_DATA_DIR=datasets/mobility/processed`(마지막 폴더 이름이 `processed` 면 그 자리를 그대로 자료 폴더로 본다).
+**읽는 코드**: `final_project_cs/app/domains/travel_ops/instances/mobility/engine/paths.py` — 명령줄·시험은 `.env` 의 `DATA_DIR` 이 없으면 이 폴더(`datasets/mobility/processed`)를 자동으로 쓴다(pull 만 하면 `pytest tests/unit/travel/mobility` 회귀 게이트가 skip 없이 돈다). 서버는 `.env` 에 `ACOP_MOBILITY_DATA_DIR=datasets/mobility/processed`(마지막 폴더 이름이 `processed` 면 그 자리를 그대로 자료 폴더로 본다).

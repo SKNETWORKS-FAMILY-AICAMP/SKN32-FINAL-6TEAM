@@ -47,7 +47,7 @@ Core가 도메인을 모른다는 것을 지킨다. **Pack 교체 가능성의 �
 |---|---|---|---|
 | `INV-CS-ARCH-001` | Core 계층은 도메인 어휘에 의존하지 않는다 | automated | `tests/architecture/test_basement_is_domain_free.py::test_basement_layers_do_not_know_the_business_domain` |
 | `INV-CS-ARCH-002` | Core 파일은 도메인 모듈을 import하지 않는다 | automated | `tests/architecture/test_basement_is_domain_free.py::test_no_basement_file_imports_a_domain_module` |
-| `INV-CS-ARCH-003` | Core는 `app/modules`를 import하지 않는다 | automated | `tests/contract/test_core_isolation.py::test_core_does_not_import_modules` |
+| `INV-CS-ARCH-003` | Core는 `app/domains`를 import하지 않는다 | automated | `tests/contract/test_core_isolation.py::test_core_does_not_import_modules` |
 | `INV-CS-ARCH-004` | 도메인 어휘 예외 목록은 작게 유지된다 | automated | `tests/architecture/test_basement_is_domain_free.py::test_allow_list_stays_small` |
 | `INV-CS-ARCH-005` | 엔진 소스에 도메인 어휘가 없다 | automated | `tests/architecture/test_engine_serves_another_domain.py::test_engine_source_has_no_domain_vocabulary` |
 | `INV-CS-ARCH-006` | 도메인 모듈은 자기 도메인을 알아도 된다 | automated | `tests/architecture/test_basement_is_domain_free.py::test_domain_modules_are_allowed_to_know_their_domain` |
@@ -69,7 +69,7 @@ DOMAIN_WORDS = (
 )
 ```
 
-★**도메인이 바뀌면 새 어휘를 여기 넣는 것까지가 교체다.** `[실측 2026-09-10]` 2026-09-08 에 도메인을 갈면서 `app/modules/travel_ops/` 만 만들고 이 목록은 안 늘렸다 — 그래서 **`booking_id` 가 코어로 새도 검사가 울지 않는 상태**였다.
+★**도메인이 바뀌면 새 어휘를 여기 넣는 것까지가 교체다.** `[실측 2026-09-10]` 2026-09-08 에 도메인을 갈면서 `app/domains/travel_ops/` 만 만들고 이 목록은 안 늘렸다 — 그래서 **`booking_id` 가 코어로 새도 검사가 울지 않는 상태**였다.
 
 ★**옛 어휘를 지우지 않는다.** 커머스 코드가 저장소에서 나갔어도 커머스 낱말이 코어에 들어오면 안 되는 것은 그대로다. **목록은 도메인마다 누적된다.**
 
@@ -383,7 +383,7 @@ python program/scripts/check_wiki.py
 
 | | 실측 |
 |---|---|
-| `travel_ops/_base.py:35` | **`from app.tools.read_tools import ReadToolbox`** — import 한다 |
+| `travel_ops/instances/_shared/_base.py:35` | **`from app.tools.read_tools import ReadToolbox`** — import 한다 |
 | `_base.py:68` `_read()` | `self.tools.call(...)` 로 **직접 부른다** |
 | 이 기준을 검사하는 테스트 | **없다.** `tests/architecture/` 에 `app.tools`·`ReadToolbox` 를 보는 검사가 0건 |
 

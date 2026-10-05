@@ -15,7 +15,7 @@
   **"테스트가 증명한다" 는 서술**이었다. 그래서 판정을 뒤집지 않고 근거를 만든다.
 
 ★**`feedback.py` 를 일부러 뺀다 — 여기서 한 번 오진했다.**
-  처음엔 `app/modules/**` 를 통째로 훑어 위반 2건이 나왔다
+  처음엔 `app/domains/**` 를 통째로 훑어 위반 2건이 나왔다
   (`app.presentation.security` 의 `masked`, 지연 `openai` import). 그런데
   이 파일은 **manifest 가 없다 — Team 이 아니다.** 인라인 분류의 라벨 어휘·
   프롬프트 구현이고 소유가 코어 1 쪽이다(`CLAUDE.md` §5, v9 §3-A).
@@ -32,10 +32,13 @@ import pytest
 from app.core.contracts import ToolNotAllowed
 from app.tools.read_tools import ReadToolbox
 
-MODULES_ROOT = Path("app/modules")
+MODULES_ROOT = Path("app/domains")
 
 #: Team 이 직접 부르면 안 되는 것들. tool 은 Registry 가 넘겨준 것만 쓴다.
-FORBIDDEN_ROOTS = ("app.infrastructure", "psycopg", "openai", "app.presentation", "app.application")
+#: ★`[2026-10-06]` 여행 외부 데이터 소스가 `app.infrastructure.travel` 에서 `app.domains.travel_ops.ports`
+#:  (D-CS-013 Port 칸)로 옮겨 왔다. 이 줄을 안 더하면 「팀은 바깥 데이터 코드를 직접 부르지 않는다」가 조용히 풀린다.
+FORBIDDEN_ROOTS = ("app.infrastructure", "app.domains.travel_ops.ports", "psycopg", "openai", "app.presentation",
+                   "app.application")
 
 
 def _team_modules() -> list[Path]:
@@ -63,7 +66,7 @@ def _relative(path: str | Path) -> Path:
 def _declared_team_files() -> dict[str, Path]:
     """등록 문자열이 가리키는 클래스가 **실제로 정의된 파일**.
 
-    ★2026-09-28 — 전에는 `app.modules.travel_ops.activity` 를 `activity.py` 로
+    ★2026-09-28 — 전에는 `app.domains.travel_ops.instances.activity` 를 `activity.py` 로
       바꿔 찾았다. Team 을 폴더(`activity/team.py` 나 `activity/__init__.py`)로
       옮기면 그 파일이 없어 이 검사가 실패했다. 파일 하나든 폴더든 같은 등록
       문자열로 부르므로, 경로를 짐작하지 않고 클래스를 불러와 정의된 곳을 묻는다.
@@ -94,7 +97,7 @@ def _team_package_files() -> list[Path]:
     """
     out: set[Path] = set()
     for ref, path in _declared_team_files().items():
-        team_name = ref.split(":")[0].rsplit(".", 1)[-1]           # app.modules.travel_ops.mobility → mobility
+        team_name = ref.split(":")[0].rsplit(".", 1)[-1]           # app.domains.travel_ops.instances.mobility → mobility
         base = path.parent.parent if path.parent.name == team_name else path.parent
         for folder in (base / team_name, base / f"{team_name}_engine"):
             if folder.is_dir() and folder != MODULES_ROOT:

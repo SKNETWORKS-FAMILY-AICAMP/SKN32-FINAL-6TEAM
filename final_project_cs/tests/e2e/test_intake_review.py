@@ -19,11 +19,11 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import op_stream
-from app.modules.travel_ops.intake import autofix as autofix_module
-from app.modules.travel_ops.intake import candidates as candidates_module
-from app.modules.travel_ops.intake import review as review_module
-from app.modules.travel_ops.trip_api import build_trip_router
+from app.domains.travel_ops.modules.live_progress import op_stream
+from app.domains.travel_ops.components.intake import autofix as autofix_module
+from app.domains.travel_ops.components.intake import candidates as candidates_module
+from app.domains.travel_ops.components.intake import review as review_module
+from app.domains.travel_ops.entry.trip_api import build_trip_router
 from app.presentation.api.app import create_app
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
@@ -78,7 +78,7 @@ class Kakao:
         if query.startswith("올리브영"):
             hits = [b for b in self.BRANCHES if query == "올리브영" or query.replace(" ", "") in b["name"].replace(" ", "")]
             if near is not None:
-                from app.modules.travel_ops.intake.places import distance_m
+                from app.domains.travel_ops.components.intake.places import distance_m
 
                 hits = sorted(hits, key=lambda b: distance_m(near[0], near[1], b["latitude"], b["longitude"]))
             return hits
@@ -337,7 +337,7 @@ def test_a_locked_item_is_registered_as_customer_pinned(rv):
     done = client.post(f"/v1/web/trip-intakes/{locked['intake_id']}/confirm", headers=headers,
                        json={"revision": locked["revision"]})
     assert done.status_code == 200, done.text
-    from app.modules.travel_ops.itinerary import TripStore
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
     with get_connection() as conn:
         items = TripStore(rv["tenant"]).latest(conn, UUID(done.json()["trip"]["trip_id"]))[1]
@@ -539,7 +539,7 @@ def test_reading_runs_once_per_intake_and_the_view_never_shows_internal_keys(rv)
     client, _, _ = _client()
     headers = _key(client)
     view = _send(client, headers)
-    from app.modules.travel_ops.intake import pipeline
+    from app.domains.travel_ops.components.intake import pipeline
 
     def claim_count():
         with get_connection() as conn, conn.cursor() as cur:
@@ -577,7 +577,7 @@ def test_no_response_shows_the_internal_place_row_number_and_the_reason_a_fix_wa
 
 
 def test_only_one_worker_reads_an_intake_and_a_second_start_changes_nothing(rv):
-    from app.modules.travel_ops.intake import pipeline
+    from app.domains.travel_ops.components.intake import pipeline
 
     with get_connection() as conn:
         intake_id = pipeline.open_intake(conn, tenant_id=rv["tenant"], customer_id=rv["customer"], text=PLAN, files=[])
@@ -600,8 +600,8 @@ def test_only_one_worker_reads_an_intake_and_a_second_start_changes_nothing(rv):
 
 
 def test_an_intake_whose_reader_died_is_closed_as_failed_instead_of_reading_forever(rv):
-    from app.modules.travel_ops.intake import pipeline
-    from app.modules.travel_ops.web_session import resolve
+    from app.domains.travel_ops.components.intake import pipeline
+    from app.domains.travel_ops.modules.web_account.web_session import resolve
 
     client, _, _ = _client()
     headers = _key(client)
@@ -621,7 +621,7 @@ def test_an_intake_whose_reader_died_is_closed_as_failed_instead_of_reading_fore
 def test_a_worker_that_was_given_up_on_stops_writing_and_a_live_worker_keeps_its_intake_alive(rv):
     import time
 
-    from app.modules.travel_ops.intake import pipeline
+    from app.domains.travel_ops.components.intake import pipeline
 
     with get_connection() as conn:
         intake_id = pipeline.open_intake(conn, tenant_id=rv["tenant"], customer_id=rv["customer"], text=PLAN, files=[])
@@ -820,7 +820,7 @@ def test_the_feed_works_on_half_read_values_and_never_repeats_what_it_already_se
     """읽는 동안(값이 일부만 적힌 상태)에도 내용 이벤트가 예외 없이 만들어지고, 같은 상태는 다시 보내지 않는다."""
     from datetime import date
 
-    from app.modules.travel_ops.intake import pipeline, stream
+    from app.domains.travel_ops.components.intake import pipeline, stream
 
     tour, kakao = Tour(), Kakao()
     with get_connection() as conn:
@@ -859,7 +859,7 @@ def test_the_feed_works_on_half_read_values_and_never_repeats_what_it_already_se
 
 
 def test_the_stream_keeps_the_stage_events_when_the_content_step_fails(rv, monkeypatch):
-    from app.modules.travel_ops.intake import stream
+    from app.domains.travel_ops.components.intake import stream
 
     client, _, _ = _client()
     headers = _key(client)
@@ -877,7 +877,7 @@ def test_content_events_are_made_while_reading_not_at_the_end(rv):
     """읽는 동안 값이 **바로바로** 적힌다 — 규칙으로 읽은 줄 → 날짜 → 이름이 특정된 장소가 하나씩 → 모호한 장소는 앞뒤가 다 찾아진 뒤."""
     from datetime import date
 
-    from app.modules.travel_ops.intake.pipeline import read_source
+    from app.domains.travel_ops.components.intake.pipeline import read_source
 
     tour, kakao = Tour(), Kakao()
     batches: list[list[dict]] = []

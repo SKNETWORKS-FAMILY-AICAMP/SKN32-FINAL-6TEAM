@@ -11,9 +11,9 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from app.infrastructure.travel.subway_notice import (CompositeRouteEvents, SubwayNotices, SubwayRouteEvents,
+from app.domains.travel_ops.ports.data_sources.subway_notice import (CompositeRouteEvents, SubwayNotices, SubwayRouteEvents,
                                                      is_nonstop_start, mentions_station)
-from app.infrastructure.travel.utic import UticIncidents, UticRouteEvents
+from app.domains.travel_ops.ports.data_sources.utic import UticIncidents, UticRouteEvents
 
 KST = ZoneInfo("Asia/Seoul")
 NOW = datetime(2026, 9, 22, 21, 30, tzinfo=KST)

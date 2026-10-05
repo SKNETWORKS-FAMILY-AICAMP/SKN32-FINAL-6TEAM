@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """웹 브라우저 세션(HttpOnly 쿠키) — 발급 · 수명 · CSRF · 로그아웃 · 옛 키 옮기기 · 소셜 로그인 교환 · 쿠키와 키 동시. `[2026-10-04 사용자 결정 — D-CS-011]`
 
-계약: `wiki/external/rest-endpoints.md` 「브라우저 세션 쿠키」 · 구현 `app/modules/travel_ops/web_cookie.py` · `web_auth_api.py` · 저장 044 `web_sessions`.
+계약: `wiki/external/rest-endpoints.md` 「브라우저 세션 쿠키」 · 구현 `app/domains/travel_ops/modules/web_account/web_cookie.py` · `web_auth_api.py` · 저장 044 `web_sessions`.
 
 ★지키려는 것
  ①게스트 세션은 쿠키로만 간다 — 응답 몸통에 키가 없다. 쿠키는 HttpOnly · SameSite=Lax · Path=/ · **Domain 없음**, 운영(https)은 `__Host-` + Secure, 개발(http)은 접두 없이
@@ -25,10 +25,11 @@ from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import web_cookie, web_guard
-from app.modules.travel_ops.trip_api import build_trip_router
-from app.modules.travel_ops.web_auth_api import build_auth_router
-from app.modules.travel_ops.web_session import issue
+from app.domains.travel_ops.modules.web_account import web_cookie
+from app.domains.travel_ops.modules.web_account import web_guard
+from app.domains.travel_ops.entry.trip_api import build_trip_router
+from app.domains.travel_ops.modules.web_account.web_auth_api import build_auth_router
+from app.domains.travel_ops.modules.web_account.web_session import issue
 from app.presentation.api.app import create_app
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다

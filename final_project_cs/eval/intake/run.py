@@ -55,7 +55,7 @@ class Memo:
 
 
 def _norm(text: str | None) -> str:
-    from app.modules.travel_ops.intake.places import normalize
+    from app.domains.travel_ops.components.intake.places import normalize
 
     return normalize(text or "")
 
@@ -64,19 +64,19 @@ def run(only: set[str] | None = None) -> dict:
     from app.core.settings import get_settings
     from app.infrastructure.db.session import get_connection
     from app.infrastructure.ollama_chat import from_settings
-    from app.infrastructure.travel.base import build_travel_sources
-    from app.infrastructure.travel.call_budget import CallBudget, kakao_caps
-    from app.infrastructure.travel.kakao_local import KakaoLocal
-    from app.modules.travel_ops.intake.assemble import assemble
-    from app.modules.travel_ops.intake.pipeline import _our_places, load_aliases, read_source
-    from app.modules.travel_ops.intake.sources import to_text
+    from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+    from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget, kakao_caps
+    from app.domains.travel_ops.ports.data_sources.kakao_local import KakaoLocal
+    from app.domains.travel_ops.components.intake.assemble import assemble
+    from app.domains.travel_ops.components.intake.pipeline import _our_places, load_aliases, read_source
+    from app.domains.travel_ops.components.intake.sources import to_text
 
     settings = get_settings()
     chat = from_settings(settings)
     place_source = build_travel_sources(settings).place
     # ★평가 실행 한 번이 관광공사를 수십 번 부른다 — 몰림 허용 30 으로는 뒤쪽이 「막힘」이 된다(첫 실행에서 봤다).
     #   이 실행에서만 몰림 200 · 하루 합계는 설정값(`rate_tour_api_per_day`) 그대로 지킨다(`interval_for`)
-    from app.infrastructure.travel.ratelimit import RateLimiter, interval_for
+    from app.domains.travel_ops.ports.data_sources.ratelimit import RateLimiter, interval_for
     per_day = settings.rate_tour_api_per_day
     place_source._limiter = RateLimiter(intervals={"tour_api": interval_for(per_day, burst=200)},
                                         bursts={"tour_api": 200})

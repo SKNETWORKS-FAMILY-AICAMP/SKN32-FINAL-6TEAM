@@ -3,15 +3,15 @@
 
 사용(실행은 키를 가진 사람이 **자기 PC 에서** 한다):
     # 1) 먼저 2건만 호출해서 키·응답이 정상인지 본다
-    python -m app.modules.travel_ops.activity.data_processing.fetch_tourapi_details --max-calls 2
+    python -m app.domains.travel_ops.instances.activity.data_processing.fetch_tourapi_details --max-calls 2
     # 2) 나머지를 받는다. 하루 한도에 걸려 멈추면 다음 날 같은 명령을 다시 돌린다
-    python -m app.modules.travel_ops.activity.data_processing.fetch_tourapi_details
+    python -m app.domains.travel_ops.instances.activity.data_processing.fetch_tourapi_details
     # 3) 호출 없이 이미 받은 것만으로 CSV 를 다시 만든다
-    python -m app.modules.travel_ops.activity.data_processing.fetch_tourapi_details --build-only
+    python -m app.domains.travel_ops.instances.activity.data_processing.fetch_tourapi_details --build-only
 
-입력(기본값): app/modules/travel_ops/activity/data_processing/tourapi_{oliveyoung,daiso,artbox}_seoul.csv
-출력:         app/modules/travel_ops/activity/data_processing/tourapi_{…}_seoul_enriched.csv (20컬럼)
-캐시:         app/modules/travel_ops/activity/data_processing/tourapi_details_cache.jsonl — 받은 상세 응답 원본. **재개의 근거**다.
+입력(기본값): app/domains/travel_ops/instances/activity/data_processing/tourapi_{oliveyoung,daiso,artbox}_seoul.csv
+출력:         app/domains/travel_ops/instances/activity/data_processing/tourapi_{…}_seoul_enriched.csv (20컬럼)
+캐시:         app/domains/travel_ops/instances/activity/data_processing/tourapi_details_cache.jsonl — 받은 상세 응답 원본. **재개의 근거**다.
 
 ★왜 장소마다 호출하는가. 검색 결과에는 개요·홈페이지·영업시간이 없다. `detailCommon2`
   (개요·홈페이지·전화)와 `detailIntro2`(영업시간·휴무)는 한 번에 장소 하나만 받는다 —

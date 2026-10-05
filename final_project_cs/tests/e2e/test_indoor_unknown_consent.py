@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.pending import (CONSENT_KEY, CONSENT_REASON, PendingStore, ProposalRefused, choose,
+from app.domains.travel_ops.components.planning.pending import (CONSENT_KEY, CONSENT_REASON, PendingStore, ProposalRefused, choose,
                                             needs_consent)
 
 from .test_trip_api import SCENARIO, _body, _detail, _slot, api  # noqa: F401 — 픽스처를 그대로 쓴다
@@ -78,6 +78,7 @@ def test_saying_change_computes_options_then_choosing_applies(api):
     assert reopened["status"] == "open" and reopened["reason"] == f"{CONSENT_REASON}_options"
     names = [o["name"] for o in reopened["options_json"]]
     assert "아쿠아리움" in names
+    assert all(o.get("reason") for o in reopened["options_json"])      # ★`[2026-10-05]` 안마다 추천 이유 한 줄(잰 값만 — 화면 표시는 ui 몫)
     assert api["notices"]()[-1][1]["type"] == "proposal_request"   # 안 1·2·3을 보이는 알림
 
     pick = next(o["key"] for o in reopened["options_json"] if o["name"] == "아쿠아리움")
@@ -293,6 +294,46 @@ def test_catalog_candidates_use_the_hours_already_read_in_the_db(api):
         assert options["시험 열린 전시관"]["catalog_place"]["attributes"]["hours_week"]["mon"]["open"] == "00:00"
         if "시험 모르는 전시관" in options:
             assert any("영업" in w for w in options["시험 모르는 전시관"].get("warnings", []))
+    finally:
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("DELETE FROM catalog_hours WHERE tenant_id=%s", (api["tenant"],))
+            cur.execute("DELETE FROM place_catalog WHERE tenant_id=%s", (api["tenant"],))
+
+
+def test_a_brand_store_is_offered_and_registered_without_a_tourism_number(api):
+    """★`[2026-10-05]` 브랜드 매장(관광공사에 없는 곳)도 대체 후보로 나온다. 고르면 그 여행 전용 장소가 되지만 **관광공사 번호
+    (`source_content_id`)는 달지 않는다** — 달면 관광공사 상세 조회가 `OY…` 번호로 불린다. 브랜드는 장소 목록 조인으로 다시 붙는다."""
+    import json as _json
+
+    week = {day: {"open": "00:00", "close": "23:59", "last_entry": None}
+            for day in ("mon", "tue", "wed", "thu", "fri", "sat", "sun")}
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("INSERT INTO place_catalog (tenant_id, source, content_id, content_type_id, title, latitude, longitude, "
+                    "raw_json) VALUES (%s,'oliveyoung','OY-TEST-1','38','시험 올리브영 잠실점',%s,%s,%s)",
+                    (api["tenant"], 37.5141, 127.1030,
+                     _json.dumps({"lclsSystm1": "SH", "lclsSystm2": "SH04", "lclsSystm3": "SH040100",
+                                  "sigungucode": "18", "brand": "올리브영"})))
+        cur.execute("INSERT INTO catalog_hours (tenant_id, source, content_id, hours_week, hours_read, read_at) "
+                    "VALUES (%s,'oliveyoung','OY-TEST-1',%s,%s, now())",
+                    (api["tenant"], _json.dumps(week), _json.dumps({"method": "csv_rule"})))
+    try:
+        trip_id = _create_with(api, {"payment": "card"}, request_id="brand-store")
+        api["tick"]("09:00")
+        [asked] = _proposals(api, trip_id)
+        _choose(api, trip_id, asked["proposal_id"], CONSENT_KEY)
+        [proposal] = _proposals(api, trip_id)
+        option = next(o for o in proposal["options_json"] if o["name"] == "시험 올리브영 잠실점")
+        attributes = option["catalog_place"]["attributes"]
+        assert attributes["catalog_source"] == "oliveyoung" and attributes["brand_content_id"] == "OY-TEST-1"
+        assert "source_content_id" not in attributes                      # ★관광공사 번호가 아니다
+        assert option["catalog_place"]["weather_sensitive"] is False      # 전문매장 → 실내
+
+        chosen = _choose(api, trip_id, proposal["proposal_id"], option["key"])
+        assert chosen["status"] == "chosen"
+        with get_connection() as conn:
+            registered = next(p for p in api["store"].places(conn, trip_id) if p["name"] == "시험 올리브영 잠실점")
+        assert registered["catalog_class"]["brand"] == "올리브영"          # 조인으로 브랜드가 다시 붙는다
+        assert registered["attributes"].get("source_content_id") is None
     finally:
         with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("DELETE FROM catalog_hours WHERE tenant_id=%s", (api["tenant"],))

@@ -5,9 +5,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.itinerary_changes import ItineraryChange, NoChange, plan_route_adjustment
-from app.modules.travel_ops.mobility import wiring
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, NoChange, plan_route_adjustment
+from app.domains.travel_ops.instances.mobility import wiring
 
 T = lambda hm: datetime.fromisoformat(f"2026-10-07T{hm}:00+09:00")  # noqa: E731
 

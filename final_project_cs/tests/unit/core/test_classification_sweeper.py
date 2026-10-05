@@ -7,7 +7,7 @@ from uuid import uuid4
 from app.application import classification
 from app.application.classification_sweeper import sweep_stuck_classifying
 from app.core.contracts import StateConflict
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 
 
 class FakeCursor:

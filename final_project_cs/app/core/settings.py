@@ -179,7 +179,7 @@ class Settings(BaseSettings):
     #:  ★(구)바다누리 자체 OpenAPI 는 종료 예정이라 공통 키로 충분하다.
     khoa_api_key: str = ""
     #: 국가유산청 — ★**키가 필요 없다**(2026-09-10 실호출 확인). 그래서 이 칸은
-    #:  비워 둔다. 어댑터(`app/infrastructure/travel/heritage.py`)가 인증
+    #:  비워 둔다. 어댑터(`app/domains/travel_ops/ports/data_sources/heritage.py`)가 인증
     #:  파라미터 없이 부른다. 공공데이터포털 쪽 문화재 공간정보
     #:  (data.go.kr/data/3070426)를 따로 쓸 때만 채운다.
     heritage_api_key: str = ""
@@ -213,6 +213,7 @@ class Settings(BaseSettings):
     # 민간 — ★공공데이터포털 키와 **다른 키**다. 공통 키가 대신하지 않는다.
     odsay_api_key: str = ""                  # ODsay 대중교통 길찾기 lab.odsay.com
     kakao_rest_api_key: str = ""             # 카카오 지도 — 주소→좌표 developers.kakao.com
+    vworld_api_key: str = ""                 # 브이월드 지오코더 — 주소→좌표(장소 데이터 좌표 보완) vworld.kr
     # ★`[2026-09-24]` 자리만 만들었다 — 새벽 3시 하루 점검에 쓴다(D-020). 비어 있으면 부르지 않는다.
     # ★관광공사 장소 목록(`place_catalog`) 수집·사용 스위치 — **기본 켜짐**(`[2026-09-28]` 사용자 결정으로 되돌림).
     #   ☆`[2026-09-27]` 콘텐츠랩 저작권 정책의 한 줄 「콘텐츠 캐싱(로컬서버 저장방식) 금지」를 「아무것도 저장 금지」로
@@ -222,7 +223,14 @@ class Settings(BaseSettings):
     #   근거 정리: `../program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md` §4-6 「2026-09-28 재판단」.
     tour_catalog_enabled: bool = True
     google_maps_api_key: str = ""            # 구글 Maps Platform(Places) console.cloud.google.com
-    # ── 이동 계산기(app/modules/travel_ops/mobility/engine) — `[2026-09-29 이동 계산기 문제목록 #48]` ──
+    # ★`[2026-10-01]` 네이버 검색(블로그 · 카페글) — 대체 후보에 후기 몇 건을 곁들인다. 비어 있으면 부르지 않는다.
+    #   NAVER API HUB(네이버 클라우드) 「검색」 키 — 2026-07-31 부터 개발자센터 신규 발급이 끝나 HUB 로 옮겨 갔다.
+    #   주소 naverapihub.apigw.ntruss.com/search/v1/{blog,cafearticle}, 헤더 X-NCP-APIGW-API-KEY-ID · X-NCP-APIGW-API-KEY.
+    #   네이버 지도 키(웹 NEXT_PUBLIC_NAVER_MAP_CLIENT_ID)와 다른 키다.
+    #   결과는 저장하지 않는다(보여 줄 때만 불러온다).
+    naver_search_client_id: str = ""
+    naver_search_client_secret: str = ""
+    # ── 이동 계산기(app/domains/travel_ops/instances/mobility/engine) — `[2026-09-29 이동 계산기 문제목록 #48]` ──
     #   계산기가 저장소 맨 위 `.env` 를 import 때 직접 읽던 것을 여기로 모은다. 서버는 기동 때 이 값을 계산기에 넘긴다.
     #: 시간표·역 순서·환승 거리 등 가공 자료가 있는 폴더(이동 담당의 DATA_DIR · git 밖 · 약 195MB).
     #:  비우면 이동 계산기를 쓰지 않는다(연결부가 대체 경로로 간다). 실제 경로는 `.env` 에만 적는다.
@@ -280,6 +288,7 @@ class Settings(BaseSettings):
     #:  ☆앞 값 1000 은 근거 없는 추정이었다(「미확인」). 어댑터가 없어 지금은 호출 코드가 없다 — 붙일 때 이 한도를 그대로 쓴다.
     rate_odsay_per_day: int = 30
     rate_kakao_per_day: int = 1000           # 미확인 - 보수적
+    rate_naver_search_per_day: int = 12500   # 확인: API HUB 검색 월 775,000건(2026-10 무료) — 블로그 · 카페글 합쳐 절반 아래(하루 12,500 × 31 ≈ 39만)
     #: 확인(2026-10-04): 서울교통공사 지하철알림정보 개발계정 하루 10,000건(공식 페이지) → 절반만 쓴다(여유 2배). 매 1분 갱신 · 한 번에 최신 100건
     rate_subway_notice_per_day: int = 5000
     #: 확인(2026-10-04 공식 안내): 서울 「실시간 지하철 인증키」 하루 최대 1,000건 → 절반만(여유 2배). 도착정보는 지금 값이라 캐시를 짧게 둔다
@@ -339,6 +348,7 @@ class Settings(BaseSettings):
             "seoul_subway_arrival": self.rate_seoul_subway_arrival_per_day,
             "seoul_bike": self.rate_seoul_bike_per_day,
             "kakao": self.rate_kakao_per_day,
+            "naver_search": self.rate_naver_search_per_day,
             "google_places": self.rate_google_places_per_day,
             "google_routes": self.rate_google_routes_per_day,
         }
@@ -437,3 +447,15 @@ def get_guardrails() -> Guardrails:
     if not isinstance(data, dict):
         raise ConfigError(f"guardrails 파일이 매핑이 아니다: {path}")
     return Guardrails(data, path)
+
+
+def google_price_enabled() -> bool:
+    """식당 대안의 구글 가격 조회를 켰나 — 가드레일 `travel.dining.google_price_enabled`. ★기본 꺼짐.
+
+    `[2026-10-05]` 팀 코드는 가격 조회가 켜져 있는 것을 기본으로 가정하지만, 우리는 식당을 가격으로 순위 매기지 않는다
+    (9/28 결정)고 꺼 둔다. 키가 없거나 가드레일을 못 읽어도 **꺼짐**으로 본다(켜는 것은 명시한 경우뿐).
+    """
+    try:
+        return get_guardrails().get("travel.dining.google_price_enabled") is True
+    except ConfigError:
+        return False

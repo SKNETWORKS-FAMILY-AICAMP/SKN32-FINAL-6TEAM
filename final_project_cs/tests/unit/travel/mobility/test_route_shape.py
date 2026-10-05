@@ -7,7 +7,7 @@ from uuid import uuid4
 
 import pytest
 
-from app.modules.travel_ops.mobility import route_shape as RS
+from app.domains.travel_ops.instances.mobility import route_shape as RS
 
 A, B = (126.9770, 37.5796), (127.0557, 37.5433)          # (경도, 위도) 경복궁 · 성수
 
@@ -207,3 +207,71 @@ def test_review_shapes_skip_moves_without_coordinates_and_say_why_for_old_review
     assert out[0]["source"] == "straight_line" and "탄 역 정보가 없어" in out[0]["note"]
     assert out[1]["mode"] == "unknown" and out[1]["grade"] == "근거없음"
     assert RS.shapes_for_review(None) == [] and RS.shapes_for_review({"items": [], "moves": []}) == []
+
+
+# ── 지하철: 탄 역~내린 역 사이의 모든 역(2026-10-05 — cs 세션 요청서, 사용자 지적) ──────────────────────────────
+
+class FakeLO:
+    """LineOrder 흉내 — path(호선, a, b) 가 사이 역을 포함한 목록을, is_loop 가 순환선 여부를 준다."""
+    def __init__(self, table, loops=()):
+        self.table, self.loops = table, set(loops)
+
+    def path(self, line, a, b):
+        return self.table.get((line, a, b))
+
+    def is_loop(self, line):
+        return line in self.loops
+
+
+SC3 = FakeStations({
+    "03호선|경복궁": {"lat": 37.5759, "lng": 126.9735}, "03호선|안국": {"lat": 37.5765, "lng": 126.9854},
+    "03호선|종로3가": {"lat": 37.5717, "lng": 126.9917}, "03호선|을지로3가": {"lat": 37.5662, "lng": 126.9926},
+    "02호선|을지로3가": {"lat": 37.5663, "lng": 126.9927}, "02호선|성수": {"lat": 37.5446, "lng": 127.0560},
+})
+LO3 = FakeLO({("03호선", "경복궁", "을지로3가"): ["경복궁", "안국", "종로3가", "을지로3가"]})
+
+
+def test_subway_draws_every_station_between_boarding_and_alighting():
+    r = FakeRouter()
+    two = RS.build_shape(A, B, _rd("subway_1", uses=["3호선:경복궁", "3호선:을지로3가"]), router=r, sc=SC3)
+    full = RS.build_shape(A, B, _rd("subway_1", uses=["3호선:경복궁", "3호선:을지로3가"]), router=r, sc=SC3, lo=LO3)
+    assert len(full["line"]["coordinates"]) == len(two["line"]["coordinates"]) + 2, "안국·종로3가 두 역이 더해진다"
+    assert full["source"] == "stations" and full["grade"] == "추정"
+    assert full["rides"] == [{"line": "3호선", "from": "경복궁", "to": "을지로3가",
+                              "stations": ["경복궁", "안국", "종로3가", "을지로3가"], "count": 4, "filled": True}]
+    assert "모든 역" in full["note"] and "선로 곡선이 아님" in full["note"]
+
+
+def test_without_line_order_only_the_scheduled_stations_are_joined_and_the_note_says_so():
+    s = RS.build_shape(A, B, _rd("subway_1", uses=["3호선:경복궁", "3호선:을지로3가"]), router=FakeRouter(), sc=SC3)
+    assert s["rides"][0]["filled"] is False and s["rides"][0]["count"] == 2
+    assert "중간 역을 못 채웠다" in s["note"]
+
+
+def test_a_station_without_coordinates_never_breaks_the_line():
+    lo = FakeLO({("03호선", "경복궁", "을지로3가"): ["경복궁", "좌표없는역", "종로3가", "을지로3가"]})
+    s = RS.build_shape(A, B, _rd("subway_1", uses=["3호선:경복궁", "3호선:을지로3가"]), router=FakeRouter(), sc=SC3, lo=lo)
+    assert s["source"] == "stations"
+    assert s["rides"][0]["stations"] == ["경복궁", "종로3가", "을지로3가"], "좌표 없는 역은 건너뛰고 나머지를 잇는다"
+
+
+def test_a_loop_line_warns_that_the_direction_may_differ():
+    sc = FakeStations({"02호선|시청": {"lat": 37.5640, "lng": 126.9770}, "02호선|충정로": {"lat": 37.5600, "lng": 126.9640},
+                       "02호선|아현": {"lat": 37.5575, "lng": 126.9560}})
+    lo = FakeLO({("02호선", "시청", "아현"): ["시청", "충정로", "아현"]}, loops={"02호선"})
+    s = RS.build_shape(A, B, _rd("subway_1", uses=["2호선:시청", "2호선:아현"]), router=FakeRouter(), sc=sc, lo=lo)
+    assert "순환선" in s["note"] and "운행 방향과 다를 수 있다" in s["note"]
+
+
+def test_a_transfer_fills_each_ride_on_its_own_line():
+    lo = FakeLO({("03호선", "경복궁", "을지로3가"): ["경복궁", "안국", "종로3가", "을지로3가"],
+                 ("02호선", "을지로3가", "성수"): ["을지로3가", "성수"]})
+    s = RS.build_shape(A, B, _rd("subway_1", uses=["3호선:경복궁", "3호선:을지로3가", "2호선:을지로3가", "2호선:성수"]),
+                       router=FakeRouter(), sc=SC3, lo=lo)
+    assert [r["line"] for r in s["rides"]] == ["3호선", "2호선"]
+    assert [r["count"] for r in s["rides"]] == [4, 2]
+
+
+def test_rides_are_only_reported_for_station_lines():
+    assert "rides" not in RS.build_shape(A, B, _rd("taxi"), router=FakeRouter(), sc=SC3)
+    assert "rides" not in RS.build_shape(A, B, _rd("bus_405", uses=["버스:405"]), router=FakeRouter(), sc=SC3)

@@ -11,9 +11,9 @@ from pathlib import Path
 
 import pytest
 
-from app.infrastructure.travel.base import TravelSources
-from app.infrastructure.travel.disaster_msg import DEFAULT_SAMPLE_PATH, KST, DisasterMsgCsv
-from app.infrastructure.travel.disruptions import DisruptionCheck
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.disaster_msg import DEFAULT_SAMPLE_PATH, KST, DisasterMsgCsv
+from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
 
 HEADER = "SN,CRT_DT,MSG_CN,RCPTN_RGN_NM,EMRG_STEP_NM,DST_SE_NM,REG_YMD,MDFCN_YMD,RCPTN_RGN_ID,EMRG_STEP_ID,DST_SE_ID\n"
 KOREAN = "일련번호,생성일시,메시지내용,수신지역명,긴급단계명,재해구분명,등록일자,수정일자,수신지역ID,긴급단계ID,재해구분ID\n"

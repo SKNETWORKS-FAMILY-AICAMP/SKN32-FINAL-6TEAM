@@ -26,8 +26,8 @@ from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.itinerary_checks import Part, check_itinerary
-from app.modules.travel_ops.trip_api import build_trip_router
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
+from app.domains.travel_ops.entry.trip_api import build_trip_router
 from app.presentation import security
 from app.presentation.api.app import create_app
 
@@ -433,7 +433,7 @@ def _cache_one_row(api):
 def test_while_the_catalog_is_switched_off_it_is_not_read_and_places_come_live(api, monkeypatch):
     """스위치를 끄면(`ACOP_TOUR_CATALOG_ENABLED=false`) 표에 행이 남아 있어도 읽지 않고, 후보는 실시간으로 받는다.
     ★`[2026-09-28]` 기본은 켜짐으로 되돌렸다 — 끄는 길이 여전히 도는지만 본다."""
-    from app.infrastructure.travel.catalog_sync import PlaceCatalogSync
+    from app.domains.travel_ops.ports.data_sources.catalog_sync import PlaceCatalogSync
 
     monkeypatch.setattr(PlaceCatalogSync, "enabled", staticmethod(lambda: False))
     _cache_one_row(api)
@@ -445,14 +445,15 @@ def test_while_the_catalog_is_switched_off_it_is_not_read_and_places_come_live(a
 
 def test_tour_api_is_called_only_when_the_catalog_is_empty(api, monkeypatch):
     """★(기본 — 목록이 켜져 있을 때) 바깥 소스는 **캐시가 비었을 때만** 나간다. 부른 횟수를 결과가 센다."""
-    from app.infrastructure.travel.catalog_sync import PlaceCatalogSync
+    from app.domains.travel_ops.ports.data_sources.catalog_sync import PlaceCatalogSync
 
     assert PlaceCatalogSync.enabled() is True       # ★기본값이 켜짐이다(2026-09-28)
     tour = StubTour()
     body = api["ask"](request_id="p-tour", tour=tour).json()
     assert tour.calls == 1 and body["calls"]["tour_api"] == 1
     assert body["candidates"]["by_source"].get("tour_api", 0) >= 0     # 순위에 따라 뽑힐 수도 아닐 수도
-    assert body["candidates"]["pool"] == len(ACTIVITIES) + len(DINING) + 2
+    # ★`[2026-10-02]` 받아온 둘 중 **미술관만** 후보다 — 식당은 관광공사에서 받지 않는다(사용자 결정, 요식 원장에서 고른다)
+    assert body["candidates"]["pool"] == len(ACTIVITIES) + len(DINING) + 1
 
     # ★카탈로그에 한 행이라도 있으면 바깥에 나가지 않는다.
     _cache_one_row(api)
@@ -528,7 +529,7 @@ def _assert_leave_rule(draft: dict) -> None:
     """★출발 = 다음 일정 시작 − 이동 시간 − 여유. 이동 알림은 이 출발 시각에 간다."""
     from datetime import datetime, timedelta
 
-    from app.modules.travel_ops.planner import MOVE_BUFFER_MIN
+    from app.domains.travel_ops.components.planning.planner import MOVE_BUFFER_MIN
 
     items = draft["items"]
     moves = [item for item in items if item["kind"] == "mobility"]
@@ -561,8 +562,8 @@ def test_the_registered_plan_announces_the_move_when_it_starts(api):
     """등록까지 가면 이동 알림이 **출발 시각 그 자체**에 잡힌다 — 「N분 전」이 없다."""
     from datetime import datetime, timedelta
 
-    from app.modules.travel_ops.itinerary import Item
-    from app.modules.travel_ops.trip_reminders import ReminderRules, plan_reminders
+    from app.domains.travel_ops.components.itinerary.itinerary import Item
+    from app.domains.travel_ops.components.watch.trip_reminders import ReminderRules, plan_reminders
 
     body = api["ask"](request_id="p-moves-reg", register=True).json()
     assert body["status"] == "registered"
@@ -579,7 +580,7 @@ def test_the_registered_plan_announces_the_move_when_it_starts(api):
 
 # ── ⑧ 설문 16번 여유 → 밀도 목표 → 하루 활동 수 (2026-09-24, D-020) ─────────────
 def _survey(pace: str) -> dict:
-    from app.modules.travel_ops.survey import SURVEY_VERSION
+    from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
 
     return {"survey": {"version": SURVEY_VERSION, "pace": pace}}
 
@@ -781,7 +782,7 @@ def test_a_place_the_customer_fixed_keeps_its_other_name_out_of_the_generated_pa
     고정한 장소를 이름이 정확히 같은 것만 뺐기 때문이다. 이름이 달라도 **같은 곳**(같은 좌표 · 이름 첫 낱말)이면 후보에서 뺀다."""
     from datetime import date
 
-    from app.modules.travel_ops import planner
+    from app.domains.travel_ops.components.planning import planner
     from app.infrastructure.db.session import get_connection
 
     def activities(**extra):
@@ -824,7 +825,7 @@ def _stored_constraints(api, trip_id: str) -> dict:
 def test_the_survey_sent_with_plan_me_a_trip_decides_the_pace_and_stays_on_the_trip(api):
     """★`[2026-09-28]` ui 세션 인계 — 웹의 등록 흐름(계획 읽기)에 설문을 실을 곳이 없었다. `/plan` 의 `survey` 는
     일정 생성기가 먼저 적용하고(16번 여유 → 밀도 목표) 여행에 그대로 남는다(15번은 감시가 읽는다)."""
-    from app.modules.travel_ops.survey import SURVEY_VERSION
+    from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
 
     client = api["client"]
     key = {"X-User-Key": client.post("/v1/web/session").json()["user_key"]}
@@ -863,7 +864,7 @@ class HoursTour(StubTour):
 def test_a_place_that_rests_on_the_day_is_read_from_its_text_and_swapped_out(api):
     """☆실제 일정에서 「13:00~17:00 · 일~목 휴무」인 곳이 월요일 09:00 에 들어갔다 — 영업시간을 몰라 판정이 안 봤다.
     이제 고른 장소의 운영시간 원문을 읽어 요일별로 채우고, 쉬는 날이면 판정(`closed_day`)이 그 장소를 바꾼다."""
-    from app.modules.travel_ops import planner as planner_module
+    from app.domains.travel_ops.components.planning import planner as planner_module
 
     planner_module._HOURS_CACHE.clear()
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:

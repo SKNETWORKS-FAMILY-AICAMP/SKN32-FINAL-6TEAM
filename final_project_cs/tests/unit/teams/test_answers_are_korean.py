@@ -24,7 +24,7 @@ import pytest
 
 # ★2026-09-10 여행으로 옮겼다. 검사 논리는 그대로다 — 아래 2026-09-02 사고는
 #   커머스 팀에서 났지만 원인(답변 문자열을 손으로 적는다)은 도메인과 무관하다.
-TEAM_DIR = Path(__file__).resolve().parents[3] / "app" / "modules" / "travel_ops"
+TEAM_DIR = Path(__file__).resolve().parents[3] / "app" / "domains" / "travel_ops"
 HANGUL = re.compile(r"[가-힣]")
 
 #: 값을 그대로 끼워 넣는 자리(`{status}` 등)는 영문 토큰일 수 있다. 문장이

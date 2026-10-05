@@ -9,8 +9,8 @@ from __future__ import annotations
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.itinerary_checks import Part, check_itinerary
-from app.modules.travel_ops.place_hours import days_in, fits, hours_on, read_by_model, read_by_rule, read_hours
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
+from app.domains.travel_ops.components.places.place_hours import days_in, fits, hours_on, read_by_model, read_by_rule, read_hours
 
 KST = ZoneInfo("Asia/Seoul")
 MONDAY, FRIDAY, TUESDAY = date(2026, 9, 28), date(2026, 10, 2), date(2026, 9, 29)

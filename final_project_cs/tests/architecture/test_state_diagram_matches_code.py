@@ -22,7 +22,7 @@ from scripts.make_state_diagram import OUT, render  # noqa: E402
 
 # invariant: INV-CS-ARCH-007
 def test_state_diagram_is_regenerated_from_the_code():
-    """★그림은 `app/domain/events.py:TRANSITIONS` 에서만 나온다."""
+    """★그림은 `app/core/case_lifecycle/events.py:TRANSITIONS` 에서만 나온다."""
     assert OUT.exists(), (
         "전이도 파일이 없다. `python -m scripts.make_state_diagram` 로 만든다:\n  %s"
         % OUT)

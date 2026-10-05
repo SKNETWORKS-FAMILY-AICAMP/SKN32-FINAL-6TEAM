@@ -132,8 +132,8 @@ def _run_place_facts(tenant_id: str) -> dict[str, object]:
     from zoneinfo import ZoneInfo
 
     from app.infrastructure.ollama_chat import from_settings
-    from app.infrastructure.travel.base import build_travel_sources
-    from app.modules.travel_ops.place_info import fill_missing_facts
+    from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+    from app.domains.travel_ops.components.places.place_info import fill_missing_facts
 
     settings = get_settings()
     with get_connection() as conn:
@@ -147,8 +147,8 @@ def _run_catalog_hours(tenant_id: str) -> dict[str, object]:
 
     from app.core.settings import get_guardrails
     from app.infrastructure.ollama_chat import from_settings
-    from app.infrastructure.travel.base import build_travel_sources
-    from app.modules.travel_ops.catalog_hours import prefill
+    from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+    from app.domains.travel_ops.components.places.catalog_hours import prefill
 
     settings, guard = get_settings(), get_guardrails()
     with get_connection() as conn:
@@ -162,9 +162,9 @@ def _run_catalog_hours(tenant_id: str) -> dict[str, object]:
 
 
 def _run_web_guard(tenant_id: str) -> dict[str, object]:
-    from app.modules.travel_ops.consents import purge_expired
-    from app.modules.travel_ops.guest_cleanup import cleanup_guests
-    from app.modules.travel_ops.web_guard import prune_usage
+    from app.domains.travel_ops.modules.web_account.consents import purge_expired
+    from app.domains.travel_ops.modules.web_account.guest_cleanup import cleanup_guests
+    from app.domains.travel_ops.modules.web_account.web_guard import prune_usage
 
     with get_connection() as conn:
         # ★`[2026-10-04 D-CS-011]` 옛 「빈 키 정리」를 게스트 정리가 대신한다 — 마지막 사용 뒤 `web.guest_idle_hours` 가 지난 게스트의 여행 · 세션 · 키 · 사용자
@@ -177,7 +177,7 @@ def _run_trip_places(tenant_id: str) -> dict[str, object]:
     from zoneinfo import ZoneInfo
 
     from app.core.settings import get_guardrails
-    from app.modules.travel_ops.trip_places import scrub_ended
+    from app.domains.travel_ops.components.itinerary.trip_places import scrub_ended
 
     with get_connection() as conn:
         return scrub_ended(conn, tenant_id=tenant_id, now=datetime.now(ZoneInfo("Asia/Seoul")),
@@ -189,17 +189,17 @@ def _run_trip_dawn(tenant_id: str) -> dict[str, object]:
     from zoneinfo import ZoneInfo
 
     from app.core.settings import get_guardrails
-    from app.infrastructure.travel.google_places import GooglePlaces
-    from app.modules.travel_ops.dawn_check import DawnCheck
-    from app.modules.travel_ops.itinerary import TripStore
+    from app.domains.travel_ops.ports.data_sources.google_places import GooglePlaces
+    from app.domains.travel_ops.components.watch.dawn_check import DawnCheck
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
-    from app.infrastructure.travel.base import build_travel_sources
+    from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
 
     settings = get_settings()
     key = settings.google_maps_api_key
     # ★하루 호출 상한(`ACOP_RATE_GOOGLE_PLACES_PER_DAY`)을 **같은 제한기**로 건다 — 넘으면 부르지 않고
     #   `rate_limited` 로 세며, 그 항목은 `fatal` 로 남아 창 안에서 다시 시도된다(요금이 새지 않게).
-    from app.infrastructure.travel.call_budget import CallBudget, google_caps
+    from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget, google_caps
 
     # ★무료 한도 보호 — DB 예산(027)을 **반드시** 건다. 프로세스 안 제한기는 매분 새로 차서 못 지킨다
     budget = CallBudget(connection_factory=get_connection, caps=google_caps())
@@ -215,10 +215,10 @@ def _run_trip_reminders(tenant_id: str) -> dict[str, int]:
     from datetime import datetime
     from zoneinfo import ZoneInfo
 
-    from app.infrastructure.travel.base import build_travel_sources
-    from app.modules.travel_ops.itinerary import TripStore
-    from app.modules.travel_ops.trip_api import plan_url
-    from app.modules.travel_ops.trip_reminders import TripReminders
+    from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
+    from app.domains.travel_ops.entry.trip_api import plan_url
+    from app.domains.travel_ops.components.watch.trip_reminders import TripReminders
 
     sources = build_travel_sources(get_settings())
     reminders = TripReminders(store=TripStore(tenant_id), connection_factory=get_connection,
@@ -254,10 +254,10 @@ def _run_trip_watch_cases(tenant_id: str) -> dict[str, int]:
 
     from app import composition
     from app.infrastructure.db import repository
-    from app.infrastructure.travel.base import build_travel_sources
-    from app.infrastructure.travel.disruptions import DisruptionCheck
-    from app.modules.travel_ops.itinerary import TripStore
-    from app.modules.travel_ops.trip_watch_cases import TripWatchCaseOpener
+    from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+    from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
+    from app.domains.travel_ops.components.watch.trip_watch_cases import TripWatchCaseOpener
 
     sources = build_travel_sources(get_settings())
     controller = composition.build_controller()
@@ -282,10 +282,10 @@ def _run_trip_watch(tenant_id: str) -> dict[str, int]:
     from datetime import datetime
     from zoneinfo import ZoneInfo
 
-    from app.infrastructure.travel.base import build_travel_sources
-    from app.infrastructure.travel.disruptions import DisruptionCheck
-    from app.modules.travel_ops.itinerary import TripStore
-    from app.modules.travel_ops.trip_watch import TripWatcher
+    from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+    from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
+    from app.domains.travel_ops.components.watch.trip_watch import TripWatcher
 
     sources = build_travel_sources(get_settings())
     watcher = TripWatcher(

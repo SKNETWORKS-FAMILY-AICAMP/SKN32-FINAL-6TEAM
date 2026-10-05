@@ -1,12 +1,11 @@
 ---
 type: contract
 title: REST API
-description: 엔드포인트 5개와 헬스체크. 쓰기는 여기로만 간다
+description: Case · 여행 · 고객 웹 REST 진입점과 인증 구분, API 명세 및 검증 경로를 안내한다. 쓰기는 여기로만 간다
 status: draft
 tags: [api, contract]
 owners: [human:미배정]
-domain: commerce
-domain_note: 코드가 아직 커머스다 — 여행 전환 층 7(입구 — 라우트 25개 중 trip 0개) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md
+domain: travel
 ---
 
 # REST API
@@ -15,7 +14,38 @@ domain_note: 코드가 아직 커머스다 — 여행 전환 층 7(입구 — �
 
 **쓰기는 REST로만 간다.** MCP는 read-only다.
 
-## 엔드포인트
+## 진입점과 명세
+
+`[실측]` 2026-10-05 · 작업 폴더 `app/` 의 라우트 선언(`@router.get/post…`)을 grep 으로 대조(팀 저장소 develop 의 개요를 읽고 우리 코드로 확인해 가져왔다 — 서버를 띄워 확인하지는 않았다). REST 에는 Case 뿐 아니라 여행 · 위임 · 고객 웹 API 가 있다. **요청 · 응답 필드의 정본은 [rest-endpoints.md](rest-endpoints.md)** 이고 이 문서는 진입점과 경계를 안내한다. 아래 「Case · outbox 표」의 「경로 5개 · operation 6개」는 `/v1/cases*` · `/v1/outbox*` 만 센 것이라 현재 API 전체를 말하지 않는다.
+
+| 대상 | 경로 · 의미 | 상세 |
+|---|---|---|
+| Case | `/v1/cases*` — 문의 · 조회 · 추가 메시지 · 제안 승인 | [필드 계약](rest-endpoints.md), [Case 라우터](../../app/presentation/api/cases.py) |
+| outbox | `/v1/outbox/{message_id}/resolve` — 불명확한 배달 결과를 사람이 확인한 근거 기록 | [필드 계약](rest-endpoints.md), [outbox](../actions/outbox.md) |
+| 여행 · 계획 | `/v1/trips*` — 등록 · 생성 · 조회 · 신고 · 상담 · 제안 · 되돌리기 (+ 토큰 링크 `/plan/{trip_id}` · `/booking-change/{booking_id}`) | [여행 계약](rest-endpoints.md), [여행 라우터](../../app/domains/travel_ops/entry/trip_api.py) |
+| 고객 웹 | `/v1/web/*` — 세션(쿠키 · 키) · 로그인 · 내 여행 · 상담 · 제안 선택 · 알림 · 프로필 · 동의 · 에이전트 키 · 모델 예열 · 지도 | [웹 계약](rest-endpoints.md) |
+| 계획 접수 | `/v1/web/trip-intakes*` — 자료 읽기 · 수정 · 확인 · 계획 생성 | [접수 계약](rest-endpoints.md) |
+| 위임 | `/v1/delegations*` — 권한 조회 · 부여 · 철회 | [필드 계약](rest-endpoints.md) |
+| 개인 AI | `/mcp/` (사용자 키) | [mcp-tools.md](mcp-tools.md) |
+
+위 표는 경로 묶음의 안내이며 엔드포인트 수나 전체 운영 API 목록이 아니다. `/health` · `/introspection` · `/admin/reload` 도 따로 있다. 운영 화면(`/ui/*`)과 `/admin/limits*` 는 고객 API 앱이 아니라 **운영 앱**(별도 프로세스)에 있다([D-CS-008](../decisions/D-CS-008-ops-console-separate-app.md)). 관리용 Composer 라우터는 관리 빌드에서만 주입된다.
+
+## 인증과 책임 경계
+
+- 서버 · 외부 에이전트 API(`/v1/cases*` · `/v1/trips*` · `/v1/delegations*` · `/v1/outbox*`)는 Bearer 키와 경로별 scope 를 쓴다. → [인증 경계](auth-boundary.md)
+- **고객 웹 `/v1/web/*` 은 scope 키를 쓰지 않는다.** 브라우저는 HttpOnly 쿠키 세션(쓰기는 `X-CSRF-Token` 까지), 에이전트 · 옛 호출자는 `X-User-Key` 로 고객을 가르고, 여행 · 접수는 그 고객의 자료만 연다. 서버용 scope 키를 브라우저에 넣지 않는다.
+- 제안 승인 · 선택과 업무 실행의 조건은 해당 계약을 따른다. HTTP 요청 성공만으로 외부 예약 변경이나 배달 성공까지 확정하지 않는다.
+- CORS 의 출처 · 메서드 · 헤더는 [앱 조립](../../app/presentation/api/app.py)이 정한다(지금 `GET · POST · PUT · DELETE` · `X-User-Key` · `Content-Type` · `X-Turnstile-Token` · `X-CSRF-Token` · 쿠키 허용). 새 API 의 메서드를 더하면 브라우저 호출 가능 여부도 같이 확인한다.
+
+## 검증 범위
+
+| 근거 | 확인하는 것 | 한계 |
+|---|---|---|
+| [앱 조립](../../app/presentation/api/app.py) · [composition](../../app/composition.py) | 실제로 포함할 라우터와 경계 | 소스 존재만으로 실행 성공을 증명하지 않음 |
+| [OpenAPI 표면 검사](../../tests/integration/api/test_openapi_surface.py) | 계약 경로 존재 · 추가 경로의 목록 반영 · 쓰기 인증 의존성 | `CONTRACT_V1_PATHS` 도 구현 변경과 함께 갱신해야 함 |
+| [웹 API 검사](../../tests/e2e/test_web_api.py) · [접수 API 검사](../../tests/e2e/test_trip_intake_api.py) | 해당 환경의 API 동작 | 실행 조건과 실제 결과를 별도로 기록해야 함 |
+
+## Case · outbox 표 (2026-08 기준 — 위 「진입점과 명세」가 현재 전체다)
 
 `[실측]`
 
@@ -30,7 +60,7 @@ domain_note: 코드가 아직 커머스다 — 여행 전환 층 7(입구 — �
 
 `+ /health`
 
-`[실측]` 경로 5개 · operation 6개다. 마지막 줄이 2026-08-24에 늘어난 것이고, 그때 테스트의 계약 목록(`CONTRACT_V1_PATHS`)도 함께 갱신됐다. → [rest-endpoints.md](rest-endpoints.md)
+`[실측]` 이 표는 Case · outbox 만 센 것이다 — 경로 5개 · operation 6개. 마지막 줄이 2026-08-24에 늘어난 것이고, 그때 테스트의 계약 목록(`CONTRACT_V1_PATHS`)도 함께 갱신됐다. → [rest-endpoints.md](rest-endpoints.md)
 
 **MVP 5개가 상한이 아니다.** 필요하면 늘리되 scope와 테스트를 함께 만든다.
 

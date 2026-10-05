@@ -28,10 +28,10 @@ from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.booking_actions import BookingChange
-from app.modules.travel_ops.itinerary import Item, TripStore
-from app.modules.travel_ops.plan_link import plan_token
-from app.modules.travel_ops.trip_api import build_trip_router, change_token
+from app.domains.travel_ops.components.actions.booking_actions import BookingChange
+from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+from app.domains.travel_ops.components.itinerary.plan_link import plan_token
+from app.domains.travel_ops.entry.trip_api import build_trip_router, change_token
 from app.presentation import security
 from app.presentation.api.app import create_app
 

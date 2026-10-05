@@ -20,9 +20,9 @@ from fastapi.testclient import TestClient
 import app.composition as composition
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.mobility import wiring
-from app.modules.travel_ops.mobility.engine import paths
-from app.modules.travel_ops.trip_api import build_trip_router
+from app.domains.travel_ops.instances.mobility import wiring
+from app.domains.travel_ops.instances.mobility.engine import paths
+from app.domains.travel_ops.entry.trip_api import build_trip_router
 from app.presentation import security
 from app.presentation.api.app import create_app
 
@@ -127,8 +127,8 @@ def test_a_plan_is_moved_by_the_real_timetable_and_registers(flow):
 def test_a_registered_plan_gets_route_lines_from_our_own_road_graph(flow):
     """★`[2026-10-04]` 화면이 이동 항목마다 지도에 경로선을 그릴 수 있게 — 외부 길찾기 API 없이 우리 도로 그래프·역 좌표로 만든 형상.
     계획 짜기 → 등록 → 저장된 항목에서 경로선을 뽑는다. 선은 두 장소 좌표에서 시작해 끝나고, 점이 둘 넘는 실제 길이어야 한다(직선 둘이 아니다)."""
-    from app.modules.travel_ops.mobility.route_shape import shapes_for_items
-    from app.modules.travel_ops.itinerary import TripStore
+    from app.domains.travel_ops.instances.mobility.route_shape import shapes_for_items
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
     body = flow["ask"](date(2026, 10, 5), request_id="mf-shape").json()
     assert body["status"] == "drafted", body
@@ -167,7 +167,7 @@ def test_a_date_the_holiday_table_does_not_cover_falls_back_to_estimates_not_a_c
 def test_the_density_the_plan_reports_is_the_one_registration_measures(flow):
     """하루를 맞추는 반복은 이동을 어림값으로 넣고, 최종 이동은 계산기가 채운다 — 계획이 말한 밀도와 등록이 재는 밀도가 같아야 한다
     (앞 판은 0.487 ≠ 0.501 로 어긋났다). 어림값으로 잰 값은 estimated_density 로 남는다."""
-    from app.modules.travel_ops.survey import SURVEY_VERSION
+    from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
 
     body = flow["ask"](date(2026, 10, 5), request_id="mf-dens",
                        constraints={"survey": {"version": SURVEY_VERSION, "pace": "packed"}}).json()
@@ -187,8 +187,8 @@ def test_swapping_a_registered_place_rejudges_the_moves_around_it_with_the_real_
     from uuid import uuid4
 
     from app.infrastructure.db.session import get_connection
-    from app.modules.travel_ops.itinerary import TripStore
-    from app.modules.travel_ops.itinerary_changes import ItineraryChange
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
 
     draft = flow["ask"](date(2026, 10, 5), request_id="mf-swap").json()["draft"]
     created = flow["client"].post("/v1/trips", headers=flow["auth"]("trip:write"),
@@ -217,7 +217,7 @@ def _registered_moves(flow, request_id):
     """계획 → 등록 → 저장소에서 다시 읽은 항목. 이동 항목은 경로 정의(route_def)를 들고 있다."""
     import uuid
 
-    from app.modules.travel_ops.itinerary import TripStore
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
     draft = flow["ask"](date(2026, 10, 5), request_id=request_id).json()["draft"]
     created = flow["client"].post("/v1/trips", headers=flow["auth"]("trip:write"),
@@ -233,7 +233,7 @@ def test_after_an_incident_a_blocked_route_is_replaced_from_the_real_timetable(f
     지하철 경로의 환승역이 무정차라는 사건을 넣고, 그 역을 빼고도 갈 수 있는 새 경로가 실려야 한다."""
     from datetime import timedelta
 
-    from app.modules.travel_ops.itinerary_changes import (ItineraryChange, next_after, place_before,
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import (ItineraryChange, next_after, place_before,
                                                           plan_route_adjustment, route_of)
 
     items = _registered_moves(flow, "mf-inc")
@@ -265,7 +265,7 @@ def test_the_mobility_team_answers_a_structured_route_question_on_the_real_timet
     """이동 에이전트(MobilityTeam)가 구조화 입력(current_state.mobility)을 받으면 실제 시간표로 답한다(#34·#35)."""
     import asyncio
 
-    from app.modules.travel_ops.mobility.team import MobilityTeam
+    from app.domains.travel_ops.instances.mobility.team import MobilityTeam
     from tests.unit.travel.helpers import FakeTools, pack, task
 
     allowed = list(MobilityTeam.manifest.allowed_tools)
@@ -278,7 +278,7 @@ def test_the_mobility_team_answers_a_structured_route_question_on_the_real_timet
     assert result.answer and result.evidence and all(e.observed_at is not None for e in result.evidence)
     assert tools.calls == [], "조회 도구(read.route - 비어 있음)를 거치지 않고 계산기로 답한다"
     # 계산기가 꺼져 있으면 지어낸 답이 아니라 오류로 올린다 - 같은 입력, 켜져 있을 때와 다른 결과
-    from app.modules.travel_ops.mobility import wiring
+    from app.domains.travel_ops.instances.mobility import wiring
     saved = dict(wiring._STATE)
     try:
         wiring._STATE["mode"] = "disabled"

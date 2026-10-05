@@ -45,7 +45,7 @@ domain: travel
 
 **무엇으로 증명하나.** 감지→통지 시간, **통지 전 재검증 통과율 100%**.
 
-`[실측 2026-09-10 작업 트리]` **여행 분류 어휘와 두 축 라우팅이 이미 적용돼 있다** — `app/modules/travel_ops/feedback.py` 의 `INTENTS` 다섯이 슬러그이고 `ISSUE_CODES` 가 여행 17개이며, `app/application/controller.py:73,176` 이 `case_type_of(issue_code)` 와 `intent` 를 **둘 다** 넘긴다. **`[실측 2026-09-10 git]` 이 구현은 아직 커밋 전이다** — 되돌려지면 다시 막힌다. → [../delivery/open-items.md](../delivery/open-items.md)
+`[실측 2026-09-10 작업 트리]` **여행 분류 어휘와 두 축 라우팅이 이미 적용돼 있다** — `app/domains/travel_ops/components/core_hooks/feedback.py` 의 `INTENTS` 다섯이 슬러그이고 `ISSUE_CODES` 가 여행 17개이며, `app/application/controller.py:73,176` 이 `case_type_of(issue_code)` 와 `intent` 를 **둘 다** 넘긴다. **`[실측 2026-09-10 git]` 이 구현은 아직 커밋 전이다** — 되돌려지면 다시 막힌다. → [../delivery/open-items.md](../delivery/open-items.md)
 
 ## 층 3 — 전달 경로: 우리 말이 그대로 고객에게 간다
 
@@ -86,7 +86,7 @@ domain: travel
 
 페인포인트가 추상적 우려가 아니라는 증거. `[실측 2026-09-09]`
 
-~~**한 사건이 여러 예약을 바꾸는데 키가 같아진다.** `app/modules/travel_ops/_base.py:169` 이 idempotency 의 `business_subject` 를 3단 폴백으로 만든다.~~ `[정정 2026-09-10]` 아래 첫 도식의 Team 폴백 값은 최종 멱등 키(중복 실행을 구분하는 키)에 쓰이지 않고 Core가 `app/application/controller.py:371-374`에서 `business_subject=str(case["case_id"])`로 고정하므로, 결함의 수정 위치는 Core이며 서버가 인자에서 꺼내 실재·소유를 확인한 대상 객체 id를 쓰는 v11 §4-E가 미구현이다(2026-09-10 실측; `open-items.md`의 「전제가 틀렸다」 판정과 같다).
+~~**한 사건이 여러 예약을 바꾸는데 키가 같아진다.** `app/domains/travel_ops/instances/_shared/_base.py:169` 이 idempotency 의 `business_subject` 를 3단 폴백으로 만든다.~~ `[정정 2026-09-10]` 아래 첫 도식의 Team 폴백 값은 최종 멱등 키(중복 실행을 구분하는 키)에 쓰이지 않고 Core가 `app/application/controller.py:371-374`에서 `business_subject=str(case["case_id"])`로 고정하므로, 결함의 수정 위치는 Core이며 서버가 인자에서 꺼내 실재·소유를 확인한 대상 객체 id를 쓰는 v11 §4-E가 미구현이다(2026-09-10 실측; `open-items.md`의 「전제가 틀렸다」 판정과 같다).
 
 아래 도식은 당시 설명을 보존한 것이며, 키 충돌은 같은 Case·같은 종류의 작업에서 대상 객체가 다를 때의 문제다.
 

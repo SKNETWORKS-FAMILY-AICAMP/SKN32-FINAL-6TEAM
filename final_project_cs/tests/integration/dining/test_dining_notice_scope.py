@@ -15,7 +15,7 @@ import pytest
 
 KST = timezone(timedelta(hours=9))
 _TICK = os.path.join(os.path.dirname(__file__), "..", "..", "..",
-                     "app", "modules", "travel_ops", "dining", "tick.py")
+                     "app", "domains", "travel_ops", "instances", "dining", "tick.py")
 _spec = importlib.util.spec_from_file_location("dining_tick_scope", _TICK)
 tick = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(tick)

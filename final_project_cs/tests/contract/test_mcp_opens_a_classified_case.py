@@ -21,7 +21,7 @@ from uuid import uuid4
 import pytest
 
 import app.core.settings as settings_module
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db.session import get_connection
 from app.presentation.api import cases as cases_module
 

@@ -21,12 +21,12 @@ import pytest
 
 from app.core import settings as settings_module
 from app.core.transition import transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import pending as pending_module
-from app.modules.travel_ops.pending import CONSENT_KEY, PendingStore
-from app.modules.travel_ops.trip_watch_cases import TripWatchCaseOpener
+from app.domains.travel_ops.components.planning import pending as pending_module
+from app.domains.travel_ops.components.planning.pending import CONSENT_KEY, PendingStore
+from app.domains.travel_ops.components.watch.trip_watch_cases import TripWatchCaseOpener
 
 from .test_ask_first import _ask_first, _choose, _proposals
 from .test_trip_api import _at, _create, api  # noqa: F401 — 픽스처를 그대로 쓴다
@@ -156,7 +156,7 @@ def test_choosing_a_proposal_whose_item_has_ended_is_refused_and_the_closing_is_
 # ── ⑤ 낡은 기준 버전 · 거절돼도 열린 채 두는 것은 의도 ─────────────────────
 
 def test_a_stale_proposal_is_closed_for_good_through_the_rest_path(api):
-    from app.modules.travel_ops.itinerary import TripStore  # noqa: F401
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore  # noqa: F401
 
     trip_id = _ask_first(api)
     api["tick"]("09:00")
@@ -175,7 +175,7 @@ def test_a_stale_proposal_is_closed_for_good_through_the_rest_path(api):
 
 def test_a_refused_option_leaves_the_proposal_open_so_another_option_can_be_chosen(api):
     """의도다(결함 인계 #5 확인): 고른 안이 지금 안 맞아 거절되면 제안은 그대로 열려 있다 — 같은 제안에서 다른 안을 고를 수 있어야 한다."""
-    from app.modules.travel_ops.pending import ProposalRefused
+    from app.domains.travel_ops.components.planning.pending import ProposalRefused
 
     trip_id = _ask_first(api)
     api["tick"]("09:00")
@@ -306,7 +306,7 @@ def test_a_batch_that_could_not_change_anything_notifies_once_for_the_set_and_ne
 
 def test_a_batch_the_applier_refused_for_the_whole_itinerary_recheck_is_announced_to_every_member(api, guardrails):
     """★적대 검토(2026-10-03) — Team 은 묶음을 냈는데 적용기가 일정 전체 재판정으로 **거절**하면, 전에는 알림 표지가 없어 구성원 전원이 말없이 막혔다. 단일 Case 처럼 알린다."""
-    from app.modules.travel_ops.itinerary_actions import RECHECK_FAILED
+    from app.domains.travel_ops.components.actions.itinerary_actions import RECHECK_FAILED
 
     _create(api)
     guardrails.update({"travel.watch.batch_enabled": True})
@@ -332,7 +332,7 @@ def test_a_batch_whose_close_has_no_item_tokens_is_not_announced(api, guardrails
 
 def test_a_change_blocked_by_the_whole_itinerary_recheck_is_announced_with_its_own_wording(api):
     """바꿀 곳은 찾았는데 일정 전체를 다시 판정하니 앞뒤와 안 맞아 적용기가 거절했다 — 고객은 「일정은 그대로 두었어요」를 듣는다(그 이유로)."""
-    from app.modules.travel_ops.itinerary_actions import RECHECK_FAILED
+    from app.domains.travel_ops.components.actions.itinerary_actions import RECHECK_FAILED
 
     _create(api)
     before = len(_notices(api))

@@ -15,8 +15,8 @@ from __future__ import annotations
 
 from datetime import date
 
-from app.modules.travel_ops.intake import progress
-from app.modules.travel_ops.intake.pipeline import read_source
+from app.domains.travel_ops.components.intake import progress
+from app.domains.travel_ops.components.intake.pipeline import read_source
 
 
 def setup_function(_fn):

@@ -21,8 +21,8 @@ import json
 from uuid import UUID
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.intake import pipeline, progress, stream
-from app.modules.travel_ops.intake import review as review_module
+from app.domains.travel_ops.components.intake import pipeline, progress, stream
+from app.domains.travel_ops.components.intake import review as review_module
 
 from .test_intake_review import PLAN, ROOMY, Kakao, Tour, _client, _key, _send, rv  # noqa: F401 — 같은 환경 · 모방을 그대로 쓴다
 from .test_trip_api import api  # noqa: F401 — `rv` 가 쓰는 픽스처

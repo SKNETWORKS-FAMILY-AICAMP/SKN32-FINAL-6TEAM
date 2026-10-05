@@ -30,7 +30,8 @@ domain: neutral
 
 | 문서 | 답하는 질문 | 코드 |
 |---|---|---|
-| [rest-api.md](rest-api.md) | 엔드포인트와 스키마 | `app/presentation/api/` |
+| [rest-api.md](rest-api.md) | REST 진입점 · 인증 구분 · 검증 범위 | `app/presentation/api/` |
+| [rest-endpoints.md](rest-endpoints.md) | API 요청 · 응답의 정본 — 웹 API · 계획 접수 · 여행 · Case 계약 | `app/domains/travel_ops/entry/trip_api.py` 등 |
 | [mcp-tools.md](mcp-tools.md) | 개인 AI가 쓰는 도구 3종 | `app/presentation/mcp/` |
 | [a2a-protocol.md](a2a-protocol.md) | 기업 Agent에 업무 위임 | `app/presentation/a2a/` |
 | [auth-boundary.md](auth-boundary.md) | 인증·스코프·PII | `app/infrastructure/auth/` |

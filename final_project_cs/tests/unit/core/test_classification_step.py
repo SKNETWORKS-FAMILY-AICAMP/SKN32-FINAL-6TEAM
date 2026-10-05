@@ -13,7 +13,7 @@ import pytest
 
 from app.application import classification
 from app.application.classification import FAILURE_CODE, REQUIRED_LABELS, classify_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 
 
 class FakeConn:

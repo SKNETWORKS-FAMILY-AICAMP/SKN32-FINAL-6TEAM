@@ -2,7 +2,7 @@
 """후보 장소 CSV → `place_catalog` 수동 적재. **재실행 안전**(upsert).
 
 대상 CSV:
-    app/modules/travel_ops/activity/data_processing/activities_candidates_seoul_merged.csv
+    app/domains/travel_ops/instances/activity/data_processing/activities_candidates_seoul_merged.csv
     — 서울 Activity 후보 1,173건(TourAPI 805 + 올리브영 368). `data_source` 컬럼이
       있으면 **`--source` 와 같은 행만** 넣는다(기본 tour_api → 805건).
       FD(음식)·AC(숙박)·EV(행사·이벤트)는 Activity 담당 범위 밖이므로 --exclude-codes로 제외한다.
@@ -11,10 +11,10 @@
 
 사용:
     python -m scripts.load_place_catalog_csv \
-        app/modules/travel_ops/activity/data_processing/activities_candidates_seoul_merged.csv \
+        app/domains/travel_ops/instances/activity/data_processing/activities_candidates_seoul_merged.csv \
         --exclude-codes FD AC EV --dry-run   # 넣지 않고 검사만
     python -m scripts.load_place_catalog_csv \
-        app/modules/travel_ops/activity/data_processing/activities_candidates_seoul_merged.csv \
+        app/domains/travel_ops/instances/activity/data_processing/activities_candidates_seoul_merged.csv \
         --exclude-codes FD AC EV             # 적재
 
 ★키는 `(tenant_id, source, content_id)` 다(011). 같은 CSV 를 다시 돌리면 같은 행을
@@ -41,7 +41,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from app.infrastructure.travel.tour_api import LARGE_CLASS_NAMES
+from app.domains.travel_ops.ports.data_sources.tour_api import LARGE_CLASS_NAMES
 
 #: 서울 경계 상자(여유 포함). 밖이면 좌표를 신뢰하지 않는다.
 SEOUL_LON = (126.70, 127.30)

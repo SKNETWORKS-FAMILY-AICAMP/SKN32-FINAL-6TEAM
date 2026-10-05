@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """웹 소셜 로그인(구글 먼저) — 시작 → 콜백 → 표 교환 한 바퀴 · 연결 · 해제 · 보안. `[2026-10-03 ui 세션 요청서 「소셜 로그인」 — 1단계는 구글 하나]`
 
-계약: `wiki/records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md` · 구현 `app/modules/travel_ops/web_auth_api.py` · `web_auth.py` · `infrastructure/oauth_providers.py`.
+계약: `wiki/records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md` · 구현 `app/domains/travel_ops/modules/web_account/web_auth_api.py` · `web_auth.py` · `infrastructure/oauth_providers.py`.
 
 ★업체(구글)는 **시험용 가짜**다 — 코드를 사용자 고유 번호로 바꾸는 자리(`exchange`)에 꽂는다(코드 `sub-<이름>` → 고유 번호 `<이름>`, `bad-` 로 시작하면 업체 오류). 실제 구글과의 연결은
 사용자가 구글 콘솔에서 만든 클라이언트 ID · 비밀값이 있어야 해서 따로 확인한다(`wiki/records/reports/`). ID 토큰 확인 자체는 `tests/unit/travel/test_oauth_providers.py` 가 본다.
@@ -31,10 +31,10 @@ from fastapi.testclient import TestClient
 import app.core.settings as settings_module
 from app.infrastructure import oauth_providers as oauth
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import web_guard
-from app.modules.travel_ops.trip_api import build_trip_router
-from app.modules.travel_ops.web_auth_api import build_auth_router
-from app.modules.travel_ops.web_session import add_key, issue, resolve
+from app.domains.travel_ops.modules.web_account import web_guard
+from app.domains.travel_ops.entry.trip_api import build_trip_router
+from app.domains.travel_ops.modules.web_account.web_auth_api import build_auth_router
+from app.domains.travel_ops.modules.web_account.web_session import add_key, issue, resolve
 from app.presentation.api.app import create_app
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
@@ -365,7 +365,7 @@ def test_a_browser_on_another_origin_may_call_delete(social):
 
 def test_a_user_with_an_attached_account_is_not_swept_up_by_the_guest_cleanup(social):
     """게스트 정리는 로그인 안 한 오래된 사용자를 지운다 — 소셜 계정이 붙은 사용자는 회원이라 건드리지 않는다(계정으로 다시 들어오면 같은 사용자)."""
-    from app.modules.travel_ops.guest_cleanup import cleanup_guests
+    from app.domains.travel_ops.modules.web_account.guest_cleanup import cleanup_guests
 
     client, tenant = social["client"], social["tenant"]
     _exchange(client, _flow(client, "sub-kate")["ticket"])

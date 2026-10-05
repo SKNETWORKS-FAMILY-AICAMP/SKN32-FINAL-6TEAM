@@ -10,13 +10,13 @@ domain: travel
 
 # Mobility Team
 
-`[2026-09-28]` **코드 위치가 폴더로 바뀌었다** — `app/modules/travel_ops/mobility/`(본체 `team.py`). 아래에 날짜와 함께 적힌 `mobility.py` 경로·줄 번호는 그때 기록이다. 두는 규칙은 [code-layout.md](code-layout.md).
+`[2026-09-28]` **코드 위치가 폴더로 바뀌었다** — `app/domains/travel_ops/instances/mobility/`(본체 `team.py`). 아래에 날짜와 함께 적힌 `mobility.py` 경로·줄 번호는 그때 기록이다. 두는 규칙은 [code-layout.md](code-layout.md).
 
-`[2026-10-04]` **이동 계산기에 서버 없는 길찾기가 붙었다** — 택시·자전거·장소 사이 도보는 GraphHopper 서버를 따로 띄우지 않고 저장소 안 도로 그래프(`datasets/mobility/processed/mobility/road_graph_v1`)를 파이썬이 직접 읽어 최단경로를 구한다(`app/modules/travel_ops/mobility/engine/graph_router.py`). 서비스 런타임은 전엔 택시 서비스를 한 번도 끼우지 않아 택시 대안이 늘 「소요 근거없음」이었는데, 이제 막차 뒤 구간의 택시 대안이 시간·요금 하한을 싣는다. 끄는 법은 설정 `mobility_local_router=false`(`ACOP_MOBILITY_LOCAL_ROUTER`). 정확도·비용·한계·검증은 [리포트](../records/reports/2026-10-04_0400_이동_파이썬_길찾기_서버없이_리포트.md).
+`[2026-10-04]` **이동 계산기에 서버 없는 길찾기가 붙었다** — 택시·자전거·장소 사이 도보는 GraphHopper 서버를 따로 띄우지 않고 저장소 안 도로 그래프(`datasets/mobility/processed/mobility/road_graph_v1`)를 파이썬이 직접 읽어 최단경로를 구한다(`app/domains/travel_ops/instances/mobility/engine/graph_router.py`). 서비스 런타임은 전엔 택시 서비스를 한 번도 끼우지 않아 택시 대안이 늘 「소요 근거없음」이었는데, 이제 막차 뒤 구간의 택시 대안이 시간·요금 하한을 싣는다. 끄는 법은 설정 `mobility_local_router=false`(`ACOP_MOBILITY_LOCAL_ROUTER`). 정확도·비용·한계·검증은 [리포트](../records/reports/2026-10-04_0400_이동_파이썬_길찾기_서버없이_리포트.md).
 
 `[2026-10-04 추가]` 같은 날 이어서 — ① **역·정류장까지 걷기를 도로 그래프로 잰다**(`Planner._eff`, 로컬 길찾기가 있을 때만 · 못 찾으면 직선 그대로). ② **공표 역간거리가 없는 구간의 지하철 요금**을 OSM 선로 길이로 추정해 대체 소스로 더했다(규칙 `fare.subway.distance_estimate` · 응답 label 에 「요금은 선로 길이 추정」 · 별도운임 노선은 안 낸다 · 자료 `rail_edge_track_v1.jsonl.gz`). ③ 구조 정리 — 판정 파일의 명령줄·출력은 `verify_time_cli.py`, 시험용 자동차 라우터는 `car_fixtures.py`, 규칙 파일의 변경 이력은 `rules_v0.3.history.json`(새 이력은 거기에 쌓는다). ④ 관광 구간을 구글 Routes(TRANSIT)와 32쌍 대조(`scripts/mobility/validate_tourist_vs_google.py`): 우리가 중앙 +8분 느림. 수치·한계는 리포트 12절. `[2026-10-04 밤]` ⑤ **지하철 무정차 감시**(서울교통공사 지하철알림정보 · 1~8호선 · `subway_notice.py`)가 경로 사건에 답한다 — 한계는 제목 글자를 읽는다는 것(역을 못 읽는 알림이 있어 「사건 없음」은 「알림에서 못 찾음」). ⑥ ODsay 무료 하루 30회 · 따릉이 서울 키 연결 확인. ⑦ 판정 기록 도구는 `mobility/devtools/` 로 옮겼다(12-7). ⑨ 도로 사건 소스에 **ITS 를 2차로 붙였다**(UTIC 와 합집합 · 둘 다 못 읽을 때만 치명 — 점검 보고서 6절). ⑧ 서울 **실시간 지하철 도착정보**(실시간 지하철 키 · `seoul_subway.py`)를 읽는 소스를 붙였다 — 지금 값이라 판정에는 안 넣는다(12-8).
 
-★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/mobility.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
+★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/domains/travel_ops/instances/mobility.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
 
 근거는 계획서 v11 §5. `[결정 2026-09-10]` **MVP Team 셋(Activity·Dining·Mobility) 중 하나다** — 5주차에 선제 조정 루프와 함께 붙는다(v11 §9-B).
 
@@ -92,7 +92,7 @@ Mobility: "오후 순서를 B→A→C 로 바꾸면 이동 40분이 줄어든다
 
 ## manifest — 실제 구현
 
-`[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/mobility.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
+`[실측 2026-09-10 작업 트리]` `app/domains/travel_ops/instances/mobility.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
 
 ```python
 capabilities          = ["mobility.check_route", "mobility.status", "mobility.exception",
@@ -130,7 +130,7 @@ default_capability    = "mobility.check_route"
 - **감시 Case**(`trigger_source=schedule`) — 구간 사건을 `read.route_events` 로 **다시** 읽고, 계획한 수단이 막혔으면 경로를 다시 고른다(이동-B1 · 이동-A6). 사건을 못 읽으면(`events=None`) 「사건 없음」으로 넘기지 않고 escalate 한다(결정 15).
 - **재요청** — 다른 안으로(`change`) · 되돌리기(`rollback`).
 
-- 계산은 `app/modules/travel_ops/itinerary_changes.py` — 시나리오용 버전과 **같은 함수**다(문구·판단이 갈리지 않는다).
+- 계산은 `app/domains/travel_ops/components/itinerary/itinerary_changes.py` — 시나리오용 버전과 **같은 함수**다(문구·판단이 갈리지 않는다).
 - 쓰지 않는다. 새 일정 버전을 `itinerary.apply` 제안(승인 불요 · 위험 낮음)으로 내고, 코어가 Case 완료와 한 트랜잭션으로 적용·통지한다 → [../actions/approval.md](../actions/approval.md) 「승인 없이 적용되는 제안」.
 - `required_context` 에서 `policy` 를 뺐다 — 선언에 두면 정책 검색 0건이 Case 전체를 degraded 로 만든다. `max_steps` 는 대안 후보마다 재점검하느라 12 로 올렸다.
 
@@ -166,7 +166,7 @@ subject = 객체 id    →  다른 키
 
 ### ★ [2026-09-09] 코드가 이 규칙을 안 지킨다
 
-`[실측]` `app/modules/travel_ops/_base.py:169` — 여행 Team 공용 기반이 **3단 폴백**을 쓴다. `[정정 2026-09-10]` 위 「business_subject」 절의 정정 참조 — Team 코드 관찰이며 최종 키 결함 자리는 Core다.
+`[실측]` `app/domains/travel_ops/instances/_shared/_base.py:169` — 여행 Team 공용 기반이 **3단 폴백**을 쓴다. `[정정 2026-09-10]` 위 「business_subject」 절의 정정 참조 — Team 코드 관찰이며 최종 키 결함 자리는 Core다.
 
 ```python
 subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.case_id)

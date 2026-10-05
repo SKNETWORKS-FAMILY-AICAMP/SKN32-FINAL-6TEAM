@@ -2,12 +2,12 @@
 """Activity 후보 장소 CSV(805건) + 올리브영 매장 CSV(368건) → 통합 CSV 하나.
 
 사용:
-    python -m app.modules.travel_ops.activity.data_processing.merge_oliveyoung_activities
+    python -m app.domains.travel_ops.instances.activity.data_processing.merge_oliveyoung_activities
 
 입력(둘 다 **읽기만** 한다 — 원본은 고치지 않는다):
-    app/modules/travel_ops/activity/data_processing/oliveyoung_seoul.csv  올리브영 서울 매장 368건, 10개 컬럼(한글)
+    app/domains/travel_ops/instances/activity/data_processing/oliveyoung_seoul.csv  올리브영 서울 매장 368건, 10개 컬럼(한글)
 출력:
-    app/modules/travel_ops/activity/data_processing/activities_candidates_seoul_merged.csv  컬럼 + `data_source`
+    app/domains/travel_ops/instances/activity/data_processing/activities_candidates_seoul_merged.csv  컬럼 + `data_source`
 
 ★통합 규칙(2026-09-26 담당자 결정). 여기 없는 변환은 하지 않는다.
   - 컬럼은 **805건 CSV 기준**이다. 올리브영 전용 컬럼은 만들지 않는다

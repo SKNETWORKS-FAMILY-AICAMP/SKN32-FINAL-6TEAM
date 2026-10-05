@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from app.infrastructure.travel.open_meteo import OpenMeteoWeather
+from app.domains.travel_ops.ports.data_sources.open_meteo import OpenMeteoWeather
 
 pytestmark = pytest.mark.live
 
@@ -37,7 +37,7 @@ def test_the_heritage_api_answers_without_any_key():
 
     Open-Meteo 에 이어 두 번째 무키 소스다. 키가 필요해지면 여기서 붉어진다.
     """
-    from app.infrastructure.travel.heritage import HeritageSource
+    from app.domains.travel_ops.ports.data_sources.heritage import HeritageSource
 
     source = HeritageSource()
     result = source.locate("경복궁 근정전")

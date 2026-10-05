@@ -3,8 +3,8 @@
 
 두 시험은 **이 파일 안의 순서**대로 돈다. 앞 시험이 서버 조립과 같은 일(설정 비움 → 꺼짐)을 하고, 뒤 시험이 그 흔적이 없는지 본다.
 """
-from app.modules.travel_ops.mobility import wiring
-from app.modules.travel_ops.mobility.engine import paths
+from app.domains.travel_ops.instances.mobility import wiring
+from app.domains.travel_ops.instances.mobility.engine import paths
 
 
 def test_a_test_that_disables_the_engine_like_the_server_assembly_does():

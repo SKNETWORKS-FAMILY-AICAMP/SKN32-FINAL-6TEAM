@@ -10,9 +10,9 @@ domain: travel
 
 # Activity Team
 
-`[2026-09-28]` **코드 위치가 폴더로 바뀌었다** — `app/modules/travel_ops/activity/`(본체 `team.py`). 아래에 날짜와 함께 적힌 `activity.py` 경로·줄 번호는 그때 기록이다. 두는 규칙은 [code-layout.md](code-layout.md).
+`[2026-09-28]` **코드 위치가 폴더로 바뀌었다** — `app/domains/travel_ops/instances/activity/`(본체 `team.py`). 아래에 날짜와 함께 적힌 `activity.py` 경로·줄 번호는 그때 기록이다. 두는 규칙은 [code-layout.md](code-layout.md).
 
-`[실측 2026-09-10]` **코드가 붙었다** — `app/modules/travel_ops/activity.py` **274줄**, capability 셋(`activity.check_cancelable`·`check_feasible`·`propose_change`), `knowledge_scope` 넷(`activity`·`cancellation`·`refund`·`weather`). 이 문서의 명세와 코드가 어긋나면 **코드를 고친다**(명세가 정본이다). `[정정 2026-09-10]` **「지금 어떻게 돼 있나」의 정본은 코드다** — 명세는 「무엇을 만들려 하나」의 정본이다. 어긋나면 어느 쪽이 틀렸는지부터 가린다. 이 문서도 manifest 절(`accepted_case_types`·`allowed_tools`)을 코드에 맞춰 고쳤다.
+`[실측 2026-09-10]` **코드가 붙었다** — `app/domains/travel_ops/instances/activity.py` **274줄**, capability 셋(`activity.check_cancelable`·`check_feasible`·`propose_change`), `knowledge_scope` 넷(`activity`·`cancellation`·`refund`·`weather`). 이 문서의 명세와 코드가 어긋나면 **코드를 고친다**(명세가 정본이다). `[정정 2026-09-10]` **「지금 어떻게 돼 있나」의 정본은 코드다** — 명세는 「무엇을 만들려 하나」의 정본이다. 어긋나면 어느 쪽이 틀렸는지부터 가린다. 이 문서도 manifest 절(`accepted_case_types`·`allowed_tools`)을 코드에 맞춰 고쳤다.
 
 근거는 계획서 v11 §5. 여행 도메인 판올림(2026-09-08)으로 생긴 Team이다.
 
@@ -146,7 +146,7 @@ Team 이 셋을 다 알고 있고 **항목이 어느 것에 걸리는지를 판�
 
 `[실측 2026-09-10 작업 트리]` **LLM 후보 생성은 아직 없다.** `_propose_change()`(`activity.py:232`)는 대안을 만들지 않는다 — 받은 예약에 `activity.change` 제안 하나(`booking_id`·`reason`)를 만들어 승인 대기에 올린다. 그래서 무예약 활동은 이 경로로도 제안을 못 만든다(아래 대조 표 절과 같은 문제).
 
-`[2026-10-01]` **대체 후보 고르는 법을 팀 작업과 맞췄다** — 비슷한 곳(관광공사 분류·구) → 같은 브랜드·같은 구 앞세우기 → 가까운 곳 순, 영업시간·휴무 글은 규칙만으로 요일별 칸으로 읽고(모델 호출 없음), 실내·야외 모르는 일정은 먼저 묻는다. 무엇을 가져오고 무엇을 안 가져왔는지·실측은 [develop 반영 리포트](../records/reports/2026-10-01_Activity_develop_반영_리포트.md) · [PR #6 전수검수 리포트](../records/reports/2026-09-28_1826_Activity_PR6_전수검수_리포트.md).
+`[2026-10-01]` **대체 후보 고르는 법을 팀 작업과 맞췄다** — 비슷한 곳(관광공사 분류) → 같은 브랜드의 1km 안 매장 앞세우기(같은 브랜드는 한 곳만) → 가까운 곳 순(`[2026-10-05]` 구는 점수에서 뺐고, 이동 중요면 분류보다 거리가 앞선다 · 안마다 추천 이유 한 줄을 기록에 싣는다), 영업시간·휴무 글은 규칙만으로 요일별 칸으로 읽고(모델 호출 없음), 실내·야외 모르는 일정은 먼저 묻는다. 무엇을 가져오고 무엇을 안 가져왔는지·실측은 [develop 반영 리포트](../records/reports/2026-10-01_Activity_develop_반영_리포트.md) · [PR #6 전수검수 리포트](../records/reports/2026-09-28_1826_Activity_PR6_전수검수_리포트.md).
 
 ## 재계획이 다른 Team의 일정을 건드린다
 
@@ -164,7 +164,7 @@ Activity: "10/03 15시 → 10/04 10시" 후보를 낸다
 
 ## manifest — 실제 구현
 
-`[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/activity.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
+`[실측 2026-09-10 작업 트리]` `app/domains/travel_ops/instances/activity.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
 
 ```python
 capabilities          = ["activity.check_cancelable",   # 지금 취소할 수 있나 · 위약금은 얼마인가
@@ -242,7 +242,7 @@ subject = 객체 id    →  다른 키
 
 ### ★ [2026-09-09] 코드가 이 규칙을 안 지킨다
 
-`[실측]` `app/modules/travel_ops/_base.py:169` — 여행 Team 공용 기반이 **3단 폴백**을 쓴다. `[정정 2026-09-10]` 위 「business_subject」 절의 정정 참조 — Team 코드 관찰이며 최종 키 결함 자리는 Core다.
+`[실측]` `app/domains/travel_ops/instances/_shared/_base.py:169` — 여행 Team 공용 기반이 **3단 폴백**을 쓴다. `[정정 2026-09-10]` 위 「business_subject」 절의 정정 참조 — Team 코드 관찰이며 최종 키 결함 자리는 Core다.
 
 ```python
 subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.case_id)

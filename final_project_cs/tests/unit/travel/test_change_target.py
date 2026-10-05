@@ -10,8 +10,8 @@ from datetime import datetime
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.trip_messages import _change_target, asked_kind
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.conversation.trip_messages import _change_target, asked_kind
 
 KST = ZoneInfo("Asia/Seoul")
 

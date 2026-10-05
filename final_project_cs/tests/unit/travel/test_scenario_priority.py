@@ -5,7 +5,7 @@
   대본이 고른 곳이 먼저 골라지게 한다. ★탈락한 곳은 살리지 못하고, 순위가 없는 실제 장소끼리는 예전 순서 그대로다."""
 from __future__ import annotations
 
-from app.modules.travel_ops.replan import Candidate, choose
+from app.domains.travel_ops.components.planning.replan import Candidate, choose
 
 
 def _cand(key, *, walk, priority=None, rejected=()):

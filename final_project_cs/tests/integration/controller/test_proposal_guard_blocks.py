@@ -58,7 +58,7 @@ def _controller(team, *, broker=None):
     Controller 는 기본값으로 아무 어휘도 갖지 않는다 — basement 이기 때문이다.
     선언을 안 주면 대조를 건너뛴다. 그래서 여기서 도메인 선언을 붙인다.
     """
-    from app.modules.travel_ops.verification_policy import FACT_QUERIES, TRAVEL_OPS_POLICY
+    from app.domains.travel_ops.components.core_hooks.verification_policy import FACT_QUERIES, TRAVEL_OPS_POLICY
     return Controller(TeamRegistry([team]), policy_search=fake_policy,
                       context_broker=broker or FakeContextBroker(),
                       verification_policy=TRAVEL_OPS_POLICY, fact_queries=FACT_QUERIES)

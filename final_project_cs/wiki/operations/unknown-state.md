@@ -83,7 +83,7 @@ Case 상태
 수동 실행은 실제 코드의 함수·이벤트·payload 계약을 직접 쓴다.
 
 ```python
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db.session import get_connection
 from app.core.transition import transition_case
 ```
@@ -108,7 +108,7 @@ unknown outbox 의 확인 결과는 `/ops/outbox` 화면과 `/v1/outbox/{message
 ```
 app/infrastructure/messaging/worker.py
 app/infrastructure/db/migrations/005_outbox_resolution.sql
-app/domain/events.py
+app/core/case_lifecycle/events.py
 app/core/transition.py
 app/presentation/api/  ·  app/presentation/ui/
 ```

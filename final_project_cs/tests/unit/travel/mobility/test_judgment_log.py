@@ -20,7 +20,7 @@ for _p in (REPO / "final_project_cs", Path(__file__).resolve().parent):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from app.modules.travel_ops.mobility.devtools import judgment_log as jl                 # noqa: E402
+from app.domains.travel_ops.instances.mobility.devtools import judgment_log as jl                 # noqa: E402
 from classification_metrics import classify_report, binary_report, misclassified_catalog   # noqa: E402
 import judgment_metrics_report as rep                                     # noqa: E402
 
@@ -344,7 +344,7 @@ def test_every_check_passes():
 def test_default_log_dir_needs_data_dir(monkeypatch, tmp_path):
     """73 후속 3-5 — 자료 폴더가 정해지지 않았거나(unset · 자리표시 /data) 계산기가 꺼졌으면(disabled) 기본 로그 자리를
     만들지 않는다. 앞 판은 #48 뒤 `/data`(Windows 에선 C:\\data)에 로그를 썼다. 명시한 log_dir 은 그대로 쓴다."""
-    from app.modules.travel_ops.mobility.engine import paths as P
+    from app.domains.travel_ops.instances.mobility.engine import paths as P
     import pytest
     for src in ("unset", "disabled"):
         monkeypatch.setattr(P, "SOURCE", src)
@@ -362,7 +362,7 @@ def test_log_run_entry_sets_data_dir_first(monkeypatch, capsys):
     """73 후속 3-5 — judgment_log_run 진입점은 로그 자리를 정하기 **전에** 자료 폴더를 정한다(load_cli_env).
     못 정하면(unset) 로그도 판정도 안 돌리고 2 로 끝난다 — `C:\\data\\…\\logs` 가 생기지 않는다."""
     import judgment_log_run as R
-    from app.modules.travel_ops.mobility.engine import paths as P
+    from app.domains.travel_ops.instances.mobility.engine import paths as P
     monkeypatch.setattr(P, "SOURCE", "unset")
     monkeypatch.setattr(P, "load_cli_env", lambda: "unset")     # .env·저장소 자료 모두 없는 기기
     code = R.main(["--", "verify_time", "--cases", "x.json"])

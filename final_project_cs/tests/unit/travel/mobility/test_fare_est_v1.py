@@ -9,8 +9,8 @@ from __future__ import annotations
 import math
 from types import SimpleNamespace
 
-from app.modules.travel_ops.mobility.engine import options as O
-from app.modules.travel_ops.mobility.engine.line_order import LineOrder, _load_est_edges
+from app.domains.travel_ops.instances.mobility.engine import options as O
+from app.domains.travel_ops.instances.mobility.engine.line_order import LineOrder, _load_est_edges
 
 FARE = {"subway": {
     "base": {"value": {"won": 1550, "base_m": 10000}},

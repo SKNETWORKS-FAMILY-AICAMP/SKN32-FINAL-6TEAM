@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 
 from app.core.settings import get_guardrails, get_settings
 from app.infrastructure.db.session import get_connection
-from app.infrastructure.travel.call_budget import UNLIMITED, usage_report
+from app.domains.travel_ops.ports.data_sources.call_budget import UNLIMITED, usage_report
 
 KST = ZoneInfo("Asia/Seoul")
 _LEVEL = {"ok": "정상", "warn": "경보", "critical": "위험", "exhausted": "찼음"}

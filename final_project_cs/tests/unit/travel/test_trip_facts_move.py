@@ -9,8 +9,8 @@ from datetime import datetime
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.trip_facts import fact_question, fact_reply
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.conversation.trip_facts import fact_question, fact_reply
 
 KST = ZoneInfo("Asia/Seoul")
 
@@ -51,7 +51,7 @@ def test_one_place_still_gets_the_old_answer():
 
 def test_a_delay_before_the_trip_starts_is_answered_not_replanned():
     """★「30분 늦어요」를 여행 전(9-28)에 받으면 일주일 뒤 점심을 늦춰 판정했고 사람 대기로 끝났다(ui 세션 실서버 시험)."""
-    from app.modules.travel_ops.itinerary_changes import NoChange, plan_delay
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_delay
 
     plan = plan_delay(trip={"constraints": {}}, items=ITEMS, places=[], at=NOW, minutes=30,
                       message="30분 늦을 것 같아요", request_id=None)

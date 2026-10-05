@@ -79,6 +79,25 @@ products                                     (006)
 
 **여러 번 돌려도 같은 결과다.** 개발 중에 반복 실행하게 되므로 중요하다.
 
+## 번호가 팀 저장소와 겹칠 때 `[2026-10-05]`
+
+**알아 둘 것.** 실행기(`migrate.py`)는 `migrations/*.sql` 을 **파일 이름순으로 이어 붙여 한 번에** 돌린다(하위 폴더 `pending/` 는 안 돈다). 실행 기록 표가 없어 **번호는 순서일 뿐 상태가 아니다** — 번호 앞자리가 겹쳐도 이름이 다르면 둘 다 돌고, 파일마다 「없을 때만 만들기」라 다시 돌려도 안전하다. 겹치는 것은 헷갈림이지 고장이 아니다. 단 **한 파일이 틀리면 그 뒤 모든 파일이 안 돈다.**
+
+팀 저장소 `develop` 이 갖고 우리에게 없는 파일 다섯과 판정(코어 담당 · 읽기만 했고 아직 가져오지 않았다):
+
+| 파일 | 우리와 겹침 | 판정 | 이유 |
+|---|---|---|---|
+| `014_activity_tour_disaster` · `015_activities_place_link` · `016_activities_disaster_to_watch` | 014·016 은 앞자리가 우리 `014_itinerary` · `016_trip_request_key` 와 같고, 015 는 우리 빈 번호지만 우리 대기 중 `pending/015_drop_commerce_domain.sql` 과 겹침 | **제외(지금)** | `activities` · `tour` · `disaster` 표는 develop 활동 Team 의 **자체 재난문자 감시**용이다. 우리는 그 감시를 쓰지 않고(3분 감시 한 곳 — [개발 통합 작업 방향](../records/plans/2026-10-05_develop_통합_작업_방향.md)) 우리 마이그레이션에는 `activities` 표가 없다. 셋은 한 묶음이다 — 015·016 이 014 가 만든 표를 고치므로 **부분만 가져오지 않는다** |
+| `017_place_catalog_large_class` | 앞자리가 우리 `017_supplier_tier` 와 같음 | **제외(지금)** | 우리 코드는 관광공사 대분류(`lclsSystm`)를 `place_catalog.raw_json` 안에서 읽는다 — 새 칸이 필요 없다. 그 칸을 읽는 develop 코드(`activity/db_search`)를 가져오기로 할 때 같이 본다 |
+| `220_dining_runtime_link` | 우리 `220_dining_notice_scope` 와 앞자리 같음(우리만 221~223 가 있다) | **요식 담당 판정: 반영 — 새 번호 `224_dining_runtime_link`** | 판정할 때 코어 장소를 원장 가게와 잇는 함수라 221 · 222(공용 장소 올리기)와는 다른 일이다 — 둘 다 필요하다. 규칙 3 대로 새 번호로 들였다(우리 220 · 221~223 이름은 그대로). 개발 DB 복사본에서 전체를 이어 붙여 두 번 실행해 오류 없음을 확인했다(요식 세션). 요식 병합 브랜치 `port/team-dining-sync`(1de9a692)에 들어 있고 **본 브랜치 반영은 대기** — 작업 폴더에 다른 세션의 미커밋 수정 한 줄이 있어 합치기가 막혀 있다 |
+
+**규칙** (코어 담당이 한 번에 정했다)
+1. **이미 적용된 번호 · 이름은 바꾸지 않는다.**
+2. **같은 내용이면 팀 저장소와 같은 이름으로** 가져온다 — 통합 때 중복이 안 생긴다.
+3. **이름이 같고 내용이 다르면**(220) 우리 마지막 번호 뒤 **새 번호**로 가져온다(코어 `050`~ · 요식 `224`~). 통합 때 팀 저장소 쪽 옛 이름을 지운다.
+4. 가져오기 전에 **개발 DB 에서 전체를 이어 붙여 두 번** 돌려 오류가 없는지 본다.
+5. 대기 중 `pending/015_drop_commerce_domain.sql` 은 켤 때 새 번호로 바꾼다.
+
 ## 빠뜨리면 무너지는 제약 셋
 
 `[실측]` handoff 계약이 "★빠뜨리면 시스템이 무너지는 제약 3개"로 따로 표시한 것들.
@@ -141,7 +160,7 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 `[실측]` `031_web_guard.sql` — 웹의 비싼 작업(계획 읽기 · 일정 짜기 · 확인 · 여행 만들기 · 채팅)과 키 발급을 **DB 에서 모든 프로세스가 같이** 센다
 (`web_usage`, 027 `external_call_budget` 과 같은 방식). 주소는 원문이 아니라 `HMAC(서버 비밀키, 날짜|주소)` 만 남고 48시간 뒤 지운다.
 운영자가 바꾼 제한값은 `runtime_limits`, 판 번호는 `runtime_limit_state`, 바꾼 기록은 `runtime_limit_events`(**트리거로 고치기·지우기 금지**).
-기본값·범위는 가드레일 `web_guard` 가 정본이다. 코드 `app/modules/travel_ops/web_guard.py` · `web_limits_api.py`.
+기본값·범위는 가드레일 `web_guard` 가 정본이다. 코드 `app/domains/travel_ops/modules/web_account/web_guard.py` · `web_limits_api.py`.
 ★적용: 전체 실행기(`app/infrastructure/db/migrate.py`)가 아니라 이 파일만 적용했다(2026-09-28) — 폴더에 다른 세션의 작업 중
 마이그레이션(200번대 요식)이 함께 있어 전체를 돌리면 그것까지 적용된다.
 
@@ -175,7 +194,7 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 
 ### 텔레그램 연결 · 알림 받는 곳 `customer_profiles` · `telegram_link_codes` · `telegram_seen_updates` `[2026-10-05 · 048]`
 
-`[실측]` `048_telegram_connect.sql` — ①`customer_profiles` 에 칸 7개: `telegram_chat_enc`(**암호화한** 대화 번호 — 원문은 어디에도 없다) · `telegram_chat_hash`(서버 비밀 HMAC — 같은 대화가 두 사용자에게 묶이는 것을 막는 **부분 유일 색인** `uq_customer_profiles_telegram_chat (tenant_id, telegram_chat_hash) WHERE … IS NOT NULL`) · `telegram_status`(`untested`/`ok`/`blocked`) · `telegram_connected_at` · `telegram_checked_at` · `telegram_tested_at`(시험 발송 간격을 DB 에서 센다) · `notice_channel`(`discord`/`telegram`/NULL — **알림 받는 곳, 한 번에 한 곳**) ②`telegram_link_codes`(연결 링크의 일회용 코드 — `code_hash` 기본키(**원문 없음**) · `tenant_id` · `customer_id`(→ `customers` **ON DELETE CASCADE** — 게스트 정리를 막지 않는다) · `created_at` · `used_at`) ③`telegram_seen_updates`(`update_id` 기본키 · `seen_at` — 텔레그램이 같은 업데이트를 다시 보내도 두 번 처리하지 않으려고 이틀 동안 기억). 저장하는 것은 대화 번호 · 연결 시각 · 상태뿐이다(텔레그램 이름 · 사용자명 · 전화 · 사진은 받아도 저장하지 않는다). 칸 · 표 모두 `IF NOT EXISTS` — **재실행 안전**. 읽고 쓰는 곳: `app/modules/travel_ops/telegram_connect.py` · `customer_profile.py` · `notice_routing.py` · 계약 [rest-endpoints.md 「텔레그램으로 알림 받기」](../external/rest-endpoints.md) · [운영 문서](../operations/telegram-setup.md). ★적용: 이 파일만 한 번(2026-10-05, 전체 실행기 아님 — 폴더에 다른 세션의 작업 중인 파일이 있다). 동의 `alert_channel` 철회가 대화 번호도 지운다(`consents.py`).
+`[실측]` `048_telegram_connect.sql` — ①`customer_profiles` 에 칸 7개: `telegram_chat_enc`(**암호화한** 대화 번호 — 원문은 어디에도 없다) · `telegram_chat_hash`(서버 비밀 HMAC — 같은 대화가 두 사용자에게 묶이는 것을 막는 **부분 유일 색인** `uq_customer_profiles_telegram_chat (tenant_id, telegram_chat_hash) WHERE … IS NOT NULL`) · `telegram_status`(`untested`/`ok`/`blocked`) · `telegram_connected_at` · `telegram_checked_at` · `telegram_tested_at`(시험 발송 간격을 DB 에서 센다) · `notice_channel`(`discord`/`telegram`/NULL — **알림 받는 곳, 한 번에 한 곳**) ②`telegram_link_codes`(연결 링크의 일회용 코드 — `code_hash` 기본키(**원문 없음**) · `tenant_id` · `customer_id`(→ `customers` **ON DELETE CASCADE** — 게스트 정리를 막지 않는다) · `created_at` · `used_at`) ③`telegram_seen_updates`(`update_id` 기본키 · `seen_at` — 텔레그램이 같은 업데이트를 다시 보내도 두 번 처리하지 않으려고 이틀 동안 기억). 저장하는 것은 대화 번호 · 연결 시각 · 상태뿐이다(텔레그램 이름 · 사용자명 · 전화 · 사진은 받아도 저장하지 않는다). 칸 · 표 모두 `IF NOT EXISTS` — **재실행 안전**. 읽고 쓰는 곳: `app/domains/travel_ops/ports/notify_channels/telegram_connect.py` · `customer_profile.py` · `notice_routing.py` · 계약 [rest-endpoints.md 「텔레그램으로 알림 받기」](../external/rest-endpoints.md) · [운영 문서](../operations/telegram-setup.md). ★적용: 이 파일만 한 번(2026-10-05, 전체 실행기 아님 — 폴더에 다른 세션의 작업 중인 파일이 있다). 동의 `alert_channel` 철회가 대화 번호도 지운다(`consents.py`).
 
 ### 호출 예산의 제공처 한도 초과 표시 `external_call_budget` `[2026-10-05 · 049]`
 

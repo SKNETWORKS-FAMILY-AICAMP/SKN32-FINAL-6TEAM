@@ -15,7 +15,7 @@ from app.core.contracts import ActionProposal, ContextPack, Evidence, InvalidTra
 from app.core.idempotency import idempotency_key
 from app.core.registry import RegistryError, TeamRegistry
 from app.core.transition import OutboxMessage, replay_case, transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db.repository import create_case, get_case, get_case_events
 from app.infrastructure.db.session import get_connection
 from app.infrastructure.messaging.outbox import OutboxBrokerAdapter

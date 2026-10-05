@@ -32,8 +32,8 @@ from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import delegation
-from app.modules.travel_ops.case_engine import cleanup_tenant
+from app.domains.travel_ops.components.booking import delegation
+from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
 from app.presentation import security
 from app.presentation.api.app import create_app
 from scripts.measure_delegation_scope import new_booking

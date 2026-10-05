@@ -8,8 +8,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 
-from app.modules.travel_ops.mobility import wiring
-from app.modules.travel_ops.planner import Cand, add_moves
+from app.domains.travel_ops.instances.mobility import wiring
+from app.domains.travel_ops.components.planning.planner import Cand, add_moves
 
 KST = timezone(timedelta(hours=9))
 
@@ -95,8 +95,8 @@ def test_46_survey_mobility_preference_becomes_engine_modes():
 
 
 def test_43_leg_planner_on_mini_data_fills_density_fields(tmp_path, monkeypatch):
-    from app.modules.travel_ops.mobility.engine import paths
-    from app.modules.travel_ops.mobility.engine import runtime as RT
+    from app.domains.travel_ops.instances.mobility.engine import paths
+    from app.domains.travel_ops.instances.mobility.engine import runtime as RT
 
     from .mobility.test_review_fixes_runtime import _write_mini_data
     before, saved = (paths.SOURCE, paths.DATA_DIR), dict(wiring._STATE)

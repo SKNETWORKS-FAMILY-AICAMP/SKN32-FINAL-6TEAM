@@ -8,7 +8,7 @@
   2026-09-10 에 「Top-Level LangGraph 가 흐름을 정한다」는 설계 문장을 다섯 군데에서
   고쳐야 했다 — 그림과 글이 코드를 앞질러 적혀 있었기 때문이다.
 
-★유일한 출처는 `app/domain/events.py:TRANSITIONS` 다. 이 스크립트는 그 표를 읽어
+★유일한 출처는 `app/core/case_lifecycle/events.py:TRANSITIONS` 다. 이 스크립트는 그 표를 읽어
   옮겨 적기만 한다. 전이 규칙을 여기서 다시 쓰지 않는다.
 
 ★출력은 Mermaid 다. GitHub 이 마크다운 안에서 그대로 그려 주고, 글자라서 검색도
@@ -24,7 +24,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
 from app.core.contracts import CaseStatus  # noqa: E402
-from app.domain.events import TERMINAL_STATUSES, TRANSITIONS  # noqa: E402
+from app.core.case_lifecycle.events import TERMINAL_STATUSES, TRANSITIONS  # noqa: E402
 
 OUT = REPO_ROOT / "wiki" / "runtime" / "case-state-machine.generated.md"
 
@@ -73,7 +73,7 @@ def table() -> str:
 def render() -> str:
     return "\n".join([
         "<!-- 이 파일은 `python -m scripts.make_state_diagram` 이 만든다. 손으로 고치지 않는다. -->",
-        "<!-- 출처: app/domain/events.py:TRANSITIONS -->",
+        "<!-- 출처: app/core/case_lifecycle/events.py:TRANSITIONS -->",
         "",
         "# Case 상태 전이도 (자동 생성)",
         "",

@@ -8,7 +8,7 @@
 
 ## 어디서 왔나
 
-- 조직 저장소 `develop` 판 `b892cfff` 의 `final_project_cs/app/modules/travel_ops/activity/data_processing/`(앱 코드 폴더 안에 있었음)
+- 조직 저장소 `develop` 판 `b892cfff` 의 `final_project_cs/app/domains/travel_ops/instances/activity/data_processing/`(앱 코드 폴더 안에 있었음)
 - 적재 스크립트는 같은 판의 `final_project_cs/scripts/load_place_catalog_csv.py`
 - 옮긴 날: 2026-09-29. 옮긴 이유: 자료는 git 밖 `datasets/` 자리라는 규칙(루트 `CLAUDE.md` 「데이터 폴더」). 검수 기록 — `final_project_cs/wiki/records/reports/2026-09-28_1826_Activity_PR6_전수검수_리포트.md`
 

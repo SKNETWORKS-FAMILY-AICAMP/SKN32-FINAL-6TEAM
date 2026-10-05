@@ -70,7 +70,7 @@ class ReadToolbox:
 
     connection_factory: Callable[[], Any]
     policy_search: Callable[..., list[Any]] = search_policy
-    #: 바깥 데이터 소스 묶음(`app/infrastructure/travel/`). ★기본값이 `None` 이다 —
+    #: 바깥 데이터 소스 묶음(`app/domains/travel_ops/ports/data_sources/`). ★기본값이 `None` 이다 —
     #:  **안 넣으면 여행 도구가 전부 「모름」을 돌려주고 네트워크를 타지 않는다.**
     #:  테스트가 조용히 바깥으로 나가는 사고를 구조로 막는다.
     travel: Any | None = None
@@ -81,9 +81,14 @@ class ReadToolbox:
     route_events: Any | None = None
     #: 고객 문장에서 신고 내용(늦음·휴무·품절·재요청)을 뽑는 함수. 없으면 「모름」.
     report_extractor: Callable[[str], dict[str, Any] | None] | None = None
-    #: 요식 원장(`read.dining_state` · `read.dining_alternatives`)을 쓰나. ★`[2026-09-28 사용자 지시]` 시나리오 모드는
-    #:  대본대로만 도는 데모 모드라 끈다(`CaseEngine`) — 끄면 두 도구가 「원장 없음」으로 답하고 계산은 장소 목록으로 간다
+    #: 요식 원장(`read.dining_state` · `read.dining_states`)을 쓰나. ★`[2026-09-28 사용자 지시]` 시나리오 모드는
+    #:  대본대로만 도는 데모 모드라 끈다(`CaseEngine`) — 끄면 두 도구가 「원장 없음」(`None`)으로 답하고 계산은 장소 목록으로 간다
     dining_ledger: bool = True
+    #: 카카오 로컬(키워드 검색). ★장소 **존재 확인**에만 쓰고 응답은 저장하지 않는다 — `[2026-10-05]` 이 브랜치에는 그걸 쓰는 도구(활동 Team 의
+    #:  `read.place_lookup`)가 아직 없고, 조립(`composition`)이 넘겨 두는 자리다. 없으면(`None`) 존재를 못 물은 것이라 「없음」이 아니라 「모름」이다.
+    kakao: Any | None = None
+    #: ★`[2026-09-30]` 구글 장소(`GooglePlaces`) — 식당 가격(`read.place_price`)만 쓴다. 없으면 「모름」.
+    google_places: Any | None = None
 
     def _one(self, sql: str, params: tuple[Any, ...], columns: tuple[str, ...]) -> dict[str, Any] | None:
         with self.connection_factory() as conn:
@@ -104,7 +109,7 @@ class ReadToolbox:
     #
     # ★기록해 둔다 — `wiki/records/handoff/10_도메인_교체_가이드.md` §1 은 이
     #   파일을 교체 지점으로 놓지 않았다. basement 순수성 게이트가 `app/tools/`
-    #   를 대상에서 빼먹었기 때문이다. 실제로 이 파일은 `app/modules/` 와
+    #   를 대상에서 빼먹었기 때문이다. 실제로 이 파일은 `app/domains/` 와
     #   마찬가지로 **도메인을 안다.** 게이트 확장은 별도 작업으로 남아 있다.
     def policy(self, scope: ToolContext, *, query: str, **_: Any) -> list[Any]:
         return self.policy_search(scope.tenant_id, query, scope.knowledge_scope)
@@ -144,8 +149,11 @@ class ReadToolbox:
             # ★요식 원장. `read.place` 와 달리 **시각을 받는다** —
             #   「그 시각에 여는가」는 시각이 있어야 답할 수 있다.
             "read.dining_state": self.dining_state,
-            # ★`[2026-09-28 cs]` 요식 원장의 대체 후보(축마다 하나). 고르지 않는다 — 고르기는 `replan.choose`
-            "read.dining_alternatives": self.dining_alternatives,
+            # ★`[2026-10-05]` 대체 후보 여럿의 방문 시간대 판정을 한 번에 — 대체 식당 계산(`state_lookup`)이 쓴다.
+            #   요식 원장이 정본이고 후보 가게는 부르는 쪽이 미리 들여놓는다(`dining.nearby`). 옛 `read.dining_alternatives` 는 걷었다
+            "read.dining_states": self.dining_states,
+            # ★`[2026-09-30]` 식당 가격(구글 1인당 범위 · 가격대) — 대안을 세울 때만. 값은 비교에만 쓰고 버린다(구글 약관)
+            "read.place_price": self.place_price,
             "read.weather":  self.weather,
             "read.route":    self.route,
             "read.transit":  self.transit,
@@ -257,20 +265,6 @@ class ReadToolbox:
             (scope.tenant_id, place_id), self._PLACE_COLUMNS)
         return self._fill_coordinates(row)
 
-    def dining_alternatives(self, scope: ToolContext, *, place_id: str | None = None,
-                            at: Any = None, until: Any = None, conds: list[str] | None = None,
-                            next_lat: float | None = None, next_lng: float | None = None,
-                            **_: Any) -> dict[str, Any]:
-        """요식 원장의 대체 후보 — 코어 장소 id 로. 짝 없는 후보는 빼고 `unlinked` 로 센다.
-
-        ★요식 표가 없는 DB 면 `available=False` 로 답한다(죽지 않는다) — 부르는 쪽은 장소 목록에서 찾는다.
-        """
-        if not self.dining_ledger:
-            return {"available": False, "candidates": [], "why": "요식 원장을 쓰지 않는 조립(시나리오 모드)"}
-        from app.modules.travel_ops.dining.ledger import alternatives_for
-        with self.connection_factory() as conn:
-            return alternatives_for(conn, scope.tenant_id, place_id, at, until, conds, next_lat, next_lng)
-
     def dining_state(self, scope: ToolContext, *, place_id: str | None = None,
                      at: Any = None, until: Any = None, order_margin_min: int | None = None,
                      **_: Any) -> dict[str, Any] | None:
@@ -287,10 +281,45 @@ class ReadToolbox:
         """
         if not self.dining_ledger:
             return None
-        from app.modules.travel_ops.dining.ledger import dining_state
+        from app.domains.travel_ops.instances.dining.ledger import dining_state
         with self.connection_factory() as conn:
             return dining_state(conn, scope.tenant_id, place_id, at, until,
                                 order_margin_min=order_margin_min)
+
+    def dining_states(self, scope: ToolContext, *, slots: list[dict[str, Any]],
+                      order_margin_min: int | None = None, **_: Any) -> dict[str, dict[str, Any] | None] | None:
+        """대체 식당들의 방문 시간대를 한 번에 읽는다. 테넌트는 검증된 scope에서만 받는다.
+
+        ★`[2026-10-05]` 라스트오더 주문 여유(`order_ok`)를 함께 낸다 — 기본은 대체 계산의 탈락 기준(20분, `replan.ORDER_MARGIN_MIN`).
+        ★요식 원장을 쓰지 않는 조립(시나리오 모드 — `dining_ledger=False`)은 `None` — 계산은 장소 목록의 영업시간으로 돌아간다.
+        """
+        if not self.dining_ledger:
+            return None
+        from app.domains.travel_ops.instances.dining.ledger import dining_states
+
+        with self.connection_factory() as conn:
+            if order_margin_min is None:
+                return dining_states(conn, scope.tenant_id, slots)
+            return dining_states(conn, scope.tenant_id, slots, order_margin_min=order_margin_min)
+
+    def place_price(self, scope: ToolContext, *, place_ids: list[str] | None = None,
+                    **_: Any) -> dict[str, dict[str, int | None] | None] | None:
+        """장소들의 구글 가격 {place_id: {"level", "low", "high"} 또는 None}. 구글이 꺼져 있으면 `None`(모름).
+
+        ★`[2026-09-30 사용자 결정]` 하루 상한 없이 부르고, 월 무료 한도를 넘으면 운영자에게 알린다
+          (`GooglePlaces.price`). ★돌려준 값을 근거·기록에 그대로 싣지 않는다 — 비교 결과만 남긴다.
+        ★`[2026-10-05]` **스위치 뒤에 있다** — 가드레일 `travel.dining.google_price_enabled`(기본 꺼짐)가 꺼져 있으면
+          구글도 DB 도 부르지 않고 `None`(모름)이다. 식당을 가격으로 순위 매기거나 떨어뜨리지 않는다(2026-09-28 결정).
+        """
+        if self.google_places is None or not place_ids:
+            return None
+        from app.core.settings import google_price_enabled
+
+        if not google_price_enabled():
+            return None
+        from app.domains.travel_ops.ports.data_sources.google_places import prices_for
+
+        return prices_for(self.connection_factory, scope.tenant_id, self.google_places, list(place_ids))
 
     def _fill_coordinates(self, row: dict[str, Any] | None) -> dict[str, Any] | None:
         """좌표가 비었으면 국가유산청에서 채운다. ★**어디서 왔는지 남긴다.**
@@ -363,7 +392,7 @@ class ReadToolbox:
 
     # ── 일정(Trip) ──────────────────────────────────────────────
     def _trip_store(self, scope: ToolContext):
-        from app.modules.travel_ops.itinerary import TripStore
+        from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
         return TripStore(scope.tenant_id)
 
@@ -372,7 +401,7 @@ class ReadToolbox:
         """그 여행의 **최신 일정 버전**. 이 고객의 여행이 아니면 `None`(있는지도 말하지 않는다)."""
         if not trip_id:
             return None
-        from app.modules.travel_ops.itinerary import item_to_dict
+        from app.domains.travel_ops.components.itinerary.itinerary import item_to_dict
 
         store = self._trip_store(scope)
         with self.connection_factory() as conn:
@@ -392,7 +421,7 @@ class ReadToolbox:
         """옛 일정 버전의 항목(되돌림용). 이 고객의 여행이 아니거나 없는 버전이면 `None`."""
         if not trip_id or version is None:
             return None
-        from app.modules.travel_ops.itinerary import item_to_dict
+        from app.domains.travel_ops.components.itinerary.itinerary import item_to_dict
 
         store = self._trip_store(scope)
         with self.connection_factory() as conn:
@@ -474,7 +503,7 @@ class ReadToolbox:
             return self.check(place=place, starts_at=_as_datetime(starts_at), region=str(region))
         if self.travel is None:
             return None
-        from app.infrastructure.travel.disruptions import DisruptionCheck
+        from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
 
         return DisruptionCheck(self.travel).check(
             place=place, starts_at=_as_datetime(starts_at), region=str(region))

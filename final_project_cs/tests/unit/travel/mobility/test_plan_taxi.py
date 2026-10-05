@@ -11,8 +11,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.modules.travel_ops.mobility.engine import plan as P
-from app.modules.travel_ops.mobility.engine.car import RouterDown
+from app.domains.travel_ops.instances.mobility.engine import plan as P
+from app.domains.travel_ops.instances.mobility.engine.car import RouterDown
 
 A = {"name": "경복궁", "lat": 37.5796, "lon": 126.9770}
 B = {"name": "성수", "lat": 37.5433, "lon": 127.0557}
@@ -90,8 +90,8 @@ def test_taxi_is_chosen_only_when_no_other_group_can_be_planned():
 
 # ── 실제 자료(있을 때만) ─────────────────────────────────────────────────────
 def _real_runtime():
-    from app.modules.travel_ops.mobility.engine import paths
-    from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+    from app.domains.travel_ops.instances.mobility.engine import paths
+    from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
     try:
         return build_verifier(quiet=True, local_router=True)
     except RuntimeError as ex:
@@ -100,7 +100,7 @@ def _real_runtime():
 
 @pytest.fixture(scope="module")
 def real_rt():
-    from app.modules.travel_ops.mobility.engine import paths
+    from app.domains.travel_ops.instances.mobility.engine import paths
     before = (paths.DATA_DIR, paths.SOURCE)
     rt = _real_runtime()
     yield rt

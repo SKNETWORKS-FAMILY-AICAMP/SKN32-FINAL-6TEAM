@@ -37,7 +37,7 @@ class _Item:
 
 def load_trips(path: Path) -> dict:
     """여행 파일 — {이름: {"items": [[날짜시각, 종류, 이름], …], "changes": [[id, 대상 순번(1부터)|null, 설명], …]}}."""
-    from app.modules.travel_ops.decision_unit import Change
+    from app.domains.travel_ops.components.conversation.decision_unit import Change
 
     raw = json.loads(path.read_text(encoding="utf-8"))
     trips = {}
@@ -56,7 +56,7 @@ def load_trips(path: Path) -> dict:
 def run(cases_path: Path, trips_path: Path) -> dict:
     from app.core.settings import get_settings
     from app.infrastructure.ollama_chat import from_settings
-    from app.modules.travel_ops.decision_unit import DecisionFailed, decide, fact_first, stops_of
+    from app.domains.travel_ops.components.conversation.decision_unit import DecisionFailed, decide, fact_first, stops_of
 
     chat = from_settings(get_settings())
     trips = load_trips(trips_path)

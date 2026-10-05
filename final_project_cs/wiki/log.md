@@ -9,6 +9,16 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 # 문서 변경 이력 (cs)
 
+## 2026-10-05 — 팀 저장소 다른 브랜치 점검(코어·공통 몫) · 스냅숏 커밋이 되돌린 수정 복원
+
+사용자 지시로 팀 저장소 `develop` 등의 파일 중 우리 로컬이 본 적 없는 내용을 읽고 **더 나은 것만** 반영했다(코어 몫 53줄: 반영 2 · 일부 반영 10 · 제외 41 — 점검표 [05_core_shared.md](records/plans/2026-10-05_브랜치별_미반영_파일/05_core_shared.md)). 반영: 보안 시험 CI 단계 · 점검 리포트 1건 · 웹 계약 시험(수정판) · 요구사항 `PyJWT` · 외부 문서 개요(`rest-api.md` 를 쿠키 세션 판으로) · 인증 경계의 고객 웹 절 · `rest-endpoints.md` 정정 · README 낡은 버전 표기. 마이그레이션 번호 겹침은 [migrations.md](data/migrations.md) 에 규칙을 적었다(014~017 지금 제외 · 220 요식 담당).
+
+★발견 — 10-04 스냅숏 커밋(`a47132eb`)이 우리 10-03 수정 셋을 되돌려 놓았다: 오류 함수 `status` 위치 전용(접수 확인이 409 대신 500 — 3개 파일 + 시험) · 안 쓰는 import 4건(develop 관문 린트가 붉어짐) · 요식 자료가 빈 DB 에서 시험 건너뛰기 조건. 복원하고 시험을 다시 돌렸다(접수 시험 21 · 웹 계약 5 통과). `[미확인]` 전체 린트는 아직 50건 — 대부분 다른 세션의 최근 파일이다.
+
+## 2026-10-05 — 호출 예산의 「실패」 집계 정정
+
+x600 서버에서 `tour_api` 오늘 줄이 사용 15 · 실패 15 로 보였다. 원인은 코드였다 — 부른 뒤 **응답이 안 오거나 못 읽은** 경우만 실패로 세려 했는데, 한도 때문에 안 부른 것만 빼고 전부 세어서 **정상 응답의 「찾는 장소 없음」**(`not_found` · `no_exact_title` · `ambiguous`)과 **키 없음**까지 실패로 셌다(실패가 호출 수를 넘을 수도 있었다). 허용 목록(`base._CALL_FAILURE_REASONS` + `http_*`)으로 뒤집었다. mock 서버 시험 5건 추가(정상인데 없음 · 호출 전 막힘 · 못 읽는 응답 3종), 단위 2171 통과. 이미 쌓인 값은 소급 정정하지 않는다. `[미확인]` 그 15건이 실제로 어떤 이유였는지는 로그가 재기동으로 사라져 못 봤다 — 코드 결함은 재현했지만 15건이 전부 이 결함 때문이라고 단정하지 않는다. 문서 [call-budget.md](operations/call-budget.md).
+
 ## 2026-10-05 — 텔레그램으로 알림 받기 · 알림 받는 곳 · 고객별 알림 발송
 
 고객이 마이페이지에서 「텔레그램으로 연결」 → 텔레그램 「시작」 한 번으로 연결되고(`POST …/telegram/connect/start` · 텔레그램이 부르는 `POST /v1/telegram/webhook`), 알림 받는 곳은 **한 번에 한 곳**(`notice_channel` — 디스코드 · 텔레그램, 마지막에 연결한 곳이 활성)이다. 봇은 알림만 하고 글에는 고정 문장으로만 답한다(모델 0 · 글 저장 없음). ★확인하다 발견: 바깥함 일꾼은 원래 **운영자 채널 하나**로만 보내고 고객이 저장한 웹훅으로는 보내는 코드가 없었다 → **고객별 발송**(`notice_routing.py`)도 같이 만들었다 — 스위치 `travel.notice_per_customer_enabled` **기본 꺼짐**(켜는 것은 사용자 승인 뒤). 알림 채널 동의 철회가 텔레그램 대화 번호도 지우도록 고쳤다. 마이그레이션 048 · 웹훅 등록 스크립트 `scripts/telegram_set_webhook.py` · 운영 문서 [telegram-setup.md](operations/telegram-setup.md) · 계약 [rest-endpoints.md](external/rest-endpoints.md) · 요청서 `records/plans/2026-10-05_텔레그램_연결_백엔드_요청.md`. 시험은 mock 서버로 167건 — **실제 텔레그램 확인은 봇을 만든 뒤**(사람이 할 일은 열린 항목에).
@@ -106,7 +116,7 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 ## 2026-09-21 (오후) — 일정을 받을 때 코드로 판정하고, 불가능하면 이유·완화 조건을 붙여 거절
 
-`app/modules/travel_ops/itinerary_checks.py` 신설 — 겹침·이동 소요·영업시간·브레이크·결제·예산을 보낸 값으로 판정한다. 모르는 칸은 판정하지 않는다(결정 15). `POST /v1/trips` 가 `422 itinerary_infeasible` + `violations[]`(`reason`·`remedy`)로 거절한다(`external/rest-endpoints.md`). v11 DoD-2·3 이 미측정에서 통과로 — 전체 17/26, MVP 17/18.
+`app/domains/travel_ops/components/itinerary/itinerary_checks.py` 신설 — 겹침·이동 소요·영업시간·브레이크·결제·예산을 보낸 값으로 판정한다. 모르는 칸은 판정하지 않는다(결정 15). `POST /v1/trips` 가 `422 itinerary_infeasible` + `violations[]`(`reason`·`remedy`)로 거절한다(`external/rest-endpoints.md`). v11 DoD-2·3 이 미측정에서 통과로 — 전체 17/26, MVP 17/18.
 
 ## 2026-09-21 — v11 26항목을 실행으로 세는 DoD 검사기
 

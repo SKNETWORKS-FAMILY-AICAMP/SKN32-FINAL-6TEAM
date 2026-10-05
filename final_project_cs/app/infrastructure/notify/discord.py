@@ -205,7 +205,7 @@ class DiscordWebhook:
 
     def text_for(self, payload: dict[str, Any]) -> str:
         """통지 payload → 보낼 글(고객 언어로 옮긴 **평문**). 길이는 자르지 않는다 — 채널마다 한도가 다르다(디스코드 2,000 · 텔레그램 4,096).
-        ★`[2026-10-05]` 고객별 발송(`travel_ops/notice_routing.py`)이 같은 문구 · 번역 · `[재생]` 규칙을 쓰려고 연 자리다."""
+        ★`[2026-10-05]` 고객별 발송(`travel_ops/components/watch/notice_routing.py`)이 같은 문구 · 번역 · `[재생]` 규칙을 쓰려고 연 자리다."""
         return self._localize(phrase_of(payload), payload.get("locale"))
 
     def _http_post(self, url: str, json: dict[str, Any]) -> httpx.Response:

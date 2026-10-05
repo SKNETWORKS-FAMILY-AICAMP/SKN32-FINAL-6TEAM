@@ -18,10 +18,10 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from app.modules.travel_ops.dining import DiningTeam
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.itinerary_changes import NoChange, plan_delay
-from app.modules.travel_ops.itinerary_delay import delay_knock_on, knock_on_text
+from app.domains.travel_ops.instances.dining import DiningTeam
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_delay
+from app.domains.travel_ops.components.itinerary.itinerary_delay import delay_knock_on, knock_on_text
 
 from .helpers import FakeTools, pack, task
 
@@ -170,7 +170,7 @@ def test_the_sentence_offers_only_things_the_service_can_actually_do():
 
 
 def test_the_minutes_prompt_does_not_promise_to_realign_the_later_schedule():
-    from app.modules.travel_ops import trip_messages
+    from app.domains.travel_ops.components.conversation import trip_messages
 
     source = open(trip_messages.__file__, encoding="utf-8").read()
     assert "뒤 일정을 맞출게요" not in source

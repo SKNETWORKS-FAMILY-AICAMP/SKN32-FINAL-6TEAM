@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 from types import SimpleNamespace
 
-from app.modules.travel_ops.mobility.engine import plan as P
+from app.domains.travel_ops.instances.mobility.engine import plan as P
 
 DETOUR, SPEED = 1.3, 1.04
 HOME = {"name": "집", "lat": 37.5700, "lon": 126.9800}

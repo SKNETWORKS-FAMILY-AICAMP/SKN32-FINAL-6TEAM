@@ -22,11 +22,11 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3]))
 
-from app.modules.travel_ops.mobility.engine.candidates import CandidateGraph  # noqa: E402
-from app.modules.travel_ops.mobility.engine.exits import StationExits  # noqa: E402
-from app.modules.travel_ops.mobility.engine.geo import StationCoords, same_station  # noqa: E402
-from app.modules.travel_ops.mobility.engine.paths import RULES_DIR  # noqa: E402
-from app.modules.travel_ops.mobility.engine.verify_time import Verifier  # noqa: E402
+from app.domains.travel_ops.instances.mobility.engine.candidates import CandidateGraph  # noqa: E402
+from app.domains.travel_ops.instances.mobility.engine.exits import StationExits  # noqa: E402
+from app.domains.travel_ops.instances.mobility.engine.geo import StationCoords, same_station  # noqa: E402
+from app.domains.travel_ops.instances.mobility.engine.paths import RULES_DIR  # noqa: E402
+from app.domains.travel_ops.instances.mobility.engine.verify_time import Verifier  # noqa: E402
 
 RULES = json.loads((RULES_DIR / "rules_v0.3.json").read_text(encoding="utf-8"))
 YP_GUN = (37.4926, 127.4919)          # 경의중앙선 양평역 근처(양평군) — 5호선 양평(영등포구)에서 53 km
@@ -138,7 +138,7 @@ class _Skip(Exception):
 def _runtime():
     global _RT
     if _RT is None:
-        from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+        from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
         try:
             _RT = build_verifier(quiet=True)
         except RuntimeError as e:
@@ -213,14 +213,14 @@ def test_d_yangpyeong_name_only_not_silent():
     assert v._pt(None, "양평") is None and v.sc.by_name.get("양평") is None
     assert v._pt("경의선", "양평")[0] > 127.4
     # 계획 — 양평군 장소 → 경의선 양평(노선군 실림)
-    from app.modules.travel_ops.mobility.engine.plan import Planner, _multi
+    from app.domains.travel_ops.instances.mobility.engine.plan import Planner, _multi
     p = Planner(rt)
     near = p._near_station({"lat": YP_GUN[0], "lon": YP_GUN[1]}, 1000)
     assert near is not None and near[0] == "양평" and near[2] == ["경의선"] and near[1] < 500, near
     m = _multi(near, ("공덕", 0, None))
     assert m == {"from": "양평", "to": "공덕", "from_lines": ["경의선"]}
     # 추정 — 역명 문자열 「양평」은 거절(장소로 달라고)
-    from app.modules.travel_ops.mobility.engine.plan_estimate import Estimator
+    from app.domains.travel_ops.instances.mobility.engine.plan_estimate import Estimator
     try:
         Estimator(rt)._point("양평", 1000)
         raise AssertionError("④ plan_estimate 가 역명만의 양평을 받았다")
@@ -249,7 +249,7 @@ def test_d_g1_legs_fake_transfer_blocked():
 
 def test_d_g2_between_homonyms():
     rt = _runtime()
-    from app.modules.travel_ops.mobility.engine.plan import Planner
+    from app.domains.travel_ops.instances.mobility.engine.plan import Planner
     p = Planner(rt)
     a = p._near_station({"lat": YP_GUN[0], "lon": YP_GUN[1]}, 1000)
     b = p._near_station({"lat": YP_YDP[0], "lon": YP_YDP[1]}, 1000)
@@ -262,7 +262,7 @@ def test_d_g2_between_homonyms():
         legs = [x for x in c["legs"] if x.get("line")]
         if legs:
             assert legs[0]["line"] == "경의선" and legs[-1]["line"] == "05호선", c["label"]
-    from app.modules.travel_ops.mobility.engine.plan_estimate import Estimator
+    from app.domains.travel_ops.instances.mobility.engine.plan_estimate import Estimator
     out = Estimator(rt).estimate({"name": "양평군", "lat": YP_GUN[0], "lon": YP_GUN[1]},
                                  {"name": "영등포 양평동", "lat": YP_YDP[0], "lon": YP_YDP[1]}, "2026-09-29", "오후")
     assert out.get("verdict") != "no_data", f"G2 plan_estimate 가 같은 역으로 봤다 — {out.get('reason')}"

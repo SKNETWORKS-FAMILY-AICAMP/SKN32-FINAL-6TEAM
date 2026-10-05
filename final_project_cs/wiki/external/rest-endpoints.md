@@ -1,7 +1,7 @@
 ---
 type: contract
 title: 엔드포인트별 요청·응답 계약
-description: Case 다섯 경로 + outbox 해소 + 여행 API 다섯 경로의 필드·제약·상태 전이. rest-api.md 가 300줄을 넘어 떼어 냈다
+description: Case · outbox · 여행 · 고객 웹 · 계획 접수 · 위임 API 의 요청·응답 필드와 제약·상태 전이. rest-api.md 가 300줄을 넘어 떼어 냈다
 status: draft
 tags: [api, contract]
 domain: travel
@@ -10,7 +10,7 @@ domain_note: "[2026-09-14] 여행 API 가 생겼다(`/v1/trips/*` 다섯 + `/pla
 
 # 엔드포인트별 요청·응답 계약
 
-`[실측]` [rest-api.md](rest-api.md) 에서 분리했다. **경로 다섯 개의 필드 단위 계약이다.**
+`[실측]` [rest-api.md](rest-api.md) 에서 분리했다. **Case · outbox · 여행 · 고객 웹 · 계획 접수 · 위임 API 의 필드 단위 계약이다(날짜는 각 절의 확인 시점을 따른다).**
 
 ## `POST /v1/cases` 요청·응답 필드
 
@@ -155,7 +155,7 @@ Case 버전만으로 여행 일정을 관리하려면 Case 가 「어느 여행�
 
 ## 여행 API — `/v1/trips/*` · `/plan/{trip_id}`
 
-`[실측 2026-09-14]` `app/modules/travel_ops/trip_api.py`. 라우터는 도메인 폴더에 있고
+`[실측 2026-09-14]` `app/domains/travel_ops/entry/trip_api.py`. 라우터는 도메인 폴더에 있고
 `composition.build_domain_routers()` 가 앱에 넣는다 — presentation 은 도메인을 import 하지
 못한다(INV-CS-ARCH-001). 확정 시나리오 하루를 이 경로로 흘리는 시험:
 `tests/e2e/test_trip_api.py`.
@@ -174,7 +174,7 @@ Case 버전만으로 여행 일정을 관리하려면 Case 가 「어느 여행�
 
 ### ★`POST /v1/trips/plan` — 일정을 **우리가 만든다** `[2026-09-22]`
 
-`[실측 2026-09-22]` `app/modules/travel_ops/planner.py` · 라우트는 `trip_api.py`.
+`[실측 2026-09-22]` `app/domains/travel_ops/components/planning/planner.py` · 라우트는 `trip_api.py`.
 시험 [`tests/e2e/test_trip_planner.py`](../../tests/e2e/test_trip_planner.py)(19) ·
 [`tests/unit/travel/test_planner.py`](../../tests/unit/travel/test_planner.py)(13).
 
@@ -209,7 +209,7 @@ Case 버전만으로 여행 일정을 관리하려면 Case 가 「어느 여행�
 
 ### `GET /booking-change/{booking_id}` — 업체 건을 넘기는 링크 `[2026-09-22]`
 
-`[실측]` `app/modules/travel_ops/change_link.py` · 라우트는 `trip_api.py`. v11 §4-C · §12 DoD-16·17.
+`[실측]` `app/domains/travel_ops/components/booking/change_link.py` · 라우트는 `trip_api.py`. v11 §4-C · §12 DoD-16·17.
 
 **업체 예약은 우리가 바꾸지 않는다.** 우리 일정 버전은 먼저 고쳐 두고, 업체 쪽 건은 고객이 직접 진행하도록 넘긴다. 그 인계를 빈손으로 하지 않으려고 **바뀔 항목 · 대안 · 차액**을 한 장에 정리해 주는 것이 이 링크다.
 
@@ -242,21 +242,23 @@ Case 버전만으로 여행 일정을 관리하려면 Case 가 「어느 여행�
 | 시각 | 시간대 없이 오면 서울 시각(대상 도시가 서울 하나, v11 §1) |
 | 링크 토큰 | 틀리면 `404`(있는지도 말하지 않는다). 응답에 `customer_id` 를 싣지 않는다 |
 
-`[미구현]` 고객 **자유 문장** → Case → 분류 → 여기로 잇는 배선(지금 신고는 구조화된 몸통) ·
-계획서의 고객 언어 생성(결정 14, 지금은 한국어 원문).
+`[정정 2026-10-05]` 고객 **자유 문장** → Case 생성 · 전이 경로는 `trip_messages.handle_trip_message` 에 구현돼 있고 `/v1/trips/{trip_id}/messages` 와 웹 상담(`/v1/web/trips/{trip_id}/messages`)이 부른다 — 이 줄은 앞 판의 `[미구현]` 이었다(팀 저장소 develop 의 정정을 읽고 우리 코드로 확인해 가져왔다).
+`[미구현]` 고객 웹이 고른 언어를 접수 · 생성에 전달하는 계약은 없다(`trip_api.py` 의 요청 몸통에 언어 입력 필드가 없다 — grep). 계획서의 고객 언어 생성(결정 14)은 지금 한국어 원문이다.
 
 ### `constraints.survey` — 여행 시작 설문 `[2026-09-24]`
 
-결정 [D-020](../../../wiki/decisions/D-020-trip-survey-and-ask-first.md) · 구현 `app/modules/travel_ops/survey.py`.
+결정 [D-020](../../../wiki/decisions/D-020-trip-survey-and-ask-first.md) · 구현 `app/domains/travel_ops/components/planning/survey.py`.
 `POST /v1/trips`(과 `/v1/trips/plan` 의 등록)이 받는다. **없어도 된다** — 없으면 지금까지와 똑같이 동작한다.
 
 | 칸 | 모양 | 판정에 |
 |---|---|---|
 | `version` | `"2026-09-24.v1"` (필수) | — |
-| `on_disruption` | `replace`(기본) · `ask_first` | ★**쓴다** — 15번. `ask_first` 흐름은 다음 작업 |
+| `on_disruption` | `replace`(기본) · `ask_first` | ★**쓴다** — 15번. 보류 제안 조회 · 선택 API 가 구현돼 있다(아래 「보류 제안」 절) |
 | `pace` | `relaxed` · `moderate` · `packed` | ★**쓴다** — 16번 → 밀도 목표 0.40 · 0.55 · 0.70 |
-| `theme` · `party` · `preferred_mobility[]` · `domestic` · `priority[]`(`food`·`activity`·`mobility`) · `priority_details{영역: [..]}` · `indoor_outdoor{dining·activity: indoor·outdoor·any}` · `theme_details[]` | 문자열·목록 | **받기만 한다** — 세부 값은 담당 팀이 정한다. 반영했다고 말하지 않는다 |
+| `theme` · `party` · `preferred_mobility[]` · `domestic` · `priority[]`(`food`·`activity`·`mobility`) · `priority_details{영역: [..]}` · `indoor_outdoor{dining·activity: indoor·outdoor·any}` · `theme_details[]` | 문자열·목록 | 필드별 소비 경로는 아래 설명을 따른다 — 세부 값은 담당 팀이 정한다. 저장됐다는 이유로 모든 선호가 계획에 반영됐다고 표시하지 않는다 |
 
+- `[실측 2026-09-29]` 이동 계산기 연결이 `priority_details.mobility` 와 `preferred_mobility` 를 수단 집합으로 바꾼다([wiring.py](../../app/domains/travel_ops/instances/mobility/wiring.py) `modes_from_survey` — 화면은 `priority_details.mobility` 로 보내고 둘 다 읽는다). 도보는 늘 포함하며 변환 가능한 값이 없으면 계산기 기본 수단(지하철 · 버스 · 도보)을 쓴다. 선호 순위를 그대로 최적화한다는 뜻은 아니다.
+- `[실측 2026-09-29]` `domestic` 이 주어지면 [이동 계획기](../../app/domains/travel_ops/instances/mobility/engine/plan.py)의 동행 조건 `foreign`(= `not domestic`)에 대응한다.
 - 모르는 칸·틀린 값 → **`422 invalid_survey`** + `problems[]`(field·reason). 여행이 **안 생긴다.**
 - `pace` 가 있고 사용자가 `density` 를 **안 줬으면**: 여행 날짜마다 하루 활동 시간 **08:00~22:00**(팀 기본값, `travel.day_window`)으로
   밀도를 잰다. `density` 를 줬는데 목표가 없으면 목표만 채운다. **사용자가 준 값이 이긴다.** 무엇을 채웠는지 `constraints.derived` 에 남는다.
@@ -295,7 +297,7 @@ Case 버전만으로 여행 일정을 관리하려면 Case 가 「어느 여행�
 
 **도로** — 경찰청 UTIC 돌발정보의 도로명을 **전체 이름**으로 적는다. `[실측]` 대조가 **포함 여부**다 —
 UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이름이 들어 있으면 걸린다
-(`app/infrastructure/travel/utic.py:177`). 짧게 줄이면(`도로:대로`) 무관한 사건까지 걸린다.
+(`app/domains/travel_ops/ports/data_sources/utic.py:177`). 짧게 줄이면(`도로:대로`) 무관한 사건까지 걸린다.
 택시 구간도 같다.
 
 **도보** — `도보:` 는 쓰지 않는다. 걷는 길을 막는 것은 집회·행사 통제이고, 그것은 도로 통제 정보로 들어온다.
@@ -306,14 +308,14 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 | 대상 | 상태 |
 |---|---|
 | `도로:` | UTIC 돌발정보(1차) + **ITS 돌발정보(2차)** 를 함께 물어 합친다 `[2026-10-05]` — 한쪽만 못 읽으면 읽은 쪽으로 답하고(`degraded` 에 남김), **둘 다 못 읽을 때만** 치명. ITS 월 호출 한도가 소진되면 2차가 못 읽는다(실측 2026-10-05) |
-| 지하철 `N호선:역`(1~8호선) | `[2026-10-04]` **서울교통공사 지하철알림정보(15144070)로 무정차 통과를 감시한다**(`infrastructure/travel/subway_notice.py`). 그 호선·그 역을 말하는 **가장 최근 알림**의 제목이 「무정차」이고 종료어(종료·해제·재개·정상·복구·완료·해소)가 없으면 `skip_station`. 발생 3시간 뒤엔 진행 중으로 안 본다(끝 알림이 안 오는 경우). **한계**: 제목이 자유 텍스트라 역을 못 읽는 알림이 있다(과거 무정차 138건 중 42건 · 나열형은 마지막 역만) — 그래서 이 소스의 「사건 없음」은 「알림에서 못 찾음」이다(증거 등급 추정). 못 읽으면 `None`(치명 · 결정 15) |
+| 지하철 `N호선:역`(1~8호선) | `[2026-10-04]` **서울교통공사 지하철알림정보(15144070)로 무정차 통과를 감시한다**(`domains/travel_ops/ports/data_sources/subway_notice.py`). 그 호선·그 역을 말하는 **가장 최근 알림**의 제목이 「무정차」이고 종료어(종료·해제·재개·정상·복구·완료·해소)가 없으면 `skip_station`. 발생 3시간 뒤엔 진행 중으로 안 본다(끝 알림이 안 오는 경우). **한계**: 제목이 자유 텍스트라 역을 못 읽는 알림이 있다(과거 무정차 138건 중 42건 · 나열형은 마지막 역만) — 그래서 이 소스의 「사건 없음」은 「알림에서 못 찾음」이다(증거 등급 추정). 못 읽으면 `None`(치명 · 결정 15) |
 | 버스 · 9호선 · 코레일/공항철도 등 서울교통공사 밖 노선 | **우리 코드에 연결된 실시간 소스가 없다.** 감시는 이 대상을 「사건 없음」이 아니라 **확인 못 한 대상**(`unsupported`)으로 센다. 후보: TOPIS 공지(버스 우회) `[미연결]` |
 
 `[반영 2026-09-23]` 이 계약을 코드가 지킨다.
 - ★**등록이 형식을 검사한다** — `POST /v1/trips`·`POST /v1/trips/plan`(`register:true`) 둘 다 같은 본문을 지난다.
   틀리면 **`422 invalid_route_uses`** 이고 `problems[]` 에 **틀린 값 전부**를 `route`·`option`·`value`·`reason`
   으로 싣는다(첫 하나에서 멈추지 않는다). **경고가 아니라 거절**로 정했다 — 받아 두고 경고하면 보낸 쪽이 모르고,
-  모르는 채로 그 구간의 사건을 놓친다. 구현 `app/modules/travel_ops/route_uses.py` ·
+  모르는 채로 그 구간의 사건을 놓친다. 구현 `app/domains/travel_ops/components/itinerary/route_uses.py` ·
   시험 `tests/e2e/test_route_uses_contract.py`. 검사를 붙이기 **전에** 틀린 표기 셋(`잠실역`·`02호선:잠실`·
   `버스:성수동`)이 전부 **201 로 받아들여지는 것**을 먼저 봤다.
   ★**모양만 본다** — 그 역이 그 노선에 있는지, 그 번호의 버스가 실제로 있는지는 안 본다(우리 쪽에 노선 자료가 없다).
@@ -343,7 +345,7 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 
 ## 보류 제안 — `/v1/trips/{trip_id}/proposals*` `[2026-09-24]`
 
-`[실측]` `app/modules/travel_ops/trip_api.py` · 저장 `pending_changes`(마이그레이션 024) · 결정 [D-020](../../../wiki/decisions/D-020-trip-survey-and-ask-first.md).
+`[실측]` `app/domains/travel_ops/entry/trip_api.py` · 저장 `pending_changes`(마이그레이션 024) · 결정 [D-020](../../../wiki/decisions/D-020-trip-survey-and-ask-first.md).
 감시가 일정 문제를 찾았거나 **고객이 늦음·휴무를 신고했는데**(`[2026-09-25]` `/reports` · `/messages`) **바로 바꾸지 않고
 묻는 경우**(설문 15번 「먼저 물어봐줘」, 또는 「변경 안 할 일정」 항목 자체를 바꿔야 할 때) 이 자리에 제안이 쌓인다.
 그때 신고 응답은 `{"status": "asked", "proposal_id", "reason", "item", "notice"}` 이고 일정은 **바뀌지 않는다.**
@@ -363,7 +365,7 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 
 ## 웹(고객 브라우저) — `/v1/web/*` `[2026-09-24]`
 
-`[실측]` `app/modules/travel_ops/trip_api.py` · 키 `app/modules/travel_ops/web_session.py` · 저장 `web_user_keys`(마이그레이션 025).
+`[실측]` `app/domains/travel_ops/entry/trip_api.py` · 키 `app/domains/travel_ops/modules/web_account/web_session.py` · 저장 `web_user_keys`(마이그레이션 025).
 ★서버용 scope 키(테넌트 전체)를 브라우저에 넣지 않는다. 웹은 **사용자 식별 키** 하나로 **그 사용자 본인의 여행만** 연다.
 
 | 경로 | 인증 | 뜻 |
@@ -379,6 +381,7 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 | `POST /v1/web/warmup` | 키 | ★`[2026-09-29]` **모델 예열** — 화면이 여행·채팅 칸을 열 때 부른다(식은 모델의 첫 채팅이 34초 걸렸다). 몸통 없음. 응답 `{status: "warm" \| "warming" \| "unavailable", model, last_attempt: null \| {ok, seconds, at, reason?}, deduped?}` — 이미 올라가 있으면 `warm`(아무것도 안 함), 1분(`web_guard.warmup.dedupe_seconds`) 안 되풀이는 `warming` + `deduped: true`(다시 안 부름), 그 밖엔 응답 뒤 한 토큰 생성으로 깨우고 `warming`. **`last_attempt.ok=false` 면 모델 서버가 못 올린 것**(`reason` 에 서버가 준 이유 — 예: GPU 메모리 부족). 실제로 부를 때만 남용 방어 `warmup` 으로 센다(한도가 켜져 있으면 429/503) |
 | `GET /v1/web/trips/{trip_id}/notices` | 키 | 나간 알림 전부. `type` = `guidance`(하루 시작·다음 일정·이동) · `proposal_request` · `safety_alert` · `change_notice` |
 
+- `[실측 2026-09-29 · 2026-10-05 확인]` `GET /v1/web/trips` 의 응답은 `{trips: [{trip_id, title, version, created_at}]}` 이며 여행 날짜 · 진행 상태 · 미확인 제안 수는 이 응답에 없다(`trip_api.py` 의 `web_list`). 직접 등록 `POST /v1/web/trips` 가 있는 것과 화면이 쓰는 것(접수 → 확인 → 생성)은 다르다.
 - ★`[2026-10-04]` **브라우저는 키 대신 쿠키 세션을 쓴다** — 아래 「브라우저 세션 쿠키」. 이 절의 `키` 칸은 **쿠키 세션 또는 키**로 읽는다(둘이 같이 오면 `400 ambiguous_credentials`). `X-User-Key` 는 에이전트(MCP)와 옮겨 가는 동안의 옛 호출자용이다.
 - 키는 헤더 **`X-User-Key`** 로 보낸다. 형식 `acop_u_…`. 없거나 틀리거나 거둔 키는 모두 `401`(어느 쪽인지 말하지 않는다).
 - **남의 여행은 `404`** — 있는지도 말하지 않는다. 서버용 scope 키로는 웹 경로가 열리지 않는다(`401`).
@@ -393,7 +396,7 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 
 ### 남용 방어 — 횟수 제한 · 사람 확인 `[2026-09-28]`
 
-`[실측]` `app/modules/travel_ops/web_guard.py` · `web_limits_api.py` · `app/infrastructure/turnstile.py` · 저장 `web_usage` ·
+`[실측]` `app/domains/travel_ops/modules/web_account/web_guard.py` · `web_limits_api.py` · `app/infrastructure/turnstile.py` · 저장 `web_usage` ·
 `runtime_limits` · `runtime_limit_events`(마이그레이션 031). 계획 `records/plans/2026-09-28_2130_웹_남용방어_실행계획.md`.
 
 **비싼 작업 횟수 제한.** 대상 — `POST /v1/web/trip-intakes`(`intake`) · `…/{id}/plan`(`plan`) · `…/{id}/confirm`(`confirm`) ·
@@ -445,7 +448,7 @@ GET   /admin/limits/events?limit=50      scope limits:read
 
 ### 소셜 로그인 — `/v1/web/auth/*` `[2026-10-03]` (구글 먼저)
 
-`[실측]` 구현 `app/modules/travel_ops/web_auth_api.py`(HTTP) · `web_auth.py`(저장 · 규칙) · `app/infrastructure/oauth_providers.py`(업체와 말하기) · 저장 마이그레이션 043 · 시험 `tests/e2e/test_web_social_login.py`(17) ·
+`[실측]` 구현 `app/domains/travel_ops/modules/web_account/web_auth_api.py`(HTTP) · `web_auth.py`(저장 · 규칙) · `app/infrastructure/oauth_providers.py`(업체와 말하기) · 저장 마이그레이션 043 · 시험 `tests/e2e/test_web_social_login.py`(17) ·
 `tests/unit/travel/test_oauth_providers.py`(15). 계약의 출처는 ui 세션의 [백엔드 요청서](../records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md)이고 웹 화면은 이 모양 그대로 연결돼 있다. 설정 · 콘솔 절차는 [google-login-setup.md](../operations/google-login-setup.md).
 ★**소셜 로그인은 「키를 받아 오는 또 하나의 길」이다** — 키와 모든 `/v1/web/*` 인증(`X-User-Key`)은 바뀌지 않는다. 계정을 사용자에 **붙여** 두면 키를 잃어도 · 새 기기에서도 그 계정으로 같은 사용자의 여행을 연다.
 
@@ -468,7 +471,7 @@ GET   /admin/limits/events?limit=50      scope limits:read
 
 ### 브라우저 세션 쿠키 — `/v1/web/auth/session*` `[결정 2026-10-04 사용자]`
 
-`[실측]` 시험 `tests/e2e/test_web_cookie_session.py`(27) · 결정 기록 [D-CS-011](../decisions/D-CS-011-browser-session-cookie.md). 구현 `app/modules/travel_ops/web_cookie.py`(저장 · 규칙) · `web_auth_api.py`(HTTP) · 저장 마이그레이션 044 `web_sessions`.
+`[실측]` 시험 `tests/e2e/test_web_cookie_session.py`(27) · 결정 기록 [D-CS-011](../decisions/D-CS-011-browser-session-cookie.md). 구현 `app/domains/travel_ops/modules/web_account/web_cookie.py`(저장 · 규칙) · `web_auth_api.py`(HTTP) · 저장 마이그레이션 044 `web_sessions`.
 ★**브라우저는 키를 저장소에 두지 않는다.** 로그인 상태는 서버가 내려주는 **HttpOnly 쿠키 하나**다 — 페이지의 스크립트(지도 SDK · 확장 · XSS)가 읽지 못한다. 키(`X-User-Key`)는 **에이전트(MCP)와 옛 호출자용**으로 남는다(웹이 옮겨 가는 동안 둘 다 받는다).
 ★「로그인하면 다시 인증하면 되니 토큰을 오래 들고 있을 이유가 없다 · 로그인 안 한 게스트는 세션을 잃어도 받아들인다」가 사용자 결정이다 — 복구 수단은 없다.
 
@@ -495,7 +498,7 @@ GET   /admin/limits/events?limit=50      scope limits:read
 
 ### 게스트(로그인 안 한 사용자) · 여행 삭제 · 게스트 정리 `[결정 2026-10-04 사용자]`
 
-`[실측]` 구현 `app/modules/travel_ops/guest_policy.py`(제한) · `trip_delete.py`(삭제) · `guest_cleanup.py`(정리) · `itinerary.py`(감시 · 안내 대상에서 게스트 제외) · 시험 `tests/e2e/test_guest_and_trip_delete.py`(16). 결정 [D-CS-011](../decisions/D-CS-011-browser-session-cookie.md) — **보존 시간 초기값의 공식과 근거도 거기 있다.**
+`[실측]` 구현 `app/domains/travel_ops/modules/web_account/guest_policy.py`(제한) · `trip_delete.py`(삭제) · `guest_cleanup.py`(정리) · `itinerary.py`(감시 · 안내 대상에서 게스트 제외) · 시험 `tests/e2e/test_guest_and_trip_delete.py`(16). 결정 [D-CS-011](../decisions/D-CS-011-browser-session-cookie.md) — **보존 시간 초기값의 공식과 근거도 거기 있다.**
 ★**게스트 = 웹으로 만든 사용자(`customers.external_id` 가 `web:` 로 시작) 중 소셜 계정이 하나도 안 붙은 사용자.** 소셜 계정을 `link` 하면 그 순간부터 회원이다(여행도 그대로). 에이전트 API 로 만든 고객과 시드는 게스트가 아니다.
 
 | | 게스트 | 회원 |
@@ -531,7 +534,7 @@ GET   /admin/limits/events?limit=50      scope limits:read
 
 ### 에이전트 키 — `/v1/web/agent-keys*` `[결정 2026-10-04 사용자 — D-CS-012]`
 
-`[실측]` 시험 `tests/e2e/test_web_agent_keys.py`(12) · 결정 기록 [D-CS-012](../decisions/D-CS-012-agent-auth-claude-style.md) · 구현 `app/modules/travel_ops/web_agent_keys.py`(저장 · 규칙) · `web_agent_keys_api.py`(HTTP) · 저장 마이그레이션 045 `web_agent_keys`. 개인 AI(MCP · 사용자 API)가 **본인 여행의 작업만** 하는 문이다. 쿠키는 브라우저 전용이라 에이전트는 키를 헤더로 보낸다.
+`[실측]` 시험 `tests/e2e/test_web_agent_keys.py`(12) · 결정 기록 [D-CS-012](../decisions/D-CS-012-agent-auth-claude-style.md) · 구현 `app/domains/travel_ops/modules/web_account/web_agent_keys.py`(저장 · 규칙) · `web_agent_keys_api.py`(HTTP) · 저장 마이그레이션 045 `web_agent_keys`. 개인 AI(MCP · 사용자 API)가 **본인 여행의 작업만** 하는 문이다. 쿠키는 브라우저 전용이라 에이전트는 키를 헤더로 보낸다.
 ★**만드는 것은 로그인한 사용자(회원)가 브라우저(쿠키 세션)에서만** 한다 — 에이전트 키 · 옛 사용자 키로는 못 만들고(`403 cookie_required`), 게스트는 못 만든다(`403 member_only` + `login_required: true`).
 
 | 경로 | 인증 | 뜻 |
@@ -558,7 +561,7 @@ GET   /admin/limits/events?limit=50      scope limits:read
 
 ### 계획 읽기 — `/v1/web/trip-intakes` `[2026-09-27]`
 
-`[실측]` `app/modules/travel_ops/intake/`(`pipeline.py` · `sources.py` · `rules.py` · `llm_spans.py` · `dates.py` · `places.py`) ·
+`[실측]` `app/domains/travel_ops/components/intake/`(`pipeline.py` · `sources.py` · `rules.py` · `llm_spans.py` · `dates.py` · `places.py`) ·
 저장 `trip_intakes` · `intake_sources` · `intake_claims`(마이그레이션 028). 설계 `../program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md`.
 ★**모델은 위치만 가리키고 값은 원문과 조회가 낸다.** 값마다 방법(`rule` · `llm_span` · `lookup` · `customer`)과 근거가 붙는다.
 
@@ -582,7 +585,7 @@ GET   /admin/limits/events?limit=50      scope limits:read
 
 - `GET` 응답의 `check` = `{ready, problems, filled, items, title}` — 등록을 막는 문제(`no_title` · `no_date` · `no_place` ·
   `booking_without_time` · `party_size_out_of_range` · `no_items`)와 **규칙으로 채운 칸**(시각이 없으면 원문의 「아침·점심·저녁」,
-  아니면 앞 일정 뒤 · 끝이 없으면 활동 90분·식사 60분). 조립은 `app/modules/travel_ops/intake/assemble.py`.
+  아니면 앞 일정 뒤 · 끝이 없으면 활동 90분·식사 60분). 조립은 `app/domains/travel_ops/components/intake/assemble.py`.
 - 등록된 항목의 `detail.provenance` 에 칸마다 방법과 근거가 따라간다. 예약번호는 `detail.booking` —
   **예약 표(`bookings`)는 만들지 않는다**(업체 확인 전 번호를 「확정 예약」으로 적지 않는다). 대신 보호 사유 `booked` 라
   **바꾸기 전에 묻는다**(`pending.protected_reason`).
@@ -603,7 +606,7 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 (`hours[]` 에 `closed: true|false` · `last_entry`(입장 마감) — 활동은 `last_order` 가 늘 null), 전화는 관광공사 문의처. 1분 작업(`run_sweepers` 의 `place_facts`)이
 진행 중인 여행에 새로 들어온 장소를 한 번 읽어 적는다 — 등록 직후 1~2분은 주소만 보일 수 있다.
 ★**요식 원장이 먼저**(장소 속성 `dining_place_uid` 또는 원장의 코어 연결), 없으면 코어 장소 속성(주소 정도). 모르는 값은 null — 「없다」로 읽지 않는다.
-`tags` 는 원장 속성 코드 그대로다(값이 「yes」인 것). 코드 `app/modules/travel_ops/place_info.py`. 채팅의 주소·운영시간 답도 원장을 먼저 읽는다
+`tags` 는 원장 속성 코드 그대로다(값이 「yes」인 것). 코드 `app/domains/travel_ops/components/places/place_info.py`. 채팅의 주소·운영시간 답도 원장을 먼저 읽는다
 (원장에 없는 값만 관광공사) — 답에 「요식 원장」·「관광공사 안내 원문」으로 어디서 온 값인지 적는다.
 
 **지도 조합** `[2026-09-29 사용자 결정]` — 고객 **자기 지도 앱으로 여는 링크**(구글 지도 링크, **API 키 없음** — 공식 문서). 장소 항목 `items[].map_url` = 그 장소(주소를 알면 「이름 주소」, 모르면 좌표) · 이동 항목 `items[].map_url` = 앞 장소 → 다음 장소 **대중교통 길찾기**. `map.days[] = {date, stops[{number, item_id, name, lat, lon, map_url}], legs[{from_item_id, to_item_id, from, to, url}]}` — `stops[].number` 는 화면의 무료 지도가 찍는 번호. ☆처음엔 하루 경로 링크(들를 곳 여러 개)와 구글 퍼가기 경로 지도도 실었으나 **한국에서는 구글이 자동차·도보 길찾기를 주지 않고 대중교통은 들를 곳을 받지 않아** 둘 다 경로를 못 그렸다(ui 세션 실측) — 뺐다. 코드 `trip_api.map_view`.
@@ -618,12 +621,12 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 - `POST /v1/web/profile/discord/test` — 저장된 웹훅으로 시험 메시지 한 줄(`@` 호출 없음). **고객이 누를 때만.** → `{result: "ok"|"invalid"|"rate_limited"|"failed", profile: {…}}`. `ok`(2xx) · `invalid`(401/403/404/410 — 상태 저장) · `rate_limited`(디스코드 429) · `failed`(리다이렉트 · 5xx · 연결 실패 · 시간 초과). 웹훅이 없으면 409 `no_webhook`, 저장값을 못 풀면 409 `unreadable`(다시 입력), **마지막 시도에서 20초 안이면 429 `too_soon` + `Retry-After`**(분당 최대 3회 — DB 시각으로 세서 프로세스가 여럿이어도 맞다, 설정 `travel.profile.test_interval_seconds`).
 - `POST /v1/web/profile/discord/connect/start` — **「디스코드로 연결」 시작**(`[2026-10-05]`). 로그인한 사용자(쿠키면 CSRF 까지)가 본문 없이 부른다 → `{authorize_url: "https://discord.com/oauth2/authorize?client_id=…&response_type=code&scope=webhook.incoming&redirect_uri=<콜백>&state=…"}`. 웹은 그 주소(`https://discord.com` 하위)로 브라우저를 보낸다. 디스코드 앱 설정이 없으면 404 `not_found`, 사용자당 한 시간 `security.discord_connect_start_per_hour`(기본 10)번을 넘으면 429 `too_many_requests` + `Retry-After`.
 - `GET /v1/web/profile/discord/connect/callback?code=…&state=…` — 디스코드가 고객 브라우저를 돌려보내는 곳(**인증 없음** — 다른 사이트에서 오는 이동이라 쿠키에 기대지 않고 `state` 가 사용자를 정한다). 서버가 코드를 디스코드 토큰 엔드포인트에 내고 응답의 `webhook.url` **하나만** 꺼내 `PUT /v1/web/profile` 의 `discord_webhook_url` 과 **같은 경로**(검사 · 암호화 · 가림 · 상태 `untested`)로 저장한다 — 이미 웹훅이 있으면 새 것으로 바뀐다. 어떤 경우에도 **웹으로 302**: `{web_origin}/mypage?discord=connected|cancelled|expired|failed` — `connected` 저장됨 · `cancelled` 고객이 디스코드 창에서 취소(`error=access_denied`, `state` 가 낡았어도) · `expired` `state` 가 없음 · 모름 · 만료(10분) · 재사용 · 다른 흐름의 것 · `failed` 그 밖의 모든 실패(토큰 교환 4xx/5xx · 연결 오류 · 응답에 `webhook` 없음 · 웹훅 주소가 디스코드 것이 아님 · 저장 실패). 웹 주소가 설정돼 있지 않으면 503 `web_origin_not_configured`.
-★**이 흐름이 다루는 비밀**: ①`state` 는 서버가 만들고 해시만 저장(기존 로그인 시작 기록 표 `web_oauth_states` 를 `provider=discord_webhook` 으로 재사용 — 마이그레이션 없음) · 10분 · **한 번만**(취소 · 실패여도 태운다) ②**저장하는 것은 웹훅 주소 하나뿐** — `access_token` · `refresh_token` 은 읽지도 저장하지도 로그에 남기지도 않는다(실패 이유는 예외 **종류 이름만** 로그) ③돌아갈 웹 주소 · 콜백 주소는 서버 설정(`web_origin` · `public_base_url`)이고 요청 값으로 바꿀 수 없다 ④디스코드가 준 주소도 위 「받을 때」 검사를 통과해야 한다 ⑤공격자가 자기 코드를 피해자에게 보내도 **공격자 자신의 `state`** 에 묶여 있어 공격자 계정에만 저장된다. 설정 `ACOP_DISCORD_CLIENT_ID` · `ACOP_DISCORD_CLIENT_SECRET`(둘 다 있어야 켜진다 · git 밖 환경 파일에만) + 디스코드 앱의 OAuth2 → Redirects 에 `<공개 주소>/v1/web/profile/discord/connect/callback` 등록(사람이 한다 — 따라 하기 `wiki/records/plans/2026-10-05_디스코드_앱_만들기_안내.md`). `[미확보]` 고객이 고른 채널에 **웹훅 관리 권한**이 있어야 하는지는 디스코드 문서에서 확인하지 못했다 — 권한이 없으면 디스코드 창 또는 토큰 교환이 실패하고 우리는 `failed` 로 돌려보낸다. 계약 `wiki/records/plans/2026-10-05_디스코드_연결버튼_백엔드_요청.md` · 구현 `app/modules/travel_ops/discord_connect.py`.
+★**이 흐름이 다루는 비밀**: ①`state` 는 서버가 만들고 해시만 저장(기존 로그인 시작 기록 표 `web_oauth_states` 를 `provider=discord_webhook` 으로 재사용 — 마이그레이션 없음) · 10분 · **한 번만**(취소 · 실패여도 태운다) ②**저장하는 것은 웹훅 주소 하나뿐** — `access_token` · `refresh_token` 은 읽지도 저장하지도 로그에 남기지도 않는다(실패 이유는 예외 **종류 이름만** 로그) ③돌아갈 웹 주소 · 콜백 주소는 서버 설정(`web_origin` · `public_base_url`)이고 요청 값으로 바꿀 수 없다 ④디스코드가 준 주소도 위 「받을 때」 검사를 통과해야 한다 ⑤공격자가 자기 코드를 피해자에게 보내도 **공격자 자신의 `state`** 에 묶여 있어 공격자 계정에만 저장된다. 설정 `ACOP_DISCORD_CLIENT_ID` · `ACOP_DISCORD_CLIENT_SECRET`(둘 다 있어야 켜진다 · git 밖 환경 파일에만) + 디스코드 앱의 OAuth2 → Redirects 에 `<공개 주소>/v1/web/profile/discord/connect/callback` 등록(사람이 한다 — 따라 하기 `wiki/records/plans/2026-10-05_디스코드_앱_만들기_안내.md`). `[미확보]` 고객이 고른 채널에 **웹훅 관리 권한**이 있어야 하는지는 디스코드 문서에서 확인하지 못했다 — 권한이 없으면 디스코드 창 또는 토큰 교환이 실패하고 우리는 `failed` 로 돌려보낸다. 계약 `wiki/records/plans/2026-10-05_디스코드_연결버튼_백엔드_요청.md` · 구현 `app/domains/travel_ops/ports/notify_channels/discord_connect.py`.
 ★**웹훅 URL 은 비밀값이자 서버가 나중에 POST 하는 바깥 호출 통로(SSRF)라 이렇게 다룬다.** ①**받을 때** — `https://` + 호스트가 디스코드 공식 도메인(`discord.com` · `discordapp.com` · `canary.`/`ptb.` 하위)일 때만 + 경로가 `/api/webhooks/<숫자>/<토큰>`. 다른 호스트 · http · IP 주소 · 사용자정보(`@`) · 포트 · 쿼리 · 조각 · 점이 붙은 호스트 · 퍼센트 인코딩 · 공백 · 전각 글자는 422. ②**저장은 암호화**(Fernet — 키는 서버 `secret_key` 에서 파생, 값에 판 이름 `v1:`)만, 원문은 DB 어디에도 없다. `secret_key` 를 바꾸면 저장값을 못 풀어 고객이 다시 넣어야 한다. ③**응답은 마스킹만.** ④**발송 때 같은 검사를 한 번 더** 하고 **리다이렉트는 따라가지 않는다.** ⑤**로그에 원문을 남기지 않는다** — `httpx` 가 요청 주소를 INFO 로 찍는 기록은 웹훅 경로가 있으면 버린다. 한계: 호스트 **이름**만 검사한다 — DNS 재결합(허용 이름이 다른 주소로 풀리는 공격)까지는 막지 않는다(허용 목록이 디스코드 공식 도메인뿐이라 위험은 작고, 배포 때 바깥 호출을 허용 목록 프록시로 보내면 닫힌다).
 이메일은 형식만 본다(인증 메일은 이번에 안 보낸다) · 닉네임은 이번 범위가 아니다. **이메일로 키를 되찾는 흐름은 서버에 아직 없다**(키 재발급 `rotate` 는 기존 키가 있어야 한다) — 웹은 「저장만 되고 복구 메일은 준비 중」으로 적는다. CORS: 화면(다른 출처)이 `PUT` 을 보내도록 허용 메서드에 `PUT` 을 더했다. 저장 표 `customer_profiles`(마이그레이션 039). 코드 `customer_profile.py` · `trip_api.web_profile*`.
 
 **텔레그램으로 알림 받기 · 알림 받는 곳 · 고객별 발송** `[2026-10-05 사용자 지시 「텔레그램만 붙여 · 알림만 하는 걸로」 — ui 세션 요청서]` — 고객이 마이페이지에서 「텔레그램으로 연결」을 누르고 텔레그램 앱에서 「시작」을 한 번 누르면 연결된다. 그 뒤 일정 변경 알림이 **고객이 연결한 곳 한 곳**(디스코드 또는 텔레그램)으로 나간다.
-**★`[결정 2026-10-05 사용자]`** ①**알림만 한다** — 고객이 봇에 쓴 글에는 고정 문장으로만 답하고(모델 호출 0 · 글은 저장도 로그도 안 한다) 수정 · 질문은 웹이나 여행계획서 링크에서 한다 ②알림 받는 곳은 **한 번에 한 곳**(`notice_channel` = `discord` | `telegram` | `null`) — **마지막에 연결한 곳이 활성**, 고객이 마이페이지에서 바꿀 수 있다 ③봇은 **운영용 · 시험용 둘** — 환경 파일이 따로이고 `allowed_tenants` 규칙은 텔레그램에도 똑같다. 계약 `wiki/records/plans/2026-10-05_텔레그램_연결_백엔드_요청.md` · 구현 `app/modules/travel_ops/telegram_connect.py`(연결) · `app/modules/travel_ops/notice_routing.py`(고객별 발송) · `app/infrastructure/notify/telegram.py`(`sendMessage`) · 저장 마이그레이션 048. 운영 문서 [telegram-setup.md](../operations/telegram-setup.md).
+**★`[결정 2026-10-05 사용자]`** ①**알림만 한다** — 고객이 봇에 쓴 글에는 고정 문장으로만 답하고(모델 호출 0 · 글은 저장도 로그도 안 한다) 수정 · 질문은 웹이나 여행계획서 링크에서 한다 ②알림 받는 곳은 **한 번에 한 곳**(`notice_channel` = `discord` | `telegram` | `null`) — **마지막에 연결한 곳이 활성**, 고객이 마이페이지에서 바꿀 수 있다 ③봇은 **운영용 · 시험용 둘** — 환경 파일이 따로이고 `allowed_tenants` 규칙은 텔레그램에도 똑같다. 계약 `wiki/records/plans/2026-10-05_텔레그램_연결_백엔드_요청.md` · 구현 `app/domains/travel_ops/ports/notify_channels/telegram_connect.py`(연결) · `app/domains/travel_ops/components/watch/notice_routing.py`(고객별 발송) · `app/infrastructure/notify/telegram.py`(`sendMessage`) · 저장 마이그레이션 048. 운영 문서 [telegram-setup.md](../operations/telegram-setup.md).
 - **프로필 응답에 더한 칸** — `GET/PUT /v1/web/profile` 과 `…/discord/test` · `…/telegram/test` 응답의 `profile` **모두 같은 모양**: `telegram_connect: {available: bool}`(**봇 토큰 · 봇 아이디 · 웹훅 비밀값 셋이 다 있을 때만** `true` — 아니면 웹이 텔레그램 줄을 통째로 숨긴다) · `telegram: {connected: bool, status: "untested"|"ok"|"blocked"|null, connected_at: ISO|null}`(`ok` 시험 · 발송이 닿음 · `untested` 연결만 됨 · `blocked` 고객이 봇을 차단 · `null` 연결 안 됨) · `notice_channel: "discord"|"telegram"|null`. **대화 번호는 어느 응답에도 없다**(가린 모양도 안 준다 — 「연결됨」만).
 - `POST /v1/web/profile/telegram/connect/start` — 로그인한 사용자(쿠키면 CSRF)가 본문 없이 부른다 → `{link: "https://t.me/<봇 아이디>?start=<코드>", expires_at: ISO}`(`Cache-Control: no-store`). 코드는 서버가 만든 무작위 일회용(**64자 이하 · `A-Z a-z 0-9 _ -`** — 텔레그램 규칙) · 해시만 저장 · 수명 `security.telegram_link_code_seconds`(기본 600초) · 한 번만. 봇 설정이 없으면 404 `not_found` · 사용자당 한 시간 `security.telegram_connect_start_per_hour`(기본 10)번을 넘으면 429 `too_many_requests` + `Retry-After` · 게이트가 켜져 있고 알림 채널 동의가 없으면 403 `consent_required`(`item: "alert_channel"`).
 - `POST /v1/telegram/webhook` — **텔레그램이 부르는 곳**(고객 인증 없음). 헤더 `X-Telegram-Bot-Api-Secret-Token` 이 서버 비밀값과 **같을 때만** 처리한다(상수 시간 비교 · 설정이 없으면 늘 401 · 본문 모양 검사는 그다음이라 틀린 비밀값은 400 이 아니라 **401**). 처리하면(실패해도) 빠르게 200 `{ok: true}` — 텔레그램은 2xx 가 아니면 같은 업데이트를 다시 보내므로 **처리한 `update_id` 를 이틀 동안 기억해 두 번 처리하지 않는다**(`telegram_seen_updates`). 업데이트별 동작:
@@ -656,7 +659,7 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 | `error` | `{code, message, retryable, status?, retry_after_seconds?, …}` | 실패 · 시간 초과(`timeout` — 채팅 90초 · 일정 짜기 240초 · 접수 읽기 600초) · 읽던 일꾼이 죽음(`stalled`). 일정 짜기 거절의 이유·완화 조건은 몸통에 그대로 |
 
 ★**웹이 할 일(서버는 재료만 준다).** ①`beat` 가 오는데 `slow=true` → 「모델 응답이 느려요 (12초째)」 — 서버는 살아 있다. ②`beat` 를 **2번(약 6초) 못 받으면** 서버·연결이 죽은 것 → 「연결이 끊겼어요 — 다시 연결 중」(워치독은 웹 몫). ③`error{retryable:true}` → 다시 시도는 **같은 request_id** 로 하면 두 번 처리되지 않는다(채팅은 `status: duplicate` 로 돌아오고, 앞 요청의 답은 `GET /chat` 대화 기록에 있다. 일정 짜기는 이미 등록된 여행을 곧바로 `accepted` → `result` 로 돌려준다).
-★**규칙.** 스트림이 열리기 **전**의 거절(남의 것 404 · 판이 낡음 409 · 날짜 밖 422 · 남용 방어 429 · 열린 연결 상한 429 `too_many_streams`)은 SSE 여도 **보통의 HTTP 오류(JSON `{error:{…}}`)** 다 — 응답 `Content-Type` 으로 가르면 된다. 연결이 끊겨도 서버의 일은 끝까지 돈다(처리 중인 요청을 버리지 않는다) · 응답 뒤로 미룬 일(분류 기록)은 정확히 한 번. 사용자당 열린 실시간 작업 3개(`travel.op_stream.max_per_user`). 값은 `config/guardrails.yaml` `travel.op_stream.*`, 코드 `app/modules/travel_ops/op_stream.py`, 시험 `tests/e2e/test_op_stream.py`.
+★**규칙.** 스트림이 열리기 **전**의 거절(남의 것 404 · 판이 낡음 409 · 날짜 밖 422 · 남용 방어 429 · 열린 연결 상한 429 `too_many_streams`)은 SSE 여도 **보통의 HTTP 오류(JSON `{error:{…}}`)** 다 — 응답 `Content-Type` 으로 가르면 된다. 연결이 끊겨도 서버의 일은 끝까지 돈다(처리 중인 요청을 버리지 않는다) · 응답 뒤로 미룬 일(분류 기록)은 정확히 한 번. 사용자당 열린 실시간 작업 3개(`travel.op_stream.max_per_user`). 값은 `config/guardrails.yaml` `travel.op_stream.*`, 코드 `app/domains/travel_ops/modules/live_progress/op_stream.py`, 시험 `tests/e2e/test_op_stream.py`.
 **접수 읽기 진행** `GET /v1/web/trip-intakes/{intake_id}/events` — `accepted{state}` → 단계가 바뀔 때마다 `stage{state}` · 조용하면 `beat` → `review`·`confirmed`·`fatal` 이면 `result{state}`. `state` = `{status, stage, stage_label, revision, fatal_code, quiet_seconds}` — 읽은 값은 싣지 않는다(웹이 `GET /v1/web/trip-intakes/{id}` 로 읽는다). 갱신이 180초 넘게 멈추면(뒤에서 읽던 일꾼이 서버 재시작으로 죽음) `error{code: stalled, retryable}` — 영원히 「읽는 중」으로 두지 않는다. 남의 접수 · 없는 접수는 404.
 
 **확인 화면 검사 · 대체 후보 · 장소 검색 · 사진 · 잠금 · 전체 자동 추천 · 재검증 · 내용 이벤트** `[2026-10-02 사용자 지시 — 계획 확인 시나리오 목업 `team_branch/sw/2026-10-02_계획확인_스트리밍_대표목업.html` + 멘토링 1001]` — 목업이 「협의 필요」로 적은 것을 서버가 채웠다. 읽기 파이프라인은 그대로이고(`intake/pipeline.py`), 읽은 값에서 **검사를 계산해 한 판(revision)마다 한 번 저장**한다(`intake_reviews`, 마이그레이션 040 — 정본은 `intake_claims`, 지워도 다시 계산한다). 새 코드: `intake/review.py`(검사) · `hours.py`(운영시간 사실) · `moves.py`(이동) · `candidates.py`(후보 · 검색 · 사진) · `autofix.py`(전체 자동 추천) · `stream.py`(내용 이벤트). 시험 `tests/e2e/test_intake_review.py` · `tests/unit/travel/test_intake_review_units.py`.
@@ -746,7 +749,7 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 「{항목} — {원인}. 같은 조건으로는 대신 갈 곳을 찾지 못했어요(또는 「바꿀 곳을 찾았지만 일정 전체와 맞지 않았어요」). 그래서 **일정은 그대로 두었어요.** 조건을 조금 풀면 이런 곳이 있어요 — 1) 16:00으로 늦추면 ○○ · 2) 다음 일정(△△) 근처 □□. 고르시면 바꿀게요. 답이 없으면 지금 일정을 그대로 둡니다.」
 ①**자동 적용하지 않는다**(판 번호 그대로 — 고르면 `…/proposals/{id}/choose` 로 바뀐다, 답이 없으면 그대로) ②묻는 안은 **고르면 그대로 적용될 안만** — `plan_swap` 으로 미리 해 보고, 같은 원인을 **다시 점검**해(활동 · 식사 모두) 통과한 곳만, **일정 전체 재판정**(바꾼 뒤 새로 생기는 구조 위반 없음)과 **밀도 판단**(하루가 원하신 여유보다 빡빡해지지 않음)을 통과한 안만 싣는다 — 못 쓸 안은 순위에서 빠지고 순위는 다시 매긴다
 ③날씨 원인이면 활동은 **실내만**(시각 · 거리를 푸는 것이지 안전 조건을 푸는 것이 아니다) ④한 곳도 없으면 지금처럼 「일정은 그대로 두었어요」 ⑤같은 항목 · 같은 판에는 제안 하나(`pending_changes` UNIQUE) — 알림도 한 번 ⑥묶음 Case 는 못 푼 항목마다 묻고, 묻는 항목은 묶음의 「그대로 두었어요」 줄에서 빠진다
-⑦스위치 `travel.watch.relaxed_enabled`(기본 켜짐 — 끄면 전과 같다). 구현 `app/modules/travel_ops/watch_relaxed.py`(감시 Case `trip_watch_cases` · 시나리오 감시 `trip_watch`/`pending.apply_or_ask`(점검기를 받은 자리만)가 부른다) · 시험 `tests/e2e/test_watch_relaxed.py`.
+⑦스위치 `travel.watch.relaxed_enabled`(기본 켜짐 — 끄면 전과 같다). 구현 `app/domains/travel_ops/components/watch/watch_relaxed.py`(감시 Case `trip_watch_cases` · 시나리오 감시 `trip_watch`/`pending.apply_or_ask`(점검기를 받은 자리만)가 부른다) · 시험 `tests/e2e/test_watch_relaxed.py`.
 `[미확보]` 식당의 **요리 분류를 넓히는** 안(아침엔 카페 · 베이커리)은 아직 없다 — 요식 원장 분류와 끼니를 엮는 자료가 정리되면 더한다. 활동은 후보를 분류로 거르지 않으므로(순위에만 쓴다) 따로 넓힐 단계가 없다. 새벽 확인(`dawn_check`)과 「바꿔 줘」 동의 뒤의 못 찾음(`pending._consented`)은 아직 이 길을 타지 않는다.
 
 **여행 조회 항목에 더한 칸** `[2026-09-27]` — `lat`·`lon`(그 고객 자신의 여행 장소 좌표, 웹 지도 핀) · `booked`(예약 표 연결 또는
@@ -768,11 +771,13 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 - 좌표 없는 장소가 낀 이동은 건너뛴다. 접수용은 저장된 검사에 탄 역 정보(`uses`)가 없는 **옛 검사**의 지하철·대중교통을 직선 + `note` 로 내린다 — **새로 접수한** 검사부터 역 좌표를 따라 그린다(고쳐도 바뀌지 않은 이동은 저장된 값을 다시 쓰므로 옛 검사는 그대로 직선).
 - `attribution`(「지도 데이터 © OpenStreetMap contributors (ODbL)」)은 선을 그릴 때 화면이 보여야 한다.
 - ★`[2026-10-05]` **점 줄이기와 확대용 상세 선(`?detail=true`).** 기본 응답(`detail=false`)은 **모양을 지키며**(Douglas–Peucker, 원본이 줄인 선에서 **최대 2 m**) 점을 줄이고 한 선 최대 240점이다. 전에는 점을 **고르게 건너뛰어** 모퉁이가 잘려 확대하면 직선처럼 보였다 — 이 PC 도로 그래프 실측: 택시 8 km 최대 8.1 m · 15 km 최대 14.0 m 벗어남 → 지금은 둘 다 2.0 m 안(점 수는 333→75 · 365→145로 오히려 줄었다). `?detail=true` 는 원본에 가깝게(오차 0.5 m · 한 선 최대 5,000점) 내려 확대용으로 쓴다. 응답의 `detail` 이 어느 쪽인지 말한다. ★도로 그래프(`local_road_graph`) 경로는 원본이 OSM 모양점을 보존한다(선분 중앙 10~30 m, 이 PC 실측 4경로) — 확대해서도 곧아 보이는 것은 **지하철(`stations`)과 버스·혼합이 직선으로 내려가는 구간**이다(아래 한계).
-- ★한계(실측 2026-10-05): 지하철은 **탄 역·갈아탄 역·내린 역만** 좌표로 잇는다(`plan.uses_of`) — 중간 역과 실제 선로 곡선이 없어 그 사이는 직선이다. 버스는 정류장 목록이 일정에 없어 항상 직선이다.
+- ★`[2026-10-05]` **지하철은 탄 역~내린 역 사이의 모든 역을 잇는다.** 일정에는 탄·갈아탄·내린 역만 담기므로(`plan.uses_of`), 사이 역은 호선별 역 순서(`LineOrder.path`)로 채우고 좌표는 역 좌표표로 얻는다 — 전에는 그 사이가 직선 한 줄이라 확대해도 같았다. 좌표를 못 찾는 역은 건너뛰고 선은 끊기지 않는다. **실제 선로·터널 곡선은 아니다**(곡선 자료 없음) — `source=stations` · `grade=추정` · `note` 가 그렇게 말한다. 순환선은 짧은 쪽으로 이으므로 운행 방향과 다를 수 있다(`note` 에 적는다). 계산기가 꺼져 있으면 노선 순서를 못 읽어 일정에 담긴 역만 잇고, `note` 가 「중간 역을 못 채웠다」고 말한다.
+- ★`rides[]`(지하철·혼합이 `source=stations` 일 때만): 탄 구간마다 `{line, from, to, stations[], count, filled}` — 화면이 「지하철 3호선 · 경복궁→을지로3가 · 4개 역 · 역 사이는 직선」처럼 밝힐 수 있게 한다. `filled=false` 면 중간 역을 못 채운 구간이다. 버스·택시·걷기·직선에는 이 칸이 없다.
+- ★한계(2026-10-05): 버스는 정류장 목록이 일정에 없어 항상 직선이다(일정 `route_def` 에 탄·내린 정류장을 같이 저장하는 일이 먼저 — 진행 예정).
 
 ## 위임 — `/v1/delegations/*` `[2026-09-22]`
 
-`[실측]` `app/modules/travel_ops/delegation_api.py`. 라우터는 도메인 폴더에 있고
+`[실측]` `app/domains/travel_ops/entry/delegation_api.py`. 라우터는 도메인 폴더에 있고
 `composition.build_domain_routers()` 가 앱에 넣는다(여행 API 와 같은 이유 — presentation 은
 도메인을 import 하지 못한다, INV-CS-ARCH-001). v11 §12 DoD-18·19.
 

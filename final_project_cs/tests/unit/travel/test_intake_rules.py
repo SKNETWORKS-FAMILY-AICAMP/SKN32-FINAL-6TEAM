@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.modules.travel_ops.intake.rules import read_plan
+from app.domains.travel_ops.components.intake.rules import read_plan
 
 
 def _items(text):
@@ -109,6 +109,6 @@ def test_a_date_written_on_each_timed_line_is_that_items_date():
 ])
 def test_a_line_that_is_only_a_date_is_not_the_trip_title(text, title):
     """★`[2026-09-28]` 날짜 머리줄로 시작하는 글의 제목이 그 날짜가 됐다(ui 세션 실서버 시험)."""
-    from app.modules.travel_ops.intake.assemble import _title
+    from app.domains.travel_ops.components.intake.assemble import _title
 
     assert _title({}, [{"transcript": text}]) == title

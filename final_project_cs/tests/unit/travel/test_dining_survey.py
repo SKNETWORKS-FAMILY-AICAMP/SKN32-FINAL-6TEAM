@@ -3,7 +3,7 @@ import importlib.util
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PATH = os.path.join(HERE, "..", "..", "..", "app", "modules", "travel_ops", "dining", "survey.py")
+PATH = os.path.join(HERE, "..", "..", "..", "app", "domains", "travel_ops", "instances", "dining", "survey.py")
 spec = importlib.util.spec_from_file_location("dining_survey", PATH)
 survey = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(survey)

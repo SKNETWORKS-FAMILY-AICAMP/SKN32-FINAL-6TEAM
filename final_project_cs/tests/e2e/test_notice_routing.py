@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """고객별 알림 발송 — 일정 변경 알림(`trip.notice`)이 **고객이 연결한 곳 한 곳**으로 나가는가. `[2026-10-05 사용자 지시 「텔레그램만 붙여 · 알림만」]`
 
-구현 `app/modules/travel_ops/notice_routing.py`(일꾼의 발행자 자리에 끼우는 래퍼) · 연결 `scripts/run_outbox_worker.py` · 일꾼 `app/infrastructure/messaging/worker.py`.
+구현 `app/domains/travel_ops/components/watch/notice_routing.py`(일꾼의 발행자 자리에 끼우는 래퍼) · 연결 `scripts/run_outbox_worker.py` · 일꾼 `app/infrastructure/messaging/worker.py`.
 ★텔레그램과 디스코드는 **mock 서버**(`httpx.MockTransport`)다 — 실제 봇 · 실제 디스코드 채널로 보낸 것이 아니다(「실서버 확인: 안 했음」). DB 는 실제 개발 DB 다.
 
 지키려는 것
@@ -35,8 +35,11 @@ from app.infrastructure.notify import telegram as telegram_client
 from app.infrastructure.notify.discord import DiscordWebhook, NoticeNotConfigured, RetryAfter
 from app.infrastructure.notify.phrase import PhraseCache
 from app.infrastructure.notify.suppressed import NoticeSuppressed
-from app.modules.travel_ops import consents, customer_profile, notice_routing, telegram_connect
-from app.modules.travel_ops.notice_routing import CustomerNoticeRouter, trip_id_of
+from app.domains.travel_ops.modules.web_account import consents
+from app.domains.travel_ops.modules.web_account import customer_profile
+from app.domains.travel_ops.components.watch import notice_routing
+from app.domains.travel_ops.ports.notify_channels import telegram_connect
+from app.domains.travel_ops.components.watch.notice_routing import CustomerNoticeRouter, trip_id_of
 
 from .test_trip_api import _create, api  # noqa: F401 — 픽스처를 그대로 쓴다
 

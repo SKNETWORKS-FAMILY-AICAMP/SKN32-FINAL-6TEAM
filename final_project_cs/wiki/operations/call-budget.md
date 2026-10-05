@@ -27,7 +27,7 @@ domain: neutral
 
 ## 아래층 — 동작과 선택
 
-**어디에 걸리나.** `TravelSource._allow` → 제한기 `acquire(이름)` 한 곳. 안쪽(프로세스 안) 제한기를 먼저 통과한 뒤 DB 한 칸을 확보한다(`app/infrastructure/travel/source_budget.py`). 캐시 적중은 바깥으로 안 나가니 한도를 안 쓴다. `TravelSource` 를 거치지 않고 직접 부르는 코드(따릉이 `urllib`)는 `build_gate(settings, ["seoul_bike"])` 로 같은 문을 쓴다.
+**어디에 걸리나.** `TravelSource._allow` → 제한기 `acquire(이름)` 한 곳. 안쪽(프로세스 안) 제한기를 먼저 통과한 뒤 DB 한 칸을 확보한다(`app/domains/travel_ops/ports/data_sources/source_budget.py`). 캐시 적중은 바깥으로 안 나가니 한도를 안 쓴다. `TravelSource` 를 거치지 않고 직접 부르는 코드(따릉이 `urllib`)는 `build_gate(settings, ["seoul_bike"])` 로 같은 문을 쓴다.
 
 **제공처가 「한도 초과」를 알릴 때.** ITS 는 월 한도가 차면 HTTP 401 + `resultCode 4001` 로 답한다. 어댑터가 그 숫자 코드를 알아보면(`_quota_signal`) 그 달 줄에 `exhausted_at` · `learned_cap`(그때까지 센 사용 수 = 제공처가 허락한 한도의 **관측값**)을 남기고(마이그레이션 049), **그날 한국 자정까지 그 소스를 부르지 않는다**(한도가 차 있던 날 하루 800~900건을 헛호출하던 것을 막는다 — 9/30 937건 · 10/2 825건). 다음 날 첫 호출이 한 번 시험해 — 여전히 초과면 다시 표시하고, 풀렸으면(한도 증설 · 달 바뀜) 그대로 쓴다. 달이 바뀌면 새 줄이라 자동으로 풀린다. 새 소스의 신호는 어댑터에 `_quota_signal` 한 메서드만 더하면 된다(공급자마다 신호가 다르다).
 
@@ -39,8 +39,8 @@ domain: neutral
 
 **개발 PC 와 서버가 같은 키를 쓸 때.** 두 곳의 DB 는 **따로**라서 각자 센 합이 키 한도를 넘을 수 있다. 추천: ① 키를 환경별로 따로 받는다 ② 안 되면 **개발 PC 환경 파일의 한도를 훨씬 낮게**(예: 서버 80% · 개발 PC 20%) 둔다. 이 표는 **이 DB 에서 센 만큼**만 보인다.
 
-**실패 수의 뜻.** 부른 뒤 `TravelSource._miss` 가 불린 경우(시간 초과 · 연결 오류 · http 오류 · 응답 모양 이상 …)를 센다 — 서비스 입장의 「못 받음」이다. 한도 때문에 안 부른 것은 실패가 아니라 거절이다. 안쪽(프로세스 안) 제한기가 거절한 것은 DB 에 안 센다(프로세스 안 `refusals` 에만 있다).
+**실패 수의 뜻.** 부른 뒤 **응답이 오지 않았거나 와도 읽을 수 없었던** 경우만 센다(시간 초과 · 연결 오류 · http 오류 · JSON/XML 아님 · 응답 모양 이상 · 본문이 오류 — `base._CALL_FAILURE_REASONS`). 한도 때문에 안 부른 것은 실패가 아니라 거절이고, **답은 잘 왔는데 찾는 것이 없는 것**(`not_found` · `ambiguous` 등)과 **부르기 전에 막힌 것**(키 없음)은 정상 호출이라 안 센다. `[2026-10-05 정정]` 처음 판은 한도 때문에 안 부른 것만 빼고 전부 실패로 세어, x600 서버에서 `tour_api` 가 사용 15 · 실패 15 로 보였다 — 정상 응답의 「찾는 장소 없음」까지 실패로 센 것이다(허용 목록으로 뒤집음, 이미 쌓인 값은 소급해 고치지 않는다). 안쪽(프로세스 안) 제한기가 거절한 것은 DB 에 안 센다(프로세스 안 `refusals` 에만 있다).
 
 **따릉이.** 서울 열린데이터광장 일반 키로 부르는 따릉이 거치 대수의 하루 상한은 `ACOP_RATE_SEOUL_BIKE_PER_DAY`(기본 1,000 — 공식 하루 한도를 못 찾아 **우리가 고른 보수적 값** `[미확인]`). 이동 모듈이 `bike.py` 에서 위 문을 쓰도록 잇는 일은 이동 세션 몫이다.
 
-관련: [rest-endpoints](../external/rest-endpoints.md)(외부 소스는 REST 가 아니라 여기) · 코드 `app/infrastructure/travel/call_budget.py` · `source_budget.py` · 보고 `scripts/report_source_budget.py` · 시험 `tests/unit/travel/test_source_budget.py` · `tests/integration/db/test_source_budget_db.py`.
+관련: [rest-endpoints](../external/rest-endpoints.md)(외부 소스는 REST 가 아니라 여기) · 코드 `app/domains/travel_ops/ports/data_sources/call_budget.py` · `source_budget.py` · 보고 `scripts/report_source_budget.py` · 시험 `tests/unit/travel/test_source_budget.py` · `tests/integration/db/test_source_budget_db.py`.

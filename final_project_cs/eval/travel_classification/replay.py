@@ -4,7 +4,7 @@
     python -m eval.travel_classification.replay eval/datasets/travel_golden.jsonl
     python -m eval.travel_classification.replay eval/datasets/travel_golden.jsonl --repeats 3
 
-★서버 코드(`app.modules.travel_ops.feedback.classify` — 지시문 · 어휘 검증 · 한 번 되묻기)를 그대로 부른다. 제공자는 설정이 정한다(Ollama 주소가 있으면 Ollama, 없으면 OpenAI).
+★서버 코드(`app.domains.travel_ops.components.core_hooks.feedback.classify` — 지시문 · 어휘 검증 · 한 번 되묻기)를 그대로 부른다. 제공자는 설정이 정한다(Ollama 주소가 있으면 Ollama, 없으면 OpenAI).
 ★정답 자료는 쇼핑몰 시절 것이 아니다 — `eval/datasets/travel_golden.jsonl`(72) · `travel_holdout.jsonl`(24). 라벨은 **사람 검수 전 초안**이다(`label_by`).
 ★holdout 은 **프롬프트를 고치는 데 쓰지 않는다**(만지는 순간 holdout 이 아니다). 프롬프트·어휘를 다듬을 때는 golden 으로만 보고, holdout 은 마지막에 한 번 잰다.
 
@@ -109,7 +109,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     from app.core.settings import get_settings
-    from app.modules.travel_ops.feedback import classify
+    from app.domains.travel_ops.components.core_hooks.feedback import classify
 
     settings = get_settings()
     provider = "ollama:" + settings.ollama_model if (settings.ollama_base_url or "").strip() else "openai:" + str(settings.llm_model)

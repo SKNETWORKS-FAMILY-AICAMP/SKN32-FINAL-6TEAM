@@ -16,9 +16,9 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.itinerary_actions import introduced_violations
-from app.modules.travel_ops.itinerary_checks import Part, check_itinerary
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.actions.itinerary_actions import introduced_violations
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
 
 KST = ZoneInfo("Asia/Seoul")
 MONDAY = datetime(2026, 10, 5, 10, 0, tzinfo=KST)          # 월요일

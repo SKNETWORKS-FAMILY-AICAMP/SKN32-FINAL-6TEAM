@@ -18,11 +18,11 @@ from datetime import date, datetime, timedelta
 
 import pytest
 
-from app.modules.travel_ops.mobility.engine import plan as P
-from app.modules.travel_ops.mobility.engine.fold import fold_case
-from app.modules.travel_ops.mobility.engine.paths import RULES_DIR
-from app.modules.travel_ops.mobility.engine.runtime import Runtime
-from app.modules.travel_ops.mobility.engine.verify_time import Timetable, Verifier
+from app.domains.travel_ops.instances.mobility.engine import plan as P
+from app.domains.travel_ops.instances.mobility.engine.fold import fold_case
+from app.domains.travel_ops.instances.mobility.engine.paths import RULES_DIR
+from app.domains.travel_ops.instances.mobility.engine.runtime import Runtime
+from app.domains.travel_ops.instances.mobility.engine.verify_time import Timetable, Verifier
 
 RULES = json.loads((RULES_DIR / "rules_v0.3.json").read_text(encoding="utf-8"))
 D = datetime.fromisoformat
@@ -325,7 +325,7 @@ _RT = None
 def _runtime():
     global _RT
     if _RT is None:
-        from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+        from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
         try:
             _RT = build_verifier(quiet=True)
         except RuntimeError as e:
@@ -437,8 +437,8 @@ def test_full_e3_real_answers_have_no_grade():
     import re
     from pathlib import Path
 
-    from app.modules.travel_ops.mobility.engine.adapter import _to_plain
-    from app.modules.travel_ops.mobility.engine.verify_time import load_cases
+    from app.domains.travel_ops.instances.mobility.engine.adapter import _to_plain
+    from app.domains.travel_ops.instances.mobility.engine.verify_time import load_cases
     rt = _runtime()
     cases = load_cases(str(Path(__file__).resolve().parent / "real_legs_v1.json"))
     n = 0

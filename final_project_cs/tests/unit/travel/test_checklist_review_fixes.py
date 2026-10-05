@@ -22,10 +22,10 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from app.modules.travel_ops import itinerary_quality
-from app.modules.travel_ops.itinerary_checks import Part, check_itinerary
-from app.modules.travel_ops.itinerary_quality import quality_warnings
-from app.modules.travel_ops.replan import dining_fits, dining_warnings
+from app.domains.travel_ops.components.itinerary import itinerary_quality
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
+from app.domains.travel_ops.components.itinerary.itinerary_quality import quality_warnings
+from app.domains.travel_ops.components.planning.replan import dining_fits, dining_warnings
 
 KST = ZoneInfo("Asia/Seoul")
 UTC = timezone.utc
@@ -193,8 +193,8 @@ def test_the_unresolved_notice_does_not_leak_a_code_name_into_the_customer_sente
     """새벽 확인이 만든 원인에는 `type=closed_on_day` 뿐이라 알림 문장에 코드 이름이 그대로 들어갔다."""
     from uuid import uuid4
 
-    from app.modules.travel_ops.itinerary import Item
-    from app.modules.travel_ops.pending import unresolved_notice
+    from app.domains.travel_ops.components.itinerary.itinerary import Item
+    from app.domains.travel_ops.components.planning.pending import unresolved_notice
 
     item = Item(item_id=uuid4(), seq=1, kind="dining", title="점심 식당", place_id=None, starts_at=_at("12:00"), ends_at=_at("13:00"), place=None, detail={})
     cause = {"category": "place_closed", "type": "closed_on_day", "source": "google", "detail": "휴무", "evidence": "새벽 확인"}
@@ -206,7 +206,7 @@ def test_the_unresolved_notice_does_not_leak_a_code_name_into_the_customer_sente
 
 
 def test_the_mcp_error_text_carries_the_field_positions():
-    from app.modules.travel_ops.mcp_server import McpApiError
+    from app.domains.travel_ops.modules.mcp.mcp_server import McpApiError
 
     error = McpApiError(422, "validation_error", "필수 칸이 비었어요", {"fields": [{"loc": ["body", "items", 0, "title"], "type": "missing"}]})
     assert "fields" in error.text() and "title" in error.text()
@@ -231,7 +231,7 @@ def test_the_cheap_shortest_path_equals_the_exhaustive_one():
     from itertools import permutations
     import random
 
-    from app.modules.travel_ops.itinerary_quality import _shortest_open_path
+    from app.domains.travel_ops.components.itinerary.itinerary_quality import _shortest_open_path
 
     rng = random.Random(7)
     for count in (2, 3, 5, 6):

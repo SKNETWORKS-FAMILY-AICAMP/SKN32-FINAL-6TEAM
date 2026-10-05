@@ -5,7 +5,7 @@
 
 ① 영업시간·휴무 **글**을 규칙만으로 요일별 칸으로 옮긴다(`activity/hours_text.py`) — 팀 읽기 규칙을 가져오되 슬래시 뒤 요일 결함을 고쳤다.
 ② 자정에 닫는 곳(「08:00 ~ 00:00」)을 항상 닫힘으로 읽던 우리 결함을 고쳤다.
-③ 같은 브랜드 · 같은 구의 후보를 유사도 맨 앞에 둔다.
+③ 같은 브랜드의 가까운 매장을 앞세우고, 같은 브랜드는 한 곳만 보인다(`test_activity_brand_stores.py`).
 ④ 실내·야외 표를 **이름을 확인한 분류만** 넓혔다(팀 표 중 섞인 갈래는 가져오지 않았다).
 """
 from __future__ import annotations
@@ -14,10 +14,9 @@ from datetime import datetime
 
 import pytest
 
-from app.modules.travel_ops.activity.hours_text import closed_weekdays, read_week
-from app.modules.travel_ops.activity.similarity import score
-from app.modules.travel_ops.itinerary import weather_from_class
-from app.modules.travel_ops.place_hours import fits
+from app.domains.travel_ops.instances.activity.hours_text import closed_weekdays, read_week
+from app.domains.travel_ops.components.itinerary.itinerary import weather_from_class
+from app.domains.travel_ops.components.places.place_hours import fits
 
 
 def _week(business, closed):
@@ -118,34 +117,6 @@ def test_a_midnight_close_from_text_is_open_in_the_evening():
     week = _week("08:00 ~ 00:00", "연중무휴")
     evening = datetime(2026, 10, 7, 21)
     assert fits({"hours_week": week}, evening, evening) is True
-
-
-# ── ③ 같은 브랜드 · 같은 구 ────────────────────────────────────
-SHOP = {"lcls1": "SH", "lcls2": "SH04", "lcls3": "SH040100", "sigungu": "1", "brand": "올리브영"}
-
-
-def test_the_same_brand_in_the_same_district_comes_first():
-    same = dict(SHOP)
-    same_class_other_brand = {**SHOP, "brand": "다이소"}
-    assert score(SHOP, same) > score(SHOP, same_class_other_brand)
-
-
-def test_the_same_brand_in_another_district_is_not_put_first():
-    """구 밖 같은 브랜드보다 더 가까운 다른 매장이 낫다 — 거리는 순위 뒷단이 본다."""
-    other_district = {**SHOP, "sigungu": "2"}
-    same_district_other_brand = {**SHOP, "brand": "다이소"}
-    assert score(SHOP, other_district) < score(SHOP, same_district_other_brand)
-
-
-@pytest.mark.parametrize("origin, candidate", [
-    ({**SHOP, "brand": None}, SHOP),               # 원래 장소가 브랜드를 모른다
-    (SHOP, {**SHOP, "brand": None}),               # 후보가 브랜드를 모른다
-    ({**SHOP, "sigungu": ""}, {**SHOP, "sigungu": ""}),   # 구를 모른다
-])
-def test_unknown_brand_or_district_never_counts_as_the_same(origin, candidate):
-    plain = {k: v for k, v in origin.items() if k != "brand"}
-    plain_candidate = {k: v for k, v in candidate.items() if k != "brand"}
-    assert score(origin, candidate) == score(plain, plain_candidate)
 
 
 # ── ④ 실내·야외 표 ─────────────────────────────────────────────

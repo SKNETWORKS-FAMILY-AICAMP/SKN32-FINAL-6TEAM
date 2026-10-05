@@ -12,19 +12,19 @@ domain: travel
 
 `[2026-09-28]` 세 팀(Activity·Dining·Mobility)이 각자 폴더에서 작업한다. 이 문서는 **어디에 두면 시험이 통과하는지**만 적는다.
 
-## 코드 — `app/modules/travel_ops/<팀>/`
+## 코드 — `app/domains/travel_ops/<팀>/`
 
 `develop` 은 세 팀을 폴더로 옮겨 두었다. 본체는 `team.py`, 입구 `__init__.py` 는 다시 내보내기만 한다.
 
 ```
-app/modules/travel_ops/
+app/domains/travel_ops/
   activity/   __init__.py  team.py   (+ 이 팀의 도우미 파일·하위 폴더)
   dining/     __init__.py  team.py
   mobility/   __init__.py  team.py
   mobility_engine/ ...               (Mobility 가 따로 둔 엔진 — 다른 이름이라 허용)
 ```
 
-**세 방식 모두 허용한다.** 등록 문자열(`config/project.yaml` 의 `app.modules.travel_ops.activity:ActivityTeam`)은 어느 방식이든 그대로다.
+**세 방식 모두 허용한다.** 등록 문자열(`config/project.yaml` 의 `app.domains.travel_ops.instances.activity:ActivityTeam`)은 어느 방식이든 그대로다.
 
 | 방식 | 모양 | 조건 |
 |---|---|---|

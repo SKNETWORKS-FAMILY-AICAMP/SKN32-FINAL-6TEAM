@@ -18,11 +18,11 @@ import httpx
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.infrastructure.travel.call_budget import CallBudget, google_caps
-from app.infrastructure.travel.google_places import GooglePlaces, verdict_from_details
-from app.modules.travel_ops.case_engine import cleanup_tenant
-from app.modules.travel_ops.dawn_check import DawnCheck
-from app.modules.travel_ops.survey import SURVEY_VERSION
+from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget, google_caps
+from app.domains.travel_ops.ports.data_sources.google_places import GooglePlaces, verdict_from_details
+from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
+from app.domains.travel_ops.components.watch.dawn_check import DawnCheck
+from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
 
 from .test_case_version_day import SCENARIO, Clock, _at, _seed
 
@@ -152,6 +152,92 @@ def test_the_month_cap_holds_across_budget_objects_like_separate_processes(budge
     assert used == [True, True, True, False, False]
 
 
+@pytest.fixture()
+def uncapped_meter(budget_meter):
+    yield budget_meter
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("DELETE FROM external_call_budget WHERE meter LIKE %s", (budget_meter + ":%",))
+
+
+def test_counting_without_a_cap_passes_the_free_tier_and_marks_the_crossing_once(uncapped_meter):
+    """★`[2026-09-30]` 가격대 조회 — 막지 않고 센다. 전체 = 상한 있는 월 줄 + 상한 없는 줄. 넘는 순간 한 번만 표시."""
+    meter = uncapped_meter
+    capped = CallBudget(connection_factory=get_connection, caps={meter: {"month": 100, "day": 2}})
+    assert capped.try_reserve(meter) and capped.try_reserve(meter)          # 새벽 확인이 2건 썼다
+    counts = [CallBudget(connection_factory=get_connection, caps={}).count(meter, free=4) for _ in range(4)]
+    assert counts == [(3, False), (4, False), (5, True), (6, False)]
+    assert capped.used(meter) == {"month": 2, "day": 2}, "새벽 확인의 월·하루 몫을 먹지 않는다"
+
+
+def test_prices_use_the_matched_google_id_and_leave_unmatched_places_unknown():
+    """★`[2026-09-30]` 가격대는 새벽 확인이 맞춘 짝 표로만 — 짝이 없는 곳은 구글에서 찾지 않고 「모름」."""
+    from app.domains.travel_ops.ports.data_sources.google_places import prices_for
+
+    tenant, matched, unmatched = "t_price_" + uuid4().hex[:8], str(uuid4()), str(uuid4())
+    asked = []
+
+    class Source:
+        def price(self, google_id):
+            asked.append(google_id)
+            return {"level": 3, "low": None, "high": None}
+
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("INSERT INTO place_provider_ids (tenant_id, place_id, provider, provider_place_id, "
+                    "match_distance_m) VALUES (%s,%s,'google_places','g-1',2.0)", (tenant, matched))
+    try:
+        assert prices_for(get_connection, tenant, Source(), [matched, unmatched], enabled=True) == {
+            matched: {"level": 3, "low": None, "high": None}, unmatched: None}
+        assert asked == ["g-1"]
+    finally:
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("DELETE FROM place_provider_ids WHERE tenant_id=%s", (tenant,))
+
+
+def test_prices_fall_back_to_the_ledger_google_id_a_person_verified():
+    """★`[2026-09-30]` 짝 표에 없으면 요식 원장의 구글 id(`dn_external_ref`, 사람이 확인한 `valid` 만)로 묻는다.
+    짝 표가 먼저다 — 새벽 확인이 좌표로 맞춘 id 를 원장 id 가 덮지 않는다."""
+    from app.domains.travel_ops.ports.data_sources.google_places import prices_for
+
+    tenant = "t_price_" + uuid4().hex[:8]
+    both, ledger_only, candidate_only = str(uuid4()), str(uuid4()), str(uuid4())
+    tag = uuid4().hex[:8]
+    asked = []
+
+    class Source:
+        def price(self, google_id):
+            asked.append(google_id)
+            return {"level": 2, "low": None, "high": None}
+
+    uids = []
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("INSERT INTO place_provider_ids (tenant_id, place_id, provider, provider_place_id, "
+                    "match_distance_m) VALUES (%s,%s,'google_places',%s,2.0)", (tenant, both, f"core-{tag}"))
+        for core_id, status in ((both, "valid"), (ledger_only, "valid"), (candidate_only, "candidate")):
+            cur.execute("INSERT INTO dining.dn_place (name_ko, area, record_status) VALUES (%s,'시험','active') "
+                        "RETURNING place_uid", (f"시험 식당 {tag}",))
+            uid = cur.fetchone()[0]
+            uids.append(uid)
+            cur.execute("INSERT INTO dining.dn_core_place_link (tenant_id, core_place_id, place_uid, linked_by) "
+                        "VALUES (%s,%s,%s,'test')", (tenant, core_id, uid))
+            verified = ("test", "now()") if status == "valid" else (None, None)
+            cur.execute("INSERT INTO dining.dn_external_ref (place_uid, kind, url, status, entered_by, provider_id, "
+                        "verified_by, verified_at) VALUES (%s,'google_place',%s,%s,'test',%s,%s,"
+                        + ("now()" if status == "valid" else "NULL") + ")",
+                        (uid, f"https://www.google.com/maps?cid={uuid4().int % 10**18}", status, f"ledger-{tag}-{core_id}",
+                         verified[0]))
+    try:
+        two = {"level": 2, "low": None, "high": None}
+        assert prices_for(get_connection, tenant, Source(), [both, ledger_only, candidate_only], enabled=True) == {
+            both: two, ledger_only: two, candidate_only: None}
+        assert asked == [f"core-{tag}", f"ledger-{tag}-{ledger_only}"], "짝 표 먼저, 확인 안 된 원장 링크는 안 쓴다"
+    finally:
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("DELETE FROM place_provider_ids WHERE tenant_id=%s", (tenant,))
+            cur.execute("DELETE FROM dining.dn_external_ref WHERE place_uid = ANY(%s)", (uids,))
+            cur.execute("DELETE FROM dining.dn_core_place_link WHERE tenant_id=%s", (tenant,))
+            cur.execute("DELETE FROM dining.dn_place WHERE place_uid = ANY(%s)", (uids,))
+
+
 def test_an_unknown_meter_is_refused():
     budget = CallBudget(connection_factory=get_connection, caps={})
     assert budget.try_reserve("anything") is False
@@ -160,8 +246,8 @@ def test_an_unknown_meter_is_refused():
 def test_the_configured_caps_stay_under_the_free_tier():
     """★모든 요금 단위: 월 상한 + 하루 상한 ≤ 무료 한도, 하루 ≤ 월 ÷ 31 — 월 경계가 어긋나도 넘지 않게."""
     from app.core.settings import get_guardrails
-    from app.infrastructure.travel.call_budget import UNLIMITED
-    from app.infrastructure.travel.google_places import METER_DETAILS, METER_SEARCH
+    from app.domains.travel_ops.ports.data_sources.call_budget import UNLIMITED
+    from app.domains.travel_ops.ports.data_sources.google_places import METER_DETAILS, METER_SEARCH
 
     free = get_guardrails().get("travel.google_budget.free_monthly")
     caps = google_caps()
@@ -259,7 +345,7 @@ def test_a_lunch_that_is_closed_today_is_replaced_before_the_day_starts(world):
 
 def test_the_day_start_notice_carries_what_changed_at_dawn(world):
     """★새벽에 고친 것은 하루 시작 알림(08:00)에 실린다 — 「어제 이후 바뀐 일정이 1건」."""
-    from app.modules.travel_ops.trip_reminders import ReminderRules, TripReminders
+    from app.domains.travel_ops.components.watch.trip_reminders import ReminderRules, TripReminders
 
     _dawn(world, FakeSource(closed={LUNCH})).tick()
     # ★버전 기록 시각은 DB 의 실제 now() 다 — 시험 시계(03:05)에 맞춰 둔다(`test_trip_reminders` 와 같은 방식)
@@ -334,8 +420,8 @@ def test_a_dawn_replacement_that_fails_the_whole_recheck_is_counted_and_not_writ
     전에는 이 호출자(새벽 확인)가 막힌 결과를 시험으로 지키지 못했다(감시자만 있었다)."""
     from datetime import timedelta
 
-    from app.modules.travel_ops import dawn_check
-    from app.modules.travel_ops.itinerary_changes import ItineraryChange
+    from app.domains.travel_ops.components.watch import dawn_check
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
 
     _, items = _latest(world)
     lunch = next(i for i in items if i.starts_at.hour == 13 and i.kind == "dining")

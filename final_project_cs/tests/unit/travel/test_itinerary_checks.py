@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.itinerary_checks import Part, check_itinerary
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
 
 KST = ZoneInfo("Asia/Seoul")
 
@@ -101,7 +101,7 @@ def test_the_confirmed_scenario_day_passes_as_submitted():
     import json
     from pathlib import Path
 
-    data = json.loads((Path(__file__).resolve().parents[3] / "app" / "modules" / "travel_ops" /
+    data = json.loads((Path(__file__).resolve().parents[3] / "app" / "domains" / "travel_ops" /
                        "scenarios" / "seoul_day_taiwan_friends.json").read_text(encoding="utf-8"))
     places = {place["key"]: {"name": place["name"], "attributes": place["attributes"]}
               for place in data["places"]}

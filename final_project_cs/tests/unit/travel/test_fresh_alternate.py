@@ -7,8 +7,8 @@ from datetime import datetime
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.itinerary_changes import NoChange, plan_fresh_alternate
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_fresh_alternate
 
 KST = ZoneInfo("Asia/Seoul")
 
@@ -83,7 +83,7 @@ def test_saying_no_names_the_time_the_distance_and_the_main_reason():
 
 def test_an_activity_is_not_replaced_by_the_same_site_under_another_name():
     """`[2026-09-29 ui 세션 지적]` 「건청궁 대신 경복궁」 — 건청궁은 경복궁 안 전각이라 사실상 같은 곳이다."""
-    from app.modules.travel_ops.itinerary_changes import same_site
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import same_site
 
     gyeongbok = {"name": "경복궁", "latitude": 37.576, "longitude": 126.9767, "attributes": {}}
     geoncheong = {"name": "건청궁", "latitude": 37.57608, "longitude": 126.97674,
@@ -166,7 +166,7 @@ def test_the_same_building_is_not_offered_twice_nor_again_next_to_the_trip():
 
 def test_the_planner_keeps_one_of_the_same_site():
     """☆`[2026-09-29 ui 세션 지적]` 일정 짜기가 경복궁(10:10)과 건청궁(13:15, 경복궁 안 · 10m)을 같은 날 따로 넣었다."""
-    from app.modules.travel_ops.planner import Cand, distinct_sites
+    from app.domains.travel_ops.components.planning.planner import Cand, distinct_sites
 
     def cand(name, lat, lon):
         return Cand(key=name, name=name, kind="activity", lat=lat, lon=lon, attributes={}, origin="places")

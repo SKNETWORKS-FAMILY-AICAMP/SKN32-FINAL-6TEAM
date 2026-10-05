@@ -10,9 +10,9 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.itinerary_changes import NoChange, plan_closed_on_day
-from app.modules.travel_ops.replan import (LAST_ORDER_WARN_MIN, ORDER_MARGIN_MIN, choose,
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_closed_on_day
+from app.domains.travel_ops.components.planning.replan import (LAST_ORDER_WARN_MIN, ORDER_MARGIN_MIN, choose,
                                            dining_candidates, dining_fits, dining_warnings)
 
 KST = ZoneInfo("Asia/Seoul")
@@ -88,18 +88,18 @@ def test_경고가_붙은_후보는_같은_조건이면_뒤로_간다():
     assert best.name == "여유있음"
 
 
-# ── 요식 원장이 후보를 내고 여기서 고른다 ──────────────────────
-class FakeLedger:
-    def __init__(self, pool, states):
-        self.pool, self.states, self.asked = pool, states, []
+# ── 요식 원장은 후보의 영업 여부를 판정하고 여기서 고른다 ─────────────
+#: `[2026-10-05]` 전에는 원장이 후보 목록을 직접 냈다(`ledger=` · `pool=`) — 요식 정본을 하나로 하려고 팀 방식으로 바꿨다:
+#:  후보는 장소 목록(근처 원장 가게를 그 여행 전용으로 들여놓은 것 포함)에서 나오고, 원장은 `state_lookup` 으로 **판정만** 한다.
+def lookup(states):
+    """`state_lookup` 대역 — 장소 번호 → 원장 판정. 물어본 구간도 모아 둔다."""
+    asked = []
 
-    def alternatives(self, meal_place, starts_at, ends_at, next_place, conds):
-        self.asked.append("alternatives")
-        return self.pool
-
-    def state(self, place_id, starts_at, ends_at):
-        self.asked.append(place_id)
-        return self.states.get(place_id)
+    def call(slots):
+        asked.append(slots)
+        return {s["place_id"]: states.get(s["place_id"]) for s in slots}
+    call.asked = asked
+    return call
 
 
 def _meal() -> Item:
@@ -112,59 +112,43 @@ def _state(open_at_slot, **extra):
             "needs_check": False, "needs_holiday_check": False, **extra}
 
 
-def test_원장_후보에서_하나를_고르고_나머지는_다른_안이다():
-    a, b, c, other = (place(n, hours=["11:00", "22:00"]) for n in ("원장A", "원장B", "원장C", "목록만"))
-    pool = [{"place_id": a["place_id"], "axis": "impact", "axis_label": "일정이 가장 덜 밀리는 곳"},
-            {"place_id": b["place_id"], "axis": "similar", "axis_label": "비슷한 곳"},
-            {"place_id": c["place_id"], "axis": "near", "axis_label": "가장 가까운 곳"}]
-    ledger = FakeLedger(pool, {p["place_id"]: _state(True) for p in (a, b, c)})
-    plan = plan_closed_on_day(trip={"constraints": {}}, items=[_meal()], places=[a, b, c, other],
+def test_원장_판정으로_열린_곳_가운데_하나를_고르고_나머지는_다른_안이다():
+    a, b, c = (place(n, hours=["11:00", "22:00"]) for n in ("원장A", "원장B", "원장C"))
+    states = lookup({p["place_id"]: _state(True) for p in (a, b, c)})
+    plan = plan_closed_on_day(trip={"constraints": {}}, items=[_meal()], places=[a, b, c],
                               meal=_meal(), source="test", detail="휴무", checked_at=at("03:00"),
-                              ledger=ledger)
+                              state_lookup=states)
     assert not isinstance(plan, NoChange)
-    assert plan.summary["candidates_from"] == "dining_ledger"
     assert plan.summary["to"] in {"원장A", "원장B", "원장C"}
     replacement = next(iter(plan.replacements.values()))
     assert {x["name"] for x in replacement.detail["alternates"]} <= {"원장A", "원장B", "원장C"}
-    assert all(x.get("axis") for x in replacement.detail["alternates"])
-    assert all(x.get("judged_by") == "dining_ledger" for x in replacement.detail["alternates"])
+    assert len(states.asked) == 1                      # 후보 판정은 한 번에 묻는다(후보마다 따로 묻지 않는다)
 
 
 def test_원장이_닫혔다고_한_곳은_고르지_않는다():
     a, b = place("닫힘", hours=["11:00", "22:00"]), place("열림", lat=37.5720, hours=["11:00", "22:00"])
-    pool = [{"place_id": a["place_id"], "axis": "near"}, {"place_id": b["place_id"], "axis": "similar"}]
-    ledger = FakeLedger(pool, {a["place_id"]: _state(False), b["place_id"]: _state(True)})
+    states = lookup({a["place_id"]: _state(False), b["place_id"]: _state(True)})
     plan = plan_closed_on_day(trip={"constraints": {}}, items=[_meal()], places=[a, b], meal=_meal(),
-                              source="test", detail="휴무", checked_at=at("03:00"), ledger=ledger)
+                              source="test", detail="휴무", checked_at=at("03:00"), state_lookup=states)
     assert plan.summary["to"] == "열림"
 
 
-def test_원장이_후보를_못_주면_장소_목록으로_돌아간다():
+def test_원장이_판정을_못_읽으면_장소_목록의_영업시간으로_판정한다():
     other = place("목록식당", hours=["11:00", "22:00"])
-    ledger = FakeLedger([], {})
     plan = plan_closed_on_day(trip={"constraints": {}}, items=[_meal()], places=[other], meal=_meal(),
-                              source="test", detail="휴무", checked_at=at("03:00"), ledger=ledger)
-    assert plan.summary == {"to": "목록식당", "candidates_from": "places"}
-
-
-def test_원장_후보가_전부_떨어지면_장소_목록으로_다시_찾는다():
-    a, other = place("원장닫힘", hours=["11:00", "22:00"]), place("목록식당", hours=["11:00", "22:00"])
-    ledger = FakeLedger([{"place_id": a["place_id"], "axis": "near"}], {a["place_id"]: _state(False)})
-    plan = plan_closed_on_day(trip={"constraints": {}}, items=[_meal()], places=[a, other], meal=_meal(),
-                              source="test", detail="휴무", checked_at=at("03:00"), ledger=ledger)
+                              source="test", detail="휴무", checked_at=at("03:00"), state_lookup=lambda slots: None)
     assert plan.summary["to"] == "목록식당"
 
 
 def test_원장이_모른다고_하면_기본_영업시간으로_판정한다():
     a = place("원장모름", hours=["11:00", "22:00"])
-    ledger = FakeLedger([{"place_id": a["place_id"], "axis": "near"}],
-                        {a["place_id"]: {"available": False, "linked": False, "open_at_slot": None}})
-    got = candidates([a], ledger=ledger, pool={a["place_id"]: {"axis": "near"}})
-    assert got[0].judged_by == "core_place" and got[0].rejected == []
+    states = lookup({a["place_id"]: {"available": False, "linked": False, "open_at_slot": None}})
+    got = candidates([a], state_lookup=states)
+    assert got[0].rejected == []
 
 
 def test_원장의_주문_여유_판정으로_탈락한다():
     a = place("원장", hours=["11:00", "22:00"])
-    ledger = FakeLedger([], {a["place_id"]: _state(True, order_ok=False)})
-    got = candidates([a], ledger=ledger, pool={a["place_id"]: {"axis": "near"}})
+    states = lookup({a["place_id"]: _state(True, order_ok=False)})
+    got = candidates([a], state_lookup=states)
     assert any("주문 여유" in r for r in got[0].rejected)
