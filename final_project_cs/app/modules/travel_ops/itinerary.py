@@ -152,6 +152,11 @@ def weather_from_class(lcls1: str | None, lcls2: str | None) -> bool | None:
 
 #: 대체 활동 후보로 쓰지 않는 관광공사 대분류 — 음식(FD)·숙박(AC)
 _NOT_ACTIVITY = ("FD", "AC")
+#: ★`[2026-10-05]` 장소 목록의 출처 — 관광공사와 브랜드 매장 자료(활동 팀 CSV 에서 옮긴 올리브영·다이소·아트박스·무신사).
+#:  브랜드 행의 번호(`OY…`)는 **관광공사 번호가 아니다** — 일정 장소에 `source_content_id` 로 넣지 않는다(관광공사 상세 조회가
+#:  그 번호로 불린다). `brand_content_id` · `catalog_source` 로 따로 둔다.
+BRAND_SOURCES = ("oliveyoung", "daiso", "artbox", "musinsa")
+CATALOG_SOURCES = ("tour_api", *BRAND_SOURCES)
 
 
 def catalog_activity_places(conn, tenant_id: str, trip_id: UUID, *, near: dict[str, Any], radius_m: int,
@@ -176,25 +181,30 @@ def catalog_activity_places(conn, tenant_id: str, trip_id: UUID, *, near: dict[s
     with conn.cursor() as cur:
         # ★`[2026-10-01]` 운영시간은 **DB 에 읽어 둔 값**(`catalog_hours` — 새벽 작업·팀 자료 옮김)만 붙인다. 바깥을 부르지 않는다.
         cur.execute(
-            "SELECT pc.content_id, pc.content_type_id, pc.title, pc.latitude, pc.longitude, pc.raw_json->>'lclsSystm1', "
-            "pc.raw_json->>'lclsSystm2', pc.raw_json->>'lclsSystm3', pc.raw_json->>'sigungucode', pc.raw_json->>'brand', "
-            "ch.hours_week, ch.hours_read FROM place_catalog pc "
+            "SELECT pc.source, pc.content_id, pc.content_type_id, pc.title, pc.latitude, pc.longitude, "
+            "pc.raw_json->>'lclsSystm1', pc.raw_json->>'lclsSystm2', pc.raw_json->>'lclsSystm3', "
+            "pc.raw_json->>'sigungucode', pc.raw_json->>'brand', ch.hours_week, ch.hours_read FROM place_catalog pc "
             "LEFT JOIN catalog_hours ch ON ch.tenant_id = pc.tenant_id AND ch.source = pc.source "
             "AND ch.content_id = pc.content_id AND ch.hours_week IS NOT NULL "
-            "WHERE pc.tenant_id=%s AND pc.source='tour_api' AND pc.latitude BETWEEN %s AND %s "
+            "WHERE pc.tenant_id=%s AND pc.source = ANY(%s) AND pc.latitude BETWEEN %s AND %s "
             "AND pc.longitude BETWEEN %s AND %s AND COALESCE(pc.raw_json->>'lclsSystm1','') <> ALL(%s) "
-            "ORDER BY pc.content_id LIMIT %s",
-            (tenant_id, float(lat) - dlat, float(lat) + dlat, float(lon) - dlon, float(lon) + dlon,
-             list(_NOT_ACTIVITY), limit))
+            # ★가까운 순 — 앞 판은 번호 순이라 상점 천 곳 가운데 앞 200곳이 가까운 곳이 아니었다
+            "ORDER BY (pc.latitude - %s)^2 + ((pc.longitude - %s) * %s)^2, pc.content_id LIMIT %s",
+            (tenant_id, list(CATALOG_SOURCES), float(lat) - dlat, float(lat) + dlat, float(lon) - dlon,
+             float(lon) + dlon, list(_NOT_ACTIVITY), float(lat), float(lon), math.cos(math.radians(float(lat))), limit))
         rows = cur.fetchall()
     out = []
-    for content_id, type_id, title, plat, plon, l1, l2, l3, sgg, brand, week, hours_read in rows:
+    for source, content_id, type_id, title, plat, plon, l1, l2, l3, sgg, brand, week, hours_read in rows:
         if not title or title in exclude_names or plat is None or plon is None:
             continue
-        pid = uuid5(NAMESPACE_URL, f"tripilot:catalog:{tenant_id}:{trip_id}:tour_api:{content_id}")
-        attributes = {"source": "tour_api", "source_content_id": str(content_id),
-                      **({"source_content_type_id": str(type_id)} if type_id else {}),
-                      "catalog_pending": True}
+        pid = uuid5(NAMESPACE_URL, f"tripilot:catalog:{tenant_id}:{trip_id}:{source}:{content_id}")
+        if source == "tour_api":
+            attributes = {"source": "tour_api", "source_content_id": str(content_id),
+                          **({"source_content_type_id": str(type_id)} if type_id else {}),
+                          "catalog_pending": True}
+        else:
+            attributes = {"source": source, "catalog_source": source, "brand_content_id": str(content_id),
+                          "catalog_pending": True}
         if week:
             attributes["hours_week"] = week
             attributes["hours_read"] = {**(hours_read or {}), "from": "catalog_hours"}
@@ -400,8 +410,9 @@ class TripStore:
                         + ", p.trip_scope, pc.raw_json->>'lclsSystm1', pc.raw_json->>'lclsSystm2',"
                         " pc.raw_json->>'lclsSystm3', pc.raw_json->>'sigungucode', pc.raw_json->>'brand'"
                         " FROM places p LEFT JOIN place_catalog pc ON pc.tenant_id = p.tenant_id"
-                        " AND pc.source = 'tour_api'"
-                        " AND pc.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id')"
+                        " AND pc.source = COALESCE(p.attributes->>'catalog_source', 'tour_api')"
+                        " AND pc.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id',"
+                        " p.attributes->>'brand_content_id')"
                         " WHERE p.tenant_id=%s" + where, params)
             width = len(PLACE_COLUMNS)
             rows = [{**_place(row[:width]), "trip_scope": str(row[width]) if row[width] else None,

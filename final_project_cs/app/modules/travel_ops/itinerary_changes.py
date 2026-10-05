@@ -26,7 +26,7 @@ from uuid import UUID, uuid4
 
 from .itinerary import Item
 from .itinerary_checks import seoul
-from .replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, activity_candidates, alternate_record,
+from .replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, activity_candidates, alternate_record, brand_of,
                      change_notice, choose, dining_candidates, dining_fits, dining_notice,
                      route_candidates, route_notice, store_candidates)
 
@@ -226,7 +226,9 @@ def applied_record(item: Item) -> dict[str, Any]:
             "option_label": option_label(item) if mobility else None,
             "starts_at": item.starts_at.isoformat(),
             "ends_at": item.ends_at.isoformat() if item.ends_at else None,
-            "walk_min": None}
+            "walk_min": None,
+            # ★`[2026-10-05]` 이 항목을 고른 이유 한 줄(활동 대체 때만 있다)
+            **({"reason": item.detail["pick_reason"]} if item.detail.get("pick_reason") else {})}
 
 
 def title_for(item: Item, name: str) -> str:
@@ -382,8 +384,12 @@ def other_sites(places: list[dict[str, Any]], original: dict[str, Any] | None,
 
 
 def _same_activity_site(a, b) -> bool:
-    """`choose(distinct=…)` 용 — 두 활동 후보가 같은 곳인가."""
-    return bool(a.place and b.place) and same_site(a.place, b.place)
+    """`choose(distinct=…)` 용 — 두 활동 후보가 같은 곳인가. ★`[2026-10-05]` **같은 브랜드는 한 곳으로 센다** —
+    순위가 앞선(가까운) 매장 하나만 남는다. 올리브영 셋이 다른 안 자리를 다 차지하지 않게(활동 팀 `one_per_brand` 규칙)."""
+    if not (a.place and b.place):
+        return False
+    brand = brand_of(a.place)
+    return same_site(a.place, b.place) or bool(brand and brand == brand_of(b.place))
 
 
 # ── 감시 — 활동 ────────────────────────────────────────────────
@@ -392,7 +398,7 @@ def plan_activity_adjustment(*, item: Item, report: dict[str, Any], places: list
                              items: list[Item] | None = None,
                              similarity: Callable[[Any, Any], int] | None = None,
                              proposal: bool = False, limit: int | None = None,
-                             radius_m: int = 600) -> Plan:
+                             radius_m: int = 600, distance_first: bool = False) -> Plan:
     """성립 점검이 `disrupted` 인 활동 항목 — 대안 후보 → 탈락·재검증·사전식 비교로 **하나**.
 
     `similarity` — ★`[2026-09-29]` 활동 팀이 넘기는 「비슷한 정도」 점수(설문 선호 반영). 순위에만 쓴다.
@@ -409,7 +415,8 @@ def plan_activity_adjustment(*, item: Item, report: dict[str, Any], places: list
     causes = report.get("disruptions", [])
     candidates = activity_candidates(original=origin, places=places,
                                      start=item.starts_at, end=item.ends_at, causes=causes,
-                                     similarity=similarity, proposal=proposal, radius_m=radius_m)
+                                     similarity=similarity, proposal=proposal, radius_m=radius_m,
+                                     distance_first=distance_first)
     if limit is not None:
         from .replan import Candidate
 
@@ -431,6 +438,7 @@ def plan_activity_adjustment(*, item: Item, report: dict[str, Any], places: list
             place=chosen.place, title=title_for(item, chosen.place["name"]),
             detail={"auto_adjusted_at": now.isoformat(),
                     "other_options": notice["other_options"],
+                    **({"pick_reason": chosen.reason} if chosen.reason else {}),
                     "alternates": [alternate_record(c) for c in others]})
         return ItineraryChange(reason="auto_adjusted", causes=causes, notice=notice,
                                replacements={item.item_id: replacement},

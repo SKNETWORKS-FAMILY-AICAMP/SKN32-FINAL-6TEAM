@@ -53,6 +53,8 @@ LAST_ORDER_WARN_MIN = 60
 #: 시연용 순위가 없는 후보(= 실제 장소 전부)의 값 — 대본 장소의 순위(1, 2 …)보다 뒤다
 SCENARIO_PRIORITY_NONE = 1_000
 SEATING_BUFFER_MIN = 10
+#: 같은 브랜드를 앞세우는 거리 — 이보다 먼 같은 브랜드는 거리로만 겨룬다. ★활동 팀 값(1km)을 그대로 쓴다
+BRAND_NEARBY_M = 1_000
 
 
 @dataclass
@@ -79,6 +81,14 @@ class Candidate:
     #:  식당·경로 후보는 둘 다 0 이라 순서가 예전 그대로다(`rank` 맨 뒤, `key` 바로 앞)
     similarity: int = 0
     distance_m: float = 0.0
+    #: ★`[2026-10-05]` 원래 장소와 **같은 브랜드**이고 `BRAND_NEARBY_M` 안이면 참 — 올리브영을 못 가면 가까운 다른 올리브영이
+    #:  가장 비슷한 대체다(활동 팀 `alternatives.same_brand_nearby` 규칙, 팀은 반경 1km). 구(시군구)가 아니라 **거리**로 잰다 —
+    #:  구 경계에서 옆 구의 가까운 매장이 밀리는 문제를 피한다(팀이 10/2 시군구를 반경으로 바꾼 이유)
+    brand_nearby: bool = False
+    #: ★`[2026-10-05]` 이동 중요 선호 — 분류보다 거리가 앞선다(`rank` 맨 뒤 순서). 코덱스 합의 · 활동 팀은 10/2 부터 거리 중심
+    distance_first: bool = False
+    #: ★`[2026-10-05]` 추천 이유 한 줄 — 잰 값만(거리 · 같은 분류 단계 · 같은 브랜드 · 영업 확인됨). 모르는 것은 말하지 않는다
+    reason: str = ""
 
     def rank(self) -> tuple:
         # ★`[2026-09-28]` 도보 분(③ 원래 시각과의 차이)과 경고 유무를 더했다. 활동·경로 후보는 `walk_min` 이
@@ -97,7 +107,9 @@ class Candidate:
         return (priority if isinstance(priority, int) else SCENARIO_PRIORITY_NONE,
                 self.changed_items, fare_unknown, self.extra_cost_krw or 0, self.shift_minutes, self.walk_min or 0,
                 0 if self.reversible_internally else 1, 1 if self.warnings else 0,
-                -self.similarity, round(self.distance_m), self.key)
+                0 if self.brand_nearby else 1,
+                *((round(self.distance_m), -self.similarity) if self.distance_first
+                  else (-self.similarity, round(self.distance_m))), self.key)
 
     @property
     def name(self) -> str:
@@ -139,6 +151,33 @@ def _margin(attributes: dict[str, Any]) -> int | None:
         return None if value is None or isinstance(value, bool) else int(value)
     except (TypeError, ValueError):
         return None
+
+
+def brand_of(place: dict[str, Any] | None) -> str:
+    """장소 목록이 붙인 브랜드(`catalog_class.brand`). 모르면 빈 문자열 — 모르는 값끼리 「같다」고 읽지 않는다."""
+    return str(((place or {}).get("catalog_class") or {}).get("brand") or "").strip()
+
+
+def same_brand_nearby(original: dict[str, Any] | None, candidate: dict[str, Any] | None, distance_m: float) -> bool:
+    brand = brand_of(original)
+    return bool(brand and brand == brand_of(candidate) and distance_m <= BRAND_NEARBY_M)
+
+
+def reason_line(original: dict[str, Any] | None, place: dict[str, Any] | None, distance_m: float, *,
+                brand_nearby: bool, opened: bool | None) -> str:
+    """추천 이유 한 줄 — ★**잰 값만** 쓴다(활동 팀 `reason_line` 규칙). 모르는 값은 건드리지 않는다:
+    영업은 확인됐을 때만 「영업 시간 확인」, 분류는 같은 단계가 있을 때만."""
+    parts = [f"{round(distance_m)}m" if distance_m < 1000 else f"{distance_m / 1000:.1f}km"]
+    mine, theirs = (original or {}).get("catalog_class") or {}, (place or {}).get("catalog_class") or {}
+    for key, word in (("lcls3", "소분류"), ("lcls2", "중분류"), ("lcls1", "대분류")):
+        if mine.get(key) and mine.get(key) == theirs.get(key):
+            parts.append(f"같은 {word}")
+            break
+    if brand_nearby:
+        parts.append(f"같은 브랜드({brand_of(place)})")
+    if opened is True:
+        parts.append("영업 시간 확인")
+    return " · ".join(parts)
 
 
 def open_during(place: dict[str, Any], start: datetime, end: datetime | None) -> bool | None:
@@ -250,7 +289,7 @@ def activity_candidates(*, original: dict[str, Any], places: list[dict[str, Any]
                         start: datetime, end: datetime | None, causes: list[dict[str, Any]],
                         radius_m: int = 600,
                         similarity: Callable[[Any, Any], int] | None = None,
-                        proposal: bool = False) -> list[Candidate]:
+                        proposal: bool = False, distance_first: bool = False) -> list[Candidate]:
     """깨진 활동의 대안 후보. ★원인이 날씨·대기질이면 **실내**에서만 찾는다.
 
     `similarity(원래 장소의 분류, 후보의 분류) -> int` 는 활동 팀이 넘긴다(`activity/similarity.py`).
@@ -274,6 +313,8 @@ def activity_candidates(*, original: dict[str, Any], places: list[dict[str, Any]
                               distance_m=distance_m(original, place))
         if similarity is not None:
             candidate.similarity = similarity(original.get("catalog_class"), place.get("catalog_class"))
+        candidate.brand_nearby = same_brand_nearby(original, place, candidate.distance_m)
+        candidate.distance_first = distance_first
         price = attributes.get("price_krw")
         if price is None or base_price is None:
             # ★`[2026-09-29]` 가격 모름은 **경고**다(탈락이 아니다) — 실제 장소는 대부분 가격이 없어 자동 대체가 늘 실패했다.
@@ -286,6 +327,8 @@ def activity_candidates(*, original: dict[str, Any], places: list[dict[str, Any]
             candidate.rejected.append("그 시각 영업하지 않는다")
         elif opened is None:
             (candidate.warnings if proposal else candidate.rejected).append("그 시각 영업을 확인할 수 없다")
+        candidate.reason = reason_line(original, place, candidate.distance_m, brand_nearby=candidate.brand_nearby,
+                                       opened=opened)
         out.append(candidate)
     return out
 
@@ -490,6 +533,8 @@ def alternate_record(candidate: Candidate) -> dict[str, Any]:
             "starts_at": candidate.starts_at.isoformat() if candidate.starts_at else None,
             "ends_at": candidate.ends_at.isoformat() if candidate.ends_at else None,
             "walk_min": candidate.walk_min,
+            # ★`[2026-10-05]` 추천 이유 한 줄(잰 값만) — 화면 표시는 ui 몫이라 먼저 기록에만 싣는다
+            **({"reason": candidate.reason} if candidate.reason else {}),
             # ★`[2026-09-28]` 화면은 key·name 만 읽고 나머지는 무시한다(UI 조사) — 더해도 깨지지 않는다
             **({"warnings": list(candidate.warnings)} if candidate.warnings else {}),
             **({"axis": candidate.axis} if candidate.axis else {}),

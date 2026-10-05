@@ -402,7 +402,7 @@ def _consented(conn, *, store: TripStore, pending: "PendingStore", trip_id: UUID
     ★계산은 감시와 같은 것(`plan_activity_adjustment` — 실내 후보 · 그 시각 영업 · 후보마다 재점검 · 비슷한 곳 순).
     ★점검기가 없으면(`check=None`) 계산하지 않는다 — 재점검 없이 고른 곳을 내밀지 않는다.
     """
-    from .activity.similarity import preference_of, score
+    from .activity.similarity import distance_first, preference_of, score
     from .itinerary_changes import plan_activity_adjustment
 
     causes = list(proposal["cause_json"] or [])
@@ -428,6 +428,7 @@ def _consented(conn, *, store: TripStore, pending: "PendingStore", trip_id: UUID
             item=current, report={"disruptions": causes}, places=pool, check=check,
             now=_dt.now(ZoneInfo("Asia/Seoul")), items=items,
             similarity=partial(score, preference=preference_of(trip.get("constraints"))),
+            distance_first=distance_first(preference_of(trip.get("constraints"))),
             proposal=True, limit=6, radius_m=radius)
         if not isinstance(plan, NoChange):
             break

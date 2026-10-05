@@ -15,6 +15,8 @@
 """
 from __future__ import annotations
 
+import json
+import logging
 from datetime import UTC, datetime
 from functools import partial
 from typing import Any
@@ -28,7 +30,10 @@ from ..itinerary_actions import consent_arguments
 from ..itinerary_changes import ACTIVITY_RECHECK_LIMIT, NoChange, plan_activity_adjustment, plan_nearby_store
 from ..itinerary_team import ITINERARY_TOOLS, Consent, ItineraryWork
 from ..pending import needs_consent, weather_only
-from .similarity import preference_of, score
+from . import failure_codes as fc
+from .similarity import distance_first, preference_of, score
+
+_failure_log = logging.getLogger(fc.LOGGER_NAME)
 
 
 class ActivityTeam(ItineraryWork, TravelTeamBase):
@@ -88,6 +93,25 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             return None
         reference = when if when.tzinfo else when.replace(tzinfo=UTC)
         return (reference - datetime.now(UTC)).total_seconds() / 3600
+
+    def _record_failure(self, task: TeamTask, code: str, **meta: Any) -> str:
+        """실패·예외 코드를 한 줄 JSON 으로 남기고 코드를 돌려준다(`failure_codes.py`). `[2026-10-05]` 활동 팀 구조.
+
+        ★좌표·장소명·고객 문장은 싣지 않는다 — Case id · capability · 코드와 짧은 메타(도구 이름 · 예외 종류)만.
+        ★기록은 **알리는 것**일 뿐 흐름을 바꾸지 않는다. 어디에 쓸지는 운영의 logging 설정이 정한다."""
+        _failure_log.warning(json.dumps(
+            {"event": "activity_failure", "code": code, "team": self.manifest.team_id,
+             "case_id": str(task.case_id), "capability": task.capability, **meta},
+            ensure_ascii=False, default=str))
+        return code
+
+    def _read(self, task: TeamTask, name: str, arguments: dict[str, Any], seen: set[str]) -> Any:
+        """도구 예외(API·DB 실패)를 코드로 남기고 **그대로 다시 던진다** — 삼켜서 「모름」으로 바꾸지 않는다(RULE §3.2)."""
+        try:
+            return super()._read(task, name, arguments, seen)
+        except Exception as exc:
+            self._record_failure(task, fc.TOOL_ERROR, tool=name, error=type(exc).__name__)
+            raise
 
     @staticmethod
     def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
@@ -176,7 +200,10 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         #   그대로 고객 답변까지 간다.
         if booking is None:
             return self._unknown(task, "예약 내역", evidence)
-        if not policy:
+        # ★`[2026-10-05]` 성립 판정(`check_feasible`)은 취소·환급 규정을 쓰지 않는다 — 규정이 없다고 멈추지 않는다(활동 팀 10/2 규칙).
+        #   전에는 규정 검색이 0건이면 날씨·재난으로 판정할 수 있는 성립 질문까지 「모름」으로 끝났다.
+        #   규정이 필요한 `check_cancelable` · `propose_change` 는 그대로 모르면 멈춘다.
+        if not policy and task.capability != "activity.check_feasible":
             return self._unknown(task, "취소·환급 규정", evidence)
 
         remaining = self._hours_until(booking.get("starts_at"))
@@ -252,6 +279,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                 next_action=NextAction.RESPOND,
                 answer=f"이미 시작한 활동입니다 — {-remaining:.1f}시간 전에 시작했습니다.",
                 decisions=[{"feasible": False, "reason": "already_started",
+                            "failure_code": self._record_failure(task, fc.ALREADY_STARTED),
                             "hours_elapsed": round(-remaining, 1)}])
         party = booking.get("party_size")
         capacity = booking.get("capacity")
@@ -260,7 +288,8 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                 task, outcome="completed", confidence=1.0, evidence=evidence,
                 next_action=NextAction.RESPOND,
                 answer=f"인원이 정원을 넘습니다 — 신청 {party}명, 정원 {capacity}명.",
-                decisions=[{"feasible": False, "reason": "party_over_capacity"}])
+                decisions=[{"feasible": False, "reason": "party_over_capacity",
+                            "failure_code": self._record_failure(task, fc.PARTY_OVER_CAPACITY)}])
 
         place = self._read(task, "read.place", {"place_id": booking.get("place_id")}, seen)
         evidence = self._evidence(task, source_id="read.place",
@@ -496,6 +525,7 @@ def plan_activity_trigger(work: ItineraryWork, task: TeamTask, ctx: dict[str, An
     plan = plan_activity_adjustment(item=item, report=report, places=places,
                                     check=work.safe_recheck(task, ctx), now=ctx["at"], items=ctx["items"],
                                     similarity=partial(score, preference=preference),
+                                    distance_first=distance_first(preference),
                                     limit=ACTIVITY_RECHECK_LIMIT)
     if isinstance(plan, NoChange) and plan.status == "unresolved" and weather_only(report):
         # ★`[2026-09-29]` 자동으로 못 찾았으면 사람에게 넘기지 않고 「바꿀까요?」로 — 「바꿔 줘」면 관광공사 목록까지 뒤진다

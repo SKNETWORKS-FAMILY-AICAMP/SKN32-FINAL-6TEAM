@@ -18,15 +18,17 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Mapping
 
-#: 원래 장소·후보가 들고 오는 분류 값의 키(`TripStore.places` 가 `catalog_class` 로 붙인다). `brand` 는 점수 필드가 아니라
-#: 「같은 브랜드·같은 구」 앞세우기에만 쓴다(`_same_brand_nearby`).
-FIELDS = ("lcls1", "lcls2", "lcls3", "sigungu")
+#: 원래 장소·후보가 들고 오는 분류 값의 키(`TripStore.places` 가 `catalog_class` 로 붙인다).
+#: ★`brand` 도 같이 오지만 점수 필드가 아니다 — 「같은 브랜드 · 가까운 곳」은 거리가 필요해 `replan.py` 가 따로 본다.
+FIELDS = ("lcls1", "lcls2", "lcls3")
 
-#: 선호별 필드 순서 — 앞이 무겁다. PR #6 `alternatives.FIELD_PRIORITY` 에서 `contenttypeid` 만 뺐다
-#: (신분류 lcls1~3 이 같은 일을 더 잘게 한다).
+#: 선호별 필드 순서 — 앞이 무겁다. ★`[2026-10-05]` **구(시군구)를 뺐다.** 활동 팀이 10/2 에 시군구를 반경으로 바꾼 이유(같은 구의 먼 곳이
+#: 옆 구의 가까운 곳보다 앞서는 경계 문제 · 구마다 넓이가 달라 기준이 일정하지 않음)가 우리 순위에도 그대로 있었다. 코덱스와 맞췄다
+#: (2026-10-05): 거리는 순위의 다음 키(`replan.Candidate.rank`)가 이미 보고, **이동 중요면 분류보다 거리가 앞선다**(`distance_first`).
+#: 그래서 두 선호의 점수 필드는 같다 — 차이는 거리와 점수의 앞뒤뿐이다.
 ORDER: dict[str, tuple[str, ...]] = {
-    "activity": ("lcls1", "sigungu", "lcls2", "lcls3"),
-    "mobility": ("sigungu", "lcls1", "lcls2", "lcls3"),
+    "activity": ("lcls1", "lcls2", "lcls3"),
+    "mobility": ("lcls1", "lcls2", "lcls3"),
 }
 DEFAULT_PREFERENCE = "activity"
 
@@ -40,13 +42,9 @@ def preference_of(constraints: Mapping[str, Any] | None) -> str | None:
     return None
 
 
-def _same_brand_nearby(origin: Mapping[str, Any] | None, candidate: Mapping[str, Any] | None) -> bool:
-    """원래 장소가 브랜드 매장이고 후보가 **같은 브랜드 · 같은 시군구**인가. 둘 중 하나라도 모르면 False.
-
-    ★출처: 활동 팀(조직 develop `alternatives.same_brand_nearby`). 올리브영을 못 가면 같은 구의 다른 올리브영이 가장 비슷한
-      대체다. **같은 구 안**일 때만 앞세운다 — 구 밖 같은 브랜드보다 더 가까운 다른 매장이 낫다(거리는 순위 뒷단이 본다)."""
-    brand, gu = _value(origin, "brand"), _value(origin, "sigungu")
-    return bool(brand and gu and _value(candidate, "brand") == brand and _value(candidate, "sigungu") == gu)
+def distance_first(preference: str | None) -> bool:
+    """이동 중요(설문 우선순위에서 mobility 가 먼저)면 분류보다 **거리**를 앞세운다. 활동 중요·설문 없음은 분류가 먼저."""
+    return preference == "mobility"
 
 
 def _value(classes: Mapping[str, Any] | None, field: str) -> str:
@@ -59,8 +57,6 @@ def score(origin: Mapping[str, Any] | None, candidate: Mapping[str, Any] | None,
     order: Iterable[str] = ORDER.get(preference or DEFAULT_PREFERENCE, ORDER[DEFAULT_PREFERENCE])
     order = tuple(order)
     total = 0
-    if _same_brand_nearby(origin, candidate):
-        total += 1 << len(order)       # 분류·구가 모두 같은 것보다 무겁다 — 맨 앞 기준
     for i, field in enumerate(order):
         mine, theirs = _value(origin, field), _value(candidate, field)
         if mine and mine == theirs:
