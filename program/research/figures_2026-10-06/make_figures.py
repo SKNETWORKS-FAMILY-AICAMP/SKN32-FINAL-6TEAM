@@ -406,6 +406,101 @@ def fig9():
     plt.close(fig)
 
 
+# ───────────────── 11. 가르친 결과 (최종) ─────────────────
+def fig11():
+    H = 1790
+    fig, ax = canvas(H)
+    head(ax, '가르친 결과 (최종) — 기준 통과', '시험지 5세트 769문제(요청 둘 유형 제외) · 같은 모델의 가르치기 전·후를 같은 문제로 채점')
+    t(ax, 40, 190, '한 줄 결과', 20, INK, True)
+    sc = 7.5
+    t(ax, 40, 252, '가르치기 전', 16, SUB)
+    box(ax, 190, 226, 89.47 * sc, 54, 'done', 8, 2)
+    t(ax, 190 + 89.47 * sc + 12, 253, '89.5%', 18, INK, True)
+    t(ax, 40, 322, '가르친 후', 16, SUB)
+    box(ax, 190, 296, 97.53 * sc, 54, 'now', 8, 2)
+    t(ax, 190 + 97.53 * sc + 12, 323, '97.5%', 18, PAL['now'][2], True)
+    box(ax, 30, 376, 1020, 96, 'now', 16, 2.2)
+    t(ax, 56, 408, '사전 등록 기준: +3%p 이상 · p < 0.05  →  통과', 18, PAL['now'][2], True)
+    t(ax, 56, 444, '+8.1%p · 가르친 쪽만 맞음 69 / 기준선만 맞음 7 · p = 6e-14', 15.5, PAL['now'][2])
+    t(ax, 40, 530, '세트별 (요청 둘 제외)', 20, INK, True)
+    rows = [('mix8 (Codex)', 90.4, 97.5), ('mix9 (Codex)', 90.8, 98.0), ('mix10 (Codex)', 92.7, 98.7), ('mix11 (Codex)', 85.9, 94.6), ('mix12 (Claude)', 87.5, 98.8)]
+    y = 570
+    for nm, b, l in rows:
+        t(ax, 40, y + 20, nm, 15, INK)
+        box(ax, 250, y, b * 6.6, 18, 'done', 4, 1.5)
+        box(ax, 250, y + 22, l * 6.6, 18, 'now', 4, 1.5)
+        t(ax, 250 + l * 6.6 + 10, y + 22, f'{b:.1f} → {l:.1f}%', 14, INK, True, 'left', 'top')
+        y += 62
+    t(ax, 40, y + 24, '회색 = 가르치기 전, 초록 = 후. 모든 세트에서 p < 0.01', 13.5, SUB)
+    y += 80
+    t(ax, 40, y + 20, '같은 769문제에서 다른 모델과', 20, INK, True)
+    refs = [('Gemma E4B (올라마)', 91.16, 'done'), ('Gemma 12B (올라마)', 91.42, 'done'), ('Gemma 26B-A4B (올라마)', 95.19, 'done'), ('가르친 E4B', 97.53, 'now'), ('Claude Fable · Opus', 99.35, 'gpu')]
+    yy = y + 62
+    for nm, v, k in refs:
+        t(ax, 40, yy + 22, nm, 15, INK)
+        box(ax, 300, yy, (v - 85) * 46, 44, k, 6, 2)
+        t(ax, 300 + (v - 85) * 46 + 12, yy + 22, f'{v:.1f}%', 16, INK, True)
+        yy += 58
+    box(ax, 30, yy + 14, 1020, 110, 'plain', 16, 2)
+    t(ax, 56, yy + 46, '짝비교 검정', 16, INK, True)
+    t(ax, 56, yy + 76, '가르친 E4B는 26B-A4B보다 위 (p=0.01), Claude보다는 아래 (p=0.003)', 14.5, SUB)
+    t(ax, 56, yy + 102, '올라마 E4B보다는 크게 위 (p=1e-9)', 14.5, SUB)
+    yy += 150
+    box(ax, 30, yy, 1020, 270, 'warn', 18, 2.2)
+    t(ax, 56, yy + 36, '주의', 18, PAL['warn'][2], True)
+    for i, s in enumerate(['· 학습 1회·평가 1회 — 반복 편차는 모름', '· 같은 4비트 하네스의 기준선(89.5%)이 올라마(91.2%)보다 낮음 → 올라마 기준 +6.4%p',
+                           '· 학습 자료와 mix12의 저자가 같음(Claude): 이득이 더 큼 (+11.2%p)', '· 실제 고객 질문 분포는 아직 못 잼 · CPU 4코어에선 4B도 느려 따로 시험 필요']):
+        t(ax, 56, yy + 78 + i * 44, s, 14, PAL['warn'][2])
+    fig.savefig(os.path.join(OUT, 'fig11_가르친_결과_최종.png'))
+    plt.close(fig)
+
+
+# ───────────────── 12. 성능·금액·부하 한눈에 (v2 — API 점수 반영) ─────────────────
+def fig12():
+    H = 1400
+    fig, ax = canvas(H)
+    head(ax, '성능·금액·부하 한눈에 (v2)', '성능 = 요청 둘 제외 311문제(mix10+mix12)를 모두 같은 문제로 채점 · 금액 = 월(30일) 환산, 만원')
+    cols = [('선택지', 40, 'left'), ('성능', 330, 'center'), ('하루 1천 건\n(월 3만)', 520, 'center'), ('하루 5천 건\n(월 15만)', 720, 'center'), ('하루 10만 건\n(월 300만)', 930, 'center')]
+    for nm, x, ha in cols:
+        t(ax, x, 190, nm, 14.5, SUB, True, ha)
+    ax.plot([40, 1040], [226, 226], color=LINE, lw=2)
+    rows = [
+        ('자체 GPU', '가르친 E4B · RunPod', 98.7, 'gpu', [('24.5', '가동 1.5%', 'good'), ('24.5', '가동 7.4%', 'good'), ('49~73.5', '2~3대 · 148%', 'bad')]),
+        ('Luna', 'API · 가장 쌈', 97.7, 'now', [('0.7', '캐시 0.2', 'best'), ('3.7', '캐시 0.9', 'best'), ('73.9', '캐시 17.2', 'warn')]),
+        ('Sol', 'API', 99.0, 'now', [('14.8', '캐시 3.4', 'warn'), ('73.9', '캐시 17.2', 'warn'), ('1,478', '캐시 344', 'bad')]),
+        ('Astra', 'API · 가장 비쌈', 99.7, 'now', [('73.9', '캐시 17.2', 'warn'), ('370', '캐시 86', 'bad'), ('7,392', '캐시 1,722', 'bad')]),
+    ]
+    tint = {'best': 'now', 'good': 'now', 'warn': 'warn', 'bad': 'bad'}
+    y = 246
+    for nm, sub, acc, k, cells in rows:
+        box(ax, 30, y, 1020, 128, 'plain', 14, 1.6)
+        t(ax, 46, y + 40, nm, 21, INK, True)
+        t(ax, 46, y + 80, sub, 13.5, SUB)
+        t(ax, 330, y + 46, f'{acc:.1f}%', 22, INK, True, 'center')
+        t(ax, 330, y + 90, '311문제', 12.5, SUB, False, 'center')
+        for (val, small, st), x in zip(cells, (520, 720, 930)):
+            box(ax, x - 88, y + 16, 176, 96, tint[st], 12, 2)
+            t(ax, x, y + 52, val, 21, PAL[tint[st]][2], True, 'center')
+            t(ax, x, y + 90, small, 13, PAL[tint[st]][2], False, 'center')
+        y += 142
+    t(ax, 40, y + 14, '초록 = 비교적 쌈 · 노랑 = 비쌈 · 빨강 = 매우 비쌈 또는 한 대로 불가', 13, SUB)
+    y += 56
+    box(ax, 30, y, 1020, 200, 'now', 16, 2.2)
+    t(ax, 56, y + 36, '읽는 법', 18, PAL['now'][2], True)
+    for i, s in enumerate(['· 성능은 사실상 같다: 가르친 E4B(98.7%)와 Luna 97.7% · Sol 99.0% · Astra 99.7%는', '  같은 문제에서 서로 구분되지 않음 (짝비교 p = 0.4~1.0, 311문제로는 힘이 약함)',
+                           '· 성능이 같다면 가장 싼 API(Luna)가 하루 5천 건까지 이기고, 하루 10만 건에서는', '  Luna(캐시 17만)·GPU(49~73만)가 비슷 → 자체 GPU는 하루 3만 건쯤부터 의미']):
+        t(ax, 56, y + 76 + i * 30, s, 14, PAL['now'][2])
+    y += 222
+    box(ax, 30, y, 1020, 270, 'warn', 16, 2.2)
+    t(ax, 56, y + 36, '숫자를 믿기 전에', 18, PAL['warn'][2], True)
+    for i, s in enumerate(['· API 점수는 Codex CLI로 잰 것(에이전트 지시문 포함·생각 낮음) — 공정 비교 아님, 원시 API와 다를 수 있음',
+                           '· 금액은 생각(추론) 토큰을 뺀 값: 실제는 출력 요금이 더해져 최대 약 2배 가능 (미측정)', '· Luna는 mix10에서 95.4%, mix12에서 100% — 세트에 따라 흔들림',
+                           '· 한도·응답 시간·약관(일정이 외부로 나감)은 API 쪽 미확인', '· 가르친 E4B는 학습 1회·평가 1회, 실제 고객 질문은 아직 못 잼']):
+        t(ax, 56, y + 76 + i * 36, s, 13.5, PAL['warn'][2])
+    fig.savefig(os.path.join(OUT, 'fig12_성능_금액_부하_한눈에_v2.png'))
+    plt.close(fig)
+
+
 if __name__ == '__main__':
-    fig1(); fig2(); fig3(); fig4(); fig5(); fig6(); fig7(); fig8(); fig9()
+    fig1(); fig2(); fig3(); fig4(); fig5(); fig6(); fig7(); fig8(); fig9(); fig11(); fig12()
     print('done', sorted(f for f in os.listdir(OUT) if f.endswith('.png')))

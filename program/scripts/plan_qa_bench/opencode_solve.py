@@ -41,13 +41,15 @@ def build(job, x):
 
 def call(text):
     global free_tier_errors
-    cmd = ['opencode', 'run', '-m', MODEL, '--format', 'json']
+    exe = os.path.join(os.environ.get('APPDATA', ''), 'npm', 'node_modules', 'opencode-ai', 'bin', 'opencode.exe')
+    # shell=True 로 부르면 시간 제한이 껍데기(cmd)만 죽여 opencode.exe 가 남아 파이프가 안 닫힌다 → 일꾼 셋이 모두 묶인 일이 있었다(2026-10-06). 실행 파일을 직접 부른다.
+    cmd = [exe if os.path.exists(exe) else 'opencode', 'run', '-m', MODEL, '--format', 'json']
     env = {k: v for k, v in os.environ.items() if k not in ('OPENCODE_CONFIG', 'OPENCODE_PERMISSION')}   # 설정을 바꾸면 무료 구간이 막힌다
     err = ''
     for n in range(4):
         try:
             t0 = time.time()
-            r = subprocess.run(cmd, input=text, capture_output=True, text=True, encoding='utf-8', timeout=300, cwd=CWD, env=env, shell=(os.name == 'nt'))
+            r = subprocess.run(cmd, input=text, capture_output=True, text=True, encoding='utf-8', timeout=300, cwd=CWD, env=env, shell=(os.name == 'nt' and not os.path.exists(exe)))
             txt, tok, errs = '', {}, []
             for line in r.stdout.splitlines():
                 try:
