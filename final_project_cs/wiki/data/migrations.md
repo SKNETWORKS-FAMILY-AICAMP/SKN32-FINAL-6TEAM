@@ -89,7 +89,7 @@ products                                     (006)
 |---|---|---|---|
 | `014_activity_tour_disaster` · `015_activities_place_link` · `016_activities_disaster_to_watch` | 014·016 은 앞자리가 우리 `014_itinerary` · `016_trip_request_key` 와 같고, 015 는 우리 빈 번호지만 우리 대기 중 `pending/015_drop_commerce_domain.sql` 과 겹침 | **제외(지금)** | `activities` · `tour` · `disaster` 표는 develop 활동 Team 의 **자체 재난문자 감시**용이다. 우리는 그 감시를 쓰지 않고(3분 감시 한 곳 — [개발 통합 작업 방향](../records/plans/2026-10-05_develop_통합_작업_방향.md)) 우리 마이그레이션에는 `activities` 표가 없다. 셋은 한 묶음이다 — 015·016 이 014 가 만든 표를 고치므로 **부분만 가져오지 않는다** |
 | `017_place_catalog_large_class` | 앞자리가 우리 `017_supplier_tier` 와 같음 | **제외(지금)** | 우리 코드는 관광공사 대분류(`lclsSystm`)를 `place_catalog.raw_json` 안에서 읽는다 — 새 칸이 필요 없다. 그 칸을 읽는 develop 코드(`activity/db_search`)를 가져오기로 할 때 같이 본다 |
-| `220_dining_runtime_link` | 우리 `220_dining_notice_scope` 와 앞자리 같음(우리만 221~223 가 있다) | **요식 담당이 정한다** | 판정할 때 코어 장소를 원장 가게와 잇는 함수. 가져온다면 아래 규칙 3 |
+| `220_dining_runtime_link` | 우리 `220_dining_notice_scope` 와 앞자리 같음(우리만 221~223 가 있다) | **요식 담당 판정: 반영 — 새 번호 `224_dining_runtime_link`** | 판정할 때 코어 장소를 원장 가게와 잇는 함수라 221 · 222(공용 장소 올리기)와는 다른 일이다 — 둘 다 필요하다. 규칙 3 대로 새 번호로 들였다(우리 220 · 221~223 이름은 그대로). 개발 DB 복사본에서 전체를 이어 붙여 두 번 실행해 오류 없음을 확인했다(요식 세션). 요식 병합 브랜치 `port/team-dining-sync`(1de9a692)에 들어 있고 **본 브랜치 반영은 대기** — 작업 폴더에 다른 세션의 미커밋 수정 한 줄이 있어 합치기가 막혀 있다 |
 
 **규칙** (코어 담당이 한 번에 정했다)
 1. **이미 적용된 번호 · 이름은 바꾸지 않는다.**
