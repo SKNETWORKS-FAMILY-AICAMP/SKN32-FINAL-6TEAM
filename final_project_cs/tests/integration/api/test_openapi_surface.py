@@ -98,6 +98,8 @@ CONTRACT_V1_PATHS = {
     # 확인 화면 — 고친 값은 새 판(낡은 판은 409), 등록은 `_create_trip` 한 곳(request_id = 접수 + 판)
     "/v1/web/trip-intakes/{intake_id}/edits",
     "/v1/web/trip-intakes/{intake_id}/confirm",
+    # ★2026-10-06 로딩 중 질문의 답 — 한 문항씩 바로 저장(같은 문항은 덮어쓴다), 등록 때 설문에 합쳐진다. `wiki/external/rest-endpoints.md` 「설문 질문」
+    "/v1/web/trip-intakes/{intake_id}/survey",
     # 「일정 짜 줘」 — 조건을 확인해 누르면 일정 생성기 초안을 판정 뒤 등록(request_id = 접수 + plan + 판)
     "/v1/web/trip-intakes/{intake_id}/plan",
     # ★2026-10-02 접수 읽기 진행(SSE) — 뒤에서 도는 읽기가 어디까지 왔는지. 채팅(`/messages`)·일정 짜기(`/plan`)는 같은 경로가
@@ -122,6 +124,8 @@ CONTRACT_V1_PATHS = {
     "/v1/web/auth/me",
     "/v1/web/auth/logout",
     "/v1/web/trips/{trip_id}/delete",
+    # ★2026-10-06 항로 지킴이(일정이 꼬이면 알아서 고치는 모드) 켜기 · 끄기 — 쿠키 세션으로만(키 · 에이전트 키는 403). `wiki/external/rest-endpoints.md` 「항로 지킴이」
+    "/v1/web/trips/{trip_id}/guardian",
     # ★2026-10-04 에이전트 키(D-CS-012) — 쿠키 로그인한 회원만 만들고 관리한다
     "/v1/web/agent-keys",
     "/v1/web/consents",

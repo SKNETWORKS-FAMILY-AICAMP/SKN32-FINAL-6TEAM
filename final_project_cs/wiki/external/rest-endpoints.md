@@ -758,6 +758,46 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 `detail.booking`). **웹 메시지 응답**에는 「바꾸지 않아도 되는 결과」(`no_meal` · `still_fits` · `no_alternate` · `clear` · `gone`)일 때
 대화 경로와 **같은 문장표**(`itinerary_team.ANSWERS`)의 `answer` 가 실린다 — 웹이 문장을 지어내지 않게.
 
+### 설문 질문 — `questions[]` · `POST /v1/web/trip-intakes/{intake_id}/survey` `[2026-10-06 사용자 지시 · uiux 인계]`
+
+`[실측]` 구현 `app/domains/travel_ops/components/intake/survey_answers.py` · `entry/trip_api.py` · 저장 `trip_intakes.survey`(마이그레이션 051) · 시험 `tests/e2e/test_intake_survey_questions.py` 18건. 기획 `wiki/records/plans/2026-10-05_설문_계획서에서_읽고_로딩에서_묻기_기획.md` 「서버 몫」 1.
+★**쓰는 문항만 묻는다** — 설문 문항 가운데 판정에 이어진 것만(`survey.py` 머리말). 받기만 하고 쓰는 곳이 없는 문항과 **식사 제한 · 접근성은 묻지 않는다**(민감 정보 — 동의 화면에서만 받는다).
+
+**`GET /v1/web/trip-intakes/{id}` 의 `questions[]`** — 접수와 상관없이 **같은 순서 · 같은 문항**이다(답에 따라 사라지지 않는다 — 화면의 `i / N` 이 흔들리지 않는다). 이미 답한 문항도 **그대로 남고** `answer` 에 고른 선택지 id 가 있다(없으면 null) — 화면이 새로 고쳐져도 앞 질문으로 돌아가 고칠 수 있다.
+
+| 문항 `id` | `title` | 선택지 `id` → 글 | 설문에 닿는 곳 |
+|---|---|---|---|
+| `preferred_mobility` | 이동은 주로 어떻게 하세요? | `public` 대중교통 · `taxi` 택시 · `walk` 걷기 위주 | `priority_details.mobility` → 이동 계산기 수단(`mobility/wiring.modes_from_survey`). ★렌트카는 계산기가 아직 못 다뤄 선택지에 없다. ☆`walk` 만 고르면 계산기 수단이 걷기뿐이다(설문 「도보」 선택과 같은 기존 동작) |
+| `priority` | 일정이 바뀔 때 대체할 곳은 무엇을 먼저 볼까요? | `activity` 하고 싶은 활동이 비슷한 곳 · `mobility` 이동이 편한 곳 | `priority`(앞이 먼저) → 대체 활동 비슷함의 가중(`activity/similarity.preference_of`) |
+
+각 문항은 `{id, kind: "single", title, why, options: [{id, label}], answer}`. 글은 한국어다(영어 화면은 문항 `id` 로 옮긴다). `on_disruption` · `pace` 는 **문항이 아니다**(항로 지킴이 카드 · 계획 담기 화면이 보낸다).
+
+**`POST /v1/web/trip-intakes/{id}/survey`** `{answers: {문항 id: 선택지 id}}` → `{ok: true, answered: [지금까지 답한 모든 문항 id, 정렬]}`
+- 한 번에 1~8개 · **부분 답 · 멱등**이다. ★**같은 문항을 다시 보내면 덮어쓴다**(마지막 값이 이긴다 — 앞 질문으로 돌아가 고치는 화면).
+- 문항 id 는 위 두 문항 + `on_disruption`(`replace` · `ask_first`) + `pace`(`relaxed` · `moderate` · `packed`)를 받는다 — 뒤 둘은 카드 · 계획 담기 화면의 값을 접수에 실어 두는 용도다. 모르는 문항 · 선택지는 **422 `invalid_answers`**(`problems[{key, reason}]`) — **하나라도 틀리면 아무것도 저장하지 않는다.** 글자가 아닌 선택지 · 빈 `answers` · 모르는 칸은 422 `validation_error`.
+- 남의 접수 · 없는 접수는 같은 404. **이미 등록된 접수는 409 `intake_confirmed`**. 저장은 접수의 `updated_at` 을 **건드리지 않는다**(읽기가 멈췄는지 가르는 기준).
+- 답은 접수에 모아 두었다가 **`confirm` · `plan` 할 때 설문(`constraints.survey`)에 합쳐진다** — 요청이 직접 준 `survey` 가 이긴다(`priority_details` 는 영역마다 합친다). 안 답한 문항은 **채워 넣지 않는다**(예: `on_disruption` 을 안 줬으면 「직접 고른 것」이 아니라 자동 변경이 켜지지 않는다). 답이 하나도 없고 `survey` 도 안 보내면 등록 동작은 옛 그대로(설문 없음).
+
+### 항로 지킴이 — `POST /v1/web/trips/{trip_id}/guardian` · 여행 조회의 `guardian` · 알림 `[결정 2026-10-06 사용자]`
+
+`[실측]` 구현 `app/domains/travel_ops/components/planning/guardian.py` · `entry/trip_api.py` · 기록 `trip_guardian_changes`(마이그레이션 050) · 시험 `tests/e2e/test_trip_guardian.py` 25건. 기획 `wiki/records/plans/2026-10-05_설문_계획서에서_읽고_로딩에서_묻기_기획.md` 「★★ 결정 2026-10-06」.
+**항로 지킴이** = 일정이 꼬이면 서버가 **알아서 대체안을 적용**하고 알리는 모드(되돌릴 수 있다). 새 판정 값이 아니라 설문 15번 `on_disruption` 을 이름 붙은 모드로 바꾼 것이다 — **켜짐 = `replace` · 꺼짐 = `ask_first`**, 판정(`pending.decide` · `survey.auto_on_disruption`)은 그대로 이 값을 읽는다.
+
+**`POST /v1/web/trips/{trip_id}/guardian`** `{enabled: true|false, via: "card"|"header"|"notice"|"settings"}` → `{enabled, since, via}`
+- ★**쿠키 세션으로만** 부른다 — 사용자 키 · 에이전트 키는 **403 `cookie_session_required`**, 인증이 없으면 401, CSRF 가 틀리면 403 `csrf_failed`. 계획서 링크 토큰으로는 열리지 않는다(자동 변경은 일정을 실제로 바꾸는 권한이라서). 게스트 세션도 쿠키 세션이라 부를 수 있다(게스트 여행은 감시 대상이 아니라 켜도 아무 일이 없다).
+- 켜기와 끄기는 **같은 입구**다. 둘 다 `constraints.survey.on_disruption` 을 **명시**(`replace` · `ask_first`)해 쓰고 `survey_answered` 에 넣는다 — 「직접 고른 것」이다(2026-09-29 규칙). ★건너뛰기(끄고 진행)는 **값을 안 보내는 것이 아니라 `ask_first` 를 보낸다** — 미응답은 기본 `replace` 로 읽혀 휴무 · 교통 통제가 자동 적용된다.
+- 본인 여행이 아니거나 없으면 404(같은 응답). `enabled` 는 JSON 참 · 거짓만(글자 「yes」는 422). **이미 그 상태로 답해 둔 여행에 같은 값을 보내면 아무것도 바꾸지 않고** 현재 값을 돌려준다(「언제부터」가 밀리지 않는다).
+- 누가 · 언제 · 어디서(`via`)가 **추가만 하는 표**에 남는다(`trip_guardian_changes` — 고치기는 트리거가 막고, 여행을 지우면 같이 지워진다).
+
+**여행 조회의 `guardian`**(`GET /v1/web/trips/{id}` · `/v1/trips/{id}` · 등록 응답) `{enabled, since, via}` — 상단 아이콘이 읽는다. `since`·`via` 는 **마지막으로 바뀐** 시각 · 곳. 기록은 없는데 등록 때 카드가 이미 답했으면 `since` = 여행 만든 시각 · `via: "registration"`(조회에서만 나오는 값). **한 번도 답하지 않은 여행**(옛 여행 · 에이전트가 만든 여행)은 `{enabled: false, since: null, via: null}` — 꺼짐이고, 문제가 생기면 지금 규칙대로 움직인다(바뀐 동작 없음).
+
+**알림 `payload.guardian`** — 알림 문장은 건드리지 않고 **구조값**을 싣는다(시나리오용 여행 버전 `TripStore.enqueue_*` 와 Case 버전 `itinerary_actions` 둘 다 같은 규칙 `guardian.annotate`).
+- 우리가 **자동으로 바꾼** 알림(`change_notice` + `rollback`)이고 **켜져 있으면** `{changed: true}` — 화면은 「항로 지킴이가 바꿨어요 · 되돌리기」. ★켜 두지 않은 여행의 자동 변경(옛 여행의 기본 `replace`)에는 싣지 않는다 — 항로 지킴이가 한 일이 아니다. 고객이 고른 변경에도 없다.
+- 「다른 안」을 보내며 먼저 묻는 알림(`proposal_request` · 이유 `ask_first`)이고 **꺼져 있으면** `{offer: {label: "항로 지킴이 켜기", via: "notice", path: "/trips/{id}?guardian=on", url}}`. `url` = `web_origin` + `path`(웹 주소 미설정이면 null). ★**링크만으로는 켜지지 않는다** — 웹이 확인 패널을 띄운 뒤 위 `POST …/guardian`(`via: "notice"`)을 부른다. 고정한 일정(`protected`) · 안전 알림 · 「바꿀까요?」(실내외 모름) · 대안이 없는 알림에는 싣지 않는다 — 켜도 그 경우는 먼저 묻거나 달라지지 않는다.
+- 디스코드 · 텔레그램 글(`notify/discord.py` `_compose`)에는 계획서 링크 **앞**에 줄이 붙는다 — 「항로 지킴이가 바꿨어요. 마음에 안 들면 웹에서 되돌릴 수 있어요.」 · 「항로 지킴이를 켜면 다음부터 알아서 바꿔 드려요: {url}」(`url` 이 있을 때만). 이 값이 없는 알림의 문구는 한 글자도 안 바뀐다.
+
+`[미확인 · 결정 대기]` **켜져 있어도 안전 사건(지진 · 재난문자 · 기상 「경보」)은 먼저 묻는다**고 카드 · 기획 문서에 적혀 있지만 **지금 코드는 그렇게 하지 않는다** — `pending.decide` 는 `replace` 일 때 안전 사건도 최적 일정으로 **바로 바꾼다**(2026-09-24 사용자 결정 · `tests/e2e/test_ask_first.py::test_default_with_a_safety_event_changes_to_the_best_plan`). 고정한 일정(`protected`)은 켜져도 먼저 묻는다(코드 그대로). 안전 사건을 어떻게 할지는 사용자 결정이다 — 이 기능은 그 판정을 바꾸지 않았다.
+
 ### 지도 경로선 — `/v1/web/trips/{trip_id}/route-shapes` · `/v1/web/trip-intakes/{intake_id}/route-shapes` `[2026-10-04]`
 
 이동 하나마다 지도에 그릴 GeoJSON `LineString` 을 우리 도로 그래프(OSM)로 계산해 내린다 — 외부 길찾기 API 를 부르지 않는다. 읽기 전용, 사용자 키/쿠키, **본인 것만**(남의 것은 404).

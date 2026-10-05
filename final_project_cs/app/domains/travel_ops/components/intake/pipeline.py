@@ -22,6 +22,7 @@ from zoneinfo import ZoneInfo
 
 from . import progress as progress_module
 from . import review as review_module
+from . import survey_answers
 from .areas import areas_for
 from .assemble import assemble, effective
 from .rules import read_plan
@@ -280,6 +281,8 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
             "revision": revision, "fatal": {"code": fatal_code, "detail": fatal_detail} if fatal_code else None,
             "trip_id": str(trip_id) if trip_id else None, "received_at": received_at.isoformat(),
             "sources": out_sources, "check": check, "review": review, "review_error": review_error,
+            # ★`[2026-10-06]` 로딩 중 질문 — 계획서만으로 알 수 없는 것만(쓰는 문항만, 최대 3). 답은 `POST …/survey` 로 한 문항씩 저장한다(`survey_answers.py`)
+            "questions": survey_answers.questions(survey_answers.stored(conn, tenant_id=tenant_id, intake_id=intake_id)),
             "needs_review": [{"field": c["field"], "value": c["value"], "note": c["note"],
                               "evidence": c["evidence"]} for c in claims if c["needs_review"]]}
 

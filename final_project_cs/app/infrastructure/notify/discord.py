@@ -52,6 +52,7 @@ MAX_RETRY_AFTER_SECONDS = 900.0
 #: 본문 밖에서 붙이는 줄(다른 안·버전·링크)의 값 자리 이름. ★본문 틀은 `_` 로 시작하는
 #:  이름을 쓰지 않는다 — 겹치면 값이 엉킨다(`_compose` 가 막는다).
 _OPTIONS, _VERSION, _URL = "_options", "_version", "_url"
+_GUARDIAN_URL = "_guardian_url"
 
 
 class RetryAfter(RuntimeError):
@@ -147,6 +148,19 @@ def _compose(body: str, values: dict[str, Any], payload: dict[str, Any], *,
             lines.append("(일정 버전 {%s})" % _VERSION)
         else:
             lines.append(f"(일정 버전 {payload['version']})")
+    # ★`[2026-10-06 사용자 결정 · 항로 지킴이]` 알림에 실린 항로 지킴이 몫(`payload.guardian`) — 디스코드 · 텔레그램은 로그인이 없어 **링크로 웹을 연다**(켜기는 웹이 확인한 뒤 서버에 요청한다).
+    #   덧붙이는 줄이라 이 값이 없는 알림의 문구는 한 글자도 안 바뀐다. 주소가 없으면(웹 주소 미설정) 켜기 줄은 붙이지 않는다.
+    #   ★계획서 링크 **앞**에 둔다 — 알림은 계획서 링크로 끝난다(`test_a_change_notice_carries_the_plan_link`).
+    guardian = payload.get("guardian") or {}
+    if guardian.get("changed"):
+        lines.append("항로 지킴이가 바꿨어요. 마음에 안 들면 웹에서 되돌릴 수 있어요.")
+    offer_url = (guardian.get("offer") or {}).get("url")
+    if offer_url:
+        if cacheable:
+            values[_GUARDIAN_URL] = str(offer_url)
+            lines.append("항로 지킴이를 켜면 다음부터 알아서 바꿔 드려요: {%s}" % _GUARDIAN_URL)
+        else:
+            lines.append(f"항로 지킴이를 켜면 다음부터 알아서 바꿔 드려요: {offer_url}")
     if payload.get("plan_url"):
         # ★상태의 정본은 링크다(v11 §6-A) — 안내에는 늘 붙인다. 주소는 옮기지 않는다.
         if cacheable:

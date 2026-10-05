@@ -200,6 +200,14 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 
 `[실측]` `049_call_budget_provider_exhausted.sql` — `exhausted_at`(제공처가 「한도 초과」를 알린 시각 — 그날 한국 자정까지 그 소스를 안 부른다) · `learned_cap`(그때까지 센 사용 수 = 제공처가 허락한 한도의 관측값)을 더한다. 달이 바뀌면 새 줄이라 자동으로 풀린다 · 재실행 안전.
 
+### 항로 지킴이 켜고 끈 기록 `trip_guardian_changes` `[2026-10-06 · 050]`
+
+`[실측]` `050_trip_guardian_changes.sql` — 일정이 꼬이면 알아서 고치는 모드(항로 지킴이)를 **누가 · 언제 · 어디서** 켜고 껐나의 **추가만 하는** 기록. 칸: `change_id`(기본키) · `seq`(bigserial — 순서는 시각이 아니라 이것이 정한다) · `tenant_id` · `trip_id`(→ `trips` **ON DELETE CASCADE** — 여행을 지우면 같이 지워진다) · `actor_customer_id` · `enabled`(이 행위의 결과 — 켬 true · 끔 false) · `via`(`card` · `header` · `notice` · `settings`, CHECK) · `at`. 트리거 `trip_guardian_changes_no_change` 가 **UPDATE 를 늘 거절**한다(지우기는 여행 삭제의 CASCADE 가 하므로 막지 않는다). 인덱스 `(tenant_id, trip_id, seq DESC)`. 켜고 끄는 **값 자체**는 이 표가 아니라 `trips.constraints.survey.on_disruption` · `survey_answered` 다(판정이 읽는 자리) — 이 표는 그 값을 **직접 골랐다는 증거**를 남긴다. 계약 [rest-endpoints.md 「항로 지킴이」](../external/rest-endpoints.md). 개발 DB 에 전체 이어 붙여 **두 번** 실행해 오류 없음을 확인했다(2026-10-06). 시험 `tests/e2e/test_guest_and_trip_delete.py` 의 「여행 번호를 든 표 목록」에 CASCADE 로 올렸다.
+
+### 로딩 중 질문의 답 `trip_intakes.survey` `[2026-10-06 · 051]`
+
+`[실측]` `051_intake_survey_answers.sql` — `trip_intakes` 에 칸 하나 `survey jsonb NOT NULL DEFAULT '{}'`: 로딩 화면에서 한 문항씩 바로 저장한 답(`{문항: 선택지 번호}` — 설문의 모양으로 바꾸는 것은 등록 때 `survey_answers.merged_survey` 한 곳). 같은 문항은 덮어쓴다. ★`updated_at` 은 건드리지 않는다(읽기가 멈췄는지 가르는 `reap_stalled` 의 기준). 기존 접수는 `{}` 로 채워진다 · 재실행 안전 · 접수가 지워지면 같이 지워진다. 계약 [rest-endpoints.md 「설문 질문」](../external/rest-endpoints.md). 개발 DB 에 두 번 실행해 확인(2026-10-06).
+
 ### 약관 동의 기록 `consent_events` · `consent_current` `[2026-10-05 · 046]`
 
 `[실측]` `046_consents.sql` — 추가만 하는 사건 표(`consent_events`: `event_id` · `tenant_id` · `user_id`(**외래키 없음** — 게스트가 정리돼도 증빙은 보관 기간 동안 남는다) · `session_kind` guest|member|key · `code` · `agreed` · `terms_version` · `text_sha256` · `at` · `ip_hash`(서버 비밀 HMAC — 주소 원문 없음) · `user_agent`) + 현재 상태 뷰(`consent_current` — 사용자 · 코드별 가장 최근 줄). **트리거 `consent_events_no_change` 가 UPDATE 를 늘 거절하고, DELETE 는 트랜잭션이 `SET LOCAL app.consent_purge = 'on'` 을 켰을 때(보관 기간 정리)만 허용한다.** 인덱스 `(tenant_id, user_id, code, at DESC, event_id DESC)` · `(at)`. 재실행 안전.

@@ -158,6 +158,7 @@ def test_every_table_that_carries_a_trip_number_is_accounted_for():
     """새 표가 `trip_id`(또는 `trip_scope`)를 들고 생기면 여기서 걸린다 — 삭제 목록에 넣거나, 외래키 CASCADE 로 두거나, 이유와 함께 이 목록에 더한다."""
     handled = {
         "trips", "itinerary_versions", "itinerary_items", "pending_changes",           # trips 를 지우면 CASCADE
+        "trip_guardian_changes",                                                       # 항로 지킴이 켜고 끈 기록(050) — trips 를 지우면 CASCADE
         "trip_chat_turns", "place_open_checks", "dining.dn_notice",                    # trip_delete._PURGE
         "trip_intakes",                                                                # trip_delete 가 이름을 대어 지운다
         "places",                                                                      # trip_scope — trip_delete 가 지운다
