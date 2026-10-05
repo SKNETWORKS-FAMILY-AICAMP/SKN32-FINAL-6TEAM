@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # A-COP 의존성 — 로컬에서 확인한 버전으로 고정한다 (RULE.md §1.2)
 # ★2026-09-24 정정: 다섯 줄이 실제 설치판과 달랐다. 깨끗한 환경에서는 설치 자체가 실패했다
 #   (pytest 7.4.4 ↔ pytest-asyncio 0.25.2 는 pytest>=8.2 를 요구 — CI 가 처음 돌면서 드러났다).
@@ -36,6 +37,7 @@ scikit-learn==1.5.2
 # ── 설정 · 유틸 ──────────────────────────────────────────────
 python-dotenv==1.1.1
 httpx==0.28.1
+PyJWT==2.13.0   # 소셜 로그인 토큰 확인 — app/infrastructure/oauth_providers.py 가 `import jwt` 로 직접 쓴다(mcp 가 끌고 오기도 하지만 직접 쓰므로 적는다 — 팀 저장소 develop 에서 가져옴 2026-10-05)
 cryptography==43.0.0   # 고객 디스코드 웹훅을 암호화해 저장 — customer_profile.py (설치만 돼 있고 목록에 없었다 — 도커 이미지에는 빠진다)
 socksio==1.0.0   # httpx SOCKS 프록시 — 고정 IP 서버 경유(ACOP_OUTBOUND_PROXY_URL)
 

@@ -254,7 +254,9 @@ def _place_view(key: str | None, places: list[Any]) -> dict[str, Any] | None:
     return None
 
 
-def _error(status: int, code: str, message: str, **extra: Any) -> HTTPException:
+# ★`[2026-10-05]` `status` 를 **위치 전용**(`/`)으로 받는다 — `**extra` 에 상세로 `status` 가 들어오면(예: 아직 등록할 수 없는 접수의 현재 상태 `IntakeConflict(..., status=...)`)
+#   같은 이름이 둘이라 `TypeError: got multiple values for argument 'status'` 로 409 가 서버 오류(500)가 됐다. 출처: 팀 저장소 develop 의 2449fa96(활동 담당 수정)을 읽고 우리 쪽에서 재현해 가져왔다.
+def _error(status: int, code: str, message: str, /, **extra: Any) -> HTTPException:
     return HTTPException(status, {"error": {"code": code, "message": message, **extra}})
 
 
@@ -347,7 +349,7 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
             "version": trip["version"],
             "items": views, "map": map_view(views),
             "history": history, "plan_url": plan_url(store.tenant_id, trip["trip_id"]),
-            # ★`[2026-10-03]` 「살펴볼 점」 — 밀도 경고 + 일정 품질 경고(같은 곳 두 번 · 끼니 빠짐 · 왔다 갔다). 둘 다 거절이 아니라 알림이다
+            # ★`[2026-10-03]` 「살펴볼 점」 — 밀도 경고 + 일정 품질 경고(같은 곳 두 번 · 끼니 빠짐 · 왔다 갔다 · 하루 마감 · 식당 라스트오더). 둘 다 거절이 아니라 알림이다
             **measured, "warnings": [*measured["warnings"], *quality_warnings(parts, trip.get("constraints") or {})]}
 
 

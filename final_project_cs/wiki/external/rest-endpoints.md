@@ -1,7 +1,7 @@
 ---
 type: contract
 title: 엔드포인트별 요청·응답 계약
-description: Case 다섯 경로 + outbox 해소 + 여행 API 다섯 경로의 필드·제약·상태 전이. rest-api.md 가 300줄을 넘어 떼어 냈다
+description: Case · outbox · 여행 · 고객 웹 · 계획 접수 · 위임 API 의 요청·응답 필드와 제약·상태 전이. rest-api.md 가 300줄을 넘어 떼어 냈다
 status: draft
 tags: [api, contract]
 domain: travel
@@ -10,7 +10,7 @@ domain_note: "[2026-09-14] 여행 API 가 생겼다(`/v1/trips/*` 다섯 + `/pla
 
 # 엔드포인트별 요청·응답 계약
 
-`[실측]` [rest-api.md](rest-api.md) 에서 분리했다. **경로 다섯 개의 필드 단위 계약이다.**
+`[실측]` [rest-api.md](rest-api.md) 에서 분리했다. **Case · outbox · 여행 · 고객 웹 · 계획 접수 · 위임 API 의 필드 단위 계약이다(날짜는 각 절의 확인 시점을 따른다).**
 
 ## `POST /v1/cases` 요청·응답 필드
 
@@ -242,8 +242,8 @@ Case 버전만으로 여행 일정을 관리하려면 Case 가 「어느 여행�
 | 시각 | 시간대 없이 오면 서울 시각(대상 도시가 서울 하나, v11 §1) |
 | 링크 토큰 | 틀리면 `404`(있는지도 말하지 않는다). 응답에 `customer_id` 를 싣지 않는다 |
 
-`[미구현]` 고객 **자유 문장** → Case → 분류 → 여기로 잇는 배선(지금 신고는 구조화된 몸통) ·
-계획서의 고객 언어 생성(결정 14, 지금은 한국어 원문).
+`[정정 2026-10-05]` 고객 **자유 문장** → Case 생성 · 전이 경로는 `trip_messages.handle_trip_message` 에 구현돼 있고 `/v1/trips/{trip_id}/messages` 와 웹 상담(`/v1/web/trips/{trip_id}/messages`)이 부른다 — 이 줄은 앞 판의 `[미구현]` 이었다(팀 저장소 develop 의 정정을 읽고 우리 코드로 확인해 가져왔다).
+`[미구현]` 고객 웹이 고른 언어를 접수 · 생성에 전달하는 계약은 없다(`trip_api.py` 의 요청 몸통에 언어 입력 필드가 없다 — grep). 계획서의 고객 언어 생성(결정 14)은 지금 한국어 원문이다.
 
 ### `constraints.survey` — 여행 시작 설문 `[2026-09-24]`
 
@@ -253,10 +253,12 @@ Case 버전만으로 여행 일정을 관리하려면 Case 가 「어느 여행�
 | 칸 | 모양 | 판정에 |
 |---|---|---|
 | `version` | `"2026-09-24.v1"` (필수) | — |
-| `on_disruption` | `replace`(기본) · `ask_first` | ★**쓴다** — 15번. `ask_first` 흐름은 다음 작업 |
+| `on_disruption` | `replace`(기본) · `ask_first` | ★**쓴다** — 15번. 보류 제안 조회 · 선택 API 가 구현돼 있다(아래 「보류 제안」 절) |
 | `pace` | `relaxed` · `moderate` · `packed` | ★**쓴다** — 16번 → 밀도 목표 0.40 · 0.55 · 0.70 |
-| `theme` · `party` · `preferred_mobility[]` · `domestic` · `priority[]`(`food`·`activity`·`mobility`) · `priority_details{영역: [..]}` · `indoor_outdoor{dining·activity: indoor·outdoor·any}` · `theme_details[]` | 문자열·목록 | **받기만 한다** — 세부 값은 담당 팀이 정한다. 반영했다고 말하지 않는다 |
+| `theme` · `party` · `preferred_mobility[]` · `domestic` · `priority[]`(`food`·`activity`·`mobility`) · `priority_details{영역: [..]}` · `indoor_outdoor{dining·activity: indoor·outdoor·any}` · `theme_details[]` | 문자열·목록 | 필드별 소비 경로는 아래 설명을 따른다 — 세부 값은 담당 팀이 정한다. 저장됐다는 이유로 모든 선호가 계획에 반영됐다고 표시하지 않는다 |
 
+- `[실측 2026-09-29]` 이동 계산기 연결이 `priority_details.mobility` 와 `preferred_mobility` 를 수단 집합으로 바꾼다([wiring.py](../../app/modules/travel_ops/mobility/wiring.py) `modes_from_survey` — 화면은 `priority_details.mobility` 로 보내고 둘 다 읽는다). 도보는 늘 포함하며 변환 가능한 값이 없으면 계산기 기본 수단(지하철 · 버스 · 도보)을 쓴다. 선호 순위를 그대로 최적화한다는 뜻은 아니다.
+- `[실측 2026-09-29]` `domestic` 이 주어지면 [이동 계획기](../../app/modules/travel_ops/mobility/engine/plan.py)의 동행 조건 `foreign`(= `not domestic`)에 대응한다.
 - 모르는 칸·틀린 값 → **`422 invalid_survey`** + `problems[]`(field·reason). 여행이 **안 생긴다.**
 - `pace` 가 있고 사용자가 `density` 를 **안 줬으면**: 여행 날짜마다 하루 활동 시간 **08:00~22:00**(팀 기본값, `travel.day_window`)으로
   밀도를 잰다. `density` 를 줬는데 목표가 없으면 목표만 채운다. **사용자가 준 값이 이긴다.** 무엇을 채웠는지 `constraints.derived` 에 남는다.
@@ -379,6 +381,7 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 | `POST /v1/web/warmup` | 키 | ★`[2026-09-29]` **모델 예열** — 화면이 여행·채팅 칸을 열 때 부른다(식은 모델의 첫 채팅이 34초 걸렸다). 몸통 없음. 응답 `{status: "warm" \| "warming" \| "unavailable", model, last_attempt: null \| {ok, seconds, at, reason?}, deduped?}` — 이미 올라가 있으면 `warm`(아무것도 안 함), 1분(`web_guard.warmup.dedupe_seconds`) 안 되풀이는 `warming` + `deduped: true`(다시 안 부름), 그 밖엔 응답 뒤 한 토큰 생성으로 깨우고 `warming`. **`last_attempt.ok=false` 면 모델 서버가 못 올린 것**(`reason` 에 서버가 준 이유 — 예: GPU 메모리 부족). 실제로 부를 때만 남용 방어 `warmup` 으로 센다(한도가 켜져 있으면 429/503) |
 | `GET /v1/web/trips/{trip_id}/notices` | 키 | 나간 알림 전부. `type` = `guidance`(하루 시작·다음 일정·이동) · `proposal_request` · `safety_alert` · `change_notice` |
 
+- `[실측 2026-09-29 · 2026-10-05 확인]` `GET /v1/web/trips` 의 응답은 `{trips: [{trip_id, title, version, created_at}]}` 이며 여행 날짜 · 진행 상태 · 미확인 제안 수는 이 응답에 없다(`trip_api.py` 의 `web_list`). 직접 등록 `POST /v1/web/trips` 가 있는 것과 화면이 쓰는 것(접수 → 확인 → 생성)은 다르다.
 - ★`[2026-10-04]` **브라우저는 키 대신 쿠키 세션을 쓴다** — 아래 「브라우저 세션 쿠키」. 이 절의 `키` 칸은 **쿠키 세션 또는 키**로 읽는다(둘이 같이 오면 `400 ambiguous_credentials`). `X-User-Key` 는 에이전트(MCP)와 옮겨 가는 동안의 옛 호출자용이다.
 - 키는 헤더 **`X-User-Key`** 로 보낸다. 형식 `acop_u_…`. 없거나 틀리거나 거둔 키는 모두 `401`(어느 쪽인지 말하지 않는다).
 - **남의 여행은 `404`** — 있는지도 말하지 않는다. 서버용 scope 키로는 웹 경로가 열리지 않는다(`401`).

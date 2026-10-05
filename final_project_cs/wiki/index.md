@@ -66,7 +66,7 @@ Team이 필요한 자료를 모아 주는 계층. **Team은 직접 읽지 않는
 
 ### [external/](external/index.md) — 바깥과 만나는 면
 `app/presentation/`
-REST, MCP, A2A, Trust Boundary.
+REST, MCP, A2A, Trust Boundary. 사용자 웹 화면과 API를 연결할 때는 [화면별 연동 문서](external/web-screen-api.md)부터 읽는다.
 
 ### [data/](data/index.md) — 저장
 `app/infrastructure/db/`
