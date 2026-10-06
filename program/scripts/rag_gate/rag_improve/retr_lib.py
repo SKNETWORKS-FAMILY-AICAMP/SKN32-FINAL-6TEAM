@@ -147,3 +147,22 @@ def bm25_ngram(docs, queries, n=2, k1=1.2, b=0.75):
 
 def zscore(S):
     return (S - S.mean(axis=1, keepdims=True)) / (S.std(axis=1, keepdims=True) + 1e-9)
+
+
+def d2q_top2(Q, src='doc2query.json'):
+    """질문 임베딩 Q → 조각별 「예상 질문(doc2query)과의 유사도 상위 2개 평균」(질문수 × 130). gen_doc2query.py 의 결과를 쓴다."""
+    d2q = json.load(open(os.path.join(OUT, src), encoding='utf-8'))
+    flat, owner = [], []
+    for i, s in enumerate(IDS):
+        for q in d2q.get(s, []):
+            flat.append(q)
+            owner.append(i)
+    owner = np.array(owner)
+    G = embed(flat)
+    sim = Q @ G.T
+    out = np.zeros((Q.shape[0], len(IDS)), dtype=np.float32)
+    for i in range(len(IDS)):
+        cols = np.where(owner == i)[0]
+        if len(cols):
+            out[:, i] = np.sort(sim[:, cols], axis=1)[:, ::-1][:, :2].mean(axis=1)
+    return out
