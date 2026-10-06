@@ -46,16 +46,18 @@
 .found { margin: 12px 2px 0; font-size: 13.5px; color: var(--color-text-secondary); }
 
 /* ③④ The map fills the screen under a floating bar; the sheet slides over it (mockup .map · .fbar · .sheet). */
-.checking { --sheet-h: min(440px, 60%); position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.checking { --sheet-h: min(440px, 60%); --soft: cubic-bezier(.22, .8, .3, 1); position: relative; flex: 1; min-height: 0; overflow: hidden; }
 .checking[data-sheet="peek"] { --sheet-h: 104px; }
 .checking[data-sheet="full"] { --sheet-h: calc(100% - 64px); }
 /* The map starts below the floating bar, so no pin hides (or can be pressed) under it. */
-.map { position: absolute; top: 0; left: 0; right: 0; bottom: calc(var(--sheet-h) - 20px); display: flex; flex-direction: column; transition: bottom .3s ease; }
+.map { position: absolute; top: 0; left: 0; right: 0; bottom: calc(var(--sheet-h) - 20px); display: flex; flex-direction: column; transition: bottom 380ms var(--soft); }
 .bar { position: absolute; top: 8px; left: 10px; right: 10px; z-index: 5; display: flex; align-items: center; gap: 4px; min-height: 48px; padding: 4px 10px 4px 4px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 4px 16px color-mix(in srgb, var(--color-text) 14%, transparent); }
 .bar .progress { flex: 1; min-width: 0; }
 .barTitle { flex: 1; min-width: 0; margin: 0; font-size: 15px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.unlocated { position: absolute; left: 10px; bottom: calc(var(--sheet-h) + 8px); z-index: 3; width: fit-content; max-width: calc(100% - 20px); margin: 0; padding: 3px 10px; border: 1.5px dashed var(--color-warning-border); border-radius: 999px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 750; transition: bottom .3s ease; }
-.sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; height: var(--sheet-h); display: flex; flex-direction: column; border-radius: 20px 20px 0 0; background: var(--color-surface); box-shadow: 0 -6px 24px color-mix(in srgb, var(--color-text) 14%, transparent); transition: height .3s ease; animation: rise .45s ease-out; }
+.unlocated { position: absolute; left: 10px; bottom: calc(var(--sheet-h) + 8px); z-index: 3; width: fit-content; max-width: calc(100% - 20px); margin: 0; padding: 3px 10px; border: 1.5px dashed var(--color-warning-border); border-radius: 999px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 750; transition: bottom 380ms var(--soft); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; height: var(--sheet-h); display: flex; flex-direction: column; border-radius: 20px 20px 0 0; background: var(--color-surface); box-shadow: 0 -6px 24px color-mix(in srgb, var(--color-text) 14%, transparent); animation: rise .45s var(--soft); }
+/* ★`[2026-10-06 사용자 지적 — 일정 창 확대·축소가 부드럽지 않다]` The height changes at once (the content never re-flows while it moves) and the sheet SLIDES there on the compositor (a transform, `plan-check.tsx` `useLayoutEffect`). When it gets shorter its bottom edge rises for a moment: this fills what is under it. */
+.sheet::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 100vh; background: var(--color-surface); pointer-events: none; }
 /* `[2026-10-04 사용자]` 손잡이는 머리의 윗가장자리에 얹혀 있다(따로 한 줄을 차지하지 않는다) — 제목 줄과 합쳐 공간을 아낀다. */
 .sheetHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 22px 16px 6px; border-bottom: 1px solid var(--color-divider); }
 .sheetTitle { margin: 0; font-size: 15px; font-weight: 750; }
@@ -125,7 +127,7 @@ button.time { cursor: pointer; }
 .handle:active { cursor: grabbing; }
 .sheetHead { touch-action: none; }
 /* While the list is being dragged it follows the finger at once (no easing). */
-.checking[data-dragging] .sheet, .checking[data-dragging] .map, .checking[data-dragging] .unlocated, .checking[data-dragging] .toast { transition: none; }
+.checking[data-dragging] .sheet, .checking[data-dragging] .map, .checking[data-dragging] .unlocated { transition: none; }
 .checking[data-dragging] { user-select: none; }
 .handle span { width: 42px; height: 5px; border-radius: 3px; background: var(--color-border-strong); }
 .handle:focus-visible, .dayButton:focus-visible, .cardHead:focus-visible, .moveHead:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
@@ -265,13 +267,7 @@ button.moveHead { cursor: pointer; }
 .tripAnswer { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-top: 6px; }
 .tripAnswer .field { flex: 1 1 140px; }
 
-/* What was just done, just above the sheet for a few seconds, with 「되돌리기」 when it can be undone (mockup .toast) */
-.toast { position: absolute; left: 12px; right: 12px; bottom: min(calc(var(--sheet-h, 0px) + 10px), calc(100% - 120px)); z-index: 15; display: flex; align-items: center; gap: 10px; margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--color-inverse); color: var(--color-on-inverse); font-size: 13px; line-height: 1.35; box-shadow: 0 8px 24px color-mix(in srgb, var(--color-text) 25%, transparent); opacity: 0; transform: translateY(6px); pointer-events: none; transition: opacity .25s, transform .25s, bottom .3s; }
-.toast[data-shown] { opacity: 1; transform: none; pointer-events: auto; }
-.toastText { flex: 1; min-width: 0; }
-.toastText small { display: block; margin-top: 1px; font-size: 11.5px; color: color-mix(in srgb, var(--color-on-inverse) 70%, transparent); }
-.undo { flex: none; min-height: 32px; padding: 0 4px; border: 0; background: none; color: var(--color-success-soft); font: inherit; font-size: 13px; font-weight: 800; white-space: nowrap; cursor: pointer; }
-.undo:focus-visible { outline: 2px solid var(--color-on-inverse); outline-offset: 2px; }
+/* ★`[2026-10-06 사용자 지시]` 이 화면의 알림도 모든 화면과 같은 한 막대다 — `components/toast-view.tsx`. 여기서 따로 그리지 않는다. */
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

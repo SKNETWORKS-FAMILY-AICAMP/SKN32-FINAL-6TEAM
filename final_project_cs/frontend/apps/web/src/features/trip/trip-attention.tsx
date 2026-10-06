@@ -10,9 +10,11 @@ import { useSettings, useT } from "@/lib/settings";
 import { openChoices, recentNotices, undoableChange } from "./attention";
 import type { Trip } from "./model";
 import { tripKey } from "./use-trip";
-import { noticesKey, proposalsKey, useNotices, useProposals } from "./use-trip-extras";
+import { noticesKey, proposalsKey, recoveryKey, useNotices, useProposals, useRecovery } from "./use-trip-extras";
 import { useTripEvents } from "./use-trip-events";
 import { SafetyPanel } from "./trip-safety";
+import { RecoveryPanel } from "./trip-recovery";
+import type { Recovery } from "@/lib/live/recovery";
 import styles from "./trip-attention.module.css";
 
 const NOTICE_LABEL: Record<string, [string, string]> = {
@@ -40,6 +42,7 @@ export function TripAttention({ trip }: { trip: Trip }) {
   useTripEvents(trip.id);
   const proposals = useProposals(trip.id);
   const notices = useNotices(trip.id);
+  const recovery = useRecovery(trip.id);
   const choices = openChoices(proposals.data ?? [], notices.data ?? [], trip.stops);
   const { shown, total, hidden } = recentNotices(notices.data ?? []);
   const undoable = undoableChange(notices.data ?? [], trip.version);
@@ -49,6 +52,9 @@ export function TripAttention({ trip }: { trip: Trip }) {
     void queryClient.invalidateQueries({ queryKey: proposalsKey(trip.id, language) });
     void queryClient.invalidateQueries({ queryKey: noticesKey(trip.id, language) });
   };
+  // `[2026-10-06]` 「일정 다시 시작」 answers with the brief of the disaster just lifted: it goes straight into the screen (no second read), and a choice made in it re-reads the brief so the choice shows next time.
+  const resumed = (brief: Recovery | null) => queryClient.setQueryData(recoveryKey(trip.id, language), brief);
+  const chosen = () => { refresh(); void queryClient.invalidateQueries({ queryKey: recoveryKey(trip.id, language) }); };
   const choose = useMutation({
     mutationFn: ({ proposalId, key }: { proposalId: string; key: string | null }) => chooseProposal(trip.id, proposalId, key, language),
     // Refused because it was already decided or the trip moved on: nothing changed, so re-read what is true now.
@@ -67,7 +73,9 @@ export function TripAttention({ trip }: { trip: Trip }) {
 
   return <div className={styles.wrap}>
     {/* `[2026-10-06]` 재난으로 일정이 멈췄으면 맨 위에: 정지 · 안전 안내 · 다시 시작. 정지가 없으면 아무것도 그리지 않는다. */}
-    <SafetyPanel trip={trip} notices={notices.data ?? []} onChanged={refresh} />
+    <SafetyPanel trip={trip} notices={notices.data ?? []} onChanged={refresh} onResumed={resumed} />
+    {/* `[2026-10-06]` 다시 시작한 뒤(72시간 안): 아는 것 · 모르는 것 · 남은 일정의 영향 · 이어가는 세 가지 길. 다시 정지 중이면(새 사건) 그 정지 패널이 먼저다. */}
+    {!trip.safety?.paused && recovery.data && <RecoveryPanel key={recovery.data.pauseId} trip={trip} recovery={recovery.data} onChosen={chosen} />}
     {trip.planUrl && <p className={styles.plan}><a href={trip.planUrl} target="_blank" rel="noopener noreferrer">{t("여행계획서 열기", "Open your trip plan")}</a>
       {/* `[2026-10-04 사용자 지시]` 같은 주소에 download=1 — 서버가 파일(triPilot-<제목>.html, 혼자 열리는 HTML)로 내려준다. 게스트는 창을 닫으면 이어 볼 수 없으니 이것이 보관 수단이다. */}
       {planDownloadUrl(trip.planUrl) && <> · <a href={planDownloadUrl(trip.planUrl) ?? undefined} data-plan-download>{t("계획서 내려받기", "Download the plan")}</a></>}<span>{t("로그인 없이 열리는 내 여행 링크예요. 링크를 아는 사람은 누구나 볼 수 있어요.", "This link opens without logging in. Anyone who has it can view your plan.")}</span></p>}

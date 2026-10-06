@@ -1,9 +1,10 @@
 "use client";
 
-import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, ChevronsDown, ChevronsRight, ChevronsUp, Pencil, Search, Undo2, X } from "lucide-react";
 import { DeviceFrame, HeaderSlot } from "@/components/layout/device-frame";
+import { ToastView, useToastState } from "@/components/toast-view";
 import { TripMap } from "@/features/map";
 import { routeNotes, visibleShapes } from "@/features/map/route-lines";
 import type { RouteShapes } from "@/lib/live/route-shapes";
@@ -20,7 +21,7 @@ import { dayTimes, withTimes } from "./day-times";
 import { DayList, type RowContext } from "./plan-rows";
 import { ResultFooter, StopEditor, TripIssues, type Registration } from "./result-parts";
 import { dampedScrollTo } from "@/lib/damped-scroll";
-import { MapCallout } from "./map-callout";
+import { moveToast, stopToast } from "./map-description";
 import { useFollowScroll } from "./use-follow-scroll";
 import { usePullPastEnd } from "./use-pull-past-end";
 import { useDayGestures } from "./use-day-gestures";
@@ -323,7 +324,7 @@ const COMPACT_BELOW = 190;
 /** The least the sheet can be dragged to: the handle and the buttons. */
 const SHEET_MIN = 104;
 
-interface Toast { text: string; sub?: string; undo?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string }
+interface Toast { text: string; sub?: string; undo?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string; /** How long it stays when the default is too short (`lib/toast-bus.ts`). */ ms?: number }
 
 type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "onMapZoom">;
 
@@ -351,7 +352,17 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState<SearchState | null>(null);
   const [details, setDetails] = useState(false);
-  const [toast, setToast] = useState<Toast | null>(null);
+  // ★`[2026-10-06 사용자 지시 — 알림은 하나의 포맷으로]` This screen's notices are shown by the one bar every screen uses (`components/toast-view.tsx`): `setToast` turns what the screen says into it. The words of 「되돌리기」 and the
+  //   plan-wide undo are read when the button is pressed (`latest`), not when the notice was made.
+  const { shown: shownToast, show: showToast, hide: hideToast } = useToastState();
+  const latest = useRef<{ t: Translate; undo: () => void } | null>(null);
+  const setToast = useCallback((value: Toast | null) => {
+    if (!value) { hideToast(); return; }
+    showToast({
+      text: value.text, sub: value.sub, ms: value.ms,
+      action: value.undo || value.revert ? { label: value.undoLabel ?? latest.current?.t("되돌리기", "Undo") ?? "", run: value.revert ?? (() => latest.current?.undo()) } : undefined,
+    });
+  }, [hideToast, showToast]);
   const [working, setWorking] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
   // `[2026-10-03 사용자]` The place search lives in the header, where the brand stands: small there, and wide while it has focus.
@@ -371,6 +382,10 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const [turn, setTurn] = useState<"forward" | "back" | null>(null);
   const grab = useRef<{ y: number; height: number; moved: boolean } | null>(null);
   const justDragged = useRef(false);
+  /** The height the list was last laid out at, and the height a drag has reached (written straight to the screen, not through state: a drag re-rendering this whole screen on every move was what made it stutter). */
+  const lastSheetHeight = useRef(0);
+  const dragHeight = useRef<number | null>(null);
+  const dragFrame = useRef<number | null>(null);
   /**
    * ★`[2026-10-04 사용자 지시]` 「전체 자동 추천」 is first only SHOWN: the plan as it WOULD be (nothing saved) stands under the plan as it is — one list, the same line running through — and
    * the sheet, the map and the buttons follow whichever of the two is in view (`side`). The screen holds both pictures; scrolling back up shows the plan as it was.
@@ -407,13 +422,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const zoomBox = useRef<HTMLDivElement>(null);
   const stripBox = useRef<HTMLDivElement>(null);
   const markerBox = useRef<HTMLSpanElement>(null);
-  useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), toast.undo ? 4500 : 2800);
-    return () => clearTimeout(timer);
-  }, [toast]);
   // `[2026-10-06 사용자 지시]` What the customer did elsewhere on this screen (the Course Keeper turned on or off in the header) is told in THIS bar, like every other notice here.
-  useEffect(() => onToast((notice) => setToast({ text: notice.text, sub: notice.sub, undo: Boolean(notice.action), revert: notice.action ? () => { setToast(null); notice.action?.run(); } : undefined, undoLabel: notice.action?.label })), []);
+  useEffect(() => onToast((notice) => setToast({ text: notice.text, sub: notice.sub, ms: notice.ms, undo: Boolean(notice.action), revert: notice.action ? () => { notice.action?.run(); } : undefined, undoLabel: notice.action?.label })), [setToast]);
   // The preview is gone from the page (the plan changed some other way): the list is the plan as it is.
   const hadPreview = useRef(false);
   useEffect(() => {
@@ -426,10 +436,22 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   useEffect(() => {
     const element = sheetBox.current;
     if (!element || typeof ResizeObserver === "undefined") return;
-    const watcher = new ResizeObserver(() => { const next = element.getBoundingClientRect().height < COMPACT_BELOW; setCompact((current) => current === next ? current : next); });
+    const watcher = new ResizeObserver(() => { lastSheetHeight.current = element.offsetHeight; const next = element.getBoundingClientRect().height < COMPACT_BELOW; setCompact((current) => current === next ? current : next); });
     watcher.observe(element);
     return () => watcher.disconnect();
   }, []);
+  // ★`[2026-10-06 사용자 지적 — 여행 일정 창 확대·축소가 부드럽지 않다]` The list takes its new height at once (nothing inside re-flows while it moves; the map's edge follows with the same curve) and SLIDES there as a transform
+  // on the compositor, from where its top edge was. A drag does not come through here: it is written to the screen as it goes (`dragSheet`) and ends with the same height it reached.
+  useLayoutEffect(() => {
+    const element = sheetBox.current;
+    if (!element || typeof element.animate !== "function") return;
+    const height = element.offsetHeight;
+    const before = lastSheetHeight.current;
+    lastSheetHeight.current = height;
+    if (!before || Math.abs(height - before) < 2 || skipAnimation || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const slide = element.animate([{ transform: `translateY(${height - before}px)` }, { transform: "translateY(0)" }], { duration: 380, easing: "cubic-bezier(.22, .8, .3, 1)" });
+    return () => slide.cancel();
+  }, [sheet, custom, skipAnimation]);
 
   // ★A stop stands in both lists while a proposal is under the plan: what is open, and what is being edited, belongs to ONE of them — never both (opening the one out of sight would push the one in view).
   const setOpen = (id: string | null, list: "before" | "after" = "before") => setOpenAt(id === null ? null : { list, id });
@@ -476,14 +498,17 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   function pick(id: string, from: "map" | "list", list: "before" | "after" = previewing && side === "after" ? "after" : "before") {
     const item = shown.items.find((entry) => entry.id === id);
     if (!item) return;
-    if (selected === id) { setSelected(null); closeOpen(id); return; }
+    if (selected === id) { setSelected(null); closeOpen(id); if (from === "map") setToast(null); return; }
     setSelectedLine(null);
     setSelected(id);
     setChosenDay(item.day);
     setOpen(id, list);
     if (from === "map") {
       if (sheet === "peek") setSheet("half");
-      requestAnimationFrame(() => document.getElementById(`${list === "after" ? "after-" : ""}plan-card-${id}`)?.scrollIntoView({ block: "nearest" }));
+      const bringUp = () => requestAnimationFrame(() => document.getElementById(`${list === "after" ? "after-" : ""}plan-card-${id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+      bringUp();
+      // ★`[2026-10-06 사용자 지시 — 마커를 누르면 그 설명이 알림으로]` What the pin says, in the one notice every screen uses.
+      showToast(stopToast({ item, order: mapStops.findIndex((stop) => stop.id === id) + 1 || 1 }, t, bringUp));
     }
   }
   /**
@@ -493,7 +518,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     const shape = routes?.shapes.find((entry) => entry.itemId === lineId);
     const move = shape && (shown.moves.find((entry) => entry.id === shape.itemId) ?? shown.moves.find((entry) => entry.fromId === shape.fromItemId && entry.toId === shape.toItemId));
     if (!move) return;
-    if (selectedLine === lineId) { setSelectedLine(null); closeOpen(move.id); return; }
+    if (selectedLine === lineId) { setSelectedLine(null); closeOpen(move.id); setToast(null); return; }
     setSelectedLine(lineId);
     setSelected(null);
     const from = shown.items.find((entry) => entry.id === move.fromId);
@@ -501,7 +526,10 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     const list = previewing && side === "after" ? "after" : "before";
     setOpenAt({ list, id: move.id });
     if (sheet === "peek") setSheet("half");
-    requestAnimationFrame(() => bodyBox.current?.querySelector<HTMLElement>(`[data-entry-id="${move.id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+    const bringUp = () => requestAnimationFrame(() => bodyBox.current?.querySelector<HTMLElement>(`[data-entry-id="${move.id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+    bringUp();
+    const name = (id: string, fallback: string | null) => shown.items.find((entry) => entry.id === id)?.title ?? fallback ?? "";
+    showToast(moveToast({ move, from: name(move.fromId, shape.from), to: name(move.toId, shape.to) }, t, bringUp));
   }
   function showDay(day: number) {
     setChosenDay(day);
@@ -797,6 +825,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     setToast(null);
     void run(async () => { await actions.undo!(); return { text: t("되돌렸어요", "Undone"), sub: t("바꾸기 전으로 돌렸어요", "Back to how it was") }; });
   }
+  useEffect(() => { latest.current = { t, undo }; });
 
   // The checks of the stops that were changed come in once more, one at a time, after the plan has been checked again.
   const replayQueue = useMemo(() => !replay ? [] : replay.ids.flatMap((id) => {
@@ -840,13 +869,24 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     const up = held.y - event.clientY;
     if (!held.moved && Math.abs(up) < 6) return;
     held.moved = true;
-    setDragging(true);
+    if (!dragging) setDragging(true);
     const { min, max } = sheetLimits();
-    setCustom(Math.round(Math.min(max, Math.max(min, held.height + up))));
+    const height = Math.round(Math.min(max, Math.max(min, held.height + up)));
+    dragHeight.current = height;
+    lastSheetHeight.current = height;                              // the slide below is for a press of the handle, not for a drag that is already there
+    if (dragFrame.current === null) dragFrame.current = requestAnimationFrame(() => {
+      dragFrame.current = null;
+      if (dragHeight.current !== null) checkingBox.current?.style.setProperty("--sheet-h", `${dragHeight.current}px`);
+    });
   }
   function dropSheet() {
-    if (grab.current?.moved) justDragged.current = true;          // the click that ends a drag is not a press of the handle
+    if (grab.current?.moved) {
+      justDragged.current = true;                                  // the click that ends a drag is not a press of the handle
+      if (dragFrame.current !== null) { cancelAnimationFrame(dragFrame.current); dragFrame.current = null; }
+      if (dragHeight.current !== null) setCustom(dragHeight.current);
+    }
     grab.current = null;
+    dragHeight.current = null;
     setDragging(false);
   }
   function cycleSheet() {
@@ -981,19 +1021,6 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     if (done) pick(id, "map");
   }
   function onLine(lineId: string) { if (done && !changing) pickLine(lineId); }
-  // What the card over the map describes: the picked stop (its number is its place in the day on the map) or the picked leg.
-  const calloutStop = done && !changing && selected ? (() => {
-    const item = shown.items.find((entry) => entry.id === selected);
-    const order = mapStops.findIndex((stop) => stop.id === selected) + 1;
-    return item ? { item, order: order || 1 } : null;
-  })() : null;
-  const calloutMove = done && !changing && selectedLine ? (() => {
-    const shape = routes?.shapes.find((entry) => entry.itemId === selectedLine);
-    const move = shape && (shown.moves.find((entry) => entry.id === shape.itemId) ?? shown.moves.find((entry) => entry.fromId === shape.fromItemId && entry.toId === shape.toItemId));
-    if (!move) return null;
-    const name = (id: string, fallback: string | null) => shown.items.find((entry) => entry.id === id)?.title ?? fallback ?? "";
-    return { move, from: name(move.fromId, shape.from), to: name(move.toId, shape.to) };
-  })() : null;
 
   // The lines belong to the plan as it is: for the proposed one only those between stops it did not change are still true (a changed place moves its ends).
   const lineShapes = !routes || changing ? null : previewing && side === "after" && recommended
@@ -1062,13 +1089,6 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
       <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" topInset={64} bottomInset={24} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin}
         selectedLineId={selectedLine ?? undefined} onSelectLine={done && !changing ? onLine : undefined} />
     </div>
-    {(calloutStop || calloutMove) && <MapCallout stop={calloutStop} move={calloutMove}
-      onList={() => requestAnimationFrame(() => {
-        const id = calloutStop ? calloutStop.item.id : calloutMove!.move.id;
-        if (sheet === "peek") setSheet("half");
-        (calloutStop ? document.getElementById(`plan-card-${id}`) : bodyBox.current?.querySelector<HTMLElement>(`[data-entry-id="${id}"]`))?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      })}
-      onClose={() => { if (calloutStop) { setSelected(null); closeOpen(calloutStop.item.id); } else if (calloutMove) { setSelectedLine(null); closeOpen(calloutMove.move.id); } }} />}
     {unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
     {changing && headerSlot && createPortal(
       <div className={styles.headSearch} data-open={searchOpen || undefined} data-hide-brand>
@@ -1198,10 +1218,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
         </>}
     </section>
     {timeEdit.drag && <TimeDragOverlay drag={timeEdit.drag} />}
-    <div className={styles.toast} role="status" data-shown={toast ? true : undefined}>
-      {toast && <><span className={styles.toastText}>{toast.text}{toast.sub && <small>{toast.sub}</small>}</span>
-        {(toast.undo || toast.revert) && <button type="button" className={styles.undo} onClick={toast.revert ?? undo}>{toast.undoLabel ?? t("되돌리기", "Undo")}</button>}</>}
-    </div>
+    {shownToast && <ToastView key={shownToast.stamp} toast={shownToast.toast} onDone={hideToast} />}
   </div>;
 }
 

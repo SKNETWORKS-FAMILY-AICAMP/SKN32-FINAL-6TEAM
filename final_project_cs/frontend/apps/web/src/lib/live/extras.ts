@@ -1,5 +1,6 @@
 import type { Language } from "../i18n";
 import { api, hasSession } from "./client";
+import { recoveryOf, type Recovery } from "./recovery";
 
 /**
  * The rest of the server's web API: the choices the server is waiting for, the notices it sent,
@@ -151,11 +152,12 @@ export async function getNotices(tripId: string, language: Language): Promise<No
 
 /**
  * `[2026-10-06]` 「일정 다시 시작」 (`POST /v1/web/trips/{id}/safety/resume`, no body): the customer says they are safe and the pause is lifted. ★Only the customer's press does it - the server cannot know
- * they are safe, so nothing resumes by itself. The plan was never changed by the pause. `resumed` = how many pauses were closed (0 when there was none - not an error).
+ * they are safe, so nothing resumes by itself. The plan was never changed by the pause. `resumed` = how many pauses were closed (0 when there was none - not an error). ★`recovery` = the situation
+ * brief of the disaster that was just lifted (`lib/live/recovery.ts`), null when there was nothing to lift.
  */
-export async function resumeSafety(tripId: string, language: Language): Promise<{ resumed: number }> {
-  const body = await api<{ resumed?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/safety/resume`, language, { method: "POST" });
-  return { resumed: typeof body.resumed === "number" ? body.resumed : 0 };
+export async function resumeSafety(tripId: string, language: Language): Promise<{ resumed: number; recovery: Recovery | null }> {
+  const body = await api<{ resumed?: unknown; recovery?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/safety/resume`, language, { method: "POST" });
+  return { resumed: typeof body.resumed === "number" ? body.resumed : 0, recovery: recoveryOf(body.recovery) };
 }
 
 /** Where the Course Keeper was turned on or off from (`via` of `POST /v1/web/trips/{id}/guardian`; the server records it). */

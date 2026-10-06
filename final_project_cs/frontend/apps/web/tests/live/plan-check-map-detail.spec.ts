@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { checkPlan, mockServer, start } from "./helpers";
-import { card, needsBadge, openFinished, pin, sheet, type Json } from "./plan-check-kit";
+import { card, mapSettled, needsBadge, openFinished, pin, sheet, type Json } from "./plan-check-kit";
 
 /**
  * `[2026-10-06 사용자 지시]` 계획 확인 화면: 핀을 누르면 지도 위에 그 일정의 설명 카드 · 경로선을 누르면 그 구간 설명 + 목록의 이동 줄 열기 · 핀 선과 점은 핀 몸통 아래 층 · 「전체 · 1일차 · 2일차」 줄이 「계획 확인」 줄과 한 줄 ·
@@ -12,35 +12,62 @@ const DAY_TWO_STOP: Json = {
   place: { name: "N서울타워", latitude: 37.5512, longitude: 126.9882, source: "tour_api", kind: null, content_id: null, content_type_id: null },
   rows: [{ row: "place", result: "ok", text: "관광공사 정보로 찾았어요" }],
 };
-const callout = (page: import("@playwright/test").Page, name: RegExp) => page.getByRole("status", { name });
+/** ★2026-10-06 사용자 지시: 핀 · 경로선의 설명도 모든 화면과 같은 알림 막대다(따로 그린 카드가 아니다). */
+const callout = (page: import("@playwright/test").Page, text: RegExp | string) => page.getByRole("status").filter({ hasText: text });
+const device = (page: import("@playwright/test").Page) => page.locator('[class*="__device"]').first();
 
-test("핀을 누르면 지도 위에 그 일정의 설명 카드가 뜬다 — 번호 · 이름 · 시각 · 판정 · 확인할 것 — 그리고 ✕ 로 놓을 수 있다", async ({ page, request }) => {
+test("핀을 누르면 그 일정의 설명이 알림으로 뜬다 — 번호 · 이름 · 시각 · 판정 · 확인할 것 — 그리고 ✕ 로 닫을 수 있다", async ({ page, request }) => {
   await openFinished(page, request);
   await pin(page, "2.").locator("[data-pin-body]").click();
-  const note = callout(page, /^2번 일정 설명$/);
+  const note = callout(page, /^2올리브영/);
   await expect(note).toBeVisible();
-  await expect(note).toContainText("올리브영");
   await expect(note).toContainText("확인 필요");
   await expect(note).toContainText("11:00");
   await expect(note).toContainText("이름이 여러 곳이라 가까운 「올리브영 인사동점」으로 임시로 골랐어요");   // 검사가 찾은 첫 문제
   await expect(card(page, "올리브영").getByRole("heading").getByRole("button")).toHaveAttribute("aria-expanded", "true");   // 목록의 카드도 열려 있다
   await note.getByRole("button", { name: "닫기" }).click();
   await expect(note).toHaveCount(0);
-  await expect(pin(page, "2.")).toHaveAttribute("aria-pressed", "false");
-  // 다른 핀으로 옮겨 가면 카드도 따라간다
+  await expect(pin(page, "2.")).toHaveAttribute("aria-pressed", "true");                                // 알림만 닫힌다 — 핀은 고른 채다
+  // 다른 핀으로 옮겨 가면 알림도 따라간다
+  await mapSettled(page);                                                                                // 고른 핀으로 지도가 움직이는 동안 누르면 핀이 손 밑에서 비켜 간다
   await pin(page, "1.").locator("[data-pin-body]").click();
-  await expect(callout(page, /^1번 일정 설명$/)).toContainText("경복궁 관람");
-  await expect(callout(page, /^1번 일정 설명$/)).toContainText("통과");
+  await expect(callout(page, /^1경복궁 관람/)).toContainText("통과");
+  await expect(callout(page, /^2올리브영/)).toHaveCount(0);
 });
 
-test("경로선을 누르면 그 구간이 골라지고 — 설명 카드(어디서 어디로 · 수단 · 출발과 도착) · 목록의 이동 줄이 열림 — 다시 누르면 놓는다", async ({ page, request }) => {
+test("핀 설명도 다른 알림과 같은 하얀 카드다: 휴대폰 틀 안 머리줄 아래, 틀 폭에 맞고 테두리 빛 · 고리 움직임이 한 번 지나가며, 몇 초 뒤 저절로 사라지고 단추 위에 있는 동안은 남는다", async ({ page, request }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openFinished(page, request);
+  await pin(page, "2.").locator("[data-pin-body]").click();
+  const note = callout(page, /^2올리브영/);
+  await expect(note).toBeVisible();
+  // 하얀 카드를 눈에 띄게 하는 강조: 테두리를 도는 빛과 한 번 퍼지는 고리가 나타날 때 지나간다
+  const names = await note.evaluate((element) => element.getAnimations({ subtree: true }).map((animation) => (animation as CSSAnimation).animationName));
+  expect(names.some((name) => name.includes("toastShine"))).toBe(true);
+  expect(names.some((name) => name.includes("toastRing"))).toBe(true);
+  await page.waitForTimeout(450);                                                                       // 들어오는 움직임이 끝나도록
+  const [frame, bar] = [(await device(page).boundingBox())!, (await note.boundingBox())!];
+  expect(Math.abs(bar.x - (frame.x + 12))).toBeLessThanOrEqual(1);                                       // 틀 폭에서 양쪽 12px 안
+  expect(Math.abs(bar.width - (frame.width - 12 - 68))).toBeLessThanOrEqual(3);                          // 지도 화면: 오른쪽 지도 단추 자리(68px)를 비운다. 틀 가장자리 선(1px)만큼은 오차
+  expect(Math.abs(bar.y - (frame.y + 76))).toBeLessThanOrEqual(2);                                       // 모든 알림이 같은 자리(머리줄 바로 아래)
+  const look = await note.evaluate((element) => { const style = getComputedStyle(element); return { background: style.backgroundColor, size: style.fontSize }; });
+  expect(look.size).toBe("13px");
+  expect(look.background).not.toBe("rgba(0, 0, 0, 0)");
+  await expect(note.getByRole("button", { name: "목록에서 보기" })).toBeVisible();
+  await note.getByRole("button", { name: "목록에서 보기" }).hover();                                             // 읽는 동안(단추 위에 포인터가 있는 동안)은 남는다
+  await page.waitForTimeout(8500);
+  await expect(note).toBeVisible();
+  await page.mouse.move(frame.x + 5, frame.y + 300);
+  await expect(note).toHaveCount(0, { timeout: 12_000 });                                                // 떠나면 몇 초 뒤 사라진다
+});
+
+test("경로선을 누르면 그 구간이 골라지고 — 설명 알림(어디서 어디로 · 수단 · 출발과 도착) · 목록의 이동 줄이 열림 — 다시 누르면 놓는다", async ({ page, request }) => {
   await openFinished(page, request, undefined, { intakeRoutes: "on" });
   const hit = page.locator("path.trip-route-hit");
   await expect(hit).toHaveCount(2);
   await hit.first().dispatchEvent("click");
-  const note = callout(page, /^이동 경로 설명$/);
+  const note = callout(page, /^→경복궁 관람 → 올리브영/);
   await expect(note).toBeVisible();
-  await expect(note).toContainText("경복궁 관람 → 올리브영");
   await expect(note).toContainText("지하철 3호선");
   await expect(note).toContainText("10:30 출발");
   await expect(page.locator('li[data-type="move"][data-entry-id] [aria-expanded="true"]').first()).toBeVisible();   // 목록의 이동 줄이 열렸다
@@ -50,16 +77,17 @@ test("경로선을 누르면 그 구간이 골라지고 — 설명 카드(어디
   await expect(note).toHaveCount(0);
 });
 
-test("핀을 누르면 경로 선택은 풀리고, 경로를 누르면 핀 선택이 풀린다(둘은 한 번에 하나)", async ({ page, request }) => {
+test("핀을 누르면 경로 선택은 풀리고, 경로를 누르면 핀 선택이 풀린다(둘은 한 번에 하나) — 알림도 하나만 선다", async ({ page, request }) => {
   await openFinished(page, request, undefined, { intakeRoutes: "on" });
   await pin(page, "2.").locator("[data-pin-body]").click();
-  await expect(callout(page, /^2번 일정 설명$/)).toBeVisible();
+  await expect(callout(page, /^2올리브영/)).toBeVisible();
   await page.locator("path.trip-route-hit").first().dispatchEvent("click");
-  await expect(callout(page, /^이동 경로 설명$/)).toBeVisible();
-  await expect(callout(page, /^2번 일정 설명$/)).toHaveCount(0);
+  await expect(callout(page, /^→경복궁 관람 → 올리브영/)).toBeVisible();
+  await expect(callout(page, /^2올리브영/)).toHaveCount(0);
+  await mapSettled(page);
   await pin(page, "3.").locator("[data-pin-body]").click();
-  await expect(callout(page, /^3번 일정 설명$/)).toBeVisible();
-  await expect(callout(page, /^이동 경로 설명$/)).toHaveCount(0);
+  await expect(callout(page, /^3/)).toBeVisible();
+  await expect(callout(page, /^→경복궁 관람 → 올리브영/)).toHaveCount(0);
 });
 
 test("핀을 밀어낸 선과 점은 핀 몸통보다 아래 층에 따로 있다(다른 핀의 몸통 위로 그려지지 않는다)", async ({ page, request }) => {

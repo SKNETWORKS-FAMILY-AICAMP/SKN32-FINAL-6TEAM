@@ -34,12 +34,30 @@ export async function patchIntake(page: Page, change: (view: Json) => void) {
 }
 
 /** 이미 읽힌 접수를 바로 연다(읽는 중 화면을 건너뛴다). */
-export async function openFinished(page: Page, request: APIRequestContext, patch?: (view: Json) => void, scenario: Json = {}) {
+export async function openFinished(page: Page, request: APIRequestContext, patch?: (view: Json) => void, scenario: Json = {}, settle = true) {
   const server = mockServer(request);
   await server.scenario({ review: "on", board: "rich", readingPolls: 0, ...scenario });
   if (patch) await patchIntake(page, patch);
   await start(page);
   await page.goto(`/intakes/${INTAKE}`);
   await expect(needsBadge(page)).toBeVisible();
+  if (settle) await mapSettled(page);                                                                     // false: a test of what the map does right as it first shows (the pulse of the first pin)
   return server;
+}
+
+/**
+ * The map is still flying to its first view for about a second after the check ends. A pin pressed while it moves loses the press (the pin leaves from under the pointer between the press and the release, so the
+ * release lands on the map): wait until the first pin has stood still for a few samples before a test presses anything on the map.
+ */
+export async function mapSettled(page: Page) {
+  const body = page.locator("[data-pin-body]").first();
+  let last = "";
+  let still = 0;
+  await expect.poll(async () => {
+    const box = await body.boundingBox().catch(() => null);
+    const now = box ? `${Math.round(box.x)},${Math.round(box.y)}` : "";
+    still = now === last ? still + 1 : 0;
+    last = now;
+    return still;
+  }, { intervals: [100], timeout: 10_000 }).toBeGreaterThanOrEqual(5);
 }

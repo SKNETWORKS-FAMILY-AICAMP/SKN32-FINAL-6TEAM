@@ -92,7 +92,7 @@ test("지도를 확대하면 화면 밖으로 나간 일정이 가장자리에 �
 });
 
 test("일정이 있는 날을 처음 보여 줄 때 첫 일정의 핀이 한 번 두근거린다 (고리가 퍼졌다 사라진다)", async ({ page, request }) => {
-  await openFinished(page, request);
+  await openFinished(page, request, undefined, {}, false);
   const first = pin(page, "1. 경복궁 관람");
   await expect(first.locator("[data-pin-pulse]")).toHaveCount(1, { timeout: 10_000 });
   await expect(first.locator("[data-pin-pulse]")).toHaveCount(0, { timeout: 6_000 });                 // 두 번 퍼지고 사라진다(남지 않는다)

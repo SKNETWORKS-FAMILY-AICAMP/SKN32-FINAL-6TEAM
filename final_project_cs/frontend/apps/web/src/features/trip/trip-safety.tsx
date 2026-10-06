@@ -5,6 +5,7 @@ import { Phone, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui";
 import { formatDistance } from "@/features/map/map-geometry";
 import { resumeSafety, type Notice, type Shelter } from "@/lib/live/extras";
+import type { Recovery } from "@/lib/live/recovery";
 import { useSettings, useT } from "@/lib/settings";
 import type { Trip } from "./model";
 import styles from "./trip-safety.module.css";
@@ -28,10 +29,10 @@ function shelterMeta(shelter: Shelter, t: ReturnType<typeof useT>): string {
  * newest alert, and the customer's 「일정 다시 시작」. ★Safety first: the guidance comes before the button; the button is said to be pressed only once the customer knows they are safe, and NOTHING resumes by
  * itself (the server cannot know). The plan is not changed by a pause. Every sentence of the guidance is the server's; the reference point is the place in the plan, and the server's note says so.
  */
-export function SafetyPanel({ trip, notices, onChanged }: { trip: Trip; notices: readonly Notice[]; onChanged: () => void }) {
+export function SafetyPanel({ trip, notices, onChanged, onResumed }: { trip: Trip; notices: readonly Notice[]; onChanged: () => void; /** The brief of the disaster that was just lifted (null when there was nothing to lift). */ onResumed?: (recovery: Recovery | null) => void }) {
   const t = useT();
   const { language } = useSettings();
-  const resume = useMutation({ mutationFn: () => resumeSafety(trip.id, language), onSettled: onChanged });
+  const resume = useMutation({ mutationFn: () => resumeSafety(trip.id, language), onSuccess: (data) => onResumed?.(data.recovery), onSettled: onChanged });
   const safety = trip.safety;
   if (!safety?.paused) return null;
   const alert = latestSafetyAlert(notices);
