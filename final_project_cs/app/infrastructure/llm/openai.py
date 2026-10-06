@@ -10,9 +10,7 @@ from uuid import UUID
 from app.core.settings import get_settings
 from app.tools.read_tools import record_llm_call
 
-
-class AuditWriteError(RuntimeError):
-    """The model responded, but its audit record could not be persisted."""
+from ._registry import AuditWriteError, load_active_prompt, write_audit
 
 
 class OpenAITeamLLM:
@@ -45,18 +43,7 @@ class OpenAITeamLLM:
             "warnings (array). Use only supplied evidence; do not invent facts."
         )
         if self.connection_factory is not None:
-            with self.connection_factory() as conn:
-                with conn.transaction(), conn.cursor() as cur:
-                    cur.execute(
-                        "SELECT prompt_id, template FROM prompts WHERE prompt_key=%s AND active=true",
-                        (prompt_key,),
-                    )
-                    rows = cur.fetchall()
-            if len(rows) == 0:
-                raise RuntimeError(f"no active prompt registered for {prompt_key}")
-            if len(rows) != 1:
-                raise RuntimeError(f"expected exactly one active prompt for {prompt_key}")
-            prompt_id, instructions = rows[0]
+            prompt_id, instructions = load_active_prompt(self.connection_factory, prompt_key)
 
         from openai import OpenAI
 
@@ -90,17 +77,13 @@ class OpenAITeamLLM:
         started = time.monotonic()
         result, input_tokens, output_tokens = await asyncio.to_thread(call)
         if prompt_id is not None:
-            try:
-                with self.connection_factory() as conn:
-                    with conn.transaction():
-                        record_llm_call(
-                            conn, run_id=run_id, prompt_id=prompt_id, provider="openai",
-                            model=settings.llm_model, response_json=result,
-                            input_tokens=input_tokens, output_tokens=output_tokens,
-                            latency_ms=round((time.monotonic() - started) * 1000),
-                        )
-            except Exception as exc:
-                raise AuditWriteError(f"failed to record LLM call for {prompt_key}") from exc
+            write_audit(
+                self.connection_factory, record_llm_call, prompt_key=prompt_key,
+                run_id=run_id, prompt_id=prompt_id, provider="openai",
+                model=settings.llm_model, response_json=result,
+                input_tokens=input_tokens, output_tokens=output_tokens,
+                latency_ms=round((time.monotonic() - started) * 1000),
+            )
         return result
 
 

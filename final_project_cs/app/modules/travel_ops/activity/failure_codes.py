@@ -34,6 +34,14 @@ ALTERNATIVES_POOL_UNAVAILABLE: Final = "alternatives_pool_unavailable"
 ALTERNATIVES_NONE: Final = "alternatives_none"
 ALTERNATIVES_UNCONFIRMED: Final = "alternatives_unconfirmed"
 TOOL_ERROR: Final = "tool_error"
+# ★`[2026-10-06]` 활동 판정 LLM(D-CS-008). 섀도 모드에서는 차이 로그에만 나가고 고객 결과에는 나가지 않는다.
+LIVE_CLOSED: Final = "live_closed"
+OUTSIDE_HOURS: Final = "outside_hours"
+LLM_TIMEOUT: Final = "llm_timeout"
+LLM_SCHEMA_INVALID: Final = "llm_schema_invalid"
+LLM_UNCITED: Final = "llm_uncited"
+LLM_ERROR: Final = "llm_error"
+LLM_FALLBACK_RULE: Final = "llm_fallback_rule"
 
 DESCRIPTIONS: Final[dict[str, str]] = {
     CLOSED_WEEKDAY: "요청 요일이 정기휴무 요일이다(판정: 불가)",
@@ -53,4 +61,11 @@ DESCRIPTIONS: Final[dict[str, str]] = {
     ALTERNATIVES_NONE: "최대 반경(10km) 안에 조건에 맞는 대체 후보가 없다",
     ALTERNATIVES_UNCONFIRMED: "대체 후보는 있으나 운영 여부를 확인한 곳이 없어 안내하지 않았다",
     TOOL_ERROR: "읽기 도구(API·DB)가 예외를 냈다 — 삼키지 않고 다시 던졌다",
+    LIVE_CLOSED: "웹 공지상 그 날짜에 휴무·통제가 확인됐다(LLM 모드, 판정: 불가)",
+    OUTSIDE_HOURS: "운영시간 원문상 예약 시각이 운영시간 밖이다(LLM 모드, 판정: 불가)",
+    LLM_TIMEOUT: "판정 LLM 호출이 시간 제한을 넘었다(판정: 모름)",
+    LLM_SCHEMA_INVALID: "판정 LLM 의 응답을 판정으로 읽을 수 없었다 — 빈 본문·JSON 아님·허용 밖 값(판정: 모름)",
+    LLM_UNCITED: "판정 LLM 이 근거를 대지 못했다 — 인용이 원문에 없거나 출처가 검색 목록에 없다(판정: 모름)",
+    LLM_ERROR: "판정 LLM 호출이 그 밖의 이유로 실패했다 — 429·키 없음·네트워크(판정: 모름)",
+    LLM_FALLBACK_RULE: "LLM 모드에서 LLM 판정이 실패해 규칙 판정으로 답했다",
 }

@@ -132,6 +132,30 @@ def create_prompt(conn: Connection, *, prompt_key: str, version: str, template: 
         cur.execute("INSERT INTO prompts (prompt_key, version, template, sha256, model_family, active) VALUES (%s,%s,%s,%s,%s,%s) RETURNING prompt_id", (prompt_key, version, template, sha256, model_family, active)); return cur.fetchone()[0]
 
 
+#: 섀도 로그의 사건 이름 → 표의 `event` 값(`031_activity_judge_shadow.sql`).
+_SHADOW_EVENTS = {"activity_judge_shadow": "shadow", "activity_judge_shadow_skipped": "skipped",
+                  "activity_judge_shadow_error": "error"}
+#: 표에 싣는 칸 — 이 밖의 키는 버린다(장소명·원문이 실수로 섞여 와도 저장되지 않게).
+_SHADOW_COLUMNS = ("origin", "tenant_id", "case_id", "run_id", "capability", "kind", "rule_value", "rule_basis",
+                   "llm_value", "agree", "comparable", "llm_failure_code", "llm_error", "llm_confidence",
+                   "quotes", "citations", "dropped", "undated_citations", "latency_ms", "search_calls",
+                   "input_tokens", "output_tokens", "reasoning_tokens", "model", "eval_run", "eval_case",
+                   "eval_repeat")
+
+
+def create_activity_judge_shadow(conn: Connection, record: dict[str, Any]) -> UUID:
+    """섀도 로그 한 줄(`judge/modes.py` 의 기록)을 한 행으로. 로그 키 `rule`·`llm` 은 `rule_value`·`llm_value` 로 옮긴다."""
+    row = {**record, "rule_value": record.get("rule"), "llm_value": record.get("llm"),
+           "origin": record.get("origin") or "live"}
+    event = _SHADOW_EVENTS[record["event"]]
+    columns = ["event", *_SHADOW_COLUMNS]
+    values = [event, *(row.get(name) for name in _SHADOW_COLUMNS)]
+    with conn.cursor() as cur:
+        cur.execute(f"INSERT INTO activity_judge_shadow ({','.join(columns)}) VALUES ({','.join(['%s'] * len(columns))}) "
+                    "RETURNING shadow_id", values)
+        return cur.fetchone()[0]
+
+
 def create_llm_call(conn: Connection, *, run_id: UUID | None, prompt_id: UUID, provider: str, model: str, response_json: dict[str, Any] | None = None, input_tokens: int | None = None, output_tokens: int | None = None, latency_ms: int | None = None, cost_microusd: int | None = None) -> UUID:
     with conn.cursor() as cur:
         cur.execute("INSERT INTO llm_calls (run_id,prompt_id,provider,model,response_json,input_tokens,output_tokens,latency_ms,cost_microusd) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING call_id", (run_id,prompt_id,provider,model,Json(response_json) if response_json is not None else None,input_tokens,output_tokens,latency_ms,cost_microusd)); return cur.fetchone()[0]

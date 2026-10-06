@@ -79,6 +79,14 @@ class ActivityTeam(FeasibilityMixin, WeatherMixin, CancellationMixin, Replacemen
         default_capability="activity.check_feasible",
     )
 
+    #: ★`[2026-10-06]` 활동 판정 LLM(D-CS-008) — 조립(`composition.build_activity_judge_llm`)이 넣는다.
+    #:  `None` 이면 규칙 판정만 한다. 2단계에서는 배선만 했고, 이것을 부르는 판정 계층은 3단계에서 붙인다
+    #:  (`wiki/teams/액티비티 LLM 연동 계획서.md` §6).
+    judge_llm: Any | None = None
+    #: ★`[2026-10-06]` 섀도 기록을 받는 함수(`record: dict -> None`) — 조립이 넣는다(표 `activity_judge_shadow`).
+    #:  `None` 이면 로그로만 남는다. 판정 계층은 인프라를 import 하지 못해 주입받는다.
+    judge_shadow_sink: Any | None = None
+
 
     @staticmethod
     def _hours_until(when: Any) -> float | None:

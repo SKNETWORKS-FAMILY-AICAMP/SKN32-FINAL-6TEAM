@@ -683,7 +683,15 @@ class ReadToolbox:
         return functions[name](ToolContext.from_pack(context), **arguments)
 
 
-ALLOWED_PROMPT_KEYS = frozenset({"response.generate", "response.review_tone"})
+ALLOWED_PROMPT_KEYS = frozenset({
+    "response.generate", "response.review_tone",
+    # ★`[2026-10-06]` 활동 판정 LLM(D-CS-008) — `prompts/activity_judge/<kind>.v<N>.md`.
+    #   여기 없으면 등록이 조용히 건너뛰고 실제 호출이 「no active prompt」로 멈춘다(2026-08-30 결함과 같은 자리).
+    #   `app.modules` 를 import 하지 않으려고 이름을 그대로 적는다 — 판정 종류와 맞는지는 시험이 본다
+    #   (`tests/unit/travel/activity/test_judge_prompts.py`).
+    "activity_judge.closure", "activity_judge.operating_hours", "activity_judge.weather_sensitive",
+    "activity_judge.disaster_effect", "activity_judge.live_status",
+})
 
 
 def register_prompt_files(

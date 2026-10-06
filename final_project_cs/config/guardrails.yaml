@@ -40,6 +40,13 @@ reliability:
   #   그 경로가 타임아웃난다 — 그래서 **키를 나눈다.** 값을 코드에
   #   박아 두면 설정이 통제하지 못한다(2026-09-03).
   local_ft_call_timeout_seconds: 120
+  # ★`[2026-10-06]` 활동 판정 LLM(gpt-5.4-nano + 웹 검색, D-CS-008) — **키를 나눈다.**
+  #   웹 검색을 끼면 20초를 넘는다: 스파이크 5회 6.92·7.60·9.27·20.10·27.99초
+  #   (wiki/records/evidence/2026-10-06_액티비티_LLM_스파이크_실측.md). 같은 20초를 물리면 2/5가 버려진다.
+  # ★출처: **우리가 고른 값**이다 — 실측 최대(27.99초)에 여유를 둔 값이고 n=5라 p95는 모른다.
+  # ★섀도 모드에서는 고객 응답 경로 **밖**에서 돈다(계획서 §5.6 (가)). `llm` 모드로 응답 경로에
+  #   올릴 때는 이 값을 그대로 쓰지 말고 다시 정한다 — 고객이 45초를 기다리게 된다.
+  activity_judge_call_timeout_seconds: 45
   llm_retry_attempts: 2          # exponential
   llm_fallback_attempts: 1
   malformed_json_repair_attempts: 1
@@ -421,6 +428,22 @@ travel:
     #   여행 정책 코퍼스가 생기면 이 둘은 사라지고 규정이 그 자리를 받는다.
     advisory_precipitation_probability: 60   # %
     advisory_wind_speed_kmh: 40
+  # ★`[2026-10-06]` 활동 판정 LLM(D-CS-008, `app/modules/travel_ops/activity/judge/`).
+  #   시간 제한은 `reliability.activity_judge_call_timeout_seconds` 에 있다.
+  activity_judge:
+    # 웹 근거의 게시일이 이보다 오래되면 버린다(임시휴무·행사 공지는 최근 것이어야 한다).
+    # ★게시일이 **없는** 근거는 버리지 않는다 — 스파이크에서 3회 중 2회가 비었고, 버리면 거의 모두
+    #   「모름」이 된다. 대신 차이 로그에 `undated` 로 센다(계획서 §7).
+    # ★출처: **우리가 고른 값**이다. 측정하지 않았다.
+    citation_max_age_days: 180
+    # 섀도 판정을 백그라운드에서 동시에 몇 개까지 돌리나 · 밀린 것을 몇 개까지 받나.
+    # ★넘치면 그 판정을 **건너뛰고** `shadow_skipped` 로 기록한다 — 고객 응답을 기다리게 하지 않는다.
+    # ★출처: **우리가 고른 값**이다. 웹 검색 호출이 건당 약 $0.02~0.04(추정)라 몰림을 막는 상한이다.
+    shadow_max_workers: 2
+    shadow_max_pending: 16
+    # 실시간 운영 상태(웹 검색)는 실외 활동이거나 시작까지 이 시간 안일 때만 본다. 그 밖은 부르지 않는다.
+    # ★출처: **우리가 고른 값**이다(계획서 §6 4단계) — 임시휴무 공지는 대개 며칠 전에 나온다고 봤다. 측정 안 함.
+    live_status_within_hours: 72
   reminders:
     # ★일정 안내(v11 §6-B ②·③) 시각. `app/modules/travel_ops/trip_reminders.py`.
     # ★출처: 정해진 기준이 없어 **우리가 고른 값**이다. 측정에서 나오지 않았다.

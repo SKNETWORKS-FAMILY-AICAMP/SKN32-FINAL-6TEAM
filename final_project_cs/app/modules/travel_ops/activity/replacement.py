@@ -18,9 +18,15 @@ class ReplacementMixin:
 
     @staticmethod
     def _blocked_by_place(decisions: dict[str, Any]) -> bool:
-        """불가 사유가 **그 장소**에 있나 — 정기휴무 요일이거나 위급재난. 이미 시작됨·정원 초과는 장소를 바꿔도 안 풀린다."""
-        return bool((decisions.get("operating") or {}).get("weekday_match") is True
-                    or (decisions.get("disaster") or {}).get("blocks"))
+        """불가 사유가 **그 장소**에 있나 — 정기휴무 요일이거나 위급재난. 이미 시작됨·정원 초과는 장소를 바꿔도 안 풀린다.
+
+        ★`[2026-10-06]` LLM 모드의 판정 둘(웹 공지상 휴무 · 운영시간 밖)도 장소 때문이다. 두 칸은 LLM 판정일 때만 생긴다.
+        """
+        operating = decisions.get("operating") or {}
+        return bool(operating.get("weekday_match") is True
+                    or (decisions.get("disaster") or {}).get("blocks")
+                    or (decisions.get("live_status") or {}).get("closed")
+                    or operating.get("hours_verdict") == "outside")
 
     @staticmethod
     def _survey(task: TeamTask) -> dict[str, Any] | None:

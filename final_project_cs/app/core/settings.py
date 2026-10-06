@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 from pydantic import ValidationError
@@ -52,6 +52,19 @@ class Settings(BaseSettings):
     llm_temperature: float = 0.0
     llm_seed: int = 7
     local_ft_base_url: str = ""
+    #: 활동 판정 LLM(D-CS-008, 브랜치 `role-activity-test` 한정 실험).
+    #:  `rule` = 지금 규칙 판정만 · `shadow` = 규칙으로 답하고 LLM 판정은 차이만 기록 · `llm` = LLM 판정으로 답한다.
+    #:  ★이 브랜치는 섀도 모드로 시작한다(2026-10-06 사용자 결정). `llm` 으로 올리는 기준은
+    #:    `wiki/teams/액티비티 LLM 연동 계획서.md` §8 에 수치로 적은 뒤에 정한다.
+    activity_judge_mode: Literal["rule", "shadow", "llm"] = "shadow"
+    #:  Responses API 로 부른다(`app/infrastructure/llm/openai_responses.py`). `llm_model` 과 따로 둔다 —
+    #:   다른 Team 의 모델을 바꾸지 않고 이 실험만 바꿀 수 있게.
+    activity_judge_model: str = "gpt-5.4-nano"
+    #:  ★`temperature`·`seed` 칸은 두지 않는다 — gpt-5.4-nano 는 `seed` 를 400 으로 거절하고
+    #:   `temperature` 는 effort=none 일 때만 받는다(2026-10-06 스파이크 Q1).
+    activity_judge_reasoning_effort: Literal["none", "low", "medium", "high", "xhigh"] = "low"
+    #:  웹 검색을 끄면 실시간 운영 상태 판정은 「모름」이 된다(지어내지 않는다).
+    activity_judge_web_search: bool = True
     #: Ollama(로컬 LLM 서버) 주소 — 채우면 분류·추출·번역을 **Ollama 로** 한다. 비우면 OpenAI.
     #:  ★2026-09-14 OpenAI 크레딧 소진(429 실측) — Gemma 4 를 포트포워딩으로 붙여 쓴다.
     #:  ★OpenAI 호환 경로(`/v1`)는 쓰지 않는다 — 생각(thinking)이 본문에 섞여 나왔다(실측).

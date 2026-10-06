@@ -2,6 +2,11 @@
 """성립 판정 — 이 시각에 이 활동이 성립하는가(운영시간·재난문자·기상·대체 장소).
 
 ★`team.py` 에서 옮겼다(동작 변경 없음). 계산으로만 판정하고 LLM 을 부르지 않는다.
+
+★`[2026-10-06]` 글을 해석하는 판정 넷(휴무 · 운영시간 · 실내외 · 재난문자)과 실시간 운영 상태는 **판정 계층**
+  (`judge/`, D-CS-008)을 거친다. 판정 LLM 이 없거나 모드가 `rule` 이면 판정 계층은 지금 규칙 그대로다.
+  섀도 모드에서도 고객 답변 · `decisions` · 실패 코드는 규칙 결과로 만든다 — LLM 결과가 이 파일의 출력에
+  들어가는 것은 판정이 `source == "llm"` 일 때(LLM 모드)뿐이다.
 """
 from __future__ import annotations
 
@@ -14,7 +19,8 @@ from app.core.contracts import NextAction, TeamResult, TeamTask
 
 from . import failure_codes as fc
 from .csv_places import CsvPlaceLookup as _CsvPlaceLookup
-from .csv_places import weather_sensitive_from_lclssystm2 as _ws_from_lclssystm2
+from .judge import JudgeContext, RuleJudge, Verdict, build_judge
+from .judge import requests as judge_requests
 
 _csv_lookup = _CsvPlaceLookup()
 
@@ -31,6 +37,21 @@ class _Check:
     answer_parts: list[str]
     decisions: dict[str, Any] = field(default_factory=lambda: {"feasible": True, "place_confirmed": True})
     warnings: list[str] = field(default_factory=list)
+    #: ★`[2026-10-06]` 판정 계층용 — 시작까지 남은 시간 · 실내외 결과 · 판정기 · CSV 행(한 번만 찾는다).
+    remaining: float | None = None
+    weather_sensitive: bool | None = None
+    judge: Any = None
+    _csv_row: Any = field(default=None, repr=False)
+    _csv_looked: bool = field(default=False, repr=False)
+
+    @property
+    def csv_row(self) -> dict[str, str] | None:
+        """장소의 `source_content_id` 로 찾은 CSV(`activity_total_data.csv`) 행. 없으면 `None`."""
+        if not self._csv_looked:
+            self._csv_looked = True
+            content_id = self.place.get("source_content_id") if isinstance(self.place, dict) else None
+            self._csv_row = _csv_lookup.find_by_content_id(str(content_id)) if content_id else None
+        return self._csv_row
 
     @property
     def lat(self) -> Any:
@@ -46,6 +67,37 @@ class FeasibilityMixin:
     #:  감시 소스가 둘로 갈려 Team 경계가 흐려진다(v10 §5 「객체 종류별로 나눈다」).
     #:  이 판단은 `read.place` 가 돌려주는 속성으로 하고, 모르면 **보지 않는다**.
     _WEATHER_SENSITIVE_KEY = "weather_sensitive"
+
+    #: ★`[2026-10-06]` 판정 모드 · 섀도 실행기를 고정한다(시험용). `None` 이면 모드는 설정을, 실행기는 기본 스레드 풀을 쓴다.
+    #:  설정은 판정 LLM(`judge_llm`)이 있을 때만 읽는다 — 없으면 언제나 규칙이고 설정 파일이 없어도 돈다.
+    judge_mode: str | None = None
+    judge_runner: Any | None = None
+
+    def _build_activity_judge(self) -> Any:
+        llm = getattr(self, "judge_llm", None)
+        if llm is None:
+            return RuleJudge()
+        mode = self.judge_mode
+        if mode is None:
+            from app.core.settings import get_settings
+            mode = get_settings().activity_judge_mode
+        return build_judge(mode, llm, runner=self.judge_runner, sink=getattr(self, "judge_shadow_sink", None))
+
+    def _judge(self, ck: "_Check", request: Any) -> Verdict:
+        if ck.judge is None:
+            ck.judge = self._build_activity_judge()
+        return ck.judge.judge(JudgeContext(case_id=ck.task.case_id, capability=ck.task.capability,
+                                           run_id=ck.task.run_id, tenant_id=ck.task.context.tenant_id), request)
+
+    def _llm_evidence(self, ck: "_Check", verdict: Verdict, claim: str) -> None:
+        """LLM 판정(LLM 모드)일 때만 근거로 남긴다 — 판정 · 인용 · 출처 URL. 웹 본문은 저장하지 않는다."""
+        ck.evidence = self._evidence(
+            ck.task, source_id=f"activity.judge.{verdict.kind}", claim=claim,
+            value={"verdict": verdict.value, "quotes": verdict.quotes,
+                   "citations": [{"url": c.get("url"), "published_at": c.get("published_at")}
+                                 for c in verdict.citations],
+                   "confidence": verdict.confidence},
+            base=ck.evidence)
 
     def _check_feasible(self, task: TeamTask, booking: dict, policy: Any,  # noqa: ARG002
                         remaining: float | None, evidence: list, seen: set[str]) -> TeamResult:
@@ -68,10 +120,12 @@ class FeasibilityMixin:
                 warnings=["장소·운영 정보를 확인하지 못했다"])
 
         ck = _Check(task=task, booking=booking, place=place, seen=seen, evidence=evidence,
-                    answer_parts=[f"확인한 범위에서는 성립합니다(시작까지 {remaining:.1f}시간)."])
+                    answer_parts=[f"확인한 범위에서는 성립합니다(시작까지 {remaining:.1f}시간)."],
+                    remaining=remaining)
         self._feasible_operating(ck)
         self._feasible_disaster(ck)
         self._feasible_weather(ck)
+        self._feasible_live_status(ck)
         self._feasible_alternatives(ck)
 
         return self._result(
@@ -122,7 +176,11 @@ class FeasibilityMixin:
             return
         usetime = operating.get("usetime_text")
         restdate = operating.get("restdate_text")
-        wm = self._weekday_closure_match(restdate, ck.booking.get("starts_at"))
+        starts_at = ck.booking.get("starts_at")
+        # ★휴무 원문이 없으면 판정하지 않는다(`None`) — 전에도 `_weekday_closure_match(None, …)` 는 `None` 이었다.
+        closure = self._judge(ck, judge_requests.closure(restdate, starts_at)) if restdate is not None else None
+        wm = None if closure is None else {"closed": True, "not_closed": False}.get(closure.value)
+        closure_by_llm = closure is not None and closure.source == "llm"
         ck.decisions["operating"] = {
             "usetime_text": usetime,
             "restdate_text": restdate,
@@ -132,14 +190,26 @@ class FeasibilityMixin:
         }
         ck.evidence = self._evidence(ck.task, source_id="read.place.operating",
                                      claim="운영시간 원문", value=operating, base=ck.evidence)
+        if closure_by_llm:
+            ck.decisions["operating"]["closure_judged_by"] = "llm"
+            self._llm_evidence(ck, closure, "휴무 원문 LLM 해석")
+            if not closure.known:
+                ck.warnings.append("휴무 원문을 LLM 으로 해석하지 못했다 — 휴무 여부는 판정에 넣지 않았다")
         if not usetime and not restdate:
             ck.answer_parts.append("운영시간 정보를 받지 못해 판정에 넣지 않았습니다.")
+        elif wm is True and closure_by_llm:
+            ck.decisions["feasible"] = False
+            ck.answer_parts.append(
+                f"다만 휴무 안내({restdate})에 따르면 이 날짜는 휴무입니다(원문 해석: «{closure.quotes[0]}»).")
+            ck.warnings.append("휴무 원문을 LLM 으로 해석했다 — 인용이 원문에 있는 것을 확인했다")
         elif wm is True:
             ck.decisions["feasible"] = False
             ck.answer_parts.append(
                 f"다만 정기휴무 요일({restdate})에 해당합니다."
                 " 공휴일과 겹치는 경우 등 예외가 있을 수 있습니다.")
             ck.warnings.append("운영시간 정기휴무 요일 일치 — 예외 조건은 반영하지 않았다")
+        elif usetime and self._feasible_hours_by_llm(ck, usetime, restdate, starts_at):
+            pass
         else:
             parts = []
             if usetime:
@@ -151,6 +221,34 @@ class FeasibilityMixin:
                     f"TourAPI 기준 {' / '.join(parts)}. 원문 그대로이며 자동 해석하지 않았습니다.")
             ck.warnings.append("TourAPI 운영시간 원문은 자동 판정에 쓰지 않았다 — 원문으로 전달")
 
+    def _feasible_hours_by_llm(self, ck: "_Check", usetime: str, restdate: str | None, starts_at: Any) -> bool:
+        """운영시간 원문 판정. LLM 이 판정했으면(LLM 모드) 안내를 쓰고 `True`, 아니면 `False` — 지금처럼 원문으로 전한다.
+
+        ★규칙은 운영시간 원문을 해석하지 않는다(`unknown`). 그래서 섀도·규칙 모드에서는 언제나 `False` 다.
+        """
+        hours = self._judge(ck, judge_requests.operating_hours(usetime, starts_at))
+        if hours.source != "llm" or not hours.known:
+            if hours.source == "llm":
+                ck.decisions["operating"]["hours_judged_by"] = "llm"
+                ck.decisions["operating"]["hours_verdict"] = hours.value
+                ck.warnings.append("운영시간 원문을 LLM 으로 해석하지 못했다 — 원문으로 전달")
+            return False
+        ck.decisions["operating"]["hours_judged_by"] = "llm"
+        ck.decisions["operating"]["hours_verdict"] = hours.value
+        self._llm_evidence(ck, hours, "운영시간 원문 LLM 해석")
+        rest = f" / 휴무 {restdate}" if restdate else ""
+        if hours.value == "outside":
+            ck.decisions["feasible"] = False
+            ck.answer_parts.append(
+                f"다만 운영시간 안내(운영시간 {usetime}{rest})에 따르면 예약 시각은 운영시간 밖입니다"
+                f"(원문 해석: «{hours.quotes[0]}»).")
+        else:
+            ck.answer_parts.append(
+                f"운영시간 안내(운영시간 {usetime}{rest})에 따르면 예약 시각은 운영시간 안입니다"
+                f"(원문 해석: «{hours.quotes[0]}»).")
+        ck.warnings.append("운영시간 원문을 LLM 으로 해석했다 — 인용이 원문에 있는 것을 확인했다")
+        return True
+
     # ── ② 재난문자 ─────────────────────────────────────────
     def _feasible_disaster(self, ck: "_Check") -> None:
         disaster = self._read(ck.task, "read.disaster",
@@ -161,14 +259,39 @@ class FeasibilityMixin:
         ck.evidence = self._evidence(ck.task, source_id="read.disaster",
                                      claim="재난문자", value=disaster, base=ck.evidence)
         messages = disaster.get("for_region") or []
-        blocks = any(m.get("step") == "위급재난" for m in messages)
+        step_blocks = any(m.get("step") == "위급재난" for m in messages)
+        # ★문자가 없으면 판정하지 않는다 — 막을 것이 없다.
+        verdict = (self._judge(ck, judge_requests.disaster_effect(
+            ck.place.get("name"), ck.place.get("kind"), messages, ck.booking.get("starts_at")))
+            if messages else None)
+        by_llm = verdict is not None and verdict.source == "llm"
+        # ★LLM 이 판정하지 못하면(모름) 등급 기준(지금 규칙)으로 막는다 — 모름을 「막지 않음」으로 읽지 않는다.
+        blocks = (verdict.value == "blocks") if by_llm and verdict.known else step_blocks
         ck.decisions["disaster"] = {
             "messages": messages,
             "blocks": blocks,
             "confirmed_at": disaster.get("confirmed_at"),
             "source": disaster.get("source"),
         }
-        if blocks:
+        if by_llm:
+            ck.decisions["disaster"]["judged_by"] = "llm"
+            ck.decisions["disaster"]["verdict"] = verdict.value
+            self._llm_evidence(ck, verdict, "재난문자 관련성 LLM 판정")
+        if by_llm and verdict.known and blocks:
+            kinds = ", ".join(sorted({str(m.get("kind", "")) for m in messages}))
+            ck.decisions["feasible"] = False
+            ck.answer_parts.append(
+                f"재난문자({kinds})가 이 장소·시각의 활동을 막는 내용이라 이 일정은 성립하지 않습니다"
+                f"(문자 해석: «{verdict.quotes[0]}»).")
+            ck.warnings.append("재난문자 관련성을 LLM 으로 판정했다 — 인용이 문자 본문에 있는 것을 확인했다")
+        elif by_llm and verdict.known and step_blocks:
+            ck.answer_parts.append(
+                f"위급재난 문자 {len(messages)}건이 있으나 이 장소·시각과 관련 없는 내용으로 판단했습니다"
+                f"(문자 해석: «{verdict.quotes[0]}»).")
+            ck.warnings.append("위급재난 문자를 LLM 이 「관련 없음」으로 판정했다 — 인용이 문자 본문에 있는 것을 확인했다")
+        elif blocks:
+            if by_llm:
+                ck.warnings.append("재난문자 관련성을 LLM 이 판정하지 못해 등급 기준으로 판정했다")
             kinds = ", ".join(
                 m.get("kind", "") for m in messages
                 if m.get("step") == "위급재난")
@@ -192,22 +315,22 @@ class FeasibilityMixin:
         if weather_sensitive is not None:
             return weather_sensitive, None
         title = place.get("name") if isinstance(place, dict) else None
-        weather_sensitive = self._weather_sensitive_from_title(title)
-        if weather_sensitive is not None:
+        lclssystm2 = (ck.csv_row or {}).get("lclsSystm2")
+        # ★규칙 판정은 장소명 → 분류 유형 순이다(`judge/rule.py`) — 전과 같다.
+        verdict = self._judge(ck, judge_requests.weather_sensitive(title, lclssystm2))
+        if not verdict.known:
+            return None, None
+        ws = verdict.value == "outdoor"
+        if verdict.source == "llm":
+            self._llm_evidence(ck, verdict, "LLM 실내외 추정")
+            return ws, "llm"
+        if verdict.basis == "title":
             ck.evidence = self._evidence(
                 ck.task, source_id="activity.weather_sensitive_from_title",
                 claim="장소명 기반 실내외 추정",
-                value={"title": title, "result": weather_sensitive},
+                value={"title": title, "result": ws},
                 base=ck.evidence)
-            return weather_sensitive, "title"
-        content_id = place.get("source_content_id") if isinstance(place, dict) else None
-        csv_row = _csv_lookup.find_by_content_id(str(content_id)) if content_id else None
-        if csv_row is None:
-            return None, None
-        lclssystm2 = csv_row.get("lclsSystm2")
-        ws = _ws_from_lclssystm2(lclssystm2)
-        if ws is None:
-            return None, None
+            return ws, "title"
         ck.evidence = self._evidence(
             ck.task, source_id="activity.weather_sensitive_from_lclssystm2",
             claim="분류 유형 기반 실내외 추정",
@@ -217,6 +340,7 @@ class FeasibilityMixin:
 
     def _feasible_weather(self, ck: "_Check") -> None:
         weather_sensitive, guessed_from = self._guess_weather_sensitive(ck)
+        ck.weather_sensitive = weather_sensitive
         if weather_sensitive is not True:
             return
         forecast = self._read(ck.task, "read.weather",
@@ -245,7 +369,50 @@ class FeasibilityMixin:
             w_dec["weather_sensitive_guessed_from_category"] = True
             ck.warnings.append(
                 "분류 유형(lclsSystm2)으로 추정한 실내외 여부로 기상을 조회했다 — 확정 정보가 아닐 수 있다")
+        elif guessed_from == "llm":
+            w_dec["weather_sensitive_guessed_by_llm"] = True
+            ck.warnings.append("LLM 으로 추정한 실내외 여부로 기상을 조회했다 — 확정 정보가 아닐 수 있다")
         ck.decisions["weather"] = w_dec
+
+    # ── ③-2 실시간 운영 상태(웹) ─────────────────────────────
+    def _feasible_live_status(self, ck: "_Check") -> None:
+        """웹 공지로 그 날의 임시휴무·통제를 본다. ★판정 LLM 이 없으면 부르지 않는다 — 규칙은 이 판정이 없다.
+
+        실외(날씨가 영향을 주는 활동)이거나 시작까지 `travel.activity_judge.live_status_within_hours` 안일 때만
+        부른다 — 웹 검색은 건당 약 $0.02~0.04(추정)다. 주소는 CSV 장소 목록(`addr1`·`addr2`)에서 가져온다.
+        """
+        if getattr(self, "judge_llm", None) is None:
+            return
+        name = ck.place.get("name") if isinstance(ck.place, dict) else None
+        if not name:
+            return
+        from app.core.settings import get_guardrails
+
+        within = float(get_guardrails().get("travel.activity_judge.live_status_within_hours"))
+        soon = ck.remaining is not None and ck.remaining <= within
+        if not (ck.weather_sensitive is True or soon):
+            return
+        row = ck.csv_row or {}
+        address = " ".join(part for part in ((row.get("addr1") or "").strip(),
+                                             (row.get("addr2") or "").strip()) if part) or None
+        verdict = self._judge(ck, judge_requests.live_status(name, ck.place.get("kind"), address,
+                                                             ck.booking.get("starts_at")))
+        if verdict.source != "llm":
+            return
+        ck.decisions["live_status"] = {"verdict": verdict.value, "judged_by": "llm",
+                                       "closed": verdict.value == "closed",
+                                       "citations": [c.get("url") for c in verdict.citations]}
+        if not verdict.known:
+            ck.warnings.append("실시간 운영 상태를 웹에서 확인하지 못했다 — 판정에 넣지 않았다")
+            return
+        self._llm_evidence(ck, verdict, "웹 공지 기반 실시간 운영 상태")
+        url = verdict.citations[0].get("url")
+        if verdict.value == "closed":
+            ck.decisions["feasible"] = False
+            ck.answer_parts.append(f"웹 공지상 이 날짜는 휴무·통제로 확인됩니다(출처: {url}).")
+        else:
+            ck.answer_parts.append(f"웹 공지상 이 날짜는 정상 운영으로 확인됩니다(출처: {url}).")
+        ck.warnings.append("실시간 운영 상태는 웹 공지를 LLM 이 읽은 것이다 — 현장 확인이 아니다")
 
     # ── ④ 대체 장소 — 이 장소가 **장소 때문에** 안 될 때만(휴무 요일 · 위급재난) ──
     def _feasible_alternatives(self, ck: "_Check") -> None:
@@ -256,6 +423,10 @@ class FeasibilityMixin:
             decisions["failure_code"] = self._record_failure(ck.task, fc.DISASTER_BLOCKS)
         elif (decisions.get("operating") or {}).get("weekday_match") is True:
             decisions["failure_code"] = self._record_failure(ck.task, fc.CLOSED_WEEKDAY)
+        elif (decisions.get("live_status") or {}).get("closed"):
+            decisions["failure_code"] = self._record_failure(ck.task, fc.LIVE_CLOSED)
+        elif (decisions.get("operating") or {}).get("hours_verdict") == "outside":
+            decisions["failure_code"] = self._record_failure(ck.task, fc.OUTSIDE_HOURS)
         if decisions["feasible"] is False and self._blocked_by_place(decisions):
             alt, ck.evidence, alt_text, alt_warnings = self._recommend_alternatives(
                 ck.task, ck.place, ck.booking.get("starts_at"), ck.seen, ck.evidence, decisions)

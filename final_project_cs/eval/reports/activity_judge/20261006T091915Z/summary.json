@@ -1,0 +1,61 @@
+{
+ "conditions": {
+  "eval_run": "20261006T091915Z",
+  "dataset_sha256": "5a0c98e5655479c7c0ce3e95d63a56ac86c344be8a430ae8b49576e1f5140bcb",
+  "labeler": "claude(작성자) — 사람 검토 전",
+  "cases": 8,
+  "repeats": 3,
+  "model": "gpt-5.4-nano",
+  "reasoning_effort": "low",
+  "web_search": true,
+  "temperature": null,
+  "seed": null,
+  "prompt_version": "activity_judge.*.v1",
+  "bootstrap": {
+   "n": 10000,
+   "seed": 7,
+   "unit": "case"
+  }
+ },
+ "elapsed_s": 648.2,
+ "kinds": {
+  "live_status": {
+   "cases": 8,
+   "observations": 24,
+   "llm_unknown": {
+    "num": 15,
+    "den": 24
+   },
+   "llm_uncited": {
+    "num": 0,
+    "den": 24
+   },
+   "llm_call_failed": {
+    "num": 8,
+    "den": 24
+   },
+   "agree_with_rule": {
+    "num": 0,
+    "den": 0
+   },
+   "consistent_cases": {
+    "num": 3,
+    "den": 8
+   },
+   "latency_ms": {
+    "p50": 15709,
+    "p95": 40672,
+    "n": 16
+   },
+   "search_calls_mean": 1.875,
+   "citations_kept": {
+    "num": 20,
+    "obs": 24
+   },
+   "undated_citations": 13,
+   "cost_usd_per_call_mean": 0.021522
+  }
+ },
+ "cost_usd_total": 0.516535,
+ "observations": 24
+}
