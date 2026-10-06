@@ -5,7 +5,7 @@
 #  ② ML 판별기: 학습한 분류 인코더(multilingual-e5-base, 머리 4개: 의도·감정·긴급도·대상 — train_cls.py --save). 의도가 「그 밖」일 확률이 REJECT_P 이상이면 범위 밖으로 닫는다.
 #  ③ Jev 분류: Winnow-E4B(유효 4B, 학습 없음) 한 번의 호출로 질문 5개(어느 전문가로 보낼지 + 의도·감정·긴급도·대상). 「보낼 곳」 확률이 큰 쪽으로 간다.
 #  ④ 전문가: 「일정 항목 짚기」 → 가르친 E4B(Q8 GGUF, 서비스 입력 그대로) · 「범위 밖」 → 없음.
-#  사전 등록(결과를 보기 전에 고정): REJECT_P=0.9 · Jev 는 확률이 큰 쪽(문턱 없음) · 아무것도 시험 세트로 고르지 않는다. 변형: full(주) · e4b_only · no_rules · no_jev · no_ml · rules_e4b · full_noctx(Jev 입력에 「일정을 가진 고객」 줄이 없는 민감도 판).
+#  사전 등록(결과를 보기 전에 고정): REJECT_P=0.9 · Jev 는 확률이 큰 쪽(문턱 없음) · 아무것도 시험 세트로 고르지 않는다. ★사후 수정: 스모크(시험 세트 44문제)에서 Jev 입력에 일정이 없어 일정 질문 26개 중 21개가 「범위 밖」으로 닫혀(full_v1) Jev 입력에 일정 목록을 넣은 판(full)을 만들었다 — 두 판 모두 보고한다. 변형: full(주) · e4b_only · no_rules · no_jev · no_ml · rules_e4b · full_noctx(Jev 입력에 「일정을 가진 고객」 줄이 없는 민감도 판).
 #  같은 입력이면 같은 출력(온도 0)이라 단계 호출 결과는 변형 사이에 재사용하되, full#live · e4b_only#live 는 캐시 없이 다시 호출해 실제 지연과 재현(같은 답인지)을 본다.
 # 사용: python chain_e2e.py [변형,쉼표]  (기본: 전부)   환경: E4B_URL · JEV_URL · SETS
 import collections
@@ -28,6 +28,7 @@ W = os.environ.get('SETS', 'mix8,mix9,mix10,mix11,mix12').split(',')
 E4B_URL = os.environ.get('E4B_URL', 'http://127.0.0.1:8201/v1/chat/completions')
 JEV_URL = os.environ.get('JEV_URL', 'http://127.0.0.1:8092/v1/systemone')
 LIMIT = int(os.environ.get('LIMIT', '0'))
+STRIDE = int(os.environ.get('STRIDE', '1'))     # 스모크 시험용: N 번째 문제마다 하나(기본 1 = 전부)
 REJECT_P = 0.9
 TAU_ANCHOR = 0.4
 OUT = f'{ROOT}/out'
@@ -103,10 +104,24 @@ def post(url, body, timeout=600):
 CTX = '고객은 서비스에 여행 일정을 등록해 둔 상태이고, 서비스는 그 일정 목록을 알고 있다.'
 
 
-def jev_stage(x, ctx=True):
+def itin_lines(job):
+    items = sorted(job['items'], key=lambda i: (i['date'], i['start']))
+    days = sorted({i['date'] for i in items})
+    out = []
+    for i in items:
+        d = date.fromisoformat(i['date'])
+        out.append(f"{i['id']}. {days.index(i['date']) + 1}일차 {d.month}/{d.day}({WK[d.weekday()]}) {i['start']} [{i['kind']}] {i['title']} @ {i['place']}")
+    return out
+
+
+def jev_stage(x, job, mode='itin'):
+    """Jev 입력 판: itin = 메시지 + 고객의 일정 목록(수정 판 — 보낼 곳을 정하려면 일정을 알아야 한다) · ctx = 메시지 + 「일정을 등록해 둔 고객」 한 줄(사전 등록 판) · none = 메시지만."""
     state = {'customer_message': x['q']}
-    if ctx:        # 사전 등록: 주 시험은 「일정을 가진 고객」 한 줄을 준다. 줄 없는 판(full_noctx)은 민감도 확인용이다
+    if mode == 'ctx':
         state['context'] = CTX
+    elif mode == 'itin':
+        state['context'] = CTX
+        state['customer_itinerary'] = itin_lines(job)
     if x.get('history'):
         state['previous_conversation'] = [f"{'고객' if h['role'] == 'customer' else '서비스'}: {h['text']}" for h in x['history']]
     qs = {'route': ROUTE_Q, **{k: {'type': 'choice', 'instructions': v[0], 'criteria': v[1]} for k, v in CLS_Q.items()}}
@@ -192,12 +207,13 @@ def rules_stage(w, i, x):
 
 
 VARIANTS = {   # rules · ml · jev · e4b_only
-    'full': dict(rules=True, ml=True, jev=True),
+    'full': dict(rules=True, ml=True, jev=True, jev_in='itin'),          # 수정 판: Jev 입력에 고객의 일정 목록
+    'full_v1': dict(rules=True, ml=True, jev=True, jev_in='ctx'),        # 사전 등록 판: 「일정 보유」 한 줄만
     'e4b_only': dict(rules=False, ml=False, jev=False, direct=True),
-    'full_noctx': dict(rules=True, ml=True, jev=True, jev_ctx=False),
-    'no_rules': dict(rules=False, ml=True, jev=True),
+    'full_noctx': dict(rules=True, ml=True, jev=True, jev_in='none'),
+    'no_rules': dict(rules=False, ml=True, jev=True, jev_in='itin'),
     'no_jev': dict(rules=True, ml=True, jev=False),
-    'no_ml': dict(rules=True, ml=False, jev=True),
+    'no_ml': dict(rules=True, ml=False, jev=True, jev_in='itin'),
     'rules_e4b': dict(rules=True, ml=False, jev=False),
 }
 
@@ -241,7 +257,7 @@ def one(w, i, fl, use_cache):
             route = 'point'          # Jev 단계가 없으면 ML 이 「범위 밖이 아님」으로 통과시킨 것이 곧 보낼 곳 결정이다
             tr['route_by'] = 'ml'
     if ended is None and route is None and fl['jev']:
-        (pr, ms, err), hit = cached('jev', (w, i, fl.get('jev_ctx', True)), lambda: jev_stage(x, fl.get('jev_ctx', True)), use_cache)
+        (pr, ms, err), hit = cached('jev', (w, i, fl.get('jev_in', 'itin')), lambda: jev_stage(x, job, fl.get('jev_in', 'itin')), use_cache)
         tr['ms']['jev'] = ms
         t_all += ms
         tr['calls']['jev'] = 1
@@ -284,7 +300,7 @@ def run_variant(name, use_cache=True, tag=None):
     t0 = time.time()
     for w in W:
         n = len(JOB[w]['qs'])
-        for i in range(n if not LIMIT else min(n, LIMIT)):
+        for i in range(0, n if not LIMIT else min(n, LIMIT), STRIDE):
             traces.append(one(w, i, fl, use_cache))
     print(f'{tag or name} 끝 {len(traces)}문제 {time.time() - t0:.0f}초', flush=True)
     json.dump(traces, open(f'{OUT}/chain_{(tag or name).replace("#", "_")}.json', 'w', encoding='utf-8'), ensure_ascii=False)
@@ -349,11 +365,11 @@ def routing(traces):
         key = (t['route_gold'], t['route'])
         c[key] += 1
         ok_after[(t['route_gold'] == t['route'], t['pick'] == t['gold'])] += 1
-    return dict(c), dict(ok_after)
+    return {f'{a}→{b}': n for (a, b), n in c.items()}, {f'경로{"맞음" if a else "틀림"}·최종{"정답" if b else "오답"}': n for (a, b), n in ok_after.items()}
 
 
 if __name__ == '__main__':
-    names = sys.argv[1].split(',') if len(sys.argv) > 1 else ['full', 'e4b_only', 'no_rules', 'no_jev', 'no_ml', 'rules_e4b', 'full_noctx', 'full#live', 'e4b_only#live']
+    names = sys.argv[1].split(',') if len(sys.argv) > 1 else ['full_v1', 'full_noctx', 'e4b_only', 'full', 'no_rules', 'no_jev', 'no_ml', 'rules_e4b', 'full#live', 'e4b_only#live']
     res = {}
     allt = {}
     for nm in names:

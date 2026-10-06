@@ -8,7 +8,7 @@ echo "## GPU"; nvidia-smi --query-gpu=name,driver_version,memory.total --format=
 echo "## CPU·메모리"; nproc; grep -m1 "model name" /proc/cpuinfo | cut -d: -f2; free -g | sed -n 2p
 echo "## OS"; grep PRETTY_NAME /etc/os-release
 echo "## 파이썬 환경별 라이브러리"
-for PY in /workspace/rtenv/bin/python /root/venv_imajev/bin/python /usr/bin/python3 /root/venv/bin/python; do
+for PY in /workspace/rtenv/bin/python /root/venv_imajev/bin/python /usr/bin/python3 /root/venv/bin/python /opt/venv/bin/python /tmp/jevenv/bin/python; do
   [ -x "$PY" ] || continue
   echo "- $PY: $($PY -c 'import sys;print(sys.version.split()[0])' 2>&1)"
   $PY - <<'EOF' 2>&1
@@ -23,14 +23,14 @@ EOF
 done
 echo "## 추론 엔진"
 command -v ollama >/dev/null && echo "ollama $(ollama --version 2>&1 | head -1)"
-for LS in /workspace/deciders/bin/llama-server /root/llama.cpp/build/bin/llama-server /usr/local/bin/llama-server; do [ -x "$LS" ] && { echo "$LS: $($LS --version 2>&1 | head -1)"; }; done
+for LS in /workspace/deciders/bin/llama-server /root/llama.cpp/build/bin/llama-server /usr/local/bin/llama-server /opt/llama/bin/llama-server; do [ -x "$LS" ] && { echo "$LS: $($LS --version 2>&1 | head -1)"; }; done
 if command -v ollama >/dev/null && ollama list >/dev/null 2>&1; then
   echo "## ollama 모델 (이름 · 아이디=내용 해시 앞 12자 · 크기 · 수정 시각)"
   ollama list 2>&1
   for M in $(ollama list 2>/dev/null | awk 'NR>1{print $1}'); do echo "- $M: $(ollama show $M 2>/dev/null | tr -s ' \n' ' ' | cut -c1-260)"; done
 fi
 echo "## 허깅페이스 캐시(수정판 해시 · 받은 시각)"
-for H in /workspace/hf/hub /root/.cache/huggingface/hub; do
+for H in /workspace/hf/hub /root/.cache/huggingface/hub /root/hf/hub; do
   [ -d "$H" ] || continue
   for d in "$H"/models--*; do
     [ -d "$d" ] || continue
