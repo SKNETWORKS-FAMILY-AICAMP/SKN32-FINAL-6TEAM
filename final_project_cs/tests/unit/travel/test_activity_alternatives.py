@@ -48,11 +48,13 @@ ORIGIN = _place("origin", title="경복궁", closed="매주 화요일")
     ("매주 월요일", SATURDAY, False),
     ("연중무휴", MONDAY, False),
     ("매주 토요일~일요일 / 법정공휴일", SATURDAY, True),
-    ("매주 토요일~일요일 / 법정공휴일", MONDAY, False),
+    # ★`[2026-10-06]` 공휴일 여부를 모르면 「법정공휴일」 조건은 모름이다. 전에는 False 로 확정했는데,
+    #   MONDAY(10/5)는 실제로 **개천절 대체공휴일**이라 그 False 는 틀린 답이었다(아래 공휴일을 아는 경우 참고).
+    ("매주 토요일~일요일 / 법정공휴일", MONDAY, None),
     ("매주 일요일~월요일", MONDAY, True),           # 주를 넘는 범위
     ("주말", SATURDAY, True),
     ("매주 월요일 / 1월 1일 / 설·추석 당일", MONDAY, True),
-    ("설·추석 당일", MONDAY, False),                 # 날짜 휴무는 요일 판정에 안 넣는다
+    ("설·추석 당일", MONDAY, None),                  # ★`[2026-10-06]` 명절인지 모르면 모름(전에는 False 로 확정)
     ("", MONDAY, None),
     (None, MONDAY, None),
     ("점포별 상이", MONDAY, None),
@@ -60,6 +62,24 @@ ORIGIN = _place("origin", title="경복궁", closed="매주 화요일")
 ])
 def test_closed_on(text, at, expected):
     assert closed_on(text, at) is expected
+
+
+#: 2026년 10월 특일(한국천문연구원 응답 모양) — 10/3 개천절 · 10/5 대체공휴일 · 10/9 한글날
+_OCT_2026 = {"2026-10-03": "개천절", "2026-10-05": "대체공휴일", "2026-10-09": "한글날"}
+
+
+def _holiday(day):
+    name = _OCT_2026.get(day.isoformat())
+    return {"is_holiday": name is not None, "holiday_name": name}
+
+
+@pytest.mark.parametrize("text, at, expected", [
+    ("매주 토요일~일요일 / 법정공휴일", MONDAY, True),     # 10/5 대체공휴일 — 실제로 휴무다
+    ("매주 토요일~일요일 / 법정공휴일", MONDAY + timedelta(days=7), False),
+    ("설·추석 당일", MONDAY, False),                       # 대체공휴일(개천절)은 명절이 아니다
+])
+def test_closed_on_with_holiday_info(text, at, expected):
+    assert closed_on(text, at, _holiday) is expected
 
 
 def test_closed_candidates_are_dropped_unknown_kept_but_marked():

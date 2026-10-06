@@ -64,7 +64,8 @@ class ActivityTeam(FeasibilityMixin, WeatherMixin, CancellationMixin, Replacemen
         # ★`[2026-09-23]` `read.booking_terms` 를 더했다 — **수치는 이 도구가** 댄다.
         #   `read.policy` 는 그대로 **문장 근거**를 댄다. 둘의 몫이 갈린다
         #   (`wiki/records/reports/debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md`).
-        allowed_tools=["read.booking", "read.booking_terms", "read.policy", "read.place",
+        # ★`[2026-10-06]` `read.holiday` — 휴무 원문에 공휴일·명절 조건이 있을 때만 부른다(`closure_rules.py`).
+        allowed_tools=["read.booking", "read.booking_terms", "read.policy", "read.place", "read.holiday",
                        "read.weather", "read.disaster", "read.place_lookup",
                        "read.place_candidates", "read.disruptions", *ITINERARY_TOOLS],
         # ★`[2026-09-22]` 여행 scope 로 바꿨다. 앞 값(`activity`·`cancellation`·`refund`·`weather`)
