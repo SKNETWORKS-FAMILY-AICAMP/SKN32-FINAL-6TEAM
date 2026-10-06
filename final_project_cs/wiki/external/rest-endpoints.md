@@ -803,13 +803,14 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 
 `[실측]` 구현 `components/planning/safety.py`(분류) · `components/watch/safety_pause.py`(정지 · 알림 · 해제) · `components/places/shelters.py`(대피 장소) · `scripts/load_safety_shelters.py`(자료 적재) · 저장 `trip_safety_pauses` · `safety_shelters`(마이그레이션 052) · 설정 `travel.safety`. 설계 · 조사 · 한계 `wiki/records/plans/2026-10-06_재난_일정정지와_피난안내_설계.md`.
 
-**규칙** — 재난이 난 시각에 그 지역에 여행객이 있었다면(오늘이 여행 기간 + 오늘 일정에 적힌 장소에서 사건이 점검됨) **그날(KST) 남은 일정을 정지**한다(자정에 풀림). 전쟁 · 공습 · 활화산 폭발 같은 심각한 사건은 **여행 전체**를 정지한다(사용자가 다시 시작할 때까지). 정지는 **일정 항목을 고치거나 지우지 않는다** — 표시(`trip_safety_pauses`)만 쓰고, 감시 · 안내 반복이 그 여행을 건너뛴다. 날씨 재해 · 안전안내 단계 · 교통통제 · 실종 · 훈련 · 해제 문자는 정지하지 않는다.
+**규칙** — 재난이 난 시각에 그 지역에 여행객이 있었다면(오늘이 여행 기간 + 오늘 일정에 적힌 장소에서 사건이 점검됨) **그날(KST) 남은 일정을 정지**한다(자정에 풀림). ★`[결정 2026-10-06]` **아직 시작하지 않은 여행도 심각한 사건이면 여행 전체를 정지한다**(사용자가 다시 시작할 때까지 — 가기 전에 현지 상황을 모른다. 「그날 정지」 단계 사건은 시작 전 여행을 멈추지 않는다 · 끝난 여행은 점검하지 않는다). 전쟁 · 공습 · 활화산 폭발 같은 심각한 사건은 **여행 전체**를 정지한다(사용자가 다시 시작할 때까지). 정지는 **일정 항목을 고치거나 지우지 않는다** — 표시(`trip_safety_pauses`)만 쓰고, 감시 · 안내 반복이 그 여행을 건너뛴다. 날씨 재해 · 안전안내 단계 · 교통통제 · 실종 · 훈련 · 해제 문자는 정지하지 않는다.
 
-**여행 조회의 `safety`**(`GET /v1/web/trips/{id}` · `/v1/trips/{id}`) — 정지가 없으면 `{paused: false}`, 있으면 `{paused: true, level: "day"|"trip", label, since, until, day, released, resume: {label: "일정 다시 시작", path: "/safety/resume"}}`. 여럿이면 여행 전체가 앞선다. `items[].paused` — 사건 시각 이후에 끝나는 항목(그날 정지는 그날 항목만)이 `true`.
+**여행 조회의 `safety`**(`GET /v1/web/trips/{id}` · `/v1/trips/{id}`) — 정지가 없으면 `{paused: false}`, 있으면 `{paused: true, level: "day"|"trip", label, since, until, day, released, phase: "in_progress"|"upcoming", resume: {label: "일정 다시 시작", path: "/safety/resume"}}`(`phase=upcoming` = 시작 전 여행이라 멈춤). 여럿이면 여행 전체가 앞선다. `items[].paused` — 사건 시각 이후에 끝나는 항목(그날 정지는 그날 항목만)이 `true`.
 
 **안전 알림** — `type: "safety_alert"` · `kind: "safety_pause_day"|"safety_pause_trip"` · `reason: "safety_pause"` · `guidance`(웹 알림 목록 `GET …/notices` 의 `safety` 칸). 글은 안전을 앞세운다: ①「⚠️ 안전 알림 — {재난}. 오늘 남은 일정을 정지했어요」 ②공식 안내(국민재난안전포털)를 먼저 따르고 위급하면 119 ③재난문자 원문(≤200자) ④**표에 있는** 가까운 대피 장소(`guidance.shelters[]` = `{type, name, address, distance_m, walk_minutes_estimate, underground, capacity, latitude, longitude, source}` · 가까운 순 · 반경 5 km · 최대 3) ⑤「일정 다시 시작」 안내.
 - ★기준점은 **일정에 적힌 장소**다(`guidance.reference` = `{basis: "planned_place", place, latitude, longitude, note}`) — 실제 위치가 아니라고 글에 밝힌다. 거리는 직선거리, 걷는 시간은 4 km/h 추정이다.
 - `guidance.shelter_status`: `ok` · `none_nearby`(자료는 있는데 반경 안에 없다) · `no_data`(자료 표가 비었다 — 「아직 불러오지 못했어요 + 공식 안내」) · `no_reference_place`(일정 장소 좌표를 모른다) · `not_applicable`(화재 · 산불처럼 대피 장소 목록 없이 공식 안내만). **표에 없는 대피 장소는 만들지 않는다.**
+- ★`guidance.phase`: `in_progress`(여행 중) · `upcoming`(아직 시작하지 않은 여행). `upcoming` 은 **대피 장소를 싣지 않고**(`shelters: []` · `shelter_status: not_applicable`) 「아직 시작하지 않은 여행이지만 현지 상황을 몰라 정지했어요 · 가기 전에 공식 안내로 확인하세요」 글이 나간다. 여행이 시작하는 날이 와도 사용자가 풀기 전에는 계속 멈춰 있다.
 - 종류: 지진 → `quake_outdoor`(옥외대피장소) · 전쟁 · 폭발 · 테러 · 화산 → `civil_defense`(민방위 대피시설).
 - 공식 해제가 오면 **한 번만** `type: "guidance"` · `kind: "safety_release"`(「해제됐다는 공식 안내가 나왔어요 · 일정 다시 시작」)가 나간다. 정지는 사용자가 풀 때까지 그대로다.
 

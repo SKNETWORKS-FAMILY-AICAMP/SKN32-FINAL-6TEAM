@@ -124,7 +124,7 @@ def test_an_earthquake_stops_the_rest_of_that_day_and_the_watchers_skip_it(api, 
     assert _watched(api, trip_id, "10:30") == (True, True)                                    # 정지 전에는 감시 대상(11:00 항목이 곧 시작)
     check = FakeCheck(_report(_quake(5.1)))
     result = _sweep(api, check).tick()
-    assert result.counts() == {"trips": 1, "checked": 1, "opened": 1, "already": 0, "no_place": 0, "fatal": 0, "released": 0}
+    assert result.counts() == {"trips": 1, "upcoming": 0, "checked": 1, "opened": 1, "already": 0, "no_place": 0, "fatal": 0, "released": 0}
     assert result.opened[0]["level"] == "day" and result.opened[0]["shelter_status"] == "ok"
     assert [c["region"] for c in check.calls] == ["서울"] and check.calls[0]["place"]["name"] == "시험 장소"      # 일정에 적힌 장소에서 점검했다
     [(level, resumed, until)] = _pauses(trip_id)
@@ -253,6 +253,68 @@ def test_a_trip_outside_its_dates_is_not_swept(api, near):
     outside = _sweep(api, FakeCheck(_report(_quake(5.1))), when="10:30")
     outside.clock = lambda: _at("10:30") + timedelta(days=2)                                 # 여행이 끝난 뒤 — 오늘이 여행 기간이 아니다
     assert outside.tick().counts()["trips"] == 0
+
+
+# ── 아직 시작하지 않은 여행 ───────────────────────────────────────
+def _two_days_before(api, check, release=None):
+    sweep = _sweep(api, check, release=release)
+    sweep.clock = lambda: _at("10:30") - timedelta(days=2)                                   # 여행은 이틀 뒤에 시작한다
+    return sweep
+
+
+def test_a_trip_that_has_not_started_is_stopped_by_a_severe_event_until_the_user_resumes(api, near):
+    """`[결정 2026-10-06 사용자]` 시작 전 여행도 심각한 사건이면 멈춘다 — 가기 전에 현지 상황을 모른다. 대피 장소는 안내하지 않는다(그곳에 있는 사람이 아니다)."""
+    trip_id = _trip(api)
+    sweep = _two_days_before(api, FakeCheck(_report(_war())))
+    result = sweep.tick()
+    assert result.counts()["upcoming"] == 1 and result.counts()["opened"] == 1
+    assert result.opened[0]["level"] == "trip" and result.opened[0]["phase"] == "upcoming"
+    assert _pauses(trip_id) == [("trip", False, None)]                                       # 기한 없음 — 사용자가 다시 시작할 때까지
+    [(_, payload)] = _notices(api, "safety_pause_trip")
+    guidance = payload["guidance"]
+    assert guidance["phase"] == "upcoming" and guidance["shelters"] == [] and guidance["shelter_status"] == "not_applicable"
+    assert "아직 시작하지 않은 여행" in payload["text"] and "공식 안내" in payload["text"] and "일정 다시 시작" in payload["text"]
+    assert "대피 장소" not in payload["text"] and "길찾기" not in payload["text"]
+    # 여행이 시작하는 날이 와도 사용자가 풀지 않았으면 계속 멈춰 있다 — 감시 · 안내가 건너뛴다
+    assert _watched(api, trip_id, "10:30") == (False, False)
+    with get_connection() as conn, conn.transaction():
+        assert SafetyPauses(api["tenant"]).resume(conn, trip_id=trip_id, via="web", by=api["customer"], now=_at("10:30")) == 1
+    assert _watched(api, trip_id, "10:30") == (True, True)
+    assert sweep.tick().counts()["already"] == 1 and len(_notices(api, "safety_pause_trip")) == 1     # 같은 사건으로 다시 멈추지 않는다
+
+
+def test_a_day_level_event_does_not_stop_a_trip_that_has_not_started(api, near):
+    """「그날 정지」는 오늘 그곳에 있는 사람의 일이다 — 이틀 뒤에 시작하는 여행은 멈추지 않는다. 같은 사건이 시작한 날에는 멈춘다."""
+    trip_id = _trip(api)
+    before = _two_days_before(api, FakeCheck(_report(_quake(5.1))))
+    assert before.tick().counts()["opened"] == 0 and _pauses(trip_id) == []
+    assert _sweep(api, FakeCheck(_report(_quake(5.1)))).tick().counts()["opened"] == 1      # 시작한 날(10:30)은 그날 정지
+    assert [row[0] for row in _pauses(trip_id)] == ["day"]
+
+
+def test_an_earthquake_of_magnitude_six_stops_a_trip_that_has_not_started(api, near):
+    trip_id = _trip(api)
+    assert _two_days_before(api, FakeCheck(_report(_quake(6.3)))).tick().counts()["opened"] == 1
+    assert _pauses(trip_id) == [("trip", False, None)]
+
+
+def test_an_upcoming_trip_with_an_ordinary_message_or_a_failed_check_is_not_stopped(api, near):
+    trip_id = _trip(api)
+    everyday = {"category": "disaster_msg", "kind": "호우", "step": "긴급재난", "text": "호우경보", "created_at": _iso("10:01")}
+    assert _two_days_before(api, FakeCheck(_report(everyday))).tick().counts()["opened"] == 0
+    failed = {"verdict": "fatal", "disruptions": [_war()], "failed_categories": ["disaster_msg"]}
+    assert _two_days_before(api, FakeCheck(failed)).tick().counts()["opened"] == 0
+    assert _pauses(trip_id) == []
+
+
+def test_the_trip_view_tells_an_upcoming_stop_apart(api, near):
+    """여행 조회의 `safety.phase` — 웹이 「시작 전 여행이라 멈춤」과 「지금 여행 중이라 멈춤」을 다르게 보인다."""
+    trip_id = _trip(api)
+    _two_days_before(api, FakeCheck(_report(_war()))).tick()
+    with get_connection() as conn:
+        shown = safety_pause.view(conn, tenant_id=api["tenant"], trip_id=trip_id, now=_at("10:30"))
+    assert shown["paused"] is True and shown["level"] == "trip" and shown["phase"] == "upcoming"
+    assert _sweep(api, FakeCheck(_report(_war())), when="10:31").tick().counts()["checked"] == 0       # 이미 여행 전체가 멈춰 있어 다시 점검하지 않는다
 
 
 def test_the_reference_place_is_the_ongoing_then_next_then_last_item():
