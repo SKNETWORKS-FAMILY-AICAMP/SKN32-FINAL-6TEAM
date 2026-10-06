@@ -214,7 +214,7 @@ def _planner_stub(results):
     pl.speed, pl.detour, pl.disruptions = 1.04, 1.4, ()
     mcs = [SimpleNamespace(shape="A", est_min=10 + i, transfers=1, walk_in_m=0, walk_out_m=0, link_m=0, sub_walk_min=0,
                            route_nm=f"R{i}", cut_station="C", legs=MIXL) for i in range(len(results))]
-    gen = SimpleNamespace(bus_to_subway=lambda *a, **k: mcs, subway_to_bus=lambda *a, **k: [], skipped_airport=[],
+    gen = SimpleNamespace(bus_to_subway=lambda *a, **k: mcs, subway_to_bus=lambda *a, **k: [], bus_to_bus=lambda *a, **k: [], skipped_airport=[],
                           materialize=lambda c: True)
     pl._mix_gen = lambda party, fv: gen
     pl._phys_set = lambda st: set()
@@ -265,9 +265,23 @@ def test_planned_prefers_plain_candidates():
     late_mix = dict(mixed, _start=590)
     got, rv = P.Planner._choose_planned([plain, late_mix], 600, lambda o: None)
     assert got is None and rv == []
-    # nb 없음 — 앞 판처럼 가장 늦게 떠나도 되는 기존 후보(혼합이 더 늦어도)
-    got, _ = P.Planner._choose_planned([plain, mixed], None, lambda o: None)
+    # nb 없음 — 혼합이 기존 후보보다 15분 미만 앞서면 앞 판처럼 기존 후보(추가만)
+    close_mix = dict(mixed, _start=plain["_start"] + P.MIX_PLAN_GAIN_MIN_PROPOSED - 1)
+    got, _ = P.Planner._choose_planned([plain, close_mix], None, lambda o: None)
     assert got is plain
+    # 15분 이상 앞서고 환승이 기존보다 1회 넘게 늘지 않으면 혼합이 계획(2026-10-07 — 카카오 대조에서 직행 버스 64분 vs 지하철+버스 49분)
+    got, _ = P.Planner._choose_planned([plain, mixed], None, lambda o: None)
+    assert got is mixed
+    two_more = dict(mixed, _transfers=plain["_transfers"] + 2)
+    got, _ = P.Planner._choose_planned([plain, two_more], None, lambda o: None)
+    assert got is plain, "환승이 2회 더 늘면 시간을 이겨도 안 바꾼다"
+    orig = P.MIX_PLAN_GAIN_MIN_PROPOSED
+    try:
+        P.MIX_PLAN_GAIN_MIN_PROPOSED = None
+        got, _ = P.Planner._choose_planned([plain, mixed], None, lambda o: None)
+        assert got is plain, "스위치를 끄면 종전 — 혼합은 추가만"
+    finally:
+        P.MIX_PLAN_GAIN_MIN_PROPOSED = orig
     assert P._is_mixed({"_legs": MIXL}) and not P._is_mixed({"_legs": SUB})
     assert not P._is_mixed({"_legs": [{"mode": "bus", "route": "1", "from": "a", "to": "b"}]})
 

@@ -250,6 +250,15 @@ MIX_MAX_PROPOSED = 3
 MIX_CUTS_PER_ROUTE_PROPOSED = 3
 MIX_SHAPES = ("A", "B")
 AIRPORT_TYPE = "공항"
+
+# ☆`[2026-10-06 구글 대조]` 버스 → 버스 환승 후보(모양 C)의 규칙 변경안 — 우리가 고른 값이다(측정으로 나온 값 아님).
+#   구글은 17구간 중 3구간(북촌→석관동 · 망원시장→연남동 · 성북동→서촌)에서 버스+버스를 골랐고, 우리는 그 모양을 못 만들어
+#   +9~12분 느리게 나왔다(앞 둘). 판정기는 버스↔버스 환승을 이미 판정한다(v0.9.2 `_bus_bus_walk`) — 생성기만 비어 있었다.
+BUS_LINK_MAX_M_PROPOSED = 250         # 갈아탈 두 정류장 직선 상한(m) — 최종 상한은 판정기가 limits.walk_m 로 본다. 같은 정류장·길 건너 맞은편 수준만 후보로 올린다
+BUS_FROM_ROUTES_MAX = 12              # 출발 쪽 노선 수 상한(가까운 순) — 환승점 탐색 비용을 묶는다
+BUS_BUS_MAX_PROPOSED = 6              # 모양 C 후보로 내놓는 수(추정 소요 순) — 판정 개수 상한(MIX_VERIFY_MAX)은 부르는 쪽이 건다
+BUS_ACCESS_REACH_M_PROPOSED = 900     # 모양 C 의 승·하차 정류장을 찾는 반경(m) — 정류장 반경(500)보다 넓다: 구글은 북촌→석관동에서 874 m 를 걸어 탔다. 도보 상한(limits.walk_m)은 따로 넘지 않는다
+BUS_DETOUR_SLACK_M_PROPOSED = 1500    # 환승점이 도착점에서 출발점보다 이만큼까지 멀어져도 본다(m) — 마을버스·순환 노선은 일단 멀어졌다가 큰길 노선으로 갈아탄다(성북동→서촌)
 _VIRTUAL = "(가상)"
 
 
@@ -268,7 +277,7 @@ def is_airport_stop(row):
 
 @dataclass
 class MixedCandidate:
-    shape: str                      # "A"(버스→지하철) / "B"(지하철→버스)
+    shape: str                      # "A"(버스→지하철) / "B"(지하철→버스) / "C"(버스→버스 · 2026-10-06)
     legs: list                      # 판정기 입력 그대로 — 버스 {"mode":"bus","route","from","to"} · 지하철 {"line","from","to"}
     est_min: float                  # 고르는 순서용 추정(접근 도보 + 대기 + 승차 + 환승 + 지하철 + 이탈 도보) — 판정 아님
     transfers: int                  # 버스↔지하철 1 + 지하철 안 환승
@@ -619,6 +628,79 @@ class MixedGenerator:
                 self.no_cut.append(r.route_nm)
         return self._finish(per_route)
 
+    # ── C: 버스 → 버스 ──
+    def bus_to_bus(self, a_lat, a_lng, b_lat, b_lng, walk_lim, link_lim=None, top=None, reach_m=None, slack_m=None):
+        """출발점 근처 정류장 → 버스 r1 → 환승 정류장 → 버스 r2 → 도착점 근처 정류장(2026-10-06 · 구글이 쓰는 「버스+버스」 모양).
+        구간열은 이미 다 채워 있다(지하철이 없다) — materialize 할 일이 없다. 환승 정류장 한 쌍은 같은 노선쌍에서 **추정 소요가 짧은 것 하나**.
+
+        환승점 찾기: r1 의 승차 이후 정류장 s 중 도착점에서 너무 멀어지지 않는 것(도착점까지 직선이 출발점까지 직선 + slack_m 안)만 보고,
+        s 둘레 `link_lim` 안의 정류장 t 가 도착점 근처에서 내리는 노선 r2 위에 있고 승차→하차 순서(seq)가 맞으면 후보다.
+        r1 이 혼자 도착점 근처까지 가면(버스 직행의 몫) 쓰지 않는다. 같은 노선 이름·공항버스·승차 분 추정이 없는 노선은 쓰지 않는다
+        (추정을 못 내는 노선을 조용히 끼우지 않는다 — 혼합 A·B 와 같은 규칙)."""
+        import math
+        link_lim = BUS_LINK_MAX_M_PROPOSED if link_lim is None else link_lim
+        top = BUS_BUS_MAX_PROPOSED if top is None else top
+        reach_m = BUS_ACCESS_REACH_M_PROPOSED if reach_m is None else reach_m
+        slack_m = BUS_DETOUR_SLACK_M_PROPOSED if slack_m is None else slack_m
+        reach = min(reach_m, walk_lim)
+
+        def near_by_route(lat, lng):
+            best = {}
+            for d, x in _stop_index(self.bus).near(lat, lng, reach):
+                r = self.bus.by_id.get(x["route_id"])
+                if r is None or r.route_type_nm in self.excluded or r.route_type_nm == AIRPORT_TYPE:
+                    continue                                   # 유형 제외 · 공항버스는 A·B 규칙대로 환승 후보에 안 쓴다
+                cur = best.get(r.route_id)
+                if cur is None or d < cur[0]:
+                    best[r.route_id] = (d, x, r)
+            return best
+
+        board_a, alight_b = near_by_route(a_lat, a_lng), near_by_route(b_lat, b_lng)
+        if not board_a or not alight_b or self.ride_min is None:
+            return []
+
+        def m(lat1, lng1, lat2, lng2):
+            dy = (lat2 - lat1) * 111_320
+            dx = (lng2 - lng1) * 111_320 * math.cos(math.radians((lat1 + lat2) / 2))
+            return math.hypot(dx, dy)
+
+        ab = m(a_lat, a_lng, b_lat, b_lng)
+        index = _stop_index(self.bus)
+        best = {}
+        for rid1, (da, x, r1) in sorted(board_a.items(), key=lambda kv: kv[1][0])[:BUS_FROM_ROUTES_MAX]:
+            if rid1 in alight_b:
+                continue                                       # r1 이 도착점 근처까지 간다 — 버스 직행(_bus_direct)의 몫
+            for sp in self.bus.stops.get(rid1, []):
+                if sp["seq"] <= x["seq"] or _VIRTUAL in str(sp.get("station_nm")) or sp.get("lat") is None:
+                    continue
+                if m(sp["lat"], sp["lng"], b_lat, b_lng) >= ab + slack_m:
+                    continue                                   # 도착점에서 너무 멀어지는 지점은 환승점이 아니다(slack_m 까지는 돌아가는 노선을 봐준다)
+                for dl, t in index.near(sp["lat"], sp["lng"], link_lim):
+                    rid2 = t["route_id"]
+                    if rid2 == rid1 or rid2 not in alight_b or _VIRTUAL in str(t.get("station_nm")):
+                        continue
+                    db, y, r2 = alight_b[rid2]
+                    if t["seq"] >= y["seq"] or r2.route_nm == r1.route_nm:
+                        continue
+                    ride1, ride2 = self._ride(r1, x, sp), self._ride(r2, t, y)
+                    if ride1 is None or ride2 is None:
+                        continue
+                    est = (self._walk_min(da) + (r1.term_min or 0) / 2 + ride1 + self._walk_min(dl) + self.wayfinding
+                           + (r2.term_min or 0) / 2 + ride2 + self._walk_min(db))
+                    key = (rid1, rid2)
+                    cur = best.get(key)
+                    if cur is not None and cur.est_min <= est:
+                        continue
+                    c = MixedCandidate(
+                        "C", [{"mode": "bus", "route": r1.route_nm, "from": x["station_nm"], "to": sp["station_nm"]},
+                              {"mode": "bus", "route": r2.route_nm, "from": t["station_nm"], "to": y["station_nm"]}],
+                        round(est, 1), 1, da, db, dl, f"{r1.route_nm}→{r2.route_nm}", sp["station_nm"], y["station_nm"],
+                        0.0, "추정")
+                    c._rank, c._sub_lines, c._tg, c._done = est, [], [], True      # 지하철 구간이 없다 — 채울 것이 없다
+                    c.route_id, c.board = r1.route_id, x
+                    best[key] = c
+        return sorted(best.values(), key=lambda c: (c.est_min, c.route_nm))[:top]
+
     def materialize(self, c):
         """후보 c 의 지하철 구간열을 채운다(최단 탐색 · 총 환승 상한 − 1). 성공하면 True — legs·transfers·est·도보·등급을 실제
         구간열 값으로 고친다. A 는 도착 역 후보 중 (지하철 + 이탈 도보)가 가장 짧은 쪽, B 는 출발 역 후보 중 (접근 도보 + 지하철)."""
@@ -725,12 +807,12 @@ def ride_estimator(v, hour=12):
     return ride
 
 
-def interleave(a_list, b_list):
-    """두 모양 후보를 번갈아(각자 추정 소요 순) — 판정 개수 상한 안에서 한 모양만 보지 않게(87). A 먼저."""
+def interleave(*lists):
+    """모양별 후보를 번갈아(각자 추정 소요 순) — 판정 개수 상한 안에서 한 모양만 보지 않게(87). 앞 목록(A) 먼저.
+    ☆`[2026-10-06]` 두 목록(A·B)에서 여럿(A·B·C 버스→버스)으로 일반화했다 — 둘만 줘도 종전과 같다."""
     out = []
-    for i in range(max(len(a_list), len(b_list))):
-        if i < len(a_list):
-            out.append(a_list[i])
-        if i < len(b_list):
-            out.append(b_list[i])
+    for i in range(max((len(x) for x in lists), default=0)):
+        for x in lists:
+            if i < len(x):
+                out.append(x[i])
     return out

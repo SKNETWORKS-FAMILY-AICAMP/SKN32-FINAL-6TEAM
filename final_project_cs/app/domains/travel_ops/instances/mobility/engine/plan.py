@@ -55,7 +55,7 @@ from .timeutil import MIN_DAY, SERVICE_DAY_START_MIN
 from .verify_time import leg_mode
 
 KST = timezone(timedelta(hours=9))
-PLAN_VERSION = "plan-v2.4"   # 87 — 지하철+버스 혼합 후보(환승 1회 · A 버스→지하철 · B 지하철→버스) · 지하철만·버스만 후보는 v2.3 과 같다
+PLAN_VERSION = "plan-v2.7"   # 2026-10-07 — 혼합이 15분 이상 앞서면 계획 수단 · (v2.6) 지하 연결통로 표 반영(역과 이어진 건물 걷기 단축) · (v2.5) 버스→버스 환승 후보(모양 C) 추가 · 기본 호출에서 버스를 두 번 타는 후보가 더 나올 수 있다 / (v2.4) 87 — 지하철+버스 혼합 후보(환승 1회 · A 버스→지하철 · B 지하철→버스) · 지하철만·버스만 후보는 v2.3 과 같다
 # (v2.3 · 86) 가장 이른 도착 모드(Planner.earliest · earliest_on_late) 추가 · 기본 호출 결과는 v2.2 와 같다
 # (v2.2 · 58) modes 에 bike 를 주면 자전거 후보를 싣는다 · 기본(bike 없음)은 v2.1 과 같다 · 모양 무변경
 # 56 (2026-09-27 · 본인) — modes 를 안 주면 지하철·버스·도보. 자전거는 modes 에 "bike" 를 줄 때만(48 결정 8 · ◆선호 「요청 시만」).
@@ -74,6 +74,13 @@ KNOWN_MODES = frozenset(DEFAULT_MODES) | {"bike", "taxi"}
 #   그래서 길 거리를 직선의 이 배수로 **상한**한다 — 우회계수(1.4)보다는 크게 두어 진짜 우회(철도·하천 건너편)는 거의 그대로 둔다. 상한이 걸리면 `Planner.walk_capped` 에 남고 로그가 난다(조용한 보정이 아니다).
 #   ★우리가 고른 값이다 — 측정으로 나온 상수가 아니다. 규칙 파일(rules)에 올리는 것은 다음 규칙판에서 한 번에(STATION_K_PROPOSED 와 같은 취급).
 WALK_ROUTED_CAP_PROPOSED = 2.0
+#: 역과 지하로 이어진 건물(연결통로 표 — connectors.py)까지 걷는 거리 = 역~장소 직선 × 이 값(추정 — 표에 거리가 없다). 지상 우회보다 길면 안 쓴다
+CONNECTOR_FACTOR_PROPOSED = 1.2
+CONNECTOR_MAX_M_PROPOSED = 700           # 역에서 이만큼 안의 장소만 — 연결통로는 역 바로 옆 건물이다
+#: 혼합 후보가 기존(지하철만·버스만) 후보보다 이만큼(분) 이상 **늦게 떠나도 될 때**(= 그만큼 빨리 닿을 때) 계획 수단이 된다. 종전은 혼합을 「추가만」
+#:   (GPT 87 #2)이라 아무리 빨라도 기존 후보가 하나라도 있으면 계획이 못 됐다 — 카카오 대조(2026-10-07, 명동성당→북서울꿈의숲: 직행 버스 64분 vs 지하철+버스 49분)에서
+#:   15분 앞서는 안이 옵션에만 남았다. None 이면 종전대로(혼합은 추가만).
+MIX_PLAN_GAIN_MIN_PROPOSED = 15
 # ☆`[2026-10-06]` 가장 가까운 출구까지의 길 거리가 직선의 이 배수를 넘으면 **같은 역의 다른 출구**도 길 거리로 따져 가장 짧은 것을 쓴다.
 #   실측(접근·하차 후보 83곳): 직선으로 가장 가까운 출구 하나만 보면 8곳이 2배를 넘는데, 모든 출구 중 길 거리 최소로 고르면 3곳으로 준다 —
 #   남대문시장→시청 4,065 m → 824 m(8.1배 → 1.6배), 광화문 209 m → 79 m(3.0배 → 1.1배), 회현 416 → 249 m. 길 거리가 직선에 가까운 곳(중앙 1.28배)은 영향이 없다.
@@ -232,9 +239,9 @@ def _is_bus(o):
 
 
 def _is_mixed(o):
-    """지하철과 버스가 섞인 후보(87 혼합)."""
-    ms = {leg_mode(x) for x in o.get("_legs") or []}
-    return {"bus", "subway"} <= ms
+    """지하철과 버스가 섞인 후보(87 혼합) — ☆`[2026-10-06]` 버스를 두 번 이상 갈아타는 후보(모양 C)도 같은 무리다(한 노선 버스 후보와 섞지 않는다)."""
+    ms = [leg_mode(x) for x in o.get("_legs") or []]
+    return {"bus", "subway"} <= set(ms) or ms.count("bus") >= 2
 
 
 
@@ -387,6 +394,28 @@ class Planner:
                 dead.add(d["line"])
         return dead >= lines
 
+    def _via_connector(self, place, station_nm, rec, d_eff):
+        """장소가 그 역과 지하로 이어진 건물(서울교통공사 연결통로 표)이면 걷는 거리를 역~장소 직선 × CONNECTOR_FACTOR_PROPOSED 로 본다 —
+        지상 길로 잰 값(d_eff, 「직선 환산 m」)보다 짧을 때만. 쓰면 `connector_used` 에 남긴다. 표·좌표가 없으면 그대로."""
+        from .connectors import Connectors
+        cn = self.__dict__.get("_connectors")
+        if cn is None:
+            cn = self.__dict__["_connectors"] = Connectors.load()
+        slat, slon = rec.get("lat"), rec.get("lng", rec.get("lon"))
+        fac = cn.match(station_nm, place.get("name") or place.get("title"))
+        if fac is None or slat is None or slon is None:
+            return d_eff
+        from .geo import meters
+        straight = meters(place["lat"], place["lon"], slat, slon)
+        if straight > CONNECTOR_MAX_M_PROPOSED:
+            return d_eff
+        alt = straight * CONNECTOR_FACTOR_PROPOSED / self.detour
+        if alt >= d_eff:
+            return d_eff
+        self.__dict__.setdefault("connector_used", []).append(
+            {"station": station_nm, "facility": fac, "from_routed_m": round(d_eff * self.detour), "to_m": round(alt * self.detour)})
+        return alt
+
     def _better_exit(self, place, station_nm, line, d_eff, nearest_ll):
         """가장 가까운 출구의 길 거리가 직선에 비해 많이 길 때(예: 큰 도로 건너편) — 같은 역의 다른 출구를 길 거리로 따져
         더 짧은 값을 쓴다. `d_eff` 는 이미 잰 가장 가까운 출구의 「직선 환산 m」. 돌려주는 것도 같은 칸이다.
@@ -437,6 +466,7 @@ class Planner:
                 d = self._eff(place["lat"], place["lon"], tlat, tlon, d)     # #13 — 출구(없으면 역)까지 길로
                 if self.v.ex is not None and d0 and d * self.detour > d0 * EXIT_RETRY_RATIO_PROPOSED:
                     d = self._better_exit(place, nm, rec.get("line"), d, (tlat, tlon))
+            d = self._via_connector(place, nm, rec, d)
             out.append((nm, d, lines))
             if len(out) >= k:
                 break
@@ -599,7 +629,7 @@ class Planner:
         wi, wo = self._walk(mc.walk_in_m), self._walk(mc.walk_out_m)
         st_date, by_stop = service_day(arrive_dt - timedelta(minutes=wo))
         off = (st_date - sdate).days * MIN_DAY
-        key = ("mix", 0 if mc.shape == "A" else 1, i)
+        key = ("mix", {"A": 0, "B": 1, "C": 2}.get(mc.shape, 1), i)
         ref = {"_legs": legs, "_walk_m": None, "_n": MIX_N_BASE + i, "_key": key, "_route": label_of(legs)}
 
         def drop(code, reason):
@@ -757,7 +787,9 @@ class Planner:
                                 excl_st=self._phys_set(sa)) if sb else [])
         cb = (gen.subway_to_bus([(nm, ls, d) for nm, d, ls in sa], b_place["lat"], b_place["lon"], wlim,
                                 excl_st=self._phys_set(sb)) if sa else [])
-        cands = interleave(ca, cb)          # 두 모양을 번갈아 — 판정 상한 안에서 한 모양만 보지 않게
+        # ☆`[2026-10-06]` C = 버스 → 버스(구글이 쓰는 모양). 지하철 걷기 후보가 없어도 만들 수 있다 — 모양 A·B 와 번갈아 판정한다
+        cc = gen.bus_to_bus(a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], wlim)
+        cands = interleave(ca, cb, cc)      # 세 모양을 번갈아 — 판정 상한 안에서 한 모양만 보지 않게
         # 운행 시간 추정 밖(심야버스 낮 구간 등)은 **뒤로 미룬다**(GPT 87 #4 — 판정 전 확정 탈락이 아니라 탐색 순서) — 안쪽 후보가
         #   하나도 없을 때만 판정한다(밖 후보는 판정기가 대개 첫차 전·막차 뒤로 내고, 그 마지막 성립 출발 찾기는 느린 길이다)
         win = [mc for mc in cands if self._in_service(mc, arrive_by - mc.est_min - MIX_WINDOW_TOL_MIN, arrive_by)]
@@ -894,7 +926,14 @@ class Planner:
                 continue
             eligible = [o for o in group if nb is None or o["_start"] >= nb]
             if eligible:
-                return max(eligible, key=cls._rank), []
+                best = max(eligible, key=cls._rank)
+                if MIX_PLAN_GAIN_MIN_PROPOSED is not None and not _is_mixed(best) and not best.get("_taxi"):
+                    mix = [o for o in opts if _is_mixed(o) and (nb is None or o["_start"] >= nb)]
+                    if mix:
+                        m = max(mix, key=cls._rank)
+                        if m["_start"] - best["_start"] >= MIX_PLAN_GAIN_MIN_PROPOSED and m["_transfers"] <= best["_transfers"] + 1:
+                            return m, []
+                return best, []
             revived = [g for g in (recheck(o) for o in group) if g is not None]
             if revived:
                 return max(revived, key=cls._rank), revived
