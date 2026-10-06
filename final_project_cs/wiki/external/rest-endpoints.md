@@ -837,7 +837,7 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 - 공식 해제가 오면 **한 번만** `type: "guidance"` · `kind: "safety_release"`(「다치신 곳은 없으신가요? 해제됐다는 공식 안내가 나왔어요 · 일정 다시 시작」 — 안부가 먼저)가 나간다. 정지는 사용자가 풀 때까지 그대로다.
 - ★`[결정 2026-10-06 사용자]` **정지가 이어지는 동안 관련 안내를 계속 보낸다**(`travel.safety.reminder`): ①**재안내** — 처음 안내 뒤 `interval_hours`(6)마다 최대 `max_count`(4)번. 해제 전에는 처음 안내(공식 안내 · 가까운 대피 장소)를 다시 `type: "safety_alert"` · `kind: "safety_pause_reminder"`(`reminder: n`), 해제 뒤에는 `type: "guidance"` · `kind: "safety_release_reminder"`(「아직 정지 중이에요」). 글은 「🔔 다치신 곳은 없으신가요?」로 시작한다. ②**다음 날 아침 질문** — 멈춘 날의 다음 날 `morning_ask_hour`(9시) 이후 첫 점검에서 정지마다 **한 번** `type: "guidance"` · `kind: "safety_morning_ask"`(「좋은 아침이에요. 지금은 괜찮으신가요? … 이어가시려면 일정 다시 시작」). **묻기만 하고 저절로 재개하지 않는다.** 끝난 여행에는 묻지 않는다. 사용자가 다시 시작하면 둘 다 멈춘다. 값은 우리가 고른 것이다(측정하지 않았다).
 
-**`POST /v1/web/trips/{trip_id}/safety/resume`**(몸통 없음) → `{resumed: 닫은 정지 수, safety}` — 사용자 키 · 쿠키(쿠키는 CSRF 필요). 본인 여행만(남의 것 · 없는 것 404). 정지가 없으면 `resumed: 0`(오류가 아니다). 일정은 안 바뀐다. **같은 사건으로 다시 정지하지 않는다**(사건 지문 `event_key`) — 새 사건이 오면 다시 정지한다. 그날 정지는 자정에 저절로 풀리므로 이 요청 없이도 내일 일정은 이어진다.
+**`POST /v1/web/trips/{trip_id}/safety/resume`**(몸통 없음) → `{resumed: 닫은 정지 수, safety, recovery}`(★`recovery` = 이번에 푼 재난의 **상황 꾸러미**, 풀 것이 없었으면 `null`. 아래 「재난 뒤 다시 시작」) — 사용자 키 · 쿠키(쿠키는 CSRF 필요). 본인 여행만(남의 것 · 없는 것 404). 정지가 없으면 `resumed: 0`(오류가 아니다). 일정은 안 바뀐다. **같은 사건으로 다시 정지하지 않는다**(사건 지문 `event_key`) — 새 사건이 오면 다시 정지한다. 그날 정지는 자정에 저절로 풀리므로 이 요청 없이도 내일 일정은 이어진다.
 
 `[미확인]` 재난문자의 재해구분명 · 긴급단계명 전체 목록을 못 구했다 — 분류 값은 우리가 고른 것이고(`travel.safety`) 본문 낱말 규칙을 함께 둔다. 실제 재난문자로 확인하기 전까지 오탐 · 미탐이 가능하다. 대피 장소 자료는 **아직 적재 전**이다(`scripts/load_safety_shelters.py` — 파일을 받는 것은 사용자 허락 뒤).
 
@@ -896,3 +896,18 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 - [rest-api.md](rest-api.md) — 경계와 원칙
 - [auth-boundary.md](auth-boundary.md) — scope
 - [../actions/idempotency.md](../actions/idempotency.md) — 멱등 키
+
+### 재난 뒤 다시 시작 — `GET|POST /v1/web/trips/{trip_id}/safety/recovery` `[결정 2026-10-06 사용자]`
+
+`[실측]` 구현 `components/watch/safety_recovery.py` · 기록 `user_activity_events`(054) · 개인 AI 는 MCP `tripilot_get_recovery_brief`. 설계 `wiki/records/plans/2026-10-06_재난_뒤_재개와_재계획_설계.md` · 근거 조사 `wiki/records/reports/2026-10-06_2330_재난_뒤_여행자_행동_조사.md`.
+
+**`GET`** → `{recovery}` — 사용자가 다시 시작한 정지가 있고 72시간 안이면 상황 꾸러미, 아니면 `null`. 읽기 전용. 꾸러미: `pause_id` · `phase`(`in_progress`/`upcoming`) · `event`(`label` · `kind` · `category` · `at` · `official_text`) · `facts`(출처 있는 사실) · `unknowns`(우리가 모르는 것) · `affected_districts`(공식 재난문자가 지정한 서울 구) · `items[]`(`item_id` · `title` · `kind` · `starts_at` · `place_name` · `district` · `status` · `reason`) · `counts` · `options` · `extras`(`lighter_day`) · `questions` · `constraints` · `scope_note` · `chosen`.
+- ★**영향 판정은 세 가지, 모르면 불명**: 재난문자가 구를 지정했으면 그 구 안 = `affected`, 구 밖 = `unaffected`(공식 문자 기준이라고 `reason` 에 밝힌다), 항목의 구를 모르면 `unknown`. **문자에 구가 없거나 지진이면 전부 `unknown`**(범위를 지어내지 않는다). 다른 도시의 같은 이름 구(부산 강서구)는 서울로 읽지 않는다.
+- 선택지(`options`): `keep` 그대로 이어가기 · `replace_affected` 영향받은 것만 바꾸기(`recommended`) · `replan_all` 남은 일정 새로 받기. 일정 항목은 장소가 있고 아직 안 끝난 활동 · 식당 · 숙소만 판정한다.
+- ★우리는 일정(시간표)만 조정한다 — 업체 예약 · 날짜 연기 · 취소는 `scope_note` 로 밝힌다.
+
+**`POST`** `{pause_id, choice: "keep"|"replace_affected"|"replan_all", lighter_day?: bool, answers?: {lodging|companions: "yes"|"no"|"unknown"}}` → `{recorded, choice, lighter_day, proposals}`.
+- 선택은 `user_activity_events`(`kind=safety_recovery_choice`, 비식별 값만)에 **기록**된다 — 값을 모를 때 기본값을 정하려면 실제 선택이 쌓여야 한다(조사 근거가 다른 나라 · 집계 · 사례뿐). 기록이 실패하면 `recorded: false` 로 알리고 경고를 남긴다(조용히 넘기지 않는다).
+- `replace_affected` 는 영향 **확정** 항목마다 대신 갈 곳을 **제안**한다(`proposals[]` = `{item_id, title, status, proposal_id, options}`). 기존 「선택이 필요해요」 제안(`requested_options`)이라 고르면 바뀌고 **안 고르면 그대로**다 — 일정은 이 요청으로 안 바뀐다. 후보에서 피해 구의 곳은 빠지고, 구를 모르는 후보는 「이 곳의 구를 확인하지 못했어요」가 붙는다. 후보가 없으면 `status` 가 `no_alternate` · `no_option_outside_area`.
+- `lighter_day` 는 우리가 밀도를 임의로 낮추지 않는다(낮추는 근거 연구가 없다) — **기록하고 `constraints.lighter_day` 로 에이전트에게 전할 뿐**이다.
+- 남의 여행 · 다시 시작한 적 없는 정지 · 없는 정지는 404, 모르는 `choice` 는 422.

@@ -29,6 +29,7 @@ _KEEP = frozenset({CaseStatus.RESOLVED, CaseStatus.CANCELLED})
 #: (표, 여행 번호 칸) — `trips` 를 지우기 **전에** 지운다. 외래키가 없어 자동으로 안 지워지는 것들
 _PURGE: tuple[tuple[str, str], ...] = (
     ("trip_chat_turns", "trip_id"),
+    ("user_activity_events", "trip_id"),             # ★`[2026-10-06]` 채팅 기록과 같은 기본값 — 비식별로 남길지는 사용자 결정 대기
     ("place_open_checks", "trip_id"),
     ("dining.dn_notice", "trip_id"),
 )

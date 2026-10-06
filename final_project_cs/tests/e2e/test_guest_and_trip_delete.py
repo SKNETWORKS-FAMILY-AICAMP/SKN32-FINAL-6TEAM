@@ -161,6 +161,7 @@ def test_every_table_that_carries_a_trip_number_is_accounted_for():
         "trip_guardian_changes",                                                       # 항로 지킴이 켜고 끈 기록(050) — trips 를 지우면 CASCADE
         "trip_safety_pauses",                                                          # 재난 시 일정 정지(052) — trips 를 지우면 CASCADE
         "trip_chat_turns", "place_open_checks", "dining.dn_notice",                    # trip_delete._PURGE
+        "user_activity_events",                                                        # 사용자 활동 기록(054) — trip_delete._PURGE. 비식별로 남길지는 사용자 결정 대기
         "trip_intakes",                                                                # trip_delete 가 이름을 대어 지운다
         "places",                                                                      # trip_scope — trip_delete 가 지운다
     }

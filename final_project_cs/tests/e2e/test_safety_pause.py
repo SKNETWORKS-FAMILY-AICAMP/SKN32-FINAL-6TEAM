@@ -426,9 +426,12 @@ def test_resume_endpoint_is_for_the_owner_only_and_leaves_the_itinerary_alone(co
     assert paused["paused"] is True
     version_before = client.get(f"/v1/web/trips/{trip_id}").json()["version"]
     response = client.post(f"/v1/web/trips/{trip_id}/safety/resume", headers=headers)
-    assert response.status_code == 200 and response.json() == {"resumed": 1, "safety": {"paused": False}}
+    body = response.json()
+    assert response.status_code == 200 and body["resumed"] == 1 and body["safety"] == {"paused": False}
+    assert body["recovery"]["phase"] == "in_progress" and body["recovery"]["chosen"] is None     # 다시 시작하면 재난 뒤 꾸러미가 같이 온다(`test_safety_recovery.py`)
     assert client.get(f"/v1/web/trips/{trip_id}").json()["version"] == version_before     # 일정은 안 바뀐다
-    assert client.post(f"/v1/web/trips/{trip_id}/safety/resume", headers=headers).json()["resumed"] == 0     # 다시 눌러도 오류가 아니다
+    again = client.post(f"/v1/web/trips/{trip_id}/safety/resume", headers=headers).json()
+    assert again["resumed"] == 0 and again["recovery"] is None                                # 다시 눌러도 오류가 아니다 — 꾸러미는 처음 풀 때만 같이 온다
     from fastapi.testclient import TestClient
     stranger = TestClient(client.app, follow_redirects=False)
     assert stranger.post(f"/v1/web/trips/{trip_id}/safety/resume").status_code == 401
