@@ -10,14 +10,13 @@
 """
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import Any
 
 from app.core.contracts import NextAction, TeamResult, TeamTask
 
 from . import failure_codes as fc
+from .closure_rules import holiday_dates_needed, read_closure
 from .csv_places import CsvPlaceLookup as _CsvPlaceLookup
 from .judge import JudgeContext, RuleJudge, Verdict, build_judge
 from .judge import requests as judge_requests
@@ -177,14 +176,21 @@ class FeasibilityMixin:
         usetime = operating.get("usetime_text")
         restdate = operating.get("restdate_text")
         starts_at = ck.booking.get("starts_at")
-        # ★휴무 원문이 없으면 판정하지 않는다(`None`) — 전에도 `_weekday_closure_match(None, …)` 는 `None` 이었다.
-        closure = self._judge(ck, judge_requests.closure(restdate, starts_at)) if restdate is not None else None
+        # ★`[2026-10-06]` 휴무는 판정 계층을 거친다(섀도·LLM 모드). 규칙 쪽은 `closure_rules.read_closure`
+        #   (fix/activity-closure-rule)이고, 공휴일이 걸린 원문만 `read.holiday` 를 불러 그 결과를 요청에 싣는다 —
+        #   규칙과 LLM 이 같은 공휴일 사실을 본다.
+        closure = (self._judge(ck, judge_requests.closure(restdate, starts_at,
+                                                           self._holiday_facts(ck, restdate, starts_at)))
+                   if restdate is not None else None)
         wm = None if closure is None else {"closed": True, "not_closed": False}.get(closure.value)
         closure_by_llm = closure is not None and closure.source == "llm"
+        # 규칙이 어떻게 정했나(`weekly` · `nth_weekday` · `date` …). LLM 판정이면 이유 문장 대신 `llm` 으로 적는다.
+        closure_reason = "empty" if closure is None else ("llm" if closure_by_llm else closure.basis)
         ck.decisions["operating"] = {
             "usetime_text": usetime,
             "restdate_text": restdate,
             "weekday_match": wm,
+            "closure_reason": closure_reason,
             "source": operating.get("source"),
             "confirmed_at": operating.get("confirmed_at"),
         }
@@ -202,15 +208,26 @@ class FeasibilityMixin:
             ck.answer_parts.append(
                 f"다만 휴무 안내({restdate})에 따르면 이 날짜는 휴무입니다(원문 해석: «{closure.quotes[0]}»).")
             ck.warnings.append("휴무 원문을 LLM 으로 해석했다 — 인용이 원문에 있는 것을 확인했다")
-        elif wm is True:
+        elif wm is True and closure_reason.startswith("weekly"):
             ck.decisions["feasible"] = False
-            ck.answer_parts.append(
-                f"다만 정기휴무 요일({restdate})에 해당합니다."
-                " 공휴일과 겹치는 경우 등 예외가 있을 수 있습니다.")
-            ck.warnings.append("운영시간 정기휴무 요일 일치 — 예외 조건은 반영하지 않았다")
+            needs_caveat = bool(closure.metrics.get("needs_caveat"))
+            caveat = " 공휴일과 겹치는 경우 등 예외가 있을 수 있습니다." if needs_caveat else ""
+            ck.answer_parts.append(f"다만 정기휴무 요일({restdate})에 해당합니다.{caveat}")
+            ck.warnings.append("운영시간 정기휴무 요일 일치 — 예외 조건은 반영하지 않았다" if needs_caveat
+                               else "운영시간 정기휴무 요일 일치 — 공휴일 예외를 확인했다")
+        elif wm is True:
+            # 몇째 주 · 날짜 · 명절 · 공휴일 — 어느 구절에 걸렸는지 함께 보인다
+            quote = closure.quotes[0] if closure.quotes else restdate
+            ck.decisions["feasible"] = False
+            ck.answer_parts.append(f"다만 휴무 안내({restdate}) 중 「{quote}」에 해당해 이 날은 휴무입니다.")
+            ck.warnings.append(f"휴무 원문 판정({closure_reason}) — 「{quote}」")
         elif usetime and self._feasible_hours_by_llm(ck, usetime, restdate, starts_at):
             pass
         else:
+            if wm is None and restdate:
+                # ★못 읽은 원문을 「휴무 아님」으로 확정하지 않는다 — 전에는 확정했다(결함 2026-10-06_1610)
+                ck.answer_parts.append("휴무 원문 일부를 읽지 못해 이 날의 휴무 여부는 확정하지 않았습니다.")
+                ck.warnings.append(f"휴무 원문을 다 읽지 못했다({closure_reason}) — 휴무 여부를 확정하지 않았다")
             parts = []
             if usetime:
                 parts.append(f"운영시간 {usetime}")
@@ -248,6 +265,25 @@ class FeasibilityMixin:
                 f"(원문 해석: «{hours.quotes[0]}»).")
         ck.warnings.append("운영시간 원문을 LLM 으로 해석했다 — 인용이 원문에 있는 것을 확인했다")
         return True
+
+    def _holiday_facts(self, ck: "_Check", restdate: str | None, starts_at: Any) -> dict[str, Any]:
+        """원문 판정에 필요한 날짜의 공휴일 여부를 `read.holiday` 로 묻는다. 필요 없으면 부르지 않는다.
+        돌려주는 것: `{"YYYY-MM-DD": 특일 응답 | None}` — 판정 요청(`judge_requests.closure`)에 실린다.
+
+        ★첫 날짜에서 모르면(`None`) 나머지는 묻지 않는다 — 같은 소스가 또 모른다고 할 것이고, 소스가 느리면
+          (`travel.source_timeout_seconds`) 그만큼 고객 응답이 늦어진다.
+        ★날짜마다 한 번만 묻는다 — 같은 인자로 두 번 부르면 `ToolLoopExceeded` 다.
+        """
+        found: dict[Any, Any] = {}
+        for day in holiday_dates_needed(restdate, starts_at):
+            info = self._read(ck.task, "read.holiday", {"on": day.isoformat()}, ck.seen)
+            found[day] = info
+            if info is None:
+                break
+        if found:
+            ck.evidence = self._evidence(ck.task, source_id="read.holiday", claim="공휴일 여부",
+                                         value={d.isoformat(): v for d, v in found.items()}, base=ck.evidence)
+        return {d.isoformat(): v for d, v in found.items()}
 
     # ── ② 재난문자 ─────────────────────────────────────────
     def _feasible_disaster(self, ck: "_Check") -> None:
@@ -436,16 +472,12 @@ class FeasibilityMixin:
             ck.warnings.extend(alt_warnings)
 
     @staticmethod
-    def _weekday_closure_match(restdate_text: str | None, starts_at: Any) -> bool | None:
-        """"매주 X 휴무" 패턴이 starts_at 요일과 일치하면 True, 패턴 없으면 False, 텍스트 없으면 None."""
+    def _weekday_closure_match(restdate_text: str | None, starts_at: Any, holiday: Any = None) -> bool | None:
+        """그 날이 원문상 휴무인가 — True 휴무 · False 아님 · None 모름(원문이 없거나 다 못 읽었다).
+
+        ★`[2026-10-06]` `closure_rules.read_closure` 의 얇은 감싸개다. 전에는 「매주 X 휴무」 정규식 하나였고,
+          패턴이 없으면 `False` 로 확정해 실제 원문 「매주 X」 309건 중 307건을 놓쳤다(결함 2026-10-06_1610).
+        """
         if restdate_text is None:
             return None
-        _KO_DAYS = {"월요일": 0, "화요일": 1, "수요일": 2, "목요일": 3,
-                    "금요일": 4, "토요일": 5, "일요일": 6}
-        day_names = re.findall(r"매주\s+(\S+?)\s*(?:휴무|휴관)", restdate_text)
-        if not day_names:
-            return False
-        if not isinstance(starts_at, datetime):
-            return None
-        weekday = starts_at.weekday()
-        return any(_KO_DAYS.get(d) == weekday for d in day_names)
+        return read_closure(restdate_text, starts_at, holiday).value

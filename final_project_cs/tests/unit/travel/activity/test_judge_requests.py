@@ -37,3 +37,20 @@ def test_kinds_and_values_are_closed_sets():
         JudgeRequest("nope", {})
     with pytest.raises(ValueError):
         Verdict("closure", "open", "llm")      # closure 에는 open 이 없다
+
+
+def test_closure_request_carries_holiday_facts():
+    """★성립 판정이 물어 온 공휴일 사실이 요청에 실린다 — 규칙과 LLM 이 같은 사실을 본다(병합 2026-10-06)."""
+    from app.modules.travel_ops.activity.judge import JudgeContext, RuleJudge, requests
+    from app.modules.travel_ops.activity.judge.llm import payload_for
+
+    at = datetime(2026, 10, 9, 14)                                   # 한글날
+    holidays = {"2026-10-09": {"is_holiday": True, "holiday_name": "한글날"}}
+    req = requests.closure("매주 토요일~일요일 / 법정공휴일", at, holidays)
+    payload = payload_for(req)
+    assert payload["is_public_holiday"] is True and payload["known_holidays"] == {"2026-10-09": "한글날"}
+    assert "holidays_raw" not in payload
+    assert RuleJudge().judge(JudgeContext(), req).value == "closed"
+    unknown = requests.closure("매주 토요일~일요일 / 법정공휴일", at)
+    assert payload_for(unknown)["is_public_holiday"] is None
+    assert RuleJudge().judge(JudgeContext(), unknown).value == "unknown"

@@ -16,7 +16,9 @@ TUESDAY = datetime(2026, 10, 13, 10, 0)
 @pytest.mark.parametrize("text, at, expected", [
     ("매주 월요일 휴무", MONDAY, "closed"),
     ("매주 월요일 휴무", TUESDAY, "not_closed"),
-    ("매월 둘째 주 화요일 휴무", TUESDAY, "not_closed"),   # ★규칙이 못 읽는 표현 — LLM 으로 넘기는 이유
+    # ★`[2026-10-06]` fix/activity-closure-rule 병합 뒤 규칙이 「매월 둘째 주」를 읽는다(전에는 not_closed)
+    ("매월 둘째 주 화요일 휴무", TUESDAY, "closed"),
+    ("공휴일 다음날 휴무", TUESDAY, "unknown"),            # 공휴일 사실이 없으면 모름 — 「아님」으로 확정하지 않는다
     (None, MONDAY, "unknown"),
     ("매주 월요일 휴무", None, "unknown"),
 ])

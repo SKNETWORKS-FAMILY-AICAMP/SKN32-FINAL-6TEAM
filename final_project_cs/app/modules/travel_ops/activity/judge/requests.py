@@ -3,8 +3,10 @@
 
 ★날짜 계산은 **코드가 한다.** 요일 · 그 달의 몇째 요일 · 마지막 주인지를 미리 넣어 준다.
   「매월 둘째 주 화요일 휴무」를 판정할 때 모델이 달력 계산을 틀리면 그 오류가 그대로 판정이 된다.
-★공휴일 여부는 넣지 않는다(`is_public_holiday: None` = 모름). 이 계층은 특일 API 를 부르지 않는다 —
-  「공휴일 다음날 휴무」 같은 원문은 모델이 `unknown` 으로 답해야 한다.
+★공휴일 여부는 **부르는 쪽이 알아 온 만큼만** 싣는다(`holidays`). 이 계층은 특일 API 를 부르지 않는다.
+  모르면 `is_public_holiday: None` 이고, 「공휴일 다음날 휴무」 같은 원문은 모델이 `unknown` 으로 답해야 한다.
+  `[2026-10-06]` 휴무 판정은 성립 판정이 `read.holiday` 로 물은 결과를 넘긴다(fix/activity-closure-rule 병합) —
+  규칙(`closure_rules.read_closure`)과 LLM 이 같은 공휴일 사실을 본다.
 """
 from __future__ import annotations
 
@@ -54,9 +56,17 @@ def date_facts(at: Any, *, today: date | None = None) -> dict[str, Any]:
     }
 
 
-def closure(restdate_text: str | None, starts_at: Any) -> JudgeRequest:
-    return JudgeRequest(CLOSURE, {"restdate_text": restdate_text, "starts_at_raw": starts_at,
-                                  **date_facts(starts_at)})
+def closure(restdate_text: str | None, starts_at: Any, holidays: dict[str, Any] | None = None) -> JudgeRequest:
+    """`holidays` — `{"YYYY-MM-DD": 특일 응답 | None}`. 성립 판정이 원문에 공휴일 조건이 있을 때만 채운다."""
+    facts = date_facts(starts_at)
+    known = {day: info for day, info in (holidays or {}).items() if isinstance(info, dict)}
+    if facts["date"] in known:
+        facts["is_public_holiday"] = bool(known[facts["date"]].get("is_holiday"))
+    return JudgeRequest(CLOSURE, {
+        "restdate_text": restdate_text, "starts_at_raw": starts_at, **facts,
+        # 앞뒤 날짜의 특일 이름(명절 연휴 판정용) — 아는 날만
+        "known_holidays": {day: info.get("holiday_name") for day, info in sorted(known.items())},
+        "holidays_raw": holidays or {}})
 
 
 def operating_hours(usetime_text: str | None, starts_at: Any) -> JudgeRequest:

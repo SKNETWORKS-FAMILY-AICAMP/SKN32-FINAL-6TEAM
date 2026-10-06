@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import math
 import re
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 #: ② 유사도에 쓰는 필드. 전부 TourAPI 원본 필드명이다(CSV 컬럼과 같다).
@@ -67,16 +67,14 @@ FALLBACK_DROPS: dict[str, tuple[tuple[str, ...], ...]] = {
 #: 선호도 `None` 일 때 **「더보기」에만** 푸는 조건(2026-10-03). 화면 3곳은 정확한 분류만 쓴다.
 MORE_ONLY_DROPS = ("lclsSystm3",)
 
-_WEEKDAYS = ("월", "화", "수", "목", "금", "토", "일")
-_WEEKLY = re.compile(r"매주\s*([^/<(※]*)")
-_RANGE = re.compile(r"([월화수목금토일])요일\s*~\s*([월화수목금토일])요일")
-_SINGLE = re.compile(r"([월화수목금토일])요일")
-#: 원문이 「모른다」고 말하는 표현. 여기 걸리면 열었다고도 닫았다고도 안 한다.
-_UNKNOWN_MARKERS = ("상이", "참조", "확인", "문의")
 
 
-def closed_on(closed_days: str | None, at: datetime) -> bool | None:
-    """`at` 요일이 원문의 정기휴무 요일인가. 모르면 `None`.
+def closed_on(closed_days: str | None, at: datetime, holiday: Any = None) -> bool | None:
+    """`at` 이 원문상 휴무인가. 모르면 `None`.
+
+    ★`[2026-10-06]` 성립 판정과 **같은 함수**(`closure_rules.read_closure`)를 쓴다. 아래 옛 설명과 달리 이제
+      날짜 · 「매월 둘째 주」 · 명절 · 공휴일 조건도 읽고, 공휴일 여부를 모르면(`holiday` 없음) 그 조건은 모름이다.
+      못 읽은 원문은 「아님」이 아니라 모름이다 — 후보에서 빼지 않고 남긴다(「명백히 닫힌 곳만 뺀다」).
 
     ★`_weekday_closure_match`와 같은 원칙 — **"매주 <요일>" 하나만** 본다.
       "단, 공휴일과 겹치면 개방" 같은 예외 조건, 1월 1일·설·추석 같은 날짜
@@ -89,20 +87,9 @@ def closed_on(closed_days: str | None, at: datetime) -> bool | None:
     | "연중무휴" · "매주 월요일"(요청이 토요일) | `False` |
     | "매주 월요일"(요청이 월요일) · "주말"(요청이 일요일) | `True` |
     """
-    text = (closed_days or "").strip()
-    if not text or any(marker in text for marker in _UNKNOWN_MARKERS):
-        return None
-    when = at if at.tzinfo else at.replace(tzinfo=UTC)
-    closed: set[int] = set()
-    if "주말" in text:
-        closed |= {5, 6}
-    for weekly in _WEEKLY.findall(text):
-        for start, end in _RANGE.findall(weekly):
-            i, j = _WEEKDAYS.index(start), _WEEKDAYS.index(end)
-            span = range(i, j + 1) if i <= j else [*range(i, 7), *range(0, j + 1)]
-            closed |= set(span)
-        closed |= {_WEEKDAYS.index(d) for d in _SINGLE.findall(weekly)}
-    return when.weekday() in closed
+    from .closure_rules import read_closure
+
+    return read_closure(closed_days, at, holiday).value
 
 
 KST = timezone(timedelta(hours=9))

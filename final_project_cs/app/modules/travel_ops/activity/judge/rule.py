@@ -34,13 +34,23 @@ class RuleJudge:
 
     @staticmethod
     def _closure(request: JudgeRequest) -> Verdict:
-        from ..feasibility import FeasibilityMixin
+        """`closure_rules.read_closure` — 성립 판정의 규칙 휴무 판정과 같다(fix/activity-closure-rule).
 
-        match = FeasibilityMixin._weekday_closure_match(request.inputs.get("restdate_text"),
-                                                        request.inputs.get("starts_at_raw"))
-        # True = 「매주 X 휴무」 요일 일치 · False = 그 패턴이 없거나 요일이 다르다 · None = 원문이나 시각이 없다
-        value = {True: "closed", False: "not_closed"}.get(match, UNKNOWN)
-        return Verdict(CLOSURE, value, "rule", basis="weekly_pattern")
+        `basis` 는 규칙이 어떻게 정했나(`weekly` · `nth_weekday` · `date` · `festive` · `holiday` · `unparsed` …),
+        `quotes` 는 맞은 절, `metrics["needs_caveat"]` 는 공휴일 예외를 확인하지 못해 단서가 필요한지다.
+        """
+        from datetime import date
+
+        from ..closure_rules import read_closure
+
+        raw = request.inputs.get("holidays_raw") or {}
+        holidays = {date.fromisoformat(day): info for day, info in raw.items()}
+        result = read_closure(request.inputs.get("restdate_text"), request.inputs.get("starts_at_raw"),
+                              holidays.get)
+        value = {True: "closed", False: "not_closed"}.get(result.value, UNKNOWN)
+        return Verdict(CLOSURE, value, "rule", basis=result.reason,
+                       quotes=[result.quote] if result.quote else [],
+                       metrics={"needs_caveat": result.needs_caveat})
 
     @staticmethod
     def _not_interpreted(request: JudgeRequest) -> Verdict:

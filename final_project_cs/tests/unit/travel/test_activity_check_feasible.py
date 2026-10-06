@@ -105,13 +105,19 @@ async def test_operating_text_appears_in_answer_and_evidence():
 
 @pytest.mark.asyncio
 async def test_non_weekday_pattern_does_not_flip_feasibility():
-    """"매주 <요일> 휴무" 패턴이 없으면 휴무 시사 문구여도 feasible 은 안 바뀐다."""
+    """읽지 못한 휴무 원문은 feasible 을 바꾸지 않는다 — 다만 「휴무 아님」으로 **확정하지도 않는다**.
+
+    ★`[2026-10-06]` 전에는 `weekday_match is False`(휴무 아님)를 기대했다. 「오늘은 임시휴무입니다」를 읽고
+      「아님」으로 확정하는 것은 틀린 답일 수 있다 — 이제 모름(`None`)이고 답변이 그 사실을 밝힌다
+      (결함 2026-10-06_1610).
+    """
     closed = _operating(usetime_text="", restdate_text="오늘은 임시휴무입니다")
     result = await ActivityTeam(
         FakeTools(_values(operating=closed))).execute(_task())
 
     assert result.decisions[0]["feasible"] is True
-    assert result.decisions[0]["operating"]["weekday_match"] is False
+    assert result.decisions[0]["operating"]["weekday_match"] is None
+    assert "확정하지 않았습니다" in result.answer
     assert "불가" not in result.answer
     assert "임시휴무" in result.answer
 

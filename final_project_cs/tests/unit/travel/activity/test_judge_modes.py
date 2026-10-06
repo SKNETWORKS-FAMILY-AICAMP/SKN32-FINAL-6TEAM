@@ -61,15 +61,19 @@ def test_build_judge_rejects_unknown_mode():
 
 def test_shadow_answers_with_rule_and_logs_difference(caplog):
     caplog.set_level(logging.INFO, logger=SHADOW_LOGGER_NAME)
-    llm = FakeJudgeLLM(out("closed", quotes=["매월 둘째 주 월요일 휴무"]))
+    text = "[부산시] 해운대구 침수, 접근 금지"
+    llm = FakeJudgeLLM(out("no_effect", quotes=[text]))
     judge = build_judge("shadow", llm, runner=InlineRunner())
-    # 10/12 는 둘째 월요일 — 규칙은 「매주」 패턴이 없어 not_closed, LLM 은 closed
-    verdict = judge.judge(CTX, requests.closure("매월 둘째 주 월요일 휴무", MONDAY))
-    assert (verdict.value, verdict.source) == ("not_closed", "rule")   # ★고객 쪽은 규칙 결과 그대로
+    # 규칙은 등급(위급재난)만 보고 막는다, LLM 은 다른 지역이라 영향 없음
+    # ★`[2026-10-06]` 전에는 「매월 둘째 주」 휴무로 차이를 냈는데, 정기휴무 규칙 수정(fix/activity-closure-rule) 뒤
+    #   규칙도 그 원문을 읽어 둘이 일치한다 — 아직 규칙이 놓치는 재난문자로 바꿨다.
+    messages = [{"step": "위급재난", "kind": "호우", "text": text, "regions": ["부산광역시"], "created_at": "t"}]
+    verdict = judge.judge(CTX, requests.disaster_effect("경복궁", "activity", messages, MONDAY))
+    assert (verdict.value, verdict.source) == ("blocks", "rule")   # ★고객 쪽은 규칙 결과 그대로
     [line] = _shadow_lines(caplog)
     assert line["event"] == "activity_judge_shadow"
-    assert (line["rule"], line["llm"], line["agree"], line["comparable"]) == ("not_closed", "closed", False, True)
-    assert line["case_id"] == "case-1" and line["kind"] == "closure" and line["model"] == "fake-nano"
+    assert (line["rule"], line["llm"], line["agree"], line["comparable"]) == ("blocks", "no_effect", False, True)
+    assert line["case_id"] == "case-1" and line["kind"] == "disaster_effect" and line["model"] == "fake-nano"
 
 
 def test_shadow_log_has_no_place_or_reason_text(caplog):
