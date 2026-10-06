@@ -49,11 +49,14 @@ class Controller:
                  team_executor: Any | None = None, broker: Any | None = None,
                  verification_policy: Any | None = None, fact_queries: Any = (),
                  response_review: Any | None = None,
-                 action_handlers: ActionHandlers | None = None) -> None:
+                 action_handlers: ActionHandlers | None = None,
+                 reroute: Callable[..., dict[str, Any] | None] | None = None) -> None:
         # ★대조 어휘는 주입받는다. Controller 는 어떤 필드를 대조하는지 모른다 —
         #   알면 basement 가 특정 업무 도메인에 묶인다.
         from app.core.verification import VerificationPolicy
         self.verification_policy = verification_policy or VerificationPolicy()
+        # ★라우팅이 어긋났을 때 한 번 더 고르는 자리(`_reroute_once`). 안 꽂으면 종전대로 escalated.
+        self.reroute = reroute
         self.fact_queries = tuple(fact_queries or ())
         # The composition root supplies all concrete adapters.  These lazy
         # defaults retain backwards compatibility for focused application
@@ -113,6 +116,43 @@ class Controller:
         return case_type_of(case.get("issue_code"), fallback=case.get("intent"),
                             hint=state.get("routing_hint"),
                             hint_wins=bool(state.get("routing_hint_verified")))
+
+    def _reroute_once(self, case: dict[str, Any], *, intent: str | None, failure: str):
+        """라우팅이 어긋났을 때 **한 번만** 다시 고른다. (팀, capability, 기록) 또는 None. `[2026-10-06]`
+
+        ★왜 있나. 이 제품에는 사람 운영자 큐가 없다 — `escalated` 로 끝내면 그 Case 는 아무도
+          받지 않는다. 그래서 「받는 팀이 없다」를 **마지막 답이 아니라 한 번 더 묻는 자리**로 둔다.
+
+        ★Controller 는 어느 팀이 무엇을 받는지 모른다. 재배분기는 주입받고, 코어는 **등록된
+          팀 목록을 있는 그대로 넘겨** 준다(도메인 어휘를 해석하지 않는다).
+
+        ★**지어내지 않는다.** 돌려받은 종류로 `Registry.resolve` 에 **다시 묻고**, 거기서도 팀이
+          안 나오면 None 이다 — 모델이 없는 팀 이름을 내도 그대로 통과하지 않는다.
+        ★**한 번만** 한다. 되풀이하면 모르는 Case 하나가 모델 호출을 무한히 쓴다.
+        """
+        if self.reroute is None:
+            return None
+        teams = [{"team_id": m.team_id, "accepts": sorted(m.accepted_case_types),
+                  "capabilities": sorted(m.capabilities)}
+                 for m in self.registry.manifests() if m.active]
+        try:
+            picked = self.reroute(subject=case.get("subject") or "", case_type=self._case_type(case),
+                                  intent=intent, teams=teams, failure=failure)
+        except Exception:                                   # noqa: BLE001 — 재배분이 죽어도 Case 는 종전대로 escalated 로 간다
+            logger.exception("reroute failed for case %s", case.get("case_id"))
+            return None
+        if not picked or not picked.get("case_type"):
+            return None
+        chosen_type, chosen_intent = str(picked["case_type"]), picked.get("intent") or intent
+        try:
+            entry = self.registry.resolve(case_type=chosen_type, intent=chosen_intent)
+            capability = self.registry.capability_for(entry, chosen_intent, input_text=case.get("subject"),
+                                                      state=self._capability_state(case))
+        except RegistryError:
+            return None                                     # 모델이 고른 것도 받는 팀이 없다 — 여기서 끝낸다
+        return entry, capability, {"from": self._case_type(case), "to": chosen_type,
+                                   "intent": chosen_intent, "why": picked.get("why"),
+                                   "by": picked.get("by") or "reroute"}
 
     def _capability(self, case: dict[str, Any]) -> str:
         """Return the capability selected by the injected Team registry."""
@@ -251,10 +291,23 @@ class Controller:
                         self._transition_with_retry(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"],
                                                     event_type=EventType.ROUTED, payload={"owner_team_id": entry.manifest.team_id, "capability": capability}, actor_id=actor_id)
                     except RegistryError as exc:
-                        self._transition_with_retry(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"],
-                                                    event_type=EventType.ROUTING_FAILED, payload={"failure_code": "no_team"}, actor_id=actor_id)
-                        self.case_service.finish_run(conn, run_id, "failed")
-                        return {"case_id": str(case_id), "status": "escalated", "run_id": str(run_id), "error": str(exc)}
+                        # ★`[2026-10-06]` **한 번 더 고른다.** 라우팅이 어긋났다고 곧바로 사람에게 넘기면
+                        #   이 제품에서는 아무도 받지 않는다(운영자 큐가 없다 · 고객은 알림만 받는다).
+                        #   재배분기는 **주입받는다** — Controller 는 어느 팀이 무엇을 받는지 모른다.
+                        #   돌려받은 값으로 **Registry 에 다시 묻는다**(모델이 없는 팀을 내면 거부된다).
+                        redirect = self._reroute_once(case, intent=intent, failure=str(exc))
+                        if redirect is not None:
+                            entry, capability, note = redirect
+                            self._transition_with_retry(
+                                conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"],
+                                event_type=EventType.ROUTED,
+                                payload={"owner_team_id": entry.manifest.team_id, "capability": capability,
+                                         "rerouted": note}, actor_id=actor_id)
+                        else:
+                            self._transition_with_retry(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"],
+                                                        event_type=EventType.ROUTING_FAILED, payload={"failure_code": "no_team"}, actor_id=actor_id)
+                            self.case_service.finish_run(conn, run_id, "failed")
+                            return {"case_id": str(case_id), "status": "escalated", "run_id": str(run_id), "error": str(exc)}
                     case = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id)
                 else:
                     entry = self.registry.get(case["owner_team_id"])

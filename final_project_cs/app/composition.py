@@ -332,6 +332,8 @@ def build_controller(*, registry: TeamRegistry | None = None,
         fact_queries=fact_queries,
         response_review=config.response_review,
         action_handlers=action_handlers if action_handlers is not None else build_action_handlers(),
+        # ★`[2026-10-06]` 라우팅이 어긋났을 때 한 번 더 고르는 자리 — 어휘는 도메인이 갖는다.
+        reroute=build_reroute(),
     )
 
 
@@ -350,6 +352,23 @@ def build_mcp_surface(app_getter):
 
     write = bool(get_guardrails().get("travel.mcp.write_enabled"))
     return build_surface(app_getter, enabled=enabled, write_enabled=write)
+
+
+def build_reroute():
+    """라우팅 재배분기 — 꺼져 있으면 `None`(Controller 는 종전대로 곧바로 escalated). `[2026-10-06]`
+
+    ★가드레일 `travel.routing.reroute_enabled` 로 끈다. 모델 호출이 늘어나는 자리라 끌 수 있어야 한다.
+      ★**호출 때 읽는다** — 시험이 바꿔 끼운 값을 따른다.
+    """
+    def _call(**kwargs):
+        from app.core.settings import get_guardrails
+
+        if not get_guardrails().get("travel.routing.reroute_enabled"):
+            return None
+        from app.domains.travel_ops.components.core_hooks.reroute import reroute
+
+        return reroute(**kwargs)
+    return _call
 
 
 def wire_optional_features() -> list[str]:
