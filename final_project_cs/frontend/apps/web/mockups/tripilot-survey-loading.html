@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>설문을 로딩 화면에서 받는 흐름 — 목업</title>
+<style>
+:root{
+  --color-text:#24392f; --color-muted:#6d7c73; --color-border:#dce3dd; --color-surface:#ffffff; --color-background:#f3f5f3; --color-paper:#f7f9f3;
+  --color-primary:#2e6047; --color-primary-hover:#254f3a; --color-on-primary:#ffffff; --color-soft:#e9f2eb; --color-subtle:#f6f7f5;
+  --color-warning:#82693e; --color-warning-soft:#faf6ec; --color-warning-border:#e5d9c1; --color-error:#965640; --color-error-soft:#fdf3ed;
+  --color-text-secondary:#4a5d52; --color-faint:#a5b1a9; --color-divider:#e8ede9; --color-subtle-strong:#e4e9e5; --color-border-strong:#c3cdc6;
+  --color-success:#3d7a56; --color-success-soft:#e3f0e7; --color-adjusted:#3f6a8a; --color-adjusted-soft:#e6eff6; --color-adjusted-border:#bcd0df;
+  --color-selected:#2e6047; --color-selected-soft:#dcebe1; --color-scrim:rgba(36,57,47,.45);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-background);color:var(--color-text);font:14px/1.6 "Segoe UI","Malgun Gothic",sans-serif}
+button{font:inherit;color:inherit;cursor:pointer;min-height:44px;min-width:44px;border:1px solid var(--color-border);border-radius:12px;background:var(--color-surface);padding:10px 14px}
+button:hover{border-color:var(--color-border-strong);background:var(--color-subtle)}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--color-adjusted);outline-offset:3px}
+button:disabled{cursor:default;background:var(--color-subtle-strong);color:var(--color-muted);border-color:var(--color-subtle-strong)}
+h1,h2,h3,p{margin:0}
+h1{font-size:23px;letter-spacing:-.7px;line-height:1.4}
+h2{font-size:22px;line-height:1.45;letter-spacing:-.6px}
+h3{font-size:16px;line-height:1.5}
+small,.small{font-size:12px;color:var(--color-muted)}
+.page-head{max-width:1100px;margin:0 auto;padding:30px 24px 20px}
+.intro{color:var(--color-muted);margin-top:8px}
+.demo-nav{display:flex;gap:12px;align-items:center;margin-top:22px;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.tabs button{font-size:12px;padding:10px 12px}
+.tabs button[aria-selected="true"]{background:var(--color-selected-soft);border-color:var(--color-selected);color:var(--color-selected);font-weight:700}
+.steps-nav{display:flex;gap:6px}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 402px minmax(0,1fr);gap:24px;max-width:1100px;margin:0 auto 40px;padding:0 24px;align-items:start}
+.phone{grid-column:2;position:relative;isolation:isolate;width:402px;max-width:100%;height:820px;border:1px solid var(--color-border-strong);border-radius:30px;background:var(--color-paper);overflow:hidden}
+.phone-content{height:100%;display:flex;flex-direction:column}
+.brand{display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;color:var(--color-primary);font-size:13px;font-weight:700;letter-spacing:.3px}
+.brand span:last-child{font-size:11px;font-weight:400;color:var(--color-muted);letter-spacing:0}
+.app-head{display:flex;align-items:center;gap:9px;padding:8px 20px 18px}
+.app-head h2{font-size:19px}
+.back{padding:0;font-size:22px;background:var(--color-paper);border-color:var(--color-paper)}
+.scroll{overflow-y:auto;flex:1;min-height:0;padding:0 20px 24px;scrollbar-width:thin;scrollbar-color:var(--color-border-strong) var(--color-paper)}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:16px;padding:18px;margin-bottom:14px}
+.card-title{display:flex;gap:8px;align-items:center;margin-bottom:13px}
+.optional{font-size:11px;border:1px solid var(--color-border);border-radius:6px;padding:1px 6px;color:var(--color-muted)}
+.help{color:var(--color-muted);font-size:12px;line-height:1.75;margin-top:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chips button{flex:1;padding:10px 9px;white-space:nowrap;font-size:13px}
+button.selected{background:var(--color-selected-soft);border-color:var(--color-selected);color:var(--color-selected);font-weight:700}
+button.selected::before{content:"✓ ";font-weight:700}
+.choices{display:grid;gap:10px;margin-top:18px}
+.choices button{text-align:left;padding:14px;font-size:14px}
+.input-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}
+.input-grid dt{font-size:12px;color:var(--color-muted);margin-bottom:7px}
+.input-grid dd{margin:0;font-size:13px;font-weight:600}
+dl{margin:0}
+.sample{margin-top:12px;padding-top:12px;border-top:1px solid var(--color-divider);font-size:12px;color:var(--color-muted)}
+.footer{padding:14px 20px 20px;background:var(--color-surface);border-top:1px solid var(--color-border);flex-shrink:0}
+.footer .help{margin-top:8px;text-align:center;font-size:11px}
+.primary{background:var(--color-primary);border-color:var(--color-primary);color:var(--color-on-primary);font-weight:600}
+.primary:hover{background:var(--color-primary-hover);border-color:var(--color-primary-hover)}
+.full{width:100%}
+.text-button{border-color:var(--color-surface);color:var(--color-muted);background:var(--color-surface);font-size:12px;text-decoration:underline;text-underline-offset:4px}
+.loading-head{padding:10px 0 20px}
+.eyebrow{color:var(--color-muted);font-size:12px;margin-bottom:9px}
+.progress-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:22px 0 18px}
+.step{color:var(--color-muted);font-size:10px;text-align:center}
+.step.current{color:var(--color-primary);font-weight:700}
+.track{height:5px;border-radius:6px;background:var(--color-subtle-strong);overflow:hidden;margin-bottom:8px}
+.fill{height:100%;width:100%;background:var(--color-primary)}
+.current .fill{transform-origin:left;animation:read-progress 14s linear forwards}
+.step.pending .fill{width:0}
+@keyframes read-progress{from{transform:scaleX(.08)}to{transform:scaleX(1)}}
+.notice{font-size:13px;line-height:1.8;color:var(--color-text-secondary);padding:14px 0 20px}
+.success-line{background:var(--color-success-soft);color:var(--color-success);border-radius:12px;padding:12px 14px;font-size:13px;font-weight:600;margin-bottom:14px}
+.question-count{font-size:12px;letter-spacing:1px;color:var(--color-muted);margin-bottom:14px}
+.question h3{font-size:19px;letter-spacing:-.5px}
+.reason{font-size:12px;color:var(--color-muted);margin-top:10px;line-height:1.8}
+.question .text-button{display:block;margin:12px auto 0}
+.saved{min-height:26px;margin-top:10px;color:var(--color-success);font-size:13px;text-align:center}
+.waiting{text-align:center;padding:40px 14px}
+.waiting .mark{font-size:30px;color:var(--color-success);margin-bottom:12px}
+.side{grid-column:3;width:100%;min-width:0;padding-top:8px}
+.rules{padding:20px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:16px}
+.rules h2{font-size:15px}
+.rules ul{padding-left:18px;margin:14px 0 0;font-size:13px;color:var(--color-text-secondary)}
+.rules li+li{margin-top:12px}
+.demo-tools{margin-top:20px;padding:0 4px}
+.demo-tools p{font-size:12px;color:var(--color-muted);margin-bottom:8px}
+.demo-tools button{font-size:12px}
+.modal-layer{position:absolute;inset:0;background:var(--color-scrim);z-index:5;display:flex;align-items:flex-end}
+.sheet{width:100%;background:var(--color-surface);border:1px solid var(--color-border);border-radius:24px 24px 0 0;padding:12px 22px 26px;max-height:90%;overflow:auto;animation:rise .22s ease-out}
+.handle{width:34px;height:4px;border-radius:6px;background:var(--color-border-strong);margin:0 auto 20px}
+@keyframes rise{from{transform:translateY(30px)}to{transform:translateY(0)}}
+.countdown{text-align:center;font-size:64px;font-weight:600;line-height:1.15;color:var(--color-primary);font-variant-numeric:tabular-nums;margin:4px 0 18px}
+.count-copy{font-size:17px;text-align:center;line-height:1.8;margin-bottom:24px;word-break:keep-all}
+.sheet .full+.full{margin-top:10px}
+.center-layer{align-items:center;justify-content:center;padding:24px}
+.completion{width:100%;text-align:center;padding:30px 22px;margin:0}
+.completion .mark{font-size:48px;color:var(--color-success);line-height:1.2;margin-bottom:18px}
+.completion p{font-size:13px;color:var(--color-muted);margin-top:10px}
+.finish-track{height:4px;background:var(--color-subtle-strong);border-radius:6px;overflow:hidden;margin-top:28px}
+.finish-fill{height:100%;background:var(--color-primary);transform-origin:left;animation:finish 1.4s linear forwards}
+@keyframes finish{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.read-card{padding:18px 16px}
+.read-card>h3{font-size:18px;margin-bottom:6px}
+.read-row{padding:17px 0;border-bottom:1px solid var(--color-divider)}
+.read-row:last-child{border-bottom:0;padding-bottom:0}
+.row-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.field-name{font-size:12px;color:var(--color-muted)}
+.field-value{font-size:14px;font-weight:600;margin-top:3px;word-break:keep-all}
+.edit{font-size:12px;flex-shrink:0;padding:8px 10px}
+.badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
+.badge{font-size:10px;line-height:1.5;border:1px solid var(--color-border);border-radius:6px;padding:3px 6px;display:inline-block}
+.direct{color:var(--color-success);background:var(--color-success-soft);border-color:var(--color-success-soft)}
+.inferred{color:var(--color-adjusted);background:var(--color-adjusted-soft);border-color:var(--color-adjusted-border)}
+.agent{color:var(--color-warning);background:var(--color-warning-soft);border-color:var(--color-warning-border)}
+.default{color:var(--color-muted);background:var(--color-subtle-strong);border-color:var(--color-subtle-strong)}
+.estimate{color:var(--color-adjusted);background:var(--color-surface);border-style:dashed;border-color:var(--color-adjusted)}
+.evidence{font-size:11px;color:var(--color-muted);line-height:1.8;margin-top:10px}
+.legend{display:flex;gap:4px;flex-wrap:wrap;margin:-2px 0 18px;align-items:center}
+.legend-label{font-size:10px;color:var(--color-muted);margin-right:2px}
+.later h3{font-size:14px;margin-bottom:10px}
+.later .prompt{font-size:16px;font-weight:600}
+.skeleton{padding:4px 4px 10px}
+.skeleton span{display:block;height:10px;border-radius:5px;background:var(--color-subtle-strong);margin-top:12px}
+.skeleton span:nth-child(2){width:78%}
+.skeleton span:nth-child(3){width:58%}
+.sheet-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.sheet .chips button{white-space:normal}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+@media(max-width:1000px){
+  .stage{display:flex;flex-direction:column;align-items:center;padding:0 16px}
+  .side{width:402px;max-width:100%;padding-top:0}
+  .page-head{max-width:650px;padding:24px 16px 20px}
+  .demo-nav{align-items:flex-start}
+  .tabs{flex-basis:100%}
+}
+@media(max-width:430px){
+  h1{font-size:20px}
+  .phone{width:100%;height:820px;border-radius:24px}
+  .scroll{padding-left:16px;padding-right:16px}
+  .card{padding:16px}
+  .input-grid{gap:6px}
+  .input-grid dd{font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<header class="page-head">
+  <h1>설문을 로딩 화면에서 받는 흐름 — 목업</h1>
+  <p class="intro">계획을 읽는 동안 취향을 묻고, 결과에서 확인하고 고치는 흐름이에요.</p>
+  <div class="demo-nav">
+    <div class="tabs" role="tablist" aria-label="여섯 화면">
+      <button id="tab1" role="tab" data-screen="1">① 계획 짜 주기</button>
+      <button id="tab2" role="tab" data-screen="2">② 읽는 중 + 질문</button>
+      <button id="tab3" role="tab" data-screen="3">③ 검사 끝 · 질문 남음</button>
+      <button id="tab4" role="tab" data-screen="4">④ 가만히 있을 때</button>
+      <button id="tab5" role="tab" data-screen="5">⑤ 다 답했을 때</button>
+      <button id="tab6" role="tab" data-screen="6">⑥ 검증 화면</button>
+    </div>
+    <div class="steps-nav">
+      <button id="previous">이전</button>
+      <button id="next">다음</button>
+    </div>
+  </div>
+</header>
+<main class="stage">
+  <section class="phone" id="phone" role="tabpanel" aria-labelledby="tab1" tabindex="-1"></section>
+  <aside class="side">
+    <section class="rules">
+      <h2>이 화면의 규칙</h2>
+      <ul id="rules"></ul>
+    </section>
+    <div class="demo-tools">
+      <p>시연 조작</p>
+      <button id="restart">처음부터</button>
+    </div>
+  </aside>
+</main>
+<div id="announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+<div id="countAnnouncement" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+<script>
+const initial = () => ({
+  screen:1, density:null, policy:null, answers:[null,null], skipped:[false,false],
+  question:0, busy:false, saved:false, stopAuto:false, seconds:20, touched:false,
+  editing:null, overrides:{}, laterSaved:false, timers:[], idle:null
+});
+let state = initial();
+const phone = document.getElementById('phone');
+const questions = [
+  {title:'이동은 주로 어떻게 하세요?',reason:'계획서에는 이동 방법이 적혀 있지 않아서 여쭤요',options:['대중교통','택시','걷기 위주']},
+  {title:'활동할 때 더 중요한 건 무엇인가요?',reason:'계획서만으로는 알 수 없어요',options:['맛집','볼거리','쉬는 시간']}
+];
+const policies = ['자동으로 고치고, 대체안 2개를 알려요','대체안 3개를 보여 드릴게요. 제가 골라요'];
+const rules = [
+  ['이 두 가지만 여기서 물어요. 나머지 취향은 계획을 읽는 동안 물어요.','둘 다 건너뛸 수 있어요.','일정이 바뀌면은 계획서에서 읽을 수 없어서, 고르지 않으면 자동으로 고치지 않아요.'],
+  ['cs 프로젝트 서버가 「물을 것」으로 알려 준 것만, 한 장에 하나, 최대 3개 묻고 한 번 누르면 바로 저장해요.','계획서에서 읽을 수 있는 건 묻지 않아요.','식사 제한·접근성·내국인 여부·동행은 읽어서 채우지 않고, 필요하면 물어요.','한 번도 안 만지고 검사가 끝나면 기다리게 하지 않고 바로 검증 화면으로 가요(검사가 3초쯤으로 짧을 때도 같아요). 못 물은 건 검증 화면에 카드로 남아요.','건너뛴 질문은 이 화면에서 다시 묻지 않고 「나중에 답하기」로 보내요.'],
+  ['검사가 끝나면 「결과 보기」가 켜져요(사용자가 눌러 넘어가요).','답하던 중이면 화면에 머물러요. 끌어내지 않아요.','마지막으로 만진 뒤 30초 동안 가만히 있으면 ④로 가요.'],
+  ['넘어가기 전에 20초 알려 줘요.','「계속 답할게요」는 몇 번이든 눌러 연장해요.','자동으로 넘어가지 않기를 고르면 끝까지 기다려요.','이미 답한 것은 문항마다 바로 저장돼 있어서 넘어가도 잃지 않아요.'],
+  ['다 답했고 검사도 끝나면 기다리지 않고 바로 넘어가요.','「전부 건너뛰기」가 아니라 「결과 보기」로 이름을 맞췄어요 — 일부만 답한 사람도 누를 수 있어서요.'],
+  ['읽은 값은 「추정」이라고 밝히고 언제든 고칠 수 있어요.','출처를 네 가지로 구분해 보여 줘요: 직접 답함 · 계획서에서 읽음 · 에이전트가 줌 · 기본값.','식사 제한·접근성은 읽어서 채우지 않고 「모름」으로 둬요.','못 물은 질문은 「나중에 답하기」로 이어져요.']
+];
+const fields = {
+  density:{name:'하루 여유',options:['여유롭게','적당히','꽉 차게']},
+  policy:{name:'일정이 바뀌면',options:policies},
+  transport:{name:'이동',options:questions[0].options},
+  diet:{name:'식사 제한',options:['제한 없음','채식','할랄','알레르기가 있어요']}
+};
+const escapeHTML = text => String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const later = (fn,ms) => {const id=setTimeout(fn,ms);state.timers.push(id);return id};
+function clearTimers(){
+  state.timers.forEach(clearTimeout);
+  state.timers=[];
+  clearTimeout(state.idle);
+  state.idle=null;
+}
+function announce(text){document.getElementById('announcement').textContent=text}
+function allAnswered(){return state.answers.every(Boolean)}
+function nextOpen(except=-1){return state.answers.findIndex((a,i)=>!a&&!state.skipped[i]&&i!==except)}
+function remaining(){return state.answers.filter(a=>!a).length}
+function brand(){return '<div class="brand"><span>triPilot</span><span>여행 계획</span></div>'}
+function shell(body,footer='',heading=''){
+  return `<div class="phone-content">${brand()}${heading?`<header class="app-head">${heading}</header>`:''}<div class="scroll">${body}</div>${footer?`<footer class="footer">${footer}</footer>`:''}</div>`;
+}
+function choiceButtons(options,action,selected=null){
+  return options.map((label,i)=>`<button data-action="${action}" data-index="${i}" aria-pressed="${selected===label}" class="${selected===label?'selected':''}">${escapeHTML(label)}</button>`).join('');
+}
+function progress(done=false){
+  return `<div class="progress-steps" aria-label="${done?'검사가 끝났어요':'장소·운영시간 확인 중'}">${['받았어요','일정 읽기','장소·운영시간','정리 완료'].map((label,i)=>`<div class="step ${!done&&i===2?'current':''} ${!done&&i===3?'pending':''}"><div class="track"><div class="fill"></div></div><span>${done||i<2?'✓ ':''}${label}</span></div>`).join('')}</div>`;
+}
+function screen1(){
+  phone.innerHTML=shell(`
+    <section class="card"><dl class="input-grid"><div><dt>시작일</dt><dd>2026-10-10 (토)</dd></div><div><dt>일수</dt><dd>2일</dd></div><div><dt>인원</dt><dd>2명</dd></div></dl>
+      <p class="sample">10/10(토) 경복궁 관람 · 올리브영 · 광장시장 점심 · 남산타워</p></section>
+    <section class="card"><div class="card-title"><h3>하루 밀도</h3><span class="optional">선택</span></div>
+      <p>하루를 얼마나 채울까요?</p><div class="chips">${choiceButtons(fields.density.options,'density',state.density)}</div>
+      <p class="help">고르지 않아도 돼요. 고르지 않으면 지금까지처럼 짜요.</p></section>
+    <section class="card"><div class="card-title"><h3>일정이 바뀌면</h3><span class="optional">선택</span></div>
+      <p>갑자기 일정이 꼬이면 어떻게 할까요?</p><div class="choices">${choiceButtons(policies,'policy',state.policy)}</div>
+      <p class="help">고르지 않으면 바꾸기 전에 먼저 물어봐요.</p></section>`,
+    '<button class="primary full" data-action="start">계획 짜 주기</button>',
+    '<button class="back" data-action="back" aria-label="뒤로가기">←</button><h2>계획 짜 주기</h2>');
+}
+function questionCard(){
+  if(state.question>1){
+    return `<section class="card waiting"><div class="mark">${allAnswered()?'✓':'…'}</div><h3>${allAnswered()?'다 답해 주셨어요':'검사가 끝나면 결과를 볼 수 있어요'}</h3><p class="help">${allAnswered()?'답하신 내용으로 일정을 맞춰 볼게요':'남은 질문은 결과 화면에서 나중에 답할 수 있어요'}</p></section>`;
+  }
+  const q=questions[state.question];
+  return `<section class="card question" aria-labelledby="questionTitle"><p class="question-count">${state.question+1} / 2</p>
+    <h3 id="questionTitle" tabindex="-1">${q.title}</h3><p class="reason">${q.reason}</p>
+    <div class="choices">${choiceButtons(q.options,'answer',state.answers[state.question])}</div>
+    <div class="saved" role="status" aria-live="polite">${state.saved?'저장했어요 ✓':''}</div>
+    <button class="text-button" data-action="skip">이 질문 건너뛰기</button></section>`;
+}
+function loadingBody(done){
+  return `<div class="loading-head"><p class="eyebrow">계획을 확인하고 있어요</p><h2 tabindex="-1" id="screenTitle">계획을 읽고 있어요</h2>${progress(done)}</div>
+    ${done?'<div class="success-line">검사가 끝났어요 ✓</div>':'<p class="notice">기다리는 동안 하나만 여쭤볼게요. 건너뛰어도 괜찮아요.</p>'}
+    ${state.stopAuto&&done?'<p class="notice">자동으로 넘어가지 않아요</p>':''}<div id="questionSlot">${questionCard()}</div>`;
+}
+function resultFooter(done){
+  return `<button class="primary full" data-action="result" ${done?'':'disabled'}>결과 보기</button>
+    <p class="help">${done?`남은 질문 ${remaining()}개는 결과 화면에서 나중에 답할 수 있어요`:'검사가 끝나면 켜져요'}</p>`;
+}
+function screen2(){
+  phone.innerHTML=shell(loadingBody(false),resultFooter(false));
+  later(()=>{
+    if(allAnswered()){go(5);return}
+    if(!state.touched){go(6);return}   // 한 번도 안 만졌으면 기다리게 하지 않고 바로 결과로
+    const open=nextOpen();
+    if(open<0){go(6);return}            // 남은 질문이 없으면(전부 건너뜀) 바로 결과로
+    state.question=open;
+    go(3);
+  },14000);
+}
+function screen3(){
+  phone.innerHTML=shell(loadingBody(true),resultFooter(true));
+  resetIdle();
+}
+function resetIdle(){
+  if(state.screen!==3)return;
+  clearTimeout(state.idle);
+  if(!state.stopAuto)state.idle=setTimeout(()=>go(4),30000);
+}
+function screen4(){
+  phone.innerHTML=shell(loadingBody(true),resultFooter(true));
+  phone.querySelector('.phone-content').inert=true;
+  phone.insertAdjacentHTML('beforeend',`<div class="modal-layer"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="countCopy">
+    <div class="handle" aria-hidden="true"></div><div class="countdown" id="countNumber" aria-hidden="true">20</div>
+    <p class="count-copy" id="countCopy">아직 보고 계신가요? <span id="seconds">20</span>초 뒤에 결과 화면으로 넘어가요</p>
+    <button class="primary full" data-action="continue">계속 답할게요</button>
+    <button class="full" data-action="stop">자동으로 넘어가지 않기</button></section></div>`);
+  state.seconds=20;
+  document.getElementById('countAnnouncement').textContent='20초 뒤에 결과 화면으로 넘어가요';
+  const tick=()=>{
+    state.seconds--;
+    if(state.seconds===0){go(6);return}
+    document.getElementById('countNumber').textContent=state.seconds;
+    document.getElementById('seconds').textContent=state.seconds;
+    if([10,5].includes(state.seconds))document.getElementById('countAnnouncement').textContent=`${state.seconds}초 뒤에 결과 화면으로 넘어가요`;
+    later(tick,1000);
+  };
+  later(tick,1000);
+}
+function screen5(){
+  phone.innerHTML=shell(`<div class="loading-head"><h2>계획을 읽고 있어요</h2>${progress(true)}</div><div class="success-line">검사가 끝났어요 ✓</div>`);
+  phone.querySelector('.phone-content').inert=true;
+  phone.insertAdjacentHTML('beforeend',`<div class="modal-layer center-layer"><section class="card completion" role="dialog" aria-modal="true" aria-labelledby="completeTitle" tabindex="-1">
+    <div class="mark" aria-hidden="true">✓</div><h2 id="completeTitle">다 답해 주셨어요</h2><p>답하신 내용으로 일정을 맞춰 볼게요</p><div class="finish-track" aria-hidden="true"><div class="finish-fill"></div></div></section></div>`);
+  later(()=>go(6),1400);
+}
+function fieldValue(key){
+  if(state.overrides[key])return {value:state.overrides[key],source:'direct'};
+  if(key==='density')return {value:state.density||'적당히',source:state.density?'direct':'inferred'};
+  if(key==='policy')return {value:state.policy===policies[0]?'자동으로 고쳐요 · 대체안 2개':'먼저 물어봐요 · 대체안 3개',source:state.policy?'direct':'default'};
+  if(key==='transport')return {value:state.answers[0]||'아직 몰라요 · 묻지 않았어요',source:state.answers[0]?'direct':'default'};
+  return {value:'아직 몰라요 · 묻지 않았어요',source:'default'};
+}
+function badge(source){
+  return `<span class="badge ${source}">${{direct:'직접 답함',inferred:'계획서에서 읽음',agent:'에이전트가 줌',default:'기본값'}[source]}</span>`;
+}
+function readRow(key){
+  const field=fields[key],data=fieldValue(key),inferred=data.source==='inferred';
+  return `<div class="read-row"><div class="row-head"><div><p class="field-name">${field.name}</p><p class="field-value">${escapeHTML(data.value)}</p></div>
+    <button class="edit" data-action="edit" data-key="${key}" aria-label="${field.name} ${key==='diet'&&!state.overrides.diet?'알려 주기':'고치기'}">${key==='diet'&&!state.overrides.diet?'알려 주기':'고치기'}</button></div>
+    <div class="badges">${badge(data.source)}${inferred?'<span class="badge estimate">추정</span>':''}</div>
+    ${inferred?'<p class="evidence">1일차 6시간, 2일차 5시간 일정으로 읽었어요. 끝나는 시각이 없는 3곳은 우리 기본 시간으로 채웠어요</p>':''}</div>`;
+}
+function pendingCard(){
+  if(state.laterSaved&&remaining()===0)return '<section class="card later"><p class="success-line">답해 주셔서 고마워요 ✓</p></section>';
+  if(!remaining())return '';
+  return `<section class="card later"><h3>나중에 답하기 · ${remaining()}개</h3>${questions.map((q,i)=>state.answers[i]?'':`<div><p class="prompt">${q.title}</p><p class="help">지금 답하기</p><div class="chips">${q.options.map((v,n)=>`<button data-action="later" data-question="${i}" data-index="${n}">${v}</button>`).join('')}</div></div>`).join('')}${state.laterSaved?'<p class="saved">답해 주셔서 고마워요 ✓</p>':''}</section>`;
+}
+function screen6(){
+  phone.innerHTML=shell(`<section class="card read-card"><h3>이렇게 읽었어요</h3>${Object.keys(fields).map(readRow).join('')}</section>
+    <div class="legend" aria-label="출처 범례"><span class="legend-label">출처</span>${['direct','inferred','agent','default'].map(badge).join('')}</div>
+    ${pendingCard()}<div class="skeleton" aria-label="일정 목록 미리보기"><span></span><span></span><span></span></div>`,
+    '', '<h2 tabindex="-1" id="screenTitle">계획 확인</h2>');
+}
+function go(n,preview=false){
+  clearTimers();
+  state.screen=n;state.editing=null;state.busy=false;state.saved=false;
+  document.getElementById('countAnnouncement').textContent='';
+  if(preview){
+    if(n===2){state.answers=[null,null];state.skipped=[false,false];state.question=0;state.laterSaved=false;state.touched=false}
+    if(n===3||n===4){state.answers=[state.answers[0]||'대중교통',null];state.question=1;state.laterSaved=false}
+    if(n===5){state.answers=[state.answers[0]||'대중교통',state.answers[1]||'볼거리']}
+    if(n===6){state.answers=['대중교통',null];state.policy=policies[1];state.laterSaved=false}
+  }
+  document.querySelectorAll('[data-screen]').forEach(button=>{
+    const active=Number(button.dataset.screen)===n;
+    button.setAttribute('aria-selected',active);
+    button.setAttribute('aria-controls','phone');
+    button.tabIndex=active?0:-1;
+  });
+  phone.setAttribute('aria-labelledby',`tab${n}`);
+  document.getElementById('previous').disabled=n===1;
+  document.getElementById('next').disabled=n===6;
+  document.getElementById('rules').innerHTML=rules[n-1].map(line=>`<li>${line}</li>`).join('');
+  [null,screen1,screen2,screen3,screen4,screen5,screen6][n]();
+  const focusTarget=phone.querySelector('[role="dialog"] button,[role="dialog"][tabindex]')||phone;
+  focusTarget.focus({preventScroll:true});
+}
+function refreshQuestion(focus=false){
+  const slot=document.getElementById('questionSlot');
+  if(!slot)return;
+  slot.innerHTML=questionCard();
+  if(state.busy)slot.querySelectorAll('button').forEach(button=>button.disabled=true);
+  if(focus)(slot.querySelector('h3')||phone).focus({preventScroll:true});
+}
+function answer(index,skip=false){
+  if(state.busy||state.question>1)return;
+  state.touched=true;
+  const q=state.question;
+  if(!skip){state.answers[q]=questions[q].options[index];state.saved=true}
+  else state.skipped[q]=true;
+  state.busy=true;
+  refreshQuestion();
+  later(()=>{
+    state.busy=false;state.saved=false;
+    if(state.screen===3&&allAnswered()){go(5);return}
+    if(state.screen===3){
+      const next=nextOpen(q);
+      state.question=next>=0?next:q;
+      if(skip&&next<0){go(6);return}
+    }else state.question=q+1;
+    refreshQuestion(true);
+    if(state.screen===3)phone.querySelector('.footer').innerHTML=resultFooter(true);
+    resetIdle();
+  },skip?0:400);
+}
+function openEdit(key){
+  state.editing=key;
+  phone.querySelector('.phone-content').inert=true;
+  phone.insertAdjacentHTML('beforeend',`<div class="modal-layer" id="editLayer"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <div class="handle" aria-hidden="true"></div><div class="sheet-heading"><h2 id="editTitle">${fields[key].name}</h2><button data-action="close" aria-label="닫기">닫기</button></div>
+    <div class="chips">${choiceButtons(fields[key].options,'saveEdit',fieldValue(key).value)}</div></section></div>`);
+  phone.querySelector('#editLayer button').focus();
+}
+function closeEdit(){
+  const key=state.editing;
+  document.getElementById('editLayer')?.remove();
+  phone.querySelector('.phone-content').inert=false;
+  state.editing=null;
+  phone.querySelector(`[data-key="${key}"]`)?.focus();
+}
+phone.addEventListener('click',event=>{
+  const button=event.target.closest('button[data-action]');
+  if(!button||button.disabled)return;
+  const {action,index,key}=button.dataset;
+  if(action==='density'||action==='policy'){
+    state[action]=(action==='density'?fields.density.options:policies)[Number(index)];
+    const group=button.parentElement;
+    group.querySelectorAll('button').forEach(b=>{
+      b.classList.toggle('selected',b===button);b.setAttribute('aria-pressed',b===button);
+    });
+  }else if(action==='start')go(2);
+  else if(action==='back')document.getElementById('tab1').focus();
+  else if(action==='answer')answer(Number(index));
+  else if(action==='skip')answer(0,true);
+  else if(action==='result')go(6);
+  else if(action==='continue'){state.seconds=20;go(3)}
+  else if(action==='stop'){state.stopAuto=true;go(3);announce('자동으로 넘어가지 않아요')}
+  else if(action==='edit')openEdit(key);
+  else if(action==='close')closeEdit();
+  else if(action==='saveEdit'){
+    const field=state.editing;
+    state.overrides[field]=fields[field].options[Number(index)];
+    if(field==='transport')state.answers[0]=state.overrides[field];
+    const scrollTop=phone.querySelector('.scroll').scrollTop;
+    state.editing=null;screen6();
+    phone.querySelector('.scroll').scrollTop=scrollTop;
+    phone.querySelector(`[data-key="${field}"]`).focus({preventScroll:true});
+    announce('저장했어요 ✓');
+  }else if(action==='later'){
+    const q=Number(button.dataset.question);
+    state.answers[q]=questions[q].options[Number(index)];state.laterSaved=true;
+    const scrollTop=phone.querySelector('.scroll').scrollTop;
+    screen6();phone.querySelector('.scroll').scrollTop=scrollTop;
+    const target=phone.querySelector('.later');
+    if(target){target.tabIndex=-1;target.focus({preventScroll:true})}
+    announce('답해 주셔서 고마워요 ✓');
+  }
+});
+['pointerdown','keydown','input','scroll','wheel','touchstart'].forEach(type=>phone.addEventListener(type,()=>{if(state.screen===2)state.touched=true;resetIdle()},{capture:true,passive:true}));
+phone.addEventListener('keydown',event=>{
+  const dialog=phone.querySelector('[role="dialog"]');
+  if(!dialog)return;
+  if(event.key==='Escape'){
+    if(state.editing)closeEdit();
+    else if(state.screen===4)go(3);
+    return;
+  }
+  if(event.key==='Tab'){
+    const buttons=[...dialog.querySelectorAll('button:not(:disabled)')];
+    if(!buttons.length){event.preventDefault();return}
+    const first=buttons[0],last=buttons[buttons.length-1];
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+  }
+});
+document.querySelector('.tabs').addEventListener('click',event=>{
+  const button=event.target.closest('[data-screen]');
+  if(button)go(Number(button.dataset.screen),true);
+});
+document.querySelector('.tabs').addEventListener('keydown',event=>{
+  const tabs=[...document.querySelectorAll('[data-screen]')];
+  const index=tabs.indexOf(document.activeElement);
+  if(index<0)return;
+  let next=index;
+  if(event.key==='ArrowRight')next=(index+1)%6;
+  else if(event.key==='ArrowLeft')next=(index+5)%6;
+  else if(event.key==='Home')next=0;
+  else if(event.key==='End')next=5;
+  else return;
+  event.preventDefault();go(next+1,true);tabs[next].focus();
+});
+document.getElementById('previous').onclick=()=>go(Math.max(1,state.screen-1),true);
+document.getElementById('next').onclick=()=>go(Math.min(6,state.screen+1),true);
+document.getElementById('restart').onclick=()=>{clearTimers();state=initial();announce('처음부터 시작해요');go(1)};
+window.addEventListener('pagehide',clearTimers);
+go(1);
+document.getElementById('tab1').focus({preventScroll:true});
+</script>
+</body>
+</html>

@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>설문을 로딩 화면에서 받는 흐름 — 목업 v7 (항로 지킴이 카드 · 최종)</title>
+<style>
+/* 토큰 — 색은 실제 제품(src/styles/tokens.css, 2026-10-03 사용자 확정 값)과 같다. 테마는 초록(기본)·흰색 두 가지뿐이고 다크 테마는 없다.
+   간격(4/8 격자) · 글자(12/14/16, 굵기 400/500/600) · 움직임(100/150/200/300ms) · 화면 폭(375/768/1280)은 이 목업이 더한 제안이다. */
+:root,[data-theme="green"]{
+  color-scheme:light;
+  --color-text:#24392f; --color-muted:#6d7c73; --color-border:#dce3dd; --color-surface:#ffffff; --color-background:#f3f5f3; --color-paper:#f7f9f3;
+  --color-primary:#2e6047; --color-primary-hover:#254f3a; --color-on-primary:#ffffff; --color-soft:#e9f2eb; --color-subtle:#f6f7f5;
+  --color-warning:#82693e; --color-warning-soft:#faf6ec; --color-warning-border:#e5d9c1;
+  --color-error:#965640; --color-error-soft:#fdf3ed; --color-error-border:#ecd2c7;
+  --color-text-secondary:#4a5d52; --color-faint:#a5b1a9; --color-divider:#e8ede9; --color-subtle-strong:#e4e9e5; --color-border-strong:#c3cdc6;
+  --color-success:#3d7a56; --color-success-soft:#e3f0e7;
+  --color-selected:#2e6047; --color-selected-soft:#dcebe1;
+  --color-inverse:#24392f; --color-on-inverse:#ffffff;
+  --color-scrim:rgba(36,57,47,.45);
+}
+[data-theme="neutral"]{
+  --color-text:#1c1c1e; --color-muted:#86868c; --color-border:#dadad6; --color-surface:#ffffff; --color-background:#f2f2ef; --color-paper:#ffffff;
+  --color-primary:#1c1c1e; --color-primary-hover:#2c2c2e; --color-on-primary:#ffffff; --color-soft:#ececea; --color-subtle:#f6f6f4;
+  --color-warning:#a35a00; --color-warning-soft:#fff0d4; --color-warning-border:#e9c27a;
+  --color-error:#c03a1a; --color-error-soft:#fde5de; --color-error-border:#f2b8a8;
+  --color-text-secondary:#48484d; --color-faint:#b9b9bd; --color-divider:#ebebe7; --color-subtle-strong:#ececea; --color-border-strong:#c2c2c6;
+  --color-success:#4f7a63; --color-success-soft:#e8f1ec;
+  --color-selected:#2457d6; --color-selected-soft:#e1e9ff;
+  --color-inverse:#26262a; --color-on-inverse:#ffffff;
+  --color-scrim:rgba(28,28,30,.45);
+}
+/* 제안: 글자 대비 보정안(켜고 끌 수 있음). 실제 값은 흐린 글자가 4.5:1 에 못 미친다 — 점검 기록 참고 */
+[data-contrast="fix"]{--color-muted:#5d6d64;--color-success:#2f6a47}
+[data-contrast="fix"][data-theme="neutral"]{--color-muted:#68686e;--color-success:#3f6b53}
+:root{
+  --focus:var(--color-primary);
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-6:24px; --space-8:32px; --space-12:48px;
+  --text-meta:12px; --text-secondary:14px; --text-body:16px;
+  --w-regular:400; --w-medium:500; --w-semibold:600;
+  --motion-100:100ms; --motion-150:150ms; --motion-200:200ms; --motion-300:300ms;
+  --ease-out:cubic-bezier(.16,1,.3,1); --ease-in:cubic-bezier(.7,0,.84,0);
+  --vp-narrow:375px; --vp-medium:768px; --vp-wide:1280px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-background);color:var(--color-text);font:var(--w-regular) var(--text-body)/1.6 "Segoe UI","Malgun Gothic",sans-serif}
+h1,h2,h3,p,ul,ol{margin:0}
+ul,ol{padding:0;list-style:none}
+h1,h2,h3{font-weight:var(--w-semibold);line-height:1.25}
+h1{font-size:24px}
+h2{font-size:20px}
+h3{font-size:16px}
+.meta{font-size:var(--text-meta);line-height:1.4;color:var(--color-muted)}
+button{font-family:inherit;font-size:var(--text-secondary);font-weight:var(--w-medium);line-height:1.4;color:inherit;cursor:pointer;min-height:44px;min-width:44px;border:1px solid var(--color-border);border-radius:12px;background:var(--color-surface);padding:var(--space-2) var(--space-4)}
+button:hover{border-color:var(--color-border-strong);background:var(--color-subtle)}
+button:disabled{cursor:default;color:var(--color-muted);background:var(--color-subtle-strong);border-color:var(--color-subtle-strong)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.skip{position:absolute;left:var(--space-2);top:-48px;z-index:20;background:var(--color-surface);border:1px solid var(--color-border-strong);border-radius:8px;padding:var(--space-2) var(--space-3);font-size:var(--text-secondary);color:var(--color-text)}
+.skip:focus{top:var(--space-2)}
+.primary{background:var(--color-primary);border-color:var(--color-primary);color:var(--color-on-primary);font-weight:var(--w-semibold)}
+.primary:hover{background:var(--color-primary-hover);border-color:var(--color-primary-hover)}
+.primary[aria-disabled="true"]{background:var(--color-subtle-strong);border-color:var(--color-subtle-strong);color:var(--color-text-secondary)}
+.full{width:100%}
+.text-button{border-color:var(--color-surface);background:var(--color-surface);color:var(--color-muted);font-size:var(--text-meta);font-weight:var(--w-regular);text-decoration:underline;text-underline-offset:4px}
+.icon-btn{display:inline-grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:12px;background:none;color:var(--color-text-secondary)}
+.icon-btn svg{display:block;width:24px;height:24px}
+.icon-btn:hover{background:var(--color-subtle)}
+.icon-btn:disabled{opacity:.35;background:none}
+svg.ic{display:inline-block;vertical-align:-3px;flex-shrink:0}
+/* 도구 설명(툴팁) */
+.tip{position:fixed;z-index:30;display:flex;align-items:center;gap:var(--space-2);background:var(--color-inverse);color:var(--color-on-inverse);font-size:var(--text-meta);font-weight:var(--w-medium);line-height:1.4;border-radius:8px;padding:var(--space-1) var(--space-2);pointer-events:none;white-space:nowrap}
+.tip[hidden]{display:none}
+.tip kbd{font:inherit;border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:0 var(--space-1)}
+/* 시연 틀(제품 화면이 아님) */
+.page-head{max-width:var(--vp-wide);margin:0 auto;padding:var(--space-8) var(--space-6) var(--space-4)}
+.intro{color:var(--color-muted);margin-top:var(--space-2);font-size:var(--text-secondary)}
+.demo-nav{display:flex;gap:var(--space-3);align-items:center;margin-top:var(--space-6);flex-wrap:wrap}
+.tabs{display:flex;gap:var(--space-2);flex-wrap:wrap;flex:1}
+.tabs button{font-size:var(--text-meta);padding:var(--space-2) var(--space-3)}
+.tabs button[aria-selected="true"]{background:var(--color-selected-soft);border-color:var(--color-primary);color:var(--color-primary);font-weight:var(--w-semibold)}
+.steps-nav{display:flex;gap:var(--space-2)}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 408px minmax(0,1fr);gap:var(--space-6);max-width:var(--vp-wide);margin:0 auto var(--space-12);padding:0 var(--space-6);align-items:start}
+.stage.wide{display:block}
+.phone{grid-column:2;position:relative;isolation:isolate;width:408px;max-width:100%;height:824px;border:1px solid var(--color-border-strong);border-radius:32px;background:var(--color-paper);overflow:hidden}
+.phone.desk{width:100%;height:auto;border-radius:24px}
+.side{grid-column:3;width:100%;min-width:0;padding-top:var(--space-2)}
+.stage.wide .side{margin-top:var(--space-6);padding-top:0}
+.rules{padding:var(--space-6);background:var(--color-surface);border:1px solid var(--color-border);border-radius:16px}
+.rules h2{font-size:16px}
+.rules ul{list-style:disc;padding-left:var(--space-4);margin-top:var(--space-4);font-size:var(--text-secondary);color:var(--color-text-secondary)}
+.rules li+li{margin-top:var(--space-3)}
+.rules .flag{display:block;background:var(--color-warning-soft);border:1px solid var(--color-warning-border);border-radius:8px;padding:var(--space-2) var(--space-3);color:var(--color-warning)}
+.rules code{font-size:var(--text-meta)}
+.demo-tools{margin-top:var(--space-6)}
+.demo-tools p{margin-bottom:var(--space-2)}
+/* 휴대폰 폭 화면 */
+.phone-content{height:100%;display:flex;flex-direction:column}
+.brand{display:flex;justify-content:space-between;align-items:center;padding:var(--space-1) var(--space-2) var(--space-1) var(--space-6);min-height:56px;color:var(--color-primary);font-weight:var(--w-semibold)}
+.brand .right{display:flex;align-items:center;gap:var(--space-1);font-weight:var(--w-regular)}
+.app-head{padding:var(--space-2) var(--space-4) var(--space-4)}
+.scroll{overflow-y:auto;flex:1;min-height:0;padding:0 var(--space-4) var(--space-6);scrollbar-width:thin;scrollbar-color:var(--color-border-strong) var(--color-paper)}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:16px;padding:var(--space-4);margin-bottom:var(--space-3)}
+.footer{padding:var(--space-4);background:var(--color-surface);border-top:1px solid var(--color-border);flex-shrink:0}
+.footer .help{margin-top:var(--space-2);text-align:center}
+.help{font-size:var(--text-meta);line-height:1.5;color:var(--color-muted);margin-top:var(--space-2)}
+.loading-head{padding:var(--space-2) 0 var(--space-4)}
+.eyebrow{color:var(--color-muted);font-size:var(--text-secondary);margin-bottom:var(--space-2)}
+.progress-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-2);margin-top:var(--space-6)}
+.step{color:var(--color-muted);font-size:var(--text-meta);line-height:1.4;text-align:center}
+.step[aria-current="step"]{color:var(--color-primary);font-weight:var(--w-semibold)}
+.track{height:4px;border-radius:4px;background:var(--color-subtle-strong);overflow:hidden;margin-bottom:var(--space-2)}
+.fill{height:100%;width:100%;background:var(--color-primary)}
+.step[aria-current="step"] .fill{transform-origin:left;animation:read-progress 14s linear forwards}
+.step.pending .fill{width:0}
+@keyframes read-progress{from{transform:scaleX(.08)}to{transform:scaleX(1)}}
+.notice{font-size:var(--text-secondary);line-height:1.6;color:var(--color-text-secondary);padding:var(--space-3) 0 var(--space-4)}
+.success-line{display:flex;align-items:center;gap:var(--space-2);background:var(--color-success-soft);color:var(--color-success);border-radius:12px;padding:var(--space-3) var(--space-4);font-size:var(--text-secondary);font-weight:var(--w-semibold);margin-bottom:var(--space-4)}
+/* 질문 슬라이드 */
+.pager-top{display:flex;align-items:center;justify-content:space-between}
+.pager-top .count{font-size:var(--text-meta);color:var(--color-muted)}
+.question h3{font-size:20px}
+.reason{font-size:var(--text-secondary);color:var(--color-muted);margin-top:var(--space-2);line-height:1.5}
+.choices{display:grid;gap:var(--space-2);margin-top:var(--space-4)}
+.choices button{display:flex;align-items:center;gap:var(--space-2);min-height:48px;text-align:left;font-size:var(--text-body);font-weight:var(--w-regular)}
+button.selected{background:var(--color-selected-soft);border-color:var(--color-selected);color:var(--color-selected);font-weight:var(--w-semibold)}
+.slide{touch-action:pan-y;user-select:none}
+.slide.from-right{animation:slide-in-right var(--motion-200) var(--ease-out)}
+.slide.from-left{animation:slide-in-left var(--motion-200) var(--ease-out)}
+@keyframes slide-in-right{from{opacity:.4;transform:translateX(8px)}to{opacity:1;transform:none}}
+@keyframes slide-in-left{from{opacity:.4;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.saved{min-height:24px;margin-top:var(--space-2);color:var(--color-success);font-size:var(--text-secondary);text-align:center}
+.question .text-button{display:block;margin:var(--space-1) auto 0}
+.dots{display:flex;justify-content:center;gap:var(--space-2);margin-top:var(--space-2)}
+.dots span{width:8px;height:8px;border-radius:50%;background:var(--color-subtle-strong)}
+.dots span.on{background:var(--color-primary)}
+.swipe-hint{margin-top:var(--space-2);text-align:center}
+.pager-status{padding:var(--space-3) var(--space-1);text-align:center;font-size:var(--text-secondary);color:var(--color-text-secondary);line-height:1.5}
+/* 아래 단추 — 읽는 중에는 눌러도 아무 일 없는 단추 대신 「읽는 중」 상태를 보여 줌 */
+.spin svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.done-line{display:flex;align-items:center;justify-content:center;gap:var(--space-2);color:var(--color-success);font-size:var(--text-secondary);font-weight:var(--w-semibold)}
+.done-sub{margin-top:var(--space-1);text-align:center;font-size:var(--text-secondary);color:var(--color-text-secondary)}
+.finish-track{height:4px;background:var(--color-subtle-strong);border-radius:4px;overflow:hidden;margin:var(--space-3) 0 var(--space-4)}
+.finish-fill{height:100%;background:var(--color-primary);transform-origin:left;animation:finish var(--finish-ms,3000ms) linear forwards}
+@keyframes finish{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.footer .text-button{display:block;margin:var(--space-2) auto 0}
+/* 가만히 있을 때(시간 경고 — 알림 대화) */
+.modal-layer{position:absolute;inset:0;background:var(--color-scrim);z-index:5;display:flex;align-items:flex-end}
+.sheet{width:100%;background:var(--color-surface);border:1px solid var(--color-border);border-radius:24px 24px 0 0;padding:var(--space-6);animation:rise var(--motion-200) var(--ease-out)}
+.sheet .text-button{display:block;margin:var(--space-2) auto 0}
+@keyframes rise{from{opacity:.4;transform:translateY(8px)}to{opacity:1;transform:none}}
+.countdown{text-align:center;font-size:48px;font-weight:var(--w-semibold);line-height:1.2;color:var(--color-primary);font-variant-numeric:tabular-nums;margin-bottom:var(--space-3)}
+.count-copy{font-size:var(--text-body);text-align:center;margin-bottom:var(--space-6);word-break:keep-all}
+/* 계획 확인(기존) 자리표시 */
+.skeleton span{display:block;height:8px;border-radius:4px;background:var(--color-subtle-strong);margin-top:var(--space-3)}
+.skeleton span:nth-child(2){width:80%}
+.skeleton span:nth-child(3){width:56%}
+/* ① 계획 담기 — 실제 화면 폭(양식 화면) */
+.site-head{display:flex;justify-content:space-between;align-items:center;padding:var(--space-2) var(--space-4) var(--space-2) var(--space-8);border-bottom:1px solid var(--color-divider);min-height:64px}
+.site-head .right{display:flex;align-items:center;gap:var(--space-2)}
+.logo{display:flex;align-items:center;gap:var(--space-2);font-size:20px;font-weight:var(--w-semibold)}
+.logo-mark{display:grid;place-items:center;width:32px;height:32px;border-radius:8px;background:var(--color-primary);color:var(--color-on-primary);font-size:20px;font-weight:var(--w-semibold)}
+.site-body{padding:var(--space-6) var(--space-8) var(--space-6)}
+.stepper{display:flex;gap:var(--space-6);margin-bottom:var(--space-8);flex-wrap:wrap}
+.stepper li{display:flex;align-items:center;gap:var(--space-2);color:var(--color-muted);font-size:var(--text-secondary)}
+.stepper .num{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--color-subtle-strong);color:var(--color-text-secondary);font-size:var(--text-meta);font-weight:var(--w-semibold)}
+.stepper .current{color:var(--color-primary);font-weight:var(--w-semibold)}
+.stepper .current .num{background:var(--color-primary);color:var(--color-on-primary)}
+.caps{font-size:var(--text-meta);font-weight:var(--w-semibold);letter-spacing:.08em;color:var(--color-text-secondary)}
+.site-body h1{font-size:40px;letter-spacing:-.02em;margin:var(--space-2) 0 var(--space-3)}
+.lede{color:var(--color-muted);max-width:70ch;margin-bottom:var(--space-6)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:var(--space-6);align-items:start}
+.panel{background:var(--color-surface);border:1px solid var(--color-border);border-radius:24px;padding:var(--space-6);margin-bottom:var(--space-4)}
+.label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-2)}
+.label-row label{font-weight:var(--w-semibold);font-size:var(--text-body)}
+.link-button{border:0;background:none;color:var(--color-text-secondary);font-weight:var(--w-regular)}
+.plan-input{display:block;width:100%;height:192px;resize:vertical;border:1px solid var(--color-border);border-radius:16px;background:var(--color-subtle);padding:var(--space-4);font:inherit;font-size:var(--text-secondary);line-height:2;color:var(--color-text)}
+.plan-input[aria-invalid="true"]{border-color:var(--color-error);background:var(--color-error-soft)}
+.inline-error{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);margin-top:var(--space-3);padding:var(--space-3) var(--space-4);border:1px solid var(--color-error-border);border-radius:12px;background:var(--color-error-soft);color:var(--color-error);font-size:var(--text-secondary);line-height:1.5}
+.inline-error button{flex-shrink:0;border-color:var(--color-error-border);color:var(--color-error);background:var(--color-surface)}
+.gk-toast.is-error{border-color:var(--color-error-border);background:var(--color-error-soft);color:var(--color-error)}
+.gk-toast.is-error .text-button{background:transparent;border-color:transparent;color:var(--color-error);font-size:var(--text-secondary);font-weight:var(--w-medium)}
+.field-error{margin-top:var(--space-2);color:var(--color-error);font-size:var(--text-secondary)}
+.demo-set{border:0;padding:0;margin:var(--space-4) 0 0}
+.demo-set legend{padding:0;margin-bottom:var(--space-1)}
+.demo-set label,.demo-check{display:flex;align-items:center;gap:var(--space-2);min-height:44px;font-size:var(--text-secondary);cursor:pointer}
+.demo-check{margin-top:var(--space-1)}
+.input-meta{display:flex;justify-content:space-between;gap:var(--space-4);margin:var(--space-2) 0 var(--space-4)}
+.file-box{border:1px dashed var(--color-border-strong);border-radius:16px;background:var(--color-subtle);padding:var(--space-4)}
+.file-trigger{display:inline-flex;align-items:center;gap:var(--space-2);background:var(--color-soft);border-color:var(--color-selected-soft);color:var(--color-primary);font-weight:var(--w-semibold)}
+.settings h2{font-size:18px}
+.settings .lead{color:var(--color-muted);margin-top:var(--space-1);font-size:var(--text-secondary)}
+.setting-group{margin-top:var(--space-4)}
+.setting-group .chips{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-2);margin-top:var(--space-3)}
+.setting-group .chips button{display:flex;align-items:center;justify-content:center;gap:var(--space-1);min-height:48px;white-space:nowrap}
+.hint{margin-top:var(--space-3);font-size:var(--text-secondary);color:var(--color-text-secondary)}
+.tips h2{font-size:18px;margin-bottom:var(--space-3)}
+.tips ol{list-style:decimal;padding-left:var(--space-6);color:var(--color-text-secondary);font-size:var(--text-secondary);line-height:1.8}
+.pref-note{padding-bottom:var(--space-4);margin-bottom:var(--space-4);border-bottom:1px solid var(--color-divider)}
+.pref-note .caps{display:block;margin-bottom:var(--space-2)}
+.pref-note h3{margin-bottom:var(--space-2)}
+.pref-note p{font-size:var(--text-secondary);color:var(--color-text-secondary);line-height:1.6}
+.actions{display:flex;justify-content:space-between;align-items:center;gap:var(--space-4);border-top:1px solid var(--color-divider);margin-top:var(--space-2);padding-top:var(--space-6)}
+.actions .note{color:var(--color-muted);font-size:var(--text-secondary);text-align:center}
+.actions button{display:inline-flex;align-items:center;gap:var(--space-2)}
+.actions .primary{padding:var(--space-3) var(--space-6)}
+/* 항로 지킴이 */
+.gk-icon{position:relative;color:var(--color-muted)}
+.gk-icon.is-on{background:var(--color-soft);color:var(--color-primary)}
+.gk-icon.is-on:hover{background:var(--color-selected-soft)}
+.gk-icon.is-on::after{content:"";position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:currentColor}
+/* 패널: 넓은 곳(768px 이상)은 오른쪽 위에 뜨는 카드(높이 = 내용), 좁은 곳은 아래에서 올라오는 시트. 폭 판단은 이 층의 폭(container)으로 한다 —
+   목업의 휴대폰 틀 안에서도 제품 화면 전체(position:fixed)에서도 같은 규칙이 맞는다. 제품에서는 .slide-layer 의 position 만 fixed 로 바꾼다. */
+.slide-layer{position:absolute;inset:0;z-index:6;container:so / inline-size;background:transparent;opacity:0;transition:opacity var(--motion-150) var(--ease-in)}
+.slide-layer[data-open="true"]{background:var(--color-scrim);opacity:1;transition:opacity var(--motion-200) var(--ease-out)}
+.slide-over{position:absolute;top:var(--space-4);right:var(--space-4);display:flex;flex-direction:column;width:min(440px,calc(100% - var(--space-8)));max-height:calc(100% - var(--space-8));overflow:hidden;background:var(--color-surface);border:1px solid var(--color-border);border-radius:24px;transform:translateX(calc(100% + var(--space-4)));transition:transform var(--motion-150) var(--ease-in)}
+.slide-layer[data-open="true"] .slide-over{transform:none;transition:transform var(--motion-200) var(--ease-out)}
+.so-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:var(--space-2);flex:none;padding:var(--space-3) var(--space-3) 0 var(--space-6)}
+.so-heading{padding-top:var(--space-3)}
+.so-title{font-size:32px;line-height:1.2;letter-spacing:-.02em;word-break:keep-all}
+.so-reco{display:block;margin-bottom:var(--space-1);font-size:var(--text-meta);font-weight:var(--w-semibold);line-height:1.4;letter-spacing:.08em;color:var(--color-primary)}
+.so-en{margin-top:var(--space-1);font-size:var(--text-secondary);line-height:1.4;color:var(--color-text-secondary)}
+.so-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:var(--space-6) var(--space-6) 0}
+.so-lead{font-size:20px;font-weight:var(--w-medium);line-height:1.5;word-break:keep-all;text-wrap:balance}
+.so-lead span{display:block;color:var(--color-text-secondary)}
+.so-asks{margin-top:var(--space-6);border:1px solid var(--color-divider);border-radius:16px;background:var(--color-subtle)}
+.so-asks li{padding:var(--space-3) var(--space-4);font-size:var(--text-body);line-height:1.5;color:var(--color-text-secondary);word-break:keep-all;text-wrap:pretty}
+.so-asks li+li{border-top:1px solid var(--color-divider)}
+.so-nb{white-space:nowrap}
+.so-foot{flex:none;padding:var(--space-6)}
+.so-actions{display:grid;gap:var(--space-2)}
+.so-actions button{min-height:48px;font-size:var(--text-body)}
+.so-where{display:flex;align-items:center;gap:var(--space-3);margin-top:var(--space-4);font-size:var(--text-secondary);line-height:1.5;color:var(--color-text-secondary);word-break:keep-all;text-wrap:balance}
+.so-where-icon{position:relative;display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:8px;background:var(--color-soft);color:var(--color-primary)}
+.so-where-icon::after{content:"";position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:currentColor}
+@container so (max-width:767.98px){
+  .slide-over{top:auto;right:0;bottom:0;left:0;width:100%;max-height:calc(100% - var(--space-12));border-width:1px 0 0;border-radius:24px 24px 0 0;transform:translateY(100%)}
+  .so-title{font-size:24px}
+  .so-foot{padding-bottom:max(var(--space-6),env(safe-area-inset-bottom))}
+}
+.gk-toast{position:absolute;left:var(--space-4);right:var(--space-4);top:64px;z-index:7;display:flex;align-items:center;gap:var(--space-1);background:var(--color-surface);border:1px solid var(--color-border-strong);border-radius:16px;padding:var(--space-1) var(--space-1) var(--space-1) var(--space-4);font-size:var(--text-secondary)}
+.phone.desk .gk-toast{top:72px;left:auto;right:var(--space-6);max-width:520px}
+.gk-toast>span{flex:1;line-height:1.5;word-break:keep-all}
+/* 화면 폭 3단계: 좁음 375 · 중간 768 · 넓음 1280 */
+@media(max-width:1279.98px){
+  .stage{display:flex;flex-direction:column;align-items:center;padding:0 var(--space-4)}
+  .stage.wide{display:block}
+  .side{width:408px;max-width:100%;padding-top:0}
+  .stage.wide .side{width:100%}
+  .page-head{padding:var(--space-6) var(--space-4) var(--space-4)}
+  .demo-nav{align-items:flex-start}
+  .tabs{flex-basis:100%}
+}
+@media(max-width:767.98px){
+  .layout{grid-template-columns:1fr}
+  .site-body{padding:var(--space-6) var(--space-4)}
+  .site-body h1{font-size:32px}
+  .site-head{padding:var(--space-2) var(--space-2) var(--space-2) var(--space-4)}
+  .actions{flex-wrap:wrap}
+  .actions .note{order:3;flex-basis:100%}
+  .phone:not(.desk){width:100%;height:824px;border-radius:24px}
+}
+@media (hover:hover){.demo-tools button:hover{background:var(--color-subtle)}}
+/* 움직임 줄이기: 위치 이동·회전·확대를 끄고 투명도 변화만 남김. 뜻은 글자로도 전달됨(「n초 뒤에 넘어가요」·「읽는 중…」) */
+@media(prefers-reduced-motion:reduce){
+  .slide.from-right,.slide.from-left,.sheet{animation:none}
+  .slide-over,.slide-layer[data-open="true"] .slide-over{transform:none;transition:opacity var(--motion-100) linear}
+  .slide-layer:not([data-open="true"]) .slide-over{opacity:0}
+  .spin svg{animation:none}
+  .step[aria-current="step"] .fill{animation:none;transform:scaleX(.5)}
+  .finish-fill{animation:none;transform:scaleX(1)}
+  *{scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<header class="page-head">
+  <h1>설문을 로딩 화면에서 받는 흐름 — 목업 v7</h1>
+  <p class="intro">v6에서 항로 지킴이 패널을 「높이를 내용에 맞춘 떠 있는 카드 / 아래 시트」로 다시 짠 판이에요. 주고받는 값은 v4와 같아요.</p>
+  <div class="demo-nav">
+    <div class="tabs" role="tablist" aria-label="화면 목록" id="tabs"></div>
+    <div class="steps-nav">
+      <button id="previous">이전 화면</button>
+      <button id="next">다음 화면</button>
+    </div>
+  </div>
+</header>
+<main class="stage">
+  <section class="phone" id="phone" role="tabpanel" tabindex="-1"></section>
+  <aside class="side">
+    <section class="rules">
+      <h2>이 화면의 규칙</h2>
+      <ul id="rules"></ul>
+    </section>
+    <div class="demo-tools">
+      <p class="meta">시연 조작</p>
+      <button id="restart">처음부터</button>
+      <fieldset class="demo-set"><legend class="meta">화면 테마(제품에 있는 두 가지)</legend>
+        <label><input type="radio" name="theme" value="green" checked> 초록(기본)</label>
+        <label><input type="radio" name="theme" value="neutral"> 흰색</label></fieldset>
+      <label class="demo-check"><input type="checkbox" id="contrastFix"> 글자 대비 보정안 켜기(제안)</label>
+      <label class="demo-check"><input type="checkbox" id="failSim"> 저장 실패 시연</label>
+    </div>
+  </aside>
+</main>
+<div id="announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+<div id="countAnnouncement" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+<div id="tip" class="tip" role="tooltip" hidden></div>
+<script>
+const TIMING = {idleMs:30000, countdownS:20, doneMs:3000};
+const densityOptions = ['여유롭게','적당히','꽉 차게'];
+const SCREENS = ['plan','card','read','late','idle','done','check','link'];
+const LABELS = {plan:'① 계획 담기',card:'② 항로 지킴이 카드',read:'③ 읽는 중 + 질문',late:'④ 로딩 끝 · 질문 남음',idle:'⑤ 가만히 있을 때',done:'⑥ 다 답했을 때',check:'⑦ 계획 확인(기존)',link:'⑧ 알림 링크로 켜기'};
+const DRAFT_KEY = 'tripilot.mock.v5.draft';
+const ICONS = {
+  shield:'<path d="M12 2.8 20 6v5.4c0 4.8-3.2 8-8 9.8-4.8-1.8-8-5-8-9.8V6Z"/><path d="M8 16c0-2.5 6-2 6-5V8m-2 2 2-2 2 2"/>',
+  menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',
+  left:'<path d="m15 6-6 6 6 6"/>', right:'<path d="m9 6 6 6-6 6"/>',
+  close:'<path d="m6 6 12 12M18 6 6 18"/>',
+  check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  clip:'<path d="m21.4 11-9.2 9.2a6 6 0 0 1-8.5-8.5l8.6-8.6A4 4 0 1 1 18 8.8l-8.6 8.6a2 2 0 0 1-2.8-2.8l8.5-8.5"/>',
+  arrowL:'<path d="M19 12H5m6-6-6 6 6 6"/>', arrowR:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
+  spinner:'<path d="M12 3a9 9 0 1 0 9 9"/>'
+};
+function icon(name,size=24){return `<svg class="ic" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICONS[name]}</svg>`}
+const COPY = {
+  waitingFooter:'로딩이 끝나면 단추가 켜져요.',
+  stillReading:'아직 읽는 중이에요. 로딩이 끝나면 단추가 켜져요.',
+  readingButton:'계획 읽는 중…',
+  goButton:'읽어 온 계획 확인하기',
+  doneLine:'계획을 다 읽었어요',
+  doneFooterAll:'누르면 계획 확인 화면으로 가요.',
+  doneFooterLeft:n=>`남은 질문 ${n}개는 메뉴의 마이페이지에서 이어서 답하거나, 다음에 계획을 읽을 때 다시 답할 수 있어요.`,
+  waitLine:'이번 질문은 여기까지예요. 아직 계획을 읽는 중이에요.',
+  allDoneWaitLine:'질문에 모두 답했어요. 계획을 다 읽으면 계획 확인 화면으로 넘어가요.',
+  allDoneStopLine:'질문에 모두 답했어요. 아래 단추를 누르면 계획 확인 화면으로 가요.',
+  doneTitle:'질문에 모두 답했어요',
+  doneCount:n=>`${n}초 뒤에 계획 확인 화면으로 넘어가요.`,
+  countCopy:n=>`아직 보고 계신가요? <span id="seconds">${n}</span>초 뒤에 계획 확인 화면으로 넘어가요`,
+  countAria:n=>`${n}초 뒤에 계획 확인 화면으로 넘어가요`,
+  keepAnswering:'계속 답하기',
+  noAuto:'자동으로 넘어가지 않기',
+  stopped:'이제 자동으로 넘어가지 않아요.',
+  notice:'기다리는 동안 하나씩 여쭤볼게요. 건너뛰어도 괜찮아요.',
+  skip:'이 질문 건너뛰기',
+  saved:'저장했어요',
+  skippedNote:'건너뛰었어요. 밀어서 돌아와 다시 답할 수 있어요.',
+  swipeHint:'좌우로 밀면 이전 · 다음 질문을 볼 수 있어요',
+  prefTitle:'기다리는 동안 취향을 알려 주세요',
+  prefBody:'계획을 읽는 동안 취향을 여쭤볼게요. 건너뛴 질문은 메뉴의 마이페이지나 다음에 계획을 읽는 화면에서 이어서 답할 수 있어요.',
+  settingsTitle:'읽는 기준',
+  settingsLead:'처음부터 골라 두었어요. 바꾸고 싶을 때만 눌러 주세요.',
+  densityTitle:'하루 일정의 여유',
+  densityAsk:'하루를 얼마나 채울까요?',
+  densityHint:'「적당히」는 「여유롭게」보다 하루에 한 곳쯤 더 담아요.',
+  planError:'여행 계획을 적거나 파일을 올려 주세요.',
+  answerFail:'답을 저장하지 못했어요. 연결을 확인하고 다시 시도해 주세요.',
+  guardianFail:'항로 지킴이를 바꾸지 못했어요. 연결을 확인하고 다시 시도해 주세요.',
+  retry:'다시 시도하기',
+  restored:'이전에 적던 계획을 불러왔어요.',
+  restoredClear:'지우기'
+};
+const initial = () => ({
+  screen:'plan', plan:samplePlan, density:densityOptions[1], restored:false, planError:false,
+  guardian:null, failSim:false, saveError:null, guardianRetry:null,
+  answers:[null,null], skipped:[false,false],
+  view:0, slide:'', busy:false, saved:false, stopAuto:false, seconds:TIMING.countdownS, touched:false,
+  timers:[], idle:null
+});
+</script>
+<script>
+const samplePlan = `1일차 · 2026-09-15
+09:00 호텔 조식
+10:00 잠실 스카이타워 · 10:45 종료
+11:00 성수동 쇼핑 · 향수, K-뷰티
+13:00 성수 예약 식당 · 예약 있음
+15:00 경복궁 · 한복 체험, 17:00 종료
+18:00 서울역 인근 저녁 식당 · 예약 없이 방문
+19:30 롯데마트 서울역점 · 식료품 쇼핑
+
+2일차 · 2026-09-16
+09:00 호텔 조식
+10:30 광장시장 · 점심
+14:00 남산타워`;
+let state = initial();
+try{
+  const draft=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');
+  if(draft&&typeof draft.plan==='string'){state.plan=draft.plan;if(densityOptions.includes(draft.density))state.density=draft.density;state.restored=true}
+}catch(error){}
+const phone = document.getElementById('phone');
+const stage = document.querySelector('.stage');
+const tipEl = document.getElementById('tip');
+const questions = [
+  {title:'이동은 주로 어떻게 하세요?',reason:'계획서에는 이동 방법이 적혀 있지 않아서 여쭤요',options:['대중교통','택시','걷기 위주']},
+  {title:'활동할 때 더 중요한 건 무엇인가요?',reason:'계획서만으로는 알 수 없어요',options:['맛집','볼거리','쉬는 시간']}
+];
+const rules = {
+  plan:['이 화면은 Pattern 3 — Form(단계 1)이에요. 양식 하나, 주 단추 하나(「계획 확인하기」)예요.',
+        '「하루 일정의 여유」는 「적당히」가 처음부터 골라져 있어요. 손대지 않으면 그대로 보내요. 「일정이 바뀌면」 칸은 없고, 항로 지킴이는 「계획 확인하기」를 누른 뒤 ②에서 정해요.',
+        '「계획 확인하기」는 비활성으로 두지 않아요. 계획이 비어 있으면 눌렀을 때 입력칸 아래에 이유가 뜨고 입력칸으로 초점이 가요. 글을 쓰기 시작하면 바로 사라져요.',
+        '적던 계획과 고른 기준은 이 브라우저에 자동으로 임시 저장돼요. 새로 고쳐도 불러오고, 「지우기」로 지울 수 있어요.',
+        '위 아이콘 단추에는 마우스를 올리거나 Tab 으로 초점을 주면 이름이 뜨는 도구 설명이 있어요.'],
+  card:['「계획 확인하기」를 누르면 읽기 시작 전에 오른쪽 위에서 카드가 열려요. 높이는 내용에 맞추고(옛 판은 화면 높이 전체라 약 70%가 비어 보였어요), 휴대폰 폭에서는 아래에서 올라오는 시트가 돼요. 켜고 진행 = 서버에 <code>on_disruption=replace</code>.',
+        '「건너뛰기 — 끄고 진행」은 <b>반드시 <code>ask_first</code> 를 명시해서 보내요.</b> 아무것도 안 보내면 서버가 휴무·재난·교통 통제를 자동으로 적용해서 화면의 약속이 깨져요.',
+        '단추 글자는 「진행」만이 아니라 「켜고 진행」이에요. 열릴 때 초점은 제목에 있어서 Enter 를 반사적으로 눌러도 켜지지 않아요.',
+        'Esc · 바깥 누르기 · 닫기(X)는 계획 담기 화면으로 돌아가요. 아직 아무것도 정해지지 않고, 초점은 「계획 확인하기」로 돌아가요. Esc 는 움직임이 끝나기를 기다리지 않아요.'],
+  read:['정한 뒤부터 위쪽에 항로 지킴이 아이콘이 항상 보여요. 켜짐은 초록 원 + 점, 꺼짐은 옅은 외곽선이에요(색만으로 구분하지 않아요).',
+        '아이콘 누르기: 켜짐이면 한 번에 꺼지고 알림줄로 되돌릴 수 있어요. 꺼짐이면 켤지 한 번 물어요.',
+        'cs 프로젝트 서버가 「물을 것」으로 알려 준 것만, 한 장에 하나, 최대 3개 묻고 한 번 누르면 바로 저장돼요.',
+        '질문은 좌우로 밀거나, 위 ‹ › 단추(도구 설명에 ← → 표시)나 방향키로 넘겨요. 이미 답한 것도 다시 눌러 고칠 수 있고 바로 저장돼요. 건너뛴 질문도 돌아와 답할 수 있어요.',
+        '아래 단추는 읽는 동안 「계획 읽는 중…」으로 보여요(눌러도 아무 일 없는 단추가 아니라, 누르면 이유를 알려 줘요). 로딩이 끝나면 「읽어 온 계획 확인하기」로 바뀌어요.',
+        '한 번도 안 만지고 로딩이 끝나면 기다리게 하지 않고 바로 계획 확인 화면으로 가요.',
+        '저장 실패(옆 「저장 실패 시연」을 켜면 보여요): 답을 누르면 카드 안에 이유와 「다시 시도하기」가 떠요. 고른 답은 화면에 남기고 다음 질문으로 넘어가지 않아요. 문구는 사용자 탓을 하지 않고 두 문장 안에서 다음 행동을 알려요.'],
+  late:['로딩이 끝나면 아래 단추가 켜져요(눌러서 넘어가요).',
+        '답하던 중이면 화면에 머물러요. 끌어내지 않아요. 로딩이 끝난 뒤에도 좌우로 밀어서 앞 질문을 다시 보고 고칠 수 있어요.',
+        '마지막으로 만진 뒤 30초 동안 가만히 있으면 ⑤로 가요.',
+        '못 답한 질문이 있으면 어디서 이어서 하는지 단추 밑에 한 줄로 알려요.'],
+  idle:['넘어가기 전에 20초 알려 줘요. 시간 경고라서 작업용 패널이 아니라 알림 대화로 두었어요(초점이 안에 갇히고 Esc 로 닫혀요).',
+        '「계속 답하기」는 몇 번이든 눌러 연장해요.',
+        '「자동으로 넘어가지 않기」는 테두리 없는 글자 단추예요 — 「이 질문 건너뛰기」와 같은 모양이에요.',
+        '이미 답한 것은 문항마다 바로 저장돼 있어서 넘어가도 잃지 않아요.'],
+  done:['가운데 대화창을 없애고 아래 단추 자리에 놓았어요. 질문 카드가 그대로 남아 있어서 3초 동안에도 앞 질문을 밀어서 보거나 고칠 수 있어요.',
+        '질문 카드를 만지면 자동 넘김이 멈추고 평소 단추로 돌아가요. 기다리지 않으려면 큰 단추 「읽어 온 계획 확인하기」를 눌러요.',
+        '「자동으로 넘어가지 않기」를 누르면 끝까지 기다려요. 움직임 줄이기를 켠 사람에게는 막대 대신 글(「3초 뒤에…」)이 그대로 남아요.'],
+  check:['새로 만드는 화면이 아니에요. 읽어 온 일정을 확인하고 고치는 기존 계획 확인 화면(02 함께 확인)이에요.',
+         '위쪽 아이콘은 여기서도 그대로예요. 켜고 끄는 일이 서버에 닿지 못하면(저장 실패 시연) 상태는 그대로 두고 알림줄에 「다시 시도하기」가 떠요.',
+         '알림줄은 자동으로 사라지지 않아요. 닫거나 되돌리거나 화면을 옮길 때까지 남아서 읽고 누를 시간을 제한하지 않아요.'],
+  link:['꺼 둔 사용자에게 가는 알림의 「항로 지킴이 켜기」 링크로 웹이 열렸을 때예요(주소 끝 <code>?guardian=on</code>).',
+        '시작 카드(②)와 같은 옆 패널을 그대로 다시 써요(같은 모양 · 같은 코드). 달라지는 것은 단추 글자(「켜기」 · 「그대로 두기」)와, 이미 꺼 둔 사람이라 「끄고 진행하면…」 줄이 빠지는 것뿐이에요.',
+        '바로 켜지 않고 패널의 「켜기」를 눌러야 서버를 불러요(<code>via=notice</code>). 꺼진 위쪽 아이콘을 눌렀을 때도 이 패널이 떠요. 서버는 로그인한 본인 여행만 켜 줘요.']
+};
+const escapeHTML = text => String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const later = (fn,ms) => {const id=setTimeout(fn,ms);state.timers.push(id);return id};
+function clearTimers(){
+  state.timers.forEach(clearTimeout);
+  state.timers=[];
+  clearTimeout(state.idle);
+  state.idle=null;
+}
+function announce(text){document.getElementById('announcement').textContent=text}
+function allAnswered(){return state.answers.every(Boolean)}
+function openIndexes(){return state.answers.map((a,i)=>(!a&&!state.skipped[i])?i:-1).filter(i=>i>=0)}
+function remaining(){return state.answers.filter(a=>!a).length}
+function content(){return phone.querySelector('.phone-content,.desk-content')}
+/* 도구 설명 */
+function tipButton(label,attrs='',kbd=''){return `data-tip="${label}" ${kbd?`data-kbd="${kbd}"`:''} aria-label="${label}" ${attrs}`}
+function showTip(target){
+  const label=target.dataset.tip;
+  if(!label)return;
+  tipEl.innerHTML=`<span>${escapeHTML(label)}</span>${target.dataset.kbd?`<kbd>${escapeHTML(target.dataset.kbd)}</kbd>`:''}`;
+  tipEl.hidden=false;
+  const r=target.getBoundingClientRect(),t=tipEl.getBoundingClientRect();
+  let left=Math.min(Math.max(8,r.left+r.width/2-t.width/2),window.innerWidth-t.width-8);
+  let top=r.bottom+8;
+  if(top+t.height>window.innerHeight-8)top=r.top-t.height-8;
+  tipEl.style.left=`${left}px`;tipEl.style.top=`${top}px`;
+  target.setAttribute('aria-describedby','tip');
+}
+function hideTip(){tipEl.hidden=true;document.querySelectorAll('[aria-describedby="tip"]').forEach(el=>el.removeAttribute('aria-describedby'))}
+phone.addEventListener('pointerover',event=>{const t=event.target.closest('[data-tip]');if(t)showTip(t)});
+phone.addEventListener('pointerout',event=>{if(event.target.closest('[data-tip]'))hideTip()});
+phone.addEventListener('focusin',event=>{const t=event.target.closest('[data-tip]');if(t&&event.target.matches(':focus-visible'))showTip(t)});
+phone.addEventListener('focusout',hideTip);
+/* 머리줄 */
+function gkHeaderButton(){
+  if(state.guardian===null)return '';
+  const on=state.guardian===true;
+  const label=on?'항로 지킴이 끄기':'항로 지킴이 켜기';
+  return `<button class="icon-btn gk-icon ${on?'is-on':'is-off'}" type="button" data-action="gk-toggle" ${tipButton(label,on?'':'aria-haspopup="dialog"')}>${icon('shield')}<span class="sr-only">${on?'지금 켜져 있어요':'지금 꺼져 있어요'}</span></button>`;
+}
+function brand(){return `<div class="brand"><span>triPilot</span><span class="right"><span class="gk-slot">${gkHeaderButton()}</span><span class="meta">여행 계획</span></span></div>`}
+function shell(body,footer='',heading=''){
+  return `<div class="phone-content">${brand()}${heading?`<header class="app-head">${heading}</header>`:''}<div class="scroll">${body}</div>${footer?`<footer class="footer">${footer}</footer>`:''}</div>`;
+}
+function choiceButtons(options,action,selected=null,radio=false){
+  return options.map((label,i)=>{
+    const on=selected===label;
+    const aria=radio?`role="radio" aria-checked="${on}" tabindex="${on?0:-1}"`:`aria-pressed="${on}"`;
+    return `<button type="button" data-action="${action}" data-index="${i}" ${aria} class="${on?'selected':''}">${on?icon('check',16):''}${escapeHTML(label)}</button>`;
+  }).join('');
+}
+function progress(done=false){
+  const steps=['받았어요','일정 읽기','장소·<wbr>운영시간','정리 완료'];
+  return `<ol class="progress-steps" aria-label="${done?'계획 읽기가 끝났어요':'장소·운영시간 확인 중'}">${steps.map((label,i)=>`<li class="step ${!done&&i===3?'pending':''}" ${!done&&i===2?'aria-current="step"':''}><div class="track"><div class="fill"></div></div><span>${done||i<2?icon('check',12)+' ':''}${label}</span></li>`).join('')}</ol>`;
+}
+/* ① 계획 담기 */
+function screenPlan(){
+  phone.innerHTML=`<div class="desk-content"><a class="skip" href="#plan-main">본문으로 건너뛰기</a>
+  <header class="site-head"><div class="logo"><span class="logo-mark" aria-hidden="true">t</span><span>triPilot</span></div><div class="right"><span class="gk-slot">${gkHeaderButton()}</span><button class="icon-btn" type="button" ${tipButton('메뉴 열기')}>${icon('menu')}</button></div></header>
+  <div class="site-body" id="plan-main" tabindex="-1">
+    <ol class="stepper" aria-label="진행 단계"><li class="current" aria-current="step"><span class="num">01</span>계획 담기</li><li><span class="num">02</span>함께 확인</li><li><span class="num">03</span>여행 시작</li></ol>
+    <p class="caps">A PLAN THAT FEELS LIKE YOU</p>
+    <h1>이제, 여행을 담아볼까요?</h1>
+    <p class="lede">준비한 계획을 그대로 붙여 넣어 주세요.<br>하나씩 살펴보고, 편안한 여행으로 이어갈게요.</p>
+    <div class="layout">
+      <div>
+        <section class="panel" aria-label="여행 계획 입력">
+          <div class="label-row"><label for="planInput">나의 여행 계획</label><button class="link-button" type="button" data-action="sample">예시 불러오기</button></div>
+          <textarea id="planInput" class="plan-input" maxlength="12000" aria-describedby="planHint planError" ${state.planError?'aria-invalid="true"':''}>${escapeHTML(state.plan)}</textarea>
+          <p class="field-error" id="planError" role="alert" ${state.planError?'':'hidden'}>${COPY.planError}</p>
+          <div class="input-meta meta"><span id="planHint">날짜 · 시간 · 장소를 함께 적어 주세요.${state.restored?` ${COPY.restored} <button class="text-button" type="button" data-action="clear-draft">${COPY.restoredClear}</button>`:''}</span><span id="planCount">${state.plan.length.toLocaleString()} / 12,000</span></div>
+          <div class="file-box"><button class="file-trigger" type="button">${icon('clip',20)}파일 선택</button>
+            <p class="help">사진 · PDF · 워드 · 엑셀로 된 계획도 올릴 수 있어요 (최대 5개, 한 개 10MB)</p><p class="help">0 / 5개 선택됨</p></div>
+        </section>
+        <section class="panel settings" aria-labelledby="settingsTitle">
+          <h2 id="settingsTitle">${COPY.settingsTitle}</h2><p class="lead">${COPY.settingsLead}</p>
+          <div class="setting-group"><h3 id="densityTitle">${COPY.densityTitle}</h3><p class="help">${COPY.densityAsk}</p>
+            <div class="chips" role="radiogroup" aria-labelledby="densityTitle">${choiceButtons(densityOptions,'density',state.density,true)}</div>
+            <p class="hint">${COPY.densityHint}</p></div>
+        </section>
+      </div>
+      <aside class="panel tips" aria-label="안내">
+        <div class="pref-note"><span class="caps">여행 취향</span><h3>${COPY.prefTitle}</h3><p>${COPY.prefBody}</p></div>
+        <h2>작은 준비, 더 편한 여행</h2>
+        <ol><li>일차 제목에 날짜를 적어요.</li><li>시작 시간과 장소를 한 줄씩 적어요.</li><li>예약한 일정은 ‘예약 있음’으로 표시해요.</li></ol>
+      </aside>
+    </div>
+    <div class="actions"><button type="button" data-action="back">${icon('arrowL',20)}이전</button><span class="note">입력한 계획은 화면을 오가도 유지돼요.</span><button class="primary" type="button" data-action="start">계획 확인하기${icon('arrowR',20)}</button></div>
+  </div></div>`;
+}
+function screenCard(){
+  screenPlan();
+  openSlide(gkPanelHTML('start'));
+}
+/* 항로 지킴이 — 옆에서 나오는 패널(시작 · 알림 링크 두 가지 같은 모양) */
+function gkPanelHTML(kind='start'){
+  const start=kind==='start';
+  return `<header class="so-head">
+      <div class="so-heading">
+        <h2 id="gkTitle" class="so-title" tabindex="-1" data-initial><span class="so-reco">추천</span> 항로 지킴이</h2>
+        <p class="so-en" lang="en">Course Keeper</p>
+      </div>
+      <button class="icon-btn" type="button" data-action="gk-close-panel" ${tipButton('닫기','','Esc')}>${icon('close')}</button>
+    </header>
+    <div class="so-body">
+      <p class="so-lead" id="gkLead">문제가 생기면 알아서 바꾸고 알려요. <span>되돌릴 수 있어요.</span></p>
+      <ul class="so-asks">${start?'<li>끄고 진행하면 문제가 생길 때 먼저 물어봐요.</li>':''}<li>켜 두어도 고정한 일정과 <span class="so-nb">재난·지진은</span> 먼저 물어봐요.</li></ul>
+    </div>
+    <footer class="so-foot">
+      <div class="so-actions">${start
+        ?'<button class="primary" type="button" data-action="gk-on">켜고 진행</button><button type="button" data-action="gk-skip">건너뛰기 — 끄고 진행</button>'
+        :'<button class="primary" type="button" data-action="gk-confirm">켜기</button><button type="button" data-action="gk-decline">그대로 두기</button>'}</div>
+      <p class="so-where"><span class="so-where-icon" aria-hidden="true">${icon('shield',20)}</span><span>켠 뒤에도 언제든 화면 위 아이콘에서 끌 수 있어요.</span></p>
+    </footer>`;
+}
+let slideTrigger=null;
+function openSlide(html){
+  hideTip();
+  slideTrigger=document.activeElement;
+  const base=content();
+  if(base)base.inert=true;
+  phone.insertAdjacentHTML('beforeend',`<div class="slide-layer" data-overlay data-open="false"><aside class="slide-over" role="dialog" aria-modal="true" aria-labelledby="gkTitle" aria-describedby="gkLead">${html}</aside></div>`);
+  const layer=phone.querySelector('[data-overlay]');
+  void layer.offsetWidth;
+  layer.dataset.open='true';
+  phone.querySelector('[data-initial]')?.focus({preventScroll:true});
+}
+function closeSlide(){
+  const layer=phone.querySelector('[data-overlay]');
+  if(!layer)return;
+  layer.dataset.open='false';layer.removeAttribute('data-overlay');layer.inert=true;
+  const base=content();
+  if(base)base.inert=false;
+  setTimeout(()=>layer.remove(),150);
+  const back=slideTrigger&&document.contains(slideTrigger)?slideTrigger:null;
+  slideTrigger=null;
+  (back||phone).focus({preventScroll:true});
+}
+/* 질문 슬라이드 */
+function pagerStatus(){
+  if(openIndexes().length)return '';
+  const all=allAnswered();
+  if(state.screen==='read')return `<p class="pager-status">${all?COPY.allDoneWaitLine:COPY.waitLine}</p>`;
+  if(state.screen==='late'&&all)return `<p class="pager-status">${COPY.allDoneStopLine}</p>`;
+  return '';
+}
+function questionCard(){
+  const N=questions.length,i=state.view,q=questions[i],a=state.answers[i],skippedHere=state.skipped[i]&&!a;
+  const note=a?(state.saved?`${icon('check',16)} ${COPY.saved}`:''):(skippedHere?COPY.skippedNote:'');
+  return `<section class="card question pager" aria-roledescription="carousel" aria-label="질문 ${N}개">
+    <div class="pager-top"><button class="icon-btn" type="button" data-action="prev" ${tipButton('이전 질문 보기','','←')} ${i===0?'disabled':''}>${icon('left')}</button>
+      <p class="count" aria-live="polite">${i+1} / ${N}</p>
+      <button class="icon-btn" type="button" data-action="next" ${tipButton('다음 질문 보기','','→')} ${i===N-1?'disabled':''}>${icon('right')}</button></div>
+    <div class="slide ${state.slide}" data-slide aria-roledescription="slide" aria-label="${i+1} / ${N}">
+      <h3 id="questionTitle" tabindex="-1">${q.title}</h3><p class="reason">${q.reason}</p>
+      <div class="choices">${choiceButtons(q.options,'answer',a)}</div>
+      <div class="saved" role="status" aria-live="polite">${note}</div>
+      ${state.saveError&&state.saveError.q===i?`<div class="inline-error" role="alert"><span>${COPY.answerFail}</span><button type="button" data-action="retry-answer">${COPY.retry}</button></div>`:''}
+      ${a?'':`<button class="text-button" type="button" data-action="skip">${COPY.skip}</button>`}
+    </div>
+    <div class="dots" aria-hidden="true">${questions.map((_,n)=>`<span class="${n===i?'on':''}"></span>`).join('')}</div>
+    <p class="swipe-hint meta">${COPY.swipeHint}</p></section>${pagerStatus()}`;
+}
+function loadingBody(done){
+  return `<div class="loading-head"><p class="eyebrow">계획을 확인하고 있어요</p><h2 tabindex="-1" id="screenTitle">계획을 읽고 있어요</h2>${progress(done)}</div>
+    ${done?`<div class="success-line">${icon('check',16)}${COPY.doneLine}</div>`:`<p class="notice">${COPY.notice}</p>`}
+    ${state.stopAuto&&done?`<p class="notice">${COPY.stopped}</p>`:''}<div id="questionSlot">${questionCard()}</div>`;
+}
+function resultFooter(done){
+  if(!done)return `<button class="primary full" type="button" data-action="result" aria-disabled="true" aria-busy="true"><span class="spin">${icon('spinner',20)}</span> ${COPY.readingButton}</button><p class="help" id="footHelp" role="status">${COPY.waitingFooter}</p>`;
+  const helper=remaining()?COPY.doneFooterLeft(remaining()):COPY.doneFooterAll;
+  return `<button class="primary full" type="button" data-action="result">${COPY.goButton}</button><p class="help" role="status">${helper}</p>`;
+}
+function doneFooter(){
+  return `<p class="done-line" role="status">${icon('check',16)}${COPY.doneTitle}</p>
+    <p class="done-sub">${COPY.doneCount(Math.round(TIMING.doneMs/1000))}</p>
+    <div class="finish-track" aria-hidden="true"><div class="finish-fill" style="--finish-ms:${TIMING.doneMs}ms"></div></div>
+    <button class="primary full" type="button" data-action="result">${COPY.goButton}</button>
+    <button class="text-button" type="button" data-action="stop">${COPY.noAuto}</button>`;
+}
+function finishLoading(){
+  const open=openIndexes();
+  if(state.stopAuto){if(open.length)state.view=open[0];go('late');return}
+  if(allAnswered()){go('done');return}
+  if(!state.touched||open.length===0){go('check');return}
+  state.view=open[0];
+  go('late');
+}
+function screenRead(){
+  phone.innerHTML=shell(loadingBody(false),resultFooter(false));
+  later(finishLoading,14000);
+}
+function screenLate(){
+  phone.innerHTML=shell(loadingBody(true),resultFooter(true));
+  resetIdle();
+}
+function screenDone(){
+  phone.innerHTML=shell(loadingBody(true),doneFooter());
+  later(()=>go('check'),TIMING.doneMs);
+}
+function cancelDone(){
+  if(state.screen!=='done')return;
+  clearTimers();
+  state.screen='late';
+  const footer=phone.querySelector('.footer');
+  if(footer)footer.innerHTML=resultFooter(true);
+  resetIdle();
+}
+function resetIdle(){
+  if(state.screen!=='late')return;
+  clearTimeout(state.idle);
+  if(!state.stopAuto)state.idle=setTimeout(()=>go('idle'),TIMING.idleMs);
+}
+function screenIdle(){
+  phone.innerHTML=shell(loadingBody(true),resultFooter(true));
+  content().inert=true;
+  phone.insertAdjacentHTML('beforeend',`<div class="modal-layer" data-idle><section class="sheet" role="alertdialog" aria-modal="true" aria-labelledby="countCopy">
+    <div class="countdown" id="countNumber" aria-hidden="true">${TIMING.countdownS}</div>
+    <p class="count-copy" id="countCopy">${COPY.countCopy(TIMING.countdownS)}</p>
+    <button class="primary full" type="button" data-action="continue">${COPY.keepAnswering}</button>
+    <button class="text-button" type="button" data-action="stop">${COPY.noAuto}</button></section></div>`);
+  state.seconds=TIMING.countdownS;
+  document.getElementById('countAnnouncement').textContent=COPY.countAria(TIMING.countdownS);
+  const tick=()=>{
+    state.seconds--;
+    if(state.seconds===0){go('check');return}
+    document.getElementById('countNumber').textContent=state.seconds;
+    document.getElementById('seconds').textContent=state.seconds;
+    if([10,5].includes(state.seconds))document.getElementById('countAnnouncement').textContent=COPY.countAria(state.seconds);
+    later(tick,1000);
+  };
+  later(tick,1000);
+}
+function screenCheck(){
+  phone.innerHTML=shell(`<section class="card"><p class="eyebrow">02 함께 확인</p><h3>기존 계획 확인 화면이에요</h3>
+    <p class="help">읽어 온 일정을 확인하고 고치는 화면이에요. 이 목업에서는 바뀌는 것이 없어서 모양만 보여 드려요.</p>
+    <div class="skeleton" aria-label="일정 목록 미리보기"><span></span><span></span><span></span></div></section>`,
+    '','<h2 tabindex="-1" id="screenTitle">계획 확인</h2>');
+}
+function screenLink(){
+  screenCheck();
+  openSlide(gkPanelHTML('notice'));
+}
+/* 알림줄(되돌릴 수 있는 알림) */
+function gkToastHTML(kind){
+  if(kind==='error')return `<div class="gk-toast is-error"><span role="alert">${COPY.guardianFail}</span><button class="text-button" type="button" data-action="gk-retry">${COPY.retry}</button><button class="icon-btn" type="button" data-action="gk-close" ${tipButton('알림 닫기')}>${icon('close')}</button></div>`;
+  return `<div class="gk-toast"><span role="status" aria-atomic="true">${kind==='off'?'항로 지킴이를 껐어요. 문제가 생기면 물어볼게요.':'항로 지킴이를 켰어요.'}</span><button class="text-button" type="button" data-action="gk-undo">되돌리기</button><button class="icon-btn" type="button" data-action="gk-close" ${tipButton('알림 닫기')}>${icon('close')}</button></div>`;
+}
+function showToast(kind){hideToast();state.toast=kind;phone.insertAdjacentHTML('beforeend',gkToastHTML(kind))}
+function hideToast(){state.toast=null;hideTip();phone.querySelector('.gk-toast')?.remove()}
+function refreshGuardian(){phone.querySelectorAll('.gk-slot').forEach(slot=>{slot.innerHTML=gkHeaderButton()})}
+function setGuardian(on,withToast){
+  if(state.failSim){
+    state.guardianRetry=on;
+    announce(COPY.guardianFail);
+    showToast('error');
+    return;
+  }
+  state.guardianRetry=null;
+  state.guardian=on;
+  refreshGuardian();
+  announce(on?'항로 지킴이를 켰어요':'항로 지킴이를 껐어요');
+  if(withToast)showToast(on?'on':'off');
+}
+const RENDER = {plan:screenPlan,card:screenCard,read:screenRead,late:screenLate,idle:screenIdle,done:screenDone,check:screenCheck,link:screenLink};
+function go(id,preview=false){
+  clearTimers();hideToast();hideTip();
+  state.screen=id;state.busy=false;state.saved=false;slideTrigger=null;
+  document.getElementById('countAnnouncement').textContent='';
+  if(preview){
+    if(id==='read'){state.answers=[null,null];state.skipped=[false,false];state.view=0;state.touched=false}
+    if(id==='late'||id==='idle'){state.answers=[state.answers[0]||'대중교통',null];state.skipped=[false,false];state.view=1}
+    if(id==='done'){state.answers=[state.answers[0]||'대중교통',state.answers[1]||'볼거리'];state.view=1}
+    if(['read','late','idle','done','check'].includes(id)&&state.guardian===null)state.guardian=true;
+    if(id==='link')state.guardian=false;
+  }
+  document.querySelectorAll('[data-screen]').forEach(button=>{
+    const active=button.dataset.screen===id;
+    button.setAttribute('aria-selected',active);
+    button.setAttribute('aria-controls','phone');
+    button.tabIndex=active?0:-1;
+  });
+  const index=SCREENS.indexOf(id);
+  phone.setAttribute('aria-labelledby',`tab-${id}`);
+  const wide=id==='plan'||id==='card';
+  phone.classList.toggle('desk',wide);
+  stage.classList.toggle('wide',wide);
+  document.getElementById('previous').disabled=index===0;
+  document.getElementById('next').disabled=index===SCREENS.length-1;
+  document.getElementById('rules').innerHTML=rules[id].map(line=>`<li>${line}</li>`).join('');
+  RENDER[id]();
+  if(!phone.querySelector('[data-overlay],[data-idle]')){
+    const focusTarget=phone.querySelector('#screenTitle')||phone;
+    focusTarget.focus({preventScroll:true});
+  }else if(phone.querySelector('[data-idle] button')){
+    phone.querySelector('[data-idle] button').focus({preventScroll:true});
+  }
+  if(id==='card'||id==='link')phone.scrollIntoView({block:'start',behavior:'auto'});
+}
+function refreshQuestion(focus=false){
+  const slot=document.getElementById('questionSlot');
+  if(!slot)return;
+  slot.innerHTML=questionCard();
+  state.slide='';
+  if(state.busy)slot.querySelectorAll('button').forEach(button=>button.disabled=true);
+  if(focus)(slot.querySelector('h3')||phone).focus({preventScroll:true});
+}
+function navigate(delta){
+  const next=Math.min(questions.length-1,Math.max(0,state.view+delta));
+  if(next===state.view||state.busy)return;
+  cancelDone();
+  state.view=next;state.saved=false;state.slide=delta>0?'from-right':'from-left';
+  refreshQuestion(true);
+  resetIdle();
+}
+function answer(index,skip=false){
+  if(state.busy)return;
+  cancelDone();
+  state.touched=true;
+  const q=state.view,wasAll=allAnswered();
+  state.saveError=null;
+  if(skip){state.skipped[q]=true;state.saved=false}
+  else if(state.failSim){
+    state.answers[q]=questions[q].options[index];state.skipped[q]=false;state.saved=false;
+    state.saveError={q,index};
+    refreshQuestion(false);
+    announce(COPY.answerFail);
+    return;
+  }
+  else{state.answers[q]=questions[q].options[index];state.skipped[q]=false;state.saved=true}
+  state.busy=true;
+  refreshQuestion();
+  later(()=>{
+    state.busy=false;
+    if(state.screen==='late'&&!state.stopAuto){
+      if(!wasAll&&allAnswered()){go('done');return}
+      if(skip&&openIndexes().length===0){go('check');return}
+    }
+    const others=openIndexes().filter(i=>i!==q);
+    if(others.length){
+      const after=others.find(i=>i>q);
+      state.view=after!==undefined?after:others[0];
+      state.slide='from-right';
+    }
+    refreshQuestion(others.length>0);
+    if(state.screen==='late')phone.querySelector('.footer').innerHTML=resultFooter(true);
+    resetIdle();
+  },skip?0:400);
+}
+/* 계획 담기 — 비활성 단추 없이, 눌렀을 때 이유를 보여 준다 */
+function planIsEmpty(){const ta=phone.querySelector('#planInput');return ta?!ta.value.trim():!state.plan.trim()}
+function showPlanError(){
+  state.planError=true;
+  const ta=phone.querySelector('#planInput'),err=phone.querySelector('#planError');
+  if(ta){ta.setAttribute('aria-invalid','true');ta.focus()}
+  if(err){err.hidden=false;err.textContent=COPY.planError}
+}
+function clearPlanError(){
+  if(!state.planError)return;
+  state.planError=false;
+  phone.querySelector('#planInput')?.removeAttribute('aria-invalid');
+  const err=phone.querySelector('#planError');
+  if(err)err.hidden=true;
+}
+let draftTimer=null;
+function saveDraft(){
+  clearTimeout(draftTimer);
+  draftTimer=setTimeout(()=>{try{localStorage.setItem(DRAFT_KEY,JSON.stringify({plan:state.plan,density:state.density,at:Date.now()}))}catch(error){}},500);
+}
+function clearDraft(){try{localStorage.removeItem(DRAFT_KEY)}catch(error){}}
+phone.addEventListener('click',event=>{
+  if(event.target.matches('[data-overlay]')&&state.screen==='card'){closeSlide();state.screen='plan';return}
+  if(event.target.matches('[data-overlay]')){closeSlide();return}
+  const button=event.target.closest('button[data-action]');
+  if(!button||button.disabled)return;
+  const {action,index}=button.dataset;
+  if(action==='result'&&button.getAttribute('aria-disabled')==='true'){
+    const help=document.getElementById('footHelp');
+    if(help)help.textContent=COPY.stillReading;
+    announce(COPY.stillReading);
+    return;
+  }
+  if(action==='density'){
+    state.density=densityOptions[Number(index)];
+    button.parentElement.innerHTML=choiceButtons(densityOptions,'density',state.density,true);
+    phone.querySelector('[data-action=density][aria-checked=true]')?.focus();
+    saveDraft();
+  }else if(action==='start'){
+    if(planIsEmpty()){showPlanError();return}
+    go('card');
+  }
+  else if(action==='sample'){state.plan=samplePlan;state.restored=false;clearDraft();screenPlan()}
+  else if(action==='clear-draft'){state.plan=samplePlan;state.density=densityOptions[1];state.restored=false;clearDraft();screenPlan()}
+  else if(action==='back')document.getElementById('tab-plan').focus();
+  else if(action==='gk-on'){state.guardian=true;go('read')}
+  else if(action==='gk-skip'){state.guardian=false;go('read')}
+  else if(action==='gk-close-panel'){const wasCard=state.screen==='card';closeSlide();if(wasCard){state.screen='plan';phone.querySelector('[data-action=start]')?.focus()}}
+  else if(action==='gk-toggle'){
+    if(state.guardian===true)setGuardian(false,true);
+    else if(state.guardian===false)openSlide(gkPanelHTML('notice'));
+  }
+  else if(action==='gk-confirm'){closeSlide();setGuardian(true,true)}
+  else if(action==='gk-decline')closeSlide();
+  else if(action==='gk-undo'){const was=state.toast;hideToast();setGuardian(was==='off',false)}
+  else if(action==='gk-close')hideToast();
+  else if(action==='gk-retry'){const target=state.guardianRetry;hideToast();setGuardian(target===true,true)}
+  else if(action==='retry-answer'){const e=state.saveError;state.saveError=null;if(e){state.view=e.q;answer(e.index)}}
+  else if(action==='answer')answer(Number(index));
+  else if(action==='skip')answer(0,true);
+  else if(action==='prev')navigate(-1);
+  else if(action==='next')navigate(1);
+  else if(action==='result')go('check');
+  else if(action==='continue'){state.seconds=TIMING.countdownS;go('late')}
+  else if(action==='stop'){
+    state.stopAuto=true;
+    go('late');announce(COPY.stopped);
+  }
+});
+phone.addEventListener('input',event=>{
+  if(event.target.id==='planInput'){
+    state.plan=event.target.value;
+    clearPlanError();
+    document.getElementById('planCount').textContent=`${state.plan.length.toLocaleString()} / 12,000`;
+    saveDraft();
+  }
+});
+phone.addEventListener('focusout',event=>{
+  if(event.target.id==='planInput'&&!event.target.value.trim()&&!phone.querySelector('[data-overlay]'))showPlanError();
+});
+/* 밀어서 보기(포인터) */
+let swipe=null;
+phone.addEventListener('pointerdown',event=>{
+  swipe=event.target.closest('[data-slide]')?{x:event.clientX,y:event.clientY}:null;
+  if(state.screen==='read')state.touched=true;
+  if(event.target.closest('.pager'))cancelDone();
+  resetIdle();
+});
+phone.addEventListener('pointerup',event=>{
+  if(!swipe)return;
+  const dx=event.clientX-swipe.x,dy=event.clientY-swipe.y;swipe=null;
+  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5)navigate(dx<0?1:-1);
+});
+phone.addEventListener('pointercancel',()=>{swipe=null});
+['keydown','input','scroll','wheel','touchstart'].forEach(type=>phone.addEventListener(type,()=>{if(state.screen==='read')state.touched=true;resetIdle()},{capture:true,passive:true}));
+phone.addEventListener('keydown',event=>{
+  if(event.key==='Escape')hideTip();
+  const radio=event.target.closest('[role="radio"]');
+  if(radio&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){
+    event.preventDefault();
+    const group=[...radio.parentElement.querySelectorAll('[role="radio"]')];
+    const at=group.indexOf(radio),step=(event.key==='ArrowLeft'||event.key==='ArrowUp')?-1:1;
+    group[(at+step+group.length)%group.length].click();
+    return;
+  }
+  if((event.key==='ArrowLeft'||event.key==='ArrowRight')&&event.target.closest('.pager')&&!phone.querySelector('[role="dialog"],[role="alertdialog"]')){
+    event.preventDefault();navigate(event.key==='ArrowRight'?1:-1);return;
+  }
+  const dialog=phone.querySelector('[data-overlay] [role="dialog"],[data-idle] [role="alertdialog"]');
+  if(!dialog)return;
+  if(event.key==='Escape'){
+    if(phone.querySelector('[data-idle]')){go('late');return}
+    const wasCard=state.screen==='card';
+    closeSlide();
+    if(wasCard){state.screen='plan';phone.querySelector('[data-action=start]')?.focus()}
+    return;
+  }
+  if(event.key==='Tab'){
+    const buttons=[...dialog.querySelectorAll('button:not(:disabled),[data-initial]')];
+    if(!buttons.length){event.preventDefault();return}
+    const first=buttons[0],last=buttons[buttons.length-1];
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+  }
+});
+const tabsEl=document.getElementById('tabs');
+tabsEl.innerHTML=SCREENS.map(id=>`<button id="tab-${id}" role="tab" data-screen="${id}">${LABELS[id]}</button>`).join('');
+tabsEl.addEventListener('click',event=>{
+  const button=event.target.closest('[data-screen]');
+  if(button)go(button.dataset.screen,true);
+});
+tabsEl.addEventListener('keydown',event=>{
+  const tabs=[...document.querySelectorAll('[data-screen]')];
+  const index=tabs.indexOf(document.activeElement);
+  if(index<0)return;
+  let next=index;
+  if(event.key==='ArrowRight')next=(index+1)%tabs.length;
+  else if(event.key==='ArrowLeft')next=(index+tabs.length-1)%tabs.length;
+  else if(event.key==='Home')next=0;
+  else if(event.key==='End')next=tabs.length-1;
+  else return;
+  event.preventDefault();go(SCREENS[next],true);tabs[next].focus();
+});
+document.getElementById('previous').onclick=()=>go(SCREENS[Math.max(0,SCREENS.indexOf(state.screen)-1)],true);
+document.getElementById('next').onclick=()=>go(SCREENS[Math.min(SCREENS.length-1,SCREENS.indexOf(state.screen)+1)],true);
+document.getElementById('restart').onclick=()=>{clearTimers();hideToast();clearDraft();state=initial();state.failSim=document.getElementById('failSim').checked;announce('처음부터 시작해요');go('plan')};
+document.querySelectorAll('input[name=theme]').forEach(input=>input.addEventListener('change',()=>{document.documentElement.dataset.theme=input.value}));
+document.getElementById('contrastFix').addEventListener('change',event=>{document.documentElement.dataset.contrast=event.target.checked?'fix':''});
+document.getElementById('failSim').addEventListener('change',event=>{state.failSim=event.target.checked});
+window.addEventListener('pagehide',clearTimers);
+go('plan');
+document.getElementById('tab-plan').focus({preventScroll:true});
+</script>
+</body>
+</html>
