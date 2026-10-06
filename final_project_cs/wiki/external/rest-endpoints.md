@@ -796,7 +796,26 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 - 「다른 안」을 보내며 먼저 묻는 알림(`proposal_request` · 이유 `ask_first`)이고 **꺼져 있으면** `{offer: {label: "항로 지킴이 켜기", via: "notice", path: "/trips/{id}?guardian=on", url}}`. `url` = `web_origin` + `path`(웹 주소 미설정이면 null). ★**링크만으로는 켜지지 않는다** — 웹이 확인 패널을 띄운 뒤 위 `POST …/guardian`(`via: "notice"`)을 부른다. 고정한 일정(`protected`) · 안전 알림 · 「바꿀까요?」(실내외 모름) · 대안이 없는 알림에는 싣지 않는다 — 켜도 그 경우는 먼저 묻거나 달라지지 않는다.
 - 디스코드 · 텔레그램 글(`notify/discord.py` `_compose`)에는 계획서 링크 **앞**에 줄이 붙는다 — 「항로 지킴이가 바꿨어요. 마음에 안 들면 웹에서 되돌릴 수 있어요.」 · 「항로 지킴이를 켜면 다음부터 알아서 바꿔 드려요: {url}」(`url` 이 있을 때만). 이 값이 없는 알림의 문구는 한 글자도 안 바뀐다.
 
-`[미확인 · 결정 대기]` **켜져 있어도 안전 사건(지진 · 재난문자 · 기상 「경보」)은 먼저 묻는다**고 카드 · 기획 문서에 적혀 있지만 **지금 코드는 그렇게 하지 않는다** — `pending.decide` 는 `replace` 일 때 안전 사건도 최적 일정으로 **바로 바꾼다**(2026-09-24 사용자 결정 · `tests/e2e/test_ask_first.py::test_default_with_a_safety_event_changes_to_the_best_plan`). 고정한 일정(`protected`)은 켜져도 먼저 묻는다(코드 그대로). 안전 사건을 어떻게 할지는 사용자 결정이다 — 이 기능은 그 판정을 바꾸지 않았다.
+`[결정 2026-10-06 사용자]` **재난 · 지진은 항로 지킴이가 켜져 있든 아니든 「다른 곳으로 바꾸기」가 아니라 「일정 정지 + 대피 안내」로 다룬다** — 아래 「재난 시 일정 정지」. 정지 대상이 아닌 일반 사건(휴무 · 통제 · 날씨)은 기존 규칙(`pending.decide`) 그대로이고, 고정한 일정(`protected`)은 켜져도 먼저 묻는다.
+(전에는 카드 · 기획 문서가 「켜 두어도 재난 · 지진은 먼저 물어요」라고 적었지만 코드는 바로 바꿨다 — 2026-09-24 결정. 둘 다 이번 결정으로 **대체**됐다. 카드 문구는 「켜 두어도 고정한 일정은 먼저 물어봐요 · 재난 · 지진이 나면 일정을 멈추고 안전 안내를 보내요」로 맞춘다 — 웹 몫.)
+
+### 재난 시 일정 정지 — `POST /v1/web/trips/{trip_id}/safety/resume` · 여행 조회의 `safety` · 안전 알림 `[결정 2026-10-06 사용자]`
+
+`[실측]` 구현 `components/planning/safety.py`(분류) · `components/watch/safety_pause.py`(정지 · 알림 · 해제) · `components/places/shelters.py`(대피 장소) · `scripts/load_safety_shelters.py`(자료 적재) · 저장 `trip_safety_pauses` · `safety_shelters`(마이그레이션 052) · 설정 `travel.safety`. 설계 · 조사 · 한계 `wiki/records/plans/2026-10-06_재난_일정정지와_피난안내_설계.md`.
+
+**규칙** — 재난이 난 시각에 그 지역에 여행객이 있었다면(오늘이 여행 기간 + 오늘 일정에 적힌 장소에서 사건이 점검됨) **그날(KST) 남은 일정을 정지**한다(자정에 풀림). 전쟁 · 공습 · 활화산 폭발 같은 심각한 사건은 **여행 전체**를 정지한다(사용자가 다시 시작할 때까지). 정지는 **일정 항목을 고치거나 지우지 않는다** — 표시(`trip_safety_pauses`)만 쓰고, 감시 · 안내 반복이 그 여행을 건너뛴다. 날씨 재해 · 안전안내 단계 · 교통통제 · 실종 · 훈련 · 해제 문자는 정지하지 않는다.
+
+**여행 조회의 `safety`**(`GET /v1/web/trips/{id}` · `/v1/trips/{id}`) — 정지가 없으면 `{paused: false}`, 있으면 `{paused: true, level: "day"|"trip", label, since, until, day, released, resume: {label: "일정 다시 시작", path: "/safety/resume"}}`. 여럿이면 여행 전체가 앞선다. `items[].paused` — 사건 시각 이후에 끝나는 항목(그날 정지는 그날 항목만)이 `true`.
+
+**안전 알림** — `type: "safety_alert"` · `kind: "safety_pause_day"|"safety_pause_trip"` · `reason: "safety_pause"` · `guidance`(웹 알림 목록 `GET …/notices` 의 `safety` 칸). 글은 안전을 앞세운다: ①「⚠️ 안전 알림 — {재난}. 오늘 남은 일정을 정지했어요」 ②공식 안내(국민재난안전포털)를 먼저 따르고 위급하면 119 ③재난문자 원문(≤200자) ④**표에 있는** 가까운 대피 장소(`guidance.shelters[]` = `{type, name, address, distance_m, walk_minutes_estimate, underground, capacity, latitude, longitude, source}` · 가까운 순 · 반경 5 km · 최대 3) ⑤「일정 다시 시작」 안내.
+- ★기준점은 **일정에 적힌 장소**다(`guidance.reference` = `{basis: "planned_place", place, latitude, longitude, note}`) — 실제 위치가 아니라고 글에 밝힌다. 거리는 직선거리, 걷는 시간은 4 km/h 추정이다.
+- `guidance.shelter_status`: `ok` · `none_nearby`(자료는 있는데 반경 안에 없다) · `no_data`(자료 표가 비었다 — 「아직 불러오지 못했어요 + 공식 안내」) · `no_reference_place`(일정 장소 좌표를 모른다) · `not_applicable`(화재 · 산불처럼 대피 장소 목록 없이 공식 안내만). **표에 없는 대피 장소는 만들지 않는다.**
+- 종류: 지진 → `quake_outdoor`(옥외대피장소) · 전쟁 · 폭발 · 테러 · 화산 → `civil_defense`(민방위 대피시설).
+- 공식 해제가 오면 **한 번만** `type: "guidance"` · `kind: "safety_release"`(「해제됐다는 공식 안내가 나왔어요 · 일정 다시 시작」)가 나간다. 정지는 사용자가 풀 때까지 그대로다.
+
+**`POST /v1/web/trips/{trip_id}/safety/resume`**(몸통 없음) → `{resumed: 닫은 정지 수, safety}` — 사용자 키 · 쿠키(쿠키는 CSRF 필요). 본인 여행만(남의 것 · 없는 것 404). 정지가 없으면 `resumed: 0`(오류가 아니다). 일정은 안 바뀐다. **같은 사건으로 다시 정지하지 않는다**(사건 지문 `event_key`) — 새 사건이 오면 다시 정지한다. 그날 정지는 자정에 저절로 풀리므로 이 요청 없이도 내일 일정은 이어진다.
+
+`[미확인]` 재난문자의 재해구분명 · 긴급단계명 전체 목록을 못 구했다 — 분류 값은 우리가 고른 것이고(`travel.safety`) 본문 낱말 규칙을 함께 둔다. 실제 재난문자로 확인하기 전까지 오탐 · 미탐이 가능하다. 대피 장소 자료는 **아직 적재 전**이다(`scripts/load_safety_shelters.py` — 파일을 받는 것은 사용자 허락 뒤).
 
 ### 지도 경로선 — `/v1/web/trips/{trip_id}/route-shapes` · `/v1/web/trip-intakes/{intake_id}/route-shapes` `[2026-10-04]`
 

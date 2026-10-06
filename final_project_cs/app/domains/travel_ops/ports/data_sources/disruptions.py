@@ -133,6 +133,35 @@ class DisruptionCheck:
             "indoor_unknown": indoor_unknown,
         }
 
+    def check_safety(self, *, place: dict[str, Any], starts_at: datetime | None, region: str = "서울") -> dict[str, Any]:
+        """**재난 사건만**(재난문자 · 지진) 점검한다 — 재난 시 일정 정지 반복(`SafetySweep`)이 쓴다. `[2026-10-06]`
+
+        ★날씨 · 교통 · 대기 소스는 부르지 않는다 — 진행 중인 여행마다 3분마다 도는 반복이라 호출 한도 · 비용을 아낀다. 날씨 재해 문자는 걸러진다(`sensitive=False`) — 정지 대상이 아니다.
+        ★모양은 `check` 와 같다(`verdict` · `disruptions` · `failed_categories`) — 소스가 실패하면 `fatal` 이고, 부르는 쪽은 그것을 정지 사유로 쓰지 않는다(결정 15)."""
+        jobs: dict[str, Callable[[], dict[str, Any]]] = {
+            "disaster_msg": lambda: self._disaster(place, starts_at, region, False),
+            "earthquake": lambda: self._earthquake(place, starts_at),
+        }
+        with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
+            futures = {name: pool.submit(job) for name, job in jobs.items()}
+            checks = [futures[name].result() for name in jobs]
+        disruptions = [item for check in checks for item in check.pop("_disruptions", [])]
+        for check in checks:
+            check.pop("_advisories", None)
+        failed = [check["category"] for check in checks if check["status"] == "failed"]
+        return {"verdict": "fatal" if failed else ("disrupted" if disruptions else "clear"), "disruptions": disruptions,
+                "checks": checks, "failed_categories": failed,
+                "not_connected": [c["category"] for c in checks if c["status"] == "not_connected"],
+                "place_id": place.get("place_id"), "region": region, "checked_at": datetime.now(UTC).isoformat()}
+
+    def released(self, *, place: dict[str, Any], since: datetime, at: datetime, region: str = "서울") -> list[dict[str, Any]] | None:
+        """`since` 부터 `at` 까지 온 **재난 해제 문자**. 소스가 해제 조회를 못 하거나 못 읽었으면 `None`(모름 — 「해제 없음」이 아니다)."""
+        source = getattr(self.sources, "disaster", None)
+        lookup = getattr(source, "released", None)
+        if lookup is None:
+            return None
+        return lookup(region=region, since=since, at=at, district=place.get("district"))
+
     # ── 항목별 ──────────────────────────────────────────────────
     def _forecast(self, place: dict[str, Any], at: datetime | None,
                   sensitive: bool) -> dict[str, Any]:

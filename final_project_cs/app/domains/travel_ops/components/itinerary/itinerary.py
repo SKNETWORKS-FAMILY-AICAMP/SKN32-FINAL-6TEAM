@@ -314,22 +314,37 @@ class TripStore:
             out.append(item)
         return out
 
-    def active_trip_ids(self, conn) -> list[UUID]:
-        """진행 중인 여행. 안내 되잡기 작업이 읽는다."""
-        with conn.cursor() as cur:
-            # ★`[2026-10-06]` 누구를 빼는지는 여기서 정하지 않는다 — 좁히는 규칙을 가진 쪽이 꽂는다
-            #   (`trip_scope`). 게스트 제외는 웹 계정 기능이 조립 때 등록한다(옛 D-CS-011 규칙 그대로). 호출 비용을 안 쓴다
-            cur.execute("SELECT t.trip_id FROM trips t WHERE t.tenant_id=%s AND t.status='active' AND " + scope_sql("t")
-                        + " ORDER BY t.trip_id", (self.tenant_id,))
-            return [row[0] for row in cur.fetchall()]
+    def _open_trips(self, conn, columns: str, now: datetime | None, order: str = "") -> list[tuple]:
+        """진행 중(`active`)이고 **재난으로 정지되지 않은** 여행. 감시 · 안내 반복이 모두 여기를 지난다.
+
+        ★`[2026-10-06 사용자 결정]` 재난 정지(`trip_safety_pauses`)가 열려 있으면 그 여행은 감시 · 안내에서 빠진다 — 정지한 일정에 「곧 시작해요」 · 대체 장소 교체가 나가면 안 된다.
+          유효한 정지 = 다시 시작하지 않았고(`resumed_at` 없음) 끝나는 시각이 안 지났다(`until_at` — 그날 정지는 자정, 여행 전체 정지는 없음). `now` 는 부르는 쪽 시계(시험 · 재생이 시계를 바꾼다) — 없으면 DB 의 지금.
+        ★마이그레이션 052 가 안 올라간 DB 에서도 감시는 돈다 — 표가 없으면 정지 없는 쿼리로 물러서고 경고를 남긴다(정지 줄이 있을 수 없는 DB 다)."""
+        base = ("SELECT " + columns + " FROM trips t WHERE t.tenant_id=%s AND t.status='active' AND " + scope_sql("t"))
+        paused = (" AND NOT EXISTS (SELECT 1 FROM trip_safety_pauses p WHERE p.tenant_id=t.tenant_id AND p.trip_id=t.trip_id "
+                  "AND p.resumed_at IS NULL AND (p.until_at IS NULL OR p.until_at > COALESCE(%s, now())))")
+        try:
+            with conn.transaction(), conn.cursor() as cur:
+                cur.execute(base + paused + order, (self.tenant_id, now))
+                return cur.fetchall()
+        except Exception as exc:                           # noqa: BLE001 — 표가 없는 DB 만 물러선다. 다른 오류는 그대로 올린다
+            if type(exc).__name__ != "UndefinedTable":
+                raise
+            import logging
+
+            logging.getLogger(__name__).warning("trip_safety_pauses missing — watching without pauses (migration 052?)")
+            with conn.cursor() as cur:
+                cur.execute(base + order, (self.tenant_id,))
+                return cur.fetchall()
+
+    def active_trip_ids(self, conn, now: datetime | None = None) -> list[UUID]:
+        """진행 중인 여행. 안내 되잡기 작업이 읽는다. ★`[2026-10-06]` 누구를 빼는지는 여기서 정하지 않는다 — 좁히는 규칙을 가진 쪽이 꽂는다
+        (`trip_scope`, 게스트 제외는 웹 계정 기능이 조립 때 등록한다 — 옛 D-CS-011 규칙 그대로). 재난 정지 중인 여행도 뺀다(`_open_trips`)."""
+        return [row[0] for row in self._open_trips(conn, "t.trip_id", now, " ORDER BY t.trip_id")]
 
     def due(self, conn, *, start: datetime, end: datetime) -> list[tuple[UUID, Item]]:
-        """최신 버전에서 `[start, end)` 에 시작하는 항목. 감시 루프가 읽는다."""
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT t.trip_id, t.latest_version FROM trips t "
-                "WHERE t.tenant_id=%s AND t.status='active' AND " + scope_sql("t"), (self.tenant_id,))
-            trips = cur.fetchall()
+        """최신 버전에서 `[start, end)` 에 시작하는 항목. 감시 루프가 읽는다. 재난 정지 중인 여행은 빠진다(`_open_trips` — 시계는 `start`)."""
+        trips = self._open_trips(conn, "t.trip_id, t.latest_version", start)
         found = []
         for trip_id, version in trips:
             for item in self.items(conn, trip_id, version):

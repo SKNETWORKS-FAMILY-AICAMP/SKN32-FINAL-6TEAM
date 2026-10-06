@@ -53,6 +53,7 @@ from app.domains.travel_ops.components.itinerary import trip_delete
 from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
 from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
 from app.domains.travel_ops.components.planning import guardian as guardian_module
+from app.domains.travel_ops.components.watch import safety_pause
 
 # ★`[2026-10-05 병합]` 팀 판의 `_CsvFallbackTour`(활동팀 CSV 로 관광공사를 대신 조회) 는 싣지 않았다 — 관광공사 호출 제한 · 카카오 403 을
 #   피하려는 활동팀의 임시 우회이고 자료 파일(`activity_total_data.csv`)이 우리 쪽에 없다. 접수의 관광공사 조회는 전처럼 `place_factory` 가 한다.
@@ -446,12 +447,19 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
              for item in items]
     parts = parts_from_items(items)
     measured = measure_density(parts, trip.get("constraints") or {})
+    # ★`[2026-10-06 사용자 결정]` 재난으로 일정이 정지돼 있으면 상단이 「정지 중」을 보이고, 정지에 든 항목은 `paused: true` 다(`components/watch/safety_pause.py`)
+    safety = safety_pause.view(conn, tenant_id=store.tenant_id, trip_id=trip["trip_id"])
+    since = datetime.fromisoformat(safety["since"]) if safety["paused"] else None
+    for item, shown in zip(items, views):
+        shown["paused"] = bool(since is not None and (item.ends_at or item.starts_at) >= since
+                               and (safety["level"] == "trip" or _seoul(item.starts_at).date().isoformat() == safety["day"]))
     return {"trip_id": str(trip["trip_id"]), "customer_id": str(trip["customer_id"]),
             "title": trip["title"], "locale": trip["locale"], "party_size": trip["party_size"],
             "version": trip["version"],
             # ★`[2026-10-06]` 항로 지킴이(일정이 꼬이면 알아서 고치는 모드) 켜짐 여부 — 상단 아이콘이 읽는다(`components/planning/guardian.py`)
             "guardian": guardian_module.view(conn, tenant_id=store.tenant_id, trip_id=trip["trip_id"],
                                              constraints=trip.get("constraints")),
+            "safety": safety,
             "items": views, "map": map_view(views),
             "history": history, "plan_url": plan_url(store.tenant_id, trip["trip_id"]),
             # ★`[2026-10-03]` 「살펴볼 점」 — 밀도 경고 + 일정 품질 경고(같은 곳 두 번 · 끼니 빠짐 · 왔다 갔다 · 하루 마감 · 식당 라스트오더). 둘 다 거절이 아니라 알림이다
@@ -1665,6 +1673,22 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(404, "not_found", "resource not found")
         return result
 
+    @router.post("/v1/web/trips/{trip_id}/safety/resume")
+    def web_safety_resume(trip_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-06 사용자 결정]` 재난으로 정지된 일정을 **다시 시작**한다 → `{resumed, safety}`(`resumed` = 닫은 정지 수, 정지가 없으면 0 — 오류가 아니다).
+
+        다시 시작은 **사용자가 정한다** — 서버는 사용자가 이미 안전한 곳에 있는지 모른다. 공식 해제가 오면 「해제됐어요」 알림이 나가지만 정지는 이 요청이 풀 때까지 그대로다.
+        그날 정지는 자정에 저절로 풀린다. 다시 시작해도 **같은 사건으로 다시 정지하지 않는다**(사건 지문 — `trip_safety_pauses.event_key`). 본인 여행만(남의 것 404)."""
+        tenant, customer = who
+        store = TripStore(tenant)
+        with get_connection() as conn:
+            _trip_or_404(conn, store, trip_id, customer)
+        with get_connection() as conn, conn.transaction():
+            closed = safety_pause.SafetyPauses(tenant).resume(conn, trip_id=trip_id, via="web", by=customer)
+        with get_connection() as conn:
+            current = safety_pause.view(conn, tenant_id=tenant, trip_id=trip_id)
+        return {"resumed": closed, "safety": current}
+
     @router.post("/v1/web/trips/{trip_id}/messages")
     def web_message(trip_id: UUID, request: MessageIn, http: Request, background: BackgroundTasks,
                     who: tuple[str, UUID] = Depends(_web_customer)):
@@ -2056,6 +2080,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                              "consent_key": payload.get("consent_key"),
                              # ★`[2026-10-06]` 항로 지킴이 몫 — `{changed: true}`(켜 둔 사용자에게 자동으로 바꿨다는 표시) · `{offer: {label, via, path, url}}`(꺼 둔 사용자에게 켜기 단추)
                              "guardian": payload.get("guardian"),
+                             # ★`[2026-10-06]` 재난 안전 알림의 안내(공식 안내 · 가까운 대피 장소 · 「일정 다시 시작」) — 안전 알림(`safety_pause` · `safety_release`)에만 있다
+                             "safety": payload.get("guidance") if payload.get("reason") in ("safety_pause", "safety_release") else None,
                              "at": at.isoformat()} for key, payload, status, at in rows]}
 
     @router.get("/v1/web/trips/{trip_id}/route-shapes")

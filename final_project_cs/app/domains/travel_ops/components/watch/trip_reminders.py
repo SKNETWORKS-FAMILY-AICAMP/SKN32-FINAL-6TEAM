@@ -238,7 +238,7 @@ class TripReminders:
         result = ReminderTickResult()
         now = self.clock()
         with self._connect() as conn:
-            trip_ids = self.store.active_trip_ids(conn)
+            trip_ids = self.store.active_trip_ids(conn, now)       # ★`[2026-10-06]` 재난 정지 중인 여행은 안내도 멈춘다 — 시계는 이 반복의 것
         for trip_id in trip_ids:
             result.trips += 1
             with self._connect() as conn:

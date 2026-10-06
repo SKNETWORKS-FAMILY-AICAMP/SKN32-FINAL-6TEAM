@@ -2,7 +2,10 @@
 
     --once      한 번 돌고 끝난다(cron·수동 실행용). 기본값이다.
     --interval  N 초마다 되돌린다(상주 실행용).
-    --only      classifying | routing | trip | trip_cases | trip_dawn | trip_reminders | place_facts | catalog_hours | trip_places | web_guard 중 하나만 돌린다.
+    --only      classifying | routing | trip | trip_cases | trip_safety | trip_dawn | trip_reminders | place_facts | catalog_hours | trip_places | web_guard 중 하나만 돌린다.
+
+★`trip_safety` 는 **재난 시 일정 정지**다(`[2026-10-06 사용자 결정]`). 진행 중인 여행마다 재난문자 · 지진을 점검해, 재난이 난 시각에 그 지역에 여행객이 있었으면 그날 일정을 정지하고
+  (전쟁 · 활화산 폭발 같은 심각한 사건은 여행 전체) 대피 장소를 안내하는 안전 알림을 낸다. 기본 실행에서는 **감시 주기 문을 지난 회차에 감시 앞에서** 같이 돈다.
 
 ★`catalog_hours` 는 **관광공사 목록 운영시간 새벽 읽기**다(`[2026-09-29 사용자 지시]`, 마이그레이션 036). 03:00~08:00 창 안에서
   처음 보는 곳 · 목록 수정 시각이 바뀐 곳만 한 번에 10곳, 하룻밤 600곳까지 읽어 `catalog_hours` 에 적는다. 활동 「다른 데로 바꿔」는
@@ -102,6 +105,8 @@ def _run_once(tenant_id: str, only: str | None) -> dict[str, dict[str, int]]:
     #   `--only trip` 으로만 돈다. 둘을 함께 돌리지 않는다 — 같은 사건을 두 경로가 다룬다.
     if only == "trip":
         result["trip"] = _run_trip_watch(tenant_id)
+    if only == "trip_safety":
+        result["trip_safety"] = _run_trip_safety(tenant_id)
     if only in (None, "trip_cases"):
         # ★`[2026-10-03 사용자 결정]` 감시는 **3분 주기**(D-017) — 일꾼은 1분마다 돌지만 감시는 주기 문을 지난 회차에만 돈다. `--only trip_cases` 는 문을 안 본다(손으로 부르는 것)
         result["trip_cases"] = _watch_if_due(tenant_id, forced=only == "trip_cases")
@@ -247,6 +252,22 @@ def _watch_if_due(tenant_id: str, *, forced: bool) -> dict[str, int]:
     return _run_trip_watch_cases(tenant_id)
 
 
+def _run_trip_safety(tenant_id: str) -> dict[str, int]:
+    """진행 중인 여행의 재난 · 지진 사건을 점검해 일정을 정지하고 안전 알림을 낸다(`SafetySweep`)."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+    from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
+    from app.domains.travel_ops.components.watch.safety_pause import SafetySweep
+
+    check = DisruptionCheck(build_travel_sources(get_settings()))
+    sweep = SafetySweep(store=TripStore(tenant_id), check=check.check_safety, release=check.released,
+                        connection_factory=get_connection, clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")))
+    return sweep.tick().counts()
+
+
 def _run_trip_watch_cases(tenant_id: str) -> dict[str, int]:
     import asyncio
     from datetime import datetime
@@ -259,6 +280,15 @@ def _run_trip_watch_cases(tenant_id: str) -> dict[str, int]:
     from app.domains.travel_ops.components.itinerary.itinerary import TripStore
     from app.domains.travel_ops.components.watch.trip_watch_cases import TripWatchCaseOpener
 
+    # ★`[2026-10-06 사용자 결정]` 재난 정지 점검은 감시 **앞에** 같은 주기로 돈다 — 정지가 먼저 걸려야 같은 회차의 감시가 그 여행을 건너뛴다(`TripStore.due`).
+    #   실패해도 감시는 돈다(정지 점검의 예외가 일정 감시를 막지 않는다 — 실패는 세고 로그에 남긴다). 결과는 `safety_*` 칸으로 감시 결과에 합친다
+    try:
+        safety = {f"safety_{key}": value for key, value in _run_trip_safety(tenant_id).items()}
+    except Exception:                                    # noqa: BLE001
+        import logging
+
+        logging.getLogger(__name__).exception("safety sweep failed")
+        safety = {"safety_errored": 1}
     sources = build_travel_sources(get_settings())
     controller = composition.build_controller()
 
@@ -272,7 +302,7 @@ def _run_trip_watch_cases(tenant_id: str) -> dict[str, int]:
         repository=repository, run_case=run_case, route_events=sources.route_events)
     outcome = opener.tick()
     escalated = sum(1 for run in outcome.ran if run.get("status") == "escalated")
-    return {"checked": outcome.checked, "opened": len(outcome.opened), "existing": len(outcome.existing),
+    return {**safety, "checked": outcome.checked, "opened": len(outcome.opened), "existing": len(outcome.existing),
             "ran": len(outcome.ran), "escalated": escalated, "fatal": len(outcome.fatal),
             "unhandled": len(outcome.unhandled), "pinned": len(outcome.pinned),
             "unchecked": len(outcome.unchecked)}
@@ -332,7 +362,7 @@ def main() -> int:
     parser.add_argument("--once", action="store_true", default=True)
     parser.add_argument("--interval", type=int, default=None,
                         help="N 초마다 반복한다. 주면 --once 를 덮는다")
-    parser.add_argument("--only", choices=("classifying", "routing", "trip", "trip_cases", "trip_dawn", "place_facts",
+    parser.add_argument("--only", choices=("classifying", "routing", "trip", "trip_cases", "trip_safety", "trip_dawn", "place_facts",
                                            "catalog_hours",
                                            "trip_reminders", "trip_places", "web_guard"),
                         default=None)

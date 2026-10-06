@@ -126,6 +126,8 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trips/{trip_id}/delete",
     # ★2026-10-06 항로 지킴이(일정이 꼬이면 알아서 고치는 모드) 켜기 · 끄기 — 쿠키 세션으로만(키 · 에이전트 키는 403). `wiki/external/rest-endpoints.md` 「항로 지킴이」
     "/v1/web/trips/{trip_id}/guardian",
+    # ★2026-10-06 재난으로 정지된 일정 **다시 시작** — 본인 여행만(사용자 키 · 쿠키). `wiki/external/rest-endpoints.md` 「재난 시 일정 정지」
+    "/v1/web/trips/{trip_id}/safety/resume",
     # ★2026-10-04 에이전트 키(D-CS-012) — 쿠키 로그인한 회원만 만들고 관리한다
     "/v1/web/agent-keys",
     "/v1/web/consents",

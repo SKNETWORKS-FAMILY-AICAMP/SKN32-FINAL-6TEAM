@@ -52,9 +52,26 @@ DEFAULT_SAMPLE_PATH = Path(__file__).resolve().parent / "samples" / "disaster_ms
 WEATHER_KINDS = frozenset({"호우", "태풍", "대설", "강풍", "폭염", "한파", "산사태",
                            "풍랑", "황사", "홍수", "낙뢰"})
 #: 장소를 가리지 않는 재해 — 가는 길이 막히거나 시설이 닫힌다.
+#: ★`[2026-10-06 사용자 결정 — 재난 시 일정 정지]` 민방위 · 화산 · 원전 · 방사능을 더했다 — 전쟁 · 활화산 폭발 같은 심각한 사건이 「모르는 구분」으로 빠져 정지 판정에 안 닿던 것을 막는다
+#:   `[미확인]` 실제 재해구분명이 이 이름들인지는 못 봤다 — 모르는 이름이어도 본문 낱말(`travel.safety.trip_keywords`)이 있으면 들어온다(`judge`)
 PLACE_KINDS = frozenset({"교통통제", "화재", "산불", "지진", "지진해일", "붕괴",
-                         "정전", "가스", "폭발", "테러"})
+                         "정전", "가스", "폭발", "테러", "민방위", "화산", "원전", "방사능"})
 DISRUPTIVE_KINDS = WEATHER_KINDS | PLACE_KINDS
+#: 설정(`config/guardrails.yaml`)을 못 읽을 때만 쓰는 값 — 정본은 `travel.safety.*` 한 곳이다
+_FALLBACK_SEVERE = ("공습경보", "경계경보", "화산", "분화", "전쟁", "미사일", "방사능", "생화학")
+_FALLBACK_EXCLUDE = ("훈련", "해제", "실제 상황이 아")
+
+
+def _safety_words() -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """(심각 낱말, 제외 낱말) — 정본은 `travel.safety`. 설정이 없는 환경(시험 · 옛 설정)에서는 기본값."""
+    try:
+        from app.core.settings import get_guardrails
+
+        guard = get_guardrails()
+        return (tuple(str(w) for w in guard.get("travel.safety.trip_keywords")),
+                tuple(str(w) for w in guard.get("travel.safety.exclude_keywords")))
+    except Exception:                                  # noqa: BLE001 — 설정 오류가 재난문자 판정을 죽이지 않는다
+        return _FALLBACK_SEVERE, _FALLBACK_EXCLUDE
 
 #: 우리 지역 이름 → 재난문자 수신지역 표기.
 REGION_NAMES = {"서울": "서울특별시"}
@@ -103,21 +120,38 @@ def judge(rows: list[dict[str, Any]], *, region: str, district: str | None,
           window_start: datetime, at: datetime) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """창 안·지역 안의 행 → (이상으로 셀 문자, 모르는 구분). 판정 규칙은 모듈 docstring."""
     messages, unclassified = [], []
+    severe_words, exclude_words = _safety_words()
     for row in rows:
         if not (window_start <= row["created_at"] <= at
                 and _covers(row["regions"], region, district)):
             continue
-        if "해제" in row["text"]:                   # ★해제 문자는 이상이 아니다
+        # ★해제 문자는 이상이 아니다. ★`[2026-10-06]` 훈련 문자도 이상이 아니다(`travel.safety.exclude_keywords` — 「민방위 훈련」 한 통으로 일정이 바뀌면 안 된다)
+        if "해제" in row["text"] or any(word in row["text"] for word in exclude_words):
             continue
         item = {"kind": row["kind"], "step": row["step"], "text": row["text"],
                 "created_at": row["created_at"].isoformat(),
                 "regions": row["regions"], "serial": row["serial"],
                 "weather": row["kind"] in WEATHER_KINDS}
-        if row["kind"] in DISRUPTIVE_KINDS:
+        # ★`[2026-10-06]` 재해구분이 모르는 값이어도(기타 · 새 이름) 본문에 심각 낱말(공습경보 · 화산 …)이 있으면 이상이다 — 전쟁 · 화산 폭발이 「모르는 구분」으로 빠지지 않게
+        if row["kind"] in DISRUPTIVE_KINDS or any(word in row["text"] for word in severe_words):
             messages.append(item)
         elif row["kind"] != "기타":
             unclassified.append(item)                # ★모르는 구분은 보이게 남긴다
     return messages, unclassified
+
+
+def judge_released(rows: list[dict[str, Any]], *, region: str, district: str | None,
+                   window_start: datetime, at: datetime) -> list[dict[str, Any]]:
+    """창 안 · 지역 안의 **해제 문자**(본문에 「해제」). 재해구분은 가리지 않는다 — 어느 사건의 해제인지는 부르는 쪽이 가른다(`safety_pause._matching_release`)."""
+    out = []
+    for row in rows:
+        if not (window_start <= row["created_at"] <= at and _covers(row["regions"], region, district)):
+            continue
+        if "해제" not in row["text"]:
+            continue
+        out.append({"kind": row["kind"], "step": row["step"], "text": row["text"], "created_at": row["created_at"].isoformat(),
+                    "regions": row["regions"], "serial": row["serial"]})
+    return out
 
 
 class DisasterMsgCsv:
@@ -170,6 +204,17 @@ class DisasterMsgCsv:
                                        window_start=window_start, at=at)
         return {**base, "for_region": messages, "unclassified": unclassified}
 
+    def released(self, *, region: str, since: datetime, at: datetime, district: str | None = None) -> list[dict[str, Any]] | None:
+        """`since` 부터 `at` 까지의 **해제 문자**. 샘플 기간 밖이면 `None`(모름 — 「해제 없음」이라고 답하지 않는다)."""
+        if self.coverage is None:
+            return None
+        at = at if at.tzinfo else at.replace(tzinfo=KST)
+        since = since if since.tzinfo else since.replace(tzinfo=KST)
+        first, last = self.coverage
+        if not (first <= at <= last + timedelta(hours=DEFAULT_LOOKBACK_HOURS)):
+            return None
+        return judge_released(self.rows, region=region, district=district, window_start=since, at=at)
+
 
 #: 재난안전데이터공유플랫폼 긴급재난문자 — 2026-09-14 실키로 실호출 확인:
 #:    `{"header":{"resultCode":"00","resultMsg":"NORMAL SERVICE"},"numOfRows":…,"pageNo":…,
@@ -217,12 +262,8 @@ class DisasterMsgApi(TravelSource):
             return f"{code} {message}".strip()
         return TravelSource._body_error(payload)
 
-    def active(self, *, region: str, at: datetime, district: str | None = None,
-               lookback_hours: int = DEFAULT_LOOKBACK_HOURS) -> dict[str, Any] | None:
-        now = datetime.now(KST)
-        at = at if at.tzinfo else at.replace(tzinfo=KST)
-        until = min(at.astimezone(KST), now)
-        window_start = until - timedelta(hours=lookback_hours)
+    def _rows_since(self, region: str, window_start: datetime) -> list[dict[str, Any]] | None:
+        """창 시작 날짜 이후 `region` 으로 온 문자를 **파싱해** 돌려준다. 못 읽으면 `None`(모름) — `active` 와 `released` 가 같이 쓴다."""
         rows: list[dict[str, Any]] = []
         # ★`crtDt` 는 하한이다 — 창 시작 날짜로 **한 번** 부르면 지금까지가 온다(실측).
         payload = self._fetch_json(API_ENDPOINT, {
@@ -247,6 +288,27 @@ class DisasterMsgApi(TravelSource):
                 self._miss("bad_row", repr(raw)[:160])
                 return None
             rows.append(row)
+        return rows
+
+    def released(self, *, region: str, since: datetime, at: datetime, district: str | None = None) -> list[dict[str, Any]] | None:
+        """`since` 부터 `at` 까지 `region` 으로 온 **해제 문자**(재해구분은 가리지 않는다). 못 읽으면 `None`. `[2026-10-06]` 재난 정지를 푸는 알림이 쓴다."""
+        now = datetime.now(KST)
+        at = at if at.tzinfo else at.replace(tzinfo=KST)
+        since = since if since.tzinfo else since.replace(tzinfo=KST)
+        rows = self._rows_since(region, since.astimezone(KST))
+        if rows is None:
+            return None
+        return judge_released(rows, region=region, district=district, window_start=since, at=min(at.astimezone(KST), now))
+
+    def active(self, *, region: str, at: datetime, district: str | None = None,
+               lookback_hours: int = DEFAULT_LOOKBACK_HOURS) -> dict[str, Any] | None:
+        now = datetime.now(KST)
+        at = at if at.tzinfo else at.replace(tzinfo=KST)
+        until = min(at.astimezone(KST), now)
+        window_start = until - timedelta(hours=lookback_hours)
+        rows = self._rows_since(region, window_start)
+        if rows is None:
+            return None
         messages, unclassified = judge(rows, region=region, district=district,
                                        window_start=window_start, at=until)
         return self.stamp({"mode": self.mode, "covered": True, "region": region,
@@ -257,4 +319,4 @@ class DisasterMsgApi(TravelSource):
 
 
 __all__ = ["API_ENDPOINT", "DEFAULT_SAMPLE_PATH", "DISRUPTIVE_KINDS", "DisasterMsgApi",
-           "DisasterMsgCsv", "PLACE_KINDS", "WEATHER_KINDS", "judge", "parse_row"]
+           "DisasterMsgCsv", "PLACE_KINDS", "WEATHER_KINDS", "judge", "judge_released", "parse_row"]
