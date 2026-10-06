@@ -430,7 +430,9 @@ def question_answer(item: Item | None, chunks: list[Any], terms: dict[str, Any] 
     if not ranked and not terms:
         return None, []
     subject = item.title if item is not None else "문의하신 내용"
-    lines = [f"{subject} — 여행 규정에서 찾은 내용이에요."]
+    # ☆`[2026-10-06 사람 평가 메모]` 규정 문장은 「해당 상황이 되면 이렇게 해 드려요」라는 일반 규정인데, 맨 끝의 「일정은 바꾸지 않았어요」와 붙어 있으면
+    #   「경로에 넣어 드려요」(규정)와 「일정은 바꾸지 않았어요」(지금)가 서로 모순으로 읽혔다 — 규정은 앞으로의 일이고 지금 일정은 그대로라고 갈라 말한다
+    lines = [f"{subject} — 여행 규정에서 찾은 내용이에요. 해당하는 상황이 되면 이 기준으로 처리해요."]
     # ★`[2026-09-29 사용자 지시]` 근거 id(t_doc_… · #c…)·예약 조건 scope 는 **고객 문장에 싣지 않는다** — 관리자(개발 모드)만 본다.
     #   근거는 버리지 않는다 — 돌려주는 출처 목록이 Case 기록에 남고, 웹은 `web.dev_mode` 가 켜졌을 때만 `basis` 칸으로 받는다
     for line, _source in ranked:
@@ -443,7 +445,7 @@ def question_answer(item: Item | None, chunks: list[Any], terms: dict[str, Any] 
         if penalty:
             line += " · 위약금 기준 " + ", ".join(f"{k}시간 전부터 {v}" for k, v in penalty.items())
         lines.append(line)
-    lines.append("일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.")
+    lines.append("지금 일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.")
     sources = [source for _, source in ranked]
     if terms:
         sources.append(f"booking_terms:{terms.get('matched_scope')}:{terms.get('source')}")

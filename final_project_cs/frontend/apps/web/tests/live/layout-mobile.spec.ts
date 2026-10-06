@@ -60,7 +60,7 @@ test("항로 지킴이 카드는 휴대폰 틀 안에서 틀 폭에 맞는 아�
   expect(sheet.y + sheet.height).toBeLessThanOrEqual(frame.y + frame.height + 1);
 });
 
-test("항로 지킴이를 끄면 알림이 틀 안에서 틀 폭에 맞는 어두운 막대로 뜨고 몇 초 뒤 저절로 사라진다. 아이콘은 메뉴 버튼과 같은 흰색 반투명이고 위에 말풍선이 없다", async ({ page, request }) => {
+test("항로 지킴이를 끄면 알림이 틀 안에서 틀 폭에 맞는 하얀 카드로 뜨고 몇 초 뒤 저절로 사라진다. 아이콘은 메뉴 버튼과 같은 흰색 반투명이고 위에 말풍선이 없다", async ({ page, request }) => {
   await mockServer(request).scenario({ guardian: "on" });
   await page.setViewportSize({ width: 1280, height: 900 });
   await start(page);
@@ -83,7 +83,7 @@ test("항로 지킴이를 끄면 알림이 틀 안에서 틀 폭에 맞는 어�
   const [frame, bar] = [(await device(page).boundingBox())!, (await toast.boundingBox())!];
   expect(bar.x).toBeGreaterThanOrEqual(frame.x - 1);
   expect(bar.x + bar.width).toBeLessThanOrEqual(frame.x + frame.width + 1);
-  expect(await toast.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(look.menu.background);   // 어두운 막대(기존 알림과 같은 모양)
+  expect(await toast.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(look.menu.background);   // 알림의 하얀 카드(메뉴 버튼의 반투명 바탕과는 다른 값)
   await expect(toast).toHaveCount(0, { timeout: 9000 });                                                  // 저절로 사라진다
 });
 
