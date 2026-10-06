@@ -52,7 +52,7 @@ class CombinedTraffic:
                 confirmed.append(value["confirmed_at"])
         if not answered:
             self.misses["all_failed"] += 1
-            logger.error("traffic sources all failed: %s", failed)
+            logger.log(getattr(self, "log_level", logging.ERROR), "traffic sources all failed: %s", failed)
             return None
         if failed:
             self.misses["partial"] += 1

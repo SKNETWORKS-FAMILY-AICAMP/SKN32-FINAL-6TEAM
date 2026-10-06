@@ -71,6 +71,26 @@ class RateLimited(RuntimeError):
         self.source, self.wait_seconds = source, wait_seconds
 
 
+class CacheOnly(RateLimited):
+    """캐시만 읽는 호출이라 바깥으로 나가지 않는다 — **정상 갈래**다(어댑터가 「모름」으로 바꾼다). 한도 · 실패로 세지 않는다."""
+
+    reason = "cache_only"
+
+    def __init__(self, source: str) -> None:
+        RuntimeError.__init__(self, f"{source}: 캐시만 읽는 호출이라 바깥으로 나가지 않는다")
+        self.source, self.wait_seconds = source, 0.0
+
+
+class CacheOnlyLimiter:
+    """바깥으로 나가는 문을 **늘 닫는다** — 이 제한기로 만든 소스는 공유 응답 캐시(`cache.py`)에 있는 것만 읽고, 없으면 「모름」이다.
+
+    ★`[2026-10-06]` 개인 AI 입구(MCP)의 「일정 위험 점검」이 쓴다. 감시(3분 주기)가 모아 둔 최근 결과를 **읽기만** 해서 하루 한도(D-017 · `source_budget`)를 깎지 않는다.
+    한도 칸을 쓰지 않고(`acquire` 가 예산에 닿지 않는다) 실패 수에도 안 센다 — 안 부른 것이지 부르다 실패한 것이 아니다."""
+
+    def acquire(self, source: str) -> None:
+        raise CacheOnly(source)
+
+
 @dataclass
 class RateLimiter:
     """소스 이름 → 마지막 호출 시각. 스레드 안전하다."""
@@ -134,5 +154,5 @@ class RateLimiter:
             }
 
 
-__all__ = ["DEFAULT_MAX_WAIT_SECONDS", "RateLimited", "RateLimiter",
+__all__ = ["CacheOnly", "CacheOnlyLimiter", "DEFAULT_MAX_WAIT_SECONDS", "RateLimited", "RateLimiter",
            "SECONDS_PER_DAY", "interval_for"]

@@ -229,6 +229,16 @@ def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, d
     return leg
 
 
+def basis() -> dict[str, Any]:
+    """판정기의 상태와 근거 판 — 읽기 입구(MCP 이동 판정)가 「어느 시간표로 판정했나」를 밝힌다. 꺼져 있으면 `mode` 만."""
+    if _STATE["mode"] != "enabled":
+        return {"mode": _STATE["mode"]}
+    rt = engine_runtime.get_verifier(**_STATE["kw"])
+    built = rt.timetable_built_at
+    return {"mode": "enabled", "timetable_built_at": built.isoformat() if hasattr(built, "isoformat") else str(built),
+            "rules_version": rt.rules_version, "timetable_stale": bool(rt.timetable_stale)}
+
+
 def team_result(task: Any) -> dict[str, Any] | None:
     """구조화 입력(current_state.mobility)을 계산기로 판정해 TeamResult 모양 dict 를. 꺼져 있으면 None."""
     if _STATE["mode"] != "enabled":

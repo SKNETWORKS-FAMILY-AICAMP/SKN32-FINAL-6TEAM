@@ -35,12 +35,18 @@ CRITICAL_RATIO = 0.95
 
 class CallBudget:
     def __init__(self, *, connection_factory: Callable[[], Any], caps: dict[str, dict[str, int]],
-                 clock: Callable[[], datetime] | None = None, tz: tzinfo = UTC) -> None:
+                 clock: Callable[[], datetime] | None = None, tz: tzinfo = UTC, share: float = 1.0) -> None:
         """`caps` — {meter: {"month": n, "day": m}}. 모르는 meter 는 **부르지 않는다**(한도를 모르면 막는다).
+
+        `share` — ★`[2026-10-06]` **낮은 우선순위 호출의 몫**(0 < share ≤ 1, 기본 1 = 전부). 이 객체는 일 · 월 줄이 `상한 × share` 에 닿으면 거절한다 — 나머지는 다른 호출(감시 · 채팅) 몫이다.
+        ★비교는 **차감하는 같은 UPDATE 안**에서 한다(읽고 나서 차감하면 동시에 들어온 호출이 몫을 넘는다). 줄의 `cap` 칸에는 **진짜 상한**을 그대로 쓴다(몫이 줄의 상한으로 새지 않는다).
+        몫으로 거절한 것은 줄의 `rejected` 수에 안 센다(그 수는 「진짜 한도가 차서」 못 부른 것을 뜻한다). 상한을 모르는(UNLIMITED) 줄에는 몫을 곱하지 않는다.
 
         `tz` — 일·월 줄을 가르는 시간대. 기본 UTC(구글·카카오가 그대로 쓰는 값). ★국내 공공 API 의 하루는
         한국 시각 자정에 바뀌므로 그 소스들은 `KST` 를 준다(UTC 로 세면 한국 하루 안에 두 줄이 걸쳐 한도가 두 배로 샌다)."""
-        self._connect, self.caps = connection_factory, caps
+        if not 0.0 < share <= 1.0:
+            raise ValueError(f"share 는 0 보다 크고 1 이하여야 한다: {share!r}")
+        self._connect, self.caps, self.share = connection_factory, caps, share
         self.clock = clock or (lambda: datetime.now(UTC))
         self._tz = tz
         self.refused: dict[str, int] = {}
@@ -73,10 +79,11 @@ class CallBudget:
             if blocked is not None:
                 raise _Exhausted(meter, blocked[0])
             for period, limit in rows:
-                # ★상한은 **지금 설정값**으로 본다 — 줄에 남은 옛 cap 이 더 커도 새 값이 이긴다
+                # ★상한은 **지금 설정값**으로 본다 — 줄에 남은 옛 cap 이 더 커도 새 값이 이긴다. 몫(`share`)이 있으면 **같은 UPDATE 의 조건**이 `상한 × 몫` 이다
+                allowed = limit if (self.share >= 1.0 or limit >= UNLIMITED) else int(limit * self.share)
                 cur.execute("UPDATE external_call_budget SET used = used + 1, cap = %s, updated_at = now() "
                             "WHERE meter=%s AND period=%s AND used < %s RETURNING used",
-                            (max(limit, 0), meter, period, limit))
+                            (max(limit, 0), meter, period, allowed))
                 row = cur.fetchone()
                 if row is None:
                     raise _Exhausted(meter, period)      # ★트랜잭션이 되돌린다 — 월 줄만 올라가지 않는다
@@ -89,7 +96,8 @@ class CallBudget:
             return self.reserve(meter)
         except _Exhausted:
             self.refused[meter] = self.refused.get(meter, 0) + 1
-            self._count(meter, "rejected")                # 한도가 차서 부르지 않은 것도 DB 에 센다(여유 확인용)
+            if self.share >= 1.0:
+                self._count(meter, "rejected")            # 한도가 차서 부르지 않은 것도 DB 에 센다(여유 확인용) — 몫으로 거절한 것은 세지 않는다(위 `share`)
             return False
 
     def mark_provider_exhausted(self, meter: str, scope: str = "day") -> None:

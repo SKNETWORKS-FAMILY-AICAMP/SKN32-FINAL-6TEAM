@@ -53,6 +53,8 @@ triPilot 은 여행 중 일정이 틀어질 때 지켜 주고 고쳐 주는 서�
 
 사용 순서: 먼저 tripilot_list_trips 로 여행 id 를 얻고, tripilot_get_trip 으로 일정(항목마다 식사/활동/이동 구분 · 시각 · 장소 정보)을 읽습니다.
 알림은 tripilot_get_notices, 서버가 고객에게 물어 둔 선택지는 tripilot_get_proposals 입니다.
+곧 시작할 일정이 날씨 · 특보 · 재난 · 교통 통제 · 대기질 · 지진 때문에 문제가 될지는 tripilot_check_trip_risks, 두 장소 사이를 몇 시에 떠나 어떻게 가는지는 tripilot_judge_move 입니다 —
+둘 다 읽기만 합니다. 결과의 status 가 unknown(확인 불가)이면 「문제 없다」고 말하지 말고 확인하지 못했다고 전하세요. 값을 지어내지 마세요.
 
 일정을 바꾸는 도구(쓰기)가 보이면 — 지연 · 휴무 같은 **사실은 지어내지 말고** 사용자가 말한 것만 tripilot_report_issue 로 전하세요. 바꾼 결과의 문장은
 서버가 돌려준 `answer` 를 그대로 전하고(서버가 가진 사실로만 만든 말입니다), 모르는 것을 추측해 메우지 마세요. 어떤 변경이든 tripilot_rollback 으로 되돌릴 수 있습니다.
@@ -277,6 +279,51 @@ def build_server(backend: Backend, *, write_enabled: bool = False, env_key: str 
         if "customer_id" in schema.get("required", []):
             schema["required"] = [r for r in schema["required"] if r != "customer_id"]
         return schema
+
+    @server.tool(name="tripilot_check_trip_risks", annotations=READ, title="일정 위험 점검",
+                 description="내 여행에서 곧 시작할 일정(기본: 지금부터 12시간 안 · 진행 중 포함)마다 외부 정보 6종 — 날씨 예보 · 기상 특보 · 재난문자 · 교통 통제 · 대기질 · 지진 — 이 문제를 가리키는지. "
+                             "항목마다 status 는 problem(문제 있음 · problems 에 원인) · clear(확인할 종류를 모두 확인했고 문제 없음 — 실내 장소의 예보처럼 볼 필요 없는 종류는 not_applicable) · unknown(문제는 못 찾았지만 확인하지 못한 종류가 있음 — unknown_categories 의 code: not_cached · source_failed · not_connected · missing · partial(소스 일부만 답함) · too_early(시작까지 3시간 넘게 남아 지금 상태만 확인됨)). "
+                             "★unknown 을 「문제 없음」으로 전하지 않는다. 각 종류의 confirmed_at 은 그 소스 값을 받아 온 시각이고 cautions 에 구분 못 한 재난문자 · 모델 추정 대기질 같은 주의가 실린다. 이미 시작한 일정은 지금 기준으로 점검한다. "
+                             "기본은 감시가 모아 둔 최근 결과만 읽는다(바깥에 새로 묻지 않음 — 결과가 없는 종류는 unknown). fresh=true 로 캐시에 없는 것을 새로 확인할 수 있지만 횟수 · 항목 수 제한이 있다(공유 하루 한도를 쓴다). "
+                             "item_id 로 한 항목만 점검할 수 있다. 읽기 전용이다.")
+    async def check_trip_risks(ctx: Context, trip_id: TripId,
+                               item_id: Annotated[str | None, Field(description="한 항목만 점검 (tripilot_get_trip 의 item_id)")] = None,
+                               within_hours: Annotated[float | None, Field(gt=0, le=48, description="지금부터 몇 시간 안에 시작하는 일정까지 (기본 12)")] = None,
+                               fresh: Annotated[bool, Field(description="true 면 캐시에 없는 종류를 새로 확인한다 (횟수 · 항목 수 제한 · 공유 하루 한도 사용). 기본 false")] = False) -> dict[str, Any]:
+        params: dict[str, Any] = {"fresh": "true" if fresh else "false"}
+        if item_id:
+            params["item_id"] = item_id
+        if within_hours is not None:
+            params["within_hours"] = within_hours
+        return await call(ctx, "GET", f"/v1/web/trips/{trip_id}/risks", params=params)
+
+    @server.tool(name="tripilot_judge_move", annotations=READ, title="이동 판정",
+                 description="서울 안 두 장소 사이를 이동 판정기가 시간표로 판정한다 — 출발 시각(depart_at) · 경로(route.label · uses 노선) · 소요(eta_min) · 도착 시각 · 대안(alternatives) · "
+                             "근거 등급 grade(timetable=열차 시간표 판정 · estimate=도보 · 택시 · 버스(배차 추정)가 낀 경로이거나 판정기가 꺼져 직선 거리 어림만 · none=근거 없음) — 대안(alternatives)마다 grade 가 따로 있다 · 확인 시각 checked_at · 판정에 쓴 시간표 판(basis). "
+                             "★시간표 판정이지 실시간 운행 확정이 아니다. 판정기가 꺼져 있거나 오류면 status=unavailable(직선 어림만), 갈 방법이 없으면 status=no_route(이유 그대로), 판정기가 판단하지 못했으면 status=undetermined(갈 방법이 없다는 뜻이 아니다) — 경로 · 시각을 지어내지 않는다. depart_at 이면 requested_depart_at · wait_min(요청 시각에서 고른 출발까지 분)이 붙고 earliest_not_guaranteed=true 면 그 출발이 가장 이른 출발이라는 보장이 없다(wait_min 이 첫차 대기가 아닐 수 있음). 못 찾으면 searched 에 어디까지 봤는지 적힌다. "
+                             "장소는 이름 + 위도(lat) · 경도(lon), 또는 내 여행의 일정 항목(trip_id + item_id). 시각은 depart_at(이 시각에 출발) 또는 arrive_by(이 시각까지 도착) 중 하나, 둘 다 없으면 지금 출발. "
+                             "읽기 전용이다.")
+    async def judge_move(ctx: Context,
+                         origin_lat: Annotated[float | None, Field(ge=-90, le=90, description="출발지 위도")] = None,
+                         origin_lon: Annotated[float | None, Field(ge=-180, le=180, description="출발지 경도")] = None,
+                         origin_name: Annotated[str | None, Field(max_length=80, description="출발지 이름")] = None,
+                         destination_lat: Annotated[float | None, Field(ge=-90, le=90, description="도착지 위도")] = None,
+                         destination_lon: Annotated[float | None, Field(ge=-180, le=180, description="도착지 경도")] = None,
+                         destination_name: Annotated[str | None, Field(max_length=80, description="도착지 이름")] = None,
+                         trip_id: Annotated[str | None, Field(description="일정 항목으로 가리킬 때 그 여행 id — 주면 그 여행의 인원 · 이동 선호를 판정에 쓴다")] = None,
+                         origin_item_id: Annotated[str | None, Field(description="출발지를 이 여행의 일정 항목으로 (trip_id 필요)")] = None,
+                         destination_item_id: Annotated[str | None, Field(description="도착지를 이 여행의 일정 항목으로 (trip_id 필요)")] = None,
+                         depart_at: Annotated[str | None, Field(description="이 시각에 출발 — ISO 8601 (시간대 없으면 한국 시각)")] = None,
+                         arrive_by: Annotated[str | None, Field(description="이 시각까지 도착 — ISO 8601 (시간대 없으면 한국 시각)")] = None) -> dict[str, Any]:
+        def end(item_id: str | None, name: str | None, lat: float | None, lon: float | None) -> dict[str, Any]:
+            return {k: v for k, v in (("item_id", item_id), ("name", name), ("lat", lat), ("lon", lon)) if v is not None}
+
+        body: dict[str, Any] = {"origin": end(origin_item_id, origin_name, origin_lat, origin_lon),
+                                "destination": end(destination_item_id, destination_name, destination_lat, destination_lon)}
+        for key, value in (("trip_id", trip_id), ("depart_at", depart_at), ("arrive_by", arrive_by)):
+            if value:
+                body[key] = value
+        return await call(ctx, "POST", "/v1/web/moves/judge", json=body)
 
     if not write_enabled:
         return server

@@ -17,19 +17,21 @@ from typing import Any, Callable
 _leg_planner: Callable[..., Any] | None = None
 _disruptions_from_events: Callable[[dict[str, Any]], tuple[list[dict[str, Any]], list[str]]] | None = None
 _walk_limit_m: Callable[[], float | None] | None = None
+_basis: Callable[[], dict[str, Any]] | None = None
 
 
 def register(*, leg_planner: Callable[..., Any],
              disruptions_from_events: Callable[[dict[str, Any]], tuple[list[dict[str, Any]], list[str]]],
-             walk_limit_m: Callable[[], float | None]) -> None:
-    """조립 때 한 번. 셋을 다 줘야 한다 — 빠뜨리면 여기서 `TypeError` 로 바로 드러난다."""
-    global _leg_planner, _disruptions_from_events, _walk_limit_m
-    _leg_planner, _disruptions_from_events, _walk_limit_m = leg_planner, disruptions_from_events, walk_limit_m
+             walk_limit_m: Callable[[], float | None],
+             basis: Callable[[], dict[str, Any]] | None = None) -> None:
+    """조립 때 한 번. 앞 셋을 다 줘야 한다 — 빠뜨리면 여기서 `TypeError` 로 바로 드러난다. `basis` 는 선택(`[2026-10-06]` 판정 근거를 밝히는 읽기 입구용)."""
+    global _leg_planner, _disruptions_from_events, _walk_limit_m, _basis
+    _leg_planner, _disruptions_from_events, _walk_limit_m, _basis = leg_planner, disruptions_from_events, walk_limit_m, basis
 
 
 def clear() -> None:
-    global _leg_planner, _disruptions_from_events, _walk_limit_m
-    _leg_planner = _disruptions_from_events = _walk_limit_m = None
+    global _leg_planner, _disruptions_from_events, _walk_limit_m, _basis
+    _leg_planner = _disruptions_from_events = _walk_limit_m = _basis = None
 
 
 def is_registered() -> bool:
@@ -50,6 +52,13 @@ def disruptions_from_events(events: dict[str, Any]) -> tuple[list[dict[str, Any]
     if _disruptions_from_events is None:
         return [], []
     return _disruptions_from_events(events)
+
+
+def basis() -> dict[str, Any] | None:
+    """판정기가 **어떤 상태이고 어느 시간표 · 규칙 판으로** 판정하나 — `{mode, timetable_built_at, rules_version, timetable_stale}`. ★미등록이면 `None`(모른다 — 「꺼짐」이라고 말하지 않는다)."""
+    if _basis is None:
+        return None
+    return _basis()
 
 
 def walk_limit_m() -> float | None:
