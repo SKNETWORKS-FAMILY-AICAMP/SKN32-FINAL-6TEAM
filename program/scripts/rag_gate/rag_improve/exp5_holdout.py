@@ -18,8 +18,7 @@ SETS['H'] = json.load(open(os.path.join(HERE, 'holdout', 'holdout_questions.json
 DA = embed([text_A(c) for c in CH])
 DE = embed([text_E(c) for c in CH])
 CACHE = load_cache()
-MODELS = {'V7a': 'gemma4:12b', 'V7b': 'gemma4:e4b'}
-NC = 10
+MODELS = {'V7a': ('gemma4:12b', 10), 'V7b': ('gemma4:e4b', 10), 'V7c': ('gemma4:12b', 20)}      # (모델, 1단계 후보 수). V7c 는 PREREG 부록(2026-10-07, 보류 세트 결과를 보기 전)에서 더했다
 result = {}
 
 
@@ -57,8 +56,8 @@ def run_set(name):
     for lab, S, gate in (('V0', SA, SA), ('V1', SE, SE), ('V5d', S5, SE)):
         out[lab] = {**metrics_rank(rows, S, lab), **leak_rank(rows, S, gate, 0.55)}
     order = np.argsort(-S5, axis=1)
-    for lab, model in MODELS.items():
-        jobs = [(model, r['q'], order[i][:NC].tolist(), CACHE) for i, r in enumerate(rows)]
+    for lab, (model, nc) in MODELS.items():
+        jobs = [(model, r['q'], order[i][:nc].tolist(), CACHE) for i, r in enumerate(rows)]
         with cf.ThreadPoolExecutor(max_workers=3) as ex:
             picks = list(ex.map(lambda a: llm_rank(*a), jobs))
         save_cache(CACHE)
@@ -70,17 +69,22 @@ def run_set(name):
             S7[i, [c for c in range(len(IDS)) if c not in full]] = -1000
         m = metrics_rank(rows, S7, lab)
         shown_ok = shown_wrong = neg_leak = nm_show = 0
+        g_ok = g_leak = g_nm = 0       # 문턱 0.45 를 더한 규칙(색인 E 점수가 0.45 이상인 줄만) — PREREG 부록에서 사전 고정
         for i, (r, pk) in enumerate(zip(rows, picks)):
             pk = pk[:3]
+            pg = [c for c in pk if SE[i, c] >= 0.45]
             if r['type'] == 'answerable':
                 hit = bool(set(pk) & {IDX[g] for g in r['gold']})
                 shown_ok += hit
                 shown_wrong += (bool(pk) and not hit)
+                g_ok += bool(set(pg) & {IDX[g] for g in r['gold']})
             elif r['type'] in ('uncovered', 'offtopic'):
                 neg_leak += bool(pk)
+                g_leak += bool(pg)
             elif r['type'] == 'near_miss':
                 nm_show += bool(pk)
-        out[lab] = {**m, 'shown_ok': shown_ok, 'shown_wrong': shown_wrong, 'neg_n': sum(1 for r in rows if r['type'] in ('uncovered', 'offtopic')), 'neg_leak': neg_leak, 'nm_n': sum(1 for r in rows if r['type'] == 'near_miss'), 'nm_show': nm_show, 'model': model}
+                g_nm += bool(pg)
+        out[lab] = {**m, 'shown_ok': shown_ok, 'shown_wrong': shown_wrong, 'neg_n': sum(1 for r in rows if r['type'] in ('uncovered', 'offtopic')), 'neg_leak': neg_leak, 'nm_n': sum(1 for r in rows if r['type'] == 'near_miss'), 'nm_show': nm_show, 'model': model, 'candidates': nc, 'g45_shown_ok': g_ok, 'g45_neg_leak': g_leak, 'g45_nm_show': g_nm}
     return out
 
 
@@ -88,7 +92,7 @@ for name in (['A', 'B'] + (['H'] if RUN else [])):
     result[name] = run_set(name)
     print('\n##', name)
     for lab, m in result[name].items():
-        extra = f" · 모델이 고른 줄에 정답 {m['shown_ok']}/{m['n']} · 틀린 줄만 {m['shown_wrong']}" if 'shown_ok' in m else ''
+        extra = (f" · 모델이 고른 줄에 정답 {m['shown_ok']}/{m['n']} · 틀린 줄만 {m['shown_wrong']}" + f" | 문턱 0.45 추가: 정답을 보임 {m['g45_shown_ok']}/{m['n']} · 답 없음 {m['g45_neg_leak']}/{m['neg_n']} 보임 · 근접·부분 {m['g45_nm_show']}/{m['nm_n']} 보임") if 'shown_ok' in m else ''
         print(f"{lab:4s} Recall@1 {m['recall1']}/{m['n']} · Recall@3 {m['recall3']}/{m['n']} = {m['recall3'] / m['n']:.3f} · MRR {m['mrr']}{extra} | 답 없음 {m['neg_leak']}/{m['neg_n']} 규정을 보임 | 근접·부분 {m['nm_show']}/{m['nm_n']} 보임")
 if RUN:
     json.dump(result, open(os.path.join(OUT, 'holdout_result.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)

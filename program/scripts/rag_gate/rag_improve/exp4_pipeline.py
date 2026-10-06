@@ -25,7 +25,7 @@ for name in WHICH:
     SE = Q @ DE.T
     S1 = zscore(SE) + 1.0 * zscore(d2q_top2(Q))
     order = np.argsort(-S1, axis=1)
-    for tau in (None, 0.50, 0.55):
+    for tau in (None, 0.40, 0.45, 0.50, 0.55):
         ans = ok = wrong = 0
         n_ans = 0
         leak = n_neg = 0
