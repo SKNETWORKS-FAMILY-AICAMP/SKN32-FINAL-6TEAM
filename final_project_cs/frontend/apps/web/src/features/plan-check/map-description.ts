@@ -1,5 +1,7 @@
 import type { Translate } from "@/lib/i18n";
 import type { BusToast } from "@/lib/toast-bus";
+import type { RouteShape } from "@/lib/live/route-shapes";
+import { rideLines } from "@/features/map/route-lines";
 import type { PlanItem, PlanMove } from "./model";
 
 /** A description has more to read than 「되돌렸어요」: it stays this long (the pointer on its button keeps it). */
@@ -37,7 +39,7 @@ export function stopToast(stop: { order: number; item: PlanItem }, t: Translate,
   };
 }
 
-export function moveToast(leg: { move: PlanMove; from: string; to: string }, t: Translate, onList: () => void): BusToast {
+export function moveToast(leg: { move: PlanMove; from: string; to: string; shape?: RouteShape }, t: Translate, onList: () => void): BusToast {
   const { move } = leg;
   const how = move.summary.includes(move.mode) ? move.summary : `${move.mode}${move.summary ? ` · ${move.summary}` : ""}`;
   const times = move.departAt || move.arriveAt
@@ -46,7 +48,8 @@ export function moveToast(leg: { move: PlanMove; from: string; to: string }, t: 
     badge: "→",
     text: `${leg.from} → ${leg.to}`,
     chip: verdictChip(move.verdict, t),
-    sub: [how, times].filter(Boolean).join("\n"),
+    // ★`[2026-10-05 사용자 지시]` Tapped, a subway line also says what it rides (the line, the stations) - only what the server sent.
+    sub: [how, times, ...(leg.shape ? rideLines(leg.shape, t) : [])].filter(Boolean).join("\n"),
     note: firstIssue(move.checks),
     action: { label: t("목록에서 보기", "Show in list"), run: onList },
     ms: READ_MS,

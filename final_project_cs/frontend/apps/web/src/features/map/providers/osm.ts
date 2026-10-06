@@ -61,12 +61,12 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       const routes = L.layerGroup().addTo(map);
       let previousLines = "";
       // `[2026-10-06 사용자 지시 — 경로를 누르면 그 경로가 나온다]` Each route is two lines: the one drawn, and a wider invisible one over it that takes the press (a thin road is hard to hit, and a phone has no hover).
-      let lineLayers: { id: string; shown: ReturnType<typeof L.polyline>; dashed: boolean }[] = [];
+      let lineLayers: { id: string; shown: ReturnType<typeof L.polyline>; dashed: boolean; mode: MapLine["mode"] }[] = [];
       let pickedLine: string | undefined;
       function styleLines() {
-        lineLayers.forEach(({ id, shown, dashed }) => {
+        lineLayers.forEach(({ id, shown, dashed, mode }) => {
           const picked = id === pickedLine;
-          const base = lineStyle(container, { id, points: [], dashed, title: "" });
+          const base = lineStyle(container, { id, points: [], dashed, mode, title: "" });
           const accent = getComputedStyle(container).getPropertyValue("--color-selected").trim();
           shown.setStyle(picked ? { weight: base.weight + 3, opacity: 1, ...(accent ? { color: accent } : {}) } : { weight: base.weight, opacity: base.opacity, color: base.color });
           if (picked) shown.bringToFront();
@@ -175,7 +175,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
             pane: "routes", color: style.color, weight: style.weight, opacity: style.opacity, lineCap: "round", lineJoin: "round",
             ...(style.dash ? { dashArray: style.dash.join(" ") } : {}), interactive: false, className: `trip-route-line${line.dashed ? " trip-route-line--dashed" : ""}`,
           }).addTo(routes);
-          lineLayers.push({ id: line.id, shown, dashed: line.dashed });
+          lineLayers.push({ id: line.id, shown, dashed: line.dashed, mode: line.mode });
           if (!options.onSelectLine) { shown.bindTooltip(line.title, { sticky: true }); return; }
           L.polyline(path, { pane: "routes", color: "#000", weight: 22, opacity: 0, lineCap: "round", lineJoin: "round", interactive: true, className: "trip-route-hit" })
             .bindTooltip(line.title, { sticky: true }).on("click", () => options.onSelectLine?.(line.id)).addTo(routes);

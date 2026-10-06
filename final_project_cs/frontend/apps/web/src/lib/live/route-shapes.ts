@@ -11,6 +11,9 @@ import { api, LiveError } from "./client";
 export type RouteMode = "walk" | "bike" | "taxi" | "subway" | "bus" | "mixed" | "unknown";
 export type RouteSource = "local_road_graph" | "stations" | "straight_line";
 
+/** `[2026-10-05 이동 세션 계약]` One ride of a subway or mixed leg (`rides[]`, only where the line follows the stations): 「지하철 3호선 · 경복궁→을지로3가 · 4개 역」; `filled: false` = the stations between could not be filled in (a straight stretch). */
+export interface RouteRide { line: string; from: string | null; to: string | null; stations: string[]; count: number | null; filled: boolean }
+
 export interface RouteShape {
   /** The move item itself; the two ends are the stops around it. */
   itemId: string;
@@ -25,6 +28,8 @@ export interface RouteShape {
   note: string | null;
   /** WGS84, in the order of the line (the server sends GeoJSON `[lng, lat]`). */
   points: { lat: number; lng: number }[];
+  /** `[2026-10-06 사용자 지시]` The rides a subway or mixed line is made of - said when the line is pressed. Empty for anything else (a bus, a taxi, a walk have none). */
+  rides: RouteRide[];
 }
 
 export interface RouteShapes { attribution: string; shapes: RouteShape[] }
@@ -44,6 +49,22 @@ export function pointsOf(coordinates: unknown): RouteShape["points"] {
   return points.length >= 2 ? points : [];
 }
 
+function ridesOf(raw: unknown): RouteRide[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((entry): RouteRide[] => {
+    const row = (entry ?? {}) as Record<string, unknown>;
+    const line = text(row.line);
+    if (!line) return [];                                                   // a ride with no line name has nothing true to say
+    const count = Number(row.count);
+    return [{
+      line, from: text(row.from), to: text(row.to),
+      stations: (Array.isArray(row.stations) ? row.stations : []).flatMap((station) => { const name = text(station); return name ? [name] : []; }),
+      count: Number.isFinite(count) && count >= 0 ? Math.floor(count) : null,
+      filled: row.filled !== false,                                         // only the server's explicit `false` says the middle stations are missing
+    }];
+  });
+}
+
 function shapeOf(entry: unknown): RouteShape | null {
   const row = (entry ?? {}) as Record<string, unknown>;
   const line = (row.line ?? {}) as { type?: unknown; coordinates?: unknown };
@@ -58,7 +79,7 @@ function shapeOf(entry: unknown): RouteShape | null {
   return {
     itemId, fromItemId, toItemId, from: text(row.from), to: text(row.to), mode, source,
     grade: row.grade === "추정" || row.grade === "근거없음" ? row.grade : "unknown",
-    distanceM: Number.isFinite(distance) && distance >= 0 ? distance : null, note: text(row.note), points,
+    distanceM: Number.isFinite(distance) && distance >= 0 ? distance : null, note: text(row.note), points, rides: ridesOf(row.rides),
   };
 }
 
