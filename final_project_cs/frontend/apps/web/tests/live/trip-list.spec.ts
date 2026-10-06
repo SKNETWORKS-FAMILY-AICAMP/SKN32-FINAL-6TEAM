@@ -127,7 +127,7 @@ test("모든 로고는 홈 첫 장으로 돌아오고, 여정 화면 헤더에�
     const banner = page.getByRole("banner");
     await expect(banner.getByRole("link")).toHaveCount(1);
     await expect(banner.getByRole("button")).toHaveCount(1);
-    await banner.getByRole("link", { name: "triPilot 홈으로" }).click();
+    await banner.getByRole("link", { name: "triPilot — 소개 화면으로 돌아가기" }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.locator("#intro-title")).toBeInViewport();
   }
@@ -150,7 +150,7 @@ test("등록하고 로고로 돌아오면 첫 화면 카드와 전체 목록이 
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
   await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
-  await page.getByRole("banner").getByRole("link", { name: "triPilot 홈으로" }).click();
+  await page.getByRole("banner").getByRole("link", { name: "triPilot — 소개 화면으로 돌아가기" }).click();
   await expect(card(page).getByRole("listitem")).toHaveCount(1);
   await expect(card(page).getByText("아직 등록한 여행이 없어요.")).toHaveCount(0);
   await openMenu(page, "메뉴");
@@ -423,7 +423,7 @@ test("마지막 여행을 지우면 빈 목록과 새 여행 등록만 남고, �
   await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toHaveCount(0);
 
   // 첫 화면 카드도 삭제를 따른다.
-  await page.getByRole("banner").getByRole("link", { name: "triPilot 홈으로" }).click();
+  await page.getByRole("banner").getByRole("link", { name: "triPilot — 소개 화면으로 돌아가기" }).click();
   await expect(card(page).getByText("아직 등록한 여행이 없어요.", { exact: true })).toBeVisible();
 
   // 새로고침해도 돌아오지 않는다(서버가 지웠다).

@@ -25,6 +25,12 @@ export const COARSE_MIN_MS = 120;
  */
 export const STAGE_MIN_MS = 900;
 
+/**
+ * `[2026-10-06 사용자 지시 — 새 마커가 생겼을 때 거기에 시선이 한 번 갈 시간을 주고, 그다음 일정이 보이게]` After a new card (and with it a new pin on the map, which flies to it) is drawn, the next step waits this long
+ * first: the eye can follow the map to the new pin before the card's checks tick on.
+ */
+export const NEW_PIN_HOLD_MS = 800;
+
 /** Up to `count` changes toward `target` (fewer when it is reached first); null when nothing is left to draw. `coarse` = card by card, not line by line. */
 export function stepMany(shown: PlanCheckView, target: PlanCheckView, count: number, coarse = false): PlanCheckView | null {
   let view: PlanCheckView | null = null;
@@ -110,8 +116,13 @@ export function useReveal(target: PlanCheckView): { view: PlanCheckView; settled
   const peak = useRef({ lines: 0, cards: 0, reading: 0 });
   // When the stage of the top bar last changed on screen (the clock of `STAGE_MIN_MS`).
   const stageSince = useRef<{ stage: PlanCheckView["stage"]; at: number } | null>(null);
+  // How many cards were on screen at the last step, and until when the screen rests on a card that has just come.
+  const cardsSeen = useRef(shown.items.length);
+  const holdUntil = useRef(0);
   useEffect(() => {
     if (reduced) return;
+    if (shown.items.length > cardsSeen.current) holdUntil.current = performance.now() + NEW_PIN_HOLD_MS;
+    cardsSeen.current = shown.items.length;
     if (stageSince.current?.stage !== shown.stage) stageSince.current = { stage: shown.stage, at: performance.now() };
     if (!nextStep(shown, target)) { peak.current = { lines: 0, cards: 0, reading: 0 }; return; }
     peak.current = { lines: Math.max(peak.current.lines, backlog(shown, target)), cards: Math.max(peak.current.cards, cardBacklog(shown, target)), reading: peak.current.reading };
@@ -124,6 +135,7 @@ export function useReveal(target: PlanCheckView): { view: PlanCheckView; settled
     // The next change moves the top bar on to its next stage: the stage that is showing has been there long enough first.
     const upcoming = nextStep(shown, target);
     if (upcoming && upcoming.stage !== shown.stage && stageSince.current) wait = Math.max(wait, STAGE_MIN_MS - (performance.now() - stageSince.current.at));
+    wait = Math.max(wait, holdUntil.current - performance.now());
     const timer = setTimeout(() => { const next = stepMany(shown, target, 1, !reading && plan.coarse); if (next) setShown(next); }, wait);
     return () => clearTimeout(timer);
   }, [shown, target, reduced]);

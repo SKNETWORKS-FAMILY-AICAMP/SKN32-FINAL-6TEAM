@@ -69,6 +69,9 @@ describe("terms documents (one per consent item)", () => {
       expect(allPlaceholders.length).toBeGreaterThan(0);        // `[2026-10-05]` the operator details are filled; what is still open are the retention periods
       expect(operatorPlaceholders).toEqual([]);
       expect(DRAFT_NOTICE[0]).toContain("AI 작성 초안");
+      // `[2026-10-06]` The notice says what is really still open: the operator details are filled and the statutes are checked, so it must not say the operator is unconfirmed.
+      expect(DRAFT_NOTICE[0]).toContain("보관 기간 확정 전");
+      expect(DRAFT_NOTICE[0]).not.toContain("운영 주체 정보 확정 전");
     } else {
       expect(allPlaceholders).toEqual([]);
     }

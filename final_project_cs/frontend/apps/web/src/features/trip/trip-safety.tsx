@@ -49,7 +49,8 @@ export function SafetyPanel({ trip, notices, onChanged }: { trip: Trip; notices:
     {upcoming && <p className={styles.label}>{t("아직 시작하지 않은 여행이지만 현지 상황을 몰라 멈췄어요.", "The trip has not started, but we paused it because we cannot tell what it is like there.")}</p>}
     <p className={styles.when}>{[
       safety.since ? t(`${safety.since}부터`, `Since ${safety.since}`) : "",
-      safety.level === "trip" ? t("다시 시작할 때까지 멈춰 있어요", "Stays paused until you resume") : safety.until ? t(`${safety.until}까지`, `Until ${safety.until}`) : "",
+      // ★`[2026-10-06 사용자 결정 — 그날 정지도 자정에 풀리지 않는다]` Nothing releases a pause by itself, a day's pause included: the server sends `until: null` and the customer's 「일정 다시 시작」 is the only way out. So no end time = said that way, whatever the level; a time is shown only when an older server still sends one for a day.
+      safety.level === "trip" || !safety.until ? t("다시 시작할 때까지 멈춰 있어요", "Stays paused until you resume") : t(`${safety.until}까지`, `Until ${safety.until}`),
       safety.released ? t("해제됐다는 공식 안내가 나왔어요", "An official all-clear came") : "",
     ].filter(Boolean).join(" · ")}</p>
 

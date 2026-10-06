@@ -14,6 +14,11 @@
   .frame { min-height: 390px; }
   .live { min-height: 290px; }
 }
+/* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
+@container page (max-width: 850px) {
+  .frame { min-height: 390px; }
+  .live { min-height: 290px; }
+}
 /* Fills a box another screen sizes (plan check: under the floating bar, behind the sheet) — no caption, no minimum. */
 .frame.fill { position: relative; height: 100%; min-height: 0; }
 .frame.fill .live { min-height: 0; }

@@ -1,3 +1,0 @@
-/* 알림줄이 서는 자리: 머리줄 바로 아래(머리줄의 아이콘을 가리지 않는다 — 넓은 곳 머리줄 끝 ≈118px · 좁은 곳 ≈76px). 넓은 곳은 오른쪽에 최대 520px, 좁은 곳은 양쪽 16px. 자동으로 사라지지 않는다. */
-.toastLayer { position: fixed; z-index: 55; top: 128px; right: 24px; width: min(520px, calc(100vw - 32px)); }
-@media (max-width: 720px) { .toastLayer { top: 84px; right: 16px; left: 16px; width: auto; } }

@@ -1,0 +1,125 @@
+import { expect, test } from "@playwright/test";
+import { checkPlan, mockServer, start } from "./helpers";
+import { card, needsBadge, openFinished, pin, sheet, type Json } from "./plan-check-kit";
+
+/**
+ * `[2026-10-06 사용자 지시]` 계획 확인 화면: 핀을 누르면 지도 위에 그 일정의 설명 카드 · 경로선을 누르면 그 구간 설명 + 목록의 이동 줄 열기 · 핀 선과 점은 핀 몸통 아래 층 · 「전체 · 1일차 · 2일차」 줄이 「계획 확인」 줄과 한 줄 ·
+ * 확인이 끝나면 목록이 맨 위에서 시작 · 카드 도구가 모자라면 다음 줄로(제목이 눌리지 않게) · 이름 수정 버튼 오른쪽 여백. 테스트용 mock 서버로 도는 자동 시험이다(화면 반응을 본다 — 실서버 확인 아님).
+ */
+const DAY_TWO_STOP: Json = {
+  id: "0-3", source_id: "s1", index: 3, title: "N서울타워", kind: "activity", day: 2, date: "2026-10-02", starts_at: "10:00", ends_at: "11:30",
+  locked: false, status: "keep", can_lock: true, place_state: "found", candidates_hint: null,
+  place: { name: "N서울타워", latitude: 37.5512, longitude: 126.9882, source: "tour_api", kind: null, content_id: null, content_type_id: null },
+  rows: [{ row: "place", result: "ok", text: "관광공사 정보로 찾았어요" }],
+};
+const callout = (page: import("@playwright/test").Page, name: RegExp) => page.getByRole("status", { name });
+
+test("핀을 누르면 지도 위에 그 일정의 설명 카드가 뜬다 — 번호 · 이름 · 시각 · 판정 · 확인할 것 — 그리고 ✕ 로 놓을 수 있다", async ({ page, request }) => {
+  await openFinished(page, request);
+  await pin(page, "2.").locator("[data-pin-body]").click();
+  const note = callout(page, /^2번 일정 설명$/);
+  await expect(note).toBeVisible();
+  await expect(note).toContainText("올리브영");
+  await expect(note).toContainText("확인 필요");
+  await expect(note).toContainText("11:00");
+  await expect(note).toContainText("이름이 여러 곳이라 가까운 「올리브영 인사동점」으로 임시로 골랐어요");   // 검사가 찾은 첫 문제
+  await expect(card(page, "올리브영").getByRole("heading").getByRole("button")).toHaveAttribute("aria-expanded", "true");   // 목록의 카드도 열려 있다
+  await note.getByRole("button", { name: "닫기" }).click();
+  await expect(note).toHaveCount(0);
+  await expect(pin(page, "2.")).toHaveAttribute("aria-pressed", "false");
+  // 다른 핀으로 옮겨 가면 카드도 따라간다
+  await pin(page, "1.").locator("[data-pin-body]").click();
+  await expect(callout(page, /^1번 일정 설명$/)).toContainText("경복궁 관람");
+  await expect(callout(page, /^1번 일정 설명$/)).toContainText("통과");
+});
+
+test("경로선을 누르면 그 구간이 골라지고 — 설명 카드(어디서 어디로 · 수단 · 출발과 도착) · 목록의 이동 줄이 열림 — 다시 누르면 놓는다", async ({ page, request }) => {
+  await openFinished(page, request, undefined, { intakeRoutes: "on" });
+  const hit = page.locator("path.trip-route-hit");
+  await expect(hit).toHaveCount(2);
+  await hit.first().dispatchEvent("click");
+  const note = callout(page, /^이동 경로 설명$/);
+  await expect(note).toBeVisible();
+  await expect(note).toContainText("경복궁 관람 → 올리브영");
+  await expect(note).toContainText("지하철 3호선");
+  await expect(note).toContainText("10:30 출발");
+  await expect(page.locator('li[data-type="move"][data-entry-id] [aria-expanded="true"]').first()).toBeVisible();   // 목록의 이동 줄이 열렸다
+  const widths = await page.locator("path.trip-route-line").evaluateAll((paths) => paths.map((path) => Number(path.getAttribute("stroke-width"))));
+  expect(Math.max(...widths)).toBeGreaterThanOrEqual(7);                                                // 고른 선은 더 굵다(점선 4 → 7)
+  await hit.first().dispatchEvent("click");                                                                          // 다시 누르면 놓는다
+  await expect(note).toHaveCount(0);
+});
+
+test("핀을 누르면 경로 선택은 풀리고, 경로를 누르면 핀 선택이 풀린다(둘은 한 번에 하나)", async ({ page, request }) => {
+  await openFinished(page, request, undefined, { intakeRoutes: "on" });
+  await pin(page, "2.").locator("[data-pin-body]").click();
+  await expect(callout(page, /^2번 일정 설명$/)).toBeVisible();
+  await page.locator("path.trip-route-hit").first().dispatchEvent("click");
+  await expect(callout(page, /^이동 경로 설명$/)).toBeVisible();
+  await expect(callout(page, /^2번 일정 설명$/)).toHaveCount(0);
+  await pin(page, "3.").locator("[data-pin-body]").click();
+  await expect(callout(page, /^3번 일정 설명$/)).toBeVisible();
+  await expect(callout(page, /^이동 경로 설명$/)).toHaveCount(0);
+});
+
+test("핀을 밀어낸 선과 점은 핀 몸통보다 아래 층에 따로 있다(다른 핀의 몸통 위로 그려지지 않는다)", async ({ page, request }) => {
+  await openFinished(page, request);
+  const layers = await page.evaluate(() => {
+    const z = (selector: string) => Number(getComputedStyle(document.querySelector(selector)!).zIndex);
+    return { leaders: z(".leaflet-pinLeaders-pane"), markers: z(".leaflet-marker-pane"), routes: z(".leaflet-routes-pane"), leaderCount: document.querySelectorAll(".leaflet-pinLeaders-pane .leaflet-marker-icon").length, pinCount: document.querySelectorAll(".leaflet-marker-pane [data-pin-body]").length, bodiesInLeaderPane: document.querySelectorAll(".leaflet-pinLeaders-pane [data-pin-body]").length };
+  });
+  expect(layers.leaders).toBeLessThan(layers.markers);
+  expect(layers.leaders).toBeGreaterThan(layers.routes);
+  expect(layers.pinCount).toBe(3);
+  expect(layers.leaderCount).toBe(3);                                                                   // 핀마다 선·점 칸이 하나씩, 층은 따로
+  expect(layers.bodiesInLeaderPane).toBe(0);
+});
+
+test("이틀 이상이면 「전체 · 1일차 · 2일차」 칩이 「계획 확인」 줄과 한 줄이다(따로 줄을 차지하지 않는다)", async ({ page, request }) => {
+  await openFinished(page, request, (view) => { view.review.items.push(DAY_TWO_STOP); });
+  const head = page.locator("header").filter({ has: page.getByRole("tablist", { name: "일차 고르기" }) });
+  await expect(head).toHaveCount(1);
+  await expect(head.getByRole("tab")).toHaveText([/^전체$/, /^1일차/, /^2일차/]);
+  await expect(head.getByRole("button", { name: /^확인 필요 \d+곳$/ })).toBeVisible();                   // 확인 필요 표시도 같은 줄
+  const [strip, badge] = [await head.getByRole("tablist").boundingBox(), await head.getByRole("button", { name: /^확인 필요 \d+곳$/ }).boundingBox()];
+  expect(Math.abs((strip!.y + strip!.height / 2) - (badge!.y + badge!.height / 2))).toBeLessThan(14);     // 가운데 높이가 거의 같다 = 한 줄
+  await expect(sheet(page).getByRole("heading", { name: "계획 확인" })).toHaveCount(1);                 // 제목은 화면 읽기용으로 남는다
+  await expect(sheet(page).getByRole("heading", { name: "계획 확인" })).toHaveClass(/sr-only/);
+  // 칩은 여전히 동작한다
+  await page.getByRole("tab", { name: /^2일차/ }).click();
+  await expect(page.getByRole("tab", { name: /^2일차/ })).toHaveAttribute("aria-selected", "true");
+  await expect(card(page, "N서울타워")).toBeVisible();
+});
+
+test("확인이 끝나면 목록은 맨 위(첫날의 첫 일정)에서 시작한다 — 읽는 중에 따라가던 자리(첫날 중간)에 남지 않는다", async ({ page, request }) => {
+  // 읽는 동안 그려지는 장면을 지나온 접수(readingPolls 3): 목록은 그려지는 줄을 따라 내려갔다가 끝나면 맨 위로 돌아와야 한다.
+  const server = mockServer(request);
+  await server.scenario({ review: "on", board: "rich", readingPolls: 3 });
+  await start(page);
+  await page.goto("/trips/new");
+  await page.getByLabel("나의 여행 계획").fill("10/1 09:00 경복궁 관람");
+  await checkPlan(page);
+  await expect(needsBadge(page)).toBeVisible({ timeout: 40_000 });
+  await page.waitForTimeout(2500);                                                                      // 맨 위로 돌아오는 움직임이 끝나도록
+  const top = await page.locator('[class*="sheetBody"]').first().evaluate((element) => element.scrollTop);
+  expect(top).toBeLessThan(4);
+  await expect(card(page, "경복궁 관람")).toBeInViewport();
+});
+
+test("카드 도구(변경 완료 · 되돌리기 · 수정 · 삭제)가 좁은 카드에서 제목을 한 글자로 누르지 않는다 — 도구는 다음 줄로 내려간다", async ({ page, request }) => {
+  await openFinished(page, request);
+  const title = card(page, "올리브영").getByRole("heading").getByRole("button");
+  const box = (await title.boundingBox())!;
+  expect(box.width).toBeGreaterThan(110);                                                                // 제목 칸이 9em 이상을 지킨다
+  expect(box.height).toBeLessThan(60);                                                                   // 세로로 꺾이지 않았다
+});
+
+test("이름 수정 버튼은 펼쳐졌을 때 칩 오른쪽 끝에 붙지 않고 여백이 있다", async ({ page, request }) => {
+  await openFinished(page, request);
+  await page.getByRole("button", { name: /^계획 이름 · / }).click();
+  const edit = page.getByRole("button", { name: /^계획 이름 바꾸기/ });
+  await expect(edit).toBeVisible();
+  const chip = page.locator('[class*="headInfo"]').first();
+  const [chipBox, editBox] = [await chip.boundingBox(), await edit.boundingBox()];
+  expect((chipBox!.x + chipBox!.width) - (editBox!.x + editBox!.width)).toBeGreaterThanOrEqual(8);       // 오른쪽에 8px 이상 여백
+});

@@ -22,6 +22,12 @@ describe("the trip's safety (rest-endpoints 「재난 시 일정 정지」)", ()
     expect(safety.resume).toEqual({ label: "일정 다시 시작" });
   });
 
+  it("reads a day's pause that has no end time (nothing releases it by itself): until stays null, the day stays as the server said", () => {
+    const safety = safetyOf({ paused: true, level: "day", label: "지진 — 오늘 남은 일정 정지", since: "2026-10-06T05:05:00Z", until: null, day: "2026-10-06", resume: { label: "일정 다시 시작" } })!;
+    expect(safety).toMatchObject({ level: "day", until: null });
+    expect(safety.since).toBe("2026-10-06 14:05");
+  });
+
   it("tells a trip that has not started from one under way (and reads nothing it was not given)", () => {
     expect(safetyOf({ paused: true, level: "trip", phase: "upcoming", until: null, resume: { label: "일정 다시 시작" } })).toMatchObject({ phase: "upcoming", until: null, level: "trip" });
     expect(safetyOf({ paused: true, phase: "in_progress" })!.phase).toBe("in_progress");

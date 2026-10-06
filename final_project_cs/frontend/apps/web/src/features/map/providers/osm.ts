@@ -1,7 +1,7 @@
 import type { MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_BOX, meKey, STAY_BOX, staysKey } from "./me";
-import { createPin, geometryKey, layoutPins, PIN_BOX, placePin, pointLabel, pulsePin, setPinSelected, type PinSlot } from "./pin";
+import { createPin, createPinLeader, geometryKey, layoutPins, PIN_BOX, placePin, pointLabel, popPin, pulsePin, setPinSelected, type PinSlot } from "./pin";
 
 /**
  * Free map: OpenStreetMap standard tiles drawn with Leaflet.
@@ -41,6 +41,11 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       let previousGeometry = "";
       let selectedId: string | undefined;
       let needsFit = false;
+      // ★`[2026-10-06 사용자 지적 — 지도가 딱딱 끊어지게 이동한다]` After the first fit the camera FLIES (a smooth, eased flight that starts from wherever the map is, and starts over smoothly if another pin arrives meanwhile)
+      //   instead of cutting to the new view. The first fit and a screen that asks for less motion still cut.
+      let fitted = false;
+      const reducedMotion = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const FLIGHT = { duration: 1.2, easeLinearity: 0.2 } as const;
       let centredOnMe = false;           // [2026-10-05] an empty map is centred on the customer once; pins (a different set of them) reset it
       // ★The box can change size after the first fit (the sheet over the map goes up and down, a tab opens). Until the customer
       //   moves or zooms the map themselves, a new size fits the pins again; after that the map stays where they put it.
@@ -48,14 +53,28 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       let programmatic = false;
       map.on("dragstart", () => { userMoved = true; });
       map.on("zoomstart", () => { if (!programmatic) userMoved = true; });
-      let markers: { id: string; marker: ReturnType<typeof L.marker>; pin: HTMLElement }[] = [];
+      let markers: { id: string; marker: ReturnType<typeof L.marker>; pin: HTMLElement; leaderMarker: ReturnType<typeof L.marker>; leaderBox: HTMLElement }[] = [];
       // Route lines sit in their own pane under the pins, so a pin is always pressable and a line never covers one.
       map.createPane("routes").style.zIndex = "350";
+      // ★`[2026-10-06 사용자 지적]` The thin lines back to a pushed-aside pin's coordinate (and their dots) stand in a layer of their own under ALL the pins (the marker pane is 600), above the route lines.
+      map.createPane("pinLeaders").style.zIndex = "580";
       const routes = L.layerGroup().addTo(map);
       let previousLines = "";
+      // `[2026-10-06 사용자 지시 — 경로를 누르면 그 경로가 나온다]` Each route is two lines: the one drawn, and a wider invisible one over it that takes the press (a thin road is hard to hit, and a phone has no hover).
+      let lineLayers: { id: string; shown: ReturnType<typeof L.polyline>; dashed: boolean }[] = [];
+      let pickedLine: string | undefined;
+      function styleLines() {
+        lineLayers.forEach(({ id, shown, dashed }) => {
+          const picked = id === pickedLine;
+          const base = lineStyle(container, { id, points: [], dashed, title: "" });
+          const accent = getComputedStyle(container).getPropertyValue("--color-selected").trim();
+          shown.setStyle(picked ? { weight: base.weight + 3, opacity: 1, ...(accent ? { color: accent } : {}) } : { weight: base.weight, opacity: base.opacity, color: base.color });
+          if (picked) shown.bringToFront();
+        });
+      }
 
       function clearMarkers() {
-        markers.forEach(({ marker }) => marker.remove());
+        markers.forEach(({ marker, leaderMarker }) => { marker.remove(); leaderMarker.remove(); });
         markers = [];
       }
 
@@ -68,7 +87,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
           const at = map.latLngToContainerPoint([point.coordinates.lat, point.coordinates.lng]);
           return { id: point.id, x: at.x, y: at.y };
         }), { width: size.x, height: size.y, top: options.topInset ?? 0 }, slots);
-        markers.forEach(({ id, pin }) => { if (slots[id]) placePin(pin, slots[id]); });
+        markers.forEach(({ id, pin, leaderBox }) => { if (slots[id]) placePin(pin, slots[id], leaderBox); });
       }
       map.on("moveend zoomend resize", relayout);
       // [2026-10-05] The zoom level goes to the screen (it asks for the detailed route lines when zoomed in).
@@ -82,6 +101,9 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         options.onView?.({ south: bounds.getSouth(), west: bounds.getWest(), north: bounds.getNorth(), east: bounds.getEast(), width: container.clientWidth, height: container.clientHeight, zoom: map.getZoom() });
       };
       map.on("moveend zoomend resize", sayView);
+      // ★`[2026-10-06 사용자 지적]` The chips for stops out of view follow the map WHILE it is dragged or flown (once a frame at most), not only when it comes to rest.
+      let viewFrame = 0;
+      map.on("move", () => { if (viewFrame || destroyed) return; viewFrame = requestAnimationFrame(() => { viewFrame = 0; sayView(); }); });
 
       // ★`[2026-10-05 사용자 지시]` 「내 위치」: a dot under the pins (a marker that takes no press) and the accuracy circle in the vector layer.
       let me: MyLocation | null = null;
@@ -109,8 +131,14 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         needsFit = false;
         programmatic = true;
         try {
-          if (points.length === 1) map.setView(points[0].coordinates, 15);
-          else map.fitBounds(L.latLngBounds(points.map(({ coordinates }) => [coordinates.lat, coordinates.lng] as [number, number])), { paddingTopLeft: [50, 50 + (options.topInset ?? 0)], paddingBottomRight: [50, 50] });
+          const fly = fitted && !reducedMotion();
+          if (points.length === 1) { if (fly) map.flyTo(points[0].coordinates, 15, FLIGHT); else map.setView(points[0].coordinates, 15); }
+          else {
+            const bounds = L.latLngBounds(points.map(({ coordinates }) => [coordinates.lat, coordinates.lng] as [number, number]));
+            const padding = { paddingTopLeft: [50, 50 + (options.topInset ?? 0)] as [number, number], paddingBottomRight: [50, 50] as [number, number] };
+            if (fly) map.flyToBounds(bounds, { ...padding, ...FLIGHT }); else map.fitBounds(bounds, padding);
+          }
+          fitted = true;
         } finally { programmatic = false; }
       }
 
@@ -138,27 +166,41 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         if (key === previousLines) return;
         previousLines = key;
         routes.clearLayers();
+        lineLayers = [];
         nextLines.forEach((line) => {
           const style = lineStyle(container, line);
+          const path = line.points.map(({ lat, lng }) => [lat, lng] as [number, number]);
           // `className` hooks the screen own CSS and the tests; the options are what Leaflet draws.
-          L.polyline(line.points.map(({ lat, lng }) => [lat, lng] as [number, number]), {
+          const shown = L.polyline(path, {
             pane: "routes", color: style.color, weight: style.weight, opacity: style.opacity, lineCap: "round", lineJoin: "round",
             ...(style.dash ? { dashArray: style.dash.join(" ") } : {}), interactive: false, className: `trip-route-line${line.dashed ? " trip-route-line--dashed" : ""}`,
-          }).bindTooltip(line.title, { sticky: true }).addTo(routes);
+          }).addTo(routes);
+          lineLayers.push({ id: line.id, shown, dashed: line.dashed });
+          if (!options.onSelectLine) { shown.bindTooltip(line.title, { sticky: true }); return; }
+          L.polyline(path, { pane: "routes", color: "#000", weight: 22, opacity: 0, lineCap: "round", lineJoin: "round", interactive: true, className: "trip-route-hit" })
+            .bindTooltip(line.title, { sticky: true }).on("click", () => options.onSelectLine?.(line.id)).addTo(routes);
         });
+        styleLines();
       }
 
-      function update(nextPoints: MapPoint[], nextSelectedId?: string, nextLines: MapLine[] = []) {
+      function update(nextPoints: MapPoint[], nextSelectedId?: string, nextLines: MapLine[] = [], nextLineId?: string) {
         if (destroyed) return;
         drawLines(nextLines);
+        if (nextLineId !== pickedLine) { pickedLine = nextLineId; styleLines(); }
         const data = JSON.stringify(nextPoints);
         const geometry = geometryKey(nextPoints);
         const changed = geometry !== previousGeometry;
         points = nextPoints;
         if (data !== previousData) {
+          // A stop the map has not shown before pops in (not the first set of pins, and not the ones that were already there).
+          const known = new Set(markers.map(({ id }) => id));
+          const popIn = previousData !== "";
           clearMarkers();
           points.forEach((point) => {
-            const pin = createPin(point);
+            const pin = createPin(point, true);
+            const leaderBox = createPinLeader(pin);
+            const leaderIcon = L.divIcon({ html: leaderBox, className: "", iconSize: [PIN_BOX, PIN_BOX], iconAnchor: [PIN_BOX / 2, PIN_BOX / 2] });
+            const leaderMarker = L.marker(point.coordinates, { icon: leaderIcon, pane: "pinLeaders", interactive: false, keyboard: false }).addTo(map);
             const icon = L.divIcon({ html: pin, className: "", iconSize: [PIN_BOX, PIN_BOX], iconAnchor: [PIN_BOX / 2, PIN_BOX / 2] });
             const marker = L.marker(point.coordinates, { icon, title: pointLabel(point), alt: pointLabel(point), keyboard: true, riseOnHover: true });
             marker.on("click", () => options.onSelect(point.id));
@@ -166,7 +208,8 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
             // The marker's box is wider than the pin: only the pin takes presses (the rest of the box leaves the map draggable).
             const element = marker.getElement();
             if (element) element.style.pointerEvents = "none";
-            markers.push({ id: point.id, marker, pin });
+            markers.push({ id: point.id, marker, pin, leaderMarker, leaderBox });
+            if (popIn && !known.has(point.id)) popPin(pin);
           });
           previousData = data;
           relayout();
@@ -267,6 +310,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         destroy() {
           if (destroyed) return;
           destroyed = true;
+          cancelAnimationFrame(viewFrame);
           clearTimeout(pulseTimer);
           clearMarkers();
           map.remove();

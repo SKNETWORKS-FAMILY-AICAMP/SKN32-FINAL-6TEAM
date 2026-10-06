@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useContext, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,14 +13,15 @@ import { ThemePicker } from "@/components/ui/theme-picker";
 import { nicknameLabel, useProfile } from "@/lib/profile";
 import { updateSettings, useSettings, useT } from "@/lib/settings";
 import { routes } from "@/lib/routes";
+import { OverlayRoot } from "./overlay-root";
 import styles from "./settings-menu.module.css";
 
 /** Where the drawer renders: the device frame on intro screens, the page otherwise. */
-export const OverlayRoot = createContext<HTMLElement | null>(null);
+export { OverlayRoot };
 
 export function SettingsMenu({ className = "" }: { className?: string }) {
   const t = useT();
-  const { navigation, skipAnimation } = useSettings();
+  const { navigation, skipAnimation, desktopLayout } = useSettings();
   const profile = useProfile();
   const [open, setOpen] = useState(false);
   // `[2026-10-03 사용자 지시]` 「계정 연결 · 로그인」 줄은 서버가 로그인 방법을 하나라도 설정했을 때만 있다(메뉴를 열 때 한 번 물어본다).
@@ -93,6 +94,12 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
           <span className={styles.switchText}><strong id={`${id}-skip`}>{t("애니메이션 건너뛰기", "Skip animations")}</strong><small id={`${id}-skip-note`}>{t("켜면 계획 확인 화면이 단계별 재생 없이 바로 떠요.", "When on, the plan check appears at once, without the step-by-step replay.")}</small></span>
           <input type="checkbox" role="switch" className={styles.switch} checked={skipAnimation} aria-labelledby={`${id}-skip`} aria-describedby={`${id}-skip-note`}
             onChange={(event) => updateSettings({ skipAnimation: event.target.checked })} />
+        </label>
+        {/* `[2026-10-06 사용자 지시]` 기본은 모든 화면이 휴대폰 크기 틀이다. 넓은 창에서 화면 전체 폭을 쓰고 싶을 때만 켠다. */}
+        <label className={styles.switchRow}>
+          <span className={styles.switchText}><strong id={`${id}-desktop`}>{t("데스크탑 화면으로 보기", "Use the desktop layout")}</strong><small id={`${id}-desktop-note`}>{t("끄면 모든 화면이 휴대폰 크기로 보여요.", "When off, every screen is shown phone-sized.")}</small></span>
+          <input type="checkbox" role="switch" className={styles.switch} checked={desktopLayout} aria-labelledby={`${id}-desktop`} aria-describedby={`${id}-desktop-note`}
+            onChange={(event) => updateSettings({ desktopLayout: event.target.checked })} />
         </label>
       </div>
       <p className={styles.note}>{t("설정은 이 브라우저에 저장돼요.", "Settings are saved in this browser.")}</p>

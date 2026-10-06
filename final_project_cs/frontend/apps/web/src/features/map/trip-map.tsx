@@ -42,6 +42,9 @@ export interface TripMapProps {
   date?: string;
   /** `[2026-10-05 사용자 지시]` The zoom level of the map (see `MapViewProps.onZoom`): the screen asks for the detailed route lines when it is zoomed in. */
   onZoom?: (zoom: number) => void;
+  /** `[2026-10-06 사용자 지시]` A route line was pressed (the id of its `RouteShape.itemId`) and which one the screen shows as picked. */
+  onSelectLine?: (lineId: string) => void;
+  selectedLineId?: string;
 }
 
 export function TripMap(props: TripMapProps) {
@@ -62,7 +65,7 @@ export function TripMap(props: TripMapProps) {
   const selectedMissing = props.selectedId && props.stops.some((stop) => stop.id === props.selectedId) && !points.some((point) => point.id === props.selectedId);
   const shapes = visibleShapes(props.routes?.shapes, props.stops);
   const lines = toMapLines(shapes);
-  const viewProps = { points, selectedId: props.selectedId, onSelect: props.onSelect, lines, topInset: props.topInset, bottomInset: props.bottomInset, me, stays, onZoom: props.onZoom, meAvailable: agreed };
+  const viewProps = { points, selectedId: props.selectedId, onSelect: props.onSelect, lines, onSelectLine: props.onSelectLine, selectedLineId: props.selectedLineId, topInset: props.topInset, bottomInset: props.bottomInset, me, stays, onZoom: props.onZoom, meAvailable: agreed };
   const fill = props.variant === "fill";
   // Said only when the customer agreed and the browser could not give it — never a word without the consent (it is optional).
   const meNotice = failure ? locationFailureText(failure, t, "map") : null;

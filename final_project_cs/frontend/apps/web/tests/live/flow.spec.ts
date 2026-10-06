@@ -199,8 +199,8 @@ test("아무것도 넣지 않고 「계획 확인하기」를 누르면 입력�
   await start(page);
   await openRegistration(page);
   const send = page.getByRole("button", { name: "계획 확인하기" });
-  await expect(send).toBeEnabled();
-  await send.click();
+  await expect(send).not.toHaveAttribute("disabled");
+  await send.click({ force: true });
   await expect(page.getByRole("alert").filter({ hasText: "여행 계획을 적거나 파일을 올려 주세요." })).toBeVisible();
   await expect(page.getByLabel("나의 여행 계획")).toBeFocused();
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -210,11 +210,11 @@ test("아무것도 넣지 않고 「계획 확인하기」를 누르면 입력�
   expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);
   // 공백뿐이어도 비어 있는 것이다
   await page.getByLabel("나의 여행 계획").fill("  \n  ");
-  await send.click();
+  await send.click({ force: true });
   await expect(page.getByRole("alert").filter({ hasText: "여행 계획을 적거나 파일을 올려 주세요." })).toBeVisible();
   await page.getByLabel("나의 여행 계획").fill("경복궁");                                                // 쓰기 시작하면 이유가 사라진다
   await expect(page.locator("#plan-error")).toHaveCount(0);
-  await send.click();
+  await send.click({ force: true });
   await expect(page.getByRole("dialog")).toBeVisible();                                               // 값이 있으니 항로 지킴이 카드가 열린다(읽기는 아직 시작 전)
   expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);
 });

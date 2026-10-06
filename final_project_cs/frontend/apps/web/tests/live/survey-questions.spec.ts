@@ -3,7 +3,7 @@ import { checkPlan, mockServer, start } from "./helpers";
 
 /**
  * `[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계]` 읽는 동안 묻는 질문(서버의 `questions[]`) — 카드 · 답 저장 · 건너뛰기 · 밀기 · 저장 실패 · 읽기가 끝난 뒤 화면을 붙잡는 규칙(안 만졌으면 바로,
- * 남았으면 머무름, 다 답했으면 3초 막대, 가만히 있으면 20초 경고). 테스트용 mock 서버로 도는 자동 시험이다(화면 반응을 본다 — 실서버 확인 아님).
+ * 남았으면 머무름, 다 답했거나 손도 안 댔으면 안내 + 5초 막대 뒤에 넘어감, 가만히 있으면 20초 경고). 테스트용 mock 서버로 도는 자동 시험이다(화면 반응을 본다 — 실서버 확인 아님).
  * 읽기는 mock 서버의 `readingPolls` 로 붙들어 두었다가(`HOLD`) `readingPolls: 0` 으로 끝낸다.
  */
 const PLAN = "10/1 09:00 경복궁 관람";
@@ -119,12 +119,36 @@ test("답을 저장하지 못하면 고른 것은 그대로 두고 「다시 시
   expect((await saved(server)).map((entry) => entry.body)).toEqual([{ answers: { preferred_mobility: "public" } }, { answers: { preferred_mobility: "public" } }]);
 });
 
-test("한 번도 만지지 않았으면 읽기가 끝나는 대로 곧장 계획 확인 화면으로 간다(질문 카드는 사라진다)", async ({ page, request }) => {
+test("질문이 나오면 거기로 초점이 가고 시선을 끄는 움직임이 한 번 나온다", async ({ page, request }) => {
+  await reading(page, request);
+  await expect(pager(page)).toBeVisible();
+  await expect(pager(page).getByRole("heading", { name: "이동은 주로 어떻게 하세요?" })).toBeFocused();
+  await expect(pager(page)).toHaveAttribute("data-attention", "true");                                    // 아래에서 올라오며 테두리 고리가 두 번 퍼진다
+  await expect(pager(page)).not.toHaveAttribute("data-attention", "true", { timeout: 5000 });             // 끝나면 사라진다
+});
+
+test("한 번도 만지지 않았어도 읽기가 끝나는 대로 곧장 넘어가지 않는다 — 「계획을 다 읽었어요」 안내를 보이고 5초를 기다린 뒤 계획 확인 화면으로 간다", async ({ page, request }) => {
   const server = await reading(page, request);
   await expect(pager(page)).toBeVisible();
   await finishReading(server);
-  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("계획을 다 읽었어요", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("5초 뒤에 계획 확인 화면으로 넘어가요.")).toBeVisible();
+  await expect(page.getByText("남은 질문 2개는 지금 답해도 돼요.")).toBeVisible();
+  await page.waitForTimeout(2500);
+  await expect(pager(page)).toBeVisible();                                                            // 아직 5초가 안 됐다 — 질문이 그대로 있다
+  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible({ timeout: 15_000 });  // 5초가 지나자 넘어간다
   await expect(pager(page)).toHaveCount(0);
+});
+
+test("5초 기다리는 동안 질문을 건드리면 저절로 넘어가지 않고 머문다", async ({ page, request }) => {
+  const server = await reading(page, request);
+  await finishReading(server);
+  await expect(page.getByText("5초 뒤에 계획 확인 화면으로 넘어가요.")).toBeVisible({ timeout: 15_000 });
+  await option(page, "택시").click();                                                                  // 질문을 만진다
+  await expect(page.getByText("5초 뒤에 계획 확인 화면으로 넘어가요.")).toHaveCount(0);
+  await page.waitForTimeout(6000);
+  await expect(pager(page)).toBeVisible();
+  await expect(bigButton(page, "읽어 온 계획 확인하기")).toBeEnabled();
 });
 
 test("만졌고 열린 질문이 남아 있으면 읽기가 끝나도 화면에 머물고, 「읽어 온 계획 확인하기」를 누르면 계획 확인으로 간다", async ({ page, request }) => {
@@ -144,7 +168,7 @@ test("만졌고 열린 질문이 남아 있으면 읽기가 끝나도 화면에 
   await expect(pager(page)).toHaveCount(0);
 });
 
-test("읽는 중에 다 답했으면 읽기가 끝난 뒤 3초 막대를 보이고 계획 확인으로 간다. 질문을 만지면 멈추고, 「자동으로 넘어가지 않기」를 누르면 더 이상 저절로 가지 않는다", async ({ page, request }) => {
+test("읽는 중에 다 답했으면 읽기가 끝난 뒤 5초 막대를 보이고 계획 확인으로 간다. 질문을 만지면 멈추고, 「자동으로 넘어가지 않기」를 누르면 더 이상 저절로 가지 않는다", async ({ page, request }) => {
   const server = await reading(page, request);
   await option(page, "택시").click();
   await expect(pager(page)).toContainText("2 / 2", { timeout: 3000 });
@@ -152,12 +176,12 @@ test("읽는 중에 다 답했으면 읽기가 끝난 뒤 3초 막대를 보이�
   await finishReading(server);
   const line = page.getByText("질문에 모두 답했어요", { exact: true });
   await expect(line).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText("3초 뒤에 계획 확인 화면으로 넘어가요.")).toBeVisible();
+  await expect(page.getByText("5초 뒤에 계획 확인 화면으로 넘어가요.")).toBeVisible();
   // 질문 카드를 만지면 막대가 멈춘다
   await pager(page).getByRole("button", { name: "이전 질문 보기" }).click();
   await expect(line).toHaveCount(0);
   await expect(bigButton(page, "읽어 온 계획 확인하기")).toBeEnabled();
-  await page.waitForTimeout(3500);
+  await page.waitForTimeout(5500);
   await expect(pager(page)).toBeVisible();
   await expect(page.getByText("질문에 모두 답했어요. 아래 단추를 누르면 계획 확인 화면으로 가요.")).toBeVisible();
   await bigButton(page, "읽어 온 계획 확인하기").click();
@@ -173,11 +197,11 @@ test("「자동으로 넘어가지 않기」를 누르면 다 답했어도 저�
   await expect(page.getByText("질문에 모두 답했어요", { exact: true })).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "자동으로 넘어가지 않기" }).click();
   await expect(page.getByText("이제 자동으로 넘어가지 않아요.")).toBeVisible();
-  await page.waitForTimeout(4000);
+  await page.waitForTimeout(6000);
   await expect(pager(page)).toBeVisible();
 });
 
-test("다 답하고 읽기가 끝나면 3초 막대 뒤에 저절로 계획 확인으로 간다", async ({ page, request }) => {
+test("다 답하고 읽기가 끝나면 5초 막대 뒤에 저절로 계획 확인으로 간다", async ({ page, request }) => {
   const server = await reading(page, request);
   await option(page, "택시").click();
   await expect(pager(page)).toContainText("2 / 2", { timeout: 3000 });

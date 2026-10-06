@@ -29,8 +29,22 @@
 .queryState p { color: var(--color-muted); margin-top: 14px; overflow-wrap: anywhere; }
 .actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
 @media (max-width: 1000px) { .panel { padding: 19px; } }
+/* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
+@container page (max-width: 1000px) { .panel { padding: 19px; } }
 @media (max-width: 768px) { .steps { gap: 10px 15px; font-size: 10px; margin-bottom: 25px; } .steps li { gap: 6px; } }
+/* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
+@container page (max-width: 768px) { .steps { gap: 10px 15px; font-size: 10px; margin-bottom: 25px; } .steps li { gap: 6px; } }
 @media (max-width: 450px) {
+  .heading { margin-bottom: 22px; }
+  .heading h1 { font-size: 25px; }
+  .heading p:not(.eyebrow) { font-size: 12px; }
+  .steps { gap: 8px 12px; font-size: 9px; }
+  .steps li { gap: 5px; }
+  .steps li > span { width: 22px; height: 22px; font-size: 9px; }
+  .panel { padding: 18px; }
+}
+/* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
+@container page (max-width: 450px) {
   .heading { margin-bottom: 22px; }
   .heading h1 { font-size: 25px; }
   .heading p:not(.eyebrow) { font-size: 12px; }

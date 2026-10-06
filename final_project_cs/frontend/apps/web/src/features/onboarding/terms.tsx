@@ -24,7 +24,7 @@ const tagOf = (doc: TermsDoc, t: Translate) => doc.required ? t("[필수]", "[Re
  */
 const consentLine = (doc: TermsDoc, t: Translate) => `${tagOf(doc, t)} ${t(...plainTitle(doc.title))}${t("에 동의합니다.", " - I agree.")}${doc.code === "privacy" ? t(" 저는 만 14세 이상입니다.", " I am 14 or older.") : ""}`;
 
-/** 「초안」 표시: 법무 검토와 운영 주체 정보 확정 전의 약관임을 숨기지 않는다. */
+/** 「초안」 표시: 변호사 검토와 보관 기간 확정 전의 약관임을 숨기지 않는다(법령 조문은 확인함 — `terms-content.ts` 의 `DRAFT_NOTICE`). */
 function DraftNote({ t }: { t: Translate }) {
   if (TERMS_STATUS !== "draft") return null;
   return <p className={styles.termsDraft} role="note">{t(DRAFT_NOTICE[0], DRAFT_NOTICE[1])}</p>;

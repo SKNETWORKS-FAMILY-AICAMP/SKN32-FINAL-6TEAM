@@ -209,7 +209,10 @@ export async function openPreferencesFromMyPage(page: Page) {
  */
 export async function checkPlan(page: Page, choice: "켜고 진행" | "건너뛰기 — 끄고 진행" = "켜고 진행") {
   await page.getByRole("button", { name: "계획 확인하기" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: choice }).click();
+  // `[2026-10-06 사용자 지시]` Turned on once, it stays on for the next plan and the card is not asked again - so the card may not come.
+  const card = page.getByRole("dialog");
+  const asked = await card.waitFor({ state: "visible", timeout: 2500 }).then(() => true, () => false);
+  if (asked) await card.getByRole("button", { name: choice }).click();
 }
 
 /**

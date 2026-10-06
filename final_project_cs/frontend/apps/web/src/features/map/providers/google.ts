@@ -193,11 +193,14 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
         routes = nextLines.map((line) => {
           const style = lineStyle(container, line);
           // A dashed line is drawn as repeated dots of an icon (the way the SDK does it): the line itself is invisible.
-          return new Polyline({
-            map, path: line.points, strokeColor: style.color, strokeWeight: style.weight, clickable: false,
+          const route = new Polyline({
+            map, path: line.points, strokeColor: style.color, strokeWeight: style.weight, clickable: Boolean(options.onSelectLine),
             strokeOpacity: style.dash ? 0 : style.opacity,
             ...(style.dash ? { icons: [{ icon: { path: "M 0,-1 0,1", strokeOpacity: style.opacity, scale: 3 }, offset: "0", repeat: `${style.dash[0] + style.dash[1]}px` }] } : {}),
           });
+          // `[2026-10-06 사용자 지시]` A press on a route line picks it (the SDK's own listener; a test double without one simply does not take the press).
+          (route as unknown as { addListener?: (name: string, run: () => void) => void }).addListener?.("click", () => options.onSelectLine?.(line.id));
+          return route;
         });
       }
 

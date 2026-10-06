@@ -193,10 +193,13 @@ export function createNaverAdapter(clientId: string): MapAdapter {
         if (!Polyline) return;
         routes = nextLines.map((line) => {
           const style = lineStyle(container, line);
-          return new Polyline({
+          const route = new Polyline({
             map, path: line.points.map(({ lat, lng }) => new sdk.LatLng(lat, lng)), strokeColor: style.color, strokeOpacity: style.opacity, strokeWeight: style.weight,
-            strokeStyle: style.dash ? "shortdash" : "solid", strokeLineCap: "round", strokeLineJoin: "round", clickable: false,
+            strokeStyle: style.dash ? "shortdash" : "solid", strokeLineCap: "round", strokeLineJoin: "round", clickable: Boolean(options.onSelectLine),
           });
+          // `[2026-10-06 사용자 지시]` A press on a route line picks it.
+          (sdk as unknown as { Event?: { addListener?: (target: unknown, name: string, run: () => void) => void } }).Event?.addListener?.(route, "click", () => options.onSelectLine?.(line.id));
+          return route;
         });
       }
 

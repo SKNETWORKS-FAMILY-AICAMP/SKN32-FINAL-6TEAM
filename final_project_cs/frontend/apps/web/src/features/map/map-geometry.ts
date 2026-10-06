@@ -74,7 +74,13 @@ const CHIP_INSET_X = 46;
 const CHIP_INSET_Y = 18;
 /** Chips closer than this (px) become one. */
 const GROUP_PX = 52;
-const MAX_CHIPS = 5;
+/** `[2026-10-06 사용자 지적 — 일정 이상 멀어지면 마커 표시가 안 된다]` Up to this many chips (it was 5: with more stops spread out the farthest ones had no sign at all). */
+const MAX_CHIPS = 8;
+/**
+ * A pin is a 34 px drop beside its coordinate, so a stop whose coordinate is this close to the edge can have its pin cut by it: it counts as out of view (it gets a chip) when the coordinate is
+ * nearer than this to the left, right or bottom edge (the top edge is the bar's own `top`).
+ */
+const EDGE_PX = 14;
 
 /**
  * Which stops are out of the visible map (below the bar at the top, inside the view), where their chips stand and how far away they are. A stop is out of view when its pin could not be seen:
@@ -84,12 +90,13 @@ export function edgeChips(view: MapView, points: readonly MapPoint[], area: Edge
   if (!(view.width > 0 && view.height > 0) || view.east === view.west || view.north === view.south) return [];
   const top = area.top ?? 0;
   const rect = { left: 0, top, right: view.width, bottom: view.height - (area.bottom ?? 0) };
+  const seen = { left: rect.left + EDGE_PX, top: rect.top, right: rect.right - EDGE_PX, bottom: rect.bottom - EDGE_PX };
   const centre = { x: (rect.left + rect.right) / 2, y: (rect.top + rect.bottom) / 2 };
   const middle: Coordinates = { lat: (view.north + view.south) / 2, lng: (view.east + view.west) / 2 };
   const found = points.flatMap((point) => {
     if (point.tone === "muted") return [];
     const at = toPixels(view, point.coordinates);
-    if (at.x >= rect.left && at.x <= rect.right && at.y >= rect.top && at.y <= rect.bottom) return [];
+    if (at.x >= seen.left && at.x <= seen.right && at.y >= seen.top && at.y <= seen.bottom) return [];
     const dx = at.x - centre.x, dy = at.y - centre.y;
     const halfW = (rect.right - rect.left) / 2 - CHIP_INSET_X, halfH = (rect.bottom - rect.top) / 2 - CHIP_INSET_Y;
     const t = Math.min(dx === 0 ? Infinity : halfW / Math.abs(dx), dy === 0 ? Infinity : halfH / Math.abs(dy));

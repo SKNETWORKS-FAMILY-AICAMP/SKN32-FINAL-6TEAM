@@ -6,8 +6,9 @@ import type { ConsentCode } from "./consent-model";
  * 규칙
  * - `TERMS_VERSION` 은 약관 내용이 바뀔 때마다 올린다. 사용자의 동의는 이 버전에 묶여 기록되고(서버 `consents`), 버전이 오르면 **다시 동의**를 받는다.
  *   ★서버 설정 `consent.terms_version`(`config/guardrails.yaml`)과 같은 값이어야 한다 — 다르면 서버가 409 `terms_version_changed` 로 거절한다.
- * - `TERMS_STATUS` 가 `draft` 인 동안 화면은 `DRAFT_NOTICE`(「AI 작성 초안 · 변호사 검토 전 · 운영 주체 정보 확정 전」)를 붙인다.
- *   법무 검토와 운영 주체 정보 확정이 끝나면 `reviewed` 로 바꾼다(시험이 그때 자리표시가 남았는지 본다).
+ * - `TERMS_STATUS` 가 `draft` 인 동안 화면은 `DRAFT_NOTICE`(「AI 작성 초안 · 관련 법령 조문 확인함 · 변호사 검토 전 · 보관 기간 확정 전」)를 붙인다.
+ *   ★`[2026-10-06 사용자 지적]` 문구가 실제보다 뒤처져 있었다: 법령 조문은 법령정보센터에서 33줄 모두 확인했고(`00_법무확인_목록.md`) 운영 주체 정보는 2026-10-05 에 채웠다 — 남은 것은
+ *   변호사 검토와 보관 기간 5칸이다. 변호사 검토와 보관 기간 확정이 끝나면 `reviewed` 로 바꾼다(시험이 그때 자리표시가 남았는지 본다).
  * - 한국어본이 정본이다. 영어본은 참고용 번역이다(각 문서의 마지막 조가 그렇게 말한다).
  * - ★본문은 **서비스가 실제로 하는 일만** 적는다. 근거(파일:줄)와 아직 서버에 없는 기능 표시는
  *   `wiki/records/plans/2026-10-05_약관_초안/00_법무확인_목록.md` 의 대조 표에 있다. 그 폴더의 01~05 는 이 파일의 한국어 본문 사본이다.
@@ -109,8 +110,8 @@ export interface TermsDoc {
 
 /** `TERMS_STATUS` 가 `draft` 인 동안 약관 화면 맨 위에 붙이는 표시. */
 export const DRAFT_NOTICE: Bilingual = [
-  "AI 작성 초안 · 변호사 검토 전 · 운영 주체 정보 확정 전 — 이 문서만으로는 법적 효력이 보장되지 않습니다.",
-  "AI-written draft · not yet reviewed by a lawyer · operator details not yet confirmed — this document alone does not guarantee legal effect.",
+  "AI 작성 초안 · 관련 법령 조문은 법령정보센터에서 확인함(2026-10-05) · 변호사 검토 전 · 보관 기간 확정 전 — 이 문서만으로는 법적 효력이 보장되지 않습니다.",
+  "AI-written draft · statutes checked at the National Law Information Center (2026-10-05) · not yet reviewed by a lawyer · retention periods not yet confirmed — this document alone does not guarantee legal effect.",
 ];
 
 // ── 본문 조립 도우미 ─────────────────────────────────────────────
