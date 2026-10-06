@@ -169,3 +169,40 @@ for label, d in MULTI.items():
     hy = {k: (d[k] if k in COMP else ([] if E4BT[k] is None else [E4BT[k]])) for k in KEYS}
     c_all, c_non, c_comp, a, b = score_multi(hy)
     print(f'  [상한: 요청 둘을 완벽히 가려낸다고 가정] 가르친 E4B + {label[:30]:<30} C 전체 {c_all}/835 = {100 * c_all / 835:.1f}% · 요청 둘 C {c_comp}/66')
+
+print('\n## 6. 출제자와 푸는 쪽을 가른 C — Codex(Luna·Sol·Astra)가 푼 둘 다 찾기(§84) · 한 줄에 「출제자 편향」 표시')
+print('mix8~11 = Codex 가 쓴 문제(Codex 풀이는 출제자 편향 · Claude 풀이는 상대적으로 공정) · mix12 = Claude 가 쓴 문제(Claude 풀이는 출제자 편향 · Codex 풀이는 상대적으로 공정). 정답 집합(gold_sets)은 전부 Claude 작성 — Claude 풀이는 정답 키도 같은 손.')
+CODEX = {}
+for m in ('gpt-6-luna', 'gpt-6-sol', 'gpt-6-astra'):
+    d = {}
+    for s in SETS:
+        f = os.path.join(HERE, f'results/codexcli_{m}_{s}_multi.json')
+        if os.path.exists(f):
+            rr = json.load(open(f, encoding='utf-8'))['rows']
+            for i in range(len(FX[s]['qs'])):
+                d[(s, i)] = rr[str(i)].get('picks') or []
+    if len(d) == 835:
+        CODEX[m] = d
+
+
+def split_c(picks):
+    out = {}
+    for lab, ss in (('mix8~11(Codex 출제)', ['mix8', 'mix9', 'mix10', 'mix11']), ('mix12(Claude 출제)', ['mix12'])):
+        ks = [k for k in KEYS if k[0] in ss]
+        out[lab] = (sum(1 for k in ks if frozenset(picks.get(k) or []) == GSET[k]), len(ks))
+    return out
+
+
+print(f'{"풀이한 쪽":<44}{"C 전체(835)":>14}{"요청 둘 C":>11}{"mix8~11 C":>13}{"mix12 C":>11}  공정성')
+for m, d in CODEX.items():
+    c_all, c_non, c_comp, a, b = score_multi(d)
+    sp = split_c(d)
+    x, y = sp['mix8~11(Codex 출제)'], sp['mix12(Claude 출제)']
+    print(f'Codex {m:<38}{c_all:>8}/835 {100 * c_all / 835:4.1f}%{c_comp:>6}/66{x[0]:>8}/{x[1]} {y[0]:>6}/{y[1]}  mix12 만 상대적으로 공정(mix8~11 은 Codex 출제 편향)')
+for label, d in MULTI.items():
+    if 'Gemma' in label:
+        continue
+    c_all, c_non, c_comp, a, b = score_multi(d)
+    sp = split_c(d)
+    x, y = sp['mix8~11(Codex 출제)'], sp['mix12(Claude 출제)']
+    print(f'{label[:44]:<44}{c_all:>8}/835 {100 * c_all / 835:4.1f}%{c_comp:>6}/66{x[0]:>8}/{x[1]} {y[0]:>6}/{y[1]}  ★정답 키·mix12 를 Claude 가 만듦 — mix8~11 칸이 상대적으로 공정')
