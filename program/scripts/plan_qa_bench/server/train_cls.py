@@ -12,7 +12,8 @@ NAME = sys.argv[1]
 a = sys.argv[2:]
 opt = lambda k, d, c=float: c(a[a.index(k) + 1]) if k in a else d
 EPOCHS, LR, SEEDS, MAXLEN, BS = opt('--epochs', 8, int), opt('--lr', 3e-5), opt('--seeds', 3, int), opt('--maxlen', 96, int), opt('--bs', 32, int)
-TAG = opt('--tag', '', str)   # 같은 모델을 다른 설정(에폭·학습률)으로 다시 돌릴 때 결과 파일 이름 뒤에 붙인다
+TAG = opt('--tag', '', str)
+SAVE = opt('--save', '', str)   # 첫 시드의 최고 개발 점수 가중치를 이 폴더에 저장한다(model.pt · meta.json) — 모델 조합 시험(chain_e2e.py)이 불러 쓴다   # 같은 모델을 다른 설정(에폭·학습률)으로 다시 돌릴 때 결과 파일 이름 뒤에 붙인다
 HEADS = {'intent': ['itinerary_submit', 'incident_report', 'confirm_request', 'adjust_reject', 'other'],
          'sentiment': ['positive', 'neutral', 'negative'], 'severity': ['low', 'medium', 'high', 'critical'],
          'case_type': ['activity', 'dining', 'mobility', 'booking', 'lodging', 'flight', 'other']}
@@ -111,6 +112,10 @@ for seed in range(SEEDS):
         if score > best:
             best, best_state = score, {k: v.detach().clone() for k, v in model.state_dict().items()}
     model.load_state_dict(best_state)
+    if SAVE and seed == 0:
+        os.makedirs(SAVE, exist_ok=True)
+        torch.save({k: v.cpu() for k, v in best_state.items()}, os.path.join(SAVE, 'model.pt'))
+        json.dump({'name': NAME, 'heads': HEADS, 'epochs': EPOCHS, 'lr': LR, 'maxlen': MAXLEN, 'dev_macro_f1': round(best, 4)}, open(os.path.join(SAVE, 'meta.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     run = {'seed': seed, 'train_s': round(time.time() - t0), 'dev_macro_f1': round(best, 4), 'cx': evaluate(model, test_cx), 'g96': evaluate(model, test_g)}
     results['runs'].append(run)
     if seed == 0:   # CPU(스레드 4) 한 건 지연 — 첫 시드 모델로
