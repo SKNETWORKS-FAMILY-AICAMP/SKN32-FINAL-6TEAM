@@ -36,7 +36,7 @@ os.makedirs(OUT, exist_ok=True)
 J = lambda f: json.load(open(f, encoding='utf-8'))
 JOB = {w: J(f'{ROOT}/fixtures/{w}.json')['sets'][w] for w in W}
 GOLDSETS = J(f'{ROOT}/fixtures/gold_sets.json')
-EMB = J(f'{OUT}/emb_scores.json')['scores']
+EMB = J(f"{OUT}/{os.environ.get('EMB_FILE', 'emb_scores.json')}")['scores']
 WK = '월화수목금토일'
 SFX = '\n\n답은 JSON 한 줄로만: {"item": 번호} 또는 {"item": null}'
 
@@ -151,12 +151,17 @@ def build(job, x):
             "질문이 이 일정에 없는 장소·일반 정보·다른 식당·다른 명소를 묻는다면 null. 확실하지 않으면 null." + SFX), {i['id'] for i in items}
 
 
+CONFS = {}
+TAGP = os.environ.get('OUT_TAG', '')     # 전문가가 다른 서버일 때 결과 파일 이름 앞에 붙인다(예: tw → chain_tw_no_jev.json)
+
+
 def e4b_stage(w, x):
     prompt, valid = build(JOB[w], x)
     t0 = time.perf_counter()
     try:
         r = post(E4B_URL, {'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 16, 'temperature': 0, 'cache_prompt': True})
         txt = r['choices'][0]['message']['content']
+        CONFS[(w, id(x))] = r.get('x_conf')
     except Exception as e:  # noqa: BLE001
         return None, (time.perf_counter() - t0) * 1000, 'http_error: ' + repr(e)[:120], ''
     ms = (time.perf_counter() - t0) * 1000
@@ -285,12 +290,13 @@ def one(w, i, fl, use_cache):
             tr['path'].append('e4b')
             if err:
                 tr['fail'].append(err)
+                tr['raw'] = raw     # 실패한 호출의 원문 앞 60자 — 읽기 실패 원인을 보려고 남긴다(2026-10-06)
             pick, ended = p, 'e4b'
         else:
             pick, ended = None, 'reject'
             tr['path'].append('reject→없음')
     tr['pick'], tr['ended'], tr['total_ms'] = pick, ended, t_all
-    tr['route_gold'] = 'reject' if x['type'] == 'out_of_scope' else 'point'
+    tr['route_gold'] = 'reject' if x['type'] in ('out_of_scope', 'chitchat', 'tourist_synth_out') else 'point'     # 뒤 둘은 섞은 시험 세트(mixed)의 유형 — 정답이 「없음」인 일정 밖 말
     return tr
 
 
@@ -303,7 +309,7 @@ def run_variant(name, use_cache=True, tag=None):
         for i in range(0, n if not LIMIT else min(n, LIMIT), STRIDE):
             traces.append(one(w, i, fl, use_cache))
     print(f'{tag or name} 끝 {len(traces)}문제 {time.time() - t0:.0f}초', flush=True)
-    json.dump(traces, open(f'{OUT}/chain_{(tag or name).replace("#", "_")}.json', 'w', encoding='utf-8'), ensure_ascii=False)
+    json.dump(traces, open(f'{OUT}/chain_{TAGP + "_" if TAGP else ""}{(tag or name).replace("#", "_")}.json', 'w', encoding='utf-8'), ensure_ascii=False)
     return traces
 
 
@@ -321,7 +327,7 @@ def score(traces):
         if t['type'] == 'compound_intent':
             r['comp_n'] += 1
             r['comp_A'] += t['pick'] == t['gold']
-            r['comp_B'] += t['pick'] in (GOLDSETS[t['set']].get(str(t['qi'])) or [])
+            r['comp_B'] += t['pick'] in (GOLDSETS.get(t['set'], {}).get(str(t['qi'])) or [])
             continue
         ok = t['pick'] == t['gold']
         r['n769'] += 1
@@ -391,5 +397,5 @@ if __name__ == '__main__':
         for nm, tr in allt.items():
             if nm != 'e4b_only' and not nm.endswith('#live'):
                 res[nm]['vs_e4b_only(a만,b만,p)'] = mcnemar(tr, base)
-    json.dump(res, open(f'{OUT}/chain_summary.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    json.dump(res, open(f'{OUT}/chain_summary{"_" + TAGP if TAGP else ""}.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print(json.dumps({k: {x: v for x, v in r.items() if x in ('ok769', 'n769', 'wrong769', 'miss769', 'comp_A', 'comp_B', 'lat_median_ms', 'lat_p95_ms', 'ended', 'calls', 'vs_e4b_only(a만,b만,p)')} for k, r in res.items()}, ensure_ascii=False, indent=1))

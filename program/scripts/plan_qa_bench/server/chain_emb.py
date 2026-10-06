@@ -17,7 +17,7 @@ ROOT = '/root/chain'
 sys.path.insert(0, ROOT)
 from clauses import analyze  # noqa: E402
 
-W = ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
+W = os.environ.get('SETS', 'mix8,mix9,mix10,mix11,mix12').split(',')     # 섞은 시험 세트(mixed8~12)는 SETS 와 EMB_FILE 로 지정한다
 NAME = 'Qwen/Qwen3-Embedding-0.6B'
 TASK = '고객이 여행 일정에 대해 묻는 질문이 주어지면, 그 질문이 가리키는 일정 항목을 찾는다'
 os.makedirs(f'{ROOT}/out', exist_ok=True)
@@ -75,5 +75,5 @@ for w in W:
                 mx = max(mx, abs(s - v))
         check = {'compared_pairs': n, 'total_pairs': len(pairs), 'max_abs_diff': mx}
         print('저장 점수와 비교', check, flush=True)
-json.dump({'scores': out, 'check_mix8': check}, open(f'{ROOT}/out/emb_scores.json', 'w'), ensure_ascii=False)
+json.dump({'scores': out, 'check_mix8': check}, open(f"{ROOT}/out/{os.environ.get('EMB_FILE', 'emb_scores.json')}", 'w'), ensure_ascii=False)
 print('끝')
