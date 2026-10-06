@@ -1,6 +1,7 @@
 import { translator, type Language, type Translate } from "../i18n";
 import { API_BASE, answerWithin, LiveError, refusal, sessionChecked, sessionInit } from "./client";
 import { eventStreamParser } from "./events";
+import { beginWait, TASK_STEPS } from "./waiting";
 
 /**
  * Live progress of the server's long tasks (`[2026-10-02]` server `op_stream.py`, REST spec 「웹 실시간 진행 (SSE)」).
@@ -124,17 +125,25 @@ async function attempt<T>(path: string, language: Language, init: RequestInit, t
 export async function streamApi<T>(path: string, language: Language, init: RequestInit, onProgress?: (progress: OpProgress) => void,
   timing: StreamTiming = STREAM_TIMING): Promise<T> {
   let progress: OpProgress = { stage: null, elapsed: 0, slow: false, lost: false };
-  const report = (next: Partial<OpProgress>) => { progress = { ...progress, ...next }; onProgress?.(progress); };
-  for (let tries = 0; ; tries += 1) {
-    const outcome = await attempt<T>(path, language, init, timing, report);
-    if (outcome.kind === "done") return outcome.value;
-    if (tries >= timing.reconnectMs.length) {
-      const t = translator(language);
-      throw new LiveError("connection_lost", t("서버와 연결이 끊겼어요. 다시 보내면 같은 요청으로 이어서 확인해요.", "The connection to the server was lost. Sending again continues the same request."));
+  // ★`[2026-10-06 사용자 지적]` A task that shows no new stage for long is told to the customer (`waiting.ts`): a heartbeat alone does not start the count over.
+  const wait = beginWait(TASK_STEPS);
+  const report = (next: Partial<OpProgress>) => {
+    if ((next.stage !== undefined && next.stage !== progress.stage) || (next.lost !== undefined && next.lost !== progress.lost)) wait.touch();
+    progress = { ...progress, ...next };
+    onProgress?.(progress);
+  };
+  try {
+    for (let tries = 0; ; tries += 1) {
+      const outcome = await attempt<T>(path, language, init, timing, report);
+      if (outcome.kind === "done") return outcome.value;
+      if (tries >= timing.reconnectMs.length) {
+        const t = translator(language);
+        throw new LiveError("connection_lost", t("서버와 연결이 끊겼어요. 다시 보내면 같은 요청으로 이어서 확인해요.", "The connection to the server was lost. Sending again continues the same request."));
+      }
+      report({ lost: true });
+      await new Promise((resolve) => setTimeout(resolve, timing.reconnectMs[tries]));
     }
-    report({ lost: true });
-    await new Promise((resolve) => setTimeout(resolve, timing.reconnectMs[tries]));
-  }
+  } finally { wait.end(); }
 }
 
 /** The server's stage names (`op_stream.STAGES` and the intake's) in the customer's language. Unknown names show as they are. */

@@ -7,6 +7,9 @@
 .input::placeholder { color: color-mix(in srgb, var(--color-muted) 85%, var(--color-surface)); opacity: 1; }
 .inputMeta { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; color: var(--color-muted); margin-top: 11px; }
 .error, .warning { margin-top: 12px; padding: 13px 15px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-error-soft); color: var(--color-error); font-size: 11px; line-height: 1.8; }
+/* `[2026-10-06 사용자 지적]` 입력칸 바로 아래에 서는 안내: 눈에 띄게 14px · 아이콘과 함께 */
+.error { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; font-weight: 500; line-height: 1.6; }
+.error svg { flex: none; margin-top: 3px; }
 .warning { color: var(--color-warning); border-color: var(--color-warning-border); background: var(--color-warning-soft); }
 .files { margin-top: 14px; display: grid; gap: 8px; font-size: 12px; color: var(--color-muted); }
 .files label { font-weight: 600; color: var(--color-text); }

@@ -350,3 +350,34 @@ test("320px 폭에서도 세 칸 · 읽는 기준이 화면을 넘지 않고, �
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test("빈 채로 「계획 확인하기」를 누르면 칸 맨 아래가 아니라 고른 입력칸 바로 아래에 눈에 띄는 안내가 뜨고(화면이 그 자리로 옮겨 간다), 서버로는 아무것도 가지 않으며, 예시 글은 예시라고 적혀 있다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await page.setViewportSize({ width: 1280, height: 640 });                                            // 낮은 화면: 입력칸 아래 안내가 가려지기 쉬운 크기
+  await start(page);
+  await openRegistration(page);
+  await expect(page.getByLabel("나의 여행 계획")).toHaveAttribute("placeholder", /^예시 — 이런 식으로 적어 주세요/);
+  const notice = page.locator("#plan-error");
+  // ① 글: 공백뿐이어도 빈 것이다
+  await page.getByLabel("나의 여행 계획").fill("   \n  ");
+  await send(page).click();
+  await expect(PANES.text(page).locator("#plan-error")).toContainText("여행 계획을 적거나 파일을 올려 주세요.");
+  await expect(notice).toBeInViewport();
+  const box = (await notice.boundingBox())!;
+  const field = (await page.getByLabel("나의 여행 계획").boundingBox())!;
+  expect(box.y).toBeGreaterThanOrEqual(field.y + field.height - 40);                                   // 입력칸 바로 아래(칸 안쪽 아래 줄 다음)
+  expect(box.y - (field.y + field.height)).toBeLessThan(120);
+  expect(await notice.evaluate((element) => getComputedStyle(element).fontSize)).toBe("14px");        // 작은 글씨가 아니다
+  // ② 파일 칸을 골랐을 때는 그 칸 안에 뜬다
+  await heading(page, "files").click();
+  await send(page).click();
+  await expect(PANES.files(page).locator("#plan-error")).toContainText("파일을 하나 이상 골라 주세요");
+  await expect(page.locator("#plan-error")).toHaveCount(1);                                            // 어디에나 하나뿐이다
+  // ③ 계획 짜 주기 칸
+  await heading(page, "plan").click();
+  await send(page).click();
+  await expect(PANES.plan(page).locator("#plan-error")).toContainText("첫날 · 일수 · 인원을 모두 골라 주세요");
+  await expect(notice).toBeInViewport();
+  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);
+  await expect(page).toHaveURL(/\/trips\/new$/);
+});

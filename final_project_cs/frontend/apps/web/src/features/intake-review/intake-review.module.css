@@ -4,6 +4,8 @@
 .waiting h1 { font-size: 22px; letter-spacing: -.6px; }
 .waiting p { color: var(--color-muted); font-size: 13px; line-height: 1.8; }
 /* The server's live progress (reading, planning): a quiet line, warning-coloured while reconnecting. */
+/* 읽는 화면 위에 서는 서버 지연 안내(`WaitNotice`)의 바깥 여백 */
+.waitWrap { padding: 8px 16px 0; }
 .streamNote { margin: 8px 0 0; font-size: 12px; line-height: 1.7; color: var(--color-muted); }
 .streamNote[data-lost] { color: var(--color-warning); }
 /* The plan is still on its way to the server (intake-starting.tsx): a slim line above the progress screen. */

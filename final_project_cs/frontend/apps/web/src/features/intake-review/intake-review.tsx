@@ -27,6 +27,8 @@ import { useRouteDetail } from "@/features/map/use-route-detail";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { draftOf, editsFor, rows } from "./model";
+import { WaitNotice } from "@/components/wait-notice";
+import { useQuiet } from "@/lib/use-quiet";
 import { useIntakeEvents } from "./use-intake-events";
 import styles from "./intake-review.module.css";
 
@@ -75,6 +77,11 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   // ★`[2026-10-03]` A stream that goes silent (`lost`) is not waited for alone: the intake is asked for every 1.5 s as well, until the read ends —
   //   the server keeps no pace for a dead line, and the customer must not sit on a screen that never moves. (The stream still reconnects.)
   if ((follow.follow === "polling" || follow.follow === "lost") && !polling) setPolling(true);
+  // ★`[2026-10-06 사용자 지적 — 서버가 1분 넘게 답이 없는데 아무 알림이 없다]` The stream stays open and says nothing of its own when the server is slow: how long NOTHING changed in the reading
+  //   (no new line read, no new stage, no new check) is counted here, and the screen says so from 30 s on.
+  const linesRead = query.data?.sources.reduce((count, source) => count + source.lines.filter((line) => line.read).length, 0) ?? 0;
+  const quiet = useQuiet([query.data?.stage, linesRead, stream.stage, stream.order.length, stream.done ? 1 : 0, stream.progress?.phase, stream.progress?.done].join("|"),
+    query.data?.status === "reading" && follow.follow !== "stalled");
   // Without the server's own check (`view.review`) a change goes through the intake's edit call, which answers with the new plan.
   const edit = useMutation({
     mutationFn: ({ revision, edits }: { revision: number; edits: IntakeEdit[] }) => editIntake(intakeId, revision, edits, language),
@@ -158,11 +165,15 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   }
   if (reading && (view.status === "reading" || (view.status === "review" && readingSeen && !readingDrawn))) {
     const streamNote = view.status !== "reading" ? null
-      : follow.follow === "lost" ? <p className={styles.streamNote} role="status" data-lost>{t("서버와 연결이 끊겼어요 — 다시 연결하는 중이에요…", "Lost the connection to the server — reconnecting…")}</p>
-      : follow.slow ? <p className={styles.streamNote} role="status">{stream.progress?.current?.title
+      : follow.follow === "lost" ? <div className={styles.waitWrap}><WaitNotice title={t("서버와 연결이 끊겼어요", "Lost the connection to the server")} body={t("다시 연결하는 중이에요…", "Reconnecting…")} /></div>
+      : follow.slow ? <div className={styles.waitWrap}><WaitNotice title={t("서버 응답이 늦어지고 있어요", "The server is slow to answer")} seconds={quiet > 0 ? quiet : undefined} body={stream.progress?.current?.title
         // ★`[2026-10-03]` The server's `progress` packet says what it is at: name it instead of a general "taking a while".
         ? t(`「${stream.progress.current.title}」 확인이 오래 걸리고 있어요. 서버는 계속 확인하고 있어요.`, `Checking “${stream.progress.current.title}” is taking a while. The server is still at it.`)
-        : t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.")}</p>
+        : t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.")} /></div>
+      : quiet >= 60 ? <div className={styles.waitWrap}><WaitNotice title={t("1분이 넘게 서버 소식이 없어요", "No news from the server for over a minute")} seconds={quiet}
+        body={t("서버나 연결에 문제가 있을 수 있어요. 이 화면에서 더 기다리거나, 뒤로 가서 잠시 뒤에 다시 보내 주세요.", "There may be a problem with the server or the connection. Keep waiting here, or go back and send it again shortly.")} /></div>
+      : quiet >= 30 ? <div className={styles.waitWrap}><WaitNotice title={t("서버 소식이 한동안 없어요", "No news from the server for a while")} seconds={quiet}
+        body={t("서버가 아직 읽고 있을 수 있어요. 조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.", "The server may still be reading. Wait a little longer, or go back and send it again.")} /></div>
       : null;
     return <PlanCheck key="plan" view={reading} notice={streamNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
   }
