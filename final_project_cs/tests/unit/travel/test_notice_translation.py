@@ -48,6 +48,52 @@ def test_repeating_a_number_that_is_already_in_the_notice_is_allowed():
     assert make_translator(_Chat("版本 4 (버전 4)"))("버전 4", "zh-TW").startswith("版本")
 
 
+# `[2026-10-06 사용자 지시 — 서비스 평가 베이스라인]` 실제 모델 120호출에서 일본어 「35,000원」→「35,000円」(원→엔)이 숫자 대조를 통과했다 — 숫자는 그대로라서.
+REFUND = "예약을 취소하시면 35,000원이 환불돼요. (일정 버전 4)"
+
+
+@pytest.mark.parametrize("translated", [
+    "ご予約をキャンセルすると35,000円が返金されます。(行程バージョン 4)",       # 원 → 엔: 약 9배 비싼 값으로 읽힌다 — 실제로 새어 나간 것
+    "Cancelling your booking refunds 35,000. (itinerary version 4)",            # 단위가 통째로 사라졌다
+    "Cancelling refunds you $35,000. (itinerary version 4)",                    # 원 → 달러
+    "取消預約將退還 35,000 元。(行程版本 4)",                                       # 원 → 위안(韩元 이 아닌 元)
+    "取消預約將退還 NT$35,000。(行程版本 4)",
+])
+def test_a_translation_that_changes_or_drops_the_won_unit_is_rejected(translated):
+    with pytest.raises(TranslationRejected, match="금액|통화"):
+        make_translator(_Chat(translated))(REFUND, "ja")
+
+
+@pytest.mark.parametrize("translated", [
+    "ご予約をキャンセルすると35,000ウォンが返金されます。(行程バージョン 4)",
+    "Cancelling your booking refunds 35,000 won. (itinerary version 4)",
+    "Cancelling your booking refunds KRW 35,000. (itinerary version 4)",
+    "Cancelling your booking refunds ₩35,000. (itinerary version 4)",
+    "取消預約將退還 35,000 韩元。(行程版本 4)",
+    "取消預約將退還 35,000 韓元。(行程版本 4)",
+    "예약을 취소하시면 35,000원 환불 (버전 4)",
+])
+def test_a_translation_that_keeps_the_won_unit_in_any_form_is_used(translated):
+    assert make_translator(_Chat(translated))(REFUND, "ja") == translated
+
+
+def test_adding_a_foreign_currency_next_to_a_number_is_rejected_even_when_the_won_is_kept():
+    """「35,000 won (약 3,800 yen)」 — 새 숫자도 생기지만, 숫자 검사 앞에 통화 검사가 무엇을 걸었는지 따로 본다."""
+    from app.infrastructure.notify.translate import currency_problem
+
+    assert currency_problem(REFUND, "refund 35,000 won (about 3,800 yen) version 4") is not None
+    assert "3,800 yen" in currency_problem(REFUND, "refund 35,000 won (about 3,800 yen) version 4")
+
+
+def test_notices_without_a_won_amount_are_not_touched_by_the_unit_check():
+    """금액이 없는 알림은 단위 검사 대상이 아니다 — 시각 · 버전만 있는 알림에 「엔」이 있어도 이 검사는 말하지 않는다(숫자 검사가 따로 본다)."""
+    from app.infrastructure.notify.translate import currency_problem
+
+    assert currency_problem(TEXT, "Lunch arrival is delayed to 14:10 (version 4)") is None
+    assert currency_problem("만원 버스를 타요 14:10", "take the full bus 14:10") is None             # 숫자 없는 「만원」은 금액으로 보지 않는다
+    assert currency_problem("입장료는 2만 원이에요", "Admission is 20,000 won".replace("20,000", "2")) is None
+
+
 @pytest.mark.parametrize("locale,expected", [("ko", True), ("ko-KR", True), (None, True),
                                              ("zh-TW", False), ("en", False)])
 def test_korean_is_not_translated(locale, expected):

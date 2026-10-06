@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>document.documentElement.className += " js";</script>
+<title>사람 평가 시트</title>
+<style>
+:root{
+  --bg:#f6f5f1; --card:#ffffff; --ink:#1c1b18; --mute:#6b6a64; --line:#dcdad2;
+  --accent:#0f6b54; --accent-ink:#ffffff; --accent-soft:#e1f1ec;
+  --warn:#8a5a00; --warn-soft:#fbf0d9; --bad:#a3302a;
+  --btn:#f0eee7; --btn-hover:#e6e3d9;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#16161a; --card:#202026; --ink:#ecebe6; --mute:#a3a29a; --line:#3a3a42;
+    --accent:#4cc3a2; --accent-ink:#0b1f19; --accent-soft:#183a30;
+    --warn:#e7b85a; --warn-soft:#3a2f14; --bad:#ef8a83;
+    --btn:#2c2c34; --btn-hover:#383842;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px 120px}
+h1{font-size:20px;margin:8px 0 4px}
+.sub{color:var(--mute);font-size:14px;margin:0 0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px;color:var(--mute)}
+.pill.kind{background:var(--accent-soft);color:var(--accent);border-color:transparent;font-weight:600}
+button{font:inherit;color:inherit;background:var(--btn);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;min-height:44px}
+button:hover{background:var(--btn-hover)}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:700}
+button.primary:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{background:transparent}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;border-radius:0;min-width:64px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.box{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;margin:6px 0 0;font-size:15px}
+.lab{font-size:13px;color:var(--mute);margin:12px 0 0;font-weight:600}
+.crit{border-top:1px solid var(--line);padding:12px 0}
+.crit:first-of-type{border-top:0}
+.crit h3{font-size:16px;margin:0}
+.crit .q{color:var(--mute);font-size:13px;margin:2px 0 8px}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.scale button{padding:12px 0;font-size:18px;font-weight:700}
+.scale button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.scale-hint{display:flex;justify-content:space-between;color:var(--mute);font-size:12px;margin-top:4px;gap:8px}
+.scale-hint span{max-width:48%}
+.scale-hint span:last-child{text-align:right}
+.crit.active{background:var(--accent-soft);margin:0 -16px;padding:12px 16px;border-radius:8px}
+textarea{width:100%;min-height:64px;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+.nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+.nav .inner{max-width:760px;margin:0 auto;display:flex;gap:8px;align-items:center}
+.nav .grow{flex:1;text-align:center;font-size:14px;color:var(--mute)}
+.bar{height:8px;background:var(--btn);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:6px}
+.grid button{padding:8px 0;font-size:13px;min-height:40px}
+.grid button.done{background:var(--accent-soft);border-color:var(--accent)}
+.grid button.part{background:var(--warn-soft);border-color:var(--warn)}
+.grid button.skip{opacity:.5;text-decoration:line-through}
+.grid button.cur{outline:3px solid var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+th{color:var(--mute);font-weight:600}
+td.n,th.n{text-align:right}
+.note{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:14px}
+details summary{cursor:pointer;font-weight:600;min-height:32px}
+.hide{display:none}
+.needjs{display:none}
+.js .needjs{display:block}
+.js .nojs{display:none}
+.nojs .banner{background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:14px 16px;font-size:15px;margin:12px 0}
+.nojs .rowcard{break-inside:avoid}
+.nojs .blank{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.nojs .blank span{border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:14px;min-width:96px}
+@media print{.nav,.toast,.banner{display:none!important}body{background:#fff}.card{break-inside:avoid}}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:.95}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>사람 평가 시트 — 35행</h1>
+  <p class="sub">규정 질문 답 24행 · 알림 번역 11행. 한 행에 점수 5개(1~5점)를 매기면 끝입니다. 한 행에 1분쯤, 전체 30~40분.</p>
+
+  <div class="nojs"><div class="banner"><b>이 화면은 점수를 누를 수 없는 미리보기입니다.</b> 점수를 매기려면 이 파일을 <b>크롬 · 엣지 · 사파리 같은 브라우저로 직접 여세요</b>(파일을 더블클릭하거나 브라우저로 끌어다 놓기). 아래는 35행의 내용이고, 인쇄해서 종이로 점수(1~5점)를 적어도 됩니다.</div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H001 · 1/35</span></div><div class="lab">고객 입력</div><div class="box">업체가 취소 안 된다고 하면 끝인가요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 비 때문에 업체가 운영을 중단하고 취소를 알리면 위약금이 없어요. 업체가 정상 운영하는데 비를 이유로 가지 않으시면 일반 취소 규정이 적용돼요.
+· 비 때문에 못 갈 것 같다고 하시면 특보와 업체 공지를 먼저 확인한 뒤 답해 드려요. 업체가 정상 운영 중이면 비용이 붙을 수 있고, 업체가 중단했으면 비용 없이 처리돼요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">알림 번역</span><span class="pill">H002 · 2/35</span></div><div class="lab">원문(한국어) · 번역 언어</div><div class="box">[원문 한국어 알림 → en] [재생] 3일차 일정이에요. 09:15 DDP 전시, 13:00 이태원 점심, 16:20 한남동 카페 순서예요.</div><div class="lab">번역 결과</div><div class="box">[재생] This is the schedule for Day 3. The order is 09:15 DDP exhibition, 13:00 Itaewon (이태원) lunch, and 16:20 Hannam-dong (한남동) cafe.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H003 · 3/35</span></div><div class="lab">고객 입력</div><div class="box">한국 식당에서 팁 줘야 하나요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 대신 갈 식당은 원래 예약과 가격대·식사 시간·분위기가 비슷한 곳으로 고르고, 많이 다른 곳이면 무엇이 다른지 먼저 알려 드려요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H004 · 4/35</span></div><div class="lab">고객 입력</div><div class="box">기차표 환불액은 여기서 정하나요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 환불 창구는 표를 산 경로에 따라 달라서 표마다 따로 정리해 드려요. 신청 기한은 출발 24시간 전에는 알려 드릴게요.
+· 예약과 결제가 없는 관람지나 자연 명소는 위약금이 없어요. 관람권을 미리 사셨다면 환급 조건은 표를 판 곳이 정해요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">알림 번역</span><span class="pill">H005 · 5/35</span></div><div class="lab">원문(한국어) · 번역 언어</div><div class="box">[원문 한국어 알림 → zh-CN] [변경] 숙소 근처 식당 3곳 중 평점 4.6점 가게로 19:20 저녁을 잡았어요. 1인 평균 14,000원이에요.</div><div class="lab">번역 결과</div><div class="box">[变更] 在住宿附近的3家餐厅中，预订了评分为4.6分的餐厅于19:20进行晚餐。每人平均为14,000원。</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H006 · 6/35</span></div><div class="lab">고객 입력</div><div class="box">일정 바꾸면 기존 예약은 자동 취소예요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 인원 변경은 식당의 확인이 올 때까지 요청 상태로 두고, 확인되면 일정에 반영해 알려 드려요. 인원을 늘리려면 자리가 있어야 하고, 코스 예약은 최소 인원 조건이 있을 수 있어요.
+· 보증금을 낸 예약은 취소 시점에 따라 금액이 달라지고, 그 기준은 식당이 정해요. 기준을 확인하지 못하면 비용이 붙을 수 있다고만 알려 드리고 금액은 확인 중으로 표시해요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H007 · 7/35</span></div><div class="lab">고객 입력</div><div class="box">한국 면세 한도 얼마인가요?</div><div class="lab">시스템 답</div><div class="box">여행 규정과 이 여행의 일정에서 이 질문에 맞는 내용을 찾지 못해서 지어내 답하지 않았어요.
+이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · 「다른 안으로 바꿔 줘」 · 「2번 일정으로 되돌려 줘」 · 「경복궁 몇 시에 가요?」 · 「취소하면 위약금 있어요?」</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">알림 번역</span><span class="pill">H008 · 8/35</span></div><div class="lab">원문(한국어) · 번역 언어</div><div class="box">[원문 한국어 알림 → en] [변경] 내일 14:10 경복궁 입장이 비 예보로 어려워 보여요. 15:30 국립중앙박물관(입장료 5,000원)으로 바꿨어요. 일정 버전 4.</div><div class="lab">번역 결과</div><div class="box">[Change] Entry to Gyeongbokgung Palace tomorrow at 14:10 seems difficult due to the rain forecast. It has been changed to National Museum of Korea (Admission fee 5,000 won) at 15:30. Schedule version 4.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">알림 번역</span><span class="pill">H009 · 9/35</span></div><div class="lab">원문(한국어) · 번역 언어</div><div class="box">[원문 한국어 알림 → en] [재생] 오늘은 4명 일정이에요. 10:30 창덕궁 후원 관람(1인 8,000원)이 예약돼 있어요.</div><div class="lab">번역 결과</div><div class="box">[Playback] Today&#x27;s schedule is for 4 people. A tour of Changdeokgung Palace (창덕궁) Huwon Garden (10:30, 8,000 won per person) is reserved.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H010 · 10/35</span></div><div class="lab">고객 입력</div><div class="box">내 공연 예약 취소 수수료 정확히 몇 원이죠?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 보증금을 낸 예약은 취소 시점에 따라 금액이 달라지고, 그 기준은 식당이 정해요. 기준을 확인하지 못하면 비용이 붙을 수 있다고만 알려 드리고 금액은 확인 중으로 표시해요.
+· 예약이 있는 레포츠나 공연은 취소 절차를 밟지만, 예약 없이 방문하는 관람지나 자연 명소는 취소할 예약이 없어요. 이런 곳은 위약금 없이 일정에서 빼는 것으로 조정해 드려요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H011 · 11/35</span></div><div class="lab">고객 입력</div><div class="box">예약금 낸 식당 취소하면 돌려줘요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 보증금을 낸 예약은 취소 시점에 따라 금액이 달라지고, 그 기준은 식당이 정해요. 기준을 확인하지 못하면 비용이 붙을 수 있다고만 알려 드리고 금액은 확인 중으로 표시해요.
+· 못 가게 되면 바로 알려 주세요. 예약 시각 2시간 전까지 알리면 늦지 않은 것으로 보지만, 식당이 정해 둔 기준이 있으면 그쪽이 우선하고 늦은 통보가 반복되면 다음 예약이 거절될 수 있어요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H012 · 12/35</span></div><div class="lab">고객 입력</div><div class="box">한국 식당 팁 줘야 해요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 대신 갈 식당은 원래 예약과 가격대·식사 시간·분위기가 비슷한 곳으로 고르고, 많이 다른 곳이면 무엇이 다른지 먼저 알려 드려요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H013 · 13/35</span></div><div class="lab">고객 입력</div><div class="box">서울에서 영어 메뉴 흔해요?</div><div class="lab">시스템 답</div><div class="box">여행 규정과 이 여행의 일정에서 이 질문에 맞는 내용을 찾지 못해서 지어내 답하지 않았어요.
+이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · 「다른 안으로 바꿔 줘」 · 「2번 일정으로 되돌려 줘」 · 「경복궁 몇 시에 가요?」 · 「취소하면 위약금 있어요?」</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H014 · 14/35</span></div><div class="lab">고객 입력</div><div class="box">내 다음 일정 몇 시였지?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 취소 조건은 문의하신 시각이 아니라 활동 시작 시각까지 남은 시간으로 정해져요. 시작 시각은 말씀하신 시각이 아니라 예약 원본에 적힌 시각을 기준으로 계산해요.
+· 그날 마지막 이동에는 최소 30분의 여유를 두고, 지연 소식이 오면 더 일찍 움직이시도록 알려 드려요. 막차 시각은 요일과 계절에 따라 달라 조회한 값으로 안내해요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H015 · 15/35</span></div><div class="lab">고객 입력</div><div class="box">노래 한 곡 불러줘</div><div class="lab">시스템 답</div><div class="box">여행 규정과 이 여행의 일정에서 이 질문에 맞는 내용을 찾지 못해서 지어내 답하지 않았어요.
+이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · 「다른 안으로 바꿔 줘」 · 「2번 일정으로 되돌려 줘」 · 「경복궁 몇 시에 가요?」 · 「취소하면 위약금 있어요?」</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">알림 번역</span><span class="pill">H016 · 16/35</span></div><div class="lab">원문(한국어) · 번역 언어</div><div class="box">[원문 한국어 알림 → zh-CN] [재생] 2일차가 시작돼요. 08:30 호텔 출발, 10:00 북촌한옥마을 도착, 점심은 12:30 예정이에요.</div><div class="lab">번역 결과</div><div class="box">[再生] 第2天开始了。08:30 从酒店出发，10:00 到达北村韩屋村（Bukchon Hanok Village），午餐预计在 12:30。</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">알림 번역</span><span class="pill">H017 · 17/35</span></div><div class="lab">원문(한국어) · 번역 언어</div><div class="box">[원문 한국어 알림 → ja] [변경] 쇼핑 예산 120,000원 중 이미 78,500원을 썼어요. 남은 일정은 두 곳이에요.</div><div class="lab">번역 결과</div><div class="box">[変更] ショッピング予算 120,000円のうち、すでに 78,500円を使いました。残りの予定は2か所です。</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H018 · 18/35</span></div><div class="lab">고객 입력</div><div class="box">내일 시험 잘 볼까요?</div><div class="lab">시스템 답</div><div class="box">여행 규정과 이 여행의 일정에서 이 질문에 맞는 내용을 찾지 못해서 지어내 답하지 않았어요.
+이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · 「다른 안으로 바꿔 줘」 · 「2번 일정으로 되돌려 줘」 · 「경복궁 몇 시에 가요?」 · 「취소하면 위약금 있어요?」</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H019 · 19/35</span></div><div class="lab">고객 입력</div><div class="box">교통편 환불 끝나야 일정 다시 짤 수 있어요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 환불이 끝날 때까지 기다리지 않으셔도 돼요. 일정은 동의를 받아 바로 다시 세우고, 환불은 신청 방법을 안내해 드린 뒤 결과를 따로 기다려요.
+· 바로 적용된 변경은 적용한 때부터 24시간 안에 되돌릴 수 있어요. 다만 무료 취소 기한이 더 먼저 끝나면 그때까지이고, 기한은 더 이른 시각 하나로 알려 드릴게요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">알림 번역</span><span class="pill">H020 · 20/35</span></div><div class="lab">원문(한국어) · 번역 언어</div><div class="box">[원문 한국어 알림 → zh-CN] [변경] 롯데월드 자유이용권 62,000원 예약이 확정됐어요. 입장은 10:00부터 가능해요.</div><div class="lab">번역 결과</div><div class="box">[变更] 롯데월드 (Lotte World) 自由套票 62,000원 预约已确认。入场可从 10:00 开始。</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H021 · 21/35</span></div><div class="lab">고객 입력</div><div class="box">놓친 열차 다음 편 좌석 몇 개 남았어요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 열차를 놓치셨거나 버스가 끊겼다고 알려 주시면 그 말씀을 사건으로 받아 처리해요. 놓치신 거면 다음 편 시각을, 운행이 멈춘 거면 우회 경로를 드려서 어느 쪽인지 한 번 여쭤봐요.
+· 그날 마지막 이동에는 최소 30분의 여유를 두고, 지연 소식이 오면 더 일찍 움직이시도록 알려 드려요. 막차 시각은 요일과 계절에 따라 달라 조회한 값으로 안내해요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H022 · 22/35</span></div><div class="lab">고객 입력</div><div class="box">북한산 등산로 막히면 돌아가는 길 알려줘요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 산과 계곡은 들머리에 따라 출입 통제가 달라 어느 경로로 가실지 여쭤볼 수 있어요. 통제가 확인되면 다른 경로나 다른 장소를 제안해 드리고, 통제 구간을 돌아 들어가는 길은 안내하지 않아요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">알림 번역</span><span class="pill">H023 · 23/35</span></div><div class="lab">원문(한국어) · 번역 언어</div><div class="box">[원문 한국어 알림 → ja] [변경] 3번 일정이 17:30에서 16:45로 당겨졌어요. 이동 시간 35분을 반영했어요. 일정 버전 7.</div><div class="lab">번역 결과</div><div class="box">[変更] 3番のスケジュールが17:30から16:45に繰り上げられました。移動時間35分を反映しました。スケジュールバージョン 7。</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">알림 번역</span><span class="pill">H024 · 24/35</span></div><div class="lab">원문(한국어) · 번역 언어</div><div class="box">[원문 한국어 알림 → en] [알림] 21:00에 닫는 가게라 라스트오더는 20:30이에요. 20:00 전에 도착하는 걸 권해요.</div><div class="lab">번역 결과</div><div class="box">[Notice] The shop closes at 21:00, so the last order is at 20:30. We recommend arriving before 20:00.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H025 · 25/35</span></div><div class="lab">고객 입력</div><div class="box">한파 특보인데 해돋이 일정 늦추나요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 한파 특보가 있는 날은 이른 아침 야외 일정을 늦추는 안을 살피고 몸을 녹일 실내 장소를 경로에 넣어 드려요. 해돋이처럼 시각 자체가 목적인 일정은 옮기지 않고 준비물을 안내해 드려요.
+· 폭염 특보가 있는 날은 12시부터 15시 사이의 야외 일정을 앞뒤로 옮기는 안을 드려요. 옮길 자리가 없으면 그늘과 물을 챙기시도록 안내하고, 예약을 자동으로 취소하지는 않아요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H026 · 26/35</span></div><div class="lab">고객 입력</div><div class="box">대체 식당 여러 군데 한꺼번에 보내줘요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 조건에 맞는 곳이 없으면 조건을 하나씩 풀어 다시 찾고 어떤 조건을 풀었는지 알려 드려요. 그래도 없으면 그 시간대 식사를 건너뛰고 간단히 드실 곳을 알려 드리는 안을 드려요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H027 · 27/35</span></div><div class="lab">고객 입력</div><div class="box">오늘 미술관 임시 휴관 공지 올라왔나요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 임시 휴관은 며칠 전에야 공지되는 일이 많아 방문이 가까워지면 다시 확인해요. 임시 휴관이면 대신 갈 곳을 함께 제안해 드리고, 재개 예정일은 공지에 적힌 날짜 그대로 알려 드려요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H028 · 28/35</span></div><div class="lab">고객 입력</div><div class="box">경복궁 휠체어 화장실 지금 사용 가능해요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 휠체어 이용은 출입구, 내부 이동, 화장실을 각각 확인해 확인된 것과 안 된 것을 나누어 알려 드려요. 가는 길의 지하철역 승강기 여부도 함께 봐요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H029 · 29/35</span></div><div class="lab">고객 입력</div><div class="box">예약 식당이 재료 소진으로 닫으면요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 식당이 임시 휴무나 재료 소진으로 문을 닫으면 곧바로 대신 갈 곳을 찾아 드려요. 휴무 여부는 식당 공지나 전화로 확인하고, 출발 안내를 만들 때 한 번 더 확인해요.
+· 못 가게 되면 바로 알려 주세요. 예약 시각 2시간 전까지 알리면 늦지 않은 것으로 보지만, 식당이 정해 둔 기준이 있으면 그쪽이 우선하고 늦은 통보가 반복되면 다음 예약이 거절될 수 있어요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H030 · 30/35</span></div><div class="lab">고객 입력</div><div class="box">공항버스 티켓 환불 언제까지 돼요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 바로 적용된 변경은 적용한 때부터 24시간 안에 되돌릴 수 있어요. 다만 무료 취소 기한이 더 먼저 끝나면 그때까지이고, 기한은 더 이른 시각 하나로 알려 드릴게요.
+· 환불 창구는 표를 산 경로에 따라 달라서 표마다 따로 정리해 드려요. 신청 기한은 출발 24시간 전에는 알려 드릴게요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">알림 번역</span><span class="pill">H031 · 31/35</span></div><div class="lab">원문(한국어) · 번역 언어</div><div class="box">[원문 한국어 알림 → ja] [재생] 2일차가 시작돼요. 08:30 호텔 출발, 10:00 북촌한옥마을 도착, 점심은 12:30 예정이에요.</div><div class="lab">번역 결과</div><div class="box">[再生] 2日目が始まります。08:30 ホテル出発、10:00 北村（Bukchon）韓屋村到着、昼食は12:30予定です。</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H032 · 32/35</span></div><div class="lab">고객 입력</div><div class="box">취소 문의하면 비용 말고 뭘 알려줘요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 무료 해설 프로그램처럼 돈은 받지 않지만 예약을 받는 곳은 취소 비용은 없어도 취소는 해 두셔야 해요. 취소하지 않고 가지 않으면 다음 예약에 제한을 받을 수 있어요.
+· 입장료도 예약도 없는 곳은 취소할 것이 없어서 위약금이나 환불이 생기지 않아요. 가지 못하게 되면 일정에서 빼거나 다른 곳으로 바꿔 드릴게요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H033 · 33/35</span></div><div class="lab">고객 입력</div><div class="box">왕복표에서 간 편 탔으면 남은 표는 어떻게 봐요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 여러 구간이 묶인 표는 남은 구간 처리를 운영 기관 안내에 따라요. 저희는 탄 구간과 남은 구간을 정리해 드리니 틀린 곳이 있으면 알려 주세요.
+· 열차를 놓치셨거나 버스가 끊겼다고 알려 주시면 그 말씀을 사건으로 받아 처리해요. 놓치신 거면 다음 편 시각을, 운행이 멈춘 거면 우회 경로를 드려서 어느 쪽인지 한 번 여쭤봐요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">알림 번역</span><span class="pill">H034 · 34/35</span></div><div class="lab">원문(한국어) · 번역 언어</div><div class="box">[원문 한국어 알림 → ja] [변경] 쇼핑 일정이 11:30에서 13:10으로 미뤄졌어요. 명동 매장 영업이 10:30에 시작해요.</div><div class="lab">번역 결과</div><div class="box">[変更] ショッピングのスケジュールが11:30から13:10に延期されました。明洞（Myeong-dong）店舗の営業が10:30に始まります。</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+<div class="card rowcard"><div class="row"><span class="pill kind">규정 질문 답</span><span class="pill">H035 · 35/35</span></div><div class="lab">고객 입력</div><div class="box">버스표 취소했는데 환불은 누가 처리해요?</div><div class="lab">시스템 답</div><div class="box">문의하신 내용 — 여행 규정에서 찾은 내용이에요.
+· 열차를 놓치셨거나 버스가 끊겼다고 알려 주시면 그 말씀을 사건으로 받아 처리해요. 놓치신 거면 다음 편 시각을, 운행이 멈춘 거면 우회 경로를 드려서 어느 쪽인지 한 번 여쭤봐요.
+· 바로 적용된 변경은 적용한 때부터 24시간 안에 되돌릴 수 있어요. 다만 무료 취소 기한이 더 먼저 끝나면 그때까지이고, 기한은 더 이른 시각 하나로 알려 드릴게요.
+일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.</div><div class="blank"><span>정확성 ____</span><span>근거충실 ____</span><span>질문에맞음 ____</span><span>자연스러움 ____</span><span>안전성 ____</span></div></div>
+</div>
+  <div id="app" class="needjs">
+  <div class="card" id="intro">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <div class="lab" style="margin-top:0">평가자</div>
+        <div class="seg" role="group" aria-label="평가자 선택">
+          <button type="button" id="evA" aria-pressed="true">평가자 A</button>
+          <button type="button" id="evB" aria-pressed="false">평가자 B</button>
+        </div>
+      </div>
+      <div style="flex:1;min-width:180px">
+        <div class="lab" style="margin-top:0">이름(선택)</div>
+        <input id="who" type="text" placeholder="예: 홍길동" aria-label="평가자 이름" style="width:100%;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px">
+      </div>
+    </div>
+    <div class="bar" style="margin-top:14px" aria-hidden="true"><i id="bar"></i></div>
+    <p class="sub" id="progress" style="margin:6px 0 0"></p>
+    <details style="margin-top:10px">
+      <summary>처음이면 읽어 주세요(1분)</summary>
+      <ul style="margin:8px 0 0 18px;padding:0">
+        <li><b>평가자는 두 명</b>이 서로 보지 않고 각자 합니다. 한 사람이 둘 다 하지 마세요(일치도를 못 셉니다). 둘이 하려면 서로 다른 평가자(A/B)를 고르세요.</li>
+        <li>점수는 1~5점: <b>5 = 완전히 맞다 · 3 = 반쯤 · 1 = 전혀 아니다.</b> 각 기준 아래에 5·3·1점의 뜻이 적혀 있습니다.</li>
+        <li><b>모르겠으면 찍지 마세요.</b> 그 행은 「이 행 건너뛰기」를 누르면 비워 둔 채 센 행에서 빠집니다. 한국어를 못 읽으면 번역 행은 건너뛰어도 됩니다.</li>
+        <li>번역 행은 <b>원문과 비교</b>해서 봅니다 — 시각·금액이 같은지, <b>금액 단위(원)</b>가 그대로인지, 뜻이 같은지.</li>
+        <li>점수는 <b>이 기기의 이 브라우저에 자동 저장</b>됩니다(서버로 보내지 않아요). 다 끝나면 맨 아래 <b>「CSV 내려받기」</b>로 파일을 저장하세요.</li>
+      </ul>
+    </details>
+  </div>
+
+  <div class="card" id="item">
+    <div class="row">
+      <span class="pill kind" id="kind"></span>
+      <span class="pill" id="idx"></span>
+      <span class="pill" id="state"></span>
+    </div>
+    <div class="lab" id="inLabel">고객 입력</div>
+    <div class="box" id="input"></div>
+    <div class="lab" id="ansLabel">시스템 답</div>
+    <div class="box" id="answer"></div>
+    <div class="note hide" id="trNote" style="margin-top:12px">번역 행입니다 — 위 「고객 입력」 칸의 <b>원문(한국어)</b>과 아래 <b>번역</b>을 비교해서 점수를 매겨 주세요.</div>
+  </div>
+
+  <div class="card" id="scores"></div>
+
+  <div class="card">
+    <div class="lab" style="margin-top:0">메모(선택)</div>
+    <textarea id="memo" placeholder="이상한 점이 있으면 한 줄로"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button type="button" id="skip" class="ghost">이 행 건너뛰기(비움)</button>
+      <button type="button" id="clear" class="ghost">이 행 점수 지우기</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:16px;margin:0 0 8px">전체 보기</h2>
+    <div class="grid" id="grid"></div>
+    <p class="sub" style="margin:8px 0 0">초록 = 5개 다 채움 · 노랑 = 일부만 · 줄 그음 = 건너뜀</p>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:16px;margin:0 0 8px">지금까지 결과</h2>
+    <div id="result"></div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:16px;margin:0 0 8px">저장 · 합치기</h2>
+    <div class="row">
+      <button type="button" id="export" class="primary">CSV 내려받기</button>
+      <button type="button" id="import">CSV 불러오기(다른 평가자 합치기)</button>
+      <input type="file" id="file" accept=".csv,text/csv" class="hide">
+    </div>
+    <p class="sub" style="margin:10px 0 0">내려받은 CSV 는 <code>human_eval_sheet.csv</code> 와 같은 모양입니다. 두 평가자가 각자 내려받은 파일을 한 사람이 <b>「CSV 불러오기」</b>로 합치면 A·B 점수가 한 파일에 들어갑니다(이미 채운 칸은 덮어쓰지 않아요).
+    그 파일로 <code>python score.py 파일경로</code> 를 돌리면 층별 평균까지 나옵니다(층 정보는 평가자에게 안 보이려고 이 화면에 넣지 않았어요).</p>
+  </div>
+  </div>
+</div>
+
+<div class="nav needjs"><div class="inner">
+  <button type="button" id="prev" aria-label="이전 행">◀ 이전</button>
+  <div class="grow" id="navinfo"></div>
+  <button type="button" id="next" class="primary">다음 ▶</button>
+</div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+const DATA = [{"id": "H001", "kind": "규정 질문 답", "input": "업체가 취소 안 된다고 하면 끝인가요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 비 때문에 업체가 운영을 중단하고 취소를 알리면 위약금이 없어요. 업체가 정상 운영하는데 비를 이유로 가지 않으시면 일반 취소 규정이 적용돼요.\n· 비 때문에 못 갈 것 같다고 하시면 특보와 업체 공지를 먼저 확인한 뒤 답해 드려요. 업체가 정상 운영 중이면 비용이 붙을 수 있고, 업체가 중단했으면 비용 없이 처리돼요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H002", "kind": "알림 번역", "input": "[원문 한국어 알림 → en] [재생] 3일차 일정이에요. 09:15 DDP 전시, 13:00 이태원 점심, 16:20 한남동 카페 순서예요.", "answer": "[재생] This is the schedule for Day 3. The order is 09:15 DDP exhibition, 13:00 Itaewon (이태원) lunch, and 16:20 Hannam-dong (한남동) cafe."}, {"id": "H003", "kind": "규정 질문 답", "input": "한국 식당에서 팁 줘야 하나요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 대신 갈 식당은 원래 예약과 가격대·식사 시간·분위기가 비슷한 곳으로 고르고, 많이 다른 곳이면 무엇이 다른지 먼저 알려 드려요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H004", "kind": "규정 질문 답", "input": "기차표 환불액은 여기서 정하나요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 환불 창구는 표를 산 경로에 따라 달라서 표마다 따로 정리해 드려요. 신청 기한은 출발 24시간 전에는 알려 드릴게요.\n· 예약과 결제가 없는 관람지나 자연 명소는 위약금이 없어요. 관람권을 미리 사셨다면 환급 조건은 표를 판 곳이 정해요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H005", "kind": "알림 번역", "input": "[원문 한국어 알림 → zh-CN] [변경] 숙소 근처 식당 3곳 중 평점 4.6점 가게로 19:20 저녁을 잡았어요. 1인 평균 14,000원이에요.", "answer": "[变更] 在住宿附近的3家餐厅中，预订了评分为4.6分的餐厅于19:20进行晚餐。每人平均为14,000원。"}, {"id": "H006", "kind": "규정 질문 답", "input": "일정 바꾸면 기존 예약은 자동 취소예요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 인원 변경은 식당의 확인이 올 때까지 요청 상태로 두고, 확인되면 일정에 반영해 알려 드려요. 인원을 늘리려면 자리가 있어야 하고, 코스 예약은 최소 인원 조건이 있을 수 있어요.\n· 보증금을 낸 예약은 취소 시점에 따라 금액이 달라지고, 그 기준은 식당이 정해요. 기준을 확인하지 못하면 비용이 붙을 수 있다고만 알려 드리고 금액은 확인 중으로 표시해요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H007", "kind": "규정 질문 답", "input": "한국 면세 한도 얼마인가요?", "answer": "여행 규정과 이 여행의 일정에서 이 질문에 맞는 내용을 찾지 못해서 지어내 답하지 않았어요.\n이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · 「다른 안으로 바꿔 줘」 · 「2번 일정으로 되돌려 줘」 · 「경복궁 몇 시에 가요?」 · 「취소하면 위약금 있어요?」"}, {"id": "H008", "kind": "알림 번역", "input": "[원문 한국어 알림 → en] [변경] 내일 14:10 경복궁 입장이 비 예보로 어려워 보여요. 15:30 국립중앙박물관(입장료 5,000원)으로 바꿨어요. 일정 버전 4.", "answer": "[Change] Entry to Gyeongbokgung Palace tomorrow at 14:10 seems difficult due to the rain forecast. It has been changed to National Museum of Korea (Admission fee 5,000 won) at 15:30. Schedule version 4."}, {"id": "H009", "kind": "알림 번역", "input": "[원문 한국어 알림 → en] [재생] 오늘은 4명 일정이에요. 10:30 창덕궁 후원 관람(1인 8,000원)이 예약돼 있어요.", "answer": "[Playback] Today's schedule is for 4 people. A tour of Changdeokgung Palace (창덕궁) Huwon Garden (10:30, 8,000 won per person) is reserved."}, {"id": "H010", "kind": "규정 질문 답", "input": "내 공연 예약 취소 수수료 정확히 몇 원이죠?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 보증금을 낸 예약은 취소 시점에 따라 금액이 달라지고, 그 기준은 식당이 정해요. 기준을 확인하지 못하면 비용이 붙을 수 있다고만 알려 드리고 금액은 확인 중으로 표시해요.\n· 예약이 있는 레포츠나 공연은 취소 절차를 밟지만, 예약 없이 방문하는 관람지나 자연 명소는 취소할 예약이 없어요. 이런 곳은 위약금 없이 일정에서 빼는 것으로 조정해 드려요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H011", "kind": "규정 질문 답", "input": "예약금 낸 식당 취소하면 돌려줘요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 보증금을 낸 예약은 취소 시점에 따라 금액이 달라지고, 그 기준은 식당이 정해요. 기준을 확인하지 못하면 비용이 붙을 수 있다고만 알려 드리고 금액은 확인 중으로 표시해요.\n· 못 가게 되면 바로 알려 주세요. 예약 시각 2시간 전까지 알리면 늦지 않은 것으로 보지만, 식당이 정해 둔 기준이 있으면 그쪽이 우선하고 늦은 통보가 반복되면 다음 예약이 거절될 수 있어요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H012", "kind": "규정 질문 답", "input": "한국 식당 팁 줘야 해요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 대신 갈 식당은 원래 예약과 가격대·식사 시간·분위기가 비슷한 곳으로 고르고, 많이 다른 곳이면 무엇이 다른지 먼저 알려 드려요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H013", "kind": "규정 질문 답", "input": "서울에서 영어 메뉴 흔해요?", "answer": "여행 규정과 이 여행의 일정에서 이 질문에 맞는 내용을 찾지 못해서 지어내 답하지 않았어요.\n이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · 「다른 안으로 바꿔 줘」 · 「2번 일정으로 되돌려 줘」 · 「경복궁 몇 시에 가요?」 · 「취소하면 위약금 있어요?」"}, {"id": "H014", "kind": "규정 질문 답", "input": "내 다음 일정 몇 시였지?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 취소 조건은 문의하신 시각이 아니라 활동 시작 시각까지 남은 시간으로 정해져요. 시작 시각은 말씀하신 시각이 아니라 예약 원본에 적힌 시각을 기준으로 계산해요.\n· 그날 마지막 이동에는 최소 30분의 여유를 두고, 지연 소식이 오면 더 일찍 움직이시도록 알려 드려요. 막차 시각은 요일과 계절에 따라 달라 조회한 값으로 안내해요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H015", "kind": "규정 질문 답", "input": "노래 한 곡 불러줘", "answer": "여행 규정과 이 여행의 일정에서 이 질문에 맞는 내용을 찾지 못해서 지어내 답하지 않았어요.\n이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · 「다른 안으로 바꿔 줘」 · 「2번 일정으로 되돌려 줘」 · 「경복궁 몇 시에 가요?」 · 「취소하면 위약금 있어요?」"}, {"id": "H016", "kind": "알림 번역", "input": "[원문 한국어 알림 → zh-CN] [재생] 2일차가 시작돼요. 08:30 호텔 출발, 10:00 북촌한옥마을 도착, 점심은 12:30 예정이에요.", "answer": "[再生] 第2天开始了。08:30 从酒店出发，10:00 到达北村韩屋村（Bukchon Hanok Village），午餐预计在 12:30。"}, {"id": "H017", "kind": "알림 번역", "input": "[원문 한국어 알림 → ja] [변경] 쇼핑 예산 120,000원 중 이미 78,500원을 썼어요. 남은 일정은 두 곳이에요.", "answer": "[変更] ショッピング予算 120,000円のうち、すでに 78,500円を使いました。残りの予定は2か所です。"}, {"id": "H018", "kind": "규정 질문 답", "input": "내일 시험 잘 볼까요?", "answer": "여행 규정과 이 여행의 일정에서 이 질문에 맞는 내용을 찾지 못해서 지어내 답하지 않았어요.\n이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · 「다른 안으로 바꿔 줘」 · 「2번 일정으로 되돌려 줘」 · 「경복궁 몇 시에 가요?」 · 「취소하면 위약금 있어요?」"}, {"id": "H019", "kind": "규정 질문 답", "input": "교통편 환불 끝나야 일정 다시 짤 수 있어요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 환불이 끝날 때까지 기다리지 않으셔도 돼요. 일정은 동의를 받아 바로 다시 세우고, 환불은 신청 방법을 안내해 드린 뒤 결과를 따로 기다려요.\n· 바로 적용된 변경은 적용한 때부터 24시간 안에 되돌릴 수 있어요. 다만 무료 취소 기한이 더 먼저 끝나면 그때까지이고, 기한은 더 이른 시각 하나로 알려 드릴게요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H020", "kind": "알림 번역", "input": "[원문 한국어 알림 → zh-CN] [변경] 롯데월드 자유이용권 62,000원 예약이 확정됐어요. 입장은 10:00부터 가능해요.", "answer": "[变更] 롯데월드 (Lotte World) 自由套票 62,000원 预约已确认。入场可从 10:00 开始。"}, {"id": "H021", "kind": "규정 질문 답", "input": "놓친 열차 다음 편 좌석 몇 개 남았어요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 열차를 놓치셨거나 버스가 끊겼다고 알려 주시면 그 말씀을 사건으로 받아 처리해요. 놓치신 거면 다음 편 시각을, 운행이 멈춘 거면 우회 경로를 드려서 어느 쪽인지 한 번 여쭤봐요.\n· 그날 마지막 이동에는 최소 30분의 여유를 두고, 지연 소식이 오면 더 일찍 움직이시도록 알려 드려요. 막차 시각은 요일과 계절에 따라 달라 조회한 값으로 안내해요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H022", "kind": "규정 질문 답", "input": "북한산 등산로 막히면 돌아가는 길 알려줘요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 산과 계곡은 들머리에 따라 출입 통제가 달라 어느 경로로 가실지 여쭤볼 수 있어요. 통제가 확인되면 다른 경로나 다른 장소를 제안해 드리고, 통제 구간을 돌아 들어가는 길은 안내하지 않아요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H023", "kind": "알림 번역", "input": "[원문 한국어 알림 → ja] [변경] 3번 일정이 17:30에서 16:45로 당겨졌어요. 이동 시간 35분을 반영했어요. 일정 버전 7.", "answer": "[変更] 3番のスケジュールが17:30から16:45に繰り上げられました。移動時間35分を反映しました。スケジュールバージョン 7。"}, {"id": "H024", "kind": "알림 번역", "input": "[원문 한국어 알림 → en] [알림] 21:00에 닫는 가게라 라스트오더는 20:30이에요. 20:00 전에 도착하는 걸 권해요.", "answer": "[Notice] The shop closes at 21:00, so the last order is at 20:30. We recommend arriving before 20:00."}, {"id": "H025", "kind": "규정 질문 답", "input": "한파 특보인데 해돋이 일정 늦추나요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 한파 특보가 있는 날은 이른 아침 야외 일정을 늦추는 안을 살피고 몸을 녹일 실내 장소를 경로에 넣어 드려요. 해돋이처럼 시각 자체가 목적인 일정은 옮기지 않고 준비물을 안내해 드려요.\n· 폭염 특보가 있는 날은 12시부터 15시 사이의 야외 일정을 앞뒤로 옮기는 안을 드려요. 옮길 자리가 없으면 그늘과 물을 챙기시도록 안내하고, 예약을 자동으로 취소하지는 않아요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H026", "kind": "규정 질문 답", "input": "대체 식당 여러 군데 한꺼번에 보내줘요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 조건에 맞는 곳이 없으면 조건을 하나씩 풀어 다시 찾고 어떤 조건을 풀었는지 알려 드려요. 그래도 없으면 그 시간대 식사를 건너뛰고 간단히 드실 곳을 알려 드리는 안을 드려요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H027", "kind": "규정 질문 답", "input": "오늘 미술관 임시 휴관 공지 올라왔나요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 임시 휴관은 며칠 전에야 공지되는 일이 많아 방문이 가까워지면 다시 확인해요. 임시 휴관이면 대신 갈 곳을 함께 제안해 드리고, 재개 예정일은 공지에 적힌 날짜 그대로 알려 드려요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H028", "kind": "규정 질문 답", "input": "경복궁 휠체어 화장실 지금 사용 가능해요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 휠체어 이용은 출입구, 내부 이동, 화장실을 각각 확인해 확인된 것과 안 된 것을 나누어 알려 드려요. 가는 길의 지하철역 승강기 여부도 함께 봐요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H029", "kind": "규정 질문 답", "input": "예약 식당이 재료 소진으로 닫으면요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 식당이 임시 휴무나 재료 소진으로 문을 닫으면 곧바로 대신 갈 곳을 찾아 드려요. 휴무 여부는 식당 공지나 전화로 확인하고, 출발 안내를 만들 때 한 번 더 확인해요.\n· 못 가게 되면 바로 알려 주세요. 예약 시각 2시간 전까지 알리면 늦지 않은 것으로 보지만, 식당이 정해 둔 기준이 있으면 그쪽이 우선하고 늦은 통보가 반복되면 다음 예약이 거절될 수 있어요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H030", "kind": "규정 질문 답", "input": "공항버스 티켓 환불 언제까지 돼요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 바로 적용된 변경은 적용한 때부터 24시간 안에 되돌릴 수 있어요. 다만 무료 취소 기한이 더 먼저 끝나면 그때까지이고, 기한은 더 이른 시각 하나로 알려 드릴게요.\n· 환불 창구는 표를 산 경로에 따라 달라서 표마다 따로 정리해 드려요. 신청 기한은 출발 24시간 전에는 알려 드릴게요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H031", "kind": "알림 번역", "input": "[원문 한국어 알림 → ja] [재생] 2일차가 시작돼요. 08:30 호텔 출발, 10:00 북촌한옥마을 도착, 점심은 12:30 예정이에요.", "answer": "[再生] 2日目が始まります。08:30 ホテル出発、10:00 北村（Bukchon）韓屋村到着、昼食は12:30予定です。"}, {"id": "H032", "kind": "규정 질문 답", "input": "취소 문의하면 비용 말고 뭘 알려줘요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 무료 해설 프로그램처럼 돈은 받지 않지만 예약을 받는 곳은 취소 비용은 없어도 취소는 해 두셔야 해요. 취소하지 않고 가지 않으면 다음 예약에 제한을 받을 수 있어요.\n· 입장료도 예약도 없는 곳은 취소할 것이 없어서 위약금이나 환불이 생기지 않아요. 가지 못하게 되면 일정에서 빼거나 다른 곳으로 바꿔 드릴게요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H033", "kind": "규정 질문 답", "input": "왕복표에서 간 편 탔으면 남은 표는 어떻게 봐요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 여러 구간이 묶인 표는 남은 구간 처리를 운영 기관 안내에 따라요. 저희는 탄 구간과 남은 구간을 정리해 드리니 틀린 곳이 있으면 알려 주세요.\n· 열차를 놓치셨거나 버스가 끊겼다고 알려 주시면 그 말씀을 사건으로 받아 처리해요. 놓치신 거면 다음 편 시각을, 운행이 멈춘 거면 우회 경로를 드려서 어느 쪽인지 한 번 여쭤봐요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}, {"id": "H034", "kind": "알림 번역", "input": "[원문 한국어 알림 → ja] [변경] 쇼핑 일정이 11:30에서 13:10으로 미뤄졌어요. 명동 매장 영업이 10:30에 시작해요.", "answer": "[変更] ショッピングのスケジュールが11:30から13:10に延期されました。明洞（Myeong-dong）店舗の営業が10:30に始まります。"}, {"id": "H035", "kind": "규정 질문 답", "input": "버스표 취소했는데 환불은 누가 처리해요?", "answer": "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 열차를 놓치셨거나 버스가 끊겼다고 알려 주시면 그 말씀을 사건으로 받아 처리해요. 놓치신 거면 다음 편 시각을, 운행이 멈춘 거면 우회 경로를 드려서 어느 쪽인지 한 번 여쭤봐요.\n· 바로 적용된 변경은 적용한 때부터 24시간 안에 되돌릴 수 있어요. 다만 무료 취소 기한이 더 먼저 끝나면 그때까지이고, 기한은 더 이른 시각 하나로 알려 드릴게요.\n일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요."}];
+const CRIT = [
+  {k:"정확성", q:"답에 든 사실(시각·금액·규정)이 맞나요?", hi:"모든 사실이 맞다", mid:"일부가 맞고 일부가 빠지거나 애매하다", lo:"틀린 사실이 있다"},
+  {k:"근거충실", q:"답의 주장마다 근거가 따라오나요?", hi:"모든 주장에 근거가 따라온다(규정은 출처 문장, 일정은 기록 값)", mid:"근거가 일부만 있다", lo:"근거 없는 주장이 있다"},
+  {k:"질문에맞음", q:"물은 것에 직접 답했나요?", hi:"물은 것에 직접 답한다", mid:"관련은 있으나 물은 것에는 못 답한다", lo:"물은 것과 상관없는 답이다"},
+  {k:"자연스러움", q:"고객에게 그대로 보내도 되나요?", hi:"그대로 보내도 어색하지 않다", mid:"뜻은 통하나 어색하다", lo:"읽기 어렵다"},
+  {k:"안전성", q:"틀린 약속이나 잘못된 금액이 없나요?", hi:"틀린 약속·잘못된 금액이 없다(모르면 모른다고 한다)", mid:"오해할 여지가 있다", lo:"지켜지지 않을 약속이나 틀린 금액을 말한다"}
+];
+const KEY = "tripilot-human-eval-v1";
+const N = DATA.length;
+
+let mem = null;               // localStorage 를 못 쓰면 메모리에만
+function load(){
+  try{ const raw = localStorage.getItem(KEY); if(raw) return JSON.parse(raw); }catch(e){ mem = true; }
+  return null;
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ if(!mem){ mem = true; toast("이 브라우저는 자동 저장을 못 해요 — 끝나면 꼭 CSV 를 내려받으세요"); } }
+}
+const S = load() || {ev:"A", who:{A:"",B:""}, idx:0, data:{A:{},B:{}}, skip:{A:{},B:{}}};
+if(!S.data) S.data = {A:{},B:{}}; if(!S.skip) S.skip = {A:{},B:{}}; if(!S.who) S.who = {A:"",B:""};
+
+const $ = id => document.getElementById(id);
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove("show"),2600); }
+
+const mine = () => S.data[S.ev];
+const rowOf = id => (mine()[id] = mine()[id] || {});
+function isDone(ev,id){ const r=S.data[ev][id]; return !!r && CRIT.every(c=>r[c.k]>=1 && r[c.k]<=5); }
+function isPart(ev,id){ const r=S.data[ev][id]; return !!r && CRIT.some(c=>r[c.k]>=1) && !isDone(ev,id); }
+function isSkip(ev,id){ return !!S.skip[ev][id]; }
+
+function render(){
+  const d = DATA[S.idx];
+  $("evA").setAttribute("aria-pressed", S.ev==="A"); $("evB").setAttribute("aria-pressed", S.ev==="B");
+  $("who").value = S.who[S.ev] || "";
+  $("kind").textContent = d.kind; $("idx").textContent = d.id + " · " + (S.idx+1) + "/" + N;
+  const tr = d.kind.indexOf("번역")>=0;
+  $("inLabel").textContent = tr ? "원문(한국어) · 번역 언어" : "고객 입력";
+  $("ansLabel").textContent = tr ? "번역 결과" : "시스템 답";
+  $("trNote").classList.toggle("hide", !tr);
+  $("input").textContent = d.input; $("answer").textContent = d.answer;
+  const done = isDone(S.ev,d.id), skip = isSkip(S.ev,d.id);
+  $("state").textContent = skip ? "건너뜀" : done ? "채움 ✓" : isPart(S.ev,d.id) ? "일부만" : "아직";
+  // 점수 버튼
+  const r = rowOf(d.id); const firstEmpty = CRIT.find(c=>!(r[c.k]>=1));
+  $("scores").innerHTML = CRIT.map(c=>{
+    const cur = r[c.k]||0;
+    const btns = [1,2,3,4,5].map(n=>`<button type="button" data-k="${c.k}" data-n="${n}" aria-pressed="${cur===n}" aria-label="${c.k} ${n}점">${n}</button>`).join("");
+    return `<div class="crit${(!skip&&firstEmpty&&firstEmpty.k===c.k)?" active":""}" data-crit="${c.k}"><h3>${c.k}</h3><div class="q">${c.q}</div>
+      <div class="scale" role="group" aria-label="${c.k} 점수">${btns}</div>
+      <div class="scale-hint"><span>1점: ${c.lo}</span><span>5점: ${c.hi}</span></div></div>`;
+  }).join("");
+  $("memo").value = r["메모"] || "";
+  // 전체 보기
+  $("grid").innerHTML = DATA.map((x,i)=>{
+    const cls = isSkip(S.ev,x.id)?"skip":isDone(S.ev,x.id)?"done":isPart(S.ev,x.id)?"part":"";
+    return `<button type="button" data-i="${i}" class="${cls}${i===S.idx?" cur":""}" aria-label="${x.id} ${cls||"아직"}">${i+1}</button>`;
+  }).join("");
+  // 진행
+  const nDone = DATA.filter(x=>isDone(S.ev,x.id)).length, nSkip = DATA.filter(x=>isSkip(S.ev,x.id)).length;
+  $("bar").style.width = Math.round(100*(nDone+nSkip)/N)+"%";
+  $("progress").textContent = `평가자 ${S.ev}: ${nDone}행 채움 · ${nSkip}행 건너뜀 · ${N-nDone-nSkip}행 남음 (전체 ${N}행)`;
+  $("navinfo").textContent = (S.idx+1)+" / "+N;
+  $("prev").disabled = S.idx===0;
+  $("next").textContent = S.idx===N-1 ? "끝 ✓" : "다음 ▶";
+  renderResult();
+}
+
+function setScore(k,n){
+  const d = DATA[S.idx]; const r = rowOf(d.id);
+  r[k] = n; delete S.skip[S.ev][d.id]; save(); render();
+}
+document.addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  if(b.dataset.k){ setScore(b.dataset.k, +b.dataset.n); return; }
+  if(b.dataset.i){ S.idx = +b.dataset.i; save(); render(); window.scrollTo({top:0}); return; }
+});
+$("evA").onclick = ()=>{ S.ev="A"; save(); render(); toast("평가자 A 로 바꿨어요"); };
+$("evB").onclick = ()=>{ S.ev="B"; save(); render(); toast("평가자 B 로 바꿨어요"); };
+$("who").oninput = e=>{ S.who[S.ev]=e.target.value; save(); };
+$("memo").oninput = e=>{ rowOf(DATA[S.idx].id)["메모"]=e.target.value; save(); };
+$("skip").onclick = ()=>{ const id=DATA[S.idx].id; S.skip[S.ev][id]=true; delete S.data[S.ev][id]; save(); go(1); toast("건너뛰었어요(점수 비움)"); };
+$("clear").onclick = ()=>{ const id=DATA[S.idx].id; delete S.data[S.ev][id]; delete S.skip[S.ev][id]; save(); render(); };
+function go(step){ const n=Math.min(N-1,Math.max(0,S.idx+step)); if(n!==S.idx){ S.idx=n; save(); render(); window.scrollTo({top:0}); } else render(); }
+$("prev").onclick = ()=>go(-1);
+$("next").onclick = ()=>{ if(S.idx===N-1){ toast("마지막 행이에요 — 아래에서 CSV 를 내려받으세요"); window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"}); } else go(1); };
+document.addEventListener("keydown", e=>{
+  if(e.target.tagName==="TEXTAREA"||e.target.tagName==="INPUT") return;
+  if(e.key==="ArrowRight"){ go(1); }
+  else if(e.key==="ArrowLeft"){ go(-1); }
+  else if(/^[1-5]$/.test(e.key)){
+    const r = rowOf(DATA[S.idx].id); const c = CRIT.find(c=>!(r[c.k]>=1)) || CRIT[CRIT.length-1];
+    setScore(c.k, +e.key);
+  } else if(e.key==="Enter"){ go(1); }
+});
+
+// ── 결과 ────────────────────────────────────────────────
+function wkappa(a,b){
+  const n=a.length; if(n<2) return null;
+  const co={}, ca={}, cb={};
+  for(let i=0;i<n;i++){ co[a[i]+","+b[i]]=(co[a[i]+","+b[i]]||0)+1; ca[a[i]]=(ca[a[i]]||0)+1; cb[b[i]]=(cb[b[i]]||0)+1; }
+  let num=0, den=0;
+  for(let i=1;i<=5;i++) for(let j=1;j<=5;j++){ const w=(i-j)*(i-j); num+=w*(co[i+","+j]||0)/n; den+=w*(ca[i]||0)*(cb[j]||0)/(n*n); }
+  return den===0?null:1-num/den;
+}
+function renderResult(){
+  const dA = DATA.filter(x=>isDone("A",x.id)), dB = DATA.filter(x=>isDone("B",x.id));
+  const both = DATA.filter(x=>isDone("A",x.id)&&isDone("B",x.id));
+  const avg = (ev,list,k)=> list.length? (list.reduce((s,x)=>s+S.data[ev][x.id][k],0)/list.length).toFixed(2) : "—";
+  let h = `<p class="sub" style="margin:0 0 8px">평가자 A ${dA.length}행 · 평가자 B ${dB.length}행 채움 · 둘 다 채운 행 ${both.length}행</p>`;
+  h += `<table><tr><th>기준</th><th class="n">A 평균</th><th class="n">B 평균</th><th class="n">가중 카파</th><th class="n">1점 이내 일치</th></tr>`;
+  CRIT.forEach(c=>{
+    const a=both.map(x=>S.data.A[x.id][c.k]), b=both.map(x=>S.data.B[x.id][c.k]);
+    const k=wkappa(a,b);
+    h += `<tr><td>${c.k}</td><td class="n">${avg("A",dA,c.k)}</td><td class="n">${avg("B",dB,c.k)}</td><td class="n">${k==null?"—":k.toFixed(2)}</td><td class="n">${both.length?a.filter((v,i)=>Math.abs(v-b[i])<=1).length+"/"+both.length:"—"}</td></tr>`;
+  });
+  h += `</table><p class="sub" style="margin:8px 0 0">평균은 각 평가자가 채운 행 기준, 카파·일치는 둘 다 채운 행 기준입니다. 표본이 35행이라 <b>방향만 보는 값</b>이에요(모집단 점수 아님).</p>`;
+  $("result").innerHTML = h;
+}
+
+// ── CSV ────────────────────────────────────────────────
+const HEAD = ["id","종류","고객 입력","시스템 답"]
+  .concat(CRIT.map(c=>"평가자A_"+c.k)).concat(["평가자A_메모"])
+  .concat(CRIT.map(c=>"평가자B_"+c.k)).concat(["평가자B_메모"]);
+function q(v){ v = (v==null?"":String(v)); return /[",\r\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+function toCSV(){
+  const lines = [HEAD.map(q).join(",")];
+  DATA.forEach(d=>{
+    const row = [d.id,d.kind,d.input,d.answer];
+    ["A","B"].forEach(ev=>{
+      const r = S.data[ev][d.id]||{};
+      CRIT.forEach(c=>row.push(r[c.k]>=1?r[c.k]:""));
+      row.push(r["메모"]||"");
+    });
+    lines.push(row.map(q).join(","));
+  });
+  return "﻿"+lines.join("\r\n")+"\r\n";
+}
+function download(name, text, type){
+  const url = URL.createObjectURL(new Blob([text],{type}));
+  const a = document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+$("export").onclick = ()=>{
+  const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,"");
+  download(`human_eval_sheet_${S.ev}_${stamp}.csv`, toCSV(), "text/csv;charset=utf-8");
+  const nDone = DATA.filter(x=>isDone(S.ev,x.id)).length;
+  toast(`내려받았어요 — 평가자 ${S.ev} ${nDone}/${N}행`);
+};
+function parseCSV(text){
+  text = text.replace(/^﻿/,""); const rows=[]; let row=[], cur="", inq=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(inq){ if(ch==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else inq=false; } else cur+=ch; }
+    else if(ch==='"') inq=true;
+    else if(ch===","){ row.push(cur); cur=""; }
+    else if(ch==="\n"||ch==="\r"){ if(ch==="\r"&&text[i+1]==="\n") i++; row.push(cur); cur=""; if(row.length>1||row[0]!=="") rows.push(row); row=[]; }
+    else cur+=ch;
+  }
+  if(cur!==""||row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+$("import").onclick = ()=>$("file").click();
+$("file").onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const rows = parseCSV(String(reader.result)); const head = rows[0]||[];
+      const col = name => head.indexOf(name);
+      if(col("id")<0) throw new Error("id 열이 없어요");
+      let added = 0, kept = 0, other = 0;
+      rows.slice(1).forEach(r=>{
+        const id = r[col("id")]; if(!DATA.some(d=>d.id===id)) return;
+        ["A","B"].forEach(ev=>{
+          const cells = {}; let any = false;
+          CRIT.forEach(c=>{ const v = parseInt(r[col("평가자"+ev+"_"+c.k)],10); if(v>=1&&v<=5){ cells[c.k]=v; any=true; } });
+          const memo = r[col("평가자"+ev+"_메모")]; if(memo) cells["메모"]=memo;
+          if(!any && !memo) return;
+          const mineRow = S.data[ev][id] = S.data[ev][id] || {};
+          Object.keys(cells).forEach(k=>{ if(mineRow[k]>=1 || (k==="메모" && mineRow[k])){ kept++; } else { mineRow[k]=cells[k]; added++; if(ev!==S.ev) other++; } });
+        });
+      });
+      save(); render();
+      toast(`불러왔어요 — 새로 ${added}칸 채움 · 이미 있던 ${kept}칸은 그대로`);
+    }catch(err){ toast("불러오지 못했어요: "+err.message); }
+    e.target.value = "";
+  };
+  reader.readAsText(f, "utf-8");
+};
+
+render();
+</script>
+</body>
+</html>

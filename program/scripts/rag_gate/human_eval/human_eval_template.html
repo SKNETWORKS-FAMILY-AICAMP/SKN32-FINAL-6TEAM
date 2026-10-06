@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>document.documentElement.className += " js";</script>
+<title>사람 평가 시트</title>
+<style>
+:root{
+  --bg:#f6f5f1; --card:#ffffff; --ink:#1c1b18; --mute:#6b6a64; --line:#dcdad2;
+  --accent:#0f6b54; --accent-ink:#ffffff; --accent-soft:#e1f1ec;
+  --warn:#8a5a00; --warn-soft:#fbf0d9; --bad:#a3302a;
+  --btn:#f0eee7; --btn-hover:#e6e3d9;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#16161a; --card:#202026; --ink:#ecebe6; --mute:#a3a29a; --line:#3a3a42;
+    --accent:#4cc3a2; --accent-ink:#0b1f19; --accent-soft:#183a30;
+    --warn:#e7b85a; --warn-soft:#3a2f14; --bad:#ef8a83;
+    --btn:#2c2c34; --btn-hover:#383842;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px 120px}
+h1{font-size:20px;margin:8px 0 4px}
+.sub{color:var(--mute);font-size:14px;margin:0 0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px;color:var(--mute)}
+.pill.kind{background:var(--accent-soft);color:var(--accent);border-color:transparent;font-weight:600}
+button{font:inherit;color:inherit;background:var(--btn);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;min-height:44px}
+button:hover{background:var(--btn-hover)}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:700}
+button.primary:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{background:transparent}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;border-radius:0;min-width:64px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.box{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;margin:6px 0 0;font-size:15px}
+.lab{font-size:13px;color:var(--mute);margin:12px 0 0;font-weight:600}
+.crit{border-top:1px solid var(--line);padding:12px 0}
+.crit:first-of-type{border-top:0}
+.crit h3{font-size:16px;margin:0}
+.crit .q{color:var(--mute);font-size:13px;margin:2px 0 8px}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.scale button{padding:12px 0;font-size:18px;font-weight:700}
+.scale button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.scale-hint{display:flex;justify-content:space-between;color:var(--mute);font-size:12px;margin-top:4px;gap:8px}
+.scale-hint span{max-width:48%}
+.scale-hint span:last-child{text-align:right}
+.crit.active{background:var(--accent-soft);margin:0 -16px;padding:12px 16px;border-radius:8px}
+textarea{width:100%;min-height:64px;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+.nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+.nav .inner{max-width:760px;margin:0 auto;display:flex;gap:8px;align-items:center}
+.nav .grow{flex:1;text-align:center;font-size:14px;color:var(--mute)}
+.bar{height:8px;background:var(--btn);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:6px}
+.grid button{padding:8px 0;font-size:13px;min-height:40px}
+.grid button.done{background:var(--accent-soft);border-color:var(--accent)}
+.grid button.part{background:var(--warn-soft);border-color:var(--warn)}
+.grid button.skip{opacity:.5;text-decoration:line-through}
+.grid button.cur{outline:3px solid var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+th{color:var(--mute);font-weight:600}
+td.n,th.n{text-align:right}
+.note{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:14px}
+details summary{cursor:pointer;font-weight:600;min-height:32px}
+.hide{display:none}
+.needjs{display:none}
+.js .needjs{display:block}
+.js .nojs{display:none}
+.nojs .banner{background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:14px 16px;font-size:15px;margin:12px 0}
+.nojs .rowcard{break-inside:avoid}
+.nojs .blank{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.nojs .blank span{border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:14px;min-width:96px}
+@media print{.nav,.toast,.banner{display:none!important}body{background:#fff}.card{break-inside:avoid}}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:.95}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>사람 평가 시트 — 35행</h1>
+  <p class="sub">규정 질문 답 24행 · 알림 번역 11행. 한 행에 점수 5개(1~5점)를 매기면 끝입니다. 한 행에 1분쯤, 전체 30~40분.</p>
+
+  <!--STATIC-->
+  <div id="app" class="needjs">
+  <div class="card" id="intro">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <div class="lab" style="margin-top:0">평가자</div>
+        <div class="seg" role="group" aria-label="평가자 선택">
+          <button type="button" id="evA" aria-pressed="true">평가자 A</button>
+          <button type="button" id="evB" aria-pressed="false">평가자 B</button>
+        </div>
+      </div>
+      <div style="flex:1;min-width:180px">
+        <div class="lab" style="margin-top:0">이름(선택)</div>
+        <input id="who" type="text" placeholder="예: 홍길동" aria-label="평가자 이름" style="width:100%;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px">
+      </div>
+    </div>
+    <div class="bar" style="margin-top:14px" aria-hidden="true"><i id="bar"></i></div>
+    <p class="sub" id="progress" style="margin:6px 0 0"></p>
+    <details style="margin-top:10px">
+      <summary>처음이면 읽어 주세요(1분)</summary>
+      <ul style="margin:8px 0 0 18px;padding:0">
+        <li><b>평가자는 두 명</b>이 서로 보지 않고 각자 합니다. 한 사람이 둘 다 하지 마세요(일치도를 못 셉니다). 둘이 하려면 서로 다른 평가자(A/B)를 고르세요.</li>
+        <li>점수는 1~5점: <b>5 = 완전히 맞다 · 3 = 반쯤 · 1 = 전혀 아니다.</b> 각 기준 아래에 5·3·1점의 뜻이 적혀 있습니다.</li>
+        <li><b>모르겠으면 찍지 마세요.</b> 그 행은 「이 행 건너뛰기」를 누르면 비워 둔 채 센 행에서 빠집니다. 한국어를 못 읽으면 번역 행은 건너뛰어도 됩니다.</li>
+        <li>번역 행은 <b>원문과 비교</b>해서 봅니다 — 시각·금액이 같은지, <b>금액 단위(원)</b>가 그대로인지, 뜻이 같은지.</li>
+        <li>점수는 <b>이 기기의 이 브라우저에 자동 저장</b>됩니다(서버로 보내지 않아요). 다 끝나면 맨 아래 <b>「CSV 내려받기」</b>로 파일을 저장하세요.</li>
+      </ul>
+    </details>
+  </div>
+
+  <div class="card" id="item">
+    <div class="row">
+      <span class="pill kind" id="kind"></span>
+      <span class="pill" id="idx"></span>
+      <span class="pill" id="state"></span>
+    </div>
+    <div class="lab" id="inLabel">고객 입력</div>
+    <div class="box" id="input"></div>
+    <div class="lab" id="ansLabel">시스템 답</div>
+    <div class="box" id="answer"></div>
+    <div class="note hide" id="trNote" style="margin-top:12px">번역 행입니다 — 위 「고객 입력」 칸의 <b>원문(한국어)</b>과 아래 <b>번역</b>을 비교해서 점수를 매겨 주세요.</div>
+  </div>
+
+  <div class="card" id="scores"></div>
+
+  <div class="card">
+    <div class="lab" style="margin-top:0">메모(선택)</div>
+    <textarea id="memo" placeholder="이상한 점이 있으면 한 줄로"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button type="button" id="skip" class="ghost">이 행 건너뛰기(비움)</button>
+      <button type="button" id="clear" class="ghost">이 행 점수 지우기</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:16px;margin:0 0 8px">전체 보기</h2>
+    <div class="grid" id="grid"></div>
+    <p class="sub" style="margin:8px 0 0">초록 = 5개 다 채움 · 노랑 = 일부만 · 줄 그음 = 건너뜀</p>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:16px;margin:0 0 8px">지금까지 결과</h2>
+    <div id="result"></div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:16px;margin:0 0 8px">저장 · 합치기</h2>
+    <div class="row">
+      <button type="button" id="export" class="primary">CSV 내려받기</button>
+      <button type="button" id="import">CSV 불러오기(다른 평가자 합치기)</button>
+      <input type="file" id="file" accept=".csv,text/csv" class="hide">
+    </div>
+    <p class="sub" style="margin:10px 0 0">내려받은 CSV 는 <code>human_eval_sheet.csv</code> 와 같은 모양입니다. 두 평가자가 각자 내려받은 파일을 한 사람이 <b>「CSV 불러오기」</b>로 합치면 A·B 점수가 한 파일에 들어갑니다(이미 채운 칸은 덮어쓰지 않아요).
+    그 파일로 <code>python score.py 파일경로</code> 를 돌리면 층별 평균까지 나옵니다(층 정보는 평가자에게 안 보이려고 이 화면에 넣지 않았어요).</p>
+  </div>
+  </div>
+</div>
+
+<div class="nav needjs"><div class="inner">
+  <button type="button" id="prev" aria-label="이전 행">◀ 이전</button>
+  <div class="grow" id="navinfo"></div>
+  <button type="button" id="next" class="primary">다음 ▶</button>
+</div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+const DATA = __DATA__;
+const CRIT = [
+  {k:"정확성", q:"답에 든 사실(시각·금액·규정)이 맞나요?", hi:"모든 사실이 맞다", mid:"일부가 맞고 일부가 빠지거나 애매하다", lo:"틀린 사실이 있다"},
+  {k:"근거충실", q:"답의 주장마다 근거가 따라오나요?", hi:"모든 주장에 근거가 따라온다(규정은 출처 문장, 일정은 기록 값)", mid:"근거가 일부만 있다", lo:"근거 없는 주장이 있다"},
+  {k:"질문에맞음", q:"물은 것에 직접 답했나요?", hi:"물은 것에 직접 답한다", mid:"관련은 있으나 물은 것에는 못 답한다", lo:"물은 것과 상관없는 답이다"},
+  {k:"자연스러움", q:"고객에게 그대로 보내도 되나요?", hi:"그대로 보내도 어색하지 않다", mid:"뜻은 통하나 어색하다", lo:"읽기 어렵다"},
+  {k:"안전성", q:"틀린 약속이나 잘못된 금액이 없나요?", hi:"틀린 약속·잘못된 금액이 없다(모르면 모른다고 한다)", mid:"오해할 여지가 있다", lo:"지켜지지 않을 약속이나 틀린 금액을 말한다"}
+];
+const KEY = "tripilot-human-eval-v1";
+const N = DATA.length;
+
+let mem = null;               // localStorage 를 못 쓰면 메모리에만
+function load(){
+  try{ const raw = localStorage.getItem(KEY); if(raw) return JSON.parse(raw); }catch(e){ mem = true; }
+  return null;
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ if(!mem){ mem = true; toast("이 브라우저는 자동 저장을 못 해요 — 끝나면 꼭 CSV 를 내려받으세요"); } }
+}
+const S = load() || {ev:"A", who:{A:"",B:""}, idx:0, data:{A:{},B:{}}, skip:{A:{},B:{}}};
+if(!S.data) S.data = {A:{},B:{}}; if(!S.skip) S.skip = {A:{},B:{}}; if(!S.who) S.who = {A:"",B:""};
+
+const $ = id => document.getElementById(id);
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove("show"),2600); }
+
+const mine = () => S.data[S.ev];
+const rowOf = id => (mine()[id] = mine()[id] || {});
+function isDone(ev,id){ const r=S.data[ev][id]; return !!r && CRIT.every(c=>r[c.k]>=1 && r[c.k]<=5); }
+function isPart(ev,id){ const r=S.data[ev][id]; return !!r && CRIT.some(c=>r[c.k]>=1) && !isDone(ev,id); }
+function isSkip(ev,id){ return !!S.skip[ev][id]; }
+
+function render(){
+  const d = DATA[S.idx];
+  $("evA").setAttribute("aria-pressed", S.ev==="A"); $("evB").setAttribute("aria-pressed", S.ev==="B");
+  $("who").value = S.who[S.ev] || "";
+  $("kind").textContent = d.kind; $("idx").textContent = d.id + " · " + (S.idx+1) + "/" + N;
+  const tr = d.kind.indexOf("번역")>=0;
+  $("inLabel").textContent = tr ? "원문(한국어) · 번역 언어" : "고객 입력";
+  $("ansLabel").textContent = tr ? "번역 결과" : "시스템 답";
+  $("trNote").classList.toggle("hide", !tr);
+  $("input").textContent = d.input; $("answer").textContent = d.answer;
+  const done = isDone(S.ev,d.id), skip = isSkip(S.ev,d.id);
+  $("state").textContent = skip ? "건너뜀" : done ? "채움 ✓" : isPart(S.ev,d.id) ? "일부만" : "아직";
+  // 점수 버튼
+  const r = rowOf(d.id); const firstEmpty = CRIT.find(c=>!(r[c.k]>=1));
+  $("scores").innerHTML = CRIT.map(c=>{
+    const cur = r[c.k]||0;
+    const btns = [1,2,3,4,5].map(n=>`<button type="button" data-k="${c.k}" data-n="${n}" aria-pressed="${cur===n}" aria-label="${c.k} ${n}점">${n}</button>`).join("");
+    return `<div class="crit${(!skip&&firstEmpty&&firstEmpty.k===c.k)?" active":""}" data-crit="${c.k}"><h3>${c.k}</h3><div class="q">${c.q}</div>
+      <div class="scale" role="group" aria-label="${c.k} 점수">${btns}</div>
+      <div class="scale-hint"><span>1점: ${c.lo}</span><span>5점: ${c.hi}</span></div></div>`;
+  }).join("");
+  $("memo").value = r["메모"] || "";
+  // 전체 보기
+  $("grid").innerHTML = DATA.map((x,i)=>{
+    const cls = isSkip(S.ev,x.id)?"skip":isDone(S.ev,x.id)?"done":isPart(S.ev,x.id)?"part":"";
+    return `<button type="button" data-i="${i}" class="${cls}${i===S.idx?" cur":""}" aria-label="${x.id} ${cls||"아직"}">${i+1}</button>`;
+  }).join("");
+  // 진행
+  const nDone = DATA.filter(x=>isDone(S.ev,x.id)).length, nSkip = DATA.filter(x=>isSkip(S.ev,x.id)).length;
+  $("bar").style.width = Math.round(100*(nDone+nSkip)/N)+"%";
+  $("progress").textContent = `평가자 ${S.ev}: ${nDone}행 채움 · ${nSkip}행 건너뜀 · ${N-nDone-nSkip}행 남음 (전체 ${N}행)`;
+  $("navinfo").textContent = (S.idx+1)+" / "+N;
+  $("prev").disabled = S.idx===0;
+  $("next").textContent = S.idx===N-1 ? "끝 ✓" : "다음 ▶";
+  renderResult();
+}
+
+function setScore(k,n){
+  const d = DATA[S.idx]; const r = rowOf(d.id);
+  r[k] = n; delete S.skip[S.ev][d.id]; save(); render();
+}
+document.addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  if(b.dataset.k){ setScore(b.dataset.k, +b.dataset.n); return; }
+  if(b.dataset.i){ S.idx = +b.dataset.i; save(); render(); window.scrollTo({top:0}); return; }
+});
+$("evA").onclick = ()=>{ S.ev="A"; save(); render(); toast("평가자 A 로 바꿨어요"); };
+$("evB").onclick = ()=>{ S.ev="B"; save(); render(); toast("평가자 B 로 바꿨어요"); };
+$("who").oninput = e=>{ S.who[S.ev]=e.target.value; save(); };
+$("memo").oninput = e=>{ rowOf(DATA[S.idx].id)["메모"]=e.target.value; save(); };
+$("skip").onclick = ()=>{ const id=DATA[S.idx].id; S.skip[S.ev][id]=true; delete S.data[S.ev][id]; save(); go(1); toast("건너뛰었어요(점수 비움)"); };
+$("clear").onclick = ()=>{ const id=DATA[S.idx].id; delete S.data[S.ev][id]; delete S.skip[S.ev][id]; save(); render(); };
+function go(step){ const n=Math.min(N-1,Math.max(0,S.idx+step)); if(n!==S.idx){ S.idx=n; save(); render(); window.scrollTo({top:0}); } else render(); }
+$("prev").onclick = ()=>go(-1);
+$("next").onclick = ()=>{ if(S.idx===N-1){ toast("마지막 행이에요 — 아래에서 CSV 를 내려받으세요"); window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"}); } else go(1); };
+document.addEventListener("keydown", e=>{
+  if(e.target.tagName==="TEXTAREA"||e.target.tagName==="INPUT") return;
+  if(e.key==="ArrowRight"){ go(1); }
+  else if(e.key==="ArrowLeft"){ go(-1); }
+  else if(/^[1-5]$/.test(e.key)){
+    const r = rowOf(DATA[S.idx].id); const c = CRIT.find(c=>!(r[c.k]>=1)) || CRIT[CRIT.length-1];
+    setScore(c.k, +e.key);
+  } else if(e.key==="Enter"){ go(1); }
+});
+
+// ── 결과 ────────────────────────────────────────────────
+function wkappa(a,b){
+  const n=a.length; if(n<2) return null;
+  const co={}, ca={}, cb={};
+  for(let i=0;i<n;i++){ co[a[i]+","+b[i]]=(co[a[i]+","+b[i]]||0)+1; ca[a[i]]=(ca[a[i]]||0)+1; cb[b[i]]=(cb[b[i]]||0)+1; }
+  let num=0, den=0;
+  for(let i=1;i<=5;i++) for(let j=1;j<=5;j++){ const w=(i-j)*(i-j); num+=w*(co[i+","+j]||0)/n; den+=w*(ca[i]||0)*(cb[j]||0)/(n*n); }
+  return den===0?null:1-num/den;
+}
+function renderResult(){
+  const dA = DATA.filter(x=>isDone("A",x.id)), dB = DATA.filter(x=>isDone("B",x.id));
+  const both = DATA.filter(x=>isDone("A",x.id)&&isDone("B",x.id));
+  const avg = (ev,list,k)=> list.length? (list.reduce((s,x)=>s+S.data[ev][x.id][k],0)/list.length).toFixed(2) : "—";
+  let h = `<p class="sub" style="margin:0 0 8px">평가자 A ${dA.length}행 · 평가자 B ${dB.length}행 채움 · 둘 다 채운 행 ${both.length}행</p>`;
+  h += `<table><tr><th>기준</th><th class="n">A 평균</th><th class="n">B 평균</th><th class="n">가중 카파</th><th class="n">1점 이내 일치</th></tr>`;
+  CRIT.forEach(c=>{
+    const a=both.map(x=>S.data.A[x.id][c.k]), b=both.map(x=>S.data.B[x.id][c.k]);
+    const k=wkappa(a,b);
+    h += `<tr><td>${c.k}</td><td class="n">${avg("A",dA,c.k)}</td><td class="n">${avg("B",dB,c.k)}</td><td class="n">${k==null?"—":k.toFixed(2)}</td><td class="n">${both.length?a.filter((v,i)=>Math.abs(v-b[i])<=1).length+"/"+both.length:"—"}</td></tr>`;
+  });
+  h += `</table><p class="sub" style="margin:8px 0 0">평균은 각 평가자가 채운 행 기준, 카파·일치는 둘 다 채운 행 기준입니다. 표본이 35행이라 <b>방향만 보는 값</b>이에요(모집단 점수 아님).</p>`;
+  $("result").innerHTML = h;
+}
+
+// ── CSV ────────────────────────────────────────────────
+const HEAD = ["id","종류","고객 입력","시스템 답"]
+  .concat(CRIT.map(c=>"평가자A_"+c.k)).concat(["평가자A_메모"])
+  .concat(CRIT.map(c=>"평가자B_"+c.k)).concat(["평가자B_메모"]);
+function q(v){ v = (v==null?"":String(v)); return /[",\r\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+function toCSV(){
+  const lines = [HEAD.map(q).join(",")];
+  DATA.forEach(d=>{
+    const row = [d.id,d.kind,d.input,d.answer];
+    ["A","B"].forEach(ev=>{
+      const r = S.data[ev][d.id]||{};
+      CRIT.forEach(c=>row.push(r[c.k]>=1?r[c.k]:""));
+      row.push(r["메모"]||"");
+    });
+    lines.push(row.map(q).join(","));
+  });
+  return "﻿"+lines.join("\r\n")+"\r\n";
+}
+function download(name, text, type){
+  const url = URL.createObjectURL(new Blob([text],{type}));
+  const a = document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+$("export").onclick = ()=>{
+  const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,"");
+  download(`human_eval_sheet_${S.ev}_${stamp}.csv`, toCSV(), "text/csv;charset=utf-8");
+  const nDone = DATA.filter(x=>isDone(S.ev,x.id)).length;
+  toast(`내려받았어요 — 평가자 ${S.ev} ${nDone}/${N}행`);
+};
+function parseCSV(text){
+  text = text.replace(/^﻿/,""); const rows=[]; let row=[], cur="", inq=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(inq){ if(ch==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else inq=false; } else cur+=ch; }
+    else if(ch==='"') inq=true;
+    else if(ch===","){ row.push(cur); cur=""; }
+    else if(ch==="\n"||ch==="\r"){ if(ch==="\r"&&text[i+1]==="\n") i++; row.push(cur); cur=""; if(row.length>1||row[0]!=="") rows.push(row); row=[]; }
+    else cur+=ch;
+  }
+  if(cur!==""||row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+$("import").onclick = ()=>$("file").click();
+$("file").onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const rows = parseCSV(String(reader.result)); const head = rows[0]||[];
+      const col = name => head.indexOf(name);
+      if(col("id")<0) throw new Error("id 열이 없어요");
+      let added = 0, kept = 0, other = 0;
+      rows.slice(1).forEach(r=>{
+        const id = r[col("id")]; if(!DATA.some(d=>d.id===id)) return;
+        ["A","B"].forEach(ev=>{
+          const cells = {}; let any = false;
+          CRIT.forEach(c=>{ const v = parseInt(r[col("평가자"+ev+"_"+c.k)],10); if(v>=1&&v<=5){ cells[c.k]=v; any=true; } });
+          const memo = r[col("평가자"+ev+"_메모")]; if(memo) cells["메모"]=memo;
+          if(!any && !memo) return;
+          const mineRow = S.data[ev][id] = S.data[ev][id] || {};
+          Object.keys(cells).forEach(k=>{ if(mineRow[k]>=1 || (k==="메모" && mineRow[k])){ kept++; } else { mineRow[k]=cells[k]; added++; if(ev!==S.ev) other++; } });
+        });
+      });
+      save(); render();
+      toast(`불러왔어요 — 새로 ${added}칸 채움 · 이미 있던 ${kept}칸은 그대로`);
+    }catch(err){ toast("불러오지 못했어요: "+err.message); }
+    e.target.value = "";
+  };
+  reader.readAsText(f, "utf-8");
+};
+
+render();
+</script>
+</body>
+</html>
