@@ -149,8 +149,11 @@ class BudgetedLimiter:
 
 
 def with_db_budget(limiter: Any, limits: dict[str, int], monthly: dict[str, int], names: list[str], *,
-                   on_db_error: str = DEFAULT_ON_DB_ERROR) -> Any:
-    """안쪽 제한기에 **DB 예산**을 얹는다. 하루 한도를 모르는(env 에 없거나 0) 소스는 세지 않는다. 월 한도를 모르면(0) 월 줄은 세기만 하고 막지 않는다(`UNLIMITED`)."""
+                   on_db_error: str = DEFAULT_ON_DB_ERROR, share: float = 1.0) -> Any:
+    """안쪽 제한기에 **DB 예산**을 얹는다. 하루 한도를 모르는(env 에 없거나 0) 소스는 세지 않는다. 월 한도를 모르면(0) 월 줄은 세기만 하고 막지 않는다(`UNLIMITED`).
+
+    `share` — ★`[2026-10-06]` 낮은 우선순위 호출(MCP 「새로 확인」)의 몫(0 < share ≤ 1). 일 · 월 줄이 `상한 × share` 에 닿으면 거절한다 — 같은 SQL 안에서 비교하므로 동시 호출도 몫을 못 넘는다(`CallBudget`).
+    ★몫을 주면 DB 를 못 읽을 때의 정책은 **`refuse` 로 고정**한다 — 낮은 우선순위가 한도를 모르고 쓰지 않게(일반 호출의 `allow` 와 반대)."""
     from zoneinfo import ZoneInfo
 
     from app.infrastructure.db.session import get_connection
@@ -159,8 +162,8 @@ def with_db_budget(limiter: Any, limits: dict[str, int], monthly: dict[str, int]
             for name in names if limits.get(name, 0) > 0}
     if not caps:
         return limiter
-    budget = CallBudget(connection_factory=get_connection, caps=caps, tz=ZoneInfo("Asia/Seoul"))
-    return BudgetedLimiter(limiter, budget, frozenset(caps), on_db_error=on_db_error)
+    budget = CallBudget(connection_factory=get_connection, caps=caps, tz=ZoneInfo("Asia/Seoul"), share=share)
+    return BudgetedLimiter(limiter, budget, frozenset(caps), on_db_error="refuse" if share < 1.0 else on_db_error)
 
 
 def build_gate(settings: Any, names: list[str], *, on_db_error: str | None = None) -> Any:

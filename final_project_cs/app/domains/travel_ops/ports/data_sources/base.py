@@ -123,6 +123,10 @@ class TravelSource:
     def _miss(self, reason: str, detail: str = "") -> None:
         """★`None` 을 돌려주기 **전에** 반드시 부른다. 이유 없는 모름은 못 고친다."""
         self.misses[reason] += 1
+        if reason == "cache_only":
+            # 캐시만 읽는 호출(`CacheOnlyLimiter`)의 정상 갈래 — 경고도 실패 수도 아니다
+            logger.debug("travel source miss: %s", SourceMiss(self.name, reason, detail))
+            return
         logger.warning("travel source miss: %s", SourceMiss(self.name, reason, detail))
         # ★`[2026-10-05]` **부른 뒤** 쓸 수 있는 답을 못 받은 것(`_is_call_failure`)만 DB 에 실패로 센다(키별 여유 확인 — `call_budget.py`).
         #   ☆같은 날 x600 서버에서 `tour_api` 줄이 used 15 · failed 15 로 나왔다 — 처음 판은 「한도 때문에 안 부른 것」만 빼고 전부 실패로 세어, 정상 응답인데 찾는 장소가 없는
@@ -386,11 +390,11 @@ def apply_outbound_proxy(sources: TravelSources, *, url: str, names: str) -> str
     return None
 
 def _with_db_budget(limiter: Any, limits: dict[str, int], monthly: dict[str, int], names: list[str], *,
-                    on_db_error: str = "allow") -> Any:
+                    on_db_error: str = "allow", share: float = 1.0) -> Any:
     """안쪽 제한기에 **DB 예산**을 얹는다 — 본체는 `source_budget.with_db_budget`(한도를 모르는 소스는 세지 않는다)."""
     from .source_budget import with_db_budget
 
-    return with_db_budget(limiter, limits, monthly, names, on_db_error=on_db_error)
+    return with_db_budget(limiter, limits, monthly, names, on_db_error=on_db_error, share=share)
 
 
 #: 부른 뒤 **쓸 수 있는 답을 못 받은** 이유 — 응답이 오지 않았거나(시간 초과 · 연결 오류 · HTTP 오류) 와도 읽을 수 없었다(JSON · XML 이 아님 · 모양이 다름 · 본문이 오류).
@@ -404,8 +408,13 @@ def _is_call_failure(reason: str) -> bool:
     return reason in _CALL_FAILURE_REASONS or reason.startswith("http_")
 
 
-def build_travel_sources(settings: Any) -> TravelSources:
+def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priority_share: float | None = None) -> TravelSources:
     """설정을 보고 붙일 수 있는 것만 붙인다.
+
+    `cache_only` — ★`[2026-10-06]` 바깥으로 **한 번도 나가지 않고** 공유 응답 캐시(`source_response_cache`)에 있는 것만 읽는 소스 묶음(`CacheOnlyLimiter`).
+    감시가 모아 둔 최근 결과를 읽기만 해야 하는 읽기 입구(MCP 일정 위험 점검)가 쓴다 — 하루 한도 칸을 안 쓴다. 캐시에 없으면 그 소스는 「모름」이다.
+    `low_priority_share` — 낮은 우선순위로 **새로 부르는** 소스 묶음: 소스의 하루 · 이번 달 한도의 이 비율(0 < 몫 ≤ 1)까지만 쓰고(`CallBudget.share` — 같은 SQL 안에서 비교), 나머지는 감시 · 채팅 몫이다.
+    ★DB 를 못 읽으면 **부르지 않는다**(일반 호출의 `allow` 정책과 반대 — `with_db_budget`). `cache_only` 가 이긴다.
 
     ★키가 없으면 **그 소스만** 빠진다. 앱이 죽지도 않고, 가짜로 채우지도
       않는다. 무엇이 왜 빠졌는지는 `unavailable` 이 들고 있고
@@ -433,7 +442,13 @@ def build_travel_sources(settings: Any) -> TravelSources:
     if guardrails.get("travel.source_budget_shared"):
         limiter = _with_db_budget(limiter, limits, getattr(settings, "source_monthly_limits", lambda: {})(),
                                   list(guardrails.get("travel.source_budget_sources") or []),
-                                  on_db_error=str(guardrails.get("travel.source_budget_on_db_error") or "allow"))
+                                  on_db_error=str(guardrails.get("travel.source_budget_on_db_error") or "allow"),
+                                  share=1.0 if low_priority_share is None else float(low_priority_share))
+    if cache_only:
+        from .ratelimit import CacheOnlyLimiter
+
+        limiter = CacheOnlyLimiter()                  # 예산 칸에도 닿지 않는다 — 위에서 만든 제한기를 쓰지 않는다
+
     ttl = float(guardrails.get("travel.source_cache_seconds") or 0)
     if ttl > 0 and guardrails.get("travel.source_cache_shared"):
         # ★`[2026-10-03]` 프로세스를 건너 공유한다 — 일꾼은 회차마다 새 프로세스라 메모리 캐시는 틱 사이에 비었다. DB 가 안 되면 메모리로 돌아간다(`DbResponseCache`).
@@ -660,4 +675,12 @@ def build_travel_sources(settings: Any) -> TravelSources:
                                   names=getattr(settings, "outbound_proxy_sources", ""))
     if reason:
         sources.unavailable["outbound_proxy"] = reason
+    if cache_only:
+        # 캐시만 읽는 묶음에서는 「체인 전부 실패」가 정상 갈래(캐시 부재)다 — 호출마다 ERROR 를 남기지 않는다(경보 소음)
+        for chain in (sources.weather, sources.air, sources.traffic):
+            if chain is not None:
+                chain.log_level = logging.DEBUG
+    elif low_priority_share is not None and not hasattr(sources.limiter, "_budget"):
+        # ★낮은 우선순위의 몫은 **DB 로 세는 소스에만** 걸린다(`travel.source_budget_sources` · 한도 env). 예산 층이 꺼져 있거나 한도를 모르면 몫이 없다 — 조용히 약해지지 않게 알린다
+        logger.warning("low-priority share requested but the DB budget layer is not active — fresh calls run without a share (travel.source_budget_shared / rate limits)")
     return sources

@@ -128,6 +128,9 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trips/{trip_id}/guardian",
     # ★2026-10-06 재난으로 정지된 일정 **다시 시작** — 본인 여행만(사용자 키 · 쿠키). `wiki/external/rest-endpoints.md` 「재난 시 일정 정지」
     "/v1/web/trips/{trip_id}/safety/resume",
+    # ★2026-10-06 개인 AI 입구(MCP) 읽기 도구의 웹 입구 둘 — 일정 위험 점검 · 이동 판정(둘 다 읽기 · 본인 여행만). `wiki/external/rest-endpoints.md` 「일정 위험 점검 · 이동 판정」
+    "/v1/web/trips/{trip_id}/risks",
+    "/v1/web/moves/judge",
     # ★2026-10-04 에이전트 키(D-CS-012) — 쿠키 로그인한 회원만 만들고 관리한다
     "/v1/web/agent-keys",
     "/v1/web/consents",

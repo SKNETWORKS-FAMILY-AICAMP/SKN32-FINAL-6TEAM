@@ -42,7 +42,7 @@ export function PlanningProgress({ phase, progress, waiting, notice, onBack }: {
   const current = phase === "planning" ? Math.max(0, stage) : -1;
   const value = current <= 0 ? 0 : Math.round(current / (STEPS.length - 1) * 100);
   const labels = [t("일정 짜기", "Planning"), t("조건 확인", "Checking"), t("여행 등록", "Registering")];
-  return <DeviceFrame>
+  return <DeviceFrame guardianIcon>
     <div className={base.screen} data-phase={phase}>
       {notice}
       <div className={base.reading}>

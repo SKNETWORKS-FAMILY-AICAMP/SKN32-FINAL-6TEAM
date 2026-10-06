@@ -1,0 +1,74 @@
+/*
+ * `[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계]` 로딩 중 질문 · 하단 단추 · 20초 경고 (목업 v9 의 `.pager` · `.footer` · `.sheet`).
+ * 글자 12/14/16(제목 20), 굵기 400/500/600, 간격 4·8 격자, 누르는 곳 44px(선택지 48px), 움직임은 transform · opacity 만(100/150/200ms), 색은 제품 토큰만.
+ */
+
+/* ── 질문 카드 ─────────────────────────────────────────────── */
+.pager { margin: 0 0 12px; padding: 16px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
+.top { display: flex; align-items: center; justify-content: space-between; }
+.count { margin: 0; font-size: 12px; color: var(--color-muted); }
+.nav { position: relative; display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px; background: none; color: var(--color-text-secondary); cursor: pointer; }
+.nav svg { display: block; width: 24px; height: 24px; }
+.nav:hover:not(:disabled) { background: var(--color-subtle); }
+.nav:disabled { opacity: .35; cursor: default; }
+.nav:focus-visible, .skip:focus-visible, .choice:focus-visible, .error button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+/* 도구 설명: 마우스를 올리거나 키보드 초점이 가면 이름과 키가 뜬다 */
+.nav[data-tip]:hover::after, .nav[data-tip]:focus-visible::after {
+  content: attr(data-tip) attr(data-kbd); position: absolute; top: calc(100% + 8px); left: 50%; z-index: 3; transform: translateX(-50%); padding: 4px 8px; border-radius: 8px; background: var(--color-inverse);
+  color: var(--color-on-inverse); font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap; pointer-events: none;
+}
+.slide { touch-action: pan-y; user-select: none; }
+.slide[data-slide="from-right"] { animation: slideInRight 200ms cubic-bezier(.16, 1, .3, 1); }
+.slide[data-slide="from-left"] { animation: slideInLeft 200ms cubic-bezier(.16, 1, .3, 1); }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: none; } }
+@keyframes slideInLeft { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+.title { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.3; outline: none; }
+.reason { margin: 8px 0 0; font-size: 14px; line-height: 1.5; color: var(--color-muted); }
+.choices { display: grid; gap: 8px; margin-top: 16px; }
+.choice { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 8px 16px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: inherit; font: inherit; font-size: 16px; font-weight: 400; line-height: 1.4; text-align: left; cursor: pointer; }
+.choice:hover:not(:disabled) { border-color: var(--color-border-strong); background: var(--color-subtle); }
+.choice[data-selected] { border-color: var(--color-selected); background: var(--color-selected-soft); color: var(--color-selected); font-weight: 600; }
+.choice:disabled { cursor: default; }
+.saved { display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 24px; margin-top: 8px; color: var(--color-success); font-size: 14px; text-align: center; }
+.error { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding: 12px 16px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-error-soft); color: var(--color-error); font-size: 14px; line-height: 1.5; }
+.error button { flex: none; min-height: 44px; padding: 8px 16px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-surface); color: var(--color-error); font: inherit; font-weight: 500; cursor: pointer; }
+.skip, .textButton { display: block; min-height: 44px; margin: 4px auto 0; padding: 8px 16px; border: 0; background: none; color: var(--color-muted); font: inherit; font-size: 12px; font-weight: 400; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.dots { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
+.dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--color-subtle-strong); }
+.dots span[data-on] { background: var(--color-primary); }
+.hint { margin: 8px 0 0; text-align: center; font-size: 12px; color: var(--color-muted); }
+.status { margin: 0 0 12px; padding: 12px 4px; text-align: center; font-size: 14px; line-height: 1.5; color: var(--color-text-secondary); }
+
+/* ── 읽는 중 머리 아래 안내 · 다 읽었다는 줄 ─────────────────── */
+.notice { margin: 0; padding: 12px 0 16px; font-size: 14px; line-height: 1.6; color: var(--color-text-secondary); }
+.successLine { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; padding: 12px 16px; border-radius: 12px; background: var(--color-success-soft); color: var(--color-success); font-size: 14px; font-weight: 600; }
+
+/* ── 하단: 계획 읽는 중… / 읽어 온 계획 확인하기 / 3초 막대 ───── */
+.footer { flex: none; padding: 16px; border-top: 1px solid var(--color-border); background: var(--color-surface); }
+.big { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; padding: 8px 16px; border: 1px solid var(--color-primary); border-radius: 12px; background: var(--color-primary); color: var(--color-on-primary); font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+.big[aria-disabled="true"] { border-color: var(--color-border); background: var(--color-subtle-strong); color: var(--color-muted); cursor: default; }
+.big:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.spin { display: inline-grid; animation: spin 1s linear infinite; }
+.spin svg { display: block; width: 20px; height: 20px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.help { margin: 8px 0 0; text-align: center; font-size: 12px; line-height: 1.5; color: var(--color-muted); }
+.doneLine { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; color: var(--color-success); font-size: 14px; font-weight: 600; }
+.doneSub { margin: 4px 0 0; text-align: center; font-size: 14px; color: var(--color-text-secondary); }
+.finishTrack { height: 4px; margin: 12px 0 16px; overflow: hidden; border-radius: 4px; background: var(--color-subtle-strong); }
+.finishFill { height: 100%; background: var(--color-primary); transform-origin: left; animation: finish var(--finish-ms, 3000ms) linear forwards; }
+@keyframes finish { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.footer .textButton { margin-top: 8px; }
+
+/* ── 20초 경고(alertdialog) ─────────────────────────────────── */
+.layer { position: fixed; inset: 0; z-index: 70; display: flex; align-items: flex-end; justify-content: center; background: var(--color-scrim); }
+.sheet { width: min(560px, 100%); padding: 24px; border: 1px solid var(--color-border); border-radius: 24px 24px 0 0; background: var(--color-surface); color: var(--color-text); animation: rise 200ms cubic-bezier(.16, 1, .3, 1); }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.countdown { margin: 0 0 12px; text-align: center; color: var(--color-primary); font-size: 48px; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.countCopy { margin: 0 0 24px; text-align: center; font-size: 16px; word-break: keep-all; }
+.sheet .textButton { margin-top: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .slide[data-slide], .sheet { animation: none; }
+  .finishFill { animation: none; transform: scaleX(1); }
+  .spin { animation: none; }
+}

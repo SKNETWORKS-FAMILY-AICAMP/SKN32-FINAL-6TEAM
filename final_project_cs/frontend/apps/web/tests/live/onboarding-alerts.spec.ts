@@ -1,11 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { agreeTerms, hydrated, mockServer, noHorizontalScroll, useKorean } from "./helpers";
+import { agreeTerms, hydrated, mockServer, noHorizontalScroll, useKorean, checkPlan } from "./helpers";
 
 /** Write a plan and press 「계획 확인하기」: the app goes to the plan-check screen of the mock server's intake. */
 async function sendPlan(page: Page) {
   await hydrated(page);
   await page.getByLabel("나의 여행 계획").fill("10/1 09:00 경복궁 관람");
-  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await checkPlan(page);
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
 }
 

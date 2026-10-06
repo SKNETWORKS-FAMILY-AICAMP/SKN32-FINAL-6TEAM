@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { KEY_STORAGE, TRIP_ID, hydrated, mockServer, noHorizontalScroll, pickMenuLanguage, registerStubTrip, start } from "./helpers";
+import { KEY_STORAGE, TRIP_ID, hydrated, mockServer, noHorizontalScroll, pickMenuLanguage, registerStubTrip, start, checkPlan } from "./helpers";
 
 /**
  * 여행 목록(첫 화면의 「내 여행」 카드 · `/trips`)과 여행 삭제 — 테스트용 모방 서버로 도는 자동 시험(실제 서버 아님).
@@ -146,7 +146,7 @@ test("등록하고 로고로 돌아오면 첫 화면 카드와 전체 목록이 
   await expect(page).toHaveURL(/\/trips\/new$/);
   await hydrated(page);
   await page.getByLabel("나의 여행 계획").fill("10/1 09:00 경복궁 관람");
-  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await checkPlan(page);
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
   await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));

@@ -46,6 +46,70 @@ export async function getProposals(tripId: string, language: Language): Promise<
 
 export type NoticeType = "guidance" | "proposal_request" | "safety_alert" | "change_notice";
 
+/** One place to go to in a disaster (`guidance.shelters[]` of a safety alert): the server's own row, with a walking-directions link when it has one. */
+export interface Shelter {
+  name: string;
+  address: string | null;
+  /** Straight-line metres from the planned place. */
+  distanceM: number | null;
+  /** An ESTIMATE (4 km/h along the straight line), not a measured route. */
+  walkMinutes: number | null;
+  underground: boolean | null;
+  capacity: number | null;
+  /** A link that opens walking directions (https only). */
+  mapUrl: string | null;
+}
+
+/**
+ * `[2026-10-06]` The guidance of a safety alert (`safety` of a notice, rest-endpoints 「재난 시 일정 정지」). ★The reference point is the PLACE IN THE PLAN, not where the customer is: `reference.note`
+ * says so in the server's words and the screen shows it with the list. `shelterStatus`: ok · none_nearby · no_data (the shelter table is empty: official guidance only) · no_reference_place · not_applicable.
+ */
+export interface SafetyGuidance {
+  level: string | null;
+  /** `upcoming`: the trip has not started - there is no shelter list, only the official guidance to check the local situation before going. */
+  phase: "in_progress" | "upcoming" | null;
+  label: string | null;
+  official: { source: string | null; text: string | null; at: string | null } | null;
+  /** A phone number to call in danger ("119"), digits only. */
+  emergencyCall: string | null;
+  /** The portal to follow first (「국민재난안전포털」), by name. */
+  portal: string | null;
+  reference: { place: string | null; note: string | null } | null;
+  shelters: Shelter[];
+  shelterStatus: string | null;
+}
+
+const str = (value: unknown): string | null => (typeof value === "string" && value.trim() ? value.trim() : null);
+const num = (value: unknown): number | null => (typeof value === "number" && Number.isFinite(value) ? value : null);
+
+/** A server `safety` guidance of a notice. Not an object: null. A shelter without a name is dropped (nothing true to show for it). */
+export function guidanceOf(raw: unknown): SafetyGuidance | null {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Record<string, unknown>;
+  const official = row.official && typeof row.official === "object" ? row.official as Record<string, unknown> : null;
+  const reference = row.reference && typeof row.reference === "object" ? row.reference as Record<string, unknown> : null;
+  const call = str(row.emergency_call);
+  return {
+    level: str(row.level), phase: row.phase === "in_progress" || row.phase === "upcoming" ? row.phase : null, label: str(row.label),
+    official: official ? { source: str(official.source), text: str(official.text), at: str(official.at) } : null,
+    emergencyCall: call && /^\d{2,4}$/.test(call) ? call : null,
+    portal: str(row.portal),
+    reference: reference ? { place: str(reference.place), note: str(reference.note) } : null,
+    shelters: (Array.isArray(row.shelters) ? row.shelters : []).flatMap((entry): Shelter[] => {
+      if (!entry || typeof entry !== "object") return [];
+      const shelter = entry as Record<string, unknown>;
+      const name = str(shelter.name);
+      const link = str(shelter.map_url);
+      return name ? [{
+        name, address: str(shelter.address), distanceM: num(shelter.distance_m), walkMinutes: num(shelter.walk_minutes_estimate),
+        underground: typeof shelter.underground === "boolean" ? shelter.underground : null, capacity: num(shelter.capacity),
+        mapUrl: link && link.startsWith("https://") ? link : null,
+      }] : [];
+    }),
+    shelterStatus: str(row.shelter_status),
+  };
+}
+
 /** A notice the server sent about this trip (`GET /v1/web/trips/{id}/notices`). `text` is the server's sentence. */
 export interface Notice {
   key: string;
@@ -58,12 +122,15 @@ export interface Notice {
   at: string;
   /** An automatic change the customer can undo from this notice (the server attaches it only when it changed the plan on its own). */
   rollback: { baseVersion: number; toVersion: number; requestId: string } | null;
+  /** `[2026-10-06]` A safety alert's guidance (what to follow, where to go); null on any other notice. */
+  safety: SafetyGuidance | null;
 }
 
 interface ServerNotice {
   key: string; type?: string | null; kind?: string | null; text?: string | null; version?: number | null;
   proposal_id?: string | null; delivery: string; at: string;
   rollback?: { base_version?: unknown; to_version?: unknown; request_id?: unknown } | null;
+  safety?: unknown;
 }
 
 function rollbackOf(raw: ServerNotice["rollback"]): Notice["rollback"] {
@@ -78,7 +145,31 @@ export async function getNotices(tripId: string, language: Language): Promise<No
     key: row.key, type: row.type ?? "change_notice", kind: row.kind ?? null, text: row.text ?? null,
     version: row.version ?? null, proposalId: row.proposal_id ?? null, delivery: row.delivery, at: row.at,
     rollback: rollbackOf(row.rollback),
+    safety: guidanceOf(row.safety),
   }));
+}
+
+/**
+ * `[2026-10-06]` 「일정 다시 시작」 (`POST /v1/web/trips/{id}/safety/resume`, no body): the customer says they are safe and the pause is lifted. ★Only the customer's press does it - the server cannot know
+ * they are safe, so nothing resumes by itself. The plan was never changed by the pause. `resumed` = how many pauses were closed (0 when there was none - not an error).
+ */
+export async function resumeSafety(tripId: string, language: Language): Promise<{ resumed: number }> {
+  const body = await api<{ resumed?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/safety/resume`, language, { method: "POST" });
+  return { resumed: typeof body.resumed === "number" ? body.resumed : 0 };
+}
+
+/** Where the Course Keeper was turned on or off from (`via` of `POST /v1/web/trips/{id}/guardian`; the server records it). */
+export type GuardianVia = "card" | "header" | "notice" | "settings";
+
+/**
+ * `[2026-10-06 사용자 결정]` Turn the Course Keeper of a REGISTERED trip on or off (`POST /v1/web/trips/{id}/guardian`) -> `{enabled, since, via}`. Only a cookie session may call it (an agent key or a plan
+ * link cannot: automatic changes are a right to change the plan); the same value again changes nothing and returns the present state. A failure is a `LiveError` - the state stays as it was.
+ */
+export async function setGuardian(tripId: string, enabled: boolean, via: GuardianVia, language: Language): Promise<{ enabled: boolean; since: string | null; via: string | null }> {
+  const body = await api<{ enabled?: unknown; since?: unknown; via?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/guardian`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled, via }),
+  });
+  return { enabled: body.enabled === true, since: typeof body.since === "string" ? body.since : null, via: typeof body.via === "string" ? body.via : null };
 }
 
 /**

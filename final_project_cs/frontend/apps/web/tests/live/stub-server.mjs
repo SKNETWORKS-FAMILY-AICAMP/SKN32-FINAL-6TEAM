@@ -2,7 +2,7 @@
 // 실제 앱(개발 서버 3100 · 배포)은 이 파일을 쓰지 않는다. 실제 서버 확인은 `tests/real/` 이 한다.
 //
 // ★Why a test mock server: registering on the real server sends a notice to the team's chat channel and leaves data behind.
-//   This server answers with the same shapes (read from `final_project_cs/app/modules/travel_ops/trip_api.py`) and
+//   This server answers with the same shapes (read from `final_project_cs/app/domains/travel_ops/entry/trip_api.py`) and
 //   keeps every request it received, so a test can check what the screen actually sent.
 //
 // Test control (never part of the real API):
@@ -48,6 +48,15 @@ const DEFAULTS = {
   // the check of the read plan (`review` in the intake view): "absent" = a server without it (the screen says only what was read) | "on"
   //   | "off" = a server that could not build it (review: null + review_error)
   review: "absent",
+  // `[2026-10-06]` the questions asked while the server reads (`questions[]` of the intake view, `POST …/trip-intakes/{id}/survey`):
+  //   "none" (an older server: no list — nothing is asked) | "two" (the server's two) | "unknown_kind" (the two and a third of a kind the page does not know)
+  questions: "none",
+  // the answer to `POST …/survey`: "ok" | "fail" (500: the answer is not saved) | "refuse" (422 invalid_answers) | "confirmed" (409 intake_confirmed)
+  surveySave: "ok",
+  // `[2026-10-06]` the Course Keeper of the trip (`guardian` of the trip view, `POST …/trips/{id}/guardian`): "absent" (an older server: no `guardian` — no icon) | "on" | "off"
+  guardian: "absent",
+  // the answer to `POST …/guardian`: "ok" | "fail" (500: nothing changes)
+  guardianSave: "ok",
   // an edit the server refuses: "" | "locked" (409 item_locked)
   editRefusal: "",
   // the plan on the check screen: "simple" (one stop that is fine — nothing to fix, 「여행 등록」 is open) | "rich" (three stops, one needs review, two legs)
@@ -149,6 +158,10 @@ let scenario;
 let board;
 let log;
 let polls;
+// the answers saved through `POST …/trip-intakes/{id}/survey`: question id → option id
+let surveyAnswers = {};
+// what `POST …/trips/{id}/guardian` last set: `{enabled, since, via}` (null: the scenario's own value stands)
+let guardianState = null;
 let confirmed;
 let keys;
 /** Session cookies this server made (`sid` → {sid, csrf, member}); `known-session` always exists (the browser of a returning visitor). */
@@ -245,6 +258,8 @@ function reset() {
   turns = [];
   log = [];
   polls = 0;
+  surveyAnswers = {};
+  guardianState = null;
   confirmed = false;
   board = freshBoard(scenario.board);
   keys = new Set(["acop_u_known"]);
@@ -301,7 +316,8 @@ function tripView(id = TRIP_ID) {
     density: [],
     warnings: scenario.warnings === "some" ? [{ code: "density_exceeded", date: "2026-10-01", reason: "하루가 빡빡해요", remedy: "일정을 줄이세요" }] : [],
   };
-  return scenario.tripItems === "map" ? { ...view, items: mapItems(), warnings: [], history: view.history.slice(0, 1) } : view;
+  const withGuardian = scenario.guardian === "absent" ? view : { ...view, guardian: guardianState ?? { enabled: scenario.guardian === "on", since: null, via: null } };
+  return scenario.tripItems === "map" ? { ...withGuardian, items: mapItems(), warnings: [], history: view.history.slice(0, 1) } : withGuardian;
 }
 
 function proposals() {
@@ -446,7 +462,24 @@ function intakeStream() {
 
 reset();                                   // after the board's helpers above are declared
 
-function intakeView(revision) {
+// The questions as the server sends them (`survey_answers.py`): the same list in the same order whatever was answered, `answer` = the saved option id or null.
+const QUESTIONS = [
+  { id: "preferred_mobility", kind: "single", title: "이동은 주로 어떻게 하세요?", why: "계획서만으로는 이동 방법을 알 수 없어서 여쭤요",
+    options: [{ id: "public", label: "대중교통" }, { id: "taxi", label: "택시" }, { id: "walk", label: "걷기 위주" }] },
+  { id: "priority", kind: "single", title: "일정이 바뀔 때 대체할 곳은 무엇을 먼저 볼까요?", why: "계획서만으로는 알 수 없어요",
+    options: [{ id: "activity", label: "하고 싶은 활동이 비슷한 곳" }, { id: "mobility", label: "이동이 편한 곳" }] },
+];
+const QUESTION_IDS = new Set(QUESTIONS.map((question) => question.id));
+function withQuestions(view) {
+  if (scenario.questions === "none") return view;
+  const list = QUESTIONS.map((question) => ({ ...question, answer: surveyAnswers[question.id] ?? null }));
+  if (scenario.questions === "unknown_kind") list.push({ id: "future_pick", kind: "multi", title: "미래의 질문", why: "", options: [{ id: "a", label: "에이" }], answer: null });
+  return { ...view, questions: list, questions_version: "1" };
+}
+
+function intakeView(revision) { return withQuestions(intakeBaseView(revision)); }
+
+function intakeBaseView(revision) {
   const base = { intake_id: INTAKE_ID, revision, fatal: null, trip_id: confirmed ? TRIP_ID : null, needs_review: [] };
   const line = { no: 1, text: "10/1 09:00 경복궁 관람" };
   // Like the server: while reading, the source and its lines are there already, not yet read and without stops.
@@ -851,6 +884,16 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     if (broken("trips")) return;
     return json(response, 200, { trips: rows }, origin);
   }
+  // `[2026-10-06]` Turn the Course Keeper on or off: `{enabled, via}` -> `{enabled, since, via}` (the same value again changes nothing).
+  const guardianPath = /^\/v1\/web\/trips\/([^/]+)\/guardian$/.exec(path);
+  if (guardianPath && request.method === "POST") {
+    if (scenario.guardianSave === "fail") return json(response, 500, { error: { code: "internal_error", message: "저장하지 못했어요" } }, origin);
+    const body = JSON.parse(raw || "{}");
+    if (typeof body.enabled !== "boolean" || !["card", "header", "notice", "settings"].includes(body.via)) return json(response, 422, { error: { code: "validation_error", message: "enabled 와 via 가 필요해요" } }, origin);
+    const now = guardianState ?? { enabled: scenario.guardian === "on", since: null, via: null };
+    if (now.enabled !== body.enabled) guardianState = { enabled: body.enabled, since: new Date().toISOString(), via: body.via };
+    return json(response, 200, guardianState ?? now, origin);
+  }
   // A trip of this customer's list (and TRIP_ID, until it is deleted) opens; any other id is "not yours / not there" (404 not_found).
   const tripPath = /^\/v1\/web\/trips\/([^/]+)$/.exec(path);
   if (tripPath && request.method === "GET") {
@@ -975,8 +1018,20 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   if (request.method === "POST" && path === "/v1/web/trip-intakes") {
     if (scenario.intakeDelay) await new Promise((resolve) => setTimeout(resolve, scenario.intakeDelay));
     if (scenario.intakeRefusal) return json(response, 422, { error: { code: "intake_refused", message: scenario.intakeRefusal } }, origin);
-    polls = 0; confirmed = false; board = freshBoard(scenario.board);
+    polls = 0; surveyAnswers = {}; confirmed = false; board = freshBoard(scenario.board);
     return json(response, 202, { intake_id: INTAKE_ID, status: "reading", stage: "received" }, origin);
+  }
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/survey` && request.method === "POST") {
+    if (scenario.surveySave === "fail") return json(response, 500, { error: { code: "internal_error", message: "저장하지 못했어요" } }, origin);
+    if (scenario.surveySave === "confirmed" || confirmed) return json(response, 409, { error: { code: "intake_confirmed", message: "이미 등록한 접수예요" } }, origin);
+    const answers = JSON.parse(raw || "{}").answers ?? {};
+    const problems = Object.entries(answers).flatMap(([key, value]) => {
+      const question = QUESTIONS.find((entry) => entry.id === key);
+      return !question ? [{ key, reason: "모르는 문항이다" }] : !question.options.some((option) => option.id === value) ? [{ key, reason: "모르는 선택지다" }] : [];
+    });
+    if (scenario.surveySave === "refuse" || problems.length) return json(response, 422, { error: { code: "invalid_answers", message: "답을 받을 수 없어요", problems } }, origin);
+    surveyAnswers = { ...surveyAnswers, ...answers };
+    return json(response, 200, { ok: true, answered: Object.keys(surveyAnswers).filter((key) => QUESTION_IDS.has(key)).sort(), questions_version: "1" }, origin);
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}` && request.method === "GET") { polls += 1; return json(response, 200, intakeView(board.revision), origin); }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/route-shapes` && request.method === "GET" && scenario.intakeRoutes !== "off") {

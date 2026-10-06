@@ -46,7 +46,7 @@ class FallbackWeather:
             failed.append(getattr(source, "name", type(source).__name__))
 
         self.misses["all_failed"] += 1
-        logger.error("weather chain exhausted — every source failed: %s", failed)
+        logger.log(getattr(self, "log_level", logging.ERROR), "weather chain exhausted — every source failed: %s", failed)
         return None
 
 

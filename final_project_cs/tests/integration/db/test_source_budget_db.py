@@ -56,6 +56,78 @@ def budget(name: str, *, day: int, month: int, now: datetime | None = None) -> C
     return CallBudget(connection_factory=get_connection, caps={name: {"day": day, "month": month}}, tz=KST, clock=clock)
 
 
+# ── ⑦ 낮은 우선순위의 몫(`share`) `[2026-10-06 — MCP 「새로 확인」이 감시 · 채팅 몫을 먹지 않게, 코덱스 검토 반영]` ──────────
+def share_budget(name: str, *, day: int, month: int, share: float) -> CallBudget:
+    return CallBudget(connection_factory=get_connection, caps={name: {"day": day, "month": month}}, tz=KST, share=share)
+
+
+def test_a_low_priority_budget_stops_at_its_share_and_the_rest_is_left_for_the_normal_caller(meter):
+    low = share_budget(meter, day=10, month=100, share=0.5)
+    assert [low.try_reserve(meter) for _ in range(6)] == [True] * 5 + [False]                   # 일 상한 10 × 0.5 = 5 에서 멈춘다
+    day = next(v for k, v in rows(meter).items() if k.startswith("day:"))
+    assert day[0] == 5 and day[1] == 10 and day[3] == 0                                          # ★줄의 상한은 진짜 값(10) · 몫으로 거절한 것은 rejected 에 안 센다
+    normal = budget(meter, day=10, month=100)
+    assert [normal.try_reserve(meter) for _ in range(6)] == [True] * 5 + [False]                 # 남은 5 는 일반 호출 몫 — 진짜 한도에서 막힌다
+    assert next(v for k, v in rows(meter).items() if k.startswith("day:"))[3] == 1               # 진짜 한도가 차서 거절한 것만 rejected
+
+
+def test_the_share_also_guards_the_month_row_so_a_low_priority_caller_cannot_eat_the_last_of_the_month(meter):
+    low = share_budget(meter, day=1000, month=10, share=0.5)
+    assert [low.try_reserve(meter) for _ in range(6)] == [True] * 5 + [False]                   # 하루는 넉넉해도 월 몫(10 × 0.5)이 먼저 찬다
+    month = next(v for k, v in rows(meter).items() if k.startswith("month:"))
+    assert month[0] == 5 and month[1] == 10
+    assert all(budget(meter, day=1000, month=10).try_reserve(meter) for _ in range(5))          # 일반 호출은 월의 나머지를 쓴다
+
+
+def test_concurrent_low_priority_callers_never_pass_the_share(meter):
+    low = share_budget(meter, day=40, month=1000, share=0.5)
+    granted, lock = [], threading.Lock()
+
+    def worker():
+        for _ in range(5):
+            got = low.try_reserve(meter)
+            with lock:
+                granted.append(got)
+
+    threads = [threading.Thread(target=worker) for _ in range(8)]
+    [t.start() for t in threads]
+    [t.join() for t in threads]
+    assert sum(granted) == 20 and next(v for k, v in rows(meter).items() if k.startswith("day:"))[0] == 20      # 40 번 몰려도 몫(40 × 0.5)을 못 넘는다 — 읽고 나서 차감이 아니라 한 SQL 의 조건이라서
+
+
+def test_an_unlimited_row_is_not_scaled_and_a_bad_share_is_refused(meter):
+    from app.domains.travel_ops.ports.data_sources.call_budget import UNLIMITED
+
+    low = CallBudget(connection_factory=get_connection, caps={meter: {"day": 4, "month": UNLIMITED}}, tz=KST, share=0.5)
+    assert [low.try_reserve(meter) for _ in range(3)] == [True, True, False]                    # 월 상한을 모르면(UNLIMITED) 곱하지 않는다 — 일 몫(4 × 0.5)만 본다
+    for bad in (0, -0.5, 1.5):
+        with pytest.raises(ValueError):
+            share_budget(meter, day=1, month=1, share=bad)
+
+
+def test_the_low_priority_door_refuses_when_the_budget_cannot_be_read_even_if_the_normal_policy_allows():
+    """일반 호출은 DB 를 못 읽으면 `allow`(안쪽 제한기만) — 낮은 우선순위는 **부르지 않는다**."""
+    def broken():
+        raise RuntimeError("DB 가 죽었다")
+
+    caps = {"x": {"day": 10, "month": 100}}
+    for share, expected in ((1.0, "allowed"), (0.5, "refused")):
+        door = BudgetedLimiter(RateLimiter(), CallBudget(connection_factory=broken, caps=caps, tz=KST, share=share), frozenset(caps),
+                               on_db_error="refuse" if share < 1.0 else "allow")
+        try:
+            door.acquire("x")
+            outcome = "allowed"
+        except Exception:                                                                       # noqa: BLE001 — BudgetUnavailable
+            outcome = "refused"
+        assert outcome == expected
+
+
+def test_with_db_budget_forces_refuse_for_a_share(monkeypatch, meter):
+    limiter = with_db_budget(RateLimiter(), {meter: 10}, {meter: 100}, [meter], on_db_error="allow", share=0.5)
+    assert limiter._on_db_error == "refuse" and limiter._budget.share == 0.5
+    assert with_db_budget(RateLimiter(), {meter: 10}, {meter: 100}, [meter], on_db_error="allow")._on_db_error == "allow"
+
+
 # ── ① 한국 시각 경계 ────────────────────────────────────────────
 def test_the_day_row_changes_exactly_at_korean_midnight(meter):
     before = datetime(2026, 10, 5, 14, 59, 59, tzinfo=timezone.utc)          # 한국 2026-10-05 23:59:59

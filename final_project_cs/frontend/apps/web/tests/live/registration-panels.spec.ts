@@ -1,9 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { fillPlanAsk, finishOnboarding, mockServer, openRegistration, PANES, start, TRIP_ID, weekAhead } from "./helpers";
+import { checkPlan, fillPlanAsk, finishOnboarding, mockServer, openRegistration, PANES, start, TRIP_ID, weekAhead } from "./helpers";
 
 /**
  * `[2026-10-03 사용자 결정]` 등록 화면의 입력은 세 칸이다 — ①직접 입력 ②파일 선택 ③계획 짜 주기 (테스트).
- * 마지막에 고른 칸만 보내고, 그 칸이 비어 있으면 「계획 확인하기」가 꺼진다. 테스트용 모방 서버로 도는 자동 시험이다(실제 서버 아님).
+ * 마지막에 고른 칸만 보내고, 그 칸이 비어 있으면 「계획 확인하기」를 눌러도 넘어가지 않고 이유를 말한다(2026-10-06 부터 단추는 꺼지지 않는다). 테스트용 모방 서버로 도는 자동 시험이다(실제 서버 아님).
  */
 const ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 const PLAN = "10/1 09:00 경복궁 관람";
@@ -86,60 +86,79 @@ for (const theme of ["green", "neutral"] as const) {
   });
 }
 
-test("고른 칸에 값이 없으면 「계획 확인하기」가 꺼져 있고 칸마다 이유를 말하며, 값이 생기면 켜진다(서버로는 아무것도 가지 않는다)", async ({ page, request }) => {
+test("고른 칸에 값이 없으면 「계획 확인하기」를 눌러도 넘어가지 않고 칸마다 이유를 알리며(단추는 꺼지지 않는다), 값이 있으면 항로 지킴이 카드가 열린다(서버로는 아무것도 가지 않는다)", async ({ page, request }) => {
+  // ★2026-10-06 사용자 지시: 단추를 꺼 두지 않는다 — 누르면 입력칸 아래에 이유가 뜨고 그 칸으로 초점이 가며, 쓰기 시작하면 이유가 사라진다.
   const server = mockServer(request);
   await start(page);
   await openRegistration(page);
-  // ① 글: 비어 있으면 꺼짐
-  await expect(send(page)).toBeDisabled();
-  await expect(page.locator("#submit-reason")).toContainText("위에서 고른 「직접 입력」 칸에 내용을 넣어 주세요");
-  // ② 파일: 칸을 누르면 그 칸이 고른 칸이 되고, 파일이 없으니 꺼짐
+  const reason = page.locator("#plan-error");
+  const card = page.getByRole("dialog");
+  await expect(send(page)).toBeEnabled();
+  // ① 글: 비어 있으면 이유 + 초점
+  await send(page).click();
+  await expect(reason).toContainText("여행 계획을 적거나 파일을 올려 주세요.");
+  await expect(page.locator("#plan-source")).toBeFocused();
+  await expect(page.locator("#plan-source")).toHaveAttribute("aria-invalid", "true");
+  await expect(card).toHaveCount(0);
+  await page.getByLabel("나의 여행 계획").fill("경복궁");                                                // 쓰기 시작하면 이유가 사라진다
+  await expect(reason).toHaveCount(0);
+  await page.getByLabel("나의 여행 계획").fill("");
+  // ② 파일: 칸을 누르면 그 칸이 고른 칸이 되고, 파일이 없으니 이유
   await heading(page, "files").click();
-  await expect(send(page)).toBeDisabled();
-  await expect(page.locator("#submit-reason")).toContainText("위에서 고른 「파일 선택」 칸에 파일을 하나 이상 골라 주세요");
+  await send(page).click();
+  await expect(reason).toContainText("위에서 고른 「파일 선택」 칸에 파일을 하나 이상 골라 주세요");
   await page.locator("#plan-files").setInputFiles(file());
-  await expect(send(page)).toBeEnabled();
-  await expect(page.locator("#submit-reason")).toHaveCount(0);
+  await expect(reason).toHaveCount(0);                                                                // 파일을 고르면 이유가 사라진다
+  await send(page).click();
+  await expect(card).toBeVisible();                                                                   // 값이 있으니 카드가 열린다
+  await page.keyboard.press("Escape");                                                                // 카드를 닫으면 아무것도 정해지지 않고
+  await expect(card).toHaveCount(0);
+  await expect(send(page)).toBeFocused();                                                             // 초점이 단추로 돌아온다
   await page.getByRole("button", { name: "plan.txt 빼기" }).click();
-  await expect(send(page)).toBeDisabled();
-  // ③ 계획 짜기: 첫날 · 일수 · 인원을 모두 골라야 켜진다 (원하는 여행은 비워도 된다)
+  // ③ 계획 짜기: 첫날 · 일수 · 인원을 모두 골라야 한다 (원하는 여행은 비워도 된다)
   await heading(page, "plan").click();
-  await expect(send(page)).toBeDisabled();
-  await expect(page.locator("#submit-reason")).toContainText("위에서 고른 「계획 짜 주기」 칸에서 첫날 · 일수 · 인원을 모두 골라 주세요");
+  await send(page).click();
+  await expect(reason).toContainText("위에서 고른 「계획 짜 주기」 칸에서 첫날 · 일수 · 인원을 모두 골라 주세요");
   await page.getByLabel("첫날", { exact: true }).fill(weekAhead());
-  await expect(send(page)).toBeDisabled();
   await page.getByLabel("일수", { exact: true }).selectOption("2");
-  await expect(send(page)).toBeDisabled();
+  await send(page).click();
+  await expect(reason).toContainText("첫날 · 일수 · 인원을 모두 골라 주세요");                           // 인원이 아직이다
   await page.getByLabel("인원", { exact: true }).selectOption("2");
-  await expect(send(page)).toBeEnabled();
-  // 일수 7·인원 4 가 끝이고, 다시 「고르기」로 되돌리면 꺼진다
+  await send(page).click();
+  await expect(card).toBeVisible();
+  await page.keyboard.press("Escape");
+  // 일수 7·인원 4 가 끝이고, 다시 「고르기」로 되돌리면 이유가 다시 나온다
   await page.getByLabel("일수", { exact: true }).selectOption("7");
   await page.getByLabel("인원", { exact: true }).selectOption("4");
-  await expect(send(page)).toBeEnabled();
   await page.getByLabel("인원", { exact: true }).selectOption("0");
-  await expect(send(page)).toBeDisabled();
+  await send(page).click();
+  await expect(reason).toContainText("첫날 · 일수 · 인원을 모두 골라 주세요");
   await page.getByLabel("인원", { exact: true }).selectOption("1");
-  // 다른 칸에 값이 있어도 고른 칸이 비면 못 넘어간다: 글을 쓰면 글 칸이 고른 칸이 되어 켜지고, 계획 칸을 다시 누르면 그 칸 기준으로 켜진다
+  // 다른 칸에 값이 있어도 고른 칸이 비면 못 넘어간다: 글을 쓰면 글 칸이 고른 칸이 되고, 계획 칸을 다시 누르면 그 칸 기준이다
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await expect(PANES.text(page)).toHaveAttribute("aria-current", "true");
   await page.getByLabel("첫날", { exact: true }).fill("");
   await expect(PANES.plan(page)).toHaveAttribute("aria-current", "true");
-  await expect(send(page)).toBeDisabled();
+  await send(page).click();
+  await expect(reason).toContainText("첫날 · 일수 · 인원을 모두 골라 주세요");
   await heading(page, "text").click();
-  await expect(send(page)).toBeEnabled();
-  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);
+  await send(page).click();
+  await expect(card).toBeVisible();
+  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);                      // 카드에서 정하기 전에는 서버로 아무것도 가지 않는다
 });
 
-test("첫날은 오늘(서울 날짜)부터 고를 수 있고, 지난 날을 적으면 이유를 말하며 꺼진다", async ({ page }) => {
+test("첫날은 오늘(서울 날짜)부터 고를 수 있고, 지난 날을 적고 누르면 이유를 말한다", async ({ page }) => {
   const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
   await start(page);
   await openRegistration(page);
   await expect(page.getByLabel("첫날", { exact: true })).toHaveAttribute("min", today);
   await fillPlanAsk(page, { start: "2020-01-01", days: 2, party: 2 });
-  await expect(send(page)).toBeDisabled();
-  await expect(page.locator("#submit-reason")).toContainText("첫날은 오늘(서울 기준)이거나 그 뒤여야 해요");
+  await send(page).click();
+  await expect(page.locator("#plan-error")).toContainText("첫날은 오늘(서울 기준)이거나 그 뒤여야 해요");
   await page.getByLabel("첫날", { exact: true }).fill(today);
-  await expect(send(page)).toBeEnabled();
+  await expect(page.locator("#plan-error")).toHaveCount(0);
+  await send(page).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
 });
 
 test("고른 칸만 보낸다 — 글 칸이 고른 칸이면 파일은 가지 않고, 파일 칸이 고른 칸이면 글은 가지 않는다", async ({ page, request }) => {
@@ -150,7 +169,7 @@ test("고른 칸만 보낸다 — 글 칸이 고른 칸이면 파일은 가지 �
   // 파일을 먼저 골랐다가 글 칸에 쓴다 → 글만 간다
   await page.locator("#plan-files").setInputFiles(file());
   await page.getByLabel("나의 여행 계획").fill(PLAN);
-  await send(page).click();
+  await checkPlan(page);
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
   let [sent] = await server.received("POST", "/v1/web/trip-intakes");
   expect(String(sent.body?.multipart)).toContain(PLAN);
@@ -160,7 +179,7 @@ test("고른 칸만 보낸다 — 글 칸이 고른 칸이면 파일은 가지 �
   await openRegistration(page);
   await expect(page.getByLabel("나의 여행 계획")).toHaveValue(PLAN);
   await page.locator("#plan-files").setInputFiles(file());
-  await send(page).click();
+  await checkPlan(page);
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
   [, sent] = await server.received("POST", "/v1/web/trip-intakes");
   expect(String(sent.body?.multipart)).toContain('filename="plan.txt"');
@@ -176,7 +195,7 @@ test("계획 짜 주기를 보내면 글·파일은 가지 않고, 곧바로 진
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.locator("#plan-files").setInputFiles(file());
   await fillPlanAsk(page, { start: weekAhead(), days: 3, party: 2, wish: WISH });
-  await send(page).click();
+  await checkPlan(page);
 
   await expect(page).toHaveURL(/\/intakes\/starting$/);
   await expect(page.getByLabel("나의 여행 계획")).toHaveCount(0);
@@ -194,7 +213,7 @@ test("계획 짜 주기를 보내면 글·파일은 가지 않고, 곧바로 진
   expect(multipart).not.toContain("filename=");
   const [plan] = await server.received("POST", "/plan");
   expect(plan.accept).toContain("text/event-stream");
-  expect(plan.body).toEqual({ revision: 1, start_date: weekAhead(), days: 3, party_size: 2, keep_read_items: false });
+  expect(plan.body).toEqual({ revision: 1, start_date: weekAhead(), days: 3, party_size: 2, keep_read_items: false, survey: { version: "2026-09-24.v1", pace: "moderate", on_disruption: "replace" } });   // 설문을 안 마쳤어도 계획 담기에서 정한 것은 간다
   expect(await server.received("POST", "/confirm")).toHaveLength(0);
 });
 
@@ -204,7 +223,7 @@ test("원하는 여행을 비워도 보낼 수 있다 — 빈 글로 접수하�
   await start(page);
   await openRegistration(page);
   await fillPlanAsk(page, { start: weekAhead(), days: 1, party: 1 });
-  await send(page).click();
+  await checkPlan(page);
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`), { timeout: 15_000 });
   const [intake] = await server.received("POST", "/v1/web/trip-intakes");
   expect(String(intake.body?.multipart)).toMatch(new RegExp(String.raw`name="text"\r\n\r\n\r\n--`));
@@ -219,10 +238,10 @@ test("설문을 마친 사람의 계획 짜 주기에는 설문이 실려 간다
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
   await fillPlanAsk(page, { start: weekAhead(), days: 2, party: 2 });
-  await send(page).click();
+  await checkPlan(page);
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`), { timeout: 15_000 });
   expect((await server.received("POST", "/plan"))[0].body).toEqual({
-    revision: 1, start_date: weekAhead(), days: 2, party_size: 2, keep_read_items: false, survey: { version: "2026-09-24.v1", pace: "relaxed" } });
+    revision: 1, start_date: weekAhead(), days: 2, party_size: 2, keep_read_items: false, survey: { version: "2026-09-24.v1", pace: "relaxed", on_disruption: "replace" } });   // 설문의 여유는 그대로, 항로 지킴이는 「켜고 진행」
 });
 
 test("서버가 짜기를 거절하면 등록 화면으로 돌아와 서버의 문장을 보이고, 고른 조건·쓴 글이 그대로 남아 고쳐 다시 보낼 수 있다", async ({ page, request }) => {
@@ -231,7 +250,7 @@ test("서버가 짜기를 거절하면 등록 화면으로 돌아와 서버의 �
   await start(page);
   await openRegistration(page);
   await fillPlanAsk(page, { start: weekAhead(), days: 1, party: 3, wish: WISH });
-  await send(page).click();
+  await checkPlan(page);
 
   await expect(page).toHaveURL(/\/trips\/new$/);
   await expect(page.locator("#plan-error")).toContainText("이 조건으로는 일정을 짤 수 없어요 — 일수를 늘려 보세요");
@@ -246,7 +265,7 @@ test("서버가 짜기를 거절하면 등록 화면으로 돌아와 서버의 �
   await server.scenario({ planRefusal: "" });
   await page.getByLabel("일수", { exact: true }).selectOption("3");
   await expect(page.locator("#plan-error")).toHaveCount(0);
-  await send(page).click();
+  await checkPlan(page);
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`), { timeout: 15_000 });
   expect(await server.received("POST", "/plan")).toHaveLength(2);
 });
@@ -256,7 +275,7 @@ test("접수 자체를 서버가 거절해도(계획 짜 주기) 등록 화면�
   await start(page);
   await openRegistration(page);
   await fillPlanAsk(page, { start: weekAhead(), days: 4, party: 2 });
-  await send(page).click();
+  await checkPlan(page);
   await expect(page).toHaveURL(/\/trips\/new$/);
   await expect(page.locator("#plan-error")).toContainText("오늘은 접수를 더 받을 수 없어요");
   await expect(PANES.plan(page)).toHaveAttribute("aria-current", "true");
@@ -269,7 +288,7 @@ test("원하는 여행을 서버가 아직 읽는 중이면 다 읽을 때까지
   await start(page);
   await openRegistration(page);
   await fillPlanAsk(page, { start: weekAhead(), days: 2, party: 2, wish: WISH });
-  await send(page).click();
+  await checkPlan(page);
   await expect(page).toHaveURL(/\/intakes\/starting$/);
   await expect(page.getByRole("status").filter({ hasText: "계획을 읽는 중이에요" })).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`), { timeout: 20_000 });
@@ -286,7 +305,7 @@ test("서버가 읽는 동안 뒤로 가면 등록 화면으로 돌아가고, �
   await start(page);
   await openRegistration(page);
   await fillPlanAsk(page, { start: weekAhead(), days: 2, party: 2, wish: WISH });
-  await send(page).click();
+  await checkPlan(page);
   await expect(page.getByRole("status").filter({ hasText: "계획을 읽는 중이에요" })).toBeVisible();
   await page.getByRole("button", { name: "뒤로" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
@@ -300,22 +319,28 @@ test("서버가 읽는 동안 뒤로 가면 등록 화면으로 돌아가고, �
   expect(await server.received("POST", "/plan")).toHaveLength(0);
 });
 
-test("영어 화면에서도 칸 제목과 꺼진 이유가 영어로 나온다", async ({ page }) => {
+test("영어 화면에서도 칸 제목과 이유 · 읽는 기준 · 항로 지킴이 카드가 영어로 나온다", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "en", navigation: "fixed" })));
   await start(page);
   await openRegistration(page);
   await expect(page.getByRole("region", { name: "Plan it for me (test)" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Type it in" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Check my plan" })).toBeDisabled();
-  await expect(page.locator("#submit-reason")).toContainText("Write something in the “Type it in” box you chose above.");
+  await expect(page.getByRole("button", { name: "Check my plan" })).toBeEnabled();
+  await page.getByRole("button", { name: "Check my plan" }).click();
+  await expect(page.locator("#plan-error")).toContainText("Write your plan or upload a file.");
+  await page.getByLabel("Your travel plan").fill("Gyeongbokgung 10/1 09:00");
+  await page.getByRole("button", { name: "Check my plan" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("dialog").getByRole("button", { name: /Turn on/ })).toBeVisible();
 });
 
-test("320px 폭에서도 세 칸이 화면을 넘지 않고, 꺼진 이유가 보인다", async ({ page }) => {
+test("320px 폭에서도 세 칸 · 읽는 기준이 화면을 넘지 않고, 눌렀을 때 이유가 보인다", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
   await start(page);
   await openRegistration(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await expect(page.locator("#submit-reason")).toBeVisible();
+  await send(page).click();
+  await expect(page.locator("#plan-error")).toBeVisible();
   await heading(page, "plan").click();
   await page.getByLabel("첫날", { exact: true }).scrollIntoViewIfNeeded();
   for (const label of ["첫날", "일수", "인원"]) {

@@ -91,7 +91,7 @@ describe("the rest of the server's web API", () => {
   it("reads the notices with the server's own sentence and links a proposal request to its proposal", async () => {
     stub(true);
     replies.push(json({ notices: [{ key: "n1", type: "proposal_request", kind: null, text: "식당이 문을 닫았어요. 하나 골라 주세요.", version: 3, proposal_id: "p1", options: [], delivery: "sent", at: "2026-09-28T12:30:00+09:00" }] }));
-    expect(await getNotices("t1", "ko")).toEqual([{ key: "n1", type: "proposal_request", kind: null, text: "식당이 문을 닫았어요. 하나 골라 주세요.", version: 3, proposalId: "p1", delivery: "sent", at: "2026-09-28T12:30:00+09:00", rollback: null }]);
+    expect(await getNotices("t1", "ko")).toEqual([{ key: "n1", type: "proposal_request", kind: null, text: "식당이 문을 닫았어요. 하나 골라 주세요.", version: 3, proposalId: "p1", delivery: "sent", at: "2026-09-28T12:30:00+09:00", rollback: null, safety: null }]);
   });
 
   it("reads the undo an automatic change carries and sends it back as the server gave it", async () => {

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { fillPlanAsk, openRegistration, start, mockServer, TRIP_ID, weekAhead } from "./helpers";
+import { fillPlanAsk, openRegistration, start, mockServer, TRIP_ID, weekAhead, checkPlan } from "./helpers";
 
 // `[2026-10-02]` The server answers long work as a progress stream (`op_stream.py`): chat and 「plan it for me」 when
 // asked with `Accept: text/event-stream`, and an intake's reading on `GET …/events`. The screen shows what the server
@@ -72,7 +72,7 @@ test("계획 짜 주기: 진행 화면이 「일정을 짜는 중이에요」와
   await start(page);
   await openRegistration(page);
   await fillPlanAsk(page, { start: weekAhead(), days: 2, party: 2 });
-  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await checkPlan(page);
   await expect(page).toHaveURL(/\/intakes\/starting$/);
   await expect(page.getByRole("heading", { name: "일정을 짜는 중이에요", level: 1 })).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: "여행으로 등록하는 중이에요" })).toBeVisible();
@@ -87,7 +87,7 @@ const upload = async (page: Page) => {
   await start(page);
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill("10/1 09:00 경복궁 관람");
-  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await checkPlan(page);
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
 };
 

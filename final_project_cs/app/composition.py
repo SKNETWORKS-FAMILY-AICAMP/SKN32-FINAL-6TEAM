@@ -429,7 +429,8 @@ def wire_domain_teams() -> list[str]:
     #   바뀌고(`wiring.configure`), 시험이 팀 함수를 바꿔 끼우기도 한다. 객체를 쥐면 옛 것을 계속 쓴다.
     legs.register(leg_planner=lambda *a, **kw: mobility_wiring.leg_planner(*a, **kw),
                   disruptions_from_events=lambda events: mobility_wiring.disruptions_from_events(events),
-                  walk_limit_m=walk_limit_m)
+                  walk_limit_m=walk_limit_m,
+                  basis=lambda: mobility_wiring.basis())
 
     # 요식 — 원장이 식당의 정본이다(근처 들여놓기 · 시간대 판정 · 이름으로 찾기).
     from app.domains.travel_ops.instances.dining import ledger as dining_ledger_impl
@@ -483,6 +484,23 @@ def build_domain_routers() -> list:
 
         return DisruptionCheck(build_travel_sources(get_settings())).check
 
+    def cached_check_factory():
+        # ★`[2026-10-06]` MCP 일정 위험 점검의 기본 — 공유 응답 캐시만 읽는다(바깥에 안 나간다 · 하루 한도를 안 쓴다)
+        from app.core.settings import get_settings
+        from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+        from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+
+        return DisruptionCheck(build_travel_sources(get_settings(), cache_only=True)).check
+
+    def fresh_check_factory():
+        # ★`[2026-10-06]` MCP 일정 위험 점검의 「새로 확인」 — 낮은 우선순위(소스의 하루 · 이번 달 한도의 `fresh_share` 까지만 쓰고 DB 를 못 읽으면 안 부른다)
+        from app.core.settings import get_guardrails, get_settings
+        from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+        from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+
+        share = float(get_guardrails().get("travel.mcp.risk_check.fresh_share"))
+        return DisruptionCheck(build_travel_sources(get_settings(), low_priority_share=share)).check
+
     def chat_factory():
         # ★자유 문장에서 신고를 뽑는 LLM — 로컬 Ollama(Gemma 4). 없으면 None → 추출 없이 escalate.
         from app.core.settings import get_settings
@@ -507,7 +525,9 @@ def build_domain_routers() -> list:
                               chat_factory=chat_factory, place_factory=place_factory,
                               kakao_factory=kakao_factory,
                               # ★채팅의 질문 — 여행 규정 검색(RAG). 문턱은 `travel.question.min_policy_score`
-                              policy_search_factory=lambda: search_policy),
+                              policy_search_factory=lambda: search_policy,
+                              # ★`[2026-10-06]` MCP 읽기 도구 「일정 위험 점검」 — 캐시만 읽는 점검기(기본) · 낮은 우선순위로 새로 부르는 점검기(fresh)
+                              cached_check_factory=cached_check_factory, fresh_check_factory=fresh_check_factory),
             # ★위임 — 승인 뒤 자동 실행을 여는 둘째 문을 주고 거두는 자리(2026-09-22).
             #   운영 화면 `/ui/delegations` 가 이 경로를 부른다.
             build_delegation_router(),

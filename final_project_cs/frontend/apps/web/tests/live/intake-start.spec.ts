@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { agree, mockServer, start } from "./helpers";
+import { agree, mockServer, start, checkPlan } from "./helpers";
 import { needsBadge } from "./plan-check-kit";
 
 /**
@@ -30,7 +30,7 @@ async function fillAndSend(page: Page, text = PLAN) {
   await page.getByLabel("나의 여행 계획").fill(text);
   await expect(page.getByLabel("나의 여행 계획")).toHaveValue(text);
   await forgetLoadingScreen(page);
-  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await checkPlan(page);
 }
 
 test("누르면 서버의 답을 기다리지 않고 곧바로 진행 화면으로 넘어가 올린 줄을 보이고, 서버가 받으면 그 접수의 실시간 진행으로 이어져 결과가 나온다", async ({ page, request }) => {
@@ -65,7 +65,7 @@ test("서버가 계획을 거절하면 등록 화면으로 돌아와 서버의 �
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.locator("#plan-files").setInputFiles({ name: "plan.txt", mimeType: "text/plain", buffer: Buffer.from("메모") });
-  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await checkPlan(page);
 
   await expect(page).toHaveURL(/\/trips\/new$/);
   await expect(planError(page)).toContainText("계획 글이 너무 길어요");
@@ -76,7 +76,7 @@ test("서버가 계획을 거절하면 등록 화면으로 돌아와 서버의 �
   await server.scenario({ intakeRefusal: "" });
   await page.getByLabel("나의 여행 계획").fill("10/1 09:00 경복궁 관람");
   await expect(planError(page)).toHaveCount(0);
-  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await checkPlan(page);
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]{36}$/, { timeout: 15_000 });
   expect((await server.received("POST", "/v1/web/trip-intakes")).length).toBe(2);
 });

@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, FileText, Paperclip, X } from "lucide-react";
 import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
+import { decideGuardian, paceOf, readCriteria, setPace, useCriteria, withCriteria } from "@/features/guardian/criteria-store";
+import { GuardianCard } from "@/features/guardian/guardian-card";
+import { ReadingCriteria } from "@/features/guardian/reading-criteria";
 import { HumanCheck, TURNSTILE_SITE_KEY } from "@/features/human-check/human-check";
 import { partyLabel } from "@/features/onboarding/model";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
@@ -65,6 +68,9 @@ export function TripRegistration() {
   const [source, setSource] = useState<string>();
   const [validation, setValidation] = useState("");
   const [draftWarning, setDraftWarning] = useState("");
+  // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계]` 「읽는 기준」 (a day's fullness, 「적당히」 from the start) and the Course Keeper card that opens when 「계획 확인하기」 is pressed, before the plan is read.
+  const criteria = useCriteria();
+  const [card, setCard] = useState(false);
   // ★A sending the server refused comes back here (`intake-starting.tsx`): its sentence is shown, the attached files and the planning
   //   conditions are given back, and the panel it came from is the chosen one again.
   const [returned] = useState(intakeFailure);
@@ -116,7 +122,8 @@ export function TripRegistration() {
     const base = { language, humanToken: token };
     if (active === "plan") {
       // The short text rides as the intake's text (the server reads it as the preferences); the survey only when it was finished.
-      const plan: PlanRequest = { start_date: ask.start, days: ask.days, party_size: ask.party, wish: ask.wish, ...(onboarding.complete && { survey: toSurvey(onboarding.answers) }) };
+      const survey = withCriteria(onboarding.complete ? toSurvey(onboarding.answers) : undefined, readCriteria());      // what the plan screen decided is laid over the preference survey
+      const plan: PlanRequest = { start_date: ask.start, days: ask.days, party_size: ask.party, wish: ask.wish, ...(survey && { survey }) };
       beginIntake({ ...base, text: ask.wish.trim(), files: [], plan });
     } else if (active === "files") beginIntake({ ...base, text: "", files });
     else beginIntake({ ...base, text: value, files: [] });
@@ -133,7 +140,7 @@ export function TripRegistration() {
     onError: () => setHumanReset((count) => count + 1),
   });
   const pending = signUp.isPending || sent;
-  // Why 「계획 확인하기」 is off: the chosen panel has nothing to send yet.
+  // The chosen panel has nothing to send yet: pressing 「계획 확인하기」 says why under the panels and moves the focus there (the button is NOT switched off).
   const reason = paneReason(active, { text: value, files: files.length, ask }, today);
 
   /** The panel the customer touched becomes the chosen one; anything said about the last sending goes with it. */
@@ -160,16 +167,34 @@ export function TripRegistration() {
     catch { setDraftWarning(t("임시 저장을 사용할 수 없어요. 이 화면을 닫으면 입력 내용이 사라질 수 있어요.", "Drafts cannot be saved here. Closing this page may lose your input.")); }
   }
 
+  /** The empty panel's own input takes the focus, so the way on is where the words are. */
+  function focusChosen() {
+    const target = active === "text" ? document.getElementById("plan-source")
+      : active === "files" ? document.getElementById("plan-files")
+        : document.querySelector<HTMLElement>('[data-pane="plan"] input, [data-pane="plan"] select, [data-pane="plan"] button');
+    target?.focus();
+  }
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (pending) return;
-    // ★`[2026-10-03 사용자 결정]` The chosen panel must have something in it — 「계획 확인하기」 is off until it has, and says why
-    //   (the earlier rule, `[2026-09-30]`, let an empty plan through to a screen that offered to plan; that screen is gone and its
-    //   planning is the third panel). Pressing Enter in a field cannot get around the off button.
-    if (reason) return;
+    if (pending || card) return;
+    // ★`[2026-10-03 사용자 결정]` The chosen panel must have something in it. ★`[2026-10-06 사용자 지시]` The button is not switched off for it any more: pressing it with nothing in the panel says why under the panels
+    //   (`role="alert"`, gone as soon as the customer starts writing) and puts the focus there. Pressing Enter in a field is the same.
+    if (reason) {
+      setValidation(active === "text" ? t("여행 계획을 적거나 파일을 올려 주세요.", "Write your plan or upload a file.") : t(...reason));
+      focusChosen();
+      return;
+    }
     if (checking && !humanToken) { setValidation(t("사람 확인이 끝나면 보낼 수 있어요. 잠시만 기다려 주세요.", "You can send once the human check finishes. One moment, please.")); return; }
     setValidation("");
     setRestored("");
+    setCard(true);                                       // ask about the Course Keeper BEFORE the plan is read
+  }
+
+  /** 「켜고 진행」 / 「건너뛰기 — 끄고 진행」: the choice is kept (and sent with the plan, `ask_first` said out loud when off), then the plan is sent as before. */
+  function proceed(guardian: "on" | "off") {
+    decideGuardian(guardian);
+    setCard(false);
     if (checking) signUp.mutate();
     else send(humanToken);
   }
@@ -310,6 +335,7 @@ export function TripRegistration() {
               <PlanAskFields ask={ask} today={today} disabled={pending} onChange={changeAsk} />
             </Pane>
           </div>
+          <ReadingCriteria pace={paceOf(onboarding.complete ? toSurvey(onboarding.answers) : undefined, criteria)} onChange={setPace} />
           {checking && <HumanCheck onToken={takeToken} resetKey={humanReset} />}
           {error && <p id="plan-error" className={styles.error} role="alert">{error}</p>}
           {draftWarning && <p className={styles.warning} role="status">{draftWarning}</p>}
@@ -328,11 +354,10 @@ export function TripRegistration() {
       </div>
       <div className={styles.actions}>
         <ButtonLink href={onboarding.agreed ? routes.home : routes.start}><ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />{t("이전", "Back")}</ButtonLink>
-        {reason
-          ? <span id="submit-reason" className={styles.reason} role="status">{t(...reason)}</span>
-          : <span className={styles.actionNote}>{t("입력한 계획은 화면을 오가도 유지돼요.", "Your draft stays while you explore.")}</span>}
-        <Button variant="primary" type="submit" disabled={pending || Boolean(reason)} aria-describedby={reason ? "submit-reason" : undefined}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
+        <span className={styles.actionNote}>{t("입력한 계획은 화면을 오가도 유지돼요.", "Your draft stays while you explore.")}</span>
+        <Button variant="primary" type="submit" disabled={pending}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
       </div>
     </form>
+    {card && <GuardianCard kind="start" onPrimary={() => proceed("on")} onSecondary={() => proceed("off")} onClose={() => setCard(false)} />}
   </>;
 }

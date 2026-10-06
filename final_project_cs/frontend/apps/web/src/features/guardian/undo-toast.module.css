@@ -1,0 +1,9 @@
+/* `[2026-10-06 사용자 지시 — 설문 화면 구현 인계 · 목업 v9 §3-4]` 알림줄: 머리줄 아래, 자동으로 사라지지 않는다. 실패 변형은 오류 색. */
+.toast { display: flex; align-items: center; gap: 4px; padding: 4px 4px 4px 16px; border: 1px solid var(--color-border-strong); border-radius: 16px; background: var(--color-surface); font-size: 14px; }
+.text { flex: 1; line-height: 1.5; word-break: keep-all; }
+.action { flex: none; min-width: 44px; min-height: 44px; padding: 8px 12px; border: 1px solid transparent; border-radius: 12px; background: transparent; color: var(--color-primary); font: inherit; font-size: 14px; font-weight: 500; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.close { display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px; background: none; color: var(--color-text-secondary); cursor: pointer; }
+.action:hover, .close:hover { background: var(--color-subtle); }
+.action:focus-visible, .close:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.toast[data-failed] { border-color: var(--color-error-border); background: var(--color-error-soft); color: var(--color-error); }
+.toast[data-failed] .action { color: var(--color-error); }

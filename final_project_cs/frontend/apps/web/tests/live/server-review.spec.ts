@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer, start, TRIP_ID } from "./helpers";
+import { mockServer, start, TRIP_ID, checkPlan } from "./helpers";
 import { needsBadge } from "./plan-check-kit";
 
 /**
@@ -25,7 +25,7 @@ async function openFinished(page: Page, request: Parameters<typeof mockServer>[0
 async function uploadPlan(page: Page) {
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill("10/1 09:00 경복궁 관람");
-  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await checkPlan(page);
 }
 
 test("읽는 동안 서버의 내용 이벤트로 장소 카드와 검사 줄이 차례로 채워지고, 끝나면 서버의 판정이 그대로 보인다", async ({ page, request }) => {

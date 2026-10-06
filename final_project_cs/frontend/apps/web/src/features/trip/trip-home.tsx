@@ -258,10 +258,10 @@ function TripWorkspace({ trip, stale }: { trip: Trip; stale: { reload: () => voi
         const expanded = expandedId === stop.id;
         const next = stops[index + 1];
         return <div key={stop.id}>
-          <article className={styles.stop} data-selected={selected?.id === stop.id}>
+          <article className={styles.stop} data-selected={selected?.id === stop.id} data-paused={stop.paused || undefined}>
             <button type="button" className={styles.stophead} id={`stop-button-${stop.id}`} aria-expanded={expanded} aria-controls={`stop-detail-${stop.id}`} onClick={() => { setSelectedId(stop.id); setExpandedId(expanded ? null : stop.id); }}>
               <time>{stop.time}</time>
-              <span className={styles.stopCopy}><strong>{stop.title}</strong><span className={styles.stopTags}><Badge>{bookingLabel(stop, t)}</Badge>{stop.pinned && <Badge>{t("고정한 일정", "Pinned")}</Badge>}</span></span>
+              <span className={styles.stopCopy}><strong>{stop.title}</strong><span className={styles.stopTags}><Badge>{bookingLabel(stop, t)}</Badge>{stop.pinned && <Badge>{t("고정한 일정", "Pinned")}</Badge>}{stop.paused && <Badge tone="warning">{t("일정 정지", "Paused")}</Badge>}</span></span>
               <span className={styles.toggleMark} aria-hidden="true">{expanded ? "−" : "+"}</span>
             </button>
             {expanded && <div className={styles.stopDetails} id={`stop-detail-${stop.id}`}>

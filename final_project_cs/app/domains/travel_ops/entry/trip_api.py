@@ -27,6 +27,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
+import contextlib
 import hashlib
 import hmac
 import html
@@ -190,6 +191,26 @@ class IntakeSurveyIn(BaseModel):
     """로딩 중 질문의 답 — `{문항: 선택지 번호}`. 한 개 이상 · 부분 답 · 같은 문항을 다시 보내면 덮어쓴다(`components/intake/survey_answers.py`)."""
     model_config = ConfigDict(extra="forbid")
     answers: dict[str, str] = Field(min_length=1, max_length=8)
+
+
+class MoveEndIn(BaseModel):
+    """이동 판정의 한쪽 끝 — 일정 항목(`item_id` + 위 `trip_id`)이거나 이름 · 좌표(`lat` · `lon`)."""
+    model_config = ConfigDict(extra="forbid")
+    item_id: UUID | None = None
+    name: str | None = Field(default=None, max_length=80)
+    lat: float | None = Field(default=None, ge=-90, le=90)
+    lon: float | None = Field(default=None, ge=-180, le=180)
+
+
+class MoveJudgeIn(BaseModel):
+    """`POST /v1/web/moves/judge` — 읽기 전용. `depart_at` 과 `arrive_by` 는 **둘 중 하나**(둘 다 없으면 지금 출발). 시간대 없는 값은 서울 시각."""
+    model_config = ConfigDict(extra="forbid")
+    origin: MoveEndIn
+    destination: MoveEndIn
+    depart_at: datetime | None = None
+    arrive_by: datetime | None = None
+    #: 일정 항목으로 한쪽 끝을 가리킬 때 필요하다. 주면 그 여행의 인원 · 이동 선호(설문)도 판정에 쓴다 — **본인 여행만**
+    trip_id: UUID | None = None
 
 
 class IntakeRevisionIn(BaseModel):
@@ -624,8 +645,12 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                       place_factory: Callable[[], Any] | None = None,
                       kakao_factory: Callable[[], Any] | None = None,
                       policy_search_factory: Callable[[], Any] | None = None,
-                      human_verify: Callable[..., dict[str, Any]] | None = None) -> APIRouter:
+                      human_verify: Callable[..., dict[str, Any]] | None = None,
+                      cached_check_factory: CheckFactory | None = None,
+                      fresh_check_factory: CheckFactory | None = None) -> APIRouter:
     """★점검기·분류기·추출용 LLM 은 **처음 쓸 때** 만든다 — 앱 기동이 기다리지 않게.
+    `cached_check_factory` · `fresh_check_factory` — ★`[2026-10-06]` 「일정 위험 점검」(`GET …/risks`)이 쓰는 점검기: 앞은 **공유 응답 캐시만 읽는** 것(바깥에 안 나간다), 뒤는 캐시에 없을 때
+    새로 부르되 **낮은 우선순위**(하루 한도의 일부만)인 것. ★뒤가 없으면 `fresh=true` 는 503 이다 — 몫이 없는 점검기로 **조용히 대신하지 않는다**(`[2026-10-06 검토]`).
     `human_verify` — 사람 확인(Turnstile `siteverify`)을 갈아 끼우는 자리(시험). 없으면 Cloudflare 에 묻는다."""
     from app.domains.travel_ops.modules.web_account import web_guard
 
@@ -2087,6 +2112,112 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                              # ★`[2026-10-06]` 재난 안전 알림의 안내(공식 안내 · 가까운 대피 장소 · 「일정 다시 시작」) — 안전 알림(`safety_pause` · `safety_release`)에만 있다
                              "safety": payload.get("guidance") if payload.get("reason") in ("safety_pause", "safety_release") else None,
                              "at": at.isoformat()} for key, payload, status, at in rows]}
+
+    # ── 개인 AI 입구(MCP)의 읽기 도구 둘 — 일정 위험 점검 · 이동 판정 `[2026-10-06 사용자 요청]` ──────────────
+    #   ★MCP 는 새 규칙을 만들지 않는다 — 이 두 입구가 규칙이고 MCP 도구(`mcp_server.py`)는 그대로 부르는 얇은 어댑터다. 둘 다 **읽기**(아무것도 쓰지 않는다 · 쓰기 스위치와 무관).
+    slots: dict[str, Any] = {}
+
+    @contextlib.contextmanager
+    def _slot(name: str):
+        """같은 입구를 **동시에** 처리하는 수의 상한(`travel.mcp.max_concurrent.<이름>`) — 넘으면 기다리지 않고 503 `busy`(5초 뒤 다시). 하루 횟수 제한과 별개로 연결 · 스레드를 지킨다
+        (캐시 읽기는 호출마다 새 DB 연결을 여러 번 열고 항목마다 스레드를 만든다)."""
+        import threading
+
+        from app.core.settings import get_guardrails
+
+        if name not in slots:
+            slots[name] = threading.BoundedSemaphore(max(1, int(get_guardrails().get(f"travel.mcp.max_concurrent.{name}"))))
+        if not slots[name].acquire(blocking=False):
+            error = _error(503, "busy", "지금 같은 요청이 몰려 있다 — 잠시 뒤 다시 한다", retry_after_seconds=5)
+            error.headers = {"Retry-After": "5"}
+            raise error
+        try:
+            yield
+        finally:
+            slots[name].release()
+
+    def _owned_trip_items(tenant: str, trip_id: UUID, customer: UUID):
+        """본인 여행의 최신 판과 항목 — 한 번만 읽는다(남의 것 · 없는 것은 같은 404)."""
+        with get_connection() as conn:
+            try:
+                trip, items = TripStore(tenant).latest(conn, trip_id)
+            except KeyError:
+                raise _error(404, "not_found", "resource not found") from None
+        if trip["customer_id"] != customer:
+            raise _error(404, "not_found", "resource not found")
+        return trip, items
+
+    @router.get("/v1/web/trips/{trip_id}/risks")
+    def web_trip_risks(trip_id: UUID, http: Request, item_id: UUID | None = Query(default=None), within_hours: float | None = Query(default=None, gt=0, le=48),
+                       fresh: bool = Query(default=False), at: datetime | None = Query(default=None), who: tuple[str, UUID] = Depends(_web_customer)):
+        """**일정 위험 점검** — 내 여행의 곧 시작할 일정(기본 지금부터 `travel.mcp.risk_check.horizon_hours` 시간 안 · 진행 중 포함)마다 외부 정보 6종
+        (날씨 예보 · 기상 특보 · 재난문자 · 교통 통제 · 대기질 · 지진)이 문제를 가리키나. 항목마다 `problem`(원인) · `clear` · `unknown`(확인 불가 — 못 확인한 종류 목록).
+
+        - ★기본(`fresh=false`)은 **감시가 모아 둔 공유 응답 캐시만 읽는다** — 바깥에 새로 묻지 않아 하루 한도(감시 · 채팅 몫)를 안 쓴다. 캐시에 없는 종류는 `unknown`(지어내지 않는다).
+        - `fresh=true` 는 캐시에 없는 것을 새로 부르되 **낮은 우선순위**다(소스의 하루 · 이번 달 한도의 `fresh_share` 까지만 쓴다) · 한 번에 `fresh_max_items` 개까지 · 횟수는 `risk_check`(키 · 주소 · 서비스) 로 센다(429 `usage_limit` · 503 `service_daily_cap`).
+        - `item_id` 로 한 항목만 · `within_hours`(최대 48) · `at`(기준 시각 — 시험 · 재생용, 없으면 지금).
+        - 본인 여행만(남의 것 · 없는 것 404). 읽기 전용이다."""
+        from app.core.settings import get_guardrails
+        from app.domains.travel_ops.components.watch.risk_report import build_report
+
+        tenant, customer = who
+        guard = get_guardrails()
+        factory = fresh_check_factory if fresh else cached_check_factory
+        if factory is None:
+            raise _error(503, "risk_check_unavailable", "일정 위험 점검 소스가 이 서버에 조립되어 있지 않다")
+        if at is not None and not 2000 <= at.year <= 2100:
+            raise _error(422, "invalid_request", "at 은 2000~2100년 사이여야 한다")
+        trip, items = _owned_trip_items(tenant, trip_id, customer)
+        if item_id is not None and not any(i.item_id == item_id for i in items):
+            raise _error(404, "not_found", "resource not found")
+        _count("risk_check" if fresh else "risk_read", tenant, customer, http)          # 캐시만 읽는 호출도 센다 — 바깥 한도는 안 쓰지만 서버 조회 부하는 쓴다
+        horizon = float(within_hours if within_hours is not None else guard.get("travel.mcp.risk_check.horizon_hours"))
+        limit = int(guard.get("travel.mcp.risk_check.fresh_max_items" if fresh else "travel.mcp.risk_check.max_items"))
+        with _slot("risk_check"):                                                        # 동시에 몰려도 연결 · 스레드를 다 쓰지 못한다
+            return build_report(trip_id=trip_id, version=int(trip["version"]), items=items, check=_lazy("risk_" + ("fresh" if fresh else "cached"), factory),
+                                at=_seoul(at) or datetime.now(KST), horizon_hours=horizon, max_items=limit, item_id=item_id, mode="fresh" if fresh else "cached",
+                                snapshot_hours=float(guard.get("travel.mcp.risk_check.snapshot_hours")))
+
+    @router.post("/v1/web/moves/judge")
+    def web_move_judge(request: MoveJudgeIn, http: Request, who: tuple[str, UUID] = Depends(_web_customer)):
+        """**이동 판정** — 두 장소 → 출발 시각 · 경로(노선) · 소요 · 근거 등급(`timetable` 시간표 판정 · `estimate` 직선 어림 · `none` 근거 없음) · 확인 시각.
+
+        - 장소는 이름 · 좌표(`lat` · `lon`) 또는 내 여행의 일정 항목(`item_id` + `trip_id` — 본인 여행만). 서울 밖은 판정하지 않는다(`out_of_scope`).
+        - 시각은 `depart_at` 이나 `arrive_by` 중 **하나**(둘 다 주면 422, 둘 다 없으면 지금 출발). ★판정기가 꺼져 있거나 못 하면 그 사실을 그대로 돌려준다(`status` = `unavailable` · `no_route`) — 경로 · 시각을 지어내지 않는다.
+        - 이 서버의 시간표 · 도로 그래프와 자체 길찾기 서버(GraphHopper)만 쓴다(바깥 **유료** 소스를 부르지 않는다). 횟수는 `move_judge` 로 센다. 읽기 전용이다."""
+        from app.domains.travel_ops.components.itinerary import move_judge
+
+        tenant, customer = who
+        if request.depart_at is not None and request.arrive_by is not None:
+            raise _error(422, "invalid_request", "depart_at 과 arrive_by 는 둘 중 하나만 줄 수 있다")
+        trip, items = None, []
+        if request.trip_id is not None:
+            trip, items = _owned_trip_items(tenant, request.trip_id, customer)
+
+        def end(side: MoveEndIn, key: str) -> dict[str, Any]:
+            try:
+                if side.item_id is not None:
+                    if trip is None:
+                        raise _error(422, "trip_id_required", "일정 항목(item_id)으로 가리키려면 trip_id 가 필요하다")
+                    found = next((i for i in items if i.item_id == side.item_id), None)
+                    if found is None:
+                        raise _error(404, "not_found", "resource not found")
+                    if found.place is None or found.place.get("latitude") is None:
+                        raise _error(422, "invalid_place", "그 항목은 장소(좌표)가 없다 — 이동 판정을 할 수 없다")
+                    return move_judge.as_place({"name": found.place.get("name") or found.title, "lat": found.place["latitude"],
+                                                "lon": found.place["longitude"]}, key=key)
+                return move_judge.as_place({"name": side.name, "lat": side.lat, "lon": side.lon}, key=key)
+            except move_judge.InvalidPlace as exc:
+                raise _error(422, "invalid_place", f"{'출발' if key == 'origin' else '도착'} 장소를 읽지 못했다 — {exc}") from None
+
+        for moment in (request.depart_at, request.arrive_by):
+            if moment is not None and not 2000 <= moment.year <= 2100:
+                raise _error(422, "invalid_request", "시각은 2000~2100년 사이여야 한다")
+        origin, dest = end(request.origin, "origin"), end(request.destination, "destination")
+        _count("move_judge", tenant, customer, http)
+        with _slot("move_judge"):                                                        # 판정기는 계산이 무겁다 — 동시 처리 상한
+            return move_judge.judge(origin=origin, dest=dest, now=datetime.now(KST), depart_at=_seoul(request.depart_at), arrive_by=_seoul(request.arrive_by),
+                                    party_size=(trip or {}).get("party_size"), constraints=(trip or {}).get("constraints"))
 
     @router.get("/v1/web/trips/{trip_id}/route-shapes")
     def web_route_shapes(trip_id: UUID, detail: bool = False, who: tuple[str, UUID] = Depends(_web_customer)):

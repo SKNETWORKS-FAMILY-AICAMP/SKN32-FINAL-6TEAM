@@ -1,0 +1,22 @@
+/* `[2026-10-06 사용자 결정 — 재난 시 일정 정지]` 여행 화면 맨 위의 「일정 정지 중」 패널. 안전 안내가 먼저, 다시 시작 단추는 맨 아래. 색은 제품 토큰(오류색 계열)이다. */
+.panel { display: grid; gap: 10px; padding: 16px 17px; border: 1px solid var(--color-error-border); border-radius: 18px; background: var(--color-error-soft); color: var(--color-text); }
+.panel[data-level="trip"] { border-width: 2px; }
+.head { display: flex; align-items: center; gap: 8px; color: var(--color-error); }
+.head h2 { margin: 0; font-size: 16px; font-weight: 800; line-height: 1.4; }
+.label { margin: 0; font-size: 14px; font-weight: 700; line-height: 1.6; }
+.when { margin: 0; font-size: 12px; line-height: 1.6; color: var(--color-text-secondary); }
+.when:empty { display: none; }
+.guidance { display: grid; gap: 10px; padding-top: 10px; border-top: 1px solid var(--color-error-border); }
+.text { margin: 0; font-size: 13px; line-height: 1.8; white-space: pre-line; word-break: keep-all; }
+.guidance h3 { margin: 0; font-size: 13px; font-weight: 750; }
+.call { display: inline-flex; align-items: center; gap: 6px; width: fit-content; min-height: 44px; padding: 0 16px; border-radius: 12px; background: var(--color-error); color: var(--color-on-primary); font-size: 14px; font-weight: 750; text-decoration: none; }
+.call:focus-visible, .shelters a:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.shelters { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.shelters li { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-surface); font-size: 12px; line-height: 1.6; }
+.shelters strong { font-size: 13px; }
+.meta { color: var(--color-text-secondary); }
+.shelters a { width: fit-content; min-height: 32px; padding-top: 4px; font-weight: 700; color: var(--color-primary); }
+.note { margin: 0; font-size: 11px; line-height: 1.7; color: var(--color-text-secondary); }
+.resume { display: grid; justify-items: start; gap: 8px; padding-top: 10px; border-top: 1px solid var(--color-error-border); }
+.resume p { margin: 0; font-size: 12px; line-height: 1.6; color: var(--color-text-secondary); }
+.resume .error { color: var(--color-error); }

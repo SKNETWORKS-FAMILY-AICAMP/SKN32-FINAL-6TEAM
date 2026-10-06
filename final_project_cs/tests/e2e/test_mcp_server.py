@@ -28,7 +28,8 @@ from .test_trip_api import _report, api  # noqa: F401 — 픽스처를 그대로
 from .test_web_api import _fresh_limit_cache, _h, _session, _web_body  # noqa: F401
 
 READ_TOOLS = {"tripilot_list_trips", "tripilot_get_trip", "tripilot_get_notices", "tripilot_get_proposals",
-              "tripilot_get_itinerary_schema"}
+              "tripilot_get_itinerary_schema",
+              "tripilot_check_trip_risks", "tripilot_judge_move"}                            # `[2026-10-06]` 읽기 도구 둘 더 — `test_mcp_read_tools.py`
 WRITE_TOOLS = {"tripilot_ask", "tripilot_report_issue", "tripilot_swap_item", "tripilot_choose_proposal",
                "tripilot_rollback", "tripilot_submit_itinerary", "tripilot_plan_trip"}
 MESSAGE = {"message": "식당이 휴무예요", "at": "2030-01-01T12:00:00+09:00"}

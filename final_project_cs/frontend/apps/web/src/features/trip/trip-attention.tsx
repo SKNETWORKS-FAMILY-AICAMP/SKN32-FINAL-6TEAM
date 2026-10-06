@@ -12,6 +12,7 @@ import type { Trip } from "./model";
 import { tripKey } from "./use-trip";
 import { noticesKey, proposalsKey, useNotices, useProposals } from "./use-trip-extras";
 import { useTripEvents } from "./use-trip-events";
+import { SafetyPanel } from "./trip-safety";
 import styles from "./trip-attention.module.css";
 
 const NOTICE_LABEL: Record<string, [string, string]> = {
@@ -65,6 +66,8 @@ export function TripAttention({ trip }: { trip: Trip }) {
   const history = trip.history ?? [];
 
   return <div className={styles.wrap}>
+    {/* `[2026-10-06]` 재난으로 일정이 멈췄으면 맨 위에: 정지 · 안전 안내 · 다시 시작. 정지가 없으면 아무것도 그리지 않는다. */}
+    <SafetyPanel trip={trip} notices={notices.data ?? []} onChanged={refresh} />
     {trip.planUrl && <p className={styles.plan}><a href={trip.planUrl} target="_blank" rel="noopener noreferrer">{t("여행계획서 열기", "Open your trip plan")}</a>
       {/* `[2026-10-04 사용자 지시]` 같은 주소에 download=1 — 서버가 파일(triPilot-<제목>.html, 혼자 열리는 HTML)로 내려준다. 게스트는 창을 닫으면 이어 볼 수 없으니 이것이 보관 수단이다. */}
       {planDownloadUrl(trip.planUrl) && <> · <a href={planDownloadUrl(trip.planUrl) ?? undefined} data-plan-download>{t("계획서 내려받기", "Download the plan")}</a></>}<span>{t("로그인 없이 열리는 내 여행 링크예요. 링크를 아는 사람은 누구나 볼 수 있어요.", "This link opens without logging in. Anyone who has it can view your plan.")}</span></p>}
