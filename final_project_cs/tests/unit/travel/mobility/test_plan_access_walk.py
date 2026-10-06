@@ -95,20 +95,21 @@ def test_near_stations_measure_to_the_exit_by_road_but_keep_candidate_order():
         def nearest(self, nm, lat, lng, line=None):
             return (250.0, {"lat": 37.5722, "lng": 126.9801}) if nm == "가" else None
 
-    p = _planner(FakeRouter(meters=520.0), sc=SC(), ex=EX())
+    # ☆`[2026-10-06]` 길 거리가 직선의 `WALK_ROUTED_CAP_PROPOSED`(2배) 를 넘으면 상한이 걸린다 — 이 시험은 상한 안(출구 직선 250 m · 길 480 m = 1.92배)에서 본다
+    p = _planner(FakeRouter(meters=480.0), sc=SC(), ex=EX())
     p._station_k = lambda: 3
     p._blocked_station = lambda rec: False
     out = p._near_stations(HOME, 1000)
     assert [o[0] for o in out] == ["가", "나"]
-    assert all(math.isclose(o[1], 520.0 / DETOUR) for o in out)
+    assert all(math.isclose(o[1], 480.0 / DETOUR) for o in out)
     calls = p.v.bike_router.calls
     assert calls[0][3:] == (37.5722, 126.9801), "출구가 있으면 출구까지"
     assert calls[1][3:] == (37.5745, 126.98), "출구표가 없으면 역 좌표까지"
 
 
 def test_stop_walk_is_remeasured_only_for_the_stop_it_is_given():
-    p = _planner(FakeRouter(meters=260.0))
-    assert p._stop_walk(HOME, {"lat": 37.5710, "lng": 126.9800}, 120) == round(260.0 / DETOUR) == 200
+    p = _planner(FakeRouter(meters=230.0))                  # 직선 120 m 에 길 230 m = 1.92배 — 상한(2배) 안
+    assert p._stop_walk(HOME, {"lat": 37.5710, "lng": 126.9800}, 120) == round(230.0 / DETOUR) == 177
     assert p._stop_walk(HOME, {"lat": None, "lng": None}, 120) == 120, "좌표 없는 정류장은 직선 그대로"
     assert len(p.v.bike_router.calls) == 1
 
