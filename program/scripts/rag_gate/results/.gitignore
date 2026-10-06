@@ -4,3 +4,4 @@ rag_live_mixed_E.json
 rag_live_metrics.json
 _*_err.txt
 translate_guard_live.out
+misanswer/
