@@ -106,6 +106,9 @@ def _controller_with(reroute, teams):
                 raise RegistryError(f"case must resolve to exactly one active team: {case_type}")
             return _Entry()
 
+        def get(self, team_id):                              # 이미 정해진 담당 팀 — 재배분으로 라우팅된 Case 가 쓴다
+            return _Entry()
+
         @staticmethod
         def capability_for(entry, intent=None, *, input_text=None, state=None):
             return "dining.check"
@@ -134,6 +137,18 @@ def test_the_core_asks_the_registry_again_instead_of_trusting_the_answer():
 
     invented = _controller_with(lambda **_: {"case_type": "concierge", "why": "지어냄"}, teams)
     assert invented._reroute_once(case, intent=None, failure="f") is None
+
+
+def test_a_rerouted_case_keeps_its_team_when_the_capability_is_asked_again():
+    """★`[2026-10-07]` 재배분이 성공한 Case 는 원래 종류(`unknown`)로는 받는 팀이 없다 — 뒤에서 기능을 다시 물을 때 터지지 않고 **담당 팀**으로 찾는다.
+    전에는 이것이 터져 재배분이 성공한 Case 가 곧바로 죽었다(`tests/scenario/test_case_question.py::test_the_two_reports_stay_what_they_were`)."""
+    from app.core.registry import RegistryError
+
+    controller = _controller_with(lambda **_: None, [_Manifest("dining", ["dining"])])
+    rerouted = {"subject": "밥집이 닫았어요", "issue_code": "unknown_thing", "owner_team_id": "dining", "intent": None}
+    assert controller._capability(rerouted) == "dining.check"
+    with pytest.raises(RegistryError):                            # 담당이 정해지지 않았으면 종전대로 터진다 — 조용히 아무 팀에나 보내지 않는다
+        controller._capability({**rerouted, "owner_team_id": None})
 
 
 def test_only_active_teams_are_offered_to_the_chooser():
