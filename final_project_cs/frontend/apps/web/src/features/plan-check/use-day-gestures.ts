@@ -90,7 +90,9 @@ export function useDayGestures(box: RefObject<HTMLElement | null>, options: DayG
     const onDown = (event: PointerEvent) => {
       if (event.pointerType === "mouse" && event.button !== 0) return;
       const target = event.target as Element | null;
-      if (target?.closest("input, textarea, select, [data-grab], [data-no-swipe]")) return;
+      // ★The time and its dot (`[data-grab]`) are taken by a vertical drag (the time changes), but a SIDEWAYS move that starts there is still a swipe of the day: the lock below tells them apart
+      //   (up and down first = not ours). Without this the left 44 px of the list - where a swipe back to the previous day often starts - could not be swiped from.
+      if (target?.closest("input, textarea, select, [data-no-swipe]")) return;
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (pointers.size === 2 && latest.current.pinch) {
         if (swipe?.lock === "h") { clearTimeout(settling); place(0, true); settling = setTimeout(finish, SETTLE_MS); }
