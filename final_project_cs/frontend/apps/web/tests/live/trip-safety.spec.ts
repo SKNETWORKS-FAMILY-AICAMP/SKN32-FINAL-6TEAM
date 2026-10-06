@@ -110,13 +110,17 @@ test("여행 전체 정지는 「다시 시작할 때까지 멈춰 있어요」,
   await page.route(`**/v1/web/trips/${TRIP_ID}/notices`, async (route) => {
     const response = await route.fetch();
     const body = await response.json();
-    body.notices = [...(body.notices ?? []), { ...ALERT, safety: { ...ALERT.safety, shelters: [], shelter_status: "no_data" } }];
+    // 서버가 대피 장소 자료 표가 빈 채로 보내는 알림: 글 끝에 「가까운 대피 장소 자료를 아직 불러오지 못했어요…」가 붙고 목록은 비어 있다(2026-10-06 서버 `safety_pause.py`)
+    const text = `${ALERT.text}
+가까운 대피 장소 자료를 아직 불러오지 못했어요. 재난문자와 공식 안내를 따라 주세요.`;
+    body.notices = [...(body.notices ?? []), { ...ALERT, text, safety: { ...ALERT.safety, shelters: [], shelter_status: "no_data" } }];
     await route.fulfill({ response, json: body });
   });
   await openTrip(page);
   await expect(panel(page)).toContainText("전쟁 — 여행 전체 정지");
   await expect(panel(page)).toContainText("다시 시작할 때까지 멈춰 있어요");
-  await expect(panel(page).getByText("가까운 대피 장소")).toHaveCount(0);                                    // 없는 대피 장소를 만들지 않는다
+  await expect(panel(page).getByRole("heading", { name: "가까운 대피 장소" })).toHaveCount(0);               // 없는 대피 장소를 만들지 않는다
+  await expect(panel(page)).toContainText("가까운 대피 장소 자료를 아직 불러오지 못했어요. 재난문자와 공식 안내를 따라 주세요.");   // 서버가 말한 이유는 그대로 보인다
   await expect(panel(page)).toContainText("공식 안내(국민재난안전포털)를 먼저 따르고");
   await expect(panel(page).getByRole("link", { name: "119에 전화" })).toBeVisible();
 });
