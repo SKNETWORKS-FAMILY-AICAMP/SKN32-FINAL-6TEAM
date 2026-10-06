@@ -570,7 +570,7 @@ GET   /admin/limits/events?limit=50      scope limits:read
 |---|---|---|
 | `POST /v1/web/trip-intakes` | 키 | 폼 — `text`(붙여 넣은 일정 · 채팅처럼 쓴 계획) + `files`(사진 · PDF · docx · xlsx, 종류는 **바이트로** 가린다). 곧바로 `202 {intake_id, status: reading}`, 읽기는 뒤에서 돈다(사진 한 장 ~45~60초). ★`[2026-09-30 사용자 결정 — ui 세션 전달]` **글 · 파일이 모두 비어도 거절하지 않는다** — 읽을 것이 없으니 뒤에서 읽지 않고 곧바로 `202 {status: review, stage: review}`(확인 화면 상태)다. 조회하면 `sources: []` · `check.plan.requested: false`(「짜 달라는 요청」 표시를 지어내지 않는다) · `check.ready: false` · 문제 `no_items` — 확인 화면의 「읽은 일정이 없어요 — 대신 짜 드릴까요?」 짜기 칸에서 `/plan` 으로 짜서 등록한다. 사람 확인 · 남용 방어 한도는 그대로(빈 접수도 한 건). ☆전에는 422 `empty_intake` 였다 |
 | `GET /v1/web/trip-intakes/{intake_id}` | 키 | 단계 · 원본별 줄 번호 글(`lines[].read` = 읽은 줄) · 항목(`fields` 의 값마다 근거) · `reading`(남은 줄에 모델이 가리킨 결과 — 받은 수 · 버린 인용 · 장애) · `needs_review`. ★`[2026-10-06]` `questions[]` — 로딩 중에 물을 문항(최대 3, 아래 「설문 질문」). **남의 접수는 404** |
-| `POST /v1/web/trip-intakes/{intake_id}/survey` | 키 | ★`[2026-10-06]` 로딩 중 질문의 답을 **한 문항씩 바로** 저장 `{answers: {문항 id: 선택지 id}}` → `{ok, answered[]}` — 아래 「설문 질문」 |
+| `POST /v1/web/trip-intakes/{intake_id}/survey` | 키 | ★`[2026-10-06]` 로딩 중 질문의 답을 **한 문항씩 바로** 저장 `{answers: {문항 id: 선택지 id}}` → `{ok, answered[], questions_version}` — 아래 「설문 질문」 |
 | `POST /v1/web/trip-intakes/{intake_id}/edits` | 키 | 확인 화면에서 고친 값 `{revision, edits:[{source_id, field, value}]}` → **새 판**(앞 판의 값은 남는다). 칸: `items[n].title·date·starts_at·ends_at·kind·place·booking_no·removed` · `trip.title·party_size·first_day`. 장소는 `{"name":…}` 로 받아 **다시 찾고**(못 찾으면 422 `place_not_found`), `{"none": true}` 는 「장소 없음」. 낡은 판은 **409 `stale_revision`** |
 | `POST /v1/web/trip-intakes/{intake_id}/confirm` | 키 | 「등록하고 관리 시작」 `{revision, survey?}`. ★`survey`(선택, `TripSurvey` 판 `2026-09-24.v1`)는 등록 몸통의 `constraints.survey` 로 실려 여행에 남는다 — 틀리면 422 `invalid_survey`. 서버가 **다시 조립·판정**한 뒤 `_create_trip` 한 곳으로 등록 — `request_id = intake:{접수}:r{판}` 이라 두 번 눌러도 여행은 하나. 막으면 422 `intake_incomplete`(문제 목록) · 판정기의 422 그대로 |
 | `POST /v1/web/trip-intakes/{intake_id}/plan` | 키 | 「일정 짜 줘」 `{revision, start_date, days(1~7), party_size(1~4), keep_read_items?, survey?}` — ★`survey` 는 생성기가 먼저 적용하고(16번 여유 → 하루 곳 수) 여행에 남는다(15번은 감시가 읽는다), 틀리면 422 `invalid_survey` — 원문 그대로를 선호로 일정 생성기(`planner.plan_trip`)가 짜고, **같은 판정**을 지난 초안을 `_create_trip` 으로 등록. `request_id = intake:{접수}:plan:r{판}` — 다시 눌러도 모델을 안 부르고 같은 여행. 못 짜면 422(이유·완화 조건). ★`keep_read_items`(기본 true) — 읽은 일정은 **옮기지도 바꾸지도 않고** 빈 시간만 채운다(`planner.plan_around`: 겹치거나 앞뒤 30분에 걸린 짠 항목 · 같은 때 식사를 빼고, 이동 자리가 모자라면 고정 일정을 밀지 않고 그 앞의 짠 항목을 뺀다. 읽은 장소는 후보에서 뺀다 — ★`[2026-10-01]` 이름이 정확히 같은 것만이 아니라 **같은 곳**(같은 주소 · 30 m 안 · 이름 첫 낱말이 같고 1.5 km 안)이면 다른 이름이어도 뺀다. 고객이 쓴 「경복궁 건청궁」을 고정했는데 생성기가 「경복궁」을 따로 넣던 것을 막는다. 식당은 같은 건물에 다른 가게가 흔해 이 비교에서 뺀다). 읽은 일정이 고른 날짜 밖이면 422 `read_items_outside_days`. false 면 읽은 일정 없이 새로 짠다 |
@@ -760,7 +760,7 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 
 ### 설문 질문 — `questions[]` · `POST /v1/web/trip-intakes/{intake_id}/survey` `[2026-10-06 사용자 지시 · uiux 인계]`
 
-`[실측]` 구현 `app/domains/travel_ops/components/intake/survey_answers.py` · `entry/trip_api.py` · 저장 `trip_intakes.survey`(마이그레이션 051) · 시험 `tests/e2e/test_intake_survey_questions.py` 18건. 기획 `wiki/records/plans/2026-10-05_설문_계획서에서_읽고_로딩에서_묻기_기획.md` 「서버 몫」 1.
+`[실측]` 구현 `app/domains/travel_ops/components/intake/survey_answers.py` · `entry/trip_api.py` · 저장 `trip_intakes.survey`(마이그레이션 051) · 시험 `tests/e2e/test_intake_survey_questions.py` 24건. 기획 `wiki/records/plans/2026-10-05_설문_계획서에서_읽고_로딩에서_묻기_기획.md` 「서버 몫」 1.
 ★**쓰는 문항만 묻는다** — 설문 문항 가운데 판정에 이어진 것만(`survey.py` 머리말). 받기만 하고 쓰는 곳이 없는 문항과 **식사 제한 · 접근성은 묻지 않는다**(민감 정보 — 동의 화면에서만 받는다).
 
 **`GET /v1/web/trip-intakes/{id}` 의 `questions[]`** — 접수와 상관없이 **같은 순서 · 같은 문항**이다(답에 따라 사라지지 않는다 — 화면의 `i / N` 이 흔들리지 않는다). 이미 답한 문항도 **그대로 남고** `answer` 에 고른 선택지 id 가 있다(없으면 null) — 화면이 새로 고쳐져도 앞 질문으로 돌아가 고칠 수 있다.
@@ -772,11 +772,18 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 
 각 문항은 `{id, kind: "single", title, why, options: [{id, label}], answer}`. 글은 한국어다(영어 화면은 문항 `id` 로 옮긴다). `on_disruption` · `pace` 는 **문항이 아니다**(항로 지킴이 카드 · 계획 담기 화면이 보낸다).
 
-**`POST /v1/web/trip-intakes/{id}/survey`** `{answers: {문항 id: 선택지 id}}` → `{ok: true, answered: [지금까지 답한 모든 문항 id, 정렬]}`
+**`POST /v1/web/trip-intakes/{id}/survey`** `{answers: {문항 id: 선택지 id}}` → `{ok: true, answered: [지금까지 답한 모든 문항 id, 정렬], questions_version: "1"}`
 - 한 번에 1~8개 · **부분 답 · 멱등**이다. ★**같은 문항을 다시 보내면 덮어쓴다**(마지막 값이 이긴다 — 앞 질문으로 돌아가 고치는 화면).
 - 문항 id 는 위 두 문항 + `on_disruption`(`replace` · `ask_first`) + `pace`(`relaxed` · `moderate` · `packed`)를 받는다 — 뒤 둘은 카드 · 계획 담기 화면의 값을 접수에 실어 두는 용도다. 모르는 문항 · 선택지는 **422 `invalid_answers`**(`problems[{key, reason}]`) — **하나라도 틀리면 아무것도 저장하지 않는다.** 글자가 아닌 선택지 · 빈 `answers` · 모르는 칸은 422 `validation_error`.
 - 남의 접수 · 없는 접수는 같은 404. **이미 등록된 접수는 409 `intake_confirmed`**. 저장은 접수의 `updated_at` 을 **건드리지 않는다**(읽기가 멈췄는지 가르는 기준).
 - 답은 접수에 모아 두었다가 **`confirm` · `plan` 할 때 설문(`constraints.survey`)에 합쳐진다** — 요청이 직접 준 `survey` 가 이긴다(`priority_details` 는 영역마다 합친다). 안 답한 문항은 **채워 넣지 않는다**(예: `on_disruption` 을 안 줬으면 「직접 고른 것」이 아니라 자동 변경이 켜지지 않는다). 답이 하나도 없고 `survey` 도 안 보내면 등록 동작은 옛 그대로(설문 없음).
+
+**★질문 묶음 · 문항 번호와 슬롯 · 답 이력** `[2026-10-06 uiux 요청 — 맞춤 질문 의논 §7]` — 나중에 질문을 모델이 만들게 되어도 웹은 바꾸지 않도록 지금 지키는 것이다(구현 `survey_answers.py` · 마이그레이션 053 · 시험 6건 추가).
+- **웹은 `questions[]` 만 그린다.** 문구 · 선택지의 뜻을 하드코딩하지 않는다. 모르는 `kind`(지금은 `single` 만)는 그 문항만 건너뛴다. `questions[]` 는 슬롯 · 값을 **싣지 않는다**(웹은 모른다).
+- **문항 번호(`id`)와 슬롯(구조화 값이 들어가는 자리)은 다른 칸이다.** 선택지 번호 ↔ 구조화 값의 **매핑은 서버가 소유**한다(`Question.slot` · `Option.value`). 문구를 바꿔도 번호를 새로 만들지 않고 **같은 선택지 번호의 뜻을 바꾸지 않는다.** 지금 두 문항은 번호 = 슬롯 이름 · 선택지 번호 = 값으로 같지만 코드는 번호 → 슬롯 → 값으로만 읽는다(번호가 다른 묶음으로도 시험했다).
+- **질문 묶음에 버전이 있다** — `QUESTION_SET_VERSION`(지금 `"1"`). 접수 조회(`GET /v1/web/trip-intakes/{id}`)의 `questions_version` 과 `POST …/survey` 응답의 `questions_version`(이 답을 해석한 묶음)으로 내려간다. 문구만 고치면 안 올리고, **선택지 목록 · 값 매핑 · 문항 추가/삭제**처럼 답의 뜻이 달라지면 올린다.
+- **저장할 때 그때의 묶음을 남긴다** — 답 이력(`trip_intake_survey_answers`, 추가만 · 053): 문항 번호 · 선택지 번호 · **슬롯 · 해석한 값** · 그때 화면에 보인 문구와 라벨 · 묶음 버전. 같은 답을 다시 보내면(멱등) 줄이 늘지 않고, 고치면 줄이 하나 더 쌓인다. **등록 때는 저장 때 해석한 값으로 설문을 만든다** — 묶음이 바뀐 뒤에도 옛 답이 새 매핑으로 잘못 읽히지 않는다. 이력이 없는 옛 답은 지금 묶음의 매핑으로 읽는다(경고).
+- **지금 하지 않는 것**: 자유 선택지 생성 · 자유 답변(나중에 별도 필드나 계약 버전으로) · 추정값으로 기존 답 덮어쓰기 · 로딩 경로의 모델 여러 번 호출. `[미확인]` 다음 단계가 필요로 할 값(프로필의 `source`(user_answer · inferred) · `scope`(trip · day) · `question_id` · 가설 목록)은 설계하지 않았다 — 질문 생성 모델 · 제한 시간(실측) · 외부 전송 정책 · 슬롯 목록 확정이 먼저이고 서버 · RAG 몫이거나 사용자 결정이다(`wiki/records/plans/2026-10-06_맞춤_질문_생성_방향_의논.md` §8).
 
 ### 항로 지킴이 — `POST /v1/web/trips/{trip_id}/guardian` · 여행 조회의 `guardian` · 알림 `[결정 2026-10-06 사용자]`
 
