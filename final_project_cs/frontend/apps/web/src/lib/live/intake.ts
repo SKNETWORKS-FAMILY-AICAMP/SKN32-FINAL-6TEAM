@@ -48,6 +48,23 @@ export interface IntakeView {
   sources: IntakeSource[];
   check: { ready: boolean; problems: IntakeProblem[]; filled: IntakeFilled[]; items: number; title: string; plan: IntakePlanBasis } | null;
   needs_review: { field: string; note: string | null }[];
+  /**
+   * `[2026-10-06]` Questions to ask while the server reads (`wiki/external/rest-endpoints.md` 「설문 질문」). The page DRAWS what is here and nothing else: a `kind` it does not know is skipped,
+   * and no wording or option meaning is built into the page (an older server sends none). `answer` = the option id already saved, `null` when there is none.
+   */
+  questions?: IntakeQuestion[];
+  /** The question set these come from; a change in meaning of an option raises it. Kept for the record - the page does not branch on it. */
+  questions_version?: string;
+}
+
+/** One question of `questions[]`. Only `kind: "single"` (pick one option) is drawn today; the fields are read as data and checked again before drawing (`features/survey-questions/model.ts`). */
+export interface IntakeQuestion {
+  id: string;
+  kind: string;
+  title?: string;
+  why?: string;
+  options?: { id: string; label: string }[];
+  answer?: string | null;
 }
 
 /** 「일정 짜 줘」 기본값 — 읽은 값에서만 나온다. 모르면 null(화면이 묻는다). */
@@ -87,6 +104,16 @@ export function planIntake(intakeId: string, revision: number, input: IntakePlan
   return streamApi(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/plan`, language, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, ...input }),
   }, onProgress);
+}
+
+/**
+ * `[2026-10-06]` Save the answers to the questions asked while the server reads: `{question id: option id}`, one question at a time as the customer answers. The server keeps the LAST value of a
+ * question (answering again corrects it) and refuses a whole request with `422 invalid_answers` when one id or option is unknown. A registered intake answers `409 intake_confirmed`.
+ */
+export function submitSurveyAnswers(intakeId: string, answers: Record<string, string>, language: Language): Promise<{ ok: true; answered: string[]; questions_version: string }> {
+  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/survey`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ answers }),
+  });
 }
 
 export function confirmIntake(intakeId: string, revision: number, language: Language, survey?: TripSurvey): Promise<{ status: "confirmed"; trip: { trip_id: string } }> {

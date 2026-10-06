@@ -204,13 +204,22 @@ export async function openPreferencesFromMyPage(page: Page) {
 }
 
 /**
+ * `[2026-10-06 사용자 지시]` 「계획 확인하기」: before the plan is read the Course Keeper card opens - 「켜고 진행」 goes on (or 「건너뛰기 — 끄고 진행」, which sends `on_disruption: "ask_first"`).
+ * A test that is not about the card goes through it with this.
+ */
+export async function checkPlan(page: Page, choice: "켜고 진행" | "건너뛰기 — 끄고 진행" = "켜고 진행") {
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: choice }).click();
+}
+
+/**
  * Register a trip the way a customer does, against the test mock server: write a plan, 「계획 확인하기」, wait for the plan-check screen's result,
  * 「여행 등록」, and land on the trip screen (the mock's one trip, `TRIP_ID`). Needs the mock's default scenario (a plan whose check passes).
  */
 export async function registerStubTrip(page: Page, plan = "10/1 09:00 경복궁 관람") {
   await openRegistration(page);
   await page.getByLabel("나의 여행 계획").fill(plan);
-  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await checkPlan(page);
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
   await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));

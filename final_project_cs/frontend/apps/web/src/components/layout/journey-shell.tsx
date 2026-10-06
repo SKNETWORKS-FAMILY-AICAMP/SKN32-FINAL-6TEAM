@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Leaf } from "lucide-react";
 import { RegistrationSteps } from "@/components/ui";
+import { GuardianHeaderControl } from "@/features/guardian/guardian-header";
+import { TripGuardianControl } from "@/features/guardian/trip-guardian";
 import { routes } from "@/lib/routes";
 import { useT } from "@/lib/settings";
 import { useDocumentTitle } from "@/lib/use-document-title";
@@ -18,7 +20,7 @@ const stages: Record<JourneyView, SceneStage> = { registration: 0, checking: 1, 
 const steps: Partial<Record<JourneyView, 0 | 1 | 2>> = { registration: 0, checking: 1 };
 
 /** Frame of the journey screens: brand, settings, step marker and the landscape behind. */
-export function JourneyShell({ view, title, children }: { view: JourneyView; title: readonly [ko: string, en: string]; children: ReactNode }) {
+export function JourneyShell({ view, title, tripId, children }: { view: JourneyView; title: readonly [ko: string, en: string]; /** `view="trip"`: the trip whose Course Keeper icon is drawn at the top. */ tripId?: string; children: ReactNode }) {
   const t = useT();
   useDocumentTitle(`${t(...title)} · triPilot`);
   const step = steps[view];
@@ -29,6 +31,10 @@ export function JourneyShell({ view, title, children }: { view: JourneyView; tit
       <header className={styles.topbar}>
         <Link href={routes.home} className={styles.brand} aria-label={t("triPilot 홈으로", "triPilot home")}><span className={styles.mark} aria-hidden="true">t</span>triPilot</Link>
         <div className={styles.actions}>
+          {/* `[2026-10-06]` 항로 지킴이 아이콘: 등록 전 화면(계획 담기 · 계획 확인)에서, 카드로 정한 뒤부터만 보인다. */}
+          {(view === "registration" || view === "checking") && <GuardianHeaderControl />}
+          {/* `[2026-10-06]` 등록된 여행: 서버가 말한 켜짐·꺼짐(`guardian`)을 그리고 누르면 서버에 보낸다. 알림 링크(`?guardian=on`)도 여기서 받는다. */}
+          {view === "trip" && tripId && <Suspense fallback={null}><TripGuardianControl tripId={tripId} /></Suspense>}
           <SettingsMenu />
         </div>
       </header>

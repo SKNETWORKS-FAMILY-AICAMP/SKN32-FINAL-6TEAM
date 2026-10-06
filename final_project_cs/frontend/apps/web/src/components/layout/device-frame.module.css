@@ -2,6 +2,7 @@
 /* `contain: layout` anchors fixed-position children (drawer, expanded cards) to the frame. */
 .device { position: relative; contain: layout; width: min(100%, 402px); height: min(874px, calc(100dvh - 48px)); margin: 0 auto; border-radius: 30px; overflow: hidden; box-shadow: 0 25px 90px color-mix(in srgb, var(--color-text) 13%, transparent); background: var(--color-paper); border: 1px solid var(--color-surface); }
 .header { position: absolute; z-index: 5; top: 0; left: 0; right: 0; height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 25px; background: linear-gradient(var(--color-paper) 60%, transparent); }
+.right { display: flex; align-items: center; gap: 4px; flex: none; }
 .brand { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 21px; font-weight: 750; letter-spacing: -.8px; color: var(--color-text); text-decoration: none; }
 .mark { display: grid; place-items: center; width: 29px; height: 29px; background: var(--color-primary); color: var(--color-on-primary); border-radius: 9px; font-size: 26px; line-height: 1; padding-bottom: 4px; }
 /* What a screen puts in the header (see `HeaderSlot`): while there is something, it takes the brand's place. */

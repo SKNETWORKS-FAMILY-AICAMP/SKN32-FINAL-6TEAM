@@ -7,6 +7,11 @@ import { JourneyShell } from "@/components/layout/journey-shell";
 import { ButtonLink, Eyebrow, Panel, QueryState } from "@/components/ui";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
+import { useCriteria, withCriteria } from "@/features/guardian/criteria-store";
+import { questionsOf } from "@/features/survey-questions/model";
+import { IdleWarning, ReadingFooter } from "@/features/survey-questions/reading-footer";
+import { ReadingQuestions } from "@/features/survey-questions/reading-questions";
+import { useQuestionFlow } from "@/features/survey-questions/use-question-flow";
 import { assumedYear, candidatesOf, readingOf, resultOf, tripIssuesOf } from "@/features/plan-check/from-intake";
 import { reviewResultOf, streamingViewOf } from "@/features/plan-check/from-review";
 import { useServerReview } from "@/features/plan-check/use-server-review";
@@ -41,7 +46,9 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const queryClient = useQueryClient();
   // The onboarding answers go to the server with the registration — only when the customer finished them.
   const [onboarding] = useOnboarding();
-  const survey = onboarding.complete ? toSurvey(onboarding.answers) : undefined;
+  // `[2026-10-06]` What the plan screen decided (a day's fullness, the Course Keeper on or off) is laid over it - the latest choice wins, and 「끄고 진행」 says `ask_first` out loud.
+  const criteria = useCriteria();
+  const survey = withCriteria(onboarding.complete ? toSurvey(onboarding.answers) : undefined, criteria);
   const key = ["intake", intakeId, language] as const;
   // ★`[2026-10-02]` While the server reads, its progress stream says when to read the intake again (`useIntakeEvents`).
   //   Only where there is no stream (an older server, or the stream limit) is the intake asked for every 1.5 s, as before.
@@ -121,6 +128,11 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   });
   // `[2026-10-05 사용자 지시]` Zoomed in, the detailed lines (`?detail=true`) replace these short ones - they follow the streets.
   const routeDetail = useRouteDetail(routeShapes.data, ["intake", intakeId, query.data?.revision ?? 0, language], () => getIntakeRouteShapes(intakeId, language, { detail: true }));
+  // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계]` Questions asked while the server reads (`questions[]` of the intake; none from an older server). The screen goes on to the plan check
+  //   when the reading is done unless the customer is in the middle of answering - then it is held (`flow.hold`) until they are done, press the button, or the warning runs out.
+  const questions = useMemo(() => questionsOf(query.data?.questions, language), [query.data?.questions, language]);
+  const flow = useQuestionFlow({ intakeId, language, questions, loadingDone: Boolean(query.data) && query.data?.status !== "reading" });
+  const readingExtras = flow.shown ? { top: <ReadingQuestions flow={flow} />, footer: <ReadingFooter flow={flow} />, onActivity: flow.touch } : undefined;
   const [readingSeen, setReadingSeen] = useState(false);
   const [readingDrawn, setReadingDrawn] = useState(false);
   if (query.data?.status === "reading" && !readingSeen) setReadingSeen(true);
@@ -138,6 +150,12 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       <ButtonLink href={routes.newTrip} variant="primary">{t("다시 올리기", "Upload again")}</ButtonLink>
     </Panel>);
   }
+  if (flow.hold) {
+    return <>
+      <PlanCheck key="plan" view={readingOf(view)} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} />
+      {flow.phase === "idle" && <IdleWarning flow={flow} />}
+    </>;
+  }
   if (reading && (view.status === "reading" || (view.status === "review" && readingSeen && !readingDrawn))) {
     const streamNote = view.status !== "reading" ? null
       : follow.follow === "lost" ? <p className={styles.streamNote} role="status" data-lost>{t("서버와 연결이 끊겼어요 — 다시 연결하는 중이에요…", "Lost the connection to the server — reconnecting…")}</p>
@@ -146,7 +164,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
         ? t(`「${stream.progress.current.title}」 확인이 오래 걸리고 있어요. 서버는 계속 확인하고 있어요.`, `Checking “${stream.progress.current.title}” is taking a while. The server is still at it.`)
         : t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.")}</p>
       : null;
-    return <PlanCheck key="plan" view={reading} notice={streamNote} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
+    return <PlanCheck key="plan" view={reading} notice={streamNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
   }
   if (view.status === "fatal") {
     return shell(<Panel className={styles.waiting}>

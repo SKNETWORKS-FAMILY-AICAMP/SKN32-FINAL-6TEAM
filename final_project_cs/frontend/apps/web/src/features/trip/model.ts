@@ -21,6 +21,32 @@ export interface TripStop {
   mapUrl?: string;
   /** What the server knows about the place (address, phone, hours, badges). Missing fields are not shown. */
   placeInfo?: PlaceInfo | null;
+  /** `[2026-10-06]` The trip is paused for a disaster and this stop falls in the pause (a day's pause pauses only that day's stops). The plan itself is not changed. */
+  paused?: boolean;
+}
+
+/**
+ * `[2026-10-06 사용자 결정 — 재난 시 일정 정지]` Whether the trip is paused for a disaster (`safety` of `GET /v1/web/trips/{id}`). A day's pause (`level: "day"`) lifts by itself at midnight; a pause of the
+ * whole trip (`"trip"`: war, a volcano erupting …) stays until the customer resumes. The server cannot know the customer is safe, so resuming is always the customer's press (`resume`).
+ */
+export interface TripSafety {
+  paused: boolean;
+  level: "day" | "trip" | null;
+  /**
+   * `[2026-10-06 사용자 결정]` `in_progress`: the trip is under way. `upcoming`: it has not started, and a serious event (war, a volcano, a strong earthquake) stopped it because nobody knows the local
+   * situation - it stays paused even when the start date comes, until the customer resumes (`until` is null). A day's pause never stops a trip that has not started.
+   */
+  phase: "in_progress" | "upcoming" | null;
+  /** The server's own words for what happened (「지진 — 오늘 남은 일정 정지」). */
+  label: string | null;
+  since: string | null;
+  until: string | null;
+  /** The day a day's pause is for ("2026-10-06"). */
+  day: string | null;
+  /** An official all-clear came (the pause stays until the customer resumes). */
+  released: boolean;
+  /** What the resume button says, in the server's words; null when the server gave no resume. */
+  resume: { label: string } | null;
 }
 
 export interface TripOption { key: string; name: string }
@@ -93,7 +119,14 @@ export interface Trip {
   dayRoutes?: Record<string, string[]>;
   /** Directions between two consecutive stops in the customer's map app, keyed `${fromStopId}>${toStopId}`. */
   legs?: Record<string, string>;
+  /** `[2026-10-06]` Paused for a disaster? (absent on a server that does not say). */
+  safety?: TripSafety | null;
+  /** `[2026-10-06]` The Course Keeper (항로 지킴이) of this trip: on = the server changes a plan that went wrong by itself and says so, off = it asks first. Absent on a server that does not say. */
+  guardian?: TripGuardian | null;
 }
+
+/** `guardian` of the trip view (`{enabled, since, via}`); `since` · `via` are when and where it was LAST changed (null when it never was). */
+export interface TripGuardian { enabled: boolean; since: string | null; via: string | null }
 
 /** One row of "My trips" — only what the server list (`GET /v1/web/trips`) gives: no trip dates, status or open proposals. */
 export interface TripSummary {

@@ -1,4 +1,4 @@
-import type { Trip, TripChange, TripGateway, TripMessage, TripStop, TripWarning } from "../../features/trip/model";
+import type { Trip, TripChange, TripGateway, TripGuardian, TripMessage, TripSafety, TripStop, TripWarning } from "../../features/trip/model";
 import { translator, type Language, type Translate } from "../i18n";
 import { api, hasSession, LiveError } from "./client";
 import { streamApi } from "./stream";
@@ -20,6 +20,8 @@ interface ServerItem {
   customer_pinned?: boolean;
   place_info?: ServerPlaceInfo | null;
   map_url?: string | null;
+  /** `[2026-10-06]` Falls in a disaster pause. */
+  paused?: boolean;
 }
 /** ★`[2026-09-29]` 서버에 요청한 모양(요식 원장·관광공사에서 읽은 장소 사실). 서버가 아직 안 보내면 상세에 안 나온다. */
 interface ServerPlaceInfo {
@@ -33,9 +35,17 @@ interface ServerPlaceInfo {
 }
 interface ServerHistory { version: number; reason: string; at: string; causes?: Record<string, unknown>[] }
 interface ServerWarning { code?: string; date?: string | null; reason?: string; remedy?: string | null }
+/** `safety` of the trip view (rest-endpoints 「재난 시 일정 정지」): `{paused: false}` or the pause with its resume. */
+interface ServerSafety {
+  paused?: unknown; level?: unknown; phase?: unknown; label?: unknown; since?: unknown; until?: unknown; day?: unknown; released?: unknown;
+  resume?: { label?: unknown; path?: unknown } | null;
+}
 interface ServerTrip {
   trip_id: string; title: string; version: number; items: ServerItem[]; plan_url: string;
   history?: ServerHistory[]; warnings?: ServerWarning[];
+  safety?: ServerSafety | null;
+  /** `guardian` of the trip view (rest-endpoints 「항로 지킴이」): `{enabled, since, via}`. */
+  guardian?: { enabled?: unknown; since?: unknown; via?: unknown } | null;
   map?: { days?: { date?: string; app_route_urls?: unknown[]; legs?: { from_item_id?: unknown; to_item_id?: unknown; url?: unknown }[] }[] } | null;
 }
 
@@ -68,6 +78,37 @@ function stop(item: ServerItem, t: Translate): TripStop {
     otherOptions: (item.other_options ?? []).filter((option) => typeof option?.key === "string" && typeof option?.name === "string"),
     placeInfo: placeInfo(item.place_info, t),
     mapUrl: mapLink(item.map_url),
+    ...(item.paused === true ? { paused: true } : {}),
+  };
+}
+
+/** An instant of the pause in Seoul time ("2026-10-06 14:05"); something that is not an instant (a plain date) is shown as it came. */
+function whenOf(value: unknown): string | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  if (!Number.isFinite(Date.parse(value)) || !/T|\d:\d/.test(value)) return value;
+  const at = seoul(value);
+  return `${at.date} ${at.time}`;
+}
+
+/** The server's `guardian` of a trip. No object (an older server) is null - the icon is then not drawn; a field it did not send is null, and `enabled` is only ever the server's `true`. */
+export function guardianOf(raw: ServerTrip["guardian"] | undefined): TripGuardian | null {
+  if (!raw || typeof raw !== "object" || typeof raw.enabled !== "boolean") return null;
+  return { enabled: raw.enabled, since: typeof raw.since === "string" ? raw.since : null, via: typeof raw.via === "string" ? raw.via : null };
+}
+
+/** The server's `safety` of a trip, as the screen reads it. Nothing is made up: a field the server did not send is null, and no `safety` at all is null (an older server). */
+export function safetyOf(raw: ServerSafety | null | undefined): TripSafety | null {
+  if (!raw || typeof raw !== "object") return null;
+  const label = typeof raw.resume?.label === "string" && raw.resume.label.trim() ? raw.resume.label.trim() : null;
+  return {
+    paused: raw.paused === true,
+    level: raw.level === "day" || raw.level === "trip" ? raw.level : null,
+    phase: raw.phase === "in_progress" || raw.phase === "upcoming" ? raw.phase : null,
+    label: typeof raw.label === "string" && raw.label.trim() ? raw.label.trim() : null,
+    since: whenOf(raw.since), until: whenOf(raw.until),
+    day: typeof raw.day === "string" && raw.day ? raw.day : null,
+    released: raw.released === true,
+    resume: raw.resume && typeof raw.resume === "object" ? { label: label ?? "" } : null,
   };
 }
 
@@ -228,6 +269,8 @@ async function read(tripId: string, language: Language): Promise<Trip> {
     messages: await conversation(tripId, language),
     planUrl: server.plan_url || undefined,
     version: typeof server.version === "number" ? server.version : undefined,
+    safety: safetyOf(server.safety),
+    guardian: guardianOf(server.guardian),
     history: (server.history ?? []).map(change),
     warnings: (server.warnings ?? []).map(warning).filter((item): item is TripWarning => item !== null),
     dayRoutes: Object.fromEntries((server.map?.days ?? []).flatMap((day) => {

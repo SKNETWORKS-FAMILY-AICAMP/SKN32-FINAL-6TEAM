@@ -1,0 +1,13 @@
+/* `[2026-10-06 사용자 지시 — 설문 화면 구현 인계 · 목업 v9 §3-3]` 항로 지킴이 아이콘: 44×44, 켜짐 = 연초록 원 + 점 + 초록 방패, 꺼짐 = 배경 없이 옅은 외곽선(흐린 글자색). */
+.toggle { position: relative; display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px; background: none; color: var(--color-muted); cursor: pointer; }
+.toggle:hover { background: var(--color-subtle); }
+.toggle[data-on] { background: var(--color-soft); color: var(--color-primary); }
+.toggle[data-on]:hover { background: var(--color-selected-soft); }
+.toggle[data-on]::after { content: ""; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.toggle svg { display: block; width: 24px; height: 24px; }
+.toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+/* 도구 설명: 마우스를 올리거나 키보드 초점이 가면 이름이 뜬다 */
+.toggle[data-tip]:hover::before, .toggle[data-tip]:focus-visible::before {
+  content: attr(data-tip); position: absolute; top: calc(100% + 8px); right: 0; z-index: 3; padding: 4px 8px; border-radius: 8px; background: var(--color-inverse); color: var(--color-on-inverse);
+  font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap; pointer-events: none;
+}

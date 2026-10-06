@@ -43,6 +43,11 @@ export interface PlanCheckProps {
   onCaughtUp?: () => void;
   /** Shown above the screen's content — e.g. a line about the connection. */
   notice?: ReactNode;
+  /**
+   * `[2026-10-06]` The questions asked while the server reads (`features/survey-questions/`). `top` stands under the reading screen's heading, `footer` at its bottom (it does not scroll),
+   * `onActivity` hears every touch on the screen BY THE CUSTOMER (a press, a key, a wheel, a finger) - not scrolls: the screen scrolls itself too, and that is not a touch. Left out: the reading screen is as it was.
+   */
+  readingExtras?: { top: ReactNode; footer: ReactNode; onActivity: () => void };
   /** The plan is still on its way to the server (`sendingOf`): the stage `received` is then not the server's word, so it is not read out as one. */
   sending?: boolean;
   /** What the result can change, each wired by the page. One left out stays on the screen and says it is coming. */
@@ -131,7 +136,7 @@ const HOLD_MS = 800;
  * cards and pins worked together, each stop locked, recommended, changed or deleted, 「전체 자동 추천 → 재검증 → 여행 등록」.
  * A phone-sized page of its own, like the start screen.
  */
-export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, sending = false, ...result }: PlanCheckProps) {
+export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, readingExtras, sending = false, ...result }: PlanCheckProps) {
   const { view, settled } = useReveal(latest);
   const t = useT();
   useEffect(() => {
@@ -141,10 +146,11 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, sending = 
   }, [settled, onCaughtUp]);
   // ★`[2026-10-04 사용자 지시]` Once the map is there the header is transparent: the map reaches the top and only the home mark, the plan's name and the menu float over it.
   const floating = view.stage === "checking" || view.stage === "done";
-  return <DeviceFrame floating={floating}>
-    <div className={styles.screen} data-stage={view.stage} data-floating={floating || undefined}>
+  return <DeviceFrame floating={floating} guardianIcon>
+    <div className={styles.screen} data-stage={view.stage} data-floating={floating || undefined}
+      {...(readingExtras && { onPointerDownCapture: readingExtras.onActivity, onKeyDownCapture: readingExtras.onActivity, onWheelCapture: readingExtras.onActivity, onTouchStartCapture: readingExtras.onActivity })}>
       {notice}
-      {view.stage === "received" || view.stage === "reading" ? <Reading view={view} onBack={onBack} /> : <Checking view={view} {...result} />}
+      {view.stage === "received" || view.stage === "reading" ? <Reading view={view} onBack={onBack} extras={readingExtras} /> : <Checking view={view} {...result} />}
       <p className="sr-only" role="status">{sending ? t("계획을 서버로 보내고 있어요.", "Sending your plan to the server.") : announce(view, t)}</p>
     </div>
   </DeviceFrame>;
@@ -268,19 +274,20 @@ const currentLine = (box: HTMLElement) =>
   box.querySelector<HTMLElement>('li[data-state="current"]') ?? Array.from(box.querySelectorAll<HTMLElement>('li[data-state="read"]')).at(-1) ?? null;
 
 /** ①② The uploaded plan, read line by line. */
-function Reading({ view, onBack }: { view: PlanCheckView; onBack: () => void }) {
+function Reading({ view, onBack, extras }: { view: PlanCheckView; onBack: () => void; extras?: PlanCheckProps["readingExtras"] }) {
   const t = useT();
   const { language } = useSettings();
   const current = view.stage === "reading" ? view.lines.findIndex((line) => !line.read) : -1;
   // `[2026-10-03 사용자]` The list scrolls along with the line being read.
   const box = useRef<HTMLDivElement>(null);
-  const follow = useFollowScroll(box, currentLine, true, view.lines);
-  return <div ref={box} className={styles.reading} {...follow.handlers}>
-    <header className={styles.head}>
-      <div className={styles.headRow}><BackButton onBack={onBack} /><h1 className={styles.title}>{t("계획을 확인하고 있어요", "Checking your plan")}</h1></div>
-      <p className={styles.desc}>{t("사진 한 장은 1분쯤 걸려요. 이 화면을 열어 두면 끝나는 대로 보여 드려요.", "A photo takes about a minute. Keep this page open and the result will appear.")}</p>
-      <ProgressBar view={view} />
-    </header>
+  // With questions on the screen the list does not follow the line being read (that would scroll the question away): the bar at the top says how far the reading is.
+  const follow = useFollowScroll(box, currentLine, !extras, view.lines);
+  const head = <header className={styles.head}>
+    <div className={styles.headRow}><BackButton onBack={onBack} /><h1 className={styles.title}>{t("계획을 확인하고 있어요", "Checking your plan")}</h1></div>
+    <p className={styles.desc}>{t("사진 한 장은 1분쯤 걸려요. 이 화면을 열어 두면 끝나는 대로 보여 드려요.", "A photo takes about a minute. Keep this page open and the result will appear.")}</p>
+    <ProgressBar view={view} />
+  </header>;
+  const lines = <>
     <h2 className={styles.docLabel}>{t("올린 계획", "Your plan")}</h2>
     <ol className={styles.doc}>{view.lines.map((line, index) => {
       const state = line.read ? "read" : index === current ? "current" : "waiting";
@@ -295,7 +302,13 @@ function Reading({ view, onBack }: { view: PlanCheckView; onBack: () => void }) 
     })}</ol>
     <p className={styles.found}>{t("찾은 일정", "Stops found")} <b>{foundCount(view)}</b>{t("개", "")}</p>
     {!follow.following && <button type="button" className={styles.followPill} onClick={follow.resume}><ChevronsDown size={14} strokeWidth={1.8} aria-hidden="true" />{t("읽는 곳으로", "Follow the reading")}</button>}
-  </div>;
+  </>;
+  // `[2026-10-06]` With questions on the screen: heading, questions and the lines are one scrolling page, and the footer stays at the bottom.
+  if (extras) return <>
+    <div ref={box} className={styles.reading} {...follow.handlers}>{head}{extras.top}{lines}</div>
+    {extras.footer}
+  </>;
+  return <div ref={box} className={styles.reading} {...follow.handlers}>{head}{lines}</div>;
 }
 
 /** How high the sheet stands over the map: a strip, half the screen, or (nearly) all of it — the handle cycles them. */

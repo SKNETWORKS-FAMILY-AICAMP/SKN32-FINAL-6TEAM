@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { APP, KEY_STORAGE, KNOWN_SESSION, mockServer, SESSION_COOKIE, start, startWithOldKey, STUB, TRIP_ID } from "./helpers";
+import { APP, KEY_STORAGE, KNOWN_SESSION, mockServer, SESSION_COOKIE, start, startWithOldKey, STUB, TRIP_ID, checkPlan } from "./helpers";
 
 /**
  * `[2026-10-04 사용자 결정 · 서버 D-CS-011]` 브라우저는 키를 두지 않는다 — 서버가 HttpOnly 쿠키 세션을 주고, 쓰기에는 보안 토큰(X-CSRF-Token)이 따른다.
@@ -142,7 +142,7 @@ test("게스트의 제한에 걸리면(403 guest_trip_limit · login_required) �
   await start(page);
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill("10/1 09:00 경복궁 관람");
-  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await checkPlan(page);
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
   await page.getByRole("button", { name: "여행 등록" }).click();
   const alert = page.getByRole("alert").filter({ hasText: "게스트는 여행을 1개까지" });

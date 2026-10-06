@@ -3,7 +3,7 @@ import { agree, hydrated, mockServer, noHorizontalScroll, openRegistration, useK
 
 test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); await agree(page); });
 
-// The registration page's three panels, 「계획 확인하기」 being off while the chosen one is empty, what is sent and how a refusal comes back are
+// The registration page's three panels, pressing 「계획 확인하기」 while the chosen one is empty (it says why, the button is not switched off), what is sent and how a refusal comes back are
 // in `registration-panels.spec.ts`, `flow.spec.ts` and `intake-start.spec.ts`. These two keep what only the old demo suite held.
 
 test("작성 중인 계획은 화면을 오가도·새로고침해도 보존되고, 「이전」은 소개 화면(약관 동의 뒤)으로 간다", async ({ page }) => {
