@@ -162,6 +162,9 @@ class Settings(BaseSettings):
     #: 행정안전부 긴급재난문자 — 호우·통제·화재 등 지역 재난문자       data.go.kr/data/15134001
     #:  ★2026-09-14 키 발급. 그전까지는 샘플 CSV 판(`disaster_msg.py`)으로 돌았다.
     disaster_msg_api_key: str = ""
+    #: 행정안전부 지진옥외대피장소(전국) — 재난 일정 정지 때 가까운 대피 장소 안내  data.go.kr/data/15138868
+    #:  ★`[2026-10-06]` 예시 파일에 이름이 먼저 들어가 `extra="forbid"` 라 이 PC 에서 설정이 통째로 거부됐다(시험 수집 78개 파일 · 재생 도구 불통). 비우면 서울시 자료(DB 에 적재한 곳)로만 안내한다.
+    safetydata_shelter_api_key: str = ""
     #: 서울교통공사 지하철알림정보 — 무정차 통과 감시(문제목록 #36)  data.go.kr/data/15144070
     #:  ★공통 키로 충분하다. 이 칸은 다른 계정을 쓸 때만 채운다.
     subway_notice_api_key: str = ""

@@ -48,7 +48,7 @@ test("Esc · 닫기 단추 · 바깥을 눌러 닫으면 아무것도 정해지�
     await expect(card(page)).toBeVisible();
     if (way === "esc") await page.keyboard.press("Escape");
     else if (way === "close") await card(page).getByRole("button", { name: "닫기" }).click();
-    else await page.mouse.click(8, 8);
+    else { const frame = (await page.locator('[class*="__device"]').first().boundingBox())!; await page.mouse.click(frame.x + frame.width / 2, frame.y + 100); }   // 카드는 휴대폰 틀 안에 있다 — 틀 안의 바깥(어두운 바탕)을 누른다
     await expect(card(page)).toHaveCount(0);
     await expect(send(page)).toBeFocused();
   }
@@ -94,6 +94,18 @@ test("「켜고 진행」은 on_disruption=replace, 「건너뛰기 — 끄고 �
   const [plan] = await server.received("POST", "/plan");
   expect(plan.body).toMatchObject({ survey: { version: "2026-09-24.v1", pace: "moderate", on_disruption: "ask_first" } });
 
+  // ★2026-10-06: 이 탭에서 이미 「끄고 진행」으로 정했으면 다음 계획에서는 다시 묻지 않고 같은 선택(ask_first)을 보낸다 — 켜고 싶으면 머리줄 아이콘이나 새 탭에서.
+  await server.reset();
+  await server.scenario({ readingPolls: 0 });
+  await openRegistration(page);
+  await fillPlanAsk(page, { start: weekAhead(), days: 2, party: 2 });
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/trips\/[0-9a-f-]+$/, { timeout: 15_000 });
+  expect((await server.received("POST", "/plan"))[0].body).toMatchObject({ survey: { on_disruption: "ask_first" } });
+
+  // 이 탭의 선택을 지우면(새로 시작) 다시 묻고, 「켜고 진행」은 replace 를 보낸다.
+  await page.evaluate(() => { sessionStorage.clear(); localStorage.removeItem("triPilot.guardianDefault.v1"); });
   await server.reset();
   await server.scenario({ readingPolls: 0 });
   await openRegistration(page);
@@ -131,7 +143,7 @@ test("읽는 기준: 「적당히」가 처음부터 골라져 있고, 방향키
   expect(plan.body).toMatchObject({ survey: { pace: "packed", on_disruption: "replace" } });
 });
 
-test("머리줄 아이콘: 카드로 정한 뒤부터 보이고, 켜 둔 것을 누르면 바로 꺼지며 되돌리기 줄은 저절로 사라지지 않고, 꺼진 것을 누르면 카드(켜기 / 그대로 두기)가 열린다. 확정에는 마지막 선택이 간다", async ({ page, request }) => {
+test("머리줄 아이콘: 카드로 정한 뒤부터 보이고, 켜 둔 것을 누르면 바로 꺼지며 기존 알림 막대에 되돌리기가 뜨고 몇 초 뒤 사라지고, 꺼진 것을 누르면 카드(켜기 / 그대로 두기)가 열린다. 확정에는 마지막 선택이 간다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page);
   await openRegistration(page);
@@ -142,22 +154,22 @@ test("머리줄 아이콘: 카드로 정한 뒤부터 보이고, 켜 둔 것을 
   await expect(toggle("항로 지킴이 끄기")).toBeVisible();
   await expect(toggle("항로 지킴이 끄기")).toContainText("지금 켜져 있어요");
 
-  // 켜 둔 것을 누르면 확인 없이 바로 꺼진다 + 되돌리기 줄(저절로 사라지지 않는다)
+  // 켜 둔 것을 누르면 확인 없이 바로 꺼진다 + 기존 알림 막대(계획 확인 화면의 그것)에 되돌리기 — 몇 초 뒤 저절로 사라진다
   await toggle("항로 지킴이 끄기").click();
   await expect(toggle("항로 지킴이 켜기")).toBeVisible();
   const line = page.getByRole("status").filter({ hasText: "항로 지킴이를 껐어요. 문제가 생기면 물어볼게요." });
   await expect(line).toBeVisible();
-  await page.waitForTimeout(5500);
-  await expect(line).toBeVisible();
+  await expect(line.getByRole("button", { name: "되돌리기" })).toBeVisible();
   // 되돌리기
   await line.getByRole("button", { name: "되돌리기" }).click();
   await expect(line).toHaveCount(0);
   await expect(toggle("항로 지킴이 끄기")).toBeVisible();
-
-  // 다시 끄고, 꺼진 것을 누르면 카드: 「켜기」 / 「그대로 두기」(시작 때의 「끄고 진행하면…」 줄은 없다)
+  // 건드리지 않으면 저절로 사라진다(되돌리기가 달린 알림은 4.5초)
   await toggle("항로 지킴이 끄기").click();
-  await line.getByRole("button", { name: "닫기" }).click();
-  await expect(line).toHaveCount(0);
+  await expect(line).toBeVisible();
+  await expect(line).toHaveCount(0, { timeout: 8000 });
+
+  // 꺼진 것을 누르면 카드: 「켜기」 / 「그대로 두기」(시작 때의 「끄고 진행하면…」 줄은 없다)
   await toggle("항로 지킴이 켜기").click();
   await expect(card(page)).toBeVisible();
   await expect(card(page).getByRole("button", { name: "켜기", exact: true })).toBeVisible();

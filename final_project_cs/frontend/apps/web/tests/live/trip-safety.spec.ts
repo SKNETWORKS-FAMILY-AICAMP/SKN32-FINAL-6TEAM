@@ -9,7 +9,7 @@ import { mockServer, start, TRIP_ID } from "./helpers";
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
 const PAUSE = {
-  paused: true, level: "day", label: "지진 — 오늘 남은 일정 정지", since: "2026-10-06T05:05:00Z", until: "2026-10-06T15:00:00Z", day: "2026-10-06", released: false,
+  paused: true, level: "day", label: "지진 — 오늘 남은 일정 정지", since: "2026-10-06T05:05:00Z", until: null, day: "2026-10-06", released: false,   // ★2026-10-06 결정: 그날 정지도 자정에 풀리지 않는다 — 서버가 until 을 null 로 준다
   resume: { label: "일정 다시 시작", path: "/safety/resume" },
 };
 const ALERT = {
@@ -60,7 +60,8 @@ test("정지 중이면 맨 위에 「일정 정지 중」과 이유 · 시각 ·
   await expect(panel(page).getByRole("heading", { name: "일정 정지 중" })).toBeVisible();
   await expect(panel(page)).toContainText("지진 — 오늘 남은 일정 정지");                                  // 서버의 말
   await expect(panel(page)).toContainText("2026-10-06 14:05부터");                                         // 한국 시각
-  await expect(panel(page)).toContainText("2026-10-07 00:00까지");
+  await expect(panel(page)).toContainText("다시 시작할 때까지 멈춰 있어요");                                   // 그날 정지도 자정에 풀리지 않고, 끝나는 시각을 말하지 않는다
+  await expect(panel(page)).not.toContainText(/\d{2}:\d{2}까지/);
   await expect(panel(page)).toContainText("공식 안내(국민재난안전포털)를 먼저 따르고");                       // 알림 글 그대로
   await expect(panel(page).getByRole("link", { name: "119에 전화" })).toHaveAttribute("href", "tel:119");
   await expect(panel(page).getByText("경복궁 옥외대피장소")).toBeVisible();

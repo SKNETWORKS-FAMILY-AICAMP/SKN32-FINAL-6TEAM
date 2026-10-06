@@ -7,8 +7,9 @@ import { RegistrationSteps } from "@/components/ui";
 import { GuardianHeaderControl } from "@/features/guardian/guardian-header";
 import { TripGuardianControl } from "@/features/guardian/trip-guardian";
 import { routes } from "@/lib/routes";
-import { useT } from "@/lib/settings";
+import { useSettings, useT } from "@/lib/settings";
 import { useDocumentTitle } from "@/lib/use-document-title";
+import { DeviceFrame } from "./device-frame";
 import { Scene, type SceneStage } from "./scene";
 import { SettingsMenu } from "./settings-menu";
 import styles from "./journey-shell.module.css";
@@ -22,8 +23,25 @@ const steps: Partial<Record<JourneyView, 0 | 1 | 2>> = { registration: 0, checki
 /** Frame of the journey screens: brand, settings, step marker and the landscape behind. */
 export function JourneyShell({ view, title, tripId, children }: { view: JourneyView; title: readonly [ko: string, en: string]; /** `view="trip"`: the trip whose Course Keeper icon is drawn at the top. */ tripId?: string; children: ReactNode }) {
   const t = useT();
+  const { desktopLayout } = useSettings();
   useDocumentTitle(`${t(...title)} · triPilot`);
   const step = steps[view];
+  const footer = <footer className={styles.footer}>
+    <span><Leaf size={18} strokeWidth={1.6} aria-hidden="true" />{t("당신의 취향대로, 더 편안하게.", "More you. A little more at ease.")}</span>
+    <p>{t("서버에 연결된 화면이에요. 일정과 답은 서버가 낸 결과만 보여 드려요.", "Connected to the server. Itineraries and answers shown here come from the server only.")}</p>
+  </footer>;
+  // ★`[2026-10-06 사용자 지시 — 첫 화면 · 확인 화면과 일관되게 전체를 모바일 기준으로]` The default: the same phone-sized frame the intro and the plan check stand in, the page scrolling inside it. The menu's 「데스크탑 화면으로 보기」 gives the wide page below.
+  if (!desktopLayout) {
+    return <DeviceFrame scroll guardianIcon={view === "registration" || view === "checking"}
+      headerExtra={view === "trip" && tripId ? <Suspense fallback={null}><TripGuardianControl tripId={tripId} /></Suspense> : null}>
+      <a href="#main-content" className={styles.skip}>{t("본문으로 이동", "Skip to content")}</a>
+      <main id="main-content" className={styles.phoneMain} tabIndex={-1} data-view={view}>
+        {step !== undefined && <RegistrationSteps current={step} />}
+        {children}
+        {footer}
+      </main>
+    </DeviceFrame>;
+  }
   return <div className={styles.page}>
     <Scene stage={stages[view]} sizes="100vw" />
     <a href="#main-content" className={styles.skip}>{t("본문으로 이동", "Skip to content")}</a>
@@ -41,10 +59,7 @@ export function JourneyShell({ view, title, tripId, children }: { view: JourneyV
       <main id="main-content" className={styles.main} tabIndex={-1}>
         {step !== undefined && <RegistrationSteps current={step} />}
         {children}
-        <footer className={styles.footer}>
-          <span><Leaf size={18} strokeWidth={1.6} aria-hidden="true" />{t("당신의 취향대로, 더 편안하게.", "More you. A little more at ease.")}</span>
-          <p>{t("서버에 연결된 화면이에요. 일정과 답은 서버가 낸 결과만 보여 드려요.", "Connected to the server. Itineraries and answers shown here come from the server only.")}</p>
-        </footer>
+        {footer}
       </main>
     </div>
   </div>;

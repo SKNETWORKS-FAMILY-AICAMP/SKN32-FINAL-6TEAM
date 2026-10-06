@@ -320,8 +320,8 @@ def test_both_tools_are_read_only_and_exist_even_with_the_write_switch_off(api, 
         return {t.name: t for t in (await session.list_tools()).tools}
 
     tools = _run(_surface(client), me["user_key"], scenario)
-    assert len(tools) == 7                                                                       # 읽기 5 + 새 둘 — 쓰기 7개는 없다
-    for name in ("tripilot_check_trip_risks", "tripilot_judge_move"):
+    assert len(tools) == 8                                                                       # 읽기 5 + 새 둘 + 재난 뒤 꾸러미 하나 — 쓰기 7개는 없다
+    for name in ("tripilot_check_trip_risks", "tripilot_judge_move", "tripilot_get_recovery_brief"):
         assert name in tools and tools[name].annotations.readOnlyHint is True and tools[name].annotations.destructiveHint is False
 
 

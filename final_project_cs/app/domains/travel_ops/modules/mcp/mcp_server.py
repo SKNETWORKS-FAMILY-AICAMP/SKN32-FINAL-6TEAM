@@ -297,6 +297,16 @@ def build_server(backend: Backend, *, write_enabled: bool = False, env_key: str 
             params["within_hours"] = within_hours
         return await call(ctx, "GET", f"/v1/web/trips/{trip_id}/risks", params=params)
 
+    @server.tool(name="tripilot_get_recovery_brief", annotations=READ, title="재난 뒤 상황 꾸러미",
+                 description="재난으로 멈춘 내 여행을 사용자가 다시 시작한 뒤(72시간 안) 일정을 다시 짜거나 고칠 때 읽는 상황 꾸러미. "
+                             "facts(출처가 있는 사실) · unknowns(우리가 모르는 것 — 지어내지 말고 사용자에게 묻거나 공식 안내를 확인하게 한다) · items(남은 일정 항목마다 "
+                             "status: affected=공식 재난문자가 그 구를 지정 · unknown=범위를 모름 · unaffected=지정한 구 밖, 이유 reason 포함) · "
+                             "constraints(avoid_districts=제외할 구 · affected_item_ids · lighter_day=사용자가 「오늘은 가볍게」를 골랐는지) · "
+                             "chosen(사용자가 이미 고른 것)을 준다. ★unknown 을 「영향 없음」으로 다루지 않는다. 밀도를 임의로 낮추지 않는다 — lighter_day 가 true 일 때만 그 뜻으로 다룬다. "
+                             "다시 짠 일정은 tripilot_submit_itinerary 의 검증을 통과해야 등록된다. 다시 시작한 정지가 없거나 72시간이 지났으면 recovery 가 null. 읽기 전용이다.")
+    async def get_recovery_brief(ctx: Context, trip_id: TripId) -> dict[str, Any]:
+        return await call(ctx, "GET", f"/v1/web/trips/{trip_id}/safety/recovery")
+
     @server.tool(name="tripilot_judge_move", annotations=READ, title="이동 판정",
                  description="서울 안 두 장소 사이를 이동 판정기가 시간표로 판정한다 — 출발 시각(depart_at) · 경로(route.label · uses 노선) · 소요(eta_min) · 도착 시각 · 대안(alternatives) · "
                              "근거 등급 grade(timetable=열차 시간표 판정 · estimate=도보 · 택시 · 버스(배차 추정)가 낀 경로이거나 판정기가 꺼져 직선 거리 어림만 · none=근거 없음) — 대안(alternatives)마다 grade 가 따로 있다 · 확인 시각 checked_at · 판정에 쓴 시간표 판(basis). "

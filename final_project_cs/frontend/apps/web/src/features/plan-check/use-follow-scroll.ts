@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject } from "react";
+import { dampedScrollTo } from "@/lib/damped-scroll";
 
 /** How close (px) to the bottom still counts as 「at the bottom」 — the list is then followed again. */
 export const NEAR_BOTTOM_PX = 48;
@@ -43,8 +44,8 @@ export function useFollowScroll(box: RefObject<HTMLElement | null>, find: (box: 
     if (!element || !target) return;
     const delta = scrollDelta(element.getBoundingClientRect(), target.getBoundingClientRect());
     if (Math.abs(delta) < 1) return;
-    const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    element.scrollBy({ top: delta, behavior: reduced ? "auto" : "smooth" });
+    // ★`[2026-10-06 사용자 지적]` A damped spring, not the browser's fixed smooth scroll that restarts at every row (it looked jerky): the list eases towards the newest row and keeps its speed as rows are added.
+    dampedScrollTo(element, element.scrollTop + delta);
   }, [box, find, enabled, following, change]);
 
   const note = useCallback(() => { touched.current = Date.now(); }, []);

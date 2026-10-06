@@ -5,7 +5,8 @@ import { createContext, useState, type ReactNode } from "react";
 import { useT } from "@/lib/settings";
 import { routes } from "@/lib/routes";
 import { GuardianHeaderControl } from "@/features/guardian/guardian-header";
-import { OverlayRoot, SettingsMenu } from "./settings-menu";
+import { OverlayRoot } from "./overlay-root";
+import { SettingsMenu } from "./settings-menu";
 import styles from "./device-frame.module.css";
 
 /**
@@ -19,13 +20,19 @@ export const HeaderSlot = createContext<HTMLElement | null>(null);
  * `floating` (★`[2026-10-04 사용자 지시]` the plan check's map): the header has no bar of its own — the screen under it reaches the top of the frame and the home mark, what a screen
  * puts in the slot (the plan's name) and the menu button each float over it as a small chip.
  */
-export function DeviceFrame({ children, onBrand, headerInert = false, floating = false, guardianIcon = false }: { children: ReactNode; onBrand?: () => void; headerInert?: boolean; floating?: boolean; guardianIcon?: boolean }) {
+export function DeviceFrame({ children, onBrand, headerInert = false, floating = false, guardianIcon = false, scroll = false, headerExtra = null }: {
+  children: ReactNode; onBrand?: () => void; headerInert?: boolean; floating?: boolean; guardianIcon?: boolean;
+  /** `[2026-10-06]` The page screens (registration, trips, a trip, my page) scroll INSIDE the frame; the frame is also the container their narrow-screen rules ask (`@container page`). */
+  scroll?: boolean;
+  /** Something of the page's own at the top right, beside the menu (a trip's Course Keeper icon). */
+  headerExtra?: ReactNode;
+}) {
   const t = useT();
   const [overlay, setOverlay] = useState<HTMLElement | null>(null);
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const brand = <><span className={styles.mark} aria-hidden="true">t</span>triPilot</>;
   return <div className={styles.stage}>
-    <div className={styles.device} data-floating={floating || undefined}>
+    <div className={styles.device} data-floating={floating || undefined} data-journey={scroll || undefined}>
       <OverlayRoot.Provider value={overlay}>
         <HeaderSlot.Provider value={slot}>
         <header className={styles.header} inert={headerInert}>
@@ -34,9 +41,9 @@ export function DeviceFrame({ children, onBrand, headerInert = false, floating =
             : <Link href={routes.home} className={styles.brand} aria-label={t("triPilot — 소개 화면으로 돌아가기", "triPilot — Back to introduction")}>{brand}</Link>}
           <div ref={setSlot} className={styles.slot} />
           {/* `[2026-10-06]` 항로 지킴이 아이콘: 등록 전 화면(읽는 중 · 계획 확인)에서, 카드로 정한 뒤부터만 보인다. */}
-          <div className={styles.right}>{guardianIcon && <GuardianHeaderControl />}<SettingsMenu /></div>
+          <div className={styles.right}>{headerExtra}{guardianIcon && <GuardianHeaderControl />}<SettingsMenu /></div>
         </header>
-        {children}
+        {scroll ? <div className={styles.scroll}>{children}</div> : children}
         </HeaderSlot.Provider>
       </OverlayRoot.Provider>
       <div ref={setOverlay} className={styles.overlay} />

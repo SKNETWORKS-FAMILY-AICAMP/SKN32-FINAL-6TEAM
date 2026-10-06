@@ -1,4 +1,5 @@
 import { translator, type Language, type Translate } from "../i18n";
+import { beginWait, CALL_STEPS } from "./waiting";
 
 /** A refusal from the live server — its own code (`stale_revision`, `intake_incomplete` …) and body. */
 export class LiveError extends Error {
@@ -120,17 +121,28 @@ export function answerWithin(url: string): number {
   catch { return ANSWER_WITHIN_MS; }
 }
 
+/** Calls that are slow ON PURPOSE and not something the customer waits for (the model is warmed up in the background): they are not counted as a slow server. */
+const BACKGROUND_CALL = /\/warmup$/;
+
 async function send(url: string, init: RequestInit, language: Language): Promise<Response> {
   const t = translator(language);
   let response: Response;
   const limit = AbortSignal.timeout(answerWithin(url));
-  try { response = await fetch(url, { ...init, signal: init.signal ? AbortSignal.any([init.signal, limit]) : limit }); }
-  catch {
-    if (limit.aborted && !init.signal?.aborted) throw new LiveError("timeout", t("서버가 응답하지 않아요. 잠시 뒤 다시 시도해 주세요.", "The server is not answering. Please try again shortly."));
-    throw new LiveError("network", t("서버에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요.", "Could not reach the server. Please try again shortly."));
-  }
-  if (response.ok) return response;
-  throw await refusal(response, language);
+  // ★`[2026-10-06 사용자 지적]` A call that has not answered for a while is counted (`waiting.ts`), so the screen says the server is slow instead of staying silent.
+  const wait = BACKGROUND_CALL.test(safePath(url)) ? null : beginWait(CALL_STEPS);
+  try {
+    try { response = await fetch(url, { ...init, signal: init.signal ? AbortSignal.any([init.signal, limit]) : limit }); }
+    catch {
+      if (limit.aborted && !init.signal?.aborted) throw new LiveError("timeout", t("서버가 응답하지 않아요. 잠시 뒤 다시 시도해 주세요.", "The server is not answering. Please try again shortly."));
+      throw new LiveError("network", t("서버에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요.", "Could not reach the server. Please try again shortly."));
+    }
+    if (response.ok) return response;
+    throw await refusal(response, language);
+  } finally { wait?.end(); }
+}
+
+function safePath(url: string): string {
+  try { return new URL(url).pathname; } catch { return url; }
 }
 
 /** A non-2xx answer → the server's own code and sentence (`{"error": {...}}`), with when a limit opens again. */

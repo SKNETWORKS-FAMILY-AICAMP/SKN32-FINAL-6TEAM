@@ -36,6 +36,8 @@
 """
 from __future__ import annotations
 
+import logging
+
 import argparse
 import collections
 import copy
@@ -66,6 +68,18 @@ KNOWN_MODES = frozenset(DEFAULT_MODES) | {"bike", "taxi"}
 #:   요금은 하한(정차·호출료·시계외 미포함)이고 소요는 TOPIS 시각별 속도 추정이다 — label 에 그대로 적는다.
 #: ☆`[2026-09-30 83 E1 · 85]` 장소마다 볼 역 개수 — 규칙 candidates.장소_역_후보_최대 **변경안** 값(27 규칙 32: 규칙 파일은
 #:   모아서 한 번에 고친다). 규칙에 들어가면 규칙 값이 이긴다(Planner._station_k).
+# ☆`[2026-10-06 구글·시제품 대조]` 도로 그래프로 잰 접근 걷기가 **직선의 몇 배까지** 믿을 만한가. 실측: 우리 접근·하차 후보 83곳 중 배율 중앙 1.31(1사분위 1.14 ~ 3사분위 1.52)인데
+#   8곳(10%)이 2 배를 넘고 극단은 서울역 1호선 출구 73 m → 1,502 m(20배 · 25분), 남대문시장→시청 503 m → 4,065 m(8배 · 66분), 롯데월드→잠실역 195 m → 699 m(3.6배 · 12분).
+#   지도 원본(OSM)에 지하 통로·건물 안 연결이 없고 역 복합시설 둘레를 돌아가는 값이다. 같은 구간을 구글 Routes(TRANSIT)에 물으니 걷기 거리가 직선의 0.99~1.06 배(표본 19 · 중앙 1.00)였다.
+#   그래서 길 거리를 직선의 이 배수로 **상한**한다 — 우회계수(1.4)보다는 크게 두어 진짜 우회(철도·하천 건너편)는 거의 그대로 둔다. 상한이 걸리면 `Planner.walk_capped` 에 남고 로그가 난다(조용한 보정이 아니다).
+#   ★우리가 고른 값이다 — 측정으로 나온 상수가 아니다. 규칙 파일(rules)에 올리는 것은 다음 규칙판에서 한 번에(STATION_K_PROPOSED 와 같은 취급).
+WALK_ROUTED_CAP_PROPOSED = 2.0
+# ☆`[2026-10-06]` 가장 가까운 출구까지의 길 거리가 직선의 이 배수를 넘으면 **같은 역의 다른 출구**도 길 거리로 따져 가장 짧은 것을 쓴다.
+#   실측(접근·하차 후보 83곳): 직선으로 가장 가까운 출구 하나만 보면 8곳이 2배를 넘는데, 모든 출구 중 길 거리 최소로 고르면 3곳으로 준다 —
+#   남대문시장→시청 4,065 m → 824 m(8.1배 → 1.6배), 광화문 209 m → 79 m(3.0배 → 1.1배), 회현 416 → 249 m. 길 거리가 직선에 가까운 곳(중앙 1.28배)은 영향이 없다.
+#   ★우리가 고른 값이다. 다른 출구를 보는 수는 직선으로 가까운 순 `EXIT_ALT_MAX` 개까지 — 라우팅 호출을 아낀다(정상인 곳은 아예 안 본다).
+EXIT_RETRY_RATIO_PROPOSED = 1.5
+EXIT_ALT_MAX = 4
 STATION_K_PROPOSED = 3
 #: 역 짝을 어디까지 보나 — "first_feasible"(가까운 짝부터 · 대중교통 후보가 성립한 짝에서 멈춤) / "all"(짝 전부)
 STATION_PAIR_MODE = "first_feasible"
@@ -319,6 +333,13 @@ class Planner:
                 routed = float(r["distance_m"])
                 if r.get("optimistic"):
                     routed = max(routed, straight_m * self.detour)
+                cap = straight_m * WALK_ROUTED_CAP_PROPOSED
+                if routed > cap:
+                    # 지도 원본의 끊김(지하 통로·역 복합시설)으로 길이 직선의 수 배로 나온 값 — 상한을 건다. 신호 없는 보정이 아니다: 기록 + 로그
+                    self.__dict__.setdefault("walk_capped", []).append(
+                        {"straight_m": round(straight_m), "routed_m": round(routed), "used_m": round(cap)})
+                    logging.getLogger(__name__).info("접근 걷기 상한: 직선 %d m · 길 %d m → %d m", straight_m, routed, cap)
+                    routed = cap
                 got = routed / self.detour
             self._eff_cache[key] = got
         return got
@@ -366,6 +387,29 @@ class Planner:
                 dead.add(d["line"])
         return dead >= lines
 
+    def _better_exit(self, place, station_nm, line, d_eff, nearest_ll):
+        """가장 가까운 출구의 길 거리가 직선에 비해 많이 길 때(예: 큰 도로 건너편) — 같은 역의 다른 출구를 길 거리로 따져
+        더 짧은 값을 쓴다. `d_eff` 는 이미 잰 가장 가까운 출구의 「직선 환산 m」. 돌려주는 것도 같은 칸이다.
+        다른 출구가 없거나 라우터가 길을 못 주면 원래 값 그대로. 바꿨으면 `exit_switched` 에 남긴다(조용한 보정이 아니다)."""
+        exits_of = getattr(self.v.ex, "exits_of", None)
+        if not callable(exits_of):
+            return d_eff
+        from .geo import meters
+        cands = []
+        for e in exits_of(station_nm, line) or []:
+            if e.get("lat") is None or e.get("lng") is None or (e["lat"], e["lng"]) == tuple(nearest_ll):
+                continue
+            cands.append((meters(place["lat"], place["lon"], e["lat"], e["lng"]), e))
+        best = d_eff
+        for straight, e in sorted(cands, key=lambda c: c[0])[:EXIT_ALT_MAX]:
+            alt = self._eff(place["lat"], place["lon"], e["lat"], e["lng"], straight)
+            if alt < best:
+                best = alt
+        if best < d_eff:
+            self.__dict__.setdefault("exit_switched", []).append(
+                {"station": station_nm, "from_routed_m": round(d_eff * self.detour), "to_routed_m": round(best * self.detour)})
+        return best
+
     def _near_stations(self, place, limit_m, k=None):
         """장소 → 도보 상한 안 역 **역 좌표 기준 가까운 순 최대 k 개**(E1 · 문제목록 #38). 사고로 막힌 역(_blocked_station)은 뺀다.
         순서·상한은 역 좌표 직선 거리로 정하고(앞 판 near[0] 과 같은 기준), 돌려주는 거리 값은 그 역에서 장소에 가장
@@ -389,7 +433,10 @@ class Planner:
                     d = e[0]
                     tlat, tlon = e[1]["lat"], e[1]["lng"]
             if tlat is not None and tlon is not None:
+                d0 = d
                 d = self._eff(place["lat"], place["lon"], tlat, tlon, d)     # #13 — 출구(없으면 역)까지 길로
+                if self.v.ex is not None and d0 and d * self.detour > d0 * EXIT_RETRY_RATIO_PROPOSED:
+                    d = self._better_exit(place, nm, rec.get("line"), d, (tlat, tlon))
             out.append((nm, d, lines))
             if len(out) >= k:
                 break

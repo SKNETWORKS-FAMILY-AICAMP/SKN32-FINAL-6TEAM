@@ -12,12 +12,15 @@ import type { TripStop } from "@/features/trip/model";
 import type { Language, Translate } from "@/lib/i18n";
 import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
+import { onToast } from "@/lib/toast-bus";
 import { foundCount, isInstantRow, needs, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type LineFinding, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type ServerProgress, type TripIssue } from "./model";
 import { Act, HeadBadges, letter, reason, type ListFilter } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
 import { dayTimes, withTimes } from "./day-times";
 import { DayList, type RowContext } from "./plan-rows";
 import { ResultFooter, StopEditor, TripIssues, type Registration } from "./result-parts";
+import { dampedScrollTo } from "@/lib/damped-scroll";
+import { MapCallout } from "./map-callout";
 import { useFollowScroll } from "./use-follow-scroll";
 import { usePullPastEnd } from "./use-pull-past-end";
 import { useDayGestures } from "./use-day-gestures";
@@ -320,7 +323,7 @@ const COMPACT_BELOW = 190;
 /** The least the sheet can be dragged to: the handle and the buttons. */
 const SHEET_MIN = 104;
 
-interface Toast { text: string; sub?: string; undo?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void }
+interface Toast { text: string; sub?: string; undo?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string }
 
 type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "onMapZoom">;
 
@@ -339,6 +342,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   // What the customer picked once the check is done: one card or move open, one place selected, one day on the map.
   const [openAt, setOpenAt] = useState<{ list: "before" | "after"; id: string } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  // `[2026-10-06 사용자 지시]` The route line the customer pressed on the map (the id of its shape): drawn picked, its leg opened in the list and described in the card over the map.
+  const [selectedLine, setSelectedLine] = useState<string | null>(null);
   const [chosenDay, setChosenDay] = useState<number | null>(null);
   const [sheet, setSheet] = useState<Sheet>("half");
   // ⑤ The stop being changed (the change screen takes the sheet), the search in the top bar.
@@ -407,6 +412,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     const timer = setTimeout(() => setToast(null), toast.undo ? 4500 : 2800);
     return () => clearTimeout(timer);
   }, [toast]);
+  // `[2026-10-06 사용자 지시]` What the customer did elsewhere on this screen (the Course Keeper turned on or off in the header) is told in THIS bar, like every other notice here.
+  useEffect(() => onToast((notice) => setToast({ text: notice.text, sub: notice.sub, undo: Boolean(notice.action), revert: notice.action ? () => { setToast(null); notice.action?.run(); } : undefined, undoLabel: notice.action?.label })), []);
   // The preview is gone from the page (the plan changed some other way): the list is the plan as it is.
   const hadPreview = useRef(false);
   useEffect(() => {
@@ -470,6 +477,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     const item = shown.items.find((entry) => entry.id === id);
     if (!item) return;
     if (selected === id) { setSelected(null); closeOpen(id); return; }
+    setSelectedLine(null);
     setSelected(id);
     setChosenDay(item.day);
     setOpen(id, list);
@@ -477,6 +485,23 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
       if (sheet === "peek") setSheet("half");
       requestAnimationFrame(() => document.getElementById(`${list === "after" ? "after-" : ""}plan-card-${id}`)?.scrollIntoView({ block: "nearest" }));
     }
+  }
+  /**
+   * `[2026-10-06 사용자 지시 — 경로를 누르면 해당 경로가 나온다]` A route line pressed on the map: it is drawn picked, its leg is opened in the list (and brought into view), and a card over the map describes it. Pressed again it is let go.
+   */
+  function pickLine(lineId: string) {
+    const shape = routes?.shapes.find((entry) => entry.itemId === lineId);
+    const move = shape && (shown.moves.find((entry) => entry.id === shape.itemId) ?? shown.moves.find((entry) => entry.fromId === shape.fromItemId && entry.toId === shape.toItemId));
+    if (!move) return;
+    if (selectedLine === lineId) { setSelectedLine(null); closeOpen(move.id); return; }
+    setSelectedLine(lineId);
+    setSelected(null);
+    const from = shown.items.find((entry) => entry.id === move.fromId);
+    if (from) setChosenDay(from.day);
+    const list = previewing && side === "after" ? "after" : "before";
+    setOpenAt({ list, id: move.id });
+    if (sheet === "peek") setSheet("half");
+    requestAnimationFrame(() => bodyBox.current?.querySelector<HTMLElement>(`[data-entry-id="${move.id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
   }
   function showDay(day: number) {
     setChosenDay(day);
@@ -932,6 +957,14 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   });
   // `[2026-10-03 사용자]` While the check is drawn row by row the list follows the newest row (it stayed at the top while rows were added below).
   const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view);
+  // ★`[2026-10-06 사용자 지적 — 첫 화면이 왜 애매하게 1일차 마지막 일정에 가 있나]` While the check is drawn the list follows the newest row, so it ends where the last row was drawn - in the middle of day 1.
+  //   When the check is done the list goes back to the very top (the first stop of the first day), once.
+  const wentTop = useRef(false);
+  useEffect(() => {
+    if (!done || wentTop.current) return;
+    wentTop.current = true;
+    if (bodyBox.current) dampedScrollTo(bodyBox.current, 0, 5);
+  }, [done]);
 
   // The change screen's map: the day's other stops greyed, the stop being changed, and its alternatives A, B, C.
   const cards = change ? change.list : [];
@@ -947,6 +980,20 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     }
     if (done) pick(id, "map");
   }
+  function onLine(lineId: string) { if (done && !changing) pickLine(lineId); }
+  // What the card over the map describes: the picked stop (its number is its place in the day on the map) or the picked leg.
+  const calloutStop = done && !changing && selected ? (() => {
+    const item = shown.items.find((entry) => entry.id === selected);
+    const order = mapStops.findIndex((stop) => stop.id === selected) + 1;
+    return item ? { item, order: order || 1 } : null;
+  })() : null;
+  const calloutMove = done && !changing && selectedLine ? (() => {
+    const shape = routes?.shapes.find((entry) => entry.itemId === selectedLine);
+    const move = shape && (shown.moves.find((entry) => entry.id === shape.itemId) ?? shown.moves.find((entry) => entry.fromId === shape.fromItemId && entry.toId === shape.toItemId));
+    if (!move) return null;
+    const name = (id: string, fallback: string | null) => shown.items.find((entry) => entry.id === id)?.title ?? fallback ?? "";
+    return { move, from: name(move.fromId, shape.from), to: name(move.toId, shape.to) };
+  })() : null;
 
   // The lines belong to the plan as it is: for the proposed one only those between stops it did not change are still true (a changed place moves its ends).
   const lineShapes = !routes || changing ? null : previewing && side === "after" && recommended
@@ -1012,8 +1059,16 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   return <div ref={checkingBox} className={styles.checking} data-sheet={custom !== null ? "custom" : sheet} data-changing={changing ? true : undefined} data-dragging={dragging || undefined} data-compact={compact && done && !changing ? true : undefined}
     style={custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
     <div className={styles.map}>
-      <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" topInset={64} bottomInset={24} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin} />
+      <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" topInset={64} bottomInset={24} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin}
+        selectedLineId={selectedLine ?? undefined} onSelectLine={done && !changing ? onLine : undefined} />
     </div>
+    {(calloutStop || calloutMove) && <MapCallout stop={calloutStop} move={calloutMove}
+      onList={() => requestAnimationFrame(() => {
+        const id = calloutStop ? calloutStop.item.id : calloutMove!.move.id;
+        if (sheet === "peek") setSheet("half");
+        (calloutStop ? document.getElementById(`plan-card-${id}`) : bodyBox.current?.querySelector<HTMLElement>(`[data-entry-id="${id}"]`))?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      })}
+      onClose={() => { if (calloutStop) { setSelected(null); closeOpen(calloutStop.item.id); } else if (calloutMove) { setSelectedLine(null); closeOpen(calloutMove.move.id); } }} />}
     {unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
     {changing && headerSlot && createPortal(
       <div className={styles.headSearch} data-open={searchOpen || undefined} data-hide-brand>
@@ -1060,30 +1115,31 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
             </details>} />
         : <>
           <header className={styles.sheetHead} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
-            <h2 id="plan-check-sheet-title" className={styles.sheetTitle}>{sheetTitle}</h2>
+            <h2 id="plan-check-sheet-title" className={dayStrip ? "sr-only" : styles.sheetTitle}>{sheetTitle}</h2>
+            {dayStrip && <div ref={stripBox} className={styles.dayStrip} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
+              onKeyDown={(event) => {
+                if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+                const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]'));
+                const at = tabs.indexOf(document.activeElement as HTMLElement);
+                const next = tabs[at + (event.key === "ArrowRight" ? 1 : -1)];
+                if (next) { event.preventDefault(); next.focus(); next.click(); }
+              }}>
+              <span ref={markerBox} className={styles.dayMarker} aria-hidden="true" />
+              <button type="button" role="tab" className={styles.dayChip} aria-selected={listDay === "all"} tabIndex={listDay === "all" ? 0 : -1} onClick={chooseAllDays}>{t("전체", "All")}</button>
+              {days.map((day) => {
+                const wait = needsOfDay(day.day);
+                return <button key={day.day} type="button" role="tab" className={styles.dayChip} aria-selected={listDay === day.day} tabIndex={listDay === day.day ? 0 : -1} onClick={() => goDay(day.day)}>
+                  {t(`${day.day}일차`, `Day ${day.day}`)}<small>{day.date ? dayLabel(day.date, language) : ""}</small>
+                  {wait > 0 && <span className={styles.dayBadge} role="img" aria-label={t(`확인 필요 ${wait}곳`, `${wait} to check`)}>{wait}</span>}
+                </button>;
+              })}
+            </div>}
+
             {done && !registered && adjustedNow > 0 && <button type="button" className={styles.resetTimes} onClick={resetTimes} aria-label={t(`시간 조정 ${adjustedNow}곳 모두 처음으로`, `Put the ${adjustedNow} changed time${adjustedNow > 1 ? "s" : ""} back`)} title={t("바꾼 시간을 모두 처음으로", "Put every changed time back")}><Undo2 size={13} strokeWidth={1.8} aria-hidden="true" />{t("시간 초기화", "Reset times")}</button>}
             <p className={styles.count}>{done
               ? <HeadBadges needs={needCount} changed={changedCount} filter={filtering ? filter : null} onFilter={setFilter} registered={registered} rechecking={rechecking} />
               : countText(view, t)}</p>
           </header>
-          {dayStrip && <div ref={stripBox} className={styles.dayStrip} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
-            onKeyDown={(event) => {
-              if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
-              const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]'));
-              const at = tabs.indexOf(document.activeElement as HTMLElement);
-              const next = tabs[at + (event.key === "ArrowRight" ? 1 : -1)];
-              if (next) { event.preventDefault(); next.focus(); next.click(); }
-            }}>
-            <span ref={markerBox} className={styles.dayMarker} aria-hidden="true" />
-            <button type="button" role="tab" className={styles.dayChip} aria-selected={listDay === "all"} tabIndex={listDay === "all" ? 0 : -1} onClick={chooseAllDays}>{t("전체", "All")}</button>
-            {days.map((day) => {
-              const wait = needsOfDay(day.day);
-              return <button key={day.day} type="button" role="tab" className={styles.dayChip} aria-selected={listDay === day.day} tabIndex={listDay === day.day ? 0 : -1} onClick={() => goDay(day.day)}>
-                {t(`${day.day}일차`, `Day ${day.day}`)}<small>{day.date ? dayLabel(day.date, language) : ""}</small>
-                {wait > 0 && <span className={styles.dayBadge} role="img" aria-label={t(`확인 필요 ${wait}곳`, `${wait} to check`)}>{wait}</span>}
-              </button>;
-            })}
-          </div>}
           <div ref={bodyBox} className={styles.sheetBody} {...follow.handlers} onScroll={follow.handlers.onScroll}>
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
             {filtering && <p className={styles.filterNote} role="status">{filter === "changed" ? t("바뀐 곳만 보는 중이에요", "Showing only what changed") : t("확인이 필요한 곳만 보는 중이에요", "Showing only what needs a look")}
@@ -1144,7 +1200,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     {timeEdit.drag && <TimeDragOverlay drag={timeEdit.drag} />}
     <div className={styles.toast} role="status" data-shown={toast ? true : undefined}>
       {toast && <><span className={styles.toastText}>{toast.text}{toast.sub && <small>{toast.sub}</small>}</span>
-        {(toast.undo || toast.revert) && <button type="button" className={styles.undo} onClick={toast.revert ?? undo}>{t("되돌리기", "Undo")}</button>}</>}
+        {(toast.undo || toast.revert) && <button type="button" className={styles.undo} onClick={toast.revert ?? undo}>{toast.undoLabel ?? t("되돌리기", "Undo")}</button>}</>}
     </div>
   </div>;
 }

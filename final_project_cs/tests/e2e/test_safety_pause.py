@@ -5,7 +5,7 @@
 구현: `components/planning/safety.py`(분류) · `components/watch/safety_pause.py`(정지 · 알림 · 해제) · `components/places/shelters.py`(대피 장소) · `TripStore._open_trips`(감시에서 빼기) · `052_safety_pause_and_shelters.sql`
 
 ★지키려는 것
- ①재난이 난 시각에 그 지역에 여행객이 있었다면(오늘이 여행 기간 + 일정에 적힌 장소에서 사건이 점검됨) **그날 일정이 정지**된다. 자정이 지나면 풀린다
+ ①재난이 난 시각에 그 지역에 여행객이 있었다면(오늘이 여행 기간 + 일정에 적힌 장소에서 사건이 점검됨) **그날 일정이 정지**된다. 자정이 지나도 풀리지 않는다(사용자가 다시 시작해야 푼다) 풀린다
  ②전쟁 · 화산 폭발 같은 심각한 사건은 **여행 전체**가 정지되고 사용자가 다시 시작할 때까지 간다
  ③정지한 여행은 **감시 · 안내에서 빠진다**(`due` · `active_trip_ids` · 감시 한 틱) — 정지한 일정에 「곧 시작해요」 · 대체 장소 교체가 나가면 안 된다
  ④안전 알림은 **안전을 앞세우고**(공식 안내 · 119) 재난문자 원문과 **표에 있는** 가까운 대피 장소(거리 · 걷는 시간 추정 · 자료 출처)를 싣는다. 표가 비었거나 근처에 없으면 지어내지 않고 그렇게 말한다
@@ -64,11 +64,14 @@ class FakeCheck:
         return self.report
 
 
-def _trip(api, items=2, **override):
-    """서해 한가운데 장소 하나에 활동 `items` 개(10:00~, 한 시간씩). 에이전트 입구로 등록한다."""
+def _trip(api, items=2, extra_days=0, **override):
+    """서해 한가운데 장소 하나에 활동 `items` 개(10:00~, 한 시간씩). 에이전트 입구로 등록한다. `extra_days` > 0 이면 그 날수만큼 이어 하루 한 개씩 더 둔다(멈춘 다음 날에도 여행이 이어지는 모양)."""
     places = [{"key": "p1", "name": "시험 장소", "kind": "activity", "lat": SEA[0], "lon": SEA[1], "weather_sensitive": False, "attributes": {}}]
     rows = [{"seq": n + 1, "kind": "activity", "title": f"시험 활동 {n + 1}", "place": "p1", "route": None,
              "starts_at": _iso(f"{10 + n}:00"), "ends_at": _iso(f"{10 + n}:50"), "detail": {}} for n in range(items)]
+    for day in range(1, extra_days + 1):
+        rows.append({"seq": items + day, "kind": "activity", "title": f"시험 활동 {day + 1}일째", "place": "p1", "route": None,
+                     "starts_at": (_at("10:00") + timedelta(days=day)).isoformat(), "ends_at": (_at("10:50") + timedelta(days=day)).isoformat(), "detail": {}})
     body = _body(api["customer"], f"safety-{uuid4().hex[:10]}", places=places, items=rows, routes={}, **override)
     response = api["client"].post("/v1/trips", json=body, headers=api["auth"]("trip:write"))
     assert response.status_code == 201, response.text
@@ -124,16 +127,20 @@ def test_an_earthquake_stops_the_rest_of_that_day_and_the_watchers_skip_it(api, 
     assert _watched(api, trip_id, "10:30") == (True, True)                                    # 정지 전에는 감시 대상(11:00 항목이 곧 시작)
     check = FakeCheck(_report(_quake(5.1)))
     result = _sweep(api, check).tick()
-    assert result.counts() == {"trips": 1, "upcoming": 0, "checked": 1, "opened": 1, "already": 0, "no_place": 0, "fatal": 0, "released": 0}
+    assert result.counts() == {"trips": 1, "upcoming": 0, "checked": 1, "opened": 1, "already": 0, "no_place": 0, "fatal": 0, "released": 0, "reminded": 0, "asked": 0}
     assert result.opened[0]["level"] == "day" and result.opened[0]["shelter_status"] == "ok"
     assert [c["region"] for c in check.calls] == ["서울"] and check.calls[0]["place"]["name"] == "시험 장소"      # 일정에 적힌 장소에서 점검했다
     [(level, resumed, until)] = _pauses(trip_id)
-    assert level == "day" and resumed is False and until == _at("10:30").replace(hour=0, minute=0) + timedelta(days=1)   # 그날 자정(KST)
+    assert level == "day" and resumed is False and until is None                               # ★`[결정 2026-10-06 사용자]` 그날 정지도 끝나는 시각이 없다 — 사용자가 다시 시작할 때까지
     assert _watched(api, trip_id, "10:30") == (False, False)                                    # ③감시 · 안내가 이 여행을 건너뛴다
     assert _watched(api, trip_id, "23:59") == (False, False)
     next_morning = _at("09:00") + timedelta(days=1)
     with get_connection() as conn:
-        assert trip_id in api["store"].active_trip_ids(conn, next_morning)                      # 자정이 지나면 풀린다(내일 일정은 그대로 이어진다)
+        assert trip_id not in api["store"].active_trip_ids(conn, next_morning)                  # 자정이 지나도 풀리지 않는다 — 내일 아침에도 감시 · 안내에서 빠져 있다(일정은 그대로)
+    with get_connection() as conn, conn.transaction():
+        assert SafetyPauses(api["tenant"]).resume(conn, trip_id=trip_id, via="web", now=next_morning) == 1
+    with get_connection() as conn:
+        assert trip_id in api["store"].active_trip_ids(conn, next_morning)                      # 사용자가 다시 시작해야 이어진다
 
 
 def test_the_safety_notice_leads_with_safety_and_lists_nearby_shelters_from_the_table(api, near):
@@ -154,7 +161,7 @@ def test_the_safety_notice_leads_with_safety_and_lists_nearby_shelters_from_the_
     assert first["map_url"].startswith("https://www.google.com/maps/dir/?api=1&origin=34.5%2C125.0&destination=34.501%2C125.0&travelmode=walking")
     assert f"   길찾기(걸어서): {first['map_url']}" in lines                                          # 안전을 위한 이동 — 지도 앱이 길을 안내한다(서버가 길을 계산하지 않는다)
     assert "일정에 적힌 장소 시험 장소 기준" in text and "지금 계신 곳과" in guidance["reference"]["note"]    # 실제 위치가 아니라는 것을 밝힌다
-    assert lines[-1].startswith("상황이 정리되면 웹에서 「일정 다시 시작」을") and "내일 일정은 그대로 이어져요" in lines[-1]
+    assert lines[-1].startswith("상황이 정리되면 웹에서 「일정 다시 시작」을") and "내일 일정도 멈춰 있어요" in lines[-1]
 
 
 def test_the_same_event_does_not_stop_or_notify_twice(api, near):
@@ -341,7 +348,7 @@ def test_an_official_release_is_told_once_and_the_stop_stays_until_the_user_resu
     first = sweep.tick()
     assert first.counts()["released"] == 1
     [(_, payload)] = _notices(api, "safety_release")
-    assert payload["type"] == "guidance" and "해제됐다는 공식 안내가 나왔어요" in payload["text"] and "일정 다시 시작" in payload["text"]
+    assert payload["type"] == "guidance" and payload["text"].startswith("다치신 곳은 없으신가요?") and "해제됐다는 공식 안내가 나왔어요" in payload["text"] and "일정 다시 시작" in payload["text"]
     assert sweep.tick().counts()["released"] == 0 and len(_notices(api, "safety_release")) == 1       # 한 번만
     assert _pauses(trip_id) == [("trip", False, None)]                                     # 해제가 와도 정지는 사용자가 풀 때까지 그대로다
 
@@ -419,9 +426,12 @@ def test_resume_endpoint_is_for_the_owner_only_and_leaves_the_itinerary_alone(co
     assert paused["paused"] is True
     version_before = client.get(f"/v1/web/trips/{trip_id}").json()["version"]
     response = client.post(f"/v1/web/trips/{trip_id}/safety/resume", headers=headers)
-    assert response.status_code == 200 and response.json() == {"resumed": 1, "safety": {"paused": False}}
+    body = response.json()
+    assert response.status_code == 200 and body["resumed"] == 1 and body["safety"] == {"paused": False}
+    assert body["recovery"]["phase"] == "in_progress" and body["recovery"]["chosen"] is None     # 다시 시작하면 재난 뒤 꾸러미가 같이 온다(`test_safety_recovery.py`)
     assert client.get(f"/v1/web/trips/{trip_id}").json()["version"] == version_before     # 일정은 안 바뀐다
-    assert client.post(f"/v1/web/trips/{trip_id}/safety/resume", headers=headers).json()["resumed"] == 0     # 다시 눌러도 오류가 아니다
+    again = client.post(f"/v1/web/trips/{trip_id}/safety/resume", headers=headers).json()
+    assert again["resumed"] == 0 and again["recovery"] is None                                # 다시 눌러도 오류가 아니다 — 꾸러미는 처음 풀 때만 같이 온다
     from fastapi.testclient import TestClient
     stranger = TestClient(client.app, follow_redirects=False)
     assert stranger.post(f"/v1/web/trips/{trip_id}/safety/resume").status_code == 401
@@ -490,3 +500,112 @@ def test_deleting_the_trip_deletes_its_stops(api, near):
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("DELETE FROM trips WHERE trip_id=%s", (trip_id,))
     assert _pauses(trip_id) == []                                                          # `ON DELETE CASCADE`
+
+
+# ── ⑨ 정지가 이어지는 동안 관련 안내를 계속 보낸다 (`[결정 2026-10-06 사용자]`) ─────────────────────
+def _sweep_with(api, check, when, *, rules=RULES, release=None):
+    """`when` 은 `"16:31"` 같은 그날 시각, 또는 날짜가 다른 순간(`datetime`)."""
+    moment = _at(when) if isinstance(when, str) else when
+    return SafetySweep(store=api["store"], check=check, release=release, connection_factory=get_connection, clock=lambda: moment, rules=rules)
+
+
+def test_while_paused_the_first_guidance_is_sent_again_every_interval_with_the_shelters(api, near):
+    trip_id = _trip(api)
+    _sweep(api, FakeCheck(_report(_quake(5.1)))).tick()                                      # 10:30 에 정지 + 처음 안내
+    assert _sweep_with(api, FakeCheck(_report(_quake(5.1))), "15:00").tick().counts()["reminded"] == 0     # 간격(6시간) 전에는 안 보낸다
+    first = _sweep_with(api, FakeCheck(_report(_quake(5.1))), "16:31").tick()
+    assert first.counts()["reminded"] == 1 and first.reminded[0]["released"] is False and first.reminded[0]["number"] == 1
+    [(_, payload)] = _notices(api, "safety_pause_reminder")
+    assert payload["type"] == "safety_alert" and payload["reason"] == "safety_pause" and payload["reminder"] == 1
+    assert payload["text"].startswith("🔔 다치신 곳은 없으신가요?")                                    # ★`[결정 2026-10-06 사용자]` 안부가 먼저다
+    assert "시험 옥외대피장소 가" in payload["text"] and "일정 다시 시작" in payload["text"]   # 처음 안내와 같은 내용(대피 장소 · 다시 시작 길)
+    assert payload["guidance"]["shelters"], "웹 화면이 같은 안내 카드를 다시 그릴 수 있어야 한다"
+    again = _sweep_with(api, FakeCheck(_report(_quake(5.1))), "16:45").tick()
+    assert again.counts()["reminded"] == 0 and len(_notices(api, "safety_pause_reminder")) == 1       # 같은 칸에서 두 번 보내지 않는다
+    second = _sweep_with(api, FakeCheck(_report(_quake(5.1))), "22:31").tick()
+    assert second.reminded[0]["number"] == 2 and len(_notices(api, "safety_pause_reminder")) == 2
+    assert _pauses(trip_id) == [("day", False, None)]                                             # 안내를 보내도 정지는 그대로다
+
+
+def test_after_an_official_release_the_reminder_says_it_is_still_paused_until_the_user_resumes(api, near):
+    _trip(api)
+    _sweep(api, FakeCheck(_report(_war()))).tick()
+    release = lambda *, place, since, at: [{"kind": "민방위", "step": "위급재난", "text": "[행정안전부] 서울 공습경보가 해제되었습니다.", "created_at": _iso("11:20")}]
+    _sweep_with(api, FakeCheck(_report(_war())), "11:30", release=release).tick()                  # 해제 안내(한 번)
+    result = _sweep_with(api, FakeCheck(_report(_war())), "16:31", release=release).tick()
+    assert result.reminded and result.reminded[0]["released"] is True
+    [(_, payload)] = _notices(api, "safety_release_reminder")
+    assert payload["type"] == "guidance" and payload["text"].startswith("🔔 다치신 곳은 없으신가요?") and "해제됐지만" in payload["text"] and "아직 정지" in payload["text"] and "계속 멈춰 있어요" in payload["text"]
+    assert "시험 민방위대피소" not in payload["text"]                                                   # 해제 뒤에는 대피 장소를 다시 나열하지 않는다
+
+
+def test_reminders_stop_at_the_cap(api, near):
+    from dataclasses import replace
+
+    _trip(api)
+    capped = replace(RULES, reminder_max_count=1)
+    _sweep_with(api, FakeCheck(_report(_quake(5.1))), "10:30", rules=capped).tick()
+    assert _sweep_with(api, FakeCheck(_report(_quake(5.1))), "16:31", rules=capped).tick().counts()["reminded"] == 1
+    assert _sweep_with(api, FakeCheck(_report(_quake(5.1))), "22:31", rules=capped).tick().counts()["reminded"] == 0    # 상한(1번) — 더 보내지 않는다
+
+
+def test_reminders_stop_when_the_user_resumes(api, near):
+    trip_id = _trip(api)
+    _sweep_with(api, FakeCheck(_report(_quake(5.1))), "10:30").tick()
+    with get_connection() as conn, conn.transaction():
+        assert SafetyPauses(api["tenant"]).resume(conn, trip_id=trip_id, via="web", now=_at("10:40")) == 1
+    result = _sweep_with(api, FakeCheck(_report(_quake(5.1))), "16:31").tick()
+    assert result.counts()["reminded"] == 0 and _notices(api, "safety_pause_reminder") == []       # 다시 시작한 뒤에는 안 보낸다
+
+
+def test_reminders_can_be_turned_off_in_the_settings(api, near):
+    from dataclasses import replace
+
+    _trip(api)
+    off = replace(RULES, reminder_enabled=False)
+    _sweep_with(api, FakeCheck(_report(_quake(5.1))), "10:30", rules=off).tick()
+    assert _sweep_with(api, FakeCheck(_report(_quake(5.1))), "16:31", rules=off).tick().counts()["reminded"] == 0
+    assert _notices(api, "safety_pause_reminder") == []
+
+
+# ── ⑩ 멈춘 다음 날 아침에 「이어갈까요?」를 한 번 묻는다 (`[결정 2026-10-06 사용자]`) ───────────────────
+def test_the_next_morning_asks_once_whether_to_continue_and_never_resumes_by_itself(api, near):
+    trip_id = _trip(api, extra_days=1)
+    quake = FakeCheck(_report(_quake(5.1)))
+    _sweep_with(api, quake, "10:30").tick()                                                   # 10:30 에 멈춘다
+    assert _sweep_with(api, quake, "23:50").tick().counts()["asked"] == 0                     # 같은 날에는 묻지 않는다
+    tomorrow = _at("08:59") + timedelta(days=1)
+    assert _sweep_with(api, quake, tomorrow).tick().counts()["asked"] == 0                    # 아침 9시 전에는 묻지 않는다
+    first = _sweep_with(api, quake, tomorrow + timedelta(minutes=2)).tick()
+    assert first.counts()["asked"] == 1 and first.asked[0]["released"] is False
+    [(_, payload)] = _notices(api, "safety_morning_ask")
+    assert payload["type"] == "guidance" and payload["reason"] == "safety_pause" and payload["text"].startswith("좋은 아침이에요. 지금은 괜찮으신가요?")
+    assert "일정 다시 시작" in payload["text"] and "계속 멈춰 있어요" in payload["text"] and "119" in payload["text"]
+    assert payload["guidance"]["resume"]["path"] == "/safety/resume"
+    assert _sweep_with(api, quake, tomorrow + timedelta(hours=3)).tick().counts()["asked"] == 0 and len(_notices(api, "safety_morning_ask")) == 1   # 한 번뿐
+    assert _pauses(trip_id) == [("day", False, None)]                                          # 묻기만 한다 — 저절로 재개하지 않는다
+
+
+def test_the_morning_question_after_an_official_release_says_it_was_lifted_but_still_paused(api, near):
+    _trip(api, extra_days=1)
+    _sweep_with(api, FakeCheck(_report(_war())), "10:30").tick()
+    release = lambda *, place, since, at: [{"kind": "민방위", "step": "위급재난", "text": "[행정안전부] 서울 공습경보가 해제되었습니다.", "created_at": _iso("11:20")}]
+    _sweep_with(api, FakeCheck(_report(_war())), "11:30", release=release).tick()
+    result = _sweep_with(api, FakeCheck(_report(_war())), _at("09:30") + timedelta(days=1), release=release).tick()
+    assert result.counts()["asked"] == 1 and result.asked[0]["released"] is True
+    [(_, payload)] = _notices(api, "safety_morning_ask")
+    assert payload["reason"] == "safety_release" and "해제됐지만" in payload["text"] and "아직 멈춰 있어요" in payload["text"]
+
+
+def test_no_morning_question_after_the_user_resumed_or_when_it_is_turned_off(api, near):
+    from dataclasses import replace
+
+    trip_id = _trip(api, extra_days=1)
+    quake = FakeCheck(_report(_quake(5.1)))
+    _sweep_with(api, quake, "10:30").tick()
+    tomorrow = _at("09:30") + timedelta(days=1)
+    off = replace(RULES, morning_ask_enabled=False)
+    assert _sweep_with(api, quake, tomorrow, rules=off).tick().counts()["asked"] == 0
+    with get_connection() as conn, conn.transaction():
+        assert SafetyPauses(api["tenant"]).resume(conn, trip_id=trip_id, via="web", now=tomorrow - timedelta(hours=1)) == 1
+    assert _sweep_with(api, quake, tomorrow).tick().counts()["asked"] == 0 and _notices(api, "safety_morning_ask") == []

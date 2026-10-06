@@ -7,6 +7,10 @@
 .input::placeholder { color: color-mix(in srgb, var(--color-muted) 85%, var(--color-surface)); opacity: 1; }
 .inputMeta { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; color: var(--color-muted); margin-top: 11px; }
 .error, .warning { margin-top: 12px; padding: 13px 15px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-error-soft); color: var(--color-error); font-size: 11px; line-height: 1.8; }
+/* `[2026-10-06 사용자 지적]` 입력칸 바로 아래에 서는 안내: 눈에 띄게 14px · 아이콘과 함께 */
+.blocked, .blocked:hover { border-color: var(--color-border); background: var(--color-subtle-strong); color: var(--color-muted); box-shadow: none; cursor: default; }
+.error { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; font-weight: 500; line-height: 1.6; }
+.error svg { flex: none; margin-top: 3px; }
 .warning { color: var(--color-warning); border-color: var(--color-warning-border); background: var(--color-warning-soft); }
 .files { margin-top: 14px; display: grid; gap: 8px; font-size: 12px; color: var(--color-muted); }
 .files label { font-weight: 600; color: var(--color-text); }
@@ -22,6 +26,8 @@
 .actions { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 26px; padding: 18px 0; border-top: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-paper) 96%, transparent); backdrop-filter: blur(12px); }
 .actionNote { font-size: 11px; line-height: 1.7; color: var(--color-muted); max-width: 410px; }
 @media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1.5fr) minmax(235px, 1fr); } }
+/* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
+@container page (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1.5fr) minmax(235px, 1fr); } }
 @media (max-width: 768px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   .input { min-height: 285px; }
@@ -30,7 +36,22 @@
   .actionNote { display: none; }
   .actions > button { flex: 1; }
 }
+/* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
+@container page (max-width: 768px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .input { min-height: 285px; }
+  .actions { flex-wrap: wrap; gap: 10px; padding: 15px 0; }
+  .actions > * { padding-left: 12px; padding-right: 12px; }
+  .actionNote { display: none; }
+  .actions > button { flex: 1; }
+}
 @media (max-width: 450px) {
+  .labelRow { flex-wrap: wrap; }
+  .input { padding: 15px; font-size: 12px; }
+  .inputMeta { flex-wrap: wrap; gap: 5px; }
+}
+/* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
+@container page (max-width: 450px) {
   .labelRow { flex-wrap: wrap; }
   .input { padding: 15px; font-size: 12px; }
   .inputMeta { flex-wrap: wrap; gap: 5px; }
@@ -211,4 +232,8 @@
 /* Why 「계획 확인하기」 is off: stays visible on a phone, where the usual note is hidden. */
 .reason { flex: 1 1 220px; max-width: 460px; font-size: 11px; line-height: 1.7; color: var(--color-muted); }
 @media (max-width: 768px) { .reason { flex-basis: 100%; order: -1; max-width: none; } }
+/* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
+@container page (max-width: 768px) { .reason { flex-basis: 100%; order: -1; max-width: none; } }
 @media (max-width: 560px) { .askGrid { grid-template-columns: minmax(0, 1fr); } .panes > .pane { padding: 15px; } }
+/* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
+@container page (max-width: 560px) { .askGrid { grid-template-columns: minmax(0, 1fr); } .panes > .pane { padding: 15px; } }

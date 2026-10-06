@@ -11,8 +11,11 @@ export const TIMING = {
   idleMs: 30_000,
   /** The warning counts down this many seconds, then the plan check opens. */
   countdownS: 20,
-  /** Every question answered: the plan check opens after this long unless the customer touches a question or stops it. */
-  doneMs: 3_000,
+  /**
+   * The plan is read and nothing is left to wait for: the notice is shown and the plan check opens after this long, unless the customer touches a question or stops it. ★`[2026-10-06 사용자 지시]` 5 s
+   * (there is a button to go on at once): long enough to see that the reading is done and what is left, whether every question was answered or none was touched.
+   */
+  doneMs: 5_000,
   /** After an answer is saved the next open question comes after this long (long enough to see 「저장했어요」). */
   advanceMs: 400,
 } as const;
@@ -21,7 +24,7 @@ export const TIMING = {
  * `read`  - the server is still reading: the questions are shown under the progress, the big button says 「계획 읽는 중…」.
  * `late`  - reading is done and the customer is in the middle of answering: the screen stays (the question must not be taken away) and the button is on.
  * `idle`  - `late`, but nobody touched anything for `idleMs`: the 20-second warning (an `alertdialog`) counts down to the plan check.
- * `done`  - every question answered: a 3-second bar, then the plan check.
+ * `done`  - the plan is read and the customer is not in the middle of answering (all answered, OR no question was touched): the notice and a 5-second bar, then the plan check. A touch on a question turns it into `late`.
  * `gone`  - nothing more is asked, the screen goes on to the plan check (or never held it).
  */
 export type Phase = "read" | "late" | "idle" | "done" | "gone";
@@ -65,7 +68,7 @@ export interface QuestionFlow {
   keepAnswering: () => void;
   /** Anything touched on the screen: the customer is there (restarts the idle count, and counts as having touched the questions). */
   touch: () => void;
-  /** A touch on the questions themselves: also stops the 3-second bar. */
+  /** A touch on the questions themselves: also stops the countdown bar. */
   touchQuestions: () => void;
 }
 
@@ -95,10 +98,11 @@ export function useQuestionFlow({ intakeId, language, questions, loadingDone }: 
   const allDone = allAnswered(questions, answers);
 
   // Reading is done (the server has finished): decide ONCE what the screen does (mockup `finishLoading`).
+  // ★`[2026-10-06 사용자 지적]` Untouched questions no longer send the customer straight on: the notice is shown and the screen waits `doneMs`, then goes (it used to jump at once).
   if (loadingDone && phase === "read") {
     if (questions.length === 0) setPhase("gone");
-    else if (allDone) setPhase("done");
-    else if (!touched || open.length === 0) setPhase("gone");
+    else if (allDone || !touched) setPhase("done");
+    else if (open.length === 0) setPhase("gone");                      // some were answered, the rest skipped: nothing left to ask
     else { setPhase("late"); setAt(open[0]); }
   }
   // The warning ran out.

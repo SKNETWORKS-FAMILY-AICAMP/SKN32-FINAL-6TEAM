@@ -8,7 +8,7 @@
   --text-meta: 12px; --text-secondary: 14px; --text-body: 16px;
   --motion-100: 100ms; --motion-150: 150ms; --motion-200: 200ms;
   --ease-out: cubic-bezier(.16, 1, .3, 1); --ease-in: cubic-bezier(.7, 0, .84, 0);
-  position: fixed; inset: 0; z-index: 60; container: so / size; background: transparent; opacity: 0; transition: opacity var(--motion-150) var(--ease-in);
+  position: fixed; inset: 0; z-index: 60; pointer-events: auto; container: so / size; background: transparent; opacity: 0; transition: opacity var(--motion-150) var(--ease-in);
   font-size: var(--text-body); line-height: 1.6; color: var(--color-text);
 }
 .layer[data-open="true"] { background: var(--color-scrim); opacity: 1; transition: opacity var(--motion-200) var(--ease-out); }
