@@ -38,6 +38,13 @@ class SafetyRules:
     trip_keywords: tuple[str, ...]
     trip_magnitude_min: float
     exclude_keywords: tuple[str, ...]
+    # 정지가 이어지는 동안 안내를 다시 보내는 규칙(`[결정 2026-10-06 사용자]` 관련 안내를 계속 보낸다)
+    reminder_enabled: bool = True
+    reminder_interval_hours: float = 6.0
+    reminder_max_count: int = 4
+    # 멈춘 다음 날 아침에 「이어갈까요?」를 한 번 묻는다(저절로 재개하지는 않는다)
+    morning_ask_enabled: bool = True
+    morning_ask_hour: int = 9
 
     @classmethod
     def from_guardrails(cls) -> "SafetyRules":
@@ -53,7 +60,12 @@ class SafetyRules:
                    trip_steps=frozenset(listed("trip_steps")), trip_kinds=frozenset(listed("trip_kinds")),
                    trip_keywords=tuple(listed("trip_keywords")),
                    trip_magnitude_min=float(guard.get("travel.safety.trip_magnitude_min")),
-                   exclude_keywords=tuple(listed("exclude_keywords")))
+                   exclude_keywords=tuple(listed("exclude_keywords")),
+                   reminder_enabled=bool(guard.get("travel.safety.reminder.enabled")),
+                   reminder_interval_hours=float(guard.get("travel.safety.reminder.interval_hours")),
+                   reminder_max_count=int(guard.get("travel.safety.reminder.max_count")),
+                   morning_ask_enabled=bool(guard.get("travel.safety.reminder.morning_ask_enabled")),
+                   morning_ask_hour=int(guard.get("travel.safety.reminder.morning_ask_hour")))
 
 
 @dataclass(frozen=True)

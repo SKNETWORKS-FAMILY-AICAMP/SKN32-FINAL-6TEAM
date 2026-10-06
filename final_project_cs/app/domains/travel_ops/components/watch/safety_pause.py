@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """재난 시 **일정 정지** · **피난 안내** · **다시 시작**. `[결정 2026-10-06 사용자]`
 
-    ① 재난이 난 시각에 그 지역에 여행객이 있었다 → **그날(KST) 남은 일정을 정지**한다. 자정이 지나면 저절로 풀린다.
+    ① 재난이 난 시각에 그 지역에 여행객이 있었다 → **그날(KST) 남은 일정을 정지**한다. ★`[결정 2026-10-06 사용자]` **자정이 지나도 저절로 풀리지 않는다** — 사용자가 다시 시작해야 푼다.
     ② 전쟁 · 활화산 폭발처럼 아주 심각하다 → **여행 일정 전체를 정지**하고 근처 대피 장소로 안내한다 — 안전을 위한 이동과 목적지를 알리는 안전 알림.
     ③ 공식 **해제**가 오면 「해제됐어요 — 다시 시작할까요?」를 알린다. **다시 시작은 사용자가 정한다**(서버는 사용자가 이미 안전한 곳에 있는지 모른다).
+    ④ ★`[결정 2026-10-06 사용자]` **정지 중에는 관련 안내를 계속 보낸다** — 일정 간격(`travel.safety.reminder`)으로, 해제 전에는 처음 안내(공식 안내 · 가까운 대피 장소)를 다시, 해제 뒤에는 「아직 정지 중이에요」를 보낸다. 횟수에 상한이 있다.
 
 ★정지는 **일정을 고치거나 지우지 않는다.** `trip_safety_pauses` 에 표시를 쓸 뿐이고, 감시 · 안내 반복(`TripStore.active_trip_ids` · `due`)이 그 여행(또는 그날)을 건너뛴다. 다시 시작 = 표시를 닫는 것.
 ★**여행객이 그 지역에 있었는가**는 일정으로 판단한다 — 오늘이 여행 기간 안이고, 오늘 일정에 적힌 장소(진행 중 → 다음 → 마지막)에서 사건을 점검한다. 실제 위치는 모른다(위치 수집은 아직 없다).
@@ -61,14 +62,14 @@ class SafetyPauses:
                     for row in cur.fetchall()]
 
     def open(self, conn, *, trip_id: UUID, event: SafetyEvent, day: date | None, from_at: datetime, until_at: datetime | None,
-             guidance: dict[str, Any]) -> UUID | None:
+             guidance: dict[str, Any], opened_at: datetime | None = None) -> UUID | None:
         """정지를 연다. **같은 사건으로 이미 열었으면 None**(다시 시작한 것이어도 — 같은 사건으로 두 번 멈추지 않는다)."""
         with conn.cursor() as cur:
-            cur.execute("INSERT INTO trip_safety_pauses (tenant_id, trip_id, level, event_key, event_json, day, from_at, until_at, guidance_json) "
-                        "VALUES (%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s::jsonb) ON CONFLICT (tenant_id, trip_id, level, event_key) DO NOTHING "
+            cur.execute("INSERT INTO trip_safety_pauses (tenant_id, trip_id, level, event_key, event_json, day, from_at, until_at, guidance_json, created_at) "
+                        "VALUES (%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s::jsonb,COALESCE(%s, now())) ON CONFLICT (tenant_id, trip_id, level, event_key) DO NOTHING "
                         "RETURNING pause_id",
                         (self.tenant_id, trip_id, event.level, event.key, json.dumps(event.evidence(), ensure_ascii=False), day, from_at, until_at,
-                         json.dumps(guidance, ensure_ascii=False, default=str)))
+                         json.dumps(guidance, ensure_ascii=False, default=str), opened_at))   # opened_at = 점검 시계(재안내 간격의 시작 — 시험의 고정 시계도 따른다)
             row = cur.fetchone()
         return row[0] if row else None
 
@@ -197,7 +198,7 @@ def compose_text(guidance: dict[str, Any]) -> str:
     elif status == "no_reference_place":
         lines.append("일정의 장소 좌표를 몰라 가까운 대피 장소를 찾지 못했어요. 재난문자와 공식 안내를 따라 주세요.")
     lines.append(f"상황이 정리되면 웹에서 「{guidance['resume']['label']}」을 눌러 주세요."
-                 + (" 오늘이 지나면 내일 일정은 그대로 이어져요." if level == "day" else ""))
+                 + (" 다시 시작하시기 전까지는 내일 일정도 멈춰 있어요." if level == "day" else ""))
     return "\n".join(lines)
 
 
@@ -206,13 +207,53 @@ def notice_payload(guidance: dict[str, Any], event: SafetyEvent, pause_id: UUID)
             "causes": [event.evidence()], "safety": True, "pause_id": str(pause_id), "options": [], "replay": False, "guidance": guidance}
 
 
-def release_payload(event: dict[str, Any], release_text: str | None, pause_id: UUID, level: str) -> dict[str, Any]:
+def release_payload(event: dict[str, Any], release_text: str | None, pause_id: UUID, level: str, phase: str = "in_progress") -> dict[str, Any]:
     label = event.get("label") or "재난"
-    scope = "여행 일정" if level == "trip" else "오늘 일정"
-    text = (f"{label} 상황이 해제됐다는 공식 안내가 나왔어요. 아직 {scope}은 정지돼 있어요. 안전하게 계시다면 웹에서 「{RESUME_LABEL}」을 눌러 주세요."
+    scope = "여행 일정" if level == "trip" else "일정"
+    greeting = "" if phase == "upcoming" else "다치신 곳은 없으신가요? "          # ★`[결정 2026-10-06 사용자]` 안부가 먼저다(아직 시작하지 않은 여행은 그곳에 있는 사람이 아니라 뺀다)
+    text = (f"{greeting}{label} 상황이 해제됐다는 공식 안내가 나왔어요. 아직 {scope}은 정지돼 있어요. 안전하게 계시다면 웹에서 「{RESUME_LABEL}」을 눌러 주세요. 누르시기 전까지는 계속 멈춰 있어요."
             + (f"\n재난문자: {_excerpt(release_text, 200)}" if release_text else ""))
     return {"type": "guidance", "kind": "safety_release", "reason": "safety_release", "text": text, "language": "ko", "safety": True,
             "pause_id": str(pause_id), "guidance": {"level": level, "label": label, "resume": {"label": RESUME_LABEL, "path": "/safety/resume"}}}
+
+
+def reminder_text(pause: dict[str, Any], *, released: bool) -> str:
+    """정지가 이어지는 동안 다시 보내는 글. 해제 전 = 처음 안내를 다시(대피 장소 목록 포함), 해제 뒤 = 「아직 정지 중」."""
+    guidance = pause.get("guidance") or {}
+    event = pause.get("event") or {}
+    # ★`[결정 2026-10-06 사용자]` 안부가 먼저다 — 다친 분께 일정 이야기부터 하지 않는다(아직 시작하지 않은 여행은 그곳에 있는 사람이 아니라 뺀다)
+    greeting = "" if guidance.get("phase") == "upcoming" else "다치신 곳은 없으신가요? "
+    if released:
+        label = event.get("label") or guidance.get("label") or "재난"
+        scope = "여행 일정" if pause["level"] == "trip" else "일정"
+        return (f"🔔 {greeting}{label} 상황은 해제됐지만 {scope}은 아직 정지돼 있어요. 안전한 곳에 계시다면 웹에서 「{RESUME_LABEL}」을 눌러 주세요. "
+                "누르시기 전까지는 계속 멈춰 있어요(일정은 지우지 않았어요).")
+    return f"🔔 {greeting}아직 일정이 멈춰 있어서 안내를 다시 드려요.\n" + compose_text(guidance)
+
+
+def morning_ask_payload(pause: dict[str, Any]) -> dict[str, Any]:
+    """멈춘 날의 **다음 날 아침** 한 번. 저절로 재개하지 않고 **묻기만** 한다 — 누르면 이어지고, 안 누르면 그대로 멈춰 있다."""
+    guidance = pause.get("guidance") or {}
+    event = pause.get("event") or {}
+    label = event.get("label") or guidance.get("label") or "재난"
+    released = pause["release_notified_at"] is not None
+    scope = "여행 일정" if pause["level"] == "trip" else "일정"
+    greeting = "" if guidance.get("phase") == "upcoming" else "좋은 아침이에요. 지금은 괜찮으신가요? "
+    cause = f"{label} 상황은 해제됐지만" if released else f"{label} 때문에"
+    text = (f"{greeting}{cause} {scope}이 아직 멈춰 있어요. 안전한 곳에 계시고 다시 일정을 이어가고 싶으시면 웹에서 「{RESUME_LABEL}」을 눌러 주세요. "
+            "누르시기 전까지는 계속 멈춰 있어요(일정은 지우지 않았어요). 위급하면 " + EMERGENCY_CALL + "에 연락하세요.")
+    return {"type": "guidance", "kind": "safety_morning_ask", "reason": "safety_release" if released else "safety_pause", "text": text, "language": "ko",
+            "safety": True, "pause_id": str(pause["pause_id"]), "options": [], "replay": False,
+            "guidance": {"level": pause["level"], "label": label, "phase": guidance.get("phase") or "in_progress", "resume": {"label": RESUME_LABEL, "path": "/safety/resume"}}}
+
+
+def reminder_payload(pause: dict[str, Any], *, released: bool, number: int) -> dict[str, Any]:
+    guidance = pause.get("guidance") or {}
+    return {"type": "guidance" if released else "safety_alert",
+            "kind": "safety_release_reminder" if released else "safety_pause_reminder",
+            "reason": "safety_release" if released else "safety_pause", "text": reminder_text(pause, released=released), "language": "ko",
+            "causes": [pause["event"]] if pause.get("event") and not released else [], "safety": True, "pause_id": str(pause["pause_id"]),
+            "options": [], "replay": False, "reminder": number, "guidance": guidance}
 
 
 # ── 감시 ────────────────────────────────────────────────────────────
@@ -226,10 +267,12 @@ class SweepResult:
     no_place: int = 0
     fatal: list[dict[str, Any]] = field(default_factory=list)
     released: list[dict[str, Any]] = field(default_factory=list)
+    reminded: list[dict[str, Any]] = field(default_factory=list)
+    asked: list[dict[str, Any]] = field(default_factory=list)          # 다음 날 아침 「이어갈까요?」를 물은 정지
 
     def counts(self) -> dict[str, int]:
         return {"trips": self.trips, "upcoming": self.upcoming, "checked": self.checked, "opened": len(self.opened), "already": self.already,
-                "no_place": self.no_place, "fatal": len(self.fatal), "released": len(self.released)}
+                "no_place": self.no_place, "fatal": len(self.fatal), "released": len(self.released), "reminded": len(self.reminded), "asked": len(self.asked)}
 
 
 def _reference_place(items: list[Item], now: datetime) -> dict[str, Any] | None:
@@ -303,6 +346,8 @@ class SafetySweep:
             return
         if active:
             self._release_notice(trip_id, active, place, now, result)
+            self._remind(trip_id, active, now, result)
+            self._ask_in_the_morning(trip_id, active, now, result)
         if any(p["level"] == "trip" for p in active):
             return                                         # 이미 여행 전체가 멈춰 있다 — 더 올릴 단계가 없다
         result.checked += 1
@@ -321,11 +366,11 @@ class SafetySweep:
         if event.level == "day" and event.at is not None and event.at.astimezone(KST).date() != today:
             return                                         # 어제 난 사건 — 오늘 일정을 멈출 이유가 아니다
         from_at = min(now, event.at) if event.at else now
-        until_at = day_end(now) if event.level == "day" else None
+        until_at = None                                    # ★`[결정 2026-10-06 사용자]` 그날 정지도 자정에 풀리지 않는다 — 사용자가 다시 시작할 때까지(`day` 칸은 난 날을 기록할 뿐)
         with self._connect() as conn, conn.transaction():
             guidance = build_guidance(conn, event=event, place=place, upcoming=upcoming)
             pause_id = self.pauses.open(conn, trip_id=trip_id, event=event, day=today if event.level == "day" else None,
-                                        from_at=from_at, until_at=until_at, guidance=guidance)
+                                        from_at=from_at, until_at=until_at, guidance=guidance, opened_at=now)
             if pause_id is None:
                 result.already += 1
                 return
@@ -333,13 +378,47 @@ class SafetySweep:
         result.opened.append({"trip_id": str(trip_id), "level": event.level, "kind": event.kind, "label": event.label, "phase": phase,
                               "pause_id": str(pause_id), "shelters": len(guidance["shelters"]), "shelter_status": guidance["shelter_status"]})
 
+    def _remind(self, trip_id: UUID, active: list[dict[str, Any]], now: datetime, result: SweepResult) -> None:
+        """정지가 이어지는 동안 **일정 간격마다** 안내를 다시 보낸다 — 간격 칸(`n`) 하나에 한 번만(`outbox` UNIQUE 가 같은 칸의 두 번째를 막는다).
+
+        ★처음 안내가 나간 시각(`created_at`)부터 센다: 간격 1칸이 지나면 1번째 · 2칸이면 2번째 … `reminder.max_count` 번째까지. 점검이 한동안 멈췄다 돌아오면
+          지난 칸은 건너뛰고 **지금 칸 하나만** 보낸다(밀린 것을 한꺼번에 쏟지 않는다). 사용자가 다시 시작하면 `active` 에서 빠져 더는 안 나간다."""
+        if not self.rules.reminder_enabled or self.rules.reminder_interval_hours <= 0:
+            return
+        interval = timedelta(hours=self.rules.reminder_interval_hours)
+        for pause in active:
+            number = int((now - pause["created_at"]) / interval)
+            if number < 1 or number > self.rules.reminder_max_count:
+                continue
+            released = pause["release_notified_at"] is not None
+            with self._connect() as conn, conn.transaction():
+                added = self.store.enqueue_message(conn, trip_id=trip_id, key=f"safety-remind:{pause['pause_id']}:{number}",
+                                                   payload=reminder_payload(pause, released=released, number=number))
+            if added:
+                result.reminded.append({"trip_id": str(trip_id), "pause_id": str(pause["pause_id"]), "number": number, "released": released})
+
+    def _ask_in_the_morning(self, trip_id: UUID, active: list[dict[str, Any]], now: datetime, result: SweepResult) -> None:
+        """멈춘 날의 **다음 날 아침**(KST, `morning_ask_hour` 이후 첫 점검)에 「이어갈까요?」를 **정지마다 한 번** 묻는다. 저절로 재개하지 않는다.
+
+        ★왜: 재안내(`_remind`)는 처음 안내 뒤 24시간에서 끊는다. 그 뒤 사용자가 화면을 안 열면 일정 안내가 조용히 멈춘 채 남는다 — 그 구멍을 한 번의 질문으로 메운다."""
+        if not self.rules.morning_ask_enabled:
+            return
+        local = now.astimezone(KST)
+        for pause in active:
+            if local.date() <= pause["created_at"].astimezone(KST).date() or local.hour < self.rules.morning_ask_hour:
+                continue
+            with self._connect() as conn, conn.transaction():
+                added = self.store.enqueue_message(conn, trip_id=trip_id, key=f"safety-morning:{pause['pause_id']}", payload=morning_ask_payload(pause))
+            if added:
+                result.asked.append({"trip_id": str(trip_id), "pause_id": str(pause["pause_id"]), "released": pause["release_notified_at"] is not None})
+
     def _release_notice(self, trip_id: UUID, active: list[dict[str, Any]], place: dict[str, Any], now: datetime, result: SweepResult) -> None:
         """공식 해제가 왔으면 **한 번만** 알린다(다시 시작은 사용자가 정한다)."""
         if self.release is None:
             return
         for pause in active:
             if pause["release_notified_at"] is not None or (pause["event"] or {}).get("category") != "disaster_msg":
-                continue                                   # 지진은 「해제」가 없다 — 그날 정지는 자정에 풀리고 여행 전체 정지는 사용자가 푼다
+                continue                                   # 지진은 「해제」가 없다 — 정지는 사용자가 푼다(그 대신 다시 안내가 계속 나간다)
             rows = self.release(place=place, since=pause["from_at"], at=now)
             matched = _matching_release(pause["event"] or {}, rows or [], self.rules)
             if matched is None:
@@ -347,7 +426,8 @@ class SafetySweep:
             with self._connect() as conn, conn.transaction():
                 if self.pauses.mark_release_notified(conn, pause["pause_id"]):
                     self.store.enqueue_message(conn, trip_id=trip_id, key=f"safety-release:{pause['pause_id']}",
-                                               payload=release_payload(pause["event"] or {}, matched.get("text"), pause["pause_id"], pause["level"]))
+                                               payload=release_payload(pause["event"] or {}, matched.get("text"), pause["pause_id"], pause["level"],
+                                                                         (pause["guidance"] or {}).get("phase") or "in_progress"))
                     result.released.append({"trip_id": str(trip_id), "pause_id": str(pause["pause_id"])})
 
 
