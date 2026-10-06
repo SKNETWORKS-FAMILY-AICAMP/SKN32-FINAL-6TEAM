@@ -11,8 +11,8 @@ D = os.path.join(HERE, 'results', '_pull', 'chain')
 sys.stdout.reconfigure(encoding='utf-8')
 summ = json.load(open(os.path.join(D, 'chain_summary.json'), encoding='utf-8'))
 TR = {os.path.basename(f)[6:-5]: json.load(open(f, encoding='utf-8')) for f in glob.glob(os.path.join(D, 'chain_*.json')) if not f.endswith('summary.json')}
-LAB = {'e4b_only': '단독 기준선: 가르친 E4B 만(같은 서버·같은 GGUF)', 'full': '한 줄 연결 — 수정 판(Jev 입력에 고객 일정 목록)', 'full_v1': '한 줄 연결 — 사전 등록 판(Jev 입력에 「일정 보유」 한 줄만)',
-       'full_noctx': '한 줄 연결 — Jev 입력에 메시지만', 'no_rules': '수정 판에서 규칙 뺌', 'no_jev': '수정 판에서 Jev 뺌(ML 이 범위 밖만 거름)', 'no_ml': '수정 판에서 ML 판별기 뺌', 'rules_e4b': '규칙 → E4B(ML·Jev 모두 뺌)',
+LAB = {'e4b_only': '단독 기준선: 가르친 E4B 만(같은 서버·같은 GGUF)', 'full': '한 줄 연결 — 수정 판(Jev 계열 모델 Winnow-E4B[학습 없음] 입력에 고객 일정 목록)', 'full_v1': '한 줄 연결 — 사전 등록 판(Jev 계열 모델 입력에 「일정 보유」 한 줄만)',
+       'full_noctx': '한 줄 연결 — Jev 계열 모델 입력에 메시지만', 'no_rules': '수정 판에서 규칙 뺌', 'no_jev': '수정 판에서 Jev 계열 모델 뺌(ML 이 범위 밖만 거름)', 'no_ml': '수정 판에서 ML 판별기 뺌', 'rules_e4b': '규칙 → E4B(ML·Jev 모두 뺌)',
        'full_live': '(수정 판 다시 호출 — 캐시 없음)', 'e4b_only_live': '(단독 기준선 다시 호출 — 캐시 없음)'}
 ORDER = ['e4b_only', 'rules_e4b', 'no_jev', 'no_ml', 'no_rules', 'full', 'full_v1', 'full_noctx']
 key = lambda n: n.replace('#', '_')
@@ -67,7 +67,7 @@ def mcn(a, b):
 ST = {n: strict(t) for n, t in TR.items()}
 
 print('### 변형별 결과 — 요청 둘 제외 769문제(mix8~12), 가르친 E4B 단독과 짝지은 정확검정 (★빈 응답은 틀린 것으로 센다)')
-print('| 변형 | 정답/769 | 엉뚱한 답 | 못 찾음 | 읽기 실패 | 요청 둘 A · B (/66) | 호출: 규칙·ML·Jev·E4B | 건당 중앙 · p95(ms) | 단독 대비(이쪽만 : 단독만, p) |')
+print('| 변형 | 정답/769 | 엉뚱한 답 | 못 찾음 | 읽기 실패 | 요청 둘 A · B (/66) | 호출: 규칙·ML·Jev 계열 모델·E4B | 건당 중앙 · p95(ms) | 단독 대비(이쪽만 : 단독만, p) |')
 print('|---|---:|---:|---:|---:|---|---|---|---|')
 for n in ORDER:
     r = ST.get(n)

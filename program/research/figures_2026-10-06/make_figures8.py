@@ -77,8 +77,8 @@ def fig29():
             jl.append(f"{JN.get(k, k)}: " + ' · '.join(f'{SHORT[h]} {100 * v:.0f}' for h, v in zip(HEADS, res)) + f' ({lat * 1000:.0f}ms)')
     else:
         jl = ['의도·감정·긴급도·대상 분류 점수: 시험 중']
-    cards.append(('gpu', '③ Jev 계열 분류', '고정된 라벨 중 하나를 학습 없이 고르는 소형 결정 모델 — 이번에 비어 있던 칸',
-                  ['일정 항목 짚기(후보 40~50개): 인코더형 Laya 21% · 4B급 Jev류 71~88% · 가르친 E4B 98% (§85-2 · §50)'] + jl,
+    cards.append(('gpu', '③ Jev 계열 모델(분류·보낼 곳·짚기)', '고정된 라벨 중 하나를 학습 없이 고르는 소형 결정 모델 — 이번에 비어 있던 칸',
+                  ['일정 항목 짚기(후보 40~50개): 학습 없는 Jev 계열 — 인코더형 Laya 21% · 4B급 71~88% / 우리 데이터로 가르친 Winnow-E4B(Jev 계열) 756/769 = 98.3% · 가르친 E4B 750 (§85-2 · §92-6)'] + jl,
                   '일부 채움 · OpenDecider-small 대기' if jev else '시험 중'))
     cards.append(('now', '④-a 임베딩 분류(앞서 보여 드린 표)', '학습한 작은 인코더 하나가 4가지 라벨을 한 번에',
                   [f'학습한 인코더 최고(CX 400): ' + ' · '.join(f'{SHORT[h]} {100 * v:.0f}' for h, v in zip(HEADS, best_enc)) + ' (CPU 35~120ms)',
