@@ -7,6 +7,9 @@
 ★가르칠 때와 **같은 프롬프트**(오늘 날짜 + 번호 붙인 일정 + 고객 질문 + JSON 지시)를 쓴다 — 지시문이 다르면 가르친 효과가 줄어든다.
 ★켜는 법: `.env` 의 `ACOP_OLLAMA_POINTER_MODEL`(Ollama 에 올린 모델 이름) + 가드레일 `travel.pointer.mode` — `off`(규칙만) · `shadow`(모델도 불러 비교만 남기고 **규칙 결과를 쓴다**) · `on`(모델 결과를 쓴다).
 ★모델이 실패하면(시간 초과 · 형식 오류 · 목록 밖 번호) **옛 낱말 규칙으로 돌아간다** — 대신 실패는 세어 경고로 남긴다(조용히 넘기지 않는다, CLAUDE.md §3).
+★**새 일정 첫 호출은 느리다**(2026-10-07 x600 실측: GPU 를 12B 와 나눠 쓰면 모델 교체로 한 번에 30~40초, CPU 전용이면 일정 한 개를 처음 읽는 데 약 1분, 이어지는 호출은 약 2.5초).
+  그래서 `background_warm` 이면 일정(지문)이 바뀐 첫 문장은 **고객을 기다리게 하지 않고** 규칙으로 답하며 모델은 뒤에서 그 일정을 읽어 둔다 — 다음 문장부터 모델이 쓰인다.
+  뒤에서 읽는 중에는 새 호출을 막아 모델 서버를 막지 않는다(올라마는 한 번에 하나씩 처리한다).
 """
 from __future__ import annotations
 
@@ -29,7 +32,7 @@ _SUFFIX = '\n\n답은 JSON 한 줄로만: {"item": 번호} 또는 {"item": null}
 _SCHEMA = {"type": "object", "properties": {"item": {"type": ["integer", "null"]}}, "required": ["item"]}
 
 #: 실행 중 센 값 — 운영이 「모델이 쓰이고 있나 · 실패가 얼마나 나나」를 볼 수 있게(조용한 폴백을 만들지 않는다)
-STATS: dict[str, int] = {"calls": 0, "used": 0, "failed": 0, "cache_hits": 0, "shadow_diff": 0}
+STATS: dict[str, int] = {"calls": 0, "used": 0, "failed": 0, "cache_hits": 0, "shadow_diff": 0, "cold_fallback": 0, "warmed": 0}
 
 
 def _local(moment: datetime) -> datetime:
@@ -55,26 +58,31 @@ class OllamaItemPointer:
     """`mentioned_item(items, text)` 자리에 꽂는 호출 가능 객체. 결정했으면 항목 또는 None, 못 정했으면 `NotImplemented`(→ 옛 규칙)."""
 
     def __init__(self, *, base_url: str, model: str, timeout: float = 30.0, keep_alive: str = "",
-                 mode: Callable[[], str] | str = "on", post: Callable[[str, dict], Any] | None = None, cache_size: int = 256) -> None:
+                 mode: Callable[[], str] | str = "on", post: Callable[[str, dict, float], Any] | None = None, cache_size: int = 256,
+                 background_warm: bool = False, warm_timeout: float = 180.0) -> None:
         self.base_url, self.model, self.timeout, self.keep_alive = base_url.rstrip("/"), model, timeout, keep_alive
+        self.background_warm, self.warm_timeout = background_warm, warm_timeout
+        self._warm_fp: tuple | None = None          # 모델 서버가 마지막으로 읽어 둔 일정(올라마는 한 번에 한 일정의 앞부분만 기억한다)
+        self._warming = False
+        self._warm_thread: threading.Thread | None = None
         self._mode = mode if callable(mode) else (lambda: str(mode))
         self._post = post or self._http
         self._cache: OrderedDict[tuple, Any] = OrderedDict()
         self._cache_size = cache_size
         self._lock = threading.Lock()
 
-    def _http(self, url: str, payload: dict) -> Any:
+    def _http(self, url: str, payload: dict, timeout: float) -> Any:
         import httpx
 
-        return httpx.post(url, json=payload, timeout=self.timeout)
+        return httpx.post(url, json=payload, timeout=timeout)
 
-    def _ask(self, prompt: str) -> int | None:
+    def _ask(self, prompt: str, timeout: float | None = None) -> int | None:
         """모델 한 번 — 번호(정수) 또는 None(없음). 못 부르거나 형식이 틀리면 예외."""
         payload: dict[str, Any] = {"model": self.model, "stream": False, "think": False, "format": _SCHEMA,
                                    "options": {"temperature": 0, "num_predict": 24}, "messages": [{"role": "user", "content": prompt}]}
         if self.keep_alive:
             payload["keep_alive"] = self.keep_alive
-        response = self._post(f"{self.base_url}/api/chat", payload)
+        response = self._post(f"{self.base_url}/api/chat", payload, timeout or self.timeout)
         if response.status_code != 200:
             raise RuntimeError(f"Ollama HTTP {response.status_code}: {response.text[:120]}")
         value = json.loads(response.json()["message"]["content"])
@@ -88,13 +96,25 @@ class OllamaItemPointer:
         if mode == "off" or not items or not (text or "").strip():
             return NotImplemented
         prompt, ordered = build_prompt(items, text)
-        key = (tuple((str(i.item_id), i.title, i.starts_at.isoformat()) for i in ordered), text)
+        fp = tuple((str(i.item_id), i.title, i.starts_at.isoformat()) for i in ordered)
+        key = (fp, text)
         with self._lock:
             if key in self._cache:
                 self._cache.move_to_end(key)
                 STATS["cache_hits"] += 1
                 picked = self._cache[key]
                 return picked if mode == "on" else NotImplemented
+            cold = self.background_warm and self._warm_fp != fp
+            if cold:
+                if not self._warming:
+                    self._warming = True
+                    self._warm_thread = threading.Thread(target=self._warm, args=(fp, key, prompt, ordered), daemon=True)
+                    self._warm_thread.start()
+                STATS["cold_fallback"] += 1
+                return NotImplemented          # 이 문장은 규칙으로 — 모델은 뒤에서 이 일정을 읽는다
+            if self.background_warm and self._warming:
+                STATS["cold_fallback"] += 1
+                return NotImplemented          # 뒤에서 읽는 중 — 모델 서버를 막지 않는다
         STATS["calls"] += 1
         started = time.perf_counter()
         try:
@@ -123,6 +143,43 @@ class OllamaItemPointer:
         return picked
 
 
+def _warm_impl(self: OllamaItemPointer, fp: tuple, key: tuple, prompt: str, ordered: list[Any]) -> None:
+    """뒤에서 일정을 읽어 둔다 — 이 문장의 답도 함께 캐시에 넣는다(다음에 같은 문장이 오면 바로)."""
+    started = time.perf_counter()
+    try:
+        number = self._ask(prompt, self.warm_timeout)
+        if number is not None and not (1 <= number <= len(ordered)):
+            raise ValueError(f"목록 밖 번호 {number}")
+        picked = None if number is None else ordered[number - 1]
+        if picked is not None and picked.kind == "mobility":
+            picked = None
+        with self._lock:
+            self._warm_fp = fp
+            self._cache[key] = picked
+        STATS["warmed"] += 1
+        logger.info("일정 항목 짚기 모델이 새 일정을 읽어 둠 %.1f초 (model=%s)", time.perf_counter() - started, self.model)
+    except Exception as exc:  # noqa: BLE001
+        STATS["failed"] += 1
+        with self._lock:
+            self._warm_fp = None
+        logger.warning("일정 항목 짚기 모델이 새 일정을 못 읽음 → 계속 규칙 (model=%s · %s: %s)", self.model, type(exc).__name__, str(exc)[:120])
+    finally:
+        with self._lock:
+            self._warming = False
+
+
+def _wait_idle(self: OllamaItemPointer, timeout: float = 5.0) -> bool:
+    """뒤에서 읽는 일이 끝나길 기다린다(시험·점검용)."""
+    t = self._warm_thread
+    if t is not None:
+        t.join(timeout)
+    return not self._warming
+
+
+OllamaItemPointer._warm = _warm_impl            # type: ignore[attr-defined]
+OllamaItemPointer.wait_idle = _wait_idle        # type: ignore[attr-defined]
+
+
 def register_from_settings(settings: Any) -> OllamaItemPointer | None:
     """조립 때 한 번. 설정에 모델 이름과 Ollama 주소가 있을 때만 꽂는다(없으면 규칙만 — 지금까지와 같다)."""
     from app.core.settings import get_guardrails
@@ -140,7 +197,9 @@ def register_from_settings(settings: Any) -> OllamaItemPointer | None:
         return value if value in ("off", "shadow", "on") else "off"
 
     pointer = OllamaItemPointer(base_url=base, model=model, timeout=float(getattr(settings, "ollama_pointer_timeout_seconds", 30.0)),
-                                keep_alive=str(getattr(settings, "ollama_pointer_keep_alive", "") or ""), mode=mode)
+                                keep_alive=str(getattr(settings, "ollama_pointer_keep_alive", "") or ""), mode=mode,
+                                background_warm=bool(getattr(settings, "ollama_pointer_background_warm", True)),
+                                warm_timeout=float(getattr(settings, "ollama_pointer_warm_timeout_seconds", 180.0)))
     itinerary_team.set_item_pointer(pointer)
     logger.info("일정 항목 짚기 모델 연결: %s (mode=%s)", model, mode())
     return pointer

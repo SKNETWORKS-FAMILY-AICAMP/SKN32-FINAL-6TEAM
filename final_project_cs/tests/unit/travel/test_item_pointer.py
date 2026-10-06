@@ -51,7 +51,7 @@ class _Post:
     def __init__(self, *answers):
         self.answers, self.calls = list(answers), []
 
-    def __call__(self, url, payload):
+    def __call__(self, url, payload, timeout=None):
         self.calls.append((url, payload))
         a = self.answers.pop(0) if len(self.answers) > 1 else self.answers[0]
         if isinstance(a, Exception):
@@ -137,3 +137,39 @@ def test_register_from_settings_needs_the_model_name():
     assert item_pointer.register_from_settings(SimpleNamespace(ollama_pointer_model="", ollama_base_url="http://x")) is None
     assert itinerary_team._POINTER is None
     assert item_pointer.register_from_settings(SimpleNamespace(ollama_pointer_model="m", ollama_base_url="")) is None
+
+
+def test_background_warm_answers_the_first_sentence_by_rule_then_uses_the_model():
+    post = _Post(json.dumps({"item": 1}), json.dumps({"item": 3}))
+    p = OllamaItemPointer(base_url="http://model.test", model="m", mode="on", post=post, background_warm=True)
+    assert p(ITEMS, "경복궁 몇 시에 가요?") is NotImplemented            # 새 일정 첫 문장 — 고객을 기다리게 하지 않는다
+    assert p.wait_idle(5)
+    assert item_pointer.STATS["cold_fallback"] == 1 and item_pointer.STATS["warmed"] == 1
+    assert p(ITEMS, "경복궁 몇 시에 가요?") is ITEMS[0]                   # 뒤에서 읽어 둔 답이 캐시에 있다
+    assert p(ITEMS, "금용문 알려줘") is ITEMS[2]                         # 다음 문장부터 모델이 쓰인다
+    assert len(post.calls) == 2
+
+
+def test_background_warm_failure_keeps_the_rule_and_counts():
+    p = OllamaItemPointer(base_url="http://model.test", model="m", mode="on", post=_Post(RuntimeError("시간 초과")), background_warm=True)
+    assert p(ITEMS, "경복궁 몇 시에 가요?") is NotImplemented
+    assert p.wait_idle(5)
+    assert item_pointer.STATS["failed"] == 1 and p._warm_fp is None
+    assert p(ITEMS, "경희궁 알려줘") is NotImplemented                    # 아직 못 읽었으니 다시 뒤에서 읽으려 한다
+
+
+def test_while_warming_other_calls_do_not_hit_the_model():
+    import threading
+
+    gate = threading.Event()
+
+    def slow(url, payload, timeout=None):
+        gate.wait(5)
+        return _Resp(json.dumps({"item": 1}))
+
+    p = OllamaItemPointer(base_url="http://model.test", model="m", mode="on", post=slow, background_warm=True)
+    assert p(ITEMS, "경복궁 몇 시에 가요?") is NotImplemented
+    assert p(ITEMS, "금용문 알려줘") is NotImplemented                    # 읽는 중 — 모델 서버를 막지 않는다
+    assert item_pointer.STATS["cold_fallback"] == 2
+    gate.set()
+    assert p.wait_idle(5)
