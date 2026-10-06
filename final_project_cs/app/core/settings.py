@@ -134,6 +134,11 @@ class Settings(BaseSettings):
     #: ★`[2026-09-29]` 모델을 붙잡아 둘 시간(Ollama `keep_alive`, 예 `30m` · `2h`). 비우면 Ollama 기본(5분).
     #:  길게 두면 잠든 모델의 느린 첫 호출(ui 세션 실측 29.8초)이 줄지만 원격 GPU 메모리를 그만큼 잡는다 — 값은 운영이 정한다
     ollama_keep_alive: str = ""
+    #: ★`[2026-10-07 사용자 지시]` 일정 항목 짚기 **가르친 모델**(Ollama 에 올린 이름, 예 `tripilot-pointer:e4b-ft`). 비우면 낱말 규칙만 쓴다.
+    #:  켜고 끄기는 가드레일 `travel.pointer.mode`. 모델이 못 부르면 규칙으로 돌아간다(`item_pointer.py`).
+    ollama_pointer_model: str = ""
+    ollama_pointer_timeout_seconds: float = 30.0
+    ollama_pointer_keep_alive: str = ""
 
     # ── 여행 외부 소스 ─────────────────────────────────────────
     # ★기본값이 빈 문자열이다 = **그 소스를 안 붙인다.** 가짜로 채우지 않는다.

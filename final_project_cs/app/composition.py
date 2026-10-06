@@ -397,9 +397,16 @@ def wire_optional_features() -> list[str]:
     from app.domains.travel_ops.modules.live_progress import op_stream
 
     progress_hook.register(op_stream.sse)
+
+    # ★`[2026-10-07 사용자 지시]` 일정 항목 짚기 — 우리 데이터로 가르친 모델 자리. `.env` 에 `ACOP_OLLAMA_POINTER_MODEL` 이 있을 때만 꽂는다
+    #  (없으면 낱말 규칙만 — 지금까지와 같다). 켜고 끄기: 가드레일 `travel.pointer.mode`(off · shadow · on).
+    from app.domains.travel_ops.components.conversation import item_pointer
+
+    pointer = item_pointer.register_from_settings(get_settings())
     return (list(trip_scope.registered())
             + (["settings"] if settings_hook.is_registered() else [])
-            + (["progress"] if progress_hook.is_registered() else []))
+            + (["progress"] if progress_hook.is_registered() else [])
+            + (["item_pointer"] if pointer is not None else []))
 
 
 def wire_domain_teams() -> list[str]:
