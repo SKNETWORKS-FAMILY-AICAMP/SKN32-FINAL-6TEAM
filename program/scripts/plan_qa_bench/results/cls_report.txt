@@ -85,3 +85,19 @@ clapAI/modernBERT-base-multilingual-sentiment                  CX  42.8% · G96 
 ## Jev 계열 결정 모델(학습 없음 · 질문 4개를 한 번에) — jev_cls_od_nano_ko.json
   test_cx.jsonl: intent 46.0% · sentiment 63.4% · severity 36.3% · case_type 63.7% · 중앙 지연 0.2초/건 (n=400)
   test_g96.jsonl: intent 38.5% · sentiment 72.9% · severity 15.6% · case_type 61.5% · 중앙 지연 0.2초/건 (n=96)
+
+## Jev 계열 결정 모델(학습 없음 · 질문 4개를 한 번에) — jev_cls_od_small_en.json
+  test_cx.jsonl: intent 86.9% · sentiment 93.2% · severity 62.9% · case_type 84.3% · 중앙 지연 1.8초/건 (n=400)
+  test_g96.jsonl: intent 72.9% · sentiment 79.2% · severity 54.2% · case_type 80.2% · 중앙 지연 2.0초/건 (n=96)
+
+## Jev 계열 결정 모델(학습 없음 · 질문 4개를 한 번에) — jev_cls_od_small_ko.json
+  test_cx.jsonl: intent 89.9% · sentiment 92.1% · severity 65.2% · case_type 88.9% · 중앙 지연 0.4초/건 (n=400)
+  test_g96.jsonl: intent 78.1% · sentiment 84.4% · severity 56.2% · case_type 84.4% · 중앙 지연 1.8초/건 (n=96)
+
+## Jev 계열 결정 모델(학습 없음 · 질문 4개를 한 번에) — jev_cls_winnow_e4b_en.json
+  test_cx.jsonl: intent 91.5% · sentiment 90.1% · severity 64.3% · case_type 84.8% · 중앙 지연 0.4초/건 (n=400)
+  test_g96.jsonl: intent 76.0% · sentiment 88.5% · severity 55.2% · case_type 86.5% · 중앙 지연 0.4초/건 (n=96)
+
+## Jev 계열 결정 모델(학습 없음 · 질문 4개를 한 번에) — jev_cls_winnow_e4b_ko.json
+  test_cx.jsonl: intent 94.5% · sentiment 91.0% · severity 63.5% · case_type 92.1% · 중앙 지연 0.3초/건 (n=400)
+  test_g96.jsonl: intent 86.5% · sentiment 92.7% · severity 47.9% · case_type 85.4% · 중앙 지연 0.4초/건 (n=96)

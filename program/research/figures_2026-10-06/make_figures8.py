@@ -70,7 +70,7 @@ def fig29():
         ('warn', '② ML(학습한 판별기)', '질문 유형을 가려 처리 방향을 정함 · 확신 높으면 앞에서 끝냄',
          ['유형 판별기(글자 조각 로지스틱) 평가 밖 학습 → 755 대 750(단독) — 구분 안 됨 (§82-4)', '학습 임베딩 앞단 + 규칙 + E4B: 호출 25% 줄고 정확도 743 대 750 (§82-5)'], '잰 값 있음 · 정확도 이득 없음'),
     ]
-    JN = {'laya_ml_ko': 'Laya 다국어 · 한국어 설명', 'laya_ml_en': 'Laya 다국어 · 영어 설명', 'od_nano_ko': 'OpenDecider-nano · 한국어 설명', 'od_nano_en': 'OpenDecider-nano · 영어 설명'}
+    JN = {'laya_ml_ko': 'Laya 다국어 · 한국어 설명', 'laya_ml_en': 'Laya 다국어 · 영어 설명', 'od_nano_ko': 'OpenDecider-nano · 한국어 설명', 'od_nano_en': 'OpenDecider-nano · 영어 설명', 'winnow_e4b_ko': 'Winnow-E4B(LLM형) · 한국어 설명', 'winnow_e4b_en': 'Winnow-E4B(LLM형) · 영어 설명', 'od_small_ko': 'OpenDecider-small · 한국어 설명', 'od_small_en': 'OpenDecider-small · 영어 설명'}
     jl = []
     if jev:
         for k, (res, lat) in jev.items():
@@ -79,14 +79,14 @@ def fig29():
         jl = ['의도·감정·긴급도·대상 분류 점수: 시험 중']
     cards.append(('gpu', '③ Jev 계열 분류', '고정된 라벨 중 하나를 학습 없이 고르는 소형 결정 모델 — 이번에 비어 있던 칸',
                   ['일정 항목 짚기(후보 40~50개): 인코더형 Laya 21% · 4B급 Jev류 71~88% · 가르친 E4B 98% (§85-2 · §50)'] + jl,
-                  '일부 채움 · 4B급 2종 대기' if jev else '시험 중'))
+                  '일부 채움 · OpenDecider-small 대기' if jev else '시험 중'))
     cards.append(('now', '④-a 임베딩 분류(앞서 보여 드린 표)', '학습한 작은 인코더 하나가 4가지 라벨을 한 번에',
                   [f'학습한 인코더 최고(CX 400): ' + ' · '.join(f'{SHORT[h]} {100 * v:.0f}' for h, v in zip(HEADS, best_enc)) + ' (CPU 35~120ms)',
                    '공개 감정 모델을 학습 없이 쓰면 감정 71% 가 최고 (§90)'], '잰 값 있음'))
     cards.append(('now', '④-b 소형 LLM', '항목 짚기 · 사람 말투가 어려운 문장',
                   ['항목 짚기: 가르친 E4B 750/769 = 97.5% (§69-5)', '학습 없는 E4B 분류(서비스 프롬프트): 의도 97 · 감정 84 · 긴급도 61 · 대상 86, 5.3초/건 — 학습한 인코더가 감정·긴급도에서 크게 앞섬'], '잰 값 있음'))
     foot = ['한 줄로 이어 끝까지 돌린 시험은 아직 없다 — 지금까지는 단계 하나 또는 둘씩만 이어서 쟀다(규칙 → 임베딩 게이트 → E4B 가 가장 긴 연결).',
-            '감정·긴급도·의도 분류는 학습한 인코더가 학습 없는 LLM 보다 높아, 지금 값으로는 감정 전문 LLM 을 따로 부를 이유가 없다(학습시킨 소형 LLM 의 분류 점수는 아직 안 쟀다). LLM 이 꼭 필요한 곳은 일정 항목 짚기(앞 대화 지시어·이름 없는 묘사).']
+            '학습 없는 Jev 계열 중 LLM형(Winnow-E4B)은 한국어 설명으로 쓰면 의도·감정·대상에서 학습한 인코더에 3~4%p 이내로 따라오지만 긴급도는 64 대 91 로 크게 못 미친다. 인코더형(Laya·OpenDecider-nano)은 쓸 수 없다. 학습시킨 소형 LLM 의 분류 점수는 아직 안 쟀다. LLM 이 꼭 필요한 곳은 일정 항목 짚기(앞 대화 지시어·이름 없는 묘사).']
     LIM = 62
     prepared = []
     for kind, title, what, lines, status in cards:

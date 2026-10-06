@@ -58,7 +58,7 @@ def fig28():
                '상위 인코더는 의도 96~98% · 감정 92~95% · 대상 89~95%이고 긴급도가 가장 어렵다(87~91% — 라벨러끼리도 88% 일치). CPU 한 건은 9~120ms 라 GPU 도 LLM 호출도 필요 없다. 상위 셋(BGE-M3 · e5-base · XLM-R-base)은 오차 범위 안이라 구분되지 않는다.',
                '같은 모델도 에폭 8 로는 덜 배운다 — ELECTRA 계열·e5-small 은 「대상 종류」가 37~56% 였다가 에폭 20 으로 81~92%. 표는 개발 점수가 높은 설정 하나만 보인다. 다국어 모델(e5·XLM-R·BGE-M3·mmBERT)은 영어·일본어·중국어 메시지도 같은 모델로 받는다.',
                '비교: 공개 감정 모델 영점 최고 71%(tabularisai, 비상업 라이선스) · 서비스 프롬프트 그대로 gemma4 E4B(학습 없음, 5.3초/건)는 의도 97 · 감정 84 · 긴급도 61 · 대상 86 — 학습한 인코더가 감정·긴급도·대상에서 크게 앞선다(LLM 은 우리 자료로 학습하지 않은 값). 서비스 평가 96 은 Claude 초안 라벨이라 긴급도 기준이 달라 점수가 낮다.',
-               'Jev 계열 소형 결정 모델(Laya · OpenDecider-nano, 학습 없음)은 CX 에서 의도 46~64 · 감정 63~81 · 긴급도 29~48 · 대상 32~69 — 한 라벨만 찍는 값(의도 27 · 감정 62 · 긴급도 47 · 대상 27)과 비슷하거나 조금 위다. 0.1~0.2초/건 으로 빠르지만 우리 여행 분류에는 학습한 인코더가 필요하다.']
+               'Jev 계열은 갈린다: 인코더형(Laya · OpenDecider-nano, 학습 없음)은 CX 에서 의도 46~64 · 감정 63~81 · 긴급도 29~48 · 대상 32~69 로 한 라벨만 찍는 값(27 · 62 · 47 · 27)과 비슷하다. LLM 형(Winnow-E4B · OpenDecider-small, 학습 없음)은 한국어 설명으로 의도 90~95 · 감정 91~92 · 긴급도 64~65 · 대상 89~92 이고 서비스 프롬프트 E4B(학습 없음)보다 감정·대상이 높으며 0.3~0.4초/건 이다. 단 긴급도는 학습한 인코더(91)에 27%p 못 미친다.']
     top = rows[:14]
     H = 200 + (len(top) + 3 + max(1, len(llm))) * 66 + lines_height(reading, 72, 28) + 90
     fig, ax = canvas(H)
@@ -98,7 +98,7 @@ def fig28():
         box(ax, 30, y, 1020, 58, 'plain', 8, 1.2)
         if key.startswith('jev_cls_'):
             JN = {'laya_ml_ko': 'Laya 다국어 · 한국어 설명', 'laya_ml_en': 'Laya 다국어 · 영어 설명', 'od_nano_ko': 'OpenDecider-nano · 한국어 설명',
-                  'od_nano_en': 'OpenDecider-nano · 영어 설명', 'od_small_ko': 'OpenDecider-small(4B) · 한국어', 'od_small_en': 'OpenDecider-small(4B) · 영어', 'winnow_e4b': 'Winnow-E4B(유효 4B)'}
+                  'od_nano_en': 'OpenDecider-nano · 영어 설명', 'od_small_ko': 'OpenDecider-small(4B) · 한국어 설명', 'od_small_en': 'OpenDecider-small(4B) · 영어 설명', 'winnow_e4b_ko': 'Winnow-E4B(유효 4B) · 한국어 설명', 'winnow_e4b_en': 'Winnow-E4B(유효 4B) · 영어 설명'}
             tag = key.replace('jev_cls_', '').replace('.json', '')
             t(ax, 42, y + 22, 'Jev 계열(영점) — ' + JN.get(tag, tag), 12, INK, True)
             t(ax, 42, y + 44, f"중앙 지연 {(cx or g96)[1] * 1000:.0f}ms/건 (질문 4개 한 번에)", 10, SUB)
