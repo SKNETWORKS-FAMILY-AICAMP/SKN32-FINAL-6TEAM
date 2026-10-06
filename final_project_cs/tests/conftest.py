@@ -18,6 +18,22 @@ import pytest  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
+def _wire_domain_teams():
+    """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+
+    ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+      운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+      않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+      운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+      팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+    """
+    from app.composition import wire_domain_teams
+
+    wire_domain_teams()
+    yield
+
+
+@pytest.fixture(autouse=True)
 def _isolate_mobility_engine_state():
     """시험마다 이동 계산기 상태(자료 폴더 출처·켜짐/꺼짐)를 **처음 상태로** 초기화한다.
 

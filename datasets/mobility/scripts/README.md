@@ -10,7 +10,7 @@
   상대경로 `DATA_DIR` 은 저장소 루트 기준으로 푼다.
 - `graph_` 5개는 예외 — 작업 폴더를 cwd 로 두고 돌린다(각 파일 머리말). 최상위에서 바로 읽고 쓰므로 import 하거나 `--help` 로 점검하지 않는다.
 - 키는 `.env` 에만: `DATA_GO_KR_KEY`(공공데이터포털 — TAGO · 서울 버스 · 천문연 특일) · `SEOUL_OPENAPI_KEY`(서울 열린데이터광장).
-- 패키지: 이동 자료 기기 목록 `final_project_cs/requirements-mobility.txt`(팀 서버 목록과 판이 달라 **따로 만든 가상환경**에 깐다 · 팀장 9/30 정리) — `graph_03b_profile.py` 만 쓰는 `holidays` 는 그때 따로.
+- 패키지: `final_project_cs/requirements.txt` 하나에 통합했다(2026-10-05 사용자 지시 — 이동 쪽 별도 목록 `requirements-mobility.txt` 는 없앴다). 이 스크립트들이 쓰는 pandas · requests · shapely · pyproj · osmium 도 그 파일 맨 아래 「이동 자료 가공 스크립트 전용」 묶음에 있다 — `graph_03b_profile.py` 만 쓰는 `holidays` 는 그때 따로 깐다.
 
 ## 파일
 

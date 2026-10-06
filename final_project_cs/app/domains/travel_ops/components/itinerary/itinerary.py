@@ -19,7 +19,7 @@ import json
 from typing import Any
 from uuid import UUID, uuid4
 
-from app.domains.travel_ops.modules.web_account.guest_policy import not_guest_sql
+from app.domains.travel_ops.components.itinerary.trip_scope import extra_sql as scope_sql
 
 
 class StaleItinerary(RuntimeError):
@@ -317,8 +317,9 @@ class TripStore:
     def active_trip_ids(self, conn) -> list[UUID]:
         """진행 중인 여행. 안내 되잡기 작업이 읽는다."""
         with conn.cursor() as cur:
-            # ★`[2026-10-04 D-CS-011]` 게스트(로그인 안 한 웹 사용자)의 여행은 안내 · 감시 대상이 아니다 — 외부 호출 비용을 안 쓴다
-            cur.execute("SELECT t.trip_id FROM trips t WHERE t.tenant_id=%s AND t.status='active' AND " + not_guest_sql("t")
+            # ★`[2026-10-06]` 누구를 빼는지는 여기서 정하지 않는다 — 좁히는 규칙을 가진 쪽이 꽂는다
+            #   (`trip_scope`). 게스트 제외는 웹 계정 기능이 조립 때 등록한다(옛 D-CS-011 규칙 그대로). 호출 비용을 안 쓴다
+            cur.execute("SELECT t.trip_id FROM trips t WHERE t.tenant_id=%s AND t.status='active' AND " + scope_sql("t")
                         + " ORDER BY t.trip_id", (self.tenant_id,))
             return [row[0] for row in cur.fetchall()]
 
@@ -327,7 +328,7 @@ class TripStore:
         with conn.cursor() as cur:
             cur.execute(
                 "SELECT t.trip_id, t.latest_version FROM trips t "
-                "WHERE t.tenant_id=%s AND t.status='active' AND " + not_guest_sql("t"), (self.tenant_id,))
+                "WHERE t.tenant_id=%s AND t.status='active' AND " + scope_sql("t"), (self.tenant_id,))
             trips = cur.fetchall()
         found = []
         for trip_id, version in trips:
@@ -497,6 +498,7 @@ class TripStore:
             from app.domains.travel_ops.components.itinerary.plan_link import plan_url
 
             payload = {**payload, "plan_url": plan_url(self.tenant_id, trip_id)}
+        payload = self._with_guardian(conn, trip_id, payload)
         with conn.cursor() as cur:
             cur.execute("SELECT locale FROM trips WHERE tenant_id=%s AND trip_id=%s",
                         (self.tenant_id, trip_id))
@@ -522,6 +524,7 @@ class TripStore:
             from app.domains.travel_ops.components.itinerary.plan_link import plan_url
 
             payload = {**payload, "plan_url": plan_url(self.tenant_id, trip_id)}
+        payload = self._with_guardian(conn, trip_id, payload)
         if "locale" not in payload:
             with conn.cursor() as cur:
                 cur.execute("SELECT locale FROM trips WHERE tenant_id=%s AND trip_id=%s",
@@ -534,6 +537,18 @@ class TripStore:
                 "VALUES (%s,%s,%s,%s) ON CONFLICT (tenant_id, topic, dedupe_key) DO NOTHING",
                 (self.tenant_id, "trip.notice", f"{trip_id}:v{version}",
                  json.dumps(payload, ensure_ascii=False, default=str)))
+
+    def _with_guardian(self, conn, trip_id: UUID, payload: dict[str, Any]) -> dict[str, Any]:
+        """★`[2026-10-06 사용자 결정 · 항로 지킴이]` 알림에 항로 지킴이 몫(`payload.guardian`)을 싣는다 — 규칙은 `planning/guardian.annotate` 한 곳.
+        해당 없는 알림은 여행 제약을 읽지 않는다(알림마다 조회를 더하지 않는다)."""
+        from app.domains.travel_ops.components.planning import guardian
+
+        if not guardian.relevant(payload):
+            return payload
+        with conn.cursor() as cur:
+            cur.execute("SELECT constraints FROM trips WHERE tenant_id=%s AND trip_id=%s", (self.tenant_id, trip_id))
+            row = cur.fetchone()
+        return guardian.annotate(payload, constraints=row[0] if row else None, trip_id=trip_id)
 
 
 __all__ = ["Item", "StaleItinerary", "TripStore"]

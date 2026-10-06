@@ -194,15 +194,35 @@ teams:
 app/domains/travel_ops/
 ├─ modules/      모듈 — 꺼도 나머지가 도는 기능 (web_account · mcp · live_progress)
 ├─ instances/    인스턴스 — 에이전트 팀. 팀 하나 = 폴더 하나 (activity · dining · mobility · booking_handoff · locked + _shared)
-├─ components/   컴포넌트 — 빼면 여행 서비스가 안 도는 부품 (itinerary · planning · places · intake · conversation · actions · booking · watch · core_hooks)
-├─ ports/        Port — 바꿔 끼우는 자리 (notify_channels · data_sources)
+├─ components/   컴포넌트 — 빼면 여행 서비스가 안 도는 부품 (itinerary · planning · places · intake · conversation · actions · booking · watch · customer · core_hooks · team_hooks)
+├─ ports/        Port — 바꿔 끼우는 자리 (data_sources)
 ├─ entry/        고객 입구 — HTTP 경로
 └─ scenarios/    시연 · 하루 대조 시험용 조립
 ```
 
 ★위 「필수 컴포넌트」 표는 **플랫폼 코어**(여행을 모르는 공통 층 — `app/core` · `app/application` · `app/infrastructure` · `app/presentation`)의 필수 부품이다. 여행 묶음 안의 `components/` 는 **여행 서비스의 필수 부품**이라 층이 다르다.
 
-칸끼리 누가 누구를 부르는지는 `tests/architecture/test_travel_ops_cells.py` 가 센다. 2026-10-06 실측: 팀 → 다른 팀 속 **0** · 필수 부품 → 팀 속 14 · 필수 부품 → 끌 수 있는 기능 4 · 바꿔 끼우는 자리 → 웹 계정 2. 0 이 아닌 셋은 그날 수를 상한으로 박고 줄여 나간다 — 특히 **웹 계정 기능은 지금 실제로는 끌 수 없다**(일정 저장 · 대화 · 알림 발송이 게스트 제한 · 남용 방어를 부른다).
+칸끼리 누가 누구를 부르는지는 `tests/architecture/test_travel_ops_cells.py` 가 센다. **2026-10-06 네 줄 모두 0** — 팀 → 다른 팀 속 0 · 필수 부품 → 팀 속 0 · 필수 부품 → 끌 수 있는 기능 0 · 바꿔 끼우는 자리 → … 0. 옮긴 날에는 20곳이 어기고 있었고(14 · 4 · 2), 같은 날 끼움 자리 일곱으로 **방향을 뒤집어** 없앴다.
+
+## 끼움 자리 — 기능과 팀이 **조립 때 꽂는다** `[2026-10-06]`
+
+부품이 기능·팀을 직접 import 하면 그 기능을 끄거나 팀을 빼는 순간 부품이 깨진다. 방향을 뒤집어 **부품은 자리만 알고, 꽂는 쪽이 조립 때 등록**한다(의존성 역전 · 포트와 어댑터, 조립 루트는 `app/composition.py`).
+
+| 자리 | 부품이 묻는 것 | 꽂는 쪽 | 아무도 안 꽂으면 |
+|---|---|---|---|
+| `components/itinerary/trip_scope.py` | 감시 · 안내 대상 좁히기 | 웹 계정(게스트 제외) | `TRUE` — 전부 감시 |
+| `components/settings_hook.py` | 운영자가 화면에서 바꾼 값 | 웹 남용 방어 설정 | `None` — 가드레일 기본값 |
+| `components/progress_hook.py` | 진행 알림 포장(SSE) | 실시간 진행 | `[]` — 실시간 화면만 없다 |
+| `components/team_hooks/legs.py` | 이동 시간 · 노선 · 사고 · 도보 상한 | 이동 팀 | 계산기 `None`(어림값) |
+| `components/team_hooks/dining_ledger.py` | 근처 식당 · 시간대 영업 판정 · 이름 찾기 | 요식 팀 | 판정 `None`(모름) |
+| `components/team_hooks/similarity.py` | 활동 유사도 · 설문 선호 · 거리 우선 | 활동 팀 | 점수 `None`(거리만) |
+| `components/team_hooks/watch_planners.py` | 항목 종류별 감시 판정 | 세 팀 | `None` — 그 종류는 안 한다 |
+
+꽂는 함수는 둘이다 — `wire_optional_features()`(끌 수 있는 기능)와 `wire_domain_teams()`(팀). 컨트롤러를 만들 때와 HTTP 입구를 만들 때 **양쪽에서** 부른다. 시험도 조립된 상태로 돌게 `tests/conftest.py` 가 매번 팀 배선을 부른다.
+
+★**미등록일 때의 답은 새로 만든 기본값이 아니다.** 일곱 모두 그 기능·팀이 조립에 없을 때 부품이 이미 가지고 있던 길이다. 영업 여부를 모르면서 「열었다」로 답하지 않고, 다른 팀 계산으로 대신하지도 않는다.
+
+★함수를 등록할 때 **객체를 쥐지 않고 부를 때 모듈에서 읽는다** — 이동 계산기는 켜짐/꺼짐이 실행 중에 바뀌고(`wiring.configure`), 시험이 팀 함수를 바꿔 끼우기도 한다. `core_hooks/` 는 방향이 반대다(여행이 **플랫폼 코어**에 꽂는 어휘 — 분류 · 대조 선언 · 대상 확인기 · 라우팅 재배분).
 
 ## 관계
 

@@ -27,6 +27,7 @@ import json
 import random
 import re
 import subprocess
+import warnings
 import zlib
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -37,6 +38,9 @@ from . import ask, progress, semantic
 from . import tracks as tracks_mod
 from .codeindex import Guard, Index, Unit, build as build_index
 from .config import WORKSPACE_ROOT, target_root
+
+# 대상 코드의 조건·본문을 다시 구문 분석할 때 정규식 글자(역슬래시 d 등)가 내는 경고가 문제 화면을 덮는다
+warnings.filterwarnings("ignore", category=SyntaxWarning, message="invalid escape sequence")
 
 SEPARATOR = "─" * 62
 FAMILIES = ("caller", "callee", "identify", "guard_exc", "guard_cond", "trace_next")

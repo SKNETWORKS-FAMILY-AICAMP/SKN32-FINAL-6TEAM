@@ -40,7 +40,7 @@ from zoneinfo import ZoneInfo
 from fastapi import (APIRouter, BackgroundTasks, Body, Depends, File, Form, Header, HTTPException, Query,
                      Request, UploadFile)
 from fastapi.responses import HTMLResponse, JSONResponse
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, ValidationError, model_validator
 
 from app.core import settings as settings_module
 from app.core.idempotency import idempotency_key
@@ -52,6 +52,7 @@ from app.domains.travel_ops.modules.web_account import guest_policy
 from app.domains.travel_ops.components.itinerary import trip_delete
 from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
 from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
+from app.domains.travel_ops.components.planning import guardian as guardian_module
 
 # ★`[2026-10-05 병합]` 팀 판의 `_CsvFallbackTour`(활동팀 CSV 로 관광공사를 대신 조회) 는 싣지 않았다 — 관광공사 호출 제한 · 카카오 403 을
 #   피하려는 활동팀의 임시 우회이고 자료 파일(`activity_total_data.csv`)이 우리 쪽에 없다. 접수의 관광공사 조회는 전처럼 `place_factory` 가 한다.
@@ -184,6 +185,12 @@ class IntakeConfirmIn(BaseModel):
     survey: dict[str, Any] | None = None
 
 
+class IntakeSurveyIn(BaseModel):
+    """로딩 중 질문의 답 — `{문항: 선택지 번호}`. 한 개 이상 · 부분 답 · 같은 문항을 다시 보내면 덮어쓴다(`components/intake/survey_answers.py`)."""
+    model_config = ConfigDict(extra="forbid")
+    answers: dict[str, str] = Field(min_length=1, max_length=8)
+
+
 class IntakeRevisionIn(BaseModel):
     """전체 자동 추천 · 재검증 — 화면이 보고 있던 판(낡으면 409)만 보낸다."""
     model_config = ConfigDict(extra="forbid")
@@ -252,6 +259,13 @@ class ChooseIn(BaseModel):
     """보류 제안 고르기. `key` 가 없으면(null) **원래 일정을 그대로 둔다**(kept)."""
     model_config = ConfigDict(extra="forbid")
     key: str | None = None
+
+
+class GuardianIn(BaseModel):
+    """항로 지킴이 켜기 · 끄기. `via` 는 어디서 눌렀나(기록용) — card(계획 담기 전 카드) · header(상단 아이콘) · notice(알림 링크) · settings(여행 설정)."""
+    model_config = ConfigDict(extra="forbid")
+    enabled: StrictBool                      # ★글자 「yes」 · 「1」 을 참으로 읽지 않는다 — 자동 변경을 켜는 값이라 JSON 참 · 거짓만 받는다
+    via: Literal["card", "header", "notice", "settings"]
 
 
 class ReportIn(BaseModel):
@@ -435,6 +449,9 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
     return {"trip_id": str(trip["trip_id"]), "customer_id": str(trip["customer_id"]),
             "title": trip["title"], "locale": trip["locale"], "party_size": trip["party_size"],
             "version": trip["version"],
+            # ★`[2026-10-06]` 항로 지킴이(일정이 꼬이면 알아서 고치는 모드) 켜짐 여부 — 상단 아이콘이 읽는다(`components/planning/guardian.py`)
+            "guardian": guardian_module.view(conn, tenant_id=store.tenant_id, trip_id=trip["trip_id"],
+                                             constraints=trip.get("constraints")),
             "items": views, "map": map_view(views),
             "history": history, "plan_url": plan_url(store.tenant_id, trip["trip_id"]),
             # ★`[2026-10-03]` 「살펴볼 점」 — 밀도 경고 + 일정 품질 경고(같은 곳 두 번 · 끼니 빠짐 · 왔다 갔다 · 하루 마감 · 식당 라스트오더). 둘 다 거절이 아니라 알림이다
@@ -1058,6 +1075,16 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         who = authenticate(http)
         return who.tenant_id, who.customer_id
 
+    def _web_customer_by_cookie(http: Request) -> tuple[str, UUID]:
+        """★`[2026-10-06]` **쿠키 세션으로만** — 사용자 키 · 에이전트 키로 온 요청은 403. 자동 변경을 켜는 권한(항로 지킴이)이 쓴다."""
+        from app.domains.travel_ops.modules.web_account.web_cookie import authenticate
+
+        who = authenticate(http)
+        if who.via != "cookie":
+            raise _error(403, "cookie_session_required",
+                         "항로 지킴이는 로그인한 브라우저에서만 켜고 끌 수 있다 — 키로는 바꾸지 않는다")
+        return who.tenant_id, who.customer_id
+
     # ── 계획 읽기 (2026-09-27, 설계서 program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md) ──────────────
     #   ★고객 id 는 키에서 — 몸통으로 받지 않는다(`/v1/web/trips` 와 같은 경계). 읽기는 뒤에서 돈다(사진 한 장 ~45초).
     @router.post("/v1/web/trip-intakes", status_code=202)
@@ -1335,6 +1362,38 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         except pipeline.IntakeConflict as exc:
             raise _error(409, exc.code, exc.message, **exc.detail) from None
 
+    def _intake_survey(tenant: str, intake_id: UUID, given: dict[str, Any] | None) -> dict[str, Any] | None:
+        """★`[2026-10-06]` 등록에 실을 설문 = 로딩 중 질문으로 접수에 모아 둔 답 + 등록 요청이 직접 준 설문(요청이 준 값이 이긴다). 둘 다 없으면 None."""
+        from app.domains.travel_ops.components.intake import survey_answers
+
+        with get_connection() as conn:
+            return survey_answers.merged_survey(survey_answers.stored(conn, tenant_id=tenant, intake_id=intake_id), given)
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/survey")
+    def web_intake_survey(intake_id: UUID, request: IntakeSurveyIn, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-06 사용자 지시]` 로딩 중 질문의 답을 **한 문항씩 바로** 저장한다 → `{ok, answered}`(지금까지 답한 모든 문항 번호).
+
+        - 질문은 `GET /v1/web/trip-intakes/{id}` 의 `questions[]`. 답 = `{문항 id: 선택지 id}` — 모르는 문항 · 선택지는 422 `invalid_answers`(하나라도 틀리면 **아무것도 저장하지 않는다**).
+        - 부분 답 · 멱등이다. ★**같은 문항을 다시 보내면 덮어쓴다**(마지막 값이 이긴다) — 화면이 앞 질문으로 돌아가 고칠 수 있다.
+        - `on_disruption`(replace · ask_first)과 `pace`(relaxed · moderate · packed)도 받는다 — 항로 지킴이 카드 · 계획 담기 화면의 값을 접수에 실어 두기 위해서다(질문 목록에는 없다).
+        - 답은 접수에 모아 두었다가 **등록(`confirm` · `plan`)할 때 설문에 합쳐진다.** 등록 요청이 직접 준 `survey` 가 이긴다. 이미 등록된 접수는 409 `intake_confirmed`. 남의 접수는 404.
+        """
+        from app.domains.travel_ops.components.intake import survey_answers
+
+        tenant, customer = who
+        try:
+            answers = survey_answers.check(request.answers)
+        except survey_answers.InvalidAnswers as invalid:
+            raise _error(422, "invalid_answers", "모르는 문항이거나 선택지가 아니다 — 아무것도 저장하지 않았다", problems=invalid.problems) from None
+        try:
+            with get_connection() as conn, conn.transaction():
+                answered = survey_answers.save(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id, answers=answers)
+        except survey_answers.IntakeClosed:
+            raise _error(409, "intake_confirmed", "이미 등록한 접수라 답을 더할 수 없다") from None
+        if answered is None:
+            raise _error(404, "not_found", "resource not found")
+        return {"ok": True, "answered": answered}
+
     @router.post("/v1/web/trip-intakes/{intake_id}/confirm")
     def web_intake_confirm(intake_id: UUID, request: IntakeConfirmIn, http: Request,
                            who: tuple[str, UUID] = Depends(_web_customer)):
@@ -1359,8 +1418,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                          problems=[p.as_dict() for p in built.problems])
         _count("confirm", tenant, customer, http)
         body = {**built.body, "customer_id": str(customer)}
-        if request.survey is not None:
-            body["constraints"] = {**body.get("constraints", {}), "survey": request.survey}
+        survey = _intake_survey(tenant, intake_id, request.survey)
+        if survey is not None:
+            body["constraints"] = {**body.get("constraints", {}), "survey": survey}
         try:
             create = CreateTrip.model_validate(body)
         except ValidationError as exc:
@@ -1409,10 +1469,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                     return _sse_response(tenant, customer, op="plan", http=http, work=None, instant=done)
                 return done
         _count("plan", tenant, customer, http)      # ★같은 판 되풀이는 위에서 끝나 세지 않는다
+        survey = _intake_survey(tenant, intake_id, request.survey)
         ask = planner_module.PlanRequest(
             city="서울", start_date=request.start_date, days=request.days, party_size=request.party_size,
             preferences=str(built.plan.get("preferences") or ""), title=built.body["title"], locale="ko",
-            constraints={"survey": request.survey} if request.survey is not None else {})
+            constraints={"survey": survey} if survey is not None else {})
         keep = request.keep_read_items and bool(built.body["items"])
         if keep:
             # ★읽은 일정이 요청한 날짜 밖이면 끼울 수 없다 — 조용히 버리지 않고 거절한다
@@ -1586,6 +1647,24 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             trip_id=trip_id, base_version=request.base_version, to_version=request.to_version,
             message=request.message, request_id=request.request_id))
 
+    @router.post("/v1/web/trips/{trip_id}/guardian")
+    def web_guardian(trip_id: UUID, request: GuardianIn, who: tuple[str, UUID] = Depends(_web_customer_by_cookie)):
+        """★`[2026-10-06 사용자 결정]` **항로 지킴이**(일정이 꼬이면 알아서 대체안을 적용하는 모드) 켜기 · 끄기 → `{enabled, since, via}`.
+
+        - 켜기와 끄기는 **같은 입구**다. 켜짐 = 설문 15번 `on_disruption=replace` · 꺼짐 = `ask_first` 를 **명시**한다 — 둘 다 「직접 고른 것」으로 기록된다(`survey_answered`).
+        - **로그인한 쿠키 세션**으로만 부른다 — 사용자 키 · 에이전트 키 · 계획서 링크 토큰으로는 안 된다(403 `cookie_session_required`).
+          자동 변경은 일정을 실제로 바꾸는 권한이라서다. 디스코드 · 텔레그램 알림에서는 링크로 웹을 열고 **웹이 확인한 뒤** 이 입구를 부른다.
+        - 본인 여행이 아니거나 없으면 404. 같은 값을 다시 보내면 아무것도 바꾸지 않고 현재 값을 돌려준다.
+        - `since`·`via` 는 **마지막으로 바뀐** 시각 · 곳이다(`trip_guardian_changes`, 추가만 하는 기록).
+        """
+        tenant, customer = who
+        with get_connection() as conn, conn.transaction():
+            result = guardian_module.set_enabled(conn, tenant_id=tenant, trip_id=trip_id,
+                                                 customer_id=customer, enabled=request.enabled, via=request.via)
+        if result is None:
+            raise _error(404, "not_found", "resource not found")
+        return result
+
     @router.post("/v1/web/trips/{trip_id}/messages")
     def web_message(trip_id: UUID, request: MessageIn, http: Request, background: BackgroundTasks,
                     who: tuple[str, UUID] = Depends(_web_customer)):
@@ -1752,7 +1831,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     #   응답에는 마스킹만 돌려준다(`customer_profile.py` 머리). 남의 키로는 남의 값이 안 보인다(키 → 고객).
     @router.get("/v1/web/profile")
     def web_profile(who: tuple[str, UUID] = Depends(_web_customer)):
-        from app.domains.travel_ops.modules.web_account import customer_profile
+        from app.domains.travel_ops.components.customer import profile as customer_profile
 
         tenant, customer = who
         with get_connection() as conn:
@@ -1760,8 +1839,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
     def _profile_body(view: Any) -> dict[str, Any]:
         """고객 연락처 응답 — ★`discord_connect` 는 조회 · 갱신 · 시험 **어느 응답에나** 싣는다(웹이 응답마다 같은 모양으로 읽는다 — 저장 직후 단추가 사라지지 않게)."""
-        from app.domains.travel_ops.ports.notify_channels import discord_connect
-        from app.domains.travel_ops.ports.notify_channels import telegram_connect
+        from app.domains.travel_ops.modules.web_account import discord_connect
+        from app.domains.travel_ops.modules.web_account import telegram_connect
 
         # ★`[2026-10-05]` 텔레그램 칸도 같은 자리에서 — 어느 응답에나 빠짐없이(웹이 응답마다 같은 모양으로 읽는다). 대화 번호는 어디에도 안 준다
         return {**view.as_dict(), "discord_connect": discord_connect.public_state(), "telegram_connect": telegram_connect.public_state(),
@@ -1769,7 +1848,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
     def _require_consent(tenant: str, customer: UUID, code: str) -> None:
         """게이트가 켜져 있으면 이 선택 동의(`alert_channel` 등)가 있어야 한다 — 없으면 403 `consent_required`(항목 `code` 를 싣는다). 게이트가 꺼져 있으면(기본) 아무것도 안 막는다."""
-        from app.domains.travel_ops.modules.web_account import consents
+        from app.domains.travel_ops.components.customer import consents
 
         try:
             with get_connection() as conn:
@@ -1780,7 +1859,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.put("/v1/web/profile")
     def web_profile_update(body: dict[str, Any] = Body(...), who: tuple[str, UUID] = Depends(_web_customer)):
         """부분 갱신 — 칸이 없으면 안 건드리고 null(또는 공백만)이면 지운다. 모르는 칸 · 틀린 값은 422(받은 값을 되돌려 싣지 않는다)."""
-        from app.domains.travel_ops.modules.web_account import customer_profile
+        from app.domains.travel_ops.components.customer import profile as customer_profile
 
         tenant, customer = who
         if str(body.get("discord_webhook_url") or "").strip() or body.get("notice_channel"):
@@ -1795,7 +1874,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.post("/v1/web/profile/discord/connect/start")
     def web_profile_discord_connect_start(who: tuple[str, UUID] = Depends(_web_customer)):
         """`{authorize_url}` — 웹이 그 주소(`https://discord.com…`)로 브라우저를 보낸다. 디스코드 앱 설정이 없으면 404. 사용자당 한 시간 한도(429 `too_many_requests`)."""
-        from app.domains.travel_ops.ports.notify_channels import discord_connect
+        from app.domains.travel_ops.modules.web_account import discord_connect
         from app.domains.travel_ops.modules.web_account import web_guard
 
         tenant, customer = who
@@ -1819,7 +1898,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         어떤 실패든 **웹으로 302 + `?discord=connected|cancelled|expired|failed`** 다(브라우저 이동이라 JSON 오류를 못 읽는다)."""
         from fastapi.responses import RedirectResponse
 
-        from app.domains.travel_ops.ports.notify_channels import discord_connect
+        from app.domains.travel_ops.modules.web_account import discord_connect
 
         origin = discord_connect.web_origin()
         if not origin:
@@ -1834,7 +1913,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.post("/v1/web/profile/telegram/connect/start")
     def web_profile_telegram_connect_start(who: tuple[str, UUID] = Depends(_web_customer)):
         """`{link, expires_at}` — 웹이 그 링크(`https://t.me/<봇>?start=<코드>`)를 연다. 봇 설정이 없으면 404 `not_found` · 사용자당 한 시간 한도(429 `too_many_requests`)."""
-        from app.domains.travel_ops.ports.notify_channels import telegram_connect
+        from app.domains.travel_ops.modules.web_account import telegram_connect
         from app.domains.travel_ops.modules.web_account import web_guard
 
         tenant, customer = who
@@ -1854,8 +1933,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.post("/v1/web/profile/telegram/test")
     def web_profile_telegram_test(who: tuple[str, UUID] = Depends(_web_customer)):
         """연결된 대화로 시험 메시지 한 줄 — 고객이 누를 때만. `{result: ok|blocked|rate_limited|failed, profile}`. 연결이 없으면 409 `no_telegram` · 너무 자주면 429 `too_soon`."""
-        from app.domains.travel_ops.modules.web_account import customer_profile
-        from app.domains.travel_ops.ports.notify_channels import telegram_connect
+        from app.domains.travel_ops.components.customer import profile as customer_profile
+        from app.domains.travel_ops.modules.web_account import telegram_connect
 
         tenant, customer = who
         interval = float(settings_module.get_guardrails().get("travel.profile.test_interval_seconds"))
@@ -1872,7 +1951,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.delete("/v1/web/profile/telegram")
     def web_profile_telegram_disconnect(who: tuple[str, UUID] = Depends(_web_customer)):
         """연결 풀기 — 대화 번호를 지운다. 알림 받는 곳이 텔레그램이었으면 디스코드가 있으면 디스코드로 · 없으면 없음. → `{profile}`."""
-        from app.domains.travel_ops.ports.notify_channels import telegram_connect
+        from app.domains.travel_ops.modules.web_account import telegram_connect
 
         tenant, customer = who
         with get_connection() as conn:
@@ -1883,7 +1962,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         """텔레그램이 업데이트를 보내는 곳(인증은 **비밀 헤더**). 헤더가 서버 비밀값과 다르면 401 — 아무것도 안 바뀐다. 맞으면 처리하고 **늘 빠르게 200**(텔레그램은 2xx 가 아니면 같은 업데이트를 다시 보낸다)."""
         from starlette.concurrency import run_in_threadpool
 
-        from app.domains.travel_ops.ports.notify_channels import telegram_connect
+        from app.domains.travel_ops.modules.web_account import telegram_connect
 
         if not telegram_connect.verify_secret(http.headers.get("X-Telegram-Bot-Api-Secret-Token")):
             raise _error(401, "unauthenticated", "인증하지 못했다")
@@ -1904,7 +1983,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     def web_profile_discord_test(who: tuple[str, UUID] = Depends(_web_customer)):
         """저장된 웹훅으로 시험 메시지 한 줄 — 고객이 누를 때만. `{result: ok|invalid|rate_limited|failed, profile: {…}}`.
         마지막 시도에서 `travel.profile.test_interval_seconds` 안이면 429 `too_soon`."""
-        from app.domains.travel_ops.modules.web_account import customer_profile
+        from app.domains.travel_ops.components.customer import profile as customer_profile
 
         tenant, customer = who
         interval = float(settings_module.get_guardrails().get("travel.profile.test_interval_seconds"))
@@ -1975,6 +2054,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                              # ★`[2026-09-29]` 자동 변경의 되돌리기 · 「바꿀까요?」 표시 — 화면이 버튼을 그린다(ui 세션 요청)
                              "rollback": payload.get("rollback"), "consent": bool(payload.get("consent")),
                              "consent_key": payload.get("consent_key"),
+                             # ★`[2026-10-06]` 항로 지킴이 몫 — `{changed: true}`(켜 둔 사용자에게 자동으로 바꿨다는 표시) · `{offer: {label, via, path, url}}`(꺼 둔 사용자에게 켜기 단추)
+                             "guardian": payload.get("guardian"),
                              "at": at.isoformat()} for key, payload, status, at in rows]}
 
     @router.get("/v1/web/trips/{trip_id}/route-shapes")

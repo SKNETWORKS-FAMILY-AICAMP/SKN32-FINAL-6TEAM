@@ -19,7 +19,7 @@ test("처음 온 사람은 다른 화면으로 가도 약관 화면으로 돌아
   await page.goto("/mypage");
   await expect(page).toHaveURL(/\/start$/);
   await startCard(page).click();
-  const items = page.getByRole("list", { name: "동의 항목" }).getByRole("listitem");
+  const items = page.getByRole("list", { name: "동의 항목" }).locator(":scope > li");                // 항목 줄만(전문 상자 안의 목록은 제외)
   await expect(items).toHaveCount(5);
   await expect(items.nth(0)).toContainText("[필수]");
   await expect(items.nth(1)).toContainText("[필수]");

@@ -198,7 +198,7 @@ v6 §27 은 23개 DoD 항목마다(v5 의 1~18 보존 + A2A/Port 19~23) **검증
 3. **실행 조건** — 커밋 hash, 날짜, DB 상태
 4. **통과/미통과** — 부분 통과면 무엇이 남았는지
 
-evidence 없는 DoD 체크는 `scripts/verify_dod.py` 가 **미통과로 센다.**
+evidence 없는 DoD 체크는 **미통과로 센다.** `[2026-10-06]` 세는 도구는 `scripts/verify_dod_v11.py`(v11 26항목)다 — 옛 `scripts/verify_dod.py`(v8 29항목 · 쇼핑몰 기준)는 지웠다(D-023).
 
 ### 4.1 버그를 찾으면 리포트부터 쓴다
 
@@ -288,7 +288,7 @@ evidence 없는 DoD 체크는 `scripts/verify_dod.py` 가 **미통과로 센다.
 - **기능 동결일 이후에는 P0/P1 결함 수정만** 허용한다. 새 기능을 추가하지 않는다.
 - 모든 merge 는 다음을 통과해야 한다:
   ```powershell
-  python -m scripts.verify_dod          # DoD + evidence 존재 검사
+  python -m scripts.verify_dod_v11      # DoD 26항목을 시험 실행으로 센다
   python -m pytest tests/contract -q    # 계약 테스트
   python -m pytest tests/security -q    # scope/PII 테스트
   ```

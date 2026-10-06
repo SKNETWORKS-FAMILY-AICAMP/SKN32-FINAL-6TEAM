@@ -96,6 +96,8 @@ PARTICLE_WORD_EXCEPTIONS = {
 # ★쇼핑몰 CS 도메인. sample(구독·결제)에서 갈아 끼운 부분이다
 #   (`wiki/records/handoff/10_도메인_교체_가이드.md` §1-4).
 #   합이 guardrails 의 rag.document_count(25) 와 같아야 한다.
+#: ★`[2026-10-06]` 쇼핑몰 코퍼스는 지웠다(D-023). 아래 배분표·탐침은 **그때 무엇이었는지의 기록**이고
+#:  검사는 돌지 않는다 — 검사 9 가 「폴더가 되돌아왔는지」만 본다.
 SCOPE_PLAN = {
     "order": 5,        # 주문 확인·변경·취소·상태·결제수단
     "shipping": 5,     # 배송 기간·지연·분실·주소 변경·부재
@@ -491,20 +493,18 @@ def main() -> int:
         except (AttributeError, ValueError):
             pass
 
-    check_collection("쇼핑몰", DOCUMENTS, MANIFEST, SCOPE_PLAN, SCENARIO_PROBES, "rag")
     check_collection("여행", TRAVEL_DOCUMENTS, TRAVEL_MANIFEST, TRAVEL_SCOPE_PLAN,
                      TRAVEL_SCENARIO_PROBES, "rag.travel")
 
-    # ── 9. ★두 코퍼스의 scope 가 겹치면 안 된다 ──────────────────────
-    # 검색은 `scope = ANY(allowed_scopes)` 하나로 거른다. 이름이 겹치면 여행 Team 이
-    # 쇼핑몰 문서를, 쇼핑몰 Team 이 여행 문서를 근거로 집어 온다.
+    # ── 9. ★지운 쇼핑몰 코퍼스가 되돌아오지 않았는지 ────────────────
+    # `[2026-10-06]` 쇼핑몰 코퍼스 25문서를 지웠다(D-023). 되살아나면 같은 tenant 안에서
+    # 근거가 섞인다 — scope 이름이 겹치지 않아도 검색 범위를 넓게 선언한 Team 이 집어 온다.
     global _collection
     _collection = "공통"
-    overlap = sorted(set(SCOPE_PLAN) & set(TRAVEL_SCOPE_PLAN))
-    if overlap:
-        fail(f"두 코퍼스가 같은 scope 를 쓴다: {overlap} — 검색이 도메인을 가로지른다")
+    if DOCUMENTS.exists() or MANIFEST.exists():
+        fail(f"지운 쇼핑몰 코퍼스가 되돌아왔다: {DOCUMENTS} · {MANIFEST} (D-023)")
     else:
-        note(f"scope 겹침 0건 (쇼핑몰 {len(SCOPE_PLAN)}종 · 여행 {len(TRAVEL_SCOPE_PLAN)}종)")
+        note(f"쇼핑몰 코퍼스 없음 — 적재 대상은 여행 {len(TRAVEL_SCOPE_PLAN)}종 하나다")
 
     # ── 출력 ────────────────────────────────────────────────────────
     print("=" * 78)

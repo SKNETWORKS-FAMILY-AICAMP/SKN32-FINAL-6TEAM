@@ -3,7 +3,7 @@ import { isAnswered, type Answers, type QuestionId } from "./model";
 
 /**
  * The backend trip survey, `constraints.survey` on trip registration. The backend is the
- * source of truth: `final_project_cs/app/modules/travel_ops/survey.py` (TripSurvey) and
+ * source of truth: `final_project_cs/app/domains/travel_ops/components/planning/survey.py` (TripSurvey) and
  * wiki D-020. This schema mirrors it so the screen refuses what the server would refuse (422) before sending.
  */
 export const SURVEY_VERSION = "2026-09-24.v1";

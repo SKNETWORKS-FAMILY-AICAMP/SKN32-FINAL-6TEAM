@@ -13,19 +13,25 @@ import type { ConsentCode } from "./consent-model";
  *   `wiki/records/plans/2026-10-05_약관_초안/00_법무확인_목록.md` 의 대조 표에 있다. 그 폴더의 01~05 는 이 파일의 한국어 본문 사본이다.
  * - ★정해지지 않은 값은 지어내지 않는다 — 본문에 「【확정 필요: …】」를 직접 쓰지 않고 `OPERATOR` · `RETENTION` 상수를 끼워 넣는다(시험이 지킨다).
  */
-export const TERMS_VERSION = "2026-10-05";
+export const TERMS_VERSION = "2026-10-05.1";   // `[2026-10-05]` .1 = 운영 주체 · 문의 연락처 · 보호책임자를 채웠다(글이 바뀌었으니 버전을 올린다). 서버 `consent.terms_version` 과 같이 올린다
 export const TERMS_STATUS: "draft" | "reviewed" = "draft";
 /** 시행일("YYYY-MM-DD"). 확정 전에는 초안 작성일. */
 export const TERMS_EFFECTIVE = "2026-10-05";
 
-/** 운영 주체 정보. ★확정되기 전에는 지어내지 않고 「【확정 필요: …】」 자리표시를 그대로 둔다 - 약관 본문은 이 값을 끼워 넣는다. */
+/**
+ * 운영 주체 정보. ★확정되기 전에는 지어내지 않고 「【확정 필요: …】」 자리표시를 그대로 둔다 - 약관 본문은 이 값을 끼워 넣는다.
+ * `[2026-10-05 사용자 지시]` 지금은 사업자가 아닌 부트캠프 최종 프로젝트(비영리)라 대표자 · 소재지는 「해당 없음」, 문의 연락처는 팀 공용 이메일이다.
+ *   개인정보 보호책임자는 「성명 또는 부서의 명칭과 연락처」 중 하나로 적을 수 있다(개인정보 보호법 제30조 제1항 제6호, 2026-10-05 조문 확인). 사용자 지시(2026-10-05 「팀명만 나오면 되지 않아?」)로 **개인 이름은 공개 글에 넣지 않고** 팀 명칭 + 팀 이메일만 적는다.
+ *   실제로 문의를 받아 처리하는 담당자는 팀 안에서 정해 둔다(공개하지 않음 — 운영자 화면이 생기면 거기에 내부 메모로). 위치정보 관리책임자도 같은 방식이다. 위치 저장 기능이 생기기 전에는 위치 약관을 시행하지 않는다.
+ *   ★이 값은 나중에 운영자 화면에서 바꿀 수 있게 한다(서버 요청서 `2026-10-05_운영자_정보_입력_화면_백엔드_요청.md`) - 그 값이 오면 이 상수는 서버 값이 없을 때의 기본값이 된다.
+ */
 export const OPERATOR = {
-  name: "【확정 필요: 운영 주체명】",
-  representative: "【확정 필요: 대표자】",
-  address: "【확정 필요: 소재지】",
-  contact: "【확정 필요: 문의 이메일·연락처】",
-  privacyOfficer: "【확정 필요: 개인정보 보호책임자 성명·직책·연락처】",
-  locationOfficer: "【확정 필요: 위치정보 관리책임자 성명·직책·연락처】",
+  name: "A-COPilot 팀(부트캠프 최종 프로젝트 · 비영리)",
+  representative: "해당 없음(사업자 아님)",
+  address: "해당 없음(사업자 아님 · 연락은 이메일로)",
+  contact: "acopilot3206@gmail.com",
+  privacyOfficer: "A-COPilot 팀(개인정보 보호 문의 창구) · acopilot3206@gmail.com",
+  locationOfficer: "A-COPilot 팀(위치정보 문의 창구) · acopilot3206@gmail.com",
 } as const;
 
 /** [한국어, English] */
@@ -37,7 +43,7 @@ export type Bilingual = readonly [ko: string, en: string];
  * - ★정해지지 않은 값은 「【확정 필요: …】」 + 「추천값(확정 전)」으로 둔다 — 사용자(운영 주체)가 정하면 값만 바꾼다(정하면 `TERMS_VERSION` 을 올린다).
  */
 export const RETENTION = {
-  /** 근거: `config/guardrails.yaml` `web_guard.guest_idle_hours: 168` · `guest.trip_grace_days: 3` · `guest.trip_keep_max_days: 180`, 계산 `travel_ops/guest_cleanup.py:8-10,88`. */
+  /** 근거: `config/guardrails.yaml` `web_guard.guest_idle_hours: 168` · `guest.trip_grace_days: 3` · `guest.trip_keep_max_days: 180`, 계산 `travel_ops/modules/web_account/guest_cleanup.py:8-10,88`. */
   guestData: [
     "마지막 이용 후 7일(아직 끝나지 않은 여행 일정이 있으면 그 일정이 끝난 뒤 3일까지 두되, 마지막 이용 후 183일을 넘기지 않음)",
     "7 days after the last use (if a trip has not ended yet, until 3 days after it ends, but never more than 183 days after the last use)",
@@ -438,7 +444,7 @@ const serviceTerms: TermsDoc = {
       body: [
         paras(
           "① 이용자는 언제든 이용을 그만둘 수 있습니다. 여행 삭제, 소셜 계정 연결 해제, 에이전트 키 폐기, 선택 동의 철회는 서비스 화면에서 직접 할 수 있습니다.",
-          `② 회원 자료 전체의 삭제 등 서비스 화면에서 할 수 없는 요청은 ${OPERATOR.contact}로 할 수 있으며, 운영자는 관계 법령이 정한 기간 안에 처리해야 합니다.`,
+          `② 회원 자료 전체의 삭제 등 서비스 화면에서 할 수 없는 요청은 문의처(${OPERATOR.contact})로 할 수 있으며, 운영자는 관계 법령이 정한 기간 안에 처리해야 합니다.`,
           "③ 이용자가 필수 동의를 철회하면 서비스를 이용할 수 없게 됩니다.",
         ),
         paras(
@@ -644,7 +650,7 @@ const privacy: TermsDoc = {
             "선택 동의의 철회(마이페이지)",
             "소셜 계정 연결 해제, 에이전트 키 폐기, 디스코드 웹훅 삭제",
           ),
-          `③ 화면에서 할 수 없는 요구(회원 자료 전체의 삭제, 처리 기록의 열람 · 삭제 등)는 ${OPERATOR.contact}로 할 수 있습니다. 운영자는 관계 법령이 정한 기간 안에 처리하고 결과를 알려야 합니다.`,
+          `③ 화면에서 할 수 없는 요구(회원 자료 전체의 삭제, 처리 기록의 열람 · 삭제 등)는 문의처(${OPERATOR.contact})로 할 수 있습니다. 운영자는 관계 법령이 정한 기간 안에 처리하고 결과를 알려야 합니다.`,
           "④ 게스트는 브라우저를 닫으면 로그인 상태가 끝나고, 그 뒤에는 운영자가 요청한 사람이 그 게스트 본인인지 확인할 방법이 없습니다. 그래서 게스트의 화면 밖 요구는 처리하기 어려울 수 있습니다. 게스트의 자료는 제2조의 기간이 지나면 자동으로 지워집니다.",
           "⑤ 이용자는 필수 동의도 철회할 수 있으며, 그러면 서비스를 이용할 수 없게 됩니다.",
         ),

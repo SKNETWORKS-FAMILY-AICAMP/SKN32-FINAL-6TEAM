@@ -304,6 +304,8 @@ def build_controller(*, registry: TeamRegistry | None = None,
       가 성립해야 한다. 여기서 다시 읽으면 그 사이 바뀐 선언으로 조립해 놓고
       **읽었던 revision 을 실행 중인 것으로 잘못 적게** 된다.
     """
+    wire_optional_features()                      # 끌 수 있는 기능이 끼움 자리에 규칙을 꽂는다(2026-10-06)
+    wire_domain_teams()                           # 팀이 자기 계산을 부품의 끼움 자리에 꽂는다(동)
     config = config if config is not None else load_project_config(config_path)
     _validate_modules(config)
     if llm is None:
@@ -330,6 +332,8 @@ def build_controller(*, registry: TeamRegistry | None = None,
         fact_queries=fact_queries,
         response_review=config.response_review,
         action_handlers=action_handlers if action_handlers is not None else build_action_handlers(),
+        # ★`[2026-10-06]` 라우팅이 어긋났을 때 한 번 더 고르는 자리 — 어휘는 도메인이 갖는다.
+        reroute=build_reroute(),
     )
 
 
@@ -350,6 +354,113 @@ def build_mcp_surface(app_getter):
     return build_surface(app_getter, enabled=enabled, write_enabled=write)
 
 
+def build_reroute():
+    """라우팅 재배분기 — 꺼져 있으면 `None`(Controller 는 종전대로 곧바로 escalated). `[2026-10-06]`
+
+    ★가드레일 `travel.routing.reroute_enabled` 로 끈다. 모델 호출이 늘어나는 자리라 끌 수 있어야 한다.
+      ★**호출 때 읽는다** — 시험이 바꿔 끼운 값을 따른다.
+    """
+    def _call(**kwargs):
+        from app.core.settings import get_guardrails
+
+        if not get_guardrails().get("travel.routing.reroute_enabled"):
+            return None
+        from app.domains.travel_ops.components.core_hooks.reroute import reroute
+
+        return reroute(**kwargs)
+    return _call
+
+
+def wire_optional_features() -> list[str]:
+    """끌 수 있는 기능이 **자기 규칙을 끼움 자리에 꽂는 곳**. `[2026-10-06]` D-CS-013
+
+    ★왜 여기인가. 필수 부품이 기능 쪽을 직접 import 하면 그 기능을 바꾸거나 끄는 순간 부품이
+      같이 멈춘다 — 실제로 감시·안내가 웹 로그인 표를 직접 보고 있었다. 방향을 뒤집어
+      **기능이 조립 때 자기 규칙을 등록**하고, 부품은 끼움 자리만 본다.
+
+    꽂지 않으면 부품은 기본값으로 돈다(감시 대상 좁히기 없음 = 전부 감시).
+    """
+    from app.domains.travel_ops.components.itinerary import trip_scope
+    from app.domains.travel_ops.modules.web_account.guest_policy import not_guest_sql
+
+    # 게스트(로그인 안 한 웹 사용자)의 여행은 안내·감시 대상이 아니다 — D-CS-011 §2.
+    trip_scope.register("web_account.guest", not_guest_sql)
+
+    # 운영자가 관리 화면에서 바꾼 값(채팅 해석 방식 등)을 읽는 자리. 표는 웹 제한값 기능이 들고 있다.
+    from app.domains.travel_ops.components import settings_hook
+    from app.domains.travel_ops.modules.web_account import web_guard
+
+    settings_hook.register(lambda tenant_id, name: web_guard.values(tenant_id).get(name))
+
+    # 접수 읽기의 진행 알림을 화면이 읽는 모양(SSE)으로 포장하는 자리.
+    from app.domains.travel_ops.components import progress_hook
+    from app.domains.travel_ops.modules.live_progress import op_stream
+
+    progress_hook.register(op_stream.sse)
+    return (list(trip_scope.registered())
+            + (["settings"] if settings_hook.is_registered() else [])
+            + (["progress"] if progress_hook.is_registered() else []))
+
+
+def wire_domain_teams() -> list[str]:
+    """**팀이 자기 계산을 부품의 끼움 자리에 꽂는 곳.** `[2026-10-06]` D-CS-013
+
+    ★왜 여기인가. 감시 · 대화 · 계획 · 접수 부품이 요식 · 이동 · 활동 팀 **내부**를 직접 가져다
+      썼다(14곳). 그러면 「팀은 꽂고 뺄 수 있다」가 거짓이 된다 — 팀 하나를 빼면 부품이 import
+      단계에서 깨진다. 방향을 뒤집어 팀이 조립 때 등록하고, 부품은 자리만 본다.
+
+    ★꽂지 않으면 부품은 그 팀이 없을 때의 길로 간다 — 이동은 어림값, 요식 판정은 모름,
+      활동 유사도 없음, 그 종류의 감시는 건너뜀. **값을 지어내지 않는다**(`components/team_hooks/`).
+    """
+    from app.domains.travel_ops.components.team_hooks import dining_ledger, legs, similarity, watch_planners
+
+    # 이동 — 두 지점 사이 시간 · 노선 · 사고 반영. 도보 상한은 이동 팀의 가드레일에 있다.
+    from app.domains.travel_ops.instances.mobility import wiring as mobility_wiring
+    from app.domains.travel_ops.instances.mobility.engine import guardrails as mobility_guardrails
+
+    def walk_limit_m() -> float | None:
+        """`mobility.limits.walk_m.default`. 선언에 없으면 None — 부르는 쪽이 보수적으로 간다."""
+        try:
+            return float(mobility_guardrails.lookup("mobility.limits.walk_m.default"))
+        except mobility_guardrails.GuardrailMissing:
+            return None
+
+    # ★함수를 **그 자리에서 쥐지 않고** 부를 때 모듈에서 읽는다 — 이동 계산기는 켜짐/꺼짐이 실행 중에
+    #   바뀌고(`wiring.configure`), 시험이 팀 함수를 바꿔 끼우기도 한다. 객체를 쥐면 옛 것을 계속 쓴다.
+    legs.register(leg_planner=lambda *a, **kw: mobility_wiring.leg_planner(*a, **kw),
+                  disruptions_from_events=lambda events: mobility_wiring.disruptions_from_events(events),
+                  walk_limit_m=walk_limit_m)
+
+    # 요식 — 원장이 식당의 정본이다(근처 들여놓기 · 시간대 판정 · 이름으로 찾기).
+    from app.domains.travel_ops.instances.dining import ledger as dining_ledger_impl
+    from app.domains.travel_ops.instances.dining import nearby as dining_nearby
+
+    dining_ledger.register(add_nearby=lambda *a, **kw: dining_nearby.add_nearby(*a, **kw),
+                           states=lambda *a, **kw: dining_ledger_impl.dining_states(*a, **kw),
+                           state=lambda *a, **kw: dining_ledger_impl.dining_state(*a, **kw),
+                           find_by_name=lambda *a, **kw: dining_ledger_impl.find_place_by_name(*a, **kw))
+
+    # 활동 — 비슷한 곳 순서와 설문 선호.
+    from app.domains.travel_ops.instances.activity import similarity as activity_similarity
+
+    similarity.register(score=lambda *a, **kw: activity_similarity.score(*a, **kw),
+                        preference_of=lambda c: activity_similarity.preference_of(c),
+                        distance_first=lambda pref: activity_similarity.distance_first(pref))
+
+    # 감시 묶음 — 항목 종류마다 그 팀의 점검 계산.
+    from app.domains.travel_ops.instances.activity import team as activity_team
+    from app.domains.travel_ops.instances.dining import team as dining_team
+    from app.domains.travel_ops.instances.mobility import team as mobility_team
+
+    watch_planners.register("activity", lambda *a, **kw: activity_team.plan_activity_trigger(*a, **kw))
+    watch_planners.register("dining", lambda *a, **kw: dining_team.plan_dining_trigger(*a, **kw))
+    watch_planners.register("mobility", lambda *a, **kw: mobility_team.plan_mobility_trigger(*a, **kw))
+
+    return ([name for name, hook in (("legs", legs), ("dining_ledger", dining_ledger),
+                                     ("similarity", similarity)) if hook.is_registered()]
+            + [f"watch:{kind}" for kind in watch_planners.registered()])
+
+
 def build_domain_routers() -> list:
     """**고객 API 앱**이 여는 도메인 HTTP 표면 — 여행 API · 위임. ★`[2026-09-29]` 시나리오 모드 · 웹 제한값 운영 API 는
     운영 앱으로 옮겼다(`build_ops_routers`).
@@ -361,6 +472,8 @@ def build_domain_routers() -> list:
       만들어 `create_app()` 에 넣는다. 점검기는 **처음 쓸 때** 조립한다 — 기동이
       바깥 소스(기상·교통·대기) 조립을 기다리지 않게.
     """
+    wire_optional_features()                      # 동(고객 API 앱 경로)
+    wire_domain_teams()                           # 동
     from app.domains.travel_ops.entry.trip_api import build_trip_router
 
     def check_factory():

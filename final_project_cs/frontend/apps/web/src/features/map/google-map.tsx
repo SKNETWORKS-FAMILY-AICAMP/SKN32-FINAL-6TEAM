@@ -51,5 +51,5 @@ export function GoogleMap({ apiKey, mapId, tileUrl, onDecided, ...props }: MapVi
   if (!apiKey.trim() || !mapId.trim()) return <MapUnavailable message="Google Maps 연결 설정이 필요해요." />;
   if (decision === "checking") return <div className={styles.live} role="status" aria-busy="true"><div className={styles.overlay}>지도를 불러오고 있어요…</div></div>;
   if (decision === "free" || decision === "free-setting") return <OsmMap {...props} tileUrl={tileUrl} />;
-  return <LiveMap {...props} adapter={adapter} name="Google" fitButton />;
+  return <LiveMap {...props} adapter={adapter} name="Google" />;
 }

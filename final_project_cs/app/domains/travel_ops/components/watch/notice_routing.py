@@ -24,9 +24,9 @@ from app.infrastructure.notify import telegram as telegram_client
 from app.infrastructure.notify.discord import NoticeNotConfigured, RetryAfter, _cut as discord_cut, _retry_after as discord_retry_after
 from app.infrastructure.notify.suppressed import NoticeSuppressed
 
-from app.domains.travel_ops.modules.web_account import consents
-from app.domains.travel_ops.modules.web_account import customer_profile
-from app.domains.travel_ops.ports.notify_channels import telegram_connect
+from app.domains.travel_ops.components.customer import consents
+from app.domains.travel_ops.components.customer import profile as customer_profile
+from app.domains.travel_ops.components.customer import channels as telegram_connect
 
 log = logging.getLogger(__name__)
 

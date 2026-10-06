@@ -1,5 +1,5 @@
---- a/app/modules/travel_ops/_base.py
-+++ b/app/modules/travel_ops/_base.py
+--- a/app/domains/travel_ops/instances/_shared/_base.py
++++ b/app/domains/travel_ops/instances/_shared/_base.py
 @@ -60,8 +60,6 @@
                                  handoff_capability=task.capability)
          if task.capability not in self.manifest.capabilities:

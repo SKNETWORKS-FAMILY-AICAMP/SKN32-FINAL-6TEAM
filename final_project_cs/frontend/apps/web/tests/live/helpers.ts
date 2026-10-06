@@ -149,21 +149,33 @@ export async function noHorizontalScroll(page: Page) {
 }
 
 /**
- * Terms card open on /start: read each REQUIRED document to the end and tick it (the reader closes once ticked; optional items are left unticked unless `optional` names
- * them), then go on to the preferences. `[2026-10-05]` Consent is per item: 서비스 이용약관 and 개인정보 수집·이용 are required.
+ * Terms card open on /start: tick each REQUIRED item (optional items are left unticked unless `optional` names them), then go on to the preferences.
+ * `[2026-10-05]` Consent is per item: 서비스 이용약관 and 개인정보 수집·이용 are required. `[2026-10-05 사용자 지시]` A required item is ticked at once - no reading to the end first.
+ * ★`[2026-10-06 사용자 지시]` The FIRST agreement goes straight on to the plan screen (the preference survey is not part of the first run any more). So that the many
+ *   start-screen tests that continue with the preferences keep their steps, this helper then opens the preferences from the menu, as a customer would (`openPreferencesFromMenu`).
+ *   A customer who had already agreed and only changes their boxes stays on /start with the preferences card open, as before.
  */
 export async function agreeTerms(page: Page, optional: Array<"sensitive" | "location" | "alert_channel"> = []) {
   await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
+  const alreadyAgreed = (await page.locator("#consent-service_terms").isChecked()) && (await page.locator("#consent-privacy").isChecked());
   for (const code of ["service_terms", "privacy"]) {
     if (await page.locator(`#consent-${code}`).isChecked()) continue;                       // a returning customer's boxes are already on - ticking again would untick
-    await page.locator(`[data-action="read-terms"][data-doc="${code}"]`).click();
-    const reader = page.getByRole("dialog");
-    await reader.getByRole("article").evaluate((element) => { element.scrollTop = element.scrollHeight; });
-    await reader.getByText(/^\[필수\]/).click();
-    await expect(reader).toHaveCount(0);
+    await page.locator(`li[data-doc="${code}"] label`).click();
+    await expect(page.locator(`#consent-${code}`)).toBeChecked();
   }
   for (const code of optional) await page.locator(`#consent-${code}`).evaluate((input: HTMLInputElement) => { if (!input.checked) input.click(); });
   await page.getByRole("button", { name: "동의하고 다음으로" }).click();
+  if (alreadyAgreed) return;
+  await expect(page).toHaveURL(/\/trips\/new$/);
+  await openPreferencesFromMenu(page);
+}
+
+/** `[2026-10-06]` In the open menu, the 「여행 취향 설문」 row opens the start screen on its preferences card (the survey is done on its own, not in the first run). */
+export async function openPreferencesFromMenu(page: Page) {
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  await page.getByRole("dialog", { name: "메뉴" }).getByRole("button", { name: "여행 취향 설문" }).click();
+  await expect(page).toHaveURL(/\/start$/);
+  await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toHaveAttribute("aria-expanded", "true");
 }
 
 /** In the open menu, unfolds the language card and picks a language by its own name. */

@@ -15,7 +15,7 @@
 저장소 루트가 sys.path 에 없어도 된다. 별칭 패키지로 파일째 드는 방식(`budget_probe_measure_v1.py`)은
 ② 때문에 `options`·`plan` 까지는 못 든다(`car`·`paths` 만) — 정식 경로와 별칭을 한 프로세스에서 섞지 않는다.
 
-★ 31번 방 2차(2026-09-21) — app/domains/travel_ops/ports/data_sources/mobility → app/domains/travel_ops/instances/mobility/engine.
+★ 31번 방 2차(2026-09-21) — app/infrastructure/travel/mobility → app/modules/travel_ops/mobility_engine(그때 경로. 지금은 app/domains/travel_ops/instances/mobility/engine).
   여행 데이터 소스(옛 infrastructure/travel, 지금 domains/travel_ops/ports/data_sources) 는 여러 팀이 같이 쓰는 바깥 피드(캐시·호출 제한·주기 폴링) 층이라
   우리가 필요할 때 부르는 엔진과 결이 달랐다. 세 팀이 travel_ops/<이름>_engine/ 으로 통일했다.
   이름이 mobility 가 아닌 건 옆의 팀장 mobility.py 와 부딪히지 않게 하려는 것이다.

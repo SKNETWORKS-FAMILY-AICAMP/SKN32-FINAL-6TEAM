@@ -3,8 +3,8 @@ import { agree, mockServer, registerStubTrip, useKorean } from "./helpers";
 
 test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); await agree(page); });
 
-test("메뉴는 프로필·여행 목록·언어·테마·플로팅 스위치 순서이고, Tab 순환과 Esc(언어 목록 먼저, 메뉴 다음)·포커스 복귀를 지키며, 링크는 메뉴를 닫는다", async ({ page, request }) => {
-  // The six base rows (profile · trips · language · theme · floating switch · skip-animation switch): with a social sign-in provider set up the menu has a seventh (「계정 연결 · 로그인」, covered by social-login.spec).
+test("메뉴는 프로필·여행 목록·여행 취향 설문·언어·테마·플로팅 스위치 순서이고, Tab 순환과 Esc(언어 목록 먼저, 메뉴 다음)·포커스 복귀를 지키며, 링크는 메뉴를 닫는다", async ({ page, request }) => {
+  // The seven base rows (profile · trips · survey · language · theme · floating switch · skip-animation switch; the survey row `[2026-10-06]`): with a social sign-in provider set up the menu has an eighth (「계정 연결 · 로그인」, covered by social-login.spec).
   await mockServer(request).scenario({ social: "off" });
   await page.goto("/trips/new");
   const open = page.getByRole("button", { name: "메뉴", exact: true });
@@ -12,22 +12,23 @@ test("메뉴는 프로필·여행 목록·언어·테마·플로팅 스위치 �
   const menu = page.getByRole("dialog", { name: "메뉴" });
   const profile = menu.getByRole("link", { name: /마이페이지/ });
   const trips = menu.getByRole("link", { name: "여행 목록 보기" });
+  const survey = menu.getByRole("button", { name: "여행 취향 설문" });
   const language = menu.getByRole("button", { name: /LANGUAGE/ });
   const green = menu.getByRole("button", { name: "그린", exact: true });
   const white = menu.getByRole("button", { name: "화이트", exact: true });
   const floating = menu.getByRole("switch", { name: "플로팅 버튼 사용" });
   const skip = menu.getByRole("switch", { name: "애니메이션 건너뛰기" });
   const close = menu.getByRole("button", { name: "메뉴 닫기" });
-  const tops = await Promise.all([profile, trips, language, green, floating, skip].map(async (item) => (await item.boundingBox())!.y));
+  const tops = await Promise.all([profile, trips, survey, language, green, floating, skip].map(async (item) => (await item.boundingBox())!.y));
   expect([...tops].sort((a, b) => a - b)).toEqual(tops);
-  // One board holds exactly these six rows; the language row is the home card's picker with its caption.
+  // One board holds exactly these seven rows; the language row is the home card's picker with its caption.
   expect(await profile.evaluate((link) => {
     const board = link.parentElement!;
-    return board.children.length === 6 && Boolean(board.querySelector('a[href="/trips"]')) && Boolean(board.querySelector('[role="switch"]')) && board.textContent!.includes("LANGUAGE · 언어") && board.textContent!.includes("THEME · 테마");
+    return board.children.length === 7 && Boolean(board.querySelector('a[href="/trips"]')) && Boolean(board.querySelector('[role="switch"]')) && board.textContent!.includes("LANGUAGE · 언어") && board.textContent!.includes("THEME · 테마");
   })).toBe(true);
 
   await expect(profile).toBeFocused();
-  for (const next of [trips, language, green, white, floating, skip, close, profile]) {
+  for (const next of [trips, survey, language, green, white, floating, skip, close, profile]) {
     await page.keyboard.press("Tab");
     await expect(next).toBeFocused();
   }

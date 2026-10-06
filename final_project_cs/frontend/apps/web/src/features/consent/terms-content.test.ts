@@ -66,7 +66,8 @@ describe("terms documents (one per consent item)", () => {
     const operatorPlaceholders = Object.values(OPERATOR).filter((value) => value.includes(PLACEHOLDER));
     const allPlaceholders = constantValues.filter((value) => value.includes(PLACEHOLDER));
     if (TERMS_STATUS === "draft") {
-      expect(operatorPlaceholders.length).toBeGreaterThan(0);
+      expect(allPlaceholders.length).toBeGreaterThan(0);        // `[2026-10-05]` the operator details are filled; what is still open are the retention periods
+      expect(operatorPlaceholders).toEqual([]);
       expect(DRAFT_NOTICE[0]).toContain("AI 작성 초안");
     } else {
       expect(allPlaceholders).toEqual([]);

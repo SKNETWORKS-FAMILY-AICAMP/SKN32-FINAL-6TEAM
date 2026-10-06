@@ -206,12 +206,13 @@ test.describe("좌우로 쓸어 날짜 넘기기", () => {
   test.use({ hasTouch: true });
   test("왼쪽으로 쓸면 다음 날, 오른쪽으로 쓸면 이전 날이 되고, 거의 세로인 움직임은 목록 스크롤이라 넘기지 않는다", async ({ page, request }) => {
     await openFinished(page, request, (view) => { view.review.items.push(DAY_TWO_STOP); });
+    // 손가락 하나를 흉내 낸다(포인터 이벤트): 길을 따라 움직여 가다 떼면 한 번에 쓸어 넘긴 것과 같다 (끄는 동안의 모습은 day-gestures.spec.ts).
     const swipe = (from: [number, number], to: [number, number]) => page.evaluate(([a, b]) => {
       const target = document.querySelector("div[class*=sheetBody]")!;
-      const touch = (x: number, y: number) => new Touch({ identifier: 1, target, clientX: x, clientY: y });
-      const fire = (type: string, x: number, y: number) => target.dispatchEvent(new TouchEvent(type, { bubbles: true, cancelable: true, touches: type === "touchend" ? [] : [touch(x, y)], changedTouches: [touch(x, y)] }));
-      fire("touchstart", a[0], a[1]);
-      fire("touchend", b[0], b[1]);
+      const fire = (type: string, x: number, y: number) => target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, pointerType: "touch", isPrimary: true, clientX: x, clientY: y, button: 0, buttons: type === "pointerup" ? 0 : 1 }));
+      fire("pointerdown", a[0], a[1]);
+      for (let step = 1; step <= 6; step += 1) fire("pointermove", a[0] + ((b[0] - a[0]) * step) / 6, a[1] + ((b[1] - a[1]) * step) / 6);
+      fire("pointerup", b[0], b[1]);
     }, [from, to] as const);
     await expect(card(page, "경복궁 관람")).toBeVisible();
     await swipe([300, 400], [250, 520]);                                                                // 거의 세로: 넘기지 않는다
@@ -390,8 +391,8 @@ test("「직접 고치기」에서 「장소 없음」으로 저장하면 서버
 
 test("지도의 확대·축소(+/−) 버튼은 둥근 단추이고, 지도에 포인터를 올려 두는 동안에만 보인다", async ({ page, request }) => {
   await openFinished(page, request);
-  const zoom = page.locator(".leaflet-control-zoom");
-  const plus = zoom.getByRole("button", { name: "Zoom in" });
+  const zoom = page.getByRole("group", { name: "지도 단추" });
+  const plus = zoom.getByRole("button", { name: "확대" });
   await expect(zoom).toHaveCSS("opacity", "0");                                         // 평소에는 지도를 가리지 않는다
   await page.getByRole("region", { name: "여행 지도" }).hover({ position: { x: 150, y: 150 } });
   await expect(zoom).toHaveCSS("opacity", "1");

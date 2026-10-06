@@ -12,3 +12,4 @@ test-results/
 !.env.example
 next-env.d.ts
 dev-*.log
+dev.log

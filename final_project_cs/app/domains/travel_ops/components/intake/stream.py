@@ -149,9 +149,15 @@ class Feed:
 
 
 def sse_chunks(events: list[tuple[str, dict[str, Any]]]) -> list[str]:
-    from app.domains.travel_ops.modules.live_progress import op_stream
+    """진행 이벤트를 화면이 읽는 모양으로 바꾼다.
 
-    return [op_stream.sse(name, body) for name, body in events]
+    ★`[2026-10-06]` 전에는 실시간 진행 기능(`modules/live_progress`)을 직접 불렀다 — 그 기능을
+      끄면 접수 읽기가 같이 멈추는 길이었다(D-CS-013). 지금은 **포장하는 쪽이 조립 때 꽂는다.**
+      아무도 안 꽂으면 그냥 빈 목록이다 — 실시간 화면이 없을 뿐, 접수 읽기는 그대로 돈다.
+    """
+    from app.domains.travel_ops.components.progress_hook import render
+
+    return render(events)
 
 
 __all__ = ["Feed", "sse_chunks"]

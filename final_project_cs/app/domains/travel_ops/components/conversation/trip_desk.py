@@ -103,20 +103,21 @@ class TripDesk:
         return plan(more) if more != places else first
 
     def _add_nearby(self, trip_id: UUID, meal: Item, places: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        from app.domains.travel_ops.instances.dining import nearby
+        # ★`[2026-10-06]` 요식 팀을 직접 부르지 않는다 — 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013)
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
 
         with self._connect() as conn:
-            return nearby.add_nearby(conn, self.store, trip_id, [meal], places)
+            return dining_ledger.add_nearby(conn, self.store, trip_id, [meal], places)
 
     def _state_lookup(self):
         """대체 식당 후보의 방문 시간대 원장 판정 — 시나리오 모드(`dining_ledger=False`)는 원장을 섞지 않으므로 None."""
         return self._dining_states if self._use_ledger else None
 
     def _dining_states(self, slots):
-        from app.domains.travel_ops.instances.dining.ledger import dining_states
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
 
         with self._connect() as conn:
-            return dining_states(conn, self.store.tenant_id, slots)
+            return dining_ledger.states(conn, self.store.tenant_id, slots)
 
     # ── 요식-P3 — 늦는다 ────────────────────────────────────────
     def report_delay(self, *, trip_id: UUID, at: datetime, minutes: int,

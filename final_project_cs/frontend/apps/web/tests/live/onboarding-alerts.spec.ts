@@ -47,12 +47,15 @@ async function skipPreferencesAndRegister(page: Page) {
   await sendPlan(page);
 }
 
-test("디스코드 알림 카드를 한 번도 열지 않고 약관 → 취향 → 여행 등록까지 가고, 번호는 약관 01·취향 02 그대로이며 알림 카드는 선택 표시만 있다", async ({ page }) => {
+test("디스코드 알림 카드를 한 번도 열지 않고 약관 → 취향 → 여행 등록까지 가고, 번호는 약관 01·취향 02 그대로이며 알림 카드는 선택 표시만 있다", async ({ page, request }) => {
+  await mockServer(request).scenario({ trips: "none" });   // [2026-10-06] 처음 동의하면 계획 화면을 거쳐 취향으로 돌아오므로, 그 사이 세션이 생긴다 - 그 세션에 여행은 아직 없다(첫 시험과 같다)
   await page.goto("/start");
   await expect(alertsHead(page)).toHaveAttribute("aria-expanded", "false");
   await expect(alertsHead(page)).toContainText("선택");
   await expect(alertsHead(page)).toContainText("여행 알림을 받을 디스코드 채널.");
-  await expect(page.getByText("이메일")).toHaveCount(0);           // no email anywhere on the start screen
+  // no email input or label anywhere on the start screen (the terms boxes may MENTION an email address - the company's contact - so their text is left out)
+  await expect(page.getByRole("textbox", { name: /이메일/ })).toHaveCount(0);
+  expect(await page.locator("main").evaluate((main) => { const copy = main.cloneNode(true) as HTMLElement; copy.querySelectorAll('[role="region"]').forEach((box) => box.remove()); return (copy.textContent ?? "").includes("이메일"); })).toBe(false);
   await expect(termsHead(page)).toContainText("01");
   await expect(preferencesHead(page)).toContainText("02");
   // Collapsed and never asking: no focus is taken.
@@ -65,7 +68,8 @@ test("디스코드 알림 카드를 한 번도 열지 않고 약관 → 취향 �
   await skipPreferencesAndRegister(page);
 });
 
-test("카드를 열고 비우거나 공백만 넣은 채 계속하면 약관으로 가고, 끝까지 진행할 수 있다", async ({ page }) => {
+test("카드를 열고 비우거나 공백만 넣은 채 계속하면 약관으로 가고, 끝까지 진행할 수 있다", async ({ page, request }) => {
+  await mockServer(request).scenario({ trips: "none" });   // [2026-10-06] 처음 동의하면 계획 화면을 거쳐 취향으로 돌아오므로, 그 사이 세션이 생긴다 - 그 세션에 여행은 아직 없다(첫 시험과 같다)
   await page.goto("/start");
   await alertsHead(page).click();
   await expect(webhook(page)).toHaveAttribute("type", "url");

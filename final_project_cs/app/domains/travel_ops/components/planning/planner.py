@@ -1440,9 +1440,10 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     # ★이동 항목을 넣고(출발 = 다음 일정 시작 − 이동 − 여유) **같은 판정기로 한 번 더** 본다 —
     #   자리가 모자라 민 항목이 영업시간을 넘길 수 있다. 여기서 걸리면 고친 척하지 않고 거절한다.
     # ☆`[2026-09-29 이동 계산기 문제목록 #27·#34·#46]` 최종 이동은 이동 계산기(시간표 판정)로 — 꺼져 있으면 None(어림값)
-    from app.domains.travel_ops.instances.mobility.wiring import leg_planner
+    # ★`[2026-10-06]` 이동 팀을 지정 부르지 않는다 — 팀이 조립 때 겊은 자리에서 받는다(D-CS-013 `team_hooks/legs.py`)
+    from app.domains.travel_ops.components.team_hooks import legs
     items, routes, moved = add_moves(items, chosen,
-                                     engine=leg_planner(request.party_size, dict(request.constraints)))
+                                     engine=legs.leg_planner(request.party_size, dict(request.constraints)))
     fixed += moved
     violations = _check(items, chosen, request, routes, ledger=ledger)
     if violations:

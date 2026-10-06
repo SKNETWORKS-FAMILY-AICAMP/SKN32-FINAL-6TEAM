@@ -108,9 +108,8 @@ def db():
                     cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (tenant,))
-                    cur.execute("DELETE FROM returns WHERE tenant_id=%s", (tenant,))
+                    # ★`[2026-10-06]` 쇼핑몰 표(returns · order_items)는 DB 에서 지웠다(D-023).
                     cur.execute("DELETE FROM supplier_bookings WHERE tenant_id=%s", (tenant,))
-                    cur.execute("DELETE FROM order_items WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM bookings WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM customers WHERE tenant_id=%s", (tenant,))

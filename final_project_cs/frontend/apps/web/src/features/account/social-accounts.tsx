@@ -8,6 +8,7 @@ import { getLinks, isSocialUnsupported, providerName, startSocial, unlinkSocial,
 import { LiveError } from "@/lib/live/client";
 import { useProfile } from "@/lib/profile";
 import { useSettings, useT } from "@/lib/settings";
+import { GoogleButton } from "./google-button";
 import { useAuthProviders } from "./use-auth-providers";
 import styles from "./account.module.css";
 
@@ -95,7 +96,10 @@ export function SocialAccounts() {
         <p className={styles.explain}>{isGuest
           ? t("계정을 연결해 두면 창을 닫아도 여행이 보관되고, 게스트 제한도 없어져요. 다른 기기에서도 그 계정으로 로그인해 여행을 열 수 있어요. 이메일은 받지 않아요.", "Link an account and your trips are kept even after you close the window, the guest limits end, and you can sign in with it on another device. We do not take your email.")
           : t("연결된 계정으로 어느 기기에서든 로그인해 여행을 열 수 있어요. 이메일은 받지 않아요.", "Sign in with a linked account on any device to open your trips. We do not take your email.")}</p>
-        <ul className={styles.providers} aria-label={t("연결할 계정", "Accounts to link")}>{providers.data.map((provider) => <li key={provider}>
+        <ul className={styles.providers} aria-label={t("연결할 계정", "Accounts to link")}>{providers.data.map((provider) => provider === "google" && !linked.has(provider)
+          // `[2026-10-05]` Google's own button (its rules: the brand button, not a plain one) - the row is the button.
+          ? <li key={provider} data-provider={provider} className={styles.brandRow}><GoogleButton mode="link" disabled={busy || links.isPending} onClick={() => start(provider, "link")} /></li>
+          : <li key={provider} data-provider={provider}>
           <span className={styles.providerName}>{t(...providerName(provider))}</span>
           {linked.has(provider)
             ? (unlinking === provider
@@ -117,10 +121,12 @@ export function SocialAccounts() {
           ? <Button disabled={busy} onClick={() => setReplacing(true)}>{t("계정으로 로그인하기", "Sign in with an account")}</Button>
           : <>
             {isGuest && <p className={styles.warn} role="alert">{t("로그인하면 이 기기의 게스트 여행은 사라지고 그 계정의 여행이 열려요. 지금 여행을 계속 쓰려면 위의 「연결하기」를 쓰세요.", "Signing in ends this device's guest session and its trips, and opens the account's trips. To keep using these trips, use “Link” above.")}</p>}
-            <ul className={styles.providers} aria-label={t("로그인할 계정", "Accounts to sign in with")}>{providers.data.map((provider) => <li key={provider}>
-              <span className={styles.providerName}>{t(...providerName(provider))}</span>
-              <Button variant={isGuest ? "secondary" : "primary"} disabled={busy} onClick={() => start(provider, "login")}>{t("로그인", "Sign in")}</Button>
-            </li>)}</ul>
+            <ul className={styles.providers} aria-label={t("로그인할 계정", "Accounts to sign in with")}>{providers.data.map((provider) => provider === "google"
+              ? <li key={provider} data-provider={provider} className={styles.brandRow}><GoogleButton mode="login" disabled={busy} onClick={() => start(provider, "login")} /></li>
+              : <li key={provider} data-provider={provider}>
+                <span className={styles.providerName}>{t(...providerName(provider))}</span>
+                <Button variant={isGuest ? "secondary" : "primary"} disabled={busy} onClick={() => start(provider, "login")}>{t("로그인", "Sign in")}</Button>
+              </li>)}</ul>
             {isGuest && <Button variant="quiet" disabled={busy} onClick={() => setReplacing(false)}>{t("닫기", "Close")}</Button>}
           </>}
       </div>}

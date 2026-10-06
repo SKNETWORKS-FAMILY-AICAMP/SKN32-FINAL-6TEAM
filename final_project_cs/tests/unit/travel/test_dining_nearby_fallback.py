@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from app.domains.travel_ops.instances.dining import nearby
+from app.domains.travel_ops.instances.dining import ledger as dining_ledger_impl
 from app.domains.travel_ops.components.itinerary.itinerary import Item
 
 KST = timezone(timedelta(hours=9))
@@ -146,8 +147,9 @@ def test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_
         return [lunch] if remove_alias else places + [alt]
 
     monkeypatch.setattr(nearby, "add_nearby", fake_add)
-    monkeypatch.setattr(dawn_check, "dining_states",
-                        lambda c, t, slots: {s["place_id"]: {"linked": True, "open_at_slot": True} for s in slots})
+    # ★`[2026-10-06]` 자리를 거치므로 꽂는 쪽(요식 원장)을 바꿔 끼운다(D-CS-013)
+    monkeypatch.setattr(dining_ledger_impl, "dining_states",
+                        lambda c, t, slots, **_: {s["place_id"]: {"linked": True, "open_at_slot": True} for s in slots})
     applied = []
     monkeypatch.setattr(dawn_check, "apply_or_ask",
                         lambda *_, plan, **__: applied.append(plan) or {"status": "adjusted", "version": 2})

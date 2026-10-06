@@ -43,10 +43,21 @@ test("결과 화면의 상단바는 투명하고 지도가 맨 위까지 이어�
   await expect(page.getByRole("button", { name: "메뉴", exact: true })).toBeVisible();
 });
 
-test("계획 이름은 눌러야 연필이 나온다: 이름 → 연필 → 입력칸 → Enter 로 저장", async ({ page, request }) => {
+test("계획 이름은 눌러야 연필이 나온다: 이름 → 연필 → 입력칸 → Enter 로 저장 (`[2026-10-05]` 칩은 글자 길이만큼·왼쪽, 누르면 오른쪽으로 길어지고, 이름을 한 번 더 누르면 입력칸)", async ({ page, request }) => {
   const server = await openFinished(page, request);
   const pencil = page.getByRole("button", { name: /^계획 이름 바꾸기 · 지금 이름은 / });
   await expect(pencil).toHaveCount(0);                                                              // 평소에는 연필이 없다
+  const chip = page.locator("[class*=headInfo]");
+  const bar = (await page.locator("header[class*=header]").first().boundingBox())!;
+  const rest = (await chip.boundingBox())!;
+  expect(rest.width).toBeLessThan(bar.width * 0.5);                                                 // 한 줄을 다 차지하지 않는다(글자 길이만큼)
+  expect(rest.x - bar.x).toBeLessThan(120);                                                         // 왼쪽(로고 바로 옆)에 있다
+  await page.getByRole("button", { name: /^계획 이름 · / }).click();
+  await expect(pencil).toBeVisible();
+  await expect.poll(async () => (await chip.boundingBox())!.width).toBeGreaterThan(rest.width);     // 누르면 오른쪽으로 길어진다
+  await page.getByRole("button", { name: /^계획 이름 · / }).click();                                // 이름을 한 번 더 누르면 바로 입력칸(키보드)
+  await expect(page.getByRole("textbox", { name: "계획 이름" })).toBeFocused();
+  await page.getByRole("textbox", { name: "계획 이름" }).press("Escape");
   await page.getByRole("button", { name: /^계획 이름 · / }).click();
   await expect(pencil).toBeVisible();
   await pencil.click();
@@ -88,10 +99,10 @@ test("시트를 끝까지 내리면 머리·날짜 칩·목록을 모두 접고 
 
 // ── 카드 · 이동 줄 ─────────────────────────────────────────────────────────────
 
-test("이동 줄은 시간과 거리만 말한다(수단은 아이콘) — 같은 말이 두 번 나오지 않고, 통과한 구간에는 체크가 붙지 않는다", async ({ page, request }) => {
+test("이동 줄은 수단 · 시간 · 거리 · 여유를 한 줄에 말한다(`[2026-10-05 사용자 지시]` 수단 이름을 다시 보인다) — 같은 말이 두 번 나오지 않고, 통과한 구간에는 체크가 붙지 않는다", async ({ page, request }) => {
   await openFinished(page, request);
   const second = page.getByRole("button", { name: /지하철 1호선.*16분 · 1\.5km/ });
-  await expect(second.locator("span[class*=moveText]")).toHaveText("16분 · 1.5km");                   // 눈에 보이는 말은 이것뿐(수단 이름은 화면 읽기용으로만 있다)
+  await expect(second.locator("span[class*=moveText]")).toHaveText("지하철 1호선 16분 · 1.5km");       // 눈에 보이는 말: 수단 이름도 함께(화면 읽기용 글자는 따로 두지 않는다)
   await expect(second.getByRole("img")).toHaveCount(0);                                              // 통과(✓)는 표시하지 않는다
   const first = page.getByRole("button", { name: /지하철 3호선.*9분 · 0\.6km/ });
   await expect(first.getByRole("img", { name: "확인 필요" })).toBeVisible();                           // 봐야 하는 구간만 표시한다
@@ -319,10 +330,10 @@ test("지도에 「모든 일정 보기」 단추가 확대·축소 단추 옆�
   const before = (await first.boundingBox())!;
   const map = page.getByRole("region", { name: "여행 지도" });
   await map.hover({ position: { x: 200, y: 100 } });                                              // 단추는 지도에 포인터가 있을 때 보인다
-  const zoom = page.locator(".leaflet-control-zoom");
+  const zoom = page.getByRole("group", { name: "지도 단추" });
   await expect(zoom.getByRole("button", { name: "모든 일정 보기" })).toBeVisible();                   // 확대·축소와 같은 묶음 안
-  await zoom.getByRole("button", { name: "Zoom in" }).click();
-  await zoom.getByRole("button", { name: "Zoom in" }).click();
+  await zoom.getByRole("button", { name: "확대" }).click();
+  await zoom.getByRole("button", { name: "확대" }).click();
   await expect.poll(async () => Math.abs((await first.boundingBox())!.x - before.x)).toBeGreaterThan(20);   // 확대하니 핀이 제자리에서 멀어졌다
   await zoom.getByRole("button", { name: "모든 일정 보기" }).click();
   await expect.poll(async () => { const now = (await first.boundingBox())!; return Math.abs(now.x - before.x) + Math.abs(now.y - before.y); }, { timeout: 8_000 }).toBeLessThan(4);   // 처음 자리로
@@ -342,8 +353,13 @@ const fieldsOf = (body: { edits: { field: string; value: unknown }[] }) => Objec
 test("일정 사이 간격은 비는 시간만큼 벌어지고, 15분 넘게 비면 「여유 N분」을 한 번 연하게 적는다", async ({ page, request }) => {
   await openFinished(page, request);
   await expect(page.getByText("여유 21분")).toBeVisible();                                            // 경복궁 → 올리브영: 11:00 − (10:30 + 이동 9분) = 21분
+  // `[2026-10-05 사용자 지시]` 한 줄에 다 보인다: 「지하철 3호선 9분 · 0.6km」와 「여유 21분」이 같은 줄(같은 높이)에 있고, 시간은 자기 원과 같은 줄에 있다
+  const move = page.locator("li[data-type=move]").first();
+  const textBox = (await move.locator("[class*=moveText]").boundingBox())!, freeBox = (await move.getByText("여유 21분").boundingBox())!;
+  expect(Math.abs((textBox.y + textBox.height / 2) - (freeBox.y + freeBox.height / 2))).toBeLessThan(3);
+  await expect(move.locator("[class*=moveText]")).toContainText("지하철 3호선");
   await expect(page.getByText(/^여유 /)).toHaveCount(1);                                              // 올리브영 → 광장시장은 14분이라 말은 없다(간격만)
-  const spaces = await page.locator("p[class*=free]").evaluateAll((elements) => elements.map((element) => Math.round(element.getBoundingClientRect().height)));
+  const spaces = await page.locator("div[class*=freeGap]").evaluateAll((elements) => elements.map((element) => Math.round(element.getBoundingClientRect().height)));
   expect(spaces[0]).toBeGreaterThanOrEqual(15);                                                        // 21분이면 기본 간격(14px)에 더해 19px 가량 더 벌어진다
 });
 

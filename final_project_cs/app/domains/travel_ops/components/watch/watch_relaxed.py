@@ -42,12 +42,13 @@ def enabled() -> bool:
     return bool(settings_module.get_guardrails().get("travel.watch.relaxed_enabled"))   # ★호출 때 읽는다 — 시험이 바꿔 끼운 값을 따른다
 
 
-def ledger_states(conn, tenant_id: str) -> Callable[[list[dict[str, Any]]], Any]:
+def ledger_states(conn, tenant_id: str) -> Callable[[list[dict[str, Any]]], Any] | None:
     """식사 후보의 시간대별 원장 판정 — 감시 · 신고 창구가 쓰는 것과 같다(`trip_desk.TripDesk._dining_states`).
-    ★`[2026-10-05]` 전에는 원장 가게를 공용 장소로 올려 두고 `DbLedgerView` 로 물었다 — 요식 정본을 하나로 하려고 팀 방식(`dining_states`)을 쓴다."""
-    from app.domains.travel_ops.instances.dining.ledger import dining_states
+    ★`[2026-10-05]` 전에는 원장 가게를 공용 장소로 올려 두고 `DbLedgerView` 로 물었다 — 요식 정본을 하나로 하려고 팀 방식을 쓴다.
+    ★`[2026-10-06]` 요식 팀을 직접 부르지 않는다 — 팀이 조립 때 꽂은 자리가 준다. **팀이 없으면 `None`**(판정 없이 간다)."""
+    from app.domains.travel_ops.components.team_hooks import dining_ledger
 
-    return lambda slots: dining_states(conn, tenant_id, slots)
+    return dining_ledger.state_lookup(conn, tenant_id)
 
 
 def verified_options(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]], current: Item,
@@ -121,9 +122,9 @@ def offer_relaxed(conn, *, store: Any, trip_id: UUID, item_id: UUID, causes: lis
     if current.kind == "dining" and use_ledger:
         # ★`[2026-10-05]` 식사는 근처 원장 가게를 그 여행 전용으로 들여놓고(`dining.nearby`) 원장 판정으로 후보를 계산한다 —
         #   고객 요청 길(`TripDesk`)과 같다. 들이지 못하면 예전 목록 그대로(`add_nearby` 가 경고 로그를 남긴다)
-        from app.domains.travel_ops.instances.dining import nearby
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
 
-        more = nearby.add_nearby(conn, store, trip_id, [current], all_places)
+        more = dining_ledger.add_nearby(conn, store, trip_id, [current], all_places)
         if more is not all_places:
             all_places = more
             candidates = unused_places(all_places, items, current)

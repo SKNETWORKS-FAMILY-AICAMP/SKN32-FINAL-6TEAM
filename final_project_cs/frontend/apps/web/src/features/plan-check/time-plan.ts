@@ -278,3 +278,103 @@ export function settledAfter<T extends TimedStop>(stops: readonly T[], changes: 
     return change ? { ...stop, start: change.start, end: change.end } : stop;
   });
 }
+
+// ---------------------------------------------------------------------------------------------------------------------------------
+// Free time first, then pushing: the stop at the end of the free time, and moving the END of a stop (the time of leaving)
+// ---------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ * `[2026-10-05 사용자 지시]` A drag that reaches the end of the free time (so far nobody else is pushed) is held there for this many more minutes of dragging; only a drag
+ * that goes on past it pushes the stops behind (or in front). The stop has a place the finger can feel, and the screen says once that the free time is used up.
+ */
+export const DETENT_MINUTES = 10;
+
+/** Which end of the free time a drag is being held at: `"max"` = the later end, `"min"` = the earlier end, null = not held. */
+export type Held = "min" | "max" | null;
+
+/**
+ * Where a drag lands: free inside `own` (the range that moves nobody), held at its end for `DETENT_MINUTES` of further dragging, then on into `reach` (the range that may push).
+ * With nothing to push into (`reach` ends where `own` ends) it is simply the end of the range.
+ */
+export function holdAtLimit(wanted: number, own: TimeRange, reach: TimeRange): { value: number; held: Held } {
+  if (wanted > own.max) {
+    if (reach.max <= own.max) return { value: own.max, held: null };
+    const over = wanted - own.max;
+    return over <= DETENT_MINUTES ? { value: own.max, held: "max" } : { value: Math.min(reach.max, own.max + over - DETENT_MINUTES), held: null };
+  }
+  if (wanted < own.min) {
+    if (reach.min >= own.min) return { value: own.min, held: null };
+    const over = own.min - wanted;
+    return over <= DETENT_MINUTES ? { value: own.min, held: "min" } : { value: Math.max(reach.min, own.min - over + DETENT_MINUTES), held: null };
+  }
+  return { value: wanted, held: null };
+}
+
+/** What moving the END of one stop does (see `moveEnd`). */
+export interface EndMove { end: number; changes: Retime[]; clamped: boolean; min: number; max: number }
+
+/**
+ * The END times a stop can have - the time the traveller leaves for the next place (`withTimes` draws the leg's departure at `start + length`). `own` moves nobody: from one step
+ * after the start to the next stop's start minus the travel (the day's end for the last stop); `reach` lets the stops after it be pushed, but never across a `fixed` stop or out
+ * of the day. A `fixed` stop keeps its end. Both are snapped inwards to `step`, and a stop already standing outside keeps its own place in them (see `inwards`).
+ */
+export function endRanges(stops: readonly TimedStop[], legs: readonly TimedLeg[], index: number, step: number = SNAP): { own: TimeRange; reach: TimeRange } {
+  const stop = stopAt(stops, index);
+  const current = stop.start + occupancy(stop);
+  if (stop.fixed) return { own: { min: current, max: current }, reach: { min: current, max: current } };
+  const leg = legLookup(legs);
+  const next = stops[index + 1];
+  const min = stop.start + step;
+  const ownMax = next ? next.start - leg(stop.id, next.id) : DAY_END;
+  let packedAfter = 0;
+  let ceiling = DAY_END;
+  for (let k = index + 1; k < stops.length; k++) {
+    packedAfter += leg(stops[k - 1].id, stops[k].id);
+    if (stops[k].fixed) { ceiling = stops[k].start; break; }
+    packedAfter += occupancy(stops[k]);
+  }
+  return { own: inwards(min, ownMax, current, step), reach: inwards(min, ceiling - packedAfter, current, step) };
+}
+
+/**
+ * Move the END of stop `index` (leave later or earlier). Leaving later uses the free time first: nothing else moves while `end` is inside `own`; past it each stop behind is pushed
+ * to exactly the time it would need (start + length + travel of the one in front), one after the other, until a stop is not hit - the same push as `moveStop`. Leaving earlier
+ * only makes the free time longer. `changes` has the stop itself first (its start unchanged, its new end) and then the pushed ones in day order.
+ */
+export function moveEnd(
+  stops: readonly TimedStop[],
+  legs: readonly TimedLeg[],
+  index: number,
+  wantedEnd: number,
+  options: { push?: boolean; step?: number } = {},
+): EndMove {
+  const stop = stopAt(stops, index);
+  const step = options.step ?? SNAP;
+  const { own, reach } = endRanges(stops, legs, index, step);
+  const range = options.push === false ? own : reach;
+  const current = stop.start + occupancy(stop);
+  if (!Number.isFinite(wantedEnd)) return { end: current, changes: [], clamped: false, min: range.min, max: range.max };
+  const wanted = snap(wantedEnd, step);
+  const end = Math.min(range.max, Math.max(range.min, wanted));
+  const clamped = end !== wanted;
+  if (end === current) return { end, changes: [], clamped, min: range.min, max: range.max };
+
+  const leg = legLookup(legs);
+  const starts = stops.map((s) => s.start);
+  const lengths = stops.map((s) => occupancy(s));
+  lengths[index] = end - stop.start;
+  if (end > current) {
+    for (let k = index + 1; k < stops.length; k++) {
+      const earliest = starts[k - 1] + lengths[k - 1] + leg(stops[k - 1].id, stops[k].id);
+      if (starts[k] >= earliest) break;
+      starts[k] = earliest;
+    }
+  }
+  const changes: Retime[] = [{ id: stop.id, start: stop.start, end }];
+  stops.forEach((s, k) => {
+    if (k === index) return;
+    const shift = starts[k] - s.start;
+    if (shift !== 0) changes.push({ id: s.id, start: starts[k], end: s.end === null ? null : s.end + shift });
+  });
+  return { end, changes, clamped, min: range.min, max: range.max };
+}

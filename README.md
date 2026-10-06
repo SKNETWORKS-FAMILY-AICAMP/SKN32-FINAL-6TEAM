@@ -101,7 +101,7 @@ flowchart TB
 | Presentation | REST, MCP, A2A, 운영 UI, 인증 경계 | `final_project_cs/app/presentation/` |
 | Application | Case 접수·분류·라우팅·Controller·배치 | `final_project_cs/app/application/` |
 | Core/Domain | 계약, 상태 전이, Registry, 멱등성, 안전 규칙 | `final_project_cs/app/core/`, `app/domain/` |
-| Teams | 여행 도메인 판정과 제안 | `final_project_cs/app/modules/travel_ops/` |
+| Teams | 여행 도메인 판정과 제안 | `final_project_cs/app/domains/travel_ops/` |
 | Infrastructure | PostgreSQL, pgvector, 외부 API, LLM, outbox | `final_project_cs/app/infrastructure/` |
 | Knowledge | 정책 원문, manifest, ingest | `final_project_cs/knowledge/` |
 
@@ -154,11 +154,11 @@ Team은 허용된 read tool만 사용하고, 외부 시스템에 직접 쓰지 �
 | 외부 연동 | `httpx` 0.28.1 기반 여행 데이터 어댑터, 소스별 rate limit |
 | Graph | PostgreSQL Recursive CTE 기반 `SqlGraphAdapter`(별도 Graph DB 없음) |
 | 운영 화면 | FastAPI server-rendered HTML/CSS/vanilla JavaScript, 별도 `final_project_ui` 개발 콘솔 |
-| 평가 | NumPy 2.2.1, SciPy 1.15.1, scikit-learn 1.6.1 |
-| 품질 | pytest 7.4.4, pytest-asyncio 0.25.2, 계약·단위·통합·아키텍처·e2e 테스트 |
+| 평가 | NumPy 1.26.4, SciPy 1.13.1, scikit-learn 1.5.2 |
+| 품질 | pytest 8.4.2, pytest-asyncio 0.25.2, ruff 0.16.8, 계약·단위·통합·아키텍처·e2e 테스트 |
 | 설정/폼 | PyYAML, python-dotenv, python-multipart |
 
-> `requirements.txt`에 선언된 SQLAlchemy·Alembic·LangGraph·LangChain Core는 현재 제품 소스에서 import·사용되지 않으므로 구현 완료 스택으로 표기하지 않습니다. 실제 도입 시 사용 범위와 문서를 함께 갱신합니다.
+> `requirements.txt`에 선언된 SQLAlchemy·Alembic·LangChain Core(LangGraph 줄은 2026-10-03 에 뺐습니다)는 현재 제품 소스에서 import·사용되지 않으므로 구현 완료 스택으로 표기하지 않습니다. 실제 도입 시 사용 범위와 문서를 함께 갱신합니다.
 
 ## 로컬 실행
 

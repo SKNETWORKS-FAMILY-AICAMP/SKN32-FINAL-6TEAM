@@ -123,25 +123,27 @@ export function Onboarding() {
     return () => document.removeEventListener("keydown", escape);
   }, [opened, termsOpen, setState]);
 
-  const markRead = useCallback(() => setState((current) => !readerCode || current.readDocs[readerCode] ? current : { ...current, readDocs: { ...current.readDocs, [readerCode]: true } }), [setState, readerCode]);
-
-  /** Tick or untick one item. A required item can be ticked only after its full text was read to the end. */
+  /** Tick or untick one item (`[2026-10-05 사용자 지시]` a required item too, at once - the full text is in the card, and 「전문 보기」 only enlarges it). */
   function toggle(code: ConsentCode, checked: boolean) {
-    const doc = termsDoc(code);
-    if (checked && doc?.required && !state.readDocs[code]) return;
     setState((current) => ({ ...current, choices: { ...current.choices, [code]: checked }, open: 1 }));
     setConsentMotion(checked);
     feedback(checked ? "complete" : "soft");
   }
 
-  /** 「동의하고 다음으로」: this press is what records the consent (the browser's copy at once, the server's record right behind it). */
+  /**
+   * 「동의하고 다음으로」: this press is what records the consent (the browser's copy at once, the server's record right behind it).
+   * ★`[2026-10-06 사용자 지시]` The first agreement goes straight on to registering a plan — the preference survey is no longer part of the first run
+   *   (it stays here as the third card, opened from the menu / My page). A customer who already agreed and only changes their boxes stays on this screen.
+   */
   function continueTerms() {
     if (!requiredAgreed(state.choices)) return;
+    const firstAgreement = !state.agreed;
     void saveConsents(state.choices, language);
     flushWebhook(state.choices.alert_channel);
+    feedback("complete");
+    if (firstAgreement) { router.push(routes.newTrip); return; }
     setState((current) => ({ ...current, open: 2 }));
     setSceneStage(2);
-    feedback("complete");
   }
 
   function closeTerms() {
@@ -188,7 +190,7 @@ export function Onboarding() {
                 onWebhook={editWebhook} onContinue={() => openCard(1)} />)}
             {card(1, state.agreed,
               cardHead(1, t("약관 동의", "Terms & consent"), state.agreed ? t("필수 내용을 확인했어요.", "Required consent completed.") : t("시작하기 전에 확인해 주세요.", "A quick check before you begin."), false, state.agreed),
-              <TermsCardBody t={t} choices={state.choices} readDocs={state.readDocs} consentMotion={consentMotion} alertTyped={Boolean(state.webhook.trim())}
+              <TermsCardBody t={t} choices={state.choices} consentMotion={consentMotion} alertTyped={Boolean(state.webhook.trim())}
                 onReadDoc={setReaderCode} onToggle={toggle} onContinue={continueTerms} />)}
             {card(2, state.complete,
               cardHead(2, t("여행 취향 알아보기", "Your travel preferences"), state.complete ? t(`${questions.length}가지 질문을 모두 마쳤어요.`, `All ${questions.length} questions completed.`) : t(`${questions.length}가지 질문으로 더 나다운 여행.`, `${questions.length} questions for a trip that fits you.`), !state.agreed, state.complete),
@@ -204,7 +206,7 @@ export function Onboarding() {
           <footer className={styles.bottomNote} inert={expanded}><span className={styles.leaf}><OnboardingIcon name="leaf" size={17} /></span>{t("정답은 없어요. 당신이 좋아하는 여행이면 충분해요.", "There’s no right answer. Just the journey you love.")}</footer>
         </main>
       </div>
-      {readerCode && termsDoc(readerCode) && <TermsReader t={t} doc={termsDoc(readerCode)!} read={Boolean(state.readDocs[readerCode])} agreed={state.choices[readerCode]} onRead={markRead} onClose={closeTerms}
+      {readerCode && termsDoc(readerCode) && <TermsReader t={t} doc={termsDoc(readerCode)!} agreed={state.choices[readerCode]} onClose={closeTerms}
         onAgree={(checked) => { const code = readerCode; toggle(code, checked); if (checked) { setReaderCode(null); requestAnimationFrame(() => document.getElementById(`consent-${code}`)?.focus({ preventScroll: true })); } }} />}
       <div className="sr-only" aria-live="polite">{message}</div>
     </div>

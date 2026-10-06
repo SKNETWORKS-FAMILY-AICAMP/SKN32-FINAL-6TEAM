@@ -96,6 +96,25 @@ class StubChat:
     KEYS: dict[str, set[str]] = {"activity": set(), "dining": set()}
 
 
+@pytest.fixture(autouse=True)
+def _plan_without_the_dining_ledger(monkeypatch):
+    """★`[2026-10-06]` 이 파일은 **자기가 심은 장소만** 써야 한다 — 요식 원장을 끈다.
+
+    요식 원장(`dining.dn_place`)은 테넌트와 무관한 **공용 표**다. 그래서 「자기 테넌트에 자기
+    장소를 심는다」는 이 파일의 격리가 원장에는 통하지 않았다 — 원장 자료를 넣은 컴퓨터에서는
+    후보가 12곳이 아니라 1,778곳이 되어 하루 항목 수 · 고른 식당 · 후보 수를 보는 시험 10건이
+    **그 컴퓨터에서만** 붉었다(2026-10-06 실측: 이 PC 의 개발 DB 에 가게 1,766곳). CI 처럼 원장이
+    빈 DB 에서는 통과해서, **컴퓨터마다 결과가 다른 시험**이었다.
+
+    이 파일이 보는 여섯 가지(판정기 통과 · 선호 반영 · 후보 부족 거절 · 모델 없이도 동작 ·
+    중복 등록 · 목록 밖 값 버리기)는 원장과 무관하다. 원장을 쓰는 길은 다른 시험이 본다
+    (`tests/unit/travel/test_dining_*`). 켠 채로 보고 싶으면 이 fixture 를 빼고 돌린다.
+    """
+    from app.domains.travel_ops.entry import trip_api
+
+    monkeypatch.setattr(trip_api, "_planner_ledger", lambda conn: None)
+
+
 @pytest.fixture()
 def api(monkeypatch):
     original = settings_module.get_settings()

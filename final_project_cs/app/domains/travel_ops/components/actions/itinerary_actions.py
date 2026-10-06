@@ -45,6 +45,7 @@ from app.core.transition import OutboxMessage
 from app.domains.travel_ops.components.itinerary.itinerary import Item, StaleItinerary, TripStore, item_from_dict, item_to_dict
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, refresh_moves_around
 from app.domains.travel_ops.components.itinerary.itinerary_checks import Violation, check_itinerary, parts_from_items
+from app.domains.travel_ops.components.planning import guardian
 from app.domains.travel_ops.components.planning.pending import PendingStore, decide, options_for, proposal_notice
 
 ACTION_TYPE = "itinerary.apply"
@@ -232,9 +233,11 @@ def _open_ask(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id: UU
                       "safety": decision.safety})
     outbox = [] if already else [OutboxMessage(
         topic=NOTICE_TOPIC, dedupe_key=f"{trip_id}:proposal:{proposal_id}",
-        payload=_plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
-                        **proposal_notice(item=item, decision=decision, causes=causes,
-                                          options=options, proposal_id=proposal_id)}))]
+        # ★`[2026-10-06]` 꺼 둔 사용자에게 「다른 안」을 보낼 때는 「항로 지킴이 켜기」를 같이 싣는다(`planning/guardian.annotate`)
+        payload=_plain(guardian.annotate(
+            {"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
+             **proposal_notice(item=item, decision=decision, causes=causes, options=options, proposal_id=proposal_id)},
+            constraints=trip.get("constraints"), trip_id=trip_id)))]
     return summary, outbox
 
 
@@ -250,6 +253,8 @@ def _version_notice(*, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, v
              else {"rollback": rollback_offer(version=version, previous=base)})
     payload = _plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
                       **dict(arguments.get("notice") or {}), "version": version, **offer})
+    # ★`[2026-10-06]` 항로 지킴이가 켜져 있으면 「항로 지킴이가 바꿨어요」 표시를 싣는다(`planning/guardian.annotate` — 시나리오용 여행 버전과 같은 규칙)
+    payload = _plain(guardian.annotate(payload, constraints=trip.get("constraints"), trip_id=trip_id))
     return OutboxMessage(topic=NOTICE_TOPIC, payload=payload, dedupe_key=f"{trip_id}:v{version}")
 
 

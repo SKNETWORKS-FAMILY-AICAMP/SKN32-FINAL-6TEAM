@@ -106,12 +106,11 @@ def refresh_moves_around(before: list[Item], after: list[Item], replacements: di
     """
     from app.domains.travel_ops.components.planning.replan import distance_m, walk_minutes
     olds = {i.item_id: i for i in before}
-    # 「옛 경로를 둘 수 있는 거리」 = 이동 계산기의 도보 상한(guardrails mobility.limits.walk_m.default) — 새 수치를 만들지 않는다
-    from app.domains.travel_ops.instances.mobility.engine.guardrails import GuardrailMissing, lookup
-    try:
-        keep_m = float(lookup("mobility.limits.walk_m.default"))
-    except GuardrailMissing:
-        keep_m = 0.0                                     # 못 읽으면 늘 어림값으로(보수적)
+    # 「옛 경로를 둘 수 있는 거리」 = 이동 계산기의 도보 상한 — 새 수치를 만들지 않는다
+    # ★`[2026-10-06]` 이동 팀의 가드레일 파일을 직접 읽지 않는다. 팀이 조립 때 꽂은 자리가 준다(D-CS-013)
+    from app.domains.travel_ops.components.team_hooks import legs
+    limit = legs.walk_limit_m()
+    keep_m = 0.0 if limit is None else limit              # 못 읽으면 늘 어림값으로(보수적)
 
     def moved_far(old_id: UUID, new: Item) -> bool:
         a, b = _leg_place(olds[old_id]) if old_id in olds else None, _leg_place(new)
@@ -134,8 +133,8 @@ def refresh_moves_around(before: list[Item], after: list[Item], replacements: di
                     targets[j] = targets.get(j, False) or far_of_new[it.item_id]
     if not targets:
         return after
-    from app.domains.travel_ops.instances.mobility.wiring import leg_planner
-    engine = leg_planner(None, {})
+    from app.domains.travel_ops.components.team_hooks import legs
+    engine = legs.leg_planner(None, {})
     fresh: dict[UUID, Item] = {}
     for j, far in sorted(targets.items()):
         move = seq_sorted[j]
@@ -521,13 +520,13 @@ def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None
     """저장된 후보가 다 막혔을 때 이동 계산기로 사고를 피하는 새 경로를 찾는다. 못 찾으면 None(종전 unresolved)."""
     if previous is None or following is None:
         return None
-    from app.domains.travel_ops.instances.mobility import wiring
+    from app.domains.travel_ops.components.team_hooks import legs
     from app.domains.travel_ops.components.planning.replan import Candidate
     a, b = _leg_place(previous), _leg_place(following)
     if a is None or b is None:
         return None
-    disruptions, unmapped = wiring.disruptions_from_events(events)
-    leg = wiring.leg_planner(None, {}, disruptions=disruptions)
+    disruptions, unmapped = legs.disruptions_from_events(events)
+    leg = legs.leg_planner(None, {}, disruptions=disruptions)
     if leg is None:
         return None
     start_floor = max(now, previous.ends_at or previous.starts_at)

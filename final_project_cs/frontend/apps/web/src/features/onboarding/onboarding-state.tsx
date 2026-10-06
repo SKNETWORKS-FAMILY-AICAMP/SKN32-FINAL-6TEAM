@@ -2,13 +2,12 @@
 
 import { createContext, useContext, useEffect, useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import { z } from "zod";
-import { noConsents, type ConsentCode, type ConsentMap } from "@/features/consent/consent-model";
+import { noConsents, type ConsentMap } from "@/features/consent/consent-model";
 import { readConsents, useRequiredConsents } from "@/features/consent/consent-store";
 import { initialAnswers, INTRO_STEP, questions, type Answers } from "./model";
 
 export interface OnboardingState {
   /** The documents whose full text was scrolled to the end on this page (page state only - the proof of a consent is the server's record, not this). */
-  readDocs: Partial<Record<ConsentCode, boolean>>;
   /**
    * ★`[2026-10-05]` Derived, never stored here: the required consents (service terms, personal data) are on record for the CURRENT terms version
    * (`features/consent/consent-store.ts`). A newer terms version makes this false again, so the customer is asked once more.
@@ -28,7 +27,7 @@ export interface OnboardingState {
   answers: Answers;
 }
 
-const initial: OnboardingState = { readDocs: {}, agreed: false, choices: noConsents(), open: null, webhook: "", step: INTRO_STEP, complete: false, answers: initialAnswers };
+const initial: OnboardingState = { agreed: false, choices: noConsents(), open: null, webhook: "", step: INTRO_STEP, complete: false, answers: initialAnswers };
 const Context = createContext<[OnboardingState, Dispatch<SetStateAction<OnboardingState>>] | null>(null);
 const ReadyContext = createContext(false);
 

@@ -2,7 +2,8 @@ import { translator, type Language, type Translate } from "../i18n";
 
 /** A refusal from the live server — its own code (`stale_revision`, `intake_incomplete` …) and body. */
 export class LiveError extends Error {
-  constructor(public readonly code: string, message: string, public readonly detail?: unknown) {
+  /** `[2026-10-05]` `status` = the HTTP status of the refusal (absent when there was no answer: offline, timed out). */
+  constructor(public readonly code: string, message: string, public readonly detail?: unknown, public readonly status?: number) {
     super(message);
     this.name = "LiveError";
   }
@@ -150,7 +151,7 @@ export async function refusal(response: Response, language: Language): Promise<L
     const seconds = Number((detail as { retry_after_seconds?: unknown } | undefined)?.retry_after_seconds ?? response.headers.get("Retry-After"));
     if (Number.isFinite(seconds) && seconds > 0) message = `${message} ${waitText(seconds, t)}`;
   }
-  return new LiveError(code, message, detail);
+  return new LiveError(code, message, detail, response.status);
 }
 
 /** 「3시간 20분 뒤에 다시 할 수 있어요」 — whole minutes, rounded up. */

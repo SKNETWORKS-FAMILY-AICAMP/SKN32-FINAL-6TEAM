@@ -537,12 +537,11 @@ def _decision_mode(chat: Any, tenant: str | None = None) -> str:
     # ★YAML 은 따옴표 없는 on/off 를 참/거짓으로 읽는다 — 그래서 한 번 꺼진 채로 돌았다(2026-09-29 실서버)
     mode = {True: "on", False: "off"}.get(raw, str(raw or "off")) if isinstance(raw, bool) else str(raw or "off")
     if tenant:
-        try:
-            from app.domains.travel_ops.modules.web_account import web_guard
+        # ★`[2026-10-06]` 전에는 웹 남용 방어 설정 표를 직접 읽었다(D-CS-013 칸끼리 규칙 위반) —
+        #   운영자 조정값을 **주는 쪽**이 조립 때 꽂는다. 아무도 안 꽂으면 가드레일 기본값 그대로.
+        from app.domains.travel_ops.components.settings_hook import operator_setting
 
-            mode = str(web_guard.values(tenant).get("chat.decision_mode") or mode)
-        except Exception:                               # noqa: BLE001 — 설정 표를 못 읽으면 가드레일 기본값
-            pass
+        mode = str(operator_setting(tenant, "chat.decision_mode") or mode)
     return mode if mode in ("off", "shadow", "on") else "off"
 
 
@@ -838,9 +837,11 @@ def _answer_here(conn, *, kind: str, fix: Any, trip: dict[str, Any], items: list
         if dest is None:
             text = "어느 곳까지 가는 길을 알려 드릴까요? 일정에 있는 곳 이름을 말씀해 주세요."
         else:
-            from app.domains.travel_ops.instances.mobility.wiring import leg_planner
+            # ★`[2026-10-06]` 이동 팀을 직접 부르지 않는다 — 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013)
+            from app.domains.travel_ops.components.team_hooks import legs
 
-            text = trip_here.route_here(fix, dest, now=at, leg=leg_planner(trip.get("party_size"), trip.get("constraints")))
+            text = trip_here.route_here(fix, dest, now=at,
+                                        leg=legs.leg_planner(trip.get("party_size"), trip.get("constraints")))
     else:
         from app.domains.travel_ops.components.itinerary.itinerary_changes import plan_nearby
 
@@ -862,17 +863,13 @@ def _answer_here(conn, *, kind: str, fix: Any, trip: dict[str, Any], items: list
             #   ★반경은 1.5km 까지만 들여놓는다(3km 는 한 번에 수백~수천 곳이라 여행 전용 장소 표를 부풀린다 · 우리가 고른 값).
             from types import SimpleNamespace
 
-            from app.domains.travel_ops.instances.dining import nearby
-            from app.domains.travel_ops.instances.dining.ledger import dining_states
+            # ★`[2026-10-06]` 요식 팀을 직접 부르지 않는다 — 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013)
+            from app.domains.travel_ops.components.team_hooks import dining_ledger
 
-            places = nearby.add_nearby(conn, store, trip_id,
-                                       [SimpleNamespace(kind="dining", place=fix.as_origin())], places,
-                                       radius_m=NEARBY_HERE_RADIUS_M)
-
-            def here_states(slots: list[dict[str, Any]]) -> Any:
-                return dining_states(conn, store.tenant_id, slots)
-
-            state_lookup = here_states
+            places = dining_ledger.add_nearby(conn, store, trip_id,
+                                              [SimpleNamespace(kind="dining", place=fix.as_origin())], places,
+                                              radius_m=NEARBY_HERE_RADIUS_M)
+            state_lookup = dining_ledger.state_lookup(conn, store.tenant_id)
         found, radius, sought = plan_nearby(wanted, trip=trip, places=places, origin=fix.as_origin(), at=at,
                                             state_lookup=state_lookup)
         text = trip_here.nearby(kind, fix, found=found, radius_m=radius, sought=sought)

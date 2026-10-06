@@ -35,10 +35,10 @@ from app.infrastructure.notify import telegram as telegram_client
 from app.infrastructure.notify.discord import DiscordWebhook, NoticeNotConfigured, RetryAfter
 from app.infrastructure.notify.phrase import PhraseCache
 from app.infrastructure.notify.suppressed import NoticeSuppressed
-from app.domains.travel_ops.modules.web_account import consents
-from app.domains.travel_ops.modules.web_account import customer_profile
+from app.domains.travel_ops.components.customer import consents
+from app.domains.travel_ops.components.customer import profile as customer_profile
 from app.domains.travel_ops.components.watch import notice_routing
-from app.domains.travel_ops.ports.notify_channels import telegram_connect
+from app.domains.travel_ops.modules.web_account import telegram_connect
 from app.domains.travel_ops.components.watch.notice_routing import CustomerNoticeRouter, trip_id_of
 
 from .test_trip_api import _create, api  # noqa: F401 — 픽스처를 그대로 쓴다

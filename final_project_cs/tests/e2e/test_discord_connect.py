@@ -30,8 +30,8 @@ import pytest
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
-from app.domains.travel_ops.modules.web_account import customer_profile as profile
-from app.domains.travel_ops.ports.notify_channels import discord_connect
+from app.domains.travel_ops.components.customer import profile
+from app.domains.travel_ops.modules.web_account import discord_connect
 from app.domains.travel_ops.modules.web_account import web_auth
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { IntakeItem, IntakeView } from "@/lib/live/intake";
-import { candidatesOf, readingOf, resultOf, sendingOf } from "./from-intake";
+import { assumedYear, candidatesOf, readingOf, resultOf, sendingOf } from "./from-intake";
 
 const field = (value: unknown) => ({ value, method: "rule" as const, evidence: {}, needs_review: false, note: null });
 const item = (index: number, line: number, day: number | null, fields: IntakeItem["fields"]): IntakeItem => ({ index, line, day, date: null, fields });
@@ -87,6 +87,14 @@ describe("plan check result, from an intake the server has read", () => {
     expect(view.items[2].checks).toEqual([{ kind: "time", result: "filled", text: "끝 시각이 없어 식사 1시간으로 채웠어요" }]);
     // Opening hours and closed days are not in the response: no such rows.
     expect(view.items.flatMap((entry) => entry.checks.map((check) => check.kind))).not.toContain("hours");
+  });
+
+  it("names the year the server only assumed (a date with no year), and nothing else: not a date the customer set, not a date with its year written", () => {
+    const assumed = { value: "2026-10-01", method: "rule" as const, evidence: { how: "year_filled" }, needs_review: true, note: "해를 2026년으로 두었어요" };
+    expect(assumedYear(read([item(0, 1, 1, { title: field("경복궁"), date: assumed })]))).toBe("2026");
+    expect(assumedYear(read([item(0, 1, 1, { title: field("경복궁"), date: { ...assumed, method: "customer" as const } })]))).toBeNull();     // the customer set it
+    expect(assumedYear(read([item(0, 1, 1, { title: field("경복궁"), date: { ...assumed, evidence: { line: 1 } } })]))).toBeNull();           // the year was written
+    expect(assumedYear(read([item(0, 1, 1, { title: field("경복궁") })]))).toBeNull();                                                         // no date at all
   });
 
   it("does not flag what the server only assumed (a year or a day it filled); a stop the customer changed counts as adjusted", () => {
