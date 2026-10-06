@@ -1,5 +1,6 @@
 # modules/mobility/bus.py — 시내버스 노선·정류장 조회 계층
-# 소스: processed/mobility/bus_route_v1.jsonl (18노선) · bus_stops_v1.jsonl (1,172행 · 고유 906)
+# 소스: processed/mobility/bus_route_v1.jsonl (717노선) · bus_stops_v1.jsonl (41,820행 · 고유 정류장 12,933 · 2026-10-06 실측)
+#   ☆옛 머리말은 「18노선 · 1,172행 · 고유 906」이었다 — 자료가 늘었는데 주석만 남아 있었다(그 숫자를 믿고 「버스 자료는 18노선뿐」이라고 잘못 말한 적이 있다).
 # 규칙: rules.bus
 #
 # ★ 버스는 지하철과 판정 구조가 다르다.
