@@ -283,6 +283,7 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
             "sources": out_sources, "check": check, "review": review, "review_error": review_error,
             # ★`[2026-10-06]` 로딩 중 질문 — 계획서만으로 알 수 없는 것만(쓰는 문항만, 최대 3). 답은 `POST …/survey` 로 한 문항씩 저장한다(`survey_answers.py`)
             "questions": survey_answers.questions(survey_answers.stored(conn, tenant_id=tenant_id, intake_id=intake_id)),
+            "questions_version": survey_answers.QUESTION_SET_VERSION,
             "needs_review": [{"field": c["field"], "value": c["value"], "note": c["note"],
                               "evidence": c["evidence"]} for c in claims if c["needs_review"]]}
 

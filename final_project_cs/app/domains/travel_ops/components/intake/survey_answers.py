@@ -12,6 +12,11 @@
   카드의 답을 접수에 실어 두었다가 등록 때 합치기 위해서다. 문항 목록(`questions[]`)에는 없다.
 ★답은 **고른 선택지 번호 그대로** `trip_intakes.survey` 에 둔다. 설문의 모양으로 바꾸는 것은 `to_survey` 한 곳이다.
 ★모르는 문항 · 모르는 선택지는 **거절**한다(422) — 조용히 흘리지 않는다.
+★`[2026-10-06 uiux 요청 · 맞춤 질문 의논 §7]` **문항 번호(`Question.id`)와 슬롯(`Question.slot` — 구조화 값이 들어가는 자리)은 다른 칸이다.** 선택지 번호 ↔ 구조화 값(`Option.value`)의 매핑은
+  **서버가 소유**한다 — 웹은 `questions[]` 만 그리고 뜻을 모른다. 문구를 바꿔도 문항 · 선택지 번호를 새로 만들지 않고 **같은 선택지 번호의 뜻을 바꾸지 않는다.**
+  뜻이 바뀌는 변경(값 매핑 · 선택지 추가/삭제 · 문항 추가/삭제)은 **`QUESTION_SET_VERSION` 을 올린다.**
+★저장할 때 그때의 묶음 버전 · 문구 · 라벨 · 슬롯 · 해석한 값을 `trip_intake_survey_answers` 에 남기고(053), **등록 때는 저장 때 해석한 값으로 설문을 만든다** — 묶음이 바뀐 뒤에도 옛 답이 새 매핑으로 잘못 읽히지 않는다.
+  이력이 없는 옛 답(053 이 안 올라간 DB)은 지금 묶음의 매핑으로 읽는다(경고를 남긴다).
 """
 from __future__ import annotations
 
@@ -28,26 +33,46 @@ log = logging.getLogger(__name__)
 MAX_QUESTIONS = 3
 
 
+#: 질문 묶음 버전 — 문구만 고치면 안 올린다. **선택지 목록 · 값 매핑 · 문항의 추가/삭제**처럼 답의 뜻이 달라지면 올린다(옛 답은 저장 때 해석한 값으로 남는다)
+QUESTION_SET_VERSION = "1"
+
+
+@dataclass(frozen=True)
+class Option:
+    id: str                    # 화면이 아는 선택지 번호 — 한 번 내보내면 뜻을 바꾸지 않는다
+    label: str                 # 화면에 보일 글
+    value: str                 # 서버가 소유하는 구조화 값(설문에 들어가는 코드). 번호와 우연히 같아도 다른 칸이다
+
+
 @dataclass(frozen=True)
 class Question:
-    id: str
+    id: str                    # 화면이 아는 문항 번호
+    slot: str                  # 구조화 값이 들어가는 자리(`to_survey` 가 안다)
     title: str
     why: str
-    #: (선택지 번호, 화면에 보일 글)
-    options: tuple[tuple[str, str], ...]
+    options: tuple[Option, ...]
+    kind: str = "single"
 
     def option_ids(self) -> tuple[str, ...]:
-        return tuple(option for option, _ in self.options)
+        return tuple(option.id for option in self.options)
+
+    def value_of(self, option_id: str) -> str | None:
+        return next((option.value for option in self.options if option.id == option_id), None)
 
 
 #: 묻는 문항 — 앞이 먼저 나간다. ★렌트카(`car`)는 이동 계산기가 아직 못 다뤄 선택지에 없다(`wiring.SURVEY_MODES`)
 QUESTIONS: tuple[Question, ...] = (
-    Question("preferred_mobility", "이동은 주로 어떻게 하세요?", "계획서만으로는 이동 방법을 알 수 없어서 여쭤요",
-             (("public", "대중교통"), ("taxi", "택시"), ("walk", "걷기 위주"))),
-    Question("priority", "일정이 바뀔 때 대체할 곳은 무엇을 먼저 볼까요?", "계획서만으로는 알 수 없어요",
-             (("activity", "하고 싶은 활동이 비슷한 곳"), ("mobility", "이동이 편한 곳"))),
+    Question("preferred_mobility", "preferred_mobility", "이동은 주로 어떻게 하세요?", "계획서만으로는 이동 방법을 알 수 없어서 여쭤요",
+             (Option("public", "대중교통", "public"), Option("taxi", "택시", "taxi"), Option("walk", "걷기 위주", "walk"))),
+    Question("priority", "priority", "일정이 바뀔 때 대체할 곳은 무엇을 먼저 볼까요?", "계획서만으로는 알 수 없어요",
+             (Option("activity", "하고 싶은 활동이 비슷한 곳", "activity"), Option("mobility", "이동이 편한 곳", "mobility"))),
 )
-_BY_ID = {question.id: question for question in QUESTIONS}
+
+
+def _by_id() -> dict[str, Question]:
+    """지금 묶음의 문항 번호 표 — 부를 때마다 만든다(시험이 묶음을 바꿔 끼운다)."""
+    return {question.id: question for question in QUESTIONS}
+
 
 #: 묻지는 않지만 같은 입구가 받는 값 — 항로 지킴이 카드(`on_disruption`) · 계획 담기 화면(`pace`)
 DIRECT: dict[str, tuple[str, ...]] = {
@@ -68,8 +93,9 @@ def check(answers: Mapping[str, Any]) -> dict[str, str]:
     """받은 답을 확인해 `{문항: 선택지 번호}` 로 돌려준다. 틀린 것이 하나라도 있으면 **전부 거절**한다(일부만 저장하지 않는다)."""
     problems: list[dict[str, str]] = []
     clean: dict[str, str] = {}
+    known = _by_id()
     for key, value in answers.items():
-        allowed = _BY_ID[key].option_ids() if key in _BY_ID else DIRECT.get(key)
+        allowed = known[key].option_ids() if key in known else DIRECT.get(key)
         if allowed is None:
             problems.append({"key": str(key), "reason": "모르는 문항이다"})
         elif not isinstance(value, str) or value not in allowed:
@@ -97,8 +123,8 @@ def questions(answers: Mapping[str, str]) -> list[dict[str, Any]]:
     """`GET /v1/web/trip-intakes/{id}` 의 `questions[]`. 이미 답한 문항도 **그대로 둔다**(`answer` 에 고른 번호) — 화면이 새로 고쳐져도 앞 질문으로 돌아가 고칠 수 있게.
 
     ★목록은 접수와 상관없이 같은 순서 · 같은 문항이다(문항이 답에 따라 사라지지 않는다) — 화면의 `i / N` 이 흔들리지 않는다."""
-    return [{"id": q.id, "kind": "single", "title": q.title, "why": q.why,
-             "options": [{"id": option, "label": label} for option, label in q.options],
+    return [{"id": q.id, "kind": q.kind, "title": q.title, "why": q.why,
+             "options": [{"id": option.id, "label": option.label} for option in q.options],
              "answer": answers.get(q.id)}
             for q in QUESTIONS[:MAX_QUESTIONS]]
 
@@ -121,33 +147,96 @@ def save(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, answers: M
         merged = {**{k: v for k, v in dict(row[1] or {}).items() if isinstance(v, str)}, **answers}
         cur.execute("UPDATE trip_intakes SET survey=%s::jsonb WHERE tenant_id=%s AND intake_id=%s",
                     (json.dumps(merged, ensure_ascii=False), tenant_id, intake_id))
+        _record(cur, tenant_id=tenant_id, intake_id=intake_id, answers=answers)
     return sorted(merged)
+
+
+def _record(cur, *, tenant_id: str, intake_id: UUID, answers: Mapping[str, str]) -> None:
+    """답 이력(053)에 **그때의 묶음 버전 · 문구 · 라벨 · 슬롯 · 해석한 값**을 남긴다. 같은 묶음 · 같은 선택지를 또 보낸 것(멱등 재전송)은 줄을 더하지 않는다."""
+    known = _by_id()
+    for key, option_id in answers.items():
+        slot, value = resolve(key, option_id) or (None, None)
+        if slot is None or value is None:                                # check() 를 지났으니 일어날 수 없다 — 일어나면 조용히 흘리지 않는다
+            raise ValueError(f"해석할 수 없는 답: {key}={option_id}")
+        cur.execute("SELECT option_id, bundle_version FROM trip_intake_survey_answers WHERE tenant_id=%s AND intake_id=%s AND question_id=%s "
+                    "ORDER BY seq DESC LIMIT 1", (tenant_id, intake_id, key))
+        last = cur.fetchone()
+        if last is not None and tuple(last) == (option_id, QUESTION_SET_VERSION):
+            continue
+        question = known.get(key)
+        label = next((o.label for o in question.options if o.id == option_id), None) if question else None
+        cur.execute("INSERT INTO trip_intake_survey_answers (tenant_id, intake_id, question_id, option_id, slot, value, question_text, option_label, bundle_version) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                    (tenant_id, intake_id, key, option_id, slot, value, question.title if question else None, label, QUESTION_SET_VERSION))
+
+
+def resolve(key: str, option_id: str) -> tuple[str, str] | None:
+    """지금 묶음에서 이 답이 **어느 슬롯의 어떤 값**인가 — `(슬롯, 값)`. 모르면 None. 직접 값(`on_disruption` · `pace`)은 이름이 슬롯이고 값은 그대로다."""
+    question = _by_id().get(key)
+    if question is not None:
+        value = question.value_of(option_id)
+        return None if value is None else (question.slot, value)
+    if key in DIRECT and option_id in DIRECT[key]:
+        return key, option_id
+    return None
+
+
+def stored_resolved(conn, *, tenant_id: str, intake_id: UUID) -> dict[str, tuple[str, str, str]]:
+    """문항마다 **저장 때 해석해 둔** 최신 답 `{문항: (선택지 번호, 슬롯, 값)}`. ★묶음이 바뀐 뒤에도 옛 답을 그때의 뜻으로 읽게 한다.
+    053 이 안 올라간 DB 는 빈 결과 + 경고(그러면 지금 묶음의 매핑으로 읽는다)."""
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT DISTINCT ON (question_id) question_id, option_id, slot, value FROM trip_intake_survey_answers "
+                        "WHERE tenant_id=%s AND intake_id=%s ORDER BY question_id, seq DESC", (tenant_id, intake_id))
+            return {key: (option, slot, value) for key, option, slot, value in cur.fetchall()}
+    except Exception:                                                  # noqa: BLE001
+        log.warning("intake survey answer history unreadable intake=%s (migration 053?)", intake_id, exc_info=True)
+        return {}
 
 
 class IntakeClosed(Exception):
     """이미 등록된 접수 — 답을 더할 수 없다."""
 
 
-def to_survey(answers: Mapping[str, str]) -> dict[str, Any]:
-    """모아 둔 답(`{문항: 선택지}`)을 설문(`TripSurvey`)의 조각으로. ★`version` 은 합칠 때 붙인다."""
+def _place(survey: dict[str, Any], slot: str, value: str) -> None:
+    """슬롯의 값을 설문(`TripSurvey`)의 자리에 둔다 — 슬롯이 어디로 가는지는 여기 한 곳이다."""
+    if slot == "preferred_mobility":
+        survey["priority_details"] = {"mobility": [value]}
+    elif slot == "priority":
+        survey["priority"] = [value]
+    elif slot in DIRECT:
+        survey[slot] = value
+    else:                                                              # 묶음이 모르는 슬롯 — 조용히 버리지 않는다
+        log.warning("intake survey answer for an unknown slot=%s", slot)
+
+
+def to_survey(answers: Mapping[str, str], resolved: Mapping[str, tuple[str, str, str]] | None = None) -> dict[str, Any]:
+    """모아 둔 답(`{문항: 선택지}`)을 설문(`TripSurvey`)의 조각으로. ★`version` 은 합칠 때 붙인다.
+
+    `resolved` = 저장 때 해석한 값(`stored_resolved`). 그 문항의 선택지가 지금 답과 같으면 **그것을 쓴다**(묶음이 바뀌어도 옛 뜻 그대로). 없으면 지금 묶음의 매핑."""
     out: dict[str, Any] = {}
-    if "preferred_mobility" in answers:
-        out["priority_details"] = {"mobility": [answers["preferred_mobility"]]}
-    if "priority" in answers:
-        out["priority"] = [answers["priority"]]
-    for key in DIRECT:
-        if key in answers:
-            out[key] = answers[key]
+    for key, option_id in answers.items():
+        saved = (resolved or {}).get(key)
+        if saved is not None and saved[0] == option_id:
+            slot, value = saved[1], saved[2]
+        else:
+            now = resolve(key, option_id)
+            if now is None:
+                log.warning("intake survey answer cannot be read key=%s option=%s (question set changed, no history)", key, option_id)
+                continue
+            slot, value = now
+        _place(out, slot, value)
     return out
 
 
-def merged_survey(answers: Mapping[str, str], request_survey: Mapping[str, Any] | None) -> dict[str, Any] | None:
+def merged_survey(answers: Mapping[str, str], request_survey: Mapping[str, Any] | None,
+                  resolved: Mapping[str, tuple[str, str, str]] | None = None) -> dict[str, Any] | None:
     """등록 때 쓸 설문 = 접수에 모아 둔 답 + 등록 요청이 직접 준 설문. **요청이 준 값이 이긴다**(가장 나중의 직접 입력).
 
     - 둘 다 없으면 None(설문 없이 등록 — 옛 동작 그대로).
     - 세부 선택(`priority_details`)은 영역마다 합친다 — 요청이 `food` 만 줘도 모아 둔 `mobility` 가 남는다.
     - ★설문 안 문항을 **채워 넣지 않는다** — 안 답한 문항은 없는 채로 둔다(`apply_survey` 가 「직접 답한 문항」을 가르는 기준이다)."""
-    mine = to_survey(answers)
+    mine = to_survey(answers, resolved)
     if not mine and request_survey is None:
         return None
     given = dict(request_survey or {})
@@ -158,5 +247,5 @@ def merged_survey(answers: Mapping[str, str], request_survey: Mapping[str, Any] 
     return survey
 
 
-__all__ = ["DIRECT", "IntakeClosed", "InvalidAnswers", "MAX_QUESTIONS", "QUESTIONS", "Question", "check", "merged_survey",
-           "questions", "save", "stored", "to_survey"]
+__all__ = ["DIRECT", "IntakeClosed", "InvalidAnswers", "MAX_QUESTIONS", "Option", "QUESTIONS", "QUESTION_SET_VERSION", "Question", "check", "merged_survey",
+           "questions", "resolve", "save", "stored", "stored_resolved", "to_survey"]
