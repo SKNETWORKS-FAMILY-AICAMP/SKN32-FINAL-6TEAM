@@ -219,6 +219,11 @@ class IntakeRevisionIn(BaseModel):
     revision: int = Field(ge=1)
 
 
+class IntakeModeIn(IntakeRevisionIn):
+    """이동수단 고르기 — `mode` = `subway|bus|taxi|walk`(그 수단으로) · `recommended`(추천으로 되돌리기). `[2026-10-07]`"""
+    mode: str = Field(min_length=1, max_length=16)
+
+
 class IntakeAutofixIn(IntakeRevisionIn):
     """전체 자동 추천 — `dry_run` 이면 **저장하지 않고** 바뀔 모습만(`view.preview`) 돌려준다. `[2026-10-03 ui 세션 요청서 3번]`"""
     dry_run: bool = False
@@ -1213,6 +1218,55 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return {"intake_id": str(intake_id), "revision": revision, "detail": detail,
                 "shapes": shapes_for_review(stored, detail=detail),
                 "attribution": "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)"}
+
+    @router.get("/v1/web/trip-intakes/{intake_id}/moves/{pair}/options")
+    def web_intake_move_options(intake_id: UUID, pair: str, http: Request, revision: int | None = Query(default=None, ge=1),
+                                who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-07 사용자 결정 — 이동수단 고르기]` 확인 화면의 이동 한 구간(`{pair}` = `{from}~{to}` · 확인 화면 `items[].id` 두 개)을 **지하철 · 버스 · 택시 · 걸음 수단마다**
+        계산한 후보 — 줄 순서 고정, 못 만든 수단은 줄이 없고, 시간 안에 못 끝낸 수단은 `fits: null` + `why_not`. 계산은 구간을 열 때 한 건씩 부른다(네 수단 동시 · 느린 구간은 수 초).
+        `fits` = 다음 일정 시작 안에 닿고(`slack_min ≥ 0`) 시간표로 확인한 것. 이 기능이 꺼져 있거나 그 구간이 대상이 아니면 404 `not_available`(화면은 고르기 박스를 두지 않는다).
+        읽기 전용 — 아무것도 저장하지 않는다. ★남의 접수 404 · 낡은 판(`revision`) 409. 계약: `wiki/records/plans/2026-10-05_이동수단_선택_서버계약안.md`."""
+        from app.domains.travel_ops.components.intake import move_options, pipeline
+
+        tenant, customer = who
+        from_id, _, to_id = pair.partition("~")
+        _count("place_search", tenant, customer, http)
+        try:
+            with get_connection() as conn:
+                return {"intake_id": str(intake_id), **move_options.read(
+                    conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id, revision=revision,
+                    from_id=from_id, to_id=to_id)}
+        except move_options.NotAvailable:
+            raise _error(404, "not_available", "이 구간은 수단을 고를 수 없다") from None
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except pipeline.IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/moves/{pair}/mode")
+    def web_intake_move_mode(intake_id: UUID, pair: str, request: IntakeModeIn, http: Request,
+                             who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-07]` 이동 한 구간의 수단을 고른다 → `{revision, review}`(새 판 · 그 구간이 고른 수단으로 다시 계산된 확인 결과 전체 · `moves[i].mode_choice` · `recommended_mode`).
+        서버가 **고른 수단으로 다시 계산해 닿는지 확인한 뒤에만** 받는다(화면이 보낸 값을 믿지 않는다) — 그래서 「다시 제출」이 필요 없다. `mode` = `recommended` 는 되돌리기.
+        ★낡은 판 409 `stale_revision` · 안 닿는 수단 · 계산 못 한 수단 · 알 수 없는 수단 422 `mode_not_fit`(`why` = 서버가 완성한 문장) · 남의 접수 · 없는 구간 404.
+        고른 구간은 앞뒤 일정이 바뀌어도 다시 시도한다 — 닿으면 유지(`kept`) · 안 닿으면 추천으로 복귀(`dropped` + `why`)."""
+        from app.domains.travel_ops.components.intake import move_options, pipeline
+
+        tenant, customer = who
+        from_id, _, to_id = pair.partition("~")
+        _count("place_search", tenant, customer, http)
+        try:
+            with get_connection() as conn:
+                return move_options.choose(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                           revision=request.revision, from_id=from_id, to_id=to_id, mode=request.mode)
+        except move_options.ModeNotFit as exc:
+            raise _error(422, "mode_not_fit", exc.why, why=exc.why) from None
+        except move_options.NotAvailable:
+            raise _error(404, "not_available", "이 구간은 수단을 고를 수 없다") from None
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except pipeline.IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
 
     @router.get("/v1/web/trip-intakes/{intake_id}/events")
     async def web_intake_events(intake_id: UUID, http: Request, who: tuple[str, UUID] = Depends(_web_customer)):

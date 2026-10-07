@@ -303,13 +303,14 @@ class _Budgeted:
         return answer
 
 
-def default_engine(party_size: int | None) -> Callable[..., Any] | None:
+def default_engine(party_size: int | None, modes: list[str] | None = None) -> Callable[..., Any] | None:
     """이동 계산기(시간표 판정). 꺼져 있거나 이동 팀이 조립에 없으면 None.
-    ★`[2026-10-06]` 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013 `team_hooks/legs.py`)."""
+    ★`[2026-10-06]` 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013 `team_hooks/legs.py`).
+    `modes` `[2026-10-07 이동수단 고르기]` 이 수단만으로 후보를 만드는 계산기 — 고객이 구간 수단을 골랐을 때 쓴다."""
     try:
         from app.domains.travel_ops.components.team_hooks import legs
 
-        return legs.leg_planner(party_size, {})
+        return legs.leg_planner(party_size, {}, modes=modes)
     except Exception:                                     # noqa: BLE001 — 계산기 장애가 확인 화면을 막지 않는다
         return None
 
@@ -326,9 +327,12 @@ _ITEM_EVENT_FIELDS = ("id", "source_id", "index", "title", "kind", "day", "date"
 def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[dict[str, Any]],
           claims: list[dict[str, Any]], engine: Callable[..., Any] | None = None, use_engine: bool = True,
           previous: dict[str, Any] | None = None, now: datetime | None = None,
-          on_event: Callable[[str, dict[str, Any]], None] | None = None) -> dict[str, Any]:
+          on_event: Callable[[str, dict[str, Any]], None] | None = None,
+          engine_for_mode: Callable[[str], Any] | None = None) -> dict[str, Any]:
     """한 판의 검사를 계산한다. `previous` = 앞 판의 검사 — 같은 구간(좌표 · 시각이 같음)은 그 값을 재사용한다(`sig`).
 
+    `engine_for_mode(수단)` `[2026-10-07 이동수단 고르기]` — 고객이 구간 수단을 골랐을 때 그 수단만으로 계산하는 계산기. 안 주고 기본 계산기를 쓰면 기본 팩토리를 쓴다.
+      고른 수단이 닿으면 유지(`mode_choice.state=kept`) · 안 닿으면 추천으로 복귀(`dropped` + 이유)한다.
     `on_event(이름, 몸통)` `[2026-10-03 ui 세션 요청서 2번]` — **계산이 끝나는 대로** 알린다(검사는 끝나 커밋돼야 DB 에 보여서, 이게 없으면 실시간 진행이 끝에서 한꺼번에 낸다):
       `progress{phase: hours, done, total, current}` 운영시간 확인이 한 일정씩 · `item` 과 `check` 일정마다 검사 줄이 정해지는 대로(이동 계산 **전에**) ·
       `move` 와 `progress{phase: moves}` 이동이 한 구간씩. 이 값들은 **상태의 복사본**이라 끝에 DB 에서 읽은 최종 값이 같은 키로 와서 덮는다.
@@ -354,6 +358,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         party = None
     if engine is None and use_engine:
         engine = default_engine(party)
+        if engine_for_mode is None and engine is not None:
+            engine_for_mode = lambda mode: default_engine(party, [mode])        # noqa: E731
     budgeted = _Budgeted(engine, ENGINE_BUDGET_S) if engine is not None else None
     dates = sorted({r["date"] for r in rows if r["date"]})
     day_no = {d: i + 1 for i, d in enumerate(dates)}
@@ -435,6 +441,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         for line in lines:
             note("check", {"item": items[-1]["id"], **line})
 
+    mode_pick = picked_modes(claims)            # {"0-0~0-1": "taxi"} — 고객이 구간마다 고른 수단(없으면 추천)
     old_moves = {m.get("sig"): m for m in (previous or {}).get("moves", []) if m.get("sig") and m.get("basis") == "timetable"}
     moves: list[dict[str, Any]] = []
     move_total = sum(1 for i in range(len(rows) - 1) if rows[i]["date"] and rows[i]["date"] == rows[i + 1]["date"])
@@ -453,20 +460,24 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         ia, ib = items[i], items[i + 1]
         a_end, b_start = _dt(a["date"], a["end"] or a["start"]), _dt(b["date"], b["start"])
         if a["place"] is None or b["place"] is None or a_end is None or b_start is None:
-            add_move(_waiting_move(ia, ib), ia, ib)
+            add_move(_waiting_move(ia, ib, mode_pick.get(f"{ia['id']}~{ib['id']}")), ia, ib)
             continue
         pa = {"key": ia["id"], "name": a["place"]["name"], "lat": float(a["place"]["latitude"]), "lon": float(a["place"]["longitude"])}
         pb = {"key": ib["id"], "name": b["place"]["name"], "lat": float(b["place"]["latitude"]), "lon": float(b["place"]["longitude"])}
         # ★재사용 키 — 이름과 정확한 좌표까지 넣는다(같은 자리에서 지점 이름만 바뀌어도 앞 판의 경로 문구가 남지 않게)
+        pick = mode_pick.get(f"{ia['id']}~{ib['id']}")
         sig = (f"{pa['name']}|{pa['lat']!r},{pa['lon']!r}>{pb['name']}|{pb['lat']!r},{pb['lon']!r}@{a_end.isoformat()}>{b_start.isoformat()}"
-               f"#{ia['place_state']}{ib['place_state']}")
+               f"#{ia['place_state']}{ib['place_state']}" + (f"#m={pick}" if pick else ""))        # ★고른 수단이 바뀌면 옛 이동을 재사용하지 않는다
         if sig in old_moves:
             # 재사용하는 것은 경로 계산뿐이다 — 어느 일정 · 몇째 날인지는 지금 판의 것으로 채운다(앞에 날짜가 하나 늘어 일차만 바뀐 경우)
             add_move({**old_moves[sig], "from": ia["id"], "to": ib["id"], "day": ia["day"], "date": ia["date"]}, ia, ib)
             continue
         leg = leg_between(budgeted, pa, pb, a_end, b_start)
+        choice, recommended = None, leg.mode
+        if pick:
+            leg, choice, recommended = _apply_pick(pick, leg, engine_for_mode, pa, pb, a_end, b_start, b["start"])
         provisional = [x["place"]["name"] for x in (ia, ib) if x["place_state"] == "picked_nearest"]
-        add_move(_move(ia, ib, leg, provisional, sig), ia, ib)
+        add_move({**_move(ia, ib, leg, provisional, sig), "recommended_mode": recommended, "mode_choice": choice}, ia, ib)
 
     # 겹침은 보통 앞 구간이 「늦게 닿는다」로 잡혀 이동이 확인 필요를 센다. 이동으로 안 잡히는 겹침(한쪽 장소를 모르거나 같은 곳이라 이동이 없는 것)은
     # 등록 판정이 거절할 일이므로 그 일정을 확인 필요로 센다 — 안 그러면 겹친 일정이 「등록 가능」으로 보인다
@@ -504,9 +515,57 @@ def public(payload: dict[str, Any] | None) -> dict[str, Any] | None:
             "moves": [{k: v for k, v in m.items() if k not in ("sig", "uses")} for m in payload.get("moves", [])]}
 
 
-def _waiting_move(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]:
+MOVE_MODES = ("subway", "bus", "taxi", "walk")
+MOVE_LABEL = {"subway": "지하철", "bus": "버스", "taxi": "택시", "walk": "걸음"}
+
+
+def picked_modes(claims: list[dict[str, Any]]) -> dict[str, str]:
+    """고객이 구간마다 고른 수단 — 값 줄 `moves[{from}~{to}].mode`(고객 값 · `recommended` 로 되돌리면 값이 비어 이 표에서 빠진다)."""
+    out: dict[str, str] = {}
+    for c in claims:
+        field = str(c.get("field") or "")
+        if field.startswith("moves[") and field.endswith("].mode") and c.get("method") == "customer" and c.get("value") in MOVE_MODES:
+            out[field[len("moves["):-len("].mode")]] = c["value"]
+    return out
+
+
+def mode_fits(leg: Leg) -> bool:
+    """고른 수단이 **닿고 확인됐나** — 시간표 구간은 시간표로 확인(`verified`)돼야 한다. 택시 · 걸음은 시간표가 없다(끝나는 대로 떠난다)."""
+    if leg.basis != "timetable" or leg.slack_min < 0:
+        return False
+    return True if leg.mode in ("taxi", "walk") else bool(leg.verified)
+
+
+def why_not(label: str, leg: Leg | None, b_hhmm: str) -> str:
+    """고른 수단이 안 닿는 이유 — 서버가 완성한 문장(화면은 그대로 보여 준다)."""
+    if leg is None or leg.basis != "timetable" or leg.mode == "estimate":
+        return f"{ro(label)}는 이 구간을 계산하지 못했어요"
+    if leg.slack_min < 0:
+        return f"{ro(label)}는 {-leg.slack_min}분 늦어요 · 다음 일정이 {b_hhmm}에 시작해요"
+    return f"{label} — 시간표로 확인하지 못했어요 · 열차·버스를 놓치면 늦을 수 있어요"
+
+
+def _apply_pick(pick: str, rec_leg: Leg, engine_for_mode: Callable[[str], Any] | None, pa: dict[str, Any],
+                pb: dict[str, Any], a_end: datetime, b_start: datetime, b_hhmm: str):
+    """(최종 구간, mode_choice, 추천 수단). 고른 수단으로 같은 구간을 다시 계산해 닿으면 그것을 쓰고(kept), 안 닿으면 추천으로 되돌린다(dropped + 이유)."""
+    recommended = rec_leg.mode
+    engine = engine_for_mode(pick) if engine_for_mode is not None else None
+    if engine is None:
+        return rec_leg, {"mode": pick, "state": "dropped", "why": "이동 계산기가 꺼져 있어 고른 수단으로 계산하지 못했어요"}, recommended
+    try:
+        mine = leg_between(_Budgeted(engine, ENGINE_BUDGET_S), pa, pb, a_end, b_start)
+    except Exception:                                     # noqa: BLE001 — 한 수단의 오류가 확인 화면을 막지 않는다
+        mine = None
+    if mine is not None and mine.mode == pick and mode_fits(mine):
+        return mine, {"mode": pick, "state": "kept"}, recommended
+    return rec_leg, {"mode": pick, "state": "dropped", "why": why_not(MOVE_LABEL.get(pick, pick), mine, b_hhmm)}, recommended
+
+
+def _waiting_move(a: dict[str, Any], b: dict[str, Any], pick: str | None = None) -> dict[str, Any]:
     wait = "한쪽 장소가 정해지지 않았어요"
-    return {"from": a["id"], "to": b["id"], "day": a["day"], "date": a["date"], "status": "waiting", "mode": None,
+    choice = {"mode": pick, "state": "dropped", "why": "장소가 정해지면 고른 수단으로 계산해요"} if pick else None
+    return {"recommended_mode": None, "mode_choice": choice,
+            "from": a["id"], "to": b["id"], "day": a["day"], "date": a["date"], "status": "waiting", "mode": None,
             "mode_label": None, "minutes": None, "km": None, "depart": None, "arrive": None, "slack_min": None,
             "basis": None, "summary": "장소가 정해지면 경로를 찾아요", "sig": None,
             "rows": [_line("route", "unknown", wait), _line("mode", "unknown", "장소를 정하면 찾아요"),
