@@ -15,6 +15,9 @@
   ① 고객에게 나가는 결과(답변 · 성립 여부 · 실패 코드 · 경고)와 걸린 시간
   ② 판정 종류별 규칙 값 vs LLM 값 · 일치 · 실패 코드 · 지연 · 모델의 판단 이유
 
+★`--at` 은 **앞으로의 시각**이어야 한다 — 지난 시각은 「이미 시작됨」에서 끝난다(위 예시 날짜도 지나면 바꿔 쓴다).
+★재난문자는 실제 소스와 **같은 지역 판정**을 거친다 — 장소 좌표의 서울 자치구로 온 문자만 판정에 들어간다
+  (부산 문자는 경복궁에 안 들어간다). 지역을 비우면 「서울특별시 전체」다.
 ★예약·장소·재난문자는 **가짜 도구**로 넣는다(DB 예약을 만들지 않는다). 판정 LLM · 프롬프트(DB 등록본) ·
   감사 기록(`llm_calls`)은 **실제**다. 장소는 CSV 장소 목록(`activity_total_data.csv`)에서 이름으로 찾아
   좌표 · 주소 · 분류를 채운다 — 못 찾으면 이름만으로 돈다.
@@ -60,7 +63,44 @@ class Tools:
             raise ToolBudgetExceeded(f"budget {budget} exhausted before {name}")
         seen.add(signature)
         self.calls.append(name)
-        return self.values.get(name)
+        value = self.values.get(name)
+        # 값 대신 함수를 넣으면 인자로 답을 만든다(재난문자 — 좌표마다 지역이 다르다)
+        return value(**arguments) if callable(value) else value
+
+
+class ScriptDisaster:
+    """`--disaster` 문자를 **실제 재난문자 소스와 같은 지역 판정**으로 거른다. `[2026-10-07]`
+
+    ★예전에는 넣은 문자를 「이 지역 문자」(`for_region`)에 그대로 넣었다 — 부산 문자가 경복궁 판정에 들어갔다.
+      지금은 실제 소스(`DisasterMsgApi.near`)처럼 좌표 → 서울 자치구 → 그 구로 온 문자만 남긴다
+      (`disaster_msg.judge` · `_lat_lon_to_gu` 를 그대로 쓴다). 창도 같다 — 지금과 일정 시각 중 이른 쪽에서 6시간.
+    """
+
+    def __init__(self, rows: list[dict[str, Any]]) -> None:
+        self.rows = rows
+
+    def near(self, latitude: Any, longitude: Any, at: Any) -> dict[str, Any] | None:
+        from app.infrastructure.travel.disaster_msg import DEFAULT_LOOKBACK_HOURS, _lat_lon_to_gu, judge
+
+        if latitude is None or longitude is None:
+            return None       # ★실제 도구와 같다 — 어디인지 모르면 묻지 않는다
+        now = datetime.now(KST)
+        when = at if isinstance(at, datetime) else now
+        until = min(when.astimezone(KST), now)
+        window_start = until - timedelta(hours=DEFAULT_LOOKBACK_HOURS)
+        district = _lat_lon_to_gu(float(latitude), float(longitude))
+        messages, unclassified = judge(self.rows, region="서울", district=district,
+                                       window_start=window_start, at=until)
+        return {"region": "서울", "district": district, "for_region": messages, "unclassified": unclassified,
+                "confirmed_at": now.isoformat(), "source": "try_activity_judge"}
+
+    def read_disaster(self, latitude=None, longitude=None, at=None, **_: Any):
+        return self.near(latitude, longitude, at)
+
+    def read_points(self, points=None, at=None, **_: Any):
+        if not isinstance(points, list):
+            return None
+        return {"points": [self.near(*(list(p) + [None, None])[:2], at) for p in points]}
 
 
 def parse_at(text: str) -> datetime:
@@ -68,13 +108,18 @@ def parse_at(text: str) -> datetime:
     return value if value.tzinfo else value.replace(tzinfo=KST)
 
 
-def parse_disaster(text: str, created_at: str) -> dict[str, Any]:
+def parse_disaster(text: str, created_at: datetime) -> dict[str, Any]:
+    """`"등급|구분|본문|지역(쉼표)"` → 실제 소스의 판정용 행(`disaster_msg.parse_row` 와 같은 모양).
+
+    ★지역을 안 주면 「서울특별시 전체」로 둔다 — 지역 없는 문자는 실제로 오지 않는다.
+    """
     parts = [p.strip() for p in text.split("|")]
     if len(parts) < 3:
         raise SystemExit(f'--disaster 는 "등급|구분|본문|지역" 모양이다: {text!r}')
     step, kind, body = parts[:3]
-    regions = [r.strip() for r in parts[3].split(",")] if len(parts) > 3 and parts[3] else []
-    return {"step": step, "kind": kind, "text": body, "regions": regions, "created_at": created_at}
+    regions = [r.strip() for r in parts[3].split(",") if r.strip()] if len(parts) > 3 else []
+    return {"step": step, "kind": kind, "text": body, "regions": regions or ["서울특별시 전체"],
+            "created_at": created_at, "serial": None}
 
 
 def build_values(args: argparse.Namespace, starts: datetime) -> tuple[dict[str, Any], dict[str, Any] | None]:
@@ -89,12 +134,11 @@ def build_values(args: argparse.Namespace, starts: datetime) -> tuple[dict[str, 
     if args.restdate is not None or args.usetime is not None:
         place["operating"] = {"usetime_text": args.usetime, "restdate_text": args.restdate,
                               "source": "try_activity_judge", "confirmed_at": now}
-    disaster = None
-    if args.disaster:
-        disaster = {"for_region": [parse_disaster(d, now) for d in args.disaster],
-                    "confirmed_at": now, "source": "try_activity_judge"}
-    elif args.no_disaster_messages:
-        disaster = {"for_region": [], "confirmed_at": now, "source": "try_activity_judge"}
+    disaster = points = None
+    if args.disaster or args.no_disaster_messages:
+        created = datetime.now(KST)
+        source = ScriptDisaster([parse_disaster(d, created) for d in args.disaster or []])
+        disaster, points = source.read_disaster, source.read_points
     forecast = None
     if args.forecast:
         pop, _, wind = args.forecast.partition(",")
@@ -106,6 +150,7 @@ def build_values(args: argparse.Namespace, starts: datetime) -> tuple[dict[str, 
         "read.policy": [{"note": "try_activity_judge"}],
         "read.place": place,
         "read.disaster": disaster,
+        "read.disaster_points": points,
         "read.weather": forecast,
     }
     return values, found
@@ -218,6 +263,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"장소: {args.place} → " + (f"CSV {found['content_id']} · {found['address']}" if found
                                        else "CSV 에서 못 찾음(이름만으로 돈다 — 실내외·주소 단서가 줄어든다)"))
     print(f"시각: {starts.isoformat()}   모드: {args.mode}")
+    if starts <= datetime.now(KST):
+        print("   ★이미 지난 시각이다 — 「이미 시작됨」에서 끝나 휴무·재난문자·LLM 판정이 돌지 않는다")
 
     team = ActivityTeam(Tools(values))
     records: list[dict[str, Any]] = []

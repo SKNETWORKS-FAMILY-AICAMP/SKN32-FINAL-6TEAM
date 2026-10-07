@@ -880,15 +880,15 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 | `unknown` · `pool_unavailable` | 도구가 `None`을 줄 때. **지금 실제 경로가 이 갈래다** | 「조회하지 못했습니다」. 「대안 없음」으로 읽지 않는다 |
 | `unknown` · `no_content_id` | 원래 장소에 `source_content_id`가 없을 때. 도구를 부르지 않는다 | 「식별 정보가 없어 찾지 못했습니다」 |
 | `unknown` · `origin_no_coordinates` `[2026-10-02]` | 원래 장소 좌표가 없어 반경을 잴 수 없을 때 | 「좌표가 없어 근처 대체 장소를 찾지 못했습니다」. 「근처에 없음」으로 읽지 않는다 |
-| `withheld` · `disaster_blocks` | 위급재난으로 막혔을 때. 도구를 부르지 않는다 | 대체 장소를 안내하지 않는다 |
+| `withheld` · `disaster_blocks` | `[정정 2026-10-07]` 위급재난으로 막혔고, **후보 위치도 전부** 위급재난 지역일 때. 예전에는 위급재난이면 도구를 부르지 않고 바로 이 갈래였다 | 대체 장소를 안내하지 않는다 |
 
-**① 재검증(v11 §5) — 도구를 더 부르지 않는다.** 가장 긴 경로가 예약·규정·장소·기상·재난·후보로 6회이고, 이게 `max_steps`와 딱 맞는다. 그래서 재검증은 이미 읽은 값으로만 한다.
+**① 재검증(v11 §5) — 이미 읽은 값으로 한다. 예외는 재난문자 하나다.** `[정정 2026-10-07]` 이 줄은 「가장 긴 경로가 6회라 `max_steps`와 딱 맞는다」였는데 `max_steps`는 2026-09-17에 12가 됐다. 원래 장소가 위급재난으로 막혔을 때만 `read.disaster_points`를 **한 번** 더 부른다(아래 재난문자 줄).
 
 | ① 항목 | 후보에 대해 |
 |---|---|
 | 시각 | 원래 예약과 같은 시각이고, 여기까지 왔다면 아직 안 지났다 → 통과 |
 | 휴무 요일·운영시간 | `closed_on`이 `False`이거나 `open_at`이 `True`인 후보만 `revalidated: True`다(`availability`가 `open_weekday`·`open_at_time`). 둘 다 모름인 후보(`unconfirmed`)는 `decisions`에만 남고 **안내문에는 안 싣는다** — 빠진 곳 수는 경고로 남긴다 `[구현 2026-10-01]` |
-| 재난문자 | `disaster_msg.near()`는 좌표를 쓰지 않고 **전국 목록**을 준다. 그래서 원래 장소의 판정이 곧 후보의 판정이다. 위급재난이면 후보 전부 같은 판정이라 `withheld`다 |
+| 재난문자 | `[정정 2026-10-07]` `disaster_msg.near()`는 좌표로 **서울 자치구를 정해 그 구로 온 문자만** 준다(`163a98f`). 이 줄은 「전국 목록이라 후보도 같은 판정 → `withheld`」였는데 그 전제가 바뀌었다. 지금은 원래 장소가 위급재난으로 막히면 줄에 오른 후보(화면 3 + 더보기 10)의 좌표를 `read.disaster_points`로 한 번에 다시 본다. 위급재난이 걸린 후보는 **뺀다**(`disaster_excluded` 수), 문자를 모르는 후보는 `disaster: "unknown"`·`revalidated: False`로 안내문에 안 싣는다, 전부 걸리면 `withheld`다. 원래 장소가 재난 때문에 막힌 게 아니면(휴무 요일 등) 후보의 재난문자는 다시 보지 않는다 — 원래 장소의 구에는 위급재난이 없다는 것까지만 안다 |
 | 정원 | 후보 쪽 값이 없다 → **확인하지 않았다**. 안내문(「정원은 확인하지 않았습니다」)과 `revalidation.not_checked: ["capacity"]`에 이 사실을 밝힌다 `[정정 2026-10-01]` 운영시간은 위 줄처럼 읽게 돼 여기서 빠졌다 |
 
 **선호도**는 `current_state["activity_preference"]`(`"mobility"`·`"activity"`)에서 읽는다. 값이 없으면 설문(`current_state["survey"]` 또는 `["constraints"]["survey"]`)의 `priority`에서 먼저 나오는 `activity`·`mobility`를 읽는다(`food`는 이 팀 몫이 아니라 건너뜀). 둘 다 없으면 `None`이다. `activity_preference`에 모르는 값이 있으면 경고를 남기고 `None`으로 처리한다. 추측하지 않는다. `[구현 2026-10-01]` `ActivityTeam._preference`.
@@ -941,7 +941,7 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 | ~~`read.place_candidates` 실구현~~ | **닫힘 — `[구현 2026-09-28]`** `db_search/place_candidates.py`로 실구현됨 → [아래 절](#read_place_candidates-실구현--db_search-구현-2026-09-28) |
 | `sigungucode`·`closed_days`의 카탈로그 출처 | `place_catalog`에 구조화 컬럼이 없다(아래 「걸리는 것」). 실구현 때 `raw_json`을 풀어 행에 싣거나 컬럼으로 승격해야 한다. `[2026-10-02]` `sigungucode`는 판정에 안 쓰게 돼 `closed_days`만 남았다(`raw_json`에서 읽는다) |
 | 「이미 일정에 있는 곳」 제외 연결 | `[미연결 2026-10-02]` `rank_alternatives(exclude_ids=...)`는 받지만 Team이 넘길 값이 없다 — `check_feasible` 경로에 `trip_id`가 없고, 일정 항목은 TourAPI `contentid`가 아니라 내부 `place_id`만 든다 → [반경·노출 규칙](#대체-장소-반경노출-규칙-구현-2026-10-02) |
-| 재난문자 지역 관련성 | 역지오코딩으로 `rgnNm`을 거르게 되면, 「위급재난 → 후보 전부 `withheld`」 규칙을 다시 봐야 한다. 그때는 다른 지역 후보가 통과할 수 있다 |
+| ~~재난문자 지역 관련성~~ | **닫힘 — `[2026-10-07]`** `near()`가 자치구로 거르게 돼(`163a98f`) 「위급재난 → 후보 전부 `withheld`」를 후보 위치별 재확인으로 바꿨다(위 ① 재난문자 줄). 남은 것: 휴무 요일로 막힌 경우의 후보 재난문자는 아직 안 본다 |
 | 코어가 설문·선호도를 `current_state`로 넘기는 경로 | `[확인 2026-10-01]` 코어(`app/application/controller.py:87` `TEAM_STATE_KEYS`)는 `subject_ref`·`trigger_source`·`trigger`·`interpretation` 넷만 넘긴다 — origin/develop 도 같다. 설문은 여행의 `constraints.survey`(`TripSurvey.priority`)에 저장돼 있지만 활동 팀까지 오지 않아, **실제 흐름에서는 선호도가 항상 `None`**이다(시험은 `current_state`에 직접 넣어 검증). Activity 는 **받는 쪽만** 구현했다(`ActivityTeam._preference`: `activity_preference` → `survey` → `constraints.survey`). 코어가 키를 넘겨 주는 쪽은 코어 담당 몫이라 비워 뒀다 |
 
 #### `read.place_candidates` 실구현 — `db_search` `[구현 2026-09-28]`

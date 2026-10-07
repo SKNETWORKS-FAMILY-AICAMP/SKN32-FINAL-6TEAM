@@ -57,15 +57,12 @@ class ReplacementMixin:
         ★**계산만 한다.** 후보를 못 읽으면 지어내지 않고 `status="unknown"` 과 이유 코드를 낸다.
         ★결과는 `decisions[].alternatives` 로 나간다 — `status`: ranked · unknown · withheld
           (wiki/teams/activity.md 「Team 연결」).
-        ★위급재난이면 **도구를 부르지 않고** 안내도 하지 않는다(`withheld`). 재난문자가 전국 목록이라
-          후보도 원래 장소와 같은 판정이다.
+        ★`[2026-10-07]` 위급재난이어도 후보를 찾는다. 재난문자는 **자치구 단위**로 걸러 오므로
+          (`disaster_msg.near()`) 다른 구의 후보는 막히지 않을 수 있다. 후보마다 그 위치의 문자를
+          `read.disaster_points` 로 한 번에 다시 보고, 위급재난이 걸린 후보는 빼고, 모르는 후보는
+          안내문에 싣지 않는다(`_recheck_disaster`). 후보가 전부 걸리면 `withheld` 다.
         """
-        if (decisions.get("disaster") or {}).get("blocks"):
-            # ★전국 목록이라 어느 후보로 옮겨도 같은 위급재난 판정을 받는다.
-            self._record_failure(task, fc.ALTERNATIVES_WITHHELD)
-            return ({"status": "withheld", "reason": "disaster_blocks"}, evidence,
-                    "위급재난 문자는 지역 구분 없이 확인되어 대체 장소도 같은 판정을 "
-                    "받으므로 대체 장소를 안내하지 않았습니다.", [])
+        disaster_blocked = bool((decisions.get("disaster") or {}).get("blocks"))
         content_id = place.get("source_content_id") if isinstance(place, dict) else None
         if not content_id:
             self._record_failure(task, fc.ALTERNATIVES_NO_CONTENT_ID)
@@ -97,6 +94,14 @@ class ReplacementMixin:
         #   `revalidated: True` 다. 모름인 후보는 `decisions` 에만 남기고 안내문에는 싣지 않는다.
         for alternative in [*ranked["alternatives"], *ranked["more_alternatives"]]:
             alternative["revalidated"] = alternative["availability"] != "unconfirmed"
+        disaster_note = None
+        if disaster_blocked:
+            evidence, disaster_note = self._recheck_disaster(task, ranked, candidates, starts_at, seen, evidence)
+            if disaster_note == "all_blocked":
+                self._record_failure(task, fc.ALTERNATIVES_WITHHELD)
+                return ({"status": "withheld", "reason": "disaster_blocks"}, evidence,
+                        "근처 대체 후보도 모두 위급재난 문자가 온 지역이라 대체 장소를 안내하지 않았습니다.",
+                        warnings)
         if ranked["dropped_fields"]:
             warnings.append(f"유사 조건 일부({', '.join(ranked['dropped_fields'])})를 풀어서 찾은 후보다")
         if ranked["alternatives"] and ranked["radius_km"] > RADIUS_START_KM:
@@ -115,6 +120,8 @@ class ReplacementMixin:
                                  else fc.ALTERNATIVES_UNCONFIRMED)
             note = (f"근처(반경 {ranked['max_radius_km']:g}km)에 조건에 맞는 장소가 없습니다."
                     if not ranked["alternatives"]
+                    else "대체 장소 후보는 있으나 재난문자를 확인하지 못해 안내하지 않았습니다."
+                    if disaster_note == "unknown"
                     else "대체 장소 후보는 있으나 운영 여부를 확인하지 못해 안내하지 않았습니다.")
             if more:
                 # ★선호도 없음 — 화면 칸은 정확한 분류만 쓰므로 비지만, 비슷한 곳은 더보기에 있다.
@@ -127,3 +134,48 @@ class ReplacementMixin:
                 f"대체 장소 후보:\n{lines}\n"
                 + (f"더보기에 후보 {more}곳이 더 있습니다.\n" if more else "")
                 + "후보는 휴무 요일·운영시간·재난문자만 다시 확인했고 정원은 확인하지 않았습니다.", warnings)
+
+    def _recheck_disaster(self, task: TeamTask, ranked: dict[str, Any], candidates: list[dict[str, Any]],
+                          starts_at: Any, seen: set[str], evidence: list) -> tuple[list, str | None]:
+        """원래 장소가 위급재난으로 막혔을 때 — 후보 위치마다 재난문자를 다시 본다. `[2026-10-07]`
+
+        위급재난이 걸린 후보는 `ranked` 의 두 목록에서 **뺀다.** 그 위치의 문자를 모르는 후보는
+        `revalidated: False` 로 두어 안내문에 싣지 않는다(모름을 「안 막힘」으로 읽지 않는다).
+        반환: (근거, 상태) — 상태는 `None`(확인됨) · `"unknown"`(모르는 후보가 있음) · `"all_blocked"`.
+        """
+        listed = [*ranked["alternatives"], *ranked["more_alternatives"]]
+        if not listed:
+            return evidence, None
+        rows = {str(c.get("contentid")): c for c in candidates}
+        points = []
+        for alternative in listed:
+            row = rows.get(str(alternative.get("contentid"))) or {}
+            points.append([row.get("mapy"), row.get("mapx")])
+        found = self._read(task, "read.disaster_points", {"points": points, "at": starts_at}, seen)
+        results = (found or {}).get("points") if isinstance(found, dict) else None
+        if not isinstance(results, list) or len(results) != len(listed):
+            results = [None] * len(listed)
+
+        blocked: set[int] = set()
+        unknown = False
+        for alternative, result in zip(listed, results):
+            if not isinstance(result, dict):
+                alternative["disaster"] = "unknown"
+                alternative["revalidated"] = False
+                unknown = True
+                continue
+            messages = result.get("for_region") or []
+            if any(m.get("step") == "위급재난" for m in messages):
+                blocked.add(id(alternative))
+            else:
+                alternative["disaster"] = "clear"
+        ranked["alternatives"] = [a for a in ranked["alternatives"] if id(a) not in blocked]
+        ranked["more_alternatives"] = [a for a in ranked["more_alternatives"] if id(a) not in blocked]
+        ranked["disaster_excluded"] = len(blocked)
+        evidence = self._evidence(task, source_id="read.disaster_points", claim="대체 후보 위치의 재난문자",
+                                  value={"checked": len(listed), "excluded": len(blocked),
+                                         "unknown": sum(1 for r in results if not isinstance(r, dict))},
+                                  base=evidence)
+        if blocked and not ranked["alternatives"] and not ranked["more_alternatives"]:
+            return evidence, "all_blocked"
+        return evidence, "unknown" if unknown else None

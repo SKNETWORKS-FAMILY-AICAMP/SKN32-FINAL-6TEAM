@@ -154,6 +154,7 @@ class ReadToolbox:
             "read.place_price": self.place_price,
             "read.weather":  self.weather,
             "read.disaster": self.disaster,
+            "read.disaster_points": self.disaster_points,
             "read.route":    self.route,
             "read.transit":  self.transit,
             "read.supplier": self.supplier,
@@ -502,6 +503,34 @@ class ReadToolbox:
         return self.travel.disaster.near(
             latitude=float(latitude), longitude=float(longitude),
             at=_as_datetime(at))
+
+    #: 한 번에 묻는 좌표 수 상한 — 대체 후보(화면 3 + 더보기 10)를 넘지 않는다.
+    DISASTER_POINTS_MAX = 13
+
+    def disaster_points(self, scope: ToolContext, *, points: Any = None, at: Any = None,
+                        **_: Any) -> dict[str, Any] | None:
+        """좌표 여러 곳의 재난문자를 **한 번에** 본다 — 대체 후보 재검증용. `[2026-10-07]`
+
+        `points`: `[[위도, 경도], ...]`. 반환: `{"points": [<disaster() 와 같은 모양 | None>, ...]}`
+        — 순서는 `points` 와 같다. 좌표를 못 읽은 칸은 `None`(모름)이다.
+        ★지역 판정(좌표 → 자치구 → 그 구로 온 문자)은 `disaster()` 와 **같은** `near()` 가 한다 —
+          Team 이 지역을 따로 해석하지 않게. 소스가 지역 단위로 캐시하므로 좌표가 많아도 외부 호출은 늘지 않는다.
+        ★소스가 없거나 `points` 가 목록이 아니면 `None`(모름).
+        """
+        if self.travel is None or self.travel.disaster is None:
+            return None
+        if not isinstance(points, (list, tuple)):
+            return None
+        when = _as_datetime(at)
+        results: list[dict[str, Any] | None] = []
+        for point in list(points)[:self.DISASTER_POINTS_MAX]:
+            try:
+                latitude, longitude = float(point[0]), float(point[1])
+            except (TypeError, ValueError, IndexError):
+                results.append(None)
+                continue
+            results.append(self.travel.disaster.near(latitude=latitude, longitude=longitude, at=when))
+        return {"points": results}
 
     # ── 일정(Trip) ──────────────────────────────────────────────
     def _trip_store(self, scope: ToolContext):

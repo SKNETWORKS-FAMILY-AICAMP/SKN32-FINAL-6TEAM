@@ -67,7 +67,8 @@ class ActivityTeam(FeasibilityMixin, WeatherMixin, CancellationMixin, Replacemen
         # ★`[2026-10-06]` `read.holiday` — 휴무 원문에 공휴일·명절 조건이 있을 때만 부른다(`closure_rules.py`).
         allowed_tools=["read.booking", "read.booking_terms", "read.policy", "read.place", "read.holiday",
                        "read.weather", "read.disaster", "read.place_lookup",
-                       "read.place_candidates", "read.disruptions", *ITINERARY_TOOLS],
+                       "read.place_candidates", "read.disaster_points", "read.disruptions",
+                       *ITINERARY_TOOLS],
         # ★`[2026-09-22]` 여행 scope 로 바꿨다. 앞 값(`activity`·`cancellation`·`refund`·`weather`)
         #   가운데 **`refund` 는 쇼핑몰 코퍼스에 실재하는 scope** 라, 정책을 켜는 순간 활동 판정이
         #   쇼핑몰 환불 문서를 근거로 집어 왔다. 이름이 겹치지 않게 `travel_` 을 붙이고

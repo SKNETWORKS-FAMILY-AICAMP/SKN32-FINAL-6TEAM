@@ -187,17 +187,18 @@ async def test_unconfirmed_candidate_is_kept_but_not_announced():
 
 
 @pytest.mark.asyncio
-async def test_disaster_block_withholds_alternatives_without_a_lookup():
-    """★재난문자는 전국 목록이라(`disaster_msg.near()`가 좌표를 안 쓴다)
-    어느 후보로 옮겨도 같은 판정이다 — 후보 풀을 부르지도 않는다."""
+async def test_disaster_block_rechecks_candidates_and_withholds_when_all_are_hit():
+    """★`[2026-10-07]` 재난문자는 자치구 단위라(`disaster_msg.near()`가 좌표로 구를 정한다) 후보 풀을
+    읽고 후보 위치의 문자를 다시 본다. 후보가 전부 위급재난 지역이면 `withheld` 다."""
     disaster = {"for_region": [{"step": "위급재난", "kind": "지진"}],
                 "source": "safetydata", "confirmed_at": "x"}
-    result, calls = await _run(_values(starts_at=SATURDAY, pool=_pool(NEAR),
-                                       disaster=disaster))
+    values = {**_values(starts_at=SATURDAY, pool=_pool(NEAR), disaster=disaster),
+              "read.disaster_points": {"points": [disaster]}}
+    result, calls = await _run(values)
     assert result.decisions[0]["status"] == "problem"
     assert result.decisions[0]["alternatives"] == {"status": "withheld",
                                                    "reason": "disaster_blocks"}
-    assert "read.place_candidates" not in calls
+    assert calls[-2:] == ["read.place_candidates", "read.disaster_points"]
 
 
 # ══════════════════════════════════════════════════════════════════

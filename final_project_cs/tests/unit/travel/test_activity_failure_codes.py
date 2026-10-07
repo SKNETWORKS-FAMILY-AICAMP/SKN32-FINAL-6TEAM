@@ -86,7 +86,7 @@ async def test_critical_disaster_code(caplog):
 
 @pytest.mark.asyncio
 async def test_disaster_wins_when_it_overlaps_a_closed_weekday(caplog):
-    """★둘이 겹치면 위급재난이 앞선다 — 대체 장소 `withheld` 와 같은 우선순위."""
+    """★둘이 겹치면 위급재난이 앞선다."""
     result, lines = await _run(_values(disaster=DISASTER), caplog)
     assert result.decisions[0]["failure_code"] == fc.DISASTER_BLOCKS
     assert fc.CLOSED_WEEKDAY not in _codes(lines)
@@ -122,7 +122,9 @@ async def test_a_feasible_booking_leaves_no_code_and_no_log(caplog):
 
 @pytest.mark.asyncio
 async def test_alternatives_failures_are_logged_but_the_result_shape_is_unchanged(caplog):
-    withheld, lines = await _run(_values(disaster=DISASTER), caplog)
+    # ★`[2026-10-07]` 후보 위치도 전부 위급재난일 때만 `withheld` 다
+    every = {"points": [DISASTER] * 2}       # POOL 에서 줄에 오르는 후보 둘(near · far)
+    withheld, lines = await _run({**_values(disaster=DISASTER), "read.disaster_points": every}, caplog)
     assert withheld.decisions[0]["alternatives"] == {"status": "withheld", "reason": "disaster_blocks"}
     assert fc.ALTERNATIVES_WITHHELD in _codes(lines)
     caplog.clear()

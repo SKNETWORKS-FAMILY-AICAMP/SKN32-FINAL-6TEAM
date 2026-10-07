@@ -96,25 +96,53 @@ async def test_evidence_summarizes_the_pool_instead_of_dumping_it():
     assert "candidates" not in ev.value
 
 
+CRITICAL = {"for_region": [{"step": "위급재난", "kind": "지진"}],
+            "confirmed_at": "2026-09-28T10:00:00+00:00", "source": "disaster_api"}
+CLEAR = {"for_region": [], "confirmed_at": "2026-09-28T10:00:00+00:00", "source": "disaster_api"}
+
+
 @pytest.mark.asyncio
-async def test_critical_disaster_withholds_alternatives_and_reads_nothing():
-    """★위급재난이면 대체 장소를 안내하지 않는다 — 재난문자가 전국 목록이라 후보도 같은 판정이다."""
-    disaster = {"for_region": [{"step": "위급재난", "kind": "지진"}],
-                "confirmed_at": "2026-09-28T10:00:00+00:00", "source": "disaster_api"}
-    result, tools = await _run(_values(restdate="연중무휴", disaster=disaster))
+async def test_critical_disaster_still_recommends_candidates_outside_the_alert_area():
+    """★`[2026-10-07]` 재난문자는 자치구 단위로 온다 — 위급재난이어도 문자가 안 온 곳의 후보는 안내한다.
+    후보 위치의 문자는 `read.disaster_points` 한 번으로 다시 본다(순서: near · far)."""
+    values = {**_values(restdate="연중무휴", disaster=CRITICAL),
+              "read.disaster_points": {"points": [CLEAR, CRITICAL]}}
+    result, tools = await _run(values)
+    alt = _alt(result)
     assert result.decisions[0]["feasible"] is False
+    assert alt["status"] == "ranked" and alt["disaster_excluded"] == 1
+    assert [i["contentid"] for i in alt["alternatives"]] == ["near"]
+    assert "가까운 궁궐" in result.answer and "먼 궁궐" not in result.answer
+    names = [n for n, _ in tools.calls]
+    assert names.count("read.disaster_points") == 1
+    assert "read.disaster_points" in [e.source_id for e in result.evidence]
+
+
+@pytest.mark.asyncio
+async def test_disaster_withholds_when_every_candidate_is_in_the_alert_area():
+    values = {**_values(disaster=CRITICAL),                     # 휴무 요일(월요일)도 겹친다
+              "read.disaster_points": {"points": [CRITICAL, CRITICAL]}}
+    result, _ = await _run(values)
     assert _alt(result) == {"status": "withheld", "reason": "disaster_blocks"}
     assert "가까운 궁궐" not in result.answer and "대체 장소를 안내하지 않았습니다" in result.answer
-    assert "read.place_candidates" not in [n for n, _ in tools.calls]
 
 
 @pytest.mark.asyncio
-async def test_disaster_and_closed_weekday_together_still_withhold():
-    disaster = {"for_region": [{"step": "위급재난", "kind": "지진"}],
-                "confirmed_at": "2026-09-28T10:00:00+00:00", "source": "disaster_api"}
-    result, tools = await _run(_values(disaster=disaster))     # 휴무 요일(월요일)도 겹친다
-    assert _alt(result)["status"] == "withheld"
-    assert "read.place_candidates" not in [n for n, _ in tools.calls]
+async def test_candidates_with_unknown_disaster_are_not_announced():
+    """★후보 위치의 문자를 모르면(도구 `None`) 「안 막힘」으로 읽지 않는다 — 안내문에 싣지 않는다."""
+    result, _ = await _run(_values(restdate="연중무휴", disaster=CRITICAL))   # read.disaster_points 없음
+    alt = _alt(result)
+    assert alt["status"] == "ranked"
+    assert all(a["revalidated"] is False and a["disaster"] == "unknown" for a in alt["alternatives"])
+    assert "가까운 궁궐" not in result.answer
+    assert "재난문자를 확인하지 못해 안내하지 않았습니다" in result.answer
+
+
+@pytest.mark.asyncio
+async def test_closed_weekday_without_disaster_does_not_recheck_disaster():
+    result, tools = await _run(_values(disaster=CLEAR))
+    assert _alt(result)["status"] == "ranked"
+    assert "read.disaster_points" not in [n for n, _ in tools.calls]
 
 
 @pytest.mark.asyncio
