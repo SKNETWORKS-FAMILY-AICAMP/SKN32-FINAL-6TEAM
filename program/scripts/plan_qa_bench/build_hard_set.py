@@ -25,6 +25,7 @@ ap.add_argument('--gen-model', default='gpt-6.1-sol')
 ap.add_argument('--label-model', default='gpt-6-luna')
 ap.add_argument('--split', default='test', choices=['test', 'train'])
 ap.add_argument('--workers', type=int, default=3)
+ap.add_argument('--heads-file', default='', help='일정 머리를 이 jsonl(행마다 prompt)의 고유 일정에서 고른다 — 학습용(--split train)은 D 시험과 겹치지 않는 학습 자료의 일정을 쓴다')
 a = ap.parse_args()
 
 OUT = os.path.join(HERE, 'results', 'hard_set')
@@ -36,7 +37,14 @@ for p in P:
     heads.setdefault(h, 0)
     heads[h] += 1
     tail = tail or rest.split('\n\n', 1)[1]
-HEADS = sorted(heads)                       # 89개 고유 일정(D 시험의 일정)
+if a.heads_file:   # 학습용: 학습 자료의 일정(D 시험의 일정과 겹치지 않음을 확인한 것만)
+    _h = {}
+    for _l in open(a.heads_file, encoding='utf-8'):
+        _h[json.loads(_l)['prompt'].split('고객 질문: ', 1)[0]] = 1
+    _ban = set(heads)
+    heads = {k: 1 for k in _h if k not in _ban}
+    assert heads, '학습 일정이 모두 D 시험 일정과 겹친다'
+HEADS = sorted(heads)                       # 시험용: 89개 고유 일정(D 시험의 일정) · 학습용: 학습 자료의 일정(D 와 안 겹침)
 rnd = random.Random(a.seed)
 pick = rnd.sample(range(len(HEADS)), a.n)   # 시험용 일정 n개(나머지는 따로 둔다)
 SEL = [(k, HEADS[k]) for k in sorted(pick)]
