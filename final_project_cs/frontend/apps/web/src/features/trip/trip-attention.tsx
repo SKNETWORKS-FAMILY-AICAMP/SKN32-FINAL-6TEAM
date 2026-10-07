@@ -8,6 +8,7 @@ import { LiveError } from "@/lib/live/client";
 import { chooseProposal, undoChange, type Notice } from "@/lib/live/extras";
 import { useSettings, useT } from "@/lib/settings";
 import { openChoices, recentNotices, undoableChange } from "./attention";
+import { LinkedText } from "./linked-text";
 import type { Trip } from "./model";
 import { markNoticesSeen, useSeenNotices } from "./notice-reads";
 import { tripKey } from "./use-trip";
@@ -175,7 +176,8 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
           return <li key={notice.key}>
             <span className={styles.tag} data-type={notice.type}>{label ? t(label[0], label[1]) : notice.type}</span><time>{noticeWhen(notice.at)}</time>
             {!seenAtOpen.has(notice.key) && <span className={styles.unread} role="img" aria-label={t("새 알림", "New")} />}
-            <p>{notice.text ?? t("서버가 문장을 보내지 않았어요.", "The server sent no text.")}</p>
+            {/* A link the server wrote into the notice (the plan's address) is pressable, by the chat's rule: https only. */}
+            <p>{notice.text ? <LinkedText text={notice.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} /> : t("서버가 문장을 보내지 않았어요.", "The server sent no text.")}</p>
           </li>;
         })}</ul>
         {hidden > 0 && <p className={styles.cut}>{t(`최근 ${shown.length}개만 보여요. 전체 ${total}개 중 ${hidden}개는 화면에 없어요.`, `Showing the latest ${shown.length}. ${hidden} of ${total} are not on screen.`)}</p>}

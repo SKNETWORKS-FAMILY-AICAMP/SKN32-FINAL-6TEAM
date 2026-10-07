@@ -49,6 +49,7 @@
 .stopTags { display: flex; flex-wrap: wrap; gap: 5px; }
 .stopTags [data-booked], .detailChips [data-booked] { border-color: transparent; background: var(--color-success-soft); color: var(--color-success); }
 .toggleMark { flex: none; width: 18px; color: var(--color-muted); font-size: 17px; line-height: 1; text-align: center; }
+.toggleEnd { display: grid; flex: none; place-items: center; width: 30px; min-height: 48px; padding: 0; border: 0; background: none; cursor: pointer; }
 .detailButton { display: inline-flex; flex: none; align-items: center; gap: 1px; height: 32px; padding: 0 7px 0 11px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-primary); font: inherit; font-size: 12px; font-weight: 750; white-space: nowrap; cursor: pointer; }
 .detailButton[aria-disabled="true"] { color: var(--color-muted); }
 .stopBody { padding: 10px 13px 13px; border-top: 1px solid var(--color-divider); }

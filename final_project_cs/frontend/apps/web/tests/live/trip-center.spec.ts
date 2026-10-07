@@ -76,3 +76,25 @@ test("선택 요청의 「일정에서 보기」는 센터를 닫고 그 일정�
   await expect(page.locator("#stop-button-i-c")).toHaveAttribute("aria-expanded", "true");
   await expect(tripScreen(page).locator('li[data-selected="true"]')).toContainText("점심 식당");
 });
+
+test("알림 문장 속 https 주소는 채팅처럼 누를 수 있는 링크이고, https 가 아닌 주소는 글자 그대로다", async ({ page }) => {
+  // 실서버의 등록 알림은 「계획서: <주소>」를 문장에 싣는다(2026-10-08 확인). 링크 규칙은 채팅의 답과 같다(`linked-text.tsx`, https 만).
+  const at = (minute: number) => `2026-10-01T08:${String(minute).padStart(2, "0")}:00+09:00`;
+  await page.route(`**/v1/web/trips/${TRIP_ID}/notices`, async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    body.notices = [...body.notices,
+      { key: "n-link", type: "change_notice", kind: null, text: "여행 일정이 준비되었습니다 — 내 여행. 계획서: https://plan.example/plan/x?t=abc", version: 1, proposal_id: null, delivery: "sent", at: at(0) },
+      { key: "n-http", type: "guidance", kind: null, text: "로컬 계획서: http://127.0.0.1:8042/plan/x?t=abc", version: 1, proposal_id: null, delivery: "sent", at: at(10) }];
+    await route.fulfill({ response, json: body });
+  });
+  await page.goto(`/trips/${TRIP_ID}`);
+  const center = await openNotices(page);
+  await center.getByRole("tab", { name: /받은 알림/ }).click();
+  const list = center.getByRole("tabpanel");
+  const link = list.getByRole("link", { name: "https://plan.example/plan/x?t=abc" });
+  await expect(link).toHaveAttribute("href", "https://plan.example/plan/x?t=abc");
+  await expect(link).toHaveAttribute("target", "_blank");
+  await expect(list.getByRole("link", { name: /127\.0\.0\.1/ })).toHaveCount(0);
+  await expect(list).toContainText("로컬 계획서: http://127.0.0.1:8042/plan/x?t=abc");
+});

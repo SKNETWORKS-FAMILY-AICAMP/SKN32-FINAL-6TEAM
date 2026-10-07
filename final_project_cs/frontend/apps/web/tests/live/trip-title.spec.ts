@@ -98,6 +98,7 @@ test("「상세 보기」는 그날 일정을 카드로 넘겨 보게 하고, �
   await mockServer(request).scenario({ routeShapes: "on" });
   await openTrip(page);
   await expect(page.locator("main path.trip-route-line")).not.toHaveCount(0);
+  await page.locator("#stop-button-i-b").click();                                                        // 「상세 보기」는 펼친 카드에만 있다
   await page.getByRole("button", { name: "경복궁 관람 상세 보기" }).click();
   const detail = page.getByRole("heading", { name: "경복궁 관람 상세", level: 3 });
   await expect(detail).toBeFocused();
@@ -122,6 +123,7 @@ test("「상세 보기」는 그날 일정을 카드로 넘겨 보게 하고, �
 test("상세 보기는 Esc 로도 닫히고, 「이 일정 질문하기」는 상세를 닫고 채팅으로 묻는다", async ({ page, request }) => {
   const server = mockServer(request);
   await openTrip(page);
+  await page.locator("#stop-button-i-a").click();
   await page.getByRole("button", { name: "아침 식당 상세 보기" }).click();
   await expect(page.getByRole("heading", { name: "아침 식당 상세", level: 3 })).toBeFocused();
   await page.keyboard.press("Escape");
@@ -130,4 +132,44 @@ test("상세 보기는 Esc 로도 닫히고, 「이 일정 질문하기」는 �
   await page.locator('[data-card-id="i-a"]').getByRole("button", { name: "이 일정 질문하기" }).click();
   await expect(page.getByRole("tab", { name: "채팅", exact: true })).toHaveAttribute("aria-selected", "true");
   await expect.poll(async () => (await server.received("POST", "/messages")).length).toBe(1);
+});
+
+test("장소 출처는 상세 카드에서 이름 옆 꼬리표로 한 번만 말하고(「출처」 줄이 없다), 목록 카드는 「출처」 줄로 말한다", async ({ page }) => {
+  // 실서버 확인(2026-10-08)에서 상세 카드에 「ⓒ한국관광공사」가 두 번 보였다 — mock 서버의 일정에는 출처가 없어 여기서 붙인다.
+  await page.route(`**/v1/web/trips/${TRIP_ID}`, async (route) => {
+    if (route.request().method() !== "GET") { await route.continue(); return; }
+    const response = await route.fetch();
+    const trip = await response.json();
+    trip.items = (trip.items as { item_id: string; place_info?: Record<string, unknown> | null }[])
+      .map((item) => item.item_id === "i-a" ? { ...item, place_info: { ...item.place_info, source_note: "ⓒ한국관광공사" } } : item);
+    await route.fulfill({ response, json: trip });
+  });
+  await openTrip(page);
+  await page.locator("#stop-button-i-a").click();
+  await expect(page.locator("#stop-detail-i-a dl")).toContainText("출처ⓒ한국관광공사");
+  await page.getByRole("button", { name: "아침 식당 상세 보기" }).click();
+  const card = page.locator('[data-card-id="i-a"]');
+  await expect(card.getByText("ⓒ한국관광공사", { exact: true })).toHaveCount(1);
+  await expect(card.locator("dl")).not.toContainText("출처");
+});
+
+test("일정 카드는 접혀 있으면 「상세 보기」가 없고 ＋ 가 맨 오른쪽이며, 펼치면 「상세 보기」가 나오고 － 는 그대로 맨 오른쪽이다", async ({ page }) => {
+  // `[2026-10-08 사용자 지시]` 접힌 카드에서 「상세 보기」를 빼고 ＋ 를 맨 오른쪽으로, 펼쳤을 때만 「상세 보기」.
+  await openTrip(page);
+  const card = page.locator("#trip-card-i-b");
+  const mark = card.locator("[data-toggle-mark]");
+  const detail = card.getByRole("button", { name: "경복궁 관람 상세 보기" });
+  const gapRight = async () => { const [box, end] = [await card.boundingBox(), await mark.boundingBox()]; return Math.round(box!.x + box!.width - (end!.x + end!.width)); };
+  await expect(detail).toHaveCount(0);
+  await expect(mark).toHaveText("+");
+  expect(await gapRight()).toBeLessThan(16);                                                            // 카드 오른쪽 끝에 붙어 있다
+  await mark.click();                                                                                   // 오른쪽 끝의 ＋ 를 눌러도 펼친다
+  await expect(page.locator("#stop-button-i-b")).toHaveAttribute("aria-expanded", "true");
+  await expect(detail).toBeVisible();
+  await expect(mark).toHaveText("−");
+  expect(await gapRight()).toBeLessThan(16);
+  const [button, end] = [await detail.boundingBox(), await mark.boundingBox()];
+  expect(button!.x + button!.width).toBeLessThanOrEqual(end!.x + 1);                                     // 「상세 보기」는 － 의 왼쪽
+  await page.locator("#stop-button-i-b").click();                                                        // 이름을 눌러 접으면 다시 없다
+  await expect(detail).toHaveCount(0);
 });

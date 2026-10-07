@@ -33,7 +33,8 @@ export function placeRows(stop: TripStop, t: Translate, where = true) {
     {info.hoursNotes.length > 0 && <><dt>{info.hours.length ? t("운영 안내", "Hours notes") : t("영업시간", "Hours")}</dt><dd>{info.hoursNotes.join(" · ")}</dd></>}
     {info.michelin && <><dt>{t("미쉐린", "Michelin")}</dt><dd>{info.michelin.level}{info.michelin.year ? ` (${info.michelin.year})` : ""}</dd></>}
     {tags.length > 0 && <><dt>{t("편의", "Amenities")}</dt><dd>{tags.join(" · ")}</dd></>}
-    {info.sourceNote && <><dt>{t("출처", "Source")}</dt><dd>{info.sourceNote}</dd></>}
+    {/* The detail (`where` false) shows the credit as a tag beside the name — said once. */}
+    {where && info.sourceNote && <><dt>{t("출처", "Source")}</dt><dd>{info.sourceNote}</dd></>}
   </>;
 }
 
@@ -67,9 +68,11 @@ export function StopRow({ stop, next, open, selected, onToggle, onDetail, detail
               {stop.paused && <span className={pc.pill} data-state="review">{t("일정 정지", "Paused")}</span>}
             </span>
           </span>
-          <span className={styles.toggleMark} aria-hidden="true">{open ? "−" : "+"}</span>
         </button>
-        <Act className={styles.detailButton} why={detailWhy} explain={explain} onPress={onDetail} aria-label={t(`${stop.title} 상세 보기`, `Details of ${stop.title}`)}>{t("상세 보기", "Details")}<ChevronRight size={15} strokeWidth={1.8} aria-hidden="true" /></Act>
+        {/* `[2026-10-08 사용자 지시]` 「상세 보기」는 카드를 펼쳤을 때만 나오고, ＋/－ 는 늘 맨 오른쪽이다. 오른쪽 끝의 ＋/－ 는 같은 접기 단추의 누르는 자리일 뿐이라
+             화면 읽기와 키보드에는 앞의 이름 단추 하나만 있다. */}
+        {open && <Act className={styles.detailButton} why={detailWhy} explain={explain} onPress={onDetail} aria-label={t(`${stop.title} 상세 보기`, `Details of ${stop.title}`)}>{t("상세 보기", "Details")}<ChevronRight size={15} strokeWidth={1.8} aria-hidden="true" /></Act>}
+        <button type="button" className={styles.toggleEnd} onClick={onToggle} tabIndex={-1} aria-hidden="true" data-toggle-mark><span className={styles.toggleMark}>{open ? "−" : "+"}</span></button>
       </div>
       {open && <div className={styles.stopBody} id={`stop-detail-${stop.id}`}>
         <StopFacts stop={stop} next={next} />
@@ -84,7 +87,7 @@ export function StopRow({ stop, next, open, selected, onToggle, onDetail, detail
 }
 
 /**
- * The facts of a stop (the old trip screen's card), in the server's words: the opened card shows them all; the detail (`brief`) leaves out what it shows above them (date, time, kind, address).
+ * The facts of a stop (the old trip screen's card), in the server's words: the opened card shows them all; the detail (`brief`) leaves out what it shows above them (date, time, kind, address, credit).
  */
 export function StopFacts({ stop, next, brief = false }: { stop: TripStop; next: TripStop | undefined; brief?: boolean }) {
   const t = useT();
