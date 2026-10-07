@@ -116,16 +116,28 @@ def _kakao_places(kakao: Any, query: str, ref: tuple[float, float] | None, kind:
                    category=h.get("category") or None, ref=f"kakao:{h['id']}" if h.get("id") else None) for h in hits]
 
 
+#: 관광공사 분류 — 숙박 · 쇼핑. ★`[2026-10-07]` 숙소 줄은 숙박(32)을 **읽어야** 후보가 나오고, 분류를 모르는 활동 줄은 쇼핑(38)을 **빼야** 한다
+LODGING_TYPE = "32"
+SHOPPING_TYPE = "38"
+#: 원래 장소의 분류를 모를 때(우리 장소 표의 행 — 활동 522곳 중 194곳만 분류가 있다) 후보에서 빼는 분류. 카탈로그의 38 은 4,360건으로 가장 많아 가까운 순으로 고르면
+#: 관광지(경복궁)의 대체로 약국 · 편의점이 먼저 나왔다(2026-10-07 사용자 지적). 쇼핑을 찾는 줄은 분류(38)를 줘서 들어오므로 이 기본값에 걸리지 않는다
+UNTYPED_EXCLUDES = (SHOPPING_TYPE,)
+
+
 def _catalog_places(conn, tenant_id: str, ref: tuple[float, float], content_type: str | None,
                     now: datetime, *, limit: int = 12, query: str | None = None, radius_m: float = RADIUS_M) -> list[dict[str, Any]]:
-    """관광공사 목록(DB)에서 반경 안 활동 — 운영시간은 새벽 작업이 읽어 둔 것(`catalog_hours`)을 붙인다. 바깥을 부르지 않는다."""
+    """관광공사 목록(DB)에서 반경 안 활동 — 운영시간은 새벽 작업이 읽어 둔 것(`catalog_hours`)을 붙인다. 바깥을 부르지 않는다.
+
+    `content_type` 이 있으면 **그 분류만**, 없으면(분류를 모른다) 쇼핑(38)을 뺀 활동이다. 숙박(32)이면 숙박 분류를 읽는다(전에는 활동 분류만 읽어 숙소 후보가 0 이었다)."""
     from app.domains.travel_ops.components.places.catalog_pool import nearby_activities, reuse_hours
 
     cands = nearby_activities(conn, tenant_id, latitude=ref[0], longitude=ref[1], radius_m=radius_m,
-                              exclude_names=set(), limit=limit * 2)
+                              exclude_names=set(), limit=limit * 2, types=[LODGING_TYPE] if content_type == LODGING_TYPE else None)
     if content_type:
         # ★같은 분류가 없으면 비운다 — 관광지의 대체로 음식점 · 쇼핑을 끌어오지 않는다(호출한 쪽이 `no_same_kind` 로 알린다)
         cands = [c for c in cands if c.attributes.get("source_content_type_id") == content_type]
+    else:
+        cands = [c for c in cands if c.attributes.get("source_content_type_id") not in UNTYPED_EXCLUDES]
     if query:
         key = normalize_full(query)
         cands = [c for c in cands if key in normalize_full(c.name)]
@@ -317,6 +329,27 @@ def _present(place: dict[str, Any], assessed: dict[str, Any], prev, nxt, ref, ar
             "estimated": assessed["estimated"]}
 
 
+def _original_type(conn, tenant_id: str, current: dict[str, Any] | None) -> str | None:
+    """원래 장소의 관광공사 분류. 값이 없으면(우리 장소 표의 행은 대개 비어 있다) **같은 이름의 목록 항목**에서 찾고, 이름이 여러 분류에 걸치면 모른다(None)."""
+    if not current:
+        return None
+    if current.get("content_type_id"):
+        return str(current["content_type_id"])
+    name = (current.get("name") or "").strip()
+    if not name:
+        return None
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT DISTINCT content_type_id FROM place_catalog WHERE tenant_id = ANY(%s) AND source='tour_api' AND title=%s",
+                        (_tenants(tenant_id), name))
+            types = [row[0] for row in cur.fetchall() if row[0]]
+    except Exception as exc:                                  # noqa: BLE001 — 목록이 없는 DB(시험 · 다른 조립)면 분류를 모른다
+        if type(exc).__name__ not in ("UndefinedColumn", "UndefinedTable"):
+            raise
+        return None
+    return str(types[0]) if len(types) == 1 else None
+
+
 # ── 대체 후보 ─────────────────────────────────────────────────────
 def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any], kakao: Any = None,
                  engine: Callable[..., Any] | None = None, use_engine: bool = True, now: datetime | None = None,
@@ -349,8 +382,10 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         else:
             found += _catalog_places(conn, tenant_id, ref, parts.get("content_type"), now,
                                      radius_m=float(area["radius_m"]) if area else RADIUS_M)
-        if ref is not None and len(found) < limit + POOL_EXTRA and not lodging:
-            # 우리 목록이 모자라면 카카오 지도로 채운다 — 「성수 식당」 같은 말 그대로 지역 중심 둘레에서
+        if ref is not None and len(found) < limit + POOL_EXTRA:
+            # 우리 목록이 모자라면 카카오 지도로 채운다 — 「성수 식당」 같은 말 그대로 지역 중심 둘레에서.
+            # ★`[2026-10-07]` 숙소 줄(「호텔 조식」)도 「숙소」로 찾는다 — 전에는 숙소 줄에서 이 길을 막아 후보가 늘 0 이었다(사용자 지적 「전에는 카카오로 줬다」).
+            #   카카오가 음식점(FD6 · CE7)을 섞어 내도 아래 종류 거르기(숙소 줄은 활동만)가 버린다
             words = " ".join(w for w in ((area or {}).get("name"), parts.get("label")) if w)
             found += _kakao_places(kakao, words, ref, item["kind"], notes)
         if ref is not None and not found:
@@ -366,7 +401,7 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         if item["kind"] == "dining":
             found += _ledger_places(conn, tenant_id, ref)
         else:
-            ctype = (current or {}).get("content_type_id") if current else None
+            ctype = _original_type(conn, tenant_id, current)
             found += _catalog_places(conn, tenant_id, ref, ctype, now)
             if ctype and not found:
                 notes.append("no_same_kind")

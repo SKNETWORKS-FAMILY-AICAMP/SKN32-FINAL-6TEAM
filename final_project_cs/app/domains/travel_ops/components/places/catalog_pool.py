@@ -16,7 +16,7 @@ import json
 import math
 import time
 from datetime import datetime
-from typing import Any
+from typing import Any, Sequence
 from uuid import UUID
 
 from app.domains.travel_ops.components.planning.planner import CONTENT_TYPE_RANK, INDOOR_ASSUMED_BY_CONTENT_TYPE, KIND_BY_CONTENT_TYPE, Cand, _district_of
@@ -39,8 +39,11 @@ def _catalog_tenants(tenant_id: str) -> list[str]:
 
 
 def nearby_activities(conn, tenant_id: str, *, latitude: float, longitude: float, radius_m: float,
-                      exclude_names: set[str], limit: int = POOL_LIMIT) -> list[Cand]:
-    """목록(`place_catalog`)에서 반경 안 활동을 가까운 순으로."""
+                      exclude_names: set[str], limit: int = POOL_LIMIT, types: Sequence[str] | None = None) -> list[Cand]:
+    """목록(`place_catalog`)에서 반경 안 활동을 가까운 순으로.
+
+    `types` — 읽을 관광공사 분류 번호. 안 주면 활동 분류(`ACTIVITY_TYPES`)다. ★`[2026-10-07]` 숙소 줄의 후보를 위해 숙박(32)을 읽을 수 있게 열었다
+    (전에는 활동 분류만 읽어 「호텔」 줄의 후보가 늘 0 이었다)."""
     dlat = radius_m / 111_000
     dlon = radius_m / (111_000 * max(0.2, math.cos(math.radians(latitude))))
     with conn.cursor() as cur:
@@ -49,7 +52,7 @@ def nearby_activities(conn, tenant_id: str, *, latitude: float, longitude: float
             "WHERE tenant_id = ANY(%s) AND source='tour_api' AND content_type_id = ANY(%s) "
             "AND latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s "
             "ORDER BY (latitude - %s)^2 + ((longitude - %s) * %s)^2 LIMIT %s",
-            (_catalog_tenants(tenant_id), ACTIVITY_TYPES, latitude - dlat, latitude + dlat, longitude - dlon,
+            (_catalog_tenants(tenant_id), list(types) if types else ACTIVITY_TYPES, latitude - dlat, latitude + dlat, longitude - dlon,
              longitude + dlon, latitude, longitude, math.cos(math.radians(latitude)), limit * 3))
         rows = cur.fetchall()
     out: list[Cand] = []
