@@ -44,7 +44,7 @@ def test_ride_of_prefers_the_run_and_falls_back_to_the_path_average():
 
 
 def test_the_shipped_line9_table_separates_express_from_general():
-    assert EX.available() == ["09호선"]
+    assert sorted(EX.available()) == ["01호선", "09호선"]
     weekday = EX.load_line("09호선")["weekday"]
     runs = {id(r): r for _nm, _m, r in weekday}.values()
     assert sum(1 for r in runs if r.express) > 100 and sum(1 for r in runs if not r.express) > 100
@@ -55,36 +55,43 @@ def test_the_shipped_line9_table_separates_express_from_general():
     assert all(not r.serves("여의도", "샛강") for r in runs if r.express), "급행은 샛강에 서지 않는다"
 
 
-def test_timetable_replaces_a_line_with_its_run_table_only_when_the_file_has_that_line(tmp_path):
-    rows = [{"line": "09호선", "station_nm": "여의도", "day_type": "weekday", "dep_time": "09:00:00", "dir": "U", "dest_nm": "중앙보훈병원",
-             "fetched_at": "2026-09-09"},
-            {"line": "01호선", "station_nm": "서울역", "day_type": "weekday", "dep_time": "09:00:00", "dir": "U", "dest_nm": "소요산",
-             "fetched_at": "2026-09-09"}]
-    p = tmp_path / "t.jsonl"
+def _write(tmp_path, name, rows):
+    p = tmp_path / name
     p.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
-    tt = Timetable.load(p)
+    return p
+
+
+def _row(line, nm, dest="중앙보훈병원"):
+    return {"line": line, "station_nm": nm, "day_type": "weekday", "dep_time": "09:00:00", "dir": "U", "dest_nm": dest,
+            "fetched_at": "2026-09-09"}
+
+
+def test_timetable_replaces_a_line_with_its_run_table_only_for_a_real_full_timetable(tmp_path):
+    real = [_row("09호선", nm) for nm in sorted(EX.stations_of("09호선"))] + [_row("02호선", "잠실", "성수")]
+    p = _write(tmp_path, "t.jsonl", real)
+    tt = Timetable.load(p, express=True)
     deps = tt.departures("09호선", "여의도", "weekday")
     assert len(deps) > 100 and all(isinstance(d, Dep) and d.run is not None for d in deps), "9호선은 열차 단위 표로 읽는다"
-    assert [d.run for d in tt.departures("01호선", "서울역", "weekday")] == [None], "다른 노선은 그대로"
+    assert [d.run for d in tt.departures("02호선", "잠실", "weekday")] == [None], "다른 노선은 그대로"
     assert tt.has_station("09호선", "샛강")
-    plain = Timetable.load(p, express=False)
-    assert len(plain.departures("09호선", "여의도", "weekday")) == 1, "스위치를 끄면 종전"
-    only1 = tmp_path / "u.jsonl"
-    only1.write_text(json.dumps(rows[1], ensure_ascii=False) + "\n", encoding="utf-8")
-    assert not Timetable.load(only1).has_station("09호선", "여의도"), "그 노선이 없는 시간표 파일에 표를 끼워 넣지 않는다"
+    assert len(Timetable.load(p).departures("09호선", "여의도", "weekday")) == 1, "기본은 꺼짐 — 시험용 축소 시간표를 건드리지 않는다"
+    mini = _write(tmp_path, "mini.jsonl", [_row("09호선", "여의도")])
+    assert len(Timetable.load(mini, express=True).departures("09호선", "여의도", "weekday")) == 1, "역이 80% 미만인 파일(시험용 축소판)에는 표를 끼우지 않는다"
+    only2 = _write(tmp_path, "u.jsonl", [_row("02호선", "잠실", "성수")])
+    assert not Timetable.load(only2, express=True).has_station("09호선", "여의도"), "그 노선이 없는 파일에 표를 끼워 넣지 않는다"
 
 
-def test_non_express_station_headway_is_the_real_one():
-    tt = Timetable.load(_empty_with_line9())
+def test_non_express_station_headway_is_the_real_one(tmp_path):
+    p = _write(tmp_path, "t.jsonl", [_row("09호선", nm) for nm in sorted(EX.stations_of("09호선"))])
+    tt = Timetable.load(p, express=True)
     n = sum(1 for d in tt.departures("09호선", "공항시장", "weekday") if d.dir == "U")   # 한 방향
     assert 100 <= n <= 140, f"공항시장은 일반만 선다 — 통합 시간표는 한 방향 239편이었다, 실제는 약 124편(받은 값 {n})"
 
 
-def _empty_with_line9():
-    import tempfile
-    import pathlib
-    d = pathlib.Path(tempfile.mkdtemp())
-    p = d / "t.jsonl"
-    p.write_text(json.dumps({"line": "09호선", "station_nm": "여의도", "day_type": "weekday", "dep_time": "09:00:00", "dir": "U",
-                             "dest_nm": "중앙보훈병원", "fetched_at": "2026-09-09"}, ensure_ascii=False) + "\n", encoding="utf-8")
-    return p
+def test_line1_run_table_has_express_trains_that_skip_stations():
+    runs = {id(r): r for _nm, _m, r in EX.load_line("01호선")["weekday"]}.values()
+    assert sum(1 for r in runs if r.express) > 100 and len(runs) > 500
+    skip = [r for r in runs if r.express and not r.serves("서울역", "남영") and r.serves("서울역", "용산")]
+    assert skip, "1호선 급행은 남영 같은 작은 역을 지나친다"
+    gen = [r.ride_min("서울역", "용산") for r in runs if not r.express and r.serves("서울역", "용산")]
+    assert gen and min(gen) > 0

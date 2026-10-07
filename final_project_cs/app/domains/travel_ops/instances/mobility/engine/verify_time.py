@@ -134,37 +134,45 @@ class Timetable:
         self.fetched_at = None
 
     @classmethod
-    def load(cls, path, wanted=None, express=True):
+    def load(cls, path, wanted=None, express=False):
         tt = cls()
-        ex_lines = EX.available() if express else []   # 열차 단위 표가 있는 노선은 통합 시간표 행 대신 그 표로 읽는다
-        seen_ex = set()
+        ex_lines = EX.available() if express else []   # express=True(실서비스 런타임·CLI)일 때만: 열차 단위 표가 있는 노선은 통합 시간표 행 대신 그 표로 읽는다. 시험용 축소 시간표는 노선 이름만 같은 가짜라 기본 꺼짐
+        held = collections.defaultdict(list)     # 열차 단위 표 후보 노선의 행 — 실제 시간표면 버리고 표로, 아니면(시험용 축소판) 그대로 쓴다
         # ☆`[2026-09-29 문제목록 #63]` .gz 도 읽는다 — 시험용 축소 시간표(20MB)를 압축해 두었다(98% 줄어든다)
         opener = gzip.open if str(path).endswith(".gz") else open
+
+        def add(r):
+            line, nm = r.get("line"), r.get("station_nm")
+            if wanted is not None and (line, nm) not in wanted:
+                return
+            tt.stations.add((line, nm))
+            if tt.fetched_at is None:
+                tt.fetched_at = r.get("fetched_at")
+            m = to_min(r.get("dep_time"))
+            if m is None:                         # 시·종착역은 출발이 없다
+                tt.skipped_no_dep += 1
+                return
+            tt.by_key[(line, nm, r.get("day_type"))].append(
+                Dep(m, r.get("dir"), r.get("dest_nm"), r.get("dest_inferred")))
+            tt.rows += 1
+
         with opener(path, "rt", encoding="utf-8") as f:
             for raw in f:
                 raw = raw.strip()
                 if not raw:
                     continue
                 r = json.loads(raw)
-                line, nm = r.get("line"), r.get("station_nm")
-                if line in ex_lines:
-                    seen_ex.add(line)                 # 이 파일에 그 노선이 있다 — 아래에서 열차 단위 표로 바꿔 채운다
+                if r.get("line") in ex_lines:
+                    held[r["line"]].append({k: r.get(k) for k in ("line", "station_nm", "dep_time", "day_type", "dir", "dest_nm",
+                                                                  "dest_inferred", "fetched_at")})
                     continue
-                if wanted is not None and (line, nm) not in wanted:
-                    continue
-                tt.stations.add((line, nm))
-                if tt.fetched_at is None:
-                    tt.fetched_at = r.get("fetched_at")
-                m = to_min(r.get("dep_time"))
-                if m is None:                     # 시·종착역은 출발이 없다
-                    tt.skipped_no_dep += 1
-                    continue
-                tt.by_key[(line, nm, r.get("day_type"))].append(
-                    Dep(m, r.get("dir"), r.get("dest_nm"), r.get("dest_inferred")))
-                tt.rows += 1
+                add(r)
         for ln in ex_lines:
-            if ln not in seen_ex and not (wanted and any(l == ln for l, _n in wanted)):
-                continue                              # 이 시간표 파일에 그 노선이 없다 — 표를 끼워 넣지 않는다(시험용 축소 시간표 등)
+            have = (EX.stations_of(ln) or set())
+            if not have or len({r["station_nm"] for r in held[ln]} & have) < 0.8 * len(have):
+                for r in held[ln]:                    # 이 파일은 그 노선의 실제 시간표가 아니다(역 80% 미만 — 시험용 축소 시간표 등) — 그대로 쓴다
+                    add(r)
+                continue
             for day, rows in (EX.load_line(ln) or {}).items():
                 for nm, m, run in rows:
                     if wanted is not None and (ln, nm) not in wanted:

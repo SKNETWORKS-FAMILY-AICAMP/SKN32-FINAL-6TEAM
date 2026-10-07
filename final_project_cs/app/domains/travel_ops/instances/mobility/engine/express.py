@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""급행이 있는 노선의 **열차 단위** 운행표 — 지금은 9호선 (서울 열린데이터광장 역별 시간표 OA-101, 2026-10-07 들임).
+"""급행이 있는 노선의 **열차 단위** 운행표 — 9호선 · 1호선 (서울 열린데이터광장 역별 시간표 OA-101, 2026-10-07 들임).
 
 왜 필요했나(2026-10-07 카카오맵 대조): 통합 시간표(timetable_v1)에는 열차번호·급행 표시가 없다. 그래서 판정기는
   ① 9호선 모든 열차가 모든 역에 선다고 계산했다 — 급행 구간은 실제보다 늦게(여의도→봉은사 우리 28분 · 급행 실제 중앙값 19.8분),
@@ -16,7 +16,7 @@ import json
 import pathlib
 
 RULES = pathlib.Path(__file__).with_name("rules")
-FILES = {"09호선": RULES / "express_runs_line09_v1.json.gz"}
+FILES = {"09호선": RULES / "express_runs_line09_v1.json.gz", "01호선": RULES / "express_runs_line01_v1.json.gz"}
 
 
 class Run:
@@ -74,6 +74,14 @@ def load_line(line):
             out = None
     _CACHE[line] = out
     return out
+
+
+def stations_of(line):
+    """그 노선 열차 단위 표에 나오는 역 집합(없으면 None)."""
+    d = load_line(line)
+    if d is None:
+        return None
+    return {nm for rows in d.values() for nm, _m, _r in rows}
 
 
 def available():
