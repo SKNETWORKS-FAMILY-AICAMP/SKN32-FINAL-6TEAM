@@ -18,7 +18,8 @@ KEYS = [(s, i) for s in SETS for i, q in enumerate(FX[s]['qs']) if q['type'] != 
 assert len(KEYS) == 769
 D = os.path.join(HERE, 'results/_pull/distill_eval')
 TAGS = [('r16e2', 'r16e2#lora', '시드 1(처음 판)'), ('e4bs2', 'e4bs2#lora', '시드 2'), ('e4bs3', 'e4bs3#lora', '시드 3'), ('e4bs4', 'e4bs4#lora', '시드 4'),
-        ('e4bs5', 'e4bs5#lora', '시드 5'), ('e4bs6', 'e4bs6#lora', '시드 6')]
+        ('e4bs5', 'e4bs5#lora', '시드 5'), ('e4bs6', 'e4bs6#lora', '시드 6'),
+        ('oos1', 'oos1#lora', 'oos1(잡담 부정 사례 추가, 시드 20261012)'), ('oos2', 'oos2#lora', 'oos2(〃 시드 20261013)'), ('oos3', 'oos3#lora', 'oos3(〃 시드 20261014)')]
 runs = {}
 for tag, key, label in TAGS:
     good, errs = {}, 0
@@ -36,13 +37,16 @@ for tag, key, label in TAGS:
     else:
         runs[label] = (good, errs)
 out = ['# 가르친 E4B 시드별 769문제(요청 둘 제외, 엄격 계수) — 같은 레시피(QLoRA r16 · 2 에폭 · lr 2e-4, 한 항목 학습 자료), 시드만 다름\n', '| 시드 | 정답 (Wilson 95%) | 호출 오류 |', '|---|---|---:|']
-vals = []
+vals, ovals = [], []
 for label, (good, errs) in runs.items():
     n = sum(good[k] for k in KEYS)
-    vals.append(n)
+    (ovals if label.startswith('oos') else vals).append(n)
     out.append(f'| {label} | {fmt_ratio(n, 769)} | {errs} |')
+if ovals:
+    out.append('')
+    out.append(f'- 잡담 부정 사례를 더해 다시 가르친 모델(oos) {len(ovals)}개: ' + ' · '.join(f'{v}/769 = {100 * v / 769:.1f}%' for v in ovals) + ' — 학습 자료가 다르므로 아래 시드 범위와 섞어 평균을 내지 않는다')
 if len(vals) >= 3:
-    out.append(f'\n- **시드 {len(vals)}개: 평균 {sum(vals) / len(vals):.1f}/769 = {100 * sum(vals) / len(vals) / 769:.2f}% · 범위 {min(vals)}~{max(vals)} ({100 * min(vals) / 769:.1f}~{100 * max(vals) / 769:.1f}%)** — 시드 하나의 값으로 모델 순위를 말하지 않는 근거')
+    out.append(f'\n- **같은 레시피 시드 {len(vals)}개: 평균 {sum(vals) / len(vals):.1f}/769 = {100 * sum(vals) / len(vals) / 769:.2f}% · 범위 {min(vals)}~{max(vals)} ({100 * min(vals) / 769:.1f}~{100 * max(vals) / 769:.1f}%)** — 시드 하나의 값으로 모델 순위를 말하지 않는 근거')
 labels = list(runs)
 out.append('\n**시드 사이 짝지은 비교**(McNemar 정확검정, 이쪽만 맞음 : 저쪽만 맞음)')
 for a in range(len(labels)):

@@ -82,6 +82,29 @@ out.append(f"| FrogNano 일정 전체(앞의 거부권) | — | {cell('D', 'full
 for vname in V:
     for tau in GRID:
         out.append(f"| {vname} | {tau:g} | {cell('D', vname, tau, True)} | {cell('D2', vname, tau, False)} | {cell('D3', vname, tau, True)} |")
+# 잡담 부정 사례를 더해 다시 가르친 oos1 — 검토자가 oos1 이 고른 답에도 더 줄일 여지가 있는지(검토 결과가 있는 FrogNano · gemma4:12b 만)
+if os.path.exists(os.path.join(D, 'd_test_lp_q4km_oos1.jsonl')):
+    for ds, (pat, pre) in SRC.items():
+        data[(ds, 'oos1')] = jl(pat.format(pre + 'oos1'))
+    out.append('\n## oos1(잡담 부정 사례를 더해 다시 가르친 E4B) + 짧은 확인 검토\n')
+    out.append('표의 값: 오지목 % / 정답 있는 질문 %. 검토 결과가 없는 항목(검토를 못 받은 답)은 그대로 둔다 — 아래에 그 수를 함께 적는다.\n')
+    out.append('| 검토 방식 | τ | D | D2(오지목만) | D3 |')
+    out.append('|---|---|---|---|---|')
+
+    def one(ds, verifier, tau, with_ans=True):
+        x = metrics(ds, 'oos1', verifier, tau)
+        return f'{100 * x[0]:.1f}/{100 * x[1]:.1f}' if with_ans else f'{100 * x[0]:.1f}'
+    out.append(f"| 거르지 않음 | — | {one('D', 'none', 0)} | {one('D2', 'none', 0, False)} | {one('D3', 'none', 0)} |")
+    for vname in ('FrogNano(짧은 확인)', 'gemma4:12b(짧은 확인)'):
+        if vname not in V:
+            continue
+        for tau in GRID:
+            out.append(f"| {vname} | {tau:g} | {one('D', vname, tau)} | {one('D2', vname, tau, False)} | {one('D3', vname, tau)} |")
+    miss = {}
+    for vname in ('FrogNano(짧은 확인)', 'gemma4:12b(짧은 확인)'):
+        if vname in V:
+            miss[vname] = sum(1 for ds in SRC for i, r in data[(ds, 'oos1')].items() if r.get('pick') is not None and r['type'] != 'compound_intent' and V[vname].get(f'{ds}|{i}|{r["pick"]}') is None)
+    out.append('\n- 검토 못 받은 답(oos1 이 항목을 골랐는데 검토 결과가 없는 건수): ' + ' · '.join(f'{k} {v}' for k, v in miss.items()))
 text = '\n'.join(out)
 open(os.path.join(HERE, 'results', 'verify_veto_report.md'), 'w', encoding='utf-8').write(text)
 print(text)
