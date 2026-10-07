@@ -231,6 +231,13 @@ export async function openNotices(page: Page) {
 /** The two panes of the trip's sheet: 「일정 | 채팅」. */
 export const paneTab = (page: Page, name: "일정" | "채팅") => page.getByRole("tab", { name, exact: true });
 
+/** `[2026-10-07 목업 C안 B]` Open the trip's name in the header: the row 「여행계획서 열기 · 공유하기」 under it. */
+export async function openTitle(page: Page) {
+  await page.locator("#trip-title-button").click();
+  await expect(page.getByRole("group", { name: "여행계획서" })).toBeVisible();
+  return page.getByRole("group", { name: "여행계획서" });
+}
+
 /** A day chip in the trip's sheet head (「전체 · 1일차 · 2일차 …」). */
 export const dayTab = (page: Page, name: RegExp) => page.getByRole("tablist", { name: "일차 고르기" }).getByRole("tab", { name });
 

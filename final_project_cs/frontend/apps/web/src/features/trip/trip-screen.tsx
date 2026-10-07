@@ -1,14 +1,14 @@
 "use client";
 
-import { Suspense, useContext, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
-import { createPortal } from "react-dom";
+import { Suspense, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Bell, ChevronsRight, OctagonAlert } from "lucide-react";
-import { DeviceFrame, HeaderSlot } from "@/components/layout/device-frame";
+import { DeviceFrame } from "@/components/layout/device-frame";
 import { JourneyShell } from "@/components/layout/journey-shell";
 import { ToastView, useToastState } from "@/components/toast-view";
 import { QueryState } from "@/components/ui";
 import { TripMap } from "@/features/map";
+import type { PinLook } from "@/features/map/model";
 import { rideLines, routeNotes, visibleShapes } from "@/features/map/route-lines";
 import { hasValidCoordinates } from "@/features/map/map-points";
 import { useRouteDetail } from "@/features/map/use-route-detail";
@@ -27,6 +27,8 @@ import { LegRow, legSummary, StopRow } from "./trip-rows";
 import { dayTimeline, tripDays, type TripLeg } from "./trip-timeline";
 import { NOTICE_LABEL, noticeWhen, TripAttention, type CenterTab } from "./trip-attention";
 import { useSeenNotices } from "./notice-reads";
+import { DetailHeader, TripDetail } from "./trip-detail";
+import { TitleMenu, TripShare, TripTitle } from "./trip-title";
 import { SafetyPanel, shelterMeta } from "./trip-safety";
 import { tripKey, useTrip } from "./use-trip";
 import { useRouteShapes } from "./use-route-shapes";
@@ -103,6 +105,11 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   const [barOpen, setBarOpen] = useState(false);
   const [centerOpen, setCenterOpen] = useState(false);
   const [centerTab, setCenterTab] = useState<CenterTab>("warnings");
+  // `[2026-10-07 목업 C안 3단계]` The title row (opened · being renamed), the share sheet, and the stop whose detail is open.
+  const [titleOpen, setTitleOpen] = useState(false);
+  const [titleEditing, setTitleEditing] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const [slide, setSlide] = useState<"next" | "prev" | null>(null);
   const [peek, setPeek] = useState<{ side: -1 | 0 | 1; top: number; edge: boolean }>({ side: 0, top: 0, edge: false });
   const { shown: shownToast, show: showToast, hide: hideToast } = useToastState();
@@ -330,12 +337,55 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   // ── The notice center: opened by the bell (unread notices first), by a notice's 「알림 보기」, by 「일정 정지 중」. ──
   function openCenter(tab?: CenterTab) {
     setCenterTab(tab ?? (unread > 0 ? "notices" : centerTab));
+    setTitleOpen(false);
     setCenterOpen(true);
   }
   function closeCenter() {
     setCenterOpen(false);
     requestAnimationFrame(() => document.getElementById("trip-bell")?.focus());
   }
+  // ── The title: opened, it shows 「여행계획서 열기 · 공유하기」 under it; a press outside folds it. ──
+  const tripTitle = trip.title ?? t("나의 여행", "Your trip");
+  function closeTitle() { setTitleOpen(false); setTitleEditing(false); }
+  /** `finished`: the plan was sent or saved — the title row folds too and the focus goes back to the name. */
+  function closeShare(finished?: boolean) {
+    setShareOpen(false);
+    if (finished) setTitleOpen(false);
+    requestAnimationFrame(() => document.getElementById(finished ? "trip-title-button" : "trip-title-share")?.focus({ preventScroll: true }));
+  }
+  useEffect(() => {
+    if (!titleOpen || shareOpen) return;
+    const away = (event: Event) => { if (!(event.target instanceof Element && event.target.closest("[data-trip-title]"))) setTitleOpen(false); };
+    document.addEventListener("pointerdown", away);
+    return () => document.removeEventListener("pointerdown", away);
+  }, [titleOpen, shareOpen]);
+
+  // ── 「상세 보기」: the stop's day on the map (the others greyed), its cards in the sheet; ← or Esc goes back to the list with that stop open. ──
+  const detailStop = detailId ? trip.stops.find((stop) => stop.id === detailId) ?? null : null;
+  function openDetail(id: string) {
+    const stop = trip.stops.find((entry) => entry.id === id);
+    if (!stop) return;
+    hideToast();
+    closeTitle();
+    setBarOpen(false);
+    goPane("plan");
+    if (stop.date !== mapDay) showDay(stop.date);
+    setSelectedLine(null);
+    setSelectedId(id);
+    setDetailId(id);
+    if (sheet === "peek") setSheet("half");
+  }
+  function detailTo(id: string) { setDetailId(id); setSelectedId(id); }
+  function closeDetail() {
+    const id = detailId;
+    setDetailId(null);
+    if (!id) return;
+    setSelectedId(id);
+    setOpenId(id);
+    bringUp(id);
+    requestAnimationFrame(() => document.getElementById(`stop-button-${id}`)?.focus({ preventScroll: true }));
+  }
+
   /** A notice the server sent while the trip is open: one bar, the newest (a new bar replaces the one shown). */
   const announce = useEffectEvent((notice: Notice) => showToast(noticeToast(notice, trip, proposals.data ?? [], t, () => openCenter("notices"))));
   const known = useRef<Set<string> | null>(null);
@@ -352,6 +402,8 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   function onKey(event: KeyboardEvent<HTMLElement>) {
     if (event.key !== "Escape" || event.defaultPrevented) return;
     if (centerOpen) { event.preventDefault(); closeCenter(); return; }
+    if (detailId) { event.preventDefault(); closeDetail(); return; }
+    if (titleOpen) { event.preventDefault(); closeTitle(); requestAnimationFrame(() => document.getElementById("trip-title-button")?.focus()); return; }
     if (pane === "chat") { event.preventDefault(); goPane("plan"); return; }
     if (barOpen) { event.preventDefault(); setBarOpen(false); }
   }
@@ -366,13 +418,16 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
       <ol className={pc.timeline}>{dayTimeline(trip, date, shapes).map((entry) => entry.type === "stop"
         ? <StopRow key={entry.stop.id} stop={entry.stop} next={stops[stops.indexOf(entry.stop) + 1]} open={openId === entry.stop.id} selected={selectedId === entry.stop.id}
             onToggle={() => { setSelectedId(entry.stop.id); setSelectedLine(null); setOpenId((current) => current === entry.stop.id ? null : entry.stop.id); }}
-            onDetail={() => undefined} detailWhy={t("상세 보기는 준비 중이에요", "Details are coming")} explain={explain}
+            onDetail={() => openDetail(entry.stop.id)} detailWhy={null} explain={explain}
             onShowOnMap={() => pick(entry.stop.id, "list")} onAsk={() => { setSelectedId(entry.stop.id); chat.askAbout(entry.stop); }} askBusy={chat.message.isPending} />
         : <LegRow key={entry.leg.id} leg={entry.leg} open={openId === entry.leg.id}
             onToggle={() => { setOpenId((current) => current === entry.leg.id ? null : entry.leg.id); setSelectedLine((current) => entry.leg.shape && current !== entry.leg.shape.itemId ? entry.leg.shape.itemId : null); setSelectedId(null); }} />)}</ol>
     </section>;
   };
   const near = peek.side === 0 ? undefined : days[dayAt + peek.side];
+  const detailLooks: Record<string, PinLook> | undefined = detailStop
+    ? Object.fromEntries(mapStops.map((stop, at) => [stop.id, { label: String(at + 1), tone: stop.id === detailStop.id ? "current" : "muted" }]))
+    : undefined;
   const plan = pane === "plan";
 
   return <DeviceFrame floating menuTools={guardian.tool}
@@ -380,12 +435,17 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
       aria-label={unread > 0 ? t(`알림 센터 열기 · 읽지 않은 알림 ${unread}개`, `Open notices · ${unread} unread`) : t("알림 센터 열기", "Open notices")}>
       <Bell size={20} strokeWidth={2} aria-hidden="true" />{unread > 0 && <span className={styles.badge} aria-hidden="true">{unread > 99 ? "99+" : unread}</span>}</button>}>
     <main id="main-content" tabIndex={-1} className={`${pc.screen} ${styles.screen}`} data-floating onKeyDown={onKey}>
-      <HeaderTitle title={trip.title ?? t("나의 여행", "Your trip")} />
+      {detailStop ? <DetailHeader title={detailStop.title} onBack={closeDetail} />
+        : <TripTitle title={tripTitle} open={titleOpen} editing={titleEditing} onOpen={() => setTitleOpen(true)} onClose={closeTitle}
+          onEdit={() => setTitleEditing(true)} onEditEnd={closeTitle}
+          // ★The server cannot rename a registered trip yet: said, and the name stays.
+          onSave={() => showToast({ text: t("이름 바꾸기는 준비 중이에요", "Renaming is coming"), sub: t("서버에 아직 등록한 여행의 이름을 바꾸는 기능이 없어 저장하지 않았어요.", "The server cannot rename a registered trip yet, so the name was not saved.") })} />}
       <div ref={box} className={pc.checking} data-sheet={custom !== null ? "custom" : sheet} data-dragging={dragging || undefined} data-compact={compact || undefined}
         style={custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
         <div className={pc.map}>
-          <TripMap stops={mapStops} dayNumber={dayAt + 1} selectedId={selectedId ?? undefined} variant="fill" topInset={64} bottomInset={24} routes={routeDetail.routes} onZoom={routeDetail.onZoom}
-            onSelect={(id) => pick(id, "map")} onSelectLine={pickLine} selectedLineId={selectedLine ?? undefined} tripId={trip.id} date={mapDay}
+          <TripMap stops={mapStops} dayNumber={dayAt + 1} selectedId={detailId ?? selectedId ?? undefined} variant="fill" topInset={64} bottomInset={24} looks={detailLooks}
+            routes={detailStop ? undefined : routeDetail.routes} onZoom={routeDetail.onZoom}
+            onSelect={(id) => detailStop ? detailTo(id) : pick(id, "map")} onSelectLine={pickLine} selectedLineId={selectedLine ?? undefined} tripId={trip.id} date={mapDay}
             routesError={routeShapes.isError ? t("경로선을 불러오지 못했어요. 장소 핀은 그대로 보여 드려요.", "Could not load the route lines. The pins are still shown.") : undefined} />
         </div>
         {/* 지도 아래 안내 줄(계획 확인 화면과 같다): 핀이 없는 일정 · 경로선을 읽지 못함. 수단 태그(지하철 · 버스 · 도보)는 띄우지 않는다(2026-10-07 사용자 결정). */}
@@ -397,7 +457,10 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
           <button type="button" className={pc.handle} aria-label={t("목록 높이 바꾸기", "Change the list height")} title={t("눌러서 높이를 바꾸고, 잡고 끌어 원하는 높이로 맞춰요", "Press to change the height, or drag it to any height")}
             onClick={cycleSheet} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet} onKeyDown={nudgeSheet}><span aria-hidden="true" /></button>
           {/* `[2026-10-07 사용자 결정]` 머리는 날짜 칩 줄 하나: 칩은 옆으로 스크롤되고 오른쪽 「일정 | 채팅」은 고정(자리는 정하는 중이라 임시). 「등록 완료」 표시는 두지 않는다. */}
-          <header className={pc.sheetHead} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
+          {detailStop && <TripDetail trip={trip} stopId={detailStop.id} dayNumber={days.indexOf(detailStop.date) + 1} onStop={detailTo}
+            onAsk={(stop) => { setDetailId(null); setSelectedId(stop.id); chat.askAbout(stop); }} askBusy={chat.message.isPending} onSheetFull={() => { setCustom(null); setSheet("full"); }} />}
+          {/* The list and the chat stay mounted under the detail (their gestures and scroll are kept), only hidden. */}
+          <header className={`${pc.sheetHead} ${detailStop ? styles.away : ""}`} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
             {days.length > 1 && <div ref={stripBox} className={pc.dayStrip} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
               onKeyDown={(event) => {
                 if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
@@ -420,7 +483,7 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
               </div>
             </div>
           </header>
-          <div className={styles.pager}>
+          <div className={`${styles.pager} ${detailStop ? styles.away : ""}`}>
             <div ref={pagerTrack} className={styles.pagerTrack} data-pane={pane} data-instant={instant || undefined}>
               <div className={styles.pane} id="trip-pane-schedule" role="tabpanel" aria-labelledby="trip-pane-button-schedule" inert={!plan}>
                 <div ref={bodyBox} className={`${pc.sheetBody} ${styles.planBody}`}>
@@ -445,8 +508,10 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
           </div>
         </section>
       </div>
-      <ChatBar chat={chat} open={barOpen} inChat={!plan} onOpen={() => setBarOpen(true)} onClose={() => setBarOpen(false)} onEnterChat={() => goPane("chat")} />
-      {/* `[2026-10-07 목업 C안 ① 알림 센터]` 할 일(재난 정지 → 재난 뒤 이어가기 → 선택 요청 → 자동 변경) 아래 탭 셋(살펴볼 점 · 받은 알림 · 변경 이력). 여행계획서 링크는 3단계(제목 펼침)까지 맨 아래. */}
+      {titleOpen && !titleEditing && !detailStop && <TitleMenu planUrl={trip.planUrl ?? null} onShare={() => setShareOpen(true)} onDone={closeTitle} explain={explain} />}
+      {shareOpen && trip.planUrl && <TripShare trip={trip} title={tripTitle} planUrl={trip.planUrl} onClose={closeShare} notify={showToast} />}
+      {!detailStop && <ChatBar chat={chat} open={barOpen} inChat={!plan} onOpen={() => setBarOpen(true)} onClose={() => setBarOpen(false)} onEnterChat={() => goPane("chat")} />}
+      {/* `[2026-10-07 목업 C안 ① 알림 센터]` 할 일(재난 정지 → 재난 뒤 이어가기 → 선택 요청 → 자동 변경) 아래 탭 셋(살펴볼 점 · 받은 알림 · 변경 이력). 여행계획서 링크는 제목을 펼친 줄에 있다. */}
       {centerOpen && <section className={styles.center} role="dialog" aria-modal="false" aria-labelledby="trip-center-title">
         <header className={styles.centerHead}>
           <button type="button" className={styles.centerBack} onClick={closeCenter} aria-label={t("알림 센터 닫기", "Close notices")}><ArrowLeft size={20} strokeWidth={1.6} aria-hidden="true" /></button>
@@ -462,11 +527,6 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
 }
 
 /** The trip's name in the header's slot (inside the frame, where the slot is provided) — the plan check's title chip. */
-function HeaderTitle({ title }: { title: string }) {
-  const slot = useContext(HeaderSlot);
-  return slot && createPortal(<div className={pc.headInfo} data-title><h1 className={pc.headTitle}>{title}</h1></div>, slot);
-}
-
 /** What a pressed route line says, in the one notice bar: from where to where, how, when, what it rides — only what the server gave. */
 /**
  * `[2026-10-07 목업 C안]` A notice the server just sent, in the notice bar: the stop's number and name when the notice is about one (a choice), the kind as a chip, the server's sentence

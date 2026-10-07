@@ -21,13 +21,13 @@ const TAG_LABELS: Record<string, [string, string]> = {
 };
 
 /** The place facts of a stop in the server's words (old trip screen's rows): only what the server sent. */
-export function placeRows(stop: TripStop, t: Translate) {
+export function placeRows(stop: TripStop, t: Translate, where = true) {
   const info = stop.placeInfo;
   if (!info) return null;
   const tags = info.tags.filter((tag) => !tag.startsWith("michelin")).map((tag) => (TAG_LABELS[tag] ? t(...TAG_LABELS[tag]) : tag));
   return <>
-    {info.category && <><dt>{t("분류", "Type")}</dt><dd>{info.category}</dd></>}
-    {info.address && <><dt>{t("주소", "Address")}</dt><dd>{info.address}</dd></>}
+    {where && info.category && <><dt>{t("분류", "Type")}</dt><dd>{info.category}</dd></>}
+    {where && info.address && <><dt>{t("주소", "Address")}</dt><dd>{info.address}</dd></>}
     {info.phone && <><dt>{t("전화", "Phone")}</dt><dd><a href={`tel:${info.phone.replace(/[^\d+]/g, "")}`}>{info.phone}</a></dd></>}
     {info.hours.length > 0 && <><dt>{t("영업시간", "Hours")}</dt><dd>{info.hours.join(" · ")}</dd></>}
     {info.hoursNotes.length > 0 && <><dt>{info.hours.length ? t("운영 안내", "Hours notes") : t("영업시간", "Hours")}</dt><dd>{info.hoursNotes.join(" · ")}</dd></>}
@@ -72,15 +72,7 @@ export function StopRow({ stop, next, open, selected, onToggle, onDetail, detail
         <Act className={styles.detailButton} why={detailWhy} explain={explain} onPress={onDetail} aria-label={t(`${stop.title} 상세 보기`, `Details of ${stop.title}`)}>{t("상세 보기", "Details")}<ChevronRight size={15} strokeWidth={1.8} aria-hidden="true" /></Act>
       </div>
       {open && <div className={styles.stopBody} id={`stop-detail-${stop.id}`}>
-        <dl className={styles.details}>
-          <dt>{t("날짜", "Date")}</dt><dd>{stop.date}</dd>
-          <dt>{t("예정 시간", "Planned time")}</dt><dd>{stop.time}</dd>
-          {placeRows(stop, t)}
-          <dt>{t("예약 표시", "Booking note")}</dt><dd>{bookingLabel(stop, t)}</dd>
-          <dt>{t("다음 일정", "Next stop")}</dt><dd>{next ? `${next.time} · ${next.title}` : t("이날 마지막 일정", "Last stop of the day")}</dd>
-          {stop.otherOptions && stop.otherOptions.length > 0 && <><dt>{t("다른 안", "Other options")}</dt><dd>{stop.otherOptions.map((option) => option.name).join(" · ")}</dd></>}
-          <dt>{t("입력한 메모", "Your notes")}</dt><dd>{stop.notes || t("등록된 메모가 없어요.", "No notes added.")}</dd>
-        </dl>
+        <StopFacts stop={stop} next={next} />
         <div className={styles.detailActions}>
           <button type="button" className={styles.action} onClick={onShowOnMap}><MapPin size={16} strokeWidth={1.6} aria-hidden="true" />{t("지도에서 보기", "Show on map")}</button>
           <button type="button" className={styles.action} disabled={askBusy} onClick={onAsk}><MessageCircle size={16} strokeWidth={1.6} aria-hidden="true" />{t("이 일정 질문하기", "Ask about this stop")}</button>
@@ -89,6 +81,22 @@ export function StopRow({ stop, next, open, selected, onToggle, onDetail, detail
       </div>}
     </article>
   </li>;
+}
+
+/**
+ * The facts of a stop (the old trip screen's card), in the server's words: the opened card shows them all; the detail (`brief`) leaves out what it shows above them (date, time, kind, address).
+ */
+export function StopFacts({ stop, next, brief = false }: { stop: TripStop; next: TripStop | undefined; brief?: boolean }) {
+  const t = useT();
+  return <dl className={styles.details}>
+    {!brief && <><dt>{t("날짜", "Date")}</dt><dd>{stop.date}</dd>
+      <dt>{t("예정 시간", "Planned time")}</dt><dd>{stop.time}</dd></>}
+    {placeRows(stop, t, !brief)}
+    <dt>{t("예약 표시", "Booking note")}</dt><dd>{bookingLabel(stop, t)}</dd>
+    <dt>{t("다음 일정", "Next stop")}</dt><dd>{next ? `${next.time} · ${next.title}` : t("이날 마지막 일정", "Last stop of the day")}</dd>
+    {stop.otherOptions && stop.otherOptions.length > 0 && <><dt>{t("다른 안", "Other options")}</dt><dd>{stop.otherOptions.map((option) => option.name).join(" · ")}</dd></>}
+    <dt>{t("입력한 메모", "Your notes")}</dt><dd>{stop.notes || t("등록된 메모가 없어요.", "No notes added.")}</dd>
+  </dl>;
 }
 
 /** The icon of how a leg is travelled (the route line's mode); a plain arrow when the server did not say. */

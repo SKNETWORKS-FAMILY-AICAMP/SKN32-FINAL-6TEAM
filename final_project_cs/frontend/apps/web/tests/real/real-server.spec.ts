@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { finishOnboarding, openNotices, paneTab, start, tripScreen } from "../live/helpers";
+import { finishOnboarding, openNotices, openTitle, paneTab, start, tripScreen } from "../live/helpers";
 
 /**
  * A brand-new customer on the REAL server: first visit → survey → plan → read → confirm → trip screen → chat → map.
@@ -87,7 +87,8 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   const center = await openNotices(page);
   await center.getByRole("tab", { name: /받은 알림/ }).click();
   await expect(center.getByRole("tabpanel")).toContainText("여행 일정이 준비되었습니다");
-  await expect(center.getByRole("link", { name: "여행계획서 열기" })).toHaveAttribute("href", /\/plan\/[0-9a-f-]{36}\?t=/);
+  await center.getByRole("button", { name: "알림 센터 닫기" }).click();
+  await expect((await openTitle(page)).getByRole("link", { name: "여행계획서 열기" })).toHaveAttribute("href", /\/plan\/[0-9a-f-]{36}\?t=/);
 
   // 내 여행: 같은 브라우저(같은 키)로 첫 화면에 돌아오면 방금 만든 여행이 카드에 있다
   await page.goto("/");

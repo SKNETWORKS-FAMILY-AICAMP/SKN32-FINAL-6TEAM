@@ -39,5 +39,3 @@
 .tag[data-type="version"] { background: var(--color-subtle); color: var(--color-text-secondary); }
 .cut { margin: 10px 0 0; font-size: 11px; color: var(--color-muted); }
 
-.plan { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 8px 0 0; padding-top: 12px; border-top: 1px solid var(--color-divider); font-size: 11px; color: var(--color-muted); }
-.plan a { font-size: 13px; font-weight: 650; color: var(--color-primary); }

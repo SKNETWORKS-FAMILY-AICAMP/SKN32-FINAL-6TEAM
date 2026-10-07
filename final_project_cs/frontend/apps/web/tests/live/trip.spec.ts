@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { alsoAgree, APP, start, mockServer, openNotices, paneTab, TRIP_ID, tripScreen } from "./helpers";
+import { alsoAgree, APP, start, mockServer, openNotices, openTitle, paneTab, TRIP_ID, tripScreen } from "./helpers";
 
 test.beforeEach(async ({ page, request }) => {
   await mockServer(request).reset();
@@ -54,7 +54,7 @@ test("여행 화면(지도 + 시트)은 서버가 준 일정·고정·다른 안
   await expect(detail.getByRole("link", { name: "지도 앱으로 열기" })).toHaveAttribute("href", "https://www.google.com/maps/search/?api=1&query=%EC%95%84%EC%B9%A8");
   await expect(detail.getByRole("link", { name: "지도 앱으로 열기" })).toHaveAttribute("target", "_blank");
 
-  // 종 — 알림 센터: 할 일 · 탭 셋(서버가 찾은 것 · 보낸 것 · 바꾼 것)과 여행계획서
+  // 종 — 알림 센터: 할 일 · 탭 셋(서버가 찾은 것 · 보낸 것 · 바꾼 것)
   const notices = await openNotices(page);
   const tabs = notices.getByRole("tablist", { name: "알림 종류" }).getByRole("tab");
   await expect(tabs).toHaveText([/^살펴볼 점 \d+$/, "받은 알림 2", /^변경 이력 \d+$/]);
@@ -67,7 +67,9 @@ test("여행 화면(지도 + 시트)은 서버가 준 일정·고정·다른 안
   await expect(list).toContainText("일정을 줄이세요");
   await notices.getByRole("tab", { name: /변경 이력/ }).click();
   await expect(list).toContainText("처음 등록");
-  const plan = notices.getByRole("link", { name: "여행계획서 열기" });
+  // 여행계획서 — 제목을 펼친 줄(목업 C안 B)
+  await notices.getByRole("button", { name: "알림 센터 닫기" }).click();
+  const plan = (await openTitle(page)).getByRole("link", { name: "여행계획서 열기" });
   await expect(plan).toHaveAttribute("href", new RegExp(`/plan/${TRIP_ID}\\?t=`));
   await expect(plan).toHaveAttribute("target", "_blank");
   // 데모 잔재가 없다
@@ -439,12 +441,13 @@ test("채팅: 서버가 현재 위치가 필요하다고 하면 버튼을 누를
   await expect(chat.getByRole("button", { name: "내 위치 알려 주고 다시 묻기" })).toHaveCount(0);
 });
 
-test("계획서 링크 옆에 「계획서 내려받기」가 있고, 같은 주소에 download=1 이 붙으며, 서버는 그것을 파일(attachment)로 내려 준다", async ({ page, request }) => {
+test("「공유하기」의 「파일로 내려받기」는 계획서 링크와 같은 주소에 download=1 이 붙고, 서버는 그것을 파일(attachment)로 내려 준다", async ({ page, request }) => {
   await start(page);
   await openTrip(page);
-  await openNotices(page);
-  const open = page.getByRole("link", { name: "여행계획서 열기" });
-  const download = page.getByRole("link", { name: "계획서 내려받기" });
+  const menu = await openTitle(page);
+  const open = menu.getByRole("link", { name: "여행계획서 열기" });
+  await menu.getByRole("button", { name: "공유하기" }).click();
+  const download = page.getByRole("dialog", { name: "여행계획서 공유" }).getByRole("link", { name: /파일로 내려받기/ });
   await expect(open).toBeVisible();
   const openHref = new URL((await open.getAttribute("href"))!);
   const downloadHref = new URL((await download.getAttribute("href"))!);
