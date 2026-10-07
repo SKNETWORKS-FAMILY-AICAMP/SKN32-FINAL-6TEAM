@@ -63,6 +63,19 @@ domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도�
 - 그 칸이 비어 있으면 **넘기지 않고 예외**를 낸다 — 다른 벡터로 몰래 검색하면 근거 0건이 「규정이 없다」로 읽힌다(`RULE.md` §3.2).
 - 채우려면 `python -m scripts.embed_chunks_openai`(서버용 키로 청크 본문 그대로 임베딩 · 1024 칸은 안 건드림 · `--dry-run` 으로 수만 센다). **배포 DB 에서도 한 번 돌려야 한다.**
 
+## 정확도 — 넘긴 모델이 Gemma 만큼 맞나 `[실측 2026-10-07]`
+
+채팅 결정 단위의 재생 시험(`eval/decision_unit/replay.py`, 실제 대화 66문장, 정답은 Claude 표기)을 Ollama 자리를 막고 OpenAI 로만 돌렸다. 한 번씩 잰 값이다(반복 없음 — 편차는 모른다).
+
+| 모델 | 맞음 | 엉뚱한 대상 변경 | 쓸데없는 되묻기 | 지연 p95 |
+|---|---:|---:|---:|---:|
+| Gemma 4 12B(평소 경로, GPU 서버 혼잡 없을 때) | 64/66 = 97.0% | 0 | 1 | 5.8초 |
+| `gpt-4.1` | **64/66 = 97.0%** | 0 | 1 | 3.9초 |
+| `gpt-4.1-mini` | 55/66 = 83.3% | 0 | 9 | 3.2초 |
+| `gpt-4o-mini` | 52/66 = 78.8% | **1** | 3 | 3.0초 |
+
+작은 모델은 이름으로 일정을 못 짚거나(「무구옥 주소 알려줘」→ 대상 없음) 엉뚱한 일정을 바꿨다(「그럼 그 다음식당 바꿔」→ 다른 날 식당). 그래서 기본을 `gpt-4.1` 로 했다. 호출당 비용이 작은 모델보다 크지만(단가는 확인하지 않았다 `[미확인]`) 일 상한(2,000)이 하루 비용의 위쪽을 막는다. 화면 조작 30문장은 `gpt-4o-mini` 로만 쟀다(27/30). 알림 번역 · 분류 · 계획 읽기를 OpenAI 로 돌린 정확도는 `[미측정]`. 보고서 `eval/decision_unit/report_openai_failover_*.json`.
+
 ## 켜는 법
 
 배포(운영) 환경 파일에서만 켠다. 개발 PC 에서는 켜지 않는다 — 연결이 끊겼을 때 시험 · 측정이 조용히 유료 API 로 새고, 어느 모델의 값인지 섞인다.
@@ -71,7 +84,7 @@ domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도�
 |---|---|---|
 | `ACOP_LLM_FAILOVER_ENABLED` | `true` | 스위치(기본 `false`) |
 | `ACOP_OPENAI_API_KEY_SERVER` | 서버용 키 | 비어 있으면 스위치가 켜져 있어도 안 넘긴다. 개인 키로 대신하지 않는다 |
-| `ACOP_LLM_FAILOVER_MODEL` | 비움 | 비우면 `ACOP_LLM_MODEL`(지금 `gpt-4o-mini`) |
+| `ACOP_LLM_FAILOVER_MODEL` | `gpt-4.1`(기본) | 비우면 `ACOP_LLM_MODEL`(지금 `gpt-4o-mini`). 왜 `gpt-4.1` 인지는 아래 「정확도」 |
 | `ACOP_OLLAMA_FALLBACK_BASE_URLS` | 비움 | Ollama 가 둘 이상일 때만 |
 | `ACOP_LLM_FAILOVER_VISION` | `false` | 이미지도 넘길지(기본 안 넘김) |
 | `…_PRIMARY_TIMEOUT_SECONDS` · `…_API_TIMEOUT_SECONDS` · `…_TOTAL_SECONDS` · `…_FAILURES` · `…_OPEN_SECONDS` · `…_DAILY_CAP` · `…_MONTHLY_CAP` | 6 · 8 · 15 · 3 · 60 · 2000 · 30000 | 기본값은 [settings.py](../../app/core/settings.py) |
@@ -79,6 +92,6 @@ domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도�
 ## 한계 — 확인한 것과 못 한 것
 
 - **시험:** mock 서버 시험(Ollama 자리는 정해진 응답을 내는 가짜 전송 함수와 **이 PC 안에 잠깐 띄운 진짜 HTTP mock 서버** — 닫힌 포트 · 느린 서버 · 5xx · 정상, OpenAI 자리는 가짜 클라이언트)으로 위 동작을 확인했다.
-- **실서버 확인:** 서버용 키로 **실제 OpenAI 를 4번**(json · text · structured · embedding) 불러 넘어가는 것을 확인했다(Ollama 자리는 닫힌 포트). x600 서버의 실제 Ollama · GPU 서버를 죽여 보는 시험, **배포 환경에 켜는 일은 하지 않았다**.
-- 다른 모델이 답하므로 **결정 단위 정확도는 Gemma 와 같다고 알 수 없다** — OpenAI 경로의 재생 시험(`eval/decision_unit/replay.py`)은 아직 안 했다 `[미측정]`. 재생 도구는 `from_settings` 를 쓰므로 스위치가 꺼진 개발 환경에서는 늘 Ollama 만 잰다.
+- **실서버 확인:** 서버용 키로 **실제 OpenAI** 를 불러 넘어가는 것을 확인했다 — json · text · structured · embedding 각 1번, 규정 검색 1번(로컬 개발 DB), 결정 단위 재생 약 300번(모델 비교, 위 표). Ollama 자리는 닫힌 포트였다. x600 서버의 실제 Ollama · GPU 서버를 죽여 보는 시험, **배포 환경에 켜는 일은 하지 않았다**.
+- 결정 단위 정확도는 위 표(실제 대화 66문장)만 쟀다 — 다른 호출(번역 · 분류 · 계획 읽기)의 OpenAI 경로 정확도는 `[미측정]`. 재생 도구는 `from_settings` 를 쓰므로 스위치가 꺼진 개발 환경에서는 늘 Ollama 만 잰다(OpenAI 경로로 재려면 `ACOP_OLLAMA_BASE_URL` 을 닫힌 주소로 두고 스위치를 켠다).
 - 지표는 프로세스를 다시 띄우면 0 으로 돌아간다(영구 기록은 로그).

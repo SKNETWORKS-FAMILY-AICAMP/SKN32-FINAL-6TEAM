@@ -144,8 +144,10 @@ class Settings(BaseSettings):
     #:  ★스위치는 **기본 꺼짐**이다 — 개발 PC 에서 모델 서버 연결이 끊겼을 때 시험 · 측정이 조용히 유료 API 로 새지 않게. 운영(배포) 환경 파일에서만 켠다.
     #:  켜져 있어도 `openai_api_key_server` 가 비어 있으면 넘기지 않는다(그때는 지금처럼 Ollama 만).
     llm_failover_enabled: bool = False
-    #:  넘길 때 쓰는 OpenAI 모델. 비우면 `llm_model`
-    llm_failover_model: str = ""
+    #:  넘길 때 쓰는 OpenAI 모델. 비우면 `llm_model`.
+    #:  ★`[2026-10-07 실측 — 결정 단위 재생 · 실제 대화 66문장]` `gpt-4o-mini` 52/66 · `gpt-4.1-mini` 55/66 · **`gpt-4.1` 64/66 = 97.0%**(Gemma 4 12B 와 같음). 그래서 기본은 `gpt-4.1` —
+    #:  작은 모델은 엉뚱한 대상을 바꾸거나(4o-mini 1건) 쓸데없이 되묻는다(4.1-mini 9건)
+    llm_failover_model: str = "gpt-4.1"
     #:  Ollama 를 기다리는 시간(초) — 고객 응답 SLA 15초 안에 API 까지 끝나게 `ollama_timeout_seconds`(60)보다 짧다. 서버가 식어 느린 첫 호출도 여기서 걸러진다(예열이 그 몫)
     llm_failover_primary_timeout_seconds: float = 6.0
     #:  OpenAI 를 기다리는 시간(초)
