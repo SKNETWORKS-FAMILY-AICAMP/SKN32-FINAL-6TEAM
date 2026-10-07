@@ -94,6 +94,20 @@ ActivityTeam (feasibility / weather …)
   - 가드레일 수치는 한 곳에만 둔다(CLAUDE.md §3).
   - 기존 `reliability.llm_call_timeout_seconds` (20초)를 웹 검색 호출에도 그대로 쓸지는 실측 후 정한다.
 
+**지금 쓰는 모델** `[실측 2026-10-07 — 로컬 .env 를 앱이 읽은 값]`
+
+활동 판정 LLM 은 **`gpt-5.4-nano`** 다. 다만 서비스 전체가 이 모델 하나를 쓰는 것은 아니다 — 용도마다 다르다.
+
+| 용도 | 모델 | 어디서 정하나 |
+|---|---|---|
+| **활동 판정 LLM** (정기휴무 · 운영시간 · 실내외 · 재난문자 · 실시간 운영 상태) | **`gpt-5.4-nano`** — OpenAI Responses API, reasoning effort `low`, 웹 검색 켬 | 코드 기본값(`settings.py`). `.env` 의 `ACOP_ACTIVITY_JUDGE_*` 줄은 주석이라 기본값이 그대로 쓰인다 |
+| 분류 · 추출 · 번역 | `gemma4:12b` — 로컬 Ollama | `.env` 의 `ACOP_OLLAMA_BASE_URL` 이 있으면 이쪽을 쓴다(9/14 OpenAI 크레딧 소진 뒤) |
+| 일반 Team LLM | `gpt-4o-mini` — OpenAI | `.env` 의 `ACOP_LLM_MODEL` |
+| 정책 검색(RAG) 임베딩 | `bge-m3` — 로컬 Ollama, 1024차원 | `.env` 의 `ACOP_EMBEDDING_PROVIDER=ollama`(10/07 사용자 변경) |
+
+- 활동 판정은 섀도 모드라 `gpt-5.4-nano` 의 판정은 비교 기록(`activity_judge_shadow`)에만 남고 고객 답변에는 쓰이지 않는다.
+- 판정 모델을 바꾸려면 `.env` 의 `# ACOP_ACTIVITY_JUDGE_MODEL=gpt-5.4-nano` 주석을 풀고 값을 바꾼다.
+
 ### 5.2 어댑터 — `openai_responses.py` (새 파일)
 
 - 호출 형태: `client.responses.create(model=…, input=…, tools=[{"type": "web_search"}] (선택), text={"format": json_schema}, reasoning={"effort": …}, include=["web_search_call.action.sources"])`
@@ -389,3 +403,7 @@ LLM 구현과 관련한 결정·변경·실측을 날짜순으로 적는다. 항
 - 시험: 여행 · 도구 · 스크립트 · Team 규율 1600 passed. DB 통합(활동 · 재난 · 장소 · 섀도) 53 passed. `ruff` 통과.
   - 앞 커밋 `298ca73` 에서 `tests/unit/test_try_activity_judge_script.py::test_parse_disaster` 가 깨져 있었다(그때 이 파일을 돌리지 않았다). 함께 고쳤다.
 - 남은 것: 일정 감시(`watch.py`)와 운행 차질 점검(`disruptions.py`)은 아직 주소를 넘기지 않는다 — 좌표 상자(겹치면 전부)로 거른다.
+
+### 2026-10-07 (지금 쓰는 모델 확인)
+- 앱이 읽은 설정을 확인해 §5.1 「지금 쓰는 모델」 표에 적었다. 활동 판정은 `gpt-5.4-nano`(effort `low` · 웹 검색 켬 · 섀도 모드)이고, 분류 · 추출 · 번역은 `gemma4:12b`, 일반 Team LLM 은 `gpt-4o-mini`, 정책 검색 임베딩은 `bge-m3` 다.
+- 같은 날 로컬 DB 를 Docker(`docker/compose.db.yml`)로 새로 띄우고 마이그레이션 · 프롬프트 등록 · 장소 카탈로그 6,141건 · 여행 데모 · 여행 정책 코퍼스 130청크(`bge-m3`)를 적재했다. 판정 프롬프트를 DB 에서 읽으므로 섀도 · LLM 모드는 DB 가 떠 있어야 돈다.
