@@ -38,4 +38,3 @@
 .tag[data-type="safety_alert"] { background: var(--color-error-soft); color: var(--color-error); }
 .tag[data-type="version"] { background: var(--color-subtle); color: var(--color-text-secondary); }
 .cut { margin: 10px 0 0; font-size: 11px; color: var(--color-muted); }
-

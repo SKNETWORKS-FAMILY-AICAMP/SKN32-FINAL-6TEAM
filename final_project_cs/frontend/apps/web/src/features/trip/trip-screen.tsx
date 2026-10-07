@@ -565,4 +565,3 @@ function legToast(leg: TripLeg, t: Translate, onList: () => void) {
     action: { label: t("목록에서 보기", "Show in list"), run: onList }, ms: READ_MS,
   };
 }
-

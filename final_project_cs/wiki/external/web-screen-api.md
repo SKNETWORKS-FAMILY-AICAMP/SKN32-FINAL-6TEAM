@@ -101,7 +101,7 @@ tags: [ui, api]
 
 ## 여행 화면 `/trips/[tripId]` — 목업 C안 교체
 
-[실측] 2026-10-07 · Claude · 브랜치 `feat/trip-c-screen`(`role-eval-ui` `c5bbea5` 에서). 등록한 여행 화면을 [목업 C안](../../frontend/apps/web/mockups/tripilot-registered-c-attention.html)으로 바꿨다(사용자 지시 「해당 화면을 목업 화면으로 대체 … 백엔드 연결 상황에 맞게」). 3단계로 나눠 진행했고 **이 표는 3단계(제목 펼침 · 공유 · 상세 보기)까지** 기준이다. 화면 설명·변경 내용은 웹 [개발 기준 「2026-10-07」](../../frontend/apps/web/DEVELOPMENT.md#2026-10-07--여행-화면을-목업-c안으로-교체1단계-틀--연결).
+[실측] 2026-10-07 ~ 2026-10-08 · Claude · 작업 가지 `feat/trip-c-screen`(`role-eval-ui` `c5bbea5` 에서) → 2026-10-08 `role-eval-ui` 에 합침. 등록한 여행 화면을 [목업 C안](../../frontend/apps/web/mockups/tripilot-registered-c-attention.html)으로 바꿨다(사용자 지시 「해당 화면을 목업 화면으로 대체 … 백엔드 연결 상황에 맞게」). 3단계로 나눠 진행했고 **이 표는 3단계(제목 펼침 · 공유 · 상세 보기)까지** 기준이다. 화면 설명·변경 내용은 웹 [개발 기준 「2026-10-07」](../../frontend/apps/web/DEVELOPMENT.md#2026-10-07--여행-화면을-목업-c안으로-교체1단계-틀--연결).
 
 | 화면 동작 | 사용 API·데이터 | 연결·검증 |
 |---|---|---|
