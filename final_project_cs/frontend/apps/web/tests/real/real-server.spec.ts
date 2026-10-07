@@ -85,10 +85,8 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   await expect(schedule.getByText("경복궁").first()).toBeVisible();
   await expect(schedule.getByText("광장시장").first()).toBeVisible();
   const center = await openNotices(page);
-  const notices = center.locator("details").filter({ hasText: "받은 알림" });
-  await expect(notices).toBeVisible();
-  await notices.locator("summary").click();
-  await expect(notices).toContainText("여행 일정이 준비되었습니다");
+  await center.getByRole("tab", { name: /받은 알림/ }).click();
+  await expect(center.getByRole("tabpanel")).toContainText("여행 일정이 준비되었습니다");
   await expect(center.getByRole("link", { name: "여행계획서 열기" })).toHaveAttribute("href", /\/plan\/[0-9a-f-]{36}\?t=/);
 
   // 내 여행: 같은 브라우저(같은 키)로 첫 화면에 돌아오면 방금 만든 여행이 카드에 있다

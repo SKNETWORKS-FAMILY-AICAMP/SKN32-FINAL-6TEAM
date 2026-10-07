@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
+import { Suspense, useContext, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Bell, ChevronsRight } from "lucide-react";
+import { ArrowLeft, Bell, ChevronsRight, OctagonAlert } from "lucide-react";
 import { DeviceFrame, HeaderSlot } from "@/components/layout/device-frame";
 import { JourneyShell } from "@/components/layout/journey-shell";
 import { ToastView, useToastState } from "@/components/toast-view";
@@ -19,17 +19,19 @@ import { LiveError } from "@/lib/live/client";
 import { getRouteShapes } from "@/lib/live/route-shapes";
 import type { Language, Translate } from "@/lib/i18n";
 import { useSettings, useT } from "@/lib/settings";
-import { onToast } from "@/lib/toast-bus";
+import { onToast, type BusToast } from "@/lib/toast-bus";
+import type { Notice, Proposal } from "@/lib/live/extras";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { ChatBar, ChatPane, useTripChat } from "./trip-chat";
 import { LegRow, legSummary, StopRow } from "./trip-rows";
 import { dayTimeline, tripDays, type TripLeg } from "./trip-timeline";
-import { TripAttention } from "./trip-attention";
-import { SafetyPanel } from "./trip-safety";
+import { NOTICE_LABEL, noticeWhen, TripAttention, type CenterTab } from "./trip-attention";
+import { useSeenNotices } from "./notice-reads";
+import { SafetyPanel, shelterMeta } from "./trip-safety";
 import { tripKey, useTrip } from "./use-trip";
 import { useRouteShapes } from "./use-route-shapes";
 import { useTripEvents } from "./use-trip-events";
-import { noticesKey, proposalsKey, recoveryKey, useNotices } from "./use-trip-extras";
+import { noticesKey, proposalsKey, recoveryKey, useNotices, useProposals } from "./use-trip-extras";
 import type { Recovery } from "@/lib/live/recovery";
 import type { Trip } from "./model";
 import styles from "./trip-screen.module.css";
@@ -38,6 +40,8 @@ import styles from "./trip-screen.module.css";
 const TOUR_API_POLICY_URL = "https://api.visitkorea.or.kr/#/useServiceGuide/2";
 /** A description has more to read than a one-line notice: it stays this long (the pointer on its button keeps it). */
 const READ_MS = 7_000;
+/** `[2026-10-07 목업 C안]` A safety alert stays longer (the same 9 s as the recovery's failed-record notice). */
+const URGENT_MS = 9_000;
 /** How high the sheet stands over the map: half the screen, (nearly) all of it, or a strip — the handle cycles them (the plan check's sheet). */
 const SHEETS = ["half", "full", "peek"] as const;
 type Sheet = (typeof SHEETS)[number];
@@ -76,6 +80,10 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   useTripEvents(trip.id);
   const guardian = useTripGuardian(trip.id);
   const notices = useNotices(trip.id);
+  const proposals = useProposals(trip.id);
+  // `[2026-10-07 목업 C안]` The bell counts the notices this browser has not seen yet (the server keeps no read state — `notice-reads.ts`).
+  const seen = useSeenNotices(trip.id);
+  const unread = (notices.data ?? []).filter((notice) => !seen.includes(notice.key)).length;
   // `[2026-10-04]` The lines between the stops (never holding the page up); zoomed in, the detailed lines replace them.
   const routeShapes = useRouteShapes(trip.id, trip.version);
   const routeDetail = useRouteDetail(routeShapes.data, ["trip", trip.id, trip.version ?? 0, language], () => getRouteShapes(trip.id, language, { detail: true }));
@@ -94,6 +102,7 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   const [instant, setInstant] = useState(false);
   const [barOpen, setBarOpen] = useState(false);
   const [centerOpen, setCenterOpen] = useState(false);
+  const [centerTab, setCenterTab] = useState<CenterTab>("warnings");
   const [slide, setSlide] = useState<"next" | "prev" | null>(null);
   const [peek, setPeek] = useState<{ side: -1 | 0 | 1; top: number; edge: boolean }>({ side: 0, top: 0, edge: false });
   const { shown: shownToast, show: showToast, hide: hideToast } = useToastState();
@@ -313,12 +322,36 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
     void queryClient.invalidateQueries({ queryKey: proposalsKey(trip.id, language) });
     void queryClient.invalidateQueries({ queryKey: noticesKey(trip.id, language) });
   };
-  const resumed = (brief: Recovery | null) => queryClient.setQueryData(recoveryKey(trip.id, language), brief);
+  const resumed = (brief: Recovery | null) => {
+    queryClient.setQueryData(recoveryKey(trip.id, language), brief);
+    showToast({ text: t("일정을 다시 시작했어요", "The itinerary is running again"), sub: brief ? t("재난 뒤 이어가기에서 어떻게 이어갈지 골라 주세요.", "Choose how to go on under 「Going on after the disaster」.") : undefined });
+  };
+
+  // ── The notice center: opened by the bell (unread notices first), by a notice's 「알림 보기」, by 「일정 정지 중」. ──
+  function openCenter(tab?: CenterTab) {
+    setCenterTab(tab ?? (unread > 0 ? "notices" : centerTab));
+    setCenterOpen(true);
+  }
+  function closeCenter() {
+    setCenterOpen(false);
+    requestAnimationFrame(() => document.getElementById("trip-bell")?.focus());
+  }
+  /** A notice the server sent while the trip is open: one bar, the newest (a new bar replaces the one shown). */
+  const announce = useEffectEvent((notice: Notice) => showToast(noticeToast(notice, trip, proposals.data ?? [], t, () => openCenter("notices"))));
+  const known = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (!notices.data) return;
+    const before = known.current;
+    known.current = new Set(notices.data.map((notice) => notice.key));
+    if (!before) return;                                                       // what was there when the screen opened is not news
+    const fresh = notices.data.filter((notice) => !before.has(notice.key)).sort((a, b) => Date.parse(b.at) - Date.parse(a.at))[0];
+    if (fresh) announce(fresh);
+  }, [notices.data]);
 
   // ── Keys: Esc closes what is on top. ──
   function onKey(event: KeyboardEvent<HTMLElement>) {
     if (event.key !== "Escape" || event.defaultPrevented) return;
-    if (centerOpen) { event.preventDefault(); setCenterOpen(false); requestAnimationFrame(() => document.getElementById("trip-bell")?.focus()); return; }
+    if (centerOpen) { event.preventDefault(); closeCenter(); return; }
     if (pane === "chat") { event.preventDefault(); goPane("plan"); return; }
     if (barOpen) { event.preventDefault(); setBarOpen(false); }
   }
@@ -343,7 +376,9 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   const plan = pane === "plan";
 
   return <DeviceFrame floating menuTools={guardian.tool}
-    headerExtra={<button type="button" id="trip-bell" className={styles.bell} onClick={() => setCenterOpen(true)} aria-label={t("알림 센터 열기", "Open notices")} aria-haspopup="dialog" aria-expanded={centerOpen}><Bell size={20} strokeWidth={2} aria-hidden="true" /></button>}>
+    headerExtra={<button type="button" id="trip-bell" className={styles.bell} onClick={() => openCenter()} aria-haspopup="dialog" aria-expanded={centerOpen}
+      aria-label={unread > 0 ? t(`알림 센터 열기 · 읽지 않은 알림 ${unread}개`, `Open notices · ${unread} unread`) : t("알림 센터 열기", "Open notices")}>
+      <Bell size={20} strokeWidth={2} aria-hidden="true" />{unread > 0 && <span className={styles.badge} aria-hidden="true">{unread > 99 ? "99+" : unread}</span>}</button>}>
     <main id="main-content" tabIndex={-1} className={`${pc.screen} ${styles.screen}`} data-floating onKeyDown={onKey}>
       <HeaderTitle title={trip.title ?? t("나의 여행", "Your trip")} />
       <div ref={box} className={pc.checking} data-sheet={custom !== null ? "custom" : sheet} data-dragging={dragging || undefined} data-compact={compact || undefined}
@@ -376,6 +411,9 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
                 onClick={() => { goDay(date); goPane("plan"); }}>{dayName(index, t)}<small>{dayLabel(date, language)}</small></button>)}
             </div>}
             <div className={styles.headTools}>
+              {/* `[2026-10-07 목업 C안]` 재난으로 정지된 동안만 「일정 | 채팅」 앞에 — 누르면 알림 센터(할 일 맨 위가 정지 패널). */}
+              {trip.safety?.paused && <button type="button" className={styles.pausedChip} onClick={() => openCenter()} aria-label={t("일정 정지 중 · 알림 센터 열기", "Itinerary paused · open notices")}>
+                <OctagonAlert size={16} strokeWidth={2} aria-hidden="true" />{t("일정 정지 중", "Paused")}</button>}
               <div className={styles.paneSwitch} role="tablist" aria-label={t("일정과 채팅 바꾸기", "Itinerary or chat")}>
                 <button type="button" role="tab" id="trip-pane-button-schedule" aria-selected={plan} aria-controls="trip-pane-schedule" onClick={() => goPane("plan")}>{t("일정", "Schedule")}</button>
                 <button type="button" role="tab" id="trip-pane-button-chat" aria-selected={!plan} aria-controls="trip-pane-chat" onClick={() => goPane("chat")}>{t("채팅", "Chat")}</button>
@@ -408,13 +446,14 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
         </section>
       </div>
       <ChatBar chat={chat} open={barOpen} inChat={!plan} onOpen={() => setBarOpen(true)} onClose={() => setBarOpen(false)} onEnterChat={() => goPane("chat")} />
-      {/* 1단계: 종을 누르면 지금까지의 여행 알림 묶음(선택 요청 · 되돌리기 · 재난 · 살펴볼 점 · 받은 알림 · 변경 이력 · 여행계획서)을 한 칸에 연다. 알림 센터의 탭 · 할 일은 2단계. */}
+      {/* `[2026-10-07 목업 C안 ① 알림 센터]` 할 일(재난 정지 → 재난 뒤 이어가기 → 선택 요청 → 자동 변경) 아래 탭 셋(살펴볼 점 · 받은 알림 · 변경 이력). 여행계획서 링크는 3단계(제목 펼침)까지 맨 아래. */}
       {centerOpen && <section className={styles.center} role="dialog" aria-modal="false" aria-labelledby="trip-center-title">
         <header className={styles.centerHead}>
-          <button type="button" className={styles.centerBack} onClick={() => { setCenterOpen(false); requestAnimationFrame(() => document.getElementById("trip-bell")?.focus()); }} aria-label={t("알림 센터 닫기", "Close notices")}><ArrowLeft size={20} strokeWidth={1.6} aria-hidden="true" /></button>
+          <button type="button" className={styles.centerBack} onClick={closeCenter} aria-label={t("알림 센터 닫기", "Close notices")}><ArrowLeft size={20} strokeWidth={1.6} aria-hidden="true" /></button>
           <h2 id="trip-center-title" tabIndex={-1} ref={(element) => element?.focus({ preventScroll: true })}>{t("알림", "Notices")}</h2>
         </header>
-        <div className={styles.centerBody}><TripAttention trip={trip} /></div>
+        <div className={styles.centerBody}><TripAttention trip={trip} tab={centerTab} onTab={setCenterTab} onResumed={resumed}
+          onGoto={(stopId) => { setCenterOpen(false); pick(stopId, "list"); }} /></div>
       </section>}
     </main>
     {guardian.overlay}
@@ -429,6 +468,34 @@ function HeaderTitle({ title }: { title: string }) {
 }
 
 /** What a pressed route line says, in the one notice bar: from where to where, how, when, what it rides — only what the server gave. */
+/**
+ * `[2026-10-07 목업 C안]` A notice the server just sent, in the notice bar: the stop's number and name when the notice is about one (a choice), the kind as a chip, the server's sentence
+ * under it, 「알림 보기」 to the center. A safety alert says the pause and the nearest shelter and stays 9 s. ★Nothing is written for the server — no sentence, no stop it did not name.
+ */
+function noticeToast(notice: Notice, trip: Trip, proposals: readonly Proposal[], t: Translate, view: () => void): BusToast {
+  const action = { label: t("알림 보기", "View notices"), run: view };
+  const label = NOTICE_LABEL[notice.type];
+  const kind = label ? t(label[0], label[1]) : notice.type;
+  const sub = notice.text ?? undefined;
+  if (notice.type === "safety_alert") {
+    const shelter = notice.safety?.shelters[0];
+    const meta = shelter ? shelterMeta(shelter, t) : "";
+    // A pause alert (`safety_pause_<level>` — the server pauses with it) says so even before the trip is read again.
+    const pausing = trip.safety?.paused || /^safety_pause_/.test(notice.kind ?? "");
+    return { text: pausing ? t("일정 정지 중", "Itinerary paused") : kind, chip: { text: kind, tone: "warn" }, sub,
+      note: shelter ? [t("가까운 대피 장소", "Nearest shelter"), shelter.name, meta].filter(Boolean).join(" · ") : undefined, action, ms: URGENT_MS };
+  }
+  if (notice.type === "proposal_request") {
+    const proposal = proposals.find((entry) => entry.id === notice.proposalId);
+    const stop = trip.stops.find((entry) => entry.id === proposal?.itemId);
+    const order = stop ? trip.stops.filter((entry) => entry.date === stop.date).indexOf(stop) + 1 : 0;
+    return { badge: stop ? String(order) : undefined, text: stop?.title ?? kind, chip: { text: kind, tone: "warn" }, sub,
+      note: proposal?.expiresAt ? t(`${noticeWhen(proposal.expiresAt)} 까지`, `Until ${noticeWhen(proposal.expiresAt)}`) : undefined, action };
+  }
+  if (notice.type === "change_notice") return { text: kind, chip: { text: t("바뀜", "Changed"), tone: "changed" }, sub, action };
+  return { text: kind, sub, action };
+}
+
 function legToast(leg: TripLeg, t: Translate, onList: () => void) {
   const times = leg.move ? [t(`${leg.move.departAt} 출발`, `Leave ${leg.move.departAt}`), leg.move.arriveAt && t(`${leg.move.arriveAt} 도착`, `arrive ${leg.move.arriveAt}`)].filter(Boolean).join(" → ") : null;
   return {

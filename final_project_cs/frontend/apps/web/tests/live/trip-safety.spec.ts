@@ -150,3 +150,37 @@ test("정지가 없는 여행(또는 이 값을 모르는 옛 서버)에는 아�
   await expect(panel(page)).toHaveCount(0);
   await expect(page.getByText("일정 정지", { exact: true })).toHaveCount(0);
 });
+
+test("정지 중이면 시트 머리 「일정 | 채팅」 앞에 「일정 정지 중」이 붙고, 누르면 알림 센터의 할 일 맨 위에 같은 정지 패널이 있다", async ({ page }) => {
+  await stage(page, { paused: true, resumed: 0 });
+  await openTrip(page);
+  const chip = page.getByRole("button", { name: "일정 정지 중 · 알림 센터 열기" });
+  await expect(chip).toBeVisible();
+  await chip.click();
+  const center = page.getByRole("dialog", { name: "알림" });
+  await expect(center.getByTestId("center-safety-panel")).toBeVisible();
+  await expect(center.getByTestId("center-safety-panel").getByRole("heading", { name: "일정 정지 중" })).toBeVisible();
+  await expect(center.getByRole("heading", { name: /^할 일 1$/ })).toBeVisible();
+});
+
+test("화면이 열려 있는 동안 안전 알림이 오면 「일정 정지 중 · 안전 알림」 막대가 대피 장소를 말하고 9초 동안 남는다 — 정지가 풀리면 칩도 없다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ bell: "on" });
+  const state = { paused: false, resumed: 0 };
+  await stage(page, state);
+  await openTrip(page);
+  await expect(page.getByRole("button", { name: "일정 정지 중 · 알림 센터 열기" })).toHaveCount(0);
+  state.paused = true;
+  await expect.poll(() => server.ring(["itinerary", "notice"])).toBeGreaterThan(0);
+  const bar = page.getByRole("status").filter({ hasText: "안전 알림" });
+  await expect(bar).toContainText("일정 정지 중");
+  await expect(bar).toContainText("지진. 오늘 남은 일정을 정지했어요.");                                      // 서버의 문장 그대로
+  await expect(bar).toContainText("가까운 대피 장소 · 경복궁 옥외대피장소 · 직선 320m · 걸어서 약 5분(추정)");
+  await expect(page.getByRole("button", { name: "일정 정지 중 · 알림 센터 열기" })).toBeVisible();
+  await page.waitForTimeout(6_000);
+  await expect(bar).toBeVisible();                                                                           // 보통 막대(2.8 · 4.5초)보다 오래
+  await expect(bar).toHaveCount(0, { timeout: 6_000 });                                                      // 그래도 저절로 사라진다
+  await panel(page).getByRole("button", { name: "일정 다시 시작" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "일정을 다시 시작했어요" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "일정 정지 중 · 알림 센터 열기" })).toHaveCount(0);
+});

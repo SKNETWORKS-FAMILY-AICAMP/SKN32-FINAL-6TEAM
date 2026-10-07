@@ -54,18 +54,19 @@ test("여행 화면(지도 + 시트)은 서버가 준 일정·고정·다른 안
   await expect(detail.getByRole("link", { name: "지도 앱으로 열기" })).toHaveAttribute("href", "https://www.google.com/maps/search/?api=1&query=%EC%95%84%EC%B9%A8");
   await expect(detail.getByRole("link", { name: "지도 앱으로 열기" })).toHaveAttribute("target", "_blank");
 
-  // 종 — 서버가 찾은 것·보낸 것·바꾼 것과 여행계획서
+  // 종 — 알림 센터: 할 일 · 탭 셋(서버가 찾은 것 · 보낸 것 · 바꾼 것)과 여행계획서
   const notices = await openNotices(page);
-  await expect(notices.getByRole("heading", { name: "살펴볼 점" })).toBeVisible();
-  await expect(notices.getByText("하루가 빡빡해요")).toBeVisible();
-  await expect(notices.getByText("일정을 줄이세요")).toBeVisible();
-  const received = notices.locator("details").filter({ hasText: "받은 알림" });
-  await received.locator("summary").click();
-  await expect(received).toContainText("오늘 첫 일정은 08:00 아침 식당이에요.");
-  await expect(received).toContainText("2개");
-  const history = notices.locator("details").filter({ hasText: "변경 이력" });
-  await history.locator("summary").click();
-  await expect(history).toContainText("처음 등록");
+  const tabs = notices.getByRole("tablist", { name: "알림 종류" }).getByRole("tab");
+  await expect(tabs).toHaveText([/^살펴볼 점 \d+$/, "받은 알림 2", /^변경 이력 \d+$/]);
+  const list = notices.getByRole("tabpanel");
+  await expect(notices.getByRole("tab", { name: /받은 알림/ })).toHaveAttribute("aria-selected", "true");   // 안 읽은 알림이 있으면 받은 알림부터
+  await expect(list).toContainText("오늘 첫 일정은 08:00 아침 식당이에요.");
+  await expect(list.getByRole("img", { name: "새 알림" })).toHaveCount(2);
+  await notices.getByRole("tab", { name: /살펴볼 점/ }).click();
+  await expect(list).toContainText("하루가 빡빡해요");
+  await expect(list).toContainText("일정을 줄이세요");
+  await notices.getByRole("tab", { name: /변경 이력/ }).click();
+  await expect(list).toContainText("처음 등록");
   const plan = notices.getByRole("link", { name: "여행계획서 열기" });
   await expect(plan).toHaveAttribute("href", new RegExp(`/plan/${TRIP_ID}\\?t=`));
   await expect(plan).toHaveAttribute("target", "_blank");
@@ -86,12 +87,16 @@ test("서버가 경로선을 주지 않으면 이동 줄은 수단·거리를 �
   await expect(schedule.locator('[data-entry-id="i-a>i-b"]')).not.toContainText("버스");
 });
 
-test("경고와 알림이 없으면 그 칸을 그리지 않는다(빈 칸이나 0을 지어내지 않는다)", async ({ page, request }) => {
+test("경고와 알림이 없으면 탭은 0 과 「없어요」만 말하고 줄을 지어내지 않으며, 종에는 수가 없다", async ({ page, request }) => {
   await mockServer(request).scenario({ warnings: "none", notices: "none" });
   await openTrip(page);
+  await expect(page.getByRole("button", { name: "알림 센터 열기", exact: true })).toBeVisible();     // 읽지 않은 알림이 없다
   const notices = await openNotices(page);
-  await expect(notices.getByRole("heading", { name: "살펴볼 점" })).toHaveCount(0);
-  await expect(notices.locator("details").filter({ hasText: "받은 알림" })).toHaveCount(0);
+  await expect(notices.getByRole("tab", { name: /살펴볼 점/ })).toHaveText("살펴볼 점 0");
+  await expect(notices.getByRole("tab", { name: /받은 알림/ })).toHaveText("받은 알림 0");
+  await expect(notices.getByRole("tabpanel")).toHaveText("살펴볼 점이 없어요.");
+  await expect(notices.getByRole("tabpanel").getByRole("listitem")).toHaveCount(0);
+  await expect(notices.getByText("지금 처리할 일은 없어요.")).toBeVisible();
 });
 
 test("서버가 기다리는 선택이 있으면 「선택이 필요해요」가 뜨고, 고르면 그 안의 key 가 서버로 가고 칸이 사라진다", async ({ page, request }) => {
@@ -289,7 +294,7 @@ test("선택·알림을 읽지 못해도(서버 500) 여행 화면은 그대로 
   await expect(tripScreen(page).getByText("경복궁 관람")).toBeVisible();
   const notices = await openNotices(page);
   await expect(notices.getByRole("alert").filter({ hasText: "선택과 알림을 읽지 못했어요" })).toBeVisible();
-  await expect(notices.getByRole("heading", { name: "살펴볼 점" })).toBeVisible();     // 다른 패널은 영향받지 않는다
+  await expect(notices.getByRole("tab", { name: /살펴볼 점/ })).toBeVisible();     // 다른 칸은 영향받지 않는다
 });
 
 test("없는 여행 주소는 빈 화면이 아니라 이유와 다시 시도 단추를 보인다", async ({ page, request }) => {
