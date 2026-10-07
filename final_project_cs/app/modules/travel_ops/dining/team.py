@@ -207,10 +207,22 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
         known = place.get("dietary") or []
         absent = place.get("dietary_absent") or []
         unknown = [item for item in wanted if item not in known and item not in absent]
+        met = [item for item in wanted if item in known]
+        # ★`[2026-10-06]` 아닌 것으로 확인된 조건은 「모름」도 「충족」도 아니다 — 전에는 이 갈래가 없어
+        #   할랄 불가 가게에 할랄을 물어도 「확인 없이 진행할 수 있다」고 답했다(test_dining_conditions).
+        #   확인된 불가가 하나라도 있으면 모르는 조건을 기다리지 않고 답하되, 모르는 것은 경고로만 남긴다.
+        not_met = [item for item in wanted if item in absent and item not in known]
+        if not_met:
+            return self._result(
+                task, outcome="completed", confidence=0.9, evidence=evidence,
+                next_action=NextAction.RESPOND,
+                answer=f"요청한 조건 중 {', '.join(not_met)} 은(는) 이 식당이 충족하지 않습니다.",
+                decisions=[{"conditions_met": met, "conditions_not_met": not_met,
+                            "conditions_unknown": unknown, "requested": list(wanted)}],
+                warnings=[f"조건 {item} 은(는) 확인되지 않았다" for item in unknown])
         if unknown:
             return self._unknown(task, f"조건 {', '.join(unknown)}", evidence)
 
-        met = [item for item in wanted if item in known]
         return self._result(
             task, outcome="completed", confidence=0.9, evidence=evidence,
             next_action=NextAction.RESPOND,

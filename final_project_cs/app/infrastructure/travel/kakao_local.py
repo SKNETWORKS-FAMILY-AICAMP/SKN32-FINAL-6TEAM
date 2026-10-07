@@ -44,12 +44,17 @@ class KakaoLocal(TravelSource):
         self._request = request or (lambda url, params, headers: httpx.get(
             url, params=params, headers=headers, timeout=self._timeout))
 
-    def search(self, query: str, *, size: int = 5,
-               near: tuple[float, float] | None = None) -> list[dict[str, Any]] | None:
+    def search(self, query: str, *, size: int = 5, near: tuple[float, float] | None = None,
+               radius: int | None = None, category_group_code: str | None = None,
+               anywhere: bool = False) -> list[dict[str, Any]] | None:
         """서울 안의 결과(주소가 「서울」로 시작하는 것)만. 못 불렀으면 `None`, 없으면 `[]`.
 
         `near=(위도, 경도)` 를 주면 그 점에서 반경 `NEAR_RADIUS_M` 안을 **거리순**으로 찾는다(계획 읽기의 「앞뒤 일정에
         가장 가까운 곳」). 서울 사각 대신 이 원을 쓰고, 주소로 서울만 거르는 것은 같다.
+        ★`[2026-10-07]` 체인점 지점 고르기(`intake/chain_pick`) — `radius`(미터, `near` 와 함께) · `category_group_code`
+          (FD6 음식점 · CE7 카페 · SW8 지하철역) · `size`(카카오 상한 15)를 받는다. 주지 않으면 예전 그대로다.
+          `anywhere=True` 면 `near` 를 무시하고 서울 전역을 관련도 순으로 — 지점명 위치(「강남역」) 찾기용.
+          ☆접수의 카카오 연결층이 앞 일정 좌표를 자동으로 넣어 「강남역」을 경복궁 근처에서 찾았다
         """
         if not query or not query.strip():
             return []
@@ -59,9 +64,12 @@ class KakaoLocal(TravelSource):
             self._miss("budget_exhausted", METER)
             return None
         try:
-            params = {"query": query.strip(), "size": str(size)}
-            if near is not None:
-                params.update({"y": f"{near[0]:.6f}", "x": f"{near[1]:.6f}", "radius": str(NEAR_RADIUS_M),
+            params = {"query": query.strip(), "size": str(max(1, min(int(size), 15)))}
+            if category_group_code:
+                params["category_group_code"] = category_group_code
+            if near is not None and not anywhere:
+                params.update({"y": f"{near[0]:.6f}", "x": f"{near[1]:.6f}",
+                               "radius": str(max(1, min(int(radius or NEAR_RADIUS_M), NEAR_RADIUS_M))),
                                "sort": "distance"})
             else:
                 params["rect"] = SEOUL_RECT

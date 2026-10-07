@@ -142,7 +142,8 @@ def _dining_lookup(ctx: _PlaceCtx | None = None) -> Any:
             except (KeyError, TypeError, ValueError):
                 pass
 
-    return LedgerPlaceLookup(get_connection, on_found=found)
+    # ★`[2026-10-07]` 앞 일정 좌표를 같이 넘긴다 — 같은 이름 여럿 · 「근처 ○○집」에서 가까운 원장 가게를 고르는 단서
+    return LedgerPlaceLookup(get_connection, on_found=found, near=ctx.get_near if ctx is not None else None)
 
 
 class _KakaoNearHint:

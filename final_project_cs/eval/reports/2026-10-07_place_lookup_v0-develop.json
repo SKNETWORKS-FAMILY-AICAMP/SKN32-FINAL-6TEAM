@@ -1,0 +1,805 @@
+{
+ "eval": "place_lookup",
+ "dataset": "place_lookup_v1.jsonl",
+ "dataset_sha": "304c47b376f098cc",
+ "label": "v0-develop",
+ "env": {
+  "run_at": "2026-10-07T03:18:13+00:00",
+  "today": "2026-10-07",
+  "layout": "develop",
+  "kakao": "live",
+  "llm": "off",
+  "git_commit": "3fad933",
+  "git_branch": "role-dining",
+  "git_dirty": true,
+  "db": "dining_rebuild",
+  "ledger_open_places": 1767,
+  "places": 6,
+  "aliases": 5
+ },
+ "summary": {
+  "accuracy": {
+   "num": 15,
+   "den": 34,
+   "rate": 0.441
+  },
+  "wrong_confirmed": {
+   "num": 11,
+   "den": 34,
+   "rate": 0.324
+  },
+  "wrong_review": {
+   "num": 3,
+   "den": 34,
+   "rate": 0.088
+  },
+  "not_found": {
+   "num": 5,
+   "den": 34,
+   "rate": 0.147
+  },
+  "blocked": {
+   "num": 0,
+   "den": 34,
+   "rate": 0.0
+  },
+  "labels": {
+   "correct_confirmed": 11,
+   "correct_review": 3,
+   "correct_abstain": 1,
+   "wrong_review": 3,
+   "wrong_confirmed": 11,
+   "not_found": 5,
+   "blocked": 0
+  },
+  "by_group": {
+   "misc": {
+    "num": 4,
+    "den": 12,
+    "rate": 0.333
+   },
+   "name": {
+    "num": 5,
+    "den": 10,
+    "rate": 0.5
+   },
+   "near": {
+    "num": 6,
+    "den": 12,
+    "rate": 0.5
+   }
+  }
+ },
+ "results": [
+  {
+   "id": "PL-001",
+   "group": "name",
+   "input": "12:30 토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5776,
+    126.9716
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-002",
+   "group": "name",
+   "input": "12:30 토속촌 삼계탕",
+   "place": "토속촌삼계탕",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5776,
+    126.9716
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-003",
+   "group": "name",
+   "input": "12:30 토속촌",
+   "place": "토속촌삼계탕",
+   "source": "kakao",
+   "method": "kakao_nearest",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "이름이 특정하지 않아 종류가 맞는 3곳 중 앞뒤 일정 좌표가 없어 카카오 첫 후보 「토속촌삼계탕」을 골랐다 — 이 여행에만 싣는다. 다르면 고쳐 주세요",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5777,
+    126.9715
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-004",
+   "group": "name",
+   "input": "12:30 토손촌삼계탕",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-005",
+   "group": "name",
+   "input": "12:30 점심 토속촌에서 삼계탕",
+   "place": "토속촌삼계탕",
+   "source": "kakao",
+   "method": "kakao_nearest",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "이름이 특정하지 않아 종류가 맞는 1곳 중 앞뒤 일정 좌표가 없어 카카오 첫 후보 「토속촌삼계탕」을 골랐다 — 이 여행에만 싣는다. 다르면 고쳐 주세요",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5777,
+    126.9715
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-006",
+   "group": "name",
+   "input": "12:30 스타벅스",
+   "place": "스타벅스 더북한산점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "kind": true
+   },
+   "at": [
+    37.6555,
+    126.9476
+   ],
+   "label": "wrong_confirmed",
+   "why_wrong": "확인이 필요한 곳(어느 지점인지 원문에 없음)을 확인 없이 확정"
+  },
+  {
+   "id": "PL-007",
+   "group": "name",
+   "input": "12:30 스타벅스 광화문점",
+   "place": "스타벅스 광화문점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5712,
+    126.9763
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-008",
+   "group": "name",
+   "input": "12:30 을지로 노가리골목 만선호프",
+   "place": "을지로 노가리골목",
+   "source": "tour_api",
+   "method": "tour_api",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "원문 「을지로 노가리골목 만선호프」에서 「을지로 노가리골목」로 좁혔다",
+   "blocked": [],
+   "checks": {
+    "accept": false,
+    "kind": true
+   },
+   "at": [
+    37.5663,
+    126.9927
+   ],
+   "label": "wrong_review",
+   "why_wrong": "accept"
+  },
+  {
+   "id": "PL-009",
+   "group": "name",
+   "input": "12:30 광장시장 빈대떡",
+   "place": "광장시장",
+   "source": "tour_api",
+   "method": "tour_api",
+   "kind": "dining",
+   "review": true,
+   "km": 0.01,
+   "note": "원문 「광장시장 빈대떡」에서 「광장시장」로 좁혔다",
+   "blocked": [],
+   "checks": {
+    "brand": false,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5702,
+    126.9997
+   ],
+   "label": "wrong_review",
+   "why_wrong": "brand"
+  },
+  {
+   "id": "PL-010",
+   "group": "name",
+   "input": "12:30 Tosokchon Samgyetang",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-011",
+   "group": "near",
+   "input": "12:30 스타벅스",
+   "place": "스타벅스 더북한산점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": 8.91,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": false,
+    "kind": true
+   },
+   "at": [
+    37.6555,
+    126.9476
+   ],
+   "label": "wrong_confirmed",
+   "why_wrong": "near"
+  },
+  {
+   "id": "PL-012",
+   "group": "near",
+   "input": "12:30 스타벅스",
+   "place": "스타벅스 갤러리아팰리스점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": 0.35,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5116,
+    127.0941
+   ],
+   "label": "wrong_confirmed",
+   "why_wrong": "확인이 필요한 곳(어느 지점인지 원문에 없음)을 확인 없이 확정"
+  },
+  {
+   "id": "PL-013",
+   "group": "near",
+   "input": "12:30 교촌치킨",
+   "place": "교촌치킨 종로1호점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": 5.58,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": false,
+    "kind": true
+   },
+   "at": [
+    37.5692,
+    126.986
+   ],
+   "label": "wrong_confirmed",
+   "why_wrong": "near"
+  },
+  {
+   "id": "PL-014",
+   "group": "near",
+   "input": "12:30 맥도날드",
+   "place": "맥도날드 이태원점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": 1.39,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.534,
+    126.9897
+   ],
+   "label": "wrong_confirmed",
+   "why_wrong": "확인이 필요한 곳(어느 지점인지 원문에 없음)을 확인 없이 확정"
+  },
+  {
+   "id": "PL-015",
+   "group": "near",
+   "input": "12:30 김밥천국",
+   "place": "김밥천국 서울숲점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": 1.35,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5495,
+    127.0513
+   ],
+   "label": "wrong_confirmed",
+   "why_wrong": "확인이 필요한 곳(어느 지점인지 원문에 없음)을 확인 없이 확정"
+  },
+  {
+   "id": "PL-016",
+   "group": "near",
+   "input": "12:30 이삭토스트",
+   "place": "이삭토스트 서울명동성당점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": 8.68,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": false,
+    "kind": true
+   },
+   "at": [
+    37.563,
+    126.9855
+   ],
+   "label": "wrong_confirmed",
+   "why_wrong": "near"
+  },
+  {
+   "id": "PL-017",
+   "group": "near",
+   "input": "12:30 명동교자",
+   "place": "명동교자 분점",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": 0.17,
+   "note": "카카오로 「명동교자 분점」를 찾아 요식 원장에서 확인했다",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5626,
+    126.9856
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-018",
+   "group": "near",
+   "input": "12:30 우래옥",
+   "place": "우래옥",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5682,
+    126.9987
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-019",
+   "group": "near",
+   "input": "12:30 을밀대",
+   "place": "을밀대 본점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5475,
+    126.9455
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-020",
+   "group": "near",
+   "input": "12:30 진미평양냉면",
+   "place": "진미평양냉면",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5162,
+    127.0361
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-021",
+   "group": "near",
+   "input": "12:30 삼청동수제비",
+   "place": "삼청동수제비",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5846,
+    126.9819
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-022",
+   "group": "near",
+   "input": "12:30 목멱산방",
+   "place": "목멱산방",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5581,
+    126.9869
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-023",
+   "group": "misc",
+   "input": "12:30 근처 국밥집",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-024",
+   "group": "misc",
+   "input": "12:30 점심 한식",
+   "place": "한식문화공간 이음",
+   "source": "tour_api",
+   "method": "tour_api",
+   "kind": "activity",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "no_pick": false
+   },
+   "at": [
+    37.5784,
+    126.9859
+   ],
+   "label": "wrong_confirmed",
+   "why_wrong": "no_pick"
+  },
+  {
+   "id": "PL-025",
+   "group": "misc",
+   "input": "12:30 스타벅스",
+   "place": "스타벅스 더북한산점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": 8.79,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": false,
+    "kind": true
+   },
+   "at": [
+    37.6555,
+    126.9476
+   ],
+   "label": "wrong_confirmed",
+   "why_wrong": "near"
+  },
+  {
+   "id": "PL-026",
+   "group": "misc",
+   "input": "12:30 교촌치킨",
+   "place": "교촌치킨 종로1호점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": 5.58,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": false,
+    "kind": true
+   },
+   "at": [
+    37.5692,
+    126.986
+   ],
+   "label": "wrong_confirmed",
+   "why_wrong": "near"
+  },
+  {
+   "id": "PL-027",
+   "group": "misc",
+   "input": "12:30 명동교쟈",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-028",
+   "group": "misc",
+   "input": "12:30 Starbucks",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-029",
+   "group": "misc",
+   "input": "12:30 Gwangjang Market",
+   "place": "광장시장",
+   "source": "tour_api",
+   "method": "tour_api",
+   "kind": "activity",
+   "review": true,
+   "km": null,
+   "note": "카카오로 「광장시장」를 찾아 관광공사에서 확인했다",
+   "blocked": [],
+   "checks": {
+    "accept": true
+   },
+   "at": [
+    37.5702,
+    126.9997
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-030",
+   "group": "misc",
+   "input": "12:30 해운대암소갈비집",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "correct_abstain"
+  },
+  {
+   "id": "PL-031",
+   "group": "misc",
+   "input": "12:30 스타벅스 강남역점",
+   "place": "스타벅스 강남구청역점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": 2.41,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": false,
+    "kind": true
+   },
+   "at": [
+    37.5167,
+    127.0413
+   ],
+   "label": "wrong_confirmed",
+   "why_wrong": "near"
+  },
+  {
+   "id": "PL-032",
+   "group": "misc",
+   "input": "18:00 정식당 (예약 있음)",
+   "place": "정식당",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5256,
+    127.0413
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-033",
+   "group": "misc",
+   "input": "18:00 밍글스",
+   "place": "밍글스",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5254,
+    127.0442
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-034",
+   "group": "misc",
+   "input": "12:30 성수동 소문난 감자탕",
+   "place": "성수동 카페거리",
+   "source": "tour_api",
+   "method": "tour_api",
+   "kind": "dining",
+   "review": true,
+   "km": 1.7,
+   "note": "원문 「성수동 소문난 감자탕」에서 「성수동」로 좁혔다",
+   "blocked": [],
+   "checks": {
+    "accept": false,
+    "near": false,
+    "kind": true
+   },
+   "at": [
+    37.5432,
+    127.0566
+   ],
+   "label": "wrong_review",
+   "why_wrong": "accept, near"
+  }
+ ]
+}
