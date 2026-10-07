@@ -176,7 +176,7 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
     from .timeutil import HolidayCalendar
     holidays = HolidayCalendar.from_doc(json.loads(Path(P["holidays"]).read_text(encoding="utf-8")))
     lo = vt.LineOrder.load(str(P["order"]))
-    tt = vt.Timetable.load(str(P["timetable"]), wanted)
+    tt = vt.Timetable.load(str(P["timetable"]), wanted, express=True)   # 9호선·1호선은 열차 단위 표(급행)로 읽는다
     tw = vt.TransferWalk.load(str(P["transfer_walk"]),
                               rules["measured_baseline"]["kakao_walk_speed_mps"]["value"])
     bus = vt.BusRoutes.load(str(P["bus_route"]), str(P["bus_stops"]))

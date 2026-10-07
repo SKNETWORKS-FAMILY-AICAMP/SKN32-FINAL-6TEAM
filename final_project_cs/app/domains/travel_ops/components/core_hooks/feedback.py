@@ -31,7 +31,7 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 
 from app.core.settings import get_settings
-from app.presentation.security import masked
+from app.core.redaction import masked
 
 
 class ClassificationFailed(RuntimeError):

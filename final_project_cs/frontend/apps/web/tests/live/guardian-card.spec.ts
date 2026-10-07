@@ -24,7 +24,7 @@ test("「계획 확인하기」를 누르면 읽기 전에 항로 지킴이 카�
   await expect(card(page)).toContainText("되돌릴 수 있어요.");
   await expect(card(page)).toContainText("끄고 진행하면 문제가 생길 때 먼저 물어봐요.");
   await expect(card(page)).toContainText("켜 두어도 고정한 일정은 먼저 물어봐요.");
-  await expect(card(page)).toContainText("재난·지진이 나면 일정을 멈추고 안전 안내를 보내요.");
+  await expect(card(page)).toContainText("재난·지진이 나면 일정을 멈추고, 가까운 대피 장소와 안전 안내를 보내요.");
   await expect(card(page)).toContainText("켠 뒤에도 언제든 화면 위 아이콘에서 끌 수 있어요.");
   // 주 단추 둘은 크기가 같고 44px 이상이다
   const on = await card(page).getByRole("button", { name: "켜고 진행" }).boundingBox();
@@ -94,23 +94,14 @@ test("「켜고 진행」은 on_disruption=replace, 「건너뛰기 — 끄고 �
   const [plan] = await server.received("POST", "/plan");
   expect(plan.body).toMatchObject({ survey: { version: "2026-09-24.v1", pace: "moderate", on_disruption: "ask_first" } });
 
-  // ★2026-10-06: 이 탭에서 이미 「끄고 진행」으로 정했으면 다음 계획에서는 다시 묻지 않고 같은 선택(ask_first)을 보낸다 — 켜고 싶으면 머리줄 아이콘이나 새 탭에서.
+  // ★2026-10-07 사용자 지시: 끈 선택은 기억하지 않는다 — 같은 탭의 다음 계획에서도 카드가 다시 뜨고, 「켜고 진행」은 replace 를 보낸다(켜면 그때부터 기억).
   await server.reset();
   await server.scenario({ readingPolls: 0 });
   await openRegistration(page);
   await fillPlanAsk(page, { start: weekAhead(), days: 2, party: 2 });
   await page.getByRole("button", { name: "계획 확인하기" }).click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page).toHaveURL(/\/trips\/[0-9a-f-]+$/, { timeout: 15_000 });
-  expect((await server.received("POST", "/plan"))[0].body).toMatchObject({ survey: { on_disruption: "ask_first" } });
-
-  // 이 탭의 선택을 지우면(새로 시작) 다시 묻고, 「켜고 진행」은 replace 를 보낸다.
-  await page.evaluate(() => { sessionStorage.clear(); localStorage.removeItem("triPilot.guardianDefault.v1"); });
-  await server.reset();
-  await server.scenario({ readingPolls: 0 });
-  await openRegistration(page);
-  await fillPlanAsk(page, { start: weekAhead(), days: 2, party: 2 });
-  await checkPlan(page, "켜고 진행");
+  await expect(card(page)).toBeVisible();                                                                // 끈 선택은 다시 묻는다
+  await card(page).getByRole("button", { name: "켜고 진행" }).click();
   await expect(page).toHaveURL(/\/trips\/[0-9a-f-]+$/, { timeout: 15_000 });
   const [again] = await server.received("POST", "/plan");
   expect(again.body).toMatchObject({ survey: { on_disruption: "replace" } });

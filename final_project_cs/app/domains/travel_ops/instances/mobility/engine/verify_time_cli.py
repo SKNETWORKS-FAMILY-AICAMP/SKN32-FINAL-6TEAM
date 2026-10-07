@@ -219,7 +219,7 @@ def build_verifier_for_cases(args, cases):
                     for row in seg[:2]:
                         for _d, v in sc.stations_near(row["lat"], row["lng"], radius):
                             wanted |= {(ln, v["station_nm"]) for ln in lines_of[v["station_nm"]]}
-    tt = Timetable.load(args.timetable, None if full_tt else wanted)
+    tt = Timetable.load(args.timetable, None if full_tt else wanted, express=True)
     # 혼잡도(v0.8) — 케이스에 나오는 (노선, 역)만 올린다. 파일이 없으면 가산 없음(근거없음).
     cg_data = None
     if args.congestion != ["none"]:

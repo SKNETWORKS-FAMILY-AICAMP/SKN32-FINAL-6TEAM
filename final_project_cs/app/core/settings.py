@@ -139,6 +139,9 @@ class Settings(BaseSettings):
     ollama_pointer_model: str = ""
     ollama_pointer_timeout_seconds: float = 30.0
     ollama_pointer_keep_alive: str = ""
+    #: 일정이 바뀐 첫 문장은 고객을 기다리게 하지 않고 규칙으로 답하며 모델은 뒤에서 그 일정을 읽어 둔다(`item_pointer.py` 머리). 끄면 첫 문장도 모델을 기다린다.
+    ollama_pointer_background_warm: bool = True
+    ollama_pointer_warm_timeout_seconds: float = 180.0
 
     # ── 여행 외부 소스 ─────────────────────────────────────────
     # ★기본값이 빈 문자열이다 = **그 소스를 안 붙인다.** 가짜로 채우지 않는다.
