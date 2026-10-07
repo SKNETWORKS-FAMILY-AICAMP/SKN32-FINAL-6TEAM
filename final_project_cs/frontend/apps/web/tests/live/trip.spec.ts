@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { alsoAgree, APP, start, mockServer, TRIP_ID } from "./helpers";
+import { alsoAgree, APP, start, mockServer, openNotices, paneTab, TRIP_ID, tripScreen } from "./helpers";
 
 test.beforeEach(async ({ page, request }) => {
   await mockServer(request).reset();
@@ -8,16 +8,31 @@ test.beforeEach(async ({ page, request }) => {
 
 const openTrip = async (page: import("@playwright/test").Page) => {
   await page.goto(`/trips/${TRIP_ID}`);
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
 };
 
-test("여행 화면은 서버가 준 일정·고정·다른 안·알림·이력·경고·계획서 링크를 그대로 보이고, 이동 항목은 목록에 섞지 않는다", async ({ page }) => {
+test("여행 화면(지도 + 시트)은 서버가 준 일정·고정·다른 안을 하루씩 보이고, 이동 항목은 일정 사이의 이동 줄로, 알림·이력·경고·계획서 링크는 종 아래에 그대로 보인다", async ({ page, request }) => {
+  await mockServer(request).scenario({ routeShapes: "on" });                                     // 수단 · 거리는 서버의 경로선에서 읽는다
   await openTrip(page);
-  await expect(page.getByText("2일 · 4개 일정")).toBeVisible();                       // 이동 1건은 일정 수에서 빠진다
-  const schedule = page.locator("#trip-pane-schedule");
-  await expect(schedule.getByText("아침 식당")).toBeVisible();
-  await expect(schedule.getByText("11:10 출발").first()).toBeHidden();                // 이동은 다음 일정 메모로 접힌다
-  // 구간 길찾기 — 서버가 준 구간(아침 → 경복궁)에만 링크가 있고, 링크가 없는 구간에는 없다
+  await expect(page.getByRole("heading", { level: 1, name: "내 여행" })).toBeVisible();          // 머리줄 제목은 서버가 준 여행 이름
+  await expect(page.getByRole("tablist", { name: "일차 고르기" }).getByRole("tab")).toHaveText([/전체/, /1일차/, /2일차/]);
+  const schedule = tripScreen(page);
+  await expect(schedule.getByText("아침 식당", { exact: true })).toBeVisible();                   // (목록 끝 출처 줄의 「아침 식당 → 경복궁: …」 말고 카드 제목)
+  await expect(schedule.getByText("둘째 날 박물관")).toHaveCount(0);                          // 하루씩 — 다음 날은 칩이나 옆으로 밀어서
+
+  // 이동 항목(i-m)은 일정이 아니라 두 일정 사이의 이동 줄: 출발 시각 · 수단 · 걸리는 시간 · 거리 · 여유(서버의 경로선과 시각에서)
+  const move = schedule.locator('[data-entry-id="i-m"]');
+  await expect(move).toContainText("11:10");
+  await expect(move).toContainText("도보 20분 · 1.3km");
+  await expect(move).toContainText("여유 30분");
+  await move.getByRole("button").click();
+  await expect(move).toContainText("경복궁 관람 → 점심 식당");                                    // 서버의 문장 그대로
+  await expect(move).toContainText("11:10 출발 → 11:30 도착");
+  // 이동 항목이 없는 구간(아침 식당 → 경복궁)은 서버가 그린 선(버스 · 직선)과, 서버가 준 길찾기 링크
+  const leg = schedule.locator('[data-entry-id="i-a>i-b"]');
+  await expect(leg).toContainText("버스 · 640m");
+  await leg.getByRole("button").click();
+  await expect(leg).toContainText("길을 몰라 두 곳을 직선으로 이은 구간이에요.");
   await expect(schedule.getByRole("link", { name: "지도 앱에서 길찾기" })).toHaveCount(1);
   await expect(schedule.getByRole("link", { name: "지도 앱에서 길찾기" })).toHaveAttribute("href", "https://www.google.com/maps/dir/?api=1&origin=a&destination=b&travelmode=transit");
 
@@ -39,39 +54,51 @@ test("여행 화면은 서버가 준 일정·고정·다른 안·알림·이력�
   await expect(detail.getByRole("link", { name: "지도 앱으로 열기" })).toHaveAttribute("href", "https://www.google.com/maps/search/?api=1&query=%EC%95%84%EC%B9%A8");
   await expect(detail.getByRole("link", { name: "지도 앱으로 열기" })).toHaveAttribute("target", "_blank");
 
-  // 서버가 찾은 것·보낸 것·바꾼 것
-  await expect(page.getByRole("heading", { name: "살펴볼 점" })).toBeVisible();
-  await expect(page.getByText("하루가 빡빡해요")).toBeVisible();
-  await expect(page.getByText("일정을 줄이세요")).toBeVisible();
-  const notices = page.locator("details").filter({ hasText: "받은 알림" });
-  await notices.locator("summary").click();
-  await expect(notices).toContainText("오늘 첫 일정은 08:00 아침 식당이에요.");
-  await expect(notices).toContainText("2개");
-  const history = page.locator("details").filter({ hasText: "변경 이력" });
+  // 종 — 서버가 찾은 것·보낸 것·바꾼 것과 여행계획서
+  const notices = await openNotices(page);
+  await expect(notices.getByRole("heading", { name: "살펴볼 점" })).toBeVisible();
+  await expect(notices.getByText("하루가 빡빡해요")).toBeVisible();
+  await expect(notices.getByText("일정을 줄이세요")).toBeVisible();
+  const received = notices.locator("details").filter({ hasText: "받은 알림" });
+  await received.locator("summary").click();
+  await expect(received).toContainText("오늘 첫 일정은 08:00 아침 식당이에요.");
+  await expect(received).toContainText("2개");
+  const history = notices.locator("details").filter({ hasText: "변경 이력" });
   await history.locator("summary").click();
   await expect(history).toContainText("처음 등록");
-
-  // 여행계획서 링크, 실제 수정 경로, 데모 잔재가 없다
-  const plan = page.getByRole("link", { name: "여행계획서 열기" });
+  const plan = notices.getByRole("link", { name: "여행계획서 열기" });
   await expect(plan).toHaveAttribute("href", new RegExp(`/plan/${TRIP_ID}\\?t=`));
   await expect(plan).toHaveAttribute("target", "_blank");
-  await expect(page.getByRole("link", { name: "새 계획 올리기" })).toHaveAttribute("href", "/trips/new");
+  // 데모 잔재가 없다
   await expect(page.getByRole("link", { name: "일정 수정" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "검증 결과 다시 보기" })).toHaveCount(0);
-  await expect(page.getByText("서버에 연결된 화면이에요")).toBeVisible();
+});
+
+test("서버가 경로선을 주지 않으면 이동 줄은 수단·거리를 지어내지 않는다 — 출발 시각 · 걸리는 시간 · 여유만, 이동 항목이 없는 구간은 길찾기 링크만", async ({ page }) => {
+  await openTrip(page);                                                                          // 기본 장면: route-shapes 404
+  const schedule = tripScreen(page);
+  const move = schedule.locator('[data-entry-id="i-m"]');
+  await expect(move).toContainText("이동 20분");
+  await expect(move).toContainText("여유 30분");
+  await expect(move).not.toContainText("도보");
+  await expect(move).not.toContainText("km");
+  await expect(schedule.locator('[data-entry-id="i-a>i-b"]')).toContainText("다음 일정으로");
+  await expect(schedule.locator('[data-entry-id="i-a>i-b"]')).not.toContainText("버스");
 });
 
 test("경고와 알림이 없으면 그 칸을 그리지 않는다(빈 칸이나 0을 지어내지 않는다)", async ({ page, request }) => {
   await mockServer(request).scenario({ warnings: "none", notices: "none" });
   await openTrip(page);
-  await expect(page.getByRole("heading", { name: "살펴볼 점" })).toHaveCount(0);
-  await expect(page.locator("details").filter({ hasText: "받은 알림" })).toHaveCount(0);
+  const notices = await openNotices(page);
+  await expect(notices.getByRole("heading", { name: "살펴볼 점" })).toHaveCount(0);
+  await expect(notices.locator("details").filter({ hasText: "받은 알림" })).toHaveCount(0);
 });
 
 test("서버가 기다리는 선택이 있으면 「선택이 필요해요」가 뜨고, 고르면 그 안의 key 가 서버로 가고 칸이 사라진다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ proposals: "open" });
   await openTrip(page);
+  await openNotices(page);
   const ask = page.getByRole("region", { name: /선택이 필요해요/ });
   await expect(ask).toBeVisible();
   await expect(ask).toContainText("점심 식당이 문을 닫았어요. 대체 식당을 골라 주세요.");   // 서버 통지 문장 그대로
@@ -89,6 +116,7 @@ test("실내·야외를 모르는 일정의 「바꿀까요?」: 「바꿔 줘�
   const server = mockServer(request);
   await server.scenario({ proposals: "consent" });
   await openTrip(page);
+  await openNotices(page);
   const ask = page.getByRole("region", { name: /선택이 필요해요/ });
   await expect(ask.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" })).toBeVisible();
   await ask.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" }).click();
@@ -103,6 +131,7 @@ test("「바꿔 줘」에 다른 곳이 없으면 원래 일정을 그대로 둔
   const server = mockServer(request);
   await server.scenario({ proposals: "consent", choose: "no_alternate" });
   await openTrip(page);
+  await openNotices(page);
   await page.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" }).click();
   await expect(page.getByText("바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다.")).toBeVisible();
 });
@@ -111,6 +140,7 @@ test("자동으로 바꾼 일정은 「되돌리기」로 서버가 준 값 그�
   const server = mockServer(request);
   await server.scenario({ undo: "open" });
   await openTrip(page);
+  await openNotices(page);
   const card = page.getByRole("region", { name: "자동으로 바꾼 일정" });
   await expect(card).toContainText("비 소식이 있어 09:30 경복궁 관람을 실내 박물관으로 바꿨어요.");
   await card.getByRole("button", { name: "되돌리기" }).click();
@@ -124,6 +154,7 @@ test("그 사이 일정이 또 바뀌어 되돌리기가 거절되면(409) 아�
   const server = mockServer(request);
   await server.scenario({ undo: "stale" });
   await openTrip(page);
+  await openNotices(page);
   await page.getByRole("region", { name: "자동으로 바꾼 일정" }).getByRole("button", { name: "되돌리기" }).click();
   await expect(page.getByText("그 사이 일정이 다시 바뀌어 되돌리지 않았어요. 지금 상태를 다시 불러왔어요.")).toBeVisible();
 });
@@ -132,6 +163,7 @@ test("「지금 일정 그대로 두기」는 key 를 null 로 보낸다", async
   const server = mockServer(request);
   await server.scenario({ proposals: "open" });
   await openTrip(page);
+  await openNotices(page);
   await page.getByRole("button", { name: "지금 일정 그대로 두기" }).click();
   await expect.poll(async () => (await server.received("POST", "/choose")).length).toBe(1);
   expect((await server.received("POST", "/choose"))[0].body).toEqual({ key: null });
@@ -141,16 +173,16 @@ test("이미 정해진 선택(409)은 「아무것도 바뀌지 않았다」고 
   const server = mockServer(request);
   await server.scenario({ proposals: "open", choose: "conflict" });
   await openTrip(page);
+  await openNotices(page);
   await page.getByRole("button", { name: /대체 식당 B/ }).click();
   await expect(page.getByRole("alert").filter({ hasText: "이미 정해졌거나" })).toContainText("아무것도 바뀌지 않았고");
   // 알림 뒤에 화면이 서버를 다시 읽는다
   await expect.poll(async () => (await server.received("GET", "/proposals")).length).toBeGreaterThan(1);
 });
 
-test("지도 탭은 서버 좌표가 있는 그날의 일정만 실제 지도(OpenStreetMap)에 핀으로 그린다", async ({ page }) => {
+test("지도는 서버 좌표가 있는 그날의 일정만 실제 지도(OpenStreetMap)에 핀으로 그린다", async ({ page }) => {
   await openTrip(page);
-  await page.getByRole("button", { name: "지도", exact: true }).click();
-  const map = page.locator("#trip-pane-map");
+  const map = page.locator("main .leaflet-container");
   // 번호는 그날 일정의 순서이고, 핀의 title 에는 날짜와 시각이 붙는다(접근성 이름은 핀 안의 번호라 title 의 앞부분으로 찾는다). 이동 항목(i-m)은 일정이 아니라 번호를 차지하지 않는다.
   await expect(map.locator('.leaflet-marker-icon[title^="1. 아침 식당"]')).toBeVisible();
   await expect(map.locator('.leaflet-marker-icon[title^="2. 경복궁 관람"]')).toBeVisible();
@@ -163,7 +195,7 @@ test("지도 탭은 서버 좌표가 있는 그날의 일정만 실제 지도(Op
 test("채팅: 빠른 질문 세 개와 일정 상세가 화면 문장 그대로 서버로 가고, 서버 답이 그대로 보인다", async ({ page, request }) => {
   const server = mockServer(request);
   await openTrip(page);
-  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  await paneTab(page, "채팅").click();
   const chat = page.locator("#trip-pane-chat");
   const last = () => chat.locator("article[data-role=assistant]").last();
 
@@ -173,9 +205,9 @@ test("채팅: 빠른 질문 세 개와 일정 상세가 화면 문장 그대로 
   await expect(last()).toContainText("서버 답: 2026-10-01 예약 표시를 알려 주세요.");
 
   // 일정을 고른 뒤: 「선택 일정」(상세)·「다음 일정」
-  await page.getByRole("button", { name: "일정", exact: true }).click();
+  await paneTab(page, "일정").click();
   await page.locator("#stop-button-i-b").click();
-  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  await paneTab(page, "채팅").click();
   await chat.getByRole("button", { name: "선택 일정" }).click();
   await expect(last()).toContainText("서버 답: 2026-10-01 09:30 경복궁 관람 일정의 상세를 알려 주세요.");
   await chat.getByRole("button", { name: "다음 일정" }).click();
@@ -194,17 +226,17 @@ test("채팅: 빠른 질문 세 개와 일정 상세가 화면 문장 그대로 
   const answers = async () => chat.locator("article[data-role=assistant] p:nth-child(2)").allInnerTexts();
   expect((await answers()).filter((text) => text.startsWith("서버 답:"))).toHaveLength(4);
   await page.reload();
-  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  await paneTab(page, "채팅").click();
   await expect.poll(async () => (await answers()).filter((text) => text.startsWith("서버 답:")).length).toBe(4);
 });
 
 test("직접 쓴 질문도 보내고, 옛 서버처럼 answer 없이 escalated 만 오면 화면이 「담당자에게 넘겼어요」를 지어내지 않는다", async ({ page, request }) => {
   await mockServer(request).scenario({ chat: "escalated_bare" });
   await openTrip(page);
-  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  await paneTab(page, "채팅").click();
   const chat = page.locator("#trip-pane-chat");
-  await chat.getByPlaceholder("일정에 대해 궁금한 점을 입력하세요").fill("뭐라고요?");
-  await chat.getByRole("button", { name: "메시지 전송" }).click();
+  await page.getByPlaceholder("일정에 대해 궁금한 점을 입력하세요").fill("뭐라고요?");             // 입력은 화면 아래 채팅 막대
+  await page.getByRole("button", { name: "메시지 전송" }).click();
   const reply = chat.locator("article[data-role=assistant]").last();
   await expect(reply).toContainText("escalated");
   await expect(reply).not.toContainText("담당자");
@@ -215,14 +247,14 @@ test("옛 검증 결과·진행 주소는 그 여행 화면으로 보낸다 — 
   for (const path of ["results", "verification"]) {
     await page.goto(`/trips/${TRIP_ID}/${path}`);
     await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
-    await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+    await expect(tripScreen(page)).toBeVisible();
     await expect(page.getByText("조정한 일정")).toHaveCount(0);
   }
 });
 
 test("여행을 다시 읽다 실패하면(연결·서버 오류) 보이던 일정과 채팅 초안은 그대로 두고 「마지막으로 확인한 내용」이라 알리며, 다시 불러오면 알림이 사라진다", async ({ page }) => {
   await openTrip(page);
-  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  await paneTab(page, "채팅").click();
   await page.locator("#trip-chat-message").fill("초안으로 남겨 둘 질문");                              // 보내지 않은 초안
   let failing = true;
   await page.route((url) => url.pathname.endsWith(`/v1/web/trips/${TRIP_ID}`), async (route) => {
@@ -231,12 +263,12 @@ test("여행을 다시 읽다 실패하면(연결·서버 오류) 보이던 일�
   });
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));                  // 탭이 앞으로 돌아온 것과 같다: 여행을 다시 읽는다
   const banner = page.getByRole("alert").filter({ hasText: "최신 여행 정보를 불러오지 못했어요" });
-  await expect(banner).toBeVisible();
+  await expect(banner).toBeAttached();
   await expect(page.locator("#trip-chat-message")).toHaveValue("초안으로 남겨 둘 질문");             // 쓰던 초안도 그대로
   failing = false;
+  await paneTab(page, "일정").click();                                                                // 알림은 일정 칸 맨 위에 있다
   await banner.getByRole("button", { name: "다시 불러오기" }).click();
   await expect(banner).toHaveCount(0);
-  await page.getByRole("button", { name: "일정", exact: true }).click();
   await expect(page.locator("#trip-pane-schedule").getByText("경복궁 관람")).toBeVisible();          // 보이던 일정은 그대로
 });
 
@@ -254,9 +286,10 @@ test("여행이 사라졌거나(404) 세션이 끝났으면 다시 읽을 때 �
 test("선택·알림을 읽지 못해도(서버 500) 여행 화면은 그대로 뜨고, 읽지 못했다고 알린다", async ({ page, request }) => {
   await mockServer(request).scenario({ fail: "proposals" });
   await openTrip(page);
-  await expect(page.getByRole("alert").filter({ hasText: "선택과 알림을 읽지 못했어요" })).toBeVisible();
-  await expect(page.locator("#trip-pane-schedule").getByText("경복궁 관람")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "살펴볼 점" })).toBeVisible();     // 다른 패널은 영향받지 않는다
+  await expect(tripScreen(page).getByText("경복궁 관람")).toBeVisible();
+  const notices = await openNotices(page);
+  await expect(notices.getByRole("alert").filter({ hasText: "선택과 알림을 읽지 못했어요" })).toBeVisible();
+  await expect(notices.getByRole("heading", { name: "살펴볼 점" })).toBeVisible();     // 다른 패널은 영향받지 않는다
 });
 
 test("없는 여행 주소는 빈 화면이 아니라 이유와 다시 시도 단추를 보인다", async ({ page, request }) => {
@@ -297,7 +330,7 @@ test("여행 화면을 열면 채팅 모델 예열을 서버에 한 번 청하�
   const server = mockServer(request);
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
   await expect.poll(async () => (await server.received("POST", "/v1/web/warmup")).length).toBe(1);
   expect((await server.received("POST", "/v1/web/warmup"))[0]).toMatchObject({ session: "known-session", csrf: "csrf-known", key: null });
 
@@ -315,6 +348,7 @@ test("서버가 「이 여행 바뀜」 신호를 보내면 새로고침 없이 
   const server = mockServer(request);
   await server.scenario({ bell: "on" });
   await openTrip(page);
+  await openNotices(page);
   await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toHaveCount(0);
   await server.scenario({ proposals: "open" });
   // the stream opens a moment after the screen: ring until it is there
@@ -326,6 +360,7 @@ test("신호 연결이 끊겼다 다시 붙으면 그 사이 바뀐 것을 전�
   const server = mockServer(request);
   await server.scenario({ bell: "on" });
   await openTrip(page);
+  await openNotices(page);
   await expect.poll(() => server.ring(["notice"])).toBeGreaterThan(0);
   // changed while the line is down — no bell reaches the screen for this one
   await server.scenario({ proposals: "open" });
@@ -347,7 +382,7 @@ test("채팅: 서버가 답한 뒤 일정 다시 읽기만 실패하면 답은 �
   const server = mockServer(request);
   await server.scenario({ rereadFails: 1 });
   await openTrip(page);
-  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  await paneTab(page, "채팅").click();
   const chat = page.locator("#trip-pane-chat");
   await chat.getByRole("button", { name: "하루 요약" }).click();
   await expect(chat.locator("article[data-role=assistant]").last()).toContainText("서버 답: 2026-10-01 하루 일정을 요약해 주세요.");
@@ -355,7 +390,7 @@ test("채팅: 서버가 답한 뒤 일정 다시 읽기만 실패하면 답은 �
   await expect(chat.getByRole("alert").filter({ hasText: "메시지를 보내지 못했어요" })).toHaveCount(0);
   // the plan loads again by itself, and the note goes away
   await expect(chat.getByRole("status").filter({ hasText: "답은 받았어요" })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
   expect((await server.received("POST", "/messages")).length).toBe(1);
 });
 
@@ -363,7 +398,7 @@ test("채팅: 보내기가 실패해 「다시 보내기」를 누르면 같은 
   const server = mockServer(request);
   await server.scenario({ fail: "messages" });
   await openTrip(page);
-  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  await paneTab(page, "채팅").click();
   const chat = page.locator("#trip-pane-chat");
   await chat.getByRole("button", { name: "하루 요약" }).click();
   const failed = chat.getByRole("alert").filter({ hasText: "메시지를 보내지 못했어요" });
@@ -383,10 +418,10 @@ test("채팅: 서버가 현재 위치가 필요하다고 하면 버튼을 누를
   await context.grantPermissions(["geolocation"], { origin: APP });
   await context.setGeolocation({ latitude: 37.5704, longitude: 126.9921, accuracy: 25 });
   await openTrip(page);
-  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  await paneTab(page, "채팅").click();
   const chat = page.locator("#trip-pane-chat");
-  await chat.locator("#trip-chat-message").fill("여기서 경복궁 어떻게 가?");
-  await chat.locator("#trip-chat-message").press("Enter");
+  await page.locator("#trip-chat-message").fill("여기서 경복궁 어떻게 가?");
+  await page.locator("#trip-chat-message").press("Enter");
   await expect(chat.locator("article[data-role=assistant]").last()).toContainText("현재 위치를 알려 주시면");
   // nothing about the position has left the browser yet
   expect((await server.received("POST", "/messages"))[0].body).not.toHaveProperty("location");
@@ -401,7 +436,8 @@ test("채팅: 서버가 현재 위치가 필요하다고 하면 버튼을 누를
 
 test("계획서 링크 옆에 「계획서 내려받기」가 있고, 같은 주소에 download=1 이 붙으며, 서버는 그것을 파일(attachment)로 내려 준다", async ({ page, request }) => {
   await start(page);
-  await page.goto(`/trips/${TRIP_ID}`);
+  await openTrip(page);
+  await openNotices(page);
   const open = page.getByRole("link", { name: "여행계획서 열기" });
   const download = page.getByRole("link", { name: "계획서 내려받기" });
   await expect(open).toBeVisible();

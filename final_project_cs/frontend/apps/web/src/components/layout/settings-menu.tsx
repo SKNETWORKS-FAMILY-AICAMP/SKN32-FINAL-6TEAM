@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { createContext, useContext, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,9 +19,13 @@ import styles from "./settings-menu.module.css";
 /** Where the drawer renders: the device frame on intro screens, the page otherwise. */
 export { OverlayRoot };
 
-export function SettingsMenu({ className = "" }: { className?: string }) {
+/** The drawer's way to close itself, for what a screen puts in its head (`tools`): a press that opens a card of its own closes the drawer first (the drawer takes the focus and covers the frame). */
+export const CloseMenu = createContext<() => void>(() => undefined);
+
+/** `tools` (`[2026-10-07 사용자 결정 — 목업 C안]`): a screen's own icon in the drawer's head, left of the close button (a registered trip's Course Keeper). It reads `CloseMenu`. */
+export function SettingsMenu({ className = "", tools }: { className?: string; tools?: ReactNode }) {
   const t = useT();
-  const { navigation, skipAnimation, desktopLayout } = useSettings();
+  const { skipAnimation, desktopLayout } = useSettings();
   const profile = useProfile();
   const [open, setOpen] = useState(false);
   // `[2026-10-03 사용자 지시]` 「계정 연결 · 로그인」 줄은 서버가 로그인 방법을 하나라도 설정했을 때만 있다(메뉴를 열 때 한 번 물어본다).
@@ -67,7 +71,8 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
     <div ref={panel} className={styles.panel} id={`${id}-panel`} role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} onKeyDown={trapFocus}>
       <header className={styles.head}>
         <div><p className={styles.eyebrow}>MENU</p><h2 id={`${id}-title`}>{t("메뉴", "Menu")}</h2></div>
-        <button type="button" className={styles.close} onClick={close} aria-label={t("메뉴 닫기", "Close menu")}><X size={20} aria-hidden="true" /></button>
+        <div className={styles.headTools}><CloseMenu.Provider value={close}>{tools}</CloseMenu.Provider>
+          <button type="button" className={styles.close} onClick={close} aria-label={t("메뉴 닫기", "Close menu")}><X size={20} aria-hidden="true" /></button></div>
       </header>
       {/* One board; its rows are divided by lines only. */}
       <div className={styles.board}>
@@ -83,12 +88,6 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
         {/* The same card as the home intro, caption included. */}
         <LanguagePicker caption={<>LANGUAGE · <span lang="ko">언어</span></>} />
         <ThemePicker />
-        {/* One switch over the saved `navigation`: off = fixed tabs (the default), on = floating button. */}
-        <label className={styles.switchRow}>
-          <span className={styles.switchText}><strong id={`${id}-floating`}>{t("플로팅 버튼 사용", "Use floating button")}</strong><small id={`${id}-floating-note`}>{t("끄면 고정 하단 탭으로 표시됩니다.", "When off, the tabs stay fixed at the bottom.")}</small></span>
-          <input type="checkbox" role="switch" className={styles.switch} checked={navigation === "floating"} aria-labelledby={`${id}-floating`} aria-describedby={`${id}-floating-note`}
-            onChange={(event) => updateSettings({ navigation: event.target.checked ? "floating" : "fixed" })} />
-        </label>
         {/* `[2026-10-03 사용자 결정]` 계획 확인 화면의 단계별 재생을 건너뛰고 서버 결과를 바로 본다. 시스템의 「동작 줄이기」가 아니라 이 스위치가 정한다. */}
         <label className={styles.switchRow}>
           <span className={styles.switchText}><strong id={`${id}-skip`}>{t("애니메이션 건너뛰기", "Skip animations")}</strong><small id={`${id}-skip-note`}>{t("켜면 계획 확인 화면이 단계별 재생 없이 바로 떠요.", "When on, the plan check appears at once, without the step-by-step replay.")}</small></span>

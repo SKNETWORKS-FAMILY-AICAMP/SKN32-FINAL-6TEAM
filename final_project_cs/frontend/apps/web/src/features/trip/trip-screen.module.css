@@ -1,0 +1,112 @@
+/*
+ * `[2026-10-07 사용자 결정 — 목업 C안]` The registered trip on the plan check's screen. The map, the sheet, the day chips and the timeline are the plan check's own classes
+ * (`plan-check.module.css`); this file holds only what a registered trip adds: the stop cards with the old trip screen's facts, the ways between stops, the chat pane and bar,
+ * the bell and the notice panel. Colours are the shared roles of `styles/tokens.css`.
+ */
+.screen { color: var(--color-text); }
+
+/* ── Header: the bell beside the menu (the menu button's look) ── */
+.bell { position: relative; display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 44px; border: 1px solid var(--color-border); border-radius: 11px; background: color-mix(in srgb, var(--color-surface) 85%, transparent); color: var(--color-primary); cursor: pointer; }
+.bell:hover { border-color: var(--color-primary); }
+
+/* ── Sheet head: the 「일정 | 채팅」 switch stays at the right while the chips scroll ── */
+.headTools { display: flex; flex: none; align-items: center; gap: 6px; }
+.paneSwitch { display: inline-flex; flex: none; gap: 2px; padding: 3px; border-radius: 999px; background: var(--color-subtle); }
+.paneSwitch button { height: 28px; padding: 0 13px; border: 0; border-radius: 999px; background: none; color: var(--color-muted); font: inherit; font-size: 12.5px; font-weight: 750; cursor: pointer; }
+.paneSwitch button[aria-selected="true"] { background: var(--color-surface); color: var(--color-text); box-shadow: 0 1px 4px color-mix(in srgb, var(--color-text) 16%, transparent); }
+.paneSwitch button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
+/* ── The two panes side by side; the track moves by `translate` so a swipe (which moves it by `transform`) adds to it ── */
+.pager { position: relative; flex: 1; min-height: 0; overflow: clip; }
+.pagerTrack { display: flex; width: 200%; height: 100%; translate: 0 0; transition: translate var(--motion-soft) var(--ease-soft); }
+.pagerTrack[data-pane="chat"] { translate: -50% 0; }
+.pagerTrack[data-instant] { transition: none; }
+@media (prefers-reduced-motion: reduce) { .pagerTrack { transition: none; } }
+.pane { display: flex; flex-direction: column; width: 50%; min-width: 0; height: 100%; }
+.pane .planBody { padding-bottom: 88px; }
+
+.stale { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; padding: 10px 12px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-error-soft); color: var(--color-error); font-size: 12.5px; }
+.stale p { flex: 1 1 12em; margin: 0; }
+.safetyTop { margin: 10px 0 4px; }
+
+/* ── A stop: its time stays at the top of the list while the stop is in view, and the end time is small under the start ── */
+.stopEntry > .stopTime, .legEntry > :first-child { position: sticky; top: 0; z-index: 1; }
+.stopTime small { display: block; font-size: 11px; font-weight: 550; line-height: 1.3; color: var(--color-muted); }
+.stopEntry .stopDot { border-color: var(--color-success); background: var(--color-success-soft); }
+.stopEntry[data-paused] .stopDot { border-color: var(--color-warning); background: var(--color-warning-soft); }
+.stopCard { transition: border-color .2s, background-color .2s; }
+.stopCard[data-open] { border-color: var(--color-selected); background: color-mix(in srgb, var(--color-selected-soft) 30%, var(--color-surface)); }
+.stopHead { display: flex; align-items: center; gap: 4px; padding: 0 8px 0 0; }
+.stopToggle { display: flex; flex: 1; align-items: center; gap: 8px; min-width: 0; min-height: 48px; padding: 12px 4px 12px 12px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.stopToggle:focus-visible, .detailButton:focus-visible, .action:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.stopName { display: grid; flex: 1; gap: 5px; min-width: 0; }
+.stopName strong { font-size: 15.5px; line-height: 1.3; word-break: keep-all; }
+.stopTags { display: flex; flex-wrap: wrap; gap: 5px; }
+.stopTags [data-booked] { border-color: transparent; background: var(--color-success-soft); color: var(--color-success); }
+.toggleMark { flex: none; width: 18px; color: var(--color-muted); font-size: 17px; line-height: 1; text-align: center; }
+.detailButton { display: inline-flex; flex: none; align-items: center; gap: 1px; height: 32px; padding: 0 7px 0 11px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-primary); font: inherit; font-size: 12px; font-weight: 750; white-space: nowrap; cursor: pointer; }
+.detailButton[aria-disabled="true"] { color: var(--color-muted); }
+.stopBody { padding: 10px 13px 13px; border-top: 1px solid var(--color-divider); }
+.details { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 14px; margin: 0; font-size: 12.5px; line-height: 1.7; }
+.details dt { color: var(--color-muted); white-space: nowrap; }
+.details dd { margin: 0; text-align: right; word-break: keep-all; overflow-wrap: anywhere; }
+.details a { color: var(--color-primary); font-weight: 650; }
+.detailActions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 11px; }
+.action { display: inline-flex; flex: 1 1 auto; align-items: center; justify-content: center; gap: 5px; min-height: 44px; padding: 0 9px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: var(--color-primary); font: inherit; font-size: 12px; font-weight: 650; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.action:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ── The way between two stops ── */
+.legPlain { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.legLink { display: inline-flex; align-items: center; gap: 4px; color: var(--color-primary); font-size: 12.5px; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.legBody { padding: 0 0 6px; }
+.legBody p { margin: 4px 0; font-size: 12.5px; color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.legBody .legGuess { color: var(--color-warning); }
+
+/* ── The chat pane (the old trip screen's chat, in the sheet) ── */
+.chatPane { padding-bottom: 84px; }
+.chatLog { display: flex; flex: 1; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; padding: 12px 14px; }
+.chatContext { flex: none; padding: 8px 12px; border-radius: 10px; background: var(--color-soft); color: var(--color-primary); font-size: 12.5px; line-height: 1.6; }
+.chatContext span { display: block; }
+.message { display: flex; flex-direction: column; align-items: flex-start; }
+.message[data-role="user"] { align-items: flex-end; }
+.messageMeta { margin: 0 2px 3px; font-size: 11px; color: var(--color-muted); }
+.bubble { max-width: 88%; margin: 0; padding: 10px 12px; border-radius: 0 13px 13px; background: var(--color-subtle); color: var(--color-text); font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.message[data-role="user"] .bubble { border-radius: 13px 0 13px 13px; background: var(--color-soft); color: var(--color-primary); }
+.more { margin-top: 4px; font-size: 13px; }
+.devBasis { margin: 4px 0 0; font-size: 11px; color: var(--color-muted); }
+.choices { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.choicesTitle { flex: 1 1 100%; font-size: 12px; color: var(--color-muted); }
+.choice { display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.choice:disabled { opacity: .45; cursor: not-allowed; }
+.undoHint { font-size: 11.5px; color: var(--color-muted); }
+.error { margin: 0; color: var(--color-error); font-size: 12.5px; }
+.pending { margin: 0; font-size: 12.5px; color: var(--color-muted); }
+.pending[data-lost] { color: var(--color-warning); }
+.prompts { display: flex; flex: none; flex-wrap: wrap; gap: 5px; padding: 8px 14px 4px; border-top: 1px solid var(--color-divider); }
+.prompt { flex: none; min-height: 40px; padding: 0 10px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-muted); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.prompt:disabled { opacity: .45; cursor: not-allowed; }
+.chatNote { flex: none; margin: 4px 14px 0; font-size: 11px; line-height: 1.6; color: var(--color-muted); }
+
+/* ── The chat bar at the bottom of the frame: a round button that grows into the bar ── */
+.chatBar { position: absolute; z-index: 7; right: 18px; bottom: 22px; display: flex; align-items: center; width: 58px; height: 58px; border: 1px solid transparent; border-radius: 29px; background: var(--color-primary); box-shadow: 0 10px 24px color-mix(in srgb, var(--color-text) 35%, transparent); transition: width .3s var(--ease-soft); }
+.chatBar[data-open] { width: calc(100% - 36px); border-color: var(--color-border-strong); background: var(--color-surface); box-shadow: 0 10px 26px color-mix(in srgb, var(--color-text) 22%, transparent); }
+.chatBar[data-open]:focus-within { border-color: var(--color-selected); box-shadow: 0 0 0 3px var(--color-selected-soft), 0 10px 26px color-mix(in srgb, var(--color-text) 22%, transparent); }
+.chatFab { display: grid; place-items: center; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--color-on-primary); cursor: pointer; }
+.chatClose { display: grid; flex: none; place-items: center; width: 40px; height: 40px; margin-left: 7px; padding: 0; border: 0; border-radius: 50%; background: var(--color-subtle); color: var(--color-muted); cursor: pointer; }
+.chatForm { display: flex; flex: 1; align-items: center; gap: 6px; min-width: 0; padding: 0 6px 0 12px; }
+.chatInput { flex: 1; min-width: 0; height: 44px; padding: 0 2px; border: 0; background: none; color: var(--color-text); font: inherit; font-size: 16px; outline: none; }
+.chatSend { display: grid; flex: none; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: var(--color-primary); color: var(--color-on-primary); cursor: pointer; }
+.chatSend:disabled { opacity: .5; cursor: not-allowed; }
+.chatFab:focus-visible, .chatClose:focus-visible, .chatSend:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.chatError { position: absolute; left: 12px; bottom: calc(100% + 6px); margin: 0; padding: 4px 10px; border-radius: 8px; background: var(--color-error-soft); color: var(--color-error); font-size: 12.5px; }
+
+/* ── The notice panel (opened by the bell) ── */
+.center { position: absolute; z-index: 9; inset: 0; display: flex; flex-direction: column; background: var(--color-surface); animation: centerIn var(--motion-soft) var(--ease-soft); }
+@keyframes centerIn { from { transform: translateX(24px); opacity: .6; } }
+@media (prefers-reduced-motion: reduce) { .center { animation: none; } }
+.centerHead { display: flex; align-items: center; gap: 8px; padding: 16px 12px 10px; border-bottom: 1px solid var(--color-divider); }
+.centerHead h2 { margin: 0; font-size: 18px; font-weight: 750; }
+.centerHead h2:focus { outline: none; }
+.centerBack { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 11px; background: none; color: var(--color-text-secondary); cursor: pointer; }
+.centerBack:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.centerBody { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 16px 24px; }

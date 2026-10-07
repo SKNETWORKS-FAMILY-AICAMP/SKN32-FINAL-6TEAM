@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { agree, agreeTerms, hydrated, mockServer, noHorizontalScroll, openPreferencesFromMenu, openPreferencesFromMyPage, pickMenuLanguage, registerStubTrip, useKorean, checkPlan } from "./helpers";
+import { agree, agreeTerms, checkPlan, hydrated, mockServer, noHorizontalScroll, openPreferencesFromMenu, openPreferencesFromMyPage, paneTab, pickMenuLanguage, registerStubTrip, useKorean } from "./helpers";
 
 /** Write a plan and press 「계획 확인하기」: the app goes to the plan-check screen of the mock server's intake. */
 async function sendPlan(page: Page) {
@@ -148,7 +148,7 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
   await sendPlan(page);
 });
 
-test("메뉴에서 언어와 여행 화면 내비게이션을 바꾸면 새로고침 후에도 유지된다", async ({ page }) => {
+test("메뉴에서 바꾼 언어는 새로고침 후에도 유지되고, 여행 화면도 그 언어로 열린다", async ({ page }) => {
   await agree(page);
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
@@ -171,7 +171,6 @@ test("메뉴에서 언어와 여행 화면 내비게이션을 바꾸면 새로�
   await expect(page.locator("html")).toHaveAttribute("lang", "ko");
   await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
   await expect(page).toHaveTitle("triPilot · 당신다운 여행의 시작");
-  await page.getByRole("dialog", { name: "메뉴" }).getByRole("switch", { name: "플로팅 버튼 사용" }).check();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "메뉴", exact: true })).toBeFocused();
@@ -179,15 +178,9 @@ test("메뉴에서 언어와 여행 화면 내비게이션을 바꾸면 새로�
   await page.reload();
   await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
   await registerStubTrip(page);
-  await expect(page.locator("#trip-pane-button-schedule")).toBeHidden();
-  const toggle = page.getByRole("button", { name: "일정 · 메뉴 열기 또는 닫기" });
-  await toggle.click();
-  await expect(toggle).toBeHidden();
-  await page.getByRole("button", { name: "채팅", exact: true }).click();
-  await expect(page.locator("#trip-pane-chat")).toBeVisible();
-  const chatToggle = page.getByRole("button", { name: "채팅 · 메뉴 열기 또는 닫기" });
-  await expect(chatToggle).toHaveAttribute("aria-expanded", "false");
-  await expect(chatToggle).toBeFocused();
+  // `[2026-10-07 사용자 결정 — 목업 C안]` 여행 화면은 시트의 「일정 | 채팅」으로 칸을 바꾼다(플로팅 버튼 스위치는 없다).
+  await paneTab(page, "채팅").click();
+  await expect(page.locator("#trip-pane-chat")).not.toHaveAttribute("inert");
   await noHorizontalScroll(page);
 });
 

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { agree, fillPlanAsk, finishOnboarding, openRegistration, start, mockServer, TRIP_ID, weekAhead, checkPlan } from "./helpers";
+import { agree, fillPlanAsk, finishOnboarding, openRegistration, start, mockServer, TRIP_ID, weekAhead, checkPlan, tripScreen } from "./helpers";
 import { needsBadge } from "./plan-check-kit";
 
 const PLAN = "10/1 09:00 경복궁 관람";
@@ -31,7 +31,7 @@ test("첫 방문: 계획을 올리면 게스트 세션이 만들어지고(쿠키
 
   await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
 
   // 서버가 실제로 받은 것: 계획 글은 접수 때, 확인은 등록할 때. 취향 설문을 안 마쳤어도 계획 담기 화면에서 정한 것(여유 「적당히」 · 항로 지킴이 「켜고 진행」)은 간다.
   const [intake] = await server.received("POST", "/v1/web/trip-intakes");

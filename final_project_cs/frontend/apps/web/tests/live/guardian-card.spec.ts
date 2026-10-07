@@ -178,7 +178,7 @@ test("머리줄 아이콘: 카드로 정한 뒤부터 보이고, 켜 둔 것을 
 });
 
 test("영어 화면에서도 아이콘 이름 · 되돌리기 줄이 영어로 나온다", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "en", navigation: "fixed" })));
+  await page.addInitScript(() => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "en" })));
   await start(page);
   await openRegistration(page);
   await page.getByLabel("Your travel plan").fill(PLAN);

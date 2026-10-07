@@ -83,12 +83,11 @@ const shots = {
     await mock(context.request, "/__test/scenario", { chat: "summary" });   // 「하루 요약」에 하루의 일정을 실제 서버가 쓰는 모양으로 답한다
     await page.setViewportSize({ width: WIDTH, height: HEIGHT });
     await page.goto(`${BASE}/trips/${TRIP_ID}`, { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: lang === "ko" ? "채팅" : /Chat/i, exact: true }).click();
+    await page.getByRole("tab", { name: lang === "ko" ? "채팅" : "Chat", exact: true }).click();   // `[2026-10-07]` 시트 머리의 「일정 | 채팅」
     const chat = page.locator("#trip-pane-chat");
     await chat.getByRole("button", { name: lang === "ko" ? "하루 요약" : /Day summary/i }).click();
     await chat.locator("article[data-role=assistant]").last().waitFor({ timeout: 30_000 });
     await page.waitForTimeout(800);
-    await page.evaluate(() => { const card = document.querySelector("#trip-pane-chat"); if (card) window.scrollTo(0, Math.max(0, card.getBoundingClientRect().top + window.scrollY - 24)); });   // 채팅 카드의 머리가 위에 오도록
     return { name: "4-chat", clip: { x: 0, y: 0, width: WIDTH, height: HEIGHT }, viewportOnly: true };
   },
 };
@@ -102,7 +101,7 @@ for (const lang of languages) {
     if ((key === "3" || key === "4") && !MOCK) { console.log(`건너뜀: ${key}번은 mock 서버가 필요하다(--mock <주소>)`); continue; }
     const context = await browser.newContext({ viewport: { width: WIDTH, height: 844 }, deviceScaleFactor: SCALE, locale: lang === "ko" ? "ko-KR" : "en-US", isMobile: true, hasTouch: true });
     await context.addInitScript(([sKey, oKey, language, answers]) => {
-      localStorage.setItem(sKey, JSON.stringify({ language, navigation: "fixed", theme: "green", skipAnimation: true }));
+      localStorage.setItem(sKey, JSON.stringify({ language, theme: "green", skipAnimation: true }));
       localStorage.setItem(oKey, JSON.stringify({ read: true, agreed: true, complete: false, step: 0, answers }));
     }, [settingsKey, onboardingKey, lang, blankAnswers]);
     if (MOCK) await context.addCookies([{ name: SESSION_COOKIE, value: "known-session", url: MOCK }]);   // 돌아온 방문자 — mock 서버가 아는 세션

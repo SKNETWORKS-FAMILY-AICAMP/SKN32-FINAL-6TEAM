@@ -60,11 +60,12 @@ test("항로 지킴이 카드는 휴대폰 틀 안에서 틀 폭에 맞는 아�
   expect(sheet.y + sheet.height).toBeLessThanOrEqual(frame.y + frame.height + 1);
 });
 
-test("항로 지킴이를 끄면 알림이 틀 안에서 틀 폭에 맞는 하얀 카드로 뜨고 몇 초 뒤 저절로 사라진다. 아이콘은 메뉴 버튼과 같은 흰색 반투명이고 위에 말풍선이 없다", async ({ page, request }) => {
+test("항로 지킴이를 끄면 알림이 틀 안에서 틀 폭에 맞는 하얀 카드로 뜨고 몇 초 뒤 저절로 사라진다. 메뉴 서랍 머리의 아이콘은 메뉴 버튼과 같은 흰색 반투명이고 위에 말풍선이 없다", async ({ page, request }) => {
   await mockServer(request).scenario({ guardian: "on" });
   await page.setViewportSize({ width: 1280, height: 900 });
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();                                // `[2026-10-07 목업 C안]` 여행의 아이콘은 메뉴 서랍 머리(닫기 ✕ 왼쪽)에 있다
   const icon = page.getByRole("button", { name: "항로 지킴이 끄기" });
   await expect(icon).toBeVisible();
   // 메뉴 버튼과 같은 바탕(반투명 흰색)

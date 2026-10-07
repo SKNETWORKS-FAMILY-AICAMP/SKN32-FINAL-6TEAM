@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer, start, TRIP_ID } from "./helpers";
+import { mockServer, start, TRIP_ID, tripScreen } from "./helpers";
 
 /**
  * `[2026-10-06 사용자 결정 — 재난 시 일정 정지 + 대피 안내]` 여행 화면: 정지 중 표시 · 정지된 일정 표시 · 안전 알림의 안내(대피 장소 · 119) · 「일정 다시 시작」. mock 서버 시험이다 — 화면 반응만 본다.
@@ -49,7 +49,7 @@ async function stage(page: Page, state: { paused: boolean; safety?: Record<strin
 async function openTrip(page: Page) {
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
 }
 const panel = (page: Page) => page.getByTestId("safety-panel");
 
@@ -69,8 +69,9 @@ test("정지 중이면 맨 위에 「일정 정지 중」과 이유 · 시각 ·
   await expect(panel(page).getByRole("link", { name: "걸어서 길 찾기" })).toHaveAttribute("href", /^https:\/\/www\.google\.com\/maps\//);
   await expect(panel(page)).toContainText("지금 계신 곳과 다를 수 있어요");                                  // 기준점은 일정 장소다
   await expect(page.getByText("일정 정지", { exact: true })).toHaveCount(2);                              // 일정 둘이 정지됨
-  const [safety, plan] = [await panel(page).boundingBox(), await page.getByRole("heading", { name: "나의 여행" }).boundingBox()];
-  expect(safety!.y).toBeGreaterThan(plan!.y);                                                              // 제목 아래, 다른 안내보다 위
+  // `[2026-10-07 목업 C안]` 정지 패널은 일정 칸 맨 윗줄 — 첫 일차 제목(일정 목록)보다 위
+  const [safety, list] = [await panel(page).boundingBox(), await tripScreen(page).getByRole("heading", { name: /1일차/ }).boundingBox()];
+  expect(safety!.y).toBeLessThan(list!.y);
 });
 
 test("안전 안내가 다시 시작 단추보다 먼저 나오고, 단추 옆에 「안전한 곳에서 눌러 주세요」가 있으며, 자동으로 다시 시작되지 않는다", async ({ page }) => {

@@ -124,13 +124,19 @@ describe("live trip gateway", () => {
     });
   });
 
-  it("folds move items into the next stop as a departure time instead of listing them as stops", async () => {
+  it("keeps move items out of the stops, as moves between the stop before and the stop after them (Seoul time)", async () => {
     replies.push({ ...TRIP, items: [TRIP.items[0],
       { item_id: "m", seq: 2, kind: "mobility", title: "경복궁 → 명동난타극장", place: null, starts_at: "2026-10-16T09:25:00+00:00", ends_at: "2026-10-16T09:50:00+00:00", changed: false, lat: null, lon: null, booked: false },
       TRIP.items[1]] });
     const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
     expect(trip.stops.map((stop) => stop.title)).toEqual(["경복궁 관람", "명동난타극장"]);
-    expect(trip.stops[1].notes.startsWith("18:25 출발")).toBe(true);
+    expect(trip.stops[1].notes).not.toContain("출발");
+    expect(trip.moves).toEqual([{ id: "m", fromId: TRIP.items[0].item_id, toId: TRIP.items[1].item_id, date: "2026-10-16", departAt: "18:25", arriveAt: "18:50", title: "경복궁 → 명동난타극장" }]);
+  });
+
+  it("reads the trip's name the server keeps", async () => {
+    replies.push({ ...TRIP, title: " 내 여행 " });
+    expect((await createLiveGateway().getTrip(TRIP.trip_id, "ko")).title).toBe("내 여행");
   });
 
   it("shows the server's own answer and falls back to fixed words, never inventing one", async () => {

@@ -11,7 +11,6 @@ import { openChoices, recentNotices, undoableChange } from "./attention";
 import type { Trip } from "./model";
 import { tripKey } from "./use-trip";
 import { noticesKey, proposalsKey, recoveryKey, useNotices, useProposals, useRecovery } from "./use-trip-extras";
-import { useTripEvents } from "./use-trip-events";
 import { SafetyPanel } from "./trip-safety";
 import { RecoveryPanel } from "./trip-recovery";
 import type { Recovery } from "@/lib/live/recovery";
@@ -38,8 +37,7 @@ export function TripAttention({ trip }: { trip: Trip }) {
   const t = useT();
   const { language } = useSettings();
   const queryClient = useQueryClient();
-  // The server's "this trip changed" bell keeps the plan, notices and choices current while this screen is open.
-  useTripEvents(trip.id);
+  // `[2026-10-07]` The server's "this trip changed" bell is kept by the trip screen (`trip-screen.tsx`) — it listens while the trip is open, not only while this list is shown.
   const proposals = useProposals(trip.id);
   const notices = useNotices(trip.id);
   const recovery = useRecovery(trip.id);

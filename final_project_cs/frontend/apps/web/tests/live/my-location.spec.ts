@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { mockServer, TRIP_ID } from "./helpers";
+import { dayTab, mockServer, TRIP_ID, tripScreen } from "./helpers";
 import { allowLocation, changeLocationConsent, countLocationAsks, locationAsks, north, setPageHidden, startWithLocationConsent } from "./location-kit";
 import { INTAKE, needsBadge } from "./plan-check-kit";
 
@@ -20,7 +20,8 @@ test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 const NEAR = { latitude: 37.5765, longitude: 126.979 };
 const LOCATION_POST = `/trips/${TRIP_ID}/location`;
 
-const mapPane = (page: Page) => page.locator("#trip-pane-map");
+// `[2026-10-07 목업 C안]` 여행 화면의 지도는 시트 뒤에 늘 있다(지도 탭이 없다).
+const mapPane = (page: Page) => page.getByRole("region", { name: "여행 지도", exact: true });
 const meDot = (scope: Page | Locator) => scope.getByRole("img", { name: "내 위치", exact: true });
 const tripPin = (page: Page, label: string) => mapPane(page).locator(`.leaflet-marker-icon[title^="${label}"]`);
 const notice = (page: Page) => page.locator("[data-my-location-notice]");
@@ -28,12 +29,11 @@ const posts = async (request: Parameters<typeof mockServer>[0]) => mockServer(re
 type Fix = { lat: number; lng: number; accuracy_m?: number; at: string };
 const fixesOf = (entry: { body: Record<string, unknown> | null }) => (entry.body as { fixes: Fix[] }).fixes;
 
-/** 여행 화면을 열고 지도 탭으로 간다. `agreed`: 위치 동의(필수 둘은 늘 동의). */
+/** 여행 화면을 열고 지도의 핀을 기다린다. `agreed`: 위치 동의(필수 둘은 늘 동의). */
 async function openTripMap(page: Page, agreed: boolean) {
   await startWithLocationConsent(page, agreed);
   await page.goto(`/trips/${TRIP_ID}`);
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "지도", exact: true }).click();
+  await expect(tripScreen(page)).toBeVisible();
   await expect(mapPane(page).locator(".leaflet-marker-icon[title]").first()).toBeVisible();
 }
 
@@ -63,7 +63,7 @@ test("위치 동의가 있으면 여행 지도를 열자마자 「내 위치」�
   // 같은 자리의 핀은 그대로 눌린다 — 점이 가리지 않는다(실제 클릭: 가리는 것이 있으면 Playwright 가 누르지 못한다)
   await tripPin(page, "2. 경복궁 관람").locator("[data-pin-body]").click();
   await expect(tripPin(page, "2. 경복궁 관람")).toHaveAttribute("aria-pressed", "true");
-  await expect(mapPane(page).getByRole("heading", { name: "경복궁 관람", exact: true })).toBeVisible();
+  await expect(page.locator("#stop-button-i-b")).toHaveAttribute("aria-expanded", "true");         // 핀을 누르면 그 일정이 목록에서 펼쳐진다
   await expect(notice(page)).toHaveCount(0);                                                        // 위치를 찾았으니 할 말이 없다
 });
 
@@ -145,7 +145,7 @@ test("여행 화면은 읽은 위치를 서버에 보낸다 — 모았다가 화
   await context.setGeolocation({ latitude: north(NEAR.latitude, 10), longitude: NEAR.longitude, accuracy: 25 });    // 10 m: 점은 움직여도 서버엔 새 점이 아니다
   await page.waitForTimeout(2_500);
   await context.setGeolocation({ latitude: north(NEAR.latitude, 100), longitude: NEAR.longitude, accuracy: 25 });   // 100 m: 새 점
-  await expect.poll(async () => start10.y - (await dot.boundingBox())!.y, { timeout: 10_000 }).toBeGreaterThan(8);             // 100 m 는 확대 수준에 따라 10~30px 다(고정 20px 는 지도의 처음 확대에 기댄 값이었다)
+  await expect.poll(async () => start10.y - (await dot.boundingBox())!.y, { timeout: 10_000 }).toBeGreaterThan(3);             // 110 m 는 확대 수준에 따라 다르다 — 폰 틀의 시트 위 지도(2026-10-07)에서는 6px 남짓
   await setPageHidden(page, true);
   await expect.poll(async () => (await posts(request)).length).toBe(2);
   const again = fixesOf((await posts(request))[1]);
@@ -227,7 +227,7 @@ test("「모든 일정 보기」는 핀만 맞춘다 — 멀리 있는 내 위�
   await expect(dot).not.toBeInViewport();                                                            // 내 위치는 맞추기에 들지 않는다
   await settled(tripPin(page, "3. 점심 식당"));
   const first = (await tripPin(page, "1. 아침 식당").boundingBox())!, last = (await tripPin(page, "3. 점심 식당").boundingBox())!;
-  expect(Math.hypot(last.x - first.x, last.y - first.y)).toBeGreaterThan(100);                      // 핀이 한 점으로 쪼그라들지 않았다
+  expect(Math.hypot(last.x - first.x, last.y - first.y)).toBeGreaterThan(40);                       // 핀이 한 점으로 쪼그라들지 않았다(부산까지 맞췄으면 몇 px 에 그친다 · 폰 틀의 시트 위 지도에서는 약 70px)
 });
 
 test("지도 단추의 「내 위치로」: 위치 동의가 있으면 보이고 누르면 지도가 내 위치로 가고, 동의가 없으면 단추도 말도 없다", async ({ page, context }) => {
@@ -261,7 +261,7 @@ test("핀이 하나도 없는 날은 내 위치로 지도 가운데를 맞춘다
   await mockServer(request).scenario({ tripItems: "map" });                                         // 셋째 날은 좌표가 있는 일정이 없다
   await allowLocation(context, { latitude: 37.5512, longitude: 126.9882 });
   await openTripMap(page, true);
-  await page.getByRole("button", { name: /3일차/ }).click();
+  await dayTab(page, /^3일차/).click();
   await expect(page.getByText("표시할 장소 좌표가 없어요.", { exact: true })).toBeVisible();
   const dot = meDot(mapPane(page));
   await dot.scrollIntoViewIfNeeded();                                                               // 지도는 이 화면의 아래쪽에 있다
@@ -280,9 +280,9 @@ test("서버가 머문 곳을 알려 주면 그날 지도에 회색 점으로 �
   const stay = mapPane(page).getByRole("img", { name: "머문 곳 · 경복궁 관람 근처 · 09:32–10:50", exact: true });
   await expect(stay).toHaveCount(1);
   await expect.poll(async () => (await mockServer(request).received("GET", `/trips/${TRIP_ID}/location/stops`)).length).toBeGreaterThan(0);
-  await page.getByRole("button", { name: /^2일차/ }).click();
+  await dayTab(page, /^2일차/).click();
   await expect(mapPane(page).locator("[data-stay-point]")).toHaveCount(0);
-  await page.getByRole("button", { name: /^1일차/ }).click();
+  await dayTab(page, /^1일차/).click();
   await expect(stay).toHaveCount(1);
 });
 

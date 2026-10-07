@@ -249,7 +249,7 @@ test("질문 목록이 없는 옛 서버에서는 아무것도 묻지 않고 읽
 });
 
 test("영어 화면에서는 서버가 보낸 질문 번호로 영어 문구를 쓴다", async ({ page, request }) => {
-  await page.addInitScript(() => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "en", navigation: "fixed" })));
+  await page.addInitScript(() => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "en" })));
   const server = mockServer(request);
   await server.scenario({ questions: "two", readingPolls: HOLD });
   await start(page);

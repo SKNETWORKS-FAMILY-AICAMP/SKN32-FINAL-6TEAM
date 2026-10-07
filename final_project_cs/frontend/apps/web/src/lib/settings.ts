@@ -4,11 +4,8 @@ import { useMemo, useSyncExternalStore } from "react";
 import { languages, translator, type Language, type Translate } from "./i18n";
 import { settingsStorageKey as storageKey, themes, type Theme } from "./theme";
 
-export type TripNavigation = "fixed" | "floating";
-
 export interface Settings {
   language: Language;
-  navigation: TripNavigation;
   theme: Theme;
   /**
    * `[2026-10-03 사용자 결정]` 메뉴의 「애니메이션 건너뛰기」: on = the plan check shows what the server sent at once, without the step-by-step
@@ -23,7 +20,8 @@ export interface Settings {
 }
 
 // `[2026-10-03 사용자 결정]` 기본 언어는 한국어다 — 처음 여는 사람에게 한국어로 보인다(바꾸면 이 브라우저가 기억한다).
-const defaults: Settings = { language: "ko", navigation: "fixed", theme: "green", skipAnimation: false, desktopLayout: false };
+// `[2026-10-07 사용자 결정]` 「플로팅 버튼 사용」(여행 화면 하단 탭 ↔ 떠 있는 버튼)은 없앴다 — 새 여행 화면에는 하단 탭이 없다. 옛 버전이 저장한 `navigation` 은 읽지 않는다.
+const defaults: Settings = { language: "ko", theme: "green", skipAnimation: false, desktopLayout: false };
 const listeners = new Set<() => void>();
 let current: Settings | null = null;
 
@@ -34,7 +32,6 @@ function read(): Settings {
     const stored = JSON.parse(localStorage.getItem(storageKey) ?? "null") as Partial<Settings> | null;
     current = {
       language: languages.find(([value]) => value === stored?.language)?.[0] ?? defaults.language,
-      navigation: stored?.navigation === "floating" || stored?.navigation === "fixed" ? stored.navigation : defaults.navigation,
       theme: themes.find((value) => value === stored?.theme) ?? defaults.theme,
       skipAnimation: stored?.skipAnimation === true,
       desktopLayout: stored?.desktopLayout === true,
