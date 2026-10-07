@@ -2,7 +2,11 @@
 
     --once      한 번 돌고 끝난다(cron·수동 실행용). 기본값이다.
     --interval  N 초마다 되돌린다(상주 실행용).
-    --only      classifying | routing | trip | trip_cases | trip_safety | trip_dawn | trip_reminders | place_facts | catalog_hours | trip_places | web_guard 중 하나만 돌린다.
+    --only      classifying | routing | trip | trip_cases | trip_safety | trip_dawn | trip_reminders | place_facts | catalog_hours | trip_places | web_guard | retention 중 하나만 돌린다.
+
+★`retention` 은 **약관의 보관 기간 · 회원 자료 정리**다(`[2026-10-07 사용자 결정]`, 마이그레이션 056). 마지막 이용 뒤 `retention.member_idle_days` 가 지난 회원의 자료를 지우는데,
+  **기본 모드는 `dry_run`(대상을 세기만 하고 `retention_runs` 에 건수를 남긴다 — 아무것도 안 지운다)** 이고 `on` 은 사용자가 건수를 보고 승인한 뒤 관리 화면에서 켠다.
+  평소 실행에서는 `web_guard` 안에서 **하루에 한 번만** 돈다(주기 문). `--only retention` 은 문을 건너뛰고 바로 한 번 돈다(수동 건수 확인).
 
 ★`trip_safety` 는 **재난 시 일정 정지**다(`[2026-10-06 사용자 결정]`). 진행 중인(그리고 아직 시작하지 않은 — 이때는 여행 전체 정지만) 여행마다 재난문자 · 지진을 점검해, 재난이 난 시각에 그 지역에 여행객이 있었으면 그날 일정을 정지하고
   (전쟁 · 활화산 폭발 같은 심각한 사건은 여행 전체) 대피 장소를 안내하는 안전 알림을 낸다. 기본 실행에서는 **감시 주기 문을 지난 회차에 감시 앞에서** 같이 돈다.
@@ -129,6 +133,8 @@ def _run_once(tenant_id: str, only: str | None) -> dict[str, dict[str, int]]:
     # ★`[2026-09-28]` 웹 남용 방어 — 여행을 하나도 안 만든 사용자 키 정리 + 오래된 사용량 줄(주소 해시 48시간) 삭제
     if only in (None, "web_guard"):
         result["web_guard"] = _run_web_guard(tenant_id)
+    if only == "retention":
+        result["retention"] = _run_retention(tenant_id, forced=True)
     return result
 
 
@@ -166,6 +172,19 @@ def _run_catalog_hours(tenant_id: str) -> dict[str, object]:
                        retry_days=int(guard.get("travel.catalog_hours.retry_days")))
 
 
+def _run_retention(tenant_id: str, *, forced: bool) -> dict[str, object]:
+    """회원 자료 정리(모드에 따라 세기만 · 지움 · 안 함) — 하루에 한 번. `forced` 면 주기 문을 건너뛴다."""
+    from app.application.job_gate import claim
+    from app.domains.travel_ops.modules.web_account import member_cleanup
+
+    with get_connection() as conn:
+        if not forced:
+            with conn.transaction():
+                if not claim(conn, tenant_id=tenant_id, gate="member_retention", min_seconds=23 * 3600):
+                    return {"skipped_until_due": 1}
+        return member_cleanup.run(conn, tenant_id)
+
+
 def _run_web_guard(tenant_id: str) -> dict[str, object]:
     from app.domains.travel_ops.components.customer.consents import purge_expired
     from app.domains.travel_ops.modules.web_account.guest_cleanup import cleanup_guests
@@ -174,7 +193,9 @@ def _run_web_guard(tenant_id: str) -> dict[str, object]:
     with get_connection() as conn:
         # ★`[2026-10-04 D-CS-011]` 옛 「빈 키 정리」를 게스트 정리가 대신한다 — 마지막 사용 뒤 `web.guest_idle_hours` 가 지난 게스트의 여행 · 세션 · 키 · 사용자
         # ★`[2026-10-05]` 보관 기간(`consent.evidence_retention_days`)이 지난 동의 기록도 여기서 지운다 — 동의 기록을 지우는 곳은 이 함수 하나뿐이다
-        return {**prune_usage(conn, tenant_id), "guests": cleanup_guests(conn, tenant_id), "consent_events_purged": purge_expired(conn, tenant_id)}
+        out = {**prune_usage(conn, tenant_id), "guests": cleanup_guests(conn, tenant_id), "consent_events_purged": purge_expired(conn, tenant_id)}
+    # ★`[2026-10-07]` 회원 자료 정리 — 하루 한 번(주기 문) · 기본은 세기만(dry_run). 별도 연결로 돈다(위 정리와 트랜잭션이 섞이지 않게)
+    return {**out, "retention": _run_retention(tenant_id, forced=False)}
 
 
 def _run_trip_places(tenant_id: str) -> dict[str, object]:
@@ -364,7 +385,7 @@ def main() -> int:
                         help="N 초마다 반복한다. 주면 --once 를 덮는다")
     parser.add_argument("--only", choices=("classifying", "routing", "trip", "trip_cases", "trip_safety", "trip_dawn", "place_facts",
                                            "catalog_hours",
-                                           "trip_reminders", "trip_places", "web_guard"),
+                                           "trip_reminders", "trip_places", "web_guard", "retention"),
                         default=None)
     args = parser.parse_args()
 

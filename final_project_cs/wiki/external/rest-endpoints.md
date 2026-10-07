@@ -560,6 +560,29 @@ GET   /admin/limits/events?limit=50      scope limits:read
 - **철회 효과**(동의 기록과 **한 트랜잭션** — 기록만 남고 삭제가 안 되거나 그 반대가 되지 않는다): `alert_channel` → 저장한 디스코드 웹훅 삭제 · `sensitive` → 여행의 식사 제한(`trips.constraints.dietary`)과 설문 음식 답(`survey.priority_details.food`) 삭제(다른 칸은 그대로) · `location` → 위치 점 삭제(위치 수집 구현이 `consents.PURGERS["location"]` 에 등록 — 아직 없다). `[미확인]` 설문 답이 다른 복사본(일정 버전 스냅샷 · 접수 원문)에도 남는지는 확인하지 않았다.
 - **아직 없는 것**: 위치 받기 `POST·DELETE /v1/web/trips/{id}/location` · 멈춘 지점 `GET …/location/stops`(같은 요청서의 2·3부) · 텔레그램 연결 삭제 효과. 약관 전문의 법적 검토는 **변호사 검토 전**(약관 초안은 웹 쪽 작업).
 
+### 약관의 보관 기간 · 파기 — `/v1/web/legal/retention` · `/admin/retention` `[2026-10-07 사용자 결정 — uiux 전달]`
+
+`[실측]` 약관 화면의 「보관 기간 확정 전」 안내를 빼려고 **보관 기간 다섯 칸을 확정하고 서버가 그 약속대로 지우게** 했다. 값은 사용자가 2026-10-07 에 확정한 추천값이다(**변호사 검토는 아니다**).
+
+| 칸(`key`) | 약관 문장(한국어) | 값 | 서버가 지키는 곳 |
+|---|---|---|---|
+| `member_idle_days` | 회원이 지우거나 탈퇴를 요청할 때까지, 마지막 이용 후 1년이 지나면 파기 | 365일(30~3650) | `member_cleanup`(아래) |
+| `case_follows_trip` | 여행 · 게스트 자료가 지워질 때 함께 파기 | 고정 문장(스위치 `retention.case_follows_trip`) | `trip_delete.purge_cases` · 회원 · 게스트 정리 |
+| `consent_days` | 기록한 때부터 5년 | 1825일(365~3650) | 이미 있던 `consents.purge_expired`(매분 도는 `web_guard` 안) — 이 값을 읽도록 바꿨다 |
+| `location_points_days` | 여행 종료 후 7일 | 7일(1~365) | **지울 대상이 아직 없다**(서버에 위치 저장 기능이 없음 — 값만 약관에 쓴다) |
+| `location_proof_months` | 기록한 때부터 6개월 | 6개월(1~60) | 위와 같다 |
+
+- **`GET /v1/web/legal/retention`**(공개 · 키 없음 · 개인 정보 없음) → `{revision, terms_version, cells:[{key, label_ko, label_en, value, unit(days|months|null), default, editable, text_ko, text_en, min?, max?}]}`. 문장은 **값에서 만들어** 값과 따로 놀지 않는다(1년 · 5년 · 7일 · 6개월 · 영어 `1 year` …). 웹은 이 문장을 읽어 약관에 끼운다.
+- **`GET /admin/retention`**(운영 앱 · `limits:read`) → 위 내용 + `history[]`(`{revision, changed:{칸:[이전,새]}, actor, key_id, reason, at}`) + `purge:{mode, runs[]}`(정리 모드와 최근 정리 기록의 건수).
+  **`PATCH /admin/retention`**(`limits:write`) `{expected_revision, actor, reason, changes:{칸: 숫자|null}}` — `null` = 기본값으로. 운영자 · 이유가 비면 422 `actor_required`/`reason_required` · 모르는 칸 · 고정 칸 422 `unknown_cell` · 숫자가 아니면 422 · 범위 밖 422 `out_of_range` · 옛 판 409 `stale_revision`. **기본값과 같아지는 값은 「바꿈」이 아니다**(판 · 이력 불변). 감사: 누가(`actor` + 부른 키 `key_id`) · 언제 · 왜 · 이전 → 새 값, 덧붙이기만(056 `legal_retention_history`).
+- ★**약관 버전**: 값이 **실제로 바뀌면** `revision` 이 +1 되고 약관 버전이 `기본 버전+ret{revision}`(예 `2026-10-07.1+ret1`)이 된다 — 같은 버전 이름으로 다른 글에 동의했다는 기록이 생기지 않게. 옛 버전으로 동의를 보내면 409 `terms_version_changed`(현재 버전을 싣는다) — **웹은 상수가 아니라 `GET /v1/web/legal/retention` 의 `terms_version`(또는 `GET /v1/web/consents` 의 `current_version`)을 읽어 보낸다.** 기본 버전은 `config/guardrails.yaml` `consent.terms_version`(이번에 `2026-10-07.1`)이고 웹 상수와 **같은 푸시**에 올린다. 값을 되돌려도 글이 한 번 바뀐 적이 있으므로 버전은 계속 오른다.
+- **회원 자료 정리**(`modules/web_account/member_cleanup.py` · 실행 `scripts/run_sweepers.py --only retention`, 평소엔 `web_guard` 안에서 **하루 한 번**): 대상 = 소셜 계정이 붙은 웹 사용자 중 마지막 이용 후 `member_idle_days` 가 지난 사람. **「마지막 이용」 = 사용자 행 생성 · 소셜 연결 · 키의 발급/사용 · 세션의 마지막 사용 · 에이전트 키의 발급/사용 중 가장 늦은 때**(계획서 링크 열람 · 자동 감시 · 외부 호출은 이용이 아니다 — 약관에 이 한 문장을 쓰면 된다). 지우는 것: 여행(일정 · 대화 · 접수 · 알림 · 전용 장소 · 그 여행의 처리 기록) · 여행이 안 된 접수 · 활동 기록 · 장소 별칭 · 프로필(웹훅 · 복구 이메일 · 텔레그램) · 소셜 연결 · 세션 · 키 · 에이전트 키 · 남은 처리 기록 · 사용자 행. **동의 기록은 지우지 않는다**(증빙 — 자기 보관 기간). 에이전트 API 고객 · 시드 · 게스트(게스트 정리 몫)는 안 건드린다.
+  ★**모드**(`retention.purge_mode`, 관리 화면 `/admin/limits` 의 한 칸 — 같은 감사 기록): `off` · **`dry_run`(기본 — 대상을 세기만 하고 `retention_runs` 에 표별 건수를 남긴다, 아무것도 안 지운다)** · `on`. **`on` 은 사용자가 dry_run 의 건수를 보고 승인한 뒤에만 켠다.** 한 번에 `retention.purge_batch`(100)명.
+- **처리 기록(Case) 파기**: 전에는 여행을 지워도 처리 기록이 남았다. 이제 여행 삭제 · 게스트 정리 · 회원 정리가 그 자료의 Case 와 딸린 줄(`case_events` · `action_requests` · `agent_runs`)을 **지운다**(`trip_delete.purge_cases` — `case_events` 를 지우는 유일한 곳, append-only 는 코드 규칙이고 DB 트리거는 없다). 열린 Case 는 먼저 정상 전이로 `cancelled` 까지 닫는다. `retention.case_follows_trip: false` 면 옛 동작.
+- **게스트 정리의 변화**: Case 가 사용자 행을 붙들어 사용자 행 · 프로필(웹훅 · 복구 이메일)이 남던 것을 고쳤다. 다른 기록(옛 쇼핑몰 표 등)이 가리켜 행이 남는 경우에도 프로필 · 연결 · 키는 먼저 지운다.
+- ★**아직 안 한 것**: ①접수 원문 `intake_sources.keep_until`(30일)과 `security.retention_days`(90)는 여전히 읽는 코드가 없다 — 회원 · 게스트의 접수는 사용자 정리 때 같이 지워지지만 **회원이 살아 있는 동안의 오래된 접수**는 안 지운다(약관 문장이 약속하는 범위 밖이라 두었다) ②위치 점 · 위치 확인자료 파기(위치 저장 기능이 생길 때) ③회원 탈퇴 기능(없음 — 문의로만) ④x600 서버의 cs 프로젝트 서버에서 정리가 도는지 · 백업에 지운 자료가 남는지는 확인하지 못했다.
+- 시험 `tests/e2e/test_legal_retention.py`(22) · `tests/e2e/test_guest_and_trip_delete.py`(처리 기록 파기 · 게스트 프로필) · `tests/e2e/test_consents.py`.
+
 ### 계획 읽기 — `/v1/web/trip-intakes` `[2026-09-27]`
 
 `[실측]` `app/domains/travel_ops/components/intake/`(`pipeline.py` · `sources.py` · `rules.py` · `llm_spans.py` · `dates.py` · `places.py`) ·

@@ -115,7 +115,7 @@ def test_the_gate_does_not_ask_for_optional_items(gate):
 def test_a_new_terms_version_asks_everyone_again(gate, monkeypatch):
     _guest(gate)
     _agree_required(gate["client"])
-    monkeypatch.setattr(consents, "current_version", lambda: "2026-12-01")
+    monkeypatch.setattr(consents, "current_version", lambda *_args, **_kwargs: "2026-12-01")
     state = gate["client"].get("/v1/web/consents").json()
     assert state["ok"] is False and state["current_version"] == "2026-12-01"
     assert gate["client"].get("/v1/web/trips").status_code == 403

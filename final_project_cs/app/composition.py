@@ -549,9 +549,9 @@ def build_ops_routers() -> list:
     ★`[2026-09-30 사용자 지시]` **시나리오(시연) 모드는 운영 앱에서 뗐다** — 실서비스 운영 화면과 데모가 같은 프로세스에 있으면
       안 된다. 압축 보관: `legacy/scenario_mode/scenario_mode_2026-09-30.zip`(복원 방법은 그 안의 README.md).
     """
-    from app.domains.travel_ops.modules.web_account.web_limits_api import build_limits_router
+    from app.domains.travel_ops.modules.web_account.web_limits_api import build_limits_router, build_retention_ops_router
 
-    return [build_limits_router()]
+    return [build_limits_router(), build_retention_ops_router()]
 
 
 def build_subject_resolver():

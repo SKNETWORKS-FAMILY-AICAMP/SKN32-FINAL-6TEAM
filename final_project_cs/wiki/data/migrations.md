@@ -216,6 +216,10 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 
 `[실측]` `054_user_activity_events.sql` — **사용자가 무엇을 골랐나 · 눌렀나**를 한 줄씩 쌓는 append-only 표(`event_id` · `tenant_id` · `trip_id` · `customer_id` · `kind` · `payload_json` · `created_at`). 처음 쓰는 곳은 재난 뒤 다시 시작할 때의 선택(`kind=safety_recovery_choice`). 자유 문장은 넣지 않는다(채팅은 `trip_chat_turns` 가 가린 뒤 저장). 외래키가 없어 여행 삭제 때 `trip_delete._PURGE` 로 지운다(채팅 기록과 같은 기본값 — 비식별로 남길지는 사용자 결정 대기). 다시 돌려도 안전하다.
 
+### 약관의 보관 기간 `legal_retention` · `legal_retention_history` · `retention_runs` `[2026-10-07 · 056]`
+
+`[실측]` `056_legal_retention.sql` — ①`legal_retention`(`tenant_id` PK · `revision` · `overrides jsonb` — 운영자가 바꾼 값만, 기본값은 `config/guardrails.yaml` `retention`) ②`legal_retention_history`(덧붙이기만 — 트리거가 UPDATE · DELETE 를 막는다. 누가 · 언제 · 왜 · 이전 → 새 값) ③`retention_runs`(회원 정리가 한 번 돌 때마다 한 줄 — `mode` dry_run|on · 표별 지운(또는 지울) 건수만, 개인 정보 없음). 값이 바뀌면 약관 버전이 `…+ret{revision}` 이 된다. 재실행해도 안전하다.
+
 ### 로딩 중 질문의 답 `trip_intakes.survey` `[2026-10-06 · 051]`
 
 `[실측]` `051_intake_survey_answers.sql` — `trip_intakes` 에 칸 하나 `survey jsonb NOT NULL DEFAULT '{}'`: 로딩 화면에서 한 문항씩 바로 저장한 답(`{문항: 선택지 번호}` — 설문의 모양으로 바꾸는 것은 등록 때 `survey_answers.merged_survey` 한 곳). 같은 문항은 덮어쓴다. ★`updated_at` 은 건드리지 않는다(읽기가 멈췄는지 가르는 `reap_stalled` 의 기준). 기존 접수는 `{}` 로 채워진다 · 재실행 안전 · 접수가 지워지면 같이 지워진다. 계약 [rest-endpoints.md 「설문 질문」](../external/rest-endpoints.md). 개발 DB 에 두 번 실행해 확인(2026-10-06).

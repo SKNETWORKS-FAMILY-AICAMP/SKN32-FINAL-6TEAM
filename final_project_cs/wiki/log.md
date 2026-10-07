@@ -9,6 +9,14 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 # 문서 변경 이력 (cs)
 
+## 2026-10-07 — 약관의 보관 기간을 서버가 지킨다 · 관리 화면에서 고친다 · 공개 읽기 API · 약관 버전 `2026-10-07.1` (사용자 결정, uiux 전달)
+
+- **사용자 결정**(uiux 채팅 원문 요지): 보관 기간 다섯 칸을 추천값으로 확정하고, 「AI 작성 초안」 표시를 빼고, 관리 화면에서 고칠 수 있게 하고(누가 · 언제 · 왜 + 값이 바뀌면 약관 버전이 바뀌어 다시 동의), 약관 글에 끼울 공개 읽기 API 를 둔다. 지우는 작업은 건수만 세어 보고(dry_run) 승인 뒤 켠다.
+- **코드**: `components/customer/retention.py`(값 · 문장 · 이력 · 버전) · `modules/web_account/retention_api.py`(공개 `GET /v1/web/legal/retention`) · `web_limits_api.build_retention_ops_router`(`/admin/retention`) · `member_cleanup.py`(회원 정리 · 모드 · 건수) · `trip_delete.purge_cases`(처리 기록 파기) · `guest_cleanup`(공통 삭제 함수) · `consents`(약관 버전 `+ret{N}` · 동의 보관 일수가 바뀐 값을 읽음) · `scripts/run_sweepers.py`(`--only retention` · `web_guard` 안 하루 한 번) · 마이그레이션 056 · `config/guardrails.yaml` `retention` 블록 · `consent.terms_version` → `2026-10-07.1`.
+- **문서**: `wiki/external/rest-endpoints.md` 「약관의 보관 기간 · 파기」 · `wiki/data/migrations.md`.
+- **시험**: 새 22 + 기존 삭제 · 동의 · 웹 방어 · 구조 통과(로컬 개발 DB). **실서버(x600 서버의 cs 프로젝트 서버) 확인은 아직** — 마이그레이션 056 은 팀 스냅숏 배포 때 자동으로 돈다. 정리 모드 기본은 dry_run 이라 배포해도 아무것도 지워지지 않는다.
+- **처리 기록 파기 때문에 바뀐 동작**: 여행을 지우면 처리 기록도 지운다(전에는 닫기만) — `retention.case_follows_trip`.
+
 ## 2026-10-07 — 「호텔」 · 「호텔 조식」 줄은 숙소 후보와 숙소 안 식사 후보를 함께 (사용자 지시, ui 세션 전달)
 
 - **사용자**: 「그냥 호텔이라고 적어 놨는데 호텔 조식으로 인식하는 오류다 … 둘 다 추천 목록에 올려서 보여 주면 된다」. 숙소 말이 든 이름 없는 줄의 후보를 `basis: lodging`(숙소) + `lodging_meal`(숙소 안 식사 — 같은 숙소 이름 · 좌표, 종류만 식사)로 낸다. 음식점은 지어내지 않는다.

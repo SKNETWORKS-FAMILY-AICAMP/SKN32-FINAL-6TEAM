@@ -8,9 +8,9 @@
 ★지우는 때: 마지막 사용 + `web.guest_idle_hours`(관리 콘솔 — 기본 168시간)가 지난 뒤. **단 일정이 남은 게스트**(마지막 일정 종료가 아직 안 지났거나 종료 뒤 유예 안)는
   `min(마지막 일정 종료, 마지막 사용 + web_guard.guest.trip_keep_max_days) + trip_grace_days` 까지 둔다 — 계획서 링크와 알림이 그때까지 산다(세션은 이미 끝났을 수 있다).
   상한이 「지금」이 아니라 「마지막 사용」 기준이라 날짜를 빌미로 영구히 남지 않는다. 일정 종료가 비어 있으면(항목의 `ends_at` 없음) 시작 시각을 종료로 본다.
-★삭제는 사용자마다 **따로 한 트랜잭션** — 여행은 `trip_delete.delete_trip`(웹의 「여행 삭제」와 같은 함수) · 접수 · 세션 · 키 · 사용자 행(프로필은 CASCADE).
-  사용자 행을 가리키는 외래키 14개 중 13개가 「가리키면 거부」(2026-10-04 서버 DB 조회)라, **Case 같은 기록이 가리키면 사용자 행만 남긴다**(이메일도 이름도 없는 무작위 `web:` 번호 한 줄 —
-  `customers_kept` 로 센다). 다음 정리 때 또 시도해도 지울 것이 없다.
+★삭제는 사용자마다 **따로 한 트랜잭션** — `member_cleanup.erase_customer`(회원 정리와 같은 함수): 여행(`trip_delete.delete_trip`) · 접수 · 프로필 · 세션 · 키 · 활동 기록 · 처리 기록 · 사용자 행.
+  `[2026-10-07 사용자 결정 — 약관 보관 기간]` 전에는 Case 같은 기록이 사용자 행을 가리키면 사용자 행(과 그에 딸린 프로필 — 웹훅 · 복구 이메일)이 남았다. 이제 처리 기록도 지우므로(`retention.case_follows_trip`)
+  행이 남는 것은 **옛 쇼핑몰 표 같은 다른 기록**이 가리킬 때뿐이고, 그때도 식별 정보(프로필 · 연결 · 키)는 먼저 지워진다(`customers_kept` 로 센다).
 ★지운 수 · 남긴 수 · 일정 때문에 둔 수를 센다(조용히 넘기지 않는다). 꺼져 있으면(`web.guest_cleanup_enabled`) 아무것도 안 지운다.
 """
 from __future__ import annotations
@@ -19,12 +19,9 @@ from datetime import datetime, timedelta
 from typing import Any
 from uuid import UUID
 
-from psycopg.errors import ForeignKeyViolation
-
 from app.core.settings import get_guardrails
 
-from app.domains.travel_ops.modules.web_account import web_guard
-from app.domains.travel_ops.components.itinerary.trip_delete import delete_trip
+from app.domains.travel_ops.modules.web_account import member_cleanup, web_guard
 
 _CANDIDATES = """
 SELECT c.customer_id, x.last_seen, x.trips_end FROM customers c
@@ -48,25 +45,7 @@ LIMIT %s
 
 
 def _delete_one(conn, tenant_id: str, customer_id: UUID) -> dict[str, int]:
-    done = {"trips": 0, "customer": 0, "kept": 0}
-    with conn.cursor() as cur:
-        cur.execute("SELECT trip_id FROM trips WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))
-        trips = [row[0] for row in cur.fetchall()]
-    for trip_id in trips:
-        if delete_trip(conn, tenant_id=tenant_id, customer_id=customer_id, trip_id=trip_id) is not None:
-            done["trips"] += 1
-    with conn.cursor() as cur:
-        cur.execute("DELETE FROM trip_intakes WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))      # 여행이 안 된 접수(자식은 CASCADE)
-        cur.execute("DELETE FROM web_sessions WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))
-        cur.execute("DELETE FROM web_user_keys WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))
-        cur.execute("DELETE FROM web_agent_keys WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))   # 연결을 푼 옛 회원이 가졌던(거둔) 에이전트 키
-        try:
-            with conn.transaction():                       # 저장점 — 가리키는 기록이 있으면 이 삭제만 되돌린다
-                cur.execute("DELETE FROM customers WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))
-            done["customer"] = cur.rowcount
-        except ForeignKeyViolation:
-            done["kept"] = 1
-    return done
+    return member_cleanup.erase_customer(conn, tenant_id, customer_id)
 
 
 def cleanup_guests(conn, tenant_id: str, now: datetime | None = None, *, limit: int = 200) -> dict[str, Any]:
