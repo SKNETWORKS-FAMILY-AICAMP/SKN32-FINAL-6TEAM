@@ -1396,7 +1396,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             item = _review_item(found, source_id, index)
             _count("place_search", tenant, customer, http)
             return {"revision": found["revision"], **candidates.alternatives(
-                conn, tenant_id=tenant, review=found, item=item, kakao=_lazy("kakao", kakao_factory))}
+                conn, tenant_id=tenant, review=found, item=item, kakao=_lazy("kakao", kakao_factory),
+                chat=_lazy("chat", chat_factory))}      # ★`[2026-10-07]` 이유 문장은 모델이 확인된 값으로 쓴다(저장 · 검사 · 실패하면 틀 문장)
 
         return _review_call(intake_id, customer, tenant, revision, use)
 

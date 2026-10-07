@@ -100,7 +100,7 @@ def test_the_original_class_is_found_by_content_id_then_by_name_and_shared_prefi
     assert shared["lcls"] == ["HS", None, None]                                             # 같은 단계(대분류)까지만
     assert split is None or split["lcls"] is None                                           # 대분류까지 갈리면 나무는 모른다
     assert nothing is None
-    assert given_only == {"content_type": "14", "lcls": None, "by": "given"}                  # 번호만 알면 번호만
+    assert given_only == {"content_type": "14", "lcls": None, "by": "given", "grade": None}                  # 번호만 알면 번호만
 
 
 # ── 끼니 시간의 시장 ───────────────────────────────────────────────

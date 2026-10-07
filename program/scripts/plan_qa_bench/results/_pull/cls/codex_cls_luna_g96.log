@@ -1,0 +1,6 @@
+test_g96.jsonl gpt-6-luna 남은 96 / 96
+test_g96.jsonl 20 / 96 34 초
+test_g96.jsonl 40 / 96 68 초
+test_g96.jsonl 60 / 96 135 초
+test_g96.jsonl 80 / 96 175 초
+test_g96.jsonl 끝 gpt-6-luna 오류 3 199 초

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1600 912" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="tp-agents-title tp-agents-desc">
+<title id="tp-agents-title">triPilot 에이전트 구성 — 누가 누구에게 일을 맡기나</title>
+<desc id="tp-agents-desc">오케스트레이터(코드)가 문제 종류를 보고 요식업 에이전트나 액티비티 에이전트 하나에 일을 맡기고, 결과는 늘 오케스트레이터로 돌아온다. 두 에이전트는 각자의 읽기 도구와 공용 이동 판정기를 쓰며 서로 부르지 않는다. 검증 · 저장 · 알림은 프로그램이 한다.</desc>
+<defs><style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;display=swap');</style><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b7488"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a8720c"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5bd8"/></marker><marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8599"/></marker><style>.name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#161c28;text-anchor:middle}.focal-name{fill:#a8720c}.sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#6b7488;text-anchor:middle}.io{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#161c28}.io-k{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#7a8599}.tag{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;font-weight:500;letter-spacing:0.08em;text-anchor:middle}.lab{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:500;text-anchor:middle}.lab-mono{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;letter-spacing:0.14em;text-anchor:middle}.tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28;text-anchor:middle}.zone{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#6b7488}.leg{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.hub-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#fbfcfd;text-anchor:middle}.hub-sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:rgba(251,252,253,0.78);text-anchor:middle}.layer-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#161c28}.layer-note{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.layer-tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28}</style></defs>
+<rect width="1600" height="912" fill="#fbfcfd"/>
+<!-- 화살표 먼저 -->
+<path d="M800 104 L800 152" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M560 184 L248 184 A8 8 0 0 0 240 192 L240 360" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M340 360 L340 248 A8 8 0 0 1 348 240 L560 240" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1040 184 L1352 184 A8 8 0 0 1 1360 192 L1360 360" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1260 360 L1260 248 A8 8 0 0 0 1252 240 L1040 240" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M800 280 L800 360" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M240 488 L240 560" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1360 488 L1360 560" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M800 488 L800 560" fill="none" stroke="#6b7488" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M440 456 L512 456 A8 8 0 0 1 520 464 L520 604 A8 8 0 0 0 528 612 L600 612" fill="none" stroke="#6b7488" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M1160 456 L1088 456 A8 8 0 0 0 1080 464 L1080 604 A8 8 0 0 1 1072 612 L1000 612" fill="none" stroke="#6b7488" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M800 712 L800 664" fill="none" stroke="#6b7488" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<!-- 이름표 -->
+<rect x="324" y="160" width="152" height="16" rx="2" fill="#fbfcfd"/><text x="400" y="172" class="lab" fill="#6b7488">태스크 맡김 · 식당 문제</text>
+<rect x="372" y="248" width="152" height="16" rx="2" fill="#fbfcfd"/><text x="448" y="260" class="lab" fill="#6b7488">초안(일정마다 최대 3개)</text>
+<rect x="1100" y="160" width="200" height="16" rx="2" fill="#fbfcfd"/><text x="1200" y="172" class="lab" fill="#6b7488">태스크 맡김 · 활동 문제 · 묶음</text>
+<rect x="1072" y="248" width="152" height="16" rx="2" fill="#fbfcfd"/><text x="1148" y="260" class="lab" fill="#6b7488">초안(일정마다 최대 3개)</text>
+<rect x="808" y="320" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="840" y="332" class="lab" fill="#6b7488">초안 넘김</text>
+<rect x="248" y="524" width="112" height="16" rx="2" fill="#fbfcfd"/><text x="304" y="536" class="lab" fill="#6b7488">조회 · 최대 12번</text>
+<rect x="1368" y="524" width="112" height="16" rx="2" fill="#fbfcfd"/><text x="1424" y="536" class="lab" fill="#6b7488">조회 · 최대 12번</text>
+<rect x="808" y="524" width="108" height="16" rx="2" fill="#fbfcfd"/><text x="862" y="536" class="lab" fill="#6b7488">저장 직전 재검사</text>
+<rect x="448" y="540" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="480" y="552" class="lab" fill="#6b7488">앞뒤 이동</text>
+<rect x="1088" y="540" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="1120" y="552" class="lab" fill="#6b7488">앞뒤 이동</text>
+<rect x="808" y="688" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="840" y="700" class="lab" fill="#6b7488">이동 판정</text>
+<!-- 상자 -->
+<rect x="600" y="40" width="400" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="600" y="40" width="400" height="64" rx="32" fill="rgba(22,28,40,0.05)" stroke="#6b7488" stroke-width="1"/>
+<text x="800" y="67" class="name">트리거 — 일정 위험 모니터링 (3분 주기)</text>
+<text x="800" y="85" class="sub">새 문제를 찾으면 · 고객 채팅은 그림 3 채팅 길</text>
+<rect x="560" y="152" width="480" height="128" rx="6" fill="#fbfcfd"/>
+<rect x="560" y="152" width="480" height="128" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+<text x="800" y="188" class="name focal-name">오케스트레이터 [코드 · 언어 모델 안 씀]</text>
+<text x="576" y="208" class="io-k">입력</text>
+<text x="608" y="208" class="io">케이스 — 문제 코드 · 일정 · 원인</text>
+<text x="576" y="228" class="io-k">출력</text>
+<text x="608" y="228" class="io">태스크(할 일 · 컨텍스트 · 허용 도구 · 90초)</text>
+<text x="576" y="248" class="io-k"></text>
+<text x="594" y="248" class="io">결과는 늘 여기로 — 에이전트끼리 안 부름</text>
+<rect x="40" y="360" width="400" height="128" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="360" width="400" height="128" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="2.2"/>
+<text x="240" y="396" class="name">요식업 에이전트</text>
+<text x="56" y="416" class="io-k">입력</text>
+<text x="88" y="416" class="io">태스크 — 문제 난 식사 일정</text>
+<text x="56" y="436" class="io-k">도구</text>
+<text x="88" y="436" class="io">읽기 도구 최대 12번 · 이동 판정기</text>
+<text x="56" y="456" class="io-k">출력</text>
+<text x="88" y="456" class="io">변경 초안 최대 3개(1순위 + 다른 안 2)</text>
+<rect x="600" y="360" width="400" height="128" rx="6" fill="#fbfcfd"/>
+<rect x="600" y="360" width="400" height="128" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="800" y="396" class="name">검증 · 반영 · 알림 [오케스트레이터 · 코드]</text>
+<text x="616" y="416" class="io-k">입력</text>
+<text x="648" y="416" class="io">변경 초안 · 컨텍스트</text>
+<text x="616" y="436" class="io-k">도구</text>
+<text x="648" y="436" class="io">기능 검증 · 체크리스트 · 이동 판정기</text>
+<text x="616" y="456" class="io-k">출력</text>
+<text x="648" y="456" class="io">새 일정 버전 + 알림 / 묻기 / 비슷한 안</text>
+<rect x="1160" y="360" width="400" height="128" rx="6" fill="#fbfcfd"/>
+<rect x="1160" y="360" width="400" height="128" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="2.2"/>
+<text x="1360" y="396" class="name">액티비티 에이전트</text>
+<text x="1176" y="416" class="io-k">입력</text>
+<text x="1208" y="416" class="io">태스크 — 활동 일정 · 설문 · 묶음</text>
+<text x="1176" y="436" class="io-k">도구</text>
+<text x="1208" y="436" class="io">읽기 도구 12번(묶음은 항목마다) · 이동 판정기</text>
+<text x="1176" y="456" class="io-k">출력</text>
+<text x="1208" y="456" class="io">항목마다 초안 최대 3개 · 바꿀까요?</text>
+<rect x="40" y="560" width="400" height="104" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="560" width="400" height="104" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="240" y="596" class="name">요식업 읽기 도구</text>
+<text x="56" y="616" class="io-k">입력</text>
+<text x="88" y="616" class="io">도구 이름 + 인자(읽기만)</text>
+<text x="56" y="636" class="io-k">출력</text>
+<text x="88" y="636" class="io">일정 · 장소 · 식당 상태 · 대체 식당</text>
+<rect x="600" y="560" width="400" height="104" rx="6" fill="#fbfcfd"/>
+<rect x="600" y="560" width="400" height="104" rx="6" fill="rgba(22,28,40,0.04)" stroke="#6b7488" stroke-width="1.4" stroke-dasharray="6,3"/>
+<text x="800" y="596" class="name">이동 판정기 [공용 도구 · 에이전트 아님]</text>
+<text x="616" y="616" class="io-k">입력</text>
+<text x="648" y="616" class="io">앞뒤 장소 · 시각 · 사고 난 이동(직접 호출)</text>
+<text x="616" y="636" class="io-k">출력</text>
+<text x="648" y="636" class="io">출발 시각 · 경로 · 소요(시간표 판정)</text>
+<rect x="1160" y="560" width="400" height="104" rx="6" fill="#fbfcfd"/>
+<rect x="1160" y="560" width="400" height="104" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1360" y="596" class="name">액티비티 읽기 도구</text>
+<text x="1176" y="616" class="io-k">입력</text>
+<text x="1208" y="616" class="io">도구 이름 + 인자(읽기만)</text>
+<text x="1176" y="636" class="io-k">출력</text>
+<text x="1208" y="636" class="io">일정 · 장소 · 사건 · 경로 사건 · 식당</text>
+<rect x="600" y="712" width="400" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="600" y="712" width="400" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="608" y="720" width="28" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="622" y="729" class="tag" fill="#161c28">MCP</text>
+<text x="800" y="748" class="name">개인 AI 입구 — MCP 도구 14</text>
+<text x="616" y="768" class="io-k">입력</text>
+<text x="648" y="768" class="io">개인 AI 호출 — 사용자 키 · 본인 여행만</text>
+<text x="616" y="788" class="io-k">출력</text>
+<text x="648" y="788" class="io">이동 판정 · 일정 위험 점검 · 일정 · 신고 …</text>
+<text x="616" y="808" class="io-k"></text>
+<text x="634" y="808" class="io">위험 점검은 모니터링이 모아 둔 결과를 먼저 읽음</text>
+<line x1="32" y1="848" x2="1568" y2="848" stroke="rgba(22,28,40,0.12)" stroke-width="0.8"/>
+<text x="32" y="868" class="lab-mono" fill="#6b7488" text-anchor="start">LEGEND</text>
+<rect x="104" y="856" width="28" height="16" rx="8" fill="rgba(22,28,40,0.05)" stroke="#6b7488" stroke-width="1"/>
+<text x="140" y="868" class="leg">시작</text>
+<rect x="192" y="856" width="28" height="16" rx="3" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+<text x="228" y="868" class="leg">오케스트레이터(코드)</text>
+<rect x="380" y="856" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="2.2"/>
+<text x="416" y="868" class="leg">에이전트</text>
+<rect x="492" y="856" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="528" y="868" class="leg">코드 단계</text>
+<rect x="612" y="856" width="28" height="16" rx="3" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="648" y="868" class="leg">읽기 도구</text>
+<rect x="732" y="856" width="28" height="16" rx="3" fill="rgba(22,28,40,0.04)" stroke="#6b7488" stroke-width="1.4" stroke-dasharray="6,3"/>
+<text x="768" y="868" class="leg">공용 도구</text>
+<line x1="852" y1="864" x2="880" y2="864" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<text x="888" y="868" class="leg">맡김 · 돌려줌 · 부름</text>
+</svg>

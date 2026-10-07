@@ -29,8 +29,14 @@ def build(job, x):
             "질문이 이 일정에 없는 장소·일반 정보·다른 식당·다른 명소를 묻는다면 null. 확실하지 않으면 null." + SFX), {i['id'] for i in items}
 
 
-env = dict(os.environ, CUDA_VISIBLE_DEVICES='', LD_LIBRARY_PATH=os.path.dirname(SRV) + ':' + os.environ.get('LD_LIBRARY_PATH', ''))
-cmd = ['taskset', '-c', CORES, SRV, '-m', GGUF, '-t', '4', '-ngl', '0', '-c', '4096', '-np', '1', '--port', str(PORT), '--host', '127.0.0.1', '--jinja']
+GPU = os.environ.get('GPU') == '1'   # [2026-10-07] 1 이면 GPU 에 전부 올려(-ngl 99) 서버 A 의 GPU 로 잰다(기본은 CPU 전용)
+LORA = os.environ.get('LORA', '')      # 어댑터 GGUF 경로(있으면 --lora) — 기반 GGUF 와 따로 올린다
+env = dict(os.environ, LD_LIBRARY_PATH=os.path.dirname(SRV) + ':' + os.environ.get('LD_LIBRARY_PATH', ''))
+if not GPU:
+    env['CUDA_VISIBLE_DEVICES'] = ''
+cmd = ['taskset', '-c', CORES, SRV, '-m', GGUF, '-t', '4', '-ngl', '99' if GPU else '0', '-c', '4096', '-np', '1', '--port', str(PORT), '--host', '127.0.0.1', '--jinja']
+if LORA:
+    cmd += ['--lora', LORA]
 srv = subprocess.Popen(cmd, env=env, stdout=open(f'cpu_server_{TAG}.log', 'w'), stderr=subprocess.STDOUT)
 t0 = time.time()
 for _ in range(600):

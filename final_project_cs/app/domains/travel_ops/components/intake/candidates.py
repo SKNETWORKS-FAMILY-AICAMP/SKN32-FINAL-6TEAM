@@ -178,7 +178,7 @@ def _tour_places(cands: list[Any]) -> list[dict[str, Any]]:
 
 
 def _similar_places(conn, tenant_id: str, ref: tuple[float, float], lcls: list[str | None], now: datetime, *,
-                    min_level: int = 1, limit: int = 12, radius_m: float = RADIUS_M) -> list[dict[str, Any]]:
+                    min_level: int = 1, limit: int = 12, radius_m: float = RADIUS_M, grade: str | None = None) -> list[dict[str, Any]]:
     """원래 장소와 **같은 분류 나무 가지**의 곳 — 같은 소분류 → 중분류 → 대분류 순, 가까운 순(`catalog_pool.nearby_similar`).
     ★다른 대분류로는 넘어가지 않는다(관광지의 대체로 약국 · 편의점을 권하지 않는다). 각 후보의 `similarity` 에 맞은 단계(3 · 2 · 1)가 든다."""
     from app.domains.travel_ops.components.places.catalog_pool import nearby_similar, reuse_hours
@@ -186,7 +186,7 @@ def _similar_places(conn, tenant_id: str, ref: tuple[float, float], lcls: list[s
     cands = nearby_similar(conn, tenant_id, latitude=ref[0], longitude=ref[1], radius_m=radius_m, lcls=lcls,
                            exclude_names=set(), limit=limit, min_level=min_level)
     reuse_hours(conn, tenant_id, cands, now)
-    return [{**place, "basis": "same_kind"} for place in _tour_places(cands)]
+    return [{**place, "basis": "same_kind", "class_grade": grade} for place in _tour_places(cands)]
 
 
 def _experience_places(conn, tenant_id: str, ref: tuple[float, float], group: str, now: datetime, *,
@@ -379,10 +379,14 @@ def _present(place: dict[str, Any], assessed: dict[str, Any], prev, nxt, ref, ar
             # ★`[2026-10-07]` 원래 장소와 분류 나무에서 맞은 단계 — 3 같은 소분류 · 2 같은 중분류 · 1 같은 대분류 · None 은 나무로 고른 것이 아니다(식당 · 지도 검색)
             "similarity": place.get("similarity"),
             # ★`[2026-10-07 사용자]` 어느 단계로 고른 후보인가 — same_kind(같은 종류, 분류 나무) · similar_experience(비슷한 경험) · meal_inferred(끼니 시간의 식당) · None(지도 검색 등).
-            #   취향 추천(taste) 단은 아직 없다
+            #   `taste`(취향 추천 — 일정에 담은 다른 활동의 분류, `taste.py`)가 셋째 단이다
             "basis": place.get("basis"),
             # 비슷한 경험 단계일 때 어느 갈래(outdoor_walk · indoor_exhibit)인지 — 이유 문장이 쓴다
-            "experience": place.get("experience")}
+            "experience": place.get("experience"),
+            # 취향 단(`basis: "taste"`)의 근거 — {with: 일정에 담은 장소 이름, count, ranked_by, lcls2}. 아니면 None
+            "taste": place.get("taste"),
+            # 원래 장소의 분류가 **추정**일 때만 "estimated"(이유 문장이 「관광공사 분류」라고 쓰지 않는다). 아니면 None
+            "class_grade": place.get("class_grade")}
 
 
 def _common_prefix(rows: list[tuple[str | None, str | None, str | None]]) -> list[str | None]:
@@ -426,13 +430,22 @@ def _original_class(conn, tenant_id: str, current: dict[str, Any] | None) -> dic
         rows = []
     types = sorted({r[0] for r in rows if r[0]})
     lcls = [None, None, None]
+    grade = None
     if rows:
         common = _common_prefix([(r[1], r[2], r[3]) for r in rows])
         lcls = common if common[0] else [None, None, None]
+    if not lcls[0]:
+        # ★`[2026-10-07 사용자 결정]` 목록에서 못 찾았으면 **한 번 채워 저장한 분류**(`places.attributes.inferred_class` — 이름 일치 · 임베딩 투표)를 쓴다
+        from .class_fill import stored_class
+
+        place_ref = str(current.get("place_id") or "") or (str(current.get("ref") or "")[6:] if str(current.get("ref") or "").startswith("place:") else "")
+        saved = stored_class(conn, place_ref) if place_ref else None
+        if saved and saved.get("lcls") and saved["lcls"][0]:
+            lcls, grade, by = list(saved["lcls"]), saved.get("grade"), "stored"
     content_type = given or (types[0] if len(types) == 1 else None)
     if not content_type and not lcls[0]:
         return None
-    return {"content_type": content_type, "lcls": lcls if lcls[0] else None, "by": "given" if given and not rows else by}
+    return {"content_type": content_type, "lcls": lcls if lcls[0] else None, "by": "given" if given and not rows else by, "grade": grade}
 
 
 def _original_type(conn, tenant_id: str, current: dict[str, Any] | None) -> str | None:
@@ -460,19 +473,35 @@ def _experience_of(lcls2: str | None) -> str | None:
 
 
 _SAME_KIND_WORDS = {3: "같은 소분류", 2: "같은 중분류", 1: "같은 대분류"}
+#: 후보 순서의 단 — 같은 종류(그 밖의 꼬리표 없는 후보 포함)가 먼저, 비슷한 경험, 취향 추천은 맨 뒤
+_BASIS_ORDER = {"similar_experience": 1, "taste": 2}
+
+
+def with_josa(name: str) -> str:
+    """이름 뒤에 「와/과」 — 받침이 있으면 「과」(경복궁과), 없으면 「와」(북촌와가 아니라 광장시장과 …). 한글이 아닌 끝 글자(숫자 · 영문)는 「와」로 둔다(읽는 소리를 알 수 없다)."""
+    last = name.strip()[-1:] if name.strip() else ""
+    if "가" <= last <= "힣":
+        return name + ("과" if (ord(last) - 0xAC00) % 28 else "와")
+    return name + "와"
 
 
 def _reason(candidate: dict[str, Any], original: str | None) -> str | None:
     """후보를 고른 **이유 한 문장** — 사실만. 어느 단계(`basis`)인지 · 거리 · 그 시각 영업 · 다음 일정까지 여유 중 **아는 것만** 적는다(모르면 쓰지 않거나 모른다고 쓴다)."""
     basis = candidate.get("basis")
     place = candidate["place"]
-    name = f"{original}와 " if original else ""
-    if basis == "same_kind":
+    name = f"{with_josa(original)} " if original else ""
+    if basis == "same_kind" and candidate.get("class_grade") == "estimated":
+        head = f"{name}{_SAME_KIND_WORDS.get(candidate.get('similarity'), '비슷한 종류')}로 짐작되는 곳이에요(분류를 추정했어요)"
+    elif basis == "same_kind":
         head = f"{name}{_SAME_KIND_WORDS.get(candidate.get('similarity'), '비슷한 종류')}(관광공사 분류)의 곳이에요"
     elif basis == "similar_experience":
         group = EXPERIENCE_GROUPS.get(candidate.get("experience") or "", {})
         head = (f"{name}같은 종류는 가까이에 마땅한 곳이 없어, {group.get('label') or '비슷한 경험'}을 하는 곳 중 가까운 곳을 골랐어요"
                 if original else f"{group.get('label') or '비슷한 경험'}을 하는 곳 중 가까운 곳이에요")
+    elif basis == "taste":
+        from . import taste as taste_module
+
+        head = taste_module.reason_head(candidate.get("taste") or {})
     elif basis == "meal_inferred":
         head = "식사 시간이고 그 시간대에 식사 일정이 따로 없어 식당도 후보로 넣었어요"
     elif basis == "lodging":
@@ -533,9 +562,10 @@ def _eats_there(items: list[dict[str, Any]], item: dict[str, Any], cls: dict[str
 # ── 대체 후보 ─────────────────────────────────────────────────────
 def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any], kakao: Any = None,
                  engine: Callable[..., Any] | None = None, use_engine: bool = True, now: datetime | None = None,
-                 limit: int = LIMIT, rank_only: bool = False) -> dict[str, Any]:
+                 limit: int = LIMIT, rank_only: bool = False, chat: Any = None) -> dict[str, Any]:
     """이 일정의 다른 안 — `{current, reference, candidates:[{rank, place, distance_m, reference, rows, fits, status}], notes}`.
 
+    `chat` — 주면 화면에 먼저 보이는 후보의 이유 문장을 **모델이 확인된 값으로** 다시 쓴다(`reasons.polish` — 저장 · 검사 · 실패하면 틀 문장). 안 주면 전부 틀 문장.
     `rank_only` — 이동 계산기로 후보를 재지 않고 **싼 판정(운영시간 + 어림 이동)의 순서**만 낸다(자동 추천이 쓴다: 맞는 곳은 그쪽이 후보를
     차례로 시간표로 맞춰 보며 찾으므로 후보마다 미리 재면 계산기 시간을 두 번 쓴다 — 2026-10-03 실서버 10초)."""
     now = now or datetime.now(KST)
@@ -591,7 +621,8 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
             group = _experience_of(cls["lcls"][1]) if cls and cls["lcls"] else None
             if cls and cls["lcls"]:
                 # ★`[2026-10-07 사용자]` 비슷한 곳 — 같은 소분류 → 중분류 → 대분류 순(가까운 순), 다른 대분류로는 넘어가지 않는다. 끼니 시간의 시장은 같은 중분류(시장)까지만
-                found += _similar_places(conn, tenant_id, ref, cls["lcls"], now, min_level=2 if eat else 1)
+                found += _similar_places(conn, tenant_id, ref, cls["lcls"], now, min_level=2 if eat else 1,
+                                         grade=cls.get("grade") if cls.get("grade") == "estimated" else None)
             else:
                 found += _catalog_places(conn, tenant_id, ref, cls["content_type"] if cls else None, now)
             if eat:
@@ -609,10 +640,21 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         found += more
         if more:
             notes.append("similar_experience")
+    if (item["kind"] == "activity" and not stay and not lodging and ref and "meal_inferred" not in notes and len(found) < limit
+            and item["place_state"] in ("found", "customer")):
+        # ★`[2026-10-07 사용자 결정]` 셋째 단 — 취향 추천: 앞 두 단이 모자랄 때, 이 여행에 담은 다른 활동의 분류(센 값)에서 가까운 곳을 채운다
+        from . import taste as taste_module
+
+        profile = taste_module.profile(conn, _tenants(tenant_id), items, item["id"])
+        more = _dedupe(taste_module.places(conn, tenant_id, ref, profile, now, exclude_lcls2={((cls or {}).get("lcls") or [None] * 3)[1]} - {None}),
+                       taken + [(normalize_full(p["name"]), p.get("latitude"), p.get("longitude")) for p in found])
+        found += more
+        if more:
+            notes.append("taste")
     if cls and not found:
         if "no_same_kind" not in notes:
             notes.append("no_same_kind")                  # 원래 장소만 같은 분류여서 중복 제거로 비는 경우도 같은 종류가 없는 것이다
-        notes.append("no_alternative")                    # 같은 종류도 비슷한 경험도 없다 — 화면이 이유를 말하게(취향 추천 단은 아직 없다)
+        notes.append("no_alternative")                    # 같은 종류도 비슷한 경험도 취향 갈래도 없다 — 화면이 이유를 말하게
     # ★후보의 종류는 일정의 종류와 같다 — 맞는 것이 없으면 다른 종류로 채우지 않는다(식사 자리에 약국 · 활동 자리에 식당)
     before = len(found)
     kinds = {"activity", "dining"} if "meal_inferred" in notes else {"activity" if (lodging or stay) else item["kind"]}
@@ -643,7 +685,8 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         full = cheap if rank_only else assess(conn, tenant_id, item, place, prev, nxt, budget)
         out.append({"rank": 0, **_present(place, full, prev, nxt, ref, area)})
     # 시간표로 잰 곳이 어림으로 잰 곳보다 앞(같은 적합성 안에서) — 계산기 시간 상한이 일찍 닿아 뒤 후보가 어림으로 평가돼도 순위가 뒤섞이지 않게
-    out.sort(key=lambda c: (not c["fits"], c["status"] == "bad", c["basis"] == "similar_experience", -(c["similarity"] or 0), c["estimated"],
+    out.sort(key=lambda c: (not c["fits"], c["status"] == "bad", _BASIS_ORDER.get(c["basis"], 0), -(c["similarity"] or 0),
+                            -((c.get("taste") or {}).get("score") or 0), c["estimated"],     # 취향 후보는 임베딩 점수가 있으면 그 순서(`taste.ranked_by == "embedding"`)
                             c["distance_m"] if c["distance_m"] is not None else 10**9))
     if "meal_inferred" in notes:
         # 거기서 밥을 먹는 일정 — 시장만 셋이 아니라 식당도 둘까지 보인다(순서는 위 판정 순서를 지킨다)
@@ -655,6 +698,11 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     original_name = (current or {}).get("name")
     for c in out:
         c["reason"] = _reason(c, original_name)
+        c["reason_by"] = "template"
+    if chat is not None and out:
+        from . import reasons
+
+        reasons.polish(conn, tenant_id, out, original_name, chat)
     if budget is not None and budget.exhausted:
         notes.append("engine_budget_exhausted")                     # 일부 후보의 이동은 직선 어림값이다(후보의 `estimated`)
     for rank, c in enumerate(out, start=1):
