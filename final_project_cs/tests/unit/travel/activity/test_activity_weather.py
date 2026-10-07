@@ -106,7 +106,8 @@ async def test_weather_tool_is_called_with_coordinates_and_time():
     assert "read.disruptions" not in names
     arguments = dict(tools.calls)["read.weather"]
     assert arguments["latitude"] == 37.5 and arguments["longitude"] == 127.0
-    assert arguments["starts_at"] is not None
+    # ★`[2026-10-07]` 도구가 읽는 이름은 `at` 이다 — 예전 `starts_at` 은 버려져 지금 시각의 예보를 봤다
+    assert arguments["at"] is not None and "starts_at" not in arguments
 
 
 @pytest.mark.asyncio

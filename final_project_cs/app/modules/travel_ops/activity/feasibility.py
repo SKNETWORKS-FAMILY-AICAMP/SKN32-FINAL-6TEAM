@@ -287,9 +287,11 @@ class FeasibilityMixin:
 
     # ── ② 재난문자 ─────────────────────────────────────────
     def _feasible_disaster(self, ck: "_Check") -> None:
+        # ★`[2026-10-07]` 도구는 시각을 `at` 으로 읽는다. 예전에는 `starts_at` 으로 넘겨 버려져서
+        #   **일정 시각이 아니라 지금** 기준의 문자를 봤다(`read_tools.disaster`).
         disaster = self._read(ck.task, "read.disaster",
                               {"latitude": ck.lat, "longitude": ck.lng,
-                               "starts_at": ck.booking.get("starts_at")}, ck.seen)
+                               "at": ck.booking.get("starts_at")}, ck.seen)
         if disaster is None:
             return
         ck.evidence = self._evidence(ck.task, source_id="read.disaster",
@@ -379,9 +381,10 @@ class FeasibilityMixin:
         ck.weather_sensitive = weather_sensitive
         if weather_sensitive is not True:
             return
+        # ★`[2026-10-07]` `at` — 예전 `starts_at` 은 도구가 버려 **지금 시각의 예보**를 봤다(재난문자와 같은 결함).
         forecast = self._read(ck.task, "read.weather",
                               {"latitude": ck.lat, "longitude": ck.lng,
-                               "starts_at": ck.booking.get("starts_at")}, ck.seen)
+                               "at": ck.booking.get("starts_at")}, ck.seen)
         if forecast is None:
             return
         ck.evidence = self._evidence(ck.task, source_id="read.weather",

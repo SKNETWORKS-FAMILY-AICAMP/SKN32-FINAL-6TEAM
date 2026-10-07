@@ -282,6 +282,20 @@ async def test_disaster_decision_fields_all_present():
 
 
 @pytest.mark.asyncio
+async def test_disaster_and_weather_are_read_at_the_booking_time():
+    """★`[2026-10-07]` 시각은 `at` 으로 넘긴다 — 도구(`read_tools.disaster`·`weather`)가 읽는 이름이다.
+    예전에는 `starts_at` 으로 넘겨 도구가 버렸고, 일정 시각이 아니라 **지금** 기준으로 봤다."""
+    values = _values(disaster=DISASTER_NON_CRITICAL)
+    values["read.place"] = {**values["read.place"], "weather_sensitive": True}   # 실외라 기상도 읽는다
+    tools = FakeTools(values)
+    await ActivityTeam(tools).execute(_task())
+    args = {name: arguments for name, arguments in tools.calls}
+    for name in ("read.disaster", "read.weather"):
+        assert args[name].get("at") == DEFAULT_STARTS_AT, name
+        assert "starts_at" not in args[name], name
+
+
+@pytest.mark.asyncio
 async def test_disaster_evidence_recorded():
     """read.disaster 결과가 evidence 에 기록된다."""
     result = await ActivityTeam(
