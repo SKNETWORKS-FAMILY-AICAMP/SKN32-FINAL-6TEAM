@@ -97,3 +97,55 @@ def test_without_migration_055_reading_and_saving_still_work_and_only_the_differ
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT 1 FROM information_schema.columns WHERE table_name='intake_sources' AND column_name='differs_json'")
         assert cur.fetchone() is not None                                                             # 칸이 그대로 돌아왔다
+
+
+# ───────── 계획 확인 화면이 그리는 검토 응답(`review`) `[2026-10-07 uiux 요청]` ─────────
+def _review_item(view, title):
+    return next(i for i in view["review"]["items"] if title in i["title"])
+
+
+def test_the_review_marks_the_item_for_review_and_gives_the_two_readings_to_draw_buttons(api):
+    client = _client(Vision(MISREAD, PHOTO_TEXT))
+    view = _send(client, _key(client), files=[("plan.png", PHOTO.read_bytes())])
+    item = _review_item(view, "삼겹탕")
+    assert item["status"] == "review" and item["can_lock"] is False                                    # 고객이 고를 때까지 확정 못 한다
+    assert item["rereads"] == [{"field": "title", "current": "토속촌삼겹탕", "other": "토속촌삼계탕"}]    # 줄 전체가 아니라 값만
+    [place] = [row for row in item["rows"] if row["row"] == "place"]                                   # 장소 줄 하나에 말이 덧붙는다(같은 줄이 둘로 나가지 않는다)
+    assert place["result"] == "warn" and "두 가지로 읽었어요" in place["text"] and "토속촌삼계탕" in place["text"]
+    assert view["review"]["ready"] is False
+    for clean in ("경복궁 관람", "명동난타극장"):
+        assert _review_item(view, clean)["rereads"] == []                                              # 다른 줄은 빈 목록
+
+
+def test_when_the_customer_picks_a_value_the_reread_and_the_warning_go_away(api):
+    client = _client(Vision(MISREAD, PHOTO_TEXT))
+    headers = _key(client)
+    view = _send(client, headers, files=[("plan.png", PHOTO.read_bytes())])
+    item = _review_item(view, "삼겹탕")
+    response = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/edits", headers=headers, json={
+        "revision": view["revision"],
+        "edits": [{"source_id": item["source_id"], "field": f"items[{item['index']}].title", "value": "토속촌삼계탕"}]})
+    assert response.status_code == 200, response.text
+    again = _review_item(response.json(), "삼계탕")
+    assert again["rereads"] == []
+    assert "두 가지로 읽었어요" not in " ".join(row["text"] for row in again["rows"])
+
+
+def test_the_review_event_stream_item_event_carries_the_rereads_key(api):
+    from app.domains.travel_ops.components.intake import review as review_module
+
+    assert "rereads" in review_module._ITEM_EVENT_FIELDS                                              # noqa: SLF001 — 실시간으로 내려가는 항목 이벤트도 같은 칸을 가진다
+
+
+def test_a_booking_number_read_two_ways_adds_a_booking_line_and_a_reread():
+    from app.domains.travel_ops.components.intake.review import _with_note, rereads_of
+
+    claim = {"value": "AB1234", "method": "rule", "evidence": {"transcription_differs": {"text": "예약번호 AB1234", "other": "예약번호 A81234", "other_value": "A81234"}}}
+    [reread] = rereads_of({"claims": {"booking_no": claim}})
+    assert (reread["field"], reread["current"], reread["other"]) == ("booking_no", "AB1234", "A81234") and "A81234" in reread["note"]
+    line = _with_note(None, "booking", reread["note"])
+    assert line["row"] == "booking" and line["result"] == "warn"
+    merged = _with_note({"row": "booking", "result": "ok", "text": "예약이 있다고 적혀 있어요"}, "booking", reread["note"])
+    assert merged["result"] == "warn" and merged["text"].startswith("예약이 있다고 적혀 있어요 · ")
+    assert rereads_of({"claims": {"booking_no": {**claim, "method": "customer"}}}) == []               # 고객이 고친 칸은 건너뛴다
+    assert rereads_of({"claims": {"title": {"value": "x", "method": "rule", "evidence": {}}}}) == []
