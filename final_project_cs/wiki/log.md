@@ -9,6 +9,14 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 # 문서 변경 이력 (cs)
 
+## 2026-10-07 — 활동 후보를 세 단으로: 같은 종류(분류 나무) → 비슷한 경험 → (취향 추천 아직 없음) · 후보마다 `basis` · `reason` · 숙소 줄 문장 정리
+
+- **사용자 지시(ui 세션 전달)**: 「유사한 대안이 없을 수가 있나 — 경복궁을 못 가면 공원을 간다던가 … 추천 이유를 잘 쓰면 된다」, 끼니 시간의 광장시장은 시장 + 식당(올리브영 아님), 숙소 이름 없는 줄은 숙소 찾기, 고객에게 보이는 문장 정리.
+- **코드**: `intake/candidates.py`(분류 나무 순서 · `EXPERIENCE_GROUPS` · `_reason` · 끼니 시장 식당 둘 보장) · `places/catalog_pool.py`(`nearby_similar` · `nearby_in_classes`) · `intake/review.py`(숙소 줄 문장).
+- **문서**: `wiki/external/rest-endpoints.md` 후보 대목에 세 단 · 새 칸(`basis` · `similarity` · `experience` · `reason`) · 알림(`similar_experience` · `no_alternative`) · 숙소 문장.
+- **시험**: 후보 묶음 37건(`test_intake_similar_places` 15 · `test_intake_experience_tiers` 7 · 후보 종류 · 이름 없는 줄) · 접수 e2e 98 · 접수 단위·구조 286 통과. mock 서버 시험은 아니고 로컬 DB 를 쓰는 시험이다. 실서버(x600 서버의 cs 프로젝트 서버) 확인은 아직 안 했다.
+- **아직 없는 것**: 3단 취향 추천 · 분류가 빈 장소의 한 번 채우기(이름 조회 → 모델/pgvector) — 사용자 확인 대기.
+
 ## 2026-10-06 — 업무 도메인 폴더를 칸으로 나누고, 칸끼리 규칙 위반을 0 으로 (D-CS-013) · 라우팅 재배분 (D-CS-014)
 
 하루 동안 여행 코드의 **자리**를 바꾼 작업이다. 기능은 바꾸지 않았다(라우팅 재배분만 새 동작).

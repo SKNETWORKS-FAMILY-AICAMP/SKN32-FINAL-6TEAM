@@ -110,9 +110,12 @@ def test_a_line_with_only_a_kind_and_an_area_is_never_looked_up_as_a_shop_name(s
     assert booked["booked"] is True and plain["booked"] is None and palace["booked"] is True
     assert (_row(booked, "booking")["result"], _row(plain, "booking")["result"], _row(palace, "booking")["result"]) == ("warn", "unknown", "ok")
     assert hotel["parts"]["lodging_meal"] is True and hotel["parts"]["label"] == "숙소" and station["parts"]["lodging_meal"] is False
-    # ★`[2026-10-04]` 「호텔 조식」은 식당이 아니다 — 문장에 숙소라고 말하고 왜 식사로 읽었는지(아침)를 밝히며, 식당으로 바꾸지 않는다고 말한다
+    # ★`[2026-10-04]` 「호텔 조식」은 식당이 아니다 — 문장에 숙소라고 말한다.
+    # ★`[2026-10-07 사용자 지적]` 시스템이 어떻게 읽었는지의 설명(「숙소에서 하는 식사예요」 · 「(식당으로 바꾸지 않아요)」)은 고객 화면에 띄우지 않는다 —
+    #   숙소를 정하는 일정이라고만 말한다
     hotel_text = _row(hotel, "place")["text"]
-    assert "숙소에서 하는 식사예요" in hotel_text and "식당으로 바꾸지 않아요" in hotel_text and "식당의 이름" not in hotel_text, hotel_text
+    assert hotel_text == "숙소를 정해야 해요 — 숙소의 이름이 적혀 있지 않아요 · 후보에서 골라 주세요", hotel_text
+    assert not any(word in hotel_text for word in ("식사", "식당", "바꾸지", "(", ")")), hotel_text
     assert "예약하신 식당의 이름이 적혀 있지 않아요" in _row(booked, "place")["text"]
     assert "성수 지역 식당의 이름이 적혀 있지 않아요" in _row(plain, "place")["text"] and _row(plain, "place")["result"] == "bad"
     assert "booking" not in [r["row"] for r in shop["rows"]]                                                  # 예약 말이 없는 활동 줄에는 예약 행이 없다

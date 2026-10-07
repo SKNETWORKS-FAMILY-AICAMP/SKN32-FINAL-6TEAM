@@ -116,11 +116,12 @@ def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -
         what = parts.get("label") or "장소"
         area = (parts.get("area") or {}).get("name")
         if parts.get("lodging_meal"):
-            # ★`[2026-10-04]` 「호텔 조식」 — 식당이 아니다. 왜 식사로 읽었는지(끼니 말)를 밝히고 식당 후보로 바꾸지 않는다고 말한다
-            meal = f"{parts['meal']} 식사" if parts.get("meal") else "식사"
+            # ★`[2026-10-04]` 「호텔 조식」 — 식당이 아니다(후보 · 자동 추천은 숙소에서만 고른다).
+            # ★`[2026-10-07 사용자 지적]` 고객에게는 **숙소를 정하는 일정**이라고만 말한다 — 「숙소에서 하는 식사예요」 · 「(식당으로 바꾸지 않아요)」 같은
+            #   시스템이 어떻게 읽었는지의 설명은 고객 화면에 띄우지 않는다(「숙소에서 하는 식사가 아니라 그냥 호텔은 숙소를 찾고 있는 거잖아」)
             if state == "needs_name":
-                return _line("place", "bad", f"예약하신 숙소의 이름이 적혀 있지 않아요 — 이름을 알려 주세요 · 숙소에서 하는 {meal}예요")
-            return _line("place", "bad", f"숙소에서 하는 {meal}예요 — {area + ' 지역 ' if area else ''}숙소의 이름이 적혀 있지 않아요 · 숙소 이름을 알려 주세요(식당으로 바꾸지 않아요)")
+                return _line("place", "bad", "예약하신 숙소의 이름이 적혀 있지 않아요 — 이름을 알려 주세요")
+            return _line("place", "bad", f"숙소를 정해야 해요 — {area + ' 지역 ' if area else ''}숙소의 이름이 적혀 있지 않아요 · 후보에서 골라 주세요")
         if state == "needs_name":
             return _line("place", "bad", f"예약하신 {what}의 이름이 적혀 있지 않아요 — 이름을 알려 주세요")
         return _line("place", "bad", f"{area + ' 지역 ' if area else ''}{what}의 이름이 적혀 있지 않아요 — 후보에서 골라 주세요")
