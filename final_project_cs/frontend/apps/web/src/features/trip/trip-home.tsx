@@ -182,7 +182,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
           <article className={styles.stop} data-selected={selected?.id === stop.id}>
             <button type="button" className={styles.stophead} id={`stop-button-${stop.id}`} aria-expanded={expanded} aria-controls={`stop-detail-${stop.id}`} onClick={() => { setSelectedId(stop.id); setExpandedId(expanded ? null : stop.id); }}>
               <time>{stop.time}</time>
-              <span className={styles.stopCopy}><strong>{stop.title}</strong><span className={styles.stopTags}><Badge>{bookingLabel(stop, t)}</Badge>{stop.originalTime && stop.originalTime !== stop.time && <Badge>{t("시간 조정", "Time adjusted")}</Badge>}{stop.pinned && <Badge>{t("고정한 일정", "Pinned")}</Badge>}</span></span>
+              <span className={styles.stopCopy}><strong>{stop.title}</strong><span className={styles.stopTags}><Badge>{bookingLabel(stop, t)}</Badge>{stop.originalTime && stop.originalTime !== stop.time && <Badge>{t("시간 조정", "Time adjusted")}</Badge>}{stop.pinned && <Badge>{t("고정한 일정", "Pinned")}</Badge>}{stop.badges?.map((badge) => <Badge key={badge.code}>{badge.label}</Badge>)}</span></span>
               <span className={styles.toggleMark} aria-hidden="true">{expanded ? "−" : "+"}</span>
             </button>
             {expanded && <div className={styles.stopDetails} id={`stop-detail-${stop.id}`}>
@@ -193,6 +193,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
                 {stop.originalTime && stop.originalTime !== stop.time && <><dt>{t("시간 조정", "Time adjustment")}</dt><dd>{stop.originalTime} → {stop.time}</dd></>}
                 <dt>{t("다음 일정", "Next stop")}</dt><dd>{next ? `${next.time} · ${next.title}` : t("이날 마지막 일정", "Last stop of the day")}</dd>
                 {stop.otherOptions && stop.otherOptions.length > 0 && <><dt>{t("다른 안", "Other options")}</dt><dd>{stop.otherOptions.map((option) => option.name).join(" · ")}</dd></>}
+                {stop.badges && stop.badges.length > 0 && <><dt>{t("식당 표시", "Restaurant marks")}</dt><dd>{stop.badges.map((badge) => t(`${badge.label} (출처: ${badge.source})`, `${badge.label} (source: ${badge.source})`)).join(" · ")}</dd></>}
                 <dt>{t("입력한 메모", "Your notes")}</dt><dd>{stop.notes || t("등록된 메모가 없어요.", "No notes added.")}</dd>
               </dl>
               <div className={styles.detailActions}>

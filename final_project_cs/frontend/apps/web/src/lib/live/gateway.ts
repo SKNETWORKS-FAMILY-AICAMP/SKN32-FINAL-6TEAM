@@ -17,6 +17,7 @@ interface ServerItem {
   booked?: boolean;
   other_options?: { key: string; name: string }[];
   customer_pinned?: boolean;
+  badges?: { code: string; label: string; source: string }[];
 }
 interface ServerHistory { version: number; reason: string; at: string; causes?: Record<string, unknown>[] }
 interface ServerWarning { code?: string; date?: string | null; reason?: string; remedy?: string | null }
@@ -47,6 +48,9 @@ function stop(item: ServerItem, t: Translate): TripStop {
     title: item.title, booking: item.booked ? "booked" : "unknown", notes, coordinates,
     pinned: item.customer_pinned === true,
     otherOptions: (item.other_options ?? []).filter((option) => typeof option?.key === "string" && typeof option?.name === "string"),
+    // A badge without its label or source is dropped — the screen does not show a mark it cannot credit.
+    badges: (item.badges ?? []).filter((badge) => [badge?.code, badge?.label, badge?.source].every((value) => typeof value === "string" && value !== ""))
+      .map(({ code, label, source }) => ({ code, label, source })),
   };
 }
 

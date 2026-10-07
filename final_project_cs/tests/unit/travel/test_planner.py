@@ -37,7 +37,7 @@ def test_a_word_without_a_negation_is_not_a_dislike():
 def test_an_empty_sentence_asks_for_nothing():
     pref = preference_profile("")
     assert pref.as_dict() == {"indoor_first": False, "outdoor_first": False,
-                              "with_children": False, "avoid": []}
+                              "with_children": False, "avoid": [], "likes": []}
 
 
 # ── 순위 ──────────────────────────────────────────────────────────

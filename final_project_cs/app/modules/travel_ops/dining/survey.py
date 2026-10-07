@@ -9,6 +9,8 @@
         halal                          halal
 
 맛 · 친절 · 청결(taste · kindness · clean)은 조건이 아니라 취향이다. 대안을 거르지 않는다.
+미쉐린 · 노포(michelin · nopo)도 취향이다 — 거르지 않고 일정 생성기가 그 표시가 있는 식당을 **앞에 세운다**
+(`likes_from_survey` → `planner.Preference.likes`). `[2026-10-07]`
 모르는 코드는 버린다. 설문 화면이 먼저 바뀌어도 여기서 깨지지 않게.
 
 아이 동반(kids_allowed)은 설문에서 꺼내지 않는다. 「가족」이 아이를 뜻하지 않는다.
@@ -34,3 +36,21 @@ def conds_from_survey(constraints: Mapping[str, Any] | None) -> tuple[str, ...]:
     food = details.get("food") if isinstance(details, Mapping) else None
     codes = {SURVEY_CONDITIONS[c] for c in (food or []) if c in SURVEY_CONDITIONS}
     return tuple(sorted(codes))
+
+
+#: 설문 음식 세부 코드 → 가게 표시 코드(`dining.ledger.BADGE_CODES`). 거르지 않고 앞에 세우는 취향이다. `[2026-10-07]`
+SURVEY_LIKES = {
+    "michelin": "michelin",
+    "nopo": "nopo",
+}
+
+
+def likes_from_survey(constraints: Mapping[str, Any] | None) -> tuple[str, ...]:
+    """설문의 음식 세부에서 취향(가게 표시)만 골라 정해진 순서로 돌려준다. 없으면 빈 튜플."""
+    survey = (constraints or {}).get("survey") or {}
+    if not isinstance(survey, Mapping):
+        return ()
+    details = survey.get("priority_details") or {}
+    food = details.get("food") if isinstance(details, Mapping) else None
+    codes = {SURVEY_LIKES[c] for c in (food or []) if c in SURVEY_LIKES}
+    return tuple(code for code in SURVEY_LIKES.values() if code in codes)

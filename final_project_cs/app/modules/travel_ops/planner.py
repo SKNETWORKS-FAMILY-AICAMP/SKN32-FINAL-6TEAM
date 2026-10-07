@@ -216,11 +216,13 @@ class Preference:
     outdoor_first: bool = False
     with_children: bool = False
     avoid: tuple[str, ...] = ()
+    #: ★`[2026-10-07]` 원하는 가게 표시(`dining.ledger.BADGE_CODES` — michelin · nopo). 거르지 않고 **앞에 세운다**
+    likes: tuple[str, ...] = ()
     raw: str = ""
 
     def as_dict(self) -> dict[str, Any]:
         return {"indoor_first": self.indoor_first, "outdoor_first": self.outdoor_first,
-                "with_children": self.with_children, "avoid": list(self.avoid)}
+                "with_children": self.with_children, "avoid": list(self.avoid), "likes": list(self.likes)}
 
 
 _INDOOR_WORDS = ("실내", "indoor", "비가", "비 오", "더워", "더운", "추워", "추운", "미세먼지")
@@ -237,6 +239,11 @@ _AVOID_TERMS: dict[str, tuple[str, ...]] = {
     "해산물": ("해산물", "횟집", "수산", "조개", "생선", "초밥", "seafood"),
     "seafood": ("해산물", "횟집", "수산", "조개", "생선", "초밥", "seafood"),
     "술": ("술집", "포차", "호프", "이자카야", "펍", "bar"),
+}
+#: ★`[2026-10-07]` 원한다고 한 낱말 → 가게 표시 코드. 같은 조각에 부정 표현이 있으면 원한다고 읽지 않는다.
+_LIKE_TERMS: dict[str, tuple[str, ...]] = {
+    "michelin": ("미쉐린", "미슐랭", "michelin", "빕 구르망", "빕구르망"),
+    "nopo": ("노포", "오래된 집", "오래된 식당", "오래된 맛집", "전통 맛집", "old-school", "old school"),
 }
 #: 아이 동반이면 자동으로 빼는 것. ★고객이 말하지 않아도 빼는 유일한 항목이고 그 이유를 적는다.
 _CHILD_AVOID = ("술집", "포차", "호프", "이자카야", "펍")
@@ -255,9 +262,21 @@ def preference_profile(text: str) -> Preference:
     children = any(word in lowered for word in _CHILD_WORDS)
     if children:
         avoid += [term for term in _CHILD_AVOID if term not in avoid]
+    likes = [code for code, terms in _LIKE_TERMS.items()
+             if any(any(term in piece for term in terms) and not any(mark in piece for mark in _NEGATIVE)
+                    for piece in pieces)]
     return Preference(indoor_first=any(word in lowered for word in _INDOOR_WORDS),
                       outdoor_first=any(word in lowered for word in _OUTDOOR_WORDS),
-                      with_children=children, avoid=tuple(avoid), raw=text or "")
+                      with_children=children, avoid=tuple(avoid), likes=tuple(likes), raw=text or "")
+
+
+def badge_codes(cand: Cand) -> set[str]:
+    """후보에 붙은 가게 표시 코드(`ledger_candidates` 가 원장에서 싣는다)."""
+    return {str(badge.get("code")) for badge in cand.attributes.get("badges") or [] if isinstance(badge, Mapping)}
+
+
+def liked(cand: Cand, pref: Preference) -> bool:
+    return bool(pref.likes) and bool(badge_codes(cand) & set(pref.likes))
 
 
 # ── 후보 모으기 ──────────────────────────────────────────────────
@@ -373,6 +392,9 @@ def ledger_candidates(shops: Iterable[Mapping[str, Any]]) -> list[Cand]:
             attributes["district"] = district
         if shop.get("address"):
             attributes["address"] = shop["address"]
+        if shop.get("badges"):
+            # ★`[2026-10-07]` 미쉐린 · 노포 표시 — 선호 순위(`rank_candidates`)와 화면(`_item_view`)이 쓴다. 등록 때 장소에 남는다
+            attributes["badges"] = [dict(badge) for badge in shop["badges"]]
         out.append(Cand(key=f"dn_{shop['place_uid']}", name=str(shop["name"]), kind="dining",
                         lat=float(shop["lat"]), lon=float(shop["lng"]), attributes=attributes,
                         origin="dining_ledger", rank_hint=CONTENT_TYPE_RANK["39"]))
@@ -403,7 +425,9 @@ def rank_candidates(candidates: Iterable[Cand], pref: Preference) -> list[Cand]:
         # ★**아는 값이 많은 장소가 먼저다** — 영업시간을 알면 판정이 실제로 그 칸을 본다.
         #   종류 우선순위(`rank_hint`)보다 앞에 둔다: 판정 가능한 초안이 예쁜 초안보다 낫다.
         known = 0 if knows_hours(cand.attributes) else 1
-        ranked.append(((fit, known, cand.rank_hint, cand.name), cand))
+        # ★`[2026-10-07]` 원한 표시(미쉐린 · 노포)가 있는 곳이 먼저 — 단 영업시간을 아는 것보다는 뒤다(판정 가능한 초안이 먼저)
+        wanted = 0 if liked(cand, pref) or not pref.likes else 1
+        ranked.append(((fit, known, wanted, cand.rank_hint, cand.name), cand))
     ranked.sort(key=lambda pair: pair[0])
     return [cand for _, cand in ranked]
 
@@ -415,8 +439,8 @@ def _by_district(candidates: list[Cand]) -> dict[str, list[Cand]]:
     return groups
 
 
-def pick_day_pools(activities: list[Cand], dining: list[Cand], days: int
-                   ) -> list[tuple[list[Cand], list[Cand]]]:
+def pick_day_pools(activities: list[Cand], dining: list[Cand], days: int,
+                   liked: Callable[[Cand], bool] | None = None) -> list[tuple[list[Cand], list[Cand]]]:
     """하루씩 **같은 구로 묶는다.** 구가 다른 항목을 0분 간격으로 붙이면 판정이 걸고
     (`no_transfer_time`), 애초에 하루 동선이 흩어진다.
 
@@ -436,7 +460,7 @@ def pick_day_pools(activities: list[Cand], dining: list[Cand], days: int
                                    if cand.key not in used and cand not in day_acts]
         day_acts = (day_acts + spare_act)[:SHORTLIST_PER_DAY]
         used.update(cand.key for cand in day_acts[:ACTIVITIES_PER_DAY])
-        near = _near_dining(dining, day_acts[:ACTIVITIES_PER_DAY], district)
+        near = _near_dining(dining, day_acts[:ACTIVITIES_PER_DAY], district, liked)
         pools.append((day_acts, near))
     return pools
 
@@ -481,18 +505,39 @@ def _pick_breakfast(pool: list[Cand], used: set[str], anchor: Cand | None) -> Ca
                                                      {"latitude": anchor.lat, "longitude": anchor.lon}))
 
 
-def _near_dining(dining: list[Cand], anchors: list[Cand], district: str | None) -> list[Cand]:
-    """같은 구 → 그다음 **가까운 순**. 거리를 모르면 순위 그대로 뒤에 붙인다."""
+#: 다른 구의 원한 가게(미쉐린 · 노포)를 앞에 세우는 거리 한도 — 그보다 멀면 동선이 흩어져 가까운 순으로 둔다
+LIKED_RADIUS_M = 3000
+
+
+def _near_dining(dining: list[Cand], anchors: list[Cand], district: str | None,
+                 liked: Callable[[Cand], bool] | None = None) -> list[Cand]:
+    """같은 구 → 그다음 **가까운 순**. 거리를 모르면 순위 그대로 뒤에 붙인다.
+
+    ★`[2026-10-07]` `liked` — 원한 표시가 있는 곳을 같은 구 안에서 먼저, 다른 구에서는 `LIKED_RADIUS_M` 안일 때만 먼저.
+    """
     same = [cand for cand in dining if district and cand.district == district]
     rest = [cand for cand in dining if cand not in same]
     anchor = next((cand for cand in anchors if cand.lat is not None), None)
+    want = liked or (lambda cand: False)
     if anchor is not None:
-        def far(cand: Cand) -> tuple[int, float, str]:
+        def far(cand: Cand) -> float | None:
             if cand.lat is None:
-                return (1, 0.0, cand.name)
-            return (0, distance_m({"latitude": anchor.lat, "longitude": anchor.lon},
-                                  {"latitude": cand.lat, "longitude": cand.lon}), cand.name)
-        same, rest = sorted(same, key=far), sorted(rest, key=far)
+                return None
+            return distance_m({"latitude": anchor.lat, "longitude": anchor.lon},
+                              {"latitude": cand.lat, "longitude": cand.lon})
+
+        def in_group(cand: Cand) -> tuple[int, bool, float, str]:
+            meters = far(cand)
+            return (0 if want(cand) else 1, meters is None, meters or 0.0, cand.name)
+
+        def outside(cand: Cand) -> tuple[int, bool, float, str]:
+            meters = far(cand)
+            close_enough = meters is not None and meters <= LIKED_RADIUS_M
+            return (0 if want(cand) and close_enough else 1, meters is None, meters or 0.0, cand.name)
+        same, rest = sorted(same, key=in_group), sorted(rest, key=outside)
+    elif liked is not None:
+        same = sorted(same, key=lambda cand: not want(cand))      # 정렬은 안정적이다 — 원래 순위는 그대로
+        rest = sorted(rest, key=lambda cand: not want(cand))
     return (same + rest)[:SHORTLIST_PER_DAY]
 
 
@@ -516,7 +561,8 @@ ORDER_SYSTEM = (
     "The server fills those.\n"
     "- activities: the activity lines you would visit, in visiting order, best first.\n"
     "- dining: the dining lines for lunch and dinner, lunch first.\n"
-    "- Respect the traveller's words (e.g. indoor first, with a child, dislikes)."
+    "- Respect the traveller's words (e.g. indoor first, with a child, dislikes, "
+    "wanting Michelin or old-school (노포) restaurants — those lines carry such a tag)."
 )
 
 
@@ -525,8 +571,10 @@ def _order_lines(candidates: list[Cand]) -> str:
     for index, cand in enumerate(candidates, start=1):
         indoor = cand.indoorish
         mark = "indoor" if indoor is True else ("outdoor" if indoor is False else "indoor unknown")
+        tags = ", ".join(str(badge.get("label")) for badge in cand.attributes.get("badges") or []
+                         if isinstance(badge, Mapping))
         lines.append(f"{index}. {cand.kind} | {cand.name} | "
-                     f"{cand.district or 'district unknown'} | {mark}")
+                     f"{cand.district or 'district unknown'} | {mark}" + (f" | {tags}" if tags else ""))
     return "\n".join(lines)
 
 
@@ -1208,6 +1256,12 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
     per_day = MAX_ACTIVITIES_PER_DAY if target is not None else ACTIVITIES_PER_DAY
     floor_per_day = MIN_ACTIVITIES_PER_DAY if target is not None else ACTIVITIES_PER_DAY
     pref = preference_profile(request.preferences)
+    # ★`[2026-10-07]` 설문 음식 세부(michelin · nopo)도 취향이다 — 문장에서 읽은 것과 합친다(`dining.survey.likes_from_survey`)
+    from .dining.survey import likes_from_survey
+
+    survey_likes = [code for code in likes_from_survey(request.constraints) if code not in pref.likes]
+    if survey_likes:
+        pref = replace(pref, likes=pref.likes + tuple(survey_likes))
     calls = {"tour_api": 0}
     # ★요청을 **우리 규정에 붙인다**(RAG). 근거로 실어 내보내고 모델에게도 바탕으로 보인다.
     #   ★후보를 거르지는 않는다 — `ground_request` 의 설명을 그대로 읽는다.
@@ -1254,7 +1308,8 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
     held = {cand.key for cand in reserve}
     meal_dining = [cand for cand in dining if cand.key not in held]
     breakfasts: list[dict[str, Any]] = []
-    pools = pick_day_pools(activities, meal_dining, request.days)
+    pools = pick_day_pools(activities, meal_dining, request.days,
+                           liked=(lambda cand: liked(cand, pref)) if pref.likes else None)
 
     items: list[dict[str, Any]] = []
     chosen: dict[str, Cand] = {}
