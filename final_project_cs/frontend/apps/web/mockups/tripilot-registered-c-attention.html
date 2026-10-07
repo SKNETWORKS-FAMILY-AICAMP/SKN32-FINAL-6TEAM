@@ -1,0 +1,1897 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>triPilot · 등록 후 C안 + 알림 센터</title>
+<style>
+/* 색은 앱 src/styles/tokens.css 의 그린 테마 값을 옮겼다(2026-10-07 9f9838c 에서 대조). 크기는 plan-check.module.css 를 따른다. */
+:root {
+  --color-text: #24392f; --color-muted: #6d7c73; --color-border: #dce3dd; --color-surface: #ffffff;
+  --color-background: #f3f5f3; --color-primary: #2e6047; --color-on-primary: #ffffff; --color-subtle: #f6f7f5;
+  --color-warning: #82693e; --color-warning-soft: #faf6ec; --color-warning-border: #e5d9c1;
+  --color-error: #965640; --color-error-soft: #fdf3ed; --color-error-border: #ecd2c7;
+  --color-text-secondary: #4a5d52; --color-faint: #a5b1a9; --color-divider: #e8ede9;
+  --color-border-strong: #c3cdc6; --color-success: #3d7a56; --color-success-soft: #e3f0e7;
+  --color-adjusted: #3f6a8a; --color-adjusted-soft: #e6eff6; --color-adjusted-border: #bcd0df;
+  --color-selected: #2e6047; --color-selected-soft: #dcebe1;
+  --color-paper: #f7f9f3; --color-soft: #e9f2eb;
+  --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font-family: var(--font-sans); background: var(--color-background); color: var(--color-text); }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.i.big { width: 22px; height: 22px; }
+.i.sm { width: 14px; height: 14px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 검토 막대 — 휴대폰 밖 */
+.review { max-width: 1000px; margin: 0 auto; padding: 22px 16px 4px; }
+.review h1 { margin: 0; font-size: 20px; font-weight: 750; }
+.review .meta { margin: 4px 0 8px; font-size: 13px; line-height: 1.5; color: var(--color-muted); }
+.group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.group > span { margin-right: 4px; font-size: 12.5px; font-weight: 750; color: var(--color-text-secondary); }
+.group button { min-height: 34px; padding: 0 13px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); font-size: 13px; font-weight: 700; }
+.group button[aria-pressed="true"] { border-color: var(--color-text); background: var(--color-text); color: var(--color-on-primary); }
+.stage { display: grid; grid-template-columns: 390px minmax(0, 470px); justify-content: center; align-items: start; gap: 40px; padding: 18px 16px 28px; }
+@media (max-width: 899px) { .stage { grid-template-columns: minmax(0, 390px); } }
+.variant { display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 0; }
+.variant > header { width: 390px; max-width: calc(100vw - 32px); }
+.variant h2 { margin: 0; font-size: 15px; font-weight: 750; }
+.variant h2 b { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 6px; border-radius: 6px; background: var(--color-text); color: var(--color-on-primary); font-size: 12px; }
+.variant .lead { margin: 4px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--color-text-secondary); }
+@media (min-width: 900px) { .variant > header { min-height: 104px; } }
+
+/* 메모 */
+.memo { padding: 18px 20px; border: 1px solid var(--color-border); border-radius: 18px; background: var(--color-surface); }
+.memo h2 { margin: 0; font-size: 16px; font-weight: 750; }
+.memo h3 { margin: 16px 0 0; font-size: 13.5px; font-weight: 750; color: var(--color-text); }
+.memo h4 { margin: 10px 0 0; font-size: 12.5px; font-weight: 750; color: var(--color-text-secondary); }
+.memo ul { margin: 4px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: var(--color-text-secondary); }
+.memo code { font-size: 12px; }
+.memoLead { margin: 6px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--color-text-secondary); }
+
+/* 휴대폰 */
+/* ★틀은 스크롤되면 안 된다 — overflow: hidden 이면 오른쪽 밖에 놓인 알림 센터(translateX(100%))가 스크롤 폭을 늘려, 그쪽으로 초점이 가는 순간 틀 전체가 옆으로 밀렸다(2026-10-07 시험에서 scrollLeft 343px). clip 은 스크롤 자체를 막는다. */
+.phone { --sheet-h: 56%; position: relative; width: 390px; max-width: calc(100vw - 32px); height: 820px; border-radius: 34px; overflow: clip; background: #efece4; box-shadow: 0 0 0 9px #1f2a24, 0 24px 60px rgba(20, 40, 30, .28); isolation: isolate; }
+.phone[data-mode="chat"] { --sheet-h: 62%; }
+@media (max-width: 430px) { .phone { height: max(640px, min(820px, calc(100vh - 150px))); } }
+
+.map { position: absolute; inset: 0; }
+.map svg { display: block; width: 100%; height: 100%; }
+.map .road-c { stroke: #d9d2c3; stroke-width: 8; }
+.map .road { stroke: #ffffff; stroke-width: 5.5; }
+.map .road-y { stroke: #f1df9c; stroke-width: 6; }
+.map .lbl { font: 600 11px var(--font-sans); fill: #8b8576; }
+.map .river-lbl { font: italic 600 12px var(--font-sans); fill: #6f9fb1; }
+/* 경로선 — 앱 providers/lines.ts: 수단마다 테마 색(지하철 · 대중교통 파랑 · 버스 초록 · 택시 노랑 · 도보 · 자전거 회색 · 모름 기본색), 길을 몰라 직선으로 이은 구간은 점선 · 옅게(굵기 4 · .55), 고른 구간은 굵게.
+   누르는 자리는 보이는 선 위의 굵은 투명 선(앱 trip-route-hit, 굵기 22). */
+.route { fill: none; stroke: var(--color-primary); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; opacity: .85; pointer-events: none; transition: stroke-width .2s; }
+.route[data-kind="subway"], .route[data-kind="mixed"] { stroke: var(--color-adjusted); }
+.route[data-kind="bus"] { stroke: var(--color-success); }
+.route[data-kind="taxi"] { stroke: var(--color-warning); }
+.route[data-kind="walk"], .route[data-kind="bike"] { stroke: var(--color-muted); }
+.route[data-guess] { stroke-width: 4; opacity: .55; stroke-dasharray: 8 10; }
+.route[data-sel] { stroke-width: 8; opacity: 1; }
+.routeHit { fill: none; stroke: transparent; stroke-width: 22; stroke-linecap: round; pointer-events: stroke; cursor: pointer; }
+/* 지도 아래(시트 바로 위) 수단 태그 — 앱 plan-check.module.css .mapChips · .routeTags */
+.mapChips { position: absolute; z-index: 3; left: 10px; right: 12px; bottom: calc(var(--sheet-h) + 8px); display: flex; flex-wrap: wrap-reverse; align-items: flex-end; gap: 6px; pointer-events: none; transition: bottom .3s ease; }
+.mapChips:empty { display: none; }
+.routeTags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.routeTags li { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 2px 9px 2px 7px; border: 1px solid var(--color-border); border-radius: 999px; background: color-mix(in srgb, var(--color-surface) 94%, transparent); color: var(--color-text); font-size: 11.5px; font-weight: 700; }
+.routeTags li[data-guess] { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
+.sample { display: inline-block; width: 18px; height: 4px; border-radius: 2px; }
+.sampleDashed { display: inline-block; width: 18px; height: 0; border-top: 3px dashed currentColor; opacity: .75; }
+.pin { cursor: pointer; }
+.pin:focus { outline: none; }
+.pin:focus-visible .b { stroke-width: 4; }
+.pin .anchor { fill: #2b4a3a; }
+.pin .tail, .pin .b { fill: #ffffff; stroke: #2b4a3a; stroke-width: 2.5; stroke-linejoin: round; }
+.pin[data-day="2"] .tail, .pin[data-day="2"] .b { stroke: var(--color-adjusted); }
+.pin text { font: 800 15px var(--font-sans); fill: #1f2a24; pointer-events: none; }
+.pin.sel .tail, .pin.sel .b { fill: var(--color-primary); stroke: var(--color-primary); }
+.pin.sel text { fill: #ffffff; }
+.pin.paused .b { stroke-dasharray: 4 3; }
+
+.top { position: absolute; z-index: 6; top: 12px; left: 12px; right: 12px; display: flex; align-items: center; gap: 8px; }
+.topLead { display: flex; flex: 1 1 auto; align-items: center; gap: 8px; min-width: 0; }
+.logo, .menu, .bell { display: grid; place-items: center; width: 50px; height: 50px; padding: 0; border: 0; border-radius: 16px; background: var(--color-surface); box-shadow: 0 4px 14px rgba(36, 57, 47, .16); }
+.logo span { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--color-primary); color: #fff; font-size: 22px; font-weight: 800; line-height: 1; }
+/* 제목 칸 — 앱 plan-check.tsx TripTitle(plan-check.module.css .headInfo[data-title] · .titleEdit · .titleInput)을 옮겼다. 글자만큼 넓고(최대 11.5em),
+   누르면 옆으로 늘어나며(.28s) 연필이 나온다. 높이는 이 목업의 50px 칩에 맞췄다. 제목 옆 ▾ 는 아래의 「여행계획서 열기 · 공유하기」를 여닫는다(B안). */
+.titlePill { display: flex; flex: 0 1 auto; align-items: center; gap: 2px; min-width: 0; max-width: 11.5em; min-height: 50px; padding: 0 6px 0 16px; border-radius: 16px; background: var(--color-surface); box-shadow: 0 4px 14px rgba(36, 57, 47, .16); transition: max-width .28s cubic-bezier(.3, .7, .4, 1); }
+.titlePill[data-armed] { flex: 1 1 auto; max-width: 100%; }
+.titlePill[hidden] { display: none; }
+.titleButton { min-width: 0; padding: 6px 0; border: 0; background: none; font-size: 16px; font-weight: 750; letter-spacing: -.3px; line-height: 1.3; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.titlePill[data-armed] .titleButton { display: -webkit-box; white-space: normal; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.titleCaret { display: grid; place-items: center; flex: none; width: 28px; height: 34px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--color-muted); }
+.titleCaret .i { width: 16px; height: 16px; transition: transform .2s; }
+.titleCaret[aria-expanded="true"] .i { transform: rotate(180deg); }
+/* 펼치면 ▴ 와 연필을 함께 칸의 오른쪽 끝에 붙여 둔다(2026-10-07 사용자 지시 — 앱은 연필이 이름 바로 뒤). 접혔을 때 ▾ 는 이름 바로 뒤. */
+.titlePill[data-armed] .titleCaret { margin-left: auto; }
+.titleEdit { display: grid; place-items: center; flex: none; width: 34px; height: 34px; margin-left: 4px; padding: 0; border: 0; border-radius: 10px; background: #e4e9e5; color: var(--color-text); animation: rise .2s ease-out both; }
+.titleEdit .i { width: 15px; height: 15px; stroke-width: 1.8; }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+.titleForm { flex: 1; min-width: 0; margin: 0 4px 0 -8px; }
+.titleInput { width: 100%; padding: 4px 8px; border: 1px solid var(--color-border-strong); border-radius: 9px; background: var(--color-surface); font-size: 15px; font-weight: 750; }
+.bell { position: relative; color: var(--color-text); }
+.badge { position: absolute; top: -4px; right: -4px; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border: 2px solid #fff; border-radius: 10px; background: var(--color-error); color: #fff; font-size: 11px; font-weight: 800; line-height: 1; }
+
+/* 아래 시트 */
+.sheet { position: absolute; z-index: 4; left: 0; right: 0; bottom: 0; height: var(--sheet-h); display: flex; flex-direction: column; border-radius: 22px 22px 0 0; background: var(--color-surface); box-shadow: 0 -6px 24px rgba(36, 57, 47, .14); transition: height .3s ease; }
+.handle { position: absolute; top: 0; left: 0; right: 0; height: 22px; display: grid; place-items: center; pointer-events: none; }
+.handle span { width: 42px; height: 5px; border-radius: 3px; background: var(--color-border-strong); }
+.sheetHead { display: flex; align-items: center; gap: 8px; flex: none; min-height: 60px; padding: 22px 16px 8px; border-bottom: 1px solid var(--color-divider); }
+.sheetHead h3 { flex: 1; margin: 0; font-size: 15.5px; font-weight: 750; }
+/* 재난으로 정지된 동안 시트 머리의 「등록 완료」 자리 — 누르면 알림 센터 */
+.pausedChip { display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 12px 0 10px; border: 1px solid var(--color-error-border); border-radius: 999px; background: var(--color-error-soft); color: var(--color-error); font-size: 13.5px; font-weight: 800; white-space: nowrap; }
+.pausedChip .i { width: 16px; height: 16px; stroke-width: 2; }
+.dayStrip { display: flex; flex: none; gap: 6px; padding: 10px 14px 6px; overflow-x: auto; scrollbar-width: none; }
+.dayStrip::-webkit-scrollbar { display: none; }
+.dayChip { display: inline-flex; flex: none; align-items: center; gap: 5px; min-height: 34px; padding: 0 13px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: transparent; color: var(--color-muted); font-size: 12.5px; font-weight: 750; white-space: nowrap; }
+.dayChip small { font-size: 11px; font-weight: 550; }
+.dayChip[aria-selected="true"] { border-color: var(--color-text); background: var(--color-text); color: var(--color-on-primary); }
+.sheetBody { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 2px 14px 88px; scrollbar-width: thin; }
+.dayHead { margin: 14px 0 2px; font-size: 13px; font-weight: 750; }
+.dayHead small { margin-left: 4px; font-size: inherit; font-weight: 500; color: var(--color-muted); }
+.credit { margin: 14px 0 0; font-size: 11.5px; color: var(--color-faint); }
+
+/* 타임라인 — 시각 44px · 줄 18px · 카드 */
+.timeline { list-style: none; margin: 0; padding: 0; }
+.entry { display: grid; grid-template-columns: 44px 18px minmax(0, 1fr); column-gap: 8px; }
+.time { padding-top: 21px; text-align: right; font-size: 13px; font-weight: 750; line-height: 18px; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.time s { display: block; font-size: 10.5px; font-weight: 500; line-height: 1.2; color: var(--color-faint); }
+/* 왼쪽 시각 고정 — 일정 줄(li)마다 시각 칸이 목록 위쪽에 붙어 있다가, 그 일정이 지나가고 다음 일정이 올라오면 밀려 바뀐다(sticky 는 자기 줄 안에서만 붙는다). */
+.entry:not(.mv) > .time { position: sticky; top: 0; z-index: 1; align-self: start; }
+.time small { display: block; font-size: 11px; font-weight: 550; line-height: 1.3; color: var(--color-muted); }
+.entry.mv .time { display: flex; flex-direction: column; align-items: flex-end; padding-top: 7px; font-size: 11.5px; font-weight: 500; line-height: 1.15; color: var(--color-faint); }
+.entry.mv .time b { font-weight: 500; }
+.entry.mv .time small { font-size: 10px; font-weight: 500; color: inherit; }
+.rail { position: relative; }
+.rail::before { content: ""; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--color-border); }
+.entry.mv .rail::before { background: repeating-linear-gradient(to bottom, var(--color-faint) 0 3px, transparent 3px 7px); }
+.timeline .entry:first-child .rail::before { top: 30px; }
+.timeline .entry:last-child .rail::before { bottom: auto; height: 30px; }
+.dot { position: absolute; left: 3px; top: 24px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--color-success); background: var(--color-success-soft); }
+.entry.mv .dot { left: 5px; top: 12px; width: 8px; height: 8px; border-color: var(--color-faint); background: var(--color-surface); }
+.card { display: flex; align-items: center; margin: 6px 0; padding: 0 4px 0 2px; border: 1.5px solid var(--color-border); border-radius: 12px; background: var(--color-surface); transition: border-color .2s, box-shadow .2s; }
+.entry[data-selected] .card { border-color: var(--color-selected); box-shadow: 0 0 0 3px var(--color-selected-soft); }
+.cardMain { display: flex; flex: 1; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; min-height: 52px; padding: 12px 8px; border: 0; background: none; text-align: left; }
+.cardMain > .i { color: var(--color-faint); }
+.cardMain strong { min-width: 0; font-size: 15.5px; font-weight: 750; line-height: 1.3; word-break: keep-all; }
+.pill { padding: 2px 8px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 11.5px; font-weight: 750; white-space: nowrap; }
+.pill[data-state="changed"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.pill[data-state="paused"] { border-color: var(--color-error-border); background: var(--color-error-soft); color: var(--color-error); }
+.pill[data-state="choice"] { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
+/* 이동 줄 — 앱 plan-check.module.css .move · .moveHead · .modeIcon · .moveText · .moveFree · .freeGap · .checks 를 옮겼다. */
+.moveCol { display: flex; flex-direction: column; min-width: 0; }
+.move { padding: 4px 10px; border: 1.5px solid transparent; border-radius: 10px; font-size: 12.5px; color: var(--color-muted); }
+.move[data-open] { border-color: var(--color-border); background: var(--color-subtle); }
+.moveHead { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.modeIcon { display: inline-grid; flex: none; place-items: center; color: var(--color-faint); }
+.modeIcon .i { width: 14px; height: 14px; stroke-width: 1.8; }
+.moveText { flex: 1; min-width: 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.moveFree { flex: none; font-size: 11.5px; font-weight: 600; color: var(--color-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.moveFree[data-late] { color: var(--color-warning); font-weight: 750; }
+.freeGap { flex: none; }
+.mvChecks { margin: 0; padding: 0 0 6px; list-style: none; }
+.mvCheck { display: grid; grid-template-columns: 20px 56px minmax(0, 1fr); gap: 8px; align-items: center; padding: 6px 0; font-size: 13px; }
+.mvMark { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-weight: 800; line-height: 1; }
+.mvCheck[data-result="ok"] .mvMark { background: var(--color-success-soft); color: var(--color-success); }
+.mvCheck[data-result="warn"] .mvMark { background: var(--color-warning-soft); color: var(--color-warning); }
+.mvCheck[data-result="unknown"] .mvMark { background: #e4e9e5; color: var(--color-muted); }
+.mvKind { font-size: 12.5px; font-weight: 700; color: var(--color-text-secondary); }
+.mvText { color: var(--color-text-secondary); word-break: keep-all; overflow-wrap: anywhere; }
+.mvCheck[data-result="warn"] .mvText { color: var(--color-warning); }
+.mvCheck[data-result="unknown"] .mvText { color: var(--color-muted); }
+.moveLink { display: inline-flex; align-items: center; gap: 5px; margin: 0 0 6px; padding: 0; border: 0; background: none; color: var(--color-primary); font-size: 12.5px; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+
+/* C안 — 채팅 버튼이 막대로 늘어나고, 시트는 일정 ↔ 채팅을 옆으로 넘긴다 */
+.paneSwitch { display: inline-flex; flex: none; gap: 2px; padding: 3px; border-radius: 999px; background: var(--color-subtle); }
+.paneSwitch button { height: 28px; padding: 0 13px; border: 0; border-radius: 999px; background: none; color: var(--color-muted); font-size: 12.5px; font-weight: 750; }
+.paneSwitch button[aria-selected="true"] { background: var(--color-surface); color: var(--color-text); box-shadow: 0 1px 4px rgba(36, 57, 47, .16); }
+.pager { position: relative; flex: 1; min-height: 0; overflow: clip; touch-action: pan-y; }
+.track { display: flex; width: 200%; height: 100%; transform: translateX(0); transition: transform .32s cubic-bezier(.25, .8, .3, 1); }
+.phone[data-mode="chat"] .track { transform: translateX(-50%); }
+.track[data-dragging] { transition: none; }
+.pane { display: flex; flex-direction: column; width: 50%; height: 100%; min-height: 0; }
+.pane > .sheetBody { flex: 1; transition: transform .24s cubic-bezier(.2, .8, .2, 1); }
+.pane > .sheetBody[data-dragging] { transition: none; }
+.chatPane { padding-bottom: 84px; }
+.chatPane .prompts { flex: none; padding-top: 8px; border-top: 1px solid var(--color-divider); }
+.swipeHint { display: flex; align-items: center; justify-content: flex-end; gap: 3px; margin: 10px 2px 0; font-size: 11.5px; font-weight: 650; color: var(--color-faint); }
+.cbar { position: absolute; z-index: 7; right: 18px; bottom: 22px; display: flex; align-items: center; width: 58px; height: 58px; border: 1px solid transparent; border-radius: 29px; background: var(--color-primary); box-shadow: 0 10px 24px rgba(36, 57, 47, .35); overflow: hidden;
+  transition: width .34s cubic-bezier(.3, 1.12, .5, 1), background-color .2s ease, border-color .2s ease, box-shadow .2s ease; }
+.cbar[data-open] { width: calc(100% - 36px); border-color: var(--color-border-strong); background: var(--color-surface); box-shadow: 0 10px 26px rgba(36, 57, 47, .22); }
+.cbar[data-open]:focus-within { border-color: var(--color-selected); box-shadow: 0 0 0 3px var(--color-selected-soft), 0 10px 26px rgba(36, 57, 47, .22); }
+.barFab { display: grid; place-items: center; flex: none; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--color-on-primary); }
+.barFab .i { width: 26px; height: 26px; }
+.barClose { display: grid; place-items: center; flex: none; width: 40px; height: 40px; margin-left: 7px; padding: 0; border: 0; border-radius: 50%; background: var(--color-subtle); color: var(--color-muted); }
+.barForm { display: flex; flex: 1; align-items: center; gap: 6px; min-width: 0; padding: 0 6px 0 12px; animation: barIn .24s .12s both; }
+.barForm.still { animation: none; }
+.barForm input { flex: 1; min-width: 0; height: 44px; padding: 0 2px; border: 0; background: none; font-size: 16px; outline: none; }
+.barSend { display: grid; place-items: center; flex: none; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: var(--color-primary); color: var(--color-on-primary); }
+.barSend:disabled { opacity: .5; }
+@keyframes barIn { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+
+/* 채팅 칸 */
+.ctx { display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 40px; padding: 6px 14px; border-bottom: 1px solid var(--color-divider); font-size: 12px; color: var(--color-muted); }
+.ctx strong { color: var(--color-text-secondary); font-weight: 750; }
+.selChip { display: inline-flex; align-items: center; gap: 2px; height: 26px; padding: 0 4px 0 10px; border: 1px solid var(--color-selected); border-radius: 999px; background: var(--color-selected-soft); color: var(--color-selected); font-size: 12px; font-weight: 700; }
+.selChip button { display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: none; color: inherit; }
+.selChip .i { width: 13px; height: 13px; }
+.log { display: flex; flex: 1; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; padding: 14px; scrollbar-width: thin; }
+.msg { max-width: 88%; }
+.msg[data-role="user"] { align-self: flex-end; }
+.msgMeta { margin: 0 0 3px; font-size: 11px; font-weight: 650; color: var(--color-muted); }
+.msg[data-role="user"] .msgMeta { text-align: right; }
+.bubble { margin: 0; padding: 10px 12px; border: 1px solid var(--color-divider); border-radius: 4px 14px 14px; background: var(--color-subtle); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.msg[data-role="user"] .bubble { border-color: var(--color-primary); border-radius: 14px 4px 14px 14px; background: var(--color-primary); color: var(--color-on-primary); }
+.msg .opts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.places { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.placeChip { display: inline-flex; align-items: center; gap: 4px; min-height: 28px; padding: 0 10px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text-secondary); font-size: 12px; font-weight: 700; }
+.placeChip .i { width: 14px; height: 14px; }
+.pending { margin: 0; font-size: 12.5px; color: var(--color-muted); }
+.pending::after { content: ""; animation: dots 1.2s steps(4) infinite; }
+@keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+.prompts { display: flex; gap: 6px; padding: 0 14px 8px; overflow-x: auto; scrollbar-width: none; }
+.prompts::-webkit-scrollbar { display: none; }
+.prompt { flex: none; height: 32px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-subtle); color: var(--color-text-secondary); font-size: 12.5px; font-weight: 700; }
+.prompt:disabled { opacity: .45; cursor: not-allowed; }
+
+/* 단추 */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 34px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 10px; background: var(--color-surface); font-size: 12.5px; font-weight: 750; white-space: nowrap; }
+.btn[data-primary] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.link { padding: 0; border: 0; background: none; color: var(--color-selected); font-size: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+
+/* ① 알림 센터 — 휴대폰을 덮는 화면 */
+.panel { position: absolute; z-index: 9; inset: 0; display: flex; flex-direction: column; background: var(--color-surface); transform: translateX(100%); visibility: hidden; transition: transform .26s ease, visibility 0s linear .26s; }
+.panel[data-open] { transform: none; visibility: visible; transition: transform .26s ease, visibility 0s; }
+.panelHead { display: flex; flex: none; align-items: center; gap: 10px; padding: 18px 14px 10px; border-bottom: 1px solid var(--color-divider); }
+.panelHead h3 { flex: 1; margin: 0; font-size: 17px; font-weight: 750; }
+.iconBtn { display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border: 0; border-radius: 12px; background: var(--color-subtle); }
+.panelBody { flex: 1; min-height: 0; overflow-y: auto; padding: 14px; scrollbar-width: thin; }
+.secTitle { margin: 0 0 8px; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); }
+.empty { margin: 4px 0 12px; font-size: 13px; color: var(--color-muted); }
+.act { margin: 0 0 10px; padding: 12px 14px; border: 1px solid var(--color-warning-border); border-radius: 14px; background: var(--color-warning-soft); }
+.act[data-tone="info"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); }
+.act h4 { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 14px; font-weight: 750; }
+.act p { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--color-text-secondary); }
+.act .what { font-weight: 700; color: var(--color-text); }
+.act .meta { font-size: 11.5px; color: var(--color-muted); }
+.act .opts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ways { display: grid; gap: 6px; margin: 10px 0 0; padding: 0; border: 0; }
+.ways legend { margin-bottom: 6px; padding: 0; font-size: 12.5px; font-weight: 750; }
+.ways label { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 10px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); font-size: 13px; cursor: pointer; }
+.ways input { margin: 0; accent-color: var(--color-primary); }
+.tabs { position: sticky; z-index: 1; top: 0; display: flex; gap: 4px; margin: 6px 0 8px; padding: 4px; border-radius: 12px; background: var(--color-subtle); box-shadow: 0 -10px 0 4px var(--color-surface); }
+.tabs button { position: relative; flex: 1; min-height: 36px; padding: 0 6px; border: 0; border-radius: 9px; background: none; color: var(--color-muted); font-size: 12.5px; font-weight: 750; white-space: nowrap; }
+.tabs button[aria-selected="true"] { background: var(--color-surface); color: var(--color-text); box-shadow: 0 1px 4px rgba(36, 57, 47, .12); }
+.aList { list-style: none; margin: 0; padding: 0; }
+.aRow { padding: 12px 2px; border-top: 1px solid var(--color-divider); font-size: 13.5px; line-height: 1.5; }
+.aRow:first-child { border-top: 0; }
+.aRow p { margin: 4px 0 0; overflow-wrap: anywhere; }
+.aRow .remedy { font-size: 12.5px; color: var(--color-muted); }
+.aRow time { margin-left: 6px; font-size: 12px; color: var(--color-muted); }
+.tag { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--color-success-soft); color: var(--color-success); font-size: 11.5px; font-weight: 750; }
+.tag[data-type="proposal_request"] { background: var(--color-warning-soft); color: var(--color-warning); }
+.tag[data-type="change_notice"] { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.tag[data-type="safety_alert"] { background: var(--color-error-soft); color: var(--color-error); }
+.tag[data-type="version"] { background: var(--color-subtle); color: var(--color-text-secondary); }
+.unread { display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--color-error); vertical-align: middle; }
+
+/* 재난 정지 패널 — 앱 features/trip/trip-safety.module.css(9f9838c)를 옮겼다. 지금 여행 화면 맨 위에 있는 것을 일정 타임라인 맨 윗줄(과 알림 센터의 할 일)에 그대로 둔다. */
+.spWrap { margin: 12px 0 0; }
+.sp { display: grid; gap: 10px; padding: 16px 17px; border: 1px solid var(--color-error-border); border-radius: 18px; background: var(--color-error-soft); color: var(--color-text); }
+.panelBody .sp { margin: 0 0 10px; }
+.spHead { display: flex; align-items: center; gap: 8px; color: var(--color-error); }
+.spHead h2 { margin: 0; font-size: 16px; font-weight: 800; line-height: 1.4; }
+.spLabel { margin: 0; font-size: 14px; font-weight: 700; line-height: 1.6; }
+.spWhen { margin: 0; font-size: 12px; line-height: 1.6; color: var(--color-text-secondary); }
+.spGuide { display: grid; gap: 10px; padding-top: 10px; border-top: 1px solid var(--color-error-border); }
+.spText { margin: 0; font-size: 13px; line-height: 1.8; white-space: pre-line; word-break: keep-all; }
+.spGuide h3 { margin: 0; font-size: 13px; font-weight: 750; }
+.spCall { display: inline-flex; align-items: center; gap: 6px; width: fit-content; min-height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: var(--color-error); color: var(--color-on-primary); font-size: 14px; font-weight: 750; }
+.spShelters { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.spShelters li { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-surface); font-size: 12px; line-height: 1.6; }
+.spShelters strong { font-size: 13px; }
+.spMeta { color: var(--color-text-secondary); }
+.spWalk { width: fit-content; min-height: 32px; padding: 4px 0 0; border: 0; background: none; font-size: 12px; font-weight: 700; color: var(--color-primary); text-decoration: underline; text-underline-offset: 2px; }
+.spNote { margin: 0; font-size: 11px; line-height: 1.7; color: var(--color-text-secondary); }
+.spResume { display: grid; justify-items: start; gap: 8px; padding-top: 10px; border-top: 1px solid var(--color-error-border); }
+.spResume p { margin: 0; font-size: 12px; line-height: 1.6; color: var(--color-text-secondary); }
+.spResume .btn { min-height: 44px; padding: 0 18px; border-radius: 12px; font-size: 14px; }
+
+/* 메뉴 서랍 — 앱 components/layout/settings-menu.module.css · components/ui/language-picker.module.css · theme-picker.module.css 를 옮겼다(2026-10-07 앱 화면 캡처와 대조).
+   앱과 다른 것은 하나 — 머리의 ✕ 왼쪽에 항로 지킴이 아이콘(2026-10-07 사용자 결정, .mKeeperToggle). */
+.drawer { position: absolute; z-index: 12; inset: 0; display: flex; justify-content: flex-end; background: color-mix(in srgb, var(--color-text) 20%, transparent); }
+.drawer[hidden] { display: none; }
+.mPanel { display: flex; flex-direction: column; gap: 22px; width: min(320px, 86%); height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 20px 20px 24px; border-left: 1px solid var(--color-surface); background: var(--color-paper); box-shadow: -12px 0 40px color-mix(in srgb, var(--color-text) 11%, transparent); }
+.mPanel[data-enter] { animation: drawerIn .32s cubic-bezier(.22, .8, .2, 1) both; }
+@keyframes drawerIn { from { transform: translateX(24px); opacity: .6; } }
+.mPanel > * { flex-shrink: 0; }
+.mHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.mHead h2 { margin: 0; font-size: 20px; line-height: 1.4; letter-spacing: -.6px; }
+.mEyebrow { margin: 0 0 6px; font-size: 9px; font-weight: 700; letter-spacing: 1.6px; color: var(--color-primary); }
+.mClose { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 11px; background: none; color: var(--color-muted); }
+.mClose .i { width: 20px; height: 20px; }
+.mHeadTools { display: flex; align-items: center; gap: 8px; }
+/* 항로 지킴이 아이콘 — 앱 features/guardian/guardian-toggle.module.css(머리줄에 있던 아이콘) 그대로: 44×44, 메뉴 버튼과 같은 반투명 흰 바탕. 켜짐 = 초록 방패 + 점, 꺼짐 = 흐린 방패. */
+.mKeeperToggle { position: relative; display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; border: 1px solid var(--color-border); border-radius: 11px; background: color-mix(in srgb, var(--color-surface) 85%, transparent); color: var(--color-muted); cursor: pointer; }
+.mKeeperToggle:hover { border-color: var(--color-primary); }
+.mKeeperToggle[data-on] { color: var(--color-primary); }
+.mKeeperToggle[data-on]::after { content: ""; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.mKeeperToggle .i { width: 24px; height: 24px; stroke-width: 1.8; }
+.mBoard { display: grid; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); overflow: hidden; }
+.mBoard > * + * { border-top: 1px solid var(--color-border); }
+.mBoard :is(a, button, input):focus-visible { outline-offset: -3px; }
+.mProfile { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 72px; padding: 12px 15px; border: 0; background: none; color: var(--color-text); text-align: left; }
+.mProfile .avatar { display: block; flex: none; border-radius: 50%; }
+.mProfile > .i { color: var(--color-muted); }
+.mProfileText { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.mProfileText strong { font-size: 15px; font-weight: 700; letter-spacing: -.3px; }
+.mProfileText small { font-size: 11px; color: var(--color-muted); }
+.mLink { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 56px; padding: 12px 15px; border: 0; background: none; color: var(--color-primary); font-size: 14px; font-weight: 650; text-align: left; }
+.mProfile:hover, .mLink:hover { background: var(--color-soft); }
+/* 앱에서 「여행 목록 보기」는 링크(a)라 판의 구분선이 남고, 「여행 취향 설문」은 버튼이라 button.link { border: 0 } 에 선이 지워진다 — 캡처와 같게 앞 줄에만 선을 둔다. */
+.mLink[data-line] { border-top: 1px solid var(--color-border); }
+/* 언어 — 아래로 펼쳐지는 카드(language-picker) */
+.mPick { width: 100%; min-height: 54px; display: flex; align-items: center; gap: 12px; padding: 9px 15px; border: 0; background: none; text-align: left; color: var(--color-primary); }
+.mPick > span, .mThemeHead > span { flex: 1; display: grid; gap: 2px; }
+.mPick small, .mThemeHead small { font-size: 9px; letter-spacing: 1.5px; }
+.mPick strong, .mThemeHead strong { font-size: 14px; font-weight: 650; color: var(--color-text); }
+.mPick .chev { transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+.mLang[data-open] .chev { transform: rotate(180deg); }
+.mLangList { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s cubic-bezier(.2, .8, .2, 1); }
+.mLang[data-open] .mLangList { grid-template-rows: 1fr; }
+.mLangList > div { min-height: 0; overflow: hidden; display: grid; gap: 6px; padding: 0 12px; }
+.mOption { min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 14px; border: 1px solid var(--color-border); border-radius: 11px; background: var(--color-surface); font-size: 14px; }
+.mLangList .mOption:first-child { margin-top: 6px; }
+.mLangList .mOption:last-child { margin-bottom: 12px; }
+.mOption[aria-pressed="true"] { border-color: var(--color-selected); background: color-mix(in srgb, var(--color-selected-soft) 60%, var(--color-surface)); color: var(--color-selected); font-weight: 650; }
+.i.ck { width: 16px; height: 16px; }
+/* 테마 — 두 견본(theme-picker) */
+.mTheme { padding-bottom: 12px; }
+.mThemeHead { display: flex; align-items: center; gap: 12px; min-height: 54px; margin: 0; padding: 9px 15px 6px; color: var(--color-primary); }
+.mThemeOptions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 12px; }
+.mThemeOptions .mOption { justify-content: flex-start; min-width: 0; padding: 0 10px; }
+.mThemeOptions .mOption > .ck { margin-left: auto; flex: none; }
+.mSample { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--color-border-strong); border-radius: 50%; background: var(--sample-soft); }
+.mSample > span { width: 10px; height: 10px; border-radius: 50%; background: var(--sample-primary); }
+/* 스위치 줄 — ON/OFF 를 바닥에 쓴다 */
+.mSwitchRow { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 15px; cursor: pointer; }
+.mText { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.mText strong { font-size: 13px; font-weight: 650; }
+.mText small { font-size: 11px; line-height: 1.6; color: var(--color-muted); }
+.mSwitch { appearance: none; position: relative; flex: none; width: 58px; height: 30px; margin: 0; border-radius: 15px; background: var(--color-border); cursor: pointer; transition: background .2s; }
+.mSwitch::before { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: var(--color-surface); box-shadow: 0 1px 3px color-mix(in srgb, var(--color-text) 20%, transparent); transition: transform .2s; }
+.mSwitch::after { content: "OFF"; position: absolute; top: 0; right: 7px; line-height: 30px; font-size: 9px; font-weight: 700; letter-spacing: .5px; color: var(--color-muted); }
+.mSwitch:checked { background: var(--color-primary); }
+.mSwitch:checked::before { transform: translateX(28px); }
+.mSwitch:checked::after { content: "ON"; right: auto; left: 9px; color: var(--color-on-primary); }
+.mSwitch:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+.mNote { margin: auto 0 0; font-size: 10px; line-height: 1.7; color: var(--color-muted); }
+
+/* 제목을 펼치면 그 아래 「여행계획서 열기 · 공유하기」(B안 · 2026-10-07 사용자 결정). 왼쪽은 제목 칸의 시작에 맞추고 오른쪽 끝까지 쓴다(제목 칸만큼이면 두 단추가 들어가지 않는다). */
+.titleMenu { position: absolute; z-index: 8; top: 70px; left: 70px; right: 12px; display: flex; gap: 8px; padding: 10px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); box-shadow: 0 14px 34px rgba(36, 57, 47, .22); animation: popIn .18s ease both; }
+.titleMenu[hidden] { display: none; }
+.titleMenu .btn { flex: 1 1 0; min-height: 44px; font-size: 13px; }
+@keyframes popIn { from { opacity: 0; transform: translateY(-6px); } }
+
+/* 등록 완료 카드 — 지금 여행 화면(trip-home) 카드의 배지 · 펼친 줄 · 단추를 이 타임라인에 옮겼다. 고치기 · 지우기 대신 「상세 보기」. */
+.rcard { display: block; padding: 0; }
+.rcHead { display: flex; align-items: center; gap: 4px; padding-right: 8px; }
+.rcard .cardMain { flex-wrap: nowrap; gap: 8px; padding: 10px 6px 10px 12px; }
+.rcText { display: grid; flex: 1; gap: 5px; min-width: 0; }
+.rcTags { display: flex; flex-wrap: wrap; gap: 5px; }
+.cardMain .chev { flex: none; width: 16px; height: 16px; color: var(--color-muted); transition: transform .2s; }
+.rcard[data-open] .chev { transform: rotate(180deg); }
+.rcard[data-open] { border-color: var(--color-selected); background: color-mix(in srgb, var(--color-selected-soft) 30%, var(--color-surface)); }
+.rcDetail { display: inline-flex; flex: none; align-items: center; gap: 1px; height: 32px; padding: 0 7px 0 11px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-primary); font-size: 12px; font-weight: 750; white-space: nowrap; }
+.rcBody { padding: 10px 13px 13px; border-top: 1px solid var(--color-divider); }
+.rcRows { display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; margin: 0; font-size: 12.5px; line-height: 1.5; }
+.rcRows dt { color: var(--color-muted); white-space: nowrap; }
+.rcRows dd { margin: 0; text-align: right; word-break: keep-all; overflow-wrap: anywhere; }
+.rcRows .tel { color: var(--color-primary); font-weight: 650; text-decoration: underline; text-underline-offset: 2px; }
+.rcActions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 11px; }
+.rcActions .btn { flex: 1 1 auto; min-height: 40px; font-size: 12px; }
+.pill[data-state="booked"] { border-color: transparent; background: var(--color-success-soft); color: var(--color-primary); }
+.pill[data-state="plain"] { color: var(--color-text-secondary); }
+
+/* 상세 보기 — 계획 확인 화면의 수정 화면 구성: 머리의 ← · 지도는 그날 일정만(다른 일정은 회색, 보는 일정은 진하게) · 시트에 「○○ 상세」와 위치 · 옆으로 넘기는 카드 · 점 · 사진 안내 · 사진. */
+.phone[data-sheet="full"] { --sheet-h: 88%; }
+.phone[data-detail] .cbar { display: none; }
+.dtBack { display: grid; flex: none; place-items: center; width: 50px; height: 50px; padding: 0; border: 0; border-radius: 16px; background: var(--color-surface); box-shadow: 0 4px 14px rgba(36, 57, 47, .16); }
+.dtName { display: flex; flex: 1 1 auto; align-items: center; gap: 6px; min-width: 0; height: 50px; margin: 0; padding: 0 16px; border-radius: 16px; background: var(--color-surface); box-shadow: 0 4px 14px rgba(36, 57, 47, .16); font-size: 16px; font-weight: 750; }
+.dtName span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dtName small { flex: none; font-size: 12px; font-weight: 650; color: var(--color-muted); }
+.dtBack[hidden], .dtName[hidden], .logo[hidden] { display: none; }
+.dtBody { position: relative; flex: 1; min-height: 0; overflow-y: auto; padding: 24px 0 24px; scrollbar-width: thin; }
+.dtHead { display: flex; align-items: baseline; gap: 8px; padding: 0 16px; }
+.dtHead h3 { flex: 1; min-width: 0; margin: 0; font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dtPos { flex: none; font-size: 12px; font-weight: 650; color: var(--color-muted); }
+.dtCards { position: relative; display: flex; gap: 10px; margin-top: 10px; padding: 2px 14px 8px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.dtCards::-webkit-scrollbar { display: none; }
+.dtCard { flex: none; width: min(288px, calc(100% - 24px)); padding: 12px 14px; border: 1.5px solid var(--color-border); border-radius: 14px; background: var(--color-surface); scroll-snap-align: center; }
+.dtCard[data-active] { border-color: var(--color-muted); box-shadow: 0 6px 16px rgba(36, 57, 47, .14); }
+.dtChips { display: flex; flex-wrap: wrap; gap: 5px; }
+.dtChip { padding: 2px 8px; border-radius: 999px; background: var(--color-subtle); color: var(--color-text-secondary); font-size: 11.5px; font-weight: 750; }
+.dtCard h4 { margin: 8px 0 0; font-size: 18px; font-weight: 800; line-height: 1.3; word-break: keep-all; }
+.dtSrc { margin-left: 6px; padding: 1px 6px; border-radius: 6px; background: var(--color-subtle); color: var(--color-muted); font-size: 10.5px; font-style: normal; font-weight: 700; vertical-align: 3px; }
+.dtMeta { margin: 4px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--color-text-secondary); }
+.dtCard .rcRows { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-divider); }
+.dtActions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.dtActions .btn { flex: 1 1 auto; min-height: 40px; font-size: 12px; }
+.dtDots { display: flex; justify-content: center; gap: 6px; margin-top: 6px; }
+.dtDot { width: 6px; height: 6px; padding: 0; border: 0; border-radius: 3px; background: var(--color-border-strong); transition: width .2s; }
+.dtDot[aria-selected="true"] { width: 16px; background: var(--color-text); }
+.dtHint { display: block; margin: 12px auto 0; padding: 6px 12px; border: 0; border-radius: 999px; background: var(--color-subtle); color: var(--color-text-secondary); font-size: 12px; font-weight: 700; }
+.dtPhotos { margin: 16px 16px 0; }
+.dtPhotos h4 { display: flex; align-items: baseline; gap: 6px; margin: 0 0 8px; font-size: 13.5px; font-weight: 750; }
+.dtPhotos h4 small { font-size: 11.5px; color: var(--color-muted); }
+.dtGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dtPhoto { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; background: linear-gradient(135deg, hsl(var(--h) 28% 80%), hsl(var(--h) 32% 62%)); }
+.dtPhoto span { position: absolute; left: 6px; bottom: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(255, 255, 255, .85); font-size: 10.5px; font-weight: 700; }
+.dtEmpty { margin: 0; font-size: 12.5px; color: var(--color-muted); }
+.pin.muted { pointer-events: none; }
+.pin.muted .tail, .pin.muted .b { fill: var(--color-subtle); stroke: var(--color-border-strong); }
+.pin.muted text { fill: var(--color-faint); }
+.pin.focus .tail, .pin.focus .b { fill: var(--color-text); stroke: var(--color-text); }
+.pin.focus .b { stroke-width: 4; }
+.pin.focus text { fill: #ffffff; }
+
+/* 항로 지킴이 「켜기 / 그대로 두기」 카드 — 앱 guardian-card 의 문구, 폰 틀 안에서는 아래 시트 */
+.gShade { position: absolute; z-index: 13; inset: 0; display: flex; align-items: flex-end; background: color-mix(in srgb, var(--color-text) 20%, transparent); }
+.gShade[hidden] { display: none; }
+.gCard { width: 100%; padding: 18px 18px 22px; border-radius: 22px 22px 0 0; background: var(--color-surface); box-shadow: 0 -10px 30px rgba(36, 57, 47, .2); }
+.gCard[data-enter] { animation: cardUp .24s ease both; }
+@keyframes cardUp { from { transform: translateY(40px); opacity: 0; } }
+.gHead { display: flex; align-items: center; gap: 10px; }
+.gHead h2 { flex: 1; margin: 0; font-size: 17px; font-weight: 800; }
+.gHead h2:focus { outline: none; }
+.gReco { margin-right: 4px; padding: 2px 8px; border-radius: 999px; background: var(--color-selected-soft); color: var(--color-selected); font-size: 11px; font-weight: 800; vertical-align: 2px; }
+.gIcon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: var(--color-selected-soft); color: var(--color-primary); }
+.gLead { margin: 12px 0 0; font-size: 14px; line-height: 1.6; }
+.gLead span { color: var(--color-text-secondary); }
+.gCard ul { margin: 8px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.7; color: var(--color-text-secondary); }
+.gActions { display: flex; gap: 8px; margin-top: 14px; }
+.gActions .btn { flex: 1; min-height: 46px; border-radius: 12px; font-size: 14px; }
+.gWhere { display: flex; align-items: center; gap: 6px; margin: 12px 0 0; font-size: 12px; color: var(--color-muted); }
+
+/* 여행계획서 공유 창 — 휴대폰 공유 창처럼 아래에서 올라오는 시트. 앱 아이콘은 상표 그림 대신 색 원 + 일반 아이콘 + 이름으로 그렸다(목업). */
+.shareShade { position: absolute; z-index: 13; inset: 0; display: flex; align-items: flex-end; background: color-mix(in srgb, var(--color-text) 20%, transparent); }
+.shareShade[hidden] { display: none; }
+.shareSheet { width: 100%; padding: 10px 18px 22px; border-radius: 22px 22px 0 0; background: var(--color-surface); box-shadow: 0 -10px 30px rgba(36, 57, 47, .2); }
+.shareSheet[data-enter] { animation: cardUp .24s ease both; }
+.ssGrip { width: 42px; height: 5px; margin: 0 auto 10px; border-radius: 3px; background: var(--color-border-strong); }
+.ssHead { display: flex; align-items: center; gap: 10px; }
+.ssHead h2 { flex: 1; margin: 0; font-size: 17px; font-weight: 800; }
+.ssLink { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-subtle); }
+.ssLink > .i { width: 22px; height: 22px; color: var(--color-primary); }
+.ssLink span { display: grid; gap: 1px; min-width: 0; }
+.ssLink strong { font-size: 14px; }
+.ssLink small { font-size: 11.5px; color: var(--color-muted); }
+.ssNote { margin: 8px 2px 0; font-size: 11.5px; line-height: 1.6; color: var(--color-muted); }
+.ssApps { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 12px 4px; margin: 16px 0 0; padding: 0; list-style: none; }
+.ssApp { display: grid; justify-items: center; gap: 6px; width: 100%; padding: 0; border: 0; background: none; color: var(--color-text); font-size: 11.5px; font-weight: 650; }
+.ssIcon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; background: var(--app-bg); color: var(--app-fg); }
+.ssIcon .i { width: 24px; height: 24px; }
+.ssIcon[data-plain] { border: 1px solid var(--color-border); }
+.ssDownload { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; margin-top: 18px; padding: 0 14px; border: 1px solid var(--color-border-strong); border-radius: 14px; background: var(--color-surface); color: var(--color-text); font-size: 14px; font-weight: 750; text-align: left; }
+.ssDownload > .i { width: 20px; height: 20px; color: var(--color-primary); }
+.ssDownload small { margin-left: auto; font-size: 11.5px; font-weight: 600; color: var(--color-muted); }
+
+/* 알림 막대 — 앱 components/toast-view.module.css(9f9838c)를 옮겼다. 폰 틀 안의 모양(data-in-frame)만 쓴다: 머리줄 아래 76px, 양쪽 12px.
+   하얀 카드 · 가장자리의 판정 색 띠 · 나타날 때 테두리를 한 바퀴 도는 빛 · 한 번 퍼지는 고리. 막대 자체는 눌림을 통과시키고 단추만 받는다. */
+@property --toast-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.toastSlot { position: absolute; z-index: 20; inset: 0; pointer-events: none; }
+.toast {
+  --tone: var(--color-selected);
+  --lift: 0 8px 26px color-mix(in srgb, var(--color-text) 20%, transparent);
+  position: absolute; top: var(--toast-top, 76px); left: 12px; right: var(--toast-right, 12px); margin: 0; padding: 10px 6px 10px 16px;
+  display: grid; align-items: start; column-gap: 10px; row-gap: 6px; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "body action close";
+  border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); color: var(--color-text); font-size: 13px; line-height: 1.4;
+  box-shadow: inset 4px 0 0 var(--tone), var(--lift); pointer-events: none;
+  animation: toastInFrame 340ms cubic-bezier(.22, .8, .3, 1) both, toastRing 1100ms ease-out 240ms 1 both;
+}
+.toast[data-tone="warn"] { --tone: var(--color-warning); }
+.toast[data-tone="ok"] { --tone: var(--color-success); }
+.toast[data-tone="changed"] { --tone: var(--color-selected); }
+.toast[data-badge] { grid-template-columns: auto minmax(0, 1fr) auto auto; grid-template-areas: "badge body action close"; }
+.toast[data-stacked] { grid-template-areas: "body body close" "action action action"; }
+.toast[data-badge][data-stacked] { grid-template-areas: "badge body body close" ". action action action"; }
+.toast[data-leaving] { animation: toastOutFrame 180ms ease-in both; }
+.toast::before {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 2px; pointer-events: none;
+  background: conic-gradient(from var(--toast-angle), transparent 0 52%, color-mix(in srgb, var(--tone) 25%, transparent) 62%, var(--tone) 82%, color-mix(in srgb, var(--tone) 25%, transparent) 94%, transparent 100%);
+  -webkit-mask: linear-gradient(var(--color-text) 0 0) content-box, linear-gradient(var(--color-text) 0 0); -webkit-mask-composite: xor; mask: linear-gradient(var(--color-text) 0 0) content-box exclude, linear-gradient(var(--color-text) 0 0);
+  animation: toastShine 1500ms cubic-bezier(.45, .05, .35, 1) 160ms 1 both;
+}
+.t-badge { grid-area: badge; display: grid; place-items: center; width: 28px; height: 28px; margin-top: 1px; border: 1.6px solid var(--color-selected); border-radius: 50% 50% 50% 5px; background: var(--color-selected); color: var(--color-on-primary); font-size: 13px; font-weight: 700; }
+.t-body { grid-area: body; min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-top: 4px; color: var(--color-text-secondary); font-size: 12.5px; }
+.toast[data-badge] .t-body { padding-top: 0; }
+.t-title { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; font-size: 14px; font-weight: 750; line-height: 1.35; color: var(--color-text); word-break: keep-all; }
+.t-title em { padding: 1px 7px; border-radius: 999px; font-size: 11px; font-style: normal; font-weight: 750; }
+.t-title em[data-tone="warn"] { background: var(--color-warning-soft); color: var(--color-warning); }
+.t-title em[data-tone="ok"] { background: var(--color-success-soft); color: var(--color-success); }
+.t-title em[data-tone="changed"] { background: var(--color-selected-soft); color: var(--color-selected); }
+.t-sub { white-space: pre-line; }
+.t-note { color: var(--color-warning); font-weight: 600; }
+.t-action { grid-area: action; justify-self: start; min-height: 32px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; pointer-events: auto; }
+.toast:not([data-stacked]) .t-action { align-self: center; }
+.t-close { grid-area: close; display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 10px; background: none; color: var(--color-text-secondary); cursor: pointer; pointer-events: auto; }
+.t-close .i { stroke-width: 1.8; }
+.toast:not([data-stacked]) .t-close { align-self: center; }
+.t-action:focus-visible, .t-close:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+@keyframes toastInFrame { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+@keyframes toastOutFrame { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-6px); } }
+@keyframes toastShine { 0% { --toast-angle: 0deg; opacity: 1; } 78% { opacity: 1; } 100% { --toast-angle: 360deg; opacity: 0; } }
+@keyframes toastRing {
+  from { box-shadow: inset 4px 0 0 var(--tone), var(--lift), 0 0 0 0 color-mix(in srgb, var(--tone) 38%, transparent); }
+  to { box-shadow: inset 4px 0 0 var(--tone), var(--lift), 0 0 0 12px color-mix(in srgb, var(--tone) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+  .toast::before { opacity: 0; }
+}
+</style>
+</head>
+<body>
+<header class="review">
+  <h1>등록 후 C안 + ① 알림 센터</h1>
+  <p class="meta">작성일 2026-10-07 · 개정 2026-10-07(재난 알림 방식 · 종은 메뉴 옆 · 메뉴는 앱과 같게 · 항로 지킴이는 메뉴 머리 ✕ 옆 · 여행계획서는 B안 제목 펼침 + 공유하기 · 등록 완료 카드 · 상세 보기 · 왼쪽 시각 고정 · 이동 수단은 계획 확인 화면과 같게 · 채팅 버튼은 막대만 펼침) · 상태: 검토용 목업 / 실제 API 미연결. 바탕은 「등록 후 채팅 배치 비교」의 C안 휴대폰, 예시 상황은 「살펴볼 점·알림 배치 아이디어」의 세 가지다. 알림 막대는 앱 <code>components/toast-view.tsx</code>, 재난 정지 패널은 <code>features/trip/trip-safety.tsx</code>, 메뉴는 <code>components/layout/settings-menu.tsx</code>(모두 9f9838c)의 모양을 옮겼다. 장소·시각·알림·대피 장소 문장은 예시 값이고 지도는 위치 개념도다.</p>
+  <div class="group" role="group" aria-label="예시 상황 고르기"><span>예시 상황(누르면 처음부터)</span>
+    <button type="button" data-set="fresh" aria-pressed="true">등록 직후</button>
+    <button type="button" data-set="travel" aria-pressed="false">선택 요청·자동 변경이 있을 때</button>
+    <button type="button" data-set="safety" aria-pressed="false">재난으로 정지됐을 때</button>
+  </div>
+  <div class="group" role="group" aria-label="새 알림 흉내 내기"><span>새 알림 도착</span>
+    <button type="button" data-arrive="choice">선택 요청</button>
+    <button type="button" data-arrive="change">자동 변경</button>
+    <button type="button" data-arrive="safety">재난 알림</button>
+  </div>
+</header>
+
+<main class="stage">
+  <section class="variant" aria-labelledby="title-C">
+    <header><h2 id="title-C"><b>C</b>채팅 막대 + 옆으로 넘기기 + 알림 센터</h2>
+      <p class="lead">제목을 누르면 칸이 늘고 아래에 「여행계획서 열기 · 공유하기」가 뜬다. 일정 카드는 누르면 등록 완료 내용으로 펼치고 「상세 보기」로 상세 페이지를 연다. 왼쪽 시각은 그 일정이 지나갈 때까지 위에 붙어 있다. 이동 줄 · 경로선 · 수단 태그는 계획 확인 화면과 같다.</p></header>
+    <div class="phone" role="region" aria-label="C안 휴대폰 화면"></div>
+  </section>
+
+  <aside class="memo" aria-label="목업 메모">
+    <h2>이 목업에서 보는 것</h2>
+    <ul>
+      <li><b>머리줄</b> — 로고 · 여행 제목 ▾ · 종 · 메뉴. 항로 지킴이는 메뉴 서랍 머리의 ✕ 왼쪽 아이콘(2026-10-07 사용자 결정).</li>
+      <li><b>제목 펼침(B안 · 2026-10-07 사용자 결정)</b> — 제목을 누르면 앱처럼 제목 칸이 옆으로 늘고 연필이 나온다. 그 아래에 「여행계획서 열기 · 공유하기」. 펼친 뒤 이름을 한 번 더 누르거나 연필을 누르면 이름을 고친다. ▾ · 바깥 누름 · Esc 로 접는다.</li>
+      <li><b>공유하기</b> — 휴대폰 공유 창처럼 아래에서 올라온다: 카카오톡 · 디스코드 · 메시지 · 텔레그램 · 링크 복사 · 더보기(휴대폰 공유 창), 맨 아래 「파일로 내려받기」(triPilot-여행 제목.html).</li>
+      <li><b>일정 카드(등록 완료)</b> — 고치기 · 지우기를 빼고 「상세 보기」. 카드를 누르면 지금 여행 화면 카드의 내용으로 펼친다. 왼쪽 시각은 그 일정이 지나갈 때까지 위에 붙어 있다가 다음 일정으로 바뀐다.</li>
+      <li><b>상세 보기</b> — 계획 확인 화면의 수정 화면 구성: 머리의 ← · 지도는 그날 일정만 · 시트에 「○○ 상세 · n일차 · i/N」 · 옆으로 넘기는 카드(그날의 다른 일정) · 점 · 「시트를 위로 올리면 … 사진 ↑」 · 사진.</li>
+      <li><b>종 · 알림 막대 · 알림 센터</b> — 앞 개정과 같다(재난은 9초 막대 + 「일정 정지 중」 + 일정 맨 윗줄 정지 패널).</li>
+      <li><b>이동 수단(2026-10-07 사용자 지시 — 기존 페이지와 똑같이)</b> — 일정 사이 이동 줄 · 지도 경로선 · 수단 태그 · 경로선을 누르면 뜨는 막대를 계획 확인 화면 그대로 옮기고, 펼친 이동 줄에 지금 여행 화면의 「지도 앱에서 길찾기」를 붙였다.</li>
+      <li><b>채팅 버튼(2026-10-07 사용자 지시)</b> — 누르면 막대만 펼친다(입력칸에 초점을 주지 않아 휴대폰 자판이 뜨지 않음 · 키보드 초점은 ✕). 펼친 막대의 입력칸을 누르거나 초점이 오면(Tab 포함) 채팅 칸으로 넘어가 거기서 쓴다(커서는 쓰던 글 끝). 채팅 칸에서 일정 칸으로 돌아오면(Esc · 일정 탭 · 밀기) 쓰던 글은 막대에 남고 초점은 ✕(글이 없으면 막대를 접고 채팅 버튼).</li>
+      <li><b>넘기기</b> — 일정 칸을 옆으로 밀면 다음 날, 마지막 날에서 한 번 더 밀면 채팅 칸.</li>
+    </ul>
+
+    <h3>제목 펼침 · 공유(B안)</h3>
+    <ul>
+      <li>제목 칸의 모양 · 움직임 · 연필 · 입력칸은 앱 <code>plan-check.tsx</code> 의 <code>TripTitle</code> 을 옮겼다 — 글자만큼(최대 11.5em) → 누르면 끝까지 늘어남(.28s) · 연필(34×34, 회색 칸) · 입력칸(최대 80자, 전체 선택, Enter · 나가면 저장, Esc 취소, 비었거나 그대로면 보내지 않음) · 「계획 이름을 바꿨어요」.</li>
+      <li>앱과 다른 점: 펼치면 ▴ 와 연필을 함께 제목 칸의 오른쪽 끝에 붙여 둔다(2026-10-07 사용자 지시 — 앱은 연필이 이름 바로 뒤).</li>
+      <li>앱과 다른 점(작성자 가정): 앱 제목은 4.5초 뒤 저절로 접히는데, 아래에 단추가 생기므로 저절로 접지 않고 ▾ · 바깥 누름 · Esc 로 접는다. 제목 옆 ▾ 는 B안 그대로 둔다.</li>
+      <li>단추 줄은 제목 칸의 시작에 맞추고 오른쪽 끝까지 쓴다 — 제목 칸 폭(375px 폭에서 약 145px)으로는 두 단추가 들어가지 않는다.</li>
+      <li>공유 창의 앱 아이콘은 상표 그림 대신 색 원 + 일반 아이콘 + 이름으로 그렸다(목업).</li>
+    </ul>
+
+    <h3>등록 완료 카드 · 상세 보기 · 시각 고정</h3>
+    <ul>
+      <li>카드 머리: 이름 · 배지(예약 있음 / 예약 정보 없음 · 바뀜 · 일정 정지 · 선택 필요) · 펼침 표시 · 「상세 보기 ›」.</li>
+      <li>펼친 줄은 지금 여행 화면(<code>trip-home.tsx</code>) 카드와 같은 순서 — 날짜 · 예정 시간 · 분류 · 주소 · 전화 · 영업시간 · 예약 표시 · 다음 일정 · 다른 안 · 입력한 메모 — 와 단추 「지도에서 보기 · 이 일정 질문하기 · 지도 앱으로 열기」. 이 C안에서는 지도가 늘 보여 「지도에서 보기」는 그 핀을 고르고 알림 막대로 알린다. 「이 일정 질문하기」는 앱과 같은 문장(「날짜 시각 이름 일정의 상세를 알려 주세요.」)을 채팅으로 보낸다.</li>
+      <li>상세 보기 카드: 「n일차 시작–끝」 · 예약 배지, 이름과 출처(관광공사 · 카카오 지도 등), 분류 · 주소, 그 아래 전화 · 영업시간 · 예약 표시 · 다음 일정 · 다른 안 · 입력한 메모와 「이 일정 질문하기 · 지도 앱으로 열기」. 옆으로 넘기거나 점을 누르면 그날의 다른 일정으로 바뀌고 지도 · 머리 · 사진이 따라온다. 수정 화면의 검색칸과 「직접 고치기」는 뺐다(등록 뒤 바꾸기는 채팅 · 선택 요청으로).</li>
+      <li>왼쪽 시각은 시작과 끝(작게)을 보인다 — 지금 여행 화면 카드는 시작만 보이지만 <code>TripStop.endTime</code> 은 이미 있다. 시각 칸은 일정 줄마다 <code>position: sticky</code> 라 그 일정이 보이는 동안 위에 붙고, 다음 일정이 올라오면 함께 밀려 바뀐다.</li>
+      <li>장소 정보 · 사진은 예시 값이다(실제와 다를 수 있음, 사진은 색 칸).</li>
+    </ul>
+
+    <h3>이동 수단 — 계획 확인 화면과 같게</h3>
+    <ul>
+      <li>「기존 페이지」는 계획 확인 화면(개발 서버에서 보는 화면)으로 읽었다(작성자 가정). 지금 여행 화면의 이동 줄은 「→ 다음 일정으로 · 지도 앱에서 길찾기」뿐이라, 그 링크만 펼친 이동 줄 안으로 옮겼다.</li>
+      <li>이동 줄(<code>plan-rows.tsx</code> <code>MoveRow</code>): 왼쪽에 「출발」 시각(앞 일정이 끝나는 시각), 수단 아이콘 · 서버 문장(「지하철 3호선→1호선 15분 · 2.1km」) · 여유 한 줄. 여유는 앱 계산 그대로 — 다음 일정 시작 − (앞 일정 끝 + 이동 분), 15분 이상만 「여유 45분 · 1시간 14분」, 늦으면 「n분 늦어요」(노랑). 줄 뒤 빈칸도 여유만큼(앱 <code>gapPx</code>: 14 + 66 × (1 − e<sup>−여유/60</sup>)px). 이동 줄의 시각은 위에 붙지 않는다(일정 줄만).</li>
+      <li>이동 줄을 누르면 확인 줄(✓ · ! · – 와 「경로 · 수단 · 도착」)과 「지도 앱에서 길찾기」가 펼치고 지도의 그 구간이 굵어진다. 펼친 것은 카드든 이동이든 하나다.</li>
+      <li>지도 경로선(<code>map/providers/lines.ts</code>): 구간마다 수단 색 — 지하철 · 대중교통 파랑, 버스 초록, 택시 노랑, 도보 · 자전거 회색. 길을 몰라 직선으로 이은 구간은 점선 · 옅게. 시트 바로 위에 수단 태그(<code>route-tags.tsx</code>: 색 토막 + 「지하철 · 버스 · 도보」, 직선 구간이 있으면 「직선으로 이은 n구간」). 상세 보기에서는 그리지 않는다.</li>
+      <li>경로선을 누르면(<code>plan-check.tsx</code> <code>pickLine</code> · <code>map-description.ts</code> <code>moveToast</code>) 구간이 굵어지고 목록의 이동 줄이 펼치며, 막대가 7초 뜬다: 「→ 앞 → 뒤」 · 통과 / 확인 필요 · 서버 문장 · 「HH:MM 출발 → HH:MM 도착」 · 탄 구간(「지하철 3호선 · 경복궁→종로3가 · 2개 역」, 역 사이를 못 채웠으면 「역 사이는 직선」) · 「목록에서 보기」. 같은 선을 다시 누르면 놓는다.</li>
+      <li>역 이름 · 구간 · 확인 줄 문장은 예시 값이다(앱의 확인 줄은 서버가 준 문장). 2일차 북촌 → 익선동 도보는 「직선으로 이은 구간」 예시로 넣었다. 늦음 표시는 예시 상황에 없어 화면으로 보이지 않는다.</li>
+    </ul>
+
+    <h3>재난(급한 알림) · 메뉴 — 앞 개정에서 정한 것</h3>
+    <ul>
+      <li>재난: 막대 9초(기존 <code>ms</code> 칸) · 시트 머리 「일정 정지 중」(누르면 알림 센터) · 지금 여행 화면의 재난 정지 패널을 일정 맨 윗줄과 알림 센터 할 일에 그대로.</li>
+      <li>메뉴: 지금 앱 서랍과 같다(게스트 · 마이페이지 · 여행 목록 보기 · 여행 취향 설문 · 언어 · 테마 · 스위치 셋 · 안내 한 줄) + 머리의 ✕ 왼쪽 항로 지킴이 아이콘(<code>guardian-toggle.tsx</code> 그대로). 카드 문구 「화면 위 아이콘에서」 → 「메뉴에서」.</li>
+    </ul>
+
+    <h3>확인된 사실 — 지금 앱(2026-10-07, <code>9f9838c</code> · 웹 코드는 <code>origin/role-manager</code> <code>8fd211f</code> 와도 같음)</h3>
+    <ul>
+      <li>제목 펼침 · 연필(<code>plan-check.tsx</code> <code>TripTitle</code>)은 <b>등록 전</b> 계획 확인 화면에만 있다 — 등록하면 제목은 글자만 남고 연필이 없다. 이름 바꾸기는 접수 고치기(<code>POST /v1/web/trip-intakes/{id}/edits</code>, <code>trip.title</code>)로 보내며, 등록된 여행의 이름을 바꾸는 호출은 <code>lib/live</code> 에 없다. 펼친 제목은 4.5초 뒤 저절로 접힌다.</li>
+      <li>여행계획서 열기 · 내려받기는 지금 여행 화면의 알림 묶음(<code>trip-attention.tsx</code>)에 있다 — 서버가 준 <code>plan_url</code> 이 있을 때만, 내려받기는 같은 주소에 <code>download=1</code>(<code>lib/live/plan-download.ts</code>). 코드 주석: 게스트에게는 내려받기가 보관 수단이다.</li>
+      <li>등록 완료 카드(<code>trip-home.tsx</code>): 접힌 카드는 시작 시각 · 이름 · 배지(예약 · 고정한 일정 · 일정 정지) · ＋/−, 펼친 줄과 단추는 위와 같다. 끝 시각은 카드에 없고 지도 핀 설명에만 쓴다.</li>
+      <li>계획 확인 수정 화면(<code>plan-check.tsx</code> · <code>place-change.tsx</code>): 머리 [← 바꾸기 그만두기][○○ 대신 찾을 장소], 지도는 그날 다른 일정이 회색 · 바꾸는 일정이 진하게 · 대체 후보 A·B·C, 시트는 「○○ 바꾸기 · 지금 일정 1/4」 · 옆으로 넘기는 카드 · 점 · 사진 안내 · 사진 · 「직접 고치기」. 장소 정보는 분류 · 주소 · 사진뿐이고 전화 · 영업시간은 없다.</li>
+      <li>지금 여행 화면(<code>trip-home.tsx</code>)은 경로선을 그리지만(<code>GET /v1/web/trips/{id}/route-shapes</code> — 수단 · 출처 · 등급 · 거리 · 탄 구간) 선을 누르는 동작과 수단 태그가 없고, 이동 줄은 「다음 일정으로」 + 서버가 준 길찾기 주소(<code>map.days[].legs[].url</code>)가 있을 때만 「지도 앱에서 길찾기」다. 여행 모델(<code>features/trip/model.ts</code>)에는 이동의 서버 문장 · 분 · 출발 시각이 없다.</li>
+      <li>알림 막대는 모두 저절로 사라진다(2.8초 · 단추 있으면 4.5초 · <code>ms</code> 로 7초 · 9초). 받은 알림에는 읽음 표시가 없다. 채팅 기록은 <code>GET …/chat</code> 의 문답이다.</li>
+    </ul>
+
+    <h3>미정 — 정할 것 · 확인할 것</h3>
+    <ul>
+      <li><b>등록 뒤 이름 바꾸기</b>: 서버 호출이 없다 — 백엔드 협의가 필요하다. 그 전까지는 등록 뒤 연필을 숨길지.</li>
+      <li><b>공유 대상이 실제로 되는지</b>(구현 때 확인): 카카오톡은 카카오 공유(키 필요, 지금 키가 비어 있음), 디스코드는 웹에서 바로 보내는 주소를 확인하지 못해 휴대폰 공유 창(<code>navigator.share</code>)이나 링크 복사로, 메시지는 <code>sms:</code> 주소(기기별 형식), 텔레그램은 공유 주소. 컴퓨터 브라우저에서 휴대폰 공유 창이 없을 때의 모습.</li>
+      <li>등록한 계획 확인 화면에서 <code>plan_url</code> 을 받는 길(지금은 여행 조회가 준다).</li>
+      <li><b>등록 뒤 이동 줄의 데이터</b>: 서버 문장 · 이동 분 · 출발 시각 · 확인 줄은 등록 전 계획 확인 데이터에만 있다. 등록한 여행 조회가 이것을 주도록 백엔드에 요청할지(경로선 · 수단 · 탄 구간은 <code>route-shapes</code> 로 이미 받는다).</li>
+      <li>상세 보기의 사진 — 수정 화면도 「장소 사진은 준비 중」이 많다. 서버가 사진을 주는지.</li>
+      <li>앞 개정의 미정: 재난 뒤 이어가기의 자리, 「일정 정지 중」을 누르면 갈 곳, 등록 전 화면의 항로 지킴이, 급한 알림의 범위, 읽음 기준, 할 일 순서.</li>
+    </ul>
+  </aside>
+</main>
+
+<script>
+(() => {
+  "use strict";
+  // lucide 아이콘 모양(앱이 쓰는 아이콘 세트)을 옮겨 그렸다.
+  const ICON = {
+    chat: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+    back: '<path d="m15 18-6-6 6-6"/>',
+    send: '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+    x: '<path d="M18 6 6 18M6 6l12 12"/>',
+    pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+    train: '<path d="M8 3.1V7a4 4 0 0 0 8 0V3.1"/><path d="m9 15-1-1"/><path d="m15 15 1-1"/><path d="M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z"/><path d="m8 19-2 3"/><path d="m16 19 2 3"/>',
+    walk: '<path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/>',
+    bus: '<path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/>',
+    pin: '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+    bell: '<path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>',
+    menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+    // 항로 지킴이 — 앱 guardian-card.tsx 의 ShieldIcon 모양.
+    keeper: '<path d="M12 2.8 20 6v5.4c0 4.8-3.2 8-8 9.8-4.8-1.8-8-5-8-9.8V6Z"/><path d="M8 16c0-2.5 6-2 6-5V8m-2 2 2-2 2 2"/>',
+    shieldAlert: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+    phone: '<path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/>',
+    right: '<path d="m9 18 6-6-6-6"/>',
+    down: '<path d="m6 9 6 6 6-6"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+    palette: '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>',
+    share: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+    square: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    fileText: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+    download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+    external: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+    stop: '<path d="M12 16h.01"/><path d="M12 8v4"/><path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"/>',
+    undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/>',
+  };
+  const icon = (name, cls = "i") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICON[name]}</svg>`;
+  const esc = (text) => String(text).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+  // 받침 유무로 조사를 고른다(「경복궁이에요」·「이태원 거리예요」).
+  const hasFinal = (word) => { const code = word.charCodeAt(word.length - 1) - 0xac00; return code >= 0 && code <= 11171 && code % 28 !== 0; };
+  const eyo = (word) => `${word}${hasFinal(word) ? "이에요" : "예요"}`;
+  const eun = (word) => `${word}${hasFinal(word) ? "은" : "는"}`;
+  const md = (at) => `${at.slice(5, 7)}.${at.slice(8, 10)}`;
+  const hm = (at) => at.slice(11, 16);
+
+  // 앱 toast-view.tsx 의 값: 단추가 있으면 4.5초, 없으면 2.8초, 사라지는 데 0.18초.
+  const WITH_ACTION_MS = 4500;
+  const PLAIN_MS = 2800;
+  const LEAVE_MS = 180;
+  // 재난 막대는 사라지되 더 오래 — 앱 막대의 기존 ms 칸(trip-recovery.tsx 의 기록 실패 막대와 같은 9초).
+  const URGENT_MS = 9000;
+  // C안 밀기 값(앞 목업): 옆으로 10px 넘게 움직이면 밀기, 폭의 22%를 넘겨 놓으면 넘긴다. 넘길 곳이 없으면 고무줄(앱 use-day-gestures 의 30% · 최대 88px).
+  const LOCK_PX = 10;
+  const COMMIT = 0.22;
+  const RUBBER = 0.3;
+  const RUBBER_MAX = 88;
+
+  /* ---------- 예시 데이터 ---------- */
+  // 예시 일정 — 2일 · 7개(앞 두 목업과 같다). x·y 는 390×820 개념도 위의 자리.
+  const DAYS = [
+    { day: 1, date: "2026-10-13", label: "10.13 화" },
+    { day: 2, date: "2026-10-14", label: "10.14 수" },
+  ];
+  // place 는 지금 여행 화면 카드의 장소 칸(분류 · 주소 · 전화 · 영업시간)과 출처 표시, photos 는 상세 보기의 사진 수, others 는 「다른 안」, map 은 「지도 앱으로 열기」가 있는지.
+  // move 는 앱 PlanMove 의 모양(출발 · 서버 문장 · 분 · 탄 구간 rides, guess 는 길을 몰라 직선으로 이은 구간). 출발은 앞 일정이 끝나는 시각이다.
+  // ★장소 정보 · 이동 경로(역 이름 · 구간)는 화면 구성을 보이려는 예시 값이다 — 실제와 다를 수 있다.
+  const STOPS = [
+    { id: "s1", day: 1, time: "10:00", end: "11:30", title: "경복궁", x: 140, y: 128, booking: "예약 정보 없음", move: { depart: "11:30", mode: "train", text: "지하철 3호선→1호선 15분 · 2.1km", minutes: 15, rides: [{ line: "지하철 3호선", from: "경복궁", to: "종로3가", count: 2 }, { line: "지하철 1호선", from: "종로3가", to: "종로5가", count: 1 }] },
+      place: { category: "관광지 · 궁궐", address: "서울 종로구 사직로 161", phone: "02-3700-3900", hours: "09:00–18:00 · 화요일 휴무", source: "관광공사" }, photos: 4, map: true },
+    { id: "s2", day: 1, time: "12:30", end: "13:40", title: "광장시장", x: 262, y: 156, booking: "예약 정보 없음", move: { depart: "13:40", mode: "train", text: "지하철 1호선→4호선 26분 · 6.3km", minutes: 26, rides: [{ line: "지하철 1호선", from: "종로5가", to: "서울역", count: 4 }, { line: "지하철 4호선", from: "서울역", to: "이촌", count: 3 }] },
+      place: { category: "시장 · 먹거리", address: "서울 종로구 창경궁로 88", hours: "09:00–18:00", source: "관광공사" }, photos: 2, others: ["통인시장"], map: true },
+    { id: "s3", day: 1, time: "15:00", end: "16:30", title: "국립중앙박물관", x: 172, y: 290, booking: "예약 있음",
+      place: { category: "박물관", address: "서울 용산구 서빙고로 137", phone: "02-2077-9000", hours: "10:00–18:00", source: "관광공사" }, photos: 3, map: true },
+    { id: "s4", day: 2, time: "09:30", end: "11:00", title: "북촌한옥마을", x: 176, y: 118, booking: "예약 정보 없음", move: { depart: "11:00", mode: "walk", text: "도보 12분 · 0.8km", minutes: 12, guess: true },
+      place: { category: "관광지 · 한옥마을", address: "서울 종로구 계동길 37", source: "관광공사" }, photos: 2, map: true },
+    { id: "s5", day: 2, time: "11:30", end: "12:50", title: "익선동 한옥거리", x: 220, y: 150, booking: "예약 정보 없음", move: { depart: "12:50", mode: "train", text: "지하철 5호선→4호선 22분 · 4.6km", minutes: 22, rides: [{ line: "지하철 5호선", from: "종로3가", to: "동대문역사문화공원", count: 2 }, { line: "지하철 4호선", from: "동대문역사문화공원", to: "명동", count: 2, filled: false }] },
+      place: { category: "거리", address: "서울 종로구 익선동", source: "카카오 지도" }, photos: 0 },
+    { id: "s6", day: 2, time: "13:40", end: "16:00", title: "남산서울타워", x: 222, y: 216, booking: "예약 있음", move: { depart: "16:00", mode: "bus", text: "버스 402번 18분 · 3.9km", minutes: 18, rides: [{ line: "버스 402번", from: "남산서울타워", to: "이태원", count: 6 }] },
+      place: { category: "전망대", address: "서울 용산구 남산공원길 105", hours: "10:00–23:00", source: "관광공사" }, photos: 3, map: true },
+    { id: "s7", day: 2, time: "17:00", end: "19:00", title: "이태원 거리", x: 246, y: 268, booking: "예약 정보 없음", place: null, photos: 0 },
+  ];
+  const byId = (id) => STOPS.find((stop) => stop.id === id);
+  const stopsOf = (day) => STOPS.filter((stop) => stop.day === day);
+  const dayInfo = (day) => DAYS.find((entry) => entry.day === day);
+  const nextOf = (stop) => { const list = stopsOf(stop.day); return list[list.indexOf(stop) + 1] ?? null; };
+  const numberOf = (stop) => stopsOf(stop.day).indexOf(stop) + 1;
+  const toMin = (hm) => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3, 5));
+  const toHm = (min) => `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+  const moveId = (stop) => `m-${stop.id}`;
+  const fromOfMove = (id) => byId(id.slice(2));
+  const KIND = { train: "subway", walk: "walk", bus: "bus" };
+  const MODE_NAMES = { walk: "도보", bike: "자전거", taxi: "택시", subway: "지하철", bus: "버스", mixed: "대중교통", unknown: "이동" };
+  const TAG_ORDER = ["subway", "mixed", "bus", "taxi", "walk", "bike", "unknown"];
+  const TONE = { subway: "--color-adjusted", mixed: "--color-adjusted", bus: "--color-success", taxi: "--color-warning", walk: "--color-muted", bike: "--color-muted", unknown: "--color-primary" };
+  /** 이동 뒤 남는 분(다음 일정 시작 − (앞 일정 끝 + 이동)) — 앱 moveSlack. 늦으면 음수. */
+  const legSlack = (st, stop) => { const next = nextOf(stop); return toMin(st.times[next.id] ?? next.time) - (toMin(stop.end) + stop.move.minutes); };
+  /** 15분 이상만 「1시간 42분」처럼 — 앱 freeText. */
+  const freeText = (slack) => { if (slack < 15) return null; const h = Math.floor(slack / 60), m = slack % 60; return `${h ? `${h}시간` : ""}${h && m ? " " : ""}${m ? `${m}분` : ""}`; };
+  /** 이동 줄 뒤 빈칸 — 앱 gapPx(14 + 66 × (1 − e^(−여유/60))). 여유가 없거나 늦으면 기본 14px. */
+  const gapPx = (slack) => (slack <= 0 ? 14 : Math.round(14 + 66 * (1 - Math.exp(-slack / 60))));
+  const freeSays = (slack) => (slack < 0 ? `${-slack}분 늦어요` : freeText(slack) ? `여유 ${freeText(slack)}` : "");
+  /** 탄 구간 한 줄씩 — 앱 rideLines(「지하철 3호선 · 경복궁→종로3가 · 2개 역」, 역 사이를 못 채웠으면 「역 사이는 직선」). */
+  const rideLines = (move) => (move.rides || []).map((r) => [r.line, r.from && r.to ? `${r.from}→${r.to}` : null, r.count != null ? `${r.count}개 역` : null, r.filled === false ? "역 사이는 직선" : null].filter(Boolean).join(" · "));
+  const GREETING = { role: "assistant", text: "등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.", places: [] };
+  // 채팅 답에 붙은 선택지 — 채팅 쪽 알림은 채팅에 남는다(정한 것 3번). 문장은 예시.
+  const CHAT_CHOICE = [
+    { role: "user", text: "2일차에 점심 먹을 시간이 있어요?" },
+    { role: "assistant", text: "2일차 11:30–14:00에는 식사 일정이 없고 식사할 틈이 30분이에요. 익선동 한옥거리를 30분 줄이면 점심 시간을 낼 수 있어요.", options: ["익선동 30분 줄이기", "그대로 두기"] },
+  ];
+
+  // 살펴볼 점 3개 — 2026-10-06 여행 화면 캡처의 서버 문장(앞 목업과 같다).
+  const GAP = "누락되거나 잘못된 시간·이동 정보를 보완하세요";
+  const WARNINGS = [
+    { date: "2026-10-13", reason: "항목 1/2: 이동시간 누락 또는 간격 부족 / 항목 2/3: 이동시간 누락 또는 간격 부족", remedy: GAP },
+    { date: "2026-10-14", reason: "항목 4/5: 이동시간 누락 또는 간격 부족 / 항목 5/6: 이동시간 누락 또는 간격 부족 / 항목 6/7: 이동시간 누락 또는 간격 부족", remedy: GAP },
+    { date: "2026-10-14", reason: "점심 시간대(11:30~14:00)에 식사 일정이 없고 식사할 틈도 30분뿐이다 — 다른 일정이 그 시간을 채운다", remedy: "그 시간대에 식사 항목을 넣거나 일정 사이에 식사할 틈을 둔다(일부러 거르는 일정이면 그대로 둔다)" },
+  ];
+  const REGISTERED = { id: "n1", type: "guidance", at: "2026-10-06 14:32", text: "여행을 등록했어요. 일정이 바뀌거나 확인할 일이 생기면 알려 드릴게요." };
+  const V1 = { version: 1, at: "2026-10-06 14:32", reason: "처음 등록", causes: [] };
+  const TYPE_LABEL = { guidance: "안내", proposal_request: "선택 요청", change_notice: "변경 알림", safety_alert: "안전 알림" };
+  // 서버 알림 예시 — 「새 알림 도착」이 흉내 내는 셋과 예시 상황에 미리 든 안내. 문장은 앞 목업의 예시다.
+  const EXAMPLE = {
+    guidance: { type: "guidance", text: "오늘 일정 안내 — 10:00 경복궁부터 3곳이에요." },
+    choice: { type: "proposal_request", stopId: "s2", text: "14시부터 광장시장 일대에 비 예보가 있어요. 실내 일정으로 바꿀까요?", options: ["14:00 동대문디자인플라자", "14:10 서울공예박물관"], until: "10.13 13:30까지" },
+    change: { type: "change_notice", stopId: "s3", to: "15:20", text: "도로 통제로 이동이 길어져 15:00 국립중앙박물관을 15:20으로 미뤘어요.", cause: "도로 통제 — 이동 시간이 20분 늘어남" },
+    // 정지 패널의 칸은 앱 SafetyPanel 과 같다: 정지 이유 · 안내문 · 긴급 전화 · 대피 장소(이름 · 직선 거리 · 걸어서 약 몇 분(추정) · 지하) · 기준 장소 메모.
+    safety: { type: "safety_alert", text: "[재난문자] 지진 발생 — 오늘 남은 일정을 멈췄어요. 공식 안내를 따라 주세요.", label: "지진 — 오늘 남은 일정 정지", call: "119",
+      shelters: [{ name: "종로5가역 지하 대피소", meta: "직선 210m · 걸어서 약 4분(추정) · 지하" }, { name: "종로구민회관 지하", meta: "직선 350m · 걸어서 약 6분(추정) · 지하" }],
+      reference: "12:30 광장시장 · 거리는 계획에 있는 장소를 기준으로 쟀어요. 지금 계신 곳과 다를 수 있어요." },
+  };
+  // 예시 상황 — 등록 직후 상태에 미리 온 알림을 차례로 얹는다. clock 은 「새 알림 도착」의 다음 시각.
+  const SETS = {
+    fresh: { clock: "2026-10-13 09:00", events: [] },
+    travel: { clock: "2026-10-13 10:50", events: [["guidance", "2026-10-13 08:00"], ["change", "2026-10-13 09:15"], ["choice", "2026-10-13 10:42"]], chat: true },
+    safety: { clock: "2026-10-13 13:10", events: [["safety", "2026-10-13 13:05"]] },
+  };
+  const RECOVERY_WAYS = ["그대로 이어가기", "영향받은 것만 바꾸기", "남은 일정 새로 받기"];
+  const TABS = [["warnings", "살펴볼 점"], ["notices", "받은 알림"], ["history", "변경 이력"]];
+  const SHARE_TARGETS = [
+    { key: "kakao", label: "카카오톡", icon: "chat", bg: "#fee500", fg: "#3a1d1d", toast: { text: "목업 — 카카오톡으로 링크를 보내요", sub: "앱에서는 카카오 공유로 친구 · 채팅방을 고른다(카카오 키 필요 · 확인 필요)" } },
+    { key: "discord", label: "디스코드", icon: "square", bg: "#5865f2", fg: "#ffffff", toast: { text: "목업 — 디스코드로 보내요", sub: "웹에서 디스코드로 바로 보내는 주소는 확인하지 못했다 — 휴대폰 공유 창으로 보낸다(확인 필요)" } },
+    { key: "sms", label: "메시지", icon: "chat", bg: "#34c759", fg: "#ffffff", toast: { text: "목업 — 문자 앱을 열어요", sub: "sms: 주소에 계획서 링크를 담는다(기기별 형식 확인 필요)" } },
+    { key: "telegram", label: "텔레그램", icon: "send", bg: "#27a7e7", fg: "#ffffff", toast: { text: "목업 — 텔레그램으로 보내요", sub: "텔레그램 공유 주소로 연다(확인 필요)" } },
+    { key: "copy", label: "링크 복사", icon: "link", plain: true, toast: { text: "링크를 복사했어요" } },
+    { key: "more", label: "더보기", icon: "more", plain: true, toast: { text: "목업 — 휴대폰 공유 창을 열어요", sub: "설치된 앱이 휴대폰 목록에 나온다(navigator.share)" } },
+  ];
+  const PLAN_NOTE = "로그인 없이 열리는 내 여행 링크예요. 링크를 아는 사람은 누구나 볼 수 있어요.";
+  // 메뉴의 브라우저 설정 스위치(2026-10-07 앱 화면 캡처의 값). 목업에서는 표시만 바뀐다.
+  const prefs = { floating: false, skip: true, desktop: false };
+  const AVATAR = '<svg class="avatar" viewBox="0 0 96 96" width="48" height="48" aria-hidden="true"><rect width="96" height="96" style="fill: var(--color-soft)"/><circle cx="48" cy="38" r="17" style="fill: var(--color-primary)"/><path d="M14 96c2-20 16-32 34-32s32 12 34 32z" style="fill: var(--color-primary)"/></svg>';
+
+  /* ---------- 상태 ---------- */
+  // mode 는 시트가 보이는 칸(plan 일정 · chat 채팅), barOpen 은 채팅 막대가 펼쳐졌는지(앞 C안과 같다).
+  // menuOpen 은 메뉴 서랍(langOpen 은 그 안의 언어 목록), guardian 은 이 여행의 항로 지킴이(예시는 켜짐), guardianCard 는 「켜기 / 그대로 두기」 카드,
+  // titleOpen 은 제목을 눌러 펼친 상태(B — 제목 칸이 늘고 연필 · 아래에 「여행계획서 열기 · 공유하기」), titleEdit 은 이름 고치는 중, shareOpen 은 공유 창, tripTitle 은 여행 제목,
+  // open 은 펼친 일정 카드, detail 은 상세 보기로 보는 일정(sheetFull 은 사진을 보려고 시트를 끝까지 올렸는지).
+  function fresh(setKey) {
+    const set = SETS[setKey];
+    const s = { day: 1, selected: null, mode: "plan", barOpen: false, draft: "", pending: false,
+      messages: set.chat ? [GREETING, ...CHAT_CHOICE] : [GREETING],
+      center: false, tab: "warnings", seen: new Set(), dotted: new Set(), menuOpen: false, langOpen: false, guardian: true, guardianCard: false, titleOpen: false, titleEdit: false, shareOpen: false, tripTitle: "내 여행", open: null, legSel: null, detail: null, sheetFull: false,
+      notices: [REGISTERED], history: [V1], seq: 1, clock: set.clock,
+      choice: null, undo: null, safety: null, recovery: null, times: {}, paused: [] };
+    set.events.forEach(([kind, at]) => arrive(s, kind, at, true));
+    return s;
+  }
+  const unreadCount = (st) => st.notices.filter((notice) => !st.seen.has(notice.id)).length;
+  // 알림 센터 · 메뉴 서랍 · 항로 지킴이 카드가 덮고 있으면 뒤(지도 · 머리줄 · 시트 · 채팅 막대)는 누를 수 없다.
+  const covered = (st) => st.center || st.menuOpen || st.guardianCard || st.shareOpen;
+  const hasNextDay = (st) => typeof st.day === "number" && st.day < DAYS.length;
+  const hasPrevDay = (st) => typeof st.day === "number" && st.day > 1;
+  function tick(st) {
+    const [date, time] = st.clock.split(" ");
+    const minutes = Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5)) + 2;
+    st.clock = `${date} ${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+    return st.clock;
+  }
+
+  /** 서버가 알림을 보냈다 — 받은 알림 맨 앞에 넣고 그 알림이 만드는 할 일을 세운다. `quiet` 는 예시 상황을 꾸릴 때(막대 없음). */
+  function arrive(st, kind, at, quiet) {
+    const ex = EXAMPLE[kind];
+    st.seq += 1;
+    const notice = { id: `n${st.seq}`, type: ex.type, at, text: ex.text };
+    st.notices.unshift(notice);
+    if (kind === "choice") st.choice = { noticeId: notice.id, ...ex };
+    if (kind === "change" && !st.undo) {
+      st.undo = { noticeId: notice.id, ...ex };
+      st.times[ex.stopId] = ex.to;
+      st.history.unshift({ version: st.history[0].version + 1, at, reason: "자동 변경", causes: [ex.cause] });
+    }
+    if (kind === "safety") {
+      st.safety = { ...ex, since: at };
+      st.recovery = null;
+      st.paused = stopsOf(1).filter((stop) => (st.times[stop.id] ?? stop.time) > hm(at)).map((stop) => stop.id);
+    }
+    if (!quiet) showToast(st, noticeToast(st, notice));
+  }
+
+  /** 서버 알림 → 알림 막대(앱 BusToast 와 같은 칸). 배지는 그 일정의 지도 번호, 문장은 서버 문장 그대로. */
+  function noticeToast(st, notice) {
+    const view = { label: "알림 보기", run: () => openCenter(st, "notices") };
+    if (notice.type === "proposal_request") {
+      const stop = byId(st.choice.stopId);
+      return { badge: String(numberOf(stop)), text: stop.title, chip: { text: "선택 요청", tone: "warn" }, sub: notice.text, note: st.choice.until, action: view };
+    }
+    if (notice.type === "change_notice") {
+      const stop = byId(EXAMPLE.change.stopId);
+      return { badge: String(numberOf(stop)), text: stop.title, chip: { text: "바뀜", tone: "changed" }, sub: notice.text, action: view };
+    }
+    if (notice.type === "safety_alert") {
+      const shelter = st.safety.shelters[0];
+      return { text: "일정 정지 중", chip: { text: "안전 알림", tone: "warn" }, sub: notice.text, note: `가까운 대피 장소 · ${shelter.name} · ${shelter.meta}`, action: view, ms: URGENT_MS };
+    }
+    return { text: TYPE_LABEL[notice.type], sub: notice.text, action: view };
+  }
+
+  /* ---------- 알림 막대(앱 toast-view.tsx 의 동작) ---------- */
+  function toastHtml(toast) {
+    const stacked = Boolean(toast.sub || toast.note);
+    return `<div class="toast" role="status"${toast.chip ? ` data-tone="${toast.chip.tone}"` : ""}${toast.badge ? " data-badge" : ""}${stacked ? " data-stacked" : ""}>
+      ${toast.badge ? `<span class="t-badge" aria-hidden="true">${esc(toast.badge)}</span>` : ""}
+      <div class="t-body"><strong class="t-title">${esc(toast.text)}${toast.chip ? `<em data-tone="${toast.chip.tone}">${esc(toast.chip.text)}</em>` : ""}</strong>${toast.sub ? `<span class="t-sub">${esc(toast.sub)}</span>` : ""}${toast.note ? `<span class="t-note">${esc(toast.note)}</span>` : ""}</div>
+      ${toast.action ? `<button type="button" class="t-action" data-toast="action">${esc(toast.action.label)}</button>` : ""}
+      <button type="button" class="t-close" data-toast="close" aria-label="닫기">${icon("x")}</button></div>`;
+  }
+
+  /** 새 막대는 떠 있던 막대를 바꾼다(앱과 같다). */
+  function showToast(st, toast) {
+    clearTimeout(st.toastTimer);
+    clearTimeout(st.leaveTimer);
+    st.toast = { ...toast, paused: false, leaving: false };
+    const slot = st.root.querySelector(".toastSlot");
+    slot.innerHTML = toastHtml(toast);
+    const el = slot.firstElementChild;
+    // 읽는 동안(단추 위의 포인터 · 안의 초점)은 기다린다.
+    const pause = (paused) => { if (st.toast && slot.firstElementChild === el) { st.toast.paused = paused; armToast(st); } };
+    el.addEventListener("pointerenter", () => pause(true));
+    el.addEventListener("pointerleave", () => pause(false));
+    el.addEventListener("focusin", () => pause(true));
+    el.addEventListener("focusout", () => pause(false));
+    armToast(st);
+  }
+  function armToast(st) {
+    clearTimeout(st.toastTimer);
+    const toast = st.toast;
+    if (!toast || toast.paused || toast.leaving) return;
+    st.toastTimer = setTimeout(() => leaveToast(st), toast.ms ?? (toast.action ? WITH_ACTION_MS : PLAIN_MS));
+  }
+  function leaveToast(st) {
+    const el = st.root.querySelector(".toastSlot .toast");
+    if (!el || !st.toast) return;
+    st.toast.leaving = true;
+    el.setAttribute("data-leaving", "");
+    st.leaveTimer = setTimeout(() => hideToast(st), LEAVE_MS);
+  }
+  function hideToast(st) {
+    clearTimeout(st.toastTimer);
+    clearTimeout(st.leaveTimer);
+    st.root.querySelector(".toastSlot").innerHTML = "";
+    st.toast = null;
+  }
+
+  /* ---------- 그리기 ---------- */
+  function mapSvg(st) {
+    const focus = st.detail;
+    const days = focus ? [byId(focus).day] : st.day === "all" ? [1, 2] : [st.day];
+    const legs = legsOf(st);
+    const routes = legs.map((leg) => `<path class="route" data-kind="${leg.kind}"${leg.guess ? " data-guess" : ""}${st.legSel === leg.id ? " data-sel" : ""} d="M${leg.from.x} ${leg.from.y} L${leg.to.x} ${leg.to.y}"/>`).join("")
+      + legs.map((leg) => `<path class="routeHit" data-action="leg" data-id="${leg.id}" d="M${leg.from.x} ${leg.from.y} L${leg.to.x} ${leg.to.y}"><title>${esc(leg.from.title)} → ${esc(leg.to.title)}</title></path>`).join("");
+    const pinAttrs = (stop, at) => focus
+      ? (stop.id === focus ? ` aria-label="${at + 1}. ${esc(stop.title)} · 보고 있는 일정"` : ' aria-hidden="true"')
+      : ` data-action="select" data-id="${stop.id}" data-k="pin-${stop.id}" role="button" tabindex="0" aria-label="${at + 1}. ${esc(stop.title)}"`;
+    const pinClass = (stop) => focus ? (stop.id === focus ? " focus" : " muted") : `${st.selected === stop.id ? " sel" : ""}${st.paused.includes(stop.id) ? " paused" : ""}`;
+    const pins = days.map((day) => stopsOf(day).map((stop, at) => `<g class="pin${pinClass(stop)}" data-day="${day}"${pinAttrs(stop, at)} transform="translate(${stop.x} ${stop.y})">
+        <circle class="anchor" r="4"/><path class="tail" d="M-1 -2 L6 -16 L15 -11 Z"/><circle class="b" cx="15" cy="-27" r="16"/><text x="15" y="-22" text-anchor="middle">${at + 1}</text></g>`).join("")).join("");
+    return `<svg viewBox="0 0 390 820" preserveAspectRatio="xMidYMin slice" aria-label="일정 위치 개념도">
+      <rect width="390" height="820" fill="#efece4"/>
+      <path d="M30 34 C80 14 150 30 166 70 C172 98 128 104 90 98 C52 92 22 66 30 34Z" fill="#d4e6c9"/>
+      <path d="M188 196 C214 182 252 192 258 218 C262 244 232 256 206 248 C186 242 176 214 188 196Z" fill="#d4e6c9"/>
+      <path d="M112 252 C134 244 162 248 166 262 C168 276 146 282 128 280 C112 278 104 264 112 252Z" fill="#d4e6c9"/>
+      <path d="M-10 318 C60 296 120 316 190 310 C262 304 320 284 400 300 L400 356 C322 340 262 362 190 368 C120 374 60 356 -10 382 Z" fill="#b9d8e4"/>
+      <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path class="road-c" d="M0 150 H390 M0 206 C120 200 260 212 390 196 M150 30 V318 M250 56 C246 150 256 248 240 318 M40 318 L330 116 M0 92 C110 98 280 84 390 96"/>
+        <path class="road" d="M0 150 H390 M0 206 C120 200 260 212 390 196 M150 30 V318 M250 56 C246 150 256 248 240 318 M40 318 L330 116 M0 92 C110 98 280 84 390 96"/>
+        <path class="road-y" d="M0 250 C120 244 250 258 390 240 M96 30 C104 140 92 240 104 318 M312 40 C304 150 318 240 300 318"/>
+      </g>
+      <text class="lbl" x="108" y="122">종로구</text><text class="lbl" x="276" y="226">중구</text><text class="lbl" x="122" y="306">용산구</text>
+      <text class="river-lbl" x="44" y="350">한강</text>
+      ${routes}${pins}
+    </svg>`;
+  }
+
+  function dayStrip(st) {
+    const chip = (key, label, sub) => `<button type="button" role="tab" class="dayChip" data-action="day" data-day="${key}" data-k="day-${key}" aria-selected="${st.day === key}">${label}${sub ? `<small>${sub}</small>` : ""}</button>`;
+    return `<div class="dayStrip" role="tablist" aria-label="일차 고르기">${chip("all", "전체")}${DAYS.map((d) => chip(d.day, `${d.day}일차`, d.label)).join("")}</div>`;
+  }
+
+  /** 지금 여행 화면(trip-home.tsx) 카드를 펼쳤을 때의 줄 — 순서도 같다. `full` 이면 날짜 · 예정 시간 · 분류 · 주소까지(타임라인 카드), 아니면 상세 카드용(머리에 이미 있는 것은 뺀다). */
+  function stopRows(st, stop, full) {
+    const next = nextOf(stop);
+    const moved = st.times[stop.id];
+    const rows = [];
+    if (full) rows.push(["날짜", dayInfo(stop.day).date], ["예정 시간", moved ?? stop.time]);
+    if (stop.place) {
+      if (full) rows.push(["분류", stop.place.category], ["주소", stop.place.address]);
+      if (stop.place.phone) rows.push(["전화", `<span class="tel">${stop.place.phone}</span>`]);
+      if (stop.place.hours) rows.push(["영업시간", stop.place.hours]);
+    }
+    rows.push(["예약 표시", stop.booking], ["다음 일정", next ? `${next.time} · ${esc(next.title)}` : "이날 마지막 일정"]);
+    if (stop.others && stop.others.length) rows.push(["다른 안", stop.others.map(esc).join(" · ")]);
+    rows.push(["입력한 메모", moved ? "지켜보다 바뀐 일정이에요." : "등록된 메모가 없어요."]);
+    return `<dl class="rcRows">${rows.map(([label, value]) => `<dt>${label}</dt><dd>${value}</dd>`).join("")}</dl>`;
+  }
+  const bookingTag = (stop) => `<span class="pill" data-state="${stop.booking === "예약 있음" ? "booked" : "plain"}">${stop.booking}</span>`;
+
+  /** 이동 줄의 확인 — 앱 Checks(표시 · 「경로 · 수단 · 도착」 · 문장). 문장은 예시다(앱은 서버가 준 문장). */
+  function moveChecks(st, stop, id) {
+    const next = nextOf(stop);
+    const m = stop.move;
+    const slack = legSlack(st, stop);
+    const arrive = toHm(toMin(m.depart) + m.minutes);
+    const rows = [
+      m.guess ? ["unknown", "경로", "길을 찾지 못해 두 곳을 직선으로 이었어요"] : ["ok", "경로", `${stop.title} → ${next.title}`],
+      ["ok", "수단", rideLines(m).length ? (m.rides || []).map((r) => r.line).join(" → ") : MODE_NAMES[KIND[m.mode]]],
+      slack < 0 ? ["warn", "도착", `${arrive} 도착 · 다음 일정 ${st.times[next.id] ?? next.time}보다 ${-slack}분 늦어요`] : ["ok", "도착", `${arrive} 도착 · 다음 일정 ${st.times[next.id] ?? next.time}`],
+    ];
+    const glyph = { ok: "✓", warn: "!", unknown: "–" };
+    return `<ul class="mvChecks" id="${st.uid}-${id}-checks">${rows.map(([result, kind, text]) => `<li class="mvCheck" data-result="${result}"><span class="mvMark" aria-hidden="true">${glyph[result]}</span><b class="mvKind">${kind}</b><span class="mvText">${esc(text)}</span></li>`).join("")}</ul>`;
+  }
+  /** 이동 줄 — 앱 MoveRow: 왼쪽에 「출발」 시각, 수단 아이콘 · 서버 문장 · 여유(15분 이상, 늦으면 「n분 늦어요」) 한 줄. 누르면 확인 줄과 「지도 앱에서 길찾기」(지금 여행 화면의 이동 줄). 줄 뒤 빈칸은 여유만큼. */
+  function moveRow(st, stop) {
+    const id = moveId(stop);
+    const open = st.open === id;
+    const slack = legSlack(st, stop);
+    const says = freeSays(slack);
+    const extra = gapPx(slack) - 14;
+    return `<li class="entry mv" data-move="${id}"><span class="time"><b>${stop.move.depart}</b><small>출발</small></span><span class="rail" aria-hidden="true"><span class="dot"></span></span>
+      <div class="moveCol"><div class="move"${open ? " data-open" : ""}><button type="button" class="moveHead" data-action="toggleMove" data-id="${id}" data-k="${id}" aria-expanded="${open}"${open ? ` aria-controls="${st.uid}-${id}-checks"` : ""}><span class="modeIcon">${icon(stop.move.mode)}</span><span class="moveText">${stop.move.text}</span>${says ? `<span class="moveFree"${slack < 0 ? " data-late" : ""}>${says}</span>` : ""}</button>
+        ${open ? `${moveChecks(st, stop, id)}<button type="button" class="moveLink" data-action="routeApp">${icon("external", "i sm")}지도 앱에서 길찾기</button>` : ""}</div>
+      ${extra > 0 ? `<div class="freeGap" style="height: ${extra}px" aria-hidden="true"></div>` : ""}</div></li>`;
+  }
+  /** 지도의 수단 태그 — 앱 RouteTags: 그려진 수단마다 「선 색 토막 + 이름」, 길을 몰라 직선으로 이은 구간이 있으면 한 태그 더. 누름은 받지 않는다. */
+  function routeTagsHtml(legs) {
+    const kinds = TAG_ORDER.filter((kind) => legs.some((leg) => leg.kind === kind));
+    const guessed = legs.filter((leg) => leg.guess).length;
+    if (!kinds.length) return "";
+    return `<ul class="routeTags" aria-label="지도의 선 색">${kinds.map((kind) => `<li data-mode="${kind}"><span class="sample" style="background: var(${TONE[kind]})" aria-hidden="true"></span>${MODE_NAMES[kind]}</li>`).join("")}${guessed ? `<li data-guess><span class="sampleDashed" aria-hidden="true"></span>직선으로 이은 ${guessed}구간</li>` : ""}</ul>`;
+  }
+  /** 지도에 그리는 구간 — 보이는 날의 이동마다 하나. 상세 보기에서는 그리지 않는다(앱 수정 화면과 같다). */
+  const legsOf = (st) => (st.detail ? [] : (st.day === "all" ? [1, 2] : [st.day]).flatMap((day) => stopsOf(day).filter((stop, at, list) => stop.move && at < list.length - 1)
+    .map((stop) => ({ id: moveId(stop), from: stop, to: nextOf(stop), kind: KIND[stop.move.mode] || "unknown", guess: Boolean(stop.move.guess) }))));
+  /** 경로선을 누르면 — 앱 moveToast: 「→」 · 「앞 → 뒤」 · 판정 칩 · 서버 문장 / 출발 → 도착 / 탄 구간 · 첫 문제 · 「목록에서 보기」 · 7초. */
+  function legToast(st, id) {
+    const stop = fromOfMove(id);
+    const next = nextOf(stop);
+    const m = stop.move;
+    const slack = legSlack(st, stop);
+    const review = m.guess || slack < 0;
+    return { badge: "→", text: `${stop.title} → ${next.title}`, chip: review ? { text: "확인 필요", tone: "warn" } : { text: "통과", tone: "ok" },
+      sub: [m.text, `${m.depart} 출발 → ${toHm(toMin(m.depart) + m.minutes)} 도착`, ...rideLines(m)].join("\n"),
+      note: m.guess ? "길을 찾지 못해 두 곳을 직선으로 이었어요" : slack < 0 ? `다음 일정보다 ${-slack}분 늦어요` : undefined,
+      action: { label: "목록에서 보기", run: () => showMove(st, id) }, ms: 7000 };
+  }
+
+  /** 등록 완료 카드 — 고치기 · 지우기 대신 「상세 보기」, 카드를 누르면 지금 여행 화면 카드의 내용으로 펼친다. 왼쪽 시각은 시작과 끝(작게)이고 줄마다 위에 붙는다(sticky). */
+  function dayList(day, st) {
+    const stops = stopsOf(day);
+    const rows = [];
+    stops.forEach((stop, at) => {
+      const moved = st.times[stop.id];
+      const open = st.open === stop.id;
+      const tags = [bookingTag(stop), moved ? '<span class="pill" data-state="changed">바뀜</span>' : "", st.paused.includes(stop.id) ? '<span class="pill" data-state="paused">일정 정지</span>' : "",
+        st.choice && st.choice.stopId === stop.id ? '<span class="pill" data-state="choice">선택 필요</span>' : ""].join("");
+      const body = open ? `<div class="rcBody" id="${st.uid}-stop-${stop.id}">${stopRows(st, stop, true)}
+          <div class="rcActions"><button type="button" class="btn" data-action="place" data-id="${stop.id}">${icon("pin", "i sm")}지도에서 보기</button><button type="button" class="btn" data-action="ask" data-id="${stop.id}">${icon("chat", "i sm")}이 일정 질문하기</button>${stop.map ? `<button type="button" class="btn" data-action="mapApp">${icon("external", "i sm")}지도 앱으로 열기</button>` : ""}</div></div>` : "";
+      rows.push(`<li class="entry"${st.selected === stop.id ? " data-selected" : ""}>
+        <span class="time">${moved ?? stop.time}${moved ? `<s>${stop.time}</s>` : `<small>${stop.end}</small>`}</span><span class="rail" aria-hidden="true"><span class="dot"></span></span>
+        <div class="card rcard" data-card="${stop.id}"${open ? " data-open" : ""}>
+          <div class="rcHead"><button type="button" class="cardMain" data-action="toggleStop" data-id="${stop.id}" data-k="card-${stop.id}" aria-expanded="${open}"${open ? ` aria-controls="${st.uid}-stop-${stop.id}"` : ""}><span class="rcText"><strong>${esc(stop.title)}</strong><span class="rcTags">${tags}</span></span>${icon("down", "i chev")}</button>
+            <button type="button" class="rcDetail" data-action="detail" data-id="${stop.id}" data-k="detail-${stop.id}" aria-label="${esc(stop.title)} 상세 보기">상세 보기${icon("right", "i sm")}</button></div>
+          ${body}
+        </div></li>`);
+      if (stop.move && at < stops.length - 1) rows.push(moveRow(st, stop));
+    });
+    return `<ul class="timeline">${rows.join("")}</ul>`;
+  }
+
+  const listsOf = (st) => (st.day === "all"
+    ? DAYS.map((d) => `<p class="dayHead">${d.day}일차<small>${d.label}</small></p>${dayList(d.day, st)}`).join("")
+    : `<p class="dayHead">${st.day}일차<small>${dayInfo(st.day).label}</small></p>${dayList(st.day, st)}`);
+
+  /** 채팅 칸: 대화와 빠른 질문(입력은 채팅 막대가 맡는다 — 앞 C안과 같다). 채팅 답에 붙은 선택지는 여기에 남는다. */
+  function chatBody(st) {
+    const sel = byId(st.selected);
+    const ctxText = st.day === "all" ? "전체 일정" : `${st.day}일차 · ${dayInfo(st.day).label}`;
+    const selChip = sel ? `<span class="selChip">선택: ${esc(sel.title)}<button type="button" data-action="clearSel" data-k="clearSel" aria-label="선택 해제">${icon("x")}</button></span>` : "<span>지도 핀이나 일차를 누르면 물어볼 일정이 바뀌어요</span>";
+    const messages = st.messages.map((m, at) => `<article class="msg" data-role="${m.role}"><p class="msgMeta">${m.role === "user" ? "나" : "triPilot"}${m.options ? " · 채팅 답의 선택지" : ""}</p><p class="bubble">${esc(m.text)}</p>
+      ${m.places && m.places.length ? `<div class="places">${m.places.map((id) => `<button type="button" class="placeChip" data-action="place" data-id="${id}">${icon("pin")}${esc(byId(id).title)}</button>`).join("")}</div>` : ""}
+      ${m.options ? `<div class="opts">${m.options.map((label, n) => `<button type="button" class="btn" data-action="chatOption" data-k="chatOption-${at}-${n}">${esc(label)}</button>`).join("")}</div>` : ""}</article>`).join("");
+    const prompts = [["summary", "하루 요약", false], ["selected", "선택 일정", !sel], ["next", "다음 일정", !sel], ["booking", "예약 표시", false]]
+      .map(([kind, label, needsSel]) => `<button type="button" class="prompt" data-action="prompt" data-kind="${kind}" data-k="prompt-${kind}"${st.pending || needsSel ? " disabled" : ""}>${label}</button>`).join("");
+    return `<div class="ctx"><strong>${ctxText}</strong>${selChip}</div>
+      <div class="log" role="log" aria-label="여행 대화 이력" aria-live="polite">${messages}${st.pending ? '<p class="pending" role="status">답변을 준비하고 있어요</p>' : ""}</div>
+      <div class="prompts">${prompts}</div>`;
+  }
+
+  /** 재난 정지 패널 — 앱 trip-safety.tsx 의 SafetyPanel 과 같은 칸·순서·문구. 안전 안내가 먼저, 「일정 다시 시작」은 맨 아래. `where` 는 같은 패널이 두 곳(일정 맨 윗줄 · 알림 센터)에 있어 id 를 가른다. */
+  function safetyPanel(st, where) {
+    const s = st.safety;
+    const id = `${st.uid}-${where}-safety`;
+    return `<section class="sp" aria-labelledby="${id}-title" data-testid="safety-panel-${where}">
+      <header class="spHead">${icon("shieldAlert", "i big")}<h2 id="${id}-title">일정 정지 중</h2></header>
+      <p class="spLabel">${esc(s.label)}</p>
+      <p class="spWhen">${md(s.since)} ${hm(s.since)}부터 · 다시 시작할 때까지 멈춰 있어요</p>
+      <div class="spGuide">
+        <p class="spText">${esc(s.text)}</p>
+        <button type="button" class="spCall" data-action="call" data-k="call-${where}">${icon("phone")}${s.call}에 전화</button>
+        <h3>가까운 대피 장소</h3>
+        <ul class="spShelters">${s.shelters.map((shelter) => `<li><strong>${esc(shelter.name)}</strong><span class="spMeta">${esc(shelter.meta)}</span><button type="button" class="spWalk" data-action="soon">걸어서 길 찾기</button></li>`).join("")}</ul>
+        <p class="spNote">${esc(s.reference)}</p>
+      </div>
+      <div class="spResume"><p id="${id}-hint">안전한 곳에 계신 것을 확인한 뒤에 눌러 주세요.</p>
+        <button type="button" class="btn" data-primary data-action="resume" data-k="resume-${where}" aria-describedby="${id}-hint">일정 다시 시작</button></div>
+    </section>`;
+  }
+
+  /** 등록 뒤 시트: 머리의 「일정 | 채팅」, 함께 쓰는 일차 칩, 옆으로 넘기는 두 칸. 받은 알림·변경 이력 줄은 알림 센터로 옮겨 시트에서 뺐다.
+   *  재난으로 정지된 동안: 머리의 「등록 완료」 자리가 「일정 정지 중」(누르면 알림 센터), 일정 칸 맨 윗줄에 정지 패널(어느 날을 보든). */
+  function cSheet(st) {
+    const plan = st.mode === "plan";
+    const hint = hasNextDay(st) ? `옆으로 밀면 ${st.day + 1}일차` : "옆으로 밀면 채팅";
+    const title = st.safety
+      ? `<h3><button type="button" class="pausedChip" data-action="openCenter" data-k="pausedChip" aria-label="일정 정지 중 · 알림 센터 열기">${icon("stop")}일정 정지 중</button></h3>`
+      : "<h3>등록 완료</h3>";
+    return `<div class="handle" aria-hidden="true"><span></span></div>
+      <header class="sheetHead">${title}
+        <div class="paneSwitch" role="tablist" aria-label="일정과 채팅 바꾸기">
+          <button type="button" role="tab" data-action="pane" data-pane="plan" data-k="pane-plan" aria-selected="${plan}">일정</button>
+          <button type="button" role="tab" data-action="pane" data-pane="chat" data-k="pane-chat" aria-selected="${!plan}">채팅</button>
+        </div></header>
+      ${dayStrip(st)}
+      <div class="pager"><div class="track">
+        <div class="pane" aria-label="일정"${plan ? "" : " inert"}><div class="sheetBody">${st.safety ? `<div class="spWrap">${safetyPanel(st, "plan")}</div>` : ""}<p class="swipeHint">${icon("back", "i sm")}${hint}</p>${listsOf(st)}<p class="credit">장소 정보 출처 : ⓒ한국관광공사 · 예시 데이터</p></div></div>
+        <div class="pane chatPane" aria-label="여행 채팅"${plan ? " inert" : ""}>${chatBody(st)}</div>
+      </div></div>`;
+  }
+
+  /** B: 제목 칸 안 — 이름(누르면 펼침, 펼친 뒤 한 번 더 누르면 이름 고치기 · 앱과 같다) · ▾(아래 단추 줄 여닫기) · 펼쳤을 때 연필. 고치는 동안은 입력칸. */
+  function titleInner(st) {
+    const t = esc(st.tripTitle);
+    const open = st.titleOpen;
+    if (st.titleEdit) return `<form class="titleForm" novalidate><input class="titleInput" data-k="titleInput" value="${t}" maxlength="80" aria-label="계획 이름" autocomplete="off" enterkeyhint="done"></form>`;
+    return `<button type="button" class="titleButton" data-action="title" data-k="title" aria-label="계획 이름 · ${t}" aria-expanded="${open}">${t}</button>
+      <button type="button" class="titleCaret" data-action="titleCaret" data-k="titleCaret" aria-label="${open ? "여행계획서 열기 · 공유하기 접기" : "여행계획서 열기 · 공유하기 펼치기"}" aria-expanded="${open}" aria-controls="${st.uid}-titlemenu">${icon("down")}</button>
+      ${open ? `<button type="button" class="titleEdit" data-action="titleEdit" data-k="titleEdit" aria-label="계획 이름 바꾸기 · 지금 이름은 ${t}">${icon("pencil")}</button>` : ""}`;
+  }
+  /** 제목 아래 단추 줄 — 「여행계획서 열기」(새 탭) · 「공유하기」(보낼 곳 + 파일로 내려받기). */
+  function titleMenuHtml() {
+    return `<button type="button" class="btn" data-action="planOpen" data-k="planOpen">${icon("external", "i sm")}여행계획서 열기</button><button type="button" class="btn" data-primary data-action="planShare" data-k="planShare">${icon("share", "i sm")}공유하기</button>`;
+  }
+
+  /** 상세 보기 카드 — 그날 일정마다 한 장(옆으로 넘긴다). 머리에 날짜 · 시각 · 예약, 이름과 출처, 분류 · 주소, 그 아래 지금 여행 화면 카드의 나머지 줄과 단추. */
+  function detailCard(st, stop) {
+    const moved = st.times[stop.id];
+    const chips = [`<span class="dtChip">${stop.day}일차 ${moved ?? stop.time}–${stop.end}</span>`, bookingTag(stop), moved ? '<span class="pill" data-state="changed">바뀜</span>' : "", st.paused.includes(stop.id) ? '<span class="pill" data-state="paused">일정 정지</span>' : ""].join("");
+    return `<article class="dtCard" data-card-id="${stop.id}"${stop.id === st.detail ? " data-active" : ""} aria-label="${esc(stop.title)} 상세">
+      <div class="dtChips">${chips}</div>
+      <h4>${esc(stop.title)}${stop.place ? `<em class="dtSrc">${stop.place.source}</em>` : ""}</h4>
+      <p class="dtMeta">${stop.place ? `${esc(stop.place.category)} · ${esc(stop.place.address)}` : "장소 정보 없음"}</p>
+      ${stopRows(st, stop, false)}
+      <div class="dtActions"><button type="button" class="btn" data-action="ask" data-id="${stop.id}">${icon("chat", "i sm")}이 일정 질문하기</button>${stop.map ? `<button type="button" class="btn" data-action="mapApp">${icon("external", "i sm")}지도 앱으로 열기</button>` : ""}</div>
+    </article>`;
+  }
+  const detailHead = (stop) => { const list = stopsOf(stop.day); return `<h3>${esc(stop.title)} 상세</h3><span class="dtPos">${stop.day}일차 · ${list.indexOf(stop) + 1}/${list.length}</span>`; };
+  const dotsHtml = (st, list) => list.map((s, i) => `<button type="button" role="tab" class="dtDot" data-action="detailGo" data-id="${s.id}" data-k="dot-${s.id}" aria-label="${i + 1}. ${esc(s.title)}" aria-selected="${s.id === st.detail}"></button>`).join("");
+  /** 사진 안내와 사진 — 계획 확인 수정 화면의 「시트를 위로 올리면 … 사진 ↑」와 「등록된 사진 · ○○」. 사진은 색 칸으로 그린 예시다. */
+  function detailMore(st, stop) {
+    const n = stop.photos;
+    const hint = st.sheetFull ? "" : `<button type="button" class="dtHint" data-action="detailFull" data-k="dtHint">${n ? `시트를 위로 올리면 ${esc(stop.title)} 사진 ${n}장 ↑` : "시트를 위로 올리면 사진 안내 ↑"}</button>`;
+    const grid = n ? `<div class="dtGrid">${Array.from({ length: n }, (_, i) => `<div class="dtPhoto" style="--h: ${(i * 47 + stop.x) % 360}" role="img" aria-label="예시 사진 ${i + 1}"><span>예시 사진 ${i + 1}</span></div>`).join("")}</div>`
+      : '<p class="dtEmpty">등록된 사진이 없어요 · 장소 사진은 준비 중이에요</p>';
+    return `${hint}<section class="dtPhotos" aria-labelledby="${st.uid}-photos"><h4 id="${st.uid}-photos">등록된 사진 · ${esc(stop.title)}${n ? `<small>${n}장</small>` : ""}</h4>${grid}</section>`;
+  }
+  function detailSheet(st) {
+    const stop = byId(st.detail);
+    const list = stopsOf(stop.day);
+    return `<div class="handle" aria-hidden="true"><span></span></div>
+      <div class="dtBody">
+        <header class="dtHead">${detailHead(stop)}</header>
+        <div class="dtCards" tabindex="0" aria-label="${stop.day}일차 일정 상세 · 옆으로 넘기면 다른 일정">${list.map((s) => detailCard(st, s)).join("")}</div>
+        <div class="dtDots" role="tablist" aria-label="일정 고르기">${dotsHtml(st, list)}</div>
+        <div class="dtMore">${detailMore(st, stop)}</div>
+      </div>`;
+  }
+  /** 넘기던 카드가 바뀌면 지도 · 머리 · 점 · 사진만 바꾼다(카드 줄은 그대로 두어 넘기던 자리를 지킨다). */
+  function syncDetail(st, id) {
+    const root = st.root;
+    const stop = byId(id);
+    const dotFocused = document.activeElement && document.activeElement.classList.contains("dtDot");
+    st.detail = id;
+    st.selected = id;
+    root.querySelector(".map").innerHTML = mapSvg(st);
+    root.querySelector(".dtHead").innerHTML = detailHead(stop);
+    root.querySelector(".dtDots").innerHTML = dotsHtml(st, stopsOf(stop.day));
+    root.querySelector(".dtMore").innerHTML = detailMore(st, stop);
+    root.querySelector(".dtName span").textContent = stop.title;
+    root.querySelectorAll(".dtCard").forEach((card) => card.toggleAttribute("data-active", card.dataset.cardId === id));
+    if (dotFocused) root.querySelector(`[data-k="dot-${id}"]`)?.focus({ preventScroll: true });
+  }
+  const centerLeft = (box, card) => card.offsetLeft - (box.clientWidth - card.offsetWidth) / 2;
+  /** 보던 일정 카드를 가운데에 놓고, 손으로 넘기면 멈춘 자리의 카드로 맞춘다. */
+  function placeCarousel(st) {
+    const box = st.root.querySelector(".dtCards");
+    if (!box) return;
+    box.scrollLeft = centerLeft(box, box.querySelector(`[data-card-id="${st.detail}"]`));
+    let timer = null;
+    box.addEventListener("scroll", () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        // 그 사이 상세 보기를 떠났거나 다시 그려 이 카드 줄이 없어졌으면 맞추지 않는다(떠난 뒤 상세 보기가 되살아나던 결함, 2026-10-07 시험).
+        if (!box.isConnected || !st.detail) return;
+        const mid = box.scrollLeft + box.clientWidth / 2;
+        const near = [...box.querySelectorAll(".dtCard")].reduce((best, card) => (Math.abs(card.offsetLeft + card.offsetWidth / 2 - mid) < Math.abs(best.offsetLeft + best.offsetWidth / 2 - mid) ? card : best));
+        if (near.dataset.cardId !== st.detail) syncDetail(st, near.dataset.cardId);
+      }, 90);
+    });
+  }
+
+  /** 채팅 막대: 접히면 동그란 채팅 버튼, 펼치면 입력칸 + 보내기(일정 칸에서는 닫기 버튼도). 채팅 칸에서는 늘 펼친다(앞 C안 그대로).
+ */
+  function renderBar(st) {
+    const bar = st.root.querySelector(".cbar");
+    const open = st.barOpen || st.mode === "chat";
+    const still = bar.dataset.state === "open" && open;
+    bar.toggleAttribute("data-open", open);
+    bar.inert = covered(st);
+    bar.dataset.state = open ? "open" : "closed";
+    // 모양(펼침 · 칸)이 그대로면 다시 그리지 않는다 — 쓰는 중인 글자와 커서를 지킨다.
+    const shape = `${open}|${st.mode}`;
+    if (bar.dataset.shape === shape) {
+      const input = bar.querySelector("input");
+      if (input && input.value !== st.draft) input.value = st.draft;
+      const sendButton = bar.querySelector(".barSend");
+      if (sendButton) sendButton.disabled = st.pending;
+      return;
+    }
+    bar.dataset.shape = shape;
+    bar.innerHTML = open
+      ? `${st.mode === "plan" ? `<button type="button" class="barClose" data-action="closeBar" data-k="barClose" aria-label="채팅 막대 접기">${icon("x")}</button>` : ""}
+        <form class="barForm${still ? " still" : ""}" novalidate><label class="sr-only" for="${st.uid}-input">여행 메시지</label>
+          <input id="${st.uid}-input" data-k="input" autocomplete="off" maxlength="600" placeholder="${st.mode === "plan" ? "일정을 보며 바로 물어보세요" : "일정에 대해 궁금한 점을 입력하세요"}" value="${esc(st.draft)}">
+          <button type="submit" class="barSend" aria-label="메시지 전송"${st.pending ? " disabled" : ""}>${icon("send")}</button></form>`
+      : `<button type="button" class="barFab" data-action="openBar" data-k="fab" aria-label="채팅 입력 열기">${icon("chat")}</button>`;
+  }
+
+  function renderBell(st) {
+    const bell = st.root.querySelector(".bell");
+    const n = unreadCount(st);
+    bell.innerHTML = `${icon("bell", "i big")}${n ? `<span class="badge" aria-hidden="true">${n}</span>` : ""}`;
+    bell.setAttribute("aria-label", `알림 센터 열기${n ? ` · 읽지 않은 알림 ${n}개` : ""}`);
+  }
+
+  /* ---------- ① 알림 센터 ---------- */
+  const warnItem = (w) => `<li class="aRow"><span class="tag">${md(w.date)}</span><p>${esc(w.reason)}</p>${w.remedy ? `<p class="remedy">${esc(w.remedy)}</p>` : ""}</li>`;
+  const noticeItem = (st, n) => `<li class="aRow"><span class="tag" data-type="${n.type}">${TYPE_LABEL[n.type]}</span><time>${md(n.at)} ${hm(n.at)}</time>${st.dotted.has(n.id) ? '<span class="unread" role="img" aria-label="새 알림"></span>' : ""}<p>${esc(n.text)}</p></li>`;
+  const historyItem = (h) => `<li class="aRow"><span class="tag" data-type="version">v${h.version}</span><time>${md(h.at)} ${hm(h.at)}</time><p>${esc(h.reason)}</p>${h.causes.map((cause) => `<p class="remedy">${esc(cause)}</p>`).join("")}</li>`;
+  const list = (items, render, emptyText) => (items.length ? `<ul class="aList">${items.map(render).join("")}</ul>` : `<p class="empty">${emptyText}</p>`);
+
+  function recoveryCard(st) {
+    const r = st.recovery;
+    const head = `<h4>재난 뒤 이어가기</h4><p>어떻게 이어갈지는 직접 정해 주세요. 우리가 대신 정하지 않고, 아는 것과 모르는 것을 그대로 보여 드려요.</p>
+      <p class="meta">남은 일정 · 범위 모름 ${r.unknown}곳 · 영향 없음 ${r.unaffected}곳(예시)</p>`;
+    if (r.chosen) return `<article class="act" data-tone="info">${head}<p class="what">고르신 것: ${esc(r.chosen)}</p><div class="opts"><button type="button" class="btn" data-action="recoveryAgain" data-k="recoveryAgain">다시 고르기</button></div></article>`;
+    return `<article class="act" data-tone="info">${head}
+      <fieldset class="ways"><legend>어떻게 이어갈까요?</legend>${RECOVERY_WAYS.map((label, at) => `<label><input type="radio" name="${st.uid}-way" value="${at}" data-action="way" data-k="way-${at}"${r.picked === at ? " checked" : ""}>${label}</label>`).join("")}</fieldset>
+      <div class="opts"><button type="button" class="btn" data-primary data-action="recoveryDone" data-k="recoveryDone"${r.picked === null ? " disabled" : ""}>이대로 정하기</button></div>
+      ${r.picked === null ? '<p class="meta">하나를 고르면 정할 수 있어요.</p>' : ""}</article>`;
+  }
+
+  /** 할 일 카드 — 탭 위에 고정. 순서: 재난 정지 → 재난 뒤 이어가기 → 선택이 필요해요 → 자동으로 바꾼 일정. */
+  function taskCards(st) {
+    const cards = [];
+    if (st.safety) cards.push(safetyPanel(st, "center"));
+    if (st.recovery) cards.push(recoveryCard(st));
+    if (st.choice) {
+      const stop = byId(st.choice.stopId);
+      cards.push(`<article class="act"><h4>선택이 필요해요</h4><p class="what">${stop.time} · ${esc(stop.title)}</p><p>${esc(st.choice.text)}</p>
+        <div class="opts">${st.choice.options.map((label, at) => `<button type="button" class="btn" data-primary data-action="choose" data-key="${at}" data-k="choose-${at}">${esc(label)}</button>`).join("")}<button type="button" class="btn" data-action="choose" data-key="keep" data-k="choose-keep">지금 일정 그대로 두기</button></div>
+        <p class="meta">${st.choice.until} · <button type="button" class="link" data-action="goto" data-id="${stop.id}" data-k="goto-choice">일정에서 보기</button></p></article>`);
+    }
+    if (st.undo) {
+      cards.push(`<article class="act" data-tone="info"><h4>자동으로 바꾼 일정</h4><p>${esc(st.undo.text)}</p>
+        <div class="opts"><button type="button" class="btn" data-action="undo" data-k="undo">${icon("undo", "i sm")}되돌리기</button></div>
+        <p class="meta"><button type="button" class="link" data-action="goto" data-id="${st.undo.stopId}" data-k="goto-undo">일정에서 보기</button></p></article>`);
+    }
+    const open = (st.safety ? 1 : 0) + (st.recovery && !st.recovery.chosen ? 1 : 0) + (st.choice ? 1 : 0) + (st.undo ? 1 : 0);
+    if (!cards.length) return '<p class="secTitle">할 일</p><p class="empty">지금 처리할 일은 없어요.</p>';
+    return `<p class="secTitle">할 일${open ? ` ${open}` : ""}</p>${cards.join("")}`;
+  }
+
+  function centerHtml(st) {
+    // 「받은 알림」 탭을 보면 읽음 — 센터를 닫을 때까지 이번에 처음 본 알림에 점을 남긴다.
+    if (st.tab === "notices") st.notices.forEach((notice) => { if (!st.seen.has(notice.id)) { st.seen.add(notice.id); st.dotted.add(notice.id); } });
+    const unread = unreadCount(st);
+    const counts = { warnings: WARNINGS.length, notices: st.notices.length, history: st.history.length };
+    const notices = [...st.notices].sort((a, b) => b.at.localeCompare(a.at));
+    const body = st.tab === "warnings" ? list(WARNINGS, warnItem, "살펴볼 점이 없어요.")
+      : st.tab === "notices" ? list(notices, (n) => noticeItem(st, n), "받은 알림이 없어요.")
+        : list(st.history, historyItem, "변경 이력이 없어요.");
+    return `<header class="panelHead"><button type="button" class="iconBtn" data-action="closeCenter" data-k="centerBack" aria-label="알림 센터 닫기">${icon("back", "i big")}</button><h3 id="${st.uid}-center-title">알림</h3></header>
+      <div class="panelBody">
+        <section aria-label="할 일">${taskCards(st)}</section>
+        <div class="tabs" role="tablist" aria-label="알림 종류">${TABS.map(([key, label]) => `<button type="button" role="tab" id="${st.uid}-tab-${key}" data-action="tab" data-tab="${key}" data-k="tab-${key}" aria-selected="${st.tab === key}" aria-controls="${st.uid}-tabpanel" tabindex="${st.tab === key ? 0 : -1}">${label} ${counts[key]}${key === "notices" && unread ? '<span class="unread" role="img" aria-label="읽지 않은 알림"></span>' : ""}</button>`).join("")}</div>
+        <div id="${st.uid}-tabpanel" role="tabpanel" aria-labelledby="${st.uid}-tab-${st.tab}">${body}</div>
+      </div>`;
+  }
+
+  /** 메뉴 서랍 — 앱 settings-menu.tsx 와 같은 줄(프로필 · 여행 목록 보기 · 여행 취향 설문 · 언어 펼침 카드 · 테마 두 견본 · 스위치 셋 · 안내 한 줄).
+   *  앱과 다른 것은 머리의 ✕ 왼쪽 항로 지킴이 아이콘 하나(guardian-toggle.tsx 그대로 · 2026-10-07 사용자 결정). 목업에서 링크는 열지 않고, 언어 · 테마는 바꾸지 않는다. */
+  function menuHtml(st) {
+    const on = st.guardian;
+    const chevron = icon("right");
+    const check = icon("check", "i ck");
+    const close = `<button type="button" class="mClose" data-action="closeMenu" data-k="menuClose" aria-label="메뉴 닫기">${icon("x")}</button>`;
+    // 아이콘의 이름은 누르면 일어날 일, 지금 상태는 숨은 글로 읽힌다(앱과 같다). 꺼져 있으면 카드가 열린다.
+    const keeper = `<button type="button" class="mKeeperToggle" data-action="guardian" data-k="guardian"${on ? " data-on" : ' aria-haspopup="dialog"'} aria-label="${on ? "항로 지킴이 끄기" : "항로 지킴이 켜기"}">${icon("keeper")}<span class="sr-only">${on ? "지금 켜져 있어요" : "지금 꺼져 있어요"}</span></button>`;
+    const sample = (soft, primary) => `<span class="mSample" style="--sample-soft: ${soft}; --sample-primary: ${primary}" aria-hidden="true"><span></span></span>`;
+    const toggle = (key, title, note) => `<label class="mSwitchRow"><span class="mText"><strong id="${st.uid}-${key}">${title}</strong><small id="${st.uid}-${key}-note">${note}</small></span>
+      <input type="checkbox" role="switch" class="mSwitch" data-action="pref" data-pref="${key}" data-k="pref-${key}"${prefs[key] ? " checked" : ""} aria-labelledby="${st.uid}-${key}" aria-describedby="${st.uid}-${key}-note"></label>`;
+    return `<div class="mPanel" role="dialog" aria-modal="true" aria-labelledby="${st.uid}-menu-title">
+      <header class="mHead"><div><p class="mEyebrow">MENU</p><h2 id="${st.uid}-menu-title">메뉴</h2></div><div class="mHeadTools">${keeper}${close}</div></header>
+      <div class="mBoard">
+        <button type="button" class="mProfile" data-action="soon">${AVATAR}<span class="mProfileText"><strong>게스트</strong><small>마이페이지</small></span>${chevron}</button>
+        <button type="button" class="mLink" data-line data-action="soon">여행 목록 보기${chevron}</button>
+        <button type="button" class="mLink" data-action="soon">여행 취향 설문${chevron}</button>
+        <div class="mLang"${st.langOpen ? " data-open" : ""}>
+          <button type="button" class="mPick" data-action="lang" data-k="lang" aria-expanded="${st.langOpen}" aria-controls="${st.uid}-lang-list">${icon("globe")}<span><small>LANGUAGE · <span lang="ko">언어</span></small><strong>한국어</strong></span>${icon("down", "i chev")}</button>
+          <div id="${st.uid}-lang-list" class="mLangList"${st.langOpen ? "" : " inert"}><div>
+            <button type="button" lang="en" class="mOption" data-action="langPick" aria-pressed="false">English</button>
+            <button type="button" lang="ko" class="mOption" data-action="langPick" aria-pressed="true">한국어${check}</button>
+          </div></div>
+        </div>
+        <div class="mTheme" role="group" aria-labelledby="${st.uid}-theme-title">
+          <p class="mThemeHead" id="${st.uid}-theme-title">${icon("palette")}<span><small>THEME · <span lang="ko">테마</span></small><strong>그린</strong></span></p>
+          <div class="mThemeOptions">
+            <button type="button" class="mOption" data-action="themePick" aria-pressed="true">${sample("#e9f2eb", "#2e6047")}그린${check}</button>
+            <button type="button" class="mOption" data-action="themePick" aria-pressed="false">${sample("#ececea", "#1c1c1e")}화이트</button>
+          </div>
+        </div>
+        ${toggle("floating", "플로팅 버튼 사용", "끄면 고정 하단 탭으로 표시됩니다.")}
+        ${toggle("skip", "애니메이션 건너뛰기", "켜면 계획 확인 화면이 단계별 재생 없이 바로 떠요.")}
+        ${toggle("desktop", "데스크탑 화면으로 보기", "끄면 모든 화면이 휴대폰 크기로 보여요.")}
+      </div>
+      <p class="mNote">설정은 이 브라우저에 저장돼요.</p>
+    </div>`;
+  }
+
+  /** 항로 지킴이 「켜기 / 그대로 두기」 카드 — 앱 guardian-card.tsx 의 켜기 모드 문구. 마지막 줄만 「화면 위 아이콘에서」 → 「메뉴에서」로 바꿨다. */
+  /** 여행계획서 공유 창 — 링크를 보낼 곳(카카오톡 · 디스코드 · 메시지 · 텔레그램 · 링크 복사 · 더보기)과 「파일로 내려받기」. */
+  function shareHtml(st) {
+    return `<section class="shareSheet" role="dialog" aria-modal="true" aria-labelledby="${st.uid}-share-title"${st.shareEnter ? " data-enter" : ""}>
+      <div class="ssGrip" aria-hidden="true"></div>
+      <header class="ssHead"><h2 id="${st.uid}-share-title" tabindex="-1" data-k="shareTitle">여행계획서 공유</h2><button type="button" class="mClose" data-action="closeShare" aria-label="닫기">${icon("x")}</button></header>
+      <div class="ssLink">${icon("fileText")}<span><strong>${esc(st.tripTitle)}</strong><small>10.13 – 10.14 · 2일 · 7개 일정 · 여행계획서 링크</small></span></div>
+      <p class="ssNote">${PLAN_NOTE}</p>
+      <ul class="ssApps" aria-label="보낼 곳">${SHARE_TARGETS.map((t) => `<li><button type="button" class="ssApp" data-action="shareTo" data-target="${t.key}" data-k="share-${t.key}"><span class="ssIcon"${t.plain ? " data-plain" : ""} style="--app-bg: ${t.bg ?? "var(--color-subtle)"}; --app-fg: ${t.fg ?? "var(--color-text)"}" aria-hidden="true">${icon(t.icon)}</span>${t.label}</button></li>`).join("")}</ul>
+      <button type="button" class="ssDownload" data-action="planDownload" data-k="shareDownload">${icon("download")}파일로 내려받기<small>triPilot-${esc(st.tripTitle)}.html</small></button>
+    </section>`;
+  }
+
+  function guardianCardHtml(st) {
+    return `<section class="gCard" role="dialog" aria-modal="true" aria-labelledby="${st.uid}-gcard-title">
+      <header class="gHead"><span class="gIcon">${icon("keeper", "i big")}</span><h2 id="${st.uid}-gcard-title" tabindex="-1" data-k="gcardTitle"><span class="gReco">추천</span>항로 지킴이</h2>
+        <button type="button" class="mClose" data-action="closeCard" aria-label="닫기">${icon("x")}</button></header>
+      <p class="gLead">문제가 생기면 알아서 바꾸고 알려요. <span>되돌릴 수 있어요.</span></p>
+      <ul><li>켜 두어도 고정한 일정은 먼저 물어봐요.</li><li>재난·지진이 나면 일정을 멈추고 안전 안내를 보내요.</li></ul>
+      <div class="gActions"><button type="button" class="btn" data-primary data-action="guardianOn" data-k="guardianOn">켜기</button><button type="button" class="btn" data-action="closeCard" data-k="guardianKeep">그대로 두기</button></div>
+      <p class="gWhere">${icon("keeper", "i sm")}켠 뒤에도 언제든 메뉴에서 끌 수 있어요.</p>
+    </section>`;
+  }
+
+  function render(st) {
+    const root = st.root;
+    const focused = root.contains(document.activeElement) ? document.activeElement.dataset.k : null;
+    const body = root.querySelector(".pane .sheetBody");
+    const keepScroll = body && !st.resetScroll ? body.scrollTop : 0;
+    st.resetScroll = false;
+    const panelBody = root.querySelector(".panelBody");
+    const keepPanel = panelBody && st.center && !st.resetPanel ? panelBody.scrollTop : 0;
+    st.resetPanel = false;
+    root.dataset.mode = st.mode;
+    root.toggleAttribute("data-detail", Boolean(st.detail));
+    root.dataset.sheet = st.detail && st.sheetFull ? "full" : "";
+    const sheet = root.querySelector(".sheet");
+    root.querySelector(".map").innerHTML = mapSvg(st);
+    root.querySelector(".mapChips").innerHTML = routeTagsHtml(legsOf(st));
+    sheet.innerHTML = st.detail ? detailSheet(st) : cSheet(st);
+    const panel = root.querySelector(".panel");
+    // 닫을 때는 내용을 그대로 두고 밀려 나가게 한다.
+    if (st.center) panel.innerHTML = centerHtml(st);
+    panel.toggleAttribute("data-open", st.center);
+    panel.inert = !st.center;
+    // 메뉴 서랍과 항로 지킴이 카드 — 열릴 때만 들어오는 움직임(data-enter)을 준다(다시 그릴 때마다 되풀이하지 않게).
+    const drawer = root.querySelector(".drawer");
+    drawer.innerHTML = st.menuOpen ? menuHtml(st).replace('class="mPanel"', `class="mPanel"${st.menuEnter ? " data-enter" : ""}`) : "";
+    drawer.hidden = !st.menuOpen;
+    const shade = root.querySelector(".gShade");
+    shade.innerHTML = st.guardianCard ? guardianCardHtml(st).replace('class="gCard"', `class="gCard"${st.cardEnter ? " data-enter" : ""}`) : "";
+    shade.hidden = !st.guardianCard;
+    const shareShade = root.querySelector(".shareShade");
+    shareShade.innerHTML = st.shareOpen ? shareHtml(st) : "";
+    shareShade.hidden = !st.shareOpen;
+    st.shareEnter = false;
+    st.menuEnter = false;
+    st.cardEnter = false;
+    for (const part of [".map", ".top", ".sheet"]) root.querySelector(part).inert = covered(st);
+    root.querySelector(".top .menu").setAttribute("aria-expanded", String(st.menuOpen));
+    // B: 제목 칸 — 같은 요소에 표시만 바꿔 옆으로 늘어나는 움직임이 보이게 한다. 상세 보기에서는 로고 · 제목 대신 ← 와 장소 이름.
+    const pill = root.querySelector(".titlePill");
+    pill.hidden = Boolean(st.detail);
+    root.querySelector(".topLead .logo").hidden = Boolean(st.detail);
+    pill.toggleAttribute("data-armed", st.titleOpen || st.titleEdit);
+    const titleShape = `${st.titleOpen}|${st.titleEdit}|${st.tripTitle}`;
+    if (pill.dataset.shape !== titleShape) { pill.dataset.shape = titleShape; pill.innerHTML = titleInner(st); }
+    root.querySelector(".dtBack").hidden = !st.detail;
+    const name = root.querySelector(".dtName");
+    name.hidden = !st.detail;
+    if (st.detail) name.innerHTML = `<span>${esc(byId(st.detail).title)}</span><small>상세</small>`;
+    // 제목 아래 단추 줄 — 열 때 한 번만 채워 다시 그릴 때 움직임을 되풀이하지 않는다.
+    const titleMenu = root.querySelector(".titleMenu");
+    const menuOn = st.titleOpen && !st.titleEdit && !st.detail;
+    if (menuOn && !titleMenu.innerHTML) titleMenu.innerHTML = titleMenuHtml();
+    if (!menuOn) titleMenu.innerHTML = "";
+    titleMenu.hidden = !menuOn;
+    renderBar(st);
+    renderBell(st);
+    // 칸이 바뀌었거나 손을 뗀 자리에서 새 칸까지 미끄러지게 — 새로 그린 줄을 옛 자리에 놓았다가 풀어 준다.
+    const track = sheet.querySelector(".track");
+    const from = st.dragFrom ?? (st.lastSheet && st.lastSheet !== st.mode ? (st.lastSheet === "chat" ? "-50%" : "0%") : null);
+    if (track && from !== null) {
+      track.style.transition = "none";
+      track.style.transform = `translateX(${from})`;
+      track.getBoundingClientRect();
+      track.style.transition = "";
+      track.style.transform = "";
+    }
+    st.dragFrom = null;
+    // 날을 넘겼으면 새 날의 목록이 옛 목록 옆자리에서 들어온다.
+    const newBody = root.querySelector(".pane .sheetBody");
+    if (newBody && st.dayFrom != null) {
+      newBody.style.transition = "none";
+      newBody.style.transform = `translateX(${st.dayFrom})`;
+      newBody.getBoundingClientRect();
+      newBody.style.transition = "";
+      newBody.style.transform = "";
+    }
+    st.dayFrom = null;
+    if (newBody) newBody.scrollTop = keepScroll;
+    const newPanelBody = root.querySelector(".panelBody");
+    if (newPanelBody && st.center) newPanelBody.scrollTop = keepPanel;
+    root.querySelectorAll(".log").forEach((log) => { log.scrollTop = log.scrollHeight; });
+    st.lastSheet = st.mode;
+    if (st.detail) placeCarousel(st);
+    if (st.focusTo) { root.querySelector(`[data-k="${st.focusTo}"]`)?.focus({ preventScroll: true }); st.focusTo = null; }
+    else if (focused) {
+      // 일정 칸의 입력칸은 초점만 와도 채팅 칸으로 넘어가므로, 채팅 칸에서 일정 칸으로 돌아왔으면 입력칸 대신 막대의 접기(접혔으면 채팅 버튼)로 초점을 옮긴다.
+      const back = focused === "input" && st.mode === "plan" ? (root.querySelector('[data-k="barClose"]') ? "barClose" : "fab") : focused;
+      root.querySelector(`[data-k="${back}"]`)?.focus({ preventScroll: true });
+    }
+  }
+
+  /* ---------- 동작 ---------- */
+  function openCenter(st, tab) {
+    st.center = true;
+    st.tab = tab ?? (unreadCount(st) ? "notices" : st.tab);
+    st.focusTo = "centerBack";
+    st.resetPanel = true;
+    render(st);
+  }
+  function closeCenter(st) {
+    st.center = false;
+    st.dotted.clear();
+    render(st);
+    st.root.querySelector(".bell").focus({ preventScroll: true });
+  }
+  function closeShare(st) {
+    st.shareOpen = false;
+    st.focusTo = st.titleOpen ? "planShare" : "title";
+    render(st);
+  }
+  function closeTitle(st) {
+    st.titleOpen = false;
+    st.titleEdit = false;
+    render(st);
+  }
+  function startEdit(st) {
+    st.titleOpen = true;
+    st.titleEdit = true;
+    st.focusTo = "titleInput";
+    render(st);
+    st.root.querySelector('[data-k="titleInput"]')?.select();
+  }
+  /** 이름 저장 — 앞뒤 빈칸을 지우고, 비었거나 그대로면 보내지 않는다(앱과 같다). 등록된 여행의 이름을 바꾸는 서버 호출은 아직 없다(메모). */
+  function saveTitle(st, value) {
+    if (!st.titleEdit) return;
+    const next = value.trim();
+    const changed = Boolean(next) && next !== st.tripTitle;
+    st.titleEdit = false;
+    st.titleOpen = false;
+    if (changed) st.tripTitle = next;
+    st.focusTo = "title";
+    render(st);
+    if (changed) showToast(st, { text: "계획 이름을 바꿨어요", sub: next });
+  }
+  function openDetail(st, id) {
+    st.detail = id;
+    st.selected = id;
+    st.sheetFull = false;
+    st.titleOpen = false;
+    st.titleEdit = false;
+    st.focusTo = "dtBack";
+    render(st);
+  }
+  function closeDetail(st) {
+    const id = st.detail;
+    const stop = byId(id);
+    st.detail = null;
+    st.sheetFull = false;
+    st.selected = id;
+    if (st.day !== "all") st.day = stop.day;
+    st.mode = "plan";
+    st.focusTo = `detail-${id}`;
+    render(st);
+    showCard(st, id);
+  }
+  /** 언어 목록을 그 자리에서 펼치고 접는다 — 다시 그리지 않아 앱처럼 아래로 자라는 움직임이 보인다. */
+  function setLang(st, open) {
+    st.langOpen = open;
+    const box = st.root.querySelector(".mLang");
+    if (!box) return;
+    box.toggleAttribute("data-open", open);
+    box.querySelector(".mPick").setAttribute("aria-expanded", String(open));
+    box.querySelector(".mLangList").inert = !open;
+    if (!open) box.querySelector(".mPick").focus({ preventScroll: true });
+  }
+  function closeMenu(st) {
+    st.menuOpen = false;
+    st.langOpen = false;
+    st.focusTo = "menu";
+    render(st);
+  }
+  function closeCard(st) {
+    st.guardianCard = false;
+    st.focusTo = "menu";
+    render(st);
+  }
+  /** 항로 지킴이를 바꾼다 — 앱 trip-guardian.tsx 처럼 화면이 먼저 바뀌고 「되돌리기」 막대가 뜬다(되돌리기는 카드 없이 바로). */
+  function setGuardian(st, on) {
+    st.guardian = on;
+    render(st);
+    showToast(st, on
+      ? { text: "항로 지킴이를 켰어요.", action: { label: "되돌리기", run: () => setGuardian(st, false) } }
+      : { text: "항로 지킴이를 껐어요. 문제가 생기면 물어볼게요.", action: { label: "되돌리기", run: () => setGuardian(st, true) } });
+  }
+
+  /** 칸을 바꾼다. 채팅 칸이면 막대를 펴고, 일정으로 돌아오면 쓰던 글이 없을 때 막대를 접는다(앞 C안 그대로). */
+  function setPane(st, pane) {
+    if (st.mode !== pane) {
+      st.mode = pane;
+      if (pane === "chat") st.barOpen = true;
+      else if (!st.draft.trim()) st.barOpen = false;
+    }
+    render(st);
+  }
+
+  /** 일정 칸을 밀어 날을 넘긴다. `shift` 는 손을 뗀 자리 — 새 날의 목록은 그 옆자리(폭만큼 떨어진 곳)에서 들어온다. */
+  function turnDay(st, side, shift, width) {
+    st.day += side;
+    if (st.selected && byId(st.selected).day !== st.day) st.selected = null;
+    st.dayFrom = `${shift + side * width}px`;
+    st.resetScroll = true;
+    render(st);
+  }
+
+  function showCard(st, id) {
+    const body = st.root.querySelector(".pane .sheetBody");
+    const card = body?.querySelector(`[data-card="${id}"]`);
+    if (!card) return;
+    const top = card.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop;
+    if (top < body.scrollTop + 8 || top + card.offsetHeight > body.scrollTop + body.clientHeight - 90) body.scrollTo({ top: Math.max(0, top - 60), behavior: "smooth" });
+  }
+
+  /** 이동 줄을 목록에서 보이게 — 그 날로 가서 줄을 펼치고 화면 안으로. */
+  function showMove(st, id) {
+    const stop = fromOfMove(id);
+    if (st.day !== "all") st.day = stop.day;
+    st.mode = "plan";
+    st.open = id;
+    st.legSel = id;
+    st.selected = null;
+    render(st);
+    const body = st.root.querySelector(".pane .sheetBody");
+    const row = body && body.querySelector(`[data-move="${id}"]`);
+    if (row) body.scrollTo({ top: Math.max(0, row.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - 60), behavior: "smooth" });
+  }
+
+  function select(st, id) {
+    const stop = byId(id);
+    st.selected = id;
+    st.legSel = null;
+    if (st.day !== "all" && st.day !== stop.day) st.day = stop.day;
+    render(st);
+    if (st.mode === "plan") showCard(st, id);
+  }
+
+  const ctxDay = (st) => (st.day === "all" ? (byId(st.selected)?.day ?? 1) : st.day);
+
+  function question(kind, st) {
+    const sel = byId(st.selected);
+    const info = dayInfo(ctxDay(st));
+    if (kind === "summary") return `${info.date} 하루 일정을 요약해 주세요.`;
+    if (kind === "selected") return `${sel.time} ${sel.title} 일정의 상세를 알려 주세요.`;
+    if (kind === "next") return `${sel.time} ${sel.title} 다음 일정을 알려 주세요.`;
+    return `${info.date} 예약 표시를 알려 주세요.`;
+  }
+
+  function answer(kind, st) {
+    const sel = byId(st.selected);
+    const day = ctxDay(st);
+    const stops = stopsOf(day);
+    if (kind === "summary") {
+      const longest = stops.filter((stop) => stop.move).sort((a, b) => b.move.minutes - a.move.minutes)[0];
+      return { text: `${day}일차(${dayInfo(day).label})는 ${stops.length}곳이에요. ${stops.map((stop) => `${stop.time} ${stop.title}`).join(" → ")}. 가장 긴 이동은 ${longest.title} → ${nextOf(longest).title} ${longest.move.minutes}분이에요.`, places: stops.map((stop) => stop.id) };
+    }
+    if (kind === "selected" || kind === "next") {
+      const next = nextOf(sel);
+      if (!next) return { text: `${eun(sel.title)} ${sel.time}에 시작하는 이날 마지막 일정이에요. ${sel.booking}.`, places: [sel.id] };
+      return kind === "selected"
+        ? { text: `${sel.title} · ${sel.time} 시작 · ${sel.booking}. 다음 일정은 ${next.time} ${eyo(next.title)}(${sel.move.text}${freeSays(legSlack(st, sel)) ? `, ${freeSays(legSlack(st, sel))}` : ""}).`, places: [sel.id, next.id] }
+        : { text: `${sel.title} 다음은 ${next.time} ${eyo(next.title)}. ${sel.move.depart}에 출발해요(${sel.move.text}${freeSays(legSlack(st, sel)) ? `, ${freeSays(legSlack(st, sel))}` : ""}).`, places: [next.id] };
+    }
+    if (kind === "booking") {
+      const booked = stops.filter((stop) => stop.booking === "예약 있음");
+      return booked.length
+        ? { text: `${day}일차에 예약 표시가 있는 일정은 ${eyo(booked.map((stop) => `${stop.time} ${stop.title}`).join(", "))}. 예약 표시는 입력한 정보 기준이에요.`, places: booked.map((stop) => stop.id) }
+        : { text: `${day}일차에는 예약 표시가 있는 일정이 없어요. 예약 표시는 입력한 정보 기준이에요.`, places: [] };
+    }
+    return { text: "(목업 응답) 입력한 문장은 해석하지 않아요. 실제 화면에서는 서버가 답하고, 일정을 바꾸면 되돌리기 버튼이 함께 나와요.", places: [] };
+  }
+
+  function send(st, kind, text) {
+    if (st.pending) return;
+    st.messages.push({ role: "user", text });
+    st.pending = true;
+    // 일정 칸에서 막대로 보냈으면 답을 보여 주려고 채팅 칸으로 넘어간다.
+    if (st.mode !== "chat") { st.mode = "chat"; st.barOpen = true; }
+    render(st);
+    const reply = answer(kind, st);
+    st.replyTimer = setTimeout(() => { st.messages.push({ role: "assistant", ...reply }); st.pending = false; render(st); }, 900);
+  }
+
+  function act(st, el) {
+    const action = el.dataset.action;
+    if (action === "select") select(st, el.dataset.id);
+    else if (action === "day") { st.day = el.dataset.day === "all" ? "all" : Number(el.dataset.day); if (st.selected && st.day !== "all" && byId(st.selected).day !== st.day) st.selected = null; render(st); }
+    else if (action === "soon") showToast(st, { text: "이 목업에서는 열지 않아요" });
+    // 채팅 버튼은 막대만 펼친다 — 입력칸에 초점을 주지 않는다(휴대폰 자판이 뜨지 않음). 사라진 버튼 대신 키보드 초점은 막대의 접기(✕)로(2026-10-07 사용자 지시).
+    else if (action === "openBar") { st.barOpen = true; st.focusTo = "barClose"; render(st); }
+    else if (action === "closeBar") { st.barOpen = false; render(st); st.root.querySelector('[data-k="fab"]')?.focus({ preventScroll: true }); }
+    else if (action === "pane") setPane(st, el.dataset.pane);
+    else if (action === "clearSel") { st.selected = null; render(st); }
+    else if (action === "prompt") send(st, el.dataset.kind, question(el.dataset.kind, st));
+    else if (action === "place") { const stop = byId(el.dataset.id); select(st, stop.id); showToast(st, { badge: String(numberOf(stop)), text: stop.title, sub: `${st.times[stop.id] ?? stop.time} · 지도에 표시했어요` }); }
+    else if (action === "chatOption") showToast(st, { text: "채팅의 선택지는 채팅에서 처리해요", sub: "목업 — 일정은 다시 그리지 않아요" });
+    else if (action === "openCenter") openCenter(st);
+    else if (action === "closeCenter") closeCenter(st);
+    else if (action === "tab") { st.tab = el.dataset.tab; render(st); }
+    else if (action === "choose") {
+      st.choice = null;
+      render(st);
+      showToast(st, el.dataset.key === "keep" ? { text: "지금 일정을 그대로 두었어요" } : { text: "고르신 곳으로 일정을 바꿨어요", chip: { text: "바뀜", tone: "changed" }, sub: "목업 — 일정은 다시 그리지 않아요" });
+    }
+    else if (action === "undo") {
+      delete st.times[st.undo.stopId];
+      st.history.unshift({ version: st.history[0].version + 1, at: tick(st), reason: "되돌림", causes: ["자동 변경을 되돌림(예시)"] });
+      st.undo = null;
+      render(st);
+      showToast(st, { text: "바꾸기 전 일정으로 되돌렸어요" });
+    }
+    else if (action === "resume") {
+      st.recovery = { unknown: st.paused.length, unaffected: stopsOf(2).length, picked: null, chosen: null };
+      st.safety = null;
+      st.paused = [];
+      // 누른 단추(정지 패널)가 사라지므로 초점을 이어갈 자리로 옮긴다.
+      st.focusTo = st.center ? "way-0" : "pane-plan";
+      render(st);
+      showToast(st, { text: "일정을 다시 시작했어요", sub: "재난 뒤 이어가기에서 어떻게 이어갈지 골라 주세요." });
+    }
+    else if (action === "way") { st.recovery.picked = Number(el.value); render(st); }
+    else if (action === "recoveryDone") { st.recovery.chosen = RECOVERY_WAYS[st.recovery.picked]; render(st); showToast(st, { text: "고르신 것을 기록했어요", sub: st.recovery.chosen }); }
+    else if (action === "recoveryAgain") { st.recovery.chosen = null; render(st); }
+    else if (action === "call") showToast(st, { text: "목업이라 전화를 걸지 않아요", sub: "앱에서는 이 단추가 바로 전화를 걸어요(tel: 링크)." });
+    else if (action === "menu") { st.menuOpen = true; st.menuEnter = true; st.focusTo = "menuClose"; render(st); }
+    else if (action === "closeMenu") closeMenu(st);
+    else if (action === "guardian") {
+      // 켜진 것을 끄면 바로, 꺼진 것을 켜려면 「켜기 / 그대로 두기」 카드(앱의 머리줄 아이콘과 같다).
+      if (st.guardian) setGuardian(st, false);
+      else { st.menuOpen = false; st.guardianCard = true; st.cardEnter = true; st.focusTo = "gcardTitle"; render(st); }
+    }
+    else if (action === "guardianOn") { st.guardianCard = false; st.focusTo = "menu"; setGuardian(st, true); }
+    else if (action === "closeCard") closeCard(st);
+    // 메뉴 안 — 언어 목록은 그 자리에서 펼치고(앱의 움직임), 언어 · 테마는 목업이라 바꾸지 않는다. 스위치는 표시만 바뀐다.
+    else if (action === "lang") setLang(st, !st.langOpen);
+    else if (action === "langPick") { setLang(st, false); showToast(st, { text: "목업 — 화면 언어는 바꾸지 않아요" }); }
+    else if (action === "themePick") showToast(st, { text: "목업 — 테마는 바꾸지 않아요" });
+    else if (action === "pref") prefs[el.dataset.pref] = el.checked;
+    // 여행계획서 — A 카드 · B · C 작은 창 · ①②③ 원형 메뉴가 같은 두 동작을 부른다.
+    // B: 제목 — 처음 누르면 펼치고, 펼친 뒤 이름을 다시 누르면 고친다(앱과 같다). ▾ 는 아래 단추 줄을 여닫는다.
+    else if (action === "title") { if (st.titleOpen) startEdit(st); else { st.titleOpen = true; render(st); } }
+    else if (action === "titleCaret") { st.titleOpen = !st.titleOpen; render(st); }
+    else if (action === "titleEdit") startEdit(st);
+    // 등록 완료 카드 — 누르면 지금 여행 화면 카드 내용으로 펼친다(하나씩). 「상세 보기」는 상세 페이지.
+    else if (action === "toggleStop") { const id = el.dataset.id; st.selected = id; st.legSel = null; st.open = st.open === id ? null : id; render(st); showCard(st, id); }
+    // 이동 줄 — 누르면 확인 줄을 펼치고 지도의 그 구간을 굵게(펼친 것은 카드든 이동이든 하나 · 핀 선택과 구간 선택도 하나).
+    else if (action === "toggleMove") { const id = el.dataset.id; st.open = st.open === id ? null : id; st.legSel = st.open === id ? id : null; st.selected = null; render(st); }
+    // 지도의 경로선 — 구간을 굵게 하고 목록의 이동 줄도 펼치며, 같은 알림 막대로 설명한다. 같은 선을 다시 누르면 놓는다(앱 pickLine · moveToast).
+    else if (action === "leg") {
+      const id = el.dataset.id;
+      if (st.legSel === id) { st.legSel = null; if (st.open === id) st.open = null; hideToast(st); render(st); return; }
+      st.legSel = id; st.open = id; st.selected = null; render(st); showToast(st, legToast(st, id));
+    }
+    else if (action === "routeApp") showToast(st, { text: "목업 — 지도 앱에서 길찾기를 새 탭에서 열어요" });
+    else if (action === "detail") openDetail(st, el.dataset.id);
+    else if (action === "closeDetail") closeDetail(st);
+    else if (action === "detailGo") {
+      const box = st.root.querySelector(".dtCards");
+      box.scrollTo({ left: centerLeft(box, box.querySelector(`[data-card-id="${el.dataset.id}"]`)), behavior: "smooth" });
+      syncDetail(st, el.dataset.id);
+    }
+    else if (action === "detailFull") {
+      st.sheetFull = true;
+      st.root.dataset.sheet = "full";
+      st.root.querySelector(".dtMore").innerHTML = detailMore(st, byId(st.detail));
+      const body = st.root.querySelector(".dtBody");
+      setTimeout(() => { const photos = st.root.querySelector(".dtPhotos"); if (photos && body) body.scrollTo({ top: photos.offsetTop - 12, behavior: "smooth" }); }, 320);
+    }
+    else if (action === "ask") {
+      const stop = byId(el.dataset.id);
+      st.detail = null;
+      st.sheetFull = false;
+      st.selected = stop.id;
+      send(st, "selected", `${dayInfo(stop.day).date} ${st.times[stop.id] ?? stop.time} ${stop.title} 일정의 상세를 알려 주세요.`);
+    }
+    else if (action === "mapApp") showToast(st, { text: "목업 — 지도 앱(구글 지도)을 새 탭에서 열어요" });
+    else if (action === "planShare") { st.shareOpen = true; st.shareEnter = true; st.focusTo = "shareTitle"; render(st); }
+    else if (action === "closeShare") closeShare(st);
+    else if (action === "shareTo") {
+      const target = SHARE_TARGETS.find((t) => t.key === el.dataset.target);
+      st.shareOpen = false;
+      st.titleOpen = false;
+      render(st);
+      showToast(st, target.toast);
+    }
+    else if (action === "planOpen" || action === "planDownload") {
+      st.shareOpen = false;
+      st.titleOpen = false;
+      render(st);
+      showToast(st, action === "planOpen"
+        ? { text: "목업 — 여행계획서를 새 탭에서 열어요", sub: PLAN_NOTE }
+        : { text: "목업 — 계획서를 파일로 내려받아요", sub: "triPilot-내 여행.html · 혼자 열리는 HTML 파일" });
+    }
+    else if (action === "goto") {
+      const stop = byId(el.dataset.id);
+      st.center = false;
+      st.dotted.clear();
+      if (st.day !== "all") st.day = stop.day;
+      st.selected = stop.id;
+      setPane(st, "plan");
+      showCard(st, stop.id);
+      st.root.querySelector(`[data-k="card-${stop.id}"]`)?.focus({ preventScroll: true });
+    }
+  }
+
+  function mount(root) {
+    const st = { ...fresh("fresh"), root, uid: "phone-C", toast: null };
+    root.innerHTML = `<div class="map"></div>
+      <div class="top">
+        <div class="topLead">
+          <button type="button" class="logo" data-action="soon" aria-label="triPilot 처음으로"><span>t</span></button>
+          <div class="titlePill"></div>
+          <button type="button" class="dtBack" data-action="closeDetail" data-k="dtBack" aria-label="상세 닫기 · 일정으로 돌아가기" hidden>${icon("back", "i big")}</button>
+          <p class="dtName" hidden></p>
+        </div>
+        <button type="button" class="bell" data-action="openCenter" data-k="bell"></button>
+        <button type="button" class="menu" data-action="menu" data-k="menu" aria-label="메뉴" aria-haspopup="dialog" aria-expanded="false">${icon("menu", "i big")}</button>
+      </div>
+      <div class="mapChips"></div>
+      <section class="sheet" aria-label="일정 목록"></section>
+      <div class="cbar" role="group" aria-label="여행 채팅 입력"></div>
+      <section class="panel" role="dialog" aria-modal="false" aria-labelledby="phone-C-center-title"></section>
+      <div class="drawer" hidden></div>
+      <div class="gShade" hidden></div>
+      <div class="shareShade" hidden></div>
+      <div class="titleMenu" id="phone-C-titlemenu" role="group" aria-label="여행계획서" hidden></div>
+      <div class="toastSlot"></div>`;
+    root.addEventListener("click", (event) => {
+      // 옆으로 밀고 손을 뗀 자리의 카드·버튼이 눌리지 않게 한다.
+      if (st.justDragged) { st.justDragged = false; event.preventDefault(); return; }
+      // 서랍 · 카드 바깥(어두운 바탕)을 누르면 아무것도 정하지 않고 닫는다.
+      if (event.target.classList.contains("drawer")) { closeMenu(st); return; }
+      if (event.target.classList.contains("gShade")) { closeCard(st); return; }
+      if (event.target.classList.contains("shareShade")) { closeShare(st); return; }
+      if (st.titleOpen && !st.titleEdit && !st.shareOpen && !event.target.closest(".titlePill, .titleMenu")) { closeTitle(st); return; }
+      const toastButton = event.target.closest("[data-toast]");
+      if (toastButton) {
+        const run = toastButton.dataset.toast === "action" ? st.toast?.action?.run : null;
+        hideToast(st);
+        run?.();
+        return;
+      }
+      const el = event.target.closest("[data-action]");
+      if (!el || !root.contains(el) || el.matches(":disabled")) return;
+      act(st, el);
+    });
+
+    // 일정 칸: 옆으로 밀면 다음(이전) 날. 다음 날이 없으면(마지막 날 · 「전체」) 채팅 칸으로. 이전 날이 없으면 고무줄. 채팅 칸: 오른쪽으로 밀면 일정.
+    // 옆으로 10px 넘게, 세로보다 확실히 옆으로 움직일 때만 밀기로 본다(세로는 목록 스크롤).
+    let drag = null;
+    root.addEventListener("pointerdown", (event) => {
+      const pager = event.target.closest(".pager");
+      if (!pager || st.center || st.titleOpen || event.button !== 0 || event.target.closest("input, textarea, select")) return;
+      drag = { x: event.clientX, y: event.clientY, id: event.pointerId, pager, width: pager.clientWidth, active: false, dx: 0, kind: null, off: 0, shift: 0, side: 1 };
+    });
+    root.addEventListener("pointermove", (event) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+      if (!drag.active) {
+        if (Math.abs(dy) > LOCK_PX && Math.abs(dy) > Math.abs(dx)) { drag = null; return; }
+        if (Math.abs(dx) < LOCK_PX || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+        drag.active = true;
+        drag.track = drag.pager.querySelector(".track");
+        drag.list = drag.pager.querySelector(".pane .sheetBody");
+        drag.track.setAttribute("data-dragging", "");
+        drag.list.setAttribute("data-dragging", "");
+        drag.pager.setPointerCapture?.(event.pointerId);
+        root.style.userSelect = "none";
+      }
+      const width = drag.width;
+      drag.dx = dx;
+      drag.off = 0;
+      drag.shift = 0;
+      if (st.mode === "chat") { drag.kind = "pane"; drag.off = Math.max(-width, Math.min(0, -width + dx)); }
+      else {
+        drag.side = dx < 0 ? 1 : -1;
+        const neighbour = drag.side === 1 ? hasNextDay(st) : hasPrevDay(st);
+        if (neighbour) { drag.kind = "day"; drag.shift = Math.max(-width, Math.min(width, dx)); }
+        else if (drag.side === 1) { drag.kind = "pane"; drag.off = Math.max(-width, Math.min(0, dx)); }
+        else { drag.kind = "rubber"; drag.shift = Math.min(dx * RUBBER, RUBBER_MAX); }
+      }
+      drag.track.style.transform = drag.kind === "pane" ? `translateX(${drag.off}px)` : "";
+      drag.list.style.transform = drag.shift ? `translateX(${drag.shift}px)` : "";
+    });
+    const end = (event) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const done = drag;
+      drag = null;
+      if (!done.active) return;
+      root.style.userSelect = "";
+      st.justDragged = true;
+      setTimeout(() => { st.justDragged = false; }, 0);
+      const far = done.width * COMMIT;
+      const cancelled = event.type === "pointercancel";
+      done.list.removeAttribute("data-dragging");
+      if (done.kind === "day" && !cancelled && Math.abs(done.shift) > far) { turnDay(st, done.side, done.shift, done.width); return; }
+      if (done.kind === "pane") {
+        done.list.style.transform = "";
+        const next = cancelled ? st.mode : st.mode === "plan" && done.dx < -far ? "chat" : st.mode === "chat" && done.dx > far ? "plan" : st.mode;
+        st.dragFrom = `${done.off}px`;
+        setPane(st, next);
+        return;
+      }
+      // 짧게 밀었거나 고무줄 — 제자리로 돌아온다(CSS 전환).
+      done.track.removeAttribute("data-dragging");
+      done.list.style.transform = "";
+    };
+    root.addEventListener("pointerup", end);
+    root.addEventListener("pointercancel", end);
+
+    root.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        if (st.titleEdit) { event.preventDefault(); st.titleEdit = false; st.focusTo = "title"; render(st); return; }
+        if (st.menuOpen && st.langOpen) { event.preventDefault(); setLang(st, false); return; }
+        if (st.shareOpen) { event.preventDefault(); closeShare(st); return; }
+        if (st.guardianCard) { event.preventDefault(); closeCard(st); return; }
+        if (st.menuOpen) { event.preventDefault(); closeMenu(st); return; }
+        if (st.center) { event.preventDefault(); closeCenter(st); return; }
+        if (st.titleOpen) { event.preventDefault(); closeTitle(st); st.root.querySelector('[data-k="title"]')?.focus({ preventScroll: true }); return; }
+        if (st.detail) { event.preventDefault(); closeDetail(st); return; }
+        if (st.mode === "chat") { event.preventDefault(); setPane(st, "plan"); return; }
+        if (st.barOpen) { event.preventDefault(); st.barOpen = false; render(st); root.querySelector('[data-k="fab"]')?.focus({ preventScroll: true }); return; }
+      }
+      const tab = event.target.closest?.('[data-action="tab"]');
+      if (tab && (event.key === "ArrowRight" || event.key === "ArrowLeft")) {
+        event.preventDefault();
+        const at = TABS.findIndex(([key]) => key === st.tab);
+        st.tab = TABS[(at + (event.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length][0];
+        render(st);
+        root.querySelector(`[data-k="tab-${st.tab}"]`)?.focus({ preventScroll: true });
+        return;
+      }
+      const pin = event.target.closest?.(".pin");
+      if (pin && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); act(st, pin); }
+    });
+    root.addEventListener("input", (event) => {
+      if (event.target.dataset.k === "input") st.draft = event.target.value;
+    });
+    // 일정 칸에서 펼친 막대의 입력칸을 누르거나 초점이 오면(Tab 포함) 채팅 칸으로 넘어가 거기서 쓴다(2026-10-07 사용자 지시). 다시 그린 입력칸으로 초점을 옮긴다.
+    root.addEventListener("focusin", (event) => {
+      if (event.target.dataset?.k !== "input" || st.mode !== "plan") return;
+      st.focusTo = "input";
+      setPane(st, "chat");
+      const input = root.querySelector('[data-k="input"]');
+      if (input) input.setSelectionRange(input.value.length, input.value.length);   // 쓰던 글이 있으면 커서는 끝에
+    });
+    // 이름 입력칸 — Enter 나 다른 곳으로 나가면 저장(Esc 는 위에서 그대로 둔다). 앱 TripTitle 과 같다.
+    root.addEventListener("focusout", (event) => { if (event.target.dataset && event.target.dataset.k === "titleInput") saveTitle(st, event.target.value); });
+    root.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (event.target.classList.contains("titleForm")) { saveTitle(st, event.target.querySelector("input").value); return; }
+      const text = st.draft.trim();
+      if (!text) { showToast(st, { text: "메시지를 입력해 주세요." }); root.querySelector('[data-k="input"]')?.focus(); return; }
+      if (st.pending) return;
+      st.draft = "";
+      send(st, "free", text);
+      root.querySelector('[data-k="input"]')?.focus({ preventScroll: true });
+    });
+    render(st);
+    return st;
+  }
+
+  const st = mount(document.querySelector(".phone"));
+
+  function pick(attr, value) {
+    document.querySelectorAll(`[data-${attr}]`).forEach((button) => button.setAttribute("aria-pressed", String(button.dataset[attr] === value)));
+  }
+  document.querySelector(".review").addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+    if (button.dataset.set) {
+      clearTimeout(st.replyTimer);
+      hideToast(st);
+      Object.assign(st, fresh(button.dataset.set), { resetScroll: true, lastSheet: null, dragFrom: null, dayFrom: null });
+      pick("set", button.dataset.set);
+      render(st);
+    }
+    else if (button.dataset.arrive) { arrive(st, button.dataset.arrive, tick(st), false); render(st); }
+    // 자리만 바꾼다 — 열려 있던 메뉴는 그대로 열린 채 새 자리로 다시 그린다.
+  });
+})();
+</script>
+</body>
+</html>

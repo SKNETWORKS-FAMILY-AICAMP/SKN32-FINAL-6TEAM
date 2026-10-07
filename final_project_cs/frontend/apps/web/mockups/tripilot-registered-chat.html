@@ -22,6 +22,7 @@ button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 .i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .i.big { width: 22px; height: 22px; }
+.i.sm { width: 14px; height: 14px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* 검토 막대 — 휴대폰 밖 */
@@ -32,16 +33,17 @@ button { cursor: pointer; }
 .controls button, .pick button { min-height: 36px; padding: 0 14px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); font-size: 13px; font-weight: 700; }
 .pick { display: none; margin-top: 10px; }
 .pick button[aria-pressed="true"] { border-color: var(--color-text); background: var(--color-text); color: var(--color-on-primary); }
-.stage { display: flex; justify-content: center; align-items: flex-start; gap: 48px; padding: 18px 16px 28px; }
+.stage { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 40px 48px; padding: 18px 16px 28px; }
 .variant { display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 0; }
 .variant > header { width: 390px; max-width: calc(100vw - 32px); }
 .variant h2 { margin: 0; font-size: 15px; font-weight: 750; }
 .variant h2 b { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 6px; border-radius: 6px; background: var(--color-text); color: var(--color-on-primary); font-size: 12px; }
 .variant .lead { margin: 4px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--color-text-secondary); }
-@media (min-width: 900px) { .variant > header { min-height: 92px; } }
+@media (min-width: 900px) { .variant > header { min-height: 104px; } }
 @media (max-width: 899px) {
   .pick { display: flex; }
-  .stage[data-show="A"] .variant[data-variant="B"], .stage[data-show="B"] .variant[data-variant="A"] { display: none; }
+  .stage .variant { display: none; }
+  .stage[data-show="A"] .variant[data-variant="A"], .stage[data-show="B"] .variant[data-variant="B"], .stage[data-show="C"] .variant[data-variant="C"] { display: flex; }
 }
 
 /* 휴대폰 */
@@ -191,8 +193,37 @@ button { cursor: pointer; }
 .pageHead p { margin: 2px 0 0; font-size: 12px; color: var(--color-muted); }
 .pageDays { display: flex; flex: none; gap: 6px; padding: 0 14px 8px; }
 
+/* C안 — 채팅 버튼이 막대로 늘어나고, 시트는 일정 ↔ 채팅을 옆으로 넘긴다 */
+.phone[data-variant="C"][data-mode="chat"] { --sheet-h: 62%; }
+.paneSwitch { display: inline-flex; flex: none; gap: 2px; padding: 3px; border-radius: 999px; background: var(--color-subtle); }
+.paneSwitch button { height: 28px; padding: 0 13px; border: 0; border-radius: 999px; background: none; color: var(--color-muted); font-size: 12.5px; font-weight: 750; }
+.paneSwitch button[aria-selected="true"] { background: var(--color-surface); color: var(--color-text); box-shadow: 0 1px 4px rgba(36, 57, 47, .16); }
+.pager { position: relative; flex: 1; min-height: 0; overflow: hidden; touch-action: pan-y; }
+.track { display: flex; width: 200%; height: 100%; transform: translateX(0); transition: transform .32s cubic-bezier(.25, .8, .3, 1); }
+.phone[data-mode="chat"] .track { transform: translateX(-50%); }
+.track[data-dragging] { transition: none; }
+.pane { display: flex; flex-direction: column; width: 50%; height: 100%; min-height: 0; }
+.pane > .sheetBody { flex: 1; }
+.chatPane { padding-bottom: 84px; }
+.chatPane .prompts { flex: none; padding-top: 8px; border-top: 1px solid var(--color-divider); }
+.swipeHint { display: flex; align-items: center; justify-content: flex-end; gap: 3px; margin: 10px 2px 0; font-size: 11.5px; font-weight: 650; color: var(--color-faint); }
+.cbar { position: absolute; z-index: 7; right: 18px; bottom: 22px; display: flex; align-items: center; width: 58px; height: 58px; border: 1px solid transparent; border-radius: 29px; background: var(--color-primary); box-shadow: 0 10px 24px rgba(36, 57, 47, .35); overflow: hidden; opacity: 0; transform: scale(.4); pointer-events: none;
+  transition: width .34s cubic-bezier(.3, 1.12, .5, 1), background-color .2s ease, border-color .2s ease, box-shadow .2s ease, opacity .25s ease, transform .3s cubic-bezier(.3, 1.4, .5, 1); }
+.cbar[data-shown] { opacity: 1; transform: none; pointer-events: auto; }
+.cbar[data-open] { width: calc(100% - 36px); border-color: var(--color-border-strong); background: var(--color-surface); box-shadow: 0 10px 26px rgba(36, 57, 47, .22); }
+.cbar[data-open]:focus-within { border-color: var(--color-selected); box-shadow: 0 0 0 3px var(--color-selected-soft), 0 10px 26px rgba(36, 57, 47, .22); }
+.barFab { display: grid; place-items: center; flex: none; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--color-on-primary); }
+.barFab .i { width: 26px; height: 26px; }
+.barClose { display: grid; place-items: center; flex: none; width: 40px; height: 40px; margin-left: 7px; padding: 0; border: 0; border-radius: 50%; background: var(--color-subtle); color: var(--color-muted); }
+.barForm { display: flex; flex: 1; align-items: center; gap: 6px; min-width: 0; padding: 0 6px 0 12px; animation: barIn .24s .12s both; }
+.barForm.still { animation: none; }
+.barForm input { flex: 1; min-width: 0; height: 44px; padding: 0 2px; border: 0; background: none; font-size: 16px; outline: none; }
+.barSend { display: grid; place-items: center; flex: none; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: var(--color-primary); color: var(--color-on-primary); }
+.barSend:disabled { opacity: .5; }
+@keyframes barIn { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+
 /* 비교 메모 */
-.notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 1000px; margin: 0 auto; padding: 0 16px 40px; }
+.notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; max-width: 1240px; margin: 0 auto; padding: 0 16px 40px; }
 .notes section { padding: 16px 18px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
 .notes .wide { grid-column: 1 / -1; }
 .notes h3 { margin: 0; font-size: 15px; font-weight: 750; }
@@ -206,8 +237,8 @@ button { cursor: pointer; }
 <body>
 <header class="review">
   <h1>등록 후 채팅 배치 비교</h1>
-  <p class="meta">작성일 2026-10-06 · 상태: 검토용 비교안 / 실제 API 미연결. 장소·시각·이동·답변은 예시 값이고 지도는 위치 개념도다. 두 휴대폰 모두 「여행 등록」을 누르면 같은 화면에 머물고, 하단 버튼 줄 대신 오른쪽 아래 채팅 버튼이 뜬다.</p>
-  <div class="controls" role="group" aria-label="두 화면 함께 바꾸기">
+  <p class="meta">작성일 2026-10-06 · 개정 2026-10-07(C안 추가) · 상태: 검토용 비교안 / 실제 API 미연결. 장소·시각·이동·답변은 예시 값이고 지도는 위치 개념도다. 세 휴대폰 모두 「여행 등록」을 누르면 같은 화면에 머물고, 하단 버튼 줄 대신 오른쪽 아래 채팅 버튼이 뜬다.</p>
+  <div class="controls" role="group" aria-label="세 화면 함께 바꾸기">
     <button type="button" data-all="reset">처음 상태로(등록 전)</button>
     <button type="button" data-all="registered">등록 완료 상태로</button>
     <button type="button" data-all="chat">채팅 연 상태로</button>
@@ -215,6 +246,7 @@ button { cursor: pointer; }
   <div class="pick" role="group" aria-label="볼 안 고르기">
     <button type="button" data-pick="A" aria-pressed="true">A안 · 일정 자리에 채팅</button>
     <button type="button" data-pick="B" aria-pressed="false">B안 · 채팅 화면으로 이동</button>
+    <button type="button" data-pick="C" aria-pressed="false">C안 · 채팅 막대 + 옆으로 넘기기</button>
   </div>
 </header>
 
@@ -229,11 +261,16 @@ button { cursor: pointer; }
       <p class="lead">채팅 버튼을 누르면 채팅 화면이 옆에서 들어온다. 뒤로 가면 보던 일차·선택 그대로 일정 화면으로 돌아오고, 답에 나온 장소는 「지도에서 보기」로 돌아가 확인한다.</p></header>
     <div class="phone" data-variant="B" role="region" aria-label="B안 휴대폰 화면"></div>
   </section>
+  <section class="variant" data-variant="C" aria-labelledby="title-C">
+    <header><h2 id="title-C"><b>C</b>채팅 막대 + 옆으로 넘기기</h2>
+      <p class="lead">채팅 버튼을 누르면 버튼이 옆으로 늘어나 입력 막대가 된다 — 일정을 보면서 바로 보내고, 보내면 답을 보러 채팅으로 넘어간다. 일정 목록을 옆으로 밀면(또는 머리의 「일정 | 채팅」) 같은 시트 안에서 채팅으로 넘어간다.</p></header>
+    <div class="phone" data-variant="C" role="region" aria-label="C안 휴대폰 화면"></div>
+  </section>
 </main>
 
 <div class="notes">
   <section class="wide">
-    <h3>두 안 공통</h3>
+    <h3>세 안 공통</h3>
     <h4>확인된 사실 — 지금 앱(2026-10-06, <code>091a4b9</code>)</h4>
     <ul>
       <li>「여행 등록」 뒤 하단 버튼이 「✓ 등록 완료」 링크로 바뀌고, 누르면 여행 화면(<code>/trips/[id]</code>)으로 넘어간다.</li>
@@ -242,7 +279,7 @@ button { cursor: pointer; }
     <h4>이 목업의 제안</h4>
     <ul>
       <li>등록해도 화면을 넘기지 않는다. 하단 버튼 줄을 없애고 오른쪽 아래에 채팅 버튼을 띄운다. 시트 제목은 「등록 완료」, 카드의 고정·수정·삭제는 흐리게 둔다(지금 등록 뒤와 같다).</li>
-      <li>받은 알림·변경 이력은 시트 맨 위 한 줄로 접어 둔다 — 자리는 가정이며, 채팅 비교에 영향이 없게 두 안을 같게 했다.</li>
+      <li>받은 알림·변경 이력은 시트 맨 위 한 줄로 접어 둔다 — 자리는 가정이며, 채팅 비교에 영향이 없게 세 안을 같게 했다.</li>
       <li>채팅 버튼이 마지막 카드의 삭제 버튼을 가리지 않게 등록 뒤 목록 아래에 여백(88px)을 둔다.</li>
       <li>채팅 연결: 지금 계약의 여행 대화(<code>POST /v1/web/trips/{id}/messages</code>)와 알림(<code>GET /v1/web/trips/{id}/notices</code>)을 등록으로 받은 여행 ID로 부르면 된다고 본다 — 구현 때 확인한다. 목업의 답은 미리 적어 둔 예시다.</li>
     </ul>
@@ -277,6 +314,21 @@ button { cursor: pointer; }
     <ul>
       <li>대화 중에는 지도를 못 본다. 장소는 「지도에서 보기」로 돌아가 확인한다.</li>
       <li>화면 이동이 하나 생긴다. 새 주소로 둘지, 같은 주소 위 덮개로 둘지에 따라 브라우저 뒤로 가기 동작이 달라진다(미정).</li>
+    </ul>
+  </section>
+  <section>
+    <h3>C안 · 채팅 막대 + 옆으로 넘기기</h3>
+    <h4>좋은 점</h4>
+    <ul>
+      <li>일정을 보면서 바로 묻는다. 막대가 일정 위에 떠 있어 화면을 바꾸지 않고 입력하고, 보내면 답을 보러 채팅으로 넘어간다.</li>
+      <li>지도는 그대로 남고 일정 ↔ 채팅을 손가락 한 번으로 오간다. 머리의 「일정 | 채팅」으로도 넘긴다(밀기를 모르는 사람·키보드용).</li>
+      <li>입력칸이 막대 하나라 일정 쪽과 채팅 쪽 입력이 어긋나지 않는다.</li>
+    </ul>
+    <h4>걱정되는 점</h4>
+    <ul>
+      <li>★지금 앱의 계획 확인 화면은 일정 목록을 옆으로 밀면 <b>다음 날</b>로 넘어간다(「옆으로 밀면 2일차 일정이 나와요」, <code>use-day-gestures</code>). 같은 몸짓이라 겹친다 — 「마지막 날에서 한 번 더 밀면 채팅」, 「머리줄을 밀어야 채팅」, 「일차는 칩으로만 넘기기」 중 하나를 정해야 한다. 이 목업은 일차 넘기기를 넣지 않았다.</li>
+      <li>대화 칸은 A안처럼 시트 안이라 좁다(이 목업에서 약 220px — A안 약 240px, B안 약 570px). 막대가 시트 아래를 덮어 목록·대화 끝에 여백이 필요하다.</li>
+      <li>막대를 편 채 일정을 보면 휴대폰 키보드가 일정 절반을 가린다(실기기 미확인).</li>
     </ul>
   </section>
 </div>
@@ -332,7 +384,8 @@ button { cursor: pointer; }
   const nextOf = (stop) => { const list = stopsOf(stop.day); return list[list.indexOf(stop) + 1] ?? null; };
   const GREETING = { role: "assistant", text: "등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.", places: [] };
 
-  const fresh = () => ({ registered: false, busy: false, day: 1, selected: null, mode: "plan", noticesOpen: false, messages: [GREETING], pending: false, draft: "", error: "" });
+  // C안: mode 는 시트가 보이는 칸(plan 일정 · chat 채팅), barOpen 은 채팅 막대가 펼쳐졌는지.
+  const fresh = () => ({ registered: false, busy: false, day: 1, selected: null, mode: "plan", barOpen: false, noticesOpen: false, messages: [GREETING], pending: false, draft: "", error: "" });
 
   /* ---------- 그리기 ---------- */
   function mapSvg(st) {
@@ -390,13 +443,15 @@ button { cursor: pointer; }
 
   const doneBadge = `<span class="doneBadge">${icon("check")}등록 완료</span>`;
 
+  const listsOf = (st) => (st.day === "all"
+    ? DAYS.map((d) => `<p class="dayHead">${d.day}일차<small>${d.label}</small></p>${dayList(d.day, st)}`).join("")
+    : `<p class="dayHead">${st.day}일차<small>${dayInfo(st.day).label}</small></p>${dayList(st.day, st)}`);
+
   function planSheet(st) {
     const head = st.registered
       ? `<h3>등록 완료</h3>${doneBadge}`
       : `<h3>계획 확인</h3><p class="count">모두 확인했어요</p>`;
-    const lists = st.day === "all"
-      ? DAYS.map((d) => `<p class="dayHead">${d.day}일차<small>${d.label}</small></p>${dayList(d.day, st)}`).join("")
-      : `<p class="dayHead">${st.day}일차<small>${dayInfo(st.day).label}</small></p>${dayList(st.day, st)}`;
+    const lists = listsOf(st);
     const footer = st.registered ? "" : `<div class="footer">
         <button type="button" class="footButton" data-action="autoAll" aria-disabled="true">${icon("sparkle")}전체 자동 추천</button>
         <button type="button" class="footButton" data-primary data-action="register" data-k="register"${st.busy ? ' aria-disabled="true"' : ""}>${st.busy ? '<span class="spinner" aria-hidden="true"></span>등록하는 중…' : `${icon("check")}여행 등록`}</button>
@@ -408,7 +463,8 @@ button { cursor: pointer; }
       ${footer}`;
   }
 
-  function chatBody(st, where) {
+  /** `form: false` — C안: 입력은 채팅 막대가 맡으니 대화와 빠른 질문만 그린다. */
+  function chatBody(st, where, form = true) {
     const sel = byId(st.selected);
     const ctxText = st.day === "all" ? "전체 일정" : `${st.day}일차 · ${dayInfo(st.day).label}`;
     const hint = where === "sheet" ? "지도 핀이나 일차를 누르면 물어볼 일정이 바뀌어요" : "선택한 일정이 없어요";
@@ -417,8 +473,10 @@ button { cursor: pointer; }
       ${m.places && m.places.length ? `<div class="places">${m.places.map((id) => `<button type="button" class="placeChip" data-action="place" data-id="${id}">${icon("pin")}${esc(byId(id).title)}${where === "page" ? "<em>· 지도에서 보기</em>" : ""}</button>`).join("")}</div>` : ""}</article>`).join("");
     const prompts = [["summary", "하루 요약", false], ["selected", "선택 일정", !sel], ["next", "다음 일정", !sel], ["booking", "예약 표시", false]]
       .map(([kind, label, needsSel]) => `<button type="button" class="prompt" data-action="prompt" data-kind="${kind}" data-k="prompt-${kind}"${st.pending || needsSel ? " disabled" : ""}>${label}</button>`).join("");
-    return `<div class="ctx"><strong>${ctxText}</strong>${selChip}</div>
-      <div class="log" role="log" aria-label="여행 대화 이력" aria-live="polite">${messages}${st.pending ? '<p class="pending" role="status">답변을 준비하고 있어요</p>' : ""}</div>
+    const head = `<div class="ctx"><strong>${ctxText}</strong>${selChip}</div>
+      <div class="log" role="log" aria-label="여행 대화 이력" aria-live="polite">${messages}${st.pending ? '<p class="pending" role="status">답변을 준비하고 있어요</p>' : ""}</div>`;
+    if (!form) return `${head}<div class="prompts">${prompts}</div>`;
+    return `${head}
       <div class="composer">
         <div class="prompts">${prompts}</div>
         <form class="form" novalidate>
@@ -444,22 +502,93 @@ button { cursor: pointer; }
       <div class="chat">${chatBody(st, "page")}</div>`;
   }
 
+  /** C안 등록 뒤 시트: 머리의 「일정 | 채팅」, 함께 쓰는 일차 칩, 옆으로 넘기는 두 칸(일정 · 채팅). */
+  function cSheet(st) {
+    const plan = st.mode === "plan";
+    return `<div class="handle" aria-hidden="true"><span></span></div>
+      <header class="sheetHead"><h3>등록 완료</h3>
+        <div class="paneSwitch" role="tablist" aria-label="일정과 채팅 바꾸기">
+          <button type="button" role="tab" data-action="pane" data-pane="plan" data-k="pane-plan" aria-selected="${plan}">일정</button>
+          <button type="button" role="tab" data-action="pane" data-pane="chat" data-k="pane-chat" aria-selected="${!plan}">채팅</button>
+        </div></header>
+      ${dayStrip(st)}
+      <div class="pager"><div class="track">
+        <div class="pane" aria-label="일정"${plan ? "" : " inert"}><div class="sheetBody">${noticeRow(st)}<p class="swipeHint">${icon("back", "i sm")}옆으로 밀면 채팅</p>${listsOf(st)}<p class="credit">장소 정보 출처 : ⓒ한국관광공사 · 예시 데이터</p></div></div>
+        <div class="pane chatPane" aria-label="여행 채팅"${plan ? " inert" : ""}>${chatBody(st, "sheet", false)}</div>
+      </div></div>`;
+  }
+
+  /** C안 채팅 막대: 접히면 동그란 채팅 버튼, 펼치면 입력칸 + 보내기(일정 칸에서는 닫기 버튼도). 채팅 칸에서는 늘 펼친다. */
+  function renderBar(st) {
+    const bar = st.root.querySelector(".cbar");
+    const shown = st.registered;
+    const open = shown && (st.barOpen || st.mode === "chat");
+    const still = bar.dataset.state === "open" && open;
+    bar.toggleAttribute("data-shown", shown);
+    bar.toggleAttribute("data-open", open);
+    bar.inert = !shown;
+    bar.dataset.state = open ? "open" : "closed";
+    // 모양(펼침 · 칸)이 그대로면 다시 그리지 않는다 — 쓰는 중인 글자와 커서를 지킨다.
+    const shape = `${open}|${st.mode}`;
+    if (bar.dataset.shape === shape) {
+      const input = bar.querySelector("input");
+      if (input && input.value !== st.draft) input.value = st.draft;
+      const sendButton = bar.querySelector(".barSend");
+      if (sendButton) sendButton.disabled = st.pending;
+      return;
+    }
+    bar.dataset.shape = shape;
+    bar.innerHTML = open
+      ? `${st.mode === "plan" ? `<button type="button" class="barClose" data-action="closeBar" data-k="barClose" aria-label="채팅 막대 접기">${icon("x")}</button>` : ""}
+        <form class="barForm${still ? " still" : ""}" novalidate><label class="sr-only" for="${st.uid}-input">여행 메시지</label>
+          <input id="${st.uid}-input" data-k="input" autocomplete="off" maxlength="600" placeholder="${st.mode === "plan" ? "일정을 보며 바로 물어보세요" : "일정에 대해 궁금한 점을 입력하세요"}" value="${esc(st.draft)}">
+          <button type="submit" class="barSend" aria-label="메시지 전송"${st.pending ? " disabled" : ""}>${icon("send")}</button></form>`
+      : `<button type="button" class="barFab" data-action="openBar" data-k="fab" aria-label="채팅 입력 열기">${icon("chat")}</button>`;
+  }
+
+  /** C안: 칸을 바꾼다. 채팅 칸이면 막대를 펴고, 일정으로 돌아오면 쓰던 글이 없을 때 막대를 접는다. */
+  function setPane(st, pane) {
+    if (st.mode !== pane) {
+      st.mode = pane;
+      if (pane === "chat") st.barOpen = true;
+      else if (!st.draft.trim()) st.barOpen = false;
+    }
+    render(st);
+  }
+
   function render(st) {
     const root = st.root;
+    const isC = st.variant === "C";
     const focused = root.contains(document.activeElement) ? document.activeElement.dataset.k : null;
     const body = root.querySelector(".sheetBody");
-    const keepScroll = body && st.lastSheet === st.mode ? body.scrollTop : 0;
+    const keepScroll = body && (isC || st.lastSheet === st.mode) ? body.scrollTop : 0;
     const chatOpen = st.mode === "chat";
     root.dataset.mode = st.mode;
     root.toggleAttribute("data-registered", st.registered);
     root.querySelector(".map").innerHTML = mapSvg(st);
     const sheet = root.querySelector(".sheet");
-    sheet.innerHTML = st.variant === "A" && chatOpen ? chatSheet(st) : planSheet(st);
+    sheet.innerHTML = isC ? (st.registered ? cSheet(st) : planSheet(st)) : st.variant === "A" && chatOpen ? chatSheet(st) : planSheet(st);
     sheet.inert = st.variant === "B" && chatOpen;
     const fab = root.querySelector(".fab");
-    const fabShown = st.registered && !chatOpen;
-    fab.toggleAttribute("data-shown", fabShown);
-    fab.inert = !fabShown;
+    if (fab) {
+      const fabShown = st.registered && !chatOpen;
+      fab.toggleAttribute("data-shown", fabShown);
+      fab.inert = !fabShown;
+    }
+    if (isC) {
+      renderBar(st);
+      // 칸이 바뀌었거나 손을 뗀 자리에서 새 칸까지 미끄러지게 — 새로 그린 줄을 옛 자리에 놓았다가 풀어 준다.
+      const track = sheet.querySelector(".track");
+      const from = st.dragFrom ?? (st.lastSheet && st.lastSheet !== st.mode ? (st.lastSheet === "chat" ? "-50%" : "0%") : null);
+      if (track && from !== null) {
+        track.style.transition = "none";
+        track.style.transform = `translateX(${from})`;
+        track.getBoundingClientRect();
+        track.style.transition = "";
+        track.style.transform = "";
+      }
+      st.dragFrom = null;
+    }
     if (st.variant === "B") {
       const page = root.querySelector(".chatPage");
       page.innerHTML = chatPage(st);
@@ -540,6 +669,8 @@ button { cursor: pointer; }
     st.messages.push({ role: "user", text });
     st.pending = true;
     st.error = "";
+    // C안: 일정 칸에서 막대로 보냈으면 답을 보여 주려고 채팅 칸으로 넘어간다.
+    if (st.variant === "C" && st.mode !== "chat") { st.mode = "chat"; st.barOpen = true; }
     render(st);
     const reply = answer(kind, st);
     st.replyTimer = setTimeout(() => { st.messages.push({ role: "assistant", ...reply }); st.pending = false; render(st); }, 900);
@@ -565,7 +696,11 @@ button { cursor: pointer; }
     else if (action === "register") {
       if (st.busy || st.registered) return;
       st.busy = true; render(st);
-      setTimeout(() => { st.busy = false; st.registered = true; render(st); toast(st, "여행을 등록했어요 · 오른쪽 아래 버튼으로 채팅을 열 수 있어요"); st.root.querySelector(".fab").focus({ preventScroll: true }); }, 800);
+      setTimeout(() => {
+        st.busy = false; st.registered = true; render(st);
+        toast(st, st.variant === "C" ? "여행을 등록했어요 · 오른쪽 아래 버튼이나 일정을 옆으로 밀어 채팅을 열 수 있어요" : "여행을 등록했어요 · 오른쪽 아래 버튼으로 채팅을 열 수 있어요");
+        st.root.querySelector('[data-k="fab"]')?.focus({ preventScroll: true });
+      }, 800);
     }
     else if (action === "autoAll") toast(st, "고칠 곳이 없어요");
     else if (action === "tool") toast(st, st.registered ? "이미 등록한 여행이에요" : "이 목업은 고정·수정·삭제를 다루지 않아요");
@@ -573,10 +708,13 @@ button { cursor: pointer; }
     else if (action === "notices") { st.noticesOpen = !st.noticesOpen; render(st); }
     else if (action === "openChat") openChat(st);
     else if (action === "closeChat") closeChat(st);
+    else if (action === "openBar") { st.barOpen = true; render(st); st.root.querySelector('[data-k="input"]')?.focus({ preventScroll: true }); }
+    else if (action === "closeBar") { st.barOpen = false; render(st); st.root.querySelector('[data-k="fab"]')?.focus({ preventScroll: true }); }
+    else if (action === "pane") setPane(st, el.dataset.pane);
     else if (action === "clearSel") { st.selected = null; render(st); }
     else if (action === "prompt") send(st, el.dataset.kind, question(el.dataset.kind, st));
     else if (action === "place") {
-      if (st.variant === "A") { select(st, el.dataset.id); toast(st, `지도에 ${byId(el.dataset.id).title} 표시`); }
+      if (st.variant === "A" || st.variant === "C") { select(st, el.dataset.id); toast(st, `지도에 ${byId(el.dataset.id).title} 표시`); }
       else { st.mode = "plan"; select(st, el.dataset.id); st.root.querySelector(`[data-k="card-${el.dataset.id}"]`)?.focus({ preventScroll: true }); }
     }
   }
@@ -592,15 +730,62 @@ button { cursor: pointer; }
         <button type="button" class="menu" data-action="soon" aria-label="메뉴">${icon("menu", "i big")}</button>
       </div>
       <section class="sheet" aria-label="일정 목록"></section>
-      <button type="button" class="fab" data-action="openChat" data-k="fab" aria-label="여행 채팅 열기">${icon("chat")}</button>
+      ${variant === "C" ? '<div class="cbar" role="group" aria-label="여행 채팅 입력"></div>' : `<button type="button" class="fab" data-action="openChat" data-k="fab" aria-label="여행 채팅 열기">${icon("chat")}</button>`}
       <p class="toast" role="status"></p>
       ${variant === "B" ? '<section class="chatPage" aria-label="여행 채팅 화면"></section>' : ""}`;
     root.addEventListener("click", (event) => {
+      // 옆으로 밀고 손을 뗀 자리의 카드·버튼이 눌리지 않게 한다.
+      if (st.justDragged) { st.justDragged = false; event.preventDefault(); return; }
       const el = event.target.closest("[data-action]");
       if (!el || !root.contains(el) || el.matches(":disabled")) return;
       act(st, el);
     });
+    if (variant === "C") {
+      // 일정 ↔ 채팅 칸을 옆으로 민다. 옆으로 10px 넘게, 세로보다 확실히 옆으로 움직일 때만 넘기기로 본다(세로는 목록 스크롤).
+      let drag = null;
+      root.addEventListener("pointerdown", (event) => {
+        const pager = event.target.closest(".pager");
+        if (!pager || !st.registered || event.button !== 0) return;
+        drag = { x: event.clientX, y: event.clientY, id: event.pointerId, pager, width: pager.clientWidth, active: false, dx: 0, off: 0 };
+      });
+      root.addEventListener("pointermove", (event) => {
+        if (!drag || event.pointerId !== drag.id) return;
+        const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+        if (!drag.active) {
+          if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { drag = null; return; }
+          if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+          drag.active = true;
+          drag.track = drag.pager.querySelector(".track");
+          drag.track.setAttribute("data-dragging", "");
+          drag.pager.setPointerCapture?.(event.pointerId);
+          root.style.userSelect = "none";
+        }
+        const base = st.mode === "chat" ? -drag.width : 0;
+        drag.dx = dx;
+        drag.off = Math.max(-drag.width, Math.min(0, base + dx));
+        drag.track.style.transform = `translateX(${drag.off}px)`;
+      });
+      const end = (event) => {
+        if (!drag || event.pointerId !== drag.id) return;
+        const done = drag;
+        drag = null;
+        if (!done.active) return;
+        root.style.userSelect = "";
+        st.justDragged = true;
+        setTimeout(() => { st.justDragged = false; }, 0);
+        const far = done.width * 0.22;
+        const next = st.mode === "plan" && done.dx < -far ? "chat" : st.mode === "chat" && done.dx > far ? "plan" : st.mode;
+        st.dragFrom = `${done.off}px`;
+        setPane(st, next);
+      };
+      root.addEventListener("pointerup", end);
+      root.addEventListener("pointercancel", end);
+    }
     root.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && st.variant === "C") {
+        if (st.mode === "chat") { event.preventDefault(); setPane(st, "plan"); return; }
+        if (st.barOpen) { event.preventDefault(); st.barOpen = false; render(st); root.querySelector('[data-k="fab"]')?.focus({ preventScroll: true }); return; }
+      }
       if (event.key === "Escape" && st.mode === "chat") { event.preventDefault(); closeChat(st); return; }
       const pin = event.target.closest?.(".pin");
       if (pin && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); act(st, pin); }
@@ -613,7 +798,9 @@ button { cursor: pointer; }
     root.addEventListener("submit", (event) => {
       event.preventDefault();
       const text = st.draft.trim();
+      if (!text && st.variant === "C") { toast(st, "메시지를 입력해 주세요."); root.querySelector('[data-k="input"]')?.focus(); return; }
       if (!text) { st.error = "메시지를 입력해 주세요."; render(st); root.querySelector('[data-k="input"]')?.focus(); return; }
+      if (st.pending) return;
       st.draft = "";
       send(st, "free", text);
       root.querySelector('[data-k="input"]')?.focus({ preventScroll: true });
@@ -631,7 +818,7 @@ button { cursor: pointer; }
       clearTimeout(st.replyTimer);
       Object.assign(st, fresh());
       if (kind !== "reset") st.registered = true;
-      if (kind === "chat") st.mode = "chat";
+      if (kind === "chat") { st.mode = "chat"; st.barOpen = true; }
       render(st);
     });
   });
