@@ -26,7 +26,7 @@ from . import survey_answers
 from .areas import areas_for
 from .assemble import assemble, effective
 from .rules import read_plan
-from .sources import UnsupportedSource, sniff, to_text
+from .sources import UnsupportedSource, other_reading, sniff, to_text
 
 KST = ZoneInfo("Asia/Seoul")
 log = logging.getLogger(__name__)
@@ -856,8 +856,11 @@ def flag_differing(rows: list[dict[str, Any]], differs: dict[int, dict[str, Any]
         if unlike is None:
             continue
         row["needs_review"] = True
-        row["evidence"] = {**evidence, "transcription_differs": {"text": unlike.get("text"), "other": unlike.get("other"), "ratio": unlike.get("ratio")}}
-        note = f"받아쓰기가 같은 줄을 두 번 다르게 읽었다 — 「{unlike.get('text')}」 / 「{unlike.get('other')}」 · 원본과 맞는지 확인해 주세요"
+        # ★`[2026-10-07 uiux 요청]` `other_value` — 반쪽 받아쓰기에서는 **이 값이 무엇으로 읽혔나**(줄 전체가 아니라 값만). 화면이 「지금 값 / 다른 읽기」 단추를 그리고 고른 값을 보낸다. 못 정하면 `None`
+        row["evidence"] = {**evidence, "transcription_differs": {"text": unlike.get("text"), "other": unlike.get("other"), "ratio": unlike.get("ratio"),
+                                                                  "other_value": other_reading(str(row.get("value") or ""), str(unlike.get("text") or ""),
+                                                                                               str(unlike.get("other") or ""))}}
+        note = f"사진에서 이 줄을 두 가지로 읽었어요 — 「{unlike.get('text')}」 / 「{unlike.get('other')}」 · 원본과 맞는 쪽을 골라 주세요"
         row["note"] = f"{row['note']} · {note}" if row.get("note") else note
 
 

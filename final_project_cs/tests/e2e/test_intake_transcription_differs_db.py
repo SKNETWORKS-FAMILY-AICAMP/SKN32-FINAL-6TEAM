@@ -53,7 +53,7 @@ def test_a_title_on_a_line_the_two_readings_disagree_about_needs_review_and_keep
     wrong = _title(view, "삼겹탕")
     assert wrong["value"] == "토속촌삼겹탕"                                                              # ★값은 읽은 그대로 — 서버는 어느 쪽이 맞는지 모른다
     assert wrong["needs_review"] is True and wrong["evidence"]["transcription_differs"]["other"] == "12:30 토속촌삼계탕 점심"
-    assert "다르게 읽었다" in wrong["note"]
+    assert "두 가지로 읽었어요" in wrong["note"]
     for clean in ("경복궁 관람", "명동난타극장", "북촌한옥마을 산책"):                                   # 다른 줄은 그대로(전처럼 규칙으로 읽은 값 — 확인 필요 아님)
         assert _title(view, clean)["needs_review"] is False
     assert (view["needs_review"] and any(n["field"].endswith(".title") and n["value"] == "토속촌삼겹탕" for n in view["needs_review"]))   # 확인 화면의 「확인 필요」 목록에 오른다

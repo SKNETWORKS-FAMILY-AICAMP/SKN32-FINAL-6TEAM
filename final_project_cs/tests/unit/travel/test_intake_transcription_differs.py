@@ -20,6 +20,7 @@ from __future__ import annotations
 import io
 from datetime import date
 
+import pytest
 from PIL import Image
 
 from app.domains.travel_ops.components.intake import sources
@@ -117,8 +118,10 @@ def test_only_title_and_booking_number_claims_on_a_differing_line_are_flagged_an
             _row("items[1].title", 4, "광장시장"), _row("items[2].title", 3, "다른 값", needs_review=True, note="모델이 가리킨 원문 조각")]
     flag_differing(rows, differs)
     title, booking, start, other_line, already = rows
-    assert title["needs_review"] is True and title["value"] == "청경궁 관람" and "다르게 읽었다" in title["note"] and "창경궁" in title["note"]
-    assert title["evidence"]["transcription_differs"] == {"text": "11:00 청경궁 관람", "other": "11:00 창경궁 관람", "ratio": 0.88} and title["evidence"]["line"] == 3
+    assert title["needs_review"] is True and title["value"] == "청경궁 관람" and "두 가지로 읽었어요" in title["note"] and "창경궁" in title["note"]
+    assert title["evidence"]["transcription_differs"] == {"text": "11:00 청경궁 관람", "other": "11:00 창경궁 관람", "ratio": 0.88,
+                                                          "other_value": "창경궁 관람"} and title["evidence"]["line"] == 3     # ★다른 읽기는 줄 전체가 아니라 값만
+    assert "요 —" in title["note"] and title["note"].endswith("골라 주세요")                            # 고객 화면에 그대로 나가는 말 — 존댓말
     assert booking["needs_review"] is True and booking["value"] == "AB1234"
     assert start["needs_review"] is False and "transcription_differs" not in start["evidence"]            # 시각 칸 · 다른 줄은 그대로
     assert other_line["needs_review"] is False and "transcription_differs" not in other_line["evidence"]
@@ -167,3 +170,34 @@ def test_read_source_flags_the_title_read_on_the_differing_line_and_streams_the_
 def test_read_source_without_the_argument_behaves_as_before():
     plain = read_source(TEXT, tour=_Tour(), kakao=_Kakao(), our_places=[], today=TODAY)
     assert not any((r.get("evidence") or {}).get("transcription_differs") for r in plain)
+
+
+# ── ⑥ 다른 읽기의 값(`other_value`) `[2026-10-07 uiux 요청]` ─────────────────────────
+@pytest.mark.parametrize("value,text,other,expected", [
+    ("청경궁 관람", "11:00 청경궁 관람", "11:00 창경궁 관람", "창경궁 관람"),                      # 글자 하나가 바뀜
+    ("AB1234", "예약번호 AB1234 확인", "예약번호 A81234 확인", "A81234"),                         # 예약번호
+    ("토속촌삼겹탕 점심", "12:30 토속촌삼겹탕 점심", "12:30 토속촌삼계탕 점심", "토속촌삼계탕 점심"),     # 값 앞에 시각이 붙어 있어도 값 자리만
+    ("국립중앙박물관", "13:00 국립중앙박물관", "13:00 국립중앙박물", "국립중앙박물"),                  # 뒤가 잘려 읽힘
+    ("경복궁", "09:30 경복궁 관람", "09:30 경복굼 관람", "경복굼"),                              # 줄 가운데 일부
+])
+def test_other_reading_is_the_value_cut_out_of_the_other_line(value, text, other, expected):
+    assert sources.other_reading(value, text, other) == expected
+
+
+@pytest.mark.parametrize("value,text,other", [
+    ("없는 값", "09:30 경복궁 관람", "09:30 경복굼 관람"),             # 값이 줄 안에서 글자 그대로 안 보인다(모델이 다듬은 값)
+    ("경복궁", "09:30 경복궁", "09:30 경복궁"),                        # 같은 값
+    ("", "09:30 경복궁", "09:30 경복굼"),                              # 값이 비었다
+    ("경복궁", "09:30 경복궁", ""),                                    # 다른 줄이 비었다
+    ("경복궁", "09:30 경복궁", "전혀 다른 아주아주아주아주아주 긴 문장입니다 정말로"),   # 맞춤이 어긋나 길이가 너무 다르다
+])
+def test_other_reading_is_none_when_it_cannot_be_told(value, text, other):
+    assert sources.other_reading(value, text, other) is None
+
+
+def test_the_streamed_title_also_carries_the_other_value():
+    streamed = []
+    read_source(TEXT, tour=_Tour(), kakao=_Kakao(), our_places=[], today=TODAY, on_rows=streamed.extend,
+                differs=differs_by_line([{"line": 2, "text": "11:00 청경궁 관람", "other": "11:00 창경궁 관람", "ratio": 0.9}]))
+    title = next(r for r in streamed if r["field"].endswith(".title") and "청경궁" in str(r["value"]))
+    assert title["evidence"]["transcription_differs"]["other_value"] in ("창경궁 관람", "창경궁")      # 값이 줄에서 어디까지인지는 읽기 규칙이 정한다
