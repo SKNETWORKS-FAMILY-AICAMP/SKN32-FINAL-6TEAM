@@ -44,6 +44,8 @@ print('서버 준비', f'{time.time() - t0:.0f}초', flush=True)
 
 def ask(prompt):
     body = {'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 16, 'temperature': 0, 'cache_prompt': True}
+    if os.environ.get('NOTHINK') == '1':      # [2026-10-07 §92-11] Gemma-4 생각 모드가 켜져 있으면 작은 max_tokens 에서 content 가 비어 나온다 — 끈다
+        body['chat_template_kwargs'] = {'enable_thinking': False}
     req = urllib.request.Request(f'http://127.0.0.1:{PORT}/v1/chat/completions', data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'})
     return json.load(urllib.request.urlopen(req, timeout=1800))
 
