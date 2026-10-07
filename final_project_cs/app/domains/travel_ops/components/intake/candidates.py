@@ -146,6 +146,26 @@ def _catalog_places(conn, tenant_id: str, ref: tuple[float, float], content_type
     return _tour_places(cands)
 
 
+def _is_stay_line(item: dict[str, Any]) -> bool:
+    """숙소를 찾는 줄 — 「호텔」 · 「호텔 조식」 둘 다. ★`[2026-10-07 사용자]` 「그냥 호텔이라고 적어 놨는데 호텔 조식으로 인식하는 오류다 — 아침에 출발하는 장소일 수도,
+    그 안에서 조식을 먹을 수도 있다. 둘 다 추천 목록에 올려서 보여 주면 된다」."""
+    return (item.get("parts") or {}).get("content_type") == LODGING_TYPE
+
+
+def _with_stay_meals(found: list[dict[str, Any]], *, per: int = 3) -> list[dict[str, Any]]:
+    """숙소 후보 앞쪽 `per` 곳마다 **그 숙소 안에서 하는 식사** 짝을 붙인다 — 같은 장소 · 종류만 식사(`dining`). 짝은 원본 바로 뒤에 둔다(순위 판정이 같아 나란히 선다).
+    ★식당을 지어내지 않는다 — 숙소의 이름과 자리 그대로이고, 그 안에 식당이 있는지는 모른다(이유 문장이 그렇게 말한다)."""
+    out: list[dict[str, Any]] = []
+    paired = 0
+    for place in found:
+        stay = {**place, "basis": place.get("basis") or "lodging"}
+        out.append(stay)
+        if paired < per and place.get("kind") == "activity":
+            out.append({**place, "kind": "dining", "basis": "lodging_meal", "ref": None, "category": "숙소 안 식사"})
+            paired += 1
+    return out
+
+
 def _tour_places(cands: list[Any]) -> list[dict[str, Any]]:
     return [_place(c.name, c.lat, c.lon, "tour_api", kind="activity", address=c.attributes.get("address"),
                    category=category_label(c.attributes.get("source_content_type_id")),
@@ -455,6 +475,10 @@ def _reason(candidate: dict[str, Any], original: str | None) -> str | None:
                 if original else f"{group.get('label') or '비슷한 경험'}을 하는 곳 중 가까운 곳이에요")
     elif basis == "meal_inferred":
         head = "식사 시간이고 그 시간대에 식사 일정이 따로 없어 식당도 후보로 넣었어요"
+    elif basis == "lodging":
+        head = "숙소 후보예요"
+    elif basis == "lodging_meal":
+        head = "이 숙소 안에서 식사하는 경우예요(숙소 안 식당이 있는지는 확인하지 못했어요)"
     else:
         head = None
     facts: list[str] = []
@@ -526,6 +550,9 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     area = area_of(item)
     # ★`[2026-10-04]` 「호텔 조식」 — 일정은 식사지만 장소는 숙소다. 식당 후보 · 지도 식당 검색으로 채우지 않고 숙박 분류 후보만 본다(없으면 비워 둔다)
     lodging = bool((item.get("parts") or {}).get("lodging_meal"))
+    stay = _is_stay_line(item)                    # 「호텔」 · 「호텔 조식」 — 숙소 후보와 숙소 안 식사 후보를 함께 보인다
+    if stay:
+        limit = limit * 2                         # 숙소마다 짝(식사)이 붙으므로 칸을 두 배로
     cls: dict[str, Any] | None = None            # 원래 장소의 분류(같은 종류 다른 곳 블록에서 찾는다)
     group: str | None = None                      # 원래 장소의 경험 갈래(비슷한 경험 단계)
     if item["place_state"] == "needs_name":
@@ -588,8 +615,12 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         notes.append("no_alternative")                    # 같은 종류도 비슷한 경험도 없다 — 화면이 이유를 말하게(취향 추천 단은 아직 없다)
     # ★후보의 종류는 일정의 종류와 같다 — 맞는 것이 없으면 다른 종류로 채우지 않는다(식사 자리에 약국 · 활동 자리에 식당)
     before = len(found)
-    kinds = {"activity", "dining"} if "meal_inferred" in notes else {"activity" if lodging else item["kind"]}
+    kinds = {"activity", "dining"} if "meal_inferred" in notes else {"activity" if (lodging or stay) else item["kind"]}
     found = [p for p in found if p.get("kind") in kinds]
+    if stay and item["place_state"] == "needs_choice" and found:
+        # 종류를 거른 **뒤에** 짝을 붙인다 — 지도의 음식점(호텔 뷔페)이 식사 후보로 섞이지 않고, 짝은 숙소 이름 그대로인 것만 생긴다
+        found = _with_stay_meals(found)
+        notes.append("stay_and_meal")
     if before and not found and "no_same_kind" not in notes:
         notes.append("no_same_kind")
     if engine is None and use_engine:

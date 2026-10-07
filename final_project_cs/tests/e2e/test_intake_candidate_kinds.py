@@ -117,5 +117,31 @@ def test_a_hotel_breakfast_line_gets_lodging_candidates_from_the_map_and_never_a
     names = [c["place"]["name"] for c in got["candidates"]]
     assert "광화문스테이호텔" in names, got                                    # 카카오의 숙박이 후보로 온다(전에는 숙소 줄에서 이 길이 막혀 있었다)
     assert "호텔 뷔페 광화문" not in names                                       # 음식점은 버린다 — 「호텔인데 왜 식당이야」
-    assert all(c["place"]["kind"] == "activity" for c in got["candidates"])
     assert any(query == "숙소" for query, _near in kakao.asked)                  # 「숙소」로 찾았다(가게 이름처럼 「호텔 조식」을 묻지 않았다)
+    _assert_stays_come_with_their_meal(got)
+
+
+def _assert_stays_come_with_their_meal(got):
+    """`[2026-10-07 사용자]` 숙소 후보마다 **같은 숙소 안 식사** 짝이 붙는다 — 이름이 같고 종류만 식사다. 지도의 음식점(호텔 뷔페)은 여전히 안 나온다."""
+    stays = [c for c in got["candidates"] if c["basis"] == "lodging"]
+    meals = [c for c in got["candidates"] if c["basis"] == "lodging_meal"]
+    assert stays and meals, got
+    assert all(c["place"]["kind"] == "activity" for c in stays) and all(c["place"]["kind"] == "dining" for c in meals)
+    assert {c["place"]["name"] for c in meals} <= {c["place"]["name"] for c in stays}                  # 숙소 이름 그대로(식당 이름을 지어내지 않는다)
+    assert "stay_and_meal" in got["notes"]
+    assert all(c["reason"].startswith("숙소 후보예요") for c in stays)
+    assert all(c["reason"].startswith("이 숙소 안에서 식사하는 경우예요(숙소 안 식당이 있는지는 확인하지 못했어요)") for c in meals)
+
+
+def test_a_bare_hotel_line_without_breakfast_gets_the_same_two_kinds_of_candidates(around):
+    from .test_intake_review import _client, _item, _key, _send
+
+    client, _tour, _kakao = _client(kakao=_LodgingKakao())
+    headers = _key(client)
+    view = _send(client, headers, "2026-10-15\n09:00 호텔\n11:00 경복궁")
+    hotel = _item(view, "호텔")
+    assert hotel["kind"] == "activity", hotel                                   # 「조식」이 없는데 식사로 읽지 않는다
+    got = client.get(f"/v1/web/trip-intakes/{view['intake_id']}/candidates?source_id={hotel['source_id']}&index={hotel['index']}"
+                     f"&revision={view['revision']}", headers=headers).json()
+    assert "호텔 뷔페 광화문" not in [c["place"]["name"] for c in got["candidates"]]
+    _assert_stays_come_with_their_meal(got)
