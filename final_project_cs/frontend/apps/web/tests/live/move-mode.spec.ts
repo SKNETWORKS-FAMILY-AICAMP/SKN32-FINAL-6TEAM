@@ -35,6 +35,7 @@ test("박스를 열면 그 구간 하나만 묻고 네 줄이 서버 순서로 �
   await expect(rows).toHaveCount(4);
   expect(await server.received("GET", "/options")).toHaveLength(1);
   expect((await server.received("GET", "/options"))[0].path).toContain("/moves/0-0~0-1/options");    // 이 구간 하나만
+  expect((await server.received("GET", "/options"))[0].query).toBe("?revision=1");                 // 보고 있는 판을 싣는다(이동 세션 구현)
   await expect(rows.nth(0)).toContainText("지하철");
   await expect(rows.nth(0)).toContainText("추천");
   await expect(rows.nth(0)).toContainText("1,550원");
@@ -165,4 +166,14 @@ test("320px 폭에서 목록이 가로로 넘치지 않는다", async ({ page, r
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const list = (await ways(page).boundingBox())!;
   expect(list.x + list.width).toBeLessThanOrEqual(320);
+});
+
+test("목록에서는 닿는다던 수단을 서버가 다시 계산해 받지 않으면(422) 서버가 쓴 이유를 목록 안에 보이고, 화면의 계획은 그대로다", async ({ page, request }) => {
+  const server = await openFinished(page, request, undefined, { moveOptions: "refuse" });
+  await openMove(page);
+  await box(page).click();
+  await ways(page).getByRole("option", { name: /택시/ }).click();
+  await expect.poll(async () => (await server.received("POST", "/mode")).length).toBe(1);
+  await expect(ways(page).getByRole("alert")).toContainText("다시 계산해 보니 택시로도 다음 일정에 늦어요");   // `why` 그대로(「그 수단은 고를 수 없어요」 가 아니다)
+  await expect(first(page).getByRole("button", { name: /지하철 3호선.*9분/ })).toBeVisible();        // 이동 줄은 그대로
 });

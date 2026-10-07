@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { modeChoiceOf, moveOptionsOf } from "./move-options";
+import { LiveError } from "./client";
+import { modeChoiceOf, moveOptionsOf, refusalWhy } from "./move-options";
 
 const BODY = {
   intake_id: "i1", revision: 3, from: "0-0", to: "0-1", current_mode: "subway", recommended_mode: "subway",
@@ -52,5 +53,14 @@ describe("modeChoiceOf — what became of the customer's choice when the stops a
     expect(modeChoiceOf({ mode: "taxi", state: "kept" })).toEqual({ mode: "taxi", state: "kept", why: null });
     expect(modeChoiceOf({ state: "weird" })!.state).toBeNull();
     expect(modeChoiceOf(null)).toBeNull();
+  });
+});
+
+describe("refusalWhy — the server's own reason for a pick it did not take", () => {
+  it("says the `why` of a `mode_not_fit` refusal, else the refusal's sentence; nothing for what is not a refusal", () => {
+    expect(refusalWhy(new LiveError("mode_not_fit", "그 수단은 고를 수 없어요", { code: "mode_not_fit", why: "택시로도 늦어요" }, 422))).toBe("택시로도 늦어요");
+    expect(refusalWhy(new LiveError("mode_not_fit", "그 수단은 고를 수 없어요", { code: "mode_not_fit" }, 422))).toBe("그 수단은 고를 수 없어요");
+    expect(refusalWhy(new LiveError("mode_not_fit", "그 수단은 고를 수 없어요", { why: "  " }, 422))).toBe("그 수단은 고를 수 없어요");
+    expect(refusalWhy(new Error("x"))).toBeNull();
   });
 });

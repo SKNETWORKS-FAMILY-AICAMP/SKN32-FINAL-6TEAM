@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { LiveError } from "@/lib/live/client";
-import { MODE_WORDS, type MoveOption, type MoveOptions, type MoveOptionMode } from "@/lib/live/move-options";
+import { MODE_WORDS, refusalWhy, type MoveOption, type MoveOptions, type MoveOptionMode } from "@/lib/live/move-options";
 import { useT } from "@/lib/settings";
 import type { PlanItem, PlanMove } from "./model";
 import type { RowContext } from "./plan-rows";
@@ -83,7 +83,8 @@ export function MoveModeBox({ move, to, ctx, locked }: { move: PlanMove; to: Pla
       setLoad({ status: "idle" });                                  // the plan is the server's new one: the ways are asked again the next time
     } catch (error) {
       setProblem(error instanceof LiveError && error.code === "stale_revision" ? t("그 사이 일정이 바뀌었어요. 다시 골라 주세요.", "The plan changed in the meantime. Please choose again.")
-        : error instanceof Error ? error.message : String(error));
+        : error instanceof LiveError && error.code === "mode_not_fit" ? refusalWhy(error) ?? error.message
+          : error instanceof Error ? error.message : String(error));
       setLoad({ status: "idle" });
     } finally { setBusy(null); }
   }

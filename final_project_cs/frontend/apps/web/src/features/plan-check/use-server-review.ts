@@ -153,7 +153,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         for (const old of [...moveWays.current.keys()]) if (!old.startsWith(`${revision}:`)) moveWays.current.delete(old);
         const kept = moveWays.current.get(key);
         if (kept) return kept;
-        const ask = getMoveOptions(intakeId, move.from, move.to, language).catch((error: unknown) => { moveWays.current.delete(key); throw error; });
+        // A stale revision (409 - the plan moved on) re-reads the plan, like a change would; the box asks again for the new one when opened.
+        const ask = getMoveOptions(intakeId, move.from, move.to, language, revision).catch((error: unknown) => { moveWays.current.delete(key); return staleThenRethrow(error); });
         moveWays.current.set(key, ask);
         void ask.then((found) => { if (found?.options.some((option) => option.fits === null)) moveWays.current.delete(key); }, () => undefined);
         return ask;

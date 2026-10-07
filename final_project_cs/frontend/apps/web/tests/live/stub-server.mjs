@@ -92,7 +92,7 @@ const DEFAULTS = {
   routeShapes: "off",
   // `[2026-10-04]` the same for a plan not registered yet (`GET /v1/web/trip-intakes/{id}/route-shapes`, mobility session): "off" (404) | "on" (the board's first leg joined by a straight line with no ground, the second on a road) | "fail" (500)
   intakeRoutes: "off",
-  // `[2026-10-07]` the ways to go for one leg of a checked plan (`GET …/moves/{from}~{to}/options`, `POST …/mode` - the mobility session's proposal, not on the real server yet):
+  // `[2026-10-07]` the ways to go for one leg of a checked plan (`GET …/moves/{from}~{to}/options?revision=`, `POST …/mode` - built by the mobility session 2026-10-07, `wiki/external/rest-endpoints.md` 「이동수단 고르기」):
   //   "off" (404 not_available - an older server: no box) | "on" | "none" (nothing reaches in time) | "partial" (the bus could not be finished: `fits: null`) | "fail" (500) | "slow" (4 s) | "unknown_mode" (also sends a way the screen does not know)
   moveOptions: "off",
   // `[2026-10-04]` agent keys (`/v1/web/agent-keys*`, server D-CS-012): "on" | "off" (an older server: FastAPI 404 `{detail}`) | "limit" (making one answers 409 agent_key_limit)
@@ -1101,6 +1101,9 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     if (scenario.moveOptions === "off" || !move) return unavailable();
     if (scenario.moveOptions === "fail") return json(response, 500, { error: { code: "internal_error", message: "서버 오류" } }, origin);
     if (kind === "options" && request.method === "GET") {
+      // 서버 구현(2026-10-07): 보고 있는 판(`?revision=`)이 낡았으면 409 stale_revision
+      const asked = url.searchParams.get("revision");
+      if (asked !== null && Number(asked) !== board.revision) return json(response, 409, { error: { code: "stale_revision", message: "그 사이 바뀌었어요", current_revision: board.revision } }, origin);
       if (scenario.moveOptions === "slow") await new Promise((resolve) => setTimeout(resolve, 4000));
       const ways = moveWays(board, move);
       if (!ways) return unavailable();
@@ -1114,8 +1117,10 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
       const recommended = move.recommended_mode ?? move.mode;
       const mode = body.mode === "recommended" ? recommended : body.mode;
       const way = ways.find((entry) => entry.mode === mode);
+      // "refuse": the list said it reaches, but counted again with that way it does not (the server checks again before it takes it)
+      if (scenario.moveOptions === "refuse") return json(response, 422, { error: { code: "mode_not_fit", message: "그 수단은 고를 수 없어요", why: "다시 계산해 보니 택시로도 다음 일정에 늦어요" } }, origin);
       if (!way) return json(response, 422, { error: { code: "mode_not_fit", message: "그 수단은 이 구간에서 쓸 수 없어요" } }, origin);
-      if (way.fits !== true) return json(response, 422, { error: { code: "mode_not_fit", message: way.why_not ?? "그 수단으로는 닿지 않아요" } }, origin);
+      if (way.fits !== true) return json(response, 422, { error: { code: "mode_not_fit", message: "그 수단은 고를 수 없어요", why: way.why_not ?? "그 수단으로는 닿지 않아요" } }, origin);   // 이동 세션 구현: 이유는 `why`
       move.base_minutes ??= move.minutes;
       move.base_label ??= move.mode_label;
       move.recommended_mode ??= move.mode;

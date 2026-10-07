@@ -50,6 +50,13 @@ const number = (value: unknown): number | null => (typeof value === "number" && 
 /** The names the screen gives a way when the server sends no label. */
 export const MODE_WORDS: Record<MoveOptionMode, [string, string]> = { subway: ["지하철", "Subway"], bus: ["버스", "Bus"], taxi: ["택시", "Taxi"], walk: ["걸음", "Walk"] };
 
+/** The server's sentence of a refused pick (`422 mode_not_fit` carries it as `why`), else the refusal's own sentence. */
+export function refusalWhy(error: unknown): string | null {
+  if (!(error instanceof LiveError)) return null;
+  const why = (error.detail as { why?: unknown } | undefined)?.why;
+  return typeof why === "string" && why.trim() ? why.trim() : error.message;
+}
+
 /** The answer of `GET …/options`; anything that is not one reads as none. */
 export function moveOptionsOf(raw: unknown): MoveOptions | null {
   if (!isRecord(raw)) return null;
@@ -76,9 +83,11 @@ const pair = (from: string, to: string) => `${encodeURIComponent(from)}~${encode
  * `GET /v1/web/trip-intakes/{id}/moves/{from}~{to}/options`: the ways for one leg, or null when the server has nothing to offer for it (a server without the feature, a leg that is not
  * calculated: 404). Only a leg is asked, only when the customer opens the box - a whole plan of them would be dozens of calculations.
  */
-export async function getMoveOptions(intakeId: string, fromId: string, toId: string, language: Language): Promise<MoveOptions | null> {
+export async function getMoveOptions(intakeId: string, fromId: string, toId: string, language: Language, revision?: number | null): Promise<MoveOptions | null> {
+  // `[2026-10-07 이동 세션 구현]` The server takes the revision the screen shows (`?revision=`) and answers for it.
+  const asked = typeof revision === "number" ? `?revision=${revision}` : "";
   try {
-    return moveOptionsOf(await api<unknown>(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/moves/${pair(fromId, toId)}/options`, language));
+    return moveOptionsOf(await api<unknown>(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/moves/${pair(fromId, toId)}/options${asked}`, language));
   } catch (error) {
     if (error instanceof LiveError && (error.status === 404 || error.status === 405)) return null;
     throw error;
