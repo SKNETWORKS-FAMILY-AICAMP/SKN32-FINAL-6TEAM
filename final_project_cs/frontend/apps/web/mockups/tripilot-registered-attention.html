@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>triPilot · 살펴볼 점·알림 배치 아이디어</title>
+<style>
+/* 색은 앱 src/styles/tokens.css 의 그린 테마 값(2026-10-06, 091a4b9)을 옮겼다. 크기는 plan-check.module.css 를 따른다. */
+:root {
+  --color-text: #24392f; --color-muted: #6d7c73; --color-border: #dce3dd; --color-surface: #ffffff;
+  --color-background: #f3f5f3; --color-primary: #2e6047; --color-on-primary: #ffffff; --color-subtle: #f6f7f5;
+  --color-warning: #82693e; --color-warning-soft: #faf6ec; --color-warning-border: #e5d9c1;
+  --color-error: #965640; --color-error-soft: #fdf3ed; --color-error-border: #ecd2c7;
+  --color-text-secondary: #4a5d52; --color-faint: #a5b1a9; --color-divider: #e8ede9;
+  --color-border-strong: #c3cdc6; --color-success: #3d7a56; --color-success-soft: #e3f0e7;
+  --color-adjusted: #3f6a8a; --color-adjusted-soft: #e6eff6; --color-adjusted-border: #bcd0df;
+  --color-selected: #2e6047; --color-selected-soft: #dcebe1; --color-inverse: #24392f; --color-on-inverse: #ffffff;
+  --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font-family: var(--font-sans); background: var(--color-background); color: var(--color-text); }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.i.big { width: 22px; height: 22px; }
+.i.sm { width: 15px; height: 15px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 검토 막대 */
+.review { max-width: 1000px; margin: 0 auto; padding: 22px 16px 4px; }
+.review h1 { margin: 0; font-size: 20px; font-weight: 750; }
+.review .meta { margin: 4px 0 12px; font-size: 13px; line-height: 1.5; color: var(--color-muted); }
+.group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.group > span { margin-right: 4px; font-size: 12.5px; font-weight: 750; color: var(--color-text-secondary); }
+.group button { min-height: 34px; padding: 0 13px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); font-size: 13px; font-weight: 700; }
+.group button[aria-pressed="true"] { border-color: var(--color-text); background: var(--color-text); color: var(--color-on-primary); }
+.stage { display: grid; grid-template-columns: 390px minmax(0, 470px); justify-content: center; align-items: start; gap: 40px; padding: 18px 16px 28px; }
+@media (max-width: 899px) { .stage { grid-template-columns: minmax(0, 390px); } }
+
+/* 아이디어 설명 */
+.idea { padding: 18px 20px; border: 1px solid var(--color-border); border-radius: 18px; background: var(--color-surface); }
+.idea h2 { margin: 0; font-size: 17px; font-weight: 750; }
+.idea .one { margin: 6px 0 0; font-size: 14px; line-height: 1.55; color: var(--color-text-secondary); }
+.idea h3 { margin: 14px 0 0; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); }
+.idea ul { margin: 4px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.6; color: var(--color-text-secondary); }
+.idea .try { margin: 14px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--color-subtle); font-size: 12.5px; line-height: 1.5; color: var(--color-muted); }
+.idea code, .notes code { font-size: 12.5px; }
+
+/* 휴대폰 */
+.phone { --sheet-h: 56%; position: relative; width: 390px; max-width: calc(100vw - 32px); height: 820px; border-radius: 34px; overflow: hidden; background: #efece4; box-shadow: 0 0 0 9px #1f2a24, 0 24px 60px rgba(20, 40, 30, .28); isolation: isolate; }
+.phone[data-mode="chat"] { --sheet-h: 62%; }
+@media (max-width: 430px) { .phone { height: max(640px, min(820px, calc(100vh - 150px))); } }
+.map { position: absolute; inset: 0; }
+.map svg { display: block; width: 100%; height: 100%; }
+.map .road-c { stroke: #d9d2c3; stroke-width: 8; }
+.map .road { stroke: #ffffff; stroke-width: 5.5; }
+.map .road-y { stroke: #f1df9c; stroke-width: 6; }
+.map .lbl { font: 600 11px var(--font-sans); fill: #8b8576; }
+.map .river-lbl { font: italic 600 12px var(--font-sans); fill: #6f9fb1; }
+.route { fill: none; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; opacity: .92; }
+.route.d1 { stroke: #2f5d45; }
+.route.d2 { stroke: var(--color-adjusted); }
+.pin { cursor: pointer; }
+.pin:focus { outline: none; }
+.pin:focus-visible .b { stroke-width: 4; }
+.pin .anchor { fill: #2b4a3a; }
+.pin .tail, .pin .b { fill: #ffffff; stroke: #2b4a3a; stroke-width: 2.5; stroke-linejoin: round; }
+.pin[data-day="2"] .tail, .pin[data-day="2"] .b { stroke: var(--color-adjusted); }
+.pin text { font: 800 15px var(--font-sans); fill: #1f2a24; pointer-events: none; }
+.pin.sel .tail, .pin.sel .b { fill: var(--color-primary); stroke: var(--color-primary); }
+.pin.sel text { fill: #ffffff; }
+.pin.paused .b { stroke-dasharray: 4 3; }
+
+.top { position: absolute; z-index: 6; top: 12px; left: 12px; right: 12px; display: flex; align-items: center; gap: 8px; }
+.top .gap { flex: 1; }
+.logo, .menu { display: grid; place-items: center; width: 50px; height: 50px; padding: 0; border: 0; border-radius: 16px; background: var(--color-surface); box-shadow: 0 4px 14px rgba(36, 57, 47, .16); }
+.logo span { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--color-primary); color: #fff; font-size: 22px; font-weight: 800; line-height: 1; }
+.titlePill { height: 50px; padding: 0 18px; border: 0; border-radius: 16px; background: var(--color-surface); box-shadow: 0 4px 14px rgba(36, 57, 47, .16); font-size: 16px; font-weight: 750; }
+.shield { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 12px; background: transparent; color: var(--color-text-secondary); }
+.bell { position: relative; display: grid; place-items: center; width: 50px; height: 50px; padding: 0; border: 0; border-radius: 16px; background: var(--color-surface); box-shadow: 0 4px 14px rgba(36, 57, 47, .16); color: var(--color-text); }
+.badge { position: absolute; top: -4px; right: -4px; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border: 2px solid #fff; border-radius: 10px; background: var(--color-error); color: #fff; font-size: 11px; font-weight: 800; line-height: 1; }
+
+/* 지도 위 띠·카드 */
+.safetyBar, .pc { position: absolute; z-index: 5; top: 72px; left: 12px; right: 12px; box-shadow: 0 6px 18px rgba(36, 57, 47, .16); }
+.safetyBar { display: flex; align-items: center; gap: 8px; width: calc(100% - 24px); min-height: 46px; padding: 8px 12px; border: 1px solid var(--color-error-border); border-radius: 14px; background: var(--color-error-soft); color: var(--color-error); font-size: 13px; font-weight: 700; text-align: left; }
+.safetyBar span { flex: 1; min-width: 0; }
+.pc { padding: 12px 12px 10px 14px; border: 1px solid var(--color-warning-border); border-radius: 16px; background: var(--color-surface); }
+.pc[data-tone="danger"] { border-color: var(--color-error-border); background: var(--color-error-soft); }
+.pc[data-tone="info"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); }
+.pcHead { display: flex; align-items: center; gap: 8px; }
+.pcHead strong { flex: 1; font-size: 14px; font-weight: 750; }
+.pc[data-tone="warn"] .pcHead .i { color: var(--color-warning); }
+.pc[data-tone="danger"] .pcHead { color: var(--color-error); }
+.pc[data-tone="info"] .pcHead .i { color: var(--color-adjusted); }
+.pcFold { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--color-muted); }
+.pc p { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: var(--color-text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pcActions { display: flex; gap: 6px; margin-top: 8px; }
+.pcPill { position: absolute; z-index: 5; top: 72px; right: 12px; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border: 1px solid var(--color-warning-border); border-radius: 999px; background: var(--color-surface); box-shadow: 0 6px 18px rgba(36, 57, 47, .16); font-size: 13px; font-weight: 750; color: var(--color-warning); }
+.menuPop { position: absolute; z-index: 8; top: 68px; right: 12px; width: 210px; padding: 6px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); box-shadow: 0 12px 30px rgba(36, 57, 47, .2); }
+.menuPop button { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 0 10px; border: 0; border-radius: 10px; background: none; font-size: 13.5px; font-weight: 650; text-align: left; }
+.menuPop button:hover { background: var(--color-subtle); }
+.menuPop button b { margin-left: auto; font-size: 12px; color: var(--color-muted); }
+
+/* 버튼 */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 34px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 10px; background: var(--color-surface); font-size: 12.5px; font-weight: 750; white-space: nowrap; }
+.btn[data-primary] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+.btn[data-danger] { border-color: var(--color-error); background: var(--color-error); color: #fff; }
+
+/* 아래 시트 */
+.sheet { position: absolute; z-index: 4; left: 0; right: 0; bottom: 0; height: var(--sheet-h); display: flex; flex-direction: column; border-radius: 22px 22px 0 0; background: var(--color-surface); box-shadow: 0 -6px 24px rgba(36, 57, 47, .14); transition: height .3s ease; }
+.handle { position: absolute; top: 0; left: 0; right: 0; height: 22px; display: grid; place-items: center; pointer-events: none; }
+.handle span { width: 42px; height: 5px; border-radius: 3px; background: var(--color-border-strong); }
+.sheetHead { display: flex; align-items: center; gap: 8px; flex: none; min-height: 60px; padding: 22px 16px 8px; border-bottom: 1px solid var(--color-divider); }
+.sheetHead h3 { flex: 1; margin: 0; font-size: 15.5px; font-weight: 750; white-space: nowrap; }
+.doneBadge { display: inline-flex; align-items: center; gap: 4px; padding: 5px 11px; border-radius: 999px; background: var(--color-success-soft); color: var(--color-success); font-size: 12.5px; font-weight: 750; white-space: nowrap; }
+.doneBadge .i { width: 14px; height: 14px; stroke-width: 2.4; }
+.headBack { display: inline-flex; align-items: center; gap: 2px; height: 32px; padding: 0 12px 0 6px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text-secondary); font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.headBack .i { width: 16px; height: 16px; }
+.cnts { display: inline-flex; gap: 5px; }
+.cnt { position: relative; display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 9px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text-secondary); font-size: 12.5px; font-weight: 750; }
+.cnt .i { width: 15px; height: 15px; }
+.cnt[data-tone="warn"] { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
+.cnt[data-hot]::after { content: ""; position: absolute; top: -2px; right: -2px; width: 9px; height: 9px; border: 2px solid #fff; border-radius: 50%; background: var(--color-error); }
+.cnt[aria-pressed="true"] { border-color: var(--color-text); background: var(--color-text); color: var(--color-on-primary); }
+.dayStrip { display: flex; flex: none; gap: 6px; padding: 12px 14px 6px; overflow-x: auto; scrollbar-width: none; }
+.dayStrip::-webkit-scrollbar { display: none; }
+.dayChip { position: relative; display: inline-flex; flex: none; align-items: center; gap: 5px; min-height: 34px; padding: 0 13px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: transparent; color: var(--color-muted); font-size: 12.5px; font-weight: 750; white-space: nowrap; }
+.dayChip small { font-size: 11px; font-weight: 550; }
+.dayChip[aria-selected="true"] { border-color: var(--color-text); background: var(--color-text); color: var(--color-on-primary); }
+.dayChip .num { display: grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--color-warning); color: #fff; font-size: 10.5px; font-weight: 800; }
+.dayChip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-error); }
+.sheetBody { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 2px 14px 88px; scrollbar-width: thin; }
+.dayHead { margin: 14px 0 2px; font-size: 13px; font-weight: 750; }
+.dayHead small { margin-left: 4px; font-size: inherit; font-weight: 500; color: var(--color-muted); }
+.credit { margin: 14px 0 0; font-size: 11.5px; color: var(--color-faint); }
+
+/* 타임라인 */
+.timeline { list-style: none; margin: 0; padding: 0; }
+.entry { display: grid; grid-template-columns: 44px 18px minmax(0, 1fr); column-gap: 8px; }
+.time { padding-top: 21px; text-align: right; font-size: 13px; font-weight: 750; line-height: 18px; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.time s { display: block; font-size: 10.5px; font-weight: 500; line-height: 1.2; color: var(--color-faint); }
+.entry.move .time { display: flex; flex-direction: column; align-items: flex-end; padding-top: 7px; font-size: 11.5px; font-weight: 500; line-height: 1.15; color: var(--color-faint); }
+.entry.move .time small { font-size: 10px; }
+.rail { position: relative; }
+.rail::before { content: ""; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--color-border); }
+.entry.move .rail::before { background: repeating-linear-gradient(to bottom, var(--color-faint) 0 3px, transparent 3px 7px); }
+.timeline .entry:first-child .rail::before { top: 30px; }
+.timeline .entry:last-child .rail::before { bottom: auto; height: 30px; }
+.dotm { position: absolute; left: 3px; top: 24px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--color-success); background: var(--color-success-soft); }
+.entry.move .dotm { left: 5px; top: 12px; width: 8px; height: 8px; border-color: var(--color-faint); background: var(--color-surface); }
+.entry.attach .dotm { display: none; }
+.card { display: flex; align-items: center; margin: 6px 0; padding: 0 4px 0 2px; border: 1.5px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
+.entry[data-selected] .card { border-color: var(--color-selected); box-shadow: 0 0 0 3px var(--color-selected-soft); }
+.cardMain { display: flex; flex: 1; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; min-height: 52px; padding: 12px 8px; border: 0; background: none; text-align: left; }
+.cardMain > .i { color: var(--color-faint); }
+.cardMain strong { min-width: 0; font-size: 15.5px; font-weight: 750; line-height: 1.3; word-break: keep-all; }
+.pill { padding: 2px 8px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 11.5px; font-weight: 750; white-space: nowrap; }
+.pill[data-state="changed"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.pill[data-state="paused"] { border-color: var(--color-error-border); background: var(--color-error-soft); color: var(--color-error); }
+.pill[data-state="choice"] { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
+.tool { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--color-faint); }
+.move { display: flex; align-items: center; gap: 8px; min-height: 34px; margin: 0; padding: 4px 10px; font-size: 12.5px; color: var(--color-muted); }
+.move .i { width: 16px; height: 16px; color: var(--color-faint); }
+.move .txt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.move .slack { flex: none; color: var(--color-faint); }
+
+/* ③ 일정에 붙이기 */
+.dayWarn { margin: 8px 0 4px; border: 1px solid var(--color-warning-border); border-radius: 12px; background: var(--color-warning-soft); color: var(--color-warning); }
+.dayWarn > button { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 42px; padding: 8px 12px; border: 0; background: none; font-size: 13px; font-weight: 700; text-align: left; color: inherit; }
+.dayWarn > button span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dayWarn[data-open] > button span { white-space: normal; }
+.dayWarn ul { margin: 0; padding: 0 12px 10px 34px; font-size: 12.5px; line-height: 1.5; color: var(--color-text-secondary); }
+.dayWarn li + li { margin-top: 6px; }
+.dayWarn li small { display: block; color: var(--color-muted); }
+.attachCard { margin: 0 0 8px; padding: 10px 12px; border: 1.5px dashed var(--color-warning-border); border-radius: 12px; background: var(--color-warning-soft); font-size: 13px; line-height: 1.45; }
+.attachCard[data-tone="info"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); }
+.attachCard strong { display: block; margin-bottom: 2px; font-size: 12.5px; color: var(--color-warning); }
+.attachCard[data-tone="info"] strong { color: var(--color-adjusted); }
+.attachCard p { margin: 0; color: var(--color-text-secondary); }
+.attachCard .opts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.attachCard .meta { margin-top: 6px; font-size: 11.5px; color: var(--color-muted); }
+
+/* 목록·할 일 카드(공통) */
+.aList { list-style: none; margin: 0; padding: 0; }
+.aRow { padding: 12px 2px; border-top: 1px solid var(--color-divider); font-size: 13.5px; line-height: 1.5; }
+.aRow:first-child { border-top: 0; }
+.aRow p { margin: 4px 0 0; overflow-wrap: anywhere; }
+.aRow .remedy { font-size: 12.5px; color: var(--color-muted); }
+.aRow time { margin-left: 6px; font-size: 12px; color: var(--color-muted); }
+.tag { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--color-success-soft); color: var(--color-success); font-size: 11.5px; font-weight: 750; }
+.tag[data-type="proposal_request"] { background: var(--color-warning-soft); color: var(--color-warning); }
+.tag[data-type="change_notice"] { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.tag[data-type="safety_alert"] { background: var(--color-error-soft); color: var(--color-error); }
+.tag[data-type="version"] { background: var(--color-subtle); color: var(--color-text-secondary); }
+.unread { display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--color-error); vertical-align: middle; }
+.act { margin: 0 0 10px; padding: 12px 14px; border: 1px solid var(--color-warning-border); border-radius: 14px; background: var(--color-warning-soft); }
+.act[data-tone="info"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); }
+.act[data-tone="danger"] { border-color: var(--color-error-border); background: var(--color-error-soft); }
+.act h4 { margin: 0; font-size: 14px; font-weight: 750; }
+.act[data-tone="danger"] h4 { color: var(--color-error); }
+.act p { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--color-text-secondary); }
+.act .what { font-weight: 700; color: var(--color-text); }
+.act .opts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.act .meta { font-size: 11.5px; color: var(--color-muted); }
+.act ul { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; line-height: 1.5; color: var(--color-text-secondary); }
+.secTitle { margin: 16px 0 6px; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); }
+.secTitle:first-child { margin-top: 4px; }
+.empty { margin: 10px 0; font-size: 13px; color: var(--color-muted); }
+
+/* 덮는 화면(알림 센터·모두 보기·안전 안내·변경 이력) */
+.panel { position: absolute; z-index: 9; inset: 0; display: flex; flex-direction: column; background: var(--color-surface); animation: slideIn .26s ease; }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: none; } }
+.panelHead { display: flex; flex: none; align-items: center; gap: 10px; padding: 18px 14px 10px; border-bottom: 1px solid var(--color-divider); }
+.panelHead h3 { flex: 1; margin: 0; font-size: 17px; font-weight: 750; }
+.iconBtn { display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border: 0; border-radius: 12px; background: var(--color-subtle); }
+.panelBody { flex: 1; min-height: 0; overflow-y: auto; padding: 14px; scrollbar-width: thin; }
+.tabs { display: flex; gap: 4px; margin: 2px 0 8px; padding: 4px; border-radius: 12px; background: var(--color-subtle); }
+.tabs button { flex: 1; min-height: 36px; padding: 0 6px; border: 0; border-radius: 9px; background: none; color: var(--color-muted); font-size: 12.5px; font-weight: 750; white-space: nowrap; }
+.tabs button[aria-selected="true"] { background: var(--color-surface); color: var(--color-text); box-shadow: 0 1px 4px rgba(36, 57, 47, .12); }
+
+/* 채팅 버튼 · ④ 미리 보기 */
+.fab { position: absolute; z-index: 7; right: 18px; bottom: 22px; display: grid; place-items: center; width: 58px; height: 58px; padding: 0; border: 0; border-radius: 50%; background: var(--color-primary); color: var(--color-on-primary); box-shadow: 0 10px 24px rgba(36, 57, 47, .35); }
+.fab .i { width: 26px; height: 26px; }
+.phone[data-mode="chat"] .fab { display: none; }
+.peek { position: absolute; z-index: 7; right: 86px; bottom: 30px; display: flex; align-items: center; gap: 4px; max-width: 236px; padding: 4px 4px 4px 12px; border: 1px solid var(--color-border); border-radius: 14px 14px 4px 14px; background: var(--color-surface); box-shadow: 0 8px 22px rgba(36, 57, 47, .2); }
+.peek > button:first-child { flex: 1; min-width: 0; padding: 4px 0; border: 0; background: none; font-size: 12.5px; line-height: 1.35; text-align: left; }
+.peek b { display: block; font-size: 11.5px; color: var(--color-error); }
+.peek span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--color-text-secondary); }
+.peek .x { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--color-muted); }
+
+/* ④ 채팅 */
+.chat { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.log { display: flex; flex: 1; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; padding: 12px 14px; scrollbar-width: thin; }
+.pinned { border: 1px solid var(--color-warning-border); border-radius: 12px; background: var(--color-warning-soft); color: var(--color-warning); }
+.pinned > button { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 0 12px; border: 0; background: none; color: inherit; font-size: 13px; font-weight: 750; text-align: left; }
+.pinned > button span { flex: 1; }
+.pinned ul { margin: 0; padding: 0 12px 10px 32px; font-size: 12.5px; line-height: 1.5; color: var(--color-text-secondary); }
+.pinned li + li { margin-top: 6px; }
+.divider { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 11.5px; color: var(--color-muted); }
+.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--color-divider); }
+.msg { max-width: 88%; }
+.msg[data-role="user"] { align-self: flex-end; }
+.msgMeta { margin: 0 0 3px; font-size: 11px; font-weight: 650; color: var(--color-muted); }
+.msgMeta .tag { margin-right: 4px; }
+.msg[data-role="user"] .msgMeta { text-align: right; }
+.bubble { margin: 0; padding: 10px 12px; border: 1px solid var(--color-divider); border-radius: 4px 14px 14px; background: var(--color-subtle); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.msg[data-role="user"] .bubble { border-color: var(--color-primary); border-radius: 14px 4px 14px 14px; background: var(--color-primary); color: var(--color-on-primary); }
+.msg .opts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.composer { flex: none; padding: 10px 14px 12px; border-top: 1px solid var(--color-divider); background: var(--color-surface); }
+.form { display: flex; gap: 8px; }
+.form input { flex: 1; min-width: 0; height: 44px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); font-size: 16px; }
+.send { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px; background: var(--color-primary); color: var(--color-on-primary); }
+
+.toast { position: absolute; z-index: 10; left: 12px; right: 12px; bottom: calc(var(--sheet-h) + 10px); margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--color-inverse); color: var(--color-on-inverse); font-size: 13px; line-height: 1.4; box-shadow: 0 8px 24px rgba(36, 57, 47, .25); opacity: 0; transform: translateY(6px); pointer-events: none; transition: opacity .25s, transform .25s, bottom .3s; }
+.toast[data-shown] { opacity: 1; transform: none; }
+.phone[data-panel] .toast { bottom: 24px; }
+
+/* 공통 메모 */
+.notes { max-width: 1000px; margin: 0 auto; padding: 0 16px 40px; }
+.notes section { padding: 16px 18px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
+.notes h3 { margin: 0; font-size: 15px; font-weight: 750; }
+.notes h4 { margin: 12px 0 0; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); }
+.notes ul { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.6; color: var(--color-text-secondary); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<header class="review">
+  <h1>살펴볼 점·받은 알림·변경 이력 배치 아이디어</h1>
+  <p class="meta">작성일 2026-10-06 · 상태: 검토용 아이디어 5가지 + 조합 3가지 / 실제 API 미연결. 바탕은 「등록 후 채팅 배치 비교」의 등록 뒤 화면(지도 + 아래 시트 + 오른쪽 아래 채팅 버튼)이다. 살펴볼 점 3개의 문장은 지금 여행 화면 캡처의 서버 문장을 옮겼고, 나머지 장소·시각·알림 문장은 예시다.</p>
+  <div class="group" role="group" aria-label="아이디어 고르기"><span>아이디어</span>
+    <button type="button" data-variant="1" aria-pressed="true">① 알림 센터</button>
+    <button type="button" data-variant="2" aria-pressed="false">② 시트 머리 숫자</button>
+    <button type="button" data-variant="3" aria-pressed="false">③ 일정에 붙이기</button>
+    <button type="button" data-variant="4" aria-pressed="false">④ 채팅에 합치기</button>
+    <button type="button" data-variant="5" aria-pressed="false">⑤ 지도 위 우선 카드</button>
+  </div>
+  <div class="group" role="group" aria-label="조합 고르기"><span>조합</span>
+    <button type="button" data-variant="6" aria-pressed="false">⑥ 제안 조합(③+⑤+①)</button>
+    <button type="button" data-variant="7" aria-pressed="false">⑦ 계획은 시트·사건은 채팅(③+④)</button>
+    <button type="button" data-variant="8" aria-pressed="false">⑧ 시트 하나로(③+②)</button>
+  </div>
+  <div class="group" role="group" aria-label="예시 상황 고르기"><span>예시 상황</span>
+    <button type="button" data-set="fresh" aria-pressed="true">등록 직후(캡처와 같은 개수)</button>
+    <button type="button" data-set="travel" aria-pressed="false">선택 요청·자동 변경이 있을 때</button>
+    <button type="button" data-set="safety" aria-pressed="false">재난으로 정지됐을 때</button>
+  </div>
+</header>
+
+<main class="stage">
+  <div class="phone" role="region" aria-label="휴대폰 화면"></div>
+  <aside class="idea" aria-live="polite">
+    <h2 id="idea-title"></h2>
+    <p class="one" id="idea-one"></p>
+    <h3>어떻게 보이나</h3><ul id="idea-how"></ul>
+    <h3>좋은 점</h3><ul id="idea-good"></ul>
+    <h3>걱정되는 점</h3><ul id="idea-bad"></ul>
+    <p class="try" id="idea-try"></p>
+  </aside>
+</main>
+
+<div class="notes">
+  <section>
+    <h3>다섯 아이디어 공통</h3>
+    <h4>확인된 사실 — 지금 여행 화면(2026-10-06, <code>091a4b9</code> <code>features/trip/trip-attention.tsx</code>)</h4>
+    <ul>
+      <li>캡처의 세 가지 외에 같은 묶음에 재난 정지 패널(대피 장소·「일정 다시 시작」), 자동으로 바꾼 일정의 「되돌리기」, 서버가 고르기를 기다리는 「선택이 필요해요」, 여행계획서 열기·내려받기가 함께 쌓여 있다.</li>
+      <li>살펴볼 점 = 여행 조회의 <code>warnings</code>(날짜·문장·고칠 방법). 어느 일정인지 가리키는 항목 ID는 없다 — 「항목 1/2」는 문장 속 번호다.</li>
+      <li>받은 알림 = <code>GET /v1/web/trips/{id}/notices</code>(종류: 안내·선택 요청·안전 알림·변경 알림, 시각, 문장, 선택 요청이면 proposal ID, 자동 변경이면 되돌리기 정보). 화면은 최근 10개만 보이고 몇 개를 뺐는지 적는다. 읽음 표시는 없다.</li>
+      <li>변경 이력 = 여행 조회의 <code>history</code>(버전·시각·이유·원인). 선택 요청(proposal)은 일정 ID(<code>item_id</code>)를 가진다.</li>
+    </ul>
+    <h4>이 목업의 공통 제안</h4>
+    <ul>
+      <li>재난 정지는 어느 안이든 누르지 않아도 보여야 한다 — ①~④는 지도 위 빨간 띠, ⑤는 우선 카드 맨 앞. 정지된 일정 카드에는 「일정 정지」 표시.</li>
+      <li>선택·되돌리기·다시 시작 같은 「할 일」은 일반 알림 목록보다 위에 둔다(지금 여행 화면의 순서와 같다).</li>
+      <li>조합 ⑥~⑧은 모두 살펴볼 점을 ③(그날 일정 옆)에 두고 받은 알림·변경 이력·할 일의 자리만 달리했다. 살펴볼 점은 여행 중에 생긴 일이 아니라 계획 자체의 문제라 일정 옆이 맞다고 봤다(작성자 제안).</li>
+    </ul>
+    <h4>미정 — 고르기 전에 정할 것</h4>
+    <ul>
+      <li>「새 알림」 숫자의 기준: 서버 알림에 읽음 표시가 없어 브라우저가 마지막으로 본 시각을 기억하거나 서버 필드를 협의해야 한다. 목업은 페이지 메모리로만 센다.</li>
+      <li>등록 뒤 계획 확인 결과(카드의 「확인 필요」)와 살펴볼 점이 같은 문제를 두 번 말할 수 있다 — 어느 쪽을 남길지.</li>
+      <li>살펴볼 점을 일정 카드에 붙이려면(③) 서버가 항목 ID를 함께 줘야 한다 — 협의 필요.</li>
+      <li>여행계획서 열기·내려받기, 새 계획 올리기의 자리(앞 목업의 미정과 같다). ⑤는 ☰ 메뉴에 두는 예를 보였다.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const ICON = {
+    chat: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+    back: '<path d="m15 18-6-6 6-6"/>',
+    right: '<path d="m9 18 6-6-6-6"/>',
+    send: '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+    x: '<path d="M18 6 6 18M6 6l12 12"/>',
+    unlock: '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>',
+    pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+    trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
+    train: '<path d="M8 3.1V7a4 4 0 0 0 8 0V3.1"/><path d="m9 15-1-1"/><path d="m15 15 1-1"/><path d="M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z"/><path d="m8 19-2 3"/><path d="m16 19 2 3"/>',
+    walk: '<path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/>',
+    bus: '<path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/>',
+    bell: '<path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>',
+    alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+    stop: '<path d="M12 16h.01"/><path d="M12 8v4"/><path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"/>',
+    history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+    undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/>',
+    down: '<path d="m6 9 6 6 6-6"/>',
+    up: '<path d="m18 15-6-6-6 6"/>',
+    menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+    shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+  };
+  const icon = (name, cls = "i") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICON[name]}</svg>`;
+  const esc = (text) => String(text).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+  const md = (date) => `${date.slice(5, 7)}.${date.slice(8, 10)}`;
+
+  /* ---------- 예시 데이터 ---------- */
+  const DAYS = [{ day: 1, date: "2026-10-13", label: "10.13 화" }, { day: 2, date: "2026-10-14", label: "10.14 수" }];
+  const STOPS = [
+    { id: "s1", day: 1, time: "10:00", title: "경복궁", x: 140, y: 128, move: { depart: "11:40", mode: "train", text: "지하철 3호선→1호선 15분 · 2.1km", slack: "여유 35분" } },
+    { id: "s2", day: 1, time: "12:30", title: "광장시장", x: 262, y: 156, move: { depart: "14:04", mode: "train", text: "지하철 1호선→4호선 26분 · 6.3km", slack: "여유 30분" } },
+    { id: "s3", day: 1, time: "15:00", title: "국립중앙박물관", x: 172, y: 290 },
+    { id: "s4", day: 2, time: "09:30", title: "북촌한옥마을", x: 176, y: 118, move: { depart: "11:10", mode: "walk", text: "도보 12분 · 0.8km", slack: "여유 8분" } },
+    { id: "s5", day: 2, time: "11:30", title: "익선동 한옥거리", x: 220, y: 150, move: { depart: "13:05", mode: "train", text: "지하철 5호선→4호선 22분 · 4.6km", slack: "여유 13분" } },
+    { id: "s6", day: 2, time: "13:40", title: "남산서울타워", x: 222, y: 216, move: { depart: "16:20", mode: "bus", text: "버스 402번 18분 · 3.9km", slack: "여유 22분" } },
+    { id: "s7", day: 2, time: "17:00", title: "이태원 거리", x: 246, y: 268 },
+  ];
+  const byId = (id) => STOPS.find((stop) => stop.id === id);
+  const stopsOf = (day) => STOPS.filter((stop) => stop.day === day);
+  // 살펴볼 점 3개 — 지금 여행 화면 캡처(2026-10-06)의 서버 문장.
+  const GAP = "누락되거나 잘못된 시간·이동 정보를 보완하세요";
+  const WARNINGS = [
+    { date: "2026-10-13", reason: "항목 1/2: 이동시간 누락 또는 간격 부족 / 항목 2/3: 이동시간 누락 또는 간격 부족", remedy: GAP },
+    { date: "2026-10-14", reason: "항목 4/5: 이동시간 누락 또는 간격 부족 / 항목 5/6: 이동시간 누락 또는 간격 부족 / 항목 6/7: 이동시간 누락 또는 간격 부족", remedy: GAP },
+    { date: "2026-10-14", reason: "점심 시간대(11:30~14:00)에 식사 일정이 없고 식사할 틈도 30분뿐이다 — 다른 일정이 그 시간을 채운다", remedy: "그 시간대에 식사 항목을 넣거나 일정 사이에 식사할 틈을 둔다(일부러 거르는 일정이면 그대로 둔다)" },
+  ];
+  const REGISTERED = { id: "n1", type: "guidance", at: "2026-10-06 14:32", text: "여행을 등록했어요. 일정이 바뀌거나 확인할 일이 생기면 알려 드릴게요." };
+  const V1 = { version: 1, at: "2026-10-06 14:32", reason: "처음 등록", causes: [] };
+  const SETS = {
+    fresh: { notices: [REGISTERED], history: [V1], choice: null, undo: null, safety: null, times: {}, paused: [] },
+    travel: {
+      notices: [
+        { id: "n4", type: "proposal_request", at: "2026-10-13 10:42", text: "14시부터 광장시장 일대에 비 예보가 있어요. 실내 일정으로 바꿀까요?" },
+        { id: "n3", type: "change_notice", at: "2026-10-13 09:15", text: "도로 통제로 이동이 길어져 15:00 국립중앙박물관을 15:20으로 미뤘어요." },
+        { id: "n2", type: "guidance", at: "2026-10-13 08:00", text: "오늘 일정 안내 — 10:00 경복궁부터 3곳이에요." },
+        REGISTERED,
+      ],
+      history: [{ version: 2, at: "2026-10-13 09:15", reason: "자동 변경", causes: ["도로 통제 — 이동 시간 10분 늘어남"] }, V1],
+      choice: { noticeId: "n4", stopId: "s2", text: "14시부터 광장시장 일대에 비 예보가 있어요. 실내 일정으로 바꿀까요?", options: ["14:00 동대문디자인플라자", "14:10 서울공예박물관"], until: "10.13 13:30까지" },
+      undo: { noticeId: "n3", stopId: "s3", text: "도로 통제로 이동이 길어져 15:00 국립중앙박물관을 15:20으로 미뤘어요." },
+      safety: null, times: { s3: "15:20" }, paused: [],
+    },
+    safety: {
+      notices: [{ id: "n2", type: "safety_alert", at: "2026-10-13 13:05", text: "[재난문자] 지진 발생 — 오늘 남은 일정을 멈췄어요. 공식 안내를 따라 주세요." }, REGISTERED],
+      history: [V1], choice: null, undo: null, times: {}, paused: ["s3"],
+      safety: { label: "지진 — 오늘 남은 일정 정지", when: "10.13 13:05부터 · 10.13 24:00까지", shelter: "종로구민회관 지하 · 직선 350m · 걸어서 약 6분(추정)" },
+    },
+  };
+  const TYPE_LABEL = { guidance: "안내", proposal_request: "선택 요청", change_notice: "변경 알림", safety_alert: "안전 알림" };
+
+  const VARIANTS = {
+    1: { title: "① 알림 센터 — 머리줄의 종", one: "지도 위 머리줄에 종 버튼을 두고, 누르면 알림 센터가 열려 살펴볼 점·받은 알림·변경 이력을 탭으로 본다.",
+      how: ["종 위 빨간 숫자 = 아직 안 본 알림 수.", "선택 요청·되돌리기처럼 할 일이 있는 것은 탭 위에 카드로 고정한다.", "시트와 지도는 등록 전과 똑같이 둔다."],
+      good: ["많은 앱이 쓰는 익숙한 자리라 설명이 필요 없다.", "알림·이력이 많아져도 일정 화면이 늘어나지 않는다."],
+      bad: ["숨어 있어서 살펴볼 점을 안 보고 지나칠 수 있다.", "머리줄 버튼이 넷(로고·제목·종·지킴이·메뉴)으로 붐빈다."],
+      try: "종을 눌러 탭을 바꿔 보고, 예시 상황을 「선택 요청·자동 변경」으로 바꿔 고정 카드를 본다." },
+    2: { title: "② 시트 머리 숫자 칩", one: "시트 머리 「등록 완료」 옆에 ⚠살펴볼 점·🔔알림·🕘이력 숫자 칩을 둔다. 누르면 시트 안이 그 목록으로 바뀐다.",
+      how: ["살펴볼 점이 있으면 칩이 노란색, 새 알림·할 일이 있으면 칩에 빨간 점.", "목록에서 「‹ 일정」으로 돌아온다(채팅 A안과 같은 방식).", "할 일 카드는 알림 목록 맨 위."],
+      good: ["가장 많이 보는 시트에 개수가 늘 보인다.", "화면 이동 없이 같은 시트 안에서 끝난다."],
+      bad: ["일정·목록(·채팅 A안)이 한 시트를 번갈아 쓰면 지금 무엇을 보는지 헷갈릴 수 있다.", "「등록 완료」 배지 자리를 칩이 차지한다."],
+      try: "칩을 하나씩 눌러 목록이 바뀌는지 보고 「‹ 일정」으로 돌아온다." },
+    3: { title: "③ 일정에 붙이기", one: "살펴볼 점은 그 날짜의 일차 칩·일차 머리에, 선택 요청과 자동 변경은 해당 일정 카드 아래에 붙인다. 알림·변경 이력은 일차 칩 끝 「기록」에 시간순으로 모은다.",
+      how: ["일차 칩 숫자 = 그날 살펴볼 점 수.", "일차 머리의 노란 띠를 누르면 그날 살펴볼 점 전체와 고칠 방법.", "선택 요청·되돌리기는 일정 카드 바로 밑 점선 카드."],
+      good: ["문제를 일정과 같은 자리에서 본다 — 따로 찾으러 갈 곳이 줄어든다.", "등록 전 계획 확인 화면의 「일차 칩 숫자」와 같은 읽는 법이다."],
+      bad: ["서버의 살펴볼 점은 날짜만 준다 — 일정 카드 단위로 붙이려면 항목 ID 협의가 필요하다.", "날짜 없는 살펴볼 점·안내 알림은 붙일 자리가 없어 「기록」으로 간다.", "「전체」 보기에서는 띠가 여러 개라 길어진다."],
+      try: "「선택 요청·자동 변경」 상황에서 1일차 광장시장·국립중앙박물관 밑 카드를 보고, 「기록」 칩을 누른다." },
+    4: { title: "④ 채팅에 합치기", one: "받은 알림과 변경 이력을 채팅 대화 줄에 시간순으로 넣는다. 살펴볼 점은 대화 맨 위 고정 메시지. 채팅 버튼에 새 알림 수와 미리 보기 말풍선.",
+      how: ["채팅 버튼 위 숫자 + 옆 말풍선에 가장 새 알림.", "변경 이력은 대화 사이 구분선(「v2 · 자동 변경」).", "선택 요청·되돌리기 버튼은 그 알림 메시지 안에 — 지금도 채팅 답에 선택지·되돌리기가 붙는다."],
+      good: ["알림·선택·되돌리기·질문이 한 줄에 모인다. 디스코드·텔레그램으로 받는 알림과 모양이 비슷하다.", "일정 시트는 등록 전과 똑같이 깔끔하다."],
+      bad: ["중요한 알림이 대화에 묻힌다. 채팅을 열기 전에는 말풍선 하나만 보인다.", "대화(messages)와 알림(notices)은 서버에서 따로 오는 목록이라 화면이 시간순으로 섞어야 하고, 채팅으로 바꾼 일정은 답과 알림이 겹칠 수 있다.", "채팅 배치를 B안(화면 이동)으로 고르면 지도와 함께 보지 못한다."],
+      try: "미리 보기 말풍선이나 채팅 버튼을 누르고, 「선택 요청·자동 변경」 상황에서 메시지 안 버튼을 눌러 본다." },
+    5: { title: "⑤ 지도 위 우선 카드", one: "지금 가장 급한 것 하나만 지도 위 카드로 띄운다(재난 정지 > 선택 요청 > 되돌리기 > 살펴볼 점). 「모두 보기」로 전체 목록, 변경 이력·여행계획서는 ☰ 메뉴.",
+      how: ["카드 한 장에 가장 급한 것 하나 + 「모두 보기 n」.", "∧ 로 접으면 오른쪽 위 작은 알림 알약만 남는다.", "☰ 메뉴: 변경 이력 · 여행계획서 열기 · 새 계획 올리기."],
+      good: ["등록 뒤 비어 있는 지도 윗부분을 쓴다. 할 일이 있을 때만 커진다.", "시트는 등록 전과 똑같다."],
+      bad: ["카드가 지도 핀을 가린다(접기로 피한다).", "「무엇이 더 급한가」 순서를 정해 둬야 한다.", "변경 이력이 메뉴 안에 숨는다."],
+      try: "세 상황을 바꿔 가며 카드 내용이 바뀌는지 보고, ∧ 로 접고, ☰ 메뉴의 변경 이력을 연다." },
+    6: { title: "⑥ 제안 조합 — ③ + ⑤ + ①", one: "정보의 성격마다 자리를 나눈다. 살펴볼 점(계획의 문제)은 그날 일정 옆, 지금 처리할 일만 지도 위 카드, 지나간 알림과 변경 이력은 머리줄 종 보관함.",
+      how: ["일차 칩 숫자·일차 머리 노란 띠 = 살펴볼 점(③).", "재난 정지·선택 요청·되돌리기가 있을 때만 지도 위 카드가 뜬다(⑤). 할 일이 없으면 지도는 비어 있다.", "종 버튼 = 받은 알림·변경 이력 두 탭(①). 카드의 「고르기」도 여기로 오고, 할 일 카드가 맨 위에 있다."],
+      good: ["할 일이 없는 평소에는 등록 전 화면과 거의 같다 — 일차 칩 숫자만 늘어난다.", "급한 것은 누르지 않아도 보이고, 지난 기록은 찾으면 있다.", "계획 확인 화면의 「일차 칩 숫자」와 읽는 법이 같다."],
+      bad: ["자리가 세 군데(일차 칩·지도 위·종)라 처음에는 규칙을 익혀야 한다.", "③의 한계 그대로 — 살펴볼 점은 날짜 단위까지만 붙는다.", "머리줄 버튼이 넷으로 붐빈다(①과 같다)."],
+      try: "상황을 셋 다 바꿔 본다 — 등록 직후에는 지도 위 카드가 없고, 선택 요청·재난일 때만 뜬다. 「고르기」를 누르면 종 보관함이 할 일 카드와 함께 열린다." },
+    7: { title: "⑦ 계획은 시트, 사건은 채팅 — ③ + ④", one: "살펴볼 점은 그날 일정 옆(③), 받은 알림·변경 이력·선택·되돌리기는 채팅 대화에(④). 시트 = 계획, 채팅 = 여행 중 생긴 일로 나눈다.",
+      how: ["일차 칩 숫자·노란 띠 = 살펴볼 점.", "채팅 버튼 숫자 + 미리 보기 말풍선 = 새 알림. 열면 알림은 메시지, 이력은 구분선으로 보인다(살펴볼 점은 채팅에 고정하지 않는다).", "재난 정지는 지도 위 빨간 띠."],
+      good: ["자리가 둘뿐이다 — 계획은 시트, 일어난 일은 채팅.", "알림에 대한 질문을 같은 대화에서 바로 이어 한다(「왜 미뤘어?」).", "④의 「살펴볼 점이 대화에 묻힌다」를 ③이 덜어 준다."],
+      bad: ["선택 요청처럼 기한이 있는 할 일이 채팅 안에 있다 — 말풍선을 놓치면 늦을 수 있다.", "채팅 배치 A안(시트 안 채팅)과 잘 맞는다. B안(화면 이동)이면 알림을 지도와 함께 못 본다.", "대화(messages)와 알림(notices)을 시간순으로 섞는 일이 화면 몫이다(④와 같다)."],
+      try: "「선택 요청·자동 변경」 상황에서 일차 칩 숫자와 말풍선을 보고, 채팅을 열어 메시지 안 버튼을 누른다." },
+    8: { title: "⑧ 시트 하나로 — ③ + ②", one: "모든 것을 아래 시트 안에 둔다. 살펴볼 점은 그날 일정 옆, 선택·되돌리기는 그 일정 카드 밑(③), 받은 알림·변경 이력은 시트 머리 🔔·🕘 숫자 칩(②).",
+      how: ["시트 머리 「등록 완료」 옆에 🔔·🕘 두 칩. 누르면 시트 안이 그 목록으로 바뀐다.", "선택 요청·자동 변경은 그 일정 카드 바로 밑 점선 카드. 알림 목록에서는 「그 일정으로」 버튼으로 보낸다.", "재난 정지는 지도 위 빨간 띠."],
+      good: ["지도와 머리줄은 등록 전과 똑같다 — 손이 가는 시트에 다 있다.", "할 일이 그 일정 바로 밑에 있어 무엇에 대한 것인지 헷갈리지 않는다."],
+      bad: ["할 일 카드가 일정 사이에 끼어들어 시트가 길어진다.", "다른 날의 할 일은 그 날짜를 눌러야 보인다 — 🔔 칩의 빨간 점이 알려 준다.", "일정·목록(·채팅 A안)이 한 시트를 번갈아 쓴다(②와 같다)."],
+      try: "「선택 요청·자동 변경」 상황에서 2일차를 눌러 할 일이 안 보이는 것과 🔔 칩의 빨간 점을 보고, 🔔 목록의 「그 일정으로」를 누른다." },
+  };
+
+  // 아이디어마다 켜는 조각. ⑥~⑧ 은 ①~⑤ 의 조각을 섞은 조합이다.
+  const has = {
+    inlineWarn: (v) => [3, 6, 7, 8].includes(v), // 일차 칩 숫자 · 일차 머리 노란 띠
+    attach: (v) => [3, 8].includes(v),           // 선택·되돌리기를 일정 카드 밑에
+    record: (v) => v === 3,                      // 일차 칩 끝 「기록」
+    bell: (v) => [1, 6].includes(v),             // 머리줄 종 → 알림 센터
+    card: (v) => [5, 6].includes(v),             // 지도 위 우선 카드
+    chips: (v) => [2, 8].includes(v),            // 시트 머리 숫자 칩
+    chat: (v) => [4, 7].includes(v),             // 알림을 채팅에
+  };
+
+  /* ---------- 상태 ---------- */
+  const fresh = () => ({ day: 1, selected: null, mode: "plan", panel: null, tab: "warnings", seen: new Set(), choiceDone: false, undoDone: false, safetyDone: false,
+    folded: false, menuOpen: false, peekClosed: false, openWarn: {}, pinnedOpen: false, messages: [] });
+  const st = { variant: 1, set: "fresh", ...fresh() };
+
+  function data() {
+    const set = SETS[st.set];
+    return {
+      warnings: WARNINGS, notices: set.notices, history: set.history,
+      choice: st.choiceDone ? null : set.choice, undo: st.undoDone ? null : set.undo, safety: st.safetyDone ? null : set.safety,
+      times: st.undoDone ? {} : set.times, paused: st.safetyDone ? [] : set.paused,
+    };
+  }
+  const unread = (D) => D.notices.filter((notice) => !st.seen.has(notice.id));
+  const actionCount = (D) => (D.choice ? 1 : 0) + (D.undo ? 1 : 0) + (D.safety ? 1 : 0);
+  const markSeen = (D) => D.notices.forEach((notice) => st.seen.add(notice.id));
+
+  /* ---------- 공통 조각 ---------- */
+  function mapSvg(D) {
+    const days = typeof st.day === "number" ? [st.day] : [1, 2];
+    const routes = days.map((day) => `<path class="route d${day}" d="M${stopsOf(day).map((stop) => `${stop.x} ${stop.y}`).join(" L")}"/>`).join("");
+    const pins = days.map((day) => stopsOf(day).map((stop, at) => `<g class="pin${st.selected === stop.id ? " sel" : ""}${D.paused.includes(stop.id) ? " paused" : ""}" data-day="${day}" data-action="select" data-id="${stop.id}" role="button" tabindex="0" aria-label="${at + 1}. ${esc(stop.title)}" transform="translate(${stop.x} ${stop.y})">
+        <circle class="anchor" r="4"/><path class="tail" d="M-1 -2 L6 -16 L15 -11 Z"/><circle class="b" cx="15" cy="-27" r="16"/><text x="15" y="-22" text-anchor="middle">${at + 1}</text></g>`).join("")).join("");
+    return `<svg viewBox="0 0 390 820" preserveAspectRatio="xMidYMin slice" aria-label="일정 위치 개념도">
+      <rect width="390" height="820" fill="#efece4"/>
+      <path d="M30 34 C80 14 150 30 166 70 C172 98 128 104 90 98 C52 92 22 66 30 34Z" fill="#d4e6c9"/>
+      <path d="M188 196 C214 182 252 192 258 218 C262 244 232 256 206 248 C186 242 176 214 188 196Z" fill="#d4e6c9"/>
+      <path d="M112 252 C134 244 162 248 166 262 C168 276 146 282 128 280 C112 278 104 264 112 252Z" fill="#d4e6c9"/>
+      <path d="M-10 318 C60 296 120 316 190 310 C262 304 320 284 400 300 L400 356 C322 340 262 362 190 368 C120 374 60 356 -10 382 Z" fill="#b9d8e4"/>
+      <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path class="road-c" d="M0 150 H390 M0 206 C120 200 260 212 390 196 M150 30 V318 M250 56 C246 150 256 248 240 318 M40 318 L330 116 M0 92 C110 98 280 84 390 96"/>
+        <path class="road" d="M0 150 H390 M0 206 C120 200 260 212 390 196 M150 30 V318 M250 56 C246 150 256 248 240 318 M40 318 L330 116 M0 92 C110 98 280 84 390 96"/>
+        <path class="road-y" d="M0 250 C120 244 250 258 390 240 M96 30 C104 140 92 240 104 318 M312 40 C304 150 318 240 300 318"/>
+      </g>
+      <text class="lbl" x="108" y="122">종로구</text><text class="lbl" x="276" y="226">중구</text><text class="lbl" x="122" y="306">용산구</text>
+      <text class="river-lbl" x="44" y="350">한강</text>${routes}${pins}</svg>`;
+  }
+
+  const warnItem = (w) => `<li class="aRow"><span class="tag">${md(w.date)}</span><p>${esc(w.reason)}</p>${w.remedy ? `<p class="remedy">${esc(w.remedy)}</p>` : ""}</li>`;
+  const noticeItem = (n) => `<li class="aRow"><span class="tag" data-type="${n.type}">${TYPE_LABEL[n.type]}</span><time>${n.at}</time>${st.seen.has(n.id) ? "" : '<span class="unread" role="img" aria-label="새 알림"></span>'}<p>${esc(n.text)}</p></li>`;
+  const historyItem = (h) => `<li class="aRow"><span class="tag" data-type="version">v${h.version}</span><time>${h.at}</time><p>${esc(h.reason)}</p>${h.causes.map((cause) => `<p class="remedy">${esc(cause)}</p>`).join("")}</li>`;
+  const list = (items, render, emptyText) => items.length ? `<ul class="aList">${items.map(render).join("")}</ul>` : `<p class="empty">${emptyText}</p>`;
+
+  function choiceButtons(D) {
+    return `${D.choice.options.map((label, at) => `<button type="button" class="btn" data-primary data-action="choose" data-key="${at}">${esc(label)}</button>`).join("")}<button type="button" class="btn" data-action="choose" data-key="keep">지금 일정 그대로 두기</button>`;
+  }
+  function actionCards(D) {
+    let html = "";
+    if (D.safety) html += `<section class="act" data-tone="danger"><h4>일정 정지 중</h4><p class="what">${esc(D.safety.label)}</p><p>${esc(D.safety.when)}</p><div class="opts"><button type="button" class="btn" data-action="panel" data-panel="safety">안전 안내 보기</button></div></section>`;
+    if (D.choice) { const stop = byId(D.choice.stopId); html += `<section class="act"><h4>선택이 필요해요</h4><p class="what">${stop.time} · ${esc(stop.title)}</p><p>${esc(D.choice.text)}</p><div class="opts">${choiceButtons(D)}</div><p class="meta">${D.choice.until}</p></section>`; }
+    if (D.undo) html += `<section class="act" data-tone="info"><h4>자동으로 바꾼 일정</h4><p>${esc(D.undo.text)}</p><div class="opts"><button type="button" class="btn" data-action="undo">${icon("undo", "i sm")}되돌리기</button></div></section>`;
+    return html;
+  }
+
+  function dayStrip(D) {
+    const inline = has.inlineWarn(st.variant);
+    const warnOf = (date) => D.warnings.filter((w) => w.date === date).length;
+    const chip = (key, label, sub, extra = "") => `<button type="button" role="tab" class="dayChip" data-action="day" data-day="${key}" aria-selected="${st.day === key}">${label}${sub ? `<small>${sub}</small>` : ""}${extra}</button>`;
+    return `<div class="dayStrip" role="tablist" aria-label="일차 고르기">${chip("all", "전체")}${DAYS.map((d) => {
+      const n = inline ? warnOf(d.date) : 0;
+      return chip(d.day, `${d.day}일차`, d.label, n ? `<span class="num" role="img" aria-label="살펴볼 점 ${n}개">${n}</span>` : "");
+    }).join("")}${has.record(st.variant) ? chip("record", "기록", "", unread(D).length ? '<span class="dot" role="img" aria-label="새 알림"></span>' : "") : ""}</div>`;
+  }
+
+  function dayList(day, D) {
+    const attach = has.attach(st.variant);
+    const info = DAYS.find((d) => d.day === day);
+    const rows = [];
+    stopsOf(day).forEach((stop, at, all) => {
+      const time = D.times[stop.id] ?? stop.time;
+      const pills = [D.times[stop.id] ? '<span class="pill" data-state="changed">바뀜</span>' : "", D.paused.includes(stop.id) ? '<span class="pill" data-state="paused">일정 정지</span>' : "",
+        !attach && D.choice?.stopId === stop.id ? '<span class="pill" data-state="choice">선택 필요</span>' : ""].join("");
+      rows.push(`<li class="entry"${st.selected === stop.id ? " data-selected" : ""}><span class="time">${time}${D.times[stop.id] ? `<s>${stop.time}</s>` : ""}</span><span class="rail" aria-hidden="true"><span class="dotm"></span></span>
+        <div class="card" data-card="${stop.id}"><button type="button" class="cardMain" data-action="select" data-id="${stop.id}">${icon("unlock")}<strong>${esc(stop.title)}</strong>${pills}</button>
+        <button type="button" class="tool" data-action="frozen" aria-label="${esc(stop.title)} 수정">${icon("pencil")}</button><button type="button" class="tool" data-action="frozen" aria-label="${esc(stop.title)} 삭제">${icon("trash")}</button></div></li>`);
+      if (attach && D.choice?.stopId === stop.id) rows.push(`<li class="entry attach"><span></span><span class="rail" aria-hidden="true"></span><div class="attachCard"><strong>선택이 필요해요 · ${D.choice.until}</strong><p>${esc(D.choice.text)}</p><div class="opts">${choiceButtons(D)}</div></div></li>`);
+      if (attach && D.undo?.stopId === stop.id) rows.push(`<li class="entry attach"><span></span><span class="rail" aria-hidden="true"></span><div class="attachCard" data-tone="info"><strong>자동으로 바꿨어요</strong><p>${esc(D.undo.text)}</p><div class="opts"><button type="button" class="btn" data-action="undo">${icon("undo", "i sm")}되돌리기</button></div></div></li>`);
+      if (stop.move && at < all.length - 1) rows.push(`<li class="entry move"><span class="time">${stop.move.depart}<small>출발</small></span><span class="rail" aria-hidden="true"><span class="dotm"></span></span><p class="move">${icon(stop.move.mode)}<span class="txt">${stop.move.text}</span><span class="slack">${stop.move.slack}</span></p></li>`);
+    });
+    let banner = "";
+    if (has.inlineWarn(st.variant)) {
+      const ws = D.warnings.filter((w) => w.date === info.date);
+      const open = Boolean(st.openWarn[day]);
+      if (ws.length) banner = `<div class="dayWarn"${open ? " data-open" : ""}><button type="button" data-action="dayWarn" data-day="${day}" aria-expanded="${open}">${icon("alert", "i sm")}<span>살펴볼 점 ${ws.length} · ${esc(ws[0].reason)}</span>${icon(open ? "up" : "down", "i sm")}</button>
+        ${open ? `<ul>${ws.map((w) => `<li>${esc(w.reason)}${w.remedy ? `<small>${esc(w.remedy)}</small>` : ""}</li>`).join("")}</ul>` : ""}</div>`;
+    }
+    return `<p class="dayHead">${day}일차<small>${info.label}</small></p>${banner}<ul class="timeline">${rows.join("")}</ul>`;
+  }
+
+  function timelineBody(D) {
+    if (has.record(st.variant) && st.day === "record") {
+      const merged = [...D.notices.map((n) => ({ at: n.at, html: noticeItem(n) })), ...D.history.map((h) => ({ at: h.at, html: historyItem(h) }))].sort((a, b) => b.at.localeCompare(a.at));
+      const undated = D.warnings.filter((w) => !w.date);
+      markSeen(D);
+      return `<p class="secTitle">받은 알림·변경 이력 · 새것부터</p><ul class="aList">${merged.map((row) => row.html).join("")}</ul>${undated.length ? `<p class="secTitle">날짜 없는 살펴볼 점</p>${list(undated, warnItem, "")}` : ""}`;
+    }
+    const lists = typeof st.day === "number" ? dayList(st.day, D) : DAYS.map((d) => dayList(d.day, D)).join("");
+    return `${lists}<p class="credit">장소 정보 출처 : ⓒ한국관광공사 · 예시 데이터</p>`;
+  }
+
+  const doneBadge = `<span class="doneBadge">${icon("check")}등록 완료</span>`;
+
+  function countChips(D) {
+    const hot = unread(D).length + (D.choice ? 1 : 0) + (D.undo ? 1 : 0) > 0;
+    const chip = (key, ic, n, label, extra = "") => `<button type="button" class="cnt" data-action="list" data-list="${key}" aria-pressed="${st.mode === key}" aria-label="${label} ${n}개"${extra}>${icon(ic)}${n}</button>`;
+    // ⑧ 은 살펴볼 점을 일정 옆에 두므로 칩이 둘(알림·이력)이다.
+    const warnChip = has.inlineWarn(st.variant) ? "" : chip("warnings", "alert", D.warnings.length, "살펴볼 점", D.warnings.length ? ' data-tone="warn"' : "");
+    return `<span class="cnts">${warnChip}${chip("notices", "bell", D.notices.length, "받은 알림", hot ? " data-hot" : "")}${chip("history", "history", D.history.length, "변경 이력")}</span>`;
+  }
+
+  /** ⑧: 할 일은 일정 카드 밑에 있으니 알림 목록에서는 그 자리로 보내는 줄만 둔다. */
+  function attachedHint(D) {
+    const targets = [D.choice && ["선택 요청", D.choice.stopId], D.undo && ["자동 변경", D.undo.stopId]].filter(Boolean);
+    if (!targets.length) return "";
+    return `<section class="act"><h4>할 일 ${targets.length}개는 그 일정 카드 밑에 있어요</h4><div class="opts">${targets.map(([label, id]) => `<button type="button" class="btn" data-action="gotoStop" data-id="${id}">${label} · ${esc(byId(id).title)}${icon("right", "i sm")}</button>`).join("")}</div></section>`;
+  }
+
+  function sheetHtml(D) {
+    const handle = '<div class="handle" aria-hidden="true"><span></span></div>';
+    if (has.chat(st.variant) && st.mode === "chat") return `${handle}<header class="sheetHead"><button type="button" class="headBack" data-action="closeChat" aria-label="일정으로 돌아가기">${icon("back")}일정</button><h3>여행 채팅</h3>${doneBadge}</header>${chatBody(D)}`;
+    if (has.chips(st.variant) && st.mode !== "plan") {
+      const title = { warnings: "살펴볼 점", notices: "받은 알림", history: "변경 이력" }[st.mode];
+      let body = "";
+      if (st.mode === "warnings") body = list(D.warnings, warnItem, "살펴볼 점이 없어요.");
+      if (st.mode === "notices") { body = (has.attach(st.variant) ? attachedHint(D) : actionCards(D)) + list([...D.notices].sort((a, b) => b.at.localeCompare(a.at)), noticeItem, "받은 알림이 없어요."); markSeen(D); }
+      if (st.mode === "history") body = list(D.history, historyItem, "변경 이력이 없어요.");
+      return `${handle}<header class="sheetHead"><button type="button" class="headBack" data-action="list" data-list="plan" aria-label="일정으로 돌아가기">${icon("back")}일정</button><h3>${title}</h3>${countChips(D)}</header><div class="sheetBody">${body}</div>`;
+    }
+    const head = has.chips(st.variant) ? `<h3>등록 완료</h3>${countChips(D)}` : `<h3>등록 완료</h3>${doneBadge}`;
+    return `${handle}<header class="sheetHead">${head}</header>${dayStrip(D)}<div class="sheetBody">${timelineBody(D)}</div>`;
+  }
+
+  function chatBody(D) {
+    const items = [
+      ...D.history.map((h) => ({ at: h.at, order: 0, html: `<p class="divider">v${h.version} · ${md(h.at.slice(0, 10))} ${h.at.slice(11)} · ${esc(h.reason)}</p>` })),
+      ...D.notices.map((n) => {
+        let extra = "";
+        if (n.type === "proposal_request" && D.choice?.noticeId === n.id) extra = `<div class="opts">${choiceButtons(D)}</div>`;
+        if (n.type === "change_notice" && D.undo?.noticeId === n.id) extra = `<div class="opts"><button type="button" class="btn" data-action="undo">${icon("undo", "i sm")}되돌리기</button></div>`;
+        if (n.type === "safety_alert" && D.safety) extra = `<div class="opts"><button type="button" class="btn" data-danger data-action="panel" data-panel="safety">안전 안내 보기</button></div>`;
+        return { at: n.at, order: 1, html: `<article class="msg" data-role="assistant"><p class="msgMeta"><span class="tag" data-type="${n.type}">${TYPE_LABEL[n.type]}</span>${md(n.at.slice(0, 10))} ${n.at.slice(11)}</p><p class="bubble">${esc(n.text)}</p>${extra}</article>` };
+      }),
+      ...st.messages.map((m, at) => ({ at: `9999-${at}`, order: 2, html: `<article class="msg" data-role="${m.role}"><p class="msgMeta">${m.role === "user" ? "나" : "triPilot"}</p><p class="bubble">${esc(m.text)}</p></article>` })),
+    ].sort((a, b) => a.at.localeCompare(b.at) || a.order - b.order);
+    markSeen(D);
+    // ⑦ 은 살펴볼 점이 일정 옆에 있어 채팅에는 고정하지 않는다.
+    const pinned = has.inlineWarn(st.variant) ? "" : `<div class="pinned"><button type="button" data-action="pinned" aria-expanded="${st.pinnedOpen}">${icon("alert", "i sm")}<span>살펴볼 점 ${D.warnings.length} · 등록하면서 찾았어요</span>${icon(st.pinnedOpen ? "up" : "down", "i sm")}</button>
+      ${st.pinnedOpen ? `<ul>${D.warnings.map((w) => `<li>${md(w.date)} · ${esc(w.reason)}</li>`).join("")}</ul>` : ""}</div>`;
+    return `<div class="chat"><div class="log" role="log" aria-label="여행 대화와 알림">${pinned}${items.map((item) => item.html).join("")}</div>
+      <div class="composer"><form class="form" novalidate><label class="sr-only" for="chat-input">여행 메시지</label><input id="chat-input" autocomplete="off" placeholder="일정에 대해 궁금한 점을 입력하세요"><button type="submit" class="send" aria-label="메시지 전송">${icon("send")}</button></form></div></div>`;
+  }
+
+  function panelHtml(D) {
+    const head = (title) => `<header class="panelHead"><button type="button" class="iconBtn" data-action="closePanel" aria-label="닫기">${icon("back", "i big")}</button><h3>${title}</h3></header>`;
+    if (st.panel === "center") {
+      // ⑥ 은 살펴볼 점이 일정 옆에 있어 보관함 탭이 둘이다.
+      const tabs = [["warnings", `살펴볼 점 ${D.warnings.length}`], ["notices", `받은 알림 ${D.notices.length}`], ["history", `변경 이력 ${D.history.length}`]].filter(([key]) => key !== "warnings" || !has.inlineWarn(st.variant));
+      const tab = tabs.some(([key]) => key === st.tab) ? st.tab : tabs[0][0];
+      const body = tab === "warnings" ? list(D.warnings, warnItem, "살펴볼 점이 없어요.") : tab === "notices" ? list([...D.notices].sort((a, b) => b.at.localeCompare(a.at)), noticeItem, "받은 알림이 없어요.") : list(D.history, historyItem, "변경 이력이 없어요.");
+      if (tab === "notices") queueMicrotask(() => markSeen(D));
+      return `${head("알림")}<div class="panelBody">${actionCards(D)}<div class="tabs" role="tablist">${tabs.map(([key, label]) => `<button type="button" role="tab" data-action="tab" data-tab="${key}" aria-selected="${tab === key}">${label}</button>`).join("")}</div>${body}</div>`;
+    }
+    if (st.panel === "all") {
+      const acts = actionCards(D);
+      const html = `${head("알림 모두 보기")}<div class="panelBody">${acts ? `<p class="secTitle">할 일</p>${acts}` : ""}<p class="secTitle">살펴볼 점 ${D.warnings.length}</p>${list(D.warnings, warnItem, "없어요.")}<p class="secTitle">받은 알림 ${D.notices.length}</p>${list([...D.notices].sort((a, b) => b.at.localeCompare(a.at)), noticeItem, "없어요.")}</div>`;
+      markSeen(D);
+      return html;
+    }
+    if (st.panel === "history") return `${head("변경 이력")}<div class="panelBody">${list(D.history, historyItem, "변경 이력이 없어요.")}</div>`;
+    if (st.panel === "safety") {
+      const s = SETS[st.set].safety;
+      return `${head("일정 정지 중")}<div class="panelBody"><section class="act" data-tone="danger"><h4>${esc(s.label)}</h4><p>${esc(s.when)}</p><p>정지는 일정을 고치지 않아요. 공식 안내를 먼저 따라 주세요.</p>
+        <p class="secTitle">가까운 대피 장소</p><ul><li>${esc(s.shelter)}</li></ul>
+        <p class="meta" id="resume-hint">안전한 곳에 계신 것을 확인한 뒤에 눌러 주세요.</p><div class="opts">${st.safetyDone ? "<p>다시 시작했어요.</p>" : '<button type="button" class="btn" data-primary data-action="resume" aria-describedby="resume-hint">일정 다시 시작</button>'}</div></section></div>`;
+    }
+    return "";
+  }
+
+  function priorityCard(D) {
+    // ⑥ 은 지금 처리할 일(재난 정지·선택 요청·되돌리기)만 띄운다 — 없으면 카드도 없다. 지난 알림은 종 보관함.
+    const urgentOnly = st.variant === 6;
+    const total = urgentOnly ? actionCount(D) : D.warnings.length + D.notices.length + actionCount(D);
+    if (urgentOnly && !total) return "";
+    const what = urgentOnly ? "할 일" : "알림";
+    if (st.folded) return `<button type="button" class="pcPill" data-action="unfold" aria-label="${what} 카드 펼치기">${icon("bell", "i sm")}${what} ${total}</button>`;
+    const listPanel = urgentOnly ? "center" : "all";
+    let card;
+    if (D.safety) card = { tone: "danger", ic: "stop", title: "일정 정지 중", text: `${D.safety.label} · ${D.safety.when}`, act: '<button type="button" class="btn" data-danger data-action="panel" data-panel="safety">안전 안내 보기</button>' };
+    else if (D.choice) { const stop = byId(D.choice.stopId); card = { tone: "warn", ic: "alert", title: "선택이 필요해요", text: `${stop.time} ${stop.title} — ${D.choice.text}`, act: `<button type="button" class="btn" data-primary data-action="panel" data-panel="${listPanel}">고르기</button>` }; }
+    else if (D.undo) card = { tone: "info", ic: "undo", title: "자동으로 바꾼 일정", text: D.undo.text, act: `<button type="button" class="btn" data-action="undo">${icon("undo", "i sm")}되돌리기</button>` };
+    else card = { tone: "warn", ic: "alert", title: `살펴볼 점 ${D.warnings.length}`, text: `${md(D.warnings[0].date)} · ${D.warnings[0].reason}`, act: "" };
+    const more = urgentOnly ? (total > 1 ? `<button type="button" class="btn" data-action="panel" data-panel="center">할 일 ${total}개 모두</button>` : "") : `<button type="button" class="btn" data-action="panel" data-panel="all">모두 보기 ${total}</button>`;
+    return `<section class="pc" data-tone="${card.tone}" aria-label="가장 급한 ${what}"><div class="pcHead">${icon(card.ic)}<strong>${card.title}</strong><button type="button" class="pcFold" data-action="fold" aria-label="${what} 카드 접기">${icon("up")}</button></div>
+      <p>${esc(card.text)}</p><div class="pcActions">${card.act}${more}</div></section>`;
+  }
+
+  /* ---------- 그리기 ---------- */
+  const phone = document.querySelector(".phone");
+  // 다시 그린 뒤 같은 버튼으로 포커스를 돌려놓는 열쇠(같은 동작이 여러 버튼에 있어 대상까지 붙인다).
+  const keyOf = (el) => { const d = el.dataset; return `${d.action}|${d.id ?? d.day ?? d.list ?? d.tab ?? d.panel ?? d.key ?? ""}`; };
+  function render() {
+    const D = data();
+    const v = st.variant;
+    const focusedKey = phone.contains(document.activeElement) && document.activeElement.dataset.action ? keyOf(document.activeElement) : null;
+    const body = phone.querySelector(".sheetBody");
+    const keep = body && !st.resetScroll ? body.scrollTop : 0;
+    st.resetScroll = false;
+    phone.dataset.mode = st.mode === "chat" ? "chat" : "plan";
+    phone.toggleAttribute("data-panel", Boolean(st.panel));
+    const bellN = unread(D).length + (D.choice ? 1 : 0) + (D.undo ? 1 : 0);
+    const fabN = unread(D).length;
+    const latest = [...D.notices].sort((a, b) => b.at.localeCompare(a.at)).find((n) => !st.seen.has(n.id));
+    phone.innerHTML = `<div class="map">${mapSvg(D)}</div>
+      <div class="top"><button type="button" class="logo" data-action="soon" aria-label="triPilot 처음으로"><span>t</span></button><button type="button" class="titlePill" data-action="soon">내 여행</button><span class="gap"></span>
+        ${has.bell(v) ? `<button type="button" class="bell" data-action="panel" data-panel="center" aria-label="알림 센터 열기${bellN ? ` · 새 알림 ${bellN}개` : ""}">${icon("bell", "i big")}${bellN ? `<span class="badge">${bellN}</span>` : ""}</button>` : ""}
+        <button type="button" class="shield" data-action="soon" aria-label="항로 지킴이">${icon("shield", "i big")}</button>
+        <button type="button" class="menu" data-action="${v === 5 ? "menu" : "soon"}" aria-label="메뉴" aria-expanded="${v === 5 && st.menuOpen}">${icon("menu", "i big")}</button></div>
+      ${has.card(v) ? priorityCard(D) : D.safety ? `<button type="button" class="safetyBar" data-action="panel" data-panel="safety">${icon("stop")}<span>일정 정지 중 · ${esc(D.safety.label)}</span>${icon("right", "i sm")}</button>` : ""}
+      ${v === 5 && st.menuOpen ? `<div class="menuPop" role="menu"><button type="button" role="menuitem" data-action="panel" data-panel="history">${icon("history")}변경 이력<b>${D.history.length}</b></button><button type="button" role="menuitem" data-action="soon">여행계획서 열기</button><button type="button" role="menuitem" data-action="soon">새 계획 올리기</button><button type="button" role="menuitem" data-action="soon">설정</button></div>` : ""}
+      <section class="sheet" aria-label="일정 목록">${sheetHtml(D)}</section>
+      ${has.chat(v) && st.mode !== "chat" && latest && !st.peekClosed ? `<div class="peek"><button type="button" data-action="openChat"><b>새 알림 ${fabN}</b><span>${esc(latest.text)}</span></button><button type="button" class="x" data-action="closePeek" aria-label="미리 보기 닫기">${icon("x", "i sm")}</button></div>` : ""}
+      <button type="button" class="fab" data-action="openChat" aria-label="여행 채팅 열기${has.chat(v) && fabN ? ` · 새 알림 ${fabN}개` : ""}">${icon("chat")}${has.chat(v) && fabN ? `<span class="badge">${fabN}</span>` : ""}</button>
+      ${st.panel ? `<section class="panel" role="dialog" aria-label="알림">${panelHtml(D)}</section>` : ""}
+      <p class="toast" role="status"></p>`;
+    const newBody = phone.querySelector(".sheetBody");
+    if (newBody) newBody.scrollTop = keep;
+    if (st.scrollTo && newBody) {
+      const card = newBody.querySelector(`[data-card="${st.scrollTo}"]`);
+      if (card) newBody.scrollTop = Math.max(0, card.getBoundingClientRect().top - newBody.getBoundingClientRect().top + newBody.scrollTop - 60);
+      st.scrollTo = null;
+    }
+    phone.querySelectorAll(".log").forEach((log) => { log.scrollTop = log.scrollHeight; });
+    if (st.focusPanel) { st.focusPanel = false; phone.querySelector(".panel .iconBtn")?.focus({ preventScroll: true }); }
+    else if (focusedKey) [...phone.querySelectorAll("[data-action]")].find((el) => keyOf(el) === focusedKey)?.focus({ preventScroll: true });
+    if (st.toastText) showToast(st.toastText, true);
+  }
+
+  function showToast(text, keepTimer) {
+    const el = phone.querySelector(".toast");
+    el.textContent = text;
+    el.setAttribute("data-shown", "");
+    st.toastText = text;
+    if (keepTimer) return;
+    clearTimeout(st.toastTimer);
+    st.toastTimer = setTimeout(() => { st.toastText = null; phone.querySelector(".toast")?.removeAttribute("data-shown"); }, 2600);
+  }
+
+  function describe() {
+    const v = VARIANTS[st.variant];
+    document.getElementById("idea-title").textContent = v.title;
+    document.getElementById("idea-one").textContent = v.one;
+    for (const [id, items] of [["idea-how", v.how], ["idea-good", v.good], ["idea-bad", v.bad]]) document.getElementById(id).innerHTML = items.map((text) => `<li>${esc(text)}</li>`).join("");
+    document.getElementById("idea-try").textContent = `눌러 볼 곳: ${v.try}`;
+  }
+
+  /* ---------- 동작 ---------- */
+  function act(el) {
+    const a = el.dataset.action;
+    if (a === "select") { const stop = byId(el.dataset.id); st.selected = stop.id; if (typeof st.day === "number" && st.day !== stop.day) st.day = stop.day; if (st.day === "record") st.day = stop.day; }
+    else if (a === "day") st.day = ["all", "record"].includes(el.dataset.day) ? el.dataset.day : Number(el.dataset.day);
+    else if (a === "panel") { st.panel = el.dataset.panel; st.focusPanel = true; }
+    else if (a === "closePanel") st.panel = null;
+    else if (a === "tab") st.tab = el.dataset.tab;
+    else if (a === "list") st.mode = el.dataset.list;
+    else if (a === "dayWarn") st.openWarn[el.dataset.day] = !st.openWarn[el.dataset.day];
+    else if (a === "pinned") st.pinnedOpen = !st.pinnedOpen;
+    else if (a === "fold") st.folded = true;
+    else if (a === "unfold") st.folded = false;
+    else if (a === "menu") st.menuOpen = !st.menuOpen;
+    else if (a === "closePeek") st.peekClosed = true;
+    else if (a === "gotoStop") { const stop = byId(el.dataset.id); st.mode = "plan"; st.day = stop.day; st.selected = stop.id; st.scrollTo = stop.id; }
+    else if (a === "openChat") { if (!has.chat(st.variant)) { showToast("채팅 배치는 「등록 후 채팅 배치 비교」 목업에서 본다"); return; } st.mode = "chat"; }
+    else if (a === "closeChat") st.mode = "plan";
+    else if (a === "choose") { st.choiceDone = true; showToast(el.dataset.key === "keep" ? "지금 일정을 그대로 두었어요(목업)" : "고르신 곳으로 일정을 바꿨어요(목업 — 일정은 그대로 그린다)"); }
+    else if (a === "undo") { st.undoDone = true; showToast("바꾸기 전 일정으로 되돌렸어요(목업)"); }
+    else if (a === "resume") { st.safetyDone = true; showToast("일정을 다시 시작했어요(목업)"); }
+    else if (a === "frozen") { showToast("이미 등록한 여행이에요"); return; }
+    else if (a === "soon") { showToast("이 목업에서는 열지 않아요"); return; }
+    if (a !== "menu") st.menuOpen = false;
+    render();
+  }
+
+  phone.addEventListener("click", (event) => {
+    const el = event.target.closest("[data-action]");
+    if (!el || !phone.contains(el)) { if (st.menuOpen) { st.menuOpen = false; render(); } return; }
+    act(el);
+  });
+  phone.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      if (st.panel) st.panel = null; else if (st.menuOpen) st.menuOpen = false; else if (st.mode !== "plan") st.mode = "plan"; else return;
+      event.preventDefault(); render(); return;
+    }
+    const pin = event.target.closest?.(".pin");
+    if (pin && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); act(pin); }
+  });
+  phone.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const input = phone.querySelector("#chat-input");
+    const text = input.value.trim();
+    if (!text) { input.focus(); return; }
+    st.messages.push({ role: "user", text }, { role: "assistant", text: "(목업 응답) 입력한 문장은 해석하지 않아요. 이 목업은 알림이 대화에 섞여 보이는 모습만 보인다." });
+    render();
+    phone.querySelector("#chat-input")?.focus();
+  });
+
+  function pick(attr, value) {
+    document.querySelectorAll(`[data-${attr}]`).forEach((button) => button.setAttribute("aria-pressed", String(button.dataset[attr] === value)));
+  }
+  document.querySelector(".review").addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+    if (button.dataset.variant) { st.variant = Number(button.dataset.variant); pick("variant", button.dataset.variant); }
+    else if (button.dataset.set) { st.set = button.dataset.set; pick("set", button.dataset.set); }
+    else return;
+    clearTimeout(st.toastTimer);
+    Object.assign(st, fresh(), { toastText: null, resetScroll: true });
+    describe();
+    render();
+  });
+
+  describe();
+  render();
+})();
+</script>
+</body>
+</html>
