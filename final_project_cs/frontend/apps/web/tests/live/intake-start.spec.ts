@@ -33,7 +33,7 @@ async function fillAndSend(page: Page, text = PLAN) {
   await checkPlan(page);
 }
 
-test("누르면 서버의 답을 기다리지 않고 곧바로 진행 화면으로 넘어가 올린 줄을 보이고, 서버가 받으면 그 접수의 실시간 진행으로 이어져 결과가 나온다", async ({ page, request }) => {
+test("누르면 서버의 답을 기다리지 않고 곧바로 진행 화면으로 넘어가고(줄별 목록 없이 막대와 「보내는 중」), 서버가 받으면 그 접수의 실시간 진행으로 이어져 결과가 나온다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ intakeDelay: 2500, review: "on", board: "rich", intakeEvents: "on", readingPolls: 1 });
   await start(page);
@@ -46,8 +46,9 @@ test("누르면 서버의 답을 기다리지 않고 곧바로 진행 화면으�
   await expect(page.getByRole("heading", { name: "계획을 확인하고 있어요", level: 1 })).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "계획 확인 진행" })).toBeVisible();
   await expect(page.getByText("계획을 서버로 보내는 중이에요…")).toBeVisible();
-  await expect(page.getByRole("listitem").filter({ hasText: "10/1 09:00 경복궁 관람" })).toBeVisible();
-  await expect(page.getByRole("listitem").filter({ hasText: "12:00 광장시장 점심" })).toBeVisible();
+  // `[2026-10-07 사용자 지시]` 올린 줄을 줄마다 보이던 목록은 없앴다 — 막대 · 「보내는 중」 · 「찾은 일정」만
+  await expect(page.getByText("찾은 일정")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "10/1 09:00 경복궁 관람" })).toHaveCount(0);
   expect(await server.received("GET", "/events")).toHaveLength(0);              // 접수 번호가 없으니 실시간 진행도 아직 열지 않았다
 
   // 서버가 받으면 접수 번호의 화면으로 바뀌고(주소가 바뀐다), 서버의 진행 알림으로 이어져 결과가 나온다

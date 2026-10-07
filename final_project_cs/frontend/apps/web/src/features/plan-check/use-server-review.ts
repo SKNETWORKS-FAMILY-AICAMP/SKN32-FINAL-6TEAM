@@ -6,6 +6,7 @@ import { editsFor, rows } from "@/features/intake-review/model";
 import { translator, type Language, type Translate } from "@/lib/i18n";
 import { LiveError } from "@/lib/live/client";
 import { editIntake, type IntakeEdit } from "@/lib/live/intake";
+import { getMoveOptions, setMoveMode as postMoveMode, type MoveOptions } from "@/lib/live/move-options";
 import { itemEdit } from "@/lib/live/intake-edits";
 import {
   autofixIntake, getCandidates, getPlacePhotos, pickedPlace, revalidateIntake, searchPlaces,
@@ -49,6 +50,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   const latest = useRef<ReviewedIntakeView | undefined>(view);
   const undoEdits = useRef<IntakeEdit[] | null>(null);
   const pickable = useRef(new Map<string, CandidatePlace>());
+  /** `[2026-10-07]` The ways to go for a leg, asked when its box is opened and kept for the revision they were asked on (a re-opened box asks nothing). */
+  const moveWays = useRef(new Map<string, Promise<MoveOptions | null>>());
   /** Why the server's list for a stop is short or empty (`notes` of the candidates call), by stop id — said on the change screen. */
   const candidateNotes = useRef(new Map<string, string[]>());
   /**
@@ -140,6 +143,28 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         undoEdits.current = [itemEdit.remove(targetOf(item), false)];
       },
       editTrip: (field, value) => save([{ field: `trip.${field}`, value }]),
+
+      // `[2026-10-07 사용자 지시 — 이동수단 고르기]` One leg at a time, only when its box is opened; the same answer for the same revision. A way the server could not finish (`fits: null`) is asked again the next time.
+      moveOptions: (id) => {
+        const move = plan().review?.moves.find((entry) => `${entry.from}:${entry.to}` === id);
+        if (!move) return Promise.reject(gone());
+        const revision = plan().revision;
+        const key = `${revision}:${id}`;
+        for (const old of [...moveWays.current.keys()]) if (!old.startsWith(`${revision}:`)) moveWays.current.delete(old);
+        const kept = moveWays.current.get(key);
+        if (kept) return kept;
+        const ask = getMoveOptions(intakeId, move.from, move.to, language).catch((error: unknown) => { moveWays.current.delete(key); throw error; });
+        moveWays.current.set(key, ask);
+        void ask.then((found) => { if (found?.options.some((option) => option.fits === null)) moveWays.current.delete(key); }, () => undefined);
+        return ask;
+      },
+      // The server counts the leg again with that way and answers with the whole checked plan: it is what the screen shows from now on, and it needs no 「다시 제출」 (the server already checked it).
+      setMoveMode: async (id, mode) => {
+        const move = plan().review?.moves.find((entry) => `${entry.from}:${entry.to}` === id);
+        if (!move) throw gone();
+        const answer = await postMoveMode(intakeId, move.from, move.to, plan().revision, mode, language).catch(staleThenRethrow);
+        take({ ...plan(), revision: answer.revision, review: answer.review });
+      },
 
       candidates: async (id) => {
         const item = itemOf(id);

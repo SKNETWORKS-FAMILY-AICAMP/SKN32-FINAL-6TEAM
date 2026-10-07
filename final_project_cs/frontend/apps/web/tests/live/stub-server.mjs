@@ -92,6 +92,9 @@ const DEFAULTS = {
   routeShapes: "off",
   // `[2026-10-04]` the same for a plan not registered yet (`GET /v1/web/trip-intakes/{id}/route-shapes`, mobility session): "off" (404) | "on" (the board's first leg joined by a straight line with no ground, the second on a road) | "fail" (500)
   intakeRoutes: "off",
+  // `[2026-10-07]` the ways to go for one leg of a checked plan (`GET …/moves/{from}~{to}/options`, `POST …/mode` - the mobility session's proposal, not on the real server yet):
+  //   "off" (404 not_available - an older server: no box) | "on" | "none" (nothing reaches in time) | "partial" (the bus could not be finished: `fits: null`) | "fail" (500) | "slow" (4 s) | "unknown_mode" (also sends a way the screen does not know)
+  moveOptions: "off",
   // `[2026-10-04]` agent keys (`/v1/web/agent-keys*`, server D-CS-012): "on" | "off" (an older server: FastAPI 404 `{detail}`) | "limit" (making one answers 409 agent_key_limit)
   agentKeys: "on",
   // the "this trip changed" bell (`GET /v1/web/trips/{id}/events`): "off" = an older server without it (404) | "on"
@@ -411,6 +414,35 @@ function followTimes(b) {
     const line = row("arrival", move.slack_min < 0 ? "warn" : "ok", move.slack_min < 0 ? `일정보다 ${-move.slack_min}분 늦어요` : `${move.slack_min}분 여유`);
     move.rows = move.rows.some((entry) => entry.row === "arrival") ? move.rows.map((entry) => entry.row === "arrival" ? line : entry) : [...move.rows, line];
   }
+}
+
+/**
+ * `[2026-10-07]` The ways to go for a leg, worked out like the proposal says: a leg leaves when the stop before it ends, takes `minutes` by that way and has `slack_min` = the next stop's start - its arrival;
+ * a way fits when nothing is late. The minutes are made up for this mock (walking is a third of the subway time again, the bus slower, the taxi faster) - only the shape of the answer is the contract's.
+ */
+const WAYS = {
+  subway: { label: "지하철", minutes: (m) => m, fare: 1550, floor: false, grade: "확정" },
+  bus: { label: "버스", minutes: (m) => m + 22, fare: 1500, floor: false, grade: "확정" },
+  taxi: { label: "택시", minutes: (m) => Math.max(5, Math.round(m * 0.6)), fare: 9000, floor: true, grade: "추정" },
+  walk: { label: "걸음", minutes: (m) => m * 3, fare: 0, floor: false, grade: "추정" },
+};
+function moveWays(b, move) {
+  const toMin = (hhmm) => { const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm ?? ""); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+  const toText = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+  const from = b.items.find((entry) => entry.id === move.from), to = b.items.find((entry) => entry.id === move.to);
+  const start = toMin(from?.starts_at), next = toMin(to?.starts_at);
+  const base = move.base_minutes ?? move.minutes;
+  if (start === null || next === null || typeof base !== "number") return null;
+  const leave = toMin(from.ends_at) ?? start + 60;
+  return Object.entries(WAYS).map(([mode, way], at) => {
+    const minutes = way.minutes(base), arrive = leave + minutes;
+    const slack = scenario.moveOptions === "none" ? -(at + 1) * 5 : next - arrive;           // "none": every way is late
+    const fits = scenario.moveOptions === "none" ? false : slack >= 0;
+    const unknown = scenario.moveOptions === "partial" && mode === "bus";
+    return { mode, label: mode === "subway" && move.base_label ? move.base_label : way.label, minutes, km: mode === "walk" ? Math.round(minutes * 0.07 * 10) / 10 : move.km, fare_krw: way.fare, fare_is_floor: way.floor,
+      depart: toText(leave), arrive: toText(arrive), slack_min: slack, fits: unknown ? null : fits, basis: mode === "taxi" || mode === "walk" ? "estimate" : "timetable", grade: way.grade,
+      ...(unknown ? { why_not: "계산이 오래 걸려 확인하지 못했어요" } : !fits ? { why_not: `${way.label}(으)로는 ${Math.abs(slack)}분 늦어요 · 다음 일정이 ${to.starts_at}에 시작해요` } : {}) };
+  });
 }
 
 function reviewOf(b) {
@@ -1059,6 +1091,45 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     chunks.forEach((chunk) => response.write(chunk));
     if (scenario.intakeEvents !== "silent") response.end();                  // "silent" leaves the line open and says nothing more
     return;
+  }
+  // `[2026-10-07]` The ways to go for one leg, and picking one (see `moveOptions` in the scenario).
+  const waysPath = new RegExp(`^/v1/web/trip-intakes/${INTAKE_ID}/moves/([^/]+)~([^/]+)/(options|mode)$`).exec(path);
+  if (waysPath) {
+    const [, fromId, toId, kind] = waysPath;
+    const unavailable = () => json(response, 404, { error: { code: "not_available", message: "이 구간은 이동 수단을 고를 수 없어요" } }, origin);
+    const move = board.moves.find((entry) => entry.from === fromId && entry.to === toId);
+    if (scenario.moveOptions === "off" || !move) return unavailable();
+    if (scenario.moveOptions === "fail") return json(response, 500, { error: { code: "internal_error", message: "서버 오류" } }, origin);
+    if (kind === "options" && request.method === "GET") {
+      if (scenario.moveOptions === "slow") await new Promise((resolve) => setTimeout(resolve, 4000));
+      const ways = moveWays(board, move);
+      if (!ways) return unavailable();
+      const options = scenario.moveOptions === "unknown_mode" ? [...ways, { mode: "rocket", minutes: 1, fits: true }] : ways;
+      return json(response, 200, { intake_id: INTAKE_ID, revision: board.revision, from: fromId, to: toId, current_mode: move.mode, recommended_mode: move.recommended_mode ?? move.mode, options }, origin);
+    }
+    if (kind === "mode" && request.method === "POST") {
+      const body = JSON.parse(raw || "{}");
+      if (body.revision !== board.revision) return json(response, 409, { error: { code: "stale_revision", message: "그 사이 바뀌었어요", current_revision: board.revision } }, origin);
+      const ways = moveWays(board, move) ?? [];
+      const recommended = move.recommended_mode ?? move.mode;
+      const mode = body.mode === "recommended" ? recommended : body.mode;
+      const way = ways.find((entry) => entry.mode === mode);
+      if (!way) return json(response, 422, { error: { code: "mode_not_fit", message: "그 수단은 이 구간에서 쓸 수 없어요" } }, origin);
+      if (way.fits !== true) return json(response, 422, { error: { code: "mode_not_fit", message: way.why_not ?? "그 수단으로는 닿지 않아요" } }, origin);
+      move.base_minutes ??= move.minutes;
+      move.base_label ??= move.mode_label;
+      move.recommended_mode ??= move.mode;
+      move.mode = mode;
+      move.mode_label = way.label;
+      move.minutes = way.minutes;
+      move.km = way.km;
+      move.summary = `${way.label} ${way.minutes}분 · ${way.km}km`;
+      move.rows = move.rows.map((entry) => entry.row === "mode" ? row("mode", "ok", move.summary) : entry);
+      move.mode_choice = mode === recommended ? null : { mode, state: "kept" };
+      followTimes(board);
+      board.revision += 1;
+      return json(response, 200, { revision: board.revision, review: reviewOf(board) }, origin);
+    }
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/edits` && request.method === "POST") {
     if (scenario.edits === "stale") return json(response, 409, { error: { code: "stale_revision", message: "그 사이 바뀌었어요", current_revision: 2 } }, origin);

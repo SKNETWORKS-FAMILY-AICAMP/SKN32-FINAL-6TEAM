@@ -46,13 +46,14 @@ test("끌어서 늦추면 여유를 다 쓸 때 한 번 멈춰 알리고(알림�
   await expect(form.getByLabel("시작", { exact: true })).toHaveValue("09:21");
   await expect(overlay(page)).toContainText("여유를 다 썼어요 · 더 늦추면 뒤 일정이 밀려요");
   await expect(overlay(page)).toContainText("다른 일정은 그대로예요");
-  await expect(toast(page, "여유를 다 썼어요")).toHaveCount(1);                                      // 알림은 한 번만, 하나만
+  await expect(toast(page, "여유를 다 썼어요")).toHaveCount(0);                                      // `[2026-10-07 사용자 지시]` 끄는 동안은 알림이 아니라 미니맵 안의 문구만(알림이 미니맵을 가렸다)
 
   await page.mouse.move(x, y + 96, { steps: 6 });                                                  // 96px = 48분 → 5분 칸으로 50분(09:50): 여유 끝을 29분 넘었고 멈춤은 10분 → 09:40, 뒤 일정이 밀린다
   await expect(form.getByLabel("시작", { exact: true })).toHaveValue("09:40");
   await expect(overlay(page)).toContainText("다른 일정 2곳이 움직여요");
-  await expect(overlay(page).getByText("여유를 다 썼어요")).toHaveCount(0);                            // 멈춤이 풀렸다
-  expect(await toast(page, "여유를 다 썼어요").count()).toBeLessThanOrEqual(1);                       // 새 알림이 또 쌓이지 않았다
+  await expect(overlay(page)).toContainText("여유를 다 썼어요 · 뒤 일정이 밀리고 있어요");              // 멈춤은 풀렸지만 일정이 밀리는 동안은 문구가 계속 있다
+  await expect(overlay(page).getByText("더 늦추면")).toHaveCount(0);                                  // 「더 늦추면 …」은 멈춰 있던 때의 문구
+  await expect(toast(page, "여유를 다 썼어요")).toHaveCount(0);                                      // 알림은 쌓이지 않는다
   expect(await server.received("POST", "/edits")).toHaveLength(0);                                  // 끄는 동안은 아무것도 안 보낸다
 
   await page.mouse.up();
@@ -78,6 +79,7 @@ test("위로 끌어도 같다: 앞 일정과 붙는 곳에서 한 번 멈추고,
   await expect(overlay(page)).toContainText("앞 일정과 붙었어요 · 더 당기면 앞 일정이 당겨져요");
   await page.mouse.move(x, y - 100, { steps: 6 });                                                 // 100px = 50분: 멈춤을 넘어 계속 → 앞 일정이 당겨진다
   await expect(overlay(page)).toContainText("다른 일정 2곳이 움직여요");                                 // 올리브영과 경복궁이 당겨진다
+  await expect(overlay(page)).toContainText("앞 일정과 붙었어요 · 앞 일정이 당겨지고 있어요");             // 당겨지는 동안 문구가 계속 있다
   await expect(form.getByLabel("시작", { exact: true })).not.toHaveValue("12:16");
   await page.mouse.up();
 });

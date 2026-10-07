@@ -1,14 +1,16 @@
 "use client";
 
 import { Bike, Bus, Car, Check, ChevronsUpDown, Footprints, Lock, LockOpen, Minus, Pencil, Plus, Sparkles, Trash2, TrainFront, Undo2, X } from "lucide-react";
-import type { ReactNode } from "react";
+import type { CSSProperties, MouseEvent, ReactNode } from "react";
+import type { MoveOptionMode } from "@/lib/live/move-options";
 import { ro } from "@/lib/josa";
 import { useT } from "@/lib/settings";
 import { dayTimes, freeText, moveSlack } from "./day-times";
 import { timeline, type CheckRow, type PlanCheckView, type PlanDay, type PlanItem, type PlanMove } from "./model";
-import { Act, Checks, VerdictMark } from "./parts";
+import { MoveModeBox } from "./move-mode";
+import { Act, Checks, NeedsLine, VerdictMark } from "./parts";
 import type { PlanCheckActions } from "./plan-check";
-import { gapPx, GAP_BASE_PX } from "./time-plan";
+import { gapPx, GAP_BASE_PX, leadPx } from "./time-plan";
 import type { Grab, TimeEditHandles, TimeKind } from "./use-time-edit";
 import styles from "./plan-check.module.css";
 
@@ -32,6 +34,8 @@ export interface RowContext {
   rowsFor: (item: PlanItem) => CheckRow[] | null;
   onPick: (id: string) => void;
   onToggleMove: (id: string) => void;
+  /** `[2026-10-07]` The customer picked a way for a leg (`mode`, and its name for the notice): the screen sends it and says what was done, with 「되돌리기」. Rejects with the server's refusal. */
+  onSetMode: (move: PlanMove, choice: { mode: MoveOptionMode | "recommended"; label: string }) => Promise<void>;
   onChange: (item: PlanItem) => void;
   onDelete: (item: PlanItem) => void;
   onRestore: (item: PlanItem) => void;
@@ -98,7 +102,7 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading }
         const times = dayTimes(view, day.day);
         return timeline(view, day.day).filter(ctx.visible).map((entry) => entry.type === "item"
           ? <ItemRow key={entry.item.id} item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
-          : <MoveRow key={entry.move.id} move={entry.move} from={view.items.find((item) => item.id === entry.move.fromId)} ctx={ctx} slack={moveSlack(times, entry.move)} dim={ctx.removed.has(entry.move.fromId) || ctx.removed.has(entry.move.toId)} />);
+          : <MoveRow key={entry.move.id} move={entry.move} from={view.items.find((item) => item.id === entry.move.fromId)} to={view.items.find((item) => item.id === entry.move.toId)} ctx={ctx} slack={moveSlack(times, entry.move)} dim={ctx.removed.has(entry.move.fromId) || ctx.removed.has(entry.move.toId)} />);
       })()}</ol>
     </section>)}</>;
 }
@@ -142,6 +146,13 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
   const adjusted = ctx.timeAdjusted.has(item.id) && !removed;
   // The time and its dot are taken and dragged at once - unless the time cannot be changed (then the time says why when pressed, and the dot is just a dot).
   const grab = done && !timeWhy ? ctx.timeHandle(item, "start") : undefined;
+  // ★`[2026-10-07 사용자 지시 — 상자 전체가 상세정보를 여닫는 자리]` Once done, the whole card opens and closes the checks - not only the name. A press on anything that is its own button (lock, edit, delete, the time, the
+  //   tools), on the time editor and inside the opened checks does not: it does what it says. The name stays the one real button of it (keyboard and screen reader).
+  const pickCard = (event: MouseEvent<HTMLElement>) => {
+    if (!done || checking || removed) return;
+    if ((event.target as HTMLElement).closest("button, a, input, select, textarea, label, form, [data-details]")) return;
+    ctx.onPick(item.id);
+  };
   return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-verdict={item.verdict ?? "checking"} data-selected={selected || undefined} data-changed={changed || undefined} data-removed={removed || undefined}>
     {done
       ? <Act className={styles.time} data-editing={(ctx.time?.id === item.id && ctx.time.kind === "start") || undefined} data-adjusted={adjusted || undefined} data-grab={grab ? true : undefined} {...grab} why={timeWhy} explain={explain}
@@ -149,7 +160,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
           title={t("눌러서 시간 고치기 · 잡고 위아래로 끌어도 돼요", "Press to change the time · or take it and drag up or down")} aria-label={t(`${item.title} 시간 고치기 · 지금 ${item.startsAt || "시간 없음"}`, `Change the time of ${item.title} · now ${item.startsAt || "no time"}`)}>{item.startsAt || "–"}</Act>
       : <span className={styles.time}>{item.startsAt || "–"}</span>}
     <span className={styles.rail} aria-hidden="true"><span className={styles.dot} data-grab={grab ? true : undefined} {...grab} /></span>
-    <article id={`${ctx.prefix}plan-card-${item.id}`} className={styles.card} data-locked={item.locked || undefined} aria-labelledby={`${ctx.prefix}plan-item-${item.id}`} aria-busy={checking}>
+    <article id={`${ctx.prefix}plan-card-${item.id}`} className={styles.card} data-locked={item.locked || undefined} data-pickable={done && !checking && !removed ? true : undefined} aria-labelledby={`${ctx.prefix}plan-item-${item.id}`} aria-busy={checking} onClick={pickCard}>
       {done
         // Once done a card opens and closes (accordion: the heading holds the button).
         ? <div className={styles.cardTop}>
@@ -162,9 +173,9 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
                 {item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}
               </span>
             </button></h4>
+            {/* ★`[2026-10-07 사용자 지시 — 수정 · 삭제는 제목 옆 같은 줄]` The edit and delete buttons always stand on the name's line; the state beside them only when it is just the state - with a 「되돌리기」 of the time it goes under the name. */}
             <span className={styles.cardTools}>
-            {status}
-            {adjusted && <Act className={styles.undoTime} why={frozen} explain={explain} onPress={() => ctx.onRevertTime(item)} aria-label={t(`${item.title} 시간 되돌리기`, `Put back the time of ${item.title}`)} title={t("시간을 처음으로 되돌리기", "Put the time back")}><Undo2 size={13} strokeWidth={1.8} aria-hidden="true" />{t("되돌리기", "Undo")}</Act>}
+            {!adjusted && status}
             <Act id={`${ctx.prefix}plan-edit-${item.id}`} className={styles.icon} why={changeWhy} explain={explain} onPress={() => ctx.onChange(item)} aria-label={t(`${item.title} 수정`, `Edit ${item.title}`)}><Pencil size={16} strokeWidth={1.8} aria-hidden="true" /></Act>
             {removed
               ? <button type="button" id={`${ctx.prefix}plan-restore-${item.id}`} className={styles.icon} data-restore onClick={() => ctx.onRestore(item)} aria-label={t(`${item.title} 삭제 되돌리기`, `Undo deleting ${item.title}`)} title={t("되돌리기", "Undo")}><Undo2 size={16} strokeWidth={1.8} aria-hidden="true" /></button>
@@ -172,8 +183,12 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
             </span>
           </div>
         : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
+      {done && adjusted && <div className={styles.cardState}>{status}
+        <Act className={styles.undoTime} why={frozen} explain={explain} onPress={() => ctx.onRevertTime(item)} aria-label={t(`${item.title} 시간 되돌리기`, `Put back the time of ${item.title}`)} title={t("시간을 처음으로 되돌리기", "Put the time back")}><Undo2 size={13} strokeWidth={1.8} aria-hidden="true" />{t("되돌리기", "Undo")}</Act>
+      </div>}
+      {done && !open && !removed && !checking && <NeedsLine rows={rows} />}
       {done && ctx.time?.id === item.id && ctx.time.kind === "start" && !ctx.time.direct && !removed && <TimeEditor item={item} ui={ctx.time} />}
-      {open && !removed && <div id={`${ctx.prefix}plan-item-${item.id}-checks`}>
+      {open && !removed && <div id={`${ctx.prefix}plan-item-${item.id}-checks`} data-details>
         {rows.length
           ? <Checks rows={rows} />
           : <p className={styles.noChecks}>{t("서버가 이 일정에 따로 알린 것이 없어요.", "The server has nothing more on this stop.")}</p>}
@@ -250,7 +265,7 @@ export function legText(summary: string): string {
  * `slack` = the free minutes after this leg (next stop's start minus the time the traveller gets there). ★`[2026-10-04 사용자 지시]` The space after a leg grows with it
  * (`gapPx`), and 15 minutes or more is said once, quietly (「여유 1시간 42분」); a leg that arrives late says so instead (「10분 늦어요」).
  */
-function MoveRow({ move, from, ctx, slack, dim }: { move: PlanMove; from: PlanItem | undefined; ctx: RowContext; slack: number | null; dim: boolean }) {
+function MoveRow({ move, from, to, ctx, slack, dim }: { move: PlanMove; from: PlanItem | undefined; to: PlanItem | undefined; ctx: RowContext; slack: number | null; dim: boolean }) {
   const t = useT();
   const { done } = ctx;
   const open = done && ctx.open === move.id;
@@ -258,6 +273,8 @@ function MoveRow({ move, from, ctx, slack, dim }: { move: PlanMove; from: PlanIt
   // Only a leg that needs a look is marked: a fine one stays quiet, so the eye goes to the stops first.
   const mark = checking || move.verdict !== "review" ? null : <VerdictMark verdict={move.verdict} />;
   const extra = gapPx(slack) - GAP_BASE_PX;
+  // ★`[2026-10-07 사용자 지시]` The free space is split above and below the leg by when it leaves between the two stops' start times (`leadPx`): it stands nearer the stop whose time is closer.
+  const lead = done && !checking ? leadPx(extra, from?.startsAt ?? "", to?.startsAt ?? "", move.departAt) : 0;
   const free = freeText(slack);
   const late = slack !== null && slack < 0;
   // ★`[2026-10-05 사용자 지시]` One line says it all: the way, how long, how far - and how much time is left after it (「지하철 4호선 50분 · 3.5km  여유 1시간 40분」). The free time was a second line
@@ -276,21 +293,25 @@ function MoveRow({ move, from, ctx, slack, dim }: { move: PlanMove; from: PlanIt
         : from.booked === true ? t("예약한 일정에서 나서는 시각이라 바꿀 수 없어요", "Booked: when to leave cannot be changed") : ctx.frozen;
   const leaveEditing = ctx.time?.id === move.fromId && ctx.time.kind === "depart";
   const grab = done && !checking && from && !leaveWhy ? ctx.timeHandle(from, "depart") : undefined;
-  return <li className={styles.entry} data-type="move" data-entry-id={move.id} data-verdict={move.verdict ?? "checking"} data-dim={dim || undefined}>
+  return <li className={styles.entry} data-type="move" data-entry-id={move.id} data-verdict={move.verdict ?? "checking"} data-dim={dim || undefined} style={lead > 0 ? { "--lead": `${lead}px` } as CSSProperties : undefined}>
     {done && !checking && from
       ? <Act className={styles.time} data-editing={leaveEditing || undefined} data-grab={grab ? true : undefined} {...grab} why={leaveWhy} explain={ctx.explain} onPress={() => { if (!ctx.dragEnded()) ctx.onOpenDepart(move.fromId); }}
           title={t("눌러서 출발 시각 고치기", "Press to change when to leave")} aria-label={t(`${from.title}에서 나서는 시각 고치기 · 지금 ${move.departAt || "시간 없음"}`, `Change when to leave ${from.title} · now ${move.departAt || "no time"}`)}>{leaving}</Act>
       : <span className={styles.time}>{!checking && leaving}</span>}
     <span className={styles.rail} aria-hidden="true"><span className={styles.dot} data-grab={grab ? true : undefined} {...grab} /></span>
     <div className={styles.moveCol}>
+    {lead > 0 && <div className={styles.freeGap} aria-hidden="true" style={{ height: `${lead}px` }} />}
     <div className={styles.move} data-open={open || undefined}>{checking
       ? <span className={styles.waiting}>{done ? t("이동 경로 다시 찾는 중…", "Finding the way again…") : t("이동 경로를 찾는 중…", "Finding the way…")}</span>
       : done
         ? <><button type="button" className={styles.moveHead} aria-expanded={open} aria-controls={`${ctx.prefix}plan-move-${move.id}-checks`} onClick={() => ctx.onToggleMove(move.id)}>{line}</button>
+          {/* `[2026-10-07 사용자 지시 — 이동수단 고르기]` 펼친 칸 맨 위: 「이동 수단」 박스(서버가 이 기능을 주지 않으면 없다). 확인 중 · 삭제 예정 일정 옆 구간은 잠기고 이유를 말한다. */}
+          {open && ctx.actions.moveOptions && <MoveModeBox move={move} to={to} ctx={ctx}
+            locked={dim ? t("삭제할 일정 앞뒤의 이동이라 바꿀 수 없어요", "This leg belongs to a stop marked for deletion") : ctx.frozen} />}
           {open && <Checks id={`${ctx.prefix}plan-move-${move.id}-checks`} rows={move.checks} />}</>
         : <div className={styles.moveHead}>{line}</div>}</div>
     {done && !checking && leaveEditing && !ctx.time!.direct && from && <TimeEditor item={from} ui={ctx.time!} />}
-    {done && !checking && extra > 0 && <div className={styles.freeGap} aria-hidden="true" style={{ height: `${extra}px` }} />}
+    {done && !checking && extra - lead > 0 && <div className={styles.freeGap} aria-hidden="true" style={{ height: `${extra - lead}px` }} />}
     </div>
   </li>;
 }

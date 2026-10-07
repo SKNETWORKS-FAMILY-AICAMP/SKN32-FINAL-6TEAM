@@ -129,6 +129,18 @@ export function slackAfter(stops: readonly TimedStop[], legs: readonly TimedLeg[
 }
 
 /**
+ * `[2026-10-07 사용자 지시 — 이동 줄은 앞뒤 일정 중 시각이 더 가까운 쪽에 붙는다]` The free space between two stops (`extra` px, see `gapPx`) is split above and below the leg in proportion to WHEN it leaves between the
+ * two start times on the timeline: 12:30 → 15:00 with the leg leaving 14:12 is 102 of 150 minutes in, so it stands 68 % of the way down - nearer 15:00; exactly in the middle it stands in the middle. How far the leg stands
+ * from the top of the space is returned (the rest is below it). 0 when a time is missing or the stops do not follow each other - the leg then stays at the top, as it always did.
+ */
+export function leadPx(extra: number, prevStart: string, nextStart: string, depart: string): number {
+  if (!(extra > 0)) return 0;
+  const from = parseHm(prevStart), to = parseHm(nextStart), at = parseHm(depart);
+  if (from === null || to === null || at === null || to <= from) return 0;
+  return Math.round(extra * Math.min(1, Math.max(0, (at - from) / (to - from))));
+}
+
+/**
  * Space on screen for the free time between two stops, in whole px: `GAP_BASE_PX + GAP_EXTRA_PX * (1 - e^(-free / GAP_SCALE_MINUTES))`.
  * No slack (null), none left (0) or negative slack (already late) gets the base space only - the wording says "late", the distance does not.
  */

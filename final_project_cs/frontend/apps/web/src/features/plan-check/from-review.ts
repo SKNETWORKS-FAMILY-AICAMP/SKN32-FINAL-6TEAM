@@ -1,5 +1,6 @@
 import { compareItems, streamedReview } from "@/features/intake-review/stream-model";
 import type { IntakeView } from "@/lib/live/intake";
+import { modeChoiceOf } from "@/lib/live/move-options";
 import type { StreamLine, StreamState } from "@/lib/live/intake-events";
 import type { Candidate, CheckLine, ItemRow, MoveRow, ReviewItem, ReviewMove, ReviewedIntakeView } from "@/lib/live/intake-review";
 import { readingOf } from "./from-intake";
@@ -43,7 +44,7 @@ function planItem(item: ReviewItem, day: number, info: PlaceInfo | null): PlanIt
   const picked = item.place_state === "customer" && item.place?.name && item.place.name !== item.title ? item.place.name : null;
   return {
     id: item.id, day, date: item.date ?? "", startsAt: item.starts_at ?? "", endsAt: item.ends_at ?? "",
-    title: picked ?? item.title, ...(picked && { written: item.title }), place: item.place?.name ?? "", noPlace: item.place_state === "none",
+    title: picked ?? item.title, ...(picked && { written: item.title }), place: item.place?.name ?? "", noPlace: item.place_state === "none", kind: item.kind ?? item.place?.kind ?? null,
     coordinates: located(item.place) ? { lat: item.place.latitude, lng: item.place.longitude } : null,
     checks: (item.rows ?? []).map(row), verdict: verdictOf(item.status), locked: item.locked, booked: item.booked ?? null, info, suggestion: null,
   };
@@ -54,6 +55,7 @@ function planMove(move: ReviewMove, dayOf: Map<string, number>): PlanMove {
     id: `${move.from}:${move.to}`, fromId: move.from, toId: move.to, day: dayOf.get(move.from) ?? move.day ?? 1,
     departAt: move.depart ?? "", mode: move.mode_label ?? "", summary: move.summary,
     minutes: move.minutes ?? null, arriveAt: move.arrive ?? "", slackMin: move.slack_min ?? null, estimated: move.basis === "estimate",
+    modeKey: move.mode ?? null, recommendedMode: move.recommended_mode ?? null, modeChoice: modeChoiceOf(move.mode_choice),
     checks: move.rows.map(row), verdict: verdictOf(move.status),
   };
 }

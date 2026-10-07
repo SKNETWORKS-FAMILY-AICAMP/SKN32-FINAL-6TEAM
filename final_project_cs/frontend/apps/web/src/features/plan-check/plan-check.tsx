@@ -14,13 +14,14 @@ import type { Language, Translate } from "@/lib/i18n";
 import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast } from "@/lib/toast-bus";
-import { foundCount, isInstantRow, needs, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type LineFinding, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type ServerProgress, type TripIssue } from "./model";
-import { Act, HeadBadges, letter, reason, type ListFilter } from "./parts";
+import { foundCount, isInstantRow, needs, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type ServerProgress, type TripIssue } from "./model";
+import { Act, HeadBadges, letter, pinKindLabel, reason, type ListFilter } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
 import { dayTimes, withTimes } from "./day-times";
 import { DayList, type RowContext } from "./plan-rows";
 import { ResultFooter, StopEditor, TripIssues, type Registration } from "./result-parts";
 import { dampedScrollTo } from "@/lib/damped-scroll";
+import type { MoveOptions, MoveOptionMode } from "@/lib/live/move-options";
 import { moveToast, stopToast } from "./map-description";
 import { RouteTags } from "./route-tags";
 import { useFollowScroll } from "./use-follow-scroll";
@@ -130,6 +131,13 @@ export interface PlanCheckActions {
   canUndo?: () => boolean;
   /** Check the whole plan again without changing it (「다시 제출」); the view says which stop it is at (`rechecking`). `ids` = the stops that were changed (the ones shown being checked). */
   recheck?: (ids?: string[]) => Promise<void>;
+  /**
+   * `[2026-10-07 사용자 지시 — 이동수단 고르기]` The ways to go for one leg (subway · bus · taxi · walking: how long, what it costs, how much time is left), read when the customer opens the box - one leg at a
+   * time, and remembered until the plan changes. `null` = the server has nothing to offer for this leg (an older server, a leg that is not calculated): the box is then not there.
+   */
+  moveOptions?: (moveId: string) => Promise<MoveOptions | null>;
+  /** Take one way for a leg (`"recommended"` = what the calculator chose). The server counts it again and takes it only if it reaches in time; the plan then shown is the server's. No 「다시 제출」 is needed. */
+  setMoveMode?: (moveId: string, mode: MoveOptionMode | "recommended") => Promise<void>;
 }
 
 /** How long the screen stays on what it has drawn before `onCaughtUp` — so the last line read is seen, not skipped. */
@@ -150,12 +158,16 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, readingExt
     return () => clearTimeout(timer);
   }, [settled, onCaughtUp]);
   // ★`[2026-10-04 사용자 지시]` Once the map is there the header is transparent: the map reaches the top and only the home mark, the plan's name and the menu float over it.
-  const floating = view.stage === "checking" || view.stage === "done";
+  // ★`[2026-10-07 사용자 지적 — 화면이 읽는 중 ↔ 확인으로 오간다]` While questions are on the screen (`readingExtras`) the reading screen STAYS, whatever stage the server has got to: the bar at its top
+  //   carries the stage. It used to give way to the check screen as soon as the server's check began and was then pulled back to the reading screen when the server finished (the questions hold the page),
+  //   and the check was drawn again from the first step once the customer was let through.
+  const onReading = view.stage === "received" || view.stage === "reading" || Boolean(readingExtras);
+  const floating = !onReading && (view.stage === "checking" || view.stage === "done");
   return <DeviceFrame floating={floating} guardianIcon>
     <div className={styles.screen} data-stage={view.stage} data-floating={floating || undefined}
       {...(readingExtras && { onPointerDownCapture: readingExtras.onActivity, onKeyDownCapture: readingExtras.onActivity, onWheelCapture: readingExtras.onActivity, onTouchStartCapture: readingExtras.onActivity })}>
       {notice}
-      {view.stage === "received" || view.stage === "reading" ? <Reading view={view} onBack={onBack} extras={readingExtras} /> : <Checking view={view} {...result} />}
+      {onReading ? <Reading view={view} onBack={onBack} extras={readingExtras} /> : <Checking view={view} {...result} />}
       <p className="sr-only" role="status">{sending ? t("계획을 서버로 보내고 있어요.", "Sending your plan to the server.") : announce(view, t)}</p>
     </div>
   </DeviceFrame>;
@@ -270,50 +282,30 @@ function TripTitle({ title, onSave }: { title: string; onSave?: (value: string) 
 /** 한국관광공사 이용조건 — 관광정보를 화면에 올리면 출처와 저작권 정책 링크를 같이 준다(루트 사실표 「출처 표시 유지」). 옛 목록 화면에 있던 줄을 새 화면으로 옮겼다. */
 const TOUR_API_POLICY_URL = "https://api.visitkorea.or.kr/#/useServiceGuide/2";
 
-/** What the lists follow while the server's check is drawn: the newest row of the check, and the line being read (else the last one read). */
+/** What the list follows while the server's check is drawn: the newest row of the check. */
 const newestRow = (box: HTMLElement) => {
   const rows = box.querySelectorAll<HTMLElement>("li[data-type]");
   return rows[rows.length - 1] ?? null;
 };
-const currentLine = (box: HTMLElement) =>
-  box.querySelector<HTMLElement>('li[data-state="current"]') ?? Array.from(box.querySelectorAll<HTMLElement>('li[data-state="read"]')).at(-1) ?? null;
 
-/** ①② The uploaded plan, read line by line. */
+/**
+ * ①② The plan being read. ★`[2026-10-07 사용자 지시]` The 「올린 계획」 list (one row per line of the plan with a ✓ and the stop found) and its 「읽는 곳으로」 button are gone: the bar at the top says
+ * how far the reading is, the number of stops found stays under it, and every line comes in detail on the next page (the check). The server still sends the lines (the bar counts them).
+ */
 function Reading({ view, onBack, extras }: { view: PlanCheckView; onBack: () => void; extras?: PlanCheckProps["readingExtras"] }) {
   const t = useT();
-  const { language } = useSettings();
-  const current = view.stage === "reading" ? view.lines.findIndex((line) => !line.read) : -1;
-  // `[2026-10-03 사용자]` The list scrolls along with the line being read.
-  const box = useRef<HTMLDivElement>(null);
-  // With questions on the screen the list does not follow the line being read (that would scroll the question away): the bar at the top says how far the reading is.
-  const follow = useFollowScroll(box, currentLine, !extras, view.lines);
   const head = <header className={styles.head}>
     <div className={styles.headRow}><BackButton onBack={onBack} /><h1 className={styles.title}>{t("계획을 확인하고 있어요", "Checking your plan")}</h1></div>
     <p className={styles.desc}>{t("사진 한 장은 1분쯤 걸려요. 이 화면을 열어 두면 끝나는 대로 보여 드려요.", "A photo takes about a minute. Keep this page open and the result will appear.")}</p>
     <ProgressBar view={view} />
   </header>;
-  const lines = <>
-    <h2 className={styles.docLabel}>{t("올린 계획", "Your plan")}</h2>
-    <ol className={styles.doc}>{view.lines.map((line, index) => {
-      const state = line.read ? "read" : index === current ? "current" : "waiting";
-      return <li key={line.no} className={styles.line} data-state={state}>
-        <span className={styles.lineMark} aria-hidden="true">{line.read ? "✓" : ""}</span>
-        <span className={styles.lineBody}>
-          <span className={styles.lineText}>{line.text}</span>
-          {line.read && line.found && <span className={styles.lineFound}>→ {findingLabel(line.found, language, t)}</span>}
-          <span className="sr-only">{state === "read" ? t("읽음", "read") : state === "current" ? t("읽는 중", "reading") : t("기다리는 중", "waiting")}</span>
-        </span>
-      </li>;
-    })}</ol>
-    <p className={styles.found}>{t("찾은 일정", "Stops found")} <b>{foundCount(view)}</b>{t("개", "")}</p>
-    {!follow.following && <button type="button" className={styles.followPill} onClick={follow.resume}><ChevronsDown size={14} strokeWidth={1.8} aria-hidden="true" />{t("읽는 곳으로", "Follow the reading")}</button>}
-  </>;
-  // `[2026-10-06]` With questions on the screen: heading, questions and the lines are one scrolling page, and the footer stays at the bottom.
+  const found = <p className={styles.found}>{t("찾은 일정", "Stops found")} <b>{foundCount(view)}</b>{t("개", "")}</p>;
+  // `[2026-10-06]` With questions on the screen: heading, questions and the count are one scrolling page, and the footer stays at the bottom.
   if (extras) return <>
-    <div ref={box} className={styles.reading} {...follow.handlers}>{head}{extras.top}{lines}</div>
+    <div className={styles.reading}>{head}{extras.top}{found}</div>
     {extras.footer}
   </>;
-  return <div ref={box} className={styles.reading} {...follow.handlers}>{head}{lines}</div>;
+  return <div className={styles.reading}>{head}{found}</div>;
 }
 
 /** How high the sheet stands over the map: a strip, half the screen, or (nearly) all of it — the handle cycles them. */
@@ -476,6 +468,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const days = shown.days.filter((day) => shown.items.some((item) => item.day === day.day));
   // Places the server could not settle have no pin; say so on the map, as the mockup's 「위치 미정」 tag does.
   const unlocated = changing ? [] : shown.items.filter((item) => item.day === mapDay && item.verdict !== null && !item.coordinates);
+  // ★`[2026-10-07 사용자 지시 — 마커를 누르면 「위치 미정 · 호텔」 자리에 그 마커의 이름이 「경복궁 · 액티비티」로]` While a stop with a pin is picked, the tag under the map says which one it is.
+  const pinned = !changing && selected ? shown.items.find((item) => item.id === selected && item.day === mapDay && item.coordinates) ?? null : null;
 
   // Search as the words change (a moment after typing stops). No search on this server: say so, keep 「change by name」.
   useEffect(() => {
@@ -663,7 +657,15 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     try {
       if (list === "after" && previewing) await settle();
       await actions.retime!(changes.map((change) => ({ id: change.id, start: formatHm(change.start), end: change.end === null ? "" : formatHm(change.end) })));
-      for (const change of changes) { const old = was.find((entry) => entry.id === change.id); markChanged(change.id, old ? clock(old) : ""); }
+      for (const change of changes) {
+        const old = was.find((entry) => entry.id === change.id);
+        // ★`[2026-10-07 사용자 지적 — 시간 초기화를 눌러도 수정된 것으로 나온다]` A time put back to the one the screen opened with is not a change any more: the mark 「바뀜 · 이전 …」 of an earlier time change is taken off (a
+        //   mark that came from something else - a new place - stays), and nothing is marked for a stop that stands where it began.
+        const first = baseline.current[change.id];
+        const atFirst = first !== undefined && first.start === formatHm(change.start) && first.end === (change.end === null ? "" : formatHm(change.end));
+        if (atFirst) setChanged((current) => current[change.id] === clock(change) ? Object.fromEntries(Object.entries(current).filter(([id]) => id !== change.id)) : current);
+        else markChanged(change.id, old ? clock(old) : "");
+      }
       leaveRecommended();
       setToast({
         text, sub: changes.slice(0, 2).map((change) => `${title(change.id)} → ${clock(change)}`).join(" · ") + (changes.length > 2 ? t(` 외 ${changes.length - 2}곳`, ` and ${changes.length - 2} more`) : ""),
@@ -1057,6 +1059,17 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     prefix: list === "after" ? "after-" : "",
     onPick: (id) => pick(id, "list", list),
     onToggleMove: (id) => setOpenAt((current) => current?.id === id && current.list === list ? null : { list, id }),
+    // ★`[2026-10-07 사용자 지시 — 이동수단 고르기]` The server counts the leg again and answers with the plan; the notice says what was done and 「되돌리기」 takes the way it was (or the recommended one when it was not a single way).
+    onSetMode: async (move, choice) => {
+      const before = move.modeKey ?? null;
+      await actions.setMoveMode!(move.id, choice.mode);
+      const back: MoveOptionMode | "recommended" = before === "subway" || before === "bus" || before === "taxi" || before === "walk" ? before : "recommended";
+      setToast({
+        text: choice.mode === "recommended" ? t("추천 수단으로 돌아갔어요", "Back to the recommended way") : t(`${ro(choice.label)} 바꿨어요`, `Changed to ${choice.label}`),
+        sub: t("이 구간만 다시 계산했어요", "Only this leg was counted again"), undo: true,
+        revert: () => { void actions.setMoveMode!(move.id, back).catch((error: unknown) => setToast({ text: reason(error) })); },
+      });
+    },
     onChange: (item) => void startChange(item),
     onDelete: markRemoved,
     onRestore: restore,
@@ -1093,8 +1106,10 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
         selectedLineId={selectedLine ?? undefined} onSelectLine={done && !changing ? onLine : undefined} />
     </div>
     {/* `[2026-10-05 사용자 지시]` 지도 아래 안내 줄: 위치 미정 표시와, 지도에 그려진 선이 무엇인지 말하는 태그(선 색 + 수단 이름). */}
-    {(unlocated.length > 0 || routeShapes.length > 0) && <div className={styles.mapChips}>
-      {unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
+    {(unlocated.length > 0 || routeShapes.length > 0 || pinned) && <div className={styles.mapChips}>
+      {pinned
+        ? <p className={styles.picked} aria-live="polite"><b>{pinned.title}</b>{(pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category) && <> · {pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category}</>}</p>
+        : unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
       {routeShapes.length > 0 && <RouteTags shapes={routeShapes} />}
     </div>}
     {changing && headerSlot && createPortal(
@@ -1256,12 +1271,6 @@ const weekday = (date: string, language: Language) =>
 
 function dayLabel(date: string, language: Language): string {
   return `${monthDay(date)} ${weekday(date, language)}`;
-}
-
-function findingLabel(found: LineFinding, language: Language, t: Translate): string {
-  if (found.kind === "date") return t(`날짜 · ${monthDay(found.date)}(${weekday(found.date, language)})`, `Date · ${monthDay(found.date)} (${weekday(found.date, language)})`);
-  const when = [found.day !== null && t(`${found.day}일차`, `Day ${found.day}`), found.startsAt].filter(Boolean).join(" ");
-  return when ? `${when} · ${found.title}` : found.title;
 }
 
 const asStop = (id: string, date: string, time: string, title: string, coordinates: TripStop["coordinates"]): TripStop =>

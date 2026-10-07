@@ -80,7 +80,9 @@ export interface QuestionFlow {
  *   A save that fails keeps the picked option picked, says so with 「다시 시도하기」 and does not move on.
  */
 export function useQuestionFlow({ intakeId, language, questions, loadingDone }: { intakeId: string; language: Language; questions: readonly SurveyQuestion[]; loadingDone: boolean }): QuestionFlow {
-  const [phase, setPhase] = useState<Phase>("read");
+  // ★`[2026-10-07 사용자 지적 — 뒤로 갔다가 다시 열면 읽는 화면이 5초 뜨고 확인이 처음부터 다시 그려진다]` A plan that is already read when the page opens (opened again with the back and forward arrows, or from the list) was
+  //   read in front of nobody: there is nothing to hold the page for, so it opens on the check at once. Questions are held for only when this page watched the reading end.
+  const [phase, setPhase] = useState<Phase>(loadingDone ? "gone" : "read");
   const [at, setAt] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [skippedIds, setSkippedIds] = useState<readonly string[]>([]);

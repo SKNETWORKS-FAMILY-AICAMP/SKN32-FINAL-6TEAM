@@ -53,6 +53,8 @@ export interface PlanItem {
   /** The place's name as the server holds it ("" when none), and whether the customer chose 「장소 없음」. */
   place: string;
   noPlace: boolean;
+  /** `[2026-10-07]` What kind of stop the server classes it (`activity` · `dining`), for the tag under the map when its pin is picked — null when it does not say. */
+  kind?: string | null;
   /** Null when the place is not settled — it shows as 「위치 미정」 instead of a pin. */
   coordinates: Coordinates | null;
   checks: CheckRow[];
@@ -102,6 +104,10 @@ export interface PlanMove {
   slackMin: number | null;
   /** `[2026-10-04]` The time is a straight-line guess (`basis` estimate), not a timetable — said so on the screen instead of passing it off as exact. */
   estimated: boolean;
+  /** `[2026-10-07]` The way the check uses now (`walk` · `subway` · `bus` · `taxi` · `transit` · `estimate`), the way the calculator chose, and what became of the customer's choice (`kept` · `dropped` + why). */
+  modeKey?: string | null;
+  recommendedMode?: string | null;
+  modeChoice?: { mode: string | null; state: "kept" | "dropped" | null; why: string | null } | null;
   checks: CheckRow[];
   verdict: Verdict | null;
 }

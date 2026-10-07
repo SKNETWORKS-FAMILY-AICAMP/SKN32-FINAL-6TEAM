@@ -91,6 +91,40 @@ test("지도를 확대하면 화면 밖으로 나간 일정이 가장자리에 �
   await expect(page.locator(`.leaflet-marker-icon[title^="${number}."]`)).toBeInViewport({ timeout: 8_000 });   // 눌렀더니 그 핀이 화면에 들어왔다
 });
 
+test("멀리 끌어 핀이 모두 화면 밖이면 칩 하나가 모두를 담아 서고(「2 · 3 · 4」), 지도 층(타일 · 핀 층) 위에 그려지고, 가장자리에서 잘리지 않는다", async ({ page, request }) => {
+  // `[2026-10-07 사용자 지적 — 일정 이상 멀어지면 마커가 아예 사라진다]` 실제 지도 타일이 뜨면 Leaflet 층(z-index 200~800)이 칩 · 단추(z-index 4) 위에 그려져 칩이 지도 뒤에 숨었다. 시험은 타일이 없어 못 잡았다 →
+  // 지도 층처럼 높은 z-index 의 판을 하나 얹어 놓고도 칩이 그 위에서 눌리는지(= 쌓임 맥락이 갈렸는지) 본다.
+  await page.setViewportSize({ width: 560, height: 880 });
+  await openFinished(page, request);
+  const region = (await map(page).boundingBox())!;
+  for (let at = 0; at < 4; at += 1) {
+    await page.mouse.move(region.x + 300, region.y + 380);
+    await page.mouse.down();
+    await page.mouse.move(region.x + 60, region.y + 380, { steps: 8 });
+    await page.mouse.up();
+    await page.waitForTimeout(250);
+  }
+  await expect(chips(page)).toHaveCount(1);                                                           // 같은 쪽에 있는 핀 셋은 하나로 묶인다
+  const chip = chips(page).first();
+  await expect(chip).toContainText("1 · 2 · 3");
+  await page.evaluate(() => {
+    const pane = document.createElement("div");
+    pane.id = "fake-leaflet-pane";
+    pane.style.cssText = "position:absolute;inset:0;z-index:400;background:rgba(0,200,0,.2)";             // Leaflet 의 타일 층(.leaflet-map-pane)이 가진 z-index
+    document.querySelector(".leaflet-container")!.append(pane);
+  });
+  const onTop = await chip.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return element.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+  });
+  expect(onTop).toBe(true);
+  // 칩은 지도 안에 통째로 들어 있다(여러 번호를 담아 넓어도 가장자리에서 잘리지 않는다)
+  const inside = (await chip.boundingBox())!;
+  expect(inside.x).toBeGreaterThanOrEqual(region.x - 0.5);
+  expect(inside.x + inside.width).toBeLessThanOrEqual(region.x + region.width + 0.5);
+  await page.evaluate(() => document.getElementById("fake-leaflet-pane")?.remove());
+});
+
 test("일정이 있는 날을 처음 보여 줄 때 첫 일정의 핀이 한 번 두근거린다 (고리가 퍼졌다 사라진다)", async ({ page, request }) => {
   await openFinished(page, request, undefined, {}, false);
   const first = pin(page, "1. 경복궁 관람");

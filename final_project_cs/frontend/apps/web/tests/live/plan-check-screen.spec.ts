@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { mockServer, noHorizontalScroll, start } from "./helpers";
-import { needsBadge } from "./plan-check-kit";
+import { mapSettled, needsBadge } from "./plan-check-kit";
 
 /**
  * 계획 확인 화면(`/intakes/[id]`)의 「화면 자체」 동작 — 서버가 무엇을 답하느냐보다 화면이 어떻게 움직이느냐를 지키는 시험.
@@ -120,7 +120,7 @@ test("PC 기기 틀·375px·320px에서 읽는 중 화면이 가로로 넘치지
     await page.setViewportSize({ width, height });
     await page.goto(`/intakes/${INTAKE}`);
     await expect(page.getByText("찾은 일정")).toBeVisible();
-    await expect(page.getByText("15:00 쇼핑 — 올리브영에서")).toBeVisible();
+    await expect(page.getByText("15:00 쇼핑 — 올리브영에서")).toHaveCount(0);            // `[2026-10-07 사용자 지시]` 읽는 화면에 줄별 목록(「올린 계획」)은 더 없다 — 긴 줄이 화면에 올라오지 않으니 넘칠 일도 없다
     await noHorizontalScroll(page);
   }
 });
@@ -289,6 +289,30 @@ test("결과: 좌표가 없는 장소는 핀 없이 지도 위에 「위치 미�
   await expect(pin(page, "1. 경복궁 관람")).toBeVisible();
   await expect(pin(page, "3. 광장시장")).toBeVisible();
   await expect(pin(page, "2. 올리브영")).toHaveCount(0);
+});
+
+test("핀을 누르면 「위치 미정 · 올리브영」 자리에 그 핀의 이름이 「경복궁 관람 · 액티비티」로 나오고, 다시 누르면 「위치 미정」으로 돌아온다", async ({ page, request }) => {
+  // `[2026-10-07 사용자 지시]` 마커를 누르면 지도 아래 칩이 그 마커의 이름과 종류를 말한다(알림 막대와 따로, 칩 자리에서).
+  await openFinished(page, request, (view) => {
+    const olive = view.review.items[1];
+    olive.place = { ...olive.place, latitude: null, longitude: null };
+    view.review.items[0].kind = "activity";                                                           // 서버가 말한 종류
+    view.review.items[2].kind = "dining";
+  });
+  await expect(page.getByText("위치 미정 · 올리브영")).toBeVisible();
+  await mapSettled(page);
+  await pin(page, "1. 경복궁 관람").locator("[data-pin-body]").click();
+  const picked = page.locator("[class*=__picked]");
+  await expect(picked).toContainText("경복궁 관람");
+  await expect(picked).toContainText("액티비티");
+  await expect(page.getByText("위치 미정 · 올리브영")).toHaveCount(0);                              // 그 자리를 이름이 차지한다
+  await mapSettled(page);                                                                          // 핀을 누르면 지도가 그리로 날아간다 — 멈춘 뒤에 다음 핀을 누른다
+  await pin(page, "3. 광장시장").locator("[data-pin-body]").click();                                // 다른 핀을 누르면 그 핀의 이름으로 바뀐다
+  await expect(picked).toContainText("광장시장 · 식당");
+  await mapSettled(page);
+  await pin(page, "3. 광장시장").locator("[data-pin-body]").click();                                // 같은 핀을 다시 누르면 놓는다
+  await expect(picked).toHaveCount(0);
+  await expect(page.getByText("위치 미정 · 올리브영")).toBeVisible();
 });
 
 // ── 카드 도구 ────────────────────────────────────────────────────────────────

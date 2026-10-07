@@ -62,7 +62,7 @@ export interface ReviewItem {
 }
 
 export type MoveStatus = "keep" | "review" | "waiting";
-export type MoveMode = "walk" | "subway" | "bus" | "transit" | "estimate" | null;
+export type MoveMode = "walk" | "subway" | "bus" | "taxi" | "transit" | "estimate" | null;  // `taxi`: after the customer picks it (2026-10-07 이동수단 고르기)
 
 export interface ReviewMove {
   from: string;
@@ -82,6 +82,9 @@ export interface ReviewMove {
   basis: "timetable" | "estimate" | null;
   summary: string;
   fare_krw?: number | null;
+  /** `[2026-10-07]` The way the calculator chose (it stays when the customer picks another), and what became of the customer's choice after the stops around the leg changed. */
+  recommended_mode?: string | null;
+  mode_choice?: { mode?: string | null; state?: string | null; why?: string | null } | null;
   rows: CheckLine<MoveRow>[];
 }
 

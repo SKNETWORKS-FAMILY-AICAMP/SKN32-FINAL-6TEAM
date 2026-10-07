@@ -3,7 +3,7 @@
 import { useT } from "@/lib/settings";
 import { minimap } from "./day-minimap";
 import { formatHm } from "./time-plan";
-import { heldTexts, type TimeDrag } from "./use-time-edit";
+import { heldTexts, pushingTexts, type TimeDrag } from "./use-time-edit";
 import styles from "./plan-check.module.css";
 
 const signed = (minutes: number) => `${minutes > 0 ? "+" : minutes < 0 ? "−" : "±"}${Math.abs(minutes)}분`;
@@ -23,11 +23,13 @@ export function TimeDragOverlay({ drag }: { drag: TimeDrag }) {
   const summary = map.pushed
     ? t(`다른 일정 ${map.pushed}곳이 움직여요 · 가장 많이 ${signed(map.largestPush)} · 하루 끝 ${formatHm(map.dayEnd.before)} → ${formatHm(map.dayEnd.after)}`, `${map.pushed} other stop${map.pushed > 1 ? "s" : ""} move · most ${signed(map.largestPush)} · the day ends ${formatHm(map.dayEnd.before)} → ${formatHm(map.dayEnd.after)}`)
     : t("다른 일정은 그대로예요", "No other stop moves");
+  // `[2026-10-07 사용자 지시]` The notice lives here, in the overlay, and stays while the schedule is being pushed: held at the end of the free time, then as long as other stops move.
+  const note = drag.held ? t(...heldTexts(drag.kind, drag.held)) : map.pushed > 0 ? t(...pushingTexts(drag.kind, delta)) : null;
   const slack = map.slackAfter === null ? null : map.slackAfter >= 0 ? t(`여유 ${map.slackAfter}분`, `${map.slackAfter} min free`) : t(`${Math.abs(map.slackAfter)}분 겹쳐요`, `${Math.abs(map.slackAfter)} min overlap`);
   return <div className={styles.dragOverlay} data-overlay="time" role="group" aria-label={t("하루 일정 미니맵", "The whole day")} data-held={drag.held ?? undefined}>
     <p className={styles.dragHead}><strong>{drag.title}</strong>
       <span>{what} {drag.from === null ? "–" : formatHm(drag.from)} → {drag.to === null ? "–" : formatHm(drag.to)} ({signed(delta)})</span></p>
-    {drag.held && <p className={styles.dragHeld}>{t(...heldTexts(drag.kind, drag.held))}</p>}
+    {note && <p className={styles.dragHeld} aria-live="polite">{note}</p>}
     <div className={styles.miniTrack} aria-hidden="true">
       {map.blocks.map((block) => {
         const changed = block.shift !== 0 || block.after.end !== block.before.end;
