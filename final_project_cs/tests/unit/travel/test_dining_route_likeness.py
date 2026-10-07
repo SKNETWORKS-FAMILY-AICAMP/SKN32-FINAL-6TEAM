@@ -75,6 +75,56 @@ def test_previous_item_only_ranks_never_rejects():
     assert got["W"].added_move_min < got["E"].added_move_min
 
 
+# ── 먼 다음 일정 — 이동 계산기로 다시 잰다 ──
+def _transit(etas, calls=None):
+    """가짜 이동 계산기 — 출발 장소 이름별 소요(분). 이름이 없으면 못 잼(None)."""
+    def leg(a, b, arrive, leave):
+        if calls is not None:
+            calls.append(a["name"])
+        if a["name"] == "boom":
+            raise RuntimeError("계산기 장애")
+        eta = etas.get(a["name"])
+        if eta is None:
+            return None, {"code": "no_route"}
+        if leave + timedelta(minutes=eta) > arrive:              # 진짜 계산기처럼 — 제시간에 못 닿으면 소요 대신 「늦음」
+            return None, {"code": "arrive_late"}
+        return {"eta_min": eta}, None
+    return leg
+
+
+def test_far_next_item_uses_the_transit_engine_over_walking_guess():
+    """도보로는 서쪽이 더 가깝지만 시간표로는 동쪽(역 앞)이 빠르다 — 계산기를 따른다. 원래보다 늦게 닿는 곳은 탈락."""
+    original, nxt = shop("O", 0), shop("N", -8000, kind="activity")
+    west, east = shop("W", -300), shop("E", 300)
+    starts = NOON + timedelta(hours=1, minutes=45)            # 식사 13:00 끝 · 다음 13:45 — 원래 식당 40분이면 닿는다
+    route = MealRoute(planned_end=NOON + timedelta(hours=1), after=(nxt, starts),
+                      leg=_transit({"O": 40, "W": 55, "E": 32}))
+    got = {c.key: c for c in _cands(original, [original, west, east], route)}
+    assert any("이동 계산기" in why for why in got["W"].rejected)            # 13:55 — 원래(13:40)보다 늦다
+    assert not got["E"].rejected and got["E"].added_move_min < 0
+    assert choose(list(got.values()))[0].key == "E"
+
+
+def test_transit_engine_only_for_top_candidates_and_failures_keep_walking():
+    original, nxt = shop("O", 0), shop("N", 8000, kind="activity")
+    calls: list[str] = []
+    places = [original, *[shop(f"S{i}", 50 * (i + 1)) for i in range(6)], shop("boom", 20)]
+    route = MealRoute(planned_end=NOON + timedelta(hours=1), after=(nxt, NOON + timedelta(hours=2)),
+                      leg=_transit({"O": 40}, calls))
+    got = _cands(original, places, route)
+    assert calls[0] == "O" and len(calls) == 1 + 3           # 원래 식당 + 도보 어림 앞 3곳만(TRANSIT_REFINE_LIMIT)
+    assert not any(c.rejected for c in got)                  # 못 재거나 장애면 도보 어림 그대로 — 탈락시키지 않는다
+
+
+def test_no_engine_or_walkable_leg_never_calls_transit():
+    calls: list[str] = []
+    original = shop("O", 0)
+    near = MealRoute(planned_end=NOON + timedelta(hours=1), after=(shop("N", 500, kind="activity"),
+                     NOON + timedelta(hours=2)), leg=_transit({"O": 5}, calls))
+    _cands(original, [original, shop("A", 100)], near)
+    assert calls == []                                        # 걸어서 닿는 구간은 도보로 이미 쟀다
+
+
 # ── 순위 ──
 def test_rank_tolerance_then_likeness_then_move():
     near_other = Candidate(key="a", place={"name": "a"}, changed_items=1, extra_cost_krw=None, shift_minutes=0,

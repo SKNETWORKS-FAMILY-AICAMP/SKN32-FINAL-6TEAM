@@ -22,7 +22,8 @@ def _visit(case, items, places, key):
 
 def test_dataset_shape():
     cases = da.load_cases()
-    assert len(cases) == 17 and len({c["id"] for c in cases}) == 17
+    assert len(cases) == 19 and len({c["id"] for c in cases}) == 19
+    assert {c["id"] for c in cases if c.get("needs") == "mobility"} == {"DA-018", "DA-019"}
     for case in cases:
         keys = {p["key"] for p in case["places"]}
         assert "O" in keys and {i["place"] for i in case["items"]} <= keys
@@ -32,8 +33,9 @@ def test_dataset_shape():
 
 
 def test_every_accepted_place_keeps_the_route_and_wrong_move_places_are_worse():
-    """시나리오가 스스로 맞는지 — 정답은 동선을 지키고, 동선 묶음의 오답은 다음 일정에 늦거나 이동이 더 늘어난다."""
-    for case in da.load_cases():
+    """시나리오가 스스로 맞는지 — 정답은 동선을 지키고, 동선 묶음의 오답은 다음 일정에 늦거나 이동이 더 늘어난다.
+    이동 계산기 묶음(transit)은 계산기 자료가 있어야 잰다 — 여기서는 뺀다(`--mobility` 로 돌릴 때 평가기가 같은 판정을 한다)."""
+    for case in (c for c in da.load_cases() if c.get("needs") != "mobility"):
         _, items, places = da.build(case)
         checks = {key: da.route_check(case, items, places, key, _visit(case, items, places, key))
                   for key in (p["key"] for p in case["places"] if p.get("kind", "dining") == "dining" and p["key"] != "O")}
@@ -62,3 +64,11 @@ def test_ids_change_with_seed_so_ties_are_exposed():
     case = da.load_cases()[0]
     ids = {seed: da.build(case, seed)[2]["E"]["place_id"] for seed in range(3)}
     assert len(set(ids.values())) == 3
+
+
+def test_transit_cases_are_skipped_without_the_engine():
+    case = next(c for c in da.load_cases() if c["id"] == "DA-018")
+    assert da._LEG["leg"] is None
+    assert da.run_case(case)["label"] == "skipped"
+    assert da.summarize([{"id": "DA-018", "group": "transit", "label": "skipped"},
+                         {"id": "X", "group": "move", "label": "correct"}])["accuracy"]["den"] == 1

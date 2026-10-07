@@ -288,7 +288,19 @@ def dining_candidates(*, original: dict[str, Any], places: list[dict[str, Any]],
         else:
             candidate.warnings = dining_warnings(state)
             candidate.card_payment = card_payment(candidate.place, state)
+    if route is not None:
+        route.refine([c for c in out if not c.rejected], original)
     return out
+
+
+#: 다음 일정이 먼 구간(교통)일 때 이동 계산기로 다시 잴 후보 수 — 도보 어림 순위의 앞에서부터. 한 구간 0.7~2초(로컬 실측)
+TRANSIT_REFINE_LIMIT = 3
+#: 소요를 물을 도착 창(떠나는 시각 + 분) — 앞에서부터. 그 창에도 못 닿는다(arrive_late)고 하면 다음 창으로
+TRANSIT_WINDOWS_MIN = (90, 180)
+
+#: 이동 계산기 — `mobility.wiring.leg_planner` 가 돌려주는 함수. (앞 장소, 뒤 장소, 도착 목표, 이보다 일찍 못 떠남) →
+#: (결과 dict(eta_min …) | None, 이유 | None). 장소는 {"key", "name", "lat", "lon"}
+LegPlanner = Callable[..., tuple[dict[str, Any] | None, Any]]
 
 
 @dataclass(frozen=True)
@@ -301,10 +313,14 @@ class MealRoute:
     `after`  다음 일정 (장소, 시작 시각) — 식사 뒤 거기로 간다. 원래 식당보다 더 늦게 닿으면 탈락
     ★원래 식당에서 다음 일정까지 걸어서 `WALKABLE_LEG_MIN` 넘게 걸리면(교통을 타는 거리) 도보로 탈락시키지 않는다 —
       늘어난 이동만 순위에 남긴다.
+    ★`[2026-10-07]` `leg`(이동 계산기)가 있으면 그 먼 구간을 **시간표로 다시 잰다**(`refine`) — 도보 어림 순위의 앞
+      `TRANSIT_REFINE_LIMIT` 곳과 원래 식당만(한 구간 0.7~2초). 원래 식당보다 다음 일정에 더 늦게 닿으면 탈락,
+      늘어난 이동은 계산기 소요 차이로 바꾼다. 계산기가 꺼져 있거나(None) 못 재면 도보 어림 그대로다.
     """
     planned_end: datetime
     before: tuple[dict[str, Any], datetime] | None = None
     after: tuple[dict[str, Any], datetime] | None = None
+    leg: LegPlanner | None = None
 
     def check(self, candidate: Candidate, original: dict[str, Any]) -> None:
         place = candidate.place or {}
@@ -326,6 +342,48 @@ class MealRoute:
                     candidate.rejected.append(f"다음 일정({_hm(starts)})에 {late}분 늦는다(식사 뒤 도보 {from_candidate}분)")
         candidate.added_move_min = added
 
+    def refine(self, eligible: list[Candidate], original: dict[str, Any]) -> None:
+        """먼 다음 일정(교통)을 이동 계산기로 다시 잰다 — 도보 어림 순위 앞의 몇 곳만. 계산기가 없으면 아무것도 안 한다."""
+        if self.leg is None or self.after is None or not _has_point(self.after[0]) or not _has_point(original):
+            return
+        there, starts = self.after
+        walk_original = walk_minutes(distance_m(original, there))
+        if walk_original <= WALKABLE_LEG_MIN:
+            return                                            # 걸어서 닿는 구간 — 도보로 이미 쟀다
+        base = self._eta(original, there, self.planned_end)
+        if base is None:
+            return
+        for candidate in sorted(eligible, key=Candidate.rank)[:TRANSIT_REFINE_LIMIT]:
+            if candidate.ends_at is None:
+                continue
+            eta = self._eta(candidate.place, there, candidate.ends_at)
+            if eta is None:
+                continue
+            walk_candidate = walk_minutes(distance_m(candidate.place, there))
+            candidate.added_move_min += (eta - base) - (walk_candidate - walk_original)   # 도보 어림 몫을 계산기 몫으로
+            late = _late_min(candidate.ends_at + timedelta(minutes=eta), starts)
+            planned_late = _late_min(self.planned_end + timedelta(minutes=base), starts)
+            if late > planned_late:
+                candidate.rejected.append(f"다음 일정({_hm(starts)})에 {late}분 늦는다(대중교통 {eta}분 — 이동 계산기)")
+
+    def _eta(self, here: dict[str, Any], there: dict[str, Any], leave: datetime) -> int | None:
+        def point(place: dict[str, Any]) -> dict[str, Any]:
+            return {"key": str(place.get("place_id") or place.get("name")), "name": place.get("name") or "",
+                    "lat": float(place["latitude"]), "lon": float(place["longitude"])}
+
+        try:
+            # ★소요만 묻는다 — 도착 목표를 떠나는 시각 + 넉넉한 창으로. 늦는지는 부르는 쪽이 잰다(`refine`).
+            #   ☆실측(2026-10-07): 실제 도착 목표로 물으면 ①계산기가 계획 여유까지 빼고 판정해 31분 걸리는 곳도 37분 창에서
+            #   「늦음」(arrive_late)이 됐고 ②제시간에 못 닿는 질의는 모든 출발을 훑느라 10~14초 걸렸다(닿는 질의는 1초 안)
+            got, why = None, None
+            for window in TRANSIT_WINDOWS_MIN:
+                got, why = self.leg(point(here), point(there), leave + timedelta(minutes=window), leave)
+                if got is not None or not (isinstance(why, dict) and why.get("code") == "arrive_late"):
+                    break
+        except Exception:   # noqa: BLE001 — 계산기 장애로 대체를 멈추지 않는다. 도보 어림 그대로 둔다
+            return None
+        return int(got["eta_min"]) if got and got.get("eta_min") is not None else None
+
 
 def _late_min(reach: datetime, starts: datetime) -> int:
     return max(0, int((reach - starts).total_seconds() // 60))
@@ -335,9 +393,10 @@ def _has_point(place: dict[str, Any] | None) -> bool:
     return bool(place) and place.get("latitude") is not None and place.get("longitude") is not None
 
 
-def meal_route(items: list[Any], meal: Any, *, from_before: bool = True) -> MealRoute:
+def meal_route(items: list[Any], meal: Any, *, from_before: bool = True, leg: LegPlanner | None = None) -> MealRoute:
     """일정에서 식사 앞뒤의 장소 있는 항목(이동 항목 제외)으로 `MealRoute` 를 만든다.
-    `from_before=False` — 고객이 이미 원래 식당 쪽에 있다(가게 앞 신고 · 늦음). 앞 일정 동선은 재지 않는다."""
+    `from_before=False` — 고객이 이미 원래 식당 쪽에 있다(가게 앞 신고 · 늦음). 앞 일정 동선은 재지 않는다.
+    `leg` — 이동 계산기(있으면 먼 다음 일정을 시간표로 다시 잰다)."""
     def placed(item: Any) -> bool:
         return item.kind != "mobility" and _has_point(item.place)
 
@@ -347,7 +406,7 @@ def meal_route(items: list[Any], meal: Any, *, from_before: bool = True) -> Meal
     nxt = after[0] if after else None
     return MealRoute(planned_end=meal.ends_at or meal.starts_at + timedelta(hours=1),
                      before=(prev.place, prev.ends_at or prev.starts_at) if prev else None,
-                     after=(nxt.place, nxt.starts_at) if nxt else None)
+                     after=(nxt.place, nxt.starts_at) if nxt else None, leg=leg)
 
 
 # ── 후보: 경로 ─────────────────────────────────────────────────

@@ -24,6 +24,9 @@
     앞 일정 → 식당 늦음은 보고만 한다(위반 아님) — 식당 입장 몇 분은 다음 일정을 놓치는 것과 다르다(`replan.MealRoute`).
     늘어난 이동 = (앞→후보 + 후보→다음) − (앞→원래 + 원래→다음). 앞 · 다음이 없으면 그 쪽은 0.
 
+★이동 계산기 묶음(`needs: mobility`, transit) — 실제 좌표(`latlng`)로 놓고 `--mobility <이동 자료 폴더>` 를 줄 때만 잰다.
+  그 시나리오만 계산기를 쓴다(계산 코드 · 평가기 모두) — 다른 시나리오는 지은 좌표라 도보 기준으로 정답을 정했다.
+  계산기를 안 켜면 그 묶음은 `skipped` 로 따로 세고 점수에서 뺀다.
 ★장소 id 를 바꿔 가며 여러 번 돈다(`--seeds`, 기본 5). 순위가 같을 때 마지막 기준이 장소 id 라서(`replan.Candidate.rank`),
   id 하나로만 재면 우연히 맞은 것을 정답으로 센다. **모든 판에서 같은 판정**일 때만 그 판정이고, 갈리면 `unstable` 이다.
 """
@@ -52,6 +55,7 @@ WALK_M_PER_MIN = 80
 NS = uuid.UUID("6c1d7a2e-0000-4000-8000-000000000da1")
 
 LABELS = ("correct", "ok", "correct_no_change", "wrong_violation", "wrong", "missed", "wrong_change", "unstable")
+_LEG: dict[str, Any] = {"leg": None}            # --mobility 로 켠 이동 계산기(needs: mobility 시나리오에서만 쓴다)
 GOOD = frozenset({"correct", "correct_no_change"})
 
 
@@ -88,7 +92,7 @@ def build(case: dict[str, Any], seed: int = 0) -> tuple[dict[str, Any], list[Any
 
     places: dict[str, dict[str, Any]] = {}
     for spec in case["places"]:
-        lat, lng = _latlng(spec["at"])
+        lat, lng = tuple(spec["latlng"]) if "latlng" in spec else _latlng(spec["at"])
         kind = spec.get("kind", "dining")
         attributes: dict[str, Any] = {}
         if kind == "dining":
@@ -112,6 +116,17 @@ def build(case: dict[str, Any], seed: int = 0) -> tuple[dict[str, Any], list[Any
 
 def plan(case: dict[str, Any], trip: dict[str, Any], items: list[Any], places: dict[str, dict[str, Any]]) -> Any:
     from app.modules.travel_ops import itinerary_changes as changes
+
+    engine = _LEG["leg"] if case.get("needs") == "mobility" else None
+    original_engine = changes._leg_engine
+    changes._leg_engine = lambda trip: engine            # 이 시나리오에만 — 다른 시나리오는 도보 기준이다
+    try:
+        return _plan(case, trip, items, places, changes)
+    finally:
+        changes._leg_engine = original_engine
+
+
+def _plan(case, trip, items, places, changes) -> Any:
 
     pool = list(places.values())
     meal = next(i for i in items if i.seq == case["meal"])
@@ -155,14 +170,33 @@ def route_check(case: dict[str, Any], items: list[Any], places: dict[str, dict[s
     elif case["path"] == "closed_now":
         added += walk_min(orig, cand)
     if nxt is not None:
-        reach = ends + timedelta(minutes=walk_min(cand, nxt.place))
+        to_next, from_orig = walk_min(cand, nxt.place), walk_min(orig, nxt.place)
+        if case.get("needs") == "mobility":
+            to_next, from_orig = _eta(cand, nxt.place, nxt.starts_at, ends), _eta(orig, nxt.place, nxt.starts_at,
+                                                                                    meal.ends_at or meal.starts_at)
+            out["basis"] = "mobility"
+        reach = ends + timedelta(minutes=to_next)
         out["late_next_min"] = max(0, int((reach - nxt.starts_at).total_seconds() // 60))
-        planned = (meal.ends_at or meal.starts_at) + timedelta(minutes=walk_min(orig, nxt.place))
+        planned = (meal.ends_at or meal.starts_at) + timedelta(minutes=from_orig)
         out["planned_late_next_min"] = max(0, int((planned - nxt.starts_at).total_seconds() // 60))
-        added += walk_min(cand, nxt.place) - walk_min(orig, nxt.place)
+        added += to_next - from_orig
     out["added_walk_min"] = added
     out["violation"] = out["late_next_min"] > out["planned_late_next_min"]
     return out
+
+
+def _eta(a: dict[str, Any], b: dict[str, Any], arrive: datetime, leave: datetime) -> int:
+    """평가기 쪽 이동 계산기 소요(분). 못 재면 시나리오가 잘못된 것이다 — 멈춘다."""
+    here = {"key": a["key"], "name": a["name"], "lat": a["latitude"], "lon": a["longitude"]}
+    there = {"key": b["key"], "name": b["name"], "lat": b["latitude"], "lon": b["longitude"]}
+    got, why = None, None
+    for window in (90, 180):                       # 소요만 묻는다 — 늦는지는 여기서 잰다(replan.TRANSIT_WINDOWS_MIN 과 같은 방식)
+        got, why = _LEG["leg"](here, there, leave + timedelta(minutes=window), leave)
+        if got is not None or not (isinstance(why, dict) and why.get("code") == "arrive_late"):
+            break
+    if not got:
+        raise RuntimeError(f"이동 계산기가 {a['name']} → {b['name']} 를 못 쟀다: {why}")
+    return int(got["eta_min"])
 
 
 def score_case(case: dict[str, Any], key: str | None, route: dict[str, Any] | None) -> str:
@@ -184,6 +218,8 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
     def ratio(num: int, den: int) -> dict[str, Any]:
         return {"num": num, "den": den, "rate": round(num / den, 3) if den else None}
 
+    skipped = [r["id"] for r in results if r["label"] == "skipped"]
+    results = [r for r in results if r["label"] != "skipped"]
     total = len(results)
     counts = Counter(r["label"] for r in results)
     added = [r["route"]["added_walk_min"] for r in results if r.get("route")]
@@ -200,6 +236,7 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
                                   sum(r["group"] == group for r in results))
                      for group in sorted({r["group"] for r in results})},
         "added_walk_min_mean": round(sum(added) / len(added), 1) if added else None,
+        "skipped": skipped,
     }
 
 
@@ -215,6 +252,8 @@ def run_once(case: dict[str, Any], seed: int) -> dict[str, Any]:
 
 def run_case(case: dict[str, Any], seeds: int = 5) -> dict[str, Any]:
     """판마다 장소 id 를 바꿔 돈다. 판정이 모두 같으면 그 판정, 갈리면 unstable(고른 곳들을 남긴다)."""
+    if case.get("needs") == "mobility" and _LEG["leg"] is None:
+        return {"id": case["id"], "group": case["group"], "why": case["why"], "picked": None, "label": "skipped"}
     runs = [run_once(case, seed) for seed in range(seeds)]
     labels = {r["label"] for r in runs}
     first = runs[0]
@@ -223,6 +262,14 @@ def run_case(case: dict[str, Any], seeds: int = 5) -> dict[str, Any]:
     if len(labels) > 1:
         out["by_seed"] = [f"{r['picked']}:{r['label']}" for r in runs]
     return out
+
+
+def enable_mobility(data_dir: str) -> None:
+    """이동 계산기를 켠다(`mobility.wiring.configure`). 자료 확인이 실패하면 멈춘다(지어낸 소요로 재지 않는다)."""
+    from app.modules.travel_ops.mobility import wiring
+
+    wiring.configure(data_dir=str(Path(data_dir).resolve()), verify_hash=False)
+    _LEG["leg"] = wiring.leg_planner(None, {})
 
 
 def run(*, label: str, dataset: Path = DATASET, seeds: int = 5) -> dict[str, Any]:
@@ -243,7 +290,7 @@ def run(*, label: str, dataset: Path = DATASET, seeds: int = 5) -> dict[str, Any
         print(f"{r['id']} {r['label']:<18} → {r.get('picked_name')} {r.get('by_seed') or ''} {r.get('error', '')}",
               file=sys.stderr)
     return {"eval": "dining_alternatives", "dataset": dataset.name,
-            "dataset_sha": hashlib.sha256(dataset.read_bytes()).hexdigest()[:16], "label": label, "seeds": seeds,
+            "dataset_sha": hashlib.sha256(dataset.read_bytes()).hexdigest()[:16], "label": label, "seeds": seeds, "mobility": _LEG["leg"] is not None,
             "env": {"run_at": datetime.now(KST).isoformat(timespec="seconds"), "git_commit": git("rev-parse", "--short", "HEAD"),
                     "git_branch": git("rev-parse", "--abbrev-ref", "HEAD"),
                     "git_dirty": bool(git("status", "--porcelain", "--", "app"))},
@@ -256,7 +303,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dataset", type=Path, default=DATASET)
     parser.add_argument("--out", type=Path)
     parser.add_argument("--seeds", type=int, default=5, help="장소 id 를 바꿔 도는 판 수")
+    parser.add_argument("--mobility", help="이동 자료 폴더(datasets/mobility/processed) — 주면 transit 묶음도 잰다")
     args = parser.parse_args(argv)
+    if args.mobility:
+        enable_mobility(args.mobility)
     report = run(label=args.label, dataset=args.dataset, seeds=args.seeds)
     if args.out:
         args.out.write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
