@@ -72,3 +72,16 @@ def test_transit_cases_are_skipped_without_the_engine():
     assert da.run_case(case)["label"] == "skipped"
     assert da.summarize([{"id": "DA-018", "group": "transit", "label": "skipped"},
                          {"id": "X", "group": "move", "label": "correct"}])["accuracy"]["den"] == 1
+
+
+HOLDOUT = da.ROOT / "eval" / "datasets" / "dining_alternatives_holdout_v1.jsonl"
+
+
+def test_holdout_shape_and_accepted_places_keep_the_route():
+    """확인용 세트 — 모양과 「정답이 동선을 지키나」만 본다. ★이 세트를 보며 계산 코드를 고치지 않는다."""
+    cases = da.load_cases(HOLDOUT)
+    assert len(cases) == 8 and not {c["id"] for c in cases} & {c["id"] for c in da.load_cases()}
+    for case in cases:
+        _, items, places = da.build(case)
+        for key in case["expect"].get("accept", []):
+            assert not da.route_check(case, items, places, key, _visit(case, items, places, key))["violation"], case["id"]

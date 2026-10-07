@@ -80,3 +80,17 @@ def test_summary_counts_every_label():
     assert summary["accuracy"] == {"num": 3, "den": 7, "rate": 0.429}
     assert summary["wrong_confirmed"]["num"] == 1
     assert sum(summary["labels"].values()) == 7
+
+
+def test_holdout_is_12_cases_and_does_not_overlap_the_dev_set():
+    """확인용 세트 — 모양만 본다. ★이 세트를 보며 접수 코드를 고치지 않는다(발표 직전 한 번 잰다)."""
+    from eval.runners.place_lookup import ROOT
+
+    holdout = load_cases(ROOT / "eval" / "datasets" / "place_lookup_holdout_v1.jsonl")
+    dev = load_cases()
+    assert len(holdout) == 12 and len({c["id"] for c in holdout}) == 12
+    assert not {c["id"] for c in holdout} & {c["id"] for c in dev}
+    assert not {c["lines"][c["target"]] for c in holdout} & {c["lines"][c["target"]] for c in dev}
+    for case in holdout:
+        assert 0 <= case["target"] < len(case["lines"])
+        assert set(case["expect"]) <= {"accept", "brand", "near", "kind", "must_review", "no_pick", "or_no_pick"}

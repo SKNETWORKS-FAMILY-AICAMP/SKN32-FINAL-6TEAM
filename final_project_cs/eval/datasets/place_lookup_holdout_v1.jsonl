@@ -1,0 +1,12 @@
+{"id": "PLH-01", "group": "name", "lines": ["12:30 이문설롱탕"], "target": 0, "expect": {"accept": ["이문설농탕"], "kind": "dining"}, "why": "원장 식당 오타(농→롱)"}
+{"id": "PLH-02", "group": "near", "lines": ["10:00 서울숲", "12:30 성수족빨"], "target": 1, "expect": {"accept": ["성수족발"], "near": {"point": [37.546, 127.0543], "max_km": 0.3}, "kind": "dining"}, "why": "오타 + 위치"}
+{"id": "PLH-03", "group": "misc", "lines": ["10:00 경복궁", "12:30 통인시장 기름떡볶이"], "target": 1, "expect": {"brand": "기름떡볶이", "near": {"point": [37.5807, 126.9702], "max_km": 0.3}, "kind": "dining"}, "why": "시장 + 메뉴 — 시장 안 가게"}
+{"id": "PLH-04", "group": "name", "lines": ["12:30 진옥화할매"], "target": 0, "expect": {"accept": ["진옥화할매원조닭한마리"], "kind": "dining"}, "why": "줄인 이름"}
+{"id": "PLH-05", "group": "name", "lines": ["12:30 하동관"], "target": 0, "expect": {"accept": ["하동관"], "kind": "dining"}, "why": "원장에 있지만 관광공사 ID 가 없는 가게"}
+{"id": "PLH-06", "group": "near", "lines": ["10:00 서울역", "12:30 파리바게뜨"], "target": 1, "expect": {"brand": "파리바게뜨", "near": {"point": [37.5547, 126.9707], "max_km": 1.0}, "must_review": true, "kind": "dining"}, "why": "체인 — 서울역 근처 지점"}
+{"id": "PLH-07", "group": "near", "lines": ["10:00 경복궁", "15:00 이디야 홍대입구역"], "target": 1, "expect": {"brand": "이디야", "near": {"point": [37.5572, 126.9245], "max_km": 0.7}, "kind": "dining"}, "why": "체인 + 「점」 없는 지점명 — 앞 일정이 아니라 홍대입구역 근처"}
+{"id": "PLH-08", "group": "misc", "lines": ["10:00 이태원역", "12:30 Paris Baguette"], "target": 1, "expect": {"brand": "파리바게뜨", "near": {"point": [37.5345, 126.9946], "max_km": 1.0}, "must_review": true, "kind": "dining"}, "why": "영문 체인명"}
+{"id": "PLH-09", "group": "misc", "lines": ["12:30 Myeongdong Kyoja"], "target": 0, "expect": {"accept": ["명동교자"], "kind": "dining"}, "why": "로마자 식당 이름"}
+{"id": "PLH-10", "group": "misc", "lines": ["10:00 북촌한옥마을", "12:30 근처 칼국수집"], "target": 1, "expect": {"brand": "칼국수", "near": {"point": [37.5826, 126.983], "max_km": 1.0}, "must_review": true, "kind": "dining"}, "why": "메뉴만 — 앞 일정 근처 칼국수집 후보"}
+{"id": "PLH-11", "group": "misc", "lines": ["10:00 남산서울타워", "18:00 저녁 고기집"], "target": 1, "expect": {"no_pick": true}, "why": "이름이 아닌 말 — 가게를 고르지 않아야 한다"}
+{"id": "PLH-12", "group": "name", "lines": ["12:30 남산돈까스"], "target": 0, "expect": {"brand": "남산돈까스", "must_review": true, "kind": "dining"}, "why": "같은 이름이 들어간 가게 둘(원장) — 어느 곳인지 확인 필요"}
