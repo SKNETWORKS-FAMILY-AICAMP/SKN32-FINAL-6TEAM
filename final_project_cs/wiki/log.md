@@ -344,3 +344,11 @@ INV-CS-TEAM-005  다른 Team 을 직접 호출하지 않는다
 - 시험 `tests/unit/test_ollama_chat.py::test_every_kind_of_call_turns_thinking_off` 로 다섯 호출이 모두 `think: false` 를 보내는지 고정했다(새 호출을 더하다 빼먹으면 걸린다).
 - 연구 시험 도구의 `chat_template_kwargs` 는 llama.cpp 서버용이다 — **제품이 나중에 llama.cpp 서버로 옮기면 그때 이 설정을 넣어야 한다**(Ollama 의 `think` 와 이름이 다르다).
 - x600 서버 읽기 확인(2026-10-07): api · worker · web 이미지 `9a3521b571`, `/health` 200, 웹 경로 55개 · `safety/recovery` 포함, 웹 `/` · `/trips` 200, 여행 상세 화면 파일에 「범위 모름」 · 「오늘은 가볍게」 · 「다시 시작할 때까지 멈춰 있어요」 문구 있음. **안 한 것**: 로그인 · 여행 만들기 · 재난 정지 재생 같은 실제 사용자 흐름(데이터를 만들거나 인증이 필요해서).
+
+## 2026-10-07 — basement 네 폴더(core · application · infrastructure · presentation) 점검
+
+사용자 요청(도메인 폴더 정리에 이어 코어 쪽도 점검). 상세 `wiki/records/reports/2026-10-07_basement_네_폴더_점검.md`.
+- 쟀다: `app/` 의 import 를 AST 로 읽어 폴더 → 폴더 방향 표. **코어는 다른 폴더를 안 부른다(0).** 어긋난 곳은 하나의 원인 — 코어의 가림 함수를 표현 층 파일이 다시 내보낸 것을 응용 · 인프라 · 도메인이 거쳐 쓰던 것(응용→표현 1 · 인프라→표현 1 · 도메인→표현 4).
+- 고쳤다: 가림 함수 import 6곳을 `app.core.redaction` 직접으로. 빈 폴더 20개(파일 0 · git 밖 로컬 찌꺼기) 삭제. 시험 `tests/architecture/test_basement_layers.py` 추가(방향 고정 + 알고 있는 예외 셋은 상한).
+- 안 고쳤다(사용자 결정 · 후속): 쇼핑몰 시절 결제 대역 `mock_payment_publisher.py`(D-023) · `core/composer_stores.py` 가 코어에 있는 것 · 인프라 바로 아래 흩어진 파일 · 큰 파일 · 쓰이지 않는 규격 모듈 둘 · `wiki/index.md` 12행의 낡은 서술.
+- 시험: 구조 · 코어 · 컨트롤러 · 운영 UI · Case REST 427 · 계약 · 보안 · 결정 단위 · 프로필 364 통과.

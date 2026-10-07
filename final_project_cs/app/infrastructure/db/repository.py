@@ -6,7 +6,7 @@ from uuid import UUID
 
 from psycopg import Connection
 from psycopg.types.json import Json
-from app.presentation.security import mask_json, masked
+from app.core.redaction import mask_json, masked
 
 
 def create_case(conn: Connection, *, tenant_id: str, customer_id: UUID, subject: str, state_json: dict[str, Any] | None = None) -> UUID:

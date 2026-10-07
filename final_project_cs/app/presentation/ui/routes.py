@@ -23,7 +23,7 @@ from app.infrastructure.messaging.outbox import OutboxBrokerAdapter
 from app.infrastructure.db.session import get_ops_read_connection as get_connection
 from app.core.remote_team.executor import LocalTeamExecutor
 from app.infrastructure.rag import retriever as rag_retriever
-from app.presentation.security import masked
+from app.core.redaction import masked
 from app.presentation.ui import auth, theme
 
 #: 이 요청의 운영자. 관문(`_require_login`)이 채우고 `_page` 가 머리에 적는다.

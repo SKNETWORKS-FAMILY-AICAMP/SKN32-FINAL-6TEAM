@@ -29,7 +29,7 @@ from uuid import UUID
 
 from app.core.transition import transition_case
 from app.core.case_lifecycle.events import EventType
-from app.presentation.security import masked
+from app.core.redaction import masked
 
 logger = logging.getLogger(__name__)
 
