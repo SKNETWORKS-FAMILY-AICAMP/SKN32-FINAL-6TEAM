@@ -28,7 +28,9 @@ def test_parse_at_assumes_korea_time():
 
 def test_parse_disaster():
     msg = script.parse_disaster("위급재난|호우|해운대 침수|부산광역시, 해운대구", "t")
+    # ★`[2026-10-07]` 실제 소스의 판정용 행 모양(`disaster_msg.parse_row`)이다 — 지역 거르기를 같은 함수로 한다
     assert msg == {"step": "위급재난", "kind": "호우", "text": "해운대 침수",
-                   "regions": ["부산광역시", "해운대구"], "created_at": "t"}
+                   "regions": ["부산광역시", "해운대구"], "created_at": "t", "serial": None}
+    assert script.parse_disaster("위급재난|호우|본문", "t")["regions"] == ["서울특별시 전체"]
     with pytest.raises(SystemExit):
         script.parse_disaster("본문만", "t")

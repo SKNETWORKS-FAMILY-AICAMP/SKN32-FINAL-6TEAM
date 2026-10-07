@@ -34,6 +34,15 @@ class ToolLoopExceeded(RuntimeError):
     """The same named tool and normalized arguments were requested twice."""
 
 
+def _address(value: Any) -> dict[str, str]:
+    """재난문자 `near()` 에 넘길 주소 — 있을 때만 키를 싣는다(주소를 모르는 소스 · 가짜 소스와 호환).
+
+    ★`[2026-10-07]` 주소의 「서울특별시 ○○구」로 문자를 거른다. 좌표 상자는 32% 를 다른 구로 정했다.
+    """
+    text = str(value).strip() if value else ""
+    return {"address": text} if text else {}
+
+
 def _as_datetime(value: Any) -> Any:
     """문자열로 온 시각을 `datetime` 으로. ★못 읽으면 `None` — 지금으로 대체하지 않는다.
 
@@ -477,7 +486,7 @@ class ReadToolbox:
             at=_as_datetime(at))
 
     def disaster(self, scope: ToolContext, *, latitude: float | None = None,
-                 longitude: float | None = None, at: Any = None,
+                 longitude: float | None = None, at: Any = None, address: str | None = None,
                  **_: Any) -> dict[str, Any] | None:
         """그 좌표 인근·그 시각 기준의 재난문자 목록. 모르면 `None`.
 
@@ -502,7 +511,7 @@ class ReadToolbox:
             return None
         return self.travel.disaster.near(
             latitude=float(latitude), longitude=float(longitude),
-            at=_as_datetime(at))
+            at=_as_datetime(at), **_address(address))
 
     #: 한 번에 묻는 좌표 수 상한 — 대체 후보(화면 3 + 더보기 10)를 넘지 않는다.
     DISASTER_POINTS_MAX = 13
@@ -511,7 +520,7 @@ class ReadToolbox:
                         **_: Any) -> dict[str, Any] | None:
         """좌표 여러 곳의 재난문자를 **한 번에** 본다 — 대체 후보 재검증용. `[2026-10-07]`
 
-        `points`: `[[위도, 경도], ...]`. 반환: `{"points": [<disaster() 와 같은 모양 | None>, ...]}`
+        `points`: `[[위도, 경도], ...]` 또는 `[[위도, 경도, 주소], ...]` — 주소가 있으면 그 구로 거른다. 반환: `{"points": [<disaster() 와 같은 모양 | None>, ...]}`
         — 순서는 `points` 와 같다. 좌표를 못 읽은 칸은 `None`(모름)이다.
         ★지역 판정(좌표 → 자치구 → 그 구로 온 문자)은 `disaster()` 와 **같은** `near()` 가 한다 —
           Team 이 지역을 따로 해석하지 않게. 소스가 지역 단위로 캐시하므로 좌표가 많아도 외부 호출은 늘지 않는다.
@@ -529,7 +538,9 @@ class ReadToolbox:
             except (TypeError, ValueError, IndexError):
                 results.append(None)
                 continue
-            results.append(self.travel.disaster.near(latitude=latitude, longitude=longitude, at=when))
+            address = point[2] if len(point) > 2 else None
+            results.append(self.travel.disaster.near(latitude=latitude, longitude=longitude, at=when,
+                                                     **_address(address)))
         return {"points": results}
 
     # ── 일정(Trip) ──────────────────────────────────────────────

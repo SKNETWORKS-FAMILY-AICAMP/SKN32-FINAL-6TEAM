@@ -289,9 +289,13 @@ class FeasibilityMixin:
     def _feasible_disaster(self, ck: "_Check") -> None:
         # ★`[2026-10-07]` 도구는 시각을 `at` 으로 읽는다. 예전에는 `starts_at` 으로 넘겨 버려져서
         #   **일정 시각이 아니라 지금** 기준의 문자를 봤다(`read_tools.disaster`).
-        disaster = self._read(ck.task, "read.disaster",
-                              {"latitude": ck.lat, "longitude": ck.lng,
-                               "at": ck.booking.get("starts_at")}, ck.seen)
+        # ★`[2026-10-07]` 주소를 함께 넘긴다 — 도구가 주소의 자치구로 문자를 거른다. 좌표 상자만으로는
+        #   카탈로그 장소의 32% 를 다른 구로 정했다(`disaster_msg.seoul_districts`). 주소는 CSV 장소 목록에서.
+        arguments = {"latitude": ck.lat, "longitude": ck.lng, "at": ck.booking.get("starts_at")}
+        address = ((ck.csv_row or {}).get("addr1") or "").strip()
+        if address:
+            arguments["address"] = address
+        disaster = self._read(ck.task, "read.disaster", arguments, ck.seen)
         if disaster is None:
             return
         ck.evidence = self._evidence(ck.task, source_id="read.disaster",

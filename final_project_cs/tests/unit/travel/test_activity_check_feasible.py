@@ -296,6 +296,17 @@ async def test_disaster_and_weather_are_read_at_the_booking_time():
 
 
 @pytest.mark.asyncio
+async def test_disaster_lookup_carries_the_place_address():
+    """★`[2026-10-07]` 장소 주소(CSV `addr1`)를 넘겨 도구가 주소의 자치구로 거르게 한다 — 좌표 상자는 자주 틀린다."""
+    values = _values(disaster=DISASTER_NON_CRITICAL)
+    values["read.place"] = {**values["read.place"], "source_content_id": "126508"}   # 경복궁
+    tools = FakeTools(values)
+    await ActivityTeam(tools).execute(_task())
+    args = dict(tools.calls)["read.disaster"]
+    assert args["address"].startswith("서울특별시 종로구")
+
+
+@pytest.mark.asyncio
 async def test_disaster_evidence_recorded():
     """read.disaster 결과가 evidence 에 기록된다."""
     result = await ActivityTeam(

@@ -48,3 +48,21 @@ def test_caps_the_number_of_points():
 
 def test_is_a_registered_tool():
     assert "read.disaster_points" in ReadToolbox(lambda: None)._travel_tools()
+
+
+class _AddressSource(_Source):
+    def __init__(self) -> None:
+        super().__init__()
+        self.addresses: list[str | None] = []
+
+    def near(self, latitude, longitude, at=None, address=None):
+        self.addresses.append(address)
+        return super().near(latitude, longitude, at)
+
+
+def test_addresses_are_passed_through_when_given():
+    """★`[2026-10-07]` 주소가 있으면 그 구로 거르게 넘긴다. 없으면 키를 싣지 않는다."""
+    source = _AddressSource()
+    _box(source).disaster_points(None, points=[[37.5, 126.9, "서울특별시 종로구 사직로 161"], [37.5, 126.9]])
+    _box(source).disaster(None, latitude=37.5, longitude=126.9, address="서울특별시 중구 세종대로 110")
+    assert source.addresses == ["서울특별시 종로구 사직로 161", None, "서울특별시 중구 세종대로 110"]

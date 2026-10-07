@@ -80,7 +80,8 @@ def test_returns_origin_and_candidates_in_the_csv_shape():
     assert first == {"contentid": "c1", "title": "성균관 명륜당", "contenttypeid": "12",
                      "lclsSystm1": "HS", "lclsSystm2": "HS01", "lclsSystm3": "HS010100",
                      "sigungucode": "23", "brand": None, "mapx": "126.98", "mapy": "37.58",
-                     "closed_days": "연중무휴", "business_hours": "09:00~18:00"}
+                     "closed_days": "연중무휴", "business_hours": "09:00~18:00",
+                     "addr1": None}   # ★`[2026-10-07]` 재난문자를 후보의 구로 거르는 데 쓴다(이 행은 주소 없음)
     assert pool["source"] == "place_catalog:" + "+".join(DEFAULT_SOURCES)
 
 

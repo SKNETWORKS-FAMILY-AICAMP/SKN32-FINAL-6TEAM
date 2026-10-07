@@ -118,7 +118,10 @@ class ReplacementMixin:
         if not passed:
             self._record_failure(task, fc.ALTERNATIVES_NONE if not ranked["alternatives"]
                                  else fc.ALTERNATIVES_UNCONFIRMED)
-            note = (f"근처(반경 {ranked['max_radius_km']:g}km)에 조건에 맞는 장소가 없습니다."
+            excluded = ranked.get("disaster_excluded") or 0
+            note = (f"근처 후보 {excluded}곳은 위급재난 문자가 온 지역이라 뺐습니다."
+                    if not ranked["alternatives"] and excluded
+                    else f"근처(반경 {ranked['max_radius_km']:g}km)에 조건에 맞는 장소가 없습니다."
                     if not ranked["alternatives"]
                     else "대체 장소 후보는 있으나 재난문자를 확인하지 못해 안내하지 않았습니다."
                     if disaster_note == "unknown"
@@ -150,7 +153,11 @@ class ReplacementMixin:
         points = []
         for alternative in listed:
             row = rows.get(str(alternative.get("contentid"))) or {}
-            points.append([row.get("mapy"), row.get("mapx")])
+            # ★주소가 있으면 셋째 칸으로 — 도구가 주소의 자치구로 거른다(좌표 상자는 자주 틀린다)
+            point = [row.get("mapy"), row.get("mapx")]
+            if row.get("addr1"):
+                point.append(row["addr1"])
+            points.append(point)
         found = self._read(task, "read.disaster_points", {"points": points, "at": starts_at}, seen)
         results = (found or {}).get("points") if isinstance(found, dict) else None
         if not isinstance(results, list) or len(results) != len(listed):

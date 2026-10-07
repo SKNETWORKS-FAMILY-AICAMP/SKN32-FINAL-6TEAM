@@ -75,6 +75,8 @@ def to_candidate(record: dict[str, Any]) -> dict[str, Any]:
         "mapy": None if lat is None else str(lat),
         "closed_days": _text(raw.get("closed_days")),
         "business_hours": _text(raw.get("business_hours")),
+        # ★`[2026-10-07]` 재난문자를 후보의 자치구로 거르는 데 쓴다(`replacement._recheck_disaster`).
+        "addr1": _text(raw.get("addr1")),
     }
 
 

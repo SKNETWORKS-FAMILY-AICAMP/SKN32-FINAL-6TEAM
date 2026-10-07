@@ -73,14 +73,14 @@ class ScriptDisaster:
 
     ★예전에는 넣은 문자를 「이 지역 문자」(`for_region`)에 그대로 넣었다 — 부산 문자가 경복궁 판정에 들어갔다.
       지금은 실제 소스(`DisasterMsgApi.near`)처럼 좌표 → 서울 자치구 → 그 구로 온 문자만 남긴다
-      (`disaster_msg.judge` · `_lat_lon_to_gu` 를 그대로 쓴다). 창도 같다 — 지금과 일정 시각 중 이른 쪽에서 6시간.
+      (`disaster_msg.judge` · `seoul_districts` 를 그대로 쓴다 — 주소가 있으면 주소의 구). 창도 같다 — 지금과 일정 시각 중 이른 쪽에서 6시간.
     """
 
     def __init__(self, rows: list[dict[str, Any]]) -> None:
         self.rows = rows
 
-    def near(self, latitude: Any, longitude: Any, at: Any) -> dict[str, Any] | None:
-        from app.infrastructure.travel.disaster_msg import DEFAULT_LOOKBACK_HOURS, _lat_lon_to_gu, judge
+    def near(self, latitude: Any, longitude: Any, at: Any, address: str | None = None) -> dict[str, Any] | None:
+        from app.infrastructure.travel.disaster_msg import DEFAULT_LOOKBACK_HOURS, judge, seoul_districts
 
         if latitude is None or longitude is None:
             return None       # ★실제 도구와 같다 — 어디인지 모르면 묻지 않는다
@@ -88,19 +88,20 @@ class ScriptDisaster:
         when = at if isinstance(at, datetime) else now
         until = min(when.astimezone(KST), now)
         window_start = until - timedelta(hours=DEFAULT_LOOKBACK_HOURS)
-        district = _lat_lon_to_gu(float(latitude), float(longitude))
-        messages, unclassified = judge(self.rows, region="서울", district=district,
+        districts, basis = seoul_districts(float(latitude), float(longitude), address)
+        messages, unclassified = judge(self.rows, region="서울", district=districts,
                                        window_start=window_start, at=until)
-        return {"region": "서울", "district": district, "for_region": messages, "unclassified": unclassified,
-                "confirmed_at": now.isoformat(), "source": "try_activity_judge"}
+        return {"region": "서울", "district": districts, "district_basis": basis, "for_region": messages,
+                "unclassified": unclassified, "confirmed_at": now.isoformat(), "source": "try_activity_judge"}
 
-    def read_disaster(self, latitude=None, longitude=None, at=None, **_: Any):
-        return self.near(latitude, longitude, at)
+    def read_disaster(self, latitude=None, longitude=None, at=None, address=None, **_: Any):
+        return self.near(latitude, longitude, at, address)
 
     def read_points(self, points=None, at=None, **_: Any):
         if not isinstance(points, list):
             return None
-        return {"points": [self.near(*(list(p) + [None, None])[:2], at) for p in points]}
+        padded = [list(p) + [None, None, None] for p in points]
+        return {"points": [self.near(p[0], p[1], at, p[2]) for p in padded]}
 
 
 def parse_at(text: str) -> datetime:
@@ -120,6 +121,23 @@ def parse_disaster(text: str, created_at: datetime) -> dict[str, Any]:
     regions = [r.strip() for r in parts[3].split(",") if r.strip()] if len(parts) > 3 else []
     return {"step": step, "kind": kind, "text": body, "regions": regions or ["서울특별시 전체"],
             "created_at": created_at, "serial": None}
+
+
+def read_place_candidates(content_id: str | None = None, **_: Any) -> dict[str, Any] | None:
+    """대체 후보 풀 — **실제 DB**(`place_catalog`, 테넌트 `demo`)에서 읽는다. `[2026-10-07]`
+
+    ★예전에는 이 도구를 넣지 않아 성립 불가여도 늘 「대체 장소 후보를 조회하지 못했습니다」였다.
+    ★DB 에 못 붙거나 카탈로그가 비었으면 `None`(모름) — 실제 도구와 같다.
+      적재: `python -m scripts.load_place_catalog_csv <activity_total_data.csv> --source <출처> --exclude-codes FD AC EV`
+    """
+    from app.infrastructure.db.session import get_connection
+    from app.modules.travel_ops.activity.db_search.place_candidates import find_place_candidates
+
+    try:
+        return find_place_candidates(get_connection, "demo", content_id)
+    except Exception as exc:   # 스크립트다 — 원인을 보이고 모름으로 둔다
+        print(f"   (대체 후보 풀을 DB 에서 못 읽었다: {type(exc).__name__})")
+        return None
 
 
 def build_values(args: argparse.Namespace, starts: datetime) -> tuple[dict[str, Any], dict[str, Any] | None]:
@@ -151,6 +169,7 @@ def build_values(args: argparse.Namespace, starts: datetime) -> tuple[dict[str, 
         "read.place": place,
         "read.disaster": disaster,
         "read.disaster_points": points,
+        "read.place_candidates": read_place_candidates,
         "read.weather": forecast,
     }
     return values, found
