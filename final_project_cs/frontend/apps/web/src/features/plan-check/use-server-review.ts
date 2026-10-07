@@ -52,6 +52,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   const pickable = useRef(new Map<string, CandidatePlace>());
   /** `[2026-10-07]` The ways to go for a leg, asked when its box is opened and kept for the revision they were asked on (a re-opened box asks nothing). */
   const moveWays = useRef(new Map<string, Promise<MoveOptions | null>>());
+  // `[2026-10-07 사용자 지적 — 이미 받은 대안을 다시 열 때도 로딩이 있다]` The alternatives of a stop, kept for the revision they were asked for: opening the change screen again, or 「자동 추천」 after it, does not ask again.
+  const alternatives = useRef(new Map<string, ReturnType<typeof getCandidates>>());
   /** Why the server's list for a stop is short or empty (`notes` of the candidates call), by stop id — said on the change screen. */
   const candidateNotes = useRef(new Map<string, string[]>());
   /**
@@ -86,6 +88,17 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
     const staleThenRethrow = (error: unknown): never => {
       if (error instanceof LiveError && error.code === "stale_revision") reread();
       throw error;
+    };
+    /** The stop's alternatives for the revision shown — asked once (a failure is not kept, so it is asked again). */
+    const alternativesOf = (id: string, item: Parameters<typeof getCandidates>[1]) => {
+      const revision = plan().revision;
+      const key = `${revision}:${id}`;
+      for (const old of [...alternatives.current.keys()]) if (!old.startsWith(`${revision}:`)) alternatives.current.delete(old);
+      const kept = alternatives.current.get(key);
+      if (kept) return kept;
+      const ask = getCandidates(intakeId, item, revision, language).catch((error: unknown) => { alternatives.current.delete(key); return staleThenRethrow(error); });
+      alternatives.current.set(key, ask);
+      return ask;
     };
     // Any answer that is the plan itself (a change, an undo, a re-check) ends a preview: it was a picture of the plan before that.
     const take = (next: ReviewedIntakeView) => { latest.current = next; setPreviewed(null); apply(next); };
@@ -169,7 +182,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
 
       candidates: async (id) => {
         const item = itemOf(id);
-        const found = await getCandidates(intakeId, item, plan().revision, language).catch(staleThenRethrow);
+        const found = await alternativesOf(id, item);
         candidateNotes.current.set(id, found.notes ?? []);
         // The stop's own photos fill its 「지금 일정」 card.
         if (item.place) void infoOf({ ...item.place, category: null, address: null }, true).then((info) => setInfos((current) => ({ ...current, [id]: info })));
@@ -202,7 +215,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       },
       autoRecommend: async (id) => {
         const item = itemOf(id);
-        const found = await getCandidates(intakeId, item, plan().revision, language).catch(staleThenRethrow);
+        const found = await alternativesOf(id, item);
         const best = found.candidates.find((candidate) => candidate.fits && pickedPlace(candidate.place));
         const picked = best && pickedPlace(best.place);
         if (!picked) throw new LiveError("no_fitting_place", t("시간이 맞는 대체 후보가 없어요 · 수정에서 장소를 직접 골라 주세요", "No alternative fits the time — pick a place in Edit"));

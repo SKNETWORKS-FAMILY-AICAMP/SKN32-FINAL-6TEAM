@@ -47,6 +47,12 @@ export interface DayGestures {
   zoom: number;
   onPinch: (zoom: number) => void;
   onPinchEnd: (zoom: number) => void;
+  /**
+   * `[2026-10-07 사용자 지적 — 확대 · 축소를 하다 보면 좌우로 넘기기가 막힌다]` The overview of every day (pinched far enough in) has no neighbour to swipe to, and swipes used to do nothing there. Now a swipe past the
+   * line leaves the overview for the day the customer is looking at (`onOverviewSwipe`).
+   */
+  overview?: boolean;
+  onOverviewSwipe?: () => void;
 }
 
 /**
@@ -66,6 +72,10 @@ export function useDayGestures(box: RefObject<HTMLElement | null>, options: DayG
     let swipe: { id: number; x0: number; y0: number; lock: "none" | "h" | "v"; shift: number; speed: number; lastX: number; lastT: number; neighbour: boolean; armed: boolean; side: -1 | 1; peeked: boolean } | null = null;
     let pinch: { d0: number; zoom0: number; zoom: number } | null = null;
     let settling: ReturnType<typeof setTimeout> | undefined;
+    // What the settling timer will do when it rings (turn the day and/or tidy up). A new press while the list still slides runs it at once - the press is not lost and the turn is not cancelled.
+    let pending: (() => void) | null = null;
+    const later = (run: () => void) => { pending = run; settling = setTimeout(() => { pending = null; run(); }, SETTLE_MS + 10); };
+    const settleNow = () => { clearTimeout(settling); const run = pending; pending = null; if (run) run(); else finish(); };
 
     const track = () => latest.current.track();
     const place = (value: number, animate: boolean) => {
@@ -93,17 +103,18 @@ export function useDayGestures(box: RefObject<HTMLElement | null>, options: DayG
       // ★The time and its dot (`[data-grab]`) are taken by a vertical drag (the time changes), but a SIDEWAYS move that starts there is still a swipe of the day: the lock below tells them apart
       //   (up and down first = not ours). Without this the left 44 px of the list - where a swipe back to the previous day often starts - could not be swiped from.
       if (target?.closest("input, textarea, select, [data-no-swipe]")) return;
+      // ★The first finger of a new touch starts afresh: a finger whose lifting never reached the list (it left the screen elsewhere) must not stay counted - a second finger would then read as a pinch and no swipe could start.
+      if (event.pointerType === "touch" && event.isPrimary) { pointers.clear(); pinch = null; }
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (pointers.size === 2 && latest.current.pinch) {
-        if (swipe?.lock === "h") { clearTimeout(settling); place(0, true); settling = setTimeout(finish, SETTLE_MS); }
+        if (swipe?.lock === "h") { settleNow(); place(0, true); later(finish); }
         swipe = null;
         const d0 = distance();
         pinch = d0 > 0 ? { d0, zoom0: latest.current.zoom, zoom: latest.current.zoom } : null;
         return;
       }
       if (pointers.size === 1 && latest.current.swipe && !swipe) {
-        clearTimeout(settling);
-        finish();
+        settleNow();
         swipe = { id: event.pointerId, x0: event.clientX, y0: event.clientY, lock: "none", shift: 0, speed: 0, lastX: event.clientX, lastT: event.timeStamp, neighbour: false, armed: false, side: 1, peeked: false };
       }
     };
@@ -129,6 +140,12 @@ export function useDayGestures(box: RefObject<HTMLElement | null>, options: DayG
       const side: -1 | 1 = dx < 0 ? 1 : -1;                               // dragging left = the NEXT day comes in
       const neighbour = side === 1 ? latest.current.hasNext : latest.current.hasPrev;
       // The neighbour that is drawn follows the side the finger is on: it is asked for at the first move and again whenever the finger crosses to the other side.
+      if (latest.current.overview) {                                     // the overview: a little rubber band only, no neighbour drawn; letting go past the line opens the day in view
+        swipe.side = side;
+        swipe.shift = dx;
+        place(swipeStep(dx, width, false).shift, false);
+        return;
+      }
       if (!swipe.peeked || side !== swipe.side || neighbour !== swipe.neighbour) {
         swipe.side = side;
         swipe.neighbour = neighbour;
@@ -160,18 +177,25 @@ export function useDayGestures(box: RefObject<HTMLElement | null>, options: DayG
       }
       if (!swipe || swipe.id !== event.pointerId) return;
       const taken = swipe;
-      if (taken.lock !== "h") { swipe = null; return; }
+      swipe = null;                                                        // ★the next press may start a swipe at once (it used to be ignored until the list had settled)
+      if (taken.lock !== "h") return;
       try { if (element.hasPointerCapture(event.pointerId)) element.releasePointerCapture(event.pointerId); } catch { /* nothing held */ }
       const width = element.clientWidth || 1;
       const cancelled = event.type === "pointercancel";
       // A finger that stopped before it was lifted is no flick: the speed is the speed at the end, not the last one it had.
       if (event.timeStamp - taken.lastT > STOP_MS) taken.speed = 0;
+      if (latest.current.overview) {
+        place(0, true);
+        if (!cancelled && Math.abs(taken.shift) >= width * COMMIT_FRACTION) latest.current.onOverviewSwipe?.();
+        later(finish);
+        return;
+      }
       if (!cancelled && turnsDay(taken.shift, width, taken.speed, taken.neighbour)) {
         place(-taken.side * width, true);                                  // the list slides out, the neighbour in; then the day itself turns
-        settling = setTimeout(() => { latest.current.onTurn(taken.side); finish(); }, SETTLE_MS + 10);
+        later(() => { latest.current.onTurn(taken.side); finish(); });
       } else {
         place(0, true);                                                    // springs back (at an end: back from the rubber band)
-        settling = setTimeout(finish, SETTLE_MS + 10);
+        later(finish);
       }
     };
 

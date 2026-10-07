@@ -965,7 +965,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     setZoom(Math.round(Math.min(1.3, Math.max(0.8, zoom)) * 20) / 20);
   }
   useDayGestures(bodyBox, {
-    swipe: dayStrip && listDay !== "all" && !filtering,
+    swipe: dayStrip && !filtering,
     hasPrev: dayAt > 0,
     hasNext: dayAt >= 0 && dayAt < days.length - 1,
     track: () => trackBox.current,
@@ -976,6 +976,15 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     zoom: listZoom,
     onPinch: (zoom) => { if (zoomBox.current) zoomBox.current.style.zoom = String(zoom); },
     onPinchEnd: endPinch,
+    overview: listDay === "all",
+    onOverviewSwipe: () => {
+      // The day whose part of the list is at the top of what shows (the one being looked at).
+      const top = bodyBox.current?.getBoundingClientRect().top ?? 0;
+      const sections = Array.from(bodyBox.current?.querySelectorAll<HTMLElement>('section[aria-labelledby*="plan-day-"]') ?? []);
+      const seen = sections.find((section) => section.getBoundingClientRect().bottom > top + 24) ?? sections[0];
+      const day = Number(/plan-day-(\d+)$/.exec(seen?.getAttribute("aria-labelledby") ?? "")?.[1]);
+      goDay(Number.isFinite(day) && day > 0 ? day : (days[0]?.day ?? 1), false);
+    },
   });
 
   // Pushing on past the end of the list shows the plan with the recommended fixes under it. ★`[2026-10-04 사용자 지시]` At the end of any day (or of the whole list), not only the last.

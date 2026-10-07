@@ -125,6 +125,18 @@ test("수정 화면: 서버의 대체 후보가 순위·거리와 함께 나오�
     value: { name: "올리브영 인사동점", latitude: 37.5741, longitude: 126.9857, source: "kakao" } }] });
 });
 
+test("같은 판에서는 대체 후보를 한 번만 받는다 — 수정 화면을 닫았다 다시 열어도 다시 묻지 않고 바로 보인다", async ({ page, request }) => {
+  // `[2026-10-07 사용자 지적 — 이미 받은 대안인데 다시 열면 로딩이 있다]`
+  const server = await openFinished(page, request);
+  await page.getByRole("button", { name: "올리브영 수정" }).click();
+  await expect(page.getByText("대체 후보 A · 1순위")).toBeVisible();
+  await page.getByRole("button", { name: "바꾸기 그만두기" }).click();
+  await expect(page.getByText("올리브영 바꾸기")).toHaveCount(0);
+  await page.getByRole("button", { name: "올리브영 수정" }).click();
+  await expect(page.getByText("대체 후보 A · 1순위")).toBeVisible();
+  expect((await server.received("GET", "/candidates")).length).toBe(1);                         // 두 번째는 받아 둔 것
+});
+
 test("장소 검색과 사진: 검색 결과가 나오고, 관광공사 번호가 있는 곳은 사진과 「ⓒ한국관광공사」 출처가 보인다", async ({ page, request }) => {
   await openFinished(page, request);
   await page.getByRole("button", { name: "광장시장 수정" }).click();
