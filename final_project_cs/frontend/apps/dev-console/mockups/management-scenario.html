@@ -375,9 +375,9 @@ function V_detail(fp){
       <h3>스택 (가림 · 가상 예시)</h3>
 <pre>OllamaError: Ollama 호출 시간 초과 (60.0초)
   app/infrastructure/ollama_chat.py      in json
-  app/domains/travel_ops/components/core_hooks/feedback.py     in classify
+  app/modules/travel_ops/feedback.py     in classify
   app/application/classification.py      in classify_case
-  app/domains/travel_ops/components/conversation/trip_messages.py  (메시지 처리)
+  app/modules/travel_ops/trip_messages.py  (메시지 처리)
 → 기록 지점: feedback.py — 「모름」으로 바꾸기 직전 record_error() [제안]</pre>
       <p class="note">함수 이름·줄 번호는 구현 후 실제 값으로 바뀝니다.</p>
       <h3 style="margin-top:14px">요청 요약 (가림)</h3>

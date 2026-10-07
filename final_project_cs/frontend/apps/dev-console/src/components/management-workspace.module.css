@@ -1,0 +1,42 @@
+.workspace { display: grid; gap: 22px; min-width: 0; }
+.tabs { display: flex; flex-wrap: wrap; gap: 10px; }
+.tabs a { padding: 8px 14px; border: 1px solid var(--border); border-radius: 7px; text-decoration: none; background: var(--surface); }
+.tabs a[aria-current="page"] { background: var(--soft); font-weight: 700; }
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.metric { display: grid; gap: 5px; padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; }
+.metric > span { font-size: 12px; color: var(--muted); }
+.metric strong { font-size: 30px; line-height: 1.2; }
+.metric a { font-size: 12px; }
+.twoColumns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.help { color: var(--muted); font-size: 12px; margin: 8px 0; overflow-wrap: anywhere; }
+.incidentList { display: grid; gap: 12px; margin-top: 15px; }
+.incident { min-width: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 16px; background: var(--background); border: 1px solid var(--border); border-radius: 8px; }
+.incident > div { min-width: 0; }
+.incidentTitle { display: grid; gap: 3px; overflow-wrap: anywhere; text-decoration: none; }
+.incidentTitle:hover strong { text-decoration: underline; }
+.badges { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px; }
+.toolLinks { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 15px; }
+.search { display: flex; gap: 12px; align-items: end; }
+.search label { display: grid; gap: 6px; flex: 1; min-width: 0; }
+.search input { width: 100%; }
+.filters { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; margin-top: 18px; }
+.filterField { display: grid; gap: 6px; min-width: 120px; }
+.filters a { padding-bottom: 10px; font-size: 12px; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; margin: 12px 0 20px; }
+.facts > div { min-width: 0; }
+.facts dt { color: var(--muted); font-size: 12px; }
+.facts dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+.chart { display: flex; gap: 8px; width: 100%; margin-top: 12px; }
+.chartColumn { display: flex; flex-direction: column; text-align: center; flex: 1; min-width: 0; color: var(--muted); font-size: 10px; }
+.chartValue { color: var(--text); }
+.barTrack { display: flex; align-items: end; height: 90px; background: var(--background); }
+.barTrack > span { display: block; width: 100%; background: var(--primary); border-radius: 3px 3px 0 0; }
+.occurrences { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 14px 0; }
+.occurrences a { display: grid; gap: 4px; padding: 10px; text-decoration: none; border: 1px solid var(--border); border-radius: 7px; min-width: 0; }
+.occurrences a > span { color: var(--muted); font-size: 12px; }
+.occurrences a[aria-current="true"] { border-color: var(--primary); background: var(--soft); }
+.occurrenceDetail { border-top: 1px solid var(--border); margin-top: 18px; padding-top: 18px; }
+.stack { margin: 10px 0; padding: 14px; background: var(--background); border: 1px solid var(--border); border-radius: 7px; }
+.empty { display: grid; gap: 10px; padding: 20px 0; }
+@media(max-width: 800px) { .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .twoColumns { grid-template-columns: 1fr; } .incident { flex-direction: column; gap: 10px; } }
+@media(max-width: 480px) { .metric { padding: 13px; } .search { align-items: stretch; flex-direction: column; } .filters { gap: 10px; } .filterField { flex: 1; min-width: 105px; } .facts { grid-template-columns: 1fr; } .occurrences { grid-template-columns: 1fr; } .chart { gap: 3px; } .chartColumn { font-size: 8px; } }

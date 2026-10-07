@@ -36,6 +36,8 @@ domain: neutral
 | [a2a-protocol.md](a2a-protocol.md) | 기업 Agent에 업무 위임 | `app/presentation/a2a/` |
 | [auth-boundary.md](auth-boundary.md) | 인증·스코프·PII | `app/infrastructure/auth/` |
 | [web-screen-api.md](web-screen-api.md) | 사용자 웹 접수 화면·온보딩 디스코드 알림 카드의 연결 상태와 API 협의 항목(복구 이메일은 2026-10-03 에 뺌) | `frontend/apps/web/src/features/intake-review/` · `onboarding/` |
+| [admin-screen-api.md](admin-screen-api.md) | 운영 앱 검토 자료·API 계약 협의 요청·백엔드/프론트/통합 상태 | `frontend/apps/admin/` |
+| [dev-console-api.md](dev-console-api.md) | 관리 앱 오류 검색·발생 상세의 표시 요구와 API 협의·연결 상태 | `frontend/apps/dev-console/` |
 
 ## 코드 구조
 
