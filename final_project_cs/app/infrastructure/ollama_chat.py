@@ -22,6 +22,11 @@ class OllamaError(RuntimeError):
     """Ollama 를 못 불렀거나 답이 쓸 수 없는 모양이다."""
 
 
+class OllamaContentError(OllamaError):
+    """서버는 답했는데 **답의 모양이 틀렸다**(JSON 이 아님 · 객체가 아님). `[2026-10-07]` 서버 문제(연결 · 시간 초과 · 5xx · 빈 답)와 구분한다 —
+    모델 서버 넘김 장치(`llm_failover.py`)가 이 한 번만 다음 경로로 넘기고 서킷에는 세지 않는다. 부르는 쪽에는 `OllamaError` 와 같다."""
+
+
 class OllamaChat:
     def __init__(self, *, base_url: str, model: str, timeout: float = 60.0,
                  transport: Callable[..., httpx.Response] | None = None, keep_alive: str = "") -> None:
@@ -32,8 +37,9 @@ class OllamaChat:
         #:  5분 안 쓰이면 내려가서 다음 첫 호출이 30초 가까이 걸렸다(ui 세션 실측 29.8초). 원격 GPU 메모리를 그만큼 잡는다
         self.keep_alive = keep_alive
         self._injected = transport is not None      # 시험이 넣은 가짜 — 받아쓰기도 이것을 쓴다
+        #: ★`[2026-10-07]` 연결은 5초 안에 안 되면 끊는다 — 서버가 꺼졌을 때 읽기 제한(60초)만큼 기다리지 않게(넘김 장치가 빨리 알아야 한다)
         self._post = transport or (lambda url, payload: httpx.post(url, json=payload,
-                                                                  timeout=self.timeout))
+                                                                  timeout=httpx.Timeout(self.timeout, connect=min(5.0, self.timeout))))
 
     def _chat(self, system: str, user: str, *, json_mode: bool) -> str:
         payload: dict[str, Any] = {
@@ -64,9 +70,9 @@ class OllamaChat:
         try:
             value = json.loads(text)
         except ValueError as exc:
-            raise OllamaError(f"JSON 이 아니다: {text[:160]}") from exc
+            raise OllamaContentError(f"JSON 이 아니다: {text[:160]}") from exc
         if not isinstance(value, dict):
-            raise OllamaError("JSON 객체가 아니다")
+            raise OllamaContentError("JSON 객체가 아니다")
         return value
 
     def text(self, system: str, user: str) -> str:
@@ -90,9 +96,9 @@ class OllamaChat:
         try:
             value = json.loads(response.json()["message"]["content"])
         except (ValueError, KeyError, TypeError) as exc:
-            raise OllamaError(f"구조화 답이 JSON 이 아니다: {response.text[:160]}") from exc
+            raise OllamaContentError(f"구조화 답이 JSON 이 아니다: {response.text[:160]}") from exc
         if not isinstance(value, dict):
-            raise OllamaError("구조화 답이 JSON 객체가 아니다")
+            raise OllamaContentError("구조화 답이 JSON 객체가 아니다")
         return value
 
     # ── 예열 `[2026-09-29]` — 식은 모델의 첫 호출이 30초 넘게 걸렸다(ui 세션 실측). 화면이 채팅을 열 때 미리 깨운다 ──
@@ -138,7 +144,7 @@ class OllamaChat:
             if self._injected:
                 response = self._post(f"{self.base_url}/api/chat", payload)
             else:                                       # ★받아쓰기는 쪽당 45초 안팎 — 긴 제한시간
-                response = httpx.post(f"{self.base_url}/api/chat", json=payload, timeout=timeout)
+                response = httpx.post(f"{self.base_url}/api/chat", json=payload, timeout=httpx.Timeout(timeout, connect=5.0))
         except httpx.HTTPError as exc:
             raise OllamaError(f"Ollama 호출 실패: {type(exc).__name__}: {exc}") from exc
         if response.status_code != 200:
@@ -152,14 +158,22 @@ class OllamaChat:
         return content.strip()
 
 
-def from_settings(settings: Any) -> OllamaChat | None:
-    """설정에 주소가 있으면 클라이언트, 없으면 `None`."""
+def from_settings(settings: Any) -> Any:
+    """설정에 주소가 있으면 클라이언트, 없으면 `None`.
+
+    ★`[2026-10-07 사용자 지시]` 스위치(`llm_failover_enabled`)가 켜져 있고 서버용 OpenAI 키가 있으면 **같은 메서드를 가진 `FailoverChat`** 을 돌려준다 —
+    Ollama 가 모두 안 될 때 서버용 키로 자동으로 넘어간다(`llm_failover.py`). 꺼져 있으면 지금까지와 똑같이 `OllamaChat` 이다."""
     base = (getattr(settings, "ollama_base_url", "") or "").strip()
     if not base:
         return None
-    return OllamaChat(base_url=base, model=getattr(settings, "ollama_model", "gemma4:12b"),
+    chat = OllamaChat(base_url=base, model=getattr(settings, "ollama_model", "gemma4:12b"),
                       timeout=float(getattr(settings, "ollama_timeout_seconds", 60.0)),
                       keep_alive=str(getattr(settings, "ollama_keep_alive", "") or ""))
+    if not getattr(settings, "llm_failover_enabled", False):
+        return chat
+    from app.infrastructure.llm_failover import wrap_from_settings
+
+    return wrap_from_settings(chat, settings)
 
 
-__all__ = ["OllamaChat", "OllamaError", "from_settings"]
+__all__ = ["OllamaChat", "OllamaContentError", "OllamaError", "from_settings"]

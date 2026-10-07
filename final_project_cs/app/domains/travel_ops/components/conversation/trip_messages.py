@@ -315,9 +315,11 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         mode = _decision_mode(chat, tenant)
         if mode != "off":
             _stage(progress, "understanding")
+            _clear_model_path()
             decision, failure = _try_decide(conn, store=store, tenant=tenant, trip_id=trip_id, items=items,
                                             message=message, selected=selected_item_id, chat=chat)
             record = decision.record() if decision is not None else {"failed": failure}
+            record = {**record, **_model_path()}               # ★`[2026-10-07]` 어느 경로(로컬 · API)로 답했나 — 넘김 장치가 켜져 있을 때만 들어간다
             if mode == "on":
                 _stage(progress, "applying")
                 with conn.transaction():
@@ -543,6 +545,22 @@ def _decision_mode(chat: Any, tenant: str | None = None) -> str:
 
         mode = str(operator_setting(tenant, "chat.decision_mode") or mode)
     return mode if mode in ("off", "shadow", "on") else "off"
+
+
+def _clear_model_path() -> None:
+    from app.infrastructure import llm_failover
+
+    llm_failover.clear_path()
+
+
+def _model_path() -> dict[str, Any]:
+    """직전 모델 호출의 경로 — `{"model_path": {path, backend, reasons}}`. 넘김 장치가 꺼져 있으면 `{}`(기록에 아무것도 더하지 않는다)."""
+    from app.infrastructure import llm_failover
+
+    path = llm_failover.current_path()
+    if not path:
+        return {}
+    return {"model_path": {"path": path["path"], "backend": path["backend"], "reasons": [list(r) for r in path["reasons"]]}}
 
 
 def _try_decide(conn, *, store: TripStore, tenant: str, trip_id: UUID, items: list[Any], message: str,
