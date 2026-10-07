@@ -8,7 +8,7 @@ import { useT } from "@/lib/settings";
 import { dayTimes, freeText, moveSlack } from "./day-times";
 import { timeline, type CheckRow, type PlanCheckView, type PlanDay, type PlanItem, type PlanMove } from "./model";
 import { MoveModeBox } from "./move-mode";
-import { Act, Checks, NeedsLine, VerdictMark } from "./parts";
+import { Act, Checks, NeedsLine, needsOf, VerdictMark } from "./parts";
 import type { PlanCheckActions } from "./plan-check";
 import { gapPx, GAP_BASE_PX, leadPx } from "./time-plan";
 import type { Grab, TimeEditHandles, TimeKind } from "./use-time-edit";
@@ -160,7 +160,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
           title={t("눌러서 시간 고치기 · 잡고 위아래로 끌어도 돼요", "Press to change the time · or take it and drag up or down")} aria-label={t(`${item.title} 시간 고치기 · 지금 ${item.startsAt || "시간 없음"}`, `Change the time of ${item.title} · now ${item.startsAt || "no time"}`)}>{item.startsAt || "–"}</Act>
       : <span className={styles.time}>{item.startsAt || "–"}</span>}
     <span className={styles.rail} aria-hidden="true"><span className={styles.dot} data-grab={grab ? true : undefined} {...grab} /></span>
-    <article id={`${ctx.prefix}plan-card-${item.id}`} className={styles.card} data-locked={item.locked || undefined} data-pickable={done && !checking && !removed ? true : undefined} aria-labelledby={`${ctx.prefix}plan-item-${item.id}`} aria-busy={checking} onClick={pickCard}>
+    <article id={`${ctx.prefix}plan-card-${item.id}`} className={styles.card} data-locked={item.locked || undefined} data-pickable={done && !checking && !removed ? true : undefined} data-open={done && open && !checking ? true : undefined} aria-labelledby={`${ctx.prefix}plan-item-${item.id}`} aria-busy={checking} onClick={pickCard}>
       {done
         // Once done a card opens and closes (accordion: the heading holds the button).
         ? <div className={styles.cardTop}>
@@ -169,13 +169,12 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
             <h4 className={styles.cardHeading}><button type="button" className={styles.cardHead} aria-expanded={open} aria-controls={`${ctx.prefix}plan-item-${item.id}-checks`} onClick={() => ctx.onPick(item.id)}>
               <span className={styles.cardName}>
                 <span id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</span>
-                {changedFrom && <small className={styles.cardWritten} data-changed>{t(`바뀜 · 이전 ${changedFrom}`, `Changed · was ${changedFrom}`)}</small>}
                 {item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}
               </span>
             </button></h4>
             {/* ★`[2026-10-07 사용자 지시 — 수정 · 삭제는 제목 옆 같은 줄]` The edit and delete buttons always stand on the name's line; the state beside them only when it is just the state - with a 「되돌리기」 of the time it goes under the name. */}
             <span className={styles.cardTools}>
-            {!adjusted && status}
+            {status}
             <Act id={`${ctx.prefix}plan-edit-${item.id}`} className={styles.icon} why={changeWhy} explain={explain} onPress={() => ctx.onChange(item)} aria-label={t(`${item.title} 수정`, `Edit ${item.title}`)}><Pencil size={16} strokeWidth={1.8} aria-hidden="true" /></Act>
             {removed
               ? <button type="button" id={`${ctx.prefix}plan-restore-${item.id}`} className={styles.icon} data-restore onClick={() => ctx.onRestore(item)} aria-label={t(`${item.title} 삭제 되돌리기`, `Undo deleting ${item.title}`)} title={t("되돌리기", "Undo")}><Undo2 size={16} strokeWidth={1.8} aria-hidden="true" /></button>
@@ -183,10 +182,12 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
             </span>
           </div>
         : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
-      {done && adjusted && <div className={styles.cardState}>{status}
-        <Act className={styles.undoTime} why={frozen} explain={explain} onPress={() => ctx.onRevertTime(item)} aria-label={t(`${item.title} 시간 되돌리기`, `Put back the time of ${item.title}`)} title={t("시간을 처음으로 되돌리기", "Put the time back")}><Undo2 size={13} strokeWidth={1.8} aria-hidden="true" />{t("되돌리기", "Undo")}</Act>
+      {/* ★`[2026-10-07 사용자 지시 — 총 두 줄]` The second line: 「바뀜 · 이전 …」 with its 「되돌리기」 beside it, and on a shut card what is still the customer's to deal with (「✕ 장소」). */}
+      {done && !removed && (changedFrom || adjusted || (!open && !checking && needsOf(rows).length > 0)) && <div className={styles.cardSub}>
+        {changedFrom && <small className={styles.cardWritten} data-changed>{t(`바뀜 · 이전 ${changedFrom}`, `Changed · was ${changedFrom}`)}</small>}
+        {adjusted && <Act className={styles.undoTime} why={frozen} explain={explain} onPress={() => ctx.onRevertTime(item)} aria-label={t(`${item.title} 시간 되돌리기`, `Put back the time of ${item.title}`)} title={t("시간을 처음으로 되돌리기", "Put the time back")}><Undo2 size={13} strokeWidth={1.8} aria-hidden="true" />{t("되돌리기", "Undo")}</Act>}
+        {!open && !checking && !changedFrom && !adjusted && <NeedsLine rows={rows} inline />}{/* with a 「바뀜」 line the chips would make a third line: 「확인 필요」 on the name's line says it, the open card lists them */}
       </div>}
-      {done && !open && !removed && !checking && <NeedsLine rows={rows} />}
       {done && ctx.time?.id === item.id && ctx.time.kind === "start" && !ctx.time.direct && !removed && <TimeEditor item={item} ui={ctx.time} />}
       {open && !removed && <div id={`${ctx.prefix}plan-item-${item.id}-checks`} data-details>
         {rows.length

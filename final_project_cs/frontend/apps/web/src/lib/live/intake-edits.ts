@@ -24,6 +24,8 @@ export const itemEdit = {
   placePicked: (item: Target, place: PickedPlace) => edit(item, "place", place),
   /** 「장소 없음」 — free time; its legs stay `waiting` and do not block registering. */
   placeNone: (item: Target) => edit(item, "place", { none: true }),
+  /** `[2026-10-07]` What kind of stop it is — `dining` goes with a meal place picked for an activity stop (`basis: meal_inferred`), or the meal lands in an activity. */
+  kind: (item: Target, kind: string) => edit(item, "kind", kind),
   date: (item: Target, isoDate: string) => edit(item, "date", isoDate),
   starts: (item: Target, hhmm: string) => edit(item, "starts_at", hhmm),
   ends: (item: Target, hhmm: string) => edit(item, "ends_at", hhmm),

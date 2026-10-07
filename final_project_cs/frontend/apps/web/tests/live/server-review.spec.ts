@@ -137,6 +137,25 @@ test("같은 판에서는 대체 후보를 한 번만 받는다 — 수정 화�
   expect((await server.received("GET", "/candidates")).length).toBe(1);                         // 두 번째는 받아 둔 것
 });
 
+test("대체 후보는 서버가 고른 단(같은 종류 · 비슷한 경험 · 식사 시간 식당)과 이유 한 문장을 보이고, 식사 시간 식당을 고르면 일정 종류도 식사로 같이 보낸다", async ({ page, request }) => {
+  // `[2026-10-07 서버 c0ca7054]` 후보마다 basis · reason. meal_inferred 를 고르면 items[i].kind = "dining" 을 장소와 함께(안 보내면 식당이 활동 일정에 들어간다)
+  const server = await openFinished(page, request, { candidateBasis: "on" });
+  await page.getByRole("button", { name: "올리브영 수정" }).click();
+  await expect(page.getByText("같은 종류", { exact: true })).toBeVisible();
+  await expect(page.getByText("올리브영 인사동점과 같은 중분류(관광공사 분류)의 곳이에요 · 경복궁에서 450m · 다음 일정까지 8분 여유가 있어요")).toBeVisible();
+  await page.getByRole("button", { name: "후보 C", exact: true }).click();                    // 셋째 후보 카드로
+  const meal = page.getByRole("article", { name: "광장시장 순희네 빈대떡" });
+  await expect(meal.getByText("식사 시간 식당")).toBeVisible();
+  await expect(meal.getByText("점심 시간의 시장 일정이라 시장 안 식당도 함께 보여 드려요")).toBeVisible();
+  await meal.getByRole("button", { name: "이 장소로 바꾸기" }).click();
+  await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);
+  const [edit] = await server.received("POST", "/edits");
+  expect((edit.body as { edits: { field: string; value: unknown }[] }).edits).toEqual(expect.arrayContaining([
+    expect.objectContaining({ field: "items[1].place" }),
+    { source_id: "s1", field: "items[1].kind", value: "dining" },
+  ]));
+});
+
 test("장소 검색과 사진: 검색 결과가 나오고, 관광공사 번호가 있는 곳은 사진과 「ⓒ한국관광공사」 출처가 보인다", async ({ page, request }) => {
   await openFinished(page, request);
   await page.getByRole("button", { name: "광장시장 수정" }).click();

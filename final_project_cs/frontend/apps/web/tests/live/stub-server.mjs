@@ -134,6 +134,8 @@ const DEFAULTS = {
   webhookTest: "ok",
   // why the candidates list is short or empty (`notes` of `GET …/candidates`, server 8b0d4c88): [] | ["booked_needs_name"] (no candidates) | ["no_same_kind"] …
   candidateNotes: [],
+  // `[2026-10-07]` "on": candidates carry `basis` (same_kind · similar_experience · meal_inferred) and `reason`, as the server does since c0ca7054
+  candidateBasis: "off",
   // the whole-plan recommendation (`POST …/autofix`): "on" | "none" (it finds nothing to change although something needs a look) | "unknown_from" (what it changes had no known place before: it cannot be put back)
   autofix: "on",
   // social sign-in (`/v1/web/auth/*`, `wiki/records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md`): "on" | "off" (an older server: 404) | "none" (no provider set up)
@@ -1170,7 +1172,14 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/candidates` && request.method === "GET") {
     const index = Number(url.searchParams.get("index"));
     const item = board.items.find((entry) => entry.index === index) ?? board.items[0];
-    return json(response, 200, { revision: board.revision, item: item.id, current: item.place, reference: { before: "경복궁", after: "광장시장" }, candidates: scenario.candidateNotes.length ? [] : CANDIDATES, notes: scenario.candidateNotes }, origin);
+    // "on" (2026-10-07 서버 c0ca7054): each candidate says which step of the ladder it came from and why; a meal place where a market stands at a meal time is `meal_inferred`
+    const laddered = scenario.candidateBasis === "on" ? [
+      { ...CANDIDATES[0], basis: "same_kind", similarity: 2, reason: "올리브영 인사동점과 같은 중분류(관광공사 분류)의 곳이에요 · 경복궁에서 450m · 다음 일정까지 8분 여유가 있어요" },
+      { ...CANDIDATES[1], basis: "similar_experience", experience: "indoor_exhibit", reason: null },
+      { rank: 3, place: { ...place("광장시장 순희네 빈대떡", 37.5701, 126.9996, { source: "kakao", kind: "dining" }), address: "서울 종로구 종로32길", category: "음식점", ref: null }, distance_m: 600, reference: "광장시장",
+        rows: [row("place", "ok", "카카오 지도 정보로 찾았어요")], fits: true, status: "ok", slack: { before: 6, after: 10 }, estimated: false, basis: "meal_inferred", reason: "점심 시간의 시장 일정이라 시장 안 식당도 함께 보여 드려요" },
+    ] : CANDIDATES;
+    return json(response, 200, { revision: board.revision, item: item.id, current: item.place, reference: { before: "경복궁", after: "광장시장" }, candidates: scenario.candidateNotes.length ? [] : laddered, notes: scenario.candidateNotes }, origin);
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/place-search` && request.method === "GET") {
     const q = (url.searchParams.get("q") ?? "").replace(/\s/g, "");

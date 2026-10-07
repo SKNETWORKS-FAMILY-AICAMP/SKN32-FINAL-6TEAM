@@ -26,15 +26,17 @@ export function Checks({ id, rows }: { id?: string; rows: CheckRow[] }) {
  * `[2026-10-07 사용자 지시 — 카드의 둘째 줄에 사용자 입력이 필요한 요소를 ✕ 장소 처럼]` What of a stop the customer still has to deal with, one chip each (「✕ 장소」 · 「! 시간」), so a card that is shut still says what is wrong with it.
  * Only the checks that went wrong (`bad` · `warn`) - a fine one, one still being checked and one waiting on the place (`unknown`) are not the customer's to do.
  */
-export function NeedsLine({ rows }: { rows: CheckRow[] }) {
+export function needsOf(rows: CheckRow[]): CheckRow[] { return rows.filter((row) => row.result === "bad" || row.result === "warn"); }
+export function NeedsLine({ rows, inline = false }: { rows: CheckRow[]; inline?: boolean }) {
   const t = useT();
-  const wrong = rows.filter((row) => row.result === "bad" || row.result === "warn");
+  const wrong = needsOf(rows);
   if (!wrong.length) return null;
-  return <p className={styles.needs}>{wrong.map((row, index) =>
+  const Box = inline ? "span" : "p";
+  return <Box className={inline ? styles.needsInline : styles.needs}>{wrong.map((row, index) =>
     <span key={`${row.kind}-${index}`} className={styles.need} data-result={row.result}>
       <span className={styles.mark} data-result={row.result} aria-hidden="true">{GLYPH[row.result]}</span>
       <b>{kindLabel(row.kind, t)}</b><span className="sr-only">{resultLabel(row.result, t)}</span>
-    </span>)}</p>;
+    </span>)}</Box>;
 }
 
 /** ★`[2026-10-04 사용자 지시]` Only 「확인 필요」 is said: a stop that is simply fine (or was adjusted a little by the server) carries no word — the old 「조정」 told no one anything. */

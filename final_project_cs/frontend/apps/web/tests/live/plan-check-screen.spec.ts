@@ -317,6 +317,18 @@ test("핀을 누르면 「위치 미정 · 올리브영」 자리에 그 핀의 
 
 // ── 카드 도구 ────────────────────────────────────────────────────────────────
 
+test("카드의 수정 · 삭제는 카드를 가리키거나(마우스) 펼쳤을 때만 보이고, 「확인 필요」 표시와 잠금은 늘 보인다", async ({ page, request }) => {
+  // `[2026-10-07 사용자 지시]` 지도 단추처럼 — 늘 떠 있지 않고 필요할 때만
+  await openFinished(page, request);
+  const card = page.locator('li[data-entry-id="0-2"] article');
+  const edit = page.getByRole("button", { name: "광장시장 수정" });
+  await page.mouse.move(5, 5);
+  await expect.poll(() => edit.evaluate((element) => getComputedStyle(element).opacity)).toBe("0");
+  await expect(page.locator('li[data-entry-id="0-1"]').getByText("확인 필요")).toBeVisible();
+  await card.hover();
+  await expect.poll(() => edit.evaluate((element) => getComputedStyle(element).opacity)).toBe("1");
+});
+
 test("카드의 「자동 추천」은 시간이 맞는 첫 후보로 바꾸고, 바꾼 장소를 좌표째 서버로 보낸다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   await head(page, "올리브영").click();

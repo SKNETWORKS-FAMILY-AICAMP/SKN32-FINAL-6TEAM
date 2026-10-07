@@ -127,5 +127,7 @@ export function planCandidate(candidate: Candidate, itemId: string, source: Plan
     distance: typeof candidate.distance_m === "number" && candidate.reference ? { km: candidate.distance_m / 1000, from: candidate.reference } : null,
     coordinates: located(candidate.place) ? { lat: candidate.place.latitude, lng: candidate.place.longitude } : null,
     info, checks: candidate.rows.map(row),
+    ...(candidate.basis ? { basis: candidate.basis } : {}),
+    ...(typeof candidate.reason === "string" && candidate.reason.trim() ? { reason: candidate.reason.trim() } : {}),
   };
 }

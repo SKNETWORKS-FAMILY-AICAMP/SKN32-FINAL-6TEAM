@@ -126,11 +126,13 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       } catch { /* a photo that cannot be fetched is just not shown */ }
       return info;
     }
-    const replaceWith = async (id: string, edit: IntakeEdit) => {
+    const replaceWith = async (id: string, edit: IntakeEdit, asMeal = false) => {
       const item = itemOf(id);
       const back = restorePlace(targetOf(item), item.place);
-      await save([edit], true);
-      undoEdits.current = back ? [back] : null;
+      // A meal place picked for an activity stop makes it a meal (the server asks for the kind with the place); the undo puts the kind back too.
+      const meal = asMeal && item.kind !== "dining";
+      await save(meal ? [edit, itemEdit.kind(targetOf(item), "dining")] : [edit], true);
+      undoEdits.current = back ? (meal && item.kind ? [back, itemEdit.kind(targetOf(item), item.kind)] : [back]) : null;
     };
 
     return {
@@ -211,7 +213,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const place = pickable.current.get(choice.candidate.id);
         const picked = place && pickedPlace(place);
         // A place the server gave coordinates for is taken as it is; one without them is looked up again by its name.
-        return replaceWith(id, picked ? itemEdit.placePicked(target, picked) : itemEdit.placeByName(target, choice.candidate.name));
+        return replaceWith(id, picked ? itemEdit.placePicked(target, picked) : itemEdit.placeByName(target, choice.candidate.name), choice.candidate.basis === "meal_inferred");
       },
       autoRecommend: async (id) => {
         const item = itemOf(id);
@@ -219,7 +221,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const best = found.candidates.find((candidate) => candidate.fits && pickedPlace(candidate.place));
         const picked = best && pickedPlace(best.place);
         if (!picked) throw new LiveError("no_fitting_place", t("시간이 맞는 대체 후보가 없어요 · 수정에서 장소를 직접 골라 주세요", "No alternative fits the time — pick a place in Edit"));
-        await replaceWith(id, itemEdit.placePicked(targetOf(item), picked));
+        await replaceWith(id, itemEdit.placePicked(targetOf(item), picked), best.basis === "meal_inferred");
       },
       // Show how 「전체 자동 추천」 would change the plan — saves nothing (the server's dry run), so scrolling or pressing never changes the plan.
       previewRecommendAll: async (): Promise<AutoResult> => {

@@ -82,6 +82,9 @@ export interface PlanCandidate {
   coordinates: Coordinates | null;
   info: PlaceInfo | null;
   checks: CheckRow[];
+  /** `[2026-10-07]` Which step of the server's ladder it came from, and its one-sentence reason (both only when the server sent them). */
+  basis?: "same_kind" | "similar_experience" | "meal_inferred" | null;
+  reason?: string | null;
 }
 
 /** The way from one place to the next on the same day. */

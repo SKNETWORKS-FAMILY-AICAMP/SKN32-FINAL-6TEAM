@@ -139,6 +139,14 @@ export interface Candidate {
   slack: { before: number | null; after: number | null };
   /** One of the legs in or out is a straight-line guess. */
   estimated: boolean;
+  /**
+   * `[2026-10-07 서버 c0ca7054 — 대체 후보 세 단]` Which step of the ladder it came from: `same_kind` (the same kind, tourism classes) · `similar_experience` · `meal_inferred` (a meal place where a market stands
+   * at a meal time — picking it makes the stop a meal: send `items[i].kind = "dining"` with the place) · null (a map search …). `reason`: the server's one sentence, only what it knows.
+   */
+  basis?: "same_kind" | "similar_experience" | "meal_inferred" | null;
+  reason?: string | null;
+  similarity?: number | null;
+  experience?: string | null;
 }
 
 export interface CandidateList {
