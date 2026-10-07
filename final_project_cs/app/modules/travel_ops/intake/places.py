@@ -59,6 +59,8 @@ class Resolved:
     longitude: float | None = None
     place_id: str | None = None         # 우리 장소 표의 id(1·3단계)
     content_id: str | None = None       # 관광공사 id
+    #: ★`[2026-10-07]` 요식 원장 가게 id — 원장에서 찾은 곳(관광공사 id 가 없어도). 등록 때 이 id 로 원장과 잇는다
+    dining_place_uid: str | None = None
     needs_review: bool = False
     note: str | None = None
     tried: list[str] = field(default_factory=list)
@@ -167,6 +169,9 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
             found = _tour(tour, query, blocked)
             tried.append(f"tour_api:{query}")
             if found is not None:
+                shop = _dish_inside(dining, query, title, found, tried)
+                if shop is not None:
+                    return shop
                 done = _from_tour(found, query, title, tried)
                 done.item_kind = _food_hint(query, title, full_hits)
                 return done
@@ -277,12 +282,38 @@ def _from_tour(found: dict[str, Any], query: str, title: str, tried: list[str], 
         note.append(f"원문 「{title}」에서 「{query}」로 좁혔다")
     if via:
         note.append(f"카카오로 「{via}」를 찾아 {'요식 원장' if method == 'dining_ledger' else '관광공사'}에서 확인했다")
+    if found.get("note"):
+        note.append(str(found["note"]))         # 원장이 정확히 같은 이름 하나가 아닌 곳을 낸 이유(지점 · 앞부분 · 오타 · 메뉴)
     return Resolved("resolved", method, found.get("matched_title"), query,
                     KIND_BY_CONTENT_TYPE.get(str(found.get("content_type_id")), "activity"),
                     found.get("latitude"), found.get("longitude"), content_id=found.get("content_id"),
-                    # ★카카오로 찾은 이름이 원문과 다르면(「토속촌」 → 「토속촌삼계탕」) 확인을 받는다
-                    needs_review=not _plain(query, title) or (via is not None and normalize(via) != normalize(query)),
+                    dining_place_uid=found.get("dining_place_uid"),
+                    # ★카카오로 찾은 이름이 원문과 다르면(「토속촌」 → 「토속촌삼계탕」) 확인을 받는다.
+                    #   ★`[2026-10-07]` 원장이 확인 필요라고 한 곳(정확히 같은 이름 하나가 아님)도
+                    needs_review=(not _plain(query, title) or (via is not None and normalize(via) != normalize(query))
+                                  or bool(found.get("needs_review"))),
                     tried=tried, note=" · ".join(note) or None)
+
+
+def _dish_inside(dining: Any, query: str, title: str, place: dict[str, Any], tried: list[str]) -> Resolved | None:
+    """「광장시장 빈대떡」 — 좁혀 찾은 장소(광장시장) 좌표 근처에서 **뗀 말(빈대떡)이 이름에 든 원장 가게**. `[2026-10-07]`
+
+    ★뗀 말에 메뉴 말이 있을 때만(`ledger.dish_words`). 원장 가게가 없으면 None — 예전처럼 좁힌 장소를 쓴다.
+    ★언제나 확인 필요다 — 원문은 가게 이름을 말하지 않았다(「순희네빈대떡」을 원문에 없는 가게로 확정하던 사고를 되풀이하지 않는다).
+    ☆전에는 좁힌 장소(시장 · 골목)를 그대로 골라 식사가 활동이 됐다(장소 찾기 평가 v0 — 008 · 009 · 034).
+    """
+    finder = getattr(dining, "find_dish_near", None)
+    if finder is None or query == title or place.get("latitude") is None:
+        return None
+    dropped = title[len(query):].strip()
+    shop = finder(dropped, place["latitude"], place["longitude"])
+    tried.append(f"dining_ledger:{query} 근처 {dropped}")
+    if shop is None:
+        return None
+    done = _from_tour(shop, title, title, tried, method="dining_ledger")
+    done.kind, done.needs_review = "dining", True
+    done.note = " · ".join(filter(None, [f"「{query}」 안의 가게로 보고 찾았다", done.note]))
+    return done
 
 
 def _plain(query: str, title: str) -> bool:

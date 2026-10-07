@@ -367,7 +367,8 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, ki
     if found.status != "resolved":
         raise IntakeRejected("place_not_found", f"「{name}」: {found.note}")
     resolved = {"name": found.name, "kind": found.kind, "latitude": found.latitude, "longitude": found.longitude,
-                "place_id": found.place_id, "content_id": found.content_id, "source": found.evidence()["source"]}
+                "place_id": found.place_id, "content_id": found.content_id, "source": found.evidence()["source"],
+                **({"dining_place_uid": found.dining_place_uid} if found.dining_place_uid else {})}
     return resolved, {**found.evidence(), "typed": name}, found.note
 
 
@@ -482,7 +483,8 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
         if found.status == "resolved":
             value = {"name": found.name, "kind": found.kind, "latitude": found.latitude,
                      "longitude": found.longitude, "place_id": found.place_id, "content_id": found.content_id,
-                     "source": evidence["source"]}
+                     "source": evidence["source"],
+                     **({"dining_place_uid": found.dining_place_uid} if found.dining_place_uid else {})}
         elif found.candidates:
             # ★설계서 §4-2 — 이름이 특정하지 않으면 종류가 맞는 후보 중 **같은 날 앞뒤 일정에 가장 가까운 곳** 하나.
             #   선택지를 나열하지 않는다. 고른 이유(거리)를 근거에 남기고 확인을 받는다
