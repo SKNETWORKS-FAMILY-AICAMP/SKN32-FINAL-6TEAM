@@ -134,6 +134,13 @@ describe("live trip gateway", () => {
     expect(trip.moves).toEqual([{ id: "m", fromId: TRIP.items[0].item_id, toId: TRIP.items[1].item_id, date: "2026-10-16", departAt: "18:25", arriveAt: "18:50", title: "경복궁 → 명동난타극장" }]);
   });
 
+  it("reads a stop's photo ref when the server sends one (place_ref), and has none when it is empty or missing", async () => {
+    replies.push({ ...TRIP, items: [{ ...TRIP.items[0], place_ref: " tour:126508 " }, { ...TRIP.items[1], place_ref: "  " }] });
+    const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(trip.stops[0].placeRef).toBe("tour:126508");
+    expect(trip.stops[1]).not.toHaveProperty("placeRef");
+  });
+
   it("reads the trip's name the server keeps", async () => {
     replies.push({ ...TRIP, title: " 내 여행 " });
     expect((await createLiveGateway().getTrip(TRIP.trip_id, "ko")).title).toBe("내 여행");

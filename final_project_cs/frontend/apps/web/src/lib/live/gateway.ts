@@ -22,6 +22,11 @@ interface ServerItem {
   map_url?: string | null;
   /** `[2026-10-06]` Falls in a disaster pause. */
   paused?: boolean;
+  /**
+   * `[2026-10-08 웹 제안 — 서버에 아직 없음]` The place's ref for its registered photos (`GET /v1/web/places/photos?ref=`), as the plan check's candidates give it: 「tour:<관광공사 콘텐츠 ID>」.
+   * The server keeps that ID on the place (`source_content_id`) but does not send it with a trip yet — asked of the backend (`wiki/external/web-screen-api.md`).
+   */
+  place_ref?: string | null;
 }
 /** ★`[2026-09-29]` 서버에 요청한 모양(요식 원장·관광공사에서 읽은 장소 사실). 서버가 아직 안 보내면 상세에 안 나온다. */
 interface ServerPlaceInfo {
@@ -79,6 +84,7 @@ function stop(item: ServerItem, t: Translate): TripStop {
     placeInfo: placeInfo(item.place_info, t),
     mapUrl: mapLink(item.map_url),
     ...(item.paused === true ? { paused: true } : {}),
+    ...(text(item.place_ref) ? { placeRef: text(item.place_ref) } : {}),
   };
 }
 

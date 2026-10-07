@@ -23,6 +23,8 @@ export interface TripStop {
   placeInfo?: PlaceInfo | null;
   /** `[2026-10-06]` The trip is paused for a disaster and this stop falls in the pause (a day's pause pauses only that day's stops). The plan itself is not changed. */
   paused?: boolean;
+  /** `[2026-10-08]` The place's ref for its registered photos (「tour:<ID>」) — only when the server sends one (`place_ref`, asked of the backend). */
+  placeRef?: string;
 }
 
 /**

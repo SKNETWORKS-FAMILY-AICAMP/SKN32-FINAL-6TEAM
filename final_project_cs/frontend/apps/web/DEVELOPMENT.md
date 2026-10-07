@@ -527,3 +527,12 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - **알림 문장 속 주소**: 서버가 문장에 싣는 계획서 주소를 채팅과 같은 규칙(`LinkedText`, https 만)으로 링크로. 로컬 서버(http)의 주소는 그대로 글자다.
 - **이동 줄이 길찾기만 보이는 까닭**(사용자 질문): 화면은 계획 확인 화면과 같은 이동 줄이고 서버가 주는 만큼 그린다. 같은 계획에서 접수의 경로선은 5개인데 등록한 여행의 경로선은 0개이고 이동 항목도 없어서, 여행 화면에서는 「다음 일정으로 · 지도 앱에서 길찾기」만 남는다 — 백엔드 요청(등록 뒤에도 이동 정보).
 - 시험: `trip-title.spec.ts`(카드 머리 · 출처 한 번 · 상세 보기는 펼친 뒤), `trip-center.spec.ts`(알림 속 https 링크 · http 는 글자). 결과(2026-10-08): `npm run check` 통과(vitest 544), 여행 화면을 거치는 mock 서버 시험 174 통과(`trip*` · `maps` · `my-location` 84 + `route-lines` · `flow` · `session` · `trip-list` · `layout-mobile` · `menu` · `onboarding` · `progress` 90, 5 건너뜀은 지도 제공자 빌드 전용). 전체 `test:live` 는 이번에 다시 돌리지 않았다.
+
+## 2026-10-08 (이어서) — 상세 보기의 사진
+
+사용자 지적: 계획 확인 화면의 수정 화면에는 등록된 사진이 나오는데 여행의 상세 보기에는 안 나온다. 확인해 보니 사진 호출(`GET /v1/web/places/photos?ref=tour:<콘텐츠 ID>`)은 접수와 상관없는 공용 호출이고, 서버는 등록할 때 그 ID 를 장소 속성 `source_content_id` 에 저장한다. 다만 여행 조회의 일정(`trip_api.py` `_item_view`)이 그 값을 내보내지 않아 화면이 부를 수 없었다(앞서 적은 「서버가 사진을 주지 않는다」는 부정확했다).
+
+- `lib/live/gateway.ts`: 일정의 `place_ref`(제안 칸 — 서버에 아직 없음)를 `TripStop.placeRef` 로 읽는다.
+- `trip-detail.tsx` `Photos`: 보는 일정에 「tour:…」 ref 가 있으면 계획 확인 화면과 같은 호출 · 같은 사진 칸(시트를 올리라는 안내 · 「등록된 사진 · 이름 N장」 · 출처를 붙인 설명)으로 보인다. 저장하지 않고 부를 때마다 받는다(관광공사 사진 규칙). ref 가 없으면 지금처럼 「장소 사진은 준비 중이에요」, 받는 중 · 실패 · 빈 결과는 각각 그렇게 말한다.
+- 백엔드 요청: 여행 응답의 일정마다 `place_ref` 한 칸([연동 문서](../../../wiki/external/web-screen-api.md) 요청 ③). 서버 코드는 손대지 않았다 — 그 칸이 오면 화면은 그대로 사진을 띄운다.
+- 시험: 단위 `gateway.test.ts`(place_ref 읽기), mock 서버 시험 `trip-title.spec.ts`(ref 가 있으면 사진 1장 · 호출 한 번, 없는 일정은 부르지 않고 준비 중). 실서버로는 ref 가 없어 확인할 수 없다.

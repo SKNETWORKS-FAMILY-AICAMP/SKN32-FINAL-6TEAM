@@ -173,3 +173,27 @@ test("일정 카드는 접혀 있으면 「상세 보기」가 없고 ＋ 가 �
   await page.locator("#stop-button-i-b").click();                                                        // 이름을 눌러 접으면 다시 없다
   await expect(detail).toHaveCount(0);
 });
+
+test("상세 보기의 사진: 일정에 장소 ref(place_ref)가 오면 계획 확인 화면과 같은 호출로 등록된 사진을 보이고, 없으면 준비 중이라 말한다", async ({ page, request }) => {
+  // `[2026-10-08]` 실서버의 여행 응답에는 아직 place_ref 가 없다(백엔드 요청) — 여기서 붙여 화면의 몫만 본다. 사진 호출은 mock 서버의 `GET /v1/web/places/photos`.
+  const server = mockServer(request);
+  await page.route(`**/v1/web/trips/${TRIP_ID}`, async (route) => {
+    if (route.request().method() !== "GET") { await route.continue(); return; }
+    const response = await route.fetch();
+    const trip = await response.json();
+    trip.items = (trip.items as { item_id: string }[]).map((item) => item.item_id === "i-b" ? { ...item, place_ref: "tour:126508" } : item);
+    await route.fulfill({ response, json: trip });
+  });
+  await openTrip(page);
+  await page.locator("#stop-button-i-b").click();
+  await page.getByRole("button", { name: "경복궁 관람 상세 보기" }).click();
+  const photos = page.getByRole("region", { name: /등록된 사진 · 경복궁 관람/ });
+  await expect(photos.getByRole("img", { name: "경복궁_1 ⓒ한국관광공사" })).toBeVisible();
+  await expect(photos).toContainText("1장");
+  await expect(page.getByRole("button", { name: "시트를 위로 올리면 경복궁 관람 사진 1장 ↑" })).toBeVisible();
+  expect((await server.received("GET", "/places/photos")).map((entry) => entry.query)).toEqual(["?ref=tour%3A126508"]);
+  // ref 가 없는 일정(아침 식당)으로 넘기면 부르지 않고 준비 중이라 말한다
+  await page.getByRole("group", { name: "일정 고르기" }).getByRole("button", { name: "1. 아침 식당" }).click();
+  await expect(page.getByRole("region", { name: /등록된 사진 · 아침 식당/ })).toContainText("등록된 사진이 없어요 · 장소 사진은 준비 중이에요");
+  expect(await server.received("GET", "/places/photos")).toHaveLength(1);
+});
