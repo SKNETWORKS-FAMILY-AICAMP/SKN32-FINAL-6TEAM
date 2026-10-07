@@ -330,7 +330,7 @@ def nearby_shops(conn, tenant_id: str, around: list[tuple[float, float]], *, rad
             "SELECT p.place_uid, p.name_ko, p.lat, p.lng, "
             "       (SELECT min(r.external_id) FROM dining.dn_source_record r "
             "         WHERE r.place_uid = p.place_uid AND r.source_code = 'tourapi_kor_food' "
-            "           AND r.external_id IS NOT NULL), "
+            "           AND r.external_id IS NOT NULL), p.category, "
             "       min(dining.distance_m(p.lat, p.lng, pts.lat, pts.lng)) AS d "
             "FROM dining.dn_place p CROSS JOIN pts "
             "WHERE p.record_status <> 'closed' AND NOT p.is_synthetic "
@@ -339,14 +339,15 @@ def nearby_shops(conn, tenant_id: str, around: list[tuple[float, float]], *, rad
             "  AND NOT EXISTS (SELECT 1 FROM dining.dn_core_place_link l "
             "                   WHERE l.tenant_id = %s AND l.place_uid = p.place_uid "
             "                     AND l.core_place_id::text = ANY(%s::text[])) "
-            "GROUP BY p.place_uid, p.name_ko, p.lat, p.lng "
+            "GROUP BY p.place_uid, p.name_ko, p.lat, p.lng, p.category "
             "ORDER BY d, p.place_uid LIMIT %s",
             ([float(a) for a, _ in around], [float(b) for _, b in around], radius_m,
              tenant_id, [str(i) for i in (visible_core_ids or [])], limit))
         rows = cur.fetchall()
+    # ★`[2026-10-07]` 큰 종류(`category` — 한식 · 카페디저트 · 미상 …)를 싣는다 — 대체 순위의 「비슷한 곳」(`meal_likeness`)
     return [{"place_uid": str(uid), "name": name, "latitude": float(lat), "longitude": float(lng),
-             "content_id": content_id, "distance_m": float(d)}
-            for uid, name, lat, lng, content_id, d in rows]
+             "content_id": content_id, "category": category, "distance_m": float(d)}
+            for uid, name, lat, lng, content_id, category, d in rows]
 
 
 def link_core_place_to(conn, tenant_id: str, core_place_id: str, place_uid: str) -> None:
