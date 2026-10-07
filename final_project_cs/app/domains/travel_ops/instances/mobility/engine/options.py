@@ -15,6 +15,7 @@
 """
 from __future__ import annotations
 
+from . import express as _EX
 import collections
 import heapq
 import json
@@ -548,7 +549,7 @@ def chosen_departures(v, leg, lr, day_type):
     for d, verd, _f in cands:
         if d.min != lr.depart_min:
             continue
-        ride = v.lo.travel_min_on_path(line, verd.path, b)
+        ride = _EX.ride_of(v.lo, line, d, verd, a, b)
         if ride is None or d.min + math.ceil(ride) != lr.arrive_min:
             continue
         out.append((d, verd))

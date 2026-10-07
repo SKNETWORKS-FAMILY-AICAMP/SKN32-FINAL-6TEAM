@@ -66,6 +66,7 @@
 """
 from __future__ import annotations
 
+from . import express as _EX
 import statistics
 import argparse
 import collections
@@ -258,7 +259,7 @@ class Estimator:
         for dep, pv, _full in cands:
             if dep.min != dep_min:
                 continue
-            ride = self.v.lo.travel_min_on_path(line, pv.path, to)
+            ride = _EX.ride_of(self.v.lo, line, dep, pv, frm, to)
             if ride is not None and arr_min is not None and dep.min + math.ceil(ride) == arr_min:
                 dirs.add(dep.dir)
         return dirs.pop() if len(dirs) == 1 else None
