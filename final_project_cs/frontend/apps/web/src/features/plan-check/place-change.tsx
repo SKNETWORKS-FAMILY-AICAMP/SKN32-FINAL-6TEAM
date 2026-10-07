@@ -154,7 +154,8 @@ function CandidateCard({ candidate, current, index, active, applyWhy, explain, o
   // An id may not hold spaces (`aria-labelledby` reads them as several ids — a place named 「광장시장 순희네 빈대떡」 left its card with no name).
   const headingId = `plan-change-card-${candidate.id.replace(/\s+/g, "_")}`;
   const step = candidate.basis === "same_kind" ? t("같은 종류", "Same kind") : candidate.basis === "similar_experience" ? t("비슷한 경험", "Similar experience")
-    : candidate.basis === "meal_inferred" ? t("식사 시간 식당", "Meal-time place") : null;
+    : candidate.basis === "meal_inferred" ? t("식사 시간 식당", "Meal-time place") : candidate.basis === "lodging" ? t("숙소", "Stay")
+      : candidate.basis === "lodging_meal" ? t("숙소 안 식사", "Meal at the stay") : candidate.basis === "taste" ? t("취향 추천", "For your taste") : null;
   return <article className={styles.changeCard} data-active={active || undefined} aria-labelledby={headingId}>
     <div className={styles.changeTop}>
       <span className={styles.chip} data-source={candidate.source}>{chip}</span>

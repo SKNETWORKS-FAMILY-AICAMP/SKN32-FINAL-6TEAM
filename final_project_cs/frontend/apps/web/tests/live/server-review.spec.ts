@@ -156,6 +156,21 @@ test("대체 후보는 서버가 고른 단(같은 종류 · 비슷한 경험 ·
   ]));
 });
 
+test("이름 없는 「호텔」 줄은 숙소와 숙소 안 식사가 짝으로 나오고(꼬리표 「숙소」 · 「숙소 안 식사」), 숙소 안 식사를 고르면 일정 종류를 식사로 같이 보낸다", async ({ page, request }) => {
+  // `[2026-10-07 사용자 지시 · 서버 90d9e403]` 그냥 「호텔」은 아침에 나서는 숙소일 수도, 그 안에서 조식을 먹을 수도 있다 — 둘 다 후보에
+  const server = await openFinished(page, request, { candidateBasis: "lodging" });
+  await page.getByRole("button", { name: "올리브영 수정" }).click();
+  await page.getByRole("button", { name: "후보 A", exact: true }).click();
+  await expect(page.getByText("숙소", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "후보 B", exact: true }).click();
+  await expect(page.getByText("숙소 안 식사", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("숙소 안 식당이 있는지는 확인하지 못했어요")).toBeVisible();
+  await page.getByRole("article").filter({ hasText: "숙소 안 식당이 있는지는 확인하지 못했어요" }).getByRole("button", { name: "이 장소로 바꾸기" }).click();
+  await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);
+  const [edit] = await server.received("POST", "/edits");
+  expect((edit.body as { edits: { field: string; value: unknown }[] }).edits).toEqual(expect.arrayContaining([{ source_id: "s1", field: "items[1].kind", value: "dining" }]));
+});
+
 test("장소 검색과 사진: 검색 결과가 나오고, 관광공사 번호가 있는 곳은 사진과 「ⓒ한국관광공사」 출처가 보인다", async ({ page, request }) => {
   await openFinished(page, request);
   await page.getByRole("button", { name: "광장시장 수정" }).click();

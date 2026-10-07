@@ -5,10 +5,16 @@ import { noConsents, requiredAgreed } from "./consent-model";
 import { consentsSynced, forgetConsents, readConsents, replaceConsents } from "./consent-store";
 import { adoptServer, reconcileConsents, saveConsents, sendConsents } from "./consent-sync";
 import { TERMS_VERSION } from "./terms-content";
+import { resetLiveTerms, termsVersion } from "./terms-live";
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 const row = (code: string, agreed: boolean, version = TERMS_VERSION) => ({ code, agreed, version, agreed_at: "2026-10-05T09:00:00+09:00" });
 const requiredOn = [row("service_terms", true), row("privacy", true)];
+const RETENTION_PATH = "/v1/web/legal/retention";
+/** The public retention read (`terms-live.ts`) answered apart from the consent calls: an older server without it (404) unless a test sets `retention`. */
+let retention: (() => Response) | null = null;
+const legal = (inner: (url: string, init: RequestInit) => Promise<Response>) => async (url: string, init: RequestInit) =>
+  new URL(url).pathname === RETENTION_PATH ? (retention ? retention() : json({ error: { code: "not_found", message: "no" } }, 404)) : inner(url, init);
 
 describe("the browser's copy of the consents and the server's record", () => {
   let calls: { url: string; init: RequestInit }[];
@@ -22,7 +28,9 @@ describe("the browser's copy of the consents and the server's record", () => {
     });
     calls = [];
     replies = [];
-    vi.stubGlobal("fetch", answeringSession(async (url, init) => { calls.push({ url, init }); return replies.shift() ?? json({}); }, { kind: "guest" }));
+    retention = null;
+    resetLiveTerms();
+    vi.stubGlobal("fetch", answeringSession(legal(async (url, init) => { calls.push({ url, init }); return replies.shift() ?? json({}); }), { kind: "guest" }));
     forgetConsents();
   });
   afterEach(() => { vi.unstubAllGlobals(); resetSessionState(); });
@@ -106,14 +114,53 @@ describe("the browser's copy of the consents and the server's record", () => {
     replaceConsents({ ...noConsents(), service_terms: true, privacy: true }, "2026-10-05T09:00:00Z", true);
     let release: (response: Response) => void = () => {};
     const slowGet = new Promise<Response>((resolve) => { release = resolve; });
-    vi.stubGlobal("fetch", answeringSession(async (url, init) => {
+    vi.stubGlobal("fetch", answeringSession(legal(async (url, init) => {
       calls.push({ url, init });
       return init.method === "POST" ? json({ current_version: TERMS_VERSION, required: ["service_terms", "privacy"], ok: true, items: [...requiredOn, row("location", true)] }) : slowGet;
-    }, { kind: "guest" }));
+    }), { kind: "guest" }));
     const reading = reconcileConsents("ko");                                            // the read of the server is under way (and slow)
     const saving = saveConsents({ ...noConsents(), service_terms: true, privacy: true, location: true }, "ko");
     release(json({ current_version: TERMS_VERSION, required: ["service_terms", "privacy"], ok: true, items: requiredOn }));   // it brings the OLD record
     await Promise.all([reading, saving]);
     expect(readConsents().location).toBe(true);                                         // the choice made while it was reading survives
+  });
+
+  // `[2026-10-07]` An operator can change a retention period on the admin screen; the server's terms version then becomes `<base>+ret<N>`.
+  const SERVER_VERSION = `${TERMS_VERSION}+ret2`;
+  const retentionBody = { revision: 2, terms_version: SERVER_VERSION, cells: [
+    { key: "member_idle_days", text_ko: "회원이 지우거나 탈퇴를 요청할 때까지, 마지막 이용 후 2년이 지나면 파기", text_en: "Kept until you delete it or ask to withdraw, and destroyed once 2 years have passed since your last use" },
+    { key: "a_cell_this_page_does_not_know", text_ko: "모름", text_en: "unknown" },
+  ] };
+
+  it("sends the consents with the server's terms version and the fingerprint of the text with the server's retention wording", async () => {
+    retention = () => json(retentionBody);
+    replaceConsents({ ...noConsents(), service_terms: true, privacy: true }, "2026-10-07T09:00:00Z", false);
+    const fingerprintsBefore = await import("./consent-sync").then((sync) => sync.choicesOf(readConsents()));
+    replies.push(json({ current_version: SERVER_VERSION, required: ["service_terms", "privacy"], ok: true, items: [row("service_terms", true, SERVER_VERSION), row("privacy", true, SERVER_VERSION)] }));
+    expect(await sendConsents("ko")).toBe("recorded");
+    expect(termsVersion()).toBe(SERVER_VERSION);
+    const body = JSON.parse(String(consentCalls()[0].init.body)) as { version: string; items: { code: string; text_sha256: string }[] };
+    expect(body.version).toBe(SERVER_VERSION);
+    const privacyBefore = fingerprintsBefore.find((choice) => choice.code === "privacy")!.textSha256;
+    expect(body.items.find((item) => item.code === "privacy")!.text_sha256).not.toBe(privacyBefore);   // the privacy text carries the member period: it changed
+    expect(consentsSynced()).toBe(true);
+  });
+
+  it("keeps the agreed copy while the server version is not read yet, but asks again once the server says the terms moved on", async () => {
+    replaceConsents({ ...noConsents(), service_terms: true, privacy: true }, "2026-10-07T09:00:00Z", true);
+    expect(requiredAgreed(readConsents())).toBe(true);
+    retention = () => json(retentionBody);
+    replies.push(json({ current_version: SERVER_VERSION, required: ["service_terms", "privacy"], ok: false, items: [row("service_terms", true), row("privacy", true)] }));
+    expect(await reconcileConsents("ko")).toBe("needs");                                // the old agreement was for the old wording
+    expect(requiredAgreed(readConsents())).toBe(false);
+  });
+
+  it("reads the terms again when the server refuses the version (409), so the next screen shows the new wording", async () => {
+    replaceConsents({ ...noConsents(), service_terms: true, privacy: true }, "2026-10-07T09:00:00Z", false);
+    await sendConsents("ko").catch(() => undefined);                                    // first read: an older server answers 404, the page keeps its own version
+    retention = () => json(retentionBody);
+    replies.push(json({ error: { code: "terms_version_changed", message: "new terms" } }, 409));
+    expect(await sendConsents("ko")).toBe("outdated");
+    expect(termsVersion()).toBe(SERVER_VERSION);
   });
 });

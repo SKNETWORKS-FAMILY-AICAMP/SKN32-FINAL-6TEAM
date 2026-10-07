@@ -118,6 +118,11 @@ const DEFAULTS = {
   //   "server_ahead" = the server's terms are a NEWER version than the page carries (the GET says so, a POST answers 409 `terms_version_changed`).
   consents: "off",
   // ── 동의 기록 (2026-10-05) ── 끝
+  // ── 약관 보관 기간 (2026-10-07) ── 시작
+  // `[2026-10-07]` The public retention read (`GET /v1/web/legal/retention`, no session): "off" = an older server (404) | "on" = an operator changed a period on the
+  //   admin screen (member data 2 years), so the server's terms version is `<TERMS_VERSION>+ret1` - the consent record then expects that version too.
+  retention: "off",
+  // ── 약관 보관 기간 (2026-10-07) ── 끝
   // how many times the trip itself fails to load (500) right after the server answered a chat message
   rereadFails: 0,
   // chat and planning asked as a stream: "on" | "off" (an older server: JSON once) | "slow" (a `slow` beat first)
@@ -218,13 +223,26 @@ function telegramChannelRefusal(body) {
 let attempts = new Map();
 // ── 동의 기록 (2026-10-05) ── 시작
 /** The terms version the page under test carries (`src/features/consent/terms-content.ts` `TERMS_VERSION`) - keep the two the same; a different one is what "server_ahead" plays. */
-const TERMS_VERSION = "2026-10-05.1";
+const TERMS_VERSION = "2026-10-07.1";   // 웹 `terms-content.ts` 와 같은 값(2026-10-07 보관 기간 확정)
 const CONSENT_CODES = ["service_terms", "privacy", "sensitive", "location", "alert_channel"];
 const CONSENT_REQUIRED = ["service_terms", "privacy"];
 /** code → { agreed, version, at } - the latest line of the append-only record (the stub keeps only that; the requests it received are the log). */
 let consentRecords = new Map();
 function consentReset() { consentRecords = new Map(); }
-const consentVersion = () => scenario.consents === "server_ahead" ? "2099-01-01" : TERMS_VERSION;
+const consentVersion = () => scenario.consents === "server_ahead" ? "2099-01-01" : scenario.retention === "on" ? `${TERMS_VERSION}+ret1` : TERMS_VERSION;
+// ── 약관 보관 기간 (2026-10-07) ── 시작
+/** The shape of `GET /v1/web/legal/retention` (server `retention.public_view`): one cell per period with the Korean and English sentence the terms carry. */
+function retentionView() {
+  const cell = (key, value, unit, ko, en) => ({ key, label_ko: key, label_en: key, value, unit, default: value, editable: unit !== null, text_ko: ko, text_en: en });
+  return { revision: 1, terms_version: `${TERMS_VERSION}+ret1`, cells: [
+    cell("member_idle_days", 730, "days", "회원이 지우거나 탈퇴를 요청할 때까지, 마지막 이용 후 2년이 지나면 파기", "Kept until you delete it or ask to withdraw, and destroyed once 2 years have passed since your last use"),
+    cell("case_follows_trip", null, null, "여행 · 게스트 자료가 지워질 때 함께 파기", "Destroyed together when the trip or guest data is deleted"),
+    cell("consent_days", 1825, "days", "기록한 때부터 5년", "5 years from the time it was recorded"),
+    cell("location_points_days", 7, "days", "여행 종료 후 7일", "7 days after the trip ends"),
+    cell("location_proof_months", 6, "months", "기록한 때부터 6개월", "6 months from the time it was recorded"),
+  ] };
+}
+// ── 약관 보관 기간 (2026-10-07) ── 끝
 function consentView() {
   const items = CONSENT_CODES.map((code) => {
     const row = consentRecords.get(code);
@@ -780,6 +798,11 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     keys.add("acop_u_social_account");
     return json(response, 200, { outcome: "signed_in", provider: flow.provider, user_key: "acop_u_social_account", notice: "이 계정의 키예요. 따로 보관해 주세요.", trips: 2 }, origin);
   }
+  // ── 약관 보관 기간 (2026-10-07) ── 시작 (no session needed: asking must not make a user)
+  if (path === "/v1/web/legal/retention" && request.method === "GET") {
+    return scenario.retention === "on" ? json(response, 200, retentionView(), origin) : json(response, 404, { detail: "Not Found" }, origin);
+  }
+  // ── 약관 보관 기간 (2026-10-07) ── 끝
   const auth = authenticate();
   if (auth.denied) return auth.denied();
   // ── 동의 기록 (2026-10-05) ── 시작
@@ -1178,6 +1201,12 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
       { ...CANDIDATES[1], basis: "similar_experience", experience: "indoor_exhibit", reason: null },
       { rank: 3, place: { ...place("광장시장 순희네 빈대떡", 37.5701, 126.9996, { source: "kakao", kind: "dining" }), address: "서울 종로구 종로32길", category: "음식점", ref: null }, distance_m: 600, reference: "광장시장",
         rows: [row("place", "ok", "카카오 지도 정보로 찾았어요")], fits: true, status: "ok", slack: { before: 6, after: 10 }, estimated: false, basis: "meal_inferred", reason: "점심 시간의 시장 일정이라 시장 안 식당도 함께 보여 드려요" },
+    ] : scenario.candidateBasis === "lodging" ? [
+      // 서버 90d9e403: 이름 없는 「호텔」 줄 — 숙소와 그 숙소 안 식사가 짝으로
+      { rank: 1, place: { ...place("호텔 스카이파크 센트럴", 37.5665, 126.9849, { source: "kakao", kind: "activity" }), address: "서울 중구 명동", category: "숙소", ref: null }, distance_m: 700, reference: "경복궁",
+        rows: [row("place", "ok", "카카오 지도 정보로 찾았어요")], fits: true, status: "ok", slack: { before: 10, after: 10 }, estimated: false, basis: "lodging", reason: "계획에 숙소 이름이 없어 가까운 숙소를 골랐어요 · 경복궁에서 700m" },
+      { rank: 2, place: { ...place("호텔 스카이파크 센트럴", 37.5665, 126.9849, { source: "kakao", kind: "dining" }), address: "서울 중구 명동", category: "숙소 안 식사", ref: null }, distance_m: 700, reference: "경복궁",
+        rows: [row("place", "ok", "카카오 지도 정보로 찾았어요")], fits: true, status: "ok", slack: { before: 10, after: 10 }, estimated: false, basis: "lodging_meal", reason: "숙소 안 식당이 있는지는 확인하지 못했어요" },
     ] : CANDIDATES;
     return json(response, 200, { revision: board.revision, item: item.id, current: item.place, reference: { before: "경복궁", after: "광장시장" }, candidates: scenario.candidateNotes.length ? [] : laddered, notes: scenario.candidateNotes }, origin);
   }

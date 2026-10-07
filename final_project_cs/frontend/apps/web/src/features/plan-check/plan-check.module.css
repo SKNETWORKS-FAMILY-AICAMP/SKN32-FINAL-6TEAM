@@ -45,6 +45,10 @@
 .mapChips { position: absolute; left: 10px; right: 68px; bottom: calc(var(--sheet-h) + 8px); z-index: 3; display: flex; flex-wrap: wrap-reverse; align-items: flex-end; gap: 6px; pointer-events: none; transition: bottom 380ms var(--soft); }
 .picked { width: fit-content; max-width: 100%; margin: 0; padding: 3px 10px; border: 1.5px solid var(--color-text); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font-size: 11.5px; font-weight: 750; overflow-wrap: anywhere; }
 .picked b { font-weight: 800; }
+.mapNeeds { pointer-events: auto; display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 0 11px 0 6px; border: 1.5px solid var(--color-warning-border); border-radius: 999px; background: var(--color-warning-surface); color: var(--color-warning); font: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 14%, transparent); }
+.mapNeeds[aria-pressed="true"] { border-color: var(--color-warning); background: var(--color-warning); color: var(--color-surface); }
+.mapNeeds[aria-pressed="true"] .mark { background: var(--color-surface); color: var(--color-warning); }
+.mapNeeds:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 .unlocated { width: fit-content; max-width: 100%; margin: 0; padding: 3px 10px; border: 1.5px dashed var(--color-warning-border); border-radius: 999px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 750; }
 .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; height: var(--sheet-h); display: flex; flex-direction: column; border-radius: 20px 20px 0 0; background: var(--color-surface); box-shadow: 0 -6px 24px color-mix(in srgb, var(--color-text) 14%, transparent); animation: rise .45s var(--soft); }
 /* ★`[2026-10-06 사용자 지적 — 일정 창 확대·축소가 부드럽지 않다]` The height changes at once (the content never re-flows while it moves) and the sheet SLIDES there on the compositor (a transform, `plan-check.tsx` `useLayoutEffect`). When it gets shorter its bottom edge rises for a moment: this fills what is under it. */
@@ -165,7 +169,7 @@ button.moveHead { cursor: pointer; }
 }
 @media (hover: none) {
   .cardTools .icon:not([data-restore]) { visibility: hidden; }
-  .card[data-open] .cardTools .icon, .entry[data-selected] .cardTools .icon, .card:focus-within .cardTools .icon { visibility: visible; }
+  .card[data-open] .cardTools .icon, .entry[data-selected] .cardTools .icon, .card:focus-within .cardTools .icon, .entry[data-tools] .cardTools .icon { visibility: visible; }
 }
 .card:hover, .card:focus-within, .card[data-open], .entry[data-selected] .card { --tools: 1; }
 .icon[aria-pressed="true"] { background: var(--color-text); color: var(--color-surface); opacity: 1; }
@@ -420,6 +424,13 @@ button.headBadge { cursor: pointer; }
 /* The sheet pulled nearly all the way down keeps only its handle and its two buttons. */
 .checking[data-compact] .sheet { padding-top: 22px; justify-content: flex-end; }
 .checking[data-compact] :is(.sheetHead, .dayStrip, .sheetBody) { display: none; }
+/* ★`[2026-10-07 사용자 지시 — 날짜 줄은 지금 모양 그대로, 경계 없이 목록 위에 투명하게 떠서]` The day chips and the head buttons float over the top of the list (no line, no band of their own); the list scrolls under them. */
+.sheetHead[data-float] { position: absolute; z-index: 3; top: 0; left: 0; right: 0; padding: 22px 12px 6px; border-bottom: 0; background: transparent; pointer-events: none; }
+.sheetHead[data-float] > * { pointer-events: auto; }
+.sheetHead[data-float] .dayStrip { padding-left: 2px; }
+.sheetHead[data-float] .dayChip:not([data-lit]) { background: var(--color-surface); }
+.sheetHead[data-float] :is(.dayChip, .resetTimes, .headBadge) { box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 12%, transparent); }
+.sheetBody[data-under-float] { padding-top: 64px; }
 
 /* A stop that was changed: blue, the way 「확인 필요」 is amber. A stop marked for deletion: grey, 「되돌리기」 where the bin was. */
 .screen[data-stage] .entry[data-changed] .card { border-color: var(--color-adjusted-border); background: color-mix(in srgb, var(--color-adjusted-soft) 60%, var(--color-surface)); }

@@ -143,7 +143,7 @@ export interface Candidate {
    * `[2026-10-07 서버 c0ca7054 — 대체 후보 세 단]` Which step of the ladder it came from: `same_kind` (the same kind, tourism classes) · `similar_experience` · `meal_inferred` (a meal place where a market stands
    * at a meal time — picking it makes the stop a meal: send `items[i].kind = "dining"` with the place) · null (a map search …). `reason`: the server's one sentence, only what it knows.
    */
-  basis?: "same_kind" | "similar_experience" | "meal_inferred" | null;
+  basis?: "same_kind" | "similar_experience" | "meal_inferred" | "lodging" | "lodging_meal" | "taste" | null;   // lodging · lodging_meal [2026-10-07 서버 90d9e403]: 이름 없는 「호텔」 줄의 숙소 / 그 숙소 안 식사
   reason?: string | null;
   similarity?: number | null;
   experience?: string | null;

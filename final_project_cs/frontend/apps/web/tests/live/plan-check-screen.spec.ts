@@ -317,6 +317,23 @@ test("핀을 누르면 「위치 미정 · 올리브영」 자리에 그 핀의 
 
 // ── 카드 도구 ────────────────────────────────────────────────────────────────
 
+test("오류 알림은 저절로 사라지지 않고 남아 있다가 ✕ 나 옆으로 밀면 닫힌다(빨간 줄) — 다른 알림은 지금처럼 몇 초 뒤 사라진다", async ({ page, request }) => {
+  // `[2026-10-07 사용자 결정 — 오류 알림 남기기 · 밀어서 닫기]`
+  await openFinished(page, request);
+  await mockServer(request).scenario({ edits: "stale" });                                              // 다음 고치기는 「그 사이 바뀌었어요」로 거절된다
+  await page.getByRole("button", { name: "경복궁 관람 꼭 넣을 일정으로 고정" }).click();
+  const error = page.getByRole("alert").filter({ hasText: "그 사이 바뀌었어요" });
+  await expect(error).toBeVisible();
+  await page.waitForTimeout(6_000);
+  await expect(error).toBeVisible();                                                                   // 6초가 지나도 남아 있다
+  const box = (await error.boundingBox())!;
+  await page.mouse.move(box.x + 40, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 200, box.y + box.height / 2, { steps: 8 });
+  await page.mouse.up();
+  await expect(error).toHaveCount(0);                                                                  // 옆으로 밀어 닫았다
+});
+
 test("카드의 수정 · 삭제는 카드를 가리키거나(마우스) 펼쳤을 때만 보이고, 「확인 필요」 표시와 잠금은 늘 보인다", async ({ page, request }) => {
   // `[2026-10-07 사용자 지시]` 지도 단추처럼 — 늘 떠 있지 않고 필요할 때만
   await openFinished(page, request);

@@ -128,6 +128,7 @@ export function planCandidate(candidate: Candidate, itemId: string, source: Plan
     coordinates: located(candidate.place) ? { lat: candidate.place.latitude, lng: candidate.place.longitude } : null,
     info, checks: candidate.rows.map(row),
     ...(candidate.basis ? { basis: candidate.basis } : {}),
+    ...(candidate.basis === "meal_inferred" ? { placeKind: "dining" } : candidate.place.kind === "dining" || candidate.place.kind === "activity" ? { placeKind: candidate.place.kind } : {}),
     ...(typeof candidate.reason === "string" && candidate.reason.trim() ? { reason: candidate.reason.trim() } : {}),
   };
 }

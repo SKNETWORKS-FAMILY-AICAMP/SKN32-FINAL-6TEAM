@@ -20,6 +20,11 @@ export interface BusToast {
   action?: { label: string; run: () => void };
   /** How long it stays when the default (2.8 s, 4.5 s with a button) is too short: a notice with more to read (a pin's description). */
   ms?: number;
+  /**
+   * `[2026-10-07 사용자 결정 — 오류 알림은 남기고 밀어서 닫기]` Something went wrong: the notice does not go by itself (the customer may not have seen it) - it goes with ✕ or a swipe sideways,
+   * and its stripe is the error colour.
+   */
+  stay?: boolean;
 }
 
 type Listener = (toast: BusToast) => void;

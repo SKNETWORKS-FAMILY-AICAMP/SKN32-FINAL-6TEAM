@@ -3,12 +3,15 @@
 import { useSyncExternalStore } from "react";
 import { CONSENT_CODES, noConsents, type ConsentCode, type ConsentMap } from "./consent-model";
 import { TERMS_VERSION } from "./terms-content";
+import { liveTerms, subscribeTerms, termsVersion } from "./terms-live";
 
 /**
  * `[2026-10-05 사용자 지시]` 이 브라우저가 기억하는 동의. ★정본은 서버의 동의 기록(`/v1/web/consents`)이다 - 여기는 화면이 곧바로 알아야 할 때(지도에 내 위치를
  * 그릴지 · 약관 화면을 다시 보여 줄지)를 위한 사본이고, 서버 기록과 어긋나면 서버가 이긴다(`replaceConsents`).
  *
- * - 동의는 **약관 버전**에 묶인다. 저장된 버전이 지금 버전(`TERMS_VERSION`)과 다르면 아무것도 동의하지 않은 것으로 읽는다(다시 동의 받음).
+ * - 동의는 **약관 버전**에 묶인다. 저장된 버전이 지금 버전과 다르면 아무것도 동의하지 않은 것으로 읽는다(다시 동의 받음).
+ *   `[2026-10-07]` 지금 버전은 cs 프로젝트 서버가 정한다(`terms-live.ts` — 관리자가 보관 기간을 고치면 `2026-10-07.1+ret{N}` 으로 바뀐다). 서버 값을 읽기 전에는
+ *   웹에 실린 기본 버전과 그 `+ret` 판을 모두 지금 버전으로 본다 — 안 그러면 읽는 사이 약관 화면이 잠깐 떴다 사라진다. 서버 값을 읽은 뒤에는 정확히 같아야 한다.
  * - 브라우저 저장소를 못 쓰면(사생활 보호 창 등) 이 페이지가 열려 있는 동안만 기억한다.
  */
 const KEY = "tripilot.web.consent.v1";
@@ -45,34 +48,41 @@ function current(): Stored | null {
 
 function emit() { listeners.forEach((listener) => listener()); }
 
+/** 저장된 동의가 지금 약관 버전의 것인가. */
+function current_(stored: Stored | null): stored is Stored {
+  if (!stored) return false;
+  if (stored.version === termsVersion()) return true;
+  return !liveTerms().fromServer && (stored.version === TERMS_VERSION || stored.version.startsWith(`${TERMS_VERSION}+ret`));
+}
+
 /** 지금 버전에 대한 동의. 저장된 것이 없거나 옛 버전이면 모두 false. */
 export function readConsents(): ConsentMap {
   const stored = current();
-  return stored && stored.version === TERMS_VERSION ? { ...stored.items } : noConsents();
+  return current_(stored) ? { ...stored.items } : noConsents();
 }
 
 /** 동의 시각(ISO). 없으면 null. */
 export function consentedAt(): string | null {
   const stored = current();
-  return stored && stored.version === TERMS_VERSION ? stored.at : null;
+  return current_(stored) ? stored.at : null;
 }
 
 /** 서버에 이 동의가 기록돼 있나. 저장된 것이 없거나 옛 버전이면 false. */
 export function consentsSynced(): boolean {
   const stored = current();
-  return Boolean(stored && stored.version === TERMS_VERSION && stored.synced);
+  return current_(stored) && stored.synced;
 }
 
 /** 서버에 기록됐다고 표시한다(보낸 뒤, 또는 서버가 이 동의를 이미 갖고 있을 때). */
 export function markConsentsSynced(): void {
   const stored = current();
-  if (!stored || stored.version !== TERMS_VERSION || stored.synced) return;
+  if (!current_(stored) || stored.synced) return;
   replaceConsents(stored.items, stored.at, true);
 }
 
 /** 동의를 통째로 바꾼다(약관 화면에서 저장했거나, 서버 기록을 읽어 와서 맞출 때). `synced` = 서버가 이미 아는 값인가(서버에서 읽어 온 것이면 true). */
 export function replaceConsents(items: ConsentMap, at: string | null = new Date().toISOString(), synced = false): void {
-  memory = { version: TERMS_VERSION, items: { ...items }, at, synced };
+  memory = { version: termsVersion(), items: { ...items }, at, synced };
   loaded = true;
   try { window.localStorage.setItem(KEY, JSON.stringify(memory)); } catch { /* 사생활 보호 창: 이 페이지가 열려 있는 동안만 */ }
   emit();
@@ -95,7 +105,8 @@ function subscribe(listener: () => void) {
   listeners.add(listener);
   const onStorage = (event: StorageEvent) => { if (event.key === KEY) { loaded = false; emit(); } };
   if (typeof window !== "undefined") window.addEventListener("storage", onStorage);
-  return () => { listeners.delete(listener); if (typeof window !== "undefined") window.removeEventListener("storage", onStorage); };
+  const offTerms = subscribeTerms(listener);                                    // 서버가 약관 버전을 알려 오면 동의를 다시 읽는다
+  return () => { listeners.delete(listener); offTerms(); if (typeof window !== "undefined") window.removeEventListener("storage", onStorage); };
 }
 
 /**

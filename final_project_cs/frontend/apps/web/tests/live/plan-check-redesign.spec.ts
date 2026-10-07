@@ -81,7 +81,7 @@ test("시트 머리: 문장 대신 「! 2」 표시 하나 — 눌러서 확인 
   await expect(card(page, "경복궁 관람")).toBeVisible();
 });
 
-test("시트를 끝까지 내리면 머리·날짜 칩·목록을 모두 접고 손잡이와 「전체 자동 추천」 줄만 남는다", async ({ page, request }) => {
+test("시트를 끝까지 내리면 머리·날짜 칩·목록을 모두 접고 손잡이와 「전체 자동 추천」 줄만 남는다(지도의 「확인 필요」는 남는다)", async ({ page, request }) => {
   await openFinished(page, request);
   const handle = page.getByRole("button", { name: "목록 높이 바꾸기" });
   await handle.click();
@@ -89,7 +89,7 @@ test("시트를 끝까지 내리면 머리·날짜 칩·목록을 모두 접고 
   await expect(page.locator("[data-sheet]")).toHaveAttribute("data-sheet", "peek");
   await expect(page.locator("[data-compact]")).toHaveCount(1);
   await expect(page.getByRole("heading", { name: "계획 확인" })).toBeHidden();
-  await expect(needsBadge(page)).toBeHidden();
+  await expect(needsBadge(page)).toBeVisible();                                                       // `[2026-10-07]` 「! n」은 지도 쪽에 있어 시트를 접어도 보인다
   await expect(bodyOf(page)).toBeHidden();
   await expect(page.getByRole("button", { name: /^전체 자동 추천/ })).toBeVisible();
   await expect(handle).toBeVisible();

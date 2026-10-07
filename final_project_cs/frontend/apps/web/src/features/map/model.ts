@@ -8,7 +8,7 @@ export interface Coordinates {
  * How a pin looks besides selected: `muted` — shown for context, not pressable (the other stops while one is being
  * changed); `current` — the stop being changed; `candidate` — a place it could change to.
  */
-export type PinTone = "muted" | "current" | "candidate";
+export type PinTone = "muted" | "current" | "candidate" | "warn";   // `warn` [2026-10-07]: a stop that needs a look, while the list shows only those
 
 /** A pin's own label and look, by stop id (plan check's change screen: 「A · B · C」 candidates, the rest greyed). */
 export interface PinLook { label?: string; tone?: PinTone }

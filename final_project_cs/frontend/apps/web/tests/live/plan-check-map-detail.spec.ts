@@ -77,6 +77,32 @@ test("경로선을 누르면 그 구간이 골라지고 — 설명 알림(어디
   await expect(note).toHaveCount(0);
 });
 
+test("경로선을 눌러 고른 뒤 목록의 그 이동 줄을 다시 눌러 닫으면 지도의 선도 놓인다 — 목록에서 열면 지도의 선이 골라진다", async ({ page, request }) => {
+  // `[2026-10-07 사용자 지적]` 목록에서는 풀렸는데 지도에서는 클릭 상태가 안 풀렸다
+  await openFinished(page, request, undefined, { intakeRoutes: "on" });
+  const widest = async () => Math.max(...await page.locator("path.trip-route-line").evaluateAll((paths) => paths.map((path) => Number(path.getAttribute("stroke-width")))));
+  await page.locator("path.trip-route-hit").first().dispatchEvent("click");
+  await expect.poll(widest).toBeGreaterThanOrEqual(7);
+  const open = page.locator('li[data-type="move"][data-entry-id="0-0:0-1"] [aria-expanded="true"]');
+  await expect(open).toBeVisible();
+  await open.click();                                                                                   // 목록에서 닫는다
+  await expect.poll(widest).toBeLessThan(7);                                                           // 지도의 선도 놓였다
+  await page.locator('li[data-type="move"][data-entry-id="0-0:0-1"] [aria-expanded="false"]').click(); // 목록에서 연다
+  await expect.poll(widest).toBeGreaterThanOrEqual(7);                                                 // 지도의 선이 골라진다
+});
+
+test("지도의 「! n」을 누르면 목록은 확인 필요만, 지도는 확인 필요 핀만 주황으로 남고 나머지 핀은 회색(눌리지 않음) — 다시 누르면 돌아온다", async ({ page, request }) => {
+  // `[2026-10-07 사용자 지시]`
+  await openFinished(page, request);
+  const tones = () => page.locator(".leaflet-marker-icon").evaluateAll((icons) => icons.map((icon) => `${(icon.getAttribute("title") ?? "").slice(0, 2)}${(icon.querySelector("[data-tone]") as HTMLElement | null)?.dataset.tone ?? (icon as HTMLElement).dataset.tone ?? "-"}`));
+  await page.getByRole("button", { name: /^확인 필요 \d+곳$/ }).click();
+  await expect(page.getByText("확인이 필요한 곳만 보는 중이에요")).toBeVisible();
+  await expect.poll(tones).toEqual(expect.arrayContaining(["1.muted", "2.warn", "3.muted"]));
+  await page.getByRole("button", { name: /^확인 필요 \d+곳$/ }).click();
+  await expect(page.getByText("확인이 필요한 곳만 보는 중이에요")).toHaveCount(0);
+  await expect.poll(async () => (await tones()).some((tone) => tone.endsWith("muted") || tone.endsWith("warn"))).toBe(false);
+});
+
 test("핀을 누르면 경로 선택은 풀리고, 경로를 누르면 핀 선택이 풀린다(둘은 한 번에 하나) — 알림도 하나만 선다", async ({ page, request }) => {
   await openFinished(page, request, undefined, { intakeRoutes: "on" });
   await pin(page, "2.").locator("[data-pin-body]").click();
@@ -103,14 +129,16 @@ test("핀을 밀어낸 선과 점은 핀 몸통보다 아래 층에 따로 있�
   expect(layers.bodiesInLeaderPane).toBe(0);
 });
 
-test("이틀 이상이면 「전체 · 1일차 · 2일차」 칩이 「계획 확인」 줄과 한 줄이다(따로 줄을 차지하지 않는다)", async ({ page, request }) => {
+test("이틀 이상이면 「전체 · 1일차 · 2일차」 칩이 목록 위에 투명하게 뜨고(따로 줄 · 경계선 없음), 「확인 필요」는 지도 쪽에 있다", async ({ page, request }) => {
   await openFinished(page, request, (view) => { view.review.items.push(DAY_TWO_STOP); });
   const head = page.locator("header").filter({ has: page.getByRole("tablist", { name: "일차 고르기" }) });
   await expect(head).toHaveCount(1);
   await expect(head.getByRole("tab")).toHaveText([/^전체$/, /^1일차/, /^2일차/]);
-  await expect(head.getByRole("button", { name: /^확인 필요 \d+곳$/ })).toBeVisible();                   // 확인 필요 표시도 같은 줄
-  const [strip, badge] = [await head.getByRole("tablist").boundingBox(), await head.getByRole("button", { name: /^확인 필요 \d+곳$/ }).boundingBox()];
-  expect(Math.abs((strip!.y + strip!.height / 2) - (badge!.y + badge!.height / 2))).toBeLessThan(14);     // 가운데 높이가 거의 같다 = 한 줄
+  // `[2026-10-07 사용자 지시]` 「! n」(확인 필요)은 지도 쪽으로 옮겼다 — 머리에는 없고 지도 위에 있다. 머리는 목록 위에 투명하게 떠 있다(경계선 없음)
+  await expect(head.getByRole("button", { name: /^확인 필요 \d+곳$/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^확인 필요 \d+곳$/ })).toBeVisible();
+  expect(await head.evaluate((element) => ({ position: getComputedStyle(element).position, border: getComputedStyle(element).borderBottomWidth, background: getComputedStyle(element).backgroundColor })))
+    .toEqual({ position: "absolute", border: "0px", background: "rgba(0, 0, 0, 0)" });
   await expect(sheet(page).getByRole("heading", { name: "계획 확인" })).toHaveCount(1);                 // 제목은 화면 읽기용으로 남는다
   await expect(sheet(page).getByRole("heading", { name: "계획 확인" })).toHaveClass(/sr-only/);
   // 칩은 여전히 동작한다

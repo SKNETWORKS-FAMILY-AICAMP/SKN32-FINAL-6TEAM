@@ -137,16 +137,18 @@ export type ListFilter = "needs" | "changed";
  * ★`[2026-10-04 사용자 지시]` The sheet's head says the state in marks and numbers, not a sentence that wrapped to a second line (「장소 3곳 확인 필요」):
  * 「! 3」 = three need a look, 「✎ 2」 = two were changed — each can be pressed to see only those. Nothing to say: a single ✓.
  */
-export function HeadBadges({ needs, changed, filter, onFilter, registered, rechecking }: {
+export function HeadBadges({ needs, changed, filter, onFilter, registered, rechecking, needsOnMap = false }: {
   needs: number; changed: number; filter: ListFilter | null; onFilter: (next: ListFilter | null) => void;
   registered: boolean; rechecking: { at: number; of: number } | null;
+  /** `[2026-10-07]` The 「! n」 count stands on the map instead of here. */
+  needsOnMap?: boolean;
 }) {
   const t = useT();
   if (registered) return <span className={styles.headBadge} data-kind="ok"><span className={styles.mark} data-result="ok" aria-hidden="true">✓</span>{t("등록 완료", "Registered")}</span>;
   if (rechecking) return <span className={styles.headBadge} data-kind="wait" role="status"><span className={styles.spinner} aria-hidden="true" />{rechecking.at}/{rechecking.of}<span className="sr-only">{t("재검증 중", "Checking again")}</span></span>;
   const toggle = (kind: ListFilter) => onFilter(filter === kind ? null : kind);
   return <span className={styles.headBadges}>
-    {needs > 0 && <button type="button" className={styles.headBadge} data-kind="needs" aria-pressed={filter === "needs"} onClick={() => toggle("needs")}
+    {needs > 0 && !needsOnMap && <button type="button" className={styles.headBadge} data-kind="needs" aria-pressed={filter === "needs"} onClick={() => toggle("needs")}
       aria-label={t(`확인 필요 ${needs}곳`, `${needs} to check`)} title={filter === "needs" ? t("눌러서 전체 일정 보기", "Press to show every stop") : t("눌러서 확인이 필요한 곳만 모아 보기", "Press to show only what needs a look")}>
       <span className={styles.mark} data-result="warn" aria-hidden="true">!</span><b>{needs}</b></button>}
     {changed > 0 && <button type="button" className={styles.headBadge} data-kind="changed" aria-pressed={filter === "changed"} onClick={() => toggle("changed")}

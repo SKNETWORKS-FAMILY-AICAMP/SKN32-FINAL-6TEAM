@@ -4,7 +4,9 @@ import { useEffect, useRef, type KeyboardEvent } from "react";
 import { requiredAgreed, type ConsentCode, type ConsentMap } from "@/features/consent/consent-model";
 import { TermsBody } from "@/features/consent/terms-body";
 import { plainTitle } from "@/features/consent/terms-text";
-import { DRAFT_NOTICE, TERMS_DOCS, TERMS_EFFECTIVE, TERMS_STATUS, TERMS_VERSION, type TermsDoc } from "@/features/consent/terms-content";
+import { DRAFT_NOTICE, TERMS_EFFECTIVE, TERMS_STATUS, type TermsDoc } from "@/features/consent/terms-content";
+import { termsDocs, useLiveTerms } from "@/features/consent/terms-live";
+import { useSettings } from "@/lib/settings";
 import type { Translate } from "@/lib/i18n";
 import { DrawnCheck, OnboardingIcon } from "./icons";
 import styles from "./onboarding.module.css";
@@ -15,7 +17,8 @@ import styles from "./onboarding.module.css";
  * `[2026-10-05 사용자 지시]` 필수 항목도 **바로 체크할 수 있다**(전문을 끝까지 읽어야 한다는 잠금을 뺐다). 카드마다 전문이 상자 안에 있어 그 자리에서 내려 읽을 수 있고,
  * 「전문 보기」는 같은 글을 크게 보여 줄 뿐이다. 체크한 것을 기록하는 것은 「동의하고 다음으로」를 누르는 행동이다(`onboarding.tsx`).
  */
-export const termsDoc = (code: ConsentCode): TermsDoc | undefined => TERMS_DOCS.find((doc) => doc.code === code);
+/** `[2026-10-07]` 보관 기간 문장은 cs 프로젝트 서버가 준 것으로 조립한 판(`terms-live.ts`) — 못 읽었으면 웹에 실린 기본값. */
+export const termsDoc = (code: ConsentCode): TermsDoc | undefined => termsDocs().find((doc) => doc.code === code);
 
 const tagOf = (doc: TermsDoc, t: Translate) => doc.required ? t("[필수]", "[Required]") : t("[선택]", "[Optional]");
 /**
@@ -36,11 +39,12 @@ export function TermsCardBody({ t, choices, consentMotion, alertTyped = false, o
   alertTyped?: boolean;
   onReadDoc: (code: ConsentCode) => void; onToggle: (code: ConsentCode, checked: boolean) => void; onContinue: () => void;
 }) {
+  const { docs } = useLiveTerms(useSettings().language);
   return <>
     <p className={styles.termsIntro}>{t("여행을 시작하기 전에", "Before we begin")}</p>
     <DraftNote t={t} />
     <ul className={styles.consentList} aria-label={t("동의 항목", "Consent items")}>
-      {TERMS_DOCS.map((doc) => {
+      {docs.map((doc) => {
         return <li key={doc.code} className={styles.consentItem} data-doc={doc.code}>
           <label className={styles.termsCheck}>
             <input type="checkbox" id={`consent-${doc.code}`} checked={choices[doc.code]} onChange={(event) => onToggle(doc.code, event.target.checked)} />
@@ -64,6 +68,7 @@ export function TermsReader({ t, doc, agreed, onAgree, onClose }: {
   t: Translate; doc: TermsDoc; agreed: boolean; onAgree: (checked: boolean) => void; onClose: () => void;
 }) {
   const scroller = useRef<HTMLElement>(null);
+  const { version } = useLiveTerms(useSettings().language);
 
   useEffect(() => { scroller.current?.focus(); }, []);
 
@@ -74,7 +79,7 @@ export function TermsReader({ t, doc, agreed, onAgree, onClose }: {
   const title = t(doc.title[0], doc.title[1]);
   return <div className={styles.termsDialog} role="dialog" aria-modal="true" aria-labelledby="terms-full-title" onKeyDown={escape}>
     <header className={styles.termsHeader}>
-      <div><small>{t("이용 안내", "NOTICE")} · {t(`버전 ${TERMS_VERSION} · 시행 ${TERMS_EFFECTIVE}`, `Version ${TERMS_VERSION} · effective ${TERMS_EFFECTIVE}`)}</small><h2 id="terms-full-title">{title}</h2></div>
+      <div><small>{t("이용 안내", "NOTICE")} · {t(`버전 ${version} · 시행 ${TERMS_EFFECTIVE}`, `Version ${version} · effective ${TERMS_EFFECTIVE}`)}</small><h2 id="terms-full-title">{title}</h2></div>
       <button type="button" className={styles.termsClose} aria-label={t("약관 닫기", "Close terms")} onClick={onClose}>×</button>
     </header>
     <article ref={scroller} className={styles.termsScroll} tabIndex={0} aria-label={t("약관 전체 내용", "Full terms")}>

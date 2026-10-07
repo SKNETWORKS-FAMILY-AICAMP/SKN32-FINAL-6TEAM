@@ -24,7 +24,8 @@ test("처음 온 사람은 다른 화면으로 가도 약관 화면으로 돌아
   await expect(items.nth(0)).toContainText("[필수]");
   await expect(items.nth(1)).toContainText("[필수]");
   for (const at of [2, 3, 4]) await expect(items.nth(at)).toContainText("[선택]");
-  await expect(page.getByRole("note").first()).toContainText("AI 작성 초안");                // 법무 검토 전이라는 것을 숨기지 않는다
+  await expect(page.getByText("AI 작성 초안")).toHaveCount(0);                                  // `[2026-10-07 사용자 결정]` 보관 기간을 확정하고 안내문은 내렸다
+  await expect(page.getByText(/【확정 필요/)).toHaveCount(0);                                     // 빈칸이 남지 않았다
   await expect(page.locator('[data-doc="privacy"] label')).toContainText("저는 만 14세 이상입니다");   // 만 14세 미만은 쓸 수 없다 - 동의할 때 확인
 });
 
@@ -48,6 +49,25 @@ test("동의하고 다음으로를 누르면 다섯 항목이 서버에 기록�
   }
   const stored = JSON.parse(await page.evaluate((key) => localStorage.getItem(key) ?? "null", CONSENT_STORAGE)) as { version: string; synced: boolean; items: Record<string, boolean> };
   expect(stored).toMatchObject({ version: TERMS_VERSION, synced: true, items: { service_terms: true, privacy: true, location: true, sensitive: false } });
+});
+
+test("관리자가 보관 기간을 고친 cs 프로젝트 서버면 약관 글에 서버의 기간이 실리고, 동의는 서버의 약관 버전과 그 글의 지문으로 기록된다", async ({ page, request }) => {
+  // `[2026-10-07 사용자 결정]` 보관 기간은 관리자 화면에서 고칠 수 있다 - 고치면 서버의 약관 버전이 `<기본>+ret<N>` 이 되고, 웹이 옛 버전으로 보내면 409 가 난다.
+  const server = mockServer(request);
+  await server.scenario({ consents: "on", retention: "on" });
+  await useKorean(page);
+  await page.goto("/start");
+  await startCard(page).click();
+  const privacyText = page.locator('li[data-doc="privacy"]').getByRole("region");
+  await expect(privacyText).toContainText("마지막 이용 후 2년이 지나면 파기");                 // 서버가 준 문장(웹 기본값은 1년)
+  await agreeTerms(page, []);
+  await expect.poll(async () => (await server.received("POST", "/v1/web/consents")).length).toBe(1);
+  const [post] = await server.received("POST", "/v1/web/consents");
+  const body = post.body as { version: string; items: { code: string; text_sha256: string }[] };
+  expect(body.version).toBe(`${TERMS_VERSION}+ret1`);
+  const privacyDefault = sha256(docText(TERMS_DOCS.find((entry) => entry.code === "privacy")!));
+  expect(body.items.find((item) => item.code === "privacy")!.text_sha256).not.toBe(privacyDefault);   // 본 글이 기본값 글과 다르니 지문도 다르다
+  expect((await server.received("GET", "/v1/web/legal/retention")).length).toBeGreaterThan(0);
 });
 
 test("선택 항목을 하나도 안 골라도 필수 둘만으로 앱을 쓸 수 있다", async ({ page, request }) => {

@@ -30,6 +30,7 @@ import { useDayGestures } from "./use-day-gestures";
 import { formatHm, moveStop, parseHm, type Retime } from "./time-plan";
 import { TimeDragOverlay } from "./time-drag-overlay";
 import { heldTexts, useTimeEdit } from "./use-time-edit";
+import { useCenterTools } from "./use-center-tools";
 import { REVEAL_MS, useReveal } from "./use-reveal";
 import styles from "./plan-check.module.css";
 
@@ -317,7 +318,7 @@ const COMPACT_BELOW = 190;
 /** The least the sheet can be dragged to: the handle and the buttons. */
 const SHEET_MIN = 104;
 
-interface Toast { text: string; sub?: string; undo?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string; /** How long it stays when the default is too short (`lib/toast-bus.ts`). */ ms?: number }
+interface Toast { text: string; sub?: string; undo?: boolean; /** An error: it stays until closed or swiped away. */ stay?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string; /** How long it stays when the default is too short (`lib/toast-bus.ts`). */ ms?: number }
 
 type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "onMapZoom">;
 
@@ -352,7 +353,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const setToast = useCallback((value: Toast | null) => {
     if (!value) { hideToast(); return; }
     showToast({
-      text: value.text, sub: value.sub, ms: value.ms,
+      text: value.text, sub: value.sub, ms: value.ms, stay: value.stay,
       action: value.undo || value.revert ? { label: value.undoLabel ?? latest.current?.t("되돌리기", "Undo") ?? "", run: value.revert ?? (() => latest.current?.undo()) } : undefined,
     });
   }, [hideToast, showToast]);
@@ -578,7 +579,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
       if (!keepRecommended) leaveRecommended();
       if (said) setToast(said);
     }
-    catch (error) { setToast({ text: reason(error) }); }
+    catch (error) { setToast({ text: reason(error), stay: true }); }
     finally { setWorking(false); }
   }
   /** ★`[2026-10-03 사용자 지적]` 「되돌리기」는 되돌릴 수 있을 때만 단다 (이전 장소를 모르면 누른 뒤에야 「되돌릴 수 없어요」라고 하던 것). */
@@ -669,7 +670,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
       leaveRecommended();
       setToast({
         text, sub: changes.slice(0, 2).map((change) => `${title(change.id)} → ${clock(change)}`).join(" · ") + (changes.length > 2 ? t(` 외 ${changes.length - 2}곳`, ` and ${changes.length - 2} more`) : ""),
-        revert: quiet || !was.length ? undefined : () => { setToast(null); void sendTimes("before", was, t("시간을 되돌렸어요", "Put the times back"), true).catch((error: unknown) => setToast({ text: reason(error) })); },
+        revert: quiet || !was.length ? undefined : () => { setToast(null); void sendTimes("before", was, t("시간을 되돌렸어요", "Put the times back"), true).catch((error: unknown) => setToast({ text: reason(error), stay: true })); },
       });
     } finally { setWorking(false); }
   }
@@ -690,7 +691,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     if (!first || index === undefined || start === null) return;
     const end = parseHm(first.end);
     const moved = moveStop(times.stops, times.legs, index, start, { push: true, step: 1 }).changes.filter((change) => change.id !== item.id);
-    void sendTimes(list, [...moved, { id: item.id, start, end }], t(`${item.title} 시간을 처음으로 되돌렸어요`, `Put the time of ${item.title} back`), true).catch((error: unknown) => setToast({ text: reason(error) }));
+    void sendTimes(list, [...moved, { id: item.id, start, end }], t(`${item.title} 시간을 처음으로 되돌렸어요`, `Put the time of ${item.title} back`), true).catch((error: unknown) => setToast({ text: reason(error), stay: true }));
   }
   /** Every stop whose time was changed back to the time it had when the screen opened, in one request. */
   function resetTimes() {
@@ -702,7 +703,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
       return first && start !== null ? [{ id, start, end: parseHm(first.end) }] : [];
     });
     if (!changes.length) return;
-    void sendTimes(list, changes, t("시간을 모두 처음으로 되돌렸어요", "Put every time back"), true).catch((error: unknown) => setToast({ text: reason(error) }));
+    void sendTimes(list, changes, t("시간을 모두 처음으로 되돌렸어요", "Put every time back"), true).catch((error: unknown) => setToast({ text: reason(error), stay: true }));
   }
   /** What the recommendation did or would do, as the line under the toast title. */
   const changesLine = (outcome: AutoResult) => outcome.changes.slice(0, 2).join(" · ") + (outcome.changes.length > 2 ? t(` 외 ${outcome.changes.length - 2}곳`, ` and ${outcome.changes.length - 2} more`) : "")
@@ -964,6 +965,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     if (listDay === "all" && !filtering && zoom >= 1.45 && days.length > 1) { setZoom(1); setSwap("day"); goDay(mapDay, false); return; }
     setZoom(Math.round(Math.min(1.3, Math.max(0.8, zoom)) * 20) / 20);
   }
+  useCenterTools(bodyBox, done && !changing);
   useDayGestures(bodyBox, {
     swipe: dayStrip && !filtering,
     hasPrev: dayAt > 0,
@@ -1021,8 +1023,11 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   // The change screen's map: the day's other stops greyed, the stop being changed, and its alternatives A, B, C.
   const cards = change ? change.list : [];
   const mapStops: TripStop[] = changing ? changeStops(view, changing, cards) : stopsOf(shown, mapDay);
+  // ★`[2026-10-07 사용자 지시]` While the list shows only what needs a look, the map does too: those pins in the warning colours, every other pin grey and not pressable.
+  const needsOnMap = done && !changing && filtering && filter === "needs";
   const looks: Record<string, PinLook> | undefined = changing ? changeLooks(view, changing, cards)
-    : removed.length ? Object.fromEntries(removed.map((id) => [id, { tone: "muted" as const }])) : undefined;
+    : needsOnMap ? Object.fromEntries(shown.items.filter((item) => item.day === mapDay).map((item) => [item.id, { tone: item.verdict === "review" && !removed.includes(item.id) ? "warn" as const : "muted" as const }]))
+      : removed.length ? Object.fromEntries(removed.map((id) => [id, { tone: "muted" as const }])) : undefined;
   const mapSelected = changing && change ? (change.index === 0 ? changing.id : `cand-${change.index}`) : selected ?? undefined;
   function onPin(id: string) {
     if (changing && change) {
@@ -1067,7 +1072,15 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     done, open: openAt?.list === list ? openAt.id : null, selected, frozen, actions, explain, rechecking: null, changed: new Set(Object.keys(was)), was, removed: removedSet, rowsFor,
     prefix: list === "after" ? "after-" : "",
     onPick: (id) => pick(id, "list", list),
-    onToggleMove: (id) => setOpenAt((current) => current?.id === id && current.list === list ? null : { list, id }),
+    // ★`[2026-10-07 사용자 지적 — 목록에서 이동을 다시 눌러 닫아도 지도의 선은 골라진 채였다]` The list and the map say the same: opening a leg picks its line on the map, closing it lets the line go.
+    onToggleMove: (id) => {
+      const closing = openAt?.id === id && openAt.list === list;
+      setOpenAt(closing ? null : { list, id });
+      const move = shown.moves.find((entry) => entry.id === id);
+      const line = move && routes?.shapes.find((entry) => entry.itemId === move.id || (entry.fromItemId === move.fromId && entry.toItemId === move.toId));
+      setSelectedLine(closing || !line ? null : line.itemId);
+      if (!closing) setSelected(null);
+    },
     // ★`[2026-10-07 사용자 지시 — 이동수단 고르기]` The server counts the leg again and answers with the plan; the notice says what was done and 「되돌리기」 takes the way it was (or the recommended one when it was not a single way).
     onSetMode: async (move, choice) => {
       const before = move.modeKey ?? null;
@@ -1076,7 +1089,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
       setToast({
         text: choice.mode === "recommended" ? t("추천 수단으로 돌아갔어요", "Back to the recommended way") : t(`${ro(choice.label)} 바꿨어요`, `Changed to ${choice.label}`),
         sub: t("이 구간만 다시 계산했어요", "Only this leg was counted again"), undo: true,
-        revert: () => { void actions.setMoveMode!(move.id, back).catch((error: unknown) => setToast({ text: reason(error) })); },
+        revert: () => { void actions.setMoveMode!(move.id, back).catch((error: unknown) => setToast({ text: reason(error), stay: true })); },
       });
     },
     onChange: (item) => void startChange(item),
@@ -1115,7 +1128,12 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
         selectedLineId={selectedLine ?? undefined} onSelectLine={done && !changing ? onLine : undefined} />
     </div>
     {/* `[2026-10-05 사용자 지시]` 지도 아래 안내 줄: 위치 미정 표시와, 지도에 그려진 선이 무엇인지 말하는 태그(선 색 + 수단 이름). */}
-    {(unlocated.length > 0 || routeShapes.length > 0 || pinned) && <div className={styles.mapChips}>
+    {(unlocated.length > 0 || routeShapes.length > 0 || pinned || (done && !changing && needCount > 0)) && <div className={styles.mapChips}>
+      {/* ★`[2026-10-07 사용자 지시 — 「! 2」는 지도 쪽에]` The count of what needs a look stands on the map; pressed, the list and the map show only those. */}
+      {done && !changing && !registered && needCount > 0 && <button type="button" className={styles.mapNeeds} aria-pressed={filter === "needs" && filtering}
+        onClick={() => setFilter(filter === "needs" && filtering ? null : "needs")} aria-label={t(`확인 필요 ${needCount}곳`, `${needCount} to check`)}
+        title={filter === "needs" && filtering ? t("눌러서 전체 일정 보기", "Press to show every stop") : t("눌러서 확인이 필요한 곳만 모아 보기", "Press to show only the stops that need a look")}>
+        <span className={styles.mark} data-result="warn" aria-hidden="true">!</span><b>{needCount}</b></button>}
       {pinned
         ? <p className={styles.picked} aria-live="polite"><b>{pinned.title}</b>{(pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category) && <> · {pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category}</>}</p>
         : unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
@@ -1165,7 +1183,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
                 }} />}
             </details>} />
         : <>
-          <header className={styles.sheetHead} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
+          <header className={styles.sheetHead} data-float={done && dayStrip ? true : undefined} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
             <h2 id="plan-check-sheet-title" className={dayStrip ? "sr-only" : styles.sheetTitle}>{sheetTitle}</h2>
             {dayStrip && <div ref={stripBox} className={styles.dayStrip} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
               onKeyDown={(event) => {
@@ -1188,10 +1206,10 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
 
             {done && !registered && adjustedNow > 0 && <button type="button" className={styles.resetTimes} onClick={resetTimes} aria-label={t(`시간 조정 ${adjustedNow}곳 모두 처음으로`, `Put the ${adjustedNow} changed time${adjustedNow > 1 ? "s" : ""} back`)} title={t("바꾼 시간을 모두 처음으로", "Put every changed time back")}><Undo2 size={13} strokeWidth={1.8} aria-hidden="true" />{t("시간 초기화", "Reset times")}</button>}
             <p className={styles.count}>{done
-              ? <HeadBadges needs={needCount} changed={changedCount} filter={filtering ? filter : null} onFilter={setFilter} registered={registered} rechecking={rechecking} />
+              ? <HeadBadges needs={needCount} changed={changedCount} filter={filtering ? filter : null} onFilter={setFilter} registered={registered} rechecking={rechecking} needsOnMap />
               : countText(view, t)}</p>
           </header>
-          <div ref={bodyBox} className={styles.sheetBody} {...follow.handlers} onScroll={follow.handlers.onScroll}>
+          <div ref={bodyBox} className={styles.sheetBody} data-under-float={done && dayStrip ? true : undefined} {...follow.handlers} onScroll={follow.handlers.onScroll}>
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
             {filtering && <p className={styles.filterNote} role="status">{filter === "changed" ? t("바뀐 곳만 보는 중이에요", "Showing only what changed") : t("확인이 필요한 곳만 보는 중이에요", "Showing only what needs a look")}
               <button type="button" onClick={() => setFilter(null)}>{t("전체 보기", "Show all")}</button></p>}
