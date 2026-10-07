@@ -2,8 +2,9 @@ import type { RouteShape } from "@/lib/live/route-shapes";
 import type { TripStop } from "../trip/model";
 import { hasValidCoordinates } from "./map-points";
 import type { MapLine } from "./model";
+import { LINE_TONE_VARIABLE } from "./providers/lines";
 
-const MODE_NAMES: Record<RouteShape["mode"], string> = { walk: "도보", bike: "자전거", taxi: "택시", subway: "지하철", bus: "버스", mixed: "대중교통", unknown: "이동" };
+export const MODE_NAMES: Record<RouteShape["mode"], string> = { walk: "도보", bike: "자전거", taxi: "택시", subway: "지하철", bus: "버스", mixed: "대중교통", unknown: "이동" };
 
 /** The road is not known (a straight line between two places), or the server gives no ground for the line: it is drawn dashed and pale. */
 export const isGuess = (shape: RouteShape) => shape.source === "straight_line" || shape.grade === "근거없음" || shape.source === "unknown";
@@ -23,6 +24,7 @@ export function toMapLines(shapes: RouteShape[]): MapLine[] {
     id: shape.itemId,
     points: shape.points,
     dashed: isGuess(shape),
+    mode: shape.mode,
     title: `${shape.from ?? "출발"} → ${shape.to ?? "도착"} · ${MODE_NAMES[shape.mode]}${shape.distanceM !== null ? ` ${shape.distanceM >= 1000 ? `${(shape.distanceM / 1000).toFixed(1)}km` : `${Math.round(shape.distanceM)}m`}` : ""}`,
   }));
 }
@@ -36,4 +38,29 @@ export function routeNotes(shapes: RouteShape[]): string[] {
   // The server says why for each guess (`note`): the road finder was off, no stop list … — shown as it wrote it, once for each distinct sentence.
   const reasons = new Set(shapes.filter(isGuess).flatMap((shape) => shape.note ? [`${shape.from ?? "출발"} → ${shape.to ?? "도착"}: ${shape.note}`] : []));
   return [...notes, ...reasons];
+}
+
+/** One kind of route that is drawn, for the legend over the map: its name and the theme colour its lines have. */
+export interface RouteTag { mode: RouteShape["mode"]; label: string; variable: string }
+
+const TAG_ORDER: readonly RouteShape["mode"][] = ["subway", "mixed", "bus", "taxi", "walk", "bike", "unknown"];
+
+/**
+ * `[2026-10-05 사용자 지시 — 지도에 포커스가 있을 때 하단에 「(선 색) ── 지하철」처럼 태그로]` What the legend over the map says: the kinds of route that are drawn (each with the colour of its lines) and how many
+ * of the routes are only a guess (a straight, dashed line) - the odd ones, said once and short; the detail is under the line when it is pressed. Nothing for a map with no lines.
+ */
+export function routeTags(shapes: RouteShape[]): { kinds: RouteTag[]; guessed: number } {
+  const present = new Set(shapes.map((shape) => shape.mode));
+  const kinds = TAG_ORDER.filter((mode) => present.has(mode)).map((mode) => ({ mode, label: MODE_NAMES[mode], variable: LINE_TONE_VARIABLE[mode] }));
+  return { kinds, guessed: shapes.filter(isGuess).length };
+}
+
+/** The rides of a subway or mixed line, one sentence each: 「지하철 3호선 · 경복궁→을지로3가 · 4개 역」 (+ 「역 사이는 직선」 when the stations between could not be filled in). */
+export function rideLines(shape: RouteShape, t: (ko: string, en: string) => string): string[] {
+  return shape.rides.map((ride) => [
+    ride.line,
+    ride.from && ride.to ? `${ride.from}→${ride.to}` : null,
+    ride.count !== null ? t(`${ride.count}개 역`, `${ride.count} stations`) : null,
+    ride.filled ? null : t("역 사이는 직선", "straight between stations"),
+  ].filter(Boolean).join(" · "));
 }

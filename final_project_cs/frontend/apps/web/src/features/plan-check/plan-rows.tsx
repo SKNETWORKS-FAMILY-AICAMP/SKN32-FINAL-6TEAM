@@ -162,12 +162,14 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
                 {item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}
               </span>
             </button></h4>
+            <span className={styles.cardTools}>
             {status}
             {adjusted && <Act className={styles.undoTime} why={frozen} explain={explain} onPress={() => ctx.onRevertTime(item)} aria-label={t(`${item.title} 시간 되돌리기`, `Put back the time of ${item.title}`)} title={t("시간을 처음으로 되돌리기", "Put the time back")}><Undo2 size={13} strokeWidth={1.8} aria-hidden="true" />{t("되돌리기", "Undo")}</Act>}
             <Act id={`${ctx.prefix}plan-edit-${item.id}`} className={styles.icon} why={changeWhy} explain={explain} onPress={() => ctx.onChange(item)} aria-label={t(`${item.title} 수정`, `Edit ${item.title}`)}><Pencil size={16} strokeWidth={1.8} aria-hidden="true" /></Act>
             {removed
               ? <button type="button" id={`${ctx.prefix}plan-restore-${item.id}`} className={styles.icon} data-restore onClick={() => ctx.onRestore(item)} aria-label={t(`${item.title} 삭제 되돌리기`, `Undo deleting ${item.title}`)} title={t("되돌리기", "Undo")}><Undo2 size={16} strokeWidth={1.8} aria-hidden="true" /></button>
               : <Act id={`${ctx.prefix}plan-delete-${item.id}`} className={styles.icon} why={deleteWhy} explain={explain} onPress={() => ctx.onDelete(item)} aria-label={t(`${item.title} 삭제`, `Delete ${item.title}`)}><Trash2 size={16} strokeWidth={1.8} aria-hidden="true" /></Act>}
+            </span>
           </div>
         : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
       {done && ctx.time?.id === item.id && ctx.time.kind === "start" && !ctx.time.direct && !removed && <TimeEditor item={item} ui={ctx.time} />}

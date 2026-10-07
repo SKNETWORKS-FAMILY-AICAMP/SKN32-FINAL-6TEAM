@@ -27,20 +27,18 @@ test("서버가 guardian 을 말하지 않으면(옛 서버) 아이콘을 그리
   await expect(page.getByRole("button", { name: /항로 지킴이/ })).toHaveCount(0);
 });
 
-test("켜져 있으면 「끄기」 아이콘이 보이고, 누르면 바로 꺼지며 되돌리기 줄은 저절로 사라지지 않고, 되돌리면 다시 켜진다(서버에는 header 로 기록)", async ({ page, request }) => {
+test("켜져 있으면 「끄기」 아이콘이 보이고, 누르면 바로 꺼지며 알림 막대에 되돌리기가 뜨고(몇 초 뒤 저절로 사라지고), 되돌리면 다시 켜진다(서버에는 header 로 기록)", async ({ page, request }) => {
   const server = await open(page, request, "on");
   await expect(icon(page, "항로 지킴이 끄기")).toContainText("지금 켜져 있어요");
   await icon(page, "항로 지킴이 끄기").click();
   await expect(icon(page, "항로 지킴이 켜기")).toBeVisible();
   const line = page.getByRole("status").filter({ hasText: "항로 지킴이를 껐어요. 문제가 생기면 물어볼게요." });
   await expect(line).toBeVisible();
-  // 알림줄은 머리줄 아래에 서서 아이콘을 가리지 않는다
+  // 알림 막대는 머리줄 아래에 서서 아이콘을 가리지 않는다
   const iconBox = (await icon(page, "항로 지킴이 켜기").boundingBox())!;
-  const lineBox = (await line.locator("xpath=ancestor::div[1]").boundingBox())!;
+  const lineBox = (await line.boundingBox())!;
   expect(lineBox.y).toBeGreaterThanOrEqual(iconBox.y + iconBox.height);
   expect((await saved(server)).map((entry) => entry.body)).toEqual([{ enabled: false, via: "header" }]);
-  await page.waitForTimeout(5500);
-  await expect(line).toBeVisible();
   await line.getByRole("button", { name: "되돌리기" }).click();
   await expect(icon(page, "항로 지킴이 끄기")).toBeVisible();
   await expect(line).toHaveCount(0);
@@ -72,7 +70,7 @@ test("꺼져 있으면 누를 때 카드(켜기 / 그대로 두기)가 한 번 �
 test("서버가 못 받으면 상태는 그대로이고 「항로 지킴이를 바꾸지 못했어요」와 「다시 시도하기」가 뜬다. 서버가 돌아오면 다시 시도로 바뀐다", async ({ page, request }) => {
   const server = await open(page, request, "on", { guardianSave: "fail" });
   await icon(page, "항로 지킴이 끄기").click();
-  const alert = page.getByRole("alert").filter({ hasText: "항로 지킴이를 바꾸지 못했어요. 연결을 확인하고 다시 시도해 주세요." });
+  const alert = page.getByRole("status").filter({ hasText: "항로 지킴이를 바꾸지 못했어요. 연결을 확인하고 다시 시도해 주세요." });
   await expect(alert).toBeVisible();
   await expect(icon(page, "항로 지킴이 끄기")).toBeVisible();                                         // 바뀌지 않았다
   await expect(icon(page, "항로 지킴이 켜기")).toHaveCount(0);

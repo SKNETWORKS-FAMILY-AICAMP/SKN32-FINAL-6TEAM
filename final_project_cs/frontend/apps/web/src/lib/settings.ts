@@ -15,10 +15,15 @@ export interface Settings {
    * replay. It is the customer's own choice in the menu — the system's 「동작 줄이기」 no longer skips the steps (they are information, not motion).
    */
   skipAnimation: boolean;
+  /**
+   * `[2026-10-06 사용자 지시 — 첫 화면 · 확인 화면과 일관되게 전체를 모바일 기준으로, 메뉴에서 데스크탑을 고르면 그때 데스크탑 화면]` The registration, trip list, trip and my-page screens stand in the same
+   * phone-sized frame as the intro and the plan check. On = those screens use the whole width of a wide window instead (the menu's 「데스크탑 화면으로 보기」).
+   */
+  desktopLayout: boolean;
 }
 
 // `[2026-10-03 사용자 결정]` 기본 언어는 한국어다 — 처음 여는 사람에게 한국어로 보인다(바꾸면 이 브라우저가 기억한다).
-const defaults: Settings = { language: "ko", navigation: "fixed", theme: "green", skipAnimation: false };
+const defaults: Settings = { language: "ko", navigation: "fixed", theme: "green", skipAnimation: false, desktopLayout: false };
 const listeners = new Set<() => void>();
 let current: Settings | null = null;
 
@@ -32,6 +37,7 @@ function read(): Settings {
       navigation: stored?.navigation === "floating" || stored?.navigation === "fixed" ? stored.navigation : defaults.navigation,
       theme: themes.find((value) => value === stored?.theme) ?? defaults.theme,
       skipAnimation: stored?.skipAnimation === true,
+      desktopLayout: stored?.desktopLayout === true,
     };
   } catch {
     // Settings are a per-browser convenience; unreadable storage keeps the defaults.

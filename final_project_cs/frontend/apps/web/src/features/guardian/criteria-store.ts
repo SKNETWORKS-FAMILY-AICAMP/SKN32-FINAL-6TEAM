@@ -15,6 +15,18 @@ export interface Criteria { pace: Pace; paceChosen: boolean; guardian: Guardian 
 
 const KEY = "triPilot.readingCriteria.v1";
 const EMPTY: Criteria = { pace: DEFAULT_PACE, paceChosen: false, guardian: null, decided: false };
+/** `[2026-10-06 사용자 지시 — 「한 번 켜면 켜진 상태가 기본」]` Once the customer has turned the Course Keeper on it stays the starting state of every plan after (kept in this browser): no card is asked again, the icon is simply on. */
+const DEFAULT_KEY = "triPilot.guardianDefault.v1";
+const ON_BY_DEFAULT: Criteria = { ...EMPTY, guardian: "on", decided: true };
+
+function defaultOn(): boolean {
+  try { return window.localStorage.getItem(DEFAULT_KEY) === "on"; } catch { return false; }
+}
+
+/** Keep (or forget) 「on」 as the way a plan starts. Turning it off forgets it - the card asks again next time. */
+export function rememberGuardian(on: boolean) {
+  try { if (on) window.localStorage.setItem(DEFAULT_KEY, "on"); else window.localStorage.removeItem(DEFAULT_KEY); } catch { /* private window: it is only kept for this page */ }
+}
 
 let current: Criteria | null = null;
 const listeners = new Set<() => void>();
@@ -22,10 +34,12 @@ const listeners = new Set<() => void>();
 function load(): Criteria {
   try {
     const raw = JSON.parse(window.sessionStorage.getItem(KEY) ?? "null") as Partial<Criteria> | null;
-    if (!raw || typeof raw !== "object") return EMPTY;
+    if (!raw || typeof raw !== "object") return defaultOn() ? ON_BY_DEFAULT : EMPTY;
     const guardian = raw.guardian === "on" || raw.guardian === "off" ? raw.guardian : null;
-    return { pace: isPace(raw.pace) ? raw.pace : DEFAULT_PACE, paceChosen: raw.paceChosen === true && isPace(raw.pace), guardian, decided: raw.decided === true && guardian !== null };
-  } catch { return EMPTY; }
+    const decided = raw.decided === true && guardian !== null;
+    const base: Criteria = { pace: isPace(raw.pace) ? raw.pace : DEFAULT_PACE, paceChosen: raw.paceChosen === true && isPace(raw.pace), guardian, decided };
+    return !decided && defaultOn() ? { ...base, guardian: "on", decided: true } : base;
+  } catch { return defaultOn() ? ON_BY_DEFAULT : EMPTY; }
 }
 
 /** The choices now (`EMPTY` on the server render and where session storage is not available). */
@@ -43,9 +57,9 @@ function write(next: Criteria) {
 
 export const setPace = (pace: Pace) => write({ ...readCriteria(), pace, paceChosen: true });
 /** The customer decided on the card: the Course Keeper on or off, and from here the choice is sent. */
-export const decideGuardian = (guardian: Guardian) => write({ ...readCriteria(), guardian, decided: true });
+export const decideGuardian = (guardian: Guardian) => { rememberGuardian(guardian === "on"); write({ ...readCriteria(), guardian, decided: true }); };
 /** Forget it (a registered trip, or a new start). */
-export const clearCriteria = () => write(EMPTY);
+export const clearCriteria = () => write(defaultOn() ? ON_BY_DEFAULT : EMPTY);
 
 function subscribe(listener: () => void) {
   listeners.add(listener);

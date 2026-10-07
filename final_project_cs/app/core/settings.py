@@ -134,6 +134,11 @@ class Settings(BaseSettings):
     #: ★`[2026-09-29]` 모델을 붙잡아 둘 시간(Ollama `keep_alive`, 예 `30m` · `2h`). 비우면 Ollama 기본(5분).
     #:  길게 두면 잠든 모델의 느린 첫 호출(ui 세션 실측 29.8초)이 줄지만 원격 GPU 메모리를 그만큼 잡는다 — 값은 운영이 정한다
     ollama_keep_alive: str = ""
+    #: ★`[2026-10-07 사용자 지시]` 일정 항목 짚기 **가르친 모델**(Ollama 에 올린 이름, 예 `tripilot-pointer:e4b-ft`). 비우면 낱말 규칙만 쓴다.
+    #:  켜고 끄기는 가드레일 `travel.pointer.mode`. 모델이 못 부르면 규칙으로 돌아간다(`item_pointer.py`).
+    ollama_pointer_model: str = ""
+    ollama_pointer_timeout_seconds: float = 30.0
+    ollama_pointer_keep_alive: str = ""
 
     # ── 여행 외부 소스 ─────────────────────────────────────────
     # ★기본값이 빈 문자열이다 = **그 소스를 안 붙인다.** 가짜로 채우지 않는다.
@@ -162,6 +167,9 @@ class Settings(BaseSettings):
     #: 행정안전부 긴급재난문자 — 호우·통제·화재 등 지역 재난문자       data.go.kr/data/15134001
     #:  ★2026-09-14 키 발급. 그전까지는 샘플 CSV 판(`disaster_msg.py`)으로 돌았다.
     disaster_msg_api_key: str = ""
+    #: 행정안전부 지진옥외대피장소(전국) — 재난 일정 정지 때 가까운 대피 장소 안내  data.go.kr/data/15138868
+    #:  ★`[2026-10-06]` 예시 파일에 이름이 먼저 들어가 `extra="forbid"` 라 이 PC 에서 설정이 통째로 거부됐다(시험 수집 78개 파일 · 재생 도구 불통). 비우면 서울시 자료(DB 에 적재한 곳)로만 안내한다.
+    safetydata_shelter_api_key: str = ""
     #: 서울교통공사 지하철알림정보 — 무정차 통과 감시(문제목록 #36)  data.go.kr/data/15144070
     #:  ★공통 키로 충분하다. 이 칸은 다른 계정을 쓸 때만 채운다.
     subway_notice_api_key: str = ""

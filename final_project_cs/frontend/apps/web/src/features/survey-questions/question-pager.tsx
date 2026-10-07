@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useT } from "@/lib/settings";
 import { answerOf } from "./model";
@@ -21,7 +21,14 @@ export function QuestionPager({ flow }: { flow: QuestionFlow }) {
   const { questions, at, busy, saved, failed } = flow;
   const question = questions[at];
   const title = useRef<HTMLHeadingElement>(null);
+  const card = useRef<HTMLElement>(null);
   const swipe = useRef<{ x: number; y: number } | null>(null);
+  // ★`[2026-10-06 사용자 지시 — 설문이 나오면 거기로 시선이 가게]` The questions take the focus and move in with a short attention pulse (twice), so the eye goes there; a screen that asks for less motion gets the focus only.
+  const [attention, setAttention] = useState(true);
+  useEffect(() => {
+    title.current?.focus({ preventScroll: true });
+    card.current?.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }, []);
 
   // A move the customer asked for (a button, a swipe, an answer that went on) puts the focus on the new question's title - not on the first run.
   useEffect(() => { if (flow.focusNonce > 0) title.current?.focus({ preventScroll: true }); }, [flow.focusNonce]);
@@ -47,8 +54,9 @@ export function QuestionPager({ flow }: { flow: QuestionFlow }) {
     flow.navigate(event.key === "ArrowRight" ? 1 : -1);
   };
 
-  return <section className={styles.pager} aria-roledescription="carousel" aria-label={t(`질문 ${count}개`, `${count} questions`)}
-    onPointerDownCapture={flow.touchQuestions} onKeyDown={key}>
+  return <section ref={card} className={styles.pager} data-attention={attention || undefined} aria-roledescription="carousel" aria-label={t(`질문 ${count}개`, `${count} questions`)}
+    onPointerDownCapture={flow.touchQuestions} onKeyDown={key}
+    onAnimationEnd={(event) => { if (event.target === event.currentTarget && event.animationName.toLowerCase().includes("pulse")) setAttention(false); }}>
     <div className={styles.top}>
       <button type="button" className={styles.nav} onClick={() => flow.navigate(-1)} disabled={at === 0 || busy}
         aria-label={t("이전 질문 보기", "Previous question")} data-tip={t("이전 질문 보기", "Previous question")} data-kbd=" · ←"><ChevronLeft strokeWidth={1.8} aria-hidden="true" /></button>

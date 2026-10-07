@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 import { ContactSync } from "@/components/contact-sync";
+import { ServerWaitBanner } from "@/components/server-wait-banner";
 import { ServerNotConnected } from "@/components/server-not-connected";
 import { ConsentGate } from "@/features/consent/consent-gate";
 import { OnboardingProvider } from "@/features/onboarding/onboarding-state";
@@ -17,5 +18,5 @@ export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
   // ★`[2026-10-03 사용자 지시]` No server connection (`NEXT_PUBLIC_DATA_MODE=live` missing) → this one screen, never an imitation of the app.
   if (DATA_MODE !== "live") return <ServerNotConnected />;
-  return <QueryClientProvider client={client}><OnboardingProvider><ContactSync /><ConsentGate>{children}</ConsentGate></OnboardingProvider></QueryClientProvider>;
+  return <QueryClientProvider client={client}><OnboardingProvider><ContactSync /><ConsentGate>{children}</ConsentGate><ServerWaitBanner /></OnboardingProvider></QueryClientProvider>;
 }

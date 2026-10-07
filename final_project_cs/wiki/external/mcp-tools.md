@@ -1,7 +1,7 @@
 ---
 type: contract
 title: MCP 도구
-description: 개인 AI(MCP)가 사용자 키로 본인 여행을 다루는 도구 — 읽기 7 · 쓰기 7(쓰기는 스위치, 기본 꺼짐). 아래 옛 쇼핑몰 도구 3종은 연결된 적이 없다
+description: 개인 AI(MCP)가 사용자 키로 본인 여행을 다루는 도구 — 읽기 8 · 쓰기 7(쓰기는 스위치, 기본 꺼짐). 아래 옛 쇼핑몰 도구 3종은 연결된 적이 없다
 status: draft
 tags: [api, security, contract]
 owners: [human:미배정]
@@ -31,6 +31,7 @@ domain_note: 코드가 아직 커머스다 — 여행 전환 층 7(입구 — �
 | `tripilot_get_proposals` | 읽기 | 「바꿀까요?」 하고 물어 둔 대기 제안 |
 | `tripilot_get_itinerary_schema` | 읽기 | 일정 등록 JSON 스키마(`customer_id` 는 뺀다) |
 | `tripilot_check_trip_risks` | 읽기 | ★`[2026-10-06]` **일정 위험 점검** — 곧 시작할 일정마다 외부 정보 6종(예보 · 특보 · 재난문자 · 교통 통제 · 대기질 · 지진)이 문제를 가리키나. 항목마다 `problem`(원인) · `clear` · `unknown`(확인 불가). 기본은 **감시가 모아 둔 캐시만 읽는다**(`GET /v1/web/trips/{id}/risks`) — 아래 「읽기 도구 둘」 |
+| `tripilot_get_recovery_brief` | 읽기 | ★`[2026-10-06 사용자 결정]` **재난 뒤 상황 꾸러미** — 재난으로 멈춘 여행을 사용자가 다시 시작한 뒤(72시간 안) 읽는다: `facts`(출처 있는 사실) · `unknowns`(우리가 모르는 것) · `items`(항목마다 영향 판정 `affected`/`unknown`/`unaffected` + 이유) · `constraints`(`avoid_districts` · `affected_item_ids` · `lighter_day`) · `chosen`. 다시 시작한 정지가 없으면 `recovery: null`. `unknown` 을 「영향 없음」으로 다루지 않고 밀도를 임의로 낮추지 않는다(`GET /v1/web/trips/{id}/safety/recovery`) |
 | `tripilot_judge_move` | 읽기 | ★`[2026-10-06]` **이동 판정** — 서울 안 두 장소 → 출발 시각 · 경로(노선) · 소요 · 근거 등급 · 확인 시각 (`POST /v1/web/moves/judge`) — 아래 「읽기 도구 둘」 |
 | `tripilot_ask` | 쓰기 | 자유 문장을 여행 창구에 그대로 전한다 — 질문은 사실로, 요청은 조건 확인 뒤 변경 (`POST …/messages`) |
 | `tripilot_report_issue` | 쓰기 | 지연(`minutes`) · 휴무 · 품절(`products`) 구조화 신고 (`POST …/reports`, 웹 쌍둥이 신설) |

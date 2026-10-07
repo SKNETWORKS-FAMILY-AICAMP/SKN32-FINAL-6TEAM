@@ -1,9 +1,10 @@
 "use client";
 
-import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, ChevronsDown, ChevronsRight, ChevronsUp, Pencil, Search, Undo2, X } from "lucide-react";
 import { DeviceFrame, HeaderSlot } from "@/components/layout/device-frame";
+import { ToastView, useToastState } from "@/components/toast-view";
 import { TripMap } from "@/features/map";
 import { routeNotes, visibleShapes } from "@/features/map/route-lines";
 import type { RouteShapes } from "@/lib/live/route-shapes";
@@ -12,12 +13,16 @@ import type { TripStop } from "@/features/trip/model";
 import type { Language, Translate } from "@/lib/i18n";
 import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
+import { onToast } from "@/lib/toast-bus";
 import { foundCount, isInstantRow, needs, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type LineFinding, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type ServerProgress, type TripIssue } from "./model";
 import { Act, HeadBadges, letter, reason, type ListFilter } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
 import { dayTimes, withTimes } from "./day-times";
 import { DayList, type RowContext } from "./plan-rows";
 import { ResultFooter, StopEditor, TripIssues, type Registration } from "./result-parts";
+import { dampedScrollTo } from "@/lib/damped-scroll";
+import { moveToast, stopToast } from "./map-description";
+import { RouteTags } from "./route-tags";
 import { useFollowScroll } from "./use-follow-scroll";
 import { usePullPastEnd } from "./use-pull-past-end";
 import { useDayGestures } from "./use-day-gestures";
@@ -320,7 +325,7 @@ const COMPACT_BELOW = 190;
 /** The least the sheet can be dragged to: the handle and the buttons. */
 const SHEET_MIN = 104;
 
-interface Toast { text: string; sub?: string; undo?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void }
+interface Toast { text: string; sub?: string; undo?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string; /** How long it stays when the default is too short (`lib/toast-bus.ts`). */ ms?: number }
 
 type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "onMapZoom">;
 
@@ -339,6 +344,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   // What the customer picked once the check is done: one card or move open, one place selected, one day on the map.
   const [openAt, setOpenAt] = useState<{ list: "before" | "after"; id: string } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  // `[2026-10-06 사용자 지시]` The route line the customer pressed on the map (the id of its shape): drawn picked, its leg opened in the list and described in the card over the map.
+  const [selectedLine, setSelectedLine] = useState<string | null>(null);
   const [chosenDay, setChosenDay] = useState<number | null>(null);
   const [sheet, setSheet] = useState<Sheet>("half");
   // ⑤ The stop being changed (the change screen takes the sheet), the search in the top bar.
@@ -346,7 +353,17 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState<SearchState | null>(null);
   const [details, setDetails] = useState(false);
-  const [toast, setToast] = useState<Toast | null>(null);
+  // ★`[2026-10-06 사용자 지시 — 알림은 하나의 포맷으로]` This screen's notices are shown by the one bar every screen uses (`components/toast-view.tsx`): `setToast` turns what the screen says into it. The words of 「되돌리기」 and the
+  //   plan-wide undo are read when the button is pressed (`latest`), not when the notice was made.
+  const { shown: shownToast, show: showToast, hide: hideToast } = useToastState();
+  const latest = useRef<{ t: Translate; undo: () => void } | null>(null);
+  const setToast = useCallback((value: Toast | null) => {
+    if (!value) { hideToast(); return; }
+    showToast({
+      text: value.text, sub: value.sub, ms: value.ms,
+      action: value.undo || value.revert ? { label: value.undoLabel ?? latest.current?.t("되돌리기", "Undo") ?? "", run: value.revert ?? (() => latest.current?.undo()) } : undefined,
+    });
+  }, [hideToast, showToast]);
   const [working, setWorking] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
   // `[2026-10-03 사용자]` The place search lives in the header, where the brand stands: small there, and wide while it has focus.
@@ -366,6 +383,10 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const [turn, setTurn] = useState<"forward" | "back" | null>(null);
   const grab = useRef<{ y: number; height: number; moved: boolean } | null>(null);
   const justDragged = useRef(false);
+  /** The height the list was last laid out at, and the height a drag has reached (written straight to the screen, not through state: a drag re-rendering this whole screen on every move was what made it stutter). */
+  const lastSheetHeight = useRef(0);
+  const dragHeight = useRef<number | null>(null);
+  const dragFrame = useRef<number | null>(null);
   /**
    * ★`[2026-10-04 사용자 지시]` 「전체 자동 추천」 is first only SHOWN: the plan as it WOULD be (nothing saved) stands under the plan as it is — one list, the same line running through — and
    * the sheet, the map and the buttons follow whichever of the two is in view (`side`). The screen holds both pictures; scrolling back up shows the plan as it was.
@@ -402,11 +423,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const zoomBox = useRef<HTMLDivElement>(null);
   const stripBox = useRef<HTMLDivElement>(null);
   const markerBox = useRef<HTMLSpanElement>(null);
-  useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), toast.undo ? 4500 : 2800);
-    return () => clearTimeout(timer);
-  }, [toast]);
+  // `[2026-10-06 사용자 지시]` What the customer did elsewhere on this screen (the Course Keeper turned on or off in the header) is told in THIS bar, like every other notice here.
+  useEffect(() => onToast((notice) => setToast({ text: notice.text, sub: notice.sub, ms: notice.ms, undo: Boolean(notice.action), revert: notice.action ? () => { notice.action?.run(); } : undefined, undoLabel: notice.action?.label })), [setToast]);
   // The preview is gone from the page (the plan changed some other way): the list is the plan as it is.
   const hadPreview = useRef(false);
   useEffect(() => {
@@ -419,10 +437,22 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   useEffect(() => {
     const element = sheetBox.current;
     if (!element || typeof ResizeObserver === "undefined") return;
-    const watcher = new ResizeObserver(() => { const next = element.getBoundingClientRect().height < COMPACT_BELOW; setCompact((current) => current === next ? current : next); });
+    const watcher = new ResizeObserver(() => { lastSheetHeight.current = element.offsetHeight; const next = element.getBoundingClientRect().height < COMPACT_BELOW; setCompact((current) => current === next ? current : next); });
     watcher.observe(element);
     return () => watcher.disconnect();
   }, []);
+  // ★`[2026-10-06 사용자 지적 — 여행 일정 창 확대·축소가 부드럽지 않다]` The list takes its new height at once (nothing inside re-flows while it moves; the map's edge follows with the same curve) and SLIDES there as a transform
+  // on the compositor, from where its top edge was. A drag does not come through here: it is written to the screen as it goes (`dragSheet`) and ends with the same height it reached.
+  useLayoutEffect(() => {
+    const element = sheetBox.current;
+    if (!element || typeof element.animate !== "function") return;
+    const height = element.offsetHeight;
+    const before = lastSheetHeight.current;
+    lastSheetHeight.current = height;
+    if (!before || Math.abs(height - before) < 2 || skipAnimation || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const slide = element.animate([{ transform: `translateY(${height - before}px)` }, { transform: "translateY(0)" }], { duration: 380, easing: "cubic-bezier(.22, .8, .3, 1)" });
+    return () => slide.cancel();
+  }, [sheet, custom, skipAnimation]);
 
   // ★A stop stands in both lists while a proposal is under the plan: what is open, and what is being edited, belongs to ONE of them — never both (opening the one out of sight would push the one in view).
   const setOpen = (id: string | null, list: "before" | "after" = "before") => setOpenAt(id === null ? null : { list, id });
@@ -469,14 +499,38 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   function pick(id: string, from: "map" | "list", list: "before" | "after" = previewing && side === "after" ? "after" : "before") {
     const item = shown.items.find((entry) => entry.id === id);
     if (!item) return;
-    if (selected === id) { setSelected(null); closeOpen(id); return; }
+    if (selected === id) { setSelected(null); closeOpen(id); if (from === "map") setToast(null); return; }
+    setSelectedLine(null);
     setSelected(id);
     setChosenDay(item.day);
     setOpen(id, list);
     if (from === "map") {
       if (sheet === "peek") setSheet("half");
-      requestAnimationFrame(() => document.getElementById(`${list === "after" ? "after-" : ""}plan-card-${id}`)?.scrollIntoView({ block: "nearest" }));
+      const bringUp = () => requestAnimationFrame(() => document.getElementById(`${list === "after" ? "after-" : ""}plan-card-${id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+      bringUp();
+      // ★`[2026-10-06 사용자 지시 — 마커를 누르면 그 설명이 알림으로]` What the pin says, in the one notice every screen uses.
+      showToast(stopToast({ item, order: mapStops.findIndex((stop) => stop.id === id) + 1 || 1 }, t, bringUp));
     }
+  }
+  /**
+   * `[2026-10-06 사용자 지시 — 경로를 누르면 해당 경로가 나온다]` A route line pressed on the map: it is drawn picked, its leg is opened in the list (and brought into view), and a card over the map describes it. Pressed again it is let go.
+   */
+  function pickLine(lineId: string) {
+    const shape = routes?.shapes.find((entry) => entry.itemId === lineId);
+    const move = shape && (shown.moves.find((entry) => entry.id === shape.itemId) ?? shown.moves.find((entry) => entry.fromId === shape.fromItemId && entry.toId === shape.toItemId));
+    if (!move) return;
+    if (selectedLine === lineId) { setSelectedLine(null); closeOpen(move.id); setToast(null); return; }
+    setSelectedLine(lineId);
+    setSelected(null);
+    const from = shown.items.find((entry) => entry.id === move.fromId);
+    if (from) setChosenDay(from.day);
+    const list = previewing && side === "after" ? "after" : "before";
+    setOpenAt({ list, id: move.id });
+    if (sheet === "peek") setSheet("half");
+    const bringUp = () => requestAnimationFrame(() => bodyBox.current?.querySelector<HTMLElement>(`[data-entry-id="${move.id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+    bringUp();
+    const name = (id: string, fallback: string | null) => shown.items.find((entry) => entry.id === id)?.title ?? fallback ?? "";
+    showToast(moveToast({ move, from: name(move.fromId, shape.from), to: name(move.toId, shape.to), shape }, t, bringUp));
   }
   function showDay(day: number) {
     setChosenDay(day);
@@ -772,6 +826,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     setToast(null);
     void run(async () => { await actions.undo!(); return { text: t("되돌렸어요", "Undone"), sub: t("바꾸기 전으로 돌렸어요", "Back to how it was") }; });
   }
+  useEffect(() => { latest.current = { t, undo }; });
 
   // The checks of the stops that were changed come in once more, one at a time, after the plan has been checked again.
   const replayQueue = useMemo(() => !replay ? [] : replay.ids.flatMap((id) => {
@@ -815,13 +870,24 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     const up = held.y - event.clientY;
     if (!held.moved && Math.abs(up) < 6) return;
     held.moved = true;
-    setDragging(true);
+    if (!dragging) setDragging(true);
     const { min, max } = sheetLimits();
-    setCustom(Math.round(Math.min(max, Math.max(min, held.height + up))));
+    const height = Math.round(Math.min(max, Math.max(min, held.height + up)));
+    dragHeight.current = height;
+    lastSheetHeight.current = height;                              // the slide below is for a press of the handle, not for a drag that is already there
+    if (dragFrame.current === null) dragFrame.current = requestAnimationFrame(() => {
+      dragFrame.current = null;
+      if (dragHeight.current !== null) checkingBox.current?.style.setProperty("--sheet-h", `${dragHeight.current}px`);
+    });
   }
   function dropSheet() {
-    if (grab.current?.moved) justDragged.current = true;          // the click that ends a drag is not a press of the handle
+    if (grab.current?.moved) {
+      justDragged.current = true;                                  // the click that ends a drag is not a press of the handle
+      if (dragFrame.current !== null) { cancelAnimationFrame(dragFrame.current); dragFrame.current = null; }
+      if (dragHeight.current !== null) setCustom(dragHeight.current);
+    }
     grab.current = null;
+    dragHeight.current = null;
     setDragging(false);
   }
   function cycleSheet() {
@@ -932,6 +998,14 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   });
   // `[2026-10-03 사용자]` While the check is drawn row by row the list follows the newest row (it stayed at the top while rows were added below).
   const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view);
+  // ★`[2026-10-06 사용자 지적 — 첫 화면이 왜 애매하게 1일차 마지막 일정에 가 있나]` While the check is drawn the list follows the newest row, so it ends where the last row was drawn - in the middle of day 1.
+  //   When the check is done the list goes back to the very top (the first stop of the first day), once.
+  const wentTop = useRef(false);
+  useEffect(() => {
+    if (!done || wentTop.current) return;
+    wentTop.current = true;
+    if (bodyBox.current) dampedScrollTo(bodyBox.current, 0, 5);
+  }, [done]);
 
   // The change screen's map: the day's other stops greyed, the stop being changed, and its alternatives A, B, C.
   const cards = change ? change.list : [];
@@ -947,10 +1021,13 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     }
     if (done) pick(id, "map");
   }
+  function onLine(lineId: string) { if (done && !changing) pickLine(lineId); }
 
   // The lines belong to the plan as it is: for the proposed one only those between stops it did not change are still true (a changed place moves its ends).
   const lineShapes = !routes || changing ? null : previewing && side === "after" && recommended
     ? { ...routes, shapes: routes.shapes.filter((shape) => !(shape.fromItemId in recommended.was) && !(shape.toItemId in recommended.was)) } : routes;
+  // The lines of the day on the map (what the legend names).
+  const routeShapes = visibleShapes(lineShapes?.shapes, mapStops);
   const drawn = visibleShapes(lineShapes?.shapes, mapStops);
 
   const applyWhy = !changing ? null : !actions.replace ? t("장소 바꾸기는 준비 중이에요", "Changing the place is coming")
@@ -1012,9 +1089,14 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   return <div ref={checkingBox} className={styles.checking} data-sheet={custom !== null ? "custom" : sheet} data-changing={changing ? true : undefined} data-dragging={dragging || undefined} data-compact={compact && done && !changing ? true : undefined}
     style={custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
     <div className={styles.map}>
-      <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" topInset={64} bottomInset={24} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin} />
+      <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" topInset={64} bottomInset={24} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin}
+        selectedLineId={selectedLine ?? undefined} onSelectLine={done && !changing ? onLine : undefined} />
     </div>
-    {unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
+    {/* `[2026-10-05 사용자 지시]` 지도 아래 안내 줄: 위치 미정 표시와, 지도에 그려진 선이 무엇인지 말하는 태그(선 색 + 수단 이름). */}
+    {(unlocated.length > 0 || routeShapes.length > 0) && <div className={styles.mapChips}>
+      {unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
+      {routeShapes.length > 0 && <RouteTags shapes={routeShapes} />}
+    </div>}
     {changing && headerSlot && createPortal(
       <div className={styles.headSearch} data-open={searchOpen || undefined} data-hide-brand>
         <BackButton onBack={endChange} label={t("바꾸기 그만두기", "Stop changing")} />
@@ -1060,30 +1142,31 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
             </details>} />
         : <>
           <header className={styles.sheetHead} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
-            <h2 id="plan-check-sheet-title" className={styles.sheetTitle}>{sheetTitle}</h2>
+            <h2 id="plan-check-sheet-title" className={dayStrip ? "sr-only" : styles.sheetTitle}>{sheetTitle}</h2>
+            {dayStrip && <div ref={stripBox} className={styles.dayStrip} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
+              onKeyDown={(event) => {
+                if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+                const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]'));
+                const at = tabs.indexOf(document.activeElement as HTMLElement);
+                const next = tabs[at + (event.key === "ArrowRight" ? 1 : -1)];
+                if (next) { event.preventDefault(); next.focus(); next.click(); }
+              }}>
+              <span ref={markerBox} className={styles.dayMarker} aria-hidden="true" />
+              <button type="button" role="tab" className={styles.dayChip} aria-selected={listDay === "all"} tabIndex={listDay === "all" ? 0 : -1} onClick={chooseAllDays}>{t("전체", "All")}</button>
+              {days.map((day) => {
+                const wait = needsOfDay(day.day);
+                return <button key={day.day} type="button" role="tab" className={styles.dayChip} aria-selected={listDay === day.day} tabIndex={listDay === day.day ? 0 : -1} onClick={() => goDay(day.day)}>
+                  {t(`${day.day}일차`, `Day ${day.day}`)}<small>{day.date ? dayLabel(day.date, language) : ""}</small>
+                  {wait > 0 && <span className={styles.dayBadge} role="img" aria-label={t(`확인 필요 ${wait}곳`, `${wait} to check`)}>{wait}</span>}
+                </button>;
+              })}
+            </div>}
+
             {done && !registered && adjustedNow > 0 && <button type="button" className={styles.resetTimes} onClick={resetTimes} aria-label={t(`시간 조정 ${adjustedNow}곳 모두 처음으로`, `Put the ${adjustedNow} changed time${adjustedNow > 1 ? "s" : ""} back`)} title={t("바꾼 시간을 모두 처음으로", "Put every changed time back")}><Undo2 size={13} strokeWidth={1.8} aria-hidden="true" />{t("시간 초기화", "Reset times")}</button>}
             <p className={styles.count}>{done
               ? <HeadBadges needs={needCount} changed={changedCount} filter={filtering ? filter : null} onFilter={setFilter} registered={registered} rechecking={rechecking} />
               : countText(view, t)}</p>
           </header>
-          {dayStrip && <div ref={stripBox} className={styles.dayStrip} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
-            onKeyDown={(event) => {
-              if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
-              const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]'));
-              const at = tabs.indexOf(document.activeElement as HTMLElement);
-              const next = tabs[at + (event.key === "ArrowRight" ? 1 : -1)];
-              if (next) { event.preventDefault(); next.focus(); next.click(); }
-            }}>
-            <span ref={markerBox} className={styles.dayMarker} aria-hidden="true" />
-            <button type="button" role="tab" className={styles.dayChip} aria-selected={listDay === "all"} tabIndex={listDay === "all" ? 0 : -1} onClick={chooseAllDays}>{t("전체", "All")}</button>
-            {days.map((day) => {
-              const wait = needsOfDay(day.day);
-              return <button key={day.day} type="button" role="tab" className={styles.dayChip} aria-selected={listDay === day.day} tabIndex={listDay === day.day ? 0 : -1} onClick={() => goDay(day.day)}>
-                {t(`${day.day}일차`, `Day ${day.day}`)}<small>{day.date ? dayLabel(day.date, language) : ""}</small>
-                {wait > 0 && <span className={styles.dayBadge} role="img" aria-label={t(`확인 필요 ${wait}곳`, `${wait} to check`)}>{wait}</span>}
-              </button>;
-            })}
-          </div>}
           <div ref={bodyBox} className={styles.sheetBody} {...follow.handlers} onScroll={follow.handlers.onScroll}>
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
             {filtering && <p className={styles.filterNote} role="status">{filter === "changed" ? t("바뀐 곳만 보는 중이에요", "Showing only what changed") : t("확인이 필요한 곳만 보는 중이에요", "Showing only what needs a look")}
@@ -1142,10 +1225,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
         </>}
     </section>
     {timeEdit.drag && <TimeDragOverlay drag={timeEdit.drag} />}
-    <div className={styles.toast} role="status" data-shown={toast ? true : undefined}>
-      {toast && <><span className={styles.toastText}>{toast.text}{toast.sub && <small>{toast.sub}</small>}</span>
-        {(toast.undo || toast.revert) && <button type="button" className={styles.undo} onClick={toast.revert ?? undo}>{t("되돌리기", "Undo")}</button>}</>}
-    </div>
+    {shownToast && <ToastView key={shownToast.stamp} toast={shownToast.toast} onDone={hideToast} />}
   </div>;
 }
 

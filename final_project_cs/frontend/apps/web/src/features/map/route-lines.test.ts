@@ -1,11 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { RouteShape } from "@/lib/live/route-shapes";
 import type { TripStop } from "../trip/model";
-import { isGuess, routeNotes, toMapLines, visibleShapes } from "./route-lines";
+import { isGuess, rideLines, routeNotes, routeTags, toMapLines, visibleShapes } from "./route-lines";
+import { lineStyle, linesKey } from "./providers/lines";
 
 const stop = (id: string, coordinates: TripStop["coordinates"]): TripStop => ({ id, title: id, date: "2026-10-01", time: "09:00", coordinates } as TripStop);
 const shape = (patch: Partial<RouteShape> = {}): RouteShape => ({
-  itemId: "m1", fromItemId: "a", toItemId: "b", from: "경복궁", to: "광장시장", mode: "walk", source: "local_road_graph", grade: "추정", distanceM: 1830, note: null,
+  itemId: "m1", fromItemId: "a", toItemId: "b", from: "경복궁", to: "광장시장", mode: "walk", source: "local_road_graph", grade: "추정", distanceM: 1830, note: null, rides: [],
   points: [{ lat: 37.5796, lng: 126.977 }, { lat: 37.57, lng: 127.0 }], ...patch,
 });
 
@@ -49,5 +50,43 @@ describe("which route lines go on the map", () => {
       shape({ itemId: "m4", source: "stations", mode: "subway", note: "역 사이는 역 좌표를 순서대로 잇는다" }),            // not a guess: the subway sentence above says it
     ]);
     expect(reasons.filter((line) => line.includes(": "))).toEqual(["경복궁 → 광장시장: 길찾기가 꺼져 있어 직선으로 이었어요", "광장시장 → N서울타워: 좌표가 근사값이에요"]);
+  });
+});
+
+describe("the legend over the map and the colour of each kind of route", () => {
+  const t = (ko: string) => ko;
+
+  it("names each kind that is drawn once, in a fixed order, and counts the routes that are only a guess", () => {
+    const tags = routeTags([shape({ mode: "walk" }), shape({ itemId: "m2", mode: "subway", source: "straight_line", grade: "근거없음" }), shape({ itemId: "m3", mode: "subway" }), shape({ itemId: "m4", mode: "bus", source: "straight_line" })]);
+    expect(tags.kinds.map((kind) => kind.label)).toEqual(["지하철", "버스", "도보"]);
+    expect(tags.guessed).toBe(2);
+    expect(routeTags([])).toEqual({ kinds: [], guessed: 0 });
+  });
+
+  it("gives a line the colour of its kind (a subway is blue) - and the legend reads the same colour variable", () => {
+    expect(toMapLines([shape({ mode: "subway" })])[0].mode).toBe("subway");
+    // The tests run without a page: the colours the browser would resolve are given by a stand-in of `getComputedStyle`.
+    const vars: Record<string, string> = { "--color-adjusted": "#3f6a8a", "--color-success": "#3d7a56", "--color-primary": "#2f6f4f" };
+    vi.stubGlobal("getComputedStyle", () => ({ getPropertyValue: (name: string) => vars[name] ?? "" }));
+    const container = {} as HTMLElement;
+    expect(lineStyle(container, { id: "a", points: [], dashed: false, mode: "subway", title: "" }).color).toBe("#3f6a8a");
+    expect(lineStyle(container, { id: "b", points: [], dashed: false, mode: "bus", title: "" }).color).toBe("#3d7a56");
+    expect(lineStyle(container, { id: "c", points: [], dashed: false, title: "" }).color).toBe("#2f6f4f");          // no kind: the theme's colour as before
+    expect(routeTags([shape({ mode: "subway" })]).kinds[0].variable).toBe("--color-adjusted");
+    vi.unstubAllGlobals();
+  });
+
+  it("redraws the lines when only their kind changed", () => {
+    const line = { id: "a", points: [{ lat: 1, lng: 2 }], dashed: false, title: "" };
+    expect(linesKey([{ ...line, mode: "subway" }])).not.toBe(linesKey([{ ...line, mode: "bus" }]));
+  });
+
+  it("says what a subway line rides, one sentence for each ride, and that the stations between are a straight stretch when the server could not fill them in", () => {
+    const line = shape({ mode: "subway", rides: [
+      { line: "지하철 3호선", from: "경복궁", to: "을지로3가", stations: ["경복궁", "안국", "충무로", "을지로3가"], count: 4, filled: true },
+      { line: "지하철 1호선", from: "을지로3가", to: "종각", stations: [], count: null, filled: false },
+    ] });
+    expect(rideLines(line, t)).toEqual(["지하철 3호선 · 경복궁→을지로3가 · 4개 역", "지하철 1호선 · 을지로3가→종각 · 역 사이는 직선"]);
+    expect(rideLines(shape(), t)).toEqual([]);
   });
 });

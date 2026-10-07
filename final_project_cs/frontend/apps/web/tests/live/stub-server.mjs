@@ -986,6 +986,8 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     return;
   }
   if (path === `/v1/web/trips/${TRIP_ID}/notices` && request.method === "GET") return broken("notices") || json(response, 200, notices(), origin);
+  // `[2026-10-06]` The situation brief after a disaster pause was lifted: this mock server has no disaster, so there is none (tests that need one put it in with `page.route`).
+  if (path === `/v1/web/trips/${TRIP_ID}/safety/recovery` && request.method === "GET") return json(response, 200, { recovery: null }, origin);
   if (path === `/v1/web/trips/${TRIP_ID}/rollback` && request.method === "POST") {
     if (scenario.undo === "stale") return json(response, 409, { error: { code: "stale_itinerary", message: "일정이 그 사이 바뀌었다" } }, origin);
     scenario = { ...scenario, undo: "none" };

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, FileText, Paperclip, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleAlert, FileText, Paperclip, X } from "lucide-react";
 import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
 import { decideGuardian, paceOf, readCriteria, setPace, useCriteria, withCriteria } from "@/features/guardian/criteria-store";
 import { GuardianCard } from "@/features/guardian/guardian-card";
@@ -67,6 +67,8 @@ export function TripRegistration() {
   const queryClient = useQueryClient();
   const [source, setSource] = useState<string>();
   const [validation, setValidation] = useState("");
+  // Raised on every press that is turned back, so the notice is brought into view again even when it says the same words.
+  const [nudge, setNudge] = useState(0);
   const [draftWarning, setDraftWarning] = useState("");
   // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계]` 「읽는 기준」 (a day's fullness, 「적당히」 from the start) and the Course Keeper card that opens when 「계획 확인하기」 is pressed, before the plan is read.
   const criteria = useCriteria();
@@ -81,6 +83,10 @@ export function TripRegistration() {
   const [active, setActive] = useState<RegistrationPane>(() => returned ? paneOfSending(returned) : "text");
   const today = useSyncExternalStore(never, seoulToday, () => "");
   useEffect(() => { clearIntakeFailure(); }, []);
+  // ★`[2026-10-06 사용자 지적]` A press turned back for an empty plan showed its notice far below the panels where nobody looks: it now stands under the input and is brought into view.
+  useEffect(() => {
+    if (nudge > 0) document.getElementById("plan-error")?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [nudge]);
   // ★Human check (Turnstile) — only when a site key is set. A token is good for one send.
   const checking = Boolean(TURNSTILE_SITE_KEY);
   const [humanToken, setHumanToken] = useState<string | null>(null);
@@ -182,13 +188,17 @@ export function TripRegistration() {
     //   (`role="alert"`, gone as soon as the customer starts writing) and puts the focus there. Pressing Enter in a field is the same.
     if (reason) {
       setValidation(active === "text" ? t("여행 계획을 적거나 파일을 올려 주세요.", "Write your plan or upload a file.") : t(...reason));
+      setNudge((count) => count + 1);
       focusChosen();
       return;
     }
     if (checking && !humanToken) { setValidation(t("사람 확인이 끝나면 보낼 수 있어요. 잠시만 기다려 주세요.", "You can send once the human check finishes. One moment, please.")); return; }
     setValidation("");
     setRestored("");
-    setCard(true);                                       // ask about the Course Keeper BEFORE the plan is read
+    // ★`[2026-10-06 사용자 지시 — 한 번 켜면 켜진 상태가 기본]` A Course Keeper choice already made (turned on once before, or answered in this tab) is not asked again; otherwise the card asks BEFORE the plan is read.
+    const made = readCriteria();
+    if (made.decided && made.guardian) { proceed(made.guardian); return; }
+    setCard(true);
   }
 
   /** 「켜고 진행」 / 「건너뛰기 — 끄고 진행」: the choice is kept (and sent with the plan, `ask_first` said out loud when off), then the plan is sent as before. */
@@ -201,6 +211,8 @@ export function TripRegistration() {
 
   if (draft.isPending || draft.error) return <QueryState loading={draft.isPending} error={draft.error} retry={() => void draft.refetch()} />;
   const error = validation || signUp.error?.message || restored;
+  // One notice, under the panel that is chosen (the input the customer is looking at) - never at the foot of the page.
+  const errorNode = error ? <p id="plan-error" className={styles.error} role="alert"><CircleAlert size={18} strokeWidth={1.8} aria-hidden="true" /><span>{error}</span></p> : null;
 
   // The text box, the file picker and the planning conditions each sit in their own panel (`Pane`).
   const textBox = <>
@@ -209,8 +221,9 @@ export function TripRegistration() {
       <Button variant="quiet" className={styles.sample} onClick={() => updateSource(examplePlan(language))} disabled={pending}>{t("예시 불러오기", "Load example")}</Button>
     </div>
     <textarea id="plan-source" name="planSource" className={styles.input} value={value} onChange={(event) => updateSource(event.target.value)} disabled={pending} maxLength={12000} required aria-invalid={Boolean(error)} aria-describedby={`plan-format${error ? " plan-error" : ""}`}
-      placeholder={t("1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람", "DAY 1 · 2026-09-15\n09:00 Hotel breakfast\n13:00 Lunch restaurant · reserved\n\nDAY 2 · 2026-09-16\n10:00 Museum visit")} />
+      placeholder={t("예시 — 이런 식으로 적어 주세요\n\n1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람", "Example — write it like this\n\nDAY 1 · 2026-09-15\n09:00 Hotel breakfast\n13:00 Lunch restaurant · reserved\n\nDAY 2 · 2026-09-16\n10:00 Museum visit")} />
     <div className={styles.inputMeta}><span id="plan-format">{t("날짜 · 시간 · 장소를 함께 적어 주세요.", "Include dates, times, and places.")}</span><span>{value.length.toLocaleString()} / 12,000</span></div>
+    {active === "text" && errorNode}
   </>;
   // 2026-09-30: file picker designed by Codex astra — the native input stays (hidden) for keyboard and screen readers.
   const filePicker = (
@@ -319,6 +332,7 @@ export function TripRegistration() {
           ))}
         </ul>
       )}
+      {active === "files" && errorNode}
     </div>
   );
 
@@ -333,11 +347,11 @@ export function TripRegistration() {
             <Pane id="files" title={t("파일 선택", "Choose files")} active={active === "files"} onActivate={() => choose("files")}>{filePicker}</Pane>
             <Pane id="plan" title={t("계획 짜 주기 (테스트)", "Plan it for me (test)")} active={active === "plan"} onActivate={() => choose("plan")}>
               <PlanAskFields ask={ask} today={today} disabled={pending} onChange={changeAsk} />
+              {active === "plan" && errorNode}
             </Pane>
           </div>
           <ReadingCriteria pace={paceOf(onboarding.complete ? toSurvey(onboarding.answers) : undefined, criteria)} onChange={setPace} />
           {checking && <HumanCheck onToken={takeToken} resetKey={humanReset} />}
-          {error && <p id="plan-error" className={styles.error} role="alert">{error}</p>}
           {draftWarning && <p className={styles.warning} role="status">{draftWarning}</p>}
         </div>
         <aside className={styles.tips}>
@@ -355,7 +369,8 @@ export function TripRegistration() {
       <div className={styles.actions}>
         <ButtonLink href={onboarding.agreed ? routes.home : routes.start}><ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />{t("이전", "Back")}</ButtonLink>
         <span className={styles.actionNote}>{t("입력한 계획은 화면을 오가도 유지돼요.", "Your draft stays while you explore.")}</span>
-        <Button variant="primary" type="submit" disabled={pending}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
+        {/* `[2026-10-06 사용자 지적]` Empty: it LOOKS switched off (grey) but still answers a press - it says what to do. It is not `disabled`, which would say nothing. */}
+        <Button variant="primary" type="submit" disabled={pending} className={reason ? styles.blocked : ""} aria-disabled={reason ? true : undefined}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
       </div>
     </form>
     {card && <GuardianCard kind="start" onPrimary={() => proceed("on")} onSecondary={() => proceed("off")} onClose={() => setCard(false)} />}

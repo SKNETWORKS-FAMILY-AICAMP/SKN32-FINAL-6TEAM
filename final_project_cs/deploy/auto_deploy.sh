@@ -99,6 +99,13 @@ settle_ok() {
 if TRIPILOT_TAG="$SHORT" docker compose up -d --wait --wait-timeout 240 >>"$LOG" 2>&1 </dev/null && settle_ok; then
   echo "$SHORT" > "$STATE/current_tag"; echo "$FP" > "$STATE/deployed_fp"; echo "$NEW" > "$STATE/deployed_sha"
   : > "$STATE/bad_sha"
+  # 이름표 없이 다시 만들어질 때(`docker compose up` 을 손으로 칠 때 등) 옛 이미지(local)로 뜨는 사고를 막는다 —
+  # 방금 반영한 이미지를 local 이름으로도 붙인다(실패해도 반영은 이미 끝났으므로 경고만).
+  # .env 의 TRIPILOT_TAG 는 여기서 안 쓴다 — 서버의 tripilot-tag-sync(state/current_tag 가 바뀌면 .env 로 복사)가 이미 하고,
+  # 같은 파일을 두 곳이 동시에 쓰면 한쪽이 잘린 내용을 읽을 수 있다.
+  for IMG in tripilot-api tripilot-web; do
+    docker tag "$IMG:$SHORT" "$IMG:local" >>"$LOG" 2>&1 </dev/null || log "경고: $IMG:local 이름표를 못 붙였다"
+  done
   # 새 이름으로 쓴 뒤 바꿔 끼운다(mv) — 실행 중인 이 파일의 내용을 제자리에서 덮으면 아래 줄이 깨진다
   [ -f "$STATE/auto_deploy.next.sh" ] && { cp "$STATE/auto_deploy.next.sh" "$BASE/auto_deploy.sh.new" && chmod +x "$BASE/auto_deploy.sh.new" && mv "$BASE/auto_deploy.sh.new" "$BASE/auto_deploy.sh"; }
   log "반영 완료 $SHORT (이전 $PREV)"

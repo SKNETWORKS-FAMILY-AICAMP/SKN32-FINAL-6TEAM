@@ -1,6 +1,9 @@
 .stage { min-height: 100dvh; background: var(--color-subtle-strong); padding: 24px 0; }
 /* `contain: layout` anchors fixed-position children (drawer, expanded cards) to the frame. */
 .device { position: relative; contain: layout; width: min(100%, 402px); height: min(874px, calc(100dvh - 48px)); margin: 0 auto; border-radius: 30px; overflow: hidden; box-shadow: 0 25px 90px color-mix(in srgb, var(--color-text) 13%, transparent); background: var(--color-paper); border: 1px solid var(--color-surface); }
+.scroll { position: absolute; inset: 76px 0 0; overflow-y: auto; overscroll-behavior: contain; }
+/* `[2026-10-06]` The page screens inside the frame ask their narrow-screen rules of the frame's width (`@container page`), not of the window's. */
+.device[data-journey] { container: page / inline-size; }
 .header { position: absolute; z-index: 5; top: 0; left: 0; right: 0; height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 25px; background: linear-gradient(var(--color-paper) 60%, transparent); }
 .right { display: flex; align-items: center; gap: 4px; flex: none; }
 .brand { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 21px; font-weight: 750; letter-spacing: -.8px; color: var(--color-text); text-decoration: none; }
@@ -20,3 +23,5 @@
   .stage { padding: 0; }
   .device { height: 100dvh; border: 0; border-radius: 0; box-shadow: none; }
 }
+/* `[2026-10-06]` 지도 화면(떠 있는 머리줄)에서는 알림이 오른쪽 지도 단추(＋ · － · 눈금) 자리를 비운다 — 다른 화면은 양쪽 12px. */
+.device[data-floating] { --toast-right: 68px; }

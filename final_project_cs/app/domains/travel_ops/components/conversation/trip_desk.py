@@ -203,7 +203,8 @@ class TripDesk:
         return self._with_nearby(trip_id, meal, places, plan, always=True)
 
     def propose_alternatives(self, *, trip_id: UUID, item_id: UUID, base_version: int,
-                             message: str | None = None, request_id: str | None = None) -> dict[str, Any]:
+                             message: str | None = None, request_id: str | None = None,
+                             keep: Callable[[list[dict[str, Any]]], list[dict[str, Any]]] | None = None) -> dict[str, Any]:
         """★`[2026-09-29]` 결정 단위의 「후보만 알아봐 줘 · 추천해 줘」 — **바꾸지 않고** 후보를 계산해 고르게 한다.
         계산은 「다른 데로 바꿔 줘」와 같다(`plan_fresh_alternate` — 반경 넓힘 · 같은 곳 제외 · 조건 풀기). 고르면 기존 고르기 경로."""
         self._widen_activities(trip_id, item_id)
@@ -220,6 +221,10 @@ class TripDesk:
         here = str((current.place or {}).get("place_id"))
         options = [{**o, "note": None} for o in options_from(plan, current)
                    if str(o.get("place_id") or "") != here and str(o.get("key")) != here]
+        if keep is not None:                  # ★`[2026-10-06]` 재난 뒤 다시 시작 — 피해 구의 곳을 후보에서 뺀다(`safety_recovery.make_district_filter`)
+            options = keep(options)
+            if not options:
+                return {"status": "no_option_outside_area", "text": f"{current.title} 대신 갈 수 있는 곳을 피해 지역 밖에서 찾지 못했어요. 일정은 그대로 두었어요."}
         options = [{**o, "rank": n} for n, o in enumerate(options, start=1)]
         listed = " · ".join(f"{o['rank']}) {o.get('option_label') or o['name']}"
                             + (f"(도보 {o['walk_min']}분)" if o.get("walk_min") else "") for o in options[:3])

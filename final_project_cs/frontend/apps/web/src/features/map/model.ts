@@ -31,10 +31,15 @@ export interface MapPoint {
  * A route line between two stops (`GET /v1/web/trips/{id}/route-shapes`). `dashed` = the road was not known and the places were joined
  * by a straight line — drawn dashed and pale so it never reads as a real road.
  */
+/** How a route is travelled: a line is drawn in the colour of its kind, and the legend over the map names the same kinds. */
+export type MapLineMode = "walk" | "bike" | "taxi" | "subway" | "bus" | "mixed" | "unknown";
+
 export interface MapLine {
   id: string;
   points: Coordinates[];
   dashed: boolean;
+  /** `[2026-10-06 사용자 지시 — 선 색으로 수단을 알아보게]` Absent = the theme's primary colour. */
+  mode?: MapLineMode;
   /** Said to a screen reader and as the line's tooltip: 「A → B · 지하철」. */
   title: string;
 }
@@ -71,6 +76,10 @@ export interface MapViewProps {
   onSelect: (stopId: string) => void;
   /** Route lines under the pins; they never move the camera (the camera fits the pins). */
   lines?: MapLine[];
+  /** `[2026-10-06 사용자 지시 — 경로를 누르면 그 경로가 나온다]` A route line was pressed (a wider, invisible line makes it easy to hit). Absent: the lines take no press. */
+  onSelectLine?: (lineId: string) => void;
+  /** The route line the screen shows as picked: drawn thicker and in the selection colour. */
+  selectedLineId?: string;
   /** `[2026-10-04]` Px at the top of the map that a bar floats over: the camera fits the pins below it and no pin is put under it. */
   topInset?: number;
   /** `[2026-10-05]` Px at the bottom of the map that the rounded top of a sheet floats over: no chip for a stop out of view stands there. */
@@ -88,7 +97,7 @@ export interface MapViewProps {
 }
 
 export interface MapController {
-  update(points: MapPoint[], selectedId?: string, lines?: MapLine[]): void;
+  update(points: MapPoint[], selectedId?: string, lines?: MapLine[], selectedLineId?: string): void;
   /**
    * `[2026-10-04 사용자 지시]` Back to the whole picture: the place and the zoom where every pin shows (what the map did when the pins first came).
    * ★`[2026-10-05]` Pins only — 「내 위치」 is left out (far away, it would shrink the pins to nothing). A map with no pins centres on 「내 위치」 instead.

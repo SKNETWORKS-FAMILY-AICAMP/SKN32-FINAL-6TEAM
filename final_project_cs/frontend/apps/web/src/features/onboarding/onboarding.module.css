@@ -96,7 +96,7 @@
 .error:empty { margin: 0; }
 
 /* Question cards on one track. */
-.viewport { position: relative; overflow: hidden; touch-action: pan-y pinch-zoom; transition: height .34s ease; outline: 0; }
+.viewport { position: relative; overflow: hidden; touch-action: pan-y pinch-zoom; transition: height .38s var(--ease-soft); outline: 0; }
 .track { display: flex; align-items: flex-start; gap: 12px; width: 100%; transition: transform .36s cubic-bezier(.22, .8, .25, 1.06); will-change: transform; }
 .track.dragging { transition: none; }
 .slide { flex: 0 0 100%; min-width: 0; min-height: var(--question-card-height, 0px); padding: 14px 18px 12px; background: var(--color-surface); display: flex; flex-direction: column; }

@@ -74,7 +74,7 @@ const bodyOf = (pin: HTMLElement) => pin.querySelector<HTMLElement>("[data-pin-b
  * The marker's element: a transparent box with the coordinate at its middle (`PIN_BOX` square), holding the numbered body and a thin line to the coordinate for a body that had
  * to be pushed away. Only the body takes presses — the box leaves the map under it draggable.
  */
-export function createPin(point: MapPoint): HTMLDivElement {
+export function createPin(point: MapPoint, detachLeader = false): HTMLDivElement {
   const pin = document.createElement("div");
   pin.title = pointLabel(point);
   if (point.tone) pin.dataset.tone = point.tone;
@@ -100,13 +100,27 @@ export function createPin(point: MapPoint): HTMLDivElement {
     border: "2px solid var(--color-text)", font: "700 14px/1 system-ui, sans-serif", boxShadow: `0 2px 8px ${shadow}`, cursor: "pointer", pointerEvents: "auto",
     transition: "transform .15s ease",
   });
-  pin.append(leader, dot, body);
+  // ★`[2026-10-06 사용자 지적 — 점과 선이 핀 위에 막 찍혀 있다]` The line back to the coordinate and its dot belong UNDER every pin. Inside the pin's own marker they stack with that marker only (one pin's line crossed
+  //   another pin's body), so a map that can (`detachLeader`) keeps them in a box of their own (`createPinLeader`) that it puts in a layer below all the pins.
+  if (detachLeader) pin.append(body); else pin.append(leader, dot, body);
+  (pin as PinWithLeader).pinLeader = detachLeader ? { leader, dot } : undefined;
   placePin(pin, { side: "ne", push: 0 });
   return pin;
 }
 
+type PinWithLeader = HTMLDivElement & { pinLeader?: { leader: SVGElement; dot: HTMLElement } };
+
+/** The detached line + dot of a pin made with `createPinLeader`'s partner `createPin(point, true)`: a transparent box the same size as the pin's (`PIN_BOX`), centred on the coordinate like it. */
+export function createPinLeader(pin: HTMLElement): HTMLDivElement {
+  const parts = (pin as PinWithLeader).pinLeader;
+  const box = document.createElement("div");
+  Object.assign(box.style, { position: "relative", width: `${PIN_BOX}px`, height: `${PIN_BOX}px`, pointerEvents: "none", userSelect: "none" });
+  if (parts) box.append(parts.leader, parts.dot);
+  return box;
+}
+
 /** Stand the body in its slot: its tip corner (the small corner of the drop) at the coordinate, or pushed off it with a line back. */
-export function placePin(pin: HTMLElement, slot: PinSlot) {
+export function placePin(pin: HTMLElement, slot: PinSlot, leaderBox?: HTMLElement) {
   const body = bodyOf(pin);
   const east = slot.side === "ne" || slot.side === "se", north = slot.side === "ne" || slot.side === "nw";
   const middle = PIN_BOX / 2;
@@ -120,7 +134,8 @@ export function placePin(pin: HTMLElement, slot: PinSlot) {
   body.style.transformOrigin = `${east ? "0%" : "100%"} ${north ? "100%" : "0%"}`;
   pin.dataset.side = slot.side;
   pin.dataset.push = String(slot.push);
-  const leader = pin.querySelector<SVGElement>("[data-pin-leader]")!, dot = pin.querySelector<HTMLElement>("[data-pin-dot]")!;
+  const own = (pin as PinWithLeader).pinLeader;
+  const leader = (own?.leader ?? (leaderBox ?? pin).querySelector<SVGElement>("[data-pin-leader]"))!, dot = (own?.dot ?? (leaderBox ?? pin).querySelector<HTMLElement>("[data-pin-dot]"))!;
   const pushed = slot.push > 0;
   leader.style.display = dot.style.display = pushed ? "" : "none";
   if (pushed) {
@@ -164,6 +179,18 @@ export function pulsePin(pin: HTMLElement) {
   const timing = { duration: 900, iterations: 2, easing: "ease-out" } as const;
   ring.animate([{ transform: "scale(1)", opacity: 0.85 }, { transform: "scale(2.3)", opacity: 0 }], timing).onfinish = () => ring.remove();
   body.animate([{ transform: body.style.transform || "none" }, { transform: "scale(1.22)" }, { transform: body.style.transform || "none" }], { ...timing, duration: 900 });
+}
+
+/**
+ * `[2026-10-06 사용자 지시 — 새 마커가 생길 때 시선이 갈 시간을 주고 부드럽게]` A pin that has just appeared (a stop the check has just drawn) pops in: it grows from small with a little overshoot and fades in, over
+ * about half a second, so the eye catches it. Done with the browser's own animation API; a screen that asks for less motion gets nothing.
+ */
+export function popPin(pin: HTMLElement) {
+  if (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const body = bodyOf(pin);
+  if (!body || typeof body.animate !== "function") return;
+  const rest = body.style.transform || "none";
+  body.animate([{ transform: "scale(.2)", opacity: 0 }, { transform: "scale(1.22)", opacity: 1, offset: 0.6 }, { transform: rest === "none" ? "scale(1)" : rest, opacity: 1 }], { duration: 520, easing: "cubic-bezier(.2, .9, .3, 1)" });
 }
 
 /** Presentation-only updates must not reset the user's camera. */

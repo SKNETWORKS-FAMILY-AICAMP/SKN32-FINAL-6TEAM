@@ -5,6 +5,10 @@
 
 /* ── 질문 카드 ─────────────────────────────────────────────── */
 .pager { margin: 0 0 12px; padding: 16px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
+/* `[2026-10-06 사용자 지시]` 질문이 처음 나올 때: 아래에서 올라오며 초록 테두리 고리가 두 번 퍼진다 — 시선이 이쪽으로 오게. */
+.pager[data-attention] { animation: questionIn 450ms cubic-bezier(.16, 1, .3, 1), questionPulse 1000ms ease-out 450ms 2; }
+@keyframes questionIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes questionPulse { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 45%, transparent); border-color: var(--color-primary); } to { box-shadow: 0 0 0 14px transparent; border-color: var(--color-border); } }
 .top { display: flex; align-items: center; justify-content: space-between; }
 .count { margin: 0; font-size: 12px; color: var(--color-muted); }
 .nav { position: relative; display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px; background: none; color: var(--color-text-secondary); cursor: pointer; }
@@ -60,7 +64,7 @@
 .footer .textButton { margin-top: 8px; }
 
 /* ── 20초 경고(alertdialog) ─────────────────────────────────── */
-.layer { position: fixed; inset: 0; z-index: 70; display: flex; align-items: flex-end; justify-content: center; background: var(--color-scrim); }
+.layer { position: fixed; inset: 0; z-index: 70; pointer-events: auto; display: flex; align-items: flex-end; justify-content: center; background: var(--color-scrim); }
 .sheet { width: min(560px, 100%); padding: 24px; border: 1px solid var(--color-border); border-radius: 24px 24px 0 0; background: var(--color-surface); color: var(--color-text); animation: rise 200ms cubic-bezier(.16, 1, .3, 1); }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .countdown { margin: 0 0 12px; text-align: center; color: var(--color-primary); font-size: 48px; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
@@ -68,7 +72,7 @@
 .sheet .textButton { margin-top: 8px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .slide[data-slide], .sheet { animation: none; }
+  .slide[data-slide], .sheet, .pager[data-attention] { animation: none; }
   .finishFill { animation: none; transform: scaleX(1); }
   .spin { animation: none; }
 }

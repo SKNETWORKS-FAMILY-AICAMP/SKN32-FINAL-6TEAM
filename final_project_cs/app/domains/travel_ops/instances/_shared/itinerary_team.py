@@ -354,9 +354,30 @@ _GENERIC = frozenset({"식사", "체험", "관람", "일정", "방문", "투어"
 _MEAL_WORDS = {"아침": (0, 11), "조식": (0, 11), "점심": (11, 15), "저녁": (17, 24), "석식": (17, 24)}
 
 
+#: ★`[2026-10-07 사용자 지시]` 일정 항목 짚기 **모델**(우리 데이터로 가르친 파인튜닝 모델) 자리 — 조립 때 `set_item_pointer` 로 꽂는다
+#:  (`components/conversation/item_pointer.py`). 없으면 아래 낱말 규칙만 쓴다(지금까지와 같다). 모델이 못 정하면(`NotImplemented`) 규칙으로 돌아간다.
+_POINTER: Any = None
+
+
+def set_item_pointer(pointer: Any) -> None:
+    """조립 때 한 번(다시 부르면 교체, `None` 이면 뗀다). 부르는 모양: `pointer(items, text, rule)` → 항목 · None · `NotImplemented`."""
+    global _POINTER
+    _POINTER = pointer
+
+
 def mentioned_item(items: list[Item], text: str) -> Item | None:
-    """질문이 짚은 일정 항목. ①제목·장소 이름의 단어가 문장에 나오면 가장 많이 겹친 것
-    ②「점심·저녁 식당」처럼 끼니 + 식당이면 그 시간대의 식사. 모르면 None(지어내지 않는다)."""
+    """질문이 짚은 일정 항목. 가르친 모델이 꽂혀 있고 켜져 있으면 모델이 번호를 고른다(못 고르면 규칙으로).
+    규칙: ①제목·장소 이름의 단어가 문장에 나오면 가장 많이 겹친 것 ②「점심·저녁 식당」처럼 끼니 + 식당이면 그 시간대의 식사. 모르면 None(지어내지 않는다)."""
+    pointer = _POINTER
+    if pointer is not None:
+        got = pointer(items, text, lambda: _rule_item(items, text))
+        if got is not NotImplemented:
+            return got
+    return _rule_item(items, text)
+
+
+def _rule_item(items: list[Item], text: str) -> Item | None:
+    """낱말 규칙 — 옛 `mentioned_item` 그대로(모델 없이도, 모델이 실패해도 이 길로 돈다)."""
     text = text or ""
     best, hits = None, 0
     for item in items:
@@ -430,7 +451,9 @@ def question_answer(item: Item | None, chunks: list[Any], terms: dict[str, Any] 
     if not ranked and not terms:
         return None, []
     subject = item.title if item is not None else "문의하신 내용"
-    lines = [f"{subject} — 여행 규정에서 찾은 내용이에요."]
+    # ☆`[2026-10-06 사람 평가 메모]` 규정 문장은 「해당 상황이 되면 이렇게 해 드려요」라는 일반 규정인데, 맨 끝의 「일정은 바꾸지 않았어요」와 붙어 있으면
+    #   「경로에 넣어 드려요」(규정)와 「일정은 바꾸지 않았어요」(지금)가 서로 모순으로 읽혔다 — 규정은 앞으로의 일이고 지금 일정은 그대로라고 갈라 말한다
+    lines = [f"{subject} — 여행 규정에서 찾은 내용이에요. 해당하는 상황이 되면 이 기준으로 처리해요."]
     # ★`[2026-09-29 사용자 지시]` 근거 id(t_doc_… · #c…)·예약 조건 scope 는 **고객 문장에 싣지 않는다** — 관리자(개발 모드)만 본다.
     #   근거는 버리지 않는다 — 돌려주는 출처 목록이 Case 기록에 남고, 웹은 `web.dev_mode` 가 켜졌을 때만 `basis` 칸으로 받는다
     for line, _source in ranked:
@@ -443,11 +466,11 @@ def question_answer(item: Item | None, chunks: list[Any], terms: dict[str, Any] 
         if penalty:
             line += " · 위약금 기준 " + ", ".join(f"{k}시간 전부터 {v}" for k, v in penalty.items())
         lines.append(line)
-    lines.append("일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.")
+    lines.append("지금 일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.")
     sources = [source for _, source in ranked]
     if terms:
         sources.append(f"booking_terms:{terms.get('matched_scope')}:{terms.get('source')}")
     return "\n".join(lines), sources
 
 
-__all__ = ["ANSWERS", "Consent", "ITINERARY_TOOLS", "ItineraryWork", "customer_lines", "mentioned_item", "question_answer"]
+__all__ = ["ANSWERS", "Consent", "ITINERARY_TOOLS", "ItineraryWork", "customer_lines", "mentioned_item", "question_answer", "set_item_pointer"]

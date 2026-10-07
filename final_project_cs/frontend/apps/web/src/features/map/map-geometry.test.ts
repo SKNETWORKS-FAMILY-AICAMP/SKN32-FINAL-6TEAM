@@ -90,9 +90,9 @@ describe("chips for stops out of view", () => {
   });
 
   it("treats what is under the sheet at the bottom as out of view, and stands its chip above the sheet", () => {
-    const [chip] = edgeChips(view, [point("1", 37.5445, 126.978)], { bottom: 24 });                    // inside the view but under the 24 px the sheet covers
+    const [chip] = edgeChips(view, [point("1", 37.5455, 126.978)], { bottom: 24 });                    // inside the view (26 px above the edge) but under the 24 px the sheet covers
     expect(chip.y).toBeLessThanOrEqual(600 - 24);
-    expect(edgeChips(view, [point("1", 37.5445, 126.978)])).toEqual([]);                               // with nothing over it, it is in view
+    expect(edgeChips(view, [point("1", 37.5455, 126.978)])).toEqual([]);                               // with nothing over it, it is in view
   });
 
   it("keeps clear of the map's own buttons at the top right", () => {
@@ -112,5 +112,22 @@ describe("controlsLayout", () => {
     expect(controlsLayout({ width: 390, height: 90 }, 64, 4)).toBe("tab");
     expect(controlsLayout({ width: 200, height: 260 }, 64, 4)).toBe("tab");                              // not even a row fits across
     expect(controlsLayout({ width: 0, height: 0 }, 64, 4)).toBe("column");                              // not measured yet
+  });
+});
+
+describe("a pin that could be cut by the edge", () => {
+  it("gets a chip when its coordinate is within a few px of the left edge (the drop would be cut), and none when it is well inside", () => {
+    const nearLeft = toPixels(view, { lat: 37.5665, lng: view.west });                                                  // x = 0
+    expect(nearLeft.x).toBeCloseTo(0, 3);
+    const edge = { lat: 37.5665, lng: view.west + (view.east - view.west) * (6 / 360) };                                   // 6 px from the left edge
+    expect(edgeChips(view, [point("1", edge.lat, edge.lng)])).toHaveLength(1);
+    const inside = { lat: 37.5665, lng: view.west + (view.east - view.west) * (60 / 360) };                                // 60 px inside
+    expect(edgeChips(view, [point("1", inside.lat, inside.lng)])).toEqual([]);
+  });
+
+  it("shows up to eight chips (it was five: with many stops spread apart the farthest ones had no sign)", () => {
+    const far = Array.from({ length: 10 }, (_, index) => point(String(index + 1), 37.5665 + 0.2 * (index % 2 ? 1 : -1), 126.7 + index * 0.06));
+    expect(edgeChips(view, far).length).toBeGreaterThan(5);
+    expect(edgeChips(view, far).length).toBeLessThanOrEqual(8);
   });
 });

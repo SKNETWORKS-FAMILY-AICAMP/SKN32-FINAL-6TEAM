@@ -75,3 +75,19 @@ describe("asking for the lines of a trip", () => {
     await expect(getRouteShapes("t1", "ko")).rejects.toMatchObject({ code: "internal_error" });
   });
 });
+
+describe("rides of a subway line", () => {
+  const line = { type: "LineString", coordinates: [[126.977, 37.5796], [127.0, 37.57]] };
+  const read = (rides: unknown) => readRouteShapes({ shapes: [{ item_id: "m1", from_item_id: "a", to_item_id: "b", mode: "subway", source: "stations", grade: "추정", line, rides }] }).shapes[0].rides;
+
+  it("reads each ride, and says the stations between are missing only when the server says `filled: false`", () => {
+    expect(read([{ line: "지하철 3호선", from: "경복궁", to: "을지로3가", stations: ["경복궁", "", "을지로3가"], count: 4, filled: true }, { line: "지하철 1호선", from: "A", to: "B", filled: false }]))
+      .toEqual([{ line: "지하철 3호선", from: "경복궁", to: "을지로3가", stations: ["경복궁", "을지로3가"], count: 4, filled: true }, { line: "지하철 1호선", from: "A", to: "B", stations: [], count: null, filled: false }]);
+  });
+
+  it("drops a ride with no line name, and reads no rides from anything that is not a list (a bus, a taxi, an older server)", () => {
+    expect(read([{ from: "A", to: "B" }, "x", null])).toEqual([]);
+    expect(read(undefined)).toEqual([]);
+    expect(read("지하철")).toEqual([]);
+  });
+});

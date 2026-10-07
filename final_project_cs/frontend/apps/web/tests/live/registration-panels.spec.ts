@@ -93,9 +93,9 @@ test("고른 칸에 값이 없으면 「계획 확인하기」를 눌러도 넘�
   await openRegistration(page);
   const reason = page.locator("#plan-error");
   const card = page.getByRole("dialog");
-  await expect(send(page)).toBeEnabled();
+  await expect(send(page)).not.toHaveAttribute("disabled");
   // ① 글: 비어 있으면 이유 + 초점
-  await send(page).click();
+  await send(page).click({ force: true });
   await expect(reason).toContainText("여행 계획을 적거나 파일을 올려 주세요.");
   await expect(page.locator("#plan-source")).toBeFocused();
   await expect(page.locator("#plan-source")).toHaveAttribute("aria-invalid", "true");
@@ -105,11 +105,11 @@ test("고른 칸에 값이 없으면 「계획 확인하기」를 눌러도 넘�
   await page.getByLabel("나의 여행 계획").fill("");
   // ② 파일: 칸을 누르면 그 칸이 고른 칸이 되고, 파일이 없으니 이유
   await heading(page, "files").click();
-  await send(page).click();
+  await send(page).click({ force: true });
   await expect(reason).toContainText("위에서 고른 「파일 선택」 칸에 파일을 하나 이상 골라 주세요");
   await page.locator("#plan-files").setInputFiles(file());
   await expect(reason).toHaveCount(0);                                                                // 파일을 고르면 이유가 사라진다
-  await send(page).click();
+  await send(page).click({ force: true });
   await expect(card).toBeVisible();                                                                   // 값이 있으니 카드가 열린다
   await page.keyboard.press("Escape");                                                                // 카드를 닫으면 아무것도 정해지지 않고
   await expect(card).toHaveCount(0);
@@ -117,21 +117,21 @@ test("고른 칸에 값이 없으면 「계획 확인하기」를 눌러도 넘�
   await page.getByRole("button", { name: "plan.txt 빼기" }).click();
   // ③ 계획 짜기: 첫날 · 일수 · 인원을 모두 골라야 한다 (원하는 여행은 비워도 된다)
   await heading(page, "plan").click();
-  await send(page).click();
+  await send(page).click({ force: true });
   await expect(reason).toContainText("위에서 고른 「계획 짜 주기」 칸에서 첫날 · 일수 · 인원을 모두 골라 주세요");
   await page.getByLabel("첫날", { exact: true }).fill(weekAhead());
   await page.getByLabel("일수", { exact: true }).selectOption("2");
-  await send(page).click();
+  await send(page).click({ force: true });
   await expect(reason).toContainText("첫날 · 일수 · 인원을 모두 골라 주세요");                           // 인원이 아직이다
   await page.getByLabel("인원", { exact: true }).selectOption("2");
-  await send(page).click();
+  await send(page).click({ force: true });
   await expect(card).toBeVisible();
   await page.keyboard.press("Escape");
   // 일수 7·인원 4 가 끝이고, 다시 「고르기」로 되돌리면 이유가 다시 나온다
   await page.getByLabel("일수", { exact: true }).selectOption("7");
   await page.getByLabel("인원", { exact: true }).selectOption("4");
   await page.getByLabel("인원", { exact: true }).selectOption("0");
-  await send(page).click();
+  await send(page).click({ force: true });
   await expect(reason).toContainText("첫날 · 일수 · 인원을 모두 골라 주세요");
   await page.getByLabel("인원", { exact: true }).selectOption("1");
   // 다른 칸에 값이 있어도 고른 칸이 비면 못 넘어간다: 글을 쓰면 글 칸이 고른 칸이 되고, 계획 칸을 다시 누르면 그 칸 기준이다
@@ -139,10 +139,10 @@ test("고른 칸에 값이 없으면 「계획 확인하기」를 눌러도 넘�
   await expect(PANES.text(page)).toHaveAttribute("aria-current", "true");
   await page.getByLabel("첫날", { exact: true }).fill("");
   await expect(PANES.plan(page)).toHaveAttribute("aria-current", "true");
-  await send(page).click();
+  await send(page).click({ force: true });
   await expect(reason).toContainText("첫날 · 일수 · 인원을 모두 골라 주세요");
   await heading(page, "text").click();
-  await send(page).click();
+  await send(page).click({ force: true });
   await expect(card).toBeVisible();
   expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);                      // 카드에서 정하기 전에는 서버로 아무것도 가지 않는다
 });
@@ -153,11 +153,11 @@ test("첫날은 오늘(서울 날짜)부터 고를 수 있고, 지난 날을 적
   await openRegistration(page);
   await expect(page.getByLabel("첫날", { exact: true })).toHaveAttribute("min", today);
   await fillPlanAsk(page, { start: "2020-01-01", days: 2, party: 2 });
-  await send(page).click();
+  await send(page).click({ force: true });
   await expect(page.locator("#plan-error")).toContainText("첫날은 오늘(서울 기준)이거나 그 뒤여야 해요");
   await page.getByLabel("첫날", { exact: true }).fill(today);
   await expect(page.locator("#plan-error")).toHaveCount(0);
-  await send(page).click();
+  await send(page).click({ force: true });
   await expect(page.getByRole("dialog")).toBeVisible();
 });
 
@@ -259,7 +259,7 @@ test("서버가 짜기를 거절하면 등록 화면으로 돌아와 서버의 �
   await expect(page.getByLabel("일수", { exact: true })).toHaveValue("1");
   await expect(page.getByLabel("인원", { exact: true })).toHaveValue("3");
   await expect(page.getByLabel("원하는 여행", { exact: false })).toHaveValue(WISH);
-  await expect(send(page)).toBeEnabled();
+  await expect(send(page)).not.toHaveAttribute("disabled");
 
   // 조건을 고치면 문장은 사라지고, 서버가 받아 주면 이번엔 여행 화면까지 간다
   await server.scenario({ planRefusal: "" });
@@ -325,8 +325,8 @@ test("영어 화면에서도 칸 제목과 이유 · 읽는 기준 · 항로 지
   await openRegistration(page);
   await expect(page.getByRole("region", { name: "Plan it for me (test)" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Type it in" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Check my plan" })).toBeEnabled();
-  await page.getByRole("button", { name: "Check my plan" }).click();
+  await expect(page.getByRole("button", { name: "Check my plan" })).not.toHaveAttribute("disabled");
+  await page.getByRole("button", { name: "Check my plan" }).click({ force: true });
   await expect(page.locator("#plan-error")).toContainText("Write your plan or upload a file.");
   await page.getByLabel("Your travel plan").fill("Gyeongbokgung 10/1 09:00");
   await page.getByRole("button", { name: "Check my plan" }).click();
@@ -339,7 +339,7 @@ test("320px 폭에서도 세 칸 · 읽는 기준이 화면을 넘지 않고, �
   await start(page);
   await openRegistration(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await send(page).click();
+  await send(page).click({ force: true });
   await expect(page.locator("#plan-error")).toBeVisible();
   await heading(page, "plan").click();
   await page.getByLabel("첫날", { exact: true }).scrollIntoViewIfNeeded();
@@ -349,4 +349,35 @@ test("320px 폭에서도 세 칸 · 읽는 기준이 화면을 넘지 않고, �
     expect(box!.x + box!.width).toBeLessThanOrEqual(320);
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("빈 채로 「계획 확인하기」를 누르면 칸 맨 아래가 아니라 고른 입력칸 바로 아래에 눈에 띄는 안내가 뜨고(화면이 그 자리로 옮겨 간다), 서버로는 아무것도 가지 않으며, 예시 글은 예시라고 적혀 있다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await page.setViewportSize({ width: 1280, height: 640 });                                            // 낮은 화면: 입력칸 아래 안내가 가려지기 쉬운 크기
+  await start(page);
+  await openRegistration(page);
+  await expect(page.getByLabel("나의 여행 계획")).toHaveAttribute("placeholder", /^예시 — 이런 식으로 적어 주세요/);
+  const notice = page.locator("#plan-error");
+  // ① 글: 공백뿐이어도 빈 것이다
+  await page.getByLabel("나의 여행 계획").fill("   \n  ");
+  await send(page).click({ force: true });
+  await expect(PANES.text(page).locator("#plan-error")).toContainText("여행 계획을 적거나 파일을 올려 주세요.");
+  await expect(notice).toBeInViewport();
+  const box = (await notice.boundingBox())!;
+  const field = (await page.getByLabel("나의 여행 계획").boundingBox())!;
+  expect(box.y).toBeGreaterThanOrEqual(field.y + field.height - 40);                                   // 입력칸 바로 아래(칸 안쪽 아래 줄 다음)
+  expect(box.y - (field.y + field.height)).toBeLessThan(120);
+  expect(await notice.evaluate((element) => getComputedStyle(element).fontSize)).toBe("14px");        // 작은 글씨가 아니다
+  // ② 파일 칸을 골랐을 때는 그 칸 안에 뜬다
+  await heading(page, "files").click();
+  await send(page).click({ force: true });
+  await expect(PANES.files(page).locator("#plan-error")).toContainText("파일을 하나 이상 골라 주세요");
+  await expect(page.locator("#plan-error")).toHaveCount(1);                                            // 어디에나 하나뿐이다
+  // ③ 계획 짜 주기 칸
+  await heading(page, "plan").click();
+  await send(page).click({ force: true });
+  await expect(PANES.plan(page).locator("#plan-error")).toContainText("첫날 · 일수 · 인원을 모두 골라 주세요");
+  await expect(notice).toBeInViewport();
+  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);
+  await expect(page).toHaveURL(/\/trips\/new$/);
 });

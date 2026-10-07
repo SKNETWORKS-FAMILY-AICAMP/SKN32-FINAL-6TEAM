@@ -54,7 +54,7 @@ from app.domains.travel_ops.components.itinerary import trip_delete
 from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
 from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
 from app.domains.travel_ops.components.planning import guardian as guardian_module
-from app.domains.travel_ops.components.watch import safety_pause
+from app.domains.travel_ops.components.watch import safety_pause, safety_recovery
 
 # ★`[2026-10-05 병합]` 팀 판의 `_CsvFallbackTour`(활동팀 CSV 로 관광공사를 대신 조회) 는 싣지 않았다 — 관광공사 호출 제한 · 카카오 403 을
 #   피하려는 활동팀의 임시 우회이고 자료 파일(`activity_total_data.csv`)이 우리 쪽에 없다. 접수의 관광공사 조회는 전처럼 `place_factory` 가 한다.
@@ -288,6 +288,15 @@ class GuardianIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     enabled: StrictBool                      # ★글자 「yes」 · 「1」 을 참으로 읽지 않는다 — 자동 변경을 켜는 값이라 JSON 참 · 거짓만 받는다
     via: Literal["card", "header", "notice", "settings"]
+
+
+class RecoveryChoiceIn(BaseModel):
+    """재난 뒤 다시 시작할 때의 선택(`components/watch/safety_recovery.py`). 선택은 기록한다(`user_activity_events`)."""
+    model_config = ConfigDict(extra="forbid")
+    pause_id: UUID
+    choice: Literal["keep", "replace_affected", "replan_all"]
+    lighter_day: StrictBool = False          # 「오늘은 가볍게」 — 우리가 임의로 낮추지 않는다. 기록하고 에이전트에게 제약으로 전한다
+    answers: dict[Literal["lodging", "companions"], Literal["yes", "no", "unknown"]] | None = None
 
 
 class ReportIn(BaseModel):
@@ -1707,7 +1716,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         """★`[2026-10-06 사용자 결정]` 재난으로 정지된 일정을 **다시 시작**한다 → `{resumed, safety}`(`resumed` = 닫은 정지 수, 정지가 없으면 0 — 오류가 아니다).
 
         다시 시작은 **사용자가 정한다** — 서버는 사용자가 이미 안전한 곳에 있는지 모른다. 공식 해제가 오면 「해제됐어요」 알림이 나가지만 정지는 이 요청이 풀 때까지 그대로다.
-        그날 정지는 자정에 저절로 풀린다. 다시 시작해도 **같은 사건으로 다시 정지하지 않는다**(사건 지문 — `trip_safety_pauses.event_key`). 본인 여행만(남의 것 404)."""
+        ★`[결정 2026-10-06 사용자]` 그날 정지도 **자정에 풀리지 않는다** — 이 요청이 풀어야 한다. 풀면 `recovery`(재난 뒤 상황 꾸러미)가 같이 온다. 다시 시작해도 **같은 사건으로 다시 정지하지 않는다**(사건 지문 — `trip_safety_pauses.event_key`). 본인 여행만(남의 것 404)."""
         tenant, customer = who
         store = TripStore(tenant)
         with get_connection() as conn:
@@ -1716,7 +1725,44 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             closed = safety_pause.SafetyPauses(tenant).resume(conn, trip_id=trip_id, via="web", by=customer)
         with get_connection() as conn:
             current = safety_pause.view(conn, tenant_id=tenant, trip_id=trip_id)
-        return {"resumed": closed, "safety": current}
+        with get_connection() as conn:
+            brief = safety_recovery.build_brief(conn, store=store, tenant_id=tenant, trip_id=trip_id) if closed else None
+        return {"resumed": closed, "safety": current, "recovery": brief}
+
+    @router.get("/v1/web/trips/{trip_id}/safety/recovery")
+    def web_safety_recovery(trip_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[결정 2026-10-06 사용자]` 재난 뒤 **상황 꾸러미** → `{recovery}`(다시 시작한 정지가 없거나 72시간이 지나면 `null`). 읽기 전용.
+
+        사실(출처가 있는 것)과 **모르는 것**을 따로 싣고, 남은 일정 항목마다 영향 판정(확정 · 불명 · 없음 — 모르면 불명)과 이유를 붙인다. 고르는 것은 `POST` 다."""
+        tenant, customer = who
+        store = TripStore(tenant)
+        with get_connection() as conn:
+            _trip_or_404(conn, store, trip_id, customer)
+            brief = safety_recovery.build_brief(conn, store=store, tenant_id=tenant, trip_id=trip_id)
+        return {"recovery": brief}
+
+    @router.post("/v1/web/trips/{trip_id}/safety/recovery")
+    def web_safety_recovery_choose(trip_id: UUID, request: RecoveryChoiceIn, who: tuple[str, UUID] = Depends(_web_customer)):
+        """재난 뒤 다시 시작할 때 **사용자가 고른 것**을 기록한다 → `{recorded, choice, proposals}`.
+
+        · `keep` — 기록만. 일정은 안 바뀐다
+        · `replace_affected` — 영향 **확정** 항목마다 대신 갈 곳을 **제안**한다(`proposals` — 기존 「선택이 필요해요」 제안이고, 고르면 바뀌고 안 고르면 그대로)
+        · `replan_all` — 기록만. 개인 AI 가 `tripilot_get_recovery_brief` 로 이 상황을 읽고 다시 짠다
+        남의 여행 · 다시 시작한 적 없는 정지는 404 다. `lighter_day` 는 우리가 밀도를 임의로 낮추지 않고 **기록 · 제약 전달**만 한다."""
+        tenant, customer = who
+        store = TripStore(tenant)
+        with get_connection() as conn:
+            _trip_or_404(conn, store, trip_id, customer)
+            try:
+                saved = safety_recovery.record_choice(conn, tenant_id=tenant, trip_id=trip_id, customer_id=customer, pause_id=request.pause_id,
+                                                      choice=request.choice, lighter_day=request.lighter_day, answers=request.answers)
+            except LookupError:
+                raise _error(404, "not_found", "resource not found") from None
+            brief = safety_recovery.build_brief(conn, store=store, tenant_id=tenant, trip_id=trip_id)
+        proposals: list[dict[str, Any]] = []
+        if request.choice == "replace_affected" and brief is not None and brief["pause_id"] == str(request.pause_id):
+            proposals = safety_recovery.suggest_replacements(_desk(store), store, tenant_id=tenant, trip_id=trip_id, brief=brief, conn_factory=get_connection)
+        return {"recorded": saved["recorded"], "choice": request.choice, "lighter_day": request.lighter_day, "proposals": proposals}
 
     @router.post("/v1/web/trips/{trip_id}/messages")
     def web_message(trip_id: UUID, request: MessageIn, http: Request, background: BackgroundTasks,

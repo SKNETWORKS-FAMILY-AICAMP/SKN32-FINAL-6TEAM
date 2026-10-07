@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useContext, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { OverlayRoot } from "@/components/layout/overlay-root";
 import { useSettings, useT } from "@/lib/settings";
 import styles from "./guardian-card.module.css";
 
@@ -29,6 +30,8 @@ const LEAVE_MS = 150;
 export function GuardianCard({ kind, onPrimary, onSecondary, onClose }: { kind: GuardianCardKind; onPrimary: () => void; onSecondary: () => void; onClose: () => void }) {
   const t = useT();
   const { language } = useSettings();
+  // `[2026-10-06 사용자 지시 — 폰 화면 안에서 폰 폭에 맞게 떠야 한다]` On a screen inside the phone frame the card is drawn INSIDE it (the frame's overlay), so it is as wide as the phone; on a page it stands over the page.
+  const root = useContext(OverlayRoot);
   const start = kind === "start";
   const [shown, setShown] = useState(false);
   const layer = useRef<HTMLDivElement>(null);
@@ -41,8 +44,9 @@ export function GuardianCard({ kind, onPrimary, onSecondary, onClose }: { kind: 
     opener.current = document.activeElement;
     const frame = requestAnimationFrame(() => setShown(true));
     title.current?.focus({ preventScroll: true });
-    // What is behind the card cannot be reached while it is open (the keyboard, a screen reader).
-    const behind = Array.from(document.body.children).filter((element) => element !== layer.current && !element.matches("script, [data-guardian-keep]")) as HTMLElement[];
+    // What is behind the card cannot be reached while it is open (the keyboard, a screen reader): the phone frame's other parts, or the page's.
+    const scope = root ? root.parentElement : document.body;
+    const behind = Array.from(scope?.children ?? []).filter((element) => element !== layer.current && element !== root && !element.matches("script, [data-guardian-keep]")) as HTMLElement[];
     const was = behind.map((element) => element.inert);
     behind.forEach((element) => { element.inert = true; });
     return () => {
@@ -52,7 +56,7 @@ export function GuardianCard({ kind, onPrimary, onSecondary, onClose }: { kind: 
       const back = opener.current;
       if (back instanceof HTMLElement && document.contains(back)) back.focus({ preventScroll: true });
     };
-  }, []);
+  }, [root]);
 
   /** Leave without deciding anything: slide away, then the parent takes the card out. `wait` is 0 for Esc. */
   function dismiss(wait = LEAVE_MS) {
@@ -101,6 +105,6 @@ export function GuardianCard({ kind, onPrimary, onSecondary, onClose }: { kind: 
         </footer>
       </aside>
     </div>,
-    document.body,
+    root ?? document.body,
   );
 }

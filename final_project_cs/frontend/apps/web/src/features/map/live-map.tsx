@@ -16,10 +16,10 @@ export function MapUnavailable({ message }: { message: string }) {
   return <div className={styles.unavailable} role="alert"><strong>지도를 표시할 수 없어요</strong><p>{message}</p></div>;
 }
 
-export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, topInset, bottomInset, me = null, stays = NO_STAYS, onZoom, meAvailable = false }: MapViewProps & { adapter: MapAdapter; name: string }) {
+export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me = null, stays = NO_STAYS, onZoom, meAvailable = false }: MapViewProps & { adapter: MapAdapter; name: string }) {
   const container = useRef<HTMLDivElement>(null);
   const controller = useRef<MapController | null>(null);
-  const latest = useRef({ points, selectedId, onSelect, lines, topInset, me, stays, onZoom });
+  const latest = useRef({ points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, me, stays, onZoom });
   const [attempt, setAttempt] = useState(0);
   // `[2026-10-03 사용자 지시]` The map's buttons show while the pointer is over the map, or for a few seconds after it is touched (a phone has no hover).
   const [awake, setAwake] = useState(false);
@@ -33,9 +33,9 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, to
   const [folded, setFolded] = useState(readFolded);
 
   useEffect(() => {
-    latest.current = { ...latest.current, points, selectedId, onSelect, lines, topInset, onZoom };
-    controller.current?.update(points, selectedId, lines);
-  }, [points, selectedId, onSelect, lines, topInset, onZoom]);
+    latest.current = { ...latest.current, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, onZoom };
+    controller.current?.update(points, selectedId, lines, selectedLineId);
+  }, [points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, onZoom]);
 
   // `[2026-10-05 사용자 지시]` 「내 위치」 and the stays go to the map on their own: a new position does not redraw the pins.
   useEffect(() => {
@@ -66,6 +66,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, to
     void adapter.create(host, {
       ...latest.current,
       onSelect: (id) => latest.current.onSelect(id),
+      onSelectLine: (id) => latest.current.onSelectLine?.(id),
       onZoom: (zoom) => latest.current.onZoom?.(zoom),          // [2026-10-05] the screen above asks for the detailed route lines once this says the map is zoomed in
       onView: (next) => { if (!cancelled) setView(next); },
       onError: fail,
@@ -73,7 +74,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, to
       if (cancelled) { created.destroy(); return; }
       instance = created;
       controller.current = created;
-      created.update(latest.current.points, latest.current.selectedId, latest.current.lines);
+      created.update(latest.current.points, latest.current.selectedId, latest.current.lines, latest.current.selectedLineId);
       created.setMe(latest.current.me);
       created.setStays(latest.current.stays);
       observer = new ResizeObserver(([entry]) => {
