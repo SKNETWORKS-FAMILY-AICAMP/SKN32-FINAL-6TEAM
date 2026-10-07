@@ -21,6 +21,9 @@ def jl(name):
 
 
 V = {'FrogNano(짧은 확인)': jl('verify_frog.jsonl'), '가르치기 전 E4B(짧은 확인)': jl('verify_e4bbase.jsonl')}
+for _f, _n in (('verify_g12b.jsonl', 'gemma4:12b(짧은 확인)'), ('verify_e4bq4km.jsonl', '가르치기 전 E4B Q4_K_M(짧은 확인)')):
+    if os.path.exists(os.path.join(D, _f)):
+        V[_n] = jl(_f)
 SEEDS = {'시드 1': 'e4bt', '시드 2': 'e4bs2', '시드 3': 'e4bs3'}
 SRC = {'D': ('d_test_lp_{}.jsonl', 'q4km_'), 'D2': ('d_test_lp_d2_{}.jsonl', 'q4km_'), 'D3': ('d_test_d3_{}.jsonl', 'q4km_')}
 data = {}
