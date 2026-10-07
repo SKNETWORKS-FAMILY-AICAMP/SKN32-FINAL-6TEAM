@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>triPilot · 등록 완료 전환 화면</title>
+<style>
+/* 색은 등록 후 C안 목업(tripilot-registered-c-attention.html)과 같은 값 — 앱 src/styles/tokens.css 그린 테마. */
+:root {
+  --color-text: #24392f; --color-muted: #6d7c73; --color-border: #dce3dd; --color-surface: #ffffff;
+  --color-background: #f3f5f3; --color-primary: #2e6047; --color-on-primary: #ffffff; --color-subtle: #f6f7f5;
+  --color-warning: #82693e; --color-warning-soft: #faf6ec; --color-warning-border: #e5d9c1;
+  --color-error: #965640; --color-error-soft: #fdf3ed; --color-error-border: #ecd2c7;
+  --color-text-secondary: #4a5d52; --color-faint: #a5b1a9; --color-divider: #e8ede9;
+  --color-border-strong: #c3cdc6; --color-success: #3d7a56; --color-success-soft: #e3f0e7;
+  --color-adjusted: #3f6a8a; --color-adjusted-soft: #e6eff6; --color-adjusted-border: #bcd0df;
+  --color-selected: #2e6047; --color-selected-soft: #dcebe1; --color-paper: #f7f9f3; --color-soft: #e9f2eb;
+  --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font-family: var(--font-sans); background: var(--color-background); color: var(--color-text); }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.i.sm { width: 14px; height: 14px; }
+
+/* 검토 막대 — 휴대폰 밖 */
+.review { max-width: 1000px; margin: 0 auto; padding: 22px 16px 4px; }
+.review h1 { margin: 0; font-size: 20px; font-weight: 750; }
+.review .meta { margin: 4px 0 8px; font-size: 13px; line-height: 1.55; color: var(--color-muted); }
+.review .meta a { color: var(--color-primary); }
+.group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.group > span { margin-right: 4px; font-size: 12.5px; font-weight: 750; color: var(--color-text-secondary); }
+.group button { min-height: 34px; padding: 0 13px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); font-size: 13px; font-weight: 700; }
+.group button[aria-pressed="true"] { border-color: var(--color-text); background: var(--color-text); color: var(--color-on-primary); }
+.group button.act { display: inline-flex; align-items: center; gap: 6px; }
+.stage { display: grid; grid-template-columns: 390px minmax(0, 470px); justify-content: center; align-items: start; gap: 40px; padding: 18px 16px 28px; }
+@media (max-width: 899px) { .stage { grid-template-columns: minmax(0, 390px); } }
+.variant { display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 0; }
+.variant > header { width: 390px; max-width: calc(100vw - 32px); }
+.variant h2 { margin: 0; font-size: 15px; font-weight: 750; }
+.variant h2 b { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 6px; border-radius: 6px; background: var(--color-text); color: var(--color-on-primary); font-size: 12px; }
+.variant .lead { margin: 4px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--color-text-secondary); }
+@media (min-width: 900px) { .variant > header { min-height: 92px; } }
+
+/* 메모 */
+.memo { padding: 18px 20px; border: 1px solid var(--color-border); border-radius: 18px; background: var(--color-surface); }
+.memo h2 { margin: 0; font-size: 16px; font-weight: 750; }
+.memo h3 { margin: 18px 0 0; font-size: 13.5px; font-weight: 750; }
+.memo h4 { margin: 10px 0 0; font-size: 12.5px; font-weight: 750; color: var(--color-text-secondary); }
+.memo ul, .memo ol { margin: 4px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: var(--color-text-secondary); }
+.memo p { margin: 6px 0 0; font-size: 13px; line-height: 1.6; color: var(--color-text-secondary); }
+.memo code { font-size: 12px; }
+.memo a { color: var(--color-primary); }
+.timer { display: inline-block; margin-top: 8px; padding: 4px 10px; border-radius: 999px; background: var(--color-subtle); font-size: 12.5px; font-weight: 700; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.tag { display: inline-block; padding: 0 6px; border-radius: 6px; font-size: 11.5px; font-weight: 750; }
+.tag.now { background: var(--color-success-soft); color: var(--color-success); }
+.tag.ask { background: var(--color-warning-soft); color: var(--color-warning); }
+.tag.idea { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.verdict { margin-top: 8px; padding: 12px 14px; border-radius: 12px; background: var(--color-paper); border: 1px solid var(--color-border); }
+.verdict p:first-child { margin-top: 0; }
+
+/* 휴대폰 */
+.phone { position: relative; width: 390px; max-width: calc(100vw - 32px); height: 820px; border-radius: 34px; overflow: clip; background: var(--color-background); box-shadow: 0 0 0 9px #1f2a24, 0 24px 60px rgba(20, 40, 30, .28); isolation: isolate; }
+@media (max-width: 430px) { .phone { height: max(640px, min(820px, calc(100vh - 150px))); } }
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; background: linear-gradient(180deg, var(--color-paper) 0%, var(--color-background) 55%); }
+.fx { position: absolute; inset: 0; z-index: 30; pointer-events: none; }
+.skip { position: absolute; z-index: 25; top: 16px; right: 14px; min-height: 34px; padding: 0 14px; border: 1px solid var(--color-border); border-radius: 999px; background: rgba(255, 255, 255, .88); color: var(--color-text-secondary); font-size: 13px; font-weight: 700; }
+
+/* 머리 — 체크 · 제목 · 여행 요약 */
+.hero { position: relative; z-index: 2; flex: none; padding: 56px 24px 12px; text-align: center; }
+.mark { display: grid; place-items: center; width: 52px; height: 52px; margin: 0 auto 12px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 0 6px var(--color-selected-soft); }
+.mark svg { width: 26px; height: 26px; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.mark path { stroke-dasharray: 24; }
+.hero h1 { margin: 0; font-size: 22px; font-weight: 750; letter-spacing: -.4px; }
+.hero h1:focus, .cBadge:focus { outline: none; }
+.hero p { margin: 6px 0 0; font-size: 13px; color: var(--color-muted); }
+
+/* 목록 · 무대 · 아래 버튼 */
+.list { position: relative; flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 6px 18px 12px; scrollbar-width: none; transition: opacity .25s; }
+.list::-webkit-scrollbar { display: none; }
+.list.dim { opacity: .42; }
+.zone { position: relative; flex: none; display: grid; align-content: center; padding: 0 18px; }
+.zone > * { grid-area: 1 / 1; } /* 다음 카드가 앞 카드가 떠나는 동안 들어와도 같은 자리에 겹친다 */
+.foot { position: relative; z-index: 2; flex: none; padding: 12px 18px 22px; }
+.sum { margin: 0; text-align: center; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); }
+.note { margin: 4px 0 12px; text-align: center; font-size: 12.5px; line-height: 1.5; color: var(--color-muted); word-break: keep-all; }
+.cta { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; border-radius: 14px; background: var(--color-primary); color: var(--color-on-primary); font-size: 16px; font-weight: 750; text-decoration: none; box-shadow: 0 8px 20px rgba(46, 96, 71, .28); }
+.cta .i { stroke-width: 2.2; }
+
+/* 일차 카드 · 줄 */
+.dayCard { margin: 0 0 10px; padding: 4px 12px 6px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
+.dayHead { display: flex; align-items: baseline; gap: 6px; margin: 8px 2px 2px; font-size: 13px; font-weight: 750; }
+.dayHead small { font-size: 12px; font-weight: 550; color: var(--color-muted); }
+.row { display: grid; grid-template-columns: 42px 16px minmax(0, 1fr) auto; column-gap: 8px; align-items: center; min-height: 48px; overflow: hidden; }
+.row .t { text-align: right; font-size: 13px; font-weight: 750; line-height: 1.2; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.row .t small { display: block; font-size: 10.5px; font-weight: 500; color: var(--color-faint); }
+.rail { position: relative; align-self: stretch; }
+.rows .rail::before { content: ""; position: absolute; left: 7px; top: 0; bottom: 0; width: 2px; background: var(--color-border); }
+.rows .row:first-child .rail::before { top: 50%; }
+.rows .row:last-child .rail::before { bottom: 50%; }
+.rail i { position: absolute; left: 2px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; border: 2px solid var(--color-success); background: var(--color-success-soft); }
+.nm { min-width: 0; }
+.nm b { display: block; font-size: 15px; font-weight: 750; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nm small { display: block; font-size: 11.5px; line-height: 1.35; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bk { padding: 2px 8px; border: 1px solid #bcd9c6; border-radius: 999px; background: var(--color-success-soft); color: var(--color-success); font-size: 11px; font-weight: 750; white-space: nowrap; }
+
+/* 포커스 카드(A · C) */
+.fcard { position: relative; padding: 16px 18px 14px; border: 1.5px solid var(--color-border); border-radius: 18px; background: var(--color-surface); box-shadow: 0 18px 40px rgba(36, 57, 47, .18), 0 0 0 4px rgba(46, 96, 71, .08); }
+.fcTop { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 750; color: var(--color-muted); }
+.fcDay { display: inline-flex; align-items: center; gap: 6px; color: var(--day, var(--color-primary)); }
+.fcDay::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.fcIdx { font-variant-numeric: tabular-nums; }
+.fcTime { margin-top: 10px; font-size: 15px; font-weight: 750; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.fcTime span { font-weight: 550; color: var(--color-muted); }
+.fcName { margin: 2px 0 0; font-size: 26px; font-weight: 750; letter-spacing: -.6px; line-height: 1.25; word-break: keep-all; }
+.fcMeta { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--color-muted); }
+.fcFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--color-divider); font-size: 12.5px; color: var(--color-text-secondary); }
+.pill { padding: 2px 9px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 11.5px; font-weight: 750; color: var(--color-text-secondary); white-space: nowrap; }
+.pill.ok { border-color: #bcd9c6; background: var(--color-success-soft); color: var(--color-success); }
+.fcMove { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
+
+/* 날아가는 상자 — 큰 카드에서 줄로 모양을 바꾼다(컨테이너 변형) */
+.ghost { position: absolute; overflow: hidden; background: var(--color-surface); border: 1.5px solid transparent; }
+.ghost > * { position: absolute !important; left: 0; top: 0; margin: 0 !important; visibility: visible !important; transform-origin: 0 0; }
+
+/* B — 티켓 모으기 */
+.ticket { position: relative; border-radius: 16px; background: var(--color-surface); box-shadow: 0 20px 44px rgba(36, 57, 47, .22); overflow: hidden; }
+.tkTop { display: flex; justify-content: space-between; padding: 10px 16px; background: var(--day); color: #fff; font-size: 12.5px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.tkBody { padding: 12px 16px; }
+.tkBody .fcTime { margin-top: 0; }
+.tkCut { position: relative; margin: 0 14px; border-top: 2px dashed var(--color-divider); }
+.tkCut::before, .tkCut::after { content: ""; position: absolute; top: -10px; width: 18px; height: 18px; border-radius: 50%; background: var(--color-background); }
+.tkCut::before { left: -24px; }
+.tkCut::after { right: -24px; }
+.tkFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 10px 16px 12px; font-size: 12.5px; color: var(--color-text-secondary); }
+.deck { --fan: .52s; }
+.strip { position: relative; margin-top: -18px; padding-right: 10px; border: 1px solid var(--color-border); border-left: 5px solid var(--day); border-radius: 12px; background: var(--color-surface); box-shadow: 0 6px 14px rgba(36, 57, 47, .12); transition: margin-top var(--fan) cubic-bezier(.3, .7, .2, 1), box-shadow var(--fan); transition-delay: calc(var(--i, 0) * 28ms); }
+.strip.row { grid-template-columns: 44px minmax(0, 1fr) auto; }
+.strip .rail { display: none; }
+.deck > div.strip:first-of-type { margin-top: 0; }
+.deckDay { max-height: 0; margin: 0 2px; overflow: hidden; opacity: 0; font-size: 13px; font-weight: 750; transition: max-height var(--fan), opacity var(--fan), margin var(--fan); }
+.deckDay small { margin-left: 4px; font-size: 12px; font-weight: 550; color: var(--color-muted); }
+.deckDay::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: var(--day); }
+.deck.fanned .strip { margin-top: 6px; box-shadow: 0 1px 2px rgba(36, 57, 47, .06); }
+.deck.fanned .deckDay { max-height: 30px; margin: 12px 2px 0; opacity: 1; }
+.deck.fanned > .deckDay:first-child { margin-top: 2px; }
+
+/* C — 지도 + 아래 시트(다음 화면과 같은 배치) */
+.v-c { background: #efece4; }
+.map { position: absolute; inset: 0; }
+.map svg { display: block; width: 100%; height: 100%; }
+.map .road-c { stroke: #d9d2c3; stroke-width: 8; }
+.map .road { stroke: #ffffff; stroke-width: 5.5; }
+.map .road-y { stroke: #f1df9c; stroke-width: 6; }
+.map .lbl { font: 600 11px var(--font-sans); fill: #8b8576; }
+.map .river-lbl { font: italic 600 12px var(--font-sans); fill: #6f9fb1; }
+.route { fill: none; stroke: var(--color-primary); stroke-width: 5; stroke-linecap: round; opacity: .85; }
+.route[data-kind="subway"] { stroke: var(--color-adjusted); }
+.route[data-kind="bus"] { stroke: var(--color-success); }
+.route[data-kind="walk"] { stroke: var(--color-muted); }
+.route[data-guess] { stroke-width: 4; opacity: .55; stroke-dasharray: 8 10; }
+.pin .pinBody { filter: drop-shadow(0 2px 4px rgba(36, 57, 47, .25)); }
+.pin .b { fill: var(--color-surface); stroke: var(--color-text); stroke-width: 2; }
+.pin .ring { fill: none; stroke: transparent; stroke-width: 8; }
+.pin text { font: 700 14px system-ui, var(--font-sans); fill: var(--color-text); }
+.pin.sel .b { fill: var(--color-selected); stroke: var(--color-selected); }
+.pin.sel .ring { stroke: rgba(46, 96, 71, .35); }
+.pin.sel text { fill: var(--color-on-primary); }
+.cTop { position: absolute; z-index: 6; top: 16px; left: 12px; right: 100px; display: flex; }
+.cBadge { display: inline-flex; margin: 0; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px 0 8px; border-radius: 16px; background: rgba(255, 255, 255, .94); box-shadow: 0 2px 10px rgba(36, 57, 47, .16); font-size: 15px; font-weight: 750; white-space: nowrap; }
+.cBadge .mark { width: 30px; height: 30px; margin: 0; box-shadow: none; }
+.cBadge .mark svg { width: 17px; height: 17px; }
+.v-c .skip { top: 21px; right: 12px; }
+.cSheet { position: absolute; z-index: 4; left: 0; right: 0; bottom: 0; height: 58%; display: flex; flex-direction: column; border-radius: 20px 20px 0 0; background: var(--color-surface); box-shadow: 0 -6px 24px rgba(36, 57, 47, .14); overflow: hidden; }
+.handle { position: absolute; top: 0; left: 0; right: 0; height: 22px; display: grid; place-items: center; pointer-events: none; }
+.handle span { width: 42px; height: 5px; border-radius: 3px; background: var(--color-border-strong); }
+.cHead { flex: none; padding: 22px 18px 8px; border-bottom: 1px solid var(--color-divider); }
+.cHead h2 { margin: 0; font-size: 16px; font-weight: 750; }
+.cHead p { margin: 2px 0 0; font-size: 12.5px; color: var(--color-muted); }
+.cSheet .list { padding: 0 14px 8px; }
+.cSheet .dayCard { margin: 0; padding: 0; border: 0; border-radius: 0; background: none; }
+.cSheet .dayHead { margin: 10px 2px 0; color: var(--color-muted); }
+.cSheet .row { min-height: 42px; }
+.cSheet .zone { padding: 6px 14px 10px; }
+.cSheet .fcard { padding: 12px 16px; box-shadow: 0 10px 28px rgba(36, 57, 47, .16), 0 0 0 4px rgba(46, 96, 71, .08); }
+.cSheet .fcName { font-size: 21px; }
+.cSheet .fcFoot { margin-top: 8px; padding-top: 8px; }
+.cSheet .foot { padding: 10px 16px 18px; border-top: 1px solid var(--color-divider); background: var(--color-surface); }
+.cSheet .note { display: none; }
+.cSheet .sum { margin-bottom: 10px; }
+
+/* D — 하루씩 묶기 */
+.gcard { padding: 14px 16px 12px; border: 1.5px solid var(--color-border); border-radius: 18px; background: var(--color-surface); box-shadow: 0 18px 40px rgba(36, 57, 47, .18); }
+.gHead { display: flex; align-items: baseline; gap: 8px; }
+.gHead b { font-size: 22px; font-weight: 750; color: var(--day); }
+.gHead span { font-size: 14px; font-weight: 650; color: var(--color-text-secondary); }
+.gHead em { margin-left: auto; font-size: 12px; font-style: normal; font-weight: 700; color: var(--color-muted); }
+.glines { margin-top: 8px; }
+.gl { display: grid; grid-template-columns: 42px 10px minmax(0, 1fr) auto; column-gap: 8px; align-items: center; min-height: 38px; border-top: 1px solid var(--color-divider); }
+.gl .t { text-align: right; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.gl i { width: 8px; height: 8px; border-radius: 50%; background: var(--day); }
+.gl b { min-width: 0; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dsum { margin: 0 0 10px; padding: 11px 14px 12px; border: 1px solid var(--color-border); border-left: 5px solid var(--day); border-radius: 14px; background: var(--color-surface); }
+.dsHead { display: flex; align-items: baseline; gap: 6px; font-size: 12.5px; }
+.dsHead b { font-size: 15px; font-weight: 750; color: var(--day); }
+.dsHead small { font-size: 12.5px; font-weight: 600; color: var(--color-text-secondary); }
+.dsHead span { margin-left: auto; color: var(--color-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dsChain { margin: 6px 0 0; font-size: 13.5px; font-weight: 600; line-height: 1.6; color: var(--color-text); word-break: keep-all; }
+.dsChain .arr { margin: 0 4px; font-style: normal; color: var(--color-faint); }
+.dsChain .bkTag { margin-left: 3px; font-size: 11px; font-weight: 750; color: var(--color-success); }
+
+/* 화면만 크게 — 앱 화면을 덮는 전체 화면처럼 */
+.fullBar { display: none; }
+body.full { overflow: hidden; }
+body.full .review, body.full .memo, body.full .variant > header { display: none; }
+body.full .stage { display: block; padding: 0; }
+body.full .phone { position: fixed; inset: 0; z-index: 50; width: 100vw; max-width: none; height: 100dvh; border-radius: 0; box-shadow: none; background: #1f2a24; }
+body.full .screen { left: max(0px, calc(50% - 240px)); right: auto; width: min(100%, 480px); }
+body.full .fullBar { position: fixed; z-index: 60; bottom: 12px; left: 12px; display: flex; gap: 6px; }
+.fullBar button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 34px; min-height: 34px; padding: 0 12px; border: 0; border-radius: 999px; background: rgba(255, 255, 255, .9); font-size: 12.5px; font-weight: 750; box-shadow: 0 2px 8px rgba(0, 0, 0, .2); }
+/* 좁은 화면에서는 화면 아래 카드 · 버튼을 가리지 않게 오른쪽 위(건너뛰기 아래)에 아이콘만 둔다 */
+@media (max-width: 560px) {
+  body.full .fullBar { top: 58px; right: 14px; bottom: auto; left: auto; }
+  .fullBar button { padding: 0; }
+  .fullBar .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+</style>
+</head>
+<body>
+<header class="review">
+  <h1>등록 완료 전환 화면 — 등록한 일정을 하나씩 보여 주고 한 번에 보기</h1>
+  <p class="meta">작성일 2026-10-07 · 상태: 검토용 5안(미결정) / 실제 API 미연결. 계획 확인 화면에서 「재검증 → 여행 등록」을 누른 뒤, <a href="tripilot-registered-c-attention.html">등록 후 C안 + 알림 센터</a> 화면으로 가기 전에 끼우는 전체 화면이다. 끝에서 「일정 관리하기」를 누르면 그 목업으로 넘어간다.</p>
+  <div class="group" role="group" aria-label="안 고르기"><span>안</span>
+    <button type="button" data-v="A" aria-pressed="true">A 떠올라 위로 쌓기</button>
+    <button type="button" data-v="B" aria-pressed="false">B 티켓 모으기</button>
+    <button type="button" data-v="C" aria-pressed="false">C 지도에 핀 꽂기</button>
+    <button type="button" data-v="D" aria-pressed="false">D 하루씩 묶기</button>
+    <button type="button" data-v="E" aria-pressed="false">E 최소안</button>
+  </div>
+  <div class="group" role="group" aria-label="예시 여행"><span>예시</span>
+    <button type="button" data-data="base" aria-pressed="true">기본 · 2일 7개</button>
+    <button type="button" data-data="long" aria-pressed="false">긴 여행 · 4일 15개</button>
+  </div>
+  <div class="group" role="group" aria-label="재생"><span>재생</span>
+    <button type="button" class="act" data-replay><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>다시 보기</button>
+    <button type="button" data-speed="1" aria-pressed="true">1×</button>
+    <button type="button" data-speed="1.5" aria-pressed="false">1.5×</button>
+    <button type="button" data-speed="2" aria-pressed="false">2×</button>
+    <button type="button" data-reduce aria-pressed="false">움직임 줄이기</button>
+    <button type="button" class="act" data-full><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>화면만 크게</button>
+  </div>
+</header>
+
+<main class="stage">
+  <section class="variant">
+    <header><h2><b id="vBadge">A</b><span id="vName"></span></h2><p class="lead" id="vLead"></p></header>
+    <div class="phone" id="phone"><div class="screen" id="screen"></div></div>
+  </section>
+
+  <aside class="memo" aria-labelledby="memoTitle">
+    <h2 id="memoTitle">이 목업에서 보는 것</h2>
+    <span class="timer" id="timer" aria-live="polite">재생 준비</span>
+
+    <h3 id="vMemoTitle">이 안</h3>
+    <h4>흐름</h4><ol id="vFlow"></ol>
+    <h4>좋은 점</h4><ul id="vGood"></ul>
+    <h4>걱정되는 점</h4><ul id="vWorry"></ul>
+
+    <h3>이 화면이 필요한가 — 작성자 의견</h3>
+    <div class="verdict">
+      <p><b>넣는 쪽을 권한다. 단 짧게(일정 7개 기준 5초 안팎), 건너뛸 수 있게, 첫 등록 직후 한 번만.</b> 일정을 다시 보여 주는 화면이 아니라 「검사하던 계획 → 지켜보는 여행」으로 바뀌었다는 경계를 알리는 화면으로 본다.</p>
+    </div>
+    <h4>넣을 이유</h4>
+    <ul>
+      <li>등록 후 C안 화면은 계획 확인 화면과 배치가 거의 같고(지도 + 아래 시트), 2026-10-07 결정으로 시트 머리의 「등록 완료」 표시도 두지 않는다. 지금은 「여행 등록」을 누른 뒤 무엇이 바뀌었는지 알려 주는 자리가 없다.</li>
+      <li>여행 전체를 한 장에서 보는 화면이 없다. C안은 하루씩, 시트도 화면 절반이다. 등록하는 순간 전체를 한 번 보여 주면 「다 들어갔다」는 확인이 된다.</li>
+      <li>다음 화면에 필요한 여행 조회·경로선·알림을 이 화면이 도는 동안 불러 둘 수 있다. 일부러 늦추지는 않는다.</li>
+      <li>계획 등록 → 계획 확인 → 재검증 → 등록으로 이어진 긴 과정의 끝이다. 경험은 가장 강한 순간과 마지막 순간으로 기억된다는 피크엔드 규칙(NN/g)으로 보면, 끝을 따로 설계할 이유가 된다.</li>
+    </ul>
+    <h4>걱정되는 점</h4>
+    <ul>
+      <li>사용자는 방금 계획 확인 화면에서 같은 일정을 차례로 검사하는 장면을 봤다(읽기 진행 · 재검증). 같은 목록을 세 번째로 하나씩 보게 되므로 길면 지루하다. NN/g 사용성 관찰에서도 반복해서 보는 애니메이션은 짜증을 부른다.</li>
+      <li>「가운데에서 크게 → 줄어들며 위로」 움직임은 화면을 크게 가로지르고 크기가 바뀌어서, 움직임에 민감한 사람에게 어지럼을 일으키기 쉬운 유형이다(Val Head). 움직임 줄이기 대체는 필수다.</li>
+      <li>최대 7일 여행이면 일정이 30개를 넘을 수 있다. 하나에 1초씩이면 30초가 걸린다. NN/g은 10초를 넘으면 주의가 떠난다고 본다. 그래서 이 목업은 앞쪽 항목만 크게 보여 주고 뒤로 갈수록 빨라지며, 하나씩 보여 주는 연출이 4초를 넘으면 남은 항목을 한꺼번에 흘려보낸다(A·B·C). D는 일정 수가 아니라 날 수만큼만 걸린다.</li>
+    </ul>
+    <h4>구현 제안</h4>
+    <ul>
+      <li>주소를 따로 만들지 않고 C안 화면 위에 덮는 화면으로 띄운다. 「일정 관리하기」를 누르면 덮개만 걷혀서 데이터 준비와 뒤로 가기가 단순하다. <span class="tag idea">제안</span></li>
+      <li>목표 길이는 일정 7개 기준 5초 안팎이다. 전환 하나는 0.2~0.4초 안에 두고, 속도감은 머무는 시간으로 조절한다(NN/g · Material 길이 기준). 실제 구현 뒤 다시 잰다. <span class="tag idea">제안</span></li>
+      <li>고른다면 <b>A의 흐름에 C의 끝 배치</b>를 권한다. 일정을 하나씩 보여 주고 위로 쌓다가, 끝 화면이 다음 화면과 같은 지도 + 시트 배치로 이어지게 한다. 시간이 문제면 D를 고른다. <span class="tag idea">제안</span></li>
+    </ul>
+
+    <h3>모든 안에 공통인 동작</h3>
+    <ul>
+      <li>오른쪽 위 「건너뛰기」를 누르거나 재생 중에 화면 아무 곳이나 누르면 바로 끝 화면이 된다. E는 짧아서 건너뛰기가 없다.</li>
+      <li>OS에서 움직임 줄이기(<code>prefers-reduced-motion</code>)를 켰거나 위의 「움직임 줄이기」를 누르면, 움직임 없이 끝 화면을 0.2초 동안 흐리게 띄운다.</li>
+      <li>첫 항목은 천천히 보여 주고, 뒤 항목일수록 움직임이 0.8배씩 짧아진다(최저 0.5배). 머무는 시간은 0.42초에서 0.65배씩 줄어 최저 0.11초다. 카드가 머무는 동안 목록에 자리가 먼저 열리고, 카드가 날아가는 도중(55%)에 다음 카드가 들어온다.</li>
+      <li>화면 읽기 프로그램: 시작하면 「여행을 등록했어요」로 초점이 간다. 목록에는 실제 줄이 있고 날아가는 카드는 읽지 않게 숨긴다(<code>aria-hidden</code>). 끝나면 「일정 관리하기」로 초점이 간다.</li>
+      <li>「일정 관리하기」를 누르면 <a href="tripilot-registered-c-attention.html">등록 후 C안 + 알림 센터</a> 목업으로 넘어간다.</li>
+    </ul>
+
+    <h3>잰 재생 시간</h3>
+    <p>2026-10-07 내장 브라우저에서 잼, 1× 기준, 「이번 재생」 값. 화면 크기와 컴퓨터에 따라 0.1~0.3초씩 달라질 수 있다.</p>
+    <ul>
+      <li>기본(2일 · 7개): A 6.0초 · B 7.1초 · C 6.2초 · D 4.6초 · E 1.3초</li>
+      <li>긴 여행(4일 · 15개): A 7.5초 · B 8.5초 · C 7.0초 · D 6.2초 · E 1.8초</li>
+      <li>A를 1.5×로 하면 4.0초, 2×로 하면 3.1초다.</li>
+    </ul>
+
+    <h3>라이브 데이터 · API</h3>
+    <ul>
+      <li><span class="tag now">지금 계약</span> 등록은 <code>POST /v1/web/trip-intakes/{intake_id}/confirm</code> <code>{revision, survey?}</code>이다. 같은 판으로 두 번 눌러도 여행은 하나만 생긴다(<code>wiki/external/rest-endpoints.md</code>).</li>
+      <li><span class="tag now">지금 계약</span> 여행 조회는 <code>GET /v1/web/trips/{trip_id}</code>이다.</li>
+      <li><span class="tag idea">제안</span> 이 화면에는 새 API가 필요 없다고 본다. 계획 확인 화면이 이미 가진 결과(일정의 시각·이름·장소, 이동)로 바로 그리고, 그동안 여행 조회를 불러 다음 화면을 준비한다.</li>
+      <li><span class="tag ask">확인 필요</span> 등록 응답에 무엇이 오는지(여행 ID와 일정이 함께 오는지)는 이번 작업에서 확인하지 않았다. 분류·예약 표시가 등록 직후 손에 있는 값인지도 구현 때 확인한다.</li>
+      <li>등록이 실패하면(422 <code>intake_incomplete</code> 등) 이 화면으로 오지 않고 계획 확인 화면에서 지금처럼 오류를 보인다. 여행 조회가 늦거나 실패해도 성공한 것처럼 꾸미지 않는다. 「일정 관리하기」는 그대로 누를 수 있고, 다음 화면이 자기 로딩·오류 상태를 보인다.</li>
+      <li>등록 직후 한 번만 보인다. 「내 여행」에서 다시 열거나(<code>/trips/[id]</code>) 새로고침하면 바로 C안 화면이 열린다. <span class="tag idea">제안</span></li>
+    </ul>
+
+    <h3>레퍼런스</h3>
+    <div id="refs">
+      <p>2026-10-07 웹 조사. <b>[확인]</b>은 본문을 직접 열어 내용을 확인한 링크이고, <b>[미확인]</b>은 검색 결과로만 있는 것을 확인한 링크다. 요약은 작성자가 정리한 것이다.</p>
+      <h4>비슷한 제품 화면</h4>
+      <ul>
+        <li><a href="https://toss.im/tossfeed/article/why-motion-in-finance" target="_blank" rel="noopener">토스 피드 — 모션, 금융을 즐겁고 쉬운 경험으로 만드는 방법</a> [확인]: 송금·결제 끝에 체크 애니메이션 하나로 완료를 알린다. 우리 화면의 첫 신호(체크 + 「여행을 등록했어요」)와 같은 역할이다.</li>
+        <li><a href="https://rive.app/blog/spotify-used-rive-for-spotify-wrapped-2025" target="_blank" rel="noopener">Spotify Wrapped 2025 × Rive</a> [확인]: 사용자 데이터를 카드로 하나씩 공개하는 대표 사례다. 가짜 데이터로 타이밍부터 정하고 실제 데이터를 넣었다. 일정 수나 장소 이름 길이가 달라도 타이밍이 깨지지 않게 하라는 교훈이다.</li>
+        <li><a href="https://blog.duolingo.com/streak-milestone-design-animation" target="_blank" rel="noopener">Duolingo — 연속 학습 기록 달성 애니메이션</a> [확인]: 달성을 축하하는 전체 화면이다. 리듬을 여러 번 고쳐 맞췄다.</li>
+        <li><a href="https://manual.studio/work/strava-year-in-sport-2021" target="_blank" rel="noopener">Strava Year in Sport 2021</a> [확인]: 개인 기록을 전체 화면 장면으로 이어 보여 준 연말 결산이다.</li>
+        <li><a href="https://screensdesign.com/showcase/tripit-travel-planner" target="_blank" rel="noopener">TripIt</a> · <a href="https://screensdesign.com/articles/travel-itinerary-app-design-examples/" target="_blank" rel="noopener">여행 일정 앱 화면 사례 10개</a> [확인]: 핵심 화면이 시간순 타임라인이다. 일차별 목록에 시각·장소·예약 상태를 담는다. 끝 화면 목록 모양을 맞추는 데 참고했다. 완료 애니메이션 자체는 다루지 않는다.</li>
+        <li><a href="https://docs.stripe.com/payments/checkout/custom-success-page" target="_blank" rel="noopener">Stripe — 결제 성공 페이지</a> [확인]: 성공 페이지는 결과를 다시 조회해 보여 주기만 하고, 실제 처리는 그 전에 서버에서 끝낸다. 등록(<code>confirm</code>)이 끝난 뒤에만 이 화면을 띄우는 근거다.</li>
+        <li>Apple 지갑의 카드 더미(B안의 착안점)와 Airbnb의 예약 확인 애니메이션(<a href="https://www.fastcompany.com/90137495/the-airbnb-tool-thats-changing-ui-design" target="_blank" rel="noopener">Fast Company</a>, [미확인] · 2017년 무렵 기사라 지금 앱에 남아 있는지 모름)도 있다. 카카오·네이버 예약 완료 화면은 출처를 찾지 못했다.</li>
+      </ul>
+      <h4>움직임 기법</h4>
+      <ul>
+        <li><a href="https://aerotwist.com/blog/flip-your-animations/" target="_blank" rel="noopener">Paul Lewis — FLIP</a> [확인]: 처음·나중 자리를 재고 차이를 거꾸로 걸었다가 푸는 기법이다. 「크게 → 목록 자리로」의 원리다.</li>
+        <li><a href="https://gsap.com/docs/v3/Plugins/Flip" target="_blank" rel="noopener">GSAP Flip</a> · <a href="https://ryanmulligan.dev/blog/gsap-flip-cart/" target="_blank" rel="noopener">상품이 장바구니로 날아가는 데모</a> [확인]: 서로 다른 요소(가운데 카드 → 목록 줄)를 한 요소처럼 잇는다. 공개 예제 중 「포커스 → 쌓기」에 가장 가깝다.</li>
+        <li><a href="https://motion.dev/docs/react-layout-animations" target="_blank" rel="noopener">Motion 레이아웃 애니메이션</a> · <a href="https://motion.dev/docs/stagger" target="_blank" rel="noopener">stagger</a> · <a href="https://motion.dev/docs/react-accessibility" target="_blank" rel="noopener">접근성</a> [확인]: React에서 공유 요소 이동(<code>layoutId</code>)과 차례 등장을 바로 쓸 수 있다. 사용자가 움직임 줄이기를 켜면 이동은 끄고 흐려짐만 남기는 설정이 있다. 앱에 이 라이브러리가 있는지는 확인하지 않았다.</li>
+        <li><a href="https://github.com/material-components/material-components-android/blob/master/docs/theming/Motion.md" target="_blank" rel="noopener">Material — 컨테이너 변형</a> [확인]: 카드가 다른 모양으로 바뀌며 이어지는 패턴이다(들어감 300ms, 돌아옴 250ms). 이 목업의 「큰 카드 → 줄」 모양 바꾸기가 이 방식이다.</li>
+        <li><a href="https://developer.chrome.com/docs/web-platform/view-transitions" target="_blank" rel="noopener">View Transition API</a> [확인]: 브라우저 기본 기능으로 공유 요소 전환을 한다. C안처럼 「일정 관리하기」 뒤 화면을 잇는 데 쓸 수 있다. React의 같은 기능은 아직 시험판이다.</li>
+      </ul>
+      <h4>길이 · 접근성 · 필요성 근거</h4>
+      <ul>
+        <li><a href="https://www.nngroup.com/articles/animation-duration/" target="_blank" rel="noopener">NN/g — 애니메이션 길이</a> [확인]: 전환은 대체로 100~400ms가 알맞고, 500ms쯤부터 지루해진다. 실제로는 너무 긴 경우가 훨씬 흔하다.</li>
+        <li><a href="https://www.nngroup.com/articles/animation-usability/" target="_blank" rel="noopener">NN/g — 주의와 이해를 위한 애니메이션</a> · <a href="https://www.nngroup.com/articles/response-times-3-important-limits/" target="_blank" rel="noopener">응답 시간 3가지 한계</a> [확인]: 애니메이션은 상태 변화를 이해시키지만 반복하면 짜증을 부른다. 10초를 넘으면 주의가 떠난다.</li>
+        <li><a href="https://www.nngroup.com/articles/peak-end-rule/" target="_blank" rel="noopener">NN/g — 피크엔드 규칙</a> [확인]: 경험은 가장 강한 순간과 마지막 순간으로 기억된다. 끝은 축하로 마무리하고 방해를 넣지 말라고 권한다.</li>
+        <li><a href="https://developer.apple.com/design/human-interface-guidelines/motion" target="_blank" rel="noopener">Apple HIG — Motion</a> [확인]: 움직임은 목적이 있을 때만 짧게 쓴다. 사람이 취소할 수 있어야 하고 끝날 때까지 기다리게 하지 않는다. 움직임만으로 정보를 전하지 않는다.</li>
+        <li><a href="https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html" target="_blank" rel="noopener">WCAG 2.2 — 2.2.2 멈추기·정지·숨기기</a> · <a href="https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html" target="_blank" rel="noopener">2.3.3 상호작용 애니메이션</a> [확인]: 저절로 시작해 5초를 넘는 움직임에는 멈출 수단이 있어야 한다(이 화면이 해당하는지는 해석의 여지가 있지만 건너뛰기를 두면 안전하다). 꼭 필요하지 않은 움직임은 끌 수 있어야 한다.</li>
+        <li><a href="https://alistapart.com/article/designing-safer-web-animation-for-motion-sensitivity/" target="_blank" rel="noopener">Val Head — 움직임에 민감한 사람을 위한 웹 애니메이션</a> · <a href="https://web.dev/articles/prefers-reduced-motion" target="_blank" rel="noopener">web.dev — prefers-reduced-motion</a> [확인]: 넓은 면적을 가로지르는 이동과 크기 변화가 어지럼을 일으키기 쉽다. 움직임 줄이기에서는 장식 움직임을 빼고 흐려짐이나 즉시 표시로 바꾼다.</li>
+        <li><a href="https://ideas.repec.org/a/inm/ormnsc/v57y2011i9p1564-1579.html" target="_blank" rel="noopener">Buell &amp; Norton (2011) — 노동 착시</a> [확인 · 초록만]: 서비스가 일하는 과정을 보여 주면 결과가 같아도 더 가치 있게 느낀다. 다만 결과가 나오기 <i>전</i> 대기 중의 실험이다. 등록 <i>뒤</i> 연출에 그대로 들어맞는다는 것은 추론이고, 꾸민 지연은 역효과가 날 수 있다.</li>
+        <li><a href="https://design-system.service.gov.uk/patterns/confirmation-pages/" target="_blank" rel="noopener">GOV.UK — 확인 페이지</a> [확인]: 확인 페이지에는 다음에 무슨 일이 있는지와 다음으로 갈 길을 적는다. 끝 화면의 「지켜보다가 알려 드릴게요」와 「일정 관리하기」가 이 역할이다.</li>
+      </ul>
+    </div>
+
+    <h3>미정</h3>
+    <ul>
+      <li>버튼 문구: 「일정 관리하기」(임시). 「여행 관리 시작하기」나 「내 여행 보기」도 후보다.</li>
+      <li>「지켜보다가 알려 드릴게요」 문구가 실제 감시 범위(항로 지킴이를 켰는지, 알림 채널이 있는지)와 맞는지.</li>
+      <li>B·D의 일차 색 네 가지는 앱 토큰에 없다. 이 목업에서만 기존 색(기본 · 조정 · 주의 · 오류)을 빌려 썼다.</li>
+      <li>예시 일정 1~2일차는 앞 목업과 같다. 3~4일차 장소·시각은 긴 여행 모습을 보려고 지어낸 값이다. 지도는 위치 개념도다.</li>
+    </ul>
+  </aside>
+</main>
+
+<div class="fullBar">
+  <button type="button" data-replay><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span class="lbl">다시 보기</span></button>
+  <button type="button" data-full><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg><span class="lbl">크게 보기 끄기 (Esc)</span></button>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const html = (markup) => { const t = document.createElement("template"); t.innerHTML = markup.trim(); return t.content.firstElementChild; };
+
+  const ICON = {
+    arrow: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+    train: '<path d="M8 3.1V7a4 4 0 0 0 8 0V3.1"/><path d="m9 15-1-1"/><path d="m15 15 1-1"/><path d="M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z"/><path d="m8 19-2 3"/><path d="m16 19 2 3"/>',
+    walk: '<path d="M4 16v-2.38C4 11.5 2.970 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.680V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/>',
+    bus: '<path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/>',
+  };
+  const icon = (name, cls = "i") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICON[name]}</svg>`;
+  const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+  const NEXT = "tripilot-registered-c-attention.html";
+  const TITLE = "내 여행";
+
+  /* ---------- 예시 데이터 ---------- */
+  // 1~2일차는 앞 목업(등록 후 C안)과 같은 7개. x·y 는 390×820 개념도 위의 자리. 3~4일차는 긴 여행 모습을 보려고 지어낸 값이다.
+  const DAYS = [
+    { day: 1, label: "10.13 화" }, { day: 2, label: "10.14 수" },
+    { day: 3, label: "10.15 목" }, { day: 4, label: "10.16 금" },
+  ];
+  const STOPS = [
+    { id: "s1", day: 1, time: "10:00", end: "11:30", title: "경복궁", cat: "관광지 · 궁궐", addr: "서울 종로구 사직로 161", x: 140, y: 128, move: { mode: "train", minutes: 15 } },
+    { id: "s2", day: 1, time: "12:30", end: "13:40", title: "광장시장", cat: "시장 · 먹거리", addr: "서울 종로구 창경궁로 88", x: 262, y: 156, move: { mode: "train", minutes: 26 } },
+    { id: "s3", day: 1, time: "15:00", end: "16:30", title: "국립중앙박물관", cat: "박물관", addr: "서울 용산구 서빙고로 137", x: 172, y: 290, booked: true },
+    { id: "s4", day: 2, time: "09:30", end: "11:00", title: "북촌한옥마을", cat: "관광지 · 한옥마을", addr: "서울 종로구 계동길 37", x: 176, y: 118, move: { mode: "walk", minutes: 12, guess: true } },
+    { id: "s5", day: 2, time: "11:30", end: "12:50", title: "익선동 한옥거리", cat: "거리", addr: "서울 종로구 익선동", x: 220, y: 150, move: { mode: "train", minutes: 22 } },
+    { id: "s6", day: 2, time: "13:40", end: "16:00", title: "남산서울타워", cat: "전망대", addr: "서울 용산구 남산공원길 105", x: 222, y: 216, booked: true, move: { mode: "bus", minutes: 18 } },
+    { id: "s7", day: 2, time: "17:00", end: "19:00", title: "이태원 거리", cat: null, addr: null, x: 246, y: 268 },
+    { id: "s8", day: 3, time: "09:30", end: "11:00", title: "창덕궁", cat: "관광지 · 궁궐", addr: "서울 종로구 율곡로 99", x: 186, y: 112, move: { mode: "walk", minutes: 9 } },
+    { id: "s9", day: 3, time: "11:20", end: "13:00", title: "인사동", cat: "거리 · 공예", addr: "서울 종로구 인사동길", x: 204, y: 150, move: { mode: "walk", minutes: 14 } },
+    { id: "s10", day: 3, time: "13:30", end: "15:00", title: "청계천", cat: "산책로", addr: "서울 종로구 청계천로", x: 244, y: 176, move: { mode: "train", minutes: 12 } },
+    { id: "s11", day: 3, time: "15:30", end: "18:00", title: "명동", cat: "쇼핑 거리", addr: "서울 중구 명동길", x: 214, y: 212 },
+    { id: "s12", day: 4, time: "10:00", end: "11:30", title: "서울숲", cat: "공원", addr: "서울 성동구 뚝섬로 273", x: 296, y: 168, move: { mode: "walk", minutes: 15 } },
+    { id: "s13", day: 4, time: "12:00", end: "13:30", title: "성수동 카페거리", cat: "카페 거리", addr: "서울 성동구 성수동", x: 326, y: 204, move: { mode: "train", minutes: 16 } },
+    { id: "s14", day: 4, time: "15:00", end: "17:00", title: "롯데월드타워 서울스카이", cat: "전망대", addr: "서울 송파구 올림픽로 300", x: 312, y: 254, booked: true, move: { mode: "walk", minutes: 10 } },
+    { id: "s15", day: 4, time: "17:20", end: "18:30", title: "석촌호수", cat: "공원", addr: "서울 송파구 잠실동", x: 284, y: 284 },
+  ];
+  const MODE = { train: "지하철", bus: "버스", walk: "도보" };
+  const KIND = { train: "subway", bus: "bus", walk: "walk" };
+  const DAY_COLOR = ["var(--color-primary)", "var(--color-adjusted)", "var(--color-warning)", "var(--color-error)"];
+  const dayColor = (day) => DAY_COLOR[(day - 1) % DAY_COLOR.length];
+  const PIN = "M0 -5 V-17 A17 17 0 0 1 17 -34 A17 17 0 0 1 34 -17 A17 17 0 0 1 17 0 H5 A5 5 0 0 1 0 -5 Z";
+
+  /* ---------- 안 설명 ---------- */
+  const VERS = {
+    A: {
+      name: "떠올라 위로 쌓기 — 말한 흐름 그대로",
+      lead: "체크와 「여행을 등록했어요」가 가운데 떴다가 위로 올라간다. 일정이 아래 무대에 하나씩 크게 떠오르고(포커스), 위 목록의 제자리로 줄어들며 올라간다. 일정은 일차마다 카드로 묶인다.",
+      flow: ["체크와 제목이 화면 가운데에 뜬 뒤 위로 올라간다", "아래 무대에 일정 카드가 뜬다. 일차·순서·시각·이름·분류·주소·예약·다음 이동이 보이고, 위 목록은 흐려진다", "목록에 자리가 열리고 카드가 줄어들며 그 자리로 올라간다", "다음 일정도 같은 순서로 반복하고, 뒤로 갈수록 빨라진다", "무대가 접히면 요약 한 줄과 「일정 관리하기」가 올라온다"],
+      good: ["요청한 흐름과 같아서 이해하기 쉽다", "끝 화면이 전체 목록이라 한 번에 볼 수 있다", "늘 위로만 움직여 방향이 일정하다"],
+      worry: ["일정 7개에 6.0초(1×)로 목표(5초 안팎)보다 길다. 1.5×로 하면 4.0초다", "긴 여행은 목록이 화면을 넘쳐 스크롤해야 한다", "같은 목록을 계획 확인 화면에서 이미 봤다"],
+    },
+    B: {
+      name: "티켓 모으기 — 겹쳐 쌓았다가 펼치기",
+      lead: "일정이 아래에서 티켓처럼 올라오고, 위로 올라가 얇은 띠가 되어 겹겹이 쌓인다. 다 모이면 겹친 띠가 펼쳐져 일차별 목록이 된다(Apple 지갑의 카드 더미에서 착안).",
+      flow: ["체크와 제목이 가운데에서 위로 올라간다", "티켓(위 띠에 일차·순서, 아래에 예약·다음 이동)이 화면 아래에서 올라온다", "티켓이 줄어 띠가 되고, 앞 띠에 겹치며 쌓인다", "다 모이면 띠 사이가 벌어지고 일차 제목이 나온다", "요약과 「일정 관리하기」가 올라온다"],
+      good: ["「모았다」는 손맛이 있어 등록의 성취감을 준다", "쌓는 동안 자리를 적게 써서 긴 여행에서도 덜 넘친다", "마지막에 펼쳐지는 순간이 「한 번에 보기」를 분명하게 보여 준다"],
+      worry: ["다섯 안 중 가장 길다. 마지막에 펼치는 시간이 더해진다(7개 7.1초 · 15개 8.5초, 1×)", "「티켓」이 실제 예약권처럼 보일 수 있다. 예약이 없는 일정이 더 많다", "가장 화려해서 차분한 운영 도구라는 서비스 분위기와 맞는지 따져 봐야 한다", "일차 색 네 가지를 새로 정해야 한다"],
+    },
+    C: {
+      name: "지도에 핀 꽂기 — 다음 화면 배치로 끝",
+      lead: "다음 화면(C안)과 같은 지도 + 아래 시트 배치다. 지도에 경로가 그어지고 핀이 떨어지면서 시트 아래 무대에 일정 카드가 뜨고, 목록의 제자리로 올라간다. 끝 배치가 C안과 같아 「일정 관리하기」를 누르면 화면이 이어진다.",
+      flow: ["시트가 올라오고 왼쪽 위에 「여행을 등록했어요」가 붙는다", "앞 일정에서 경로선이 그어지고 그 일정의 핀이 떨어진다(고른 핀 강조)", "같은 때 시트 아래 무대에 일정 카드가 뜨고 목록 제자리로 올라간다", "날이 바뀌면 앞날의 핀과 선이 사라지고 새 날을 그린다", "끝나면 지도는 1일차(C안 첫 상태)로 돌아가고 시트 아래에 「일정 관리하기」가 나온다"],
+      good: ["다음 화면과 배치가 같아서 넘어갈 때 덜 끊긴다(공유 요소 전환)", "장소가 어디인지 함께 보인다", "1일차 핀으로 끝나 C안의 첫 상태와 같다"],
+      worry: ["시트가 화면 절반이라 무대와 목록이 좁다. 목록이 스크롤된다", "「풀 스크린」 요구와 조금 다르다(지도 위 시트)", "지도·경로선 데이터를 기다리면 핀이 늦게 뜬다. 지도 준비를 기다리지 않게 해야 한다"],
+    },
+    D: {
+      name: "하루씩 묶기 — 빠른 요약",
+      lead: "일차 카드가 아래 무대에 뜨고 그날 일정이 차례로 채워진다. 그다음 하루 요약 카드(시간대·장소 수·장소 이름 잇기)로 줄어 위로 올라간다. 7일 여행도 일곱 번이면 끝난다.",
+      flow: ["체크와 제목이 가운데에서 위로 올라간다", "아래 무대에 「1일차 · 10.13 화 · 일정 3개」 카드가 뜨고 그날 일정 줄이 차례로 채워진다", "카드가 하루 요약 카드로 줄어 목록에 올라간다", "다음 날도 반복한다", "요약과 「일정 관리하기」가 올라온다"],
+      good: ["일정 수가 아니라 날 수만큼만 걸려 긴 여행에 강하다", "끝 화면에 여행 전체가 한 화면에 들어간다", "하루 흐름(→)이 한눈에 보인다"],
+      worry: ["일정 하나하나에 포커스를 주지 않는다(요청과 다르다)", "요약 카드에서는 분류·주소·이동 정보가 줄어든다", "날이 늘수록 길어진다(2일 4.6초 · 4일 6.2초, 1×). 7일이면 상한이 따로 필요하다"],
+    },
+    E: {
+      name: "최소안 — 비교 기준",
+      lead: "체크와 제목이 뜨고 끝 화면 목록이 짧게 차례로 나타난다. A~D가 이 최소안보다 무엇을 더 주는지 견주는 기준이다.",
+      flow: ["체크와 제목이 뜬다(위치는 움직이지 않는다)", "일차 카드와 줄이 0.045초 간격으로 차례로 나타난다", "요약과 「일정 관리하기」가 뜬다"],
+      good: ["가장 빠르고 만들기 쉽다", "지루할 틈이 없다", "움직임 줄이기를 켰을 때와 거의 같은 경험이라 두 상태의 차이가 적다"],
+      worry: ["「하나씩 포커스」의 연출 효과는 없다", "등록의 무게감이 약하다. 토스트 하나와 크게 다르지 않다"],
+    },
+  };
+
+  /* ---------- 상태 · 재생 도구 ---------- */
+  const S = { v: "A", data: "base", speed: 1, reduce: matchMedia("(prefers-reduced-motion: reduce)").matches, full: false, t0: 0 };
+  const BUDGET = 4000; // 하나씩 보여 주는 연출의 상한(ms, 1× 기준) — 넘으면 남은 항목을 한꺼번에 흘린다
+  let RUN = 0;
+  const LIVE = new Set();
+  const TIMERS = new Set();
+  class Cancel extends Error {}
+  const T = (ms) => ms / S.speed;
+  const guard = (id) => { if (id !== RUN) throw new Cancel(); };
+  const sleep = (ms, id) => new Promise((ok, no) => {
+    const t = setTimeout(() => { TIMERS.delete(t); id === RUN ? ok() : no(new Cancel()); }, T(ms));
+    TIMERS.add(t);
+  });
+  function play(el, frames, { duration, delay = 0, easing = "cubic-bezier(.2,.8,.2,1)", fill = "backwards" }) {
+    const a = el.animate(frames, { duration: T(duration), delay: T(delay), easing, fill });
+    LIVE.add(a);
+    a.finished.then(() => LIVE.delete(a), () => LIVE.delete(a));
+    return a;
+  }
+  async function wait(a, id) { try { await a.finished; } catch { throw new Cancel(); } guard(id); }
+  const waitAll = (list, id) => Promise.all(list.map((a) => wait(a, id)));
+  function tween(ms, step, id) {
+    if (document.hidden || ms <= 0) { step(1); return Promise.resolve(); }
+    return new Promise((ok, no) => {
+      const t0 = performance.now();
+      const frame = (now) => {
+        if (id !== RUN) return no(new Cancel());
+        const p = Math.min(1, (now - t0) / ms);
+        step(1 - (1 - p) ** 3);
+        p < 1 ? requestAnimationFrame(frame) : ok();
+      };
+      requestAnimationFrame(frame);
+    });
+  }
+  function halt() {
+    RUN += 1;
+    TIMERS.forEach(clearTimeout); TIMERS.clear();
+    LIVE.forEach((a) => a.cancel()); LIVE.clear();
+  }
+
+  /* ---------- 데이터 도우미 ---------- */
+  const data = () => S.data === "long" ? { days: DAYS, stops: STOPS } : { days: DAYS.slice(0, 2), stops: STOPS.filter((s) => s.day <= 2) };
+  const stopsOf = (day) => data().stops.filter((s) => s.day === day);
+  const dayOf = (day) => DAYS.find((d) => d.day === day);
+  const nextOf = (s) => { const list = stopsOf(s.day); return list[list.indexOf(s) + 1] ?? null; };
+  const counts = () => { const { days, stops } = data(); return { days: days.length, stops: stops.length, moves: stops.filter((s) => s.move && nextOf(s)).length, booked: stops.filter((s) => s.booked).length }; };
+  const range = () => { const { days } = data(); return `${days[0].label} – ${days[days.length - 1].label}`; };
+  // 첫 항목은 천천히, 뒤로 갈수록 빠르게 — f 는 움직임 길이의 배수, dwell 은 카드가 머무는 시간(ms)
+  const pace = (i) => ({ f: Math.max(.5, .8 ** i), dwell: Math.max(110, 420 * .65 ** i) });
+
+  /* ---------- 조각 ---------- */
+  const skipHTML = () => `<button type="button" class="skip" data-skip>건너뛰기</button>`;
+  const heroHTML = () => `<header class="hero"><div class="mark">${CHECK}</div><h1 tabindex="-1">여행을 등록했어요</h1><p>${TITLE} · ${range()} · 일정 ${counts().stops}개</p></header>`;
+  const rowHTML = (s, cls = "row", style = "") => `<div class="${cls}" data-id="${s.id}"${style}><span class="t">${s.time}<small>${s.end}</small></span><span class="rail"><i></i></span><span class="nm"><b>${esc(s.title)}</b><small>${s.cat ? esc(s.cat) : "장소 정보 없음"}</small></span>${s.booked ? '<span class="bk">예약 있음</span>' : ""}</div>`;
+  const dayCardHTML = (d, inner) => `<section class="dayCard" data-day="${d.day}"><h2 class="dayHead">${d.day}일차 <small>${d.label}</small></h2><div class="rows">${inner}</div></section>`;
+  const daysHTML = () => data().days.map((d) => dayCardHTML(d, stopsOf(d.day).map((s) => rowHTML(s)).join(""))).join("");
+  function footHTML() {
+    const c = counts();
+    return `<footer class="foot"><p class="sum">${c.days}일 · 일정 ${c.stops}개 · 이동 ${c.moves}번 · 예약 ${c.booked}곳</p><p class="note">여행이 끝날 때까지 지켜보다가 일정에 영향이 생기면 알려 드릴게요.</p><a class="cta" href="${NEXT}" data-cta>일정 관리하기 ${icon("arrow")}</a></footer>`;
+  }
+  function moveText(s) {
+    const next = nextOf(s);
+    if (!next) return '<span class="fcMove">이날 마지막 일정</span>';
+    return `<span class="fcMove">${s.move ? icon(s.move.mode, "i sm") : ""}다음 · ${esc(next.title)}${s.move ? ` · ${MODE[s.move.mode]} ${s.move.minutes}분` : ""}</span>`;
+  }
+  const bookPill = (s) => `<span class="pill${s.booked ? " ok" : ""}">${s.booked ? "예약 있음" : "예약 정보 없음"}</span>`;
+  const metaText = (s) => s.cat ? `${esc(s.cat)} · ${esc(s.addr)}` : "장소 정보 없음";
+  function focusHTML(s, i, total) {
+    const d = dayOf(s.day);
+    return `<article class="fcard" style="--day:${dayColor(s.day)}"><div class="fcTop"><span class="fcDay">${d.day}일차 · ${d.label}</span><span class="fcIdx">${i + 1} / ${total}</span></div>
+      <div class="fcTime">${s.time}<span> – ${s.end}</span></div><h3 class="fcName">${esc(s.title)}</h3><p class="fcMeta">${metaText(s)}</p>
+      <div class="fcFoot">${bookPill(s)}${moveText(s)}</div></article>`;
+  }
+  function ticketHTML(s, i, total) {
+    const d = dayOf(s.day);
+    return `<article class="ticket" style="--day:${dayColor(s.day)}"><div class="tkTop"><span>${d.day}일차 · ${d.label}</span><span>${i + 1} / ${total}</span></div>
+      <div class="tkBody"><div class="fcTime">${s.time}<span> – ${s.end}</span></div><h3 class="fcName">${esc(s.title)}</h3><p class="fcMeta">${metaText(s)}</p></div>
+      <div class="tkCut"></div><div class="tkFoot">${bookPill(s)}${moveText(s)}</div></article>`;
+  }
+  const stripHTML = (s, i) => rowHTML(s, "row strip", ` style="--day:${dayColor(s.day)};--i:${i}"`);
+  const deckDayHTML = (d) => `<h2 class="deckDay" style="--day:${dayColor(d.day)}">${d.day}일차<small>${d.label}</small></h2>`;
+  function dsumHTML(d) {
+    const list = stopsOf(d.day);
+    const chain = list.map((s) => `${esc(s.title)}${s.booked ? '<span class="bkTag">예약</span>' : ""}`).join('<i class="arr">›</i>');
+    return `<section class="dsum" style="--day:${dayColor(d.day)}"><div class="dsHead"><b>${d.day}일차</b><small>${d.label}</small><span>${list[0].time}–${list[list.length - 1].end} · ${list.length}곳</span></div><p class="dsChain">${chain}</p></section>`;
+  }
+  function groupHTML(d) {
+    const list = stopsOf(d.day);
+    return `<article class="gcard" style="--day:${dayColor(d.day)}"><div class="gHead"><b>${d.day}일차</b><span>${d.label}</span><em>일정 ${list.length}개</em></div>
+      <div class="glines">${list.map((s) => `<div class="gl"><span class="t">${s.time}</span><i></i><b>${esc(s.title)}</b>${s.booked ? '<span class="bk">예약 있음</span>' : ""}</div>`).join("")}</div></article>`;
+  }
+
+  /* ---------- 지도(C) ---------- */
+  const routeD = (a, b) => { const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2; return `M${a.x} ${a.y} Q ${mx + (b.y - a.y) * .18} ${my - (b.x - a.x) * .18} ${b.x} ${b.y}`; };
+  const routeHTML = (a, b) => `<path class="route" data-kind="${KIND[a.move.mode]}"${a.move.guess ? " data-guess" : ""} d="${routeD(a, b)}"/>`;
+  const pinHTML = (s, n, sel) => `<g class="pin${sel ? " sel" : ""}" data-id="${s.id}" transform="translate(${s.x} ${s.y})"><g class="pinBody"><path class="ring" d="${PIN}"/><path class="b" d="${PIN}"/><text x="17" y="-17" text-anchor="middle" dominant-baseline="central">${n}</text></g></g>`;
+  function dayMap(day) {
+    const list = stopsOf(day);
+    const routes = list.map((s, i) => s.move && list[i + 1] ? routeHTML(s, list[i + 1]) : "").join("");
+    return { routes, pins: list.map((s, i) => pinHTML(s, i + 1, false)).join("") };
+  }
+  function mapHTML(day) {
+    const m = day ? dayMap(day) : { routes: "", pins: "" };
+    return `<div class="map" aria-hidden="true"><svg viewBox="0 0 390 820" preserveAspectRatio="xMidYMin slice">
+      <rect width="390" height="820" fill="#efece4"/>
+      <path d="M30 34 C80 14 150 30 166 70 C172 98 128 104 90 98 C52 92 22 66 30 34Z" fill="#d4e6c9"/>
+      <path d="M188 196 C214 182 252 192 258 218 C262 244 232 256 206 248 C186 242 176 214 188 196Z" fill="#d4e6c9"/>
+      <path d="M112 252 C134 244 162 248 166 262 C168 276 146 282 128 280 C112 278 104 264 112 252Z" fill="#d4e6c9"/>
+      <path d="M-10 318 C60 296 120 316 190 310 C262 304 320 284 400 300 L400 356 C322 340 262 362 190 368 C120 374 60 356 -10 382 Z" fill="#b9d8e4"/>
+      <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path class="road-c" d="M0 150 H390 M0 206 C120 200 260 212 390 196 M150 30 V318 M250 56 C246 150 256 248 240 318 M40 318 L330 116 M0 92 C110 98 280 84 390 96"/>
+        <path class="road" d="M0 150 H390 M0 206 C120 200 260 212 390 196 M150 30 V318 M250 56 C246 150 256 248 240 318 M40 318 L330 116 M0 92 C110 98 280 84 390 96"/>
+        <path class="road-y" d="M0 250 C120 244 250 258 390 240 M96 30 C104 140 92 240 104 318 M312 40 C304 150 318 240 300 318"/>
+      </g>
+      <text class="lbl" x="108" y="122">종로구</text><text class="lbl" x="276" y="226">중구</text><text class="lbl" x="122" y="306">용산구</text>
+      <text class="river-lbl" x="44" y="350">한강</text>
+      <g class="routes">${m.routes}</g><g class="pins">${m.pins}</g>
+    </svg></div>`;
+  }
+  function svgAdd(parent, markup) { const g = document.createElementNS("http://www.w3.org/2000/svg", "g"); g.innerHTML = markup; const el = g.firstElementChild; parent.appendChild(el); return el; }
+
+  /* ---------- 공통 움직임 ---------- */
+  // 큰 카드(from)가 목록의 줄(to) 자리로 줄어들며 날아간다. 상자는 크기·자리·둥글기를 바꾸고, 안의 큰 내용은 사라지고 작은 내용이 나타난다.
+  async function morph(from, to, id, duration) {
+    const screen = $("#screen"), sr = screen.getBoundingClientRect();
+    const a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+    const box = (r) => ({ left: `${r.left - sr.left}px`, top: `${r.top - sr.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+    const ghost = document.createElement("div");
+    ghost.className = "ghost";
+    const big = from.cloneNode(true), small = to.cloneNode(true);
+    big.style.cssText += `;width:${a.width}px;border-color:transparent;box-shadow:none;`;
+    small.style.cssText += `;width:${b.width}px;height:${b.height}px;box-shadow:none;`;
+    ghost.append(big, small);
+    $(".fx", screen).appendChild(ghost);
+    const r0 = getComputedStyle(from).borderTopLeftRadius, r1 = getComputedStyle(to).borderTopLeftRadius;
+    from.remove(); // 복사본이 날아가므로 원래 카드는 바로 치운다 — 다음 카드가 무대에 들어올 수 있다
+    const k = b.width / a.width;
+    await waitAll([
+      play(ghost, [{ ...box(a), borderRadius: r0, borderColor: "rgb(220,227,221)", boxShadow: "0 18px 40px rgba(36,57,47,.18)" }, { ...box(b), borderRadius: r1, borderColor: "rgba(220,227,221,0)", boxShadow: "0 0 0 rgba(36,57,47,0)" }], { duration, easing: "cubic-bezier(.3,.7,.2,1)", fill: "both" }),
+      play(big, [{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: `scale(${k})`, offset: .45 }, { opacity: 0, transform: `scale(${k})` }], { duration, easing: "ease-out", fill: "both" }),
+      play(small, [{ opacity: 0 }, { opacity: 0, offset: .4 }, { opacity: 1 }], { duration, easing: "linear", fill: "both" }),
+    ], id);
+    to.style.visibility = "";
+    ghost.remove();
+  }
+  // 목록에 자리를 연다 — 줄을 숨긴 채 높이를 0에서 늘린다.
+  async function openSlot(el, id, duration) {
+    el.style.visibility = "hidden";
+    const h = el.offsetHeight;
+    await wait(play(el, [{ height: "0px", minHeight: "0px", overflow: "hidden" }, { height: `${h}px`, minHeight: `${h}px`, overflow: "hidden" }], { duration }), id);
+  }
+  // 새 줄이 목록 아래로 넘치면 목록을 굴려 보이게 한다.
+  async function reveal(list, el, id) {
+    const over = el.getBoundingClientRect().bottom - (list.getBoundingClientRect().bottom - 10);
+    if (over <= 0) return;
+    const from = list.scrollTop;
+    await tween(T(240), (p) => { list.scrollTop = from + over * p; }, id);
+  }
+  async function enterCard(card, id, duration, from = "translateY(28px) scale(.97)") {
+    await wait(play(card, [{ opacity: 0, transform: from }, { opacity: 1, transform: "none" }], { duration }), id);
+  }
+  async function heroIntro(screen, id, center) {
+    const hero = $(".hero", screen);
+    $("h1", hero).focus({ preventScroll: true });
+    let dy = 0;
+    if (center) {
+      const sr = screen.getBoundingClientRect(), hr = hero.getBoundingClientRect();
+      dy = sr.top + sr.height * .42 - (hr.top + hr.height / 2);
+      hero.style.transform = `translateY(${dy}px)`;
+    }
+    await waitAll([
+      play($(".mark", hero), [{ transform: "scale(.4)", opacity: 0 }, { transform: "scale(1)", opacity: 1 }], { duration: 380, easing: "cubic-bezier(.34,1.56,.64,1)" }),
+      play($(".mark path", hero), [{ strokeDashoffset: 24 }, { strokeDashoffset: 0 }], { duration: 320, delay: 220, easing: "ease-out" }),
+      play($("h1", hero), [{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 300, delay: 300 }),
+      play($("p", hero), [{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], { duration: 300, delay: 400 }),
+    ], id);
+    if (!center) return;
+    await sleep(250, id);
+    hero.style.transform = "";
+    await wait(play(hero, [{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 440, easing: "cubic-bezier(.65,0,.35,1)" }), id);
+  }
+  async function finale(screen, id) {
+    const zone = $(".zone", screen), foot = $(".foot", screen);
+    $(".list", screen).setAttribute("aria-busy", "false");
+    $(".skip", screen)?.remove();
+    if (zone) {
+      await wait(play(zone, [{ height: `${zone.offsetHeight}px` }, { height: "0px" }], { duration: 360, easing: "cubic-bezier(.65,0,.35,1)", fill: "forwards" }), id);
+      zone.remove();
+    }
+    foot.hidden = false;
+    await wait(play(foot, [{ opacity: 0, transform: "translateY(24px)" }, { opacity: 1, transform: "none" }], { duration: 380 }), id);
+  }
+  // 날의 카드가 없으면 만든다(A · C).
+  async function dayRows(list, day, id, quick = false) {
+    let card = list.querySelector(`.dayCard[data-day="${day}"]`);
+    if (!card) {
+      card = html(dayCardHTML(dayOf(day), ""));
+      list.appendChild(card);
+      const a = play(card, [{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], { duration: 240 });
+      if (!quick) { await reveal(list, card, id); await wait(a, id); }
+    }
+    return $(".rows", card);
+  }
+  // 하나씩 보여 주고 목록에 넣는다(A · B · C).
+  // 카드가 무대에 떠서 머무는 동안 목록에 그 일정의 자리를 열고, 카드가 줄어 날아가는 도중(55%)에 다음 카드가 들어온다.
+  // 연출 시간이 BUDGET 을 넘으면 남은 줄은 크게 보여 주지 않고 한꺼번에 흘린다.
+  async function sequence(screen, id, { list, card, row, place, from, enter, fly, onFocus }) {
+    const zone = $(".zone", screen);
+    const { stops } = data();
+    const t0 = performance.now();
+    let flying = null, lastQuick = null;
+    for (let i = 0; i < stops.length; i++) {
+      const s = stops[i];
+      const el = html(row(s, i));
+      if ((performance.now() - t0) * S.speed > BUDGET) {
+        if (flying) { await flying; flying = null; }
+        list.classList.remove("dim");
+        await place(s, el, true);
+        lastQuick = play(el, [{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "none" }], { duration: 240 });
+        list.scrollTop = list.scrollHeight;
+        if (onFocus) onFocus(s, id, true).catch(() => {});
+        await sleep(70, id);
+        continue;
+      }
+      const { f, dwell } = pace(i);
+      const big = html(card(s, i, stops.length));
+      zone.appendChild(big);
+      list.classList.add("dim");
+      const slot = (async () => {
+        if (flying) await flying;
+        await place(s, el);
+        await openSlot(el, id, 160 * f);
+        await reveal(list, el, id);
+      })();
+      await Promise.all([
+        enterCard(big, id, enter * f, from).then(() => sleep(dwell, id)),
+        slot,
+        onFocus ? onFocus(s, id, false, f) : null,
+      ]);
+      list.classList.remove("dim");
+      flying = morph(big, el, id, fly * f);
+      flying.catch(() => {});
+      await sleep(fly * f * .55, id);
+    }
+    if (flying) await flying;
+    if (lastQuick) await wait(lastQuick, id);
+  }
+  const revealStops = (screen, id, onFocus) => {
+    const list = $(".list", screen);
+    return sequence(screen, id, {
+      list, onFocus, enter: 260, fly: 360,
+      card: focusHTML, row: (s) => rowHTML(s),
+      place: async (s, el, quick) => { (await dayRows(list, s.day, id, quick)).appendChild(el); },
+    });
+  };
+
+  /* ---------- 안별 재생 · 끝 화면 ---------- */
+  const ZONE = 250;
+  const PLAY = {}, FINAL = {};
+
+  FINAL.A = (screen) => { screen.innerHTML = `${heroHTML()}<div class="list">${daysHTML()}</div>${footHTML()}<div class="fx" aria-hidden="true"></div>`; };
+  PLAY.A = async (screen, id) => {
+    screen.innerHTML = `${skipHTML()}${heroHTML()}<div class="list" aria-busy="true"></div><div class="zone" style="height:${ZONE}px"></div>${footHTML()}<div class="fx" aria-hidden="true"></div>`;
+    $(".foot", screen).hidden = true;
+    await heroIntro(screen, id, true);
+    await revealStops(screen, id);
+    await finale(screen, id);
+  };
+
+  FINAL.B = (screen) => {
+    let n = 0;
+    const deck = data().days.map((d) => deckDayHTML(d) + stopsOf(d.day).map((s) => stripHTML(s, n++)).join("")).join("");
+    screen.innerHTML = `${heroHTML()}<div class="list deck fanned">${deck}</div>${footHTML()}<div class="fx" aria-hidden="true"></div>`;
+  };
+  PLAY.B = async (screen, id) => {
+    screen.innerHTML = `${skipHTML()}${heroHTML()}<div class="list deck" aria-busy="true" style="--fan:${T(520)}ms"></div><div class="zone" style="height:${ZONE}px"></div>${footHTML()}<div class="fx" aria-hidden="true"></div>`;
+    $(".foot", screen).hidden = true;
+    await heroIntro(screen, id, true);
+    const deck = $(".deck", screen);
+    await sequence(screen, id, {
+      list: deck, enter: 360, fly: 380, from: "translateY(120%) rotate(-3deg)",
+      card: ticketHTML, row: stripHTML,
+      place: async (s, el) => {
+        if (!deck.querySelector(`.deckDay[data-day="${s.day}"]`)) { const label = html(deckDayHTML(dayOf(s.day))); label.dataset.day = s.day; deck.appendChild(label); }
+        deck.appendChild(el);
+      },
+    });
+    await sleep(140, id);
+    deck.classList.add("fanned");
+    await sleep(520 + data().stops.length * 28 + 40, id);
+    await finale(screen, id);
+  };
+
+  const cShell = (day, live) => `${mapHTML(day)}<div class="cTop"><h1 class="cBadge" tabindex="-1"><span class="mark">${CHECK}</span>여행을 등록했어요</h1></div>${live ? skipHTML() : ""}
+    <section class="cSheet"><div class="handle"><span></span></div><div class="cHead"><h2>${TITLE}</h2><p>${range()} · 일정 ${counts().stops}개</p></div>
+    <div class="list"${live ? ' aria-busy="true"' : ""}>${live ? "" : daysHTML()}</div>${live ? '<div class="zone" style="height:184px"></div>' : ""}${footHTML()}</section><div class="fx" aria-hidden="true"></div>`;
+  FINAL.C = (screen) => { screen.innerHTML = cShell(1, false); };
+  PLAY.C = async (screen, id) => {
+    screen.innerHTML = cShell(null, true);
+    $(".foot", screen).hidden = true;
+    $(".cBadge", screen).focus({ preventScroll: true });
+    const routes = $(".routes", screen), pins = $(".pins", screen);
+    await waitAll([
+      play($(".cSheet", screen), [{ transform: "translateY(100%)" }, { transform: "none" }], { duration: 480, easing: "cubic-bezier(.2,.8,.2,1)" }),
+      play($(".cBadge", screen), [{ opacity: 0, transform: "scale(.85)" }, { opacity: 1, transform: "none" }], { duration: 320, delay: 200, easing: "cubic-bezier(.34,1.56,.64,1)" }),
+      play($(".cBadge path", screen), [{ strokeDashoffset: 24 }, { strokeDashoffset: 0 }], { duration: 300, delay: 380 }),
+    ], id);
+    let day = null;
+    const onFocus = async (s, id2, quick, f = 1) => {
+      if (s.day !== day) {
+        // 날이 바뀌면 앞날의 핀 · 선을 지운다. 빠르게 흘릴 때는 흐리게 하지 않고 바로 지운다(겹쳐 불려도 안전하게).
+        const had = day !== null && (routes.childElementCount || pins.childElementCount);
+        day = s.day;
+        if (had && !quick) await waitAll([routes, pins].map((g) => play(g, [{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: "forwards" })), id2);
+        routes.innerHTML = ""; pins.innerHTML = "";
+        routes.getAnimations().forEach((a) => a.cancel()); pins.getAnimations().forEach((a) => a.cancel());
+      }
+      const list = stopsOf(s.day), at = list.indexOf(s), prev = list[at - 1];
+      $$(".pin.sel", pins).forEach((p) => p.classList.remove("sel"));
+      if (prev && prev.move) {
+        const path = svgAdd(routes, routeHTML(prev, s));
+        if (quick || prev.move.guess) play(path, [{ opacity: 0 }, { opacity: prev.move.guess ? .55 : .85 }], { duration: 240 });
+        else { const len = path.getTotalLength(); path.style.strokeDasharray = `${len}`; await wait(play(path, [{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 300 * f, easing: "ease-in-out" }), id2); path.style.strokeDasharray = ""; }
+      }
+      const pin = svgAdd(pins, pinHTML(s, at + 1, !quick));
+      const drop = play($(".pinBody", pin), [{ transform: "translateY(-46px)", opacity: 0 }, { transform: "translateY(0)", opacity: 1 }], { duration: quick ? 240 : 380 * f, easing: "cubic-bezier(.34,1.56,.64,1)" });
+      if (!quick) await wait(drop, id2);
+    };
+    await revealStops(screen, id, onFocus);
+    $$(".pin.sel", pins).forEach((p) => p.classList.remove("sel"));
+    if (day !== 1) {
+      await waitAll([routes, pins].map((g) => play(g, [{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: "forwards" })), id);
+      const m = dayMap(1);
+      routes.innerHTML = m.routes; pins.innerHTML = m.pins;
+      routes.getAnimations().forEach((a) => a.cancel()); pins.getAnimations().forEach((a) => a.cancel());
+      play(routes, [{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+      play(pins, [{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+    }
+    await finale(screen, id);
+  };
+
+  FINAL.D = (screen) => { screen.innerHTML = `${heroHTML()}<div class="list">${data().days.map(dsumHTML).join("")}</div>${footHTML()}<div class="fx" aria-hidden="true"></div>`; };
+  PLAY.D = async (screen, id) => {
+    screen.innerHTML = `${skipHTML()}${heroHTML()}<div class="list" aria-busy="true"></div><div class="zone" style="height:${ZONE + 20}px"></div>${footHTML()}<div class="fx" aria-hidden="true"></div>`;
+    $(".foot", screen).hidden = true;
+    await heroIntro(screen, id, true);
+    const list = $(".list", screen), zone = $(".zone", screen);
+    const { days } = data();
+    let flying = null;
+    for (let k = 0; k < days.length; k++) {
+      const d = days[k], f = Math.max(.6, .85 ** k);
+      const card = html(groupHTML(d));
+      zone.appendChild(card);
+      list.classList.add("dim");
+      const lines = $$(".gl", card);
+      const anims = lines.map((l, j) => play(l, [{ opacity: 0, transform: "translateX(-10px)" }, { opacity: 1, transform: "none" }], { duration: 220, delay: 160 * f + j * 80 * f }));
+      const sum = html(dsumHTML(d));
+      // 그날 줄이 채워지는 동안, 앞날 카드가 다 내려앉으면 목록에 요약 카드 자리를 연다
+      const slot = (async () => { if (flying) await flying; list.appendChild(sum); await openSlot(sum, id, 200 * f); await reveal(list, sum, id); })();
+      await Promise.all([enterCard(card, id, 300 * f).then(() => waitAll(anims, id)).then(() => sleep(Math.max(200, 450 * .65 ** k), id)), slot]);
+      list.classList.remove("dim");
+      flying = morph(card, sum, id, 400 * f);
+      flying.catch(() => {});
+      await sleep(400 * f * .55, id);
+    }
+    if (flying) await flying;
+    await finale(screen, id);
+  };
+
+  FINAL.E = FINAL.A;
+  PLAY.E = async (screen, id) => {
+    FINAL.A(screen);
+    const items = $$(".dayCard, .row", screen);
+    const anims = items.map((el, j) => play(el, [{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 260, delay: 520 + j * 45 }));
+    anims.push(play($(".foot", screen), [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }], { duration: 320, delay: 620 + items.length * 45 }));
+    await heroIntro(screen, id, false);
+    await waitAll(anims, id);
+  };
+
+  /* ---------- 진행 ---------- */
+  function settleFocus(screen) {
+    const a = document.activeElement;
+    if (!a || a === document.body || screen.contains(a)) $("[data-cta]", screen)?.focus({ preventScroll: true });
+  }
+  function setTimer(text) { $("#timer").textContent = text; }
+  const label = () => `${S.speed}× · ${S.data === "long" ? "긴 여행 15개" : "기본 7개"}`;
+  function start() {
+    halt();
+    const id = RUN, screen = $("#screen");
+    screen.className = `screen v-${S.v.toLowerCase()}`;
+    screen.getAnimations().forEach((a) => a.cancel());
+    S.t0 = performance.now();
+    if (S.reduce) {
+      FINAL[S.v](screen);
+      play(screen, [{ opacity: 0 }, { opacity: 1 }], { duration: 200 * S.speed });
+      setTimer(`움직임 줄이기 — 끝 화면만 0.2초 페이드 · ${label()}`);
+      settleFocus(screen);
+      return;
+    }
+    setTimer(`재생 중… · ${label()}`);
+    PLAY[S.v](screen, id).then(() => {
+      if (id !== RUN) return;
+      setTimer(`이번 재생 ${((performance.now() - S.t0) / 1000).toFixed(1)}초 · ${label()}`);
+      settleFocus(screen);
+    }).catch((e) => { if (!(e instanceof Cancel)) console.error(e); });
+  }
+  function skip() {
+    halt();
+    const screen = $("#screen");
+    FINAL[S.v](screen);
+    setTimer(`건너뜀 (${((performance.now() - S.t0) / 1000).toFixed(1)}초에) · ${label()}`);
+    settleFocus(screen);
+  }
+  function leave(link) {
+    halt();
+    const a = $("#screen").animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.985)" }], { duration: 220, easing: "ease-in", fill: "forwards" });
+    a.finished.then(() => { location.href = link.href; });
+  }
+  function describe() {
+    const v = VERS[S.v];
+    $("#vBadge").textContent = S.v;
+    $("#vName").textContent = v.name;
+    $("#vLead").textContent = v.lead;
+    $("#vMemoTitle").textContent = `${S.v} ${v.name}`;
+    const fill = (sel, list) => { $(sel).innerHTML = list.map((t) => `<li>${esc(t)}</li>`).join(""); };
+    fill("#vFlow", v.flow); fill("#vGood", v.good); fill("#vWorry", v.worry);
+  }
+  const press = (attr, value) => $$(`[${attr}]`).forEach((b) => b.setAttribute("aria-pressed", String(b.getAttribute(attr) === value)));
+  function setFull(on) {
+    S.full = on;
+    document.body.classList.toggle("full", on);
+    start();
+  }
+
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("button, a");
+    // 재생 중에는 화면 아무 곳이나 눌러도 건너뛴다(건너뛰기 단추가 있는 동안)
+    if (!t && e.target.closest("#screen") && $("#screen [data-skip]")) { skip(); return; }
+    if (!t) return;
+    if (t.matches("[data-skip]")) skip();
+    else if (t.matches("[data-cta]")) { e.preventDefault(); leave(t); }
+    else if (t.matches("[data-v]")) { S.v = t.dataset.v; press("data-v", S.v); describe(); start(); }
+    else if (t.matches("[data-data]")) { S.data = t.dataset.data; press("data-data", S.data); start(); }
+    else if (t.matches("[data-speed]")) { S.speed = Number(t.dataset.speed); press("data-speed", t.dataset.speed); start(); }
+    else if (t.matches("[data-reduce]")) { S.reduce = !S.reduce; t.setAttribute("aria-pressed", String(S.reduce)); start(); }
+    else if (t.matches("[data-replay]")) start();
+    else if (t.matches("[data-full]")) setFull(!S.full);
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && S.full) setFull(false); });
+
+  $("[data-reduce]").setAttribute("aria-pressed", String(S.reduce));
+  describe();
+  start();
+})();
+</script>
+</body>
+</html>
