@@ -27,7 +27,7 @@ from uuid import UUID
 from .itinerary import Item
 from .replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, DiningStateLookup, activity_candidates, alternate_record,
                      apply_google_prices, change_notice, choose, dining_candidates, dining_fits, dining_notice,
-                     route_candidates, route_notice, store_candidates)
+                     meal_route, route_candidates, route_notice, store_candidates)
 
 #: 식당 가격 조회 — 장소 목록 → {place_id: 구글 가격 또는 None}. ★`[2026-09-30]` 대안을 세우는 순간에만 부르고
 #:  값은 버린다(`replan.apply_google_prices`). 없으면 구글 가격 없이 예전처럼 세운다.
@@ -374,6 +374,14 @@ def _dining_change(meal: Item, best, alternates, notice: dict[str, Any], *,
                            replacements={meal.item_id: replacement}, summary=summary)
 
 
+def _leg_engine(trip: dict[str, Any]):
+    """대체 식당의 먼 다음 일정을 잴 이동 계산기(`mobility.wiring.leg_planner`). 꺼져 있으면 None — 도보 어림으로 간다.
+    ★`[2026-10-07]` 설문의 이동 선호(수단)를 그대로 넘긴다 — 일정 짜기와 같은 계산기다."""
+    from .mobility.wiring import leg_planner
+
+    return leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+
+
 def plan_delay(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]],
                at: datetime, minutes: int, message: str, request_id: str | None,
                price_lookup: PriceLookup | None = None, state_lookup: DiningStateLookup | None = None) -> Plan:
@@ -402,7 +410,8 @@ def plan_delay(*, trip: dict[str, Any], items: list[Item], places: list[dict[str
     candidates = dining_candidates(
         original=meal.place, places=places, arrival=arrival, minutes=duration,
         constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
-        next_start=following.starts_at if following else None, state_lookup=state_lookup)
+        next_start=following.starts_at if following else None, state_lookup=state_lookup,
+        route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # 늦게 오는 중 — 앞 일정 동선은 이미 지났다
     if price_lookup is not None:
         apply_google_prices(candidates, original=meal.place, lookup=price_lookup)
     best, alternates, rejected = choose(candidates)
@@ -434,7 +443,8 @@ def plan_closed(*, trip: dict[str, Any], items: list[Item], places: list[dict[st
         original=meal.place, places=places, arrival=at, minutes=duration,
         constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
         next_start=following.starts_at if following else None, state_lookup=state_lookup,
-        arrival_for=lambda walk: round_up_5(at + timedelta(minutes=walk + SEATING_BUFFER_MIN)))
+        arrival_for=lambda walk: round_up_5(at + timedelta(minutes=walk + SEATING_BUFFER_MIN)),
+        route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # 가게 앞 — 앞 일정 동선은 이미 지났다
     if price_lookup is not None:
         apply_google_prices(candidates, original=meal.place, lookup=price_lookup)
     best, alternates, rejected = choose(candidates)
@@ -474,7 +484,8 @@ def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[
     candidates = dining_candidates(
         original=meal.place, places=places, arrival=meal.starts_at, minutes=duration,
         constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
-        next_start=following.starts_at if following else None, exclude=set(exclude), state_lookup=state_lookup)
+        next_start=following.starts_at if following else None, exclude=set(exclude), state_lookup=state_lookup,
+        route=meal_route(items, meal, leg=_leg_engine(trip)))    # 새벽 — 고객은 앞 일정에서 온다
     if price_lookup is not None:
         apply_google_prices(candidates, original=meal.place, lookup=price_lookup)
     best, alternates, rejected = choose(candidates)

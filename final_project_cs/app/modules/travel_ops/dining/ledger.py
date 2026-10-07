@@ -31,9 +31,13 @@
 """
 from __future__ import annotations
 
+import logging
+import math
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 KST = timezone(timedelta(hours=9))
 
@@ -275,42 +279,188 @@ class PlannerLedger:
             return {}
 
 
-def find_place_by_name(conn, name: str | None) -> dict[str, Any] | None:
-    """일정 접수의 장소 찾기용 — 이름이 같은 관광공사 출처 가게가 **하나뿐**이면 관광공사 결과 모양으로.
+#: ★`[2026-10-07]` 이름 찾기 단계 — 정확히 같은 이름 하나가 아니면 모두 확인 필요(`needs_review`)로 낸다
+NAME_TYPO_RATIO = 0.2               # 자모 거리 / 긴 쪽 길이 — 이 이하면 오타로 본다(`intake/places.TYPO_RATIO` 와 같다)
+NAME_PREFIX_MIN = 4                 # 앞부분 일치로 받는 최소 글자 수(「진옥화할매」 → 「진옥화할매원조닭한마리」)
+DISH_RADIUS_M = 800                 # 「근처 칼국수집」 · 「통인시장 기름떡볶이」 — 기준 좌표에서 이 안의 원장 가게
+_BRANCH_TAIL = re.compile(r"(본점|직영점|분점|별관|본관|신관|[가-힣a-z0-9]{1,8}점)")
+_NEAR_WORDS = ("근처", "주변", "가까운", "아무")
 
-    ★`[2026-10-01]` 일정 접수가 액티비티 CSV 만 봐서 식당을 하나도 못 찾았다(「토속촌삼계탕」).
-      CSV 에 없을 때 여기를 본다. 외부 API 가 아니라 원장 DB 다.
-    ★관광공사 콘텐츠 ID 가 있는 가게만 — 결과가 `tour_api` 출처로 저장되므로 그 ID 가 있어야 한다.
-      그 ID 로 판정 때 원장과 다시 이어진다(220 `link_core_place`).
-    ★같은 이름이 둘 이상이면 고르지 않는다. 폐업 · 서울 밖 · 좌표 없음 · 합성 가게도 내보내지 않는다.
-    ★요식 표가 없는 DB(요식만 빠진 DB)에서는 None — 예전처럼 「못 찾음」이다.
+
+def _name_key(name: str | None) -> str:
+    return re.sub(r"[^가-힣a-z0-9]", "", (name or "").lower())
+
+
+def _base_key(name: str | None) -> str:
+    """지점 표시를 뗀 비교 키 — 「소문난성수감자탕 별관」 → 「소문난성수감자탕」. 띄어 쓴 끝말만 뗀다(이름 안의 「점」은 둔다)."""
+    text = re.sub(r"[\(\[（【].*?[\)\]）】]", "", name or "").strip()
+    parts = text.split()
+    if len(parts) > 1 and _BRANCH_TAIL.fullmatch(_name_key(parts[-1])):
+        text = " ".join(parts[:-1])
+    return _name_key(text)
+
+
+def _shops(conn) -> list[dict[str, Any]]:
+    """이름 찾기 대상 — 폐업 아님 · 합성 아님 · 좌표 있음 · 서울 주소. 관광공사 ID 는 있으면 싣는다(없어도 대상이다)."""
+    with conn.transaction(), conn.cursor() as cur:   # 실패해도 바깥 트랜잭션을 깨지 않는다
+        cur.execute(
+            "SELECT p.place_uid, p.name_ko, p.lat, p.lng, coalesce(p.road_address, p.jibun_address), p.category, "
+            "       (SELECT min(r.external_id) FROM dining.dn_source_record r "
+            "         WHERE r.place_uid = p.place_uid AND r.source_code = 'tourapi_kor_food' "
+            "           AND r.external_id IS NOT NULL) "
+            "FROM dining.dn_place p "
+            "WHERE p.record_status <> 'closed' AND NOT p.is_synthetic AND p.lat IS NOT NULL AND p.lng IS NOT NULL "
+            "  AND coalesce(p.road_address, p.jibun_address, '') LIKE %s", ("서울%",))
+        rows = cur.fetchall()
+    return [{"place_uid": str(uid), "name": name, "latitude": float(lat), "longitude": float(lng),
+             "address": address, "category": category, "content_id": str(cid) if cid else None,
+             "key": _name_key(name), "base": _base_key(name)}
+            for uid, name, lat, lng, address, category, cid in rows]
+
+
+def _metres(a: tuple[float, float], b: tuple[float, float]) -> float:
+    p = math.pi / 180
+    h = (math.sin((b[0] - a[0]) * p / 2) ** 2
+         + math.cos(a[0] * p) * math.cos(b[0] * p) * math.sin((b[1] - a[1]) * p / 2) ** 2)
+    return 12_742_000 * math.asin(math.sqrt(h))
+
+
+def _pick(shops: list[dict[str, Any]], near: tuple[float, float] | None) -> tuple[dict[str, Any], bool]:
+    """여럿 중 하나 — 근처 기준이 있으면 가장 가까운 곳, 없으면 이름이 짧은 곳(본점 표기가 없는 쪽). (고른 곳, 여럿이었나)."""
+    if len(shops) == 1:
+        return shops[0], False
+    if near is not None:
+        return min(shops, key=lambda s: _metres(near, (s["latitude"], s["longitude"]))), True
+    return sorted(shops, key=lambda s: (len(s["name"]), s["name"]))[0], True
+
+
+def _found(shop: dict[str, Any], *, match: str, review: bool, note: str | None = None,
+           others: int = 0) -> dict[str, Any]:
+    """접수(`intake/places._from_tour`)가 읽는 모양 — 관광공사 결과와 같은 칸 + 원장 가게 ID · 확인 필요."""
+    return {"content_id": shop["content_id"], "content_type_id": "39", "matched_title": shop["name"],
+            "latitude": shop["latitude"], "longitude": shop["longitude"], "address": shop["address"],
+            "dining_place_uid": shop["place_uid"], "category": shop["category"], "match": match,
+            "needs_review": review, "note": note, "others": others}
+
+
+def find_place_by_name(conn, name: str | None, *, near: tuple[float, float] | None = None) -> dict[str, Any] | None:
+    """일정 접수의 장소 찾기용 — 원장 가게 하나(관광공사 결과 모양 + `dining_place_uid`). 못 찾으면 None.
+
+    ★`[2026-10-01]` 일정 접수가 액티비티 CSV 만 봐서 식당을 하나도 못 찾았다(「토속촌삼계탕」). CSV 에 없을 때 여기를 본다.
+    ★`[2026-10-07]` 넓혔다(장소 찾기 평가 v0 — 원장에 있는 가게를 못 꺼냈다). 단계 순서대로, 앞 단계에서 정해지면 멈춘다.
+        1 exact   이름(공백 · 기호 뺀 것)이 같다 — 하나면 확정. 여럿이면 근처 기준으로 고르고 확인 필요
+        2 branch  지점 표시를 뗀 이름이 같다(「소문난성수감자탕」 = 「소문난성수감자탕 별관」 · 「명동교자」 = 「명동교자 본점」)
+        3 prefix  원장 이름이 입력으로 시작한다(4자 이상 — 「진옥화할매」 → 「진옥화할매원조닭한마리」)
+        4 typo    자모 거리 비율 0.2 이하인 이름이 하나(「이문설롱탕」 → 「이문설농탕」) — 둘이 똑같이 비슷하면 고르지 않는다
+        5 dish    「근처 칼국수집」 · 「통인시장 기름떡볶이」 — 메뉴 말이 이름에 든 가게를 `near` 근처에서(`find_dish_near`)
+      2~5 와 「여럿 중 고름」은 **확인 필요**다 — 정확히 같은 이름 하나만 확정한다.
+    ★관광공사 ID 가 없는 가게도 낸다 — 원장 가게 ID(`dining_place_uid`)로 등록 때 원장과 잇는다(`trip_api` 등록).
+      ☆전에는 관광공사 ID 가 있는 가게만 봤다 — 영업 중 1,767곳 중 204곳(하동관 · 명동교자 본점 …)이 빠졌다.
+    ★폐업 · 서울 밖 · 좌표 없음 · 합성 가게는 내보내지 않는다. 요식 표가 없는 DB 에서는 None(「못 찾음」).
     """
-    key = re.sub(r"[^가-힣a-z0-9]", "", (name or "").lower())     # 아래 SQL 과 같은 규칙
-    if not key:
+    key = _name_key(name)
+    if len(key) < 2:
         return None
     try:
-        with conn.transaction(), conn.cursor() as cur:   # 실패해도 바깥 트랜잭션을 깨지 않는다
-            cur.execute(
-                "SELECT p.name_ko, p.lat, p.lng, coalesce(p.road_address, p.jibun_address), "
-                "       min(r.external_id), count(DISTINCT r.external_id) "
-                "FROM dining.dn_place p "
-                "JOIN dining.dn_source_record r ON r.place_uid = p.place_uid "
-                "     AND r.source_code = 'tourapi_kor_food' AND r.external_id IS NOT NULL "
-                "WHERE regexp_replace(lower(p.name_ko), '[^가-힣a-z0-9]', '', 'g') = %s "
-                "  AND p.record_status <> 'closed' AND NOT p.is_synthetic "
-                "  AND p.lat IS NOT NULL AND p.lng IS NOT NULL "
-                "GROUP BY p.place_uid, p.name_ko, p.lat, p.lng, p.road_address, p.jibun_address "
-                "LIMIT 2", (key,))
-            rows = cur.fetchall()
-    except Exception:   # noqa: BLE001 — 드라이버를 import 하지 않는다(Team 경계). 못 읽으면 못 찾음
+        shops = _shops(conn)
+    except Exception as exc:   # noqa: BLE001 — 드라이버를 import 하지 않는다(Team 경계). 못 읽으면 못 찾음
+        logger.warning("dining find_place_by_name not read reason=%s", type(exc).__name__)
         return None
-    if len(rows) != 1:
+
+    exact = [s for s in shops if s["key"] == key]
+    if exact:
+        shop, many = _pick(exact, near)
+        return _found(shop, match="exact", review=many, others=len(exact) - 1,
+                      note=f"같은 이름이 {len(exact)}곳 — 어느 곳인지 확인해 주세요" if many else None)
+    base = _base_key(name)
+    branch = [s for s in shops if s["base"] == base]
+    if branch:
+        shop, many = _pick(branch, near)
+        return _found(shop, match="branch", review=True, others=len(branch) - 1,
+                      note=(f"지점이 {len(branch)}곳 — 「{shop['name']}」을 골랐어요. 다르면 고쳐 주세요" if many
+                            else f"원장의 「{shop['name']}」로 찾았어요"))
+    if len(base) >= NAME_PREFIX_MIN:
+        prefix = [s for s in shops if s["base"].startswith(base) or s["key"].startswith(base)]
+        if prefix:
+            shop, many = _pick(prefix, near)
+            return _found(shop, match="prefix", review=True, others=len(prefix) - 1,
+                          note=f"「{name}」로 시작하는 「{shop['name']}」로 찾았어요 — 다르면 고쳐 주세요")
+    typo = _typo_match(base, shops)
+    if typo is not None:
+        shop, ratio = typo
+        return _found(shop, match="typo", review=True,
+                      note=f"오타로 보고 「{shop['name']}」로 찾았어요(자모 거리 비율 {ratio:.2f})")
+    if near is not None:
+        return find_dish_near(conn, name, near, shops=shops)
+    return None
+
+
+def _typo_match(base: str, shops: list[dict[str, Any]]) -> tuple[dict[str, Any], float] | None:
+    """자모 거리 비율이 가장 작은 이름 — 기준 이하이고, 같은 거리의 **다른 이름**이 없을 때만."""
+    from ..intake.places import edit_distance, jamo
+
+    if len(base) < 3:
         return None
-    title, lat, lng, address, content_id, ids = rows[0]
-    if ids != 1 or not str(address or "").startswith("서울"):
+    target = jamo(base)
+    scored = []
+    for shop in shops:
+        if abs(len(shop["base"]) - len(base)) > 2:
+            continue
+        other = jamo(shop["base"])
+        ratio = edit_distance(target, other) / max(len(target), len(other))
+        if 0 < ratio <= NAME_TYPO_RATIO:
+            scored.append((ratio, shop))
+    if not scored:
         return None
-    return {"content_id": str(content_id), "content_type_id": "39", "matched_title": title,
-            "latitude": float(lat), "longitude": float(lng), "address": address}
+    scored.sort(key=lambda s: s[0])
+    if len(scored) > 1 and scored[1][0] == scored[0][0] and scored[1][1]["base"] != scored[0][1]["base"]:
+        return None
+    return scored[0][1], scored[0][0]
+
+
+def dish_words(text: str | None) -> list[str]:
+    """입력의 메뉴 말 — 긴 것부터. 「통인시장 기름떡볶이」 → [기름떡볶이, 떡볶이] · 「근처 칼국수집」 → [칼국수]."""
+    from ..meal_likeness import DISHES
+
+    words = [w for w in re.split(r"\s+", (text or "").strip()) if w and w not in _NEAR_WORDS]
+    out: list[str] = []
+    for word in reversed(words):                      # 뒤 말이 메뉴다(「통인시장 기름떡볶이」)
+        clean = _name_key(re.sub(r"(집|가게|식당|맛집)$", "", word))
+        for dish in DISHES:
+            if dish in clean:
+                for got in (clean, dish):
+                    if got and got not in out:
+                        out.append(got)
+                break
+        if out:
+            break
+    return out
+
+
+def find_dish_near(conn, text: str | None, near: tuple[float, float], *, radius_m: int = DISH_RADIUS_M,
+                   shops: list[dict[str, Any]] | None = None) -> dict[str, Any] | None:
+    """메뉴 말이 이름에 든 원장 가게 중 `near` 에서 가장 가까운 곳(반경 안). ★언제나 확인 필요 — 원문이 가게를 말하지 않았다.
+
+    긴 메뉴 말이 먼저다(「기름떡볶이」를 찾고, 없으면 「떡볶이」). 반경 밖이면 고르지 않는다.
+    """
+    words = dish_words(text)
+    if not words:
+        return None
+    if shops is None:
+        try:
+            shops = _shops(conn)
+        except Exception as exc:   # noqa: BLE001
+            logger.warning("dining find_dish_near not read reason=%s", type(exc).__name__)
+            return None
+    for word in words:
+        hits = sorted(((_metres(near, (s["latitude"], s["longitude"])), s) for s in shops if word in s["key"]),
+                      key=lambda h: h[0])
+        hits = [h for h in hits if h[0] <= radius_m]
+        if hits:
+            metres, shop = hits[0]
+            return _found(shop, match="dish", review=True, others=len(hits) - 1,
+                          note=f"「{word}」 가게 중 가까운 「{shop['name']}」({round(metres):,}m) — 다르면 고쳐 주세요")
+    return None
 
 
 def nearby_shops(conn, tenant_id: str, around: list[tuple[float, float]], *, radius_m: int, limit: int | None = None,
@@ -330,7 +480,7 @@ def nearby_shops(conn, tenant_id: str, around: list[tuple[float, float]], *, rad
             "SELECT p.place_uid, p.name_ko, p.lat, p.lng, "
             "       (SELECT min(r.external_id) FROM dining.dn_source_record r "
             "         WHERE r.place_uid = p.place_uid AND r.source_code = 'tourapi_kor_food' "
-            "           AND r.external_id IS NOT NULL), "
+            "           AND r.external_id IS NOT NULL), p.category, "
             "       min(dining.distance_m(p.lat, p.lng, pts.lat, pts.lng)) AS d "
             "FROM dining.dn_place p CROSS JOIN pts "
             "WHERE p.record_status <> 'closed' AND NOT p.is_synthetic "
@@ -339,14 +489,15 @@ def nearby_shops(conn, tenant_id: str, around: list[tuple[float, float]], *, rad
             "  AND NOT EXISTS (SELECT 1 FROM dining.dn_core_place_link l "
             "                   WHERE l.tenant_id = %s AND l.place_uid = p.place_uid "
             "                     AND l.core_place_id::text = ANY(%s::text[])) "
-            "GROUP BY p.place_uid, p.name_ko, p.lat, p.lng "
+            "GROUP BY p.place_uid, p.name_ko, p.lat, p.lng, p.category "
             "ORDER BY d, p.place_uid LIMIT %s",
             ([float(a) for a, _ in around], [float(b) for _, b in around], radius_m,
              tenant_id, [str(i) for i in (visible_core_ids or [])], limit))
         rows = cur.fetchall()
+    # ★`[2026-10-07]` 큰 종류(`category` — 한식 · 카페디저트 · 미상 …)를 싣는다 — 대체 순위의 「비슷한 곳」(`meal_likeness`)
     return [{"place_uid": str(uid), "name": name, "latitude": float(lat), "longitude": float(lng),
-             "content_id": content_id, "distance_m": float(d)}
-            for uid, name, lat, lng, content_id, d in rows]
+             "content_id": content_id, "category": category, "distance_m": float(d)}
+            for uid, name, lat, lng, content_id, category, d in rows]
 
 
 def link_core_place_to(conn, tenant_id: str, core_place_id: str, place_uid: str) -> None:

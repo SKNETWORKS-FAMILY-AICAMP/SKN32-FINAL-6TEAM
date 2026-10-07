@@ -367,11 +367,36 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, ki
     if found.status != "resolved":
         raise IntakeRejected("place_not_found", f"「{name}」: {found.note}")
     resolved = {"name": found.name, "kind": found.kind, "latitude": found.latitude, "longitude": found.longitude,
-                "place_id": found.place_id, "content_id": found.content_id, "source": found.evidence()["source"]}
+                "place_id": found.place_id, "content_id": found.content_id, "source": found.evidence()["source"],
+                **({"dining_place_uid": found.dining_place_uid} if found.dining_place_uid else {})}
     return resolved, {**found.evidence(), "typed": name}, found.note
 
 
 # ── 한 원본 읽기: 규칙 → 남은 줄 → 날짜 → 장소 ─────────────────────
+def _remember(ctx: Any, found: Any) -> None:
+    """찾은 곳의 좌표를 근처 힌트에 넣는다 — 관광지 CSV · 원장은 스스로 넣고, 우리 장소 표 · 카카오에서 찾은 곳은 여기서.
+    ★`[2026-10-07]` 전에는 넣지 않아 「경복궁 → 스타벅스」의 경복궁(우리 장소 표)이 다음 항목의 기준이 되지 못했다."""
+    if ctx is None or found is None or found.status != "resolved" or found.latitude is None:
+        return
+    if found.method in ("places", "typo", "kakao", "kakao_branch"):
+        ctx.add(float(found.latitude), float(found.longitude))
+
+
+def _remember_cluster(ctx: Any, found: Any) -> None:
+    """정하지 못했지만 후보가 서로 붙어 있으면(홍대입구역 출구들) 그 가운데를 근처 힌트로 — 어느 후보든 위치가 거의 같다.
+    ★`[2026-10-07]` 전에는 「홍대입구역 → 교촌치킨」의 홍대입구역이 기준이 되지 못해 종로 지점을 골랐다(5.7km)."""
+    from .chain_pick import CLUSTER_M, centre, spread_m
+
+    if ctx is None or found is None or found.status == "resolved" or not found.candidates:
+        return
+    points = [(float(c["latitude"]), float(c["longitude"])) for c in found.candidates
+              if c.get("latitude") is not None and c.get("longitude") is not None]
+    # 관련도 1위 후보에서 CLUSTER_M 안에 절반 이상이 모였나 — 「홍대입구역 사거리」 하나가 섞여 서로 가장 먼 거리는 555m 였다
+    tight = [p for p in points if spread_m([points[0], p]) <= CLUSTER_M] if points else []
+    if tight and len(tight) * 2 >= len(points):
+        ctx.add(*centre(tight))
+
+
 def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = None,
                 our_places: list[dict[str, Any]] | None = None, today: date,
                 aliases: dict[str, str] | None = None, dining: Any = None) -> list[dict[str, Any]]:
@@ -444,6 +469,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
 
     # 장소 — 항목마다 하나(원문이 가리킨 만큼만)
     resolved: dict[int, Any] = {}
+    _ctx = getattr(tour, "_ctx", None)
     for index, item in enumerate(items):
         if item["title"]:
             # 일정 시각(날짜+시간)을 near 힌트 기준으로 넘긴다
@@ -454,13 +480,16 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 tour.set_current_date(dt_str)
             resolved[index] = resolve(item["title"], our_places=our_places or [], tour=tour, kakao=kakao,
                                       kind_hint="dining" if item["meal"] else None, aliases=aliases,
-                                      dining=dining)
+                                      dining=dining, near=_ctx.get_near() if _ctx is not None else None)
+            _remember(_ctx, resolved[index])
+            _remember_cluster(_ctx, resolved[index])
     # 두 번째 패스 — near 없이 미뤄진 항목을 다른 장소가 확정된 뒤 재시도한다(한 번만)
     # kakao 로 resolved 된 항목도 재시도 대상에 포함한다:
     # places.py normalize()가 점포 접미사를 제거하므로 "올리브영 홍대사거리점" → "올리브영" exact match →
     # Kakao 첫 번째 결과가 무조건 선택된다. near 반영을 위해 2차 패스에서 재시도한다.
-    _ctx = getattr(tour, "_ctx", None)
-    if getattr(tour, "had_deferred", False) and _ctx is not None and _ctx.get_near() is not None:
+    # ★`[2026-10-07]` 체인인데 기준 위치가 없어 미룬 항목(`chain_deferred`)도 다시 찾는다
+    deferred = getattr(tour, "had_deferred", False) or any(getattr(r, "chain_deferred", False) for r in resolved.values())
+    if deferred and _ctx is not None and _ctx.get_near() is not None:
         tour.had_deferred = False
         for index, item in enumerate(items):
             if item["title"] and resolved.get(index) is not None and (
@@ -474,7 +503,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                     tour.set_current_date(dt_str)
                 resolved[index] = resolve(item["title"], our_places=our_places or [], tour=tour, kakao=kakao,
                                           kind_hint="dining" if item["meal"] else None, aliases=aliases,
-                                          dining=dining)
+                                          dining=dining, near=_ctx.get_near())
     for index, found in resolved.items():
         evidence = found.evidence()
         value = None
@@ -482,7 +511,8 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
         if found.status == "resolved":
             value = {"name": found.name, "kind": found.kind, "latitude": found.latitude,
                      "longitude": found.longitude, "place_id": found.place_id, "content_id": found.content_id,
-                     "source": evidence["source"]}
+                     "source": evidence["source"],
+                     **({"dining_place_uid": found.dining_place_uid} if found.dining_place_uid else {})}
         elif found.candidates:
             # ★설계서 §4-2 — 이름이 특정하지 않으면 종류가 맞는 후보 중 **같은 날 앞뒤 일정에 가장 가까운 곳** 하나.
             #   선택지를 나열하지 않는다. 고른 이유(거리)를 근거에 남기고 확인을 받는다

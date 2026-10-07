@@ -237,6 +237,9 @@ def _place_in(key: str, place: dict[str, Any], kind: str) -> dict[str, Any]:
         attributes["source"] = source
         if source in _SOURCE_ATTRS and place.get("content_id"):
             attributes[_SOURCE_ATTRS[source]] = str(place["content_id"])
+        if source == "dining_ledger" and place.get("dining_place_uid"):
+            # ★`[2026-10-07]` 원장 가게 id — 관광공사 id 가 없는 원장 가게도 등록 때 원장과 잇는다(trip_api 등록)
+            attributes["dining_place_uid"] = str(place["dining_place_uid"])
     return {"key": key, "name": place["name"], "kind": place.get("kind") or kind,
             "lat": float(place["latitude"]), "lon": float(place["longitude"]),
             "weather_sensitive": False, "attributes": attributes}

@@ -63,7 +63,8 @@ def add_nearby(conn, store: Any, trip_id: Any, items: list[Any], places: list[di
             adopted = store.adopt_places(conn, trip_id, [
                 {"name": s["name"], "kind": "dining", "latitude": s["latitude"], "longitude": s["longitude"],
                  "attributes": {"source": "dining_ledger", "dining_place_uid": s["place_uid"],
-                                **({"source_content_id": s["content_id"]} if s["content_id"] else {})}}
+                                **({"source_content_id": s["content_id"]} if s["content_id"] else {}),
+                                **({"category": s["category"]} if s.get("category") else {})}}
                 for s in shops])
             requested_uids = {s["place_uid"] for s in shops}
             # 동명 식당은 (name, kind) 유일성 제약으로 첫 행이 남는다. 실제 저장된 행의 UID로만 연결한다.
