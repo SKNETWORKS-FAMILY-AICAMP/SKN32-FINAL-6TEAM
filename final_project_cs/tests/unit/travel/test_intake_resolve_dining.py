@@ -30,7 +30,7 @@ class Kakao:
     def __init__(self, hits):
         self.hits, self.asked = hits, []
 
-    def search(self, query, size=5, near=None):
+    def search(self, query, size=5, near=None, **kw):
         self.asked.append(query)
         return self.hits.get(query, [])
 

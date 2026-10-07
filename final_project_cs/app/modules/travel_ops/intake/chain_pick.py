@@ -43,6 +43,8 @@ class Chain:
     brand_key: str              # 비교용 — normalize(brand)
     hint: str | None = None     # 입력의 지점명(위치 단서) — 「스타벅스 강남역점」 → 「강남역」
     romanized: bool = False     # 로마자 입력(「Starbucks」)을 결과로 체인이라 본 것
+    #: 그 브랜드 지점들의 업종(카카오 FD6 · CE7) — 다시 찾을 때 이 업종만 묻는다(호출을 아낀다)
+    groups: tuple[str, ...] = FOOD_GROUPS
 
 
 @dataclass(frozen=True)
@@ -120,7 +122,7 @@ def needs_branch_pick(query: str, hits: Sequence[dict[str, Any]], *, landmarks: 
     한글 입력   결과의 음식점 · 카페 중 지점을 뗀 이름이 같은 곳이 **둘 이상**인 브랜드가 있고, 입력이 그 브랜드로 시작한다
                 (「스타벅스」 · 「스타벅스 강남역점」 · 「스타벅스 광화문」). 입력과 띄어쓰기만 다른 이름이 결과에 **하나** 있으면
                 (지점까지 말한 경우) 고르지 않는다.
-    로마자 입력 결과가 **모두** 음식점 · 카페이고 지점을 뗀 이름 하나로 모이고 둘 이상(「Starbucks」 → 「스타벅스 ○○점」들).
+    로마자 입력 결과가 **모두** 음식점 · 카페이고, 지점을 뗀 이름이 **절반 이상 · 둘 이상** 한 브랜드(「Starbucks」 → 「스타벅스 ○○점」들).
     ★`landmarks`(정규화한 관광지 이름 — 우리 장소 표 · 관광지 목록)에 브랜드가 있으면 고르지 않는다(관광지다).
       ☆`[실측 2026-10-07]` 「Gyeongbokgung」의 카카오 결과 5건이 모두 한식 체인 「경복궁 ○○점」 계열이었다(넷이 같은 이름).
         이름 하나로 모였다면 궁궐을 식당 체인으로 봤을 것이다. 로마자는 관광지 확인(`places._romanized`)이 먼저다.
@@ -143,14 +145,29 @@ def needs_branch_pick(query: str, hits: Sequence[dict[str, Any]], *, landmarks: 
         if len(exact) == 1 and text != key:
             return None                         # 지점까지 말했고 그 지점이 하나 — 그 지점이 답이다
         brand = brand_of(next(h for h in food if _key(h) == key)["name"])
-        return Chain(brand=brand, brand_key=key, hint=branch_hint(query, key))
-    keys = {_key(h) for h in food}
-    if len(keys) != 1 or len(food) != len(hits):
+        return Chain(brand=brand, brand_key=key, hint=branch_hint(query, key), groups=_groups(food, key))
+    if len(food) != len(hits):
+        return None                             # 음식점 · 카페가 아닌 결과가 섞였다 — 관광지일 수 있다
+    counts: dict[str, int] = {}
+    for hit in food:
+        counts[_key(hit)] = counts.get(_key(hit), 0) + 1
+    top = max(counts, key=lambda k: (counts[k], -len(k)))
+    # ★`[2026-10-07]` 대부분(절반 이상 · 둘 이상)이 한 브랜드면 — 근처 결과에 「스타벅스 코엑스」 같은 이름이 섞인다
+    if counts[top] < 2 or counts[top] * 2 < len(food):
         return None
-    brand = brand_of(food[0]["name"])
+    brand = brand_of(next(h for h in food if _key(h) == top)["name"])
     if normalize(brand) in landmarks:
         return None
-    return Chain(brand=brand, brand_key=normalize(brand), romanized=True)
+    return Chain(brand=brand, brand_key=normalize(brand), romanized=True, groups=_groups(food, normalize(brand)))
+
+
+def _groups(food: Sequence[dict[str, Any]], key: str) -> tuple[str, ...]:
+    """그 브랜드 지점들의 업종 — 결과에 나온 순서대로(없으면 음식점 · 카페 둘 다)."""
+    seen = []
+    for hit in food:
+        if _key(hit) == key and hit.get("category_group") not in seen:
+            seen.append(hit["category_group"])
+    return tuple(seen) or FOOD_GROUPS
 
 
 # ── 2 기준 위치 ────────────────────────────────────────────────
@@ -198,7 +215,7 @@ def search_requests(chain: Chain, anchor: Anchor | None) -> list[dict[str, Any]]
         return []
     at = centre(anchor.points)
     return [{"query": chain.brand, "near": at, "radius": radius, "sort": "distance", "size": 15,
-             "category_group_code": group} for radius in RADII_M for group in FOOD_GROUPS]
+             "category_group_code": group} for radius in RADII_M for group in chain.groups]
 
 
 def hint_request(chain: Chain) -> dict[str, Any] | None:

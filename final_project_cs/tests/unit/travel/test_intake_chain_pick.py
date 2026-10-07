@@ -99,8 +99,10 @@ def test_spread():
 def test_search_requests_widen_radius_by_food_groups():
     chain = needs_branch_pick("스타벅스", STARBUCKS)
     requests = search_requests(chain, anchor_for(neighbours=[Neighbour(*GYEONGBOK)]))
-    assert [r["radius"] for r in requests] == [1000, 1000, 3000, 3000, 5000, 5000]
-    assert {r["category_group_code"] for r in requests} == {"FD6", "CE7"}
+    assert [r["radius"] for r in requests] == [1000, 3000, 5000]               # 그 브랜드의 업종(카페)만 묻는다
+    assert {r["category_group_code"] for r in requests} == {"CE7"}
+    mixed = needs_branch_pick("교촌치킨", KYOCHON)
+    assert mixed.groups == ("FD6",)
     assert all(r["sort"] == "distance" and r["query"] == "스타벅스" for r in requests)
     assert search_requests(chain, None) == []
     assert hint_request(needs_branch_pick("스타벅스 강남역점", STARBUCKS)) == {"query": "강남역", "category_group_code": "SW8",
