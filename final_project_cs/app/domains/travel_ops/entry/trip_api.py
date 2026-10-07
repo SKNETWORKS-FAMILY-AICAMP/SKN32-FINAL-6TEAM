@@ -224,6 +224,22 @@ class IntakeAutofixIn(IntakeRevisionIn):
     dry_run: bool = False
 
 
+class RecoveryPlanIn(BaseModel):
+    """★`[결정 2026-10-07 사용자]` 재난 뒤 다시 짤 때 사용자가 고른 제약(`GET …/safety/recovery` 의 `constraints`) — 일정 생성기가 받는다.
+
+    `avoid_districts` 의 구는 후보에서 빠지고(구를 모르는 후보는 남는다), `lighter_day` 는 **사용자가 골랐을 때만** 밀도 목표를 한 단계 낮춘다."""
+    model_config = ConfigDict(extra="forbid")
+    avoid_districts: list[str] = Field(default_factory=list, max_length=25)
+    lighter_day: StrictBool = False
+
+    @model_validator(mode="after")
+    def _known_districts(self) -> "RecoveryPlanIn":
+        unknown = [name for name in self.avoid_districts if name not in safety_recovery.SEOUL_DISTRICTS]
+        if unknown:
+            raise ValueError(f"서울 자치구 이름이 아니다: {unknown}")
+        return self
+
+
 class IntakePlanIn(BaseModel):
     """「일정 짜 줘」 — 확인 화면에서 고객이 조건을 확인하고 누른다. ★누르는 것이 곧 등록 요청이다(통지가 나간다)."""
     model_config = ConfigDict(extra="forbid")
@@ -235,6 +251,8 @@ class IntakePlanIn(BaseModel):
     keep_read_items: bool = True
     #: ★`[2026-09-28]` 여행 시작 설문 — 선택. 일정 생성기가 먼저 적용하고(16번 여유 → 하루 곳 수) 등록에도 실린다
     survey: dict[str, Any] | None = None
+    #: ★`[2026-10-07]` 재난 뒤 다시 짤 때 사용자가 고른 제약 — 선택. 없으면 아무것도 안 바뀐다
+    recovery: RecoveryPlanIn | None = None
 
 
 class PlanIn(BaseModel):
@@ -1519,7 +1537,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         ask = planner_module.PlanRequest(
             city="서울", start_date=request.start_date, days=request.days, party_size=request.party_size,
             preferences=str(built.plan.get("preferences") or ""), title=built.body["title"], locale="ko",
-            constraints={"survey": survey} if survey is not None else {})
+            constraints={**({"survey": survey} if survey is not None else {}),
+                         **({"avoid_districts": list(request.recovery.avoid_districts), "lighter_day": request.recovery.lighter_day}
+                            if request.recovery is not None else {})})
         keep = request.keep_read_items and bool(built.body["items"])
         if keep:
             # ★읽은 일정이 요청한 날짜 밖이면 끼울 수 없다 — 조용히 버리지 않고 거절한다

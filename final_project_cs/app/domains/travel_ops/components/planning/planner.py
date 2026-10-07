@@ -850,6 +850,46 @@ def density_target(constraints: Mapping[str, Any]) -> float | None:
     return float(get_guardrails().get("travel.density.targets")[density["level"]])
 
 
+#: 밀도 단계 순서(낮음 → 높음). `travel.density.targets` 의 이름과 같다.
+DENSITY_LEVELS = ("low", "normal", "high", "very_high")
+#: ★`[결정 2026-10-07 사용자]` 재난 뒤 다시 짤 때 **사용자가 고른 것**을 받는 제약 둘. 초안에는 남기지 않는다(여행에 박히지 않게).
+RECOVERY_KEYS = ("avoid_districts", "lighter_day")
+
+
+def lighter_constraints(constraints: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    """「오늘은 가볍게」(`lighter_day: true`) — 밀도 목표를 **한 단계** 낮춘 제약을 돌려준다. `(새 제약, 적은 것)`.
+
+    ★**사용자가 골랐을 때만**이다. 우리가 임의로 낮추지 않는다 — 재난 뒤에 밀도를 낮춰야 한다는 근거 연구가 없다(D-019, 밀도 0.40 만 연구에서 직접 관찰한 값).
+    ★목표를 직접 줬거나(`target_density`) 아예 없으면 단계를 낮출 기준이 없다 — 낮추지 않고 그 사실을 적는다(없으면 하루 기본 수로 짜므로 이미 가볍다)."""
+    out = dict(constraints)
+    if constraints.get("lighter_day") is not True:
+        return out, None
+    density = constraints.get("density")
+    level = density.get("level") if isinstance(density, Mapping) else None
+    if level in DENSITY_LEVELS and density.get("target_density") is None:
+        lower = DENSITY_LEVELS[max(0, DENSITY_LEVELS.index(level) - 1)]
+        out["density"] = {**density, "level": lower}
+        return out, {"requested": True, "applied": lower != level, "from": level, "to": lower}
+    return out, {"requested": True, "applied": False,
+                 "note": f"밀도 목표가 없거나 직접 준 값이라 단계를 낮추지 않았다(목표가 없으면 하루 활동 {ACTIVITIES_PER_DAY}곳이 기본이다)"}
+
+
+def without_districts(pool: list[Cand], avoid: Any) -> tuple[list[Cand], dict[str, Any] | None]:
+    """피해 구(`avoid_districts`)의 장소를 후보에서 뺀다. `(남은 후보, 적은 것)`.
+
+    ★구를 **모르는** 후보는 빼지 않는다 — 모르는 것을 「피해 구」로 처리하지 않는다(몇 곳이 남았는지 적는다)."""
+    if avoid is None:
+        return pool, None
+    if not isinstance(avoid, (list, tuple)) or not all(isinstance(name, str) for name in avoid):
+        raise PlanRefused("invalid_avoid_districts", "avoid_districts 는 구 이름(글자)의 목록이어야 한다", got=type(avoid).__name__)
+    wanted = {name.strip() for name in avoid if name.strip()}
+    if not wanted:
+        return pool, None
+    kept = [cand for cand in pool if cand.district not in wanted]
+    return kept, {"avoid_districts": sorted(wanted), "excluded": len(pool) - len(kept),
+                  "kept_without_district": sum(1 for cand in kept if cand.district is None)}
+
+
 def _parts_of(items: list[dict[str, Any]], places: Mapping[str, Cand],
               routes: Mapping[str, Any]) -> list[Part]:
     return [Part(seq=item["seq"], kind=item["kind"], title=item["title"],
@@ -1282,6 +1322,8 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
         raise PlanRefused("invalid_survey", "constraints.survey 가 설문 계약과 다르다",
                           problems=[{"field": ".".join(str(p) for p in e["loc"]), "reason": e["msg"]}
                                     for e in exc.errors()]) from None
+    constraints_now, lighter_note = lighter_constraints(request.constraints)       # ★재난 뒤 사용자가 고른 「오늘은 가볍게」(없으면 그대로)
+    request = replace(request, constraints=constraints_now)
     target = density_target(request.constraints)
     per_day = MAX_ACTIVITIES_PER_DAY if target is not None else ACTIVITIES_PER_DAY
     floor_per_day = MIN_ACTIVITIES_PER_DAY if target is not None else ACTIVITIES_PER_DAY
@@ -1312,6 +1354,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     if skip:
         pool = [cand for cand in pool if _bare_name(cand.name) not in skip]
     pool = _without_same_sites(pool, exclude_sites)
+    pool, area_note = without_districts(pool, request.constraints.get("avoid_districts"))     # ★재난 뒤: 피해 구는 후보에서 뺀다
 
     ranked = rank_candidates(pool, pref)
     activities = distinct_sites([cand for cand in ranked if cand.kind == "activity"])
@@ -1326,6 +1369,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
             have={"activity": len(activities), "dining": len(dining)},
             pool_before_preference=len(pool),
             preference=pref.as_dict(),
+            **({"recovery": {"avoid": area_note}} if area_note else {}),
             remedy="장소 카탈로그를 더 받거나(TourAPI 동기화) 선호 조건을 줄인다")
 
     mode, note = "rules", "모델을 쓰지 않았다"
@@ -1460,7 +1504,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     draft = PlanDraft(
         title=request.title or f"서울 {request.days}일 여행 ({request.start_date.isoformat()})",
         locale=request.locale, party_size=request.party_size,
-        constraints=dict(request.constraints),
+        constraints={key: value for key, value in request.constraints.items() if key not in RECOVERY_KEYS},   # ★재난 뒤 제약은 여행에 박지 않는다(밀도 단계는 이미 반영됨)
         places=[chosen[key].as_place() for key in
                 sorted({item["place"] for item in items if item.get("place")}, key=lambda k: str(k))],
         items=items, routes=routes)
@@ -1483,6 +1527,9 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
                  "hours": hours_stats,
                  # ★`[2026-10-05]` 요식 원장에서 받은 식당 수(원장을 쓰지 않은 요청에는 이 칸이 없다) — 0 이면 못 읽은 것이다
                  **({"dining_ledger": ledger_note} if ledger_note is not None else {}),
+                 # ★`[2026-10-07]` 재난 뒤 사용자가 고른 제약을 무엇으로 반영했나(없으면 칸이 없다) — 「오늘은 가볍게」 · 피해 구 제외
+                 **({"recovery": {key: note for key, note in (("lighter_day", lighter_note), ("avoid", area_note)) if note is not None}}
+                    if (lighter_note is not None or area_note is not None) else {}),
                  # ★아침 식사 — 날마다 무엇을 넣었고 영업시간을 아는지(모르면 그날 새벽 확인이 본다)
                  "breakfast": {"wanted": want_breakfast, "days": breakfasts},
                  # ★설문 16번 → 밀도 목표 → 하루 활동 수. 목표가 없으면 기본 수로 짰다고 적는다

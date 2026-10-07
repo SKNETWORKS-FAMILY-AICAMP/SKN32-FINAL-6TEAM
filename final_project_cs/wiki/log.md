@@ -352,3 +352,16 @@ INV-CS-TEAM-005  다른 Team 을 직접 호출하지 않는다
 - 고쳤다: 가림 함수 import 6곳을 `app.core.redaction` 직접으로. 빈 폴더 20개(파일 0 · git 밖 로컬 찌꺼기) 삭제. 시험 `tests/architecture/test_basement_layers.py` 추가(방향 고정 + 알고 있는 예외 셋은 상한).
 - 안 고쳤다(사용자 결정 · 후속): 쇼핑몰 시절 결제 대역 `mock_payment_publisher.py`(D-023) · `core/composer_stores.py` 가 코어에 있는 것 · 인프라 바로 아래 흩어진 파일 · 큰 파일 · 쓰이지 않는 규격 모듈 둘 · `wiki/index.md` 12행의 낡은 서술.
 - 시험: 구조 · 코어 · 컨트롤러 · 운영 UI · Case REST 427 · 계약 · 보안 · 결정 단위 · 프로필 364 통과.
+
+## 2026-10-07 — x600 서버에 일정 항목 짚기 모델(가르친 E4B)을 켰다 (사용자 승인 · RAG 세션 인계)
+
+RAG 세션이 만든 연결 코드(커밋 6f043d36 · c431e7cb)를 사용자가 이 채팅에서 승인한 뒤 켰다. ★**x600 서버에 반영된 것은 6f043d36 판뿐이다**(팀 스냅숏 e87a45e0 은 기준 로컬 044fe2d7 이라 그 뒤 커밋 c431e7cb 가 안 들어갔다 — `item_pointer.py` 9,271바이트 · `background_warm` 0회). 그래서 「새 일정의 첫 문장은 규칙으로 먼저 답하고 모델은 뒤에서 일정을 읽는다」가 아직 없고, 새 일정의 첫 질문은 모델 첫 읽기(약 17~21초)를 기다린다(이어지는 질문 약 4초 · 30초 안에 실패하면 낱말 규칙으로 돌아간다). c431e7cb 를 담은 다음 팀 스냅숏이 올라가야 해결된다(RAG 세션 정정으로 확인 — 처음에 이 줄에 「포함」이라고 쓴 것은 파일 존재만 보고 쓴 오류였다). 순서: 배포 반영 → 읽기로 조건 확인(배포된 api 가 `ollama_pointer_*` 설정을 앎 · x600 올라마에 `tripilot-pointer-cpu:e4b-ft` 있음 · `.env` 의 `TRIPILOT_TAG` 가 실행 중 이미지와 같음) → x600 서버 `.env` 백업 후 두 줄(`ACOP_OLLAMA_POINTER_MODEL` · `ACOP_OLLAMA_POINTER_KEEP_ALIVE=30m`) 추가 → api · worker 만 재기동(`--no-deps`).
+- 확인: 새 컨테이너가 설정을 읽고, 컨테이너 안에서 연결해 일정 4개 예시에 세 문장을 물으니 모델이 셋 다 답했다(`STATS` calls 3 · used 3 · failed 0, 지연 약 4.0~4.3초, 처음 한 번 16.8초). **실제 웹 채팅 흐름으로 끝까지 본 것은 아니다**(내 예시 3문장).
+- 「일정 항목 짚기 모델 연결」 로그는 info 수준이라 api 로그에 안 보인다(기동 시 로그 수준이 경고 이상).
+- 되돌리기: `.env` 에서 두 줄을 지우고 api · worker 재기동(백업 `.env.bak_*_pointer`), 또는 `travel.pointer.mode` 를 `off`/`shadow`.
+
+## 2026-10-07 — 일정 짜기에 재난 뒤 제약 전달: 피해 구 제외 · 오늘은 가볍게 (재난 뒤 재개 ③의 남은 일)
+
+일정 생성기(`planner._plan_trip`)가 두 제약을 받는다 — `avoid_districts`(그 구의 후보를 뺌, 구를 모르는 후보는 남김, 후보가 모자라면 어떤 구를 얼마나 뺐는지 담아 거절) · `lighter_day`(**사용자가 참으로 골랐을 때만** 밀도 목표 한 단계 낮춤, 목표가 없거나 직접 준 값이면 낮추지 않고 그 사실을 적음). 두 값은 초안(여행)에 남기지 않는다. 입구: 웹 `POST /v1/web/trip-intakes/{id}/plan` 의 `recovery`(서울 구 이름만 · 참/거짓만) · MCP `tripilot_plan_trip` 인자 둘 · 에이전트 `POST /v1/trips/plan` 의 `constraints`.
+- 시험: `tests/unit/travel/test_planner_recovery.py` 13 · `tests/e2e/test_trip_planner_recovery.py` 4 · 기존 계획기 시험 76(전체) · MCP · 읽기 뒤 일정 짜기 53 통과. 실서버 확인(x600 서버의 cs 프로젝트 서버 응답): 안 했음.
+- 정하지 않은 것: 재난 종류별 거름 규칙(근거 없음) · 웹 검색 대안.

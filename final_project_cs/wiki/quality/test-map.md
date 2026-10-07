@@ -40,6 +40,7 @@ tests/
 |---|---|---|
 | Core 도메인 격리 | `architecture/` | `test_basement_is_domain_free.py` |
 | basement 층끼리 부르는 방향 `[2026-10-07]` — 코어는 다른 폴더를 못 부름 · 인프라 · 응용 · 표현의 거꾸로 부름 0 · 알고 있는 예외 셋은 상한 | `architecture/` | `test_basement_layers.py` |
+| 재난 뒤 다시 짜기 제약(피해 구 제외 · 사용자가 고른 「오늘은 가볍게」) `[2026-10-07]` | `unit/travel/` · `e2e/` | `test_planner_recovery.py` · `test_trip_planner_recovery.py` |
 | 다른 도메인 서빙 가능성 | `architecture/` | `test_engine_serves_another_domain.py` |
 | Case 상태 기계 | `contract/` | `test_case_state_table.py` |
 | 상태 축약(reducer) | `unit/core/` | `test_case_reducer.py` |

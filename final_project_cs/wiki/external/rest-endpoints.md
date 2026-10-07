@@ -911,3 +911,9 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 - `replace_affected` 는 영향 **확정** 항목마다 대신 갈 곳을 **제안**한다(`proposals[]` = `{item_id, title, status, proposal_id, options}`). 기존 「선택이 필요해요」 제안(`requested_options`)이라 고르면 바뀌고 **안 고르면 그대로**다 — 일정은 이 요청으로 안 바뀐다. 후보에서 피해 구의 곳은 빠지고, 구를 모르는 후보는 「이 곳의 구를 확인하지 못했어요」가 붙는다. 후보가 없으면 `status` 가 `no_alternate` · `no_option_outside_area`.
 - `lighter_day` 는 우리가 밀도를 임의로 낮추지 않는다(낮추는 근거 연구가 없다) — **기록하고 `constraints.lighter_day` 로 에이전트에게 전할 뿐**이다.
 - 남의 여행 · 다시 시작한 적 없는 정지 · 없는 정지는 404, 모르는 `choice` 는 422.
+
+**다시 짤 때 제약을 일정 생성기에 넘기기** `[2026-10-07]` — 꾸러미의 `constraints` 를 일정 생성기가 받는다.
+- `POST /v1/web/trip-intakes/{id}/plan` 의 `recovery: {avoid_districts: [구 이름…], lighter_day: bool}`(선택, 서울 자치구 이름만 · `lighter_day` 는 참 · 거짓만) — MCP `tripilot_plan_trip` 의 `avoid_districts` · `lighter_day` 인자가 이것을 채운다. 에이전트 입구 `POST /v1/trips/plan` 은 `constraints.avoid_districts` · `constraints.lighter_day` 로 받는다.
+- `avoid_districts` — 그 구의 장소를 **후보에서 뺀다.** 구를 **모르는** 후보는 빼지 않는다(모르는 것을 피해 구로 처리하지 않는다). 후보가 모자라면 `422 not_enough_candidates` 에 `recovery.avoid`(`{avoid_districts, excluded, kept_without_district}`)를 실어 **어떤 구를 얼마나 뺐는지** 알린다. 구 이름이 아닌 값은 `invalid_avoid_districts`.
+- `lighter_day: true` — **사용자가 골랐을 때만** 밀도 목표를 한 단계(very_high→high→normal→low) 낮춘다. 목표를 직접 줬거나 없으면 낮추지 않고 `planner.recovery.lighter_day.applied=false` 로 적는다. 우리가 임의로 켜지 않는다(낮추는 근거 연구가 없다).
+- 초안에는 이 두 값이 남지 않는다(여행 제약에 박히지 않음). 결과의 `planner.recovery` 가 무엇을 반영했는지 적는다(제약이 없으면 칸이 없다).
