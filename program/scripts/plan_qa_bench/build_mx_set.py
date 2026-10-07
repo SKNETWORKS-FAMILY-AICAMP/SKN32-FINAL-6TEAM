@@ -28,7 +28,7 @@ ap.add_argument('--gen-model', default='gpt-6.1-sol')
 ap.add_argument('--label-model', default='gpt-6-luna')
 a = ap.parse_args()
 
-OUT = os.path.join(ROOT, 'datasets', 'travel', 'mx_testset')
+OUT = os.path.join(os.path.abspath(os.path.join(HERE, '..', '..', '..')), 'datasets', 'travel', 'mx_testset')   # 저장소 루트의 datasets/(git 밖). ★ROOT 는 program/ 이라 거기에 만들면 git 이 못 막는다 — 2026-10-07 바로잡음
 os.makedirs(OUT, exist_ok=True)
 EP = os.path.join(HERE, 'results', 'empty_probe')
 P = json.load(open(os.path.join(EP, 'all_prompts.json'), encoding='utf-8'))
@@ -212,6 +212,7 @@ def build():
     pool = [(t, s) for t, s in pool if 8 <= len(t) <= 45 and '\n' not in t]
     print('잡담 조각', len(pool), {s: sum(1 for _, x in pool if x == s) for s in {s for _, s in pool}})
     items, drop = [], {'nolabel': 0, 'dispute': 0, 'overlap_item': 0}
+    disputes = []
     n = 1200000
     pid = 0
     stats = {}
@@ -245,6 +246,7 @@ def build():
                 continue
             if lab != gold:
                 drop['dispute'] += 1
+                disputes.append({'k': k, 'cat': cat, 'q': q, 'gen_item': gold, 'luna_item': lab, 'src': 'code'})
                 continue
             cands = [(t, s) for t, s in pool if len(tri(t) & itk) <= 1 or jac(tri(t), itk) < 0.04]   # 잡담이 일정 항목 낱말과 겹치면 정답이 흐려지므로 거른다
             if not cands:
@@ -278,6 +280,7 @@ def build():
                 continue
             if ans.get(str(ib), 'm') != b['item'] or ans.get(str(ir), 'm') != b['item']:
                 drop['dispute'] += 1
+                disputes.append({'k': k, 'cat': b['cat'], 'q': bl, 'req': rq, 'gen_item': b['item'], 'luna_blend': ans.get(str(ib)), 'luna_req': ans.get(str(ir)), 'src': 'llm'})
                 continue
             pid += 1
             add('mixed', b['cat'], bl, b['item'], k, h, 'llm', pid, 'Claude 합성 말투(솔 6.1 작성)', 'natural', rq)
@@ -300,6 +303,7 @@ def build():
         it['quarantine'] = it['pair'] in quarantined
     main = [x for x in items if x['kind'] in ('mixed', 'control') and not x['quarantine']]
     chal = [x for x in items if x['kind'] == 'challenge']
+    json.dump(disputes, open(os.path.join(OUT, 'mx_disputes.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)   # 사람 골든셋 후보(솔과 루나가 갈린 것)
     json.dump(items, open(os.path.join(OUT, 'mx_all.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     json.dump(main, open(os.path.join(OUT, 'mx_main_prompts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     # 사람 점검용 표본(층화 300, 혼합 문장만): 생성 방식 · 유형별
