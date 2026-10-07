@@ -15,7 +15,7 @@ CORES = os.environ.get('CORES', '0-5')
 PORT = int(os.environ.get('PORT', '8176'))
 SRV = os.environ.get('LLAMA_SERVER', '/workspace/deciders/bin/llama-server')
 dst = f'd_test_{TAG}.jsonl'
-items = sorted(json.load(open('all_prompts.json', encoding='utf-8')), key=lambda x: (x['set'], x['qi']))
+items = sorted(json.load(open(os.environ.get('PROMPTS', 'all_prompts.json'), encoding='utf-8')), key=lambda x: (x['set'], x['qi']))     # PROMPTS=all_prompts_d2.json 이면 새 잡담 보류 세트(D2)
 done = set()
 if os.path.exists(dst):
     for line in open(dst, encoding='utf-8'):
@@ -28,6 +28,9 @@ if LORA:
     cmd += ['--lora', LORA]
 srv = subprocess.Popen(cmd, env=env, stdout=open(f'dtest_server_{TAG}.log', 'w'), stderr=subprocess.STDOUT)
 for _ in range(600):
+    if srv.poll() is not None:      # [2026-10-07] 서버가 모델을 못 올리고 죽었으면 30분 기다리지 않고 바로 끝낸다(qwen3.5 GGUF 로 GPU 를 30분 놀린 일)
+        print(TAG, '서버가 시작하지 못했다 — dtest_server 로그 확인', flush=True)
+        sys.exit(2)
     try:
         urllib.request.urlopen(f'http://127.0.0.1:{PORT}/health', timeout=3)
         break
