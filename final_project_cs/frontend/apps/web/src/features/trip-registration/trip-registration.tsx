@@ -197,7 +197,8 @@ export function TripRegistration() {
     setRestored("");
     // ★`[2026-10-06 사용자 지시 — 한 번 켜면 켜진 상태가 기본]` A Course Keeper choice already made (turned on once before, or answered in this tab) is not asked again; otherwise the card asks BEFORE the plan is read.
     const made = readCriteria();
-    if (made.decided && made.guardian) { proceed(made.guardian); return; }
+    // ★`[2026-10-07 사용자 지시 — 켠 선택은 기억하고 끈 선택은 다시 물어본다]` Only a choice to turn it ON is kept and not asked again; a choice to leave it OFF is asked again with the next plan (the card is where it can be turned on).
+    if (made.decided && made.guardian === "on") { proceed("on"); return; }
     setCard(true);
   }
 
