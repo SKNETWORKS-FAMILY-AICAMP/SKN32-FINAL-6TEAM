@@ -336,3 +336,11 @@ INV-CS-TEAM-005  다른 Team 을 직접 호출하지 않는다
 ## 2026-10-07 — 라우팅 재배분 결함 정정: 재배분이 성공한 Case 가 뒤에서 죽던 것 (D-CS-014)
 
 커밋 세션이 `tests/scenario/test_case_question.py::test_the_two_reports_stay_what_they_were` 실패를 알려 왔다(「그 전부터」라고 했으나 옛 커밋을 꺼내 돌려 보니 재배분을 넣기 직전 커밋은 통과, 재배분 커밋(563bca5a)부터 실패 — **내가 만든 결함**). 재배분이 성공해 새 팀으로 라우팅된 Case 의 기능을 `_task` 가 원래 종류로 다시 찾다가 `RegistryError`. 재배분이 정한 기능을 넘기고, 못 찾으면 담당 팀으로 찾게 고쳤다. 재현 시험 추가. 상세는 D-CS-014 맨 끝.
+
+## 2026-10-07 — 생각 모드 끄기: 제품 호출이 이미 끄고 있는지 확인 · 고정 시험 · x600 서버 응답 확인 (docs works 요청)
+
+연구 §92-11 은 가르친 E4B 를 llama.cpp 서버(`/v1/chat/completions`, `chat_template_kwargs {"enable_thinking": false}`)에 짧은 답 한도 16토큰으로 불러 빈 답을 없앴다. **제품은 그 경로가 아니다** — 모델 호출은 `app/infrastructure/ollama_chat.py` 의 Ollama 자체 API(`/api/chat`)이고, 다섯 종류(`text` · `json` · `structured` · `warm` · `see`) 모두 `think: false` 를 보낸다. 다른 경로: OpenAI 호출(`feedback._openai_llm` — GPT 라 생각 모드 문제 없음) · `LocalFTTeamLLM`(`/complete` 에 프롬프트 문자열을 보내는 자체 서버 — 채팅틀을 우리가 안 거치고, 기본 제공자가 아니라 쓰지 않는다).
+- **x600 서버의 cs 프로젝트 서버 안에서 제품과 같은 호출로 재 봤다**(`gemma4:12b`, 짧은 답 한도 16토큰, 일정 항목 고르기 모양 20문장, 온도 0): `think: false` 빈 답 **0/20**(생각 글자 0/20, 종료 사유 stop), `think: true` 빈 답 **20/20**(생각 글자 20/20, 종료 사유 length — 생각이 한도를 다 썼다). 연구에서 나온 현상이 제품 경로에서 그대로 재현되고, 제품은 이미 막고 있다. 표본이 작다(20 × 2, 한 번씩).
+- 시험 `tests/unit/test_ollama_chat.py::test_every_kind_of_call_turns_thinking_off` 로 다섯 호출이 모두 `think: false` 를 보내는지 고정했다(새 호출을 더하다 빼먹으면 걸린다).
+- 연구 시험 도구의 `chat_template_kwargs` 는 llama.cpp 서버용이다 — **제품이 나중에 llama.cpp 서버로 옮기면 그때 이 설정을 넣어야 한다**(Ollama 의 `think` 와 이름이 다르다).
+- x600 서버 읽기 확인(2026-10-07): api · worker · web 이미지 `9a3521b571`, `/health` 200, 웹 경로 55개 · `safety/recovery` 포함, 웹 `/` · `/trips` 200, 여행 상세 화면 파일에 「범위 모름」 · 「오늘은 가볍게」 · 「다시 시작할 때까지 멈춰 있어요」 문구 있음. **안 한 것**: 로그인 · 여행 만들기 · 재난 정지 재생 같은 실제 사용자 흐름(데이터를 만들거나 인증이 필요해서).

@@ -22,6 +22,7 @@ import { DayList, type RowContext } from "./plan-rows";
 import { ResultFooter, StopEditor, TripIssues, type Registration } from "./result-parts";
 import { dampedScrollTo } from "@/lib/damped-scroll";
 import { moveToast, stopToast } from "./map-description";
+import { RouteTags } from "./route-tags";
 import { useFollowScroll } from "./use-follow-scroll";
 import { usePullPastEnd } from "./use-pull-past-end";
 import { useDayGestures } from "./use-day-gestures";
@@ -529,7 +530,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     const bringUp = () => requestAnimationFrame(() => bodyBox.current?.querySelector<HTMLElement>(`[data-entry-id="${move.id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
     bringUp();
     const name = (id: string, fallback: string | null) => shown.items.find((entry) => entry.id === id)?.title ?? fallback ?? "";
-    showToast(moveToast({ move, from: name(move.fromId, shape.from), to: name(move.toId, shape.to) }, t, bringUp));
+    showToast(moveToast({ move, from: name(move.fromId, shape.from), to: name(move.toId, shape.to), shape }, t, bringUp));
   }
   function showDay(day: number) {
     setChosenDay(day);
@@ -1025,6 +1026,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   // The lines belong to the plan as it is: for the proposed one only those between stops it did not change are still true (a changed place moves its ends).
   const lineShapes = !routes || changing ? null : previewing && side === "after" && recommended
     ? { ...routes, shapes: routes.shapes.filter((shape) => !(shape.fromItemId in recommended.was) && !(shape.toItemId in recommended.was)) } : routes;
+  // The lines of the day on the map (what the legend names).
+  const routeShapes = visibleShapes(lineShapes?.shapes, mapStops);
   const drawn = visibleShapes(lineShapes?.shapes, mapStops);
 
   const applyWhy = !changing ? null : !actions.replace ? t("장소 바꾸기는 준비 중이에요", "Changing the place is coming")
@@ -1089,7 +1092,11 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
       <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" topInset={64} bottomInset={24} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin}
         selectedLineId={selectedLine ?? undefined} onSelectLine={done && !changing ? onLine : undefined} />
     </div>
-    {unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
+    {/* `[2026-10-05 사용자 지시]` 지도 아래 안내 줄: 위치 미정 표시와, 지도에 그려진 선이 무엇인지 말하는 태그(선 색 + 수단 이름). */}
+    {(unlocated.length > 0 || routeShapes.length > 0) && <div className={styles.mapChips}>
+      {unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
+      {routeShapes.length > 0 && <RouteTags shapes={routeShapes} />}
+    </div>}
     {changing && headerSlot && createPortal(
       <div className={styles.headSearch} data-open={searchOpen || undefined} data-hide-brand>
         <BackButton onBack={endChange} label={t("바꾸기 그만두기", "Stop changing")} />

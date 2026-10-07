@@ -31,10 +31,15 @@ export interface MapPoint {
  * A route line between two stops (`GET /v1/web/trips/{id}/route-shapes`). `dashed` = the road was not known and the places were joined
  * by a straight line — drawn dashed and pale so it never reads as a real road.
  */
+/** How a route is travelled: a line is drawn in the colour of its kind, and the legend over the map names the same kinds. */
+export type MapLineMode = "walk" | "bike" | "taxi" | "subway" | "bus" | "mixed" | "unknown";
+
 export interface MapLine {
   id: string;
   points: Coordinates[];
   dashed: boolean;
+  /** `[2026-10-06 사용자 지시 — 선 색으로 수단을 알아보게]` Absent = the theme's primary colour. */
+  mode?: MapLineMode;
   /** Said to a screen reader and as the line's tooltip: 「A → B · 지하철」. */
   title: string;
 }

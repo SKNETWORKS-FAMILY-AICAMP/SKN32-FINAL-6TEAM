@@ -16,7 +16,7 @@
 .fill { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--color-success); transition: width .9s cubic-bezier(.3, .7, .4, 1); }
 .steps { position: relative; z-index: 1; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .steps li { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; font-size: 11.5px; font-weight: 650; color: var(--color-faint); }
-.node { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--color-faint); background: var(--color-surface); transition: background-color .4s ease, border-color .4s ease; }
+.node { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--color-faint); background: var(--color-surface); transition: background-color .4s var(--ease-soft), border-color .4s var(--ease-soft); }
 @media (prefers-reduced-motion: reduce) { .node { transition: none; } }
 .steps li[data-state="current"] { color: var(--color-text); }
 .steps li[data-state="current"] .node { border-color: var(--color-muted); }
@@ -42,7 +42,7 @@
 .lineText { font-size: 14.5px; color: var(--color-faint); }
 .line[data-state="current"] .lineText { color: var(--color-text-secondary); }
 .line[data-state="read"] .lineText { color: var(--color-text); }
-.lineFound { margin-top: 3px; font-size: 12px; font-weight: 700; color: var(--color-success); animation: rise .3s ease-out; }
+.lineFound { margin-top: 3px; font-size: 12px; font-weight: 700; color: var(--color-success); animation: rise .34s var(--ease-soft); }
 .found { margin: 12px 2px 0; font-size: 13.5px; color: var(--color-text-secondary); }
 
 /* ③④ The map fills the screen under a floating bar; the sheet slides over it (mockup .map · .fbar · .sheet). */
@@ -54,7 +54,8 @@
 .bar { position: absolute; top: 8px; left: 10px; right: 10px; z-index: 5; display: flex; align-items: center; gap: 4px; min-height: 48px; padding: 4px 10px 4px 4px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 4px 16px color-mix(in srgb, var(--color-text) 14%, transparent); }
 .bar .progress { flex: 1; min-width: 0; }
 .barTitle { flex: 1; min-width: 0; margin: 0; font-size: 15px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.unlocated { position: absolute; left: 10px; bottom: calc(var(--sheet-h) + 8px); z-index: 3; width: fit-content; max-width: calc(100% - 20px); margin: 0; padding: 3px 10px; border: 1.5px dashed var(--color-warning-border); border-radius: 999px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 750; transition: bottom 380ms var(--soft); }
+.mapChips { position: absolute; left: 10px; right: 68px; bottom: calc(var(--sheet-h) + 8px); z-index: 3; display: flex; flex-wrap: wrap-reverse; align-items: flex-end; gap: 6px; pointer-events: none; transition: bottom 380ms var(--soft); }
+.unlocated { width: fit-content; max-width: 100%; margin: 0; padding: 3px 10px; border: 1.5px dashed var(--color-warning-border); border-radius: 999px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 750; }
 .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; height: var(--sheet-h); display: flex; flex-direction: column; border-radius: 20px 20px 0 0; background: var(--color-surface); box-shadow: 0 -6px 24px color-mix(in srgb, var(--color-text) 14%, transparent); animation: rise .45s var(--soft); }
 /* ★`[2026-10-06 사용자 지적 — 일정 창 확대·축소가 부드럽지 않다]` The height changes at once (the content never re-flows while it moves) and the sheet SLIDES there on the compositor (a transform, `plan-check.tsx` `useLayoutEffect`). When it gets shorter its bottom edge rises for a moment: this fills what is under it. */
 .sheet::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 100vh; background: var(--color-surface); pointer-events: none; }
@@ -127,7 +128,7 @@ button.time { cursor: pointer; }
 .handle:active { cursor: grabbing; }
 .sheetHead { touch-action: none; }
 /* While the list is being dragged it follows the finger at once (no easing). */
-.checking[data-dragging] .sheet, .checking[data-dragging] .map, .checking[data-dragging] .unlocated { transition: none; }
+.checking[data-dragging] .sheet, .checking[data-dragging] .map, .checking[data-dragging] .mapChips { transition: none; }
 .checking[data-dragging] { user-select: none; }
 .handle span { width: 42px; height: 5px; border-radius: 3px; background: var(--color-border-strong); }
 .handle:focus-visible, .dayButton:focus-visible, .cardHead:focus-visible, .moveHead:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
@@ -291,8 +292,8 @@ button.moveHead { cursor: pointer; }
    of the proposed plan) and springs back if it is let go early; past the threshold the next page comes in from below (forward) or from above (back). */
 .page[data-pull] { transform: translateY(calc(var(--pull, 0) * var(--pull-dir, -1) * 26px)); transition: transform .12s linear; }
 .page[data-pull="start"] { --pull-dir: 1; }
-.page[data-turn="forward"] { animation: turnForward .38s cubic-bezier(.3, .7, .4, 1); }
-.page[data-turn="back"] { animation: turnBack .38s cubic-bezier(.3, .7, .4, 1); }
+.page[data-turn="forward"] { animation: turnForward .42s var(--ease-soft); }
+.page[data-turn="back"] { animation: turnBack .42s var(--ease-soft); }
 @keyframes turnForward { from { opacity: 0; transform: translateY(64px); } to { opacity: 1; transform: none; } }
 @keyframes turnBack { from { opacity: 0; transform: translateY(-64px); } to { opacity: 1; transform: none; } }
 /* The dots under the list say which of the two pages is in view (and turn to it when pressed), like the dots of the first screens. */
@@ -344,16 +345,16 @@ button.moveHead { cursor: pointer; }
 .dayMarker { position: absolute; z-index: 0; left: 0; top: 8px; height: 34px; width: 0; border-radius: 999px; background: var(--color-text); pointer-events: none; transition: transform .26s cubic-bezier(.2, .8, .2, 1), width .26s cubic-bezier(.2, .8, .2, 1); }
 .dayStrip[data-dragging] .dayMarker { transition: none; }
 .dayChip[data-lit] { border-color: transparent; color: var(--color-on-primary); }
-.dayChip { transition: color .18s ease, border-color .18s ease; }
+.dayChip { transition: color .2s var(--ease-soft), border-color .2s var(--ease-soft); }
 .dayChip:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 .dayBadge { display: inline-grid; place-items: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--color-warning); color: var(--color-on-primary); font-size: 10.5px; font-weight: 800; line-height: 1; }
-.page[data-slide="next"] { animation: slideNext .28s cubic-bezier(.3, .7, .4, 1); }
-.page[data-slide="prev"] { animation: slidePrev .28s cubic-bezier(.3, .7, .4, 1); }
+.page[data-slide="next"] { animation: slideNext var(--motion-soft) var(--ease-soft); }
+.page[data-slide="prev"] { animation: slidePrev var(--motion-soft) var(--ease-soft); }
 @keyframes slideNext { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: none; } }
 @keyframes slidePrev { from { opacity: 0; transform: translateX(-32px); } to { opacity: 1; transform: none; } }
 .filterNote { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0 0; padding: 8px 12px; border-radius: 10px; background: var(--color-soft); font-size: 12px; font-weight: 650; color: var(--color-muted); }
 .filterNote button { flex: none; min-height: 30px; padding: 0 10px; border: 1px solid var(--color-border-strong); border-radius: 9px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
-.entry[data-attention] { animation: attention 2.4s ease-out 1; border-radius: 12px; }
+.entry[data-attention] { animation: attention 2.4s var(--ease-soft) 1; border-radius: 12px; }
 @keyframes attention { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-warning) 55%, transparent); } 35% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-warning) 35%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; } }
 .titleButton { display: flex; align-items: center; min-width: 0; flex: 0 1 auto; padding: 6px 0; border: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; text-align: left; cursor: pointer; }
 .titleButton span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -503,3 +504,10 @@ button.time[data-adjusted] { color: var(--color-adjusted); }
 @keyframes swapOverview { from { opacity: 0; transform: scale(1.12); } to { opacity: 1; transform: none; } }
 @keyframes swapDay { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .dayMarker, .peek, .peekBadge { transition: none; } .dayZoom[data-swap] { animation: none; } }
+
+/* `[2026-10-05 사용자 지시]` 지도 아래 안내 줄의 태그: 선 색 한 토막 + 수단 이름. 지도 위에 뜨는 작은 흰 알약이고 눌림은 지도로 통과시킨다. */
+.routeTags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.routeTags li { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 2px 9px 2px 7px; border: 1px solid var(--color-border); border-radius: 999px; background: color-mix(in srgb, var(--color-surface) 94%, transparent); color: var(--color-text); font-size: 11.5px; font-weight: 700; line-height: 1.2; box-shadow: 0 2px 8px color-mix(in srgb, var(--color-text) 12%, transparent); }
+.routeTags li[data-guess] { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
+.sample { display: inline-block; width: 18px; height: 4px; border-radius: 2px; }
+.sampleDashed { display: inline-block; width: 18px; height: 0; border-top: 3px dashed currentColor; opacity: .75; }

@@ -151,3 +151,39 @@ test("이름 수정 버튼은 펼쳐졌을 때 칩 오른쪽 끝에 붙지 않�
   const [chipBox, editBox] = [await chip.boundingBox(), await edit.boundingBox()];
   expect((chipBox!.x + chipBox!.width) - (editBox!.x + editBox!.width)).toBeGreaterThanOrEqual(8);       // 오른쪽에 8px 이상 여백
 });
+
+test("지도 아래 안내 줄에 선 색 태그가 선다 — 그려진 수단마다 (선 색) 수단 이름 · 직선으로 이은 구간은 따로 한 태그 · 선은 수단별 색으로 그려진다", async ({ page, request }) => {
+  await openFinished(page, request, undefined, { intakeRoutes: "on" });
+  const tags = page.locator("[data-route-tags]");
+  await expect(tags).toBeVisible();
+  await expect(tags.locator("li[data-mode]")).toHaveText(["지하철", "도보"]);                              // 지하철(점선·직선 추정) 구간과 도보 구간
+  await expect(tags.locator("li[data-guess]")).toContainText("직선으로 이은 1구간");
+  // 태그는 지도 아래쪽(시트 바로 위)에 서고 눌림을 지도로 통과시킨다
+  const [bar, head] = [(await tags.boundingBox())!, (await sheet(page).boundingBox())!];
+  expect(bar.y + bar.height).toBeLessThanOrEqual(head.y + 2);
+  expect(await tags.evaluate((element) => getComputedStyle(element.closest("div")!).pointerEvents)).toBe("none");
+  // 선 색은 수단별이고 태그의 색 토막과 같은 색이다(지하철 = 파랑 계열 토큰, 도보 = 회색 계열 토큰)
+  const colors = await page.evaluate(() => {
+    const css = (variable: string) => getComputedStyle(document.documentElement).getPropertyValue(variable).trim().toLowerCase();
+    return { subway: css("--color-adjusted"), walk: css("--color-muted"), lines: Array.from(document.querySelectorAll("path.trip-route-line")).map((path) => (path.getAttribute("stroke") ?? "").toLowerCase()) };
+  });
+  expect(colors.lines).toContain(colors.subway);
+  expect(colors.lines).toContain(colors.walk);
+});
+
+test("지하철 선을 누르면 탄 구간(호선 · 역)이 설명 알림에 더해진다 — 서버가 준 것만, 중간 역을 못 채웠으면 「역 사이는 직선」", async ({ page, request }) => {
+  await page.route("**/v1/web/trip-intakes/**/route-shapes*", async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    body.shapes[0].rides = [
+      { line: "지하철 3호선", from: "경복궁", to: "을지로3가", stations: ["경복궁", "안국", "충무로", "을지로3가"], count: 4, filled: true },
+      { line: "지하철 1호선", from: "을지로3가", to: "종각", stations: [], count: 1, filled: false },
+    ];
+    await route.fulfill({ response, json: body });
+  });
+  await openFinished(page, request, undefined, { intakeRoutes: "on" });
+  await page.locator("path.trip-route-hit").first().dispatchEvent("click");
+  const note = callout(page, /^→경복궁 관람 → 올리브영/);
+  await expect(note).toContainText("지하철 3호선 · 경복궁→을지로3가 · 4개 역");
+  await expect(note).toContainText("지하철 1호선 · 을지로3가→종각 · 1개 역 · 역 사이는 직선");
+});

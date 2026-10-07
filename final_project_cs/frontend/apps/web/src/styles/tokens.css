@@ -5,6 +5,8 @@
  * An element with its own `data-theme` (the menu's theme samples) shows that theme inside it.
  */
 :root, [data-theme="green"] {
+  /* `[2026-10-06 사용자 지적 — 애니메이션을 전체적으로 부드럽게]` 움직임의 곡선과 시간은 이 셋만 쓴다: 부드럽게 감속(들어옴 · 미끄러짐) · 부드럽게 가속(나감) · 시간. */
+  --ease-soft: cubic-bezier(.22, .8, .3, 1); --ease-leave: cubic-bezier(.4, 0, .8, .4); --motion-soft: 340ms;
   color-scheme: light;
   --color-text: #24392f;
   --color-muted: #6d7c73;
