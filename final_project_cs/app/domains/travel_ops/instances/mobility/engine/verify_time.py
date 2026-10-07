@@ -93,6 +93,7 @@ from .bike import (BikeStations, BikeLive, BikeRouter,                  # noqa: 
 from .timeutil import (to_min, to_service_min, fmt_min,                 # noqa: E402
                        fmt_wall, day_type_of, MIN_DAY, HolidayCalendar)
 
+from . import express as EX                                           # noqa: E402  급행 있는 노선(9호선)의 열차 단위 운행표
 from .errors import CaseInputError                                       # noqa: E402  #30·#66 — SystemExit 대신
 
 VERDICTS = ("feasible", "infeasible", "rejected_by_limit", "unknown")
@@ -115,6 +116,7 @@ class Dep:
     dir: str          # 참고용. 방향의 정본이 아니다
     dest: str         # 행선지 — 방향의 정본
     inferred: str = None   # 행선지가 원천 값이 아니라 채운 값이면 그 방법(28 · `dest_inferred` · chain_v1). 판정 등급을 추정으로 내린다
+    run: object = None     # 열차 단위 운행표(express.Run) — 있으면 정차역·역간 시각을 그것으로 본다(9호선 · 2026-10-07)
 
 
 class Timetable:
@@ -132,29 +134,52 @@ class Timetable:
         self.fetched_at = None
 
     @classmethod
-    def load(cls, path, wanted=None):
+    def load(cls, path, wanted=None, express=False):
         tt = cls()
+        ex_lines = EX.available() if express else []   # express=True(실서비스 런타임·CLI)일 때만: 열차 단위 표가 있는 노선은 통합 시간표 행 대신 그 표로 읽는다. 시험용 축소 시간표는 노선 이름만 같은 가짜라 기본 꺼짐
+        held = collections.defaultdict(list)     # 열차 단위 표 후보 노선의 행 — 실제 시간표면 버리고 표로, 아니면(시험용 축소판) 그대로 쓴다
         # ☆`[2026-09-29 문제목록 #63]` .gz 도 읽는다 — 시험용 축소 시간표(20MB)를 압축해 두었다(98% 줄어든다)
         opener = gzip.open if str(path).endswith(".gz") else open
+
+        def add(r):
+            line, nm = r.get("line"), r.get("station_nm")
+            if wanted is not None and (line, nm) not in wanted:
+                return
+            tt.stations.add((line, nm))
+            if tt.fetched_at is None:
+                tt.fetched_at = r.get("fetched_at")
+            m = to_min(r.get("dep_time"))
+            if m is None:                         # 시·종착역은 출발이 없다
+                tt.skipped_no_dep += 1
+                return
+            tt.by_key[(line, nm, r.get("day_type"))].append(
+                Dep(m, r.get("dir"), r.get("dest_nm"), r.get("dest_inferred")))
+            tt.rows += 1
+
         with opener(path, "rt", encoding="utf-8") as f:
             for raw in f:
                 raw = raw.strip()
                 if not raw:
                     continue
                 r = json.loads(raw)
-                line, nm = r.get("line"), r.get("station_nm")
-                if wanted is not None and (line, nm) not in wanted:
+                if r.get("line") in ex_lines:
+                    held[r["line"]].append({k: r.get(k) for k in ("line", "station_nm", "dep_time", "day_type", "dir", "dest_nm",
+                                                                  "dest_inferred", "fetched_at")})
                     continue
-                tt.stations.add((line, nm))
-                if tt.fetched_at is None:
-                    tt.fetched_at = r.get("fetched_at")
-                m = to_min(r.get("dep_time"))
-                if m is None:                     # 시·종착역은 출발이 없다
-                    tt.skipped_no_dep += 1
-                    continue
-                tt.by_key[(line, nm, r.get("day_type"))].append(
-                    Dep(m, r.get("dir"), r.get("dest_nm"), r.get("dest_inferred")))
-                tt.rows += 1
+                add(r)
+        for ln in ex_lines:
+            have = (EX.stations_of(ln) or set())
+            if not have or len({r["station_nm"] for r in held[ln]} & have) < 0.8 * len(have):
+                for r in held[ln]:                    # 이 파일은 그 노선의 실제 시간표가 아니다(역 80% 미만 — 시험용 축소 시간표 등) — 그대로 쓴다
+                    add(r)
+                continue
+            for day, rows in (EX.load_line(ln) or {}).items():
+                for nm, m, run in rows:
+                    if wanted is not None and (ln, nm) not in wanted:
+                        continue
+                    tt.stations.add((ln, nm))
+                    tt.by_key[(ln, nm, day)].append(Dep(m, run.dir, run.dest, None, run))
+                    tt.rows += 1
         for v in tt.by_key.values():
             v.sort(key=lambda d: d.min)
         return tt
@@ -444,8 +469,11 @@ class Verifier:
                 if closed and self._path_blocked(v.path, target, closed):
                     drop["이슈_구간차단"] += 1
                     continue
+                if d.run is not None and not d.run.serves(origin, target):
+                    drop["급행_미정차"] += 1             # 이 열차는 도착역에 서지 않는다(급행이 일반역을 지나친다)
+                    continue
                 if full and last_at_target is not None:
-                    ride = self.lo.travel_min_on_path(line, v.path, target)
+                    ride = self.ride_of(line, d, v, origin, target)
                     if ride is not None and d.min + math.ceil(ride) > last_at_target + margin:
                         drop["운행종료후_한바퀴"] += 1        # 막차가 한 바퀴 돈다는 판정을 막는다
                         continue
@@ -467,6 +495,10 @@ class Verifier:
             if path[i + 1] == target:
                 return False
         return False
+
+    def ride_of(self, line, d, v, origin, target):
+        """승차 분 — 열차 단위 표(9호선)가 있으면 실제 시각, 없으면 역간 평균. 실제 계산은 express.ride_of."""
+        return EX.ride_of(self.lo, line, d, v, origin, target)
 
     def verify_leg(self, idx, leg, now_min, day_type, is_saturday, worst=False, party=None):
         line = leg["line"]
@@ -599,7 +631,7 @@ class Verifier:
         window = [(d, v) for d, v in after if d.min <= after[0][0].min + scan]
         best = None
         for d, v in window:
-            ride = self.lo.travel_min_on_path(line, v.path, b)
+            ride = self.ride_of(line, d, v, a, b)
             arr = d.min + math.ceil(ride) if ride is not None else None
             key = (arr is None, arr if arr is not None else d.min, d.min)
             if best is None or key < best[0]:
@@ -630,7 +662,7 @@ class Verifier:
                          if d.min > nxt.min and d.min <= nxt.min + scan and d.dir == nxt.dir and v.path == verd.path]
                 nxt2 = None
                 for d2, v2 in later:
-                    ride2 = self.lo.travel_min_on_path(line, v2.path, b)
+                    ride2 = self.ride_of(line, d2, v2, a, b)
                     arr2 = d2.min + math.ceil(ride2) if ride2 is not None else None
                     if arr2 is not None and (nxt2 is None or arr2 < nxt2[3]):
                         nxt2 = (d2, v2, ride2, arr2)

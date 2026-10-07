@@ -297,7 +297,7 @@ def test_walk_only_earliest_real_planner():
 
 
 def test_plan_version_bumped():
-    assert P.PLAN_VERSION == "plan-v2.7"      # 2026-10-07 — 혼합이 15분 이상 앞서면 계획 수단(v2.6 = 연결통로, v2.5 = 버스→버스)
+    assert P.PLAN_VERSION == "plan-v2.9"      # 2026-10-07 — 1호선 열차 단위 표 반영(v2.8 = 9호선 급행 표, v2.7 = 혼합 계획 수단, v2.6 = 연결통로, v2.5 = 버스→버스)
 
 
 # ── E3 — 답 문장에 등급 없음 ───────────────────────────────────────────

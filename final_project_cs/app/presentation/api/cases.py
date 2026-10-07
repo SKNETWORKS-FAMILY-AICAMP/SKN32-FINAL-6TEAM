@@ -21,7 +21,8 @@ from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
 from app.application.classification import classify_case
 from app.application.proposal_guard import audit_payload, describe, recheck_before_execution
-from app.presentation.security import Principal, masked, require_scope
+from app.core.redaction import masked
+from app.presentation.security import Principal, require_scope
 
 logger = logging.getLogger(__name__)
 

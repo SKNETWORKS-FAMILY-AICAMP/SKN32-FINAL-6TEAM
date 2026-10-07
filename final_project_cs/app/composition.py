@@ -24,7 +24,7 @@ from app.infrastructure.llm.openai import OpenAITeamLLM
 from app.infrastructure.messaging.outbox import OutboxBrokerAdapter
 from app.infrastructure.rag.retriever import search_policy
 from app.domains.travel_ops.components.core_hooks import feedback
-from app.presentation.security import masked
+from app.core.redaction import masked
 from app.tools.read_tools import ReadToolbox
 
 

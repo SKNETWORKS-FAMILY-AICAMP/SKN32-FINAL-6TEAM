@@ -92,8 +92,8 @@ export function GuardianCard({ kind, onPrimary, onSecondary, onClose }: { kind: 
           <ul className={styles.asks}>
             {start && <li>{t("끄고 진행하면 문제가 생길 때 먼저 물어봐요.", "If you turn it off, it asks you first when something goes wrong.")}</li>}
             <li>{t("켜 두어도 고정한 일정은 먼저 물어봐요.", "Even when it is on, it asks you first about locked stops.")}</li>
-            {/* 목업 v10: 「재난·지진이」는 줄 중간에서 끊지 않는다(가운뎃점 뒤에서 줄이 바뀌지 않게 묶는다) */}
-            <li>{language === "ko" ? <><span className={styles.nb}>재난·지진이</span> 나면 일정을 멈추고 안전 안내를 보내요.</> : "If a disaster or earthquake happens, it pauses your itinerary and sends safety guidance."}</li>
+            {/* 목업 v10: 「재난·지진이」는 줄 중간에서 끊지 않는다(가운뎃점 뒤에서 줄이 바뀌지 않게 묶는다). ★2026-10-07 사용자 결정: 대피 장소 자료가 서버에 들어가(1,580곳) 「가까운 대피 장소와」를 더해 늘렸다 — 자료가 없는 곳이면 서버가 알림 글에 그렇게 적는다 */}
+            <li>{language === "ko" ? <><span className={styles.nb}>재난·지진이</span> 나면 일정을 멈추고, 가까운 대피 장소와 안전 안내를 보내요.</> : "If a disaster or earthquake happens, it pauses your itinerary and sends nearby shelters and safety guidance."}</li>
           </ul>
         </div>
         <footer className={styles.foot}>
