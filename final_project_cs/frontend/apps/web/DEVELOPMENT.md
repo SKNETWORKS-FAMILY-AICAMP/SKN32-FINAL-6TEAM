@@ -549,3 +549,16 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - **`tests/live/_shots_plan.spec.ts` 삭제**(사용자 승인). 계획 확인 화면을 눈으로 보려고 스크린샷을 찍는 촬영 스크립트였고(단언 0, 머리 주석 「저장소에 올리지 않는다」), 저장 경로 기본값이 다른 PC 의 임시 폴더라 이 PC 와 CI 머신에서 늘 2건 실패했다(위 기록들의 「2건 늘 실패」가 이것). 매니저 스냅숏 `93a320a`(10-05) 로 들어온 파일이다.
 - README 「CI」 절을 지금 모양으로 고쳤다.
 - 검증(2026-10-08, 이 PC · 워크플로와 같은 명령): 워크플로 YAML 파싱 확인(js-yaml) · `npm run check` 통과(린트 0 · 타입 0 · 단위 545 · 빌드) · `npm run test:live` 전체 **420 통과 · 5 건너뜀(지도 공급자 빌드 전용) · 실패 0**, 21.9분 — 촬영 spec 을 지운 뒤로는 「2건 늘 실패」가 없다. GitHub Actions 에서 실제로 도는 것은 매니저가 develop 에 올리는 PR 에서 확인한다(미검증).
+
+## 2026-10-08 (이어서) — 웹 문서 옛 문구 정정 · next 16.4.0 보안 갱신(ST4F-203)
+
+검토 리포트 §6 의 ①(둘째 · 셋째). 커밋은 둘로 나눴다.
+
+**문서 정정(코드 동작 변경 없음).** 2026-10-04 쿠키 전환(D-CS-011)과 10-04 서버의 여행 삭제 라우트 뒤에도 고치지 않은 문장들을 `[2026-10-08 정정]` 표시와 함께 고쳤다 — 옛 날짜 기록은 지우지 않고 「그때 기록」이라 적었다.
+- README 「데이터 연결 상태」: 「브라우저에는 사용자 키 하나(X-User-Key)만 둔다(localStorage)」 → HttpOnly 세션 쿠키 + 메모리 CSRF 토큰 · 옛 키는 `adopt` 뒤 삭제. 「저장된 사용자 키가 없으면 목록을 부르지 않는다」 → 세션(`hasSession`)이 없으면. 「사용자 키 화면」 → 10-04 에 없어졌고 지금 마이페이지 구성(세션 카드 · 소셜 로그인 · 에이전트 키 · 디스코드 · 텔레그램 · 동의 관리). 「여행 삭제는 서버에 없다(10-03)」 → 있다(`trip_api.py`, `role-manager` `64fd0dc`; develop 에는 병합 전). 표의 「사용자 키로」 → 「세션(쿠키)으로」.
+- `lib/live/gateway.ts` `removeTrip` 머리 주석: 같은 정정. 옛 서버(404 · 405)용 `delete_unsupported` 갈래는 그대로 둔다.
+- IMPLEMENTATION_SUMMARY · MAP_INTEGRATION · PREFERENCES_CONTRACT · PROFILE_CONTRACT 의 「최신 확인」을 2026-10-08 `role-eval-ui` `68bce77` 로 — **이번 확인의 범위(옛 문구 정정, 전체 재검토 아님)를 그 줄에 적었다.** IMPLEMENTATION_SUMMARY 는 내 여행 삭제 · 마이페이지 · `X-User-Key` · 「경로선 · 현재 위치는 구현하지 않았다」(지금은 `use-route-shapes.ts` · `use-my-location.ts`) 를, MAP_INTEGRATION 은 조회 방식과 이동 항목 표시(10-07 이동 줄)를, PROFILE_CONTRACT 는 토큰 화면이 없어진 것을 고쳤다. PREFERENCES_CONTRACT 는 기준 커밋만 — 설문 판은 백엔드 계약 시험이 맞춰 본다(이날 5 통과).
+
+**next 16.3.5 → 16.4.0.** 2026-10-08 `npm audit`: critical 1(`next` 16.0.0~16.3.7 — `next/og` ImageResponse 원격 코드 실행 · `use cache` Draft Mode 누출; 이 웹은 `next/og` 를 쓰지 않아 직접 노출은 아니었다) · high 7. `next` · `eslint-config-next` 를 16.4.0 으로(정확한 판 고정, 저장소 관례) 올리고 `npm audit fix`(비파괴)로 `sharp` 0.35.5 · `source-map-js` 1.2.2 를 받았다. **남은 high 5 는 모두 `eslint-config-next` → `fast-glob` → `micromatch` → `braces` 한 사슬**(GHSA-vfj7-8cjw-p6xm, 깊게 중첩된 패턴의 스택 고갈)이다 — `braces` 는 모든 판이 해당이라 패치판이 없고(최신 3.0.3), 제안되는 수정은 `eslint-config-next` 14 로 내리는 것뿐이어서 받지 않았다. 린트 때만 쓰는 도구라 배포물에 실리지 않는다. 다음 `eslint-config-next` 판에서 다시 본다.
+- **16.4.0 이 깨뜨린 시험 6건과 고친 것.** 첫 전체 `test:live` 는 414 통과 · 6 실패였다(`guardian-card` 1 · `layout-mobile` 3 · `plan-check-map-detail` 1 · `plan-check-redesign` 1). 원인은 하나 — Next 16.4.0 의 Turbopack 이 CSS 모듈 클래스 이름을 짧게 바꿨다(릴리스 노트 「Turbopack: shorten CSS module class names」 #97944): 휴대폰 틀의 클래스가 `device-frame-module__ewwSbq__device` 에서 `ewwSbq_device` 가 되어, 틀을 `[class*="__device"]` · `[class$="__device"]` · `[class*="__scroll"]` 로 찾던 시험이 요소를 못 찾았다. 화면은 그대로다(클래스 이름만 바뀜). 고침: `device-frame.tsx` 의 틀과 안쪽 스크롤 칸에 시험용 표시 `data-device` · `data-device-scroll` 을 붙이고 네 시험이 그것으로 찾게 했다 — 클래스 이름은 빌드 몫이라 선택자로 쓰지 않는다. 다른 시험의 `[class*=sheetBody]` 류는 지역 이름이 여전히 들어 있어 통과했고(이번 요청 밖이라 손대지 않음), 같은 이유로 언젠가 깨질 수 있다.
+- 검증(2026-10-08): `npm run check` 통과(린트 0 · 타입 0 · 단위 545 · 빌드) · 백엔드 계약 시험 5 통과 · 고친 뒤 네 spec 51 통과 · `npm run test:live` 전체 **420 통과 · 5 건너뜀(지도 공급자 빌드 전용) · 실패 0**(21.6분).

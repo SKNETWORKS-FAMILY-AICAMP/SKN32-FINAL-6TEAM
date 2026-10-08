@@ -35,7 +35,7 @@ test("결과 화면의 상단바는 투명하고 지도가 맨 위까지 이어�
   await openFinished(page, request);
   const header = page.locator("header[class*=header]").first();
   await expect(header).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
-  const frame = (await page.locator('div[class$="__device"]').boundingBox())!;
+  const frame = (await page.locator("div[data-device]").boundingBox())!;
   const map = (await page.getByRole("region", { name: "여행 지도" }).boundingBox())!;
   expect(Math.abs(map.y - frame.y)).toBeLessThan(2);                                                // 지도가 상단바 아래가 아니라 맨 위에서 시작한다
   await expect(page.getByRole("link", { name: /triPilot — 소개 화면/ })).toBeVisible();

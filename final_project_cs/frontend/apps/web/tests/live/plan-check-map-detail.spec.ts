@@ -14,7 +14,7 @@ const DAY_TWO_STOP: Json = {
 };
 /** ★2026-10-06 사용자 지시: 핀 · 경로선의 설명도 모든 화면과 같은 알림 막대다(따로 그린 카드가 아니다). */
 const callout = (page: import("@playwright/test").Page, text: RegExp | string) => page.getByRole("status").filter({ hasText: text });
-const device = (page: import("@playwright/test").Page) => page.locator('[class*="__device"]').first();
+const device = (page: import("@playwright/test").Page) => page.locator("[data-device]").first();   // `[2026-10-08]` 클래스 이름 대신 data 표시(Next 16.4 가 모듈 클래스 이름을 바꿈)
 
 test("핀을 누르면 그 일정의 설명이 알림으로 뜬다 — 번호 · 이름 · 시각 · 판정 · 확인할 것 — 그리고 ✕ 로 닫을 수 있다", async ({ page, request }) => {
   await openFinished(page, request);

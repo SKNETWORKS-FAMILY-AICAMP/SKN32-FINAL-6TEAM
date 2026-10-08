@@ -6,7 +6,8 @@ import { checkPlan, mockServer, start, TRIP_ID } from "./helpers";
  * 「데스크탑 화면으로 보기」를 켜면 넓은 화면이 된다. 항로 지킴이 카드와 알림은 그 틀 안에서 틀 폭에 맞게 뜨고, 한 번 켜면 켜진 상태가 기본이다. 테스트용 mock 서버로 도는 자동 시험이다(화면 반응 — 실서버 확인 아님).
  */
 const PLAN = "10/1 09:00 경복궁 관람";
-const device = (page: Page) => page.locator('[class*="__device"]').first();
+// `[2026-10-08]` 틀은 `data-device` 로 찾는다 — CSS 모듈 클래스 이름은 빌드 몫이라(Next 16.4 부터 `<해시>_<이름>`) 선택자로 쓰지 않는다.
+const device = (page: Page) => page.locator("[data-device]").first();
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
@@ -22,7 +23,7 @@ test("기본은 휴대폰 크기 틀이다 — 넓은 창(1280)에서도 계획 
     const main = (await page.locator("#main-content").boundingBox())!;
     expect(main.width).toBeLessThanOrEqual(402.5);
     expect(main.x).toBeGreaterThanOrEqual(frame.x - 1);
-    expect(await device(page).evaluate((element) => { const scroller = element.querySelector('[class*="__scroll"]') as HTMLElement | null; return scroller ? scroller.scrollWidth <= scroller.clientWidth : true; })).toBe(true);
+    expect(await device(page).evaluate((element) => { const scroller = element.querySelector("[data-device-scroll]") as HTMLElement | null; return scroller ? scroller.scrollWidth <= scroller.clientWidth : true; })).toBe(true);
   }
 });
 
