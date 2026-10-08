@@ -513,6 +513,7 @@ def build_domain_routers() -> list:
     wire_optional_features()                      # 동(고객 API 앱 경로)
     wire_domain_teams()                           # 동
     from app.domains.travel_ops.entry.trip_api import build_trip_router
+    from app.domains.travel_ops.modules.web_account.admin_customer_api import build_router as build_customer_support_router
 
     def check_factory():
         from app.core.settings import get_settings
@@ -569,7 +570,15 @@ def build_domain_routers() -> list:
             #   운영 화면 `/ui/delegations` 가 이 경로를 부른다.
             build_delegation_router(),
             # ★소셜 로그인(구글 먼저) — 업체 설정이 없으면 `GET /v1/web/auth/providers` 가 빈 목록이고 나머지는 「쓸 수 없다」로 답한다(2026-10-03)
-            build_auth_router()]
+            build_auth_router(),
+            build_customer_support_router()]
+
+
+def build_admin_snapshot(conn, tenant_id: str, default_chat_limit: int):
+    """운영 화면의 도메인 조회를 조립 자리에서 제공한다."""
+    from app.domains.travel_ops.modules.web_account.admin_snapshot import snapshot
+
+    return snapshot(conn, tenant_id, default_chat_limit)
 
 
 def build_ops_routers() -> list:

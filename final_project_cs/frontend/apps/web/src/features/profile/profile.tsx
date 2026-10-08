@@ -82,6 +82,7 @@ export function MyPage() {
         </dl>}
     </Panel>
     <PreferencesCard />
+    <Panel className={styles.card}><ButtonLink href="/support">{t("문의하기 · 내 문의와 답변", "Contact support · My inquiries")}</ButtonLink></Panel>
     {/* ★`[2026-10-04 사용자 결정]` 토큰은 없다 — 서버가 쿠키 세션을 준다. 여기서는 게스트인지·로그인했는지와 게스트의 제한을 말한다. */}
     {DATA_MODE === "live" && profile !== undefined && <Panel className={styles.card}><SessionCard profile={profile} /></Panel>}
     {/* ★`[2026-10-03 사용자 지시]` 소셜 계정으로 로그인·연결. 서버가 준비한 업체만 단추가 생기고, 아니면 「서버 준비 중」이라고만 말한다. */}

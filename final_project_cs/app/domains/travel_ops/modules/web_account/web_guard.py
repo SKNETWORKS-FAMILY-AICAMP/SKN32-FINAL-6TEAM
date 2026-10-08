@@ -228,8 +228,21 @@ def count(tenant_id: str, action: str, *, customer_id: UUID | str, ip: str,
     midnight = datetime.combine(now.date() + timedelta(days=1), datetime.min.time(), tzinfo=KST)
     used: dict[str, int] = {}
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        if action == "message":
+            from app.application.admin_service import AdminPolicyRefused, access_policy, consume_chat
+
+            try:
+                consume_chat(conn, tenant_id=tenant_id, customer_id=customer_id, now=now)
+            except AdminPolicyRefused as exc:
+                from fastapi import HTTPException
+
+                raise HTTPException(exc.status, {"error": {"code": exc.code, "message": exc.message}}) from None
         for kind, who, scope in rows:
             cap = int(limits[f"web.{action}.{scope}"])
+            if action == "message" and kind == "key":
+                operator_cap = access_policy(conn, tenant_id, str(customer_id), now)["chat_limit"]
+                if operator_cap is not None:
+                    cap = int(operator_cap)
             got = _bump(cur, tenant_id, kind, who, action, day, cap if enabled else None)
             if got is None:
                 cur.execute("SELECT used FROM web_usage WHERE tenant_id=%s AND who_kind=%s AND who=%s AND action=%s "

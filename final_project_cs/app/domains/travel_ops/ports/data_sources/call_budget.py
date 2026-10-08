@@ -65,10 +65,13 @@ class CallBudget:
             self.refused[meter] = self.refused.get(meter, 0) + 1
             return False
         now = self.clock().astimezone(self._tz)
-        rows = [(f"month:{now:%Y-%m}", int(cap["month"])), (f"day:{now:%Y-%m-%d}", int(cap["day"]))]
         after: dict[str, tuple[int, int]] = {}
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         with self._connect() as conn, conn.transaction(), conn.cursor() as cur:
+            from app.application.admin_service import api_cap
+
+            cap = api_cap(conn, meter, cap)
+            rows = [(f"month:{now:%Y-%m}", int(cap["month"])), (f"day:{now:%Y-%m-%d}", int(cap["day"]))]
             for period, limit in rows:
                 cur.execute("INSERT INTO external_call_budget (meter, period, used, cap) VALUES (%s,%s,0,%s) "
                             "ON CONFLICT (meter, period) DO NOTHING", (meter, period, limit))

@@ -37,7 +37,10 @@ function find<T extends {id: string}>(rows: T[], id: string): T {
 function timestamp(date: string) { return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul', dateStyle: 'short', timeStyle: 'medium' }).format(new Date(date)); }
 
 export function createAdminGateway(mode: string | undefined): AdminGateway {
-  if (!isDemoMode(mode)) throw new Error('연결 미설정: NEXT_PUBLIC_ADMIN_DATA_MODE=demo를 명시해 주세요.');
+  if (!isDemoMode(mode)) {
+    if (mode === undefined || mode === '' || mode === 'live') return createLiveGateway();
+    throw new Error('연결 미설정: 지원하지 않는 데이터 모드입니다.');
+  }
   let state = createDemoSnapshot();
   let sequence = 0;
   return {
@@ -144,6 +147,45 @@ export function createAdminGateway(mode: string | undefined): AdminGateway {
       }
       sequence += 1;
       state = next;
+    },
+  };
+}
+
+export interface OperatorSession { authenticated: boolean; operator: string | null; scopes: string[]; csrf: string; configured: boolean }
+async function liveRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const response = await fetch(`/admin/api/${path}`, { credentials: 'same-origin', cache: 'no-store', ...options });
+  const data = await response.json();
+  if (!response.ok) {
+    const detail = data.detail;
+    const message = typeof detail === 'string' ? detail : detail?.error?.message || data.error?.message || `요청 실패 (${response.status})`;
+    throw new Error(message);
+  }
+  return data as T;
+}
+export const operationSettings = <T,>(kind: 'limits' | 'retention') => liveRequest<T>(`settings/${kind}`);
+export const operationCases = <T,>(id?: string) => liveRequest<T>(id ? `cases/${encodeURIComponent(id)}` : 'cases');
+export async function saveOperationSettings(kind: 'limits' | 'retention', payload: unknown) {
+  const session = await operatorSession();
+  return liveRequest(`settings/${kind}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
+}
+export const operatorSession = () => liveRequest<OperatorSession>('session');
+export async function operatorLogin(operatorId: string, password: string) {
+  const session = await operatorSession();
+  await liveRequest('login', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify({ operatorId, password }) });
+}
+export async function operatorLogout() {
+  const session = await operatorSession();
+  await liveRequest('logout', { method: 'POST', headers: { 'X-CSRF-Token': session.csrf } });
+}
+export function createLiveGateway(): AdminGateway {
+  return {
+    snapshot: () => liveRequest<AdminSnapshot>('snapshot'),
+    reset: async () => { throw new Error('운영 자료는 초기화할 수 없습니다.'); },
+    execute: async input => {
+      const command = commandSchema.parse(input);
+      const session = await operatorSession();
+      if (!session.authenticated) throw new Error('운영자 로그인이 필요합니다.');
+      await liveRequest('commands', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(command) });
     },
   };
 }

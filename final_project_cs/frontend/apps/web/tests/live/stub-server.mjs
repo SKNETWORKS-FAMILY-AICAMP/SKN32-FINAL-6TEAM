@@ -818,6 +818,9 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     return scenario.retention === "on" ? json(response, 200, retentionView(), origin) : json(response, 404, { detail: "Not Found" }, origin);
   }
   // ── 약관 보관 기간 (2026-10-07) ── 끝
+  if (request.method === "GET" && path === "/v1/web/support/notices") {
+    return json(response, 200, { notices: [], maintenance: { enabled: false, message: "" } }, origin);
+  }
   const auth = authenticate();
   if (auth.denied) return auth.denied();
   // ── 동의 기록 (2026-10-05) ── 시작

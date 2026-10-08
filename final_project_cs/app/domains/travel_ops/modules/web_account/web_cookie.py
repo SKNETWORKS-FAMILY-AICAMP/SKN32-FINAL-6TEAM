@@ -207,8 +207,26 @@ def authenticate(request: Request, *, required: bool = True, csrf: bool = True) 
     필수 동의가 지금 약관 버전으로 없는 사용자는 403 `consent_required`. 게스트 · 회원 · 옛 키 · 에이전트 키(키 주인의 동의) 모두 같다. 꺼져 있으면(기본) 아무것도 안 바뀐다."""
     identity = _identify(request, required=required, csrf=csrf)
     if identity is not None:
+        _admin_access(request, identity)
         _consent_gate(request, identity)
     return identity
+
+
+def _admin_access(request: Request, identity: Identity) -> None:
+    """운영자가 차단하거나 점검 중이면 실제 고객 작업을 거절한다."""
+    from app.application.admin_service import access_policy
+
+    # 로그아웃과 본인 문의는 서비스 작업이 차단되어도 이용할 수 있다.
+    path = request.url.path
+    if path.startswith("/v1/web/support/") or path in ("/v1/web/auth/logout", "/v1/web/session"):
+        return
+    with get_connection() as conn:
+        policy = access_policy(conn, tenant_id=identity.tenant_id, customer_id=identity.customer_id)
+    if policy.get("blocked"):
+        raise refuse(403, "user_blocked", "이 계정은 이용이 제한되었습니다. 문의 화면에서 운영자에게 문의해 주세요.")
+    maintenance = policy.get("maintenance")
+    if maintenance and maintenance.get("enabled"):
+        raise refuse(503, "maintenance", str(maintenance.get("message") or "서비스 점검 중입니다."))
 
 
 def _consent_gate(request: Request, identity: Identity) -> None:
