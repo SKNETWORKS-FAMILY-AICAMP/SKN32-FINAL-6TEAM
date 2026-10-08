@@ -90,7 +90,6 @@ def test_taxi_is_chosen_only_when_no_other_group_can_be_planned():
 
 # ── 실제 자료(있을 때만) ─────────────────────────────────────────────────────
 def _real_runtime():
-    from app.modules.travel_ops.mobility.engine import paths
     from app.modules.travel_ops.mobility.engine.runtime import build_verifier
     try:
         return build_verifier(quiet=True, local_router=True)

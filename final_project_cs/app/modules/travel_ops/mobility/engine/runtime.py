@@ -96,6 +96,9 @@ class Runtime:
         return copy.copy(self._v).verify_case(case)
 
 
+_CAR_GRAPHS: dict = {}
+
+
 class _LazyCar:
     """택시·자동차 판정 서비스 — 속도 프로파일 그래프(약 125MB · 2초)는 **처음 택시를 물을 때** 올린다.
 
@@ -187,18 +190,18 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
     # 라우터는 21번 car.py 의 make_router 로 — 23 이 CarService 를 끼울 때 같은 객체를 나눠 쓴다.
     gh = (gh_url if gh_url is not None else os.environ.get("MOBILITY_GH_URL"))         or (None if gh_url == "" else ((rules.get("car") or {}).get("graphhopper") or {}).get("url", {}).get("value"))
     bike_router = None
-    router_obj, router_kind = None, None
+    router_obj = None
     if gh and str(gh).startswith("http"):
         from .car import make_router
         rt = make_router(gh)
         if rt.info():
-            router_obj, router_kind = rt, "graphhopper"
+            router_obj = rt
     if router_obj is None and local_router:
         # ☆`[2026-10-04]` GraphHopper 주소가 없거나 안 닿으면 저장소 안 도로 그래프로 파이썬이 직접 길을 찾는다(graph_router.py)
         from .graph_router import GraphRouter
         gr = GraphRouter.default()
         if gr.available():
-            router_obj, router_kind = gr, "local"
+            router_obj = gr
     car = None
     if router_obj is not None:
         bike_router = vt.BikeRouter(router_obj, {}, (rules.get("bike") or {}).get("pbf_date") or "2026-09-18")
