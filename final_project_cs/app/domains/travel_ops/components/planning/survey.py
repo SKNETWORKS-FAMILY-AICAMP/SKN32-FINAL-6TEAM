@@ -123,4 +123,24 @@ def auto_on_disruption(constraints: Mapping[str, Any] | None) -> bool:
     return "on_disruption" in answered and on_disruption(constraints) == "replace"
 
 
-__all__ = ["SURVEY_VERSION", "TripSurvey", "apply_survey", "auto_on_disruption", "on_disruption"]
+#: 설문 음식 세부 코드 → 가게 표시 코드(요식 원장의 `ledger.BADGE_CODES`). 거르지 않고 앞에 세우는 취향이다. `[2026-10-07]`
+#: ★일정 생성기(필수 부품)의 것이라 여기 둔다 — 부품은 요식 팀 속(`instances.dining`)을 부르지 않는다.
+SURVEY_LIKES = {
+    "michelin": "michelin",
+    "nopo": "nopo",
+}
+
+
+def likes_from_survey(constraints: Mapping[str, Any] | None) -> tuple[str, ...]:
+    """설문의 음식 세부에서 취향(가게 표시)만 골라 정해진 순서로 돌려준다. 없으면 빈 튜플."""
+    survey = (constraints or {}).get("survey") or {}
+    if not isinstance(survey, Mapping):
+        return ()
+    details = survey.get("priority_details") or {}
+    food = details.get("food") if isinstance(details, Mapping) else None
+    codes = {SURVEY_LIKES[c] for c in (food or []) if c in SURVEY_LIKES}
+    return tuple(code for code in SURVEY_LIKES.values() if code in codes)
+
+
+__all__ = ["SURVEY_LIKES", "SURVEY_VERSION", "TripSurvey", "apply_survey", "auto_on_disruption",
+           "likes_from_survey", "on_disruption"]

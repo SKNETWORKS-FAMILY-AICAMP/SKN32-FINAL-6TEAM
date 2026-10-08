@@ -18,6 +18,7 @@ interface ServerItem {
   booked?: boolean;
   other_options?: { key: string; name: string }[];
   customer_pinned?: boolean;
+  badges?: { code: string; label: string; source: string }[];
   place_info?: ServerPlaceInfo | null;
   map_url?: string | null;
   /** `[2026-10-06]` Falls in a disaster pause. */
@@ -76,6 +77,9 @@ function stop(item: ServerItem, t: Translate): TripStop {
     title: item.title, booking: item.booked ? "booked" : "unknown", notes, coordinates,
     pinned: item.customer_pinned === true,
     otherOptions: (item.other_options ?? []).filter((option) => typeof option?.key === "string" && typeof option?.name === "string"),
+    // A badge without its label or source is dropped — the screen does not show a mark of unknown origin.
+    badges: (item.badges ?? []).filter((badge) => [badge?.code, badge?.label, badge?.source].every((value) => typeof value === "string" && value !== ""))
+      .map(({ code, label, source }) => ({ code, label, source })),
     placeInfo: placeInfo(item.place_info, t),
     mapUrl: mapLink(item.map_url),
     ...(item.paused === true ? { paused: true } : {}),

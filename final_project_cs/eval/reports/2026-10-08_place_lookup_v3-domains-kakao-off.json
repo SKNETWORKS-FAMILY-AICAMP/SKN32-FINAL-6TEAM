@@ -1,0 +1,667 @@
+{
+ "eval": "place_lookup",
+ "dataset": "place_lookup_v1.jsonl",
+ "dataset_sha": "d21d19af0f2094b8",
+ "label": "v3-domains-kakao-off",
+ "env": {
+  "run_at": "2026-10-08T06:37:46+00:00",
+  "today": "2026-10-07",
+  "layout": "domains",
+  "kakao": "off",
+  "llm": "off",
+  "git_commit": "d76ecad",
+  "git_branch": "role-dining",
+  "git_dirty": false,
+  "db": "dining_rebuild",
+  "ledger_open_places": 1888,
+  "tour": "off",
+  "places": 6,
+  "aliases": 5,
+  "areas": 4
+ },
+ "summary": {
+  "accuracy": {
+   "num": 14,
+   "den": 34,
+   "rate": 0.412
+  },
+  "wrong_confirmed": {
+   "num": 0,
+   "den": 34,
+   "rate": 0.0
+  },
+  "wrong_review": {
+   "num": 0,
+   "den": 34,
+   "rate": 0.0
+  },
+  "not_found": {
+   "num": 20,
+   "den": 34,
+   "rate": 0.588
+  },
+  "blocked": {
+   "num": 0,
+   "den": 34,
+   "rate": 0.0
+  },
+  "labels": {
+   "correct_confirmed": 7,
+   "correct_review": 4,
+   "correct_abstain": 3,
+   "wrong_review": 0,
+   "wrong_confirmed": 0,
+   "not_found": 20,
+   "blocked": 0,
+   "error": 0
+  },
+  "by_group": {
+   "misc": {
+    "num": 5,
+    "den": 12,
+    "rate": 0.417
+   },
+   "name": {
+    "num": 5,
+    "den": 10,
+    "rate": 0.5
+   },
+   "near": {
+    "num": 4,
+    "den": 12,
+    "rate": 0.333
+   }
+  }
+ },
+ "results": [
+  {
+   "id": "PL-001",
+   "group": "name",
+   "input": "12:30 토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5776,
+    126.9716
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-002",
+   "group": "name",
+   "input": "12:30 토속촌 삼계탕",
+   "place": "토속촌삼계탕",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5776,
+    126.9716
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-003",
+   "group": "name",
+   "input": "12:30 토속촌",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-004",
+   "group": "name",
+   "input": "12:30 토손촌삼계탕",
+   "place": "토속촌삼계탕",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "오타로 보고 「토속촌삼계탕」로 찾았어요(자모 거리 비율 0.06)",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5776,
+    126.9716
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-005",
+   "group": "name",
+   "input": "12:30 점심 토속촌에서 삼계탕",
+   "place": "토속촌삼계탕",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "오타로 보고 「토속촌삼계탕」로 찾았어요(자모 거리 비율 0.20)",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5776,
+    126.9716
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-006",
+   "group": "name",
+   "input": "12:30 스타벅스",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "correct_abstain"
+  },
+  {
+   "id": "PL-007",
+   "group": "name",
+   "input": "12:30 스타벅스 광화문점",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-008",
+   "group": "name",
+   "input": "12:30 을지로 노가리골목 만선호프",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-009",
+   "group": "name",
+   "input": "12:30 광장시장 빈대떡",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-010",
+   "group": "name",
+   "input": "12:30 Tosokchon Samgyetang",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-011",
+   "group": "near",
+   "input": "12:30 스타벅스",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-012",
+   "group": "near",
+   "input": "12:30 스타벅스",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-013",
+   "group": "near",
+   "input": "12:30 교촌치킨",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-014",
+   "group": "near",
+   "input": "12:30 맥도날드",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-015",
+   "group": "near",
+   "input": "12:30 김밥천국",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-016",
+   "group": "near",
+   "input": "12:30 이삭토스트",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-017",
+   "group": "near",
+   "input": "12:30 명동교자",
+   "place": "명동교자 본점",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": 0.26,
+   "note": "지점이 2곳 — 「명동교자 본점」을 골랐어요. 다르면 고쳐 주세요",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5612,
+    126.9861
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-018",
+   "group": "near",
+   "input": "12:30 우래옥",
+   "place": "우래옥",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5682,
+    126.9987
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-019",
+   "group": "near",
+   "input": "12:30 을밀대",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-020",
+   "group": "near",
+   "input": "12:30 진미평양냉면",
+   "place": "진미평양냉면",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5162,
+    127.0361
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-021",
+   "group": "near",
+   "input": "12:30 삼청동수제비",
+   "place": "삼청동수제비",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5846,
+    126.9819
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-022",
+   "group": "near",
+   "input": "12:30 목멱산방",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-023",
+   "group": "misc",
+   "input": "12:30 근처 국밥집",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-024",
+   "group": "misc",
+   "input": "12:30 점심 한식",
+   "place": null,
+   "source": "line_parts",
+   "method": "nameless",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "이름이 아닌 말(「점심 한식」)이라 가게를 찾지 않았다 — 식당을 고르게 한다",
+   "blocked": [],
+   "checks": {},
+   "label": "correct_abstain"
+  },
+  {
+   "id": "PL-025",
+   "group": "misc",
+   "input": "12:30 스타벅스",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-026",
+   "group": "misc",
+   "input": "12:30 교촌치킨",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-027",
+   "group": "misc",
+   "input": "12:30 명동교쟈",
+   "place": "명동교자 본점",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": 0.26,
+   "note": "오타로 보고 「명동교자 본점」로 찾았어요(자모 거리 비율 0.10)",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5612,
+    126.9861
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-028",
+   "group": "misc",
+   "input": "12:30 Starbucks",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-029",
+   "group": "misc",
+   "input": "12:30 Gwangjang Market",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-030",
+   "group": "misc",
+   "input": "12:30 해운대암소갈비집",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "correct_abstain"
+  },
+  {
+   "id": "PL-031",
+   "group": "misc",
+   "input": "12:30 스타벅스 강남역점",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PL-032",
+   "group": "misc",
+   "input": "18:00 정식당 (예약 있음)",
+   "place": "정식당",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5256,
+    127.0413
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-033",
+   "group": "misc",
+   "input": "18:00 밍글스",
+   "place": "밍글스",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5254,
+    127.0442
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-034",
+   "group": "misc",
+   "input": "12:30 성수동 소문난 감자탕",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  }
+ ]
+}

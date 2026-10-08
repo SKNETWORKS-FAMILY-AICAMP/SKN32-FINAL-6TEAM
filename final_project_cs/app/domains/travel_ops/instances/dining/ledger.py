@@ -289,9 +289,39 @@ def planner_shops(conn) -> list[dict[str, Any]]:
             "WHERE p.record_status <> 'closed' AND NOT p.is_synthetic AND p.lat IS NOT NULL AND p.lng IS NOT NULL "
             "ORDER BY p.name_ko, p.place_uid")
         rows = cur.fetchall()
+        badges = shop_badges(cur)
     return [{"place_uid": str(uid), "name": name, "lat": float(lat), "lng": float(lng),
-             "address": address, "content_id": content_id}
+             "address": address, "content_id": content_id, "badges": badges.get(str(uid), [])}
             for uid, name, lat, lng, address, content_id in rows]
+
+
+#: 화면 · 일정 생성기가 쓰는 가게 표시. 순서가 곧 화면 순서다. `[2026-10-07]`
+BADGE_CODES = ("michelin", "nopo")
+_BADGE_LABEL = {"michelin": "미쉐린", "nopo": "노포"}
+
+
+def shop_badges(cur) -> dict[str, list[dict[str, str]]]:
+    """가게별 표시 {place_uid: [{"code", "label", "source"}]}. 읽기만 한다. `[2026-10-07]`
+
+    ★운영에 쓰도록 허용된 출처(`dn_source.production_allowed`)의 살아 있는 「yes」 속성만 — 시험 출처는 화면에 올리지 않는다.
+    ★`label` 은 이름 + 상세(「미쉐린 빕 구르망 (2026)」), 상세가 없으면 이름(「노포」). `source` 는 출처 이름 — 화면이 밝힌다.
+    """
+    cur.execute(
+        "SELECT a.place_uid, a.attr_code, a.value_detail, s.display_name FROM dining.dn_attribute a "
+        "JOIN dining.dn_source s ON s.source_code = a.source_code "
+        "WHERE a.attr_code = ANY(%s) AND a.value_state = 'yes' AND a.retired_at IS NULL AND s.production_allowed "
+        "ORDER BY a.place_uid, a.attr_code, a.valid_from DESC", (list(BADGE_CODES),))
+    out: dict[str, list[dict[str, str]]] = {}
+    for uid, code, detail, source in cur.fetchall():
+        badges = out.setdefault(str(uid), [])
+        if any(badge["code"] == code for badge in badges):
+            continue                     # 같은 표시는 한 번 — 가장 최근 것
+        name = _BADGE_LABEL[code]
+        label = name if not detail else (detail if detail.startswith(name) else f"{name} {detail}")
+        badges.append({"code": code, "label": label, "source": source})
+    for badges in out.values():
+        badges.sort(key=lambda badge: BADGE_CODES.index(badge["code"]))
+    return out
 
 
 def open_among(conn, place_uids: list[str], at: Any, until: Any = None) -> dict[str, bool | None]:
