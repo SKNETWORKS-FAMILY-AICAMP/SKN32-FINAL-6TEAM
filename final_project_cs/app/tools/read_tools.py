@@ -159,6 +159,8 @@ class ReadToolbox:
             "read.place_search": self.place_search,
             "read.place_lookup": self.place_lookup,
             "read.place_candidates": self.place_candidates,
+            # ★`[2026-10-09]` 활동 성립 판정의 휴무 · 운영시간 — DB(새벽 작업 `catalog_hours`)만 읽는다.
+            "read.place_hours": self.place_hours,
             "read.weather_warning": self.weather_warning,
             "read.travel_advisory": self.travel_advisory,
             "read.place":    self.place,
@@ -573,6 +575,39 @@ class ReadToolbox:
         from app.domains.travel_ops.instances.activity.place_lookup import lookup_place
 
         return lookup_place(self.connection_factory, scope.tenant_id, name, self.kakao)
+
+    def place_hours(self, scope: ToolContext, *, place_id: str | None = None, at: Any = None,
+                    **_: Any) -> dict[str, Any] | None:
+        """그 장소의 운영시간 · 휴무 사실 — **DB 에 읽어 둔 값만** 본다(바깥 호출 없음). `[2026-10-09]`
+
+        ★요일별 운영시간은 확인 화면과 같은 함수(`components.intake.hours.facts_for`)로 모은다 — 장소 행 속성 →
+          관광공사 운영시간 표(`catalog_hours`, 새벽 작업) 순. 판정은 받는 쪽(활동 팀)이 `place_hours.fits` 로 한다.
+        ★요일표가 펴지 못하는 휴무(매월 n번째 주 · 공휴일 조건)는 **원문**(`catalog_hours.hours_origin.restdate`)을
+          함께 실어, 받는 쪽이 휴무 규칙(`closure_rules.read_closure`)으로 읽게 한다.
+        반환 `{known, attributes, source, why_unknown, conditions, usetime_text, restdate_text}`. 장소를 모르면 `None`.
+        """
+        if place_id is None:
+            return None      # ★어느 장소인지 모르면 조회하지 않는다
+        from datetime import datetime
+
+        from app.domains.travel_ops.components.intake.hours import _tenants, facts_for
+
+        when = _as_datetime(at)
+        with self.connection_factory() as conn:
+            facts = facts_for(conn, scope.tenant_id, {"place_id": str(place_id)}, "activity",
+                              when if isinstance(when, datetime) else None, None)
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT ch.hours_origin FROM places p JOIN catalog_hours ch "
+                    "ON ch.tenant_id = ANY(%s) AND ch.source = 'tour_api' "
+                    "AND ch.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id') "
+                    "WHERE p.tenant_id = %s AND p.place_id = %s AND ch.hours_origin IS NOT NULL LIMIT 1",
+                    (_tenants(scope.tenant_id), scope.tenant_id, str(place_id)))
+                row = cur.fetchone()
+        origin = dict(row[0]) if row and row[0] else {}
+        return {"known": facts.known, "attributes": facts.attributes, "source": facts.source,
+                "why_unknown": facts.why_unknown, "conditions": list(facts.conditions),
+                "usetime_text": origin.get("usetime"), "restdate_text": origin.get("restdate")}
 
     def place_candidates(self, scope: ToolContext, *, content_id: str | None = None,
                          **_: Any) -> dict[str, Any] | None:

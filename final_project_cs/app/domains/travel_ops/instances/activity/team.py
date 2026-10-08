@@ -30,7 +30,9 @@ from app.domains.travel_ops.components.actions.itinerary_actions import consent_
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ACTIVITY_RECHECK_LIMIT, NoChange, plan_activity_adjustment, plan_nearby_store
 from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TOOLS, Consent, ItineraryWork
 from app.domains.travel_ops.components.planning.pending import needs_consent, weather_only
+from app.domains.travel_ops.components.places.place_hours import fits, hours_on
 from . import failure_codes as fc
+from .closure_rules import holiday_dates_needed, local_date, read_closure
 from .similarity import distance_first, preference_of, score
 
 _failure_log = logging.getLogger(fc.LOGGER_NAME)
@@ -68,6 +70,8 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         #   조정자라 식당 · 이동 항목도 같은 초안 위에서 계산한다. 식당 원장 둘은 못 부르면 장소 목록으로 돌아간다(`dining.team.state_lookup_for` — `[2026-10-05]` 옛 `read.dining_alternatives` · `ToolLedgerView` 는 걷었다). 단일 항목 Case 는 이 셋을 안 쓴다.
         allowed_tools=["read.booking", "read.booking_terms", "read.policy", "read.place",
                        "read.disruptions", "read.route_events", "read.dining_state", "read.dining_states",
+                       # ★`[2026-10-09]` 성립 판정의 휴무 · 운영시간(DB 만) · 공휴일 조건
+                       "read.place_hours", "read.holiday",
                        *ITINERARY_TOOLS],
         # ★`[2026-09-22]` 여행 scope 로 바꿨다. 앞 값(`activity`·`cancellation`·`refund`·`weather`)
         #   가운데 **`refund` 는 쇼핑몰 코퍼스에 실재하는 scope** 라, 정책을 켜는 순간 활동 판정이
@@ -330,6 +334,14 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                     decisions={"feasible": False, "reason": "disrupted",
                                "disruptions": report.get("disruptions", [])})
 
+        # ★`[2026-10-09]` 휴무 · 운영시간 — 공유 점검은 이것을 보지 않는다. 판정 순서는 이미 시작됨 → 재난(공유 점검) → 휴무 → 운영시간.
+        hours_note: str | None = None
+        hours_decision: dict[str, Any] | None = None
+        if isinstance(place, dict):
+            closed, evidence, hours_note, hours_decision = self._hours_check(task, booking, seen, evidence)
+            if closed is not None:
+                return closed
+
         forecast = self._checked_value(report, "forecast")
         warnings = [] if place is not None else ["장소·운영 정보를 확인하지 못했다"]
         decisions: dict[str, Any] = {"feasible": True,
@@ -339,6 +351,11 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         answer = f"확인한 범위에서는 성립합니다(시작까지 {remaining:.1f}시간)."
         if place is None:
             answer += " 운영 정보는 확인되지 않아 그 부분은 판정하지 않았습니다."
+        if hours_note:
+            answer += " " + hours_note
+            warnings.append("운영시간 · 휴무를 확인하지 못했다 — 판정에 넣지 않았다")
+        if hours_decision is not None:
+            decisions["hours"] = hours_decision
         if forecast is not None:
             note, advisories = self._weather_note(forecast)
             answer += " " + note
@@ -356,6 +373,68 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             task, outcome="completed", confidence=0.8, evidence=evidence,
             next_action=NextAction.RESPOND, answer=answer,
             decisions=[decisions], warnings=warnings)
+
+    def _hours_check(self, task: TeamTask, booking: dict, seen: set[str], evidence: list
+                     ) -> tuple[TeamResult | None, list, str | None, dict[str, Any] | None]:
+        """휴무 · 운영시간 판정 — `[2026-10-09]` role-activity 판(정기휴무 규칙)을 develop 설계 위로 옮겼다.
+
+        ★데이터는 **DB 에 읽어 둔 값**(`read.place_hours` — 새벽 작업 `catalog_hours`)만 본다. 바깥을 부르지 않는다.
+        ★요일 칸은 develop 표준 함수(`place_hours.hours_on` · `fits`)가 읽는다. 요일표가 펴지 못하는 휴무(매월 n번째 주 ·
+          공휴일 조건)는 휴무 **원문**을 휴무 규칙(`closure_rules.read_closure`)으로 읽는다 — 원문이 정한 값이 요일 칸보다 앞선다
+          (「매주 화요일 휴무, 단 공휴일이면 개방」에서 공휴일 화요일은 연다).
+        ★모르면 모른다: 「성립」으로 단정하지 않고 안내 문구 · `decisions.hours` 에 남긴다. 휴무 · 운영시간 밖이면
+          공유 점검의 이상과 같은 길(`_propose_change` — 승인 대기)로 보낸다.
+        반환: (불가 결과 | None, 근거, 안내 문구 | None, 판정 기록 | None)
+        """
+        starts_at = booking.get("starts_at")
+        if not isinstance(starts_at, datetime):
+            return None, evidence, None, None
+        hours = self._read(task, "read.place_hours", {"place_id": booking.get("place_id"), "at": starts_at}, seen)
+        evidence = self._evidence(task, source_id="read.place_hours", claim="운영시간 · 휴무", value=hours, base=evidence)
+        if not isinstance(hours, dict):
+            return None, evidence, "운영시간 · 휴무를 확인하지 못해 그 부분은 판정하지 않았습니다.", {"known": False}
+        attributes = hours.get("attributes") or {}
+        day = hours_on(attributes, local_date(starts_at))
+        restdate = hours.get("restdate_text")
+        closure = None
+        if restdate:
+            holidays: dict[Any, Any] = {}
+            for when in holiday_dates_needed(restdate, starts_at):
+                holidays[when] = self._read(task, "read.holiday", {"on": when.isoformat()}, seen)
+                if holidays[when] is None:
+                    break      # ★같은 소스가 또 모른다고 할 것이다 — 응답만 늦어진다
+            if holidays:
+                evidence = self._evidence(task, source_id="read.holiday", claim="공휴일 여부",
+                                          value={d.isoformat(): v for d, v in holidays.items()}, base=evidence)
+            closure = read_closure(restdate, starts_at, holidays.get)
+        closed = (closure.value if closure is not None and closure.value is not None
+                  else (day == "closed") if day is not None else None)
+        record: dict[str, Any] = {"known": bool(hours.get("known")), "source": hours.get("source"),
+                                  "closed": closed, "closure_reason": closure.reason if closure else None,
+                                  "restdate_text": restdate, "usetime_text": hours.get("usetime_text")}
+        if closed:
+            quote = closure.quote if closure is not None and closure.value else None
+            record["failure_code"] = self._record_failure(task, fc.CLOSED_WEEKDAY)
+            told = f"휴무 안내({restdate}) 중 「{quote}」에 해당해" if quote and restdate else "정기휴무일이라"
+            return (self._propose_change(
+                task, booking, evidence, reason=f"휴무 — {quote or '정기휴무일'}",
+                answer=f"이 날은 {told} 이 일정은 바꿔야 합니다. 변경 제안을 만들었고 승인 뒤에 진행됩니다.",
+                decisions={"feasible": False, "reason": "closed_weekday", "hours": record}),
+                evidence, None, record)
+        fit = fits(attributes, starts_at, starts_at) if closed is False and day not in (None, "closed") else None
+        record["within_hours"] = fit
+        if fit is False:
+            record["failure_code"] = self._record_failure(task, fc.OUTSIDE_HOURS)
+            return (self._propose_change(
+                task, booking, evidence, reason="운영시간 밖",
+                answer=("예약 시각이 운영시간 밖이라 이 일정은 바꿔야 합니다. "
+                        "변경 제안을 만들었고 승인 뒤에 진행됩니다."),
+                decisions={"feasible": False, "reason": "outside_hours", "hours": record}),
+                evidence, None, record)
+        note = None if fit is True else "운영시간 · 휴무를 확인하지 못해 그 부분은 판정하지 않았습니다."
+        if closure is not None and closure.needs_caveat and fit is True:
+            note = "공휴일과 겹치는 경우 등 휴무 예외가 있을 수 있습니다."
+        return None, evidence, note, record
 
     # ── 성립 점검 부품 ────────────────────────────────────────
     #: 점검할 지역. ★v11 §1 — 대상 도시는 서울 하나다.
