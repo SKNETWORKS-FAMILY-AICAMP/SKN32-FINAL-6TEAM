@@ -9,7 +9,7 @@ from typing import Any
 
 from app.core.contracts import TeamTask
 
-from . import failure_codes_a as fc
+from . import failure_codes as fc
 from .alternatives import FALLBACK_DROPS, RADIUS_START_KM, preference_from_survey, rank_alternatives
 
 

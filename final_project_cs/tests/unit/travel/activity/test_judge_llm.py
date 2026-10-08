@@ -6,7 +6,7 @@ from datetime import date, datetime
 
 import pytest
 
-from app.domains.travel_ops.instances.activity import failure_codes_a as fc
+from app.domains.travel_ops.instances.activity import failure_codes as fc
 from app.domains.travel_ops.instances.activity.judge import JudgeContext, LLMJudge, requests, schema_for
 from app.domains.travel_ops.instances.activity.judge.llm import file_instructions
 

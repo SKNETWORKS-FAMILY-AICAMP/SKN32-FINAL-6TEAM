@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 import pytest
 
 from app.domains.travel_ops.instances.activity.team_a import ActivityTeam
-from app.domains.travel_ops.instances.activity import failure_codes_a as fc
+from app.domains.travel_ops.instances.activity import failure_codes as fc
 
 from .helpers import FakeTools, pack, task
 from .test_activity_alternatives_flow import ALLOWED, KST, POOL, _row, _values

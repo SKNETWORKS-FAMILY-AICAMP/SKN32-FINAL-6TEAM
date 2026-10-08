@@ -20,7 +20,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from typing import Any, Protocol
 
-from .. import failure_codes_a as fc
+from .. import failure_codes as fc
 from .llm import LLMJudge
 from .rule import RuleJudge
 from .types import JudgeContext, JudgeRequest, Verdict

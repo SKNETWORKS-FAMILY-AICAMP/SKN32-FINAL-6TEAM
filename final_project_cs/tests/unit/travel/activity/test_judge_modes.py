@@ -9,7 +9,7 @@ from datetime import datetime
 
 import pytest
 
-from app.domains.travel_ops.instances.activity import failure_codes_a as fc
+from app.domains.travel_ops.instances.activity import failure_codes as fc
 from app.domains.travel_ops.instances.activity.judge import (
     SHADOW_LOGGER_NAME,
     BackgroundRunner,

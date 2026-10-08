@@ -14,7 +14,7 @@ import pytest
 
 from app.core.contracts import NextAction
 from app.domains.travel_ops.instances.activity.team_a import ActivityTeam
-from app.domains.travel_ops.instances.activity import failure_codes_a as fc
+from app.domains.travel_ops.instances.activity import failure_codes as fc
 from app.domains.travel_ops.instances.activity.place_lookup import lookup_place
 from app.tools.read_tools_a import ReadToolbox
 

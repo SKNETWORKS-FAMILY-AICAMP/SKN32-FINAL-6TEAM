@@ -15,7 +15,7 @@ from typing import Any
 
 from app.core.contracts import NextAction, TeamResult, TeamTask
 
-from . import failure_codes_a as fc
+from . import failure_codes as fc
 from .closure_rules import holiday_dates_needed, read_closure
 from .csv_places import CsvPlaceLookup as _CsvPlaceLookup
 from .judge import JudgeContext, RuleJudge, Verdict, build_judge
