@@ -540,3 +540,12 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 ## 2026-10-08 (이어서) — 웹 설계 검토 리포트(읽기 전용)
 
 `role-eval-ui` `2a6bbdd` 기준으로 브랜치 차이(`role-manager` 는 우리 조상, develop 에만 있는 `ci-web.yml` 이 병합 뒤 붉어질 것) · 설계 문제(거대 컴포넌트 둘 · 기능 간 순환 의존 · z-index 리터럴 44개 · 저장소 접근 분산 · 세 곳 중복 문서) · 실서비스 위험(쿠키 `SameSite=Lax` 와 배포 도메인 · 게스트 세션 · 발급 한도 · 등록 뒤 이동 정보 없음) · 만들지 않은 화면(문의함 · 공지 · 탈퇴 · 위험 점검 · 신고/다른 안) · 보안(`npm audit` critical 1 · high 7, 보안 헤더 없음)을 담당(프론트 · 백엔드 · 구성 · 협의)과 함께 적었다 — [검토 리포트](../../../wiki/records/reports/2026-10-08_1205_웹_설계검토_브랜치비교_보안.md). 코드는 고치지 않았다.
+
+## 2026-10-08 (이어서) — 웹 CI 워크플로 복구(ST4F-202)
+
+검토 리포트 §1 의 ①. `.github/workflows/ci-web.yml`(2026-09-28 ST4F-161) 은 develop 에만 남아 있었다 — `role-manager` 는 스냅숏 커밋이라 받지 못했고, 10-07 `role-eval-ui` 를 `role-manager` 위에 다시 세우며(`a2e4cf9`) 이 브랜치에서도 빠졌다(지운 커밋은 없다, 옛 판은 `backup/role-eval-ui-wip-20261007`). develop 판은 10-03 에 없앤 데모 빌드 시험(`test:e2e` · `NEXT_PUBLIC_DATA_MODE=demo`)을 불러, 매니저가 이 브랜치를 develop 에 합치는 PR 에서 웹 CI 가 붉어질 것이었다.
+
+- `ci-web.yml` 을 develop 에서 가져와 고쳤다: 데모 환경변수 · 「브라우저 시험 (데모)」 단계 제거, `check` 빌드 환경을 배포와 같은 `live` · `osm` 으로, 머리 주석 갱신. 남은 단계는 `npm ci` → `npm run check` → Chromium 설치 → `npm run test:live`.
+- **`tests/live/_shots_plan.spec.ts` 삭제**(사용자 승인). 계획 확인 화면을 눈으로 보려고 스크린샷을 찍는 촬영 스크립트였고(단언 0, 머리 주석 「저장소에 올리지 않는다」), 저장 경로 기본값이 다른 PC 의 임시 폴더라 이 PC 와 CI 머신에서 늘 2건 실패했다(위 기록들의 「2건 늘 실패」가 이것). 매니저 스냅숏 `93a320a`(10-05) 로 들어온 파일이다.
+- README 「CI」 절을 지금 모양으로 고쳤다.
+- 검증(2026-10-08, 이 PC · 워크플로와 같은 명령): 워크플로 YAML 파싱 확인(js-yaml) · `npm run check` 통과(린트 0 · 타입 0 · 단위 545 · 빌드) · `npm run test:live` 전체 **420 통과 · 5 건너뜀(지도 공급자 빌드 전용) · 실패 0**, 21.9분 — 촬영 spec 을 지운 뒤로는 「2건 늘 실패」가 없다. GitHub Actions 에서 실제로 도는 것은 매니저가 develop 에 올리는 PR 에서 확인한다(미검증).

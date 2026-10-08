@@ -134,7 +134,7 @@ $env:REAL_SERVER_E2E="1"; $env:PLAYWRIGHT_CHANNEL="msedge"; npm run test:real
 
 `[2026-09-28]` 두 곳에서 돈다(ST4F-161).
 
-- **웹 관문** [`.github/workflows/ci-web.yml`](../../../../.github/workflows/ci-web.yml): 이 폴더가 바뀐 develop·main PR과 push에서 `npm ci` → `npm run check` → `test:live`(테스트용 모방 서버, 실제 서버 아님)를 돌린다. ★`[2026-10-03]` `test:e2e`(데모 빌드 시험)는 없앴다 — 이 저장소에는 `ci-web.yml` 이 없어 고치지 못했다. 조직 저장소의 워크플로가 `test:e2e` 를 부르면 `test:live` 로 바꾸고, 데모 설정(`NEXT_PUBLIC_DATA_MODE=demo`·`NEXT_PUBLIC_MAP_PROVIDER=demo`)은 지운다(`check` 의 빌드는 `live`·`osm` 으로 만든다). 서버 없이 도는 시험이라 다른 폴더의 변경에는 돌지 않는다. `test:real`은 부작용 때문에 넣지 않았다.
+- **웹 관문** [`.github/workflows/ci-web.yml`](../../../../.github/workflows/ci-web.yml): 이 폴더가 바뀐 develop·main PR과 push에서 `npm ci` → `npm run check`(`live`·`osm` 빌드) → Chromium 설치 → `test:live`(테스트용 모방 서버, 실제 서버 아님)를 돌린다. 서버 없이 도는 시험이라 다른 폴더의 변경에는 돌지 않는다. `test:real`은 부작용 때문에 넣지 않았다. ★`[2026-10-08]` 이 파일은 2026-09-28 에 만들어 develop 에 들어갔지만 `role-manager` 가 스냅숏 커밋이라 받지 못했고, 10-07 `role-eval-ui` 를 `role-manager` 위에 다시 세우며 이 브랜치에서도 빠져 있었다. develop 판은 `[2026-10-03]` 에 없앤 데모 빌드 시험(`test:e2e` · `NEXT_PUBLIC_DATA_MODE=demo`)을 불러 병합 뒤 붉어질 것이라, 이 브랜치로 가져와 지금 웹에 맞게 고쳤다. 같은 날 CI 머신에 없는 다른 PC 경로로 스크린샷을 찍어 늘 실패하던 촬영 스크립트 `tests/live/_shots_plan.spec.ts`(단언 없음)를 지웠다.
 - **계약 시험** `final_project_cs/tests/contract/test_web_client_contract.py`: 기존 develop 관문(pytest)에서 돈다. `src/lib/live/`가 부르는 메서드·경로가 서버 라우트에 모두 있는지, `payload.ts`의 설문 판·칸·값을 서버 `TripSurvey`가 받는지 본다. 서버가 `/v1/web/*`나 설문을 바꿔 웹이 깨지는 것을 모방 서버 시험은 못 잡기 때문에 둔다. 웹에서 서버를 부르는 새 모양(`api(`·`send(` 밖)을 쓰면 이 시험이 「읽지 못한 호출」로 실패하니 시험의 `_CALL`을 함께 고친다.
 
 ## 사람 확인(Cloudflare Turnstile)
