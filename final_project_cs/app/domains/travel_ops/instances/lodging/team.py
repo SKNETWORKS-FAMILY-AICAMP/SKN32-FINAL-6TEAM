@@ -134,6 +134,11 @@ class LodgingTeam(TravelTeamBase):
         for stay in listing["stays"]:
             if len(lines) >= SHOWN or calls >= DETAIL_CALLS:
                 break
+            if stay.get("price_per_night") is None:
+                # ★목록에 가격이 없는 곳은 상세를 부르지 않는다 — 2026-10-08 14:41 playdata 에서 상세가 「객실 없음」이던 곳
+                #   (1356616 · 3171484)이 같은 조건의 목록에서 가격 없이 왔다. 호출을 아끼려는 것이고, 상세 확인도 그대로 둔다
+                skipped.append({"gid": stay["gid"], "name": stay["name"], "reason": "no_price_in_list"})
+                continue
             calls += 1
             detail = self._read(task, "read.stay_detail", {"gid": stay["gid"], **dates, **party}, seen)
             evidence = self._evidence(task, source_id=f"read.stay_detail:{stay['gid']}", claim="숙소 상세(마이리얼트립)",
@@ -149,11 +154,12 @@ class LodgingTeam(TravelTeamBase):
         decision = {**decision, "found": len(listing["stays"]), "shown": shown, "skipped": skipped}
         if not lines:
             return self._respond(task, evidence, decision,
-                                 f"{found.keyword} · {dates['check_in']}~{dates['check_out']} 조건으로 앞에서부터 {calls}곳을 확인했지만 "
-                                 "그 날짜에 객실이 남은 곳이 없었습니다. 날짜나 지역을 바꿔 다시 말씀해 주세요.")
+                                 f"{found.keyword} · {dates['check_in']}~{dates['check_out']} 조건으로 받은 {len(listing['stays'])}곳 중 "
+                                 f"{len(skipped)}곳이 가격이 없거나 그 날짜에 객실이 없었고, 그 밖의 곳은 확인하지 못했습니다. "
+                                 "날짜나 지역을 바꿔 다시 말씀해 주세요.")
         head = (f"{found.keyword} · {dates['check_in']}~{dates['check_out']} · 성인 {found.adults}명 조건으로 "
                 f"{listing.get('total') or len(listing['stays'])}곳 중 {len(lines)}곳입니다(마이리얼트립 검색 순서"
-                + (f", 그 날짜에 객실이 없는 {len(skipped)}곳은 건너뜀" if skipped else "") + ").")
+                + (f", 가격이 없거나 그 날짜에 객실이 없는 {len(skipped)}곳은 건너뜀" if skipped else "") + ").")
         tail = "가격과 잔여 객실은 조회 시점 기준이며 링크에서 다시 확인해 주세요. 예약은 링크의 마이리얼트립 페이지에서 직접 하시면 됩니다."
         return self._respond(task, evidence, decision, "\n".join([head, *lines, tail]))
 

@@ -110,7 +110,7 @@ def test_the_server_recounts_what_is_missing_instead_of_trusting_the_model():
 
 
 def test_places_without_rooms_are_skipped_and_the_next_ones_fill_in():
-    stays = {**STAYS, "stays": [{"gid": n, "name": f"숙소{n}", "description": "", "price_per_night": None, "rating": 0.0,
+    stays = {**STAYS, "stays": [{"gid": n, "name": f"숙소{n}", "description": "", "price_per_night": 100000, "rating": 0.0,
                                  "review_count": None} for n in range(1, 11)]}
     full = lambda a: {**DETAIL, "gid": a["gid"], "no_rooms": a["gid"] == 2}      # noqa: E731
     result, _, tools = _run(SEARCH, {"read.stay_search": stays, "read.stay_detail": full})
@@ -119,7 +119,15 @@ def test_places_without_rooms_are_skipped_and_the_next_ones_fill_in():
     assert len(tools.calls) == 5 and "객실이 없는 1곳은 건너뜀" in result.answer and "평점 없음" in result.answer
     result, _, tools = _run(SEARCH, {"read.stay_search": stays, "read.stay_detail": {**DETAIL, "sold_out": True}})
     assert len(tools.calls) == 5, "상세는 정한 횟수(4)까지만 부른다"
-    assert "4곳을 확인했지만" in result.answer and result.decisions[0]["shown"] == []
+    assert "10곳 중 4곳이 가격이 없거나" in result.answer and result.decisions[0]["shown"] == []
+
+
+def test_places_without_a_list_price_are_skipped_before_any_detail_call():
+    stays = {**STAYS, "stays": [{"gid": n, "name": f"숙소{n}", "description": "", "rating": 4.0, "review_count": 3,
+                                 "price_per_night": None if n in (1, 2) else 90000} for n in range(1, 6)]}
+    result, _, tools = _run(SEARCH, {"read.stay_search": stays, "read.stay_detail": lambda a: {**DETAIL, "gid": a["gid"]}})
+    assert [call[1]["gid"] for call in tools.calls[1:]] == [3, 4, 5]
+    assert [(item["gid"], item["reason"]) for item in result.decisions[0]["skipped"]] == [(1, "no_price_in_list"), (2, "no_price_in_list")]
 
 
 def test_an_unreadable_detail_stops_further_detail_calls():
