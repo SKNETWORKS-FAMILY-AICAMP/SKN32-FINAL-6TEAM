@@ -18,6 +18,7 @@ from __future__ import annotations
 import ast
 import hashlib
 import json
+import warnings
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
@@ -323,7 +324,10 @@ def build(root: Path | None = None, *, use_cache: bool = True) -> Index:
         rel = p.relative_to(root).as_posix()
         try:
             text = p.read_text(encoding="utf-8")
-            tree = ast.parse(text)
+            # 대상 코드의 정규식 글자(\d 등)가 내는 SyntaxWarning 이 문제 화면을 덮는다 — 색인할 때만 감춘다
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", SyntaxWarning)
+                tree = ast.parse(text)
         except (SyntaxError, UnicodeDecodeError):
             continue
         tables[rel] = _table(tree, rel, root)

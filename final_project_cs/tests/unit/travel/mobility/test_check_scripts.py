@@ -46,8 +46,8 @@ def test_check_script_passes(rel, marker):
 
 def test_check_runtime_on_real_timetable():
     """실제 시간표로 어댑터를 끝까지(약 33초). 자료가 없는 기기는 이유를 달고 건너뛴다."""
-    from app.modules.travel_ops.mobility.engine.paths import cli_processed, UNSET_DIR
-    import app.modules.travel_ops.mobility.engine.paths as paths
+    from app.domains.travel_ops.instances.mobility.engine.paths import cli_processed, UNSET_DIR
+    import app.domains.travel_ops.instances.mobility.engine.paths as paths
     before = (paths.SOURCE, paths.DATA_DIR)
     try:
         processed = cli_processed()

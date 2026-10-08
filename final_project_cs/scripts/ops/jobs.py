@@ -70,14 +70,18 @@ JOBS: dict[str, Job] = {
     ),
     "sweepers": Job(
         name="sweepers",
-        title="되잡기 작업 (멈춘 Case · 여행 감시 · 일정 안내)",
+        title="되잡기 작업 (멈춘 Case · 여행 감시 · 일정 안내) — 1분마다 돌고, 감시만 3분 주기(작업 안의 문)",
         kind="tick",
         argv=["-m", "scripts.run_sweepers", "--once"],
         every_minutes=1,
         task_name="triPilot cs sweepers",
         max_silence_seconds=600,
         why="접수·분류·실행을 나눈 대가다. 안 돌면 `classifying`·`routing` 에 남은 Case 가 "
-            "영원히 그대로 있고, 일정 안내(v11 §6-B)가 때를 놓친다.",
+            "영원히 그대로 있고, 일정 안내(v11 §6-B)가 때를 놓친다. "
+            # ★`[2026-10-03 사용자 결정]` 주기(1분)는 그대로다 — 일정 출발 안내와 되잡기가 늦어지지 않게. 여행 **감시**만 팀 결정(D-017)대로 3분이고,
+            #   그것은 이 작업 안에서 지킨다(`scripts/run_sweepers.py` 의 `_watch_if_due` · `app/application/job_gate.py` · 표 `job_gates`).
+            #   그래서 `max_silence_seconds` 도 그대로 600 초다 — 이 값은 작업이 **돌았는지**를 재고(1분 주기의 10회), 감시가 돌았는지는 `watch_cadence` 줄이 따로 잰다.
+            "여행 감시만 3분 주기(`reliability.watch_interval_seconds`)로 작업 안에서 지킨다.",
         dead_signal="`customer_cases` 에 임계값(분류 300초·실행 600초)을 넘긴 Case 가 쌓인다. "
                     "점검의 `stuck_cases` 줄이 센다.",
     ),

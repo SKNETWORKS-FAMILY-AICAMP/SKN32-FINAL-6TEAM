@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.modules.travel_ops.intake.rules import read_plan
+from app.domains.travel_ops.components.intake.rules import read_plan
 
 
 def _items(text):
@@ -89,3 +89,26 @@ def test_a_table_row_with_an_empty_time_cell_is_an_item_not_a_heading():
     assert [(i.start, i.title.text, i.date) for i in r.items] == [
         ("09:30", "국립중앙박물관 관람", "2026-10-10"), (None, "광장시장 빈대떡", "2026-10-10"),
         ("15:00", "국립민속박물관", "2026-10-10")]
+
+
+def test_a_date_written_on_each_timed_line_is_that_items_date():
+    """★`[2026-09-28]` 「2026-10-05 09:00 경복궁 관람」 — 전에는 날짜를 머리줄(시각 없는 줄)에서만 받아 버렸다(ui 세션 실서버 시험)."""
+    r = read_plan("2026-10-05 09:00 경복궁 관람\n12:00 토속촌 삼계탕\n10월 6일 10:00 북촌한옥마을 산책")
+    assert [(i.date, i.start, i.title.text) for i in r.items] == [
+        ("2026-10-05", "09:00", "경복궁 관람"), ("2026-10-05", "12:00", "토속촌 삼계탕"),
+        ("--10-06", "10:00", "북촌한옥마을 산책")]
+    assert [c.value for c in r.claims if c.field.endswith(".date")] == ["2026-10-05", "--10-06"]
+
+
+@pytest.mark.parametrize("text, title", [
+    ("2026-10-05\n09:00 경복궁", "내 여행"),
+    ("10월 5일 (월)\n09:00 경복궁", "내 여행"),
+    ("2026-10-05 09:00 경복궁", "내 여행"),
+    ("10월 5일 서울 가족여행\n09:00 경복궁", "10월 5일 서울 가족여행"),       # 날짜 뒤에 제목이 있으면 제목이다
+    ("서울 가족여행\n1일차 · 2026-10-05\n09:00 경복궁", "서울 가족여행"),
+])
+def test_a_line_that_is_only_a_date_is_not_the_trip_title(text, title):
+    """★`[2026-09-28]` 날짜 머리줄로 시작하는 글의 제목이 그 날짜가 됐다(ui 세션 실서버 시험)."""
+    from app.domains.travel_ops.components.intake.assemble import _title
+
+    assert _title({}, [{"transcript": text}]) == title

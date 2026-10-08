@@ -1,0 +1,12 @@
+# systemd 서비스 — 자동 반영 한 회차(`auto_deploy.sh`). 타이머가 부른다.
+[Unit]
+Description=triPilot 자동 반영 (새 커밋 확인 → 빌드 → 반영 → 실패하면 되돌림)
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/root/tripilot-docker/auto_deploy.sh
+Nice=10
+# 빌드가 오래 걸려도 다음 회차와 겹치지 않는다(스크립트가 flock 으로도 막는다)
+TimeoutStartSec=1800

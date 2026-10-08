@@ -1,37 +1,35 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getNotices, getProposals, type Notice } from "@/lib/live/extras";
+import { useQuery } from "@tanstack/react-query";
+import { getNotices, getProposals } from "@/lib/live/extras";
+import { getRecovery } from "@/lib/live/recovery";
 import { useSettings } from "@/lib/settings";
-import { tripKey } from "./use-trip";
+import { useNeedsPolling } from "./watch-mode";
 
 export const proposalsKey = (tripId: string, language: string) => ["proposals", tripId, language] as const;
 export const noticesKey = (tripId: string, language: string) => ["notices", tripId, language] as const;
+export const recoveryKey = (tripId: string, language: string) => ["recovery", tripId, language] as const;
 
-/** 서버가 만든 제안과 알림을 1분 간격으로 확인한다. */
-const REFRESH_MS = 60_000;
+/**
+ * The server may open a choice or send a notice at any time (the watcher runs on its own). Its bell
+ * (`use-trip-events.ts`) says when; only a server without the bell leaves these to be re-read every 30 s.
+ */
+const REFRESH_MS = 30_000;
 
 export function useProposals(tripId: string) {
   const { language } = useSettings();
-  return useQuery({ queryKey: proposalsKey(tripId, language), queryFn: () => getProposals(tripId, language), retry: false, refetchInterval: REFRESH_MS });
+  const polling = useNeedsPolling(tripId);
+  return useQuery({ queryKey: proposalsKey(tripId, language), queryFn: () => getProposals(tripId, language), retry: false, refetchInterval: polling ? REFRESH_MS : false });
 }
 
 export function useNotices(tripId: string) {
   const { language } = useSettings();
-  const queryClient = useQueryClient();
-  return useQuery({
-    queryKey: noticesKey(tripId, language),
-    queryFn: async () => {
-      const previous = queryClient.getQueryData<Notice[]>(noticesKey(tripId, language));
-      const notices = await getNotices(tripId, language);
-      if (JSON.stringify(previous ?? []) !== JSON.stringify(notices)) {
-        // 첫 알림 조회도 동기화해 여행을 연 직후 생긴 변경을 놓치지 않는다.
-        // 여행 조회가 실패하면 알림 캐시를 갱신하지 않아 다음 주기에 다시 시도한다.
-        await queryClient.invalidateQueries({ queryKey: tripKey(tripId, language) }, { throwOnError: true });
-      }
-      return notices;
-    },
-    retry: false,
-    refetchInterval: REFRESH_MS,
-  });
+  const polling = useNeedsPolling(tripId);
+  return useQuery({ queryKey: noticesKey(tripId, language), queryFn: () => getNotices(tripId, language), retry: false, refetchInterval: polling ? REFRESH_MS : false });
+}
+
+/** `[2026-10-06]` The situation brief after a disaster pause was lifted (null when there is none or it is older than 72 hours). A server without it reads as none; a read that fails otherwise is the caller's to show. */
+export function useRecovery(tripId: string) {
+  const { language } = useSettings();
+  return useQuery({ queryKey: recoveryKey(tripId, language), queryFn: () => getRecovery(tripId, language), retry: false, staleTime: 30_000 });
 }

@@ -88,7 +88,7 @@ def walk_min(a: dict[str, Any], b: dict[str, Any]) -> int:
 
 def build(case: dict[str, Any], seed: int = 0) -> tuple[dict[str, Any], list[Any], dict[str, dict[str, Any]]]:
     """시나리오 → (trip, items, 장소 key→장소). 장소 id 는 key 로 정해진다(uuid5) — 실행마다 같다."""
-    from app.modules.travel_ops.itinerary import Item
+    from app.domains.travel_ops.components.itinerary.itinerary import Item
 
     places: dict[str, dict[str, Any]] = {}
     for spec in case["places"]:
@@ -115,7 +115,7 @@ def build(case: dict[str, Any], seed: int = 0) -> tuple[dict[str, Any], list[Any
 
 
 def plan(case: dict[str, Any], trip: dict[str, Any], items: list[Any], places: dict[str, dict[str, Any]]) -> Any:
-    from app.modules.travel_ops import itinerary_changes as changes
+    from app.domains.travel_ops.components.itinerary import itinerary_changes as changes
 
     engine = _LEG["leg"] if case.get("needs") == "mobility" else None
     original_engine = changes._leg_engine
@@ -266,7 +266,7 @@ def run_case(case: dict[str, Any], seeds: int = 5) -> dict[str, Any]:
 
 def enable_mobility(data_dir: str) -> None:
     """이동 계산기를 켠다(`mobility.wiring.configure`). 자료 확인이 실패하면 멈춘다(지어낸 소요로 재지 않는다)."""
-    from app.modules.travel_ops.mobility import wiring
+    from app.domains.travel_ops.instances.mobility import wiring
 
     wiring.configure(data_dir=str(Path(data_dir).resolve()), verify_hash=False)
     _LEG["leg"] = wiring.leg_planner(None, {})

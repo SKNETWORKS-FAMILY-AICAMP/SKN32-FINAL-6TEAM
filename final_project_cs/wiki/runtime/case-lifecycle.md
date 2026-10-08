@@ -10,7 +10,7 @@ domain: neutral
 
 # Case 생명주기
 
-`app/domain/events.py` · `app/core/transition.py` (232줄)
+`app/core/case_lifecycle/events.py` · `app/core/transition.py` (232줄)
 
 ## 12개 상태
 

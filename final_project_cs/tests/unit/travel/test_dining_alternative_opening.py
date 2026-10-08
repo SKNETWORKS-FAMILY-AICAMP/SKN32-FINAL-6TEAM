@@ -6,10 +6,11 @@ from uuid import uuid4
 
 import pytest
 
-from app.modules.travel_ops.dining import DiningTeam
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.itinerary_changes import NoChange, plan_closed, plan_closed_on_day, plan_delay
-from app.modules.travel_ops.replan import dining_candidates, dining_fits
+from app.domains.travel_ops.instances.dining import DiningTeam
+from app.domains.travel_ops.instances.dining import ledger as dining_ledger_impl
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_closed, plan_closed_on_day, plan_delay
+from app.domains.travel_ops.components.planning.replan import dining_candidates, dining_fits
 
 from .helpers import FakeTools, pack, task
 
@@ -141,8 +142,8 @@ def test_trip_desk_uses_its_tenant_when_reading_alternative_states(monkeypatch):
     from contextlib import nullcontext
     from types import SimpleNamespace
 
-    from app.modules.travel_ops.dining import ledger
-    from app.modules.travel_ops.trip_desk import TripDesk
+    from app.domains.travel_ops.instances.dining import ledger
+    from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
 
     origin, candidate = place(), place(hours=False)
     item = meal(origin)
@@ -165,14 +166,14 @@ def test_trip_desk_uses_its_tenant_when_reading_alternative_states(monkeypatch):
 def test_batch_read_tool_uses_scope_tenant_and_existing_ledger_lookup(monkeypatch):
     from contextlib import nullcontext
 
-    from app.modules.travel_ops.dining import ledger
+    from app.domains.travel_ops.instances.dining import ledger
     from app.tools.read_tools import ReadToolbox
 
     conn, seen = object(), []
     candidate = place()
     slots = [{"place_id": candidate["place_id"], "at": at("12:00"), "until": at("12:50")}]
 
-    def state(connection, tenant_id, place_id, starts, ends):
+    def state(connection, tenant_id, place_id, starts, ends, **_):    # `order_margin_min`(우리 20분 규칙) 같은 덧인자를 받는다 `[2026-10-05]`
         seen.append((connection, tenant_id, place_id, starts, ends))
         return {"linked": True, "open_at_slot": False}
 
@@ -189,7 +190,7 @@ def test_dawn_check_wires_ledger_without_calling_google_for_alternatives(monkeyp
     from contextlib import nullcontext
     from types import SimpleNamespace
 
-    from app.modules.travel_ops import dawn_check
+    from app.domains.travel_ops.components.watch import dawn_check
 
     origin, candidate = place(), place(hours=False)
     item = meal(origin)
@@ -201,11 +202,13 @@ def test_dawn_check_wires_ledger_without_calling_google_for_alternatives(monkeyp
         google_calls.append((provider_id, start, end))
         return "closed", "closed"
 
-    def states(connection, tenant_id, slots):
+    def states(connection, tenant_id, slots, **_):
         ledger_calls.append((connection, tenant_id, slots))
         return {s["place_id"]: {"linked": True, "open_at_slot": True} for s in slots}
 
-    monkeypatch.setattr(dawn_check, "dining_states", states)
+    # ★`[2026-10-06]` 새벽 점검은 요식 팀을 직접 부르지 않는다 — 조립이 꽂아 둔 자리를 거친다(D-CS-013).
+    #   그래서 **꽂는 쪽**(요식 원장)을 바꿔 끼운다. 자리가 호출 때 모듈에서 읽으므로 그대로 먹는다.
+    monkeypatch.setattr(dining_ledger_impl, "dining_states", states)
     monkeypatch.setattr(dawn_check, "apply_or_ask", lambda *_, **__: {"status": "adjusted", "version": 2})
     checker = dawn_check.DawnCheck(
         store=store, connection_factory=lambda: nullcontext(conn), clock=lambda: at("03:00"),

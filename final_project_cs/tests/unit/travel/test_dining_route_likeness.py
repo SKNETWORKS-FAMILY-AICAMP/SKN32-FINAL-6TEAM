@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops import meal_likeness as ml
-from app.modules.travel_ops.replan import (ROUTE_TOLERANCE_MIN, WALKABLE_LEG_MIN, Candidate, MealRoute, choose,
+from app.domains.travel_ops.components.planning import meal_likeness as ml
+from app.domains.travel_ops.components.planning.replan import (ROUTE_TOLERANCE_MIN, WALKABLE_LEG_MIN, Candidate, MealRoute, choose,
                                            dining_candidates)
 
 KST = ZoneInfo("Asia/Seoul")

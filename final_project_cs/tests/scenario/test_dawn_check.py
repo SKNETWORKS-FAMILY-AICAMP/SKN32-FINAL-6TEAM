@@ -18,11 +18,11 @@ import httpx
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.infrastructure.travel.call_budget import CallBudget, google_caps
-from app.infrastructure.travel.google_places import GooglePlaces, verdict_from_details
-from app.modules.travel_ops.case_engine import cleanup_tenant
-from app.modules.travel_ops.dawn_check import DawnCheck
-from app.modules.travel_ops.survey import SURVEY_VERSION
+from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget, google_caps
+from app.domains.travel_ops.ports.data_sources.google_places import GooglePlaces, verdict_from_details
+from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
+from app.domains.travel_ops.components.watch.dawn_check import DawnCheck
+from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
 
 from .test_case_version_day import SCENARIO, Clock, _at, _seed
 
@@ -171,7 +171,7 @@ def test_counting_without_a_cap_passes_the_free_tier_and_marks_the_crossing_once
 
 def test_prices_use_the_matched_google_id_and_leave_unmatched_places_unknown():
     """★`[2026-09-30]` 가격대는 새벽 확인이 맞춘 짝 표로만 — 짝이 없는 곳은 구글에서 찾지 않고 「모름」."""
-    from app.infrastructure.travel.google_places import prices_for
+    from app.domains.travel_ops.ports.data_sources.google_places import prices_for
 
     tenant, matched, unmatched = "t_price_" + uuid4().hex[:8], str(uuid4()), str(uuid4())
     asked = []
@@ -185,7 +185,7 @@ def test_prices_use_the_matched_google_id_and_leave_unmatched_places_unknown():
         cur.execute("INSERT INTO place_provider_ids (tenant_id, place_id, provider, provider_place_id, "
                     "match_distance_m) VALUES (%s,%s,'google_places','g-1',2.0)", (tenant, matched))
     try:
-        assert prices_for(get_connection, tenant, Source(), [matched, unmatched]) == {
+        assert prices_for(get_connection, tenant, Source(), [matched, unmatched], enabled=True) == {
             matched: {"level": 3, "low": None, "high": None}, unmatched: None}
         assert asked == ["g-1"]
     finally:
@@ -196,7 +196,7 @@ def test_prices_use_the_matched_google_id_and_leave_unmatched_places_unknown():
 def test_prices_fall_back_to_the_ledger_google_id_a_person_verified():
     """★`[2026-09-30]` 짝 표에 없으면 요식 원장의 구글 id(`dn_external_ref`, 사람이 확인한 `valid` 만)로 묻는다.
     짝 표가 먼저다 — 새벽 확인이 좌표로 맞춘 id 를 원장 id 가 덮지 않는다."""
-    from app.infrastructure.travel.google_places import prices_for
+    from app.domains.travel_ops.ports.data_sources.google_places import prices_for
 
     tenant = "t_price_" + uuid4().hex[:8]
     both, ledger_only, candidate_only = str(uuid4()), str(uuid4()), str(uuid4())
@@ -227,7 +227,7 @@ def test_prices_fall_back_to_the_ledger_google_id_a_person_verified():
                          verified[0]))
     try:
         two = {"level": 2, "low": None, "high": None}
-        assert prices_for(get_connection, tenant, Source(), [both, ledger_only, candidate_only]) == {
+        assert prices_for(get_connection, tenant, Source(), [both, ledger_only, candidate_only], enabled=True) == {
             both: two, ledger_only: two, candidate_only: None}
         assert asked == [f"core-{tag}", f"ledger-{tag}-{ledger_only}"], "짝 표 먼저, 확인 안 된 원장 링크는 안 쓴다"
     finally:
@@ -246,8 +246,8 @@ def test_an_unknown_meter_is_refused():
 def test_the_configured_caps_stay_under_the_free_tier():
     """★모든 요금 단위: 월 상한 + 하루 상한 ≤ 무료 한도, 하루 ≤ 월 ÷ 31 — 월 경계가 어긋나도 넘지 않게."""
     from app.core.settings import get_guardrails
-    from app.infrastructure.travel.call_budget import UNLIMITED
-    from app.infrastructure.travel.google_places import METER_DETAILS, METER_SEARCH
+    from app.domains.travel_ops.ports.data_sources.call_budget import UNLIMITED
+    from app.domains.travel_ops.ports.data_sources.google_places import METER_DETAILS, METER_SEARCH
 
     free = get_guardrails().get("travel.google_budget.free_monthly")
     caps = google_caps()
@@ -345,7 +345,7 @@ def test_a_lunch_that_is_closed_today_is_replaced_before_the_day_starts(world):
 
 def test_the_day_start_notice_carries_what_changed_at_dawn(world):
     """★새벽에 고친 것은 하루 시작 알림(08:00)에 실린다 — 「어제 이후 바뀐 일정이 1건」."""
-    from app.modules.travel_ops.trip_reminders import ReminderRules, TripReminders
+    from app.domains.travel_ops.components.watch.trip_reminders import ReminderRules, TripReminders
 
     _dawn(world, FakeSource(closed={LUNCH})).tick()
     # ★버전 기록 시각은 DB 의 실제 now() 다 — 시험 시계(03:05)에 맞춰 둔다(`test_trip_reminders` 와 같은 방식)
@@ -413,3 +413,27 @@ def test_an_activity_with_nothing_open_nearby_is_left_for_a_person_not_swapped_b
     result = _dawn(world, FakeSource(closed={SKY})).tick()
     assert result.adjusted == [] and [u["place"] for u in result.unresolved] == [SKY], result.counts()
     assert _latest(world)[0]["version"] == 1
+
+
+def test_a_dawn_replacement_that_fails_the_whole_recheck_is_counted_and_not_written(world, monkeypatch):
+    """`[2026-10-03 적대 검토]` 닫힌 식당의 대체가 일정 전체 재판정(D-017, T5)에 걸리면 **쓰지 않고** `rechecked` 로 센다 — `adjusted` 가 아니다.
+    전에는 이 호출자(새벽 확인)가 막힌 결과를 시험으로 지키지 못했다(감시자만 있었다)."""
+    from datetime import timedelta
+
+    from app.domains.travel_ops.components.watch import dawn_check
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
+
+    _, items = _latest(world)
+    lunch = next(i for i in items if i.starts_at.hour == 13 and i.kind == "dining")
+    later = next(i for i in sorted(items, key=lambda i: (i.starts_at, i.seq)) if i.starts_at >= lunch.ends_at and i.kind != "mobility")
+    overlapping = lunch.replaced_by(place=lunch.place, title=lunch.title + "(겹침)", ends_at=later.starts_at + timedelta(minutes=30))
+    change = ItineraryChange(reason="auto_adjusted", causes=[{"category": "place_closed", "type": "closed_on_day", "detail": "임시 휴업"}],
+                             notice={"text": "바꿨어요"}, replacements={lunch.item_id: overlapping},
+                             summary={"from": lunch.title, "to": overlapping.title})
+    monkeypatch.setattr(dawn_check, "plan_closed_on_day", lambda **_: change)
+
+    result = _dawn(world, FakeSource(closed={LUNCH})).tick()
+
+    assert result.adjusted == [] and len(result.rechecked) == 1 and result.rechecked[0]["skipped"]
+    assert result.counts()["rechecked"] == 1
+    assert _latest(world)[0]["version"] == 1                                         # ★아무것도 안 바뀌었다

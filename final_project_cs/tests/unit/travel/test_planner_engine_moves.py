@@ -8,8 +8,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 
-from app.modules.travel_ops.mobility import wiring
-from app.modules.travel_ops.planner import Cand, add_moves
+from app.domains.travel_ops.instances.mobility import wiring
+from app.domains.travel_ops.components.planning.planner import Cand, add_moves
 
 KST = timezone(timedelta(hours=9))
 
@@ -86,14 +86,17 @@ def test_46_survey_mobility_preference_becomes_engine_modes():
     assert wiring.modes_from_survey({"survey": {"priority_details": {"mobility": ["public"]}}}) == ["bus", "subway", "walk"]
     assert wiring.modes_from_survey({"survey": {"priority_details": {"mobility": ["walk"]}}}) == ["walk"]
     assert wiring.modes_from_survey({"survey": {"preferred_mobility": ["대중교통"]}}) == ["bus", "subway", "walk"]
-    assert wiring.modes_from_survey({"survey": {"priority_details": {"mobility": ["taxi", "car"]}}}) is None, \
-        "렌트카·택시만이면 계산기 기본 수단(아직 못 다룬다 — #47)"
+    assert wiring.modes_from_survey({"survey": {"priority_details": {"mobility": ["taxi"]}}}) == ["taxi", "walk"], \
+        "택시를 고르면 택시 후보를 싣는다(2026-10-04 · #47) — 도보는 늘 같이"
+    assert wiring.modes_from_survey({"survey": {"priority_details": {"mobility": ["public", "taxi"]}}}) == ["bus", "subway", "taxi", "walk"]
+    assert wiring.modes_from_survey({"survey": {"priority_details": {"mobility": ["car"]}}}) is None, \
+        "렌트카만이면 계산기 기본 수단(렌트카는 아직 못 다룬다)"
     assert wiring.modes_from_survey({}) is None
 
 
 def test_43_leg_planner_on_mini_data_fills_density_fields(tmp_path, monkeypatch):
-    from app.modules.travel_ops.mobility.engine import paths
-    from app.modules.travel_ops.mobility.engine import runtime as RT
+    from app.domains.travel_ops.instances.mobility.engine import paths
+    from app.domains.travel_ops.instances.mobility.engine import runtime as RT
 
     from .mobility.test_review_fixes_runtime import _write_mini_data
     before, saved = (paths.SOURCE, paths.DATA_DIR), dict(wiring._STATE)

@@ -5,9 +5,9 @@ from uuid import uuid4
 
 import pytest
 
-from app.modules.travel_ops.dining import DiningTeam
-from app.modules.travel_ops.itinerary_changes import NoChange, plan_closed, plan_delay, plan_swap
-from app.modules.travel_ops.pending import decide, options_from, proposal_notice
+from app.domains.travel_ops.instances.dining import DiningTeam
+from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_closed, plan_delay, plan_swap
+from app.domains.travel_ops.components.planning.pending import decide, options_from, proposal_notice
 
 from .helpers import FakeTools, pack, task
 from .test_dining_alternative_opening import at, meal, place

@@ -5,7 +5,7 @@
 
 한 transaction 안에서 다음을 함께 한다(v5 §6-4):
   1. 현재 version·status·tenant 확인
-  2. 허용 전이 · payload schema 검증  (app/domain/case.py 의 순수 리듀서)
+  2. 허용 전이 · payload schema 검증  (app/core/case_lifecycle/case.py 의 순수 리듀서)
   3. `customer_cases` projection UPDATE ... WHERE version = :expected  ← 동시성 게이트
   4. `case_events` append (aggregate_version = 새 version)
   5. `outbox` insert
@@ -27,8 +27,8 @@ from psycopg import Connection
 from psycopg.types.json import Json
 
 from app.core.contracts import CaseStatus, StateConflict
-from app.domain.case import CaseProjection, apply_event, fold_events
-from app.domain.events import EventType
+from app.core.case_lifecycle.case import CaseProjection, apply_event, fold_events
+from app.core.case_lifecycle.events import EventType
 from app.core.redaction import mask_json
 
 

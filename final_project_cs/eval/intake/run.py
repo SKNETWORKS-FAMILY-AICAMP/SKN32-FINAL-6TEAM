@@ -11,6 +11,9 @@
 ★지표(분자/분모)
     항목 재현율     찾은 정답 항목 / 정답 항목
     값 변조         원문(사람이 쓴 글)에 글자 그대로 없는 제목·예약번호 / 뽑은 제목·예약번호
+                    ★`[2026-10-06 사용자 지시]` 셋으로 나눈다 — 받아쓰기가 두 번 다르게 읽어 **「확인 필요」로 표시된 변조**(`tampering_flagged_by_check`) ·
+                    다른 까닭으로 이미 확인 필요였던 변조(`tampering_flagged_other`) · **표시 없이 새어 나간 변조**(`tampering_leaked` — 고객이 확정 값으로 보는 것).
+                    전체 변조(`tampering`)는 전과 같은 정의라 이전 실행(12/350)과 견줄 수 있다. 표시한 것 가운데 변조가 아니었던 것도 센다(`differs_precision`).
     시각 정확도     맞은 시각 / 원문에 시각이 있는 정답 항목
     장소 1위 정확도 맞게 고른 장소 / 정답 장소가 있는 짝지은 항목
     근거 없는 값    근거가 빈 값 / 뽑은 값 전체
@@ -55,7 +58,7 @@ class Memo:
 
 
 def _norm(text: str | None) -> str:
-    from app.modules.travel_ops.intake.places import normalize
+    from app.domains.travel_ops.components.intake.places import normalize
 
     return normalize(text or "")
 
@@ -64,19 +67,19 @@ def run(only: set[str] | None = None) -> dict:
     from app.core.settings import get_settings
     from app.infrastructure.db.session import get_connection
     from app.infrastructure.ollama_chat import from_settings
-    from app.infrastructure.travel.base import build_travel_sources
-    from app.infrastructure.travel.call_budget import CallBudget, kakao_caps
-    from app.infrastructure.travel.kakao_local import KakaoLocal
-    from app.modules.travel_ops.intake.assemble import assemble
-    from app.modules.travel_ops.intake.pipeline import _our_places, load_aliases, read_source
-    from app.modules.travel_ops.intake.sources import to_text
+    from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+    from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget, kakao_caps
+    from app.domains.travel_ops.ports.data_sources.kakao_local import KakaoLocal
+    from app.domains.travel_ops.components.intake.assemble import assemble, collect
+    from app.domains.travel_ops.components.intake.pipeline import _our_places, differs_by_line, load_aliases, read_source
+    from app.domains.travel_ops.components.intake.sources import to_text
 
     settings = get_settings()
     chat = from_settings(settings)
     place_source = build_travel_sources(settings).place
     # ★평가 실행 한 번이 관광공사를 수십 번 부른다 — 몰림 허용 30 으로는 뒤쪽이 「막힘」이 된다(첫 실행에서 봤다).
     #   이 실행에서만 몰림 200 · 하루 합계는 설정값(`rate_tour_api_per_day`) 그대로 지킨다(`interval_for`)
-    from app.infrastructure.travel.ratelimit import RateLimiter, interval_for
+    from app.domains.travel_ops.ports.data_sources.ratelimit import RateLimiter, interval_for
     per_day = settings.rate_tour_api_per_day
     place_source._limiter = RateLimiter(intervals={"tour_api": interval_for(per_day, burst=200)},
                                         bursts={"tour_api": 200})
@@ -84,48 +87,67 @@ def run(only: set[str] | None = None) -> dict:
     kakao = Memo(KakaoLocal(api_key=settings.kakao_rest_api_key,
                             budget=CallBudget(connection_factory=get_connection, caps=kakao_caps())), "search")
     with get_connection() as conn:
-        ours, aliases = _our_places(conn, "demo"), load_aliases(conn, "demo")
+        # ★고객 번호 없이 부른다 — 기본값(seed) 별칭만 읽는다(고객이 고친 별칭은 그 고객의 접수에만 쓰는 규칙, 마이그레이션 038). 이 줄이 옛 두 인자 모양이라 2026-09-30 뒤로 평가 실행이 TypeError 로 죽어 있었다
+        ours, aliases = _our_places(conn, "demo"), load_aliases(conn, "demo", None)
 
-    rows_out, seconds = [], []
+    rows_out, seconds, leaked = [], [], []
     totals = dict(gold=0, found=0, extracted=0, tampered=0, timed=0, time_ok=0, placed=0, place_ok=0,
-                  values=0, no_evidence=0, place_blocked=0)
+                  values=0, no_evidence=0, place_blocked=0,
+                  tampered_flagged_by_check=0, tampered_flagged_other=0, tampered_leaked=0,
+                  flagged_by_check=0, differ_lines=0, transcribed_lines=0)
     for folder in sorted(p for p in CASES.iterdir() if p.is_dir()):
         gold = json.loads((folder / "gold.json").read_text(encoding="utf-8"))
         if only and gold["format"] not in only:
             continue
         started = time.perf_counter()
-        sources, claims, errors = [], [], []
+        sources, claims, errors, transcripts = [], [], [], []
         for position, source in enumerate(gold["inputs"]):
             sid = f"s{position}"
+            unlike = []
             try:
                 if source["kind"] == "text":
                     text, took = source["text"], 0.0
                 else:
                     got = to_text((folder / source["name"]).read_bytes(), filename=source["name"], see=chat.see)
-                    text, took = got.text, got.seconds
+                    text, took, unlike = got.text, got.seconds, got.differs
                     if got.transcribed_pages:
                         seconds.append(took)
+                        totals["differ_lines"] += len(unlike)
+                        totals["transcribed_lines"] += len([ln for ln in text.splitlines() if ln.strip()])
+                        transcripts.append({"source": sid, "text": text, "differs": unlike, "missing": got.missing})
             except Exception as exc:                  # noqa: BLE001 — 실패는 세어 남긴다(조용한 스킵 금지)
                 errors.append(f"{sid}: {type(exc).__name__}: {exc}"[:200])
                 continue
             sources.append({"source_id": sid, "position": position, "transcript": text})
             for row in read_source(text, chat=chat, tour=tour, kakao=kakao, our_places=ours, today=TODAY,
-                                   aliases=aliases):
+                                   aliases=aliases, differs=differs_by_line(unlike)):
                 claims.append({"source_id": sid, **row})
         built = assemble(intake_id="eval", revision=1, sources=sources, claims=claims)
         predicted = built.body["items"]
         places = {p["key"]: p for p in built.body["places"]}
         original = "\n".join(gold["lines"])
-        # 변조 — 뽑은 제목·예약번호가 사람이 쓴 원문에 글자 그대로 있나
-        for item in predicted:
+        # 변조 — 뽑은 제목·예약번호가 사람이 쓴 원문에 글자 그대로 있나. ★세 갈래로 나눈다(위 머리말): 받아쓰기 비교가 표시한 것 · 다른 까닭으로 확인 필요였던 것 · 표시 없이 새어 나간 것
+        def tally(value, claim):
             totals["extracted"] += 1
-            if item["title"] not in original:
+            review = bool(claim and claim.get("needs_review"))
+            by_check = bool(claim and (claim.get("evidence") or {}).get("transcription_differs"))
+            totals["flagged_by_check"] += by_check
+            if value not in original:
                 totals["tampered"] += 1
-            booking = (item["detail"].get("booking") or {}).get("booking_no")
-            if booking:
-                totals["extracted"] += 1
-                if booking not in original:
-                    totals["tampered"] += 1
+                if by_check:
+                    totals["tampered_flagged_by_check"] += 1
+                elif review:
+                    totals["tampered_flagged_other"] += 1
+                else:
+                    totals["tampered_leaked"] += 1
+                    leaked.append({"case": gold["case_id"], "value": value})
+
+        for row in collect(sources=sources, claims=claims).rows:
+            if not (row["date"] and row["start"]):
+                continue                                  # 조립이 일정으로 싣지 않는 줄(날짜·시각 없음) — 변조 분모에 안 넣는다(전과 같다)
+            tally(row["title"] or "(제목 없음)", (row["claims"].get("title") or {}))
+            if row["booking_no"]:
+                tally(row["booking_no"], (row["claims"].get("booking_no") or {}))
         # 근거 — 값마다 근거가 붙었나
         for claim in claims:
             totals["values"] += 1
@@ -170,7 +192,7 @@ def run(only: set[str] | None = None) -> dict:
                               if got else None, "time_ok": time_ok, "place_ok": place_ok})
         rows_out.append({"case": gold["case_id"], "format": gold["format"], "defect": gold["defect"],
                          "seconds": round(time.perf_counter() - started, 1), "errors": errors,
-                         "problems": [p.code for p in built.problems], "items": case_rows})
+                         "problems": [p.code for p in built.problems], "items": case_rows, "transcripts": transcripts})
         print(f"{gold['case_id']:12} found {sum(r['found'] for r in case_rows)}/{len(case_rows)} "
               f"{'ERR ' + errors[0][:60] if errors else ''}", flush=True)
 
@@ -182,6 +204,12 @@ def run(only: set[str] | None = None) -> dict:
         "model": settings.ollama_model, "today": TODAY.isoformat(), "synthetic": True,
         "cases": len(rows_out), "item_recall": pct(totals["found"], totals["gold"]),
         "tampering": pct(totals["tampered"], totals["extracted"]),
+        "tampering_flagged_by_check": pct(totals["tampered_flagged_by_check"], totals["extracted"]),
+        "tampering_flagged_other": pct(totals["tampered_flagged_other"], totals["extracted"]),
+        "tampering_leaked": pct(totals["tampered_leaked"], totals["extracted"]),
+        "differs_precision": pct(totals["tampered_flagged_by_check"], totals["flagged_by_check"]),
+        "differ_lines": pct(totals["differ_lines"], totals["transcribed_lines"]),
+        "leaked": leaked,
         "time_accuracy": pct(totals["time_ok"], totals["timed"]),
         "place_top1": pct(totals["place_ok"], totals["placed"]),
         "no_evidence": pct(totals["no_evidence"], totals["values"]),

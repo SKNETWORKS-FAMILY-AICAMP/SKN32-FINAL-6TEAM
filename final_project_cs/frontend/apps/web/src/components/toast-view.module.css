@@ -1,0 +1,66 @@
+/* `[2026-10-06 사용자 지시 — 알림은 하나의 포맷 · 하얀 카드 · 강조는 다른 것으로(테두리를 도는 빛 등)]` 모든 화면의 알림이 이 한 모양이다: 하얀 카드 · 머리줄 바로 아래 · 쓰는 색은 제품 토큰뿐.
+   폰 틀 안에서는 틀 폭에서 양쪽 12px(지도 화면은 오른쪽 지도 단추 자리를 비운다: --toast-right), 넓은 화면에서는 위쪽 가운데.
+   하얀색은 시트와 칩 사이에 묻히므로 눈에 띄게 하는 것은 따로 둔다 — ① 가장자리의 색 띠(판정 색) ② 나타날 때 테두리를 한 바퀴 도는 빛 ③ 한 번 퍼지는 부드러운 고리. */
+@property --toast-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
+.toast {
+  --tone: var(--color-selected);
+  --lift: 0 8px 26px color-mix(in srgb, var(--color-text) 20%, transparent);
+  position: fixed; z-index: 90; top: var(--toast-top, 76px); left: 50%; width: min(420px, calc(100vw - 24px)); margin: 0; padding: 10px 6px 10px 16px;
+  display: grid; align-items: start; column-gap: 10px; row-gap: 6px; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "body action close";
+  border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); color: var(--color-text); font-size: 13px; line-height: 1.4;
+  box-shadow: inset 4px 0 0 var(--tone), var(--lift); transform: translateX(-50%); pointer-events: none;
+  animation: toastIn 340ms cubic-bezier(.22, .8, .3, 1) both, toastRing 1100ms ease-out 240ms 1 both;
+}
+.toast[data-tone="warn"] { --tone: var(--color-warning); }
+.toast[data-tone="ok"] { --tone: var(--color-success); }
+.toast[data-tone="changed"] { --tone: var(--color-selected); }
+/* `[2026-10-07 사용자 결정]` An error stays until it is closed or swiped away: it takes the finger (the others let presses through to the map), and its stripe is the error colour. */
+.toast[data-tone="error"] { --tone: var(--color-error); }
+.toast[data-stay] { pointer-events: auto; touch-action: pan-y; cursor: grab; }
+.toast[data-badge] { grid-template-columns: auto minmax(0, 1fr) auto auto; grid-template-areas: "badge body action close"; }
+.toast[data-stacked] { grid-template-areas: "body body close" "action action action"; }
+.toast[data-badge][data-stacked] { grid-template-areas: "badge body body close" ". action action action"; }
+.toast[data-in-frame] { position: absolute; left: 12px; right: var(--toast-right, 12px); width: auto; transform: none; animation-name: toastInFrame, toastRing; }
+.toast[data-leaving] { animation: toastOut 180ms ease-in both; }
+.toast[data-in-frame][data-leaving] { animation: toastOutFrame 180ms ease-in both; }
+
+/* 테두리를 한 바퀴 도는 빛: 테두리 두께만 보이게 마스크로 오려 낸 원뿔 그라데이션의 각도를 돌린다(한 번). */
+.toast::before {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 2px; pointer-events: none;
+  background: conic-gradient(from var(--toast-angle), transparent 0 52%, color-mix(in srgb, var(--tone) 25%, transparent) 62%, var(--tone) 82%, color-mix(in srgb, var(--tone) 25%, transparent) 94%, transparent 100%);
+  -webkit-mask: linear-gradient(var(--color-text) 0 0) content-box, linear-gradient(var(--color-text) 0 0); -webkit-mask-composite: xor; mask: linear-gradient(var(--color-text) 0 0) content-box exclude, linear-gradient(var(--color-text) 0 0);
+  animation: toastShine 1500ms cubic-bezier(.45, .05, .35, 1) 160ms 1 both;
+}
+
+.badge { grid-area: badge; display: grid; place-items: center; width: 28px; height: 28px; margin-top: 1px; border: 1.6px solid var(--color-selected); border-radius: 50% 50% 50% 5px; background: var(--color-selected); color: var(--color-on-primary); font-size: 13px; font-weight: 700; }
+.badge[data-route] { border-radius: 50%; background: var(--color-surface); color: var(--color-selected); }
+.body { grid-area: body; min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-top: 4px; color: var(--color-text-secondary); font-size: 12.5px; }
+.toast[data-badge] .body { padding-top: 0; }
+.title { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; font-size: 14px; font-weight: 750; line-height: 1.35; color: var(--color-text); word-break: keep-all; }
+.title em { padding: 1px 7px; border-radius: 999px; font-size: 11px; font-style: normal; font-weight: 750; }
+.title em[data-tone="warn"] { background: var(--color-warning-soft); color: var(--color-warning); }
+.title em[data-tone="ok"] { background: var(--color-success-soft); color: var(--color-success); }
+.title em[data-tone="changed"] { background: var(--color-selected-soft); color: var(--color-selected); }
+.sub { white-space: pre-line; }
+.note { color: var(--color-warning); font-weight: 600; }
+.action { grid-area: action; justify-self: start; min-height: 32px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; pointer-events: auto; }
+.toast:not([data-stacked]) .action { align-self: center; }
+.close { grid-area: close; display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 10px; background: none; color: var(--color-text-secondary); cursor: pointer; pointer-events: auto; }
+.toast:not([data-stacked]) .close { align-self: center; }
+.action:focus-visible, .close:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes toastInFrame { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+@keyframes toastOut { from { opacity: 1; transform: translate(-50%, 0); } to { opacity: 0; transform: translate(-50%, -6px); } }
+@keyframes toastOutFrame { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-6px); } }
+@keyframes toastShine { 0% { --toast-angle: 0deg; opacity: 1; } 78% { opacity: 1; } 100% { --toast-angle: 360deg; opacity: 0; } }
+@keyframes toastRing {
+  from { box-shadow: inset 4px 0 0 var(--tone), var(--lift), 0 0 0 0 color-mix(in srgb, var(--tone) 38%, transparent); }
+  to { box-shadow: inset 4px 0 0 var(--tone), var(--lift), 0 0 0 12px color-mix(in srgb, var(--tone) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast, .toast[data-in-frame] { animation: none; }
+  .toast::before { animation: none; opacity: 0; }
+  .toast[data-leaving], .toast[data-in-frame][data-leaving] { animation: none; opacity: 0; }
+}

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from app.modules.travel_ops.replan import route_candidates
+from app.domains.travel_ops.components.planning.replan import route_candidates
 
 KST = timezone(timedelta(hours=9))
 DEPART = datetime(2026, 10, 7, 10, 50, tzinfo=KST)

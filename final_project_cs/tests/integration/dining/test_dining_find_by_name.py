@@ -10,7 +10,7 @@ from datetime import datetime
 
 import pytest
 
-from app.modules.travel_ops.dining.ledger import find_place_by_name
+from app.domains.travel_ops.instances.dining.ledger import find_place_by_name
 
 
 @pytest.fixture
@@ -123,7 +123,7 @@ def test_typo_is_found_for_review(conn, shop):
 
 
 def test_dish_near_finds_the_closest_menu_shop_within_radius(conn, shop):
-    from app.modules.travel_ops.dining.ledger import find_dish_near
+    from app.domains.travel_ops.instances.dining.ledger import find_dish_near
 
     tag = uuid.uuid4().hex[:4]
     near_uid, _ = shop(f"가까운{tag}기름떡볶이", lat=37.5807, lng=126.9702)

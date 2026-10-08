@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SURVEY_VERSION } from "@/features/onboarding/payload";
+import { resetSessionState } from "./client";
 import { confirmIntake, planIntake, submitIntake } from "./intake";
+import { answeringSession } from "./session-kit";
 
 function memory() {
   const items = new Map<string, string>();
@@ -16,13 +18,12 @@ describe("live intake requests carry the onboarding survey", () => {
   beforeEach(() => {
     bodies = [];
     vi.stubGlobal("window", { localStorage: memory(), sessionStorage: memory() });
-    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
-      if (url.endsWith("/v1/web/session")) return new Response(JSON.stringify({ user_key: "acop_u_test" }), { status: 201 });
+    vi.stubGlobal("fetch", answeringSession(async (_url, init) => {
       bodies.push(JSON.parse(String(init.body)) as Record<string, unknown>);
       return new Response(JSON.stringify(CONFIRMED), { status: 200 });
-    });
+    }, { has: false }));
   });
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => { vi.unstubAllGlobals(); resetSessionState(); });
 
   it("sends the survey with /confirm when the customer finished the questions", async () => {
     await confirmIntake("i1", 3, "ko", SURVEY);
@@ -47,13 +48,12 @@ describe("plan submission carries the human-check token", () => {
   beforeEach(() => {
     forms = [];
     vi.stubGlobal("window", { localStorage: memory(), sessionStorage: memory() });
-    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
-      if (url.endsWith("/v1/web/session")) return new Response(JSON.stringify({ user_key: "acop_u_test" }), { status: 201 });
+    vi.stubGlobal("fetch", answeringSession(async (_url, init) => {
       forms.push(init.body as FormData);
       return new Response(JSON.stringify({ intake_id: "i1" }), { status: 202 });
-    });
+    }, { has: false }));
   });
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => { vi.unstubAllGlobals(); resetSessionState(); });
 
   it("adds turnstile_token next to the plan text when the check gave one", async () => {
     await submitIntake("09:00 경복궁", [], "ko", "tok-123");

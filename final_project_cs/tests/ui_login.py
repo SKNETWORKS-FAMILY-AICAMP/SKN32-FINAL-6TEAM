@@ -36,7 +36,24 @@ def login(client, monkeypatch, *, operator_id: str = "op-test",
     """운영자를 얹고 **실제 로그인 경로로** 들어간다. 쿠키는 `client` 에 남는다."""
     as_operator(monkeypatch, operator_id=operator_id, scopes=scopes)
     response = client.post("/ui/login", data={"operator_id": operator_id, "password": PASSWORD,
-                                              "next": "/ui/cases"}, follow_redirects=False)
+                                              "next": "/ui/cases", "csrf": login_csrf(client)},
+                           follow_redirects=False)
     assert response.status_code == 303, response.text[:300]
     assert auth.COOKIE in response.cookies or auth.COOKIE in client.cookies
     return operator_id
+
+
+def login_csrf(client) -> str:
+    """로그인 화면을 열어 로그인 폼의 위조 방지 값을 받는다(쿠키는 `client` 에 남는다). `[2026-09-29]`"""
+    import re
+
+    page = client.get("/ui/login")
+    found = re.search(r"name='csrf' value='([^']+)'", page.text)
+    assert found, page.text[:300]
+    return found.group(1)
+
+
+def csrf(client) -> str:
+    """로그인한 뒤의 폼 위조 방지 값 — 화면이 숨은 칸에 넣는 것과 같다(로그인 쿠키에서 서명). `[2026-09-29]`"""
+    return auth.csrf_for(client.cookies.get(auth.COOKIE) or "")
+

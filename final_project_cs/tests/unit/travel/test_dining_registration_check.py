@@ -11,7 +11,7 @@ from __future__ import annotations
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.itinerary_checks import Part, check_itinerary, with_ledger
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary, with_ledger
 
 KST = ZoneInfo("Asia/Seoul")
 
@@ -92,8 +92,11 @@ def test_with_ledger_leaves_the_plan_as_is_when_the_ledger_cannot_be_read():
         raise RuntimeError("요식 표가 없는 DB")
 
     parts = [_dining(1, "23:30")]
-    assert with_ledger(parts, broken) == parts
-    assert check_itinerary(with_ledger(parts, broken)) == []
+    got = with_ledger(parts, broken)
+    # ★`[2026-10-05]` 일정은 그대로 두되 「원장을 못 읽었다」는 표시를 남긴다(조용한 삼킴 금지) — 거르지는 않는다
+    assert [(p.seq, p.title, p.starts_at) for p in got] == [(p.seq, p.title, p.starts_at) for p in parts]
+    assert got[0].detail == {"ledger_unavailable": True}
+    assert check_itinerary(got) == []
 
 
 def test_with_ledger_does_not_call_the_ledger_without_dining_items():

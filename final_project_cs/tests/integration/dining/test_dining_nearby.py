@@ -12,10 +12,10 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.modules.travel_ops.dining.ledger import dining_state, dining_states, nearby_shops
-from app.modules.travel_ops.dining.nearby import add_nearby
-from app.modules.travel_ops.itinerary import Item, TripStore
-from app.modules.travel_ops.itinerary_changes import NoChange, plan_closed
+from app.domains.travel_ops.instances.dining.ledger import dining_state, dining_states, nearby_shops
+from app.domains.travel_ops.instances.dining.nearby import add_nearby
+from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_closed
 
 from tests.integration.dining.conftest import MIGRATIONS
 from tests.integration.dining.test_dining_judgment import add_hours
@@ -33,7 +33,7 @@ def core(conn):
                  "ON places (tenant_id, trip_scope, name, kind) WHERE trip_scope IS NOT NULL")
     conn.execute(open(os.path.join(MIGRATIONS, "202_dining_matcher.sql"), encoding="utf-8").read())
     # 판정 때 잇기(220)는 아직 안 이어진 장소에서만 돈다. 들여놓은 장소는 이미 이어져 있지만 같은 DB 를 맞춘다
-    conn.execute(open(os.path.join(MIGRATIONS, "220_dining_runtime_link.sql"), encoding="utf-8").read())
+    conn.execute(open(os.path.join(MIGRATIONS, "224_dining_runtime_link.sql"), encoding="utf-8").read())
     return conn
 
 

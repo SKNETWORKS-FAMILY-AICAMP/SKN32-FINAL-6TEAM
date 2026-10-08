@@ -37,7 +37,7 @@ MIGRATIONS = os.path.join(ROOT, "app", "infrastructure", "db", "migrations")
 #: 2026-09-28 에 020~038 을 200~218 로 옮겼다 — develop 이 020~030 을 쓰게 되어 11곳이 겹쳤다.
 #: 옛 파일 머리말·주석의 번호(「027」 등)는 옮기기 전 번호다. 지금 번호는 180 을 더하면 된다.
 DINING_RANGE = range(200, 300)
-TEAM_REF = "app.modules.travel_ops.dining:DiningTeam"
+TEAM_REF = "app.domains.travel_ops.instances.dining:DiningTeam"
 TOOL_NAME = "read.dining_state"
 
 BLOCK, WARN, OK = "막음", "봐둘 것", "괜찮음"
@@ -117,7 +117,7 @@ def check_team(rep: Report) -> None:
         return
 
     # 폴더로 바꾼 뒤에도 같은 이름으로 불러져야 한다. __init__ 이 재수출한다.
-    init_path = os.path.join(ROOT, "app", "modules", "travel_ops", "dining", "__init__.py")
+    init_path = os.path.join(ROOT, "app", "domains", "travel_ops", "instances", "dining", "__init__.py")
     if not os.path.isfile(init_path):
         rep.add(BLOCK, "dining/__init__.py 가 없다", "등록 이름이 풀리지 않는다")
         return
@@ -133,7 +133,7 @@ def check_team(rep: Report) -> None:
 
 def check_tool(rep: Report) -> None:
     tools_path = os.path.join(ROOT, "app", "tools", "read_tools.py")
-    team_path = os.path.join(ROOT, "app", "modules", "travel_ops", "dining", "team.py")
+    team_path = os.path.join(ROOT, "app", "domains", "travel_ops", "instances", "dining", "team.py")
     declared = TOOL_NAME in open(team_path, encoding="utf-8").read()
     registered = TOOL_NAME in open(tools_path, encoding="utf-8").read()
 
@@ -159,12 +159,10 @@ def check_db(rep: Report) -> None:
         rep.add(WARN, "psycopg 가 없어 DB 를 보지 못했다")
         return
 
-    dsn = os.environ.get("DINING_DSN")
-    if not dsn:
-        port = os.environ.get("DINING_PG_PORT", "5433")
-        user = os.environ.get("DINING_DB_USER", "postgres")
-        db = os.environ.get("DINING_DB", "dining_dev")
-        dsn = f"postgresql://{user}@localhost:{port}/{db}"
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import core_db  # ★`[2026-09-28 cs]` 기본은 코어 DB(`core_db.py`)
+
+    dsn = core_db.dsn()
     try:
         conn = psycopg.connect(dsn, connect_timeout=5)
     except Exception as exc:                            # noqa: BLE001

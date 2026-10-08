@@ -1,0 +1,60 @@
+{
+  "fresh_groups_reproduced": 19,
+  "fresh_rows_reproduced": 100,
+  "fresh_input_hashes_verified": 4,
+  "multi_input_hashes_verified": 88,
+  "multi_web_values_reparsed": 60,
+  "multi_metrics_independently_verified": [
+    {
+      "metric": "naver_with_wait",
+      "n": 12,
+      "median": 3.0,
+      "mae": 3.5833333333333335,
+      "within": 11,
+      "percent_median": 15.565134099616852
+    },
+    {
+      "metric": "naver_without_wait",
+      "n": 12,
+      "median": 3.0,
+      "mae": 2.9166666666666665,
+      "within": 12,
+      "percent_median": 9.934318555008215
+    },
+    {
+      "metric": "google_with_wait",
+      "n": 12,
+      "median": 1.0,
+      "mae": 2.1666666666666665,
+      "within": 12,
+      "percent_median": 4.265202702702697
+    },
+    {
+      "metric": "google_without_wait",
+      "n": 12,
+      "median": 0.0,
+      "mae": 1.8333333333333333,
+      "within": 12,
+      "percent_median": 0.0
+    },
+    {
+      "metric": "naver_taxi_meter",
+      "n": 12,
+      "median": -100.0,
+      "mae": 1116.6666666666667,
+      "within": 9,
+      "percent_median": -1.2422839506172845
+    },
+    {
+      "metric": "naver_taxi_budget",
+      "n": 12,
+      "median": 3000.0,
+      "mae": 4025,
+      "within": 1,
+      "percent_median": 36.049528301886795
+    }
+  ],
+  "naver_taxi_budget_coverage": 11,
+  "current_rules_match_experiment": true,
+  "scope": "saved web observations and saved local engine results; not new driving, deployed API or live rerouting tests"
+}

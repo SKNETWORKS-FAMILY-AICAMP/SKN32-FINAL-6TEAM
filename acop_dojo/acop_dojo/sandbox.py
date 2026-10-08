@@ -117,8 +117,12 @@ class Sandbox:
         # ★-rfE — 실패(F)와 오류(E)를 둘 다 요약에 올린다. 예전엔 -rf 라 fixture·setup 오류가
         #   목록에 안 나와 판정에서 통째로 빠졌다(2026-09-14 게이트에서 한 회차 94건, 다른 회차 119건).
         args = [sys.executable, "-m", "pytest", "-q", "--no-header", "-p", "no:cacheprovider",
-                "--tb=no", "-rfE"]
-        args.extend(selection or [])
+                "--tb=no", "-rfE", "--continue-on-collection-errors"]
+        # ★범위를 tests/ 로 좁힌다. cs 의 pytest.ini 에 testpaths 가 없어 저장소 전체를 뒤지다
+        #   _backup/ · legacy/ 의 낡은 시험(옛 경로 import, 같은 이름 파일)이 불러오기에서 깨졌고,
+        #   pytest 가 시험을 하나도 안 돌린 채 멈췄다. 관문은 그걸 「결함 8개 모두 안 잡힘」으로 저장했다
+        #   (2026-10-06 cs 폴더 이동 뒤). 불러오기 오류가 나도 나머지는 돌린다 — 오류는 ERROR 줄로 남는다.
+        args.extend(selection or ["tests"])
         try:
             proc = subprocess.run(args, cwd=self.root, capture_output=True, text=True,
                                   encoding="utf-8", errors="replace", timeout=timeout, check=False)

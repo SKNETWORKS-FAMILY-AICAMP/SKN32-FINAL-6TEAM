@@ -67,7 +67,7 @@ domain: travel
 
 `[실측 2026-09-09]` **여행 Team 여섯이 `config/project.yaml` 에 붙었다**(`activity`·`booking_handoff`·`mobility`·`dining`·`lodging`·`flight`).
 
-`[실측 2026-09-10 작업 트리]` **여행 분류 어휘와 두 축 라우팅이 이미 적용돼 있다** — `app/modules/travel_ops/feedback.py` 의 `INTENTS` 다섯이 슬러그이고 `ISSUE_CODES` 가 여행 17개이며, `app/application/controller.py:73,176` 이 `case_type_of(issue_code)` 와 `intent` 를 **둘 다** 넘긴다. **`[실측 2026-09-10 git]` 이 구현은 아직 커밋 전이다** — 되돌려지면 다시 막힌다.
+`[실측 2026-09-10 작업 트리]` **여행 분류 어휘와 두 축 라우팅이 이미 적용돼 있다** — `app/domains/travel_ops/components/core_hooks/feedback.py` 의 `INTENTS` 다섯이 슬러그이고 `ISSUE_CODES` 가 여행 17개이며, `app/application/controller.py:73,176` 이 `case_type_of(issue_code)` 와 `intent` 를 **둘 다** 넘긴다. **`[실측 2026-09-10 git]` 이 구현은 아직 커밋 전이다** — 되돌려지면 다시 막힌다.
 
 ## 이 영역의 불변식
 

@@ -1,24 +1,23 @@
 from __future__ import annotations
 
 from uuid import uuid4
-from tests.ui_login import login  # 운영 화면은 로그인한 운영자만 본다(D-CS-007)
+from tests.ops_app import ops_client
+from tests.ui_login import csrf, login  # 운영 화면은 로그인한 운영자만 본다(D-CS-007)
 
 import pytest
-from fastapi.testclient import TestClient
 from psycopg.types.json import Json
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
 from app.presentation import security
 from app.presentation.api.app import create_app
-from app.presentation.ui import mount_ui
 import app.presentation.ui.routes as ui
 from app.core.contracts import TeamManifest
 from app.core.registry import TeamRegistry
 
 
-ui_app = create_app()
-mount_ui(ui_app)
+# ★`[2026-09-29]` 운영 화면은 운영 앱이다(`app/ops_entrypoint.py`). 고객 API 앱은 운영 앱이 HTTP 로 부르는 상대다
+customer_app = create_app()
 
 
 @pytest.fixture()
@@ -48,7 +47,7 @@ def ui_fixture(monkeypatch):
                         (action_id, tenant, case_id, Json({"amount": 100, "risk_level": "high", "evidence": evidence}), "idem-" + str(action_id)))
 
     try:
-        client = TestClient(ui_app)
+        client = ops_client(monkeypatch, customer_app=customer_app)
         login(client, monkeypatch)
         yield {"client": client, "tenant": tenant, "case_id": case_id, "evidence_action": evidence_action, "empty_action": empty_action}
     finally:
@@ -111,7 +110,8 @@ def test_degraded_case_detail_has_visible_warning(ui_fixture):
 
 
 def test_approval_uses_rest_endpoint(ui_fixture):
-    response = ui_fixture["client"].post(f"/ui/approvals/{ui_fixture['case_id']}/{ui_fixture['evidence_action']}", data={"decision": "rejected"}, follow_redirects=False)
+    client = ui_fixture["client"]
+    response = ui_fixture["client"].post(f"/ui/approvals/{ui_fixture['case_id']}/{ui_fixture['evidence_action']}", data={"decision": "rejected", "csrf": csrf(client)}, follow_redirects=False)
     assert response.status_code == 303
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT decision FROM action_approvals WHERE action_id=%s", (ui_fixture["evidence_action"],))

@@ -1,0 +1,343 @@
+import type { Coordinates } from "@/features/map/model";
+
+/**
+ * The plan-check screen (after 「계획 확인하기」), built from the mockup `mockups/tripilot-plan-check-streaming.html`.
+ *
+ * ★This file is the screen's data contract. The screen draws a `PlanCheckView` snapshot and nothing else; it never calls
+ *   the server — the page passes what can change through `PlanCheckActions` (plan-check.tsx). The real route maps the
+ *   server's intake onto it (`from-intake.ts`); the preview fills every field from example data. A field or action the
+ *   server does not give yet is where the backend connects (PLAN_CHECK_SCREEN.md §4).
+ */
+
+/** One check's result (mockup `result`): passed · filled in by the server · warning · must fix · not known yet · not checked yet. */
+export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown" | "pending";
+/** Place checks: place · time · hours · closed. Move checks: route · mode · arrival. */
+export type CheckKind = "place" | "time" | "hours" | "closed" | "booking" | "route" | "mode" | "arrival";
+export interface CheckRow { kind: CheckKind; result: CheckResult; text: string }
+/** `[2026-10-07]` One value read two ways off a photo: the one kept and the other reading. */
+export interface Reread { field: "title" | "booking_no"; current: string; other: string }
+
+/** A card's verdict once its checks are in. Null while it is still being checked. */
+export type Verdict = "keep" | "adjusted" | "review";
+
+/** A place photo: the server's place data (`url`), or — preview only — an example drawing (`url` null). */
+/** A photo the server named (its address is checked before it is kept — `safePhotoUrl`); there are no stand-in pictures. */
+export interface PlacePhoto { caption: string; url: string }
+
+/** What a place is and where, for the change screen's cards. Null when the server has not given it. */
+export interface PlaceInfo {
+  /** e.g. 「관광지 · 고궁」 */
+  category: string | null;
+  address: string | null;
+  photos: PlacePhoto[];
+  /** What kind of stop the place is, as the server classes it (a meal place or an activity) — null when it does not say. */
+  kind?: "dining" | "activity" | string | null;
+  /** Where the server found it: `places` (our list) · `tour_api` (tourism service) · `kakao` (map search) · `customer_pick` … */
+  origin?: string | null;
+}
+
+export interface PlanItem {
+  id: string;
+  day: number;
+  /** "YYYY-MM-DD", or "" when the server has no date for it. */
+  date: string;
+  /** "HH:MM" */
+  startsAt: string;
+  /** "HH:MM", or "" when there is none. */
+  endsAt: string;
+  /**
+   * What the card is called. ★`[2026-10-03 사용자]` Once the customer picked a place for the stop, this is that place's name —
+   * the card used to keep the words they had written ("성수 예약 식당") after the place had changed.
+   */
+  title: string;
+  /** The words as written in the plan, when `title` is the picked place's name instead (the stop editor edits these, not the place). */
+  written?: string;
+  /** The place's name as the server holds it ("" when none), and whether the customer chose 「장소 없음」. */
+  place: string;
+  noPlace: boolean;
+  /** `[2026-10-07]` What kind of stop the server classes it (`activity` · `dining`), for the tag under the map when its pin is picked — null when it does not say. */
+  kind?: string | null;
+  /** Null when the place is not settled — it shows as 「위치 미정」 instead of a pin. */
+  coordinates: Coordinates | null;
+  checks: CheckRow[];
+  /** `[2026-10-07]` Values the server read two ways off a photo — the customer picks one (only those with another reading to offer). */
+  rereads?: Reread[];
+  verdict: Verdict | null;
+  /** Fixed by the customer: kept through re-planning and recommendations (mockup 「잠금」 — 「반드시 포함」). */
+  locked: boolean;
+  /** `[2026-10-04]` The plan says the stop is booked (`true`), says it is not (`false`), or says nothing (`null`; also an older server). */
+  booked: boolean | null;
+  info: PlaceInfo | null;
+  /** The first alternative's name, said under the card's 「자동 추천」 — null when none is known. */
+  suggestion: string | null;
+}
+
+/**
+ * A place one stop could change to (mockup scenario 4): one of the alternatives (`rank` 1, 2, 3 …) or a place picked from
+ * a search. `checks` are this place checked at the stop's time (empty when they have not been).
+ */
+export interface PlanCandidate {
+  id: string;
+  name: string;
+  source: "candidate" | "search";
+  rank: number | null;
+  /** How far it is from the stops around it, e.g. 0.6 km from 「경복궁」. */
+  distance: { km: number; from: string } | null;
+  coordinates: Coordinates | null;
+  info: PlaceInfo | null;
+  checks: CheckRow[];
+  /** `[2026-10-07]` Which step of the server's ladder it came from, and its one-sentence reason (both only when the server sent them). */
+  basis?: "same_kind" | "similar_experience" | "meal_inferred" | "lodging" | "lodging_meal" | "taste" | null;
+  /** What kind of stop the place makes (`dining` · `activity`) when the server says so — picked for a stop of another kind, the kind is sent with it. */
+  placeKind?: string | null;
+  reason?: string | null;
+}
+
+/** The way from one place to the next on the same day. */
+export interface PlanMove {
+  id: string;
+  fromId: string;
+  toId: string;
+  day: number;
+  /** "HH:MM" — leave at. */
+  departAt: string;
+  /** As the server words it, e.g. 「도보」 · 「지하철」. */
+  mode: string;
+  /** One line, e.g. 「12분 · 0.8km」. */
+  summary: string;
+  /** `[2026-10-04]` How many minutes the way takes, as the server counts it — null when it did not say. */
+  minutes: number | null;
+  /** `[2026-10-04]` "HH:MM" — arrive at, when leaving at `departAt`; "" when the server gave none. */
+  arriveAt: string;
+  /** `[2026-10-04]` Minutes to spare before the next stop starts (negative = arrives after it started) — null when not known. */
+  slackMin: number | null;
+  /** `[2026-10-04]` The time is a straight-line guess (`basis` estimate), not a timetable — said so on the screen instead of passing it off as exact. */
+  estimated: boolean;
+  /** `[2026-10-07]` The way the check uses now (`walk` · `subway` · `bus` · `taxi` · `transit` · `estimate`), the way the calculator chose, and what became of the customer's choice (`kept` · `dropped` + why). */
+  modeKey?: string | null;
+  recommendedMode?: string | null;
+  modeChoice?: { mode: string | null; state: "kept" | "dropped" | null; why: string | null } | null;
+  checks: CheckRow[];
+  verdict: Verdict | null;
+}
+
+/** What a line of the uploaded plan turned into: the trip's date, a stop, or nothing. A stop's day or time is null when
+ *  the server has not settled it — never filled in here. */
+export type LineFinding = { kind: "date"; date: string } | { kind: "item"; day: number | null; startsAt: string | null; title: string };
+export interface PlanLine { no: number; text: string; read: boolean; found: LineFinding | null }
+
+export interface PlanDay { day: number; /** "YYYY-MM-DD" */ date: string }
+
+/** received → reading (lines) → checking (places, hours, moves) → done. */
+export type PlanStage = "received" | "reading" | "checking" | "done";
+export const STAGES: readonly PlanStage[] = ["received", "reading", "checking", "done"];
+
+export interface PlanCheckView {
+  stage: PlanStage;
+  /** The trip's title once the check is done. */
+  title: string | null;
+  days: PlanDay[];
+  lines: PlanLine[];
+  /** In itinerary order within each day. */
+  items: PlanItem[];
+  moves: PlanMove[];
+  /**
+   * Changed since the whole plan was last checked: 「재검증」 comes before 「여행 등록」 (mockup scenario 7). A server that
+   * checks the plan on every save leaves it false.
+   */
+  dirty: boolean;
+  /** The whole plan is being checked again: the stop at it now, in order (mockup 「재검증 중 · 2/4」). Null otherwise. */
+  rechecking: string | null;
+  /**
+   * `[2026-10-03 사용자 지시]` How far the server says it is (its `progress` packet: phase, done of total, what it is at). When it is
+   * there the bar and the words come from it alone; when the server sends none (an older server) they come from the rows drawn, as before.
+   */
+  serverProgress?: ServerProgress | null;
+}
+
+/** What the server's `progress` packet says, with the stop's title to show. */
+export interface ServerProgress { phase: "places" | "hours" | "moves"; done: number; total: number; title: string | null }
+
+const stageIndex = (stage: PlanStage) => STAGES.indexOf(stage);
+
+/** Items and moves of one day in the order they are lived: item, move, item … */
+export function timeline(view: Pick<PlanCheckView, "items" | "moves">, day: number): ({ type: "item"; item: PlanItem } | { type: "move"; move: PlanMove })[] {
+  const out: ({ type: "item"; item: PlanItem } | { type: "move"; move: PlanMove })[] = [];
+  for (const item of view.items.filter((entry) => entry.day === day)) {
+    out.push({ type: "item", item });
+    const move = view.moves.find((entry) => entry.fromId === item.id);
+    if (move) out.push({ type: "move", move });
+  }
+  return out;
+}
+
+/** Every item and move in check order: day by day, along each day's timeline. */
+function checkOrder(view: PlanCheckView): ({ type: "item"; id: string } | { type: "move"; id: string })[] {
+  const days = [...new Set(view.items.map((item) => item.day))].sort((a, b) => a - b);
+  return days.flatMap((day) => timeline(view, day).map((entry) => entry.type === "item" ? { type: "item" as const, id: entry.item.id } : { type: "move" as const, id: entry.move.id }));
+}
+
+/**
+ * ★`[2026-10-04 사용자 지시]` 빨강(못 찾음·고쳐야 함)과 회색(–, 아직 모름)은 어차피 확인이 안 된 것이라 「확인 중」 애니메이션 없이 처음부터 그 모양으로 나온다.
+ * 천천히 켜지는 것은 통과(✓)·채움(✎)·주의(!)뿐이다 — 사용자가 「이건 확인됐구나」를 알아볼 수 있는 속도로.
+ */
+export const isInstantRow = (row: CheckRow) => row.result === "bad" || row.result === "unknown";
+
+const pendingCopy = <T extends { checks: CheckRow[]; verdict: Verdict | null }>(entity: T): T =>
+  ({ ...entity, checks: entity.checks.map((row) => isInstantRow(row) ? row : { ...row, result: "pending" as const, text: "" }), verdict: null });
+
+/**
+ * One visible change from `shown` toward `target`, or null when they already match.
+ *
+ * ★The server says what happened and in which order; the screen decides the pace. However many changes arrive at once
+ *   (a stream burst, or a re-read after a poll), they are drawn one at a time in this order: reading starts → each line
+ *   read → the days → checking starts → each place or move along the day (appear with its checks waiting → each check → its
+ *   verdict) → done → title.
+ *   Anything the screen cannot step toward (something removed, a line changed) jumps straight to `target`.
+ */
+export function nextStep(shown: PlanCheckView, target: PlanCheckView, coarse = false): PlanCheckView | null {
+  if (JSON.stringify(shown) === JSON.stringify(target)) return null;
+  const jump = () => target;
+  if (stageIndex(target.stage) < stageIndex(shown.stage)) return jump();
+  if (shown.lines.length > target.lines.length || shown.items.some((item) => !target.items.some((other) => other.id === item.id))
+    || shown.moves.some((move) => !target.moves.some((other) => other.id === move.id))) return jump();
+
+  // Reading starts before the first line is read, so the bar moves with the lines.
+  if (shown.stage === "received" && target.stage !== "received") return { ...shown, stage: "reading" };
+  // Lines: a line appears or is read, one at a time.
+  for (let index = 0; index < target.lines.length; index += 1) {
+    const want = target.lines[index], have = shown.lines[index];
+    if (!have) return { ...shown, lines: [...shown.lines, { ...want, read: false, found: null }] };
+    if (have.no !== want.no || have.text !== want.text || (have.read && !want.read)) return jump();
+    if (!have.read && want.read) return { ...shown, lines: shown.lines.map((line, at) => at === index ? want : line) };
+    if (JSON.stringify(have.found) !== JSON.stringify(want.found)) return { ...shown, lines: shown.lines.map((line, at) => at === index ? want : line) };
+  }
+  // The trip's days come with the reading; checking starts once every line is read.
+  if (JSON.stringify(shown.days) !== JSON.stringify(target.days)) return { ...shown, days: target.days };
+  if (shown.stage === "reading" && stageIndex(target.stage) > stageIndex("reading")) return { ...shown, stage: "checking" };
+
+  // Places and moves along each day: appear (checks waiting) → each check → verdict.
+  for (const entry of checkOrder(target)) {
+    if (entry.type === "item") {
+      const want = target.items.find((item) => item.id === entry.id)!;
+      const have = shown.items.find((item) => item.id === entry.id);
+      const step = advance(have, want, coarse ? "whole" : "rows");
+      if (step === undefined) continue;
+      const items = have ? shown.items.map((item) => item.id === want.id ? step : item) : insertInOrder(shown.items, step, target.items);
+      return { ...shown, items };
+    }
+    const want = target.moves.find((move) => move.id === entry.id)!;
+    const have = shown.moves.find((move) => move.id === entry.id);
+    // A move is one line whose only visible part is its mark: its own checks (shown only when opened) are not ticked in one by one.
+    const step = advance(have, want, "whole");
+    if (step === undefined) continue;
+    const moves = have ? shown.moves.map((move) => move.id === want.id ? step : move) : [...shown.moves, step];
+    return { ...shown, moves };
+  }
+  // Done only once every check is in, then the title.
+  if (stageIndex(shown.stage) < stageIndex(target.stage)) return { ...shown, stage: STAGES[stageIndex(shown.stage) + 1] };
+  if (shown.title !== target.title) return { ...shown, title: target.title };
+  return jump();
+}
+
+/**
+ * The next state of one place or move toward `want`, or undefined when it already matches.
+ * `rows`: a place appears with its checks waiting, then one drawn check at a time (the red and grey ones come with the check before them, at once),
+ * the verdict with the last. `whole`: it appears finished — a move (its only visible part is its mark: no pretended search is replayed after the
+ * server has answered) or, in a big plan, a card (drawn card by card instead of line by line).
+ */
+function advance<T extends { checks: CheckRow[]; verdict: Verdict | null }>(have: T | undefined, want: T, grain: "rows" | "whole"): T | undefined {
+  if (!have) return grain === "whole" ? want : pendingCopy(want);
+  if (JSON.stringify(have) === JSON.stringify(want)) return undefined;
+  if (have.checks.length !== want.checks.length || have.checks.some((row, at) => row.kind !== want.checks[at].kind)) return want;
+  if (grain === "whole") return { ...have, ...want };
+  const checks = have.checks.slice();
+  let ticked = false;
+  for (let at = 0; at < checks.length; at += 1) {
+    if (JSON.stringify(checks[at]) === JSON.stringify(want.checks[at])) continue;
+    if (!isInstantRow(want.checks[at])) {
+      if (ticked) break;
+      ticked = true;
+    }
+    checks[at] = want.checks[at];
+  }
+  const left = checks.some((row, at) => JSON.stringify(row) !== JSON.stringify(want.checks[at]));
+  return left ? { ...have, checks } : { ...have, ...want };
+}
+
+/** Put `item` where it stands in `order` (the server's order), among the items already shown. */
+function insertInOrder(items: PlanItem[], item: PlanItem, order: PlanItem[]): PlanItem[] {
+  const rank = (id: string) => order.findIndex((entry) => entry.id === id);
+  return [...items, item].sort((a, b) => rank(a.id) - rank(b.id));
+}
+
+/**
+ * How many places and moves there will be. Places come from the lines read (a line that turned into a stop), moves from
+ * the stops of each day (one between two stops) — so the counts and the bar know the whole before every card is shown.
+ * What the screen already shows counts when it is more.
+ */
+export function expected(view: Pick<PlanCheckView, "lines" | "items" | "moves">): { places: number; moves: number } {
+  const stops = view.lines.flatMap((line) => line.read && line.found?.kind === "item" ? [line.found.day ?? 0] : []);
+  const perDay = [...new Set(stops)].map((day) => stops.filter((value) => value === day).length);
+  return { places: Math.max(view.items.length, stops.length), moves: Math.max(view.moves.length, perDay.reduce((sum, count) => sum + Math.max(0, count - 1), 0)) };
+}
+
+/** 0–100 along the four steps. Within reading it follows the lines read; within checking, the places and moves done. */
+export function progress(view: PlanCheckView): number {
+  const third = 100 / 3;
+  if (view.stage === "received") return 0;
+  if (view.stage === "done") return 100;
+  // The server's own count, when it sends one: the whole line is split in three phases (places · hours · moves), each as far as `done / total`.
+  //   ★The bar never goes back: the rows drawn so far (lines read; places and legs checked) still count, and the larger of the two is shown.
+  const served = view.serverProgress ? (["places", "hours", "moves"].indexOf(view.serverProgress.phase) + Math.min(1, view.serverProgress.done / Math.max(1, view.serverProgress.total))) * third : 0;
+  if (view.stage === "reading") return Math.max(served, view.lines.length ? third * view.lines.filter((line) => line.read).length / view.lines.length : 0);
+  const total = expected(view);
+  const all = total.places + total.moves;
+  const done = [...view.items, ...view.moves].filter((entity) => entity.verdict !== null).length;
+  // 100 is for the finished check only: the last leg counted is "almost", not "done".
+  return Math.min(99, Math.max(served, third + (all ? third * Math.min(done, all) / all : 0)));
+}
+
+export interface Tally { places: number; placesDone: number; moves: number; movesDone: number; placesReview: number; movesReview: number }
+
+export function tally(view: Pick<PlanCheckView, "lines" | "items" | "moves">): Tally {
+  const total = expected(view);
+  return {
+    places: total.places,
+    placesDone: view.items.filter((item) => item.verdict !== null).length,
+    moves: total.moves,
+    movesDone: view.moves.filter((move) => move.verdict !== null).length,
+    placesReview: view.items.filter((item) => item.verdict === "review").length,
+    movesReview: view.moves.filter((move) => move.verdict === "review").length,
+  };
+}
+
+/** What the customer still has to look at before 「재검증」 or 「여행 등록」: places and moves that need a check. */
+export function needs(view: Pick<PlanCheckView, "items" | "moves">): { places: number; moves: number; total: number } {
+  const places = view.items.filter((item) => item.verdict === "review").length;
+  const moves = view.moves.filter((move) => move.verdict === "review").length;
+  return { places, moves, total: places + moves };
+}
+
+/** Lines that turned into a stop, among those read so far. */
+export const foundCount = (view: Pick<PlanCheckView, "lines">) => view.lines.filter((line) => line.read && line.found?.kind === "item").length;
+
+/** What the stop editor sends: the stop as the customer wants it. Same fields as the intake review's draft. */
+export interface ItemDraft { title: string; date: string; start: string; end: string; place: string; noPlace: boolean }
+
+export const draftOfItem = (item: PlanItem): ItemDraft =>
+  ({ title: item.written ?? item.title, date: item.date, start: item.startsAt, end: item.endsAt, place: item.place, noPlace: item.noPlace });
+
+/**
+ * What stops the editor from saving, checked on the screen before anything is sent: no name, an end before the start,
+ * no place name (unless 「장소 없음」). Everything else — whether the place exists, the date's range — is the server's to say.
+ */
+export function draftProblem(draft: ItemDraft): "title" | "time" | "place" | null {
+  if (!draft.title.trim()) return "title";
+  if (draft.start && draft.end && draft.end <= draft.start) return "time";
+  if (!draft.noPlace && !draft.place.trim()) return "place";
+  return null;
+}
+
+/** A trip-wide detail the server asks for before it can register (its problem codes `no_date` · `party_size_out_of_range`). */
+export interface TripIssue { field: "first_day" | "party_size" | null; message: string }

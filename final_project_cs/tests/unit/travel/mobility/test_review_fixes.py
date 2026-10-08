@@ -11,8 +11,8 @@ from datetime import date
 
 import pytest
 
-from app.modules.travel_ops.mobility.engine.paths import RULES_DIR
-from app.modules.travel_ops.mobility.engine.timeutil import (
+from app.domains.travel_ops.instances.mobility.engine.paths import RULES_DIR
+from app.domains.travel_ops.instances.mobility.engine.timeutil import (
     CalendarOutOfRange, HolidayCalendar, day_type_of, to_min, to_min_ceil, to_service_min)
 
 RULES = json.loads((RULES_DIR / "rules_v0.3.json").read_text(encoding="utf-8"))
@@ -20,7 +20,7 @@ RULES = json.loads((RULES_DIR / "rules_v0.3.json").read_text(encoding="utf-8"))
 
 def _verifier(**kw):
     """데이터 없이 만드는 작은 판정기 — 빈 시간표 · 노선 순서 없음."""
-    from app.modules.travel_ops.mobility.engine.verify_time import Timetable, Verifier
+    from app.domains.travel_ops.instances.mobility.engine.verify_time import Timetable, Verifier
     return Verifier(Timetable(), None, RULES, kw.pop("holidays", set()), **kw)
 
 
@@ -63,7 +63,7 @@ def test_5_real_holiday_file_declares_years():
 
 # ── #66 · #30 판정기가 SystemExit 로 프로세스를 끝내지 않는다 ──────────
 def test_66_unknown_disruption_kind_is_input_error_not_exit():
-    from app.modules.travel_ops.mobility.engine.errors import CaseInputError
+    from app.domains.travel_ops.instances.mobility.engine.errors import CaseInputError
     with pytest.raises(CaseInputError):
         _verifier().verify_case({"id": "t", "date": "2026-10-05", "depart_at": "10:00",
                                  "disruptions": [{"kind": "bogus"}], "legs": []})
@@ -71,13 +71,13 @@ def test_66_unknown_disruption_kind_is_input_error_not_exit():
 
 
 def test_30_missing_depart_is_input_error():
-    from app.modules.travel_ops.mobility.engine.errors import CaseInputError
+    from app.domains.travel_ops.instances.mobility.engine.errors import CaseInputError
     with pytest.raises(CaseInputError):
         _verifier().verify_case({"id": "t", "date": "2026-10-05", "arrive_by": "11:00", "legs": []})
 
 
 def test_30_adapter_refuses_arrive_only_input():
-    from app.modules.travel_ops.mobility.engine.adapter import map_task_to_case
+    from app.domains.travel_ops.instances.mobility.engine.adapter import map_task_to_case
     task = {"task_id": "t1", "case_id": "c1",
             "context": {"current_state": {"mobility": {
                 "date": "2026-10-05", "arrive_by": "11:00",
@@ -98,7 +98,7 @@ class _Router:
 
 
 def test_10_missing_distance_or_time_is_not_zero():
-    from app.modules.travel_ops.mobility.engine.bike import BikeRouter
+    from app.domains.travel_ops.instances.mobility.engine.bike import BikeRouter
     br = BikeRouter(_Router({"paths": [{}]}))
     assert br.route("bike", 37.5, 127.0, 37.51, 127.01) is None, "빈 경로를 0 m·0 초로 만들지 않는다"
     assert br.last_error["kind"] == "bad_response"
@@ -107,8 +107,8 @@ def test_10_missing_distance_or_time_is_not_zero():
 
 
 def test_28_router_failures_are_classified_and_bugs_not_swallowed():
-    from app.modules.travel_ops.mobility.engine.bike import BikeRouter
-    from app.modules.travel_ops.mobility.engine.car import RouterDown
+    from app.domains.travel_ops.instances.mobility.engine.bike import BikeRouter
+    from app.domains.travel_ops.instances.mobility.engine.car import RouterDown
     down = BikeRouter(_Router(exc=RouterDown("down")))
     assert down.route("bike", 37.5, 127.0, 37.51, 127.01) is None and down.last_error["kind"] == "router_down"
     net = BikeRouter(_Router(exc=OSError("reset")))
@@ -119,7 +119,7 @@ def test_28_router_failures_are_classified_and_bugs_not_swallowed():
 
 
 def test_28_bike_live_no_key_reason():
-    from app.modules.travel_ops.mobility.engine.bike import BikeLive
+    from app.domains.travel_ops.instances.mobility.engine.bike import BikeLive
     live = BikeLive(key=None)
     assert live.get("ST-1") is None and live.last_error == {"kind": "no_key"}
 
@@ -127,7 +127,7 @@ def test_28_bike_live_no_key_reason():
 def test_50_bike_live_error_never_carries_key(monkeypatch):
     import urllib.request
 
-    from app.modules.travel_ops.mobility.engine.bike import BikeLive
+    from app.domains.travel_ops.instances.mobility.engine.bike import BikeLive
 
     def boom(url, timeout):
         raise OSError(f"failed {url}")
@@ -139,7 +139,7 @@ def test_50_bike_live_error_never_carries_key(monkeypatch):
 
 # ── #9 자전거 대수는 일행 인원만큼 · 설문 값 옮기기 ────────────────────
 def test_9_bike_needs_one_per_person():
-    from app.modules.travel_ops.mobility.engine.bike import BikeStations
+    from app.domains.travel_ops.instances.mobility.engine.bike import BikeStations
     st = {"stationId": "ST-1", "name": "대여소1", "lat": 37.5000, "lon": 127.0000, "mode": "QR", "rack": 10}
     st2 = {"stationId": "ST-2", "name": "대여소2", "lat": 37.5100, "lon": 127.0100, "mode": "QR", "rack": 10}
     v = _verifier(bk=BikeStations([st, st2]))
@@ -153,7 +153,7 @@ def test_9_bike_needs_one_per_person():
 
 
 def test_9_party_of_reads_survey_domestic():
-    from app.modules.travel_ops.mobility.engine.plan import party_of
+    from app.domains.travel_ops.instances.mobility.engine.plan import party_of
     assert party_of(4, {"survey": {"domestic": True}}) == {"size": 4, "foreign": False}
     assert party_of(2, {"survey": {"domestic": False}})["foreign"] is True
     assert "foreign" not in party_of(2, {"survey": {"party": "아이 둘"}}), "자유 문장에서 짐작하지 않는다"
@@ -161,7 +161,7 @@ def test_9_party_of_reads_survey_domestic():
 
 # ── #16 버스 소요 48시간 경계 ─────────────────────────────────────────
 def test_16_bus_profile_checks_end_of_last_segment():
-    from app.modules.travel_ops.mobility.engine.bus_profile import BusSegProfile
+    from app.domains.travel_ops.instances.mobility.engine.bus_profile import BusSegProfile
     prof = BusSegProfile.__new__(BusSegProfile)
     prof.row = lambda route_id, s, nxt: (None, False)
     stops = [{"seq": 1}, {"seq": 2, "sect_dist_m": 500}]
@@ -176,7 +176,7 @@ def test_16_bus_profile_checks_end_of_last_segment():
 @pytest.mark.parametrize("raw,hidden", [("문의 a@b.com", "a@b.com"), ("010-1234-5678", "1234"),
                                         ("lat=37.5, lon=127.0", "37.5"), ("37.5,127.0", "127.0")])
 def test_51_scrub_hides_pii_and_single_coords(raw, hidden):
-    from app.modules.travel_ops.mobility.engine.judgment_log import scan_blocked, scrub_text
+    from app.domains.travel_ops.instances.mobility.devtools.judgment_log import scan_blocked, scrub_text
     assert hidden not in scrub_text(raw)
     assert scan_blocked(raw), "검사도 잡는다"
 
@@ -185,7 +185,7 @@ def test_51_scrub_hides_pii_and_single_coords(raw, hidden):
                                    # 실행 번호 — 새벽 2시대 + 무작위 뒷자리가 숫자 넷이면 서울 번호 모양이 됐다(시험이 흔들린 원인)
                                    "20260929T024107-1234ab", "20260929T031500-5678cd"])
 def test_51_scrub_leaves_ordinary_text(plain):
-    from app.modules.travel_ops.mobility.engine.judgment_log import scan_blocked, scrub_text
+    from app.domains.travel_ops.instances.mobility.devtools.judgment_log import scan_blocked, scrub_text
     assert scrub_text(plain) == plain and not scan_blocked(plain)
 
 
@@ -194,7 +194,7 @@ _BASIS = {"timetable_built_at": "built:t", "rules_version": "v", "service_date":
 
 
 def test_18_answer_has_no_english_verdict_words():
-    from app.modules.travel_ops.mobility.engine.fold import fold_case
+    from app.domains.travel_ops.instances.mobility.engine.fold import fold_case
     out = fold_case({"id": "c", "verdict": "feasible", "grade": "확정", "reason": "성립",
                      "legs": [{"label": "02호선 강남→잠실", "verdict": "feasible", "grade": "확정", "arrive_min": 620}]},
                     task_id="t", basis=_BASIS)
@@ -203,7 +203,7 @@ def test_18_answer_has_no_english_verdict_words():
 
 
 def test_18_unknown_verdict_is_not_packaged_as_completed():
-    from app.modules.travel_ops.mobility.engine.fold import fold_case
+    from app.domains.travel_ops.instances.mobility.engine.fold import fold_case
     out = fold_case({"id": "c", "verdict": "unknown", "grade": "근거없음", "reason": "시간표 없음",
                      "legs": [{"label": "02호선 강남→잠실", "verdict": "unknown", "grade": "근거없음"}]},
                     task_id="t", basis=_BASIS)

@@ -37,6 +37,8 @@ domain: travel
 
 `[미확보]` **MCP·A2A 를 MVP 확정 경로로 그려 뒀는데 v11 이 그것을 말하지 않는다.** `MCP` 문자열이 v11 에 0회이고 `A2A` 는 「계약을 바꾸면 걸리는 것」으로 2회뿐이다 — **빠진 것인지 뺀 것인지 안 정해졌다.** 아래 진입 경로 그림을 확정으로 읽지 않는다.
 
+★`[2026-10-02 정정]` **MCP 는 이제 실제로 있다.** 이 줄의 앞 판(2026-09-10)은 「도구 3개 선언만 있고 띄우는 곳이 없다」였다 — 그 옛 도구(쇼핑몰 Case 도구)는 지금도 연결 안 된 채 남아 있고, **여행 도구를 새로 만들어 고객 API 앱의 `/mcp/` 에 붙였다**(사용자 키로 본인 여행만 · 읽기 5 · 쓰기 7은 스위치 기본 꺼짐 · MCP 프로토콜 접속 시험 통과). 사용자 지시로 만든 것이라 v11 결정이 아니다 — v11 이 MCP 를 확정 경로로 정하는지는 여전히 `[미확보]`. 사실은 [mcp-tools.md](../../final_project_cs/wiki/external/mcp-tools.md).
+
 ## 진입 경로 3종
 
 ```text
@@ -72,7 +74,7 @@ domain: travel
 | 알림 채널 | 고객·운영자 알림 **두 종류** — 변경 통지 · **일정 안내** | Outbox 경유 → [`notifications.md`](notifications.md) |
 | A2A Remote Agent | Task 위임 | Artifact 근거를 Context/DB와 대조 |
 
-★`[실측 2026-09-10]` **「공급자」 행의 조회 셋 중 지금 붙는 것은 일부다.** 이동 시간·운행(`read.route`·`read.transit`)은 항상 값 없음이고, `build_travel_sources()` 가 import 하는 **`kma.py`(기상 대안)·`odsay.py`(대중교통)는 파일이 없다** — `weather_provider=kma` 에 **기상청 키나 공공데이터포털 공통 키가 있을 때**, 또는 `ACOP_ODSAY_API_KEY` 를 넣으면 **조립이 `ModuleNotFoundError` 로 깨진다**(실행 확인). 키가 없으면 import 까지 가지 않고 그 소스만 빠진 채 기동한다(`final_project_cs/app/infrastructure/travel/base.py:276~287`). 인천공항 모듈은 있으나 조립되지 않는다. 코드 담당에게 넘겼다 → [인계](../../program/산출물양식/w2/아키텍처/인계_코드와_계획서.md)
+★`[실측 2026-09-10]` **「공급자」 행의 조회 셋 중 지금 붙는 것은 일부다.** 이동 시간·운행(`read.route`·`read.transit`)은 항상 값 없음이고, `build_travel_sources()` 가 import 하는 **`kma.py`(기상 대안)·`odsay.py`(대중교통)는 파일이 없다** — `weather_provider=kma` 에 **기상청 키나 공공데이터포털 공통 키가 있을 때**, 또는 `ACOP_ODSAY_API_KEY` 를 넣으면 **조립이 `ModuleNotFoundError` 로 깨진다**(실행 확인). 키가 없으면 import 까지 가지 않고 그 소스만 빠진 채 기동한다(`final_project_cs/app/domains/travel_ops/ports/data_sources/base.py:276~287`). 인천공항 모듈은 있으나 조립되지 않는다. 코드 담당에게 넘겼다 → [인계](../../program/산출물양식/w2/아키텍처/인계_코드와_계획서.md)
 
 **나가는 모든 것은 Action Layer를 거친다.** side effect가 일어나는 유일한 경로다.
 

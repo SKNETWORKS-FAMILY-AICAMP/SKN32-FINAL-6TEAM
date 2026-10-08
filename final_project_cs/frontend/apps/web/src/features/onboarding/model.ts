@@ -178,3 +178,20 @@ export function toggleDetail(a: Answers, area: Area, value: string): Answers {
   const picked = a.details[area];
   return { ...a, details: { ...a.details, [area]: picked.includes(value) ? picked.filter((item) => item !== value) : [...picked, value] } };
 }
+
+/**
+ * The server's webhook rule (`customer_profile.parse_webhook`, `PUT /v1/web/profile`): https, a Discord host (discord.com
+ * or discordapp.com, or their canary./ptb. builds), then exactly `/api/webhooks/<15–25 digit id>/<20–120 char token>` —
+ * no port, version, trailing slash, query or fragment. Lower case only: Discord's copied URLs are, and being stricter
+ * than the server never lets through a value it would refuse.
+ */
+const DISCORD_WEBHOOK = /^https:\/\/(?:(?:canary|ptb)\.)?discord(?:app)?\.com\/api\/webhooks\/\d{15,25}\/[A-Za-z0-9_-]{20,120}$/;
+
+/**
+ * The optional Discord webhook on the alerts & recovery card. Only the ends are trimmed: blank (or spaces only) means
+ * "not entered", anything else must pass the server's rule above. It does not tell whether the webhook exists.
+ */
+export function discordWebhookProblem(url: string): "format" | undefined {
+  const value = url.trim();
+  return value && !DISCORD_WEBHOOK.test(value) ? "format" : undefined;
+}

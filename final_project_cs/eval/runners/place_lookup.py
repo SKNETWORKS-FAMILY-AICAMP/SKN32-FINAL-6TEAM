@@ -188,8 +188,8 @@ def _develop_reader(kakao_mode: str) -> Callable[[str], list[dict[str, Any]]]:
     """develop(2026-10-04 · `app/modules/travel_ops`) 의 접수 조립을 그대로 쓴다 — `trip_api` 의 읽기 경로와 같은 부품."""
     from app.core.settings import get_settings
     from app.infrastructure.db.session import get_connection
-    from app.modules.travel_ops import trip_api
-    from app.modules.travel_ops.intake.pipeline import _our_places, load_aliases, read_source
+    from app.domains.travel_ops.entry import trip_api
+    from app.domains.travel_ops.components.intake.pipeline import _our_places, load_aliases, read_source
 
     tenant = get_settings().tenant_id
     with get_connection() as conn:

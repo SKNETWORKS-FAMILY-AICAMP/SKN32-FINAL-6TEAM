@@ -11,9 +11,9 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from app.infrastructure.travel.utic import UticIncidents, UticRouteEvents
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.trip_watch import TripTickResult, TripWatcher
+from app.domains.travel_ops.ports.data_sources.utic import UticIncidents, UticRouteEvents
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.watch.trip_watch import TripTickResult, TripWatcher
 
 KST = ZoneInfo("Asia/Seoul")
 NOW = datetime(2026, 9, 23, 17, 10, tzinfo=KST)

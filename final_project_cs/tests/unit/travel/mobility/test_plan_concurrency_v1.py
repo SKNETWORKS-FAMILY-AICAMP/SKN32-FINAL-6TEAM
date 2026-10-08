@@ -43,10 +43,10 @@ except ImportError:     # pragma: no cover
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3]))
 
-from app.modules.travel_ops.mobility.engine import plan as plan_mod  # noqa: E402
-from app.modules.travel_ops.mobility.engine import judgment_log as jl  # noqa: E402
-from app.modules.travel_ops.mobility.engine.plan import DEFAULT_MODES, Planner, plan  # noqa: E402
-from app.modules.travel_ops.mobility.engine.runtime import Runtime  # noqa: E402
+from app.domains.travel_ops.instances.mobility.engine import plan as plan_mod  # noqa: E402
+from app.domains.travel_ops.instances.mobility.devtools import judgment_log as jl  # noqa: E402
+from app.domains.travel_ops.instances.mobility.engine.plan import DEFAULT_MODES, Planner, plan  # noqa: E402
+from app.domains.travel_ops.instances.mobility.engine.runtime import Runtime  # noqa: E402
 
 IN = HERE / "plan_example_in_v1.json"
 GOLD_ALL = HERE / "plan_example_out_all_v1.json"
@@ -184,7 +184,7 @@ class _Skip(Exception):
 def _runtime():
     global _RT
     if _RT is None:
-        from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+        from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
         try:
             _RT = build_verifier(quiet=True)
         except RuntimeError as e:          # 시간표가 없는 기기 — 데이터 축은 SKIP
@@ -247,7 +247,7 @@ def test_bike_not_called_by_default():
         got = json.loads(_plan(d, rt))
         assert calls["n"] == 0, f"기본 plan() 이 자전거 구간을 {calls['n']}번 판정했다(따릉이 실시간·라우터 호출)"
         # 자전거를 켜면 판정을 부르고 자전거 옵션이 실린다(58) — 라우터는 요약 픽스처 · 실시간 없음(복사본에서)
-        from app.modules.travel_ops.mobility.engine.bike import BikeRouter
+        from app.domains.travel_ops.instances.mobility.engine.bike import BikeRouter
         fx = json.loads(GH_FIX.read_text(encoding="utf-8"))
         rt2 = copy.copy(rt)
         rt2._v = copy.copy(rt._v)
@@ -332,7 +332,7 @@ def test_threads_8x80():
     """T — 24 ① 과 같은 조건 + first_visit=False · 스레드 8 × 80건 · **캐시가 빈 새 Runtime 에서 스레드부터**(GPT 56 #3)
     · 기준은 다른 Runtime 의 순차 결과 · 끝나고 새 Runtime 싱글턴 건별 상태가 그대로 · 경쟁 뒤 순차 재실행도 같다."""
     _need_data()
-    from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+    from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
     ref_rt = _runtime()
     inputs = {"화 09-29": _doc(), "일 09-27": _doc("2026-09-27"), "토 10-03": _doc("2026-10-03")}
     nf = _doc()

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""접수의 체인점 지점 고르기 연결(`intake/places._chain_branch` · `pipeline._remember_cluster`). 카카오는 지은 가짜다."""
+"""접수의 체인점 지점 고르기 연결(`intake/places._chain_branch` · `pipeline._near_hint` · `_cluster_centre`). 카카오는 지은 가짜다."""
 from __future__ import annotations
 
-from app.modules.travel_ops.intake.places import resolve
-from app.modules.travel_ops.intake.pipeline import _remember, _remember_cluster
+from app.domains.travel_ops.components.intake.places import resolve
+from app.domains.travel_ops.components.intake.pipeline import _cluster_centre, _near_hint
 
 GYEONGBOK = (37.5788, 126.9770)
 
@@ -62,34 +62,38 @@ def test_romanized_chain_searches_by_relevance_first():
     assert kakao.calls[0]["anywhere"] is True and found.name == "스타벅스 적선점"
 
 
-class Ctx:
-    def __init__(self):
-        self.points = []
-
-    def add(self, lat, lon):
-        self.points.append((lat, lon))
-
-
 class Found:
     def __init__(self, status, method=None, lat=None, lon=None, candidates=()):
         self.status, self.method, self.latitude, self.longitude = status, method, lat, lon
         self.candidates = list(candidates)
 
 
-def test_places_and_kakao_hits_feed_the_near_hint():
-    ctx = Ctx()
-    _remember(ctx, Found("resolved", "places", 37.5788, 126.977))
-    _remember(ctx, Found("resolved", "tour_api", 37.0, 127.0))           # 관광지 CSV 는 스스로 넣는다 — 두 번 넣지 않는다
-    assert ctx.points == [(37.5788, 126.977)]
+class Dated:
+    def __init__(self, value):
+        self.value = value
 
 
-def test_clustered_candidates_feed_their_centre_even_with_one_outlier():
+def _items(n):
+    return [{"title": f"항목{i}"} for i in range(n)]
+
+
+def test_the_previous_resolved_item_of_the_same_day_is_the_near_hint():
+    """★`[2026-10-07]` 우리 접수는 요청 상태 객체 대신 같은 날 앞뒤 항목의 좌표를 기준으로 쓴다(`_neighbours`)."""
+    resolved = {0: Found("resolved", "places", 37.5788, 126.977), 2: Found("resolved", "tour_api", 37.0, 127.0)}
+    dated = [Dated("2026-10-15")] * 3
+    assert _near_hint(1, _items(3), resolved, dated) == (37.5788, 126.977)         # 앞 항목이 먼저
+    assert _near_hint(0, _items(3), {2: resolved[2]}, dated) == (37.0, 127.0)       # 앞이 없으면 뒤
+    assert _near_hint(1, _items(3), resolved, [Dated("a"), Dated("b"), Dated("b")]) == (37.0, 127.0)   # 다른 날 항목은 보지 않는다
+    assert _near_hint(1, _items(3), {}, dated) is None
+
+
+def test_clustered_candidates_give_their_centre_even_with_one_outlier():
     """홍대입구역 — 노선별 역 셋은 붙어 있고 「사거리」 하나가 조금 떨어졌다(서로 가장 먼 거리 555m). 1위 근처가 절반 넘게 모였다."""
-    ctx = Ctx()
     stations = [hit("홍대입구역 2호선", 37.5569, 126.9238), hit("홍대입구역 공항철도", 37.5573, 126.9270),
                 hit("홍대입구역 경의중앙선", 37.5574, 126.9271), hit("홍대입구역사거리", 37.5552, 126.9215)]
-    _remember_cluster(ctx, Found("unresolved", candidates=stations))
-    assert len(ctx.points) == 1 and abs(ctx.points[0][0] - 37.557) < 0.001
+    centre = _cluster_centre(Found("unresolved", candidates=stations))
+    assert centre is not None and abs(centre[0] - 37.557) < 0.001
     scattered = [hit("a", 37.50, 126.90), hit("b", 37.60, 127.10), hit("c", 37.55, 127.00)]
-    _remember_cluster(ctx, Found("unresolved", candidates=scattered))
-    assert len(ctx.points) == 1                                          # 흩어져 있으면 넣지 않는다
+    assert _cluster_centre(Found("unresolved", candidates=scattered)) is None       # 흩어져 있으면 쓰지 않는다
+    # 정하지 못한 항목의 후보 가운데가 다음 항목의 기준이 된다
+    assert _near_hint(1, _items(2), {0: Found("unresolved", candidates=stations)}, [Dated("d")] * 2) == centre

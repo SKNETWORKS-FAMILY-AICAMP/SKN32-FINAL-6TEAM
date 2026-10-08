@@ -12,12 +12,16 @@ domain: neutral
 
 | 문서 | 답하는 질문 |
 |---|---|
+| [gpu-work-queue.md](gpu-work-queue.md) | GPU 서버 A/B의 연구 일감을 어떻게 이어가는가 |
 | [local-setup.md](local-setup.md) | 처음 어떻게 셋업하는가 |
 | [run.md](run.md) | 무엇을 어떻게 실행하는가 |
 | [troubleshooting.md](troubleshooting.md) | 막히면 어디를 보는가 |
 | [unknown-state.md](unknown-state.md) | **돈이 나갔는지 모를 때** |
 | [always-on.md](always-on.md) | **무엇이 늘 돌아야 하고, 죽으면 무엇으로 아는가** |
 | [move-to-server.md](move-to-server.md) | 이 PC 에서 서비스로 · 항상 켜진 서버로 — 절차와 되돌리기 |
+| [google-login-setup.md](google-login-setup.md) | 구글 로그인 켜기 — 콘솔에서 사람이 할 일 · 서버 설정 · 확인 · 되돌리기 |
+| [call-budget.md](call-budget.md) | 외부 API 키마다 하루·월 호출 한도를 어떻게 DB 로 세어 막고, 여유를 어떻게 보나 |
+| [telegram-setup.md](telegram-setup.md) | 텔레그램 알림 연결을 서버에서 어떻게 켜고(환경 파일 · 웹훅 등록 · 스위치), 막히면 어디를 보고, 어떻게 되돌리나 |
 
 ## 자주 쓰는 명령
 

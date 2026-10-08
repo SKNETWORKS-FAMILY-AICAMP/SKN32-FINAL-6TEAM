@@ -1,12 +1,13 @@
-.menuButton { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 44px; border: 1px solid var(--color-border); border-radius: 11px; background: #ffffffd9; color: var(--color-primary); }
+.menuButton { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 44px; border: 1px solid var(--color-border); border-radius: 11px; background: color-mix(in srgb, var(--color-surface) 85%, transparent); color: var(--color-primary); }
 .menuButton:hover { border-color: var(--color-primary); }
-.overlay { position: fixed; inset: 0; z-index: 50; background: #24392f33; display: flex; justify-content: flex-end; pointer-events: auto; animation: fade .2s ease both; }
-.panel { width: min(320px, 86%); height: 100%; overflow-y: auto; overscroll-behavior: contain; background: var(--color-paper); border-left: 1px solid #ffffff; box-shadow: -12px 0 40px #24392f1c; padding: 20px 20px 24px; display: flex; flex-direction: column; gap: 22px; animation: slide .32s cubic-bezier(.22, .8, .2, 1) both; }
+.overlay { position: fixed; inset: 0; z-index: 50; background: color-mix(in srgb, var(--color-text) 20%, transparent); display: flex; justify-content: flex-end; pointer-events: auto; animation: fade .2s ease both; }
+.panel { width: min(320px, 86%); height: 100%; overflow-y: auto; overscroll-behavior: contain; background: var(--color-paper); border-left: 1px solid var(--color-surface); box-shadow: -12px 0 40px color-mix(in srgb, var(--color-text) 11%, transparent); padding: 20px 20px 24px; display: flex; flex-direction: column; gap: 22px; animation: slide .32s cubic-bezier(.22, .8, .2, 1) both; }
 /* Rows keep their height and the panel scrolls: a flex child may shrink, and the board clips (overflow: hidden), so a long menu (the new-key notice) cut the language row and hid the floating switch. */
 .panel > * { flex-shrink: 0; }
 .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .head h2 { font-size: 20px; line-height: 1.4; letter-spacing: -.6px; }
 .eyebrow { font-size: 9px; letter-spacing: 1.6px; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
+.headTools { display: flex; align-items: center; gap: 8px; }
 .close { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 11px; color: var(--color-muted); }
 .close:hover { color: var(--color-primary); background: var(--color-soft); }
 .board { display: grid; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); overflow: hidden; }
@@ -15,6 +16,9 @@
 .board :is(a, button):focus-visible { outline-offset: -3px; }
 .link { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 56px; padding: 12px 15px; color: var(--color-primary); font-size: 14px; font-weight: 650; text-decoration: none; }
 .link:hover { background: var(--color-soft); }
+/* The survey row is a button (it opens the start screen's preferences card), drawn like the links. */
+button.link { width: 100%; border: 0; background: transparent; font-family: inherit; text-align: left; cursor: pointer; }
+button.link:hover { background: var(--color-soft); }
 .profile { display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 12px 15px; color: var(--color-text); text-decoration: none; }
 .profile:hover { background: var(--color-soft); }
 .profile > svg { flex: none; color: var(--color-muted); }
@@ -27,7 +31,7 @@
 .switchText small { font-size: 11px; line-height: 1.6; color: var(--color-muted); }
 /* The checkbox itself draws the switch; ON/OFF is written in the track. */
 .switch { appearance: none; position: relative; flex: none; width: 58px; height: 30px; margin: 0; border-radius: 15px; background: var(--color-border); cursor: pointer; transition: background .2s; }
-.switch::before { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px #24392f33; transition: transform .2s; }
+.switch::before { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: var(--color-surface); box-shadow: 0 1px 3px color-mix(in srgb, var(--color-text) 20%, transparent); transition: transform .2s; }
 .switch::after { content: "OFF"; position: absolute; top: 0; right: 7px; line-height: 30px; font-size: 9px; font-weight: 700; letter-spacing: .5px; color: var(--color-muted); }
 .switch:checked { background: var(--color-primary); }
 .switch:checked::before { transform: translateX(28px); }

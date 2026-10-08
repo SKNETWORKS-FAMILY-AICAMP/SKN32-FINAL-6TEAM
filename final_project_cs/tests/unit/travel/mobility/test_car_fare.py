@@ -5,7 +5,7 @@
 
 ① 규칙 파일 taxi.fare.검산_예시 8건을 car.taxi_fare 로 다시 낸다 — rules_check.py(저장소 밖 점검 · 82)의 사본과 같은 답이어야 한다
    (두 구현이 갈리면 여기서 난다).
-② 심야 구간 경계 — 21:59 / 22:00 / 23:00 / 01:59 / 02:00 / 03:59 / 04:00.  ③ 병산 — 저속 m 를 거리요금에서 뺀다.
+② 심야 구간 경계 — 21:59 / 22:00 / 23:00 / 01:59 / 02:00 / 03:59 / 04:00.  ③ 중형 동시병산 — 저속에서도 거리와 시간을 함께 센다.
 ④ 요일형 — config holidays(A10) 가 달력을 이긴다(2026-09-26 토요일이지만 추석 → 휴일), 일요일 = 휴일, 제헌절은 A10 대로(18번 달력과 어긋남 — 기록).
 ⑤ 공항 상자 — T1·T2 안, 서울역 밖.
 """
@@ -16,11 +16,11 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(REPO / "final_project_cs"))
-from app.modules.travel_ops.mobility.engine.car import (taxi_fare, taxi_rate,  # noqa: E402
+from app.domains.travel_ops.instances.mobility.engine.car import (taxi_fare, taxi_rate,  # noqa: E402
                                                         daytype_kr, CarService)
 
-R = json.loads((REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility" / "engine" / "rules" / "rules_v0.3.json").read_text(encoding="utf-8"))
-H = set(json.loads((REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility" / "engine" / "rules" / "holidays_2026_2027.json").read_text(encoding="utf-8"))["holidays"])
+R = json.loads((REPO / "final_project_cs" / "app" / "domains" / "travel_ops" / "instances" / "mobility" / "engine" / "rules" / "rules_v0.3.json").read_text(encoding="utf-8"))
+H = set(json.loads((REPO / "final_project_cs" / "app" / "domains" / "travel_ops" / "instances" / "mobility" / "engine" / "rules" / "holidays_2026_2027.json").read_text(encoding="utf-8"))["holidays"])
 F = R["taxi"]["fare"]
 ok = fail = 0
 
@@ -46,13 +46,13 @@ for t, want in (("21:59", 0.0), ("22:00", 0.2), ("22:59", 0.2), ("23:00", 0.4), 
     chk(f"{t} → {want:g}", taxi_rate(F, "중형", t) == want, str(taxi_rate(F, "중형", t)))
 chk("대형_모범 23:30 → 0.2 (2단계 없음)", taxi_rate(F, "대형_모범", "23:30") == 0.2)
 
-print("[3] 병산 — 저속 구간은 시간요금만")
+print("[3] 중형 동시병산 — 저속에서 거리와 시간요금을 함께 계산")
 # 5.0 km 중 1.0 km 가 저속(300초): 거리요금은 4.0 km 에 대해서만
 a = taxi_fare(F, "중형", 5000, 0, "14:00")                # 7,400
 b = taxi_fare(F, "중형", 5000 - 1000, 300, "14:00")       # 4,800 + ceil(2400/131)=19×100 + ceil(300/30)=10×100 = 7,700
 chk("전 구간 주행 5.0 km = 7,400", a == 7400, str(a))
 chk("4.0 km 주행 + 저속 300초 = 7,700", b == 7700, str(b))
-chk("저속 300초를 거리요금과 겹쳐 세면(구 근사) 8,400 — 이 값이 나오면 안 된다",
+chk("중형 5.0 km + 저속 300초 동시병산 = 8,400",
     taxi_fare(F, "중형", 5000, 300, "14:00") == 8400 and b != 8400)
 
 print("[4] 요일형 — config holidays 정본")

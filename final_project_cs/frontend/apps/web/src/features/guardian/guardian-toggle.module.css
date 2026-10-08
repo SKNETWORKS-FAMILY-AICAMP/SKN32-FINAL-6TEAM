@@ -1,0 +1,7 @@
+/* `[2026-10-06 사용자 지시 — 메뉴 버튼과 같은 흰색 반투명으로]` 항로 지킴이 아이콘: 44×44, 메뉴 버튼(`settings-menu.module.css .menuButton`)과 같은 바탕 · 테두리 · 반투명. 켜짐 = 초록 방패 + 점, 꺼짐 = 흐린 방패(점 없음). 색만으로 구분하지 않는다(점). */
+.toggle { position: relative; display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; border: 1px solid var(--color-border); border-radius: 11px; background: color-mix(in srgb, var(--color-surface) 85%, transparent); color: var(--color-muted); cursor: pointer; }
+.toggle:hover { border-color: var(--color-primary); }
+.toggle[data-on] { color: var(--color-primary); }
+.toggle[data-on]::after { content: ""; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.toggle svg { display: block; width: 24px; height: 24px; }
+.toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }

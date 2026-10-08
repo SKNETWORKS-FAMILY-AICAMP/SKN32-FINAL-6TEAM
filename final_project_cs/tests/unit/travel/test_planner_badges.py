@@ -6,11 +6,11 @@
 """
 from __future__ import annotations
 
-from app.modules.travel_ops import planner
-from app.modules.travel_ops.dining.ledger import shop_badges
-from app.modules.travel_ops.dining.survey import likes_from_survey
-from app.modules.travel_ops.planner import Cand, preference_profile, rank_candidates
-from app.modules.travel_ops.trip_api import _badges
+from app.domains.travel_ops.components.planning import planner
+from app.domains.travel_ops.instances.dining.ledger import shop_badges
+from app.domains.travel_ops.components.planning.survey import likes_from_survey
+from app.domains.travel_ops.components.planning.planner import Cand, preference_profile, rank_candidates
+from app.domains.travel_ops.entry.trip_api import _badges
 
 MICHELIN = {"code": "michelin", "label": "미쉐린 빕 구르망 (2026)", "source": "미쉐린 가이드 서울"}
 NOPO = {"code": "nopo", "label": "노포", "source": "카카오맵 노포 지도"}
@@ -125,7 +125,7 @@ def test_the_item_view_passes_well_formed_badges_with_their_source_and_drops_the
 def test_the_planner_picks_the_wanted_nopo_only_when_asked(monkeypatch):
     from datetime import date
 
-    from app.modules.travel_ops.planner import PlanRequest
+    from app.domains.travel_ops.components.planning.planner import PlanRequest
 
     def act(name, lat):
         return Cand(key=f"k_{name}", name=name, kind="activity", lat=lat, lon=126.977,

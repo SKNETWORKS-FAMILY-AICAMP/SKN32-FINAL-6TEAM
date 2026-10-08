@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 
-from app.modules.travel_ops import planner
-from app.modules.travel_ops.itinerary_checks import check_itinerary
-from app.modules.travel_ops.planner import Cand, preference_profile, rank_candidates
+from app.domains.travel_ops.components.planning import planner
+from app.domains.travel_ops.components.itinerary.itinerary_checks import check_itinerary
+from app.domains.travel_ops.components.planning.planner import Cand, preference_profile, rank_candidates
 
 KST = planner.KST
 DAY = date(2026, 10, 5)
@@ -93,7 +93,7 @@ def test_hours_we_do_not_know_are_left_alone():
 
 # ── 고쳐서 다시 판정 ──────────────────────────────────────────────
 def _parts(items, places):
-    from app.modules.travel_ops.itinerary_checks import Part
+    from app.domains.travel_ops.components.itinerary.itinerary_checks import Part
 
     return [Part(seq=item["seq"], kind=item["kind"], title=item["title"],
                  starts_at=item["starts_at"], ends_at=item["ends_at"],
@@ -118,7 +118,7 @@ def test_an_overlap_is_pushed_back_until_the_check_is_clean():
 
 def test_an_unknown_violation_is_not_pretended_to_be_fixed():
     """★고칠 줄 모르는 위반에 「고쳤다」를 돌려주면 루프가 조용히 통과로 끝난다."""
-    from app.modules.travel_ops.itinerary_checks import Violation
+    from app.domains.travel_ops.components.itinerary.itinerary_checks import Violation
 
     acts = [_cand("하나", hours=["09:00", "18:00"])]
     places = {cand.key: cand for cand in acts}

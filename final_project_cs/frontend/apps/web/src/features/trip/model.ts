@@ -1,37 +1,15 @@
 import type { Language } from "@/lib/i18n";
+import type { LocationFix } from "@/lib/location";
+import type { OpProgress } from "@/lib/live/stream";
 import type { Coordinates } from "../map/model";
-import type { TripSurvey } from "../onboarding/payload";
-
-export type DemoScenario = "success" | "needs-review" | "failed";
-export type StageStatus = "pending" | "running" | "completed" | "failed";
-
-export interface VerificationStage {
-  id: string;
-  label: string;
-  description: string;
-  status: StageStatus;
-}
-
-export interface VerificationResult {
-  id: string;
-  stopId: string;
-  date: string;
-  status: "adjusted" | "unchanged" | "needs_review";
-  title: string;
-  originalValue: string;
-  proposedValue?: string;
-  reason: string;
-  impact: string;
-}
 
 export interface TripStop {
   id: string;
   date: string;
   time: string;
   endTime?: string;
-  originalTime?: string;
   title: string;
-  booking: "booked" | "none" | "unknown";
+  booking: "booked" | "unknown";
   notes: string;
   /** WGS84 coordinates supplied by the backend; missing means no map pin. */
   coordinates?: Coordinates | null;
@@ -41,12 +19,57 @@ export interface TripStop {
   otherOptions?: TripOption[];
   /** Restaurant marks from the dining ledger (Michelin, 노포) with where each came from — the screen names the source. */
   badges?: TripBadge[];
+  /** Opens this place in the customer's own map app (Google Maps link from the server; no API key, no billing). */
+  mapUrl?: string;
+  /** What the server knows about the place (address, phone, hours, badges). Missing fields are not shown. */
+  placeInfo?: PlaceInfo | null;
+  /** `[2026-10-06]` The trip is paused for a disaster and this stop falls in the pause (a day's pause pauses only that day's stops). The plan itself is not changed. */
+  paused?: boolean;
+}
+
+/**
+ * `[2026-10-06 사용자 결정 — 재난 시 일정 정지]` Whether the trip is paused for a disaster (`safety` of `GET /v1/web/trips/{id}`). A day's pause (`level: "day"`) lifts by itself at midnight; a pause of the
+ * whole trip (`"trip"`: war, a volcano erupting …) stays until the customer resumes. The server cannot know the customer is safe, so resuming is always the customer's press (`resume`).
+ */
+export interface TripSafety {
+  paused: boolean;
+  level: "day" | "trip" | null;
+  /**
+   * `[2026-10-06 사용자 결정]` `in_progress`: the trip is under way. `upcoming`: it has not started, and a serious event (war, a volcano, a strong earthquake) stopped it because nobody knows the local
+   * situation - it stays paused even when the start date comes, until the customer resumes (`until` is null). A day's pause never stops a trip that has not started.
+   */
+  phase: "in_progress" | "upcoming" | null;
+  /** The server's own words for what happened (「지진 — 오늘 남은 일정 정지」). */
+  label: string | null;
+  since: string | null;
+  until: string | null;
+  /** The day a day's pause is for ("2026-10-06"). */
+  day: string | null;
+  /** An official all-clear came (the pause stays until the customer resumes). */
+  released: boolean;
+  /** What the resume button says, in the server's words; null when the server gave no resume. */
+  resume: { label: string } | null;
 }
 
 export interface TripOption { key: string; name: string }
 
 /** A mark on a restaurant, in the server's words: `label` is shown, `source` is credited. */
 export interface TripBadge { code: string; label: string; source: string }
+
+export interface PlaceInfo {
+  address?: string;
+  phone?: string;
+  category?: string;
+  /** Opening hours in the server's words, one line per rule ("월 11:00–21:00"). */
+  hours: string[];
+  /** Hours the source gave only as text, or conditions the weekly table cannot hold ("공휴일 휴무"). */
+  hoursNotes: string[];
+  /** Facility badges as the server named them ("card_payment", "parking", …). */
+  tags: string[];
+  michelin?: { level: string; year?: number } | null;
+  /** Credit line the source asks for (e.g. "ⓒ한국관광공사"). */
+  sourceNote?: string;
+}
 
 /** One saved version of the trip (server `history`): why it changed and what caused it, in the server's words. */
 export interface TripChange {
@@ -70,60 +93,90 @@ export interface TripMessage {
   role: "assistant" | "user";
   text: string;
   createdAt: string;
+  /** Development mode only: which rule sections the answer came from (「t_doc_07#c5」). The server sends it only when an
+   *  operator turned on `web.dev_mode`; customers never see it. */
+  basis?: string[];
+  /** The server did not understand and asks 「다음 중 하나인가요?」: each choice's `message` is a sentence it will understand. */
+  choices?: { label: string; message: string }[];
+  /** The server's heading for `choices` — 「혹시 이런 뜻이었나요?」 when it answered and offers other readings. */
+  choicesTitle?: string;
+  /** The rest of a long answer, folded under 「더 보기」 (the answer itself keeps only the core). */
+  more?: string;
+  /** This answer changed the plan to `version`: an 「되돌리기」 button can take it back to `version - 1` while it is still the latest. */
+  changedTo?: number;
+  /** The answer needs where the customer is now (「여기서 어떻게 가?」): the screen offers to ask the browser and send again. */
+  needsLocation?: boolean;
 }
 
-/** Web view model; not a claim that the existing Case API returns this contract. */
+/**
+ * `[2026-10-07]` A move between two stops as the server keeps it (an item of kind `mobility`): when to leave and when to arrive, in Seoul time. How it is travelled (mode · distance ·
+ * rides) is not in the trip view — it comes with the route lines (`GET …/route-shapes`, keyed by this id). A trip registered from a typed plan may have no moves at all.
+ */
+export interface TripMove {
+  id: string;
+  /** The stops it goes between (the stop before and the stop after it in the plan); null at the start or the end of the plan. */
+  fromId: string | null;
+  toId: string | null;
+  date: string;
+  /** "HH:MM" */
+  departAt: string;
+  arriveAt: string | null;
+  /** The server's own words (「경복궁 관람 → 점심 식당」). */
+  title: string;
+}
+
+/** Web view model of one trip, read from `GET /v1/web/trips/{id}` (not a claim that the Case API returns this shape). */
 export interface Trip {
   id: string;
-  source: string;
-  startDate: string;
-  endDate: string;
-  status: "processing" | "ready" | "active" | "failed";
+  /** `[2026-10-07]` The trip's name as the server keeps it (「내 여행」); absent on a server that does not send one. */
+  title?: string;
   stops: TripStop[];
-  verification: {
-    status: "running" | "completed" | "failed";
-    progress: number;
-    stages: VerificationStage[];
-    results: VerificationResult[];
-    error?: string;
-  };
+  /** `[2026-10-07]` The moves between the stops, in plan order (see `TripMove`). */
+  moves?: TripMove[];
   messages: TripMessage[];
-  /** Live only: what the server did to the trip and what it found. Absent in demo. */
+  /** What the server did to the trip and what it found. */
   history?: TripChange[];
   warnings?: TripWarning[];
   /** The server's per-trip plan page (a link that needs no login). */
   planUrl?: string;
+  /** The itinerary version on the server now (an undo is offered only for the change that made it). */
+  version?: number;
+  /** The day's route to open in the customer's map app, by date. Several links when a day has more stops than one link holds. */
+  dayRoutes?: Record<string, string[]>;
+  /** Directions between two consecutive stops in the customer's map app, keyed `${fromStopId}>${toStopId}`. */
+  legs?: Record<string, string>;
+  /** `[2026-10-06]` Paused for a disaster? (absent on a server that does not say). */
+  safety?: TripSafety | null;
+  /** `[2026-10-06]` The Course Keeper (항로 지킴이) of this trip: on = the server changes a plan that went wrong by itself and says so, off = it asks first. Absent on a server that does not say. */
+  guardian?: TripGuardian | null;
 }
+
+/** `guardian` of the trip view (`{enabled, since, via}`); `since` · `via` are when and where it was LAST changed (null when it never was). */
+export interface TripGuardian { enabled: boolean; since: string | null; via: string | null }
 
 /** One row of "My trips" — only what the server list (`GET /v1/web/trips`) gives: no trip dates, status or open proposals. */
 export interface TripSummary {
   id: string;
   title: string;
-  /** When the trip was registered (ISO instant). Null for a demo trip saved before registration time was kept. */
+  /** When the trip was registered (ISO instant). */
   createdAt: string | null;
-  /** Itinerary version; above 1 means the itinerary changed after registration. Null where there are no versions (demo). */
+  /** Itinerary version; above 1 means the itinerary changed after registration. */
   version: number | null;
-}
-
-export interface CreateTripInput {
-  source: string;
-  scenario?: DemoScenario;
-  /** Onboarding answers, sent as the backend's `constraints.survey`. Absent when onboarding was not finished. */
-  survey?: TripSurvey;
 }
 
 /** Every call names the reader's language; generated text comes back in that language. */
 export interface TripGateway {
-  createTrip(input: CreateTripInput, language: Language): Promise<Trip>;
-  /** This browser's trips, newest first. */
+  /** This customer's trips (the server's list for the stored user key), newest first. */
   listTrips(language: Language): Promise<TripSummary[]>;
   getTrip(tripId: string, language: Language): Promise<Trip>;
-  retryVerification(tripId: string, language: Language): Promise<Trip>;
-  startTrip(tripId: string, language: Language): Promise<Trip>;
-  sendMessage(tripId: string, message: string, language: Language): Promise<Trip>;
+  /** `itemId` — the stop the customer picked on screen; the server uses it when the sentence does not name one. */
+  /** `location`: where the customer is, from the browser, sent only after the server said the answer needs it. */
+  /** `onProgress`: what the server is doing while it works on the message. */
+  sendMessage(tripId: string, message: string, language: Language, itemId?: string | null, location?: LocationFix | null,
+    onProgress?: (progress: OpProgress) => void): Promise<Trip>;
   /**
-   * Delete one trip, or reject with why it was not deleted. Absent where a trip cannot be deleted: the server has no
-   * delete call yet (`/v1/web/trips` is GET and POST only), so only the demo offers it.
+   * Delete one trip on the server, or reject with why it was not deleted. A server that has no delete call yet
+   * rejects with a `LiveError` whose code is `delete_unsupported` (backend request 2026-10-03).
    */
-  deleteTrip?(tripId: string, language: Language): Promise<void>;
+  deleteTrip(tripId: string, language: Language): Promise<void>;
 }

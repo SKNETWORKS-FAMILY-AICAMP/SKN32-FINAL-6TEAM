@@ -3,9 +3,9 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.case_engine import cleanup_tenant
-from app.modules.travel_ops.trip_desk import TripDesk
-from app.modules.travel_ops.trip_messages import handle_trip_message
+from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
+from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
+from app.domains.travel_ops.components.conversation.trip_messages import handle_trip_message
 
 from .test_case_version_day import REPORTS, _at, _classifier, _seed
 

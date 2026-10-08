@@ -10,8 +10,8 @@ from __future__ import annotations
 import pytest
 
 from app.core.contracts import CaseStatus, InvalidTransition
-from app.domain.case import CaseProjection, apply_event, fold_events, validate_payload
-from app.domain.events import EventType
+from app.core.case_lifecycle.case import CaseProjection, apply_event, fold_events, validate_payload
+from app.core.case_lifecycle.events import EventType
 
 CREATED_PAYLOAD = {"channel": "personal_ai", "message": "해지했는데 결제가 됐어요"}
 CLASSIFIED_PAYLOAD = {

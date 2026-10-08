@@ -118,9 +118,9 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
     if (reducedMotion()) return;
     setTouched((current) => new Set(current).add(key));
     control.animate([
-      { transform: "scale(.97)", boxShadow: "0 0 0 0 #2E604700" },
-      { transform: "scale(1.015)", boxShadow: "0 0 0 3px #2E604714", offset: .6 },
-      { transform: "scale(1)", boxShadow: "0 0 0 0 #2E604700" },
+      { transform: "scale(.97)", boxShadow: "0 0 0 0 transparent" },
+      { transform: "scale(1.015)", boxShadow: "0 0 0 3px color-mix(in srgb, var(--color-selected) 8%, transparent)", offset: .6 },
+      { transform: "scale(1)", boxShadow: "0 0 0 0 transparent" },
     ], { duration: 220, easing: "cubic-bezier(.2,.8,.2,1)" });
   }
 
@@ -374,6 +374,6 @@ export function PreferencesSummary({ t, answers, hasTrip, onJourney, onEdit }: {
     </div>
     <button type="button" className={`${styles.next} ${styles.homeContinue}`} onClick={onJourney}>{hasTrip ? t("내 여행 이어보기", "Continue my trip") : t("여행 계획 등록하기", "Add my travel plan")}<OnboardingIcon name="arrow" size={16} /></button>
     <button type="button" className={`${styles.next} ${styles.homeContinue} ${styles.editPreferences}`} onClick={onEdit}>{t("여행 취향 수정하기", "Edit your preferences")}<OnboardingIcon name="arrow" size={16} /></button>
-    <p className={styles.prototypeNote}>{t("데모 화면이에요. 답변은 이 페이지에서만 유지돼요.", "Demo preview. Answers stay in this page only.")}</p>
+    <p className={styles.savedNote}>{t("답변은 이 브라우저에 저장돼요. 여행을 등록할 때 함께 서버로 보내져 일정을 살필 때 써요.", "Your answers are saved in this browser. They go to the server with a trip registration and are used when your plan is checked.")}</p>
   </div>;
 }

@@ -44,7 +44,7 @@ TRACKS: dict[str, Track] = {
         owner_hint="코어 1",
         owns=("app/core/transition.py", "app/core/contracts.py", "app/core/registry.py",
               "app/core/context.py", "app/core/idempotency.py", "app/core/remote_team/",
-              "app/domain/", "app/application/controller.py", "app/application/case_service.py",
+              "app/core/case_lifecycle/", "app/application/controller.py", "app/application/case_service.py",
               "app/infrastructure/messaging/"),
         scenarios=("shipping-status-resolved-v1", "case-reducer-versions-v1"),
         focus="상태는 이벤트를 접은 결과다. transition_case 만이 상태를 바꾼다",
@@ -138,7 +138,7 @@ TRACKS["team-travel"] = Track(
     track_id="team-travel",
     title="Team — 여행 (Activity · Dining · Mobility)",
     owner_hint="팀 모듈",
-    owns=("app/modules/travel_ops/",),
+    owns=("app/domains/travel_ops/",),
     scenarios=("travel-team-keeps-every-evidence-v1",),
     focus="읽은 것마다 근거가 쌓인다. 분류가 실패하면 조용히 넘기지 않는다",
 )

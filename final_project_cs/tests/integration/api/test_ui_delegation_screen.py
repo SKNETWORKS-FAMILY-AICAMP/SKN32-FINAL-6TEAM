@@ -19,15 +19,15 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
-from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import delegation
-from app.modules.travel_ops.case_engine import cleanup_tenant
+from app.domains.travel_ops.components.booking import delegation
+from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
 from app.presentation import security
 from app.presentation.api.app import create_app
-from tests.ui_login import login  # 운영 화면은 로그인한 운영자만 본다(D-CS-007)
+from tests.ops_app import ops_client
+from tests.ui_login import csrf, login  # 운영 화면은 로그인한 운영자만 본다(D-CS-007)
 
 SCREEN = "/ui/delegations"
 
@@ -48,7 +48,7 @@ def world(monkeypatch):
                     "RETURNING customer_id", (tenant,))
         customer = cur.fetchone()[0]
 
-    client = TestClient(create_app(), raise_server_exceptions=False)
+    client = ops_client(monkeypatch, customer_app=create_app(), raise_server_exceptions=False)
     login(client, monkeypatch, operator_id="op-1")
     yield client, tenant, customer
     cleanup_tenant(tenant)
@@ -76,7 +76,7 @@ def test_the_menu_can_reach_it(world):
 def test_granting_shows_what_changes_before_it_changes_anything(world):
     """★되돌릴 수 없는 쪽은 확인 단계를 둔다. **그 단계에서는 아직 아무것도 안 바뀐다.**"""
     client, tenant, customer = world
-    response = client.post(SCREEN, data={"action": "grant", "customer_id": str(customer),
+    response = client.post(SCREEN, data={"csrf": csrf(client), "action": "grant", "customer_id": str(customer),
                                          "actor_id": "op-1", "note": "고객이 맡김"},
                            follow_redirects=False)
     assert response.status_code == 200
@@ -93,7 +93,7 @@ def test_granting_shows_what_changes_before_it_changes_anything(world):
 
 def test_confirming_actually_grants_and_the_row_appears(world):
     client, tenant, customer = world
-    response = client.post(SCREEN, data={"action": "grant", "confirm": "yes",
+    response = client.post(SCREEN, data={"csrf": csrf(client), "action": "grant", "confirm": "yes",
                                          "customer_id": str(customer),
                                          "actor_id": "op-1", "note": "고객이 맡김"},
                            follow_redirects=False)
@@ -111,7 +111,7 @@ def test_revoking_from_the_screen_closes_it(world):
     with get_connection() as conn, conn.transaction():
         delegation.grant(conn, tenant_id=tenant, customer_id=customer, by="op-1", note="맡김")
 
-    response = client.post(SCREEN, data={"action": "revoke", "customer_id": str(customer),
+    response = client.post(SCREEN, data={"csrf": csrf(client), "action": "revoke", "customer_id": str(customer),
                                          "actor_id": "op-2", "note": "고객이 거둠"},
                            follow_redirects=False)
     assert response.status_code == 303, response.text
@@ -127,7 +127,7 @@ def test_revoking_from_the_screen_closes_it(world):
 def test_revoking_nothing_shows_the_reason_instead_of_a_silent_redirect(world):
     """★조용한 303 이면 운영자는 거둔 줄 안다 — 실제로는 아무 일도 없었는데."""
     client, _tenant, customer = world
-    response = client.post(SCREEN, data={"action": "revoke", "customer_id": str(customer),
+    response = client.post(SCREEN, data={"csrf": csrf(client), "action": "revoke", "customer_id": str(customer),
                                          "actor_id": "op", "note": "n"}, follow_redirects=False)
     assert response.status_code != 303, "거두지 못했는데 성공과 같은 리다이렉트로 삼켜졌다"
     assert response.status_code == 200
@@ -139,7 +139,7 @@ def test_revoking_nothing_shows_the_reason_instead_of_a_silent_redirect(world):
 
 def test_an_unknown_customer_shows_the_reason(world):
     client, _tenant, _customer = world
-    response = client.post(SCREEN, data={"action": "grant", "customer_id": str(uuid4()),
+    response = client.post(SCREEN, data={"csrf": csrf(client), "action": "grant", "customer_id": str(uuid4()),
                                          "actor_id": "op", "note": "n"}, follow_redirects=False)
     assert response.status_code == 200
     assert "이 고객을 확인하지 못했습니다" in response.text
@@ -149,7 +149,7 @@ def test_an_unknown_customer_shows_the_reason(world):
 def test_a_malformed_customer_id_is_told_plainly(world):
     """★서버까지 보내 422 를 받아 오면 무엇이 잘못됐는지가 오히려 흐려진다."""
     client, _tenant, _customer = world
-    response = client.post(SCREEN, data={"action": "grant", "customer_id": "cust_01",
+    response = client.post(SCREEN, data={"csrf": csrf(client), "action": "grant", "customer_id": "cust_01",
                                          "actor_id": "op", "note": "n"}, follow_redirects=False)
     assert response.status_code == 200
     assert "고객 id 형식이 아닙니다" in response.text
@@ -173,9 +173,9 @@ def test_an_operator_without_delegation_write_cannot_change_a_delegation(monkeyp
                     (tenant,))
         customer = cur.fetchone()[0]
     try:
-        client = TestClient(create_app(), raise_server_exceptions=False)
+        client = ops_client(monkeypatch, customer_app=create_app(), raise_server_exceptions=False)
         login(client, monkeypatch, operator_id="viewer", scopes=("case:read", "delegation:read"))
-        response = client.post(SCREEN, data={"action": "grant", "confirm": "yes",
+        response = client.post(SCREEN, data={"csrf": csrf(client), "action": "grant", "confirm": "yes",
                                              "customer_id": str(customer), "note": "확인"})
         assert response.status_code == 403
         assert "위임 변경 권한이 없습니다" in response.text and "delegation:write" in response.text
@@ -191,7 +191,7 @@ def test_an_operator_without_delegation_write_cannot_change_a_delegation(monkeyp
 def test_the_record_names_the_logged_in_operator_not_what_the_form_says(world):
     """★입력 칸의 `actor_id` 를 믿으면 **남의 이름으로** 맡기고 거둘 수 있다."""
     client, tenant, customer = world
-    client.post(SCREEN, data={"action": "grant", "confirm": "yes", "customer_id": str(customer),
+    client.post(SCREEN, data={"csrf": csrf(client), "action": "grant", "confirm": "yes", "customer_id": str(customer),
                               "actor_id": "someone-else", "note": "맡김"}, follow_redirects=False)
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT actor_id FROM delegation_events WHERE tenant_id=%s", (tenant,))

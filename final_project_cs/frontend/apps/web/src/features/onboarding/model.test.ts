@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { translator } from "@/lib/i18n";
 import {
-  answeredCount, answerLines, done, initialAnswers, partyLabel, priorityLines, questions, skip, toggle, toggleArea, toggleDetail, unskip, valid, type Answers,
+  answeredCount, answerLines, discordWebhookProblem, done, initialAnswers, partyLabel, priorityLines, questions, skip, toggle, toggleArea, toggleDetail, unskip, valid, type Answers,
 } from "./model";
 
 const ko = translator("ko");
@@ -112,5 +112,41 @@ describe("onboarding preferences", () => {
     expect(answerLines("priority", a, ko)).toEqual([
       "1. 활동 — 쇼핑 → DIY → 힐링 → 익스트림", "2. 음식 — 친절 → 맛 → 청결", "3. 이동 — 도보 → 렌트카 → 택시 → 대중교통",
     ]);
+  });
+});
+
+describe("discord webhook rule (alerts & recovery card) — the server's `parse_webhook`", () => {
+  const id = "123456789012345678";
+  const token = "AbC-def_123456789012345";
+
+  it("treats blank and spaces-only as not entered", () => {
+    expect(discordWebhookProblem("")).toBeUndefined();
+    expect(discordWebhookProblem("   ")).toBeUndefined();
+  });
+
+  it("trims only the ends and accepts Discord's webhook URLs on each Discord host", () => {
+    for (const host of ["discord.com", "discordapp.com", "ptb.discord.com", "canary.discord.com", "ptb.discordapp.com", "canary.discordapp.com"]) {
+      expect(discordWebhookProblem(`https://${host}/api/webhooks/${id}/${token}`), host).toBeUndefined();
+    }
+    expect(discordWebhookProblem(` https://discord.com/api/webhooks/${id}/${token} `)).toBeUndefined();
+    expect(discordWebhookProblem(`https://discord.com/api/webhooks/${"1".repeat(15)}/${"a".repeat(20)}`)).toBeUndefined();
+    expect(discordWebhookProblem(`https://discord.com/api/webhooks/${"1".repeat(25)}/${"a".repeat(120)}`)).toBeUndefined();
+  });
+
+  it("rejects what the server refuses: other schemes, hosts, ports, versions, slashes, queries, and ids or tokens out of range", () => {
+    for (const url of [
+      "discord.com/api/web" + "hooks/1/x", `http://discord.com/api/webhooks/${id}/${token}`, `https://discord.com:443/api/webhooks/${id}/${token}`,
+      `https://evil.com/api/webhooks/${id}/${token}`, `https://discord.com.evil.com/api/webhooks/${id}/${token}`, `https://xdiscord.com/api/webhooks/${id}/${token}`,
+      `https://user@discord.com/api/webhooks/${id}/${token}`, `https://discord.com./api/webhooks/${id}/${token}`,
+      `https://canary.discord.com/api/v10/webhooks/${id}/${token}`, `https://discord.com/api/webhooks/${id}/${token}/`,
+      `https://discord.com/api/webhooks/${id}/${token}?thread_id=1`, `https://discord.com/api/webhooks/${id}/${token}#x`,
+      `https://discord.com/api/webhooks/${id}`, `https://discord.com/api/webhooks/abc/${token}`, `https://discord.com/channels/${id}/${id}`,
+      `https://discord.com/api/webhooks/${id}/${token}/extra`, `https://discord.com/api/webhooks/${id}/to ken`, `https://discord.com/api/webhooks/${id}/${token}%41`,
+      `https://discord.com/api/webhooks/${"1".repeat(14)}/${token}`, `https://discord.com/api/webhooks/${"1".repeat(26)}/${token}`,
+      `https://discord.com/api/webhooks/${id}/${"a".repeat(19)}`, `https://discord.com/api/webhooks/${id}/${"a".repeat(121)}`,
+      "name@example.com",
+    ]) {
+      expect(discordWebhookProblem(url), url).toBe("format");
+    }
   });
 });

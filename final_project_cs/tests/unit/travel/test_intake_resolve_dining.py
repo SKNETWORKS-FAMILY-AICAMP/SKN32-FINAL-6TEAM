@@ -8,7 +8,7 @@
 """
 from __future__ import annotations
 
-from app.modules.travel_ops.intake.places import resolve
+from app.domains.travel_ops.components.intake.places import resolve
 
 
 class Lookup:
@@ -109,8 +109,8 @@ def test_a_ledger_that_could_not_be_read_is_named():
 
 def test_a_ledger_place_is_registered_for_this_trip_only_with_its_content_id():
     # 관광공사 ID 를 실어야 판정 때 원장 가게와 다시 이어진다(220). 공용 표에는 넣지 않는다(여행 전용 행).
-    from app.modules.travel_ops.intake.assemble import _place_in
-    from app.modules.travel_ops.trip_api import EXTERNAL_PLACE_SOURCES
+    from app.domains.travel_ops.components.intake.assemble import _place_in
+    from app.domains.travel_ops.entry.trip_api import EXTERNAL_PLACE_SOURCES
 
     place = _place_in("p0", {"name": "토속촌삼계탕", "kind": "dining", "latitude": 37.5777, "longitude": 126.9715,
                              "content_id": "c-1", "source": "dining_ledger"}, "dining")
@@ -120,7 +120,7 @@ def test_a_ledger_place_is_registered_for_this_trip_only_with_its_content_id():
 
 
 def test_the_ledger_lookup_counts_an_unreadable_ledger_as_blocked():
-    from app.modules.travel_ops.dining.place_lookup import LedgerPlaceLookup
+    from app.domains.travel_ops.instances.dining.place_lookup import LedgerPlaceLookup
 
     def broken():
         raise RuntimeError("connection refused")
@@ -145,8 +145,8 @@ def test_a_ledger_hit_feeds_the_near_hint_for_the_next_items():
     # 액티비티 CSV · 카카오가 쓰는 근처 힌트(`_PlaceCtx`)에 원장에서 찾은 식당 좌표도 넣는다.
     import contextlib
 
-    from app.modules.travel_ops import trip_api
-    from app.modules.travel_ops.dining import place_lookup
+    from app.domains.travel_ops.entry import trip_api
+    from app.domains.travel_ops.instances.dining import place_lookup
 
     shop = {"matched_title": "토속촌삼계탕", "content_id": "1", "content_type_id": "39",
             "latitude": 37.5777, "longitude": 126.9715, "address": "서울특별시 종로구"}

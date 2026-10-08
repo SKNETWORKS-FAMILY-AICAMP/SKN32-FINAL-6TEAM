@@ -19,10 +19,10 @@ from uuid import uuid4
 import httpx
 import pytest
 
-from app.infrastructure.travel.google_places import METER_DETAILS, GooglePlaces, price_from_details
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.itinerary_changes import NoChange, plan_closed, plan_closed_on_day
-from app.modules.travel_ops.replan import Candidate, apply_google_prices
+from app.domains.travel_ops.ports.data_sources.google_places import METER_DETAILS, GooglePlaces, price_from_details
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_closed, plan_closed_on_day
+from app.domains.travel_ops.components.planning.replan import Candidate, apply_google_prices
 
 KST = timezone(timedelta(hours=9))
 T = lambda hm: datetime.fromisoformat(f"2026-10-07T{hm}:00+09:00")  # noqa: E731
@@ -81,7 +81,7 @@ class ClosedLimiter:
     """프로세스 안 하루 제한기가 이미 찬 상태."""
 
     def acquire(self, *args, **kwargs):
-        from app.infrastructure.travel.ratelimit import RateLimited
+        from app.domains.travel_ops.ports.data_sources.ratelimit import RateLimited
         raise RateLimited("google_places", 0)
 
 
@@ -284,7 +284,7 @@ def test_the_dawn_path_uses_the_same_price_order():
 # ── 웹에 내려가는 것 ─────────────────────────────────────────────
 def test_the_chosen_place_and_the_other_options_carry_the_comparison_to_the_web():
     """★`[2026-09-30]` 웹이 「같은 가격대 · 더 비쌈」을 보이게 비교 결과만 내려 준다 — 금액은 싣지 않는다."""
-    from app.modules.travel_ops.trip_api import _item_view
+    from app.domains.travel_ops.entry.trip_api import _item_view
 
     origin = _restaurant("원래 식당", 37.5700, 126.9800)
     same = _restaurant("같은 급 식당", 37.5701, 126.9801)
@@ -306,7 +306,7 @@ def test_the_chosen_place_and_the_other_options_carry_the_comparison_to_the_web(
 
 
 def test_items_without_a_price_comparison_say_none():
-    from app.modules.travel_ops.trip_api import _item_view
+    from app.domains.travel_ops.entry.trip_api import _item_view
 
     _, _, meal = _trip(_restaurant("원래 식당", 37.57, 126.98))
     view = _item_view(meal)

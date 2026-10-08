@@ -26,6 +26,14 @@
    },
    "invariant": "wait_for_approval 은 action_proposals 가 최소 1건 있어야 한다",
    "path": "app/core/contracts.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 2.80s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 85.99s (0:01:25)",
    "title": "승인 대기인데 제안이 하나도 없어도 통과한다",
    "unique_failures": [
@@ -46,6 +54,14 @@
    },
    "invariant": "인증 헤더는 형식부터 검사한다",
    "path": "app/presentation/security.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 2.49s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 101.63s (0:01:41)",
    "title": "Bearer 형식 검사가 사라졌다",
    "unique_failures": [
@@ -76,6 +92,14 @@
    },
    "invariant": "승인자는 action:approve scope 가 있어야 한다",
    "path": "app/presentation/api/cases.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 11,
+    "dropped": 0,
+    "ran": 11,
+    "state": "caught",
+    "summary": "11 failed in 7.43s"
+   },
    "summary": "14 failed, 1116 passed, 4 skipped, 7 deselected, 36 warnings in 84.43s (0:01:24)",
    "title": "승인 엔드포인트가 읽기 권한으로 열린다",
    "unique_failures": [
@@ -104,6 +128,14 @@
    },
    "invariant": "ContextPack 은 12,000 토큰 예산을 넘겨서 만들어질 수 없다",
    "path": "app/core/contracts.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 2.62s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 116.91s (0:01:56)",
    "title": "ContextPack 토큰 예산 상한이 두 배로 늘어났다",
    "unique_failures": [
@@ -130,6 +162,14 @@
    },
    "invariant": "분류 실패는 조용히 넘기지 않는다 — classification_failed 를 남기고 escalated 로 간다",
    "path": "app/application/classification.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 7,
+    "dropped": 0,
+    "ran": 7,
+    "state": "caught",
+    "summary": "7 failed in 4.49s"
+   },
    "summary": "10 failed, 1120 passed, 4 skipped, 7 deselected, 36 warnings in 83.54s (0:01:23)",
    "title": "일부만 분류돼도 성공으로 친다",
    "unique_failures": [
@@ -156,6 +196,14 @@
    },
    "invariant": "분류 실패는 조용히 넘기지 않는다 — classification_failed 를 남기고 escalated 로 간다",
    "path": "app/application/classification.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 3.87s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 91.13s (0:01:31)",
    "title": "분류 실패의 사유를 잃는다",
    "unique_failures": [
@@ -176,7 +224,15 @@
     "reverts": true
    },
    "invariant": "분류가 실패하면 조용히 넘기지 않는다 — 잘못된 라벨은 거부한다",
-   "path": "app/modules/travel_ops/feedback.py",
+   "path": "app/domains/travel_ops/components/core_hooks/feedback.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 2,
+    "dropped": 0,
+    "ran": 2,
+    "state": "caught",
+    "summary": "2 failed in 2.21s"
+   },
    "summary": "5 failed, 1125 passed, 4 skipped, 7 deselected, 36 warnings in 95.12s (0:01:35)",
    "title": "분류 라벨 검사가 or 에서 and 로 바뀌었다",
    "unique_failures": [
@@ -194,7 +250,12 @@
     "reverts": true
    },
    "invariant": "Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
-   "path": "app/modules/travel_ops/_base.py",
+   "path": "app/domains/travel_ops/instances/_shared/_base.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "dropped": 0,
+    "state": "no_tests"
+   },
    "summary": "4 failed, 1161 passed, 4 skipped, 7 deselected, 36 warnings in 129.60s (0:02:09)",
    "title": "capability 검사를 Team 에서 뺀다"
   },
@@ -213,6 +274,14 @@
    },
    "invariant": "project.yaml 에 선언되지 않은 모듈을 물으면 오류다",
    "path": "app/core/project_config.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 2,
+    "dropped": 0,
+    "ran": 2,
+    "state": "caught",
+    "summary": "2 failed in 1.99s"
+   },
    "summary": "5 failed, 1125 passed, 4 skipped, 7 deselected, 36 warnings in 134.69s (0:02:14)",
    "title": "선언되지 않은 모듈이 켜진 것으로 취급된다",
    "unique_failures": [
@@ -234,6 +303,14 @@
    },
    "invariant": "신호 없는 축소는 폴백이다 — degraded 면 omissions 를 반드시 남긴다",
    "path": "app/core/contracts.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 2.73s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 126.30s (0:02:06)",
    "title": "축소했는데 무엇을 뺐는지 남기지 않아도 통과한다",
    "unique_failures": [
@@ -254,6 +331,14 @@
    },
    "invariant": "escalate 는 failure_code 또는 warnings 가 있어야 한다",
    "path": "app/core/contracts.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 1.85s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 84.77s (0:01:24)",
    "title": "사유 없는 에스컬레이션이 통과한다",
    "unique_failures": [
@@ -274,6 +359,14 @@
    },
    "invariant": "answer 가 있으면 evidence 가 있어야 한다 — 근거 없는 확정 답변은 만들지 않는다",
    "path": "app/core/contracts.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 3.23s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 91.23s (0:01:31)",
    "title": "근거 없는 확정 답변이 통과한다",
    "unique_failures": [
@@ -300,6 +393,14 @@
    },
    "invariant": "든 근거는 ContextPack 에 실재하는 것이어야 한다",
    "path": "app/core/verification.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 7,
+    "dropped": 0,
+    "ran": 7,
+    "state": "caught",
+    "summary": "7 failed in 4.98s"
+   },
    "summary": "10 failed, 1120 passed, 4 skipped, 7 deselected, 36 warnings in 92.93s (0:01:32)",
    "title": "근거 id 대조 방향이 뒤집혔다",
    "unique_failures": [
@@ -324,6 +425,14 @@
    },
    "invariant": "handoff 는 handoff_capability 가 있어야 한다",
    "path": "app/core/contracts.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 2.89s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 83.62s (0:01:23)",
    "title": "넘길 곳 없는 인계가 통과한다",
    "unique_failures": [
@@ -345,6 +454,14 @@
    },
    "invariant": "같은 요청을 두 번 실행해도 side effect 는 한 번만 난다",
    "path": "app/core/idempotency.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 2,
+    "dropped": 0,
+    "ran": 2,
+    "state": "caught",
+    "summary": "2 failed in 4.24s"
+   },
    "summary": "5 failed, 1125 passed, 4 skipped, 7 deselected, 36 warnings in 116.57s (0:01:56)",
    "title": "멱등키에서 대상 필드가 빠졌다",
    "unique_failures": [
@@ -368,6 +485,14 @@
    },
    "invariant": "같은 요청을 두 번 실행해도 side effect 는 한 번만 난다",
    "path": "app/core/idempotency.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 3,
+    "dropped": 0,
+    "ran": 3,
+    "state": "caught",
+    "summary": "3 failed in 2.65s"
+   },
    "summary": "6 failed, 1124 passed, 4 skipped, 7 deselected, 36 warnings in 132.71s (0:02:12)",
    "title": "멱등키의 요청 식별자가 Case 로 고정됐다",
    "unique_failures": [
@@ -389,6 +514,14 @@
    },
    "invariant": "MCP 는 read-only 다 — 결제·환불·구독 변경을 하지 않는다",
    "path": "app/presentation/api/mcp.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 2.90s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 92.00s (0:01:32)",
    "title": "MCP 도구 하나가 쓰기 scope 를 요구한다",
    "unique_failures": [
@@ -423,7 +556,15 @@
     "reverts": true
    },
    "invariant": "state_json 은 덮어쓰기가 아니라 병합이다 — 이전 근거를 지우지 않는다",
-   "path": "app/domain/case.py",
+   "path": "app/core/case_lifecycle/case.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 15,
+    "dropped": 1,
+    "ran": 15,
+    "state": "caught",
+    "summary": "15 failed in 23.71s"
+   },
    "summary": "19 failed, 1111 passed, 4 skipped, 7 deselected, 36 warnings in 75.63s (0:01:15)",
    "title": "상태 병합이 덮어쓰기가 됐다",
    "unique_failures": [
@@ -459,6 +600,14 @@
    },
    "invariant": "다른 tenant 의 Case 로 메시지를 발행할 수 없다",
    "path": "app/infrastructure/messaging/outbox.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 2,
+    "dropped": 0,
+    "ran": 2,
+    "state": "caught",
+    "summary": "2 failed in 4.77s"
+   },
    "summary": "5 failed, 1125 passed, 4 skipped, 7 deselected, 36 warnings in 92.80s (0:01:32)",
    "title": "outbox 발행에서 tenant 불일치 검사가 꺼졌다",
    "unique_failures": [
@@ -480,6 +629,14 @@
    },
    "invariant": "모르는 값을 추정값으로 채우지 않는다",
    "path": "app/infrastructure/messaging/outbox.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 3.79s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 93.10s (0:01:33)",
    "title": "tenant 를 모를 때 임시값으로 채운다",
    "unique_failures": [
@@ -501,6 +658,14 @@
    },
    "invariant": "PII 는 저장 시 마스킹하고 LLM 에는 masked 만 넘긴다",
    "path": "app/core/redaction.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 2,
+    "dropped": 0,
+    "ran": 2,
+    "state": "caught",
+    "summary": "2 failed in 2.51s"
+   },
    "summary": "5 failed, 1125 passed, 4 skipped, 7 deselected, 36 warnings in 119.71s (0:01:59)",
    "title": "저장 전 마스킹에서 이메일 규칙이 빠졌다",
    "unique_failures": [
@@ -523,6 +688,14 @@
    },
    "invariant": "감사 로그에 API key 원문을 기록하지 않는다",
    "path": "app/core/redaction.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 3,
+    "dropped": 0,
+    "ran": 3,
+    "state": "caught",
+    "summary": "3 failed in 4.48s"
+   },
    "summary": "6 failed, 1124 passed, 4 skipped, 7 deselected, 36 warnings in 129.13s (0:02:09)",
    "title": "API 키 마스킹 규칙이 사라졌다",
    "unique_failures": [
@@ -544,6 +717,14 @@
    },
    "invariant": "PII 는 저장 시 마스킹한다 — 구조 전체를 훑는다",
    "path": "app/core/redaction.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 2,
+    "dropped": 0,
+    "ran": 2,
+    "state": "caught",
+    "summary": "2 failed in 2.72s"
+   },
    "summary": "5 failed, 1125 passed, 4 skipped, 7 deselected, 36 warnings in 118.71s (0:01:58)",
    "title": "마스킹이 리스트 안으로 내려가지 않는다",
    "unique_failures": []
@@ -564,6 +745,14 @@
    },
    "invariant": "PII 는 저장 시 마스킹한다",
    "path": "app/core/redaction.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 3,
+    "dropped": 0,
+    "ran": 3,
+    "state": "caught",
+    "summary": "3 failed in 3.94s"
+   },
    "summary": "6 failed, 1124 passed, 4 skipped, 7 deselected, 36 warnings in 85.79s (0:01:25)",
    "title": "마스킹이 잎 노드에서 아무 일도 하지 않는다",
    "unique_failures": []
@@ -594,6 +783,14 @@
    },
    "invariant": "수량이 참조 대상의 상한을 넘지 않는지 본다",
    "path": "app/core/verification.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 13,
+    "dropped": 0,
+    "ran": 13,
+    "state": "caught",
+    "summary": "13 failed in 5.14s"
+   },
    "summary": "16 failed, 1114 passed, 4 skipped, 7 deselected, 36 warnings in 83.90s (0:01:23)",
    "title": "수량 대조가 값이 있을 때 건너뛴다",
    "unique_failures": [
@@ -622,6 +819,14 @@
    },
    "invariant": "respond 는 answer 가 있어야 한다",
    "path": "app/core/contracts.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 2.18s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 84.28s (0:01:24)",
    "title": "빈 답변으로 응답이 완료된다",
    "unique_failures": [
@@ -642,6 +847,14 @@
    },
    "invariant": "모든 조회에 tenant_id 와 customer_id(또는 case_id) 조건을 적용한다",
    "path": "app/infrastructure/db/repository.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 3.61s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 120.67s (0:02:00)",
    "title": "Case 목록이 customer 경계를 무시한다",
    "unique_failures": [
@@ -662,6 +875,14 @@
    },
    "invariant": "scope 없는 호출은 거부한다",
    "path": "app/presentation/security.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 1.88s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 119.64s (0:01:59)",
    "title": "scope 가 하나도 없는 주체는 검사를 통과한다",
    "unique_failures": [
@@ -684,6 +905,14 @@
    },
    "invariant": "낙관적 동시성 — 상태 변경은 읽은 시점의 version 과 정확히 맞아야 한다",
    "path": "app/core/transition.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 2,
+    "dropped": 0,
+    "ran": 3,
+    "state": "caught",
+    "summary": "2 failed, 1 passed in 5.02s"
+   },
    "summary": "6 failed, 1124 passed, 4 skipped, 7 deselected, 36 warnings in 124.55s (0:02:04)",
    "title": "버전 대조가 헐거워져 지난 상태로 덮어쓴다",
    "unique_failures": [
@@ -706,7 +935,15 @@
     "reverts": true
    },
    "invariant": "상태표에 없는 전이는 거부한다",
-   "path": "app/domain/events.py",
+   "path": "app/core/case_lifecycle/events.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 3,
+    "dropped": 0,
+    "ran": 3,
+    "state": "caught",
+    "summary": "3 failed in 3.73s"
+   },
    "summary": "6 failed, 1124 passed, 4 skipped, 7 deselected, 36 warnings in 121.52s (0:02:01)",
    "title": "전이표에 없는 전이가 기본값으로 통과한다",
    "unique_failures": [
@@ -730,7 +967,15 @@
     "reverts": true
    },
    "invariant": "이벤트별 필수 키를 검사한다 — 없는 키를 조용히 넘기지 않는다",
-   "path": "app/domain/case.py",
+   "path": "app/core/case_lifecycle/case.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 3,
+    "dropped": 0,
+    "ran": 3,
+    "state": "caught",
+    "summary": "3 failed in 2.41s"
+   },
    "summary": "6 failed, 1124 passed, 4 skipped, 7 deselected, 36 warnings in 133.53s (0:02:13)",
    "title": "이벤트 payload 의 필수 키 검사가 사라졌다",
    "unique_failures": [
@@ -752,7 +997,15 @@
     "reverts": true
    },
    "invariant": "payload schema 가 등록되지 않은 이벤트는 거부한다",
-   "path": "app/domain/case.py",
+   "path": "app/core/case_lifecycle/case.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 3.00s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 167.84s (0:02:47)",
    "title": "등록되지 않은 이벤트가 조용히 통과한다",
    "unique_failures": [
@@ -773,6 +1026,14 @@
    },
    "invariant": "case_events 는 append-only 이고 순서가 곧 상태다",
    "path": "app/core/transition.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 3.62s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 99.04s (0:01:39)",
    "title": "이벤트를 역순으로 재생한다",
    "unique_failures": [
@@ -794,6 +1055,14 @@
    },
    "invariant": "checkpoint 는 실행 snapshot 이다 — 권위 있는 projection 은 customer_cases 다",
    "path": "app/application/case_service.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 2,
+    "dropped": 0,
+    "ran": 2,
+    "state": "caught",
+    "summary": "2 failed in 1.58s"
+   },
    "summary": "5 failed, 1125 passed, 4 skipped, 7 deselected, 36 warnings in 85.90s (0:01:25)",
    "title": "checkpoint 가 업무 상태를 들고 다닌다",
    "unique_failures": [
@@ -817,6 +1086,14 @@
    },
    "invariant": "상태 변경은 읽은 시점의 version 과 정확히 맞아야 한다 (SQL 쪽 방어)",
    "path": "app/core/transition.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 3,
+    "dropped": 0,
+    "ran": 3,
+    "state": "caught",
+    "summary": "3 failed in 3.57s"
+   },
    "summary": "6 failed, 1124 passed, 4 skipped, 7 deselected, 36 warnings in 92.62s (0:01:32)",
    "title": "SQL 쪽 버전 조건이 사라졌다",
    "unique_failures": [
@@ -838,6 +1115,14 @@
    },
    "invariant": "Team 은 승인 없이 실행하지 않는다 — 승인 필요 제안이 있으면 wait_for_approval 이어야 한다",
    "path": "app/core/contracts.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 2.39s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 87.35s (0:01:27)",
    "title": "승인 필요 제안을 첫 건만 보고 넘긴다",
    "unique_failures": [
@@ -859,6 +1144,14 @@
    },
    "invariant": "근거 없는 제안은 화면에서 결정할 수 없어야 한다",
    "path": "app/presentation/ui/routes.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 2,
+    "dropped": 0,
+    "ran": 2,
+    "state": "caught",
+    "summary": "2 failed in 3.98s"
+   },
    "summary": "5 failed, 1125 passed, 4 skipped, 7 deselected, 36 warnings in 84.72s (0:01:24)",
    "title": "근거 없는 제안인데 결정 버튼이 살아 있다",
    "unique_failures": [
@@ -886,6 +1179,14 @@
    },
    "invariant": "provider timeout 을 성공으로 추정하지 않는다 — unknown 으로 남긴다",
    "path": "app/infrastructure/messaging/worker.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 7,
+    "dropped": 0,
+    "ran": 7,
+    "state": "caught",
+    "summary": "7 failed in 5.66s"
+   },
    "summary": "10 failed, 1120 passed, 4 skipped, 7 deselected, 36 warnings in 88.54s (0:01:28)",
    "title": "provider 실패를 성공으로 기록한다",
    "unique_failures": [
@@ -912,6 +1213,14 @@
    },
    "invariant": "조회 자체가 실패했으면 통과시키지 않는다 — 사실을 모르는 상태다",
    "path": "app/core/verification.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 3.64s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 111.97s (0:01:51)",
    "title": "사실 조회에 실패해도 제안을 통과시킨다",
    "unique_failures": [
@@ -933,6 +1242,14 @@
    },
    "invariant": "산출물에 버전을 박는다 — 같은 입력이라도 버전이 다르면 결과가 다르다",
    "path": "app/application/case_service.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 2,
+    "dropped": 0,
+    "ran": 2,
+    "state": "caught",
+    "summary": "2 failed in 3.32s"
+   },
    "summary": "5 failed, 1125 passed, 4 skipped, 7 deselected, 36 warnings in 83.93s (0:01:23)",
    "title": "checkpoint 의 graph_revision 이 하드코딩됐다",
    "unique_failures": [
@@ -956,7 +1273,15 @@
     "reverts": true
    },
    "invariant": "분류가 실패하면 조용히 넘기지 않는다 — 필드가 빠지면 거부한다",
-   "path": "app/modules/travel_ops/feedback.py",
+   "path": "app/domains/travel_ops/components/core_hooks/feedback.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 4,
+    "dropped": 0,
+    "ran": 4,
+    "state": "caught",
+    "summary": "4 failed in 2.33s"
+   },
    "summary": "7 failed, 1123 passed, 4 skipped, 7 deselected, 36 warnings in 104.41s (0:01:44)",
    "title": "분류 필수 필드 검사가 any 에서 all 로 바뀌었다",
    "unique_failures": [
@@ -976,7 +1301,12 @@
     "reverts": true
    },
    "invariant": "ContextPack 이 축소됐으면(degraded) 확정 답변을 만들지 않는다",
-   "path": "app/modules/travel_ops/_base.py",
+   "path": "app/domains/travel_ops/instances/_shared/_base.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "dropped": 0,
+    "state": "no_tests"
+   },
    "summary": "4 failed, 1161 passed, 4 skipped, 7 deselected, 36 warnings in 127.44s (0:02:07)",
    "title": "degraded 검사를 Team 에서 뺀다"
   },
@@ -994,6 +1324,14 @@
    },
    "invariant": "wait_for_input 은 wait_reason 이 customer_input 이어야 한다",
    "path": "app/core/contracts.py",
+   "recheck": {
+    "at": "2026-10-05T18:27:06+00:00",
+    "caught": 1,
+    "dropped": 0,
+    "ran": 1,
+    "state": "caught",
+    "summary": "1 failed in 2.00s"
+   },
    "summary": "4 failed, 1126 passed, 4 skipped, 7 deselected, 36 warnings in 85.41s (0:01:25)",
    "title": "입력 대기의 사유가 아무 값이나 통과한다",
    "unique_failures": [

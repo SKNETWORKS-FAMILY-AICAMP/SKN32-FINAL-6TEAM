@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   agentRules: false,
   devIndicators: false,
+  // Phones on the same router open the dev server by this PC's LAN address (`scripts/ops/lan_serve.ps1` sets it). Unset = same-machine only, as before.
+  allowedDevOrigins: process.env.NEXT_ALLOWED_DEV_ORIGINS?.split(",").map((host) => host.trim()).filter(Boolean),
 };
 
 export default nextConfig;

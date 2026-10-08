@@ -7,10 +7,10 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from app.infrastructure.travel.base import TravelSources
-from app.infrastructure.travel.disruptions import DisruptionCheck
-from app.infrastructure.travel.traffic_chain import CombinedTraffic
-from app.infrastructure.travel.utic import UticIncidents, classify, title_tags
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+from app.domains.travel_ops.ports.data_sources.traffic_chain import CombinedTraffic
+from app.domains.travel_ops.ports.data_sources.utic import UticIncidents, classify, title_tags
 
 KST = ZoneInfo("Asia/Seoul")
 NOW = datetime(2026, 9, 14, 16, 0, tzinfo=KST)

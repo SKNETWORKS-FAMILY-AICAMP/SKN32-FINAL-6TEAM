@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<title>triPilot 관리 앱 — 오류 대응 시나리오 목업</title>
+<style>
+:root{color-scheme:light;--bg:#f3f6f4;--surface:#fff;--text:#253c30;--muted:#637369;--border:#dce4de;--soft:#eaf2ec;--primary:#2e6047;--on-primary:#fff;--warning:#865d20;--warning-soft:#faf1df;--danger:#a34636;--danger-soft:#fbece7;--info:#2f5d8a;--info-soft:#e6eef7;--mono:ui-monospace,SFMono-Regular,Consolas,"D2Coding",monospace}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#151c18;--surface:#1c2620;--text:#e2eee6;--muted:#a7b9ad;--border:#3b4c41;--soft:#2a3c30;--primary:#b3d9be;--on-primary:#193223;--warning:#ebc785;--warning-soft:#3c3323;--danger:#f1b1a7;--danger-soft:#412c27;--info:#a9c8ea;--info-soft:#243142}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.6 system-ui,-apple-system,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",sans-serif}
+h1{font-size:22px;margin:2px 0 4px;font-weight:650}
+h2{font-size:16px;margin:0 0 10px;font-weight:650}
+h3{font-size:14px;margin:0 0 6px;font-weight:650}
+p{margin:0 0 8px}
+code,.mono{font-family:var(--mono);font-size:12.5px}
+a{color:inherit}
+button,select,input,textarea{font:inherit;color:var(--text)}
+button{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer}
+button:hover{background:var(--soft)}
+button.primary{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}
+button.small{padding:2px 8px;font-size:12px}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+select,input[type=text],textarea{padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface)}
+.muted{color:var(--muted)}
+.eyebrow{font-size:12px;color:var(--muted);margin:0}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.brand{display:flex;gap:10px;align-items:center}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;font-weight:700}
+.brand b{display:block;font-size:15px}
+.brand small{color:var(--muted);font-size:12px}
+.top-r{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pill{font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--border)}
+.pill.warn{background:var(--warning-soft);color:var(--warning);border-color:transparent}
+.pill.env{background:var(--info-soft);color:var(--info);border-color:transparent}
+.guide{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--soft);border-bottom:1px solid var(--border)}
+.guide .g-l{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;min-width:0;flex:1}
+.g-n{font-size:12px;color:var(--muted);font-family:var(--mono)}
+.guide .g-r{display:flex;gap:6px}
+.shell{display:grid;grid-template-columns:230px minmax(0,1fr) 360px;min-height:calc(100vh - 120px)}
+body.nopanel .shell{grid-template-columns:230px minmax(0,1fr)}
+body.nopanel #panel{display:none}
+nav{background:var(--surface);border-right:1px solid var(--border);padding:12px 10px}
+.nav-g{font-size:11px;color:var(--muted);margin:14px 8px 4px}
+.nav-g:first-child{margin-top:4px}
+.nav-i{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;text-decoration:none;color:var(--text)}
+.nav-i:hover{background:var(--soft)}
+.nav-i.on{background:var(--soft);font-weight:650}
+.nav-i small{font-size:11px;color:var(--muted);font-family:var(--mono)}
+main{padding:22px 26px 40px;min-width:0}
+#panel{background:var(--surface);border-left:1px solid var(--border);padding:18px 16px 40px;min-width:0}
+.page-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.grid{display:grid;gap:12px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.metric span{font-size:12px;color:var(--muted)}
+.metric b{display:block;font-size:24px;font-weight:650}
+.chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;border:1px solid var(--border);white-space:nowrap}
+.chip.ok{background:var(--soft);border-color:transparent}
+.chip.warn{background:var(--warning-soft);color:var(--warning);border-color:transparent}
+.chip.danger{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+.chip.info{background:var(--info-soft);color:var(--info);border-color:transparent}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--primary);vertical-align:0}
+.dot.warn{background:var(--warning)}.dot.down{background:var(--danger)}.dot.off{background:var(--muted)}
+.tw{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th,.tbl td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+.tbl th{font-size:12px;color:var(--muted);font-weight:600}
+.tbl tr.hl td{background:var(--warning-soft)}
+.tbl a{text-decoration:none;font-weight:600}
+.kv{display:grid;grid-template-columns:130px minmax(0,1fr);gap:4px 12px;font-size:13px}
+.kv dt{color:var(--muted)}.kv dd{margin:0;overflow-wrap:anywhere}
+pre{margin:0;padding:12px;border-radius:8px;background:var(--bg);border:1px solid var(--border);font-family:var(--mono);font-size:12.5px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.hint{border-left:3px solid var(--info);background:var(--info-soft);padding:10px 12px;border-radius:0;font-size:13px}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+.bars{display:flex;align-items:flex-end;gap:4px;height:70px;padding-top:6px}
+.bars i{flex:1;background:var(--border);border-radius:3px 3px 0 0;min-height:2px}
+.bars i.hot{background:var(--warning)}
+.bars-x{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.ev{display:flex;flex-direction:column;gap:6px}
+.ev button{text-align:left;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.ev button.on{border-color:var(--primary);background:var(--soft)}
+.tl{list-style:none;margin:0;padding:0;border-left:2px solid var(--border);margin-left:8px}
+.tl li{position:relative;padding:0 0 14px 18px}
+.tl li::before{content:"";position:absolute;left:-7px;top:5px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--primary)}
+.tl li.err::before{border-color:var(--danger)}
+.tl li.warn::before{border-color:var(--warning)}
+.tl .t{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tl .box{margin-top:6px}
+.band{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;background:var(--warning-soft);color:var(--warning);margin-bottom:14px}
+.band.ok{background:var(--soft);color:var(--text)}
+.phone{max-width:380px;border:1px solid var(--border);border-radius:24px;background:var(--surface);padding:14px;margin:6px 0}
+.phone-top{font-size:13px;font-weight:650;padding:4px 6px 10px;border-bottom:1px solid var(--border)}
+.chat{display:flex;flex-direction:column;gap:10px;padding:14px 4px}
+.bubble{padding:10px 12px;border-radius:14px;max-width:88%;font-size:14px}
+.bubble.me{align-self:flex-end;background:var(--primary);color:var(--on-primary)}
+.bubble.sys{align-self:flex-start;background:var(--warning-soft);color:var(--text)}
+.ref{margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
+.api{border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.api .m{display:inline-block;font-family:var(--mono);font-size:11px;padding:1px 6px;border-radius:5px;background:var(--info-soft);color:var(--info);margin-right:6px}
+.api .p{font-family:var(--mono);font-size:12.5px;overflow-wrap:anywhere}
+.api .perm{font-size:12px;color:var(--muted);margin:4px 0}
+.api table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.api td{padding:3px 4px;border-top:1px solid var(--border);vertical-align:top}
+.api td:first-child{font-family:var(--mono);white-space:nowrap}
+.q{border-top:1px solid var(--border);padding:10px 0}
+.q p{font-size:13px;margin-bottom:6px}
+.dec{display:flex;gap:4px;flex-wrap:wrap}
+.dec button{padding:2px 9px;font-size:12px}
+.dec button.on-ok{background:var(--soft);border-color:var(--primary);font-weight:650}
+.dec button.on-change{background:var(--warning-soft);border-color:var(--warning);color:var(--warning);font-weight:650}
+.dec button.on-hold{background:var(--bg);border-color:var(--muted);font-weight:650}
+.later{border:1px dashed var(--border);border-radius:12px;padding:18px}
+.spot{outline:3px solid var(--warning);outline-offset:4px;border-radius:12px}
+@media (prefers-reduced-motion:no-preference){.spot{animation:spot 1.4s ease-out 2}@keyframes spot{0%{outline-color:transparent}50%{outline-color:var(--warning)}100%{outline-color:var(--warning)}}}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:13px;z-index:10}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.actions label{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:4px}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+.flow span{padding:4px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface)}
+@media (max-width:1180px){.shell{grid-template-columns:210px minmax(0,1fr)}#panel{grid-column:1/-1;border-left:0;border-top:1px solid var(--border)}}
+@media (max-width:760px){.shell{grid-template-columns:1fr}nav{display:flex;gap:4px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--border);padding:8px}.nav-g{display:none}.nav-i{white-space:nowrap}.g4,.g3,.g2{grid-template-columns:1fr 1fr}main{padding:16px}.kv{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo" aria-hidden="true">t.</span><div><b>triPilot 관리 앱</b><small>개발자 콘솔 · 오류 대응 시나리오 목업 · 가상 운영일 2026-10-14</small></div></div>
+  <div class="top-r">
+    <span class="pill warn">가상 데이터 · API 연결 없음</span>
+    <span class="pill env">환경: 개발 서버 (dev)</span>
+    <button data-act="toggle-guide" id="btn-guide">시나리오 가이드 끄기</button>
+    <button data-act="toggle-panel" id="btn-panel">백엔드 합의 숨기기</button>
+    <button data-act="reset">처음으로</button>
+  </div>
+</header>
+<div id="guide" class="guide" aria-live="polite"></div>
+<div class="shell">
+  <nav id="nav" aria-label="화면 메뉴"></nav>
+  <main id="main" tabindex="-1"></main>
+  <aside id="panel" aria-label="백엔드 합의"></aside>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const STATUS={new:['확인 전','warn'],investigating:['조사 중','info'],resolved:['해결','ok']};
+const SEV={high:['높음','danger'],medium:['보통','warn'],low:['낮음','']};
+const SRC={server:'서버',web:'웹',job:'상시 작업'};
+
+const GROUPS={
+  fp_llm:{code:'LLM_TIMEOUT',title:'채팅 분류 LLM 응답 시간 초과',ops:'채팅 응답이 늦어지고 있어요',module:'코어 · 분류 실행',source:'server',sev:'high',n:37,users:12,first:'13:05',last:'14:32',hours:[0,0,0,0,0,0,0,0,0,0,0,0,0,11,26],
+    hint:'모델 적재 대기(콜드 스타트)가 백엔드 타임아웃 60초를 넘었을 수 있습니다. 연결 점검에서 Ollama 적재 상태와 keep_alive 설정을 확인합니다. (코드표의 개발자 힌트 예시)'},
+  fp_notice:{code:'INTERNAL_ERROR',title:'알림 목록 조회 중 KeyError',ops:'일부 알림을 불러오지 못해요',module:'코어 · 여행 API',source:'server',sev:'high',n:3,users:2,first:'11:48',last:'12:10',hours:[0,0,0,0,0,0,0,0,0,0,0,2,1,0,0]},
+  fp_kma:{code:'EXTERNAL_SOURCE_FAILED',title:'기상청 단기예보 — 대체 소스까지 실패 (fatal)',ops:'날씨 확인이 일시적으로 안 돼요',module:'활동 · 감시',source:'job',sev:'medium',n:6,users:0,first:'13:10',last:'13:40',hours:[0,0,0,0,0,0,0,0,0,0,0,0,0,6,0]},
+  fp_map:{code:'CLIENT_RENDER_ERROR',title:'여행 화면 지도 로딩 실패',ops:'',module:'웹 · 지도',source:'web',sev:'low',n:5,users:4,first:'09:12',last:'14:05',hours:[0,0,0,0,0,0,0,0,0,2,1,0,1,0,1]}
+};
+const EVENTS=[
+  {ref:'ERR-7F3A2C',at:'14:32:05',user:'uk#9f2c',trace:'tr_01JA9Q7M3K2X',trip:'trp_5d2e',cs:'cs_8c41'},
+  {ref:'ERR-7F2B91',at:'14:28:40',user:'uk#41ad',trace:'tr_01JA9Q2B7T0E',trip:'trp_a910',cs:'cs_8b77'},
+  {ref:'ERR-7F1D20',at:'14:30:01',user:'(상시 작업)',trace:'tr_job_classifying_1430',trip:'—',cs:'cs_8a02',job:true},
+  {ref:'ERR-7F0E55',at:'14:21:17',user:'uk#9f2c',trace:'tr_01JA9PX4QW1C',trip:'trp_5d2e',cs:'cs_8a90'},
+  {ref:'ERR-7E9C04',at:'14:11:12',user:'uk#c3d0',trace:'tr_01JA9P93HD6M',trip:'trp_1c33',cs:'cs_89f1'},
+  {ref:'ERR-7E1A77',at:'13:05:33',user:'uk#77be',trace:'tr_01JA9K0Z5R8N',trip:'trp_77b0',cs:'cs_8811'}
+];
+const JOBS=[
+  {id:'job-outbox',job:'outbox_worker',at:'14:33:00',dur:'0.4초',st:'ok',c:'delivered 3 · unknown 0',refs:''},
+  {id:'job-tc-1431',job:'trip_cases',at:'14:31:00',dur:'8.2초',st:'ok',c:'checked 14 · opened 1 · ran 1 · escalated 1 · fatal 0',refs:''},
+  {id:'job-classifying',job:'classifying',at:'14:30:00',dur:'61.3초',st:'warn',c:'scanned 1 · reclassified 0 · failed 1',refs:'ERR-7F1D20',fp:'fp_llm'},
+  {id:'job-tc-1430',job:'trip_cases',at:'14:30:00',dur:'7.9초',st:'ok',c:'checked 14 · opened 0 · fatal 0',refs:''},
+  {id:'job-tc-1340',job:'trip_cases',at:'13:40:00',dur:'9.6초',st:'warn',c:'checked 12 · opened 0 · fatal 3 · unchecked 2',refs:'ERR-7D4410 외 2',fp:'fp_kma'},
+  {id:'job-tc-1310',job:'trip_cases',at:'13:10:00',dur:'9.1초',st:'warn',c:'checked 12 · opened 0 · fatal 3',refs:'ERR-7C0B3E 외 2',fp:'fp_kma'},
+  {id:'job-rem',job:'trip_reminders',at:'08:00:00',dur:'1.1초',st:'ok',c:'trips 6 · sent 6 · already 0 · fatal 0',refs:''},
+  {id:'job-dawn',job:'trip_dawn',at:'06:00:00',dur:'0.1초',st:'disabled',c:'disabled — 구글 장소 키 없음',refs:''},
+  {id:'job-places',job:'trip_places',at:'04:00:00',dur:'0.3초',st:'ok',c:'scrubbed 2',refs:''}
+];
+
+const SPEC={
+  web:{title:'사용자 웹 · 오류 안내',apis:[
+    {m:'공통',p:'{"error":{"code","message","ref"}} + 헤더 X-Trace-Id',perm:'—',d:'기존 오류 형식에 ref(참조번호)를 더합니다. 모든 응답에 X-Trace-Id 헤더를 붙입니다.'},
+    {m:'POST',p:'/v1/web/client-errors',perm:'X-User-Key',d:'화면 오류 보고. 본문 {code, message, page, build, trace_id?, occurred_at} → 202 {ref}. 키당 개수·본문 크기 제한과 가림을 겁니다.'}],
+    q:[['web-ref-scope','ref를 어떤 응답에 싣나요 — 기록 대상(5xx·조용한 실패)만, 아니면 모든 4xx·5xx?'],
+       ['web-silent','이번 사례처럼 에스컬레이션으로 처리된 실패도 여행자에게 참조번호를 보일까요?'],
+       ['web-client-limit','client-errors 제한 값(예: 키당 분당 10건, 본문 4KB)과 가림 범위']]},
+  ops:{title:'운영 콘솔 · S-02 알림 띠 / S-07 오류 요약',apis:[
+    {m:'GET',p:'/v1/ops/incidents?status=open',perm:'ops:read',d:'코드별 집계만 돌려줍니다. 스택·입력은 없습니다.',f:[['code','오류 코드'],['severity','high · medium · low'],['title_ko · title_en','코드표의 운영자 문구'],['affected_users','24시간 서로 다른 사용자 키 수'],['events_24h','24시간 발생 수'],['first_seen · last_seen','처음·마지막 발생'],['status','new · investigating · resolved (관리 앱과 같은 값)'],['sample_ref','대표 참조번호']]}],
+    q:[['ops-affected','영향 사용자 수를 24시간 서로 다른 user_key_hash 수로 셀까요?'],
+       ['ops-visible','운영 콘솔에 보일 심각도 기준 — low는 숨길까요?'],
+       ['ops-status','상태는 개발자가 관리 앱에서 바꾼 값을 그대로 보일까요?']]},
+  home:{title:'M-01 홈',apis:[
+    {m:'GET',p:'/v1/dev/summary',perm:'dev:read',d:'새 오류 수, 늘어나는 묶음, 미해결 수, 영향 사용자 수, 연결 점검 요약, 최근 작업 회차를 한 번에.'}],
+    q:[['home-rising','「늘어나는 오류」 기준 — 직전 1시간 대비 2배 이상?'],
+       ['home-new','「새 오류」 기준 — 24시간 안에 처음 본 지문?']]},
+  errors:{title:'M-02 오류 목록',apis:[
+    {m:'GET',p:'/v1/dev/errors?q&status&source&module&since&cursor',perm:'dev:read',d:'원인 묶음 목록. q가 ERR- 또는 tr_ 형식이면 그 발생이 속한 묶음을 바로 돌려줍니다.',f:[['fingerprint','원인 지문'],['code · title','코드와 제목'],['owner_module','코드표의 담당 모듈'],['source','server · web · job'],['events_24h · affected_users','24시간 집계'],['first_seen · last_seen','처음·마지막'],['status · assignee · ticket_key','처리 상태']]}],
+    q:[['err-fp','지문 규칙 — 예외 종류 + 앱 코드 위 3프레임 + 오류 코드'],
+       ['err-ref','참조번호 형식 — ERR- + 16진 6자리? 충돌 시 처리']]},
+  detail:{title:'M-03 오류 상세',apis:[
+    {m:'GET',p:'/v1/dev/errors/{fingerprint}',perm:'dev:read',d:'묶음 정보 + 시간별 건수 + 최근 발생.'},
+    {m:'GET',p:'/v1/dev/events/{ref}',perm:'dev:read',d:'발생 한 건.',f:[['stack_masked','가린 스택'],['context_masked','가린 요청 요약'],['route · http_status','경로와 응답 코드'],['trace_id','요청 추적 번호'],['app_version · environment','커밋 · dev/prod'],['case_id · trip_id · run_id','관련 기록']]},
+    {m:'PATCH',p:'/v1/dev/errors/{fingerprint}',perm:'dev:write',d:'status · assignee · ticket_key · resolved_in · note. 변경 이력을 남깁니다.'}],
+    q:[['det-stack','스택에 남길 범위 — 앱 코드 프레임만? 줄 번호 포함?'],
+       ['det-context','요청 요약에 원문 문장을 저장할까요, 길이·언어만 남길까요?'],
+       ['det-record','record_error()를 넣을 지점 — Ollama 실패, 외부 소스 fatal, BackgroundTasks 감싸기'],
+       ['det-history','상태 변경 이력을 별도 테이블로 남길까요?']]},
+  trace:{title:'M-04 요청 추적',apis:[
+    {m:'GET',p:'/v1/dev/traces/{trace_id}',perm:'dev:read',d:'한 요청의 시간순 사건. kind = http · case_event · team_task · llm_call · error · outbox.',f:[['at','시각'],['kind','사건 종류'],['title · detail','요약 · 상세'],['duration_ms','소요'],['ids','case_id · trip_id · ref 등']]}],
+    q:[['tr-llm','llm_calls에 trace_id 칸을 더할까요? (기록 함수 한 곳에서 채움)'],
+       ['tr-join','case_events · team_tasks는 case_id로 이을까요, trace_id 칸을 더할까요?'],
+       ['tr-io','LLM 입력·출력을 보일 범위 — 가린 요약만?']]},
+  jobs:{title:'M-05 상시 작업 기록',apis:[
+    {m:'GET',p:'/v1/dev/jobs?job&since&limit',perm:'dev:read',d:'회차 목록. counts는 run_sweepers가 지금 출력하는 JSON 칸을 그대로 담습니다.',f:[['run_id','회차 ID'],['job','trip_cases · classifying 등'],['started_at · finished_at','시작·끝'],['status','ok · warn · failed · disabled'],['counts','checked · opened · fatal · errored …'],['error_refs','이 회차에서 기록한 참조번호']]}],
+    q:[['job-wrap','run_sweepers · run_outbox_worker의 회차 기록을 누가 넣을까요? (스크립트 감싸기)'],
+       ['job-keep','회차 기록 보관 기간 — 1분 주기면 하루 1,440회차']]},
+  health:{title:'M-06 연결 점검',apis:[
+    {m:'GET',p:'/v1/dev/health',perm:'dev:read',d:'점검 항목별 상태. 운영 콘솔 S-07(A-09)과 같은 점검을 쓰고 관리 앱은 상세를 더 봅니다.',f:[['checks[]','name · status(ok·warn·down·unknown·disabled) · detail · checked_at'],['version','commit · started_at'],['migrations','latest'],['switches','기능 스위치 값(읽기 전용)']]}],
+    q:[['hl-ollama','Ollama 적재 모델 확인(/api/ps)을 서버가 대신 부를까요? 점검 주기는?'],
+       ['hl-share','운영 콘솔 A-09 점검과 같은 구현을 공유할까요?']]},
+  bench:{title:'M-08 모듈 시험대 (2차)',apis:[
+    {m:'POST',p:'/v1/dev/runs',perm:'dev:write · 개발 서버만',d:'{module, capability, input, mode, fixtures, expected?, retry_of?} + 멱등 키. 통지·발송은 끕니다.'},
+    {m:'GET',p:'/v1/dev/runs/{id}',perm:'dev:read',d:'단계 · 관측값 · 결과.'}],
+    q:[['bn-impl','개발용 실행 API의 구현 주체와 기본 꺼짐 스위치'],
+       ['bn-case','사례 정본 위치 — 저장소 파일(tests/fixtures 등)']]}
+};
+const COMMON=[['c-store','오류 저장 방식 — 자체 테이블(제안) vs Sentry·GlitchTip 같은 외부 도구'],
+  ['c-owner','백엔드 한 겹(추적 번호·오류 기록·조회 API) 구현 주체'],
+  ['c-codes','오류 코드표의 위치와 소유자'],
+  ['c-retain','보관 기간 — 이벤트 30일, 묶음은 유지?'],
+  ['c-auth','권한 — dev:read · dev:write · ops:read, 운영 콘솔 로그인과 역할 분리?'],
+  ['c-env','관리 앱이 붙을 환경과 배포 위치 — 공용 서버 vs 각자 PC']];
+const LATER={
+  m07:['M-07 Case·여행 추적','2차','Case·여행 ID로 여러 요청에 걸친 사건 전체를 봅니다. M-04 요청 추적의 확장입니다.'],
+  m09:['M-09 사례 모음','2차','저장한 사례를 모아 일괄 실행하고, 회귀 시험 파일로 내보냅니다(PR로만).'],
+  m10:['M-10 통합 시나리오','3차','확정 시나리오 하루를 코어 경유로 돌려 Team 사이 흐름을 봅니다.'],
+  m11:['M-11 모델 평가·비교','3차','평가셋·실행 기록·두 실행 비교. 모델 검증 계획과 연결됩니다.'],
+  m12:['M-12 CI 현황','3차','워크플로×브랜치 최신 결과, 실패, skip 추이.']
+};
+
+const INIT=()=>({step:0,guide:true,panel:true,q:'',sel:'ERR-7F3A2C',bench:0,memo:'',dec:{},
+  g:{fp_llm:{status:'new',assignee:'',ticket:'',resolved:''},fp_notice:{status:'new',assignee:'',ticket:'',resolved:''},
+     fp_kma:{status:'investigating',assignee:'활동 담당',ticket:'',resolved:''},fp_map:{status:'new',assignee:'',ticket:'',resolved:''}}});
+let S=INIT();
+
+const STEPS=[
+  {r:'web',t:'여행자가 참조번호를 봅니다',d:'대화로 보낸 질문에 답을 만들지 못해 담당자에게 넘어갔습니다. 안내와 함께 참조번호가 보입니다.',spot:'#web-alert'},
+  {r:'ops',t:'운영자가 장애를 알아챕니다',d:'운영 콘솔에는 코드·영향·상태만 보입니다. 「개발팀에 전달」로 참조번호를 넘깁니다.',spot:'#ops-band'},
+  {r:'home',t:'개발자가 관리 앱을 엽니다',d:'늘어나는 오류 1위가 LLM_TIMEOUT이고, 연결 신호등의 Ollama가 주의 상태입니다.',spot:'#rising'},
+  {r:'errors',t:'참조번호로 찾습니다',d:'검색창에 참조번호를 넣으면 그 발생이 속한 원인 묶음이 바로 나옵니다.',spot:'#err-search',act:()=>{S.q='ERR-7F3A2C'}},
+  {r:'detail/fp_llm',t:'오류 상세를 봅니다',d:'같은 원인 37건이 13시부터 늘었습니다. 선택한 발생의 가린 스택·요청 요약·서버 판을 확인합니다.',spot:'#ev-detail',act:()=>{S.sel='ERR-7F3A2C'}},
+  {r:'trace/tr_01JA9Q7M3K2X',t:'요청 한 번을 따라갑니다',d:'HTTP 요청 → Case 생성 → LLM 호출이 60초에서 끊김 → 오류 기록 → 에스컬레이션. 모델이 적재 중이었습니다.',spot:'#tl-llm'},
+  {r:'health',t:'연결 상태를 확인합니다',d:'Ollama에 적재된 모델이 없습니다. 첫 호출이 모델 적재를 기다리다 타임아웃을 넘긴 것이 원인 후보입니다.',spot:'#chk-ollama'},
+  {r:'jobs',t:'상시 작업에도 영향이 있었는지 봅니다',d:'같은 시각 멈춘 분류를 되잡는 작업도 LLM_TIMEOUT으로 실패했습니다.',spot:'#job-classifying'},
+  {r:'detail/fp_llm',t:'조치를 기록합니다',d:'상태를 「조사 중」으로 바꾸고 담당과 티켓을 붙입니다. 운영 콘솔의 상태도 함께 바뀝니다.',spot:'#actions',act:()=>{const g=S.g.fp_llm;if(g.status==='new'){g.status='investigating';g.assignee='코어 담당';g.ticket='ST4F-000 (가상)';}}},
+  {r:'bench',t:'재현하고 회귀 시험으로 남깁니다 (2차 미리보기)',d:'시험대에서 LLM 지연을 주입해 같은 결과를 재현하고, 사례로 저장해 회귀 시험 파일로 내보냅니다.',spot:'#bench-run'},
+  {r:'agree',t:'백엔드와 합의할 것을 정리합니다',d:'화면별 항목을 「합의 · 수정 필요 · 보류」로 표시하고 결과를 복사해 문서로 옮깁니다.',spot:'#agree-list'}
+];
+
+const NAV=[
+  ['시나리오 속 다른 앱',[['web','사용자 웹','웹'],['ops','운영 콘솔','S-02·07']]],
+  ['홈',[['home','홈','M-01']]],
+  ['문제 대응',[['errors','오류 목록','M-02'],['detail/fp_llm','오류 상세','M-03'],['trace/tr_01JA9Q7M3K2X','요청 추적','M-04'],['jobs','상시 작업 기록','M-05'],['later/m07','Case·여행 추적','2차']]],
+  ['검증',[['bench','모듈 시험대','2차'],['later/m09','사례 모음','2차'],['later/m10','통합 시나리오','3차'],['later/m11','모델 평가·비교','3차'],['later/m12','CI 현황','3차']]],
+  ['시스템',[['health','연결 점검','M-06']]],
+  ['합의',[['agree','합의 정리','']]]
+];
+
+let CUR='web';
+function route(){const h=CUR;const i=h.indexOf('/');return {h,a:i<0?h:h.slice(0,i),b:i<0?'':h.slice(i+1)};}
+function go(h){CUR=h;try{if(location.hash!=='#/'+h)history.pushState(null,'','#/'+h);}catch(_){}render();window.scrollTo(0,0);$('#main').focus({preventScroll:true});}
+function fromHash(){const h=location.hash.replace(/^#\/?/,'');if(h&&h!==CUR){CUR=h;render();}}
+const chip=(t,k)=>`<span class="chip ${k||''}">${t}</span>`;
+const stChip=s=>chip(STATUS[s][0],STATUS[s][1]);
+const sevChip=s=>chip(SEV[s][0],SEV[s][1]);
+
+function renderNav(){
+  const r=route();
+  $('#nav').innerHTML=NAV.map(([g,items])=>`<div class="nav-g">${g}</div>`+items.map(([h,t,tag])=>{
+    const on=r.h===h||(r.a==='detail'&&h.startsWith('detail'))||(r.a==='trace'&&h.startsWith('trace'));
+    return `<a class="nav-i${on?' on':''}" href="#/${h}"${on?' aria-current="page"':''}><span>${t}</span><small>${tag}</small></a>`;}).join('')).join('');
+}
+
+function V_web(){
+  return `<div class="page-h"><div><p class="eyebrow">시나리오 속 다른 앱 · 관리 앱이 아닙니다</p><h1>사용자 웹 — 대화 화면</h1><p class="muted">여행자가 보는 화면입니다. 백엔드가 참조번호를 돌려주면 웹은 안내와 함께 보여 줍니다.</p></div></div>
+  <div class="phone"><div class="phone-top">서울 2박 3일 · 친구 4명 (가상 여행)</div>
+    <div class="chat"><div class="bubble me">내일 경복궁은 몇 시까지 들어갈 수 있어요?</div>
+      <div class="bubble sys" id="web-alert"><b>지금 답을 만들지 못해 담당자에게 넘겼어요.</b><br>확인되면 이 대화로 알려 드릴게요.
+        <div class="ref">참조번호 <code>ERR-7F3A2C</code><button class="small" data-act="copy" data-v="ERR-7F3A2C">복사</button></div></div></div></div>
+  <p class="note">[제안] 여행자 화면에 참조번호를 보일지는 합의 전입니다. 오른쪽 「백엔드 합의」를 확인하세요.</p>`;
+}
+
+function V_ops(){
+  const g=S.g.fp_llm,G=GROUPS.fp_llm;
+  const band=g.status==='resolved'
+    ?`<div class="band ok" id="ops-band"><span><b>${G.ops}</b> · 해결됨 · 참조 <code>ERR-7F3A2C</code></span></div>`
+    :`<div class="band" id="ops-band"><span><b>${G.ops}</b> · 영향 ${G.users}명 · ${G.n}건 · 상태 ${STATUS[g.status][0]} · 참조 <code>ERR-7F3A2C</code></span><button data-act="handoff">개발팀에 전달</button></div>`;
+  const rows=Object.entries(GROUPS).filter(([,x])=>x.sev!=='low').map(([fp,x])=>`<tr><td><code>${x.code}</code></td><td>${x.ops}</td><td>${x.users?x.users+'명':'—'}</td><td>${x.n}</td><td>${stChip(S.g[fp].status)}</td></tr>`).join('');
+  return `<div class="page-h"><div><p class="eyebrow">시나리오 속 다른 앱 · 운영자용</p><h1>운영 콘솔 — 홈 알림 띠 · 서버 상태 오류 요약</h1><p class="muted">운영자에게는 코드·쉬운 설명·영향·상태만 보입니다. 스택과 입력은 없습니다.</p></div></div>
+  ${band}
+  <div class="card"><h2>S-07 서버 상태 · 오류 요약 (지난 24시간)</h2><div class="tw"><table class="tbl"><thead><tr><th>코드</th><th>운영자 문구</th><th>영향</th><th>건수</th><th>상태</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <p class="note">심각도 낮음 1건은 숨김. 상태는 관리 앱에서 개발자가 바꾼 값과 같습니다.</p></div>`;
+}
+
+function V_home(){
+  const open=Object.values(S.g).filter(x=>x.status!=='resolved').length;
+  const nw=Object.values(S.g).filter(x=>x.status==='new').length;
+  const users=Object.entries(GROUPS).filter(([fp])=>S.g[fp].status!=='resolved').reduce((a,[,x])=>a+x.users,0);
+  return `<div class="page-h"><div><p class="eyebrow">M-01 · 1차</p><h1>홈</h1><p class="muted">지금 봐야 할 오류와 연결 상태를 한 화면에서 봅니다.</p></div></div>
+  <div class="grid g4" style="margin-bottom:14px">
+    <div class="metric"><span>확인 전 오류 묶음</span><b>${nw}</b></div>
+    <div class="metric"><span>늘어나는 오류</span><b>${S.g.fp_llm.status==='resolved'?0:1}</b></div>
+    <div class="metric"><span>미해결 묶음</span><b>${open}</b></div>
+    <div class="metric"><span>영향 사용자 (24시간)</span><b>${users}명</b></div></div>
+  <div class="card"><h2>연결 신호등</h2><div class="grid g3" style="font-size:13px">
+    <span><i class="dot"></i>API 서버</span><span><i class="dot"></i>DB</span><span><i class="dot warn"></i>Ollama — 모델 미적재</span>
+    <span><i class="dot"></i>임베딩</span><span><i class="dot warn"></i>외부 API — 기상청 이상</span><span><i class="dot"></i>알림 채널</span></div>
+    <p class="note"><a href="#/health">연결 점검 자세히 보기</a></p></div>
+  <div class="card" id="rising"><h2>늘어나는 오류</h2><div class="tw"><table class="tbl"><thead><tr><th>코드</th><th>제목</th><th>담당</th><th>13시 → 14시</th><th>상태</th></tr></thead><tbody>
+    <tr class="${S.g.fp_llm.status==='resolved'?'':'hl'}"><td><a href="#/detail/fp_llm"><code>LLM_TIMEOUT</code></a></td><td>${GROUPS.fp_llm.title}</td><td>${GROUPS.fp_llm.module}</td><td>11건 → 26건</td><td>${stChip(S.g.fp_llm.status)}</td></tr>
+  </tbody></table></div></div>
+  <div class="grid g2"><div class="card"><h2>최근 작업 회차</h2><div class="tw"><table class="tbl"><tbody>
+    ${JOBS.slice(0,3).map(j=>`<tr><td><code>${j.job}</code></td><td>${j.at}</td><td>${j.st==='ok'?chip('정상','ok'):j.st==='warn'?chip('주의','warn'):chip('꺼짐')}</td></tr>`).join('')}
+  </tbody></table></div><p class="note"><a href="#/jobs">상시 작업 기록 보기</a></p></div>
+  <div class="card"><h2>최근 CI · 평가</h2><p class="muted">3차 화면(M-11 · M-12)의 요약 자리입니다.</p></div></div>`;
+}
+
+function errRows(){
+  const q=S.q.trim();let list=Object.entries(GROUPS);let note='';
+  if(q){const u=q.toUpperCase();
+    const ev=EVENTS.find(e=>e.ref===u||e.trace===q);
+    if(ev){list=list.filter(([fp])=>fp==='fp_llm');note=`<p class="note"><code>${esc(q)}</code>가 속한 원인 묶음입니다.</p>`;}
+    else list=list.filter(([,x])=>x.code.includes(u)||x.title.includes(q));}
+  const rows=list.map(([fp,x])=>{const g=S.g[fp];return `<tr class="${fp==='fp_llm'&&q?'hl':''}"><td><a href="#/detail/${fp}"><code>${x.code}</code></a><br><span class="muted">${x.title}</span></td><td>${x.module}</td><td>${SRC[x.source]}</td><td>${sevChip(x.sev)}</td><td>${x.n}</td><td>${x.users||'—'}</td><td>${x.first} · ${x.last}</td><td>${stChip(g.status)}${g.assignee?`<br><span class="muted">${g.assignee}</span>`:''}</td></tr>`;}).join('')
+    ||`<tr><td colspan="8" class="muted">찾은 묶음이 없습니다. 참조번호(ERR-…), trace_id(tr_…), 오류 코드로 찾아보세요.</td></tr>`;
+  return {rows,note};
+}
+function V_errors(){
+  const {rows,note}=errRows();
+  return `<div class="page-h"><div><p class="eyebrow">M-02 · 1차</p><h1>오류 목록</h1><p class="muted">같은 원인끼리 묶어 보여 줍니다. 참조번호나 trace_id로 찾으면 그 묶음이 바로 나옵니다.</p></div></div>
+  <div class="card"><div class="actions">
+    <label>검색<input type="text" id="err-search" value="${esc(S.q)}" placeholder="ERR-7F3A2C · tr_… · LLM_TIMEOUT" style="min-width:260px"></label>
+    <label>상태<select><option>전체</option><option>확인 전</option><option>조사 중</option><option>해결</option></select></label>
+    <label>출처<select><option>전체</option><option>서버</option><option>웹</option><option>상시 작업</option></select></label>
+    <label>담당 모듈<select><option>전체</option><option>코어</option><option>활동</option><option>요식</option><option>이동</option><option>웹</option></select></label>
+    <label>기간<select><option>24시간</option><option>7일</option></select></label></div>
+    <p class="note">목업에서는 검색만 동작합니다.</p></div>
+  <div class="card"><div id="err-note">${note}</div><div class="tw"><table class="tbl"><thead><tr><th>코드 · 제목</th><th>담당</th><th>출처</th><th>심각도</th><th>24시간</th><th>영향</th><th>처음 · 마지막</th><th>상태</th></tr></thead><tbody id="err-rows">${rows}</tbody></table></div></div>`;
+}
+
+function V_detail(fp){
+  const G=GROUPS[fp]||GROUPS.fp_llm;fp=GROUPS[fp]?fp:'fp_llm';const g=S.g[fp];
+  const max=Math.max(...G.hours,1);
+  const bars=G.hours.map(n=>`<i class="${n>=10?'hot':''}" style="height:${Math.round(n/max*100)}%" title="${n}건"></i>`).join('');
+  const head=`<div class="page-h"><div><p class="eyebrow">M-03 · 1차 · 지문 <code>${fp}</code></p><h1><code>${G.code}</code> ${G.title}</h1>
+    <p class="muted">${stChip(g.status)} ${sevChip(G.sev)} · ${SRC[G.source]} · 담당 모듈 ${G.module} · 24시간 ${G.n}건 · 영향 ${G.users||'—'}${G.users?'명':''} · 처음 ${G.first} · 마지막 ${G.last}</p></div></div>
+  <div class="card" id="actions"><h2>처리</h2><div class="actions">
+    <label>상태<select data-act="set-status" data-fp="${fp}">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}"${g.status===k?' selected':''}>${v[0]}</option>`).join('')}</select></label>
+    <label>담당<select data-act="set-assignee" data-fp="${fp}">${['','코어 담당','검증 담당','활동 담당','요식 담당','이동 담당'].map(v=>`<option${g.assignee===v?' selected':''} value="${v}">${v||'미지정'}</option>`).join('')}</select></label>
+    <label>티켓<span>${g.ticket?`<code>${g.ticket}</code>`:'<button data-act="ticket" data-fp="'+fp+'">티켓 발행 (가상)</button>'}</span></label>
+    <label>해결 판<span>${g.resolved?`<code>${g.resolved}</code>`:'<span class="muted">—</span>'}</span></label>
+    ${fp==='fp_llm'?'<a href="#/bench" class="chip info" style="align-self:center">시험대에서 재현 →</a>':''}</div>
+    <p class="note">바꾼 상태는 운영 콘솔 오류 요약에 그대로 보입니다 (PATCH /v1/dev/errors/{fingerprint}).</p></div>
+  <div class="card"><h2>시간별 발생 (오늘 00시~14시)</h2><div class="bars">${bars}</div><div class="bars-x"><span>00</span><span>07</span><span>14</span></div></div>`;
+  if(fp!=='fp_llm')return head+`<div class="card later"><p>발생 상세 예시는 시나리오 대상인 <a href="#/detail/fp_llm"><code>LLM_TIMEOUT</code></a>에만 채웠습니다.</p></div>`;
+  const ev=EVENTS.find(e=>e.ref===S.sel)||EVENTS[0];
+  const list=EVENTS.map(e=>`<button class="${e.ref===ev.ref?'on':''}" data-act="sel" data-v="${e.ref}"><span><code>${e.ref}</code><br><span class="muted">${e.at} · ${e.user}</span></span>${e.job?chip('작업'):''}</button>`).join('')+'<p class="note">외 31건</p>';
+  return head+`<div class="hint" style="margin-bottom:14px"><b>개발자 힌트</b> — ${G.hint}</div>
+  <div class="grid" style="grid-template-columns:minmax(0,230px) minmax(0,1fr)">
+    <div class="card"><h2>발생</h2><div class="ev">${list}</div></div>
+    <div class="card" id="ev-detail"><h2>발생 <code>${ev.ref}</code> · ${ev.at}</h2>
+      <h3>스택 (가림 · 가상 예시)</h3>
+<pre>OllamaError: Ollama 호출 시간 초과 (60.0초)
+  app/infrastructure/ollama_chat.py      in json
+  app/domains/travel_ops/components/core_hooks/feedback.py     in classify
+  app/application/classification.py      in classify_case
+  app/domains/travel_ops/components/conversation/trip_messages.py  (메시지 처리)
+→ 기록 지점: feedback.py — 「모름」으로 바꾸기 직전 record_error() [제안]</pre>
+      <p class="note">함수 이름·줄 번호는 구현 후 실제 값으로 바뀝니다.</p>
+      <h3 style="margin-top:14px">요청 요약 (가림)</h3>
+      <dl class="kv"><dt>경로</dt><dd><code>POST /v1/web/trips/{trip_id}/messages</code></dd>
+        <dt>응답</dt><dd>200 — 에스컬레이션으로 응답 (조용한 실패)</dd>
+        <dt>메시지</dt><dd>23자 · 언어 ko · 원문 저장 안 함 <span class="chip warn">합의 필요</span></dd>
+        <dt>사용자 키</dt><dd><code>${ev.user}</code> (해시)</dd>
+        <dt>여행 · Case</dt><dd><code>${ev.trip}</code> · <code>${ev.cs}</code></dd>
+        <dt>trace_id</dt><dd><code>${ev.trace}</code></dd></dl>
+      <h3 style="margin-top:14px">환경</h3>
+      <dl class="kv"><dt>서버 판</dt><dd><code>5202ef5</code> (가상)</dd><dt>환경</dt><dd>dev · api-1</dd><dt>모델 설정</dt><dd><code>tripilot-gemma4</code> · 타임아웃 60초</dd></dl>
+      <p style="margin-top:12px">${ev.ref==='ERR-7F3A2C'?'<a class="chip info" href="#/trace/tr_01JA9Q7M3K2X">요청 추적 열기 →</a>':'<span class="muted">요청 추적 예시는 ERR-7F3A2C에만 채웠습니다.</span>'} <a class="chip" href="#/later/m07">Case 추적 (2차)</a></p>
+    </div></div>`;
+}
+
+function V_trace(id){
+  const items=[
+    ['14:32:05.112','http','','HTTP 요청','<code>POST /v1/web/trips/trp_5d2e/messages</code> · 사용자 키 <code>uk#9f2c</code>',''],
+    ['14:32:05.140','case_event','','Case 생성','<code>cs_8c41</code> · received → classifying','28ms'],
+    ['14:32:05.151','llm_call','warn','LLM 호출 — 분류','',''],
+    ['14:33:05.171','error','err','오류 기록','<code>ERR-7F3A2C</code> · <code>LLM_TIMEOUT</code> · warning · <a href="#/detail/fp_llm">묶음 보기</a>','4ms'],
+    ['14:33:05.190','case_event','','Case → escalated','이유 <code>classification_failed</code>','19ms'],
+    ['14:33:05.204','http','','HTTP 응답','200 · 에스컬레이션 안내 · <code>X-Trace-Id: tr_01JA9Q7M3K2X</code>',''],
+    ['14:33:05.230','outbox','','outbox 적재','운영 알림 1건 (배달 루프가 보냄)','']];
+  const li=items.map(([t,k,cls,title,d,dur])=>{
+    if(k==='llm_call')return `<li class="warn" id="tl-llm"><div class="t">${t} · llm_call</div><b>${title}</b> ${chip('60.0초 초과','warn')}
+      <div class="card box" style="margin-bottom:0"><dl class="kv"><dt>모델</dt><dd><code>tripilot-gemma4</code> (Ollama)</dd><dt>프롬프트</dt><dd>분류 프롬프트 (키·판은 llm_calls 기록)</dd><dt>대기</dt><dd>모델 적재 대기 중 타임아웃 · 응답 없음</dd><dt>토큰 · 파싱</dt><dd>— · —</dd><dt>입력</dt><dd>가린 요약 (23자 · ko)</dd></dl></div></li>`;
+    return `<li class="${cls}"><div class="t">${t} · ${k}${dur?' · '+dur:''}</div><b>${title}</b><br><span class="muted">${d}</span></li>`;}).join('');
+  const known=id==='tr_01JA9Q7M3K2X';
+  return `<div class="page-h"><div><p class="eyebrow">M-04 · 1차</p><h1>요청 추적</h1><p class="muted">trace_id 하나로 HTTP 요청부터 Case 사건 · Team 작업 · LLM 호출 · 오류 · outbox까지 시간순으로 봅니다.</p></div></div>
+  <div class="card"><div class="actions"><label>trace_id 또는 참조번호<input type="text" value="${esc(id||'')}" style="min-width:280px" readonly></label></div></div>
+  ${known?`<div class="grid g3" style="margin-bottom:14px"><div class="metric"><span>총 소요</span><b>60.1초</b></div><div class="metric"><span>사건</span><b>7</b></div><div class="metric"><span>오류</span><b>1</b></div></div>
+  <div class="card"><ol class="tl">${li}</ol></div>`:`<div class="card later">추적 예시는 <a href="#/trace/tr_01JA9Q7M3K2X"><code>tr_01JA9Q7M3K2X</code></a>에만 채웠습니다.</div>`}`;
+}
+
+function V_jobs(){
+  const rows=JOBS.map(j=>`<tr id="${j.id}" class="${j.id==='job-classifying'?'hl':''}"><td><code>${j.job}</code></td><td>${j.at}</td><td>${j.dur}</td><td>${j.st==='ok'?chip('정상','ok'):j.st==='warn'?chip('주의','warn'):chip('꺼짐')}</td><td class="mono">${j.c}</td><td>${j.refs?(j.fp?`<a href="#/detail/${j.fp}"><code>${j.refs}</code></a>`:`<code>${j.refs}</code>`):'—'}</td></tr>`).join('');
+  return `<div class="page-h"><div><p class="eyebrow">M-05 · 1차</p><h1>상시 작업 기록</h1><p class="muted">run_sweepers · run_outbox_worker의 회차별 결과입니다. 지금은 출력 한 줄로 사라지는 숫자를 회차마다 저장해 보여 줍니다.</p></div></div>
+  <div class="card"><div class="actions"><label>작업<select><option>전체</option><option>trip_cases</option><option>classifying</option><option>routing</option><option>trip_dawn</option><option>trip_reminders</option><option>trip_places</option><option>outbox_worker</option></select></label><label>기간<select><option>오늘</option><option>7일</option></select></label></div></div>
+  <div class="card"><div class="tw"><table class="tbl"><thead><tr><th>작업</th><th>시작</th><th>소요</th><th>상태</th><th>숫자 (run_sweepers 출력 그대로)</th><th>기록한 오류</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <p class="note">fatal = 대체 소스까지 실패해 판정 못 함 · errored = 아무것도 기록 못 함(다음 회차에 또 걸림). 둘 다 오류 목록으로 올라갑니다.</p></div>`;
+}
+
+function V_health(){
+  const c=(id,cls,name,st,lines)=>`<div class="card" ${id?`id="${id}"`:''}><h2><i class="dot ${cls}"></i>${name} ${st}</h2><dl class="kv">${lines.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></div>`;
+  return `<div class="page-h"><div><p class="eyebrow">M-06 · 1차</p><h1>연결 점검</h1><p class="muted">마지막 점검 14:34:10 · <button class="small" data-act="recheck">지금 다시 점검</button></p></div></div>
+  <div class="grid g2">
+  ${c('','','API 서버',chip('정상','ok'),[['서버 판','<code>5202ef5</code> (가상)'],['가동','3시간 12분'],['요청 (1시간)','412건 · 오류율 9.0%']])}
+  ${c('','','DB',chip('정상','ok'),[['PostgreSQL','16 · pgvector'],['마이그레이션','220 (가정 — 오류 기록 테이블 추가 후)'],['연결 수','6 / 20']])}
+  ${c('chk-ollama','warn','Ollama',chip('주의','warn'),[['연결','정상 (응답 12ms)'],['적재된 모델','<b>없음</b> — 마지막 해제 13:02'],['설정 모델','<code>tripilot-gemma4</code> · 타임아웃 60초'],['참고','로컬 실측(9/29) 첫 호출 103초 · 적재 후 분류 4.5~5.4초'],['원인 후보','적재 해제 뒤 첫 호출이 모델 적재를 기다리다 타임아웃 초과']])}
+  ${c('','','임베딩',chip('정상','ok'),[['제공자','ollama · <code>bge-m3-cpu</code>'],['마지막 성공','14:20']])}
+  ${c('','warn','외부 API',chip('일부 이상','warn'),[['관광공사','정상'],['기상청 단기예보','이상 — 13:10~13:40 fatal 6'],['TAGO 교통','정상'],['구글 장소','꺼짐 — 키 없음']])}
+  ${c('','','알림 채널',chip('정상','ok'),[['디스코드 웹훅','마지막 성공 14:30'],['outbox unknown','0건']])}
+  </div>
+  <div class="card"><h2>기능 스위치 (읽기 전용)</h2><dl class="kv"><dt>scenario_mode_enabled</dt><dd>false</dd><dt>dev_api_enabled (제안)</dt><dd>true — 개발 서버에서만</dd><dt>embedding_provider</dt><dd>ollama</dd></dl></div>`;
+}
+
+function V_bench(){
+  const st=S.bench;
+  return `<div class="page-h"><div><p class="eyebrow">M-08 · 2차 미리보기 · 개발 서버에서만</p><h1>모듈 시험대 — 오류 재현</h1><p class="muted">오류 상세의 「재현」이 입력과 조건을 넘깁니다. 운영 서버에 붙었을 때는 실행 버튼이 막힙니다.</p></div></div>
+  <div class="grid g2"><div class="card"><h2>입력</h2><dl class="kv">
+    <dt>대상</dt><dd>코어 · 문의 분류 (<code>classify_case</code>)</dd>
+    <dt>입력 문장</dt><dd>합성 문장 「내일 오후 입장 마감이 몇 시예요?」<br><span class="muted">원문은 저장하지 않아 합성 문장으로 재현 (합의 필요)</span></dd>
+    <dt>모드</dt><dd>고정 도구 · 통지·발송 꺼짐</dd>
+    <dt>조건</dt><dd>LLM 지연 주입 90초 · 타임아웃 60초</dd>
+    <dt>기대</dt><dd><code>escalated</code> + <code>LLM_TIMEOUT</code> 기록</dd></dl>
+    <div class="actions" style="margin-top:12px"><button class="primary" id="bench-run" data-act="bench-run">${st>=2?'다시 실행':'재현 실행'}</button>${st>=2?'<button data-act="bench-warm">모델 예열 상태로 실행</button>':''}</div></div>
+  <div class="card"><h2>결과</h2>${st===0?'<p class="muted">아직 실행하지 않았습니다.</p>':st===1?'<p>실행 중… (가상)</p>':`
+    <dl class="kv"><dt>실행</dt><dd>${chip('완료','ok')} run <code>run_0c71</code></dd><dt>결과</dt><dd><code>classification_failed → escalated</code></dd><dt>기대 대조</dt><dd>${chip('일치','ok')}</dd><dt>기록</dt><dd><code>ERR-8A01F2</code> (환경 dev · 시험 실행 표시)</dd></dl>
+    ${st>=3?`<hr style="border:0;border-top:1px solid var(--border);margin:12px 0"><dl class="kv"><dt>예열 후</dt><dd>${chip('완료','ok')} 분류 성공 4.9초</dd><dt>결과</dt><dd>intent · issue_code 정상 (가상)</dd></dl>`:''}
+    <div class="actions" style="margin-top:12px"><button data-act="toast" data-v="사례로 저장했어요 (가상)">사례 저장</button><button data-act="toast" data-v="회귀 시험 파일을 만들었어요. PR로만 반영합니다 (가상)">회귀 시험으로 내보내기</button><button data-act="resolve">오류에 해결 표시</button></div>`}</div></div>
+  <div class="card"><h2>흐름</h2><div class="flow"><span>오류 발견</span>→<span>원인 확인</span>→<span>시험대 재현</span>→<span>사례 저장</span>→<span>회귀 시험 (CI)</span>→<span>해결 표시</span></div></div>`;
+}
+
+function V_later(id){
+  const x=LATER[id]||['다음 차수 화면','',''];
+  return `<div class="page-h"><div><p class="eyebrow">${x[1]} · 이번 합의 범위 밖</p><h1>${x[0]}</h1></div></div>
+  <div class="card later"><p>${x[2]}</p><p class="muted">이번 합의 범위는 M-01~M-06과 운영 콘솔·사용자 웹 연결입니다.</p></div>`;
+}
+
+function qRow(id,q){
+  const v=S.dec[id]||'';
+  const b=(k,t)=>`<button class="${v===k?'on-'+k:''}" data-act="dec" data-id="${id}" data-v="${k}" aria-pressed="${v===k}">${t}</button>`;
+  return `<div class="q"><p>${q}</p><div class="dec">${b('ok','합의')}${b('change','수정 필요')}${b('hold','보류')}</div></div>`;
+}
+function allQs(){const out=[['공통',COMMON]];for(const k of Object.keys(SPEC))out.push([SPEC[k].title,SPEC[k].q]);return out;}
+function V_agree(){
+  const qs=allQs();const flat=qs.flatMap(([,l])=>l);
+  const cnt=k=>flat.filter(([id])=>S.dec[id]===k).length;
+  const apis=Object.values(SPEC).flatMap(s=>s.apis.map(a=>[s.title,a]));
+  return `<div class="page-h"><div><p class="eyebrow">합의 정리</p><h1>백엔드와 합의할 것</h1><p class="muted">화면마다 오른쪽 패널에서 표시한 결과가 여기에 모입니다. 새로고침하면 지워집니다.</p></div>
+    <div class="actions"><button class="primary" data-act="export">합의 결과 복사</button></div></div>
+  <div class="grid g4" style="margin-bottom:14px"><div class="metric"><span>합의</span><b>${cnt('ok')}</b></div><div class="metric"><span>수정 필요</span><b>${cnt('change')}</b></div><div class="metric"><span>보류</span><b>${cnt('hold')}</b></div><div class="metric"><span>미표시</span><b>${flat.length-cnt('ok')-cnt('change')-cnt('hold')}</b></div></div>
+  <div class="card" id="agree-list">${qs.map(([t,l])=>`<h2 style="margin-top:8px">${t}</h2>${l.map(([id,q])=>qRow(id,q)).join('')}`).join('')}</div>
+  <div class="card"><h2>회의 메모</h2><textarea id="memo" rows="4" style="width:100%" placeholder="결정 내용, 담당, 기한">${esc(S.memo)}</textarea></div>
+  <div class="card"><h2>필요한 API 전체 (초안)</h2><div class="tw"><table class="tbl"><thead><tr><th>화면</th><th>메서드</th><th>경로</th><th>권한</th></tr></thead><tbody>${apis.map(([t,a])=>`<tr><td>${t}</td><td>${a.m}</td><td><code>${esc(a.p)}</code></td><td>${a.perm}</td></tr>`).join('')}</tbody></table></div></div>
+  <div class="card" id="export-box" hidden><h2>복사할 내용</h2><textarea id="export-text" rows="10" style="width:100%" readonly></textarea></div>`;
+}
+
+function renderPanel(){
+  const r=route();const key=r.a==='later'?null:r.a;const s=key&&SPEC[key];
+  if(r.a==='agree'){$('#panel').innerHTML=`<h2>백엔드 합의</h2><p class="muted">이 화면이 전체 합의 목록입니다.</p>`;return;}
+  if(!s){$('#panel').innerHTML=`<h2>백엔드 합의</h2><p class="muted">다음 차수 화면이라 이번 합의 대상이 아닙니다.</p>`;return;}
+  $('#panel').innerHTML=`<p class="eyebrow">백엔드 합의 · 모두 제안</p><h2>${s.title}</h2>
+  <h3>필요한 API</h3>${s.apis.map(a=>`<div class="api"><span class="m">${a.m}</span><span class="p">${esc(a.p)}</span><div class="perm">권한 ${a.perm}</div><div style="font-size:13px">${a.d}</div>${a.f?`<table>${a.f.map(([n,d])=>`<tr><td>${n}</td><td>${d}</td></tr>`).join('')}</table>`:''}</div>`).join('')}
+  <h3 style="margin-top:14px">정할 것</h3>${s.q.map(([id,q])=>qRow(id,q)).join('')}
+  <p class="note">공통 결정은 「합의 정리」 화면에 있습니다.</p>`;
+}
+
+function renderGuide(){
+  const g=$('#guide');
+  if(!S.guide){g.hidden=true;return;}
+  g.hidden=false;const st=STEPS[S.step];const here=route().h===st.r;
+  g.innerHTML=`<div class="g-l"><span class="g-n">시나리오 ${S.step+1} / ${STEPS.length}</span><b>${st.t}</b><span class="muted">${st.d}</span></div>
+  <div class="g-r"><button data-act="g-prev">이전</button>${here?'':'<button data-act="g-go">이 화면으로</button>'}<button class="primary" data-act="g-next">${S.step===STEPS.length-1?'처음부터':'다음'}</button></div>`;
+}
+
+const VIEWS={web:V_web,ops:V_ops,home:V_home,errors:V_errors,detail:V_detail,trace:V_trace,jobs:V_jobs,health:V_health,bench:V_bench,later:V_later,agree:V_agree};
+function render(){
+  const r=route();const v=VIEWS[r.a]||V_web;
+  $('#main').innerHTML=v(r.b);
+  renderNav();renderPanel();renderGuide();
+  document.body.classList.toggle('nopanel',!S.panel);
+  $('#btn-guide').textContent=S.guide?'시나리오 가이드 끄기':'시나리오 가이드 켜기';
+  $('#btn-panel').textContent=S.panel?'백엔드 합의 숨기기':'백엔드 합의 보기';
+  const st=STEPS[S.step];
+  if(S.guide&&r.h===st.r){const el=$(st.spot);if(el){el.classList.add('spot');el.scrollIntoView({block:'center',behavior:'smooth'});}}
+}
+function goStep(i){
+  S.step=(i+STEPS.length)%STEPS.length;const st=STEPS[S.step];if(st.act)st.act();
+  go(st.r);
+}
+let tt;
+function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>{el.hidden=true},2200);}
+function copyText(t,box){
+  const fb=()=>{if(box){box.hidden=false;const ta=$('#export-text');ta.value=t;ta.select();}
+    try{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();toast(ok?'복사했어요':'아래 칸에서 직접 복사해 주세요');}catch(_){toast('아래 칸에서 직접 복사해 주세요');}};
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(()=>{toast('복사했어요');if(box){box.hidden=false;$('#export-text').value=t;}},fb);}else fb();
+}
+function exportMd(){
+  const L={ok:'합의',change:'수정 필요',hold:'보류'};
+  let s='# 관리 앱 백엔드 합의 결과 (시나리오 목업)\n\n';
+  for(const [t,l] of allQs()){s+='## '+t+'\n\n';for(const [id,q] of l)s+='- ['+(L[S.dec[id]]||'미표시')+'] '+q+'\n';s+='\n';}
+  if(S.memo.trim())s+='## 회의 메모\n\n'+S.memo.trim()+'\n';
+  return s;
+}
+const ACT={
+  'toggle-guide':()=>{S.guide=!S.guide;render();},
+  'toggle-panel':()=>{S.panel=!S.panel;render();},
+  'reset':()=>{S=INIT();go('web');toast('처음 상태로 돌렸어요');},
+  'g-next':()=>goStep(S.step+1),'g-prev':()=>goStep(S.step-1),'g-go':()=>goStep(S.step),
+  'copy':b=>copyText(b.dataset.v),
+  'handoff':()=>copyText('ERR-7F3A2C'),
+  'sel':b=>{S.sel=b.dataset.v;render();},
+  'ticket':b=>{S.g[b.dataset.fp].ticket='ST4F-000 (가상)';render();toast('티켓을 발행했어요 (가상)');},
+  'dec':b=>{const id=b.dataset.id,v=b.dataset.v;S.dec[id]=S.dec[id]===v?'':v;render();},
+  'bench-run':()=>{S.bench=1;render();setTimeout(()=>{S.bench=2;render();},900);},
+  'bench-warm':()=>{S.bench=3;render();},
+  'resolve':()=>{const g=S.g.fp_llm;g.status='resolved';g.resolved='a1b2c3d (가상)';render();toast('해결로 표시했어요. 운영 콘솔에도 반영돼요');},
+  'recheck':()=>toast('다시 점검했어요 (가상 — 값은 그대로)'),
+  'toast':b=>toast(b.dataset.v),
+  'export':()=>copyText(exportMd(),$('#export-box'))
+};
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a[href^="#/"]');if(a){e.preventDefault();go(a.getAttribute('href').slice(2));return;}
+  const b=e.target.closest('[data-act]');if(!b||b.tagName==='SELECT')return;const f=ACT[b.dataset.act];if(f){e.preventDefault();f(b);}});
+document.addEventListener('change',e=>{const t=e.target;
+  if(t.dataset.act==='set-status'){S.g[t.dataset.fp].status=t.value;if(t.value!=='resolved')S.g[t.dataset.fp].resolved='';render();}
+  if(t.dataset.act==='set-assignee'){S.g[t.dataset.fp].assignee=t.value;render();}});
+document.addEventListener('input',e=>{const t=e.target;
+  if(t.id==='err-search'){S.q=t.value;const {rows,note}=errRows();$('#err-rows').innerHTML=rows;$('#err-note').innerHTML=note;}
+  if(t.id==='memo')S.memo=t.value;});
+window.addEventListener('hashchange',fromHash);
+window.addEventListener('popstate',fromHash);
+CUR=location.hash.replace(/^#\/?/,'')||'web';
+render();
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@ import Image, { getImageProps } from "next/image";
 import { useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
-import { LanguagePicker } from "@/components/ui/language-picker";
+import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { RecentTrips } from "@/features/trip/trip-list";
 import type { Language } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
@@ -26,8 +26,9 @@ const copy: Record<Language, Record<string, string>> = {
     guide: "How to use triPilot", shot: "App screen", swipe: "Swipe to see each step", prevStep: "Previous step", nextStep: "Next step",
     start: "Your next journey\nstarts right here.",
     startDescription: "The places you dream of. The moments you love.\nTell us what your next trip looks like.",
-    taste: "Your style", trip: "Your trip", cta: "Start my itinerary",
-    actionNote: "Review the terms, then tell us your travel preferences.",
+    taste: "Your plan", trip: "Your trip", cta: "Start my itinerary",
+    actionNote: "Review the terms, then add your plan.",
+    actionNoteDone: "You have already set up. Change your preferences any time on My page.",
     scrollHint: "Scroll down to explore", skip: "Skip intro", next: "Next screen",
     pages: "triPilot introduction. Scroll down to move to the next screen.", navigation: "Introduction screens",
     label0: "Introduction", label1: "How it works", label2: "Start your itinerary",
@@ -45,8 +46,9 @@ const copy: Record<Language, Record<string, string>> = {
     guide: "triPilot 이용 방법", shot: "앱 화면", swipe: "옆으로 넘겨 단계별로 확인하세요", prevStep: "이전 단계", nextStep: "다음 단계",
     start: "다음 여행의 첫걸음,\n여기서 시작해요.",
     startDescription: "가고 싶은 곳, 좋아하는 순간.\n당신의 여행 이야기를 들려주세요.",
-    taste: "나의 취향", trip: "나의 여행", cta: "내 일정 시작하기",
-    actionNote: "약관 확인과 여행 취향 설정부터 함께할게요.",
+    taste: "나의 계획", trip: "나의 여행", cta: "내 일정 시작하기",
+    actionNote: "약관 확인부터 함께할게요.",
+    actionNoteDone: "이미 설정을 마치셨어요. 취향과 디스코드 알림은 마이페이지에서 바꿀 수 있어요.",
     scrollHint: "아래로 스크롤하며 만나보세요", skip: "소개 건너뛰기", next: "다음 화면",
     pages: "triPilot 서비스 소개. 아래로 스크롤하면 다음 화면으로 이동합니다.", navigation: "소개 화면 이동",
     label0: "서비스 소개", label1: "이용 방법", label2: "일정 시작",
@@ -57,7 +59,7 @@ const copy: Record<Language, Record<string, string>> = {
 const { props: { srcSet } } = getImageProps({ alt: "", src: "/images/tripilot-home-03-journey.png", width: 1672, height: 941, quality: 75 });
 const background = `image-set(${(srcSet ?? "").split(", ").map((entry) => { const [url, density] = entry.split(" "); return `url("${url}") ${density}`; }).join(", ")})`;
 
-/** How-it-works slides; each has a demo-mode capture per language in `public/images/tripilot-guide-<language>-<slide>.jpg`. */
+/** How-it-works slides; each has a screen capture per language in `public/images/tripilot-guide-<language>-<slide>.jpg`. */
 const guide = ["1-preferences", "2-plan", "3-results", "4-chat"] as const;
 
 const delay = (seconds: number) => ({ "--d": `${seconds.toFixed(3)}s` }) as CSSProperties;
@@ -80,6 +82,10 @@ export function Intro() {
   const { language } = useSettings();
   const text = copy[language];
   const router = useRouter();
+  // ★`[2026-10-06 user decision]` The button always goes straight to registering a plan. The terms are still required: a visitor who has not
+  //   agreed is sent to the start screen by `ConsentGate` and, once they agree there, on to the plan (`onboarding.tsx`). The preference survey is
+  //   no longer part of the first run — it is done on its own from the menu / My page.
+  const [{ agreed }] = useOnboarding();
   const pages = useRef<HTMLElement>(null);
   const [shown, setShown] = useState<boolean[]>([true, false, false]);
   const [current, setCurrent] = useState(0);
@@ -207,7 +213,6 @@ export function Intro() {
           <h1 id="intro-title" className={styles.title}><Reveal key={language} text={text.intro} mode="char" /></h1>
           <p className={styles.description} data-fx="up" style={delay(.5)}><Lines text={text.introDescription} /></p>
         </div>
-        <LanguagePicker className={styles.language} caption={<>LANGUAGE · <span lang="ko">언어</span></>} data-fx="up" style={delay(.65)} />
         <div className={styles.trips} data-fx="up" style={delay(.75)}><RecentTrips /></div>
         <div className={styles.badge} data-fx="scale" style={delay(.8)}><small>A LITTLE MORE YOU</small><strong>{text.badge}</strong></div>
         {controls(1)}
@@ -243,8 +248,8 @@ export function Intro() {
           <div className={styles.ticketBottom}><span>TRAVEL PARTNER</span><span>triPilot</span></div>
         </div>
         <div className={styles.actionArea} data-fx="up" style={delay(.95)}>
-          <button type="button" className={styles.primary} onClick={() => router.push(routes.start)}><span>{text.cta}</span><span aria-hidden="true">↗</span></button>
-          <p className={styles.actionNote}>{text.actionNote}</p>
+          <button type="button" className={styles.primary} onClick={() => router.push(routes.newTrip)}><span>{text.cta}</span><span aria-hidden="true">↗</span></button>
+          <p className={styles.actionNote}>{agreed ? text.actionNoteDone : text.actionNote}</p>
         </div>
       </section>
     </main>

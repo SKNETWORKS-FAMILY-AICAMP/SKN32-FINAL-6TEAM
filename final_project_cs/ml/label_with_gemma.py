@@ -23,7 +23,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-#: ★제품 어휘 — `app/modules/travel_ops/feedback.py` 와 같아야 한다(시험이 대조한다).
+#: ★제품 어휘 — `app/domains/travel_ops/components/core_hooks/feedback.py` 와 같아야 한다(시험이 대조한다).
 INTENTS = ("itinerary_submit", "incident_report", "confirm_request", "adjust_reject", "other")
 ISSUE_CODES = (
     "activity_cancel_or_change", "activity_weather_risk", "activity_time_conflict", "activity_other",

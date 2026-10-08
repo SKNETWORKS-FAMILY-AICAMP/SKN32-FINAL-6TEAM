@@ -104,7 +104,7 @@ def _is_secret(name: str) -> bool:
       웹훅 URL 은 이름이 `_URL` 이어도 자격 증명**이다 — 그 주소를 가진 사람은 누구나
       우리 채널에 글을 올린다. 그래서 `_WEBHOOK_URL` 도 비밀로 본다. 비밀은 템플릿에
       **비어 있어야** 하고, 비어 있어도 문자열이라 기동은 막히지 않는다.
-    ★2026-10-04 — OAuth 형 키 쌍(`_CLIENT_ID` · `_CLIENT_SECRET`)도 자격 증명이다. 네이버 검색 키
+    ★2026-10-04(팀) — OAuth 형 키 쌍(`_CLIENT_ID` · `_CLIENT_SECRET`)도 자격 증명이다. 네이버 검색 키
       (`ACOP_NAVER_SEARCH_CLIENT_ID/SECRET`)가 `_KEY` 로 끝나지 않아 「기본값 없는 설정」으로 오판됐다.
     """
     return (bool(_KEY_NAME.search(name))

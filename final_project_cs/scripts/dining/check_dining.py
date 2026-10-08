@@ -45,7 +45,10 @@ DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git
 ROOT = os.path.dirname(os.path.dirname(HERE))          # final_project_cs
 sys.path.insert(0, ROOT)
 
-DSN = os.environ.get("DINING_DSN", "postgresql://postgres@localhost:5433/dining_rebuild")
+sys.path.insert(0, HERE)
+import core_db  # noqa: E402  ★`[2026-09-28 cs]` 기본은 코어 DB(`core_db.py`)
+
+DSN = core_db.dsn()
 KST = timezone(timedelta(hours=9))
 SAVE = os.path.join(DINING_DATA, "_build", "점검표.md")
 
@@ -387,7 +390,7 @@ def check_core(conn, cur, s: Sheet, day: date) -> None:
     if not cur.fetchone()[0]:
         s.add(step, None, "코어 places 가 있다", "이 DB 에는 코어가 없다 — rebuild.py 를 --no-core 없이")
         return
-    from app.modules.travel_ops.dining.ledger import dining_state
+    from app.domains.travel_ops.instances.dining.ledger import dining_state
 
     cur.execute("""SELECT l.tenant_id, l.core_place_id, p.name
                    FROM dining.dn_core_place_link l JOIN public.places p ON p.place_id = l.core_place_id

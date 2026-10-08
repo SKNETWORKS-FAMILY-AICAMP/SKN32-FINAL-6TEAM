@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Notice, Proposal } from "@/lib/live/extras";
-import { NOTICE_LIMIT, openChoices, recentNotices } from "./attention";
+import { NOTICE_LIMIT, openChoices, recentNotices, undoableChange } from "./attention";
 import type { TripStop } from "./model";
 
 const stop = (id: string): TripStop => ({ id, date: "2026-09-28", time: "12:00", title: "황생가칼국수", booking: "unknown", notes: "" });
 const proposal = (id: string, status: string): Proposal => ({ id, itemId: "i1", baseVersion: 1, reason: "closed", status, safety: false, expiresAt: null, options: [] });
-const notice = (key: string, at: string, over: Partial<Notice> = {}): Notice => ({ key, type: "change_notice", kind: null, text: "t", version: 1, proposalId: null, delivery: "sent", at, ...over });
+const notice = (key: string, at: string, over: Partial<Notice> = {}): Notice => ({ key, type: "change_notice", kind: null, text: "t", version: 1, proposalId: null, delivery: "sent", at, rollback: null, safety: null, ...over });
 
 describe("what the trip screen asks the customer to decide", () => {
   it("lists only proposals that are still open, with the stop they are about", () => {
@@ -33,5 +33,14 @@ describe("the notice list", () => {
     expect(total).toBe(NOTICE_LIMIT + 3);
     expect(hidden).toBe(3);
     expect(Date.parse(shown[0].at)).toBeGreaterThanOrEqual(Date.parse(shown[1].at));
+  });
+
+  it("offers an undo only for the automatic change that made the version the trip is on now", () => {
+    const undo = (base: number) => ({ baseVersion: base, toVersion: base - 1, requestId: `rollback:v${base}->v${base - 1}` });
+    const notices = [notice("n2", "2026-09-28T10:00:00+09:00", { rollback: undo(2) }), notice("n3", "2026-09-28T11:00:00+09:00", { rollback: undo(3) }),
+      notice("n4", "2026-09-28T12:00:00+09:00")];                                   // a change without an undo
+    expect(undoableChange(notices, 3)?.key).toBe("n3");
+    expect(undoableChange(notices, 4)).toBeNull();                                   // the plan moved on — an older undo would be refused
+    expect(undoableChange(notices, undefined)).toBeNull();
   });
 });

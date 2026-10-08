@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>설문을 로딩 화면에서 받는 흐름 — 목업 v3 (항로 지킴이)</title>
+<style>
+:root{
+  --color-text:#24392f; --color-muted:#6d7c73; --color-border:#dce3dd; --color-surface:#ffffff; --color-background:#f3f5f3; --color-paper:#f7f9f3;
+  --color-primary:#2e6047; --color-primary-hover:#254f3a; --color-on-primary:#ffffff; --color-soft:#e9f2eb; --color-subtle:#f6f7f5;
+  --color-warning:#82693e; --color-warning-soft:#faf6ec; --color-warning-border:#e5d9c1;
+  --color-text-secondary:#4a5d52; --color-faint:#a5b1a9; --color-divider:#e8ede9; --color-subtle-strong:#e4e9e5; --color-border-strong:#c3cdc6;
+  --color-success:#3d7a56; --color-success-soft:#e3f0e7; --color-adjusted:#3f6a8a;
+  --color-selected:#2e6047; --color-selected-soft:#dcebe1; --color-scrim:rgba(36,57,47,.45);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-background);color:var(--color-text);font:14px/1.6 "Segoe UI","Malgun Gothic",sans-serif}
+button{font:inherit;color:inherit;cursor:pointer;min-height:44px;min-width:44px;border:1px solid var(--color-border);border-radius:12px;background:var(--color-surface);padding:10px 14px}
+button:hover{border-color:var(--color-border-strong);background:var(--color-subtle)}
+button:focus-visible,[tabindex]:focus-visible,textarea:focus-visible{outline:3px solid var(--color-adjusted);outline-offset:3px}
+button:disabled{cursor:default;background:var(--color-subtle-strong);color:var(--color-muted);border-color:var(--color-subtle-strong)}
+h1,h2,h3,p{margin:0}
+h1{font-size:23px;letter-spacing:-.7px;line-height:1.4}
+h2{font-size:22px;line-height:1.45;letter-spacing:-.6px}
+h3{font-size:16px;line-height:1.5}
+.page-head{max-width:1100px;margin:0 auto;padding:30px 24px 20px}
+.intro{color:var(--color-muted);margin-top:8px}
+.demo-nav{display:flex;gap:12px;align-items:center;margin-top:22px;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.tabs button{font-size:12px;padding:10px 12px}
+.tabs button[aria-selected="true"]{background:var(--color-selected-soft);border-color:var(--color-selected);color:var(--color-selected);font-weight:700}
+.steps-nav{display:flex;gap:6px}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 402px minmax(0,1fr);gap:24px;max-width:1100px;margin:0 auto 40px;padding:0 24px;align-items:start}
+.stage.wide{display:block}
+.phone{grid-column:2;position:relative;isolation:isolate;width:402px;max-width:100%;height:820px;border:1px solid var(--color-border-strong);border-radius:30px;background:var(--color-paper);overflow:hidden}
+.phone.desk{width:100%;height:auto;border-radius:20px}
+.phone-content{height:100%;display:flex;flex-direction:column}
+.brand{display:flex;justify-content:space-between;align-items:center;padding:10px 14px 4px 22px;color:var(--color-primary);font-size:13px;font-weight:700;letter-spacing:.3px;min-height:56px}
+.brand .right{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:400;color:var(--color-muted);letter-spacing:0}
+.app-head{display:flex;align-items:center;gap:9px;padding:8px 20px 18px}
+.app-head h2{font-size:19px}
+.scroll{overflow-y:auto;flex:1;min-height:0;padding:0 20px 24px;scrollbar-width:thin;scrollbar-color:var(--color-border-strong) var(--color-paper)}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:16px;padding:18px;margin-bottom:14px}
+.help{color:var(--color-muted);font-size:12px;line-height:1.75;margin-top:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chips button{flex:1;padding:10px 9px;white-space:nowrap;font-size:13px}
+button.selected{background:var(--color-selected-soft);border-color:var(--color-selected);color:var(--color-selected);font-weight:700}
+button.selected::before{content:"✓ ";font-weight:700}
+.choices{display:grid;gap:10px;margin-top:18px}
+.choices button{text-align:left;padding:14px;font-size:14px}
+.footer{padding:14px 20px 20px;background:var(--color-surface);border-top:1px solid var(--color-border);flex-shrink:0}
+.footer .help{margin-top:8px;text-align:center;font-size:11px}
+.primary{background:var(--color-primary);border-color:var(--color-primary);color:var(--color-on-primary);font-weight:600}
+.primary:hover{background:var(--color-primary-hover);border-color:var(--color-primary-hover)}
+.full{width:100%}
+.text-button{border-color:var(--color-surface);color:var(--color-muted);background:var(--color-surface);font-size:12px;text-decoration:underline;text-underline-offset:4px}
+.loading-head{padding:10px 0 20px}
+.eyebrow{color:var(--color-muted);font-size:12px;margin-bottom:9px}
+.progress-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:22px 0 18px}
+.step{color:var(--color-muted);font-size:10px;text-align:center}
+.step.current{color:var(--color-primary);font-weight:700}
+.track{height:5px;border-radius:6px;background:var(--color-subtle-strong);overflow:hidden;margin-bottom:8px}
+.fill{height:100%;width:100%;background:var(--color-primary)}
+.current .fill{transform-origin:left;animation:read-progress 14s linear forwards}
+.step.pending .fill{width:0}
+@keyframes read-progress{from{transform:scaleX(.08)}to{transform:scaleX(1)}}
+.notice{font-size:13px;line-height:1.8;color:var(--color-text-secondary);padding:14px 0 20px}
+.success-line{background:var(--color-success-soft);color:var(--color-success);border-radius:12px;padding:12px 14px;font-size:13px;font-weight:600;margin-bottom:14px}
+.question-count{font-size:12px;letter-spacing:1px;color:var(--color-muted);margin-bottom:14px}
+.question h3{font-size:19px;letter-spacing:-.5px}
+.reason{font-size:12px;color:var(--color-muted);margin-top:10px;line-height:1.8}
+.question .text-button{display:block;margin:12px auto 0}
+.saved{min-height:26px;margin-top:10px;color:var(--color-success);font-size:13px;text-align:center}
+.waiting{text-align:center;padding:40px 14px}
+.waiting .mark{font-size:30px;color:var(--color-success);margin-bottom:12px}
+.side{grid-column:3;width:100%;min-width:0;padding-top:8px}
+.stage.wide .side{margin-top:20px;padding-top:0}
+.rules{padding:20px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:16px}
+.rules h2{font-size:15px}
+.rules ul{padding-left:18px;margin:14px 0 0;font-size:13px;color:var(--color-text-secondary)}
+.rules li+li{margin-top:12px}
+.rules .flag{display:block;background:var(--color-warning-soft);border:1px solid var(--color-warning-border);border-radius:10px;padding:8px 10px;color:var(--color-warning)}
+.demo-tools{margin-top:20px;padding:0 4px}
+.demo-tools p{font-size:12px;color:var(--color-muted);margin-bottom:8px}
+.demo-tools button{font-size:12px}
+.modal-layer{position:absolute;inset:0;background:var(--color-scrim);z-index:5;display:flex;align-items:flex-end}
+.modal-layer.at-top{align-items:flex-start;justify-content:center;padding:130px 24px 0}
+.sheet{width:100%;background:var(--color-surface);border:1px solid var(--color-border);border-radius:24px 24px 0 0;padding:12px 22px 26px;max-height:90%;overflow:auto;animation:rise .22s ease-out}
+.sheet .text-button{display:block;margin:10px auto 0}
+.handle{width:34px;height:4px;border-radius:6px;background:var(--color-border-strong);margin:0 auto 20px}
+@keyframes rise{from{transform:translateY(30px)}to{transform:translateY(0)}}
+.countdown{text-align:center;font-size:64px;font-weight:600;line-height:1.15;color:var(--color-primary);font-variant-numeric:tabular-nums;margin:4px 0 18px}
+.count-copy{font-size:17px;text-align:center;line-height:1.8;margin-bottom:24px;word-break:keep-all}
+.center-layer{align-items:center;justify-content:center;padding:24px}
+.completion{width:100%;text-align:center;padding:30px 22px 18px;margin:0}
+.completion .mark{font-size:48px;color:var(--color-success);line-height:1.2;margin-bottom:18px}
+.completion p{font-size:13px;color:var(--color-muted);margin-top:10px}
+.completion .text-button{display:block;margin:14px auto 0}
+.finish-track{height:4px;background:var(--color-subtle-strong);border-radius:6px;overflow:hidden;margin-top:28px}
+.finish-fill{height:100%;background:var(--color-primary);transform-origin:left;animation:finish var(--finish-ms,5000ms) linear forwards}
+@keyframes finish{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.skeleton{padding:4px 4px 10px}
+.skeleton span{display:block;height:10px;border-radius:5px;background:var(--color-subtle-strong);margin-top:12px}
+.skeleton span:nth-child(2){width:78%}
+.skeleton span:nth-child(3){width:58%}
+.stub .eyebrow{margin-bottom:6px}
+.stub h3{margin-bottom:8px}
+/* 실제 「계획 담기」 화면 — 데스크톱 폭 */
+.desk-content{display:block}
+.site-head{display:flex;justify-content:space-between;align-items:center;padding:12px 24px 12px 32px;border-bottom:1px solid var(--color-divider)}
+.site-head .right{display:flex;align-items:center;gap:8px}
+.logo{display:flex;align-items:center;gap:10px;font-size:21px;font-weight:800;letter-spacing:-.5px}
+.logo-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:var(--color-primary);color:var(--color-on-primary);font-size:22px;font-weight:800}
+.menu-button{width:48px;min-height:48px;padding:0;font-size:20px;border-radius:14px}
+.site-body{padding:26px 32px 24px}
+.stepper{display:flex;gap:26px;list-style:none;margin:0 0 30px;padding:0}
+.stepper li{display:flex;align-items:center;gap:10px;color:var(--color-muted);font-size:14px}
+.stepper .num{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--color-subtle-strong);font-size:12px;font-weight:700}
+.stepper .current{color:var(--color-primary);font-weight:700}
+.stepper .current .num{background:var(--color-primary);color:var(--color-on-primary)}
+.caps{font-size:12px;font-weight:700;letter-spacing:1.5px;color:var(--color-text-secondary)}
+.site-body h1{font-size:38px;letter-spacing:-1.4px;line-height:1.25;margin:10px 0 14px}
+.lede{color:var(--color-muted);font-size:15px;line-height:1.9;margin-bottom:26px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:start}
+.panel{background:var(--color-surface);border:1px solid var(--color-border);border-radius:24px;padding:24px;margin-bottom:18px}
+.label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.label-row label{font-weight:700;font-size:16px}
+.link-button{border:0;background:none;min-height:44px;color:var(--color-text-secondary);font-size:13px;padding:0 4px}
+.plan-input{width:100%;height:190px;resize:vertical;border:1px solid var(--color-border);border-radius:14px;background:var(--color-subtle);padding:14px 18px;font:inherit;font-size:14px;line-height:2;color:var(--color-text)}
+.input-meta{display:flex;justify-content:space-between;margin:8px 0 14px;font-size:12px;color:var(--color-muted)}
+.file-box{border:1px dashed var(--color-border-strong);border-radius:16px;background:var(--color-subtle);padding:16px}
+.file-trigger{display:inline-flex;align-items:center;gap:8px;background:var(--color-soft);border-color:var(--color-selected-soft);color:var(--color-primary);font-weight:700}
+.file-box .help{margin-top:10px}
+.settings h2{font-size:17px}
+.settings .lead{color:var(--color-muted);font-size:13px;margin-top:6px}
+.setting-group{margin-top:20px}
+.setting-group .chips{margin-top:12px}
+.setting-group .hint{margin-top:10px;font-size:12px;color:var(--color-text-secondary)}
+.tips h2{font-size:18px;margin:0 0 14px}
+.tips ol{margin:0;padding-left:20px;color:var(--color-text-secondary);font-size:13px;line-height:1.9}
+.tips li+li{margin-top:10px}
+.pref-note{padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--color-divider)}
+.pref-note .caps{display:block;margin-bottom:8px}
+.pref-note h3{font-size:15px;margin-bottom:6px}
+.pref-note p{font-size:13px;color:var(--color-text-secondary);line-height:1.8}
+.actions{display:flex;justify-content:space-between;align-items:center;gap:16px;border-top:1px solid var(--color-divider);margin-top:6px;padding-top:20px}
+.actions .note{font-size:13px;color:var(--color-muted);text-align:center}
+.actions .primary{padding:12px 20px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+/* 항로 지킴이 — 아이콘·카드·알림줄·확인 대화 (코덱스 gpt-6-astra 안을 이 목업 틀에 맞춰 옮김) */
+.gk-icon{position:relative;display:inline-grid;place-items:center;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;border:0;border-radius:50%;background:none;color:var(--color-muted)}
+.gk-icon:hover{background:var(--color-subtle);border-color:transparent}
+.gk-icon.is-on{background:var(--color-soft);color:var(--color-primary)}
+.gk-icon.is-on:hover{background:var(--color-selected-soft)}
+.gk-icon.is-on::after{content:"";position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:currentColor}
+.gk-icon svg{display:block;width:24px;height:24px}
+.gk-card{width:100%;max-width:520px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:24px;padding:22px 22px 20px;animation:rise .22s ease-out}
+.modal-layer:not(.at-top) .gk-card{border-radius:24px 24px 0 0;max-width:none}
+.gk-heading{display:flex;align-items:center;gap:12px}
+.gk-mark{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border-radius:50%;background:var(--color-soft);color:var(--color-primary)}
+.gk-mark svg{display:block;width:24px;height:24px}
+.gk-name{flex:1;min-width:0}
+.gk-name h2{font-size:22px}
+.gk-name small{display:block;font-size:12px;color:var(--color-muted)}
+.gk-badge{flex-shrink:0;padding:2px 9px;border:1px solid var(--color-selected);border-radius:999px;background:var(--color-selected-soft);color:var(--color-selected);font-size:13px;font-weight:700;white-space:nowrap}
+.gk-line{margin-top:18px;font-size:15px;font-weight:600;line-height:1.8;word-break:keep-all}
+.gk-help{margin-top:10px;font-size:12px;color:var(--color-muted);line-height:1.8;word-break:keep-all}
+.gk-actions{display:grid;gap:10px;margin-top:20px}
+.gk-actions button{min-height:48px}
+.gk-foot{margin-top:12px;text-align:center;font-size:12px;color:var(--color-muted);line-height:1.75}
+.gk-toast{position:absolute;left:14px;right:14px;top:64px;z-index:7;display:flex;align-items:center;gap:4px;background:var(--color-surface);border:1px solid var(--color-border-strong);border-radius:16px;padding:6px 6px 6px 16px;font-size:13px;box-shadow:0 6px 20px rgba(36,57,47,.14)}
+.phone.desk .gk-toast{top:84px;left:auto;right:24px;max-width:520px}
+.gk-toast>span{flex:1;line-height:1.5;word-break:keep-all}
+.gk-toast .gk-x{display:grid;place-items:center;border:0;background:none;color:var(--color-muted);padding:0}
+.gk-confirm h2{font-size:20px;margin-bottom:8px}
+.gk-confirm p{font-size:14px;color:var(--color-text-secondary);line-height:1.8}
+.gk-confirm .gk-help{font-size:12px;color:var(--color-muted);margin:8px 0 20px}
+.at-top .sheet{max-width:520px;border-radius:24px}
+
+@media(max-width:1000px){
+  .stage{display:flex;flex-direction:column;align-items:center;padding:0 16px}
+  .stage.wide{display:block}
+  .side{width:402px;max-width:100%;padding-top:0}
+  .stage.wide .side{width:100%}
+  .page-head{max-width:650px;padding:24px 16px 20px}
+  .demo-nav{align-items:flex-start}
+  .tabs{flex-basis:100%}
+}
+@media(max-width:860px){
+  .layout{grid-template-columns:1fr}
+  .site-body{padding:22px 18px}
+  .site-head{padding:12px 14px 12px 18px}
+  .actions{flex-wrap:wrap}
+  .modal-layer.at-top{padding-top:90px}
+}
+@media(max-width:430px){
+  h1{font-size:20px}
+  .phone:not(.desk){width:100%;height:820px;border-radius:24px}
+  .scroll{padding-left:16px;padding-right:16px}
+  .card{padding:16px}
+  .site-body h1{font-size:30px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<header class="page-head">
+  <h1>설문을 로딩 화면에서 받는 흐름 — 목업 v3</h1>
+  <p class="intro">계획을 담기 전에 항로 지킴이를 켜고 끄고, 읽는 동안 취향을 묻고, 끝나면 기존 계획 확인 화면으로 넘어가는 흐름이에요.</p>
+  <div class="demo-nav">
+    <div class="tabs" role="tablist" aria-label="화면 목록" id="tabs"></div>
+    <div class="steps-nav">
+      <button id="previous">이전</button>
+      <button id="next">다음</button>
+    </div>
+  </div>
+</header>
+<main class="stage">
+  <section class="phone" id="phone" role="tabpanel" tabindex="-1"></section>
+  <aside class="side">
+    <section class="rules">
+      <h2>이 화면의 규칙</h2>
+      <ul id="rules"></ul>
+    </section>
+    <div class="demo-tools">
+      <p>시연 조작</p>
+      <button id="restart">처음부터</button>
+    </div>
+  </aside>
+</main>
+<div id="announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+<div id="countAnnouncement" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+<script>
+const TIMING = {idleMs:30000, countdownS:20, doneOverlayMs:5000};
+const densityOptions = ['여유롭게','적당히','꽉 차게'];
+const SCREENS = ['plan','card','read','late','idle','done','check','link'];
+const LABELS = {plan:'① 계획 담기',card:'② 항로 지킴이 카드',read:'③ 읽는 중 + 질문',late:'④ 로딩 끝 · 질문 남음',idle:'⑤ 가만히 있을 때',done:'⑥ 다 답했을 때',check:'⑦ 계획 확인(기존)',link:'⑧ 알림 링크로 켜기'};
+const COPY = {
+  waitingFooter:'로딩이 끝나면 단추가 켜져요.',
+  goButton:'읽어 온 계획 확인하기',
+  doneLine:'계획을 다 읽었어요 ✓',
+  doneFooterAll:'누르면 계획 확인 화면으로 가요.',
+  doneFooterLeft:n=>`남은 질문 ${n}개는 메뉴의 마이페이지에서 이어서 답하거나, 다음에 계획을 읽을 때 다시 답할 수 있어요.`,
+  waitTitle:'이번 질문은 여기까지예요',
+  waitHelp:'아직 계획을 읽는 중이에요.',
+  doneCardTitle:'질문에 모두 답했어요',
+  allDoneWaitHelp:'계획을 다 읽으면 계획 확인 화면으로 넘어가요.',
+  allDoneStopHelp:'아래 단추를 누르면 계획 확인 화면으로 가요.',
+  doneOverlayHelp:'곧 계획 확인 화면으로 넘어가요.',
+  countCopy:n=>`아직 보고 계신가요? <span id="seconds">${n}</span>초 뒤에 계획 확인 화면으로 넘어가요`,
+  countAria:n=>`${n}초 뒤에 계획 확인 화면으로 넘어가요`,
+  keepAnswering:'계속 답할게요',
+  noAuto:'자동으로 넘어가지 않기',
+  stopped:'이제 자동으로 넘어가지 않아요.',
+  notice:'기다리는 동안 하나씩 여쭤볼게요. 건너뛰어도 괜찮아요.',
+  skip:'이 질문 건너뛰기',
+  prefTitle:'기다리는 동안 취향을 알려 주세요',
+  prefBody:'계획을 읽는 동안 취향을 여쭤볼게요. 건너뛴 질문은 메뉴의 마이페이지나 다음에 계획을 읽는 화면에서 이어서 답할 수 있어요.',
+  settingsTitle:'읽는 기준',
+  settingsLead:'처음부터 골라 두었어요. 바꾸고 싶을 때만 눌러 주세요.',
+  densityTitle:'하루 일정의 여유',
+  densityAsk:'하루를 얼마나 채울까요?',
+  densityHint:'「적당히」는 「여유롭게」보다 하루에 한 곳쯤 더 담아요.'
+};
+function gkIconSVG(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 2.8 20 6v5.4c0 4.8-3.2 8-8 9.8-4.8-1.8-8-5-8-9.8V6Z"/><path d="M8 16c0-2.5 6-2 6-5V8m-2 2 2-2 2 2"/></svg>'}
+function gkHeaderButton(){
+  if(state.guardian===null)return '';
+  const on=state.guardian===true;
+  return `<button class="gk-icon ${on?'is-on':'is-off'}" type="button" data-action="gk-toggle" aria-pressed="${on}" ${on?'':'aria-haspopup="dialog"'} aria-label="${on?'항로 지킴이가 켜져 있어요. 누르면 꺼요':'항로 지킴이가 꺼져 있어요. 누르면 켜기 전에 물어봐요'}">${gkIconSVG()}</button>`;
+}
+function gkCardHTML(){
+  return `<section class="gk-card" role="dialog" aria-modal="true" aria-labelledby="gkTitle">
+    <div class="gk-heading"><span class="gk-mark" aria-hidden="true">${gkIconSVG()}</span>
+      <div class="gk-name"><h2 id="gkTitle" tabindex="-1" data-initial>항로 지킴이</h2><small lang="en">Course Keeper</small></div><span class="gk-badge">추천</span></div>
+    <p class="gk-line">문제가 생기면 알아서 바꾸고 알려요. 되돌릴 수 있어요.</p>
+    <p class="gk-help">끄고 진행하면 문제가 생길 때 먼저 물어봐요.<br>켜 두어도 고정한 일정과 재난·지진은 먼저 물어봐요.</p>
+    <div class="gk-actions"><button class="primary" type="button" data-action="gk-on">켜고 진행</button><button type="button" data-action="gk-skip">건너뛰기 — 끄고 진행</button></div>
+    <p class="gk-foot">켠 뒤에도 언제든 화면 위 아이콘에서 끌 수 있어요.</p></section>`;
+}
+function gkToastHTML(kind){
+  return `<div class="gk-toast"><span role="status" aria-atomic="true">${kind==='off'?'항로 지킴이를 껐어요. 문제가 생기면 물어볼게요.':'항로 지킴이를 켰어요.'}</span><button class="text-button" type="button" data-action="gk-undo">되돌리기</button><button class="gk-x" type="button" data-action="gk-close" aria-label="알림을 닫아요"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>`;
+}
+function gkConfirmHTML(){
+  return `<section class="sheet gk-confirm" role="dialog" aria-modal="true" aria-labelledby="gkcTitle"><div class="handle" aria-hidden="true"></div>
+    <h2 id="gkcTitle" tabindex="-1" data-initial>항로 지킴이를 켤까요?</h2><p>켜면 문제가 생길 때 알아서 바꾸고 알려요. 되돌릴 수 있어요.</p>
+    <p class="gk-help">고정한 일정과 재난·지진은 먼저 물어봐요.</p>
+    <button class="primary full" type="button" data-action="gk-confirm">켜기</button><button class="text-button" type="button" data-action="gk-decline">그냥 둘게요</button></section>`;
+}
+const initial = () => ({
+  screen:'plan', density:densityOptions[1], guardian:null, card:false, confirm:false, toast:null,
+  answers:[null,null], skipped:[false,false],
+  question:0, busy:false, saved:false, stopAuto:false, seconds:TIMING.countdownS, touched:false,
+  timers:[], idle:null
+});
+let state = initial();
+const phone = document.getElementById('phone');
+const stage = document.querySelector('.stage');
+const questions = [
+  {title:'이동은 주로 어떻게 하세요?',reason:'계획서에는 이동 방법이 적혀 있지 않아서 여쭤요',options:['대중교통','택시','걷기 위주']},
+  {title:'활동할 때 더 중요한 건 무엇인가요?',reason:'계획서만으로는 알 수 없어요',options:['맛집','볼거리','쉬는 시간']}
+];
+const samplePlan = `1일차 · 2026-09-15
+09:00 호텔 조식
+10:00 잠실 스카이타워 · 10:45 종료
+11:00 성수동 쇼핑 · 향수, K-뷰티
+13:00 성수 예약 식당 · 예약 있음
+15:00 경복궁 · 한복 체험, 17:00 종료
+18:00 서울역 인근 저녁 식당 · 예약 없이 방문
+19:30 롯데마트 서울역점 · 식료품 쇼핑
+
+2일차 · 2026-09-16
+09:00 호텔 조식
+10:30 광장시장 · 점심
+14:00 남산타워`;
+const rules = {
+  plan:['「하루 일정의 여유」는 「적당히」가 처음부터 골라져 있어요. 손대지 않으면 그대로 보내요.',
+        '「일정이 바뀌면」 칸은 이 화면에서 없앴어요. 항로 지킴이는 「계획 확인하기」를 누른 뒤 ②에서 정해요.',
+        '취향 질문은 별도 화면 없이 계획을 읽는 동안 로딩 화면에서 물어봐요. 못 답한 질문은 메뉴나 다음에 계획을 읽을 때 이어서 해요(오른쪽 카드에 안내).'],
+  card:['「계획 확인하기」를 누르면 읽기 시작 전에 이 카드가 떠요. 켜고 진행 = 서버에 <code>on_disruption=replace</code>.',
+        '「건너뛰기 — 끄고 진행」은 <b>반드시 <code>ask_first</code> 를 명시해서 보내요.</b> 아무것도 안 보내면 서버가 휴무·재난·교통 통제를 자동으로 적용해서 화면의 약속(문제가 생기면 물어볼게요)이 깨져요.',
+        '단추 글자는 「진행」만이 아니라 「켜고 진행」이에요. 반사적으로 눌러 켜지는 것을 막아요.',
+        '바깥을 누르거나 Esc 로 닫으면 계획 담기 화면으로 돌아가요. 아직 아무것도 정해지지 않아요. 열릴 때 초점은 제목에 있어서 Enter 를 반사적으로 눌러도 켜지지 않아요.'],
+  read:['항로 지킴이를 정한 뒤 이 화면부터 위쪽에 아이콘이 항상 보여요. 켜짐은 초록 원 + 점, 꺼짐은 옅은 외곽선만이에요(제안: 꺼져도 안 숨겨서 켜는 곳을 찾을 수 있게 했어요).',
+        '아이콘 누르기: 켜짐이면 한 번에 꺼지고 알림줄로 되돌릴 수 있어요. 꺼짐이면 켤지 한 번 물어요.',
+        'cs 프로젝트 서버가 「물을 것」으로 알려 준 것만, 한 장에 하나, 최대 3개 묻고 한 번 누르면 바로 저장해요.',
+        '식사 제한·접근성·내국인 여부·동행은 읽어서 채우지 않고, 필요하면 물어요.',
+        '한 번도 안 만지고 로딩이 끝나면 기다리게 하지 않고 바로 계획 확인 화면으로 가요(로딩이 3초쯤으로 짧을 때도 같아요).',
+        '건너뛴 질문은 여기서 다시 묻지 않아요. 메뉴나 다음 로딩 화면에서 이어서 할 수 있어요.'],
+  late:['로딩이 끝나면 아래 단추가 켜져요(눌러서 넘어가요).',
+        '답하던 중이면 화면에 머물러요. 끌어내지 않아요.',
+        '마지막으로 만진 뒤 30초 동안 가만히 있으면 ⑤로 가요.',
+        '못 답한 질문이 있으면 어디서 이어서 하는지 단추 밑에 한 줄로 알려요.'],
+  idle:['넘어가기 전에 20초 알려 줘요.',
+        '「계속 답할게요」는 몇 번이든 눌러 연장해요.',
+        '「자동으로 넘어가지 않기」는 테두리 없는 글자 단추예요 — 「이 질문 건너뛰기」와 같은 모양이에요.',
+        '이미 답한 것은 문항마다 바로 저장돼 있어서 넘어가도 잃지 않아요.'],
+  done:['다 답했고 로딩도 끝나면 5초 뒤에 계획 확인 화면으로 넘어가요(누를 틈을 주려고 늘렸어요).',
+        '여기서도 「자동으로 넘어가지 않기」로 멈출 수 있어요. 멈추면 로딩 화면에 남고, 아래 단추로 직접 넘어가요.'],
+  check:['새로 만드는 화면이 아니에요. 읽어 온 일정을 확인하고 고치는 기존 계획 확인 화면(02 함께 확인)이에요.',
+         '위쪽 아이콘은 여기서도 그대로예요.',
+         '알림줄은 자동으로 사라지지 않아요. 닫거나 되돌리거나 화면을 옮길 때까지 남아서 읽고 누를 시간을 제한하지 않아요.'],
+  link:['꺼 둔 사용자에게 가는 알림의 「항로 지킴이 켜기」 링크로 웹이 열렸을 때예요(주소 끝 <code>?guardian=on</code>).',
+        '바로 켜지 않고 확인 대화를 띄운 뒤, 「켜기」를 눌러야 서버를 불러요(<code>via=notice</code>).',
+        '서버는 로그인한 본인 여행만 켜 줘요. 계획서 링크 토큰만으로는 켜지지 않아요.']
+};
+const escapeHTML = text => String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const later = (fn,ms) => {const id=setTimeout(fn,ms);state.timers.push(id);return id};
+function clearTimers(){
+  state.timers.forEach(clearTimeout);
+  state.timers=[];
+  clearTimeout(state.idle);
+  state.idle=null;
+}
+function announce(text){document.getElementById('announcement').textContent=text}
+function allAnswered(){return state.answers.every(Boolean)}
+function nextOpen(except=-1){return state.answers.findIndex((a,i)=>!a&&!state.skipped[i]&&i!==except)}
+function remaining(){return state.answers.filter(a=>!a).length}
+function brand(){return `<div class="brand"><span>triPilot</span><span class="right"><span class="gk-slot">${gkHeaderButton()}</span><span>여행 계획</span></span></div>`}
+function shell(body,footer='',heading=''){
+  return `<div class="phone-content">${brand()}${heading?`<header class="app-head">${heading}</header>`:''}<div class="scroll">${body}</div>${footer?`<footer class="footer">${footer}</footer>`:''}</div>`;
+}
+function content(){return phone.querySelector('.phone-content,.desk-content')}
+function choiceButtons(options,action,selected=null,radio=false){
+  return options.map((label,i)=>{
+    const on=selected===label;
+    const aria=radio?`role="radio" aria-checked="${on}"`:`aria-pressed="${on}"`;
+    return `<button data-action="${action}" data-index="${i}" ${aria} class="${on?'selected':''}">${escapeHTML(label)}</button>`;
+  }).join('');
+}
+function progress(done=false){
+  return `<div class="progress-steps" aria-label="${done?'계획 읽기가 끝났어요':'장소·운영시간 확인 중'}">${['받았어요','일정 읽기','장소·운영시간','정리 완료'].map((label,i)=>`<div class="step ${!done&&i===2?'current':''} ${!done&&i===3?'pending':''}"><div class="track"><div class="fill"></div></div><span>${done||i<2?'✓ ':''}${label}</span></div>`).join('')}</div>`;
+}
+function screenPlan(){
+  phone.innerHTML=`<div class="desk-content"><header class="site-head"><div class="logo"><span class="logo-mark" aria-hidden="true">t</span><span>triPilot</span></div><div class="right"><span class="gk-slot">${gkHeaderButton()}</span><button class="menu-button" aria-label="메뉴">☰</button></div></header>
+  <div class="site-body">
+    <ol class="stepper" aria-label="진행 단계"><li class="current" aria-current="step"><span class="num">01</span>계획 담기</li><li><span class="num">02</span>함께 확인</li><li><span class="num">03</span>여행 시작</li></ol>
+    <p class="caps">A PLAN THAT FEELS LIKE YOU</p>
+    <h1>이제, 여행을 담아볼까요?</h1>
+    <p class="lede">준비한 계획을 그대로 붙여 넣어 주세요.<br>하나씩 살펴보고, 편안한 여행으로 이어갈게요.</p>
+    <div class="layout">
+      <div>
+        <section class="panel" aria-label="여행 계획 입력">
+          <div class="label-row"><label for="planInput">나의 여행 계획</label><button class="link-button" type="button">예시 불러오기</button></div>
+          <textarea id="planInput" class="plan-input" maxlength="12000">${escapeHTML(samplePlan)}</textarea>
+          <div class="input-meta"><span>날짜 · 시간 · 장소를 함께 적어 주세요.</span><span id="planCount">${samplePlan.length.toLocaleString()} / 12,000</span></div>
+          <div class="file-box"><button class="file-trigger" type="button">📎 파일 선택</button>
+            <p class="help">사진 · PDF · 워드 · 엑셀로 된 계획도 올릴 수 있어요 (최대 5개, 한 개 10MB)</p><p class="help">0 / 5개 선택됨</p></div>
+        </section>
+        <section class="panel settings" aria-labelledby="settingsTitle">
+          <h2 id="settingsTitle">${COPY.settingsTitle}</h2><p class="lead">${COPY.settingsLead}</p>
+          <div class="setting-group"><h3 id="densityTitle">${COPY.densityTitle}</h3><p class="help">${COPY.densityAsk}</p>
+            <div class="chips" role="radiogroup" aria-labelledby="densityTitle">${choiceButtons(densityOptions,'density',state.density,true)}</div>
+            <p class="hint">${COPY.densityHint}</p></div>
+        </section>
+      </div>
+      <aside class="panel tips" aria-label="안내">
+        <div class="pref-note"><span class="caps">여행 취향</span><h3>${COPY.prefTitle}</h3><p>${COPY.prefBody}</p></div>
+        <h2>작은 준비, 더 편한 여행</h2>
+        <ol><li>일차 제목에 날짜를 적어요.</li><li>시작 시간과 장소를 한 줄씩 적어요.</li><li>예약한 일정은 ‘예약 있음’으로 표시해요.</li></ol>
+      </aside>
+    </div>
+    <div class="actions"><button type="button" data-action="back">← 이전</button><span class="note">입력한 계획은 화면을 오가도 유지돼요.</span><button class="primary" data-action="start">계획 확인하기 →</button></div>
+  </div></div>`;
+}
+function screenCard(){
+  screenPlan();
+  openOverlay(gkCardHTML(),'at-top');
+}
+function questionCard(){
+  if(state.question>1){
+    const all=allAnswered();
+    const help=all?(['late','idle'].includes(state.screen)?COPY.allDoneStopHelp:COPY.allDoneWaitHelp):COPY.waitHelp;
+    return `<section class="card waiting"><div class="mark">${all?'✓':'…'}</div><h3>${all?COPY.doneCardTitle:COPY.waitTitle}</h3><p class="help">${help}</p></section>`;
+  }
+  const q=questions[state.question];
+  return `<section class="card question" aria-labelledby="questionTitle"><p class="question-count">${state.question+1} / 2</p>
+    <h3 id="questionTitle" tabindex="-1">${q.title}</h3><p class="reason">${q.reason}</p>
+    <div class="choices">${choiceButtons(q.options,'answer',state.answers[state.question])}</div>
+    <div class="saved" role="status" aria-live="polite">${state.saved?'저장했어요 ✓':''}</div>
+    <button class="text-button" data-action="skip">${COPY.skip}</button></section>`;
+}
+function loadingBody(done){
+  return `<div class="loading-head"><p class="eyebrow">계획을 확인하고 있어요</p><h2 tabindex="-1" id="screenTitle">계획을 읽고 있어요</h2>${progress(done)}</div>
+    ${done?`<div class="success-line">${COPY.doneLine}</div>`:`<p class="notice">${COPY.notice}</p>`}
+    ${state.stopAuto&&done?`<p class="notice">${COPY.stopped}</p>`:''}<div id="questionSlot">${questionCard()}</div>`;
+}
+function resultFooter(done){
+  const helper=!done?COPY.waitingFooter:(remaining()?COPY.doneFooterLeft(remaining()):COPY.doneFooterAll);
+  return `<button class="primary full" data-action="result" ${done?'':'disabled'}>${COPY.goButton}</button><p class="help">${helper}</p>`;
+}
+function finishLoading(){
+  const open=nextOpen();
+  if(state.stopAuto){state.question=open<0?2:open;go('late');return}
+  if(allAnswered()){go('done');return}
+  if(!state.touched||open<0){go('check');return}
+  state.question=open;
+  go('late');
+}
+function screenRead(){
+  phone.innerHTML=shell(loadingBody(false),resultFooter(false));
+  later(finishLoading,14000);
+}
+function screenLate(){
+  phone.innerHTML=shell(loadingBody(true),resultFooter(true));
+  resetIdle();
+}
+function resetIdle(){
+  if(state.screen!=='late')return;
+  clearTimeout(state.idle);
+  if(!state.stopAuto)state.idle=setTimeout(()=>go('idle'),TIMING.idleMs);
+}
+function screenIdle(){
+  phone.innerHTML=shell(loadingBody(true),resultFooter(true));
+  content().inert=true;
+  phone.insertAdjacentHTML('beforeend',`<div class="modal-layer"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="countCopy">
+    <div class="handle" aria-hidden="true"></div><div class="countdown" id="countNumber" aria-hidden="true">${TIMING.countdownS}</div>
+    <p class="count-copy" id="countCopy">${COPY.countCopy(TIMING.countdownS)}</p>
+    <button class="primary full" data-action="continue">${COPY.keepAnswering}</button>
+    <button class="text-button" data-action="stop">${COPY.noAuto}</button></section></div>`);
+  state.seconds=TIMING.countdownS;
+  document.getElementById('countAnnouncement').textContent=COPY.countAria(TIMING.countdownS);
+  const tick=()=>{
+    state.seconds--;
+    if(state.seconds===0){go('check');return}
+    document.getElementById('countNumber').textContent=state.seconds;
+    document.getElementById('seconds').textContent=state.seconds;
+    if([10,5].includes(state.seconds))document.getElementById('countAnnouncement').textContent=COPY.countAria(state.seconds);
+    later(tick,1000);
+  };
+  later(tick,1000);
+}
+function screenDone(){
+  phone.innerHTML=shell(`<div class="loading-head"><h2>계획을 읽고 있어요</h2>${progress(true)}</div><div class="success-line">${COPY.doneLine}</div>`);
+  content().inert=true;
+  phone.insertAdjacentHTML('beforeend',`<div class="modal-layer center-layer"><section class="card completion" role="dialog" aria-modal="true" aria-labelledby="completeTitle" tabindex="-1">
+    <div class="mark" aria-hidden="true">✓</div><h2 id="completeTitle">${COPY.doneCardTitle}</h2><p>${COPY.doneOverlayHelp}</p>
+    <div class="finish-track" aria-hidden="true"><div class="finish-fill" style="--finish-ms:${TIMING.doneOverlayMs}ms"></div></div>
+    <button class="text-button" data-action="stop">${COPY.noAuto}</button></section></div>`);
+  later(()=>go('check'),TIMING.doneOverlayMs);
+}
+function screenCheck(){
+  phone.innerHTML=shell(`<section class="card stub"><p class="eyebrow">02 함께 확인</p><h3>기존 계획 확인 화면이에요</h3>
+    <p class="help">읽어 온 일정을 확인하고 고치는 화면이에요. 이 목업에서는 바뀌는 것이 없어서 모양만 보여 드려요.</p>
+    <div class="skeleton" aria-label="일정 목록 미리보기"><span></span><span></span><span></span></div></section>`,
+    '','<h2 tabindex="-1" id="screenTitle">계획 확인</h2>');
+}
+function screenLink(){
+  screenCheck();
+  openOverlay(gkConfirmHTML(),'');
+}
+function openOverlay(html,extra=''){
+  const base=content();
+  if(base)base.inert=true;
+  phone.insertAdjacentHTML('beforeend',`<div class="modal-layer ${extra}" data-overlay>${html}</div>`);
+  const first=phone.querySelector('[data-overlay] [data-initial]')||phone.querySelector('[data-overlay] button');
+  if(first)first.focus({preventScroll:true});
+}
+function closeOverlay(){
+  phone.querySelector('[data-overlay]')?.remove();
+  const base=content();
+  if(base)base.inert=false;
+}
+function refreshGuardian(){
+  phone.querySelectorAll('.gk-slot').forEach(slot=>{slot.innerHTML=gkHeaderButton()});
+}
+function setGuardian(on,via){
+  state.guardian=on;
+  refreshGuardian();
+  announce(on?'항로 지킴이를 켰어요':'항로 지킴이를 껐어요');
+  if(via==='header-off'||via==='confirm')showToast(on?'on':'off');
+}
+function showToast(kind){
+  state.toast=kind;
+  phone.querySelector('.gk-toast')?.remove();
+  phone.insertAdjacentHTML('beforeend',gkToastHTML(kind));
+}
+function hideToast(){
+  state.toast=null;
+  phone.querySelector('.gk-toast')?.remove();
+}
+const RENDER = {plan:screenPlan,card:screenCard,read:screenRead,late:screenLate,idle:screenIdle,done:screenDone,check:screenCheck,link:screenLink};
+function go(id,preview=false){
+  clearTimers();hideToast();
+  state.screen=id;state.busy=false;state.saved=false;
+  document.getElementById('countAnnouncement').textContent='';
+  if(preview){
+    if(id==='read'){state.answers=[null,null];state.skipped=[false,false];state.question=0;state.touched=false}
+    if(id==='late'||id==='idle'){state.answers=[state.answers[0]||'대중교통',null];state.question=1}
+    if(id==='done'){state.answers=[state.answers[0]||'대중교통',state.answers[1]||'볼거리'];state.question=2}
+    if(['read','late','idle','done','check'].includes(id)&&state.guardian===null)state.guardian=true;
+    if(id==='link')state.guardian=false;
+  }
+  document.querySelectorAll('[data-screen]').forEach(button=>{
+    const active=button.dataset.screen===id;
+    button.setAttribute('aria-selected',active);
+    button.setAttribute('aria-controls','phone');
+    button.tabIndex=active?0:-1;
+  });
+  const index=SCREENS.indexOf(id);
+  phone.setAttribute('aria-labelledby',`tab-${id}`);
+  const wide=id==='plan'||id==='card';
+  phone.classList.toggle('desk',wide);
+  stage.classList.toggle('wide',wide);
+  document.getElementById('previous').disabled=index===0;
+  document.getElementById('next').disabled=index===SCREENS.length-1;
+  document.getElementById('rules').innerHTML=rules[id].map(line=>`<li>${line}</li>`).join('');
+  RENDER[id]();
+  const focusTarget=phone.querySelector('[role="dialog"] [data-initial]')||phone.querySelector('[role="dialog"] button,[role="dialog"][tabindex]')||phone;
+  focusTarget.focus({preventScroll:true});
+  if(id==='card')phone.scrollIntoView({block:'start',behavior:'auto'});
+}
+function refreshQuestion(focus=false){
+  const slot=document.getElementById('questionSlot');
+  if(!slot)return;
+  slot.innerHTML=questionCard();
+  if(state.busy)slot.querySelectorAll('button').forEach(button=>button.disabled=true);
+  if(focus)(slot.querySelector('h3')||phone).focus({preventScroll:true});
+}
+function answer(index,skip=false){
+  if(state.busy||state.question>1)return;
+  state.touched=true;
+  const q=state.question;
+  if(!skip){state.answers[q]=questions[q].options[index];state.saved=true}
+  else state.skipped[q]=true;
+  state.busy=true;
+  refreshQuestion();
+  later(()=>{
+    state.busy=false;state.saved=false;
+    if(state.screen==='late'&&allAnswered()){
+      if(state.stopAuto){state.question=2;refreshQuestion(true);phone.querySelector('.footer').innerHTML=resultFooter(true);return}
+      go('done');return;
+    }
+    if(state.screen==='late'){
+      const next=nextOpen(q);
+      state.question=next>=0?next:q;
+      if(skip&&next<0){
+        if(state.stopAuto){state.question=2;refreshQuestion(true);phone.querySelector('.footer').innerHTML=resultFooter(true);return}
+        go('check');return;
+      }
+    }else state.question=q+1;
+    refreshQuestion(true);
+    if(state.screen==='late')phone.querySelector('.footer').innerHTML=resultFooter(true);
+    resetIdle();
+  },skip?0:400);
+}
+phone.addEventListener('click',event=>{
+  if(event.target.matches('[data-overlay]')&&state.screen==='card'){go('plan');return}
+  const button=event.target.closest('button[data-action]');
+  if(!button||button.disabled)return;
+  const {action,index}=button.dataset;
+  if(action==='density'){
+    state.density=densityOptions[Number(index)];
+    button.parentElement.querySelectorAll('button').forEach(b=>{
+      b.classList.toggle('selected',b===button);b.setAttribute('aria-checked',b===button);
+    });
+  }else if(action==='start')go('card');
+  else if(action==='back')document.getElementById('tab-plan').focus();
+  else if(action==='gk-on'){state.guardian=true;go('read')}
+  else if(action==='gk-skip'){state.guardian=false;go('read')}
+  else if(action==='gk-toggle'){
+    if(state.guardian===true)setGuardian(false,'header-off');
+    else if(state.guardian===false)openOverlay(gkConfirmHTML(),state.screen==='plan'?'at-top':'');
+  }
+  else if(action==='gk-confirm'){closeOverlay();setGuardian(true,'confirm')}
+  else if(action==='gk-decline')closeOverlay();
+  else if(action==='gk-undo'){setGuardian(state.toast==='off',null);hideToast()}
+  else if(action==='gk-close')hideToast();
+  else if(action==='answer')answer(Number(index));
+  else if(action==='skip')answer(0,true);
+  else if(action==='result')go('check');
+  else if(action==='continue'){state.seconds=TIMING.countdownS;go('late')}
+  else if(action==='stop'){
+    state.stopAuto=true;
+    if(allAnswered())state.question=2;
+    go('late');announce(COPY.stopped);
+  }
+});
+phone.addEventListener('input',event=>{
+  if(event.target.id==='planInput')document.getElementById('planCount').textContent=`${event.target.value.length.toLocaleString()} / 12,000`;
+});
+['pointerdown','keydown','input','scroll','wheel','touchstart'].forEach(type=>phone.addEventListener(type,()=>{if(state.screen==='read')state.touched=true;resetIdle()},{capture:true,passive:true}));
+phone.addEventListener('keydown',event=>{
+  const dialog=phone.querySelector('[role="dialog"]');
+  if(!dialog)return;
+  if(event.key==='Escape'){
+    if(state.screen==='idle')go('late');
+    else if(state.screen==='card')go('plan');
+    else if(phone.querySelector('[data-overlay]'))closeOverlay();
+    return;
+  }
+  if(event.key==='Tab'){
+    const buttons=[...dialog.querySelectorAll('button:not(:disabled)')];
+    if(!buttons.length){event.preventDefault();return}
+    const first=buttons[0],last=buttons[buttons.length-1];
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+  }
+});
+const tabsEl=document.getElementById('tabs');
+tabsEl.innerHTML=SCREENS.map(id=>`<button id="tab-${id}" role="tab" data-screen="${id}">${LABELS[id]}</button>`).join('');
+tabsEl.addEventListener('click',event=>{
+  const button=event.target.closest('[data-screen]');
+  if(button)go(button.dataset.screen,true);
+});
+tabsEl.addEventListener('keydown',event=>{
+  const tabs=[...document.querySelectorAll('[data-screen]')];
+  const index=tabs.indexOf(document.activeElement);
+  if(index<0)return;
+  let next=index;
+  if(event.key==='ArrowRight')next=(index+1)%tabs.length;
+  else if(event.key==='ArrowLeft')next=(index+tabs.length-1)%tabs.length;
+  else if(event.key==='Home')next=0;
+  else if(event.key==='End')next=tabs.length-1;
+  else return;
+  event.preventDefault();go(SCREENS[next],true);tabs[next].focus();
+});
+document.getElementById('previous').onclick=()=>go(SCREENS[Math.max(0,SCREENS.indexOf(state.screen)-1)],true);
+document.getElementById('next').onclick=()=>go(SCREENS[Math.min(SCREENS.length-1,SCREENS.indexOf(state.screen)+1)],true);
+document.getElementById('restart').onclick=()=>{clearTimers();hideToast();state=initial();announce('처음부터 시작해요');go('plan')};
+window.addEventListener('pagehide',clearTimers);
+go('plan');
+document.getElementById('tab-plan').focus({preventScroll:true});
+</script>
+</body>
+</html>

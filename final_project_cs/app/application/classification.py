@@ -3,7 +3,7 @@
 무엇이 여기 있고 무엇이 여기 없나:
 
     여기(코어 1)      언제 부르는가 · 실패를 어떻게 처리하는가 · 어느 상태로 보내는가
-    app/modules/     라벨 어휘 · 프롬프트 · provider 호출 (모델 담당)
+    app/domains/     라벨 어휘 · 프롬프트 · provider 호출 (모델 담당)
 
 ★v8 §3-A 가 그대로 그렇게 적는다: "분류기의 라벨 어휘와 프롬프트 품질은 모델
   담당이 만들지만, 언제 부르고 실패를 어떻게 처리하며 어느 상태로 보내는지는
@@ -12,7 +12,7 @@
 ★**왜 어휘까지 여기로 올리지 않는가.** `order_payment_failed` 같은 업무 어휘는
   basement 에 있을 수 없다(`tests/architecture/test_basement_is_domain_free.py`).
   복사본이 다른 도메인으로 갈아 끼울 때 그 어휘까지 물려받으면 안 되기 때문이다.
-  그래서 어휘는 `app/modules/` 에 남기고, **실행 절차만** 코어 1 이 갖는다.
+  그래서 어휘는 `app/domains/` 에 남기고, **실행 절차만** 코어 1 이 갖는다.
   여기에는 업무 어휘가 한 낱말도 없다 — 그게 이 파일이 이 자리에 있을 수 있는
   이유다.
 
@@ -28,8 +28,8 @@ from typing import Any, Protocol
 from uuid import UUID
 
 from app.core.transition import transition_case
-from app.domain.events import EventType
-from app.presentation.security import masked
+from app.core.case_lifecycle.events import EventType
+from app.core.redaction import masked
 
 logger = logging.getLogger(__name__)
 
@@ -63,9 +63,7 @@ def classify_case(conn: Any, *, tenant_id: str, case_id: UUID, text: str,
     알아야 하고, 그걸 다시 DB 에 물어보게 하지 않는다.
     """
     try:
-        if classifier is None:
-            raise ValueError("classifier is not configured")
-        result = classifier(masked(text))
+        result = classifier(masked(text)) if classifier else None
         # ★**키가 있는지가 아니라 값이 있는지를 본다.** 전에는
         #   `label in result` 로 키 존재만 봐서 `""`·`"  "`·`None` 이 전부
         #   통과했다(2026-09-01 발견,
@@ -79,10 +77,11 @@ def classify_case(conn: Any, *, tenant_id: str, case_id: UUID, text: str,
         event: EventType = EventType.CLASSIFIED
         payload: dict[str, Any] = dict(result)
     except Exception as exc:
-        # ★원인을 남긴다. 여기서 삼키면 키 오류(401)도 「분류하지 못했다」 한 줄로만 보여 원인을 못 찾는다.
-        #   문의 원문은 남기지 않는다 — 원인 종류와 메시지만.
-        logger.warning("분류 실패: tenant=%s case=%s 원인=%s: %s",
-                       tenant_id, case_id, type(exc).__name__, exc)
+        # ★`[2026-09-29]` **왜** 실패했는지 한 줄 남긴다 — 전에는 처리된 실패라 로그에 아무것도 없어, 「하루 요약」이 분류 실패로
+        #   끝났을 때 모델 시간 초과인지 메모리 압박·DB 끊김인지 가릴 수 없었다. 키 오류(401)도 「분류하지 못했다」 한 줄로만
+        #   보이면 원인을 못 찾는다(팀 판과 합침 `[2026-10-05]`). 고객 원문은 싣지 않는다 — 예외 종류와 짧은 설명만.
+        logger.warning("classification failed tenant=%s case=%s reason=%s: %s",
+                       tenant_id, case_id, type(exc).__name__, str(exc)[:200])
         event, payload = EventType.CLASSIFICATION_FAILED, {"failure_code": FAILURE_CODE}
     if state_patch:
         # ★`[2026-09-17]` 분류와 **같은 이벤트**로 기록한다 — Case 상태는 한 문으로만 바뀐다.

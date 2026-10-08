@@ -23,9 +23,39 @@ from app.infrastructure.llm.local_ft import LocalFTTeamLLM
 from app.infrastructure.llm.openai import OpenAITeamLLM
 from app.infrastructure.messaging.outbox import OutboxBrokerAdapter
 from app.infrastructure.rag.retriever import search_policy
-from app.modules.travel_ops import feedback
-from app.presentation.security import masked
+from app.domains.travel_ops.components.core_hooks import feedback
+from app.core.redaction import masked
 from app.tools.read_tools import ReadToolbox
+
+
+def _llm_failover_budget(settings: Any):
+    """모델 서버 넘김 장치(`llm_failover.py`)가 **API 로 넘긴 호출**을 세는 장치 — `external_call_budget` 의 `openai_failover` 줄(일 · 월 상한).
+    ★인프라는 도메인의 `CallBudget` 을 모르므로(계층 규칙) 조립 루트가 만들어 꽂는다. 한도 표를 못 읽으면 **부른다**(서비스를 살리는 쪽) — 경고를 남긴다.
+    한도를 넘으면 `False` — 넘김 장치가 더 부르지 않고 실패로 올린다."""
+    import logging
+
+    from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget
+    from app.infrastructure.llm_failover import METER
+
+    budget = CallBudget(connection_factory=get_connection,
+                        caps={METER: {"day": int(settings.llm_failover_daily_cap), "month": int(settings.llm_failover_monthly_cap)}})
+
+    def allowed() -> bool:
+        try:
+            return bool(budget.try_reserve(METER))
+        except Exception as exc:                                  # noqa: BLE001 — 세는 일이 서비스를 막지 않게
+            logging.getLogger("app.llm_failover").warning("call budget unreadable (%s) — calling the API anyway", type(exc).__name__)
+            return True
+    return allowed
+
+
+def _register_llm_failover() -> None:
+    from app.infrastructure.llm_failover import register_budget_provider
+
+    register_budget_provider(_llm_failover_budget)
+
+
+_register_llm_failover()           # import 때 한 번 — 꽂기만 한다(I/O 없음, 부를 때 일한다)
 
 
 def build_classifier(*, config: ProjectConfig | None = None):
@@ -57,7 +87,7 @@ def build_classifier(*, config: ProjectConfig | None = None):
         언제 부르고 / 실패를 어떻게 처리하고 / 어느 상태로 보내는가
             → `app/application/classification.py::classify_case` (코어 1)
         라벨 어휘 · 프롬프트 · provider 호출
-            → `app/modules/travel_ops/feedback.py` (모델)
+            → `app/domains/travel_ops/components/core_hooks/feedback.py` (모델)
 
       이 함수는 그 둘을 잇는 **배선**이다 — 도메인 모듈의 `classify` 를 마스킹과
       함께 감싸 코어 1 이 부를 수 있는 모양으로 만든다.
@@ -163,7 +193,7 @@ def build_report_extractor():
     chat = from_settings(get_settings())
     if chat is None:
         return None
-    from app.modules.travel_ops.trip_intake import extract
+    from app.domains.travel_ops.components.conversation.trip_intake import extract
 
     return lambda text: extract(text, chat)
 
@@ -174,8 +204,8 @@ def build_kakao_local() -> Any | None:
     ★**장소 이름 찾기·존재 확인** 전용이다(`intake/places.py` · `read.place_lookup`). 응답은 저장하지 않는다.
     호출 예산이 필수다(무료 한도 초과 사용은 약관 위반) — `travel.kakao_budget`.
     """
-    from app.infrastructure.travel.call_budget import CallBudget, kakao_caps
-    from app.infrastructure.travel.kakao_local import KakaoLocal
+    from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget, kakao_caps
+    from app.domains.travel_ops.ports.data_sources.kakao_local import KakaoLocal
 
     # ★설정 객체에 키 필드가 없으면(시험용 설정) 키가 없는 것과 같다 — 조립을 깨지 않는다
     key = getattr(get_settings(), "kakao_rest_api_key", "")
@@ -194,7 +224,7 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
         config.require_module("vector_rag", "default ReadToolbox")
         # ★바깥 소스는 **조립이 넣는다.** 도구가 스스로 만들면 테스트가 조용히
         #   네트워크를 탄다. 만드는 것 자체는 I/O 가 없다 — 호출할 때만 나간다.
-        from app.infrastructure.travel import build_travel_sources
+        from app.domains.travel_ops.ports.data_sources import build_travel_sources
 
         sources = build_travel_sources(get_settings())
         tools = ReadToolbox(get_connection, policy_search=search_policy,
@@ -205,9 +235,22 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
         # ☆`[2026-09-29 이동 계산기 문제목록 #24·#31·#34]` 이동 계산기를 설정대로 켜거나 끈다 — 켜면 자료를 확인하고
         #   (없거나 판 명세와 다르면 기동을 멈춘다, 결정 15) 적재까지 한다(첫 고객 요청이 약 33초를 기다리지 않게).
         #   설정 mobility_data_dir 가 비면 꺼짐. 도구를 주입한 조립(시험)은 건너뛴다.
-        from app.modules.travel_ops.mobility import wiring as mobility_wiring
+        from app.domains.travel_ops.instances.mobility import wiring as mobility_wiring
 
-        mobility_wiring.configure_from_settings(get_settings())
+        # ★`[2026-10-05]` 따릉이 실시간 조회의 호출 한도 문(env 하루 한도 + DB 예산) — 이동 쪽은 infrastructure 를 import 하지 않으니 여기서 만들어 넘긴다.
+        #   못 만들면 문 없이 부르지 않고 실시간을 끈다(이동 쪽이 처리).
+        _bike_gate = None
+        # ★설정 객체에 그 칸이 없을 수 있다(시험이 넣는 일부 칸짜리 대역) — 칸이 없으면 키가 없는 것과 같다(`wiring.configure_from_settings` 와 같은 규칙)
+        if getattr(get_settings(), "seoul_openapi_key", ""):
+            try:
+                from app.domains.travel_ops.ports.data_sources.source_budget import build_gate
+
+                _bike_gate = build_gate(get_settings(), ["seoul_bike"])
+            except Exception as exc:  # noqa: BLE001 — 문을 못 만들면 실시간만 끈다(서비스는 계속)
+                import logging
+
+                logging.getLogger(__name__).warning("따릉이 실시간 한도 문을 못 만들었다: %s: %s", type(exc).__name__, exc)
+        mobility_wiring.configure_from_settings(get_settings(), bike_gate=_bike_gate)
     teams = []
     capabilities: dict[str, str] = {}
     for declaration in config.teams:
@@ -251,8 +294,8 @@ def build_google_places(*, limiter: Any = None) -> Any:
     if not key:
         return None
     from app.infrastructure.notify.ops_alert import google_over_free_alert
-    from app.infrastructure.travel.call_budget import CallBudget, google_caps
-    from app.infrastructure.travel.google_places import GooglePlaces
+    from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget, google_caps
+    from app.domains.travel_ops.ports.data_sources.google_places import GooglePlaces
 
     return GooglePlaces(api_key=key, budget=CallBudget(connection_factory=get_connection, caps=google_caps()),
                         limiter=limiter, on_over_free=google_over_free_alert)
@@ -291,6 +334,8 @@ def build_controller(*, registry: TeamRegistry | None = None,
       가 성립해야 한다. 여기서 다시 읽으면 그 사이 바뀐 선언으로 조립해 놓고
       **읽었던 revision 을 실행 중인 것으로 잘못 적게** 된다.
     """
+    wire_optional_features()                      # 끌 수 있는 기능이 끼움 자리에 규칙을 꽂는다(2026-10-06)
+    wire_domain_teams()                           # 팀이 자기 계산을 부품의 끼움 자리에 꽂는다(동)
     config = config if config is not None else load_project_config(config_path)
     _validate_modules(config)
     if llm is None:
@@ -317,11 +362,146 @@ def build_controller(*, registry: TeamRegistry | None = None,
         fact_queries=fact_queries,
         response_review=config.response_review,
         action_handlers=action_handlers if action_handlers is not None else build_action_handlers(),
+        # ★`[2026-10-06]` 라우팅이 어긋났을 때 한 번 더 고르는 자리 — 어휘는 도메인이 갖는다.
+        reroute=build_reroute(),
     )
 
 
+def build_mcp_surface(app_getter):
+    """개인 AI(Claude · ChatGPT · Cursor …)가 **사용자 본인의 여행**을 다루는 MCP 표면 — 고객 API 앱에 `/mcp/` 로 붙는다. `[2026-10-02]`
+
+    ★도구는 웹 API(`/v1/web/*`)를 그대로 부르는 얇은 어댑터다(`mcp_server.py`) — 규칙을 새로 만들지 않는다. `mcp` 모듈 토글은 **요청마다** 읽는다
+      (끄면 404). 쓰기 도구는 `travel.mcp.write_enabled` 가 켜졌을 때만 등록한다(기본 꺼짐 — 「MCP 는 read-only」). presentation 은 도메인을
+      import 하지 못해(INV-CS-ARCH-001) 조립이 만들어 `create_app()` 에 준다. `app_getter` 는 이 표면이 붙을 앱을 돌려준다(네트워크 없이 부르려고).
+    """
+    from app.core.settings import get_guardrails
+    from app.domains.travel_ops.modules.mcp.mcp_server import build_surface
+
+    def enabled() -> bool:
+        return load_project_config().module_enabled("mcp")
+
+    write = bool(get_guardrails().get("travel.mcp.write_enabled"))
+    return build_surface(app_getter, enabled=enabled, write_enabled=write)
+
+
+def build_reroute():
+    """라우팅 재배분기 — 꺼져 있으면 `None`(Controller 는 종전대로 곧바로 escalated). `[2026-10-06]`
+
+    ★가드레일 `travel.routing.reroute_enabled` 로 끈다. 모델 호출이 늘어나는 자리라 끌 수 있어야 한다.
+      ★**호출 때 읽는다** — 시험이 바꿔 끼운 값을 따른다.
+    """
+    def _call(**kwargs):
+        from app.core.settings import get_guardrails
+
+        if not get_guardrails().get("travel.routing.reroute_enabled"):
+            return None
+        from app.domains.travel_ops.components.core_hooks.reroute import reroute
+
+        return reroute(**kwargs)
+    return _call
+
+
+def wire_optional_features() -> list[str]:
+    """끌 수 있는 기능이 **자기 규칙을 끼움 자리에 꽂는 곳**. `[2026-10-06]` D-CS-013
+
+    ★왜 여기인가. 필수 부품이 기능 쪽을 직접 import 하면 그 기능을 바꾸거나 끄는 순간 부품이
+      같이 멈춘다 — 실제로 감시·안내가 웹 로그인 표를 직접 보고 있었다. 방향을 뒤집어
+      **기능이 조립 때 자기 규칙을 등록**하고, 부품은 끼움 자리만 본다.
+
+    꽂지 않으면 부품은 기본값으로 돈다(감시 대상 좁히기 없음 = 전부 감시).
+    """
+    from app.domains.travel_ops.components.itinerary import trip_scope
+    from app.domains.travel_ops.modules.web_account.guest_policy import not_guest_sql
+
+    # 게스트(로그인 안 한 웹 사용자)의 여행은 안내·감시 대상이 아니다 — D-CS-011 §2.
+    trip_scope.register("web_account.guest", not_guest_sql)
+
+    # 운영자가 관리 화면에서 바꾼 값(채팅 해석 방식 등)을 읽는 자리. 표는 웹 제한값 기능이 들고 있다.
+    from app.domains.travel_ops.components import settings_hook
+    from app.domains.travel_ops.modules.web_account import web_guard
+
+    settings_hook.register(lambda tenant_id, name: web_guard.values(tenant_id).get(name))
+
+    # 접수 읽기의 진행 알림을 화면이 읽는 모양(SSE)으로 포장하는 자리.
+    from app.domains.travel_ops.components import progress_hook
+    from app.domains.travel_ops.modules.live_progress import op_stream
+
+    progress_hook.register(op_stream.sse)
+
+    # ★`[2026-10-07 사용자 지시]` 일정 항목 짚기 — 우리 데이터로 가르친 모델 자리. `.env` 에 `ACOP_OLLAMA_POINTER_MODEL` 이 있을 때만 꽂는다
+    #  (없으면 낱말 규칙만 — 지금까지와 같다). 켜고 끄기: 가드레일 `travel.pointer.mode`(off · shadow · on).
+    from app.domains.travel_ops.components.conversation import item_pointer
+
+    pointer = item_pointer.register_from_settings(get_settings())
+    return (list(trip_scope.registered())
+            + (["settings"] if settings_hook.is_registered() else [])
+            + (["progress"] if progress_hook.is_registered() else [])
+            + (["item_pointer"] if pointer is not None else []))
+
+
+def wire_domain_teams() -> list[str]:
+    """**팀이 자기 계산을 부품의 끼움 자리에 꽂는 곳.** `[2026-10-06]` D-CS-013
+
+    ★왜 여기인가. 감시 · 대화 · 계획 · 접수 부품이 요식 · 이동 · 활동 팀 **내부**를 직접 가져다
+      썼다(14곳). 그러면 「팀은 꽂고 뺄 수 있다」가 거짓이 된다 — 팀 하나를 빼면 부품이 import
+      단계에서 깨진다. 방향을 뒤집어 팀이 조립 때 등록하고, 부품은 자리만 본다.
+
+    ★꽂지 않으면 부품은 그 팀이 없을 때의 길로 간다 — 이동은 어림값, 요식 판정은 모름,
+      활동 유사도 없음, 그 종류의 감시는 건너뜀. **값을 지어내지 않는다**(`components/team_hooks/`).
+    """
+    from app.domains.travel_ops.components.team_hooks import dining_ledger, legs, similarity, watch_planners
+
+    # 이동 — 두 지점 사이 시간 · 노선 · 사고 반영. 도보 상한은 이동 팀의 가드레일에 있다.
+    from app.domains.travel_ops.instances.mobility import wiring as mobility_wiring
+    from app.domains.travel_ops.instances.mobility.engine import guardrails as mobility_guardrails
+
+    def walk_limit_m() -> float | None:
+        """`mobility.limits.walk_m.default`. 선언에 없으면 None — 부르는 쪽이 보수적으로 간다."""
+        try:
+            return float(mobility_guardrails.lookup("mobility.limits.walk_m.default"))
+        except mobility_guardrails.GuardrailMissing:
+            return None
+
+    # ★함수를 **그 자리에서 쥐지 않고** 부를 때 모듈에서 읽는다 — 이동 계산기는 켜짐/꺼짐이 실행 중에
+    #   바뀌고(`wiring.configure`), 시험이 팀 함수를 바꿔 끼우기도 한다. 객체를 쥐면 옛 것을 계속 쓴다.
+    legs.register(leg_planner=lambda *a, **kw: mobility_wiring.leg_planner(*a, **kw),
+                  disruptions_from_events=lambda events: mobility_wiring.disruptions_from_events(events),
+                  walk_limit_m=walk_limit_m,
+                  basis=lambda: mobility_wiring.basis())
+
+    # 요식 — 원장이 식당의 정본이다(근처 들여놓기 · 시간대 판정 · 이름으로 찾기).
+    from app.domains.travel_ops.instances.dining import ledger as dining_ledger_impl
+    from app.domains.travel_ops.instances.dining import nearby as dining_nearby
+
+    dining_ledger.register(add_nearby=lambda *a, **kw: dining_nearby.add_nearby(*a, **kw),
+                           states=lambda *a, **kw: dining_ledger_impl.dining_states(*a, **kw),
+                           state=lambda *a, **kw: dining_ledger_impl.dining_state(*a, **kw),
+                           find_by_name=lambda *a, **kw: dining_ledger_impl.find_place_by_name(*a, **kw))
+
+    # 활동 — 비슷한 곳 순서와 설문 선호.
+    from app.domains.travel_ops.instances.activity import similarity as activity_similarity
+
+    similarity.register(score=lambda *a, **kw: activity_similarity.score(*a, **kw),
+                        preference_of=lambda c: activity_similarity.preference_of(c),
+                        distance_first=lambda pref: activity_similarity.distance_first(pref))
+
+    # 감시 묶음 — 항목 종류마다 그 팀의 점검 계산.
+    from app.domains.travel_ops.instances.activity import team as activity_team
+    from app.domains.travel_ops.instances.dining import team as dining_team
+    from app.domains.travel_ops.instances.mobility import team as mobility_team
+
+    watch_planners.register("activity", lambda *a, **kw: activity_team.plan_activity_trigger(*a, **kw))
+    watch_planners.register("dining", lambda *a, **kw: dining_team.plan_dining_trigger(*a, **kw))
+    watch_planners.register("mobility", lambda *a, **kw: mobility_team.plan_mobility_trigger(*a, **kw))
+
+    return ([name for name, hook in (("legs", legs), ("dining_ledger", dining_ledger),
+                                     ("similarity", similarity)) if hook.is_registered()]
+            + [f"watch:{kind}" for kind in watch_planners.registered()])
+
+
 def build_domain_routers() -> list:
-    """도메인이 여는 HTTP 표면 — 여행 API · 위임 · 시나리오 모드.
+    """**고객 API 앱**이 여는 도메인 HTTP 표면 — 여행 API · 위임. ★`[2026-09-29]` 시나리오 모드 · 웹 제한값 운영 API 는
+    운영 앱으로 옮겼다(`build_ops_routers`).
 
     `[정정 2026-09-22]` 이 줄은 「여행 API 하나」라고 적혀 있었다. 시나리오 라우터가
     늘어난 뒤에도 안 고쳐져 있었고, 여기에 위임까지 더해 셋이 됐다.
@@ -330,14 +510,33 @@ def build_domain_routers() -> list:
       만들어 `create_app()` 에 넣는다. 점검기는 **처음 쓸 때** 조립한다 — 기동이
       바깥 소스(기상·교통·대기) 조립을 기다리지 않게.
     """
-    from app.modules.travel_ops.trip_api import build_trip_router
+    wire_optional_features()                      # 동(고객 API 앱 경로)
+    wire_domain_teams()                           # 동
+    from app.domains.travel_ops.entry.trip_api import build_trip_router
 
     def check_factory():
         from app.core.settings import get_settings
-        from app.infrastructure.travel.base import build_travel_sources
-        from app.infrastructure.travel.disruptions import DisruptionCheck
+        from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+        from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
 
         return DisruptionCheck(build_travel_sources(get_settings())).check
+
+    def cached_check_factory():
+        # ★`[2026-10-06]` MCP 일정 위험 점검의 기본 — 공유 응답 캐시만 읽는다(바깥에 안 나간다 · 하루 한도를 안 쓴다)
+        from app.core.settings import get_settings
+        from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+        from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+
+        return DisruptionCheck(build_travel_sources(get_settings(), cache_only=True)).check
+
+    def fresh_check_factory():
+        # ★`[2026-10-06]` MCP 일정 위험 점검의 「새로 확인」 — 낮은 우선순위(소스의 하루 · 이번 달 한도의 `fresh_share` 까지만 쓰고 DB 를 못 읽으면 안 부른다)
+        from app.core.settings import get_guardrails, get_settings
+        from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+        from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+
+        share = float(get_guardrails().get("travel.mcp.risk_check.fresh_share"))
+        return DisruptionCheck(build_travel_sources(get_settings(), low_priority_share=share)).check
 
     def chat_factory():
         # ★자유 문장에서 신고를 뽑는 LLM — 로컬 Ollama(Gemma 4). 없으면 None → 추출 없이 escalate.
@@ -346,14 +545,14 @@ def build_domain_routers() -> list:
 
         return from_settings(get_settings())
 
-    from app.modules.travel_ops.delegation_api import build_delegation_router
-    from app.modules.travel_ops.scenario_mode import build_scenario_router
+    from app.domains.travel_ops.entry.delegation_api import build_delegation_router
+    from app.domains.travel_ops.modules.web_account.web_auth_api import build_auth_router
 
     def place_factory():
         # ★일정 생성기의 **마지막 후보 소스**(`planner.py`) — `place_catalog` 이 비었을 때만
         #   실제로 불린다. 키가 없으면 `None` 이고 그러면 그 경로가 아예 안 열린다.
         from app.core.settings import get_settings
-        from app.infrastructure.travel.base import build_travel_sources
+        from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
 
         return build_travel_sources(get_settings()).place
 
@@ -363,12 +562,26 @@ def build_domain_routers() -> list:
                               chat_factory=chat_factory, place_factory=place_factory,
                               kakao_factory=kakao_factory,
                               # ★채팅의 질문 — 여행 규정 검색(RAG). 문턱은 `travel.question.min_policy_score`
-                              policy_search_factory=lambda: search_policy),
+                              policy_search_factory=lambda: search_policy,
+                              # ★`[2026-10-06]` MCP 읽기 도구 「일정 위험 점검」 — 캐시만 읽는 점검기(기본) · 낮은 우선순위로 새로 부르는 점검기(fresh)
+                              cached_check_factory=cached_check_factory, fresh_check_factory=fresh_check_factory),
             # ★위임 — 승인 뒤 자동 실행을 여는 둘째 문을 주고 거두는 자리(2026-09-22).
             #   운영 화면 `/ui/delegations` 가 이 경로를 부른다.
             build_delegation_router(),
-            # ★시나리오 모드 — 설정 `scenario_mode_enabled` 가 꺼져 있으면 모든 경로가 404 다.
-            build_scenario_router(classifier_factory=build_classifier, chat_factory=chat_factory)]
+            # ★소셜 로그인(구글 먼저) — 업체 설정이 없으면 `GET /v1/web/auth/providers` 가 빈 목록이고 나머지는 「쓸 수 없다」로 답한다(2026-10-03)
+            build_auth_router()]
+
+
+def build_ops_routers() -> list:
+    """**운영 앱**(`app/ops_entrypoint.py`)이 여는 도메인 경로 — 웹 제한값 운영 API. `[2026-09-29]`
+
+    ★고객 API 앱(8042)에는 없다(사용자 지시 — 운영 경로는 외부에서 닿지 못하게 다른 프로세스 · 127.0.0.1).
+    ★`[2026-09-30 사용자 지시]` **시나리오(시연) 모드는 운영 앱에서 뗐다** — 실서비스 운영 화면과 데모가 같은 프로세스에 있으면
+      안 된다. 압축 보관: `legacy/scenario_mode/scenario_mode_2026-09-30.zip`(복원 방법은 그 안의 README.md).
+    """
+    from app.domains.travel_ops.modules.web_account.web_limits_api import build_limits_router, build_retention_ops_router
+
+    return [build_limits_router(), build_retention_ops_router()]
 
 
 def build_subject_resolver():
@@ -377,7 +590,7 @@ def build_subject_resolver():
     ★선언이 없으면 `None` — 그 조립에서 `subject_ref` 를 보내면 422 다(조용히 무시하지 않는다).
     """
     try:
-        from app.modules.travel_ops.subjects import resolve_subject
+        from app.domains.travel_ops.components.core_hooks.subjects import resolve_subject
     except ImportError:
         return None
     return resolve_subject
@@ -386,7 +599,7 @@ def build_subject_resolver():
 def build_subject_interpreter():
     """`[2026-09-17]` 대상이 정해진 고객 Case 의 문장 해석기. 선언이 없으면 `None`."""
     try:
-        from app.modules.travel_ops.subjects import make_subject_interpreter
+        from app.domains.travel_ops.components.core_hooks.subjects import make_subject_interpreter
     except ImportError:
         return None
     return make_subject_interpreter(build_report_extractor())
@@ -399,8 +612,8 @@ def build_action_handlers():
     """
     from app.core.actions import ActionHandlers
     try:
-        from app.modules.travel_ops.booking_actions import APPROVED_HANDLERS
-        from app.modules.travel_ops.itinerary_actions import ACTION_HANDLERS
+        from app.domains.travel_ops.components.actions.booking_actions import APPROVED_HANDLERS
+        from app.domains.travel_ops.components.actions.itinerary_actions import ACTION_HANDLERS
     except ImportError:
         return ActionHandlers()
     # ★`[2026-09-18]` 승인된 예약 제안의 적용기도 싣는다(`auto_apply=False` — 승인 없이는 안 돈다).
@@ -420,7 +633,7 @@ def build_verification(*, config=None):
     """
     from app.core.verification import VerificationPolicy
     try:
-        from app.modules.travel_ops.verification_policy import (
+        from app.domains.travel_ops.components.core_hooks.verification_policy import (
             FACT_QUERIES, TRAVEL_OPS_POLICY)
     except ImportError:
         return VerificationPolicy(), ()

@@ -215,9 +215,12 @@ SQL 쪽뿐이다.** 파이썬 검사는 자기가 읽은 값과만 비교하므�
 
 ```
 app/presentation/schemas/            .py 없음
-app/core/case_runtime/               .py 없음
-app/modules/customer_ops/team_modules/   .py 없음 (local_team_a·b·remote_team_demo)
+app/core/case_runtime/               .py 없음          ← `[2026-10-06]` 삭제
+app/modules/customer_ops/team_modules/   .py 없음      ← `[2026-10-06]` 상위 폴더째 삭제
 ```
+
+`[2026-10-06]` 위 빈 패키지 둘은 지웠다. 쇼핑몰 팀 데모(`local_team_a`·`local_team_b`·`remote_team_demo`)는
+구현이 들어온 적이 없고 폴더만 남아 있었다(D-023 다섯째 항목 — 지울 코드가 없었다).
 
 `[실측]` **이 함정으로 wiki 문서 17건이 틀렸다.** "여기에 무엇이 있다"고 썼는데 빈 폴더였다. → [../../../wiki/governance/type-verification/round-9.md](../../../wiki/governance/type-verification/round-9.md)
 

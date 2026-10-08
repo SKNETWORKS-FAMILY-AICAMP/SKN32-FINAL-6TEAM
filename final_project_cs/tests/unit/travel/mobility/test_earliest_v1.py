@@ -18,11 +18,11 @@ from datetime import date, datetime, timedelta
 
 import pytest
 
-from app.modules.travel_ops.mobility.engine import plan as P
-from app.modules.travel_ops.mobility.engine.fold import fold_case
-from app.modules.travel_ops.mobility.engine.paths import RULES_DIR
-from app.modules.travel_ops.mobility.engine.runtime import Runtime
-from app.modules.travel_ops.mobility.engine.verify_time import Timetable, Verifier
+from app.domains.travel_ops.instances.mobility.engine import plan as P
+from app.domains.travel_ops.instances.mobility.engine.fold import fold_case
+from app.domains.travel_ops.instances.mobility.engine.paths import RULES_DIR
+from app.domains.travel_ops.instances.mobility.engine.runtime import Runtime
+from app.domains.travel_ops.instances.mobility.engine.verify_time import Timetable, Verifier
 
 RULES = json.loads((RULES_DIR / "rules_v0.3.json").read_text(encoding="utf-8"))
 D = datetime.fromisoformat
@@ -297,7 +297,7 @@ def test_walk_only_earliest_real_planner():
 
 
 def test_plan_version_bumped():
-    assert P.PLAN_VERSION == "plan-v2.4"      # 87 — 혼합 후보 추가로 올림(86 판 = plan-v2.3)
+    assert P.PLAN_VERSION == "plan-v2.10"      # 2026-10-07 — 운행 시간 밖이면 택시 대체(v2.9 = 1호선 표, v2.8 = 9호선 급행 표, v2.7 = 혼합 계획 수단, v2.6 = 연결통로, v2.5 = 버스→버스)
 
 
 # ── E3 — 답 문장에 등급 없음 ───────────────────────────────────────────
@@ -325,7 +325,7 @@ _RT = None
 def _runtime():
     global _RT
     if _RT is None:
-        from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+        from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
         try:
             _RT = build_verifier(quiet=True)
         except RuntimeError as e:
@@ -437,8 +437,8 @@ def test_full_e3_real_answers_have_no_grade():
     import re
     from pathlib import Path
 
-    from app.modules.travel_ops.mobility.engine.adapter import _to_plain
-    from app.modules.travel_ops.mobility.engine.verify_time import load_cases
+    from app.domains.travel_ops.instances.mobility.engine.adapter import _to_plain
+    from app.domains.travel_ops.instances.mobility.engine.verify_time import load_cases
     rt = _runtime()
     cases = load_cases(str(Path(__file__).resolve().parent / "real_legs_v1.json"))
     n = 0

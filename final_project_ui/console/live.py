@@ -91,8 +91,12 @@ def trigger_reload(introspection_url: str | None, token: str | None) -> LiveRead
             return LiveRead("인증 실패",
                             detail="CONSOLE_RELOAD_TOKEN 의 scope 가 `ops:reload` 가 아님")
         if exc.code == 404:
+            # ★2026-09-29 D-CS-008: 고객용 빌드(8042)에서 /admin/reload 를 뺐다 — 설정 관리용 빌드
+            #   (app.entrypoint:app)에만 있다. 404 를 「계약 1.0」으로만 설명하면 틀린 안내가 된다.
             return LiveRead("그 경로가 없음",
-                            detail=f"{url} — 대상이 아직 reload 를 지원하지 않음(계약 1.0)")
+                            detail=f"{url} — 이 대상에는 반영 경로가 없음: 고객용 빌드라면 "
+                                   "설정 관리용 빌드(app.entrypoint:app)를 가리켜야 하고, "
+                                   "아니면 아직 reload 를 지원하지 않는 대상(계약 1.0)")
         if exc.code == 409:
             # 대상이 새 선언으로 조립하지 못했다. 옛 조립이 계속 돈다.
             error = (body.get("error") or {})

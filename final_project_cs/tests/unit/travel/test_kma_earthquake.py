@@ -10,9 +10,9 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from app.infrastructure.travel.base import TravelSources
-from app.infrastructure.travel.disruptions import DisruptionCheck
-from app.infrastructure.travel.kma_earthquake import KmaEarthquakeSource, parse_event
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+from app.domains.travel_ops.ports.data_sources.kma_earthquake import KmaEarthquakeSource, parse_event
 
 KST = ZoneInfo("Asia/Seoul")
 #: 실측 항목(2026-09-12 인도네시아 해역)

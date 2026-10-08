@@ -9,8 +9,8 @@ from __future__ import annotations
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
-from app.modules.travel_ops.itinerary_checks import Part, check_itinerary
-from app.modules.travel_ops.place_hours import days_in, fits, hours_on, read_by_model, read_by_rule, read_hours
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
+from app.domains.travel_ops.components.places.place_hours import days_in, fits, hours_on, read_by_model, read_by_rule, read_hours
 
 KST = ZoneInfo("Asia/Seoul")
 MONDAY, FRIDAY, TUESDAY = date(2026, 9, 28), date(2026, 10, 2), date(2026, 9, 29)
@@ -72,6 +72,17 @@ def test_seasons_become_the_shortest_window_and_holiday_rules_stay_as_text():
     assert read.week["tue"] == "closed"
     assert read.week["mon"] == {"open": "09:00", "close": "17:00", "last_entry": "16:00"}   # 가장 짧은 쪽
     assert read.conditions and read.dropped == []
+
+
+def test_a_weekly_rest_day_with_a_holiday_exception_is_still_closed_that_day():
+    """`[2026-09-29]` 모델이 「매주 월요일 (단, 공휴일이 월요일인 경우 그 다음날 휴무)」를 통째로 조건에 넣었고, 월요일이
+    「연다」로 남았다(창덕궁 다래나무 실측). 앞의 「매주 월요일」은 매주 쉬는 날이다 — 예외만 조건으로 남는다."""
+    rest = "매주 월요일 (단, 공휴일이 월요일인 경우 그 다음날 휴무)"
+    model = _Model({"open": [{"days": [], "open": "09:00", "close": "17:30", "quote": "09:00~17:30"}],
+                    "closed": [], "conditions": [rest]})
+    read = read_hours("[11월~1월]- 09:00~17:30", rest, chat=model)
+    assert read.week["mon"] == "closed" and read.week["tue"]["open"] == "09:00"
+    assert read.conditions == [rest]
 
 
 def test_what_is_not_in_the_text_is_dropped_not_believed():

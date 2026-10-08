@@ -2,7 +2,7 @@
 """체인점 지점 고르기 규칙(`intake/chain_pick.py`). 카카오 응답은 저장하지 않는다 — 아래 결과는 시험용으로 지은 것이다."""
 from __future__ import annotations
 
-from app.modules.travel_ops.intake.chain_pick import (
+from app.domains.travel_ops.components.intake.chain_pick import (
     CLUSTER_M, Neighbour, anchor_for, brand_of, branch_hint, needs_branch_pick, hint_request, pick_branch,
     search_requests, spread_m,
 )
