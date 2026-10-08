@@ -19,7 +19,7 @@ import pytest
 from app.application.controller import Controller
 from app.core.registry import TeamRegistry
 from app.core.transition import transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db.repository import get_case_events
 from app.infrastructure.db.session import get_connection
 

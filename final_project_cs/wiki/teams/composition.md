@@ -33,7 +33,7 @@ domain_note: 조립 기제는 도메인 무관이다. 예시로 커머스·여�
 
 | 컴포넌트 | 위치 | 필수 의존 |
 |---|---|---|
-| Case lifecycle · `transition_case()` | `app/core/transition.py`, `app/domain/{case,events}.py` | 상태 변경의 단일 진입점; API의 Case 생성·분류가 이벤트에 의존 |
+| Case lifecycle · `transition_case()` | `app/core/transition.py`, `app/core/case_lifecycle/{case,events}.py` | 상태 변경의 단일 진입점; API의 Case 생성·분류가 이벤트에 의존 |
 | 계약 모델 | `app/core/contracts.py` | Controller·Team·평가가 `TeamTask`·`TeamResult`·`TeamManifest`·`TeamModule`·`ContextPack`·`Evidence` 사용 |
 | Team Registry | `app/core/registry.py` | capability 해석의 유일한 경로 |
 | Context Broker | `app/core/context.py` | 12,000 토큰 예산·절삭·`degraded` 신호 |
@@ -78,7 +78,7 @@ domain_note: 조립 기제는 도메인 무관이다. 예시로 커머스·여�
 | 책임 | 위치 | 소유 |
 |---|---|---|
 | 호출 시점·실패 처리·상태 전이 | `app/application/classification.py` | 코어 1 |
-| 라벨 어휘·프롬프트·provider 호출 | `app/modules/travel_ops/feedback.py`(작업 트리. git 에는 아직 `customer_ops/feedback.py`) | 모델 |
+| 라벨 어휘·프롬프트·provider 호출 | `app/domains/travel_ops/components/core_hooks/feedback.py`(작업 트리. git 에는 아직 `customer_ops/feedback.py`) | 모델 |
 
 근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:112-152`
 
@@ -184,7 +184,45 @@ teams:
 
 ## 만드는 순서 · 공통 뼈대
 
-만드는 순서는 [build-order.md](build-order.md). 반복되는 네 가지를 조합형 유틸로 빼는 설계는 [common-utils.md](common-utils.md)에 있고 `[정정 2026-09-10]` 「아직 구현은 없다」(09-03)는 낡았다 — **`app/modules/travel_ops/_base.py` 가 생겼다**(작업 트리, 커밋 전). common-utils 설계의 네 가지를 다 담았는지는 대조하지 않았다.
+만드는 순서는 [build-order.md](build-order.md). 반복되는 네 가지를 조합형 유틸로 빼는 설계는 [common-utils.md](common-utils.md)에 있고 `[정정 2026-09-10]` 「아직 구현은 없다」(09-03)는 낡았다 — **`app/domains/travel_ops/instances/_shared/_base.py` 가 생겼다**(작업 트리, 커밋 전). common-utils 설계의 네 가지를 다 담았는지는 대조하지 않았다.
+
+## 폴더 구조
+
+`[2026-10-06]` 업무 도메인 코드는 `app/domains/<도메인>/` 에만 있고, 그 안을 위의 구성 단위대로 칸을 나눴다 — [D-CS-013](../decisions/D-CS-013-domain-folder-layout.md).
+
+```
+app/domains/travel_ops/
+├─ modules/      모듈 — 꺼도 나머지가 도는 기능 (web_account · mcp · live_progress)
+├─ instances/    인스턴스 — 에이전트 팀. 팀 하나 = 폴더 하나 (activity · dining · mobility · booking_handoff · locked + _shared)
+├─ components/   컴포넌트 — 빼면 여행 서비스가 안 도는 부품 (itinerary · planning · places · intake · conversation · actions · booking · watch · customer · core_hooks · team_hooks)
+├─ ports/        Port — 바꿔 끼우는 자리 (data_sources)
+├─ entry/        고객 입구 — HTTP 경로
+└─ scenarios/    시연 · 하루 대조 시험용 조립
+```
+
+★위 「필수 컴포넌트」 표는 **플랫폼 코어**(여행을 모르는 공통 층 — `app/core` · `app/application` · `app/infrastructure` · `app/presentation`)의 필수 부품이다. 여행 묶음 안의 `components/` 는 **여행 서비스의 필수 부품**이라 층이 다르다.
+
+칸끼리 누가 누구를 부르는지는 `tests/architecture/test_travel_ops_cells.py` 가 센다. **2026-10-06 네 줄 모두 0** — 팀 → 다른 팀 속 0 · 필수 부품 → 팀 속 0 · 필수 부품 → 끌 수 있는 기능 0 · 바꿔 끼우는 자리 → … 0. 옮긴 날에는 20곳이 어기고 있었고(14 · 4 · 2), 같은 날 끼움 자리 일곱으로 **방향을 뒤집어** 없앴다.
+
+## 끼움 자리 — 기능과 팀이 **조립 때 꽂는다** `[2026-10-06]`
+
+부품이 기능·팀을 직접 import 하면 그 기능을 끄거나 팀을 빼는 순간 부품이 깨진다. 방향을 뒤집어 **부품은 자리만 알고, 꽂는 쪽이 조립 때 등록**한다(의존성 역전 · 포트와 어댑터, 조립 루트는 `app/composition.py`).
+
+| 자리 | 부품이 묻는 것 | 꽂는 쪽 | 아무도 안 꽂으면 |
+|---|---|---|---|
+| `components/itinerary/trip_scope.py` | 감시 · 안내 대상 좁히기 | 웹 계정(게스트 제외) | `TRUE` — 전부 감시 |
+| `components/settings_hook.py` | 운영자가 화면에서 바꾼 값 | 웹 남용 방어 설정 | `None` — 가드레일 기본값 |
+| `components/progress_hook.py` | 진행 알림 포장(SSE) | 실시간 진행 | `[]` — 실시간 화면만 없다 |
+| `components/team_hooks/legs.py` | 이동 시간 · 노선 · 사고 · 도보 상한 | 이동 팀 | 계산기 `None`(어림값) |
+| `components/team_hooks/dining_ledger.py` | 근처 식당 · 시간대 영업 판정 · 이름 찾기 | 요식 팀 | 판정 `None`(모름) |
+| `components/team_hooks/similarity.py` | 활동 유사도 · 설문 선호 · 거리 우선 | 활동 팀 | 점수 `None`(거리만) |
+| `components/team_hooks/watch_planners.py` | 항목 종류별 감시 판정 | 세 팀 | `None` — 그 종류는 안 한다 |
+
+꽂는 함수는 둘이다 — `wire_optional_features()`(끌 수 있는 기능)와 `wire_domain_teams()`(팀). 컨트롤러를 만들 때와 HTTP 입구를 만들 때 **양쪽에서** 부른다. 시험도 조립된 상태로 돌게 `tests/conftest.py` 가 매번 팀 배선을 부른다.
+
+★**미등록일 때의 답은 새로 만든 기본값이 아니다.** 일곱 모두 그 기능·팀이 조립에 없을 때 부품이 이미 가지고 있던 길이다. 영업 여부를 모르면서 「열었다」로 답하지 않고, 다른 팀 계산으로 대신하지도 않는다.
+
+★함수를 등록할 때 **객체를 쥐지 않고 부를 때 모듈에서 읽는다** — 이동 계산기는 켜짐/꺼짐이 실행 중에 바뀌고(`wiring.configure`), 시험이 팀 함수를 바꿔 끼우기도 한다. `core_hooks/` 는 방향이 반대다(여행이 **플랫폼 코어**에 꽂는 어휘 — 분류 · 대조 선언 · 대상 확인기 · 라우팅 재배분).
 
 ## 관계
 

@@ -101,7 +101,7 @@ flowchart TB
 | Presentation | REST, MCP, A2A, 운영 UI, 인증 경계 | `final_project_cs/app/presentation/` |
 | Application | Case 접수·분류·라우팅·Controller·배치 | `final_project_cs/app/application/` |
 | Core/Domain | 계약, 상태 전이, Registry, 멱등성, 안전 규칙 | `final_project_cs/app/core/`, `app/domain/` |
-| Teams | 여행 도메인 판정과 제안 | `final_project_cs/app/modules/travel_ops/` |
+| Teams | 여행 도메인 판정과 제안 | `final_project_cs/app/domains/travel_ops/` |
 | Infrastructure | PostgreSQL, pgvector, 외부 API, LLM, outbox | `final_project_cs/app/infrastructure/` |
 | Knowledge | 정책 원문, manifest, ingest | `final_project_cs/knowledge/` |
 
@@ -154,11 +154,11 @@ Team은 허용된 read tool만 사용하고, 외부 시스템에 직접 쓰지 �
 | 외부 연동 | `httpx` 0.28.1 기반 여행 데이터 어댑터, 소스별 rate limit |
 | Graph | PostgreSQL Recursive CTE 기반 `SqlGraphAdapter`(별도 Graph DB 없음) |
 | 운영 화면 | FastAPI server-rendered HTML/CSS/vanilla JavaScript, 별도 `final_project_ui` 개발 콘솔 |
-| 평가 | NumPy 2.2.1, SciPy 1.15.1, scikit-learn 1.6.1 |
-| 품질 | pytest 7.4.4, pytest-asyncio 0.25.2, 계약·단위·통합·아키텍처·e2e 테스트 |
+| 평가 | NumPy 1.26.4, SciPy 1.13.1, scikit-learn 1.5.2 |
+| 품질 | pytest 8.4.2, pytest-asyncio 0.25.2, ruff 0.16.8, 계약·단위·통합·아키텍처·e2e 테스트 |
 | 설정/폼 | PyYAML, python-dotenv, python-multipart |
 
-> `requirements.txt`에 선언된 SQLAlchemy·Alembic·LangGraph·LangChain Core는 현재 제품 소스에서 import·사용되지 않으므로 구현 완료 스택으로 표기하지 않습니다. 실제 도입 시 사용 범위와 문서를 함께 갱신합니다.
+> `requirements.txt`에 선언된 SQLAlchemy·Alembic·LangChain Core(LangGraph 줄은 2026-10-03 에 뺐습니다)는 현재 제품 소스에서 import·사용되지 않으므로 구현 완료 스택으로 표기하지 않습니다. 실제 도입 시 사용 범위와 문서를 함께 갱신합니다.
 
 ## 로컬 실행
 
@@ -221,21 +221,45 @@ python -m knowledge.ingest
 
 임베딩 모델을 바꾸면 `config/guardrails.yaml`의 차원과 DB의 `vector(1536)` 스키마, 기존 적재 데이터를 함께 검토해야 합니다.
 
-### 4. API 서버
+### 4. API 서버 (포트 8042)
 
-고객/외부 Agent용 릴리스 빌드는 Composer 쓰기 라우터를 포함하지 않습니다.
+사용자 웹(화면)이 기본으로 붙는 주소가 `http://127.0.0.1:8042` 이므로 개발용 서버도 8042번으로 띄웁니다. 1번에서 들어간 `final_project_cs` 폴더에서 실행합니다.
 
 ```powershell
-python -m uvicorn app.presentation.api.app:app --host 127.0.0.1 --port 8041 --reload
+python -m uvicorn app.presentation.api.app:app --host 127.0.0.1 --port 8042 --reload
 ```
 
 확인:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8041/health
+Invoke-RestMethod http://127.0.0.1:8042/health
 ```
 
-관리용 Composer 빌드가 필요한 경우에만 `app.entrypoint:app`을 사용하며, `acop_composer` 패키지와 별도 인증 시크릿이 필요합니다.
+- 이 빌드(`app.presentation.api.app:app`)는 고객·외부 Agent용이며 Composer 쓰기 라우터를 포함하지 않습니다. 관리용 Composer 빌드가 필요한 경우에만 `app.entrypoint:app` 을 쓰며, `acop_composer` 패키지와 별도 인증 시크릿이 필요합니다.
+- 화면이 서버를 부르려면 서버의 `ACOP_WEB_ALLOWED_ORIGINS` 에 화면 주소가 들어 있어야 합니다. 기본값이 `http://127.0.0.1:3100,http://localhost:3100` 이라 아래 5번대로 띄우면 따로 설정할 것이 없습니다.
+- DB 마이그레이션을 새로 적용했으면 떠 있는 서버를 한 번 껐다 켭니다. 옛 코드로 계속 돌면 등록 등이 500으로 실패합니다.
+
+### 5. 사용자 웹(화면, 포트 3100)
+
+Node.js 22와 npm이 필요합니다. 서버(4번)를 먼저 띄운 뒤 **다른 터미널**에서 `final_project_cs` 폴더 기준으로 실행합니다.
+
+```powershell
+cd frontend/apps/web
+npm ci
+Copy-Item .env.example .env.local
+npm run dev
+```
+
+브라우저에서 **`http://127.0.0.1:3100`** 을 엽니다. ★`localhost:3100` 으로 열면 브라우저가 저장 공간을 따로 잡아, 발급받은 사용자 키가 없는 새 사용자로 보입니다.
+
+`.env.local` 에서 먼저 정할 값은 둘입니다. `[2026-10-03 사용자 지시]` 화면에 시연(데모) 데이터는 없습니다 — 웹은 실제 서버에만 붙습니다.
+
+| 값 | 뜻 |
+|---|---|
+| `NEXT_PUBLIC_DATA_MODE=live` | 실제 서버(4번)에 붙습니다. 계획 읽기·확인·여행·채팅이 서버 데이터로 돕니다. 이 값이 없거나 `live` 가 아니면 화면은 「서버 연결이 설정되지 않았어요」 한 장만 보입니다 |
+| `NEXT_PUBLIC_API_BASE` | 붙을 서버 주소. 기본 `http://127.0.0.1:8042` |
+
+지도(`NEXT_PUBLIC_MAP_PROVIDER` — `osm`(기본)·`naver`·`google`. 예전 `demo` 값은 설정 오류)와 사람 확인(`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, 비우면 꺼짐)은 필요할 때만 채웁니다. 값을 바꾸면 `npm run dev` 를 다시 띄웁니다. 화면 쪽 시험·빌드 명령은 [`final_project_cs/frontend/apps/web/README.md`](final_project_cs/frontend/apps/web/README.md)에 있습니다.
 
 ## API 표면
 

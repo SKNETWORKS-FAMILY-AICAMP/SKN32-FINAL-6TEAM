@@ -1,0 +1,76 @@
+{
+  "observed_at_local": "2026-10-08T10:13:47",
+  "scope": "five listed reports, their local links, four named raw files, eight source files; not a repository-wide audit",
+  "reports": [
+    {
+      "report": "2026-10-08_이동_중단작업_재개와_200쌍_대조.md",
+      "exists": true,
+      "wiki_link": true,
+      "timestamp_name": false,
+      "local_links": 0,
+      "broken_links": [],
+      "direct_evidence_md_links": [],
+      "sha256": "3f4ca19afbe8ae2f11a81553b7c239acd00d96efa85bccef87d52160b7cef219"
+    },
+    {
+      "report": "2026-10-08_0343_택시_예산여유_보정과_시각일치_검증.md",
+      "exists": true,
+      "wiki_link": true,
+      "timestamp_name": true,
+      "local_links": 1,
+      "broken_links": [],
+      "direct_evidence_md_links": [],
+      "sha256": "43b9eff6891d5dcb7d9d984c16fe4b105c471a2937a567620e143d9aaead7c87"
+    },
+    {
+      "report": "2026-10-08_이동_새100쌍_카카오웹_성능조사.md",
+      "exists": true,
+      "wiki_link": true,
+      "timestamp_name": false,
+      "local_links": 12,
+      "broken_links": [],
+      "direct_evidence_md_links": [],
+      "sha256": "2b5095dd3c571a874991825ecccfc3840930126293d1888eec16ce89b3d17d6a"
+    },
+    {
+      "report": "2026-10-08_0924_택시_공식요율과_네이버_구글_대조.md",
+      "exists": true,
+      "wiki_link": true,
+      "timestamp_name": true,
+      "local_links": 4,
+      "broken_links": [],
+      "direct_evidence_md_links": [
+        "../evidence/2026-10-08_0924_택시지도조사_검증.md"
+      ],
+      "sha256": "15be90458c89d3c2ac1008c599dcaa6cecf7c0fa04931fb597a1f95cc6fc6a9c"
+    },
+    {
+      "report": "2026-10-08_이동_네이버_구글_웹_12쌍_대조.md",
+      "exists": true,
+      "wiki_link": true,
+      "timestamp_name": false,
+      "local_links": 12,
+      "broken_links": [],
+      "direct_evidence_md_links": [
+        "../evidence/2026-10-08_이동_네이버_구글_웹_12쌍_대조_검증.md"
+      ],
+      "sha256": "bef35b4ed840e7cca926246811217d49dd3438a18ffddd9787481942f447b9b5"
+    }
+  ],
+  "raw_files_exist": {
+    "compare_resume_200_v5.json": true,
+    "taxi_time_aligned_v1.json": true,
+    "taxi_budget_calibration_v1.json": true,
+    "taxi_time_aligned_v2.json": true
+  },
+  "source_sha256": {
+    "frontend/apps/web/src/features/map/config.ts": "4371bae4b261ec90eff42b1f5ec1eb373332e65995965698777209eb83308c2a",
+    "frontend/apps/web/src/features/map/trip-map.tsx": "5270252fbe49ccab77ea311bd70c724bab8efc5056d205a8b9d9bdcf0838069a",
+    "frontend/apps/web/src/features/map/providers/naver.ts": "ece95ded7b922420dc1e4ac94d608eea69a7b557da429058dd06b3756d7b27c6",
+    "frontend/apps/web/src/features/map/providers/osm.ts": "253f295ad2f7243759fb110719d30ff932b67b0bff46c91e379e453513aa2672",
+    "frontend/apps/web/src/features/map/providers/lines.ts": "a5eb3b318bba9145e4d4c4a029b2359e25c4202d0b0d4069be5970930adab84d",
+    "frontend/apps/web/src/features/map/route-lines.ts": "a2704a8f1df59a2c2fdedb9e9c8ab22aafc5b45bbd3c5ee5da1e8b3e48cf8970",
+    "frontend/apps/web/src/features/map/use-route-detail.ts": "5437e3b2b519173ecd15652d79b06479514dce972f38cf3d6161d0d5417fa69e",
+    "app/domains/travel_ops/instances/mobility/route_shape.py": "2b18477de80ee0cf92c2dea3fdb74706eb27b2a96ad385bd3b30cd82390ce45a"
+  }
+}

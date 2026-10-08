@@ -1,0 +1,14 @@
+.toggle { width: 100%; min-height: 54px; display: flex; align-items: center; gap: 12px; padding: 9px 15px; text-align: left; color: var(--color-primary); }
+.toggle > span { flex: 1; display: grid; gap: 2px; }
+.toggle small { font-size: 9px; letter-spacing: 1.5px; }
+.toggle strong { font-size: 14px; font-weight: 650; color: var(--color-text); }
+.chevron { transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+.open .chevron { transform: rotate(180deg); }
+/* The option list grows downward from the card by animating its row from 0fr to 1fr. */
+.list { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s cubic-bezier(.2, .8, .2, 1); }
+.open .list { grid-template-rows: 1fr; }
+.list > div { min-height: 0; overflow: hidden; display: grid; gap: 6px; padding: 0 12px; }
+.option { min-height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; border: 1px solid var(--color-border); border-radius: 11px; background: var(--color-surface); font-size: 14px; }
+.option:first-child { margin-top: 6px; }
+.option:last-child { margin-bottom: 12px; }
+.option[aria-pressed="true"] { border-color: var(--color-selected); background: color-mix(in srgb, var(--color-selected-soft) 60%, var(--color-surface)); color: var(--color-selected); font-weight: 650; }

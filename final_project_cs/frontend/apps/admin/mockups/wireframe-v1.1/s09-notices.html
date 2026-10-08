@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>운영자 콘솔 · 공지와 점검</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;font-family:'IBM Plex Sans KR',sans-serif;color:#1F1E1B;background:#F4F3EF}
+a{color:#1F4E8C}a:hover{color:#163A6A}
+</style>
+</head>
+<body>
+<div style="box-sizing: border-box; width: 1440px; padding: 8px 16px; background: #1F1E1B; color: #F4F3EF; font-family: 'IBM Plex Sans KR', sans-serif; font-size: 13px">운영자 콘솔 와이어프레임 v1.1 (2026-09-29) · S-09 공지 · 점검 · 정적 사본 — 값은 모두 자리표시, 버튼은 동작하지 않음 · <a href="index.html" style="color: #F4F3EF">화면 목록</a></div>
+<div style="width: 1440px; height: 1180px; display: flex; background: #F4F3EF; font-family: 'IBM Plex Sans KR', sans-serif; color: #1F1E1B">
+<nav aria-label="운영자 콘솔 메뉴" style="width: 248px; flex-shrink: 0; box-sizing: border-box; padding: 24px 16px; background: #ECEAE4; border-right: 1px solid #D9D6CE; display: flex; flex-direction: column; gap: 20px">
+<a href="s02-home.html" style="display: flex; align-items: center; gap: 10px; padding: 0 8px; text-decoration: none; color: #1F1E1B">
+<span style="width: 32px; height: 32px; border-radius: 8px; background: #1F1E1B; color: #F4F3EF; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700">t</span>
+<span style="display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 700">triPilot</span><span style="font-size: 12px; color: #5B5953">운영자 콘솔</span></span>
+</a>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">운영</div>
+
+<a href="s02-home.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">홈</a>
+
+<a href="s08-inquiries.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">문의함</a>
+
+<a href="s03-users.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">사용자</a>
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">사용 · 상태</div>
+
+<a href="s06-usage.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">사용량</a>
+
+<a href="s07-server.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">서버 상태</a>
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">설정</div>
+
+<a href="s05-limits.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">한도 · 감시 조절</a>
+
+<a href="s09-notices.html" aria-current="page" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; background: #1F4E8C; color: #FFFFFF; font-weight: 600">공지 · 점검</a>
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">기록</div>
+
+<a href="s10-audit.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">운영 기록</a>
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">임시</div>
+
+<a href="s11-ops.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">예약 승인 · 위임 · 발송 실패</a>
+
+</div>
+
+</nav>
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column">
+<header style="height: 64px; flex-shrink: 0; box-sizing: border-box; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; background: #FFFFFF; border-bottom: 1px solid #D9D6CE">
+<div style="font-size: 13px; color: #5B5953">설정 › 공지 · 점검</div>
+<div style="display: flex; align-items: center; gap: 16px; font-size: 13px; color: #5B5953">
+<span>배포 [미정]</span>
+<span style="font-weight: 600; color: #1F1E1B">[운영자 ID]</span>
+<a href="s01-login.html">로그아웃</a>
+</div>
+</header>
+<main style="flex-grow: 1; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-size: 28px; font-weight: 700">공지 · 점검</h1>
+<p style="margin: 0; font-size: 14px; color: #5B5953">사용자 웹 위쪽 배너로 보입니다 · 사용자 웹 기본 언어는 English · 기능에 차질이 생기면 여기서 알립니다</p>
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<section aria-labelledby="maint-title" style="box-sizing: border-box; padding: 20px; display: flex; flex-direction: column; gap: 14px; background: #FFFFFF; border: 1px solid #D9D6CE; border-radius: 12px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 id="maint-title" style="margin: 0; font-size: 16px; font-weight: 700">점검 모드</h2>
+<span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #ECEAE4; color: #3F3D38">꺼짐</span>
+</div>
+<fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px">
+<legend style="padding: 0; margin-bottom: 6px; font-size: 13px; font-weight: 600">켜면 사용자 웹은 [범위 논의]</legend>
+<label style="display: flex; align-items: center; gap: 8px"><input type="radio" name="maint-scope" checked> 전체를 막고 점검 안내 화면만 보여 줌</label>
+<label style="display: flex; align-items: center; gap: 8px"><input type="radio" name="maint-scope"> 쓸 수 있게 두고 배너만 띄움</label>
+</fieldset>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="m-ko" style="font-size: 13px; font-weight: 600">안내 문구 · 한국어</label><input id="m-ko" type="text" placeholder="[점검 안내]" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; font-family: inherit; font-size: 14px"></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="m-en" style="font-size: 13px; font-weight: 600">안내 문구 · English</label><input id="m-en" type="text" placeholder="[Maintenance notice]" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; font-family: inherit; font-size: 14px"></div>
+</div>
+<div style="display: flex; align-items: flex-end; gap: 10px">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px"><label for="m-end" style="font-size: 13px; font-weight: 600">예상 종료 (한국 시각)</label><input id="m-end" type="datetime-local" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; font-family: inherit; font-size: 14px"></div>
+<button type="button" aria-pressed="false" style="height: 44px; padding: 0 18px; border: 1px solid #A64B0A; border-radius: 8px; background: #FFFFFF; color: #A64B0A; font-family: inherit; font-size: 14px; font-weight: 600">점검 모드 켜기</button>
+</div>
+</section>
+<section aria-labelledby="list-title" style="background: #FFFFFF; border: 1px solid #D9D6CE; border-radius: 12px; overflow: hidden">
+<div style="height: 56px; box-sizing: border-box; padding: 0 20px; display: flex; align-items: center"><h2 id="list-title" style="margin: 0; font-size: 16px; font-weight: 700">공지 목록</h2></div>
+<div role="table" aria-label="공지 목록" style="display: flex; flex-direction: column">
+<div role="row" style="display: grid; grid-template-columns: minmax(0, 1fr) 80px 150px 110px; column-gap: 10px; align-items: center; min-height: 40px; padding: 0 20px; background: #F4F3EF; font-size: 12px; font-weight: 600; color: #5B5953"><span role="columnheader">제목</span><span role="columnheader">상태</span><span role="columnheader">게시 기간</span><span role="columnheader">작성자</span></div>
+
+<div role="row" style="display: grid; grid-template-columns: minmax(0, 1fr) 80px 150px 110px; column-gap: 10px; align-items: center; min-height: 50px; padding: 0 20px; border-top: 1px solid #ECEAE4; font-size: 14px"><span role="cell">[공지 제목 1]</span><span role="cell"><span style="display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; background: #E6EDF6; color: #1F4E8C">게시 중</span></span><span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B5953">MM-DD ~ MM-DD</span><span role="cell" style="font-size: 13px">[운영자 ID]</span></div>
+
+<div role="row" style="display: grid; grid-template-columns: minmax(0, 1fr) 80px 150px 110px; column-gap: 10px; align-items: center; min-height: 50px; padding: 0 20px; border-top: 1px solid #ECEAE4; font-size: 14px"><span role="cell">[공지 제목 2]</span><span role="cell"><span style="display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; border: 1px dashed #75726B; color: #3F3D38">예약</span></span><span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B5953">MM-DD ~ MM-DD</span><span role="cell" style="font-size: 13px">[운영자 ID]</span></div>
+
+<div role="row" style="display: grid; grid-template-columns: minmax(0, 1fr) 80px 150px 110px; column-gap: 10px; align-items: center; min-height: 50px; padding: 0 20px; border-top: 1px solid #ECEAE4; font-size: 14px"><span role="cell">[공지 제목 3]</span><span role="cell"><span style="display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; background: #ECEAE4; color: #3F3D38">종료</span></span><span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B5953">MM-DD ~ MM-DD</span><span role="cell" style="font-size: 13px">[운영자 ID]</span></div>
+
+<div role="row" style="display: grid; grid-template-columns: minmax(0, 1fr) 80px 150px 110px; column-gap: 10px; align-items: center; min-height: 50px; padding: 0 20px; border-top: 1px solid #ECEAE4; font-size: 14px"><span role="cell">[공지 제목 4]</span><span role="cell"><span style="display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; background: #ECEAE4; color: #3F3D38">종료</span></span><span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B5953">MM-DD ~ MM-DD</span><span role="cell" style="font-size: 13px">[운영자 ID]</span></div>
+
+</div>
+</section>
+</div>
+<div style="display: flex; flex-direction: column; gap: 16px">
+<section aria-labelledby="write-title" style="box-sizing: border-box; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: #FFFFFF; border: 1px solid #D9D6CE; border-radius: 12px">
+<h2 id="write-title" style="margin: 0; font-size: 16px; font-weight: 700">공지 작성</h2>
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="n-kind" style="font-size: 13px; font-weight: 600">종류</label><select id="n-kind" style="height: 44px; box-sizing: border-box; padding: 0 10px; border: 1px solid #BDB9AF; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 14px"><option>안내</option><option>기능 차질 · 장애</option><option>점검 예고</option></select></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="n-title-ko" style="font-size: 13px; font-weight: 600">제목 · 한국어</label><input id="n-title-ko" type="text" placeholder="[제목]" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; font-family: inherit; font-size: 14px"></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="n-title-en" style="font-size: 13px; font-weight: 600">제목 · English</label><input id="n-title-en" type="text" placeholder="[Title]" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; font-family: inherit; font-size: 14px"></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="n-body-ko" style="font-size: 13px; font-weight: 600">내용 · 한국어</label><textarea id="n-body-ko" rows="4" placeholder="[내용]" style="box-sizing: border-box; padding: 10px 12px; border: 1px solid #BDB9AF; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical"></textarea></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="n-body-en" style="font-size: 13px; font-weight: 600">내용 · English</label><textarea id="n-body-en" rows="4" placeholder="[Body]" style="box-sizing: border-box; padding: 10px 12px; border: 1px solid #BDB9AF; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical"></textarea></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="n-start" style="font-size: 13px; font-weight: 600">게시 시작</label><input id="n-start" type="datetime-local" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; font-family: inherit; font-size: 14px"></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="n-end" style="font-size: 13px; font-weight: 600">게시 끝</label><input id="n-end" type="datetime-local" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; font-family: inherit; font-size: 14px"></div>
+</div>
+<div style="display: flex; justify-content: flex-end; gap: 8px">
+<button type="button" style="height: 44px; padding: 0 16px; border: 1px solid #BDB9AF; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600">미리보기</button>
+<button type="button" style="height: 44px; padding: 0 18px; border: 1px solid #1F4E8C; border-radius: 8px; background: #1F4E8C; color: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600">게시</button>
+</div>
+</section>
+<section aria-labelledby="prev-title" style="box-sizing: border-box; padding: 20px; display: flex; gap: 20px; background: #FFFFFF; border: 1px solid #D9D6CE; border-radius: 12px">
+<div style="width: 300px; flex-shrink: 0; box-sizing: border-box; border: 1px solid #BDB9AF; border-radius: 20px; overflow: hidden; background: #F4F3EF">
+<div style="height: 48px; box-sizing: border-box; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; background: #FFFFFF; font-size: 14px; font-weight: 700"><span>triPilot</span><span style="font-size: 18px; color: #5B5953">≡</span></div>
+<div style="box-sizing: border-box; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; background: #1F1E1B; color: #FFFFFF"><span style="font-size: 13px; font-weight: 700">[공지 제목]</span><span style="font-size: 12px; color: #D9D6CE">[한 줄 내용] · 자세히</span></div>
+<div style="height: 150px; margin: 12px; border-radius: 12px; background: repeating-linear-gradient(45deg, #EFEDE7 0 8px, #F7F6F2 8px 16px)"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h2 id="prev-title" style="margin: 0; font-size: 15px; font-weight: 700">사용자 웹 미리보기</h2>
+<span style="font-size: 13px; line-height: 1.55; color: #3F3D38">사용자가 고른 언어로 보입니다. 닫기를 누른 공지를 다시 띄울지는 [논의].</span>
+</div>
+</section>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body>
+</html>

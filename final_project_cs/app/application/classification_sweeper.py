@@ -8,7 +8,7 @@ from psycopg import Connection
 from app.application.classification import Classifier, classify_case
 from app.core.contracts import InvalidTransition, StateConflict
 from app.core.settings import get_guardrails
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 
 logger = logging.getLogger(__name__)
 

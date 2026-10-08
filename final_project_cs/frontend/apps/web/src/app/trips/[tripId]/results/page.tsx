@@ -1,7 +1,8 @@
-import { JourneyShell } from "@/components/layout/journey-shell";
-import { VerificationResults } from "@/features/verification/verification-results";
+import { redirect } from "next/navigation";
+import { routes } from "@/lib/routes";
 
+/** 따로 보는 「검증 결과」 화면은 없다 — `../verification/page.tsx` 와 같은 이유로 그 여행 화면으로 보낸다. */
 export default async function ResultsPage({ params }: { params: Promise<{ tripId: string }> }) {
   const { tripId } = await params;
-  return <JourneyShell view="results" title={["검증 결과", "Your results"]}><VerificationResults tripId={tripId} /></JourneyShell>;
+  redirect(routes.trip(tripId));
 }

@@ -26,16 +26,17 @@ domain: travel
 |---|---|---|
 | [team-contract.md](team-contract/index.md) | `TeamTask` / `TeamResult` 모양 | `app/core/contracts.py` |
 | [team-boundary.md](team-boundary.md) | Team이 하면 안 되는 것 셋 | — |
-| [code-layout.md](code-layout.md) | `[2026-09-28]` 팀 코드·시험을 어디에 두나 — 파일·폴더·파일+엔진 | `app/modules/travel_ops/<팀>/` |
+| [code-layout.md](code-layout.md) | `[2026-09-28]` 팀 코드·시험을 어디에 두나 — 파일·폴더·파일+엔진 | `app/domains/travel_ops/<팀>/` |
+| [folder-change-notice.md](folder-change-notice.md) | `[2026-09-28]` 팀원 안내문 — 폴더 구조가 바뀌었다, 브랜치별로 할 일 | — |
 | [build-order.md](build-order.md) | 어느 순서로 만드나 | — |
-| [common-utils.md](common-utils.md) | 공통 뼈대 — `[2026-09-10]` `travel_ops/_base.py` 가 생겼다(설계 대조 전) | `app/modules/travel_ops/_base.py` |
+| [common-utils.md](common-utils.md) | 공통 뼈대 — `[2026-09-10]` `travel_ops/instances/_shared/_base.py` 가 생겼다(설계 대조 전) | `app/domains/travel_ops/instances/_shared/_base.py` |
 | [team-registry.md](team-registry.md) | capability → Team 해석 | `app/core/registry.py` |
 | [remote-team-a2a.md](remote-team-a2a.md) | A2A Remote Team 실행 | `app/core/remote_team/` |
 | [response-review-design.md](../records/legacy/teams/response-review-design.md) | **GEN→REV 내부 설계와 검증 4항목** | `response_review_policy.py` |
 
 ## 여행 Team
 
-`[정정 2026-09-10]` 이 절은 「명세만 있다 — 코드가 없고 등록도 없다」(09-09)였다. **지금 작업 트리에는 코드가 있고 여섯이 등록돼 있다** — `app/modules/travel_ops/` 파일 10개, `config/project.yaml` 의 `implementation_ref` 6개(Activity · Booking Handoff · Mobility · Dining · Lodging · Flight). ★`[실측 git]` **git 에는 아직 없다** — travel_ops 는 추적되지 않고, git 의 등록 여섯은 커머스다. 아래 표는 각 Team 이 무엇을 판정하나다.
+`[정정 2026-09-10]` 이 절은 「명세만 있다 — 코드가 없고 등록도 없다」(09-09)였다. **지금 작업 트리에는 코드가 있고 여섯이 등록돼 있다** — `app/domains/travel_ops/` 파일 10개, `config/project.yaml` 의 `implementation_ref` 6개(Activity · Booking Handoff · Mobility · Dining · Lodging · Flight). ★`[실측 git]` **git 에는 아직 없다** — travel_ops 는 추적되지 않고, git 의 등록 여섯은 커머스다. 아래 표는 각 Team 이 무엇을 판정하나다.
 
 | Team | MVP | 무엇을 판정하나 | 재계획 |
 |---|---|---|---|
@@ -87,7 +88,7 @@ domain: travel
 
 ★**「삭제됨」의 범위를 정확히 적는다.** `[실측 2026-09-10]` **작업 트리에서는 파일이 없고 git 에는 아직 있다** — 삭제가 커밋되지 않았다(다른 세션의 진행 중 작업). **되돌려지면 이 표가 틀린다.**
 
-★**둘은 삭제가 아니라 이동이다.** `feedback.py`(인라인 분류)와 `verification_policy.py` 는 `app/modules/travel_ops/` 로 옮겨졌다 — 인라인 분류는 남고 **라벨만 교체된다**(v11 §5-A).
+★**둘은 삭제가 아니라 이동이다.** `feedback.py`(인라인 분류)와 `verification_policy.py` 는 `app/domains/travel_ops/` 로 옮겨졌다 — 인라인 분류는 남고 **라벨만 교체된다**(v11 §5-A).
 
 ★**문서를 지우지 않고 옮긴 이유.** 판정의 **이유**가 도메인 무관이라 여행 Team 이 같은 문제를 다시 만난다. 그리고 도메인이 되돌아가면 그 판정을 다시 하게 되는데 **그걸 다시 논의하지 않으려고** 남긴다. → [records/legacy/index.md](../records/legacy/index.md)
 

@@ -4,20 +4,24 @@
 .primary { color: var(--color-on-primary); background: var(--color-primary); }
 .primary:hover:not(:disabled) { background: var(--color-primary-hover); }
 .secondary { color: var(--color-primary); background: var(--color-surface); border-color: var(--color-border); }
-.secondary:hover:not(:disabled) { border-color: var(--color-primary); background: #f8fbf8; }
+.secondary:hover:not(:disabled) { border-color: var(--color-primary); background: var(--color-subtle); }
 .quiet { color: var(--color-muted); background: transparent; }
 .quiet:hover:not(:disabled) { color: var(--color-primary); background: var(--color-soft); }
-.panel { min-width: 0; border: 1px solid var(--color-border); border-radius: 20px; background: #fffffff5; padding: 23px; }
+.danger { color: var(--color-on-primary); background: var(--color-error); }
+.danger:hover:not(:disabled) { filter: brightness(.92); }
+.panel { min-width: 0; border: 1px solid var(--color-border); border-radius: 20px; background: color-mix(in srgb, var(--color-surface) 96%, transparent); padding: 23px; }
 .badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 7px; padding: 4px 8px; font-size: 10px; line-height: 1.6; font-weight: 600; white-space: nowrap; }
 .success { background: var(--color-soft); color: var(--color-primary); }
-.warning { color: var(--color-warning); background: #faf0db; }
+.warning { color: var(--color-warning); background: var(--color-warning-soft); }
 .eyebrow { display: block; color: var(--color-primary); font-size: 10px; font-weight: 700; letter-spacing: 1.25px; margin: 0 0 9px; }
 .heading { margin-bottom: 26px; }
 .heading h1 { font-size: clamp(25px, 3vw, 32px); line-height: 1.4; letter-spacing: -1.25px; overflow-wrap: anywhere; }
+.titleRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.titleRow h1 { min-width: 0; }
 .heading p:not(.eyebrow) { margin: 11px 0 0; max-width: 620px; font-size: 13px; line-height: 1.85; color: var(--color-muted); white-space: pre-line; }
 .steps { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 26px; list-style: none; padding: 0; margin: 0 0 30px; font-size: 11px; color: var(--color-muted); }
 .steps li { display: flex; align-items: center; gap: 8px; }
-.steps li > span { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 50%; background: #e9ede7; font-size: 10px; font-weight: 650; }
+.steps li > span { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 50%; background: var(--color-subtle-strong); font-size: 10px; font-weight: 650; }
 .steps li[aria-current="step"] { color: var(--color-primary); font-weight: 700; }
 .steps li[aria-current="step"] > span { color: var(--color-on-primary); background: var(--color-primary); }
 .queryState { max-width: 740px; padding: 60px 24px; margin: auto; text-align: center; }
@@ -25,7 +29,11 @@
 .queryState p { color: var(--color-muted); margin-top: 14px; overflow-wrap: anywhere; }
 .actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
 @media (max-width: 1000px) { .panel { padding: 19px; } }
+/* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
+@container page (max-width: 1000px) { .panel { padding: 19px; } }
 @media (max-width: 768px) { .steps { gap: 10px 15px; font-size: 10px; margin-bottom: 25px; } .steps li { gap: 6px; } }
+/* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
+@container page (max-width: 768px) { .steps { gap: 10px 15px; font-size: 10px; margin-bottom: 25px; } .steps li { gap: 6px; } }
 @media (max-width: 450px) {
   .heading { margin-bottom: 22px; }
   .heading h1 { font-size: 25px; }
@@ -35,3 +43,14 @@
   .steps li > span { width: 22px; height: 22px; font-size: 9px; }
   .panel { padding: 18px; }
 }
+/* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
+@container page (max-width: 450px) {
+  .heading { margin-bottom: 22px; }
+  .heading h1 { font-size: 25px; }
+  .heading p:not(.eyebrow) { font-size: 12px; }
+  .steps { gap: 8px 12px; font-size: 9px; }
+  .steps li { gap: 5px; }
+  .steps li > span { width: 22px; height: 22px; font-size: 9px; }
+  .panel { padding: 18px; }
+}
+.avatar { display: block; flex: none; border-radius: 50%; }

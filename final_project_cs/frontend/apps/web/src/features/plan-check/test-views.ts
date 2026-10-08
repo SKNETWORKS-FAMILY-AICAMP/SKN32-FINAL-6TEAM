@@ -1,0 +1,56 @@
+import type { CheckRow, PlanCheckView, PlanItem, PlanLine, PlanMove } from "./model";
+
+/**
+ * ★Test data for the plan-check unit tests (`model.test.ts` · `use-reveal.test.ts`) — a plan of four places and two moves, in the shapes the screen
+ * draws. It is not shown anywhere: no screen reads this file, and the app's bundle does not include it.
+ */
+const row = (kind: CheckRow["kind"], result: CheckRow["result"], text: string): CheckRow => ({ kind, result, text });
+
+const stop = (fields: Omit<PlanItem, "locked" | "booked" | "info" | "suggestion">, suggestion: string | null): PlanItem =>
+  ({ ...fields, locked: false, booked: null, info: null, suggestion });
+
+const items: PlanItem[] = [
+  stop({ id: "a", day: 1, date: "2026-10-01", startsAt: "10:00", endsAt: "11:30", title: "경복궁", place: "경복궁", noPlace: false, coordinates: { lat: 37.5796, lng: 126.977 }, verdict: "keep",
+    checks: [row("place", "ok", "관광공사 정보로 찾았어요"), row("hours", "ok", "09:00–18:00 안에 머물러요"), row("closed", "ok", "화요일 휴무 · 방문은 목요일")] }, "창덕궁"),
+  stop({ id: "b", day: 1, date: "2026-10-01", startsAt: "11:00", endsAt: "12:00", title: "올리브영", place: "", noPlace: false, coordinates: null, verdict: "review",
+    checks: [row("place", "bad", "지점이 여러 곳이라 정하지 못했어요"), row("time", "warn", "경복궁 관람과 30분 겹쳐요 · 등록 때 막힐 수 있어요"),
+      row("hours", "unknown", "지점을 고르면 확인해요"), row("closed", "unknown", "지점을 고르면 확인해요")] }, "올리브영 광화문점"),
+  stop({ id: "c", day: 1, date: "2026-10-01", startsAt: "12:30", endsAt: "13:30", title: "광장시장", place: "광장시장", noPlace: false, coordinates: { lat: 37.57, lng: 126.9996 }, verdict: "adjusted",
+    checks: [row("place", "ok", "가게 이름이 없어 광장시장으로 잡았어요"), row("time", "filled", "끝 시각이 없어 식사 1시간으로 채웠어요"),
+      row("hours", "ok", "09:00–23:00 안에 머물러요"), row("closed", "unknown", "점포마다 달라요")] }, "통인시장"),
+  stop({ id: "d", day: 2, date: "2026-10-02", startsAt: "15:00", endsAt: "16:30", title: "N서울타워", place: "N서울타워", noPlace: false, coordinates: { lat: 37.5512, lng: 126.9882 }, verdict: "keep",
+    checks: [row("place", "ok", "「남산타워」를 N서울타워로 찾았어요"), row("hours", "ok", "10:00–23:00 안에 머물러요"), row("closed", "ok", "연중무휴")] }, "낙산공원"),
+];
+
+const moves: PlanMove[] = [
+  { id: "a-b", fromId: "a", toId: "b", day: 1, departAt: "11:30", mode: "도보", summary: "12분 · 0.8km", minutes: 12, arriveAt: "11:42", slackMin: -42, estimated: false, verdict: "review",
+    checks: [row("route", "warn", "올리브영 지점이 미정이라 가장 가까운 광화문점 기준이에요"), row("mode", "ok", "도보 12분 · 0.8km · 이 구간은 걷는 게 가장 빨라요"),
+      row("arrival", "warn", "관람이 11:30에 끝나면 11:42 도착 · 일정보다 42분 늦어요")] },
+  { id: "b-c", fromId: "b", toId: "c", day: 1, departAt: "12:00", mode: "지하철", summary: "18분 · 1호선 2정거장", minutes: 18, arriveAt: "12:18", slackMin: 12, estimated: false, verdict: "keep",
+    checks: [row("route", "ok", "종각역 → 종로5가역 · 1호선 2정거장"), row("mode", "ok", "지하철 18분(걷기 7분 포함) · 택시보다 시간이 일정해요"),
+      row("arrival", "ok", "12:00에 나서면 12:18 도착 · 12분 여유")] },
+];
+
+const lines: PlanLine[] = [
+  { no: 1, text: "10월 1일 서울 여행", read: true, found: { kind: "date", date: "2026-10-01" } },
+  { no: 2, text: "10시 경복궁 관람 1시간 반", read: true, found: { kind: "item", day: 1, startsAt: "10:00", title: "경복궁" } },
+  { no: 3, text: "11시 올리브영", read: true, found: { kind: "item", day: 1, startsAt: "11:00", title: "올리브영" } },
+  { no: 4, text: "12시 반 광장시장 빈대떡", read: true, found: { kind: "item", day: 1, startsAt: "12:30", title: "광장시장" } },
+  { no: 5, text: "둘째 날 3시 남산타워", read: true, found: { kind: "item", day: 2, startsAt: "15:00", title: "남산타워" } },
+];
+
+const days = [{ day: 1, date: "2026-10-01" }, { day: 2, date: "2026-10-02" }];
+
+/** The final state: every check in, the trip titled. */
+export const exampleDone: PlanCheckView = { stage: "done", title: "10월 서울 여행", days, lines, items, moves, dirty: false, rechecking: null };
+
+/**
+ * What a server might send, in four coarse snapshots — received, every line read, every check in, done. The screen
+ * draws the changes between them one at a time (`nextStep`), as it would with a stream burst or a re-read.
+ */
+export const exampleSnapshots: { at: number; view: PlanCheckView }[] = [
+  { at: 0, view: { ...exampleDone, stage: "received", title: null, days: [], lines: lines.map((line) => ({ ...line, read: false, found: null })), items: [], moves: [] } },
+  { at: 400, view: { ...exampleDone, stage: "reading", title: null, items: [], moves: [] } },
+  { at: 1200, view: { ...exampleDone, stage: "checking", title: null } },
+  { at: 1500, view: exampleDone },
+];

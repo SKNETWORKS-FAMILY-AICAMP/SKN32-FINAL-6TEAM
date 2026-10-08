@@ -1,5 +1,8 @@
 node_modules/
 .next/
+.next-live/
+.next-live/
+.next-lan/
 out/
 coverage/
 playwright-report/
@@ -9,3 +12,4 @@ test-results/
 !.env.example
 next-env.d.ts
 dev-*.log
+dev.log

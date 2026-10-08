@@ -26,8 +26,8 @@ from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.itinerary_checks import Part, check_itinerary
-from app.modules.travel_ops.trip_api import build_trip_router
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
+from app.domains.travel_ops.entry.trip_api import build_trip_router
 from app.presentation import security
 from app.presentation.api.app import create_app
 
@@ -96,6 +96,25 @@ class StubChat:
     KEYS: dict[str, set[str]] = {"activity": set(), "dining": set()}
 
 
+@pytest.fixture(autouse=True)
+def _plan_without_the_dining_ledger(monkeypatch):
+    """★`[2026-10-06]` 이 파일은 **자기가 심은 장소만** 써야 한다 — 요식 원장을 끈다.
+
+    요식 원장(`dining.dn_place`)은 테넌트와 무관한 **공용 표**다. 그래서 「자기 테넌트에 자기
+    장소를 심는다」는 이 파일의 격리가 원장에는 통하지 않았다 — 원장 자료를 넣은 컴퓨터에서는
+    후보가 12곳이 아니라 1,778곳이 되어 하루 항목 수 · 고른 식당 · 후보 수를 보는 시험 10건이
+    **그 컴퓨터에서만** 붉었다(2026-10-06 실측: 이 PC 의 개발 DB 에 가게 1,766곳). CI 처럼 원장이
+    빈 DB 에서는 통과해서, **컴퓨터마다 결과가 다른 시험**이었다.
+
+    이 파일이 보는 여섯 가지(판정기 통과 · 선호 반영 · 후보 부족 거절 · 모델 없이도 동작 ·
+    중복 등록 · 목록 밖 값 버리기)는 원장과 무관하다. 원장을 쓰는 길은 다른 시험이 본다
+    (`tests/unit/travel/test_dining_*`). 켠 채로 보고 싶으면 이 fixture 를 빼고 돌린다.
+    """
+    from app.domains.travel_ops.entry import trip_api
+
+    monkeypatch.setattr(trip_api, "_planner_ledger", lambda conn: None)
+
+
 @pytest.fixture()
 def api(monkeypatch):
     original = settings_module.get_settings()
@@ -103,6 +122,8 @@ def api(monkeypatch):
     test_settings = original.model_copy(update={"tenant_id": tenant})
     monkeypatch.setattr(settings_module, "get_settings", lambda: test_settings)
     monkeypatch.setattr(security, "get_settings", lambda: test_settings)
+    # ★웹 키 발급 한도(주소당 시간당 20)는 DB(`web_usage`, 031)에서 **테넌트별로** 센다 — 시험마다 새 테넌트라 쌓이지 않는다.
+    #   (전에는 프로세스 전역이라 시험마다 비워야 했다 — 2026-09-28 실측)
     customer = uuid4()
     keys = {"activity": set(), "dining": set()}
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
@@ -148,6 +169,7 @@ def api(monkeypatch):
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         for sql in ("DELETE FROM trip_intakes WHERE tenant_id=%s",          # 웹 계획 읽기(028) — 원본·값은 따라 지워진다
                     "DELETE FROM web_user_keys WHERE tenant_id=%s",          # 웹 사용자 키(025)
+                    "DELETE FROM web_usage WHERE tenant_id=%s",              # 웹 남용 방어 사용량(031)
                     "DELETE FROM place_catalog WHERE tenant_id=%s",
                     "DELETE FROM itinerary_items WHERE tenant_id=%s",
                     "DELETE FROM itinerary_versions WHERE tenant_id=%s",
@@ -427,9 +449,12 @@ def _cache_one_row(api):
             "'캐시된 미술관','서울특별시 종로구 캐시길 1',37.5759,126.9787)", (api["tenant"],))
 
 
-def test_while_the_catalog_is_switched_off_it_is_not_read_and_places_come_live(api):
-    """★`[2026-09-27]` 관광공사 장소 목록은 **기본 꺼짐**(콘텐츠랩 「로컬서버 저장방식 금지」 해석 대기).
-    표에 행이 남아 있어도 읽지 않고, 후보는 실시간으로 받아 그 요청 안에서만 쓴다."""
+def test_while_the_catalog_is_switched_off_it_is_not_read_and_places_come_live(api, monkeypatch):
+    """스위치를 끄면(`ACOP_TOUR_CATALOG_ENABLED=false`) 표에 행이 남아 있어도 읽지 않고, 후보는 실시간으로 받는다.
+    ★`[2026-09-28]` 기본은 켜짐으로 되돌렸다 — 끄는 길이 여전히 도는지만 본다."""
+    from app.domains.travel_ops.ports.data_sources.catalog_sync import PlaceCatalogSync
+
+    monkeypatch.setattr(PlaceCatalogSync, "enabled", staticmethod(lambda: False))
     _cache_one_row(api)
     tour = StubTour()
     body = api["ask"](request_id="p-off", tour=tour).json()
@@ -438,15 +463,16 @@ def test_while_the_catalog_is_switched_off_it_is_not_read_and_places_come_live(a
 
 
 def test_tour_api_is_called_only_when_the_catalog_is_empty(api, monkeypatch):
-    """★(목록이 켜져 있을 때) 바깥 소스는 **캐시가 비었을 때만** 나간다. 부른 횟수를 결과가 센다."""
-    from app.infrastructure.travel.catalog_sync import PlaceCatalogSync
+    """★(기본 — 목록이 켜져 있을 때) 바깥 소스는 **캐시가 비었을 때만** 나간다. 부른 횟수를 결과가 센다."""
+    from app.domains.travel_ops.ports.data_sources.catalog_sync import PlaceCatalogSync
 
-    monkeypatch.setattr(PlaceCatalogSync, "enabled", staticmethod(lambda: True))
+    assert PlaceCatalogSync.enabled() is True       # ★기본값이 켜짐이다(2026-09-28)
     tour = StubTour()
     body = api["ask"](request_id="p-tour", tour=tour).json()
     assert tour.calls == 1 and body["calls"]["tour_api"] == 1
     assert body["candidates"]["by_source"].get("tour_api", 0) >= 0     # 순위에 따라 뽑힐 수도 아닐 수도
-    assert body["candidates"]["pool"] == len(ACTIVITIES) + len(DINING) + 2
+    # ★`[2026-10-02]` 받아온 둘 중 **미술관만** 후보다 — 식당은 관광공사에서 받지 않는다(사용자 결정, 요식 원장에서 고른다)
+    assert body["candidates"]["pool"] == len(ACTIVITIES) + len(DINING) + 1
 
     # ★카탈로그에 한 행이라도 있으면 바깥에 나가지 않는다.
     _cache_one_row(api)
@@ -522,7 +548,7 @@ def _assert_leave_rule(draft: dict) -> None:
     """★출발 = 다음 일정 시작 − 이동 시간 − 여유. 이동 알림은 이 출발 시각에 간다."""
     from datetime import datetime, timedelta
 
-    from app.modules.travel_ops.planner import MOVE_BUFFER_MIN
+    from app.domains.travel_ops.components.planning.planner import MOVE_BUFFER_MIN
 
     items = draft["items"]
     moves = [item for item in items if item["kind"] == "mobility"]
@@ -536,7 +562,9 @@ def _assert_leave_rule(draft: dict) -> None:
         assert arrive - leave == timedelta(minutes=eta)                       # 이동 항목 길이 = 이동 시간
         assert datetime.fromisoformat(after["starts_at"]) - arrive == timedelta(minutes=MOVE_BUFFER_MIN)
         assert leave >= datetime.fromisoformat(before["ends_at"])              # 앞 일정이 끝난 뒤에 나선다
-        assert item["detail"]["planner"]["leave_rule"] == "다음 일정 시작 − 이동 시간 − 여유"
+        # 이동 계산기가 켜져 있으면 여유를 계산기 정책 버퍼로 두고 그렇게 적는다(planner.add_moves) — 같은 규칙, 문구만 다르다
+        assert item["detail"]["planner"]["leave_rule"] in ("다음 일정 시작 − 이동 시간 − 여유",
+                                                           "다음 일정 시작 − 이동 시간 − 여유(계산기 정책 버퍼)")
 
 
 def test_every_move_leaves_at_next_start_minus_travel_minus_buffer(api):
@@ -553,8 +581,8 @@ def test_the_registered_plan_announces_the_move_when_it_starts(api):
     """등록까지 가면 이동 알림이 **출발 시각 그 자체**에 잡힌다 — 「N분 전」이 없다."""
     from datetime import datetime, timedelta
 
-    from app.modules.travel_ops.itinerary import Item
-    from app.modules.travel_ops.trip_reminders import ReminderRules, plan_reminders
+    from app.domains.travel_ops.components.itinerary.itinerary import Item
+    from app.domains.travel_ops.components.watch.trip_reminders import ReminderRules, plan_reminders
 
     body = api["ask"](request_id="p-moves-reg", register=True).json()
     assert body["status"] == "registered"
@@ -571,7 +599,7 @@ def test_the_registered_plan_announces_the_move_when_it_starts(api):
 
 # ── ⑧ 설문 16번 여유 → 밀도 목표 → 하루 활동 수 (2026-09-24, D-020) ─────────────
 def _survey(pace: str) -> dict:
-    from app.modules.travel_ops.survey import SURVEY_VERSION
+    from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
 
     return {"survey": {"version": SURVEY_VERSION, "pace": pace}}
 
@@ -621,6 +649,72 @@ def test_a_packed_plan_registers_and_the_trip_measures_the_same_density(api):
     assert registered == planned
 
 
+# ── ⑨ 하루는 08:00 아침 식사로 연다 (2026-09-28, D-020 「하루 시작 08:00」) ─────────────
+def _add_breakfast_places(api, rows) -> None:
+    import json
+
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        for name, lat, lon, attributes in rows:
+            cur.execute("INSERT INTO places (tenant_id,name,kind,latitude,longitude,attributes) "
+                        "VALUES (%s,%s,'dining',%s,%s,%s)",
+                        (api["tenant"], name, lat, lon, json.dumps(attributes, ensure_ascii=False)))
+
+
+def _clock(item: dict) -> str:
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    return datetime.fromisoformat(item["starts_at"]).astimezone(ZoneInfo("Asia/Seoul")).strftime("%H:%M")
+
+
+def test_each_day_opens_with_breakfast_at_eight_and_the_first_activity_after_it(api):
+    """★전에는 08~09시를 식사 자리로 비워 두고 아침을 짜는 코드가 없었다(화면에서 찾음). 이제 날마다
+    08:00 에 아침(60분)을 두고 첫 활동은 그 뒤 — 아침 식당은 **08:00 에 연다고 알려진 곳**이다."""
+    _add_breakfast_places(api, [
+        ("새벽 죽집", 37.5757, 126.9790, {"district": "종로구", "indoor": True,
+                                          "hours": ["07:00", "15:00"], "price_krw": 8000}),
+        ("아침 토스트", 37.5753, 126.9781, {"district": "종로구", "indoor": True,
+                                            "hours": ["07:30", "14:00"], "price_krw": 5000}),
+    ])
+    body = api["ask"](request_id="p-breakfast").json()
+    assert body["status"] == "drafted" and body["checks"]["violations"] == [], body
+    draft = body["draft"]
+    assert check_itinerary(_parts(draft), constraints=draft["constraints"],
+                           party_size=draft["party_size"]) == []
+    for day in (START.isoformat(), START.replace(day=START.day + 1).isoformat()):
+        stops = [i for i in _stops(draft) if i["detail"]["planner"]["day"] == day]
+        first = stops[0]
+        assert first["kind"] == "dining" and first["detail"]["planner"]["meal"] == "breakfast", stops
+        assert _clock(first) == "08:00" and first["detail"]["planner"]["hours_known"] is True
+        assert first["title"] in ("새벽 죽집", "아침 토스트")
+        # 첫 활동은 아침이 끝난 뒤 — 09:00 이후(아침 60분 + 이동)
+        assert _clock(stops[1]) >= "09:00" and stops[1]["kind"] == "activity", stops
+        # 아침 뒤 첫 식사는 점심 칸(점심 하한) — 아침을 점심으로 세지 않는다
+        lunch = [i for i in stops[1:] if i["kind"] == "dining"][0]
+        assert _clock(lunch) >= "11:00", lunch
+    assert len({i["title"] for i in _stops(draft) if i["detail"]["planner"].get("meal") == "breakfast"}) == 2
+    assert [d["hours_known"] for d in body["planner"]["breakfast"]["days"]] == [True, True]
+
+
+def test_a_place_known_to_open_after_eight_is_never_breakfast_and_a_short_day_says_so(api):
+    """★시험 식당은 전부 11:00 에 연다 — 그런 곳을 아침에 넣지 않는다. 넣을 곳이 없으면 아침을 빼고 **적는다**."""
+    body = api["ask"](request_id="p-nobreakfast").json()
+    assert body["status"] == "drafted", body
+    assert not [i for i in _stops(body["draft"]) if i["detail"]["planner"].get("meal") == "breakfast"]
+    days = body["planner"]["breakfast"]["days"]
+    assert len(days) == 2 and all(d["place"] is None and "모자라" in d["note"] for d in days), days
+
+
+def test_breakfast_can_be_switched_off(api):
+    _add_breakfast_places(api, [("새벽 죽집", 37.5757, 126.9790, {"district": "종로구", "indoor": True,
+                                                                  "hours": ["07:00", "15:00"]})])
+    response = api["ask"](request_id="p-breakfast-off", constraints={"breakfast": False})
+    body = response.json()
+    assert body["status"] == "drafted", body
+    assert body["planner"]["breakfast"] == {"wanted": False, "days": []}
+    assert _clock(_stops(body["draft"])[0]) == "09:00"
+
+
 # ── 계획 읽기에서 「일정 짜 줘」 → 일정 생성기 → 등록 (2026-09-28) ───────────
 def test_a_plan_request_read_from_the_customer_text_is_planned_and_registered_once(api):
     """★모델이 없어도 「일정 짜 줘」를 규칙으로 잡는다. 조건(첫날·일수·인원)을 확인해 누르면 일정 생성기가 짠 초안이
@@ -647,3 +741,195 @@ def test_a_plan_request_read_from_the_customer_text_is_planned_and_registered_on
     # 상품 범위 밖(8일)은 받지 않는다
     wide = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json={**body, "days": 8})
     assert wide.status_code == 422
+
+
+def test_an_empty_intake_is_planned_from_the_review_screen_and_registered(api):
+    """`[2026-09-30 사용자 결정 — ui 세션 전달]` 입력칸을 비운 채 접수 → 곧바로 확인 화면 상태 → 그 화면의 짜기 칸(`/plan`)으로 짜서
+    등록. 「짜 달라는 요청」 표시는 없다(고객이 짜기 칸에서 직접 고른다) — 그래도 짜서 등록할 수 있다."""
+    client = api["client"]
+    key = {"X-User-Key": client.post("/v1/web/session").json()["user_key"]}
+    accepted = client.post("/v1/web/trip-intakes", headers=key, data={"text": ""})
+    assert accepted.status_code == 202, accepted.text
+    assert accepted.json()["status"] == "review"
+    intake_id = accepted.json()["intake_id"]
+    view = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
+    assert view["check"]["plan"]["requested"] is False and view["check"]["items"] == 0
+    body = {"revision": view["revision"], "start_date": START.isoformat(), "days": 2, "party_size": 2}
+    done = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json=body)
+    assert done.status_code == 200, done.text
+    trip = done.json()["trip"]
+    assert trip["created"] is True and {i["starts_at"][:10] for i in trip["items"]} == {"2026-10-05", "2026-10-06"}
+    after = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
+    assert after["status"] == "confirmed" and after["trip_id"] == trip["trip_id"]
+
+
+def test_read_items_are_kept_and_the_planner_fills_only_the_rest(api):
+    """★`[2026-09-28]` 「읽은 일정은 그대로 두고 나머지만 짜 줘」 — 고정 일정은 옮기지도 바꾸지도 않는다(`plan_around`).
+    짠 항목은 고정 일정 앞뒤 30분에 걸리지 않고, 같은 장소를 두 번 넣지 않는다. 등록은 같은 판정기를 지난다."""
+    from datetime import datetime
+
+    client = api["client"]
+    key = {"X-User-Key": client.post("/v1/web/session").json()["user_key"]}
+    text = chr(10).join(["서울 2일 일정 짜 줘", "1일차 2026-10-05", "13:00 하늘 박물관"])
+    intake_id = client.post("/v1/web/trip-intakes", headers=key, data={"text": text}).json()["intake_id"]
+    view = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
+    assert view["check"]["plan"]["requested"] is True and view["check"]["items"] == 1
+    base = {"revision": view["revision"], "start_date": START.isoformat(), "days": 2, "party_size": 2}
+    # 날짜 밖이면(읽은 일정이 10-05 인데 10-06 부터 짜 달라면) 조용히 버리지 않고 거절한다
+    outside = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key,
+                          json={**base, "start_date": "2026-10-06", "days": 1})
+    assert outside.status_code == 422 and outside.json()["error"]["code"] == "read_items_outside_days"
+    done = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json=base)
+    assert done.status_code == 200, done.text
+    body = done.json()
+    assert body["planner"]["kept_read_items"] is True
+    stops = [i for i in body["trip"]["items"] if i["kind"] != "mobility"]
+    fixed = [i for i in stops if i["title"] == "하늘 박물관"]
+    assert len(fixed) == 1 and fixed[0]["starts_at"][11:16] == "13:00"          # ★그대로, 한 번만
+    pinned_start = datetime.fromisoformat(fixed[0]["starts_at"])
+    pinned_end = datetime.fromisoformat(fixed[0]["ends_at"])
+    for other in stops:
+        if other is fixed[0] or other["starts_at"][:10] != "2026-10-05":
+            continue
+        start, end = datetime.fromisoformat(other["starts_at"]), datetime.fromisoformat(other["ends_at"] or other["starts_at"])
+        assert end <= pinned_start or start >= pinned_end, other                # 겹치지 않는다
+    assert {i["starts_at"][:10] for i in stops} == {"2026-10-05", "2026-10-06"}
+
+
+def test_a_place_the_customer_fixed_keeps_its_other_name_out_of_the_generated_part(api):
+    """☆`[2026-10-01 사용자 지적]` 고객이 쓴 「경복궁 건청궁」을 고정하고 짰더니 생성기가 「경복궁」을 따로 넣어 같은 곳이 두 이름으로 두 번 나왔다.
+    고정한 장소를 이름이 정확히 같은 것만 뺐기 때문이다. 이름이 달라도 **같은 곳**(같은 좌표 · 이름 첫 낱말)이면 후보에서 뺀다."""
+    from datetime import date
+
+    from app.domains.travel_ops.components.planning import planner
+    from app.infrastructure.db.session import get_connection
+
+    def activities(**extra):
+        ask = planner.PlanRequest(city="서울", start_date=date(2026, 10, 5), days=2, party_size=2, locale="ko")
+        with get_connection() as conn:
+            out = planner.plan_trip(conn=conn, tenant_id=api["tenant"], request=ask, chat=None, tour_api=None, **extra)
+        body = out.draft.as_create_body(request_id="same-site", customer_id=api["customer"])
+        places = {p["key"]: p["name"] for p in body["places"]}
+        return {places[i["place"]] for i in body["items"] if i["kind"] == "activity" and i.get("place")}
+
+    # 고객이 쓴 장소는 「고궁 뜰 별채」 — 시험용 「고궁 뜰」과 같은 자리(좌표 같음 · 이름 첫 낱말 같음), 이름은 다르다
+    fixed = {"name": "고궁 뜰 별채", "latitude": 37.5758, "longitude": 126.9768, "attributes": {}}
+    before = activities(exclude_names=["고궁 뜰 별채"])
+    assert "고궁 뜰" in before, before                         # 이름만 빼면 같은 곳이 그대로 들어온다(옛 동작 — 이 시험이 잡으려는 것)
+    after = activities(exclude_names=["고궁 뜰 별채"], exclude_sites=[fixed])
+    assert "고궁 뜰" not in after and len(after) >= 4, after
+    # 식당은 보지 않는다 — 같은 건물에 다른 가게가 흔하다
+    dining_site = {"name": "한식당", "latitude": 37.5760, "longitude": 126.9770, "attributes": {}}
+    assert activities(exclude_sites=[{**dining_site}]) != set() and len(activities()) >= 4
+
+
+def test_a_fresh_plan_ignores_the_read_items_when_asked(api):
+    client = api["client"]
+    key = {"X-User-Key": client.post("/v1/web/session").json()["user_key"]}
+    text = chr(10).join(["서울 1일 일정 짜 줘", "1일차 2026-10-05", "13:00 하늘 박물관"])
+    intake_id = client.post("/v1/web/trip-intakes", headers=key, data={"text": text}).json()["intake_id"]
+    view = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
+    done = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key,
+                       json={"revision": view["revision"], "start_date": START.isoformat(), "days": 1,
+                             "party_size": 2, "keep_read_items": False}).json()
+    assert done["planner"]["kept_read_items"] is False and done["planner"]["merge"] == []
+
+
+def _stored_constraints(api, trip_id: str) -> dict:
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT constraints FROM trips WHERE tenant_id=%s AND trip_id=%s", (api["tenant"], trip_id))
+        return cur.fetchone()[0]
+
+
+def test_the_survey_sent_with_plan_me_a_trip_decides_the_pace_and_stays_on_the_trip(api):
+    """★`[2026-09-28]` ui 세션 인계 — 웹의 등록 흐름(계획 읽기)에 설문을 실을 곳이 없었다. `/plan` 의 `survey` 는
+    일정 생성기가 먼저 적용하고(16번 여유 → 밀도 목표) 여행에 그대로 남는다(15번은 감시가 읽는다)."""
+    from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
+
+    client = api["client"]
+    key = {"X-User-Key": client.post("/v1/web/session").json()["user_key"]}
+    intake_id = client.post("/v1/web/trip-intakes", headers=key,
+                            data={"text": "서울 2일 일정 짜 줘"}).json()["intake_id"]
+    view = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
+    base = {"revision": view["revision"], "start_date": START.isoformat(), "days": 2, "party_size": 2}
+    bad = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key,
+                      json={**base, "survey": {"version": SURVEY_VERSION, "pace": "turbo"}})
+    assert bad.status_code == 422 and bad.json()["error"]["code"] == "invalid_survey", bad.text
+    survey = {"version": SURVEY_VERSION, "pace": "packed", "on_disruption": "ask_first", "party": "friends"}
+    done = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json={**base, "survey": survey})
+    assert done.status_code == 200, done.text
+    stored = _stored_constraints(api, done.json()["trip"]["trip_id"])
+    assert stored["survey"]["pace"] == "packed" and stored["survey"]["on_disruption"] == "ask_first"
+    assert stored["survey"]["party"] == "friends"
+    assert stored["density"]["level"] == "high"                  # 16번 → 밀도 목표
+
+
+
+# ── 영업시간 — 관광공사 원문을 읽어 쉬는 날에 넣지 않는다 (2026-09-28, 사용자 결정 「원문을 구조화한다」) ──────
+class HoursTour(StubTour):
+    """운영시간 원문도 주는 흉내. ★「가든 공원」은 월요일에 쉰다 — 시작일(10-05)이 월요일이다."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.asked: list[str] = []
+
+    def operating(self, content_id: str, content_type_id: str):
+        self.asked.append(content_id)
+        if content_id == "800001":
+            return {"usetime_text": "09:00~18:00", "restdate_text": "매주 월요일"}
+        return None
+
+
+def test_a_place_that_rests_on_the_day_is_read_from_its_text_and_swapped_out(api):
+    """☆실제 일정에서 「13:00~17:00 · 일~목 휴무」인 곳이 월요일 09:00 에 들어갔다 — 영업시간을 몰라 판정이 안 봤다.
+    이제 고른 장소의 운영시간 원문을 읽어 요일별로 채우고, 쉬는 날이면 판정(`closed_day`)이 그 장소를 바꾼다."""
+    from app.domains.travel_ops.components.planning import planner as planner_module
+
+    planner_module._HOURS_CACHE.clear()
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        # 활동은 전부 영업시간을 모르게 한다(실제 데이터처럼) — 그러면 이름순으로 「가든 공원」이 첫날 먼저 뽑힌다
+        cur.execute("UPDATE places SET attributes = attributes - 'hours' WHERE tenant_id=%s AND kind='activity'",
+                    (api["tenant"],))
+        cur.execute("UPDATE places SET attributes = attributes || "
+                    "'{\"source_content_id\": \"800001\", \"source_content_type_id\": \"12\"}'::jsonb "
+                    "WHERE tenant_id=%s AND name='가든 공원'", (api["tenant"],))
+    tour = HoursTour()
+    body = api["ask"](tour=tour, request_id="p-rest-day").json()
+    assert body["status"] == "drafted" and body["checks"]["violations"] == [], body
+    draft = body["draft"]
+    monday = [i["title"] for i in _stops(draft) if i["detail"]["planner"]["day"] == START.isoformat()]
+    assert "가든 공원" not in monday, monday
+    assert "800001" in tour.asked
+    hours = body["planner"]["hours"]
+    assert hours["read"] >= 1 and hours["by_rule"] >= 1, hours
+    assert any(r.startswith("closed_day") for r in body["checks"]["repairs"]), body["checks"]
+    # 등록 판정기도 같은 칸을 본다 — 초안을 그대로 등록해도 통과한다
+    assert check_itinerary(_parts(draft), constraints=draft["constraints"], party_size=draft["party_size"]) == []
+
+
+class BusyTour(StubTour):
+    """관광공사가 속도 한도에 걸린 흉내 — 실제 소스처럼 `misses["rate_limited"]` 를 세고 기다릴 초를 남긴다."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        from collections import Counter
+
+        self.misses = Counter()
+        self.last_wait_seconds = 57.3
+
+    def area_page(self, area_code: str, *, page: int, rows: int):
+        self.calls += 1
+        self.misses["rate_limited"] += 1
+        return None
+
+
+def test_a_refusal_caused_by_the_tourism_rate_limit_says_try_again_in_seconds(api):
+    """★`[2026-09-28]` 관광공사가 한도에 걸려 후보를 못 받아 「후보 부족」 422 가 났고, 1분 뒤 다시 누르니 됐다(ui 세션 실측).
+    조건 문제가 아니라 **잠시 뒤 다시**다 — 503 + `Retry-After`, 원래 거절은 `underlying` 에."""
+    response = api["ask"](tour=BusyTour(), request_id="p-busy", days=4)
+    assert response.status_code == 503, response.text
+    assert response.headers["Retry-After"] == "58"
+    error = response.json()["error"]
+    assert error["code"] == "source_busy" and error["retry_after_seconds"] == 58
+    assert error["underlying"]["code"] == "not_enough_candidates"
+    # 한도에 안 걸렸으면 그대로 422 다(위 `test_too_few_candidates_are_refused_with_numbers_not_shrunk`)

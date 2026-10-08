@@ -1,280 +1,248 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, CalendarDays, MapPin, Trash2 } from "lucide-react";
-import { Badge, Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
-import type { Translate } from "@/lib/i18n";
-import { LiveError } from "@/lib/live/client";
-import { confirmIntake, editIntake, getIntake, planIntake, type IntakeEdit, type IntakeItem, type IntakePlanBasis, type IntakePlanInput, type IntakeProblem, type IntakeSource, type IntakeView } from "@/lib/live/intake";
+import { JourneyShell } from "@/components/layout/journey-shell";
+import { ButtonLink, Eyebrow, Panel, QueryState } from "@/components/ui";
+import { useOnboarding } from "@/features/onboarding/onboarding-state";
+import { toSurvey } from "@/features/onboarding/payload";
+import { useCriteria, withCriteria } from "@/features/guardian/criteria-store";
+import { questionsOf } from "@/features/survey-questions/model";
+import { IdleWarning, ReadingFooter } from "@/features/survey-questions/reading-footer";
+import { ReadingQuestions } from "@/features/survey-questions/reading-questions";
+import { useQuestionFlow } from "@/features/survey-questions/use-question-flow";
+import { assumedYear, candidatesOf, readingOf, resultOf, tripIssuesOf } from "@/features/plan-check/from-intake";
+import { reviewResultOf, streamingViewOf } from "@/features/plan-check/from-review";
+import { useServerReview } from "@/features/plan-check/use-server-review";
+import type { ItemDraft } from "@/features/plan-check/model";
+import { PlanCheck } from "@/features/plan-check/plan-check";
+import { tripsKey } from "@/lib/gateway";
+import { LiveError, loginRequired } from "@/lib/live/client";
+import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/lib/live/intake-events";
+import { confirmIntake, editIntake, getIntake, type IntakeEdit } from "@/lib/live/intake";
+import type { ReviewedIntakeView } from "@/lib/live/intake-review";
+import { getIntakeRouteShapes } from "@/lib/live/route-shapes";
+import { useRouteDetail } from "@/features/map/use-route-detail";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
+import { draftOf, editsFor, rows } from "./model";
+import { WaitNotice } from "@/components/wait-notice";
+import { useQuiet } from "@/lib/use-quiet";
+import { useIntakeEvents } from "./use-intake-events";
 import styles from "./intake-review.module.css";
 
-/** 한국관광공사 이용조건 — 관광정보를 화면에 올리면 출처와 저작권 정책 링크를 같이 준다(설계서 §4-6). */
-const TOUR_API_POLICY_URL = "https://api.visitkorea.or.kr/#/useServiceGuide/2";
-const icon = { size: 16, strokeWidth: 1.6, "aria-hidden": true } as const;
-
-interface Row {
-  source: IntakeSource;
-  item: IntakeItem;
-  key: string;
-  problems: IntakeProblem[];
-  filledStart?: string;
-  filledEnd?: string;
-}
-
-function rows(view: IntakeView): Row[] {
-  const problems = view.check?.problems ?? [];
-  const filled = view.check?.filled ?? [];
-  const out: Row[] = [];
-  for (const source of view.sources) {
-    for (const item of source.items) {
-      if (item.fields.removed?.value === true) continue;
-      const where = `items[${item.index}]`;
-      const mine = (field: string) => filled.find((entry) => entry.source_id === source.source_id && entry.field === `${where}.${field}`)?.value;
-      out.push({
-        source, item, key: `${source.source_id}:${item.index}`,
-        problems: problems.filter((problem) => problem.source_id === source.source_id && problem.field.startsWith(`${where}.`)),
-        filledStart: mine("starts_at"), filledEnd: mine("ends_at"),
-      });
-    }
-  }
-  const dateOf = (row: Row) => String(row.item.fields.date?.value ?? row.item.date ?? "9999");
-  const timeOf = (row: Row) => String(row.item.fields.starts_at?.value ?? row.filledStart ?? "99:99");
-  return out.sort((a, b) => (b.problems.length ? 1 : 0) - (a.problems.length ? 1 : 0) || dateOf(a).localeCompare(dateOf(b)) || timeOf(a).localeCompare(timeOf(b)));
-}
-
-function badges(row: Row, t: Translate, yearNote: boolean) {
-  const out: { label: string; warn?: boolean }[] = [];
-  const title = row.item.fields.title;
-  if (title?.method === "rule" || title?.method === "llm_span") out.push({ label: t("원문 그대로", "As written") });
-  if (row.filledStart) out.push({ label: t("규칙으로 배치", "Placed by rule") });
-  const place = row.item.fields.place;
-  if (place?.method === "lookup" && place.value) out.push({ label: t("조회로 확인", "Checked by lookup") });
-  if (place?.method === "customer") out.push({ label: t("직접 고침", "Fixed by you") });
-  // ★해를 채운 날짜(「10월 15일」 → 올해·내년)는 항목마다 달지 않고 화면 위에서 한 번 알린다 — 전부에 붙으면
-  //   정작 확인할 곳이 묻힌다(2026-09-27 실제 화면)
-  const review = Object.entries(row.item.fields).some(([name, field]) => field?.needs_review && field.method !== "customer"
-    && !(name === "date" && yearNote && ["year_filled", "day_offset"].includes(String(field.evidence.how))));
-  if (row.problems.length || review) out.push({ label: t("확인 필요", "Needs review"), warn: true });
-  return out;
-}
-
+/**
+ * The screen of a plan the server has taken (`/intakes/[intakeId]`): the plan check (`features/plan-check/`) while the server reads and
+ * once it has — and, for the two ways it can end without a result, a short panel of its own.
+ *
+ * ★`[2026-10-03 사용자 결정]` The earlier list-style review screen is gone (it sat behind 「이전 확인 화면 열기」), and with it its
+ *   「읽은 일정이 없어요 — 대신 짜 드릴까요?」 panel: asking the server to plan moved to the registration page's third panel,
+ *   「계획 짜 주기」 (`features/trip-registration/`). Here, an intake the server read but found no stops in gets a short note and a link back
+ *   to that page.
+ */
 export function IntakeReview({ intakeId }: { intakeId: string }) {
   const t = useT();
   const { language } = useSettings();
   const router = useRouter();
   const queryClient = useQueryClient();
+  // The onboarding answers go to the server with the registration — only when the customer finished them.
+  const [onboarding] = useOnboarding();
+  // `[2026-10-06]` What the plan screen decided (a day's fullness, the Course Keeper on or off) is laid over it - the latest choice wins, and 「끄고 진행」 says `ask_first` out loud.
+  const criteria = useCriteria();
+  const survey = withCriteria(onboarding.complete ? toSurvey(onboarding.answers) : undefined, criteria);
   const key = ["intake", intakeId, language] as const;
+  // ★`[2026-10-02]` While the server reads, its progress stream says when to read the intake again (`useIntakeEvents`).
+  //   Only where there is no stream (an older server, or the stream limit) is the intake asked for every 1.5 s, as before.
+  const [polling, setPolling] = useState(false);
   const query = useQuery({
     queryKey: key,
     queryFn: () => getIntake(intakeId, language),
     retry: false,
     refetchOnWindowFocus: false,
-    refetchInterval: (state) => !state.state.error && state.state.data?.status === "reading" ? 1500 : false,
+    // ★`[2026-10-03]` The page opens on the intake the progress screen just read (`intake-starting.tsx`): do not read it again at once.
+    //   (`invalidateQueries` / `refetch` below still read it whenever the stream or an edit asks.)
+    staleTime: 2_000,
+    refetchInterval: (state) => polling && !state.state.error && state.state.data?.status === "reading" ? 1500 : false,
   });
+  const reread = useCallback(() => void queryClient.invalidateQueries({ queryKey: ["intake", intakeId, language] }), [queryClient, intakeId, language]);
+  // ★`[2026-10-03]` What the server has checked so far arrives as content events while it reads (the GET holds the check only
+  //   once it is done): `line` · `item` · `check` · `move` · `done`, copies of state that `reduceStream` folds in.
+  const [stream, setStream] = useState<StreamState>(emptyStream);
+  const onContent = useCallback((name: string, data: string) => {
+    const event = toIntakeEvent(name, data);
+    if (event) setStream((current) => reduceStream(current, event));
+  }, []);
+  const follow = useIntakeEvents(intakeId, query.data?.status === "reading", language, reread, onContent);
+  // ★`[2026-10-03]` A stream that goes silent (`lost`) is not waited for alone: the intake is asked for every 1.5 s as well, until the read ends —
+  //   the server keeps no pace for a dead line, and the customer must not sit on a screen that never moves. (The stream still reconnects.)
+  if ((follow.follow === "polling" || follow.follow === "lost") && !polling) setPolling(true);
+  // ★`[2026-10-06 사용자 지적 — 서버가 1분 넘게 답이 없는데 아무 알림이 없다]` The stream stays open and says nothing of its own when the server is slow: how long NOTHING changed in the reading
+  //   (no new line read, no new stage, no new check) is counted here, and the screen says so from 30 s on.
+  const linesRead = query.data?.sources.reduce((count, source) => count + source.lines.filter((line) => line.read).length, 0) ?? 0;
+  const quiet = useQuiet([query.data?.stage, linesRead, stream.stage, stream.order.length, stream.done ? 1 : 0, stream.progress?.phase, stream.progress?.done].join("|"),
+    query.data?.status === "reading" && follow.follow !== "stalled");
+  // Without the server's own check (`view.review`) a change goes through the intake's edit call, which answers with the new plan.
   const edit = useMutation({
     mutationFn: ({ revision, edits }: { revision: number; edits: IntakeEdit[] }) => editIntake(intakeId, revision, edits, language),
     onSuccess: (view) => queryClient.setQueryData(key, view),
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
-  const plan = useMutation({
-    mutationFn: ({ revision, input }: { revision: number; input: IntakePlanInput }) => planIntake(intakeId, revision, input, language),
-    onSuccess: (result) => router.push(routes.trip(result.trip.trip_id)),
-    onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
-  });
+  // A registered trip makes the cached trip list stale; drop it so the home card and "My trips" read it again.
+  const registered = (tripId: string) => { queryClient.removeQueries({ queryKey: tripsKey }); router.push(routes.trip(tripId)); };
   const confirm = useMutation({
-    mutationFn: (revision: number) => confirmIntake(intakeId, revision, language),
-    onSuccess: (result) => router.push(routes.trip(result.trip.trip_id)),
+    mutationFn: (revision: number) => confirmIntake(intakeId, revision, language, survey),
+    onSuccess: (result) => registered(result.trip.trip_id),
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
 
-  if (query.isPending || query.error || !query.data) return <QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />;
+  // ★`[2026-10-03]` The plan-check screen (mockup `tripilot-plan-check-streaming.html`) shows the server's intake:
+  //   while it reads (`readingOf` — it first draws the lines it has not drawn yet when reading ends), then the result
+  //   (`resultOf` — map and list; edit, delete, trip details and register through the same server calls as the edit call above).
+  //   An intake opened after reading goes straight to the result.
+  //   ★`[2026-10-03]` With the server's own check (`review`, and while reading the events), the places, legs and every check line
+  //   come from it and the changes (lock, recommend, search, photos, re-check) go through its calls (`useServerReview`).
+  //   Without one (`review: null` — the check failed — or an older server), it says only what the read values say.
+  const apply = useCallback((next: ReviewedIntakeView) => { queryClient.setQueryData(["intake", intakeId, language], next); }, [queryClient, intakeId, language]);
+  const server = useServerReview({ intakeId, view: query.data, language, apply, reread });
+  // ★`[2026-10-03]` While 「전체 자동 추천」 is only previewed (`server.preview`, nothing saved) the screen also draws that plan; every call still goes with the real one.
+  // ★`[2026-10-04 사용자 지시]` The two are held side by side — the plan as it is (`reviewed`) and the one the server proposed (`previewed`) — so the list can scroll from one into the other.
+  const shown = query.data;
+  const reviewed = useMemo(() => shown && shown.status !== "reading" ? reviewResultOf(shown, readingOf(shown), server.infos) : null, [shown, server.infos]);
+  const previewed = useMemo(() => server.preview && server.preview.status !== "reading" ? reviewResultOf(server.preview, readingOf(server.preview), server.infos) : null, [server.preview, server.infos]);
+  // ★`[2026-10-03]` While the screen still draws what the server did (the intake is already `review` but the rows are being caught up), the last
+  //   count the server sent stays on the bar — it would otherwise vanish the moment the server finishes, however many rows are left to draw.
+  const reading = useMemo(() => {
+    if (!query.data) return null;
+    if (query.data.status === "reading") return streamingViewOf(query.data, stream, server.infos);
+    const base = reviewed ?? readingOf(query.data);
+    const last = stream.progress;
+    return last ? { ...base, serverProgress: { phase: last.phase, done: last.done, total: last.total, title: last.current?.title ?? null } } : base;
+  }, [query.data, stream, reviewed, server.infos]);
+  const result = useMemo(() => {
+    if (!query.data || query.data.status === "reading" || query.data.status === "fatal") return null;
+    return reviewed ? { ...reviewed, dirty: server.dirty, rechecking: server.rechecking } : resultOf(query.data);
+  }, [query.data, reviewed, server.dirty, server.rechecking]);
+  // ★`[2026-10-04 사용자 지시]` The lines to draw between the stops on the map (`trip-intakes/{id}/route-shapes`): asked once the check is on screen and again when the plan moves on
+  //   (`revision`). A failure or an older server (404) just means no lines — the pins are the map.
+  const routeShapes = useQuery({
+    queryKey: ["intake-route-shapes", intakeId, query.data?.revision ?? 0, language],
+    queryFn: () => getIntakeRouteShapes(intakeId, language).catch(() => null),
+    enabled: Boolean(reviewed),
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 10 * 60_000,
+  });
+  // `[2026-10-05 사용자 지시]` Zoomed in, the detailed lines (`?detail=true`) replace these short ones - they follow the streets.
+  const routeDetail = useRouteDetail(routeShapes.data, ["intake", intakeId, query.data?.revision ?? 0, language], () => getIntakeRouteShapes(intakeId, language, { detail: true }));
+  // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계]` Questions asked while the server reads (`questions[]` of the intake; none from an older server). The screen goes on to the plan check
+  //   when the reading is done unless the customer is in the middle of answering - then it is held (`flow.hold`) until they are done, press the button, or the warning runs out.
+  const questions = useMemo(() => questionsOf(query.data?.questions, language), [query.data?.questions, language]);
+  const flow = useQuestionFlow({ intakeId, language, questions, loadingDone: Boolean(query.data) && query.data?.status !== "reading" });
+  const readingExtras = flow.shown ? { top: <ReadingQuestions flow={flow} />, footer: <ReadingFooter flow={flow} />, onActivity: flow.touch } : undefined;
+  const [readingSeen, setReadingSeen] = useState(false);
+  const [readingDrawn, setReadingDrawn] = useState(false);
+  if (query.data?.status === "reading" && !readingSeen) setReadingSeen(true);
+  const readingCaughtUp = useCallback(() => setReadingDrawn(true), []);
+  const shell = (children: ReactNode) => <JourneyShell view="checking" title={["계획 확인", "Check your plan"]}>{children}</JourneyShell>;
+
+  if (query.isPending || !query.data) return shell(<QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />);
   const view = query.data;
 
-  if (view.status === "reading") {
-    return <Panel className={styles.waiting} role="status">
-      <Eyebrow>{t("계획을 읽고 있어요", "READING YOUR PLAN")}</Eyebrow>
-      <h1>{view.stage_label}</h1>
-      <p>{t("사진은 한 장에 1분쯤 걸려요. 이 화면을 열어 두면 끝나는 대로 보여 드려요.", "A photo takes about a minute. Keep this page open and the result will appear.")}</p>
-    </Panel>;
+  if (view.status === "reading" && follow.follow === "stalled") {
+    return shell(<Panel className={styles.waiting}>
+      <Eyebrow>{t("읽기가 멈췄어요", "READING STOPPED")}</Eyebrow>
+      <h1>{t("서버가 이 계획을 끝까지 읽지 못했어요", "The server stopped reading this plan")}</h1>
+      <p role="alert">{t("읽던 서버가 다시 시작됐을 수 있어요. 계획을 다시 올려 주세요.", "The server may have restarted while reading. Please upload the plan again.")}</p>
+      <ButtonLink href={routes.newTrip} variant="primary">{t("다시 올리기", "Upload again")}</ButtonLink>
+    </Panel>);
+  }
+  if (flow.hold) {
+    return <>
+      {/* `[2026-10-07 사용자 지적]` The held page is drawn from the same view as the one before it (`reading`), not from a fresh reading-only one: that one stood the bar back at 「일정 읽기」 and the check was drawn again from there. */}
+      <PlanCheck key="plan" view={reading ?? readingOf(view)} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} />
+      {flow.phase === "idle" && <IdleWarning flow={flow} />}
+    </>;
+  }
+  if (reading && (view.status === "reading" || (view.status === "review" && readingSeen && !readingDrawn))) {
+    const streamNote = view.status !== "reading" ? null
+      : follow.follow === "lost" ? <div className={styles.waitWrap}><WaitNotice title={t("서버와 연결이 끊겼어요", "Lost the connection to the server")} body={t("다시 연결하는 중이에요…", "Reconnecting…")} /></div>
+      : follow.slow ? <div className={styles.waitWrap}><WaitNotice title={t("서버 응답이 늦어지고 있어요", "The server is slow to answer")} seconds={quiet > 0 ? quiet : undefined} body={stream.progress?.current?.title
+        // ★`[2026-10-03]` The server's `progress` packet says what it is at: name it instead of a general "taking a while".
+        ? t(`「${stream.progress.current.title}」 확인이 오래 걸리고 있어요. 서버는 계속 확인하고 있어요.`, `Checking “${stream.progress.current.title}” is taking a while. The server is still at it.`)
+        : t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.")} /></div>
+      : quiet >= 60 ? <div className={styles.waitWrap}><WaitNotice title={t("1분이 넘게 서버 소식이 없어요", "No news from the server for over a minute")} seconds={quiet}
+        body={t("서버나 연결에 문제가 있을 수 있어요. 이 화면에서 더 기다리거나, 뒤로 가서 잠시 뒤에 다시 보내 주세요.", "There may be a problem with the server or the connection. Keep waiting here, or go back and send it again shortly.")} /></div>
+      : quiet >= 30 ? <div className={styles.waitWrap}><WaitNotice title={t("서버 소식이 한동안 없어요", "No news from the server for a while")} seconds={quiet}
+        body={t("서버가 아직 읽고 있을 수 있어요. 조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.", "The server may still be reading. Wait a little longer, or go back and send it again.")} /></div>
+      : null;
+    return <PlanCheck key="plan" view={reading} notice={streamNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
   }
   if (view.status === "fatal") {
-    return <Panel className={styles.waiting}>
+    return shell(<Panel className={styles.waiting}>
       <Eyebrow>{t("읽지 못했어요", "COULD NOT READ")}</Eyebrow>
       <h1>{t("이 계획을 읽지 못했어요", "We could not read this plan")}</h1>
       <p role="alert">{view.fatal?.detail ?? view.fatal?.code}</p>
       <ButtonLink href={routes.newTrip} variant="primary">{t("다시 올리기", "Try again")}</ButtonLink>
-    </Panel>;
+    </Panel>);
   }
 
-  const list = rows(view);
-  const problems = view.check?.problems ?? [];
-  const needsFirstDay = problems.some((problem) => problem.code === "no_date");
-  const needsParty = problems.some((problem) => problem.code === "party_size_out_of_range");
-  const yearFilled = view.sources.flatMap((source) => source.items).map((item) => item.fields.date)
-    .find((field) => field?.method !== "customer" && field?.evidence.how === "year_filled");
-  const busy = edit.isPending || confirm.isPending || plan.isPending;
-  const send = (edits: IntakeEdit[]) => edit.mutate({ revision: view.revision, edits });
-  const confirmed = view.status === "confirmed";
-  const error = edit.error ?? confirm.error ?? plan.error;
-  const refusal = error instanceof LiveError ? (error.detail as { problems?: { field: string; message?: string; reason?: string }[]; violations?: { reason: string }[] } | undefined) : undefined;
-
-  return <>
-    <PageHeading eyebrow="LET’S CHECK IT TOGETHER" title={view.check?.title ?? t("읽은 계획", "Your plan")}
-      description={t("읽은 그대로 보여 드려요. 고칠 곳만 고치고 등록하면, 여행이 끝날 때까지 지켜볼게요.", "Here is what we read. Fix only what needs fixing, then we’ll watch over your trip until it ends.")} />
-    {problems.length > 0 && <Panel className={styles.problems} aria-labelledby="intake-problems">
-      <h2 id="intake-problems">{t(`등록 전에 확인할 것 ${problems.length}개`, `${problems.length} things to check before registering`)}</h2>
-      <ul>{problems.map((problem) => <li key={`${problem.source_id}:${problem.field}:${problem.code}`}>{problem.message}</li>)}</ul>
-      {needsFirstDay && <FirstDay disabled={busy} onSave={(value) => send([{ field: "trip.first_day", value }])} />}
-      {needsParty && <Party disabled={busy} onSave={(value) => send([{ field: "trip.party_size", value }])} />}
-    </Panel>}
-    {yearFilled && <p className={styles.notice} role="note">{t(`해가 적혀 있지 않아 ${String(yearFilled.value).slice(0, 4)}년으로 두었어요. 다르면 항목의 날짜를 고쳐 주세요.`, `No year was written, so we assumed ${String(yearFilled.value).slice(0, 4)}. Fix a stop’s date if that is wrong.`)}</p>}
-    {view.check && !confirmed && (view.check.plan.requested || list.length === 0) &&
-      <PlanPanel basis={view.check.plan} readItems={list.length} disabled={busy} pending={plan.isPending}
-        onPlan={(input) => plan.mutate({ revision: view.revision, input })} />}
-    <div className={styles.list}>{list.map((row) => <ItemCard key={row.key} row={row} yearNote={Boolean(yearFilled)} disabled={busy || confirmed} onEdit={send} />)}</div>
-    {list.length === 0 && !view.check?.plan.requested && <Panel><p>{t("읽은 일정이 없어요. 원문을 보고 다시 올리거나, 위에서 일정을 짜 달라고 해 주세요.", "No stops were read. Check the original and upload again, or ask us above to plan it.")}</p></Panel>}
-    <Evidence view={view} />
-    {error && <div className={styles.error} role="alert">
-      <p>{error.message}</p>
-      {refusal?.problems && <ul>{refusal.problems.map((problem, index) => <li key={`${problem.field}-${index}`}>{problem.message ?? `${problem.field}: ${problem.reason}`}</li>)}</ul>}
-      {refusal?.violations && <ul>{refusal.violations.map((violation) => <li key={violation.reason}>{violation.reason}</li>)}</ul>}
-    </div>}
-    <p className={styles.credit}>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></p>
-    <div className={styles.actions}>
-      <ButtonLink href={routes.newTrip}><ArrowLeft {...icon} />{t("다시 올리기", "Upload again")}</ButtonLink>
-      <span className={styles.actionNote}>{confirmed ? t("이미 등록했어요.", "Already registered.") : view.check?.ready ? t("등록하면 바로 지켜보기 시작해요.", "We start watching as soon as you register.") : list.length === 0 ? t("위에서 조건을 고르고 「짜서 등록」을 눌러 주세요.", "Choose the conditions above and press “Plan and register”.") : t("위의 확인할 것을 먼저 채워 주세요.", "Fill in the items above first.")}</span>
-      {confirmed && view.trip_id
-        ? <ButtonLink href={routes.trip(view.trip_id)} variant="primary">{t("여행 보기", "Open trip")}<ArrowRight {...icon} /></ButtonLink>
-        : <Button variant="primary" disabled={busy || !view.check?.ready} onClick={() => confirm.mutate(view.revision)}>{confirm.isPending ? t("등록하는 중…", "Registering…") : t("등록하고 관리 시작", "Register and start")}<ArrowRight {...icon} /></Button>}
-    </div>
-  </>;
-}
-
-function FirstDay({ disabled, onSave }: { disabled: boolean; onSave: (value: string) => void }) {
-  const t = useT();
-  const [value, setValue] = useState("");
-  return <form className={styles.inline} onSubmit={(event) => { event.preventDefault(); if (value) onSave(value); }}>
-    <label htmlFor="intake-first-day"><CalendarDays {...icon} />{t("여행 첫날", "First day")}</label>
-    <input id="intake-first-day" type="date" value={value} onChange={(event) => setValue(event.target.value)} disabled={disabled} required />
-    <Button type="submit" disabled={disabled || !value}>{t("저장", "Save")}</Button>
-  </form>;
-}
-
-/** 「일정 짜 줘」 — 조건을 확인하고 누르면 일정 생성기가 짠 초안을 판정 뒤 등록한다. 누르는 것이 곧 등록이다. */
-function PlanPanel({ basis, readItems, disabled, pending, onPlan }: { basis: IntakePlanBasis; readItems: number; disabled: boolean; pending: boolean; onPlan: (input: IntakePlanInput) => void }) {
-  const t = useT();
-  const [start, setStart] = useState(basis.start_date ?? "");
-  const [days, setDays] = useState(basis.days ?? 0);
-  const [party, setParty] = useState(basis.party_size ?? 0);
-  const ready = Boolean(start) && days >= 1 && party >= 1;
-  return <Panel className={styles.plan} aria-labelledby="intake-plan">
-    <h2 id="intake-plan">{basis.requested ? t("일정을 짜 달라고 하셨어요", "You asked us to plan the trip") : t("읽은 일정이 없어요 — 대신 짜 드릴까요?", "No stops were read — shall we plan one?")}</h2>
-    <p>{t("서울 안에서, 올려 주신 글을 선호로 읽어 하루하루를 짜요. 짠 일정은 판정을 통과해야 등록돼요.", "We plan each day in Seoul, reading your text as preferences. The plan is registered only if it passes our checks.")}
-      {readItems > 0 && <strong> {t(`새로 짜면 위에 읽은 일정 ${readItems}개는 쓰지 않아요.`, `A new plan does not use the ${readItems} stops read above.`)}</strong>}</p>
-    <form className={styles.inline} onSubmit={(event) => { event.preventDefault(); if (ready) onPlan({ start_date: start, days, party_size: party }); }}>
-      <label htmlFor="plan-start">{t("첫날", "First day")}</label>
-      <input id="plan-start" type="date" value={start} onChange={(event) => setStart(event.target.value)} disabled={disabled} required />
-      <label htmlFor="plan-days">{t("일수", "Days")}</label>
-      <select id="plan-days" value={days} onChange={(event) => setDays(Number(event.target.value))} disabled={disabled}>
-        <option value={0}>{t("고르기", "Choose")}</option>{[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{t(`${n}일`, `${n}`)}</option>)}
-      </select>
-      <label htmlFor="plan-party">{t("인원", "Travelers")}</label>
-      <select id="plan-party" value={party} onChange={(event) => setParty(Number(event.target.value))} disabled={disabled}>
-        <option value={0}>{t("고르기", "Choose")}</option>{[1, 2, 3, 4].map((n) => <option key={n} value={n}>{t(`${n}명`, `${n}`)}</option>)}
-      </select>
-      <Button type="submit" variant="primary" disabled={disabled || !ready}>{pending ? t("짜는 중… (1분쯤)", "Planning… (about a minute)") : t("이 조건으로 짜서 등록", "Plan and register")}</Button>
-    </form>
-  </Panel>;
-}
-
-function Party({ disabled, onSave }: { disabled: boolean; onSave: (value: number) => void }) {
-  const t = useT();
-  const [value, setValue] = useState(2);
-  return <form className={styles.inline} onSubmit={(event) => { event.preventDefault(); onSave(value); }}>
-    <label htmlFor="intake-party">{t("인원", "Travelers")}</label>
-    <select id="intake-party" value={value} onChange={(event) => setValue(Number(event.target.value))} disabled={disabled}>
-      {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{t(`${n}명`, `${n}`)}</option>)}
-    </select>
-    <Button type="submit" disabled={disabled}>{t("저장", "Save")}</Button>
-  </form>;
-}
-
-function ItemCard({ row, yearNote, disabled, onEdit }: { row: Row; yearNote: boolean; disabled: boolean; onEdit: (edits: IntakeEdit[]) => void }) {
-  const t = useT();
-  const { item, source } = row;
-  const where = `items[${item.index}]`;
-  const field = (name: string) => `${where}.${name}`;
-  const title = String(item.fields.title?.value ?? "");
-  const start = String(item.fields.starts_at?.value ?? row.filledStart ?? "");
-  const end = String(item.fields.ends_at?.value ?? row.filledEnd ?? "");
-  const date = String(item.fields.date?.value ?? item.date ?? "");
-  const place = item.fields.place;
-  const placeName = place?.value && typeof place.value === "object" ? String((place.value as { name?: string }).name ?? "") : "";
-  const [placeDraft, setPlaceDraft] = useState("");
-  const [times, setTimes] = useState({ start, end, date });
-  const booking = item.fields.booking_no?.value;
-  const line = item.line ? source.lines[item.line - 1]?.text : undefined;
-  const t2 = (edits: IntakeEdit[]) => onEdit(edits.map((edit) => ({ source_id: source.source_id, ...edit })));
-
-  function saveTimes(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const edits: IntakeEdit[] = [];
-    if (times.start && times.start !== start) edits.push({ field: field("starts_at"), value: times.start });
-    if (times.end && times.end !== end) edits.push({ field: field("ends_at"), value: times.end });
-    if (times.date && times.date !== date) edits.push({ field: field("date"), value: times.date });
-    if (edits.length) t2(edits);
+  // ★The server read it and found no stops at all (the text was not a schedule, or was empty). Stops the customer took out afterwards do not
+  //   count: those leave the plan check's own 「남은 일정이 없어요」. A trip already registered from this intake (a planned one) links to the trip.
+  const stopsRead = view.sources.reduce((count, source) => count + source.items.length, 0);
+  if (stopsRead === 0) {
+    const tripId = view.status === "confirmed" ? view.trip_id : null;
+    const asked = Boolean(view.check?.plan.requested);
+    return shell(<Panel className={styles.waiting}>
+      <Eyebrow>{tripId ? t("이미 등록했어요", "ALREADY REGISTERED") : t("읽은 일정이 없어요", "NO STOPS READ")}</Eyebrow>
+      <h1>{tripId ? t("이 접수는 여행으로 등록했어요", "This plan is already a trip") : t("이 글에서는 일정을 찾지 못했어요", "We found no stops in this")}</h1>
+      <p>{tripId ? t("등록한 여행은 여행 화면에서 볼 수 있어요.", "You can see the trip on its own page.")
+        : asked ? t("읽은 일정이 없어요. 글에서 일정을 짜 달라는 요청은 읽었어요 — 등록 화면의 「계획 짜 주기」에서 첫날 · 일수 · 인원을 골라 짜 보세요.", "No stops were read. We did read that you asked us to plan — use “Plan it for me” on the registration page and choose the first day, days and travelers.")
+          : t("읽은 일정이 없어요. 원문을 확인해 다시 올리거나, 등록 화면의 「계획 짜 주기」를 써 보세요.", "No stops were read. Check the original and upload it again, or use “Plan it for me” on the registration page.")}</p>
+      {tripId ? <ButtonLink href={routes.trip(tripId)} variant="primary">{t("여행 보기", "Open trip")}</ButtonLink>
+        : <ButtonLink href={routes.newTrip} variant="primary">{t("등록 화면으로", "Back to the registration page")}</ButtonLink>}
+    </Panel>);
   }
+  if (!result) return shell(<QueryState loading error={null} />);
 
-  return <Panel className={styles.item} data-problem={row.problems.length > 0}>
-    <header className={styles.itemHead}>
-      <div>
-        <p className={styles.when}>{date || t("날짜 모름", "Date unknown")} · {start || "--:--"}{end ? ` – ${end}` : ""}</p>
-        <h2>{title || t("(이름 없음)", "(no name)")}</h2>
-      </div>
-      <div className={styles.badges}>{badges(row, t, yearNote).map((badge) => <Badge key={badge.label} tone={badge.warn ? "warning" : "success"}>{badge.label}</Badge>)}</div>
-    </header>
-    {row.problems.map((problem) => <p key={problem.code} className={styles.problem}>{problem.message}</p>)}
-    <dl className={styles.facts}>
-      <dt><MapPin {...icon} />{t("장소", "Place")}</dt>
-      <dd>{placeName || (place?.method === "customer" ? t("장소 없음", "No place") : t("정하지 못했어요", "Not decided"))}
-        {place?.note && <span className={styles.note}>{place.note}</span>}</dd>
-      {booking != null && <><dt>{t("예약번호", "Booking")}</dt><dd>{String(booking)} <span className={styles.note}>{t("바꾸기 전에 꼭 물어볼게요", "We will always ask before changing it")}</span></dd></>}
-      {line && <><dt>{t("원문", "Original")}</dt><dd className={styles.quote}>{item.line}: {line}</dd></>}
-    </dl>
-    <div className={styles.editRow}>
-      <form className={styles.inline} onSubmit={(event) => { event.preventDefault(); if (placeDraft.trim()) { t2([{ field: field("place"), value: { name: placeDraft.trim() } }]); setPlaceDraft(""); } }}>
-        <label className="sr-only" htmlFor={`place-${row.key}`}>{t("다른 장소로 고치기", "Change place")}</label>
-        <input id={`place-${row.key}`} value={placeDraft} onChange={(event) => setPlaceDraft(event.target.value)} placeholder={t("다른 장소로 고치기", "Change place")} disabled={disabled} maxLength={80} />
-        <Button type="submit" disabled={disabled || !placeDraft.trim()}>{t("찾기", "Find")}</Button>
-        <Button variant="quiet" disabled={disabled} onClick={() => t2([{ field: field("place"), value: { none: true } }])}>{t("장소 없음", "No place")}</Button>
-      </form>
-      <form className={styles.inline} onSubmit={saveTimes}>
-        <label className="sr-only" htmlFor={`date-${row.key}`}>{t("날짜", "Date")}</label>
-        <input id={`date-${row.key}`} type="date" value={times.date} onChange={(event) => setTimes({ ...times, date: event.target.value })} disabled={disabled} />
-        <label className="sr-only" htmlFor={`start-${row.key}`}>{t("시작", "Start")}</label>
-        <input id={`start-${row.key}`} type="time" value={times.start} onChange={(event) => setTimes({ ...times, start: event.target.value })} disabled={disabled} />
-        <label className="sr-only" htmlFor={`end-${row.key}`}>{t("끝", "End")}</label>
-        <input id={`end-${row.key}`} type="time" value={times.end} onChange={(event) => setTimes({ ...times, end: event.target.value })} disabled={disabled} />
-        <Button type="submit" disabled={disabled}>{t("날짜·시각 저장", "Save date & time")}</Button>
-      </form>
-      <Button variant="quiet" disabled={disabled} onClick={() => t2([{ field: field("removed"), value: true }])}><Trash2 {...icon} />{t("빼기", "Remove")}</Button>
-    </div>
-  </Panel>;
-}
-
-function Evidence({ view }: { view: IntakeView }) {
-  const t = useT();
-  return <details className={styles.evidence}>
-    <summary>{t("읽은 원문 전체 보기", "Show the full original")}</summary>
-    {view.sources.map((source) => <div key={source.source_id}>
-      <p className={styles.note}>{source.filename ?? t("입력한 글", "Your text")}{source.transcribed ? t(" · 사진에서 받아 적은 글", " · transcribed from a photo") : ""}
-        {source.reading?.rejected?.length ? t(` · 원문에 없는 인용 ${source.reading.rejected.length}개는 버렸어요`, ` · ${source.reading.rejected.length} quotes not in the original were dropped`) : ""}
-        {source.reading?.error ? t(" · 남은 줄 읽기 모델이 응답하지 않았어요", " · the model for unread lines did not respond") : ""}</p>
-      <ol className={styles.lines}>{source.lines.map((line) => <li key={line.no} data-read={line.read}><span>{line.no}</span>{line.text}</li>)}</ol>
-    </div>)}
-  </details>;
+  // Every change goes through the intake's edit call, so the server checks the plan again and answers with the new one.
+  const send = async (edits: IntakeEdit[]) => { if (edits.length) await edit.mutateAsync({ revision: view.revision, edits }); };
+  const rowOf = (id: string) => rows(view).find((row) => row.key === id);
+  const refusal = confirm.error instanceof LiveError ? (confirm.error.detail as { problems?: { field: string; message?: string; reason?: string }[] } | undefined) : undefined;
+  // The server tried to check places, hours and legs and could not (`review: null` + `review_error`): say so — nothing it did not check is shown as fine.
+  const unchecked = view.review_error ? <p className={styles.streamNote} role="status">{t("서버가 장소·운영시간·이동 확인 결과를 만들지 못했어요. 읽은 값만 보여 드려요 — 등록할 때 서버가 다시 확인해요.", "The server could not build the place, hours and route check. Only what it read is shown — it checks again when you register.")}</p> : null;
+  // The text also asked us to plan, but stops were read too: only the stops are shown, so say where the planning is.
+  const asked = view.check?.plan.requested ? <p className={styles.streamNote} role="status">{t("글에 일정을 짜 달라는 말도 있었어요. 읽은 일정만 보여 드려요 — 대신 짜 받으려면 등록 화면의 「계획 짜 주기」를 써 주세요.", "The text also asked us to plan. Only the stops it lists are shown — to have a trip planned, use “Plan it for me” on the registration page.")}</p> : null;
+  // `[2026-10-05]` A date written without a year: the server took one (and says so in its own note) - the screen says which, so the customer can correct it.
+  const year = assumedYear(view);
+  const yearNote = year ? <p className={styles.streamNote} role="note">{t(`날짜에 해가 적혀 있지 않아 ${year}년으로 두었어요. 다르면 일정의 날짜를 고쳐 주세요.`, `Some dates had no year, so ${year} was assumed. Change the date of a stop if that is wrong.`)}</p> : null;
+  return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} notice={<>{unchecked}{asked}{yearNote}</>} onBack={() => router.push(routes.newTrip)}
+    tripIssues={tripIssuesOf(view)}
+    actions={view.review ? server.actions : {
+      edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },
+      // `[2026-10-04]` Several stops' new times in ONE request (title · date · place stay as they are; an empty start leaves the start alone).
+      retime: async (changes) => {
+        const edits = changes.flatMap((change) => {
+          const row = rowOf(change.id);
+          return row ? editsFor(row, { ...draftOf(row), start: change.start || draftOf(row).start, end: change.end }) : [];
+        });
+        await send(edits);
+      },
+      remove: async (id: string) => { const row = rowOf(id); if (row) await send([{ source_id: row.source.source_id, field: `items[${row.item.index}].removed`, value: true }]); },
+      // A place by name: the server looks it up again and checks the plan (an alternative it weighed, or a typed name).
+      replace: async (id, choice) => {
+        const row = rowOf(id);
+        if (row) await send([{ source_id: row.source.source_id, field: `items[${row.item.index}].place`, value: { name: "candidate" in choice ? choice.candidate.name : choice.name } }]);
+      },
+      candidates: async (id) => candidatesOf(view, id),
+      editTrip: (field, value) => send([{ field: `trip.${field}`, value }]),
+    }}
+    registration={{
+      ready: view.review ? view.review.ready : Boolean(view.check?.ready), previewReady: server.preview?.review ? server.preview.review.ready : undefined, busy: confirm.isPending,
+      // The plan the server holds when it is pressed — a plan saved a moment before (the proposed one, registered from) has a newer revision than this render's.
+      onRegister: () => confirm.mutate(queryClient.getQueryData<ReviewedIntakeView>(key)?.revision ?? view.revision),
+      error: confirm.error?.message ?? null, problems: refusal?.problems?.map((problem) => problem.message ?? `${problem.field}: ${problem.reason}`) ?? [],
+      loginRequired: loginRequired(confirm.error),
+      registeredHref: view.status === "confirmed" && view.trip_id ? routes.trip(view.trip_id) : null,
+    }} />;
 }

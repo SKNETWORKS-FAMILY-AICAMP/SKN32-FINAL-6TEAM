@@ -15,7 +15,7 @@
   **"테스트가 증명한다" 는 서술**이었다. 그래서 판정을 뒤집지 않고 근거를 만든다.
 
 ★**`feedback.py` 를 일부러 뺀다 — 여기서 한 번 오진했다.**
-  처음엔 `app/modules/**` 를 통째로 훑어 위반 2건이 나왔다
+  처음엔 `app/domains/**` 를 통째로 훑어 위반 2건이 나왔다
   (`app.presentation.security` 의 `masked`, 지연 `openai` import). 그런데
   이 파일은 **manifest 가 없다 — Team 이 아니다.** 인라인 분류의 라벨 어휘·
   프롬프트 구현이고 소유가 코어 1 쪽이다(`CLAUDE.md` §5, v9 §3-A).
@@ -32,10 +32,13 @@ import pytest
 from app.core.contracts import ToolNotAllowed
 from app.tools.read_tools import ReadToolbox
 
-MODULES_ROOT = Path("app/modules")
+MODULES_ROOT = Path("app/domains")
 
 #: Team 이 직접 부르면 안 되는 것들. tool 은 Registry 가 넘겨준 것만 쓴다.
-FORBIDDEN_ROOTS = ("app.infrastructure", "psycopg", "openai", "app.presentation", "app.application")
+#: ★`[2026-10-06]` 여행 외부 데이터 소스가 `app.infrastructure.travel` 에서 `app.domains.travel_ops.ports`
+#:  (D-CS-013 Port 칸)로 옮겨 왔다. 이 줄을 안 더하면 「팀은 바깥 데이터 코드를 직접 부르지 않는다」가 조용히 풀린다.
+FORBIDDEN_ROOTS = ("app.infrastructure", "app.domains.travel_ops.ports", "psycopg", "openai", "app.presentation",
+                   "app.application")
 
 
 def _team_modules() -> list[Path]:
@@ -51,15 +54,19 @@ def _team_modules() -> list[Path]:
 
 
 def _relative(path: str | Path) -> Path:
-    """절대 경로를 `app/...` 상대 경로로 — 정적 검사가 모은 경로와 같은 모양으로 맞춘다."""
-    parts = Path(path).resolve().parts
-    return Path(*parts[parts.index("app"):])
+    """절대 경로를 `app/...` 상대 경로로 — 정적 검사가 모은 경로와 같은 모양으로 맞춘다.
+
+    ★처음엔 경로 조각에서 첫 `app` 을 찾아 잘랐다. 상위 폴더 이름이 `app` 이면
+      (`/home/app/repo/final_project_cs/app/...`) 엉뚱한 곳에서 잘린다(코덱스 검증 2026-09-28).
+      시험은 `final_project_cs` 에서 돌므로 그 폴더 기준으로 자른다.
+    """
+    return Path(path).resolve().relative_to(Path.cwd().resolve())
 
 
 def _declared_team_files() -> dict[str, Path]:
     """등록 문자열이 가리키는 클래스가 **실제로 정의된 파일**.
 
-    ★2026-09-28 — 전에는 `app.modules.travel_ops.activity` 를 `activity.py` 로
+    ★2026-09-28 — 전에는 `app.domains.travel_ops.instances.activity` 를 `activity.py` 로
       바꿔 찾았다. Team 을 폴더(`activity/team.py` 나 `activity/__init__.py`)로
       옮기면 그 파일이 없어 이 검사가 실패했다. 파일 하나든 폴더든 같은 등록
       문자열로 부르므로, 경로를 짐작하지 않고 클래스를 불러와 정의된 곳을 묻는다.
@@ -78,18 +85,23 @@ def _declared_team_files() -> dict[str, Path]:
 
 
 def _team_package_files() -> list[Path]:
-    """Team 이 폴더로 살면 그 폴더 안 `.py` 전부 — 도우미 파일도 팀 코드다.
+    """팀이 가진 폴더 안 `.py` 전부 — 도우미 파일·엔진도 팀 코드다.
 
     파일 하나로 살 때는 그 파일만 Team 이었다. 폴더로 쪼개면 인프라 호출을
     옆 파일로 옮기기만 해도 규율 검사를 빠져나가므로, 폴더째 검사한다.
-    `travel_ops/` 자체(여러 팀이 함께 쓰는 곳)는 폴더로 치지 않는다.
+
+    팀의 폴더는 둘이다 — `<팀>/`(팀 본체 폴더)와 `<팀>_engine/`(Mobility 방식 엔진).
+    ★처음엔 본체 폴더만 봐서 `mobility_engine/` 이 통째로 빠졌다. 본체가 파일 하나
+      (`mobility.py`)면 부모가 `travel_ops/` 라 엔진까지 건너뛰었다(코덱스 검증 2026-09-28).
+    `travel_ops/` 자체(여러 팀이 함께 쓰는 곳)는 팀 폴더로 치지 않는다.
     """
     out: set[Path] = set()
-    for path in _declared_team_files().values():
-        folder = path.parent
-        if folder.name == "travel_ops" or folder == MODULES_ROOT:
-            continue
-        out.update(p for p in folder.rglob("*.py") if "__pycache__" not in p.parts)
+    for ref, path in _declared_team_files().items():
+        team_name = ref.split(":")[0].rsplit(".", 1)[-1]           # app.domains.travel_ops.instances.mobility → mobility
+        base = path.parent.parent if path.parent.name == team_name else path.parent
+        for folder in (base / team_name, base / f"{team_name}_engine"):
+            if folder.is_dir() and folder != MODULES_ROOT:
+                out.update(p for p in folder.rglob("*.py") if "__pycache__" not in p.parts)
     return sorted(out)
 
 

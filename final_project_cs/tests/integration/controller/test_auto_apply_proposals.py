@@ -20,7 +20,7 @@ from app.core.registry import TeamRegistry
 from app.core.transition import OutboxMessage
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.case_engine import cleanup_tenant
+from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
 
 TOPIC = "test.applied"
 

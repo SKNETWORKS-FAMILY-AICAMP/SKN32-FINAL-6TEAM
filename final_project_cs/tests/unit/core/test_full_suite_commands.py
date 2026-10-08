@@ -3,7 +3,8 @@
 ★같은 결함이 두 번 나왔다(2026-09-02 둘 다 수정):
 
     scripts/check_release_gate.py   `pytest tests -q -m "not live"`
-    scripts/verify_dod.py           `pytest tests -q`
+    scripts/verify_dod.py           `pytest tests -q`   ← `[2026-10-06]` 이 스크립트는 지웠다(D-023).
+                                                          지금 관문이 부르는 것은 `verify_dod_v11.py` 다
 
   둘 다 `tests` 를 인자로 줘서 **`eval/tests/` 14건이 조용히 빠졌다**
   (실측: 542 수집 vs 556). 빠지던 것 중에

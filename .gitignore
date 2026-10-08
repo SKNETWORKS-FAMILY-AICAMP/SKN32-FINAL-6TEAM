@@ -180,4 +180,40 @@ program/산출물양식/_backup/
 # 올라간 일이 있었다. 부모 폴더를 막으면 위 "datasets/ 전역 규칙" 의 되살리기(!)
 # 규칙은 더 이상 적용되지 않는다. ★루트에 고정한다 — final_project_cs/eval/datasets
 # (골든셋) 는 걸리지 않아야 한다.
-/datasets/
+# ★2026-09-29 사용자 지시 — 팀마다 데이터셋 폴더를 둔다(activity · dining · mobility).
+#   폴더 자체만 열고, 그 안에서는 위 "datasets/ 전역 규칙" 이 그대로 적용된다 —
+#   README·REPORT·스키마·scripts/ 는 올라가고, raw/·processed/·CSV·JSONL·XLSX·DB·압축본·로그인 세션은 안 올라간다.
+#   그 밖의 datasets/ 아래(팀 폴더가 아닌 곳)는 여전히 통째로 막는다.
+/datasets/*
+!/datasets/activity/
+!/datasets/dining/
+!/datasets/mobility/
+
+# mobility local
+.metrics/
+Claude outputs/
+*.bak_*
+demo*.html
+selfcheck*.json
+fold_sample.json
+# 39 (2026-09-24) 자기점검 보고서는 미추적 — 기본 출력은 .metrics/ (50 결함 2)
+selfcheck_report.md
+# 39 (2026-09-24) 방 작업폴더·스크립트는 git 밖(27번 규칙 22)
+_39/
+_50/
+50_*.ps1
+# 40 (2026-09-24) 방 작업폴더는 git 밖 · 판정 로그는 DATA_DIR logs\ (한 기기)
+_40/
+# 파이참 작업 공간. 사람마다 다르다.
+.idea/
+
+docs/mobility/*.docx
+docs/mobility/*.png
+
+# 실험 사본 — 비교 측정용으로 저장소를 통째로 복사한 자리.
+# ★git 에 올리지 않는다. 릴리스 대상(final_project_cs)과 섞이면 되돌리기 어렵다.
+#   결과·결론은 wiki 문서로만 남긴다(사본 자체는 버려도 되는 것).
+/_experiments/
+
+# 2026-10-07 시험 세트 원문(AI Hub · KoCulture 문장 포함) — 저장소에 올리지 않는다(재배포 제한). MX 세트 · 검토자 입력
+/program/datasets/

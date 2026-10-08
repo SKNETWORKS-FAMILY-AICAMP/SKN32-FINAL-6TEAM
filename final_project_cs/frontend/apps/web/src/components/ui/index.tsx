@@ -7,7 +7,7 @@ import { useT } from "@/lib/settings";
 import { routes } from "@/lib/routes";
 import styles from "./ui.module.css";
 
-type Variant = "primary" | "secondary" | "quiet";
+type Variant = "primary" | "secondary" | "quiet" | "danger";
 
 export function Button({ variant = "secondary", className = "", type = "button", ...props }: ComponentProps<"button"> & { variant?: Variant }) {
   return <button type={type} className={`${styles.button} ${styles[variant]} ${className}`} {...props} />;
@@ -25,12 +25,25 @@ export function Badge({ children, tone = "success", className = "" }: { children
   return <span className={`${styles.badge} ${styles[tone]} ${className}`}>{children}</span>;
 }
 
+/**
+ * The one default profile image, shared by the menu and My page. Changing it is not offered yet.
+ * Drawn inline (the shape of `public/images/tripilot-avatar-default.svg`) so it takes the chosen theme's soft and primary roles.
+ */
+export function Avatar({ size, className = "" }: { size: number; className?: string }) {
+  return <svg viewBox="0 0 96 96" width={size} height={size} aria-hidden="true" className={`${styles.avatar} ${className}`}>
+    <rect width="96" height="96" style={{ fill: "var(--color-soft)" }} />
+    <circle cx="48" cy="38" r="17" style={{ fill: "var(--color-primary)" }} />
+    <path d="M14 96c2-20 16-32 34-32s32 12 34 32z" style={{ fill: "var(--color-primary)" }} />
+  </svg>;
+}
+
 export function Eyebrow({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <p className={`${styles.eyebrow} ${className}`}>{children}</p>;
 }
 
-export function PageHeading({ eyebrow, title, description }: { eyebrow?: string; title: string; description?: ReactNode }) {
-  return <header className={styles.heading}>{eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}<h1>{title}</h1>{description && <p>{description}</p>}</header>;
+/** `action` sits at the right end of the title's row. */
+export function PageHeading({ eyebrow, title, description, action }: { eyebrow?: string; title: string; description?: ReactNode; action?: ReactNode }) {
+  return <header className={styles.heading}>{eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}{action ? <div className={styles.titleRow}><h1>{title}</h1>{action}</div> : <h1>{title}</h1>}{description && <p>{description}</p>}</header>;
 }
 
 export function RegistrationSteps({ current }: { current: 0 | 1 | 2 }) {

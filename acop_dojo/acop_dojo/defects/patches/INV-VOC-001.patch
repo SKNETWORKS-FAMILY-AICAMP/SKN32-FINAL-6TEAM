@@ -1,6 +1,6 @@
---- a/app/modules/travel_ops/feedback.py
-+++ b/app/modules/travel_ops/feedback.py
-@@ -160,7 +160,7 @@
+--- a/app/domains/travel_ops/components/core_hooks/feedback.py
++++ b/app/domains/travel_ops/components/core_hooks/feedback.py
+@@ -175,7 +175,7 @@
      if not isinstance(raw, dict):
          raise ClassificationFailed("classifier output is not an object")
      required = ("sentiment", "intent", "issue_code", "severity")

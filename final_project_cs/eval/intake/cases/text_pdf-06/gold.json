@@ -1,0 +1,45 @@
+{
+ "case_id": "text_pdf-06",
+ "format": "text_pdf",
+ "defect": null,
+ "party": 3,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.pdf"
+  }
+ ],
+ "lines": [
+  "서울 1일 여행 (3명)",
+  "1일차 2026-10-21",
+  "09:30 국립중앙박물관 관람",
+  "12:30 망원시장 칼국수",
+  "15:00 경복궁 관람"
+ ],
+ "items": [
+  {
+   "date": "2026-10-21",
+   "start": "09:30",
+   "title": "국립중앙박물관 관람",
+   "place": "국립중앙박물관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-21",
+   "start": "12:30",
+   "title": "망원시장 칼국수",
+   "place": "망원시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-21",
+   "start": "15:00",
+   "title": "경복궁 관람",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

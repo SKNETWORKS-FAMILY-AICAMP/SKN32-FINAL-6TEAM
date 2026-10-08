@@ -18,9 +18,10 @@ LAYERS = [
     ("presentation", "app/presentation"),
     ("application", "app/application"),
     ("core", "app/core"),
-    ("domain", "app/domain"),
+    # 2026-10-06 cs 폴더 이동 — 옛 app/domain 은 app/core/case_lifecycle, 옛 app/modules 는 app/domains
+    ("domain", "app/core/case_lifecycle"),
     ("infrastructure", "app/infrastructure"),
-    ("modules", "app/modules"),
+    ("modules", "app/domains"),
 ]
 OTHER = "기타"
 
@@ -78,7 +79,8 @@ def runtime_calls(trace: dict[str, Any]) -> Counter:
 
 def layer_of(module: str) -> str:
     path = module.replace(".", "/")
-    for name, prefix in LAYERS:
+    # 긴 앞부분부터 본다 — case_lifecycle 이 app/core 안에 있다. 칸 순서는 LAYERS 그대로다
+    for name, prefix in sorted(LAYERS, key=lambda item: -len(item[1])):
         if path.startswith(prefix):
             return name
     return OTHER

@@ -12,8 +12,8 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from app.infrastructure.travel.base import TravelSource
-from app.infrastructure.travel.ratelimit import (
+from app.domains.travel_ops.ports.data_sources.base import TravelSource
+from app.domains.travel_ops.ports.data_sources.ratelimit import (
     RateLimited, RateLimiter, SECONDS_PER_DAY, interval_for,
 )
 
@@ -236,10 +236,10 @@ def test_every_configured_source_name_matches_a_real_adapter():
     종류의 실수라 여기서 센다.
     """
     from app.core.settings import Settings
-    from app.infrastructure.travel.heritage import HeritageSource
-    from app.infrastructure.travel.holiday import HolidaySource
-    from app.infrastructure.travel.open_meteo import OpenMeteoWeather
-    from app.infrastructure.travel.tour_api import TourApiPlace
+    from app.domains.travel_ops.ports.data_sources.heritage import HeritageSource
+    from app.domains.travel_ops.ports.data_sources.holiday import HolidaySource
+    from app.domains.travel_ops.ports.data_sources.open_meteo import OpenMeteoWeather
+    from app.domains.travel_ops.ports.data_sources.tour_api import TourApiPlace
 
     configured = set(Settings.model_construct().source_rate_limits())
     implemented = {OpenMeteoWeather.name, HeritageSource.name,

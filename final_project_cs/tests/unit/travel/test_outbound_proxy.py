@@ -11,9 +11,9 @@ import importlib.util
 
 import httpx
 
-from app.infrastructure.travel import base as base_module
-from app.infrastructure.travel.air_quality import FallbackAir
-from app.infrastructure.travel.base import TravelSource, TravelSources, apply_outbound_proxy
+from app.domains.travel_ops.ports.data_sources import base as base_module
+from app.domains.travel_ops.ports.data_sources.air_quality import FallbackAir
+from app.domains.travel_ops.ports.data_sources.base import TravelSource, TravelSources, apply_outbound_proxy
 
 
 class _Src(TravelSource):
@@ -65,7 +65,7 @@ def test_socks_without_socksio_is_not_applied_and_says_why(monkeypatch):
 
 def _built_utic(**overrides):
     from app.core.settings import Settings
-    from app.infrastructure.travel.base import build_travel_sources
+    from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
 
     settings = Settings.model_construct(**{"its_api_key": "", "utic_api_key_1": "key-one",
                                            "utic_api_key_2": "key-two", **overrides})

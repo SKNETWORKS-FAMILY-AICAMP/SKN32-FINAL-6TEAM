@@ -47,6 +47,20 @@ $data = "C:\Users\playdata2\Documents\llm_workspace\_unified_mall_3\data\pgdata"
 | 기동 후 | **건수를 대조하고 작업을 재개한다.** `knowledge_documents=25 · knowledge_chunks=306`(cs `CLAUDE.md` §5). 원본 매뉴얼의 `payments=30·knowledge_chunks=300`은 옛 도메인 값이라 지금과 다르다 |
 | extension | `vector`·`pgcrypto`는 **마이그레이션이 만든다.** `CREATE EXTENSION`을 손으로 치지 않는다 — 마이그레이션이 유일한 경로여야 재현된다 |
 
+### 앱이 관리하는 서버로 띄우기 `[2026-10-03]`
+
+`pg_ctl` 을 도구(Bash·PowerShell) 안에서 띄우면 그 도구 작업이 끝날 때 DB 도 같이 죽는다. 앱의 실행 설정에 올려 두면 도구와 상관없이 산다.
+`final_project_ui/.claude/launch.json` 에 아래 항목을 넣고(**경로는 PC마다 달라 커밋하지 않는다**) `preview_start {name: "tripilot-db"}` 로 띄운다.
+
+```json
+{ "name": "tripilot-db", "runtimeExecutable": "<conda env>/Library/bin/postgres.exe",
+  "runtimeArgs": ["-D", "<pgdata 폴더>", "-p", "5433"], "port": 5433 }
+```
+
+- 순서는 DB → `tripilot-api`(8042) → `tripilot-web`(3100).
+- 앱에서 끄면 강제 종료라 다음 기동 때 자동 복구가 돈다(40초쯤). 옆 프로젝트 DB 와 같은 서버라 함부로 끄지 않는다.
+- 실행 도구가 포트를 웹 요청으로 확인해서 로그에 `invalid length of startup packet` 이 쌓인다 — 이상이 아니다.
+
 ## psql이 PATH에 없다
 
 `[실측]` conda env 안에 있다.

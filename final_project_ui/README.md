@@ -79,6 +79,38 @@ Composer 화면 위쪽에 "빠른 토글" 카드가 뜰 때가 있습니다. 아
 필드명·경로가 최종 계약과 다를 수 있습니다 — 대상이 실제로 이 계약을 내놓으면
 `CONSOLE_CONTRACT_VERSIONS`에 그 버전 문자열을 추가해야 카드가 뜹니다.
 
+## 실행 중 설정 — 웹 지도 종류(구글 ↔ 무료 지도) 바꾸기
+
+`[2026-09-29 사용자 지시]` 「개발자 앱에서 구글 ↔ 무료 지도(OSM)로 바꿀 수 있게 옵션으로 만들어 둔다. 화면은 없고 기능만.」
+구현: [`console/runtime_settings.py`](console/runtime_settings.py). 명령줄로 쓴다:
+
+```powershell
+python -m console.runtime_settings map-provider                                   # 지금 값 보기
+python -m console.runtime_settings map-provider google --reason "구글 지도 시험"   # 바꾸기
+python -m console.runtime_settings map-provider default --reason "기본값으로"       # 대상 기본값으로
+python -m console.runtime_settings dev-mode on --reason "근거 확인"                 # 개발 모드 켜기
+python -m console.runtime_settings dev-mode off --reason "시연 전"                  # 끄기(기본)
+```
+
+- **개발 모드**(`web.dev_mode`, `[2026-09-29 사용자 지시]`): 켜면 고객 채팅 답 아래에 그 답의 근거(규정 절 id, 예 `t_doc_07#c5`)가 작게 보인다. 끄면(기본) 고객은 근거 id 를 못 본다 — 근거는 대상의 Case 기록에는 늘 남는다.
+
+- 대상의 운영 설정 API(`GET·PATCH /admin/limits`, 설정 이름 `web.map_provider`)를 부른다. 검증·저장·감사 기록은 대상이 한다 — §0.3 의 반영(`/admin/reload`) 호출과 같은 성격의 예외다. 대상 파일·DB·파이썬은 건드리지 않는다.
+- 환경변수: `CONSOLE_LIMITS_URL`(대상의 `/admin/limits` 전체 주소) · `CONSOLE_LIMITS_READ_TOKEN`(scope `limits:read`) · `CONSOLE_LIMITS_WRITE_TOKEN`(scope `limits:write`) · `CONSOLE_ACTOR`(누가 바꾸나, 없으면 로그인 사용자 이름). 보기·바꾸기 열쇠를 나눈다.
+- 그 사이 다른 운영자가 바꿨으면 「다른 운영자가 먼저 바꿈」으로 끝난다(덮어쓰지 않는다). 모르는 지도 이름은 보내지 않는다.
+- 웹은 지도를 열 때마다 서버(`POST /v1/web/map-load`)에 묻고 그 답의 `provider` 를 따른다. 그래서 다시 빌드하지 않아도 바뀐다(웹 빌드 설정이 `google` 이고 구글 키가 있을 때).
+- `[대기]` 대상 쪽 설정 이름·주소·scope 는 cs 세션이 구현 중이다. 구현되면 실서버로 확인한다.
+
+## 대기 중인 일 — 조립 정보(`/introspection`)를 운영 앱으로 옮기기
+
+`[계획 2026-09-29 · 대기]` 사용자 지시: 계획만 잡아 두고, **운영 앱이 준비되면** 옮긴다. 지금은 하지 않는다.
+
+- **무엇인가**: 대상 서버가 「지금 어떻게 조립돼 돌고 있는지」를 알려 주는 경로다. 켜진 모듈, 연결된 부품(Port) 구현, 등록된 팀과 각 팀이 할 수 있는 일·쓸 수 있는 도구, 저장된 설정 판과 실제로 도는 판(반영 상태), 가드레일 설정값 전체, 쓰는 언어 모델 이름을 준다. 이 개발 콘솔의 「라이브 연결」·「반영」이 이것을 읽는다.
+- **왜 옮기나**: 운영 정보다. 지금은 고객 서버(8042)에 있고 scope `ops:introspect` 열쇠 없이는 401 이라 바로 새지는 않지만, 운영 화면·관리 API 를 고객 서버에서 뺀 결정(D-CS-008)과 같은 이유로 고객 쪽에 둘 까닭이 없다.
+- **옮길 때 할 일**
+  1. 서버(cs 세션 몫): `/introspection` 을 고객용 빌드에서 빼고 운영 앱에 둔다. 반영 경로(`/admin/reload`)도 운영 앱에서 같은 주소 뿌리로 열리는지 맞춘다 — 이 콘솔은 반영 주소를 조립 정보 주소에서 만든다(`console/live.py` `reload_url_for`). 둘이 다른 프로세스에 있으면 「남의 프로세스를 반영시키는」 사고가 난다.
+  2. 이 콘솔: 대상 프로필의 `CONSOLE_INTROSPECTION_URL` 을 운영 앱 주소로 바꾼다. 운영 앱은 루프백에만 묶이므로 원격에서는 SSH 터널로 붙는다(§0.3 의 VPN/SSH 전제와 같다).
+  3. 확인: 고객 서버에서 `/introspection` 404, 운영 앱에서 200(열쇠 있을 때), 이 콘솔의 라이브 연결·반영이 운영 앱 주소로 동작.
+
 ## 테스트
 
 ```powershell

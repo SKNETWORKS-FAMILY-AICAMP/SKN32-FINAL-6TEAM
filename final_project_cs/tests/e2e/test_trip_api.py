@@ -21,18 +21,18 @@ from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
-from app.infrastructure.travel.base import TravelSources
-from app.infrastructure.travel.disruptions import DisruptionCheck
-from app.infrastructure.travel.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+from app.domains.travel_ops.ports.data_sources.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
                                               ReplayWarning, ReplayWeather)
-from app.modules.travel_ops.itinerary import TripStore
-from app.modules.travel_ops.trip_api import build_trip_router, plan_token
-from app.modules.travel_ops.trip_watch import TripWatcher
+from app.domains.travel_ops.components.itinerary.itinerary import TripStore
+from app.domains.travel_ops.entry.trip_api import build_trip_router, plan_token
+from app.domains.travel_ops.components.watch.trip_watch import TripWatcher
 from app.presentation import security
 from app.presentation.api.app import create_app
 
 KST = ZoneInfo("Asia/Seoul")
-SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "modules" / "travel_ops"
+SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "domains" / "travel_ops"
                        / "scenarios" / "seoul_day_taiwan_friends.json").read_text(encoding="utf-8"))
 DAY = SCENARIO["trip"]["date"]
 REPORTS = {report["type"]: report for report in SCENARIO["customer_reports"]}
@@ -94,6 +94,10 @@ def api(monkeypatch):
     store = TripStore(tenant)
     watcher = TripWatcher(store=store, check=check, connection_factory=get_connection,
                           clock=clock, routes=None, route_events=ReplayRouteEvents(timeline))
+    # ★`[2026-10-02 결함 인계 #2]` 제안 고르기는 그 일정이 **끝났으면** 못 고른다(`pending.choose`) — 대본 날짜는 지난 날이라 실시간으로 보면 전부 끝난 것이 된다. 시계를 대본의 것으로
+    from app.domains.travel_ops.components.planning import pending as pending_module
+
+    monkeypatch.setattr(pending_module, "wall_clock", lambda: clock.now)
 
     def classifier(_message):
         return {"intent": "other", "issue_code": "other", "sentiment": "neutral"}
@@ -117,7 +121,8 @@ def api(monkeypatch):
                 return {"type": "stock_out", "products": ["라면 선물세트", "스팸 선물세트"]}
             if "되돌려" in message:
                 import re
-                return {"type": "rollback", "to_version": int(re.findall(r"\d+", message)[0])}
+                numbers = re.findall(r"\d+", message)
+                return {"type": "rollback", "to_version": int(numbers[0]) if numbers else None}
             return {"type": "other"}
 
     client = TestClient(create_app(classifier=classifier, domain_routers=[build_trip_router(
@@ -145,6 +150,10 @@ def api(monkeypatch):
         cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM web_user_keys WHERE tenant_id=%s", (tenant,))     # 웹 사용자 키(025)
+        for table in ("web_agent_keys", "web_sessions", "web_social_links"):                          # 쿠키 세션(044) · 소셜 계정(043) — 사용자 행을 가리킨다
+            cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s", (tenant,))
+        for table in ("web_usage", "runtime_limits", "runtime_limit_state"):   # 웹 남용 방어(031)
+            cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM trip_intakes WHERE tenant_id=%s", (tenant,))     # 계획 읽기(028, 원본·값은 따라 지워진다)
         cur.execute("DELETE FROM place_aliases WHERE tenant_id=%s", (tenant,))    # 고객이 고친 장소 별칭(030)
         for sql in ("DELETE FROM outbox WHERE tenant_id=%s", "DELETE FROM trips WHERE tenant_id=%s",
@@ -218,6 +227,32 @@ def test_density_warning_survives_registration_duplicate_and_read(api, preferenc
     assert _detail(api, view["trip_id"])["density"] == view["density"]
 
 
+# invariant: INV-CS-ACT-008
+def test_quality_warnings_ride_along_with_an_accepted_registration(api):
+    """`[2026-10-03]` 같은 곳 두 번 · 점심 빠짐 · 왔다 갔다는 **거절이 아니라 경고**다 — 등록은 받고(201), 응답과 조회의 「살펴볼 점」(`warnings`)에 실린다.
+    체크리스트 v2 T7·T8·T9 — 외부 에이전트가 만든 일정(등록 길)은 이것들을 아무도 말해 주지 않았다."""
+    body = _body(api["customer"])
+    spot = lambda key, name, lat, lon: {"key": key, "name": name, "kind": "activity", "lat": lat, "lon": lon,  # noqa: E731
+                                        "weather_sensitive": False, "attributes": {}}
+    body["places"] = [spot("palace", "테스트궁", 37.5796, 126.9770), spot("museum", "테스트박물관", 37.5300, 127.0000)]
+    body["constraints"] = {}
+    body["routes"] = {}
+    body["items"] = [{"seq": 1, "kind": "activity", "title": "궁 구경", "place": "palace", "route": None,
+                      "starts_at": _iso("10:00"), "ends_at": _iso("11:00"), "detail": {}},
+                     {"seq": 2, "kind": "activity", "title": "박물관", "place": "museum", "route": None,
+                      "starts_at": _iso("12:00"), "ends_at": _iso("13:30"), "detail": {}},      # 점심 창(11:30~14:00)을 틈 30분만 두고 채운다
+                     {"seq": 3, "kind": "activity", "title": "궁 다시", "place": "palace", "route": None,
+                      "starts_at": _iso("15:00"), "ends_at": _iso("16:00"), "detail": {}}]
+    created = api["client"].post("/v1/trips", json=body, headers=api["auth"]("trip:write"))
+    assert created.status_code == 201, created.text
+    view = created.json()
+    found = {w["code"]: w for w in view["warnings"]}
+    assert {"same_place_twice", "meal_missing", "route_zigzag"} <= set(found)
+    assert found["same_place_twice"]["items"] == [1, 3] and found["meal_missing"]["date"] == DAY
+    assert all(w["reason"] and w["remedy"] for w in view["warnings"])
+    assert {w["code"] for w in _detail(api, view["trip_id"])["warnings"]} == set(found)       # 조회도 같은 목록
+
+
 def test_a_second_trip_reuses_known_places_without_overwriting_them(api):
     """☆2026-09-14 개발 서버에서 발견 — 같은 테넌트의 두 번째 여행이 이미 있는 장소를
     적자 UNIQUE(tenant_id, name, kind) 로 500 이 났다. 여행마다 테넌트를 새로 만드는
@@ -245,8 +280,8 @@ def test_places_from_outside_services_stay_with_their_own_trip(api):
     """★`[2026-09-27]` 관광공사·카카오에서 받은 장소는 공용 표에 쌓아 다른 고객에게 재사용하지 않는다
     (콘텐츠랩 「로컬서버 저장 금지」 · 카카오 운영정책 제5조 — 마이그레이션 029). 그 여행 전용 행이 되고,
     그 여행의 감시·대체 일정에서는 보이고, 공용 목록·다른 여행에서는 안 보인다."""
-    from app.modules.travel_ops.itinerary import TripStore
-    from app.modules.travel_ops.planner import load_candidates
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
+    from app.domains.travel_ops.components.planning.planner import load_candidates
 
     outside = {"key": "market", "name": "광장시장", "kind": "activity", "lat": 37.5700, "lon": 126.9996,
                "weather_sensitive": False,
@@ -297,6 +332,20 @@ def test_create_rejects_unknown_references_and_needs_the_write_scope(api):
 
 
 # ── 하루 전체 ──────────────────────────────────────────────────
+def test_every_item_says_what_kind_it_is_and_which_meal(api):
+    """☆`[2026-10-01 사용자 지적]` 화면이 「개화」만 보고는 식당인지 활동인지 알 수 없었다 — 종류의 사람 말과 끼니를 서버가 준다.
+    끼니는 시작 시각(KST)으로 센다 — 10시 전 아침 · 16시 전 점심 · 그 뒤 저녁. 식사가 아니면 None."""
+    view = _detail(api, _create(api)["trip_id"])
+    by_kind = {}
+    for item in view["items"]:
+        by_kind.setdefault(item["kind"], []).append(item)
+    assert {i["kind_label"] for i in by_kind["dining"]} == {"식사"}
+    assert {i["kind_label"] for i in by_kind["activity"]} == {"활동"}
+    assert {i["kind_label"] for i in by_kind["mobility"]} == {"이동"}
+    assert [i["meal"] for i in by_kind["dining"]] == ["아침", "점심", "저녁"]          # 09:00 · 13:00 · 18:00
+    assert all(i["meal"] is None for kind in ("activity", "mobility") for i in by_kind[kind])
+
+
 def test_the_whole_day_through_the_api(api):
     trip_id = _create(api)["trip_id"]
     assert len(api["tick"]("09:00").adjusted) == 1                               # 액-02
@@ -476,8 +525,8 @@ def test_the_confirmed_day_is_accepted_as_submitted(api):
 
 def test_a_plan_link_opens_for_a_trip_in_another_tenant(api):
     """★시나리오 모드처럼 **다른 테넌트**의 여행도 링크로 열린다 — 통지에 실린 링크가 404 였다."""
-    from app.modules.travel_ops.itinerary import Item, TripStore
-    from app.modules.travel_ops.trip_api import plan_token
+    from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+    from app.domains.travel_ops.entry.trip_api import plan_token
 
     other = "planlink_" + uuid4().hex[:10]
     with get_connection() as conn:
@@ -511,11 +560,14 @@ def test_a_plan_link_opens_for_a_trip_in_another_tenant(api):
 
 def test_a_question_shaped_closed_report_does_not_change_the_plan(api):
     """★`[2026-09-25]` 묻는 꼴이면 「닫혔다」로 받지 않는다 — 모델이 closed 로 뽑아도 질문이고,
-    이 경로(규정 도구 없음)에서는 바꾸지 않고 사람에게 넘긴다. 전에는 대체안 계산으로 갈 수 있었다."""
+    일정은 바꾸지 않는다. 전에는 대체안 계산으로 갈 수 있었다.
+    ★`[2026-09-28]` 전에는 답 없이 escalated 로 끝났다 — 이제 **짚은 일정의 사실로 답하고**, 규정을 찾아볼 수
+    없으면(이 앱은 규정 검색을 안 물렸다) 그렇다고 같이 말한다(`trip_replies.question_reply`)."""
     trip_id = _create(api)["trip_id"]
     said = _say(api, trip_id, "closed", request_id="say-q", text="오늘 저녁 식당 휴무 아니에요?").json()
-    assert said["status"] == "escalated" and said["reason"] == "question_needs_policy_answer", said
+    assert said["status"] == "answered" and said["reason"] == "question_answered", said
     assert said["report"] == {"type": "question"}
+    assert "저녁" in said["answer"] and "규정을 찾아볼 수 없어서" in said["answer"], said["answer"]
     assert _detail(api, trip_id)["version"] == 1
 
 
@@ -534,3 +586,59 @@ def test_a_rollback_sentence_rolls_back_instead_of_swapping(api):
         v1 = api["store"].items(conn, trip_id, 1)
     assert [(s["seq"], s["place"]) for s in view["items"]] == [(i.seq, (i.place or {}).get("name")) for i in v1]
     assert [(s["seq"], s["place"]) for s in view["items"]] != before
+
+
+def test_a_rollback_without_a_number_undoes_the_latest_change(api):
+    """`[2026-09-29 사용자 지적 · ui 세션 전달]` 「원래대로 되돌려」 · 「○○ 이전 식당으로 되돌려」 — 번호가 없으면 서버가
+    그 항목(또는 가장 최근)의 변경 직전으로 정한다. 전에는 「알아듣지 못했어요」로 끝났다."""
+    trip_id = _create(api)["trip_id"]
+    assert len(api["tick"]("09:00").adjusted) == 1                   # v2 — 감시가 바꿨다
+    said = _say(api, trip_id, "rollback", request_id="say-back-0", text="원래대로 되돌려 주세요").json()
+    assert said["status"] == "rolled_back", said
+    view = _detail(api, trip_id)
+    with get_connection() as conn:
+        v1 = api["store"].items(conn, trip_id, 1)
+    assert view["version"] == 3
+    assert [(s["seq"], s["place"]) for s in view["items"]] == [(i.seq, (i.place or {}).get("name")) for i in v1]
+
+
+def test_a_rollback_of_an_unchanged_item_says_so_instead_of_undoing_something_else(api):
+    trip_id = _create(api)["trip_id"]
+    assert len(api["tick"]("09:00").adjusted) == 1
+    first = _detail(api, trip_id)["items"][0]["place"]
+    said = _say(api, trip_id, "rollback", request_id="say-back-1", text=f"{first} 되돌려 주세요").json()
+    assert said["status"] == "ask_rollback" and "되돌릴 변경이 없어요" in said["answer"], said
+    assert _detail(api, trip_id)["version"] == 2                      # 아무것도 되돌리지 않았다
+
+
+def test_places_of_an_ended_trip_lose_outside_values_but_keep_their_name(api):
+    """★`[2026-09-28]` 끝난 여행의 전용 장소 행(029)은 좌표·외부 식별자를 비운다(`trip_places.scrub_ended`).
+    끝나기 전 · 공용 행은 그대로다. 다시 돌려도 같은 행을 두 번 비우지 않는다."""
+    from datetime import timedelta
+
+    from app.domains.travel_ops.components.itinerary.trip_places import scrub_ended
+
+    body = _body(api["customer"], request_id="scrub-1")
+    body["places"].append({"key": "market", "name": "광장시장", "kind": "activity", "lat": 37.57, "lon": 126.9996,
+                           "weather_sensitive": False,
+                           "attributes": {"source": "tour_api", "source_content_id": "264570"}})
+    last = max(it["seq"] for it in body["items"])
+    body["items"].append({"seq": last + 1, "kind": "activity", "title": "광장시장", "place": "market",
+                          "starts_at": _iso("21:00"), "ends_at": _iso("21:40"), "detail": {}})
+    trip = api["client"].post("/v1/trips", json=body, headers=api["auth"]("trip:write")).json()
+    ended = _at("21:40")
+    with get_connection() as conn:
+        early = scrub_ended(conn, tenant_id=api["tenant"], now=ended + timedelta(hours=1), retention_hours=24)
+        late = scrub_ended(conn, tenant_id=api["tenant"], now=ended + timedelta(hours=25), retention_hours=24)
+        again = scrub_ended(conn, tenant_id=api["tenant"], now=ended + timedelta(hours=26), retention_hours=24)
+        with conn.cursor() as cur:
+            cur.execute("SELECT name, latitude, longitude, attributes FROM places WHERE tenant_id=%s AND trip_scope=%s",
+                        (api["tenant"], trip["trip_id"]))
+            name, lat, lon, attributes = cur.fetchone()
+            cur.execute("SELECT count(*) FROM places WHERE tenant_id=%s AND trip_scope IS NULL AND latitude IS NULL",
+                        (api["tenant"],))
+            shared_blanked = cur.fetchone()[0]
+    assert (early["scrubbed"], late["scrubbed"], again["scrubbed"]) == (0, 1, 0)
+    assert name == "광장시장" and lat is None and lon is None
+    assert set(attributes) == {"source", "scrubbed_at"} and "source_content_id" not in attributes
+    assert shared_blanked == 0                                             # ★공용 행은 그대로

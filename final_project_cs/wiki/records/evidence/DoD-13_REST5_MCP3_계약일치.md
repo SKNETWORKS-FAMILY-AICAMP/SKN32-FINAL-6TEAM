@@ -1,5 +1,7 @@
 # DoD-13 — REST 5개 endpoint 와 MCP read-only 3개 tool 이 문서·contract 와 일치
 
+> ★`[2026-10-02 주석 — 기록 본문은 고치지 않는다]` 이 판정의 **MCP 3개는 옛 쇼핑몰 Case 도구**이고, 이 판정이 재는 것은 도구 이름·scope 의 **선언 일치**이지 **접속 가능 여부가 아니다** — 그 3개는 앱에 연결된 적이 없었다(git 이력 전체 확인). 지금의 MCP 는 새 모듈(`app/modules/travel_ops/mcp_server.py`, 읽기 5 · 쓰기 7·스위치)이고 `tests/e2e/test_mcp_server.py` 가 **MCP 프로토콜로 실제 접속**해 검증한다([mcp-tools.md](../../external/mcp-tools.md)). 아래 본문의 「in-process 로만 검증」 한계는 그 시험으로 풀렸다.
+
 - v5 §20 항목 13 / 검증 방법: OpenAPI/MCP test
 - 실행: 2026-08-12 23:20 · 실측 원문 `wiki/records/evidence/_raw/DoD-13.md`
 - 판정: 통과

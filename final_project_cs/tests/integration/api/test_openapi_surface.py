@@ -26,12 +26,20 @@ from app.presentation.api.app import app
 
 # 설계 계약 문서 §1 의 표 — 이것은 **최소 집합**이지 상한이 아니다.
 CONTRACT_V1_PATHS = {
+    # 운영자 웹앱 연동 계약의 고객 문의·공개 공지. 문의 쓰기는 고객 인증과 CSRF를 거친다.
+    "/v1/web/support/notices",
+    "/v1/web/support/inquiries",
+    # 공개 계약 rest-endpoints.md에 이미 정의된 이동 선택·보관 정책·안전 복구 경로.
+    "/v1/web/legal/retention",
+    "/v1/web/trip-intakes/{intake_id}/moves/{pair}/mode",
+    "/v1/web/trip-intakes/{intake_id}/moves/{pair}/options",
+    "/v1/web/trips/{trip_id}/safety/recovery",
     "/v1/cases",
     "/v1/cases/{case_id}",
     "/v1/cases/{case_id}/messages",
     "/v1/cases/{case_id}/actions/{action_id}/approve",
     "/v1/outbox/{message_id}/resolve",
-    # ★2026-09-14 여행 API(`app/modules/travel_ops/trip_api.py`) — 등록·조회·신고·재요청.
+    # ★2026-09-14 여행 API(`app/domains/travel_ops/entry/trip_api.py`) — 등록·조회·신고·재요청.
     #   scope `trip:read`·`trip:write`, 등록은 request_id 멱등, 신고·재요청은 원인 칸의
     #   request_id 로 중복을 막는다.
     "/v1/trips",
@@ -41,13 +49,13 @@ CONTRACT_V1_PATHS = {
     "/v1/trips/{trip_id}/rollback",
     # ★2026-09-14 고객 자유 문장 → Case → 분류 → 여행 창구
     "/v1/trips/{trip_id}/messages",
-    # ★★2026-09-22 **일정 생성**(`app/modules/travel_ops/planner.py`) — 요청 → 초안 → 판정
+    # ★★2026-09-22 **일정 생성**(`app/domains/travel_ops/components/planning/planner.py`) — 요청 → 초안 → 판정
     #   통과 → (`register:true` 면) 등록. scope `trip:write`, 등록까지 가면 `/v1/trips` 와
     #   **같은 멱등 키**를 쓴다. 이 경로는 v11 §4-A(「계획 생성은 우리 일이 아니다」)를
     #   뒤집는 것이고, 사용자 지시로 만들었다 —
     #   `wiki/records/reports/2026-09-22_2205_일정생성기_v11-4A를_뒤집는다.md`.
     "/v1/trips/plan",
-    # ★2026-09-22 위임(`app/modules/travel_ops/delegation_api.py`) — 승인 뒤 자동 실행을
+    # ★2026-09-22 위임(`app/domains/travel_ops/entry/delegation_api.py`) — 승인 뒤 자동 실행을
     #   여는 둘째 문을 주고 거두는 자리. scope `delegation:read`·`delegation:write`
     #   (`action:approve` 와 나눈다 — 승인은 제안 한 건, 위임은 거둘 때까지 서 있는 권한),
     #   상태 변경은 누가·왜 를 필수로 받고 `delegation_events`(021)에 덧붙여 기록한다.
@@ -69,6 +77,28 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trips/{trip_id}/proposals/{proposal_id}/choose",
     "/v1/web/trips/{trip_id}/messages",
     "/v1/web/trips/{trip_id}/notices",
+    # ★2026-09-29 모델 예열 — 화면이 채팅을 열 때 부른다(사용자 식별 키). `wiki/external/rest-endpoints.md` 웹 표
+    "/v1/web/warmup",
+    # ★2026-09-29 채팅 기록(서버가 저장한 최근 대화 — 결정 단위의 재료) · 구글 지도 불러오기 허락(한도) · 웹 되돌리기.
+    #   `wiki/external/rest-endpoints.md` 「채팅 결정 단위」·「구글 지도 불러오기 허락」
+    "/v1/trips/{trip_id}/chat",
+    "/v1/web/trips/{trip_id}/chat",
+    "/v1/web/map-load",
+    "/v1/web/trips/{trip_id}/rollback",
+    # ★2026-10-02 웹(사용자 키)용 신고 · 다른 안으로 — 에이전트 입구(`/v1/trips/{id}/reports` · `…/alternate`)와 같은 처리, 본인 여행만. 개인 AI(MCP)가 쓴다
+    "/v1/web/trips/{trip_id}/reports",
+    "/v1/web/trips/{trip_id}/items/{item_id}/alternate",
+    # ★2026-09-30 변경 초인종 — 「이 여행 바뀜」 신호만 흘린다(text/event-stream, 사용자 키). `wiki/external/rest-endpoints.md`
+    "/v1/web/trips/{trip_id}/events",
+    # ★2026-10-01 고객 연락처(복구 이메일 · 디스코드 웹훅) — 사용자 키. `wiki/external/rest-endpoints.md`
+    "/v1/web/profile",
+    "/v1/web/profile/discord/test",
+    "/v1/web/profile/discord/connect/start",
+    "/v1/web/profile/telegram/connect/start",
+    "/v1/web/profile/telegram/test",
+    "/v1/web/profile/telegram",
+    "/v1/telegram/webhook",
+    "/v1/web/profile/discord/connect/callback",
     # ★2026-09-27 계획 읽기 — 글·사진·PDF·docx·xlsx 를 받아 확인 화면용 값으로(설계서 program/plan/…고객계획_읽기_설계…).
     #   고객 id 는 키에서, 남의 접수는 404. 읽기는 뒤에서 돈다.
     "/v1/web/trip-intakes",
@@ -76,16 +106,60 @@ CONTRACT_V1_PATHS = {
     # 확인 화면 — 고친 값은 새 판(낡은 판은 409), 등록은 `_create_trip` 한 곳(request_id = 접수 + 판)
     "/v1/web/trip-intakes/{intake_id}/edits",
     "/v1/web/trip-intakes/{intake_id}/confirm",
+    # ★2026-10-06 로딩 중 질문의 답 — 한 문항씩 바로 저장(같은 문항은 덮어쓴다), 등록 때 설문에 합쳐진다. `wiki/external/rest-endpoints.md` 「설문 질문」
+    "/v1/web/trip-intakes/{intake_id}/survey",
     # 「일정 짜 줘」 — 조건을 확인해 누르면 일정 생성기 초안을 판정 뒤 등록(request_id = 접수 + plan + 판)
     "/v1/web/trip-intakes/{intake_id}/plan",
+    # ★2026-10-02 접수 읽기 진행(SSE) — 뒤에서 도는 읽기가 어디까지 왔는지. 채팅(`/messages`)·일정 짜기(`/plan`)는 같은 경로가
+    #   `Accept: text/event-stream` 이면 SSE 로 답한다(새 경로 없음). `wiki/external/rest-endpoints.md` 「웹 실시간 진행」
+    "/v1/web/trip-intakes/{intake_id}/events",
+    # ★2026-10-02 확인 화면 수정 화면 — 대체 후보 · 장소 검색 · 사진(읽기 전용) · 전체 자동 추천 · 재검증(계획 확인 시나리오 목업).
+    #   `wiki/external/rest-endpoints.md` 「확인 화면 검사 · 후보 · 자동 추천」
+    "/v1/web/trip-intakes/{intake_id}/candidates",
+    "/v1/web/trip-intakes/{intake_id}/place-search",
+    "/v1/web/trip-intakes/{intake_id}/autofix",
+    "/v1/web/trip-intakes/{intake_id}/revalidate",
+    "/v1/web/places/photos",
+    # ★2026-10-03 소셜 로그인(구글 먼저) · ★2026-10-04 브라우저 세션 쿠키 · 여행 삭제(D-CS-011) — `wiki/external/rest-endpoints.md`
+    "/v1/web/auth/providers",
+    "/v1/web/auth/{provider}/start",
+    "/v1/web/auth/{provider}/callback",
+    "/v1/web/auth/exchange",
+    "/v1/web/auth/links",
+    "/v1/web/auth/{provider}",
+    "/v1/web/auth/session",
+    "/v1/web/auth/adopt",
+    "/v1/web/auth/me",
+    "/v1/web/auth/logout",
+    "/v1/web/trips/{trip_id}/delete",
+    # ★2026-10-06 항로 지킴이(일정이 꼬이면 알아서 고치는 모드) 켜기 · 끄기 — 쿠키 세션으로만(키 · 에이전트 키는 403). `wiki/external/rest-endpoints.md` 「항로 지킴이」
+    "/v1/web/trips/{trip_id}/guardian",
+    # ★2026-10-06 재난으로 정지된 일정 **다시 시작** — 본인 여행만(사용자 키 · 쿠키). `wiki/external/rest-endpoints.md` 「재난 시 일정 정지」
+    "/v1/web/trips/{trip_id}/safety/resume",
+    # ★2026-10-06 개인 AI 입구(MCP) 읽기 도구의 웹 입구 둘 — 일정 위험 점검 · 이동 판정(둘 다 읽기 · 본인 여행만). `wiki/external/rest-endpoints.md` 「일정 위험 점검 · 이동 판정」
+    "/v1/web/trips/{trip_id}/risks",
+    "/v1/web/moves/judge",
+    # ★2026-10-04 에이전트 키(D-CS-012) — 쿠키 로그인한 회원만 만들고 관리한다
+    "/v1/web/agent-keys",
+    "/v1/web/consents",
+    "/v1/web/agent-keys/{key_id}",
+    # ★2026-10-04 이동 경로선(이동 세션 255a873f) — 화면이 이동 항목의 경로선을 그린다(읽기, 사용자 키/쿠키). 계약 `wiki/records/reports/2026-10-04_0400_이동_파이썬_길찾기_서버없이_리포트.md`
+    "/v1/web/trips/{trip_id}/route-shapes",
+    # ★2026-10-04 접수 확인 화면용 경로선(ui 세션 요청) — 등록 전 지도에 그린다(읽기, 사용자 키/쿠키, 저장된 검사만)
+    "/v1/web/trip-intakes/{intake_id}/route-shapes",
 }
 
 # ★키 없이 열어 둔 쓰기 경로 — **이름으로** 적는다. 여기 없는 쓰기 경로가 인증 없이 열리면 실패한다.
-#   `/v1/web/session`: 첫 방문에 사용자 식별 키를 발급하는 자리라 키를 받을 수 없다(D-020 · 025).
-OPEN_WRITE_PATHS = {"/v1/web/session"}
+#   `/v1/web/session` · `/v1/web/auth/session`: 첫 방문에 키/쿠키 세션을 발급하는 자리라 인증을 받을 수 없다(D-020 · 025 · D-CS-011 — 사람 확인과 주소당 한도가 막는다).
+#   `/v1/web/auth/{provider}/start`: 로그인 시작은 인증 없이 열린다(`link` 모드는 함수 안에서 인증을 확인한다 — 사람 확인 · 주소당 한도).
+#   `/v1/web/auth/exchange`: 일회용 표 + 시작한 브라우저의 `client_nonce` 가 인증이다(로그인 CSRF 막기).
+#   `/v1/web/auth/adopt`: 옛 키를 쿠키로 옮기는 자리 — 함수 안에서 키를 확인한다(쿠키와 같이 오면 400, 주소당 한도).
+#   `/v1/telegram/webhook`: 텔레그램이 부르는 곳 — 사용자 인증이 아니라 **비밀 헤더**(`X-Telegram-Bot-Api-Secret-Token` = 서버 비밀값, 상수 시간 비교)가 인증이다. 틀리면 401 이고 아무것도 안 바뀐다(`telegram_connect.verify_secret`).
+OPEN_WRITE_PATHS = {"/v1/web/session", "/v1/web/auth/session", "/v1/web/auth/{provider}/start", "/v1/web/auth/exchange", "/v1/web/auth/adopt",
+                    "/v1/telegram/webhook"}
 
 # 인증으로 치는 의존성 — scope 키(`require_scope`) 또는 웹 사용자 키(`_web_customer`)
-AUTH_DEPENDENCIES = ("require_scope.", "._web_customer")
+AUTH_DEPENDENCIES = ("require_scope.", "._web_customer", "require_identity")
 
 WRITE_METHODS = {"post", "put", "patch", "delete"}
 

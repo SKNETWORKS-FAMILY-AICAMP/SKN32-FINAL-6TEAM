@@ -11,6 +11,10 @@ domain_note: 하네스 구조는 도메인 무관이다. 「여행 시나리오 
 
 # 평가 하네스
 
+> ★`[2026-10-03]` **이 문서 아래의 A/B/Proposed · golden/holdout(쇼핑몰 문장) 서술은 쇼핑몰 시절 기록이다.** 그 자료와 도구는 `legacy/commerce_eval/` 로 옮겼고 지금은 돌지 않는다(D-023 — 쇼핑몰 시절 자산은 쓰지 않는다).
+> 지금 도는 평가: **여행 분류** `eval/datasets/travel_golden.jsonl`(72) · `travel_holdout.jsonl`(24) — 검사 `python -m scripts.verify_travel_eval_datasets`, 재생 `python -m eval.travel_classification.replay <자료>`
+> (실제 모델로 intent · issue_code · **엉뚱한 팀으로 가는 것** · 지연을 잰다. 라벨은 **사람 검수 전 초안**이고 holdout 은 프롬프트를 고치는 데 쓰지 않는다). 그 밖에 `eval/decision_unit/`(고객 말 → 할 일 + 대상) · `eval/runners/travel_scenarios.py`(일정 시나리오).
+
 `eval/`
 
 ## 구조
@@ -33,7 +37,7 @@ python -m eval.runners.travel_scenarios              # 전체 10건, 보고서�
 python -m eval.runners.travel_scenarios --case t-cash-only --keep
 ```
 
-확정 시나리오 하루를 변형해 흘리고(감시 사건 넣기·빼기 · 고객 신고 · 재요청 · 여행 제약 교체), **적용된 모든 일정 버전**을 등록 때와 **같은 판정기**(`app/modules/travel_ops/itinerary_checks.py`)로 다시 본다 — 겹침 · 이동 소요 · 영업시간 · 브레이크 · 결제 수단 · 예산. v11 DoD-22 「필수 조건 위반 0건」이 이것이다.
+확정 시나리오 하루를 변형해 흘리고(감시 사건 넣기·빼기 · 고객 신고 · 재요청 · 여행 제약 교체), **적용된 모든 일정 버전**을 등록 때와 **같은 판정기**(`app/domains/travel_ops/components/itinerary/itinerary_checks.py`)로 다시 본다 — 겹침 · 이동 소요 · 영업시간 · 브레이크 · 결제 수단 · 예산. v11 DoD-22 「필수 조건 위반 0건」이 이것이다.
 
 | | |
 |---|---|
@@ -149,3 +153,7 @@ abl_no_*.jsonl   ← ablation 5종 전부
 - [../../../wiki/evaluation/protocol.md](../../../wiki/evaluation/protocol.md) — 평가 설계
 - [../../../wiki/evaluation/metrics.md](../../../wiki/evaluation/metrics.md) — 지표 정의
 - [../../../wiki/business/infrastructure-cost.md](../../../wiki/business/infrastructure-cost.md) — 원가를 여기서 뽑는다
+
+## 일정 항목 인식 모델의 비교
+
+원본 비교·추가 학습·최종 채택 조건은 [모델 평가 기준](slm-model-evaluation.md), 날짜별 실측은 [연구 기록](../../../program/research/daily_rag_slm/index.md)에서 확인한다.

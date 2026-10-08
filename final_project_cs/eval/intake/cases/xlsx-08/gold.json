@@ -1,0 +1,71 @@
+{
+ "case_id": "xlsx-08",
+ "format": "xlsx",
+ "defect": null,
+ "party": 4,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.xlsx"
+  }
+ ],
+ "lines": [
+  "일차 | 날짜 | 시각 | 일정 | 메모",
+  "1일차 | 2026-10-31 | 09:30 | 북촌한옥마을 산책 | ",
+  "1일차 | 2026-10-31 | 12:30 | 진옥화할매원조닭한마리 | ",
+  "1일차 | 2026-10-31 | 15:00 | 여의도한강공원 | ",
+  "2일차 | 2026-11-01 | 09:30 | 경복궁 관람 | ",
+  "2일차 | 2026-11-01 | 12:30 | 광장시장 빈대떡 | ",
+  "2일차 | 2026-11-01 | 15:00 | 국립민속박물관 | "
+ ],
+ "items": [
+  {
+   "date": "2026-10-31",
+   "start": "09:30",
+   "title": "북촌한옥마을 산책",
+   "place": "북촌한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-31",
+   "start": "12:30",
+   "title": "진옥화할매원조닭한마리",
+   "place": "진옥화할매원조닭한마리",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-31",
+   "start": "15:00",
+   "title": "여의도한강공원",
+   "place": "여의도한강공원",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-01",
+   "start": "09:30",
+   "title": "경복궁 관람",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-01",
+   "start": "12:30",
+   "title": "광장시장 빈대떡",
+   "place": "광장시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-01",
+   "start": "15:00",
+   "title": "국립민속박물관",
+   "place": "국립민속박물관",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

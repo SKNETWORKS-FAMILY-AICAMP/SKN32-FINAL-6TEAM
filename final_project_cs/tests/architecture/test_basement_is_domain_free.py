@@ -1,14 +1,14 @@
 """★basement 층에 업무 도메인 어휘가 들어오지 못하게 막는다.
 
 이 저장소의 목표는 **어떤 CS 플랫폼 요청이 와도 바로 대응 가능한 범용 basement** 다.
-도메인은 `app/modules/**` 와 `config/**` 에만 산다 — 2026-09-08-10 에 커머스 CS 를
+도메인은 `app/domains/**` 와 `config/**` 에만 산다 — 2026-09-08-10 에 커머스 CS 를
 여행 CS 로 통째로 갈아끼우면서 그 주장을 실제로 시험했고, basement 는 안 바뀌었다.
 
 그래서 지켜야 할 경계가 있다:
 
-    basement (도메인을 몰라야 함)      app/core, app/domain, app/application,
+    basement (도메인을 몰라야 함)      app/core(Case 상태 규칙 app/core/case_lifecycle 포함), app/application,
                                        app/infrastructure, app/presentation
-    도메인 자리 (알아도 됨)            app/modules/**, config/**, 도메인 마이그레이션
+    도메인 자리 (알아도 됨)            app/domains/**, config/**, 도메인 마이그레이션
 
 ★검사하지 않는 규칙은 지켜지지 않는다. 이 저장소에서 여러 번 겪었다.
   실제로 2026-08-16 에 `app/core/verification.py` 가 구독·결제 어휘를 Core 에 박았고,
@@ -27,10 +27,13 @@ import pytest
 APP = Path("app")
 
 #: basement — 업무 도메인 어휘가 있으면 안 되는 곳
-BASEMENT_DIRS = ("core", "domain", "application", "infrastructure", "presentation")
+#: ★`[2026-10-06]` 옛 `app/domain/`(Case 상태 규칙 두 파일)을 `app/core/case_lifecycle/` 로 옮겼다 —
+#:  업무 도메인 묶음 폴더 이름과 「domain」이 겹치지 않게. `core` 가 그 자리를 덮는다.
+BASEMENT_DIRS = ("core", "application", "infrastructure", "presentation")
 
 #: 도메인 자리 — 여기서는 도메인을 알아도 된다
-DOMAIN_DIRS = ("modules",)
+#: ★`[2026-10-06]` 옛 이름 `modules`. 끌 수 있는 기능(모듈 칸)과 겹쳐 `domains` 로 바꿨다(D-CS-013).
+DOMAIN_DIRS = ("domains",)
 
 #: 업무 도메인 어휘. ★"고객·케이스·팀" 처럼 CS 일반 개념은 넣지 않는다 —
 #:  그건 이 플랫폼이 다루는 대상 자체다.
@@ -41,7 +44,7 @@ DOMAIN_WORDS = (
     "order_id", "line_item", "shipment", "sku", "cart",
     # ★여행 (v10~ 현재 도메인). 2026-09-10 추가.
     #   전에는 여기 여행 어휘가 **하나도 없었다** — 도메인을 갈아끼우면서
-    #   `app/modules/travel_ops/` 만 만들고 이 목록은 안 늘렸기 때문이다.
+    #   `app/domains/travel_ops/` 만 만들고 이 목록은 안 늘렸기 때문이다.
     #   그래서 `booking_id` 가 코어로 새도 검사가 울지 않는 상태였다.
     #   도메인을 바꾸면 **새 어휘를 여기 넣는 것까지가 교체다.**
     "booking", "itinerary", "lodging", "supplier_booking", "traveller",
@@ -101,7 +104,7 @@ def test_basement_layers_do_not_know_the_business_domain():
             problems[rel] = hits
 
     assert not problems, (
-        "basement 에 업무 도메인 어휘가 있다. 도메인은 app/modules/ 또는 선언(config/)으로 내린다:\n"
+        "basement 에 업무 도메인 어휘가 있다. 도메인은 app/domains/ 또는 선언(config/)으로 내린다:\n"
         + "\n".join(f"  {f}:{n}  {t}" for f, hits in problems.items() for n, t in hits))
 
 
@@ -112,7 +115,7 @@ def test_domain_modules_are_allowed_to_know_their_domain():
     (게이트가 '아무 데도 도메인이 없다' 를 통과시키면 잘못 만든 것이다.)
     """
     hits = [p for p in _python_files(*DOMAIN_DIRS) if _offending_lines(p)]
-    assert hits, "app/modules/ 에 도메인 구현이 없다 — 게이트가 헛돌고 있다"
+    assert hits, "app/domains/ 에 도메인 구현이 없다 — 게이트가 헛돌고 있다"
 
 
 # invariant: INV-CS-ARCH-004
@@ -140,7 +143,7 @@ def test_allow_list_has_no_stale_entries():
 # invariant: INV-CS-ARCH-002
 @pytest.mark.parametrize("path", sorted(p.as_posix() for p in _python_files(*BASEMENT_DIRS)))
 def test_no_basement_file_imports_a_domain_module(path: str):
-    """★basement 는 `app.modules` 를 import 하지 않는다.
+    """★basement 는 `app.domains` 를 import 하지 않는다.
 
     조립은 composition root 가 **선언을 읽어** 한다. basement 가 특정 모듈을
     직접 부르면 그 모듈 없이는 못 뜬다.
@@ -148,5 +151,5 @@ def test_no_basement_file_imports_a_domain_module(path: str):
     if path == "app/composition.py":
         pytest.skip("composition root 는 선언대로 도메인 모듈을 조립하는 자리다")
     text = Path(path).read_text(encoding="utf-8")
-    assert "from app.modules" not in text and "import app.modules" not in text, \
+    assert "from app.domains" not in text and "import app.domains" not in text, \
         f"{path} 가 도메인 모듈을 직접 import 한다"

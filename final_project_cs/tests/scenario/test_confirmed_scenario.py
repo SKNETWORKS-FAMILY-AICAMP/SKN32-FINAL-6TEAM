@@ -26,16 +26,16 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.infrastructure.travel.base import TravelSources
-from app.infrastructure.travel.disruptions import DisruptionCheck
-from app.infrastructure.travel.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+from app.domains.travel_ops.ports.data_sources.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
                                               ReplayWarning, ReplayWeather)
-from app.modules.travel_ops.itinerary import Item, TripStore
-from app.modules.travel_ops.trip_desk import TripDesk
-from app.modules.travel_ops.trip_watch import TripWatcher
+from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
+from app.domains.travel_ops.components.watch.trip_watch import TripWatcher
 
 KST = ZoneInfo("Asia/Seoul")
-SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "modules" / "travel_ops"
+SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "domains" / "travel_ops"
                        / "scenarios" / "seoul_day_taiwan_friends.json").read_text(encoding="utf-8"))
 DAY = SCENARIO["trip"]["date"]
 REPORTS = {report["type"]: report for report in SCENARIO["customer_reports"]}
@@ -89,7 +89,7 @@ def world():
     check = DisruptionCheck(sources, limits=lambda: (60, 30)).check
     watcher = TripWatcher(store=store, check=check, connection_factory=get_connection, clock=clock,
                           routes=SCENARIO["routes"], route_events=ReplayRouteEvents(timeline))
-    desk = TripDesk(store=store, connection_factory=get_connection)
+    desk = TripDesk(store=store, connection_factory=get_connection, dining_ledger=False)   # 시나리오 모드와 같게
     yield {"tenant": tenant, "store": store, "trip_id": trip_id, "clock": clock,
            "watcher": watcher, "desk": desk}
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:

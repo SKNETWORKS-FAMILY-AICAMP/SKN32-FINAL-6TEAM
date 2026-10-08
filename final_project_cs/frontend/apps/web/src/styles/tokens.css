@@ -1,8 +1,16 @@
-/* Palette of the 2026-09-23 journey mockup. The mockup defines a light scheme only. */
-:root {
+/*
+ * Two themes on the same roles (2026-10-03, user-confirmed values): green — the 2026-09-23 journey mockup, the default — and
+ * white (`data-theme="neutral"` on <html>) — the plan-check streaming mockup. Chosen in the menu's theme card
+ * (`lib/settings.ts`). Fonts, sizes and weights are the same in both. A screen's CSS uses roles, never a colour.
+ * An element with its own `data-theme` (the menu's theme samples) shows that theme inside it.
+ */
+:root, [data-theme="green"] {
+  /* `[2026-10-06 사용자 지적 — 애니메이션을 전체적으로 부드럽게]` 움직임의 곡선과 시간은 이 셋만 쓴다: 부드럽게 감속(들어옴 · 미끄러짐) · 부드럽게 가속(나감) · 시간. */
+  --ease-soft: cubic-bezier(.22, .8, .3, 1); --ease-leave: cubic-bezier(.4, 0, .8, .4); --motion-soft: 340ms;
   color-scheme: light;
   --color-text: #24392f;
-  --color-muted: #6d7c73;
+  /* `[2026-10-07 사용자 결정 — 흐린 글자 한 단계 진하게]` 흐린 글자(--color-faint)는 흰 바탕 · 연한 바탕에서 읽기 기준 4.5:1 이상, 보조 글자(--color-muted)는 그보다 한 단계 진하게(5.5:1 이상). 이전: muted #6d7c73(4.4:1) · faint #a5b1a9(2.2:1) / 화이트 muted #86868c(3.6:1) · faint #b9b9bd(2.0:1) */
+  --color-muted: #56645b;
   --color-border: #dce3dd;
   --color-surface: #ffffff;
   --color-background: #f3f5f3;
@@ -18,5 +26,59 @@
   --color-error: #965640;
   --color-error-soft: #fdf3ed;
   --color-error-border: #ecd2c7;
+  /* Roles added 2026-10-03 for the plan-check screen (user-approved list); the white theme below redefines them too. */
+  --color-text-secondary: #4a5d52;
+  --color-faint: #66746b;
+  --color-divider: #e8ede9;
+  --color-subtle-strong: #e4e9e5;
+  --color-border-strong: #c3cdc6;
+  --color-success: #3d7a56;
+  --color-success-soft: #e3f0e7;
+  --color-adjusted: #3f6a8a;
+  --color-adjusted-soft: #e6eff6;
+  --color-adjusted-border: #bcd0df;
+  --color-selected: #2e6047;
+  --color-selected-soft: #dcebe1;
+  --color-warning-surface: #fdfaf3;
+  --color-inverse: #24392f;
+  --color-on-inverse: #ffffff;
+  --color-scrim: rgba(36, 57, 47, 0.45);
   --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
+}
+
+/* White theme — the plan-check streaming mockup (`mockups/tripilot-plan-check-streaming.html`). */
+[data-theme="neutral"] {
+  --color-text: #1c1c1e;
+  --color-muted: #5f5f65;
+  --color-border: #dadad6;
+  --color-surface: #ffffff;
+  --color-background: #f2f2ef;
+  --color-paper: #ffffff;
+  --color-primary: #1c1c1e;
+  --color-primary-hover: #2c2c2e;
+  --color-on-primary: #ffffff;
+  --color-soft: #ececea;
+  --color-subtle: #f6f6f4;
+  --color-warning: #a35a00;
+  --color-warning-soft: #fff0d4;
+  --color-warning-border: #e9c27a;
+  --color-error: #c03a1a;
+  --color-error-soft: #fde5de;
+  --color-error-border: #f2b8a8;
+  --color-text-secondary: #48484d;
+  --color-faint: #707074;
+  --color-divider: #ebebe7;
+  --color-subtle-strong: #ececea;
+  --color-border-strong: #c2c2c6;
+  --color-success: #4f7a63;
+  --color-success-soft: #e8f1ec;
+  --color-adjusted: #3f6a8a;
+  --color-adjusted-soft: #e6eff6;
+  --color-adjusted-border: #bcd0df;
+  --color-selected: #2457d6;
+  --color-selected-soft: #e1e9ff;
+  --color-warning-surface: #fffaf0;
+  --color-inverse: #26262a;
+  --color-on-inverse: #ffffff;
+  --color-scrim: rgba(28, 28, 30, 0.45);
 }

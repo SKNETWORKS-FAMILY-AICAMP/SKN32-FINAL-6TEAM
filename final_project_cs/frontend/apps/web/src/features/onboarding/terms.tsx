@@ -1,80 +1,101 @@
 "use client";
 
 import { useEffect, useRef, type KeyboardEvent } from "react";
+import { requiredAgreed, type ConsentCode, type ConsentMap } from "@/features/consent/consent-model";
+import { TermsBody } from "@/features/consent/terms-body";
+import { plainTitle } from "@/features/consent/terms-text";
+import { DRAFT_NOTICE, TERMS_EFFECTIVE, TERMS_STATUS, type TermsDoc } from "@/features/consent/terms-content";
+import { termsDocs, useLiveTerms } from "@/features/consent/terms-live";
+import { useSettings } from "@/lib/settings";
 import type { Translate } from "@/lib/i18n";
 import { DrawnCheck, OnboardingIcon } from "./icons";
 import styles from "./onboarding.module.css";
 
-/** Interaction-only draft terms; replace the copy with reviewed terms before release. */
-const sections = [
-  ["이 문서에 대하여", "About this document", "이 문서는 약관 열람과 동의 동작을 확인하기 위한 목업용 예시입니다. 실제 서비스의 확정된 이용약관이나 개인정보 처리방침이 아닙니다. 정식 서비스에 적용하기 전에 운영 주체, 실제 처리 방식과 이용자 권리를 반영한 문서로 교체해야 합니다.", "This is sample content for previewing the reading and consent flow. It is not the final terms of service or privacy policy. Before release, replace it with reviewed documents that describe the operator, actual data practices, and user rights."],
-  ["서비스 이용 안내", "Using the service", "triPilot 목업에서는 여행 취향을 선택하고 준비한 여행 계획을 등록하는 흐름을 체험할 수 있습니다. 일정과 장소, 이동 시간 등을 살펴보고 여행 계획을 조정하는 화면을 제공합니다. 화면에 표시되는 결과는 기능 설명을 위한 예시입니다.", "The triPilot prototype lets you explore selecting travel preferences and adding a travel plan. Screens demonstrate reviewing places, travel times, and itinerary changes. Results shown in the prototype illustrate the intended experience."],
-  ["여행 정보 확인", "Checking travel information", "여행지의 운영시간, 예약 조건, 교통편과 방문 가능 여부는 달라질 수 있습니다. 실제 예약이나 방문 전에는 해당 시설 또는 제공 업체의 최신 안내를 직접 확인하는 흐름을 전제로 합니다. 목업의 예시 일정은 실제 예약이나 예약 확정을 의미하지 않습니다.", "Opening hours, reservation requirements, transport, and availability can change. Travelers should check current information with the relevant venue or provider before booking or visiting. Sample itineraries do not represent bookings or confirmations."],
-  ["입력 항목과 활용", "Information you enter", "이 화면에서는 언어, 여행 테마, 동행 인원, 교통수단, 예산과 여행 일정 등 입력 항목을 보여줍니다. 해당 정보는 사용자가 원하는 여행 조건을 이해하고 일정을 구성하는 화면에 활용하는 것으로 표현되어 있습니다. 실제 수집 항목과 처리 목적은 정식 안내에서 명확히 정해야 합니다.", "This preview includes language, travel themes, group size, transport, budget, and itinerary fields. These inputs are presented as context for understanding travel preferences and organizing an itinerary. The actual collection fields and purposes must be specified in the final notice."],
-  ["선택 정보", "Optional information", "식사 제한이나 종교 관련 항목은 원하는 경우에만 입력하는 선택 정보로 구성되어 있습니다. 입력하지 않고 건너뛰는 흐름을 제공합니다. 실제 서비스에서 이러한 정보를 처리한다면 그 필요성과 별도 동의 여부를 검토하고 명확하게 안내해야 합니다.", "Food restrictions and religion-related fields are optional in this preview, with a skip option. If the released service processes this information, its necessity and any separate consent requirements must be reviewed and explained clearly."],
-  ["보관과 이용자 권리", "Retention and user rights", "이 목업의 온보딩 답변은 현재 페이지의 상태로 유지됩니다. 서비스의 실제 보관 기간, 파기 방법, 열람·수정·삭제 요청 절차와 문의처는 아직 이 예시 문서에 정해져 있지 않습니다. 출시 전 확정된 정책을 구체적으로 안내해야 합니다.", "Onboarding answers in this prototype are held in the current page state. Actual retention periods, deletion practices, access and correction procedures, and contact details are not defined by this sample. The released service must provide its finalized policies."],
-  ["동의 전 확인", "Before agreeing", "이 문서의 끝까지 내려오면 아래 동의 체크박스가 활성화됩니다. 체크하면 전체 화면이 닫히고 기존 카드에도 동일한 동의 상태가 표시됩니다. 체크하지 않고 닫을 수도 있으며, 카드에서 동의를 해제하면 다음 단계로 진행할 수 없습니다. 이 동작은 목업에서만 확인하는 예시 동의 절차입니다.", "Reaching the end enables the agreement checkbox below. Checking it closes this view and updates the checkbox on the card. You may close without agreeing. Clearing consent on the card prevents continuing to the next step. This is a demonstration consent flow only."],
-] as const;
+/**
+ * ★`[2026-10-05 사용자 지시]` 약관 동의는 한 덩어리가 아니라 **항목별**이다(`features/consent/consent-model.ts`): 필수(서비스 이용약관 · 개인정보 수집·이용)는 동의해야 앱을 쓸 수 있고,
+ * 선택(민감정보 · 위치 · 알림 채널)은 거부해도 쓸 수 있다. 약관 전문은 `features/consent/terms-content.ts` 가 정본이다(한국어가 정본, 영어는 참고 번역).
+ * `[2026-10-05 사용자 지시]` 필수 항목도 **바로 체크할 수 있다**(전문을 끝까지 읽어야 한다는 잠금을 뺐다). 카드마다 전문이 상자 안에 있어 그 자리에서 내려 읽을 수 있고,
+ * 「전문 보기」는 같은 글을 크게 보여 줄 뿐이다. 체크한 것을 기록하는 것은 「동의하고 다음으로」를 누르는 행동이다(`onboarding.tsx`).
+ */
+/** `[2026-10-07]` 보관 기간 문장은 cs 프로젝트 서버가 준 것으로 조립한 판(`terms-live.ts`) — 못 읽었으면 웹에 실린 기본값. */
+export const termsDoc = (code: ConsentCode): TermsDoc | undefined => termsDocs().find((doc) => doc.code === code);
 
-const requiredConsent = (t: Translate) => t("[필수] 서비스 이용약관 및 개인정보 수집·이용 내용을 확인하고 동의합니다.", "[Required] I have reviewed and agree to the terms of service and the collection and use of personal data.");
+const tagOf = (doc: TermsDoc, t: Translate) => doc.required ? t("[필수]", "[Required]") : t("[선택]", "[Optional]");
+/**
+ * The words next to the box. ★The personal-data item also carries the age statement: the service is closed to children under 14 (their data needs a guardian's consent),
+ * and the customer confirms being 14 or older when agreeing (terms 제7조 ④) - there is no other age check in the app.
+ */
+const consentLine = (doc: TermsDoc, t: Translate) => `${tagOf(doc, t)} ${t(...plainTitle(doc.title))}${t("에 동의합니다.", " - I agree.")}${doc.code === "privacy" ? t(" 저는 만 14세 이상입니다.", " I am 14 or older.") : ""}`;
 
-export function TermsCardBody({ t, read, agreed, consentMotion, onReadTerms, onAgree, onContinue }: {
-  t: Translate; read: boolean; agreed: boolean; consentMotion: boolean;
-  onReadTerms: () => void; onAgree: (checked: boolean) => void; onContinue: () => void;
+/** 「초안」 표시: 변호사 검토와 보관 기간 확정 전의 약관임을 숨기지 않는다(법령 조문은 확인함 — `terms-content.ts` 의 `DRAFT_NOTICE`). */
+function DraftNote({ t }: { t: Translate }) {
+  if (TERMS_STATUS !== "draft") return null;
+  return <p className={styles.termsDraft} role="note">{t(DRAFT_NOTICE[0], DRAFT_NOTICE[1])}</p>;
+}
+
+export function TermsCardBody({ t, choices, consentMotion, alertTyped = false, onReadDoc, onToggle, onContinue }: {
+  t: Translate; choices: ConsentMap; consentMotion: boolean;
+  /** The customer typed a Discord address on the first card: it is kept only if the alert-channel item is ticked. */
+  alertTyped?: boolean;
+  onReadDoc: (code: ConsentCode) => void; onToggle: (code: ConsentCode, checked: boolean) => void; onContinue: () => void;
 }) {
+  const { docs } = useLiveTerms(useSettings().language);
   return <>
     <p className={styles.termsIntro}>{t("여행을 시작하기 전에", "Before we begin")}</p>
-    <button type="button" className={styles.termsSummary} data-action="read-terms" aria-haspopup="dialog" onClick={onReadTerms}>
-      <strong>{t("서비스 이용 및 개인정보 안내", "Service & personal data")}</strong>
-      <span>{t("입력한 일정과 취향을 여행 지원에 활용합니다. 종교와 식사 관련 정보는 원하는 경우에만 입력할 수 있습니다.", "Your schedule and preferences are used to support your travel. Religion and food information are optional.")}</span>
-      <span className={styles.termsReadLink}>{t("전체 약관 읽기 ↗", "Read full terms ↗")}</span>
-    </button>
-    <label className={styles.termsCheck}>
-      <input type="checkbox" id="terms-check" disabled={!read} checked={agreed} onChange={(event) => onAgree(event.target.checked)} />
-      <span className={`${styles.consentMark} ${consentMotion ? styles.completionMotion : ""}`} aria-hidden="true"><DrawnCheck className={styles.drawnCheck} /></span>
-      <span>{requiredConsent(t)}</span>
-    </label>
-    <p className={styles.draftNote}>{t("목업용 약관 요약 · 실제 약관 검토 전", "Draft terms summary for the mockup · not final terms")}</p>
-    <button type="button" className={`${styles.next} ${styles.termsContinue}`} disabled={!agreed} onClick={onContinue}>{t("동의하고 다음으로", "Agree and continue")}<OnboardingIcon name="arrow" size={15} /></button>
+    <DraftNote t={t} />
+    <ul className={styles.consentList} aria-label={t("동의 항목", "Consent items")}>
+      {docs.map((doc) => {
+        return <li key={doc.code} className={styles.consentItem} data-doc={doc.code}>
+          <label className={styles.termsCheck}>
+            <input type="checkbox" id={`consent-${doc.code}`} checked={choices[doc.code]} onChange={(event) => onToggle(doc.code, event.target.checked)} />
+            <span className={`${styles.consentMark} ${consentMotion && choices[doc.code] ? styles.completionMotion : ""}`} aria-hidden="true"><DrawnCheck className={styles.drawnCheck} /></span>
+            <span>{consentLine(doc, t)}</span>
+          </label>
+          <p className={styles.consentSummary}>{t(doc.summary[0], doc.summary[1])}</p>
+          {/* The whole text, right here, in a box that scrolls on its own (no need to open anything to read it). */}
+          <div className={styles.consentText} role="region" tabIndex={0} aria-label={t(`${plainTitle(doc.title)[0]} 전문`, `${plainTitle(doc.title)[1]} - full text`)}><TermsBody doc={doc} t={t} /></div>
+          {doc.code === "alert_channel" && alertTyped && !choices.alert_channel && <p className={styles.consentHint}>{t("앞에서 입력한 디스코드 주소는 이 항목에 동의해야 저장돼요.", "The Discord address you entered earlier is saved only if you agree to this item.")}</p>}
+          <button type="button" className={styles.consentRead} data-action="read-terms" data-doc={doc.code} aria-haspopup="dialog" onClick={() => onReadDoc(doc.code)}>{t("전문 보기 ↗", "Read in full ↗")}</button>
+        </li>;
+      })}
+    </ul>
+    <button type="button" className={`${styles.next} ${styles.termsContinue}`} disabled={!requiredAgreed(choices)} onClick={onContinue}>{t("동의하고 다음으로", "Agree and continue")}<OnboardingIcon name="arrow" size={15} /></button>
   </>;
 }
 
-export function TermsReader({ t, read, agreed, onRead, onAgree, onClose }: {
-  t: Translate; read: boolean; agreed: boolean; onRead: () => void; onAgree: (checked: boolean) => void; onClose: () => void;
+/** The same text, enlarged (`[2026-10-05]` nothing has to be read to the end here: the box can be ticked at once). */
+export function TermsReader({ t, doc, agreed, onAgree, onClose }: {
+  t: Translate; doc: TermsDoc; agreed: boolean; onAgree: (checked: boolean) => void; onClose: () => void;
 }) {
   const scroller = useRef<HTMLElement>(null);
+  const { version } = useLiveTerms(useSettings().language);
 
   useEffect(() => { scroller.current?.focus(); }, []);
-  useEffect(() => {
-    const element = scroller.current;
-    if (!element) return;
-    const checkEnd = () => { if (element.clientHeight > 0 && element.scrollHeight - element.scrollTop - element.clientHeight <= 3) onRead(); };
-    const observer = new ResizeObserver(checkEnd);
-    observer.observe(element);
-    element.addEventListener("scroll", checkEnd, { passive: true });
-    const frame = requestAnimationFrame(checkEnd);
-    return () => { observer.disconnect(); element.removeEventListener("scroll", checkEnd); cancelAnimationFrame(frame); };
-  }, [onRead]);
 
   function escape(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") { event.stopPropagation(); onClose(); }
   }
 
+  const title = t(doc.title[0], doc.title[1]);
   return <div className={styles.termsDialog} role="dialog" aria-modal="true" aria-labelledby="terms-full-title" onKeyDown={escape}>
     <header className={styles.termsHeader}>
-      <div><small>{t("목업용 예시 · 확정 전", "PROTOTYPE · DRAFT")}</small><h2 id="terms-full-title">{t("서비스 이용 및 개인정보 안내", "Service & personal data")}</h2></div>
+      <div><small>{t("이용 안내", "NOTICE")} · {t(`버전 ${version} · 시행 ${TERMS_EFFECTIVE}`, `Version ${version} · effective ${TERMS_EFFECTIVE}`)}</small><h2 id="terms-full-title">{title}</h2></div>
       <button type="button" className={styles.termsClose} aria-label={t("약관 닫기", "Close terms")} onClick={onClose}>×</button>
     </header>
     <article ref={scroller} className={styles.termsScroll} tabIndex={0} aria-label={t("약관 전체 내용", "Full terms")}>
-      {sections.map((section, index) => <section key={section[0]}><h3>{index + 1}. {t(section[0], section[1])}</h3><p>{t(section[2], section[3])}</p></section>)}
+      <DraftNote t={t} />
+      <p>{t("한국어 약관이 정본이고, 영어는 참고용 번역이에요.", "The Korean text is the binding version; the English is a courtesy translation.")}</p>
+      <TermsBody doc={doc} t={t} />
       <p className={styles.termsEnd}>{t("약관 내용의 끝입니다.", "You have reached the end of the terms.")}</p>
     </article>
     <footer className={styles.termsFooter}>
-      <p id="terms-read-hint" role="status">{read ? t("내용을 확인했어요. 동의 여부를 선택해 주세요.", "You have reached the end. You can now choose whether to agree.") : t("약관을 끝까지 내려 읽으면 동의할 수 있어요.", "Scroll to the end of the terms to enable agreement.")}</p>
+      <p id="terms-read-hint" role="status">{doc.required
+        ? t("필수 항목이에요. 동의 여부를 선택해 주세요.", "This is required. Please choose whether to agree.")
+        : t("선택 항목이에요. 동의하지 않아도 앱을 쓸 수 있어요.", "This is optional. You can use the app without agreeing.")}</p>
       <label className={styles.termsCheck}>
-        <input type="checkbox" id="terms-full-check" disabled={!read} checked={agreed} onChange={(event) => onAgree(event.target.checked)} />
+        <input type="checkbox" id="terms-full-check" checked={agreed} onChange={(event) => onAgree(event.target.checked)} />
         <span className={styles.consentMark} aria-hidden="true"><DrawnCheck className={styles.drawnCheck} /></span>
-        <span>{requiredConsent(t)}</span>
+        <span>{consentLine(doc, t)}</span>
       </label>
     </footer>
   </div>;

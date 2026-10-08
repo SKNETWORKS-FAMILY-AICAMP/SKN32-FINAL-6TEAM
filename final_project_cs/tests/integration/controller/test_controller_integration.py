@@ -15,7 +15,7 @@ from app.core.contracts import ActionProposal, ContextPack, Evidence, InvalidTra
 from app.core.idempotency import idempotency_key
 from app.core.registry import RegistryError, TeamRegistry
 from app.core.transition import OutboxMessage, replay_case, transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db.repository import create_case, get_case, get_case_events
 from app.infrastructure.db.session import get_connection
 from app.infrastructure.messaging.outbox import OutboxBrokerAdapter
@@ -108,9 +108,8 @@ def db():
                     cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (tenant,))
-                    cur.execute("DELETE FROM returns WHERE tenant_id=%s", (tenant,))
+                    # ★`[2026-10-06]` 쇼핑몰 표(returns · order_items)는 DB 에서 지웠다(D-023).
                     cur.execute("DELETE FROM supplier_bookings WHERE tenant_id=%s", (tenant,))
-                    cur.execute("DELETE FROM order_items WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM bookings WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM customers WHERE tenant_id=%s", (tenant,))

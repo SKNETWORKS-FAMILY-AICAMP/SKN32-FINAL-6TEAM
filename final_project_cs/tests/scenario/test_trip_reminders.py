@@ -9,10 +9,10 @@ from datetime import timedelta
 
 from app.infrastructure.db.session import get_connection
 from app.infrastructure.notify.discord import render
-from app.modules.travel_ops.trip_reminders import ReminderRules, TripReminders, plan_reminders
+from app.domains.travel_ops.components.watch.trip_reminders import ReminderRules, TripReminders, plan_reminders
 
 from .test_case_version_day import SCENARIO, Clock, _at, _seed, _sources
-from app.modules.travel_ops.case_engine import cleanup_tenant
+from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
 
 import pytest
 
@@ -65,7 +65,7 @@ def _items(world):
 # ── 계산 ───────────────────────────────────────────────────────
 def test_windows_follow_the_first_item_and_each_move():
     """순수 계산 — 첫 항목 09:00, 이동 10:50·15:00·17:15·19:20."""
-    from app.modules.travel_ops.itinerary import Item
+    from app.domains.travel_ops.components.itinerary.itinerary import Item
     from uuid import uuid4
 
     items = [Item(item_id=uuid4(), seq=it["seq"], kind=it["kind"], title=it["title"], place_id=None,
@@ -133,7 +133,7 @@ def test_a_disrupted_route_is_held_for_the_watch_then_the_new_move_is_announced(
     assert "departure" not in _kinds_sent(held)
     assert [h["item"] for h in held.held] == [SCENARIO["items"][2]["title"]]
 
-    from app.modules.travel_ops.trip_watch import TripWatcher
+    from app.domains.travel_ops.components.watch.trip_watch import TripWatcher
 
     check, _ = _sources(clock)
     watcher = TripWatcher(store=world["store"], check=check, connection_factory=get_connection, clock=clock,
@@ -143,6 +143,27 @@ def test_a_disrupted_route_is_held_for_the_watch_then_the_new_move_is_announced(
     assert _kinds_sent(after) == ["departure"], after
     text = next(p for k, p in _notices(world) if k.startswith("departure:"))["text"]
     assert "가는 방법:" in text and "2호선 잠실→성수 직통" not in text
+
+
+class _RoadsOnly:
+    """UTIC 사건 소스와 같은 모양 — 도로만 답하고 지하철·버스는 `unsupported` 로 드러낸다."""
+
+    def unsupported(self, targets):
+        return [t for t in targets if not t.startswith("도로:")]
+
+    def affecting(self, targets):
+        return {}
+
+
+def test_a_route_the_source_cannot_check_is_not_announced_as_checked(world):
+    """★`[2026-09-29 이동 계산기 문제목록 #37]` 사건 소스가 확인하지 못하는 노선(2호선)을 「경로 확인 10:50」으로
+    안내하지 않는다 — 가는 방법·소요만 보내고, 확인 못 한 안내로 센다."""
+    world["clock"].now = _at("10:50")
+    outcome = _reminders(world, route_events=_RoadsOnly()).tick()
+    assert _kinds_sent(outcome) == ["departure"] and len(outcome.unchecked) == 1 and outcome.fatal == []
+    text = next(p for k, p in _notices(world) if k.startswith("departure:"))["text"]
+    assert "가는 방법: 2호선 잠실→성수 직통 · 약 13분" in text
+    assert "경로 확인" not in text, "확인하지 않은 경로를 확인했다고 말하지 않는다"
 
 
 def test_without_a_route_source_where_and_when_still_go(world):
@@ -156,8 +177,8 @@ def test_without_a_route_source_where_and_when_still_go(world):
 # ── 변경 통지에도 링크가 붙는다 (2026-09-20) ────────────────────
 def test_a_change_notice_carries_the_plan_link(world):
     """★상태의 정본은 링크다(v11 §6-A). 전에는 안내(②·③)에만 붙고 변경 통지(①)에는 없었다."""
-    from app.modules.travel_ops.plan_link import plan_url
-    from app.modules.travel_ops.trip_watch import TripWatcher
+    from app.domains.travel_ops.components.itinerary.plan_link import plan_url
+    from app.domains.travel_ops.components.watch.trip_watch import TripWatcher
 
     clock = world["clock"]
     check, route_events = _sources(clock)
@@ -192,7 +213,7 @@ def test_the_day_starts_at_eight_unless_the_first_item_is_earlier():
     """★하루 시작은 사용자 설정이 없으면 08:00. 첫 일정이 그보다 이르면 그 전으로 당긴다."""
     from uuid import uuid4
 
-    from app.modules.travel_ops.itinerary import Item
+    from app.domains.travel_ops.components.itinerary.itinerary import Item
 
     late = [Item(item_id=uuid4(), seq=1, kind="activity", title="늦은 시작", place_id=None,
                  starts_at=_at("11:00"), ends_at=_at("12:00"), detail={})]
@@ -208,7 +229,7 @@ def test_the_day_starts_at_eight_unless_the_first_item_is_earlier():
 def test_a_day_start_the_user_set_wins():
     from uuid import uuid4
 
-    from app.modules.travel_ops.itinerary import Item
+    from app.domains.travel_ops.components.itinerary.itinerary import Item
 
     items = [Item(item_id=uuid4(), seq=1, kind="activity", title="오전 일정", place_id=None,
                   starts_at=_at("11:00"), ends_at=_at("12:00"), detail={})]
@@ -220,8 +241,8 @@ def test_a_day_start_the_user_set_wins():
 
 def test_no_departure_is_announced_toward_an_item_waiting_for_an_answer(world):
     """★답을 기다리는 일정으로 「출발하세요」를 보내지 않는다 — 대신 「답을 기다리는 중」(D-020)."""
-    from app.modules.travel_ops.itinerary import Item
-    from app.modules.travel_ops.pending import Decision, PendingStore
+    from app.domains.travel_ops.components.itinerary.itinerary import Item
+    from app.domains.travel_ops.components.planning.pending import Decision, PendingStore
 
     items = _items(world)
     target = next(i for i in items if i.seq == 4)                # 10:50 이동이 향하는 11:15 일정
@@ -241,7 +262,7 @@ def test_no_departure_is_announced_toward_an_item_waiting_for_an_answer(world):
 
 def test_the_day_start_carries_what_changed_overnight_and_what_waits(world):
     """★새벽 3시까지 모인 이슈를 하루 시작에서 한 번에 — 바뀐 일정 수 · 답을 기다리는 일정(D-020)."""
-    from app.modules.travel_ops.pending import Decision, PendingStore
+    from app.domains.travel_ops.components.planning.pending import Decision, PendingStore
 
     store, trip_id = world["store"], world["trip_id"]
     with get_connection() as conn, conn.transaction():

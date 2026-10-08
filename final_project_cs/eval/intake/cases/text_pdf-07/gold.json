@@ -1,0 +1,74 @@
+{
+ "case_id": "text_pdf-07",
+ "format": "text_pdf",
+ "defect": null,
+ "party": 1,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.pdf"
+  }
+ ],
+ "lines": [
+  "서울 2일 여행 (1명)",
+  "1일차 · 11월 5일",
+  "09:30 N서울타워",
+  "12:30 망원시장 칼국수",
+  "15:00 서울숲 산책",
+  "",
+  "2일차 · 11월 6일",
+  "09:30 동대문디자인플라자",
+  "12:30 토속촌삼계탕 점심",
+  "15:00 인사동 구경"
+ ],
+ "items": [
+  {
+   "date": "2026-11-05",
+   "start": "09:30",
+   "title": "N서울타워",
+   "place": "N서울타워",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-05",
+   "start": "12:30",
+   "title": "망원시장 칼국수",
+   "place": "망원시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-05",
+   "start": "15:00",
+   "title": "서울숲 산책",
+   "place": "서울숲",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-06",
+   "start": "09:30",
+   "title": "동대문디자인플라자",
+   "place": "동대문디자인플라자",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-06",
+   "start": "12:30",
+   "title": "토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-06",
+   "start": "15:00",
+   "title": "인사동 구경",
+   "place": "인사동",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}
