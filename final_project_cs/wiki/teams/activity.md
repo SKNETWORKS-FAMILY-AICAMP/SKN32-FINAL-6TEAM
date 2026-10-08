@@ -404,6 +404,8 @@ return weekday_name in restdate_text and "휴무" in restdate_text
 
 ### 재난문자 등급 대조 — `check_feasible` 배선
 
+> `[결정 2026-10-08]` **위급재난은 유형 · 내용과 관계없이 막는다.** LLM 판정 계층(섀도 · LLM 모드)에도 보내지 않는다 — 위급재난은 전시 · 공습경보 · 규모 6.0 이상 지진에만 나가는 등급이다. 아래 「지역·주제 관련성 캐비앗」은 더 붙이지 않는다(관련성과 관계없이 막는 것이 규칙). 위급재난이 아닌 문자만 관련성을 판정한다. 경위는 [LLM 연동 계획서](액티비티%20LLM%20연동%20계획서.md) 업데이트 기록 2026-10-08.
+
 ★★`[구현 2026-09-20]` 휴무 요일 대조와 같은 날, **두 번째 예외**가 생겼다. `app/tools/read_tools.py`에 `disaster()` 도구를 신설했다(`weather()`와 같은 패턴 — 좌표·시각을 받아 `self.travel.disaster.near(...)`에 위임). `allowed_tools`에 `"read.disaster"`, `knowledge_scope`에 `"disaster"`를 추가했다(manifest 절 참고). `app/infrastructure/travel/base.py`의 `TravelSources`에 `disaster` 슬롯도 추가했다.
 
 ### 실제 클라이언트 — `disaster_msg.py` (실 키 미검증)

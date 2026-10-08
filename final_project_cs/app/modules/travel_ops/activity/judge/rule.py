@@ -74,7 +74,11 @@ class RuleJudge:
 
     @staticmethod
     def _disaster_effect(request: JudgeRequest) -> Verdict:
-        """`FeasibilityMixin._feasible_disaster` 와 같다 — 위급재난이 하나라도 있으면 막는다(관련성은 보지 않는다)."""
+        """위급재난이 하나라도 있으면 막는다(관련성은 보지 않는다). 그 밖은 막지 않는다.
+
+        ★`[2026-10-08]` 성립 판정은 위급재난을 이 계층에 보내지 않고 **판정 전에 막는다**(`_feasible_disaster`) —
+          그래서 운영 경로에서 이 함수가 받는 문자는 위급재난이 아니고, 답은 늘 `no_effect` 다.
+        """
         messages = request.inputs.get("messages") or []
         blocks = any(m.get("step") == "위급재난" for m in messages)
         return Verdict(DISASTER_EFFECT, "blocks" if blocks else "no_effect", "rule", basis="step_only")

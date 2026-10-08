@@ -262,13 +262,26 @@ async def test_critical_disaster_blocks_feasible():
 
 
 @pytest.mark.asyncio
-async def test_critical_disaster_has_relevance_caveat():
-    """위급재난 판정은 지역·주제 관련성 미확인 캐비앗이 answer·warnings 에 함께."""
+async def test_critical_disaster_blocks_regardless_of_kind_or_content():
+    """★`[결정 2026-10-08]` 위급재난은 유형 · 내용과 관계없이 막는다 — 그 사실을 경고로 밝힌다."""
     result = await ActivityTeam(
         FakeTools(_values(disaster=DISASTER_CRITICAL))).execute(_task())
 
-    assert "지역·주제가 이 활동과" in result.answer
-    assert any("지역·주제 관련성" in w for w in result.warnings)
+    assert result.decisions[0]["disaster"]["blocks"] is True
+    assert "위급재난 문자(" in result.answer and "성립하지 않습니다" in result.answer
+    assert any("유형·내용과 관계없이 막는다" in w for w in result.warnings)
+
+
+@pytest.mark.asyncio
+async def test_infeasible_answer_does_not_open_with_feasible():
+    """★`[2026-10-08]` 성립하지 않으면 답이 「확인한 범위에서는 성립합니다」로 시작하지 않는다.
+    예전에는 점검 전에 그 문장을 먼저 넣어 「성립합니다 … 성립하지 않습니다」로 어긋났다."""
+    blocked = await ActivityTeam(FakeTools(_values(disaster=DISASTER_CRITICAL))).execute(_task())
+    assert blocked.decisions[0]["feasible"] is False
+    assert "성립합니다(" not in blocked.answer and blocked.answer.startswith("시작까지 ")
+    fine = await ActivityTeam(FakeTools(_values(disaster=DISASTER_NON_CRITICAL))).execute(_task())
+    assert fine.decisions[0]["feasible"] is True
+    assert fine.answer.startswith("확인한 범위에서는 성립합니다(")
 
 
 @pytest.mark.asyncio
@@ -486,7 +499,7 @@ async def test_customer_act003_gyeongbokgung_tuesday_infeasible():
 @pytest.mark.asyncio
 @pytest.mark.skipif(_activity("act_004") is None, reason="act_004 이 일정에 없음")
 async def test_customer_act004_critical_disaster_blocks():
-    """act_004 — 위급재난 발령 → feasible=False + 관련성 캐비앗."""
+    """act_004 — 위급재난 발령 → feasible=False. 유형 · 내용과 관계없이 막는다(2026-10-08)."""
     result = await ActivityTeam(
         FakeTools(_vals_from(_activity("act_004"),
                              disaster=CUSTOMER_CRITICAL_DISASTER))).execute(_task())
@@ -494,8 +507,7 @@ async def test_customer_act004_critical_disaster_blocks():
     assert result.decisions[0]["feasible"] is False
     assert result.decisions[0]["disaster"]["blocks"] is True
     assert "위급재난" in result.answer
-    assert "지역·주제가 이 활동과" in result.answer
-    assert any("지역·주제 관련성" in w for w in result.warnings)
+    assert any("유형·내용과 관계없이 막는다" in w for w in result.warnings)
 
 
 @pytest.mark.asyncio

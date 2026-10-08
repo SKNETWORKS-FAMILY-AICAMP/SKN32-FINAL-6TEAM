@@ -119,17 +119,21 @@ class FeasibilityMixin:
                 warnings=["장소·운영 정보를 확인하지 못했다"])
 
         ck = _Check(task=task, booking=booking, place=place, seen=seen, evidence=evidence,
-                    answer_parts=[f"확인한 범위에서는 성립합니다(시작까지 {remaining:.1f}시간)."],
-                    remaining=remaining)
+                    answer_parts=[], remaining=remaining)
         self._feasible_operating(ck)
         self._feasible_disaster(ck)
         self._feasible_weather(ck)
         self._feasible_live_status(ck)
         self._feasible_alternatives(ck)
 
+        # ★`[2026-10-08]` 첫 문장은 판정이 **끝난 뒤** 정한다. 예전에는 점검 전에 「확인한 범위에서는 성립합니다」를
+        #   먼저 넣고 불가 사유를 뒤에 붙여, 성립 False 인데 답이 「성립합니다 … 성립하지 않습니다」로 어긋났다.
+        opening = (f"확인한 범위에서는 성립합니다(시작까지 {remaining:.1f}시간)."
+                   if ck.decisions.get("feasible") is not False
+                   else f"시작까지 {remaining:.1f}시간 남은 일정입니다.")
         return self._result(
             task, outcome="completed", confidence=0.8, evidence=ck.evidence,
-            next_action=NextAction.RESPOND, answer=" ".join(ck.answer_parts),
+            next_action=NextAction.RESPOND, answer=" ".join([opening, *ck.answer_parts]),
             decisions=[ck.decisions], warnings=ck.warnings)
 
     def _feasible_early_exit(self, task: TeamTask, booking: dict, remaining: float | None,
@@ -301,47 +305,50 @@ class FeasibilityMixin:
         ck.evidence = self._evidence(ck.task, source_id="read.disaster",
                                      claim="재난문자", value=disaster, base=ck.evidence)
         messages = disaster.get("for_region") or []
-        step_blocks = any(m.get("step") == "위급재난" for m in messages)
-        # ★문자가 없으면 판정하지 않는다 — 막을 것이 없다.
+        ck.decisions["disaster"] = {
+            "messages": messages,
+            "blocks": False,
+            "confirmed_at": disaster.get("confirmed_at"),
+            "source": disaster.get("source"),
+        }
+        # ★`[결정 2026-10-08]` **위급재난은 유형 · 내용과 관계없이 막는다** — LLM 에 묻지 않는다.
+        #   위급재난은 전시 · 공습경보 · 규모 6.0 이상 지진 같은 국가적 위기에만 나간다(행정안전부 송출 기준).
+        #   공습 · 민방공은 유형 목록(`disaster_msg.DISRUPTIVE_KINDS`)에도 없다. LLM 이 「이 장소와 무관」으로
+        #   판정해 성립으로 뒤집는 것은 막는 손해보다 위험하다(§5.4 「확정 불가 보호」와 같은 원칙).
+        critical = [m for m in messages if m.get("step") == "위급재난"]
+        if critical:
+            kinds = ", ".join(sorted({str(m.get("kind") or "") for m in critical} - {""})) or "구분 없음"
+            ck.decisions["disaster"]["blocks"] = True
+            ck.decisions["disaster"]["critical"] = len(critical)
+            ck.decisions["feasible"] = False
+            ck.answer_parts.append(f"위급재난 문자({kinds})가 발령 중이라 이 일정은 성립하지 않습니다.")
+            ck.warnings.append("위급재난 문자는 유형·내용과 관계없이 막는다 — 관련성을 판정하지 않았다")
+            return
+        # ★위급재난이 아닌 문자만 관련성을 판정한다(섀도 · LLM 모드). 문자가 없으면 판정하지 않는다.
+        #   규칙 판정은 위급재난이 아니면 막지 않는다(`judge/rule.py`) — 지금 동작과 같다.
         verdict = (self._judge(ck, judge_requests.disaster_effect(
             ck.place.get("name"), ck.place.get("kind"), messages, ck.booking.get("starts_at")))
             if messages else None)
         by_llm = verdict is not None and verdict.source == "llm"
-        # ★LLM 이 판정하지 못하면(모름) 등급 기준(지금 규칙)으로 막는다 — 모름을 「막지 않음」으로 읽지 않는다.
-        blocks = (verdict.value == "blocks") if by_llm and verdict.known else step_blocks
-        ck.decisions["disaster"] = {
-            "messages": messages,
-            "blocks": blocks,
-            "confirmed_at": disaster.get("confirmed_at"),
-            "source": disaster.get("source"),
-        }
+        blocks = by_llm and verdict.known and verdict.value == "blocks"
+        ck.decisions["disaster"]["blocks"] = blocks
         if by_llm:
             ck.decisions["disaster"]["judged_by"] = "llm"
             ck.decisions["disaster"]["verdict"] = verdict.value
             self._llm_evidence(ck, verdict, "재난문자 관련성 LLM 판정")
-        if by_llm and verdict.known and blocks:
+        if blocks:
             kinds = ", ".join(sorted({str(m.get("kind", "")) for m in messages}))
             ck.decisions["feasible"] = False
             ck.answer_parts.append(
                 f"재난문자({kinds})가 이 장소·시각의 활동을 막는 내용이라 이 일정은 성립하지 않습니다"
                 f"(문자 해석: «{verdict.quotes[0]}»).")
             ck.warnings.append("재난문자 관련성을 LLM 으로 판정했다 — 인용이 문자 본문에 있는 것을 확인했다")
-        elif by_llm and verdict.known and step_blocks:
+        elif messages and by_llm and not verdict.known:
+            # ★모름을 「막음」으로도 「무관」으로도 읽지 않는다 — 규칙(위급재난만 막음)대로 두고 알린다.
+            grade = messages[0].get("step", "")
             ck.answer_parts.append(
-                f"위급재난 문자 {len(messages)}건이 있으나 이 장소·시각과 관련 없는 내용으로 판단했습니다"
-                f"(문자 해석: «{verdict.quotes[0]}»).")
-            ck.warnings.append("위급재난 문자를 LLM 이 「관련 없음」으로 판정했다 — 인용이 문자 본문에 있는 것을 확인했다")
-        elif blocks:
-            if by_llm:
-                ck.warnings.append("재난문자 관련성을 LLM 이 판정하지 못해 등급 기준으로 판정했다")
-            kinds = ", ".join(
-                m.get("kind", "") for m in messages
-                if m.get("step") == "위급재난")
-            ck.decisions["feasible"] = False
-            ck.answer_parts.append(
-                f"위급재난({kinds})이 발령 중이라 이 일정은 성립하지 않습니다. "
-                f"지역·주제가 이 활동과 관련 없을 수 있습니다.")
-            ck.warnings.append("재난문자 위급재난 등급 확인 — 지역·주제 관련성은 확인하지 않았다")
+                f"재난문자 {len(messages)}건 확인됨({grade}). 이 활동과 관련 있는지는 확인하지 못했습니다.")
+            ck.warnings.append("재난문자 관련성을 LLM 이 판정하지 못했다 — 위급재난이 아니라 막지 않았다")
         elif messages:
             grade = messages[0].get("step", "")
             ck.answer_parts.append(

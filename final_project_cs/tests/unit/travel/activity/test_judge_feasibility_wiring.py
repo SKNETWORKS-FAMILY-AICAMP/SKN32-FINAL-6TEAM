@@ -172,21 +172,39 @@ def test_llm_hours_outside_is_a_place_problem():
     assert "운영시간 밖입니다" in result.answer and "자동 해석하지 않았습니다" not in result.answer
 
 
-def test_llm_unrelated_red_disaster_does_not_block():
-    result = _llm("red_disaster", closure=(out("not_closed", quotes=["매주 화요일 휴무"]), []),
+def test_llm_cannot_override_a_critical_disaster():
+    """★`[결정 2026-10-08]` 위급재난은 유형 · 내용과 관계없이 막는다 — LLM 에 묻지도 않는다.
+    예전에는 LLM 이 「무관」으로 판정하면 성립으로 뒤집었다."""
+    llm = ScriptedJudgeLLM(closure=(out("not_closed", quotes=["매주 화요일 휴무"]), []),
+                           operating_hours=(out("within", quotes=["09:00~18:00"]), []))
+    result = _run(_team(_scenario("red_disaster"), llm=llm, mode="llm"), _task())
+    decision = result.decisions[0]
+    assert decision["feasible"] is False and decision["disaster"]["blocks"] is True
+    assert decision["failure_code"] == fc.DISASTER_BLOCKS and decision["disaster"]["critical"] == 1
+    assert "disaster_effect" not in llm.calls
+    assert "위급재난 문자(호우)가 발령 중이라" in result.answer
+    assert any("유형·내용과 관계없이 막는다" in w for w in result.warnings)
+
+
+def test_llm_unknown_on_a_non_critical_disaster_does_not_block():
+    """★위급재난이 아닌 문자에서 LLM 이 근거를 못 대면(모름) 규칙대로 막지 않고, 모른다고 알린다."""
+    result = _llm("info_disaster", disaster_effect=(out("blocks", quotes=["지어낸 구절"]), []),
+                  closure=(out("not_closed", quotes=["매주 화요일 휴무"]), []),
                   operating_hours=(out("within", quotes=["09:00~18:00"]), []))
     decision = result.decisions[0]
-    assert decision["feasible"] is True and decision["disaster"]["blocks"] is False
-    assert "관련 없는 내용으로 판단했습니다" in result.answer
+    assert decision["disaster"]["blocks"] is False
+    assert "관련 있는지는 확인하지 못했습니다" in result.answer
+    assert any("위급재난이 아니라 막지 않았다" in w for w in result.warnings)
 
 
-def test_llm_unknown_disaster_falls_back_to_step():
-    """★LLM 이 근거를 못 대면(모름) 등급 기준으로 막는다 — 모름을 「막지 않음」으로 읽지 않는다."""
-    result = _llm("red_disaster", disaster_effect=(out("no_effect", quotes=["지어낸 구절"]), []),
-                  closure=(out("not_closed", quotes=["매주 화요일 휴무"]), []))
+def test_llm_can_block_a_related_non_critical_disaster():
+    """긴급재난 · 안전안내는 LLM 이 「이 활동을 막는다」고 근거와 함께 답하면 불가다."""
+    result = _llm("info_disaster", closure=(out("not_closed", quotes=["매주 화요일 휴무"]), []),
+                  operating_hours=(out("within", quotes=["09:00~18:00"]), []))
     decision = result.decisions[0]
-    assert decision["disaster"]["blocks"] is True and decision["failure_code"] == fc.DISASTER_BLOCKS
-    assert any("등급 기준으로 판정했다" in w for w in result.warnings)
+    assert decision["feasible"] is False and decision["disaster"]["blocks"] is True
+    assert decision["disaster"]["judged_by"] == "llm"
+    assert "문자 해석: «종로구 사직로 통제»" in result.answer
 
 
 def test_llm_live_closed_blocks_with_source():
