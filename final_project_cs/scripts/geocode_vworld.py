@@ -22,7 +22,7 @@ from pathlib import Path
 import requests
 
 ROOT = Path(__file__).resolve().parents[1]
-CSV_PATH = ROOT / "app/modules/travel_ops/activity/data_processing/activity_total_data.csv"
+CSV_PATH = ROOT / "app/domains/travel_ops/instances/activity/data_processing/activity_total_data.csv"
 FAILED_PATH = CSV_PATH.with_name("geocode_failed.csv")
 API = "https://api.vworld.kr/req/address"
 SEOUL_LON, SEOUL_LAT = (126.7, 127.3), (37.4, 37.75)

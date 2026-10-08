@@ -33,6 +33,8 @@ from app.core.contracts import ToolNotAllowed
 from app.tools.read_tools import ReadToolbox
 
 MODULES_ROOT = Path("app/modules")
+#: ★`[2026-10-08]` 활동 팀은 develop 의 새 구조 자리(`app/domains/travel_ops/instances/activity`)로 옮겼다 — 둘 다 훑는다.
+TEAM_ROOTS = (MODULES_ROOT, Path("app/domains"))
 
 #: Team 이 직접 부르면 안 되는 것들. tool 은 Registry 가 넘겨준 것만 쓴다.
 FORBIDDEN_ROOTS = ("app.infrastructure", "psycopg", "openai", "app.presentation", "app.application")
@@ -41,7 +43,7 @@ FORBIDDEN_ROOTS = ("app.infrastructure", "psycopg", "openai", "app.presentation"
 def _team_modules() -> list[Path]:
     """`manifest = TeamManifest(...)` 를 선언한 파일만 Team 으로 본다."""
     found = []
-    for path in sorted(MODULES_ROOT.rglob("*.py")):
+    for path in sorted(p for root in TEAM_ROOTS if root.is_dir() for p in root.rglob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         if any(isinstance(node, ast.Assign)
                and any(getattr(target, "id", "") == "manifest" for target in node.targets)
@@ -63,7 +65,7 @@ def _relative(path: str | Path) -> Path:
 def _declared_team_files() -> dict[str, Path]:
     """등록 문자열이 가리키는 클래스가 **실제로 정의된 파일**.
 
-    ★2026-09-28 — 전에는 `app.modules.travel_ops.activity` 를 `activity.py` 로
+    ★2026-09-28 — 전에는 `app.domains.travel_ops.instances.activity` 를 `activity.py` 로
       바꿔 찾았다. Team 을 폴더(`activity/team.py` 나 `activity/__init__.py`)로
       옮기면 그 파일이 없어 이 검사가 실패했다. 파일 하나든 폴더든 같은 등록
       문자열로 부르므로, 경로를 짐작하지 않고 클래스를 불러와 정의된 곳을 묻는다.

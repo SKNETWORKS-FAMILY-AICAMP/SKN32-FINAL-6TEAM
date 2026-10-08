@@ -19,7 +19,7 @@ _MODULES = {"vector_rag": {"enabled": True}, "graph_store": {"enabled": True},
             "voc": {"enabled": True}, "ops_ui": {"enabled": True}}
 _PORTS = {"team_executor": "local", "message_broker": "outbox", "graph_store": "sql"}
 _TEAM = {"team_id": "activity", "active": True,
-         "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"}
+         "implementation_ref": "app.domains.travel_ops.instances.activity:ActivityTeam"}
 
 
 def _config(review: dict, *, teams=None):

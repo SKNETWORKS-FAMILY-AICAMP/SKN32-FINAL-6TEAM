@@ -114,7 +114,7 @@ def _run_once(tenant_id: str, only: str | None) -> dict[str, dict[str, int]]:
 
 def _run_activity_disaster(tenant_id: str) -> dict[str, int]:
     from app.infrastructure.travel.base import build_travel_sources
-    from app.modules.travel_ops.activity.watch_runner import run_activity_disaster
+    from app.domains.travel_ops.instances.activity.watch_runner import run_activity_disaster
 
     return run_activity_disaster(connection_factory=get_connection, tenant_id=tenant_id,
                                  sources=build_travel_sources(get_settings()))

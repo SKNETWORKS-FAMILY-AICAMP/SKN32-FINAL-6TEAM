@@ -20,11 +20,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parent
-D = ROOT / "app/modules/travel_ops/activity/data_processing"
+D = ROOT / "app/domains/travel_ops/instances/activity/data_processing"
 CSV_PATH = D / "activity_total_data.csv"
 LIST_PATH = D / "tourapi_seoul_list.csv"
 DUP_PATH = D / "tourapi_possible_dups.csv"
-REL = "final_project_cs/app/modules/travel_ops/activity/data_processing/activity_total_data.csv"
+REL = "final_project_cs/app/domains/travel_ops/instances/activity/data_processing/activity_total_data.csv"
 
 
 def nt(s: str) -> str:

@@ -7,9 +7,9 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from app.modules.travel_ops.activity import watch as watch_mod
-from app.modules.travel_ops.activity.watch import TravelWatcher
-from app.modules.travel_ops.activity.watch_runner import run_activity_disaster
+from app.domains.travel_ops.instances.activity import watch as watch_mod
+from app.domains.travel_ops.instances.activity.watch import TravelWatcher
+from app.domains.travel_ops.instances.activity.watch_runner import run_activity_disaster
 
 
 class _Disaster:

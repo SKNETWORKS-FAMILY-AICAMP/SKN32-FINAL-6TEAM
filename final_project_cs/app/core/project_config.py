@@ -27,7 +27,7 @@ DEFAULT_PROJECT_CONFIG = REPO_ROOT / "config" / "project.yaml"
 #:  옛 목록이 필요하면 그날 이전 커밋을 본다.
 KNOWN_IMPLEMENTATION_REFS = frozenset({
     # 여행 (v10 §5) — 현재 등록분
-    "app.modules.travel_ops.activity:ActivityTeam",
+    "app.domains.travel_ops.instances.activity:ActivityTeam",
     "app.modules.travel_ops.booking_handoff:BookingHandoffTeam",
     "app.modules.travel_ops.mobility:MobilityTeam",
     "app.modules.travel_ops.dining:DiningTeam",

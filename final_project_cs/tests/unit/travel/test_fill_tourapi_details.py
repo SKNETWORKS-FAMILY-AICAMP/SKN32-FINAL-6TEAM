@@ -2,7 +2,7 @@
 """fill_tourapi_details — 상세 칸 채우기와 인원·예약 확인용 5칸(통일된 컬럼 이름)의 규칙. 네트워크 없이 본다."""
 from __future__ import annotations
 
-from app.modules.travel_ops.activity.data_processing import fill_tourapi_details as f
+from app.domains.travel_ops.instances.activity.data_processing import fill_tourapi_details as f
 
 
 def _row(cid="1", ctype="12", **cols):

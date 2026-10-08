@@ -15,7 +15,7 @@ from app.core.contracts import ContextPack, ToolNotAllowed
 from app.infrastructure.travel.base import TravelSources
 from app.infrastructure.travel.kma_warning import KmaWarningSource, parse_status
 from app.infrastructure.travel.mofa import MofaTravelAlarm
-from app.modules.travel_ops.activity import ActivityTeam
+from app.domains.travel_ops.instances.activity import ActivityTeam
 from app.tools.read_tools import ReadToolbox, ToolContext
 
 from .helpers import FakeTools, in_hours, pack, task

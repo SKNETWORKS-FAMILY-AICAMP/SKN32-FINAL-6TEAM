@@ -5,8 +5,8 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from app.modules.travel_ops.activity.judge import JudgeRequest, Verdict
-from app.modules.travel_ops.activity.judge.requests import date_facts
+from app.domains.travel_ops.instances.activity.judge import JudgeRequest, Verdict
+from app.domains.travel_ops.instances.activity.judge.requests import date_facts
 
 
 @pytest.mark.parametrize("at, weekday, nth, last", [
@@ -41,8 +41,8 @@ def test_kinds_and_values_are_closed_sets():
 
 def test_closure_request_carries_holiday_facts():
     """★성립 판정이 물어 온 공휴일 사실이 요청에 실린다 — 규칙과 LLM 이 같은 사실을 본다(병합 2026-10-06)."""
-    from app.modules.travel_ops.activity.judge import JudgeContext, RuleJudge, requests
-    from app.modules.travel_ops.activity.judge.llm import payload_for
+    from app.domains.travel_ops.instances.activity.judge import JudgeContext, RuleJudge, requests
+    from app.domains.travel_ops.instances.activity.judge.llm import payload_for
 
     at = datetime(2026, 10, 9, 14)                                   # 한글날
     holidays = {"2026-10-09": {"is_holiday": True, "holiday_name": "한글날"}}

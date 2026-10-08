@@ -132,7 +132,7 @@ IMPLEMENTATIONS: tuple[Implementation, ...] = (
     # ── 여행 (v10 §5) — 2026-09-09 등록분 ──────────────────────────────
     Implementation(
         id="team.activity",
-        ref="app.modules.travel_ops.activity:ActivityTeam",
+        ref="app.domains.travel_ops.instances.activity:ActivityTeam",
         display_name="Activity Team",
         description="활동 예약의 취소 가능 여부·실행 가능 여부. 변경은 제안까지다.",
     ),

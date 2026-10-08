@@ -47,7 +47,7 @@ from app.core.idempotency import idempotency_key
 from app.infrastructure.db.session import get_connection
 from app.presentation.security import Principal, require_scope
 
-from .activity.csv_places import CsvPlaceLookup as _CsvPlaceLookup
+from app.domains.travel_ops.instances.activity.csv_places import CsvPlaceLookup as _CsvPlaceLookup
 from .itinerary import Item, TripStore
 from .trip_desk import TripDesk
 

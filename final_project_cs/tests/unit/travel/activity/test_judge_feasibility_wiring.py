@@ -13,9 +13,9 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from app.modules.travel_ops.activity import ActivityTeam
-from app.modules.travel_ops.activity import failure_codes as fc
-from app.modules.travel_ops.activity.judge import SHADOW_LOGGER_NAME
+from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.instances.activity import failure_codes_a as fc
+from app.domains.travel_ops.instances.activity.judge import SHADOW_LOGGER_NAME
 
 from ..test_activity_check_feasible import FakeTools, _operating, _task, _values
 from ._judge_fakes import out
@@ -230,7 +230,7 @@ def test_llm_call_failure_falls_back_to_rule_everywhere():
 
 def test_live_status_address_comes_from_csv():
     """주소는 CSV 장소 목록의 addr1·addr2 에서 온다(`read.place` 에는 주소가 없다)."""
-    from app.modules.travel_ops.activity.feasibility import _csv_lookup
+    from app.domains.travel_ops.instances.activity.feasibility import _csv_lookup
 
     content_id = next(iter(_csv_lookup._by_content_id))
     row = _csv_lookup.find_by_content_id(content_id)

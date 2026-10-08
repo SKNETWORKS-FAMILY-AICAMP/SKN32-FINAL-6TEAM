@@ -23,7 +23,7 @@ teams:
 #     2026-09-10 이전 커밋에서 `app/modules/customer_ops/` 를 되살려야 한다.
 - team_id: activity
   active: true
-  implementation_ref: app.modules.travel_ops.activity:ActivityTeam
+  implementation_ref: app.domains.travel_ops.instances.activity:ActivityTeam
 - team_id: booking_handoff
   active: true
   implementation_ref: app.modules.travel_ops.booking_handoff:BookingHandoffTeam

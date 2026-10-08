@@ -131,7 +131,7 @@ def read_place_candidates(content_id: str | None = None, **_: Any) -> dict[str, 
       적재: `python -m scripts.load_place_catalog_csv <activity_total_data.csv> --source <출처> --exclude-codes FD AC EV`
     """
     from app.infrastructure.db.session import get_connection
-    from app.modules.travel_ops.activity.db_search.place_candidates import find_place_candidates
+    from app.domains.travel_ops.instances.activity.db_search.place_candidates import find_place_candidates
 
     try:
         return find_place_candidates(get_connection, "demo", content_id)
@@ -141,7 +141,7 @@ def read_place_candidates(content_id: str | None = None, **_: Any) -> dict[str, 
 
 
 def build_values(args: argparse.Namespace, starts: datetime) -> tuple[dict[str, Any], dict[str, Any] | None]:
-    from app.modules.travel_ops.activity.feasibility import _csv_lookup
+    from app.domains.travel_ops.instances.activity.feasibility import _csv_lookup
 
     found = _csv_lookup.find(args.place)
     now = datetime.now(KST).isoformat()
@@ -247,7 +247,7 @@ def print_judgments(records: list[dict[str, Any]], outputs: dict[str, Any], mode
 
 
 def wait_for_shadow(timeout: float = 180.0) -> bool:
-    from app.modules.travel_ops.activity.judge import modes
+    from app.domains.travel_ops.instances.activity.judge import modes
 
     runner = modes.default_runner()
     deadline = time.monotonic() + timeout
@@ -275,7 +275,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-db", action="store_true", help="섀도 기록 표에 쓰지 않는다")
     args = parser.parse_args(argv)
 
-    from app.modules.travel_ops.activity import ActivityTeam
+    from app.domains.travel_ops.instances.activity import ActivityTeam
 
     starts = parse_at(args.at)
     values, found = build_values(args, starts)

@@ -28,7 +28,7 @@ def _config(*, teams=None, graph_enabled=True, graph_port="sql", broker="outbox"
         "modules": modules,
         "ports": {"team_executor": "local", "message_broker": broker, "graph_store": graph_port},
         "teams": teams or [{"team_id": "activity", "active": True,
-                             "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"}],
+                             "implementation_ref": "app.domains.travel_ops.instances.activity:ActivityTeam"}],
     })
 
 
@@ -38,7 +38,7 @@ def _tools():
 
 def test_declaration_controls_active_routing_and_keeps_inactive_manifest():
     config = _config(teams=[{"team_id": "activity", "active": True,
-                             "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"}])
+                             "implementation_ref": "app.domains.travel_ops.instances.activity:ActivityTeam"}])
     registry = build_registry(config=config, tools=_tools(), llm=object())
 
     assert {manifest.team_id for manifest in registry.manifests()} == {"activity"}
@@ -83,9 +83,9 @@ def test_composer_ui_is_no_longer_a_registered_module():
 def test_duplicate_capability_is_rejected():
     config = _config(teams=[
         {"team_id": "one", "active": True,
-         "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"},
+         "implementation_ref": "app.domains.travel_ops.instances.activity:ActivityTeam"},
         {"team_id": "two", "active": True,
-         "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"},
+         "implementation_ref": "app.domains.travel_ops.instances.activity:ActivityTeam"},
     ])
     with pytest.raises(CompositionError, match="duplicate capability"):
         build_registry(config=config, tools=_tools(), llm=object())

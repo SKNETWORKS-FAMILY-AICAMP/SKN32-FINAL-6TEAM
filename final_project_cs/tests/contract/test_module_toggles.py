@@ -37,7 +37,7 @@ def _config(**overrides) -> ProjectConfig:
         "modules": modules,
         "ports": {"team_executor": "local", "message_broker": "outbox", "graph_store": "sql"},
         "teams": [{"team_id": "activity", "active": True,
-                   "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"}],
+                   "implementation_ref": "app.domains.travel_ops.instances.activity:ActivityTeam"}],
     })
 
 

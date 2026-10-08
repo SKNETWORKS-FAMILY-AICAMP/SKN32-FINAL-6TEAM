@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-python -m app.modules.travel_ops.activity
+python -m app.domains.travel_ops.instances.activity
 
 customer_travel.json 의 일정으로 ActivityTeam.check_feasible 을 데모 실행한다.
 실 DB·API 없이 JSON 데이터와 TourAPI 가데이터를 주입한다.
@@ -110,7 +110,7 @@ def _build_context():
 
 def _build_task(act: dict, context):
     from app.core.contracts import TeamTask
-    from app.modules.travel_ops.activity import ActivityTeam
+    from app.domains.travel_ops.instances.activity import ActivityTeam
     return TeamTask(
         task_id=uuid4(), run_id=uuid4(), case_id=context.case_id,
         team_id="activity", capability="activity.check_feasible",
@@ -145,7 +145,7 @@ def _print_result(act: dict, result) -> None:
 # ── 진입점 ─────────────────────────────────────────────────────────
 
 async def _run() -> int:
-    from app.modules.travel_ops.activity import ActivityTeam
+    from app.domains.travel_ops.instances.activity import ActivityTeam
 
     json_path = _HERE / "customer_travel.json"
     if not json_path.exists():

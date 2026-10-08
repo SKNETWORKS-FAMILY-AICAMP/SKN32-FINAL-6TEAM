@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from .. import failure_codes as fc
+from .. import failure_codes_a as fc
 from .types import DISASTER_EFFECT, QUOTE_SOURCES, UNKNOWN, VALUES, WEB_KINDS, JudgeContext, JudgeRequest, Verdict
 
 #: 원문이 **비어 있는 것 자체가 근거**인 경우 — 재난문자 0건이면 「막지 않는다」에 인용할 구절이 없다.

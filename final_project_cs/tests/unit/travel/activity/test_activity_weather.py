@@ -15,7 +15,7 @@ import pytest
 
 from app.core.context import PolicyChunk
 from app.core.contracts import NextAction
-from app.modules.travel_ops.activity import ActivityTeam
+from app.domains.travel_ops.instances.activity import ActivityTeam
 
 from ..helpers import FakeTools, in_hours, pack, task
 

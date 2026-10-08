@@ -2,8 +2,8 @@
 """Activity Team 폴더 — 이 팀의 파일은 전부 이 폴더 안에 둔다(2026-09-28).
 
 ★**바깥에서 부르는 경로는 파일 하나였을 때와 같다.**
-  등록 문자열 `app.modules.travel_ops.activity:ActivityTeam` 와
-  `from app.modules.travel_ops.activity import ActivityTeam` 를 고치지 않는다.
+  등록 문자열 `app.domains.travel_ops.instances.activity:ActivityTeam` 와
+  `from app.domains.travel_ops.instances.activity import ActivityTeam` 를 고치지 않는다.
   그래서 Team 본체는 `team.py` 에 두고 여기서는 다시 내보내기만 한다.
 
 ★**본체를 이 `__init__.py` 에 직접 써도 된다.** 시험은 등록 문자열이 가리키는
@@ -16,6 +16,6 @@
   `tests/contract/test_team_layout.py` 가 이 경우를 막는다.
   엔진을 따로 두려면 `activity_engine/` 처럼 다른 이름의 폴더를 쓴다(Mobility 방식).
 """
-from .team import ActivityTeam
+from .team_a import ActivityTeam
 
 __all__ = ["ActivityTeam"]

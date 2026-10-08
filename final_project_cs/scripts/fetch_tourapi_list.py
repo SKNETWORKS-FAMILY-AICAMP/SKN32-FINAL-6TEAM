@@ -23,7 +23,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = ROOT / "app/modules/travel_ops/activity/data_processing"
+DATA_DIR = ROOT / "app/domains/travel_ops/instances/activity/data_processing"
 OUT_PATH = DATA_DIR / "tourapi_seoul_list.csv"
 TOTAL_PATH = DATA_DIR / "activity_total_data.csv"
 APIKEYS = ROOT / ".env.apikeys"

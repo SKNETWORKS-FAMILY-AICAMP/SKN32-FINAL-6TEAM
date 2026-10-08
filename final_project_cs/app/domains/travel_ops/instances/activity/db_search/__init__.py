@@ -5,6 +5,6 @@
   않는다. `app/tools/read_tools.py` 의 `ReadToolbox` 가 자기 연결 공장을 넘겨
   부르고, 테스트는 가짜 연결을 넘긴다.
 """
-from app.modules.travel_ops.activity.db_search.place_candidates import find_place_candidates
+from app.domains.travel_ops.instances.activity.db_search.place_candidates import find_place_candidates
 
 __all__ = ["find_place_candidates"]

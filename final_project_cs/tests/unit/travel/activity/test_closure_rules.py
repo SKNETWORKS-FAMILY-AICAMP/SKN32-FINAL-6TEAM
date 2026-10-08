@@ -13,13 +13,13 @@ from pathlib import Path
 
 import pytest
 
-from app.modules.travel_ops.activity import ActivityTeam
-from app.modules.travel_ops.activity.closure_rules import holiday_dates_needed, read_closure
+from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.instances.activity.closure_rules import holiday_dates_needed, read_closure
 
 from ..helpers import FakeTools, pack, task
 
 KST = timezone(timedelta(hours=9))
-CSV_PATH = (Path(__file__).resolve().parents[4] / "app" / "modules" / "travel_ops" / "activity"
+CSV_PATH = (Path(__file__).resolve().parents[4] / "app" / "domains" / "travel_ops" / "instances" / "activity"
             / "data_processing" / "activity_total_data.csv")
 #: 2026년 특일(한국천문연구원 응답 모양). ★추석 사흘이 같은 이름으로 온다고 가정한다 — 실측 확인 필요(키 403)
 CAL = {date(2026, 9, 24): "추석", date(2026, 9, 25): "추석", date(2026, 9, 26): "추석",

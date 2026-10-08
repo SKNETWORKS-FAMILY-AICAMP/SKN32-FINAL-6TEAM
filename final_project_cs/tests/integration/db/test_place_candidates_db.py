@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""`app/modules/travel_ops/activity/db_search/place_candidates.py` 를 **실 PostgreSQL** 로 돌린다.
+"""`app/domains/travel_ops/instances/activity/db_search/place_candidates.py` 를 **실 PostgreSQL** 로 돌린다.
 
 두 가지를 본다.
   1. 시험용 테넌트에 행 몇 개를 직접 넣고 조회 → SQL 이 실제로 맞는지(jsonb `->>` 포함).
@@ -17,8 +17,8 @@ import psycopg
 import pytest
 
 from app.infrastructure.db.session import database_dsn, get_connection
-from app.modules.travel_ops.activity.alternatives import RADIUS_MAX_KM, bounding_box
-from app.modules.travel_ops.activity.db_search.place_candidates import find_place_candidates
+from app.domains.travel_ops.instances.activity.alternatives import RADIUS_MAX_KM, bounding_box
+from app.domains.travel_ops.instances.activity.db_search.place_candidates import find_place_candidates
 
 
 def _reachable() -> str | None:

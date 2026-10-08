@@ -21,8 +21,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from app.core.settings import get_settings
-from app.modules.travel_ops.activity.judge import JudgeContext, LLMJudge, RuleJudge, requests
-from app.modules.travel_ops.activity.judge.modes import _record
+from app.domains.travel_ops.instances.activity.judge import JudgeContext, LLMJudge, RuleJudge, requests
+from app.domains.travel_ops.instances.activity.judge.modes import _record
 
 from .build import DATASET, MANIFEST
 from .metrics import summarize

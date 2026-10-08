@@ -408,7 +408,7 @@ class ReadToolbox:
         """
         if not name or not name.strip():
             return None
-        from app.modules.travel_ops.activity.place_lookup import lookup_place
+        from app.domains.travel_ops.instances.activity.place_lookup import lookup_place
 
         return lookup_place(self.connection_factory, scope.tenant_id, name, self.kakao)
 
@@ -416,7 +416,7 @@ class ReadToolbox:
                          **_: Any) -> dict[str, Any] | None:
         """대체 장소 후보 풀. `place_catalog`(TourAPI 적재분)를 읽는다.
 
-        ★실제 조회는 `app/modules/travel_ops/activity/db_search/place_candidates.py` 가 한다 — 여기는 테넌트
+        ★실제 조회는 `app/domains/travel_ops/instances/activity/db_search/place_candidates.py` 가 한다 — 여기는 테넌트
           범위를 넘겨 부르는 얇은 연결이다. 원래 장소가 카탈로그에 없으면
           `None`(모름)이고 Team 은 「후보를 조회하지 못했다」로 답한다.
 
@@ -439,7 +439,7 @@ class ReadToolbox:
         """
         if not content_id:
             return None      # ★어느 장소인지 모르면 조회하지 않는다
-        from app.modules.travel_ops.activity.db_search.place_candidates import find_place_candidates
+        from app.domains.travel_ops.instances.activity.db_search.place_candidates import find_place_candidates
 
         return find_place_candidates(self.connection_factory, scope.tenant_id, content_id)
 

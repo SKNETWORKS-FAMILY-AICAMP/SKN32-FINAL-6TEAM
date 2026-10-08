@@ -9,8 +9,8 @@ from datetime import datetime
 
 import pytest
 
-from app.modules.travel_ops.activity import failure_codes as fc
-from app.modules.travel_ops.activity.judge import (
+from app.domains.travel_ops.instances.activity import failure_codes_a as fc
+from app.domains.travel_ops.instances.activity.judge import (
     SHADOW_LOGGER_NAME,
     BackgroundRunner,
     JudgeContext,
@@ -132,7 +132,7 @@ def test_shadow_really_runs_in_background():
             await asyncio.to_thread(gate.wait, 5)
             return await super().judge(*args, **kwargs)
     llm = SlowLLM(out("closed", quotes=["매주 월요일 휴무"]))
-    judge = ShadowJudge(RuleJudge(), __import__("app.modules.travel_ops.activity.judge", fromlist=["x"])
+    judge = ShadowJudge(RuleJudge(), __import__("app.domains.travel_ops.instances.activity.judge", fromlist=["x"])
                         .LLMJudge(llm, citation_max_age_days=180),
                         runner=BackgroundRunner(max_workers=1, max_pending=2))
     verdict = judge.judge(CTX, requests.closure("매주 월요일 휴무", MONDAY))

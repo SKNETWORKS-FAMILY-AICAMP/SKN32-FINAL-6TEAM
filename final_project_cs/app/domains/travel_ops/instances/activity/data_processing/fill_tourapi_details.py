@@ -2,10 +2,10 @@
 """activity_total_data.csv 의 빈 상세(overview·business_hours·closed_days·fee)를 TourAPI 로 채운다.
 
 사용(키를 가진 사람이 **자기 PC 에서** 실행한다. 최종 실행 위치: final_project_cs):
-    python -m app.modules.travel_ops.activity.data_processing.fill_tourapi_details --dry-run
+    python -m app.domains.travel_ops.instances.activity.data_processing.fill_tourapi_details --dry-run
     # 쇼핑(38)을 빼고 나머지만: ... fill_tourapi_details --types 12 14 28 15 --max-calls 900
-    python -m app.modules.travel_ops.activity.data_processing.fill_tourapi_details --max-calls 2
-    python -m app.modules.travel_ops.activity.data_processing.fill_tourapi_details --max-calls 900
+    python -m app.domains.travel_ops.instances.activity.data_processing.fill_tourapi_details --max-calls 2
+    python -m app.domains.travel_ops.instances.activity.data_processing.fill_tourapi_details --max-calls 900
     # 하루 한도에 걸려 멈추면 다음 날 같은 명령을 다시 돌린다(캐시에 있는 건 부르지 않는다)
 
 ★대상은 TourAPI 행(contentid 가 숫자) 중 **네 칸이 모두 빈 행**이다. 이미 값이 있는 칸은 덮어쓰지 않는다.

@@ -11,14 +11,14 @@ Activity 가 장소·일정 JSON의 **필수값이 빠졌을 때** 어떻게 반
       시각이 없으면 「정보 부족」, 규정은 아예 안 쓴다. 취소·변경은 둘 다 필요해서 그대로 escalate
     - **없어도 성립 판정 자체는 막지 않는** 값(장소 상세, 인원 정보)이
       없으면 "모름"을 달고도 계속 진행하는지
-  를 검증한다. 코드: `app/modules/travel_ops/activity.py` `execute()`·
+  를 검증한다. 코드: `app/domains/travel_ops/instances/activity.py` `execute()`·
   `_check_feasible()`.
 """
 from __future__ import annotations
 
 import pytest
 
-from app.modules.travel_ops.activity import ActivityTeam
+from app.domains.travel_ops.instances.activity import ActivityTeam
 
 from .helpers import FakeTools, in_hours, pack, task
 

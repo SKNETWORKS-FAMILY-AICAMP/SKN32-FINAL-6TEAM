@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""`app/modules/travel_ops/activity/db_search/place_candidates.py` — `read.place_candidates` 의 DB 조회.
+"""`app/domains/travel_ops/instances/activity/db_search/place_candidates.py` — `read.place_candidates` 의 DB 조회.
 
 가짜 연결로 SQL 인자와 행 → 계약 모양 변환을 본다(실 DB 없이).
 """
@@ -9,8 +9,8 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from app.tools.read_tools import ReadToolbox, ToolContext
-from app.modules.travel_ops.activity.alternatives import RADIUS_MAX_KM, bounding_box
-from app.modules.travel_ops.activity.db_search.place_candidates import (
+from app.domains.travel_ops.instances.activity.alternatives import RADIUS_MAX_KM, bounding_box
+from app.domains.travel_ops.instances.activity.db_search.place_candidates import (
     DEFAULT_SOURCES, ORIGIN_SQL, POOL_SQL, find_place_candidates)
 
 UTC = timezone.utc

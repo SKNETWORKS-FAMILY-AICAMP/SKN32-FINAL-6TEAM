@@ -5,8 +5,8 @@
 """
 from __future__ import annotations
 
-from app.modules.travel_ops.activity.judge import KINDS, prompt_key
-from app.modules.travel_ops.activity.judge.llm import known_prompt_files
+from app.domains.travel_ops.instances.activity.judge import KINDS, prompt_key
+from app.domains.travel_ops.instances.activity.judge.llm import known_prompt_files
 from app.tools.read_tools import ALLOWED_PROMPT_KEYS
 
 

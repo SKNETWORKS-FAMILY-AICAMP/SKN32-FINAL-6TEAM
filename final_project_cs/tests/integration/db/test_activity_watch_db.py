@@ -12,7 +12,7 @@ import psycopg
 import pytest
 
 from app.infrastructure.db.session import database_dsn, get_connection
-from app.modules.travel_ops.activity.watch_runner import run_activity_disaster
+from app.domains.travel_ops.instances.activity.watch_runner import run_activity_disaster
 
 
 def _reachable() -> str | None:

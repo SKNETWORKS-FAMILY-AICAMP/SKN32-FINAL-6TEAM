@@ -15,7 +15,6 @@
   도메인도 섬긴다」는 대조군은 코드가 아니라 검사로 남겼다 —
   `tests/architecture/test_engine_serves_another_domain.py`.
 """
-from .activity import ActivityTeam
 from .booking_handoff import BookingHandoffTeam
 from .dining import DiningTeam
 from .locked_bookings import FlightTeam, LodgingTeam
@@ -29,3 +28,16 @@ __all__ = [
     "LodgingTeam",
     "MobilityTeam",
 ]
+
+
+def __getattr__(name: str):
+    """★`[2026-10-08]` 활동 팀은 develop 의 새 구조 자리(`app/domains/travel_ops/instances/activity`)로 옮겼다.
+
+    맨 위에서 바로 불러오면 순환한다 — 활동 팀(`team_a.py`)이 이 패키지의 `_base` · `itinerary_team` 을
+    부르고, 이 파일이 다시 활동 팀을 부른다. 그래서 `ActivityTeam` 을 찾을 때 불러온다.
+    """
+    if name == "ActivityTeam":
+        from app.domains.travel_ops.instances.activity import ActivityTeam
+        return ActivityTeam
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+

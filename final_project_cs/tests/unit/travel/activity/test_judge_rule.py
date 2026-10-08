@@ -5,8 +5,8 @@ from datetime import datetime
 
 import pytest
 
-from app.modules.travel_ops.activity.feasibility import FeasibilityMixin
-from app.modules.travel_ops.activity.judge import JudgeContext, RuleJudge, requests
+from app.domains.travel_ops.instances.activity.feasibility import FeasibilityMixin
+from app.domains.travel_ops.instances.activity.judge import JudgeContext, RuleJudge, requests
 
 CTX = JudgeContext()
 MONDAY = datetime(2026, 10, 12, 10, 0)

@@ -25,7 +25,7 @@ from datetime import date, datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from ..place_hours import DAYS, days_in
+from app.modules.travel_ops.place_hours import DAYS, days_in
 
 HolidayLookup = Callable[[date], "dict[str, Any] | None"]
 

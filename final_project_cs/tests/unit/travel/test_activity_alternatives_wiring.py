@@ -14,7 +14,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.modules.travel_ops.activity import ActivityTeam
+from app.domains.travel_ops.instances.activity import ActivityTeam
 
 from .helpers import FakeTools, pack, task
 

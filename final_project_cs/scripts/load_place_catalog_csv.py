@@ -2,7 +2,7 @@
 """후보 장소 CSV → `place_catalog` 수동 적재. **재실행 안전**(upsert).
 
 대상 CSV:
-    app/modules/travel_ops/activity/data_processing/activity_total_data.csv
+    app/domains/travel_ops/instances/activity/data_processing/activity_total_data.csv
     — 서울 Activity 후보(TourAPI + 올리브영·다이소·아트박스·무신사). **`--source` 와 같은 출처의 행만**
       넣는다(기본 tour_api). 출처는 `data_source` 열이 있으면 그것으로, 없으면 `contentid` 로 가른다
       (숫자 = TourAPI, OY/DS/AB/MS 접두어 = 올리브영/다이소/아트박스/무신사).
@@ -12,10 +12,10 @@
 
 사용:
     python -m scripts.load_place_catalog_csv \
-        app/modules/travel_ops/activity/data_processing/activity_total_data.csv \
+        app/domains/travel_ops/instances/activity/data_processing/activity_total_data.csv \
         --exclude-codes FD AC EV --dry-run   # 넣지 않고 검사만
     python -m scripts.load_place_catalog_csv \
-        app/modules/travel_ops/activity/data_processing/activity_total_data.csv \
+        app/domains/travel_ops/instances/activity/data_processing/activity_total_data.csv \
         --exclude-codes FD AC EV             # 적재
 
 ★키는 `(tenant_id, source, content_id)` 다(011). 같은 CSV 를 다시 돌리면 같은 행을

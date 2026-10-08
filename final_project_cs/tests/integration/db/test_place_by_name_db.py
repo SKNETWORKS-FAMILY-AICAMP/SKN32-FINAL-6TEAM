@@ -8,7 +8,7 @@ import psycopg
 import pytest
 
 from app.infrastructure.db.session import database_dsn, get_connection
-from app.modules.travel_ops.activity.db_search.place_by_name import find_place_by_name
+from app.domains.travel_ops.instances.activity.db_search.place_by_name import find_place_by_name
 
 
 def _reachable() -> str | None:

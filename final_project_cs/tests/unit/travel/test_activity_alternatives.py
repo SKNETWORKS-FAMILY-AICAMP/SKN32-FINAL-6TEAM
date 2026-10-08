@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from app.modules.travel_ops.activity import ActivityTeam
-from app.modules.travel_ops.activity.alternatives import (
+from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.instances.activity.alternatives import (
     RADIUS_MAX_KM, bounding_box, closed_on, open_at, rank_alternatives, search_steps)
 
 from .helpers import FakeTools, pack, task
@@ -24,7 +24,7 @@ MONDAY = datetime(2026, 10, 5, 10, tzinfo=KST)
 SATURDAY = datetime(2026, 10, 3, 10, tzinfo=KST)
 
 CSV_PATH = (Path(__file__).resolve().parents[3]
-            / "app" / "modules" / "travel_ops" / "activity" / "data_processing"
+            / "app" / "domains" / "travel_ops" / "instances" / "activity" / "data_processing"
             / "activity_total_data.csv")
 
 

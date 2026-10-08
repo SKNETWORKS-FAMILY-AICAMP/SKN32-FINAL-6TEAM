@@ -15,12 +15,12 @@ from pathlib import Path
 import pytest
 
 from app.infrastructure.travel.tour_api import LARGE_CLASS_NAMES
-from app.modules.travel_ops.activity.db_search.place_candidates import DEFAULT_SOURCES
+from app.domains.travel_ops.instances.activity.db_search.place_candidates import DEFAULT_SOURCES
 from scripts.load_place_catalog_csv import (
     SEOUL_LAT, SEOUL_LON, _origin_from_id, read_rows, to_row)
 
-CSV_PATH = (Path(__file__).resolve().parents[3] / "app" / "modules" / "travel_ops"
-            / "activity" / "data_processing" / "activity_total_data.csv")
+CSV_PATH = (Path(__file__).resolve().parents[3] / "app" / "domains" / "travel_ops" / "instances" / "activity"
+            / "data_processing" / "activity_total_data.csv")
 
 COLUMNS = ["contentid", "contenttypeid", "title", "addr1", "addr2", "sigungucode",
            "mapx", "mapy", "lclsSystm1", "lclsSystm2", "lclsSystm3",

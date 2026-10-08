@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.modules.travel_ops.activity.judge import VALUES
+from app.domains.travel_ops.instances.activity.judge import VALUES
 from eval.activity_judge.build import CASES, dataset_text
 from eval.activity_judge.metrics import cluster_bootstrap, outcome, summarize
 from eval.activity_judge.run import load_cases, to_request

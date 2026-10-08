@@ -61,5 +61,7 @@ def test_the_registered_class_is_reachable_the_same_way(team_id: str, ref: str):
         f"`__init__.py` 에서 `from .team import {class_name}` 로 다시 내보낸다.")
     assert cls.manifest.team_id == team_id
     source = Path(inspect.getsourcefile(cls)).resolve()
-    assert (Path.cwd() / "app" / "modules").resolve() in source.parents, (
-        f"{ref} 의 클래스가 app/modules 밖에 정의돼 있다: {source}")
+    # ★`[2026-10-08]` 활동 팀은 develop 의 새 구조 자리(`app/domains`)로 옮겼다 — 둘 중 하나 안이면 된다.
+    roots = [(Path.cwd() / "app" / name).resolve() for name in ("modules", "domains")]
+    assert any(root in source.parents for root in roots), (
+        f"{ref} 의 클래스가 app/modules · app/domains 밖에 정의돼 있다: {source}")
