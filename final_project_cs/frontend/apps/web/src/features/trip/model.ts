@@ -103,10 +103,31 @@ export interface TripMessage {
   needsLocation?: boolean;
 }
 
+/**
+ * `[2026-10-07]` A move between two stops as the server keeps it (an item of kind `mobility`): when to leave and when to arrive, in Seoul time. How it is travelled (mode · distance ·
+ * rides) is not in the trip view — it comes with the route lines (`GET …/route-shapes`, keyed by this id). A trip registered from a typed plan may have no moves at all.
+ */
+export interface TripMove {
+  id: string;
+  /** The stops it goes between (the stop before and the stop after it in the plan); null at the start or the end of the plan. */
+  fromId: string | null;
+  toId: string | null;
+  date: string;
+  /** "HH:MM" */
+  departAt: string;
+  arriveAt: string | null;
+  /** The server's own words (「경복궁 관람 → 점심 식당」). */
+  title: string;
+}
+
 /** Web view model of one trip, read from `GET /v1/web/trips/{id}` (not a claim that the Case API returns this shape). */
 export interface Trip {
   id: string;
+  /** `[2026-10-07]` The trip's name as the server keeps it (「내 여행」); absent on a server that does not send one. */
+  title?: string;
   stops: TripStop[];
+  /** `[2026-10-07]` The moves between the stops, in plan order (see `TripMove`). */
+  moves?: TripMove[];
   messages: TripMessage[];
   /** What the server did to the trip and what it found. */
   history?: TripChange[];

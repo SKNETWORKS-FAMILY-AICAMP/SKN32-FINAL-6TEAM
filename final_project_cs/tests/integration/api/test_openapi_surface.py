@@ -26,6 +26,11 @@ from app.presentation.api.app import app
 
 # 설계 계약 문서 §1 의 표 — 이것은 **최소 집합**이지 상한이 아니다.
 CONTRACT_V1_PATHS = {
+    # 공개 계약 rest-endpoints.md에 이미 정의된 이동 선택·보관 정책·안전 복구 경로.
+    "/v1/web/legal/retention",
+    "/v1/web/trip-intakes/{intake_id}/moves/{pair}/mode",
+    "/v1/web/trip-intakes/{intake_id}/moves/{pair}/options",
+    "/v1/web/trips/{trip_id}/safety/recovery",
     "/v1/cases",
     "/v1/cases/{case_id}",
     "/v1/cases/{case_id}/messages",

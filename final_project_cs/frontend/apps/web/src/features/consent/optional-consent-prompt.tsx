@@ -6,7 +6,7 @@ import { useSettings, useT } from "@/lib/settings";
 import type { ConsentCode } from "./consent-model";
 import { readConsents } from "./consent-store";
 import { saveConsents } from "./consent-sync";
-import { TERMS_DOCS } from "./terms-content";
+import { useLiveTerms } from "./terms-live";
 import { plainTitle } from "./terms-text";
 import { TermsViewer } from "./terms-viewer";
 import styles from "./consent.module.css";
@@ -18,7 +18,7 @@ import styles from "./consent.module.css";
 export function OptionalConsentPrompt({ code, why, onAgreed, onCancel }: { code: ConsentCode; why: string; onAgreed: () => void; onCancel?: () => void }) {
   const t = useT();
   const { language } = useSettings();
-  const doc = TERMS_DOCS.find((entry) => entry.code === code);
+  const doc = useLiveTerms(language).docs.find((entry) => entry.code === code);
   const [reading, setReading] = useState(false);
   const [busy, setBusy] = useState(false);
   if (!doc) return null;

@@ -6,6 +6,7 @@ import { editsFor, rows } from "@/features/intake-review/model";
 import { translator, type Language, type Translate } from "@/lib/i18n";
 import { LiveError } from "@/lib/live/client";
 import { editIntake, type IntakeEdit } from "@/lib/live/intake";
+import { getMoveOptions, setMoveMode as postMoveMode, type MoveOptions } from "@/lib/live/move-options";
 import { itemEdit } from "@/lib/live/intake-edits";
 import {
   autofixIntake, getCandidates, getPlacePhotos, pickedPlace, revalidateIntake, searchPlaces,
@@ -49,6 +50,10 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   const latest = useRef<ReviewedIntakeView | undefined>(view);
   const undoEdits = useRef<IntakeEdit[] | null>(null);
   const pickable = useRef(new Map<string, CandidatePlace>());
+  /** `[2026-10-07]` The ways to go for a leg, asked when its box is opened and kept for the revision they were asked on (a re-opened box asks nothing). */
+  const moveWays = useRef(new Map<string, Promise<MoveOptions | null>>());
+  // `[2026-10-07 사용자 지적 — 이미 받은 대안을 다시 열 때도 로딩이 있다]` The alternatives of a stop, kept for the revision they were asked for: opening the change screen again, or 「자동 추천」 after it, does not ask again.
+  const alternatives = useRef(new Map<string, ReturnType<typeof getCandidates>>());
   /** Why the server's list for a stop is short or empty (`notes` of the candidates call), by stop id — said on the change screen. */
   const candidateNotes = useRef(new Map<string, string[]>());
   /**
@@ -84,6 +89,17 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       if (error instanceof LiveError && error.code === "stale_revision") reread();
       throw error;
     };
+    /** The stop's alternatives for the revision shown — asked once (a failure is not kept, so it is asked again). */
+    const alternativesOf = (id: string, item: Parameters<typeof getCandidates>[1]) => {
+      const revision = plan().revision;
+      const key = `${revision}:${id}`;
+      for (const old of [...alternatives.current.keys()]) if (!old.startsWith(`${revision}:`)) alternatives.current.delete(old);
+      const kept = alternatives.current.get(key);
+      if (kept) return kept;
+      const ask = getCandidates(intakeId, item, revision, language).catch((error: unknown) => { alternatives.current.delete(key); return staleThenRethrow(error); });
+      alternatives.current.set(key, ask);
+      return ask;
+    };
     // Any answer that is the plan itself (a change, an undo, a re-check) ends a preview: it was a picture of the plan before that.
     const take = (next: ReviewedIntakeView) => { latest.current = next; setPreviewed(null); apply(next); };
     /**
@@ -110,11 +126,14 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       } catch { /* a photo that cannot be fetched is just not shown */ }
       return info;
     }
-    const replaceWith = async (id: string, edit: IntakeEdit) => {
+    const replaceWith = async (id: string, edit: IntakeEdit, kind: string | null = null) => {
       const item = itemOf(id);
       const back = restorePlace(targetOf(item), item.place);
-      await save([edit], true);
-      undoEdits.current = back ? [back] : null;
+      // ★`[2026-10-07 서버 c0ca7054 · 90d9e403]` A place of another kind than the stop (a meal place for an activity, a stay's own meal for a stay) changes the stop's kind with it - the server asks for both
+      //   in the same request, or the meal lands in an activity. The undo puts the kind back too.
+      const retype = kind !== null && kind !== item.kind;
+      await save(retype ? [edit, itemEdit.kind(targetOf(item), kind)] : [edit], true);
+      undoEdits.current = back ? (retype && item.kind ? [back, itemEdit.kind(targetOf(item), item.kind)] : [back]) : null;
     };
 
     return {
@@ -141,9 +160,32 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       },
       editTrip: (field, value) => save([{ field: `trip.${field}`, value }]),
 
+      // `[2026-10-07 사용자 지시 — 이동수단 고르기]` One leg at a time, only when its box is opened; the same answer for the same revision. A way the server could not finish (`fits: null`) is asked again the next time.
+      moveOptions: (id) => {
+        const move = plan().review?.moves.find((entry) => `${entry.from}:${entry.to}` === id);
+        if (!move) return Promise.reject(gone());
+        const revision = plan().revision;
+        const key = `${revision}:${id}`;
+        for (const old of [...moveWays.current.keys()]) if (!old.startsWith(`${revision}:`)) moveWays.current.delete(old);
+        const kept = moveWays.current.get(key);
+        if (kept) return kept;
+        // A stale revision (409 - the plan moved on) re-reads the plan, like a change would; the box asks again for the new one when opened.
+        const ask = getMoveOptions(intakeId, move.from, move.to, language, revision).catch((error: unknown) => { moveWays.current.delete(key); return staleThenRethrow(error); });
+        moveWays.current.set(key, ask);
+        void ask.then((found) => { if (found?.options.some((option) => option.fits === null)) moveWays.current.delete(key); }, () => undefined);
+        return ask;
+      },
+      // The server counts the leg again with that way and answers with the whole checked plan: it is what the screen shows from now on, and it needs no 「다시 제출」 (the server already checked it).
+      setMoveMode: async (id, mode) => {
+        const move = plan().review?.moves.find((entry) => `${entry.from}:${entry.to}` === id);
+        if (!move) throw gone();
+        const answer = await postMoveMode(intakeId, move.from, move.to, plan().revision, mode, language).catch(staleThenRethrow);
+        take({ ...plan(), revision: answer.revision, review: answer.review });
+      },
+
       candidates: async (id) => {
         const item = itemOf(id);
-        const found = await getCandidates(intakeId, item, plan().revision, language).catch(staleThenRethrow);
+        const found = await alternativesOf(id, item);
         candidateNotes.current.set(id, found.notes ?? []);
         // The stop's own photos fill its 「지금 일정」 card.
         if (item.place) void infoOf({ ...item.place, category: null, address: null }, true).then((info) => setInfos((current) => ({ ...current, [id]: info })));
@@ -172,15 +214,15 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const place = pickable.current.get(choice.candidate.id);
         const picked = place && pickedPlace(place);
         // A place the server gave coordinates for is taken as it is; one without them is looked up again by its name.
-        return replaceWith(id, picked ? itemEdit.placePicked(target, picked) : itemEdit.placeByName(target, choice.candidate.name));
+        return replaceWith(id, picked ? itemEdit.placePicked(target, picked) : itemEdit.placeByName(target, choice.candidate.name), choice.candidate.placeKind ?? null);
       },
       autoRecommend: async (id) => {
         const item = itemOf(id);
-        const found = await getCandidates(intakeId, item, plan().revision, language).catch(staleThenRethrow);
+        const found = await alternativesOf(id, item);
         const best = found.candidates.find((candidate) => candidate.fits && pickedPlace(candidate.place));
         const picked = best && pickedPlace(best.place);
         if (!picked) throw new LiveError("no_fitting_place", t("시간이 맞는 대체 후보가 없어요 · 수정에서 장소를 직접 골라 주세요", "No alternative fits the time — pick a place in Edit"));
-        await replaceWith(id, itemEdit.placePicked(targetOf(item), picked));
+        await replaceWith(id, itemEdit.placePicked(targetOf(item), picked), best.basis === "meal_inferred" ? "dining" : best.place.kind === "dining" || best.place.kind === "activity" ? best.place.kind : null);
       },
       // Show how 「전체 자동 추천」 would change the plan — saves nothing (the server's dry run), so scrolling or pressing never changes the plan.
       previewRecommendAll: async (): Promise<AutoResult> => {
@@ -208,6 +250,13 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         return autoResultOf(result, t);
       },
       discardPreview: () => setPreviewed(null),
+      // `[2026-10-07]` One of two readings of a photo's line: the value goes as the customer's. Keeping the current one confirms it (nothing to undo); the other reading can be put back.
+      pickReading: async (id, field, value) => {
+        const item = itemOf(id);
+        const reread = item.rereads?.find((entry) => entry.field === field);
+        await save([itemEdit.reading(targetOf(item), field, value)], true);
+        undoEdits.current = reread && value !== reread.current ? [itemEdit.reading(targetOf(item), field, reread.current)] : null;
+      },
       lock: async (id, locked) => {
         const item = itemOf(id);
         await save([itemEdit.lock(targetOf(item), locked)]);        // a lock goes alone; it does not touch what 「되돌리기」 holds

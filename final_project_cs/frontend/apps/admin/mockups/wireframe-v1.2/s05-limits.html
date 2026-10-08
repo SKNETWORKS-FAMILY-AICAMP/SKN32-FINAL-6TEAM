@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>운영자 콘솔 · 한도와 감시 조절</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;font-family:'IBM Plex Sans KR',sans-serif;color:#1F1E1B;background:#F4F3EF}
+a{color:#1F4E8C}a:hover{color:#163A6A}
+</style>
+</head>
+<body>
+<div style="box-sizing: border-box; width: 1440px; padding: 8px 16px; background: #1F1E1B; color: #F4F3EF; font-family: 'IBM Plex Sans KR', sans-serif; font-size: 13px">운영자 콘솔 와이어프레임 v1.2 (2026-09-29) · S-05 한도 · 감시 조절 · 정적 사본 — 값은 모두 자리표시, 버튼은 동작하지 않음 · <a href="index.html" style="color: #F4F3EF">화면 목록</a></div>
+<div style="width: 1440px; height: 1420px; display: flex; background: #F4F3EF; font-family: 'IBM Plex Sans KR', sans-serif; color: #1F1E1B">
+<nav aria-label="운영자 콘솔 메뉴" style="width: 248px; flex-shrink: 0; box-sizing: border-box; padding: 24px 16px; background: #ECEAE4; border-right: 1px solid #D9D6CE; display: flex; flex-direction: column; gap: 20px">
+<a href="s02-home.html" style="display: flex; align-items: center; gap: 10px; padding: 0 8px; text-decoration: none; color: #1F1E1B">
+<span style="width: 32px; height: 32px; border-radius: 8px; background: #1F1E1B; color: #F4F3EF; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700">t</span>
+<span style="display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 700">triPilot</span><span style="font-size: 12px; color: #5B5953">운영자 콘솔</span></span>
+</a>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">운영</div>
+
+<a href="s02-home.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">홈</a>
+
+<a href="s08-inquiries.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">문의함</a>
+
+<a href="s03-users.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">사용자</a>
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">사용 · 상태</div>
+
+<a href="s06-usage.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">사용량</a>
+
+<a href="s07-server.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">서버 상태</a>
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">설정</div>
+
+<a href="s05-limits.html" aria-current="page" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; background: #1F4E8C; color: #FFFFFF; font-weight: 600">한도 · 감시 조절</a>
+
+<a href="s09-notices.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">공지 · 점검</a>
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">기록</div>
+
+<a href="s10-audit.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">운영 기록</a>
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">임시</div>
+
+<a href="s11-ops.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">예약 승인 · 위임 · 발송 확인</a>
+
+</div>
+
+</nav>
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column">
+<header style="height: 64px; flex-shrink: 0; box-sizing: border-box; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; background: #FFFFFF; border-bottom: 1px solid #D9D6CE">
+<div style="font-size: 13px; color: #5B5953">설정 › 한도 · 감시 조절</div>
+<div style="display: flex; align-items: center; gap: 16px; font-size: 13px; color: #5B5953">
+<span style="display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 999px; border: 1px dashed #A64B0A; color: #8A3E08; font-weight: 600">데모 데이터 — 서버에 저장되지 않음</span>
+<span>배포 [미정]</span>
+<span style="font-weight: 600; color: #1F1E1B">[운영자 ID]</span>
+<a href="s01-login.html">로그아웃</a>
+</div>
+</header>
+<main style="flex-grow: 1; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-size: 28px; font-weight: 700">한도 · 감시 조절</h1>
+<p style="margin: 0; font-size: 14px; color: #5B5953">사용자 한도는 한 명당 하루 기준 · 외부 API는 서비스 전체 예산으로 조절 · 매일 한국 시각 00:00 초기화</p>
+</div>
+<section aria-labelledby="base-title" style="background: #FFFFFF; border: 1px solid #D9D6CE; border-radius: 12px; overflow: hidden">
+<div style="height: 56px; box-sizing: border-box; padding: 0 20px; display: flex; align-items: center; justify-content: space-between">
+<h2 id="base-title" style="margin: 0; font-size: 16px; font-weight: 700">사용자별 기본 일일 한도 (모든 사용자)</h2>
+<span style="font-size: 13px; color: #5B5953">한 사용자만 다르게 하려면 <a href="s04-user-detail.html">사용자 상세의 예외 한도</a></span>
+</div>
+<div role="table" aria-label="사용자별 기본 일일 한도" style="display: flex; flex-direction: column">
+<div role="row" style="display: grid; grid-template-columns: 170px minmax(0, 1fr) 220px 280px; column-gap: 16px; align-items: center; min-height: 40px; padding: 0 20px; background: #F4F3EF; font-size: 12px; font-weight: 600; color: #5B5953">
+<span role="columnheader">항목</span><span role="columnheader">무엇을 세나</span><span role="columnheader">하루 한도</span><span role="columnheader">넘었을 때</span>
+</div>
+<div role="row" style="display: grid; grid-template-columns: 170px minmax(0, 1fr) 220px 280px; column-gap: 16px; align-items: center; min-height: 72px; padding: 12px 20px; box-sizing: border-box; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell" style="font-weight: 700">② 채팅 호출</span>
+<span role="cell" style="color: #3F3D38; line-height: 1.5">사용자가 채팅으로 우리 서버를 부른 횟수</span>
+<span role="cell" style="display: flex; align-items: center; gap: 8px"><label for="lim-chat" style="position: absolute; left: -9999px">② 채팅 하루 한도</label><input id="lim-chat" type="number" placeholder="N" style="width: 120px; height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 14px"><span style="color: #5B5953">회</span></span>
+<span role="cell" style="color: #3F3D38; line-height: 1.5">요청을 거절하고 다시 되는 시각을 안내 (사용자 웹에 이미 있음)</span>
+</div>
+<div role="row" style="display: grid; grid-template-columns: 170px minmax(0, 1fr) 220px 280px; column-gap: 16px; align-items: center; min-height: 72px; padding: 12px 20px; box-sizing: border-box; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell" style="font-weight: 700">③ 웹 호출</span>
+<span role="cell" style="color: #3F3D38; line-height: 1.5">채팅 외에 사용자 웹이 우리 서버를 부른 횟수 (경로별 집계)</span>
+<span role="cell" style="width: 180px; height: 44px; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px; border: 1px dashed #BDB9AF; border-radius: 8px; background: #F4F3EF; color: #5B5953">[한도 적용 논의]</span>
+<span role="cell" style="color: #3F3D38; line-height: 1.5">지금은 집계만 (화면 통계용)</span>
+</div>
+</div>
+</section>
+<section aria-labelledby="step-title" style="box-sizing: border-box; padding: 20px; display: flex; flex-direction: column; gap: 14px; background: #FFFFFF; border: 1px solid #D9D6CE; border-radius: 12px">
+<div style="display: flex; align-items: center; gap: 10px">
+<h2 id="step-title" style="margin: 0; font-size: 16px; font-weight: 700">감시 조절 — 외부 API 예산 기준 (서비스 전체)</h2>
+<span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px dashed #75726B; color: #3F3D38">방식 확정 아님</span>
+</div>
+<p style="margin: 0; font-size: 14px; line-height: 1.55; color: #3F3D38">외부 API는 한 번 부른 결과를 여러 사용자가 함께 쓰므로 사용자별로 나누지 않습니다. API마다 우리가 정한 운영 상한의 소진율을 보고, 그 API를 쓰는 감시의 간격을 늘리거나 호출을 멈춥니다. 공급자 무료 제공량 소진율은 사용량 화면에서 따로 봅니다.</p>
+<div role="table" aria-label="감시 조절 단계" style="display: flex; flex-direction: column; border: 1px solid #ECEAE4; border-radius: 10px; overflow: hidden">
+<div role="row" style="display: grid; grid-template-columns: 100px 300px minmax(0, 1fr) 80px; column-gap: 16px; align-items: center; min-height: 40px; padding: 0 16px; background: #F4F3EF; font-size: 12px; font-weight: 600; color: #5B5953"><span role="columnheader">단계</span><span role="columnheader">그 API의 운영 상한 소진율</span><span role="columnheader">감시 동작</span><span role="columnheader"></span></div>
+<div role="row" style="display: grid; grid-template-columns: 100px 300px minmax(0, 1fr) 80px; column-gap: 16px; align-items: center; min-height: 60px; padding: 0 16px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell" style="font-weight: 700">1단계</span>
+<span role="cell" style="display: flex; align-items: center; gap: 8px"><label for="st1" style="position: absolute; left: -9999px">1단계 조건 퍼센트</label><input id="st1" type="number" placeholder="80" style="width: 88px; height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 14px"><span>% 이상</span></span>
+<span role="cell" style="display: flex; align-items: center; gap: 8px">그 API를 쓰는 감시 간격 ×<label for="st1x" style="position: absolute; left: -9999px">1단계 간격 배수</label><input id="st1x" type="number" placeholder="2" style="width: 72px; height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 14px"></span>
+<span role="cell"><button type="button" style="height: 36px; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 13px">빼기</button></span>
+</div>
+<div role="row" style="display: grid; grid-template-columns: 100px 300px minmax(0, 1fr) 80px; column-gap: 16px; align-items: center; min-height: 60px; padding: 0 16px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell" style="font-weight: 700">2단계</span>
+<span role="cell">운영 상한 도달</span>
+<span role="cell" style="line-height: 1.5">그 API 호출 멈춤 (다음 초기화까지) <span style="color: #5B5953">· 구글 · 카카오는 서버가 이미 이렇게 막음</span></span>
+<span role="cell"></span>
+</div>
+</div>
+<div><button type="button" style="height: 40px; padding: 0 14px; border: 1px dashed #75726B; border-radius: 8px; background: #FFFFFF; color: #3F3D38; font-family: inherit; font-size: 13px; font-weight: 600">+ 단계 추가</button></div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h3 style="margin: 0; font-size: 14px; font-weight: 700">지금 상태 · API별</h3>
+<a href="s06-usage.html" style="font-size: 13px; font-weight: 600">운영 상한은 사용량 화면에서 조정 →</a>
+</div>
+<div role="table" aria-label="API별 감시 상태" style="display: flex; flex-direction: column; border: 1px solid #ECEAE4; border-radius: 10px; overflow: hidden">
+<div role="row" style="display: grid; grid-template-columns: 200px minmax(0, 1fr) 140px 220px; column-gap: 16px; align-items: center; min-height: 40px; padding: 0 16px; background: #F4F3EF; font-size: 12px; font-weight: 600; color: #5B5953"><span role="columnheader">API</span><span role="columnheader">운영 상한 소진</span><span role="columnheader">감시</span><span role="columnheader">이 API를 쓰는 감시</span></div>
+
+<div role="row" style="display: grid; grid-template-columns: 200px minmax(0, 1fr) 140px 220px; column-gap: 16px; align-items: center; min-height: 50px; padding: 0 16px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell" style="font-weight: 600">Google Places</span>
+<span role="cell" style="display: flex; align-items: center; gap: 10px"><span style="flex-grow: 1; height: 6px; border-radius: 3px; background: #ECEAE4; overflow: hidden"><span style="display: block; height: 6px; width: 85%; background: #A64B0A"></span></span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B5953">NN%</span></span>
+<span role="cell"><span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; background: #FBEFE4; color: #8A3E08">간격 늘림</span></span>
+<span role="cell" style="font-size: 13px; color: #3F3D38">[새벽 식당 영업 확인 등]</span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 200px minmax(0, 1fr) 140px 220px; column-gap: 16px; align-items: center; min-height: 50px; padding: 0 16px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell" style="font-weight: 600">Google Routes</span>
+<span role="cell" style="display: flex; align-items: center; gap: 10px"><span style="flex-grow: 1; height: 6px; border-radius: 3px; background: #ECEAE4; overflow: hidden"><span style="display: block; height: 6px; width: 30%; background: #1F4E8C"></span></span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B5953">NN%</span></span>
+<span role="cell"><span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; background: #ECEAE4; color: #3F3D38">정상</span></span>
+<span role="cell" style="font-size: 13px; color: #3F3D38">[이동 경로 확인]</span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 200px minmax(0, 1fr) 140px 220px; column-gap: 16px; align-items: center; min-height: 50px; padding: 0 16px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell" style="font-weight: 600">카카오 로컬</span>
+<span role="cell" style="display: flex; align-items: center; gap: 10px"><span style="flex-grow: 1; height: 6px; border-radius: 3px; background: #ECEAE4; overflow: hidden"><span style="display: block; height: 6px; width: 40%; background: #1F4E8C"></span></span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B5953">NN%</span></span>
+<span role="cell"><span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; background: #ECEAE4; color: #3F3D38">정상</span></span>
+<span role="cell" style="font-size: 13px; color: #3F3D38">[장소 검색]</span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 200px minmax(0, 1fr) 140px 220px; column-gap: 16px; align-items: center; min-height: 50px; padding: 0 16px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell" style="font-weight: 600">[그 밖의 외부 API]</span>
+<span role="cell" style="display: flex; align-items: center; gap: 10px"><span style="flex-grow: 1; height: 6px; border-radius: 3px; background: #ECEAE4; overflow: hidden"><span style="display: block; height: 6px; width: 20%; background: #1F4E8C"></span></span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B5953">NN%</span></span>
+<span role="cell"><span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; background: #ECEAE4; color: #3F3D38">정상</span></span>
+<span role="cell" style="font-size: 13px; color: #3F3D38">[날씨 · 대기질 · 특보 등]</span>
+</div>
+
+</div>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; background: #F4F3EF; border-radius: 10px; font-size: 14px; color: #3F3D38; line-height: 1.5">
+<span>사용자에게는 알리지 않습니다. 운영자 홈에 표시되고, 감시가 줄어 모든 사용자의 기능에 차질이 생기면 공지로 알립니다.</span>
+<a href="s09-notices.html" style="flex-shrink: 0; font-weight: 600">공지 · 점검 →</a>
+</div>
+</section>
+<section aria-labelledby="impact-title" style="box-sizing: border-box; padding: 20px; display: flex; align-items: center; gap: 24px; background: #FFFFFF; border: 1px solid #D9D6CE; border-radius: 12px">
+<h2 id="impact-title" style="margin: 0; font-size: 15px; font-weight: 700; flex-shrink: 0">이 값으로 저장하면 오늘 기준</h2>
+<div style="display: flex; gap: 24px; font-size: 14px; color: #3F3D38">
+<span>채팅 한도 초과 <strong style="font-family: 'IBM Plex Mono', monospace; font-weight: 500">N명</strong></span>
+<span>감시 간격 늘림 <strong style="font-family: 'IBM Plex Mono', monospace; font-weight: 500">N개 API</strong></span>
+<span>호출 멈춤 <strong style="font-family: 'IBM Plex Mono', monospace; font-weight: 500">N개 API</strong></span>
+</div>
+</section>
+<div style="box-sizing: border-box; padding: 16px 20px; display: flex; align-items: flex-end; gap: 12px; background: #FFFFFF; border: 1px solid #D9D6CE; border-radius: 12px">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px">
+<label for="lim-reason" style="font-size: 13px; font-weight: 600">바꾸는 사유 (필수)</label>
+<input id="lim-reason" type="text" placeholder="[사유]" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; font-family: inherit; font-size: 14px">
+</div>
+<button type="button" style="height: 44px; padding: 0 20px; border: 1px solid #1F4E8C; border-radius: 8px; background: #1F4E8C; color: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600">저장</button>
+<span style="align-self: center; font-size: 13px; color: #5B5953">운영 기록에 이전 값 → 새 값으로 남음</span>
+</div>
+</main>
+</div>
+</div>
+</body>
+</html>

@@ -16,7 +16,7 @@ export function latestSafetyAlert(notices: readonly Notice[]): Notice | null {
 }
 
 /** 「직선 320m · 걸어서 약 5분(추정)」 - only what the server sent; the walk is an estimate along a straight line and says so. */
-function shelterMeta(shelter: Shelter, t: ReturnType<typeof useT>): string {
+export function shelterMeta(shelter: Shelter, t: ReturnType<typeof useT>): string {
   return [
     shelter.distanceM !== null ? t(`직선 ${formatDistance(shelter.distanceM)}`, `${formatDistance(shelter.distanceM)} in a straight line`) : "",
     shelter.walkMinutes !== null ? t(`걸어서 약 ${shelter.walkMinutes}분(추정)`, `about ${shelter.walkMinutes} min on foot (estimate)`) : "",
@@ -28,8 +28,9 @@ function shelterMeta(shelter: Shelter, t: ReturnType<typeof useT>): string {
  * `[2026-10-06 사용자 결정 — 재난 시 일정 정지 + 대피 안내]` The top of the trip screen while the trip is paused for a disaster: that it is paused, why (the server's label), until when, the safety guidance of the
  * newest alert, and the customer's 「일정 다시 시작」. ★Safety first: the guidance comes before the button; the button is said to be pressed only once the customer knows they are safe, and NOTHING resumes by
  * itself (the server cannot know). The plan is not changed by a pause. Every sentence of the guidance is the server's; the reference point is the place in the plan, and the server's note says so.
+ * `where` (`[2026-10-07 목업 C안]`): the same panel stands at the top of the plan and among the notice center's tasks — each keeps its own ids.
  */
-export function SafetyPanel({ trip, notices, onChanged, onResumed }: { trip: Trip; notices: readonly Notice[]; onChanged: () => void; /** The brief of the disaster that was just lifted (null when there was nothing to lift). */ onResumed?: (recovery: Recovery | null) => void }) {
+export function SafetyPanel({ trip, notices, onChanged, onResumed, where = "plan" }: { trip: Trip; notices: readonly Notice[]; onChanged: () => void; /** The brief of the disaster that was just lifted (null when there was nothing to lift). */ onResumed?: (recovery: Recovery | null) => void; where?: "plan" | "center" }) {
   const t = useT();
   const { language } = useSettings();
   const resume = useMutation({ mutationFn: () => resumeSafety(trip.id, language), onSuccess: (data) => onResumed?.(data.recovery), onSettled: onChanged });
@@ -41,10 +42,11 @@ export function SafetyPanel({ trip, notices, onChanged, onResumed }: { trip: Tri
   // ★`[2026-10-06 사용자 결정]` A trip that has not started yet is also paused by a serious event (nobody knows the local situation): the words differ, and there is NO shelter card at all
   //   (the customer is not there; the server sends official guidance to check the situation before going, not a list of places).
   const upcoming = safety.phase === "upcoming" || guidance?.phase === "upcoming";
-  return <section className={styles.panel} aria-labelledby="trip-safety-title" data-level={safety.level ?? undefined} data-phase={upcoming ? "upcoming" : undefined} data-testid="safety-panel">
+  const id = where === "plan" ? "trip-safety" : "trip-center-safety";
+  return <section className={styles.panel} aria-labelledby={`${id}-title`} data-level={safety.level ?? undefined} data-phase={upcoming ? "upcoming" : undefined} data-testid={where === "plan" ? "safety-panel" : "center-safety-panel"}>
     <header className={styles.head}>
       <ShieldAlert size={22} strokeWidth={1.8} aria-hidden="true" />
-      <h2 id="trip-safety-title">{t("일정 정지 중", "Itinerary paused")}</h2>
+      <h2 id={`${id}-title`}>{t("일정 정지 중", "Itinerary paused")}</h2>
     </header>
     {safety.label && <p className={styles.label}>{safety.label}</p>}
     {upcoming && <p className={styles.label}>{t("아직 시작하지 않은 여행이지만 현지 상황을 몰라 멈췄어요.", "The trip has not started, but we paused it because we cannot tell what it is like there.")}</p>}
@@ -71,8 +73,8 @@ export function SafetyPanel({ trip, notices, onChanged, onResumed }: { trip: Tri
     </div>}
 
     {resumeLabel !== null && <div className={styles.resume}>
-      <p id="trip-safety-resume-hint">{upcoming ? t("가기 전에 현지 상황을 확인한 뒤에 눌러 주세요.", "Press it after you have checked the situation there.") : t("안전한 곳에 계신 것을 확인한 뒤에 눌러 주세요.", "Press it only after you are somewhere safe.")}</p>
-      <Button variant="primary" disabled={resume.isPending} aria-describedby="trip-safety-resume-hint" onClick={() => resume.mutate()}>{resume.isPending ? t("다시 시작하는 중…", "Resuming…") : resumeLabel}</Button>
+      <p id={`${id}-resume-hint`}>{upcoming ? t("가기 전에 현지 상황을 확인한 뒤에 눌러 주세요.", "Press it after you have checked the situation there.") : t("안전한 곳에 계신 것을 확인한 뒤에 눌러 주세요.", "Press it only after you are somewhere safe.")}</p>
+      <Button variant="primary" disabled={resume.isPending} aria-describedby={`${id}-resume-hint`} onClick={() => resume.mutate()}>{resume.isPending ? t("다시 시작하는 중…", "Resuming…") : resumeLabel}</Button>
       {resume.error && <p className={styles.error} role="alert">{resume.error instanceof Error ? resume.error.message : String(resume.error)}</p>}
     </div>}
   </section>;

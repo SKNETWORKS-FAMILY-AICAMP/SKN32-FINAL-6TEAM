@@ -5,9 +5,9 @@ name: CI (main)
 
 on:
   push:
-    branches: [main]
+    branches: [role-manager, develop, main]
   pull_request:
-    branches: [main]
+    branches: [role-manager, develop, main]
 
 concurrency:
   group: ci-main-${{ github.ref }}

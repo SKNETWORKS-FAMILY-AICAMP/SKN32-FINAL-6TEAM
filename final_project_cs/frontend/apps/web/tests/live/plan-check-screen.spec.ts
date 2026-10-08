@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { mockServer, noHorizontalScroll, start } from "./helpers";
-import { needsBadge } from "./plan-check-kit";
+import { mapSettled, needsBadge } from "./plan-check-kit";
 
 /**
  * 계획 확인 화면(`/intakes/[id]`)의 「화면 자체」 동작 — 서버가 무엇을 답하느냐보다 화면이 어떻게 움직이느냐를 지키는 시험.
@@ -77,7 +77,7 @@ async function openReading(page: Page, request: APIRequestContext) {
 // `[2026-10-03 사용자 결정]` 단계별 재생을 건너뛸지는 시스템의 「동작 줄이기」가 아니라 메뉴의 「애니메이션 건너뛰기」가 정한다.
 test("메뉴의 「애니메이션 건너뛰기」를 켜면 읽는 중에서 결과로 넘어갈 때 다시 그리지 않고 서버 결과를 바로 보인다", async ({ page, request }) => {
   await mockServer(request).scenario({ review: "on", board: "rich", intakeEvents: "on", readingPolls: 1 });
-  await page.addInitScript(() => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko", navigation: "fixed", skipAnimation: true })));
+  await page.addInitScript(() => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko", skipAnimation: true })));
   await start(page);
   await page.goto(`/intakes/${INTAKE}`);
   // 단계별로 다시 그리면 이 판(장소 셋 · 이동 둘 · 검사 줄)을 다 그리는 데 읽기 5초 + 단계 머무름 + 검사 줄이 들어 7초 넘게 걸린다. 바로 그리면 한두 초 안에 끝난다.
@@ -120,7 +120,7 @@ test("PC 기기 틀·375px·320px에서 읽는 중 화면이 가로로 넘치지
     await page.setViewportSize({ width, height });
     await page.goto(`/intakes/${INTAKE}`);
     await expect(page.getByText("찾은 일정")).toBeVisible();
-    await expect(page.getByText("15:00 쇼핑 — 올리브영에서")).toBeVisible();
+    await expect(page.getByText("15:00 쇼핑 — 올리브영에서")).toHaveCount(0);            // `[2026-10-07 사용자 지시]` 읽는 화면에 줄별 목록(「올린 계획」)은 더 없다 — 긴 줄이 화면에 올라오지 않으니 넘칠 일도 없다
     await noHorizontalScroll(page);
   }
 });
@@ -291,7 +291,60 @@ test("결과: 좌표가 없는 장소는 핀 없이 지도 위에 「위치 미�
   await expect(pin(page, "2. 올리브영")).toHaveCount(0);
 });
 
+test("핀을 누르면 「위치 미정 · 올리브영」 자리에 그 핀의 이름이 「경복궁 관람 · 액티비티」로 나오고, 다시 누르면 「위치 미정」으로 돌아온다", async ({ page, request }) => {
+  // `[2026-10-07 사용자 지시]` 마커를 누르면 지도 아래 칩이 그 마커의 이름과 종류를 말한다(알림 막대와 따로, 칩 자리에서).
+  await openFinished(page, request, (view) => {
+    const olive = view.review.items[1];
+    olive.place = { ...olive.place, latitude: null, longitude: null };
+    view.review.items[0].kind = "activity";                                                           // 서버가 말한 종류
+    view.review.items[2].kind = "dining";
+  });
+  await expect(page.getByText("위치 미정 · 올리브영")).toBeVisible();
+  await mapSettled(page);
+  await pin(page, "1. 경복궁 관람").locator("[data-pin-body]").click();
+  const picked = page.locator("[class*=__picked]");
+  await expect(picked).toContainText("경복궁 관람");
+  await expect(picked).toContainText("액티비티");
+  await expect(page.getByText("위치 미정 · 올리브영")).toHaveCount(0);                              // 그 자리를 이름이 차지한다
+  await mapSettled(page);                                                                          // 핀을 누르면 지도가 그리로 날아간다 — 멈춘 뒤에 다음 핀을 누른다
+  await pin(page, "3. 광장시장").locator("[data-pin-body]").click();                                // 다른 핀을 누르면 그 핀의 이름으로 바뀐다
+  await expect(picked).toContainText("광장시장 · 식당");
+  await mapSettled(page);
+  await pin(page, "3. 광장시장").locator("[data-pin-body]").click();                                // 같은 핀을 다시 누르면 놓는다
+  await expect(picked).toHaveCount(0);
+  await expect(page.getByText("위치 미정 · 올리브영")).toBeVisible();
+});
+
 // ── 카드 도구 ────────────────────────────────────────────────────────────────
+
+test("오류 알림은 저절로 사라지지 않고 남아 있다가 ✕ 나 옆으로 밀면 닫힌다(빨간 줄) — 다른 알림은 지금처럼 몇 초 뒤 사라진다", async ({ page, request }) => {
+  // `[2026-10-07 사용자 결정 — 오류 알림 남기기 · 밀어서 닫기]`
+  await openFinished(page, request);
+  await mockServer(request).scenario({ edits: "stale" });                                              // 다음 고치기는 「그 사이 바뀌었어요」로 거절된다
+  await page.getByRole("button", { name: "경복궁 관람 꼭 넣을 일정으로 고정" }).click();
+  const error = page.getByRole("alert").filter({ hasText: "그 사이 바뀌었어요" });
+  await expect(error).toBeVisible();
+  await page.waitForTimeout(6_000);
+  await expect(error).toBeVisible();                                                                   // 6초가 지나도 남아 있다
+  const box = (await error.boundingBox())!;
+  await page.mouse.move(box.x + 40, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 200, box.y + box.height / 2, { steps: 8 });
+  await page.mouse.up();
+  await expect(error).toHaveCount(0);                                                                  // 옆으로 밀어 닫았다
+});
+
+test("카드의 수정 · 삭제는 카드를 가리키거나(마우스) 펼쳤을 때만 보이고, 「확인 필요」 표시와 잠금은 늘 보인다", async ({ page, request }) => {
+  // `[2026-10-07 사용자 지시]` 지도 단추처럼 — 늘 떠 있지 않고 필요할 때만
+  await openFinished(page, request);
+  const card = page.locator('li[data-entry-id="0-2"] article');
+  const edit = page.getByRole("button", { name: "광장시장 수정" });
+  await page.mouse.move(5, 5);
+  await expect.poll(() => edit.evaluate((element) => getComputedStyle(element).opacity)).toBe("0");
+  await expect(page.locator('li[data-entry-id="0-1"]').getByText("확인 필요")).toBeVisible();
+  await card.hover();
+  await expect.poll(() => edit.evaluate((element) => getComputedStyle(element).opacity)).toBe("1");
+});
 
 test("카드의 「자동 추천」은 시간이 맞는 첫 후보로 바꾸고, 바꾼 장소를 좌표째 서버로 보낸다", async ({ page, request }) => {
   const server = await openFinished(page, request);

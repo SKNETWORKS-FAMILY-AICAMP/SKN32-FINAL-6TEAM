@@ -214,3 +214,6 @@ docs/mobility/*.png
 # ★git 에 올리지 않는다. 릴리스 대상(final_project_cs)과 섞이면 되돌리기 어렵다.
 #   결과·결론은 wiki 문서로만 남긴다(사본 자체는 버려도 되는 것).
 /_experiments/
+
+# 2026-10-07 시험 세트 원문(AI Hub · KoCulture 문장 포함) — 저장소에 올리지 않는다(재배포 제한). MX 세트 · 검토자 입력
+/program/datasets/

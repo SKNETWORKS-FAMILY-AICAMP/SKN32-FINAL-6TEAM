@@ -271,8 +271,10 @@ def test_reporting_a_delay_over_mcp_matches_the_web_twin_and_a_stranger_cannot_r
     assert denied.isError and "404" in _error_text(denied)
 
 
-def test_swap_and_rollback_use_the_current_version_and_a_stranger_gets_404(api):
+def test_swap_and_rollback_use_the_current_version_and_a_stranger_gets_404(api, monkeypatch):
     """다른 안으로 바꾸고(판이 오른다) 그 앞 판으로 되돌린다 — 두 도구 모두 **현재 판 번호를 서버에서 읽어** 보내 낡은 판 거절이 나지 않는다."""
+    # ★`[2026-10-07]` 이동 계산기를 끈다 — 이동 자료가 있는 기계에서는 시간표로 다시 재어 대체 식당이 「다음 일정에 늦음」으로 떨어질 수 있다(이 시험의 뜻이 아니다)
+    monkeypatch.setattr("app.domains.travel_ops.components.itinerary.itinerary_changes._leg_engine", lambda trip: None)
     me, other = _session(api), _session(api)
     trip_id = _trip(api, me)
     assert _report(api, trip_id, "delay").status_code == 200           # 지연 → 점심에 다른 안이 마련된다(판 2) — 에이전트 입구로 준비

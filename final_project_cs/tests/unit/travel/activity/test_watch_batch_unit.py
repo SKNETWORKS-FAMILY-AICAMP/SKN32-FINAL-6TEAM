@@ -234,7 +234,7 @@ def test_the_digest_puts_the_safety_line_first_and_never_promises_a_human():
 @pytest.mark.asyncio
 async def test_an_exception_in_one_item_does_not_block_the_others_and_that_item_is_kept_for_a_retry(monkeypatch):
     """★전에는 한 항목에서 예외가 나면 Team 전체가 실패해(`team_error`) 건강한 항목 · 안전 사건까지 같이 막혔다. 이제 그 항목만 `error` 로 남기고 나머지는 진행한다."""
-    a1, a2 = _place("가나다 전망대", 0), _place("마바사 정원", 1)
+    a1, _a2 = _place("가나다 전망대", 0), _place("마바사 정원", 1)
     meal = _place("바보 식당", 2)
     first, second = _item(1, "activity", "전망대 관람", 10, a1), _item(2, "dining", "점심 식사", 12, meal)
     real = trip_watch_batch._planner

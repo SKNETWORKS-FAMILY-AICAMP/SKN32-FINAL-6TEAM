@@ -33,6 +33,7 @@ from app.domains.travel_ops.modules.web_account import web_cookie
 from app.domains.travel_ops.modules.web_account import web_guard
 from app.domains.travel_ops.modules.web_account.web_agent_keys_api import build_agent_keys_router
 from app.domains.travel_ops.modules.web_account.consents_api import build_consents_router
+from app.domains.travel_ops.modules.web_account.retention_api import build_public_retention_router
 from app.domains.travel_ops.modules.web_account.web_session import add_key, new_customer
 
 #: 콜백이 웹으로 돌려보낼 때 쓰는 오류 코드(요청서) — 이 밖의 이유는 전부 `failed`
@@ -66,6 +67,7 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
     router = APIRouter()
     router.include_router(build_agent_keys_router())        # `[2026-10-04 D-CS-012]` 에이전트 키(쿠키 로그인한 회원만)
     router.include_router(build_consents_router())          # `[2026-10-05]` 약관 동의 기록 · 사용 조건(게이트는 `web_cookie.authenticate`)
+    router.include_router(build_public_retention_router())  # `[2026-10-07]` 약관 보관 기간 공개 읽기(키 없음 · 개인 정보 없음)
 
     def _tenant() -> str:
         return settings_module.get_settings().tenant_id

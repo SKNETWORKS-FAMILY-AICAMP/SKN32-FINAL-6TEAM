@@ -3,7 +3,7 @@ import { checkPlan, mockServer, start, TRIP_ID } from "./helpers";
 
 /**
  * `[2026-10-06 사용자 지시 — 첫 화면 · 확인 화면과 일관되게 전체를 모바일 기준으로, 메뉴에서 데스크탑을 고르면 그때 데스크탑 화면]` 계획 담기 · 내 여행 · 여행 · 마이페이지는 기본으로 휴대폰 크기 틀 안에 있고, 메뉴의
- * 「데스크탑 화면으로 보기」를 켜면 넓은 화면이 된다. 항로 지킴이 카드와 알림은 그 틀 안에서 틀 폭에 맞게 뜨고, 한 번 켜면 켜진 상태가 기본이다. 테스트용 mock 서버로 도는 자동 시험이다(화면 반응 — 실서버 확인 아님).
+ * (2026-10-07 사용자 지시: 데스크탑 화면과 그 스위치는 없앴다.) 항로 지킴이 카드와 알림은 그 틀 안에서 틀 폭에 맞게 뜨고, 한 번 켜면 켜진 상태가 기본이다. 테스트용 mock 서버로 도는 자동 시험이다(화면 반응 — 실서버 확인 아님).
  */
 const PLAN = "10/1 09:00 경복궁 관람";
 const device = (page: Page) => page.locator('[class*="__device"]').first();
@@ -26,24 +26,6 @@ test("기본은 휴대폰 크기 틀이다 — 넓은 창(1280)에서도 계획 
   }
 });
 
-test("메뉴의 「데스크탑 화면으로 보기」를 켜면 넓은 화면이 되고(이 브라우저가 기억한다), 끄면 다시 휴대폰 크기 틀이다", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await start(page);
-  await page.goto("/trips/new");
-  const narrow = (await page.locator("#main-content").boundingBox())!.width;
-  expect(narrow).toBeLessThanOrEqual(402.5);
-  await page.getByRole("button", { name: "메뉴" }).click();
-  const toggle = page.getByRole("switch", { name: "데스크탑 화면으로 보기" });
-  await expect(toggle).not.toBeChecked();
-  await toggle.click();                                                                                  // 켜는 순간 화면 틀이 바뀌어 메뉴도 새로 그려진다
-  await expect.poll(async () => (await page.locator("#main-content").boundingBox())!.width).toBeGreaterThan(600);
-  await page.reload();                                                                                  // 기억한다
-  await expect.poll(async () => (await page.locator("#main-content").boundingBox())!.width).toBeGreaterThan(600);
-  await page.getByRole("button", { name: "메뉴" }).click();
-  await page.getByRole("switch", { name: "데스크탑 화면으로 보기" }).click();
-  await expect.poll(async () => (await page.locator("#main-content").boundingBox())!.width).toBeLessThanOrEqual(402.5);
-});
-
 test("항로 지킴이 카드는 휴대폰 틀 안에서 틀 폭에 맞는 아래 시트로 뜬다(화면 전체를 덮는 따로 노는 카드가 아니다)", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await start(page);
@@ -60,11 +42,12 @@ test("항로 지킴이 카드는 휴대폰 틀 안에서 틀 폭에 맞는 아�
   expect(sheet.y + sheet.height).toBeLessThanOrEqual(frame.y + frame.height + 1);
 });
 
-test("항로 지킴이를 끄면 알림이 틀 안에서 틀 폭에 맞는 하얀 카드로 뜨고 몇 초 뒤 저절로 사라진다. 아이콘은 메뉴 버튼과 같은 흰색 반투명이고 위에 말풍선이 없다", async ({ page, request }) => {
+test("항로 지킴이를 끄면 알림이 틀 안에서 틀 폭에 맞는 하얀 카드로 뜨고 몇 초 뒤 저절로 사라진다. 메뉴 서랍 머리의 아이콘은 메뉴 버튼과 같은 흰색 반투명이고 위에 말풍선이 없다", async ({ page, request }) => {
   await mockServer(request).scenario({ guardian: "on" });
   await page.setViewportSize({ width: 1280, height: 900 });
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();                                // `[2026-10-07 목업 C안]` 여행의 아이콘은 메뉴 서랍 머리(닫기 ✕ 왼쪽)에 있다
   const icon = page.getByRole("button", { name: "항로 지킴이 끄기" });
   await expect(icon).toBeVisible();
   // 메뉴 버튼과 같은 바탕(반투명 흰색)

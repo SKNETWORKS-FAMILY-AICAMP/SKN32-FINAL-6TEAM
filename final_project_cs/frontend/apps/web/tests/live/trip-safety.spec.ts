@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer, start, TRIP_ID } from "./helpers";
+import { mockServer, start, TRIP_ID, tripScreen } from "./helpers";
 
 /**
  * `[2026-10-06 사용자 결정 — 재난 시 일정 정지 + 대피 안내]` 여행 화면: 정지 중 표시 · 정지된 일정 표시 · 안전 알림의 안내(대피 장소 · 119) · 「일정 다시 시작」. mock 서버 시험이다 — 화면 반응만 본다.
@@ -49,7 +49,7 @@ async function stage(page: Page, state: { paused: boolean; safety?: Record<strin
 async function openTrip(page: Page) {
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
 }
 const panel = (page: Page) => page.getByTestId("safety-panel");
 
@@ -69,8 +69,9 @@ test("정지 중이면 맨 위에 「일정 정지 중」과 이유 · 시각 ·
   await expect(panel(page).getByRole("link", { name: "걸어서 길 찾기" })).toHaveAttribute("href", /^https:\/\/www\.google\.com\/maps\//);
   await expect(panel(page)).toContainText("지금 계신 곳과 다를 수 있어요");                                  // 기준점은 일정 장소다
   await expect(page.getByText("일정 정지", { exact: true })).toHaveCount(2);                              // 일정 둘이 정지됨
-  const [safety, plan] = [await panel(page).boundingBox(), await page.getByRole("heading", { name: "나의 여행" }).boundingBox()];
-  expect(safety!.y).toBeGreaterThan(plan!.y);                                                              // 제목 아래, 다른 안내보다 위
+  // `[2026-10-07 목업 C안]` 정지 패널은 일정 칸 맨 윗줄 — 첫 일차 제목(일정 목록)보다 위
+  const [safety, list] = [await panel(page).boundingBox(), await tripScreen(page).getByRole("heading", { name: /1일차/ }).boundingBox()];
+  expect(safety!.y).toBeLessThan(list!.y);
 });
 
 test("안전 안내가 다시 시작 단추보다 먼저 나오고, 단추 옆에 「안전한 곳에서 눌러 주세요」가 있으며, 자동으로 다시 시작되지 않는다", async ({ page }) => {
@@ -148,4 +149,38 @@ test("정지가 없는 여행(또는 이 값을 모르는 옛 서버)에는 아�
   await openTrip(page);
   await expect(panel(page)).toHaveCount(0);
   await expect(page.getByText("일정 정지", { exact: true })).toHaveCount(0);
+});
+
+test("정지 중이면 시트 머리 「일정 | 채팅」 앞에 「일정 정지 중」이 붙고, 누르면 알림 센터의 할 일 맨 위에 같은 정지 패널이 있다", async ({ page }) => {
+  await stage(page, { paused: true, resumed: 0 });
+  await openTrip(page);
+  const chip = page.getByRole("button", { name: "일정 정지 중 · 알림 센터 열기" });
+  await expect(chip).toBeVisible();
+  await chip.click();
+  const center = page.getByRole("dialog", { name: "알림" });
+  await expect(center.getByTestId("center-safety-panel")).toBeVisible();
+  await expect(center.getByTestId("center-safety-panel").getByRole("heading", { name: "일정 정지 중" })).toBeVisible();
+  await expect(center.getByRole("heading", { name: /^할 일 1$/ })).toBeVisible();
+});
+
+test("화면이 열려 있는 동안 안전 알림이 오면 「일정 정지 중 · 안전 알림」 막대가 대피 장소를 말하고 9초 동안 남는다 — 정지가 풀리면 칩도 없다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ bell: "on" });
+  const state = { paused: false, resumed: 0 };
+  await stage(page, state);
+  await openTrip(page);
+  await expect(page.getByRole("button", { name: "일정 정지 중 · 알림 센터 열기" })).toHaveCount(0);
+  state.paused = true;
+  await expect.poll(() => server.ring(["itinerary", "notice"])).toBeGreaterThan(0);
+  const bar = page.getByRole("status").filter({ hasText: "안전 알림" });
+  await expect(bar).toContainText("일정 정지 중");
+  await expect(bar).toContainText("지진. 오늘 남은 일정을 정지했어요.");                                      // 서버의 문장 그대로
+  await expect(bar).toContainText("가까운 대피 장소 · 경복궁 옥외대피장소 · 직선 320m · 걸어서 약 5분(추정)");
+  await expect(page.getByRole("button", { name: "일정 정지 중 · 알림 센터 열기" })).toBeVisible();
+  await page.waitForTimeout(6_000);
+  await expect(bar).toBeVisible();                                                                           // 보통 막대(2.8 · 4.5초)보다 오래
+  await expect(bar).toHaveCount(0, { timeout: 6_000 });                                                      // 그래도 저절로 사라진다
+  await panel(page).getByRole("button", { name: "일정 다시 시작" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "일정을 다시 시작했어요" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "일정 정지 중 · 알림 센터 열기" })).toHaveCount(0);
 });

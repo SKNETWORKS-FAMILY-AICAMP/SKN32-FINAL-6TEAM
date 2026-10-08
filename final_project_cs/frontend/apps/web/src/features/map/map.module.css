@@ -1,6 +1,9 @@
 .frame { display: flex; flex-direction: column; flex: 1; min-height: 285px; overflow: hidden; background: var(--color-background); }
 .live { position: relative; flex: 1; min-height: 240px; isolation: isolate; }
 .canvas { width: 100%; height: 100%; position: absolute; inset: 0; color-scheme: light; color: var(--color-text); }
+/* ★`[2026-10-07 사용자 지적 — 멀어지면 마커(가장자리 칩)가 사라진다 · 지도 단추도 안 보인다]` Leaflet gives its panes z-index 200-800 and the pane that holds the tiles is 400: with no stacking context of its own, they stood ABOVE the chips
+   and buttons (z-index 4) of `.live`, so with real tiles on the map the chips and the buttons were painted under them (the tests have no tiles - they never showed it). The map keeps its panes to itself. */
+.canvas { isolation: isolate; z-index: 0; }
 .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 24px; background: var(--color-surface); font-size: 13px; z-index: 2; }
 .overlay p { margin: 0; line-height: 1.7; overflow-wrap: anywhere; }
 .overlay[role="alert"] { color: var(--color-error); }

@@ -12,6 +12,7 @@ domain: neutral
 
 | 문서 | 답하는 질문 |
 |---|---|
+| [gpu-work-queue.md](gpu-work-queue.md) | GPU 서버 A/B의 연구 일감을 어떻게 이어가는가 |
 | [local-setup.md](local-setup.md) | 처음 어떻게 셋업하는가 |
 | [run.md](run.md) | 무엇을 어떻게 실행하는가 |
 | [troubleshooting.md](troubleshooting.md) | 막히면 어디를 보는가 |

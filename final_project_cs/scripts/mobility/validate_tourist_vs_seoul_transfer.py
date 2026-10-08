@@ -5,7 +5,7 @@
   python scripts/mobility/validate_tourist_vs_seoul_transfer.py
 이 서비스는 출발 시각을 받지 않는다(정적 추정) — 우리 값은 평일 12시 출발의 p50 이다. 응답은 소요(분)·거리만 쓰고 저장하지 않는다.
 독립 **참고값**이다(정답 아님) — 구글 대조(validate_tourist_vs_google.py)와 같은 쌍으로 비교한다."""
-import json, math, random, re, statistics as st, sys, time, urllib.parse, urllib.request, urllib.error
+import json, random, re, statistics as st, sys, time, urllib.parse, urllib.request, urllib.error
 from pathlib import Path
 sys.path.insert(0, ".")
 from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier

@@ -10,7 +10,8 @@ import { consentedAt, readConsents, useConsent } from "./consent-store";
 import { saveConsents, type SendResult } from "./consent-sync";
 import { plainTitle } from "./terms-text";
 import { TermsViewer } from "./terms-viewer";
-import { TERMS_DOCS, TERMS_EFFECTIVE, TERMS_VERSION, type TermsDoc } from "./terms-content";
+import { TERMS_EFFECTIVE, type TermsDoc } from "./terms-content";
+import { useLiveTerms } from "./terms-live";
 import styles from "./consent.module.css";
 
 /** What turning an item off does - said before it is done. */
@@ -78,11 +79,12 @@ function Row({ doc, onView }: { doc: TermsDoc; onView: (doc: TermsDoc) => void }
 export function ConsentManager() {
   const t = useT();
   const [viewing, setViewing] = useState<TermsDoc | null>(null);
-  if (!TERMS_DOCS.length) return null;
+  const { version, docs } = useLiveTerms(useSettings().language);
+  if (!docs.length) return null;
   return <div className={styles.manager} id="consents">
     <h2 className={styles.managerTitle}>{t("약관 동의 관리", "Manage consents")}</h2>
-    <p className={styles.managerNote}>{t(`약관 버전 ${TERMS_VERSION} (시행 ${TERMS_EFFECTIVE}). 선택 항목은 동의하지 않아도 앱을 쓸 수 있고, 언제든 철회할 수 있어요.`, `Terms version ${TERMS_VERSION} (effective ${TERMS_EFFECTIVE}). Optional items can be declined without losing the app, and withdrawn at any time.`)}</p>
-    <ul className={styles.items} aria-label={t("동의 항목", "Consent items")}>{TERMS_DOCS.map((doc) => <Row key={doc.code} doc={doc} onView={setViewing} />)}</ul>
+    <p className={styles.managerNote}>{t(`약관 버전 ${version} (시행 ${TERMS_EFFECTIVE}). 선택 항목은 동의하지 않아도 앱을 쓸 수 있고, 언제든 철회할 수 있어요.`, `Terms version ${version} (effective ${TERMS_EFFECTIVE}). Optional items can be declined without losing the app, and withdrawn at any time.`)}</p>
+    <ul className={styles.items} aria-label={t("동의 항목", "Consent items")}>{docs.map((doc) => <Row key={doc.code} doc={doc} onView={setViewing} />)}</ul>
     {viewing && <TermsViewer doc={viewing} onClose={() => setViewing(null)} />}
   </div>;
 }

@@ -181,20 +181,23 @@ def disruptions_from_events(events: dict[str, dict[str, Any]]) -> tuple[list[dic
     return out, unmapped
 
 
-def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None):
+def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None, modes=None):
     """일정 짜기(planner.add_moves)가 부를 **구간 계산기**. 꺼져 있으면 None — 부르는 쪽이 직선 어림값으로 간다.
 
     돌려주는 함수 leg(a_place, b_place, arrive_dt, not_before_dt) → (결과 dict, None) 또는 (None, 이유 dict).
       결과: starts_at · ends_at(도착 목표 − 여유 기준 출발 · 도착) · eta_min · route(options·uses 포함) · left_out
       route 에 밀도 검사(density.py)가 읽는 칸을 채운다 — average_eta_min(계획 수단 소요) · p95_eta_min(최악 소요) ·
       distance_m(계획 수단 도보 거리). ☆`[2026-09-29 문제목록 #43]` 앞 판 계산기는 이 칸을 내지 않았다.
+
+    `modes` `[2026-10-07 이동수단 고르기]` 이 수단만으로 후보를 만든다(["subway"] · ["bus"] · ["taxi"] · ["walk"]) — 설문 수단보다 앞선다.
+    없으면 설문의 수단 선호(`modes_from_survey`)를 따른다.
     """
     if _STATE["mode"] != "enabled":
         return None
     from .engine.plan import Planner, iso_of, party_of
     rt = engine_runtime.get_verifier(**_STATE["kw"])
     c = dict(constraints or {})
-    planner = Planner(rt, stage="planning", modes=modes_from_survey(c))
+    planner = Planner(rt, stage="planning", modes=(list(modes) if modes else modes_from_survey(c)))
     if disruptions:
         planner.disruptions = tuple(dict(d) for d in disruptions)     # #38 — 사고를 모든 판정 호출에 싣는다
     party = party_of(party_size, c)

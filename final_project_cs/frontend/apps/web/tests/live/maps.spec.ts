@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer, noHorizontalScroll, start, TRIP_ID } from "./helpers";
+import { dayTab, mockServer, noHorizontalScroll, start, TRIP_ID, tripScreen } from "./helpers";
 import { allowLocation, startWithLocationConsent } from "./location-kit";
 import { readMapSdk, stubMapSdk, type TestMapProvider } from "./map-sdk";
 
@@ -11,13 +11,11 @@ async function openMapTrip(page: Page, request: Parameters<typeof mockServer>[0]
   await mockServer(request).scenario({ tripItems: "map" });
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
 }
 
-/** The travel views show one pane at a time; switch with the bottom tabs. */
-async function showPane(page: Page, label: "일정" | "지도") {
-  await page.getByRole("button", { name: label, exact: true }).click();
-}
+// `[2026-10-07 사용자 결정 — 목업 C안]` 여행 화면의 지도는 시트 뒤에 늘 있다(지도 탭이 없다). 목록의 일정을 누르면 지도의 핀이, 핀을 누르면 목록의 일정이 골라진다.
+const mapRegion = (page: Page) => page.getByRole("region", { name: "여행 지도", exact: true });
 
 function marker(page: Page, name: string) {
   return page.getByRole("region", { name: "여행 지도", exact: true }).getByRole("button", { name, exact: true });
@@ -31,10 +29,9 @@ test.describe(`${provider} 지도 어댑터 · SDK 계약 대역`, () => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     const sdk = await stubMapSdk(page, provider, { holdFirst: true });
     await openMapTrip(page, request);
-    await showPane(page, "지도");
-    await expect(page.locator("#trip-pane-map").getByRole("status")).toBeVisible();
+    await expect(mapRegion(page).getByRole("status")).toBeVisible();
     sdk.releaseFirst();
-    const region = page.getByRole("region", { name: "여행 지도", exact: true });
+    const region = mapRegion(page);
     const firstMarker = marker(page, "1. 첫 지도 장소 · 2026-10-01 09:00–10:00");
     const thirdMarker = marker(page, `3. ${literalTitle} · 2026-10-01 12:00–13:00`);
     await expect(firstMarker).toBeVisible();
@@ -50,28 +47,24 @@ test.describe(`${provider} 지도 어댑터 · SDK 계약 대역`, () => {
     expect(sdk.requests.every((request) => request.provider === provider)).toBe(true);
     expect(sdk.requests[0].url).toContain(provider === "naver" ? "test-naver-key" : "test-google-key");
 
-    const timeline = page.locator("#trip-pane-schedule");
-    await showPane(page, "일정");
+    const timeline = tripScreen(page);
     await timeline.getByRole("button", { name: new RegExp(literalTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) }).click();
-    await showPane(page, "지도");
     await expect(thirdMarker).toHaveAttribute("aria-pressed", "true");
     await expect.poll(async () => (await readMapSdk(page))?.pans.at(-1)).toEqual({ lat: 37.57, lng: 127.01 });
     await firstMarker.locator("[data-pin-body]").click();                                          // 핀 상자의 한가운데는 좌표 자리(눌리지 않는 곳) — 누르는 곳은 물방울 몸통이다
     await expect(firstMarker).toHaveAttribute("aria-pressed", "true");
-    await showPane(page, "일정");
-    await expect(timeline.locator('article[data-selected="true"]')).toContainText("첫 지도 장소");
+    await expect(timeline.locator('li[data-selected="true"]')).toContainText("첫 지도 장소");
     const previousPan = (await readMapSdk(page))?.pans.at(-1);
     await timeline.getByRole("button", { name: /좌표가 없는 중간 일정/ }).click();
-    await showPane(page, "지도");
     await expect(firstMarker).toHaveAttribute("aria-pressed", "false");
     await expect(thirdMarker).toHaveAttribute("aria-pressed", "false");
     expect((await readMapSdk(page))?.pans.at(-1)).toEqual(previousPan);
     await firstMarker.focus();
     await firstMarker.press("Enter");
     await expect(firstMarker).toHaveAttribute("aria-pressed", "true");
-    await expect(page.locator("#trip-pane-map").getByRole("heading", { name: "첫 지도 장소", exact: true })).toBeVisible();
+    await expect(timeline.locator('li[data-selected="true"]')).toContainText("첫 지도 장소");             // 핀을 고르면 목록에서도 그 일정
 
-    await page.getByRole("button", { name: /2일차/ }).click();
+    await dayTab(page, /^2일차/).click();
     await expect(marker(page, "1. 다음 날 첫 장소 · 2026-10-02 09:00–10:00")).toBeVisible();
     await expect(marker(page, "2. 다음 날 둘째 장소 · 2026-10-02 10:00–11:00")).toBeVisible();
     await expect(firstMarker).toHaveCount(0);
@@ -84,13 +77,12 @@ test.describe(`${provider} 지도 어댑터 · SDK 계약 대역`, () => {
       { lat: 37.51, lng: 127.02 },
     ]);
 
-    await page.getByRole("button", { name: /3일차/ }).click();
+    await dayTab(page, /^3일차/).click();
     await expect(page.getByText("표시할 장소 좌표가 없어요.", { exact: true })).toBeVisible();
     await expect(region.locator("[data-sdk-marker]")).toHaveCount(0);
-    await page.getByRole("button", { name: /1일차/ }).click();
+    await dayTab(page, /^1일차/).click();
     await expect(firstMarker).toBeVisible();
     await page.reload();
-    await showPane(page, "지도");
     await expect(firstMarker).toBeVisible();
     await expect(thirdMarker).toBeVisible();
     expect(sdk.requests.every((request) => request.provider === provider)).toBe(true);
@@ -101,8 +93,7 @@ test.describe(`${provider} 지도 어댑터 · SDK 계약 대역`, () => {
     const sdk = await stubMapSdk(page, provider, { failFirst: true });
     await openMapTrip(page, request);
     const tripUrl = page.url();
-    await showPane(page, "지도");
-    const mapPane = page.locator("#trip-pane-map");
+    const mapPane = mapRegion(page);
     await expect(mapPane.getByRole("alert")).toBeVisible();
     await expect(marker(page, "1. 첫 지도 장소 · 2026-10-01 09:00–10:00")).toHaveCount(0);
     expect(sdk.selectedRequestCount()).toBe(1);
@@ -114,26 +105,20 @@ test.describe(`${provider} 지도 어댑터 · SDK 계약 대역`, () => {
     expect(sdk.requests.every((request) => request.provider === provider)).toBe(true);
   });
 
-  test("모바일에서 숨겨진 지도를 열 때 크기를 다시 계산하고 핀에서 일정 상세로 이동한다", async ({ page, request }) => {
+  test("모바일에서 화면 폭이 바뀌면 지도 크기를 다시 계산하고, 핀을 누르면 목록에서 그 일정이 골라져 펼쳐진다", async ({ page, request }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     const sdk = await stubMapSdk(page, provider);
     await openMapTrip(page, request);
-    await expect(page.locator("#trip-pane-map")).not.toBeVisible();
-    await showPane(page, "지도");
     const firstMarker = marker(page, "1. 첫 지도 장소 · 2026-10-01 09:00–10:00");
     await expect(firstMarker).toBeVisible();
     const initialResizes = (await readMapSdk(page))?.resizes ?? 0;
-    await showPane(page, "일정");
     await page.setViewportSize({ width: 320, height: 812 });
-    await showPane(page, "지도");
     await expect(firstMarker).toBeVisible();
     await expect.poll(async () => (await readMapSdk(page))?.resizes ?? 0).toBeGreaterThan(initialResizes);
     await noHorizontalScroll(page);
     await marker(page, `3. ${literalTitle} · 2026-10-01 12:00–13:00`).locator("[data-pin-body]").click();
-    await page.locator("#trip-pane-map").getByRole("button", { name: "일정 상세 보기", exact: true }).click();
-    await expect(page.getByRole("button", { name: "일정", exact: true })).toHaveAttribute("aria-pressed", "true");
-    await expect(page.locator('#trip-pane-schedule article[data-selected="true"]')).toContainText(literalTitle);
-    await expect(page.locator("#trip-pane-schedule").getByRole("button", { name: new RegExp(literalTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) })).toHaveAttribute("aria-expanded", "true");
+    await expect(tripScreen(page).locator('li[data-selected="true"]')).toContainText(literalTitle);
+    await expect(tripScreen(page).getByRole("button", { name: new RegExp(literalTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) })).toHaveAttribute("aria-expanded", "true");
     expect(sdk.requests.every((request) => request.provider === provider)).toBe(true);
   });
 
@@ -143,19 +128,16 @@ test.describe(`${provider} 지도 어댑터 · SDK 계약 대역`, () => {
     await mockServer(request).scenario({ routeShapes: "on" });          // the default trip: 아침 식당 → 경복궁 (bus, straight line) and 경복궁 → 점심 식당 (walk, road graph)
     await start(page);
     await page.goto(`/trips/${TRIP_ID}`);
-    await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
-    await showPane(page, "지도");
+    await expect(tripScreen(page)).toBeVisible();
     await expect.poll(async () => (await readMapSdk(page))?.lines.filter((line) => line.attached).length).toBe(2);
     const drawn = (await readMapSdk(page))?.lines.filter((line) => line.attached) ?? [];
     const road = drawn.find((line) => !line.dashed)!, guess = drawn.find((line) => line.dashed)!;
     expect(road.path).toEqual([{ lat: 37.5796, lng: 126.977 }, { lat: 37.5745, lng: 126.981 }, { lat: 37.57, lng: 126.99 }]);   // the server sent [lng, lat]
     expect(guess.path).toEqual([{ lat: 37.575, lng: 126.98 }, { lat: 37.5796, lng: 126.977 }]);
-    await expect(page.locator("#trip-pane-map")).toContainText("경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)");
-    await expect(page.locator("#trip-pane-map")).toContainText("점선은 길을 몰라 두 곳을 직선으로 이은 구간이에요.");
+    await expect(tripScreen(page)).toContainText("경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)");   // 목록 끝 출처 줄
+    await expect(tripScreen(page)).toContainText("점선은 길을 몰라 두 곳을 직선으로 이은 구간이에요.");
     // another day: the lines of the first day are taken off the map
-    await showPane(page, "일정");
-    await page.getByRole("button", { name: /^2일차/ }).click();
-    await showPane(page, "지도");
+    await dayTab(page, /^2일차/).click();
     await expect.poll(async () => (await readMapSdk(page))?.lines.filter((line) => line.attached).length).toBe(0);
   });
 
@@ -166,9 +148,8 @@ test.describe(`${provider} 지도 어댑터 · SDK 계약 대역`, () => {
     await mockServer(request).scenario({ tripItems: "map" });
     await startWithLocationConsent(page, true);
     await page.goto(`/trips/${TRIP_ID}`);
-    await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
-    await showPane(page, "지도");
-    const region = page.getByRole("region", { name: "여행 지도", exact: true });
+    await expect(tripScreen(page)).toBeVisible();
+    const region = mapRegion(page);
     const me = async () => (await readMapSdk(page))?.markers.filter((item) => item.attached && item.title === "내 위치").map((item) => item.position);
     await expect(region.getByRole("img", { name: "내 위치", exact: true })).toBeVisible();
     await expect.poll(me).toEqual([{ lat: 37.575, lng: 127 }]);

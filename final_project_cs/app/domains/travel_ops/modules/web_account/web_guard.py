@@ -115,6 +115,9 @@ def specs() -> dict[str, LimitSpec]:
     out["chat.decision_mode"] = LimitSpec("chat.decision_mode", "채팅 해석 방식(결정 단위)", "", "choice",
                                           _mode_text(guard.get("travel.decision_unit.mode")),
                                           choices=("off", "shadow", "on"))
+    # ★`[2026-10-07 사용자 결정 — 약관 보관 기간]` 회원 자료 정리 모드 — off · dry_run(세기만) · on(지움). 기본 dry_run, on 은 사용자가 건수를 보고 승인한 뒤에(`member_cleanup`)
+    out["retention.purge_mode"] = LimitSpec("retention.purge_mode", "회원 자료 정리 모드(지움은 승인 뒤에만 on)", "", "choice",
+                                            _mode_text(guard.get("retention.purge_mode")), choices=("off", "dry_run", "on"))
     return out
 
 

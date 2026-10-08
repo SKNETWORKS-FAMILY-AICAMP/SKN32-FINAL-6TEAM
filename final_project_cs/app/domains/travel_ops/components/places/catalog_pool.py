@@ -16,7 +16,7 @@ import json
 import math
 import time
 from datetime import datetime
-from typing import Any
+from typing import Any, Sequence
 from uuid import UUID
 
 from app.domains.travel_ops.components.planning.planner import CONTENT_TYPE_RANK, INDOOR_ASSUMED_BY_CONTENT_TYPE, KIND_BY_CONTENT_TYPE, Cand, _district_of
@@ -39,8 +39,11 @@ def _catalog_tenants(tenant_id: str) -> list[str]:
 
 
 def nearby_activities(conn, tenant_id: str, *, latitude: float, longitude: float, radius_m: float,
-                      exclude_names: set[str], limit: int = POOL_LIMIT) -> list[Cand]:
-    """목록(`place_catalog`)에서 반경 안 활동을 가까운 순으로."""
+                      exclude_names: set[str], limit: int = POOL_LIMIT, types: Sequence[str] | None = None) -> list[Cand]:
+    """목록(`place_catalog`)에서 반경 안 활동을 가까운 순으로.
+
+    `types` — 읽을 관광공사 분류 번호. 안 주면 활동 분류(`ACTIVITY_TYPES`)다. ★`[2026-10-07]` 숙소 줄의 후보를 위해 숙박(32)을 읽을 수 있게 열었다
+    (전에는 활동 분류만 읽어 「호텔」 줄의 후보가 늘 0 이었다)."""
     dlat = radius_m / 111_000
     dlon = radius_m / (111_000 * max(0.2, math.cos(math.radians(latitude))))
     with conn.cursor() as cur:
@@ -49,26 +52,96 @@ def nearby_activities(conn, tenant_id: str, *, latitude: float, longitude: float
             "WHERE tenant_id = ANY(%s) AND source='tour_api' AND content_type_id = ANY(%s) "
             "AND latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s "
             "ORDER BY (latitude - %s)^2 + ((longitude - %s) * %s)^2 LIMIT %s",
-            (_catalog_tenants(tenant_id), ACTIVITY_TYPES, latitude - dlat, latitude + dlat, longitude - dlon,
+            (_catalog_tenants(tenant_id), list(types) if types else ACTIVITY_TYPES, latitude - dlat, latitude + dlat, longitude - dlon,
              longitude + dlon, latitude, longitude, math.cos(math.radians(latitude)), limit * 3))
         rows = cur.fetchall()
     out: list[Cand] = []
     for content_id, content_type, title, address, lat, lon in rows:
         if not title or title in exclude_names or any(c.name == title for c in out):
             continue
-        attributes: dict[str, Any] = {"source": "tour_api", "source_content_id": str(content_id),
-                                      "source_content_type_id": str(content_type), "from_catalog": True}
-        if address:
-            attributes["address"] = address
-        district = _district_of(address)
-        if district:
-            attributes["district"] = district
-        assumed = INDOOR_ASSUMED_BY_CONTENT_TYPE.get(str(content_type))
-        if assumed is not None:
-            attributes["indoor_assumed"] = assumed
-        out.append(Cand(key=f"tour_{content_id}", name=title, kind="activity", lat=float(lat), lon=float(lon),
-                        attributes=attributes, origin="place_catalog",
-                        rank_hint=1 + CONTENT_TYPE_RANK.get(str(content_type), 9)))
+        out.append(_catalog_cand(content_id, content_type, title, address, lat, lon))
+        if len(out) >= limit:
+            break
+    return out
+
+
+def _catalog_cand(content_id: Any, content_type: Any, title: str, address: str | None, lat: Any, lon: Any,
+                  extra: dict[str, Any] | None = None) -> Cand:
+    attributes: dict[str, Any] = {"source": "tour_api", "source_content_id": str(content_id),
+                                  "source_content_type_id": str(content_type), "from_catalog": True, **(extra or {})}
+    if address:
+        attributes["address"] = address
+    district = _district_of(address)
+    if district:
+        attributes["district"] = district
+    assumed = INDOOR_ASSUMED_BY_CONTENT_TYPE.get(str(content_type))
+    if assumed is not None:
+        attributes["indoor_assumed"] = assumed
+    return Cand(key=f"tour_{content_id}", name=title, kind="activity", lat=float(lat), lon=float(lon),
+                attributes=attributes, origin="place_catalog",
+                rank_hint=1 + CONTENT_TYPE_RANK.get(str(content_type), 9))
+
+
+def nearby_similar(conn, tenant_id: str, *, latitude: float, longitude: float, radius_m: float, lcls: Sequence[str | None],
+                   exclude_names: set[str], limit: int = POOL_LIMIT, min_level: int = 1) -> list[Cand]:
+    """원래 장소와 **비슷한** 곳을 관광공사 3단계 분류 나무(`raw_json` 의 lclsSystm1·2·3)에서 가까운 순으로. `[2026-10-07 사용자]`
+
+    같은 소분류(3) → 같은 중분류(2) → 같은 대분류(1) 순이다. **그 나무 밖(다른 대분류)은 절대 안 준다** — 분류를 모른다고 약국을 권하지 않는다.
+    `lcls` = `(대, 중, 소)` — 뒤쪽이 None 이면(이름이 여러 소분류에 걸침) 아는 단계까지만 쓴다. `min_level` 아래 단계는 안 준다.
+    각 후보의 `attributes["similarity"]` = 맞은 단계(3·2·1) · `lcls` = 그 곳의 분류. 단계가 높은 쪽이 앞이고 같은 단계 안에서는 가까운 순이다."""
+    depth = sum(1 for _ in __import__("itertools").takewhile(lambda v: v, lcls))
+    if depth == 0:
+        return []
+    dlat = radius_m / 111_000
+    dlon = radius_m / (111_000 * max(0.2, math.cos(math.radians(latitude))))
+    out: list[Cand] = []
+    seen: set[str] = set()
+    for level in range(depth, max(min_level, 1) - 1, -1):
+        where = " AND ".join(f"raw_json->>'lclsSystm{n}' = %s" for n in range(1, level + 1))
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT content_id, content_type_id, title, address, latitude, longitude, "
+                "raw_json->>'lclsSystm1', raw_json->>'lclsSystm2', raw_json->>'lclsSystm3' FROM place_catalog "
+                f"WHERE tenant_id = ANY(%s) AND source='tour_api' AND {where} "
+                "AND latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s "
+                "ORDER BY (latitude - %s)^2 + ((longitude - %s) * %s)^2 LIMIT %s",
+                (_catalog_tenants(tenant_id), *lcls[:level], latitude - dlat, latitude + dlat, longitude - dlon, longitude + dlon,
+                 latitude, longitude, math.cos(math.radians(latitude)), limit * 3))
+            rows = cur.fetchall()
+        for content_id, content_type, title, address, lat, lon, l1, l2, l3 in rows:
+            if not title or title in exclude_names or str(content_id) in seen:
+                continue
+            seen.add(str(content_id))
+            out.append(_catalog_cand(content_id, content_type, title, address, lat, lon,
+                                     {"similarity": level, "lcls": [l1, l2, l3]}))
+        if len(out) >= limit:
+            break
+    return out[:limit]
+
+
+def nearby_in_classes(conn, tenant_id: str, *, latitude: float, longitude: float, radius_m: float, lcls2: Sequence[str],
+                      exclude_names: set[str], limit: int = POOL_LIMIT) -> list[Cand]:
+    """관광공사 **중분류**(`lclsSystm2`)가 주어진 목록 안인 곳을 가까운 순으로 — 「비슷한 경험」 단계가 쓴다(궁궐 · 유적 → 공원 · 둘레길 같은 갈래). `[2026-10-07]`
+    각 후보의 `attributes["lcls"]` = 그 곳의 분류. 어느 대분류든 중분류 번호가 목록에 있으면 받는다."""
+    if not lcls2:
+        return []
+    dlat = radius_m / 111_000
+    dlon = radius_m / (111_000 * max(0.2, math.cos(math.radians(latitude))))
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT content_id, content_type_id, title, address, latitude, longitude, "
+            "raw_json->>'lclsSystm1', raw_json->>'lclsSystm2', raw_json->>'lclsSystm3' FROM place_catalog "
+            "WHERE tenant_id = ANY(%s) AND source='tour_api' AND raw_json->>'lclsSystm2' = ANY(%s) "
+            "AND latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s "
+            "ORDER BY (latitude - %s)^2 + ((longitude - %s) * %s)^2 LIMIT %s",
+            (_catalog_tenants(tenant_id), list(lcls2), latitude - dlat, latitude + dlat, longitude - dlon, longitude + dlon,
+             latitude, longitude, math.cos(math.radians(latitude)), limit * 3))
+        rows = cur.fetchall()
+    out: list[Cand] = []
+    for content_id, content_type, title, address, lat, lon, l1, l2, l3 in rows:
+        if not title or title in exclude_names or any(c.name == title for c in out):
+            continue
+        out.append(_catalog_cand(content_id, content_type, title, address, lat, lon, {"lcls": [l1, l2, l3]}))
         if len(out) >= limit:
             break
     return out

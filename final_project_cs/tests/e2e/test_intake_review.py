@@ -12,7 +12,6 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from uuid import UUID
 
 import pytest
@@ -106,6 +105,10 @@ def rv(api, monkeypatch):  # noqa: F811
     """이동 계산기를 끈 환경(직선 어림값) + 시험이 넣은 관광공사 목록 · 운영시간 정리."""
     for module in (review_module, candidates_module, autofix_module):
         monkeypatch.setattr(module, "default_engine", lambda party=None: None)
+    # ★`[2026-10-07]` 원장의 「시장 안 메뉴 가게 찾기」(`find_dish_near`)를 끈다 — 이 시험의 「시장까지만 정한 식사」는 원장이 비었을 때의 동작인데,
+    #   개발 DB 원장에는 광장시장 근처 빈대떡 가게가 있어 시험 결과가 DB 내용을 따라갔다(메뉴 찾기 자체는 시험 test_intake_chain_resolve · test_dining_find_by_name)
+    from app.domains.travel_ops.instances.dining.place_lookup import LedgerPlaceLookup
+    monkeypatch.setattr(LedgerPlaceLookup, "find_dish_near", lambda self, text, latitude, longitude: None)
     op_stream._OPEN.clear()
     yield api
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:

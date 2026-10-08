@@ -11,7 +11,6 @@
 비밀값(서비스 키)은 기록하지 않는다 — 소스 이름 · 주소 경로 · 인자 이름 · 인자 값의 해시 앞 8자리만.
 """
 import hashlib
-import json
 import random
 import sys
 from collections import Counter, defaultdict

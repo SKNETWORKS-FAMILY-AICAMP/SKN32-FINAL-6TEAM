@@ -81,7 +81,7 @@ test("시트 머리: 문장 대신 「! 2」 표시 하나 — 눌러서 확인 
   await expect(card(page, "경복궁 관람")).toBeVisible();
 });
 
-test("시트를 끝까지 내리면 머리·날짜 칩·목록을 모두 접고 손잡이와 「전체 자동 추천」 줄만 남는다", async ({ page, request }) => {
+test("시트를 끝까지 내리면 머리·날짜 칩·목록을 모두 접고 손잡이와 「전체 자동 추천」 줄만 남는다(지도의 「확인 필요」는 남는다)", async ({ page, request }) => {
   await openFinished(page, request);
   const handle = page.getByRole("button", { name: "목록 높이 바꾸기" });
   await handle.click();
@@ -89,7 +89,7 @@ test("시트를 끝까지 내리면 머리·날짜 칩·목록을 모두 접고 
   await expect(page.locator("[data-sheet]")).toHaveAttribute("data-sheet", "peek");
   await expect(page.locator("[data-compact]")).toHaveCount(1);
   await expect(page.getByRole("heading", { name: "계획 확인" })).toBeHidden();
-  await expect(needsBadge(page)).toBeHidden();
+  await expect(needsBadge(page)).toBeVisible();                                                       // `[2026-10-07]` 「! n」은 지도 쪽에 있어 시트를 접어도 보인다
   await expect(bodyOf(page)).toBeHidden();
   await expect(page.getByRole("button", { name: /^전체 자동 추천/ })).toBeVisible();
   await expect(handle).toBeVisible();
@@ -359,8 +359,51 @@ test("일정 사이 간격은 비는 시간만큼 벌어지고, 15분 넘게 비
   expect(Math.abs((textBox.y + textBox.height / 2) - (freeBox.y + freeBox.height / 2))).toBeLessThan(3);
   await expect(move.locator("[class*=moveText]")).toContainText("지하철 3호선");
   await expect(page.getByText(/^여유 /)).toHaveCount(1);                                              // 올리브영 → 광장시장은 14분이라 말은 없다(간격만)
-  const spaces = await page.locator("div[class*=freeGap]").evaluateAll((elements) => elements.map((element) => Math.round(element.getBoundingClientRect().height)));
-  expect(spaces[0]).toBeGreaterThanOrEqual(15);                                                        // 21분이면 기본 간격(14px)에 더해 19px 가량 더 벌어진다
+  // `[2026-10-07 사용자 지시]` 벌어진 공간은 이동 줄의 위와 아래로 나뉜다 — 이동 줄이 앞뒤 일정의 시작 시각 사이에서 출발하는 만큼 위에서 내려온다(09:00 → 11:00 사이 10:30 출발은 75%)
+  const spaces = await move.locator("div[class*=freeGap]").evaluateAll((elements) => elements.map((element) => Math.round(element.getBoundingClientRect().height)));
+  expect(spaces).toHaveLength(2);
+  expect(spaces[0] + spaces[1]).toBeGreaterThanOrEqual(15);                                            // 21분이면 기본 간격(14px)에 더해 19px 가량 더 벌어진다
+  expect(spaces[0]).toBeGreaterThan(spaces[1]);                                                        // 나중 일정(11:00)에 더 가까우니 아래 공간이 더 좁다
+});
+
+/** 글자 자체의 세로 가운데(단추의 위 안쪽 여백은 빼고 잰다). */
+const textCentre = (page: Page, selector: string) => page.locator(selector).first().evaluate((element) => {
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  const rect = range.getBoundingClientRect();
+  return rect.y + rect.height / 2;
+});
+
+test("이동 줄은 앞뒤 일정의 시작 시각 사이에서 출발하는 만큼 위에서 내려와, 시각이 더 가까운 일정 쪽에 붙는다", async ({ page, request }) => {
+  await openFinished(page, request);
+  // 경복궁 09:00 → 올리브영 11:00: 이동 줄은 10:30 에 나선다(75 %) — 카드 사이에서 올리브영 카드 쪽에 더 가깝다
+  const box = async (selector: string) => (await page.locator(selector).first().boundingBox())!;
+  const prev = await box('li[data-type="item"][data-entry-id="0-0"] article');
+  const next = await box('li[data-type="item"][data-entry-id="0-1"] article');
+  const row = await box('li[data-type="move"][data-entry-id="0-0:0-1"] [class$="__move"]');
+  const above = row.y - (prev.y + prev.height), below = next.y - (row.y + row.height);
+  expect(above).toBeGreaterThan(below);
+  // 이동 줄의 시간표(「출발」)와 원은 이동 줄 글자와 같은 높이다
+  const dot = await box('li[data-type="move"][data-entry-id="0-0:0-1"] [class*="__dot"]');
+  const centre = row.y + row.height / 2;
+  expect(Math.abs(dot.y + dot.height / 2 - centre)).toBeLessThan(2.5);
+  expect(Math.abs((await textCentre(page, 'li[data-type="move"][data-entry-id="0-0:0-1"] [class*="__time"]')) - centre)).toBeLessThan(3);
+});
+
+test("일정 카드의 시간 · 원 · 이름은 한 줄에 놓인다(이름만 아래로 처지지 않는다)", async ({ page, request }) => {
+  await openFinished(page, request);
+  for (const id of ["0-0", "0-1", "0-2"]) {
+    const entry = page.locator(`li[data-type="item"][data-entry-id="${id}"]`);
+    const title = (await entry.locator("[class*=cardTitle]").boundingBox())!;
+    const timeCentre = await textCentre(page, `li[data-type="item"][data-entry-id="${id}"] [class*="__time"]`);
+    const dot = (await entry.locator("[class*=__dot]").boundingBox())!;
+    const centre = (box: { y: number; height: number }) => box.y + box.height / 2;
+    // 이름이 두 줄이 아니라면 이름의 가운데, 시간 글자의 가운데, 원의 가운데가 같은 높이다
+    if (title.height < 26) {
+      expect(Math.abs(centre(dot) - centre(title))).toBeLessThan(2);
+      expect(Math.abs(timeCentre - centre(title))).toBeLessThan(2);
+    }
+  }
 });
 
 test("시간 편집기에 시각을 적으면 밀리는 일정이 미리 보이고, 적용하면 모든 일정이 요청 하나로 간다", async ({ page, request }) => {
@@ -419,6 +462,7 @@ test("끌개를 아래로 끌면 시작이 늦어지고(10px = 5분) 손을 떼�
   const form = await openTime(page, "광장시장");
   await form.getByLabel("앞뒤 일정도 함께 밀기").uncheck();
   const grip = form.getByRole("button", { name: /끌어서 시작 시각 바꾸기/ });
+  await grip.hover();
   const box = (await grip.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
@@ -433,6 +477,7 @@ test("끌개를 아래로 끌면 시작이 늦어지고(10px = 5분) 손을 떼�
   const again = await openTime(page, "광장시장");
   await again.getByLabel("앞뒤 일정도 함께 밀기").uncheck();
   const grip2 = again.getByRole("button", { name: /끌어서 시작 시각 바꾸기/ });
+  await grip2.hover();
   const box2 = (await grip2.boundingBox())!;
   await page.mouse.move(box2.x + box2.width / 2, box2.y + box2.height / 2);
   await page.mouse.down();
@@ -471,4 +516,8 @@ test("바꾼 시간에는 「되돌리기」가 붙고(수정·삭제 앞), 누�
   expect(back["items[0].starts_at"]).toBe("09:00");
   await expect(undo).toHaveCount(0);                                                                    // 처음 시간이 되면 표시가 없다
   await expect(reset).toHaveCount(0);
+  // `[2026-10-07 사용자 지적 — 시간 초기화를 눌러도 수정된 것으로 나온다]` 처음 시간으로 돌아온 일정에는 「변경 완료 · 바뀜 · 이전 …」도 머리의 「바뀐 일정 N곳」도 남지 않는다
+  await expect(page.getByText(/바뀜 · 이전/)).toHaveCount(0);
+  await expect(page.getByText("변경 완료")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^바뀐 일정/ })).toHaveCount(0);
 });

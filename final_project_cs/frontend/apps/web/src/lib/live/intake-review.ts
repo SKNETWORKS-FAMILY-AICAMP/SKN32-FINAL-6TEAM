@@ -59,10 +59,17 @@ export interface ReviewItem {
   booked?: boolean | null;
   candidates_hint: number | null;
   rows?: CheckLine<ItemRow>[];
+  /**
+   * `[2026-10-07 cs 개발 세션 제안 계약]` A value read off a photo or scan that the server read two ways (the whole page and a half of it read the same line differently). `current` is the value it kept,
+   * `other` what the other reading gave (null when it could not tell - then only the row's note is shown). The customer picks one; it is sent as `items[i].<field>`. Absent on an older server.
+   */
+  rereads?: ReviewReread[];
 }
 
+export interface ReviewReread { field: "title" | "booking_no"; current: string; other: string | null }
+
 export type MoveStatus = "keep" | "review" | "waiting";
-export type MoveMode = "walk" | "subway" | "bus" | "transit" | "estimate" | null;
+export type MoveMode = "walk" | "subway" | "bus" | "taxi" | "transit" | "estimate" | null;  // `taxi`: after the customer picks it (2026-10-07 이동수단 고르기)
 
 export interface ReviewMove {
   from: string;
@@ -82,6 +89,9 @@ export interface ReviewMove {
   basis: "timetable" | "estimate" | null;
   summary: string;
   fare_krw?: number | null;
+  /** `[2026-10-07]` The way the calculator chose (it stays when the customer picks another), and what became of the customer's choice after the stops around the leg changed. */
+  recommended_mode?: string | null;
+  mode_choice?: { mode?: string | null; state?: string | null; why?: string | null } | null;
   rows: CheckLine<MoveRow>[];
 }
 
@@ -136,6 +146,14 @@ export interface Candidate {
   slack: { before: number | null; after: number | null };
   /** One of the legs in or out is a straight-line guess. */
   estimated: boolean;
+  /**
+   * `[2026-10-07 서버 c0ca7054 — 대체 후보 세 단]` Which step of the ladder it came from: `same_kind` (the same kind, tourism classes) · `similar_experience` · `meal_inferred` (a meal place where a market stands
+   * at a meal time — picking it makes the stop a meal: send `items[i].kind = "dining"` with the place) · null (a map search …). `reason`: the server's one sentence, only what it knows.
+   */
+  basis?: "same_kind" | "similar_experience" | "meal_inferred" | "lodging" | "lodging_meal" | "taste" | null;   // lodging · lodging_meal [2026-10-07 서버 90d9e403]: 이름 없는 「호텔」 줄의 숙소 / 그 숙소 안 식사
+  reason?: string | null;
+  similarity?: number | null;
+  experience?: string | null;
 }
 
 export interface CandidateList {

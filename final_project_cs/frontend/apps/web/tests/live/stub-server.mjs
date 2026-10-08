@@ -61,6 +61,8 @@ const DEFAULTS = {
   editRefusal: "",
   // the plan on the check screen: "simple" (one stop that is fine — nothing to fix, 「여행 등록」 is open) | "rich" (three stops, one needs review, two legs)
   board: "simple",
+  // 받아쓰기 두 읽기 (2026-10-07): "on" = the first stop was read two ways off a photo (`rereads[]` + a warning row) — see `withReread`; "note_only" = the other value is unknown (`other: null`).
+  reread: "off",
   // the trip screen's stops: "default" | "map" (three days for the map tests — see `mapItems`)
   tripItems: "default",
   // trip warnings / notices to show
@@ -92,6 +94,9 @@ const DEFAULTS = {
   routeShapes: "off",
   // `[2026-10-04]` the same for a plan not registered yet (`GET /v1/web/trip-intakes/{id}/route-shapes`, mobility session): "off" (404) | "on" (the board's first leg joined by a straight line with no ground, the second on a road) | "fail" (500)
   intakeRoutes: "off",
+  // `[2026-10-07]` the ways to go for one leg of a checked plan (`GET …/moves/{from}~{to}/options?revision=`, `POST …/mode` - built by the mobility session 2026-10-07, `wiki/external/rest-endpoints.md` 「이동수단 고르기」):
+  //   "off" (404 not_available - an older server: no box) | "on" | "none" (nothing reaches in time) | "partial" (the bus could not be finished: `fits: null`) | "fail" (500) | "slow" (4 s) | "unknown_mode" (also sends a way the screen does not know)
+  moveOptions: "off",
   // `[2026-10-04]` agent keys (`/v1/web/agent-keys*`, server D-CS-012): "on" | "off" (an older server: FastAPI 404 `{detail}`) | "limit" (making one answers 409 agent_key_limit)
   agentKeys: "on",
   // the "this trip changed" bell (`GET /v1/web/trips/{id}/events`): "off" = an older server without it (404) | "on"
@@ -115,6 +120,11 @@ const DEFAULTS = {
   //   "server_ahead" = the server's terms are a NEWER version than the page carries (the GET says so, a POST answers 409 `terms_version_changed`).
   consents: "off",
   // ── 동의 기록 (2026-10-05) ── 끝
+  // ── 약관 보관 기간 (2026-10-07) ── 시작
+  // `[2026-10-07]` The public retention read (`GET /v1/web/legal/retention`, no session): "off" = an older server (404) | "on" = an operator changed a period on the
+  //   admin screen (member data 2 years), so the server's terms version is `<TERMS_VERSION>+ret1` - the consent record then expects that version too.
+  retention: "off",
+  // ── 약관 보관 기간 (2026-10-07) ── 끝
   // how many times the trip itself fails to load (500) right after the server answered a chat message
   rereadFails: 0,
   // chat and planning asked as a stream: "on" | "off" (an older server: JSON once) | "slow" (a `slow` beat first)
@@ -131,6 +141,8 @@ const DEFAULTS = {
   webhookTest: "ok",
   // why the candidates list is short or empty (`notes` of `GET …/candidates`, server 8b0d4c88): [] | ["booked_needs_name"] (no candidates) | ["no_same_kind"] …
   candidateNotes: [],
+  // `[2026-10-07]` "on": candidates carry `basis` (same_kind · similar_experience · meal_inferred) and `reason`, as the server does since c0ca7054
+  candidateBasis: "off",
   // the whole-plan recommendation (`POST …/autofix`): "on" | "none" (it finds nothing to change although something needs a look) | "unknown_from" (what it changes had no known place before: it cannot be put back)
   autofix: "on",
   // social sign-in (`/v1/web/auth/*`, `wiki/records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md`): "on" | "off" (an older server: 404) | "none" (no provider set up)
@@ -213,13 +225,26 @@ function telegramChannelRefusal(body) {
 let attempts = new Map();
 // ── 동의 기록 (2026-10-05) ── 시작
 /** The terms version the page under test carries (`src/features/consent/terms-content.ts` `TERMS_VERSION`) - keep the two the same; a different one is what "server_ahead" plays. */
-const TERMS_VERSION = "2026-10-05.1";
+const TERMS_VERSION = "2026-10-07.1";   // 웹 `terms-content.ts` 와 같은 값(2026-10-07 보관 기간 확정)
 const CONSENT_CODES = ["service_terms", "privacy", "sensitive", "location", "alert_channel"];
 const CONSENT_REQUIRED = ["service_terms", "privacy"];
 /** code → { agreed, version, at } - the latest line of the append-only record (the stub keeps only that; the requests it received are the log). */
 let consentRecords = new Map();
 function consentReset() { consentRecords = new Map(); }
-const consentVersion = () => scenario.consents === "server_ahead" ? "2099-01-01" : TERMS_VERSION;
+const consentVersion = () => scenario.consents === "server_ahead" ? "2099-01-01" : scenario.retention === "on" ? `${TERMS_VERSION}+ret1` : TERMS_VERSION;
+// ── 약관 보관 기간 (2026-10-07) ── 시작
+/** The shape of `GET /v1/web/legal/retention` (server `retention.public_view`): one cell per period with the Korean and English sentence the terms carry. */
+function retentionView() {
+  const cell = (key, value, unit, ko, en) => ({ key, label_ko: key, label_en: key, value, unit, default: value, editable: unit !== null, text_ko: ko, text_en: en });
+  return { revision: 1, terms_version: `${TERMS_VERSION}+ret1`, cells: [
+    cell("member_idle_days", 730, "days", "회원이 지우거나 탈퇴를 요청할 때까지, 마지막 이용 후 2년이 지나면 파기", "Kept until you delete it or ask to withdraw, and destroyed once 2 years have passed since your last use"),
+    cell("case_follows_trip", null, null, "여행 · 게스트 자료가 지워질 때 함께 파기", "Destroyed together when the trip or guest data is deleted"),
+    cell("consent_days", 1825, "days", "기록한 때부터 5년", "5 years from the time it was recorded"),
+    cell("location_points_days", 7, "days", "여행 종료 후 7일", "7 days after the trip ends"),
+    cell("location_proof_months", 6, "months", "기록한 때부터 6개월", "6 months from the time it was recorded"),
+  ] };
+}
+// ── 약관 보관 기간 (2026-10-07) ── 끝
 function consentView() {
   const items = CONSENT_CODES.map((code) => {
     const row = consentRecords.get(code);
@@ -357,9 +382,22 @@ const place = (name, latitude, longitude, extra = {}) => ({ name, latitude, long
 /** The check of a plan — the shape of `review` in the real server's answer. "rich": three stops (one needs review) and two legs. */
 function freshBoard(kind = "simple") {
   const rich = freshRichBoard();
-  if (kind === "rich") return rich;
-  return { revision: 1, items: [rich.items[0]], moves: [] };
+  const board = kind === "rich" ? rich : { revision: 1, items: [rich.items[0]], moves: [] };
+  return scenario.reread === "on" || scenario.reread === "note_only" ? withReread(board) : board;
 }
+
+// ── 받아쓰기 두 읽기 (2026-10-07) ── 시작
+/**
+ * `[2026-10-07 cs 개발 세션 제안 계약]` scenario `reread: "on"`: the first stop was read off a photo two ways — the server kept 「청경궁 관람」, the other half read 「창경궁 관람」 (`rereads[]`),
+ * so the stop needs review with a warning row. Sending `items[0].title` (method customer) settles it.
+ */
+const REREAD_NOTE = "사진에서 이 줄을 두 가지로 읽었어요 — 「09:00 청경궁 관람」 / 「09:00 창경궁 관람」 · 원본과 맞는 쪽을 골라 주세요";
+function withReread(board) {
+  const [first, ...rest] = board.items;
+  return { ...board, items: [{ ...first, title: "청경궁 관람", status: "review", can_lock: false, rereads: [{ field: "title", current: "청경궁 관람", other: scenario.reread === "note_only" ? null : "창경궁 관람" }],
+    rows: [row("place", "warn", REREAD_NOTE), ...first.rows.filter((line) => line.row !== "place")] }, ...rest] };
+}
+// ── 받아쓰기 두 읽기 (2026-10-07) ── 끝
 
 function freshRichBoard() {
   return {
@@ -411,6 +449,35 @@ function followTimes(b) {
     const line = row("arrival", move.slack_min < 0 ? "warn" : "ok", move.slack_min < 0 ? `일정보다 ${-move.slack_min}분 늦어요` : `${move.slack_min}분 여유`);
     move.rows = move.rows.some((entry) => entry.row === "arrival") ? move.rows.map((entry) => entry.row === "arrival" ? line : entry) : [...move.rows, line];
   }
+}
+
+/**
+ * `[2026-10-07]` The ways to go for a leg, worked out like the proposal says: a leg leaves when the stop before it ends, takes `minutes` by that way and has `slack_min` = the next stop's start - its arrival;
+ * a way fits when nothing is late. The minutes are made up for this mock (walking is a third of the subway time again, the bus slower, the taxi faster) - only the shape of the answer is the contract's.
+ */
+const WAYS = {
+  subway: { label: "지하철", minutes: (m) => m, fare: 1550, floor: false, grade: "확정" },
+  bus: { label: "버스", minutes: (m) => m + 22, fare: 1500, floor: false, grade: "확정" },
+  taxi: { label: "택시", minutes: (m) => Math.max(5, Math.round(m * 0.6)), fare: 9000, floor: false, grade: "추정" },
+  walk: { label: "걸음", minutes: (m) => m * 3, fare: 0, floor: false, grade: "추정" },
+};
+function moveWays(b, move) {
+  const toMin = (hhmm) => { const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm ?? ""); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+  const toText = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+  const from = b.items.find((entry) => entry.id === move.from), to = b.items.find((entry) => entry.id === move.to);
+  const start = toMin(from?.starts_at), next = toMin(to?.starts_at);
+  const base = move.base_minutes ?? move.minutes;
+  if (start === null || next === null || typeof base !== "number") return null;
+  const leave = toMin(from.ends_at) ?? start + 60;
+  return Object.entries(WAYS).map(([mode, way], at) => {
+    const minutes = way.minutes(base), arrive = leave + minutes;
+    const slack = scenario.moveOptions === "none" ? -(at + 1) * 5 : next - arrive;           // "none": every way is late
+    const fits = scenario.moveOptions === "none" ? false : slack >= 0;
+    const unknown = scenario.moveOptions === "partial" && mode === "bus";
+    return { mode, label: mode === "subway" && move.base_label ? move.base_label : way.label, minutes, km: mode === "walk" ? Math.round(minutes * 0.07 * 10) / 10 : move.km, fare_krw: way.fare, fare_is_floor: way.floor, fare_is_estimate: mode === "taxi",
+      depart: toText(leave), arrive: toText(arrive), slack_min: slack, fits: unknown ? null : fits, basis: mode === "taxi" || mode === "walk" ? "estimate" : "timetable", grade: way.grade,
+      ...(unknown ? { why_not: "계산이 오래 걸려 확인하지 못했어요" } : !fits ? { why_not: `${way.label}(으)로는 ${Math.abs(slack)}분 늦어요 · 다음 일정이 ${to.starts_at}에 시작해요` } : {}) };
+  });
 }
 
 function reviewOf(b) {
@@ -608,7 +675,7 @@ createServer(async (request, response) => {
   if (path === "/__test/scenario") {
     const change = JSON.parse(raw || "{}");
     scenario = { ...scenario, ...change };
-    if ("board" in change) board = freshBoard(scenario.board);
+    if ("board" in change || "reread" in change) board = freshBoard(scenario.board);
     if ("trips" in change) rows = freshRows(scenario.trips);
     return json(response, 200, scenario, origin);
   }
@@ -746,6 +813,11 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     keys.add("acop_u_social_account");
     return json(response, 200, { outcome: "signed_in", provider: flow.provider, user_key: "acop_u_social_account", notice: "이 계정의 키예요. 따로 보관해 주세요.", trips: 2 }, origin);
   }
+  // ── 약관 보관 기간 (2026-10-07) ── 시작 (no session needed: asking must not make a user)
+  if (path === "/v1/web/legal/retention" && request.method === "GET") {
+    return scenario.retention === "on" ? json(response, 200, retentionView(), origin) : json(response, 404, { detail: "Not Found" }, origin);
+  }
+  // ── 약관 보관 기간 (2026-10-07) ── 끝
   const auth = authenticate();
   if (auth.denied) return auth.denied();
   // ── 동의 기록 (2026-10-05) ── 시작
@@ -1060,6 +1132,50 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     if (scenario.intakeEvents !== "silent") response.end();                  // "silent" leaves the line open and says nothing more
     return;
   }
+  // `[2026-10-07]` The ways to go for one leg, and picking one (see `moveOptions` in the scenario).
+  const waysPath = new RegExp(`^/v1/web/trip-intakes/${INTAKE_ID}/moves/([^/]+)~([^/]+)/(options|mode)$`).exec(path);
+  if (waysPath) {
+    const [, fromId, toId, kind] = waysPath;
+    const unavailable = () => json(response, 404, { error: { code: "not_available", message: "이 구간은 이동 수단을 고를 수 없어요" } }, origin);
+    const move = board.moves.find((entry) => entry.from === fromId && entry.to === toId);
+    if (scenario.moveOptions === "off" || !move) return unavailable();
+    if (scenario.moveOptions === "fail") return json(response, 500, { error: { code: "internal_error", message: "서버 오류" } }, origin);
+    if (kind === "options" && request.method === "GET") {
+      // 서버 구현(2026-10-07): 보고 있는 판(`?revision=`)이 낡았으면 409 stale_revision
+      const asked = url.searchParams.get("revision");
+      if (asked !== null && Number(asked) !== board.revision) return json(response, 409, { error: { code: "stale_revision", message: "그 사이 바뀌었어요", current_revision: board.revision } }, origin);
+      if (scenario.moveOptions === "slow") await new Promise((resolve) => setTimeout(resolve, 4000));
+      const ways = moveWays(board, move);
+      if (!ways) return unavailable();
+      const options = scenario.moveOptions === "unknown_mode" ? [...ways, { mode: "rocket", minutes: 1, fits: true }] : ways;
+      return json(response, 200, { intake_id: INTAKE_ID, revision: board.revision, from: fromId, to: toId, current_mode: move.mode, recommended_mode: move.recommended_mode ?? move.mode, options }, origin);
+    }
+    if (kind === "mode" && request.method === "POST") {
+      const body = JSON.parse(raw || "{}");
+      if (body.revision !== board.revision) return json(response, 409, { error: { code: "stale_revision", message: "그 사이 바뀌었어요", current_revision: board.revision } }, origin);
+      const ways = moveWays(board, move) ?? [];
+      const recommended = move.recommended_mode ?? move.mode;
+      const mode = body.mode === "recommended" ? recommended : body.mode;
+      const way = ways.find((entry) => entry.mode === mode);
+      // "refuse": the list said it reaches, but counted again with that way it does not (the server checks again before it takes it)
+      if (scenario.moveOptions === "refuse") return json(response, 422, { error: { code: "mode_not_fit", message: "그 수단은 고를 수 없어요", why: "다시 계산해 보니 택시로도 다음 일정에 늦어요" } }, origin);
+      if (!way) return json(response, 422, { error: { code: "mode_not_fit", message: "그 수단은 이 구간에서 쓸 수 없어요" } }, origin);
+      if (way.fits !== true) return json(response, 422, { error: { code: "mode_not_fit", message: "그 수단은 고를 수 없어요", why: way.why_not ?? "그 수단으로는 닿지 않아요" } }, origin);   // 이동 세션 구현: 이유는 `why`
+      move.base_minutes ??= move.minutes;
+      move.base_label ??= move.mode_label;
+      move.recommended_mode ??= move.mode;
+      move.mode = mode;
+      move.mode_label = way.label;
+      move.minutes = way.minutes;
+      move.km = way.km;
+      move.summary = `${way.label} ${way.minutes}분 · ${way.km}km`;
+      move.rows = move.rows.map((entry) => entry.row === "mode" ? row("mode", "ok", move.summary) : entry);
+      move.mode_choice = mode === recommended ? null : { mode, state: "kept" };
+      followTimes(board);
+      board.revision += 1;
+      return json(response, 200, { revision: board.revision, review: reviewOf(board) }, origin);
+    }
+  }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/edits` && request.method === "POST") {
     if (scenario.edits === "stale") return json(response, 409, { error: { code: "stale_revision", message: "그 사이 바뀌었어요", current_revision: 2 } }, origin);
     if (scenario.edits === "not_found") return json(response, 422, { error: { code: "place_not_found", message: "「없는 곳」: 이 이름으로 장소를 찾지 못했어요" } }, origin);
@@ -1076,6 +1192,11 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
       else if (m[2] === "removed") { if (edit.value === true) board.removed = [...(board.removed ?? []), item]; board.items = edit.value === true ? board.items.filter((entry) => entry !== item) : board.items; }
       else if (m[2] === "place" && edit.value?.name) { item.place = place(edit.value.name, edit.value.latitude ?? 37.57, edit.value.longitude ?? 126.98, { source: edit.value.source ?? "kakao" }); item.status = "adjusted"; item.place_state = "customer"; item.rows = [row("place", "ok", "직접 고른 곳이에요")]; }
       else if (m[2] === "place" && edit.value?.none === true) { item.place = null; item.place_state = "none"; item.status = "adjusted"; item.rows = [row("place", "ok", "장소 없이 자유 시간으로 두었어요")]; }
+      else if ((m[2] === "title" || m[2] === "booking_no") && typeof edit.value === "string") {           // 받아쓰기 두 읽기: the customer's value settles the row
+        if (m[2] === "title") item.title = edit.value;
+        item.rereads = (item.rereads ?? []).filter((entry) => entry.field !== m[2]);
+        if (!item.rereads.length) { item.rows = item.rows.filter((line) => line.text !== REREAD_NOTE); item.rows.unshift(row("place", "ok", "관광공사 정보로 찾았어요")); item.status = "adjusted"; item.can_lock = true; }
+      }
       else if (m[2] === "starts_at") { item.starts_at = edit.value; retimed = true; }
       else if (m[2] === "ends_at") { item.ends_at = edit.value || null; retimed = true; }       // "" = no end time, as the stop editor sends it
     }
@@ -1094,7 +1215,20 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/candidates` && request.method === "GET") {
     const index = Number(url.searchParams.get("index"));
     const item = board.items.find((entry) => entry.index === index) ?? board.items[0];
-    return json(response, 200, { revision: board.revision, item: item.id, current: item.place, reference: { before: "경복궁", after: "광장시장" }, candidates: scenario.candidateNotes.length ? [] : CANDIDATES, notes: scenario.candidateNotes }, origin);
+    // "on" (2026-10-07 서버 c0ca7054): each candidate says which step of the ladder it came from and why; a meal place where a market stands at a meal time is `meal_inferred`
+    const laddered = scenario.candidateBasis === "on" ? [
+      { ...CANDIDATES[0], basis: "same_kind", similarity: 2, reason: "올리브영 인사동점과 같은 중분류(관광공사 분류)의 곳이에요 · 경복궁에서 450m · 다음 일정까지 8분 여유가 있어요" },
+      { ...CANDIDATES[1], basis: "similar_experience", experience: "indoor_exhibit", reason: null },
+      { rank: 3, place: { ...place("광장시장 순희네 빈대떡", 37.5701, 126.9996, { source: "kakao", kind: "dining" }), address: "서울 종로구 종로32길", category: "음식점", ref: null }, distance_m: 600, reference: "광장시장",
+        rows: [row("place", "ok", "카카오 지도 정보로 찾았어요")], fits: true, status: "ok", slack: { before: 6, after: 10 }, estimated: false, basis: "meal_inferred", reason: "점심 시간의 시장 일정이라 시장 안 식당도 함께 보여 드려요" },
+    ] : scenario.candidateBasis === "lodging" ? [
+      // 서버 90d9e403: 이름 없는 「호텔」 줄 — 숙소와 그 숙소 안 식사가 짝으로
+      { rank: 1, place: { ...place("호텔 스카이파크 센트럴", 37.5665, 126.9849, { source: "kakao", kind: "activity" }), address: "서울 중구 명동", category: "숙소", ref: null }, distance_m: 700, reference: "경복궁",
+        rows: [row("place", "ok", "카카오 지도 정보로 찾았어요")], fits: true, status: "ok", slack: { before: 10, after: 10 }, estimated: false, basis: "lodging", reason: "계획에 숙소 이름이 없어 가까운 숙소를 골랐어요 · 경복궁에서 700m" },
+      { rank: 2, place: { ...place("호텔 스카이파크 센트럴", 37.5665, 126.9849, { source: "kakao", kind: "dining" }), address: "서울 중구 명동", category: "숙소 안 식사", ref: null }, distance_m: 700, reference: "경복궁",
+        rows: [row("place", "ok", "카카오 지도 정보로 찾았어요")], fits: true, status: "ok", slack: { before: 10, after: 10 }, estimated: false, basis: "lodging_meal", reason: "숙소 안 식당이 있는지는 확인하지 못했어요" },
+    ] : CANDIDATES;
+    return json(response, 200, { revision: board.revision, item: item.id, current: item.place, reference: { before: "경복궁", after: "광장시장" }, candidates: scenario.candidateNotes.length ? [] : laddered, notes: scenario.candidateNotes }, origin);
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/place-search` && request.method === "GET") {
     const q = (url.searchParams.get("q") ?? "").replace(/\s/g, "");

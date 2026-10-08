@@ -16,7 +16,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any
 from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item

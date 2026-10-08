@@ -47,13 +47,16 @@ def _name() -> str:
 
 def test_finds_tourapi_shop_in_the_tour_result_shape(conn, shop):
     name = _name()
-    _, cid = shop(name)
+    uid, cid = shop(name)
 
     found = find_place_by_name(conn, name)
 
-    assert found == {"content_id": cid, "content_type_id": "39", "matched_title": name,
-                     "latitude": pytest.approx(37.5777), "longitude": pytest.approx(126.9715),
-                     "address": "서울특별시 종로구 자하문로5길 5"}
+    # 관광공사 결과 모양 + 원장 가게 id · 찾은 단계 · 확인 필요(2026-10-07)
+    assert {k: found[k] for k in ("content_id", "content_type_id", "matched_title", "address", "dining_place_uid",
+                                  "match", "needs_review")} == {
+        "content_id": cid, "content_type_id": "39", "matched_title": name, "address": "서울특별시 종로구 자하문로5길 5",
+        "dining_place_uid": uid, "match": "exact", "needs_review": False}
+    assert (found["latitude"], found["longitude"]) == (pytest.approx(37.5777), pytest.approx(126.9715))
 
 
 def test_name_match_ignores_spaces_and_punctuation(conn, shop):
@@ -67,12 +70,15 @@ def test_unknown_name_is_none(conn):
     assert find_place_by_name(conn, _name()) is None
 
 
-def test_two_shops_with_the_same_name_are_not_guessed(conn, shop):
+def test_two_shops_with_the_same_name_pick_the_nearer_one_for_review(conn, shop):
+    # ★`[2026-10-07]` 전에는 고르지 않았다(못 찾음). 이제 근처 기준으로 하나를 고르고 확인을 받는다
     name = _name()
     shop(name)
-    shop(name, lat=37.50, lng=127.04)
+    far, _ = shop(name, lat=37.50, lng=127.04)
 
-    assert find_place_by_name(conn, name) is None
+    near = find_place_by_name(conn, name, near=(37.501, 127.041))
+    assert near["dining_place_uid"] == far and near["needs_review"] and near["others"] == 1
+    assert find_place_by_name(conn, name)["needs_review"]                 # 기준이 없어도 하나 — 언제나 확인 필요
 
 
 def test_closed_shop_is_not_offered(conn, shop):
@@ -89,14 +95,43 @@ def test_shop_outside_seoul_is_not_offered(conn, shop):
     assert find_place_by_name(conn, name) is None
 
 
-def test_shop_without_tourapi_record_is_not_offered(conn, place):
-    # 관광공사 콘텐츠 ID 가 없으면 관광공사 결과로 내보낼 수 없다(미쉐린만 있는 가게 등).
+def test_shop_without_tourapi_record_is_offered_with_its_ledger_id(conn, place):
+    # ★`[2026-10-07]` 관광공사 ID 가 없는 원장 가게(미쉐린 · 인허가로만 들어온 곳)도 낸다 — 등록 때 원장 가게 id 로 잇는다.
+    #   ☆전에는 빼서 영업 중 204곳(하동관 · 명동교자 본점 …)을 이름으로 못 찾았다
     name = _name()
     uid = place(name)
     conn.execute("UPDATE dining.dn_place SET name_ko = %s, road_address = '서울특별시 중구 1', "
                  "is_synthetic = false WHERE place_uid = %s", (name, uid))
 
-    assert find_place_by_name(conn, name) is None
+    found = find_place_by_name(conn, name)
+    assert found["content_id"] is None and found["dining_place_uid"] == uid and not found["needs_review"]
+
+
+def test_branch_prefix_and_typo_are_found_for_review(conn, shop):
+    stem = f"시험국밥{uuid.uuid4().hex[:4]}"
+    uid, _ = shop(f"{stem}원조할매 별관")
+    branch = find_place_by_name(conn, f"{stem}원조할매")                  # 지점 표시를 뗀 이름
+    prefix = find_place_by_name(conn, stem)                               # 앞부분(4자 이상)
+    assert branch["match"] == "branch" and branch["dining_place_uid"] == uid and branch["needs_review"]
+    assert prefix["match"] == "prefix" and prefix["needs_review"]
+
+
+def test_typo_is_found_for_review(conn, shop):
+    shop("시험이문설농탕가게")
+    found = find_place_by_name(conn, "시험이문설롱탕가게")                  # 농 → 롱
+    assert found["match"] == "typo" and found["matched_title"] == "시험이문설농탕가게" and found["needs_review"]
+
+
+def test_dish_near_finds_the_closest_menu_shop_within_radius(conn, shop):
+    from app.domains.travel_ops.instances.dining.ledger import find_dish_near
+
+    tag = uuid.uuid4().hex[:4]
+    near_uid, _ = shop(f"가까운{tag}기름떡볶이", lat=37.5807, lng=126.9702)
+    shop(f"먼{tag}기름떡볶이", lat=37.60, lng=127.00)
+    found = find_dish_near(conn, "통인시장 기름떡볶이", (37.5800, 126.9700))
+    assert found["match"] == "dish" and found["needs_review"]
+    assert found["dining_place_uid"] == near_uid or found["matched_title"].endswith("기름떡볶이")
+    assert find_dish_near(conn, "통인시장 구경", (37.58, 126.97)) is None   # 메뉴 말이 없으면 찾지 않는다
 
 
 def test_missing_dining_schema_is_none_not_an_error():

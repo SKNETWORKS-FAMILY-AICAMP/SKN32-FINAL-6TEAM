@@ -150,13 +150,21 @@ function CandidateCard({ candidate, current, index, active, applyWhy, explain, o
   const note = kindNote(current, candidate, t);
   const chip = candidate.source === "search" ? t(`검색으로 고른 곳 ${letter(index)}`, `From search ${letter(index)}`)
     : t(`대체 후보 ${letter(index)}${candidate.rank ? ` · ${candidate.rank}순위` : ""}`, `Alternative ${letter(index)}${candidate.rank ? ` · #${candidate.rank}` : ""}`);
-  return <article className={styles.changeCard} data-active={active || undefined} aria-labelledby={`plan-change-card-${candidate.id}`}>
+  // `[2026-10-07 서버 c0ca7054]` Which step of the ladder the server took it from, said beside the chip; and its reason under the name.
+  // An id may not hold spaces (`aria-labelledby` reads them as several ids — a place named 「광장시장 순희네 빈대떡」 left its card with no name).
+  const headingId = `plan-change-card-${candidate.id.replace(/\s+/g, "_")}`;
+  const step = candidate.basis === "same_kind" ? t("같은 종류", "Same kind") : candidate.basis === "similar_experience" ? t("비슷한 경험", "Similar experience")
+    : candidate.basis === "meal_inferred" ? t("식사 시간 식당", "Meal-time place") : candidate.basis === "lodging" ? t("숙소", "Stay")
+      : candidate.basis === "lodging_meal" ? t("숙소 안 식사", "Meal at the stay") : candidate.basis === "taste" ? t("취향 추천", "For your taste") : null;
+  return <article className={styles.changeCard} data-active={active || undefined} aria-labelledby={headingId}>
     <div className={styles.changeTop}>
       <span className={styles.chip} data-source={candidate.source}>{chip}</span>
+      {step && <span className={styles.stepTag} data-basis={candidate.basis}>{step}</span>}
       {candidate.distance && <span className={styles.distance}>{t(`${candidate.distance.from}에서 ${candidate.distance.km.toFixed(1)}km`, `${candidate.distance.km.toFixed(1)} km from ${candidate.distance.from}`)}</span>}
     </div>
-    <div className={styles.nameRow}><h4 id={`plan-change-card-${candidate.id}`} className={styles.changeName}>{candidate.name}</h4><SourceTag origin={candidate.info?.origin} /></div>
+    <div className={styles.nameRow}><h4 id={headingId} className={styles.changeName}>{candidate.name}</h4><SourceTag origin={candidate.info?.origin} /></div>
     {placeMeta(candidate.info, t) && <p className={styles.changeSub}>{placeMeta(candidate.info, t)}</p>}
+    {candidate.reason && <p className={styles.changeReason}>{candidate.reason}</p>}
     {note && <p className={styles.kindNote} data-mismatch={note.mismatch || undefined}>{note.text}</p>}
     {candidate.checks.length
       ? <Checks rows={candidate.checks} />

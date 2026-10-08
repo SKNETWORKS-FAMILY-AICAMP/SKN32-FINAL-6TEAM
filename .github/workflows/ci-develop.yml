@@ -9,9 +9,9 @@ name: CI (develop)
 
 on:
   push:
-    branches: [develop]
+    branches: [role-manager, develop]
   pull_request:
-    branches: [develop]
+    branches: [role-manager, develop]
 
 concurrency:
   group: ci-develop-${{ github.ref }}

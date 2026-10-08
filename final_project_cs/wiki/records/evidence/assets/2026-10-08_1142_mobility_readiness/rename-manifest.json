@@ -1,0 +1,45 @@
+{
+  "observed_at": "2026-10-08T11:42:45.344244+09:00",
+  "mapping": [
+    {
+      "old": "2026-10-08_이동_중단작업_재개와_200쌍_대조.md",
+      "new": "2026-10-08_0245_이동_중단작업_재개와_200쌍_대조.md",
+      "creation_time": "2026-10-08T02:45:37.133021+09:00",
+      "basis": "Windows filesystem creation time; query observation times are not report authorship times",
+      "original_sha256": "3f4ca19afbe8ae2f11a81553b7c239acd00d96efa85bccef87d52160b7cef219"
+    },
+    {
+      "old": "2026-10-08_이동_새100쌍_카카오웹_성능조사.md",
+      "new": "2026-10-08_0503_이동_새100쌍_카카오웹_성능조사.md",
+      "creation_time": "2026-10-08T05:03:33.240342+09:00",
+      "basis": "Windows filesystem creation time; query observation times are not report authorship times",
+      "original_sha256": "2b5095dd3c571a874991825ecccfc3840930126293d1888eec16ce89b3d17d6a"
+    },
+    {
+      "old": "2026-10-08_이동_네이버_구글_웹_12쌍_대조.md",
+      "new": "2026-10-08_0954_이동_네이버_구글_웹_12쌍_대조.md",
+      "creation_time": "2026-10-08T09:54:18.330296+09:00",
+      "basis": "Windows filesystem creation time; query observation times are not report authorship times",
+      "original_sha256": "bef35b4ed840e7cca926246811217d49dd3438a18ffddd9787481942f447b9b5"
+    }
+  ],
+  "reference_files_updated": [
+    "wiki\\log.md",
+    "scripts\\mobility\\extend_golden_pairs.py",
+    "wiki\\teams\\mobility.md",
+    "wiki\\records\\reports\\2026-10-08_0343_택시_예산여유_보정과_시각일치_검증.md",
+    "wiki\\records\\reports\\2026-10-08_1012_이동기록_점검과_지도표시_개선안.md",
+    "wiki\\records\\reports\\2026-10-08_이동_네이버_구글_웹_12쌍_대조.md",
+    "wiki\\records\\evidence\\assets\\2026-10-08_1012_records_map_audit\\check.py"
+  ],
+  "backups": [
+    "wiki\\_backup\\2026-10-08_1142_文件名時刻補完\\log.md",
+    "scripts\\mobility\\_backup\\2026-10-08_1142_文件名時刻補完\\extend_golden_pairs.py",
+    "wiki\\teams\\_backup\\2026-10-08_1142_文件名時刻補完\\mobility.md",
+    "wiki\\records\\reports\\_backup\\2026-10-08_1142_文件名時刻補完\\2026-10-08_0343_택시_예산여유_보정과_시각일치_검증.md",
+    "wiki\\records\\reports\\_backup\\2026-10-08_1142_文件名時刻補完\\2026-10-08_1012_이동기록_점검과_지도표시_개선안.md",
+    "wiki\\records\\reports\\_backup\\2026-10-08_1142_文件名時刻補完\\2026-10-08_이동_네이버_구글_웹_12쌍_대조.md",
+    "wiki\\records\\evidence\\assets\\2026-10-08_1012_records_map_audit\\_backup\\2026-10-08_1142_文件名時刻補完\\check.py"
+  ],
+  "historical_evidence_json_preserved": true
+}

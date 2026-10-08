@@ -6,7 +6,7 @@
 ★ODsay 키는 「URI」 플랫폼이면 등록한 웹 주소를 Referer 로 보내야 통과한다 — 환경변수 ODSAY_REFERER 로 준다(문서·커밋에 적지 않는다).
 ODsay 응답은 요금·노선 숫자만 쓰고 파일로 저장하지 않는다. ODsay 값도 독립 **참고값**이다(정답 아님).
 """
-import json, os, random, re, statistics as st, sys, time, urllib.parse, urllib.request, urllib.error
+import json, os, random, re, sys, time, urllib.parse, urllib.request, urllib.error
 from pathlib import Path
 sys.path.insert(0, ".")
 from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier

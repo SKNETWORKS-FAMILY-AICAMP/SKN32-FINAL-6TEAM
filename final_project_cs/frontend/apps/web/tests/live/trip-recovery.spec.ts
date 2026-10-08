@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer, start, TRIP_ID } from "./helpers";
+import { mockServer, openNotices, start, TRIP_ID, tripScreen } from "./helpers";
 
 /**
  * `[2026-10-06 사용자 결정 — 재난 뒤 다시 시작]` 여행 화면: 다시 시작한 직후 상황 꾸러미(아는 것 · 모르는 것 · 남은 일정의 영향 · 세 가지 길 · 「오늘은 가볍게」 · 질문 둘). 우리가 대신 정하지 않는다 —
@@ -46,10 +46,12 @@ async function stage(page: Page, state: { brief: unknown; answer?: Record<string
     await route.fulfill({ json: { recovery: state.brief } });
   });
 }
+/** `[2026-10-07 목업 C안]` 재난 뒤 이어가기는 종 아래 알림 칸에 있다. */
 async function openTrip(page: Page) {
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
+  await openNotices(page);
 }
 const panel = (page: Page) => page.getByTestId("recovery-panel");
 
@@ -172,6 +174,7 @@ test("「일정 다시 시작」의 답에 꾸러미가 실려 오면 곧바로 
   await expect(page.getByTestId("safety-panel")).toBeVisible();
   await expect(panel(page)).toHaveCount(0);                                                                // 정지 중에는 꾸러미가 아직 없다
   await page.getByTestId("safety-panel").getByRole("button", { name: "일정 다시 시작" }).click();
-  await expect(panel(page)).toBeVisible();
   await expect(page.getByTestId("safety-panel")).toHaveCount(0);
+  await openNotices(page);                                                                                  // 꾸러미는 종 아래 알림 칸에
+  await expect(panel(page)).toBeVisible();
 });

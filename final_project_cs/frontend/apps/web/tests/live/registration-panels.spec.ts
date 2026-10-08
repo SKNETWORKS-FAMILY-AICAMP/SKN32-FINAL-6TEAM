@@ -54,7 +54,7 @@ test("칸을 누르거나, 그 안에 쓰거나 고르거나, 키보드 초점�
 
 for (const theme of ["green", "neutral"] as const) {
   test(`보낼 칸은 글칸에 초점이 있을 때와 같은 강조색 2px 로 둘러진다 — ${theme === "green" ? "초록(기본)" : "흰색"} 테마`, async ({ page }) => {
-    await page.addInitScript((value) => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko", navigation: "fixed", theme: value })), theme);
+    await page.addInitScript((value) => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko", theme: value })), theme);
     await start(page);
     await openRegistration(page);
     expect(await page.evaluate(() => document.documentElement.dataset.theme ?? "green")).toBe(theme);
@@ -320,7 +320,7 @@ test("서버가 읽는 동안 뒤로 가면 등록 화면으로 돌아가고, �
 });
 
 test("영어 화면에서도 칸 제목과 이유 · 읽는 기준 · 항로 지킴이 카드가 영어로 나온다", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "en", navigation: "fixed" })));
+  await page.addInitScript(() => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "en" })));
   await start(page);
   await openRegistration(page);
   await expect(page.getByRole("region", { name: "Plan it for me (test)" })).toBeVisible();

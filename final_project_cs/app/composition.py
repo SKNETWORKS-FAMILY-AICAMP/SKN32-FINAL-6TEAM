@@ -28,6 +28,36 @@ from app.core.redaction import masked
 from app.tools.read_tools import ReadToolbox
 
 
+def _llm_failover_budget(settings: Any):
+    """모델 서버 넘김 장치(`llm_failover.py`)가 **API 로 넘긴 호출**을 세는 장치 — `external_call_budget` 의 `openai_failover` 줄(일 · 월 상한).
+    ★인프라는 도메인의 `CallBudget` 을 모르므로(계층 규칙) 조립 루트가 만들어 꽂는다. 한도 표를 못 읽으면 **부른다**(서비스를 살리는 쪽) — 경고를 남긴다.
+    한도를 넘으면 `False` — 넘김 장치가 더 부르지 않고 실패로 올린다."""
+    import logging
+
+    from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget
+    from app.infrastructure.llm_failover import METER
+
+    budget = CallBudget(connection_factory=get_connection,
+                        caps={METER: {"day": int(settings.llm_failover_daily_cap), "month": int(settings.llm_failover_monthly_cap)}})
+
+    def allowed() -> bool:
+        try:
+            return bool(budget.try_reserve(METER))
+        except Exception as exc:                                  # noqa: BLE001 — 세는 일이 서비스를 막지 않게
+            logging.getLogger("app.llm_failover").warning("call budget unreadable (%s) — calling the API anyway", type(exc).__name__)
+            return True
+    return allowed
+
+
+def _register_llm_failover() -> None:
+    from app.infrastructure.llm_failover import register_budget_provider
+
+    register_budget_provider(_llm_failover_budget)
+
+
+_register_llm_failover()           # import 때 한 번 — 꽂기만 한다(I/O 없음, 부를 때 일한다)
+
+
 def build_classifier(*, config: ProjectConfig | None = None):
     """Build the configured classifier, failing explicitly when unconfigured.
 
@@ -549,9 +579,9 @@ def build_ops_routers() -> list:
     ★`[2026-09-30 사용자 지시]` **시나리오(시연) 모드는 운영 앱에서 뗐다** — 실서비스 운영 화면과 데모가 같은 프로세스에 있으면
       안 된다. 압축 보관: `legacy/scenario_mode/scenario_mode_2026-09-30.zip`(복원 방법은 그 안의 README.md).
     """
-    from app.domains.travel_ops.modules.web_account.web_limits_api import build_limits_router
+    from app.domains.travel_ops.modules.web_account.web_limits_api import build_limits_router, build_retention_ops_router
 
-    return [build_limits_router()]
+    return [build_limits_router(), build_retention_ops_router()]
 
 
 def build_subject_resolver():

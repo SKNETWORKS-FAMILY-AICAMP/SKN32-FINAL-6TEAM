@@ -75,6 +75,39 @@ def _extractor_for(data: dict[str, Any]):
     return extract
 
 
+#: ★`[2026-10-06]` `--llm live` — 분류 · 신고 추출만 실제 모델(Ollama/OpenAI 설정을 따른다)로 바꾼다.
+#:   감시 소스는 그대로 재생이라 모델 말고는 매번 같다. 호출마다 입력 · 출력 · 걸린 시간을 남긴다.
+LIVE_LOG: list[dict[str, Any]] = []
+
+
+def _live_models():
+    import time
+
+    from app.composition import build_classifier, build_report_extractor
+
+    classify, extract = build_classifier(), build_report_extractor()
+    if extract is None:
+        raise RuntimeError("--llm live 는 ACOP_OLLAMA_BASE_URL 이 있어야 한다(신고 추출기는 Ollama 전용)")
+
+    def logged(name, fn):
+        def call(text):
+            started = time.perf_counter()
+            record = {"fn": name, "text": text}
+            try:
+                out = fn(text)
+                record["output"] = out
+                return out
+            except Exception as exc:          # noqa: BLE001 — 실패도 측정 대상이다. 남기고 그대로 던진다
+                record["error"] = f"{type(exc).__name__}: {exc}"
+                raise
+            finally:
+                record["ms"] = round((time.perf_counter() - started) * 1000)
+                LIVE_LOG.append(record)
+        return call
+
+    return logged("classify", classify), logged("extract", extract)
+
+
 def _seed(tenant: str, data: dict[str, Any], constraints: dict[str, Any]):
     """확정 시나리오의 장소·일정을 이 테넌트에 넣는다(등록 API 와 같은 모양)."""
     from app.infrastructure.db.session import get_connection
@@ -129,7 +162,7 @@ def _calm_or_drop(event: dict[str, Any]) -> dict[str, Any] | None:
     return {**event, "value": {**(event.get("value") or {}), **calm}, "_scene": None}
 
 
-def _engine(tenant: str, data: dict[str, Any], drop_scenes: list[str], clock: Clock):
+def _engine(tenant: str, data: dict[str, Any], drop_scenes: list[str], clock: Clock, llm: str = "mock"):
     from app.domains.travel_ops.ports.data_sources.base import TravelSources
     from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
     from app.domains.travel_ops.ports.data_sources.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
@@ -146,12 +179,13 @@ def _engine(tenant: str, data: dict[str, Any], drop_scenes: list[str], clock: Cl
                 events.append(calmed)
             continue
         events.append(event)
+    classifier, extractor = _live_models() if llm == "live" else (_classifier, _extractor_for(data))
     timeline = ReplayTimeline(events, clock)
     sources = TravelSources(weather=ReplayWeather(timeline), warning=ReplayWarning(timeline),
                             air=ReplayAir(timeline))
     check = DisruptionCheck(sources, limits=lambda: (60, 30)).check
     return CaseEngine(tenant_id=tenant, check=check, route_events=ReplayRouteEvents(timeline),
-                      classifier=_classifier, report_extractor=_extractor_for(data), clock=clock)
+                      classifier=classifier, report_extractor=extractor, clock=clock)
 
 
 def _violations(store, trip_id, data) -> list[dict[str, Any]]:
@@ -172,7 +206,7 @@ def _violations(store, trip_id, data) -> list[dict[str, Any]]:
     return found
 
 
-def run_case(spec: dict[str, Any], *, keep: bool = False) -> dict[str, Any]:
+def run_case(spec: dict[str, Any], *, keep: bool = False, llm: str = "mock") -> dict[str, Any]:
     from app.infrastructure.db.session import get_connection
     from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
 
@@ -181,14 +215,17 @@ def run_case(spec: dict[str, Any], *, keep: bool = False) -> dict[str, Any]:
     tenant = "eval_" + uuid4().hex[:10]
     store, customer, trip_id, at = _seed(tenant, data, spec.get("constraints") or {})
     clock = Clock(at("08:00"))
-    engine = _engine(tenant, data, spec.get("drop_scenes") or [], clock)
+    engine = _engine(tenant, data, spec.get("drop_scenes") or [], clock, llm=llm)
     outcome = {"case_id": spec["case_id"], "what": spec.get("what", ""), "tenant": tenant,
                "steps": [], "cases": {"resolved": 0, "escalated": 0}, "fatal": 0}
     try:
         for step in spec["steps"]:
-            outcome["steps"].append(_step(step, engine=engine, store=store, trip_id=trip_id,
-                                          customer=customer, clock=clock, at=at, reports=reports,
-                                          counts=outcome))
+            mark = len(LIVE_LOG)
+            result = _step(step, engine=engine, store=store, trip_id=trip_id,
+                           customer=customer, clock=clock, at=at, reports=reports, counts=outcome)
+            if llm == "live":
+                result["llm_calls"] = LIVE_LOG[mark:]
+            outcome["steps"].append(result)
         outcome["violations"] = _violations(store, trip_id, data)
         with get_connection() as conn:
             trip, items = store.latest(conn, trip_id)
@@ -223,7 +260,10 @@ def _step(step: str, *, engine, store, trip_id, customer, clock, at, reports, co
         view = engine.message(customer_id=customer, trip_id=trip_id, text=text,
                               request_id=f"eval-{name}-{uuid4().hex[:6]}")
         counts["cases"]["resolved" if view["case_status"] == "resolved" else "escalated"] += 1
-        return {"step": step, "status": view["case_status"], "team": view["owner_team_id"]}
+        truth = {"type": name, "minutes": int(minutes) if minutes else report.get("minutes"),
+                 "products": report.get("products", [])}
+        return {"step": step, "text": text, "truth": truth,
+                "status": view["case_status"], "team": view["owner_team_id"]}
     if kind in ("swap", "rollback"):
         from app.infrastructure.db.session import get_connection
 
@@ -268,6 +308,9 @@ def main() -> int:
     parser.add_argument("--dataset", default=str(DATASET))
     parser.add_argument("--case", default=None, help="이 case_id 하나만 돌린다")
     parser.add_argument("--keep", action="store_true", help="테넌트를 지우지 않는다(들여다볼 때)")
+    parser.add_argument("--llm", choices=("mock", "live"), default="mock",
+                        help="live = 분류 · 신고 추출을 실제 모델로(감시 소스는 재생 그대로)")
+    parser.add_argument("--repeat", type=int, default=1, help="같은 시나리오를 몇 번 돌릴지(안정성)")
     parser.add_argument("--out", default=None, help="보고서 경로. 기본은 eval/reports/travel_scenarios_<run>.json")
     args = parser.parse_args()
 
@@ -277,8 +320,8 @@ def main() -> int:
     run_id = datetime.now(KST).strftime("%Y%m%d_%H%M%S")
     results = []
     print(f"여행 평가 — 시나리오 {len(specs)}건 (run {run_id})")
-    for spec in specs:
-        outcome = run_case(spec, keep=args.keep)
+    for spec in [spec for spec in specs for _ in range(max(1, args.repeat))]:
+        outcome = run_case(spec, keep=args.keep, llm=args.llm)
         results.append(outcome)
         mark = "통과" if outcome["verdict"]["passed"] else "실패"
         print(f"  {outcome['case_id']:<16} 버전 {outcome['versions']} · 통지 {outcome['notices']} · "
@@ -292,7 +335,7 @@ def main() -> int:
     total_violations = sum(len(result["violations"]) for result in results)
     REPORTS.mkdir(parents=True, exist_ok=True)
     out = Path(args.out) if args.out else REPORTS / f"travel_scenarios_{run_id}.json"
-    out.write_text(json.dumps({"run_id": run_id, "dataset": args.dataset, "llm": "흉내(분류·추출)",
+    out.write_text(json.dumps({"run_id": run_id, "dataset": args.dataset, "llm": "흉내(분류·추출)" if args.llm == "mock" else "실제 모델(분류·추출)",
                                "sources": "재생", "results": results,
                                "summary": {"cases": len(results), "passed": passed,
                                            "violations": total_violations}},

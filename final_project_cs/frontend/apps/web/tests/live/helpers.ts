@@ -65,7 +65,7 @@ export async function alsoAgree(page: Page, extra: ConsentSeed) {
  */
 export async function start(page: Page, session: string | null = "acop_u_known", seedConsent = true) {
   await page.addInitScript(() => {
-    if (!localStorage.getItem("tripilot.web.settings.v1")) localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko", navigation: "fixed" }));
+    if (!localStorage.getItem("tripilot.web.settings.v1")) localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko" }));
   });
   if (session) {
     await page.context().addCookies([{ name: SESSION_COOKIE, value: session === "acop_u_known" ? KNOWN_SESSION : session, url: STUB }]);
@@ -216,6 +216,32 @@ export async function checkPlan(page: Page, choice: "켜고 진행" | "건너뛰
 }
 
 /**
+ * `[2026-10-07]` The registered trip's screen (map + sheet, `features/trip/trip-screen.tsx`): its plan pane is there once the trip has loaded. (The old screen's heading 「나의 여행」 is gone —
+ * the header's title is the trip's own name.)
+ */
+export const tripScreen = (page: Page) => page.locator("#trip-pane-schedule");
+
+/** Open the trip's notices (the bell beside the menu): the choices, the undo, the warnings, the notices, the history, the plan links. */
+export async function openNotices(page: Page) {
+  await page.getByRole("button", { name: "알림 센터 열기" }).click();
+  await expect(page.getByRole("dialog", { name: "알림" })).toBeVisible();
+  return page.getByRole("dialog", { name: "알림" });
+}
+
+/** The two panes of the trip's sheet: 「일정 | 채팅」. */
+export const paneTab = (page: Page, name: "일정" | "채팅") => page.getByRole("tab", { name, exact: true });
+
+/** `[2026-10-07 목업 C안 B]` Open the trip's name in the header: the row 「여행계획서 열기 · 공유하기」 under it. */
+export async function openTitle(page: Page) {
+  await page.locator("#trip-title-button").click();
+  await expect(page.getByRole("group", { name: "여행계획서" })).toBeVisible();
+  return page.getByRole("group", { name: "여행계획서" });
+}
+
+/** A day chip in the trip's sheet head (「전체 · 1일차 · 2일차 …」). */
+export const dayTab = (page: Page, name: RegExp) => page.getByRole("tablist", { name: "일차 고르기" }).getByRole("tab", { name });
+
+/**
  * Register a trip the way a customer does, against the test mock server: write a plan, 「계획 확인하기」, wait for the plan-check screen's result,
  * 「여행 등록」, and land on the trip screen (the mock's one trip, `TRIP_ID`). Needs the mock's default scenario (a plan whose check passes).
  */
@@ -226,5 +252,5 @@ export async function registerStubTrip(page: Page, plan = "10/1 09:00 경복궁 
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
   await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
 }

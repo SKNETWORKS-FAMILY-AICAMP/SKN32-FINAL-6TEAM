@@ -159,7 +159,8 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   }
   if (flow.hold) {
     return <>
-      <PlanCheck key="plan" view={readingOf(view)} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} />
+      {/* `[2026-10-07 사용자 지적]` The held page is drawn from the same view as the one before it (`reading`), not from a fresh reading-only one: that one stood the bar back at 「일정 읽기」 and the check was drawn again from there. */}
+      <PlanCheck key="plan" view={reading ?? readingOf(view)} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} />
       {flow.phase === "idle" && <IdleWarning flow={flow} />}
     </>;
   }

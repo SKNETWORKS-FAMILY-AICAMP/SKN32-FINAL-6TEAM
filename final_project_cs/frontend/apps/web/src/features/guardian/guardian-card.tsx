@@ -26,8 +26,9 @@ const LEAVE_MS = 150;
  * - Esc, pressing outside, and the close button leave without deciding anything, and the focus goes back to what opened it. Esc does not wait for the movement to end.
  * - Tab goes round inside it; what is behind it is `inert` while it is open.
  * The parent shows it only while it is wanted and takes it away when `onClose` is called (after the leaving movement, or at once for Esc).
+ * `iconIn` (`[2026-10-07 사용자 결정 — 목업 C안]`): where the icon that turns it off is — the header (before registering) or the menu drawer (a registered trip).
  */
-export function GuardianCard({ kind, onPrimary, onSecondary, onClose }: { kind: GuardianCardKind; onPrimary: () => void; onSecondary: () => void; onClose: () => void }) {
+export function GuardianCard({ kind, iconIn = "header", onPrimary, onSecondary, onClose }: { kind: GuardianCardKind; iconIn?: "header" | "menu"; onPrimary: () => void; onSecondary: () => void; onClose: () => void }) {
   const t = useT();
   const { language } = useSettings();
   // `[2026-10-06 사용자 지시 — 폰 화면 안에서 폰 폭에 맞게 떠야 한다]` On a screen inside the phone frame the card is drawn INSIDE it (the frame's overlay), so it is as wide as the phone; on a page it stands over the page.
@@ -101,7 +102,7 @@ export function GuardianCard({ kind, onPrimary, onSecondary, onClose }: { kind: 
             <button type="button" className={styles.primary} onClick={onPrimary}>{start ? t("켜고 진행", "Turn on and go on") : t("켜기", "Turn on")}</button>
             <button type="button" onClick={onSecondary}>{start ? t("건너뛰기 — 끄고 진행", "Skip — turn off and go on") : t("그대로 두기", "Leave it off")}</button>
           </div>
-          <p className={styles.where}><span className={styles.whereIcon} aria-hidden="true"><ShieldIcon size={20} /></span><span>{t("켠 뒤에도 언제든 화면 위 아이콘에서 끌 수 있어요.", "Even after turning it on, you can turn it off any time from the icon at the top.")}</span></p>
+          <p className={styles.where}><span className={styles.whereIcon} aria-hidden="true"><ShieldIcon size={20} /></span><span>{iconIn === "menu" ? t("켠 뒤에도 언제든 메뉴에서 끌 수 있어요.", "Even after turning it on, you can turn it off any time from the menu.") : t("켠 뒤에도 언제든 화면 위 아이콘에서 끌 수 있어요.", "Even after turning it on, you can turn it off any time from the icon at the top.")}</span></p>
         </footer>
       </aside>
     </div>,

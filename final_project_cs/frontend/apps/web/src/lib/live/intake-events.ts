@@ -105,6 +105,8 @@ function toItem(body: Record<string, unknown>): ReviewItem | null {
     locked: body.locked === true, status: status === "keep" || status === "adjusted" || status === "review" ? status : null,
     can_lock: body.can_lock === true, place_state: (text(body.place_state, "unresolved")) as ReviewItem["place_state"],
     place, booked: body.booked === true ? true : body.booked === false ? false : null, candidates_hint: maybeNum(body.candidates_hint),
+    // `[2026-10-07]` Two readings of a photo's line (checked again before drawing — `from-review.ts` `rereadsOf`).
+    ...(Array.isArray(body.rereads) && { rereads: body.rereads as NonNullable<ReviewItem["rereads"]> }),
   };
 }
 

@@ -11,6 +11,8 @@ import styles from "./toast-view.module.css";
 /** How long a notice stays: longer when it has a button to press. */
 const WITH_ACTION_MS = 4_500;
 const PLAIN_MS = 2_800;
+/** A swipe sideways past this far (px) lets a staying notice go. */
+const SWIPE_PX = 72;
 /** The fade-out before it goes (the same length as `toastOut` in the CSS). */
 const LEAVE_MS = 180;
 
@@ -38,9 +40,11 @@ export function ToastView({ toast, onDone }: { toast: BusToast; onDone: () => vo
   const root = useContext(OverlayRoot);
   const [leaving, setLeaving] = useState(false);
   const [paused, setPaused] = useState(false);
+  // A notice that stays (an error) goes with a swipe sideways: it follows the finger, and past this far it slides away.
+  const [swipe, setSwipe] = useState<{ x0: number; dx: number } | null>(null);
   // A notice stays while the customer is reading it (the pointer on its button or the focus in it), then goes after its few seconds.
   useEffect(() => {
-    if (paused) return;
+    if (paused || toast.stay) return;
     const timer = setTimeout(() => setLeaving(true), toast.ms ?? (toast.action ? WITH_ACTION_MS : PLAIN_MS));
     return () => clearTimeout(timer);
   }, [toast, paused]);
@@ -52,9 +56,14 @@ export function ToastView({ toast, onDone }: { toast: BusToast; onDone: () => vo
   if (typeof document === "undefined") return null;
   const stacked = Boolean(toast.sub || toast.note);
   return createPortal(
-    <div className={styles.toast} role="status" data-tone={toast.chip?.tone} data-badge={toast.badge ? true : undefined} data-stacked={stacked || undefined}
-      data-in-frame={root ? true : undefined} data-leaving={leaving || undefined}
-      onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
+    <div className={styles.toast} role={toast.stay ? "alert" : "status"} data-tone={toast.stay ? "error" : toast.chip?.tone} data-badge={toast.badge ? true : undefined} data-stacked={stacked || undefined}
+      data-in-frame={root ? true : undefined} data-leaving={leaving || undefined} data-stay={toast.stay || undefined}
+      style={swipe ? { translate: `${swipe.dx}px 0`, opacity: Math.max(0.2, 1 - Math.abs(swipe.dx) / 220) } : undefined}
+      onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}
+      onPointerDown={(event) => { if (!toast.stay || (event.target as HTMLElement).closest("button")) return; event.currentTarget.setPointerCapture(event.pointerId); setSwipe({ x0: event.clientX, dx: 0 }); }}
+      onPointerMove={(event) => { if (swipe) setSwipe({ ...swipe, dx: event.clientX - swipe.x0 }); }}
+      onPointerUp={() => { if (!swipe) return; if (Math.abs(swipe.dx) > SWIPE_PX) onDone(); else setSwipe(null); }}
+      onPointerCancel={() => setSwipe(null)}>
       {toast.badge && <span className={styles.badge} data-route={toast.badge === "→" || undefined} aria-hidden="true">{toast.badge}</span>}
       <div className={styles.body}>
         <strong className={styles.title}>{toast.text}{toast.chip && <em data-tone={toast.chip.tone}>{toast.chip.text}</em>}</strong>

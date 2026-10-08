@@ -33,6 +33,7 @@ _LITERAL = re.compile(r"[`\"](?:\$\{API_BASE\})?/v1/web/[a-z]")
 _METHOD = re.compile(r"method:\s*\"([A-Z]+)\"")
 
 #: 웹은 부르는데 서버에 아직 없는 경로 — **이유와 함께** 적는다. 서버에 생기면 이 시험이 「목록에서 빼라」고 실패한다(목록이 낡지 않게).
+#:   `[2026-10-07]` 이동 수단 고르기 서버 경로 두 개(구간별 조회 · 수단 고르기)는 만들어져 이 목록에서 뺐다(`intake/move_options.py`).
 #:   `[2026-10-05]` 위치 수집 화면(웹 먼저) — 서버 요청서 「동의 기록 · 위치 수집」 대기. 서버가 만들면 여기서 뺀다.
 PENDING_ON_SERVER: dict[tuple[str, str], str] = {
     ("POST", "/v1/web/trips/{}/location"): "위치 수집 — 서버 쪽 대기",

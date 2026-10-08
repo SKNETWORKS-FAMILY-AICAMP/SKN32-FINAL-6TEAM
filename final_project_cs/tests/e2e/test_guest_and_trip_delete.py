@@ -7,6 +7,8 @@
 ★지키려는 것
  ①삭제는 즉시 · 완전 — 목록 · 조회에서 사라지고, 외래키 없는 표(대화 · 영업 확인 · 요식 알림 · 접수 · 전용 장소 · 바깥함 알림)도 같이 지워진다. 남의 것은 안 건드린다
  ②남의 여행 · 없는 여행 · 이미 지운 여행은 **같은 404**. 열린 Case 는 전이표가 허용하는 정상 전이로 닫히고(`case_events` 는 안 지운다), 해결된 Case 는 그대로
+ ②-1 `[2026-10-07 사용자 결정 — 약관 보관 기간]` 닫은 **뒤에** 그 여행을 가리키는 Case 와 딸린 줄(`case_events` · `action_requests` · `agent_runs`)을 **지운다**(해결된 것 포함). 다른 여행의 Case 는 그대로.
+    설정 `retention.case_follows_trip` 이 false 면 옛 동작(닫기만)
  ③여행 번호를 들고 있는 표 목록이 **빠짐없다**(새 표가 생기면 이 시험이 걸린다)
  ④게스트는 여행 1개(동시 생성까지) · 시작 365일 · 길이 7일, 회원과 에이전트 API 고객은 제한이 없다. 게스트의 여행은 감시 · 안내 대상이 아니다
  ⑤게스트 정리는 마지막 사용 뒤 보존 시간이 지난 게스트만, 일정이 남았으면 종료 + 유예(상한 마지막 사용 + 180일)까지 둔다. 회원 · 에이전트 고객은 안 건드린다. 기록이 가리키면 사용자 행만 남긴다
@@ -129,7 +131,47 @@ def test_someone_elses_missing_and_already_deleted_trips_are_the_same_404(cookie
     assert again.status_code == 404 and again.json() == missing.json()                                                # 두 번째 호출
 
 
-def test_open_cases_about_the_trip_are_closed_by_normal_transitions_and_resolved_ones_stay(cookies):
+class _PurgeOff:
+    """설정 `retention.case_follows_trip` 만 false 로 읽게 하는 가드레일 덮개 — 나머지는 그대로."""
+    def __init__(self, real):
+        self._real = real
+
+    def get(self, key):
+        return False if key == "retention.case_follows_trip" else self._real.get(key)
+
+
+def test_cases_about_the_trip_are_purged_with_their_events_and_other_trips_cases_stay(cookies):
+    _guest(cookies)
+    _, trip = _make_trip(cookies)
+    trip_id, tenant, customer = UUID(trip["trip_id"]), cookies["tenant"], _customer_of(cookies)
+    _link(cookies, customer)
+    _, other_trip = _make_trip(cookies)
+    other_id = UUID(other_trip["trip_id"])
+    mine = '{"subject_ref": {"kind": "trip", "id": "%s"}}' % trip_id
+    theirs = '{"subject_ref": {"kind": "trip", "id": "%s"}}' % other_id
+    cases = {status: uuid4() for status in ("running", "resolved", "cancelled")}
+    keep = uuid4()
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        for status, case_id in cases.items():
+            cur.execute("INSERT INTO customer_cases (case_id, tenant_id, customer_id, status, subject, state_json, version) "
+                        "VALUES (%s,%s,%s,%s::case_status,'t',%s::jsonb,3)", (case_id, tenant, customer, status, mine))
+        cur.execute("INSERT INTO customer_cases (case_id, tenant_id, customer_id, status, subject, state_json, version) "
+                    "VALUES (%s,%s,%s,'resolved'::case_status,'t',%s::jsonb,3)", (keep, tenant, customer, theirs))
+    assert _delete(cookies, trip_id).status_code == 200
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT case_id FROM customer_cases WHERE tenant_id=%s AND customer_id=%s", (tenant, customer))
+        left = {row[0] for row in cur.fetchall()}
+        cur.execute("SELECT count(*) FROM case_events WHERE tenant_id=%s AND case_id = ANY(%s)", (tenant, list(cases.values())))
+        events_left = cur.fetchone()[0]
+    assert left == {keep}, left                                      # 이 여행의 Case 셋은 해결 · 취소된 것까지 사라지고 다른 여행의 것은 남는다
+    assert events_left == 0                                          # 닫으면서 쌓인 사건 줄도 함께
+
+
+def test_open_cases_about_the_trip_are_closed_by_normal_transitions_and_resolved_ones_stay_when_purge_is_off(cookies, monkeypatch):
+    from app.domains.travel_ops.components.itinerary import trip_delete
+
+    real = trip_delete.get_guardrails()
+    monkeypatch.setattr(trip_delete, "get_guardrails", lambda: _PurgeOff(real))
     _guest(cookies)
     _, trip = _make_trip(cookies)
     trip_id, tenant, customer = UUID(trip["trip_id"]), cookies["tenant"], _customer_of(cookies)
@@ -331,18 +373,39 @@ def test_the_keep_cap_is_measured_from_the_last_use_not_from_now(cookies):
     assert _exists(cookies, recent)
 
 
-def test_a_guest_a_record_points_at_keeps_only_the_empty_user_row(cookies):
+def test_a_guest_cleanup_also_purges_the_cases_and_the_profile_so_no_row_is_left_behind(cookies):
+    """`[2026-10-07 사용자 결정 — 약관 보관 기간]` 전에는 Case 가 가리키면 사용자 행과 프로필(웹훅 · 복구 이메일)이 남았다 — 이제 처리 기록도 지워 사용자 행까지 사라진다."""
     guest = _new_guest_with_trip(cookies, days_idle=9)
-    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:   # 해결된 Case — 기록이라 지우지 않는다
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:   # 해결된 Case — 처리 기록도 함께 파기한다
         cur.execute("INSERT INTO customer_cases (tenant_id, customer_id, status, subject, state_json, version) "
                     "VALUES (%s,%s,'resolved','t','{}'::jsonb,1)", (cookies["tenant"], guest))
+        cur.execute("INSERT INTO customer_profiles (tenant_id, customer_id, recovery_email) VALUES (%s,%s,'a@example.com')", (cookies["tenant"], guest))
+    with get_connection() as conn:
+        result = cleanup_guests(conn, cookies["tenant"])
+    assert result["customers_kept"] == 0 and result["customers_deleted"] == 1 and result["trips_deleted"] == 1, result
+    assert not _exists(cookies, guest)
+    assert _count("SELECT count(*) FROM customer_cases WHERE tenant_id=%s AND customer_id=%s", cookies["tenant"], guest) == 0
+    assert _count("SELECT count(*) FROM customer_profiles WHERE tenant_id=%s AND customer_id=%s", cookies["tenant"], guest) == 0
+
+
+def test_when_another_record_points_at_the_guest_only_the_empty_user_row_stays_and_the_profile_goes(cookies, monkeypatch):
+    """처리 기록 파기를 끄면(옛 동작) Case 가 사용자 행을 붙든다 — 그래도 식별 정보(프로필)는 지운다(전에는 프로필이 같이 남았다)."""
+    from app.domains.travel_ops.modules.web_account import member_cleanup
+
+    real = member_cleanup.get_guardrails()
+    monkeypatch.setattr(member_cleanup, "get_guardrails", lambda: _PurgeOff(real))
+    guest = _new_guest_with_trip(cookies, days_idle=9)
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("INSERT INTO customer_cases (tenant_id, customer_id, status, subject, state_json, version) "
+                    "VALUES (%s,%s,'resolved','t','{}'::jsonb,1)", (cookies["tenant"], guest))
+        cur.execute("INSERT INTO customer_profiles (tenant_id, customer_id, recovery_email) VALUES (%s,%s,'a@example.com')", (cookies["tenant"], guest))
     with get_connection() as conn:
         result = cleanup_guests(conn, cookies["tenant"])
     assert result["customers_kept"] == 1 and result["customers_deleted"] == 0 and result["trips_deleted"] == 1, result
     assert _exists(cookies, guest)                                           # 이메일도 이름도 없는 무작위 번호 한 줄
-    assert _count("SELECT count(*) FROM trips WHERE tenant_id=%s AND customer_id=%s", cookies["tenant"], guest) == 0
     assert _count("SELECT count(*) FROM web_sessions WHERE tenant_id=%s AND customer_id=%s", cookies["tenant"], guest) == 0
     assert _count("SELECT count(*) FROM customer_cases WHERE tenant_id=%s AND customer_id=%s", cookies["tenant"], guest) == 1
+    assert _count("SELECT count(*) FROM customer_profiles WHERE tenant_id=%s AND customer_id=%s", cookies["tenant"], guest) == 0
 
 
 def test_guest_cleanup_does_nothing_when_switched_off_and_follows_the_operator_hours(cookies):

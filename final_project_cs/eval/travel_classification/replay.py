@@ -64,7 +64,6 @@ def _case_type(code: str) -> str:
 def summarize(results: list[dict[str, Any]], latencies: list[float]) -> dict[str, Any]:
     n = len(results)
     failed = [r for r in results if "failed" in r]
-    done = [r for r in results if "predicted" in r]
     hit = Counter()
     wrong_team, unrouted = [], []
     confusion: Counter[tuple[str, str]] = Counter()

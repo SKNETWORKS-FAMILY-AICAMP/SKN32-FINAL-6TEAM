@@ -1,7 +1,8 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, LocateFixed, Minus, Plus, Scan } from "lucide-react";
-import { edgeChips, formatDistance, niceScale } from "./map-geometry";
+import { edgeChips, formatDistance, niceScale, type EdgeChip } from "./map-geometry";
 import type { MapPoint, MapView } from "./model";
 import styles from "./map.module.css";
 
@@ -67,13 +68,27 @@ export function MapControls({ view, topInset, layout, folded, onFold, canFit, me
  */
 export function EdgeChips({ view, points, topInset, bottomInset, keepRight, onGo }: { view: MapView | null; points: readonly MapPoint[]; topInset: number; bottomInset: number; keepRight: number; onGo: (ids: string[]) => void }) {
   if (!view) return null;
-  return <>{edgeChips(view, points, { top: topInset, bottom: bottomInset, rightKeep: keepRight }).map((chip) => {
-    const names = chip.labels.join(" · ");
-    const far = formatDistance(chip.distanceM);
-    return <button key={chip.ids.join(",")} type="button" className={styles.edgeChip} style={{ left: `${chip.x}px`, top: `${chip.y}px` }} data-edge-chip
-      aria-label={`${names}번 일정이 화면 밖에 있어요 · ${far} · 누르면 그곳으로 가요`} onClick={() => onGo(chip.ids)}>
-      <ArrowRight size={13} strokeWidth={2.4} style={{ transform: `rotate(${Math.round(chip.angle)}deg)` }} aria-hidden="true" />
-      <span aria-hidden="true">{names}</span><small aria-hidden="true">{far}</small>
-    </button>;
-  })}</>;
+  return <>{edgeChips(view, points, { top: topInset, bottom: bottomInset, rightKeep: keepRight }).map((chip) =>
+    <EdgeChipButton key={chip.ids.join(",")} chip={chip} width={view.width} onGo={onGo} />)}</>;
+}
+
+/** The air (px) a chip keeps from the sides of the map. */
+const CHIP_AIR = 6;
+
+/**
+ * One chip. ★`[2026-10-07 사용자 지적]` A chip that names several stops (「2 · 3 · 4 · 5 · 62km」) is wider than the 92 px the geometry reserves for one, and stood half out of the map at its left or right edge (the frame cuts what
+ * passes the edge): its own width is measured and it is moved in until all of it shows. The chip stays where the geometry put it in the other direction.
+ */
+function EdgeChipButton({ chip, width, onGo }: { chip: EdgeChip; width: number; onGo: (ids: string[]) => void }) {
+  const button = useRef<HTMLButtonElement>(null);
+  const [half, setHalf] = useState(0);
+  const names = chip.labels.join(" · ");
+  const far = formatDistance(chip.distanceM);
+  useLayoutEffect(() => { const measured = button.current?.offsetWidth ?? 0; if (measured / 2 !== half) setHalf(measured / 2); }, [names, far, half]);
+  const left = half > 0 && width > half * 2 + CHIP_AIR * 2 ? Math.min(width - half - CHIP_AIR, Math.max(half + CHIP_AIR, chip.x)) : chip.x;
+  return <button ref={button} type="button" className={styles.edgeChip} style={{ left: `${left}px`, top: `${chip.y}px` }} data-edge-chip
+    aria-label={`${names}번 일정이 화면 밖에 있어요 · ${far} · 누르면 그곳으로 가요`} onClick={() => onGo(chip.ids)}>
+    <ArrowRight size={13} strokeWidth={2.4} style={{ transform: `rotate(${Math.round(chip.angle)}deg)` }} aria-hidden="true" />
+    <span aria-hidden="true">{names}</span><small aria-hidden="true">{far}</small>
+  </button>;
 }

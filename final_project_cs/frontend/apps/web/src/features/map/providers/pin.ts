@@ -153,9 +153,9 @@ export function setPinSelected(pin: HTMLElement, selected: boolean) {
     Object.assign(body.style, { background: "var(--color-subtle)", color: "var(--color-faint)", borderColor: "var(--color-border-strong)", boxShadow: "none", pointerEvents: "none", transform: "none" });
     return;
   }
-  body.style.background = selected ? "var(--color-selected)" : tone === "current" ? "var(--color-text)" : "var(--color-surface)";
-  body.style.color = selected || tone === "current" ? "var(--color-on-primary)" : tone === "candidate" ? "var(--color-success)" : "var(--color-text)";
-  body.style.borderColor = selected ? "var(--color-selected)" : tone === "candidate" ? "var(--color-success)" : "var(--color-text)";
+  body.style.background = selected ? "var(--color-selected)" : tone === "current" ? "var(--color-text)" : tone === "warn" ? "var(--color-warning-soft)" : "var(--color-surface)";
+  body.style.color = selected || tone === "current" ? "var(--color-on-primary)" : tone === "candidate" ? "var(--color-success)" : tone === "warn" ? "var(--color-warning)" : "var(--color-text)";
+  body.style.borderColor = selected ? "var(--color-selected)" : tone === "candidate" ? "var(--color-success)" : tone === "warn" ? "var(--color-warning)" : "var(--color-text)";
   body.style.boxShadow = selected ? `0 0 0 3px color-mix(in srgb, var(--color-selected) 35%, var(--color-surface)), 0 3px 12px ${shadow}` : `0 2px 8px ${shadow}`;
   body.style.transform = selected ? "scale(1.14)" : "none";
   body.style.pointerEvents = "auto";

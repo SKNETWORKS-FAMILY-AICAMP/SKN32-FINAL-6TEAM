@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ASSUMED_MINUTES, DAY_END, GAP_BASE_PX, GAP_MAX_PX, SNAP,
-  formatHm, gapPx, legMinutes, moveStop, occupancy, ownRange, parseHm, pushRange, settledAfter, slackAfter, snap,
+  formatHm, gapPx, leadPx, legMinutes, moveStop, occupancy, ownRange, parseHm, pushRange, settledAfter, slackAfter, snap,
   type TimedLeg, type TimedStop,
 } from "./time-plan";
 
@@ -417,5 +417,30 @@ describe("a time typed in by hand is taken to the minute", () => {
   it("moves the neighbours by the minute too, when pushing", () => {
     const result = moveStop(day, legs, 0, 655, { step: 1 });                                      // a would end at 745 + 12 > 700: b is pushed to 757
     expect(result.changes.map((change) => [change.id, change.start])).toEqual([["a", 655], ["b", 757]]);
+  });
+});
+
+describe("leadPx — the leg stands nearer the stop whose time is closer", () => {
+  it("12:30 → 15:00 with the leg leaving at 14:12 stands 68 % of the way down (nearer 15:00)", () => {
+    expect(leadPx(40, "12:30", "15:00", "14:12")).toBe(27);      // 102 / 150 of 40 px
+  });
+  it("exactly between the two times it stands exactly in the middle", () => {
+    expect(leadPx(40, "10:00", "12:00", "11:00")).toBe(20);
+    expect(leadPx(41, "10:00", "12:00", "11:00")).toBe(21);       // rounded to a whole px
+  });
+  it("leaving at the first stop's time stands at the top; at the next stop's time at the bottom; outside the two it is held to the nearer end", () => {
+    expect(leadPx(40, "10:00", "12:00", "10:00")).toBe(0);
+    expect(leadPx(40, "10:00", "12:00", "12:00")).toBe(40);
+    expect(leadPx(40, "10:00", "12:00", "09:00")).toBe(0);
+    expect(leadPx(40, "10:00", "12:00", "13:00")).toBe(40);
+  });
+  it("no free space, a missing or unreadable time, or stops that do not follow each other leave the leg at the top (0)", () => {
+    expect(leadPx(0, "10:00", "12:00", "11:00")).toBe(0);
+    expect(leadPx(-5, "10:00", "12:00", "11:00")).toBe(0);
+    expect(leadPx(40, "", "12:00", "11:00")).toBe(0);
+    expect(leadPx(40, "10:00", "12:00", "")).toBe(0);
+    expect(leadPx(40, "10:00", "--", "11:00")).toBe(0);
+    expect(leadPx(40, "12:00", "10:00", "11:00")).toBe(0);
+    expect(leadPx(40, "10:00", "10:00", "10:00")).toBe(0);
   });
 });

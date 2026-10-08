@@ -197,11 +197,10 @@ def _ask_instead(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id:
                  current: list[Item], replacements: Mapping[UUID, Item],
                  arguments: Mapping[str, Any]) -> AppliedAction | None:
     """바꿀 항목 중 하나라도 판정이 「바꾸지 말라」면 **바꾸지 않고 묻는다.** None 이면 바꿔도 된다."""
-    from app.domains.travel_ops.components.itinerary.plan_link import plan_url
 
     causes = list(arguments.get("causes") or [])
     report = {"disruptions": causes}           # ★안전 사건 여부는 원인의 종류(`category`)로 가른다
-    pending = PendingStore(tenant_id)
+    PendingStore(tenant_id)
     for item_id, best in replacements.items():
         item = next(i for i in current if i.item_id == item_id)
         decision = decide(constraints=trip.get("constraints"), item=item, report=report)
@@ -350,8 +349,6 @@ def _apply_batch(conn: Any, *, store: TripStore, tenant_id: str, trip: Mapping[s
 def _ask_consent(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, base: int,
                  current: list[Item], arguments: Mapping[str, Any]) -> AppliedAction:
     """「바꿀까요?」 보류 제안을 열고 묻는 알림을 바깥함에 싣는다. **일정은 안 바꾼다.**"""
-    from app.domains.travel_ops.components.planning.pending import CONSENT_REASON, Decision, consent_notice
-    from app.domains.travel_ops.components.itinerary.plan_link import plan_url
 
     causes = list(arguments.get("causes") or [])
     wanted = str((arguments.get("consent") or {}).get("item_id"))

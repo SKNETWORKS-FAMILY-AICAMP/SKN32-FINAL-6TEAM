@@ -93,9 +93,9 @@ test("영어 화면과 PC·375px·320px에서 메뉴는 스크롤로 끝까지 �
     await page.getByRole("button", { name: "메뉴", exact: true }).click();
     const menu = page.getByRole("dialog", { name: "메뉴" });
     await menu.getByRole("button", { name: /LANGUAGE/ }).click();
-    const floating = menu.getByRole("switch", { name: "플로팅 버튼 사용" });
-    await floating.scrollIntoViewIfNeeded();
-    await expect(floating).toBeInViewport();
+    const last = menu.getByRole("switch", { name: "애니메이션 건너뛰기" });         // 메뉴의 마지막 줄
+    await last.scrollIntoViewIfNeeded();
+    await expect(last).toBeInViewport();
     expect(await menu.evaluate((panel) => panel.scrollWidth <= panel.clientWidth)).toBe(true);
     await noHorizontalScroll(page);
     await page.keyboard.press("Escape");
@@ -127,7 +127,7 @@ test("영어 화면과 PC·375px·320px에서 메뉴는 스크롤로 끝까지 �
   await menu.getByRole("button", { name: "English", exact: true }).click();
   const english = page.getByRole("dialog", { name: "Menu" });
   await expect(english.getByRole("link", { name: /My page/ })).toContainText("Guest");
-  await expect(english.getByRole("switch", { name: "Use floating button" })).toBeVisible();
+  await expect(english.getByRole("switch", { name: "Skip animations" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { name: "Edit profile", exact: true })).toBeVisible();
   await expect(page.getByText("You can save the Discord webhook. Saving the nickname and image is not available yet.", { exact: true })).toBeVisible();

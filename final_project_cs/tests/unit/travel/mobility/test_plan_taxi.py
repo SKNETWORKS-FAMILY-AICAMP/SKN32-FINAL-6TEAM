@@ -51,7 +51,7 @@ def test_taxi_option_shape_and_backward_time_fit():
     assert left == [] and o["_taxi"] is True and o["_legs"] == [] and o["uses"] == []
     assert o["eta_min"] == 30 and o["_fare"] == 11700 and o["_walk_m"] == 0
     assert o["_start"] == 12 * 60 - 30 - 10, "도착 목표 − 소요 − 여유 정책 버퍼"
-    assert "11,700원" in o["_route"] and "하한" in o["_route"] and "[추정]" in o["_route"]
+    assert "11,700원" in o["_route"] and "예상 요금" in o["_route"] and "[추정]" in o["_route"]
     assert len(car.calls) == 2, "첫 추정 출발로 재고, 그 소요로 출발을 다시 맞춰 한 번 더"
 
 
@@ -90,7 +90,6 @@ def test_taxi_is_chosen_only_when_no_other_group_can_be_planned():
 
 # ── 실제 자료(있을 때만) ─────────────────────────────────────────────────────
 def _real_runtime():
-    from app.domains.travel_ops.instances.mobility.engine import paths
     from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
     try:
         return build_verifier(quiet=True, local_router=True)
@@ -123,7 +122,7 @@ def test_real_data_taxi_mode_lists_a_taxi_option_with_time_and_fare(real_rt):
     route = next(iter(out["routes"].values()))
     taxi = next(o for o in route["options"] if o["id"] == "taxi")
     assert taxi["eta_min"] >= 15 and taxi["fare_krw"] >= 8000 and taxi["uses"] == []
-    assert "택시" in taxi["label"] and "하한" in taxi["label"]
+    assert "택시" in taxi["label"] and "예상 요금" in taxi["label"]
     assert route["planned"] == "taxi", "도보 상한 밖이라 택시만 남는다"
 
 

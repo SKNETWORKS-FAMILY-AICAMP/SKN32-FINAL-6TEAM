@@ -15,6 +15,9 @@ export function useTrip(tripId: string) {
     enabled: Boolean(tripId),
     retry: false,
     refetchOnWindowFocus: false,
+    // `[2026-10-07]` A language change reads the trip again: meanwhile the same trip in the language before stays on screen, so the trip screen (its frame and the open menu) does not
+    // give way to the loading page. Never another trip's plan.
+    placeholderData: (previous, previousQuery) => previousQuery?.queryKey[1] === tripId ? previous : undefined,
   });
 }
 

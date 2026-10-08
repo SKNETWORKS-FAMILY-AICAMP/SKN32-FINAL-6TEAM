@@ -26,6 +26,8 @@ from uuid import UUID
 import app.core.settings as settings_module
 from app.core.settings import get_guardrails
 
+from . import retention
+
 log = logging.getLogger(__name__)
 
 CODES = ("service_terms", "privacy", "sensitive", "location", "alert_channel")
@@ -44,8 +46,13 @@ class ConsentError(Exception):
 
 
 # ── 설정 ────────────────────────────────────────────────────────
-def current_version() -> str:
-    return str(get_guardrails().get("consent.terms_version"))
+def current_version(conn=None, tenant_id: str | None = None) -> str:
+    """지금 약관 버전. ★`conn` 과 `tenant_id` 를 주면 운영자가 **보관 기간을 바꾼 횟수**를 `+ret{N}` 으로 붙인다(`retention.version_for`) — 값이 바뀌면 약관 글이 바뀌므로
+    모두 다시 동의한다. 안 주면 기본 버전(설정 값)만이다 — 동의를 받는 · 검사하는 길은 모두 주고 부른다."""
+    base = str(get_guardrails().get("consent.terms_version"))
+    if conn is None or tenant_id is None:
+        return base
+    return retention.version_for(base, retention.revision(conn, tenant_id))
 
 
 def required_codes() -> tuple[str, ...]:
@@ -72,8 +79,7 @@ def _current_rows(conn, tenant_id: str, user_id: UUID) -> dict[str, tuple[bool, 
         return {row[0]: (row[1], row[2], row[3], row[4]) for row in cur.fetchall()}
 
 
-def _is_ok(rows: dict[str, tuple[bool, str, str, datetime]]) -> bool:
-    version = current_version()
+def _is_ok(rows: dict[str, tuple[bool, str, str, datetime]], version: str) -> bool:
     return all(code in rows and rows[code][0] and rows[code][1] == version for code in required_codes())
 
 
@@ -85,17 +91,18 @@ def state(conn, tenant_id: str, user_id: UUID) -> dict[str, Any]:
         row = rows.get(code)
         items.append({"code": code, "agreed": bool(row and row[0]), "version": row[1] if row else None,
                       "agreed_at": row[3].isoformat() if row else None})
-    return {"current_version": current_version(), "required": list(required_codes()), "items": items, "ok": _is_ok(rows)}
+    version = current_version(conn, tenant_id)
+    return {"current_version": version, "required": list(required_codes()), "items": items, "ok": _is_ok(rows, version)}
 
 
 def is_ok(conn, tenant_id: str, user_id: UUID) -> bool:
-    return _is_ok(_current_rows(conn, tenant_id, user_id))
+    return _is_ok(_current_rows(conn, tenant_id, user_id), current_version(conn, tenant_id))
 
 
 def has(conn, tenant_id: str, user_id: UUID, code: str) -> bool:
     """이 항목에 **지금 버전으로** 동의돼 있나 — 선택 항목(위치 등)을 쓰기 전에 본다."""
     row = _current_rows(conn, tenant_id, user_id).get(code)
-    return bool(row and row[0] and row[1] == current_version())
+    return bool(row and row[0] and row[1] == current_version(conn, tenant_id))
 
 
 # ── 기록 ────────────────────────────────────────────────────────
@@ -104,8 +111,9 @@ def record(conn, *, tenant_id: str, user_id: UUID, session_kind: str, version: A
     """동의 · 철회를 기록하고 새 상태를 돌려준다. ★전부 맞아야 하나도 기록한다(일부만 남지 않는다). 바뀌지 않은 항목은 줄을 더하지 않는다(같은 동의를 되풀이해 늘리지 않는다).
 
     오류: 버전이 지금과 다르면 409 `terms_version_changed`(지금 버전을 싣는다) · 모르는 코드 · 모양이 틀린 입력 422."""
-    if version != current_version():
-        raise ConsentError(409, "terms_version_changed", "약관 버전이 바뀌었어요 — 새 약관을 보고 다시 동의해 주세요", current_version=current_version())
+    now_version = current_version(conn, tenant_id)
+    if version != now_version:
+        raise ConsentError(409, "terms_version_changed", "약관 버전이 바뀌었어요 — 새 약관을 보고 다시 동의해 주세요", current_version=now_version)
     if not isinstance(items, list) or not items or len(items) > len(CODES):
         raise ConsentError(422, "invalid_items", "동의 항목이 비었거나 모양이 틀려요")
     parsed: dict[str, tuple[bool, str]] = {}
@@ -182,7 +190,7 @@ def require(conn, tenant_id: str, user_id: UUID, code: str) -> None:
     if not gate_enabled() or has(conn, tenant_id, user_id, code):
         return
     # ★항목 이름은 `item` 으로 싣는다 — 오류 본문의 `code` 는 오류 종류(`consent_required`)라 같은 이름을 못 쓴다
-    raise ConsentError(403, "consent_required", "이 기능을 쓰려면 동의가 필요해요", item=code, current_version=current_version())
+    raise ConsentError(403, "consent_required", "이 기능을 쓰려면 동의가 필요해요", item=code, current_version=current_version(conn, tenant_id))
 
 
 # ── 사용 조건(게이트) ───────────────────────────────────────────
@@ -193,14 +201,14 @@ def gate_check(conn, *, tenant_id: str, user_id: UUID, path: str) -> None:
     if any(path == prefix or path.startswith(prefix + "/") for prefix in EXEMPT_PREFIXES):
         return
     if not is_ok(conn, tenant_id, user_id):
-        raise ConsentError(403, "consent_required", "약관에 동의해야 쓸 수 있어요", current_version=current_version(),
+        raise ConsentError(403, "consent_required", "약관에 동의해야 쓸 수 있어요", current_version=current_version(conn, tenant_id),
                            required=list(required_codes()))
 
 
 # ── 정리 ────────────────────────────────────────────────────────
 def purge_expired(conn, tenant_id: str, now: datetime | None = None) -> int:
-    """보관 기간(`consent.evidence_retention_days`)이 지난 동의 기록을 지운다 — 삭제는 이 함수만 한다(트리거가 이 트랜잭션에서만 허용)."""
-    days = int(get_guardrails().get("consent.evidence_retention_days"))
+    """보관 기간(`retention.effective` 의 `consent_days` — 기본 `consent.evidence_retention_days`)이 지난 동의 기록을 지운다 — 삭제는 이 함수만 한다(트리거가 이 트랜잭션에서만 허용)."""
+    days = retention.effective(conn, tenant_id)["consent_days"]            # 운영자가 바꾼 값이 있으면 그것(기본은 consent.evidence_retention_days)
     cutoff = (now or datetime.now(timezone.utc)) - timedelta(days=days)
     with conn.transaction(), conn.cursor() as cur:
         cur.execute("SET LOCAL app.consent_purge = 'on'")

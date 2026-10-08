@@ -47,6 +47,13 @@ export const heldTexts = (kind: TimeKind, held: Exclude<Held, null>): readonly [
     : ["여유를 다 썼어요 · 더 늦추면 뒤 일정이 밀려요", "The free time is used up · going on pushes the stops behind"])
   : ["앞 일정과 붙었어요 · 더 당기면 앞 일정이 당겨져요", "Touching the stop before · going on pulls it earlier"];
 
+/** The wording of the overlay while the drag has gone past that end and the other stops are being pushed (`delta` > 0 later, < 0 earlier) - it stays up as long as they move. */
+export const pushingTexts = (kind: TimeKind, delta: number): readonly [string, string] => delta < 0
+  ? ["앞 일정과 붙었어요 · 앞 일정이 당겨지고 있어요", "Touching the stop before · it is being pulled earlier"]
+  : kind === "depart"
+    ? ["여유를 다 썼어요 · 다음 일정이 밀리고 있어요", "The free time is used up · the next stops are being pushed"]
+    : ["여유를 다 썼어요 · 뒤 일정이 밀리고 있어요", "The free time is used up · the stops behind are being pushed"];
+
 /** The pointer handlers of something a time is dragged by (the grip in the form, the time itself, its dot). */
 export interface Grab { onPointerDown: (event: PointerEvent<HTMLElement>) => void; onPointerMove: (event: PointerEvent<HTMLElement>) => void; onPointerUp: (event: PointerEvent<HTMLElement>) => void; onPointerCancel: (event: PointerEvent<HTMLElement>) => void }
 /** A press that moves this far (px) up or down is a drag; one that does not is a tap (it opens the form). */
@@ -242,7 +249,7 @@ export function useTimeEdit({ views, commit, onNotice }: {
       const taken = grabbed.current;
       if (!taken) return;
       const { value, held: now } = draggedTo(taken.origin, event.clientY - taken.y);
-      if (now && heldBefore.current !== now && edit) say(edit.kind, now);
+      // ★`[2026-10-07 사용자 지시]` No notice while dragging: the overlay of the day says it (and keeps saying it while the next stops are pushed) - the notice stood right over that overlay and hid it.
       heldBefore.current = now;
       setHeld(now);
       setValue(formatHm(value));

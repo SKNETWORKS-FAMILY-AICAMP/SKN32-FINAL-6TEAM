@@ -3,7 +3,7 @@
 
 실행(final_project_cs 에서): python scripts/mobility/validate_fare_estimate.py
 자료: ../datasets/mobility/processed/mobility/rail_edge_track_v1.jsonl.gz (datasets/mobility/scripts/build_rail_edge_distance_v1.py 가 만든다)"""
-import copy, gzip, json, math, random, sys
+import copy, gzip, json, random, sys
 sys.path.insert(0, ".")
 from app.domains.travel_ops.instances.mobility.engine import options as O
 from app.domains.travel_ops.instances.mobility.engine.line_order import LineOrder

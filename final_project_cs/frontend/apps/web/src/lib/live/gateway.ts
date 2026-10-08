@@ -1,4 +1,4 @@
-import type { Trip, TripChange, TripGateway, TripGuardian, TripMessage, TripSafety, TripStop, TripWarning } from "../../features/trip/model";
+import type { Trip, TripChange, TripGateway, TripGuardian, TripMessage, TripMove, TripSafety, TripStop, TripWarning } from "../../features/trip/model";
 import { translator, type Language, type Translate } from "../i18n";
 import { api, hasSession, LiveError } from "./client";
 import { streamApi } from "./stream";
@@ -252,20 +252,24 @@ async function read(tripId: string, language: Language): Promise<Trip> {
     throw new LiveError("not_found", t("이 여행을 찾지 못했어요. 창을 닫았거나 시간이 지나 게스트 여행이 사라졌을 수 있어요. 계정에 보관한 여행이라면 마이페이지에서 로그인하면 다시 열려요.", "We could not find this trip. A guest trip cannot be continued after the window is closed, and is deleted after a while. If it is kept with an account, sign in on My page to open it again."));
   }
   const server = await api<ServerTrip>(`/v1/web/trips/${encodeURIComponent(tripId)}`, language);
-  // ★이동 항목(kind mobility — 출발 시각 = 다음 일정 시작 − 이동 − 여유)은 일정 목록에 섞지 않고 **다음 일정의 메모**로
-  //   붙인다. 출발 알림은 서버가 그 시각에 보낸다(D-020). ☆2026-09-28 실제 화면: 「A → B」가 일정처럼 끼어 보였다.
+  // ★이동 항목(kind mobility — 출발 시각 = 다음 일정 시작 − 이동 − 여유)은 일정 목록에 섞지 않는다(☆2026-09-28 「A → B」가 일정처럼 끼어 보였다).
+  //   `[2026-10-07]` 여행 화면이 일정 사이의 이동 줄로 그리므로 앞뒤 일정과 함께 `moves` 로 따로 둔다(전에는 다음 일정 메모의 「몇 시 출발」이었다). 출발 알림은 서버가 그 시각에 보낸다(D-020).
   const stops: TripStop[] = [];
-  let leave: string | null = null;
+  const moves: TripMove[] = [];
   for (const item of server.items) {
-    if (item.kind === "mobility") { leave = seoul(item.starts_at).time; continue; }
-    const next = stop(item, t);
-    if (leave) next.notes = [t(`${leave} 출발`, `Leave at ${leave}`), next.notes].filter(Boolean).join(" · ");
-    stops.push(next);
-    leave = null;
+    if (item.kind !== "mobility") { stops.push(stop(item, t)); continue; }
+    const depart = seoul(item.starts_at);
+    moves.push({ id: item.item_id, fromId: stops.at(-1)?.id ?? null, toId: null, date: depart.date, departAt: depart.time,
+      arriveAt: item.ends_at ? seoul(item.ends_at).time : null, title: item.title });
+  }
+  // The stop after each move is the next stop in the plan.
+  for (const move of moves) {
+    const at = server.items.findIndex((item) => item.item_id === move.id);
+    move.toId = server.items.slice(at + 1).find((item) => item.kind !== "mobility")?.item_id ?? null;
   }
   // ★The server judged the plan when it was registered (`_create_trip`) — what it found is `warnings`, not a separate check to run.
   return {
-    id: server.trip_id, stops,
+    id: server.trip_id, title: text(server.title), stops, moves,
     messages: await conversation(tripId, language),
     planUrl: server.plan_url || undefined,
     version: typeof server.version === "number" ? server.version : undefined,

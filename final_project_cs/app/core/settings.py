@@ -47,9 +47,10 @@ class Settings(BaseSettings):
     # LLM
     llm_provider: str = "openai"
     openai_api_key: str
-    #: ★`[2026-10-01 사용자 지시]` **서버 배포용** OpenAI 키(서버를 도커 이미지로 만들어 아마존 등에 올릴 때 쓸 키). 이름만 선언했다 —
-    #:  **어느 코드도 이 값을 읽지 않는다.** 이 키를 쓰는 일은 사용자가 쓰라고 지시한 순간에만 한다(그 전에는 읽지도 부르지도 않는다).
-    #:  선언한 까닭: `extra="forbid"` 라 `.env` 에 이름이 먼저 적히면 앱이 기동조차 못 한다. 값은 `.env` 에만 둔다.
+    #: ★`[2026-10-01 사용자 지시]` **서버 배포용** OpenAI 키(서버를 도커 이미지로 만들어 아마존 등에 올릴 때 쓸 키). 값은 `.env` 에만 둔다.
+    #:  ★`[2026-10-07 사용자 지시]` 이제 **한 곳만** 읽는다 — 모델 서버가 모두 장애일 때 넘기는 장치(`llm_failover.py`, 스위치 `llm_failover_enabled`).
+    #:  개인 키(`openai_api_key`)로 대신하지 않는다. 그 밖의 코드 · 시험 · 측정은 이 값을 읽지 않는다.
+    #:  선언한 까닭: `extra="forbid"` 라 `.env` 에 이름이 먼저 적히면 앱이 기동조차 못 한다.
     openai_api_key_server: str = ""
     llm_model: str
     embedding_model: str
@@ -138,6 +139,32 @@ class Settings(BaseSettings):
     #:  켜고 끄기는 가드레일 `travel.pointer.mode`. 모델이 못 부르면 규칙으로 돌아간다(`item_pointer.py`).
     ollama_pointer_model: str = ""
     ollama_pointer_timeout_seconds: float = 30.0
+    # ── 모델 서버가 죽거나 늦을 때 **서버용 OpenAI 키**로 넘기는 장치 `[2026-10-07 사용자 지시]` ──
+    #:  「올라마나 외부 GPU 서버가 모두 장애면 서버키(개인키 말고)로 자동 전환돼서 동작하게」. 코드 `app/infrastructure/llm_failover.py`.
+    #:  ★스위치는 **기본 꺼짐**이다 — 개발 PC 에서 모델 서버 연결이 끊겼을 때 시험 · 측정이 조용히 유료 API 로 새지 않게. 운영(배포) 환경 파일에서만 켠다.
+    #:  켜져 있어도 `openai_api_key_server` 가 비어 있으면 넘기지 않는다(그때는 지금처럼 Ollama 만).
+    llm_failover_enabled: bool = False
+    #:  넘길 때 쓰는 OpenAI 모델. 비우면 `llm_model`.
+    #:  ★`[2026-10-07 실측 — 결정 단위 재생 · 실제 대화 66문장]` `gpt-4o-mini` 52/66 · `gpt-4.1-mini` 55/66 · **`gpt-4.1` 64/66 = 97.0%**(Gemma 4 12B 와 같음). 그래서 기본은 `gpt-4.1` —
+    #:  작은 모델은 엉뚱한 대상을 바꾸거나(4o-mini 1건) 쓸데없이 되묻는다(4.1-mini 9건)
+    llm_failover_model: str = "gpt-4.1"
+    #:  Ollama 를 기다리는 시간(초) — 고객 응답 SLA 15초 안에 API 까지 끝나게 `ollama_timeout_seconds`(60)보다 짧다. 서버가 식어 느린 첫 호출도 여기서 걸러진다(예열이 그 몫)
+    llm_failover_primary_timeout_seconds: float = 6.0
+    #:  OpenAI 를 기다리는 시간(초)
+    llm_failover_api_timeout_seconds: float = 8.0
+    #:  한 호출에 쓸 수 있는 전체 시간(초) — 이 안에 다시 시도(429·5xx 1회)와 넘김이 다 들어가야 한다
+    llm_failover_total_seconds: float = 15.0
+    #:  연속 실패가 이만큼이면 서킷을 연다(그 서버를 건너뛰고 다음 경로로 바로 간다)
+    llm_failover_failures: int = 3
+    #:  서킷이 열려 있는 시간(초) — 지나면 한 번만 시험해서(반쯤 열림) 성공하면 닫는다
+    llm_failover_open_seconds: float = 60.0
+    #:  API 로 넘긴 호출의 일 · 월 상한(`external_call_budget` 의 `openai_failover` 줄). 넘으면 더 안 부르고 실패로 올린다 — 비용 폭주 방어
+    llm_failover_daily_cap: int = 2000
+    llm_failover_monthly_cap: int = 30000
+    #:  사진·스캔 받아쓰기(이미지)를 API 로 넘길지. ★이미지에는 이름 · 연락처 · 예약번호가 그대로 있어 **가릴 수 없다** — 그래서 따로 켠다(기본 꺼짐).
+    llm_failover_vision: bool = False
+    #:  Ollama 가 둘 이상일 때(예: 오라클 무료 서버 + GPU 서버) 쉼표로 이어 적는다 — 앞에서부터 시도하고 **모두** 안 되면 API 로 간다
+    ollama_fallback_base_urls: str = ""
     ollama_pointer_keep_alive: str = ""
     #: 일정이 바뀐 첫 문장은 고객을 기다리게 하지 않고 규칙으로 답하며 모델은 뒤에서 그 일정을 읽어 둔다(`item_pointer.py` 머리). 끄면 첫 문장도 모델을 기다린다.
     ollama_pointer_background_warm: bool = True

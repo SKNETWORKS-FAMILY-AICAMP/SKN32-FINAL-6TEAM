@@ -288,7 +288,7 @@ def shapes_for_items(items, *, detail: bool = False) -> list[dict[str, Any]]:
 
 
 #: 접수 확인 화면 `moves[].mode`(계산기가 고른 후보의 종류) → `build_shape` 가 읽는 후보 id 접두. estimate(직선 어림)는 직선으로 내린다
-_REVIEW_MODE_ID = {"walk": "walk", "subway": "subway", "bus": "bus", "transit": "subway_bus"}
+_REVIEW_MODE_ID = {"walk": "walk", "subway": "subway", "bus": "bus", "transit": "subway_bus", "taxi": "taxi"}
 
 
 def shapes_for_review(review: dict[str, Any] | None, *, detail: bool = False) -> list[dict[str, Any]]:

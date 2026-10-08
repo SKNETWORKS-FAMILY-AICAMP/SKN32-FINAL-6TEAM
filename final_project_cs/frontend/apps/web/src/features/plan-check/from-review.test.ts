@@ -53,9 +53,16 @@ describe("the finished check, from the server's review", () => {
   it("turns a leg into the way from one stop to the next, with its own check lines", () => {
     expect(view.moves).toEqual([{
       id: "0-0:0-1", fromId: "0-0", toId: "0-1", day: 1, departAt: "11:05", mode: "지하철", summary: "12분 · 3.1km", verdict: "keep",
-      minutes: 12, arriveAt: "11:17", slackMin: 8, estimated: false,
+      minutes: 12, arriveAt: "11:17", slackMin: 8, estimated: false, modeKey: "subway", recommendedMode: null, modeChoice: null,
       checks: [{ kind: "route", result: "ok", text: "경복궁 → 광장시장" }, { kind: "arrival", result: "ok", text: "8분 여유" }],
     }]);
+  });
+
+  it("carries the way the check uses, the way the calculator chose and what became of the customer's choice (`mode_choice`)", () => {
+    const legs = reviewResultOf(intake("review", "review", { review: { ...review, moves: [
+      move({ mode: "taxi", recommended_mode: "subway", mode_choice: { mode: "taxi", state: "dropped", why: "앞 일정이 늦어져 택시로도 닿지 않아요" } }),
+    ] } }), readingOf(intake("review", "review")))!;
+    expect(legs.moves[0]).toMatchObject({ modeKey: "taxi", recommendedMode: "subway", modeChoice: { mode: "taxi", state: "dropped", why: "앞 일정이 늦어져 택시로도 닿지 않아요" } });
   });
 
   it("carries a leg's minutes, arrival and slack; a straight-line guess (basis estimate) is marked estimated", () => {
