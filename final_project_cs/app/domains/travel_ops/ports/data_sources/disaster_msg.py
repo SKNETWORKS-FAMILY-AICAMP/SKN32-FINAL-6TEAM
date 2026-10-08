@@ -83,7 +83,7 @@ DEFAULT_LOOKBACK_HOURS = 6
 
 # ── 자치구 정하기 — `[2026-10-08]` role-activity 판(`disaster_msg.py`)에서 합쳤다 ──────────────
 # ★develop 판정은 장소의 구(`district`)를 받아 거른다(`disruptions.py`). 아래는 좌표 · 주소만 아는 호출
-#   (보존한 활동 팀 판 · `read_tools_a`)을 위한 것이다 — 주소의 「서울특별시 ○○구」가 먼저고, 주소가 없을 때만
+#   (보존한 활동 팀 판 · `read_tools`)을 위한 것이다 — 주소의 「서울특별시 ○○구」가 먼저고, 주소가 없을 때만
 #   대략적 좌표 상자를 쓰되 **겹친 구를 전부** 본다. 겹친 상자 중 앞 구를 고르던 옛 함수(`_lat_lon_to_gu`)는
 #   카탈로그 장소의 32% 를 다른 구로 정해 가져오지 않았다.
 # 서울 25개 자치구 대략적 경계(EPSG:4326) — 위경도 → 구 이름 변환용.
@@ -287,7 +287,7 @@ class DisasterMsgCsv:
              at: Any = None, *, within: Any = None, address: str | None = None) -> dict[str, Any] | None:
         """좌표 · 주소로 자치구를 정해 조회한다 — `[2026-10-08]` role-activity 판에서 합쳤다.
 
-        보존한 활동 팀 판(`instances/activity/watch.py` 는 `within=`, `read_tools_a.py` 는 `at=`)이 부른다.
+        보존한 활동 팀 판(`instances/activity/watch.py` 는 `within=`, `read_tools.py` 는 `at=`)이 부른다.
         `address` 를 주면 주소의 구로 거른다(`seoul_districts`). 구를 못 정하면 시 전체로 조회한다.
         """
         effective_at = within or at or datetime.now(KST)
@@ -412,7 +412,7 @@ class DisasterMsgApi(TravelSource):
              at: Any = None, *, within: Any = None, address: str | None = None) -> dict[str, Any] | None:
         """좌표 · 주소로 자치구를 정해 조회한다 — `[2026-10-08]` role-activity 판에서 합쳤다.
 
-        보존한 활동 팀 판(`instances/activity/watch.py` 는 `within=`, `read_tools_a.py` 는 `at=`)이 부른다.
+        보존한 활동 팀 판(`instances/activity/watch.py` 는 `within=`, `read_tools.py` 는 `at=`)이 부른다.
         `address` 를 주면 주소의 구로 거른다(`seoul_districts`). 구를 못 정하면 시 전체로 조회한다.
         """
         effective_at = within or at or datetime.now(KST)

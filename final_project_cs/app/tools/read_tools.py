@@ -34,6 +34,15 @@ class ToolLoopExceeded(RuntimeError):
     """The same named tool and normalized arguments were requested twice."""
 
 
+def _address(value: Any) -> dict[str, str]:
+    """재난문자 `near()` 에 넘길 주소 — 있을 때만 키를 싣는다(주소를 모르는 소스 · 가짜 소스와 호환).
+
+    ★`[2026-10-07]` 주소의 「서울특별시 ○○구」로 문자를 거른다. 좌표 상자는 32% 를 다른 구로 정했다.
+    """
+    text = str(value).strip() if value else ""
+    return {"address": text} if text else {}
+
+
 def _as_datetime(value: Any) -> Any:
     """문자열로 온 시각을 `datetime` 으로. ★못 읽으면 `None` — 지금으로 대체하지 않는다.
 
@@ -143,6 +152,13 @@ class ReadToolbox:
             # ★수치(취소 기한·위약금율)는 여기서 온다. `read.policy` 는 문장 근거만 댄다
             "read.booking_terms": self.booking_terms,
             "read.disruptions": self.disruptions,
+            # ★`[2026-10-08]` role-activity 판(`read_tools_a.py`)에서 합쳤다 — 보존한 활동 팀 판(`instances/activity/team_a.py`)만
+            #   부른다. 등록된 팀들은 manifest 허용 목록에 없어 부르지 않는다.
+            "read.disaster": self.disaster,
+            "read.disaster_points": self.disaster_points,
+            "read.place_search": self.place_search,
+            "read.place_lookup": self.place_lookup,
+            "read.place_candidates": self.place_candidates,
             "read.weather_warning": self.weather_warning,
             "read.travel_advisory": self.travel_advisory,
             "read.place":    self.place,
@@ -172,7 +188,9 @@ class ReadToolbox:
                         "party_size", "capacity", "amount_cents", "locked", "place_id")
     _PLACE_COLUMNS = ("place_id", "name", "kind", "latitude", "longitude",
                       "weather_sensitive", "confirmed_at", "open_at_slot",
-                      "dietary", "dietary_absent")
+                      "dietary", "dietary_absent",
+                      # ★`[2026-10-08]` 관광공사 식별자(013) — 보존한 활동 팀 판의 대체 후보 · CSV 조회가 쓴다. 읽기만 는다.
+                      "source_content_id", "source_content_type_id")
 
     def booking(self, scope: ToolContext, *, booking_id: str | None = None,
                 **_: Any) -> dict[str, Any] | None:
@@ -260,7 +278,8 @@ class ReadToolbox:
             return None      # ★어느 장소인지 모르면 조회하지 않는다
         row = self._one(
             "SELECT place_id, name, kind, latitude, longitude, weather_sensitive, "
-            "hours_confirmed_at, open_at_slot, dietary, dietary_absent FROM places "
+            "hours_confirmed_at, open_at_slot, dietary, dietary_absent, "
+            "source_content_id, source_content_type_id FROM places "
             "WHERE tenant_id=%s AND place_id=%s",
             (scope.tenant_id, place_id), self._PLACE_COLUMNS)
         return self._fill_coordinates(row)
@@ -507,6 +526,142 @@ class ReadToolbox:
 
         return DisruptionCheck(self.travel).check(
             place=place, starts_at=_as_datetime(starts_at), region=str(region))
+
+    # ── role-activity 판에서 합친 도구 `[2026-10-08]` — 보존한 활동 팀 판만 부른다 ──────────────────
+    def place_search(self, scope: ToolContext, *, name: str | None = None,
+                     kind: str | None = None, **_: Any) -> dict[str, Any] | None:
+        """이름으로 장소 후보 하나를 찾는다(공급자 카탈로그, **우리 DB 조회가 아니다**).
+
+        ★`place()`와 다르다 — `place()`는 **이미 아는** `place_id`로 우리
+          `places` 테이블을 읽고, 이건 **아직 모르는** 장소를 이름만으로
+          TourAPI에서 찾는다. 「일정 제출」처럼 고객이 새로 말한 장소를
+          다루는 자리에서 쓴다.
+
+        ★애매하면 **`None`(모름)** — 확정하지 않는다. `tour_api.py.find()`가
+          이미 이 규율을 지킨다(제목 정확일치 1건일 때만 확정, 2건 이상이면
+          "경복궁"이 서울 궁궐·울산 음식점으로 갈리는 것처럼 애매함 자체를
+          답으로 준다). 여기서 그 규율을 느슨하게 만들지 않는다.
+
+        ★`kind`(activity/dining/lodging/flight)를 주면 그 종류로만 좁혀
+          받는다 — `watch.py`의 `KIND_TO_CONTENT_TYPES`와 같은 매핑을 쓴다.
+        """
+        if self.travel is None or self.travel.place is None:
+            return None
+        if not name or not name.strip():
+            return None
+        # ★`watch.py`의 `KIND_TO_CONTENT_TYPES`와 같은 매핑이다. Team 내부
+        #   모듈을 이 파일에서 import하지 않으려고(basement가 Team을 모르는
+        #   경계) 작게 복제한다 — 값이 갈라지면 나란히 있는 두 자리가 서로
+        #   드러내 준다.
+        allowed = {"activity": {"12", "14", "28", "38"}, "dining": {"39"},
+                  "lodging": {"32"}, "flight": set()}.get(kind or "")
+        narrow = next(iter(allowed)) if allowed and len(allowed) == 1 else None
+        return self.travel.place.find(
+            name.strip(), content_type_id=narrow, allowed_types=allowed or None)
+
+    def place_lookup(self, scope: ToolContext, *, name: str | None = None,
+                     **_: Any) -> dict[str, Any] | None:
+        """고객이 말한 장소 이름 → 우리 카탈로그, 없으면 카카오로 **존재만** 확인한다.
+
+        반환 `status`: `found` · `ambiguous` · `exists_unregistered` · `not_found` · `unknown`.
+        ★`read.place_search` 와 달리 「없음」과 「못 물어봄」을 가른다(`not_found` ≠ `unknown`).
+        ★카카오 응답(이름·좌표·주소)은 결과에 싣지 않는다 — 결과는 Case 근거로 저장되기 때문이다.
+        이름이 비면 `None`(모름). 본체는 `activity/place_lookup.py`.
+        """
+        if not name or not name.strip():
+            return None
+        from app.domains.travel_ops.instances.activity.place_lookup import lookup_place
+
+        return lookup_place(self.connection_factory, scope.tenant_id, name, self.kakao)
+
+    def place_candidates(self, scope: ToolContext, *, content_id: str | None = None,
+                         **_: Any) -> dict[str, Any] | None:
+        """대체 장소 후보 풀. `place_catalog`(TourAPI 적재분)를 읽는다.
+
+        ★실제 조회는 `app/domains/travel_ops/instances/activity/db_search/place_candidates.py` 가 한다 — 여기는 테넌트
+          범위를 넘겨 부르는 얇은 연결이다. 원래 장소가 카탈로그에 없으면
+          `None`(모름)이고 Team 은 「후보를 조회하지 못했다」로 답한다.
+
+        인자: `content_id` — 문제있음 판정이 난 원래 장소의 TourAPI
+        `contentid`(`read.place` 의 `source_content_id`). 없으면 `None`.
+
+        반환 모양(행은 CSV·TourAPI 컬럼명 그대로 — `alternatives.py` 가 읽는다)::
+
+            {"origin":     {"contentid", "title", "contenttypeid",
+                            "lclsSystm1", "lclsSystm2", "lclsSystm3",
+                            "sigungucode", "brand", "mapx", "mapy",
+                            "closed_days", "business_hours"},
+             "candidates": [<origin 과 같은 모양의 행>, ...],
+             "source": "...", "confirmed_at": "..."}
+
+        ★후보 풀을 유사도 필드로 **미리 좁히지 않는다** — 폴백이 필드를
+          하나씩 풀 수 있어야 한다. 원래 장소 좌표 기준 최대 반경(10km)의
+          바운딩 박스로만 좁힌다(`[2026-10-02]` 시군구 대신 반경).
+        ★원래 장소 행(`origin`)을 모르면 `None` — 유사도를 잴 기준이 없다.
+        """
+        if not content_id:
+            return None      # ★어느 장소인지 모르면 조회하지 않는다
+        from app.domains.travel_ops.instances.activity.db_search.place_candidates import find_place_candidates
+
+        return find_place_candidates(self.connection_factory, scope.tenant_id, content_id)
+
+    def disaster(self, scope: ToolContext, *, latitude: float | None = None,
+                 longitude: float | None = None, at: Any = None, address: str | None = None,
+                 **_: Any) -> dict[str, Any] | None:
+        """그 좌표 인근·그 시각 기준의 재난문자 목록. 모르면 `None`.
+
+        ★`weather()`와 같은 규율이다 — **좌표를 모르면 묻지 않는다.**
+          "어디인지 모르는 곳의 재난"은 없다.
+
+        ★`[구현 2026-09-20]` `DisasterMsgSource`(`disaster_msg.py`)가 생겼고
+          `build_travel_sources()`가 `ACOP_DISASTER_API_KEY`(또는 공통 키)가
+          있으면 조립한다. 키가 없으면 `self.travel.disaster`는 여전히 `None`
+          이고 이 함수는 `None`을 돌려준다 — 모름은 정상 갈래다.
+          ★★실 키로 검증되지 않았다(`disaster_msg.py` 모듈 docstring 참고).
+
+        ★반환 모양: `{"messages": [{"SN":...,
+          "EMRG_STEP_NM":...,"DST_SE_NM":...,"MSG_CN":...}, ...],
+          "confirmed_at":..., "source":...}`. 재난문자 원문(`MSG_CN`)은
+          자연어다 — TourAPI 운영시간과 같은 이유로 Team은 이걸 통으로
+          해석하지 않는다(`activity.py`의 `_disaster_blocks()` 참고).
+        """
+        if self.travel is None or self.travel.disaster is None:
+            return None
+        if latitude is None or longitude is None:
+            return None
+        return self.travel.disaster.near(
+            latitude=float(latitude), longitude=float(longitude),
+            at=_as_datetime(at), **_address(address))
+
+    #: 한 번에 묻는 좌표 수 상한 — 대체 후보(화면 3 + 더보기 10)를 넘지 않는다.
+    DISASTER_POINTS_MAX = 13
+
+    def disaster_points(self, scope: ToolContext, *, points: Any = None, at: Any = None,
+                        **_: Any) -> dict[str, Any] | None:
+        """좌표 여러 곳의 재난문자를 **한 번에** 본다 — 대체 후보 재검증용. `[2026-10-07]`
+
+        `points`: `[[위도, 경도], ...]` 또는 `[[위도, 경도, 주소], ...]` — 주소가 있으면 그 구로 거른다. 반환: `{"points": [<disaster() 와 같은 모양 | None>, ...]}`
+        — 순서는 `points` 와 같다. 좌표를 못 읽은 칸은 `None`(모름)이다.
+        ★지역 판정(좌표 → 자치구 → 그 구로 온 문자)은 `disaster()` 와 **같은** `near()` 가 한다 —
+          Team 이 지역을 따로 해석하지 않게. 소스가 지역 단위로 캐시하므로 좌표가 많아도 외부 호출은 늘지 않는다.
+        ★소스가 없거나 `points` 가 목록이 아니면 `None`(모름).
+        """
+        if self.travel is None or self.travel.disaster is None:
+            return None
+        if not isinstance(points, (list, tuple)):
+            return None
+        when = _as_datetime(at)
+        results: list[dict[str, Any] | None] = []
+        for point in list(points)[:self.DISASTER_POINTS_MAX]:
+            try:
+                latitude, longitude = float(point[0]), float(point[1])
+            except (TypeError, ValueError, IndexError):
+                results.append(None)
+                continue
+            address = point[2] if len(point) > 2 else None
+            results.append(self.travel.disaster.near(latitude=latitude, longitude=longitude, at=when,
+                                                     **_address(address)))
+        return {"points": results}
 
     def weather_warning(self, scope: ToolContext, *, region: str = "서울",
                         **_: Any) -> dict[str, Any] | None:
