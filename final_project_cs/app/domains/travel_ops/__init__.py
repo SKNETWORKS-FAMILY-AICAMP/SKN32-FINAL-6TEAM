@@ -22,7 +22,8 @@
 from app.domains.travel_ops.instances.activity import ActivityTeam
 from app.domains.travel_ops.instances.booking_handoff import BookingHandoffTeam
 from app.domains.travel_ops.instances.dining import DiningTeam
-from app.domains.travel_ops.instances.locked import FlightTeam, LodgingTeam
+from app.domains.travel_ops.instances.locked import FlightTeam
+from app.domains.travel_ops.instances.lodging import LodgingTeam
 from app.domains.travel_ops.instances.mobility import MobilityTeam
 
 __all__ = [

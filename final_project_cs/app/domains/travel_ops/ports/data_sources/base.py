@@ -327,6 +327,8 @@ class TravelSources:
     #: 서울 열린데이터광장 실시간 지하철 도착정보(「실시간 지하철 인증키」) — **지금 값**. `arrivals(역, line=…)`. 판정에 넣지 않고 같이 놓고 보는 용도(2026-10-05)
     subway_arrival: Any | None = None
     route: Any | None = None
+    #: 마이리얼트립 MCP — 숙소·항공 **검색 전용**(`myrealtrip.py`). 키가 없어 항상 붙는다. 예약·결제는 하지 않고 링크만 준다(2026-10-07).
+    travel_search: Any | None = None
     #: 키가 없어 못 붙인 소스 이름들. ★조용히 비워 두지 않는다.
     unavailable: dict[str, str] = field(default_factory=dict)
     #: 소스 전부가 같은 것을 공유한다 - 따로 두면 한 키를 두 소스가 나눠
@@ -463,6 +465,9 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
     sources = TravelSources(limiter=limiter, cache=cache)
     # ★키를 안 보고 붙인다 — 이 소스는 인증 파라미터 자체가 없다.
     sources.heritage = HeritageSource(limiter=limiter, cache=cache)
+    # ★`[2026-10-07]` 숙소·항공 검색(마이리얼트립 MCP) — 키가 없다. 응답은 캐시에 담지 않는다(가격·잔여).
+    from .myrealtrip import MyRealTripMcp
+    sources.travel_search = MyRealTripMcp(limiter=limiter)
     # ── 기상: 1차 + 대체 (v11 §0-4 결정 15) ─────────────────────────
     # ★`weather_provider` 는 **어느 쪽이 먼저인가**만 정한다. 붙일 수 있는 것은
     #   전부 붙이고 나머지를 대체로 둔다 — 1차가 못 주면 대체가 값을 낸다.

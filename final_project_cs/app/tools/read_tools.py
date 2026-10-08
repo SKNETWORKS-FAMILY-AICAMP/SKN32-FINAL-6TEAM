@@ -165,6 +165,10 @@ class ReadToolbox:
             "read.place_catalog": self.place_catalog,
             "read.route_events": self.route_events_for,
             "read.customer_report": self.customer_report,
+            # ★`[2026-10-07]` 숙소·항공 검색(마이리얼트립 MCP · 검색 전용) — 숙소 팀 · 항공 팀이 쓴다
+            "read.stay_search": self.stay_search,
+            "read.stay_detail": self.stay_detail,
+            "read.flight_search": self.flight_search,
         }
 
     #: 여행 예약의 컬럼. ★`_one()` 이 zip 으로 붙이므로 SELECT 순서와 **같아야** 한다.
@@ -533,6 +537,45 @@ class ReadToolbox:
             return None
         return self.travel.advisory.country(iso2=str(country_iso2))
 
+    # ── 숙소·항공 검색 (마이리얼트립 MCP) ─────────────────────────
+    #   ★인자 이름은 어댑터(`ports/data_sources/myrealtrip.py`)와 같다. 소스가 없으면 `None`(모름) — 바깥으로 나가지 않는다.
+    #   ★날짜·키워드·공항 코드가 비면 **묻지 않는다** — 기본 날짜로 채워 부르지 않는다(되묻기는 팀의 일).
+    def _travel_search(self) -> Any | None:
+        return getattr(self.travel, "travel_search", None) if self.travel else None
+
+    def stay_search(self, scope: ToolContext, *, keyword: str | None = None, check_in: str | None = None,
+                    check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """숙소 목록(이름 · 1박 가격 · 5점 만점 평점). 좌표 · 링크는 `read.stay_detail` 이 준다."""
+        source = self._travel_search()
+        if source is None or not keyword or not check_in or not check_out:
+            return None
+        wanted = ("adults", "children", "domestic", "size", "min_price", "max_price", "min_review_rating")
+        return source.stay_search(keyword=str(keyword), check_in=str(check_in), check_out=str(check_out),
+                                  **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def stay_detail(self, scope: ToolContext, *, gid: Any = None, check_in: str | None = None,
+                    check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """숙소 한 곳의 좌표 · 주소 · 예약 페이지 링크 · 그 날짜의 가격."""
+        source = self._travel_search()
+        if source is None or gid is None or not check_in or not check_out:
+            return None
+        try:
+            gid = int(gid)
+        except (TypeError, ValueError):
+            return None
+        return source.stay_detail(gid=gid, check_in=str(check_in), check_out=str(check_out),
+                                  **{key: options[key] for key in ("adults", "children") if options.get(key) is not None})
+
+    def flight_search(self, scope: ToolContext, *, origin: str | None = None, destination: str | None = None,
+                      depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """항공편 목록(항공사 · 시각 · 총액 · 검색 페이지 링크). 공항 코드는 3글자."""
+        source = self._travel_search()
+        if source is None or not origin or not destination or not depart_date:
+            return None
+        wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")
+        return source.flight_search(origin=str(origin), destination=str(destination), depart_date=str(depart_date),
+                                    **{key: options[key] for key in wanted if options.get(key) is not None})
+
     def route(self, scope: ToolContext, **_: Any) -> None:
         """이동 시간. `[미구현]` — Routes API 를 붙일 자리."""
         return None
@@ -592,7 +635,8 @@ class ReadToolbox:
         return functions[name](ToolContext.from_pack(context), **arguments)
 
 
-ALLOWED_PROMPT_KEYS = frozenset({"response.generate", "response.review_tone"})
+# ★`[2026-10-07]` `lodging.interpret` — 숙소 팀이 고객 문장을 구조로 옮길 때 쓰는 프롬프트(`prompts/lodging/interpret.v1.md`)
+ALLOWED_PROMPT_KEYS = frozenset({"response.generate", "response.review_tone", "lodging.interpret"})
 
 
 def register_prompt_files(

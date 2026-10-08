@@ -33,10 +33,11 @@ teams:
 - team_id: dining
   active: true
   implementation_ref: app.domains.travel_ops.instances.dining:DiningTeam
-# 등록만 — 로직 없음. 잠긴 예약으로만 취급한다.
+# ★2026-10-07 숙소 팀 — 숙소 찾기 · 내 숙소 위치(마이리얼트립 검색, 예약은 링크로). 본체는 instances/lodging/
 - team_id: lodging
   active: true
-  implementation_ref: app.domains.travel_ops.instances.locked:LodgingTeam
+  implementation_ref: app.domains.travel_ops.instances.lodging:LodgingTeam
+# 등록만 — 로직 없음. 잠긴 예약으로만 취급한다.
 - team_id: flight
   active: true
   implementation_ref: app.domains.travel_ops.instances.locked:FlightTeam
