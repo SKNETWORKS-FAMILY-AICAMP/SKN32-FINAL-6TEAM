@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { useSettings } from "@/lib/settings";
 import { tripGateway, tripKey, tripsKey } from "../../lib/gateway";
 import { deleteTrips } from "./delete-trips";
@@ -16,7 +15,9 @@ export function useTrip(tripId: string) {
     enabled: Boolean(tripId),
     retry: false,
     refetchOnWindowFocus: false,
-    refetchInterval: (query) => !query.state.error && query.state.data?.verification.status === "running" ? 800 : false,
+    // `[2026-10-07]` A language change reads the trip again: meanwhile the same trip in the language before stays on screen, so the trip screen (its frame and the open menu) does not
+    // give way to the loading page. Never another trip's plan.
+    placeholderData: (previous, previousQuery) => previousQuery?.queryKey[1] === tripId ? previous : undefined,
   });
 }
 
@@ -31,13 +32,9 @@ export function useTrips() {
   });
 }
 
-/** `deleteTrips` for this screen: a deleted trip also stops being the onboarding's active trip. Null where the gateway cannot delete (live). */
+/** `deleteTrips` for this screen: each trip is deleted on the server, and the cached trips and list are dropped for the ones that went. */
 export function useDeleteTrips() {
   const queryClient = useQueryClient();
   const { language } = useSettings();
-  const [, setOnboarding] = useOnboarding();
-  if (!tripGateway.deleteTrip) return null;
-  const remove = tripGateway.deleteTrip;
-  return (ids: readonly string[]) => deleteTrips(ids, (id) => remove(id, language), queryClient, (deleted) =>
-    setOnboarding((current) => current.activeTripId && deleted.includes(current.activeTripId) ? { ...current, activeTripId: null } : current));
+  return (ids: readonly string[]) => deleteTrips(ids, (id) => tripGateway.deleteTrip(id, language), queryClient);
 }

@@ -18,7 +18,6 @@ import time
 from uuid import uuid4
 
 import pytest
-from fastapi.testclient import TestClient
 from psycopg.types.json import Json
 
 import app.core.settings as settings_module
@@ -26,7 +25,8 @@ from app.infrastructure.db.session import get_connection
 from app.presentation import security
 from app.presentation.api.app import create_app
 from app.presentation.ui import auth
-from tests.ui_login import PASSWORD, as_operator, login
+from tests.ops_app import ops_client
+from tests.ui_login import PASSWORD, as_operator, csrf, login, login_csrf
 
 
 @pytest.fixture()
@@ -50,7 +50,8 @@ def world(monkeypatch):
                     (action_id, tenant, case_id,
                      Json({"amount": 100, "evidence": [{"source_type": "policy", "source_id": "d#1",
                                                         "claim": "c"}]}), "idem-" + str(action_id)))
-    client = TestClient(create_app(), raise_server_exceptions=False)
+    # ★`[2026-09-29]` 운영 화면은 운영 앱이다 — 승인은 고객 API 앱을 HTTP 경계로 부른다(`tests/ops_app.py`)
+    client = ops_client(monkeypatch, customer_app=create_app(), raise_server_exceptions=False)
     yield {"client": client, "tenant": tenant, "case_id": case_id, "action_id": action_id}
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("DELETE FROM action_approvals WHERE action_id=%s", (action_id,))
@@ -70,7 +71,7 @@ def _approve_url(world) -> str:
 
 # ── 막히는가 ────────────────────────────────────────────────────
 @pytest.mark.parametrize("path", ["/ui/cases", "/ui/approvals", "/ui/delegations", "/ui/admin",
-                                  "/ui/scenario", "/ops/outbox", "/ui/ops/outbox"])
+                                  "/ops/outbox", "/ui/ops/outbox"])
 def test_every_screen_sends_a_stranger_to_the_login_page(world, path):
     response = world["client"].get(path, follow_redirects=False)
     assert response.status_code == 303, (path, response.status_code)
@@ -79,7 +80,7 @@ def test_every_screen_sends_a_stranger_to_the_login_page(world, path):
 
 def test_a_stranger_cannot_approve_and_nothing_is_recorded(world):
     """★★이것이 막으려던 구멍이다 — 전에는 이 요청 하나로 승인이 났다."""
-    response = world["client"].post(_approve_url(world), data={"decision": "approved"},
+    response = world["client"].post(_approve_url(world), data={"csrf": csrf(world["client"]), "decision": "approved"},
                                      follow_redirects=False)
     assert response.status_code == 303 and response.headers["location"].startswith("/ui/login")
     assert _approvals(world["action_id"]) == [], "로그인 안 한 요청으로 승인이 기록됐다"
@@ -89,7 +90,7 @@ def test_with_no_operator_configured_the_screen_is_closed(world):
     """★기본이 닫힘이다 — 계정이 하나도 없으면 아무도 못 들어온다."""
     page = world["client"].get("/ui/login")
     assert "운영자 계정이 하나도 설정되지 않았습니다" in page.text
-    response = world["client"].post("/ui/login", data={"operator_id": "anyone", "password": "x"},
+    response = world["client"].post("/ui/login", data={"csrf": login_csrf(world["client"]), "operator_id": "anyone", "password": "x"},
                                     follow_redirects=False)
     assert response.status_code == 401 and auth.COOKIE not in response.cookies
 
@@ -98,7 +99,7 @@ def test_with_no_operator_configured_the_screen_is_closed(world):
 def test_a_logged_in_approval_names_the_real_operator(world, monkeypatch):
     """★승인자가 `ui-operator` 가 아니라 **누른 사람**으로 남는다."""
     login(world["client"], monkeypatch, operator_id="op-kim")
-    response = world["client"].post(_approve_url(world), data={"decision": "rejected"},
+    response = world["client"].post(_approve_url(world), data={"csrf": csrf(world["client"]), "decision": "rejected"},
                                      follow_redirects=False)
     assert response.status_code == 303, response.text[:300]
     assert _approvals(world["action_id"]) == [("op-kim", "rejected")]
@@ -107,7 +108,7 @@ def test_a_logged_in_approval_names_the_real_operator(world, monkeypatch):
 def test_without_the_scope_the_button_does_nothing_and_says_why(world, monkeypatch):
     login(world["client"], monkeypatch, operator_id="viewer", scopes=("case:read",))
     assert world["client"].get("/ui/approvals").status_code == 200        # 보는 것은 된다
-    response = world["client"].post(_approve_url(world), data={"decision": "approved"},
+    response = world["client"].post(_approve_url(world), data={"csrf": csrf(world["client"]), "decision": "approved"},
                                      follow_redirects=False)
     assert response.status_code == 403
     assert "action:approve" in response.text and "아무것도 바뀌지 않았습니다" in response.text
@@ -118,7 +119,7 @@ def test_the_page_shows_who_is_logged_in_and_logout_works(world, monkeypatch):
     login(world["client"], monkeypatch, operator_id="op-kim")
     page = world["client"].get("/ui/cases")
     assert page.status_code == 200 and "op-kim" in page.text and "/ui/logout" in page.text
-    world["client"].post("/ui/logout", follow_redirects=False)
+    world["client"].post("/ui/logout", data={"csrf": csrf(world["client"])}, follow_redirects=False)
     assert world["client"].get("/ui/cases", follow_redirects=False).status_code == 303
 
 
@@ -126,8 +127,8 @@ def test_the_page_shows_who_is_logged_in_and_logout_works(world, monkeypatch):
 def test_a_wrong_password_and_an_unknown_id_look_the_same(world, monkeypatch):
     """★어느 id 가 있는지 알려 주지 않는다."""
     as_operator(monkeypatch, operator_id="op-kim")
-    wrong = world["client"].post("/ui/login", data={"operator_id": "op-kim", "password": "nope"})
-    ghost = world["client"].post("/ui/login", data={"operator_id": "op-ghost", "password": "nope"})
+    wrong = world["client"].post("/ui/login", data={"csrf": login_csrf(world["client"]), "operator_id": "op-kim", "password": "nope"})
+    ghost = world["client"].post("/ui/login", data={"csrf": login_csrf(world["client"]), "operator_id": "op-ghost", "password": "nope"})
     assert wrong.status_code == ghost.status_code == 401
     assert "id 또는 비밀번호가 맞지 않습니다" in wrong.text and "id 또는 비밀번호가 맞지 않습니다" in ghost.text
 
@@ -136,8 +137,8 @@ def test_repeated_failures_lock_the_id_even_for_the_right_password(world, monkey
     as_operator(monkeypatch, operator_id="op-kim")
     limit = int(settings_module.get_guardrails().get("security.ui_login_max_failures"))
     for _ in range(limit):
-        world["client"].post("/ui/login", data={"operator_id": "op-kim", "password": "nope"})
-    right = world["client"].post("/ui/login", data={"operator_id": "op-kim", "password": PASSWORD},
+        world["client"].post("/ui/login", data={"csrf": login_csrf(world["client"]), "operator_id": "op-kim", "password": "nope"})
+    right = world["client"].post("/ui/login", data={"csrf": login_csrf(world["client"]), "operator_id": "op-kim", "password": PASSWORD},
                                  follow_redirects=False)
     assert right.status_code == 429 and auth.COOKIE not in right.cookies
     assert "잠시 막혔습니다" in right.text
@@ -180,7 +181,7 @@ def test_removing_an_operator_or_a_scope_takes_effect_on_the_next_request(monkey
 
 def test_the_cookie_is_not_readable_by_scripts_or_sent_cross_site(world, monkeypatch):
     as_operator(monkeypatch, operator_id="op-kim")
-    response = world["client"].post("/ui/login", data={"operator_id": "op-kim", "password": PASSWORD},
+    response = world["client"].post("/ui/login", data={"csrf": login_csrf(world["client"]), "operator_id": "op-kim", "password": PASSWORD},
                                     follow_redirects=False)
     cookie = response.headers["set-cookie"].lower()
     assert "httponly" in cookie and "samesite=strict" in cookie
@@ -190,7 +191,7 @@ def test_the_cookie_is_not_readable_by_scripts_or_sent_cross_site(world, monkeyp
 def test_after_login_it_never_goes_outside_the_console(world, monkeypatch, target):
     """★`?next=` 에 바깥 주소를 받으면 우리 로그인 화면이 피싱 발판이 된다."""
     as_operator(monkeypatch, operator_id="op-kim")
-    response = world["client"].post("/ui/login", data={"operator_id": "op-kim", "password": PASSWORD,
+    response = world["client"].post("/ui/login", data={"csrf": login_csrf(world["client"]), "operator_id": "op-kim", "password": PASSWORD,
                                                        "next": target}, follow_redirects=False)
     assert response.status_code == 303 and response.headers["location"] == "/ui/cases"
 

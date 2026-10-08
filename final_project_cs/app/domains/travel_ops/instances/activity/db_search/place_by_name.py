@@ -20,7 +20,7 @@ import re
 import unicodedata
 from typing import Any, Callable
 
-from app.modules.travel_ops.intake.places import normalize
+from app.domains.travel_ops.components.intake.places import normalize
 
 from .place_candidates import DEFAULT_SOURCES
 

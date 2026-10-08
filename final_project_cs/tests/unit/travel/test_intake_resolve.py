@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from datetime import date
 
-from app.modules.travel_ops.intake.dates import resolve_dates
-from app.modules.travel_ops.intake.llm_spans import label_lines
-from app.modules.travel_ops.intake.places import jamo, narrowings, normalize, resolve
+from app.domains.travel_ops.components.intake.dates import resolve_dates
+from app.domains.travel_ops.components.intake.llm_spans import label_lines
+from app.domains.travel_ops.components.intake.places import jamo, narrowings, normalize, resolve
 
 TODAY = date(2026, 9, 27)
 
@@ -229,7 +229,7 @@ def test_dropping_only_a_what_you_do_word_needs_no_review():
 
 # ── 「일정 짜 줘」 규칙 ───────────────────────────────────────────
 def test_a_plan_request_is_caught_by_rule_without_a_model():
-    from app.modules.travel_ops.intake.pipeline import PLAN_ASK
+    from app.domains.travel_ops.components.intake.pipeline import PLAN_ASK
 
     for asked in ("서울 2일 일정 짜 줘", "코스 추천해 주세요", "여행 계획 세워줘", "동선 좀 잡아 줄래?", "일정을 만들어 주세요"):
         assert PLAN_ASK.search(asked), asked
@@ -258,7 +258,7 @@ class GeoTour(Tour):
 
 
 def test_a_vague_activity_takes_the_candidate_nearest_to_the_neighbouring_stops():
-    from app.modules.travel_ops.intake.pipeline import read_source
+    from app.domains.travel_ops.components.intake.pipeline import read_source
 
     far = _at("잠실카약클럽", 37.5170, 127.0980, "스포츠,레저 > 수상스포츠")
     near = _at("망원카약", 37.5560, 126.8970, "스포츠,레저 > 수상스포츠")
@@ -285,7 +285,7 @@ def test_several_sections_of_a_trail_are_candidates_not_the_first_one():
 
 
 def test_nearest_without_neighbours_takes_the_first_candidate():
-    from app.modules.travel_ops.intake.places import nearest
+    from app.domains.travel_ops.components.intake.places import nearest
 
     a, b = _at("가", 37.5, 127.0), _at("나", 37.6, 127.1)
     assert nearest([a, b], [])[0] is a and nearest([a, b], [])[1] is None
@@ -293,7 +293,7 @@ def test_nearest_without_neighbours_takes_the_first_candidate():
 
 
 def test_an_alias_is_looked_up_again_by_its_replacement_and_asks():
-    from app.modules.travel_ops.intake.places import normalize
+    from app.domains.travel_ops.components.intake.places import normalize
 
     tour = Tour({"N서울타워": "12"})
     found = resolve("남산타워", our_places=[], tour=tour, aliases={normalize("남산타워"): "N서울타워"})
@@ -311,7 +311,7 @@ def test_a_narrowed_place_wins_over_shops_that_share_the_last_word():
 
 def test_a_narrowed_food_line_marks_the_item_as_a_meal():
     """「광장시장 빈대떡」 — 장소는 광장시장, 항목 종류는 식사(설계서 §4-2). 원문 전체로 찾은 결과가 대부분 음식점이다."""
-    from app.modules.travel_ops.intake.pipeline import read_source
+    from app.domains.travel_ops.components.intake.pipeline import read_source
 
     kakao = Kakao({"광장시장 빈대떡": [_at("순희네빈대떡", 37.57, 127.0, "음식점", "FD6"),
                                      _at("박가네빈대떡 본점", 37.57, 127.0, "음식점", "FD6")]})
@@ -330,10 +330,22 @@ def test_a_relative_word_on_the_day_heading_dates_the_items_under_it():
 
 
 def test_tour_api_takes_a_title_with_a_bracketed_alias_as_the_same_name():
-    from app.infrastructure.travel.tour_api import _bare
+    from app.domains.travel_ops.ports.data_sources.tour_api import _bare
 
     assert _bare("동대문디자인플라자(DDP)") == _bare("동대문디자인플라자")
     assert _bare("경복궁 별빛야행") != _bare("경복궁")
+
+
+def test_tour_api_takes_a_conjoined_title_as_the_first_name_only():
+    """★`[2026-09-28]` 관광공사의 창덕궁은 「창덕궁과 후원 [유네스코 세계유산]」 — 「창덕궁」이 정확일치 0 이라 등록이
+    「창덕궁 종합관람지원센터」로 갔다(ui 세션 실서버 시험). 과·와·및 병칭만 받고 다른 꼴은 여전히 다른 곳이다."""
+    from app.domains.travel_ops.ports.data_sources.tour_api import _bare, _joined
+
+    assert _joined("창덕궁과 후원 [유네스코 세계유산]", _bare("창덕궁"))
+    assert not _joined("창덕궁 낙선재", _bare("창덕궁"))
+    assert not _joined("창덕궁 달빛기행", _bare("창덕궁"))
+    assert not _joined("창덕궁과", _bare("창덕궁"))
+    assert not _joined("후원과 창덕궁", _bare("창덕궁"))
 
 
 # ── 받아쓰기 일시 오류는 한 번만 다시 부른다 (2026-09-28 평가셋) ─────────────────
@@ -341,7 +353,7 @@ def test_a_transient_vision_error_is_retried_once_and_only_once():
     import pytest
 
     from app.infrastructure.ollama_chat import OllamaError
-    from app.modules.travel_ops.intake.sources import _see_once_more
+    from app.domains.travel_ops.components.intake.sources import _see_once_more
 
     calls = []
 
@@ -361,3 +373,14 @@ def test_a_transient_vision_error_is_retried_once_and_only_once():
     with pytest.raises(OllamaError):                      # 일시 오류가 아닌 것은 다시 부르지 않는다
         _see_once_more(flaky([OllamaError("Ollama HTTP 404: model not found")]))("p", b"")
     assert len(calls) == 1
+
+
+def test_같은_이름_지점이_여럿이면_골라도_확인이_필요하다():
+    """★`[2026-09-28]` 요식 식당이 공용 장소가 되며 같은 이름 지점이 생겼다 — 한 곳을 고르되 확인 화면에서 묻는다."""
+    branches = [{"place_id": "a", "name": "명동교자", "kind": "dining", "latitude": 37.56, "longitude": 126.98},
+                {"place_id": "b", "name": "명동교자", "kind": "dining", "latitude": 37.57, "longitude": 126.99}]
+    found = resolve("명동교자", our_places=branches)
+    assert found.place_id in {"a", "b"}
+    assert found.needs_review is True and "같은 이름이 2곳" in (found.note or "")
+    single = resolve("명동교자", our_places=branches[:1])
+    assert single.needs_review is False

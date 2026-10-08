@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.instances.activity.team_a import ActivityTeam
 
 from .helpers import FakeTools, in_hours, pack, task
 

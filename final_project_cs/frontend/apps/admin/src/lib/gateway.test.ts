@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createAdminGateway } from './gateway';
 import { createDemoSnapshot } from './demo/fixtures';
 import { watchState } from './model';
 import type { AdminCommand } from './model';
 
 describe('명시적인 데모 경계', () => {
-  it.each([undefined, '', 'live', 'DEMO', ' demo '])('미지원 모드 %s는 데모로 바꾸지 않는다', mode => {
+  it.each(['DEMO', ' demo '])('미지원 모드 %s는 데모로 바꾸지 않는다', mode => {
     expect(() => createAdminGateway(mode)).toThrow('연결 미설정');
   });
   it('조회 사본을 고쳐도 내부 데이터는 바뀌지 않고 초기화는 변경을 지운다', async () => {
@@ -15,6 +15,24 @@ describe('명시적인 데모 경계', () => {
     await gateway.execute({ type:'block-user', userId:'demo-user-01', blocked:true, reason:'비정상 반복 요청' });
     expect((await gateway.snapshot()).users[0].blocked).toBe(true);
     await gateway.reset(); expect(await gateway.snapshot()).toEqual(createDemoSnapshot());
+  });
+});
+
+describe('실제 운영 연결', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  it('기본 모드는 실제 API를 읽으며 실패해도 데모로 전환하지 않는다', async () => {
+    const request = vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: '운영자 로그인이 필요합니다.' }), { status: 401 }));
+    vi.stubGlobal('fetch', request);
+    await expect(createAdminGateway(undefined).snapshot()).rejects.toThrow('운영자 로그인이 필요합니다.');
+    expect(request).toHaveBeenCalledWith('/admin/api/snapshot', expect.objectContaining({ credentials: 'same-origin' }));
+  });
+  it('실제 쓰기는 세션 CSRF를 붙이고 데모 초기화는 거절한다', async () => {
+    const request = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ authenticated: true, csrf: 'session-csrf' }))).mockResolvedValueOnce(new Response(JSON.stringify({ ok: true })));
+    vi.stubGlobal('fetch', request);
+    const gateway = createAdminGateway('live');
+    await gateway.execute({ type: 'block-user', userId: 'customer', blocked: true, reason: '남용' });
+    expect(request).toHaveBeenLastCalledWith('/admin/api/commands', expect.objectContaining({ method: 'POST', headers: expect.objectContaining({ 'X-CSRF-Token': 'session-csrf' }) }));
+    await expect(gateway.reset()).rejects.toThrow('운영 자료는 초기화할 수 없습니다.');
   });
 });
 

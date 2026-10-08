@@ -47,7 +47,7 @@ Core가 도메인을 모른다는 것을 지킨다. **Pack 교체 가능성의 �
 |---|---|---|---|
 | `INV-CS-ARCH-001` | Core 계층은 도메인 어휘에 의존하지 않는다 | automated | `tests/architecture/test_basement_is_domain_free.py::test_basement_layers_do_not_know_the_business_domain` |
 | `INV-CS-ARCH-002` | Core 파일은 도메인 모듈을 import하지 않는다 | automated | `tests/architecture/test_basement_is_domain_free.py::test_no_basement_file_imports_a_domain_module` |
-| `INV-CS-ARCH-003` | Core는 `app/modules`를 import하지 않는다 | automated | `tests/contract/test_core_isolation.py::test_core_does_not_import_modules` |
+| `INV-CS-ARCH-003` | Core는 `app/domains`를 import하지 않는다 | automated | `tests/contract/test_core_isolation.py::test_core_does_not_import_modules` |
 | `INV-CS-ARCH-004` | 도메인 어휘 예외 목록은 작게 유지된다 | automated | `tests/architecture/test_basement_is_domain_free.py::test_allow_list_stays_small` |
 | `INV-CS-ARCH-005` | 엔진 소스에 도메인 어휘가 없다 | automated | `tests/architecture/test_engine_serves_another_domain.py::test_engine_source_has_no_domain_vocabulary` |
 | `INV-CS-ARCH-006` | 도메인 모듈은 자기 도메인을 알아도 된다 | automated | `tests/architecture/test_basement_is_domain_free.py::test_domain_modules_are_allowed_to_know_their_domain` |
@@ -69,7 +69,7 @@ DOMAIN_WORDS = (
 )
 ```
 
-★**도메인이 바뀌면 새 어휘를 여기 넣는 것까지가 교체다.** `[실측 2026-09-10]` 2026-09-08 에 도메인을 갈면서 `app/modules/travel_ops/` 만 만들고 이 목록은 안 늘렸다 — 그래서 **`booking_id` 가 코어로 새도 검사가 울지 않는 상태**였다.
+★**도메인이 바뀌면 새 어휘를 여기 넣는 것까지가 교체다.** `[실측 2026-09-10]` 2026-09-08 에 도메인을 갈면서 `app/domains/travel_ops/` 만 만들고 이 목록은 안 늘렸다 — 그래서 **`booking_id` 가 코어로 새도 검사가 울지 않는 상태**였다.
 
 ★**옛 어휘를 지우지 않는다.** 커머스 코드가 저장소에서 나갔어도 커머스 낱말이 코어에 들어오면 안 되는 것은 그대로다. **목록은 도메인마다 누적된다.**
 
@@ -100,6 +100,15 @@ DOMAIN_WORDS = (
 | `INV-CS-ACT-001` | 동일 dedupe key는 side effect가 1회다 | automated | `tests/contract/test_consumer_idempotency_contract.py::test_duplicate_dedupe_key_has_one_side_effect` |
 | `INV-CS-ACT-002` | 동시 claim도 side effect가 1회다 | automated | `tests/contract/test_consumer_idempotency_contract.py::test_concurrent_claims_have_one_side_effect` |
 | `INV-CS-ACT-003` | timeout은 unknown이며 자동 재시도하지 않는다 | automated | `tests/contract/test_consumer_idempotency_contract.py::test_timeout_is_unknown_and_not_automatically_retried` |
+| `INV-CS-ACT-004` | **자동 변경은 쓰기 전에 일정 전체를 다시 판정하고, 바꾼 뒤 새로 생긴 위반이 있으면 적용하지 않는다**(D-017 전체 일정 재검증 — 등록 때와 같은 판정기 `check_itinerary`). ★최고 안이 걸리면 담당이 뽑아 둔 **다음 순위 안**을 차례로 시험한다 | automated | `tests/scenario/test_apply_recheck.py::test_an_automatic_change_that_breaks_the_whole_itinerary_is_not_applied` · `tests/unit/travel/activity/test_activity_fit.py` |
+| `INV-CS-ACT-005` | **자동 변경이 하루 밀도를 나쁘게 만들면(목표 밖으로 새로 밀기 · 이미 밖인 날을 허용 오차보다 더 밀기 · 잴 수 있던 날을 못 재게 하기) 순위에서 뒤로 밀리고, 더 나은 안이 없을 때만 감수하며 알림에 적는다.** 구조 위반은 밀도와 상관없이 늘 막는다(D-019 개정) | automated | `tests/unit/travel/test_density_gate.py` |
+| `INV-CS-ACT-006` | **같은 여행의 새 문제가 한 회차에 둘 이상이면 Case 1 · 새 판 1 · 알림 1** — 뒤 항목은 앞에서 고친 초안 기준이고, 하나를 못 풀어도 나머지는 진행하며, 묻는 것은 새 판 기준 · 못 푼 것은 같은 알림에 한 줄 · 같은 사건은 다시 열지도 알리지도 않는다(D-017 여행별 묶음) | automated | `tests/scenario/test_watch_batch.py` · `tests/unit/travel/activity/test_watch_batch_unit.py` · `tests/e2e/test_watch_failures.py`(묶음 구간) |
+| `INV-CS-ACT-007` | **시나리오 감시 · 새벽 확인(`pending.apply_or_ask`)도 자동 변경 전에 일정 전체를 다시 판정한다** — Case 적용기와 같은 문(`itinerary_fit.fit_change`: 순위 순 재판정 + 밀도 게이트). 다 걸리면 **쓰지 않고** 「일정은 그대로 두었어요」(`recheck_failed`)를 같은 사건·같은 판에 **한 번만** 알리고 `rechecked` 로 센다. 묻는 쪽(변경 안 할 일정 등)은 지나지 않는다. ★`[2026-10-03 적대 검토]` **채팅 신고 경로**(`TripDesk._outcome(gate=True)` — 「늦어요」 · 「문 닫았대요」로 자동 고른 대체)도 같은 문을 지나고, 다 걸리면 쓰지 않고 `rechecked` 답 문장을 돌려준다. 고객이 직접 고른 길(다른 안으로 바꿔 줘 · 되돌려 줘)은 지나지 않는다(D-017 · 체크리스트 v2 T5) | automated | `tests/scenario/test_apply_or_ask_recheck.py` · `tests/scenario/test_desk_report_recheck.py` · `tests/scenario/test_dawn_check.py` |
+| `INV-CS-ACT-009` | **일정 판정기(`check_itinerary`)는 시각을 서울 시각으로 읽는다** — 같은 순간을 세계 표준시로 보내든 서울로 보내든 영업 전 · 마감 뒤 · 쉬는 날 · 브레이크 · 입장 마감 판정과 안내 문장의 시각이 같다. 시간대 없는 시각은 서울로 본다(이 PC 시간대가 아니다). 자동 변경 전 일정 전체 재판정이 DB 에서 읽은 시각으로 이 판정기를 돌리므로 DB 세션이 UTC 여도 같은 결과다(체크리스트 H3). ★`[2026-10-03 적대 검토]` 시간대 있는 시각과 없는 시각이 한 일정에 섞여도 죽지 않고, **자정을 넘기는 일정**이 마감 · 브레이크 검사를 빠져나가지 않는다(자정 마감으로 읽힌 곳은 진짜 닫는 시각을 모르니 안 센다). 식당 판정(`replan.dining_fits` · `dining_warnings`)도 서울 시각이다. ★`[2026-10-03 ui 검증 세션 지적]` 시(hour) · 날짜를 직접 읽는 곳도 같다 — 화면의 끼니 이름표(`trip_api._meal_label`) · 되돌리기 안내의 자리 이름표 · 채팅의 「점심 식당」 찾기 · 변경 알림 문구의 시각 서식(`replan._hm` · `_part_of_day` · 고객 요청 변경 알림) · 변경 링크 화면의 시각 · 일정 응답의 `starts_at`/`ends_at`(서울 +09:00 — 지도의 날짜 묶음) · 날씨 소스의 예보 칸(DB 세션이 UTC 여도 서울 12:00 점심이 「점심」) | automated | `tests/unit/travel/test_itinerary_checks_seoul_time.py` · `tests/unit/travel/test_checklist_review_fixes.py` · `tests/unit/travel/test_seoul_hour_readers.py` |
+| `INV-CS-ACT-010` | **앞 일정이 늦어지면(「N분 늦어요」) 그 식사만 보지 않고 뒤 일정이 밀려도 성립하는지 본다** — 겹치는 뒤 항목만 차례로 밀어 영업 · 휴무 · 브레이크 · 입장 마감(같은 `check_itinerary` 판정)에 걸리거나 예약 · 고정 일정이면 알리고, **일정은 바꾸지 않는다**(체크리스트 L2). ★`[2026-10-03 적대 검토]` 끝 시각을 모르는 항목은 끝을 지어내지 않고 · 예약 · 고정 일정은 밀리지 않고 제자리에서 **늦는 것**으로 세어 뒤로는 원래 끝에서 이어지며 · 안내 문장은 서비스가 실제로 해 주는 일(「○○ 바꿔줘」 대체 찾기)만 말한다 | automated | `tests/unit/travel/test_delay_knock_on.py` |
+| `INV-CS-ACT-011` | **일정 품질 경고 계산은 장소 값이 비뚤어져도 여행 화면을 죽이지 않는다** — 읽을 수 없는 `break` 값(`"15:00~17:00"` · `[null,null]` …)은 모름으로 보고, 점검 하나가 예외를 내도 나머지 경고는 나가며 죽은 점검은 로그와 `quality_check_skipped` 경고로 **센다**(조용히 빼지 않는다). 동선 점검은 8곳이어도 값싸다(동적 계획법) | automated | `tests/unit/travel/test_checklist_review_fixes.py` |
+| `INV-CS-ACT-012` | **감시가 대안을 못 찾거나(`no_alternate`) 찾은 안이 일정 전체 재판정에 다 걸려도(`recheck_failed`) 곧바로 「일정은 그대로 두었어요」로 끝내지 않고 조건을 풀어 비슷한 안을 묻는다** — 시각 늦추기 · 다음 일정 근처 · 반경 넓히기 셋까지, **자동 적용하지 않고** 보류 제안(이유 `relaxed`)으로. 묻는 안은 **고르면 그대로 적용될 안만**(같은 원인 재점검 통과 · 일정 전체 재판정 · 밀도 판단) 싣고, 날씨 원인이면 활동은 실내만. 한 곳도 없을 때만 옛 알림이고, 같은 항목 · 같은 판에는 제안 하나(`travel.watch.relaxed_enabled`) | automated | `tests/e2e/test_watch_relaxed.py` |
+| `INV-CS-ACT-008` | **일정 품질 경고(같은 곳 두 번 · 끼니 빠짐 · 왔다 갔다 · 하루 마감 · 식당 라스트오더)는 거절이 아니라 `warnings` 로만 알린다** — 위반(`check_itinerary`)이 없는 일정은 경고가 몇 개든 등록된다(201). 경고는 밀도 경고와 같은 목록 · 같은 모양(`code`·`date`·`reason`·`remedy` + `items`)이다(체크리스트 v2 T7·T8·T9) | automated | `tests/unit/travel/test_itinerary_quality.py::test_a_day_with_every_warning_is_still_accepted_by_the_registration_judge` · `tests/e2e/test_trip_api.py::test_quality_warnings_ride_along_with_an_accepted_registration` |
 
 **`INV-CS-ACT-003`이 중요하다.** timeout을 실패로 간주해 자동 재시도하면 이중 실행이 된다. **모르는 건 모르는 채로 둔다.**
 
@@ -116,7 +125,10 @@ DOMAIN_WORDS = (
 | `INV-CS-SEC-005` | 같은 tenant 안에서도 customer 간 누출이 없다 | automated | `tests/security/test_query_scope.py::test_case_list_does_not_leak_across_customers_in_one_tenant` |
 | `INV-CS-SEC-006` | customer 미지정 조회도 tenant를 벗어나지 않는다 | automated | `tests/security/test_query_scope.py::test_case_list_without_customer_stays_inside_the_tenant` |
 | `INV-CS-SEC-007` | scope 12개는 guardrail이 소유한다(09-06 `composer:admin`·`ops:reload` 추가 전 10개) | automated | `tests/security/test_scope_contract.py::test_scopes_are_guardrail_owned` |
-| `INV-CS-SEC-008` | MCP는 정확히 3개의 read scope 도구를 갖는다 | automated | `tests/security/test_scope_contract.py::test_mcp_has_exactly_three_read_scoped_tools` |
+| `INV-CS-SEC-008` | **옛** MCP 도구 셋(`app/presentation/api/mcp.py`, 쇼핑몰 Case 도구)은 정확히 3개의 read scope 도구를 갖는다 — ★`[2026-10-02]` 이 셋은 **연결된 적이 없고 지금도 앱에 안 붙는다.** 지금의 MCP 는 아래 009·010 | automated | `tests/security/test_scope_contract.py::test_mcp_has_exactly_three_read_scoped_tools` |
+| `INV-CS-SEC-009` | **MCP 호출자는 사용자 키가 정한다** — 키가 없거나 틀리면 연결 단계에서 401, `mcp` 모듈 토글을 끄면 404. 도구 인자에 `customer_id` 가 없어 본인 여행만 열린다(남의 여행은 404) | automated | `tests/e2e/test_mcp_server.py::test_without_a_key_or_with_a_wrong_key_the_connection_is_401_and_a_disabled_module_is_404` |
+| `INV-CS-SEC-010` | **MCP 쓰기 도구는 `travel.mcp.write_enabled` 가 켜졌을 때만 등록된다**(기본 꺼짐 — 「MCP 는 read-only」). 읽기 도구만 있을 땐 전부 `readOnlyHint` | automated | `tests/e2e/test_mcp_server.py::test_by_default_only_read_tools_exist_and_all_say_they_are_read_only` |
+| `INV-CS-SEC-011` | **바깥 소스 응답 공유 캐시는 허용된 공개 소스만 DB 에 두고, 요청 인자의 서비스 키 원문을 두지 않는다**(열쇠는 해시). 고객 검색어가 담기는 소스(카카오 · 구글 장소)는 메모리에만 — DB 가 안 되면 메모리로 계속한다 | automated | `tests/unit/travel/test_shared_source_cache.py::test_only_allowed_sources_reach_the_db_and_the_service_key_is_not_stored` |
 
 **`INV-CS-SEC-004`가 셋을 한 번에 본다.** DB에만 마스킹하고 audit에 원본이 남는 실수를 막는다.
 
@@ -237,6 +249,24 @@ Action을 실행하기 전 근거를 대조한다.
 
 **`INV-CS-RT-018`이 특히 값지다.** 대기가 만료됐을 때 "그냥 완료 처리"하면 고객은 답을 못 받았는데 시스템은 해결됐다고 본다. 이걸 테스트가 막는다.
 
+### 웹 실시간 진행(SSE) `[2026-10-02]`
+
+서버·모델이 멈춰도 사용자가 자기 요청의 상태를 알게 하는 장치(`op_stream.py`)의 약속 둘.
+
+| ID | 불변식 | 판정 | 실행 위치 |
+|---|---|---|---|
+| `INV-CS-RT-021` | **일꾼이 막혀 있어도 생존 신호(`beat`)가 계속 나간다** — 이벤트 루프가 낸다. 모델·장소 조회를 기다리는 단계가 `slow_seconds` 를 넘으면 `slow=true` | automated | `tests/e2e/test_op_stream.py::test_beats_keep_coming_while_the_worker_is_blocked_and_flag_a_slow_model` |
+| `INV-CS-RT-022` | **연결이 끊겨도 일은 끝까지 돌고 응답 뒤로 미룬 일은 정확히 한 번 돈다** — 처리 중인 요청을 버리지 않는다 | automated | `tests/e2e/test_op_stream.py::test_if_the_client_leaves_midway_the_work_and_its_deferred_part_still_finish_once` |
+
+### 감시 반복의 끝맺음 `[2026-10-03 결함 인계]`
+
+| ID | 불변식 | 판정 | 실행 위치 |
+|---|---|---|---|
+| `INV-CS-RT-023` | **감시 반복은 Case 하나의 실행 실패로 끊기지 않는다** — 터진 Case 는 `escalated`(`team_error`)로 닫혀 운영자가 오류로 보고, 그 회차의 나머지 Case 는 계속 돈다 | automated | `tests/e2e/test_watch_failures.py::test_one_case_blowing_up_does_not_stop_the_rest_of_the_tick_and_is_closed_as_team_error` |
+| `INV-CS-RT-024` | **못 고르게 된 제안(끝난 일정 · 낡은 기준 버전)은 열린 채 두지 않고 그 자리에서 닫는다** — 닫은 기록은 커밋되고 부르는 쪽은 409 를 받는다 | automated | `tests/e2e/test_watch_failures.py::test_choosing_a_proposal_whose_item_has_ended_is_refused_and_the_closing_is_kept` |
+| `INV-CS-RT-025` | **여행 감시는 주기 문(3분)을 지난 회차에서만 돌고 일꾼이 몇이 떠도 한 번 돈다** — 일꾼은 1분마다 돌아도 외부 소스를 3배로 부르지 않는다(D-017) | automated | `tests/integration/test_watch_cadence.py::test_two_workers_at_the_same_moment_only_one_wins` |
+| `INV-CS-RT-026` | **고객이 「바꾸지 말 것」으로 고정한 일정도 감시한다 — 일정은 바꾸지 않고 알린다**(바꾸지 않는 것과 알림을 끄는 것은 별개, D-020) | automated | `tests/scenario/test_pinned_items_are_watched.py::test_a_pinned_activity_is_checked_and_the_customer_is_told_but_the_itinerary_is_not_changed` |
+
 ---
 
 ## Context 예산 — `INV-CS-CTX-*`
@@ -256,7 +286,8 @@ Action을 실행하기 전 근거를 대조한다.
 
 | ID | 불변식 | 판정 | 실행 위치 |
 |---|---|---|---|
-| `INV-CS-EVAL-001` | **Proposed 페널티가 rubric 재계산 뒤에 걸린다** | automated | `tests/unit/eval/test_team_failed_penalty.py::test_penalty_reaches_success_in_the_runner` |
+| `INV-CS-EVAL-001` | **Proposed 페널티가 rubric 재계산 뒤에 걸린다** — ★`[2026-10-03]` 쇼핑몰 시절 평가 러너의 불변식이다. 러너와 시험을 `legacy/commerce_eval/` 로 옮겨 **지금은 실행하지 않는다**(D-023). 번호는 재사용하지 않는다 | automated | `legacy/commerce_eval/tests/unit/eval/test_team_failed_penalty.py::test_penalty_reaches_success_in_the_runner` (실행 안 됨) |
+| `INV-CS-EVAL-002` | **여행 분류 평가 자료는 서버 어휘(`feedback.INTENTS` · `ISSUE_CODES`)로 쓰이고 쇼핑몰 낱말이 섞이지 않으며, 재생 시험은 실패를 분모에 넣는다**(쇼핑몰 시절 자료를 쓰지 않는다 — D-023) | automated | `tests/unit/eval/test_travel_classification_eval.py` |
 
 ### 왜 이게 불변식인가
 
@@ -328,12 +359,14 @@ python program/scripts/check_wiki.py
 |---|---|---|---|
 | ARCH | 6 | 6 | 0 |
 | TEAM | 5 | 2 | **3** |
-| ACT | 3 | 3 | 0 |
-| SEC | 8 | 8 | 0 |
+| ACT | 4 | 4 | 0 |
+| SEC | 10 | 10 | 0 |
 | VER | 7 | 7 | 0 |
-| RT | 20 | 20 | 0 |
+| RT | 26 | 26 | 0 |
 | CTX | 2 | 2 | 0 |
-| **합계** | **52** | **49** | **3** |
+| **합계** | **61** | **58** | **3** |
+
+★`[2026-10-02]` 불변식 4개(SEC-009·010, RT-021·022)를 더해 **56개 · 코드 표식 53개**다(`check_wiki.py` 실행값으로 확인).
 
 ★`[정정 2026-09-10]` **51/48 로 적혀 있었다.** 고유 ID 를 세면 **52개**이고 코드 역방향 표식은 **49개**다(`check_wiki.py` 실행값). 2026-09-01 실측 뒤 불변식이 늘었는데 요약만 안 고쳤다.
 
@@ -350,7 +383,7 @@ python program/scripts/check_wiki.py
 
 | | 실측 |
 |---|---|
-| `travel_ops/_base.py:35` | **`from app.tools.read_tools import ReadToolbox`** — import 한다 |
+| `travel_ops/instances/_shared/_base.py:35` | **`from app.tools.read_tools import ReadToolbox`** — import 한다 |
 | `_base.py:68` `_read()` | `self.tools.call(...)` 로 **직접 부른다** |
 | 이 기준을 검사하는 테스트 | **없다.** `tests/architecture/` 에 `app.tools`·`ReadToolbox` 를 보는 검사가 0건 |
 

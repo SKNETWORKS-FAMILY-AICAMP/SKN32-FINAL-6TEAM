@@ -30,7 +30,10 @@ REPO = os.path.dirname(ROOT)                           # 저장소 뿌리
 PG_PORT = int(os.environ.get("DINING_PG_PORT", "5433"))
 PG_DATA = os.environ.get("DINING_PG_DATA",
                          os.path.join(os.path.dirname(REPO), "pgdata"))
-DB_NAME = os.environ.get("DINING_DB", "dining_dev")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import core_db  # noqa: E402  ★`[2026-09-28 cs]` 기본은 코어 DB(`core_db.py`)
+
+DB_NAME = os.environ.get("DINING_DB") or core_db.db_name()
 DB_USER = os.environ.get("DINING_DB_USER", "postgres")
 
 #: pg_ctl 이 있을 만한 자리. 먼저 찾히는 것을 쓴다.
@@ -162,8 +165,7 @@ def start_postgres() -> bool:
 
 
 def dsn() -> str:
-    return os.environ.get(
-        "DINING_DSN", f"postgresql://{DB_USER}@localhost:{PG_PORT}/{DB_NAME}")
+    return core_db.dsn()
 
 
 def check_data() -> bool:

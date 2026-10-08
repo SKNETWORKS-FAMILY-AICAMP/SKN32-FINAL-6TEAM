@@ -44,6 +44,7 @@ PATH_OWNERS: tuple[tuple[str, str, str], ...] = (
     ("app/infrastructure/db/", "S-DB", "P2"),
     ("scripts/seed.py", "S-DB", "P2"),
     ("app/modules/", "S-TEAM", "P4"),
+    ("app/domains/", "S-TEAM", "P4"),     # 2026-10-06 D-CS-013 — 옛 app/modules/ 의 새 이름. 옛 커밋은 위 줄로 센다
     ("app/tools/", "S-TEAM", "P4"),
     ("app/modules/customer_ops/feedback.py", "S-VOC", "P7"),
     ("app/application/feedback_job.py", "S-VOC", "P7"),

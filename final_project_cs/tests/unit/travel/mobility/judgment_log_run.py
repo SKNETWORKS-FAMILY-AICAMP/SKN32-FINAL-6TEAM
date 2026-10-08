@@ -27,8 +27,8 @@ for _p in (REPO / "final_project_cs", REPO):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from app.modules.travel_ops.mobility.engine import verify_time as vt          # noqa: E402
-from app.modules.travel_ops.mobility.engine.judgment_log import JudgmentLogger, install, DeviceMismatch   # noqa: E402
+from app.domains.travel_ops.instances.mobility.engine import verify_time as vt          # noqa: E402
+from app.domains.travel_ops.instances.mobility.devtools.judgment_log import JudgmentLogger, install, DeviceMismatch   # noqa: E402
 
 TARGETS = ("verify_time", "selfcheck")
 
@@ -62,7 +62,7 @@ def main(argv=None):
     # ☆`[73 후속 · 3-5]` 로그 폴더를 정하기 **전에** 자료 폴더를 정한다(`.env` DATA_DIR · 없으면 저장소 datasets).
     #   앞 판은 #48(엔진 import 때 .env 를 안 읽음) 뒤로 자리표시 `/data` 를 보고 `C:\data\…\logs` 에 썼다(73 실행).
     #   자료 폴더를 못 정했거나(unset) 계산기가 꺼졌으면(disabled) **로그를 쓰지 않는다** — --log-dir 을 주면 그 자리에 쓴다.
-    from app.modules.travel_ops.mobility.engine import paths as _paths
+    from app.domains.travel_ops.instances.mobility.engine import paths as _paths
     if _paths.SOURCE == "unset":
         _paths.load_cli_env()
     if not a.log_dir and _paths.SOURCE in ("unset", "disabled"):

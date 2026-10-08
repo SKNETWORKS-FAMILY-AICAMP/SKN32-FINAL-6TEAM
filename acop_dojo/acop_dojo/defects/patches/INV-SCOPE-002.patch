@@ -1,6 +1,6 @@
 --- a/app/presentation/security.py
 +++ b/app/presentation/security.py
-@@ -51,7 +51,7 @@
+@@ -53,7 +53,7 @@
  
      def dependency(authorization: str | None = Header(default=None)) -> Principal:
          principal = authenticate(authorization)

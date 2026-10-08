@@ -203,6 +203,8 @@ def cmd_defects(args: argparse.Namespace) -> int:
         for path in defects.write_patches(target_root()):
             print(f"  패치 작성 {path.name}")
     only = args.only.split(",") if args.only else None
+    if args.recheck:
+        return _recheck(only)
     outcome = validate.validate_all(target_root(), only=only)
     if not outcome["entries"]:
         # 검증 결과가 없으면 카탈로그를 건드리지 않는다. 예전에는 빈 결과로
@@ -228,6 +230,24 @@ def cmd_defects(args: argparse.Namespace) -> int:
             print(f"    {nodeid}")
         return 1
     return 0
+
+
+def _recheck(only: list[str] | None) -> int:
+    report = validate.recheck_all(target_root(), only=only)
+    if report["baseline"] is None:
+        return 1
+    data = defects.load_catalog()
+    stamp = datetime.now(UTC).isoformat(timespec="seconds")
+    for defect_id, result in report["entries"].items():
+        if defect_id in data.get("entries", {}):
+            data["entries"][defect_id]["recheck"] = {**result, "at": stamp}
+    defects.save_catalog(data)
+    states = [r["state"] for r in report["entries"].values()]
+    print("")
+    print(f"재확인 결과: 지금도 잡힘 {states.count('caught')}/{len(states)} · 안 잡힘 {states.count('missed')} · "
+          f"판정 못 함 {len(states) - states.count('caught') - states.count('missed')}")
+    print("  재확인은 지난번에 결함을 잡은 시험만 돈다. 새 시험이 잡는지는 전체 관문(defects)이 본다.")
+    return 0 if states.count("missed") == 0 else 1
 
 
 def cmd_defect(args: argparse.Namespace) -> int:
@@ -611,6 +631,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     defects_cmd = sub.add_parser("defects", help="결함 카탈로그(검증할 결함 목록)를 검사한다")
     defects_cmd.add_argument("--rebuild", action="store_true", help="패치를 다시 만든다")
+    defects_cmd.add_argument("--recheck", action="store_true",
+                             help="결함마다 지난번에 잡은 시험만 다시 돌려 지금도 우는지 본다(빠름)")
     defects_cmd.add_argument("--only", default=None, help="쉼표로 구분한 결함 id 만 검증한다")
     defects_cmd.set_defaults(func=cmd_defects)
 

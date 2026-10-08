@@ -15,7 +15,7 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-RULES = ROOT / "app/modules/travel_ops/mobility/engine/rules/rules_v0.3.json"
+RULES = ROOT / "app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.json"
 RAW = ROOT.parent / "datasets/mobility/raw/kakao_golden"
 
 
@@ -34,8 +34,8 @@ def main():
     if hashlib.sha256(RULES.read_bytes()).hexdigest() != frozen_hash:
         ap.error("고정한 요금 규칙이 바뀌었습니다")
     sys.path.insert(0, str(ROOT))
-    from app.modules.travel_ops.mobility.engine.plan import Planner
-    from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+    from app.domains.travel_ops.instances.mobility.engine.plan import Planner
+    from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
     from scripts.mobility.compare_kakao_golden import KST, _planner_leg
 
     refs = {row[0]: row for row in json.loads(args.references.read_text(encoding="utf-8"))} if args.references else {}

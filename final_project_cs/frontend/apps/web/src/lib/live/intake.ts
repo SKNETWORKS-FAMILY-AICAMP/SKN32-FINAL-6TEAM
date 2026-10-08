@@ -1,6 +1,8 @@
 import type { TripSurvey } from "@/features/onboarding/payload";
 import type { Language } from "../i18n";
 import { api } from "./client";
+import type { ReviewedIntakeView } from "./intake-review";
+import { streamApi, type OpProgress } from "./stream";
 
 /** One value the server read, with how it was read and the evidence behind it (server `intake_claims`). */
 export interface IntakeField {
@@ -37,6 +39,7 @@ export interface IntakeSource {
 export interface IntakeView {
   intake_id: string;
   status: "reading" | "review" | "confirmed" | "fatal";
+  /** received · transcribing · reading · checking (places and hours) · review · … — shown through `stage_label`. */
   stage: string;
   stage_label: string;
   revision: number;
@@ -45,6 +48,23 @@ export interface IntakeView {
   sources: IntakeSource[];
   check: { ready: boolean; problems: IntakeProblem[]; filled: IntakeFilled[]; items: number; title: string; plan: IntakePlanBasis } | null;
   needs_review: { field: string; note: string | null }[];
+  /**
+   * `[2026-10-06]` Questions to ask while the server reads (`wiki/external/rest-endpoints.md` 「설문 질문」). The page DRAWS what is here and nothing else: a `kind` it does not know is skipped,
+   * and no wording or option meaning is built into the page (an older server sends none). `answer` = the option id already saved, `null` when there is none.
+   */
+  questions?: IntakeQuestion[];
+  /** The question set these come from; a change in meaning of an option raises it. Kept for the record - the page does not branch on it. */
+  questions_version?: string;
+}
+
+/** One question of `questions[]`. Only `kind: "single"` (pick one option) is drawn today; the fields are read as data and checked again before drawing (`features/survey-questions/model.ts`). */
+export interface IntakeQuestion {
+  id: string;
+  kind: string;
+  title?: string;
+  why?: string;
+  options?: { id: string; label: string }[];
+  answer?: string | null;
 }
 
 /** 「일정 짜 줘」 기본값 — 읽은 값에서만 나온다. 모르면 null(화면이 묻는다). */
@@ -55,27 +75,44 @@ export interface IntakePlanInput { start_date: string; days: number; party_size:
 export interface IntakeEdit { source_id?: string | null; field: string; value: unknown }
 
 /** `humanToken` — the Turnstile token when the human check is on; the server checks it with Cloudflare. */
-export async function submitIntake(text: string, files: File[], language: Language, humanToken?: string | null): Promise<{ intake_id: string }> {
+export async function submitIntake(text: string, files: File[], language: Language, humanToken?: string | null, signal?: AbortSignal): Promise<{ intake_id: string }> {
   const form = new FormData();
   form.append("text", text);
   for (const file of files) form.append("files", file, file.name);
   if (humanToken) form.append("turnstile_token", humanToken);
-  return api("/v1/web/trip-intakes", language, { method: "POST", body: form });
+  return api("/v1/web/trip-intakes", language, { method: "POST", body: form, ...(signal && { signal }) });
 }
 
-export function getIntake(intakeId: string, language: Language): Promise<IntakeView> {
+/** The read values plus — once the plan is on the check screen — the server's check of every place and leg (`review`). */
+export function getIntake(intakeId: string, language: Language): Promise<ReviewedIntakeView> {
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}`, language);
 }
 
-export function editIntake(intakeId: string, revision: number, edits: IntakeEdit[], language: Language): Promise<IntakeView> {
+export function editIntake(intakeId: string, revision: number, edits: IntakeEdit[], language: Language): Promise<ReviewedIntakeView> {
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/edits`, language, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, edits }),
   });
 }
 
-export function planIntake(intakeId: string, revision: number, input: IntakePlanInput, language: Language): Promise<{ status: "confirmed"; trip: { trip_id: string } }> {
-  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/plan`, language, {
+/**
+ * 「Plan it for me」 — streamed (`stream.ts`): the server says when it plans, checks and registers. A lost line sends the
+ * same revision again; the server derives the request from it (`intake:{id}:plan:r{revision}`) and returns the trip it
+ * already registered instead of planning twice.
+ */
+export function planIntake(intakeId: string, revision: number, input: IntakePlanInput, language: Language,
+  onProgress?: (progress: OpProgress) => void): Promise<{ status: "confirmed"; trip: { trip_id: string } }> {
+  return streamApi(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/plan`, language, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, ...input }),
+  }, onProgress);
+}
+
+/**
+ * `[2026-10-06]` Save the answers to the questions asked while the server reads: `{question id: option id}`, one question at a time as the customer answers. The server keeps the LAST value of a
+ * question (answering again corrects it) and refuses a whole request with `422 invalid_answers` when one id or option is unknown. A registered intake answers `409 intake_confirmed`.
+ */
+export function submitSurveyAnswers(intakeId: string, answers: Record<string, string>, language: Language): Promise<{ ok: true; answered: string[]; questions_version: string }> {
+  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/survey`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ answers }),
   });
 }
 

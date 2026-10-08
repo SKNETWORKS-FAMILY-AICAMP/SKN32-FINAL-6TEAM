@@ -16,7 +16,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 MIGRATIONS = os.path.join(ROOT, "app", "infrastructure", "db", "migrations")
 
 #: 022 는 코어 places 표가 있어야 올라간다. 판정과 무관하므로 뺀다.
-SKIP = {"202_dining_matcher.sql"}
+SKIP = {"202_dining_matcher.sql",
+        "221_dining_core_promote.sql",
+        "222_dining_core_sync.sql"}   # 2026-09-28 cs — 코어 places·202 의 뷰에 기대어 올린다
 
 def _admin_dsn() -> str:
     port = os.environ.get("DINING_PG_PORT", "5433")

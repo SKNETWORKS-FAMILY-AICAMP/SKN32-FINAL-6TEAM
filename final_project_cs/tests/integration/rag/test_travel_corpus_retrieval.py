@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""여행 코퍼스가 여행 질의에 답하고, 쇼핑몰 코퍼스와 섞이지 않는지 본다. `[2026-09-22]`
+"""여행 코퍼스가 여행 질의에 답하고, 다른 영역 문서가 섞여 들어오지 않는지 본다. `[2026-09-22]`
+
+★`[2026-10-06]` 쇼핑몰 코퍼스를 지웠다(D-023 — 쇼핑몰 자산을 시험 재료로 쓰지 않는다).
+  전에는 쇼핑몰 코퍼스를 「다른 영역」 음성 대조군으로 썼다. 지금은 **적재된 scope 가 여행뿐**이라는
+  더 센 단언과, 문서가 없는 scope·범위 밖 질의로 같은 것을 본다.
 
 ★왜 있나. 2026-09-22 전까지 `knowledge_documents` 에는 쇼핑몰 25문서뿐이었고 여행 문서는
   0건이었다. 그래서 여행 Team 셋은 `required_context` 에서 `policy` 를 빼고 돌았고
@@ -18,7 +22,8 @@ from app.infrastructure.rag.retriever import search_policy
 #: 여행 코퍼스 scope (knowledge/travel/manifest.json · scripts/check_corpus.py TRAVEL_SCOPE_PLAN)
 TRAVEL_SCOPES = ["travel_activity", "travel_weather", "travel_dining",
                  "travel_mobility", "travel_cancellation", "travel_access"]
-COMMERCE_SCOPES = ["order", "shipping", "return", "exchange", "refund", "support", "incident"]
+#: 쇼핑몰 시절 scope 이름 — **적재돼 있으면 안 된다**(2026-10-06 코퍼스 삭제). 이름만 남겨 되돌아옴을 막는다.
+REMOVED_SCOPES = ["order", "shipping", "return", "exchange", "refund", "support", "incident"]
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -60,42 +65,38 @@ def test_travel_queries_find_travel_documents(query, scopes, expected_document):
     assert all(chunk.scope in scopes for chunk in results)
 
 
-def test_commerce_queries_still_find_commerce_documents():
-    """★쇼핑몰 코퍼스의 판정이 깨지지 않았는지. 두 코퍼스는 공존한다."""
-    results = search_policy("demo", "배송완료로 떴는데 못 받았어요", ["shipping", "return", "exchange"])
-    assert "doc_01" in {chunk.document_id for chunk in results}
-    assert not any(chunk.document_id.startswith("t_doc") for chunk in results)
+def test_a_scope_with_no_documents_returns_nothing(
+):
+    """★scope 가 도메인을 가른다 — 문서가 없는 scope 로 찾으면 **빈 결과**다.
+
+    여행 문서를 끌어다 메우지 않는다. 지운 쇼핑몰 scope 이름으로도 같은지 함께 본다.
+    """
+    assert search_policy("demo", "비가 와서 야외 활동을 못 하게 됐다", ["scope_that_has_no_documents"]) == []
+    assert search_policy("demo", "비가 와서 야외 활동을 못 하게 됐다", REMOVED_SCOPES) == []
 
 
-def test_travel_query_under_commerce_scope_never_returns_travel_documents():
-    """★scope 가 도메인을 가른다 — 질의가 여행이어도 scope 가 쇼핑몰이면 여행 문서는 안 나온다."""
-    results = search_policy("demo", "비가 와서 야외 활동을 못 하게 됐다", COMMERCE_SCOPES)
-    assert results, "쇼핑몰 scope 에는 문서가 있으므로 결과가 비면 안 된다"
-    assert all(not chunk.document_id.startswith("t_doc") for chunk in results)
-
-
-def test_commerce_query_under_travel_scope_never_returns_commerce_documents():
-    results = search_policy("demo", "반품 수량이 주문 수량을 넘었어요", TRAVEL_SCOPES)
-    assert results
+def test_an_off_domain_question_still_only_returns_travel_documents():
+    """★범위 밖 질문이어도 여행 scope 로 찾으면 여행 문서만 나온다(0건일 수도 있다)."""
+    results = search_policy("demo", "노트북 보증 기간이 얼마나 되나요", TRAVEL_SCOPES)
     assert all(chunk.document_id.startswith("t_doc") for chunk in results)
+    assert all(chunk.scope in TRAVEL_SCOPES for chunk in results)
 
 
 def test_tenant_isolation_holds_for_the_travel_corpus():
     assert search_policy("tenant-that-does-not-exist", "비가 와서 못 간다", TRAVEL_SCOPES) == []
 
 
-def test_the_two_corpora_do_not_share_a_scope_name():
-    """★이름이 겹치면 한 질의가 두 도메인을 가로지른다. DB 로 직접 센다."""
+def test_only_the_travel_corpus_is_loaded():
+    """★적재된 scope 는 여행뿐이다. DB 로 직접 센다. `[2026-10-06]` 쇼핑몰 코퍼스 삭제 뒤의 단언."""
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT DISTINCT scope FROM knowledge_documents WHERE tenant_id=%s", ("demo",))
         scopes = {row[0] for row in cur.fetchall()}
-    assert set(TRAVEL_SCOPES) & set(COMMERCE_SCOPES) == set()
     assert set(TRAVEL_SCOPES) <= scopes, f"적재되지 않은 여행 scope: {set(TRAVEL_SCOPES) - scopes}"
-    assert set(COMMERCE_SCOPES) <= scopes
+    assert scopes == set(TRAVEL_SCOPES), f"여행 밖 scope 가 적재돼 있다: {sorted(scopes - set(TRAVEL_SCOPES))}"
 
 
-def test_registered_teams_never_search_commerce_scopes():
-    """★등록된 여섯은 전부 **여행** Team 이다(`tests/registered_teams.py`). 쇼핑몰 문서를 보면 안 된다.
+def test_registered_teams_only_search_travel_scopes():
+    """★등록된 여섯은 전부 **여행** Team 이다(`tests/registered_teams.py`). 여행 밖 scope 를 보면 안 된다.
 
     2026-09-22 이전 Activity 의 `knowledge_scope` 에 `refund` 가 들어 있었다 — 쇼핑몰
     코퍼스에 **실재하는 scope** 라, 정책을 켜는 순간 활동 취소 판정이 쇼핑몰 환불 규정을
@@ -103,10 +104,12 @@ def test_registered_teams_never_search_commerce_scopes():
     """
     from app.composition import build_registry
 
-    bleeding = {m.team_id: sorted(set(m.knowledge_scope) & set(COMMERCE_SCOPES))
+    bleeding = {m.team_id: sorted(set(m.knowledge_scope) & set(REMOVED_SCOPES))
                 for m in build_registry().manifests()
-                if set(m.knowledge_scope) & set(COMMERCE_SCOPES)}
-    assert not bleeding, f"여행 Team 이 쇼핑몰 scope 를 검색 범위에 두고 있다: {bleeding}"
+                if set(m.knowledge_scope) & set(REMOVED_SCOPES)}
+    assert not bleeding, f"Team 이 지운 쇼핑몰 scope 를 검색 범위에 두고 있다: {bleeding}"
+    # ★등록만 된 Team(lodging · flight)은 자기 이름 scope 를 선언하지만 문서가 0건이다 —
+    #   그건 아래 `test_every_team_that_requires_policy_has_documents_in_its_scope` 가 본다.
 
 
 def test_every_team_that_requires_policy_has_documents_in_its_scope():
@@ -146,7 +149,7 @@ def test_the_planner_grounds_a_request_in_travel_rules_only(preferences):
     """
     from datetime import date
 
-    from app.modules.travel_ops.planner import PlanRequest, ground_request, grounding_text
+    from app.domains.travel_ops.components.planning.planner import PlanRequest, ground_request, grounding_text
 
     found = ground_request(
         tenant_id="demo",
@@ -162,14 +165,14 @@ def test_the_planner_grounds_a_request_in_travel_rules_only(preferences):
     assert found["evidence"][0]["excerpt"][:20] in text
 
 
-def test_grounding_never_reaches_into_the_commerce_corpus():
-    """★상품 범위 밖의 말을 해도 쇼핑몰 문서를 끌어오면 안 된다."""
+def test_grounding_never_reaches_outside_the_travel_corpus():
+    """★상품 범위 밖의 말을 해도 여행 밖 문서를 끌어오면 안 된다."""
     from datetime import date
 
-    from app.modules.travel_ops.planner import PlanRequest, ground_request
+    from app.domains.travel_ops.components.planning.planner import PlanRequest, ground_request
 
     found = ground_request(
         tenant_id="demo",
         request=PlanRequest(city="서울", start_date=date(2026, 10, 5), days=2, party_size=2,
-                            preferences="환불 받을 수 있나요 배송은 언제 오나요"))
+                            preferences="노트북 보증 기간과 수리비가 궁금해요"))
     assert all(item["scope"] in TRAVEL_SCOPES for item in found["evidence"]), found["evidence"]

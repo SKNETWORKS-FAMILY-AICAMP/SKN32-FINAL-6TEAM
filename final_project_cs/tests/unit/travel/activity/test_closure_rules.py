@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.instances.activity.team_a import ActivityTeam
 from app.domains.travel_ops.instances.activity.closure_rules import holiday_dates_needed, read_closure
 
 from ..helpers import FakeTools, pack, task

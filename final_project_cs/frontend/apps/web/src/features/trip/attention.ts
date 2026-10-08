@@ -28,3 +28,13 @@ export function recentNotices(notices: Notice[], limit = NOTICE_LIMIT): { shown:
   const shown = [...notices].sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, limit);
   return { shown, total: notices.length, hidden: notices.length - shown.length };
 }
+
+/**
+ * The automatic change the customer can undo right now: the newest change notice that carries an undo and made the
+ * version the trip is on. An older one would be refused (409) — the plan has moved on — so it is not offered.
+ */
+export function undoableChange(notices: Notice[], version: number | undefined): Notice | null {
+  if (version === undefined) return null;
+  return [...notices].filter((notice) => notice.rollback && notice.rollback.baseVersion === version)
+    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at))[0] ?? null;
+}

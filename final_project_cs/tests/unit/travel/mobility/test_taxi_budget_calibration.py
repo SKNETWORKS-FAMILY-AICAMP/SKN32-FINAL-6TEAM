@@ -46,7 +46,7 @@ def test_current_medium_budget_passes_reserved_paths_and_matches_calibration():
     source = B.RAW / "kakao_golden/taxi_time_aligned_v1.json"
     if not source.exists():
         pytest.skip("로컬 시각 복원 비교 자료를 확보한 기기에서 실행합니다")
-    rules = Path(__file__).resolve().parents[4] / "app/modules/travel_ops/mobility/engine/rules/rules_v0.3.json"
+    rules = Path(__file__).resolve().parents[4] / "app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.json"
     policy = json.loads(rules.read_text(encoding="utf-8"))["taxi"]["planning_budget"]
     result = B.calibrate(json.loads(source.read_text(encoding="utf-8"))["rows"], policy)
     assert policy["reserve_rate_by_kind"]["value"]["중형"] == result["reserve_rate"]

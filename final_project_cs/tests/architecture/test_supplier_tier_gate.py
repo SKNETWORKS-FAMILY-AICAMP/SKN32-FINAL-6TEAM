@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 from app.core.actions import ActionRejected
-from app.modules.travel_ops.booking_actions import (APPROVED_HANDLERS, SIMULATED_TIER,
+from app.domains.travel_ops.components.actions.booking_actions import (APPROVED_HANDLERS, SIMULATED_TIER,
                                                     require_simulated_tier)
 
 APP = Path("app")

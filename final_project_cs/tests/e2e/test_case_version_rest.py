@@ -16,7 +16,7 @@ import app.composition as composition
 import app.core.settings as settings_module
 from app.core.project_config import load_project_config
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.case_engine import cleanup_tenant
+from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
 from app.presentation import security
 from app.presentation.api.app import create_app
 from app.tools.read_tools import ReadToolbox

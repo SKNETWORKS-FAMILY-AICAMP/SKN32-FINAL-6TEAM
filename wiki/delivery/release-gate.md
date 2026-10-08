@@ -72,7 +72,7 @@ golden 20건을 사람이 rubric 대로 채점
 
 | 층 | 무엇 | 합격선 |
 |---|---|---|
-| **빌드·테스트** | `pytest` · `python -m scripts.verify_dod` | **실패·skip·flaky 0** |
+| **빌드·테스트** | `pytest` · `python -m scripts.verify_dod_v11` `[2026-10-06]` 옛 v8 스크립트는 지웠다 | **실패·skip·flaky 0** |
 | **안전** | 되돌릴 수 없는 것 — 승인·idempotency·감사 | 불변식 통과 |
 | **데이터·격리** | tenant·PII | `INV-CS-SEC-*` |
 | **배포 산출물** | `publish_public` 검증 | **내부 문서·작업 흔적·AI 커밋 identity 제외 확인** |

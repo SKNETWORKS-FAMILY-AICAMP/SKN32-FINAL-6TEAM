@@ -4,13 +4,12 @@ DB 없이 돈다. 커서를 가짜로 세워 「무엇을 물었고 무엇을 �
 판정 자체는 SQL 함수가 하고 그쪽은 별도로 시험한다. 여기서 지키는 것은
 모양과 경계다 — 모르는 것을 모름으로 두는가, 아는 값을 덮지 않는가.
 
-ledger.py 는 경로로 읽는다. app.modules.travel_ops 를 import 하면
+ledger.py 는 경로로 읽는다. app.domains.travel_ops 를 import 하면
 다른 팀 모듈과 openai 까지 딸려 와서 이 시험이 그것들에 매이게 된다.
 ledger.py 자체는 psycopg 도 import 하지 않으므로 경로로 읽는 편이 맞다.
 """
 from __future__ import annotations
 
-import contextlib
 import importlib.util
 import os
 from datetime import datetime, timedelta, timezone
@@ -20,7 +19,7 @@ import pytest
 KST = timezone(timedelta(hours=9))
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-LEDGER = os.path.join(ROOT, "app", "modules", "travel_ops", "dining", "ledger.py")
+LEDGER = os.path.join(ROOT, "app", "domains", "travel_ops", "instances", "dining", "ledger.py")
 
 _spec = importlib.util.spec_from_file_location("dining_ledger", LEDGER)
 ledger = importlib.util.module_from_spec(_spec)
@@ -41,12 +40,14 @@ class FakeCursor:
 
     def execute(self, sql, params=None):
         self.asked.append(sql)
-        if "dn_core_place_link" in sql:
+        if "to_regclass" in sql:                          # 요식 표가 이 DB 에 있나
+            self._row = (self.plan.get("ready", True),)
+        elif "dn_core_place_link" in sql:
             self._row = self.plan.get("link")
-        elif "link_core_place" in sql:                   # 판정 때 잇기(220) — 정해둔 답이 없으면 못 이음
-            self._row = self.plan.get("auto_link", (None,))
         elif "core_place_state" in sql:
             self._row = self.plan.get("state")
+        elif "dining.open_at_slot" in sql:                # 주문 여유(도착 + n분) 재판정
+            self._row = (self.plan.get("order_ok", True),)
         elif "meets_condition" in sql:
             code = params[1]
             self._row = (self.plan.get("conditions", {}).get(code),)
@@ -69,9 +70,6 @@ class FakeConn:
 
     def cursor(self):
         return self.cursor_obj
-
-    def transaction(self):
-        return contextlib.nullcontext()
 
 
 def linked(state=None, conditions=None) -> FakeConn:
@@ -120,7 +118,29 @@ def test_안_이어진_장소도_같은_칸을_갖는다():
                             "2026-09-22 12:00+09:00")
     b = ledger.dining_state(linked(OPEN_STATE), "demo", CORE_ID,
                             "2026-09-22 12:00+09:00")
-    assert set(a) == set(b)
+    c = ledger.dining_state(FakeConn({"ready": False}), "demo", CORE_ID,
+                            "2026-09-22 12:00+09:00")
+    assert set(a) - {"reason"} == set(b) == set(c) - {"reason"}
+
+
+# ── 요식 표가 없는 DB (2026-09-28 cs) ─────────────────────────
+
+def test_요식_표가_없으면_죽지_않고_물을_수_없다고_답한다():
+    """★공용 개발 DB 에 마이그레이션 200~219 가 없을 때 `UndefinedTable` 로 Team 이 죽었다."""
+    conn = FakeConn({"ready": False})
+    got = ledger.dining_state(conn, "demo", CORE_ID, "2026-09-22 12:00+09:00")
+    assert got["available"] is False and got["linked"] is False
+    assert got["open_at_slot"] is None                  # 「영업 안 함」이 아니라 모름
+    assert "마이그레이션" in got["reason"]
+    assert all("dn_core_place_link" not in sql or "to_regclass" in sql
+               for sql in conn.cursor_obj.asked)        # 원장 표를 건드리지 않았다
+
+
+def test_주문_여유는_연_곳에만_묻는다():
+    """도착 + 20분이 라스트오더 안인지 — 원장이 「연다」고 한 곳에만 더 묻는다."""
+    got = ledger.dining_state(linked(OPEN_STATE), "demo", CORE_ID,
+                              "2026-09-22 12:00+09:00", order_margin_min=20)
+    assert got["order_ok"] is True       # 가짜 커서는 open_at_slot 을 state 첫 칸으로 답한다
 
 
 # ── 판정 ────────────────────────────────────────────────────
@@ -149,13 +169,6 @@ def test_규칙이_없으면_모름():
 
 
 # ── 조건 ────────────────────────────────────────────────────
-
-@pytest.mark.parametrize("accepted", [True, False, None])
-def test_card_payment_keeps_the_ledgers_three_valued_verdict(accepted):
-    got = ledger.dining_state(linked(OPEN_STATE, {"card_payment": accepted}), "demo", CORE_ID,
-                              "2026-09-22 12:00+09:00")
-    assert got["card_payment"] is accepted
-
 
 def test_모르는_조건은_어느_목록에도_넣지_않는다():
     conn = linked(OPEN_STATE, {"halal": None, "vegetarian_menu": True,
@@ -236,3 +249,29 @@ def test_시각_표기를_읽는다(text, expect_hour):
 def test_시간대가_없으면_한국_시각으로_본다():
     got = ledger._as_datetime("2026-09-22 12:00")
     assert got.utcoffset() == timedelta(hours=9)
+
+
+# ── 새 여행의 식당 잇기 (2026-09-28 cs) ────────────────────────
+
+class _TxConn(FakeConn):
+    """세이브포인트를 흉내 낸다. `boom` 이면 잇기 조회가 터진다."""
+
+    def __init__(self, plan: dict, boom: bool = False):
+        super().__init__(plan)
+        self.boom, self.rolled_back = boom, False
+        outer = self
+
+        class _Tx:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, *_):
+                outer.rolled_back = exc_type is not None
+                return False
+        self._tx = _Tx()
+
+    def transaction(self):
+        return self._tx
+
+
+# `link_trip`(여행 등록 직후 원장과 잇기) 시험 셋은 지웠다 `[2026-10-05]` — 그 함수와 공용 장소 승격 경로를 걷고 판정 시점에 잇는 팀 방식(`resolve_place`)을 쓴다

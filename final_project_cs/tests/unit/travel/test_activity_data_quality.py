@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from app.infrastructure.travel.tour_api import LARGE_CLASS_NAMES
 from app.domains.travel_ops.instances.activity.db_search.place_candidates import DEFAULT_SOURCES
-from scripts.load_place_catalog_csv import (
+from scripts.load_place_catalog_csv import (  # noqa: I001
+    LARGE_CLASS_NAMES,
     SEOUL_LAT, SEOUL_LON, _origin_from_id, read_rows, to_row)
 
 CSV_PATH = (Path(__file__).resolve().parents[3] / "app" / "domains" / "travel_ops" / "instances" / "activity"

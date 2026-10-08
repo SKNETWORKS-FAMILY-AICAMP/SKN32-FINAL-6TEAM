@@ -1,25 +1,38 @@
 "use client";
 
-import { createContext, useContext, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { createContext, useContext, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronRight, Menu, X } from "lucide-react";
 import { Avatar } from "@/components/ui";
+import { useAuthProviders } from "@/features/account/use-auth-providers";
+import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { LanguagePicker } from "@/components/ui/language-picker";
+import { ThemePicker } from "@/components/ui/theme-picker";
 import { nicknameLabel, useProfile } from "@/lib/profile";
 import { updateSettings, useSettings, useT } from "@/lib/settings";
 import { routes } from "@/lib/routes";
+import { OverlayRoot } from "./overlay-root";
 import styles from "./settings-menu.module.css";
 
 /** Where the drawer renders: the device frame on intro screens, the page otherwise. */
-export const OverlayRoot = createContext<HTMLElement | null>(null);
+export { OverlayRoot };
 
-export function SettingsMenu({ className = "" }: { className?: string }) {
+/** The drawer's way to close itself, for what a screen puts in its head (`tools`): a press that opens a card of its own closes the drawer first (the drawer takes the focus and covers the frame). */
+export const CloseMenu = createContext<() => void>(() => undefined);
+
+/** `tools` (`[2026-10-07 사용자 결정 — 목업 C안]`): a screen's own icon in the drawer's head, left of the close button (a registered trip's Course Keeper). It reads `CloseMenu`. */
+export function SettingsMenu({ className = "", tools }: { className?: string; tools?: ReactNode }) {
   const t = useT();
-  const { navigation } = useSettings();
+  const { skipAnimation } = useSettings();
   const profile = useProfile();
   const [open, setOpen] = useState(false);
+  // `[2026-10-03 사용자 지시]` 「계정 연결 · 로그인」 줄은 서버가 로그인 방법을 하나라도 설정했을 때만 있다(메뉴를 열 때 한 번 물어본다).
+  const providers = useAuthProviders(open);
   const root = useContext(OverlayRoot);
+  const router = useRouter();
+  const [{ agreed }, setOnboarding] = useOnboarding();
   const button = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const first = useRef<HTMLAnchorElement>(null);
@@ -32,6 +45,16 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
   function close() {
     setOpen(false);
     button.current?.focus({ preventScroll: true });
+  }
+
+  /**
+   * `[2026-10-06 사용자 지시]` 취향 설문은 첫 진행에서 빠졌다 — 따로 하고 싶을 때 이 메뉴에서 연다(마이페이지의 「여행 취향」과 같은 화면: 시작 화면의 취향 카드).
+   * 약관에 아직 동의하지 않았으면 카드를 열지 않고 시작 화면(약관)으로 간다.
+   */
+  function openSurvey() {
+    setOnboarding((current) => ({ ...current, open: agreed ? 2 : null }));      // ★`agreed` 는 동의 저장소에서 온 파생 값이다
+    setOpen(false);
+    router.push(routes.start);
   }
 
   function trapFocus(event: KeyboardEvent<HTMLDivElement>) {
@@ -48,7 +71,8 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
     <div ref={panel} className={styles.panel} id={`${id}-panel`} role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} onKeyDown={trapFocus}>
       <header className={styles.head}>
         <div><p className={styles.eyebrow}>MENU</p><h2 id={`${id}-title`}>{t("메뉴", "Menu")}</h2></div>
-        <button type="button" className={styles.close} onClick={close} aria-label={t("메뉴 닫기", "Close menu")}><X size={20} aria-hidden="true" /></button>
+        <div className={styles.headTools}><CloseMenu.Provider value={close}>{tools}</CloseMenu.Provider>
+          <button type="button" className={styles.close} onClick={close} aria-label={t("메뉴 닫기", "Close menu")}><X size={20} aria-hidden="true" /></button></div>
       </header>
       {/* One board; its rows are divided by lines only. */}
       <div className={styles.board}>
@@ -59,13 +83,16 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
           <ChevronRight size={18} aria-hidden="true" />
         </Link>
         <Link href={routes.trips} className={styles.link} onClick={close}>{t("여행 목록 보기", "View trip list")}<ChevronRight size={18} aria-hidden="true" /></Link>
+        <button type="button" className={styles.link} onClick={openSurvey}>{t("여행 취향 설문", "Travel preferences survey")}<ChevronRight size={18} aria-hidden="true" /></button>
+        {(providers.data?.length ?? 0) > 0 && <Link href={`${routes.myPage}#accounts`} className={styles.link} onClick={close}>{t("계정 연결 · 로그인", "Link account · Sign in")}<ChevronRight size={18} aria-hidden="true" /></Link>}
         {/* The same card as the home intro, caption included. */}
         <LanguagePicker caption={<>LANGUAGE · <span lang="ko">언어</span></>} />
-        {/* One switch over the saved `navigation`: off = fixed tabs (the default), on = floating button. */}
+        <ThemePicker />
+        {/* `[2026-10-03 사용자 결정]` 계획 확인 화면의 단계별 재생을 건너뛰고 서버 결과를 바로 본다. 시스템의 「동작 줄이기」가 아니라 이 스위치가 정한다. */}
         <label className={styles.switchRow}>
-          <span className={styles.switchText}><strong id={`${id}-floating`}>{t("플로팅 버튼 사용", "Use floating button")}</strong><small id={`${id}-floating-note`}>{t("끄면 고정 하단 탭으로 표시됩니다.", "When off, the tabs stay fixed at the bottom.")}</small></span>
-          <input type="checkbox" role="switch" className={styles.switch} checked={navigation === "floating"} aria-labelledby={`${id}-floating`} aria-describedby={`${id}-floating-note`}
-            onChange={(event) => updateSettings({ navigation: event.target.checked ? "floating" : "fixed" })} />
+          <span className={styles.switchText}><strong id={`${id}-skip`}>{t("애니메이션 건너뛰기", "Skip animations")}</strong><small id={`${id}-skip-note`}>{t("켜면 계획 확인 화면이 단계별 재생 없이 바로 떠요.", "When on, the plan check appears at once, without the step-by-step replay.")}</small></span>
+          <input type="checkbox" role="switch" className={styles.switch} checked={skipAnimation} aria-labelledby={`${id}-skip`} aria-describedby={`${id}-skip-note`}
+            onChange={(event) => updateSettings({ skipAnimation: event.target.checked })} />
         </label>
       </div>
       <p className={styles.note}>{t("설정은 이 브라우저에 저장돼요.", "Settings are saved in this browser.")}</p>

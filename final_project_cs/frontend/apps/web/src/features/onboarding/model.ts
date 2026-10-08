@@ -49,7 +49,8 @@ export const areaNames: Record<Area, readonly [ko: string, en: string]> = { food
 
 /** Details per area. Mobility keeps its codes: `car` is now shown as a rental car, and taxi is added. */
 export const detailOptions: Record<Area, readonly Option[]> = {
-  food: [["taste", "맛", "Taste"], ["kindness", "친절", "Kindness"], ["clean", "청결", "Cleanliness"]],
+  // `michelin` · `nopo` — the planner puts restaurants with that mark first (backend `dining/survey.py` SURVEY_LIKES). Nothing is filtered out.
+  food: [["taste", "맛", "Taste"], ["kindness", "친절", "Kindness"], ["clean", "청결", "Cleanliness"], ["michelin", "미쉐린", "Michelin"], ["nopo", "노포", "Old-school (nopo)"]],
   activity: [["extreme", "익스트림", "Extreme"], ["healing", "힐링", "Relaxation"], ["diy", "DIY", "DIY"], ["shopping", "쇼핑", "Shopping"]],
   mobility: [["public", "대중교통", "Public transit"], ["walk", "도보", "Walking"], ["car", "렌트카", "Rental car"], ["taxi", "택시", "Taxi"]],
 };
@@ -176,4 +177,21 @@ export function toggleArea(a: Answers, area: Area): Answers {
 export function toggleDetail(a: Answers, area: Area, value: string): Answers {
   const picked = a.details[area];
   return { ...a, details: { ...a.details, [area]: picked.includes(value) ? picked.filter((item) => item !== value) : [...picked, value] } };
+}
+
+/**
+ * The server's webhook rule (`customer_profile.parse_webhook`, `PUT /v1/web/profile`): https, a Discord host (discord.com
+ * or discordapp.com, or their canary./ptb. builds), then exactly `/api/webhooks/<15–25 digit id>/<20–120 char token>` —
+ * no port, version, trailing slash, query or fragment. Lower case only: Discord's copied URLs are, and being stricter
+ * than the server never lets through a value it would refuse.
+ */
+const DISCORD_WEBHOOK = /^https:\/\/(?:(?:canary|ptb)\.)?discord(?:app)?\.com\/api\/webhooks\/\d{15,25}\/[A-Za-z0-9_-]{20,120}$/;
+
+/**
+ * The optional Discord webhook on the alerts & recovery card. Only the ends are trimmed: blank (or spaces only) means
+ * "not entered", anything else must pass the server's rule above. It does not tell whether the webhook exists.
+ */
+export function discordWebhookProblem(url: string): "format" | undefined {
+  const value = url.trim();
+  return value && !DISCORD_WEBHOOK.test(value) ? "format" : undefined;
 }

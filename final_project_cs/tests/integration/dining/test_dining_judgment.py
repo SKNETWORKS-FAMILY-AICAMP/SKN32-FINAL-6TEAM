@@ -439,7 +439,7 @@ import importlib.util as _ilu
 from datetime import datetime as _dt, timedelta as _td, timezone as _tz
 
 _TICK = os.path.join(os.path.dirname(__file__), "..", "..", "..",
-                     "app", "modules", "travel_ops", "dining", "tick.py")
+                     "app", "domains", "travel_ops", "instances", "dining", "tick.py")
 _spec = _ilu.spec_from_file_location("dining_tick", os.path.abspath(_TICK))
 tick = _ilu.module_from_spec(_spec)
 _spec.loader.exec_module(tick)

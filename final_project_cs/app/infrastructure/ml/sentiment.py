@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """감정 분류 — 우리가 학습한 모델을 부르는 어댑터.
 
-★**왜 필요한가.** 지금 감정은 LLM 이 낸다(`travel_ops/feedback.py`). 그 한 축을
+★**왜 필요한가.** 지금 감정은 LLM 이 낸다(`travel_ops/components/core_hooks/feedback.py`). 그 한 축을
   우리 모델이 맡으면 호출이 줄고, 망이 끊겨도 답이 나온다. **대신 정확도를
   숫자로 알고 써야 한다** — 지표는 산출물 폴더의 `metrics.json` 이 갖는다.
 
@@ -24,7 +24,7 @@ from typing import Any
 
 from app.infrastructure.ml.labels import LabelModelUnavailable, LocalLabelModel, artifact_root
 
-#: 제품이 쓰는 감정 라벨(`travel_ops/feedback.py::SENTIMENTS` 와 같아야 한다).
+#: 제품이 쓰는 감정 라벨(`travel_ops/components/core_hooks/feedback.py::SENTIMENTS` 와 같아야 한다).
 SENTIMENTS = ("positive", "neutral", "negative")
 
 #: ★기본 임계값 0.8 — 기준선 시험 조각에서 커버리지 84%·그때 정확도 0.96 이었다

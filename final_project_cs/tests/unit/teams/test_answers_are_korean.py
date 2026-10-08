@@ -24,9 +24,7 @@ import pytest
 
 # ★2026-09-10 여행으로 옮겼다. 검사 논리는 그대로다 — 아래 2026-09-02 사고는
 #   커머스 팀에서 났지만 원인(답변 문자열을 손으로 적는다)은 도메인과 무관하다.
-TEAM_DIR = Path(__file__).resolve().parents[3] / "app" / "modules" / "travel_ops"
-#: ★`[2026-10-08]` 활동 팀은 develop 의 새 구조 자리로 옮겼다 — 그 폴더도 훑는다.
-ACTIVITY_DIR = Path(__file__).resolve().parents[3] / "app" / "domains" / "travel_ops" / "instances" / "activity"
+TEAM_DIR = Path(__file__).resolve().parents[3] / "app" / "domains" / "travel_ops"
 HANGUL = re.compile(r"[가-힣]")
 
 #: 값을 그대로 끼워 넣는 자리(`{status}` 등)는 영문 토큰일 수 있다. 문장이
@@ -71,7 +69,7 @@ def _answer_literals(path: Path) -> list[tuple[int, str]]:
 #   팀 폴더의 `__init__.py` 는 본체를 담을 수 있어(본체를 거기 쓰는 방식도 허용) 뺀 대상이
 #   `travel_ops/__init__.py` 하나뿐이다.
 TEAM_FILES = sorted(
-    p for p in [*TEAM_DIR.rglob("*.py"), *ACTIVITY_DIR.rglob("*.py")]
+    p for p in TEAM_DIR.rglob("*.py")
     if "__pycache__" not in p.parts
     and p != TEAM_DIR / "__init__.py"
     and not p.name.endswith("_policy.py")
@@ -79,7 +77,7 @@ TEAM_FILES = sorted(
 
 
 # invariant 성격 — 팀이 늘어나도 자동으로 포함된다.
-@pytest.mark.parametrize("path", TEAM_FILES, ids=lambda p: p.relative_to(TEAM_DIR.parents[1]).as_posix())
+@pytest.mark.parametrize("path", TEAM_FILES, ids=lambda p: p.relative_to(TEAM_DIR).as_posix())
 def test_customer_facing_answers_are_written_in_korean(path: Path):
     offenders = []
     for lineno, text in _answer_literals(path):

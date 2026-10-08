@@ -80,7 +80,7 @@ class ScriptDisaster:
         self.rows = rows
 
     def near(self, latitude: Any, longitude: Any, at: Any, address: str | None = None) -> dict[str, Any] | None:
-        from app.infrastructure.travel.disaster_msg import DEFAULT_LOOKBACK_HOURS, judge, seoul_districts
+        from app.domains.travel_ops.ports.data_sources.disaster_msg import DEFAULT_LOOKBACK_HOURS, judge, seoul_districts
 
         if latitude is None or longitude is None:
             return None       # ★실제 도구와 같다 — 어디인지 모르면 묻지 않는다
@@ -275,7 +275,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-db", action="store_true", help="섀도 기록 표에 쓰지 않는다")
     args = parser.parse_args(argv)
 
-    from app.domains.travel_ops.instances.activity import ActivityTeam
+    from app.domains.travel_ops.instances.activity.team_a import ActivityTeam
 
     starts = parse_at(args.at)
     values, found = build_values(args, starts)

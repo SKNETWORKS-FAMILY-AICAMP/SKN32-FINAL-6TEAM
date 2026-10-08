@@ -15,7 +15,7 @@
   **"테스트가 증명한다" 는 서술**이었다. 그래서 판정을 뒤집지 않고 근거를 만든다.
 
 ★**`feedback.py` 를 일부러 뺀다 — 여기서 한 번 오진했다.**
-  처음엔 `app/modules/**` 를 통째로 훑어 위반 2건이 나왔다
+  처음엔 `app/domains/**` 를 통째로 훑어 위반 2건이 나왔다
   (`app.presentation.security` 의 `masked`, 지연 `openai` import). 그런데
   이 파일은 **manifest 가 없다 — Team 이 아니다.** 인라인 분류의 라벨 어휘·
   프롬프트 구현이고 소유가 코어 1 쪽이다(`CLAUDE.md` §5, v9 §3-A).
@@ -32,18 +32,19 @@ import pytest
 from app.core.contracts import ToolNotAllowed
 from app.tools.read_tools import ReadToolbox
 
-MODULES_ROOT = Path("app/modules")
-#: ★`[2026-10-08]` 활동 팀은 develop 의 새 구조 자리(`app/domains/travel_ops/instances/activity`)로 옮겼다 — 둘 다 훑는다.
-TEAM_ROOTS = (MODULES_ROOT, Path("app/domains"))
+MODULES_ROOT = Path("app/domains")
 
 #: Team 이 직접 부르면 안 되는 것들. tool 은 Registry 가 넘겨준 것만 쓴다.
-FORBIDDEN_ROOTS = ("app.infrastructure", "psycopg", "openai", "app.presentation", "app.application")
+#: ★`[2026-10-06]` 여행 외부 데이터 소스가 `app.infrastructure.travel` 에서 `app.domains.travel_ops.ports`
+#:  (D-CS-013 Port 칸)로 옮겨 왔다. 이 줄을 안 더하면 「팀은 바깥 데이터 코드를 직접 부르지 않는다」가 조용히 풀린다.
+FORBIDDEN_ROOTS = ("app.infrastructure", "app.domains.travel_ops.ports", "psycopg", "openai", "app.presentation",
+                   "app.application")
 
 
 def _team_modules() -> list[Path]:
     """`manifest = TeamManifest(...)` 를 선언한 파일만 Team 으로 본다."""
     found = []
-    for path in sorted(p for root in TEAM_ROOTS if root.is_dir() for p in root.rglob("*.py")):
+    for path in sorted(MODULES_ROOT.rglob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         if any(isinstance(node, ast.Assign)
                and any(getattr(target, "id", "") == "manifest" for target in node.targets)
@@ -96,7 +97,7 @@ def _team_package_files() -> list[Path]:
     """
     out: set[Path] = set()
     for ref, path in _declared_team_files().items():
-        team_name = ref.split(":")[0].rsplit(".", 1)[-1]           # app.modules.travel_ops.mobility → mobility
+        team_name = ref.split(":")[0].rsplit(".", 1)[-1]           # app.domains.travel_ops.instances.mobility → mobility
         base = path.parent.parent if path.parent.name == team_name else path.parent
         for folder in (base / team_name, base / f"{team_name}_engine"):
             if folder.is_dir() and folder != MODULES_ROOT:

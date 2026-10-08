@@ -19,8 +19,8 @@ import pytest
 
 from app.core.context import PolicyChunk
 from app.domains.travel_ops.instances.activity import ActivityTeam
-from app.modules.travel_ops.booking_handoff import BookingHandoffTeam
-from app.modules.travel_ops.dining import DiningTeam
+from app.domains.travel_ops.instances.booking_handoff import BookingHandoffTeam
+from app.domains.travel_ops.instances.dining import DiningTeam
 
 from .helpers import FakeTools, in_hours, pack, task
 
@@ -45,12 +45,14 @@ async def test_activity_keeps_every_source_it_read():
                                      content="취소·환급은 업체 조건을 따른다.")],
         "read.place": {"place_id": "p1", "weather_sensitive": True,
                        "latitude": 37.5, "longitude": 127.0},
-        "read.weather": {"matched_hour": "2026-09-10T14:00",
-                         "precipitation_probability": 10, "wind_speed_kmh": 5.0,
-                         "source": "open_meteo", "confirmed_at": "2026-09-09T12:00:00+00:00"},
+        "read.disruptions": {"verdict": "clear", "disruptions": [], "advisories": [],
+                             "failed_categories": [], "not_connected": [],
+                             "checks": [{"category": "forecast", "status": "ok", "value": {
+                                 "matched_hour": "2026-09-10T14:00",
+                                 "precipitation_probability": 10, "wind_speed_kmh": 5.0}}]},
     })).execute(request)
 
-    assert _sources(result) == ["read.booking", "read.policy", "read.place", "read.weather"]
+    assert _sources(result) == ["read.booking", "read.policy", "read.place", "read.disruptions"]
 
 
 @pytest.mark.asyncio

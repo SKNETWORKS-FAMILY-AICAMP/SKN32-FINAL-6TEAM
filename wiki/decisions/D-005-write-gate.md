@@ -117,7 +117,7 @@ action_id · case/run/task · 실패한 필드
 
 ## [2026-09-10] 여행 판에서 — 대조표는 쇼핑몰 예시다
 
-`[실측 2026-09-10 작업 트리]` 위 필드 대조표는 쇼핑몰·구독 예시다. 여행 판 선언은 `final_project_cs/app/modules/travel_ops/verification_policy.py:36` 에 있다 — 참조 둘(`booking_id` → `bookings`, `supplier_booking_id` → `supplier_bookings`)과 수량 규칙 둘(인원 ≤ 정원, 환급·차액 ≤ 예약 금액). `[실측 git]` 이 파일은 아직 커밋되지 않았다.
+`[실측 2026-09-10 작업 트리]` 위 필드 대조표는 쇼핑몰·구독 예시다. 여행 판 선언은 `final_project_cs/app/domains/travel_ops/components/core_hooks/verification_policy.py:36` 에 있다 — 참조 둘(`booking_id` → `bookings`, `supplier_booking_id` → `supplier_bookings`)과 수량 규칙 둘(인원 ≤ 정원, 환급·차액 ≤ 예약 금액). `[실측 git]` 이 파일은 아직 커밋되지 않았다.
 
 참조 대조는 **이 고객 범위에 실재하는가**만 본다. 두 키가 서로 짝인지는 안 본다(`verification.py:145-150`).
 

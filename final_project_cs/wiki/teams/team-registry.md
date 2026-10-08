@@ -1,7 +1,7 @@
 ---
 type: concept
 title: Team Registry
-description: capability를 Team 구현으로 해석한다. Core가 app.modules를 절대 import하지 않는 장치
+description: capability를 Team 구현으로 해석한다. Core가 app.domains를 절대 import하지 않는 장치
 status: draft
 tags: [architecture, agent]
 owners: [human:미배정]
@@ -23,7 +23,7 @@ capability를 Team 구현으로 해석한다. **Team을 추가·교체할 때 Co
 
 ```python
 class TeamRegistry:
-    """Maps capabilities to injected Team modules; never imports app.modules."""
+    """Maps capabilities to injected Team modules; never imports app.domains."""
 ```
 
 파일 첫 줄도 그렇다.
@@ -144,7 +144,7 @@ Team은 `TeamManifest.allowed_tools` 밖의 도구를 호출할 수 없다. **Re
 
 | ID | 불변식 | 판정 | 실행 위치 |
 |---|---|---|---|
-| `INV-CS-ARCH-003` | Core는 `app/modules`를 import하지 않는다 | automated | `tests/contract/test_core_isolation.py::test_core_does_not_import_modules` |
+| `INV-CS-ARCH-003` | Core는 `app/domains`를 import하지 않는다 | automated | `tests/contract/test_core_isolation.py::test_core_does_not_import_modules` |
 | `INV-CS-TEAM-001` | Team manifest는 프로토콜을 구현한다 | automated | `tests/contract/test_team_contract.py::test_team_manifests_implement_protocol` |
 | `INV-CS-TEAM-002` | manifest의 scope는 정확히 선언된다 | automated | `tests/contract/test_team_contract.py::test_manifest_scopes_are_exact` |
 

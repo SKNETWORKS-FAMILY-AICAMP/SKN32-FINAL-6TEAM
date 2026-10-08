@@ -14,7 +14,7 @@ domain: neutral
 > 2026-08-13 에 중첩 구조로 갔다가 **평면 구조로 되돌아왔다.** 정본은 `app/core/*.py` 다.
 > 구조가 또 바뀔 수 있으므로 **작업 전에 실제 경로를 확인한다.**
 
-`app/core/transition.py` · `app/domain/case.py`
+`app/core/transition.py` · `app/core/case_lifecycle/case.py`
 
 ## 책임
 
@@ -91,7 +91,7 @@ customer_cases → case_events   (aggregate_version으로 순서 보장)
 ```text
 app/core/transition.py       transition_case() — projection UPDATE(version 가드) · case_events append
                              · outbox insert 를 한 함수에서, commit 은 호출자가 (232줄)
-app/domain/case.py           apply_event — 순수 리듀서. transition_case() 와 replay_case() 가 같은 것을 쓴다
+app/core/case_lifecycle/case.py           apply_event — 순수 리듀서. transition_case() 와 replay_case() 가 같은 것을 쓴다
 ```
 
 `[실측]` 두 경로가 **같은 리듀서**를 쓰는 게 단일 원천의 실체다. 각자 계산하면 조용히 어긋난다. → [DoD-03](../records/evidence/DoD-03_동시성_appendonly_replay.md)

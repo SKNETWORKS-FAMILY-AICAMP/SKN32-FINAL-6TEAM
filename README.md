@@ -16,8 +16,8 @@ triPilot은 고객의 자연어 요청을 업무 **Case**로 접수하고, 현�
 | 서유현 | Mobility Team | 실시간 운행 중단·도로 통제 감지, 우회로 탐색, 출발 시각 역산 알고리즘 |
 | 정세환 | Dining Team | 영업시간·브레이크타임 대조, 해외카드 결제 검증, CatchTable·Tripadvisor 연동 |
 | 최상욱 | UI & 검증 (요식 지원) | 동적 여행계획서 웹(`/t/{token}`), 18개 MVP DoD 검증 하네스, 요식업 데이터 정제 |
-| 김지혜 | Activity Team | 정리된 형태로 제공, 조건 검증, 확인 요청 + 피드백 수집 |
-| 송채영 | Activity Team | API 연동, 수기 큐레이션, 정보 재확인·업데이트 |
+| 김지혜 | Activity Team | 관람·체험·쇼핑 성립 검증, 기상청 초단기예보 감시, 다국어 프롬프트 템플릿 |
+| 송채영 | Activity Team | 관람·체험·쇼핑 성립 검증, 기상청 초단기예보 감시, 다국어 프롬프트 템플릿 |
 
 > 공통 역할: 6인 전원 데이터 전처리 참여, 파이프라인 총괄 및 DB 무결성 관리
 
@@ -101,7 +101,7 @@ flowchart TB
 | Presentation | REST, MCP, A2A, 운영 UI, 인증 경계 | `final_project_cs/app/presentation/` |
 | Application | Case 접수·분류·라우팅·Controller·배치 | `final_project_cs/app/application/` |
 | Core/Domain | 계약, 상태 전이, Registry, 멱등성, 안전 규칙 | `final_project_cs/app/core/`, `app/domain/` |
-| Teams | 여행 도메인 판정과 제안 | `final_project_cs/app/modules/travel_ops/` |
+| Teams | 여행 도메인 판정과 제안 | `final_project_cs/app/domains/travel_ops/` |
 | Infrastructure | PostgreSQL, pgvector, 외부 API, LLM, outbox | `final_project_cs/app/infrastructure/` |
 | Knowledge | 정책 원문, manifest, ingest | `final_project_cs/knowledge/` |
 
@@ -158,7 +158,7 @@ Team은 허용된 read tool만 사용하고, 외부 시스템에 직접 쓰지 �
 | 품질 | pytest 8.4.2, pytest-asyncio 0.25.2, ruff 0.16.8, 계약·단위·통합·아키텍처·e2e 테스트 |
 | 설정/폼 | PyYAML, python-dotenv, python-multipart |
 
-> `requirements.txt`에 선언된 SQLAlchemy·Alembic·LangGraph·LangChain Core는 현재 제품 소스에서 import·사용되지 않으므로 구현 완료 스택으로 표기하지 않습니다. 실제 도입 시 사용 범위와 문서를 함께 갱신합니다.
+> `requirements.txt`에 선언된 SQLAlchemy·Alembic·LangChain Core(LangGraph 줄은 2026-10-03 에 뺐습니다)는 현재 제품 소스에서 import·사용되지 않으므로 구현 완료 스택으로 표기하지 않습니다. 실제 도입 시 사용 범위와 문서를 함께 갱신합니다.
 
 ## 로컬 실행
 
@@ -172,8 +172,6 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 ```
-
-`requirements.txt`는 서버·시험/린트·선택 도구·로컬 분류 모델 구획으로 나뉘어 있고, 머리 주석에 설명이 있습니다. 이동 자료 기기 전용 `requirements-mobility.txt`는 numpy 등 판이 서버와 달라 **같은 환경에 깔지 않습니다**(새 가상환경에서 따로).
 
 ### 2. 환경변수
 
@@ -254,15 +252,14 @@ npm run dev
 
 브라우저에서 **`http://127.0.0.1:3100`** 을 엽니다. ★`localhost:3100` 으로 열면 브라우저가 저장 공간을 따로 잡아, 발급받은 사용자 키가 없는 새 사용자로 보입니다.
 
-`.env.local` 에서 먼저 정할 값은 둘입니다.
+`.env.local` 에서 먼저 정할 값은 둘입니다. `[2026-10-03 사용자 지시]` 화면에 시연(데모) 데이터는 없습니다 — 웹은 실제 서버에만 붙습니다.
 
 | 값 | 뜻 |
 |---|---|
-| `NEXT_PUBLIC_DATA_MODE=live` | 실제 서버(4번)에 붙습니다. 계획 읽기·확인·여행·채팅이 서버 데이터로 돕니다 |
-| `NEXT_PUBLIC_DATA_MODE=demo` | 서버 없이 브라우저 안의 시연 데이터로만 돕니다 |
-| `NEXT_PUBLIC_API_BASE` | live 일 때 붙을 서버 주소. 기본 `http://127.0.0.1:8042` |
+| `NEXT_PUBLIC_DATA_MODE=live` | 실제 서버(4번)에 붙습니다. 계획 읽기·확인·여행·채팅이 서버 데이터로 돕니다. 이 값이 없거나 `live` 가 아니면 화면은 「서버 연결이 설정되지 않았어요」 한 장만 보입니다 |
+| `NEXT_PUBLIC_API_BASE` | 붙을 서버 주소. 기본 `http://127.0.0.1:8042` |
 
-지도(`NEXT_PUBLIC_MAP_PROVIDER` — `demo`·`naver`·`google`)와 사람 확인(`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, 비우면 꺼짐)은 필요할 때만 채웁니다. 값을 바꾸면 `npm run dev` 를 다시 띄웁니다. 화면 쪽 시험·빌드 명령은 [`final_project_cs/frontend/apps/web/README.md`](final_project_cs/frontend/apps/web/README.md)에 있습니다.
+지도(`NEXT_PUBLIC_MAP_PROVIDER` — `osm`(기본)·`naver`·`google`. 예전 `demo` 값은 설정 오류)와 사람 확인(`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, 비우면 꺼짐)은 필요할 때만 채웁니다. 값을 바꾸면 `npm run dev` 를 다시 띄웁니다. 화면 쪽 시험·빌드 명령은 [`final_project_cs/frontend/apps/web/README.md`](final_project_cs/frontend/apps/web/README.md)에 있습니다.
 
 ## API 표면
 

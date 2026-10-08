@@ -21,7 +21,7 @@ from fastapi.testclient import TestClient
 
 from app.infrastructure.db.session import get_connection
 from app.presentation.api.app import create_app
-from app.modules.travel_ops.trip_api import build_trip_router
+from app.domains.travel_ops.entry.trip_api import build_trip_router
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
 
@@ -165,17 +165,15 @@ def test_unknown_files_are_refused_at_the_door_and_photos_need_a_reader(api):
     refused = client.post("/v1/web/trip-intakes", headers=headers,
                           files=[("files", ("x.bin", b"\x00\x01\x02binary", "application/octet-stream"))])
     assert refused.status_code == 422 and refused.json()["error"]["code"] == "unsupported_format"
-    empty = client.post("/v1/web/trip-intakes", headers=headers, data={"text": "  "})
-    assert empty.status_code == 422 and empty.json()["error"]["code"] == "empty_intake"
     # 받아쓰기 모델이 없으면 사진은 「읽지 못함」— 지어내지 않는다
     view = _send(client, headers, files=[("plan.png", PHOTO.read_bytes())])
     assert view["status"] == "fatal" and view["fatal"]["code"] == "unsupported_format", view
 
 
 def test_confirming_an_intake_that_could_not_be_read_is_a_409_not_a_server_error(api):
-    """★「읽지 못했어요」 접수에 「등록하고 관리 시작」을 눌러도 서버 오류(500)가 나지 않는다 — 409 와 현재 상태를 돌려준다.
-    오류 함수가 상세의 `status` 를 위치 인자 `status` 와 겹쳐 받아 `TypeError` 가 났다(그래서 위치 전용으로 바꿨다)."""
-    client = _client()                                        # 받아쓰기 모델이 없어 사진은 읽지 못함(fatal)
+    """★`[2026-10-05 팀 저장소 develop 을 읽고 가져온 수정]` 「읽지 못했어요」 접수에 「등록하고 관리 시작」을 눌러도 서버 오류(500)가 아니라 409 와 현재 상태를 돌려준다.
+    전에는 `_error(409, code, message, **{"status": …})` 가 `status` 를 두 번 받아 `TypeError` → 500 이었다(`trip_api._error` 의 `status` 를 위치 전용으로 고침)."""
+    client = _client()                                       # 받아쓰기 모델이 없어 사진은 읽지 못함(fatal)
     headers = _key(client)
     view = _send(client, headers, files=[("plan.png", PHOTO.read_bytes())])
     assert view["status"] == "fatal", view
@@ -242,7 +240,7 @@ class Kakao:
     def __init__(self):
         self.asked = []
 
-    def search(self, query, size=5, near=None, **kw):     # ★운영 쪽 래퍼(`_KakaoNearHint`)가 `near` 를 넘긴다
+    def search(self, query, size=5):
         self.asked.append(query)
         return [{"id": "1", "name": "토속촌삼계탕", "category": "음식점 > 한식", "category_group": "FD6",
                  "address": "서울 종로구 자하문로5길 5", "latitude": 37.5778, "longitude": 126.9716}] \
@@ -266,13 +264,16 @@ def test_unread_lines_are_pointed_at_by_the_model_and_places_are_looked_up(api):
     assert items[1]["fields"]["kind"]["value"] == "dining"                   # 「점심」 → 끼니
     # 날짜 — 본문에 적힌 날짜가 모델이 가리킨 줄까지 이어진다
     assert [i["date"] for i in items] == ["2026-10-15"] * 3
-    # 장소 — 활동 CSV(관광공사 값) 정확 일치 · 활동이 아닌 곳(식당 「토속촌삼계탕」)은 카카오로 이름을 찾은 근거 그대로 둔다
-    #   (`[2026-09-30]` 접수의 장소 확인이 활동 CSV 전용으로 바뀌어 식당을 관광공사로 다시 확인하지 않는다)
+    # 장소 — 관광공사(서울 필터) 정확 일치 · 카카오로 이름을 찾아 관광공사에서 다시 확인
     places = [i["fields"]["place"] for i in items]
-    assert [(p["value"]["name"], p["evidence"]["source"]) for p in places] == [
-        ("경복궁", "tour_api"), ("토속촌삼계탕", "kakao"), ("광장시장", "tour_api")]
+    # ★`[2026-10-05]` 「토속촌삼계탕」은 개발 DB 의 요식 원장에도 있어(관광공사 재수집으로 들어왔다) 원장이 먼저 찾을 수 있다 — 시험이 DB 내용에 기대지 않게 둘 다 허용한다
+    assert [(p["value"]["name"], p["evidence"]["source"]) for p in places][::2] == [("경복궁", "tour_api"), ("광장시장", "tour_api")]
+    assert (places[1]["value"]["name"], places[1]["evidence"]["source"]) in {("토속촌삼계탕", "tour_api"), ("토속촌삼계탕", "dining_ledger")}
     assert places[1]["needs_review"] and not places[0]["needs_review"]      # 이름이 원문과 다르다 → 확인
     assert places[1]["value"]["kind"] == "dining"
+    # ★`[2026-09-28]` 종류 번호도 싣는다 — 없으면 운영시간 조회가 「필수 값 없음」으로 실패했다(ui 세션 실서버 시험)
+    assert [(p["value"]["content_id"], p["value"]["content_type_id"]) for p in places][::2] == [("126508", "12"), ("264570", "38")]
+    assert places[1]["value"]["content_id"] and places[1]["value"]["content_type_id"] == "39"
     assert all(area == "1" for _, area in tour.asked)                        # ★서울 밖으로 새지 않는다
     assert kakao.asked == ["토속촌"]                                           # 카카오는 관광공사에 없을 때만
 
@@ -305,7 +306,7 @@ def _full_client():
 
 def _stored(api, trip):
     """등록된 항목(내부 모양 — `detail` 포함). 공개 조회는 `detail` 을 싣지 않는다."""
-    from app.modules.travel_ops.itinerary import TripStore
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
     with get_connection() as conn:
         return TripStore(api["tenant"]).latest(conn, UUID(trip["trip_id"]))[1]
@@ -397,7 +398,7 @@ def test_an_unfound_place_is_fixed_by_name_or_left_without_a_place(api):
 
 
 def test_a_booking_number_is_carried_and_protects_the_item(api):
-    from app.modules.travel_ops.pending import protected_reason
+    from app.domains.travel_ops.components.planning.pending import protected_reason
 
     client, _, _ = _full_client()
     headers = _key(client)
@@ -444,9 +445,49 @@ def test_a_place_name_the_customer_fixed_is_remembered_for_the_next_plan(api):
     assert place["evidence"]["tried"][0] == "alias:옛날시장→광장시장"
 
 
+def test_a_place_the_customer_fixed_is_never_used_for_another_customer(api):
+    """☆`[2026-09-30 사용자 확인 「명백한 버그」 — ui 세션 전달]` 한 고객이 확인 화면에서 고친 장소(「이촌동 점심 식당」→ 「엘 샌드위치」)가
+    테넌트 단위로 쌓여 **다른 고객의 같은 원문에 자동 적용**됐다. 고른 값은 그 여행에 대한 그 사람의 선택이지 이름 교정이 아니다.
+    이제 ①고친 본인의 다음 접수에만 쓰이고 ②다른 고객에게는 안 쓰이며 ③누가 고쳤는지 모르는 옛 행은 아무에게도 안 쓰인다
+    ④우리가 넣은 기본값(남산타워 등)은 모두에게 쓰인다."""
+    client, _, _ = _full_client()
+    mine, other = _key(client), _key(client)
+    first = _send(client, mine, text=ALIAS_FIRST)
+    source = first["sources"][0]["source_id"]
+    _edit(client, mine, first, {"source_id": source, "field": "items[1].place", "value": {"name": "광장시장"}})
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT phrase, replacement, source, customer_id IS NOT NULL FROM place_aliases WHERE tenant_id=%s",
+                    (api["tenant"],))
+        assert cur.fetchall() == [("옛날시장", "광장시장", "customer", True)]          # 고친 고객의 번호가 붙는다
+    # ① 본인의 다음 접수 — 쓰인다
+    own = _send(client, mine, text=ALIAS_NEXT)["sources"][0]["items"][0]["fields"]["place"]
+    assert own["value"]["name"] == "광장시장" and own["evidence"]["tried"][0] == "alias:옛날시장→광장시장"
+    # ② 다른 고객의 같은 원문 — 안 쓰인다(별칭으로 잡히지 않는다)
+    theirs = _send(client, other, text=ALIAS_NEXT)["sources"][0]["items"][0]["fields"]
+    place = theirs.get("place")
+    assert place is None or "alias:" not in " ".join(place["evidence"].get("tried") or []), place
+    assert not place or place["value"] is None or place["value"]["name"] != "광장시장", place
+    # ③ 누가 고쳤는지 모르는 옛 행(마이그레이션 038 앞에 쌓인 것 — 고객 번호가 없다)은 아무에게도 안 쓰인다: 조회는 고객 번호가 같은 행만 고른다.
+    #    그런 행을 새로 만들 수도 없다(고객이 고친 행은 번호가 있어야 한다).
+    import psycopg
+    from app.domains.travel_ops.components.intake.pipeline import SEED_ALIASES, load_aliases
+    from app.domains.travel_ops.components.intake.places import normalize
+
+    with get_connection() as conn:
+        with pytest.raises(psycopg.errors.CheckViolation), conn.transaction(), conn.cursor() as cur:
+            cur.execute("INSERT INTO place_aliases (tenant_id, phrase_norm, phrase, replacement, source, customer_id) "
+                        "VALUES (%s,'낡은표현','낡은표현','광장시장','customer',NULL)", (api["tenant"],))
+        assert normalize("옛날시장") not in load_aliases(conn, api["tenant"], None)          # 번호 없는 조회에는 고객 행이 안 나온다
+    # ④ 우리가 넣은 기본값 — 모두에게 쓰인다
+    with get_connection() as conn:
+        for who in (None, "00000000-0000-0000-0000-0000000000aa"):
+            got = load_aliases(conn, api["tenant"], who)
+            assert all(got[normalize(k)] == v for k, v in SEED_ALIASES.items())
+
+
 def test_the_survey_sent_with_confirm_is_checked_and_stays_on_the_trip(api):
     """★`[2026-09-28]` 「등록하고 관리 시작」에도 설문을 싣는다 — `/v1/web/trips` 와 같은 검사(`_create_trip`)."""
-    from app.modules.travel_ops.survey import SURVEY_VERSION
+    from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
 
     client, _, _ = _full_client()
     headers = _key(client)
@@ -463,3 +504,31 @@ def test_the_survey_sent_with_confirm_is_checked_and_stays_on_the_trip(api):
                     (api["tenant"], done.json()["trip"]["trip_id"]))
         assert cur.fetchone()[0]["survey"]["on_disruption"] == "ask_first"
 
+
+
+def test_a_plan_with_the_date_on_every_line_registers_on_those_days(api):
+    """★`[2026-09-28]` 줄마다 날짜를 쓴 글 — 날짜가 「모름」이 되고 제목이 날짜가 되던 것(ui 세션 실서버 시험)."""
+    client, _, _ = _full_client()
+    headers = _key(client)
+    view = _send(client, headers, text="2026-10-15 09:00 경복궁\n2026-10-15 13:00 광장시장\n2026-10-16 10:00 경복궁")
+    assert view["check"]["ready"] is True, view["check"]["problems"]
+    trip = _confirm(client, headers, view["intake_id"], view["revision"])["trip"]
+    assert [i["starts_at"][:16] for i in trip["items"] if i["kind"] != "mobility"] == [
+        "2026-10-15T09:00", "2026-10-15T13:00", "2026-10-16T10:00"]
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT title FROM trips WHERE tenant_id=%s AND trip_id=%s", (api["tenant"], trip["trip_id"]))
+        assert cur.fetchone()[0] == "내 여행"
+
+
+def test_an_empty_intake_goes_straight_to_the_review_screen_where_the_plan_box_is(api):
+    """`[2026-09-30 사용자 결정 — ui 세션 전달]` 입력칸을 비운 채 접수해도 거절하지 않는다 — 읽을 것 없이 곧바로 확인 화면 상태다.
+    「짜 달라는 요청」 표시는 없다(고객이 그 화면의 짜기 칸에서 직접 고른다). 거기서 `/plan` 으로 짜서 등록까지 간다."""
+    client = _client()
+    headers = _key(client)
+    sent = client.post("/v1/web/trip-intakes", headers=headers, data={"text": "  "})
+    assert sent.status_code == 202, sent.text
+    assert sent.json()["status"] == "review" and sent.json()["stage"] == "review"
+    view = client.get(f"/v1/web/trip-intakes/{sent.json()['intake_id']}", headers=headers).json()
+    assert view["status"] == "review" and view["sources"] == [] and view["needs_review"] == []
+    assert view["check"]["plan"]["requested"] is False                    # 요청 표시를 지어내지 않는다
+    assert view["check"]["ready"] is False and view["check"]["items"] == 0    # 읽은 일정이 없어 그대로는 등록할 수 없다

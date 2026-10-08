@@ -22,9 +22,9 @@ from typing import Any
 
 from app.core.contracts import NextAction, TeamManifest, TeamResult, TeamTask
 
-from app.modules.travel_ops._base import TravelTeamBase
-from app.modules.travel_ops.itinerary_changes import NoChange, plan_activity_adjustment, plan_nearby_store
-from app.modules.travel_ops.itinerary_team import ITINERARY_TOOLS, ItineraryWork
+from app.domains.travel_ops.instances._shared._base import TravelTeamBase
+from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_activity_adjustment, plan_nearby_store
+from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TOOLS, ItineraryWork
 from . import failure_codes_a as fc
 from .cancellation import CancellationMixin
 from .feasibility import FeasibilityMixin

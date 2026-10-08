@@ -42,7 +42,23 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from app.infrastructure.travel.tour_api import LARGE_CLASS_NAMES
+# ★`[2026-10-08]` develop 이 `tour_api.py` 에서 이 표를 뺐다(활동 전용 적재만 쓴다) — 여기로 옮겨 둔다.
+#: 실측(2026-09-21): searchKeyword2 응답에서 직접 확인한 코드.
+#: Activity 담당(wiki/teams/activity.md §범위): NA·HS·VE·LS·EX·SH.
+#: 대분류 10종 중 9종 확인 — 나머지 1종은 아직 미관측.
+LARGE_CLASS_NAMES = {
+    # ── Activity 담당 ──────────────────────────────────────
+    "NA": "자연관광",    # 산·하천·해양·생태·자연공원
+    "HS": "역사관광",    # 역사유적지·유물·종교성지·안보관광지 (경복궁=HS01)
+    "VE": "문화관광",    # 랜드마크·테마파크·공연·전시·박물관·미술관
+    "LS": "레저스포츠",  # 골프·스키·수상레저·항공레저
+    "EX": "체험관광",    # 전통·공예·농산어촌체험·템플스테이·웰니스
+    "SH": "쇼핑",        # 대형마트(SH03) 포함
+    # ── Activity 미담당 ────────────────────────────────────
+    "FD": "음식",        # 음식점·식도락
+    "AC": "숙박",        # 호텔·리조트·펜션·캠핑
+    "EV": "행사·이벤트", # 축제·공연·전시 행사 (contenttypeid=15)
+}
 
 #: 서울 경계 상자(여유 포함). 밖이면 좌표를 신뢰하지 않는다.
 SEOUL_LON = (126.70, 127.30)

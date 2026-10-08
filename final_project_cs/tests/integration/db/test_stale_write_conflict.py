@@ -14,7 +14,7 @@ import pytest
 
 from app.core.contracts import StateConflict
 from app.core.transition import transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db.repository import create_case, get_case
 
 from tests.integration.controller.test_controller_integration import db  # noqa: F401

@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.modules.travel_ops.mobility.engine import car, paths, runtime
+from app.domains.travel_ops.instances.mobility.engine import car, paths, runtime
 
 
 def test_lazy_car_loads_graph_once_across_services(monkeypatch, tmp_path):

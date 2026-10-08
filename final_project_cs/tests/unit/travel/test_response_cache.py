@@ -11,9 +11,9 @@ from datetime import UTC, datetime
 import httpx
 import pytest
 
-from app.infrastructure.travel.base import TravelSource
-from app.infrastructure.travel.cache import ResponseCache
-from app.infrastructure.travel.ratelimit import RateLimiter, interval_for
+from app.domains.travel_ops.ports.data_sources.base import TravelSource
+from app.domains.travel_ops.ports.data_sources.cache import ResponseCache
+from app.domains.travel_ops.ports.data_sources.ratelimit import RateLimiter, interval_for
 
 
 class _Clock:

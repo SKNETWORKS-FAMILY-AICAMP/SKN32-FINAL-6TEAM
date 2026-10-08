@@ -13,7 +13,7 @@ import os
 import statistics
 from pathlib import Path
 
-from app.modules.travel_ops.mobility.engine.car import taxi_planning_fare
+from app.domains.travel_ops.instances.mobility.engine.car import taxi_planning_fare
 
 SEED = "taxi-budget-20261008"
 TRAIN_SHARE = 0.8
@@ -97,7 +97,7 @@ def main():
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
     source, output = raw_path(args.aligned), raw_path(args.out)
-    rules_file = Path(__file__).resolve().parents[2] / "app/modules/travel_ops/mobility/engine/rules/rules_v0.3.json"
+    rules_file = Path(__file__).resolve().parents[2] / "app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.json"
     policy = json.loads(rules_file.read_text(encoding="utf-8"))["taxi"]["planning_budget"]
     payload = source.read_bytes()
     result = calibrate(json.loads(payload)["rows"], policy)

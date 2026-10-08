@@ -18,7 +18,7 @@ _RT = None
 def _v():
     global _RT
     if _RT is None:
-        from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+        from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
         try:
             _RT = build_verifier(quiet=True)
         except RuntimeError as e:

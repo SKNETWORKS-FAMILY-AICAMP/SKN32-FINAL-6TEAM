@@ -17,7 +17,7 @@ import pytest
 
 KST = timezone(timedelta(hours=9))
 HERE = os.path.dirname(os.path.abspath(__file__))
-PKG = os.path.join(HERE, "..", "..", "..", "app", "modules", "travel_ops", "dining")
+PKG = os.path.join(HERE, "..", "..", "..", "app", "domains", "travel_ops", "instances", "dining")
 DAY = date(2026, 10, 7)
 
 

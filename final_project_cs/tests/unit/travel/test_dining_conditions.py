@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.modules.travel_ops.dining import DiningTeam
+from app.domains.travel_ops.instances.dining import DiningTeam
 
 from .helpers import FakeTools, pack, task
 

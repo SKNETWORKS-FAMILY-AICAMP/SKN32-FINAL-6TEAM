@@ -1,0 +1,764 @@
+{
+ "summary": {
+  "cases": 30,
+  "good": 28,
+  "accuracy": 0.933,
+  "wrong_target_changes": 0,
+  "clarify_with_right_choice": 1,
+  "unnecessary_clarify": 1,
+  "fact_labeled": 5,
+  "fact_correct": 5,
+  "p50": 2.8,
+  "p95": 5.27,
+  "p99": 7.94,
+  "max": 7.94
+ },
+ "rows": [
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": "i9",
+   "message": "첫 식당 다른 걸로 바꿔",
+   "action": "apply_change",
+   "item": "i1",
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "apply_change",
+    "item": "i1",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 4.45
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": "i9",
+   "message": "첫 활동 다른 걸로 바꿔줘",
+   "action": "apply_change",
+   "item": "i2",
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "apply_change",
+    "item": "i2",
+    "change": "c2",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.95
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "2일차 첫 식당 바꿔 줘",
+   "action": "apply_change",
+   "item": "i6",
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "apply_change",
+    "item": "i6",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 5.27
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "원래대로 돌려 줘",
+   "action": "rollback",
+   "item": null,
+   "change": "c3",
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "rollback",
+    "item": "i6",
+    "change": "c3",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.95
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "경복궁 이전 걸로 다시 되돌려",
+   "action": "rollback",
+   "item": "i2",
+   "change": "c2",
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "rollback",
+    "item": "i2",
+    "change": "c2",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.81
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "방금 바꾼 거 마음에 안 들어 원래 식당으로",
+   "action": "rollback",
+   "item": "i6",
+   "change": "c3",
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "rollback",
+    "item": "i6",
+    "change": "c3",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.73
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "저녁 식당 다른 데 알아봐 줘",
+   "action": "propose_alternatives",
+   "item": "i5",
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "propose_alternatives",
+    "item": "i5",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.92
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "2일차 점심 뭐 있는지 추천해줘",
+   "action": "propose_alternatives",
+   "item": "i8",
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "propose_alternatives",
+    "item": "i8",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.78
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": "i9",
+   "message": "첫날 저녁 식당 바꿔",
+   "action": "apply_change",
+   "item": "i5",
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "apply_change",
+    "item": "i5",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.94
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "광희문 몇 시에 가?",
+   "action": "answer_fact",
+   "item": "i9",
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "answer_fact",
+    "item": "i9",
+    "change": "none",
+    "fact": "time",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.61
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "금용문 주소 알려줘",
+   "action": "answer_fact",
+   "item": "i3",
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "answer_fact",
+    "item": "i3",
+    "change": "none",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.62
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "30분 늦을 것 같아",
+   "action": "report_delay",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "report_delay",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.62
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "경희궁 오늘 문 닫았대",
+   "action": "report_closed",
+   "item": "i4",
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "report_closed",
+    "item": "i4",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.59
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "마지막 일정 바꿔줘",
+   "action": "apply_change",
+   "item": "i10",
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "apply_change",
+    "item": "i10",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.94
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "둘째 날 두 번째 활동 다른 데로",
+   "action": "apply_change",
+   "item": "i9",
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "propose_alternatives",
+    "item": "i9",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 2.78
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "바꿔",
+   "action": "clarify",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "c3",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "apply_change",
+      "i2"
+     ],
+     [
+      "apply_change",
+      "i6"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 5.05
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "비 오면 경희궁 취소돼요? 위약금 있어요?",
+   "action": "ask_policy",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "ask_policy",
+    "item": "i4",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.59
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "오늘 날씨 좋다 ㅎㅎ",
+   "action": "other",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "other",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.62
+  },
+  {
+   "trip": "e71ee6ab_b",
+   "history": [],
+   "selected": null,
+   "message": "광화문 세종클럽 알려줘",
+   "action": "answer_fact",
+   "item": "i5",
+   "change": null,
+   "fact": "detail",
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "answer_fact",
+    "item": "i5",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 3.42
+  },
+  {
+   "trip": "e71ee6ab_b",
+   "history": [
+    [
+     "고객",
+     "광화문 세종클럽 알려줘"
+    ],
+    [
+     "triPilot",
+     "광화문 세종클럽 식사 · 10월 14일 18:00~19:00"
+    ]
+   ],
+   "selected": null,
+   "message": "아니 그 식당 세부정보 알려달라고",
+   "action": "answer_fact",
+   "item": "i5",
+   "change": null,
+   "fact": "detail",
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "answer_fact",
+    "item": "i5",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 3.05
+  },
+  {
+   "trip": "e71ee6ab_b",
+   "history": [
+    [
+     "고객",
+     "광화문 세종클럽 알려줘"
+    ]
+   ],
+   "selected": null,
+   "message": "그 식당 전화번호 뭐야",
+   "action": "answer_fact",
+   "item": "i5",
+   "change": null,
+   "fact": "phone",
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "answer_fact",
+    "item": "i5",
+    "change": "none",
+    "fact": "phone",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.61
+  },
+  {
+   "trip": "e71ee6ab_b",
+   "history": [
+    [
+     "고객",
+     "광화문 세종클럽 알려줘"
+    ]
+   ],
+   "selected": null,
+   "message": "거기 몇 시까지 해?",
+   "action": "answer_fact",
+   "item": "i5",
+   "change": null,
+   "fact": "hours",
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "answer_fact",
+    "item": "i5",
+    "change": "none",
+    "fact": "hours",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.72
+  },
+  {
+   "trip": "e71ee6ab_b",
+   "history": [
+    [
+     "고객",
+     "경희궁 몇 시에 가?"
+    ]
+   ],
+   "selected": null,
+   "message": "거기 말고 다른 데로 바꿔줘",
+   "action": "apply_change",
+   "item": "i4",
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "apply_change",
+    "item": "i4",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.67
+  },
+  {
+   "trip": "e71ee6ab_b",
+   "history": [],
+   "selected": null,
+   "message": "경복궁은 어떤 곳이야?",
+   "action": "answer_fact",
+   "item": "i2",
+   "change": null,
+   "fact": "detail",
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "answer_fact",
+    "item": "i2",
+    "change": "c2",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.77
+  },
+  {
+   "trip": "e71ee6ab_b",
+   "history": [],
+   "selected": null,
+   "message": "비 오면 취소돼요?",
+   "action": "ask_policy",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "ui세션(화면) 표기",
+   "got": {
+    "action": "ask_policy",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.56
+  },
+  {
+   "trip": "e71ee6ab_b",
+   "history": [],
+   "selected": null,
+   "message": "금용문 이전 식당으로 다시 되돌려",
+   "action": "rollback",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude 표기(ui 세션 기대와 같게)",
+   "got": {
+    "action": "rollback",
+    "item": "i3",
+    "change": "c2",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 3.0
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "이전에 변경요청 한거 다시 진행해줘봐",
+   "action": "redo",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude 표기(ui 세션 기대와 같게)",
+   "got": {
+    "action": "redo",
+    "item": "i6",
+    "change": "c3",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.84
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "첫날 아침 일정 바꿔",
+   "action": "apply_change",
+   "item": "i1",
+   "change": null,
+   "fact": null,
+   "label_by": "claude 표기(ui 세션 기대와 같게)",
+   "got": {
+    "action": "apply_change",
+    "item": "i1",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.64
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [],
+   "selected": null,
+   "message": "저녁 식당 변경해",
+   "action": "apply_change",
+   "item": "i5",
+   "change": null,
+   "fact": null,
+   "label_by": "claude 표기(ui 세션 기대와 같게)",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "apply_change",
+      "i5"
+     ],
+     [
+      "apply_change",
+      "i10"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": true,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 4.86
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [
+    [
+     "고객",
+     "원래대로 돌려 줘"
+    ],
+    [
+     "triPilot",
+     "2일차 아침을 먹고을전주콩나물국밥 묵동본점에서 [백년가게] 장군숯불족발(으)로 되돌렸어요."
+    ]
+   ],
+   "selected": null,
+   "message": "바꿔",
+   "action": "clarify",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude — ui 세션 실서버(2026-09-29): 되돌린 뒤 대상 없는 「바꿔」에 모델이 rollback 을 골랐다",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "c3",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "redo",
+      "i6"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 7.94
+  }
+ ]
+}

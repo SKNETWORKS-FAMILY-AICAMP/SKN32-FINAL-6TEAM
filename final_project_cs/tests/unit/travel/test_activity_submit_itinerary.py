@@ -26,7 +26,7 @@ import pytest
 
 from app.core.contracts import NextAction
 from app.core.registry import TeamRegistry
-from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.instances.activity.team_a import ActivityTeam
 
 from .helpers import FakeTools, pack, task
 

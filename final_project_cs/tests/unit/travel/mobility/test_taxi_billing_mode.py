@@ -3,12 +3,12 @@ from types import SimpleNamespace
 import json
 from pathlib import Path
 
-from app.modules.travel_ops.mobility.engine.car import CarService, taxi_fare, taxi_planning_fare
+from app.domains.travel_ops.instances.mobility.engine.car import CarService, taxi_fare, taxi_planning_fare
 
 
 def test_medium_taxi_counts_distance_also_on_slow_edges():
     root = Path(__file__).resolve().parents[4]
-    rules = json.loads((root / "app/modules/travel_ops/mobility/engine/rules/rules_v0.3.json").read_text(encoding="utf-8"))
+    rules = json.loads((root / "app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.json").read_text(encoding="utf-8"))
     result = dict(distance_m=5000, slow_m=1000, slow_s=300, coverage_pct={"class": 0, "default": 0},
                   topis_time_s=600, gh_time_s=600, depart="14:00", arrive="14:10", day_type="평일",
                   hour_start=14, coverage_m={}, n_edges=1, links=[], n_links=0)

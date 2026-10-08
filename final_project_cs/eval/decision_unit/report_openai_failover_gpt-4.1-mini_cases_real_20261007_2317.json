@@ -1,0 +1,2115 @@
+{
+ "summary": {
+  "cases": 66,
+  "good": 55,
+  "accuracy": 0.833,
+  "wrong_target_changes": 0,
+  "clarify_with_right_choice": 9,
+  "unnecessary_clarify": 9,
+  "fact_labeled": 29,
+  "fact_correct": 29,
+  "p50": 1.18,
+  "p95": 3.22,
+  "p99": 3.42,
+  "max": 4.52
+ },
+ "rows": [
+  {
+   "trip": "c287a5e9",
+   "history": [],
+   "selected": null,
+   "message": "토속촌 오늘 휴무래요",
+   "action": "report_closed",
+   "item": "i2",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "report_closed",
+    "item": "i2",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 4.52
+  },
+  {
+   "trip": "c287a5e9",
+   "history": [
+    [
+     "고객",
+     "토속촌 오늘 휴무래요"
+    ],
+    [
+     "triPilot",
+     ""
+    ]
+   ],
+   "selected": null,
+   "message": "점심 식당이 문을 안 열었어요",
+   "action": "report_closed",
+   "item": "i2",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "report_closed",
+    "item": "i2",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 3.22
+  },
+  {
+   "trip": "250514b0",
+   "history": [],
+   "selected": null,
+   "message": "2026-09-28 18:00 자하손만두 일정의 상세를 알려 주세요.",
+   "action": "answer_fact",
+   "item": "i4",
+   "change": null,
+   "fact": "detail",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i4",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 3.42
+  },
+  {
+   "trip": "250514b0",
+   "history": [
+    [
+     "고객",
+     "2026-09-28 18:00 자하손만두 일정의 상세를 알려 주세요."
+    ],
+    [
+     "triPilot",
+     ""
+    ]
+   ],
+   "selected": null,
+   "message": "2026-09-28 하루 일정을 요약해 주세요.",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "day",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i1",
+    "change": "none",
+    "fact": "day",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.12
+  },
+  {
+   "trip": "250514b0",
+   "history": [
+    [
+     "고객",
+     "2026-09-28 하루 일정을 요약해 주세요."
+    ],
+    [
+     "triPilot",
+     ""
+    ]
+   ],
+   "selected": null,
+   "message": "할 수 있는게 뭐야",
+   "action": "other",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "other",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.19
+  },
+  {
+   "trip": "250514b0",
+   "history": [
+    [
+     "고객",
+     "할 수 있는게 뭐야"
+    ],
+    [
+     "triPilot",
+     ""
+    ]
+   ],
+   "selected": null,
+   "message": "2026-09-28 09:00 과학책방 갈다 일정의 상세를 알려 주세요.",
+   "action": "answer_fact",
+   "item": "i1",
+   "change": null,
+   "fact": "detail",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i1",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.14
+  },
+  {
+   "trip": "250514b0",
+   "history": [
+    [
+     "고객",
+     "2026-09-28 09:00 과학책방 갈다 일정의 상세를 알려 주세요."
+    ],
+    [
+     "triPilot",
+     "과학책방 갈다 일정이에요 — 9월 28일(월) 09:00~10:30 · 활동\n· 장소: 과학책방 갈다 · 종로구\n· 주소: 서울특별시 종로구 삼청로10길 18 (삼청동) (출처 관광공사)\n· 과학책방 갈다 운영시간(관광공사 안내 원문): 13:00~17:00\n· 쉬는 날(원문): 매주 "
+    ]
+   ],
+   "selected": null,
+   "message": "2026-09-28 09:00 과학책방 갈다 다음 일정을 알려 주세요.",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "next",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i1",
+    "change": "none",
+    "fact": "next",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.17
+  },
+  {
+   "trip": "250514b0",
+   "history": [
+    [
+     "고객",
+     "2026-09-28 09:00 과학책방 갈다 다음 일정을 알려 주세요."
+    ],
+    [
+     "triPilot",
+     "과학책방 갈다(09:00) 다음 일정은 9월 28일(월) 12:00~13:00 황생가칼국수(식사)이에요.\n이동: 11:39 출발 · 도보 기준 · 약 11분 (직선 854m ÷ 도보 80m/분 [추정])"
+    ]
+   ],
+   "selected": null,
+   "message": "2026-09-28 예약 표시를 알려 주세요.",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "booking",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "none",
+    "change": "none",
+    "fact": "booking",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.11
+  },
+  {
+   "trip": "250514b0",
+   "history": [
+    [
+     "고객",
+     "2026-09-28 예약 표시를 알려 주세요."
+    ],
+    [
+     "triPilot",
+     "9월 28일(월) 예약 표시예요.\n· 09:00 과학책방 갈다 — 예약 기록 없음(받은 예약 정보가 없어요)\n· 12:00 황생가칼국수 — 예약 기록 없음(받은 예약 정보가 없어요)\n· 13:22 세종이야기 충무공이야기 — 예약 기록 없음(받은 예약 정보가 없어요)\n· 18:00 자하손"
+    ]
+   ],
+   "selected": null,
+   "message": "취소하면 위약금 있어요?",
+   "action": "ask_policy",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "ask_policy",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.08
+  },
+  {
+   "trip": "250514b0",
+   "history": [
+    [
+     "고객",
+     "2026-09-28 예약 표시를 알려 주세요."
+    ],
+    [
+     "triPilot",
+     "9월 28일(월) 예약 표시예요.\n· 09:00 과학책방 갈다 — 예약 기록 없음(받은 예약 정보가 없어요)\n· 12:00 황생가칼국수 — 예약 기록 없음(받은 예약 정보가 없어요)\n· 13:22 세종이야기 충무공이야기 — 예약 기록 없음(받은 예약 정보가 없어요)\n· 18:00 자하손"
+    ]
+   ],
+   "selected": null,
+   "message": "2026-09-28 13:22 세종이야기 충무공이야기 일정의 상세를 알려 주세요.",
+   "action": "answer_fact",
+   "item": "i3",
+   "change": null,
+   "fact": "detail",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i3",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.11
+  },
+  {
+   "trip": "250514b0",
+   "history": [
+    [
+     "고객",
+     "2026-09-28 하루 일정을 요약해 주세요."
+    ],
+    [
+     "triPilot",
+     "9월 28일(월) 일정은 4곳이에요.\n· 09:00~10:30 과학책방 갈다(활동)\n   ↳ 이동: 11:39 출발 · 도보 기준 · 약 11분 (직선 854m ÷ 도보 80m/분 [추정])\n· 12:00~13:00 황생가칼국수(식사)\n   ↳ 이동: 13:00 출발 · 도보 기준 · "
+    ]
+   ],
+   "selected": null,
+   "message": "지금 답하는 llm 은 뭐야?",
+   "action": "other",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "other",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.11
+  },
+  {
+   "trip": "feb6fc53",
+   "history": [],
+   "selected": null,
+   "message": "경복궁 몇 시에 가요?",
+   "action": "answer_fact",
+   "item": "i1",
+   "change": null,
+   "fact": "time",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i1",
+    "change": "none",
+    "fact": "time",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.17
+  },
+  {
+   "trip": "3eb1ff22",
+   "history": [
+    [
+     "고객",
+     "취소하면 위약금 있어요?"
+    ],
+    [
+     "triPilot",
+     "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 무료이면서 예약도 없는 활동은 취소라는 행위의 대상이 아니다. 비가 와서 못 가게 됐다는 문의가 와도 위약금이나 환급을 말하지 않고 일정에서 빼거나 다른 항목으로 바꾸는 조정만 제안한다. 여기에 위약금 문장을 붙이면 없는 비용을 만들"
+    ]
+   ],
+   "selected": null,
+   "message": "안녕하세요 반가워요",
+   "action": "other",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "other",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.11
+  },
+  {
+   "trip": "f46f777a",
+   "history": [],
+   "selected": null,
+   "message": "2026-10-05 하루 일정을 요약해 주세요.",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "day",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "none",
+    "change": "none",
+    "fact": "day",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.11
+  },
+  {
+   "trip": "f46f777a",
+   "history": [
+    [
+     "고객",
+     "2026-10-05 하루 일정을 요약해 주세요."
+    ],
+    [
+     "triPilot",
+     "10월 5일(월) 일정은 3곳이에요.\n· 09:00~10:30 경복궁 관람(활동)\n· 12:00~13:00 광장시장(식사)\n· 15:00~16:30 북촌한옥마을 산책(활동)"
+    ]
+   ],
+   "selected": null,
+   "message": "2026-10-05 예약 표시를 알려 주세요.",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "booking",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "none",
+    "change": "none",
+    "fact": "booking",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.11
+  },
+  {
+   "trip": "f46f777a",
+   "history": [
+    [
+     "고객",
+     "2026-10-05 예약 표시를 알려 주세요."
+    ],
+    [
+     "triPilot",
+     "10월 5일(월) 예약 표시예요.\n· 09:00 경복궁 관람 — 예약 기록 없음(받은 예약 정보가 없어요)\n· 12:00 광장시장 — 예약 기록 없음(받은 예약 정보가 없어요)\n· 15:00 북촌한옥마을 산책 — 예약 기록 없음(받은 예약 정보가 없어요)\n「예약 기록 없음」은 받은 예약"
+    ]
+   ],
+   "selected": null,
+   "message": "2026-10-05 09:00 경복궁 관람 일정의 상세를 알려 주세요.",
+   "action": "answer_fact",
+   "item": "i1",
+   "change": null,
+   "fact": "detail",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i1",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.56
+  },
+  {
+   "trip": "f46f777a",
+   "history": [
+    [
+     "고객",
+     "2026-10-05 09:00 경복궁 관람 일정의 상세를 알려 주세요."
+    ],
+    [
+     "triPilot",
+     "경복궁 관람 일정이에요 — 10월 5일(월) 09:00~10:30 · 활동\n· 장소: 경복궁\n· 주소: 모름 — 관광공사 식별자가 없는 장소\n· 경복궁의 운영시간은 모르겠어요 — 관광공사 식별자가 없는 장소.\n· 예약: 예약 기록 없음(받은 예약 정보가 없어요)\n· 다음 일정: 10월 "
+    ]
+   ],
+   "selected": null,
+   "message": "2026-10-05 09:00 경복궁 관람 다음 일정을 알려 주세요.",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "next",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i1",
+    "change": "none",
+    "fact": "next",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.06
+  },
+  {
+   "trip": "60315aa2",
+   "history": [],
+   "selected": null,
+   "message": "오늘 비트코인 시세 알려줘",
+   "action": "other",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "other",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.03
+  },
+  {
+   "trip": "60315aa2",
+   "history": [
+    [
+     "고객",
+     "오늘 비트코인 시세 알려줘"
+    ],
+    [
+     "triPilot",
+     "여행 규정과 이 여행의 일정에서 이 질문에 맞는 내용을 찾지 못했어요. 지어내서 답하지 않고, 사람이 확인하도록 남겨 두었어요. 일정의 어느 항목에 대한 질문인지 적어 주시면 바로 찾아볼게요."
+    ]
+   ],
+   "selected": null,
+   "message": "대한민국 수도가 어디야?",
+   "action": "other",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "other",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.0
+  },
+  {
+   "trip": "60315aa2",
+   "history": [
+    [
+     "고객",
+     "대한민국 수도가 어디야?"
+    ],
+    [
+     "triPilot",
+     "여행 규정과 이 여행의 일정에서 이 질문에 맞는 내용을 찾지 못했어요. 지어내서 답하지 않고, 사람이 확인하도록 남겨 두었어요. 일정의 어느 항목에 대한 질문인지 적어 주시면 바로 찾아볼게요."
+    ]
+   ],
+   "selected": null,
+   "message": "파이썬으로 정렬하는 코드 짜줘",
+   "action": "other",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "other",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.08
+  },
+  {
+   "trip": "60315aa2",
+   "history": [
+    [
+     "고객",
+     "파이썬으로 정렬하는 코드 짜줘"
+    ],
+    [
+     "triPilot",
+     "이 여행은 1일 · 일정 4개예요. 다음 일정은 광장시장 · 10월 5일 08:00~09:00이에요.\n이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · 「다른 안으로 바꿔 줘」 · 「2번 일정으로 되돌려 줘」 · 「경복"
+    ]
+   ],
+   "selected": null,
+   "message": "안녕하세요",
+   "action": "other",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "other",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.5
+  },
+  {
+   "trip": "60315aa2",
+   "history": [
+    [
+     "고객",
+     "안녕하세요"
+    ],
+    [
+     "triPilot",
+     "이 여행은 1일 · 일정 4개예요. 다음 일정은 광장시장 · 10월 5일 08:00~09:00이에요.\n이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · 「다른 안으로 바꿔 줘」 · 「2번 일정으로 되돌려 줘」 · 「경복"
+    ]
+   ],
+   "selected": null,
+   "message": "서울에서 맛집 추천해줘",
+   "action": [
+    "other",
+    "propose_alternatives",
+    "clarify"
+   ],
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "propose_alternatives",
+    "item": "none",
+    "change": "none",
+    "fact": "nearby_dining",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.3
+  },
+  {
+   "trip": "60315aa2",
+   "history": [
+    [
+     "고객",
+     "서울에서 맛집 추천해줘"
+    ],
+    [
+     "triPilot",
+     "이 여행은 1일 · 일정 4개예요. 다음 일정은 광장시장 · 10월 5일 08:00~09:00이에요.\n이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · 「다른 안으로 바꿔 줘」 · 「2번 일정으로 되돌려 줘」 · 「경복"
+    ]
+   ],
+   "selected": null,
+   "message": "내일 서울 날씨 어때?",
+   "action": [
+    "other",
+    "ask_policy"
+   ],
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "other",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.06
+  },
+  {
+   "trip": "60315aa2",
+   "history": [
+    [
+     "고객",
+     "내일 서울 날씨 어때?"
+    ],
+    [
+     "triPilot",
+     "여행 규정과 이 여행의 일정에서 이 질문에 맞는 내용을 찾지 못했어요. 지어내서 답하지 않고, 사람이 확인하도록 남겨 두었어요. 일정의 어느 항목에 대한 질문인지 적어 주시면 바로 찾아볼게요."
+    ]
+   ],
+   "selected": null,
+   "message": "하루 일정 요약해 주세요",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "day",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "none",
+    "change": "none",
+    "fact": "day",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.69
+  },
+  {
+   "trip": "60315aa2",
+   "history": [
+    [
+     "고객",
+     "경복궁 몇 시에 가요?"
+    ],
+    [
+     "triPilot",
+     "경복궁 관람 일정이에요 — 10월 5일(월) 10:00~11:30 · 활동\n· 장소: 경복궁\n· 주소: 모름 — 관광공사 식별자가 없는 장소\n· 경복궁의 운영시간은 모르겠어요 — 관광공사 식별자가 없는 장소.\n· 예약: 예약 기록 없음(받은 예약 정보가 없어요)\n· 다음 일정: 10월 "
+    ]
+   ],
+   "selected": null,
+   "message": "창덕궁 운영시간 알려줘",
+   "action": "answer_fact",
+   "item": "i4",
+   "change": null,
+   "fact": "hours",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i4",
+    "change": "none",
+    "fact": "hours",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.09
+  },
+  {
+   "trip": "60315aa2",
+   "history": [
+    [
+     "고객",
+     "창덕궁 운영시간 알려줘"
+    ],
+    [
+     "triPilot",
+     "창덕궁 종합관람지원센터의 운영시간은 모르겠어요 — 관광공사 식별자가 없는 장소."
+    ]
+   ],
+   "selected": null,
+   "message": "경복궁에서 창덕궁까지 어떻게 가요?",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "move",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "none",
+    "change": "none",
+    "fact": "move",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.45
+  },
+  {
+   "trip": "60315aa2",
+   "history": [
+    [
+     "고객",
+     "경복궁에서 창덕궁까지 어떻게 가요?"
+    ],
+    [
+     "triPilot",
+     "경복궁 관람(10:00) 이동 정보예요.\n· 오는 길: 앞 일정에서 오는 이동 항목이 없어요.\n· 다음 일정(북촌손만두 13:00)으로 가는 이동 항목은 없어요."
+    ]
+   ],
+   "selected": null,
+   "message": "경복궁에 아이 데려가도 되나요?",
+   "action": "ask_policy",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i2",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 1.09
+  },
+  {
+   "trip": "60315aa2",
+   "history": [
+    [
+     "고객",
+     "취소하면 위약금 있어요?"
+    ],
+    [
+     "triPilot",
+     "문의하신 내용 — 여행 규정에서 찾은 내용이에요.\n· 무료이면서 예약도 없는 활동은 취소라는 행위의 대상이 아니다. 비가 와서 못 가게 됐다는 문의가 와도 위약금이나 환급을 말하지 않고 일정에서 빼거나 다른 항목으로 바꾸는 조정만 제안한다. 여기에 위약금 문장을 붙이면 없는 비용을 만들"
+    ]
+   ],
+   "selected": null,
+   "message": "점심 식당 다른 데로 바꿔 줘",
+   "action": "apply_change",
+   "item": "i3",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "apply_change",
+    "item": "i3",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.11
+  },
+  {
+   "trip": "60315aa2",
+   "history": [
+    [
+     "고객",
+     "점심 식당 다른 데로 바꿔 줘"
+    ],
+    [
+     "triPilot",
+     "바꿀 수 있는 다른 안이 없어요."
+    ]
+   ],
+   "selected": null,
+   "message": "30분 늦을 것 같아요",
+   "action": "report_delay",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "report_delay",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.17
+  },
+  {
+   "trip": "f8985798",
+   "history": [
+    [
+     "고객",
+     "경복궁에서 창덕궁까지 어떻게 가요?"
+    ],
+    [
+     "triPilot",
+     "경복궁 관람(10:00) → 창덕궁 관람(15:00) 이동이에요.\n· 도보 기준 · 약 15분 (직선 1144m ÷ 도보 80m/분 [추정])\n  일정에 이 두 곳 사이의 이동 항목이 없어서 두 장소의 거리로 계산했어요. 실제 경로는 조회하지 않았어요."
+    ]
+   ],
+   "selected": null,
+   "message": "경복궁 주소 알려 주세요",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "address",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i2",
+    "change": "none",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.34
+  },
+  {
+   "trip": "f8985798",
+   "history": [
+    [
+     "고객",
+     "경복궁 주소 알려 주세요"
+    ],
+    [
+     "triPilot",
+     "경복궁 주소는 서울특별시 종로구 사직로 161 (세종로)예요(출처 관광공사)."
+    ]
+   ],
+   "selected": null,
+   "message": "창덕궁 운영시간 알려 주세요",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "hours",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i4",
+    "change": "none",
+    "fact": "hours",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.25
+  },
+  {
+   "trip": "9c8886e6",
+   "history": [
+    [
+     "고객",
+     "창덕궁 운영시간 알려 주세요"
+    ],
+    [
+     "triPilot",
+     "창덕궁과 후원 [유네스코 세계유산]의 운영시간은 모르겠어요 — 운영시간 조회 결과 없음."
+    ]
+   ],
+   "selected": null,
+   "message": "창덕궁 주소 알려 주세요",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "address",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i4",
+    "change": "none",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.27
+  },
+  {
+   "trip": "4317d6da",
+   "history": [
+    [
+     "고객",
+     "창덕궁 운영시간 알려 주세요"
+    ],
+    [
+     "triPilot",
+     "창덕궁과 후원 [유네스코 세계유산] 운영시간(관광공사 안내 원문): [2월~5월]- 09:00~18:00 (입장 마감 17:00)[6월~8월]- 09:00~18:30 (입장 마감 17:30)[9월~10월]- 09:00~18:00 (입장 마감 17:00)[11월~1월]- 09:00~17:"
+    ]
+   ],
+   "selected": null,
+   "message": "경복궁 운영시간 알려 주세요",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "hours",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i2",
+    "change": "none",
+    "fact": "hours",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.8
+  },
+  {
+   "trip": "d50ab68b",
+   "history": [
+    [
+     "고객",
+     "하루 일정 요약해 주세요"
+    ],
+    [
+     "triPilot",
+     "10월 5일(월) 일정은 2곳이에요.\n· 09:00~10:30 경복궁 관람(활동)\n· 12:00~13:00 광장시장(식사)"
+    ]
+   ],
+   "selected": null,
+   "message": "다음 일정 알려 주세요",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "next",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i1",
+    "change": "none",
+    "fact": "next",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.12
+  },
+  {
+   "trip": "91b38ba9",
+   "history": [
+    [
+     "고객",
+     "하루 일정 요약해 주세요"
+    ],
+    [
+     "triPilot",
+     "10월 5일(월) 일정은 2곳이에요.\n· 09:00~10:30 경복궁 관람(활동)\n· 12:00~13:00 광장시장(식사)"
+    ]
+   ],
+   "selected": null,
+   "message": "하루 일정 요약해 주세요 ",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "day",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "none",
+    "change": "none",
+    "fact": "day",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.25
+  },
+  {
+   "trip": "a5442268",
+   "history": [],
+   "selected": null,
+   "message": "2026-09-30 12:00 무구옥 일정의 상세를 알려 주세요.",
+   "action": "answer_fact",
+   "item": "i3",
+   "change": null,
+   "fact": "detail",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i3",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.39
+  },
+  {
+   "trip": "a5442268",
+   "history": [
+    [
+     "고객",
+     "2026-09-30 12:00 무구옥 일정의 상세를 알려 주세요."
+    ],
+    [
+     "triPilot",
+     "무구옥 일정이에요 — 9월 30일(수) 12:00~13:00 · 식사\n· 장소: 무구옥\n· 주소: 모름 — 관광공사에서 같은 이름·종류를 하나로 찾지 못했다\n· 무구옥의 운영시간은 모르겠어요 — 관광공사에서 같은 이름·종류를 하나로 찾지 못했다.\n· 예약: 예약 기록 없음(받은 예약 정"
+    ]
+   ],
+   "selected": null,
+   "message": "2026-09-30 하루 일정을 요약해 주세요.",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "day",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i1",
+    "change": "none",
+    "fact": "day",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.11
+  },
+  {
+   "trip": "a5442268",
+   "history": [
+    [
+     "고객",
+     "2026-09-30 하루 일정을 요약해 주세요."
+    ],
+    [
+     "triPilot",
+     "9월 30일(수) 일정은 4곳이에요.\n· 08:00~09:00 [백년가게] 삼거리 먼지막 순대국(식사)\n   ↳ 이동: 09:00 출발 · 대중교통 권장 · 약 60분 (직선 11059m — 도보 139분이라 대중교통 구간, 60분 상한 [추정])\n· 10:10~11:40 K-컬처 스크"
+    ]
+   ],
+   "selected": null,
+   "message": "2026-09-30 12:00 무구옥 다음 일정을 알려 주세요.",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "next",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i3",
+    "change": "none",
+    "fact": "next",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.56
+  },
+  {
+   "trip": "a5442268",
+   "history": [
+    [
+     "고객",
+     "2026-09-30 12:00 무구옥 다음 일정을 알려 주세요."
+    ],
+    [
+     "triPilot",
+     "무구옥(12:00) 다음 일정은 9월 30일(수) 18:00~19:00 일품당프리미엄(식사)예요.\n이동: 17:41 출발 · 도보 기준 · 약 9분 (직선 656m ÷ 도보 80m/분 [추정])"
+    ]
+   ],
+   "selected": null,
+   "message": "2026-09-30 예약 표시를 알려 주세요.",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "booking",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "none",
+    "change": "none",
+    "fact": "booking",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.09
+  },
+  {
+   "trip": "a5442268",
+   "history": [
+    [
+     "고객",
+     "2026-09-30 예약 표시를 알려 주세요."
+    ],
+    [
+     "triPilot",
+     "9월 30일(수) 예약 표시예요.\n· 08:00 [백년가게] 삼거리 먼지막 순대국 — 예약 기록 없음(받은 예약 정보가 없어요)\n· 10:10 K-컬처 스크린(대한민국역사박물관) — 예약 기록 없음(받은 예약 정보가 없어요)\n· 12:00 무구옥 — 예약 기록 없음(받은 예약 정보가 없"
+    ]
+   ],
+   "selected": null,
+   "message": "무구옥 시간정보 있는 다른 곳으로 바꿔줘",
+   "action": "apply_change",
+   "item": "i3",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "apply_change",
+    "item": "i3",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.09
+  },
+  {
+   "trip": "8b751b38",
+   "history": [],
+   "selected": null,
+   "message": "다른 데로 바꿔 줘",
+   "action": "clarify",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "apply_change",
+      "i2"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.23
+  },
+  {
+   "trip": "c1daa880",
+   "history": [],
+   "selected": null,
+   "message": "무구옥 주소 알려줘",
+   "action": "answer_fact",
+   "item": "i2",
+   "change": null,
+   "fact": "address",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i2",
+    "change": "none",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.08
+  },
+  {
+   "trip": "c1daa880",
+   "history": [
+    [
+     "고객",
+     "무구옥 주소 알려줘"
+    ],
+    [
+     "triPilot",
+     "무구옥 주소는 서울특별시 종로구 율곡로1길 7이에요(출처 요식 원장 · 미쉐린 가이드 서울)."
+    ]
+   ],
+   "selected": null,
+   "message": "무구옥 운영시간 알려줘",
+   "action": "answer_fact",
+   "item": "i2",
+   "change": null,
+   "fact": "hours",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i2",
+    "change": "none",
+    "fact": "hours",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.19
+  },
+  {
+   "trip": "c1daa880",
+   "history": [
+    [
+     "고객",
+     "무구옥 운영시간 알려줘"
+    ],
+    [
+     "triPilot",
+     "무구옥의 운영시간은 모르겠어요 — 관광공사에서 같은 이름·종류를 하나로 찾지 못했다."
+    ]
+   ],
+   "selected": null,
+   "message": "경복궁 주소 알려줘",
+   "action": "answer_fact",
+   "item": "i1",
+   "change": null,
+   "fact": "address",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i1",
+    "change": "none",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.22
+  },
+  {
+   "trip": "f81afc61",
+   "history": [],
+   "selected": null,
+   "message": "2026-09-30 18:00 일품당프리미엄 일정의 상세를 알려 주세요.",
+   "action": [
+    "answer_fact",
+    "clarify"
+   ],
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "none",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.12
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "2026-09-30 18:00 일품당프리미엄 일정의 상세를 알려 주세요."
+    ],
+    [
+     "triPilot",
+     "일품당프리미엄 일정이에요 — 9월 30일(수) 18:00~19:00 · 식사\n· 장소: 일품당프리미엄\n· 주소: 서울특별시 종로구 새문안로5가길 7 (출처 요식 원장 · ⓒ한국관광공사)\n· 일품당프리미엄 운영시간(요식 원장): 월 11:30~15:00 · 월 17:00~22:00(라스트"
+    ]
+   ],
+   "selected": null,
+   "message": "1일차 저녁 식당 변경해",
+   "action": "apply_change",
+   "item": "i5",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "apply_change",
+      "i5"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": true,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 1.28
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "1일차 저녁 식당 변경해"
+    ],
+    [
+     "triPilot",
+     "요청하신 대로 일품당프리미엄 대신 금용문(으)로 바꿨습니다(18:00 시작). 다른 안: 광화문 세종클럽, 동경우동."
+    ]
+   ],
+   "selected": null,
+   "message": "되돌려줘 원래대로",
+   "action": "rollback",
+   "item": null,
+   "change": "c3",
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "rollback",
+    "item": "i5",
+    "change": "c3",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.16
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "되돌려줘 원래대로"
+    ],
+    [
+     "triPilot",
+     ""
+    ]
+   ],
+   "selected": null,
+   "message": "방금 바꾼 금용문으로 바꾼 일정 원래대로 돌리라고",
+   "action": "rollback",
+   "item": null,
+   "change": "c2",
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "rollback",
+    "item": "i5",
+    "change": "c3",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 1.14
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "방금 바꾼 금용문으로 바꾼 일정 원래대로 돌리라고"
+    ],
+    [
+     "triPilot",
+     "말씀을 제대로 알아듣지 못해 일정은 바꾸지 않았어요.\n이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · 「다른 안으로 바꿔 줘」 · 「2번 일정으로 되돌려 줘」 · 「경복궁 몇 시에 가요?」 · 「취소하면 위약금 있어요"
+    ]
+   ],
+   "selected": null,
+   "message": "2026-09-30 18:00 금용문 식사 일정의 상세를 알려 주세요.",
+   "action": [
+    "answer_fact",
+    "clarify"
+   ],
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "none",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.06
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "2026-09-30 18:00 금용문 식사 일정의 상세를 알려 주세요."
+    ],
+    [
+     "triPilot",
+     "금용문 식사 일정이에요 — 9월 30일(수) 18:00~19:00 · 식사\n· 장소: 금용문\n· 주소: 서울특별시 종로구 새문안로5가길 7 (내수동) (출처 요식 원장 · ⓒ한국관광공사)\n· 금용문 운영시간(요식 원장): 월 11:30~15:00 · 월 17:00~22:00 · 화 11"
+    ]
+   ],
+   "selected": null,
+   "message": "금용문 이전 식당으로 다시 되돌려",
+   "action": "rollback",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "rollback",
+    "item": "i5",
+    "change": "c3",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.09
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "금용문 이전 식당으로 다시 되돌려"
+    ],
+    [
+     "triPilot",
+     ""
+    ]
+   ],
+   "selected": null,
+   "message": "첫날 아침 일정 바꿔",
+   "action": "apply_change",
+   "item": "i1",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "apply_change",
+      "i1"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": true,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 3.34
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "2026-09-30 하루 일정을 요약해 주세요."
+    ],
+    [
+     "triPilot",
+     "9월 30일(수) 일정은 5곳이에요.\n· 08:00~09:00 [백년가게] 삼거리 먼지막 순대국(식사)\n   ↳ 이동: 09:00 출발 · 대중교통 권장 · 약 60분 (직선 11059m — 도보 139분이라 대중교통 구간, 60분 상한 [추정])\n· 10:10~11:40 K-컬처 스크"
+    ]
+   ],
+   "selected": null,
+   "message": "이전에 변경요청 한거 다시 진행해줘봐",
+   "action": [
+    "redo",
+    "clarify"
+   ],
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "redo",
+    "item": "i5",
+    "change": "c2",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.22
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "이전에 변경요청 한거 다시 진행해줘봐"
+    ],
+    [
+     "triPilot",
+     "이 여행은 3일 · 일정 15개예요. 다음 일정은 [백년가게] 삼거리 먼지막 순대국 · 9월 30일 08:00~09:00이에요.\n이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · 「다른 안으로 바꿔 줘」 · 「2번 일정"
+    ]
+   ],
+   "selected": null,
+   "message": "북한산 코스 바꿔줘",
+   "action": "apply_change",
+   "item": "i4",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "apply_change",
+      "i4"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": true,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 1.38
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "북한산 코스 바꿔줘"
+    ],
+    [
+     "triPilot",
+     "바꿀 수 있는 다른 곳을 찾지 못했어요 — 14:01에 갈 수 있는 활동이 3km 안에 없어요."
+    ]
+   ],
+   "selected": null,
+   "message": "북한산 경복궁으로 바꿔",
+   "action": "apply_change",
+   "item": "i4",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "apply_change",
+      "i4"
+     ],
+     [
+      "apply_change",
+      "i2"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": true,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 1.61
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "2026-09-30 18:00 금용문 식사 일정의 상세를 알려 주세요."
+    ],
+    [
+     "triPilot",
+     "금용문 식사 일정이에요 — 9월 30일(수) 18:00~19:00 · 식사\n· 장소: 금용문\n· 주소: 서울특별시 종로구 새문안로5가길 7 (내수동) (출처 요식 원장 · ⓒ한국관광공사)\n· 금용문 운영시간(요식 원장): 월 11:30~15:00 · 월 17:00~22:00 · 화 11"
+    ]
+   ],
+   "selected": null,
+   "message": "첫 활동 다른 걸로 바꿔줘",
+   "action": "apply_change",
+   "item": "i2",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "apply_change",
+      "i2"
+     ],
+     [
+      "apply_change",
+      "i7"
+     ],
+     [
+      "apply_change",
+      "i12"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": true,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 2.05
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "첫 활동 다른 걸로 바꿔줘"
+    ],
+    [
+     "triPilot",
+     "바꿀 수 있는 다른 곳을 찾지 못했어요 — 14:01에 갈 수 있는 활동이 3km 안에 없어요."
+    ]
+   ],
+   "selected": null,
+   "message": "첫 식당 다른 걸로 바꿔",
+   "action": "apply_change",
+   "item": "i1",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "apply_change",
+      "i1"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": true,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 1.38
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "첫 식당 다른 걸로 바꿔"
+    ],
+    [
+     "triPilot",
+     "바꿀 수 있는 다른 곳을 찾지 못했어요 — 14:01에 갈 수 있는 활동이 3km 안에 없어요."
+    ]
+   ],
+   "selected": null,
+   "message": "첫식당 바꿔",
+   "action": "apply_change",
+   "item": "i1",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "apply_change",
+      "i1"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": true,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 1.44
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "첫식당 바꿔"
+    ],
+    [
+     "triPilot",
+     "바꿀 수 있는 다른 곳을 찾지 못했어요 — 08:00에 갈 수 있는 식당이 3km 안에 없어요(살펴본 27곳 중 21곳은 「그 시각 영업하지 않는다」)."
+    ]
+   ],
+   "selected": null,
+   "message": "그럼 그 다음식당 바꿔",
+   "action": "apply_change",
+   "item": "i3",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "apply_change",
+    "item": "i3",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.34
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "그럼 그 다음식당 바꿔"
+    ],
+    [
+     "triPilot",
+     "요청하신 대로 금용문 대신 광화문 세종클럽(으)로 바꿨습니다(18:00 시작)."
+    ]
+   ],
+   "selected": null,
+   "message": "광화문 세종클럽 알려줘",
+   "action": "answer_fact",
+   "item": "i5",
+   "change": null,
+   "fact": "detail",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i5",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.14
+  },
+  {
+   "trip": "f81afc61",
+   "history": [
+    [
+     "고객",
+     "광화문 세종클럽 알려줘"
+    ],
+    [
+     "triPilot",
+     "일정에서 찾은 것 — 광화문 세종클럽 식사 · 9월 30일 18:00~19:00 · 장소 광화문 세종클럽\n여행 규정에서 이 질문에 맞는 내용은 찾지 못했어요. 더 궁금하신 점을 조금 더 자세히 적어 주세요. 일정은 바꾸지 않았어요."
+    ]
+   ],
+   "selected": null,
+   "message": "아니 그 식당 세부정보 알려달라고",
+   "action": "answer_fact",
+   "item": "i5",
+   "change": null,
+   "fact": "detail",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i5",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.34
+  },
+  {
+   "trip": "1d592fc5",
+   "history": [
+    [
+     "고객",
+     "무구옥 운영시간 알려줘"
+    ],
+    [
+     "triPilot",
+     "무구옥의 운영시간은 모르겠어요 — 관광공사에서 같은 이름·종류를 하나로 찾지 못했다."
+    ]
+   ],
+   "selected": null,
+   "message": "점심 식당 바꿔 줘",
+   "action": "apply_change",
+   "item": "i2",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "apply_change",
+      "i2"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": true,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 1.86
+  },
+  {
+   "trip": "398ade6c",
+   "history": [],
+   "selected": null,
+   "message": "저녁 식당 바꿔 줘",
+   "action": "apply_change",
+   "item": "i5",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "clarify",
+    "item": "i5",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "apply_change",
+      "i5"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": true,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 1.38
+  },
+  {
+   "trip": "398ade6c",
+   "history": [
+    [
+     "고객",
+     "저녁 식당 바꿔 줘"
+    ],
+    [
+     "triPilot",
+     "요청하신 대로 일품당프리미엄 대신 광화문 세종클럽(으)로 바꿨습니다(18:00 시작). 다른 안: 동경우동."
+    ]
+   ],
+   "selected": null,
+   "message": "원래대로 돌려 줘",
+   "action": "rollback",
+   "item": null,
+   "change": "c4",
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "rollback",
+    "item": "i5",
+    "change": "c4",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.06
+  },
+  {
+   "trip": "1168583d",
+   "history": [],
+   "selected": null,
+   "message": "경희궁 몇 시에 닫아? 쉬는 날도 있어?",
+   "action": [
+    "answer_fact",
+    "clarify"
+   ],
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i1",
+    "change": "c2",
+    "fact": "hours",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.08
+  },
+  {
+   "trip": "1168583d",
+   "history": [
+    [
+     "고객",
+     "경희궁 몇 시에 닫아? 쉬는 날도 있어?"
+    ],
+    [
+     "triPilot",
+     "경희궁 운영시간(관광공사 안내 원문): 09:00~18:00 (입장 마감 17:30)\n쉬는 날(원문): 매주 월요일 / 1월 1일\n경희궁 영업시간(저장된 값): 09:00~18:00 (입장·주문 마감 17:30)"
+    ]
+   ],
+   "selected": null,
+   "message": "경희궁 말고 다른 곳으로 바꿔줘",
+   "action": [
+    "apply_change",
+    "clarify"
+   ],
+   "item": "i1",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "apply_change",
+    "item": "i1",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.33
+  },
+  {
+   "trip": "e71ee6ab",
+   "history": [
+    [
+     "고객",
+     "첫 활동 다른 걸로 바꿔줘"
+    ],
+    [
+     "triPilot",
+     "요청하신 대로 건청궁 대신 경복궁(으)로 바꿨습니다(10:10 시작)."
+    ]
+   ],
+   "selected": "i9",
+   "message": "2일차 첫 식당 바꿔 줘",
+   "action": "apply_change",
+   "item": "i6",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "apply_change",
+    "item": "i6",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 1.06
+  }
+ ]
+}

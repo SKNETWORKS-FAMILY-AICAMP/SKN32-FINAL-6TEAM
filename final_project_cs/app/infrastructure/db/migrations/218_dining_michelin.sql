@@ -25,10 +25,21 @@ ON CONFLICT (source_code) DO UPDATE
        production_allowed = EXCLUDED.production_allowed,
        note = EXCLUDED.note;
 
-ALTER TABLE dining.dn_attribute DROP CONSTRAINT IF EXISTS dn_attribute_code_chk;
-ALTER TABLE dining.dn_attribute ADD CONSTRAINT dn_attribute_code_chk CHECK (attr_code IN (
-    'card_payment', 'reservable', 'reservation_required', 'kids_allowed',
-    'vegetarian_menu', 'halal', 'max_party_size', 'price_per_person',
-    'parking', 'takeout', 'non_smoking', 'michelin'));
+-- ★`[2026-10-08]` 이미 「michelin」을(를) 받는 목록이면 건드리지 않는다. 
+--   마이그레이션은 매번 전부 다시 돈다(`migrate.py`). 전에는 여기서 목록을 늘 다시 만들어 뒤에 더한 코드(226 「nopo」)가
+--   빠졌고, 노포 행이 있는 DB 에서 재실행이 dn_attribute_code_chk 위반으로 멈췄다(2026-10-08 로컬 평가 DB 실측).
+--   뒤 마이그레이션이 이 목록을 넓혔으면 그 목록에 「michelin」도 들어 있다 — 그대로 둔다.
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                    WHERE conname = 'dn_attribute_code_chk'
+                      AND pg_get_constraintdef(oid) LIKE '%''michelin''%') THEN
+        ALTER TABLE dining.dn_attribute DROP CONSTRAINT IF EXISTS dn_attribute_code_chk;
+        ALTER TABLE dining.dn_attribute ADD CONSTRAINT dn_attribute_code_chk CHECK (attr_code IN (
+            'card_payment', 'reservable', 'reservation_required', 'kids_allowed',
+            'vegetarian_menu', 'halal', 'max_party_size', 'price_per_person',
+            'parking', 'takeout', 'non_smoking', 'michelin'));
+    END IF;
+END $$;
 
 COMMIT;

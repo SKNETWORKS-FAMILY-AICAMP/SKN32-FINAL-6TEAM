@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from app.modules.travel_ops.itinerary_changes import round_up_5
-from app.modules.travel_ops.replan import SEATING_BUFFER_MIN
+from app.domains.travel_ops.components.itinerary.itinerary_changes import round_up_5
+from app.domains.travel_ops.components.planning.replan import SEATING_BUFFER_MIN
 from eval.runners import dining_alternatives as da
 
 

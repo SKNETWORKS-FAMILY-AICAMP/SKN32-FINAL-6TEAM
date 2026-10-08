@@ -6,7 +6,7 @@
   내거나 제품 라벨을 영원히 못 낸다 — 커머스 시절 `INTENTS` 가 옛 어휘로 남아
   운영 분류가 전량 실패한 사고와 같은 모양이다(2026-08-17).
 """
-from app.modules.travel_ops.feedback import INTENTS, ISSUE_CODES
+from app.domains.travel_ops.components.core_hooks.feedback import INTENTS, ISSUE_CODES
 from ml import label_with_gemma
 
 

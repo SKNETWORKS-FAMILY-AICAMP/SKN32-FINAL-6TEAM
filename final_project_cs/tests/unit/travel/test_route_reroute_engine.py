@@ -5,9 +5,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.itinerary_changes import ItineraryChange, NoChange, plan_route_adjustment
-from app.modules.travel_ops.mobility import wiring
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, NoChange, plan_route_adjustment
+from app.domains.travel_ops.instances.mobility import wiring
 
 T = lambda hm: datetime.fromisoformat(f"2026-10-07T{hm}:00+09:00")  # noqa: E731
 
@@ -67,6 +67,7 @@ def test_38_blocked_everywhere_asks_engine_with_disruptions(monkeypatch):
     new = next(iter(plan.replacements.values()))
     assert new.detail["route_def"]["options"][0]["uses"] == ["버스:2224"] and "route" not in new.detail
     assert plan.summary["rerouted_by"] == "mobility_engine"
+    assert new.detail["planner"]["transfer_basis"] == "시간표 판정(이동 계산기)" and new.detail["planner"]["travel_min"] == 25,         "산출 근거·소요도 새 경로 값으로(옛 값이 남으면 채팅이 옛 소요를 답한다)"
 
 
 def test_38_engine_off_keeps_old_unresolved(monkeypatch):

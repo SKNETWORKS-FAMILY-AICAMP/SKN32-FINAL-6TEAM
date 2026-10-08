@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from app.modules.travel_ops.intake.places import _kakao_match
+from app.domains.travel_ops.components.intake.places import _kakao_match
 
 from .db_search.place_by_name import find_place_by_name
 

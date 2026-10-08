@@ -28,9 +28,6 @@ knowledge/raw/
 *.dump
 *.sqlite3
 
-# Docker
-docker/
-
 # OS
 Thumbs.db
 .DS_Store
@@ -40,8 +37,6 @@ Thumbs.db
 #   운영 기록이지 소스가 아니고, 저장소마다 내용이 달라 커밋하면 늘 충돌한다.
 var/
 
-# test용
-.*/
-
-# graphify 지식그래프 산출물 (생성물, 용량 큼)
-graphify-out/
+# 데이터 표본을 눈으로 확인하려고 저장소 루트에 뽑은 임시 파일 — 커밋하지 않는다(2026-09-30, 8월·9월 커밋에 딸려 올라간 것을 지웠다)
+/scratch_*.txt
+/spotcheck*.txt

@@ -202,9 +202,12 @@ def yes_no(prompt: str, *, hints: Sequence[str] = ()) -> Answer:
 LAYER_NAMES = {
     "app/presentation": "입구(presentation: 외부 요청을 받는 영역) 층",
     "app/application": "응용(application: 처리 흐름을 구성하는 영역) 층",
+    "app/core/case_lifecycle": "Case 생명주기(case_lifecycle: Case 상태와 이벤트를 담는 영역) 층",
     "app/core": "코어(core: 규칙과 계약을 담는 영역) 층",
     "app/domain": "도메인(domain: 상태와 이벤트를 담는 영역) 층",
     "app/infrastructure": "인프라(infrastructure: DB·메시지·외부 시스템을 연결하는 영역) 층",
+    "app/domains": "업무 도메인(domains: 여행 Team 처럼 업무마다 다른 코드가 모인 영역) 층",
+    # 옛 경로 — 2026-10-06 cs 폴더 이동 전 기록(멈춘 쇼핑몰 결함 등)을 읽을 때만 쓰인다
     "app/modules": "Team(작업을 수행하는 모듈) 층",
     "app/tools": "도구(tools: Team이 데이터를 읽을 때 거치는 영역) 층",
 }
@@ -212,7 +215,7 @@ LAYER_NAMES = {
 
 def layer_of(path: str) -> str:
     """경로가 어느 층인지. 경로에 폴더가 없으면(짧은 이름) 파일 이름을 그대로 말한다."""
-    for prefix, name in LAYER_NAMES.items():
+    for prefix, name in sorted(LAYER_NAMES.items(), key=lambda item: -len(item[0])):
         if path.startswith(prefix):
             return name
     return f"{path} 파일"

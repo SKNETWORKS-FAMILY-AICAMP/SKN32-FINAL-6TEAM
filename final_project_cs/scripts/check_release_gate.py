@@ -84,12 +84,14 @@ def main() -> int:
     code, output = _run([sys.executable, "-m", "pytest", "-q", "-m", "not live"])
     results.append(("pytest -q -m 'not live' (저장소 전체)", code == 0, _pytest_summary(output)))
 
-    code, output = _run([sys.executable, "-m", "scripts.verify_dod"])
+    # ★`[2026-10-06]` 옛 `scripts/verify_dod.py`(v8 29항목 · 쇼핑몰 기준)를 지우고 여행 기준 v11 로 바꿨다(D-023).
+    #   옛 스크립트는 evidence 문서의 「판정:」 줄을 읽었고, 이쪽은 항목마다 적힌 시험을 **실제로 돌린다**.
+    code, output = _run([sys.executable, "-m", "scripts.verify_dod_v11"])
     summary = next(
-        (line.strip() for line in reversed(output.splitlines()) if "evidence 있음" in line),
-        f"verify_dod exit {code}",
+        (line.strip() for line in reversed(output.splitlines()) if "통과" in line),
+        f"verify_dod_v11 exit {code}",
     )
-    results.append(("python -m scripts.verify_dod", code == 0, summary))
+    results.append(("python -m scripts.verify_dod_v11", code == 0, summary))
 
     changed = _frozen_changes()
     if changed:

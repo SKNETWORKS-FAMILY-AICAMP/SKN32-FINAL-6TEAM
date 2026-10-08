@@ -176,6 +176,18 @@ def read(value: str | None, now: float | None = None) -> Operator | None:
     return Operator(str(data["sub"]), frozenset(data.get("scopes") or []) & current[1])
 
 
+#: 로그인 **전** 폼(로그인)의 위조 방지 쿠키 — 폼의 숨은 칸과 같아야 한다(이중 제출). `[2026-09-29]`
+CSRF_COOKIE = "acop_ui_csrf"
+
+
+def csrf_for(session_cookie: str) -> str:
+    """로그인한 뒤의 폼 위조 방지 토큰 — 로그인 쿠키에서 서명으로 만든다(따로 저장하지 않는다). `[2026-09-29]`
+
+    ★전에는 `SameSite=Strict` 쿠키에만 기댔다(운영자 콘솔 분리 · Codex 합의 보강). 다른 사이트는 이 값을 알 수 없다."""
+    key = ("acop-ui-csrf:" + settings_module.get_settings().secret_key).encode()
+    return _b64(hmac.new(key, session_cookie.encode(), hashlib.sha256).digest())
+
+
 def _sign(payload: str) -> str:
     key = ("acop-ui-session:" + settings_module.get_settings().secret_key).encode()
     return _b64(hmac.new(key, payload.encode(), hashlib.sha256).digest())
@@ -195,5 +207,5 @@ def reset_failures() -> None:
         _failures.clear()
 
 
-__all__ = ["COOKIE", "Operator", "OperatorConfigError", "authenticate", "hash_password", "issue",
+__all__ = ["COOKIE", "CSRF_COOKIE", "Operator", "csrf_for", "OperatorConfigError", "authenticate", "hash_password", "issue",
            "locked", "operators", "read", "reset_failures", "verify_password"]

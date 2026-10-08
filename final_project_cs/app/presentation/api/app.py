@@ -1,7 +1,8 @@
-from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.exceptions import RequestValidationError
+from contextlib import asynccontextmanager
+
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from starlette.routing import Route
 
 from app import composition
 from app.application.runtime import ControllerProxy, RuntimeComposition
@@ -10,13 +11,25 @@ from app.core.settings import get_settings
 from app.presentation.api.cases import build_router
 from app.presentation.api.outbox import build_router as build_outbox_router
 from app.presentation.api.introspection import router as introspection_router
+from app.presentation.errors import install_error_handlers
 from app.presentation.security import require_scope
-from app.presentation.ui import mount_ui
+
+
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    """앱 생명주기 — MCP 표면이 붙어 있으면 그 세션 관리자를 앱과 함께 연다(없으면 아무것도 안 한다). ★서버(uvicorn)가 돌릴 때만 의미가 있다."""
+    surface = getattr(app.state, "mcp_surface", None)
+    if surface is None:
+        yield
+        return
+    async with surface.lifespan():
+        yield
 
 
 def create_app(controller=None, classifier=None, *,
                composer_write_router=None, composer_auth_router=None,
-               domain_routers=None, subject_resolver=None, subject_interpreter=None) -> FastAPI:
+               domain_routers=None, subject_resolver=None, subject_interpreter=None,
+               management: bool = False) -> FastAPI:
     """릴리즈 빌드는 Composer 없이 뜬다.
 
     ★v9 §8-D — **cs 소스 안에 Composer 구현을 두지 않는다.** 2026-09-06 이전에는
@@ -38,13 +51,18 @@ def create_app(controller=None, classifier=None, *,
         active_config = composition.load_project_config()
         built_revision = config_revision(active_config)
         controller = composition.build_controller(config=active_config)
-    app = FastAPI(title="triPilot S-API")
+    app = FastAPI(title="triPilot S-API", lifespan=_lifespan)
     # ★`[2026-09-24]` 웹(`frontend/apps/web`)이 다른 출처(포트 3100)에서 부른다(D-020). 허용하는 헤더는
     #   사용자 식별 키(`X-User-Key`)와 Content-Type 뿐 — 서버용 `Authorization` 은 브라우저에서 받지 않는다.
     origins = [o.strip() for o in get_settings().web_allowed_origins.split(",") if o.strip()]
+    # ★`[2026-09-28]` 사람 확인 토큰 헤더(`X-Turnstile-Token`, 키 발급)를 받고, 한도 응답의 `Retry-After` 를 화면이 읽게 연다
+    # ★`[2026-10-01]` `PUT` 도 연다 — 고객 연락처 저장(`PUT /v1/web/profile`)이 화면(다른 출처)에서 온다
+    # ★`[2026-10-04 D-CS-011]` 브라우저 세션이 쿠키다 — 허용 출처에 **쿠키를 허용**한다(`allow_credentials=True` 는 와일드카드 출처와 못 쓴다 — 목록 그대로).
+    #   쓰기 요청은 `X-CSRF-Token` 을 싣는다. 키 헤더(`X-User-Key`)는 에이전트·옮겨 가는 동안의 호출자용으로 남긴다
     if origins:
-        app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST"],
-                           allow_headers=["X-User-Key", "Content-Type"], allow_credentials=False)
+        app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST", "PUT", "DELETE"],
+                           allow_headers=["X-User-Key", "Content-Type", "X-Turnstile-Token", "X-CSRF-Token"],
+                           expose_headers=["Retry-After"], allow_credentials=True)
     runtime = RuntimeComposition(controller, built_revision)
     app.state.runtime = runtime
     # ★router 는 프록시를 붙잡는다 — reload 로 갈아 끼워도 옛 Controller 를
@@ -70,12 +88,31 @@ def create_app(controller=None, classifier=None, *,
     if composer_write_router is not None:
         app.include_router(composer_write_router)
     app.include_router(introspection_router)
+    # ★`[2026-10-02 사용자 지시]` 개인 AI(MCP) 입구 — `/mcp/`(Streamable HTTP, 사용자 키). 도메인은 조립이 만든다(INV-CS-ARCH-001).
+    #   `mcp` 모듈 토글 · 쓰기 도구 스위치(`travel.mcp.write_enabled`)는 `composition.build_mcp_surface` 가 본다. 모듈이 꺼져 있으면 요청이 404 다.
+    app.state.mcp_surface = composition.build_mcp_surface(lambda: app)
+    app.mount("/mcp", app.state.mcp_surface.asgi)
+    app.router.routes.append(Route("/mcp", endpoint=app.state.mcp_surface.root, methods=["GET", "POST", "DELETE"]))   # 슬래시 없이 불러도 열린다
 
     # ★재기동 없이 반영시키는 유일한 길 (2026-09-06, sample 에서 이식).
     #   `ops:reload` 는 `composer:write` 와 **분리**한다 — 저장은 되돌릴 수 있지만
     #   반영은 그 순간 트래픽이 받는 것을 바꾼다.
     #   계약: **새 조립이 전부 성공한 뒤에만** 갈아 끼운다. 실패하면 옛 조립을
     #   그대로 쓰고 `reload_failed` 를 드러낸다 — 실패를 성공 뒤에 숨기지 않는다.
+    # ★`[2026-09-29 사용자 지시]` 운영 화면(로그인 · Case · 승인 · 위임 · 바깥함 · VOC · 관리 · 시나리오)은 **여기 없다** —
+    #   별도 운영 앱(`app/ops_entrypoint.py`, 다른 포트 · 127.0.0.1)이다. 「외부에서 절대 접근 못 하게」. 전에는 고객 API
+    #   앱(8042)에 같이 붙어 있어 고객이 닿는 포트로 운영 화면이 열려 있었다(로그인으로만 막았다).
+    # ★`[2026-09-29 사용자 지시]` 재기동 없는 반영은 **관리용 빌드**(`app/entrypoint.py`, `management=True`)에만 연다 —
+    #   고객 릴리즈 빌드에는 이 경로가 없다(404). 반영은 **그 프로세스 안**에서만 뜻이 있어 운영 앱으로 옮길 수 없다.
+    if management:
+        _mount_reload(app, runtime)
+    install_error_handlers(app, origins=origins)
+    @app.get("/health")
+    def health(): return {"status": "ok"}
+    return app
+
+
+def _mount_reload(app: FastAPI, runtime: RuntimeComposition) -> None:
     @app.post("/admin/reload")
     def reload_composition(_principal=Depends(require_scope("ops:reload"))):
         try:
@@ -101,28 +138,6 @@ def create_app(controller=None, classifier=None, *,
         return {"reload_state": runtime.state(revision),
                 "active_revision": runtime.active_revision,
                 "desired_revision": revision}
-    # 운영 화면(Case/Trace/Approval/VOC). S-UI 가 소유 범위를 지켜 mount 함수만 제공하고
-    # 이 한 줄 등록을 리포트로 요청했다 — wiki/records/reports/2026-08-12_S-UI_리포트.md §6
-    mount_ui(app)
-    @app.exception_handler(HTTPException)
-    async def http_error(_request: Request, exc: HTTPException):
-        detail = exc.detail if isinstance(exc.detail, dict) else {
-            "error": {"code": "http_error", "message": str(exc.detail)}
-        }
-        # ★`[2026-09-23]` 헤더를 버리고 있었다 — 운영 화면 관문의 303 에 `Location` 이 빠져 브라우저가
-        #   로그인 화면으로 못 갔다. 예외가 들고 온 헤더(`Location`·`WWW-Authenticate` 등)는 그대로 싣는다.
-        return JSONResponse(status_code=exc.status_code, content=detail,
-                            headers=getattr(exc, "headers", None))
 
-    @app.exception_handler(RequestValidationError)
-    async def validation_error(_request: Request, _exc: RequestValidationError):
-        return JSONResponse(status_code=422, content={"error": {"code": "validation_error", "message": "request validation failed"}})
-
-    @app.exception_handler(Exception)
-    async def internal_error(_request: Request, _exc: Exception):
-        return JSONResponse(status_code=500, content={"error": {"code": "internal_error", "message": "internal server error"}})
-    @app.get("/health")
-    def health(): return {"status": "ok"}
-    return app
 
 app = create_app()

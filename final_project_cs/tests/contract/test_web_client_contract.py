@@ -1,6 +1,6 @@
-"""웹(`frontend/apps/web`)이 기대하는 서버가 **지금 서버와 같은가** (2026-09-28, ST4F-161).
+"""웹(`frontend/apps/web`)이 기대하는 서버가 **지금 서버와 같은가** (2026-09-28, ST4F-161 · develop 판을 우리 웹 호출 모양에 맞춤).
 
-★왜 여기 있는가. 웹의 시험(`ci-web.yml`)은 서버 없이 돈다 — 데모 모드이거나, 손으로 만든 가짜 서버
+★왜 여기 있는가. 웹의 시험(`npm run test:live` — 웹 CI 는 아직 우리 쪽에 없다)은 실제 서버 없이 돈다 — 손으로 만든 mock 서버
   (`tests/live/stub-server.mjs`)를 상대한다. 그래서 서버가 `/v1/web/*` 경로나 설문 모양을 바꾸면
   웹 시험은 **그대로 통과하고 실제 화면만 깨진다.** 이 시험은 웹 소스를 읽어 서버 쪽과 맞춰 본다.
   서버를 바꾼 PR 의 develop 관문에서 바로 붉어지게 하려고 `tests/contract` 에 둔다.
@@ -15,17 +15,31 @@ from pathlib import Path
 from typing import Literal, get_args, get_origin
 
 from app import composition
-from app.modules.travel_ops.survey import SURVEY_VERSION, TripSurvey
+from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION, TripSurvey
 
 WEB = Path(__file__).resolve().parents[2] / "frontend" / "apps" / "web"
 LIVE = WEB / "src" / "lib" / "live"
 PAYLOAD = WEB / "src" / "features" / "onboarding" / "payload.ts"
 
-#: `api("/v1/web/…", …)` · `api<T>(`…`, …)` · `send(`${API_BASE}/v1/web/…`, …)` — 첫 인자가 경로인 호출
-_CALL = re.compile(r"\b(?:api|send)\s*(?:<[^()]*?>)?\(\s*([`\"])(?:\$\{API_BASE\})?(/v1/web/[^`\"]*)\1")
+#: `api("/v1/web/…", …)` · `api<T>(`…`, …)` · `openApi(` · `streamApi(` · `send(`${API_BASE}/v1/web/…`, …)` — 첫 인자가 경로인 호출
+_CALL = re.compile(r"\b(?:api|openApi|streamApi|send)\s*(?:<[^()]*?>)?\(\s*([`\"])(?:\$\{API_BASE\})?(/v1/web/[^`\"]*)\1")
+#: `fetch(`${API_BASE}/v1/web/…`, …)` — 실시간(SSE) 줄기는 `api` 를 거치지 않고 직접 부른다
+_FETCH = re.compile(r"\bfetch\(\s*`\$\{API_BASE\}(/v1/web/[^`]*)`")
+#: `const base = (id: string) => `/v1/web/trip-intakes/${…}`` 와 `api(`${base(id)}/candidates…`)` — 앞머리를 도우미로 빼 둔 모양
+_BASE_DEF = re.compile(r"\bconst base\s*=\s*\(\w+:\s*string\)\s*=>\s*`(/v1/web/[^`]*)`")
+_BASE_CALL = re.compile(r"\bapi\s*(?:<[^()]*?>)?\(\s*`\$\{base\([^)]*\)\}([^`]*)`")
 #: 호출이든 아니든, 경로로 시작하는 문자열 — 호출로 읽히지 않은 것이 남았는지 세는 데 쓴다
 _LITERAL = re.compile(r"[`\"](?:\$\{API_BASE\})?/v1/web/[a-z]")
 _METHOD = re.compile(r"method:\s*\"([A-Z]+)\"")
+
+#: 웹은 부르는데 서버에 아직 없는 경로 — **이유와 함께** 적는다. 서버에 생기면 이 시험이 「목록에서 빼라」고 실패한다(목록이 낡지 않게).
+#:   `[2026-10-07]` 이동 수단 고르기 서버 경로 두 개(구간별 조회 · 수단 고르기)는 만들어져 이 목록에서 뺐다(`intake/move_options.py`).
+#:   `[2026-10-05]` 위치 수집 화면(웹 먼저) — 서버 요청서 「동의 기록 · 위치 수집」 대기. 서버가 만들면 여기서 뺀다.
+PENDING_ON_SERVER: dict[tuple[str, str], str] = {
+    ("POST", "/v1/web/trips/{}/location"): "위치 수집 — 서버 쪽 대기",
+    ("DELETE", "/v1/web/trips/{}/location"): "위치 수집 — 서버 쪽 대기",
+    ("GET", "/v1/web/trips/{}/location/stops"): "위치 수집 — 서버 쪽 대기",
+}
 
 
 def _code_lines(text: str) -> str:
@@ -52,22 +66,45 @@ def _call_end(text: str, start: int) -> int:
     return index
 
 
+def _shape(path: str) -> str:
+    """경로 변수는 `{}` 로 맞추고, 쿼리(`?…` 또는 글자 바로 뒤에 붙은 `${…}`)는 뗀다."""
+    path = path.split("?")[0]
+    path = re.sub(r"(?<=[a-z-])\$\{[^}]*\}$", "", path)
+    return re.sub(r"\$\{[^}]*\}", "{}", path)
+
+
+def _method(code: str, start: int, end: int) -> str:
+    """호출 안의 `method: "…"`. 없고 `json(` 도우미를 쓰면 POST. 요청 설정을 변수로 넘겼으면 메서드를 모르니 `*`(경로만 맞춘다)."""
+    found = _METHOD.search(code, start, end)
+    if found:
+        return found.group(1)
+    segment = code[start:end]
+    if re.search(r"\bjson\(", segment):
+        return "POST"
+    return "*" if re.search(r",\s*language\s*,\s*[A-Za-z_]\w*\s*\)$", segment.rstrip()) else "GET"
+
+
 def _web_calls() -> set[tuple[str, str]]:
-    """웹이 부르는 (메서드, 경로). 경로 변수는 `{}` 로 맞춘다. 단위 시험 파일은 뺀다(가짜 주소가 있다)."""
+    """웹이 부르는 (메서드, 경로). 단위 시험(`*.test.ts`)과 시험용 흉내 도구(`*-kit.ts`)는 뺀다(가짜 주소가 있다)."""
     calls: set[tuple[str, str]] = set()
     unread: list[str] = []
     for path in sorted(LIVE.glob("*.ts")):
-        if path.name.endswith(".test.ts"):
+        if path.name.endswith((".test.ts", "-kit.ts")):
             continue
         code = _code_lines(path.read_text(encoding="utf-8"))
-        found = list(_CALL.finditer(code))
-        for match in found:
-            method = _METHOD.search(code, match.end(), _call_end(code, match.end()))
-            calls.add((method.group(1) if method else "GET", re.sub(r"\$\{[^}]*\}", "{}", match.group(2))))
-        if len(_LITERAL.findall(code)) != len(found):
+        seen = len(_BASE_DEF.findall(code))
+        for pattern, group in ((_CALL, 2), (_FETCH, 1)):
+            for match in pattern.finditer(code):
+                seen += 1
+                calls.add((_method(code, match.end(), _call_end(code, match.end())), _shape(match.group(group))))
+        base = _BASE_DEF.search(code)
+        if base:
+            for match in _BASE_CALL.finditer(code):
+                calls.add((_method(code, match.end(), _call_end(code, match.end())), _shape(base.group(1) + match.group(1))))
+        if len(_LITERAL.findall(code)) != seen:
             unread.append(path.name)
     assert not unread, (
-        f"경로 문자열은 있는데 호출로 읽지 못한 파일: {unread}. 새 호출 모양이면 이 시험의 `_CALL` 을 넓힌다.")
+        f"경로 문자열은 있는데 호출로 읽지 못한 파일: {unread}. 새 호출 모양이면 이 시험의 `_CALL` · `_FETCH` 를 넓힌다.")
     return calls
 
 
@@ -79,12 +116,28 @@ def _server_routes() -> set[tuple[str, str]]:
             for method in getattr(route, "methods", None) or ()}
 
 
+def _on_server(call: tuple[str, str], routes: set[tuple[str, str]]) -> bool:
+    method, path = call
+    return (method, path) in routes if method != "*" else any(p == path for _, p in routes)
+
+
 def test_the_server_still_has_every_path_the_web_calls():
     calls = _web_calls()
     assert calls, f"{LIVE} 에서 서버 호출을 하나도 읽지 못했다 — 웹 파일이 옮겨졌는지 본다."
-    missing = sorted(calls - _server_routes())
+    routes = _server_routes()
+    missing = sorted(call for call in calls if not _on_server(call, routes) and call not in PENDING_ON_SERVER)
     assert not missing, (
-        f"웹이 부르는데 서버에 없는 경로: {missing}. 서버에서 없앴거나 바꿨다면 웹(`src/lib/live/`)도 함께 고친다.")
+        f"웹이 부르는데 서버에 없는 경로: {missing}. 서버에서 없앴거나 바꿨다면 웹(`src/lib/live/`)도 함께 고친다. "
+        "서버 쪽을 기다리는 중이면 `PENDING_ON_SERVER` 에 이유와 함께 적는다.")
+
+
+def test_the_pending_list_does_not_go_stale():
+    """서버에 이미 생긴 경로가 「대기」 목록에 남아 있으면 실패한다 — 그래야 목록이 거짓으로 남지 않는다."""
+    routes = _server_routes()
+    done = sorted(call for call in PENDING_ON_SERVER if _on_server(call, routes))
+    assert not done, f"서버에 이미 있다 — `PENDING_ON_SERVER` 에서 뺀다: {done}"
+    unused = sorted(call for call in PENDING_ON_SERVER if call not in _web_calls())
+    assert not unused, f"웹이 더는 부르지 않는다 — `PENDING_ON_SERVER` 에서 뺀다: {unused}"
 
 
 # ── 설문(`constraints.survey`) ─────────────────────────────────────────────

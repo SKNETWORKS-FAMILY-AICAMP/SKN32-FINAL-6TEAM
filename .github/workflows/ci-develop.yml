@@ -2,16 +2,16 @@
 #   린트: 버그만 잡는 최소 규칙(F·E9). 규칙 범위는 루트 ruff.toml 이 정한다.
 #   시험: DB 없이도 대부분 도는 architecture·contract·unit.
 #         contract·unit 중 9개 파일이 DB 를 쓰기 때문에 PostgreSQL 은 띄운다.
-#   보안(scope/PII·추적 파일)은 RULE.md §5에 따라 같은 시험 DB에서 검사한다.
+#   보안(scope · PII · 추적 파일)은 RULE.md §5 에 따라 같은 시험 DB 에서 검사한다 — `[2026-10-05]` 팀 저장소 develop 판에서 가져옴(우리 로컬에서 22개 통과 확인).
 #   통합·e2e 와 Docker 빌드는 main 관문(ci-main.yml)에서 본다.
 #   실제 LLM 호출 시험(live)은 pytest.ini 가 기본으로 빼 둔다.
 name: CI (develop)
 
 on:
   push:
-    branches: [develop]
+    branches: [role-manager, develop]
   pull_request:
-    branches: [develop]
+    branches: [role-manager, develop]
 
 concurrency:
   group: ci-develop-${{ github.ref }}

@@ -1,0 +1,318 @@
+{
+ "eval": "place_lookup",
+ "dataset": "place_lookup_holdout_v1.jsonl",
+ "dataset_sha": "2b30e3d73ba1f642",
+ "label": "holdout_v3-domains",
+ "env": {
+  "run_at": "2026-10-08T06:37:29+00:00",
+  "today": "2026-10-07",
+  "layout": "domains",
+  "kakao": "live",
+  "llm": "off",
+  "git_commit": "d76ecad",
+  "git_branch": "role-dining",
+  "git_dirty": false,
+  "db": "dining_rebuild",
+  "ledger_open_places": 1888,
+  "tour": "off",
+  "places": 6,
+  "aliases": 5,
+  "areas": 4
+ },
+ "summary": {
+  "accuracy": {
+   "num": 9,
+   "den": 12,
+   "rate": 0.75
+  },
+  "wrong_confirmed": {
+   "num": 0,
+   "den": 12,
+   "rate": 0.0
+  },
+  "wrong_review": {
+   "num": 0,
+   "den": 12,
+   "rate": 0.0
+  },
+  "not_found": {
+   "num": 3,
+   "den": 12,
+   "rate": 0.25
+  },
+  "blocked": {
+   "num": 0,
+   "den": 12,
+   "rate": 0.0
+  },
+  "labels": {
+   "correct_confirmed": 1,
+   "correct_review": 7,
+   "correct_abstain": 1,
+   "wrong_review": 0,
+   "wrong_confirmed": 0,
+   "not_found": 3,
+   "blocked": 0,
+   "error": 0
+  },
+  "by_group": {
+   "misc": {
+    "num": 4,
+    "den": 5,
+    "rate": 0.8
+   },
+   "name": {
+    "num": 3,
+    "den": 4,
+    "rate": 0.75
+   },
+   "near": {
+    "num": 2,
+    "den": 3,
+    "rate": 0.667
+   }
+  }
+ },
+ "results": [
+  {
+   "id": "PLH-01",
+   "group": "name",
+   "input": "12:30 이문설롱탕",
+   "place": "이문설농탕",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "오타로 보고 「이문설농탕」로 찾았어요(자모 거리 비율 0.07)",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5728,
+    126.9839
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PLH-02",
+   "group": "near",
+   "input": "12:30 성수족빨",
+   "place": "성수족발",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": 0.0,
+   "note": "오타로 보고 「성수족발」로 찾았어요(자모 거리 비율 0.09)",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.546,
+    127.0543
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PLH-03",
+   "group": "misc",
+   "input": "12:30 통인시장 기름떡볶이",
+   "place": "원조정할머니 기름떡볶이",
+   "source": "kakao",
+   "method": "kakao_nearest",
+   "kind": "dining",
+   "review": true,
+   "km": 0.01,
+   "note": "이름이 특정하지 않아 종류가 맞는 1곳 중 앞뒤 일정에 가장 가까운 「원조정할머니 기름떡볶이」(평균 775m)을 골랐다 — 이 여행에만 싣는다. 다르면 고쳐 주세요",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5806,
+    126.9701
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PLH-04",
+   "group": "name",
+   "input": "12:30 진옥화할매",
+   "place": "진옥화할매원조닭한마리",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "「진옥화할매」로 시작하는 「진옥화할매원조닭한마리」로 찾았어요 — 다르면 고쳐 주세요",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5704,
+    127.0057
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PLH-05",
+   "group": "name",
+   "input": "12:30 하동관",
+   "place": "하동관",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5644,
+    126.985
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PLH-06",
+   "group": "near",
+   "input": "12:30 파리바게뜨",
+   "place": "파리바게뜨 서울역씨티타워점",
+   "source": "kakao",
+   "method": "kakao_branch",
+   "kind": "dining",
+   "review": true,
+   "km": 0.29,
+   "note": "「파리바게뜨」 지점 중 앞뒤 일정 1곳에서 가장 가까운 「파리바게뜨 서울역씨티타워점」(평균 289m) — 다르면 고쳐 주세요 (다른 지점: 파리바게뜨 용산후암점, 파리바게뜨 만리점)",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5542,
+    126.974
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PLH-07",
+   "group": "near",
+   "input": "15:00 이디야 홍대입구역",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PLH-08",
+   "group": "misc",
+   "input": "12:30 Paris Baguette",
+   "place": "파리바게뜨 이태원점",
+   "source": "kakao",
+   "method": "kakao_branch",
+   "kind": "dining",
+   "review": true,
+   "km": 0.02,
+   "note": "「파리바게뜨」 지점 중 앞뒤 일정 1곳에서 가장 가까운 「파리바게뜨 이태원점」(평균 77m) — 다르면 고쳐 주세요 (다른 지점: 파리바게뜨 이태원경리단점, 파리바게뜨 광화문1945점)",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5343,
+    126.9946
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PLH-09",
+   "group": "misc",
+   "input": "12:30 Myeongdong Kyoja",
+   "place": "명동교자 본점",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "카카오로 「명동교자」를 찾아 요식 원장에서 확인했다 · 지점이 2곳 — 「명동교자 본점」을 골랐어요. 다르면 고쳐 주세요",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5612,
+    126.9861
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PLH-10",
+   "group": "misc",
+   "input": "12:30 근처 칼국수집",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PLH-11",
+   "group": "misc",
+   "input": "18:00 저녁 고기집",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "correct_abstain"
+  },
+  {
+   "id": "PLH-12",
+   "group": "name",
+   "input": "12:30 남산돈까스",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  }
+ ]
+}

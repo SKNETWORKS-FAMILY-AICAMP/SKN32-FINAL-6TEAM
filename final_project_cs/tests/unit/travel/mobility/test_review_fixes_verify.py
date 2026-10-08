@@ -13,12 +13,12 @@ from datetime import date
 
 import pytest
 
-from app.modules.travel_ops.mobility.engine.errors import CaseInputError
-from app.modules.travel_ops.mobility.engine.line_order import LineOrder
-from app.modules.travel_ops.mobility.engine.paths import RULES_DIR
-from app.modules.travel_ops.mobility.engine.timeutil import HolidayCalendar
-from app.modules.travel_ops.mobility.engine.transfer_walk import TransferWalk, ceil1
-from app.modules.travel_ops.mobility.engine.verify_time import Dep, Timetable, Verifier
+from app.domains.travel_ops.instances.mobility.engine.errors import CaseInputError
+from app.domains.travel_ops.instances.mobility.engine.line_order import LineOrder
+from app.domains.travel_ops.instances.mobility.engine.paths import RULES_DIR
+from app.domains.travel_ops.instances.mobility.engine.timeutil import HolidayCalendar
+from app.domains.travel_ops.instances.mobility.engine.transfer_walk import TransferWalk, ceil1
+from app.domains.travel_ops.instances.mobility.engine.verify_time import Dep, Timetable, Verifier
 
 RULES = json.loads((RULES_DIR / "rules_v0.3.json").read_text(encoding="utf-8"))
 

@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
-from app.modules.travel_ops.dining.ledger import slot_verdicts
+from app.domains.travel_ops.instances.dining.ledger import slot_verdicts
 
 KST = timezone(timedelta(hours=9))
 MONDAY = date(2026, 9, 21)
@@ -112,7 +112,7 @@ def test_an_unknown_ledger_id_is_left_out(conn):
 
 # ── 생성기가 쓰는 것 ────────────────────────────────────────────────
 def test_planner_shops_are_every_open_real_shop_with_coordinates(conn, shop, place):
-    from app.modules.travel_ops.dining.ledger import planner_shops
+    from app.domains.travel_ops.instances.dining.ledger import planner_shops
 
     with_tour = _uid_of(conn, cid := shop())
     no_tour = place("비건키친")
@@ -131,7 +131,7 @@ def test_planner_shops_are_every_open_real_shop_with_coordinates(conn, shop, pla
 
 
 def test_open_among_answers_for_each_shop_at_that_time(conn, shop, place):
-    from app.modules.travel_ops.dining.ledger import open_among
+    from app.domains.travel_ops.instances.dining.ledger import open_among
 
     open_ = _uid_of(conn, shop())
     unknown = place("규칙없는집")

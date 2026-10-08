@@ -38,10 +38,6 @@ credentials*
 Thumbs.db
 .DS_Store
 *.swp
-# JetBrains(PyCharm 등) 프로젝트 설정 — 개인 로컬 경로·최근 파일 목록이 섞여
-# 있어 공유 가치가 없고, 저장소 안 어느 하위 폴더에서 열든(role-activity·
-# final_project_cs 등) 다 걸리게 슬래시 없이 둔다.
-.idea/
 
 # 임시 작업물
 .tmp_*
@@ -53,14 +49,6 @@ Thumbs.db
 # 로컬 DB 덤프
 *.dump
 *.sqlite3
-
-# 로컬 PostgreSQL 데이터 폴더(`initdb -D pgdata`). 서버가 쓰는 바이너리라 커밋하지 않는다 —
-# DB 는 마이그레이션과 적재 스크립트로 다시 만든다.
-pgdata/
-
-# TourAPI 상세 조회 이어받기 캐시(응답 원본). 하루 호출 한도 때문에 나눠 받을 때만 쓰는 중간 저장본이라
-# 올리지 않는다 — 결과는 activity_total_data.csv 에 반영된다.
-final_project_cs/app/modules/travel_ops/activity/data_processing/tourapi_details_cache.jsonl
 
 # 빌드·휠 검사 찌꺼기
 .wheelhouse*/
@@ -221,3 +209,11 @@ _40/
 
 docs/mobility/*.docx
 docs/mobility/*.png
+
+# 실험 사본 — 비교 측정용으로 저장소를 통째로 복사한 자리.
+# ★git 에 올리지 않는다. 릴리스 대상(final_project_cs)과 섞이면 되돌리기 어렵다.
+#   결과·결론은 wiki 문서로만 남긴다(사본 자체는 버려도 되는 것).
+/_experiments/
+
+# 2026-10-07 시험 세트 원문(AI Hub · KoCulture 문장 포함) — 저장소에 올리지 않는다(재배포 제한). MX 세트 · 검토자 입력
+/program/datasets/

@@ -79,6 +79,25 @@ products                                     (006)
 
 **여러 번 돌려도 같은 결과다.** 개발 중에 반복 실행하게 되므로 중요하다.
 
+## 번호가 팀 저장소와 겹칠 때 `[2026-10-05]`
+
+**알아 둘 것.** 실행기(`migrate.py`)는 `migrations/*.sql` 을 **파일 이름순으로 이어 붙여 한 번에** 돌린다(하위 폴더 `pending/` 는 안 돈다). 실행 기록 표가 없어 **번호는 순서일 뿐 상태가 아니다** — 번호 앞자리가 겹쳐도 이름이 다르면 둘 다 돌고, 파일마다 「없을 때만 만들기」라 다시 돌려도 안전하다. 겹치는 것은 헷갈림이지 고장이 아니다. 단 **한 파일이 틀리면 그 뒤 모든 파일이 안 돈다.**
+
+팀 저장소 `develop` 이 갖고 우리에게 없는 파일 다섯과 판정(코어 담당 · 읽기만 했고 아직 가져오지 않았다):
+
+| 파일 | 우리와 겹침 | 판정 | 이유 |
+|---|---|---|---|
+| `014_activity_tour_disaster` · `015_activities_place_link` · `016_activities_disaster_to_watch` | 014·016 은 앞자리가 우리 `014_itinerary` · `016_trip_request_key` 와 같고, 015 는 우리 빈 번호지만 우리 대기 중 `pending/015_drop_commerce_domain.sql` 과 겹침 | **제외(지금)** | `activities` · `tour` · `disaster` 표는 develop 활동 Team 의 **자체 재난문자 감시**용이다. 우리는 그 감시를 쓰지 않고(3분 감시 한 곳 — [개발 통합 작업 방향](../records/plans/2026-10-05_develop_통합_작업_방향.md)) 우리 마이그레이션에는 `activities` 표가 없다. 셋은 한 묶음이다 — 015·016 이 014 가 만든 표를 고치므로 **부분만 가져오지 않는다** |
+| `017_place_catalog_large_class` | 앞자리가 우리 `017_supplier_tier` 와 같음 | **제외(지금)** | 우리 코드는 관광공사 대분류(`lclsSystm`)를 `place_catalog.raw_json` 안에서 읽는다 — 새 칸이 필요 없다. 그 칸을 읽는 develop 코드(`activity/db_search`)를 가져오기로 할 때 같이 본다 |
+| `220_dining_runtime_link` | 우리 `220_dining_notice_scope` 와 앞자리 같음(우리만 221~223 가 있다) | **요식 담당 판정: 반영 — 새 번호 `224_dining_runtime_link`** | 판정할 때 코어 장소를 원장 가게와 잇는 함수라 221 · 222(공용 장소 올리기)와는 다른 일이다 — 둘 다 필요하다. 규칙 3 대로 새 번호로 들였다(우리 220 · 221~223 이름은 그대로). 개발 DB 복사본에서 전체를 이어 붙여 두 번 실행해 오류 없음을 확인했다(요식 세션). 요식 병합 브랜치 `port/team-dining-sync`(1de9a692)에 들어 있고 **본 브랜치 반영은 대기** — 작업 폴더에 다른 세션의 미커밋 수정 한 줄이 있어 합치기가 막혀 있다 |
+
+**규칙** (코어 담당이 한 번에 정했다)
+1. **이미 적용된 번호 · 이름은 바꾸지 않는다.**
+2. **같은 내용이면 팀 저장소와 같은 이름으로** 가져온다 — 통합 때 중복이 안 생긴다.
+3. **이름이 같고 내용이 다르면**(220) 우리 마지막 번호 뒤 **새 번호**로 가져온다(코어 `050`~ · 요식 `224`~). 통합 때 팀 저장소 쪽 옛 이름을 지운다.
+4. 가져오기 전에 **개발 DB 에서 전체를 이어 붙여 두 번** 돌려 오류가 없는지 본다.
+5. 대기 중 `pending/015_drop_commerce_domain.sql` 은 켤 때 새 번호로 바꾼다.
+
 ## 빠뜨리면 무너지는 제약 셋
 
 `[실측]` handoff 계약이 "★빠뜨리면 시스템이 무너지는 제약 3개"로 따로 표시한 것들.
@@ -131,6 +150,91 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 ★**고객이 쓴 글 → 고객이 고친 글만** 담는다(둘 다 고객 글) — 관광공사·카카오가 준 이름·좌표는 담지 않는다(약관). 별칭은 다시 찾을 이름일
 뿐이고 값은 매번 조회한다. 확인 화면에서 장소 이름을 고치면 쌓이고(`intake.pipeline.remember_alias`), 기본값은 코드의
 `SEED_ALIASES`(남산타워 → N서울타워 등)다 — 고객이 고친 것이 이긴다.
+
+### 장소 별칭을 고객 단위로 `[2026-09-30 · 038]`
+
+`[실측]` `038_place_aliases_per_customer.sql` — `place_aliases` 에 `customer_id` 칸을 더한다. ☆버그(사용자 확인 「명백한 버그」 — ui 세션 전달): 한 고객이 확인 화면에서 고친 장소(「이촌동 점심 식당」→ 「엘 샌드위치」)가 테넌트 단위로 쌓여 다른 고객의 같은 원문에 자동 적용됐다 — 고른 값은 그 여행에 대한 그 사람의 선택이지 이름 교정이 아니고, 데이터 격리 문제였다. 이제 `source='customer'` 행은 **그 고객의 다음 접수에만** 쓰고(`intake.pipeline.load_aliases`), `source='seed'`(기본값)만 모두에게 쓴다. 유일 키는 (테넌트, 원문, 고객). 새 고객 행은 고객 번호가 필수(`NOT VALID` 검사 — 옛 행은 통과). ★이미 있던 1행(고객 번호 없음)은 **지우지 않았다** — 누가 고쳤는지 몰라 조회에서 아무에게도 쓰이지 않는다(삭제 여부는 사용자 결정). 다른 고객 여럿이 같게 고친 것을 공용으로 올리는 규칙은 만들지 않았다(필요하면 「원문이 가게 이름처럼 보이고 서로 다른 고객 여러 명이 같게 고쳤을 때만」이 제안이다). ★적용: 이 파일만 적용했다(2026-09-30) — 031 과 같은 이유.
+
+### 웹 남용 방어 `web_usage` · `runtime_limits` · `runtime_limit_events` `[2026-09-28 · 031]`
+
+`[실측]` `031_web_guard.sql` — 웹의 비싼 작업(계획 읽기 · 일정 짜기 · 확인 · 여행 만들기 · 채팅)과 키 발급을 **DB 에서 모든 프로세스가 같이** 센다
+(`web_usage`, 027 `external_call_budget` 과 같은 방식). 주소는 원문이 아니라 `HMAC(서버 비밀키, 날짜|주소)` 만 남고 48시간 뒤 지운다.
+운영자가 바꾼 제한값은 `runtime_limits`, 판 번호는 `runtime_limit_state`, 바꾼 기록은 `runtime_limit_events`(**트리거로 고치기·지우기 금지**).
+기본값·범위는 가드레일 `web_guard` 가 정본이다. 코드 `app/domains/travel_ops/modules/web_account/web_guard.py` · `web_limits_api.py`.
+★적용: 전체 실행기(`app/infrastructure/db/migrate.py`)가 아니라 이 파일만 적용했다(2026-09-28) — 폴더에 다른 세션의 작업 중
+마이그레이션(200번대 요식)이 함께 있어 전체를 돌리면 그것까지 적용된다.
+
+### 보류 제안 이유 `relaxed` `[2026-09-29 · 033]` — `[2026-10-03]` 감시도 이 이유로 묻는다(`watch_relaxed.py` · 스키마 변경 없음)
+
+`[실측]` `033_pending_relaxed.sql` — `pending_changes.reason` 제약에 `relaxed`(조건을 풀어 찾은 안 — 시각 늦추기 · 다음 일정 근처)를 더한다. 「다른 데로 바꿔 줘」가 같은 조건으로 0곳일 때 되는 안을 **묻는** 제안이다(`itinerary_changes.relaxed_options` · `trip_desk._ask_relaxed`). 옛 제약을 지우고 넓혀 다시 거는 방식이라 다시 돌려도 안전하다. ★적용: 이 파일만 적용했다(2026-09-29) — 031 과 같은 이유.
+
+### 보류 제안 이유 `other_options` `[2026-09-29 · 035]`
+
+`[실측]` `035_pending_other_options.sql` — `pending_changes.reason` 제약에 `other_options`(바꾼 뒤에도 고를 수 있는 다른 안)를 더한다. 「다른 데로 바꿔 줘」로 한 곳으로 **바꾼 뒤** 조건을 다 통과한 나머지 · 모자라면 조건을 푼 안을 셋까지 같은 항목의 제안으로 연다 — 고르면 그 안으로(`plan_swap`), 답이 없으면 바꾼 것을 그대로 둔다(`itinerary_changes.plan_fresh_alternate` · `trip_desk.fresh_alternate`). 옛 제약을 지우고 넓혀 다시 거는 방식이라 다시 돌려도 안전하다. (034 가 `requested_options` 를 더했다 — 이 절 위에 따로 적지 않았다.) ★적용: 이 파일만 적용했다(2026-09-29, 제약 조회로 확인) — 031 과 같은 이유.
+
+### 관광공사 목록 운영시간 `catalog_hours` `[2026-09-29 · 036]`
+
+`[실측]` `036_catalog_hours.sql` — 새벽 작업(`catalog_hours.prefill`, `run_sweepers --only catalog_hours`)이 관광공사 목록(`place_catalog`)의 활동 운영시간을 읽어 두는 표. 키 (tenant_id, source, content_id). 칸: 요일별 운영시간 `hours_week` · 읽은 방법 `hours_read` · 원문 `hours_origin`(이용시간 · 쉬는 날) · 문의 전화 · 읽을 때의 목록 수정 시각 `source_modified_at`(목록 값과 다르면 다시 읽는다) · `read_at`. 사실 정보만 적는다(사진 · 소개글 없음 — 2026-09-28 사용자 결정). 활동 「다른 데로 바꿔」는 요청 자리에서 관광공사를 부르지 않고 이 표를 읽는다(`catalog_pool`). ★적용: 이 파일만 적용했다(2026-09-29) — 031 과 같은 이유.
+
+### 바깥함 알림 앞부분 검색 인덱스 `[2026-09-30 · 037]`
+
+`[실측]` `037_outbox_notice_prefix_idx.sql` — 바깥함 `(tenant_id, topic, dedupe_key text_pattern_ops)` 인덱스 추가. 알림 조회(`dedupe_key LIKE '<여행 id>:%'`)가 기존 유일 인덱스로는 앞부분 검색을 못 써 바깥함 전체를 훑었다(543행에서 Seq Scan). 변경 초인종(`trip_events.py`)이 연결마다 2초 간격으로 읽어 바깥함이 커지면 부담이 된다. 인덱스를 강제로 켜 확인했다: `Index Scan using outbox_notice_prefix_idx`. 추가만 하고 다시 돌려도 안전하다. ★적용: 이 파일만 적용했다(2026-09-30) — 031 과 같은 이유.
+
+### 고객 연락처 `customer_profiles` `[2026-10-01 · 039]`
+
+`[실측]` `039_customer_profiles.sql` — 복구 이메일과 디스코드 웹훅의 저장 자리. 키 (tenant_id, customer_id). 칸: `recovery_email` · `discord_webhook_enc`(**암호화한** 웹훅 URL — 원문은 어디에도 없다) · `discord_hint`(마스킹한 모양) · `discord_status`(`untested`/`ok`/`invalid`) · `discord_checked_at`(상태를 정한 시각) · `discord_tested_at`(마지막 시험 시도 — 시험 발송 간격 제한을 DB 에서 센다). 고객이 지워지면 함께 지운다(`ON DELETE CASCADE`). 웹훅은 서버가 나중에 POST 하는 비밀값이라 암호화 키는 서버 설정에서 파생한다(`customer_profile.py`). ★적용: 이 파일만 적용했다(2026-10-01) — 031 과 같은 이유.
+
+### 웹 브라우저 세션 `web_sessions` `[2026-10-04 · 044]`
+
+`[실측]` `044_web_sessions.sql` — HttpOnly 쿠키 세션. 칸: `session_hash`(쿠키 값의 SHA-256 — 원문은 어디에도 없다 · 기본키) · `tenant_id` · `customer_id`(→ `customers`) · `created_at` · `last_used_at` · `revoked_at`. ★만료 시각 · 종류(게스트/회원) · CSRF 토큰을 **저장하지 않는다** — 쓸 때 `web.*` 설정과 소셜 계정 유무로 계산하고 HMAC 으로 다시 만든다(관리 콘솔이 바꾼 값이 이미 만든 세션에도 곧 적용). 사용자 행을 가리키는 외래키라 게스트 정리가 이 행을 먼저 지운다. 계약 [rest-endpoints.md 「브라우저 세션 쿠키」](../external/rest-endpoints.md) · [D-CS-011](../decisions/D-CS-011-browser-session-cookie.md). 적용은 이 파일만 한 번(전체 실행기 아님 — 폴더에 다른 세션의 작업 중인 파일이 있다).
+
+### 호출 예산의 실패 · 거절 수 `external_call_budget` `[2026-10-05 · 047]`
+
+`[실측]` `047_call_budget_outcomes.sql` — 027 의 호출 예산 표(`meter` · `period` · `used` · `cap`)에 `failed`(부른 뒤 쓸 수 있는 답을 못 받은 수 — `used` 의 부분집합) · `rejected`(한도가 차서 **안 부른** 수 — `used` 에 안 들어감)를 더한다. 기존 줄은 0 으로 채워진다 · 재실행 안전. 읽는 곳: `scripts/report_source_budget.py` · [운영 문서](../operations/call-budget.md).
+
+### 텔레그램 연결 · 알림 받는 곳 `customer_profiles` · `telegram_link_codes` · `telegram_seen_updates` `[2026-10-05 · 048]`
+
+`[실측]` `048_telegram_connect.sql` — ①`customer_profiles` 에 칸 7개: `telegram_chat_enc`(**암호화한** 대화 번호 — 원문은 어디에도 없다) · `telegram_chat_hash`(서버 비밀 HMAC — 같은 대화가 두 사용자에게 묶이는 것을 막는 **부분 유일 색인** `uq_customer_profiles_telegram_chat (tenant_id, telegram_chat_hash) WHERE … IS NOT NULL`) · `telegram_status`(`untested`/`ok`/`blocked`) · `telegram_connected_at` · `telegram_checked_at` · `telegram_tested_at`(시험 발송 간격을 DB 에서 센다) · `notice_channel`(`discord`/`telegram`/NULL — **알림 받는 곳, 한 번에 한 곳**) ②`telegram_link_codes`(연결 링크의 일회용 코드 — `code_hash` 기본키(**원문 없음**) · `tenant_id` · `customer_id`(→ `customers` **ON DELETE CASCADE** — 게스트 정리를 막지 않는다) · `created_at` · `used_at`) ③`telegram_seen_updates`(`update_id` 기본키 · `seen_at` — 텔레그램이 같은 업데이트를 다시 보내도 두 번 처리하지 않으려고 이틀 동안 기억). 저장하는 것은 대화 번호 · 연결 시각 · 상태뿐이다(텔레그램 이름 · 사용자명 · 전화 · 사진은 받아도 저장하지 않는다). 칸 · 표 모두 `IF NOT EXISTS` — **재실행 안전**. 읽고 쓰는 곳: `app/domains/travel_ops/modules/web_account/telegram_connect.py` · `customer_profile.py` · `notice_routing.py` · 계약 [rest-endpoints.md 「텔레그램으로 알림 받기」](../external/rest-endpoints.md) · [운영 문서](../operations/telegram-setup.md). ★적용: 이 파일만 한 번(2026-10-05, 전체 실행기 아님 — 폴더에 다른 세션의 작업 중인 파일이 있다). 동의 `alert_channel` 철회가 대화 번호도 지운다(`consents.py`).
+
+### 호출 예산의 제공처 한도 초과 표시 `external_call_budget` `[2026-10-05 · 049]`
+
+`[실측]` `049_call_budget_provider_exhausted.sql` — `exhausted_at`(제공처가 「한도 초과」를 알린 시각 — 그날 한국 자정까지 그 소스를 안 부른다) · `learned_cap`(그때까지 센 사용 수 = 제공처가 허락한 한도의 관측값)을 더한다. 달이 바뀌면 새 줄이라 자동으로 풀린다 · 재실행 안전.
+
+### 항로 지킴이 켜고 끈 기록 `trip_guardian_changes` `[2026-10-06 · 050]`
+
+`[실측]` `050_trip_guardian_changes.sql` — 일정이 꼬이면 알아서 고치는 모드(항로 지킴이)를 **누가 · 언제 · 어디서** 켜고 껐나의 **추가만 하는** 기록. 칸: `change_id`(기본키) · `seq`(bigserial — 순서는 시각이 아니라 이것이 정한다) · `tenant_id` · `trip_id`(→ `trips` **ON DELETE CASCADE** — 여행을 지우면 같이 지워진다) · `actor_customer_id` · `enabled`(이 행위의 결과 — 켬 true · 끔 false) · `via`(`card` · `header` · `notice` · `settings`, CHECK) · `at`. 트리거 `trip_guardian_changes_no_change` 가 **UPDATE 를 늘 거절**한다(지우기는 여행 삭제의 CASCADE 가 하므로 막지 않는다). 인덱스 `(tenant_id, trip_id, seq DESC)`. 켜고 끄는 **값 자체**는 이 표가 아니라 `trips.constraints.survey.on_disruption` · `survey_answered` 다(판정이 읽는 자리) — 이 표는 그 값을 **직접 골랐다는 증거**를 남긴다. 계약 [rest-endpoints.md 「항로 지킴이」](../external/rest-endpoints.md). 개발 DB 에 전체 이어 붙여 **두 번** 실행해 오류 없음을 확인했다(2026-10-06). 시험 `tests/e2e/test_guest_and_trip_delete.py` 의 「여행 번호를 든 표 목록」에 CASCADE 로 올렸다.
+
+### 로딩 중 질문의 답 이력 `trip_intake_survey_answers` `[2026-10-06 · 053]`
+
+`[실측]` `053_intake_survey_answer_history.sql` — 저장할 때 **그때의 질문 묶음 버전 · 문구 · 라벨 · 슬롯 · 해석한 값**을 남기는 **추가만 하는 표**(UPDATE 는 트리거가 막는다). 칸: `answer_id` · `seq`(순서) · `tenant_id` · `intake_id`(→ `trip_intakes` **ON DELETE CASCADE**) · `question_id`(화면이 아는 문항 번호) · `option_id` · `slot`(구조화 값이 들어가는 자리 — 문항 번호와 다른 칸) · `value`(서버가 해석한 값) · `question_text` · `option_label`(직접 값 `on_disruption` · `pace` 는 비어 있다) · `bundle_version` · `answered_at`. 같은 문항을 고치면 줄이 쌓이고 지금 답 = 문항마다 `seq` 최대 줄. 같은 묶음 · 같은 선택지의 재전송은 줄을 더하지 않는다. 등록 때 설문은 이 표의 **저장 때 해석한 값**으로 만든다. 계약 [rest-endpoints.md 「설문 질문」](../external/rest-endpoints.md). 개발 DB 에서 전체 이어 붙여 실행해 오류 없음 · 마이그레이션 재실행 시험 통과(2026-10-06).
+
+### 재난 시 일정 정지 `trip_safety_pauses` · 대피 장소 `safety_shelters` `[2026-10-06 · 052]`
+
+`[실측]` `052_safety_pause_and_shelters.sql` — ①`trip_safety_pauses`: 재난으로 **여행(또는 그날)을 감시 · 안내 대상에서 멈추는 표시**. 칸: `pause_id` · `seq` · `tenant_id` · `trip_id`(→ `trips` **ON DELETE CASCADE**) · `level`(`day` 그날 정지 · `trip` 여행 전체, CHECK) · `event_key`(사건 지문 — `UNIQUE (tenant_id, trip_id, level, event_key)` 라 **같은 사건으로 두 번 열지 않는다**, 다시 시작한 뒤에도) · `event_json`(근거: 재해구분 · 단계 · 시각 · 원문 일부) · `day`(그날 정지의 날짜) · `from_at` · `until_at`(★`[2026-10-06 정정]` 지금은 **둘 다 NULL** — 자정에 풀지 않는다. 칸은 옛 값 호환용으로 남는다) · `guidance_json`(알림에 실은 안내 — 대피 장소 포함, 감사용) · `release_notified_at`(공식 해제 알림을 낸 시각 — 한 번만) · `resumed_at` · `resumed_via`(web · agent · release · expired) · `resumed_by`. 일정 항목은 **고치지 않는다**. 부분 인덱스 `(tenant_id, trip_id) WHERE resumed_at IS NULL`. ②`safety_shelters`: 공공 대피 장소 자료 — `shelter_type`(`civil_defense` 민방위 대피시설 · `quake_outdoor` 지진 옥외대피장소, CHECK) · `name` · `address` · `latitude` · `longitude`(WGS84, CHECK 범위) · `underground` · `capacity` · `source`(자료 이름 — 알림에 「자료: …」로 실린다) · `source_ref` · `source_date` · `loaded_at`. 유일 색인 둘(자료 안 번호가 있으면 `(type, source, source_ref)`, 없으면 `(type, source, name, 좌표)`)이라 같은 자료를 다시 적재해도 줄이 늘지 않는다. **적재 전에는 비어 있다** — 비어 있으면 안내가 「자료를 아직 불러오지 못했어요」라고 말한다. 적재: `scripts/load_safety_shelters.py`. 계약 [rest-endpoints.md 「재난 시 일정 정지」](../external/rest-endpoints.md) · 설계 `records/plans/2026-10-06_재난_일정정지와_피난안내_설계.md`. 개발 DB 에 전체를 이어 붙여 **두 번** 실행해 오류 없음(2026-10-06). `trip_safety_pauses` 는 여행 삭제 시험의 「여행 번호를 든 표 목록」에 CASCADE 로 올렸다.
+
+### 사용자 활동 기록 `user_activity_events` `[2026-10-06 · 054]`
+
+`[실측]` `054_user_activity_events.sql` — **사용자가 무엇을 골랐나 · 눌렀나**를 한 줄씩 쌓는 append-only 표(`event_id` · `tenant_id` · `trip_id` · `customer_id` · `kind` · `payload_json` · `created_at`). 처음 쓰는 곳은 재난 뒤 다시 시작할 때의 선택(`kind=safety_recovery_choice`). 자유 문장은 넣지 않는다(채팅은 `trip_chat_turns` 가 가린 뒤 저장). 외래키가 없어 여행 삭제 때 `trip_delete._PURGE` 로 지운다(채팅 기록과 같은 기본값 — 비식별로 남길지는 사용자 결정 대기). 다시 돌려도 안전하다.
+
+### 약관의 보관 기간 `legal_retention` · `legal_retention_history` · `retention_runs` `[2026-10-07 · 056]`
+
+`[실측]` `056_legal_retention.sql` — ①`legal_retention`(`tenant_id` PK · `revision` · `overrides jsonb` — 운영자가 바꾼 값만, 기본값은 `config/guardrails.yaml` `retention`) ②`legal_retention_history`(덧붙이기만 — 트리거가 UPDATE · DELETE 를 막는다. 누가 · 언제 · 왜 · 이전 → 새 값) ③`retention_runs`(회원 정리가 한 번 돌 때마다 한 줄 — `mode` dry_run|on · 표별 지운(또는 지울) 건수만, 개인 정보 없음). 값이 바뀌면 약관 버전이 `…+ret{revision}` 이 된다. 재실행해도 안전하다.
+
+### 받아쓰기에서 같은 줄을 다르게 읽은 곳 `intake_sources.differs_json` `[2026-10-06 · 055]`
+
+`[실측]` `055_intake_transcription_differs.sql` — `intake_sources` 에 칸 하나 `differs_json jsonb NOT NULL DEFAULT '[]'`. 사진 · 스캔을 받아쓸 때 **전체 · 위 반쪽 · 아래 반쪽**을 모델이 읽는데, 전체와 반쪽이 **같은 줄을 다르게 읽은 곳**(`[{line, text, other, half, ratio}]` — 줄 번호는 전체 받아쓴 글 기준)을 남긴다. 그 줄에서 나온 제목 · 예약번호는 읽을 때 「확인 필요」로 표시된다(값은 그대로 두고 확정으로 쓰지 않는다). 빠진 줄을 적는 `missing_json` 은 화면이 이미 읽고 있어 모양을 바꾸지 않고 **따로 둔 칸**이다. 기존 접수는 `[]` 로 채워진다(그때는 이 검사가 없었다). 칸이 아직 없는 DB 에서도 읽기 · 저장은 이어지고 이 표시만 빠진다(시험 `test_without_migration_055_…`). 재실행 안전(IF NOT EXISTS) — 개발 DB 에 적용해 확인(2026-10-06). 시험 `tests/e2e/test_intake_transcription_differs_db.py`.
+
+### 로딩 중 질문의 답 `trip_intakes.survey` `[2026-10-06 · 051]`
+
+`[실측]` `051_intake_survey_answers.sql` — `trip_intakes` 에 칸 하나 `survey jsonb NOT NULL DEFAULT '{}'`: 로딩 화면에서 한 문항씩 바로 저장한 답(`{문항: 선택지 번호}` — 설문의 모양으로 바꾸는 것은 등록 때 `survey_answers.merged_survey` 한 곳). 같은 문항은 덮어쓴다. ★`updated_at` 은 건드리지 않는다(읽기가 멈췄는지 가르는 `reap_stalled` 의 기준). 기존 접수는 `{}` 로 채워진다 · 재실행 안전 · 접수가 지워지면 같이 지워진다. 계약 [rest-endpoints.md 「설문 질문」](../external/rest-endpoints.md). 개발 DB 에 두 번 실행해 확인(2026-10-06).
+
+### 약관 동의 기록 `consent_events` · `consent_current` `[2026-10-05 · 046]`
+
+`[실측]` `046_consents.sql` — 추가만 하는 사건 표(`consent_events`: `event_id` · `tenant_id` · `user_id`(**외래키 없음** — 게스트가 정리돼도 증빙은 보관 기간 동안 남는다) · `session_kind` guest|member|key · `code` · `agreed` · `terms_version` · `text_sha256` · `at` · `ip_hash`(서버 비밀 HMAC — 주소 원문 없음) · `user_agent`) + 현재 상태 뷰(`consent_current` — 사용자 · 코드별 가장 최근 줄). **트리거 `consent_events_no_change` 가 UPDATE 를 늘 거절하고, DELETE 는 트랜잭션이 `SET LOCAL app.consent_purge = 'on'` 을 켰을 때(보관 기간 정리)만 허용한다.** 인덱스 `(tenant_id, user_id, code, at DESC, event_id DESC)` · `(at)`. 재실행 안전.
+
+### 에이전트 키 `web_agent_keys` `[2026-10-04 · 045]`
+
+`[실측]` `045_web_agent_keys.sql` — 개인 AI(MCP · 사용자 API)가 본인 여행의 작업만 하는 키. 칸: `key_id` · `tenant_id` · `customer_id`(→ `customers`) · `name`(1~60자) · `key_hash`(SHA-256 — 원문은 어디에도 없다 · UNIQUE) · `scope`(`read`/`write`) · `created_at` · `expires_at`(NOT NULL — 기본·최대 90일) · `last_used_at` · `revoked_at`. 옛 사용자 키(`web_user_keys`)와 달리 **만료 · 개별 폐기**가 있다. 계약 [rest-endpoints.md 「에이전트 키」](../external/rest-endpoints.md) · [D-CS-012](../decisions/D-CS-012-agent-auth-claude-style.md). 적용은 이 파일만 한 번(전체 실행기 아님).
 
 ## 인덱스
 

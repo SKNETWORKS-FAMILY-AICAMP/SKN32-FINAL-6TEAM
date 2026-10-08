@@ -47,7 +47,7 @@ def selected(row):
 
 
 def analyse(refs, transit, taxi, bus):
-    from app.modules.travel_ops.mobility.engine.car import taxi_planning_fare
+    from app.domains.travel_ops.instances.mobility.engine.car import taxi_planning_fare
     rows, budget_old, budget_new, estimates, reference_fares = [], [], [], [], []
     out = {"n": len(refs), "reserve_rate_frozen": .37, "target_coverage": .9,
            "transit_cards": sum(r[6] for r in refs)}

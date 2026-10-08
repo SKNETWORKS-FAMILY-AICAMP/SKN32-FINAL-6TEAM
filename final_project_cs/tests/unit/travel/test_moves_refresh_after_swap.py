@@ -5,9 +5,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.itinerary_changes import ItineraryChange
-from app.modules.travel_ops.mobility import wiring
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
+from app.domains.travel_ops.instances.mobility import wiring
 
 KST = timezone(timedelta(hours=9))
 T = lambda hm: datetime.fromisoformat(f"2026-10-07T{hm}:00+09:00")  # noqa: E731
@@ -24,7 +24,8 @@ def _items():
     old_route = {"from": "미술관", "to": "옛 식당", "planned": "subway_1",
                  "options": [{"id": "subway_1", "label": "3호선 경복궁→안국", "eta_min": 8, "uses": ["3호선:경복궁"]}]}
     move = Item(item_id=uuid4(), seq=2, kind="mobility", title="미술관 → 옛 식당", place_id=None,
-                starts_at=T("11:40"), ends_at=T("11:48"), detail={"route_def": old_route})
+                starts_at=T("11:40"), ends_at=T("11:48"),
+                detail={"route_def": old_route, "planner": {"day": 1, "transfer_basis": "시간표 판정(이동 계산기)", "travel_min": 8}})
     meal = Item(item_id=uuid4(), seq=3, kind="dining", title="옛 식당 식사", place_id=None, starts_at=T("12:00"),
                 ends_at=T("13:00"), place=p2)
     return act, move, meal
@@ -99,3 +100,37 @@ def test_44_swap_next_door_is_rejudged_when_the_engine_is_on(monkeypatch):
     moved = next(i for i in change.new_items([act, move, meal]) if i.kind == "mobility")
     assert seen["to"] == "옆 식당" and moved.detail["route_basis"] == "rejudged"
     assert moved.detail["route_def"]["options"][0]["id"] == "walk" and moved.title == "미술관 → 옆 식당"
+
+
+def test_44_the_basis_text_follows_the_new_state_so_chat_does_not_overclaim(monkeypatch):
+    """☆`[2026-09-29]` 장소를 바꾼 뒤 이동의 산출 근거가 옛 「시간표 판정」으로 남아, 채팅이 어림값 경로를 시간표로 판정했다고 답했다.
+    (멀리 바뀌어 어림값이 됐는데도 「약 36분 (시간표 판정(이동 계산기))」)"""
+    from app.domains.travel_ops.components.conversation import trip_facts
+    act, move, meal = _items()
+    monkeypatch.setitem(wiring._STATE, "mode", "disabled")
+    for name, (lat, lon), basis, must in (("멀리", (37.590, 127.000), "estimate", "직선"),
+                                          ("옆", (37.5755, 126.9855), "kept_nearby", "옛 경로 유지")):
+        new = _place("새 식당", lat, lon)
+        sw = meal.replaced_by(place=new, title="새 식당 식사")
+        sw.place = new
+        after = ItineraryChange(reason="x", causes=[], notice={}, replacements={meal.item_id: sw}).new_items([act, move, meal])
+        m = next(i for i in after if i.kind == "mobility")
+        assert m.detail["route_basis"] == basis
+        text = m.detail["planner"]["transfer_basis"]
+        assert must in text and "[추정]" in text and "시간표 판정" not in text, (name, text)
+        assert "시간표 판정" not in trip_facts._move_line(m), (name, trip_facts._move_line(m))
+    # 계산기가 다시 판정했을 때는 시간표 판정이라고 말해도 된다 — 소요도 새 값
+    def leg_planner(party_size, constraints, *, disruptions=None):
+        def leg(a, b, arrive, not_before):
+            route = {"from": a["name"], "to": b["name"], "planned": "walk",
+                     "options": [{"id": "walk", "label": "도보", "eta_min": 9, "uses": []}]}
+            return {"route": route, "starts_at": arrive - timedelta(minutes=19), "ends_at": arrive - timedelta(minutes=10),
+                    "eta_min": 9, "left_out": []}, None
+        return leg
+    monkeypatch.setattr(wiring, "leg_planner", leg_planner)
+    new = _place("새 식당", 37.590, 127.000)
+    sw = meal.replaced_by(place=new, title="새 식당 식사")
+    sw.place = new
+    after = ItineraryChange(reason="x", causes=[], notice={}, replacements={meal.item_id: sw}).new_items([act, move, meal])
+    m = next(i for i in after if i.kind == "mobility")
+    assert m.detail["planner"]["transfer_basis"] == "시간표 판정(이동 계산기)" and m.detail["planner"]["travel_min"] == 9

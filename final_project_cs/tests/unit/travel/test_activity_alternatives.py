@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.instances.activity.team_a import ActivityTeam
 from app.domains.travel_ops.instances.activity.alternatives import (
     RADIUS_MAX_KM, bounding_box, closed_on, open_at, rank_alternatives, search_steps)
 

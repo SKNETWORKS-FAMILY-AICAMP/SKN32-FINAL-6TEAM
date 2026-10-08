@@ -47,6 +47,11 @@ class Settings(BaseSettings):
     # LLM
     llm_provider: str = "openai"
     openai_api_key: str
+    #: ★`[2026-10-01 사용자 지시]` **서버 배포용** OpenAI 키(서버를 도커 이미지로 만들어 아마존 등에 올릴 때 쓸 키). 값은 `.env` 에만 둔다.
+    #:  ★`[2026-10-07 사용자 지시]` 이제 **한 곳만** 읽는다 — 모델 서버가 모두 장애일 때 넘기는 장치(`llm_failover.py`, 스위치 `llm_failover_enabled`).
+    #:  개인 키(`openai_api_key`)로 대신하지 않는다. 그 밖의 코드 · 시험 · 측정은 이 값을 읽지 않는다.
+    #:  선언한 까닭: `extra="forbid"` 라 `.env` 에 이름이 먼저 적히면 앱이 기동조차 못 한다.
+    openai_api_key_server: str = ""
     llm_model: str
     embedding_model: str
     llm_temperature: float = 0.0
@@ -71,8 +76,8 @@ class Settings(BaseSettings):
     #:    자체 API(`/api/chat`, `think:false`)는 `gemma4:12b` 가 1.3초에 JSON 을 냈다.
     #:  실제 주소는 `.env` 에만 적는다(공용 파일에 호스트를 적지 않는다).
     ollama_base_url: str = ""
-    #: 시나리오 모드(운영콘솔 스위치로 확정 시나리오 하루를 실제 시스템으로 돌리는 시연 기능).
-    #:  ★기본은 꺼짐 — 릴리즈에 `/scenario/*`·`/tripilot` 이 열리지 않게. 로컬 `.env` 에서만 켠다.
+    #: ★`[2026-09-30]` 더는 쓰지 않는다 — 시나리오(시연) 모드를 운영 앱에서 뗐다(`legacy/scenario_mode/`). 이름만 남겼다:
+    #:  설정 검사가 모르는 이름을 거부(`extra="forbid"`)해서, 옛 `.env` 가 이 이름을 적고 있으면 앱이 못 뜬다.
     scenario_mode_enabled: bool = False
     ollama_model: str = "gemma4:12b"
     #: 정책 검색(RAG)의 임베딩을 어디서 만드나 — `openai` | `ollama`.
@@ -96,9 +101,87 @@ class Settings(BaseSettings):
     # ★`[2026-09-24]` 웹(`frontend/apps/web`, 포트 3100)이 이 API 를 부르는 출처. 쉼표로 여럿.
     #   서버용 scope 키가 아니라 사용자 식별 키(`X-User-Key`)만 받는다(D-020 · 025).
     web_allowed_origins: str = "http://127.0.0.1:3100,http://localhost:3100"
+    #: ★`[2026-09-28]` **개발용** — 웹 사용자 키 발급 한도(`security.web_session_issue_per_hour`)를 끈다.
+    #:  화면 시험이 한 주소에서 새 사용자를 계속 만들다 429 에 걸렸다(ui 세션). 기본은 꺼짐(한도 적용) —
+    #:  로컬 `.env` 에서만 켠다(`ACOP_WEB_SESSION_ISSUE_UNLIMITED=true`). 숫자는 가드레일 그대로다.
+    web_session_issue_unlimited: bool = False
+    #: ★`[2026-09-28]` 사람 확인(Cloudflare Turnstile) 비밀키 — 있으면 키 발급·계획 읽기에서 **늘 확인**한다(`web_guard.py`).
+    #:  개발 시험 키 `1x0000000000000000000000000000000AA`(항상 통과) · `2x…AA`(항상 실패) — Cloudflare 공개 값.
+    #:  실제 비밀키는 `.env` 에만 둔다. 비어 있으면 확인을 건너뛰고 응답에 `human_check: skipped` 를 싣는다(개발).
+    turnstile_secret: str = ""
+    #: 비밀키 없이는 **서버를 켜지 않는다**. `env=prod` 면 이 값과 무관하게 켜진 것으로 본다(운영에서 모르게 꺼지지 않게).
+    turnstile_required: bool = False
+    #: 쉼표로 여럿 — 있으면 Cloudflare 가 돌려준 `hostname` 이 이 중 하나여야 통과
+    turnstile_hostnames: str = ""
+    #: 역방향 프록시 주소(쉼표). 이 주소에서 온 요청만 `X-Forwarded-For` 의 원 주소를 믿는다. 비어 있으면 연결 주소
+    trusted_proxies: str = ""
+    # ── 소셜 로그인 `[2026-10-03 ui 세션 요청서 · 사용자 결정 「가장 쉬운 걸로 하나 먼저」 → 구글]` ──
+    #:  업체 콘솔에서 사람이 만든 **클라이언트 ID · 비밀값**(`ACOP_GOOGLE_CLIENT_ID` · `ACOP_GOOGLE_CLIENT_SECRET`). git 밖 환경 파일에만 둔다.
+    #:  ★둘 다 있어야 그 업체가 켜진다(`GET /v1/web/auth/providers` 에 나온다). 하나라도 비면 목록에서 빠진다 — 반쯤 켜진 채 뜨지 않게.
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    #:  `[2026-10-05]` 「디스코드로 연결」(알림 웹훅 자동 연결) — 디스코드 개발자 포털에서 만든 앱의 **클라이언트 ID · 비밀값**(`ACOP_DISCORD_CLIENT_ID` · `ACOP_DISCORD_CLIENT_SECRET`).
+    #:  ★둘 다 있어야 켜진다(`GET /v1/web/profile` 의 `discord_connect.available`). 소셜 로그인용 디스코드 앱을 만들게 되면 같은 앱을 써도 된다. git 밖 환경 파일에만 둔다.
+    discord_client_id: str = ""
+    discord_client_secret: str = ""
+    #:  `[2026-10-05]` 텔레그램으로 알림 받기 — @BotFather 에서 사람이 만든 봇의 **토큰 · 아이디(`…bot` 으로 끝남)** 와 웹훅 **비밀값**(`setWebhook` 의 `secret_token`: `A-Z a-z 0-9 _ -` 1~256자, 우리가 정한다).
+    #:  ★셋 다 있어야 켜진다(`GET /v1/web/profile` 의 `telegram_connect.available`). 운영 봇과 시험 봇은 **환경 파일이 따로**다(시험 봇 토큰은 개발 환경에만). 토큰은 로그 · 응답 · 문서 · 커밋에 쓰지 않는다.
+    telegram_bot_token: str = ""
+    telegram_bot_username: str = ""
+    telegram_webhook_secret: str = ""
+    #:  로그인이 끝나면 브라우저를 돌려보낼 **웹 주소(출처만)**. ★서버 설정이고 요청 값으로 바꿀 수 없다(열린 리디렉션 금지).
+    #:  비어 있으면 `web_allowed_origins` 의 첫 값.
+    web_origin: str = ""
+    # ── 운영 앱(운영자 콘솔) — 고객 API 앱과 다른 프로세스 · 다른 포트 `[2026-09-29]` 사용자 지시 ──
+    #: 운영 앱 포트. 127.0.0.1 에만 묶는다(`app/ops_entrypoint.py`). 지금 쓰는 번호(3100·3102·3200·3300·8041·8042·8044·8060)와 겹치지 않게
+    ops_port: int = 8070
+    #: 운영 화면이 부르는 **고객 API** 주소(승인 · 위임 · 바깥함). 같은 프로세스 안 호출을 없앴다 — 실제 HTTP 로 부른다
+    ops_api_base_url: str = "http://127.0.0.1:8042"
+    #: 운영 앱이 고객 API 를 부를 scope 키 — JSON `{"action:approve": "…", "delegation:read": "…", "delegation:write": "…"}`.
+    #:  ★운영 앱 서버의 비밀(`.env`)에만 둔다. 전에는 화면이 서버 비밀키로 **스스로 만들어** 썼다(D-CS-007) — 이제 만들지 않는다
+    ops_api_keys: str = ""
+    #: 운영 화면의 조회 전용 DB 주소(읽기 전용 계정). 비우면 본 DB 주소(개발)
+    ops_read_database_url: str = ""
     embedding_provider: str = "openai"
     ollama_embedding_model: str = "bge-m3:latest"
     ollama_timeout_seconds: float = 60.0
+    #: ★`[2026-09-29]` 모델을 붙잡아 둘 시간(Ollama `keep_alive`, 예 `30m` · `2h`). 비우면 Ollama 기본(5분).
+    #:  길게 두면 잠든 모델의 느린 첫 호출(ui 세션 실측 29.8초)이 줄지만 원격 GPU 메모리를 그만큼 잡는다 — 값은 운영이 정한다
+    ollama_keep_alive: str = ""
+    #: ★`[2026-10-07 사용자 지시]` 일정 항목 짚기 **가르친 모델**(Ollama 에 올린 이름, 예 `tripilot-pointer:e4b-ft`). 비우면 낱말 규칙만 쓴다.
+    #:  켜고 끄기는 가드레일 `travel.pointer.mode`. 모델이 못 부르면 규칙으로 돌아간다(`item_pointer.py`).
+    ollama_pointer_model: str = ""
+    ollama_pointer_timeout_seconds: float = 30.0
+    # ── 모델 서버가 죽거나 늦을 때 **서버용 OpenAI 키**로 넘기는 장치 `[2026-10-07 사용자 지시]` ──
+    #:  「올라마나 외부 GPU 서버가 모두 장애면 서버키(개인키 말고)로 자동 전환돼서 동작하게」. 코드 `app/infrastructure/llm_failover.py`.
+    #:  ★스위치는 **기본 꺼짐**이다 — 개발 PC 에서 모델 서버 연결이 끊겼을 때 시험 · 측정이 조용히 유료 API 로 새지 않게. 운영(배포) 환경 파일에서만 켠다.
+    #:  켜져 있어도 `openai_api_key_server` 가 비어 있으면 넘기지 않는다(그때는 지금처럼 Ollama 만).
+    llm_failover_enabled: bool = False
+    #:  넘길 때 쓰는 OpenAI 모델. 비우면 `llm_model`.
+    #:  ★`[2026-10-07 실측 — 결정 단위 재생 · 실제 대화 66문장]` `gpt-4o-mini` 52/66 · `gpt-4.1-mini` 55/66 · **`gpt-4.1` 64/66 = 97.0%**(Gemma 4 12B 와 같음). 그래서 기본은 `gpt-4.1` —
+    #:  작은 모델은 엉뚱한 대상을 바꾸거나(4o-mini 1건) 쓸데없이 되묻는다(4.1-mini 9건)
+    llm_failover_model: str = "gpt-4.1"
+    #:  Ollama 를 기다리는 시간(초) — 고객 응답 SLA 15초 안에 API 까지 끝나게 `ollama_timeout_seconds`(60)보다 짧다. 서버가 식어 느린 첫 호출도 여기서 걸러진다(예열이 그 몫)
+    llm_failover_primary_timeout_seconds: float = 6.0
+    #:  OpenAI 를 기다리는 시간(초)
+    llm_failover_api_timeout_seconds: float = 8.0
+    #:  한 호출에 쓸 수 있는 전체 시간(초) — 이 안에 다시 시도(429·5xx 1회)와 넘김이 다 들어가야 한다
+    llm_failover_total_seconds: float = 15.0
+    #:  연속 실패가 이만큼이면 서킷을 연다(그 서버를 건너뛰고 다음 경로로 바로 간다)
+    llm_failover_failures: int = 3
+    #:  서킷이 열려 있는 시간(초) — 지나면 한 번만 시험해서(반쯤 열림) 성공하면 닫는다
+    llm_failover_open_seconds: float = 60.0
+    #:  API 로 넘긴 호출의 일 · 월 상한(`external_call_budget` 의 `openai_failover` 줄). 넘으면 더 안 부르고 실패로 올린다 — 비용 폭주 방어
+    llm_failover_daily_cap: int = 2000
+    llm_failover_monthly_cap: int = 30000
+    #:  사진·스캔 받아쓰기(이미지)를 API 로 넘길지. ★이미지에는 이름 · 연락처 · 예약번호가 그대로 있어 **가릴 수 없다** — 그래서 따로 켠다(기본 꺼짐).
+    llm_failover_vision: bool = False
+    #:  Ollama 가 둘 이상일 때(예: 오라클 무료 서버 + GPU 서버) 쉼표로 이어 적는다 — 앞에서부터 시도하고 **모두** 안 되면 API 로 간다
+    ollama_fallback_base_urls: str = ""
+    ollama_pointer_keep_alive: str = ""
+    #: 일정이 바뀐 첫 문장은 고객을 기다리게 하지 않고 규칙으로 답하며 모델은 뒤에서 그 일정을 읽어 둔다(`item_pointer.py` 머리). 끄면 첫 문장도 모델을 기다린다.
+    ollama_pointer_background_warm: bool = True
+    ollama_pointer_warm_timeout_seconds: float = 180.0
 
     # ── 여행 외부 소스 ─────────────────────────────────────────
     # ★기본값이 빈 문자열이다 = **그 소스를 안 붙인다.** 가짜로 채우지 않는다.
@@ -113,6 +196,9 @@ class Settings(BaseSettings):
     data_go_kr_key: str = ""                 # https://www.data.go.kr 공통 인증키
 
     #: 한국관광공사 국문 관광정보 — 장소·운영시간   data.go.kr/data/15101578
+    #: Jev(TypeSafe AI 의 판정용 모델) API 키 — `[2026-09-30]` `.env` 에 키가 먼저 적혀 앱이 기동 못 했다(`extra="forbid"`).
+    #:  ★자리만 선언했다 — 아직 어느 코드도 읽지 않는다(질의 해석 개선 후보로 조사 중). 값은 `.env` 에만 둔다.
+    jev_api_key: str = ""
     tour_api_key: str = ""
     #: 기상청 단기예보 — Open-Meteo 대안            data.go.kr/data/15084084
     kma_api_key: str = ""
@@ -124,6 +210,12 @@ class Settings(BaseSettings):
     #: 행정안전부 긴급재난문자 — 호우·통제·화재 등 지역 재난문자       data.go.kr/data/15134001
     #:  ★2026-09-14 키 발급. 그전까지는 샘플 CSV 판(`disaster_msg.py`)으로 돌았다.
     disaster_msg_api_key: str = ""
+    #: 행정안전부 지진옥외대피장소(전국) — 재난 일정 정지 때 가까운 대피 장소 안내  data.go.kr/data/15138868
+    #:  ★`[2026-10-06]` 예시 파일에 이름이 먼저 들어가 `extra="forbid"` 라 이 PC 에서 설정이 통째로 거부됐다(시험 수집 78개 파일 · 재생 도구 불통). 비우면 서울시 자료(DB 에 적재한 곳)로만 안내한다.
+    safetydata_shelter_api_key: str = ""
+    #: 서울교통공사 지하철알림정보 — 무정차 통과 감시(문제목록 #36)  data.go.kr/data/15144070
+    #:  ★공통 키로 충분하다. 이 칸은 다른 계정을 쓸 때만 채운다.
+    subway_notice_api_key: str = ""
     #: 한국천문연구원 특일 정보 — ★공휴일 휴무 판정 data.go.kr/data/15012690
     holiday_api_key: str = ""
     #: 국토교통부 TAGO — 버스·지하철·열차 운행      data.go.kr/data/15098530
@@ -138,7 +230,7 @@ class Settings(BaseSettings):
     #:  ★(구)바다누리 자체 OpenAPI 는 종료 예정이라 공통 키로 충분하다.
     khoa_api_key: str = ""
     #: 국가유산청 — ★**키가 필요 없다**(2026-09-10 실호출 확인). 그래서 이 칸은
-    #:  비워 둔다. 어댑터(`app/infrastructure/travel/heritage.py`)가 인증
+    #:  비워 둔다. 어댑터(`app/domains/travel_ops/ports/data_sources/heritage.py`)가 인증
     #:  파라미터 없이 부른다. 공공데이터포털 쪽 문화재 공간정보
     #:  (data.go.kr/data/3070426)를 따로 쓸 때만 채운다.
     heritage_api_key: str = ""
@@ -147,12 +239,6 @@ class Settings(BaseSettings):
     airport_api_key: str = ""
     #: 외교부 국가·지역별 여행경보 — 해외 확장 시   data.go.kr/data/15076237
     mofa_api_key: str = ""
-    #: 행정안전부 긴급재난문자 — data.go.kr/data/15134001 에 목록만 있고
-    #:  실제 호출은 재난안전데이터 공유플랫폼(safetydata.go.kr)에서 한다.
-    #:  `[미확보 2026-09-20]` 이 키가 공통 키(`data_go_kr_key`)와 같은 계정인지,
-    #:  safetydata.go.kr 에 별도 가입·키 발급이 필요한지 확인 안 됐다 —
-    #:  `app/infrastructure/travel/disaster_msg.py` 참고.
-    disaster_api_key: str = ""
 
     # 정부 교통정보 — ★공공데이터포털 공통 키와 **다른 키**다(각 기관이 따로 발급).
     #: 국토교통부 ITS 국가교통정보센터 — 돌발상황  its.go.kr/opendata
@@ -180,10 +266,13 @@ class Settings(BaseSettings):
     kakao_rest_api_key: str = ""             # 카카오 지도 — 주소→좌표 developers.kakao.com
     vworld_api_key: str = ""                 # 브이월드 지오코더 — 주소→좌표(장소 데이터 좌표 보완) vworld.kr
     # ★`[2026-09-24]` 자리만 만들었다 — 새벽 3시 하루 점검에 쓴다(D-020). 비어 있으면 부르지 않는다.
-    # ★`[2026-09-27]` 관광공사 장소 목록(`place_catalog`) 수집·사용 스위치 — **기본 꺼짐.**
-    #   콘텐츠랩 저작권 정책의 「콘텐츠 캐싱(로컬서버 저장방식) 금지」 해석을 관광공사에 묻는 중이라, 답을 받기
-    #   전까지 쌓지도 읽지도 않는다. 장소는 필요할 때 실시간으로 조회한다(`TourApiPlace.find`·`area_page`).
-    tour_catalog_enabled: bool = False
+    # ★관광공사 장소 목록(`place_catalog`) 수집·사용 스위치 — **기본 켜짐**(`[2026-09-28]` 사용자 결정으로 되돌림).
+    #   ☆`[2026-09-27]` 콘텐츠랩 저작권 정책의 한 줄 「콘텐츠 캐싱(로컬서버 저장방식) 금지」를 「아무것도 저장 금지」로
+    #     넓게 읽어 끄고 8,015행을 지웠다. 약관(구속력 있는 계약)에는 저장 금지가 없고(제10조 유·무료 활용 · 제3조
+    #     파일 내려받기 제공), 저작권법 제93조는 DB 의 「전부·상당 부분」만 막으며 사실(소재)엔 미치지 않고,
+    #     공공데이터법 제3조④는 영리 이용 제한까지 금지한다. 게다가 학업용이다. 사진·소개글은 저장하지 않는다.
+    #   근거 정리: `../program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md` §4-6 「2026-09-28 재판단」.
+    tour_catalog_enabled: bool = True
     google_maps_api_key: str = ""            # 구글 Maps Platform(Places) console.cloud.google.com
     # ★`[2026-10-01]` 네이버 검색(블로그 · 카페글) — 대체 후보에 후기 몇 건을 곁들인다. 비어 있으면 부르지 않는다.
     #   NAVER API HUB(네이버 클라우드) 「검색」 키 — 2026-07-31 부터 개발자센터 신규 발급이 끝나 HUB 로 옮겨 갔다.
@@ -192,15 +281,21 @@ class Settings(BaseSettings):
     #   결과는 저장하지 않는다(보여 줄 때만 불러온다).
     naver_search_client_id: str = ""
     naver_search_client_secret: str = ""
-    # ── 이동 계산기(app/modules/travel_ops/mobility/engine) — `[2026-09-29 이동 계산기 문제목록 #48]` ──
+    # ── 이동 계산기(app/domains/travel_ops/instances/mobility/engine) — `[2026-09-29 이동 계산기 문제목록 #48]` ──
     #   계산기가 저장소 맨 위 `.env` 를 import 때 직접 읽던 것을 여기로 모은다. 서버는 기동 때 이 값을 계산기에 넘긴다.
     #: 시간표·역 순서·환승 거리 등 가공 자료가 있는 폴더(이동 담당의 DATA_DIR · git 밖 · 약 195MB).
     #:  비우면 이동 계산기를 쓰지 않는다(연결부가 대체 경로로 간다). 실제 경로는 `.env` 에만 적는다.
     mobility_data_dir: str = ""
     #: 자전거·도보 경로 서버(GraphHopper) 주소. 비우면 자전거 소요는 근거없음으로 낸다. 실제 주소는 `.env` 에만.
     mobility_gh_url: str = ""
+    #: ☆`[2026-10-04]` GraphHopper 주소가 없을 때 저장소 안 도로 그래프(`road_graph_v2` 걸음 길 포함 · 없으면 `v1`)로 파이썬이 직접 길을 찾는다 — 택시·자전거·장소 사이 도보.
+    #:  서버를 따로 띄우지 않는다(첫 길 묻기 때 자료를 한 번 올린다 · 약 7~16초 · 250~350MB). 끄려면 false — 도보는 직선×우회계수, 택시·자전거는 근거없음.
+    mobility_local_router: bool = True
     #: 서울 열린데이터광장 키(따릉이 실시간 거치 대수). 비우면 거치 대수는 근거없음. ★제공처가 http 만 받는다(평문 전송)
     seoul_openapi_key: str = ""
+    #: 서울 열린데이터광장 「실시간 지하철 인증키」(일반 키와 **별개** · 하루 1,000건 · 활용사례 등록 심사 뒤 해제) — 실시간 도착정보
+    #:  (`travel/seoul_subway.py`, `sources.subway_arrival`). ★설정에 없는 이름으로 넣으면 기동이 거부된다(`extra="forbid"` · 2026-10-05 실제로 났다).
+    seoul_metro_api_key: str = ""
     #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**
     #:  기록한다(dead_letter). 보낸 것처럼 `delivered` 로 찍지 않는다.
     discord_webhook_url: str = ""
@@ -232,15 +327,26 @@ class Settings(BaseSettings):
     rate_airport_per_day: int = 1000         # 미확인 - 보수적
     rate_mofa_per_day: int = 1000            # 미확인 - 보수적
     rate_its_per_day: int = 1000             # 미확인 - 보수적(ITS 공개 한도 못 찾음)
+    #: ★ITS 는 응답이 「월간 API 호출 한도 초과」(4001)다 — 월 한도의 크기는 포털(국가교통정보센터 인증키 상세정보)에서 확인해 넣는다.
+    #:  0 = 모른다(세기만 하고 월로는 막지 않는다 — 하루 줄로만 막는다). 2026-10-05 기준 `[미확인]`.
+    rate_its_per_month: int = 0
     rate_kma_earthquake_per_day: int = 1000  # 미확인 - 보수적(지진정보 상세 한도 안 봄)
     rate_open_meteo_air_per_day: int = 2000  # 미확인 - 보수적(Open-Meteo 한도를 API 끼리 나눠 쓰는지 안 봄)
     rate_disaster_msg_per_day: int = 1000    # 확인: 사용자 제공(2026-09-15) 재난문자 하루 1,000
     #                                          ☆그전 값 100 은 같은 플랫폼 다른 API 사용기에서 옮긴 추정이었다
-    #                                          ☆안전데이터 공유플랫폼 V2 공통 일일 1,000건과도 일치(2026-09-20 웹조사로 재확인)
     rate_utic_per_day: int = 1000            # 미확인 - 보수적(UTIC 한도 문서 못 봄)
-    rate_odsay_per_day: int = 1000           # 미확인 - 무료 구간 한도 못 찾음
-    rate_kakao_per_day: int = 1000            # 미확인 - 보수적
+    #: ★확인(2026-10-04): ODsay LAB 운영정책 「Basic 서비스 30 / 일 · 기간 제한 없음」 — 이 계정으로 30회 안팎에서 `Daily quota exceeded` 를 실측했다.
+    #:  ☆앞 값 1000 은 근거 없는 추정이었다(「미확인」). 어댑터가 없어 지금은 호출 코드가 없다 — 붙일 때 이 한도를 그대로 쓴다.
+    rate_odsay_per_day: int = 30
+    rate_kakao_per_day: int = 1000           # 미확인 - 보수적
     rate_naver_search_per_day: int = 12500   # 확인: API HUB 검색 월 775,000건(2026-10 무료) — 블로그 · 카페글 합쳐 절반 아래(하루 12,500 × 31 ≈ 39만)
+    #: 확인(2026-10-04): 서울교통공사 지하철알림정보 개발계정 하루 10,000건(공식 페이지) → 절반만 쓴다(여유 2배). 매 1분 갱신 · 한 번에 최신 100건
+    rate_subway_notice_per_day: int = 5000
+    #: 확인(2026-10-04 공식 안내): 서울 「실시간 지하철 인증키」 하루 최대 1,000건 → 절반만(여유 2배). 도착정보는 지금 값이라 캐시를 짧게 둔다
+    rate_seoul_subway_arrival_per_day: int = 500
+    #: 서울 열린데이터광장 **일반 인증키**(따릉이 실시간 거치 대수 `bikeList`) 하루 상한 — ★공식 하루 한도를 못 찾았다(안내에 숫자 없음 · 「이용 제약 없이 쓰려면 활용사례 등록」)
+    #:  `[미확인]` 그래서 **우리가 고른 보수적 값**이다. 이 값에서 막히면 따릉이 거치 대수가 「근거없음」이 되고(후보는 유지) 서비스는 계속된다. 0 = 제한 없음
+    rate_seoul_bike_per_day: int = 1000
     #: 국가유산청은 키가 없고 공개된 한도도 못 찾았다. 그래도 스스로 조인다 -
     #: 한도를 모른다는 것이 마음껏 두들겨도 된다는 뜻은 아니다.
     rate_heritage_khs_per_day: int = 1000
@@ -261,6 +367,10 @@ class Settings(BaseSettings):
     #: 간격이 안 찼을 때 기다려 볼 최대 시간(초). 고객 요청이 여기서 멈춘다.
     #:  넘으면 기다리지 않고 거부하고, Team 은 「모름」으로 넘어간다.
     rate_max_wait_seconds: float = 5.0
+
+    def source_monthly_limits(self) -> dict[str, int]:
+        """`TravelSource.name` -> 월 한도(알려진 것만). DB 예산(`source_budget.py`)이 월 줄로 쓴다."""
+        return {name: value for name, value in {"its": self.rate_its_per_month}.items() if value and value > 0}
 
     def source_rate_limits(self) -> dict[str, int]:
         """`TravelSource.name` -> 하루 한도. 어댑터 이름과 정확히 맞춘다.
@@ -285,6 +395,9 @@ class Settings(BaseSettings):
             "disaster_msg": self.rate_disaster_msg_per_day,
             "utic": self.rate_utic_per_day,
             "odsay": self.rate_odsay_per_day,
+            "subway_notice": self.rate_subway_notice_per_day,
+            "seoul_subway_arrival": self.rate_seoul_subway_arrival_per_day,
+            "seoul_bike": self.rate_seoul_bike_per_day,
             "kakao": self.rate_kakao_per_day,
             "naver_search": self.rate_naver_search_per_day,
             "google_places": self.rate_google_places_per_day,
@@ -385,3 +498,15 @@ def get_guardrails() -> Guardrails:
     if not isinstance(data, dict):
         raise ConfigError(f"guardrails 파일이 매핑이 아니다: {path}")
     return Guardrails(data, path)
+
+
+def google_price_enabled() -> bool:
+    """식당 대안의 구글 가격 조회를 켰나 — 가드레일 `travel.dining.google_price_enabled`. ★기본 꺼짐.
+
+    `[2026-10-05]` 팀 코드는 가격 조회가 켜져 있는 것을 기본으로 가정하지만, 우리는 식당을 가격으로 순위 매기지 않는다
+    (9/28 결정)고 꺼 둔다. 키가 없거나 가드레일을 못 읽어도 **꺼짐**으로 본다(켜는 것은 명시한 경우뿐).
+    """
+    try:
+        return get_guardrails().get("travel.dining.google_price_enabled") is True
+    except ConfigError:
+        return False

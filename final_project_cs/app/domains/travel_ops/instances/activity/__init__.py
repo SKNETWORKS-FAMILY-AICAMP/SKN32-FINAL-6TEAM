@@ -16,6 +16,6 @@
   `tests/contract/test_team_layout.py` 가 이 경우를 막는다.
   엔진을 따로 두려면 `activity_engine/` 처럼 다른 이름의 폴더를 쓴다(Mobility 방식).
 """
-from .team_a import ActivityTeam
+from .team import ActivityTeam
 
 __all__ = ["ActivityTeam"]

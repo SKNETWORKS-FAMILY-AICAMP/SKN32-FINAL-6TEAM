@@ -22,8 +22,8 @@ import pytest
 
 from app.core.context import PolicyChunk
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.case_engine import CaseEngine, cleanup_tenant
-from app.modules.travel_ops.trip_intake import validate
+from app.domains.travel_ops.scenarios.case_engine import CaseEngine, cleanup_tenant
+from app.domains.travel_ops.components.conversation.trip_intake import validate
 
 from .test_case_version_day import Clock, _at, _latest, _seed, _sources
 
@@ -96,7 +96,11 @@ def test_a_rules_question_is_answered_from_the_rules_and_the_plan_stays(world, t
     view = _ask(world, text, f"q-{source}")
     assert _reading(world, view["case_id"]) == {"type": "question"}          # ★질문으로 읽혔다
     assert view["case_status"] == "resolved" and view["owner_team_id"] == team, view
-    assert source in view["answer"] and "규정에서 찾은 내용" in view["answer"], view["answer"]
+    # ★`[2026-09-29 사용자 지시]` 근거 id 는 고객 문장에 싣지 않는다 — 그 절의 **고객용 문장**이 실렸는지로 본다
+    from app.domains.travel_ops.instances._shared.itinerary_team import customer_lines
+
+    assert customer_lines()[source] in view["answer"] and "규정에서 찾은 내용" in view["answer"], view["answer"]
+    assert "t_doc_" not in view["answer"]
     assert "일정은 바꾸지 않았어요" in view["answer"]
     if item:
         assert view["answer"].split(" — ")[0].find(item) >= 0, view["answer"]

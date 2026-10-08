@@ -5,7 +5,7 @@ import pytest
 
 from app.core.contracts import CaseStatus, StateConflict
 from app.core.transition import OutboxMessage, transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db.repository import create_case, list_cases
 from app.infrastructure.db.session import get_connection
 from app.infrastructure.messaging.outbox import OutboxBrokerAdapter

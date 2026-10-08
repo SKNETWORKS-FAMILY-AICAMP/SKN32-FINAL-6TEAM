@@ -30,14 +30,16 @@ export interface Delegation { id: string; userId: string; scope: string; active:
 export interface OutboxItem { id: string; topic: string; attempts: number; error: string; status: 'unknown'; resolution: 'confirmed_delivered' | 'confirmed_not_delivered' | null; resolvedBy: string | null; note: string | null }
 export interface ServerCheck { name: string; status: '정상' | '이상' | '미확인'; detail: string }
 export interface AdminSnapshot {
+  live?: boolean;
+  measurements?: { requests: string; llm: string };
   clock: string; users: User[]; apis: ApiUsage[]; chatLimit: number; watchRules: WatchRule[];
   inquiries: Inquiry[]; templates: { id: string; title: string; body: string }[];
   notices: Notice[]; maintenance: { enabled: boolean; message: string; messageEn: string; endsAt: string };
   audit: AuditEntry[]; approvals: Approval[]; delegations: Delegation[]; outbox: OutboxItem[];
-  server: { checkedAt: string; checks: ServerCheck[]; cpu: number; memory: number; disk: number; uptime: string; dbSize: string; dbConnections: number; slowQueries: number; lastWatch: string; watchFailures: number; restarts: number };
+  server: { checkedAt: string; checks: ServerCheck[]; cpu: number | null; memory: number | null; disk: number | null; uptime: string | null; dbSize: string | null; dbConnections: number | null; slowQueries: number | null; lastWatch: string | null; watchFailures: number | null; restarts: number };
   requests: { path: string; count: number; users: number; errorRate: number; p50: number; p95: number }[];
-  llm: { model: string; calls: number; input: number; output: number; cost: number | null; latency: number; local: boolean }[];
-  daily: { day: string; watch: number; chat: number }[];
+  llm: { model: string; calls: number; input: number | null; output: number | null; cost: number | null; latency: number | null; local: boolean }[];
+  daily: { day: string; watch: number | null; chat: number }[];
 }
 export type AdminCommand =
   | { type: 'block-user'; userId: string; blocked: boolean; reason: string }

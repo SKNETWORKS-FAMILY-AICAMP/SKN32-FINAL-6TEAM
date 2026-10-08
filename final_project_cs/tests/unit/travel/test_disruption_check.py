@@ -10,9 +10,9 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import uuid4
 
-from app.infrastructure.travel.base import TravelSources
-from app.infrastructure.travel.disruptions import NOT_CONNECTED, DisruptionCheck
-from app.infrastructure.travel.weather_chain import FallbackWeather
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.disruptions import NOT_CONNECTED, DisruptionCheck
+from app.domains.travel_ops.ports.data_sources.weather_chain import FallbackWeather
 from app.tools.read_tools import ReadToolbox, ToolContext
 
 OUTDOOR = {"place_id": "p1", "latitude": 37.58, "longitude": 126.98, "weather_sensitive": True}

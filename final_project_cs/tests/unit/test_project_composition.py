@@ -130,7 +130,7 @@ teams:
     ("implementation_ref", "message"),
     [
         ("app.nonexistent:Missing", "cannot be imported"),
-        ("app.modules.travel_ops:Missing", "not defined"),
+        ("app.domains.travel_ops:Missing", "not defined"),
         ("tests.unit.test_project_composition:IncompleteTeam", "TeamModule"),
         ("not-a-ref", "expected 'package.module:Class'"),
     ],

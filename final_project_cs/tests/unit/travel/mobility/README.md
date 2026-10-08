@@ -166,7 +166,7 @@
    - **판정기가 의도대로 바뀌었다** — 규칙 버전을 올린 수정(v0.9 → v0.9.1 처럼). → 기대값 갱신 + 규칙 `changelog` + 인계 문서.
    - **판정기가 잘못 바뀌었다(진짜 회귀)** — 위 둘이 아니면 이것. 케이스 `note` 가 가리키는 함수부터 본다.
 4. `--case <id> --verbose` 로 한 건만 돌리면 구간별 값이 찍힌다:
-   `python -m app.modules.travel_ops.mobility.engine.verify_time --cases final_project_cs/tests/unit/travel/mobility/real_legs_v1.json --case R-LOOP-01 --verbose`
+   `python -m app.domains.travel_ops.instances.mobility.engine.verify_time --cases final_project_cs/tests/unit/travel/mobility/real_legs_v1.json --case R-LOOP-01 --verbose`
 
 **기대값을 「통과하게」 고치는 것은 회귀를 지우는 것과 같다.** 왜 움직였는지 모르면 갱신하지 않는다.
 

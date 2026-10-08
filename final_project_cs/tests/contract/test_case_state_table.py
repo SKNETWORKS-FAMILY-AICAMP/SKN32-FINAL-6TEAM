@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from app.core.contracts import CaseStatus
-from app.domain.events import (
+from app.core.case_lifecycle.events import (
     REQUIRED_PAYLOAD_KEYS,
     TERMINAL_STATUSES,
     TRANSITIONS,

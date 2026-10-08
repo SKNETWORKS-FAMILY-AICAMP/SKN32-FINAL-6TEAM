@@ -50,7 +50,7 @@ def load_kakao():
 
 def _planner_leg(rt, modes):
     """조립 없이 판정기만 있을 때의 구간 계산기 — `wiring.leg_planner` 가 돌려주는 것과 같은 모양(`{"route": …}`)."""
-    from app.modules.travel_ops.mobility.engine.plan import Planner, party_of
+    from app.domains.travel_ops.instances.mobility.engine.plan import Planner, party_of
 
     planner = Planner(rt, stage="planning", modes=modes)
     planner.trace = []
@@ -66,9 +66,9 @@ def _planner_leg(rt, modes):
 def run(arrive: datetime, only: set[str] | None = None, log=print, direct: bool = True) -> dict:
     sys.path.insert(0, str(ROOT))
     from app.core.settings import get_settings
-    from app.modules.travel_ops.mobility import wiring
-    from app.modules.travel_ops.mobility.engine import runtime as ER
-    from app.modules.travel_ops.mobility.engine.plan import Planner
+    from app.domains.travel_ops.instances.mobility import wiring
+    from app.domains.travel_ops.instances.mobility.engine import runtime as ER
+    from app.domains.travel_ops.instances.mobility.engine.plan import Planner
 
     if not direct:
         wiring.configure_from_settings(get_settings(), preload=True)

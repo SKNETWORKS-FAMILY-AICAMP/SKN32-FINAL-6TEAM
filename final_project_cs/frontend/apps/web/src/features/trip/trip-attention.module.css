@@ -1,23 +1,40 @@
-.wrap { display: grid; gap: 12px; margin: 0 0 14px; }
-.plan { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0; font-size: 11px; color: var(--color-muted); }
-.plan a { font-size: 13px; font-weight: 650; color: var(--color-primary); }
-.card { border: 1px solid var(--color-border); border-radius: 18px; background: #fff; padding: 16px 17px; }
-.card h2 { margin: 0 0 10px; font-size: 14px; line-height: 1.6; letter-spacing: -.3px; display: flex; align-items: center; gap: 8px; }
-.ask { border-color: var(--color-primary); }
-.warn { border-color: var(--color-warning-border); background: var(--color-warning-soft); }
-.warn h2 { color: var(--color-warning); }
-.choice { padding: 12px 0; border-top: 1px solid var(--color-border); }
-.choice:first-of-type { border-top: 0; padding-top: 0; }
-.choice strong { display: block; font-size: 13px; margin-bottom: 4px; }
-.choice p { margin: 0 0 8px; font-size: 12px; line-height: 1.8; color: var(--color-muted); }
-.options { display: flex; flex-wrap: wrap; gap: 8px; }
-.meta { font-size: 10px; color: var(--color-subtle); margin-top: 6px; }
-.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; font-size: 12px; line-height: 1.8; }
-.list li { padding-top: 10px; border-top: 1px solid var(--color-border); }
-.list li:first-child { padding-top: 0; border-top: 0; }
-.remedy { display: block; color: var(--color-muted); font-size: 11px; }
-.details summary { cursor: pointer; font-size: 13px; font-weight: 650; }
-.details[open] summary { margin-bottom: 10px; }
-.tag { display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 99px; background: var(--color-soft); color: var(--color-primary); font-size: 10px; }
-.cut { margin: 10px 0 0; font-size: 11px; color: var(--color-muted); }
+/* `[2026-10-07 사용자 결정 — 목업 C안 ① 알림 센터]` The body of the notice center: 「할 일」 cards, then three tabs over one list (mockup `tripilot-registered-c-attention.html` .act · .tabs · .aRow · .tag).
+   Colours are the shared roles of `styles/tokens.css`. */
+.wrap { display: grid; gap: 10px; }
+.tasks { display: grid; gap: 10px; }
+.secTitle { margin: 0; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); }
+.empty { margin: 2px 0 6px; font-size: 13px; color: var(--color-muted); }
+
+/* A task: a choice the server waits for (warning tone), an automatic change (info tone). */
+.act { padding: 12px 14px; border: 1px solid var(--color-warning-border); border-radius: 14px; background: var(--color-warning-soft); }
+.act[data-tone="info"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); }
+.act h4 { margin: 0; font-size: 14px; font-weight: 750; }
+.act p { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.choice + .choice { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-warning-border); }
+.act .what { font-weight: 700; color: var(--color-text); }
+.options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.optionWarning { display: block; font-size: 10px; font-weight: 400; opacity: 0.85; margin-top: 2px; }
+.act .meta { font-size: 11.5px; color: var(--color-muted); }
+.link { padding: 0; border: 0; background: none; color: var(--color-selected); font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.said { margin: 0; font-size: 12.5px; color: var(--color-text-secondary); }
 .error { padding: 11px 14px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-error-soft); color: var(--color-error); font-size: 12px; line-height: 1.8; }
+
+/* The three tabs stay at the top of the scrolling body. */
+.tabs { position: sticky; z-index: 1; top: -12px; display: flex; gap: 4px; margin: 6px 0 0; padding: 4px; border-radius: 12px; background: var(--color-subtle); box-shadow: 0 -10px 0 4px var(--color-surface); }
+.tabs button { position: relative; flex: 1; min-height: 36px; padding: 0 6px; border: 0; border-radius: 9px; background: none; color: var(--color-muted); font: inherit; font-size: 12.5px; font-weight: 750; white-space: nowrap; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--color-surface); color: var(--color-text); box-shadow: 0 1px 4px color-mix(in srgb, var(--color-text) 12%, transparent); }
+.tabs button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 1px; }
+.unread { display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--color-error); vertical-align: middle; }
+
+.list { list-style: none; margin: 0; padding: 0; }
+.list li { padding: 12px 2px; border-top: 1px solid var(--color-divider); font-size: 13.5px; line-height: 1.5; }
+.list li:first-child { border-top: 0; }
+.list p { margin: 4px 0 0; overflow-wrap: anywhere; }
+.list time { margin-left: 6px; font-size: 12px; color: var(--color-muted); }
+.list .remedy { font-size: 12.5px; color: var(--color-muted); }
+.tag { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--color-success-soft); color: var(--color-success); font-size: 11.5px; font-weight: 750; }
+.tag[data-type="proposal_request"] { background: var(--color-warning-soft); color: var(--color-warning); }
+.tag[data-type="change_notice"] { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.tag[data-type="safety_alert"] { background: var(--color-error-soft); color: var(--color-error); }
+.tag[data-type="version"] { background: var(--color-subtle); color: var(--color-text-secondary); }
+.cut { margin: 10px 0 0; font-size: 11px; color: var(--color-muted); }

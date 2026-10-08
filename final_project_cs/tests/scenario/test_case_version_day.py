@@ -25,18 +25,18 @@ import pytest
 from app.core.subjects import SubjectNotFound
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
-from app.infrastructure.travel.base import TravelSources
-from app.infrastructure.travel.disruptions import DisruptionCheck
-from app.infrastructure.travel.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+from app.domains.travel_ops.ports.data_sources.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
                                               ReplayWarning, ReplayWeather)
-from app.modules.travel_ops.case_engine import CaseEngine, cleanup_tenant
-from app.modules.travel_ops.itinerary import Item, TripStore
-from app.modules.travel_ops.subjects import resolve_subject
-from app.modules.travel_ops.trip_desk import TripDesk
-from app.modules.travel_ops.trip_watch import TripWatcher
+from app.domains.travel_ops.scenarios.case_engine import CaseEngine, cleanup_tenant
+from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+from app.domains.travel_ops.components.core_hooks.subjects import resolve_subject
+from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
+from app.domains.travel_ops.components.watch.trip_watch import TripWatcher
 
 KST = ZoneInfo("Asia/Seoul")
-SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "modules" / "travel_ops"
+SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "domains" / "travel_ops"
                        / "scenarios" / "seoul_day_taiwan_friends.json").read_text(encoding="utf-8"))
 DAY = SCENARIO["trip"]["date"]
 REPORTS = {report["type"]: report for report in SCENARIO["customer_reports"]}
@@ -123,7 +123,7 @@ def trip_world():
     yield {"tenant": tenant, "store": store, "trip_id": trip_id, "customer": customer, "clock": clock,
            "watcher": TripWatcher(store=store, check=check, connection_factory=get_connection, clock=clock,
                                   route_events=route_events),
-           "desk": TripDesk(store=store, connection_factory=get_connection)}
+           "desk": TripDesk(store=store, connection_factory=get_connection, dining_ledger=False)}
     cleanup_tenant(tenant)
 
 
@@ -388,7 +388,7 @@ def test_every_notice_carries_the_plan_link_whichever_path_made_it(case_world):
     시나리오용 여행 버전은 `TripStore.enqueue_notice` 가 붙여 주는데, Case 버전은 코어가 바깥함에
     **직접** 써서 그 자리를 지나지 않았다. 통지를 만드는 길이 여럿이라 **길마다** 본다.
     """
-    from app.modules.travel_ops.plan_link import plan_url
+    from app.domains.travel_ops.components.itinerary.plan_link import plan_url
 
     _run_case_day(case_world)
     link = plan_url(case_world["tenant"], case_world["trip_id"])

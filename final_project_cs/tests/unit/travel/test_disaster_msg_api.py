@@ -11,8 +11,8 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from app.infrastructure.travel.cache import ResponseCache
-from app.infrastructure.travel.disaster_msg import DisasterMsgApi
+from app.domains.travel_ops.ports.data_sources.cache import ResponseCache
+from app.domains.travel_ops.ports.data_sources.disaster_msg import DisasterMsgApi
 
 KST = ZoneInfo("Asia/Seoul")
 

@@ -16,12 +16,12 @@ from pathlib import Path
 
 import pytest
 
-from app.modules.travel_ops.mobility.engine import guardrails as G
-from app.modules.travel_ops.mobility.engine import paths
-from app.modules.travel_ops.mobility.engine.paths import RULES_DIR
+from app.domains.travel_ops.instances.mobility.engine import guardrails as G
+from app.domains.travel_ops.instances.mobility.engine import paths
+from app.domains.travel_ops.instances.mobility.engine.paths import RULES_DIR
 
 ENGINE = Path(paths.__file__).resolve().parent
-CS_ROOT = ENGINE.parents[4]
+CS_ROOT = ENGINE.parents[5]          # engine → mobility → instances → travel_ops → domains → app 위 (2026-10-06 한 칸 깊어짐)
 
 
 def _write_mini_data(root: Path, built_at="2026-09-20T00:00:00+09:00"):
@@ -73,7 +73,7 @@ def test_48_paths_module_does_not_load_dotenv_at_import():
 def test_48_fresh_import_is_unset_and_leaves_environ_alone():
     env = {k: v for k, v in os.environ.items() if k != "DATA_DIR"}
     code = ("import os; before = dict(os.environ); "
-            "import app.modules.travel_ops.mobility.engine.paths as p; "
+            "import app.domains.travel_ops.instances.mobility.engine.paths as p; "
             "print(p.SOURCE, dict(os.environ) == before)")
     out = subprocess.run([sys.executable, "-B", "-c", code], cwd=CS_ROOT, env=env, capture_output=True, text=True)
     assert out.stdout.split() == ["unset", "True"], out.stderr
@@ -82,7 +82,7 @@ def test_48_fresh_import_is_unset_and_leaves_environ_alone():
 def test_48_cli_processed_reads_env_only_when_nobody_configured(tmp_path):
     """점검 스크립트 길 — 아무도 안 정했으면 DATA_DIR 을 따르고, 서버가 끈 뒤에는 새지 않는다."""
     env = dict(os.environ, DATA_DIR=str(tmp_path))
-    code = ("import app.modules.travel_ops.mobility.engine.paths as p; a = p.cli_processed(); s1 = p.SOURCE; "
+    code = ("import app.domains.travel_ops.instances.mobility.engine.paths as p; a = p.cli_processed(); s1 = p.SOURCE; "
             "p.disable(); b = p.cli_processed(); print(a, s1, b, p.SOURCE, sep='|')")
     out = subprocess.run([sys.executable, "-B", "-c", code], cwd=CS_ROOT, env=env, capture_output=True, text=True)
     a, s1, b, s2 = out.stdout.strip().split("|")
@@ -113,7 +113,7 @@ def test_49_rules_json_holds_pointers_not_numbers():
 
 
 def test_49_verifier_reads_values_from_guardrails(tmp_path):
-    from app.modules.travel_ops.mobility.engine.verify_time import Timetable, Verifier
+    from app.domains.travel_ops.instances.mobility.engine.verify_time import Timetable, Verifier
     R = json.loads((RULES_DIR / "rules_v0.3.json").read_text(encoding="utf-8"))
     v = Verifier(Timetable(), None, R, set())
     assert v.rv("buffer", "by_stage", "planning") == 10 and v.rv("limits", "walk_m", "default") == 1200
@@ -130,7 +130,7 @@ def test_49_verifier_reads_values_from_guardrails(tmp_path):
 
 # ── #24 · #25 · #32 적재 · 자료 확인 · 노후 · 다시 올리기 ─────────────
 def test_24_build_verifier_on_mini_data(mini):
-    from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+    from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
     rt = build_verifier(quiet=True, data_dir=mini, gh_url="", seoul_key="")
     assert rt.stats["timetable_stations"] == 3 and rt.stats["data_dir_source"] == "settings"
     assert rt.stats["bike_live"] is False and rt.stats["bike_router"] is False, "빈 값은 끔 — 환경변수로 새지 않는다"
@@ -140,7 +140,7 @@ def test_24_build_verifier_on_mini_data(mini):
 
 
 def test_24_missing_data_names_the_folder(tmp_path, monkeypatch):
-    from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+    from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
     before = (paths.SOURCE, paths.DATA_DIR)
     try:
         with pytest.raises(RuntimeError, match="자료 폴더"):
@@ -150,7 +150,7 @@ def test_24_missing_data_names_the_folder(tmp_path, monkeypatch):
 
 
 def test_25_manifest_detects_changed_file(mini):
-    from app.modules.travel_ops.mobility.engine import datacheck
+    from app.domains.travel_ops.instances.mobility.engine import datacheck
     paths.configure(mini)
     assert datacheck.check()["ok"]
     datacheck.write_manifest()
@@ -162,7 +162,7 @@ def test_25_manifest_detects_changed_file(mini):
 
 
 def test_32_stale_timetable_is_flagged(tmp_path):
-    from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+    from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
     before = (paths.SOURCE, paths.DATA_DIR)
     _write_mini_data(tmp_path, built_at="2026-01-01T00:00:00+09:00")
     try:
@@ -183,7 +183,7 @@ def _iso_days_ago(n):
     (1, 2, 40, True),       # 원천 중 가장 오래된 것이 기준(서울 보충분만 낡아도 경고)
 ])
 def test_89_staleness_uses_collection_date_not_build_time(tmp_path, built_ago, tago_ago, seoul_ago, stale):
-    from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+    from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
     before = (paths.SOURCE, paths.DATA_DIR)
     m = _write_mini_data(tmp_path, built_at=_iso_days_ago(built_ago))
     (m / "timetable_v1_meta.json").write_text(json.dumps({
@@ -200,7 +200,7 @@ def test_89_staleness_uses_collection_date_not_build_time(tmp_path, built_ago, t
 
 def test_89_staleness_falls_back_to_row_fetched_at(tmp_path):
     """meta 에 수집일이 없으면 행 fetched_at — 만든 시각(built_at)으로 신선하다고 하지 않는다."""
-    from app.modules.travel_ops.mobility.engine.runtime import build_verifier
+    from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
     before = (paths.SOURCE, paths.DATA_DIR)
     m = _write_mini_data(tmp_path, built_at="2026-01-01T00:00:00+09:00")          # 행 fetched_at = 1/1
     (m / "timetable_v1_meta.json").write_text(json.dumps({"built_at": _iso_days_ago(1)}), encoding="utf-8")
@@ -212,7 +212,7 @@ def test_89_staleness_falls_back_to_row_fetched_at(tmp_path):
 
 
 def test_32_get_verifier_reloads_when_source_changes(mini, monkeypatch):
-    from app.modules.travel_ops.mobility.engine import runtime as RT
+    from app.domains.travel_ops.instances.mobility.engine import runtime as RT
     monkeypatch.setattr(RT, "_SINGLETON", None)
     first = RT.get_verifier(quiet=True, data_dir=mini, gh_url="", seoul_key="")
     assert RT.get_verifier() is first, "바뀐 것이 없으면 같은 판"
@@ -228,7 +228,7 @@ def test_32_get_verifier_reloads_when_source_changes(mini, monkeypatch):
 # ── #63 시험용 축소 시간표를 압축해 둔다 — 로더가 .gz 도 읽는다 ─────────────
 def test_63_timetable_loads_gzip_same_as_plain(tmp_path):
     import gzip
-    from app.modules.travel_ops.mobility.engine.verify_time import Timetable
+    from app.domains.travel_ops.instances.mobility.engine.verify_time import Timetable
     rows = [{"line": "01호선", "station_nm": "A", "day_type": "weekday", "dep_time": "09:00:00", "dir": "down",
              "dest_nm": "D", "fetched_at": "2026-09-09"},
             {"line": "01호선", "station_nm": "B", "day_type": "weekday", "dep_time": None, "dir": "down",
@@ -243,8 +243,54 @@ def test_63_timetable_loads_gzip_same_as_plain(tmp_path):
 
 
 def test_63_committed_mini_timetable_is_gzip_and_readable():
-    from app.modules.travel_ops.mobility.engine.verify_time import Timetable
+    from app.domains.travel_ops.instances.mobility.engine.verify_time import Timetable
     here = Path(__file__).resolve().parent
     assert not (here / "mini_timetable_v2.jsonl").exists(), "평문 20MB 판은 압축본으로 바뀌었다"
     tt = Timetable.load(here / "mini_timetable_v2.jsonl.gz", wanted={("05호선", "여의도")})
     assert tt.rows > 0 and tt.fetched_at == "2026-09-09"
+
+
+# ── 자료 폴더 통일(2026-09-29) — 저장소 안 datasets/mobility/processed ─────────────────
+def test_datasets_relative_path_is_resolved_from_the_repo_root(monkeypatch):
+    """상대 경로는 서버를 띄운 폴더가 아니라 저장소 맨 위 기준 — 안 그러면 final_project_cs/ 에서 띄울 때 자료를 못 찾는다."""
+    monkeypatch.chdir(CS_ROOT)
+    before = (paths.SOURCE, paths.DATA_DIR)
+    try:
+        paths.configure("datasets/mobility/processed")
+        assert paths.DATA_DIR == paths.REPO_ROOT / "datasets" / "mobility" / "processed"
+        assert paths.PROCESSED == paths.DATA_DIR, "processed 로 끝나는 경로는 그 자리가 PROCESSED"
+        paths.configure(CS_ROOT / "somewhere")
+        assert paths.DATA_DIR == CS_ROOT / "somewhere" and paths.PROCESSED == CS_ROOT / "somewhere" / "travel" / "processed"
+    finally:
+        paths._layout(before[1], before[0])
+
+
+def test_repo_root_ignores_an_empty_dot_git_folder(tmp_path):
+    """이 기기의 final_project_cs/.git 처럼 info/ 만 든 빈 폴더(찌꺼기)에 속아 저장소 맨 위를 잘못 잡지 않는다."""
+    (tmp_path / ".git").mkdir()
+    (tmp_path / ".git" / "HEAD").write_text("ref: refs/heads/x", encoding="utf-8")
+    inner = tmp_path / "final_project_cs" / "app"
+    inner.mkdir(parents=True)
+    (tmp_path / "final_project_cs" / ".git" / "info").mkdir(parents=True)          # 찌꺼기: HEAD 가 없다
+    assert paths._repo_root(inner / "x.py") == tmp_path.resolve()
+    (tmp_path / "final_project_cs" / ".git" / "HEAD").write_text("ref: y", encoding="utf-8")
+    assert paths._repo_root(inner / "x.py") == (tmp_path / "final_project_cs").resolve(), "진짜 저장소면 그것을 센다"
+
+
+def test_datacheck_reads_the_manifest_the_mobility_owner_ships(mini):
+    """자료와 함께 올라오는 MANIFEST_git_v1.json(files[].path·bytes·sha256)으로 서버 기동 때 확인한다."""
+    import hashlib
+    from app.domains.travel_ops.instances.mobility.engine import datacheck
+    paths.configure(mini)
+    base = mini / "travel" / "processed" / "mobility"
+    P = datacheck._paths()
+    entries = [{"path": p.relative_to(base).as_posix(), "bytes": p.stat().st_size,
+                "sha256": hashlib.sha256(p.read_bytes()).hexdigest()} for p in P.values() if p.exists()]
+    (base / datacheck.GIT_MANIFEST_NAME).write_text(json.dumps({"manifest_version": "git_v1", "files": entries}),
+                                                     encoding="utf-8")
+    ok = datacheck.check()
+    assert ok["ok"] and ok["manifest"].endswith(datacheck.GIT_MANIFEST_NAME), ok
+    tt = base / "timetable_v1.jsonl"
+    tt.write_text(tt.read_text(encoding="utf-8").replace("01호선", "01호선 ", 1), encoding="utf-8")   # 내용만 바뀐다
+    bad = datacheck.check()
+    assert not bad["ok"] and {m["file"] for m in bad["mismatched"]} == {"timetable"}, bad

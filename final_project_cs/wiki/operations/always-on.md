@@ -42,7 +42,7 @@ domain_note: 상시 실행 얼개는 도메인 무관이다. 「무엇이 돌아
 | 대상 | 주기 | 왜 상시인가 | 죽으면 무엇으로 아나 | 기록이 남는 곳 |
 |---|---|---|---|---|
 | **DB** PostgreSQL 16.14 · 5433 | 항상 | 나머지 넷이 전부 이것 위에 선다 | 5433 이 안 열린다 → 점검 `db` | `server_5433.log` (데이터 디렉터리) |
-| **되잡기 작업** `scripts.run_sweepers` | **1분마다** 한 회차 | 접수·분류·실행을 나눈 대가. 안 돌면 `classifying`·`routing` 잔류 Case 가 영원히 남고 **일정 안내가 때를 놓친다** | 임계값 넘긴 Case 가 쌓인다 → 점검 `stuck_cases` | `var/ops/logs/sweepers-<날짜>.log` |
+| **되잡기 작업** `scripts.run_sweepers` | **1분마다** 한 회차(★`[2026-10-03]` 그 안의 여행 **감시**만 3분 주기 — 작업 안의 문 `job_gates`, D-017) | 접수·분류·실행을 나눈 대가. 안 돌면 `classifying`·`routing` 잔류 Case 가 영원히 남고 **일정 안내가 때를 놓친다** | 임계값 넘긴 Case 가 쌓인다 → 점검 `stuck_cases` | `var/ops/logs/sweepers-<날짜>.log` |
 | **안내(리마인더)** 되잡기 안에 있다 | 위와 같다 | v11 §6-B ②하루 시작 ③항목 출발. `--only` 없이 돌면 `trip_reminders` 가 함께 돈다 | 나간 안내가 없다 → 점검 `notice` (★아래 한계) | 위와 같다 |
 | **바깥함 일꾼** `scripts.run_outbox_worker` | **1분마다** 한 회차 | 통지는 `outbox` 에 **쌓이기만 한다.** 일꾼이 안 돌면 고객에게 아무것도 안 나가는데 **어디에도 오류가 안 뜬다** | `pending` 이 오래 남는다 → 점검 `outbox_pending` | `var/ops/logs/outbox-<날짜>.log` |
 | **앱** uvicorn | 항상 | 접점 둘(에이전트 API · **여행계획서 링크**)이 같은 프로세스다. **상태의 정본이 링크**라(v11 §9-C) 앱이 꺼지면 고객이 맞는 것을 볼 데가 없다 | `/health` 가 안 열린다 → 점검 `app` | `var/ops/logs/app-<날짜>.log` |
