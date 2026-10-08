@@ -216,7 +216,7 @@ def _api_error(exc: BaseException) -> ModelCallError:
     return ModelCallError(f"OpenAI 호출 실패({reason}): {type(exc).__name__}" + (f" HTTP {status}" if status else ""), reason=reason)
 
 
-_NO_TEMPERATURE = ("o1", "o3", "o4", "gpt-5")           # 추론 모델은 temperature 를 거부한다
+_NO_TEMPERATURE = ("o1", "o3", "o4", "gpt-5", "gpt-6")  # 추론 모델에 샘플링 옵션을 보내지 않는다
 _clients: dict[tuple[str, float], Any] = {}
 _clients_lock = threading.Lock()
 
@@ -243,7 +243,11 @@ class OpenAIChat:
 
     def _complete(self, messages: list[dict[str, Any]], *, response_format: dict[str, Any] | None = None,
                   max_tokens: int = 600, timeout: float | None = None) -> str:
-        kwargs: dict[str, Any] = {"model": self.model, "messages": messages, "max_tokens": int(max_tokens)}
+        token_limit = "max_completion_tokens" if self.model.startswith("gpt-6") else "max_tokens"
+        kwargs: dict[str, Any] = {"model": self.model, "messages": messages, token_limit: int(max_tokens)}
+        if self.model.startswith("gpt-6-luna"):
+            # 짧은 문장·JSON 추출의 출력 예산을 추론 토큰이 먼저 소진하지 않도록 한다.
+            kwargs["reasoning_effort"] = "none"
         if not self.model.startswith(_NO_TEMPERATURE):
             kwargs["temperature"] = 0
         if response_format is not None:

@@ -11,6 +11,10 @@ domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도�
 
 # 모델 서버 장애 시 OpenAI 로 자동 전환
 
+## 2026-10-08 사용자 지정 운영 모델
+
+공개 배포 환경에서는 `ACOP_LLM_FAILOVER_ENABLED=true`, `ACOP_LLM_FAILOVER_MODEL=gpt-6-luna`로 전환한다. 키는 `ACOP_OPENAI_API_KEY_SERVER`만 사용한다. 로컬 개발 환경의 스위치 기본 꺼짐은 유지한다. GPT-6 호출은 `max_completion_tokens`를 쓰고, Luna는 짧은 JSON·문장 추출을 위해 `reasoning_effort=none`을 명시한다. 개인 키를 대신 쓰거나 복사하지 않는다. 호출 상한·마스킹·전환 경로 기록은 기존 계약을 유지한다. 실제 적용 여부와 시험은 해당 날짜 작업 리포트로 확인한다.
+
 `[2026-10-07 사용자 지시]` 「올라마나 외부 GPU 서버가 모두 장애면 서버키(개인키 말고)로 자동 전환돼서 동작하게」.
 코드 [llm_failover.py](../../app/infrastructure/llm_failover.py) · 시험 `tests/unit/infrastructure/test_llm_failover.py` · `test_retriever_failover.py`.
 
