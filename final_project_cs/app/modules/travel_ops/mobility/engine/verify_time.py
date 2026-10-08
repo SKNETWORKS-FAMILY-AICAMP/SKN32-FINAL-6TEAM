@@ -1550,7 +1550,8 @@ class Verifier:
             ev.append(self._ev_rule("taxi.fare.산식", "확정"))
             ev.append({"source_type": "policy", "source_id": "seoul_taxi_fare@2023-02-01(확인 2026-09-19)",
                        "grade": "추정", "observed_at": "2026-09-19",
-                       "claim": f"택시({c['fare_kind']}) 요금 하한 {c['fare_won']:,}원 = 미터 {c['meter_won']:,}"
+                       "claim": f"택시({c['fare_kind']}) 예상 요금 {c['fare_won']:,}원 = 미터 {c['meter_won']:,}"
+                                + (f" + 예산 여유 {c['planning_reserve_won']:,}" if c.get("planning_reserve_won") else "")
                                 + (f" + 통행료 {c['toll_won']:,}" if c["toll_won"] else "")
                                 + f" · 심야율 {c['night_rate']:g} · 저속 {c['slow_s']}초"})
             ev.append(self._ev_rule("car.택시_대기", "근거없음"))
@@ -1590,7 +1591,7 @@ class Verifier:
         ride = ceil1(c["topis_time_s"] / 60)                # #2 올림
         arr = int(now_min) + math.ceil(ride)
         return dict(base, verdict="feasible", grade=c["grade"],
-                    reason=f"{c['distance_m']/1000:.1f} km · 소요 {ride:g}분 · 요금 하한 {c['fare_won']:,}원({c['fare_kind']})",
+                    reason=f"{c['distance_m']/1000:.1f} km · 소요 {ride:g}분 · 예상 요금 {c['fare_won']:,}원({c['fare_kind']})",
                     depart_min=int(now_min), arrive_min=arr, ride_min=ride,
                     distance_m=c["distance_m"], fare_won=c["fare_won"], fare_kind=c["fare_kind"],
                     warnings=self._car_warnings(c), evidence=self._car_evidence(c),
@@ -1613,7 +1614,7 @@ class Verifier:
         ride = ceil1(c["topis_time_s"] / 60)                # #2 올림
         arr = int(now_min) + math.ceil(ride)
         reason = (f"{fmt_min(now_min)} 출발 · {c['distance_m']/1000:.1f} km · 소요 {ride:g}분"
-                  + (f" · 요금 하한 {c['fare_won']:,}원({c['fare_kind']}) · 대기 0분(근거없음)" if taxi else ""))
+                  + (f" · 예상 요금 {c['fare_won']:,}원({c['fare_kind']}) · 대기 0분(근거없음)" if taxi else ""))
         return LegResult(idx, label, "feasible", reason, grade=c["grade"],
                          depart_min=int(now_min), arrive_min=arr, wait_min=0 if taxi else None,
                          ride_min=ride, ride_grade=c["grade"],
@@ -2313,7 +2314,7 @@ class Verifier:
                     i, label, "feasible",
                     f"도보 {walk:g}분{dist_txt}"
                     + (f" + 길찾기 {wf}분" if wf else " (초행 아님)")
-                    + f" = +{add}분", grade=tg, warnings=twarn, worst=worst))
+                    + f" = +{add}분", grade=tg, warnings=twarn, worst=worst, wait_min=0))
             r = (self.verify_leg_bus(i, leg, now, day_type, worst=worst) if mode == "bus"
                  else self._cached_leg(("bike", i, json.dumps(leg, sort_keys=True, ensure_ascii=False), now),
                                        lambda: self.verify_leg_bike(i, leg, now, day_type, party, case.get("bike_live")))

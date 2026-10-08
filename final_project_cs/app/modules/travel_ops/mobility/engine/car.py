@@ -18,8 +18,8 @@
 택시 요금 — rules taxi.fare 산식 그대로(15번 방). rules_check.py(저장소 밖 점검 · 82)의 taxi_fare 와 같은 식이고
   규칙 파일의 검산_예시 8건이 둘의 공통 정답이다(final_project_cs/tests/unit/travel/mobility/car_legs_v1.json 이 이 모듈로 다시 검산한다).
   병산: 프로파일 속도가 전환속도(15.72 km/h) 미만인 edge 는 시간요금(slow_s), 이상인 edge 는 거리요금(distance_m − slow_m).
-  정차·신호 대기·호출료는 없다 → 요금은 **하한**.
-  시계외 할증은 서울 경계 폴리곤이 없어 판정하지 않는다(out_of_city=None → 미적용, 하한 방향).
+  요금은 미터 추정에 예산 여유(10%, 최소 1,000원)를 더한 예상액이다. 결제 상한은 아니다.
+  시계외 할증은 서울 경계 폴리곤이 없어 판정하지 않는다(out_of_city=None → 미적용 추정).
 """
 from __future__ import annotations
 
@@ -313,6 +313,20 @@ def taxi_fare(fare, kind, dist_m, slow_s, hhmm, out_of_city=False):
 
 
 # ── 구간 판정 서비스 ───────────────────────────────────────────────────────
+def taxi_planning_fare(meter_won, toll_won=0, *, reserve_rate, minimum_reserve_won, round_unit_won):
+    """여행 예산용 예상액: 미터 추정 + 설정된 예산 여유 + 통행료.
+
+    여유는 제품의 보수적 예산 가정이며 법정 요율이나 결제 상한이 아니다.
+    """
+    if (meter_won < 0 or toll_won < 0 or not math.isfinite(reserve_rate)
+            or reserve_rate < 0 or minimum_reserve_won < 0 or round_unit_won <= 0):
+        raise ValueError("택시 예산 금액·여유율·올림 단위를 확인해야 합니다")
+    from decimal import Decimal
+    reserve = max(minimum_reserve_won,
+                  math.ceil(Decimal(meter_won) * Decimal(str(reserve_rate)) / round_unit_won) * round_unit_won)
+    return meter_won + reserve + toll_won, reserve
+
+
 class CarService:
     """그래프 + 라우터 + 규칙. Verifier 가 자동차/택시 구간과 택시 대안에 쓴다."""
 
@@ -320,6 +334,7 @@ class CarService:
         self.g, self.router, self.R = graph, router, rules
         self.C = rules["car"]
         self.F = rules["taxi"]["fare"]
+        self.B = rules["taxi"]["planning_budget"]
 
     def in_airport_box(self, pt):
         b = self.C["공항_상자"]["value"]
@@ -353,10 +368,19 @@ class CarService:
             if self.in_airport_box(s) or self.in_airport_box(e):
                 toll = self.F["공항"]["통행료_인천공항고속도로_won"]["value"]
                 toll_basis = "공항 방면 — 인천공항고속도로 통행료 상한(어느 다리를 타는지는 미판정)"
-            # 병산: 전환속도 미만 edge 는 시간요금, 이상 edge 는 거리요금(15번 산식의 '전 구간 거리 + 저속 시간' 근사보다 한 발 정확).
-            fare = taxi_fare(self.F, kind, r["distance_m"] - r["slow_m"], r["slow_s"], hhmm, out_of_city=False)
-            out.update({"fare_kind": kind, "fare_won": fare + toll, "meter_won": fare, "toll_won": toll,
+            # 서울 중형은 저속에서 시간·거리를 동시에 센다. 대형·모범은 시간/거리 상호병산이다.
+            # 근거: 서울시 물가정보 중형/대형 택시 공통사항(2026-10-08 확인).
+            billed_distance = r["distance_m"] if kind == "중형" else r["distance_m"] - r["slow_m"]
+            fare = taxi_fare(self.F, kind, billed_distance, r["slow_s"], hhmm, out_of_city=False)
+            reserve_rate = self.B["reserve_rate_by_kind"]["value"][kind]
+            planning_fare, reserve = taxi_planning_fare(
+                fare, toll, reserve_rate=reserve_rate,
+                minimum_reserve_won=self.B["minimum_reserve_won"]["value"],
+                round_unit_won=self.B["round_unit_won"]["value"])
+            out.update({"fare_kind": kind, "fare_won": planning_fare, "meter_won": fare, "toll_won": toll,
+                        "planning_reserve_won": reserve,
+                        "planning_reserve_rate": reserve_rate,
                         "toll_basis": toll_basis, "slow_s": r["slow_s"], "slow_m": r["slow_m"],
                         "night_rate": taxi_rate(self.F, kind, hhmm), "out_of_city": None,
-                        "fare_basis": "호출료·정차·시계외 미포함 하한"})
+                        "fare_basis": f"예상 요금(예산 여유 {reserve:,}원 포함) · 실제 결제액은 교통·대기·호출료·시계외 할증에 따라 달라짐"})
         return out
