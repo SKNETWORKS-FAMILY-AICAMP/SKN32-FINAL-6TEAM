@@ -77,9 +77,9 @@ def test_blocked_is_counted_apart_from_not_found():
 def test_summary_counts_every_label():
     results = [{"group": "near", "label": label} for label in LABELS]
     summary = summarize(results)
-    assert summary["accuracy"] == {"num": 3, "den": 7, "rate": 0.429}
+    assert summary["accuracy"] == {"num": 3, "den": 8, "rate": 0.375}
     assert summary["wrong_confirmed"]["num"] == 1
-    assert sum(summary["labels"].values()) == 7
+    assert sum(summary["labels"].values()) == 8
 
 
 def test_holdout_is_12_cases_and_does_not_overlap_the_dev_set():

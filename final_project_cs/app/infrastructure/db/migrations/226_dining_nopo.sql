@@ -26,10 +26,20 @@ ON CONFLICT (source_code) DO UPDATE
        production_allowed = EXCLUDED.production_allowed,
        note = EXCLUDED.note;
 
-ALTER TABLE dining.dn_attribute DROP CONSTRAINT IF EXISTS dn_attribute_code_chk;
-ALTER TABLE dining.dn_attribute ADD CONSTRAINT dn_attribute_code_chk CHECK (attr_code IN (
-    'card_payment', 'reservable', 'reservation_required', 'kids_allowed',
-    'vegetarian_menu', 'halal', 'max_party_size', 'price_per_person',
-    'parking', 'takeout', 'non_smoking', 'michelin', 'nopo'));
+-- ★`[2026-10-08]` 이미 「nopo」을(를) 받는 목록이면 건드리지 않는다. 
+--   218 과 같은 이유다 — 코드를 또 더하는 마이그레이션도 이 모양으로 쓴다(앞 목록 + 새 코드, 이미 받으면 건너뛴다).
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                    WHERE conname = 'dn_attribute_code_chk'
+                      AND pg_get_constraintdef(oid) LIKE '%''nopo''%') THEN
+        ALTER TABLE dining.dn_attribute DROP CONSTRAINT IF EXISTS dn_attribute_code_chk;
+        ALTER TABLE dining.dn_attribute ADD CONSTRAINT dn_attribute_code_chk CHECK (attr_code IN (
+            'card_payment', 'reservable', 'reservation_required', 'kids_allowed',
+            'vegetarian_menu', 'halal', 'max_party_size', 'price_per_person',
+            'parking', 'takeout', 'non_smoking', 'michelin',
+            'nopo'));
+    END IF;
+END $$;
 
 COMMIT;
