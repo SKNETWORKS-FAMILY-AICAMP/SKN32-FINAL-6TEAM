@@ -32,6 +32,7 @@ from collections import Counter
 from datetime import datetime, timedelta
 import logging
 from pathlib import Path
+import re
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -80,17 +81,84 @@ REGION_NAMES = {"서울": "서울특별시"}
 DEFAULT_LOOKBACK_HOURS = 6
 
 
+# ── 자치구 정하기 — `[2026-10-08]` role-activity 판(`disaster_msg.py`)에서 합쳤다 ──────────────
+# ★develop 판정은 장소의 구(`district`)를 받아 거른다(`disruptions.py`). 아래는 좌표 · 주소만 아는 호출
+#   (보존한 활동 팀 판 · `read_tools_a`)을 위한 것이다 — 주소의 「서울특별시 ○○구」가 먼저고, 주소가 없을 때만
+#   대략적 좌표 상자를 쓰되 **겹친 구를 전부** 본다. 겹친 상자 중 앞 구를 고르던 옛 함수(`_lat_lon_to_gu`)는
+#   카탈로그 장소의 32% 를 다른 구로 정해 가져오지 않았다.
+# 서울 25개 자치구 대략적 경계(EPSG:4326) — 위경도 → 구 이름 변환용.
+# ★재난문자 수신지역 문자열("서울특별시 송파구 신천동")에서 구 이름("송파구")으로 좁힌다.
+_SEOUL_GU_BOUNDS: list[tuple[str, float, float, float, float]] = [
+    # (구이름, lat_min, lat_max, lon_min, lon_max)
+    ("강남구",   37.4950, 37.5430, 127.0250, 127.1170),
+    ("강동구",   37.5230, 37.5640, 127.1070, 127.1850),
+    ("강북구",   37.6100, 37.6700, 127.0050, 127.0630),
+    ("강서구",   37.5190, 37.5760, 126.7980, 126.8860),
+    ("관악구",   37.4470, 37.4970, 126.9070, 126.9850),
+    ("광진구",   37.5360, 37.5630, 127.0640, 127.1230),
+    ("구로구",   37.4850, 37.5270, 126.8360, 126.9200),
+    ("금천구",   37.4470, 37.4840, 126.8770, 126.9370),
+    ("노원구",   37.6170, 37.6860, 127.0580, 127.1150),
+    ("도봉구",   37.6470, 37.7150, 127.0160, 127.0720),
+    ("동대문구", 37.5610, 37.5960, 127.0150, 127.0630),
+    ("동작구",   37.4870, 37.5290, 126.9330, 126.9980),
+    ("마포구",   37.5360, 37.5750, 126.8830, 126.9680),
+    ("서대문구", 37.5580, 37.6040, 126.9070, 126.9740),
+    ("서초구",   37.4730, 37.5270, 126.9930, 127.0730),
+    ("성동구",   37.5390, 37.5760, 127.0200, 127.0730),
+    ("성북구",   37.5800, 37.6300, 126.9830, 127.0370),
+    ("송파구",   37.4730, 37.5400, 127.0850, 127.1910),
+    ("양천구",   37.5150, 37.5570, 126.8470, 126.9140),
+    ("영등포구", 37.5040, 37.5380, 126.8840, 126.9510),
+    ("용산구",   37.5180, 37.5530, 126.9580, 127.0120),
+    ("은평구",   37.5910, 37.6420, 126.8820, 126.9570),
+    ("종로구",   37.5650, 37.6200, 126.9520, 127.0190),
+    ("중구",     37.5520, 37.5760, 126.9800, 127.0240),
+    ("중랑구",   37.5840, 37.6260, 127.0580, 127.1180),
+]
+
+
+SEOUL_GU_NAMES = frozenset(name for name, *_ in _SEOUL_GU_BOUNDS)
+#: 「서울특별시 종로구 …」 · 「서울 종로구 …」 · 「서울시 중구 …」
+_ADDRESS_GU = re.compile(r"서울(?:특별시|시)?\s+(\S+?구)(?=\s|$|\()")
+
+
+def seoul_districts(latitude: float | None, longitude: float | None,
+                    address: str | None = None) -> tuple[list[str] | None, str]:
+    """장소 → 재난문자를 거를 서울 자치구 목록과 그 근거. `[2026-10-07]`
+
+    1. **주소**에 「서울특별시 ○○구」가 있으면 그 구 하나(`address`). 카탈로그·CSV 장소는 모두 주소가 있다.
+    2. 없으면 좌표 상자. 상자는 겹친다 — 들어가는 구를 **전부** 본다(`box`, 둘 이상이면 `box_ambiguous`).
+       한쪽을 고르면 진짜 구의 위급재난을 놓친다. 전부 보면 이웃 구 문자로 막을 수 있지만 그쪽이 덜 위험하다.
+    3. 상자에도 없으면 `None`(구를 모름) — 서울 전체로 조회한다(`none`).
+    ★상자는 대략값이라 2 로도 진짜 구가 빠질 수 있다(카탈로그 실측 12%). 주소를 넘기는 것이 기본이다.
+    """
+    if address:
+        match = _ADDRESS_GU.search(address)
+        if match and match.group(1) in SEOUL_GU_NAMES:
+            return [match.group(1)], "address"
+    if latitude is None or longitude is None:
+        return None, "none"
+    hits = [name for name, lat_min, lat_max, lon_min, lon_max in _SEOUL_GU_BOUNDS
+            if lat_min <= latitude <= lat_max and lon_min <= longitude <= lon_max]
+    if not hits:
+        return None, "none"
+    return hits, "box" if len(hits) == 1 else "box_ambiguous"
+
+
 def _regions(text: str) -> list[str]:
     return [part.strip() for part in str(text or "").split(",") if part.strip()]
 
 
-def _covers(tokens: list[str], region: str, district: str | None) -> bool:
+def _covers(tokens: list[str], region: str, district: str | list[str] | None) -> bool:
+    """`district` 는 구 하나 또는 목록(좌표 상자가 겹칠 때 — 그중 하나라도 걸리면 덮는다). `[2026-10-08]` 목록 허용."""
     full = REGION_NAMES.get(region, region)
+    districts = [district] if isinstance(district, str) else district
     for token in tokens:
         if not token.startswith(full):
             continue
         # ★구까지 알면 구로 좁힌다 — 강남 도로 통제로 종로 일정을 바꾸지 않게.
-        if district is None or token.endswith("전체") or district in token:
+        if not districts or token.endswith("전체") or any(d in token for d in districts):
             return True
     return False
 
@@ -116,7 +184,7 @@ def parse_row(raw: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
-def judge(rows: list[dict[str, Any]], *, region: str, district: str | None,
+def judge(rows: list[dict[str, Any]], *, region: str, district: str | list[str] | None,
           window_start: datetime, at: datetime) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """창 안·지역 안의 행 → (이상으로 셀 문자, 모르는 구분). 판정 규칙은 모듈 docstring."""
     messages, unclassified = [], []
@@ -140,7 +208,7 @@ def judge(rows: list[dict[str, Any]], *, region: str, district: str | None,
     return messages, unclassified
 
 
-def judge_released(rows: list[dict[str, Any]], *, region: str, district: str | None,
+def judge_released(rows: list[dict[str, Any]], *, region: str, district: str | list[str] | None,
                    window_start: datetime, at: datetime) -> list[dict[str, Any]]:
     """창 안 · 지역 안의 **해제 문자**(본문에 「해제」). 재해구분은 가리지 않는다 — 어느 사건의 해제인지는 부르는 쪽이 가른다(`safety_pause._matching_release`)."""
     out = []
@@ -182,7 +250,7 @@ class DisasterMsgCsv:
             logger.warning("disaster_msg sample: skipped rows %s", dict(self.misses))
         return rows
 
-    def active(self, *, region: str, at: datetime, district: str | None = None,
+    def active(self, *, region: str, at: datetime, district: str | list[str] | None = None,
                lookback_hours: int = DEFAULT_LOOKBACK_HOURS) -> dict[str, Any] | None:
         """`at` 이전 `lookback_hours` 안에 `region` 으로 온 문자. 못 읽었으면 `None`."""
         if self.coverage is None:
@@ -214,6 +282,29 @@ class DisasterMsgCsv:
         if not (first <= at <= last + timedelta(hours=DEFAULT_LOOKBACK_HOURS)):
             return None
         return judge_released(self.rows, region=region, district=district, window_start=since, at=at)
+
+    def near(self, latitude: float, longitude: float,
+             at: Any = None, *, within: Any = None, address: str | None = None) -> dict[str, Any] | None:
+        """좌표 · 주소로 자치구를 정해 조회한다 — `[2026-10-08]` role-activity 판에서 합쳤다.
+
+        보존한 활동 팀 판(`instances/activity/watch.py` 는 `within=`, `read_tools_a.py` 는 `at=`)이 부른다.
+        `address` 를 주면 주소의 구로 거른다(`seoul_districts`). 구를 못 정하면 시 전체로 조회한다.
+        """
+        effective_at = within or at or datetime.now(KST)
+        if not isinstance(effective_at, datetime):
+            effective_at = datetime.now(KST)
+        return _near_by_district(self, latitude, longitude, effective_at, address)
+
+
+def _near_by_district(source: Any, latitude: float, longitude: float, at: datetime,
+                      address: str | None) -> dict[str, Any] | None:
+    """두 판의 `near()` 공통 — 구를 정해 `active()` 로 묻고, 어떻게 정했는지(`district_basis`)를 싣는다."""
+    districts, basis = seoul_districts(latitude, longitude, address)
+    district: str | list[str] | None = districts[0] if districts and len(districts) == 1 else districts
+    result = source.active(region="서울", district=district, at=at)
+    if isinstance(result, dict):
+        result = {**result, "district_basis": basis}
+    return result
 
 
 #: 재난안전데이터공유플랫폼 긴급재난문자 — 2026-09-14 실키로 실호출 확인:
@@ -300,7 +391,7 @@ class DisasterMsgApi(TravelSource):
             return None
         return judge_released(rows, region=region, district=district, window_start=since, at=min(at.astimezone(KST), now))
 
-    def active(self, *, region: str, at: datetime, district: str | None = None,
+    def active(self, *, region: str, at: datetime, district: str | list[str] | None = None,
                lookback_hours: int = DEFAULT_LOOKBACK_HOURS) -> dict[str, Any] | None:
         now = datetime.now(KST)
         at = at if at.tzinfo else at.replace(tzinfo=KST)
@@ -317,6 +408,19 @@ class DisasterMsgApi(TravelSource):
                            "for_region": messages, "unclassified": unclassified},
                           source=self.name)
 
+    def near(self, latitude: float, longitude: float,
+             at: Any = None, *, within: Any = None, address: str | None = None) -> dict[str, Any] | None:
+        """좌표 · 주소로 자치구를 정해 조회한다 — `[2026-10-08]` role-activity 판에서 합쳤다.
+
+        보존한 활동 팀 판(`instances/activity/watch.py` 는 `within=`, `read_tools_a.py` 는 `at=`)이 부른다.
+        `address` 를 주면 주소의 구로 거른다(`seoul_districts`). 구를 못 정하면 시 전체로 조회한다.
+        """
+        effective_at = within or at or datetime.now(KST)
+        if not isinstance(effective_at, datetime):
+            effective_at = datetime.now(KST)
+        return _near_by_district(self, latitude, longitude, effective_at, address)
+
 
 __all__ = ["API_ENDPOINT", "DEFAULT_SAMPLE_PATH", "DISRUPTIVE_KINDS", "DisasterMsgApi",
-           "DisasterMsgCsv", "PLACE_KINDS", "WEATHER_KINDS", "judge", "judge_released", "parse_row"]
+           "DisasterMsgCsv", "PLACE_KINDS", "SEOUL_GU_NAMES", "WEATHER_KINDS", "judge", "judge_released",
+           "parse_row", "seoul_districts"]
