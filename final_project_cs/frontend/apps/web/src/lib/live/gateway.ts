@@ -302,11 +302,11 @@ async function read(tripId: string, language: Language): Promise<Trip> {
 const unanswered = new Map<string, { message: string; itemId: string | null; requestId: string }>();
 
 /**
- * ★`[2026-10-03]` 여행 삭제 — 서버에 아직 없다(`DELETE`도 `POST …/delete`도 `app/` 의 라우트에 없음, 백엔드 요청서
- *   `wiki/records/plans/2026-10-03_1920_웹_실서버_전환_백엔드_요청.md`). 웹은 요청한 모양 그대로 연결해 둔다:
- *   `POST /v1/web/trips/{id}/delete`(본인 여행만, 이미 없으면 404 `not_found`). 서버에 그 경로가 없으면 FastAPI 가 본문
- *   `{"detail":"Not Found"}` 의 404(`HTTP_404`)를 주므로 — 여행이 없다는 서버 문장(`not_found`)과 갈라 — 「지원하지 않음」으로 말한다.
- *   (실서버 8042 에서 확인: 없는 경로 POST → 404 `{"detail":"Not Found"}`.) `POST` 로 한 것은 서버 CORS 가 GET·POST·PUT 만 열어서다.
+ * ★`[2026-10-08 정정]` 여행 삭제 — **서버에 있다**: `POST /v1/web/trips/{trip_id}/delete`(`app/domains/travel_ops/entry/trip_api.py`,
+ *   `role-manager` 스냅숏 `64fd0dc` 2026-10-04). 웹이 `[2026-10-03]` 에 요청서(`wiki/records/plans/2026-10-03_1920_웹_실서버_전환_백엔드_요청.md`)의
+ *   모양 그대로 연결해 둔 것이라 그대로 동작한다(본인 여행만, 이미 없으면 404 `not_found`).
+ *   그 경로가 없는 옛 서버는 FastAPI 본문 `{"detail":"Not Found"}` 의 404(`HTTP_404`)를 주므로 — 여행이 없다는 서버 문장(`not_found`)과 갈라 —
+ *   「지원하지 않음」으로 말하는 갈래(`delete_unsupported`)를 남겨 둔다. `POST` 로 한 것은 서버 CORS 가 GET·POST·PUT 만 열어서다.
  */
 async function removeTrip(tripId: string, language: Language): Promise<void> {
   const t = translator(language);

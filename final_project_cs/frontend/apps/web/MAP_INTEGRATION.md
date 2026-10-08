@@ -1,6 +1,6 @@
 # 지도 연동 · 백엔드 전달 계약
 
-최신 확인: 2026-09-29 · SKN32 `develop` `fc1ac0a` 코드 기준. 화면별 요구·사용 API·협의와 연결 상태는 [공유 연동 문서](../../../wiki/external/web-screen-api.md)에서 관리한다.
+최신 확인: 2026-10-08 · SKN32 `role-eval-ui` `68bce77`(ST4F-203 — 옛 문구 정정: 사용자 키 → 세션 쿠키 · 이동 항목 표시. 문서 전체 재검토는 아니다) · 앞선 확인 2026-09-29 `develop` `fc1ac0a`. 화면별 요구·사용 API·협의와 연결 상태는 [공유 연동 문서](../../../wiki/external/web-screen-api.md)에서 관리한다.
 
 작성일: 2026-09-21. 웹 MVP 1차의 여행 홈에 적용한다. 지도 표시와 핀 선택은 프론트가 담당하고, 장소 식별·좌표 확정·방문 시간·이동 경로 계산은 백엔드/에이전트가 담당한다.
 
@@ -45,7 +45,7 @@ NEXT_PUBLIC_MAP_PROVIDER=osm
 
 ## 2. 현재 API 응답과 프론트 표시 데이터
 
-live는 `X-User-Key`로 `GET /v1/web/trips/{trip_id}`를 조회한다. 서버 응답은 `trip_id`·`items[]`이고, `src/lib/live/gateway.ts`가 이를 프론트 `Trip.id`·`stops[]`로 변환한다. `item_id`→`id`, `lat/lon`→`coordinates.lat/lng`, ISO `starts_at/ends_at`→서울 시각 `date/time/endTime`이다. `kind=mobility` 항목은 핀에서 빼고 다음 일정 메모에 출발 시각을 붙인다. 아래 표의 `stops`는 서버의 원본 JSON 필드가 아닌 **프론트 표시 모델**이다. 변환 후 `stops`가 일정 목록과 지도의 공통 원본이다. 지도 전용으로 장소를 다시 추측하거나 채팅 답변에서 좌표를 추출하지 않는다. 실제 API 어댑터가 응답을 `Trip`/`TripStop`으로 변환하고, 지도는 선택한 날짜의 일정에서 핀 데이터를 만든다.
+live는 세션 쿠키로(`[2026-10-08 정정]` 10-04 부터 — 전에는 `X-User-Key`) `GET /v1/web/trips/{trip_id}`를 조회한다. 서버 응답은 `trip_id`·`items[]`이고, `src/lib/live/gateway.ts`가 이를 프론트 `Trip.id`·`stops[]`로 변환한다. `item_id`→`id`, `lat/lon`→`coordinates.lat/lng`, ISO `starts_at/ends_at`→서울 시각 `date/time/endTime`이다. `kind=mobility` 항목은 핀에서 빼고, `[2026-10-07]` 두 일정 사이의 이동 줄(출발 시각 · 수단 · 걸리는 시간 · 거리 · 여유, `Trip.moves`)로 보인다(전에는 다음 일정 메모의 출발 시각). 아래 표의 `stops`는 서버의 원본 JSON 필드가 아닌 **프론트 표시 모델**이다. 변환 후 `stops`가 일정 목록과 지도의 공통 원본이다. 지도 전용으로 장소를 다시 추측하거나 채팅 답변에서 좌표를 추출하지 않는다. 실제 API 어댑터가 응답을 `Trip`/`TripStop`으로 변환하고, 지도는 선택한 날짜의 일정에서 핀 데이터를 만든다.
 
 | 프론트 표시 필드 | 지도 표시 기준 | 표시 모델 규칙 |
 |---|---|---|
