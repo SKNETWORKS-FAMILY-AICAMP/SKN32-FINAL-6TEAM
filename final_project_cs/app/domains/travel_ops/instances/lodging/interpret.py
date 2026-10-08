@@ -64,11 +64,17 @@ def needs(found: Interpretation, *, today: date) -> list[str]:
 
 
 def ask(found: Interpretation, missing: list[str]) -> str:
-    """되묻는 문장. 모델이 센 빠진 값이 서버가 센 것과 **같을 때만** 모델의 문장을 쓰고, 다르면 빠진 값의 이름을 나열한다.
+    """되묻는 문장. 모델이 센 빠진 값이 서버가 센 것과 **같을 때만** 모델 문장을 쓰고, 다르면 빠진 값의 이름을 나열한다.
 
-    ☆2026-10-07 17:48 playdata — 「호텔 추천해줘」에 모델은 지역만 빠졌다고 보고 「어디에서 숙소를 찾으시나요?」만 물었다.
-      서버가 필요한 것은 넷(지역 · 날짜 둘 · 인원)이었다. 모델 문장을 그대로 쓰면 한 번에 하나씩만 묻게 된다.
+    값은 읽었는데 서버가 쓸 수 없다고 본 것(지난 날짜 · 같은 공항 · 뒤집힌 날짜)은 **읽은 값을 같이 보여 준다** —
+    ☆2026-10-08 14:58 playdata, 「11월 6일」을 모델이 2023-11-06 으로 옮겼고 서버가 지난 날짜로 거른 뒤 「출발 날짜를 알려 달라」고만 물었다.
+      고객은 날짜를 말했는데 다시 묻는 꼴이었다.
     """
+    values = found.model_dump(mode="json")
+    rejected = [f"{LABELS[name]} {values[name]}" for name in missing if values.get(name) not in (None, "")]
+    if rejected:
+        return (f"{' · '.join(rejected)}(으)로 읽었는데 지난 날짜이거나 앞뒤가 맞지 않습니다. "
+                f"{' · '.join(LABELS[name] for name in missing)}을(를) 다시 알려 주세요.")
     if found.question and set(found.missing) == set(missing):
         return found.question
     return f"{' · '.join(LABELS[name] for name in missing)}을(를) 알려 주시면 이어서 찾아 드리겠습니다."

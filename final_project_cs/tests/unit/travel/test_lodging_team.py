@@ -233,3 +233,16 @@ def test_the_prompt_key_is_registrable_and_the_file_exists():
     assert len(files) == 1 and "lodging team" in files[0].read_text(encoding="utf-8")
     manifest = LodgingTeam.manifest
     assert manifest.default_capability == "lodging.assist" and set(manifest.capabilities) == {"lodging.assist", "lodging.status"}
+
+
+def test_a_rejected_date_is_shown_back():
+    result, _, _ = _run({**SEARCH, "check_in": "2023-11-06", "check_out": "2023-11-09"})
+    assert result.decisions[0]["needs"] == ["check_in"]
+    assert result.answer.startswith("체크인 날짜 2023-11-06(으)로 읽었는데")
+
+
+def test_the_prompts_tell_the_model_where_the_year_comes_from():
+    from pathlib import Path
+
+    for folder in ("lodging", "flight"):
+        assert "take the\n  year from `context.today`" in Path(f"prompts/{folder}/interpret.v1.md").read_text(encoding="utf-8")

@@ -635,8 +635,9 @@ class ReadToolbox:
         return functions[name](ToolContext.from_pack(context), **arguments)
 
 
-# ★`[2026-10-07]` `lodging.interpret` — 숙소 팀이 고객 문장을 구조로 옮길 때 쓰는 프롬프트(`prompts/lodging/interpret.v1.md`)
-ALLOWED_PROMPT_KEYS = frozenset({"response.generate", "response.review_tone", "lodging.interpret"})
+# ★`[2026-10-07]` `lodging.interpret` · `[2026-10-08]` `flight.interpret` — 숙소 · 항공 팀이 고객 문장을 구조로 옮길 때 쓰는 프롬프트
+#   (`prompts/lodging/interpret.v1.md` · `prompts/flight/interpret.v1.md`)
+ALLOWED_PROMPT_KEYS = frozenset({"response.generate", "response.review_tone", "lodging.interpret", "flight.interpret"})
 
 
 def register_prompt_files(

@@ -18,7 +18,10 @@ Return exactly these keys:
   Otherwise null.
 - "stay_name": for "my_stay", the lodging name exactly as written (e.g. "해밀톤 호텔"). Otherwise null.
 - "check_in", "check_out": YYYY-MM-DD, or null. Resolve relative expressions ("내일", "다음 주 금요일",
-  "3박") against `context.today`. A stay of N nights means check_out = check_in + N days. If the traveller
+  "3박") against `context.today`.
+  A date written without a year ("11월 6일", "11/6") is the FIRST such date on or after `context.today` — take the
+  year from `context.today`, and use the next year only if that date has already passed. Never use a year that is
+  not today's year or the next one unless the traveller wrote it. A stay of N nights means check_out = check_in + N days. If the traveller
   gives no dates but `context.trip.first_day` and `last_day` exist AND the message refers to that trip
   ("이번 여행", "내 일정"), use them. Never invent a date that neither the message nor the trip supports.
 - "adults": integer or null. "children": integer or null. Use `context.trip.party_size` for adults only when

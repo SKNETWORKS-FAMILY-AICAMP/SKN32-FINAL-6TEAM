@@ -168,7 +168,7 @@ def test_a_domestic_round_trip_calls_the_domestic_tool():
 
 
 def test_the_default_timeout_covers_the_slow_domestic_search():
-    assert MyRealTripMcp()._timeout == 20.0
+    assert MyRealTripMcp()._timeout == 30.0
 
 
 def test_without_three_letter_codes_the_server_is_not_asked():

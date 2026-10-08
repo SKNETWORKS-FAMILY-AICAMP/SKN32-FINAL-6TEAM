@@ -37,10 +37,11 @@ teams:
 - team_id: lodging
   active: true
   implementation_ref: app.domains.travel_ops.instances.lodging:LodgingTeam
-# 등록만 — 로직 없음. 잠긴 예약으로만 취급한다.
+# ★2026-10-08 항공 팀 — 항공편 찾기(마이리얼트립 검색, 예약은 링크로). 본체는 instances/flight/
+#   옛 「등록만」 두 팀(`instances/locked/`)은 등록에서 빠졌고 코드는 그대로 둔다.
 - team_id: flight
   active: true
-  implementation_ref: app.domains.travel_ops.instances.locked:FlightTeam
+  implementation_ref: app.domains.travel_ops.instances.flight:FlightTeam
 response_review:
   # ★[미확보] 여행 도메인에 응답 검토 Team 이 **아직 없다**(2026-09-10).
   #   커머스판(`ResponseGenerationReviewTeam`)은 구현과 함께 걷어냈고, 이 절은
