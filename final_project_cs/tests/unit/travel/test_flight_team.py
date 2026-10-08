@@ -29,7 +29,7 @@ FLIGHTS = {"flights": [
      "legs": [{"origin": "GMP", "destination": "CJU", "flightNumber": "TW727", "departDate": GO, "departTime": "18:30",
                "arriveDate": GO, "arriveTime": "19:45", "durationMinutes": 75}],
      "price_total": 64000, "currency": "KRW", "seats": None,
-     "link": "https://flights.myrealtrip.com/air/b2c/x", "link_kind": "reservation"}],
+     "link": "https://flights.myrealtrip.com/air/b2c/x", "link_kind": "route_search"}],
     "total": 40, "cheapest_total": 64000, "confirmed_at": "2026-10-08T05:00:00+00:00", "source": "myrealtrip"}
 
 
@@ -78,7 +78,8 @@ def test_search_calls_the_model_once_and_the_tool_once():
     assert f"TPE → ICN · {GO} · 성인 2명 조건으로 40개 중 2개입니다" in result.answer
     assert f"1. 제주항공 — {GO} TPE 13:10 → ICN 16:40 (직항, 2시간 30분) · 총액 302,000원 · 남은 좌석 5" in result.answer
     assert "TW727 (1시간 15분)" in result.answer, "국내선은 경유 칸이 없어 적지 않는다"
-    assert "예약 페이지 링크 — 가격이 바뀌었을 수 있습니다" in result.answer
+    assert "TW727 (1시간 15분) · 총액 64,000원\n" in result.answer, "국내선 편 줄에는 링크를 붙이지 않는다"
+    assert "이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): https://flights.myrealtrip.com/air/b2c/x" in result.answer
     assert [item.source_id for item in result.evidence] == ["flight.interpret", "read.flight_search"]
 
 

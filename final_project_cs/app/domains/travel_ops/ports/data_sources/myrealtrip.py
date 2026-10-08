@@ -10,7 +10,8 @@
 - 폴백 금지(`base.py` ①~④): 못 가져오면 `None` 이고 이유를 센다. 받은 값의 단위를 바꾸지 않는다 —
   숙소 평점은 **5점 만점**, 목록 가격은 **1박**, 상세 `total_price` 는 **숙박 전체(세금 포함)** 다.
 - 국내선은 응답 모양이 다르다(2026-10-07 17:31 playdata 실호출): 구간이 `legs` 가 아니라 `outbound` 에 오고, `searchUrl` 이 없고
-  `reservationUrl` 만 온다. 그래서 국내선 링크는 `reservationUrl` 이고 `link_kind="reservation"` 으로 표시한다. 응답에 9.49초가 걸려
+  `reservationUrl` 만 온다. 그 주소는 열면 「마감」 팝업이 떠서(2026-10-08 확인), 고른 편 값만 뺀 **노선 검색 주소**를 주고
+  `link_kind="route_search"` 로 표시한다. 응답에 9.49초가 걸려
   이 소스의 시간 상한을 `TIMEOUT_SECONDS` 로 따로 둔다.
 - `[확인 안 함]` 국내선 왕복의 돌아오는 구간 이름(`inbound` 로 보고 읽는다) · 국내선 도구의 승객 수 입력(국제선과 같다고 보고 보낸다) ·
   국내선 `reservationUrl` 이 열리는지 · 객실 `ratePlan` 16개 항목의 뜻(객실은 이름 · 무료 취소 여부 · 총액만 읽는다).
@@ -292,8 +293,10 @@ class MyRealTripMcp(TravelSource):
                                                                   "durationMinutes")}})
             # ★국제선은 `searchUrl` 만 쓴다(`reservationUrl` 은 열면 「가격 변동」 뒤 다시 검색). 국내선은 `searchUrl` 이 오지 않아 `reservationUrl` 을 싣고 표시한다
             link, kind = str(row.get("searchUrl") or ""), "search"
-            if not link and domestic:
-                link, kind = str(row.get("reservationUrl") or ""), "reservation"
+            if not link and domestic and row.get("reservationUrl"):
+                # ★국내선 `reservationUrl` 은 고른 편(`flightinfo`)까지 담고 있어, 열면 「가는편 여정이 마감되었습니다」가 뜬다.
+                #   그 값만 뺀 주소는 같은 노선 · 날짜 · 인원의 **검색 결과 목록**이 팝업 없이 열린다(2026-10-08 15:40 playdata 사용자 확인).
+                link, kind = _without_selected_flight(str(row["reservationUrl"])), "route_search"
             flights.append({"airline_code": str(airline.get("code") or ""), "airline": str(airline.get("name") or ""),
                             "duration_minutes": info.get("totalDurationMinutes", legs[0].get("durationMinutes") if len(legs) == 1 else None),
                             "stops": info.get("stops"),
@@ -306,6 +309,15 @@ class MyRealTripMcp(TravelSource):
                            "cheapest_total": summary.get("cheapestTotal"), "origin": origin, "destination": destination,
                            "depart_date": depart_date, "return_date": return_date, "domestic": bool(domestic)},
                           source=SOURCE)
+
+
+def _without_selected_flight(url: str) -> str:
+    """국내선 예약 주소에서 고른 편(`flightinfo`)만 뺀다. 나머지 값과 순서는 그대로 둔다."""
+    from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
+    parts = urlsplit(url)
+    query = [(key, value) for key, value in parse_qsl(parts.query, keep_blank_values=True) if key != "flightinfo"]
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), ""))
 
 
 def _retry_after(response: httpx.Response) -> float:

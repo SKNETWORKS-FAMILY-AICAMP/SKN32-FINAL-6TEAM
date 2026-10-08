@@ -146,7 +146,9 @@ DOMESTIC = {"success": True, "result": {       # 2026-10-07 17:31 playdata 에�
                             "arriveCity": "CJU", "departDate": "2026-11-06", "departTime": "18:30",
                             "arriveDate": "2026-11-06", "arriveTime": "19:45", "durationMinutes": 75},
                "price": {"currency": "KRW", "total": 32000}, "isCheapest": True,
-               "reservationUrl": "https://flights.myrealtrip.com/air/b2c/AIR/MBL/x.k1?domintgubun=D"}]}}
+               "reservationUrl": "https://flights.myrealtrip.com/air/b2c/AIR/MBL/x.k1?domintgubun=D&depctycd=GMP&depctycd=CJU"
+                                 "&depdt=2026-11-06&adtcount=1&KSESID=air%3Ab2c&utm_source=mcp-servers"
+                                 "&flightinfo=TW%7C727%7C81800&flightinfo=RS%7C6306%7C80900"}]}}
 
 
 def test_a_domestic_round_trip_calls_the_domestic_tool():
@@ -163,8 +165,9 @@ def test_a_domestic_round_trip_calls_the_domestic_tool():
                                "departTime": "18:30", "arriveDate": "2026-11-06", "arriveTime": "19:45",
                                "durationMinutes": 75}]
     assert (flight["airline"], flight["price_total"], flight["duration_minutes"]) == ("티웨이항공", 32000, 75)
-    assert (flight["link_kind"], found["total"]) == ("reservation", 61), "국내선은 searchUrl 이 없다 — 표시하고 싣는다"
-    assert flight["link"].startswith("https://flights.myrealtrip.com/")
+    assert (flight["link_kind"], found["total"]) == ("route_search", 61), "국내선은 searchUrl 이 없다 — 노선 검색 주소로 싣는다"
+    assert flight["link"] == ("https://flights.myrealtrip.com/air/b2c/AIR/MBL/x.k1?domintgubun=D&depctycd=GMP&depctycd=CJU"
+                              "&depdt=2026-11-06&adtcount=1&KSESID=air%3Ab2c&utm_source=mcp-servers"), "고른 편(flightinfo)만 뺀다"
 
 
 def test_the_default_timeout_covers_the_slow_domestic_search():

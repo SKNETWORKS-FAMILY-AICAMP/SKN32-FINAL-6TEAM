@@ -138,19 +138,21 @@ class FlightTeam(TravelTeamBase):
         lines = []
         for number, flight in enumerate(result["flights"][:SHOWN], start=1):
             legs = " / ".join(_leg(leg) for leg in flight.get("legs") or []) or "구간 정보 없음"
-            link = flight.get("link") or "링크 없음"
-            if flight.get("link_kind") == "reservation":
-                link += " (예약 페이지 링크 — 가격이 바뀌었을 수 있습니다)"
+            # 국내선은 편마다가 아니라 노선 검색 주소 하나다 — 줄마다 붙이지 않고 끝에 한 번 적는다
+            link = "" if flight.get("link_kind") == "route_search" else f" · {flight.get('link') or '링크 없음'}"
             seats = f" · 남은 좌석 {flight['seats']}" if isinstance(flight.get("seats"), int) else ""
             lines.append(f"{number}. {flight.get('airline') or flight.get('airline_code') or '항공사 모름'} — {legs} · "
-                         f"총액 {_won(flight.get('price_total'), flight.get('currency') or '')}{seats} · {link}")
+                         f"총액 {_won(flight.get('price_total'), flight.get('currency') or '')}{seats}{link}")
+        searches = sorted({flight["link"] for flight in result["flights"][:SHOWN]
+                           if flight.get("link_kind") == "route_search" and flight.get("link")})
+        pages = [f"이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): {url}" for url in searches]
         total = result.get("total")
         head = (f"{route} · {when} · {party} 조건으로 " + (f"{total}개 중 " if total else "")
                 + f"{len(lines)}개입니다(마이리얼트립 검색 순서).")
         tail = "가격과 좌석은 조회 시점 기준이며 링크에서 다시 확인해 주세요. 예약은 링크의 마이리얼트립 페이지에서 직접 하시면 됩니다."
         shown = [{"airline": flight.get("airline"), "price_total": flight.get("price_total"), "link_kind": flight.get("link_kind")}
                  for flight in result["flights"][:SHOWN]]
-        return self._respond(task, evidence, {**decision, "found": total, "shown": shown}, "\n".join([head, *lines, tail]))
+        return self._respond(task, evidence, {**decision, "found": total, "shown": shown}, "\n".join([head, *lines, *pages, tail]))
 
     def _trip(self, task: TeamTask, seen: set[str]) -> tuple[dict[str, Any] | None, list[Evidence]]:
         """Case 에 여행이 붙어 있으면 그 일정을 모델에 줄 요약으로(숙소 팀과 같다 — 팀끼리 import 하지 않으려고 따로 둔다)."""
