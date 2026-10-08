@@ -59,7 +59,11 @@ PLAN_VERSION = "plan-v2.4"   # 87 — 지하철+버스 혼합 후보(환승 1회
 # 56 (2026-09-27 · 본인) — modes 를 안 주면 지하철·버스·도보. 자전거는 modes 에 "bike" 를 줄 때만(48 결정 8 · ◆선호 「요청 시만」).
 #   뺄 때는 **후보 생성 전에** 끊는다(아래 Planner — 따릉이 실시간·GraphHopper 호출 0).
 DEFAULT_MODES = ("subway", "bus", "walk")
-KNOWN_MODES = frozenset(DEFAULT_MODES) | {"bike"}
+KNOWN_MODES = frozenset(DEFAULT_MODES) | {"bike", "taxi"}
+#: ☆`[2026-10-04 문제목록 #47]` 택시는 modes 에 "taxi" 를 줄 때만 후보로 싣는다(설문 「택시」 선택). 기본 호출은 앞 판과 같다.
+#:   계획 수단을 고를 때 대중교통·도보·자전거 무리 → 혼합 무리 → **택시 무리** 순이다(택시는 가장 늦게 떠나도 되는 후보가 되기 쉬워
+#:   섞어 두면 늘 택시가 뽑히기 때문 — 여행자가 택시만 고르면 택시가, 같이 고르면 대중교통이 먼저다).
+#:   요금은 예산 여유를 포함한 예상액이고 소요는 TOPIS 시각별 속도 추정이다 — label 에 그대로 적는다.
 #: ☆`[2026-09-30 83 E1 · 85]` 장소마다 볼 역 개수 — 규칙 candidates.장소_역_후보_최대 **변경안** 값(27 규칙 32: 규칙 파일은
 #:   모아서 한 번에 고친다). 규칙에 들어가면 규칙 값이 이긴다(Planner._station_k).
 STATION_K_PROPOSED = 3
@@ -751,6 +755,46 @@ class Planner:
                 out.append(mc)
         return out
 
+    def _service_hours_blocked(self, why, left):
+        """대중교통 후보가 **운행 시간 때문에** 없는가 — 판정기 대표 이유가 첫차 전·공백·막차 뒤이거나, 뺀 후보의 이유가 모두 그렇다.
+        역이 멀어서(걸어갈 역이 없음 · 데이터 없음) 못 만든 것과 가른다 — 그건 택시로 덮을 일이 아니다."""
+        if (why or {}).get("code") in EARLIEST_WAIT_CODES:
+            return True
+        timed = [e for e in left if e.get("code") in EARLIEST_WAIT_CODES
+                 or (e.get("code") == "no_last_departure" and any(k in str(e.get("reason")) for k in ("첫차", "막차", "필요 시각")))]
+        return bool(timed)
+
+    def _taxi_option(self, a_place, b_place, sdate, arrive_by, buf, left):
+        """택시 후보 하나 또는 None(이유는 left). 판정기의 택시 서비스(`v.car` — 로컬 도로 그래프 또는 GraphHopper + TOPIS 속도 + 요금 산식)로
+        잰다. 도착 목표에서 거꾸로 두 번 맞춘다(첫 추정 출발 −30분 → 그 소요로 다시) — 출발 시각이 바뀌면 속도 프로파일이 달라진다."""
+        from .car import RouterDown
+        car = getattr(self.v, "car", None)
+        if car is None:
+            left.append({"_o": {"_legs": []}, "label": "택시", "code": "taxi_unavailable",
+                         "reason": "택시 소요를 잴 도로 그래프·속도 자료가 없다(길찾기 꺼짐) — 택시 후보를 싣지 않았다"})
+            return None
+        s, e = (a_place["lon"], a_place["lat"]), (b_place["lon"], b_place["lat"])
+        guess, c, ride = arrive_by - 30, None, 0
+        for _ in range(2):
+            try:
+                c = car.leg(s, e, datetime.fromisoformat(iso_of(sdate, guess)), taxi=True)
+            except RouterDown as ex:
+                left.append({"_o": {"_legs": []}, "label": "택시", "code": "taxi_no_route",
+                             "reason": f"택시 경로를 못 구했다 — {str(ex)[:100]}"})
+                return None
+            ride = max(1, math.ceil(c["topis_time_s"] / 60))
+            nxt = arrive_by - ride - buf
+            done = abs(nxt - guess) <= 3
+            guess = nxt
+            if done:
+                break
+        fare = c.get("fare_won")
+        note = f"예상 요금 {fare:,}원(예산 여유 포함 · 교통·대기·호출료에 따라 달라짐)" if fare is not None else "요금 모름"
+        return {"eta_min": ride, "uses": [], "_legs": [], "_taxi": True, "_n": 300, "_key": ("taxi", 0, 0),
+                "_route": f"택시 {c['distance_m'] / 1000:.1f}km · {note} [{c.get('grade', '근거없음')}]",
+                "_start": guess, "_transfers": 0, "_margin": buf, "_slack": 0, "_walk_min": 0, "_walk_m": 0,
+                "_fare": fare, "_severe": [], "_covered": False}
+
     @staticmethod
     def _rank(o):
         """계획 수단 순서 — **가장 늦게 떠나도 되는 후보**(동률은 환승 적은 · 소요 짧은 · 생성 순). 순위가 아니라 「일정대로
@@ -763,7 +807,7 @@ class Planner:
         그중 _rank 최대, 없으면 무리 전부를 nb 에서 재판정(recheck(o) → 갱신 후보 또는 None)해 살아난 것 중 최대.
         무리 순서: ① 지하철만·버스만·도보·자전거(앞 판 후보) ② 혼합(87) — ① 에서 하나라도 나오면 ② 는 안 본다(추가만).
         앞 일정 끝보다 이른 _start 후보도 **버리지 않고** 재판정까지 둔다(GPT 23 2차 #1 — 역산이 실제보다 이르게 나왔을 수 있다)."""
-        for group in ([o for o in opts if not _is_mixed(o)], [o for o in opts if _is_mixed(o)]):
+        for group in ([o for o in opts if not _is_mixed(o) and not o.get("_taxi")], [o for o in opts if _is_mixed(o)], [o for o in opts if o.get("_taxi")]):
             if not group:
                 continue
             eligible = [o for o in group if nb is None or o["_start"] >= nb]
@@ -1265,6 +1309,11 @@ class Planner:
                              "_margin": buf, "_slack": 0, "_walk_min": eta,
                              "_walk_m": wm, "_fare": 0, "_severe": [], "_covered": False})
 
+        if "taxi" in self.modes:
+            tx = self._taxi_option(a_place, b_place, sdate, arrive_by, buf, left)
+            if tx is not None:
+                opts.append(tx)
+
         # ② 대중교통 — 장소마다 도보 상한 안 역 **가까운 순 여럿**(막힌 역 뺌 · E1) → 역 짝마다 다목적 후보(판정기
         #   verify_multi) → 후보마다 마지막 성립 출발로 다시 판정. 짝은 가까운 짝부터 보고, **실을 수 있는 대중교통 후보가
         #   앞 일정 끝 뒤에 떠날 수 있는 짝에서 멈춘다**(_pair_settles · STATION_PAIR_MODE) — 그런 짝이 첫 짝이면 앞 판과
@@ -1418,7 +1467,7 @@ class Planner:
         opts = [o for o in opts if id(o) not in cut]
         taken = set()
         for o in opts:
-            o["id"] = O.make_id(o["_legs"], taken)
+            o["id"] = "taxi" if o.get("_taxi") and "taxi" not in taken else O.make_id(o["_legs"], taken)
             taken.add(o["id"])
         O.add_reasons(opts)
         for o in opts:
@@ -1443,7 +1492,11 @@ class Planner:
                                "planned": planned["id"],
                                "options": [{"id": o["id"], "start_min": o["_start"], "eta_min": o["eta_min"],
                                             "margin_min": o.get("_margin"), "slack_min": o.get("_slack"),
-                                            "transfers": o["_transfers"], "check": o.get("_check")}
+                                            "transfers": o["_transfers"], "check": o.get("_check"),
+                                            "wait_min": (sum(lr.wait_min for lr in o["_lr"])
+                                                         if o.get("_lr") is not None
+                                                         and all(lr.wait_min is not None for lr in o["_lr"])
+                                                         else (0 if not o["_legs"] else None))}
                                            for o in opts],
                                "left_out": left, "left_checks": left_checks, "start_min": start})
         keys = ("id", "label", "eta_min", "walk_m", "fare_krw", "uses", "transfer_car")

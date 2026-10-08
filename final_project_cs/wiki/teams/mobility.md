@@ -227,3 +227,7 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 - [activity.md](activity.md) · [dining.md](dining.md) — 순서가 바뀌면 이 둘이 흔들린다
 - [booking-handoff.md](booking-handoff.md) — 업체 건 인계
 - [../../../wiki/product/scope.md](../../../wiki/product/scope.md) — 여행 MVP 범위
+
+[2026-10-08 이동 완료작업 이식](../records/reports/2026-10-08_팀develop_이동완료작업_이식.md) — 택시 병산·예산 여유·택시 선택·대기 분해와 대조 도구를 기존 develop 구조에 이식했다. 전체 릴리스 완료와 실제 운행 보장은 별도다.
+
+[2026-10-08 자동 검사 실패 수정](../records/reports/2026-10-08_이동이식_CI실패_수정.md) — 속도 그래프 공유 사전 선언 누락과 미사용 이름을 수정하고 전체 Ruff·첫 호출 회귀 시험을 확인했다.
