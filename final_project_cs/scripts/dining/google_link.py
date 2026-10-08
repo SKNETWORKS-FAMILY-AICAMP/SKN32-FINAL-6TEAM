@@ -30,6 +30,7 @@
     python scripts/dining/google_link.py --limit 5
     python scripts/dining/google_link.py --place 닥터비건
     python scripts/dining/google_link.py --retry                전에 못 붙인 가게도 다시 본다
+    python scripts/dining/google_link.py --attr nopo --limit 200  노포 가게만
     python scripts/dining/google_link.py --by 홍길동             entered_by 에 남는 이름(기본 google_link)
     python scripts/dining/google_link.py --to-sql               구글_연결.csv → 적재 SQL(키 없이, rebuild 가 부른다)
 
@@ -41,6 +42,7 @@ CSV 가 원본이다. 열어 보고 맞으면 CSV 의 확인자 · 확인일을 
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 import math
 import os
@@ -68,6 +70,10 @@ TIMEOUT = 10
 
 #: 우리 좌표와 이만큼 안이어야 같은 가게로 본다(미터). 좌표는 둘 다 건물 입구 근처다.
 MAX_DISTANCE_M = 150
+#: 이름이 조금 다르게 적혔어도(「부일숯불갈비」 · 「부일갈비」) 이만큼 가깝고 이만큼 비슷하면 후보로 붙인다. `[2026-10-08]`
+#: 구글이 주소를 지번으로 돌려주면 도로명 대조가 안 되어, 같은 가게가 「이름이 맞는 곳이 없다」로 빠졌다(노포 5곳).
+SIMILAR_DISTANCE_M = 30
+SIMILAR_RATIO = 0.7
 #: 찾을 때 이 반경 안을 먼저 본다. 판정 거리보다 넓게 잡아 후보를 놓치지 않는다.
 BIAS_RADIUS_M = 500
 #: 못 붙인 가게. 우리 uid 와 우리 판정만 적는다. 구글이 돌려준 내용은 적지 않는다.
@@ -172,6 +178,27 @@ def judge(place: Place, candidates: list[dict[str, Any]],
                 return Verdict("none", reason=f"가게 주소를 다듬지 못했다: {exc}")
             return Verdict("matched", place_id=cand["id"], url=url, distance_m=d,
                            reason=f"주소 일치 · 이름 표기 다름, {d:.0f}m")
+        # 주소로도 못 가렸으면 — 아주 가깝고 이름이 많이 닮은 곳이 딱 하나일 때만. 사유에는 구글 이름을 적지 않는다
+        similar = []
+        for cand in candidates:
+            loc = cand.get("location") or {}
+            if "latitude" not in loc:
+                continue
+            d = distance_m(place.lat, place.lng, loc["latitude"], loc["longitude"])
+            ratio = difflib.SequenceMatcher(None, name_key(place.name),
+                                            name_key((cand.get("displayName") or {}).get("text", ""))).ratio()
+            if d <= SIMILAR_DISTANCE_M and ratio >= SIMILAR_RATIO:
+                similar.append((d, ratio, cand))
+        if len({c["id"] for _, _, c in similar}) > 1:
+            return Verdict("ambiguous", reason=f"가깝고 이름이 닮은 곳이 {len(similar)}곳이다")
+        if similar:
+            d, ratio, cand = similar[0]
+            try:
+                url = normalize("google_place", cand.get("googleMapsUri") or "")
+            except ValueError as exc:
+                return Verdict("none", reason=f"가게 주소를 다듬지 못했다: {exc}")
+            return Verdict("matched", place_id=cand["id"], url=url, distance_m=d,
+                           reason=f"이름 비슷({ratio:.2f}) · {d:.0f}m")
 
     if not near_named:
         if closest_named is not None:
@@ -258,12 +285,18 @@ def save_misses(misses: dict[str, dict[str, str]], path: str = MISSES) -> None:
         json.dump(misses, f, ensure_ascii=False, indent=1, sort_keys=True)
 
 
-def pending(cur, place: str | None, limit: int, skip: set[str] = frozenset()) -> list[Place]:
+def pending(cur, place: str | None, limit: int, skip: set[str] = frozenset(),
+            attr: str | None = None) -> list[Place]:
     """아직 구글 링크가 없는 가게. dead 로 내린 것도 있음으로 본다 — 같은 걸 또 붙이지 않게.
 
     skip 은 전에 못 붙인 가게다. --place 로 콕 집으면 skip 해도 본다.
+    attr 를 주면 그 속성(예: nopo)이 살아 있는 가게만 본다. `[2026-10-08]`
     """
     sql, params = PENDING_SQL, []
+    if attr:
+        sql += (" AND EXISTS (SELECT 1 FROM dining.dn_attribute a WHERE a.place_uid = p.place_uid "
+                "AND a.attr_code = %s AND a.value_state = 'yes' AND a.retired_at IS NULL)")
+        params.append(attr)
     if place:
         sql += " AND (p.place_uid::text = %s OR p.name_ko = %s)"
         params += [place, place]
@@ -363,6 +396,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--by", default="google_link")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--retry", action="store_true", help="전에 못 붙인 가게도 다시 본다")
+    ap.add_argument("--attr", help="이 속성이 있는 가게만(예: nopo)")
     ap.add_argument("--sync-csv", action="store_true", help="DB 의 연결 중 CSV 에 없는 것을 적는다")
     ap.add_argument("--to-sql", action="store_true", help="구글_연결.csv 를 적재 SQL 로(rebuild 가 부른다)")
     args = ap.parse_args(argv)
@@ -382,7 +416,7 @@ def main(argv: list[str] | None = None) -> int:
     counts: dict[str, int] = {}
     misses = load_misses()
     with run_check.connect() as conn, conn.cursor() as cur:
-        todo = pending(cur, args.place, args.limit, set() if args.retry else set(misses))
+        todo = pending(cur, args.place, args.limit, set() if args.retry else set(misses), args.attr)
         print(f"이번에 볼 가게 {len(todo)}곳 (limit {args.limit})")
         for place in todo:
             v = judge(place, search(place, key), place_link.normalize)

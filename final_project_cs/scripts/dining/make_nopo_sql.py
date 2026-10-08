@@ -63,6 +63,9 @@ SHEET = os.path.join(DINING_DATA, "nopo", "노포_영업시간_검수.csv")
 #: 브이월드 지오코더 결과 — 공공데이터라 저장해도 된다. 생성기(rebuild)는 이 파일만 읽고 네트워크를 타지 않는다
 GEOCODED = os.path.join(DINING_DATA, "nopo", "노포_좌표_브이월드.csv")
 GEOCODE_SOURCE = "vworld_geocoder"
+#: 이 적재가 지금까지 만든 가게 uid. 시트에서 주소 · 관리번호가 바뀌면 옛 가게가 남는데, 그것만 지우기 위해 적어 둔다 `[2026-10-08]`
+#: (원장에는 「누가 만든 가게인가」 칸이 없다. 기록이 없는 가게를 모두 지우면 다른 적재의 가게까지 지운다)
+MADE = os.path.join(DINING_DATA, "nopo", "노포_만든_가게.json")
 RAW = os.path.join(os.path.dirname(DINING_DATA), "raw")
 LOCALDATA = (("localdata_food", "서울시 일반음식점 인허가 정보.csv"),
              ("localdata_rest", "서울시 휴게음식점 인허가 정보.csv"))
@@ -115,6 +118,16 @@ def q(value) -> str:
     return "'" + str(value).replace("'", "''") + "'"
 
 
+#: make_vegan_sql 의 NS — 영업시간 적재(hours_sql)의 load_id 를 같은 규칙으로 계산한다
+VEGAN_NS = uuid.UUID("6f1c0d2e-0000-4000-8000-000000000001")
+
+
+def _own_loads() -> list[str]:
+    """이 적재가 쓰는 load_id 전부 — 노포 목록 · 인허가(두 종류) · 영업시간(hours_sql, tag=nopo)."""
+    return ([str(uuid.uuid5(NS, f"load:nopo:{LOADED}"))] + [_localdata_load(src) for src in LOCALDATA_LABEL]
+            + [str(uuid.uuid5(VEGAN_NS, f"load:{HOURS_TAG}-hours:operator_check"))])
+
+
 def match_sql(name: str, key: tuple[str, str, str], skip: tuple[str, ...] = ()) -> str:
     """그 가게의 place_uid 하나 — 후보가 하나일 때만. 자치구 · 도로명 · 건물번호 · 상호를 모두 본다.
 
@@ -127,6 +140,11 @@ def match_sql(name: str, key: tuple[str, str, str], skip: tuple[str, ...] = ()) 
     named = (f"p.name_ko = {q(alias)}" if alias else
              f"(strpos({_NORM_SQL}, {q(norm(name))}) > 0 OR strpos({q(norm(name))}, {_NORM_SQL}) > 0)")
     skipped = (" AND p.place_uid NOT IN (" + ", ".join(f"'{uid}'" for uid in skip) + ")") if skip else ""
+    # ★이 적재가 예전에 만든 가게(시트에서 주소를 바꿔 버려진 것 포함)는 맨 앞 DELETE 로 레코드가 다 지워져 있다.
+    #   기존 원장 가게는 늘 출처 레코드가 있으므로, 레코드가 남은 가게에만 붙인다 `[2026-10-08]`
+    own = ", ".join(f"'{load}'" for load in _own_loads())
+    skipped += (" AND EXISTS (SELECT 1 FROM dining.dn_source_record x WHERE x.place_uid = p.place_uid "
+                f"AND x.load_id NOT IN ({own}))")
     return ("(SELECT min(p.place_uid::text)::uuid FROM dining.dn_place p "
             f"WHERE NOT p.is_synthetic AND p.area = {q(district)} AND p.road_address ~ {q(pattern)} "
             f"AND {named}{skipped} HAVING count(*) = 1)")
@@ -136,7 +154,8 @@ def _localdata_load(source: str) -> str:
     return str(uuid.uuid5(NS, f"load:nopo:{source}"))
 
 
-def sql_lines(rows: list[dict], new_places: list[str] | None = None, skip: tuple[str, ...] = ()) -> list[str]:
+def sql_lines(rows: list[dict], new_places: list[str] | None = None, skip: tuple[str, ...] = (),
+              made: tuple[str, ...] = ()) -> list[str]:
     load_id = str(uuid.uuid5(NS, f"load:nopo:{LOADED}"))
     local_loads = ", ".join(f"'{_localdata_load(src)}'" for src in LOCALDATA_LABEL)
     lines = ["-- make_nopo_sql.py 결과. 생성 파일이므로 직접 고치지 않는다.",
@@ -173,8 +192,33 @@ def sql_lines(rows: list[dict], new_places: list[str] | None = None, skip: tuple
             f"FROM dining.dn_source_record sr WHERE sr.record_id = '{rec_id}';")
     if new_places:
         lines += ["", "-- 원장에 없던 가게 — 검수 시트에서 새로 만든다"] + new_places
+    if made:
+        lines += ["", "-- 시트에서 주소 · 관리번호를 바꾸면 옛 가게 행이 아무 기록 없이 남는다. 이 적재가 만든 가게 중",
+                  "-- 어디에서도 가리키지 않는 것만 지운다. `[2026-10-08]`", orphan_sql(made)]
     lines += ["", "COMMIT;", ""]
     return lines
+
+
+#: dn_place 를 가리키는 표 전부(외래 키 10곳) — 하나라도 가리키면 지우지 않는다
+PLACE_REFERRERS = ("dn_source_record", "dn_hours_rule", "dn_closure_rule", "dn_core_place_link", "dn_attribute",
+                   "dn_live_check", "dn_notice", "dn_truth", "dn_closure_coverage", "dn_external_ref")
+
+
+def orphan_sql(made: tuple[str, ...]) -> str:
+    """이 적재가 만든 가게(`made`) 중 기록이 하나도 남지 않은 것을 지운다."""
+    uids = ", ".join(f"'{uid}'" for uid in sorted(made))
+    return (f"DELETE FROM dining.dn_place p WHERE p.place_uid IN ({uids}) "
+            + " ".join(f"AND NOT EXISTS (SELECT 1 FROM dining.{t} x WHERE x.place_uid = p.place_uid)"
+                       for t in PLACE_REFERRERS) + ";")
+
+
+def remember_made(uids: list[str]) -> tuple[str, ...]:
+    """만든 가게 uid 를 MADE 에 더해 두고, 지금까지 만든 것 전부를 돌려준다."""
+    seen = set(json.load(open(MADE, encoding="utf-8"))) if os.path.exists(MADE) else set()
+    seen |= set(uids)
+    os.makedirs(os.path.dirname(MADE), exist_ok=True)
+    json.dump(sorted(seen), open(MADE, "w", encoding="utf-8"), indent=1)
+    return tuple(sorted(seen))
 
 
 # ── 검수 시트 → 새 가게 ───────────────────────────────────────────────
@@ -657,7 +701,8 @@ def main() -> None:
             extra, counts = new_place_lines(sheet_rows, licenses, read_geocoded())
         else:
             print(f"!! 인허가 원본이 없다({RAW}) — 검수 시트의 새 가게는 이번에 넣지 않는다")
-    lines = sql_lines(rows, extra, tuple(counts.get("uids", ())))
+    made = remember_made(counts.get("uids", [])) if counts else ()
+    lines = sql_lines(rows, extra, tuple(counts.get("uids", ())), made)
     print(f"카카오맵 노포 지도 서울: {len(rows)}곳 (별칭 {len(ALIAS)}곳 — 기존 가게 연결은 SQL 에서 판정)")
     if counts:
         print(f"검수 시트 새 가게: 만든다 {len(counts['만든다'])} · 아직 안 봄 {counts['안 봄']} · "
