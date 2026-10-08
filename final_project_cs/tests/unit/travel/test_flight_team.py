@@ -17,6 +17,7 @@ from app.tools.read_tools import ALLOWED_PROMPT_KEYS
 TODAY = datetime.now(ZoneInfo("Asia/Seoul")).date()
 GO, BACK = (TODAY + timedelta(days=30)).isoformat(), (TODAY + timedelta(days=33)).isoformat()
 SEARCH = {"task": "search", "origin": "TPE", "destination": "ICN", "depart_date": GO, "return_date": None,
+          "depart_date_text": "다음 달 6일", "return_date_text": None,
           "adults": 2, "children": None, "infants": None, "cabin": None, "direct_only": True, "domestic": False,
           "missing": [], "question": None}
 LEG = {"origin": "TPE", "destination": "ICN", "departDate": GO, "departTime": "13:10", "arriveDate": GO,
@@ -56,7 +57,7 @@ class FakeTools:
         return self.values.get(name)
 
 
-def _run(reply, tools=None, *, text="타이베이에서 인천 가는 비행기 알아봐줘", capability="flight.assist", llm=True, state=None):
+def _run(reply, tools=None, *, text="다음 달 6일 타이베이에서 인천 가는 비행기 알아봐줘, 9일에 오는 편도", capability="flight.assist", llm=True, state=None):
     model, toolbox = FakeLLM(reply), FakeTools(tools or {})
     case_id = uuid4()
     pack = ContextPack(pack_id=uuid4(), case_id=case_id, team_id="flight", tenant_id="t", knowledge_scope=["flight"],
@@ -82,7 +83,7 @@ def test_search_calls_the_model_once_and_the_tool_once():
 
 
 def test_a_round_trip_passes_the_return_date():
-    _, _, tools = _run({**SEARCH, "return_date": BACK}, {"read.flight_search": FLIGHTS})
+    _, _, tools = _run({**SEARCH, "return_date": BACK, "return_date_text": "9일에 오는"}, {"read.flight_search": FLIGHTS})
     assert tools.calls[0][1]["return_date"] == BACK
 
 
@@ -100,7 +101,7 @@ def test_the_server_recounts_what_is_missing():
     assert tools.calls == [] and result.decisions[0]["needs"] == ["depart_date"] and "출발 날짜" in result.answer
     result, _, _ = _run({**SEARCH, "destination": "TPE"})
     assert result.decisions[0]["needs"] == ["destination"]
-    result, _, _ = _run({**SEARCH, "return_date": (TODAY + timedelta(days=10)).isoformat()})
+    result, _, _ = _run({**SEARCH, "return_date": (TODAY + timedelta(days=10)).isoformat(), "return_date_text": "9일에 오는"})
     assert result.decisions[0]["needs"] == ["return_date"]
 
 
@@ -157,3 +158,9 @@ def test_a_rejected_value_is_shown_back_instead_of_asked_as_if_missing():
                              "origin": "GMP", "destination": "CJU"})
     assert tools.calls == [] and result.decisions[0]["needs"] == ["depart_date"]
     assert result.answer.startswith("출발 날짜 2023-11-06(으)로 읽었는데 지난 날짜이거나")
+
+
+def test_an_ungrounded_flight_date_is_cleared():
+    result, _, tools = _run({**SEARCH, "depart_date_text": "내일"}, text="타이베이에서 인천 가는 비행기 2명")
+    assert tools.calls == [] and result.decisions[0]["ungrounded"] == ["depart_date"]
+    assert result.decisions[0]["needs"] == ["depart_date"]

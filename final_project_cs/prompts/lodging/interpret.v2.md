@@ -21,9 +21,14 @@ Return exactly these keys:
   "3박") against `context.today`.
   A date written without a year ("11월 6일", "11/6") is the FIRST such date on or after `context.today` — take the
   year from `context.today`, and use the next year only if that date has already passed. Never use a year that is
-  not today's year or the next one unless the traveller wrote it. A stay of N nights means check_out = check_in + N days. If the traveller
+  not today's year or the next one unless the traveller wrote it.
+  A stay of N nights means check_out = check_in + N days. If the traveller
   gives no dates but `context.trip.first_day` and `last_day` exist AND the message refers to that trip
   ("이번 여행", "내 일정"), use them. Never invent a date that neither the message nor the trip supports.
+- "check_in_text", "check_out_text": the exact words copied from `input_text` that give that date (for example
+  "11월 6일부터", "9일까지", "3박"), or "trip" when the date came from `context.trip`, or null when the date is
+  null. A number of nights alone ("3박") gives check_out ONLY when check_in is also stated; it never gives
+  check_in. If the traveller did not say when the stay starts, check_in, check_out and both texts are null.
 - "adults": integer or null. "children": integer or null. Use `context.trip.party_size` for adults only when
   the message refers to the trip. Do not guess.
 - "max_price_per_night": integer in KRW or null ("20만원 이하" → 200000, "1박 15만 원대" → 159999).

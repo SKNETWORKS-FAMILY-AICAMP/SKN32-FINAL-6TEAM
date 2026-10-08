@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """모델이 낸 해석을 **검증**한다 — 모델은 문장을 구조로 옮기기만 하고, 쓸 수 있는지는 서버가 정한다. `[2026-10-07]`
 
-- 프롬프트: `prompts/lodging/interpret.v1.md` (키 `lodging.interpret`). 모델 호출은 한 번이다.
+- 프롬프트: `prompts/lodging/interpret.v2.md` (키 `lodging.interpret`). 모델 호출은 한 번이다.
 - 모양이 틀리면 `InterpretationInvalid` — 고쳐 맞추지 않는다(지어내지 않는다).
 - 모델이 적은 `missing` 은 되묻는 문장을 고를 때만 본다. 무엇이 빠졌는지는 `needs()` 가 값으로 다시 센다 —
   날짜가 날짜가 아니거나, 체크아웃이 체크인보다 늦지 않거나, 체크인이 오늘보다 앞이면 그 값은 없는 것으로 본다.
@@ -37,6 +37,8 @@ class Interpretation(BaseModel):
     children: int | None = Field(default=None, ge=0, le=20)
     max_price_per_night: int | None = Field(default=None, ge=1)
     min_rating: float | None = Field(default=None, ge=0, le=5)
+    check_in_text: str | None = None
+    check_out_text: str | None = None
     domestic: bool | None = None
     missing: list[str] = Field(default_factory=list)
     question: str | None = None
@@ -79,5 +81,35 @@ def ask(found: Interpretation, missing: list[str]) -> str:
         return found.question
     return f"{' · '.join(LABELS[name] for name in missing)}을(를) 알려 주시면 이어서 찾아 드리겠습니다."
 
+#: 날짜 값 → 그 값의 근거로 모델이 옮겨 적은 문장 조각 칸
+GROUNDS = {"check_in": "check_in_text", "check_out": "check_out_text"}
 
-__all__ = ["Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "needs", "parse"]
+
+def ground(found: Interpretation, text: str, *, has_trip: bool) -> tuple[Interpretation, list[str]]:
+    """날짜마다 모델이 적은 근거 조각이 **고객 문장에 실제로 있는지** 본다. 없으면 그 날짜를 비운다(없는 값으로 다시 묻는다).
+
+    ☆2026-10-08 15:26 playdata — 「서울에서 3박 할 숙소 추천해줘」에 모델이 체크인을 오늘(2026-10-08)로 지어냈다.
+      프롬프트에 「지어내지 말라」가 있었는데도 그랬다. 그래서 값 대신 **근거를 받아 서버가 문장과 맞춰 본다** —
+      뜻을 서버가 해석하는 것이 아니라, 모델이 인용한 글자가 문장에 있는지만 본다(공백 무시).
+      근거가 `"trip"` 이면 Case 에 여행 일정이 붙어 있을 때만 받는다.
+    """
+    squeezed = "".join(text.split())
+    cleared: list[str] = []
+    for field, evidence in GROUNDS.items():
+        if getattr(found, field) is None:
+            continue
+        if field in found.missing:
+            # ★모델 스스로 「빠졌다」고 적은 값은 채워 와도 쓰지 않는다. ☆15:30 playdata — 체크인을 오늘로 채우고 근거로 「3박」을
+            #   인용하면서, 같은 답의 `missing` 에는 check_in 을 넣었다. 인용 글자는 문장에 있어 위 확인만으로는 못 걸렀다
+            cleared.append(field)
+            continue
+        quote = getattr(found, evidence)
+        if quote == "trip" and has_trip:
+            continue
+        if quote and "".join(quote.split()) in squeezed:
+            continue
+        cleared.append(field)
+    return found.model_copy(update={field: None for field in cleared}), cleared
+
+
+__all__ = ["GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]

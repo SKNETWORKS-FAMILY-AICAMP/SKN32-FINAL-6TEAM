@@ -20,7 +20,7 @@ from zoneinfo import ZoneInfo
 from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
 
 from app.domains.travel_ops.instances._shared._base import TravelTeamBase
-from .interpret import Interpretation, InterpretationInvalid, ask, needs, parse
+from .interpret import Interpretation, InterpretationInvalid, ask, ground, needs, parse
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class FlightTeam(TravelTeamBase):
             raw = await self.llm.complete(PROMPT_KEY, task.input_text,
                                           {"today": today.isoformat(), **({"trip": trip} if trip else {})},
                                           run_id=task.run_id)
-            found = parse(raw)
+            found, ungrounded = ground(parse(raw), task.input_text, has_trip=trip is not None)
         except InterpretationInvalid as exc:
             logger.warning("flight interpretation invalid case=%s %s", task.case_id, exc)
             return self._escalate(task, "interpretation_invalid", evidence, warnings=[str(exc)[:200]])
@@ -91,10 +91,11 @@ class FlightTeam(TravelTeamBase):
 
         evidence = [*evidence, Evidence(
             evidence_id=f"interpretation:{task.team_id}", source_type="customer_message", source_id=PROMPT_KEY,
-            claim="고객 문장을 모델이 옮긴 구조", value=found.model_dump(mode="json"), confidence=1.0,
+            claim="고객 문장을 모델이 옮긴 구조", value={**found.model_dump(mode="json"), "ungrounded": ungrounded}, confidence=1.0,
             observed_at=datetime.now(SEOUL))]
         decision = {"task": found.task,
-                    "interpretation": found.model_dump(mode="json", exclude={"question", "missing"})}
+                    "interpretation": found.model_dump(mode="json", exclude={"question", "missing"}),
+                    "ungrounded": ungrounded}
 
         if found.task == "status":
             return self._status(task, seen, evidence)

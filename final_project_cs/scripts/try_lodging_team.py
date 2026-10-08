@@ -2,7 +2,7 @@
 
 - 팀 본체(`LodgingTeam.execute`)와 도구함(`ReadToolbox`) · 어댑터(`MyRealTripMcp`)는 제품 코드 그대로다.
 - 다른 것은 모델 객체 하나다: 제품은 프롬프트를 DB(`prompts` 표)에서 읽지만, 여기서는 파일
-  `prompts/lodging/interpret.v1.md` 를 바로 읽는다. 보내는 글의 모양(prompt_key · input_text · context · instructions)은
+  `prompts/lodging/interpret.v2.md` 를 바로 읽는다. 보내는 글의 모양(prompt_key · input_text · context · instructions)은
   `OpenAITeamLLM` 과 같게 맞췄다. 호출 기록은 남기지 않는다.
 - 문장 하나 = 모델 호출 1번 + 마이리얼트립 호출 최대 4번(목록 1 + 상세 3). 예약 · 결제는 하지 않는다.
 - 설정(.env)의 OpenAI 키와 모델 이름을 쓴다. 키 값은 출력하지 않는다.

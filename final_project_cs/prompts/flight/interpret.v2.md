@@ -18,8 +18,12 @@ Return exactly these keys:
   relative expressions against `context.today`.
   A date written without a year ("11월 6일", "11/6") is the FIRST such date on or after `context.today` — take the
   year from `context.today`, and use the next year only if that date has already passed. Never use a year that is
-  not today's year or the next one unless the traveller wrote it. If the message refers to the trip ("이번 여행 갈 때/올 때") and
+  not today's year or the next one unless the traveller wrote it.
+  If the message refers to the trip ("이번 여행 갈 때/올 때") and
   `context.trip` has `first_day` / `last_day`, use them. Never invent a date.
+- "depart_date_text", "return_date_text": the exact words copied from `input_text` that give that date (for
+  example "11월 6일", "9일에 오는"), or "trip" when the date came from `context.trip`, or null when the date is
+  null. If the traveller did not say when, the date and its text are null.
 - "adults", "children", "infants": integers or null. Use `context.trip.party_size` for adults only when the
   message refers to the trip. Do not guess.
 - "cabin": "ECONOMY", "BUSINESS", "FIRST", or null.

@@ -16,7 +16,8 @@ from app.tools.read_tools import ALLOWED_PROMPT_KEYS
 
 TODAY = datetime.now(ZoneInfo("Asia/Seoul")).date()
 IN, OUT = (TODAY + timedelta(days=30)).isoformat(), (TODAY + timedelta(days=33)).isoformat()
-SEARCH = {"task": "search", "keyword": "용산", "stay_name": None, "check_in": IN, "check_out": OUT, "adults": 2,
+SEARCH = {"task": "search", "keyword": "용산", "stay_name": None, "check_in": IN, "check_out": OUT,
+          "check_in_text": "다음 달 6일부터", "check_out_text": "3박", "adults": 2,
           "children": None, "max_price_per_night": 200000, "min_rating": 4.0, "domestic": True, "missing": [],
           "question": None}
 STAYS = {"stays": [{"gid": 11, "name": "해밀톤 호텔", "description": "3성급 · 호텔 · 용산구 · 서울", "price_per_night": 188597,
@@ -57,7 +58,7 @@ class FakeTools:
         return value(arguments) if callable(value) else value
 
 
-def _run(reply, tools=None, *, text="용산 근처 호텔 찾아줘", capability="lodging.assist", state=None):
+def _run(reply, tools=None, *, text="다음 달 6일부터 3박 용산 근처 호텔 찾아줘", capability="lodging.assist", state=None):
     llm, toolbox = FakeLLM(reply), FakeTools(tools or {})
     case_id = uuid4()
     pack = ContextPack(pack_id=uuid4(), case_id=case_id, team_id="lodging", tenant_id="t", knowledge_scope=["lodging"],
@@ -157,7 +158,7 @@ MY_STAY = {**SEARCH, "task": "my_stay", "keyword": None, "stay_name": "해밀톤
 
 def test_my_stay_returns_coordinates_address_and_link():
     result, _, tools = _run(MY_STAY, {"read.stay_search": STAYS, "read.stay_detail": DETAIL},
-                            text="해밀톤호텔 예약했는데 일정에 넣어줘")
+                            text="해밀톤호텔 다음 달 6일부터 3박 예약했는데 일정에 넣어줘")
     assert tools.calls[0][1]["keyword"] == "해밀톤호텔" and tools.calls[0][1]["size"] == 5
     assert tools.calls[1] == ("read.stay_detail", {"gid": 11, "check_in": IN, "check_out": OUT, "adults": None,
                                                    "children": None}), "띄어쓰기만 다른 이름은 같은 숙소로 본다"
@@ -245,4 +246,34 @@ def test_the_prompts_tell_the_model_where_the_year_comes_from():
     from pathlib import Path
 
     for folder in ("lodging", "flight"):
-        assert "take the\n  year from `context.today`" in Path(f"prompts/{folder}/interpret.v1.md").read_text(encoding="utf-8")
+        assert "take the\n  year from `context.today`" in Path(f"prompts/{folder}/interpret.v2.md").read_text(encoding="utf-8")
+
+
+def test_a_date_whose_quote_is_not_in_the_message_is_cleared_and_asked():
+    """☆2026-10-08 15:26 playdata — 「서울에서 3박 할 숙소 추천해줘」에 모델이 체크인을 오늘로 지어냈다."""
+    reply = {**SEARCH, "keyword": "서울", "check_in_text": "오늘", "adults": None, "missing": ["adults"],
+             "question": "몇 명이 숙소에 머무실 예정인가요?"}
+    result, _, tools = _run(reply, text="서울에서 3박 할 숙소 추천해줘")
+    assert tools.calls == [] and result.decisions[0]["ungrounded"] == ["check_in"]
+    assert result.decisions[0]["needs"] == ["check_in", "adults"]
+    assert result.answer.startswith("체크인 날짜 · 성인 인원을(를) 알려 주시면"), "모델 질문(인원만)은 쓰지 않는다"
+
+
+def test_trip_as_a_quote_needs_a_trip_on_the_case():
+    from app.domains.travel_ops.instances.lodging.interpret import ground, parse
+
+    found = parse({**SEARCH, "check_in_text": "trip", "check_out_text": "trip"})
+    assert ground(found, "이번 여행 숙소", has_trip=True)[1] == []
+    assert ground(found, "이번 여행 숙소", has_trip=False)[1] == ["check_in", "check_out"]
+    assert ground(parse({**SEARCH, "check_in_text": None}), "다음 달 6일부터 3박", has_trip=False)[1] == ["check_in"]
+    assert ground(parse(SEARCH), "다음 달  6일 부터 3 박", has_trip=False)[1] == [], "공백 차이는 같은 글로 본다"
+
+
+def test_a_value_the_model_itself_lists_as_missing_is_not_used():
+    """☆2026-10-08 15:30 playdata — 체크인을 오늘로 채우고 근거로 「3박」을 인용하면서 missing 에는 check_in 을 넣었다."""
+    reply = {**SEARCH, "keyword": "서울", "check_in_text": "3박", "check_out_text": "3박", "adults": None,
+             "missing": ["check_in", "check_out", "adults"], "question": "체크인 날짜, 체크아웃 날짜, 성인 수를 알려주세요."}
+    result, _, tools = _run(reply, text="서울에서 3박 할 숙소 추천해줘")
+    assert tools.calls == [] and result.decisions[0]["ungrounded"] == ["check_in", "check_out"]
+    assert result.decisions[0]["needs"] == ["check_in", "check_out", "adults"]
+    assert result.answer == "체크인 날짜, 체크아웃 날짜, 성인 수를 알려주세요."
