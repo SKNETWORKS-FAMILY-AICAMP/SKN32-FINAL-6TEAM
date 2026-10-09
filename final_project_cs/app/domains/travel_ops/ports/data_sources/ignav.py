@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from typing import Any, Callable
+from urllib.parse import quote
 
 import httpx
 
@@ -30,6 +31,21 @@ MARKET = "KR"
 #: `search_flights` 의 `max_results` 상한 — 30 을 보냈더니 「less than or equal to 10」 검증 오류(2026-10-09 12:25 playdata)
 MAX_RESULTS = 10
 CABINS = {"ECONOMY": "economy", "PREMIUM_ECONOMY": "premium_economy", "BUSINESS": "business", "FIRST": "first"}
+
+
+def _link(url: Any) -> str:
+    """판매처 주소에서 대괄호 · 공백 같은 글자만 %-인코딩한다. 이미 인코딩된 `%xx` 와 주소 구분 글자는 그대로 둔다.
+
+    ☆2026-10-09 12:39 playdata — ZIPAIR 링크(`…/search/v2?routes[0][0][origin]=ICN…`)를 답에서 눌렀더니 주소가
+      `zipair.net/ko/search/v2?routes` 에서 잘려 열렸고 ZIPAIR 「에러가 발생했습니다」. 대괄호에서 링크 인식이 끊긴 것으로 본다.
+      인코딩한 주소를 ZIPAIR 가 받는지는 확인 안 함.
+    """
+    text = str(url or "")
+    # ★웹 답 화면(`frontend/apps/web/src/features/trip/linked-text.tsx`)은 https 주소만 링크로 만든다 — http 는 글자로만 남는다.
+    #   ☆12:39 에어서울 링크가 `http://flyairseoul.com/CW/ko/main.do` 였다. https 로 바꿔 준다. https 로 열리는지는 확인 안 함
+    if text.startswith("http://"):
+        text = "https://" + text[len("http://"):]
+    return quote(text, safe=":/?&=%#+,;@!$'()*~.-_")
 
 
 def _leg(segments: list[Any]) -> dict[str, Any] | None:
@@ -111,7 +127,7 @@ class IgnavMcp(McpToolTransport):
                 "price_total": _number(price.get("amount")), "currency": str(price.get("currency") or ""),
                 "price_status": str(price.get("status") or ""), "seats": None,
                 "seller": str(row.get("booking_provider_name") or ""), "seller_type": kind,
-                "link": str(row.get("booking_url") or ""),
+                "link": _link(row.get("booking_url")),
                 "link_kind": (f"seller_{kind}" if kind else "seller") if row.get("booking_url") else "",
                 "self_transfer": bool(row.get("requires_self_transfer"))})
         return self.stamp({"flights": flights, "total": None, "origin": origin, "destination": destination,

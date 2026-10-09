@@ -90,6 +90,17 @@ def test_itineraries_come_back_in_the_myrealtrip_shape_with_the_seller():
     assert connecting["direct"] is False and (connecting["link"], connecting["link_kind"]) == ("", ""), "링크가 없으면 지어내지 않는다"
 
 
+def test_brackets_in_a_seller_link_are_encoded_so_the_link_is_not_cut():
+    zipair = {**ITINERARY, "booking_url": "https://www.zipair.net/ko/search/v2?routes[0][0][origin]=ICN&currency=KRW&gclid=a-b_c"}
+    found = IgnavMcp(api_key="k", post=FakeServer({**BODY, "itineraries": [zipair]})).flight_search(
+        origin="ICN", destination="NRT", depart_date="2026-10-20")
+    assert found["flights"][0]["link"] == "https://www.zipair.net/ko/search/v2?routes%5B0%5D%5B0%5D%5Borigin%5D=ICN&currency=KRW&gclid=a-b_c"
+    seoul = {**ITINERARY, "booking_url": "http://flyairseoul.com/CW/ko/main.do"}
+    found = IgnavMcp(api_key="k", post=FakeServer({**BODY, "itineraries": [seoul]})).flight_search(
+        origin="ICN", destination="NRT", depart_date="2026-10-20")
+    assert found["flights"][0]["link"] == "https://flyairseoul.com/CW/ko/main.do", "답 화면은 https 만 링크로 만든다"
+
+
 def test_a_bad_airport_code_or_shape_is_counted_not_guessed():
     source = IgnavMcp(api_key="k", post=FakeServer())
     assert source.flight_search(origin="서울", destination="NRT", depart_date="2026-10-20") is None
