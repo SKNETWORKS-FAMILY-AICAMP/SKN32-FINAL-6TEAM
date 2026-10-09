@@ -76,6 +76,8 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                        "read.place_hours", "read.holiday",
                        # ★`[2026-10-09]` 휴무 · 운영시간 밖일 때 대체 장소 후보(관광공사 목록 — team 통합 ④)
                        "read.place_candidates",
+                       # ★`[2026-10-09]` 장소 행에 실내외가 없을 때 관광공사 분류로 정한다(team 통합 ⑤)
+                       "read.place_class",
                        *ITINERARY_TOOLS],
         # ★`[2026-09-22]` 여행 scope 로 바꿨다. 앞 값(`activity`·`cancellation`·`refund`·`weather`)
         #   가운데 **`refund` 는 쇼핑몰 코퍼스에 실재하는 scope** 라, 정책을 켜는 순간 활동 판정이
@@ -326,12 +328,17 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         #   재난문자·대기질을 도구가 한꺼번에 본다. 무엇을 볼지(실내면 예보 안 봄)는
         #   점검이 장소 속성으로 정한다 — Team 이 소스 조합을 들고 있지 않는다.
         report: dict[str, Any] | None = None
+        indoor: dict[str, Any] = {}
+        weather_pending: dict[str, Any] | None = None
         if isinstance(place, dict):
+            indoor, evidence = self._indoor_outdoor(task, booking, place, seen, evidence)
             report = self._read(task, "read.disruptions", {
                 "place_id": booking.get("place_id"),
                 "latitude": place.get("latitude"),
                 "longitude": place.get("longitude"),
-                "weather_sensitive": bool(place.get(self._WEATHER_SENSITIVE_KEY)),
+                # ★`[2026-10-09]` 전에는 `bool(...)` 이라 모름(`None`)이 「실내」가 되어 날씨를 아예 안 봤다 — 감시 경로는
+                #   9/29 에 고친 결함이다(`disruptions.py` — 모르면 야외처럼 보고 `indoor_unknown`). 모름은 모름으로 넘긴다.
+                "weather_sensitive": indoor.get("value"),
                 "region": self._REGION,
                 # ★구를 알면 넘긴다 — 강남 도로 통제로 종로 일정을 바꾸지 않게.
                 "district": place.get("district"),
@@ -346,8 +353,12 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                 return self._escalate(task, "fatal_source_failure", evidence, warnings=[
                     f"값을 끝까지 못 가져온 항목: {', '.join(failed)} — 대체 소스까지 "
                     f"실패했다(결정 15: 치명). 모르는 채로 성립이라고 답하지 않는다"])
+            # ★`[2026-10-09]` 실내외를 모르는데 **날씨 사건만** 걸렸다 — 바꾸라고 단정하지 않고 먼저 묻는다(감시 경로의
+            #   `pending.needs_consent` 와 같은 기준 · 사용자 결정 2026-09-29). 휴무가 더 확실한 불가라 휴무를 먼저 본 뒤에 답한다.
+            if report.get("verdict") == "disrupted" and report.get("indoor_unknown") and weather_only(report):
+                weather_pending = report
             # ★이상이 **하나라도** 있으면 일정 변경 대상이다.
-            if report.get("verdict") == "disrupted":
+            elif report.get("verdict") == "disrupted":
                 kinds = ", ".join(str(d.get("kind")) for d in report.get("disruptions", []))
                 return self._propose_change(
                     task, booking, evidence,
@@ -379,6 +390,16 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             closed, evidence, hours_note, hours_decision = self._hours_check(task, booking, place, seen, evidence)
             if closed is not None:
                 return closed
+        if weather_pending is not None:
+            kinds = ", ".join(str(d.get("kind")) for d in weather_pending.get("disruptions", []))
+            return self._result(
+                task, outcome="completed", confidence=0.6, evidence=evidence,
+                next_action=NextAction.RESPOND,
+                answer=(f"현재 {self._REGION}에 {kinds}가 발효 중입니다. 이 장소가 실내인지 확인하지 못해 일정을 바꿔야 "
+                        f"하는지는 판정하지 않았습니다. 바꾸기를 원하시면 말씀해 주세요."),
+                decisions=[{"feasible": None, "status": "needs_confirmation", "reason": "indoor_unknown_weather",
+                            "disruptions": weather_pending.get("disruptions", []), "indoor": indoor}],
+                warnings=["실내외를 모르는 장소에 날씨 사건만 걸렸다 — 변경을 단정하지 않고 고객에게 먼저 묻는다"])
 
         forecast = self._checked_value(report, "forecast")
         warnings: list[str] = list(headcount_warnings)
@@ -394,6 +415,12 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             warnings.append("운영시간 · 휴무를 확인하지 못했다 — 판정에 넣지 않았다")
         if hours_decision is not None:
             decisions["hours"] = hours_decision
+        if indoor:
+            decisions["indoor"] = indoor
+            if indoor.get("source") == "class":
+                warnings.append("실내외는 관광공사 분류로 정한 값이다 — 장소에 적힌 값이 아니다")
+            elif indoor.get("value") is None and forecast is not None:
+                warnings.append("실내인지 확인하지 못해 야외 기준으로 날씨를 봤다")
         if forecast is not None:
             note, advisories = self._weather_note(forecast)
             answer += " " + note
@@ -411,6 +438,27 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             task, outcome="completed", confidence=0.8, evidence=evidence,
             next_action=NextAction.RESPOND, answer=answer,
             decisions=[decisions], warnings=warnings)
+
+    def _indoor_outdoor(self, task: TeamTask, booking: dict, place: dict, seen: set[str], evidence: list
+                        ) -> tuple[dict[str, Any], list]:
+        """실내외 — 장소에 적힌 값 → 관광공사 분류(`read.place_class`) 순. `[2026-10-09]` team 통합 ⑤(사용자 결정: develop 기준 + 분류).
+
+        ★분류 규칙은 develop 의 것(`itinerary.weather_from_class` — 확실한 대 · 중분류만)이다. role-activity 판의 장소명 짐작은
+          옮기지 않았다 — 일정 짜기(`fill_weather_sensitive`)와 판단이 갈리지 않게.
+        반환: (`{value: True|False|None, source: place|class|None}`, 근거). `value` None 이면 모른다 — 공유 점검이 야외처럼 보고
+        `indoor_unknown` 을 붙인다.
+        """
+        known = place.get(self._WEATHER_SENSITIVE_KEY)
+        if known is not None:
+            return {"value": bool(known), "source": "place"}, evidence
+        found = self._read(task, "read.place_class", {"place_id": booking.get("place_id")}, seen)
+        value = found.get("weather_sensitive") if isinstance(found, dict) else None
+        if value is None:
+            return {"value": None, "source": None}, evidence
+        evidence = self._evidence(task, source_id="read.place_class", claim="관광공사 분류로 정한 실내외",
+                                  value=found, base=evidence)
+        return {"value": bool(value), "source": "class", "lcls1": found.get("lcls1"),
+                "lcls2": found.get("lcls2")}, evidence
 
     def _insufficient(self, task: TeamTask, evidence: list, code: str, *, answer: str, warnings: list[str],
                       **decisions: Any) -> TeamResult:

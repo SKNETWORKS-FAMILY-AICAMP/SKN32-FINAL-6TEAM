@@ -161,6 +161,8 @@ class ReadToolbox:
             "read.place_candidates": self.place_candidates,
             # ★`[2026-10-09]` 활동 성립 판정의 휴무 · 운영시간 — DB(새벽 작업 `catalog_hours`)만 읽는다.
             "read.place_hours": self.place_hours,
+            # ★`[2026-10-09]` 활동 성립 판정의 실내외 — 장소의 관광공사 분류(DB 만)로 develop 규칙(`weather_from_class`)을 적용한다.
+            "read.place_class": self.place_class,
             "read.weather_warning": self.weather_warning,
             "read.travel_advisory": self.travel_advisory,
             "read.place":    self.place,
@@ -631,6 +633,28 @@ class ReadToolbox:
         return {"known": facts.known, "attributes": facts.attributes, "source": facts.source,
                 "why_unknown": facts.why_unknown, "conditions": list(facts.conditions),
                 "usetime_text": origin.get("usetime"), "restdate_text": origin.get("restdate")}
+
+    def place_class(self, scope: ToolContext, *, place_id: str | None = None, **_: Any) -> dict[str, Any] | None:
+        """그 장소의 관광공사 분류와 그 분류로 정한 실내외 — **DB 에 적재한 목록**(`place_catalog`)만 본다. `[2026-10-09]`
+
+        ★실내외는 develop 규칙(`itinerary.weather_from_class` — 확실한 대 · 중분류만, 모르면 `None`)으로 정한다.
+          일정 짜기가 장소 행을 채울 때(`fill_weather_sensitive`)와 같은 규칙이다. 장소명으로 짐작하지 않는다.
+        반환 `{content_id, lcls1, lcls2, weather_sensitive}`. 장소를 모르거나 목록에 없으면 `None`(모름).
+        """
+        if place_id is None:
+            return None
+        from app.domains.travel_ops.components.intake.hours import _tenants
+        from app.domains.travel_ops.components.itinerary.itinerary import weather_from_class
+
+        found = self._one(
+            "SELECT pc.content_id, pc.raw_json->>'lclsSystm1', pc.raw_json->>'lclsSystm2' FROM places p "
+            "JOIN place_catalog pc ON pc.tenant_id = ANY(%s) AND pc.source = 'tour_api' "
+            "AND pc.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id') "
+            "WHERE p.tenant_id = %s AND p.place_id = %s LIMIT 1",
+            (_tenants(scope.tenant_id), scope.tenant_id, str(place_id)), ("content_id", "lcls1", "lcls2"))
+        if found is None:
+            return None
+        return {**found, "weather_sensitive": weather_from_class(found["lcls1"], found["lcls2"])}
 
     def place_candidates(self, scope: ToolContext, *, content_id: str | None = None,
                          **_: Any) -> dict[str, Any] | None:

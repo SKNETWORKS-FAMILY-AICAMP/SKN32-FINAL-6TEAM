@@ -38,10 +38,13 @@ def world():
                     "VALUES (%s,'tour_api',%s,%s,'{}'::jsonb,%s,now())",
                     (tenant, content_id, json.dumps(WEEK),
                      json.dumps({"usetime": "09:00~18:00", "restdate": "매월 둘째 주 화요일 휴무"}, ensure_ascii=False)))
+        # ★`[2026-10-09]` 통합 ⑤ — 실내외를 관광공사 분류로(EX02 = 실내 전시, develop `WEATHER_BY_MIDDLE_CLASS`)
+        cur.execute("INSERT INTO place_catalog (tenant_id,source,content_id,title,raw_json) VALUES (%s,'tour_api',%s,%s,%s)",
+                    (tenant, content_id, "시험 박물관", json.dumps({"lclsSystm1": "EX", "lclsSystm2": "EX02"})))
     scope = ToolContext(tenant_id=tenant, customer_id=uuid4(), case_id=uuid4(), knowledge_scope=[])
     yield {"tools": ReadToolbox(get_connection), "scope": scope, "place_id": place_id}
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
-        for table in ("catalog_hours", "places", "tenants"):
+        for table in ("catalog_hours", "place_catalog", "places", "tenants"):
             cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s", (tenant,))
 
 
@@ -51,6 +54,16 @@ def test_the_tool_reads_the_week_and_the_closure_text_from_the_db(world):
     assert found["known"] is True and found["source"] == "tour_api"
     assert found["attributes"]["hours_week"]["tue"] == {"open": "09:00", "close": "18:00"}
     assert found["restdate_text"] == "매월 둘째 주 화요일 휴무"
+
+
+def test_the_class_tool_reads_the_tour_class_and_applies_the_develop_rule(world):
+    found = world["tools"].place_class(world["scope"], place_id=str(world["place_id"]))
+
+    assert found["lcls1"] == "EX" and found["lcls2"] == "EX02" and found["weather_sensitive"] is False
+
+
+def test_the_class_tool_says_unknown_for_a_place_off_the_catalog(world):
+    assert world["tools"].place_class(world["scope"], place_id=str(uuid4())) is None
 
 
 def test_an_unknown_place_is_none(world):
