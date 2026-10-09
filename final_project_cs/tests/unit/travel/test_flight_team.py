@@ -161,6 +161,27 @@ def test_time_of_day_shape():
         parse({**SEARCH, "depart_times": ["noon"]})
 
 
+SLOW = {"airline_code": "5J", "airline": "세부퍼시픽항공", "duration_minutes": 685,
+        "legs": [{**LEG, "departTime": "06:35", "arriveTime": "18:00", "durationMinutes": 685, "stops": 1, "isDirect": False}],
+        "price_total": 732000, "currency": "KRW", "seats": 9, "link": "https://air-web.myrealtrip.com/results?x=5J",
+        "link_kind": "search"}
+
+
+def test_a_slow_connecting_flight_is_not_a_band_pick_when_direct_flights_exist():
+    """☆2026-10-09 14:46 playdata 인천→나리타 — 새벽 최저가가 경유 11시간 25분 732,000원이었다."""
+    result, _, _ = _run(SEARCH, {"read.flight_search": {**FLIGHTS, "flights": [*FLIGHTS["flights"], SLOW]},
+                                 "read.flight_offers": IGNAV})
+    assert "세부퍼시픽" not in result.answer and result.decisions[0]["dropped_slow"] == 1
+    assert "새벽 출발은 경유로 직항보다 2배 넘게 걸리는 편뿐이라 뺐습니다." in result.answer
+    assert "받은 결과에 새벽" not in result.answer
+
+
+def test_a_connecting_flight_stays_when_there_is_no_direct_one():
+    only = {**FLIGHTS, "flights": [SLOW]}
+    result, _, _ = _run(SEARCH, {"read.flight_search": only})
+    assert "1. [새벽 최저가 · 전체 최저가] 세부퍼시픽항공" in result.answer and result.decisions[0]["dropped_slow"] == 0
+
+
 def test_one_source_is_enough_and_both_missing_is_unknown():
     result, _, _ = _run(SEARCH, {"read.flight_search": None, "read.flight_offers": IGNAV})
     assert result.outcome == "completed" and "찾은 결과(마이리얼트립 조회 실패 · 항공사·여행사 판매처 2개)를" in result.answer

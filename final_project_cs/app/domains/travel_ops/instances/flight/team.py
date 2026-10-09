@@ -130,6 +130,38 @@ def _band(option: dict[str, Any]) -> str | None:
 BAND_LABEL = {name: label for name, label, _, _ in TIME_BANDS}
 
 
+def _minutes(option: dict[str, Any]) -> int | None:
+    """편 전체 소요 분. 편에 값이 없으면 다리마다 값을 더한다. 하나라도 모르면 None."""
+    if isinstance(option.get("minutes"), int):
+        return option["minutes"]
+    parts = [leg.get("durationMinutes") for leg in option["legs"]]
+    return sum(parts) if parts and all(isinstance(part, int) for part in parts) else None
+
+
+def _connecting(option: dict[str, Any]) -> bool:
+    """경유가 **확실한** 편만 참. 경유 칸이 없으면(국내선 응답) 경유로 보지 않는다."""
+    return any(isinstance(leg.get("stops"), int) and leg["stops"] > 0 for leg in option["legs"])
+
+
+#: 직항이 있는 노선에서 경유 편이 가장 짧은 편의 몇 배를 넘으면 시간대 대표에서 빼나. 우리가 고른 값(2026-10-09 사용자와 정함)
+SLOW_FACTOR = 2
+
+
+def _drop_slow(options: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], int]:
+    """직항이 하나라도 있으면, 경유이면서 가장 짧은 편의 `SLOW_FACTOR` 배를 넘게 걸리는 편을 뺀다. (남은 편, 뺀 수)
+
+    ☆2026-10-09 12:39 · 14:46 playdata 인천→나리타 — 「새벽 최저가」가 세부퍼시픽 06:35 경유 1회 11시간 25분 732,000원이었다.
+      직항 2시간대가 11만 원대부터 있는데 그 편을 시간대 대표로 내세웠다.
+    """
+    known = [minutes for option in options if (minutes := _minutes(option)) is not None]
+    if not known or not any(not _connecting(option) and _minutes(option) is not None for option in options):
+        return options, 0
+    limit = min(known) * SLOW_FACTOR
+    kept = [option for option in options
+            if not (_connecting(option) and (minutes := _minutes(option)) is not None and minutes > limit)]
+    return kept, len(options) - len(kept)
+
+
 def _pick(options: list[dict[str, Any]], wanted: list[str] | None) -> tuple[list[tuple[dict[str, Any], str]], list[str]]:
     """답에 실을 편과 그 줄의 표시, 그리고 받은 결과에 편이 없던 시간대들.
 
@@ -248,13 +280,14 @@ class FlightTeam(TravelTeamBase):
         party = f"성인 {found.adults}명" + (f" · 아동 {found.children}명" if found.children else "") \
             + (f" · 유아 {found.infants}명" if found.infants else "")
         wanted = list(found.depart_times or [])
-        picked, empty = _pick(options, wanted)
+        pool, slow = _drop_slow(options)
+        picked, empty = _pick(pool, wanted)
         fallback = bool(wanted) and not picked
         if fallback:
             # 말한 시간대 편이 받은 결과에 하나도 없다 — 빈 답 대신 다른 시간대 최저가를 보여 주고 그렇다고 적는다
-            picked, _ = _pick(options, None)
+            picked, _ = _pick(pool, None)
         shown_options = [option for option, _ in picked]
-        cheapest = options[0] if options and options[0]["best"] is not None else None
+        cheapest = pool[0] if pool and pool[0]["best"] is not None else None
         minutes = [option["minutes"] for option in shown_options if isinstance(option["minutes"], int)]
         # ★소요 시간이 다 같으면 「가장 짧음」을 붙이지 않는다 — ☆12:09 김포→제주, 셋 다 75분인데 셋 다 붙었다
         fastest = min(minutes) if minutes and len(set(minutes)) > 1 else None
@@ -273,8 +306,15 @@ class FlightTeam(TravelTeamBase):
                 link = "" if offer.get("link_kind") == "route_search" else f": {offer.get('link') or '링크 없음'}"
                 lines.append(f"   · {offer['label']} {_won(offer.get('price_total'), offer.get('currency') or '')}{seats}{link}")
         if empty and not fallback:
-            lines.append(f"받은 결과에 {' · '.join(BAND_LABEL[name] for name in empty)} 출발 편은 없었습니다"
-                         "(가격이 낮은 순으로 일부만 받습니다).")
+            # 뺀 경유 편만 있던 시간대는 「없었다」가 아니라 「뺐다」고 적는다
+            slow_only = [name for name in empty if any(_band(option) == name for option in options)]
+            none = [name for name in empty if name not in slow_only]
+            if none:
+                lines.append(f"받은 결과에 {' · '.join(BAND_LABEL[name] for name in none)} 출발 편은 없었습니다"
+                             "(가격이 낮은 순으로 일부만 받습니다).")
+            if slow_only:
+                lines.append(f"{' · '.join(BAND_LABEL[name] for name in slow_only)} 출발은 경유로 직항보다 "
+                             f"{SLOW_FACTOR}배 넘게 걸리는 편뿐이라 뺐습니다.")
         searches = sorted({offer["link"] for option in shown_options for offer in option["offers"]
                            if offer.get("link_kind") == "route_search" and offer.get("link")})
         pages = [f"마이리얼트립 이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): {url}" for url in searches]
@@ -301,7 +341,8 @@ class FlightTeam(TravelTeamBase):
                     for source in ("myrealtrip", "ignav")}}
                 for option in options if {offer["source"] for offer in option["offers"]} >= {"myrealtrip", "ignav"}]
         return self._respond(task, evidence, {**decision, "found": len(options), "shown": shown, "both": both,
-                                              "times": wanted or None, "empty_bands": empty, "fallback": fallback},
+                                              "times": wanted or None, "empty_bands": empty, "fallback": fallback,
+                                              "dropped_slow": slow},
                              "\n".join([head, *lines, *pages, tail]))
 
     def _trip(self, task: TeamTask, seen: set[str]) -> tuple[dict[str, Any] | None, list[Evidence]]:
