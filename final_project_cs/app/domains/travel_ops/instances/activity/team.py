@@ -52,6 +52,7 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             "activity.propose_change",     # 대안을 제안한다 (승인 대기)
             "activity.itinerary",          # ★`[2026-09-17]` 여행 일정 관리 — 감시 Case · 품절 · 재요청
             "activity.itinerary_question", # ★`[2026-09-25]` 규정 질문 — 규정을 읽는다(면제 아님)
+            "activity.submit_itinerary",   # ★`[2026-10-09]` 일정 제출 — 여행 접수로 안내한다(team 통합 ⑥)
         ],
         accepted_case_types=["activity"],
         # ★`[2026-09-17]` `policy` 를 뺐다 — 규정은 `read.policy` 도구로 **직접** 읽고(없으면 모름),
@@ -64,7 +65,8 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         required_context=["case_state", "policy", "db_facts", "history"],
         # ★일정 관리만 면제한다 — 예보·운행·영업 같은 **실시간 사실**로 판단하는 일이라
         #   정책 검색 결과에 막히면 안 된다(감시 루프가 여는 Case 가 전부 사람에게 간다).
-        policy_optional_capabilities=["activity.itinerary"],
+        # ★`[2026-10-09]` 일정 제출 안내도 규정을 쓰지 않는다 — 정책 검색 0건으로 사람에게 가지 않게.
+        policy_optional_capabilities=["activity.itinerary", "activity.submit_itinerary"],
         # ★`[2026-09-23]` `read.booking_terms` 를 더했다 — **수치는 이 도구가** 댄다.
         #   `read.policy` 는 그대로 **문장 근거**를 댄다. 둘의 몫이 갈린다
         #   (`wiki/records/reports/debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md`).
@@ -125,8 +127,15 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
 
     @staticmethod
     def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
-        """★여행이 정해진 Case 는 일정 관리로 — 그 밖은 기본 동작에 맡긴다."""
-        return ItineraryWork.itinerary_route("activity", state)
+        """★여행이 정해진 Case 는 일정 관리로 — 일정 제출은 안내로 — 그 밖은 기본 동작에 맡긴다.
+
+        ★`[2026-10-09]` 일정 제출(`itinerary_submit`)을 받을 capability 가 없어 기본값(성립 판정)으로 갔고, 그러면 고객의
+          **가장 임박한 예약**을 판정해 엉뚱한 답을 냈다. 일정 제출은 develop 여행 접수가 맡는다(team 통합 ⑥ — 사용자 결정).
+        """
+        route = ItineraryWork.itinerary_route("activity", state)
+        if route is None and intent == "itinerary_submit":
+            return "activity.submit_itinerary"
+        return route
 
     async def handle_trigger(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:
         """감시가 연 Case — 그 항목을 **다시 점검**하고, 깨졌으면 대안을 계산해 제안한다."""
@@ -196,6 +205,8 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             return blocked
         if task.capability in (self.itinerary_capability, self.question_capability):
             return await self.run_itinerary(task)
+        if task.capability == "activity.submit_itinerary":
+            return self._submit_itinerary(task)
 
         seen: set[str] = set()
         booking = self._read(task, "read.booking", {"case_id": str(task.case_id)}, seen)
@@ -232,6 +243,25 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         if task.capability == "activity.check_feasible":
             return self._check_feasible(task, booking, policy, remaining, evidence, seen)
         return self._propose_change(task, booking, evidence)
+
+    # ── 일정 제출 — 여행 접수가 맡는다 ─────────────────────────
+    #: 일정 제출을 받는 곳 — develop 여행 접수(문장에서 장소 · 시각 · 예약번호를 읽어 여행 · 일정 항목을 만들고 감시까지 잇는다)
+    SUBMIT_ENTRY = "POST /v1/web/trip-intakes"
+
+    def _submit_itinerary(self, task: TeamTask) -> TeamResult:
+        """★`[2026-10-09]` team 통합 ⑥(사용자 결정: develop 접수에 맡김) — 일정을 **만들지 않고** 여행 접수로 안내한다.
+
+        role-activity 판(`team_a._submit_itinerary`)은 장소 이름을 조회해 `activity.submit` 제안을 만들었지만, 그 입력
+        (`requested_place_name` · `requested_activity_time`)을 채우는 곳도, 제안을 실행할 처리기 · `activities` 표도 develop 에
+        없다 — 승인해도 아무 일도 안 일어난다. 예약을 읽지 않는다(문의와 상관없는 예약을 판정하지 않게).
+        """
+        evidence = self._evidence(task, source_id="case.capability", claim="요청 종류 — 일정 제출",
+                                  value={"capability": task.capability, "handled_by": self.SUBMIT_ENTRY})
+        return self._result(
+            task, outcome="completed", confidence=0.9, evidence=evidence, next_action=NextAction.RESPOND,
+            answer=("일정 등록은 여행 일정 화면에서 받고 있습니다. 일정을 그곳에 붙여 넣어 주시면 장소와 시각을 확인해 "
+                    "일정을 만들고, 그 뒤로 날씨 · 재난 같은 변동을 살펴 드립니다."),
+            decisions=[{"itinerary": "submit_redirected", "handled_by": "trip_intake", "entry": self.SUBMIT_ENTRY}])
 
     # ── ① 검증 — 계산으로만 ────────────────────────────────────
     def _check_cancelable(self, task: TeamTask, booking: dict, terms: Any,
