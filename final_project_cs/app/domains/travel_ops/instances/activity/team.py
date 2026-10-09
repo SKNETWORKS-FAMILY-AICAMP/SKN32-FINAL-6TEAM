@@ -34,12 +34,13 @@ from app.domains.travel_ops.components.planning.safety import classify as classi
 from app.domains.travel_ops.components.places.place_hours import fits, hours_on
 from . import failure_codes as fc
 from .closure_rules import holiday_dates_needed, local_date, read_closure
+from .replacement import ReplacementMixin
 from .similarity import distance_first, preference_of, score
 
 _failure_log = logging.getLogger(fc.LOGGER_NAME)
 
 
-class ActivityTeam(ItineraryWork, TravelTeamBase):
+class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
     manifest = TeamManifest(
         team_id="activity",
         display_name="Activity Team",
@@ -73,6 +74,8 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                        "read.disruptions", "read.route_events", "read.dining_state", "read.dining_states",
                        # ★`[2026-10-09]` 성립 판정의 휴무 · 운영시간(DB 만) · 공휴일 조건
                        "read.place_hours", "read.holiday",
+                       # ★`[2026-10-09]` 휴무 · 운영시간 밖일 때 대체 장소 후보(관광공사 목록 — team 통합 ④)
+                       "read.place_candidates",
                        *ITINERARY_TOOLS],
         # ★`[2026-09-22]` 여행 scope 로 바꿨다. 앞 값(`activity`·`cancellation`·`refund`·`weather`)
         #   가운데 **`refund` 는 쇼핑몰 코퍼스에 실재하는 scope** 라, 정책을 켜는 순간 활동 판정이
@@ -373,7 +376,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         hours_note: str | None = None
         hours_decision: dict[str, Any] | None = None
         if isinstance(place, dict):
-            closed, evidence, hours_note, hours_decision = self._hours_check(task, booking, seen, evidence)
+            closed, evidence, hours_note, hours_decision = self._hours_check(task, booking, place, seen, evidence)
             if closed is not None:
                 return closed
 
@@ -431,7 +434,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                   for message in check.get("unclassified") or [] if isinstance(message, dict)]
         return classify_safety(causes) if causes else None
 
-    def _hours_check(self, task: TeamTask, booking: dict, seen: set[str], evidence: list
+    def _hours_check(self, task: TeamTask, booking: dict, place: dict, seen: set[str], evidence: list
                      ) -> tuple[TeamResult | None, list, str | None, dict[str, Any] | None]:
         """휴무 · 운영시간 판정 — `[2026-10-09]` role-activity 판(정기휴무 규칙)을 develop 설계 위로 옮겼다.
 
@@ -473,8 +476,8 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             quote = closure.quote if closure is not None and closure.value else None
             record["failure_code"] = self._record_failure(task, fc.CLOSED_WEEKDAY)
             told = f"휴무 안내({restdate}) 중 「{quote}」에 해당해" if quote and restdate else "정기휴무일이라"
-            return (self._propose_change(
-                task, booking, evidence, reason=f"휴무 — {quote or '정기휴무일'}",
+            return (self._closed_place_change(
+                task, booking, place, seen, evidence, reason=f"휴무 — {quote or '정기휴무일'}",
                 answer=f"이 날은 {told} 이 일정은 바꿔야 합니다. 변경 제안을 만들었고 승인 뒤에 진행됩니다.",
                 decisions={"feasible": False, "reason": "closed_weekday", "hours": record}),
                 evidence, None, record)
@@ -482,8 +485,8 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         record["within_hours"] = fit
         if fit is False:
             record["failure_code"] = self._record_failure(task, fc.OUTSIDE_HOURS)
-            return (self._propose_change(
-                task, booking, evidence, reason="운영시간 밖",
+            return (self._closed_place_change(
+                task, booking, place, seen, evidence, reason="운영시간 밖",
                 answer=("예약 시각이 운영시간 밖이라 이 일정은 바꿔야 합니다. "
                         "변경 제안을 만들었고 승인 뒤에 진행됩니다."),
                 decisions={"feasible": False, "reason": "outside_hours", "hours": record}),
@@ -492,6 +495,23 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         if closure is not None and closure.needs_caveat and fit is True:
             note = "공휴일과 겹치는 경우 등 휴무 예외가 있을 수 있습니다."
         return None, evidence, note, record
+
+    def _closed_place_change(self, task: TeamTask, booking: dict, place: dict, seen: set[str], evidence: list, *,
+                             reason: str, answer: str, decisions: dict[str, Any]) -> TeamResult:
+        """그 장소가 그 시각에 닫혀 있다(휴무 · 운영시간 밖) — 변경 제안에 **대체 장소 후보**를 붙인다. `[2026-10-09]` team 통합 ④.
+
+        ★role-activity 판의 대체 장소 계산(`ReplacementMixin._recommend_alternatives` — 관광공사 목록에서 비슷한 곳 → 가까운 곳,
+          그 시각에 여는지 다시 확인된 곳만 안내문에)을 그대로 쓴다. 계산만 하고 고르지 않는다 — 제안은 여전히 `booking.change`
+          (승인 대기)이고 후보는 `decisions.alternatives` 와 답변에만 실린다.
+        ★장소를 바꾸면 풀리는 사유에만 붙인다. 재난 정지(`safety_event`)는 그날 · 여행 전체를 멈추는 결정이라 붙이지 않고,
+          공유 점검의 이상(`disrupted` — 날씨 · 통제)은 감시 경로의 대체 계산(`plan_activity_adjustment`)이 맡는다.
+        ★후보를 못 찾거나 확인하지 못하면 그렇다고 말한다(`status` unknown · ranked 0곳) — 변경 제안은 그대로 만든다.
+        """
+        alternatives, evidence, note, warnings = self._recommend_alternatives(
+            task, place, booking.get("starts_at"), seen, evidence, decisions)
+        return self._propose_change(task, booking, evidence, reason=reason,
+                                    answer=f"{answer}\n{note}" if note else answer,
+                                    decisions={**decisions, "alternatives": alternatives}, warnings=warnings)
 
     # ── 성립 점검 부품 ────────────────────────────────────────
     #: 점검할 지역. ★v11 §1 — 대상 도시는 서울 하나다.
@@ -557,7 +577,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
     # ── ③ 재계획 — 제안까지만 ──────────────────────────────────
     def _propose_change(self, task: TeamTask, booking: dict, evidence: list, *,
                         reason: str | None = None, answer: str | None = None,
-                        decisions: dict[str, Any] | None = None) -> TeamResult:
+                        decisions: dict[str, Any] | None = None, warnings: list[str] | None = None) -> TeamResult:
         """★대안을 실행하지 않는다. `ActionProposal` 로 승인 대기에 올린다.
 
         `reason` 이 없으면 고객 문장 그대로(고객이 바꿔 달라고 한 경우), 있으면
@@ -577,7 +597,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             next_action=NextAction.WAIT_FOR_APPROVAL,
             answer=answer or "변경 제안을 만들었습니다. 승인 뒤에 진행됩니다.",
             action_proposals=[proposal],
-            decisions=[{"proposed": "booking.change", **(decisions or {})}])
+            decisions=[{"proposed": "booking.change", **(decisions or {})}], warnings=list(warnings or []))
 
     # ── 취소 조건 읽기 ────────────────────────────────────────
     #
