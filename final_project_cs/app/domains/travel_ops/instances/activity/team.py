@@ -30,6 +30,7 @@ from app.domains.travel_ops.components.actions.itinerary_actions import consent_
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ACTIVITY_RECHECK_LIMIT, NoChange, plan_activity_adjustment, plan_nearby_store
 from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TOOLS, Consent, ItineraryWork
 from app.domains.travel_ops.components.planning.pending import needs_consent, weather_only
+from app.domains.travel_ops.components.planning.safety import classify as classify_safety
 from app.domains.travel_ops.components.places.place_hours import fits, hours_on
 from . import failure_codes as fc
 from .closure_rules import holiday_dates_needed, local_date, read_closure
@@ -333,6 +334,21 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                             f"바꿔야 합니다. 변경 제안을 만들었고 승인 뒤에 진행됩니다."),
                     decisions={"feasible": False, "reason": "disrupted",
                                "disruptions": report.get("disruptions", [])})
+            # ★`[2026-10-09]` 재난 기준을 재난 정지와 맞춘다(가 방안 — 사용자 결정). 공유 점검은 재해구분을 모르는 문자를
+            #   `unclassified` 로만 남긴다(「민방공」 위급재난인데 본문에 공습경보 낱말이 없는 경우 등). 그런데 재난 정지
+            #   (`planning/safety.classify` — 같은 서비스의 감시 경로)는 그 문자로 그날 · 여행 전체를 멈춘다. 성립 판정이
+            #   「성립」으로 답하면 둘이 어긋나므로, **같은 기준**으로 정지 대상이면 막는다. 날씨형 위급재난은 develop 결정대로
+            #   정지 대상이 아니다(실내 대체 · 안전 알림이 맡는다 — `[결정 2026-10-06 사용자]`).
+            event = self._unclassified_safety_event(report)
+            if event is not None:
+                return self._propose_change(
+                    task, booking, evidence,
+                    reason=f"재난 — {event.label}",
+                    answer=(f"현재 {self._REGION}에 {event.label} 문자가 발령 중이라 이 일정은 바꿔야 합니다. "
+                            f"변경 제안을 만들었고 승인 뒤에 진행됩니다."),
+                    decisions={"feasible": False, "reason": "safety_event",
+                               "failure_code": self._record_failure(task, fc.DISASTER_BLOCKS),
+                               "safety": event.evidence()})
 
         # ★`[2026-10-09]` 휴무 · 운영시간 — 공유 점검은 이것을 보지 않는다. 판정 순서는 이미 시작됨 → 재난(공유 점검) → 휴무 → 운영시간.
         hours_note: str | None = None
@@ -373,6 +389,18 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             task, outcome="completed", confidence=0.8, evidence=evidence,
             next_action=NextAction.RESPOND, answer=answer,
             decisions=[decisions], warnings=warnings)
+
+    @staticmethod
+    def _unclassified_safety_event(report: dict[str, Any] | None):
+        """공유 점검이 「모르는 구분」(`unclassified`)으로만 남긴 재난문자 가운데 재난 정지 대상(그날 · 여행 전체)이 있으면
+        가장 심각한 것 하나. 없으면 `None`. ★공유 점검이 이미 이상으로 센 문자는 위에서 막혔으므로 여기서 다시 보지 않는다."""
+        if not isinstance(report, dict):
+            return None
+        causes = [{**message, "category": "disaster_msg"}
+                  for check in report.get("checks") or []
+                  if isinstance(check, dict) and check.get("category") == "disaster_msg"
+                  for message in check.get("unclassified") or [] if isinstance(message, dict)]
+        return classify_safety(causes) if causes else None
 
     def _hours_check(self, task: TeamTask, booking: dict, seen: set[str], evidence: list
                      ) -> tuple[TeamResult | None, list, str | None, dict[str, Any] | None]:
