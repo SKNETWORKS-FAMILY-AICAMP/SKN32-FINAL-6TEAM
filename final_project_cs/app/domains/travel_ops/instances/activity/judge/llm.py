@@ -59,7 +59,7 @@ def payload_for(request: JudgeRequest) -> dict[str, Any]:
     """모델에게 보낼 입력 — 원래 시각 객체와 인용 대조용 칸은 뺀다(날짜 사실은 이미 문자열로 들어 있다)."""
     return {"kind": request.kind,
             **{k: v for k, v in request.inputs.items()
-               if k not in ("starts_at_raw", "message_texts", "holidays_raw")}}
+               if k not in ("starts_at_raw", "message_texts", "holidays_raw", "weather_sensitive_raw")}}
 
 
 @lru_cache(maxsize=None)

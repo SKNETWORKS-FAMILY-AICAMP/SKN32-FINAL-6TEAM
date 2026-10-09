@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-"""RuleJudge — **지금 규칙 판정을 그대로** 감싼다. 동작을 바꾸지 않는다.
+"""RuleJudge — **develop 판 활동 팀의 지금 규칙**을 판정 모양으로 감싼다. 새 판정을 만들지 않는다.
 
-★이 클래스는 새 판정을 만들지 않는다. `feasibility.py` · `weather.py` · `csv_places.py` 의 함수를 부르고
-  그 결과를 `Verdict` 로 옮길 뿐이다. 섀도 모드의 비교 기준이 「지금 동작」이어야 해서다.
+★`[2026-10-09]` 비교 기준을 role-activity 판 규칙에서 **develop 판 규칙**으로 바꿨다(D-CS-015). 평가(`eval/activity_judge`)의
+  규칙 쪽 점수가 지금 서비스의 동작을 재야 해서다. 바뀐 것: ③ 실내외는 장소명 짐작 대신 관광공사 분류(`weather_from_class`),
+  ④ 재난문자는 「위급재난이면 막음」 대신 공유 점검의 유형 목록 · 심각 낱말 + 재난 정지 기준(`safety.classify`).
+  운영 경로의 섀도는 이 클래스가 아니라 팀이 실제로 낸 값을 비교 기준으로 쓴다(`team._shadow`).
 ★규칙이 해석하지 않는 판정(운영시간 원문 · 실시간 운영 상태)은 `unknown` 이다 — 지금 코드도 판정에 넣지 않는다.
-★import 는 함수 안에서 한다 — 4단계에서 `feasibility.py` 가 이 패키지를 부르면 순환이 생긴다.
+★import 는 함수 안에서 한다.
 """
 from __future__ import annotations
 
@@ -58,27 +60,41 @@ class RuleJudge:
 
     @staticmethod
     def _weather_sensitive(request: JudgeRequest) -> Verdict:
-        """장소명 → 분류 유형 순 — `FeasibilityMixin._guess_weather_sensitive` 의 추정 단계와 같다.
-        ★DB 값(`places.weather_sensitive`)은 판정 대상이 아니다. 값이 있으면 부르는 쪽이 판정을 부르지 않는다."""
-        from ..csv_places import weather_sensitive_from_lclssystm2
-        from ..weather import WeatherMixin
+        """관광공사 분류 — develop 규칙 `itinerary.weather_from_class`(확실한 대 · 중분류만). 장소명으로 짐작하지 않는다.
+        대분류는 중분류 앞 두 글자다(`NA01` → `NA`). ★DB 값(`places.weather_sensitive`)이 있으면 부르는 쪽이 판정을 부르지 않는다."""
+        from app.domains.travel_ops.components.itinerary.itinerary import weather_from_class
 
-        guessed = WeatherMixin._weather_sensitive_from_title(request.inputs.get("title"))
-        basis = "title"
-        if guessed is None:
-            guessed = weather_sensitive_from_lclssystm2(request.inputs.get("lclssystm2"))
-            basis = "category"
-        if guessed is None:
+        middle = (request.inputs.get("lclssystm2") or "").strip().upper() or None
+        known = weather_from_class(middle[:2] if middle else None, middle)
+        if known is None:
             return Verdict(WEATHER_SENSITIVE, UNKNOWN, "rule", basis=None)
-        return Verdict(WEATHER_SENSITIVE, "outdoor" if guessed else "indoor", "rule", basis=basis)
+        return Verdict(WEATHER_SENSITIVE, "outdoor" if known else "indoor", "rule", basis="tour_class")
 
     @staticmethod
     def _disaster_effect(request: JudgeRequest) -> Verdict:
-        """위급재난이 하나라도 있으면 막는다(관련성은 보지 않는다). 그 밖은 막지 않는다.
+        """develop 판 기준 — 공유 점검(`disaster_msg.judge` · `disruptions._disaster`)과 재난 정지(`safety.classify`).
 
-        ★`[2026-10-08]` 성립 판정은 위급재난을 이 계층에 보내지 않고 **판정 전에 막는다**(`_feasible_disaster`) —
-          그래서 운영 경로에서 이 함수가 받는 문자는 위급재난이 아니고, 답은 늘 `no_effect` 다.
+        - 해제 · 훈련 문자는 막지 않는다.
+        - 장소형 유형(통제 · 화재 …)이나 심각 낱말이 있으면 막는다. 재난 정지 대상(그날 · 여행 전체)도 막는다.
+        - 날씨형 유형은 **실외에만** 영향이다 — 장소의 실내외(`weather_sensitive_raw`)를 모르면 `unknown`
+          (develop 판은 그때 바꾸라고 단정하지 않고 먼저 묻는다).
         """
-        messages = request.inputs.get("messages") or []
-        blocks = any(m.get("step") == "위급재난" for m in messages)
-        return Verdict(DISASTER_EFFECT, "blocks" if blocks else "no_effect", "rule", basis="step_only")
+        from app.domains.travel_ops.components.planning.safety import classify
+        from app.domains.travel_ops.ports.data_sources.disaster_msg import PLACE_KINDS, WEATHER_KINDS, _safety_words
+
+        severe, exclude = _safety_words()
+        sensitive = request.inputs.get("weather_sensitive_raw")
+        value = "no_effect"
+        for message in request.inputs.get("messages") or []:
+            text, kind = str(message.get("text") or ""), message.get("kind")
+            if "해제" in text or any(word in text for word in exclude):
+                continue
+            if (kind in PLACE_KINDS or any(word in text for word in severe)
+                    or classify([{**message, "category": "disaster_msg"}]) is not None):
+                return Verdict(DISASTER_EFFECT, "blocks", "rule", basis="shared_check_and_safety_stop")
+            if kind in WEATHER_KINDS:
+                if sensitive is True:
+                    return Verdict(DISASTER_EFFECT, "blocks", "rule", basis="weather_kind_outdoor")
+                if sensitive is None:
+                    value = UNKNOWN
+        return Verdict(DISASTER_EFFECT, value, "rule", basis="shared_check_and_safety_stop")

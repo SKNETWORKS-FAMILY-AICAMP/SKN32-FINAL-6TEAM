@@ -435,7 +435,7 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             quiet = self._unclassified_messages(report)
             if quiet:
                 self._shadow(task, judge_requests.disaster_effect(place.get("name"), "activity", quiet,
-                                                                  booking.get("starts_at")),
+                                                                  booking.get("starts_at"), indoor.get("value")),
                              value="no_effect", basis="shared_check_and_safety_stop")
 
         # ★`[2026-10-09]` 휴무 · 운영시간 — 공유 점검은 이것을 보지 않는다. 판정 순서는 이미 시작됨 → 재난(공유 점검) → 휴무 → 운영시간.

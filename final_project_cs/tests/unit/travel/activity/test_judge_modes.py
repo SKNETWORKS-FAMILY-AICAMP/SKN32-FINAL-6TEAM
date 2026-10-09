@@ -61,13 +61,12 @@ def test_build_judge_rejects_unknown_mode():
 
 def test_shadow_answers_with_rule_and_logs_difference(caplog):
     caplog.set_level(logging.INFO, logger=SHADOW_LOGGER_NAME)
-    text = "[부산시] 해운대구 침수, 접근 금지"
+    text = "[종로구] 율곡로 일부 구간 교통통제 — 우회 바랍니다"
     llm = FakeJudgeLLM(out("no_effect", quotes=[text]))
     judge = build_judge("shadow", llm, runner=InlineRunner())
-    # 규칙은 등급(위급재난)만 보고 막는다, LLM 은 다른 지역이라 영향 없음
-    # ★`[2026-10-06]` 전에는 「매월 둘째 주」 휴무로 차이를 냈는데, 정기휴무 규칙 수정(fix/activity-closure-rule) 뒤
-    #   규칙도 그 원문을 읽어 둘이 일치한다 — 아직 규칙이 놓치는 재난문자로 바꿨다.
-    messages = [{"step": "위급재난", "kind": "호우", "text": text, "regions": ["부산광역시"], "created_at": "t"}]
+    # 규칙은 유형(교통통제 — 장소형)으로 막는다, LLM 은 이 장소와 무관하다고 본다
+    # ★`[2026-10-09]` 규칙이 develop 판 기준이 됐다(D-CS-015) — 전의 「위급재난 호우」는 실내외를 모르면 규칙이 「모름」이다.
+    messages = [{"step": "안전안내", "kind": "교통통제", "text": text, "regions": ["서울특별시 종로구"], "created_at": "t"}]
     verdict = judge.judge(CTX, requests.disaster_effect("경복궁", "activity", messages, MONDAY))
     assert (verdict.value, verdict.source) == ("blocks", "rule")   # ★고객 쪽은 규칙 결과 그대로
     [line] = _shadow_lines(caplog)

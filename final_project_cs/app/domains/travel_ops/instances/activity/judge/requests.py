@@ -79,12 +79,14 @@ def weather_sensitive(title: str | None, lclssystm2: str | None) -> JudgeRequest
 
 
 def disaster_effect(place_name: str | None, place_kind: str | None, messages: list[dict[str, Any]],
-                    starts_at: Any) -> JudgeRequest:
+                    starts_at: Any, weather_sensitive: bool | None = None) -> JudgeRequest:
+    """`weather_sensitive` — 장소의 실내외(모르면 `None`). ★규칙 판정만 쓴다(날씨형 문자는 실외에만 영향) — 모델에는 보내지 않는다."""
     kept = [{key: m.get(key) for key in ("kind", "step", "text", "regions", "created_at")} for m in messages]
     return JudgeRequest(DISASTER_EFFECT, {
         "place_name": place_name, "place_kind": place_kind, "messages": kept,
         # 인용 대조용 — 문자 본문만 모은다
         "message_texts": [str(m.get("text") or "") for m in kept],
+        "weather_sensitive_raw": weather_sensitive,
         "starts_at_raw": starts_at, **date_facts(starts_at)})
 
 
