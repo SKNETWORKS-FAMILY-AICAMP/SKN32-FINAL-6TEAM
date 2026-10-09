@@ -10,6 +10,8 @@
 
   --color-shadow-light: #0002;
   --color-brand-paper: #fff;
+  --color-edge-number-bg: #202020;
+  --mask-opaque: #000;
   --color-brand-ink: #191919;
   --color-brand-border: #d8dfdb;
   --color-brand-kakao: #fee500;
@@ -58,6 +60,8 @@
 [data-theme="neutral"] {
   --color-shadow-light: #0002;
   --color-brand-paper: #fff;
+  --color-edge-number-bg: #202020;
+  --mask-opaque: #000;
   --color-brand-ink: #191919;
   --color-brand-border: #d8dfdb;
   --color-brand-kakao: #fee500;

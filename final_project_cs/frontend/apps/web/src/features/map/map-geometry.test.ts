@@ -82,17 +82,17 @@ describe("chips for stops out of view", () => {
     expect(chips[0].y).toBeLessThan(120);
   });
 
-  it("does not stand one under the bar at the top, nor point at a stop shown only as context", () => {
+  it("keeps an inside coordinate under the bar as a normal pin, and ignores muted context", () => {
     const under = edgeChips(view, [point("1", 37.5885, 126.978)], { top: 64 });                       // inside the view but under the 64 px bar
-    expect(under).toHaveLength(1);
-    expect(under[0].y).toBeGreaterThanOrEqual(64);
+    expect(under).toEqual([]);
     expect(edgeChips(view, [point("1", 37.7, 126.978, 1, "muted")])).toEqual([]);
   });
 
-  it("treats what is under the sheet at the bottom as out of view, and stands its chip above the sheet", () => {
-    const [chip] = edgeChips(view, [point("1", 37.5455, 126.978)], { bottom: 24 });                    // inside the view (26 px above the edge) but under the 24 px the sheet covers
-    expect(chip.y).toBeLessThanOrEqual(600 - 24);
-    expect(edgeChips(view, [point("1", 37.5455, 126.978)])).toEqual([]);                               // with nothing over it, it is in view
+  it("keeps inside coordinates normal despite bottom placement space, but puts outside chips above it", () => {
+    expect(edgeChips(view, [point("1", 37.5455, 126.978)], { bottom: 76 })).toEqual([]);
+    const [chip] = edgeChips(view, [point("2", 37.53, 126.978)], { bottom: 76 });
+    expect(chip.ids).toEqual(["2"]);
+    expect(chip.y).toBeLessThanOrEqual(600 - 76);
   });
 
   it("keeps clear of the map's own buttons at the top right", () => {
@@ -115,14 +115,29 @@ describe("controlsLayout", () => {
   });
 });
 
-describe("a pin that could be cut by the edge", () => {
-  it("gets a chip when its coordinate is within a few px of the left edge (the drop would be cut), and none when it is well inside", () => {
+describe("physical viewport bounds", () => {
+  it("keeps pins at the edge and within a few px inside as normal markers", () => {
     const nearLeft = toPixels(view, { lat: 37.5665, lng: view.west });                                                  // x = 0
     expect(nearLeft.x).toBeCloseTo(0, 3);
     const edge = { lat: 37.5665, lng: view.west + (view.east - view.west) * (6 / 360) };                                   // 6 px from the left edge
-    expect(edgeChips(view, [point("1", edge.lat, edge.lng)])).toHaveLength(1);
+    expect(edgeChips(view, [point("1", edge.lat, edge.lng)])).toEqual([]);
     const inside = { lat: 37.5665, lng: view.west + (view.east - view.west) * (60 / 360) };                                // 60 px inside
     expect(edgeChips(view, [point("1", inside.lat, inside.lng)])).toEqual([]);
+  });
+
+  it("keeps all four viewport corners inside even with reserved placement space", () => {
+    const corners = [
+      point("1", view.north, view.west), point("2", view.north, view.east),
+      point("3", view.south, view.west), point("4", view.south, view.east),
+    ];
+    expect(edgeChips(view, corners, { top: 64, bottom: 76, rightKeep: 64 })).toEqual([]);
+  });
+
+  it("groups only truly outside points when a nearby inside point shares their direction", () => {
+    const chips = edgeChips(view, [point("1", 37.589, 126.978), point("2", 37.61, 126.978), point("3", 37.612, 126.978)], { top: 64, bottom: 76 });
+    expect(chips).toHaveLength(1);
+    expect(chips[0].ids).toEqual(["2", "3"]);
+    expect(edgeChips(view, [point("4", 37.5665, view.west - 0.00001)])[0].ids).toEqual(["4"]);
   });
 
   it("shows up to eight chips (it was five: with many stops spread apart the farthest ones had no sign)", () => {

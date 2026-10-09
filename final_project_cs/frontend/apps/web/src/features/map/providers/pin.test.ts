@@ -16,6 +16,21 @@ const rects = (points: { id: string; x: number; y: number }[], slots: Record<str
 const overlaps = (a: ReturnType<typeof pinRect>, b: ReturnType<typeof pinRect>) =>
   Math.min(a.right, b.right) > Math.max(a.left, b.left) && Math.min(a.bottom, b.bottom) > Math.max(a.top, b.top);
 
+it("지도 안의 메뉴 아래·하단·가장자리 좌표는 개별 몸통으로 빈 곳에 배치한다", () => {
+  const points = [{ id: "top", x: 180, y: 8 }, { id: "near", x: 181, y: 9 }, { id: "bottom", x: 180, y: 296 }, { id: "left", x: 2, y: 150 }, { id: "right", x: 373, y: 150 }];
+  const area = { width: 375, height: 300, top: 64, bottom: 76, gap: 4 };
+  const slots = layoutPins(points, area);
+  const bodies = rects(points, slots);
+  points.forEach((point, i) => {
+    expect(slots[point.id].group).toBeUndefined();
+    const body = bodies[i];
+    expect(body.left).toBeGreaterThanOrEqual(0); expect(body.right).toBeLessThanOrEqual(375);
+    expect(body.top).toBeGreaterThanOrEqual(64); expect(body.bottom).toBeLessThanOrEqual(224);
+    bodies.slice(i+1).forEach((other) => expect(overlaps(body, other)).toBe(false));
+  });
+  expect(slots.top.push).toBeGreaterThan(0); expect(slots.bottom.push).toBeGreaterThan(0);
+});
+
 describe("where a numbered pin stands beside its coordinate", () => {
   it("puts the body up and to the right of the coordinate when nothing is near (the tip of the drop is the coordinate)", () => {
     const slots = layoutPins([{ id: "a", x: 200, y: 150 }], AREA);

@@ -61,9 +61,9 @@ export interface EdgeChip {
 }
 
 export interface EdgeArea {
-  /** Px at the top that a bar floats over (no stop is "visible" there, and no chip stands there). */
+  /** Placement space reserved for the top bar; coordinates here remain inside the map. */
   top?: number;
-  /** Px at the bottom that something floats over (the rounded top of the sheet): no stop is "visible" there and no chip stands there. */
+  /** Placement space reserved for the sheet; coordinates here remain inside the map. */
   bottom?: number;
   /** Px at the right kept free for the map's own buttons (a chip never stands over them). */
   rightKeep?: number;
@@ -78,27 +78,22 @@ const CHIP_INSET_Y = 18;
 const GROUP_PX = 52;
 /** `[2026-10-06 사용자 지적 — 일정 이상 멀어지면 마커 표시가 안 된다]` Up to this many chips (it was 5: with more stops spread out the farthest ones had no sign at all). */
 const MAX_CHIPS = 8;
-/**
- * A pin is a 34 px drop beside its coordinate, so a stop whose coordinate is this close to the edge can have its pin cut by it: it counts as out of view (it gets a chip) when the coordinate is
- * nearer than this to the left, right or bottom edge (the top edge is the bar's own `top`).
- */
-const EDGE_PX = 14;
 
 /**
- * Which stops are out of the visible map (below the bar at the top, inside the view), where their chips stand and how far away they are. A stop is out of view when its pin could not be seen:
- * the coordinate is outside the view, or under the top bar. Stops shown muted (the context of the change screen) have no chip.
+ * Only coordinates outside the physical viewport get chips. Overlay insets reserve placement space,
+ * not geographic visibility: an inside pin moves clear of controls and keeps a leader to its coordinate.
+ * Stops shown muted (the context of the change screen) have no chip.
  */
 export function edgeChips(view: MapView, points: readonly MapPoint[], area: EdgeArea = {}): EdgeChip[] {
   if (!(view.width > 0 && view.height > 0) || view.east === view.west || view.north === view.south) return [];
   const top = area.top ?? 0;
   const rect = { left: 0, top, right: view.width, bottom: view.height - (area.bottom ?? 0) };
-  const seen = { left: rect.left + EDGE_PX, top: rect.top, right: rect.right - EDGE_PX, bottom: rect.bottom - EDGE_PX };
   const centre = { x: (rect.left + rect.right) / 2, y: (rect.top + rect.bottom) / 2 };
   const middle: Coordinates = { lat: (view.north + view.south) / 2, lng: (view.east + view.west) / 2 };
   const found = points.flatMap((point) => {
     if (point.tone === "muted") return [];
     const at = toPixels(view, point.coordinates);
-    if (at.x >= seen.left && at.x <= seen.right && at.y >= seen.top && at.y <= seen.bottom) return [];
+    if (at.x >= 0 && at.x <= view.width && at.y >= 0 && at.y <= view.height) return [];
     const dx = at.x - centre.x, dy = at.y - centre.y;
     const halfW = (rect.right - rect.left) / 2 - CHIP_INSET_X, halfH = (rect.bottom - rect.top) / 2 - CHIP_INSET_Y;
     const t = Math.min(dx === 0 ? Infinity : halfW / Math.abs(dx), dy === 0 ? Infinity : halfH / Math.abs(dy));

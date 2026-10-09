@@ -529,7 +529,12 @@ button.headBadge { cursor: pointer; }
 }
 .sheetHead[data-float] .dayChip:not([data-lit]) { background: var(--color-surface); }
 .sheetHead[data-float] :is(.dayChip, .resetTimes, .headBadge) { box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 12%, transparent); }
-.sheetBody[data-under-float] { padding-top: 64px; scroll-padding-top: 64px; }
+/* Fade only scrolling content; the handle and floating date controls stay crisp. */
+.sheetBody[data-under-float] {
+  padding-top: 64px; scroll-padding-top: 64px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, var(--mask-opaque) 32px);
+  mask-image: linear-gradient(to bottom, transparent, var(--mask-opaque) 32px);
+}
 
 /* A stop that was changed: blue, the way 「확인 필요」 is amber. A stop marked for deletion: grey, 「되돌리기」 where the bin was. */
 .screen[data-stage] .entry[data-changed] .card { border-color: var(--color-adjusted-border); background: color-mix(in srgb, var(--color-adjusted-soft) 60%, var(--color-surface)); }

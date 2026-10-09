@@ -232,9 +232,9 @@ test.describe("좌우로 쓸어 날짜 넘기기", () => {
   });
 });
 
-test("하루 계획은 날짜 칩 줄이 없다(넘길 날이 없다)", async ({ page, request }) => {
+test("하루 계획도 멈춰 있을 때 날짜 칩 줄을 표시한다", async ({ page, request }) => {
   await openFinished(page, request);
-  await expect(page.getByRole("tablist", { name: "일차 고르기" })).toHaveCount(0);
+  await expect(page.getByRole("tablist", { name: "일차 고르기" })).toHaveCSS("opacity", "1");
 });
 
 test("결과: 손잡이는 시트를 높게·낮게·중간으로 돌린다", async ({ page, request }) => {
@@ -283,18 +283,18 @@ test("결과: 이동 줄을 누르면 경로·수단·도착 검사가 펼쳐진
   await expect(page.getByText("일정보다 39분 늦어요")).toBeVisible();
 });
 
-test("결과: 좌표가 없는 장소는 핀 없이 지도 위에 「위치 미정」으로 알리고, 나머지 핀의 번호는 그대로다", async ({ page, request }) => {
+test("결과: 좌표 없는 장소는 핀을 만들지 않고 확인 필요 안내를 우선하며 나머지 번호를 유지한다", async ({ page, request }) => {
   await openFinished(page, request, (view) => {
     const olive = view.review.items[1];
     olive.place = { ...olive.place, latitude: null, longitude: null };
   });
-  await expect(page.getByText("위치 미정 · 올리브영")).toBeVisible();
+  await expect(page.getByText("확인 필요 · 올리브영")).toBeVisible();
   await expect(pin(page, "1. 경복궁 관람")).toBeVisible();
   await expect(pin(page, "3. 광장시장")).toBeVisible();
   await expect(pin(page, "2. 올리브영")).toHaveCount(0);
 });
 
-test("핀을 누르면 「위치 미정 · 올리브영」 자리에 그 핀의 이름이 「경복궁 관람 · 액티비티」로 나오고, 다시 누르면 「위치 미정」으로 돌아온다", async ({ page, request }) => {
+test("핀을 누르면 선택한 이름·종류가 나오고 다시 누르면 확인 필요 안내로 돌아온다", async ({ page, request }) => {
   // `[2026-10-07 사용자 지시]` 마커를 누르면 지도 아래 칩이 그 마커의 이름과 종류를 말한다(알림 막대와 따로, 칩 자리에서).
   await openFinished(page, request, (view) => {
     const olive = view.review.items[1];
@@ -302,20 +302,20 @@ test("핀을 누르면 「위치 미정 · 올리브영」 자리에 그 핀의 
     view.review.items[0].kind = "activity";                                                           // 서버가 말한 종류
     view.review.items[2].kind = "dining";
   });
-  await expect(page.getByText("위치 미정 · 올리브영")).toBeVisible();
+  await expect(page.getByText("확인 필요 · 올리브영")).toBeVisible();
   await mapSettled(page);
   await pin(page, "1. 경복궁 관람").locator("[data-pin-body]").click();
   const picked = page.locator("[class*=picked]");
   await expect(picked).toContainText("경복궁 관람");
   await expect(picked).toContainText("액티비티");
-  await expect(page.getByText("위치 미정 · 올리브영")).toHaveCount(0);                              // 그 자리를 이름이 차지한다
+  await expect(page.getByText("확인 필요 · 올리브영")).toHaveCount(0);                              // 그 자리를 이름이 차지한다
   await mapSettled(page);                                                                          // 핀을 누르면 지도가 그리로 날아간다 — 멈춘 뒤에 다음 핀을 누른다
   await pin(page, "3. 광장시장").locator("[data-pin-body]").click();                                // 다른 핀을 누르면 그 핀의 이름으로 바뀐다
   await expect(picked).toContainText("광장시장 · 식당");
   await mapSettled(page);
   await pin(page, "3. 광장시장").locator("[data-pin-body]").click();                                // 같은 핀을 다시 누르면 놓는다
-  await expect(picked).toHaveCount(0);
-  await expect(page.getByText("위치 미정 · 올리브영")).toBeVisible();
+  await expect(page.locator("[data-map-summary]")).toBeVisible();
+  await expect(page.getByText("확인 필요 · 올리브영")).toBeVisible();
 });
 
 // ── 카드 도구 ────────────────────────────────────────────────────────────────
@@ -432,7 +432,7 @@ test("수정 화면: 장소 검색은 로고 자리(머리줄)에 작게 들어 
   await expect(page.getByRole("link", { name: /triPilot — 소개 화면/ })).toBeVisible();          // 수정이 끝나면 로고가 돌아온다
 });
 
-test("「직접 고치기」에서 「장소 없음」으로 저장하면 서버에 `place {none: true}` 가 가고, 카드가 「변경 완료」가 되고 위치 미정으로 보인다", async ({ page, request }) => {
+test("「장소 없음」을 저장하면 place.none을 보내고 변경 완료 카드와 확인 필요 우선 안내를 유지한다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   await page.getByRole("button", { name: "경복궁 관람 수정" }).click();
   await page.getByText("직접 고치기 · 이름·날짜·시각·장소 없음").click();
@@ -443,7 +443,8 @@ test("「직접 고치기」에서 「장소 없음」으로 저장하면 서버
   const [edit] = await server.received("POST", "/edits");
   expect(JSON.stringify(edit.body)).toContain('"none":true');
   await expect(card(page, "경복궁 관람").getByRole("img", { name: "변경 완료" })).toBeVisible();
-  await expect(page.getByText(/위치 미정 · .*경복궁 관람/)).toBeVisible();
+  await expect(page.locator("[data-map-summary]")).toContainText("확인 필요 · 올리브영");
+  await expect(pin(page, "1. 경복궁 관람")).toHaveCount(0);
 });
 
 test("지도는 기본 접힘 상태이고 눈금은 남으며 펼친 단추는 둥근 모양이다", async ({ page, request }) => {

@@ -1,0 +1,47 @@
+
+> @tripilot/web@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.1 WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web
+
+ ❯ src/styles/tokens.test.ts (3 tests | 1 failed) 107ms
+   ❯ the two themes (styles/tokens.css) (3)
+     × leave no colour written into a screen's CSS: every screen follows the chosen theme 99ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/styles/tokens.test.ts > the two themes (styles/tokens.css) > leave no colour written into a screen's CSS: every screen follows the chosen theme
+AssertionError: expected [ …(3) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "features/map/map.module.css: .edgeNumbers { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: #202020; color: #fff; font-size: 12px; font-weight: 700; }",
++   "features/plan-check/plan-check.module.css: -webkit-mask-image: linear-gradient(to bottom, transparent, #000 32px);",
++   "features/plan-check/plan-check.module.css: mask-image: linear-gradient(to bottom, transparent, #000 32px);",
++ ]
+
+ ❯ src/styles/tokens.test.ts:35:19
+     33|     const found = files.flatMap((file) => readFileSync(join(src, file)…
+     34|       .split("\n").filter((line) => /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(|…
+     35|     expect(found).toEqual([]);
+       |                   ^
+     36|   });
+     37| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 75 passed (76)
+      Tests  1 failed | 632 passed (633)
+   Start at  05:44:17
+   Duration  8.62s (transform 40%, import 35%, tests 20%, worker 4%)
+
+  Transform  transforming modules took 7.68s · 40% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+
+

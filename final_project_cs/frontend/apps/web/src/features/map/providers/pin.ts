@@ -115,6 +115,7 @@ export function createPin(point: MapPoint, detachLeader = false): HTMLDivElement
   line.setAttribute("stroke", "var(--color-text)");
   line.setAttribute("stroke-width", "1.5");
   line.setAttribute("stroke-linecap", "round");
+  line.setAttribute("stroke-dasharray", "2 4");
   leader.append(line);
   const dot = document.createElement("span");
   dot.dataset.pinDot = "";

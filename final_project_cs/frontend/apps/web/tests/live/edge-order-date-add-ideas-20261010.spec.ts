@@ -7,8 +7,7 @@ import { useMapTiles } from './capture-map-tiles';
 const shots = process.env.EDGE_IDEAS_SHOTS;
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 async function prepare(page: Page) {
-  const close = page.getByRole('button', { name: '닫기', exact: true });
-  if (await close.isVisible()) await close.click();
+  await expect(page.getByRole('status').filter({ hasText: '계획 확인 화면이에요' })).toHaveCount(0);
   await page.mouse.move(0, 0);
 }
 async function capture(page: Page, name: string, pointer = true) {
@@ -18,7 +17,7 @@ async function capture(page: Page, name: string, pointer = true) {
   await page.screenshot({ path: `${shots}/${name}.png`, fullPage: true });
 }
 for (const width of [375, 1280]) {
-  test(`좌우 순서·동일한 채움색·조작 중 거리 숨김 ${width}px`, async ({ page, request }) => {
+  test(`좌우 순서·검정 번호·조작 중 거리 숨김 ${width}px`, async ({ page, request }) => {
     await page.setViewportSize({ width, height: 812 });
     await page.emulateMedia({ reducedMotion: 'reduce' });
     const tiles = shots ? await useMapTiles(page) : async () => {};
@@ -49,8 +48,7 @@ for (const width of [375, 1280]) {
       expect(xs[0] < xs[1] && xs[1] < xs[2]).toBe(side.side === 'right');
     }
     const fill = await chips.first().locator('span').evaluate(e => getComputedStyle(e).backgroundColor);
-    const pinFill = await page.locator('[data-pin-body]').first().evaluate(e => getComputedStyle(e).backgroundColor);
-    expect(fill).toBe(pinFill);
+    expect(fill).toBe('rgb(32, 32, 32)');
     await expect(page.locator('[role=tablist]')).toHaveCSS('opacity', '1');
     await capture(page, `01-both-sides-${width}`);
     const box = (await map.boundingBox())!;
