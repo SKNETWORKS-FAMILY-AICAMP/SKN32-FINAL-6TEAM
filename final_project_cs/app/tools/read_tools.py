@@ -169,6 +169,8 @@ class ReadToolbox:
             "read.stay_search": self.stay_search,
             "read.stay_detail": self.stay_detail,
             "read.flight_search": self.flight_search,
+            # ★`[2026-10-09]` 항공편 비교용 두 번째 소스(Ignav MCP) — 판매처(항공사 · OTA) 예약 링크가 붙는다. 항공 팀이 쓴다
+            "read.flight_offers": self.flight_offers,
         }
 
     #: 여행 예약의 컬럼. ★`_one()` 이 zip 으로 붙이므로 SELECT 순서와 **같아야** 한다.
@@ -570,6 +572,17 @@ class ReadToolbox:
                       depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
         """항공편 목록(항공사 · 시각 · 총액 · 검색 페이지 링크). 공항 코드는 3글자."""
         source = self._travel_search()
+        if source is None or not origin or not destination or not depart_date:
+            return None
+        wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")
+        return source.flight_search(origin=str(origin), destination=str(destination), depart_date=str(depart_date),
+                                    **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def flight_offers(self, scope: ToolContext, *, origin: str | None = None, destination: str | None = None,
+                      depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """항공편 목록(Ignav) — `read.flight_search` 와 같은 인자 · 같은 모양에 판매처(`seller`)와 판매처 링크가 붙는다.
+        키가 없어 소스가 없으면 `None`(모름)."""
+        source = getattr(self.travel, "flight_offers", None) if self.travel else None
         if source is None or not origin or not destination or not depart_date:
             return None
         wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")

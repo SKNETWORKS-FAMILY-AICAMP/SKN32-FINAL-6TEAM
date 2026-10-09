@@ -119,6 +119,17 @@ def first_item(value):
     return value
 
 
+def clip(value):
+    """긴 링크 글자만 줄인다(구조는 그대로)."""
+    if isinstance(value, dict):
+        return {key: clip(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [clip(item) for item in value]
+    if isinstance(value, str) and value.startswith("http") and len(value) > 120:
+        return value[:120] + f"…({len(value)}자)"
+    return value
+
+
 def find_list(value):
     """처음 만나는 dict 목록."""
     if isinstance(value, list) and value and isinstance(value[0], dict):
@@ -175,6 +186,7 @@ def main():
     parser.add_argument("--instructions", action="store_true", help="서버 안내문 전체를 출력하고 끝낸다")
     parser.add_argument("--schema", help="이 도구의 입력 정의(inputSchema)를 그대로 출력하고 끝낸다")
     parser.add_argument("--raw", type=int, default=0, help="응답 글의 앞부분을 이 글자 수만큼 그대로 출력")
+    parser.add_argument("--first", action="store_true", help="첫 일정 하나를 JSON 전체로(링크는 앞 120자만)")
     parser.add_argument("--list", type=int, default=0, help="첫 목록에서 이만큼 항목을 한 줄씩(가격·항공사·시각·링크 도메인)")
     args = parser.parse_args()
     print(f"기기 {platform.node()} · 시각 {datetime.now(ZoneInfo('Asia/Seoul')).isoformat(timespec='seconds')}")
@@ -249,6 +261,11 @@ def main():
             for key, value in item.items():
                 shown = value if not isinstance(value, (dict, list)) else shape(value, limit=2)
                 print(f"      {key}: {str(shown)[:200]}")
+        if args.first:
+            rows = find_list(data)
+            if rows:
+                print("[첫 일정 전체]")
+                print(json.dumps(clip(rows[0]), ensure_ascii=False, indent=1))
         if args.list:
             rows = find_list(data)
             print(f"[목록] {len(rows)}개 중 {min(args.list, len(rows))}개")

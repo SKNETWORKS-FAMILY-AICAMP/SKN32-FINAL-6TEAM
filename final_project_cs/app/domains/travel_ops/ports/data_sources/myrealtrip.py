@@ -58,14 +58,18 @@ def _number(value: Any) -> float | None:
         return None
 
 
-class MyRealTripMcp(TravelSource):
-    name = SOURCE
+class McpToolTransport(TravelSource):
+    """MCP 서버(JSON-RPC `tools/call`)를 부르는 공통 부분 — 연결 · 호출 · 429 대기 · 실패 세기. `[2026-10-09]`
 
-    def __init__(self, *, url: str = URL,
+    ★마이리얼트립 어댑터에서 그대로 떼어 냈다. Ignav(`ignav.py`)도 같은 방식이라 같이 쓴다.
+      소스마다 다른 것은 주소와 덧붙일 헤더(`_extra_headers`)뿐이다.
+    """
+
+    def __init__(self, *, url: str,
                  post: Callable[[str, dict[str, Any], dict[str, str]], httpx.Response] | None = None,
-                 **kwargs: Any) -> None:
+                 timeout_seconds: float = TIMEOUT_SECONDS, **kwargs: Any) -> None:
         kwargs.pop("cache", None)                     # ★가격·잔여 — 담아 두지 않는다
-        kwargs.setdefault("timeout", TIMEOUT_SECONDS)
+        kwargs.setdefault("timeout", timeout_seconds)
         super().__init__(**kwargs)
         self._url = url
         # ★시험이 네트워크 없이 돌게 여는 주입 지점. 기본값은 실제 호출이다
@@ -78,6 +82,10 @@ class MyRealTripMcp(TravelSource):
         self._clock = time.monotonic
         self._blocked_until = 0.0
 
+    def _extra_headers(self) -> dict[str, str]:
+        """소스마다 덧붙일 헤더(키 등). 기본은 없음."""
+        return {}
+
     # ── JSON-RPC ────────────────────────────────────────────────
     def _send(self, method: str, params: dict[str, Any] | None, *, notify: bool = False) -> dict[str, Any] | None:
         """메시지 하나. 응답 봉투(`{"result"|"error"}`)를 돌려주고, 못 받으면 세고 `None`."""
@@ -88,7 +96,7 @@ class MyRealTripMcp(TravelSource):
             with self._lock:
                 self._next_id += 1
                 message["id"] = self._next_id
-        headers = dict(HEADERS)
+        headers = {**HEADERS, **self._extra_headers()}
         if self._session_id:
             headers["Mcp-Session-Id"] = self._session_id
         try:
@@ -164,6 +172,15 @@ class MyRealTripMcp(TravelSource):
             self._miss("body_error", f"{tool}: success=false {str(data.get('message') or data.get('error') or '')[:120]}")
             return None
         return data
+
+
+class MyRealTripMcp(McpToolTransport):
+    name = SOURCE
+
+    def __init__(self, *, url: str = URL,
+                 post: Callable[[str, dict[str, Any], dict[str, str]], httpx.Response] | None = None,
+                 **kwargs: Any) -> None:
+        super().__init__(url=url, post=post, **kwargs)
 
     # ── 숙소 ────────────────────────────────────────────────────
     def stay_search(self, *, keyword: str, check_in: str, check_out: str, adults: int = 2, children: int = 0,
@@ -355,4 +372,4 @@ def _messages(response: httpx.Response) -> list[Any]:
     return body if isinstance(body, list) else [body]
 
 
-__all__ = ["MyRealTripMcp", "SOURCE", "URL"]
+__all__ = ["McpToolTransport", "MyRealTripMcp", "SOURCE", "URL"]

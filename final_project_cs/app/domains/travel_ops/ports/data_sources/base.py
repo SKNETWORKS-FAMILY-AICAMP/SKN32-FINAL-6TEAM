@@ -329,6 +329,9 @@ class TravelSources:
     route: Any | None = None
     #: 마이리얼트립 MCP — 숙소·항공 **검색 전용**(`myrealtrip.py`). 키가 없어 항상 붙는다. 예약·결제는 하지 않고 링크만 준다(2026-10-07).
     travel_search: Any | None = None
+    #: Ignav MCP — 항공편 검색 + 판매처(항공사 · OTA) 예약 링크(`ignav.py`). 키(`ignav_api_key`)가 있을 때만 붙는다(2026-10-09).
+    #:  항공 팀이 마이리얼트립 결과와 나란히 놓고 비교한다.
+    flight_offers: Any | None = None
     #: 키가 없어 못 붙인 소스 이름들. ★조용히 비워 두지 않는다.
     unavailable: dict[str, str] = field(default_factory=dict)
     #: 소스 전부가 같은 것을 공유한다 - 따로 두면 한 키를 두 소스가 나눠
@@ -468,6 +471,13 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
     # ★`[2026-10-07]` 숙소·항공 검색(마이리얼트립 MCP) — 키가 없다. 응답은 캐시에 담지 않는다(가격·잔여).
     from .myrealtrip import MyRealTripMcp
     sources.travel_search = MyRealTripMcp(limiter=limiter)
+    # ★`[2026-10-09]` 항공 비교용 두 번째 소스(Ignav MCP). 키가 없으면 붙이지 않고 이유를 남긴다 — 항공 팀은 마이리얼트립만으로 답한다.
+    ignav_key = (getattr(settings, "ignav_api_key", "") or "").strip()
+    if ignav_key:
+        from .ignav import IgnavMcp
+        sources.flight_offers = IgnavMcp(api_key=ignav_key, limiter=limiter)
+    else:
+        sources.unavailable["flight_offers"] = "ignav_api_key 없음 — 항공 비교는 마이리얼트립만"
     # ── 기상: 1차 + 대체 (v11 §0-4 결정 15) ─────────────────────────
     # ★`weather_provider` 는 **어느 쪽이 먼저인가**만 정한다. 붙일 수 있는 것은
     #   전부 붙이고 나머지를 대체로 둔다 — 1차가 못 주면 대체가 값을 낸다.
