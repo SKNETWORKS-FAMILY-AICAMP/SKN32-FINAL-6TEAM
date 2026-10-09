@@ -13,11 +13,10 @@ from pathlib import Path
 
 import pytest
 
-from app.domains.travel_ops.instances.activity.team_a import ActivityTeam
+
 from app.domains.travel_ops.instances.activity.alternatives import (
     RADIUS_MAX_KM, bounding_box, closed_on, open_at, rank_alternatives, search_steps)
 
-from .helpers import FakeTools, pack, task
 
 KST = timezone(timedelta(hours=9))        # ★요청 시각은 전부 한국 시간으로 다룬다(2026-10-01)
 MONDAY = datetime(2026, 10, 5, 10, tzinfo=KST)
@@ -439,58 +438,3 @@ def test_real_catalog_changgyeonggung_on_monday():
                for a in result["alternatives"])
     assert all(closed_on(a["closed_days"], MONDAY) is not True
                for a in result["alternatives"])
-
-
-# ══════════════════════════════════════════════════════════════════
-# check_feasible 3분기 status
-# ══════════════════════════════════════════════════════════════════
-
-def _feasible_task():
-    context = pack("activity", scope=["activity"])
-    return task("activity", "activity.check_feasible", context,
-                ActivityTeam.manifest.allowed_tools)
-
-
-def _values(*, place="default", starts_at=None, party=2, capacity=4, disaster=None):
-    starts_at = starts_at or datetime.now(KST) + timedelta(days=30)
-    if place == "default":
-        place = {"place_id": "p1", "weather_sensitive": False,
-                 "latitude": 37.5796, "longitude": 126.9770}
-    return {
-        "read.booking": {"booking_id": "b1", "place_id": "p1", "starts_at": starts_at,
-                         "party_size": party, "capacity": capacity},
-        "read.policy": [{"cancel_deadline_hours": 24}],
-        "read.place": place,
-        "read.weather": None,
-        "read.disaster": disaster,
-    }
-
-
-@pytest.mark.asyncio
-async def test_feasible_ok():
-    result = await ActivityTeam(FakeTools(_values())).execute(_feasible_task())
-    assert result.decisions[0]["feasible"] is True
-
-
-@pytest.mark.asyncio
-async def test_feasible_place_unknown_returns_infeasible():
-    """place=None → feasible=False + place_confirmed=False (장소를 모르면 성립 단정 안 함)."""
-    result = await ActivityTeam(FakeTools(_values(place=None))).execute(_feasible_task())
-    assert result.decisions[0]["feasible"] is False
-    assert result.decisions[0]["place_confirmed"] is False
-
-
-@pytest.mark.asyncio
-async def test_feasible_problem_on_capacity():
-    result = await ActivityTeam(FakeTools(_values(party=5, capacity=4))).execute(_feasible_task())
-    assert result.decisions[0]["feasible"] is False
-    assert result.decisions[0]["reason"] == "party_over_capacity"
-
-
-@pytest.mark.asyncio
-async def test_feasible_disrupted_by_critical_disaster():
-    """위급재난 발령 → feasible=False + disaster.blocks=True."""
-    disaster = {"for_region": [{"step": "위급재난", "kind": "지진"}]}
-    result = await ActivityTeam(FakeTools(_values(disaster=disaster))).execute(_feasible_task())
-    assert result.decisions[0]["feasible"] is False
-    assert result.decisions[0]["disaster"]["blocks"] is True

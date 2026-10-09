@@ -152,8 +152,9 @@ class ReadToolbox:
             # ★수치(취소 기한·위약금율)는 여기서 온다. `read.policy` 는 문장 근거만 댄다
             "read.booking_terms": self.booking_terms,
             "read.disruptions": self.disruptions,
-            # ★`[2026-10-08]` role-activity 판(`read_tools_a.py`)에서 합쳤다 — 보존한 활동 팀 판(`instances/activity/team_a.py`)만
-            #   부른다. 등록된 팀들은 manifest 허용 목록에 없어 부르지 않는다.
+            # ★`[2026-10-08]` role-activity 판(`read_tools_a.py`)에서 합쳤다 — 보존한 활동 팀 판(`team_a.py`)이 불렀다.
+            #   ★`[2026-10-09]` `team_a.py` 를 `legacy/` 로 옮겼다 — `read.place_candidates` 는 develop 판 팀(대체 장소)이 쓰고,
+            #   나머지(`read.disaster` · `read.disaster_points` · `read.place_lookup` · `read.place_search` …)는 지금 부르는 팀이 없다.
             "read.disaster": self.disaster,
             "read.disaster_points": self.disaster_points,
             "read.place_search": self.place_search,
@@ -833,8 +834,8 @@ class ReadToolbox:
 ALLOWED_PROMPT_KEYS = frozenset({
     "response.generate", "response.review_tone",
     # ★`[2026-10-08]` 활동 판정 LLM 실험(D-CS-008, role-activity-test) — `prompts/activity_judge/<kind>.v<N>.md`.
-    #   폴더에 프롬프트가 있으면 여기 있어야 한다(`test_prompt_registration`). 쓰는 곳은 보존한 활동 팀 판
-    #   (`instances/activity/team_a.py`)뿐이고, 등록된 활동 팀(`team.py`)은 부르지 않는다.
+    #   폴더에 프롬프트가 있으면 여기 있어야 한다(`test_prompt_registration`). ★`[2026-10-09]` 등록된 활동 팀(`team.py`)이
+    #   섀도 모드에서 부른다(D-CS-015) — 기본 모드 `rule` 이면 부르지 않는다.
     "activity_judge.closure", "activity_judge.operating_hours", "activity_judge.weather_sensitive",
     "activity_judge.disaster_effect", "activity_judge.live_status",
 })

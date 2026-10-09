@@ -7,20 +7,14 @@ DB·네트워크 없이 본다(가짜 DB·가짜 카카오). SQL 자체는 `test
 from __future__ import annotations
 
 import json
-import logging
 from datetime import datetime, timezone
 
-import pytest
 
-from app.core.contracts import NextAction
-from app.domains.travel_ops.instances.activity.team_a import ActivityTeam
-from app.domains.travel_ops.instances.activity import failure_codes as fc
+
 from app.domains.travel_ops.instances.activity.place_lookup import lookup_place
 from app.tools.read_tools import ReadToolbox
 
-from .helpers import FakeTools, pack, task
 
-ALLOWED = ActivityTeam.manifest.allowed_tools
 WHEN = datetime(2026, 10, 3, 15, tzinfo=timezone.utc)
 
 
@@ -131,56 +125,3 @@ def test_toolbox_tool_returns_none_for_blank_name():
 
     assert ReadToolbox(_db([])).place_lookup(Scope(), name="  ") is None
     assert "read.place_lookup" in ReadToolbox(_db([]))._travel_tools()
-
-
-# ── Team 이 상태별로 답하는 방식 ─────────────────────────────────────
-
-def _task():
-    ctx = pack("activity", scope=["activity"],
-               state={"requested_place_name": "새로생긴전시관", "requested_activity_time": WHEN})
-    return task("activity", "activity.submit_itinerary", ctx, ALLOWED)
-
-
-async def _run(result, caplog):
-    caplog.set_level(logging.WARNING, logger=fc.LOGGER_NAME)
-    return await ActivityTeam(FakeTools({"read.place_lookup": result})).execute(_task())
-
-
-@pytest.mark.asyncio
-async def test_exists_unregistered_asks_again_and_makes_no_proposal(caplog):
-    out = await _run({"status": "exists_unregistered", "via": "kakao"}, caplog)
-    assert out.next_action is NextAction.WAIT_FOR_INPUT and not out.action_proposals
-    assert out.decisions[0]["failure_code"] == fc.PLACE_EXISTS_UNREGISTERED
-    assert "실제로 있는 장소" in out.answer
-
-
-@pytest.mark.asyncio
-async def test_ambiguous_lists_candidates_and_asks(caplog):
-    found = {"status": "ambiguous", "via": "place_catalog", "match_count": 2,
-             "candidates": [{"content_id": "1", "title": "서울 숲"}, {"content_id": "2", "title": "서울숲 공원"}]}
-    out = await _run(found, caplog)
-    assert out.next_action is NextAction.WAIT_FOR_INPUT and out.decisions[0]["failure_code"] == fc.PLACE_AMBIGUOUS
-    assert "서울 숲" in out.answer and "서울숲 공원" in out.answer
-
-
-@pytest.mark.asyncio
-async def test_not_found_asks_again(caplog):
-    out = await _run({"status": "not_found", "via": "kakao"}, caplog)
-    assert out.next_action is NextAction.WAIT_FOR_INPUT and out.decisions[0]["failure_code"] == fc.PLACE_NOT_FOUND
-
-
-@pytest.mark.asyncio
-async def test_blocked_lookup_goes_to_a_person_not_back_to_the_customer(caplog):
-    """★못 물어본 것을 「없는 이름」이라며 고객에게 다시 쓰게 하지 않는다."""
-    out = await _run({"status": "unknown", "via": "kakao", "reason": "kakao_blocked"}, caplog)
-    assert out.outcome == "escalated"
-    lines = [json.loads(r.getMessage()) for r in caplog.records if r.name == fc.LOGGER_NAME]
-    assert [x["code"] for x in lines] == [fc.PLACE_LOOKUP_BLOCKED]
-    assert lines[0]["reason"] == "kakao_blocked"
-
-
-@pytest.mark.asyncio
-async def test_failure_logs_carry_no_customer_text(caplog):
-    await _run({"status": "exists_unregistered", "via": "kakao"}, caplog)
-    raw = json.dumps([r.getMessage() for r in caplog.records if r.name == fc.LOGGER_NAME], ensure_ascii=False)
-    assert "새로생긴전시관" not in raw

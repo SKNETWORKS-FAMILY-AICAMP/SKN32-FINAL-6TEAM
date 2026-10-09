@@ -13,10 +13,9 @@ from pathlib import Path
 
 import pytest
 
-from app.domains.travel_ops.instances.activity.team_a import ActivityTeam
+
 from app.domains.travel_ops.instances.activity.closure_rules import holiday_dates_needed, read_closure
 
-from ..helpers import FakeTools, pack, task
 
 KST = timezone(timedelta(hours=9))
 CSV_PATH = (Path(__file__).resolve().parents[4] / "app" / "domains" / "travel_ops" / "instances" / "activity"
@@ -112,77 +111,3 @@ def test_holiday_dates_needed():
     assert holiday_dates_needed("매주 월요일 / 법정공휴일", at(10, 12)) == [date(2026, 10, 12)]
     assert holiday_dates_needed("설·추석 연휴", at(10, 12)) == [date(2026, 10, 12), date(2026, 10, 11),
                                                               date(2026, 10, 13)]
-
-
-# ── 성립 판정에 연결 ────────────────────────────────────────────
-
-class HolidayTools(FakeTools):
-    """`read.holiday` 는 날짜(`on`)마다 답한다. `None` 이면 소스가 모른다."""
-
-    def __init__(self, values, holidays):
-        super().__init__(values)
-        self.holidays = holidays
-
-    def call(self, name, context, arguments, allowed_tools, seen, budget=None):
-        value = super().call(name, context, arguments, allowed_tools, seen, budget)
-        if name == "read.holiday":
-            return self.holidays(date.fromisoformat(arguments["on"]))
-        return value
-
-
-def _run(restdate, when, holidays=lambda d: None):
-    values = {"read.booking": {"booking_id": "b1", "place_id": "p1", "starts_at": when, "party_size": 2,
-                               "capacity": 4},
-              "read.policy": [{"x": 1}],
-              "read.place": {"place_id": "p1", "weather_sensitive": False, "latitude": 37.57, "longitude": 126.97,
-                             "operating": {"usetime_text": "09:00~18:00", "restdate_text": restdate,
-                                           "source": "tour_api", "confirmed_at": "2026-10-01T00:00:00+00:00"}},
-              "read.weather": None, "read.disaster": None}
-    tools = HolidayTools(values, holidays)
-    ctx = pack("activity", scope=["activity"])
-    import asyncio
-    result = asyncio.run(ActivityTeam(tools).execute(
-        task("activity", "activity.check_feasible", ctx, ActivityTeam.manifest.allowed_tools)))
-    return result, [n for n, _ in tools.calls]
-
-
-def _future(weekday: int, nth_week: int = 2) -> datetime:
-    """오늘 이후, 주어진 요일의 날 — 시험이 날짜가 지나 깨지지 않게."""
-    day = datetime.now(KST).replace(hour=14, minute=0, second=0, microsecond=0) + timedelta(days=7 * nth_week)
-    return day + timedelta(days=(weekday - day.weekday()) % 7)
-
-
-def test_feasible_monday_closure_without_the_word_holiday():
-    """결함 재현 — 「매주 월요일」인데 월요일 예약이 「성립」으로 나갔다."""
-    result, calls = _run("매주 월요일", _future(0))
-    assert result.decisions[0]["feasible"] is False
-    assert result.decisions[0]["operating"]["weekday_match"] is True
-    assert "read.holiday" not in calls                                  # 공휴일 조건이 없으면 묻지 않는다
-
-
-def test_feasible_asks_holiday_only_when_needed_and_once():
-    result, calls = _run("매주 토요일~일요일 / 법정공휴일", _future(2), holidays=lambda d: {"is_holiday": False})
-    assert calls.count("read.holiday") == 1
-    assert result.decisions[0]["feasible"] is True
-    assert any(e.source_id == "read.holiday" for e in result.evidence)
-
-
-def test_feasible_stops_asking_when_holiday_source_is_unknown():
-    """첫 날짜에서 모르면 앞뒤 날짜는 묻지 않는다 — 느린 소스를 세 번 기다리지 않는다."""
-    result, calls = _run("설·추석 연휴 휴관", _future(2))
-    assert calls.count("read.holiday") == 1
-    assert result.decisions[0]["operating"]["weekday_match"] is None
-    assert "확정하지 않았습니다" in result.answer
-
-
-def test_feasible_nth_weekday_closure_names_the_clause():
-    when = _future(1)
-    nth = (when.day - 1) // 7 + 1
-    word = {1: "첫째", 2: "둘째", 3: "셋째", 4: "넷째", 5: "다섯째"}[nth]
-    result, _ = _run(f"매월 {word} 주 화요일 휴무", when)
-    assert result.decisions[0]["feasible"] is False
-    assert f"「매월 {word} 주 화요일 휴무」에 해당해" in result.answer
-
-
-def test_activity_may_read_holidays():
-    assert "read.holiday" in ActivityTeam.manifest.allowed_tools

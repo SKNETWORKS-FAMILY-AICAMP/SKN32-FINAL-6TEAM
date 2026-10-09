@@ -537,3 +537,6 @@ LLM 구현과 관련한 결정·변경·실측을 날짜순으로 적는다. 항
 - **규칙 판정(`RuleJudge`)을 develop 판 기준으로(단계 C 준비).** 평가의 규칙 쪽이 지금 서비스를 재야 해서다. ③ 실내외는 장소명 짐작 → 관광공사 분류(`weather_from_class`, 중분류 앞 두 글자를 대분류로). ④ 재난문자는 「위급재난이면 막음」 → 공유 점검 기준(장소형 유형 · 심각 낱말 · 해제/훈련 제외) + 재난 정지(`safety.classify`), 날씨형 유형은 실외만 막고 실내외를 모르면 「모름」. 실내외는 요청의 `weather_sensitive_raw` 칸으로 넘기고 **모델에는 보내지 않는다**(`payload_for`). 팀의 ④ 섀도 요청에도 실내외를 싣는다.
   - 골든셋 규칙 쪽 재측정(LLM 호출 없음, 라벨 52 · 작성자 라벨): 휴무 16/16 · 운영시간 3/14(모두 「모름」) · 실내외 1/10(모두 「모름」) · 재난문자 6/12(「모름」 6) · 합계 26/52. 이전 role-activity 판 규칙은 33/52 였다.
   - ★운영시간 3/14 는 develop 판을 **낮게** 잰다 — develop 은 요청 때가 아니라 새벽 작업(`catalog_hours`, 규칙 → 모델)이 원문을 요일표로 읽어 둔다. 골든셋은 그 경로를 재지 않는다. 재난문자 골든셋은 실내외를 주지 않아 날씨형 문자가 「모름」이 된다.
+- **`try_activity_judge` 를 develop 판 팀으로**(`6d49ef2`). 공유 점검은 실제 `DisruptionCheck` 가 돌고, 넣는 것은 재난문자 · 예보 소스뿐이다. 모드는 `shadow` · `rule`.
+- **보존본 `team_a.py` 정리.** 판정 LLM 이 develop 판 팀에서 돌고(단계 B), 규칙 판정 · 실험 스크립트도 develop 판으로 옮겨 남은 쓰임이 없어졌다(사용자 결정). RULE §2-4 대로 `legacy/final_project_cs/<원래 경로>` 에 보존했다 — `team_a.py` 와 그것만 쓰던 믹스인 `feasibility.py` · `weather.py` · `cancellation.py`, `team_a` 동작만 보던 시험 11개 파일(develop 쪽과 이름까지 같은 중복 `_a` 2개 포함). 섞여 있던 4개 파일(휴무 규칙 · 대체 장소 순위 · 장소 조회 · 실패 코드 설명)은 순수 함수 시험만 남겼다.
+  - 지금 부르는 팀이 없는 도구: `read.disaster` · `read.disaster_points` · `read.place_lookup` · `read.place_search` (`read_tools.py` 주석에 적었다). 지울지는 따로 정한다.
