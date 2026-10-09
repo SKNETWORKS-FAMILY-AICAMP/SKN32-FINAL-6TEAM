@@ -1,0 +1,77 @@
+{
+  "scope": "지도 단추 화살표 위치 유지·상하 공간 부족 시 왼쪽 방향",
+  "mock_final": {
+    "passed": 4,
+    "total": 4
+  },
+  "checks": [
+    "TypeScript",
+    "ESLint",
+    "standard production build"
+  ],
+  "screenshots": 6,
+  "real_response_checked": false,
+  "runs": [
+    {
+      "run": "final",
+      "stats": {
+        "startTime": "2026-10-09T21:30:18.841Z",
+        "duration": 44545.966,
+        "expected": 2,
+        "skipped": 0,
+        "unexpected": 2,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "name": "메뉴 정렬·고정 거리 글자·화살표만 전환 375px",
+          "status": "failed"
+        },
+        {
+          "name": "메뉴 정렬·고정 거리 글자·화살표만 전환 1280px",
+          "status": "failed"
+        },
+        {
+          "name": "지도 도구는 5초 뒤 접히고 키보드 조작 중에는 유지된다",
+          "status": "passed"
+        },
+        {
+          "name": "지도를 움직이는 동안 정보와 단추가 사라졌다가 멈추면 돌아온다",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "run": "ready",
+      "stats": {
+        "startTime": "2026-10-09T21:31:26.126Z",
+        "duration": 37492.055,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "name": "메뉴 정렬·고정 거리 글자·화살표만 전환 375px",
+          "status": "passed"
+        },
+        {
+          "name": "메뉴 정렬·고정 거리 글자·화살표만 전환 1280px",
+          "status": "passed"
+        },
+        {
+          "name": "지도 도구는 5초 뒤 접히고 키보드 조작 중에는 유지된다",
+          "status": "passed"
+        },
+        {
+          "name": "지도를 움직이는 동안 정보와 단추가 사라졌다가 멈추면 돌아온다",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "initial_failure": "첫 시험은 버튼 테두리1px를 제외한 좌표를 기대해 새2개가 실패했다. 실제 중앙과 거리 글자 아래 위치를 기준으로 고치고 모든 상태에서 처음 위치 유지와 SVG 실제 방향을 확인했다. 제품 코드 추가 수정은 없었다.",
+  "command": "STUB_PORT=8167 LIVE_PORT=3167 PLAYWRIGHT_CHANNEL=chrome LIVE_SKIP_BUILD=0 node node_modules/@playwright/test/cli.js test -c .tmp/consent-progress.config.ts tests/live/aligned-map-quiet-cards-20261010.spec.ts tests/live/compact-map-account-20261009.spec.ts --grep \"메뉴 정렬|지도 도구는 5초|지도를 움직이는 동안\" --workers=1 --reporter=line,json",
+  "retry": "같은 생산 빌드에서 LIVE_SKIP_BUILD=1로 위4개를 재확인했다."
+}

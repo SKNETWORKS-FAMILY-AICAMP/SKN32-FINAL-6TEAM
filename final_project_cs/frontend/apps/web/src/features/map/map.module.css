@@ -72,8 +72,8 @@
 .controls[data-folded] { flex-direction: column; gap: 4px; }
 .fold { width: 44px; min-width: 44px; max-width: 44px; height: 40px; display: block; padding: 0; border-radius: 999px; background: color-mix(in srgb, var(--color-surface) 92%, transparent); }
 .scaleValue { position: absolute; left: 0; right: 0; top: 7px; text-align: center; font-size: 10px; line-height: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.foldArrow { position: absolute; left: 50%; top: 28px; width: 14px; height: 14px; display: grid; place-items: center; transform: translate(-50%, -50%) translateX(-12px); transition: transform 200ms ease-out; }
-.fold[aria-expanded="true"] .foldArrow { transform: translate(-50%, -50%) translateX(-12px) rotate(180deg); }
+.foldArrow { position: absolute; left: 50%; top: 28px; width: 14px; height: 14px; display: grid; place-items: center; transform: translate(-50%, -50%) rotate(180deg); transition: transform 200ms ease-out; }
+.fold[aria-expanded="true"] .foldArrow { transform: translate(-50%, -50%); }
 .controls[data-direction="column"] .foldArrow { transform: translate(-50%, -50%) rotate(90deg); }
 .controls[data-direction="column"] .fold[aria-expanded="true"] .foldArrow { transform: translate(-50%, -50%) rotate(270deg); }
 @media (prefers-reduced-motion: reduce) { .foldArrow { transition: none; } }

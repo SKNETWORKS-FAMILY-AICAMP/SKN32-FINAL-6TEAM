@@ -20,6 +20,14 @@ async function textPosition(page:Page) {
     return {x:s.x+s.width/2-b.x,y:s.y+s.height/2-b.y};
   });
 }
+async function arrowGeometry(page:Page) {
+  return page.getByRole('group',{name:'지도 단추'}).locator('button[aria-expanded]').evaluate(el=>{
+    const button=el.getBoundingClientRect(),arrow=el.querySelector('[class*=foldArrow]')!,box=arrow.getBoundingClientRect();
+    const matrix=arrow.querySelector('svg')!.getScreenCTM()!;
+    const back=new DOMPoint(9,12).matrixTransform(matrix),tip=new DOMPoint(15,12).matrixTransform(matrix);
+    return {x:box.x+box.width/2-button.x,y:box.y+box.height/2-button.y,dx:tip.x-back.x,dy:tip.y-back.y};
+  });
+}
 for(const width of [375,1280]) {
   test(`메뉴 정렬·고정 거리 글자·화살표만 전환 ${width}px`,async({page,request})=>{
     await page.setViewportSize({width,height:812});await page.emulateMedia({reducedMotion:'no-preference'});
@@ -30,15 +38,32 @@ for(const width of [375,1280]) {
     const a=(await fold.boundingBox())!,b=(await menu.boundingBox())!;
     expect(a.width).toBe(b.width);expect(a.height).toBe(40);expect(Math.abs(a.x-b.x)).toBeLessThan(.6);
     await expect(arrow).toHaveCSS('transition-property','transform');await expect(arrow).toHaveCSS('transition-duration','0.2s');
+    await expect.poll(async()=>(await arrowGeometry(page)).dy).toBeGreaterThan(3);
+    const origin=await arrowGeometry(page);
+    expect(Math.abs(origin.x-a.width/2)).toBeLessThan(.6);expect(origin.y).toBeGreaterThan(a.height/2);
+    async function samePosition() {
+      const current=await arrowGeometry(page);
+      expect(Math.abs(current.x-origin.x)).toBeLessThan(.6);expect(Math.abs(current.y-origin.y)).toBeLessThan(.6);
+    }
     const before=await textPosition(page);await capture(page,`01-column-${width}`);
     await fold.click();await expect(fold).toHaveAttribute('aria-expanded','true');
+    await expect.poll(async()=>(await arrowGeometry(page)).dy).toBeLessThan(-3);await samePosition();
     expect(await textPosition(page)).toEqual(before);
     await fold.click();await expect(fold).toHaveAttribute('aria-expanded','false');
     for(let i=0;i<4;i++)await page.getByRole('button',{name:'목록 높이 바꾸기'}).press('ArrowUp');
     await expect(controls).toHaveAttribute('data-direction','row');await expect(controls).toHaveCSS('opacity','1');
+    await expect.poll(async()=>(await arrowGeometry(page)).dx).toBeLessThan(-3);await samePosition();
     expect(await textPosition(page)).toEqual(before);
     const value=fold.getByRole('img');expect((await value.boundingBox())!.y+(await value.boundingBox())!.height).toBeLessThan((await arrow.boundingBox())!.y);
     await capture(page,`02-row-${width}`);
+    await fold.click();await expect(fold).toHaveAttribute('aria-expanded','true');
+    await expect(controls).toHaveAttribute('data-layout','row');
+    await expect.poll(async()=>(await arrowGeometry(page)).dx).toBeGreaterThan(3);await samePosition();
+    expect(await textPosition(page)).toEqual(before);await capture(page,`03-row-open-${width}`);
+    await fold.click();
+    for(let i=0;i<4;i++)await page.getByRole('button',{name:'목록 높이 바꾸기'}).press('ArrowDown');
+    await expect(controls).toHaveAttribute('data-direction','column');
+    await expect.poll(async()=>(await arrowGeometry(page)).dy).toBeGreaterThan(3);await samePosition();
     await page.emulateMedia({reducedMotion:'reduce'});expect(await arrow.evaluate(el=>parseFloat(getComputedStyle(el).transitionDuration))).toBeLessThanOrEqual(.0001);
     await noHorizontalScroll(page);
   });
