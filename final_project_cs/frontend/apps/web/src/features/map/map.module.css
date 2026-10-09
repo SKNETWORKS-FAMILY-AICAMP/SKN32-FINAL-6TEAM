@@ -77,7 +77,7 @@
 .controls[data-direction="column"] .foldArrow { transform: translate(-50%, -50%) rotate(90deg); }
 .controls[data-direction="column"] .fold[aria-expanded="true"] .foldArrow { transform: translate(-50%, -50%) rotate(270deg); }
 @media (prefers-reduced-motion: reduce) { .foldArrow { transition: none; } }
-.edgeNumbers { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: var(--color-text); color: var(--color-surface); font-size: 12px; font-weight: 700; }
+.edgeNumbers { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: var(--color-selected); color: var(--color-on-primary); font-size: 12px; font-weight: 700; }
 .edgeChip small { margin-left: 3px; padding-left: 7px; border-left: 1px solid var(--color-border-strong); font-size: 11px; font-weight: 500; }
 @media (prefers-reduced-motion: reduce) { .live .controls { transition: none; transform: none; } }
 
@@ -88,3 +88,7 @@
 @media (prefers-reduced-motion: reduce) { .toolTip { transition: none; } }
 
 @media (prefers-reduced-motion: reduce) { .live[data-moving] .controls { transform: none; } }
+
+/* Read toward the offscreen destination on either half of the map. */
+.edgeChip[data-side="left"] { flex-direction: row-reverse; }
+.edgeChip[data-side="left"] small { margin-left: 0; padding-left: 0; border-left: 0; margin-right: 3px; padding-right: 7px; border-right: 1px solid var(--color-border-strong); }

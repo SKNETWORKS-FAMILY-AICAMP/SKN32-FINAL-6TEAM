@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowRight, ChevronRight, LocateFixed, Minus, Plus, Scan } from "lucide-react";
+import { ArrowRight, Layers, ChevronRight, LocateFixed, Minus, Plus, Scan } from "lucide-react";
 import { formatDistance, niceScale, type EdgeChip } from "./map-geometry";
 import type { MapView } from "./model";
 import styles from "./map.module.css";
@@ -90,14 +90,14 @@ function EdgeChipButton({ chip, width, moving, onGo, onLayout }: { chip: EdgeChi
   const [half, setHalf] = useState(0);
   const names = chip.labels.join(" · ");
   const far = formatDistance(chip.distanceM);
-  const visibleNames = chip.labels.length > 3 ? `${chip.labels.slice(0, 2).join(" · ")} +${chip.labels.length - 2}` : names;
+  const side = chip.x < width / 2 ? "left" : "right";
   useLayoutEffect(() => { const measured = button.current?.offsetWidth ?? 0; if (measured / 2 !== half) setHalf(measured / 2); else onLayout?.(); }, [names, far, half, moving, onLayout]);
   const edgeX = chip.x >= width - 47 ? width - half - CHIP_AIR : chip.x <= 47 ? half + CHIP_AIR : chip.x;
   const left = half > 0 && width > half * 2 + CHIP_AIR * 2 ? Math.min(width - half - CHIP_AIR, Math.max(half + CHIP_AIR, edgeX)) : chip.x;
-  return <button ref={button} type="button" className={styles.edgeChip} style={{ left: `${left}px`, top: `${chip.y}px` }} data-edge-chip
+  return <button ref={button} type="button" className={styles.edgeChip} style={{ left: `${left}px`, top: `${chip.y}px` }} data-edge-chip data-side={side} data-multiple={chip.ids.length >= 3 || undefined}
     aria-label={`${names}번 일정이 화면 밖에 있어요 · ${far} · 누르면 그곳으로 가요`} onClick={() => onGo(chip.ids)}>
     <ArrowRight size={13} strokeWidth={2.4} style={{ transform: `rotate(${Math.round(chip.angle)}deg)` }} aria-hidden="true" />
-    <span className={styles.edgeNumbers} aria-hidden="true">{visibleNames}</span>{!moving && <small aria-hidden="true">{far}</small>}
+    <span className={styles.edgeNumbers} aria-hidden="true">{chip.ids.length >= 3 ? <Layers size={14} strokeWidth={1.8} /> : names}</span>{!moving && <small aria-hidden="true">{far}</small>}
   </button>;
 }
 

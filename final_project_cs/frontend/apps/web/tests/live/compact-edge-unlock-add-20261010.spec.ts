@@ -46,15 +46,15 @@ for(const width of [375,1280]){
     expect((writes[0].body!.edits as unknown[])).toHaveLength(2);await expect(recommend).toBeFocused();
     await noHorizontalScroll(page);
   });
-  test(`이름 있는 추가 단추는 일정 사이 왼쪽·취소 복귀 ${width}px`,async({page,request})=>{
+  test(`원형 추가 단추는 일정 사이 중앙·취소 복귀 ${width}px`,async({page,request})=>{
     await page.setViewportSize({width,height:812});await page.emulateMedia({reducedMotion:'reduce'});
     const tiles=shots?await useMapTiles(page):async()=>{};
     await openFinished(page,request,undefined,{intakeEvents:'off'});await tiles();await prepare(page);
     for(let i=0;i<4;i++)await page.getByRole('button',{name:'목록 높이 바꾸기'}).press('ArrowUp');
     const seam=page.locator('[data-insert-near]'),add=seam.getByRole('button');await expect(add).toBeVisible();
-    await expect(add).toHaveText(/일정 추가|이동 전 추가/);
+    await expect(add.locator("svg")).toBeVisible();
     const button=(await add.boundingBox())!,first=(await card(page,'경복궁 관람').boundingBox())!;
-    expect(Math.abs(button.x-first.x)).toBeLessThan(1);expect(button.height).toBe(44);
+    expect(Math.abs(button.x+button.width/2-first.x-first.width/2)).toBeLessThan(1);expect(button.height).toBe(44);expect(button.width).toBe(44);expect((await seam.boundingBox())!.height).toBe(0);
     const label=await add.getAttribute('aria-label');await capture(page,`05-add-placement-${width}`);
     await add.click();await expect(page.getByRole('region',{name:'일정 추가',exact:true})).toBeVisible();
     await page.getByRole('button',{name:'일정 추가 취소',exact:true}).click();await expect(page.getByRole('button',{name:label!,exact:true})).toBeFocused();

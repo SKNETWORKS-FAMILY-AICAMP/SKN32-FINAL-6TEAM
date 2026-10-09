@@ -1,0 +1,729 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      ".tmp/consent-progress.config.ts",
+      "tests/live/edge-order-date-add-ideas-20261010.spec.ts",
+      "tests/live/compact-edge-unlock-add-20261010.spec.ts",
+      "tests/live/day-strip-quiet.spec.ts",
+      "--reporter=line,json",
+      "--workers=1",
+      "--output=.tmp/edge-ideas-results"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\consent-progress.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/.tmp/edge-ideas-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "compact-edge-unlock-add-20261010.spec.ts",
+      "file": "compact-edge-unlock-add-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "먼 일정 거리 숨김·좁은 마커·조작 후 복귀 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4218,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:39:38.185Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-846c871a48ec998487e2",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 12,
+          "column": 3
+        },
+        {
+          "title": "전체 잠금 해제는 목록 맨 위·한 요청·스크롤에 사라짐 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2635,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:39:43.228Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-67d0320ade800aecc0bb",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 35,
+          "column": 3
+        },
+        {
+          "title": "원형 추가 단추는 일정 사이 중앙·취소 복귀 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2388,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:39:45.881Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-2f2c5fda185832dda335",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 49,
+          "column": 3
+        },
+        {
+          "title": "먼 일정 거리 숨김·좁은 마커·조작 후 복귀 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4134,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:39:48.284Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-d384525f9baef704df1b",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 12,
+          "column": 3
+        },
+        {
+          "title": "전체 잠금 해제는 목록 맨 위·한 요청·스크롤에 사라짐 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2297,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:39:52.436Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-f92f72d0432de7d64943",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 35,
+          "column": 3
+        },
+        {
+          "title": "원형 추가 단추는 일정 사이 중앙·취소 복귀 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2327,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:39:54.759Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-fbf37e72479491886b94",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 49,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "day-strip-quiet.spec.ts",
+      "file": "day-strip-quiet.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "목록을 스크롤하면 일차 줄만 사라지고 멈춘 뒤 다시 나타나며 목록 위치는 유지된다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5390,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:39:57.117Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1778477e3940b8f876fe-60cd522c09ff29642ab5",
+          "file": "day-strip-quiet.spec.ts",
+          "line": 18,
+          "column": 1
+        },
+        {
+          "title": "지도를 누르고 움직이는 동안은 계속 숨고 손을 놓은 뒤 복귀한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7056,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:40:02.523Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1778477e3940b8f876fe-42d66da687a4b5aa83d5",
+          "file": "day-strip-quiet.spec.ts",
+          "line": 35,
+          "column": 1
+        },
+        {
+          "title": "일차 버튼 조작은 숨기지 않고 숨은 중에도 Tab을 누르면 다시 접근할 수 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5502,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:40:09.598Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1778477e3940b8f876fe-d6c96148cb7878011cdb",
+          "file": "day-strip-quiet.spec.ts",
+          "line": 48,
+          "column": 1
+        },
+        {
+          "title": "동작 줄이기 설정에서도 숨김·복귀가 되며 위치 이동 효과는 없다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3344,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:40:15.116Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1778477e3940b8f876fe-207259886e2eeb1d590d",
+          "file": "day-strip-quiet.spec.ts",
+          "line": 69,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "edge-order-date-add-ideas-20261010.spec.ts",
+      "file": "edge-order-date-add-ideas-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "좌우 순서·동일한 채움색·조작 중 거리 숨김 375px",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 5097,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\edge-order-date-add-ideas-20261010.spec.ts:40:48",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\edge-order-date-add-ideas-20261010.spec.ts",
+                      "column": 48,
+                      "line": 40
+                    },
+                    "snippet": "  38 |     await expect(chips.first()).toBeVisible();\n  39 |     const sides = await chips.evaluateAll(es => es.map(e => ({ side: e.getAttribute('data-side'), x: e.getBoundingClientRect().x + e.getBoundingClientRect().width / 2, direction: getComputedStyle(e).flexDirection, children: Array.from(e.children).map(c => ({ tag: c.tagName, x: c.getBoundingClientRect().x })) })));\n> 40 |     expect(sides.some(s => s.side === 'left')).toBe(true);\n     |                                                ^\n  41 |     expect(sides.some(s => s.side === 'right')).toBe(true);\n  42 |     for (const side of sides) {\n  43 |       const xs = side.children.map(c => c.x);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\edge-order-date-add-ideas-20261010.spec.ts",
+                        "column": 48,
+                        "line": 40
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  38 |     await expect(chips.first()).toBeVisible();\n  39 |     const sides = await chips.evaluateAll(es => es.map(e => ({ side: e.getAttribute('data-side'), x: e.getBoundingClientRect().x + e.getBoundingClientRect().width / 2, direction: getComputedStyle(e).flexDirection, children: Array.from(e.children).map(c => ({ tag: c.tagName, x: c.getBoundingClientRect().x })) })));\n> 40 |     expect(sides.some(s => s.side === 'left')).toBe(true);\n     |                                                ^\n  41 |     expect(sides.some(s => s.side === 'right')).toBe(true);\n  42 |     for (const side of sides) {\n  43 |       const xs = side.children.map(c => c.x);\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\edge-order-date-add-ideas-20261010.spec.ts:40:48"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:40:18.495Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\edge-ideas-results\\edge-order-date-add-ideas--663ac-순서·동일한-채움색·조작-중-거리-숨김-375px\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\edge-ideas-results\\edge-order-date-add-ideas--663ac-순서·동일한-채움색·조작-중-거리-숨김-375px\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\edge-ideas-results\\edge-order-date-add-ideas--663ac-순서·동일한-채움색·조작-중-거리-숨김-375px\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\edge-order-date-add-ideas-20261010.spec.ts",
+                    "column": 48,
+                    "line": 40
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-db1bc1d6237831e39a90",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 21,
+          "column": 3
+        },
+        {
+          "title": "하루 일정도 날짜 표시·스크롤 중 숨김·정지 후 복귀·미선택 안내 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7927,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:40:24.966Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-4130e9821a90730c5aff",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 58,
+          "column": 3
+        },
+        {
+          "title": "일정 추가 네 배치안 비교 촬영 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3962,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:40:33.199Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-25a019986f7b2bacf5a2",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 72,
+          "column": 3
+        },
+        {
+          "title": "좌우 순서·동일한 채움색·조작 중 거리 숨김 1280px",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 4308,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\edge-order-date-add-ideas-20261010.spec.ts:40:48",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\edge-order-date-add-ideas-20261010.spec.ts",
+                      "column": 48,
+                      "line": 40
+                    },
+                    "snippet": "  38 |     await expect(chips.first()).toBeVisible();\n  39 |     const sides = await chips.evaluateAll(es => es.map(e => ({ side: e.getAttribute('data-side'), x: e.getBoundingClientRect().x + e.getBoundingClientRect().width / 2, direction: getComputedStyle(e).flexDirection, children: Array.from(e.children).map(c => ({ tag: c.tagName, x: c.getBoundingClientRect().x })) })));\n> 40 |     expect(sides.some(s => s.side === 'left')).toBe(true);\n     |                                                ^\n  41 |     expect(sides.some(s => s.side === 'right')).toBe(true);\n  42 |     for (const side of sides) {\n  43 |       const xs = side.children.map(c => c.x);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\edge-order-date-add-ideas-20261010.spec.ts",
+                        "column": 48,
+                        "line": 40
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  38 |     await expect(chips.first()).toBeVisible();\n  39 |     const sides = await chips.evaluateAll(es => es.map(e => ({ side: e.getAttribute('data-side'), x: e.getBoundingClientRect().x + e.getBoundingClientRect().width / 2, direction: getComputedStyle(e).flexDirection, children: Array.from(e.children).map(c => ({ tag: c.tagName, x: c.getBoundingClientRect().x })) })));\n> 40 |     expect(sides.some(s => s.side === 'left')).toBe(true);\n     |                                                ^\n  41 |     expect(sides.some(s => s.side === 'right')).toBe(true);\n  42 |     for (const side of sides) {\n  43 |       const xs = side.children.map(c => c.x);\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\edge-order-date-add-ideas-20261010.spec.ts:40:48"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:40:37.183Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\edge-ideas-results\\edge-order-date-add-ideas--61904-서·동일한-채움색·조작-중-거리-숨김-1280px\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\edge-ideas-results\\edge-order-date-add-ideas--61904-서·동일한-채움색·조작-중-거리-숨김-1280px\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\edge-ideas-results\\edge-order-date-add-ideas--61904-서·동일한-채움색·조작-중-거리-숨김-1280px\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\edge-order-date-add-ideas-20261010.spec.ts",
+                    "column": 48,
+                    "line": 40
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-8804fabb1044407d451d",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 21,
+          "column": 3
+        },
+        {
+          "title": "하루 일정도 날짜 표시·스크롤 중 숨김·정지 후 복귀·미선택 안내 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7978,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:40:42.745Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-4d274c30e29dc1b200b1",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 58,
+          "column": 3
+        },
+        {
+          "title": "일정 추가 네 배치안 비교 촬영 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3918,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:40:50.991Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-a4344c9eefd52d406944",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 72,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T19:39:17.124Z",
+    "duration": 98904.372,
+    "expected": 14,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

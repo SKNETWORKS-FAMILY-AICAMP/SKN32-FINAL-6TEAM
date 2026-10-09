@@ -79,9 +79,9 @@
 
 /* The day's timeline: time · rail · card (a place) or a thin line (the move to the next place) */
 .timeline { list-style: none; margin: 0; padding: 0; }
-.insertPoint { position: relative; height: 24px; margin: 0 0 0 78px; z-index: 3; }
-.insertButton { position: absolute; top: 50%; left: 0; display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 96px; height: 44px; padding: 0 8px; border: 0; border-radius: 8px; background: transparent; color: var(--color-primary); font: inherit; font-size: 11px; cursor: pointer; opacity: 0; pointer-events: none; transform: translateY(-50%); transition: opacity 150ms ease-out; }
-.insertButton::before { content: ""; position: absolute; inset: 10px 0; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); z-index: -1; }
+.insertPoint { position: relative; height: 0; margin: 0 0 0 78px; z-index: 3; }
+.insertButton { position: absolute; top: 0; left: calc(50% - 22px); display: grid; place-items: center; width: 44px; height: 44px; padding: 8px; border: 0; border-radius: 50%; background: transparent; color: var(--color-primary); cursor: pointer; opacity: 0; pointer-events: none; transform: translateY(-50%); transition: opacity .16s ease-out; }
+.insertButton::before { content: ""; position: absolute; inset: 8px; border: 1px solid var(--color-border-strong); border-radius: 50%; background: var(--color-surface); box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 9%, transparent); z-index: -1; }
 .insertPoint[data-insert-near] .insertButton, .insertPoint:focus-within .insertButton { opacity: 1; pointer-events: auto; }
 .insertButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 .insertButton:hover .iconTip, .insertButton:focus-visible .iconTip { opacity: 1; visibility: visible; }

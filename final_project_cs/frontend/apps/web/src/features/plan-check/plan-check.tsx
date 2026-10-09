@@ -1001,11 +1001,19 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const needCount = needsLeft(shown, removedSet).total;
   const changedMap: Record<string, string> = previewing && side === "after" && recommended ? { ...changed, ...recommended.was } : changed;
   const changedCount = Object.keys(changedMap).filter((id) => !removedSet.has(id)).length;
+  const firstNeed = shown.items.find((item) => item.verdict === "review" && !removedSet.has(item.id));
+  const firstMoveNeed = shown.moves.find((move) => move.verdict === "review" && !removedSet.has(move.fromId) && !removedSet.has(move.toId));
+  const changedItem = shown.items.find((item) => changedMap[item.id] && !removedSet.has(item.id));
+  const mapSummary = !done || changing || registered ? null
+    : firstNeed ? t(`확인 필요 · ${firstNeed.title}`, `Needs a look · ${firstNeed.title}`)
+      : firstMoveNeed ? t(`이동 확인 · ${shown.items.find((item) => item.id === firstMoveNeed.fromId)?.title ?? ""} → ${shown.items.find((item) => item.id === firstMoveNeed.toId)?.title ?? ""}`, `Check travel · ${shown.items.find((item) => item.id === firstMoveNeed.fromId)?.title ?? ""} → ${shown.items.find((item) => item.id === firstMoveNeed.toId)?.title ?? ""}`)
+        : actions.canUndoAll?.() ? changedItem ? t(`변경됨 · ${changedItem.title}`, `Changed · ${changedItem.title}`) : removed.length > 0 ? t(`삭제한 일정 ${removed.length}곳 · 되돌리기 가능`, `${removed.length} removed stops · can undo`) : t("변경한 내용 · 되돌리기 가능", "Changes · can undo") : null;
+
   // The filter ends by itself when nothing is left to show.
   const filtering = done && filter !== null && (filter === "needs" ? needCount > 0 : changedCount > 0);
   // ★`[2026-10-04 사용자 결정]` With more than one day the list shows one day at a time, with a strip of day chips above it (and a swipe sideways to the next or
   //   the previous day); 「전체」 and the filters show every day as before. The map follows the day.
-  const dayStrip = done && !changing && days.length > 1;
+  const dayStrip = done && !changing && days.length > 0;
   const quietDays = useQuietDayStrip(stripBox, dayStrip);
   const submitBox = useRef<HTMLElement>(null);
   const quietSubmit = useQuietDayStrip(submitBox, done && !changing && !inserting);
@@ -1134,7 +1142,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     return <li key={point.key} className={styles.insertPoint} data-insert-point={point.key}>
       <button type="button" id={`plan-insert-${point.key}`} className={styles.insertButton} aria-label={label} aria-describedby={`plan-insert-tip-${point.key}`}
         onClick={() => { setAddingBusy(false); setInserting(point); if (sheet === "peek") setSheet("half"); }}>
-        <Plus size={15} strokeWidth={1.8} aria-hidden="true" /><span>{point.side === "before-move" ? t("이동 전 추가", "Add before travel") : t("일정 추가", "Add a stop")}</span><span id={`plan-insert-tip-${point.key}`} className={styles.iconTip} role="tooltip">{label}</span>
+        <Plus size={18} strokeWidth={1.8} aria-hidden="true" /><span id={`plan-insert-tip-${point.key}`} className={styles.iconTip} role="tooltip">{label}</span>
       </button>
     </li>;
   };
@@ -1256,11 +1264,11 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
         selectedLineId={selectedLine ?? undefined} onSelectLine={done && !changing ? onLine : undefined} />
     </div>
     {/* `[2026-10-08 사용자 지시]` 확인·변경·장소 표시는 같은 막대에, 이동 수단 이름은 확대된 경로선에 표시한다. */}
-    {(unlocated.length > 0 || pinned || (done && !changing && !registered && (needCount > 0 || changedCount > 0 || removed.length > 0 || actions.canUndoAll?.()))) && <div className={styles.mapChips} data-muted={mapMoving || undefined} inert={mapMoving} aria-hidden={mapMoving || undefined}>
+    {(unlocated.length > 0 || pinned || mapSummary || (done && !changing && !registered && (needCount > 0 || changedCount > 0 || removed.length > 0 || actions.canUndoAll?.()))) && <div className={styles.mapChips} data-muted={mapMoving || undefined} inert={mapMoving} aria-hidden={mapMoving || undefined}>
       <div className={styles.statusTools} role="group" aria-label={t("일정 확인과 변경", "Plan checks and changes")}>
       {pinned
         ? <p className={styles.picked} aria-live="polite"><b>{pinned.title}</b>{(pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category) && <> · {pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category}</>}</p>
-        : unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
+        : mapSummary ? <p className={styles.picked} data-map-summary aria-live="polite">{mapSummary}</p> : unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
       {/* ★`[2026-10-07 사용자 지시 — 「! 2」는 지도 쪽에]` The count of what needs a look stands on the map; pressed, the list and the map show only those. */}
       {done && !changing && !registered && needCount > 0 && <button type="button" className={styles.mapNeeds} aria-pressed={filter === "needs" && filtering}
         onClick={() => setFilter(filter === "needs" && filtering ? null : "needs")} aria-label={t(`확인 필요 ${needCount}곳`, `${needCount} to check`)}
