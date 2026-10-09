@@ -75,7 +75,7 @@ def test_search_calls_the_model_once_and_both_sources_once():
               "direct_only": True, "cabin": None, "max_results": 10, "adults": 2, "children": None, "infants": None}
     assert tools.calls == [("read.flight_search", wanted), ("read.flight_offers", wanted)]
     assert result.outcome == "completed" and result.next_action.value == "respond"
-    assert f"TPE → ICN · {GO} · 성인 2명 조건으로 마이리얼트립 2개 · 판매처 비교 결과 없음(조회 실패)를" in result.answer
+    assert f"TPE → ICN · {GO} · 성인 2명 조건으로 찾은 결과(마이리얼트립 2개 · 판매처 비교 조회 실패)를" in result.answer
     # 가격이 낮은 순 — 국내선 64,000원이 먼저다
     assert result.answer.index("티웨이항공") < result.answer.index("제주항공")
     assert f"2. 제주항공 — {GO} TPE 13:10 → ICN 16:40 (직항, 2시간 30분)" in result.answer
@@ -101,7 +101,7 @@ IGNAV = {"flights": [
 def test_the_same_flight_from_both_sources_is_shown_once_with_both_prices():
     result, _, _ = _run(SEARCH, {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV})
     answer = result.answer
-    assert "마이리얼트립 2개 · 항공사·여행사 판매처 2개를" in answer
+    assert "찾은 결과(마이리얼트립 2개 · 항공사·여행사 판매처 2개)를" in answer
     assert answer.count("TPE 13:10 → ICN 16:40") == 1, "같은 편은 한 번만"
     assert "TPE 13:10 → ICN 16:40 7C1501 (직항, 2시간 30분)" in answer, "편명은 묶인 Ignav 쪽에서 빌린다"
     jeju = answer.index("제주항공(항공사 공식) 289,000원: https://www.jejuair.net/x")
@@ -110,12 +110,14 @@ def test_the_same_flight_from_both_sources_is_shown_once_with_both_prices():
     shown = result.decisions[0]["shown"]
     assert [option["best"] for option in shown] == [64000, 289000.0, 350000.0]
     assert [offer["source"] for offer in shown[1]["offers"]] == ["ignav", "myrealtrip"]
+    assert result.decisions[0]["both"] == [{"flight": "7C1501", "depart": "13:10", "myrealtrip": 302000, "ignav": 289000.0}], \
+        "두 소스가 다 판 편만, 소스별 최저가로"
     assert [item.source_id for item in result.evidence] == ["flight.interpret", "read.flight_search", "read.flight_offers"]
 
 
 def test_one_source_is_enough_and_both_missing_is_unknown():
     result, _, _ = _run(SEARCH, {"read.flight_search": None, "read.flight_offers": IGNAV})
-    assert result.outcome == "completed" and "마이리얼트립 결과 없음(조회 실패) · 항공사·여행사 판매처 2개를" in result.answer
+    assert result.outcome == "completed" and "찾은 결과(마이리얼트립 조회 실패 · 항공사·여행사 판매처 2개)를" in result.answer
     result, _, _ = _run(SEARCH, {})
     assert (result.outcome, result.failure_code) == ("escalated", "unknown_항공편 검색 결과")
 

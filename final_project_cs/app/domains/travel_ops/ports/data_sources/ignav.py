@@ -22,8 +22,9 @@ from .myrealtrip import McpToolTransport, _number
 
 URL = "https://ignav.com/mcp"
 SOURCE = "ignav"
-#: 검색 한 번에 6.35~21.51초가 걸렸다(2026-10-08~09 playdata). 마이리얼트립과 같은 30초로 둔다. 우리가 고른 값
-TIMEOUT_SECONDS = 30.0
+#: 검색 한 번에 6.35~21.51초가 걸렸다(2026-10-08~09 playdata). 30초로 두었더니 2026-10-09 12:06 playdata
+#: ICN→NRT 에서 30초를 넘겨 끊겼다 — 45초로 올린다. 팀 기한 90초 안(마이리얼트립 ~10초 + 45초). 우리가 고른 값
+TIMEOUT_SECONDS = 45.0
 #: 한국 시장 가격(원화)으로 받는다 — 2026-10-08 실호출에서 KRW 로 왔다
 MARKET = "KR"
 CABINS = {"ECONOMY": "economy", "PREMIUM_ECONOMY": "premium_economy", "BUSINESS": "business", "FIRST": "first"}

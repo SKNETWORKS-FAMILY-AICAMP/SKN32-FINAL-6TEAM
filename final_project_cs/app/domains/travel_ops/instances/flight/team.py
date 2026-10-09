@@ -224,16 +224,23 @@ class FlightTeam(TravelTeamBase):
         searches = sorted({offer["link"] for option in shown_options for offer in option["offers"]
                            if offer.get("link_kind") == "route_search" and offer.get("link")})
         pages = [f"마이리얼트립 이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): {url}" for url in searches]
-        counted = [f"마이리얼트립 {len(mrt.get('flights') or [])}개" if mrt is not None else "마이리얼트립 결과 없음(조회 실패)",
-                   f"항공사·여행사 판매처 {len(offers.get('flights') or [])}개" if offers is not None else "판매처 비교 결과 없음(조회 실패)"]
-        head = (f"{route} · {when} · {party} 조건으로 {' · '.join(counted)}를 같은 편끼리 묶어 "
+        counted = [f"마이리얼트립 {len(mrt.get('flights') or [])}개" if mrt is not None else "마이리얼트립 조회 실패",
+                   f"항공사·여행사 판매처 {len(offers.get('flights') or [])}개" if offers is not None else "판매처 비교 조회 실패"]
+        head = (f"{route} · {when} · {party} 조건으로 찾은 결과({' · '.join(counted)})를 같은 편끼리 묶어 "
                 f"가격이 낮은 순으로 {len(shown_options)}개 보여 드립니다.")
         tail = ("가격과 좌석은 조회 시점 참고값이며 판매처 화면에서 달라질 수 있습니다. 링크가 열리지 않으면 같은 편의 다른 판매처 링크를 써 주세요. "
                 "예약 · 결제는 링크한 판매처에서 직접 하시면 됩니다.")
         shown = [{"airline": option["airline"], "best": option["best"],
                   "offers": [{"source": offer["source"], "price_total": offer.get("price_total"), "link_kind": offer.get("link_kind")}
                              for offer in option["offers"]]} for option in shown_options]
-        return self._respond(task, evidence, {**decision, "found": len(options), "shown": shown},
+        # 두 소스가 다 판 편 — 보여 준 것뿐 아니라 묶인 전부. 같은 편 가격 차이를 재려고 남긴다(답에는 안 싣는다)
+        both = [{"flight": "/".join(str(leg.get("flightNumber") or "?") for leg in option["legs"]),
+                 "depart": option["legs"][0].get("departTime"),
+                 **{source: min((offer["price_total"] for offer in option["offers"]
+                                 if offer["source"] == source and isinstance(offer["price_total"], (int, float))), default=None)
+                    for source in ("myrealtrip", "ignav")}}
+                for option in options if {offer["source"] for offer in option["offers"]} >= {"myrealtrip", "ignav"}]
+        return self._respond(task, evidence, {**decision, "found": len(options), "shown": shown, "both": both},
                              "\n".join([head, *lines, *pages, tail]))
 
     def _trip(self, task: TeamTask, seen: set[str]) -> tuple[dict[str, Any] | None, list[Evidence]]:
