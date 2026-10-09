@@ -1,8 +1,9 @@
 import type { Coordinates, MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_LABEL, meKey, staysKey } from "./me";
-import { createPin, geometryKey, layoutPins, placePin, pointLabel, pulsePin, setPinSelected, type PinSlot } from "./pin";
+import { createPin, geometryKey, layoutPins, paintPinGroups, pinArea, placePin, pointLabel, pulsePin, setPinSelected, type PinSlot } from "./pin";
 import { createSdkLoader } from "./sdk-loader";
+import { setMarkerHidden } from "./visibility";
 
 interface GoogleBounds { extend(position: Coordinates): void }
 interface GoogleLatLng { lat(): number; lng(): number }
@@ -46,7 +47,7 @@ interface GoogleSdk {
   marker: {
     AdvancedMarkerElement: new (options: { map: GoogleMap; position: Coordinates; title: string; gmpClickable: boolean }) => GoogleMarker;
   };
-  event: { trigger(target: GoogleMap, event: "resize"): void; clearInstanceListeners(target: GoogleMap): void; addListener?(target: GoogleMap, event: "idle", callback: () => void): unknown };
+  event: { trigger(target: GoogleMap, event: "resize"): void; clearInstanceListeners(target: GoogleMap): void; addListener?(target: GoogleMap, event: "idle" | "bounds_changed", callback: () => void): unknown };
 }
 
 const loader = createSdkLoader<GoogleSdk>({
@@ -84,19 +85,26 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
 
       // ★`[2026-10-04]` Each pin stands on the side of its coordinate where it overlaps the fewest others (`layoutPins`); worked out again when the map comes to rest.
       let slots: Record<string, PinSlot> = {};
+      let hiddenPoints = new Set<string>();
+      function setHiddenPoints(ids: readonly string[]) {
+        hiddenPoints = new Set(ids);
+        markers.forEach(({ id, marker }) => setMarkerHidden(marker, hiddenPoints.has(id)));
+      }
       function relayout() {
         const projection = map.getProjection?.(), center = map.getCenter(), zoom = map.getZoom?.();
         const middle = projection && center ? projection.fromLatLngToPoint(center) : null;
         if (destroyed || !projection || !middle || typeof zoom !== "number" || !markers.length || !container.clientWidth || !container.clientHeight) return;
         const scale = 2 ** zoom;
-        const placed = points.flatMap((point) => {
+        const placed = points.filter((point) => !hiddenPoints.has(point.id)).sort((a, b) => Number(b.id === selectedId) - Number(a.id === selectedId)).flatMap((point) => {
           const world = projection.fromLatLngToPoint(point.coordinates);
           return world ? [{ id: point.id, x: (world.x - middle.x) * scale + container.clientWidth / 2, y: (world.y - middle.y) * scale + container.clientHeight / 2 }] : [];
         });
-        slots = layoutPins(placed, { width: container.clientWidth, height: container.clientHeight, top: options.topInset ?? 0 }, slots);
+        slots = layoutPins(placed, pinArea(container, options), slots);
         markers.forEach(({ id, pin }) => { if (slots[id]) placePin(pin, slots[id]); });
+        paintPinGroups(markers, slots);
       }
-      sdk.event.addListener?.(map, "idle", relayout);
+      sdk.event.addListener?.(map, "bounds_changed", () => options.onInteractionChange?.(true));
+      sdk.event.addListener?.(map, "idle", () => { options.onInteractionChange?.(false); relayout(); });
       // [2026-10-05] The zoom level goes to the screen (it asks for the detailed route lines when zoomed in).
       sdk.event.addListener?.(map, "idle", () => { const zoom = map.getZoom?.(); if (typeof zoom === "number") options.onZoom?.(zoom); });
       // [2026-10-05] What the map shows goes to the screen (the scale ruler, the chips for stops out of view) - nothing when this build of the SDK cannot say it.
@@ -163,7 +171,7 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
         } else {
           const bounds = new sdk.LatLngBounds();
           points.forEach(({ coordinates }) => bounds.extend(coordinates));
-          map.fitBounds(bounds, { top: 50 + (options.topInset ?? 0), right: 50, bottom: 50, left: 50 });
+          map.fitBounds(bounds, { top: 50 + (options.topInset ?? 0), right: 50, bottom: 50 + (options.bottomInset ?? 0), left: 50 });
         }
       }
 
@@ -226,6 +234,7 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
             markers.push({ id: point.id, marker, pin, onClick });
           });
           previousData = data;
+          setHiddenPoints([...hiddenPoints]);
           relayout();
         }
         markers.forEach(({ id, pin, marker }) => {
@@ -245,6 +254,7 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
           if (selected) map.panTo(selected.coordinates);
         }
         selectedId = nextSelectedId;
+        relayout();
       }
 
       function setMe(next: MyLocation | null) {
@@ -294,6 +304,8 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
 
       return {
         update,
+        setHiddenPoints,
+        relayout,
         setMe,
         setStays,
         fit() { needsFit = true; fit(); },

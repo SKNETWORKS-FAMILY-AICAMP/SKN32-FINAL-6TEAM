@@ -1,0 +1,828 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.live.config.ts",
+      "tests/live/plan-check-redesign.spec.ts",
+      "tests/live/card-footer-exclusive-20261009.spec.ts",
+      "tests/live/add-header-map-20261009.spec.ts",
+      "tests/live/time-free-first.spec.ts",
+      "--grep",
+      "이동 줄은 앞뒤|시간 · 원 · 이름|확인 필요|되돌|상단 검색|오른쪽 스와이프|저장 중에는|거리 칩은|끌어서|위로 끌어도|−5분|이동의|고정한 일정",
+      "--reporter=list,json"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\playwright.live.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "add-header-map-20261009.spec.ts",
+      "file": "add-header-map-20261009.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "상단 검색·선택·뒤로가기와 지도 단추 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6948,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:38:09.430Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "15b049a72f5a27536d90-ec986ae5153b797f7e9f",
+          "file": "add-header-map-20261009.spec.ts",
+          "line": 27,
+          "column": 3
+        },
+        {
+          "title": "상단 검색·선택·뒤로가기와 지도 단추 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6696,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:38:16.641Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "15b049a72f5a27536d90-1b0e3aedb170c11bec25",
+          "file": "add-header-map-20261009.spec.ts",
+          "line": 27,
+          "column": 3
+        },
+        {
+          "title": "빈 배경의 오른쪽 스와이프만 추가를 취소하고 일차 전환 모션을 사용한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6049,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:38:23.372Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "15b049a72f5a27536d90-933fea64e18f158c4aef",
+          "file": "add-header-map-20261009.spec.ts",
+          "line": 68,
+          "column": 1
+        },
+        {
+          "title": "저장 중에는 뒤로가기·스와이프가 요청과 입력을 취소하지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5535,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:38:29.439Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "15b049a72f5a27536d90-da3742510a75f8ad5b0b",
+          "file": "add-header-map-20261009.spec.ts",
+          "line": 86,
+          "column": 1
+        },
+        {
+          "title": "오른쪽 거리 칩은 단추 아래의 빈 높이에서 화면 끝에 붙고 번호와 거리가 구분된다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6915,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:38:34.998Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "15b049a72f5a27536d90-9aae582ffb719d150411",
+          "file": "add-header-map-20261009.spec.ts",
+          "line": 115,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "card-footer-exclusive-20261009.spec.ts",
+      "file": "card-footer-exclusive-20261009.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px: 확인 필요와 되돌리기는 카드 하단 한 자리에서 교대로 표시된다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3293,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:38:41.944Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "127c279f8f85435de074-957b84363fa94f26953a",
+          "file": "card-footer-exclusive-20261009.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "1280px: 확인 필요와 되돌리기는 카드 하단 한 자리에서 교대로 표시된다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3031,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:38:45.252Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "127c279f8f85435de074-095d162d2eeaad74819b",
+          "file": "card-footer-exclusive-20261009.spec.ts",
+          "line": 9,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "plan-check-redesign.spec.ts",
+      "file": "plan-check-redesign.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "시트 머리: 문장 대신 「! 2」 표시 하나 — 눌러서 확인 필요만 모아 보고 다시 눌러 전체로 돌아온다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1979,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:38:48.328Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4cc90a58a1fd94513073-03e4549628292ad12e8d",
+          "file": "plan-check-redesign.spec.ts",
+          "line": 72,
+          "column": 1
+        },
+        {
+          "title": "시트를 끝까지 내리면 머리·날짜 칩·목록을 모두 접고 손잡이와 플로팅 제출만 남는다(지도의 「확인 필요」는 남는다)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5148,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:38:50.319Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4cc90a58a1fd94513073-82cc9aafa0071b7b98d6",
+          "file": "plan-check-redesign.spec.ts",
+          "line": 84,
+          "column": 1
+        },
+        {
+          "title": "카드 옆 표시는 「확인 필요」와 「변경 완료」뿐이다 — 「조정」은 없다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4401,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:38:55.486Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4cc90a58a1fd94513073-803938ff332b0a14331e",
+          "file": "plan-check-redesign.spec.ts",
+          "line": 112,
+          "column": 1
+        },
+        {
+          "title": "삭제는 바로 지우지 않는다: 카드가 회색이 되고 휴지통 자리에 되돌리기가 서며, 서버로는 「다시 제출」을 누를 때 간다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3254,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:38:59.903Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4cc90a58a1fd94513073-0a97ca1a5a856ea7477d",
+          "file": "plan-check-redesign.spec.ts",
+          "line": 161,
+          "column": 1
+        },
+        {
+          "title": "지도에 「모든 일정 보기」 단추가 확대·축소 단추 옆에 있어, 확대하거나 옮긴 지도를 모든 핀이 보이는 처음 위치·배율로 되돌린다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6072,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:39:03.170Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4cc90a58a1fd94513073-f843788c4196123dc9d1",
+          "file": "plan-check-redesign.spec.ts",
+          "line": 326,
+          "column": 1
+        },
+        {
+          "title": "이동 줄은 앞뒤 일정의 시작 시각 사이에서 출발하는 만큼 위에서 내려와, 시각이 더 가까운 일정 쪽에 붙는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1818,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:39:09.269Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4cc90a58a1fd94513073-90f94cf7dcfcbb9329e1",
+          "file": "plan-check-redesign.spec.ts",
+          "line": 380,
+          "column": 1
+        },
+        {
+          "title": "일정 카드의 시간 · 원 · 이름은 한 줄에 놓인다(이름만 아래로 처지지 않는다)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4205,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:39:11.102Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4cc90a58a1fd94513073-b1d81bba863d8e4520f5",
+          "file": "plan-check-redesign.spec.ts",
+          "line": 401,
+          "column": 1
+        },
+        {
+          "title": "−5분 · +5분 단추는 시작을 5분씩 옮기고, 범위 끝에서 멈춘다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3087,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:39:15.322Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4cc90a58a1fd94513073-80a1f37a6150df4acb28",
+          "file": "plan-check-redesign.spec.ts",
+          "line": 452,
+          "column": 1
+        },
+        {
+          "title": "바꾼 시간에는 「되돌리기」가 붙고, 누르면 그 일정만 처음 시간으로 돌아오며, 변경 메뉴에서는 바꾼 시간 모두를 한 번에 되돌린다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2601,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:39:18.432Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4cc90a58a1fd94513073-44f2936490dbaa351341",
+          "file": "plan-check-redesign.spec.ts",
+          "line": 507,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "time-free-first.spec.ts",
+      "file": "time-free-first.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "끌어서 늦추면 여유를 다 쓸 때 한 번 멈춰 알리고(알림은 하나), 더 끌어야 뒤 일정이 밀리며, 끄는 동안 하루 미니맵이 뜬다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2802,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:39:21.066Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0fcdcb6f675bb62e79c8-20fa379953097b0cc098",
+          "file": "time-free-first.spec.ts",
+          "line": 25,
+          "column": 1
+        },
+        {
+          "title": "위로 끌어도 같다: 앞 일정과 붙는 곳에서 한 번 멈추고, 멈춤을 넘어야 앞 일정이 당겨진다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4939,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:39:23.882Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0fcdcb6f675bb62e79c8-e5fc94606aa1a4be482f",
+          "file": "time-free-first.spec.ts",
+          "line": 68,
+          "column": 1
+        },
+        {
+          "title": "−5분 · +5분 단추도 여유 끝에서 한 번 멈춰 알린 뒤 다음 단추부터 민다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4846,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:39:28.837Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0fcdcb6f675bb62e79c8-a01b0bde4150f1f408f2",
+          "file": "time-free-first.spec.ts",
+          "line": 87,
+          "column": 1
+        },
+        {
+          "title": "이동의 「출발」 시각을 눌러 같은 방식으로 고친다: 늦게 나서면 여유가 줄고, 여유를 다 쓰면 멈춘 뒤 다음 일정이 밀린다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2770,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:39:33.699Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0fcdcb6f675bb62e79c8-c371b2940f2fb80e36ae",
+          "file": "time-free-first.spec.ts",
+          "line": 101,
+          "column": 1
+        },
+        {
+          "title": "고정한 일정에서 나서는 시각은 못 바꾸고 이유를 말한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1931,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T13:39:36.485Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0fcdcb6f675bb62e79c8-352d1dae7c7928a15e07",
+          "file": "time-free-first.spec.ts",
+          "line": 122,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T13:38:06.345Z",
+    "duration": 93357.11700000001,
+    "expected": 21,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

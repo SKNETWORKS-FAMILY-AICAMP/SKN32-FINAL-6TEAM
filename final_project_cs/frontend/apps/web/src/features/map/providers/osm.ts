@@ -1,7 +1,8 @@
 import type { MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_BOX, meKey, STAY_BOX, staysKey } from "./me";
-import { createPin, createPinLeader, geometryKey, layoutPins, PIN_BOX, placePin, pointLabel, popPin, pulsePin, setPinSelected, type PinSlot } from "./pin";
+import { createPin, createPinLeader, geometryKey, layoutPins, paintPinGroups, pinArea, PIN_BOX, placePin, pointLabel, popPin, pulsePin, setPinSelected, type PinSlot } from "./pin";
+import { setMarkerHidden } from "./visibility";
 
 /**
  * Free map: OpenStreetMap standard tiles drawn with Leaflet.
@@ -51,9 +52,19 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       //   moves or zooms the map themselves, a new size fits the pins again; after that the map stays where they put it.
       let userMoved = false;
       let programmatic = false;
+      map.on("movestart zoomstart", () => options.onInteractionChange?.(true));
+      map.on("moveend zoomend", () => options.onInteractionChange?.(false));
       map.on("dragstart", () => { userMoved = true; });
       map.on("zoomstart", () => { if (!programmatic) userMoved = true; });
       let markers: { id: string; marker: ReturnType<typeof L.marker>; pin: HTMLElement; leaderMarker: ReturnType<typeof L.marker>; leaderBox: HTMLElement }[] = [];
+      let hiddenPoints = new Set<string>();
+      function setHiddenPoints(ids: readonly string[]) {
+        hiddenPoints = new Set(ids);
+        markers.forEach(({ id, marker, leaderMarker }) => {
+          setMarkerHidden(marker.getElement(), hiddenPoints.has(id));
+          setMarkerHidden(leaderMarker.getElement(), hiddenPoints.has(id));
+        });
+      }
       // Route lines sit in their own pane under the pins, so a pin is always pressable and a line never covers one.
       map.createPane("routes").style.zIndex = "350";
       // ★`[2026-10-06 사용자 지적]` The thin lines back to a pushed-aside pin's coordinate (and their dots) stand in a layer of their own under ALL the pins (the marker pane is 600), above the route lines.
@@ -82,12 +93,12 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       let slots: Record<string, PinSlot> = {};
       function relayout() {
         if (destroyed || !markers.length || !container.clientWidth || !container.clientHeight) return;
-        const size = map.getSize();
-        slots = layoutPins(points.map((point) => {
+        slots = layoutPins(points.filter((point) => !hiddenPoints.has(point.id)).sort((a, b) => Number(b.id === selectedId) - Number(a.id === selectedId)).map((point) => {
           const at = map.latLngToContainerPoint([point.coordinates.lat, point.coordinates.lng]);
           return { id: point.id, x: at.x, y: at.y };
-        }), { width: size.x, height: size.y, top: options.topInset ?? 0 }, slots);
+        }), pinArea(container, options), slots);
         markers.forEach(({ id, pin, leaderBox }) => { if (slots[id]) placePin(pin, slots[id], leaderBox); });
+        paintPinGroups(markers, slots);
       }
       map.on("moveend zoomend resize", relayout);
       // [2026-10-05] The zoom level goes to the screen (it asks for the detailed route lines when zoomed in).
@@ -135,7 +146,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
           if (points.length === 1) { if (fly) map.flyTo(points[0].coordinates, 15, FLIGHT); else map.setView(points[0].coordinates, 15); }
           else {
             const bounds = L.latLngBounds(points.map(({ coordinates }) => [coordinates.lat, coordinates.lng] as [number, number]));
-            const padding = { paddingTopLeft: [50, 50 + (options.topInset ?? 0)] as [number, number], paddingBottomRight: [50, 50] as [number, number] };
+            const padding = { paddingTopLeft: [50, 50 + (options.topInset ?? 0)] as [number, number], paddingBottomRight: [50, 50 + (options.bottomInset ?? 0)] as [number, number] };
             if (fly) map.flyToBounds(bounds, { ...padding, ...FLIGHT }); else map.fitBounds(bounds, padding);
           }
           fitted = true;
@@ -212,6 +223,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
             if (popIn && !known.has(point.id)) popPin(pin);
           });
           previousData = data;
+          setHiddenPoints([...hiddenPoints]);
           relayout();
         }
         markers.forEach(({ id, pin, marker }) => {
@@ -233,6 +245,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
           if (selected) map.panTo(selected.coordinates);
         }
         selectedId = nextSelectedId;
+        relayout();
       }
 
       function setMe(next: MyLocation | null) {
@@ -296,6 +309,8 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
 
       return {
         update,
+        setHiddenPoints,
+        relayout,
         setMe,
         setStays,
         fit: fitAll,

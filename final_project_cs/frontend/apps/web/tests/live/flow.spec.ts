@@ -409,15 +409,15 @@ test("결과 화면: 서버에 아직 없는 잠금·자동 추천·전체 자�
   await start(page);
   await page.goto(INTAKE);
   const say = (text: string) => page.getByRole("status").filter({ hasText: text });
+  await page.getByRole("article", { name: "경복궁 관람" }).getByRole("heading").getByRole("button").click();
   const lock = page.getByRole("button", { name: "경복궁 관람 꼭 넣을 일정으로 고정" });
   await expect(lock).toHaveAttribute("aria-disabled", "true");
   await lock.click({ force: true });
   await expect(say("잠금은 준비 중이에요")).toBeVisible();
-  await page.getByRole("article", { name: "경복궁 관람" }).getByRole("heading").getByRole("button").click();
-  await page.getByRole("button", { name: "자동 추천", exact: true }).click({ force: true });
+  await page.getByRole("button", { name: "경복궁 관람 자동 추천", exact: true }).click({ force: true });
   await expect(say("자동 추천은 준비 중이에요")).toBeVisible();
   const all = page.getByRole("button", { name: /전체 자동 추천/ });
-  await expect(all).toContainText("준비 중");
+  await expect(all).toHaveAttribute("aria-disabled", "true");
   await all.click({ force: true });
   await expect(say("전체 자동 추천은 준비 중이에요")).toBeVisible();
 });

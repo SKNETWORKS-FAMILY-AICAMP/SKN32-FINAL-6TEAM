@@ -56,7 +56,8 @@ const DAY_TWO_STOP: Json = {
 /** 이미 읽힌 접수를 바로 연다(읽는 중 화면을 건너뛴다). `patch` 가 있으면 서버 응답을 그렇게 고친 채로. */
 async function openFinished(page: Page, request: APIRequestContext, patch?: (view: Json) => void) {
   const server = mockServer(request);
-  await server.scenario({ review: "on", board: "rich", readingPolls: 0 });
+  // GET으로 덧붙인 둘째 날을 다른 내용의 SSE가 뒤늦게 덮지 않게 응답 경로를 맞춘다.
+  await server.scenario({ review: "on", board: "rich", readingPolls: 0, ...(patch ? { intakeEvents: "off" } : {}) });
   if (patch) await patchIntake(page, patch);
   await start(page);
   await page.goto(`/intakes/${INTAKE}`);
@@ -184,6 +185,8 @@ test("이틀 이상이면 날짜 칩 줄이 목록 위에 있고, 하루씩 보�
   await expect(card(page, "N서울타워")).toHaveCount(0);                                                // 둘째 날은 보이지 않는다
   await expect(page.getByRole("tab", { name: /^1일차/ }).getByRole("img")).toHaveAccessibleName(/확인 필요 \d+곳/);   // 첫날에 고칠 곳이 있다
   await expect(page.getByRole("tab", { name: /^2일차/ }).getByRole("img")).toHaveCount(0);
+  await expect(strip).toHaveCSS("opacity", "1");
+  await expect(strip).not.toHaveAttribute("inert", "");
   await page.getByRole("tab", { name: "전체" }).click();                                               // 「전체」는 이어진 목록
   await expect(card(page, "경복궁 관람")).toBeVisible();
   await expect(card(page, "N서울타워")).toBeVisible();
@@ -191,7 +194,7 @@ test("이틀 이상이면 날짜 칩 줄이 목록 위에 있고, 하루씩 보�
 
 test("하루씩 볼 때 날의 끝에는 「다음」 단추 없이 옆으로 밀면 다음 날이라는 안내만 있고, 맨 아래는 권장 수정안 안내다", async ({ page, request }) => {
   await openFinished(page, request, (view) => { view.review.items.push(DAY_TWO_STOP); });
-  const hint = page.getByText("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요");
+  const hint = page.getByText("아래로 스크롤하면 권장 수정안이 나와요");
   await expect(page.getByRole("button", { name: /^다음 · / })).toHaveCount(0);                          // 단추는 없다
   await expect(page.getByText(/옆으로 밀면 2일차/)).toBeVisible();                                      // 안내만 있다
   await expect(hint).toBeVisible();                                                                     // 어느 날의 끝에서든 맨 아래는 이 안내다(고칠 곳이 있으면)
@@ -302,7 +305,7 @@ test("핀을 누르면 「위치 미정 · 올리브영」 자리에 그 핀의 
   await expect(page.getByText("위치 미정 · 올리브영")).toBeVisible();
   await mapSettled(page);
   await pin(page, "1. 경복궁 관람").locator("[data-pin-body]").click();
-  const picked = page.locator("[class*=__picked]");
+  const picked = page.locator("[class*=picked]");
   await expect(picked).toContainText("경복궁 관람");
   await expect(picked).toContainText("액티비티");
   await expect(page.getByText("위치 미정 · 올리브영")).toHaveCount(0);                              // 그 자리를 이름이 차지한다
@@ -321,6 +324,7 @@ test("오류 알림은 저절로 사라지지 않고 남아 있다가 ✕ 나 �
   // `[2026-10-07 사용자 결정 — 오류 알림 남기기 · 밀어서 닫기]`
   await openFinished(page, request);
   await mockServer(request).scenario({ edits: "stale" });                                              // 다음 고치기는 「그 사이 바뀌었어요」로 거절된다
+  await head(page, "경복궁 관람").click();
   await page.getByRole("button", { name: "경복궁 관람 꼭 넣을 일정으로 고정" }).click();
   const error = page.getByRole("alert").filter({ hasText: "그 사이 바뀌었어요" });
   await expect(error).toBeVisible();
@@ -334,7 +338,7 @@ test("오류 알림은 저절로 사라지지 않고 남아 있다가 ✕ 나 �
   await expect(error).toHaveCount(0);                                                                  // 옆으로 밀어 닫았다
 });
 
-test("카드의 수정 · 삭제는 카드를 가리키거나(마우스) 펼쳤을 때만 보이고, 「확인 필요」 표시와 잠금은 늘 보인다", async ({ page, request }) => {
+test("카드의 수정 · 삭제는 카드를 가리키거나(마우스) 펼쳤을 때만 보이고, 「확인 필요」 표시는 유지하고 잠금은 상세에서만 보인다", async ({ page, request }) => {
   // `[2026-10-07 사용자 지시]` 지도 단추처럼 — 늘 떠 있지 않고 필요할 때만
   await openFinished(page, request);
   const card = page.locator('li[data-entry-id="0-2"] article');
@@ -349,7 +353,7 @@ test("카드의 수정 · 삭제는 카드를 가리키거나(마우스) 펼쳤�
 test("카드의 「자동 추천」은 시간이 맞는 첫 후보로 바꾸고, 바꾼 장소를 좌표째 서버로 보낸다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   await head(page, "올리브영").click();
-  await card(page, "올리브영").getByRole("button", { name: "자동 추천" }).click();
+  await card(page, "올리브영").getByRole("button", { name: /자동 추천$/ }).click();
   await expect(toast(page, "대체 후보 1순위로 바꿨어요")).toBeVisible();
   const [edit] = await server.received("POST", "/edits");
   expect(edit.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[1].place",
@@ -438,19 +442,14 @@ test("「직접 고치기」에서 「장소 없음」으로 저장하면 서버
   await expect(toast(page, "저장했어요.")).toBeVisible();
   const [edit] = await server.received("POST", "/edits");
   expect(JSON.stringify(edit.body)).toContain('"none":true');
-  await expect(card(page, "경복궁 관람").getByText("변경 완료")).toBeVisible();
+  await expect(card(page, "경복궁 관람").getByRole("img", { name: "변경 완료" })).toBeVisible();
   await expect(page.getByText(/위치 미정 · .*경복궁 관람/)).toBeVisible();
 });
 
-test("지도의 확대·축소(+/−) 버튼은 둥근 단추이고, 지도에 포인터를 올려 두는 동안에만 보인다", async ({ page, request }) => {
+test("지도는 기본 접힘 상태이고 눈금은 남으며 펼친 단추는 둥근 모양이다", async ({ page, request }) => {
   await openFinished(page, request);
   const zoom = page.getByRole("group", { name: "지도 단추" });
-  const plus = zoom.getByRole("button", { name: "확대" });
-  await expect(zoom).toHaveCSS("opacity", "0");                                         // 평소에는 지도를 가리지 않는다
-  await page.getByRole("region", { name: "여행 지도" }).hover({ position: { x: 150, y: 150 } });
-  await expect(zoom).toHaveCSS("opacity", "1");
-  await expect(plus).toHaveCSS("border-radius", "50%");                                // 화면의 다른 둥근 단추와 같은 모양
-  await page.mouse.move(5, 5);                                                         // 지도 밖으로
-  await expect(zoom).toHaveCSS("opacity", "0");
+  await expect(zoom.getByRole("img", { name: /^거리 눈금/ })).toBeVisible();
+  await zoom.getByRole("button", { name: "지도 단추 펼치기" }).click();
+  await expect(zoom.getByRole("button", { name: "확대", exact: true })).toHaveCSS("border-radius", "50%");
 });
-

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockServer, start, TRIP_ID, checkPlan } from "./helpers";
-import { needsBadge } from "./plan-check-kit";
+import { head, needsBadge } from "./plan-check-kit";
 
 /**
  * 계획 확인 화면(조직 판 `features/plan-check`)에 서버의 확인 결과(`review`)를 이은 부분 — 테스트용 모방 서버로 도는 자동 시험(실제 서버 아님).
@@ -65,12 +65,14 @@ test("결과: 카드는 서버의 판정(확인 필요만 말한다)과 검사 �
 
 test("잠금: 확인이 끝난 일정은 서버에 알리고 고정되며, 확인이 필요한 일정은 이유를 말하고 보내지 않는다", async ({ page, request }) => {
   const server = await openFinished(page, request);
+  await head(page, "경복궁 관람").click();
   await page.getByRole("button", { name: "경복궁 관람 꼭 넣을 일정으로 고정" }).click();
   await expect(page.getByText("경복궁 관람을 꼭 넣을 일정으로 고정했어요")).toBeVisible();
   const [lock] = await server.received("POST", "/edits");
   expect(lock.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].locked", value: true }] });   // 잠금은 혼자 간다
   await expect(page.getByRole("button", { name: "경복궁 관람 고정 풀기" })).toBeVisible();
 
+  await head(page, "올리브영").click();
   await page.getByRole("button", { name: "확인이 필요한 일정은 고정할 수 없어요" }).click({ force: true });
   await expect(page.getByText("확인이 필요한 일정은 먼저 고쳐야 고정할 수 있어요")).toBeVisible();
   expect((await server.received("POST", "/edits")).length).toBe(1);               // 보내지 않았다
@@ -309,7 +311,7 @@ test("머리의 「내 여행」을 눌러 계획 이름을 바꾸면 서버의 
 
 test("출처 줄(ⓒ한국관광공사)은 「계속 내리면 …」 안내 위에 있어서, 목록 맨 끝이 「내리면 다음이 나온다」로 읽힌다", async ({ page, request }) => {
   await openFinished(page, request);
-  const credit = page.getByText("장소 정보 출처", { exact: false });
+  const credit = page.locator("details[class*=credit] summary");
   const hint = page.getByText("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요");
   await expect(credit).toBeVisible();
   await hint.scrollIntoViewIfNeeded();

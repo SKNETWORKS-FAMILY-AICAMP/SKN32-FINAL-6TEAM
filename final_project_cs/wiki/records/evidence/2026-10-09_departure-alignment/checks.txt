@@ -1,0 +1,6 @@
+TypeScript: exit 0
+ESLint: changed files exit 0
+Next build: exit 0
+Chrome screenshots: 4/4
+Real cs API response: not checked
+Deployment: not run

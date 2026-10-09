@@ -50,16 +50,15 @@ export interface QuestionFlow {
   /** 「저장했어요」 is up for the question on view. */
   saved: boolean;
   /** An answer the server did not take: the question and the option the customer picked (kept picked, with 「다시 시도하기」). */
-  failed: { id: string; option: string } | null;
+  failed: { id: string; option: string | null } | null;
   slide: Slide;
   /** Raised when the focus should go to the title of the question on view (a move the customer asked for). */
   focusNonce: number;
   seconds: number;
   stopAuto: boolean;
   navigate: (delta: 1 | -1) => void;
-  choose: (optionId: string) => void;
+  choose: (optionId: string | null) => void;
   retry: () => void;
-  skip: () => void;
   /** Go on to the plan check now. */
   release: () => void;
   /** 「자동으로 넘어가지 않기」: the screen stays until the customer presses the button. */
@@ -79,18 +78,18 @@ export interface QuestionFlow {
  * ★An answer is saved at once, one question at a time (`POST …/trip-intakes/{id}/survey`); the server keeps the last value of a question, so going back to correct it is just another answer.
  *   A save that fails keeps the picked option picked, says so with 「다시 시도하기」 and does not move on.
  */
-export function useQuestionFlow({ intakeId, language, questions, loadingDone }: { intakeId: string; language: Language; questions: readonly SurveyQuestion[]; loadingDone: boolean }): QuestionFlow {
+export function useQuestionFlow({ intakeId, language, questions, loadingDone, fresh = false }: { intakeId: string; language: Language; questions: readonly SurveyQuestion[]; loadingDone: boolean; fresh?: boolean }): QuestionFlow {
   // ★`[2026-10-07 사용자 지적 — 뒤로 갔다가 다시 열면 읽는 화면이 5초 뜨고 확인이 처음부터 다시 그려진다]` A plan that is already read when the page opens (opened again with the back and forward arrows, or from the list) was
   //   read in front of nobody: there is nothing to hold the page for, so it opens on the check at once. Questions are held for only when this page watched the reading end.
-  const [phase, setPhase] = useState<Phase>(loadingDone ? "gone" : "read");
+  const [phase, setPhase] = useState<Phase>(loadingDone && !fresh ? "gone" : "read");
   const [at, setAt] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
-  const [skippedIds, setSkippedIds] = useState<readonly string[]>([]);
+  const [skippedIds] = useState<readonly string[]>([]);
   const [touched, setTouched] = useState(false);
   const [stopAuto, setStopAuto] = useState(false);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [failed, setFailed] = useState<{ id: string; option: string } | null>(null);
+  const [failed, setFailed] = useState<{ id: string; option: string | null } | null>(null);
   const [slide, setSlide] = useState<Slide>("");
   const [focusNonce, setFocusNonce] = useState(0);
   const [seconds, setSeconds] = useState<number>(TIMING.countdownS);
@@ -98,6 +97,8 @@ export function useQuestionFlow({ intakeId, language, questions, loadingDone }: 
   const skipped = new Set(skippedIds);
   const open = openIndexes(questions, answers, skipped);
   const allDone = allAnswered(questions, answers);
+  const [pickedFirst, setPickedFirst] = useState(false);
+  if (questions.length && !pickedFirst) { setPickedFirst(true); setAt(open[0] ?? 0); }
 
   // Reading is done (the server has finished): decide ONCE what the screen does (mockup `finishLoading`).
   // ★`[2026-10-06 사용자 지적]` Untouched questions no longer send the customer straight on: the notice is shown and the screen waits `doneMs`, then goes (it used to jump at once).
@@ -134,7 +135,7 @@ export function useQuestionFlow({ intakeId, language, questions, loadingDone }: 
     return () => clearInterval(id);
   }, [phase]);
 
-  const touch = useCallback(() => { setTouched(true); setActivity((value) => value + 1); }, []);
+  const touch = useCallback(() => { setTouched(true); setActivity((value) => value + 1); }, [setTouched, setActivity]);
   const touchQuestions = useCallback(() => {
     touch();
     setPhase((value) => value === "done" ? "late" : value);
@@ -145,7 +146,7 @@ export function useQuestionFlow({ intakeId, language, questions, loadingDone }: 
     setSaved(false);
     setSlide(delta > 0 ? "from-right" : "from-left");
     setFocusNonce((value) => value + 1);
-  }, []);
+  }, [setAt, setSaved, setSlide, setFocusNonce]);
 
   const navigate = useCallback((delta: 1 | -1) => {
     const to = Math.min(questions.length - 1, Math.max(0, at + delta));
@@ -154,7 +155,7 @@ export function useQuestionFlow({ intakeId, language, questions, loadingDone }: 
     move(to, delta);
   }, [questions.length, at, busy, touchQuestions, move]);
 
-  const choose = useCallback((optionId: string) => {
+  const choose = useCallback((optionId: string | null) => {
     const question = questions[at];
     if (!question || busy) return;
     touchQuestions();
@@ -162,7 +163,8 @@ export function useQuestionFlow({ intakeId, language, questions, loadingDone }: 
     setFailed(null);
     setSaved(false);
     setBusy(true);
-    void submitSurveyAnswers(intakeId, { [question.id]: optionId }, language).then(() => {
+    const value = optionId?.startsWith("custom:") ? { custom: optionId.slice(7) } : optionId;
+    void submitSurveyAnswers(intakeId, { [question.id]: value }, language).then(() => {
       const next: Answers = { ...answers, [question.id]: optionId };
       setAnswers(next);
       setSaved(true);
@@ -170,6 +172,7 @@ export function useQuestionFlow({ intakeId, language, questions, loadingDone }: 
       timer.current = setTimeout(() => {
         setBusy(false);
         const now = latest.current;
+        if (optionId === null) return;
         if (now.phase === "late" && !now.stopAuto && !wasAll && allAnswered(now.questions, next)) { setPhase("done"); return; }
         const target = nextOpen(openIndexes(now.questions, next, new Set(now.skippedIds)), at);
         if (target !== null) move(target, 1);
@@ -182,27 +185,13 @@ export function useQuestionFlow({ intakeId, language, questions, loadingDone }: 
 
   const retry = useCallback(() => { if (failed) choose(failed.option); }, [failed, choose]);
 
-  const skip = useCallback(() => {
-    const question = questions[at];
-    if (!question || busy) return;
-    touchQuestions();
-    const nextSkipped = [...skippedIds, question.id];
-    setSkippedIds(nextSkipped);
-    setSaved(false);
-    setFailed(null);
-    const stillOpen = openIndexes(questions, answers, new Set(nextSkipped));
-    if (phase === "late" && !stopAuto && stillOpen.length === 0) { setPhase("gone"); return; }
-    const target = nextOpen(stillOpen, at);
-    if (target !== null) move(target, 1);
-  }, [questions, at, busy, skippedIds, answers, phase, stopAuto, touchQuestions, move]);
-
-  const release = useCallback(() => setPhase("gone"), []);
-  const stop = useCallback(() => { setStopAuto(true); setPhase("late"); setActivity((value) => value + 1); }, []);
-  const keepAnswering = useCallback(() => { setSeconds(TIMING.countdownS); setPhase("late"); setActivity((value) => value + 1); }, []);
+  const release = useCallback(() => setPhase("gone"), [setPhase]);
+  const stop = useCallback(() => { setStopAuto(true); setPhase("late"); setActivity((value) => value + 1); }, [setStopAuto, setPhase, setActivity]);
+  const keepAnswering = useCallback(() => { setSeconds(TIMING.countdownS); setPhase("late"); setActivity((value) => value + 1); }, [setSeconds, setPhase, setActivity]);
 
   return {
     phase, hold: phase === "late" || phase === "idle" || phase === "done", shown: questions.length > 0 && phase !== "gone",
     questions, at, answers, skipped, open, allDone, left: unanswered(questions, answers), busy, saved, failed, slide, focusNonce, seconds, stopAuto,
-    navigate, choose, retry, skip, release, stop, keepAnswering, touch, touchQuestions,
+    navigate, choose, retry, release, stop, keepAnswering, touch, touchQuestions,
   };
 }

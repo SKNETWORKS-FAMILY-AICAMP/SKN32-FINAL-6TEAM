@@ -5,15 +5,13 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { sendingOf } from "@/features/plan-check/from-intake";
 import { PlanCheck } from "@/features/plan-check/plan-check";
-import { STAGE_MIN_MS } from "@/features/plan-check/use-reveal";
 import { PlanningProgress, type PlanningPhase } from "@/features/plan-check/planning-progress";
 import { tripsKey } from "@/lib/gateway";
-import { getIntake } from "@/lib/live/intake";
 import { planFromIntake } from "@/lib/live/intake-plan";
-import { endIntakeStart, intakeStart, rememberIntakeFailure } from "@/lib/live/intake-start";
+import { endIntakeStart, intakeStart, rememberIntakeArrival, rememberIntakeFailure } from "@/lib/live/intake-start";
 import type { OpProgress } from "@/lib/live/stream";
 import { routes } from "@/lib/routes";
-import { useSettings, useT } from "@/lib/settings";
+import { useT } from "@/lib/settings";
 import styles from "./intake-review.module.css";
 
 /** The server has not answered the plan yet: say it is slow after this long, and that it is very slow after this long. */
@@ -21,10 +19,9 @@ export const SLOW_AFTER_MS = 4_000;
 export const VERY_SLOW_AFTER_MS = 15_000;
 
 /**
- * `[2026-10-03 사용자 지시]` The plan check from the moment 「계획 확인하기」 is pressed. The entry page has already started
- * sending (`beginIntake`) and navigated here at once; this screen is the progress screen with the customer's own lines
- * (`sendingOf`) while the server takes the plan. When the server gives the intake an id it reads the intake once (so the next
- * page opens on what the server has, not on a loading screen) and moves to the intake's page, where the server's progress
+ * `[2026-10-08 사용자 지시]` The plan check from the moment 「계획 확인하기」 is pressed. The entry page renders this screen
+ * immediately; sending begins after its first paint. When the server gives the intake an id, the same seed view is handed
+ * to its page before the first GET finishes, so that page can already connect the server's progress
  * stream (`GET …/events`) takes over: the stages move the bar and the lines, places and checks come one at a time.
  *
  * ★`[2026-10-03 사용자 지시]` 「계획 짜 주기」 (the entry page's third panel) takes the other way: there is no plan to read, so the screen
@@ -42,10 +39,6 @@ export function IntakeStarting() {
   const view = useMemo(() => sendingOf(start?.text ?? ""), [start]);
   // Set when the customer leaves with the back arrow: the abort that follows is not a failure to report.
   const left = useRef(false);
-  // The customer's menu choice 「애니메이션 건너뛰기」, read where the effect needs it without restarting the effect when it changes.
-  const { skipAnimation: skipSetting } = useSettings();
-  const skipAnimation = useRef(skipSetting);
-  useEffect(() => { skipAnimation.current = skipSetting; });
   // `[2026-10-03 사용자]` How long the server has been silent: after a few seconds the screen says so (and that going back is possible).
   const [slow, setSlow] = useState<0 | 1 | 2>(0);
   useEffect(() => {
@@ -62,13 +55,15 @@ export function IntakeStarting() {
   useEffect(() => {
     if (!start) { router.replace(routes.newTrip); return; }
     let live = true;
+    // 두 번의 그리기 프레임을 기다려 화면을 실제로 표시한 뒤 전송한다.
+    let secondFrame = 0;
+    const firstFrame = requestAnimationFrame(() => { secondFrame = requestAnimationFrame(() => start.send()); });
     const fail = (error: unknown) => {
       if (!live || left.current) return;
-      rememberIntakeFailure(start, error instanceof Error ? error.message : String(error));
+    rememberIntakeFailure(start, error);
       endIntakeStart(start);
       router.replace(routes.newTrip);
     };
-    const shownAt = Date.now();
     start.result.then(async ({ intake_id }) => {
       if (!live || left.current) return;
       if (start.plan) {
@@ -86,17 +81,12 @@ export function IntakeStarting() {
         } catch (error) { fail(error); }
         return;
       }
-      try { await queryClient.fetchQuery({ queryKey: ["intake", intake_id, start.language], queryFn: () => getIntake(intake_id, start.language) }); }
-      catch { /* the intake's own page reads it again and says what went wrong */ }
-      // ★`[2026-10-03 사용자 지적]` 「받았어요」 is the first stage of the bar at the top: it stays as long as every stage does (a fast server used to
-      //   answer in a few hundred ms and the bar moved on before it could be seen).
-      const seenFor = Date.now() - shownAt;
-      if (!skipAnimation.current && seenFor < STAGE_MIN_MS) await new Promise((resolve) => setTimeout(resolve, STAGE_MIN_MS - seenFor));
       if (!live || left.current) return;
+      rememberIntakeArrival(intake_id, start.text);
       endIntakeStart(start);
       router.replace(routes.intake(intake_id));
     }, fail);
-    return () => { live = false; };
+    return () => { live = false; cancelAnimationFrame(firstFrame); cancelAnimationFrame(secondFrame); };
   }, [start, router, queryClient]);
 
   // Going back gives the entry page what the customer had chosen to send (the files, the planning conditions) — with no sentence of a refusal.

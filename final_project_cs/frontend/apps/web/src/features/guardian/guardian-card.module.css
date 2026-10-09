@@ -51,7 +51,7 @@
 .whereIcon::after { content: ""; position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .whereIcon svg { display: block; width: 20px; height: 20px; }
 /* 도구 설명(마우스 올림 · 키보드 초점): 검은 바탕 흰 글씨 */
-[data-tip]:hover::after, [data-tip]:focus-visible::after {
+.card [data-tip]:hover::after, .card [data-tip]:focus-visible::after {
   content: attr(data-tip) attr(data-kbd); position: absolute; top: calc(100% + var(--space-2)); right: 0; z-index: 2; padding: var(--space-1) var(--space-2); border-radius: 8px;
   background: var(--color-inverse); color: var(--color-on-inverse); font-size: var(--text-meta); font-weight: 500; line-height: 1.4; white-space: pre; pointer-events: none;
 }

@@ -34,7 +34,7 @@
 .found { margin: 12px 2px 0; font-size: 13.5px; color: var(--color-text-secondary); }
 
 /* ③④ The map fills the screen under a floating bar; the sheet slides over it (mockup .map · .fbar · .sheet). */
-.checking { --sheet-h: min(440px, 60%); --soft: cubic-bezier(.22, .8, .3, 1); position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.checking { --sheet-h: min(440px, 60%); --soft: cubic-bezier(.22, .8, .3, 1); position: relative; flex: 1; min-height: 0; overflow: clip; }
 .checking[data-sheet="peek"] { --sheet-h: 104px; }
 .checking[data-sheet="full"] { --sheet-h: calc(100% - 64px); }
 /* The map starts below the floating bar, so no pin hides (or can be pressed) under it. */
@@ -42,13 +42,28 @@
 .bar { position: absolute; top: 8px; left: 10px; right: 10px; z-index: 5; display: flex; align-items: center; gap: 4px; min-height: 48px; padding: 4px 10px 4px 4px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 4px 16px color-mix(in srgb, var(--color-text) 14%, transparent); }
 .bar .progress { flex: 1; min-width: 0; }
 .barTitle { flex: 1; min-width: 0; margin: 0; font-size: 15px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mapChips { position: absolute; left: 10px; right: 68px; bottom: calc(var(--sheet-h) + 8px); z-index: 3; display: flex; flex-wrap: wrap-reverse; align-items: flex-end; gap: 6px; pointer-events: none; transition: bottom 380ms var(--soft); }
+.mapChips { position: absolute; left: 10px; right: 10px; bottom: calc(var(--sheet-h) + 8px); z-index: 3; display: flex; flex-wrap: wrap-reverse; align-items: flex-end; gap: 6px; pointer-events: none; transition: bottom 380ms var(--soft); }
 .picked { width: fit-content; max-width: 100%; margin: 0; padding: 3px 10px; border: 1.5px solid var(--color-text); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font-size: 11.5px; font-weight: 750; overflow-wrap: anywhere; }
 .picked b { font-weight: 800; }
 .mapNeeds { pointer-events: auto; display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 0 11px 0 6px; border: 1.5px solid var(--color-warning-border); border-radius: 999px; background: var(--color-warning-surface); color: var(--color-warning); font: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 14%, transparent); }
 .mapNeeds[aria-pressed="true"] { border-color: var(--color-warning); background: var(--color-warning); color: var(--color-surface); }
 .mapNeeds[aria-pressed="true"] .mark { background: var(--color-surface); color: var(--color-warning); }
 .mapNeeds:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.statusTools { display: flex; width: fit-content; align-items: center; gap: 0; min-width: 0; max-width: 100%; padding: 0 4px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); }
+.statusTools .mapNeeds, .statusTools .changeCount { flex: none; min-width: 44px; min-height: 44px; padding: 0 8px; border: 0; border-radius: 10px; background: transparent; box-shadow: none; font-weight: 600; }
+.statusTools .mapNeeds[aria-pressed="true"] { background: var(--color-warning-soft); color: var(--color-warning); }
+.statusTools .changeCount[aria-expanded="true"] { background: var(--color-adjusted-soft); }
+.statusTools .picked, .statusTools .unlocated { flex: 1; min-width: 0; margin: 8px 0; padding: 0 8px; border: 0; border-radius: 0; background: transparent; font-size: 12px; line-height: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.statusTools b { font-weight: 600; }
+.statusTools > :not(:first-child) { border-left: 1px solid var(--color-divider); }
+.changeTools { position: relative; pointer-events: auto; }
+.changeCount { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 0 10px; border: 1.5px solid var(--color-adjusted-border); border-radius: 999px; background: var(--color-surface); color: var(--color-adjusted); font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
+.changeCount[aria-expanded="true"] { background: var(--color-adjusted-soft); }
+.changeCount:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.changePanel { position: absolute; z-index: 6; left: 0; bottom: calc(100% + 8px); width: max-content; max-width: 270px; display: grid; gap: 8px; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); box-shadow: 0 4px 20px color-mix(in srgb, var(--color-text) 16%, transparent); }
+.changePanel p { margin: 0; color: var(--color-text-secondary); font-size: 12px; }
+.changePanel button { min-height: 44px; font: inherit; font-size: 14px; cursor: pointer; }
+.changePanel button:not(.resetTimes) { border: 0; background: transparent; color: var(--color-text); text-align: left; }
 .unlocated { width: fit-content; max-width: 100%; margin: 0; padding: 3px 10px; border: 1.5px dashed var(--color-warning-border); border-radius: 999px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 750; }
 .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; height: var(--sheet-h); display: flex; flex-direction: column; border-radius: 20px 20px 0 0; background: var(--color-surface); box-shadow: 0 -6px 24px color-mix(in srgb, var(--color-text) 14%, transparent); animation: rise .45s var(--soft); }
 /* ★`[2026-10-06 사용자 지적 — 일정 창 확대·축소가 부드럽지 않다]` The height changes at once (the content never re-flows while it moves) and the sheet SLIDES there on the compositor (a transform, `plan-check.tsx` `useLayoutEffect`). When it gets shorter its bottom edge rises for a moment: this fills what is under it. */
@@ -58,12 +73,23 @@
 .sheetTitle { margin: 0; font-size: 15px; font-weight: 750; }
 .count { margin: 0; font-size: 12.5px; font-weight: 650; color: var(--color-text-secondary); text-align: right; }
 .headBadges { display: inline-flex; gap: 6px; }
-.sheetBody { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 2px 14px 18px; touch-action: pan-y; }
+.sheetBody { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 2px 14px calc(18px + max(var(--follow-room, 0px), var(--focus-room, 0px))); touch-action: pan-y; }
 .day { margin: 12px 0 2px; font-size: 13px; font-weight: 750; color: var(--color-muted); }
 .day small { margin-left: 4px; font-size: inherit; font-weight: 500; }
 
 /* The day's timeline: time · rail · card (a place) or a thin line (the move to the next place) */
 .timeline { list-style: none; margin: 0; padding: 0; }
+.insertPoint { position: relative; height: 24px; margin: 0 0 0 78px; z-index: 3; }
+.insertButton { position: absolute; top: 50%; left: 0; display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 96px; height: 44px; padding: 0 8px; border: 0; border-radius: 8px; background: transparent; color: var(--color-primary); font: inherit; font-size: 11px; cursor: pointer; opacity: 0; pointer-events: none; transform: translateY(-50%); transition: opacity 150ms ease-out; }
+.insertButton::before { content: ""; position: absolute; inset: 10px 0; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); z-index: -1; }
+.insertPoint[data-insert-near] .insertButton, .insertPoint:focus-within .insertButton { opacity: 1; pointer-events: auto; }
+.insertButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.insertButton:hover .iconTip, .insertButton:focus-visible .iconTip { opacity: 1; visibility: visible; }
+.insertPoint[data-insert-open] { height: auto; padding: 20px 0 16px; margin-left: 0; }
+.insertPoint[data-insert-open] > .insertButton { display: none; }
+.insertForm { min-width: 0; scroll-margin-top: 76px; }
+.insertHint { margin: 0 0 8px; color: var(--color-muted); font-size: 12px; }
+@media (prefers-reduced-motion: reduce) { .insertButton { transition: none; } }
 /* `[2026-10-05 사용자 지시 · 일정 상자 안 B]` A fixed time column (44px) and equal gaps (8px) so every row starts in the same place: the time on the same line as its dot, the card the same distance from the line. */
 .entry { display: grid; grid-template-columns: 44px 18px minmax(0, 1fr); column-gap: 8px; animation: riseSoft .6s cubic-bezier(.2, .8, .2, 1); }
 /* The time is a button once the plan is checked: a button centres its text in the whole row and let the time drift under its dot - it is held to the top, and its line (18px) is centred on the dot.
@@ -73,6 +99,16 @@ button.time { cursor: pointer; }
 .entry[data-type="move"] .time { display: flex; flex-direction: column; align-items: flex-end; padding-top: calc(8.9px + var(--lead, 0px)); line-height: 1.15; }   /* the two-line time (13px of glyphs on each side) is centred on the leg's 44px row */
 .entry[data-type="move"] .time b { font-size: 11.5px; font-weight: 500; color: var(--color-faint); }
 .entry[data-type="move"] .time small { font-size: 10px; font-weight: 500; color: var(--color-faint); }
+.entry[data-type="move"] { min-height: 80px; }
+.moveClock { position: relative; align-self: stretch; font-variant-numeric: tabular-nums; }
+.entry[data-type="move"] .moveClock .time { position: absolute; top: calc(16.5px + var(--lead, 0px)); right: 0; display: flex; flex-direction: row; align-items: center; justify-content: flex-end; width: 44px; min-height: 44px; padding: 0; font-size: 12px; line-height: 16px; font-weight: 400; color: var(--color-muted); }
+.timeStack { position: relative; display: block; white-space: nowrap; }
+.rangeEnd { position: absolute; top: calc(100% + 2px); right: 0; font-size: 12px; line-height: 16px; font-weight: 400; color: var(--color-muted); letter-spacing: normal; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity 150ms ease-in, transform 150ms ease-in; }
+.entry[data-time-focused] .rangeEnd { opacity: 1; transform: translateY(0); transition-duration: 200ms; transition-timing-function: ease-out; }
+.entry[data-time-focused] .timeStack > time:first-child { font-weight: 600; }
+@media (prefers-reduced-motion: reduce) {
+  .rangeEnd, .entry[data-time-focused] .rangeEnd { transition: none; transform: none; }
+}
 .rail { position: relative; }
 .rail::before { content: ""; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--color-border); }
 .entry[data-type="move"] .rail::before { background: repeating-linear-gradient(to bottom, var(--color-faint) 0 3px, transparent 3px 7px); }
@@ -80,12 +116,16 @@ button.time { cursor: pointer; }
 .entry[data-type="move"] .dot { left: 5px; top: calc(18px + var(--lead, 0px)); width: 8px; height: 8px; }
 .entry[data-verdict="keep"] .dot, .entry[data-verdict="adjusted"] .dot { border-color: var(--color-success); background: var(--color-success-soft); }
 .entry[data-verdict="review"] .dot { border-color: var(--color-warning); background: var(--color-warning-soft); }
+.entry[data-type="move"] .departureMark { left: -1px; top: calc(28.5px + var(--lead, 0px)); display: grid; place-items: center; width: 20px; height: 20px; border: 0; border-radius: 0; background: var(--color-surface); color: var(--color-muted); }
+.entry[data-type="move"][data-verdict="review"] .departureMark { color: var(--color-warning); }
 
 .card { margin: 4px 0; border: 1.5px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
 .entry[data-verdict="checking"] .card { border-color: var(--color-faint); }
 .entry[data-verdict="keep"] .card, .entry[data-verdict="adjusted"] .card { border-color: var(--color-success); }
 .entry[data-verdict="review"] .card { border-color: var(--color-warning-border); background: var(--color-warning-surface); }
-.screen[data-stage="done"] .entry[data-verdict="keep"] .card, .screen[data-stage="done"] .entry[data-verdict="adjusted"] .card { border-color: var(--color-border); }
+.screen[data-stage="done"] .entry:is([data-verdict="keep"], [data-verdict="checking"]) .card { border-color: transparent; }
+.screen[data-stage="done"] .entry[data-verdict="adjusted"] .card { border-color: var(--color-adjusted-border); }
+.screen[data-stage="done"] .entry[data-type="item"]:is([data-selected], :focus-within) .card { border-color: var(--color-selected); }
 .cardHead { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 12px; }
 .cardTitle { flex: 1; min-width: 0; margin: 0; font-size: 16px; font-weight: 750; overflow-wrap: anywhere; }
 .spinner { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--color-border); border-top-color: var(--color-muted); animation: spin .8s linear infinite; }
@@ -151,19 +191,20 @@ button.moveHead { cursor: pointer; }
 .footButton[data-primary] .spinner { border-color: color-mix(in srgb, var(--color-on-primary) 35%, transparent); border-top-color: var(--color-on-primary); }
 .footButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 
-/* ⑥⑦ Card tools: the lock, edit and delete on the card; recommend and edit inside. One that cannot act is faint and says why. */
-/* ★`[2026-10-06 사용자 지적]` 「변경 완료 · 되돌리기 · 수정 · 삭제」가 한 줄에 몰리면 제목이 한 글자 폭으로 눌려 세로로 꺾였다: 제목은 최소 9em 을 지키고, 도구가 모자라면 다음 줄 오른쪽으로 내려간다. */
-.cardTop { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 2px; padding: 0 4px; }
+/* 제목 옆에서 자동 추천·수정·삭제를 한 줄로 쓰고, 긴 제목은 두 줄까지만 표시한다. */
+.cardTop { display: flex; flex-wrap: nowrap; justify-content: flex-end; align-items: center; gap: 2px; padding: 0 4px; }
 /* `[2026-10-07 사용자 지시]` The state, edit and delete stand on the name's line (they dropped to a second line once the name asked for 9em); the name gives way (it may take two lines) before the tools wrap. */
-.cardTop .cardHeading { flex: 1 1 4.5em; min-width: 4.5em; }
-.cardTools { display: inline-flex; flex: none; align-items: center; gap: 2px; margin-left: auto; }
+.cardTop .cardHeading { flex: 1 1 auto; min-width: 0; }
+.cardTools { display: inline-flex; flex: none; align-items: center; gap: 0; margin-left: auto; }
 .cardTop .cardHead { padding: 12px 4px; }
-.cardTop .cardTitle { font-size: 15.5px; line-height: 1.3; word-break: keep-all; }
-.icon { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border: 0; border-radius: 8px; background: none; color: var(--color-muted); cursor: pointer; }
+.cardTop .cardTitle { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 15.5px; line-height: 1.3; word-break: keep-all; }
+.icon { position: relative; display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border: 0; border-radius: 8px; background: none; color: var(--color-muted); cursor: pointer; }
+.itemKind, .lockIcon { display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; color: var(--color-muted); }
+.cardTools .icon { width: 44px; height: 44px; }
 .icon:hover:not([aria-disabled="true"]) { background: var(--color-subtle-strong); color: var(--color-text); }
 .icon[aria-disabled="true"] { opacity: .28; --o: .28; cursor: not-allowed; }
 /* ★`[2026-10-07 사용자 지시 — 수정 · 삭제는 가리키거나 고를 때만]` The edit and delete of a card show while the card is pointed at, holds the focus, is open or is picked
-   (on a phone: open or picked - a tap on the card opens it). The state 「확인 필요」, the lock and 「삭제 되돌리기」 always show. The buttons keep their place, so the name does not jump. */
+   (on a phone: open or picked - a tap on the card opens it). The state 「확인 필요」 and 「삭제 되돌리기」 always show. The lock is rendered only when details are open; otherwise a stop-kind icon takes its place. */
 @media (hover: hover) {
   .cardTools .icon:not([data-restore]) { opacity: calc(var(--o, 1) * var(--tools, 0)); transition: opacity .15s var(--ease-soft, ease); }
 }
@@ -172,14 +213,22 @@ button.moveHead { cursor: pointer; }
   .card[data-open] .cardTools .icon, .entry[data-selected] .cardTools .icon, .card:focus-within .cardTools .icon, .entry[data-tools] .cardTools .icon { visibility: visible; }
 }
 .card:hover, .card:focus-within, .card[data-open], .entry[data-selected] .card { --tools: 1; }
-.icon[aria-pressed="true"] { background: var(--color-text); color: var(--color-surface); opacity: 1; }
-.card[data-locked] { border-color: var(--color-border-strong); background: var(--color-subtle); }
+.lockIcon[aria-pressed="true"] { color: var(--color-text); opacity: 1; }
+.lockIcon[aria-pressed="true"] > svg rect { fill: currentColor; fill-opacity: .2; }
+.lockIcon:hover:not([aria-disabled="true"]) { background: none; color: var(--color-text); }
+.entry[data-selected] .card[data-locked] { box-shadow: none; }
 /* `[2026-10-07 사용자 지시]` The whole card opens and closes the checks (the buttons in it keep doing what they say). */
 .card[data-pickable] { cursor: pointer; }
 .card[data-pickable] [data-details] { cursor: auto; }
 /* `[2026-10-07 사용자 지시 — 총 두 줄]` The card's second line, under the name: 「바뀜 · 이전 …」 · its 「되돌리기」 · on a shut card 「✕ 장소」 chips. The state, edit and delete stay on the name's line. */
-.cardSub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: -8px 0 0; padding: 0 12px 10px 46px; }
-.cardSub .cardWritten { margin: 0; }
+.cardTitleLine { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.cardName .cardTitleLine .cardTitle { flex: 0 1 auto; }
+.changedMark { display: inline-flex; flex: none; color: var(--color-adjusted); }
+.cardFoot { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: flex-end; gap: 4px 8px; padding: 0 12px 8px; }
+.cardFootNote { flex: 1 1 96px; min-width: 0; }
+.cardFootNote .cardWritten { display: block; margin: 0; font-size: 12px; font-weight: 600; }
+.cardFootTools { display: flex; flex: none; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.cardFootTools .pill { font-size: 12px; font-weight: 600; }
 .needsInline { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; }
 /* What of the stop is still the customer's to deal with, under the name of a shut card: 「✕ 장소」 · 「! 시간」. */
 .needs { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: -4px 0 0; padding: 0 12px 10px 46px; }
@@ -193,6 +242,8 @@ button.moveHead { cursor: pointer; }
 .status { display: inline-flex; align-items: center; gap: 6px; }
 .empty { margin: 16px 0; padding: 14px; border-radius: 10px; background: var(--color-subtle); font-size: 13px; color: var(--color-muted); text-align: center; }
 .icon:focus-visible, .action:focus-visible, .previous button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.lockIcon:focus-visible { outline: none; }
+.lockIcon:focus-visible > svg { color: var(--color-primary); stroke-width: 2.6; }
 .cardActions { display: flex; gap: 8px; padding: 0 12px 12px; }
 /* `[2026-10-07]` A photo's line read two ways: the two values side by side, equal weight (the server cannot tell which is right). Warning tone, like the check row above it. */
 .reread { margin: 0 12px 10px; padding: 10px; border-radius: 10px; background: var(--color-warning-soft); }
@@ -334,18 +385,31 @@ button.moveHead { cursor: pointer; }
 .pagerDot > span { display: block; width: 6px; height: 6px; border-radius: 10px; background: var(--color-faint); transition: width .25s, background .25s; }
 .pagerDot[aria-current="step"] > span { width: 22px; background: var(--color-primary); }
 .pagerDot:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; border-radius: 8px; }
-.pullHintTop { composes: pullHint; margin: 6px 0 14px; }
 @media (prefers-reduced-motion: reduce) { .timeEditor { animation: none; } .page[data-turn], .page[data-shake] { animation: none; } .page[data-pull] { transition: none; } .pagerDot > span { transition: none; } }
-.pullHint:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.pullHint:focus-visible, .pullEmpty:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 /* At the end of the list: a hint that fills as the customer keeps pushing, and opens the next page when it is full. */
-.pullHint { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 14px 0 4px; padding: 12px 10px 14px; border: 1px dashed var(--color-border-strong); border-radius: 12px; background: var(--color-subtle); color: var(--color-muted); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; overflow: hidden; }
-.pullHint[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+/* 목록 끝이 아래 추천 영역으로 이어지는 안내. 별도 상자보다 같은 바닥으로 읽힌다. */
+.sheetBody[data-next-preview] { padding-bottom: max(var(--follow-room, 0px), var(--focus-room, 0px)); }
+.pullHint { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; width: calc(100% + 28px); min-height: 168px; margin: 16px -14px 0; padding: 24px 24px 16px; border: 0; border-radius: 28px 28px 0 0; background: var(--color-subtle); color: var(--color-text); font: inherit; cursor: pointer; overflow: hidden; }
+.pullHint::before, .pullHint::after { content: ""; position: absolute; z-index: -1; pointer-events: none; width: 150%; height: 96px; left: -25%; bottom: -40px; border-radius: 50%; background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface)); }
+.pullHint::after { left: 10%; bottom: -60px; background: color-mix(in srgb, var(--color-primary) 9%, var(--color-surface)); }
+.pullCopy { display: block; font-size: 16px; font-weight: 600; line-height: 1.5; }
+.pullDirection { display: inline-flex; align-items: center; justify-content: center; gap: 16px; color: var(--color-primary); font-size: 14px; font-weight: 400; line-height: 1.5; }
+.pullDirection svg { flex: none; transform: translateY(calc(var(--pull, 0) * 8px)); transition: transform 150ms ease-out; }
+.pullSteps { display: flex; align-items: center; gap: 8px; height: 8px; }
+.pullSteps i { width: 6px; height: 6px; border-radius: 8px; background: var(--color-muted); }
+.pullSteps i:first-child { width: 28px; background: var(--color-primary); }
+.pullEmpty { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; margin: 12px 0 0; padding: 12px; border: 0; background: none; color: var(--color-muted); font: inherit; font-size: 12px; cursor: pointer; }
+.pullHintTop { composes: pullEmpty; margin: 6px 0 14px; }
+.pullEmpty[aria-disabled="true"] { opacity: .6; cursor: not-allowed; }
+.sheet:has(.sheetBody[data-next-preview]) .footer { border-top-color: transparent; background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface)); }
+.sheet:has(.sheetBody[data-next-preview]) .pager { background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface)); }
 /* `[2026-10-05 사용자 선택]` Nothing to recommend and the customer pushes on: the list stays where it is and shakes a little (sideways, not up - it is not going anywhere). */
 .page[data-shake] { animation: shakeInPlace .46s cubic-bezier(.36, .07, .19, .97); }
 @keyframes shakeInPlace { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); } 30%, 50%, 70% { transform: translateX(-6px); } 40%, 60% { transform: translateX(6px); } }
-.pullHint[data-edge] { border-color: var(--color-adjusted); color: var(--color-adjusted); }
-.pullBar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--color-border); }
-.pullBar > span { display: block; height: 100%; width: calc(var(--pull, 0) * 100%); background: var(--color-adjusted); transition: width .12s linear; }
+.pullHint[data-edge] { color: var(--color-primary); }
+.pullBar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: transparent; }
+.pullBar > span { display: block; height: 100%; background: var(--color-primary); transform-origin: left; transform: scaleX(var(--pull, 0)); transition: transform 150ms ease-out; }
 
 /* While the check is drawn the list follows its newest row; scrolled away by hand, this brings the customer back to it. */
 .followPill { position: sticky; bottom: 8px; z-index: 2; display: flex; align-items: center; gap: 4px; margin: 8px auto 0; padding: 7px 14px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12.5px; font-weight: 750; box-shadow: 0 4px 14px color-mix(in srgb, var(--color-text) 16%, transparent); cursor: pointer; }
@@ -403,8 +467,20 @@ button.moveHead { cursor: pointer; }
 .headTrack > span { display: block; height: 100%; border-radius: inherit; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
 
 /* 한국관광공사 출처 표시 — 확인 목록의 맨 아래 */
-.credit { margin: 14px 0 4px; font-size: 11.5px; line-height: 1.6; color: var(--color-muted); text-align: center; }
+.credit { --credit-enter: 200ms; --credit-exit: 150ms; margin: 8px 0 4px; font-size: 12px; line-height: 1.6; color: var(--color-muted); transition: opacity var(--credit-enter) var(--ease-soft); }
+.credit[data-muted] { opacity: 0; pointer-events: none; transition-duration: var(--credit-exit); transition-timing-function: var(--ease-leave); }
+.credit summary { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; list-style: none; cursor: pointer; }
+.credit summary::-webkit-details-marker { display: none; }
+.credit summary span { min-width: 0; }
+.credit summary svg { flex: none; transition: transform var(--credit-enter) var(--ease-soft); }
+.credit[open] summary svg { transform: rotate(180deg); }
+.credit summary:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; border-radius: 8px; }
+.creditDetails { padding: 8px 12px; border: 1px solid var(--color-border-strong); border-radius: 8px; background: var(--color-surface); }
+.creditDetails p { margin: 0; }
+.creditDetails p + p { margin-top: 4px; }
+.creditDetails [data-route-note] { display: block; }
 .credit a { color: inherit; text-decoration: underline; }
+@media (prefers-reduced-motion: reduce) { .credit, .credit[data-muted], .credit summary svg { transition: none; } .page[data-slide] { animation: none; } }
 /* `[2026-10-04]` 게스트 제한에 걸리면 등록 줄 위 오류에 붙는 「계정 연결」 안내. */
 .loginHint { margin: 6px 0 0; font-size: 12px; line-height: 1.6; color: var(--color-muted); }
 .loginHint a { color: var(--color-primary); font-weight: 750; text-decoration: underline; }
@@ -436,9 +512,14 @@ button.headBadge { cursor: pointer; }
 .sheetHead[data-float] { position: absolute; z-index: 3; top: 0; left: 0; right: 0; padding: 22px 12px 6px; border-bottom: 0; background: transparent; pointer-events: none; }
 .sheetHead[data-float] > * { pointer-events: auto; }
 .sheetHead[data-float] .dayStrip { padding-left: 2px; }
+.sheetHead[data-float] .dayStrip { --day-enter: 200ms; --day-exit: 150ms; opacity: 1; transform: translateY(0); transition: opacity var(--day-enter) ease-out, transform var(--day-enter) ease-out; }
+.sheetHead[data-float] .dayStrip[data-quiet] { opacity: 0; transform: translateY(-4px); pointer-events: none; transition-duration: var(--day-exit); transition-timing-function: ease-in; }
+@media (prefers-reduced-motion: reduce) {
+  .sheetHead[data-float] .dayStrip { transform: none; transition: none; }
+}
 .sheetHead[data-float] .dayChip:not([data-lit]) { background: var(--color-surface); }
 .sheetHead[data-float] :is(.dayChip, .resetTimes, .headBadge) { box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 12%, transparent); }
-.sheetBody[data-under-float] { padding-top: 64px; }
+.sheetBody[data-under-float] { padding-top: 64px; scroll-padding-top: 64px; }
 
 /* A stop that was changed: blue, the way 「확인 필요」 is amber. A stop marked for deletion: grey, 「되돌리기」 where the bin was. */
 .screen[data-stage] .entry[data-changed] .card { border-color: var(--color-adjusted-border); background: color-mix(in srgb, var(--color-adjusted-soft) 60%, var(--color-surface)); }
@@ -515,10 +596,11 @@ button.time[data-adjusted] { color: var(--color-adjusted); }
 /* 바꾼 시간의 「되돌리기」(수정·삭제 앞, 「확인 필요」가 나오는 자리) · 머리의 「시간 초기화」 */
 .undoTime, .resetTimes { display: inline-flex; flex: none; align-items: center; gap: 4px; min-height: 28px; padding: 0 9px; border: 1px solid var(--color-adjusted-border); border-radius: 999px; background: var(--color-surface); color: var(--color-adjusted); font: inherit; font-size: 11.5px; font-weight: 750; white-space: nowrap; cursor: pointer; }
 .undoTime[aria-disabled="true"] { opacity: .4; cursor: not-allowed; }
+.cardFootTools .undoTime { min-height: 44px; padding: 0 12px; font-size: 14px; font-weight: 600; }
 .undoTime:focus-visible, .resetTimes:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 .resetTimes { margin: 0; }
 /* 이동 줄 아래의 여유 — 비는 시간만큼 간격이 벌어지고, 15분 넘게 비면 한 번 연하게 적는다(늦으면 주황으로). */
-.moveCol { display: flex; flex-direction: column; min-width: 0; }
+.moveCol { display: flex; flex-direction: column; min-width: 0; padding-top: 16px; }
 .moveFree { flex: none; font-size: 11.5px; font-weight: 600; color: var(--color-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .moveFree[data-late] { color: var(--color-warning); font-weight: 750; }
 .freeGap { flex: none; }
@@ -583,4 +665,57 @@ button.time[data-adjusted] { color: var(--color-adjusted); }
 .modeNone { display: grid; justify-items: start; gap: 6px; padding: 10px 12px; border-radius: 12px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 12.5px; line-height: 1.6; }
 .modeNone p { margin: 0; }
 @media (prefers-reduced-motion: reduce) { .modeList { animation: none; } .modeButton > svg { transition: none; } }
+.addStop { margin: 8px 0 16px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
+.addStop summary { min-height: 44px; display: flex; align-items: center; padding: 12px 16px; color: var(--color-primary); cursor: pointer; }
+.addStop form { display: grid; gap: 12px; padding: 0 16px 16px; }
+.addStop label { display: grid; gap: 8px; color: var(--color-text); font-size: 14px; }
+.addStop input, .addStop select { min-width: 0; width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: inherit; font: inherit; }
+.addStopTimes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.addStop button { min-height: 44px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--color-border); background: var(--color-primary); color: var(--color-on-primary); font: inherit; cursor: pointer; }
+.addStop p { margin: 0; color: var(--color-muted); font-size: 12px; }
 
+/* 상태 막대는 선택 일정부터 읽고, 오른쪽에서 확인·변경·복원을 이어간다. */
+.statusTools .undoAll { position: relative; display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 0 12px 12px 0; background: transparent; color: var(--color-adjusted); cursor: pointer; pointer-events: auto; }
+.statusTools .undoAll:hover { background: var(--color-adjusted-soft); }
+.statusTools .undoAll:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.iconTip { position: absolute; z-index: 12; right: 0; bottom: calc(100% + 8px); width: max-content; max-width: 208px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-text); font-size: 12px; font-weight: 400; line-height: 1.4; text-align: left; white-space: normal; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 150ms ease-out; }
+.icon:hover .iconTip, .icon:focus-visible .iconTip, .undoAll:hover .iconTip, .undoAll:focus-visible .iconTip, .changeCount:hover + .iconTip, .changeCount:focus-visible + .iconTip { opacity: 1; visibility: visible; }
+@media (prefers-reduced-motion: reduce) { .pullDirection svg, .pullBar > span, .iconTip { transition: none; } .pullDirection svg { transform: none; } }
+
+/* 2026-10-09: 지도 정보는 각각의 작은 칩으로 분리한다. */
+.mapChips { transition: bottom 380ms var(--soft), opacity 200ms ease-out, transform 200ms ease-out; }
+.mapChips[data-muted] { opacity: 0; transform: translateY(4px); pointer-events: none; }
+.statusTools { gap: 4px; padding: 0; border: 0; border-radius: 0; background: none; }
+.statusTools > :not(:first-child) { border-left: 0; }
+.statusTools .picked, .statusTools .unlocated { margin: 0; padding: 5px 9px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); font-size: 11px; line-height: 18px; }
+.statusTools .mapNeeds, .statusTools .changeCount { min-height: 32px; height: 32px; min-width: 44px; padding: 0 8px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); font-size: 11px; }
+.statusTools .undoAll { width: 32px; height: 32px; border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface); }
+.cardTop { gap: 0; padding: 0 2px; }
+.cardTools .icon { width: 36px; height: 44px; }
+.entry[data-type="item"] > .time { position: sticky; top: 0; z-index: 1; font-size: 16px; line-height: 20px; font-weight: 400; padding: 17.5px 0 6.5px; }
+.sheetBody[data-under-float] .entry[data-type="item"] > .time { top: 64px; }
+.sheetHead[data-done]:not([data-float]) { padding: 18px 12px 0; min-height: 18px; border: 0; }
+.autoAllTop { position: static; flex: none; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; margin: 0 0 8px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12px; cursor: pointer; }
+.topActions { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin-bottom: 8px; }
+.topActions .autoAllTop { margin: 0; }
+.unlockAllTop { position: static; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--color-muted); font: inherit; font-size: 12px; cursor: pointer; }
+.unlockAllTop:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; border-radius: 8px; }
+.footer.footer { position: absolute; z-index: 7; right: 18px; bottom: 22px; width: 58px; height: 58px; padding: 0; gap: 0; flex-wrap: nowrap; border: 1px solid transparent; border-radius: 29px; background: var(--color-primary); }
+.footer.footer { opacity: 1; transform: translateY(0); transition: opacity 200ms ease-out, transform 200ms ease-out; }
+.footer.footer[data-quiet] { opacity: 0; transform: translateY(4px); pointer-events: none; transition-duration: 150ms; transition-timing-function: ease-in; }
+@media (prefers-reduced-motion: reduce) { .footer.footer, .footer.footer[data-quiet] { transform: none; transition: none; } }
+.footer .footButton { flex: none; display: grid; width: 56px; height: 56px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--color-on-primary); }
+.footer .footButton[aria-disabled="true"] { opacity: .65; }
+.footer > [role="alert"] { position: absolute; right: 0; bottom: calc(100% + 12px); width: min(320px, calc(100vw - 40px)); padding: 12px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-surface); box-shadow: 0 4px 16px var(--color-shadow-light); }
+.footButton:hover .iconTip, .footButton:focus-visible .iconTip { opacity: 1; visibility: visible; }
+.sheetBody { padding-bottom: max(88px, calc(18px + max(var(--follow-room, 0px), var(--focus-room, 0px)))); }
+.sheetBody[data-next-preview] { padding-bottom: max(88px, var(--follow-room, 0px), var(--focus-room, 0px)); }
+.credit { margin: 0; font-size: 10px; font-weight: 400; }
+.credit summary { gap: 4px; }
+.pullHint { flex-direction: row; gap: 6px; width: 100%; min-height: 52px; margin: 4px 0; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-subtle); font-size: 12px; font-weight: 400; line-height: 1.5; }
+.pullHint::before, .pullHint::after { display: none; }
+.pullDirection { gap: 8px; font-size: 12px; }
+.pullDirection svg { width: 16px; height: 16px; }
+@media (prefers-reduced-motion: reduce) { .mapChips { transition: none; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) { .mapChips[data-muted] { transform: none; } }

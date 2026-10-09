@@ -7,6 +7,14 @@
 :root, [data-theme="green"] {
   /* `[2026-10-06 사용자 지적 — 애니메이션을 전체적으로 부드럽게]` 움직임의 곡선과 시간은 이 셋만 쓴다: 부드럽게 감속(들어옴 · 미끄러짐) · 부드럽게 가속(나감) · 시간. */
   --ease-soft: cubic-bezier(.22, .8, .3, 1); --ease-leave: cubic-bezier(.4, 0, .8, .4); --motion-soft: 340ms;
+
+  --color-shadow-light: #0002;
+  --color-brand-paper: #fff;
+  --color-brand-ink: #191919;
+  --color-brand-border: #d8dfdb;
+  --color-brand-kakao: #fee500;
+  --color-brand-naver: #03a94d;
+  --color-brand-discord: #5865f2;
   color-scheme: light;
   --color-text: #24392f;
   /* `[2026-10-07 사용자 결정 — 흐린 글자 한 단계 진하게]` 흐린 글자(--color-faint)는 흰 바탕 · 연한 바탕에서 읽기 기준 4.5:1 이상, 보조 글자(--color-muted)는 그보다 한 단계 진하게(5.5:1 이상). 이전: muted #6d7c73(4.4:1) · faint #a5b1a9(2.2:1) / 화이트 muted #86868c(3.6:1) · faint #b9b9bd(2.0:1) */
@@ -48,6 +56,14 @@
 
 /* White theme — the plan-check streaming mockup (`mockups/tripilot-plan-check-streaming.html`). */
 [data-theme="neutral"] {
+  --color-shadow-light: #0002;
+  --color-brand-paper: #fff;
+  --color-brand-ink: #191919;
+  --color-brand-border: #d8dfdb;
+  --color-brand-kakao: #fee500;
+  --color-brand-naver: #03a94d;
+  --color-brand-discord: #5865f2;
+
   --color-text: #1c1c1e;
   --color-muted: #5f5f65;
   --color-border: #dadad6;

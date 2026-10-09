@@ -190,7 +190,7 @@ class IntakeConfirmIn(BaseModel):
 class IntakeSurveyIn(BaseModel):
     """로딩 중 질문의 답 — `{문항: 선택지 번호}`. 한 개 이상 · 부분 답 · 같은 문항을 다시 보내면 덮어쓴다(`components/intake/survey_answers.py`)."""
     model_config = ConfigDict(extra="forbid")
-    answers: dict[str, str] = Field(min_length=1, max_length=8)
+    answers: dict[str, str | dict[str, str] | None] = Field(min_length=1, max_length=8)
 
 
 class MoveEndIn(BaseModel):
@@ -222,6 +222,11 @@ class IntakeRevisionIn(BaseModel):
 class IntakeModeIn(IntakeRevisionIn):
     """이동수단 고르기 — `mode` = `subway|bus|taxi|walk`(그 수단으로) · `recommended`(추천으로 되돌리기). `[2026-10-07]`"""
     mode: str = Field(min_length=1, max_length=16)
+
+
+class IntakeRestoreIn(IntakeRevisionIn):
+    """전체 되돌리기 — 현재 판과 같은 접수에서 복원할 완료된 과거 판."""
+    restore_revision: int = Field(ge=1)
 
 
 class IntakeAutofixIn(IntakeRevisionIn):
@@ -1357,6 +1362,21 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(409, exc.code, exc.message, **exc.detail) from None
         except IntakeRejected as exc:
             raise _error(422, exc.code, exc.message) from None
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/restore")
+    def web_intake_restore(intake_id: UUID, request: IntakeRestoreIn, who: tuple[str, UUID] = Depends(_web_customer)):
+        """완료된 원판을 새 판으로 전체 복원한다. 현재 잠금·예약·판 충돌은 부분 저장 없이 거절한다."""
+        from app.domains.travel_ops.components.intake.pipeline import IntakeConflict, restore
+
+        tenant, customer = who
+        try:
+            with get_connection() as conn:
+                return restore(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                               revision=request.revision, restore_revision=request.restore_revision)
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
 
     # ── 확인 화면 수정 화면: 대체 후보 · 장소 검색 · 사진 · 전체 자동 추천 · 재검증 (2026-10-02, 계획 확인 시나리오 목업) ─────────
     def _review_call(intake_id: UUID, customer: UUID, tenant: str, revision: int | None, use):

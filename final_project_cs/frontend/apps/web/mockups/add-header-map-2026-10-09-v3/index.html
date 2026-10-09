@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>일정 추가 · 상단 검색과 지도 단추</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#edf1ed;color:#213c32;font:15px/1.7 system-ui,sans-serif}main{max-width:1120px;margin:auto;padding:28px 20px 64px}h1{font-size:25px;margin:0 0 8px}h2{font-size:19px;margin:0 0 8px}p{margin:0 0 16px;color:#53665c}.toolbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;background:#edf1edf5;padding:12px 0;border-bottom:1px solid #ccd7cf;margin-bottom:24px}select{font:inherit;border:1px solid #c8d4cc;border-radius:12px;padding:8px 12px;background:white;color:inherit;min-height:44px}section{padding:22px;background:white;border:1px solid #d9e1dc;border-radius:24px;margin:24px 0}figure{margin:16px 0 0;text-align:center;background:#e3e9e3;border-radius:18px;padding:14px}img{max-width:100%;width:375px;height:auto;border-radius:16px;vertical-align:middle}body[data-wide] img{width:100%}a{color:inherit}small{display:block;margin-top:8px;color:#64776a}
+</style>
+<main><h1>일정 추가 · 상단 검색과 지도 단추</h1><p>이번 수정이 반영된 실제 프론트를 새로 촬영했습니다. 이전 화면이 섞이지 않도록 최신 화면만 모았습니다.</p><p>로컬 mock 서버 응답을 사용한 Chrome 화면입니다. 실제 로그인·공개 배포 확인은 포함하지 않습니다. 이미지를 누르면 원본을 볼 수 있습니다.</p>
+<div class="toolbar"><label for="size">촬영 화면</label><select id="size"><option value="375">375px 휴대폰</option><option value="1280">1280px 넓은 화면</option></select></div>
+<section><h2>상단에서 장소 검색</h2><p>로고·여행 제목 자리가 뒤로가기와 검색창으로 전환됩니다. 아래에는 검색 결과가 나오고 중복 검색 입력칸은 없습니다.</p><figure><a data-shot="01-search"><img alt="상단 검색창과 장소 결과"></a></figure></section>
+<section><h2>장소를 고른 뒤 날짜와 시각 입력</h2><p>고른 지점을 유지하며 일정 이름·날짜·시각·종류를 입력합니다. 뒤로가기는 추가를 취소합니다.</p><figure><a data-shot="02-selected"><img alt="선택한 장소와 일정 추가 입력"></a></figure></section>
+<section><h2>낮은 지도에서는 옆으로 펼치기</h2><p>별도 눈금 막대를 제거하고 화살표와 거리를 한 버튼에 넣었습니다. 일정 번호 배지와 이동 거리를 구분했습니다.</p><figure><a data-shot="03-horizontal"><img alt="옆으로 펼친 지도 단추와 거리 표시"></a></figure></section>
+<section><h2>아래가 넓으면 아래로 펼치기</h2><p>기본은 접혀 있습니다. 단추가 없는 높이의 거리 칩은 지도 가장자리에 붙습니다.</p><figure><a data-shot="04-vertical"><img alt="아래로 펼치는 거리 단추와 독립 정보칩"></a></figure></section>
+<section><h2>취소하면 원래 목록으로</h2><p>뒤로가기 또는 왼쪽 빈 배경의 오른쪽 스와이프로 돌아옵니다. 버튼·입력칸·지도 조작과 세로 스크롤은 취소로 처리하지 않습니다. 앞서 수정한 독립 정보칩도 함께 반영했습니다.</p><figure><a data-shot="05-return"><img alt="취소 후 원래 일정 목록"></a></figure></section>
+</main><script>
+const size=document.getElementById('size');function render(){document.body.toggleAttribute('data-wide',size.value==='1280');document.querySelectorAll('[data-shot]').forEach(a=>{const src=a.dataset.shot+'-'+size.value+'.png';a.href=src;a.querySelector('img').src=src;});}size.addEventListener('change',render);render();
+</script></html>

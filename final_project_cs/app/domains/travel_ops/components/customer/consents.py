@@ -83,15 +83,21 @@ def _is_ok(rows: dict[str, tuple[bool, str, str, datetime]], version: str) -> bo
     return all(code in rows and rows[code][0] and rows[code][1] == version for code in required_codes())
 
 
-def state(conn, tenant_id: str, user_id: UUID) -> dict[str, Any]:
+def state(conn, tenant_id: str, user_id: UUID, *, progress: Callable[[str], None] | None = None) -> dict[str, Any]:
     """`GET /v1/web/consents` 의 모양. 기록이 없는 항목은 `agreed:false` · 나머지 null. `ok` = 필수가 모두 **지금 버전으로** 동의됨."""
+    if progress:
+        progress("consent_records")
     rows = _current_rows(conn, tenant_id, user_id)
     items = []
     for code in CODES:
         row = rows.get(code)
         items.append({"code": code, "agreed": bool(row and row[0]), "version": row[1] if row else None,
                       "agreed_at": row[3].isoformat() if row else None})
+    if progress:
+        progress("consent_version")
     version = current_version(conn, tenant_id)
+    if progress:
+        progress("consent_required")
     return {"current_version": version, "required": list(required_codes()), "items": items, "ok": _is_ok(rows, version)}
 
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import { useId, type CSSProperties, type ReactNode } from "react";
 import type { Translate } from "@/lib/i18n";
 import { useT } from "@/lib/settings";
 import type { CheckKind, CheckResult, CheckRow, PlaceInfo, Verdict } from "./model";
@@ -117,14 +117,15 @@ export function SourceTag({ origin }: { origin: string | null | undefined }) {
 export const reason = (error: unknown) => error instanceof Error ? error.message : String(error);
 
 /** A button that stays reachable when it cannot act: pressing it says why (mockup: 「꺼진 버튼을 누르면 이유를 알려 준다」). */
-export function Act({ why, onPress, explain, className, children, title, ...rest }: {
+export function Act({ why, onPress, explain, className, children, title, tooltip, ...rest }: {
   why: string | null; onPress: () => void; explain: (why: string) => void; className?: string; children: ReactNode;
-  id?: string; title?: string; "aria-label"?: string; "aria-pressed"?: boolean; "data-primary"?: boolean; "data-edge"?: string; style?: CSSProperties;
+  id?: string; title?: string; tooltip?: string; "aria-label"?: string; "aria-pressed"?: boolean; "data-primary"?: boolean; "data-edge"?: string; style?: CSSProperties;
   /** `[2026-10-05]` Something a time is dragged by: the pointer handlers of a drag, and the mark for the cursor and the touch (`data-grab`). */
   "data-grab"?: boolean; onPointerDown?: Grab["onPointerDown"]; onPointerMove?: Grab["onPointerMove"]; onPointerUp?: Grab["onPointerUp"]; onPointerCancel?: Grab["onPointerCancel"];
 }) {
-  return <button type="button" className={className} aria-disabled={why ? true : undefined} title={why ?? title} {...rest}
-    onClick={() => why ? explain(why) : onPress()}>{children}</button>;
+  const tip = useId();
+  return <button type="button" className={className} aria-disabled={why ? true : undefined} title={tooltip ? undefined : why ?? title} aria-describedby={tooltip ? tip : undefined} {...rest}
+    onClick={() => why ? explain(why) : onPress()}>{children}{tooltip && <span id={tip} role="tooltip" className={styles.iconTip}>{tooltip}</span>}</button>;
 }
 
 /** 「A」 「B」 「C」 for the change screen's cards and pins (the current stop is card 0). */

@@ -12,13 +12,15 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
+from starlette.concurrency import run_in_threadpool
 
 from app.infrastructure.db.session import get_connection
 
 from app.domains.travel_ops.components.customer import consents
 from app.domains.travel_ops.modules.web_account import web_cookie
 from app.domains.travel_ops.modules.web_account import web_guard
+from app.domains.travel_ops.modules.live_progress import op_stream
 
 
 def build_consents_router() -> APIRouter:
@@ -31,9 +33,29 @@ def build_consents_router() -> APIRouter:
         return web_guard.client_ip(http.client.host if http.client else None, http.headers.get("x-forwarded-for"))
 
     @router.get("/v1/web/consents")
-    def consents_state(who: web_cookie.Identity = Depends(web_cookie.require_identity)):
-        with get_connection() as conn:
-            return JSONResponse(consents.state(conn, who.tenant_id, who.customer_id), headers={"Cache-Control": "no-store"})
+    async def consents_state(http: Request, who: web_cookie.Identity = Depends(web_cookie.require_identity)):
+        def read(progress=None):
+            with get_connection() as conn:
+                return consents.state(conn, who.tenant_id, who.customer_id, progress=progress)
+
+        if "text/event-stream" not in http.headers.get("accept", "").lower():
+            return JSONResponse(await run_in_threadpool(read), headers={"Cache-Control": "no-store"})
+        cfg = op_stream.limits("consents")
+        if not op_stream.acquire(who.tenant_id, who.customer_id, cap=int(cfg["max_per_user"])):
+            refused = web_cookie.refuse(429, "too_many_streams", "실시간 확인이 너무 많이 열려 있어요. 잠시 뒤 다시 시도해 주세요.")
+            refused.headers = {"Retry-After": "5"}
+            raise refused
+
+        async def flow():
+            try:
+                async for chunk in op_stream.run(lambda progress, _defer: read(progress.stage), op="consents",
+                                                 is_disconnected=http.is_disconnected, cfg=cfg):
+                    yield chunk
+            finally:
+                op_stream.release(who.tenant_id, who.customer_id)
+
+        return StreamingResponse(flow(), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
     @router.post("/v1/web/consents")
     def consents_record(http: Request, body: dict[str, Any] = Body(...), who: web_cookie.Identity = Depends(web_cookie.require_identity)):

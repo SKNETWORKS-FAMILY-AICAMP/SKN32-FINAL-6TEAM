@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-10",
+  "unique_mock_ui": {
+    "passed": 26,
+    "total": 26,
+    "first_passed": 24,
+    "first_failed": 2,
+    "corrected_rerun_passed": 2,
+    "capture_rerun_passed": 2
+  },
+  "map_units": {
+    "passed": 29,
+    "total": 29,
+    "command": "vitest run src/features/map/providers/pin.test.ts src/features/map/map-geometry.test.ts"
+  },
+  "static_checks": {
+    "typescript": "passed",
+    "eslint": "passed",
+    "standard_turbopack_build": "passed"
+  },
+  "shots": {
+    "count": 10,
+    "widths": [
+      375,
+      1280
+    ]
+  },
+  "public_cs_response_checked": false,
+  "deployed": false,
+  "raw_results": [
+    "first.json",
+    "reduced-motion-rerun.json",
+    "lock-capture-rerun.json"
+  ],
+  "reduced_motion_note": "Global CSS uses 0.01ms; test now accepts <=0.1ms instead of exact 0 seconds."
+}

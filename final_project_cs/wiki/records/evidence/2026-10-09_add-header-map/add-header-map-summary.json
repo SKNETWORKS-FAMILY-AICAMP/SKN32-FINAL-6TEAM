@@ -1,0 +1,205 @@
+{
+  "count": 33,
+  "passed": 33,
+  "remaining": [],
+  "cases": [
+    {
+      "file": "add-header-map-20261009.spec.ts",
+      "title": "상단 검색·선택·뒤로가기와 지도 단추 375px",
+      "status": "expected",
+      "run": 3
+    },
+    {
+      "file": "add-header-map-20261009.spec.ts",
+      "title": "상단 검색·선택·뒤로가기와 지도 단추 1280px",
+      "status": "expected",
+      "run": 3
+    },
+    {
+      "file": "add-header-map-20261009.spec.ts",
+      "title": "빈 배경의 오른쪽 스와이프만 추가를 취소하고 일차 전환 모션을 사용한다",
+      "status": "expected",
+      "run": 3
+    },
+    {
+      "file": "add-header-map-20261009.spec.ts",
+      "title": "저장 중에는 뒤로가기·스와이프가 요청과 입력을 취소하지 않는다",
+      "status": "expected",
+      "run": 3
+    },
+    {
+      "file": "add-header-map-20261009.spec.ts",
+      "title": "오른쪽 거리 칩은 단추 아래의 빈 높이에서 화면 끝에 붙고 번호와 거리가 구분된다",
+      "status": "expected",
+      "run": 3
+    },
+    {
+      "file": "inline-insertion-20261009.spec.ts",
+      "title": "375px: 스크롤한 일정 사이에서 장소를 검색하고 정확한 지점으로 추가한다",
+      "status": "expected",
+      "run": 3
+    },
+    {
+      "file": "inline-insertion-20261009.spec.ts",
+      "title": "1280px: 스크롤한 일정 사이에서 장소를 검색하고 정확한 지점으로 추가한다",
+      "status": "expected",
+      "run": 3
+    },
+    {
+      "file": "inline-insertion-20261009.spec.ts",
+      "title": "키보드로 다른 추가 위치를 고르고 취소하면 그 +로 초점이 돌아온다",
+      "status": "expected",
+      "run": 3
+    },
+    {
+      "file": "inline-insertion-20261009.spec.ts",
+      "title": "추가 저장을 거절하면 검색 선택과 입력을 보존해 수정 후 재시도할 수 있다",
+      "status": "expected",
+      "run": 3
+    },
+    {
+      "file": "map-controls.spec.ts",
+      "title": "접기 단추에 거리가 함께 나오고 확대·축소·모든 일정 보기 순서로 선다",
+      "status": "expected",
+      "run": 2
+    },
+    {
+      "file": "map-controls.spec.ts",
+      "title": "거리 눈금은 지도에 담긴 거리를 말하고, 확대하면 더 짧은 거리로 바뀐다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "map-controls.spec.ts",
+      "title": "접으면 눈금과 탭이 남고 다시 열어도 기본은 접힌 상태다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "map-controls.spec.ts",
+      "title": "목록 창을 크게 열어 지도가 낮아지면 같은 단추가 가로 한 줄로 서고, 더 낮으면 접는 탭만 남는다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "map-controls.spec.ts",
+      "title": "지도를 확대하면 화면 밖으로 나간 일정이 가장자리에 「번호 · 거리」 칩으로 서고, 누르면 그 일정으로 가며 골라진다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "map-controls.spec.ts",
+      "title": "멀리 끌어 핀이 모두 화면 밖이면 칩 하나가 모두를 담아 서고(「2 · 3 · 4」), 지도 층(타일 · 핀 층) 위에 그려지고, 가장자리에서 잘리지 않는다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "map-controls.spec.ts",
+      "title": "일정이 있는 날을 처음 보여 줄 때 첫 일정의 핀이 한 번 두근거린다 (고리가 퍼졌다 사라진다)",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "plan-check-map-detail.spec.ts",
+      "title": "마커는 해당 일정만 열고 중복 설명 알림을 띄우지 않는다 — 다른 마커와 재선택도 같다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "plan-check-map-detail.spec.ts",
+      "title": "경로 설명 알림은 하얀 카드다: 휴대폰 틀 안 머리줄 아래, 틀 폭에 맞고 테두리 빛 · 고리 움직임이 한 번 지나가며, 몇 초 뒤 저절로 사라지고 단추 위에 있는 동안은 남는다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "plan-check-map-detail.spec.ts",
+      "title": "경로선을 누르면 그 구간이 골라지고 — 설명 알림(어디서 어디로 · 수단 · 출발과 도착) · 목록의 이동 줄이 열림 — 다시 누르면 놓는다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "plan-check-map-detail.spec.ts",
+      "title": "경로선을 눌러 고른 뒤 목록의 그 이동 줄을 다시 눌러 닫으면 지도의 선도 놓인다 — 목록에서 열면 지도의 선이 골라진다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "plan-check-map-detail.spec.ts",
+      "title": "지도의 「! n」을 누르면 목록은 확인 필요만, 지도는 확인 필요 핀만 주황으로 남고 나머지 핀은 회색(눌리지 않음) — 다시 누르면 돌아온다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "plan-check-map-detail.spec.ts",
+      "title": "핀을 누르면 경로 선택은 풀리고, 경로를 누르면 핀 선택이 풀린다(둘은 한 번에 하나) — 알림도 하나만 선다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "plan-check-map-detail.spec.ts",
+      "title": "핀을 밀어낸 선과 점은 핀 몸통보다 아래 층에 따로 있다(다른 핀의 몸통 위로 그려지지 않는다)",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "plan-check-map-detail.spec.ts",
+      "title": "이틀 이상이면 「전체 · 1일차 · 2일차」 칩이 목록 위에 투명하게 뜨고(따로 줄 · 경계선 없음), 「확인 필요」는 지도 쪽에 있다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "plan-check-map-detail.spec.ts",
+      "title": "확인이 끝나면 목록은 맨 위(첫날의 첫 일정)에서 시작한다 — 읽는 중에 따라가던 자리(첫날 중간)에 남지 않는다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "plan-check-map-detail.spec.ts",
+      "title": "카드 도구가 좁은 카드에서 제목을 한 글자로 누르지 않고 제목 폭과 높이를 유지한다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "plan-check-map-detail.spec.ts",
+      "title": "이름 수정 버튼은 펼쳐졌을 때 칩 오른쪽 끝에 붙지 않고 여백이 있다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "plan-check-map-detail.spec.ts",
+      "title": "이동 수단 범례는 없고 선은 수단별 색으로 그려진다",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "plan-check-map-detail.spec.ts",
+      "title": "지하철 선을 누르면 탄 구간(호선 · 역)이 설명 알림에 더해진다 — 서버가 준 것만, 중간 역을 못 채웠으면 「역 사이는 직선」",
+      "status": "expected",
+      "run": 1
+    },
+    {
+      "file": "add-header-map-20261009.spec.ts",
+      "title": "새 목업은 이번 촬영만 사용하며 두 화면 크기로 전환된다",
+      "status": "expected",
+      "run": 3
+    },
+    {
+      "file": "compact-map-account-20261009.spec.ts",
+      "title": "지도 도구는 5초 뒤 접히고 키보드 조작 중에는 유지된다",
+      "status": "expected",
+      "run": 3
+    },
+    {
+      "file": "compact-map-account-20261009.spec.ts",
+      "title": "지도를 움직이는 동안 정보와 단추가 사라졌다가 멈추면 돌아온다",
+      "status": "expected",
+      "run": 3
+    },
+    {
+      "file": "compact-map-account-20261009.spec.ts",
+      "title": "같은 좌표의 일정 40개도 겹치지 않게 표시하고 목록에는 모두 남긴다",
+      "status": "expected",
+      "run": 3
+    }
+  ]
+}

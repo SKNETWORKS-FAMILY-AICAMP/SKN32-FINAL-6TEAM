@@ -16,6 +16,8 @@ export interface SurveyQuestion {
   options: { id: string; label: string }[];
   /** The option id the server already holds. */
   answer: string | null;
+  allowCustom?: boolean;
+  customMaxLength?: number;
 }
 
 /** English for the question ids the server sends today (the id and option id are the server's, never changed once sent). */
@@ -51,16 +53,20 @@ export function questionsOf(raw: readonly IntakeQuestion[] | undefined | null, l
       title: english?.title ?? entry.title,
       why: english?.why ?? (isText(entry.why) ? entry.why : ""),
       options: options.map((option) => ({ id: option.id, label: english?.options[option.id] ?? option.label })),
-      answer: isText(entry.answer) && options.some((option) => option.id === entry.answer) ? entry.answer : null,
+      allowCustom: entry.allow_custom === true,
+      customMaxLength: entry.custom_max_length,
+      answer: entry.allow_custom === true && isText(entry.custom_answer) ? `custom:${entry.custom_answer}`
+        : isText(entry.answer) && options.some((option) => option.id === entry.answer) ? entry.answer : null,
     });
   }
   return drawn;
 }
 
 /** What the customer has answered so far: the saved answers (`answers`, by question id) over what the server held. */
-export type Answers = Readonly<Record<string, string>>;
+export type Answers = Readonly<Record<string, string | null>>;
 
-export const answerOf = (question: SurveyQuestion, answers: Answers): string | null => answers[question.id] ?? question.answer;
+export const answerOf = (question: SurveyQuestion, answers: Answers): string | null =>
+  Object.hasOwn(answers, question.id) ? answers[question.id] : question.answer;
 
 /** Indexes of the questions not answered and not skipped: the ones still to ask. */
 export function openIndexes(questions: readonly SurveyQuestion[], answers: Answers, skipped: ReadonlySet<string>): number[] {

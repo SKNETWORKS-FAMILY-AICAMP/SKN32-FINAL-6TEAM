@@ -16,7 +16,7 @@ export const PIN_BODY = 34;
 export const PIN_BOX = PIN_BODY * 2 + 32;
 
 export type PinSide = "ne" | "nw" | "se" | "sw";
-export interface PinSlot { side: PinSide; push: number }
+export interface PinSlot { side: PinSide; push: number; dx?: number; dy?: number; group?: string }
 const SIDES: readonly PinSide[] = ["ne", "nw", "se", "sw"];
 /** How far a body may be pushed off its coordinate, tried in this order (px along each axis): the first push clears a body that stands on its coordinate (`PIN_BODY` + a little). */
 const PUSHES = [0, 38, 76] as const;
@@ -28,9 +28,16 @@ interface Rect { left: number; top: number; right: number; bottom: number }
 /** Where a body stands for a coordinate at (x, y) in the container, in the container's pixels. */
 export function pinRect(x: number, y: number, slot: PinSlot): Rect {
   const east = slot.side === "ne" || slot.side === "se", north = slot.side === "ne" || slot.side === "nw";
-  const left = east ? x + slot.push : x - slot.push - PIN_BODY;
-  const top = north ? y - slot.push - PIN_BODY : y + slot.push;
+  const left = (east ? x + slot.push : x - slot.push - PIN_BODY) + (slot.dx ?? 0);
+  const top = (north ? y - slot.push - PIN_BODY : y + slot.push) + (slot.dy ?? 0);
   return { left, top, right: left + PIN_BODY, bottom: top + PIN_BODY };
+}
+
+/** The body may have been moved to any free slot; its small corner always faces the actual coordinate. */
+export function pinFacing(rect: Rect, anchor: { x: number; y: number }): PinSide {
+  const east = (rect.left + rect.right) / 2 >= anchor.x;
+  const north = (rect.top + rect.bottom) / 2 <= anchor.y;
+  return north ? east ? "ne" : "nw" : east ? "se" : "sw";
 }
 
 const overlap = (a: Rect, b: Rect, gap = 0) =>
@@ -40,23 +47,43 @@ const overlap = (a: Rect, b: Rect, gap = 0) =>
  * Which slot each pin takes. Pins are placed in the order of the day; each takes the first slot (the one it had, then upright-right, upright-left, below-right, below-left, then pushed
  * further out) that overlaps nothing already placed and stays inside the map below `top` (the bar over the map); when none is free, the one that overlaps least. Pure.
  */
-export function layoutPins(points: readonly { id: string; x: number; y: number }[], area: { width: number; height: number; top?: number }, previous: Readonly<Record<string, PinSlot>> = {}): Record<string, PinSlot> {
-  const bounds: Rect = { left: 0, top: area.top ?? 0, right: area.width, bottom: area.height };
-  const placed: Rect[] = [];
+export function layoutPins(points: readonly { id: string; x: number; y: number }[], area: { width: number; height: number; top?: number; bottom?: number; obstacles?: Rect[]; gap?: number }, previous: Readonly<Record<string, PinSlot>> = {}): Record<string, PinSlot> {
+  const bounds: Rect = { left: 0, top: area.top ?? 0, right: area.width, bottom: area.height - (area.bottom ?? 0) };
+  const placed: Rect[] = [...(area.obstacles ?? [])];
   const out: Record<string, PinSlot> = {};
   for (const point of points) {
     const candidates: PinSlot[] = [];
     // A pin keeps the side it had while that still overlaps nothing — but only a side on its coordinate: a pushed-off body goes back as soon as a side is free.
     const before = previous[point.id];
-    if (before && before.push === 0) candidates.push(before);
+    if (before && before.push === 0 && !before.group) candidates.push(before);
     for (const push of PUSHES) for (const side of SIDES) candidates.push({ side, push });
     let best = candidates[0], bestCost = Infinity;
     for (const slot of candidates) {
       const rect = pinRect(point.x, point.y, slot);
       const outside = PIN_BODY * PIN_BODY - overlap(rect, bounds);
-      const cost = placed.reduce((sum, other) => sum + overlap(rect, other, GAP), 0) * 4 + outside * 2 + slot.push;
+      const cost = placed.reduce((sum, other) => sum + overlap(rect, other, area.gap ?? GAP), 0) * 4 + outside * 2 + slot.push;
       if (cost < bestCost) { best = slot; bestCost = cost; }
       if (cost === slot.push) break;                       // nothing overlaps and it is inside the map: the first such slot wins
+    }
+    // SDK UI와 거리 칩까지 피한다. 네 모서리에 자리가 없으면 가장 가까운 빈 칸을 찾는다.
+    if (bestCost > best.push) {
+      let distance = Infinity;
+      // 낮은 지도에서는 경계에서 4px를 더 비우면 실제 빈 상단 띠를 놓친다.
+      for (let y = bounds.top; y + PIN_BODY <= bounds.bottom; y += PIN_BODY + 8) {
+        for (let x = 4; x + PIN_BODY <= bounds.right - 4; x += PIN_BODY + 8) {
+          const rect = { left: x, top: y, right: x + PIN_BODY, bottom: y + PIN_BODY };
+          if (placed.some((other) => overlap(rect, other, 4) > 0)) continue;
+          const d = Math.hypot(x - point.x, y - (point.y - PIN_BODY));
+          if (d < distance) { distance = d; best = { side: "ne", push: 1, dx: x - point.x - 1, dy: y - point.y + PIN_BODY + 1 }; }
+        }
+      }
+      if (!Number.isFinite(distance) && Object.keys(out).length) {
+        const owner = Object.keys(out).filter((id) => !out[id].group).sort((a, b) => {
+          const pa = points.find((entry) => entry.id === a)!, pb = points.find((entry) => entry.id === b)!;
+          return Math.hypot(pa.x-point.x,pa.y-point.y)-Math.hypot(pb.x-point.x,pb.y-point.y);
+        })[0];
+        if (owner) { out[point.id] = { ...out[owner], group: owner }; continue; }
+      }
     }
     out[point.id] = best;
     placed.push(pinRect(point.x, point.y, best));
@@ -94,6 +121,7 @@ export function createPin(point: MapPoint, detachLeader = false): HTMLDivElement
   Object.assign(dot.style, { position: "absolute", left: `${PIN_BOX / 2 - 3}px`, top: `${PIN_BOX / 2 - 3}px`, width: "6px", height: "6px", borderRadius: "50%", background: "var(--color-text)", display: "none", pointerEvents: "none" });
   const body = document.createElement("div");
   body.dataset.pinBody = "";
+  body.dataset.pinLabel = point.label ?? String(point.order);
   body.textContent = point.label ?? String(point.order);
   Object.assign(body.style, {
     position: "absolute", display: "grid", placeItems: "center", width: `${PIN_BODY}px`, height: `${PIN_BODY}px`, boxSizing: "border-box",
@@ -124,19 +152,24 @@ export function placePin(pin: HTMLElement, slot: PinSlot, leaderBox?: HTMLElemen
   const body = bodyOf(pin);
   const east = slot.side === "ne" || slot.side === "se", north = slot.side === "ne" || slot.side === "nw";
   const middle = PIN_BOX / 2;
-  const left = east ? middle + slot.push : middle - slot.push - PIN_BODY;
-  const top = north ? middle - slot.push - PIN_BODY : middle + slot.push;
-  const tipX = east ? left : left + PIN_BODY, tipY = north ? top + PIN_BODY : top;
+  const left = (east ? middle + slot.push : middle - slot.push - PIN_BODY) + (slot.dx ?? 0);
+  const top = (north ? middle - slot.push - PIN_BODY : middle + slot.push) + (slot.dy ?? 0);
+  const facing = pinFacing({ left, top, right: left + PIN_BODY, bottom: top + PIN_BODY }, { x: middle, y: middle });
+  const facesEast = facing === "ne" || facing === "se", facesNorth = facing === "ne" || facing === "nw";
+  const tipX = facesEast ? left : left + PIN_BODY, tipY = facesNorth ? top + PIN_BODY : top;
   // The drop: three round corners and a small one where the coordinate is.
   body.style.left = `${left}px`;
   body.style.top = `${top}px`;
-  body.style.borderRadius = slot.side === "ne" ? "50% 50% 50% 5px" : slot.side === "nw" ? "50% 50% 5px 50%" : slot.side === "se" ? "5px 50% 50% 50%" : "50% 5px 50% 50%";
-  body.style.transformOrigin = `${east ? "0%" : "100%"} ${north ? "100%" : "0%"}`;
+  body.style.borderRadius = facing === "ne" ? "50% 50% 50% 5px" : facing === "nw" ? "50% 50% 5px 50%" : facing === "se" ? "5px 50% 50% 50%" : "50% 5px 50% 50%";
+  body.style.transformOrigin = `${facesEast ? "0%" : "100%"} ${facesNorth ? "100%" : "0%"}`;
+  body.dataset.facing = facing;
   pin.dataset.side = slot.side;
   pin.dataset.push = String(slot.push);
   const own = (pin as PinWithLeader).pinLeader;
   const leader = (own?.leader ?? (leaderBox ?? pin).querySelector<SVGElement>("[data-pin-leader]"))!, dot = (own?.dot ?? (leaderBox ?? pin).querySelector<HTMLElement>("[data-pin-dot]"))!;
-  const pushed = slot.push > 0;
+  body.style.visibility = slot.group ? "hidden" : "";
+  pin.dataset.pinGroup = slot.group ?? "";
+  const pushed = slot.push > 0 && !slot.group;
   leader.style.display = dot.style.display = pushed ? "" : "none";
   if (pushed) {
     const line = leader.firstElementChild!;
@@ -196,4 +229,27 @@ export function popPin(pin: HTMLElement) {
 /** Presentation-only updates must not reset the user's camera. */
 export function geometryKey(points: MapPoint[]) {
   return JSON.stringify(points.map(({ id, coordinates }) => [id, coordinates.lat, coordinates.lng]));
+}
+
+/** 화면에 실제로 그려진 지도 도구와 거리 칩의 영역을 마커 배치에서 제외한다. */
+export function pinArea(container: HTMLElement, options: { topInset?: number; bottomInset?: number }) {
+  const box = container.getBoundingClientRect();
+  const live = container.closest('[aria-label="여행 지도"]');
+  const obstacles = [...(live?.querySelectorAll<HTMLElement>('[data-map-controls], [data-edge-chip]') ?? [])].map((node) => {
+    const r = node.getBoundingClientRect();
+    return { left: r.left - box.left - 6, top: r.top - box.top - 6, right: r.right - box.left + 6, bottom: r.bottom - box.top + 6 };
+  });
+  return { width: box.width, height: box.height, top: options.topInset ?? 0, bottom: options.bottomInset ?? 0, obstacles, gap: 4 };
+}
+
+/** 마커가 들어갈 빈 칸이 전부 차면 가까운 마커의 개수 표시로 합친다. 목록에는 모든 일정이 남는다. */
+export function paintPinGroups(markers: readonly { id: string; pin: HTMLElement }[], slots: Record<string, PinSlot>) {
+  for (const { id, pin } of markers) {
+    const body = bodyOf(pin);
+    const grouped = markers.filter((entry) => slots[entry.id]?.group === id);
+    body.textContent = `${body.dataset.pinLabel ?? ""}${grouped.length ? `+${grouped.length}` : ""}`;
+    body.style.fontSize = grouped.length ? "10px" : "14px";
+    if (grouped.length) body.title = `함께 표시한 일정 ${[body.dataset.pinLabel, ...grouped.map((entry) => bodyOf(entry.pin).dataset.pinLabel)].join(" · ")} · 목록에서 각 일정을 선택할 수 있어요`;
+    else body.removeAttribute("title");
+  }
 }

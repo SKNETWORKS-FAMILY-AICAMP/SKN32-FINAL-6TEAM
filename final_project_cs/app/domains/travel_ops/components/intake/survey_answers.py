@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass
 from typing import Any, Mapping
 from uuid import UUID
@@ -34,7 +35,10 @@ MAX_QUESTIONS = 3
 
 
 #: 질문 묶음 버전 — 문구만 고치면 안 올린다. **선택지 목록 · 값 매핑 · 문항의 추가/삭제**처럼 답의 뜻이 달라지면 올린다(옛 답은 저장 때 해석한 값으로 남는다)
-QUESTION_SET_VERSION = "1"
+QUESTION_SET_VERSION = "2"
+CUSTOM_PREFIX = "custom:"
+CLEARED_ANSWER = "__cleared__"
+MAX_CUSTOM_LENGTH = 1000
 
 
 @dataclass(frozen=True)
@@ -89,15 +93,23 @@ class InvalidAnswers(ValueError):
         self.problems = problems
 
 
-def check(answers: Mapping[str, Any]) -> dict[str, str]:
+def check(answers: Mapping[str, Any]) -> dict[str, str | None]:
     """받은 답을 확인해 `{문항: 선택지 번호}` 로 돌려준다. 틀린 것이 하나라도 있으면 **전부 거절**한다(일부만 저장하지 않는다)."""
     problems: list[dict[str, str]] = []
-    clean: dict[str, str] = {}
+    clean: dict[str, str | None] = {}
     known = _by_id()
     for key, value in answers.items():
         allowed = known[key].option_ids() if key in known else DIRECT.get(key)
         if allowed is None:
             problems.append({"key": str(key), "reason": "모르는 문항이다"})
+        elif value is None and key in known:
+            clean[key] = None
+        elif key in known and isinstance(value, dict) and set(value) == {"custom"}:
+            raw = value["custom"]
+            if not isinstance(raw, str) or not raw.strip() or len(raw) > MAX_CUSTOM_LENGTH:
+                problems.append({"key": key, "reason": f"직접 입력은 1~{MAX_CUSTOM_LENGTH}자로 적어 주세요"})
+            else:
+                clean[key] = CUSTOM_PREFIX + raw.strip()
         elif not isinstance(value, str) or value not in allowed:
             problems.append({"key": str(key), "reason": f"선택지는 {', '.join(allowed)} 중 하나여야 한다"})
         else:
@@ -119,17 +131,34 @@ def stored(conn, *, tenant_id: str, intake_id: UUID) -> dict[str, str]:
     return {k: v for k, v in dict((row[0] if row else None) or {}).items() if isinstance(v, str)}
 
 
+def inherit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> None:
+    """같은 고객의 저장된 로딩 설문을 이어받는다. 뜻·묶음이 바뀐 답과 직접 설정은 새로 묻는다."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT DISTINCT ON (a.question_id) a.question_id, a.option_id, a.slot, a.value, a.bundle_version "
+                    "FROM trip_intake_survey_answers a JOIN trip_intakes i ON i.intake_id=a.intake_id AND i.tenant_id=a.tenant_id "
+                    "WHERE a.tenant_id=%s AND i.customer_id=%s AND a.intake_id<>%s "
+                    "ORDER BY a.question_id, a.seq DESC", (tenant_id, customer_id, intake_id))
+        previous = cur.fetchall()
+    known = _by_id()
+    answers = {key: option for key, option, slot, value, version in previous
+               if key in known and version == QUESTION_SET_VERSION and resolve(key, option) == (slot, value)}
+    if answers:
+        save(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, answers=answers)
+
+
 def questions(answers: Mapping[str, str]) -> list[dict[str, Any]]:
     """`GET /v1/web/trip-intakes/{id}` 의 `questions[]`. 이미 답한 문항도 **그대로 둔다**(`answer` 에 고른 번호) — 화면이 새로 고쳐져도 앞 질문으로 돌아가 고칠 수 있게.
 
     ★목록은 접수와 상관없이 같은 순서 · 같은 문항이다(문항이 답에 따라 사라지지 않는다) — 화면의 `i / N` 이 흔들리지 않는다."""
     return [{"id": q.id, "kind": q.kind, "title": q.title, "why": q.why,
              "options": [{"id": option.id, "label": option.label} for option in q.options],
-             "answer": answers.get(q.id)}
+             "allow_custom": True, "custom_max_length": MAX_CUSTOM_LENGTH,
+             "answer": None if str(answers.get(q.id) or "").startswith(CUSTOM_PREFIX) else answers.get(q.id),
+             "custom_answer": answers[q.id][len(CUSTOM_PREFIX):] if str(answers.get(q.id) or "").startswith(CUSTOM_PREFIX) else None}
             for q in QUESTIONS[:MAX_QUESTIONS]]
 
 
-def save(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, answers: Mapping[str, str]) -> list[str] | None:
+def save(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, answers: Mapping[str, str | None]) -> list[str] | None:
     """답을 모은다(같은 문항은 덮어쓴다). 돌려주는 값 = 지금까지 답한 **모든** 문항 번호(정렬). 남의 접수 · 없는 접수면 None.
 
     ★한 트랜잭션 — 호출자가 `with conn.transaction():` 으로 감싼다. 접수 행을 잠근다(`FOR UPDATE`) — 탭 둘이 동시에 다른 문항을 저장해도 서로를 덮지 않는다.
@@ -145,17 +174,22 @@ def save(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, answers: M
         if row[0] == "confirmed":
             raise IntakeClosed()
         merged = {**{k: v for k, v in dict(row[1] or {}).items() if isinstance(v, str)}, **answers}
+        merged = {k: v for k, v in merged.items() if v is not None}
         cur.execute("UPDATE trip_intakes SET survey=%s::jsonb WHERE tenant_id=%s AND intake_id=%s",
                     (json.dumps(merged, ensure_ascii=False), tenant_id, intake_id))
         _record(cur, tenant_id=tenant_id, intake_id=intake_id, answers=answers)
     return sorted(merged)
 
 
-def _record(cur, *, tenant_id: str, intake_id: UUID, answers: Mapping[str, str]) -> None:
+def _record(cur, *, tenant_id: str, intake_id: UUID, answers: Mapping[str, str | None]) -> None:
     """답 이력(053)에 **그때의 묶음 버전 · 문구 · 라벨 · 슬롯 · 해석한 값**을 남긴다. 같은 묶음 · 같은 선택지를 또 보낸 것(멱등 재전송)은 줄을 더하지 않는다."""
     known = _by_id()
     for key, option_id in answers.items():
-        slot, value = resolve(key, option_id) or (None, None)
+        if option_id is None:
+            slot, value = known[key].slot, ""
+            option_id = CLEARED_ANSWER
+        else:
+            slot, value = resolve(key, option_id) or (None, None)
         if slot is None or value is None:                                # check() 를 지났으니 일어날 수 없다 — 일어나면 조용히 흘리지 않는다
             raise ValueError(f"해석할 수 없는 답: {key}={option_id}")
         cur.execute("SELECT option_id, bundle_version FROM trip_intake_survey_answers WHERE tenant_id=%s AND intake_id=%s AND question_id=%s "
@@ -164,7 +198,8 @@ def _record(cur, *, tenant_id: str, intake_id: UUID, answers: Mapping[str, str])
         if last is not None and tuple(last) == (option_id, QUESTION_SET_VERSION):
             continue
         question = known.get(key)
-        label = next((o.label for o in question.options if o.id == option_id), None) if question else None
+        label = (option_id[len(CUSTOM_PREFIX):] if option_id.startswith(CUSTOM_PREFIX)
+                 else next((o.label for o in question.options if o.id == option_id), None) if question else None)
         cur.execute("INSERT INTO trip_intake_survey_answers (tenant_id, intake_id, question_id, option_id, slot, value, question_text, option_label, bundle_version) "
                     "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                     (tenant_id, intake_id, key, option_id, slot, value, question.title if question else None, label, QUESTION_SET_VERSION))
@@ -174,6 +209,8 @@ def resolve(key: str, option_id: str) -> tuple[str, str] | None:
     """지금 묶음에서 이 답이 **어느 슬롯의 어떤 값**인가 — `(슬롯, 값)`. 모르면 None. 직접 값(`on_disruption` · `pace`)은 이름이 슬롯이고 값은 그대로다."""
     question = _by_id().get(key)
     if question is not None:
+        if option_id.startswith(CUSTOM_PREFIX) and option_id[len(CUSTOM_PREFIX):].strip():
+            return question.slot, option_id
         value = question.value_of(option_id)
         return None if value is None else (question.slot, value)
     if key in DIRECT and option_id in DIRECT[key]:
@@ -200,6 +237,25 @@ class IntakeClosed(Exception):
 
 def _place(survey: dict[str, Any], slot: str, value: str) -> None:
     """슬롯의 값을 설문(`TripSurvey`)의 자리에 둔다 — 슬롯이 어디로 가는지는 여기 한 곳이다."""
+    if value.startswith(CUSTOM_PREFIX):
+        raw = value[len(CUSTOM_PREFIX):]
+        survey.setdefault("custom_answers", {})[slot] = raw
+        # 원문을 보존하고 구분된 기존 단어만 계산용 코드에 대응시킨다.
+        tokens = re.split(r"[+/,、·&\s]+", raw.lower())
+        if slot == "preferred_mobility":
+            aliases = {"택시": "taxi", "taxi": "taxi", "버스": "bus", "bus": "bus",
+                       "지하철": "subway", "subway": "subway", "대중교통": "public", "public": "public",
+                       "도보": "walk", "걷기": "walk", "walk": "walk"}
+            codes = list(dict.fromkeys(aliases[token] for token in tokens if token in aliases))
+            if codes:
+                survey.setdefault("priority_details", {})["mobility"] = codes
+        elif slot == "priority":
+            aliases = {"활동": "activity", "activity": "activity", "이동": "mobility", "mobility": "mobility",
+                       "음식": "food", "식사": "food", "food": "food"}
+            codes = list(dict.fromkeys(aliases[token] for token in tokens if token in aliases))
+            if codes:
+                survey["priority"] = codes
+        return
     if slot == "preferred_mobility":
         survey["priority_details"] = {"mobility": [value]}
     elif slot == "priority":

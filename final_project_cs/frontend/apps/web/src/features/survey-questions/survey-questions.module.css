@@ -36,7 +36,14 @@
 .saved { display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 24px; margin-top: 8px; color: var(--color-success); font-size: 14px; text-align: center; }
 .error { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding: 12px 16px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-error-soft); color: var(--color-error); font-size: 14px; line-height: 1.5; }
 .error button { flex: none; min-height: 44px; padding: 8px 16px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-surface); color: var(--color-error); font: inherit; font-weight: 500; cursor: pointer; }
-.skip, .textButton { display: block; min-height: 44px; margin: 4px auto 0; padding: 8px 16px; border: 0; background: none; color: var(--color-muted); font: inherit; font-size: 12px; font-weight: 400; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.textButton { display: block; min-height: 44px; margin: 4px auto 0; padding: 8px 16px; border: 0; background: none; color: var(--color-muted); font: inherit; font-size: 12px; font-weight: 400; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.customAnswer { margin-top: 16px; text-align: left; }
+.customAnswer label { display: block; margin-bottom: 8px; font-size: 14px; }
+.customAnswer > div { display: flex; gap: 8px; }
+.customAnswer input { min-width: 0; width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: inherit; font: inherit; }
+.customAnswer button { flex-shrink: 0; min-height: 44px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: var(--color-primary); font: inherit; font-size: 14px; cursor: pointer; }
+.customAnswer input:focus-visible, .customAnswer button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.customAnswer p { color: var(--color-error); font-size: 12px; }
 .dots { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
 .dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--color-subtle-strong); }
 .dots span[data-on] { background: var(--color-primary); }

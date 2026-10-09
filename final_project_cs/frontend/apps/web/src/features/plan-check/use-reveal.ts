@@ -104,14 +104,19 @@ export function revealPlan(lines: number, cards: number): { pause: number; coars
 
 /**
  * The snapshot to draw, and whether it has caught up with `target`. The first snapshot is drawn as it is (a reload or a
- * late open shows where things stand, without replaying); every later one is reached one change at a time (`nextStep`).
+ * late open shows where things stand, without replaying); changes during the first check are reached one at a time (`nextStep`).
+ * After the check is done, edits are shown together: another action must use the whole saved plan, not a partially replayed edit.
  * With the menu's 「애니메이션 건너뛰기」 on it is drawn at once.
  */
-export function useReveal(target: PlanCheckView): { view: PlanCheckView; settled: boolean } {
+export function useReveal(target: PlanCheckView, paused = false): { view: PlanCheckView; settled: boolean } {
   // ★`[2026-10-03 사용자 결정]` Skipping is the customer's own choice in the menu (「애니메이션 건너뛰기」), not the system's 「동작 줄이기」: the steps are
   //   information (how far the check is), and movement the system asked to reduce is already off (`globals.css` ends every transition and animation).
   const { skipAnimation: reduced } = useSettings();
   const [shown, setShown] = useState(target);
+  const immediate = !paused && (reduced || (shown.stage === "done" && target.stage === "done"));
+  // Keep the state in step with what is returned before another render can pause or restart the replay.
+  // This guarded update adjusts only this hook's component; an effect would leave the old snapshot until after commit.
+  if (immediate && shown !== target) setShown(target);
   // The most that has been waiting since the screen last caught up: the pace is set by that, not by what is left.
   const peak = useRef({ lines: 0, cards: 0, reading: 0 });
   // When the stage of the top bar last changed on screen (the clock of `STAGE_MIN_MS`).
@@ -120,7 +125,14 @@ export function useReveal(target: PlanCheckView): { view: PlanCheckView; settled
   const cardsSeen = useRef(shown.items.length);
   const holdUntil = useRef(0);
   useEffect(() => {
-    if (reduced) return;
+    if (paused) return;
+    if (immediate) {
+      peak.current = { lines: 0, cards: 0, reading: 0 };
+      cardsSeen.current = target.items.length;
+      holdUntil.current = 0;
+      if (stageSince.current?.stage !== target.stage) stageSince.current = { stage: target.stage, at: performance.now() };
+      return;
+    }
     if (shown.items.length > cardsSeen.current) holdUntil.current = performance.now() + NEW_PIN_HOLD_MS;
     cardsSeen.current = shown.items.length;
     if (stageSince.current?.stage !== shown.stage) stageSince.current = { stage: shown.stage, at: performance.now() };
@@ -138,8 +150,8 @@ export function useReveal(target: PlanCheckView): { view: PlanCheckView; settled
     wait = Math.max(wait, holdUntil.current - performance.now());
     const timer = setTimeout(() => { const next = stepMany(shown, target, 1, !reading && plan.coarse); if (next) setShown(next); }, wait);
     return () => clearTimeout(timer);
-  }, [shown, target, reduced]);
+  }, [shown, target, immediate, paused]);
   // ★The server's own count is not replayed: it is shown as it arrives, whatever row the drawing has got to (the rows follow at their pace).
   const live = useMemo(() => (shown.serverProgress === target.serverProgress ? shown : { ...shown, serverProgress: target.serverProgress }), [shown, target.serverProgress]);
-  return reduced ? { view: target, settled: true } : { view: live, settled: nextStep(shown, target) === null };
+  return immediate ? { view: target, settled: true } : { view: live, settled: !paused && nextStep(shown, target) === null };
 }

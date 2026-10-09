@@ -1,0 +1,888 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      ".tmp/consent-progress.config.ts",
+      "quiet-lock-map-width-20261010.spec.ts",
+      "focused-times-lock-20261010.spec.ts",
+      "timeline-endpoints-20261009.spec.ts",
+      "--reporter=line,json",
+      "--workers=1",
+      "--output",
+      ".tmp/quiet-lock-map-first-results"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\consent-progress.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/.tmp/quiet-lock-map-first-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "focused-times-lock-20261010.spec.ts",
+      "file": "focused-times-lock-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "접힌 카드 종류 아이콘·상세 잠금·초점 설명 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4090,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:22:38.794Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-fb632463ac562b514fab",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 19,
+          "column": 3
+        },
+        {
+          "title": "선택한 일정·이동만 시각 두 줄·애니메이션 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5472,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:22:43.803Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-9feef039dbe35fa21233",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 48,
+          "column": 3
+        },
+        {
+          "title": "접힌 카드 종류 아이콘·상세 잠금·초점 설명 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3119,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:22:49.302Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-4381781355fcbb1600e9",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 19,
+          "column": 3
+        },
+        {
+          "title": "선택한 일정·이동만 시각 두 줄·애니메이션 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5757,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:22:52.449Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-2cf4c7f4bc8ee726253a",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 48,
+          "column": 3
+        },
+        {
+          "title": "잠금은 시작·출발 드래그와 내용 변경을 막고 이웃 일정은 고정 경계까지만 움직인다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5865,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:22:58.228Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-ad5308d168b5cce634cd",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 87,
+          "column": 1
+        },
+        {
+          "title": "시간 변경 후 잠그면 되돌리기를 먼저 막고 요청을 보내지 않는다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 3070,
+                  "error": {
+                    "message": "Error: browserContext.close: ENOSPC: no space left on device, write",
+                    "stack": "Error: browserContext.close: ENOSPC: no space left on device, write"
+                  },
+                  "errors": [
+                    {
+                      "message": "Error: browserContext.close: ENOSPC: no space left on device, write"
+                    },
+                    {
+                      "message": "Error: apiRequestContext._wrapApiCall: ENOSPC: no space left on device, write"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:23:04.130Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\quiet-lock-map-first-results\\focused-times-lock-2026101-331c9-잠그면-되돌리기를-먼저-막고-요청을-보내지-않는다\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\quiet-lock-map-first-results\\focused-times-lock-2026101-331c9-잠그면-되돌리기를-먼저-막고-요청을-보내지-않는다\\trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-a4ee59d97739910e82c5",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 114,
+          "column": 1
+        },
+        {
+          "title": "재확인 상태인 잠근 일정도 상세에서 잠금 해제할 수 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5634,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:23:08.586Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-341b71de5ce4d72a98ef",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 127,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "quiet-lock-map-width-20261010.spec.ts",
+      "file": "quiet-lock-map-width-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "거리 버튼은 두 방향 모두 메뉴 폭·기존 높이 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3501,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:23:14.653Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b031a75780c954166618-416cf2d4c7f546097b9c",
+          "file": "quiet-lock-map-width-20261010.spec.ts",
+          "line": 14,
+          "column": 2
+        },
+        {
+          "title": "잠금은 아이콘만 채우고 설명은 hover·키보드 초점에서만 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3679,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:23:18.190Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b031a75780c954166618-72ba8c4c4fc579957b98",
+          "file": "quiet-lock-map-width-20261010.spec.ts",
+          "line": 31,
+          "column": 2
+        },
+        {
+          "title": "전체 자동 추천은 목록과 함께 사라지고 최상단에서 복귀 375px",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 13364,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: /^확인 필요 \\d+곳$/ })\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('button', { name: /^확인 필요 \\d+곳$/ }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: /^확인 필요 \\d+곳$/ })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: /^확인 필요 \\d+곳$/ })\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('button', { name: /^확인 필요 \\d+곳$/ }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: /^확인 필요 \\d+곳$/ })\u001b[22m\n\n    at openFinished (C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\plan-check-kit.ts:43:34)\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\quiet-lock-map-width-20261010.spec.ts:51:3",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\plan-check-kit.ts",
+                      "column": 34,
+                      "line": 43
+                    },
+                    "snippet": "\u001b[90m   at \u001b[39mplan-check-kit.ts:43\n\n  41 |   await start(page);\n  42 |   await page.goto(`/intakes/${INTAKE}`);\n> 43 |   await expect(needsBadge(page)).toBeVisible();\n     |                                  ^\n  44 |   if (settle) await mapSettled(page);                                                                     // false: a test of what the map does right as it first shows (the pulse of the first pin)\n  45 |   return server;\n  46 | }"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\plan-check-kit.ts",
+                        "column": 34,
+                        "line": 43
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: /^확인 필요 \\d+곳$/ })\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('button', { name: /^확인 필요 \\d+곳$/ }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: /^확인 필요 \\d+곳$/ })\u001b[22m\n\n\n   at plan-check-kit.ts:43\n\n  41 |   await start(page);\n  42 |   await page.goto(`/intakes/${INTAKE}`);\n> 43 |   await expect(needsBadge(page)).toBeVisible();\n     |                                  ^\n  44 |   if (settle) await mapSettled(page);                                                                     // false: a test of what the map does right as it first shows (the pulse of the first pin)\n  45 |   return server;\n  46 | }\n    at openFinished (C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\plan-check-kit.ts:43:34)\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\quiet-lock-map-width-20261010.spec.ts:51:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:23:21.895Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\quiet-lock-map-first-results\\quiet-lock-map-width-20261-9090b--목록과-함께-사라지고-최상단에서-복귀-375px\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\quiet-lock-map-first-results\\quiet-lock-map-width-20261-9090b--목록과-함께-사라지고-최상단에서-복귀-375px\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\quiet-lock-map-first-results\\quiet-lock-map-width-20261-9090b--목록과-함께-사라지고-최상단에서-복귀-375px\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\plan-check-kit.ts",
+                    "column": 34,
+                    "line": 43
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "b031a75780c954166618-b1e52f889f61517d28f2",
+          "file": "quiet-lock-map-width-20261010.spec.ts",
+          "line": 48,
+          "column": 2
+        },
+        {
+          "title": "거리 버튼은 두 방향 모두 메뉴 폭·기존 높이 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3222,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:23:37.349Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b031a75780c954166618-82c253c5a49e4aad26bb",
+          "file": "quiet-lock-map-width-20261010.spec.ts",
+          "line": 14,
+          "column": 2
+        },
+        {
+          "title": "잠금은 아이콘만 채우고 설명은 hover·키보드 초점에서만 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3207,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:23:41.000Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b031a75780c954166618-54b6f4bfc8eba9bbd35b",
+          "file": "quiet-lock-map-width-20261010.spec.ts",
+          "line": 31,
+          "column": 2
+        },
+        {
+          "title": "전체 자동 추천은 목록과 함께 사라지고 최상단에서 복귀 1280px",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 13266,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: /^확인 필요 \\d+곳$/ })\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('button', { name: /^확인 필요 \\d+곳$/ }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: /^확인 필요 \\d+곳$/ })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: /^확인 필요 \\d+곳$/ })\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('button', { name: /^확인 필요 \\d+곳$/ }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: /^확인 필요 \\d+곳$/ })\u001b[22m\n\n    at openFinished (C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\plan-check-kit.ts:43:34)\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\quiet-lock-map-width-20261010.spec.ts:51:3",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\plan-check-kit.ts",
+                      "column": 34,
+                      "line": 43
+                    },
+                    "snippet": "\u001b[90m   at \u001b[39mplan-check-kit.ts:43\n\n  41 |   await start(page);\n  42 |   await page.goto(`/intakes/${INTAKE}`);\n> 43 |   await expect(needsBadge(page)).toBeVisible();\n     |                                  ^\n  44 |   if (settle) await mapSettled(page);                                                                     // false: a test of what the map does right as it first shows (the pulse of the first pin)\n  45 |   return server;\n  46 | }"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\plan-check-kit.ts",
+                        "column": 34,
+                        "line": 43
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: /^확인 필요 \\d+곳$/ })\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('button', { name: /^확인 필요 \\d+곳$/ }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: /^확인 필요 \\d+곳$/ })\u001b[22m\n\n\n   at plan-check-kit.ts:43\n\n  41 |   await start(page);\n  42 |   await page.goto(`/intakes/${INTAKE}`);\n> 43 |   await expect(needsBadge(page)).toBeVisible();\n     |                                  ^\n  44 |   if (settle) await mapSettled(page);                                                                     // false: a test of what the map does right as it first shows (the pulse of the first pin)\n  45 |   return server;\n  46 | }\n    at openFinished (C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\plan-check-kit.ts:43:34)\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\quiet-lock-map-width-20261010.spec.ts:51:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:23:44.240Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\quiet-lock-map-first-results\\quiet-lock-map-width-20261-d01d4-목록과-함께-사라지고-최상단에서-복귀-1280px\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\quiet-lock-map-first-results\\quiet-lock-map-width-20261-d01d4-목록과-함께-사라지고-최상단에서-복귀-1280px\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\quiet-lock-map-first-results\\quiet-lock-map-width-20261-d01d4-목록과-함께-사라지고-최상단에서-복귀-1280px\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\plan-check-kit.ts",
+                    "column": 34,
+                    "line": 43
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "b031a75780c954166618-f4e828fd6acddfb28bb7",
+          "file": "quiet-lock-map-width-20261010.spec.ts",
+          "line": 48,
+          "column": 2
+        }
+      ]
+    },
+    {
+      "title": "timeline-endpoints-20261009.spec.ts",
+      "file": "timeline-endpoints-20261009.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "출발 시각·큰 시작 시각·세로 지도 단추 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2465,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:23:58.930Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-468c6b2d7d2b3c9ec4ff",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 15,
+          "column": 3
+        },
+        {
+          "title": "추가 취소 후 바깥 화면 고정·마지막 카드 전체 표시 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3399,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:24:01.705Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-c2308617bea5966f6909",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 33,
+          "column": 3
+        },
+        {
+          "title": "스크롤·드래그 중 제출 숨김과 유휴 복원 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8494,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:24:05.143Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-451ff556640c16319d24",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 52,
+          "column": 3
+        },
+        {
+          "title": "출발 시각·큰 시작 시각·세로 지도 단추 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1840,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:24:13.660Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-1b9edefaa7006d3dce5f",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 15,
+          "column": 3
+        },
+        {
+          "title": "추가 취소 후 바깥 화면 고정·마지막 카드 전체 표시 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3225,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:24:15.522Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-01446acc955c764fcec1",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 33,
+          "column": 3
+        },
+        {
+          "title": "스크롤·드래그 중 제출 숨김과 유휴 복원 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8320,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:24:18.778Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-11875321d2f024842979",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 52,
+          "column": 3
+        },
+        {
+          "title": "도착 시각이 없는 구간은 시각을 지어내지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4509,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:24:27.121Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-9ba5d304f20271055462",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 74,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T17:21:46.703Z",
+    "duration": 167386.304,
+    "expected": 17,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

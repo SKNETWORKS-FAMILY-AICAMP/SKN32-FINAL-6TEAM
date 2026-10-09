@@ -1,17 +1,7 @@
 import type { Language } from "../i18n";
 import { api, LiveError, openApi, sessionOf, takeSession, probeSession } from "./client";
 
-/**
- * Social sign-in (`wiki/records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md`). `[2026-10-04]` The identity of every call is the session
- * cookie; a social account is what makes a guest session a member's — it is linked to this browser's session (`link`: the session, and
- * its trips, are kept and now outlive the browser), or it opens an account's session in this browser (`login`: the guest session this
- * browser had is ended by the server, and its trips with it).
- *
- * ★The server does the whole OAuth dance (state, PKCE, the provider's code). This side only starts it, is sent back with a
- *   one-time ticket, and swaps the ticket for the result. The ticket is worth nothing without `clientNonce`, which only the
- *   browser that started the sign-in knows — so a ticket in a link someone else sends cannot sign this browser into their account.
- * ★Nothing here is stored in the browser except the pending flow in `sessionStorage` (provider, mode, nonce, where to go back to).
- */
+/** 같은 소셜 진입점에서 로그인과 가입을 처리한다. 검증된 게스트 일정은 회원 계정으로 보관한다. */
 export const SOCIAL_PROVIDERS = ["google", "kakao", "naver", "discord"] as const;
 export type SocialProvider = (typeof SOCIAL_PROVIDERS)[number];
 export type SocialMode = "login" | "link";
@@ -66,6 +56,7 @@ function newNonce(): string {
  * the caller moves the browser there. `login` with no key may be refused with `human_check_required` — the caller then asks for the check.
  */
 export async function startSocial(provider: SocialProvider, mode: SocialMode, returnTo: string, language: Language, humanToken?: string | null): Promise<string> {
+  await probeSession(language); // 쿠키 세션의 CSRF를 로그인 시작에도 붙인다. 새 게스트는 만들지 않는다.
   const nonce = newNonce();
   const init = {
     method: "POST", headers: { "Content-Type": "application/json" },
@@ -97,7 +88,7 @@ export async function exchangeTicket(ticket: string, nonce: string, language: La
   if (!outcome || !isProvider(body.provider)) throw new LiveError("bad_exchange", "서버 답을 읽지 못했어요.");
   if (outcome === "linked") await probeSession(language, true).catch(() => null);
   else {
-    // A sign-in that brings no session would leave this browser with nothing: never claim it worked.
+    // 세션을 받지 못했으면 로그인 성공으로 안내하지 않는다.
     const session = sessionOf(body) ?? await probeSession(language, true).catch(() => null);
     if (!session) throw new LiveError("bad_exchange", "서버가 로그인 세션을 주지 않았어요.");
     takeSession(session);

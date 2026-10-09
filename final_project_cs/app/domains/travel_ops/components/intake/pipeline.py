@@ -109,6 +109,7 @@ def open_intake(conn, *, tenant_id: str, customer_id: UUID, text: str | None,
         cur.execute("INSERT INTO trip_intakes (tenant_id, customer_id, stage) VALUES (%s,%s,'received') "
                     "RETURNING intake_id", (tenant_id, customer_id))
         intake_id = cur.fetchone()[0]
+        survey_answers.inherit(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id)
         position = 0
         if text:
             raw = text.encode("utf-8")
@@ -357,10 +358,11 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
         batch = [(str(e.get("source_id") or ""), str(e.get("field") or ""), e.get("value")) for e in edits]
         unlocking = {(sid, _item_no(f)) for sid, f, v in batch if f.endswith(".locked") and v is False}
         existing = {(str(c["source_id"]), _item_no(c["field"])) for c in current_claims if c["field"].startswith("items[")}
+        added = _new_items(batch, existing, sources)
         locking = {(sid, _item_no(f)) for sid, f, v in batch if f.endswith(".locked") and v is True}
         for sid, field_name, value in batch:
-            # ★이 접수에 있는 일정만 고친다 — 없는 번호를 보내 일정이 새로 생기면(`items[500].title`) 날짜·장소 없는 항목이 끼어든다(웹은 있는 일정만 고친다)
-            if field_name.startswith("items[") and field_name.count("]") == 1 and (sid, _item_no(field_name)) not in existing:
+            # 신규 항목은 다음 번호와 필수 여섯 칸을 한 번에 보낸 요청만 허용한다.
+            if field_name.startswith("items[") and field_name.count("]") == 1 and (sid, _item_no(field_name)) not in existing | added:
                 raise IntakeRejected("unknown_item", f"{field_name}: 이 접수에 없는 일정입니다")
             # ★고정은 그 판의 검사로만 판단한다 — 같은 요청에서 장소를 비우거나 시각을 바꾸는 것과 섞으면 고정이 바뀐 값에 걸린다. 고정은 따로 보낸다
             if field_name.startswith("items[") and not field_name.endswith(".locked") and (sid, _item_no(field_name)) in locking:
@@ -398,6 +400,33 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
             if via:
                 evidence = {**evidence, "via": via}            # 전체 자동 추천이 낸 값이면 그렇게 적는다(고객이 고른 값과 구별)
             rows.append((source_id if field_name.startswith("items[") else None, field_name, value, evidence, note))
+        # 직접 고른 장소도 자동 추천과 마찬가지로 이동시간을 반영한다. 저장 전에
+        # 계산하므로 불가능한 배치는 claim·별칭·revision을 모두 원래대로 유지한다.
+        touched = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
+                   if field.endswith(".place") and isinstance(value, dict) and value.get("latitude") is not None}
+        if (touched or added) and via != "autofix":
+            from . import direct_schedule
+            from .assemble import collect
+            prospective = [{**c, "source_id": str(c["source_id"]) if c["source_id"] is not None else None}
+                           for c in current_claims] + [
+                {"source_id": sid, "field": field, "value": value, "method": "customer", "evidence": evidence,
+                 "needs_review": False, "note": note} for sid, field, value, evidence, note in rows]
+            got = collect(sources=[{**s, "source_id": str(s["source_id"])} for s in source_rows], claims=prospective)
+            if added:
+                from ..planning.planner import MAX_DAYS
+                dates = sorted({r["date"] for r in got.rows if r["date"]})
+                if dates and (date.fromisoformat(dates[-1]) - date.fromisoformat(dates[0])).days >= MAX_DAYS:
+                    raise IntakeRejected("trip_too_long", "서울 여행은 최대 7일까지 추가할 수 있습니다")
+            party = (got.trip.get("party_size") or {}).get("value")
+            try:
+                adjusted = direct_schedule.fit(conn, tenant_id=tenant_id, rows=got.rows, touched=touched, party_size=party,
+                                               mode_picks=review_module.picked_modes(prospective))
+            except direct_schedule.ScheduleConflict as exc:
+                raise IntakeConflict(exc.code, str(exc)) from exc
+            for change in adjusted:
+                evidence = {"source": "customer", "via": "direct_schedule", "basis": change["basis"]}
+                note = "장소 변경에 따라 앞뒤 이동시간을 반영해 재배치" + ("(어림 이동시간)" if change["basis"] == "estimate" else "")
+                rows.append((change["source_id"], change["field"], change["value"], evidence, note))
         new = current + 1
         # 앞 판을 그대로 옮기고(만든 순서 유지) 고친 값을 뒤에 얹는다 — 칸마다 마지막 값이 이긴다
         cur.execute("INSERT INTO intake_claims (intake_id, tenant_id, revision, source_id, field, value_json, method, "
@@ -414,10 +443,115 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                          note))
         cur.execute("UPDATE trip_intakes SET revision=%s, updated_at=now() WHERE tenant_id=%s AND intake_id=%s",
                     (new, tenant_id, intake_id))
-    # 새 판의 검사 — 바뀌지 않은 구간은 앞 판의 값을 쓴다. 실패해도 고친 값은 이미 저장됐다(조회가 다시 계산한다)
-    _review_of(conn, tenant_id, intake_id, new, _sources(conn, tenant_id, intake_id),
-               effective(_claims(conn, tenant_id, intake_id, new)), force=True)
+        # 검사까지 같은 트랜잭션에 저장한다. 새 장소만 반영되고 이동 검사는
+        # 옛 상태인 중간 판을 다른 화면에서 읽지 않게 한다.
+        found, error = _review_of(conn, tenant_id, intake_id, new, source_rows,
+                                  effective(_claims(conn, tenant_id, intake_id, new)), force=True)
+        if found is None:
+            raise IntakeConflict("schedule_check_failed", "변경 후 검사를 끝내지 못해 저장하지 않았어요. 다시 시도해 주세요.", reason=error)
     return new
+
+
+def restore(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int,
+            restore_revision: int) -> dict[str, Any]:
+    """완료된 과거 판의 원값을 새 판으로 복원한다. 보호·검사 실패는 전체 롤백한다."""
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute("SELECT status, revision FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s AND customer_id=%s "
+                    "FOR UPDATE", (tenant_id, intake_id, customer_id))
+        row = cur.fetchone()
+        if row is None:
+            raise LookupError("intake")
+        status, current = row
+        if status != "review":
+            raise IntakeConflict("intake_not_editable", "지금은 전체 되돌리기를 할 수 없습니다", status=status)
+        if revision != current:
+            raise IntakeConflict("stale_revision", "그 사이 다른 화면에서 고쳤습니다 — 새로 불러와 주세요",
+                                 current_revision=current)
+        old_review = review_module.load(conn, tenant_id, intake_id, restore_revision)
+        if not 1 <= restore_revision < current or not old_review or old_review.get("revision") != restore_revision:
+            raise IntakeConflict("restore_revision_invalid", "복원할 완료된 이전 판을 찾지 못했어요")
+        before = effective(_claims(conn, tenant_id, intake_id, restore_revision))
+        now = effective(_claims(conn, tenant_id, intake_id, current))
+        if not before:
+            raise IntakeConflict("restore_revision_invalid", "복원할 이전 값이 없어요")
+        source_rows = _sources(conn, tenant_id, intake_id)
+        _protect_restore(now, before, source_rows)
+        new = current + 1
+        # 유효 값만 복사하여 같은 시각 claim의 UUID 정렬에 따라 값이 뒤집히지 않게 한다.
+        # 원래 method/evidence도 유지한다. 빈 값·없던 장소를 임의의 값으로 바꾸지 않는다.
+        for claim in before:
+            cur.execute("INSERT INTO intake_claims (intake_id,tenant_id,revision,source_id,field,value_json,method,"
+                        "evidence,needs_review,note) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                        (intake_id, tenant_id, new, claim["source_id"], claim["field"],
+                         json.dumps(claim["value"], ensure_ascii=False, default=str), claim["method"],
+                         json.dumps(claim["evidence"], ensure_ascii=False, default=str), claim["needs_review"], claim["note"]))
+        cur.execute("UPDATE trip_intakes SET revision=%s, updated_at=now() WHERE tenant_id=%s AND intake_id=%s",
+                    (new, tenant_id, intake_id))
+        # 장소 재조회나 direct_schedule.fit 없이 원값 그대로 다시 검사한다.
+        found, error = _review_of(conn, tenant_id, intake_id, new, source_rows, before, force=True)
+        if found is None:
+            raise IntakeConflict("schedule_check_failed", "되돌린 후 검사를 끝내지 못해 저장하지 않았어요", reason=error)
+        return view(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id)
+
+
+def _protect_restore(now, before, sources) -> None:
+    """현재 보호 일정의 값·상태·실제 조립 시각을 바꾸는 역사 복원을 막는다."""
+    def fields(claims):
+        out = {}
+        for claim in claims:
+            field = claim["field"]
+            if field.startswith("items["):
+                out.setdefault((str(claim["source_id"]), _item_no(field)), {})[field.split("].", 1)[-1]] = claim["value"]
+        return out
+
+    current, target = fields(now), fields(before)
+    from .assemble import collect
+    def assembled(claims):
+        return {(str(r["source_id"]), r["index"]): r for r in collect(sources=sources, claims=claims).rows}
+    current_rows, target_rows = assembled(now), assembled(before)
+    for key, values in current.items():
+        locked = values.get("locked") is True
+        booked = values.get("booked") is True or bool(values.get("booking_no"))
+        if not locked and not booked:
+            continue
+        desired = target.get(key)
+        # 잠금·예약 상태 자체를 되돌려 보호를 없애는 것도 허용하지 않는다.
+        same_values = desired is not None and {**values, "removed": values.get("removed", False),
+                                               "locked": values.get("locked", False)} == {
+            **desired, "removed": desired.get("removed", False), "locked": desired.get("locked", False)}
+        a, b = current_rows.get(key), target_rows.get(key)
+        same_slot = (a is None and b is None) or (a is not None and b is not None and
+                    all(a.get(f) == b.get(f) for f in ("date", "start", "end", "place", "kind", "title")))
+        if not same_values or not same_slot:
+            raise IntakeConflict("item_locked" if locked else "item_booked",
+                                 "잠금·예약 일정이 달라져 전체 되돌리기를 저장하지 않았어요")
+
+
+def _new_items(batch, existing, sources) -> set[tuple[str, int]]:
+    """신규 한 항목을 기존 edits 계약으로 생성한다. 삭제 번호도 재사용하지 않는다."""
+    required = {"title", "date", "starts_at", "ends_at", "kind", "place"}
+    added = {(sid, _item_no(f)) for sid, f, _ in batch if f.startswith("items[") and (sid, _item_no(f)) not in existing}
+    if not added:
+        return set()
+    if len(added) != 1:
+        raise IntakeRejected("unknown_item", "새 일정은 한 번에 하나씩 추가해 주세요")
+    sid, index = next(iter(added))
+    next_index = max((i for s, i in existing if s == sid), default=-1) + 1
+    fields = {f.rsplit(".", 1)[-1]: v for s, f, v in batch if s == sid and _item_no(f) == index}
+    if sid not in sources or index != next_index or not required <= fields.keys():
+        raise IntakeRejected("unknown_item", "새 일정은 다음 번호에 이름·날짜·시작·끝·종류·장소를 함께 보내 주세요")
+    if len([1 for s, f, _ in batch if s == sid and _item_no(f) == index]) != len(fields):
+        raise IntakeRejected("invalid_value", "새 일정의 같은 칸을 두 번 보낼 수 없습니다")
+    for name in required:
+        _checked(f"items[{index}].{name}", fields[name])
+    if fields["starts_at"] >= fields["ends_at"]:
+        raise IntakeRejected("invalid_value", "새 일정의 끝은 시작보다 늦어야 합니다")
+    if fields.get("removed") is True or fields.get("locked") is True:
+        raise IntakeRejected("invalid_value", "새 일정은 추가한 뒤 확인하고 고정하거나 빼 주세요")
+    place = fields["place"]
+    if not isinstance(place, dict) or place.get("none") is True:
+        raise IntakeRejected("invalid_value", "새 일정의 장소를 먼저 골라 주세요")
+    return added
 
 
 def current_review(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int | None = None,

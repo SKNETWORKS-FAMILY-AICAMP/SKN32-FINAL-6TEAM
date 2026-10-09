@@ -1,6 +1,7 @@
 import { CONSENT_CODES, type ConsentCode } from "@/features/consent/consent-model";
 import type { Language } from "../i18n";
 import { api, LiveError } from "./client";
+import { streamApi, type OpProgress } from "./stream";
 
 /**
  * `[2026-10-05 사용자 지시]` 약관 동의의 서버 기록(`GET/POST /v1/web/consents`, 계약: `wiki/records/plans/2026-10-05_동의기록_위치수집_백엔드_요청.md`).
@@ -35,8 +36,8 @@ export function readServerConsents(wire: Wire | null | undefined): ServerConsent
   };
 }
 
-export async function getServerConsents(language: Language): Promise<ServerConsents> {
-  return readServerConsents(await api<Wire>("/v1/web/consents", language));
+export async function getServerConsents(language: Language, onProgress?: (progress: OpProgress) => void): Promise<ServerConsents> {
+  return readServerConsents(await streamApi<Wire>("/v1/web/consents", language, { method: "GET" }, onProgress));
 }
 
 /** One item as it is sent: the choice and the fingerprint of the Korean text the customer was shown (`text_sha256`). */

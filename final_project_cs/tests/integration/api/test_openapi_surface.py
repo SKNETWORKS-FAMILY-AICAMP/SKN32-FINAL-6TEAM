@@ -26,6 +26,7 @@ from app.presentation.api.app import app
 
 # 설계 계약 문서 §1 의 표 — 이것은 **최소 집합**이지 상한이 아니다.
 CONTRACT_V1_PATHS = {
+    "/v1/web/trip-intakes/{intake_id}/restore",
     # 운영자 웹앱 연동 계약의 고객 문의·공개 공지. 문의 쓰기는 고객 인증과 CSRF를 거친다.
     "/v1/web/support/notices",
     "/v1/web/support/inquiries",

@@ -65,6 +65,37 @@ def test_the_intake_carries_only_the_questions_that_are_used(api):
 
 
 # ── ② 답 저장 ─────────────────────────────────────────────────────
+def test_next_intake_continues_saved_questions_but_not_direct_settings(api):
+    client, _, _ = _full_client()
+    headers = _key(client)
+    previous = _intake(client, headers)["intake_id"]
+    _answer(client, headers, previous, {"preferred_mobility": "taxi", "pace": "packed", "on_disruption": "replace"})
+    next_view = _intake(client, headers)
+    assert {q["id"]: q["answer"] for q in next_view["questions"]} == {"preferred_mobility": "taxi", "priority": None}
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT survey FROM trip_intakes WHERE intake_id=%s", (UUID(next_view["intake_id"]),))
+        assert cur.fetchone()[0] == {"preferred_mobility": "taxi"}
+
+
+def test_next_intake_does_not_inherit_answers_from_another_customer(api):
+    first, _, _ = _full_client()
+    first_headers = _key(first)
+    previous = _intake(first, first_headers)["intake_id"]
+    _answer(first, first_headers, previous, {"priority": "mobility"})
+    other, _, _ = _full_client()
+    other_headers = _key(other)
+    assert all(q["answer"] is None for q in _intake(other, other_headers)["questions"])
+
+
+def test_changed_question_bundle_is_asked_again_on_the_next_intake(api, monkeypatch):
+    client, _, _ = _full_client()
+    headers = _key(client)
+    previous = _intake(client, headers)["intake_id"]
+    _answer(client, headers, previous, {"preferred_mobility": "taxi"})
+    monkeypatch.setattr(survey_answers, "QUESTION_SET_VERSION", "future-bundle")
+    assert all(q["answer"] is None for q in _intake(client, headers)["questions"])
+
+
 def test_answers_are_saved_one_at_a_time_and_a_later_answer_overwrites(api):
     client, _, _ = _full_client()
     headers = _key(client)
@@ -171,8 +202,8 @@ def test_the_view_and_the_answer_reply_carry_the_question_set_version(api):
     client, _, _ = _full_client()
     headers = _key(client)
     view = _intake(client, headers)
-    assert view["questions_version"] == survey_answers.QUESTION_SET_VERSION == "1"
-    assert _answer(client, headers, view["intake_id"], {"priority": "activity"})["questions_version"] == "1"
+    assert view["questions_version"] == survey_answers.QUESTION_SET_VERSION == "2"
+    assert _answer(client, headers, view["intake_id"], {"priority": "activity"})["questions_version"] == "2"
     assert all("slot" not in question and "value" not in question for question in view["questions"])    # 웹은 슬롯 · 값을 모른다 — 번호 · 문구 · 선택지만
 
 
@@ -186,8 +217,8 @@ def test_saving_an_answer_keeps_what_was_shown_and_how_it_was_read(api):
     rows = _history(intake_id)
     assert [(r[0], r[1]) for r in rows] == [("preferred_mobility", "taxi"), ("pace", "packed"), ("preferred_mobility", "walk")]
     first = rows[0]
-    assert first[2:] == ("preferred_mobility", "taxi", "이동은 주로 어떻게 하세요?", "택시", "1")        # 슬롯 · 값 · 그때의 문구 · 라벨 · 묶음 버전
-    assert rows[1][2:] == ("pace", "packed", None, None, "1")                                            # 직접 값은 문구 · 라벨이 없다
+    assert first[2:] == ("preferred_mobility", "taxi", "이동은 주로 어떻게 하세요?", "택시", "2")        # 슬롯 · 값 · 그때의 문구 · 라벨 · 묶음 버전
+    assert rows[1][2:] == ("pace", "packed", None, None, "2")                                            # 직접 값은 문구 · 라벨이 없다
 
 
 def test_a_question_id_and_its_slot_are_different_things(api, monkeypatch):
@@ -213,7 +244,7 @@ def test_an_old_answer_keeps_the_meaning_it_had_when_it_was_saved(api, monkeypat
     client, _, _ = _full_client()
     headers = _key(client)
     view = _intake(client, headers)
-    _answer(client, headers, view["intake_id"], {"preferred_mobility": "taxi"})                          # 묶음 1 에서: taxi → "taxi"
+    _answer(client, headers, view["intake_id"], {"preferred_mobility": "taxi"})                          # 묶음 2 에서: taxi → "taxi"
     version, bundle = _bundle("3", mobility_value="walk")                                                # 묶음 3 은 같은 번호를 다르게 읽는다
     monkeypatch.setattr(survey_answers, "QUESTIONS", (survey_answers.Question(
         "preferred_mobility", "preferred_mobility", "이동은?", "묶음 시험", (survey_answers.Option("taxi", "택시", "walk"),)), bundle[1]))
@@ -221,7 +252,7 @@ def test_an_old_answer_keeps_the_meaning_it_had_when_it_was_saved(api, monkeypat
     done = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/confirm", headers=headers, json={"revision": view["revision"]})
     assert done.status_code == 200, done.text
     assert _constraints(done.json()["trip"]["trip_id"])["survey"]["priority_details"] == {"mobility": ["taxi"]}    # 저장 때의 뜻 그대로(walk 가 아니다)
-    assert [r[-1] for r in _history(view["intake_id"])] == ["1"]
+    assert [r[-1] for r in _history(view["intake_id"])] == ["2"]
 
 
 def test_without_history_an_answer_is_read_with_the_current_bundle():

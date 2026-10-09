@@ -22,8 +22,25 @@ from uuid import UUID
 from app.core.settings import get_guardrails
 
 from app.domains.travel_ops.modules.web_account import member_cleanup, web_guard
+from app.domains.travel_ops.modules.web_account.guest_policy import is_guest
 
-_CANDIDATES = """
+# Case의 발생 당시 고객은 그대로 두고, 현재 회원 여행에 연결된 이력만 보호한다.
+# 감시/업무는 subject_ref, 웹 대화는 trip_message, 옛 기록은 trip_id를 쓴다.
+_MEMBER_TRIP_HISTORY = """
+EXISTS (
+    SELECT 1 FROM customer_cases history
+    JOIN trips saved ON saved.tenant_id=history.tenant_id
+      AND saved.trip_id::text IN (history.state_json->'subject_ref'->>'id',
+                                 history.state_json->'trip_message'->>'trip_id',
+                                 history.state_json->>'trip_id')
+    WHERE history.tenant_id=c.tenant_id AND history.customer_id=c.customer_id
+      AND saved.customer_id<>c.customer_id
+      AND EXISTS (SELECT 1 FROM web_social_links member
+                  WHERE member.tenant_id=saved.tenant_id AND member.customer_id=saved.customer_id)
+)
+"""
+
+_CANDIDATES = f"""
 SELECT c.customer_id, x.last_seen, x.trips_end FROM customers c
 CROSS JOIN LATERAL (
     SELECT GREATEST(
@@ -38,6 +55,7 @@ CROSS JOIN LATERAL (
 ) x
 WHERE c.tenant_id=%s AND left(c.external_id, 4) = 'web:'
   AND NOT EXISTS (SELECT 1 FROM web_social_links l WHERE l.tenant_id=c.tenant_id AND l.customer_id=c.customer_id)
+  AND NOT {_MEMBER_TRIP_HISTORY}
   AND x.last_seen < %s
 ORDER BY x.last_seen
 LIMIT %s
@@ -68,6 +86,15 @@ def cleanup_guests(conn, tenant_id: str, now: datetime | None = None, *, limit: 
             out["held_for_trips"] += 1
             continue
         with conn.transaction():
+            # 후보를 읽은 뒤 로그인 이관이 일어났어도 지우지 않는다.
+            # 이관과 같은 고객 행 잠금으로 정리/이관을 직렬화한다.
+            with conn.cursor() as cur:
+                cur.execute(f"SELECT {_MEMBER_TRIP_HISTORY} FROM customers c "
+                            "WHERE c.tenant_id=%s AND c.customer_id=%s FOR UPDATE", (tenant_id, customer_id))
+                current = cur.fetchone()
+            if current is None or current[0] or not is_guest(conn, tenant_id=tenant_id, customer_id=customer_id):
+                out["customers_kept"] += int(current is not None)
+                continue
             done = _delete_one(conn, tenant_id, customer_id)
         out["trips_deleted"] += done["trips"]
         out["customers_deleted"] += done["customer"]

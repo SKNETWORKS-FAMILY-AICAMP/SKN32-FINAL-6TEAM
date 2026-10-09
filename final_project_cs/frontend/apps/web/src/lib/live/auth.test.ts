@@ -66,8 +66,16 @@ describe("social sign-in calls", () => {
     replies.push(json({ authorize_url: "https://kauth.example/oauth" }));
     await startSocial("kakao", "login", "/mypage", "ko", "TOKEN");
     expect(headerOf(0, "X-User-Key")).toBeUndefined();
-    expect(sessionCalls).toHaveLength(0);
+    expect(sessionCalls.every((call) => call.init.method !== "POST")).toBe(true);
     expect(JSON.parse(String(calls[0].init.body))).toMatchObject({ mode: "login", turnstile_token: "TOKEN" });
+  });
+
+  it("starts a unified login with the current guest CSRF without creating another guest", async () => {
+    replies.push(json({ authorize_url: "https://accounts.example/o/auth" }));
+    await startSocial("google", "login", "/trips/new", "ko");
+    expect(headerOf(0, "X-CSRF-Token")).toBe(CSRF);
+    expect(sessionCalls.every((call) => call.init.method !== "POST")).toBe(true);
+    expect(pendingFlow()?.returnTo).toBe("/trips/new");
   });
 
   it("does not follow an address that is not http(s), and remembers no flow for it", async () => {

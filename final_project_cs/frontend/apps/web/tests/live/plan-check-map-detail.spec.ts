@@ -3,8 +3,8 @@ import { checkPlan, mockServer, start } from "./helpers";
 import { card, mapSettled, needsBadge, openFinished, pin, sheet, type Json } from "./plan-check-kit";
 
 /**
- * `[2026-10-06 사용자 지시]` 계획 확인 화면: 핀을 누르면 지도 위에 그 일정의 설명 카드 · 경로선을 누르면 그 구간 설명 + 목록의 이동 줄 열기 · 핀 선과 점은 핀 몸통 아래 층 · 「전체 · 1일차 · 2일차」 줄이 「계획 확인」 줄과 한 줄 ·
- * 확인이 끝나면 목록이 맨 위에서 시작 · 카드 도구가 모자라면 다음 줄로(제목이 눌리지 않게) · 이름 수정 버튼 오른쪽 여백. 테스트용 mock 서버로 도는 자동 시험이다(화면 반응을 본다 — 실서버 확인 아님).
+ * `[2026-10-06 사용자 지시]` 계획 확인 화면: 핀을 누르면 목록의 해당 일정만 열기 · 경로선을 누르면 그 구간 설명 + 목록의 이동 줄 열기 · 핀 선과 점은 핀 몸통 아래 층 · 「전체 · 1일차 · 2일차」 줄이 「계획 확인」 줄과 한 줄 ·
+ * 확인이 끝나면 목록이 맨 위에서 시작 · 카드 제목과 같은 줄의 도구가 제목 폭을 무너뜨리지 않음 · 이름 수정 버튼 오른쪽 여백. 테스트용 mock 서버로 도는 자동 시험이다(화면 반응을 본다 — 실서버 확인 아님).
  */
 const DAY_TWO_STOP: Json = {
   id: "0-3", source_id: "s1", index: 3, title: "N서울타워", kind: "activity", day: 2, date: "2026-10-02", starts_at: "10:00", ends_at: "11:30",
@@ -12,34 +12,38 @@ const DAY_TWO_STOP: Json = {
   place: { name: "N서울타워", latitude: 37.5512, longitude: 126.9882, source: "tour_api", kind: null, content_id: null, content_type_id: null },
   rows: [{ row: "place", result: "ok", text: "관광공사 정보로 찾았어요" }],
 };
-/** ★2026-10-06 사용자 지시: 핀 · 경로선의 설명도 모든 화면과 같은 알림 막대다(따로 그린 카드가 아니다). */
+/** ★2026-10-06 사용자 지시: 경로선 설명은 공통 알림 막대를 사용한다. 마커 설명 알림은 2026-10-08 사용자 지시로 제거했다. */
 const callout = (page: import("@playwright/test").Page, text: RegExp | string) => page.getByRole("status").filter({ hasText: text });
-const device = (page: import("@playwright/test").Page) => page.locator('[class*="__device"]').first();
+const device = (page: import("@playwright/test").Page) => page.locator('[data-device]').first();
+test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
-test("핀을 누르면 그 일정의 설명이 알림으로 뜬다 — 번호 · 이름 · 시각 · 판정 · 확인할 것 — 그리고 ✕ 로 닫을 수 있다", async ({ page, request }) => {
+test("마커는 해당 일정만 열고 중복 설명 알림을 띄우지 않는다 — 다른 마커와 재선택도 같다", async ({ page, request }) => {
   await openFinished(page, request);
   await pin(page, "2.").locator("[data-pin-body]").click();
-  const note = callout(page, /^2올리브영/);
-  await expect(note).toBeVisible();
-  await expect(note).toContainText("확인 필요");
-  await expect(note).toContainText("11:00");
-  await expect(note).toContainText("이름이 여러 곳이라 가까운 「올리브영 인사동점」으로 임시로 골랐어요");   // 검사가 찾은 첫 문제
-  await expect(card(page, "올리브영").getByRole("heading").getByRole("button")).toHaveAttribute("aria-expanded", "true");   // 목록의 카드도 열려 있다
-  await note.getByRole("button", { name: "닫기" }).click();
-  await expect(note).toHaveCount(0);
-  await expect(pin(page, "2.")).toHaveAttribute("aria-pressed", "true");                                // 알림만 닫힌다 — 핀은 고른 채다
-  // 다른 핀으로 옮겨 가면 알림도 따라간다
-  await mapSettled(page);                                                                                // 고른 핀으로 지도가 움직이는 동안 누르면 핀이 손 밑에서 비켜 간다
-  await pin(page, "1.").locator("[data-pin-body]").click();
-  await expect(callout(page, /^1경복궁 관람/)).toContainText("통과");
+  await expect(card(page, "올리브영").getByRole("heading").getByRole("button")).toHaveAttribute("aria-expanded", "true");
   await expect(callout(page, /^2올리브영/)).toHaveCount(0);
+  await expect(pin(page, "2.")).toHaveAttribute("aria-pressed", "true");
+  await mapSettled(page);
+  // 거리 칩으로 교대된 마커를 억지로 누르지 않고 전체 보기로 먼저 지도 안에 넣는다.
+  await page.getByRole("region", { name: "여행 지도", exact: true }).hover();
+  await page.getByRole("button", { name: "지도 단추 펼치기", exact: true }).click();
+  await page.getByRole("button", { name: "모든 일정 보기", exact: true }).click();
+  await mapSettled(page);
+  // 작은 지도에서는 펼쳐진 지도 단추를 접은 뒤 그 아래 마커를 고른다.
+  await page.getByRole("button", { name: "지도 단추 접기", exact: true }).click();
+  await pin(page, "1.").locator("[data-pin-body]").click();
+  await expect(card(page, "경복궁 관람").getByRole("heading").getByRole("button")).toHaveAttribute("aria-expanded", "true");
+  await expect(callout(page, /^1경복궁 관람/)).toHaveCount(0);
+  await mapSettled(page);
+  await pin(page, "1.").locator("[data-pin-body]").click();
+  await expect(pin(page, "1.")).toHaveAttribute("aria-pressed", "false");
 });
 
-test("핀 설명도 다른 알림과 같은 하얀 카드다: 휴대폰 틀 안 머리줄 아래, 틀 폭에 맞고 테두리 빛 · 고리 움직임이 한 번 지나가며, 몇 초 뒤 저절로 사라지고 단추 위에 있는 동안은 남는다", async ({ page, request }) => {
+test("경로 설명 알림은 하얀 카드다: 휴대폰 틀 안 머리줄 아래, 틀 폭에 맞고 테두리 빛 · 고리 움직임이 한 번 지나가며, 몇 초 뒤 저절로 사라지고 단추 위에 있는 동안은 남는다", async ({ page, request }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await openFinished(page, request);
-  await pin(page, "2.").locator("[data-pin-body]").click();
-  const note = callout(page, /^2올리브영/);
+  await openFinished(page, request, undefined, { intakeRoutes: "on" });
+  await page.locator("path.trip-route-hit").first().dispatchEvent("click");
+  const note = callout(page, /^→경복궁 관람 → 올리브영/);
   await expect(note).toBeVisible();
   // 하얀 카드를 눈에 띄게 하는 강조: 테두리를 도는 빛과 한 번 퍼지는 고리가 나타날 때 지나간다
   const names = await note.evaluate((element) => element.getAnimations({ subtree: true }).map((animation) => (animation as CSSAnimation).animationName));
@@ -106,13 +110,13 @@ test("지도의 「! n」을 누르면 목록은 확인 필요만, 지도는 확
 test("핀을 누르면 경로 선택은 풀리고, 경로를 누르면 핀 선택이 풀린다(둘은 한 번에 하나) — 알림도 하나만 선다", async ({ page, request }) => {
   await openFinished(page, request, undefined, { intakeRoutes: "on" });
   await pin(page, "2.").locator("[data-pin-body]").click();
-  await expect(callout(page, /^2올리브영/)).toBeVisible();
+  await expect(callout(page, /^2올리브영/)).toHaveCount(0);
   await page.locator("path.trip-route-hit").first().dispatchEvent("click");
   await expect(callout(page, /^→경복궁 관람 → 올리브영/)).toBeVisible();
   await expect(callout(page, /^2올리브영/)).toHaveCount(0);
   await mapSettled(page);
   await pin(page, "3.").locator("[data-pin-body]").click();
-  await expect(callout(page, /^3/)).toBeVisible();
+  await expect(callout(page, /^3/)).toHaveCount(0);
   await expect(callout(page, /^→경복궁 관람 → 올리브영/)).toHaveCount(0);
 });
 
@@ -150,7 +154,8 @@ test("이틀 이상이면 「전체 · 1일차 · 2일차」 칩이 목록 위�
 test("확인이 끝나면 목록은 맨 위(첫날의 첫 일정)에서 시작한다 — 읽는 중에 따라가던 자리(첫날 중간)에 남지 않는다", async ({ page, request }) => {
   // 읽는 동안 그려지는 장면을 지나온 접수(readingPolls 3): 목록은 그려지는 줄을 따라 내려갔다가 끝나면 맨 위로 돌아와야 한다.
   const server = mockServer(request);
-  await server.scenario({ review: "on", board: "rich", readingPolls: 3 });
+  // This exercises the polling path: the mock server's one-shot SSE snapshot cannot advance readingPolls.
+  await server.scenario({ review: "on", board: "rich", readingPolls: 3, intakeEvents: "off" });
   await start(page);
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill("10/1 09:00 경복궁 관람");
@@ -162,7 +167,7 @@ test("확인이 끝나면 목록은 맨 위(첫날의 첫 일정)에서 시작�
   await expect(card(page, "경복궁 관람")).toBeInViewport();
 });
 
-test("카드 도구(변경 완료 · 되돌리기 · 수정 · 삭제)가 좁은 카드에서 제목을 한 글자로 누르지 않는다 — 도구는 다음 줄로 내려간다", async ({ page, request }) => {
+test("카드 도구가 좁은 카드에서 제목을 한 글자로 누르지 않고 제목 폭과 높이를 유지한다", async ({ page, request }) => {
   await openFinished(page, request);
   const title = card(page, "올리브영").getByRole("heading").getByRole("button");
   const box = (await title.boundingBox())!;
@@ -180,17 +185,9 @@ test("이름 수정 버튼은 펼쳐졌을 때 칩 오른쪽 끝에 붙지 않�
   expect((chipBox!.x + chipBox!.width) - (editBox!.x + editBox!.width)).toBeGreaterThanOrEqual(8);       // 오른쪽에 8px 이상 여백
 });
 
-test("지도 아래 안내 줄에 선 색 태그가 선다 — 그려진 수단마다 (선 색) 수단 이름 · 직선으로 이은 구간은 따로 한 태그 · 선은 수단별 색으로 그려진다", async ({ page, request }) => {
+test("이동 수단 범례는 없고 선은 수단별 색으로 그려진다", async ({ page, request }) => {
   await openFinished(page, request, undefined, { intakeRoutes: "on" });
-  const tags = page.locator("[data-route-tags]");
-  await expect(tags).toBeVisible();
-  await expect(tags.locator("li[data-mode]")).toHaveText(["지하철", "도보"]);                              // 지하철(점선·직선 추정) 구간과 도보 구간
-  await expect(tags.locator("li[data-guess]")).toContainText("직선으로 이은 1구간");
-  // 태그는 지도 아래쪽(시트 바로 위)에 서고 눌림을 지도로 통과시킨다
-  const [bar, head] = [(await tags.boundingBox())!, (await sheet(page).boundingBox())!];
-  expect(bar.y + bar.height).toBeLessThanOrEqual(head.y + 2);
-  expect(await tags.evaluate((element) => getComputedStyle(element.closest("div")!).pointerEvents)).toBe("none");
-  // 선 색은 수단별이고 태그의 색 토막과 같은 색이다(지하철 = 파랑 계열 토큰, 도보 = 회색 계열 토큰)
+  await expect(page.locator("[data-route-tags]")).toHaveCount(0);
   const colors = await page.evaluate(() => {
     const css = (variable: string) => getComputedStyle(document.documentElement).getPropertyValue(variable).trim().toLowerCase();
     return { subway: css("--color-adjusted"), walk: css("--color-muted"), lines: Array.from(document.querySelectorAll("path.trip-route-line")).map((path) => (path.getAttribute("stroke") ?? "").toLowerCase()) };

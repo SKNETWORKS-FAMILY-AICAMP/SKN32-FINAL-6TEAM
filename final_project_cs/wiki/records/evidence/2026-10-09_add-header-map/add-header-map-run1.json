@@ -1,0 +1,1173 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.live.config.ts",
+      "--output",
+      "../../../../.tmp/add-header-map-run1",
+      "--reporter",
+      "list,json",
+      "tests/live/add-header-map-20261009.spec.ts",
+      "tests/live/inline-insertion-20261009.spec.ts",
+      "tests/live/map-controls.spec.ts",
+      "tests/live/plan-check-map-detail.spec.ts"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\playwright.live.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/add-header-map-run1",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "add-header-map-20261009.spec.ts",
+      "file": "add-header-map-20261009.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "상단 검색·선택·뒤로가기와 지도 단추 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7609,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:45:54.362Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "15b049a72f5a27536d90-ec986ae5153b797f7e9f",
+          "file": "add-header-map-20261009.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "상단 검색·선택·뒤로가기와 지도 단추 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7389,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:46:02.208Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "15b049a72f5a27536d90-1b0e3aedb170c11bec25",
+          "file": "add-header-map-20261009.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "빈 배경의 오른쪽 스와이프만 추가를 취소하고 일차 전환 모션을 사용한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5422,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:46:09.616Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "15b049a72f5a27536d90-933fea64e18f158c4aef",
+          "file": "add-header-map-20261009.spec.ts",
+          "line": 57,
+          "column": 1
+        },
+        {
+          "title": "저장 중에는 뒤로가기·스와이프가 요청과 입력을 취소하지 않는다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 45451,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 45000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 45000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 45000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\add-header-map-20261009.spec.ts",
+                        "column": 74,
+                        "line": 86
+                      },
+                      "message": "Error: locator.click: Test timeout of 45000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: '일정 추가 취소', exact: true })\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" aria-disabled=\"true\" aria-label=\"일정 추가 취소\" class=\"plan-check-module__MjxneW__back\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    76 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n\n  84 |   await form.getByRole('button',{name:'일정에 추가',exact:true}).click();\n  85 |   const back=page.getByRole('button',{name:'일정 추가 취소',exact:true});\n> 86 |   await expect(back).toHaveAttribute('aria-disabled','true'); await back.click();\n     |                                                                          ^\n  87 |   const box=(await page.getByRole('region',{name:'일정 추가 화면'}).boundingBox())!;\n  88 |   await drag(page,box.x+4,box.y+100,160); await expect(form).toBeVisible();\n  89 |   release(); await expect(form.getByRole('alert')).toContainText('앞뒤 일정');\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\add-header-map-20261009.spec.ts:86:74"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:46:15.055Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\add-header-map-run1\\add-header-map-20261009-저장-중에는-뒤로가기·스와이프가-요청과-입력을-취소하지-않는다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\add-header-map-run1\\add-header-map-20261009-저장-중에는-뒤로가기·스와이프가-요청과-입력을-취소하지-않는다\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\add-header-map-run1\\add-header-map-20261009-저장-중에는-뒤로가기·스와이프가-요청과-입력을-취소하지-않는다\\trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "15b049a72f5a27536d90-da3742510a75f8ad5b0b",
+          "file": "add-header-map-20261009.spec.ts",
+          "line": 75,
+          "column": 1
+        },
+        {
+          "title": "오른쪽 거리 칩은 단추 아래의 빈 높이에서 화면 끝에 붙고 번호와 거리가 구분된다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6732,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:47:01.911Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "15b049a72f5a27536d90-9aae582ffb719d150411",
+          "file": "add-header-map-20261009.spec.ts",
+          "line": 93,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "inline-insertion-20261009.spec.ts",
+      "file": "inline-insertion-20261009.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px: 스크롤한 일정 사이에서 장소를 검색하고 정확한 지점으로 추가한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3029,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:47:08.973Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c2feea53b8dbedda92ce-7dc832a371f213dfb43f",
+          "file": "inline-insertion-20261009.spec.ts",
+          "line": 17,
+          "column": 3
+        },
+        {
+          "title": "1280px: 스크롤한 일정 사이에서 장소를 검색하고 정확한 지점으로 추가한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3397,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:47:12.018Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c2feea53b8dbedda92ce-35aafa95fcf01bb17172",
+          "file": "inline-insertion-20261009.spec.ts",
+          "line": 17,
+          "column": 3
+        },
+        {
+          "title": "키보드로 다른 추가 위치를 고르고 취소하면 그 +로 초점이 돌아온다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2248,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:47:15.434Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c2feea53b8dbedda92ce-00a41fa1cf53c24952b2",
+          "file": "inline-insertion-20261009.spec.ts",
+          "line": 53,
+          "column": 1
+        },
+        {
+          "title": "추가 저장을 거절하면 검색 선택과 입력을 보존해 수정 후 재시도할 수 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4831,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:47:17.706Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c2feea53b8dbedda92ce-481815123ca77f518d77",
+          "file": "inline-insertion-20261009.spec.ts",
+          "line": 69,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "map-controls.spec.ts",
+      "file": "map-controls.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "단추는 ＋ · 거리 눈금 · － · 모든 일정 보기 순서로 서고, 위치 동의가 없으면 「내 위치」 단추는 없다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 4769,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m111.921875\u001b[39m\nReceived:   \u001b[31m149\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m111.921875\u001b[39m\nReceived:   \u001b[31m149\u001b[39m\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-controls.spec.ts:31:19",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-controls.spec.ts",
+                      "column": 19,
+                      "line": 31
+                    },
+                    "snippet": "  29 |   await expect(group(page).getByRole(\"button\", { name: /내 위치/ })).toHaveCount(0);\n  30 |   const [plus, ruler, minus] = await Promise.all([group(page).getByRole(\"button\", { name: \"확대\" }), scale(page), group(page).getByRole(\"button\", { name: \"축소\" })].map((item) => item.boundingBox()));\n> 31 |   expect(plus!.y).toBeLessThan(ruler!.y);\n     |                   ^\n  32 |   expect(ruler!.y).toBeLessThan(minus!.y);                                                           // 눈금이 ＋ 와 － 사이에 있다\n  33 | });\n  34 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-controls.spec.ts",
+                        "column": 19,
+                        "line": 31
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m111.921875\u001b[39m\nReceived:   \u001b[31m149\u001b[39m\n\n  29 |   await expect(group(page).getByRole(\"button\", { name: /내 위치/ })).toHaveCount(0);\n  30 |   const [plus, ruler, minus] = await Promise.all([group(page).getByRole(\"button\", { name: \"확대\" }), scale(page), group(page).getByRole(\"button\", { name: \"축소\" })].map((item) => item.boundingBox()));\n> 31 |   expect(plus!.y).toBeLessThan(ruler!.y);\n     |                   ^\n  32 |   expect(ruler!.y).toBeLessThan(minus!.y);                                                           // 눈금이 ＋ 와 － 사이에 있다\n  33 | });\n  34 |\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-controls.spec.ts:31:19"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:47:22.578Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\add-header-map-run1\\map-controls-단추는-＋-·-거리-눈금-34114-서고-위치-동의가-없으면-「내-위치」-단추는-없다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\add-header-map-run1\\map-controls-단추는-＋-·-거리-눈금-34114-서고-위치-동의가-없으면-「내-위치」-단추는-없다\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\add-header-map-run1\\map-controls-단추는-＋-·-거리-눈금-34114-서고-위치-동의가-없으면-「내-위치」-단추는-없다\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-controls.spec.ts",
+                    "column": 19,
+                    "line": 31
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-be21ba5f443cd552ea08",
+          "file": "map-controls.spec.ts",
+          "line": 23,
+          "column": 1
+        },
+        {
+          "title": "거리 눈금은 지도에 담긴 거리를 말하고, 확대하면 더 짧은 거리로 바뀐다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6486,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:47:28.503Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-dffec8d9891a727a7cf3",
+          "file": "map-controls.spec.ts",
+          "line": 35,
+          "column": 1
+        },
+        {
+          "title": "접으면 눈금과 탭이 남고 다시 열어도 기본은 접힌 상태다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5755,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:47:35.299Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-da31b1b4c085d6a8bbf1",
+          "file": "map-controls.spec.ts",
+          "line": 50,
+          "column": 1
+        },
+        {
+          "title": "목록 창을 크게 열어 지도가 낮아지면 같은 단추가 가로 한 줄로 서고, 더 낮으면 접는 탭만 남는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5277,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:47:41.073Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-9385fccbf57020613e95",
+          "file": "map-controls.spec.ts",
+          "line": 67,
+          "column": 1
+        },
+        {
+          "title": "지도를 확대하면 화면 밖으로 나간 일정이 가장자리에 「번호 · 거리」 칩으로 서고, 누르면 그 일정으로 가며 골라진다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7765,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:47:46.368Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-d7fea47bc4987f97f85a",
+          "file": "map-controls.spec.ts",
+          "line": 86,
+          "column": 1
+        },
+        {
+          "title": "멀리 끌어 핀이 모두 화면 밖이면 칩 하나가 모두를 담아 서고(「2 · 3 · 4」), 지도 층(타일 · 핀 층) 위에 그려지고, 가장자리에서 잘리지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6072,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:47:54.151Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-ec21d5529872493fad02",
+          "file": "map-controls.spec.ts",
+          "line": 102,
+          "column": 1
+        },
+        {
+          "title": "일정이 있는 날을 처음 보여 줄 때 첫 일정의 핀이 한 번 두근거린다 (고리가 퍼졌다 사라진다)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3725,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:48:00.238Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-1b562660017dc730ee93",
+          "file": "map-controls.spec.ts",
+          "line": 136,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "plan-check-map-detail.spec.ts",
+      "file": "plan-check-map-detail.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "마커는 해당 일정만 열고 중복 설명 알림을 띄우지 않는다 — 다른 마커와 재선택도 같다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8792,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:48:03.997Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbcc7e34fc209fea700c-efe934c9cf8be28dda73",
+          "file": "plan-check-map-detail.spec.ts",
+          "line": 20,
+          "column": 1
+        },
+        {
+          "title": "경로 설명 알림은 하얀 카드다: 휴대폰 틀 안 머리줄 아래, 틀 폭에 맞고 테두리 빛 · 고리 움직임이 한 번 지나가며, 몇 초 뒤 저절로 사라지고 단추 위에 있는 동안은 남는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 21519,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:48:12.809Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbcc7e34fc209fea700c-44b8d072cd0a2d6c7f46",
+          "file": "plan-check-map-detail.spec.ts",
+          "line": 42,
+          "column": 1
+        },
+        {
+          "title": "경로선을 누르면 그 구간이 골라지고 — 설명 알림(어디서 어디로 · 수단 · 출발과 도착) · 목록의 이동 줄이 열림 — 다시 누르면 놓는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1988,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:48:34.350Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbcc7e34fc209fea700c-388ccbd39e99b70c0747",
+          "file": "plan-check-map-detail.spec.ts",
+          "line": 68,
+          "column": 1
+        },
+        {
+          "title": "경로선을 눌러 고른 뒤 목록의 그 이동 줄을 다시 눌러 닫으면 지도의 선도 놓인다 — 목록에서 열면 지도의 선이 골라진다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2291,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:48:36.360Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbcc7e34fc209fea700c-35a869cf5dc50877cfdd",
+          "file": "plan-check-map-detail.spec.ts",
+          "line": 84,
+          "column": 1
+        },
+        {
+          "title": "지도의 「! n」을 누르면 목록은 확인 필요만, 지도는 확인 필요 핀만 주황으로 남고 나머지 핀은 회색(눌리지 않음) — 다시 누르면 돌아온다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4405,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:48:38.676Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbcc7e34fc209fea700c-bb7f620ca23b9eb7c98d",
+          "file": "plan-check-map-detail.spec.ts",
+          "line": 98,
+          "column": 1
+        },
+        {
+          "title": "핀을 누르면 경로 선택은 풀리고, 경로를 누르면 핀 선택이 풀린다(둘은 한 번에 하나) — 알림도 하나만 선다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4418,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:48:43.103Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbcc7e34fc209fea700c-8febc59c4b71195af7fb",
+          "file": "plan-check-map-detail.spec.ts",
+          "line": 110,
+          "column": 1
+        },
+        {
+          "title": "핀을 밀어낸 선과 점은 핀 몸통보다 아래 층에 따로 있다(다른 핀의 몸통 위로 그려지지 않는다)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4277,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:48:47.541Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbcc7e34fc209fea700c-82fdf81a59212b4e3e07",
+          "file": "plan-check-map-detail.spec.ts",
+          "line": 123,
+          "column": 1
+        },
+        {
+          "title": "이틀 이상이면 「전체 · 1일차 · 2일차」 칩이 목록 위에 투명하게 뜨고(따로 줄 · 경계선 없음), 「확인 필요」는 지도 쪽에 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4436,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:48:51.835Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbcc7e34fc209fea700c-e0df8570aeb37fa456d6",
+          "file": "plan-check-map-detail.spec.ts",
+          "line": 136,
+          "column": 1
+        },
+        {
+          "title": "확인이 끝나면 목록은 맨 위(첫날의 첫 일정)에서 시작한다 — 읽는 중에 따라가던 자리(첫날 중간)에 남지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 17416,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:48:56.289Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbcc7e34fc209fea700c-06ff889f5f9a5f1456e8",
+          "file": "plan-check-map-detail.spec.ts",
+          "line": 154,
+          "column": 1
+        },
+        {
+          "title": "카드 도구가 좁은 카드에서 제목을 한 글자로 누르지 않고 제목 폭과 높이를 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4348,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:49:13.722Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbcc7e34fc209fea700c-9eef326537bbdcb19f76",
+          "file": "plan-check-map-detail.spec.ts",
+          "line": 170,
+          "column": 1
+        },
+        {
+          "title": "이름 수정 버튼은 펼쳐졌을 때 칩 오른쪽 끝에 붙지 않고 여백이 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4741,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:49:18.091Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbcc7e34fc209fea700c-f4e5c3e499acc0ea8518",
+          "file": "plan-check-map-detail.spec.ts",
+          "line": 178,
+          "column": 1
+        },
+        {
+          "title": "이동 수단 범례는 없고 선은 수단별 색으로 그려진다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4784,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:49:22.852Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbcc7e34fc209fea700c-a87f38c3f7c04a69800a",
+          "file": "plan-check-map-detail.spec.ts",
+          "line": 188,
+          "column": 1
+        },
+        {
+          "title": "지하철 선을 누르면 탄 구간(호선 · 역)이 설명 알림에 더해진다 — 서버가 준 것만, 중간 역을 못 채웠으면 「역 사이는 직선」",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4851,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T12:49:27.658Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbcc7e34fc209fea700c-3836e195b52ae0dce909",
+          "file": "plan-check-map-detail.spec.ts",
+          "line": 199,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T12:45:38.413Z",
+    "duration": 235872.459,
+    "expected": 27,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

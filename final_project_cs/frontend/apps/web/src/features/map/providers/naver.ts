@@ -1,8 +1,9 @@
 import type { Coordinates, MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_BOX, ME_LABEL, meKey, STAY_BOX, staysKey } from "./me";
-import { createPin, geometryKey, layoutPins, PIN_BOX, placePin, pointLabel, pulsePin, setPinSelected, type PinSlot } from "./pin";
+import { createPin, geometryKey, layoutPins, paintPinGroups, pinArea, PIN_BOX, placePin, pointLabel, pulsePin, setPinSelected, type PinSlot } from "./pin";
 import { createSdkLoader } from "./sdk-loader";
+import { setMarkerHidden } from "./visibility";
 
 interface NaverLatLng { lat(): number; lng(): number }
 interface NaverSize { width: number; height: number }
@@ -51,7 +52,7 @@ interface NaverSdk {
     clickable?: boolean; zIndex?: number;
   }) => NaverMarker;
   Event: {
-    addListener(target: NaverMarker | NaverMap, event: "click" | "idle", callback: () => void): NaverListener;
+    addListener(target: NaverMarker | NaverMap, event: "click" | "idle" | "bounds_changed", callback: () => void): NaverListener;
     removeListener(listener: NaverListener): void;
   };
 }
@@ -87,17 +88,30 @@ export function createNaverAdapter(clientId: string): MapAdapter {
 
       // ★`[2026-10-04]` Each pin stands on the side of its coordinate where it overlaps the fewest others (`layoutPins`); worked out again when the map comes to rest.
       let slots: Record<string, PinSlot> = {};
+      let hiddenPoints = new Set<string>();
+      function setHiddenPoints(ids: readonly string[]) {
+        hiddenPoints = new Set(ids);
+        markers.forEach(({ id, pin, marker }) => {
+          const hidden = hiddenPoints.has(id);
+          // SDK의 투명 클릭 영역도 함께 숨긴다. 같은 marker를 다시 붙이며
+          // 좌표나 지도 시점은 바꾸지 않는다.
+          if (hidden !== (pin.dataset.edgeHidden === "true")) marker.setMap(hidden ? null : map);
+          setMarkerHidden(pin, hidden);
+        });
+      }
       function relayout() {
         const projection = map.getProjection?.();
         if (destroyed || !projection || !markers.length || !container.clientWidth || !container.clientHeight) return;
-        const placed = points.map((point) => {
+        const placed = points.filter((point) => !hiddenPoints.has(point.id)).sort((a, b) => Number(b.id === selectedId) - Number(a.id === selectedId)).map((point) => {
           const at = projection.fromCoordToOffset(new sdk.LatLng(point.coordinates.lat, point.coordinates.lng));
           return { id: point.id, x: at.x, y: at.y };
         });
-        slots = layoutPins(placed, { width: container.clientWidth, height: container.clientHeight, top: options.topInset ?? 0 }, slots);
+        slots = layoutPins(placed, pinArea(container, options), slots);
         markers.forEach(({ id, pin }) => { if (slots[id]) placePin(pin, slots[id]); });
+        paintPinGroups(markers, slots);
       }
-      const idleListener = sdk.Event.addListener(map, "idle", relayout);
+      const motionListener = sdk.Event.addListener(map, "bounds_changed", () => options.onInteractionChange?.(true));
+      const idleListener = sdk.Event.addListener(map, "idle", () => { options.onInteractionChange?.(false); relayout(); });
       // [2026-10-05] The zoom level goes to the screen (it asks for the detailed route lines when zoomed in).
       const zoomListener = sdk.Event.addListener(map, "idle", () => { const zoom = map.getZoom?.(); if (typeof zoom === "number") options.onZoom?.(zoom); });
       // [2026-10-05] What the map shows goes to the screen (the scale ruler, the chips for stops out of view) - nothing when this build of the SDK cannot say it.
@@ -164,7 +178,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
           map.setCenter(positions[0]);
           map.setZoom(15);
         } else {
-          map.fitBounds(positions, { top: 80 + (options.topInset ?? 0), right: 80, bottom: 80, left: 80, maxZoom: 16 });
+          map.fitBounds(positions, { top: 80 + (options.topInset ?? 0), right: 80, bottom: 80 + (options.bottomInset ?? 0), left: 80, maxZoom: 16 });
         }
       }
 
@@ -233,6 +247,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
             markers.push({ id: point.id, marker, pin, listener, onKey });
           });
           previousData = data;
+          setHiddenPoints([...hiddenPoints]);
           relayout();
         }
         markers.forEach(({ id, pin, marker }) => {
@@ -252,6 +267,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
           if (selected) map.panTo(new sdk.LatLng(selected.coordinates.lat, selected.coordinates.lng));
         }
         selectedId = nextSelectedId;
+        relayout();
       }
 
       function setMe(next: MyLocation | null) {
@@ -288,13 +304,15 @@ export function createNaverAdapter(clientId: string): MapAdapter {
         stayMarkers = stays.map((stay) => quietMarker(stay.coordinates, stay.label, createStayDot(stay), STAY_BOX, -1));
       }
 
-      function cleanUp() { clearTimeout(pulseTimer); clearMarkers(); clearLines(); removeMe(); clearStays(); sdk.Event.removeListener(idleListener); sdk.Event.removeListener(zoomListener); sdk.Event.removeListener(viewListener); unwatch(); map.destroy(); }
+      function cleanUp() { clearTimeout(pulseTimer); clearMarkers(); clearLines(); removeMe(); clearStays(); sdk.Event.removeListener(motionListener); sdk.Event.removeListener(idleListener); sdk.Event.removeListener(zoomListener); sdk.Event.removeListener(viewListener); unwatch(); map.destroy(); }
 
       try { update(options.points, options.selectedId, options.lines); setMe(options.me ?? null); setStays(options.stays ?? []); }
       catch (error) { cleanUp(); throw error; }
 
       return {
         update,
+        setHiddenPoints,
+        relayout,
         setMe,
         setStays,
         fit() { needsFit = true; fit(); },

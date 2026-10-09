@@ -65,6 +65,9 @@ export interface IntakeQuestion {
   why?: string;
   options?: { id: string; label: string }[];
   answer?: string | null;
+  allow_custom?: boolean;
+  custom_max_length?: number;
+  custom_answer?: string | null;
 }
 
 /** 「일정 짜 줘」 기본값 — 읽은 값에서만 나온다. 모르면 null(화면이 묻는다). */
@@ -94,6 +97,13 @@ export function editIntake(intakeId: string, revision: number, edits: IntakeEdit
   });
 }
 
+/** Restore a completed historical revision atomically; protected stops or a stale revision reject the whole request. */
+export function restoreIntake(intakeId: string, revision: number, restoreRevision: number, language: Language): Promise<ReviewedIntakeView> {
+  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/restore`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, restore_revision: restoreRevision }),
+  });
+}
+
 /**
  * 「Plan it for me」 — streamed (`stream.ts`): the server says when it plans, checks and registers. A lost line sends the
  * same revision again; the server derives the request from it (`intake:{id}:plan:r{revision}`) and returns the trip it
@@ -110,7 +120,7 @@ export function planIntake(intakeId: string, revision: number, input: IntakePlan
  * `[2026-10-06]` Save the answers to the questions asked while the server reads: `{question id: option id}`, one question at a time as the customer answers. The server keeps the LAST value of a
  * question (answering again corrects it) and refuses a whole request with `422 invalid_answers` when one id or option is unknown. A registered intake answers `409 intake_confirmed`.
  */
-export function submitSurveyAnswers(intakeId: string, answers: Record<string, string>, language: Language): Promise<{ ok: true; answered: string[]; questions_version: string }> {
+export function submitSurveyAnswers(intakeId: string, answers: Record<string, string | { custom: string } | null>, language: Language): Promise<{ ok: true; answered: string[]; questions_version: string }> {
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/survey`, language, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ answers }),
   });

@@ -188,10 +188,12 @@ def test_an_account_attached_to_someone_else_is_never_merged(social):
     client = social["client"]
     first, second = _session(client), _session(client)
     assert _exchange(client, _flow(client, "sub-dave", mode="link", headers=first)["ticket"]).json()["outcome"] == "linked"
+    # 회원끼리는 합치지 않는다. 게스트의 기존 회원 로그인은 별도 이관 시험에서 확인한다.
+    assert _exchange(client, _flow(client, "sub-second-member", mode="link", headers=second)["ticket"]).json()["outcome"] == "linked"
     started = _start(client, "link", headers=second)
     where, query = _location(_callback(client, _state_of(started.json()["authorize_url"])["state"], "sub-dave"))
     assert query == {"error": "already_linked_elsewhere"}
-    assert client.get("/v1/web/auth/links", headers=second).json() == {"links": []}                    # 두 번째 사용자에게는 붙지 않았다
+    assert len(client.get("/v1/web/auth/links", headers=second).json()["links"]) == 1
 
 
 def test_a_ticket_works_once_for_the_browser_that_started_it_and_expires(social):

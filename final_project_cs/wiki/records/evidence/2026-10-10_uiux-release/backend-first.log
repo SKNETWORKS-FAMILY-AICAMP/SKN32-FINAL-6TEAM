@@ -1,0 +1,24 @@
+F....................................................................... [ 17%]
+........................................................................ [ 35%]
+........................................................................ [ 53%]
+........................................................................ [ 71%]
+........................................................................ [ 89%]
+...........................................                              [100%]
+================================== FAILURES ===================================
+_ test_custom_transport_is_preserved_and_used_by_the_actual_mobility_adapter __
+tests\unit\travel\test_survey_custom_answers.py:13: in test_custom_transport_is_preserved_and_used_by_the_actual_mobility_adapter
+    assert modes_from_survey({"survey": survey}) == ["bus", "taxi", "walk"]
+E   AssertionError: assert ['taxi', 'walk'] == ['bus', 'taxi', 'walk']
+E     
+E     At index 0 diff: 'taxi' != 'bus'
+E     Right contains one more item: 'walk'
+E     Use -v to get more diff
+============================== warnings summary ===============================
+<unknown>:352
+tests/contract/test_team_tool_discipline.py::test_team_does_not_import_infrastructure_directly[devtools/judgment_log.py]
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_survey_custom_answers.py::test_custom_transport_is_preserved_and_used_by_the_actual_mobility_adapter
+1 failed, 402 passed, 2 warnings in 163.13s (0:02:43)

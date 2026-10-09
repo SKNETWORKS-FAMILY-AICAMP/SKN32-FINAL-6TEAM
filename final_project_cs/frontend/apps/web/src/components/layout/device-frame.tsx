@@ -34,7 +34,7 @@ export function DeviceFrame({ children, onBrand, headerInert = false, floating =
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const brand = <><span className={styles.mark} aria-hidden="true">t</span>triPilot</>;
   return <div className={styles.stage}>
-    <div className={styles.device} data-floating={floating || undefined} data-journey={scroll || undefined}>
+    <div className={styles.device} data-device="" data-floating={floating || undefined} data-journey={scroll || undefined}>
       <OverlayRoot.Provider value={overlay}>
         <HeaderSlot.Provider value={slot}>
         <header className={styles.header} inert={headerInert}>
@@ -45,7 +45,7 @@ export function DeviceFrame({ children, onBrand, headerInert = false, floating =
           {/* `[2026-10-06]` 항로 지킴이 아이콘: 등록 전 화면(읽는 중 · 계획 확인)에서, 카드로 정한 뒤부터만 보인다. */}
           <div className={styles.right}>{headerExtra}{guardianIcon && <GuardianHeaderControl />}<SettingsMenu tools={menuTools} /></div>
         </header>
-        {scroll ? <div className={styles.scroll}>{children}</div> : children}
+        {scroll ? <div className={styles.scroll} data-device-scroll="">{children}</div> : children}
         </HeaderSlot.Provider>
       </OverlayRoot.Provider>
       <div ref={setOverlay} className={styles.overlay} />

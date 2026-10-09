@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { JourneyShell } from "@/components/layout/journey-shell";
@@ -12,7 +12,7 @@ import { questionsOf } from "@/features/survey-questions/model";
 import { IdleWarning, ReadingFooter } from "@/features/survey-questions/reading-footer";
 import { ReadingQuestions } from "@/features/survey-questions/reading-questions";
 import { useQuestionFlow } from "@/features/survey-questions/use-question-flow";
-import { assumedYear, candidatesOf, readingOf, resultOf, tripIssuesOf } from "@/features/plan-check/from-intake";
+import { assumedYear, candidatesOf, readingOf, resultOf, sendingOf, tripIssuesOf } from "@/features/plan-check/from-intake";
 import { reviewResultOf, streamingViewOf } from "@/features/plan-check/from-review";
 import { useServerReview } from "@/features/plan-check/use-server-review";
 import type { ItemDraft } from "@/features/plan-check/model";
@@ -21,6 +21,7 @@ import { tripsKey } from "@/lib/gateway";
 import { LiveError, loginRequired } from "@/lib/live/client";
 import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/lib/live/intake-events";
 import { confirmIntake, editIntake, getIntake, type IntakeEdit } from "@/lib/live/intake";
+import { clearIntakeArrival, intakeArrival } from "@/lib/live/intake-start";
 import type { ReviewedIntakeView } from "@/lib/live/intake-review";
 import { getIntakeRouteShapes } from "@/lib/live/route-shapes";
 import { useRouteDetail } from "@/features/map/use-route-detail";
@@ -46,6 +47,10 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const { language } = useSettings();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [arrival] = useState(() => intakeArrival(intakeId));
+  const arriving = arrival !== undefined;
+  const firstView = useMemo(() => sendingOf(arrival ?? ""), [arrival]);
+  useEffect(() => { clearIntakeArrival(intakeId); }, [intakeId]);
   // The onboarding answers go to the server with the registration — only when the customer finished them.
   const [onboarding] = useOnboarding();
   // `[2026-10-06]` What the plan screen decided (a day's fullness, the Course Keeper on or off) is laid over it - the latest choice wins, and 「끄고 진행」 says `ask_first` out loud.
@@ -60,20 +65,35 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     queryFn: () => getIntake(intakeId, language),
     retry: false,
     refetchOnWindowFocus: false,
-    // ★`[2026-10-03]` The page opens on the intake the progress screen just read (`intake-starting.tsx`): do not read it again at once.
-    //   (`invalidateQueries` / `refetch` below still read it whenever the stream or an edit asks.)
+    // Keep recently read data when reopening; a new submission opens its progress screen before this first GET finishes.
     staleTime: 2_000,
     refetchInterval: (state) => polling && !state.state.error && state.state.data?.status === "reading" ? 1500 : false,
   });
-  const reread = useCallback(() => void queryClient.invalidateQueries({ queryKey: ["intake", intakeId, language] }), [queryClient, intakeId, language]);
+  const refresh = useRef({ running: false, queued: false });
+  const reread = useCallback(() => {
+    refresh.current.queued = true;
+    if (refresh.current.running) return;
+    refresh.current.running = true;
+    void (async () => {
+      try {
+        do {
+          refresh.current.queued = false;
+          // Wait for an active GET instead of cancelling it on every SSE packet. If another packet arrived meanwhile,
+          // read once more afterwards: a completion signal must not be swallowed by the first, older GET.
+          await queryClient.refetchQueries({ queryKey: ["intake", intakeId, language] }, { cancelRefetch: false });
+        } while (refresh.current.queued);
+      } finally { refresh.current.running = false; }
+    })();
+  }, [queryClient, intakeId, language]);
   // ★`[2026-10-03]` What the server has checked so far arrives as content events while it reads (the GET holds the check only
   //   once it is done): `line` · `item` · `check` · `move` · `done`, copies of state that `reduceStream` folds in.
   const [stream, setStream] = useState<StreamState>(emptyStream);
   const onContent = useCallback((name: string, data: string) => {
     const event = toIntakeEvent(name, data);
     if (event) setStream((current) => reduceStream(current, event));
-  }, []);
-  const follow = useIntakeEvents(intakeId, query.data?.status === "reading", language, reread, onContent);
+    if (event?.type === "done") reread();
+  }, [reread]);
+  const follow = useIntakeEvents(intakeId, query.data?.status === "reading" || (arriving && !query.data && !query.error), language, reread, onContent);
   // ★`[2026-10-03]` A stream that goes silent (`lost`) is not waited for alone: the intake is asked for every 1.5 s as well, until the read ends —
   //   the server keeps no pace for a dead line, and the customer must not sit on a screen that never moves. (The stream still reconnects.)
   if ((follow.follow === "polling" || follow.follow === "lost") && !polling) setPolling(true);
@@ -138,14 +158,15 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계]` Questions asked while the server reads (`questions[]` of the intake; none from an older server). The screen goes on to the plan check
   //   when the reading is done unless the customer is in the middle of answering - then it is held (`flow.hold`) until they are done, press the button, or the warning runs out.
   const questions = useMemo(() => questionsOf(query.data?.questions, language), [query.data?.questions, language]);
-  const flow = useQuestionFlow({ intakeId, language, questions, loadingDone: Boolean(query.data) && query.data?.status !== "reading" });
-  const readingExtras = flow.shown ? { top: <ReadingQuestions flow={flow} />, footer: <ReadingFooter flow={flow} />, onActivity: flow.touch } : undefined;
-  const [readingSeen, setReadingSeen] = useState(false);
+  const flow = useQuestionFlow({ intakeId, language, questions, loadingDone: Boolean(query.data) && query.data?.status !== "reading", fresh: arriving });
+  const readingExtras = flow.shown ? { top: <><ReadingQuestions flow={flow} />{flow.phase === "idle" && <IdleWarning flow={flow} />}</>, footer: <ReadingFooter flow={flow} />, onActivity: flow.touch } : undefined;
+  const [readingSeen, setReadingSeen] = useState(arriving);
   const [readingDrawn, setReadingDrawn] = useState(false);
   if (query.data?.status === "reading" && !readingSeen) setReadingSeen(true);
   const readingCaughtUp = useCallback(() => setReadingDrawn(true), []);
   const shell = (children: ReactNode) => <JourneyShell view="checking" title={["계획 확인", "Check your plan"]}>{children}</JourneyShell>;
 
+  if (query.isPending && arriving) return <PlanCheck key="plan" view={firstView} sending onBack={() => router.push(routes.newTrip)} />;
   if (query.isPending || !query.data) return shell(<QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />);
   const view = query.data;
 
@@ -158,11 +179,8 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     </Panel>);
   }
   if (flow.hold) {
-    return <>
-      {/* `[2026-10-07 사용자 지적]` The held page is drawn from the same view as the one before it (`reading`), not from a fresh reading-only one: that one stood the bar back at 「일정 읽기」 and the check was drawn again from there. */}
-      <PlanCheck key="plan" view={reading ?? readingOf(view)} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} />
-      {flow.phase === "idle" && <IdleWarning flow={flow} />}
-    </>;
+    // Keep the same PlanCheck instance through the survey: its paused replay must not remount at the completed target.
+    return <PlanCheck key="plan" view={reading ?? readingOf(view)} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} />;
   }
   if (reading && (view.status === "reading" || (view.status === "review" && readingSeen && !readingDrawn))) {
     const streamNote = view.status !== "reading" ? null
@@ -243,6 +261,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       onRegister: () => confirm.mutate(queryClient.getQueryData<ReviewedIntakeView>(key)?.revision ?? view.revision),
       error: confirm.error?.message ?? null, problems: refusal?.problems?.map((problem) => problem.message ?? `${problem.field}: ${problem.reason}`) ?? [],
       loginRequired: loginRequired(confirm.error),
+      loginHref: `${routes.myPage}?returnTo=${encodeURIComponent(routes.intake(intakeId))}#accounts`,
       registeredHref: view.status === "confirmed" && view.trip_id ? routes.trip(view.trip_id) : null,
     }} />;
 }

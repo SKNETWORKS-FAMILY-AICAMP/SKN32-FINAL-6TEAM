@@ -1,0 +1,1039 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      ".tmp/consent-progress.config.ts",
+      "compact-edge-unlock-add-20261010.spec.ts",
+      "aligned-map-quiet-cards-20261010.spec.ts",
+      "focused-times-lock-20261010.spec.ts",
+      "timeline-endpoints-20261009.spec.ts",
+      "--reporter=line,json",
+      "--workers=1",
+      "--output",
+      ".tmp/compact-edge-unlock-first-results"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\consent-progress.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/.tmp/compact-edge-unlock-first-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "aligned-map-quiet-cards-20261010.spec.ts",
+      "file": "aligned-map-quiet-cards-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "메뉴 정렬·고정 거리 글자·화살표만 전환 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7233,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:09:04.456Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a846c10ffc2332119492-2f0b04fd464601111d03",
+          "file": "aligned-map-quiet-cards-20261010.spec.ts",
+          "line": 24,
+          "column": 3
+        },
+        {
+          "title": "일반 카드 무테·선택과 상태 테두리·잠금 재클릭 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2592,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:09:11.960Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a846c10ffc2332119492-a31f3c93941a1e37456f",
+          "file": "aligned-map-quiet-cards-20261010.spec.ts",
+          "line": 45,
+          "column": 3
+        },
+        {
+          "title": "밀린 지도 마커는 실제 좌표 방향으로 모서리와 선을 연결 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2525,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:09:14.577Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a846c10ffc2332119492-b6429d6982a42a08b14a",
+          "file": "aligned-map-quiet-cards-20261010.spec.ts",
+          "line": 66,
+          "column": 3
+        },
+        {
+          "title": "메뉴 정렬·고정 거리 글자·화살표만 전환 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4946,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:09:17.127Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a846c10ffc2332119492-e436246d9c94f42c3d4d",
+          "file": "aligned-map-quiet-cards-20261010.spec.ts",
+          "line": 24,
+          "column": 3
+        },
+        {
+          "title": "일반 카드 무테·선택과 상태 테두리·잠금 재클릭 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2574,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:09:22.099Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a846c10ffc2332119492-1bbb6f88a1b12a21cf79",
+          "file": "aligned-map-quiet-cards-20261010.spec.ts",
+          "line": 45,
+          "column": 3
+        },
+        {
+          "title": "밀린 지도 마커는 실제 좌표 방향으로 모서리와 선을 연결 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2613,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:09:24.690Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a846c10ffc2332119492-f3db395dab03779e15ed",
+          "file": "aligned-map-quiet-cards-20261010.spec.ts",
+          "line": 66,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "compact-edge-unlock-add-20261010.spec.ts",
+      "file": "compact-edge-unlock-add-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "먼 일정 거리 숨김·좁은 마커·조작 후 복귀 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3751,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:09:27.350Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-846c871a48ec998487e2",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 12,
+          "column": 3
+        },
+        {
+          "title": "전체 잠금 해제는 목록 맨 위·한 요청·스크롤에 사라짐 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2251,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:09:31.114Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-67d0320ade800aecc0bb",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 31,
+          "column": 3
+        },
+        {
+          "title": "이름 있는 추가 단추는 일정 사이 왼쪽·취소 복귀 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2590,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:09:33.382Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-f97de82adca8ba8a53bb",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 45,
+          "column": 3
+        },
+        {
+          "title": "먼 일정 거리 숨김·좁은 마커·조작 후 복귀 1280px",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 14564,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-edge-chip]').first()\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" locator('[data-edge-chip]').first() with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-edge-chip]').first()\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-edge-chip]').first()\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" locator('[data-edge-chip]').first() with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-edge-chip]').first()\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\compact-edge-unlock-add-20261010.spec.ts:19:76",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\compact-edge-unlock-add-20261010.spec.ts",
+                      "column": 76,
+                      "line": 19
+                    },
+                    "snippet": "  17 |     const map=page.getByRole('region',{name:'여행 지도'});\n  18 |     await expect.poll(()=>map.getAttribute('data-moving')).toBe(null);\n> 19 |     const chip=page.locator('[data-edge-chip]').first();await expect(chip).toBeVisible();await expect(chip.locator('small')).toBeVisible();\n     |                                                                            ^\n  20 |     const before=(await chip.boundingBox())!.width;await capture(page,`01-distance-${width}`);\n  21 |     const box=(await map.boundingBox())!;\n  22 |     await page.mouse.move(box.x+box.width/2,box.y+box.height-60);await page.mouse.down();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\compact-edge-unlock-add-20261010.spec.ts",
+                        "column": 76,
+                        "line": 19
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-edge-chip]').first()\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" locator('[data-edge-chip]').first() with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-edge-chip]').first()\u001b[22m\n\n\n  17 |     const map=page.getByRole('region',{name:'여행 지도'});\n  18 |     await expect.poll(()=>map.getAttribute('data-moving')).toBe(null);\n> 19 |     const chip=page.locator('[data-edge-chip]').first();await expect(chip).toBeVisible();await expect(chip.locator('small')).toBeVisible();\n     |                                                                            ^\n  20 |     const before=(await chip.boundingBox())!.width;await capture(page,`01-distance-${width}`);\n  21 |     const box=(await map.boundingBox())!;\n  22 |     await page.mouse.move(box.x+box.width/2,box.y+box.height-60);await page.mouse.down();\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\compact-edge-unlock-add-20261010.spec.ts:19:76"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:09:35.987Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\compact-edge-unlock-first-results\\compact-edge-unlock-add-20-e64b0--거리-숨김·좁은-마커·조작-후-복귀-1280px\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\compact-edge-unlock-first-results\\compact-edge-unlock-add-20-e64b0--거리-숨김·좁은-마커·조작-후-복귀-1280px\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\compact-edge-unlock-first-results\\compact-edge-unlock-add-20-e64b0--거리-숨김·좁은-마커·조작-후-복귀-1280px\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\compact-edge-unlock-add-20261010.spec.ts",
+                    "column": 76,
+                    "line": 19
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-d384525f9baef704df1b",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 12,
+          "column": 3
+        },
+        {
+          "title": "전체 잠금 해제는 목록 맨 위·한 요청·스크롤에 사라짐 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2530,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:09:51.572Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-f92f72d0432de7d64943",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 31,
+          "column": 3
+        },
+        {
+          "title": "이름 있는 추가 단추는 일정 사이 왼쪽·취소 복귀 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2256,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:09:54.378Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-9718052695505b1a4490",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 45,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "focused-times-lock-20261010.spec.ts",
+      "file": "focused-times-lock-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "접힌 카드 종류 아이콘·상세 잠금·키보드 초점 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2308,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:09:56.679Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-fb59148c79e286225670",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 19,
+          "column": 3
+        },
+        {
+          "title": "선택한 일정·이동만 시각 두 줄·애니메이션 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5024,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:09:59.005Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-9feef039dbe35fa21233",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 48,
+          "column": 3
+        },
+        {
+          "title": "접힌 카드 종류 아이콘·상세 잠금·키보드 초점 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2817,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:10:04.052Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-8a86569ff7187ae5901a",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 19,
+          "column": 3
+        },
+        {
+          "title": "선택한 일정·이동만 시각 두 줄·애니메이션 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5083,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:10:06.886Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-2cf4c7f4bc8ee726253a",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 48,
+          "column": 3
+        },
+        {
+          "title": "잠금은 시작·출발 드래그와 내용 변경을 막고 이웃 일정은 고정 경계까지만 움직인다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5294,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:10:11.985Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-ad5308d168b5cce634cd",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 87,
+          "column": 1
+        },
+        {
+          "title": "시간 변경 후 잠그면 되돌리기를 먼저 막고 요청을 보내지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2680,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:10:17.293Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-a4ee59d97739910e82c5",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 114,
+          "column": 1
+        },
+        {
+          "title": "재확인 상태인 잠근 일정도 상세에서 잠금 해제할 수 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4349,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:10:19.987Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-341b71de5ce4d72a98ef",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 127,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "timeline-endpoints-20261009.spec.ts",
+      "file": "timeline-endpoints-20261009.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "출발 시각·큰 시작 시각·세로 지도 단추 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1875,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:10:24.366Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-468c6b2d7d2b3c9ec4ff",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 15,
+          "column": 3
+        },
+        {
+          "title": "추가 취소 후 바깥 화면 고정·마지막 카드 전체 표시 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3148,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:10:26.258Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-c2308617bea5966f6909",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 33,
+          "column": 3
+        },
+        {
+          "title": "스크롤·드래그 중 제출 숨김과 유휴 복원 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7959,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:10:29.419Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-451ff556640c16319d24",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 52,
+          "column": 3
+        },
+        {
+          "title": "출발 시각·큰 시작 시각·세로 지도 단추 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1737,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:10:37.393Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-1b9edefaa7006d3dce5f",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 15,
+          "column": 3
+        },
+        {
+          "title": "추가 취소 후 바깥 화면 고정·마지막 카드 전체 표시 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2947,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:10:39.145Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-01446acc955c764fcec1",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 33,
+          "column": 3
+        },
+        {
+          "title": "스크롤·드래그 중 제출 숨김과 유휴 복원 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8071,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:10:42.107Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-11875321d2f024842979",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 52,
+          "column": 3
+        },
+        {
+          "title": "도착 시각이 없는 구간은 시각을 지어내지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4010,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:10:50.200Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-9ba5d304f20271055462",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 74,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T19:08:48.388Z",
+    "duration": 126846.083,
+    "expected": 25,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

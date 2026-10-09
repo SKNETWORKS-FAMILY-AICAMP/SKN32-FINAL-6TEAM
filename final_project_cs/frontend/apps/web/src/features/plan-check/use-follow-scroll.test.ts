@@ -24,4 +24,12 @@ describe("following the newest row of the list", () => {
     expect(nearBottom({ scrollTop: 560, clientHeight: 300, scrollHeight: 900 })).toBe(true);
     expect(nearBottom({ scrollTop: 400, clientHeight: 300, scrollHeight: 900 })).toBe(false);
   });
+  it("centres a checked row instead of keeping it at the bottom", () => {
+    expect(scrollDelta(box, { top: 380, bottom: 480 }, 12, "center")).toBe(180);
+    expect(scrollDelta(box, { top: 200, bottom: 300 }, 12, "center")).toBe(0);
+  });
+
+  it("keeps the start visible when a checked row cannot fit in the centre", () => {
+    expect(scrollDelta(box, { top: 300, bottom: 900 }, 12, "center")).toBe(188);
+  });
 });

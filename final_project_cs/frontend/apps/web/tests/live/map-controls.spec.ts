@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockServer } from "./helpers";
-import { openFinished, pin } from "./plan-check-kit";
+import { mapSettled, openFinished, pin } from "./plan-check-kit";
 
 /**
  * `[2026-10-05 사용자 선택 — 지도 단추 · 거리 눈금 · 가장자리 마커 안 B · 첫 지도 시점 안 C]` 계획 확인 화면의 지도(무료 지도 · Leaflet 빌드). mock 서버 시험이다 — 화면 반응만 본다
@@ -12,20 +12,26 @@ test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
 const group = (page: Page) => page.getByRole("group", { name: "지도 단추" });
 const map = (page: Page) => page.getByRole("region", { name: "여행 지도" });
-const wake = (page: Page) => map(page).hover({ position: { x: 150, y: 150 } });                    // 단추는 지도에 포인터가 있을 때 보인다
+const wake = async (page: Page) => {
+  await map(page).hover({ position: { x: 150, y: 150 } });
+  const open = group(page).getByRole("button", { name: "지도 단추 펼치기" });
+  if (await open.count() && await group(page).getAttribute("data-layout") !== "tab") await open.click();
+};
 const scale = (page: Page) => group(page).getByRole("img", { name: /^거리 눈금/ });
 const chips = (page: Page) => page.locator("[data-edge-chip]");
 
-test("단추는 ＋ · 거리 눈금 · － · 모든 일정 보기 순서로 서고, 위치 동의가 없으면 「내 위치」 단추는 없다", async ({ page, request }) => {
+test("접기 단추에 거리가 함께 나오고 확대·축소·모든 일정 보기 순서로 선다", async ({ page, request }) => {
   await page.setViewportSize({ width: 1280, height: 1100 });                                          // 지도가 충분히 높아 세로로 선다
   await openFinished(page, request);
   await wake(page);
   const names = await group(page).getByRole("button").evaluateAll((buttons) => buttons.map((button) => button.getAttribute("aria-label")));
-  expect(names).toEqual(["지도 단추 접기", "확대", "축소", "모든 일정 보기"]);                         // 눈금은 단추가 아니라 ＋ 와 － 사이에 선다
+  expect(names).toEqual(["지도 단추 접기", "확대", "축소", "모든 일정 보기"]);
   await expect(group(page).getByRole("button", { name: /내 위치/ })).toHaveCount(0);
   const [plus, ruler, minus] = await Promise.all([group(page).getByRole("button", { name: "확대" }), scale(page), group(page).getByRole("button", { name: "축소" })].map((item) => item.boundingBox()));
-  expect(plus!.y).toBeLessThan(ruler!.y);
-  expect(ruler!.y).toBeLessThan(minus!.y);                                                           // 눈금이 ＋ 와 － 사이에 있다
+  expect(ruler!.y).toBeLessThan(plus!.y);
+  expect(plus!.y).toBeLessThan(minus!.y);
+  await expect(group(page).getByRole("button", { name: "지도 단추 접기" }).getByRole("img", { name: /^거리 눈금/ })).toBeVisible();
+  await expect(group(page).locator('[class*=scaleBar]')).toHaveCount(0);
 });
 
 test("거리 눈금은 지도에 담긴 거리를 말하고, 확대하면 더 짧은 거리로 바뀐다", async ({ page, request }) => {
@@ -43,7 +49,7 @@ test("거리 눈금은 지도에 담긴 거리를 말하고, 확대하면 더 �
   await expect.poll(async () => meters(await label())).toBeLessThan(meters(before));                  // 두 단계 확대: 같은 폭이 더 짧은 거리다
 });
 
-test("접으면 탭 하나만 남아 지도를 가리지 않고, 접은 상태는 기억되며, 탭을 누르면 다시 펼쳐진다", async ({ page, request }) => {
+test("접으면 눈금과 탭이 남고 다시 열어도 기본은 접힌 상태다", async ({ page, request }) => {
   await openFinished(page, request);
   await wake(page);
   await group(page).getByRole("button", { name: "지도 단추 접기" }).click();
@@ -52,7 +58,11 @@ test("접으면 탭 하나만 남아 지도를 가리지 않고, 접은 상태�
   await page.reload();
   await expect(needsBadgeOrSheet(page)).toBeVisible();
   await expect(group(page).getByRole("button", { name: "지도 단추 펼치기" })).toBeVisible();          // 다시 열어도 접혀 있다
-  await group(page).getByRole("button", { name: "지도 단추 펼치기" }).click({ force: true });
+  await mapSettled(page);
+  const intro = page.getByRole("status").filter({ hasText: "계획 확인 화면이에요" });
+  if (await intro.count()) await intro.getByRole("button", { name: "닫기", exact: true }).click();
+  await expect(map(page)).not.toHaveAttribute("data-moving", "true");
+  await group(page).getByRole("button", { name: "지도 단추 펼치기" }).click();
   await expect(group(page).getByRole("button", { name: "확대" })).toBeVisible();
 });
 
@@ -86,7 +96,7 @@ test("지도를 확대하면 화면 밖으로 나간 일정이 가장자리에 �
   await expect(chip).toContainText(/\d+(m|km)$/);                                                    // 거리
   const label = (await chip.getAttribute("aria-label")) ?? "";
   expect(label).toMatch(/화면 밖에 있어요/);
-  const number = /^(\d+)번/.exec(label)?.[1];
+  const number = /^(\d+)/.exec(label)?.[1];
   await chip.click();
   await expect(page.locator(`.leaflet-marker-icon[title^="${number}."]`)).toBeInViewport({ timeout: 8_000 });   // 눌렀더니 그 핀이 화면에 들어왔다
 });

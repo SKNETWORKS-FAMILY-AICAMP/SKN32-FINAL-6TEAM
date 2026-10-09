@@ -361,6 +361,7 @@ travel:
       message: 90
       plan: 240
       intake: 600
+      consents: 60
     intake_poll_seconds: 1
     intake_stalled_seconds: 180
   # -- 고객 연락처 시험 발송 (2026-10-01 — `customer_profile.py`, `POST /v1/web/profile/discord/test`) --

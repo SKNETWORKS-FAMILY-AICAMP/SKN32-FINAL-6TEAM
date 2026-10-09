@@ -57,6 +57,9 @@ STAGES: dict[str, tuple[str, str | None]] = {
     "applying": ("일정에 반영하는 중이에요", None),
     "registering": ("여행으로 등록하는 중이에요", None),
     "writing": ("답을 정리하는 중이에요", None),
+    "consent_records": ("동의 기록을 읽는 중이에요", "database"),
+    "consent_version": ("동의한 약관 버전을 확인하는 중이에요", "database"),
+    "consent_required": ("필수 동의 항목을 확인하는 중이에요", None),
 }
 
 #: 열린 실시간 작업 수 — (테넌트, 고객) → 수. 자원 보호용이며 누가 받았는지의 기록이 아니다

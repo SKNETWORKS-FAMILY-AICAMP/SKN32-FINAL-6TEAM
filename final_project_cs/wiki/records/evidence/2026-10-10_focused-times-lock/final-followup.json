@@ -1,0 +1,362 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      ".tmp/consent-progress.config.ts",
+      "focused-times-lock-20261010.spec.ts",
+      "server-review.spec.ts",
+      "plan-check-screen.spec.ts",
+      "plan-check-redesign.spec.ts",
+      "flow.spec.ts",
+      "--grep",
+      "選択|선택한 일정·이동만|잠금:|잠근 일정은 시간이|카드의 수정|서버에 아직 없는 잠금",
+      "--reporter=line,json",
+      "--workers=1",
+      "--output",
+      ".tmp/focused-times-followup-results"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\consent-progress.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/.tmp/focused-times-followup-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "flow.spec.ts",
+      "file": "flow.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "결과 화면: 서버에 아직 없는 잠금·자동 추천·전체 자동 추천은 화면에 남아 누르면 「준비 중」이라고 말한다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 45283,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 45000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 45000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 45000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\flow.spec.ts",
+                        "column": 66,
+                        "line": 417
+                      },
+                      "message": "Error: locator.click: Test timeout of 45000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: '자동 추천', exact: true })\u001b[22m\n\n\n  415 |   await lock.click({ force: true });\n  416 |   await expect(say(\"잠금은 준비 중이에요\")).toBeVisible();\n> 417 |   await page.getByRole(\"button\", { name: \"자동 추천\", exact: true }).click({ force: true });\n      |                                                                  ^\n  418 |   await expect(say(\"자동 추천은 준비 중이에요\")).toBeVisible();\n  419 |   const all = page.getByRole(\"button\", { name: /전체 자동 추천/ });\n  420 |   await expect(all).toContainText(\"준비 중\");\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\flow.spec.ts:417:66"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T16:53:43.558Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\focused-times-followup-results\\flow-결과-화면-서버에-아직-없는-잠금·자동-9f831-천은-화면에-남아-누르면-「준비-중」이라고-말한다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\focused-times-followup-results\\flow-결과-화면-서버에-아직-없는-잠금·자동-9f831-천은-화면에-남아-누르면-「준비-중」이라고-말한다\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\focused-times-followup-results\\flow-결과-화면-서버에-아직-없는-잠금·자동-9f831-천은-화면에-남아-누르면-「준비-중」이라고-말한다\\trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "f353db48c569834dc22b-6d976fdc429ef5dc531c",
+          "file": "flow.spec.ts",
+          "line": 407,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "focused-times-lock-20261010.spec.ts",
+      "file": "focused-times-lock-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "선택한 일정·이동만 시각 두 줄·애니메이션 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5206,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T16:54:29.775Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-9feef039dbe35fa21233",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 48,
+          "column": 3
+        },
+        {
+          "title": "선택한 일정·이동만 시각 두 줄·애니메이션 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2686,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T16:54:35.221Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-2cf4c7f4bc8ee726253a",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 48,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "plan-check-redesign.spec.ts",
+      "file": "plan-check-redesign.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "잠근 일정은 시간이 못 움직이는 벽이다: 그 일정에 막혀 앞으로는 더 못 당긴다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4420,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T16:54:37.955Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4cc90a58a1fd94513073-2c8b0f82616ad5353f95",
+          "file": "plan-check-redesign.spec.ts",
+          "line": 497,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "plan-check-screen.spec.ts",
+      "file": "plan-check-screen.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "카드의 수정 · 삭제는 카드를 가리키거나(마우스) 펼쳤을 때만 보이고, 「확인 필요」 표시는 유지하고 잠금은 상세에서만 보인다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1675,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T16:54:42.409Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "257f33396c91d18aa9a0-84d600a0fd540e497a99",
+          "file": "plan-check-screen.spec.ts",
+          "line": 341,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "server-review.spec.ts",
+      "file": "server-review.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "잠금: 확인이 끝난 일정은 서버에 알리고 고정되며, 확인이 필요한 일정은 이유를 말하고 보내지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2321,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T16:54:44.121Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2ba5efa9a045049067fc-6bf1bea1a8f76fbc9546",
+          "file": "server-review.spec.ts",
+          "line": 66,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T16:53:41.853Z",
+    "duration": 65475.399,
+    "expected": 5,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}diff --git a/final_project_cs/wiki/records/evidence/2026-10-10_focused-times-lock/iteration-2.json b/final_project_cs/wiki/records/evidence/2026-10-10_focused-times-lock/iteration-2.json

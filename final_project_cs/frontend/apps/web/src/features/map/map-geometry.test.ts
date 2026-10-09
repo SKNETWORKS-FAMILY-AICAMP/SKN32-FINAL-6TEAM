@@ -131,3 +131,12 @@ describe("a pin that could be cut by the edge", () => {
     expect(edgeChips(view, far).length).toBeLessThanOrEqual(8);
   });
 });
+
+
+it("거리 칩의 표시 한도를 넘어도 모든 일정 번호가 합쳐져 남는다", () => {
+  const view = { west: 126.9, east: 127.0, south: 37.5, north: 37.6, width: 375, height: 400, zoom: 12 };
+  const points = Array.from({ length: 40 }, (_, i) => ({ id: String(i), title: "일정", date: "2026-10-01", time: "09:00", order: i + 1, coordinates: { lat: i % 2 ? 37.8 : 37.3, lng: 126.4 + i * .03 } }));
+  const chips = edgeChips(view, points, { top: 64, bottom: 76, rightKeep: 64 });
+  expect(new Set(chips.flatMap((chip) => chip.ids)).size).toBe(40);
+  chips.forEach((chip, i) => chips.slice(i + 1).forEach((other) => expect(Math.abs(chip.y-other.y) >= 36 || Math.abs(chip.x-other.x) >= 158).toBe(true)));
+});

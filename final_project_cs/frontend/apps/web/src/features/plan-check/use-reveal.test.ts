@@ -1,9 +1,119 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { exampleDone, exampleSnapshots } from "./test-views";
 import { nextStep, STAGES, type PlanCheckView } from "./model";
-import { backlog, cardBacklog, COARSE_MIN_MS, linesBacklog, READ_BUDGET_MS, READ_MIN_MS, readPause, REVEAL_BUDGET_MS, REVEAL_MIN_MS, REVEAL_MS, revealPlan, STAGE_MIN_MS, stepMany } from "./use-reveal";
+import { backlog, cardBacklog, COARSE_MIN_MS, linesBacklog, READ_BUDGET_MS, READ_MIN_MS, readPause, REVEAL_BUDGET_MS, REVEAL_MIN_MS, REVEAL_MS, revealPlan, STAGE_MIN_MS, stepMany, useReveal } from "./use-reveal";
+
+// Exercise the hook's timer/state boundary in Node; the live tests cover React and browser rendering.
+const hooks = vi.hoisted(() => ({
+  slots: [] as { value?: unknown; deps?: readonly unknown[]; cleanup?: () => void }[],
+  pending: [] as { slot: number; run: () => void | (() => void) }[],
+  cursor: 0, again: false, skip: false,
+}));
+vi.mock("@/lib/settings", () => ({ useSettings: () => ({ skipAnimation: hooks.skip }) }));
+vi.mock("react", () => ({
+  useState: <T>(initial: T) => {
+    const at = hooks.cursor++;
+    hooks.slots[at] ??= { value: initial };
+    return [hooks.slots[at].value, (value: T | ((current: T) => T)) => {
+      const next = typeof value === "function" ? (value as (current: T) => T)(hooks.slots[at].value as T) : value;
+      if (Object.is(next, hooks.slots[at].value)) return;
+      hooks.slots[at].value = next;
+      hooks.again = true;
+    }];
+  },
+  useRef: <T>(initial: T) => {
+    const at = hooks.cursor++;
+    hooks.slots[at] ??= { value: { current: initial } };
+    return hooks.slots[at].value;
+  },
+  useMemo: <T>(make: () => T) => make(),
+  useEffect: (run: () => void | (() => void), deps: readonly unknown[]) => {
+    const at = hooks.cursor++;
+    const slot = hooks.slots[at] ??= {};
+    if (slot.deps && deps.length === slot.deps.length && deps.every((value, index) => Object.is(value, slot.deps![index]))) return;
+    slot.deps = deps;
+    hooks.pending.push({ slot: at, run });
+  },
+}));
+
+function draw(target: PlanCheckView, paused = false) {
+  let result: ReturnType<typeof useReveal>;
+  do {
+    hooks.again = false;
+    hooks.cursor = 0;
+    hooks.pending = [];
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Node test harness replays renders with mocked hooks; this is not a React component.
+    result = useReveal(target, paused);
+  } while (hooks.again);
+  for (const effect of hooks.pending) {
+    hooks.slots[effect.slot].cleanup?.();
+    const cleanup = effect.run();
+    hooks.slots[effect.slot].cleanup = typeof cleanup === "function" ? cleanup : undefined;
+  }
+  return result;
+}
+
+afterEach(() => {
+  for (const slot of hooks.slots) slot.cleanup?.();
+  hooks.slots = [];
+  hooks.pending = [];
+  hooks.cursor = 0;
+  hooks.again = false;
+  hooks.skip = false;
+  vi.useRealTimers();
+});
 
 const received = exampleSnapshots[0].view;
+
+describe("saved edits and paused replay", () => {
+  it("shows every saved time together and keeps that snapshot if a survey pauses the next update", () => {
+    vi.useFakeTimers();
+    draw(exampleDone);
+    const saved = { ...exampleDone, items: exampleDone.items.map((item) => ({ ...item, startsAt: "08:35", endsAt: "10:05" })) };
+    expect(draw(saved)).toEqual({ view: saved, settled: true });
+    expect(vi.getTimerCount()).toBe(0);
+    // A paused next update must keep the saved times, not revive the original snapshot stored before the edit.
+    const paused = draw(exampleDone, true);
+    expect(paused.view.items.map((item) => item.startsAt)).toEqual(saved.items.map((item) => item.startsAt));
+    expect(paused.settled).toBe(false);
+    vi.advanceTimersByTime(5_000);
+    expect(draw(exampleDone, true).view.items).toEqual(saved.items);
+    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+  });
+
+  it("keeps the first checking-to-done transition paced until its stage hold ends", () => {
+    vi.useFakeTimers();
+    const checking: PlanCheckView = { ...exampleDone, stage: "checking" };
+    draw(checking);
+    expect(draw(exampleDone).view.stage).toBe("checking");
+    vi.advanceTimersByTime(STAGE_MIN_MS - 1);
+    expect(draw(exampleDone).settled).toBe(false);
+    vi.advanceTimersByTime(1);
+    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+  });
+
+  it("holds an incoming completed plan during the survey and resumes its first replay afterwards", () => {
+    vi.useFakeTimers();
+    draw(received);
+    expect(draw(exampleDone, true)).toEqual({ view: received, settled: false });
+    vi.advanceTimersByTime(5_000);
+    expect(draw(exampleDone, true).view).toBe(received);
+    expect(vi.getTimerCount()).toBe(0);
+    expect(draw(exampleDone).settled).toBe(false);
+    expect(vi.getTimerCount()).toBe(1);
+  });
+
+  it("does not revive the old plan when animation skipping is turned off or a survey opens", () => {
+    vi.useFakeTimers();
+    draw(received);
+    hooks.skip = true;
+    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    hooks.skip = false;
+    expect(draw(exampleDone, true).view).toBe(exampleDone);
+    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
 
 describe("how fast the plan check draws what the server sent", () => {
   it("counts what is waiting to be drawn, and none once everything is drawn", () => {

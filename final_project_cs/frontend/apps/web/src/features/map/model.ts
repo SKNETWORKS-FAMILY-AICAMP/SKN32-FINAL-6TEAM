@@ -92,12 +92,16 @@ export interface MapViewProps {
   onZoom?: (zoom: number) => void;
   /** `[2026-10-05]` What the map shows, said once the map is up and each time it comes to rest after being moved, zoomed or resized. */
   onView?: (view: MapView) => void;
+  onInteractionChange?: (active: boolean) => void;
   /** `[2026-10-05]` The customer agreed to share their place: the map has a 「내 위치로」 button (it waits, greyed, for the first fix). Absent/false: no such button, and nothing said about it. */
   meAvailable?: boolean;
 }
 
 export interface MapController {
   update(points: MapPoint[], selectedId?: string, lines?: MapLine[], selectedLineId?: string): void;
+  /** 거리 칩이 대신 표시하는 일정의 마커만 숨긴다. 좌표·경로·선택·카메라는 유지한다. */
+  setHiddenPoints(ids: readonly string[]): void;
+  relayout?(): void;
   /**
    * `[2026-10-04 사용자 지시]` Back to the whole picture: the place and the zoom where every pin shows (what the map did when the pins first came).
    * ★`[2026-10-05]` Pins only — 「내 위치」 is left out (far away, it would shrink the pins to nothing). A map with no pins centres on 「내 위치」 instead.

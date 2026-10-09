@@ -29,14 +29,14 @@ const saved = (server: ReturnType<typeof mockServer>) => server.received("POST",
 
 test("읽는 동안 질문 카드가 서버의 문구 그대로 뜨고, 아래 단추는 꺼진 단추가 아니라 눌러 보면 이유를 말하는 「계획 읽는 중…」이다", async ({ page, request }) => {
   const server = await reading(page, request);
-  await expect(page.getByText("기다리는 동안 하나씩 여쭤볼게요. 건너뛰어도 괜찮아요.")).toBeVisible();
+  await expect(page.getByText("기다리는 동안 하나씩 여쭤볼게요. 원하는 답을 직접 적어도 좋아요.")).toBeVisible();
   await expect(pager(page)).toBeVisible();
   await expect(pager(page).getByRole("heading", { name: "이동은 주로 어떻게 하세요?" })).toBeVisible();
   await expect(pager(page)).toContainText("계획서만으로는 이동 방법을 알 수 없어서 여쭤요");
   await expect(pager(page)).toContainText("1 / 2");
   for (const label of ["대중교통", "택시", "걷기 위주"]) {
     const box = await option(page, label).boundingBox();
-    expect(box!.height).toBeGreaterThanOrEqual(48);
+    expect(box!.height).toBeGreaterThanOrEqual(47.5); // 서브픽셀 반올림 오차를 허용한다.
   }
   await expect(pager(page)).toContainText("좌우로 밀면 이전 · 다음 질문을 볼 수 있어요");
   await expect(pager(page).getByRole("button", { name: "이전 질문 보기" })).toBeDisabled();
@@ -71,13 +71,13 @@ test("답하면 그 문항만 바로 저장되고(「저장했어요」), 잠시
   expect((await saved(server))[2].body).toEqual({ answers: { preferred_mobility: "walk" } });
 });
 
-test("건너뛴 질문은 알려 주고, 돌아와 답할 수 있다. 방향키 · 마우스로 밀기 · ‹ › 단추가 같은 이동이다", async ({ page, request }) => {
+test("건너뛰기 없이 방향키 · 마우스로 밀기 · ‹ › 단추로 같은 질문을 볼 수 있다", async ({ page, request }) => {
   const server = await reading(page, request);
-  await pager(page).getByRole("button", { name: "이 질문 건너뛰기" }).click();
+  await expect(pager(page).getByRole("button", { name: "이 질문 건너뛰기" })).toHaveCount(0);
+  await pager(page).getByRole("button", { name: "다음 질문 보기" }).click();
   await expect(pager(page)).toContainText("2 / 2");
   expect(await saved(server)).toHaveLength(0);                                                        // 건너뛰기는 서버로 가지 않는다
   await pager(page).getByRole("button", { name: "이전 질문 보기" }).click();
-  await expect(pager(page)).toContainText("건너뛰었어요. 밀어서 돌아와 다시 답할 수 있어요.");
   // 방향키
   await option(page, "택시").focus();
   await page.keyboard.press("ArrowRight");
@@ -273,7 +273,7 @@ test("좁은 화면(375×812)에서도 머리 · 질문 · 읽는 줄 · 아래 
   expect(footer!.height).toBeGreaterThanOrEqual(44);
   for (const name of ["이전 질문 보기", "다음 질문 보기"]) {
     const box = await pager(page).getByRole("button", { name }).boundingBox();
-    expect(box!.width).toBeGreaterThanOrEqual(44);
-    expect(box!.height).toBeGreaterThanOrEqual(44);
+    expect(box!.width).toBeGreaterThanOrEqual(43.5);
+    expect(box!.height).toBeGreaterThanOrEqual(43.5); // 서브픽셀 반올림 오차를 허용한다.
   }
 });
