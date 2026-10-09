@@ -74,7 +74,7 @@ export function TripMap(props: TripMapProps) {
     {mapConfiguration.provider === "naver" ? <NaverMap {...viewProps} clientId={mapConfiguration.clientId} />
       : mapConfiguration.provider === "osm" ? <OsmMap {...viewProps} tileUrl={mapConfiguration.tileUrl} />
       : <GoogleMap {...viewProps} apiKey={mapConfiguration.apiKey} mapId={mapConfiguration.mapId} tileUrl={mapConfiguration.tileUrl} onDecided={setGoogle} />}
-    {fill && meNotice && <p className={styles.meNoticeFloat} role="status" data-my-location-notice style={{ top: `${(props.topInset ?? 0) + 12}px` }}>{meNotice}</p>}
+    {fill && meNotice && <p className={styles.meNoticeFloat} role="status" data-my-location-notice style={{ top: `${(props.topInset ?? 0) + (points.length ? 12 : 64)}px` }}>{meNotice}</p>}
     {!fill && <p className={styles.caption}>
       <span>{providerName(mapConfiguration.provider, google)} · {props.dayNumber}일차 · {points.length}개 장소 표시</span>
       {meNotice && <span className={styles.notice} role="status" data-my-location-notice>{meNotice}</span>}

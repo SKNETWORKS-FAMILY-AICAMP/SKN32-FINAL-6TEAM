@@ -160,6 +160,6 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
       }} />}
     {ready && <MapControls view={view} topInset={topInset ?? 0} layout={layout} folded={folded} onFold={(next) => { setFolded(next); }} canFit={canFit} me={meButton}
       onZoom={(delta) => controller.current?.zoomBy(delta)} onFit={() => controller.current?.fit()} onLocate={() => { if (me) controller.current?.centerOn(me.coordinates); }} />}
-    {ready && points.length === 0 && <p className={styles.emptyNotice}>표시할 장소 좌표가 없어요.</p>}
+    {ready && points.length === 0 && <p className={styles.emptyNotice} role="status" data-empty-map-notice style={{ top: (topInset ?? 0) + 12 }}>표시할 장소 좌표가 없어요.</p>}
   </div>;
 }

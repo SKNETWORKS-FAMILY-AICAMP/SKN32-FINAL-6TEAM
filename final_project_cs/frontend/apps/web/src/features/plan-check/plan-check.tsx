@@ -326,10 +326,10 @@ function Reading({ view, onBack, extras }: { view: PlanCheckView; onBack: () => 
 const SHEETS = ["half", "full", "peek"] as const;
 type Sheet = (typeof SHEETS)[number];
 
-/** Under this height (px) the sheet keeps only its handle and its two buttons: there is no room left for a list worth reading (`[2026-10-04 사용자]`). */
+/** Under this height (px) there is no room left for a list worth reading. */
 const COMPACT_BELOW = 190;
-/** The least the sheet can be dragged to: the handle and the buttons. */
-const SHEET_MIN = 104;
+/** The fully folded sheet keeps only a handle with a 44px press target. */
+const SHEET_MIN = 44;
 
 interface Toast { text: string; sub?: string; undo?: boolean; /** An error: it stays until closed or swiped away. */ stay?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string; /** How long it stays when the default is too short (`lib/toast-bus.ts`). */ ms?: number }
 
@@ -385,6 +385,8 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const [custom, setCustom] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
   const [compact, setCompact] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [mapTight, setMapTight] = useState(false);
   const checkingBox = useRef<HTMLDivElement>(null);
   const sheetBox = useRef<HTMLElement>(null);
   const bodyBox = useRef<HTMLDivElement>(null);
@@ -452,8 +454,15 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   useEffect(() => {
     const element = sheetBox.current;
     if (!element || typeof ResizeObserver === "undefined") return;
-    const watcher = new ResizeObserver(() => { lastSheetHeight.current = element.offsetHeight; const next = element.getBoundingClientRect().height < COMPACT_BELOW; setCompact((current) => current === next ? current : next); });
+    const watcher = new ResizeObserver(() => {
+      const height = element.offsetHeight;
+      lastSheetHeight.current = height;
+      setCompact(height < COMPACT_BELOW);
+      setCollapsed(height <= SHEET_MIN);
+      setMapTight((checkingBox.current?.clientHeight ?? 0) - height < 136);
+    });
     watcher.observe(element);
+    if (checkingBox.current) watcher.observe(checkingBox.current);
     return () => watcher.disconnect();
   }, []);
   // ★`[2026-10-06 사용자 지적 — 여행 일정 창 확대·축소가 부드럽지 않다]` The list takes its new height at once (nothing inside re-flows while it moves; the map's edge follows with the same curve) and SLIDES there as a transform
@@ -1016,7 +1025,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const dayStrip = done && !changing && days.length > 0;
   const quietDays = useQuietDayStrip(stripBox, dayStrip);
   const submitBox = useRef<HTMLElement>(null);
-  const quietSubmit = useQuietDayStrip(submitBox, done && !changing && !inserting);
+  const quietSubmit = useQuietDayStrip(submitBox, done && !changing && !inserting, collapsed);
   const listDay: number | "all" = !dayStrip || dayChoice === "all" || filtering ? "all" : mapDay;
   const dayAt = days.findIndex((day) => day.day === listDay);
   const needsOfDay = (day: number) => timeline(shown, day).filter((entry) => (entry.type === "item" ? entry.item.verdict : entry.move.verdict) === "review"
@@ -1158,6 +1167,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   // The change screen's map: the day's other stops greyed, the stop being changed, and its alternatives A, B, C.
   const cards = change ? change.list : [];
   const mapStops: TripStop[] = changing ? changeStops(view, changing, cards) : stopsOf(shown, mapDay);
+  const emptyMapInHead = done && !changing && !inserting && mapTight && mapStops.length > 0 && mapStops.every(stop => !stop.coordinates);
   // ★`[2026-10-07 사용자 지시]` While the list shows only what needs a look, the map does too: those pins in the warning colours, every other pin grey and not pressable.
   const needsOnMap = done && !changing && filtering && filter === "needs";
   const looks: Record<string, PinLook> | undefined = changing ? changeLooks(view, changing, cards)
@@ -1256,7 +1266,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     return { at: order.indexOf(view.rechecking) + 1, of: order.length };
   })() : null;
 
-  return <div ref={checkingBox} className={styles.checking} data-sheet={custom !== null ? "custom" : sheet} data-changing={changing ? true : undefined} data-dragging={dragging || undefined} data-compact={compact && done && !changing && !inserting ? true : undefined}
+  return <div ref={checkingBox} className={styles.checking} data-sheet={custom !== null ? "custom" : sheet} data-changing={changing ? true : undefined} data-dragging={dragging || undefined} data-compact={compact && done && !changing && !inserting ? true : undefined} data-collapsed={collapsed && done && !changing && !inserting ? true : undefined} data-empty-map-in-head={emptyMapInHead || undefined}
     {...quietDays.handlers} {...backGesture}
     style={custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
     <div className={styles.map}>
@@ -1335,6 +1345,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
         : <>
           <header className={styles.sheetHead} data-done={done || undefined} data-float={done && dayStrip ? true : undefined} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
             <h2 id="plan-check-sheet-title" className={done || dayStrip ? "sr-only" : styles.sheetTitle}>{sheetTitle}</h2>
+            {emptyMapInHead && <p className={styles.emptyMapNotice} role="status" data-empty-map-notice>{t("표시할 장소 좌표가 없어요.", "There are no place coordinates to display.")}<span>{t("일정에서 장소를 수정해 주세요.", "Edit the places in your stops.")}</span></p>}
             {dayStrip && <div ref={stripBox} className={styles.dayStrip} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
               data-quiet={quietDays.hidden || undefined} aria-hidden={quietDays.hidden || undefined} inert={quietDays.hidden} {...quietDays.focusHandlers}
               onKeyDown={(event) => {
@@ -1418,7 +1429,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
 
         </>}
     </section>
-          {done && !changing && !inserting && <ResultFooter footerRef={submitBox} muted={quietSubmit.hidden || mapMoving} focusHandlers={quietSubmit.focusHandlers} view={shown} registration={registration} frozen={frozen} explain={explain} needsTotal={needCount} pendingRemovals={removed.length}
+          {done && !changing && !inserting && <ResultFooter footerRef={submitBox} muted={collapsed || quietSubmit.hidden || mapMoving} focusHandlers={quietSubmit.focusHandlers} view={shown} registration={registration} frozen={frozen} explain={explain} needsTotal={needCount} pendingRemovals={removed.length}
             previewing={previewing && side === "after"} onRecheck={actions.recheck || actions.remove ? recheck : undefined} onRegisterPreview={registerPreview} />}
     {timeEdit.drag && <TimeDragOverlay drag={timeEdit.drag} />}
     {shownToast && <ToastView key={shownToast.stamp} toast={shownToast.toast} onDone={hideToast} />}

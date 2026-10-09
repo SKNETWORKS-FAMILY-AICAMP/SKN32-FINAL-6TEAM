@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState, type FocusEvent, type Keyboar
 /** Wait until scrolling, including its inertia, has stopped before restoring the floating day controls. */
 export const DAY_STRIP_IDLE_MS = 800;
 
-export function useQuietDayStrip(strip: RefObject<HTMLElement | null>, enabled: boolean) {
+export function useQuietDayStrip(strip: RefObject<HTMLElement | null>, enabled: boolean, suppressed = false) {
   const [busy, setBusy] = useState(false);
   const [focused, setFocused] = useState(false);
   const pointers = useRef(new Set<number>());
@@ -26,7 +26,7 @@ export function useQuietDayStrip(strip: RefObject<HTMLElement | null>, enabled: 
     const release = (event: globalThis.PointerEvent) => { if (pointers.current.delete(event.pointerId)) settle(); };
     const blur = () => { pointers.current.clear(); settle(); };
     const tab = (event: globalThis.KeyboardEvent) => {
-      if (event.key !== "Tab") return;
+      if (event.key !== "Tab" || suppressed) return;
       // The header is outside this sheet. Restore the tabs before the browser calculates its next focus target.
       if (strip.current) strip.current.inert = false;
       reveal();
@@ -43,7 +43,7 @@ export function useQuietDayStrip(strip: RefObject<HTMLElement | null>, enabled: 
       window.removeEventListener("keydown", tab, true);
       clearTimeout(timer.current);
     };
-  }, [settle, strip, reveal]);
+  }, [settle, strip, reveal, suppressed]);
 
   const onPointerDownCapture = useCallback((event: PointerEvent<HTMLElement>) => {
     if (!enabled || inStrip(event.target)) return;
