@@ -212,7 +212,9 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             return self._unknown(task, "취소·환급 규정", evidence)
 
         remaining = self._hours_until(booking.get("starts_at"))
-        if remaining is None:
+        # ★`[2026-10-09]` 시각을 모르면 성립 판정은 「정보 부족」으로 답한다(escalate 가 아니다 — 활동 팀 10/2 규칙, team 통합 ③).
+        #   취소 · 변경은 시각이 있어야 계산되므로 그대로 멈춘다.
+        if remaining is None and task.capability != "activity.check_feasible":
             return self._unknown(task, "예약 시각", evidence)
 
         if task.capability == "activity.check_cancelable":
@@ -275,10 +277,10 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                         "penalty_rate": penalty}])
 
     def _check_feasible(self, task: TeamTask, booking: dict, policy: Any,
-                        remaining: float, evidence: list, seen: set[str]) -> TeamResult:
+                        remaining: float | None, evidence: list, seen: set[str]) -> TeamResult:
         # ★`[2026-09-29]` 이미 시작한 예약은 성립을 다시 점검하지 않는다 — 지난 시각의 날씨·특보로
         #   「바꿔야 한다」는 제안을 만들면 되돌릴 수 없는 일을 권하게 된다. 출처: 활동 팀 PR #6(결함 2 수정)
-        if remaining < 0:
+        if remaining is not None and remaining < 0:
             return self._result(
                 task, outcome="completed", confidence=1.0, evidence=evidence,
                 next_action=NextAction.RESPOND,
@@ -295,10 +297,27 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                 answer=f"인원이 정원을 넘습니다 — 신청 {party}명, 정원 {capacity}명.",
                 decisions=[{"feasible": False, "reason": "party_over_capacity",
                             "failure_code": self._record_failure(task, fc.PARTY_OVER_CAPACITY)}])
+        # ★`[2026-10-09]` 인원 · 정원 중 하나라도 모르면 위 비교를 건너뛴다 — 「초과 아님」으로 확정한 것이 아니므로 조용히
+        #   넘기지 않고 경고로 남긴다(사용자 결정, team 통합 ③). 막지는 않는다 — 인원은 성립을 정하는 다른 점검의 재료가 아니다.
+        missing = [label for label, value in (("신청 인원", party), ("정원", capacity)) if value is None]
+        headcount_warnings = ([f"{' · '.join(missing)}을 확인하지 못했다 — 정원 초과 여부는 판정하지 않았다"]
+                              if missing else [])
+        # ★`[2026-10-09]` 「모름」을 「성립」으로 읽지 않는다(team 통합 ③ — role-activity 판). 시각을 모르면 휴무 · 운영시간 ·
+        #   재난 · 기상 어느 것도 잴 수 없어 장소를 읽지 않는다. 정원 초과처럼 시각 없이 확인된 불가(위)는 이미 나갔다.
+        if remaining is None:
+            return self._insufficient(task, evidence, fc.TIME_UNKNOWN, reason="time_unknown",
+                                      answer="예약 시각을 확인하지 못해 성립 여부를 판정하지 않았습니다.",
+                                      warnings=["예약 시각을 확인하지 못했다", *headcount_warnings])
 
         place = self._read(task, "read.place", {"place_id": booking.get("place_id")}, seen)
         evidence = self._evidence(task, source_id="read.place",
                                   claim="장소·운영 정보", value=place, base=evidence)
+        # ★전에는 장소를 몰라도 「확인한 범위에서는 성립합니다 … 판정하지 않았습니다」로 답했다 — 앞뒤가 어긋난다(활동 팀 결함 1).
+        #   장소를 모르면 재난 · 휴무 점검에 넘길 좌표 · 구도 없다.
+        if place is None:
+            return self._insufficient(task, evidence, fc.PLACE_UNKNOWN, place_confirmed=False,
+                                      answer="장소·운영 정보가 확인되지 않아 판정하지 않았습니다.",
+                                      warnings=["장소·운영 정보를 확인하지 못했다", *headcount_warnings])
 
         # ★성립 점검은 **한 번**이다(`read.disruptions`). 예보·특보·(붙는 대로)
         #   재난문자·대기질을 도구가 한꺼번에 본다. 무엇을 볼지(실내면 예보 안 봄)는
@@ -359,14 +378,14 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                 return closed
 
         forecast = self._checked_value(report, "forecast")
-        warnings = [] if place is not None else ["장소·운영 정보를 확인하지 못했다"]
-        decisions: dict[str, Any] = {"feasible": True,
-                                     "place_confirmed": place is not None}
+        warnings: list[str] = list(headcount_warnings)
+        decisions: dict[str, Any] = {"feasible": True, "place_confirmed": True,
+                                     "headcount_checked": not missing}
         if report is not None:
             decisions["not_connected"] = report.get("not_connected", [])
         answer = f"확인한 범위에서는 성립합니다(시작까지 {remaining:.1f}시간)."
-        if place is None:
-            answer += " 운영 정보는 확인되지 않아 그 부분은 판정하지 않았습니다."
+        if missing:
+            answer += " 인원 · 정원 정보가 없어 정원 초과 여부는 판정하지 않았습니다."
         if hours_note:
             answer += " " + hours_note
             warnings.append("운영시간 · 휴무를 확인하지 못했다 — 판정에 넣지 않았다")
@@ -389,6 +408,16 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             task, outcome="completed", confidence=0.8, evidence=evidence,
             next_action=NextAction.RESPOND, answer=answer,
             decisions=[decisions], warnings=warnings)
+
+    def _insufficient(self, task: TeamTask, evidence: list, code: str, *, answer: str, warnings: list[str],
+                      **decisions: Any) -> TeamResult:
+        """「정보 부족」 — 사람에게 넘기지 않고 답하되 성립을 단정하지 않는다(`feasible: False` · `status: insufficient_info`)."""
+        return self._result(
+            task, outcome="completed", confidence=0.5, evidence=evidence,
+            next_action=NextAction.RESPOND, answer=answer,
+            decisions=[{"feasible": False, "status": "insufficient_info", **decisions,
+                        "failure_code": self._record_failure(task, code)}],
+            warnings=warnings)
 
     @staticmethod
     def _unclassified_safety_event(report: dict[str, Any] | None):
