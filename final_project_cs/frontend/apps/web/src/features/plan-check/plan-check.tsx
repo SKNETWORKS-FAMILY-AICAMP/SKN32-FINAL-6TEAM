@@ -1168,6 +1168,25 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const cards = change ? change.list : [];
   const mapStops: TripStop[] = changing ? changeStops(view, changing, cards) : stopsOf(shown, mapDay);
   const emptyMapInHead = done && !changing && !inserting && mapTight && mapStops.length > 0 && mapStops.every(stop => !stop.coordinates);
+  useLayoutEffect(() => {
+    const box = bodyBox.current;
+    if (!done || changing || inserting || !box) return;
+    const header = sheetBox.current?.querySelector<HTMLElement>(`header.${styles.sheetHead}`);
+    const measure = () => {
+      const css = getComputedStyle(box);
+      const overlayBottom = header?.hasAttribute("data-float")
+        ? header.getBoundingClientRect().bottom - parseFloat(getComputedStyle(header).paddingBottom) : box.getBoundingClientRect().top;
+      const hiddenAbove = Math.max(0, overlayBottom - box.getBoundingClientRect().top);
+      // Native sticky starts at the padded scroll edge; the text also has an optical lead above it.
+      const inset = hiddenAbove - parseFloat(css.paddingTop) - parseFloat(css.getPropertyValue("--stop-time-lead"));
+      box.style.setProperty("--time-stick-inset", `${inset}px`);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(box);
+    if (header) observer.observe(header);
+    return () => observer.disconnect();
+  }, [done, changing, inserting, dayStrip, emptyMapInHead, side]);
   // ★`[2026-10-07 사용자 지시]` While the list shows only what needs a look, the map does too: those pins in the warning colours, every other pin grey and not pressable.
   const needsOnMap = done && !changing && filtering && filter === "needs";
   const looks: Record<string, PinLook> | undefined = changing ? changeLooks(view, changing, cards)

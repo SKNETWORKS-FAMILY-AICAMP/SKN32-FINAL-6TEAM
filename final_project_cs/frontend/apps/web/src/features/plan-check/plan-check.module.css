@@ -73,7 +73,7 @@
 .sheetTitle { margin: 0; font-size: 15px; font-weight: 750; }
 .count { margin: 0; font-size: 12.5px; font-weight: 650; color: var(--color-text-secondary); text-align: right; }
 .headBadges { display: inline-flex; gap: 6px; }
-.sheetBody { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 2px 14px calc(18px + max(var(--follow-room, 0px), var(--focus-room, 0px))); touch-action: pan-y; }
+.sheetBody { --stop-time-lead: 17.5px; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 2px 14px calc(18px + max(var(--follow-room, 0px), var(--focus-room, 0px))); touch-action: pan-y; }
 .day { margin: 12px 0 2px; font-size: 13px; font-weight: 750; color: var(--color-muted); }
 .day small { margin-left: 4px; font-size: inherit; font-weight: 500; }
 
@@ -707,9 +707,9 @@ button.time[data-adjusted] { color: var(--color-adjusted); }
 .statusTools .undoAll { width: 32px; height: 32px; border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface); }
 .cardTop { gap: 0; padding: 0 2px; }
 .cardTools .icon { width: 36px; height: 44px; }
-.entry[data-type="item"] > .time { position: relative; top: 0; z-index: 1; font-size: 16px; line-height: 20px; font-weight: 400; padding: 17.5px 0 6.5px; }
-.entry[data-type="item"][data-time-follow] > .time { position: sticky; }
-.sheetBody[data-under-float] .entry[data-type="item"][data-time-follow] > .time { top: 64px; }
+.entry[data-type="item"] > .time { position: relative; top: 0; z-index: 1; font-size: 16px; line-height: 20px; font-weight: 400; padding: var(--stop-time-lead) 0 6.5px; }
+/* The measured inset excludes the scroll padding and button lead, so visible text stays with its title. */
+.entry[data-type="item"][data-time-follow] > .time { position: sticky; top: var(--time-stick-inset, 0px); }
 .sheetHead[data-done]:not([data-float]) { padding: 18px 12px 0; min-height: 18px; border: 0; }
 .autoAllTop { position: static; flex: none; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; margin: 0 0 8px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12px; cursor: pointer; }
 .topActions { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin-bottom: 8px; }
@@ -724,8 +724,8 @@ button.time[data-adjusted] { color: var(--color-adjusted); }
 .footer .footButton[aria-disabled="true"] { opacity: .65; }
 .footer > [role="alert"] { position: absolute; right: 0; bottom: calc(100% + 12px); width: min(320px, calc(100vw - 40px)); padding: 12px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-surface); box-shadow: 0 4px 16px var(--color-shadow-light); }
 .footButton:hover .iconTip, .footButton:focus-visible .iconTip { opacity: 1; visibility: visible; }
-.sheetBody { padding-bottom: max(88px, calc(18px + max(var(--follow-room, 0px), var(--focus-room, 0px)))); }
-.sheetBody[data-next-preview] { padding-bottom: max(88px, var(--follow-room, 0px), var(--focus-room, 0px)); }
+.screen[data-stage="done"] .sheetBody { padding-bottom: 0; }
+.screen[data-stage="done"] :is(.pullHint, .pullEmpty) { margin-bottom: 0; padding-inline-end: 76px; }
 .credit { margin: 0; font-size: 10px; font-weight: 400; }
 .credit summary { gap: 4px; }
 .pullHint { flex-direction: row; gap: 6px; width: 100%; min-height: 52px; margin: 4px 0; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-subtle); font-size: 12px; font-weight: 400; line-height: 1.5; }

@@ -1,0 +1,202 @@
+{
+  "scope": "하단 안내 밀착·이동 미정 표시·시각 글자가 가려지는 때부터 고정",
+  "mock_final": {
+    "passed": 20,
+    "total": 20
+  },
+  "unit": {
+    "passed": 26,
+    "total": 26
+  },
+  "checks": [
+    "TypeScript",
+    "ESLint",
+    "standard production build"
+  ],
+  "screenshots": 10,
+  "real_response_checked": false,
+  "measurement": {
+    "viewport": [
+      375,
+      812
+    ],
+    "date_bottom": 424,
+    "before": {
+      "scroll_top": [
+        0,
+        20,
+        40,
+        60,
+        80,
+        100,
+        120,
+        140
+      ],
+      "time_top": [
+        542.5,
+        522.5,
+        516.5,
+        516.5,
+        516.5,
+        516.5,
+        516.5,
+        516.5
+      ]
+    },
+    "after": {
+      "scroll_top": [
+        0,
+        20,
+        40,
+        60,
+        80,
+        100,
+        120,
+        140
+      ],
+      "time_top": [
+        542.5,
+        522.5,
+        502.5,
+        482.5,
+        462.5,
+        442.5,
+        427,
+        427
+      ]
+    }
+  },
+  "initial_failure": "미정 표시는 정상이나 시험의 편집창 이름에 조사 에서가 빠져 2개 실패. 실제 접근 가능한 이름으로 수정 후 전체 재확인.",
+  "runs": [
+    {
+      "run": "first",
+      "stats": {
+        "startTime": "2026-10-09T21:12:22.335Z",
+        "duration": 67366.183,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 2,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "name": "시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 375px",
+          "status": "passed"
+        },
+        {
+          "name": "수정안 안내는 하단 공백 없이 붙고 보내기와 겹치지 않는다 375px",
+          "status": "passed"
+        },
+        {
+          "name": "이동 시각은 둘 다 없으면 미정 하나·부분 누락은 알려진 값 유지 375px",
+          "status": "failed"
+        },
+        {
+          "name": "시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 1280px",
+          "status": "passed"
+        },
+        {
+          "name": "수정안 안내는 하단 공백 없이 붙고 보내기와 겹치지 않는다 1280px",
+          "status": "passed"
+        },
+        {
+          "name": "이동 시각은 둘 다 없으면 미정 하나·부분 누락은 알려진 값 유지 1280px",
+          "status": "failed"
+        }
+      ]
+    },
+    {
+      "run": "final",
+      "stats": {
+        "startTime": "2026-10-09T21:15:42.560Z",
+        "duration": 104433.575,
+        "expected": 20,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "name": "시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 375px",
+          "status": "passed"
+        },
+        {
+          "name": "수정안 안내는 하단 공백 없이 붙고 보내기와 겹치지 않는다 375px",
+          "status": "passed"
+        },
+        {
+          "name": "이동 시각은 둘 다 없으면 미정 하나·부분 누락은 알려진 값 유지 375px",
+          "status": "passed"
+        },
+        {
+          "name": "시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 1280px",
+          "status": "passed"
+        },
+        {
+          "name": "수정안 안내는 하단 공백 없이 붙고 보내기와 겹치지 않는다 1280px",
+          "status": "passed"
+        },
+        {
+          "name": "이동 시각은 둘 다 없으면 미정 하나·부분 누락은 알려진 값 유지 1280px",
+          "status": "passed"
+        },
+        {
+          "name": "지도를 움직이는 동안 정보와 단추가 사라졌다가 멈추면 돌아온다",
+          "status": "passed"
+        },
+        {
+          "name": "일정을 펼쳐 스크롤해도 왼쪽 시각은 해당 일정이 끝날 때까지 따라온다",
+          "status": "passed"
+        },
+        {
+          "name": "시각은 펼침·검토·되돌리기 상태에만 따라온다 375px",
+          "status": "passed"
+        },
+        {
+          "name": "직접 수정은 장소 입력 중복 없이 원래 장소와 거절된 초안을 유지한다 375px",
+          "status": "passed"
+        },
+        {
+          "name": "일정 추가는 입력부터 열고 검색·지우기·선택 후에도 초안을 보존한다 375px",
+          "status": "passed"
+        },
+        {
+          "name": "추가 입력 검증과 검색 초점·실제 선택 장소 저장 375px",
+          "status": "passed"
+        },
+        {
+          "name": "시각은 펼침·검토·되돌리기 상태에만 따라온다 1280px",
+          "status": "passed"
+        },
+        {
+          "name": "직접 수정은 장소 입력 중복 없이 원래 장소와 거절된 초안을 유지한다 1280px",
+          "status": "passed"
+        },
+        {
+          "name": "일정 추가는 입력부터 열고 검색·지우기·선택 후에도 초안을 보존한다 1280px",
+          "status": "passed"
+        },
+        {
+          "name": "추가 입력 검증과 검색 초점·실제 선택 장소 저장 1280px",
+          "status": "passed"
+        },
+        {
+          "name": "시간을 탭 없이 바로 잡고 아래로 끌면 늦춰지고, 끄는 동안 폼은 안 열리고 미니맵이 뜨며, 놓으면 한 번에 저장된다",
+          "status": "passed"
+        },
+        {
+          "name": "추가 취소 후 바깥 화면 고정·마지막 카드 전체 표시 375px",
+          "status": "passed"
+        },
+        {
+          "name": "추가 취소 후 바깥 화면 고정·마지막 카드 전체 표시 1280px",
+          "status": "passed"
+        },
+        {
+          "name": "도착 시각이 없는 구간은 시각을 지어내지 않는다",
+          "status": "passed"
+        }
+      ]
+    }
+  ]
+}

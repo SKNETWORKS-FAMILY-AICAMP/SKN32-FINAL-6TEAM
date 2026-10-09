@@ -36,9 +36,9 @@ for (const width of [375, 1280]) {
     await head(page, '경복궁 관람').click(); await expect(time('경복궁 관람')).toHaveCSS('position', 'sticky');
     const scroll = page.locator('div[class*=sheetBody]');
     const original = await time('경복궁 관람').boundingBox();
-    await scroll.evaluate(e => { e.scrollTop += 80; });
+    await scroll.evaluate(e => { e.scrollTop += 140; });
     const followed = await time('경복궁 관람').boundingBox();
-    expect(followed!.y).toBeGreaterThan(original!.y - 80 + 8);
+    expect(followed!.y).toBeGreaterThan(original!.y - 140 + 8);
     await capture(page, `expanded-time-${width}`);
     await head(page, '경복궁 관람').dispatchEvent('click');
     await expect(time('경복궁 관람')).toHaveCSS('position', 'relative');

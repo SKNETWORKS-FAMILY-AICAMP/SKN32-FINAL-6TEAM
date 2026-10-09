@@ -326,7 +326,12 @@ function MoveRow({ move, from, to, ctx, slack, dim }: { move: PlanMove; from: Pl
   // ★`[2026-10-05 사용자 지시]` The time of leaving can be changed like the time of a stop: leaving later uses the free time first, then the next stops are pushed.
   const leaveEditing = ctx.time?.id === move.fromId && ctx.time.kind === "depart";
   const timeFocused = done && (ctx.time ? leaveEditing : open);
-  const leaving = <span className={styles.timeStack}><time data-move-departure>{move.departAt || "—"}</time><time className={styles.rangeEnd} data-move-arrival aria-hidden={!timeFocused}>~{move.arriveAt || "—"}</time></span>;
+  const leaving = <span className={styles.timeStack}>
+    {move.departAt ? <time data-move-departure>{move.departAt}</time> : <span data-move-departure>{t("미정", "TBD")}</span>}
+    {(move.departAt || move.arriveAt) && (move.arriveAt
+      ? <time className={styles.rangeEnd} data-move-arrival aria-hidden={!timeFocused}>~{move.arriveAt}</time>
+      : <span className={styles.rangeEnd} data-move-arrival aria-hidden={!timeFocused}>{t("미정", "TBD")}</span>)}
+  </span>;
   const leaveWhy = !from ? null : dim ? t("삭제할 일정 앞뒤의 이동이라 바꿀 수 없어요", "This leg belongs to a stop marked for deletion")
     : !ctx.actions.retime && !ctx.actions.edit ? t("시간 고치기는 준비 중이에요", "Changing the time is coming")
       : from.locked ? t("고정한 일정에서 나서는 시각이라 바꿀 수 없어요 · 잠금을 풀면 수정할 수 있어요", "Locked · unlock the stop to change when to leave")
@@ -336,7 +341,7 @@ function MoveRow({ move, from, to, ctx, slack, dim }: { move: PlanMove; from: Pl
     <div className={styles.moveClock}>
     {done && !checking && from
       ? <Act className={styles.time} data-editing={leaveEditing || undefined} data-grab={grab ? true : undefined} {...grab} why={leaveWhy} explain={ctx.explain} onPress={() => { if (!ctx.dragEnded()) ctx.onOpenDepart(move.fromId); }}
-          title={t("눌러서 출발 시각 고치기", "Press to change when to leave")} aria-label={t(`${from.title}에서 나서는 시각 고치기 · 지금 ${move.departAt || "시간 없음"}`, `Change when to leave ${from.title} · now ${move.departAt || "no time"}`)}>{leaving}</Act>
+          title={t("눌러서 출발 시각 고치기", "Press to change when to leave")} aria-label={t(`${from.title}에서 나서는 시각 고치기 · 지금 ${move.departAt || "미정"} · 도착 ${move.arriveAt || "미정"}`, `Change when to leave ${from.title} · now ${move.departAt || "TBD"} · arrival ${move.arriveAt || "TBD"}`)}>{leaving}</Act>
       : <span className={styles.time}>{!checking && leaving}</span>}
     </div>
     <span className={styles.rail} aria-hidden="true"><span className={`${styles.dot} ${styles.departureMark}`} data-departure-mark title={t("출발", "Depart")} data-grab={grab ? true : undefined} {...grab}><Minus size={16} strokeWidth={2} /></span></span>

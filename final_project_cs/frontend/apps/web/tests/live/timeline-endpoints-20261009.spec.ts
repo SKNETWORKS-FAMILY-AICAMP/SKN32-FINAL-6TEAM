@@ -73,5 +73,5 @@ for(const width of [375,1280]) {
 }
 test('도착 시각이 없는 구간은 시각을 지어내지 않는다',async({page,request})=>{
   await openFinished(page,request,view=>{for(const move of view.review.moves){move.arrive=null;move.minutes=null;}},{intakeEvents:'off'});
-  await expect(page.locator('[data-move-arrival]').first()).toHaveText('~—');
+  await expect(page.locator('[data-move-arrival]').first()).toHaveText('미정');
 });
