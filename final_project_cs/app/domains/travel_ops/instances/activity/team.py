@@ -135,6 +135,10 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         route = ItineraryWork.itinerary_route("activity", state)
         if route is None and intent == "itinerary_submit":
             return "activity.submit_itinerary"
+        # ★`[2026-10-09]` 「바꿔 주세요」(조정 거부) — 전에는 받을 곳이 없어 성립 판정으로 갔다(「성립합니다」로 답했다).
+        #   role-activity 판의 연결을 되살린다. 여행이 정해진 Case 의 바꾸기는 위의 일정 관리가 맡는다.
+        if route is None and intent == "adjust_reject":
+            return "activity.propose_change"
         return route
 
     async def handle_trigger(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:
