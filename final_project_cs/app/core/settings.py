@@ -57,11 +57,12 @@ class Settings(BaseSettings):
     llm_temperature: float = 0.0
     llm_seed: int = 7
     local_ft_base_url: str = ""
-    #: 활동 판정 LLM(D-CS-008, 브랜치 `role-activity-test` 한정 실험).
+    #: 활동 판정 LLM(D-CS-008 실험 → D-CS-015 develop 판).
     #:  `rule` = 지금 규칙 판정만 · `shadow` = 규칙으로 답하고 LLM 판정은 차이만 기록 · `llm` = LLM 판정으로 답한다.
-    #:  ★이 브랜치는 섀도 모드로 시작한다(2026-10-06 사용자 결정). `llm` 으로 올리는 기준은
-    #:    `wiki/teams/액티비티 LLM 연동 계획서.md` §8 에 수치로 적은 뒤에 정한다.
-    activity_judge_mode: Literal["rule", "shadow", "llm"] = "shadow"
+    #:  ★`[2026-10-09]` 기본값을 `shadow` → `rule` 로 바꿨다(D-CS-015, 사용자 결정). develop 판 활동 팀에 붙이면 키가 있는
+    #:    모든 환경의 성립 판정마다 백그라운드 LLM 호출(웹 검색 포함)이 나간다 — 섀도 기록을 모을 환경만 `.env` 로 켠다.
+    #:    `llm` 으로 올리는 기준은 `wiki/teams/액티비티 LLM 연동 계획서.md` §8 에 수치로 적은 뒤에 정한다.
+    activity_judge_mode: Literal["rule", "shadow", "llm"] = "rule"
     #:  Responses API 로 부른다(`app/infrastructure/llm/openai_responses.py`). `llm_model` 과 따로 둔다 —
     #:   다른 Team 의 모델을 바꾸지 않고 이 실험만 바꿀 수 있게.
     activity_judge_model: str = "gpt-5.4-nano"

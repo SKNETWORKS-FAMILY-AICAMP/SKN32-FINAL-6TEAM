@@ -230,6 +230,78 @@ LLM 이 받는 입력은 아래 「입력 데이터」 칸이 전부다. **웹 �
 - 운영 섀도에서 그 종류의 비교 가능 관측이 100건 이상이고, 불일치 표본을 사람이 검토해 LLM 이 맞은 비율이 규칙보다 높다.
 - 웹 판정(`live_status`)은 라벨 셋과 429 대책이 생길 때까지 대상이 아니다.
 
+## 9. develop 판 재설계 `[결정 2026-10-09 — D-CS-015]`
+
+§4~§8 은 role-activity 판(`team_a.py` + `feasibility.py` 믹스인) 위의 실험이다. 2026-10-09 통합으로 등록된 활동 팀은
+develop 판(`team.py`)이 됐고, 판정 LLM 은 옮기지 않았다. 이 절은 판정 LLM 을 **develop 판 위에 다시 붙이는** 설계다.
+
+### 9.1 지금 상태 (실측 2026-10-09)
+
+- **남아 있는 것(그대로 쓴다):** 판정 계층 `instances/activity/judge/`(types · requests · rule · llm · modes), Responses 어댑터
+  `infrastructure/llm/openai_responses.py`, 설정 `activity_judge_*`(기본 모드 `shadow`), 가드레일, 프롬프트 5개
+  (`prompts/activity_judge/*.v1.md`, `ALLOWED_PROMPT_KEYS` 등록), 섀도 기록 표 `activity_judge_shadow`(031),
+  조립 배선(`composition.build_registry` — Team 에 `judge_llm` 칸이 **있으면** 넣는다).
+- **끊긴 것:** develop 판 `team.py` 에 `judge_llm` 칸이 없다 → 조립이 넣지 않는다 → 판정 LLM 은 지금 **한 번도 불리지 않는다.**
+  판정 LLM 을 부르는 유일한 팀은 보존본 `team_a.py`(등록 안 됨)이고, `scripts/try_activity_judge.py` 가 그것을 쓴다.
+- **결정 범위:** D-CS-008 은 「`role-activity-test` 안에서만, develop · main 에 합치려면 평가를 붙여 새로 결정」이다
+  (`wiki/decisions/D-CS-008-activity-llm-judgment-experiment.md` §범위). develop 판 위에 붙이는 것은 이 범위 밖이다.
+  ★`D-CS-008` 번호를 운영 콘솔 결정(`D-CS-008-ops-console-separate-app.md`)도 쓰고 있다 — 새 결정은 다른 번호로 받는다.
+
+### 9.2 판정 종류별로 develop 판에서 다시 본 것
+
+develop 판은 role-activity 판과 판정 자리가 다르다. 종류마다 「지금 develop 이 무엇으로 정하나」부터 다시 봤다.
+
+| 판정 | develop 판의 지금 판정 | LLM 이 더할 수 있는 것 | 제안 |
+|---|---|---|---|
+| ① 정기휴무 `closure` | `team._hours_check` → `closure_rules.read_closure`(휴무 원문) — `RuleJudge._closure` 와 같은 함수 | 규칙이 「모름」인 원문만. 골든셋 규칙 16/16(낙관적) · LLM 0.958 | **섀도** — 원문이 있을 때. LLM 모드 전환 후보 아님 |
+| ② 운영시간 `operating_hours` | 새벽 작업(`catalog_hours` — `place_hours.read_hours`, 규칙 → 안 되면 **모델**)이 원문을 요일표로 옮겨 두고, 요청 때는 `place_hours.fits` 로 잰다 | 거의 없다 — 원문 해석은 이미 모델이 새벽에 한다 | **붙이지 않는다.** 요일표를 못 만든 곳(`fit` 모름 · 원문 있음)만 2차 후보 |
+| ③ 실내·실외 `weather_sensitive` | 장소 값 → 관광공사 분류(`read.place_class`, 통합 ⑤) → 모르면 **먼저 묻는다**(감시 경로와 같은 기준) | 분류도 모르는 곳의 추정 | **섀도** — 분류까지 모를 때만. ★LLM 모드로 올리려면 감시 경로(`disruptions.py` · `pending.needs_consent`)도 같은 값을 써야 한다 — 성립 판정만 바꾸면 둘이 어긋난다(통합 ② · ⑤ 의 교훈) |
+| ④ 재난문자 `disaster_effect` | 공유 점검(`read.disruptions` — 유형 목록 `DISRUPTIVE_KINDS`) + 재난 정지 기준(`planning/safety.classify`, 통합 ②). 위급재난 · 정지 대상은 판정 계층에 보내지 않는다 | 공유 점검이 이상으로 세지 않은 **긴급재난 · 안전안내**의 주제 관련성 | **섀도** — 그런 문자가 1건 이상일 때. ★LLM 모드는 ③ 과 같은 이유로 공유 점검 안에서 해야 한다 |
+| ⑤ 실시간 운영 상태 `live_status` | 없음 | 그 날짜의 임시휴무 · 통제 공지(웹 검색) | **섀도** — 실외이거나 72시간 안일 때(`live_status_within_hours`). 건당 약 $0.03 · p95 40.7초 · 429 |
+
+### 9.3 구조
+
+```
+ActivityTeam(team.py)
+   judge_llm · judge_shadow_sink   ← 조립(composition.build_registry)이 넣는 칸 — 칸을 만들면 배선은 이미 있다
+   _judge(task, request) → Verdict ← build_judge(mode, judge_llm, sink) · JudgeContext(case_id · capability · run_id · tenant_id)
+      ├─ _hours_check        ① closure      (원문이 있을 때)
+      ├─ _indoor_outdoor     ③ weather      (장소 값 · 분류 모두 없을 때)
+      ├─ (공유 점검 뒤)       ④ disaster     (정지 대상이 아닌 미분류 문자가 있을 때)
+      └─ (성립 직전)          ⑤ live_status  (실외 또는 72시간 안)
+```
+
+- `feasibility.py` 믹스인은 쓰지 않는다 — role-activity 판의 판정 순서 · 답변 문구를 함께 끌고 온다. 판정 계층(`judge/`)만 쓴다.
+- **섀도 모드에서 고객 결과는 지금과 바이트 단위로 같아야 한다.** 규칙 판정은 이미 develop 판 코드가 하고 있으므로, 섀도는
+  「규칙 값은 지금 코드의 값 · LLM 은 백그라운드」로 기록만 한다(`ShadowJudge` 의 규칙 쪽을 develop 판 값과 맞춘다 — ③ · ④ 는
+  `RuleJudge` 의 규칙이 develop 판과 다르다: ③ 은 장소명 짐작, ④ 는 등급만. 섀도 비교 기준이 「지금 동작」이 되게 고친다).
+- 판정 하나에 도구 호출은 늘지 않는다(LLM 호출은 도구가 아니다). ⑤ 의 주소는 장소 행 → 카탈로그(`place_catalog.address`)에서 —
+  role-activity 판은 CSV 를 읽었다.
+
+### 9.4 먼저 고칠 것 (열린 항목에서)
+
+| 항목 | 근거 | 할 일 |
+|---|---|---|
+| 시간 제한 45초가 실제로 135초 | 2026-10-07 기록 — SDK 기본 재시도 2회 | 어댑터에 `max_retries` 를 명시한다(섀도에서도 스레드를 오래 잡는다) |
+| 기본 모드가 `shadow` | `settings.py:64` | develop 판에 붙이는 순간 운영 성립 판정마다 백그라운드 LLM 호출(최대 4회, ⑤ 는 웹)이 나간다 — 기본값을 정해야 한다(9.5) |
+| LLM 모드에서 대신한 판정에 표시가 없다 | 2026-10-07 기록 | `failure_code == llm_fallback_rule` 로 경고를 단다(LLM 모드를 켤 때) |
+| 휴무 원문 판정과 웹 판정이 엇갈릴 때 우선순위 없음 | 2026-10-06 기록 | LLM 모드를 켜기 전에 정한다(섀도에는 영향 없음) |
+
+### 9.5 정한 것 `[2026-10-09 사용자 — 제안 그대로]`
+
+1. **결정 범위** — 새 결정 [D-CS-015](../decisions/D-CS-015-activity-llm-judgment-on-develop.md). D-CS-008 은 테스트 브랜치 실험 기록으로 둔다.
+2. **기본 모드** — `rule`. 섀도 기록을 모을 환경만 `.env` 로 `shadow`(`settings.py` 기본값을 바꿨다).
+3. **붙일 종류** — ① · ③ · ④ · ⑤ 섀도, ② 제외.
+
+### 9.6 단계 (제안)
+
+| 단계 | 내용 | 완료 기준 |
+|---|---|---|
+| A | 결정(9.5) · 어댑터 `max_retries` | 결정 기록 · 어댑터 시험 |
+| B | `team.py` 에 칸과 `_judge` · 섀도 배선(9.3), 섀도 규칙 쪽을 develop 판 값으로 | 섀도 모드에서 LLM 이 모두 반대로 답해도 고객 결과 전체가 규칙 모드와 같다(role-activity 판 4단계와 같은 시험) |
+| C | 운영 섀도 수집 · 골든셋 재측정(규칙 쪽은 develop 판 기준) | 종류별 비교 가능 관측 수 · 일치율 · 분모 |
+| D | 전환 판단(§8 기준) — ③ · ④ 는 감시 경로를 함께 바꾸는 설계까지 | 사용자 결정 |
+
 ---
 
 ## 업데이트 기록
@@ -449,3 +521,10 @@ LLM 구현과 관련한 결정·변경·실측을 날짜순으로 적는다. 항
 - 시험: 단위 · 계약 2279 passed, DB 통합(활동 · 재난 · 섀도) 8 passed, `ruff` 통과. 예전 동작을 확인하던 시험 4건을 고치고 1건을 더했다(LLM 이 위급재난을 뒤집지 못함 · 긴급재난에서 LLM 모름 · 긴급재난을 LLM 이 막음).
 - 남은 것: 긴급재난 · 안전안내를 유형 · 관련성으로 막을지(앞서 검토한 「나 방안」)는 아직 정하지 않았다 — 지금 규칙은 위급재난이 아니면 막지 않는다.
 
+
+### 2026-10-09 (develop 판 재설계 시작)
+- 2026-10-09 통합으로 등록된 활동 팀이 develop 판(`team.py`)이 됐고, 판정 LLM 은 옮기지 않았다. 판정 계층 · 어댑터 · 프롬프트 · 섀도 표 · 조립 배선은 남아 있지만 `team.py` 에 `judge_llm` 칸이 없어 **지금은 한 번도 불리지 않는다.**
+- §9 「develop 판 재설계」 초안을 적었다. 판정 종류마다 develop 판의 지금 판정을 다시 봤다 — ② 운영시간은 새벽 작업(`catalog_hours`)이 이미 원문을 규칙 → 모델로 읽어 두므로 요청 경로에 붙이지 않는 것을 제안한다. ③ · ④ 는 LLM 모드로 올리려면 감시 경로도 같은 값을 써야 한다(성립 판정만 바꾸면 둘이 어긋난다).
+- 정할 것: 결정 범위(D-CS-008 은 테스트 브랜치 한정 · 번호가 운영 콘솔 결정과 겹친다), develop 판의 기본 모드, 붙일 종류.
+- **결정(사용자, 제안 그대로):** 새 결정 [D-CS-015](../decisions/D-CS-015-activity-llm-judgment-on-develop.md) · 기본 모드 `rule` · ① · ③ · ④ · ⑤ 섀도(② 제외). §9.5 를 고쳤다.
+- **단계 A:** `settings.activity_judge_mode` 기본값 `shadow` → `rule`(`.env.example` 주석도). 어댑터가 SDK 재시도를 명시한다 — 새 가드레일 `reliability.activity_judge_max_retries: 0`(우리가 고른 값). 전에는 SDK 기본(2회 더)이라 시간 제한 45초가 실제로 135초였다(2026-10-07 열린 항목). 시험 1건 추가.

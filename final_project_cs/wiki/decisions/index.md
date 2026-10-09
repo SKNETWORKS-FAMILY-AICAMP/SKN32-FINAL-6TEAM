@@ -39,6 +39,7 @@ domain: neutral
 | [D-CS-006](D-CS-006-cancellation-terms-are-structured.md) | **취소 기한·위약금율은 구조화된 표에서 읽는다** — RAG 청크에서 꺼내려던 경로가 구조상 언제나 `None` 이었다. 수치는 `cancellation_terms`(예약→공급자→종류), 문장 근거는 `read.policy` | draft | RAG · 판정 |
 | [D-CS-005](D-CS-005-odsay-not-used.md) | **ODsay 를 쓰지 않는다** — 약관이 결과 데이터 저장·가공을 사전 동의 없이 금지하고 무료 한도가 30회/일. 이동 시간은 일정이 들고 오는 경로 정의로 간다 | draft | 외부 소스 |
 | [D-CS-008](D-CS-008-activity-llm-judgment-experiment.md) | **활동 판정 일부를 LLM(gpt-5.4-nano + 웹 검색)으로 — 실험** — `role-activity-test` 브랜치 한정. 글 해석 판정 4종 + 실시간 운영 상태만 대상, 섀도 모드로 시작(고객 답변은 규칙 결과). 계산 판정은 코드에 남는다 | draft | 판정 · LLM |
+| [D-CS-015](D-CS-015-activity-llm-judgment-on-develop.md) | **develop 판 활동 팀에 판정 LLM 을 섀도로** `[2026-10-09 사용자]` — D-CS-008(테스트 브랜치 실험)을 develop 판 위로. 기본 모드 `rule`, 켜는 환경만 섀도. 정기휴무 · 실내외 · 재난문자 · 실시간 운영 넷만(운영시간은 새벽 작업이 이미 모델로 읽는다). `llm` 전환은 따로 | draft | 판정 · LLM |
 
 `[미확보]` `wiki/records/plans/`·`wiki/records/reports/`에서 이관 대상을 더 골라야 한다.
 

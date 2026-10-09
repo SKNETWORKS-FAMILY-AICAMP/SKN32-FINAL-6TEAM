@@ -70,14 +70,17 @@ class OpenAIResponsesJudgeLLM:
             from app.core.settings import get_guardrails
             timeout = float(get_guardrails().get("reliability.activity_judge_call_timeout_seconds"))
         self.timeout = timeout
+        # ★`[2026-10-09]` 재시도를 명시한다 — SDK 기본(2회 더)이면 시간 제한이 세 배가 된다(가드레일 주석).
+        from app.core.settings import get_guardrails
+        self.max_retries = int(get_guardrails().get("reliability.activity_judge_max_retries"))
         self._client_factory = client_factory
 
     def _client(self, api_key: str) -> Any:
         if self._client_factory is not None:
-            return self._client_factory(api_key=api_key, timeout=self.timeout)
+            return self._client_factory(api_key=api_key, timeout=self.timeout, max_retries=self.max_retries)
         from openai import OpenAI
 
-        return OpenAI(api_key=api_key, timeout=self.timeout)
+        return OpenAI(api_key=api_key, timeout=self.timeout, max_retries=self.max_retries)
 
     async def judge(self, prompt_key: str, payload: dict[str, Any], *, schema: dict[str, Any],
                     schema_name: str, web_search: bool | None = None,

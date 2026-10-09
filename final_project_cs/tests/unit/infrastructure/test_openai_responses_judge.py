@@ -70,6 +70,20 @@ def _judge(adapter, **kwargs):
                                      schema_name="t", **kwargs))
 
 
+def test_the_client_is_built_without_sdk_retries(monkeypatch):
+    """★`[2026-10-09]` SDK 기본 재시도(2회 더)면 시간 제한 45초가 135초가 된다 — 가드레일 값(0)을 넘긴다."""
+    monkeypatch.setattr(mod, "get_settings", lambda: _settings())
+    built = {}
+
+    def factory(**kwargs):
+        built.update(kwargs)
+        return _Client(_response())
+
+    adapter = OpenAIResponsesJudgeLLM(timeout=5, client_factory=factory)
+    _judge(adapter)
+    assert built["max_retries"] == 0 and built["timeout"] == 5
+
+
 def test_request_shape_with_web_search(monkeypatch):
     adapter, client = _adapter(monkeypatch, _response())
     _judge(adapter)
