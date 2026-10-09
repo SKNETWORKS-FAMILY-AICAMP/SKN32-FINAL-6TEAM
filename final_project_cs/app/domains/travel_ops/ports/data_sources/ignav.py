@@ -27,6 +27,8 @@ SOURCE = "ignav"
 TIMEOUT_SECONDS = 45.0
 #: 한국 시장 가격(원화)으로 받는다 — 2026-10-08 실호출에서 KRW 로 왔다
 MARKET = "KR"
+#: `search_flights` 의 `max_results` 상한 — 30 을 보냈더니 「less than or equal to 10」 검증 오류(2026-10-09 12:25 playdata)
+MAX_RESULTS = 10
 CABINS = {"ECONOMY": "economy", "PREMIUM_ECONOMY": "premium_economy", "BUSINESS": "business", "FIRST": "first"}
 
 
@@ -68,7 +70,7 @@ class IgnavMcp(McpToolTransport):
             self._miss("no_airport_code", f"{origin!r}->{destination!r}")
             return None
         arguments: dict[str, Any] = {"origin": origin, "destination": destination, "departure_date": depart_date,
-                                     "market": MARKET, "max_results": max(1, int(max_results))}
+                                     "market": MARKET, "max_results": max(1, min(int(max_results), MAX_RESULTS))}
         if return_date:
             arguments["return_date"] = return_date
         for name, value in (("adults", adults), ("children", children), ("infants_on_lap", infants)):
@@ -116,4 +118,4 @@ class IgnavMcp(McpToolTransport):
                            "depart_date": depart_date, "return_date": return_date}, source=SOURCE)
 
 
-__all__ = ["IgnavMcp", "SOURCE", "URL"]
+__all__ = ["IgnavMcp", "MAX_RESULTS", "SOURCE", "URL"]

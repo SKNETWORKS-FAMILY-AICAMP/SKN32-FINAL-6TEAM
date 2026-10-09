@@ -76,9 +76,12 @@ def test_search_calls_the_model_once_and_both_sources_once():
     assert tools.calls == [("read.flight_search", wanted), ("read.flight_offers", wanted)]
     assert result.outcome == "completed" and result.next_action.value == "respond"
     assert f"TPE → ICN · {GO} · 성인 2명 조건으로 찾은 결과(마이리얼트립 2개 · 판매처 비교 조회 실패)를" in result.answer
-    # 가격이 낮은 순 — 국내선 64,000원이 먼저다
-    assert result.answer.index("티웨이항공") < result.answer.index("제주항공")
-    assert f"2. 제주항공 — {GO} TPE 13:10 → ICN 16:40 (직항, 2시간 30분)" in result.answer
+    assert "출발 시간대마다 가장 싼 편을 보여 드립니다." in result.answer
+    # 시간대 순서(새벽 → 저녁) — 오후 13:10 이 저녁 18:30 보다 먼저, 전체 최저가는 표시로 알린다
+    assert f"1. [오후 최저가] 제주항공 — {GO} TPE 13:10 → ICN 16:40 (직항, 2시간 30분)" in result.answer
+    assert "2. [저녁 최저가 · 전체 최저가] 티웨이항공 — " in result.answer
+    assert "받은 결과에 새벽 · 오전 출발 편은 없었습니다" in result.answer, "없는 시간대는 「받은 결과에」 없다고 적는다"
+    assert "가장 짧음" not in result.answer, "소요 시간을 모르거나 다 같으면 붙이지 않는다"
     assert "   · 마이리얼트립 302,000원 · 남은 좌석 5: https://air-web.myrealtrip.com/results?trip=A.TPE.A.ICN" in result.answer
     assert "TW727 (1시간 15분)" in result.answer, "국내선은 경유 칸이 없어 적지 않는다"
     assert "   · 마이리얼트립 64,000원\n" in result.answer, "국내선 편 줄에는 링크를 붙이지 않는다"
@@ -108,11 +111,54 @@ def test_the_same_flight_from_both_sources_is_shown_once_with_both_prices():
     assert jeju < answer.index("마이리얼트립 302,000원"), "같은 편 안에서도 싼 판매처가 먼저"
     assert "에바항공" in answer and "Trip.com(여행사) 350,000원: https://www.trip.com/y" in answer
     shown = result.decisions[0]["shown"]
-    assert [option["best"] for option in shown] == [64000, 289000.0, 350000.0]
+    assert [(option["band"], option["best"]) for option in shown] == [
+        ("morning", 350000.0), ("afternoon", 289000.0), ("evening", 64000)]
     assert [offer["source"] for offer in shown[1]["offers"]] == ["ignav", "myrealtrip"]
     assert result.decisions[0]["both"] == [{"flight": "7C1501", "depart": "13:10", "myrealtrip": 302000, "ignav": 289000.0}], \
         "두 소스가 다 판 편만, 소스별 최저가로"
     assert [item.source_id for item in result.evidence] == ["flight.interpret", "read.flight_search", "read.flight_offers"]
+
+
+TEXT_MORNING = "다음 달 6일 타이베이에서 인천 가는 비행기 알아봐줘, 9일에 오는 편도 오전 출발로"
+
+
+def test_a_time_of_day_the_customer_said_keeps_only_those_flights():
+    result, _, _ = _run({**SEARCH, "depart_times": ["morning"], "depart_times_text": "오전 출발로"},
+                        {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV}, text=TEXT_MORNING)
+    assert "오전 출발 편을 가격이 낮은 순으로 1개 보여 드립니다." in result.answer
+    assert "1. [오전] 에바항공 — " in result.answer
+    assert "제주항공" not in result.answer and "티웨이항공" not in result.answer
+    assert (result.decisions[0]["times"], result.decisions[0]["fallback"]) == (["morning"], False)
+
+
+def test_several_times_of_day_show_the_cheapest_in_each_of_them():
+    result, _, _ = _run({**SEARCH, "depart_times": ["morning", "evening"], "depart_times_text": "오전 출발로"},
+                        {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV}, text=TEXT_MORNING)
+    assert "오전 · 저녁 출발 시간대마다 가장 싼 편을 보여 드립니다." in result.answer
+    assert [option["band"] for option in result.decisions[0]["shown"]] == ["morning", "evening"], "오후는 고객이 빼지 않았어도 말한 것만"
+    assert "1. [오전 최저가] 에바항공" in result.answer and "2. [저녁 최저가 · 전체 최저가] 티웨이항공" in result.answer
+
+
+def test_a_time_of_day_with_nothing_found_shows_the_other_bands_and_says_so():
+    result, _, _ = _run({**SEARCH, "depart_times": ["dawn"], "depart_times_text": "오전 출발로"},
+                        {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV}, text=TEXT_MORNING)
+    assert "새벽 출발 편이 없어, 다른 출발 시간대마다 가장 싼 편을 보여 드립니다" in result.answer
+    assert [option["band"] for option in result.decisions[0]["shown"]] == ["morning", "afternoon", "evening"]
+    assert result.decisions[0]["fallback"] is True and "받은 결과에 새벽" not in result.answer
+
+
+def test_a_time_of_day_not_in_the_message_is_cleared():
+    result, _, _ = _run({**SEARCH, "depart_times": ["morning"], "depart_times_text": "오전"},
+                        {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV})
+    assert result.decisions[0]["ungrounded"] == ["depart_times"]
+    assert result.decisions[0]["times"] is None and "출발 시간대마다 가장 싼 편을" in result.answer
+
+
+def test_time_of_day_shape():
+    assert parse({**SEARCH, "depart_times": []}).depart_times is None
+    assert parse({**SEARCH, "depart_times": ["morning", "evening"]}).depart_times == ["morning", "evening"]
+    with pytest.raises(InterpretationInvalid):
+        parse({**SEARCH, "depart_times": ["noon"]})
 
 
 def test_one_source_is_enough_and_both_missing_is_unknown():

@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """모델이 낸 항공 해석을 **검증**한다 — 모델은 문장을 구조로 옮기고(도시 이름 → 공항 코드 포함), 쓸 수 있는지는 서버가 정한다. `[2026-10-08]`
 
-- 프롬프트: `prompts/flight/interpret.v2.md` (키 `flight.interpret`). 모델 호출은 한 번이다.
+- 프롬프트: `prompts/flight/interpret.v3.md` (키 `flight.interpret`). 모델 호출은 한 번이다.
+- `[2026-10-09]` 출발 시간대(`depart_times`: dawn · morning · afternoon · evening)를 받는다. 시각 경계는 서버(`TIME_BANDS`)가 정한다 —
+  모델은 고객이 말한 시간대 이름만 옮기고, 근거 조각(`depart_times_text`)이 문장에 없으면 비운다(날짜와 같은 방식).
 - 모양이 틀리면 `InterpretationInvalid` — 고쳐 맞추지 않는다. 공항 코드는 영문 대문자 3글자만 받는다.
 - 무엇이 빠졌는지는 `needs()` 가 값으로 다시 센다 — 지난 출발일 · 출발일보다 앞선 귀국일 · 출발지와 같은 도착지는 없는 값으로 본다.
 """
@@ -16,6 +18,10 @@ REQUIRED = ("origin", "destination", "depart_date", "adults")
 LABELS = {"origin": "출발지", "destination": "도착지", "depart_date": "출발 날짜", "adults": "성인 인원",
           "return_date": "돌아오는 날짜"}
 _CODE = r"^[A-Z]{3}$"
+#: 출발 시간대 — (이름, 한국어, 시작 시각 포함, 끝 시각 제외). 출발 공항 현지 시각 기준. 우리가 고른 값(2026-10-09, 사용자와 정함)
+TIME_BANDS = (("dawn", "새벽", "00:00", "07:00"), ("morning", "오전", "07:00", "12:00"),
+              ("afternoon", "오후", "12:00", "18:00"), ("evening", "저녁", "18:00", "24:00"))
+Band = Literal["dawn", "morning", "afternoon", "evening"]
 
 
 class InterpretationInvalid(ValueError):
@@ -37,6 +43,8 @@ class Interpretation(BaseModel):
     depart_date_text: str | None = None
     return_date_text: str | None = None
     direct_only: bool | None = None
+    depart_times: list[Band] | None = None
+    depart_times_text: str | None = None
     domestic: bool | None = None
     missing: list[str] = Field(default_factory=list)
     question: str | None = None
@@ -46,6 +54,8 @@ def parse(raw: Any) -> Interpretation:
     if not isinstance(raw, dict):
         raise InterpretationInvalid(f"not an object: {type(raw).__name__}")
     cleaned = {key: (value.strip() or None) if isinstance(value, str) else value for key, value in raw.items()}
+    if cleaned.get("depart_times") == []:
+        cleaned["depart_times"] = None
     try:
         found = Interpretation.model_validate(cleaned)
     except ValidationError as exc:
@@ -89,7 +99,7 @@ def ask(found: Interpretation, missing: list[str]) -> str:
     return f"{' · '.join(LABELS[name] for name in missing)}을(를) 알려 주시면 이어서 찾아 드리겠습니다."
 
 #: 날짜 값 → 그 값의 근거로 모델이 옮겨 적은 문장 조각 칸
-GROUNDS = {"depart_date": "depart_date_text", "return_date": "return_date_text"}
+GROUNDS = {"depart_date": "depart_date_text", "return_date": "return_date_text", "depart_times": "depart_times_text"}
 
 
 def ground(found: Interpretation, text: str, *, has_trip: bool) -> tuple[Interpretation, list[str]]:
@@ -119,4 +129,4 @@ def ground(found: Interpretation, text: str, *, has_trip: bool) -> tuple[Interpr
     return found.model_copy(update={field: None for field in cleared}), cleared
 
 
-__all__ = ["GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]
+__all__ = ["TIME_BANDS", "GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]

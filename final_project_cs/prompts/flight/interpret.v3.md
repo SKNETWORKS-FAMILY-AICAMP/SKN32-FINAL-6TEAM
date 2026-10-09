@@ -28,6 +28,13 @@ Return exactly these keys:
   message refers to the trip. Do not guess.
 - "cabin": "ECONOMY", "BUSINESS", "FIRST", or null.
 - "direct_only": true if the traveller wants non-stop only, otherwise null.
+- "depart_times": the departure time-of-day the traveller asked for on the OUTBOUND flight, as a list of these
+  words only: "dawn" (새벽, 첫 비행기), "morning" (오전, 아침), "afternoon" (오후, 점심 이후), "evening" (저녁, 밤, 퇴근 후).
+  Several are allowed ("오전이나 오후" → ["morning", "afternoon"]). If the traveller only rules one out
+  ("새벽은 싫어"), list the other three. null when the traveller said nothing about the time of day.
+  Do not turn a clock time into a list unless it was said ("10시쯤" → ["morning"]).
+- "depart_times_text": the exact words copied from `input_text` that state that time preference (for example
+  "오전에", "새벽은 싫어"), or null when "depart_times" is null.
 - "domestic": true when BOTH airports are in South Korea, false when either is abroad, null only when an
   airport is still unknown.
 - "missing": what the traveller still has to tell us before the server can act, using only these words:

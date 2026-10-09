@@ -69,6 +69,12 @@ def test_search_sends_the_key_header_and_the_ignav_argument_names():
         "adults": 2, "infants_on_lap": 1, "cabin_class": "business", "max_stops": 0}}]
 
 
+def test_more_than_ten_is_asked_as_ten():
+    server = FakeServer()
+    IgnavMcp(api_key="k", post=server).flight_search(origin="GMP", destination="CJU", depart_date="2026-10-20", max_results=30)
+    assert server.calls()[0]["arguments"]["max_results"] == 10, "도구 상한 10 — 넘기면 검증 오류로 결과가 통째로 빠진다"
+
+
 def test_itineraries_come_back_in_the_myrealtrip_shape_with_the_seller():
     found = IgnavMcp(api_key="k", post=FakeServer()).flight_search(origin="ICN", destination="NRT", depart_date="2026-10-20")
     assert found["source"] == "ignav" and found["confirmed_at"]

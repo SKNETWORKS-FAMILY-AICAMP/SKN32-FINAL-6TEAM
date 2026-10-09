@@ -10,6 +10,9 @@
 - `[2026-10-09]` **비교**: 같은 조건으로 Ignav(`read.flight_offers`, 판매처 = 항공사 · OTA)도 부르고, 같은 편(항공사 코드 · 출발 공항 ·
   출발 날짜 · 시각 · 도착 공항)끼리 묶어 판매처별 가격과 링크를 나란히 보여 준다. 순서는 편마다 가장 낮은 가격순(같은 통화끼리만).
   한쪽이 못 주면 다른 쪽만으로 답하고 그렇다고 적는다. 가격은 조회 시점 참고값이다(두 소스 모두 정확성을 보장하지 않는다).
+- `[2026-10-09]` **시간대**: 출발 시각으로 새벽 · 오전 · 오후 · 저녁(`interpret.TIME_BANDS`)을 나눈다. 고객이 시간대를 말했으면 그 시간대 편만
+  가격순으로 보여 주고, 말하지 않았으면 **시간대마다 최저가 한 편씩** 보여 준다 — 가장 싼 편이 새벽인 경우가 많다는 사용자 지적.
+  ★시간대가 비면 「그 시간대 편이 없다」가 아니라 「받은 결과에 없다」다 — 소스마다 가격순 상위 `FETCH` 개만 받는다.
 - 되묻기는 숙소 팀과 같은 까닭으로 `waiting` 이 아니라 답(`completed`)으로 한다.
 - `flight.status` 는 전과 같다 — 잠긴 예약을 조회만 한다.
 """
@@ -23,13 +26,13 @@ from zoneinfo import ZoneInfo
 from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
 
 from app.domains.travel_ops.instances._shared._base import TravelTeamBase
-from .interpret import Interpretation, InterpretationInvalid, ask, ground, needs, parse
+from .interpret import TIME_BANDS, Interpretation, InterpretationInvalid, ask, ground, needs, parse
 
 logger = logging.getLogger(__name__)
 
 PROMPT_KEY = "flight.interpret"
 SEOUL = ZoneInfo("Asia/Seoul")
-#: 받는 항공편 수 = 답에 싣는 수. 한 번만 부른다. 우리가 고른 값
+#: 고객이 시간대를 말했을 때 그 시간대에서 보여 주는 편 수. 우리가 고른 값
 SHOWN = 3
 #: 소스마다 받는 수 — 묶기 위해 보여 줄 수보다 넉넉히 받는다. 우리가 고른 값
 FETCH = 10
@@ -110,6 +113,42 @@ def _merge(mrt: list[dict[str, Any]], offers: list[dict[str, Any]]) -> list[dict
         option["offers"].sort(key=lambda offer: (not isinstance(offer["price_total"], (int, float)), offer["price_total"] or 0))
     options.sort(key=lambda option: (option["best"] is None, option["best"] or 0))
     return options
+
+
+def _band(option: dict[str, Any]) -> str | None:
+    """첫 다리 출발 시각(HH:MM, 출발 공항 현지)이 드는 시간대 이름. 시각을 모르면 None — 어느 시간대에도 넣지 않는다."""
+    clock = str((option["legs"][0] if option["legs"] else {}).get("departTime") or "")
+    if len(clock) != 5 or clock[2] != ":":
+        return None
+    return next((name for name, _, start, end in TIME_BANDS if start <= clock < end), None)
+
+
+#: 시간대 이름 → 한국어
+BAND_LABEL = {name: label for name, label, _, _ in TIME_BANDS}
+
+
+def _pick(options: list[dict[str, Any]], wanted: list[str] | None) -> tuple[list[tuple[dict[str, Any], str]], list[str]]:
+    """답에 실을 편과 그 줄의 표시, 그리고 받은 결과에 편이 없던 시간대들.
+
+    - 말한 시간대가 **하나**면: 그 시간대 편만 가격순 `SHOWN` 개. 표시는 시간대 이름.
+    - **여럿**이면(「새벽은 싫어」 → 오전 · 오후 · 저녁): 그 시간대들 안에서 시간대마다 최저가 하나.
+      ☆12:22 playdata — 여럿을 가격순 3개로 했더니 셋 다 저녁이었다. 고객은 시간대를 넓혔지 저녁을 고른 것이 아니다.
+    - 없으면: 네 시간대마다 가격이 가장 낮은 편 하나, 시간대 순서(새벽 → 저녁). 표시는 「오전 최저가」.
+    `options` 는 이미 가격순이다(`_merge`).
+    """
+    if wanted and len(wanted) == 1:
+        picked = [(option, BAND_LABEL[band]) for option in options if (band := _band(option)) in wanted][:SHOWN]
+        return picked, [name for name in wanted if not any(_band(option) == name for option in options)]
+    picked, empty = [], []
+    for name, label, _, _ in TIME_BANDS:
+        if wanted and name not in wanted:
+            continue
+        first = next((option for option in options if _band(option) == name), None)
+        if first is None:
+            empty.append(name)
+        else:
+            picked.append((first, f"{label} 최저가"))
+    return picked, empty
 
 
 class FlightTeam(TravelTeamBase):
@@ -205,32 +244,50 @@ class FlightTeam(TravelTeamBase):
                                  f"{route} · {when} 조건으로 찾은 항공편이 없습니다. 날짜나 공항을 바꿔 다시 말씀해 주세요.")
         party = f"성인 {found.adults}명" + (f" · 아동 {found.children}명" if found.children else "") \
             + (f" · 유아 {found.infants}명" if found.infants else "")
-        shown_options = options[:SHOWN]
-        fastest = min((option["minutes"] for option in shown_options if isinstance(option["minutes"], int)), default=None)
+        wanted = list(found.depart_times or [])
+        picked, empty = _pick(options, wanted)
+        fallback = bool(wanted) and not picked
+        if fallback:
+            # 말한 시간대 편이 받은 결과에 하나도 없다 — 빈 답 대신 다른 시간대 최저가를 보여 주고 그렇다고 적는다
+            picked, _ = _pick(options, None)
+        shown_options = [option for option, _ in picked]
+        cheapest = options[0] if options and options[0]["best"] is not None else None
+        minutes = [option["minutes"] for option in shown_options if isinstance(option["minutes"], int)]
+        # ★소요 시간이 다 같으면 「가장 짧음」을 붙이지 않는다 — ☆12:09 김포→제주, 셋 다 75분인데 셋 다 붙었다
+        fastest = min(minutes) if minutes and len(set(minutes)) > 1 else None
         lines = []
-        for number, option in enumerate(shown_options, start=1):
+        for number, (option, mark) in enumerate(picked, start=1):
             legs = " / ".join(_leg(leg) for leg in option["legs"]) or "구간 정보 없음"
-            tags = []
-            if number == 1 and option["best"] is not None:
-                tags.append("최저가")
-            if fastest is not None and option["minutes"] == fastest and len(shown_options) > 1:
+            tags = [mark]
+            if option is cheapest:
+                tags.append("전체 최저가")
+            if fastest is not None and option["minutes"] == fastest:
                 tags.append("가장 짧음")
-            lines.append(f"{number}. {option['airline'] or '항공사 모름'} — {legs}" + (f" [{' · '.join(tags)}]" if tags else ""))
+            lines.append(f"{number}. [{' · '.join(tags)}] {option['airline'] or '항공사 모름'} — {legs}")
             for offer in option["offers"]:
                 seats = f" · 남은 좌석 {offer['seats']}" if isinstance(offer.get("seats"), int) else ""
                 # 국내선 마이리얼트립은 편마다가 아니라 노선 검색 주소 하나다 — 줄마다 붙이지 않고 끝에 한 번 적는다
                 link = "" if offer.get("link_kind") == "route_search" else f": {offer.get('link') or '링크 없음'}"
                 lines.append(f"   · {offer['label']} {_won(offer.get('price_total'), offer.get('currency') or '')}{seats}{link}")
+        if empty and not fallback:
+            lines.append(f"받은 결과에 {' · '.join(BAND_LABEL[name] for name in empty)} 출발 편은 없었습니다"
+                         "(가격이 낮은 순으로 일부만 받습니다).")
         searches = sorted({offer["link"] for option in shown_options for offer in option["offers"]
                            if offer.get("link_kind") == "route_search" and offer.get("link")})
         pages = [f"마이리얼트립 이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): {url}" for url in searches]
         counted = [f"마이리얼트립 {len(mrt.get('flights') or [])}개" if mrt is not None else "마이리얼트립 조회 실패",
                    f"항공사·여행사 판매처 {len(offers.get('flights') or [])}개" if offers is not None else "판매처 비교 조회 실패"]
-        head = (f"{route} · {when} · {party} 조건으로 찾은 결과({' · '.join(counted)})를 같은 편끼리 묶어 "
-                f"가격이 낮은 순으로 {len(shown_options)}개 보여 드립니다.")
+        said = " · ".join(BAND_LABEL[name] for name in wanted)
+        if fallback:
+            head = (f"{route} · {when} · {party} 조건으로 찾은 결과({' · '.join(counted)})에는 {said} 출발 편이 없어, "
+                    "다른 출발 시간대마다 가장 싼 편을 보여 드립니다(가격이 낮은 순으로 일부만 받습니다).")
+        else:
+            how = (f"{said} 출발 편을 가격이 낮은 순으로 {len(shown_options)}개" if len(wanted) == 1
+                   else f"{said} 출발 시간대마다 가장 싼 편을" if wanted else "출발 시간대마다 가장 싼 편을")
+            head = f"{route} · {when} · {party} 조건으로 찾은 결과({' · '.join(counted)})를 같은 편끼리 묶어 {how} 보여 드립니다."
         tail = ("가격과 좌석은 조회 시점 참고값이며 판매처 화면에서 달라질 수 있습니다. 링크가 열리지 않으면 같은 편의 다른 판매처 링크를 써 주세요. "
                 "예약 · 결제는 링크한 판매처에서 직접 하시면 됩니다.")
-        shown = [{"airline": option["airline"], "best": option["best"],
+        shown = [{"airline": option["airline"], "best": option["best"], "band": _band(option),
                   "offers": [{"source": offer["source"], "price_total": offer.get("price_total"), "link_kind": offer.get("link_kind")}
                              for offer in option["offers"]]} for option in shown_options]
         # 두 소스가 다 판 편 — 보여 준 것뿐 아니라 묶인 전부. 같은 편 가격 차이를 재려고 남긴다(답에는 안 싣는다)
@@ -240,7 +297,8 @@ class FlightTeam(TravelTeamBase):
                                  if offer["source"] == source and isinstance(offer["price_total"], (int, float))), default=None)
                     for source in ("myrealtrip", "ignav")}}
                 for option in options if {offer["source"] for offer in option["offers"]} >= {"myrealtrip", "ignav"}]
-        return self._respond(task, evidence, {**decision, "found": len(options), "shown": shown, "both": both},
+        return self._respond(task, evidence, {**decision, "found": len(options), "shown": shown, "both": both,
+                                              "times": wanted or None, "empty_bands": empty, "fallback": fallback},
                              "\n".join([head, *lines, *pages, tail]))
 
     def _trip(self, task: TeamTask, seen: set[str]) -> tuple[dict[str, Any] | None, list[Evidence]]:
