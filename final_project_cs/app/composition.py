@@ -298,6 +298,13 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
                 f"team '{declaration.team_id}' implementation must provide manifest and execute"
             )
         if judge_llm is not None and hasattr(team, "judge_llm"):
+            # ★`[2026-10-09]` 팀이 받는 모드를 밝혔으면 지킨다(D-CS-015 — develop 판 활동 팀은 `rule` · `shadow` 만).
+            #   `llm` 을 켰는데 팀이 섀도로만 돈다면 조용한 축소다 — 기동을 멈추고 이유를 말한다.
+            mode = getattr(get_settings(), "activity_judge_mode", "rule")
+            supported = getattr(team, "judge_modes", None)
+            if supported is not None and mode not in supported:
+                raise CompositionError(
+                    f"team '{declaration.team_id}' supports activity_judge_mode {list(supported)}, got '{mode}'")
             team.judge_llm = judge_llm
             team.judge_shadow_sink = shadow_sink
         team.manifest = team.manifest.model_copy(update={"active": declaration.active,

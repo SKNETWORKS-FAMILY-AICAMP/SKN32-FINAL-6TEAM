@@ -528,3 +528,9 @@ LLM 구현과 관련한 결정·변경·실측을 날짜순으로 적는다. 항
 - 정할 것: 결정 범위(D-CS-008 은 테스트 브랜치 한정 · 번호가 운영 콘솔 결정과 겹친다), develop 판의 기본 모드, 붙일 종류.
 - **결정(사용자, 제안 그대로):** 새 결정 [D-CS-015](../decisions/D-CS-015-activity-llm-judgment-on-develop.md) · 기본 모드 `rule` · ① · ③ · ④ · ⑤ 섀도(② 제외). §9.5 를 고쳤다.
 - **단계 A:** `settings.activity_judge_mode` 기본값 `shadow` → `rule`(`.env.example` 주석도). 어댑터가 SDK 재시도를 명시한다 — 새 가드레일 `reliability.activity_judge_max_retries: 0`(우리가 고른 값). 전에는 SDK 기본(2회 더)이라 시간 제한 45초가 실제로 135초였다(2026-10-07 열린 항목). 시험 1건 추가.
+- **단계 B — develop 판 섀도 배선(D-CS-015).**
+  - `team.py` 에 칸 `judge_llm` · `judge_shadow_sink` · `judge_runner` 와 `judge_modes = ("rule", "shadow")`. 조립은 섀도 모드일 때만 넣고, `llm` 이면 **기동을 멈춘다**(`CompositionError` — 조용히 섀도로 바꾸지 않는다).
+  - 판정 지점: ① `_hours_check`(휴무 원문이 있을 때 — 같은 원문 · 공휴일 사실) · ③ `_indoor_outdoor`(장소 값 · 분류 모두 모를 때) · ④ 공유 점검 뒤(정지 대상이 아닌 미분류 문자가 있을 때) · ⑤ 성립으로 답하는 자리(실외이거나 72시간 안 — 주소는 `read.place_class` 의 카탈로그 주소). ② 는 부르지 않는다.
+  - **비교 기준은 develop 판이 실제로 낸 값**이다(`_CurrentVerdict` — `ShadowJudge` 의 규칙 자리). ① 은 `read_closure` 값, ③ 은 「모름」, ④ 는 `no_effect`(develop 판은 그 문자로 막지 않는다), ⑤ 는 「모름」.
+  - 시험: LLM 이 모든 판정에서 반대로 답해도 고객 결과(답변 · decisions · 근거 · 경고 · 실패 코드 · 제안)가 판정 LLM 이 없을 때와 같다 — 시나리오 4개. 섀도 기록 값 · 호출 조건 · 장소명/고객 문장 미포함 6건. 꺼 두었던 배선 시험(`tests/unit/test_activity_judge_wiring.py`)을 되살리고 `llm` 모드 기동 차단 1건을 더했다.
+  - 실제 모델 호출은 하지 않았다(비용). 섀도 기록 표 DB 시험 4건은 통과.

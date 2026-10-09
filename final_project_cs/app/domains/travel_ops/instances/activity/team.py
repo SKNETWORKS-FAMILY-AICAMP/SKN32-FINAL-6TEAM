@@ -34,6 +34,10 @@ from app.domains.travel_ops.components.planning.safety import classify as classi
 from app.domains.travel_ops.components.places.place_hours import fits, hours_on
 from . import failure_codes as fc
 from .closure_rules import holiday_dates_needed, local_date, read_closure
+from .judge import requests as judge_requests
+from .judge.llm import LLMJudge
+from .judge.modes import ShadowJudge
+from .judge.types import JudgeContext, JudgeRequest, Verdict
 from .replacement import ReplacementMixin
 from .similarity import distance_first, preference_of, score
 
@@ -97,6 +101,15 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
     #:  감시 소스가 둘로 갈려 Team 경계가 흐려진다(v10 §5 「객체 종류별로 나눈다」).
     #:  이 판단은 `read.place` 가 돌려주는 속성으로 하고, 모르면 **보지 않는다**.
     _WEATHER_SENSITIVE_KEY = "weather_sensitive"
+
+    #: ★`[2026-10-09]` 판정 LLM(D-CS-015) — 조립(`composition.build_registry`)이 섀도 모드일 때만 넣는다. `None` 이면 부르지 않는다.
+    judge_llm: Any | None = None
+    #: 섀도 기록을 표(`activity_judge_shadow`)에 쓰는 함수 — 조립이 넣는다.
+    judge_shadow_sink: Any | None = None
+    #: 섀도 판정을 돌리는 실행기. `None` 이면 판정 계층의 기본 스레드 풀(시험은 바로 끝나는 실행기를 넣는다).
+    judge_runner: Any | None = None
+    #: 이 팀이 받는 판정 LLM 모드. ★`llm` 은 D-CS-015 범위 밖이다 — 조립이 기동 때 막는다(조용히 섀도로 바꾸지 않는다).
+    judge_modes = ("rule", "shadow")
 
     @staticmethod
     def _hours_until(when: Any) -> float | None:
@@ -363,9 +376,10 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         #   점검이 장소 속성으로 정한다 — Team 이 소스 조합을 들고 있지 않는다.
         report: dict[str, Any] | None = None
         indoor: dict[str, Any] = {}
+        place_class: dict[str, Any] | None = None
         weather_pending: dict[str, Any] | None = None
         if isinstance(place, dict):
-            indoor, evidence = self._indoor_outdoor(task, booking, place, seen, evidence)
+            indoor, evidence, place_class = self._indoor_outdoor(task, booking, place, seen, evidence)
             report = self._read(task, "read.disruptions", {
                 "place_id": booking.get("place_id"),
                 "latitude": place.get("latitude"),
@@ -416,6 +430,13 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                     decisions={"feasible": False, "reason": "safety_event",
                                "failure_code": self._record_failure(task, fc.DISASTER_BLOCKS),
                                "safety": event.evidence()})
+            # ★`[2026-10-09]` 판정 LLM 섀도 ④(D-CS-015) — 공유 점검이 이상으로 세지 않고 재난 정지 대상도 아닌 문자(긴급재난 ·
+            #   안전안내)의 주제 관련성. develop 판은 이 문자로 막지 않는다 — 그것이 비교 기준(`no_effect`)이다.
+            quiet = self._unclassified_messages(report)
+            if quiet:
+                self._shadow(task, judge_requests.disaster_effect(place.get("name"), "activity", quiet,
+                                                                  booking.get("starts_at")),
+                             value="no_effect", basis="shared_check_and_safety_stop")
 
         # ★`[2026-10-09]` 휴무 · 운영시간 — 공유 점검은 이것을 보지 않는다. 판정 순서는 이미 시작됨 → 재난(공유 점검) → 휴무 → 운영시간.
         hours_note: str | None = None
@@ -468,31 +489,80 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                 "confirmed_at": forecast.get("confirmed_at"),
             }
 
+        self._shadow_live_status(task, booking, place, seen, indoor, place_class, remaining)
         return self._result(
             task, outcome="completed", confidence=0.8, evidence=evidence,
             next_action=NextAction.RESPOND, answer=answer,
             decisions=[decisions], warnings=warnings)
 
+    # ── 판정 LLM 섀도(D-CS-015) — 고객 결과를 바꾸지 않는다 ────────────
+    def _shadow(self, task: TeamTask, request: JudgeRequest, *, value: str, basis: str | None) -> None:
+        """develop 판의 지금 판정(`value`)을 비교 기준으로, LLM 판정을 **백그라운드에서** 돌려 차이만 기록한다. `[2026-10-09]`
+
+        ★판정 LLM 이 없으면(기본 `rule` — 조립이 넣지 않는다) 아무것도 안 한다. 돌려받는 값을 쓰지 않는다 — 고객 답변 ·
+          `decisions` · 근거 · 실패 코드는 이 호출과 상관없다. 비교 기준은 role-activity 판 규칙(`RuleJudge`)이 아니라
+          develop 판이 실제로 낸 값이다 — 섀도는 「지금 동작」과 비교해야 한다(D-CS-015 「지키는 것」).
+        """
+        if self.judge_llm is None:
+            return
+        current = Verdict(request.kind, value, "rule", basis=basis)
+        ctx = JudgeContext(case_id=task.case_id, capability=task.capability, run_id=task.run_id,
+                           tenant_id=task.context.tenant_id)
+        ShadowJudge(_CurrentVerdict(current), LLMJudge(self.judge_llm), runner=self.judge_runner,
+                    sink=self.judge_shadow_sink).judge(ctx, request)
+
+    def _shadow_live_status(self, task: TeamTask, booking: dict, place: Any, seen: set[str], indoor: dict[str, Any],
+                            place_class: dict[str, Any] | None, remaining: float) -> None:
+        """⑤ 실시간 운영 상태(웹 검색) — 성립으로 답하는 자리에서, 실외이거나 시작까지 `live_status_within_hours` 안일 때만.
+        develop 판은 웹 공지를 보지 않는다 — 비교 기준은 「모름」이다. 주소는 관광공사 목록(`read.place_class`)에서."""
+        if self.judge_llm is None or not isinstance(place, dict) or not place.get("name"):
+            return
+        from app.core.settings import get_guardrails
+
+        within = float(get_guardrails().get("travel.activity_judge.live_status_within_hours"))
+        if not (indoor.get("value") is True or remaining <= within):
+            return
+        if place_class is None:
+            # ★섀도에서만 부른다 — 근거에 싣지 않으므로 고객 결과는 그대로다
+            found = self._read(task, "read.place_class", {"place_id": booking.get("place_id")}, seen)
+            place_class = found if isinstance(found, dict) else None
+        self._shadow(task, judge_requests.live_status(place.get("name"), "activity", (place_class or {}).get("address"),
+                                                      booking.get("starts_at")),
+                     value="unknown", basis="develop_does_not_read_web_notices")
+
+    @staticmethod
+    def _unclassified_messages(report: dict[str, Any] | None) -> list[dict[str, Any]]:
+        """공유 점검이 「모르는 구분」으로만 남긴 재난문자(정지 대상이 없다고 확인된 뒤에 부른다)."""
+        if not isinstance(report, dict):
+            return []
+        return [message for check in report.get("checks") or []
+                if isinstance(check, dict) and check.get("category") == "disaster_msg"
+                for message in check.get("unclassified") or [] if isinstance(message, dict)]
+
     def _indoor_outdoor(self, task: TeamTask, booking: dict, place: dict, seen: set[str], evidence: list
-                        ) -> tuple[dict[str, Any], list]:
+                        ) -> tuple[dict[str, Any], list, dict[str, Any] | None]:
         """실내외 — 장소에 적힌 값 → 관광공사 분류(`read.place_class`) 순. `[2026-10-09]` team 통합 ⑤(사용자 결정: develop 기준 + 분류).
 
         ★분류 규칙은 develop 의 것(`itinerary.weather_from_class` — 확실한 대 · 중분류만)이다. role-activity 판의 장소명 짐작은
           옮기지 않았다 — 일정 짜기(`fill_weather_sensitive`)와 판단이 갈리지 않게.
-        반환: (`{value: True|False|None, source: place|class|None}`, 근거). `value` None 이면 모른다 — 공유 점검이 야외처럼 보고
-        `indoor_unknown` 을 붙인다.
+        반환: (`{value: True|False|None, source: place|class|None}`, 근거, 읽은 분류 | None). `value` None 이면 모른다 — 공유
+        점검이 야외처럼 보고 `indoor_unknown` 을 붙인다.
+        ★`[2026-10-09]` 분류까지 모르면 판정 LLM 섀도(③)를 건다(D-CS-015) — 비교 기준은 develop 판의 지금 값(모름)이다.
         """
         known = place.get(self._WEATHER_SENSITIVE_KEY)
         if known is not None:
-            return {"value": bool(known), "source": "place"}, evidence
+            return {"value": bool(known), "source": "place"}, evidence, None
         found = self._read(task, "read.place_class", {"place_id": booking.get("place_id")}, seen)
-        value = found.get("weather_sensitive") if isinstance(found, dict) else None
+        found = found if isinstance(found, dict) else None
+        value = (found or {}).get("weather_sensitive")
         if value is None:
-            return {"value": None, "source": None}, evidence
+            self._shadow(task, judge_requests.weather_sensitive(place.get("name"), (found or {}).get("lcls2")),
+                         value="unknown", basis="place_and_tour_class_unknown")
+            return {"value": None, "source": None}, evidence, found
         evidence = self._evidence(task, source_id="read.place_class", claim="관광공사 분류로 정한 실내외",
                                   value=found, base=evidence)
         return {"value": bool(value), "source": "class", "lcls1": found.get("lcls1"),
-                "lcls2": found.get("lcls2")}, evidence
+                "lcls2": found.get("lcls2")}, evidence, found
 
     def _insufficient(self, task: TeamTask, evidence: list, code: str, *, answer: str, warnings: list[str],
                       **decisions: Any) -> TeamResult:
@@ -549,6 +619,10 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                 evidence = self._evidence(task, source_id="read.holiday", claim="공휴일 여부",
                                           value={d.isoformat(): v for d, v in holidays.items()}, base=evidence)
             closure = read_closure(restdate, starts_at, holidays.get)
+            # ★`[2026-10-09]` 판정 LLM 섀도 ①(D-CS-015) — 같은 원문 · 같은 공휴일 사실로. 비교 기준은 위 규칙 값이다.
+            self._shadow(task, judge_requests.closure(restdate, starts_at,
+                                                      {d.isoformat(): v for d, v in holidays.items()}),
+                         value={True: "closed", False: "not_closed"}.get(closure.value, "unknown"), basis=closure.reason)
         closed = (closure.value if closure is not None and closure.value is not None
                   else (day == "closed") if day is not None else None)
         record: dict[str, Any] = {"known": bool(hours.get("known")), "source": hours.get("source"),
@@ -736,6 +810,16 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             except (TypeError, ValueError):
                 continue
         return best
+
+
+class _CurrentVerdict:
+    """섀도의 비교 기준 — develop 판이 이미 낸 판정을 그대로 돌려준다(`ShadowJudge` 의 규칙 자리)."""
+
+    def __init__(self, verdict: Verdict) -> None:
+        self._verdict = verdict
+
+    def judge(self, ctx: JudgeContext, request: JudgeRequest) -> Verdict:  # noqa: ARG002
+        return self._verdict
 
 
 def plan_activity_trigger(work: ItineraryWork, task: TeamTask, ctx: dict[str, Any], item: Any):

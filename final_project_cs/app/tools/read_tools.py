@@ -639,7 +639,8 @@ class ReadToolbox:
 
         ★실내외는 develop 규칙(`itinerary.weather_from_class` — 확실한 대 · 중분류만, 모르면 `None`)으로 정한다.
           일정 짜기가 장소 행을 채울 때(`fill_weather_sensitive`)와 같은 규칙이다. 장소명으로 짐작하지 않는다.
-        반환 `{content_id, lcls1, lcls2, weather_sensitive}`. 장소를 모르거나 목록에 없으면 `None`(모름).
+        반환 `{content_id, lcls1, lcls2, address, weather_sensitive}`. 장소를 모르거나 목록에 없으면 `None`(모름).
+        ★`address` 는 판정 LLM 의 실시간 운영 상태(웹 검색)가 같은 이름의 다른 곳과 가르는 데 쓴다(D-CS-015).
         """
         if place_id is None:
             return None
@@ -647,11 +648,11 @@ class ReadToolbox:
         from app.domains.travel_ops.components.itinerary.itinerary import weather_from_class
 
         found = self._one(
-            "SELECT pc.content_id, pc.raw_json->>'lclsSystm1', pc.raw_json->>'lclsSystm2' FROM places p "
+            "SELECT pc.content_id, pc.raw_json->>'lclsSystm1', pc.raw_json->>'lclsSystm2', pc.address FROM places p "
             "JOIN place_catalog pc ON pc.tenant_id = ANY(%s) AND pc.source = 'tour_api' "
             "AND pc.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id') "
             "WHERE p.tenant_id = %s AND p.place_id = %s LIMIT 1",
-            (_tenants(scope.tenant_id), scope.tenant_id, str(place_id)), ("content_id", "lcls1", "lcls2"))
+            (_tenants(scope.tenant_id), scope.tenant_id, str(place_id)), ("content_id", "lcls1", "lcls2", "address"))
         if found is None:
             return None
         return {**found, "weather_sensitive": weather_from_class(found["lcls1"], found["lcls2"])}
