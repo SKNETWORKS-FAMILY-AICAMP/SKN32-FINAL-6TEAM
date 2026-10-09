@@ -72,7 +72,7 @@ def test_search_calls_the_model_once_and_both_sources_once():
     result, llm, tools = _run(SEARCH, {"read.flight_search": FLIGHTS})
     assert len(llm.calls) == 1 and llm.calls[0][0] == "flight.interpret" and llm.calls[0][2] == {"today": TODAY.isoformat()}
     wanted = {"origin": "TPE", "destination": "ICN", "depart_date": GO, "return_date": None, "domestic": False,
-              "direct_only": True, "cabin": None, "max_results": 10, "adults": 2, "children": None, "infants": None}
+              "direct_only": True, "cabin": None, "max_results": 100, "adults": 2, "children": None, "infants": None}
     assert tools.calls == [("read.flight_search", wanted), ("read.flight_offers", wanted)]
     assert result.outcome == "completed" and result.next_action.value == "respond"
     assert f"TPE → ICN · {GO} · 성인 2명 조건으로 찾은 결과(마이리얼트립 2개 · 판매처 비교 조회 실패)를" in result.answer
