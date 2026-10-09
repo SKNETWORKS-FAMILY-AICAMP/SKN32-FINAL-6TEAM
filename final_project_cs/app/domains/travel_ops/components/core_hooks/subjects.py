@@ -3,8 +3,8 @@
 
 ★`[결정 2026-09-17]` wiki `external/rest-endpoints.md` 「subject_ref」.
 
-    kind     "trip" 만 받는다
-    id       trip_id — 이 테넌트·이 고객의 여행이 아니면 SubjectNotFound(404)
+    kind     "trip" · "booking"(`[2026-10-09]`)
+    id       trip_id · booking_id — 이 테넌트·이 고객의 것이 아니면 SubjectNotFound(404)
     part_id  일정 항목 — 이 여행의 **어느 버전에든** 있던 항목이어야 한다
              (고객이 본 뒤 바뀌었을 수 있다 — 낡았는지는 적용 순간 기준 버전이 가린다)
 
@@ -25,6 +25,8 @@ from app.core.subjects import ResolvedSubject, SubjectNotFound
 from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
 KIND = "trip"
+#: ★`[2026-10-09]` 예약 하나를 가리키는 Case — 예약 판정(`read.booking`)이 고객의 「가장 임박한 예약」이 아니라 이 예약을 읽는다.
+BOOKING_KIND = "booking"
 
 
 def recent_changed_item(store: TripStore, conn: Any, trip_id: UUID, version: int, items: list):
@@ -36,8 +38,28 @@ def recent_changed_item(store: TripStore, conn: Any, trip_id: UUID, version: int
     return max(pick, key=lambda i: i.seq) if pick else None
 
 
+def resolve_booking(conn: Any, *, tenant_id: str, customer_id: UUID,
+                    subject_ref: dict[str, Any]) -> ResolvedSubject:
+    """예약 대상 — 이 테넌트 · 이 고객의 예약이어야 한다. 예약 종류(activity · dining …)는 확인된 사실이라 라우팅 힌트로 쓴다."""
+    try:
+        booking_id = UUID(str(subject_ref["id"]))
+    except (KeyError, ValueError) as exc:
+        raise SubjectNotFound("subject id is not a booking id") from exc
+    with conn.cursor() as cur:
+        cur.execute("SELECT kind FROM bookings WHERE tenant_id=%s AND customer_id=%s AND booking_id=%s",
+                    (tenant_id, str(customer_id), str(booking_id)))
+        row = cur.fetchone()
+    if row is None:
+        raise SubjectNotFound("booking not found")
+    normalized = {"kind": BOOKING_KIND, "id": str(booking_id), "part_kind": row[0],
+                  "request": subject_ref.get("request")}
+    return ResolvedSubject(subject_ref=normalized, routing_hint=row[0], hint_is_verified=True)
+
+
 def resolve_subject(conn: Any, *, tenant_id: str, customer_id: UUID,
                     subject_ref: dict[str, Any]) -> ResolvedSubject:
+    if subject_ref.get("kind") == BOOKING_KIND:
+        return resolve_booking(conn, tenant_id=tenant_id, customer_id=customer_id, subject_ref=subject_ref)
     if subject_ref.get("kind") != KIND:
         raise SubjectNotFound(f"unsupported subject kind: {subject_ref.get('kind')}")
     try:
@@ -93,7 +115,10 @@ def make_subject_interpreter(extractor):
                 return {"routing_hint": None, "report": None, "reason": "no_extractor"}
             report = extractor(text)
         kind = (report or {}).get("type")
-        if kind in REPORT_OWNER:
+        if subject_ref.get("kind") == BOOKING_KIND:
+            # ★예약 대상은 그 예약의 종류가 담당이다(확인된 사실) — 신고 종류로 다른 팀에 보내면 그 팀이 남의 종류 예약을 읽는다
+            hint = subject_ref.get("part_kind")
+        elif kind in REPORT_OWNER:
             hint = REPORT_OWNER[kind]
         elif kind in ("change", "rollback"):
             hint = subject_ref.get("part_kind") or subject_ref.get("recent_part_kind")
@@ -107,4 +132,4 @@ def make_subject_interpreter(extractor):
     return interpret
 
 
-__all__ = ["KIND", "REPORT_OWNER", "make_subject_interpreter", "recent_changed_item", "resolve_subject"]
+__all__ = ["BOOKING_KIND", "KIND", "REPORT_OWNER", "make_subject_interpreter", "recent_changed_item", "resolve_booking", "resolve_subject"]

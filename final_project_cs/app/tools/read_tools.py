@@ -196,11 +196,16 @@ class ReadToolbox:
 
     def booking(self, scope: ToolContext, *, booking_id: str | None = None,
                 **_: Any) -> dict[str, Any] | None:
-        """예약 한 건. 없으면 `None`(모름).
+        """예약 한 건. 없으면 `None`(모름). 어떻게 골랐는지를 `matched_by` 에 남긴다.
 
-        ★`booking_id` 를 주면 그 건을, 안 주면 **가장 임박한** 예약을 본다.
-          「가장 최근에 만든 것」이 아니다 — 여행 CS 에서 문제가 되는 것은
-          다가오는 일정이지 방금 만든 예약이 아니다.
+        고르는 순서:
+          1. `booking_id` 를 주면 그 건(`matched_by: "argument"`).
+          2. ★`[2026-10-09]` **이 Case 가 가리키는 예약**(`state_json.subject_ref` 의 `kind: "booking"` — 접수 때 확인기가
+             소유를 확인했다, `core_hooks/subjects.py`)이면 그 건(`"case"`). 팀이 넘기는 `case_id` 인자는 믿지 않고
+             도구 문맥(`scope.case_id`)으로 읽는다. 이은 예약이 없어졌으면 `None` — 다른 예약으로 대신하지 않는다.
+          3. Case 에 이은 예약이 없으면 **가장 임박한** 예약(`"nearest"`) — 추정이다. 전에는 언제나 이 길이라, 예약이
+             여럿인 고객은 문의와 다른 예약으로 판정받을 수 있었다. 「가장 최근에 만든 것」이 아니다 — 여행 CS 에서
+             문제가 되는 것은 다가오는 일정이지 방금 만든 예약이 아니다.
 
         ★tenant·customer 조건을 뺀 조회는 그 자체가 보안 결함이다
           (`CLAUDE.md` §1, `tests/security/`).
@@ -208,12 +213,30 @@ class ReadToolbox:
         select = ("SELECT booking_id, booking_no, kind, status, starts_at, party_size, "
                   "capacity, amount_cents, locked, place_id FROM bookings "
                   "WHERE tenant_id=%s AND customer_id=%s")
+        matched_by = "argument"
+        if booking_id is None:
+            booking_id = self._case_booking_id(scope)
+            matched_by = "case"
         if booking_id is not None:
-            return self._one(select + " AND booking_id=%s",
-                             (scope.tenant_id, scope.customer_id, booking_id),
-                             self._BOOKING_COLUMNS)
-        return self._one(select + " ORDER BY starts_at ASC LIMIT 1",
-                         (scope.tenant_id, scope.customer_id), self._BOOKING_COLUMNS)
+            found = self._one(select + " AND booking_id=%s",
+                              (scope.tenant_id, scope.customer_id, str(booking_id)),
+                              self._BOOKING_COLUMNS)
+        else:
+            matched_by = "nearest"
+            found = self._one(select + " ORDER BY starts_at ASC LIMIT 1",
+                              (scope.tenant_id, scope.customer_id), self._BOOKING_COLUMNS)
+        return None if found is None else {**found, "matched_by": matched_by}
+
+    def _case_booking_id(self, scope: ToolContext) -> str | None:
+        """이 Case 가 가리키는 예약 id(`subject_ref.kind == "booking"`). 없으면 `None`."""
+        with self.connection_factory() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT state_json->'subject_ref'->>'id' FROM customer_cases "
+                            "WHERE tenant_id=%s AND customer_id=%s AND case_id=%s "
+                            "AND state_json->'subject_ref'->>'kind' = 'booking'",
+                            (scope.tenant_id, scope.customer_id, scope.case_id))
+                row = cur.fetchone()
+        return row[0] if row and row[0] else None
 
     #: 취소 조건을 찾는 순서 — 좁은 것부터. v11 결정 15 「값마다 대체 소스를 둔다」를
     #: 데이터로 구현한 것이다(마이그레이션 023).
