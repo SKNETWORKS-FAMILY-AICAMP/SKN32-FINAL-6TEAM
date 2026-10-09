@@ -164,12 +164,13 @@ test("같은 좌표의 일정 40개도 겹치지 않게 표시하고 목록에�
 
 test("일정을 펼쳐 스크롤해도 왼쪽 시각은 해당 일정이 끝날 때까지 따라온다", async ({ page, request }) => {
   await openFinished(page, request); await head(page, "경복궁 관람").click();
+  await expect(page.getByRole("status").filter({ hasText: "계획 확인 화면이에요" })).toHaveCount(0);
   const body = page.locator("div[class*=sheetBody]");
   const time = page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ });
   await expect(time).toHaveCSS("position", "sticky");
   await body.evaluate((node) => {
     const entry = node.querySelector('[data-entry-id="0-0"]')!;
-    node.scrollTop += entry.getBoundingClientRect().top - node.getBoundingClientRect().top + 30;
+    node.scrollTop += entry.getBoundingClientRect().top - node.getBoundingClientRect().top - 24;
   });
   const before = (await time.boundingBox())!;
   await body.evaluate((node) => { node.scrollTop += 25; });

@@ -12,7 +12,7 @@ import styles from "./plan-check.module.css";
 import tripStyles from "../trip/trip-screen.module.css";
 
 /**
- * The stop's own details — name, date, times, the place by name or 「장소 없음」 — under the change screen (「직접 고치기」).
+ * The stop's own details — name, date, times, the existing place or 「장소 없음」 — under the change screen (「직접 고치기」).
  * What the screen can check it checks first (`draftProblem`); the rest is the server's to say, and a refusal keeps the
  * editor open with what was typed.
  */
@@ -38,19 +38,14 @@ export function StopEditor({ item, onCancel, onSave, autoFocus = true }: { item:
 
   const message = problem === "title" ? t("일정 이름을 적어 주세요.", "Give the stop a name.")
     : problem === "time" ? t("끝 시각이 시작보다 빨라요.", "The end is before the start.")
-      : problem === "place" ? t("장소 이름을 적거나 「장소 없음」을 골라 주세요.", "Type a place name or choose “No place”.") : "";
+      : problem === "place" ? t("위 검색창에서 장소를 고르거나 「장소 없음」을 선택해 주세요.", "Choose a place above or select “No place”.") : "";
   return <form className={styles.editor} aria-labelledby="plan-editor-title" noValidate
     onSubmit={(event) => { event.preventDefault(); void save(); }}
     onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onCancel(); } }}>
     <h3 id="plan-editor-title" className={styles.editorTitle}>{t(`「${item.title}」 고치기`, `Edit “${item.title}”`)}</h3>
-    <label className={styles.field}>{t("장소 이름", "Place")}
-      <input ref={first} type="search" value={draft.place} disabled={draft.noPlace} placeholder={t("장소 이름으로 찾기", "Find a place by name")}
-        aria-invalid={problem === "place"} onChange={(event) => change({ place: event.target.value })} />
-    </label>
     <label className={styles.toggle}><input type="checkbox" checked={draft.noPlace} onChange={(event) => change({ noPlace: event.target.checked })} />{t("장소 없음(자유 시간 등)", "No place (free time etc.)")}</label>
-    <p className={styles.editorNote}>{t("저장하면 서버가 이 이름으로 장소를 다시 찾고 일정을 다시 확인해요.", "On save the server looks the place up by this name and checks the plan again.")}</p>
     <label className={styles.field}>{t("일정 이름", "Name")}
-      <input type="text" value={draft.title} aria-invalid={problem === "title"} onChange={(event) => change({ title: event.target.value })} />
+      <input ref={first} type="text" value={draft.title} aria-invalid={problem === "title"} onChange={(event) => change({ title: event.target.value })} />
     </label>
     <div className={styles.fieldRow}>
       <label className={styles.field}>{t("날짜", "Date")}<input type="date" value={draft.date} onChange={(event) => change({ date: event.target.value })} /></label>

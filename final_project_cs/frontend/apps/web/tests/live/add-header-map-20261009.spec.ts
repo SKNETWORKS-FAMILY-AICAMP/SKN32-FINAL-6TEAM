@@ -39,7 +39,8 @@ for (const width of [375,1280]) {
     const seam=page.locator('[data-insert-near] > button'); const seamName=await seam.getAttribute('aria-label');
     await seam.click();
     const search=page.getByRole('searchbox',{name:'장소 검색',exact:true});
-    await expect(search).toBeFocused();
+    await expect(search).not.toBeFocused();
+    await expect(page.getByRole("form", { name: "일정 추가", exact: true })).toBeVisible();
     expect(await search.evaluate(node=>Boolean(node.closest('[data-hide-brand]')))).toBe(true);
     await expect(page.getByRole('region',{name:'일정 추가 화면'}).getByRole('searchbox')).toHaveCount(0);
     await expect(page.getByRole('button',{name:'다시 제출',exact:true})).toHaveCount(0);
@@ -77,7 +78,15 @@ test('빈 배경의 오른쪽 스와이프만 추가를 취소하고 일차 전�
   // 입력칸에서 시작한 가로 드래그도 취소하지 않는다.
   const input=(await search.boundingBox())!;
   await drag(page,input.x+8,input.y+input.height/2,120); await expect(search).toBeVisible();
-  await drag(page,box.x+4,box.y+100,160);
+  const blank = await screen.evaluate(e => {
+    const r = e.getBoundingClientRect();
+    for (let x=r.left+2; x<r.left+32; x+=4) for (let y=r.top+24; y<r.bottom-24; y+=12) {
+      const hit=document.elementFromPoint(x,y);
+      if (hit && e.contains(hit) && !hit.closest('button,a,input,textarea,select,label,summary,[role="button"]')) return {x,y};
+    }
+    throw new Error('왼쪽의 빈 배경을 찾지 못했습니다');
+  });
+  await drag(page,blank.x,blank.y,160);
   await expect(search).toHaveCount(0);
   await expect(page.locator('[data-slide="prev"]')).toHaveCSS('animation-name',/slidePrev/);
   expect(await api.received('POST','/edits')).toHaveLength(0);

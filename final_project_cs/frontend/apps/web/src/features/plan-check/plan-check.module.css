@@ -334,13 +334,13 @@ button.moveHead { cursor: pointer; }
 .field input, .field select { width: 100%; min-width: 0; min-height: 40px; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 500; }
 .field input[aria-invalid="true"] { border-color: var(--color-error); }
 .field input:disabled { background: var(--color-subtle); color: var(--color-faint); }
-.fieldRow { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.fieldRow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.fieldRow > :first-child { grid-column: 1 / -1; }
 .toggle { display: flex; align-items: center; gap: 8px; min-height: 32px; font-size: 13px; color: var(--color-text-secondary); }
 .editorNote { margin: 0; font-size: 12px; color: var(--color-muted); }
 .editorError { margin: 0; font-size: 12.5px; font-weight: 650; color: var(--color-error); }
 .editorButtons { display: flex; gap: 8px; }
 .editorButtons > * { flex: 1; justify-content: center; }
-@media (max-width: 360px) { .fieldRow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .fieldRow > :first-child { grid-column: 1 / -1; } }
 
 
 /* The trip-wide details the server asks for */
@@ -707,8 +707,9 @@ button.time[data-adjusted] { color: var(--color-adjusted); }
 .statusTools .undoAll { width: 32px; height: 32px; border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface); }
 .cardTop { gap: 0; padding: 0 2px; }
 .cardTools .icon { width: 36px; height: 44px; }
-.entry[data-type="item"] > .time { position: sticky; top: 0; z-index: 1; font-size: 16px; line-height: 20px; font-weight: 400; padding: 17.5px 0 6.5px; }
-.sheetBody[data-under-float] .entry[data-type="item"] > .time { top: 64px; }
+.entry[data-type="item"] > .time { position: relative; top: 0; z-index: 1; font-size: 16px; line-height: 20px; font-weight: 400; padding: 17.5px 0 6.5px; }
+.entry[data-type="item"][data-time-follow] > .time { position: sticky; }
+.sheetBody[data-under-float] .entry[data-type="item"][data-time-follow] > .time { top: 64px; }
 .sheetHead[data-done]:not([data-float]) { padding: 18px 12px 0; min-height: 18px; border: 0; }
 .autoAllTop { position: static; flex: none; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; margin: 0 0 8px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12px; cursor: pointer; }
 .topActions { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin-bottom: 8px; }

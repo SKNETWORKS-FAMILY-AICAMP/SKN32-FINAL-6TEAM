@@ -395,7 +395,7 @@ test("수정 화면: 지금 일정과 후보 A·B를 넘기면 지도의 핀이 
   await expect(page.locator("[data-sheet]")).toHaveAttribute("data-sheet", "full");
 });
 
-test("수정 화면의 「직접 고치기」: 끝이 시작보다 빠르거나 장소가 비면 보내지 않고, 「바꾸기 그만두기」는 수정 단추로 돌아간다", async ({ page, request }) => {
+test("수정 화면의 「직접 고치기」: 끝이 시작보다 빠르거나 이름이 비면 보내지 않고, 「바꾸기 그만두기」는 수정 단추로 돌아간다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   await page.getByRole("button", { name: "광장시장 수정" }).click();
   await page.getByText("직접 고치기 · 이름·날짜·시각·장소 없음").click();
@@ -404,9 +404,10 @@ test("수정 화면의 「직접 고치기」: 끝이 시작보다 빠르거나 
   await editor.getByRole("button", { name: "저장" }).click();
   await expect(editor.getByRole("alert")).toHaveText("끝 시각이 시작보다 빨라요.");
   await editor.getByLabel("끝").fill("13:30");
-  await editor.getByRole("searchbox", { name: "장소 이름" }).fill("");
+  await expect(editor.getByRole("searchbox")).toHaveCount(0);
+  await editor.getByLabel("일정 이름", { exact: true }).fill("");
   await editor.getByRole("button", { name: "저장" }).click();
-  await expect(editor.getByRole("alert")).toHaveText("장소 이름을 적거나 「장소 없음」을 골라 주세요.");
+  await expect(editor.getByRole("alert")).toHaveText("일정 이름을 적어 주세요.");
   expect(await server.received("POST", "/edits")).toHaveLength(0);                          // 화면이 먼저 막았다: 서버로는 아무것도 가지 않았다
   await editor.getByRole("button", { name: "취소" }).click();
   await expect(editor).toHaveCount(0);

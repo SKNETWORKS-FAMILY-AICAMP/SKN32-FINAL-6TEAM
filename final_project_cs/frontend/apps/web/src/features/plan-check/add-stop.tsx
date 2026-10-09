@@ -22,6 +22,8 @@ export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBu
   const box = useRef<HTMLDetailsElement>(null);
   const form = useRef<HTMLFormElement>(null);
   const first = useRef<HTMLInputElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const [query, setQuery] = useState("");
   const [draft, setDraft] = useState<NewStop>({ title: "", date, start: initial?.start ?? "", end: initial?.end ?? "", place: "", kind: "activity" });
   const [selected, setSelected] = useState<AddStopPlace | null>(null);
   const [busy, setBusy] = useState(false);
@@ -64,7 +66,7 @@ export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBu
     const next = Object.fromEntries(fields.map((key) => [key, errorOf(key)]));
     setErrors(next);
     const invalid = fields.find((key) => next[key]);
-    if (invalid) { form.current?.querySelector<HTMLInputElement>('[name="' + invalid + '"]')?.focus(); return; }
+    if (invalid) { if (invalid === "place" && search) searchInput.current?.focus(); else form.current?.querySelector<HTMLInputElement>('[name="' + invalid + '"]')?.focus(); return; }
     setBusy(true); setProblem("");
     try {
       await onSave({ ...draft, title: draft.title.trim(), place: draft.pickedPlace?.name ?? draft.place.trim() });
@@ -83,11 +85,12 @@ export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBu
       onFocus={() => clear(key)} onBlur={() => blur(key)} onChange={(event) => change(key, event.target.value)} />
     {errors[key] && <span id={`${id}-${key}-error`} className={styles.error}>{errors[key]}</span>}
   </div>;
-  const placeSearch = search && <PlaceSearch search={search} value={selected} onPick={pick} error={errors.place} onBlur={() => blur("place")} onFocus={() => clear("place")} busy={busy} onCancel={onCancel ? cancel : undefined} />;
-  const content = <>{onCancel && <div className={styles.searchBody}>{placeSearch}</div>}
-    {(!onCancel || !search || selected) && <form ref={form} className={styles.form} onSubmit={save} noValidate aria-label={t("일정 추가", "Add a stop")}
+  const placeSearch = search && <PlaceSearch query={query} onQuery={setQuery} inputRef={searchInput} search={search} value={selected} onPick={pick} error={errors.place} onBlur={() => blur("place")} onFocus={() => clear("place")} busy={busy} onCancel={onCancel ? cancel : undefined} />;
+  const content = <>{onCancel && <div className={styles.searchBody} data-searching={!!query.trim() && !selected || undefined} data-selected={!!selected || undefined}>{placeSearch}</div>}
+    {(!onCancel || !search || selected || !query.trim()) && <form ref={form} className={styles.form} onSubmit={save} noValidate aria-label={t("일정 추가", "Add a stop")}
     onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); cancel(); } }}>
     <h3>{t("일정 추가", "Add a stop")}</h3>
+    {onCancel && search && !selected && <p className={styles.hint}>{t("장소는 위 검색창에서 골라 주세요.", "Choose a place using the search above.")}</p>}
     {field("title", t("일정 이름", "Stop name"))}
     {field("date", t("날짜", "Date"), "date")}
     <div className={styles.times}>{field("start", t("시작", "Start"), "time")}{field("end", t("끝", "End"), "time")}</div>
