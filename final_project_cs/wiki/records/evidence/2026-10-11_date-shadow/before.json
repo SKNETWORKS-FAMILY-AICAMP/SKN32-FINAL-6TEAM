@@ -1,0 +1,22 @@
+{
+  "strip": {
+    "y": 393.94598388671875,
+    "height": 34,
+    "overflowX": "auto",
+    "overflowY": "auto",
+    "paddingTop": "0px",
+    "paddingBottom": "0px"
+  },
+  "chip": {
+    "y": 393.94598388671875,
+    "height": 34,
+    "shadow": "color(srgb 0.141176 0.223529 0.184314 / 0.12) 0px 2px 10px 0px"
+  },
+  "handle": {
+    "y": 372,
+    "bottom": 394
+  },
+  "topClearance": 0,
+  "bottomClearance": 0,
+  "animation": "plan-check-module__MjxneW__dayFloat"
+}diff --git a/final_project_cs/wiki/records/evidence/2026-10-11_date-shadow/verification.json b/final_project_cs/wiki/records/evidence/2026-10-11_date-shadow/verification.json

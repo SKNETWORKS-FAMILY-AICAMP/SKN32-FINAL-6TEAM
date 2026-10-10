@@ -13,9 +13,9 @@ async function snap(page: Page, name: string) {
 }
 async function phase(target: Locator, time: number) {
   await target.evaluate((e, t) => {
-    const a = e.getAnimations({ subtree: true }).find(a => a instanceof CSSAnimation && /dayFloat|insertLineBreathe/.test(a.animationName));
-    if (!a) throw new Error(`반복 애니메이션을 찾지 못했습니다: ${getComputedStyle(e, '::after').animationName}`);
-    a.pause(); a.currentTime = t;
+    const animations = e.getAnimations({ subtree: true }).filter(a => a instanceof CSSAnimation && /dayShadow|insertLineBreathe/.test(a.animationName));
+    if (!animations.length) throw new Error(`반복 애니메이션을 찾지 못했습니다: ${getComputedStyle(e, '::after').animationName}`);
+    animations.forEach(a => { a.pause(); a.currentTime = t; });
   }, time);
 }
 async function restart(target: Locator) {
@@ -25,12 +25,12 @@ async function restart(target: Locator) {
     if (node.hasAttribute('data-insert-near')) {
       node.removeAttribute('data-insert-near'); void node.offsetWidth; node.setAttribute('data-insert-near', '');
     } else {
-      node.style.animation = 'none'; void node.offsetWidth; node.style.removeProperty('animation');
+      node.style.display = 'none'; void node.offsetWidth; node.style.removeProperty('display');
     }
   });
 }
 for (const width of [375, 1280]) {
-  test(`날짜 부유·추가 가로선은 조작 시 멈추고 움직임 줄이기에서 정지 ${width}px`, async ({ page, request }) => {
+  test(`날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 ${width}px`, async ({ page, request }) => {
     test.setTimeout(90_000);
     await page.setViewportSize({ width, height: 812 });
     await page.emulateMedia({ reducedMotion: 'no-preference' });
@@ -41,27 +41,55 @@ for (const width of [375, 1280]) {
     await page.mouse.move(0, 0);
     const strip = page.getByRole('tablist', { name: '일차 고르기', includeHidden: true });
     await expect(strip).not.toHaveAttribute('data-quiet');
-    await expect(strip).toHaveCSS('animation-duration', '4s');
+    const firstTab = strip.getByRole('tab').first();
+    const shadow = () => firstTab.evaluate(e => {
+      const c = getComputedStyle(e, '::after');
+      return { opacity: Number(c.opacity), duration: c.animationDuration, animation: c.animationName, state: c.animationPlayState };
+    });
+    expect((await shadow()).duration).toBe('4s');
     await phase(strip, 0);
     const body = page.locator('div[class*=sheetBody]');
     const origin = await strip.boundingBox(), bodyOrigin = await body.boundingBox();
     const marker = strip.locator('[class*=dayMarker]');
     const markerOrigin = await marker.boundingBox();
+    const dimShadow = await shadow();
+    const tabOrigin = await firstTab.boundingBox();
+    const clearances = [];
+    // Check the entire cycle, including both extremes, against the actual opaque handle and scroll clip.
+    for (let time = 0; time <= 4000; time += 250) {
+      await phase(strip, time);
+      expect(await strip.boundingBox()).toEqual(origin);
+      expect(await firstTab.boundingBox()).toEqual(tabOrigin);
+      expect(await marker.boundingBox()).toEqual(markerOrigin);
+      expect(await body.boundingBox()).toEqual(bodyOrigin);
+      const clearance = await strip.evaluate(e => {
+        const r = e.getBoundingClientRect(), handle = e.closest('section')!.querySelector('button')!.getBoundingClientRect();
+        const tabs = Array.from(e.querySelectorAll<HTMLElement>('[role=tab]')).map(tab => {
+          const t = tab.getBoundingClientRect();
+          const visible = t.left >= r.left && t.right <= r.right;
+          return { top: t.top-r.top, bottom: r.bottom-t.bottom, handleGap: t.top-handle.bottom,
+            topHit: !visible || tab.contains(document.elementFromPoint(t.x+t.width/2,t.top+.5)),
+            bottomHit: !visible || tab.contains(document.elementFromPoint(t.x+t.width/2,t.bottom-.5)) };
+        });
+        return {time: performance.now(),tabs};
+      });
+      for (const t of clearance.tabs) {
+        expect(t.top).toBeGreaterThanOrEqual(12); expect(t.bottom).toBeGreaterThanOrEqual(12);
+        expect(t.handleGap).toBeGreaterThanOrEqual(10); expect(t.topHit).toBe(true); expect(t.bottomHit).toBe(true);
+      }
+      clearances.push(clearance);
+    }
     await phase(strip, 2000);
-    const raised = await strip.boundingBox(), raisedMarker = await marker.boundingBox();
-    expect(raised!.y).toBeCloseTo(origin!.y - 2, 1);
-    expect(raised!.height).toBe(origin!.height);
-    expect(raisedMarker!.y - raised!.y).toBeCloseTo(markerOrigin!.y - origin!.y, 1);
-    expect(await body.boundingBox()).toEqual(bodyOrigin);
-    await snap(page, `date-float-${width}`);
+    expect((await shadow()).opacity - dimShadow.opacity).toBeGreaterThan(.4);
+    await test.info().attach(`date-clearance-${width}`, {body:JSON.stringify(clearances),contentType:'application/json'});
+    await snap(page, `date-shadow-${width}`);
     await restart(strip);
     const stripBox = (await strip.boundingBox())!;
-    // A floating target is intentionally moving; move the real pointer without the locator stability gate.
     await page.mouse.move(stripBox.x + stripBox.width / 2, stripBox.y + stripBox.height / 2);
-    await expect(strip).toHaveCSS('animation-play-state', 'paused');
-    await expect.poll(() => strip.evaluate(e => e.getAnimations().filter(a => a instanceof CSSAnimation).every(a => a.playState === 'paused'))).toBe(true);
+    await expect.poll(async () => (await shadow()).state).toBe('paused');
+    await expect.poll(() => strip.evaluate(e => e.getAnimations({subtree:true}).filter(a => a instanceof CSSAnimation && /dayShadow/.test(a.animationName)).every(a => a.playState === 'paused'))).toBe(true);
     await page.mouse.move(0, 0);
-    await strip.getByRole('tab').first().focus(); await expect(strip).toHaveCSS('animation-play-state', 'paused');
+    await firstTab.focus(); expect((await shadow()).state).toBe('paused');
     const handle = page.getByRole('button', { name: '목록 높이 바꾸기' });
     await handle.focus();
     for (let i = 0; i < 5; i++) await handle.press('ArrowUp');
@@ -83,8 +111,8 @@ for (const width of [375, 1280]) {
     expect(bright.buttonX).toBe(dim.buttonX); expect(bright.buttonY).toBe(dim.buttonY);
     await phase(strip, 2000); await snap(page, `divider-${width}`);
     if (shots && width === 375 && process.env.DATE_DIVIDER_PREVIEW === '1') {
-      const frames = '.tmp/date-divider-preview-frames'; await mkdir(frames, { recursive: true });
-      // Capture real browser frames over the common 12s cycle of the 4s row and 3s line.
+      const frames = '.tmp/date-shadow-preview-frames'; await mkdir(frames, { recursive: true });
+      // Capture the stationary date shadows and approved line over their common 12s cycle.
       for (let i = 0; i < 60; i++) {
         await phase(strip, i * 200 % 4000); await phase(seam, i * 200 % 3000);
         await page.screenshot({ path: `${frames}/${String(i).padStart(3, '0')}.png` });
@@ -102,9 +130,10 @@ for (const width of [375, 1280]) {
     await restart(strip);
     await body.hover(); await page.mouse.wheel(0, 80);
     await expect(strip).toHaveAttribute('data-quiet'); await expect(strip).toHaveAttribute('inert', '');
-    await expect(strip).not.toHaveAttribute('data-quiet'); await expect(strip).toHaveCSS('animation-play-state', 'running');
+    await expect(strip).not.toHaveAttribute('data-quiet'); expect((await shadow()).state).toBe('running');
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await expect(strip).toHaveCSS('animation-name', 'none'); await expect(strip).toHaveCSS('transform', 'none');
+    expect((await shadow()).animation).toBe('none'); expect((await shadow()).opacity).toBe(.35);
     const staticSeam = page.locator('[data-insert-near]');
     expect(await staticSeam.evaluate(e => getComputedStyle(e, '::after').animationName)).toBe('none');
     expect(Number(await staticSeam.evaluate(e => getComputedStyle(e, '::after').opacity))).toBe(.6);

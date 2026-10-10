@@ -1,0 +1,31 @@
+..................................................F.                     [100%]
+================================== FAILURES ===================================
+_ test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-11_\ub0a0\uc9dc\ud0ed\ubd80\uc720_\uc190\uc7a1\uc774\uac00\ub9bc] _
+
+path = WindowsPath('WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/wiki/records/reports/debugs/2026-10-11_��¥�Ǻ���_�����̰���.md')
+
+    @pytest.mark.parametrize("path", REPORTS, ids=lambda p: p.stem[:40])
+    def test_every_debug_report_declares_whether_it_is_open_or_closed(path: Path):
+        text = path.read_text(encoding="utf-8")
+        resolved = bool(STATUS_RESOLVED.search(text))
+        still_open = bool(STATUS_OPEN.search(text))
+    
+>       assert resolved or still_open, (
+            f"{path.name} �� ���� ǥ�Ⱑ ����.\n"
+            "  ���� ù �� ������ `## �ذ�� (YYYY-MM-DD)` �Ǵ� `## ���ذ�` �� �д�.\n"
+            "  \u2605\uc61b `- \uc0c1\ud0dc:` \uc904\uc740 \uc9c0\uc6b0\uc9c0 \uc54a\ub294\ub2e4 \u2014 \ubc1c\uacac \uc2dc\uc810\uc758 \uae30\ub85d\uc774\ub2e4. \uc704\uc5d0 \uc5b9\uae30\ub9cc \ud55c\ub2e4.\\n"
+            "  �ٰ�: wiki/records/reports/2026-09-03_���Ը���Ʈ_���¸�_����_��_����.md")
+E       AssertionError: 2026-10-11_��¥�Ǻ���_�����̰���.md �� ���� ǥ�Ⱑ ����.
+E           ���� ù �� ������ `## �ذ�� (YYYY-MM-DD)` �Ǵ� `## ���ذ�` �� �д�.
+E           \u2605\uc61b `- \uc0c1\ud0dc:` \uc904\uc740 \uc9c0\uc6b0\uc9c0 \uc54a\ub294\ub2e4 \u2014 \ubc1c\uacac \uc2dc\uc810\uc758 \uae30\ub85d\uc774\ub2e4. \uc704\uc5d0 \uc5b9\uae30\ub9cc \ud55c\ub2e4.
+E           �ٰ�: wiki/records/reports/2026-09-03_���Ը���Ʈ_���¸�_����_��_����.md
+E       assert (False or False)
+
+tests\unit\core\test_debug_report_status.py:45: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-11_\ub0a0\uc9dc\ud0ed\ubd80\uc720_\uc190\uc7a1\uc774\uac00\ub9bc]
+1 failed, 51 passed in 9.20s
+Exception ignored in: <function Console.__del__ at 0x000001B0C37B1BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

@@ -519,20 +519,24 @@ button.headBadge { cursor: pointer; }
 .emptyMapNotice { margin: 0; padding: 6px 8px; border-radius: 6px; background: var(--color-surface); color: var(--color-muted); font-size: 12px; line-height: 18px; }
 .emptyMapNotice span { display: block; font-size: 11px; }
 /* ★`[2026-10-07 사용자 지시 — 날짜 줄은 지금 모양 그대로, 경계 없이 목록 위에 투명하게 떠서]` The day chips and the head buttons float over the top of the list (no line, no band of their own); the list scrolls under them. */
-.sheetHead[data-float] { position: absolute; z-index: 3; top: 0; left: 0; right: 0; padding: 22px 12px 6px; border-bottom: 0; background: transparent; pointer-events: none; }
+.sheetHead[data-float] { position: absolute; z-index: 3; top: 0; left: 0; right: 0; padding: 32px 12px 6px; border-bottom: 0; background: transparent; pointer-events: none; }
 .sheetHead[data-float] > * { pointer-events: auto; }
-.sheetHead[data-float] .dayStrip { padding-left: 2px; }
-.sheetHead[data-float] .dayStrip { --day-enter: 200ms; --day-exit: 150ms; opacity: 1; transform: translateY(0); transition: opacity var(--day-enter) ease-out, transform var(--day-enter) ease-out; }
-.sheetHead[data-float] .dayStrip:not([data-quiet]) { --day-float-cycle: 4s; animation: dayFloat var(--day-float-cycle) ease-in-out infinite; }
-.sheetHead[data-float] .dayStrip:is(:hover, :focus-within, [data-dragging]) { animation-play-state: paused; }
-/* `[2026-10-10 사용자]` Float the whole tab row, including its selected marker, without moving the list. */
-@keyframes dayFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+/* Keep the stationary tabs below the opaque handle; reserve scrollport room for shadows and focus rings. */
+.sheetHead[data-float] .dayStrip { padding: 12px 8px; margin: -12px -6px; --day-enter: 200ms; --day-exit: 150ms; opacity: 1; transform: translateY(0); transition: opacity var(--day-enter) ease-out, transform var(--day-enter) ease-out; }
+.sheetHead[data-float] .dayMarker { top: 12px; }
+.sheetHead[data-float] .dayChip::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 3px 6px color-mix(in srgb, var(--color-text) 24%, transparent); opacity: .2; pointer-events: none; }
+.sheetHead[data-float] .dayStrip:not([data-quiet]) .dayChip::after { --day-shadow-cycle: 4s; animation: dayShadow var(--day-shadow-cycle) ease-in-out infinite; }
+.sheetHead[data-float] .dayStrip:is(:hover, :focus-within, [data-dragging]) .dayChip::after { animation-play-state: paused; }
+/* `[2026-10-11 사용자]` Suggest elevation with shadow opacity only; never move the date tabs into the handle. */
+@keyframes dayShadow { 0%, 100% { opacity: .2; } 50% { opacity: .65; } }
 .sheetHead[data-float] .dayStrip[data-quiet] { opacity: 0; transform: translateY(-4px); pointer-events: none; transition-duration: var(--day-exit); transition-timing-function: ease-in; }
 @media (prefers-reduced-motion: reduce) {
-  .sheetHead[data-float] .dayStrip { animation: none !important; transform: none; transition: none; }
+  .sheetHead[data-float] .dayStrip { transform: none; transition: none; }
+  .sheetHead[data-float] .dayStrip .dayChip::after { animation: none !important; opacity: .35; }
 }
 .sheetHead[data-float] .dayChip:not([data-lit]) { background: var(--color-surface); }
-.sheetHead[data-float] :is(.dayChip, .resetTimes, .headBadge) { box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 12%, transparent); }
+.sheetHead[data-float] .dayChip { box-shadow: 0 1px 3px color-mix(in srgb, var(--color-text) 12%, transparent); }
+.sheetHead[data-float] :is(.resetTimes, .headBadge) { box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 12%, transparent); }
 /* Hide scrolling content throughout the handle, then fade in over the next 32px. */
 .screen[data-stage="done"] .sheetBody {
   -webkit-mask-image: linear-gradient(to bottom, transparent var(--handle-clearance, 4px), var(--color-text) calc(var(--handle-clearance, 4px) + 32px));
