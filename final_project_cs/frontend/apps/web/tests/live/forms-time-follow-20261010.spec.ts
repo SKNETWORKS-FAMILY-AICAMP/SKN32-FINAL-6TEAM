@@ -76,7 +76,7 @@ for (const width of [375, 1280]) {
     expect(await api.received('POST', '/edits')).toHaveLength(0); await noHorizontalScroll(page);
   });
 
-  test(`일정 추가는 입력부터 열고 검색·지우기·선택 후에도 초안을 보존한다 ${width}px`, async ({ page, request }) => {
+  test(`일정 추가는 검색 초점으로 열고 검색·지우기·선택 후에도 초안을 보존한다 ${width}px`, async ({ page, request }) => {
     await page.setViewportSize({ width, height: 812 }); await page.emulateMedia({ reducedMotion: 'reduce' });
     const tiles = shots ? await useMapTiles(page) : async () => {};
     tileWaits.set(page, tiles);
@@ -86,12 +86,28 @@ for (const width of [375, 1280]) {
     await add.click();
     const search = page.getByRole('searchbox', { name: '장소 검색', exact: true });
     const form = page.getByRole('form', { name: '일정 추가', exact: true });
-    await expect(form).toBeVisible(); await expect(search).not.toBeFocused();
-    await expect(page.locator('[data-hide-brand]')).not.toHaveAttribute('data-open');
+    await expect(form).toBeVisible(); await expect(search).toBeFocused();
+    await expect(page.locator('[data-hide-brand]')).toHaveAttribute('data-open');
     await expect(page.getByText('검색 결과에서 방문할 장소를 골라 주세요.')).toHaveCount(0);
     expect((await api.log()).slice(before).filter(e => e.path.includes('/places'))).toHaveLength(0);
-    if (shots) for (let i=0; i<4; i++) await page.getByRole('button', { name: '목록 높이 바꾸기' }).press('ArrowUp');
+    for (let i=0; i<4; i++) await page.getByRole('button', { name: '목록 높이 바꾸기' }).press('ArrowUp');
+    const controls = page.getByRole('group', { name: '지도 단추' }), fold = controls.locator('button[aria-expanded]');
+    await expect(controls).toHaveAttribute('data-direction', 'row');
+    const geometry = () => fold.evaluate(e => {
+      const r = e.getBoundingClientRect(), a = e.querySelector('[class*=foldArrow]')!.getBoundingClientRect();
+      const m = e.querySelector<SVGSVGElement>('[class*=foldArrow] svg')!.getScreenCTM()!;
+      const start = new DOMPoint(9,12).matrixTransform(m), tip = new DOMPoint(15,12).matrixTransform(m);
+      return { x:a.x+a.width/2-r.x, y:a.y+a.height/2-r.y, dx:tip.x-start.x };
+    });
+    await expect(fold).toHaveAttribute('aria-expanded','false');
+    const closed = await geometry(); expect(closed.dx).toBeLessThan(-3);
+    await search.focus();
     await capture(page, `add-initial-${width}`);
+    await fold.click(); await expect(fold).toHaveAttribute('aria-expanded','true');
+    const opened = await geometry(); expect(opened.dx).toBeGreaterThan(3);
+    expect(opened.x).toBe(closed.x); expect(opened.y).toBe(closed.y);
+    await capture(page, `add-map-open-${width}`);
+    await fold.click(); await search.focus();
     await form.getByLabel('일정 이름', { exact: true }).fill('종로에서 잠깐 쇼핑');
     await search.fill('올리브영'); await expect(form).toHaveCount(0);
     const result = page.getByRole('list', { name: '장소 검색 결과' }).getByRole('button', { name: /올리브영 명동 플래그십/ });

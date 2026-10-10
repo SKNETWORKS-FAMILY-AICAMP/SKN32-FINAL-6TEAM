@@ -1,0 +1,26 @@
+
+[WebServer] (node:26968) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:22424) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+
+[WebServer] (node:6164) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:20020) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 6 tests using 1 worker
+
+(node:29284) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/6] tests\live\aligned-map-quiet-cards-20261010.spec.ts:35:3 › 메뉴 정렬·고정 거리 글자·화살표만 전환 375px
+[2/6] tests\live\aligned-map-quiet-cards-20261010.spec.ts:35:3 › 메뉴 정렬·고정 거리 글자·화살표만 전환 1280px
+[3/6] tests\live\forms-time-follow-20261010.spec.ts:79:3 › 일정 추가는 검색 초점으로 열고 검색·지우기·선택 후에도 초안을 보존한다 375px
+[4/6] tests\live\forms-time-follow-20261010.spec.ts:126:3 › 추가 입력 검증과 검색 초점·실제 선택 장소 저장 375px
+[5/6] tests\live\forms-time-follow-20261010.spec.ts:79:3 › 일정 추가는 검색 초점으로 열고 검색·지우기·선택 후에도 초안을 보존한다 1280px
+[6/6] tests\live\forms-time-follow-20261010.spec.ts:126:3 › 추가 입력 검증과 검색 초점·실제 선택 장소 저장 1280px
+  6 passed (45.4s)

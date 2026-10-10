@@ -1,0 +1,64 @@
+
+[WebServer] (node:21688) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:8512) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+[WebServer] (node:28456) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:18392) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:5648) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/1] tests\live\aligned-map-quiet-cards-20261010.spec.ts:32:3 › 메뉴 정렬·고정 거리 글자·화살표만 전환 1280px
+  1) tests\live\aligned-map-quiet-cards-20261010.spec.ts:32:3 › 메뉴 정렬·고정 거리 글자·화살표만 전환 1280px ──────
+
+    Test timeout of 45000ms exceeded.
+
+    Error: locator.click: Test timeout of 45000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '닫기', exact: true })
+        - locator resolved to <button type="button" aria-label="닫기" class="toast-view_close__vTQwF">…</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not stable
+        - retrying click action
+        - waiting 20ms
+        - waiting for element to be visible, enabled and stable
+      - element was detached from the DOM, retrying
+
+
+       8 | test.beforeEach(async({request})=>{await mockServer(request).reset();});
+       9 | async function prepare(page:Page) {
+    > 10 |   const close=page.getByRole('button',{name:'닫기',exact:true});if(await close.isVisible())await close.click();
+         |                                                                                                      ^
+      11 |   await page.mouse.move(0,0);
+      12 | }
+      13 | async function capture(page:Page,name:string) {
+        at prepare (WORKSPACE\.tmp\full-release-20261008\release\final_project_cs\frontend\apps\web\tests\live\aligned-map-quiet-cards-20261010.spec.ts:10:102)
+        at WORKSPACE\.tmp\full-release-20261008\release\final_project_cs\frontend\apps\web\tests\live\aligned-map-quiet-cards-20261010.spec.ts:35:101
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\..\..\..\..\uiux-handoff-20261009-2300\frontend-check\add-search-focus-final-20261010\retry1-results\aligned-map-quiet-cards-20-2b7de--정렬·고정-거리-글자·화살표만-전환-1280px\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\..\..\..\..\..\uiux-handoff-20261009-2300\frontend-check\add-search-focus-final-20261010\retry1-results\aligned-map-quiet-cards-20-2b7de--정렬·고정-거리-글자·화살표만-전환-1280px\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\..\..\..\..\uiux-handoff-20261009-2300\frontend-check\add-search-focus-final-20261010\retry1-results\aligned-map-quiet-cards-20-2b7de--정렬·고정-거리-글자·화살표만-전환-1280px\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\..\..\..\..\uiux-handoff-20261009-2300\frontend-check\add-search-focus-final-20261010\retry1-results\aligned-map-quiet-cards-20-2b7de--정렬·고정-거리-글자·화살표만-전환-1280px\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    tests\live\aligned-map-quiet-cards-20261010.spec.ts:32:3 › 메뉴 정렬·고정 거리 글자·화살표만 전환 1280px ───────

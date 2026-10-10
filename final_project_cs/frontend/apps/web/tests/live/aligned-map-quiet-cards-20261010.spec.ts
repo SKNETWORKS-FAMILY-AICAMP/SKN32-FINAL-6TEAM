@@ -7,7 +7,10 @@ import {useMapTiles} from './capture-map-tiles';
 const shots=process.env.ALIGNED_MAP_SHOTS;
 test.beforeEach(async({request})=>{await mockServer(request).reset();});
 async function prepare(page:Page) {
-  const close=page.getByRole('button',{name:'닫기',exact:true});if(await close.isVisible())await close.click();
+  const close=page.getByRole('button',{name:'닫기',exact:true});if(await close.isVisible()) {
+    try { await close.click({timeout:1000}); }
+    catch(error) { if(await close.isVisible())throw error; }
+  }
   await page.mouse.move(0,0);
 }
 async function capture(page:Page,name:string) {
