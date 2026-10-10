@@ -496,9 +496,9 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   /** Back to the card's own button after the change screen closes. */
   const refocus = (id: string, which: "edit" | "delete") => requestAnimationFrame(() => document.getElementById(`plan-${which}-${id}`)?.focus());
 
-  const firstDay = shown.days[0]?.day ?? 1;
+  const firstDay = shown.days.find((day) => shown.items.some((item) => item.day === day.day))?.day ?? 1;
   // While checking, the map follows the day being checked; once done it shows the day picked (the first by default).
-  const mapDay = changing ? changing.day : done ? chosenDay ?? firstDay : shown.items.at(-1)?.day ?? firstDay;
+  const mapDay = changing ? changing.day : done ? (chosenDay !== null && shown.items.some((item) => item.day === chosenDay) ? chosenDay : firstDay) : shown.items.at(-1)?.day ?? firstDay;
   const days = shown.days.filter((day) => shown.items.some((item) => item.day === day.day));
   // Places the server could not settle have no pin; say so on the map, as the mockup's 「위치 미정」 tag does.
   const unlocated = changing ? [] : shown.items.filter((item) => item.day === mapDay && item.verdict !== null && !item.coordinates);
@@ -1047,10 +1047,13 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   }
   function chooseAllDays() { setSlide(null); setFilter(null); setDayChoice("all"); bodyBox.current?.scrollTo({ top: 0 }); }
   const neighbourOf = (side: -1 | 1) => (dayAt < 0 ? undefined : days[dayAt + side]);
+  const markerProgress = useRef({ shift: 0, width: 1 });
+  const measureMarker = useRef<() => void>(() => {});
   /** Where the marker under the day chips stands: on the chip of the day shown, or between it and its neighbour while the list is dragged (`shift` of `width`: negative = toward the next day). */
   function placeMarker(shift = 0, width = 1) {
+    markerProgress.current = { shift, width };
     const strip = stripBox.current, marker = markerBox.current;
-    if (!strip || !marker) return;
+    if (!strip || !marker || !strip.clientWidth) return;
     const tabs = Array.from(strip.querySelectorAll<HTMLElement>('[role="tab"]'));
     const at = listDay === "all" ? 0 : dayAt + 1;
     const here = tabs[at];
@@ -1070,7 +1073,23 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     const tab = stripBox.current?.querySelectorAll<HTMLElement>('[role="tab"]')[listDay === "all" ? 0 : dayAt + 1];
     tab?.scrollIntoView?.({ inline: "center", block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   // eslint-disable-next-line react-hooks/exhaustive-deps -- `placeMarker` reads the current day itself
-  }, [listDay, dayStrip, days.length, language]);
+  }, [listDay, dayStrip, days.length, language, side, compact, inserting]);
+  useLayoutEffect(() => {
+    measureMarker.current = () => placeMarker(markerProgress.current.shift, markerProgress.current.width);
+  });
+  // `[2026-10-11]` Badge/font widths and hidden→visible layouts can change without changing the day.
+  // Observe the tabs as well as the strip; keep the current drag fraction while remeasuring.
+  useLayoutEffect(() => {
+    const strip = stripBox.current;
+    if (!dayStrip || !strip) return;
+    let live = true;
+    const measure = () => { if (live) measureMarker.current(); };
+    const observer = new ResizeObserver(measure);
+    observer.observe(strip, { box: "border-box" });
+    strip.querySelectorAll<HTMLElement>('[role="tab"]').forEach((tab) => observer.observe(tab, { box: "border-box" }));
+    void document.fonts.ready.then(measure);
+    return () => { live = false; observer.disconnect(); };
+  }, [dayStrip, days.length]);
   /** Pinched as far in as it goes, the day list becomes the overview of every day; pinched as far out as it goes from the overview, one day. Between: the size the customer asked for stays. */
   function endPinch(zoom: number) {
     const zoomEl = zoomBox.current;
