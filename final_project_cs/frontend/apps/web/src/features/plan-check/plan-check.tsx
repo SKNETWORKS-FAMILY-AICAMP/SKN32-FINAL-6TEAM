@@ -211,7 +211,8 @@ function ProgressBar({ view }: { view: PlanCheckView }) {
   const reached = (index: number) => view.stage === "done" || (index === 0 ? view.stage !== "received" : index === last ? false : exact >= (index / last) * 100 - 0.05);
   const waitingAt = labels.findIndex((_, index) => !reached(index));
   // ★`[2026-10-03]` The server's "장소 3/14 · 광장시장" count comes while it reads, so the big bar says it too.
-  const at = view.serverProgress ? serverProgressText(view.serverProgress, t) : null;
+  // A terminal result supersedes the last partial SSE count; never announce it as still running.
+  const at = view.stage !== "done" && view.serverProgress ? serverProgressText(view.serverProgress, t) : null;
   return <div className={styles.progress} data-size="large" role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
     aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%${at ? ` · ${at}` : ""}`}>
     <div className={styles.track}><span className={styles.fill} style={{ width: `${Math.min(100, exact)}%` }} /></div>
@@ -235,7 +236,7 @@ function HeaderProgress({ view }: { view: PlanCheckView }) {
   const value = Math.round(progress(view));
   // ★`[2026-10-03 사용자 지시]` What the server says it is at ("3/14 · 광장시장 운영시간 확인 중"): only when it sent a `progress` packet.
   // ★A "places" count belongs to the reading: once the check has begun, a left-over "13/14 · … 장소 확인 중" would keep saying that while the hours and legs are drawn.
-  const at = view.serverProgress && view.serverProgress.phase !== "places" ? serverProgressText(view.serverProgress, t) : null;
+  const at = view.stage !== "done" && view.serverProgress && view.serverProgress.phase !== "places" ? serverProgressText(view.serverProgress, t) : null;
   return <div className={styles.headProgress} role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
     aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%${at ? ` · ${at}` : ""}`}>
     <span className={styles.headStep}>{labels[current]}<b>{value}%</b></span>

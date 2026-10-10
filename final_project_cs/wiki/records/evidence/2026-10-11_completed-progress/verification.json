@@ -1,0 +1,51 @@
+{
+  "team_base": "9e0972f76c5509af7aaa5624bcdc1d183e3e315d",
+  "mock_before": {
+    "reproduced": 2,
+    "total": 2,
+    "file": "before.json"
+  },
+  "mock_final": {
+    "startTime": "2026-10-10T20:46:48.744Z",
+    "duration": 30794.434,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "capture_run": {
+    "startTime": "2026-10-10T20:48:04.449Z",
+    "duration": 11223.048,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "unit": {
+    "file": "src/features/plan-check/server-progress.test.ts",
+    "passed": 5,
+    "total": 5
+  },
+  "static_checks": [
+    {
+      "command": "node node_modules/typescript/bin/tsc --noEmit",
+      "exit_code": 0
+    },
+    {
+      "command": "node node_modules/eslint/bin/eslint.js src/features/plan-check/plan-check.tsx tests/live/completed-progress-20261011.spec.ts",
+      "exit_code": 0
+    }
+  ],
+  "production_build": {
+    "LIVE_SKIP_BUILD": "0",
+    "result": "passed; final/capture reuse this unchanged production code"
+  },
+  "iterations": {
+    "first_two_test_setups": "backup first/second-test-run.json; not counted as product reproduction",
+    "after.json": "production fix passed completion assertions; two tests expected a bar on final results where it is intentionally absent. Corrected final-result assertion; 4 existing tests passed.",
+    "final.json": "6/6, no product change after after.json",
+    "capture.json": "2/2 same production; scroll to top for screenshot only"
+  },
+  "ux_scope": "기존 읽기·완료 문구 영역만; 새 모션/페이지 없음. 375/1280 촬영 확인",
+  "public_service_verified": false
+}
