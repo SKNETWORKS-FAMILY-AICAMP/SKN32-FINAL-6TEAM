@@ -17,6 +17,13 @@ export function toPixels(view: MapView, at: Coordinates): { x: number; y: number
   return { x, y };
 }
 
+/** toPixels의 역변환. 지도 화면의 Web Mercator 좌표를 사용한다. */
+export function fromPixels(view: MapView, at: { x: number; y: number }): Coordinates {
+  const top = mercatorY(view.north), bottom = mercatorY(view.south);
+  return { lat: (Math.atan(Math.exp(top - at.y / view.height * (top - bottom))) * 2 - Math.PI / 2) * 180 / Math.PI,
+    lng: view.west + at.x / view.width * (view.east - view.west) };
+}
+
 /** Metres on the ground that one px of the view covers (at its middle). */
 export function metersPerPixel(view: MapView): number {
   const middle = (view.north + view.south) / 2;

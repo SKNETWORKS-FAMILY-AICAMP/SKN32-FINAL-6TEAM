@@ -106,7 +106,7 @@ function MapTool({ label, hint, children, className, onClick, expanded, disabled
   label: string; hint?: string; children: ReactNode; className: string; onClick: () => void; expanded?: boolean; disabled?: boolean;
 }) {
   const id = useId();
-  return <button type="button" className={className} aria-label={label} aria-describedby={id} aria-expanded={expanded} aria-disabled={disabled || undefined} onClick={onClick}>
+  return <button type="button" className={className} data-map-obstacle={expanded !== undefined || undefined} aria-label={label} aria-describedby={id} aria-expanded={expanded} aria-disabled={disabled || undefined} onClick={onClick}>
     {children}<span id={id} role="tooltip" className={styles.toolTip}>{hint ?? label}</span>
   </button>;
 }

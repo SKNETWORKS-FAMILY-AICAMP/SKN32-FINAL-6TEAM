@@ -1,0 +1,90 @@
+
+=================================== ERRORS ====================================
+_______ ERROR collecting tests/unit/travel/test_intake_review_units.py ________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 8 validation errors for Settings
+E   database_url
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   openai_api_key
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\travel\test_intake_review_units.py:18: in <module>
+    from app.domains.travel_ops.components.intake import autofix, candidates, hours, moves, pipeline, places, review
+app\domains\travel_ops\components\intake\autofix.py:23: in <module>
+    from . import candidates as cand_module
+app\domains\travel_ops\components\intake\candidates.py:31: in <module>
+    from .review import (KST, SOURCE_LABEL, _Budgeted, _dt, _hours_lines, _line, _worst, default_engine, public_place)
+app\domains\travel_ops\components\intake\review.py:30: in <module>
+    from .assemble import collect
+app\domains\travel_ops\components\intake\assemble.py:29: in <module>
+    from app.domains.travel_ops.components.planning import planner
+app\domains\travel_ops\components\planning\planner.py:77: in <module>
+    DAY_START, DAY_END = _day_window()   #: �Ϸ� ù Ȱ�� �� ������ ������ ������ �ϴ� �ð�
+                         ^^^^^^^^^^^^^
+app\domains\travel_ops\components\planning\planner.py:64: in _day_window
+    guard = get_guardrails()
+            ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: �ʼ� ȯ�溯���� ���ų� �߸��ƴ�. .env.example �� .env �� �����ؼ� ä���.
+E   8 validation errors for Settings
+E   database_url
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   openai_api_key
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+=========================== short test summary info ===========================
+ERROR tests/unit/travel/test_intake_review_units.py - app.core.settings.Confi...
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 7.60s
+Exception ignored in: <function Console.__del__ at 0x000001C94A311BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

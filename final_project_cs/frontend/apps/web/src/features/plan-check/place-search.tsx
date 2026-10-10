@@ -38,7 +38,7 @@ export function PlaceSearch({ search, value, onPick, error, onBlur, onFocus, bus
     {onCancel && <PlaceSearchHeader query={query} onQuery={(next) => { if (value) onPick(null); onQuery(next); setResult({ state: "idle", list: [] }); onFocus(); }} onBack={onCancel}
       backLabel={t("일정 추가 취소", "Cancel adding a stop")} placeholder={t("추가할 장소 이름이나 주소", "Place name or address to add")} busy={busy} inputRef={inputRef} errorId={error ? `${id}-hint` : undefined} autoFocus escapeClears />}
     {value ? <div className={styles.selected}>
-      <span><strong>{value.name}</strong>{value.info?.address && <small>{value.info.address}</small>}</span>
+      <span><strong>{value.name}</strong>{value.info?.address && <small>{value.info.address}</small>}{value.pickedPlace?.source === "map" && <small>{t("지도에서 지정", "Picked on map")} · {value.pickedPlace.latitude.toFixed(6)}, {value.pickedPlace.longitude.toFixed(6)}</small>}</span>
       <button type="button" onClick={() => { if (busy) return; onQuery(""); setResult({ state: "idle", list: [] }); onPick(null); requestAnimationFrame(() => inputRef.current?.focus()); }}>{t("다시 검색", "Search again")}</button>
     </div> : <>
       {!onCancel && <><label htmlFor={id}>{t("장소 검색", "Search places")}</label>

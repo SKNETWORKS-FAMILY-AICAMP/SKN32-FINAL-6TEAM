@@ -8,7 +8,7 @@ import { ToastView, useToastState } from "@/components/toast-view";
 import { TripMap } from "@/features/map";
 import { routeNotes, visibleShapes } from "@/features/map/route-lines";
 import type { RouteShapes } from "@/lib/live/route-shapes";
-import type { PinLook } from "@/features/map/model";
+import type { Coordinates, PinLook } from "@/features/map/model";
 import type { TripStop } from "@/features/trip/model";
 import type { Language, Translate } from "@/lib/i18n";
 import { eul, ro } from "@/lib/josa";
@@ -423,6 +423,8 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const [changed, setChanged] = useState<Record<string, string>>({});
   const [removed, setRemoved] = useState<string[]>([]);
   const [inserting, setInserting] = useState<InsertionPoint | null>(null);
+  const [mapPicking, setMapPicking] = useState(false);
+  const [mapCoordinate, setMapCoordinate] = useState<Coordinates | null>(null);
   const [addingBusy, setAddingBusy] = useState(false);
   const removedSet = useMemo(() => new Set(removed), [removed]);
   // `[2026-10-04 사용자]` 한 번 더 확인할 때 바뀐 곳만 확인 표시가 다시 하나씩 켜진다.
@@ -1134,7 +1136,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   useInsertionPoint(bodyBox, canInsert && !inserting, `${planKey}|${listDay}|${listZoom}`);
   const closeInsertion = (key: string) => {
     if (addingBusy) return;
-    setInserting(null); setSlide("prev");
+    setMapPicking(false); setMapCoordinate(null); setInserting(null); setSlide("prev");
     requestAnimationFrame(() => {
       const button = document.getElementById(`plan-insert-${key}`);
       const box = bodyBox.current;
@@ -1142,7 +1144,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       button?.focus({ preventScroll: true });
     });
   };
-  const backGesture = useBackgroundBack(Boolean(inserting) && !addingBusy, () => { if (inserting) closeInsertion(inserting.key); });
+  const backGesture = useBackgroundBack(Boolean(inserting) && !addingBusy, () => { if (mapPicking) setMapPicking(false); else if (inserting) closeInsertion(inserting.key); });
   const renderInsertion = (point: InsertionPoint) => {
     const label = point.side === "before-move"
       ? t(`${point.previous} 다음 이동 전에 일정 추가`, `Add a stop before leaving ${point.previous}`)
@@ -1287,13 +1289,14 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
 
   return <div ref={checkingBox} className={styles.checking} data-sheet={custom !== null ? "custom" : sheet} data-changing={changing ? true : undefined} data-dragging={dragging || undefined} data-compact={compact && done && !changing && !inserting ? true : undefined} data-collapsed={collapsed && done && !changing && !inserting ? true : undefined} data-empty-map-in-list={emptyMapInList || undefined}
     {...quietDays.handlers} {...backGesture}
-    style={custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
+    style={mapPicking ? { "--sheet-h": "min(320px, 55%)" } as CSSProperties : custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
     <div className={styles.map}>
       <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" onInteractionChange={setMapMoving} topInset={64} bottomInset={76} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin}
+        coordinatePick={mapPicking ? { value: mapCoordinate, onPick: setMapCoordinate } : undefined}
         selectedLineId={selectedLine ?? undefined} onSelectLine={done && !changing ? onLine : undefined} />
     </div>
     {/* `[2026-10-08 사용자 지시]` 확인·변경·장소 표시는 같은 막대에, 이동 수단 이름은 확대된 경로선에 표시한다. */}
-    {(unlocated.length > 0 || pinned || mapSummary || (done && !changing && !registered && (needCount > 0 || changedCount > 0 || removed.length > 0 || actions.canUndoAll?.()))) && <div className={styles.mapChips} data-muted={mapMoving || undefined} inert={mapMoving} aria-hidden={mapMoving || undefined}>
+    {!mapPicking && (unlocated.length > 0 || pinned || mapSummary || (done && !changing && !registered && (needCount > 0 || changedCount > 0 || removed.length > 0 || actions.canUndoAll?.()))) && <div className={styles.mapChips} data-muted={mapMoving || undefined} inert={mapMoving} aria-hidden={mapMoving || undefined}>
       <div className={styles.statusTools} role="group" aria-label={t("일정 확인과 변경", "Plan checks and changes")}>
       {pinned
         ? <p className={styles.picked} aria-live="polite"><b>{pinned.title}</b>{(pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category) && <> · {pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category}</>}</p>
@@ -1337,6 +1340,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
         onClick={cycleSheet} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet} onKeyDown={nudgeSheet}><span aria-hidden="true" /></button>}
       {inserting ? <div className={`${styles.change} ${styles.page}`} data-slide="next">
         <AddStop key={inserting.key} date={inserting.date} initial={{ start: inserting.start, end: inserting.end }} blocked={frozen} onBusy={setAddingBusy} onCancel={() => closeInsertion(inserting.key)}
+          mapPicker={{ active: mapPicking, value: mapCoordinate, onStart: () => { setMapCoordinate(null); setMapPicking(true); }, onClose: () => setMapPicking(false) }}
           search={actions.searchToAdd ? (query) => actions.searchToAdd!(inserting.anchorId, query) : undefined}
           onSave={async (draft) => { await actions.add!(draft); setAddingBusy(false); setInserting(null); setSlide("prev"); setToast({ text: t("일정을 추가하고 앞뒤 이동시간을 다시 확인했어요.", "Added the stop and checked travel times around it.") }); }} />
       </div> : changing && change

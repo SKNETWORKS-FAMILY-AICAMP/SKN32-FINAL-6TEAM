@@ -8,14 +8,15 @@ import styles from "./map.module.css";
 import { routeLabels } from "./route-labels";
 import { MODE_NAMES } from "./route-lines";
 import { LINE_TONE_VARIABLE } from "./providers/lines";
-import { edgeChips } from "./map-geometry";
+import { edgeChips, fromPixels, toPixels } from "./map-geometry";
 
 const NO_STAYS: StayPoint[] = [];
 export function MapUnavailable({ message }: { message: string }) {
   return <div className={styles.unavailable} role="alert"><strong>지도를 표시할 수 없어요</strong><p>{message}</p></div>;
 }
 
-export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me = null, stays = NO_STAYS, onZoom, onInteractionChange, meAvailable = false }: MapViewProps & { adapter: MapAdapter; name: string }) {
+export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me = null, stays = NO_STAYS, onZoom, onInteractionChange, meAvailable = false, coordinatePick }: MapViewProps & { adapter: MapAdapter; name: string }) {
+  const pointer = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const surface = useRef<HTMLDivElement>(null);
   const container = useRef<HTMLDivElement>(null);
   const controller = useRef<MapController | null>(null);
@@ -127,7 +128,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
     const node = surface.current, controls = node?.querySelector<HTMLElement>("[data-map-controls]");
     if (!node || !controls) return;
     const measure = () => {
-      const root = node.getBoundingClientRect(), box = controls.getBoundingClientRect();
+      const root = node.getBoundingClientRect(), box = controls.querySelector<HTMLElement>("[data-map-obstacle]")!.getBoundingClientRect();
       const next = [{ left: box.left-root.left, top: box.top-root.top, right: box.right-root.left, bottom: box.bottom-root.top }];
       setControlArea((old) => JSON.stringify(old) === JSON.stringify(next) ? old : next);
     };
@@ -141,7 +142,17 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
     top: topInset ?? 0, bottom: bottomInset ?? 0, obstacles: controlArea,
   }) : [], [ready, view, points, topInset, bottomInset, controlArea]);
   useLayoutEffect(() => { controller.current?.setHiddenPoints(chips.flatMap((chip) => chip.ids)); refreshLayout(); }, [chips, folded, refreshLayout]);
-  return <div ref={surface} className={styles.live} role="region" aria-label="여행 지도" aria-busy={state.status === "loading"} data-moving={moving || undefined} data-awake={awake || undefined} onPointerDown={wake}>
+  const preview = view && coordinatePick?.value ? toPixels(view, coordinatePick.value) : null;
+  return <div ref={surface} className={styles.live} role="region" aria-label="여행 지도" aria-busy={state.status === "loading"} data-moving={moving || undefined} data-awake={awake || undefined} data-picking={!!coordinatePick || undefined} onPointerDown={wake}
+    onPointerDownCapture={event => { pointer.current = { x: event.clientX, y: event.clientY, moved: false }; }}
+    onPointerMoveCapture={event => { const start = pointer.current; if (start && Math.hypot(event.clientX-start.x, event.clientY-start.y)>8) start.moved = true; }}
+    onClickCapture={event => {
+      if (!coordinatePick || !view || !ready || (event.target as Element).closest('[data-map-controls], [data-map-pick-center], .leaflet-control')) return;
+      event.stopPropagation(); event.preventDefault();
+      if (!pointer.current || pointer.current.moved) return;
+      const rect = container.current!.getBoundingClientRect(), x = event.clientX-rect.left, y = event.clientY-rect.top;
+      if (x>=0 && x<=rect.width && y>=(topInset??0) && y<=rect.height-(bottomInset??0)) coordinatePick.onPick(fromPixels(view, { x, y }));
+    }}>
     <div className={styles.canvas} ref={container} aria-label={`${name} 지도`} />
     {ready && <div className={styles.routeLabels} aria-hidden="true">
       {routeLabels(view, lines ?? [], points, topInset, bottomInset).map((label) => <span key={label.id} data-route-label={label.id} data-mode={label.mode}
@@ -160,6 +171,10 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
       }} />}
     {ready && <MapControls view={view} topInset={topInset ?? 0} layout={layout} folded={folded} onFold={(next) => { setFolded(next); }} canFit={canFit} me={meButton}
       onZoom={(delta) => controller.current?.zoomBy(delta)} onFit={() => controller.current?.fit()} onLocate={() => { if (me) controller.current?.centerOn(me.coordinates); }} />}
-    {ready && points.length === 0 && <p className={styles.emptyNotice} role="status" data-empty-map-notice style={{ top: (topInset ?? 0) + 12 }}>표시할 장소 좌표가 없어요.</p>}
+    {ready && coordinatePick && view && <>
+      {preview && <span className={styles.coordinatePin} data-coordinate-pin aria-hidden="true" style={{ left: preview.x, top: preview.y }}>＋</span>}
+      <button type="button" className={styles.pickCenter} data-map-pick-center onClick={() => coordinatePick.onPick(fromPixels(view, { x: view.width/2, y: (view.height+(topInset??0)-(bottomInset??0))/2 }))}>지도 중심 선택</button>
+    </>}
+    {ready && points.length === 0 && !coordinatePick && <p className={styles.emptyNotice} role="status" data-empty-map-notice style={{ top: (topInset ?? 0) + 12 }}>표시할 장소 좌표가 없어요.</p>}
   </div>;
 }

@@ -4,7 +4,7 @@ import type { RouteShapes } from "@/lib/live/route-shapes";
 import { locationFailureText } from "@/lib/location";
 import { useT } from "@/lib/settings";
 import type { TripStop } from "../trip/model";
-import type { PinLook } from "./model";
+import type { MapViewProps, PinLook } from "./model";
 import { mapConfiguration } from "./config";
 import { useMemo, useState } from "react";
 import { GoogleMap, type GoogleDecision } from "./google-map";
@@ -17,6 +17,7 @@ import { useLocationSamples, useLocationStays, useMeOnMap, useMyLocation } from 
 import styles from "./map.module.css";
 
 export interface TripMapProps {
+  coordinatePick?: MapViewProps["coordinatePick"];
   stops: TripStop[];
   selectedId?: string;
   dayNumber: number;
@@ -71,9 +72,9 @@ export function TripMap(props: TripMapProps) {
   // Said only when the customer agreed and the browser could not give it — never a word without the consent (it is optional).
   const meNotice = failure ? locationFailureText(failure, t, "map") : null;
   return <div className={`${styles.frame} ${fill ? styles.fill : ""}`}>
-    {mapConfiguration.provider === "naver" ? <NaverMap {...viewProps} clientId={mapConfiguration.clientId} />
-      : mapConfiguration.provider === "osm" ? <OsmMap {...viewProps} tileUrl={mapConfiguration.tileUrl} />
-      : <GoogleMap {...viewProps} apiKey={mapConfiguration.apiKey} mapId={mapConfiguration.mapId} tileUrl={mapConfiguration.tileUrl} onDecided={setGoogle} />}
+    {mapConfiguration.provider === "naver" ? <NaverMap {...viewProps} coordinatePick={props.coordinatePick} clientId={mapConfiguration.clientId} />
+      : mapConfiguration.provider === "osm" ? <OsmMap {...viewProps} coordinatePick={props.coordinatePick} tileUrl={mapConfiguration.tileUrl} />
+      : <GoogleMap {...viewProps} coordinatePick={props.coordinatePick} apiKey={mapConfiguration.apiKey} mapId={mapConfiguration.mapId} tileUrl={mapConfiguration.tileUrl} onDecided={setGoogle} />}
     {fill && meNotice && <p className={styles.meNoticeFloat} role="status" data-my-location-notice style={{ top: `${(props.topInset ?? 0) + (points.length ? 12 : 64)}px` }}>{meNotice}</p>}
     {!fill && <p className={styles.caption}>
       <span>{providerName(mapConfiguration.provider, google)} · {props.dayNumber}일차 · {points.length}개 장소 표시</span>

@@ -71,6 +71,8 @@ export interface StayPoint {
 export interface MapView { south: number; west: number; north: number; east: number; width: number; height: number; zoom: number }
 
 export interface MapViewProps {
+  /** 클릭한 좌표의 미리보기. 저장은 일정 입력 화면에서 별도로 확인한다. */
+  coordinatePick?: { value: Coordinates | null; onPick: (at: Coordinates) => void };
   points: MapPoint[];
   selectedId?: string;
   onSelect: (stopId: string) => void;

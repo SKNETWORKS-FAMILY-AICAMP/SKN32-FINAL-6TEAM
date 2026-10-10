@@ -232,11 +232,11 @@ export function geometryKey(points: MapPoint[]) {
   return JSON.stringify(points.map(({ id, coordinates }) => [id, coordinates.lat, coordinates.lng]));
 }
 
-/** 화면에 실제로 그려진 지도 도구와 거리 칩의 영역을 마커 배치에서 제외한다. */
+/** 거리·화살표 버튼과 거리 칩만 피한다. 펼친 나머지 도구는 마커와 겹쳐도 된다. */
 export function pinArea(container: HTMLElement, options: { topInset?: number; bottomInset?: number }) {
   const box = container.getBoundingClientRect();
   const live = container.closest('[aria-label="여행 지도"]');
-  const obstacles = [...(live?.querySelectorAll<HTMLElement>('[data-map-controls], [data-edge-chip]') ?? [])].map((node) => {
+  const obstacles = [...(live?.querySelectorAll<HTMLElement>('[data-map-obstacle], [data-edge-chip]') ?? [])].map((node) => {
     const r = node.getBoundingClientRect();
     return { left: r.left - box.left - 6, top: r.top - box.top - 6, right: r.right - box.left + 6, bottom: r.bottom - box.top + 6 };
   });
