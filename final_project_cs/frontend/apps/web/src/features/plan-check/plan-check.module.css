@@ -80,8 +80,13 @@
 /* The day's timeline: time · rail · card (a place) or a thin line (the move to the next place) */
 .timeline { list-style: none; margin: 0; padding: 0; }
 .insertPoint { position: relative; height: 0; margin: 0 0 0 78px; z-index: 3; }
+.insertPoint::after { --insert-line-cycle: 3s; content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--color-border-strong); z-index: -2; opacity: 0; pointer-events: none; }
+.insertPoint[data-insert-near]::after, .insertPoint:focus-within::after { opacity: .6; animation: insertLineBreathe var(--insert-line-cycle) ease-in-out infinite; }
+.insertPoint:hover::after, .insertPoint:focus-within::after { animation-play-state: paused; }
+/* `[2026-10-10 사용자]` A quiet repeating line marks the chosen insertion seam; no layout or button movement. */
+@keyframes insertLineBreathe { 0%, 100% { opacity: .35; } 50% { opacity: .85; } }
 .insertButton { position: absolute; top: 0; left: calc(50% - 22px); display: grid; place-items: center; width: 44px; height: 44px; padding: 8px; border: 0; border-radius: 50%; background: transparent; color: var(--color-primary); cursor: pointer; opacity: 0; pointer-events: none; transform: translateY(-50%); transition: opacity .16s ease-out; }
-.insertButton::before { content: ""; position: absolute; inset: 8px; border: 1px solid var(--color-border-strong); border-radius: 50%; background: var(--color-surface); box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 9%, transparent); z-index: -1; }
+.insertButton::before { content: ""; position: absolute; inset: 7px; border: 1px solid var(--color-border-strong); border-radius: 50%; background: var(--color-surface); z-index: -1; }
 .insertPoint[data-insert-near] .insertButton, .insertPoint:focus-within .insertButton { opacity: 1; pointer-events: auto; }
 .insertButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 .insertButton:hover .iconTip, .insertButton:focus-visible .iconTip { opacity: 1; visibility: visible; }
@@ -89,7 +94,7 @@
 .insertPoint[data-insert-open] > .insertButton { display: none; }
 .insertForm { min-width: 0; scroll-margin-top: 76px; }
 .insertHint { margin: 0 0 8px; color: var(--color-muted); font-size: 12px; }
-@media (prefers-reduced-motion: reduce) { .insertButton { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .insertButton { transition: none; } .insertPoint::after { animation: none !important; } }
 /* `[2026-10-05 사용자 지시 · 일정 상자 안 B]` A fixed time column (44px) and equal gaps (8px) so every row starts in the same place: the time on the same line as its dot, the card the same distance from the line. */
 .entry { display: grid; grid-template-columns: 44px 18px minmax(0, 1fr); column-gap: 8px; animation: riseSoft .6s cubic-bezier(.2, .8, .2, 1); }
 /* The time is a button once the plan is checked: a button centres its text in the whole row and let the time drift under its dot - it is held to the top, and its line (18px) is centred on the dot.
@@ -518,9 +523,13 @@ button.headBadge { cursor: pointer; }
 .sheetHead[data-float] > * { pointer-events: auto; }
 .sheetHead[data-float] .dayStrip { padding-left: 2px; }
 .sheetHead[data-float] .dayStrip { --day-enter: 200ms; --day-exit: 150ms; opacity: 1; transform: translateY(0); transition: opacity var(--day-enter) ease-out, transform var(--day-enter) ease-out; }
+.sheetHead[data-float] .dayStrip:not([data-quiet]) { --day-float-cycle: 4s; animation: dayFloat var(--day-float-cycle) ease-in-out infinite; }
+.sheetHead[data-float] .dayStrip:is(:hover, :focus-within, [data-dragging]) { animation-play-state: paused; }
+/* `[2026-10-10 사용자]` Float the whole tab row, including its selected marker, without moving the list. */
+@keyframes dayFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 .sheetHead[data-float] .dayStrip[data-quiet] { opacity: 0; transform: translateY(-4px); pointer-events: none; transition-duration: var(--day-exit); transition-timing-function: ease-in; }
 @media (prefers-reduced-motion: reduce) {
-  .sheetHead[data-float] .dayStrip { transform: none; transition: none; }
+  .sheetHead[data-float] .dayStrip { animation: none !important; transform: none; transition: none; }
 }
 .sheetHead[data-float] .dayChip:not([data-lit]) { background: var(--color-surface); }
 .sheetHead[data-float] :is(.dayChip, .resetTimes, .headBadge) { box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 12%, transparent); }
