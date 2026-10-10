@@ -287,7 +287,7 @@ class DisasterMsgCsv:
              at: Any = None, *, within: Any = None, address: str | None = None) -> dict[str, Any] | None:
         """좌표 · 주소로 자치구를 정해 조회한다 — `[2026-10-08]` role-activity 판에서 합쳤다.
 
-        보존한 활동 팀 판(`instances/activity/watch.py` 는 `within=`, `read_tools.py` 는 `at=`)이 부른다.
+        `read_tools.py` 가 `at=` 으로 부른다. `within=` 은 `[2026-10-10]` 지운 활동별 5분 감시(`instances/activity/watch.py`)가 쓰던 이름이다.
         `address` 를 주면 주소의 구로 거른다(`seoul_districts`). 구를 못 정하면 시 전체로 조회한다.
         """
         effective_at = within or at or datetime.now(KST)
@@ -412,7 +412,7 @@ class DisasterMsgApi(TravelSource):
              at: Any = None, *, within: Any = None, address: str | None = None) -> dict[str, Any] | None:
         """좌표 · 주소로 자치구를 정해 조회한다 — `[2026-10-08]` role-activity 판에서 합쳤다.
 
-        보존한 활동 팀 판(`instances/activity/watch.py` 는 `within=`, `read_tools.py` 는 `at=`)이 부른다.
+        `read_tools.py` 가 `at=` 으로 부른다. `within=` 은 `[2026-10-10]` 지운 활동별 5분 감시(`instances/activity/watch.py`)가 쓰던 이름이다.
         `address` 를 주면 주소의 구로 거른다(`seoul_districts`). 구를 못 정하면 시 전체로 조회한다.
         """
         effective_at = within or at or datetime.now(KST)
