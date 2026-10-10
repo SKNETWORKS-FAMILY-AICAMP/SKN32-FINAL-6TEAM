@@ -172,6 +172,7 @@ class ReadToolbox:
             # ★`[2026-10-09]` 항공편 비교용 두 번째 소스(Ignav MCP) — 판매처(항공사 · OTA) 예약 링크가 붙는다. 항공 팀이 쓴다
             "read.flight_offers": self.flight_offers,
             "read.flight_google": self.flight_google,
+            "read.stay_google": self.stay_google,
         }
 
     #: 여행 예약의 컬럼. ★`_one()` 이 zip 으로 붙이므로 SELECT 순서와 **같아야** 한다.
@@ -600,6 +601,16 @@ class ReadToolbox:
         wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")
         return source.flight_search(origin=str(origin), destination=str(destination), depart_date=str(depart_date),
                                     **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def stay_google(self, scope: ToolContext, *, keyword: str | None = None, check_in: str | None = None,
+                    check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """숙소 목록(SerpApi 구글 호텔, 한국 설정) — 이름 · 1박 · 전체 · 평점 · 좌표 · 링크. 키가 없어 소스가 없으면 `None`. `[2026-10-10]`"""
+        source = getattr(self.travel, "stay_google", None) if self.travel else None
+        if source is None or not keyword or not check_in or not check_out:
+            return None
+        wanted = ("adults", "children", "size", "max_price")
+        return source.stay_search(keyword=str(keyword), check_in=str(check_in), check_out=str(check_out),
+                                  **{key: options[key] for key in wanted if options.get(key) is not None})
 
     def route(self, scope: ToolContext, **_: Any) -> None:
         """이동 시간. `[미구현]` — Routes API 를 붙일 자리."""

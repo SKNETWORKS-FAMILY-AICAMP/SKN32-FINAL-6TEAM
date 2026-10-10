@@ -240,6 +240,14 @@ def test_a_mixed_carrier_round_trip_is_flagged_and_same_price_offers_are_one_lin
     assert "   ※ 가는 편과 오는 편 항공사가 달라(7C · BR) 따로 예약해야 할 수 있습니다." in result.answer
 
 
+def test_myrealtrip_resting_after_a_429_is_said_as_resting_not_failed():
+    result, _, _ = _run(SEARCH, {"read.flight_search": {"cooldown_seconds": 540, "source": "myrealtrip"},
+                                 "read.flight_offers": IGNAV})
+    assert "마이리얼트립은 요청 한도로 잠시 조회를 쉬는 중 · 항공사·여행사 판매처 2개" in result.answer
+    assert "read.flight_search" not in [item.source_id for item in result.evidence], "쉬는 표시는 근거가 아니다"
+    assert "제주항공(항공사 공식) 289,000원" in result.answer
+
+
 def test_one_source_is_enough_and_both_missing_is_unknown():
     result, _, _ = _run(SEARCH, {"read.flight_search": None, "read.flight_offers": IGNAV})
     assert result.outcome == "completed" and "찾은 결과(마이리얼트립 조회 실패 · 항공사·여행사 판매처 2개 · 구글 항공권 조회 실패)를" in result.answer

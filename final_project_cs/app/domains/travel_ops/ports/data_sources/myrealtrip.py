@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import threading
 import time
@@ -27,6 +28,8 @@ from typing import Any, Callable
 import httpx
 
 from .base import TravelSource
+
+logger = logging.getLogger(__name__)
 
 URL = "https://mcp-servers.myrealtrip.com/mcp"
 PROTOCOL = "2025-03-26"
@@ -41,6 +44,12 @@ SOURCE = "myrealtrip"
 TIMEOUT_SECONDS = 30.0
 #: 429 를 받았는데 기다릴 시간을 못 읽었을 때 쉬는 시간(초). 우리가 고른 값
 DEFAULT_RETRY_AFTER_SECONDS = 60.0
+#: `[2026-10-10]` 마이리얼트립은 429 를 받으면 **최소 이만큼** 부르지 않는다(사용자 결정). MCP 의 호출 한도가 문서 · 서버 안내문 ·
+#: 응답 헤더 어디에도 없어(10-10 15:13 playdata 확인) 길게 잡았다 — 마이리얼트립 문의 답이 오면 이 값을 바꾼다
+PROVIDER_COOLDOWN_SECONDS = 600.0
+#: 쉬는 시각은 같은 주소를 쓰는 어댑터끼리 나눈다(질문마다 어댑터를 새로 만들어도 이어진다). 서버 프로세스 메모리에만 있다
+_BLOCKED_UNTIL: dict[str, float] = {}
+_BLOCKED_LOCK = threading.Lock()
 
 _DIGITS = re.compile(r"\d[\d,]*")
 
@@ -81,10 +90,26 @@ class McpToolTransport(TravelSource):
         #   그 사이 부르면 같은 거절만 늘고 제공처에 부하를 보탠다.
         self._clock = time.monotonic
         self._blocked_until = 0.0
+        #: 429 뒤 최소로 쉬는 시간 · 쉬는 시각을 어댑터끼리 나눌지. 기본은 응답이 말한 만큼 · 이 어댑터만(Ignav)
+        self._min_cooldown = 0.0
+        self._shared_block = False
 
     def _extra_headers(self) -> dict[str, str]:
         """소스마다 덧붙일 헤더(키 등). 기본은 없음."""
         return {}
+
+    def cooldown_left(self) -> float:
+        """429 뒤 쉬는 중이면 남은 초, 아니면 0."""
+        until = self._blocked_until
+        if self._shared_block:
+            with _BLOCKED_LOCK:
+                until = max(until, _BLOCKED_UNTIL.get(self._url, 0.0))
+        return max(0.0, until - self._clock())
+
+    def _cooling(self) -> dict[str, Any] | None:
+        """쉬는 중이라 못 부른 것이면 그 표시(`cooldown_seconds`)를 돌려준다 — 팀이 「조회 실패」와 다르게 말하게. 아니면 `None`."""
+        left = self.cooldown_left()
+        return {"cooldown_seconds": round(left), "source": self.name} if left > 0 else None
 
     # ── JSON-RPC ────────────────────────────────────────────────
     def _send(self, method: str, params: dict[str, Any] | None, *, notify: bool = False) -> dict[str, Any] | None:
@@ -112,7 +137,12 @@ class McpToolTransport(TravelSource):
         if notify:
             return {}
         if response.status_code == 429:
-            self._blocked_until = self._clock() + _retry_after(response)
+            seconds = max(_retry_after(response), self._min_cooldown)
+            self._blocked_until = self._clock() + seconds
+            if self._shared_block:
+                with _BLOCKED_LOCK:
+                    _BLOCKED_UNTIL[self._url] = max(_BLOCKED_UNTIL.get(self._url, 0.0), self._blocked_until)
+            logger.warning("travel source cooldown: %s got 429 on %s — no calls for %.0fs", self.name, method, seconds)
         if response.status_code != 200:
             self._miss(f"http_{response.status_code}", response.text[:200])
             return None
@@ -138,7 +168,7 @@ class McpToolTransport(TravelSource):
 
     def _call(self, tool: str, arguments: dict[str, Any]) -> dict[str, Any] | None:
         """도구 하나를 부르고 본문(JSON 객체)을 돌려준다. 실패 갈래는 전부 세고 `None`."""
-        wait = self._blocked_until - self._clock()
+        wait = self.cooldown_left()
         if wait > 0:
             self._miss("rate_limited_by_provider", f"{wait:.0f}s remaining")
             self.last_wait_seconds = wait
@@ -181,6 +211,8 @@ class MyRealTripMcp(McpToolTransport):
                  post: Callable[[str, dict[str, Any], dict[str, str]], httpx.Response] | None = None,
                  **kwargs: Any) -> None:
         super().__init__(url=url, post=post, **kwargs)
+        # 쉬는 시각을 나누는 것은 실제로 나갈 때만 — 시험(가짜 `post`)끼리 서로 막지 않게
+        self._min_cooldown, self._shared_block = PROVIDER_COOLDOWN_SECONDS, post is None
 
     # ── 숙소 ────────────────────────────────────────────────────
     def stay_search(self, *, keyword: str, check_in: str, check_out: str, adults: int = 2, children: int = 0,
@@ -201,7 +233,7 @@ class MyRealTripMcp(McpToolTransport):
                 arguments[name] = value
         data = self._call("searchStays", arguments)
         if data is None:
-            return None
+            return self._cooling()
         rows = data.get("stays")
         if not isinstance(rows, list):
             self._miss("unexpected_shape", f"searchStays: {sorted(data)[:8]}")
@@ -229,7 +261,7 @@ class MyRealTripMcp(McpToolTransport):
         data = self._call("getStayDetail", {"gid": int(gid), "checkIn": check_in, "checkOut": check_out,
                                             "adultCount": int(adults), "childCount": int(children)})
         if data is None:
-            return None
+            return self._cooling()
         prop, pricing, location = (data.get(key) if isinstance(data.get(key), dict) else {}
                                    for key in ("property", "pricing", "location"))
         if not prop:
@@ -283,7 +315,7 @@ class MyRealTripMcp(McpToolTransport):
             arguments["directFlightOnly"] = bool(direct_only)       # 국내선 도구에는 이 입력이 없다
         data = self._call("searchDomesticFlights" if domestic else "searchInternationalFlights", arguments)
         if data is None:
-            return None
+            return self._cooling()
         result = data.get("result") if isinstance(data.get("result"), dict) else {}
         rows = result.get("items")
         if not isinstance(rows, list):

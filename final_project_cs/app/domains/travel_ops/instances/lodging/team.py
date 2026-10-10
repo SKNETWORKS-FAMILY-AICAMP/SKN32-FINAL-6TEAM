@@ -11,12 +11,16 @@
   고객이 보낸 글을 팀에 넘기지 않아(`Controller.resume` 은 토큰만 받고, 팀은 처음 문장을 다시 받는다) `waiting` 으로 두면
   같은 질문만 되풀이된다. 고객이 조건을 채워 다시 보내면 새 요청으로 처리된다.
 - `lodging.status` 는 전과 같다 — 잠긴 예약을 조회만 한다.
+- `[2026-10-10]` **비교**: 찾기에서 같은 조건으로 구글 호텔(`read.stay_google`, SerpApi 한국 설정)도 부르고, 마이리얼트립 목록 아래에
+  구글 호텔 쪽 숙소(호텔만, 이미 보인 이름은 빼고) 최대 `GOOGLE_SHOWN` 곳을 따로 보여 준다. 두 소스의 숙소 이름이 달라(한국어 · 영어 ·
+  지점 표기) 같은 숙소로 묶지는 않는다. 끝에 「같은 조건으로 다른 곳에서 보기」(부킹닷컴) 링크를 붙인다. 가격은 조회 시점 참고값이다.
 """
 from __future__ import annotations
 
 from datetime import datetime
 import logging
 from typing import Any
+from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
@@ -32,6 +36,8 @@ SEOUL = ZoneInfo("Asia/Seoul")
 SHOWN, DETAIL_CALLS = 3, 4
 #: 목록에서 받는 수(찾기) · 이름으로 찾을 때 받는 수(내 숙소). 우리가 고른 값
 SEARCH_SIZE, NAME_SIZE = 20, 5
+#: 구글 호텔에서 따로 보여 주는 수. 우리가 고른 값
+GOOGLE_SHOWN = 3
 
 
 def _won(value: Any) -> str:
@@ -52,9 +58,9 @@ class LodgingTeam(TravelTeamBase):
         accepted_case_types=["lodging"],
         # 정책 문서를 쓰지 않는다 — 선언하면 문서 0건으로 degraded 가 된다(`locked` 의 2026-09-22 주석과 같은 까닭)
         required_context=["case_state", "db_facts", "history"],
-        allowed_tools=["read.booking", "read.itinerary", "read.stay_search", "read.stay_detail"],
+        allowed_tools=["read.booking", "read.itinerary", "read.stay_search", "read.stay_detail", "read.stay_google"],
         knowledge_scope=["lodging"],
-        max_steps=7,                                  # 일정 1 + 목록 1 + 상세 DETAIL_CALLS + 여유 1
+        max_steps=8,                                  # 일정 1 + 목록 1 + 구글 호텔 1 + 상세 DETAIL_CALLS + 여유 1
         active=True,
         implementation_revision="2026-10-07",
         default_capability="lodging.assist",
@@ -121,9 +127,25 @@ class LodgingTeam(TravelTeamBase):
         listing = self._read(task, "read.stay_search", {
             "keyword": found.keyword, **dates, **party, "domestic": found.domestic, "size": SEARCH_SIZE,
             "max_price": found.max_price_per_night, "min_review_rating": found.min_rating}, seen)
+        # `[2026-10-10]` 마이리얼트립이 429 뒤 쉬는 중이면 표시만 온다 — 결과가 아니니 근거에 싣지 않는다
+        resting = bool(listing and listing.get("cooldown_seconds"))
+        if resting:
+            listing = None
         evidence = self._evidence(task, source_id="read.stay_search", claim="숙소 검색 결과(마이리얼트립)", value=listing,
                                   base=evidence)
+        google = self._read(task, "read.stay_google", {
+            "keyword": found.keyword, **dates, **party, "size": SEARCH_SIZE, "max_price": found.max_price_per_night}, seen)
+        evidence = self._evidence(task, source_id="read.stay_google", claim="숙소 검색 결과(SerpApi 구글 호텔, 한국 설정)",
+                                  value=google, base=evidence)
+        extra = self._google_block(found, dates, google, [])
         if listing is None:
+            why = "요청 한도로 잠시 조회를 쉬고 있습니다" if resting else "결과를 받지 못했습니다(조회 실패)"
+            if (google and google.get("stays")) or resting:
+                # 마이리얼트립을 못 읽어도 구글 호텔 · 다른 곳 링크는 보여 준다 — 그렇다고 적는다
+                return self._respond(task, evidence, {**decision, "found": None, "resting": resting,
+                                                      "google": len((google or {}).get("stays") or [])},
+                                     "\n".join([f"{found.keyword} · {dates['check_in']}~{dates['check_out']} 조건으로 마이리얼트립 검색은 {why}.",
+                                                *extra]))
             return self._unknown(task, "숙소 검색 결과", evidence)
         if not listing["stays"]:
             return self._respond(task, evidence, {**decision, "found": 0},
@@ -142,6 +164,8 @@ class LodgingTeam(TravelTeamBase):
                 continue
             calls += 1
             detail = self._read(task, "read.stay_detail", {"gid": stay["gid"], **dates, **party}, seen)
+            if detail and detail.get("cooldown_seconds"):
+                detail = None                         # 상세 도중 429 — 쉬는 표시는 상세가 아니다(아래에서 더 부르지 않고 멈춘다)
             evidence = self._evidence(task, source_id=f"read.stay_detail:{stay['gid']}", claim="숙소 상세(마이리얼트립)",
                                       value=detail, base=evidence)
             if detail is not None and (detail.get("no_rooms") or detail.get("sold_out")):
@@ -152,17 +176,19 @@ class LodgingTeam(TravelTeamBase):
             if detail is None:
                 # ★상세를 못 읽었으면 더 부르지 않는다 — 대개 제공처가 거절한 것이고(2026-10-08 14:35 playdata 429), 이어 부르면 부하만 보탠다
                 break
-        decision = {**decision, "found": len(listing["stays"]), "shown": shown, "skipped": skipped}
+        extra = self._google_block(found, dates, google, [item["name"] for item in shown])
+        decision = {**decision, "found": len(listing["stays"]), "shown": shown, "skipped": skipped,
+                    "google": len((google or {}).get("stays") or []) if google is not None else None}
         if not lines:
             return self._respond(task, evidence, decision,
                                  f"{found.keyword} · {dates['check_in']}~{dates['check_out']} 조건으로 받은 {len(listing['stays'])}곳 중 "
                                  f"{len(skipped)}곳이 가격이 없거나 그 날짜에 객실이 없었고, 그 밖의 곳은 확인하지 못했습니다. "
-                                 "날짜나 지역을 바꿔 다시 말씀해 주세요.")
+                                 "날짜나 지역을 바꿔 다시 말씀해 주세요." + ("\n" + "\n".join(extra) if extra else ""))
         head = (f"{found.keyword} · {dates['check_in']}~{dates['check_out']} · 성인 {found.adults}명 조건으로 "
                 f"{listing.get('total') or len(listing['stays'])}곳 중 {len(lines)}곳입니다(마이리얼트립 검색 순서"
                 + (f", 가격이 없거나 그 날짜에 객실이 없는 {len(skipped)}곳은 건너뜀" if skipped else "") + ").")
-        tail = "가격과 잔여 객실은 조회 시점 기준이며 링크에서 다시 확인해 주세요. 예약은 링크의 마이리얼트립 페이지에서 직접 하시면 됩니다."
-        return self._respond(task, evidence, decision, "\n".join([head, *lines, tail]))
+        tail = "가격과 잔여 객실은 조회 시점 기준이며 링크에서 다시 확인해 주세요. 예약은 링크한 페이지에서 직접 하시면 됩니다."
+        return self._respond(task, evidence, decision, "\n".join([head, *lines, *extra, tail]))
 
     def _my_stay(self, task: TeamTask, found: Interpretation, seen: set[str], evidence: list[Evidence],
                  decision: dict[str, Any]) -> TeamResult:
@@ -197,6 +223,38 @@ class LodgingTeam(TravelTeamBase):
         return self._respond(task, evidence, {**decision, "my_stay": {**stay, **dates}}, answer)
 
     # ── 부품 ────────────────────────────────────────────────────
+    @staticmethod
+    def _google_block(found: Interpretation, dates: dict[str, str], google: dict[str, Any] | None,
+                      shown_names: list[str]) -> list[str]:
+        """구글 호텔 쪽 줄 + 다른 곳에서 보기 링크. 이미 보인 이름(공백 · 대소문자 무시)과 숙박 공유(vacation rental)는 뺀다.
+
+        ★숙박 공유를 빼는 까닭 — ☆2026-10-10 14:21 playdata 「서울 명동」 앞의 셋이 숙박 공유(Bluepillow · Vio)였고 평점 · 후기가 없었다.
+        ★가격이 없는 곳도 뺀다 — ☆15:37 「지요크 명동」이 가격 · 링크 없이 왔다(비교에 쓸 수 없다).
+        """
+        lines: list[str] = []
+        if google is None:
+            lines.append("구글 호텔 비교는 받지 못했습니다(조회 실패).")
+        else:
+            seen = {"".join(name.split()).casefold() for name in shown_names}
+            picks = [stay for stay in google.get("stays") or []
+                     if stay.get("type") != "vacation rental" and stay.get("price_per_night") is not None
+                     and "".join(stay["name"].split()).casefold() not in seen][:GOOGLE_SHOWN]
+            if picks:
+                lines.append("구글 호텔에서 본 같은 조건 숙소(구글 순서, 숙박 공유 제외):")
+                for stay in picks:
+                    rating = (f"평점 {stay['rating']:.1f}/5" + (f"(후기 {stay['review_count']:,})" if isinstance(stay.get("review_count"), int) else "")
+                              if stay.get("rating") else "평점 없음")
+                    star = f"{stay['hotel_class']}성급 · " if stay.get("hotel_class") else ""
+                    lines.append(f"   · {stay['name']} — {star}1박 {_won(stay.get('price_per_night'))} · 전체 {_won(stay.get('total_price'))} · "
+                                 f"{rating}: {stay.get('link') or '링크 없음'}")
+            if google.get("page"):
+                lines.append(f"구글 호텔 검색 결과 페이지(날짜는 그 화면에서 다시 고르셔야 할 수 있습니다): {google['page']}")
+        booking = (f"https://www.booking.com/searchresults.ko.html?ss={quote(found.keyword or '')}"
+                   f"&checkin={dates['check_in']}&checkout={dates['check_out']}"
+                   f"&group_adults={found.adults or 1}&no_rooms=1&group_children={found.children or 0}")
+        lines += ["같은 조건으로 다른 곳에서 보기(가격은 그 사이트에서 확인):", f"   · 부킹닷컴: {booking}"]
+        return lines
+
     def _trip(self, task: TeamTask, seen: set[str]) -> tuple[dict[str, Any] | None, list[Evidence]]:
         """Case 에 여행이 붙어 있으면 그 일정을 모델에 줄 요약으로. 없거나 못 읽으면 `None` — 없이 해석한다."""
         ref = task.context.current_state.get("subject_ref") or {}

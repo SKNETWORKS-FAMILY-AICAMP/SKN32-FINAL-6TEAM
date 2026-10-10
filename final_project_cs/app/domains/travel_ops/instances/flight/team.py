@@ -317,6 +317,10 @@ class FlightTeam(TravelTeamBase):
             "direct_only": found.direct_only, "cabin": found.cabin, "max_results": FETCH,
             "adults": found.adults, "children": found.children, "infants": found.infants}
         mrt = self._read(task, "read.flight_search", dict(arguments), seen)
+        # `[2026-10-10]` 마이리얼트립이 429 뒤 쉬는 중이면 표시만 온다 — 결과가 아니니 근거에 싣지 않고, 답에는 「쉬는 중」으로 적는다
+        resting = bool(mrt and mrt.get("cooldown_seconds"))
+        if resting:
+            mrt = None
         evidence = self._evidence(task, source_id="read.flight_search", claim="항공편 검색 결과(마이리얼트립)", value=mrt,
                                   base=evidence)
         # ★왕복은 Ignav 를 부르지 않는다(사용자 결정 2026-10-10) — ☆13:41 · 13:45 playdata ICN→NRT 왕복: Ignav 가 41.9~42.3초(전체의 90% 넘게)
@@ -381,7 +385,8 @@ class FlightTeam(TravelTeamBase):
         searches = sorted({(offer["label"], offer["link"]) for option in shown_options for offer in option["offers"]
                            if offer.get("link_kind") == "route_search" and offer.get("link")})
         pages = [f"{label} 이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): {url}" for label, url in searches]
-        counted = [f"마이리얼트립 {len(mrt.get('flights') or [])}개" if mrt is not None else "마이리얼트립 조회 실패",
+        counted = [f"마이리얼트립 {len(mrt.get('flights') or [])}개" if mrt is not None
+                   else "마이리얼트립은 요청 한도로 잠시 조회를 쉬는 중" if resting else "마이리얼트립 조회 실패",
                    f"항공사·여행사 판매처 {len(offers.get('flights') or [])}개" if offers is not None
                    else "항공사·여행사 판매처는 편도만" if found.return_date else "판매처 비교 조회 실패",
                    ("구글 항공권 왕복 최저가 참고" if google.get("note") and not google.get("flights")

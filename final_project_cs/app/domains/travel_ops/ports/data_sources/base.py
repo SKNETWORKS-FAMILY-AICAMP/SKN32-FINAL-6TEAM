@@ -334,6 +334,8 @@ class TravelSources:
     flight_offers: Any | None = None
     #: SerpApi Google Flights — 구글 항공권 한국 설정 검색(`serpapi_flights.py`). 키(`serpapi_api_key`)가 있을 때만(2026-10-09).
     flight_google: Any | None = None
+    #: SerpApi Google Hotels — 구글 호텔 한국 설정 검색(`serpapi_hotels.py`). 같은 키(`serpapi_api_key`)가 있을 때만(2026-10-10).
+    stay_google: Any | None = None
     #: 키가 없어 못 붙인 소스 이름들. ★조용히 비워 두지 않는다.
     unavailable: dict[str, str] = field(default_factory=dict)
     #: 소스 전부가 같은 것을 공유한다 - 따로 두면 한 키를 두 소스가 나눠
@@ -485,8 +487,11 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
     if serpapi_key:
         from .serpapi_flights import SerpApiFlights
         sources.flight_google = SerpApiFlights(api_key=serpapi_key, limiter=limiter)
+        from .serpapi_hotels import SerpApiHotels
+        sources.stay_google = SerpApiHotels(api_key=serpapi_key, limiter=limiter)
     else:
         sources.unavailable["flight_google"] = "serpapi_api_key 없음 — 구글 항공권 비교 안 함"
+        sources.unavailable["stay_google"] = "serpapi_api_key 없음 — 구글 호텔 비교 안 함"
     # ── 기상: 1차 + 대체 (v11 §0-4 결정 15) ─────────────────────────
     # ★`weather_provider` 는 **어느 쪽이 먼저인가**만 정한다. 붙일 수 있는 것은
     #   전부 붙이고 나머지를 대체로 둔다 — 1차가 못 주면 대체가 값을 낸다.

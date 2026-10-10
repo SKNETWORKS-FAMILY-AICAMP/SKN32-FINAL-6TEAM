@@ -264,14 +264,36 @@ def test_after_a_429_the_source_waits_without_calling_out():
 
     source = MyRealTripMcp(post=post)
     source._clock = lambda: now[0]
-    assert source.stay_search(keyword="서울", **DATES) is None and source.misses["http_429"] == 1
+    # ★`[2026-10-10]` 마이리얼트립은 응답이 60초라 해도 최소 600초 쉰다(사용자 결정) — 못 부른 것은 「쉬는 중」 표시로 돌려준다
+    assert source.stay_search(keyword="서울", **DATES) == {"cooldown_seconds": 600, "source": "myrealtrip"}
+    assert source.misses["http_429"] == 1
     sent = len(server.sent)
-    now[0] += 59
-    assert source.stay_search(keyword="서울", **DATES) is None
-    assert len(server.sent) == sent and source.misses["rate_limited_by_provider"] == 1
+    now[0] += 599
+    assert source.stay_search(keyword="서울", **DATES) == {"cooldown_seconds": 1, "source": "myrealtrip"}
+    assert source.flight_search(origin="ICN", destination="NRT", depart_date="2026-10-20")["cooldown_seconds"] == 1
+    assert len(server.sent) == sent and source.misses["rate_limited_by_provider"] == 2
     now[0] += 2
     source._post = server
     assert source.stay_search(keyword="서울", **DATES)["stays"]
+
+
+def test_the_cooldown_is_shared_by_adapters_of_the_same_address():
+    from app.domains.travel_ops.ports.data_sources import myrealtrip
+
+    now = [1000.0]
+
+    def blocked(url, message, headers):
+        return httpx.Response(429, json={"retryAfter": 60}, request=httpx.Request("POST", "https://x"))
+
+    first, second = MyRealTripMcp(url="https://shared.test/mcp", post=blocked), MyRealTripMcp(url="https://shared.test/mcp", post=FakeServer({"searchStays": STAYS}))
+    for source in (first, second):
+        source._clock, source._shared_block = (lambda: now[0]), True
+    try:
+        first._ready = True
+        assert first.stay_search(keyword="서울", **DATES)["cooldown_seconds"] == 600
+        assert second.stay_search(keyword="서울", **DATES) == {"cooldown_seconds": 600, "source": "myrealtrip"}, "새 어댑터도 이어서 쉰다"
+    finally:
+        myrealtrip._BLOCKED_UNTIL.pop("https://shared.test/mcp", None)
 
 
 def test_a_429_without_a_readable_wait_uses_the_default():

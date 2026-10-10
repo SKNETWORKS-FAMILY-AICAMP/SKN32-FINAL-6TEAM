@@ -60,15 +60,23 @@ def main():
     from app.domains.travel_ops.instances.lodging import LodgingTeam
     from app.domains.travel_ops.ports.data_sources.base import TravelSources
     from app.domains.travel_ops.ports.data_sources.myrealtrip import MyRealTripMcp
+    from app.domains.travel_ops.ports.data_sources.serpapi_hotels import SerpApiHotels
     from app.tools.read_tools import ReadToolbox
 
-    sentences = sys.argv[1:]
+    sentences = [arg for arg in sys.argv[1:] if arg != "--no-google"]
     if not sentences:
         raise SystemExit(__doc__)
     print(f"기기 {platform.node()} · 시각 {datetime.now(ZoneInfo('Asia/Seoul')).isoformat(timespec='seconds')}")
     for text in sentences:
         source, llm = MyRealTripMcp(), FilePromptLLM()
-        team = LodgingTeam(ReadToolbox(lambda: None, travel=TravelSources(travel_search=source)), llm)
+        google = None                                 # `[2026-10-10]` SerpApi 키가 있으면 구글 호텔도(문장마다 1회). --no-google 로 끈다
+        if "--no-google" not in sys.argv:
+            from scripts.probe_serpapi_flights import load_key as serpapi_key
+            try:
+                google = SerpApiHotels(api_key=serpapi_key())
+            except SystemExit as exc:
+                print(f"구글 호텔 안 부름 — {exc}")
+        team = LodgingTeam(ReadToolbox(lambda: None, travel=TravelSources(travel_search=source, stay_google=google)), llm)
         case_id = uuid4()
         pack = ContextPack(pack_id=uuid4(), case_id=case_id, team_id="lodging", tenant_id="try", knowledge_scope=["lodging"],
                            current_state={"customer_id": str(uuid4())}, estimated_input_tokens=1)
@@ -86,7 +94,8 @@ def main():
               + (f" · warnings {result.warnings}" if result.warnings else ""))
         decision = (result.decisions or [{}])[0]
         print(f"[판단] task {decision.get('task')} · needs {decision.get('needs')} · found {decision.get('found')}")
-        print(f"[근거] {[item.source_id for item in result.evidence]} · 못 가져온 것 {dict(source.misses) or '없음'}")
+        print(f"[근거] {[item.source_id for item in result.evidence]} · 못 가져온 것 마이리얼트립 {dict(source.misses) or '없음'}"
+              + (f" · 구글 호텔 {dict(google.misses) or '없음'}" if google else ""))
         print("[답]")
         print(result.answer or "(없음)")
 

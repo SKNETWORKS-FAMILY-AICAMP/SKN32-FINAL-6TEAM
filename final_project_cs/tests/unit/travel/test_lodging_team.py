@@ -79,7 +79,8 @@ def test_search_calls_the_model_once_and_answers_from_tool_values():
     assert name == "read.stay_search"
     assert arguments == {"keyword": "용산", "check_in": IN, "check_out": OUT, "adults": 2, "children": None,
                          "domestic": True, "size": 20, "max_price": 200000, "min_review_rating": 4.0}
-    assert [call[1]["gid"] for call in tools.calls[1:]] == [11, 12]
+    assert tools.calls[1][0] == "read.stay_google" and tools.calls[1][1]["keyword"] == "용산"
+    assert [call[1]["gid"] for call in tools.calls if call[0] == "read.stay_detail"] == [11, 12]
     assert "2. 둘째 호텔" in result.answer
     assert result.outcome == "completed" and result.next_action.value == "respond"
     assert "1. 해밀톤 호텔 — 1박 188,597원 · 전체 622,370원(세금 포함) · 평점 4.0/5(후기 1,009)" in result.answer
@@ -89,6 +90,53 @@ def test_search_calls_the_model_once_and_answers_from_tool_values():
     sources = [item.source_id for item in result.evidence]
     assert sources == ["lodging.interpret", "read.stay_search", "read.stay_detail:11"], "못 읽은 상세는 근거로 싣지 않는다"
     assert result.decisions[0]["shown"][1] == {"gid": 12, "name": "둘째 호텔", "detail_read": False}
+
+
+GOOGLE = {"stays": [
+    {"name": "Namsan Ville", "type": "vacation rental", "price_per_night": 177960.0, "total_price": 533879.0,
+     "rating": None, "review_count": None, "hotel_class": None, "link": "https://www.bluepillow.com/x"},
+    {"name": "해밀톤 호텔", "type": "hotel", "price_per_night": 190000.0, "total_price": 570000.0, "rating": 4.0,
+     "review_count": 1000, "hotel_class": 3, "link": "https://www.hamilton.co.kr"},
+    {"name": "밀리오레호텔 명동", "type": "hotel", "price_per_night": 241878.0, "total_price": 725634.0, "rating": 3.3,
+     "review_count": 1076, "hotel_class": 4, "link": "https://migliorehotel.co.kr"}],
+    "page": "https://www.google.com/travel/search?q=%EC%9A%A9%EC%82%B0&hl=ko&gl=kr", "source": "serpapi_hotels"}
+
+
+def test_google_hotels_are_a_separate_block_without_shown_names_and_rentals():
+    result, _, _ = _run(SEARCH, {"read.stay_search": STAYS, "read.stay_detail": lambda a: DETAIL if a["gid"] == 11 else None,
+                                 "read.stay_google": GOOGLE})
+    answer = result.answer
+    assert "구글 호텔에서 본 같은 조건 숙소(구글 순서, 숙박 공유 제외):" in answer
+    assert "   · 밀리오레호텔 명동 — 4성급 · 1박 241,878원 · 전체 725,634원 · 평점 3.3/5(후기 1,076): https://migliorehotel.co.kr" in answer
+    assert "Namsan Ville" not in answer, "숙박 공유는 뺀다"
+    priceless = {**GOOGLE, "stays": [{**GOOGLE["stays"][2], "name": "지요크 명동", "price_per_night": None, "link": ""}]}
+    other, _, _ = _run(SEARCH, {"read.stay_search": STAYS, "read.stay_detail": lambda a: DETAIL, "read.stay_google": priceless})
+    assert "지요크 명동" not in other.answer, "가격 없는 곳은 뺀다"
+    assert answer.count("해밀톤 호텔") == 1, "마이리얼트립에서 이미 보인 이름은 뺀다"
+    assert "구글 호텔 검색 결과 페이지(날짜는 그 화면에서 다시 고르셔야 할 수 있습니다): https://www.google.com/travel/search?" in answer
+    assert ("   · 부킹닷컴: https://www.booking.com/searchresults.ko.html?ss=%EC%9A%A9%EC%82%B0"
+            f"&checkin={IN}&checkout={OUT}&group_adults=2&no_rooms=1&group_children=0") in answer
+    assert result.decisions[0]["google"] == 3
+
+
+def test_google_hotels_alone_answer_when_myrealtrip_fails():
+    result, _, _ = _run(SEARCH, {"read.stay_search": None, "read.stay_google": GOOGLE})
+    assert result.outcome == "completed" and "마이리얼트립 검색은 결과를 받지 못했습니다(조회 실패)" in result.answer
+    assert "밀리오레호텔 명동" in result.answer
+    result, _, _ = _run(SEARCH, {})
+    assert result.outcome == "escalated", "둘 다 못 받으면 모름"
+
+
+def test_myrealtrip_resting_after_a_429_still_answers_with_google_and_links():
+    resting = {"cooldown_seconds": 540, "source": "myrealtrip"}
+    result, _, tools = _run(SEARCH, {"read.stay_search": resting, "read.stay_google": GOOGLE})
+    assert result.outcome == "completed" and "마이리얼트립 검색은 요청 한도로 잠시 조회를 쉬고 있습니다." in result.answer
+    assert "밀리오레호텔 명동" in result.answer and "부킹닷컴" in result.answer
+    assert [call[0] for call in tools.calls] == ["read.stay_search", "read.stay_google"], "쉬는 중이면 상세도 안 부른다"
+    result, _, _ = _run(SEARCH, {"read.stay_search": resting})
+    assert result.outcome == "completed" and "부킹닷컴" in result.answer, "구글 호텔도 없으면 링크라도"
+    result, _, tools = _run(SEARCH, {"read.stay_search": STAYS, "read.stay_detail": resting})
+    assert [call[0] for call in tools.calls].count("read.stay_detail") == 1, "상세 도중 쉬기 시작하면 더 안 부른다"
 
 
 def test_missing_values_are_asked_back_without_any_search():
@@ -117,9 +165,9 @@ def test_places_without_rooms_are_skipped_and_the_next_ones_fill_in():
     result, _, tools = _run(SEARCH, {"read.stay_search": stays, "read.stay_detail": full})
     assert [item["gid"] for item in result.decisions[0]["shown"]] == [1, 3, 4]
     assert [item["gid"] for item in result.decisions[0]["skipped"]] == [2]
-    assert len(tools.calls) == 5 and "객실이 없는 1곳은 건너뜀" in result.answer and "평점 없음" in result.answer
+    assert len(tools.calls) == 6 and "객실이 없는 1곳은 건너뜀" in result.answer and "평점 없음" in result.answer
     result, _, tools = _run(SEARCH, {"read.stay_search": stays, "read.stay_detail": {**DETAIL, "sold_out": True}})
-    assert len(tools.calls) == 5, "상세는 정한 횟수(4)까지만 부른다"
+    assert len(tools.calls) == 6, "상세는 정한 횟수(4)까지만 부른다(목록 · 구글 호텔 각 1)"
     assert "10곳 중 4곳이 가격이 없거나" in result.answer and result.decisions[0]["shown"] == []
 
 
@@ -127,13 +175,13 @@ def test_places_without_a_list_price_are_skipped_before_any_detail_call():
     stays = {**STAYS, "stays": [{"gid": n, "name": f"숙소{n}", "description": "", "rating": 4.0, "review_count": 3,
                                  "price_per_night": None if n in (1, 2) else 90000} for n in range(1, 6)]}
     result, _, tools = _run(SEARCH, {"read.stay_search": stays, "read.stay_detail": lambda a: {**DETAIL, "gid": a["gid"]}})
-    assert [call[1]["gid"] for call in tools.calls[1:]] == [3, 4, 5]
+    assert [call[1]["gid"] for call in tools.calls if call[0] == "read.stay_detail"] == [3, 4, 5]
     assert [(item["gid"], item["reason"]) for item in result.decisions[0]["skipped"]] == [(1, "no_price_in_list"), (2, "no_price_in_list")]
 
 
 def test_an_unreadable_detail_stops_further_detail_calls():
     result, _, tools = _run(SEARCH, {"read.stay_search": STAYS, "read.stay_detail": None})
-    assert [call[0] for call in tools.calls] == ["read.stay_search", "read.stay_detail"]
+    assert [call[0] for call in tools.calls] == ["read.stay_search", "read.stay_google", "read.stay_detail"]
     assert result.decisions[0]["shown"] == [{"gid": 11, "name": "해밀톤 호텔", "detail_read": False}]
 
 
@@ -246,7 +294,9 @@ def test_the_prompts_tell_the_model_where_the_year_comes_from():
     from pathlib import Path
 
     for folder in ("lodging", "flight"):
-        assert "take the\n  year from `context.today`" in Path(f"prompts/{folder}/interpret.v2.md").read_text(encoding="utf-8")
+        # 프롬프트 판이 오르면 파일 이름이 바뀐다(항공은 2026-10-09 v3) — 그 폴더에 하나뿐인 판을 읽는다
+        (prompt,) = Path(f"prompts/{folder}").glob("interpret.v*.md")
+        assert "take the\n  year from `context.today`" in prompt.read_text(encoding="utf-8")
 
 
 def test_a_date_whose_quote_is_not_in_the_message_is_cleared_and_asked():

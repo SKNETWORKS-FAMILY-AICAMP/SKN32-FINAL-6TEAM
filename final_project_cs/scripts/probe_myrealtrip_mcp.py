@@ -48,6 +48,7 @@ def decode(response):
 class Session:
     def __init__(self, client, url=URL):
         self.client, self.session_id, self.next_id, self.url = client, None, 0, url
+        self.limit_headers = {}
 
     def send(self, method, params=None, *, notify=False):
         message = {"jsonrpc": "2.0", "method": method}
@@ -62,6 +63,9 @@ class Session:
         started = time.perf_counter()
         response = self.client.post(self.url, json=message, headers=headers)
         took = time.perf_counter() - started
+        # `[2026-10-10]` 호출 한도 확인 — 파트너 REST 문서는 `X-RateLimit-*` 헤더 · 429 를 말한다. MCP 도 주는지 본다
+        self.limit_headers = {name: value for name, value in response.headers.items()
+                              if any(word in name.lower() for word in ("ratelimit", "rate-limit", "retry-after", "quota", "x-limit"))}
         if response.headers.get("mcp-session-id"):
             self.session_id = response.headers["mcp-session-id"]
         if notify:
@@ -136,6 +140,7 @@ def main():
         if reply is None or "result" not in reply:
             raise SystemExit(f"[연결] 실패 · HTTP {status} · {took:.2f}초 · 오류 {(reply or {}).get('error')}")
         info = reply["result"]
+        print(f"[한도 헤더] {session.limit_headers or '없음'}")
         print(f"[연결] HTTP {status} · {took:.2f}초 · 인증 없이 연결됨 · 서버 {info.get('serverInfo')} · "
               f"프로토콜 {info.get('protocolVersion')} · 세션 ID {'있음' if session.session_id else '없음'}")
         if info.get("instructions"):
@@ -174,9 +179,10 @@ def main():
         print(f"[호출] {args.call} · 입력 {arguments}")
         reply, status, took = session.send("tools/call", {"name": args.call, "arguments": arguments})
         if reply is None:
-            raise SystemExit(f"[호출] 응답 없음 · HTTP {status} · {took:.2f}초")
+            raise SystemExit(f"[호출] 응답 없음 · HTTP {status} · {took:.2f}초 · 한도 헤더 {session.limit_headers or '없음'}")
         if "error" in reply:
             raise SystemExit(f"[호출] 오류 · HTTP {status} · {took:.2f}초 · {reply['error']}")
+        print(f"[한도 헤더] {session.limit_headers or '없음'}")
         result = reply["result"]
         content = result.get("content") or []
         print(f"[호출] HTTP {status} · {took:.2f}초 · isError {result.get('isError')} · "
