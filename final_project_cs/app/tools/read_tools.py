@@ -173,6 +173,9 @@ class ReadToolbox:
             "read.flight_offers": self.flight_offers,
             "read.flight_google": self.flight_google,
             "read.stay_google": self.stay_google,
+            # ★`[2026-10-10]` booking 모듈 — 여러 판매처를 한 번에 비교(팀 피드백: 에이전트 → booking → 어댑터). 항공 팀 · 숙소 팀이 쓴다
+            "read.booking_search_flights": self.booking_search_flights,
+            "read.booking_search_stays": self.booking_search_stays,
         }
 
     #: 여행 예약의 컬럼. ★`_one()` 이 zip 으로 붙이므로 SELECT 순서와 **같아야** 한다.
@@ -611,6 +614,28 @@ class ReadToolbox:
         wanted = ("adults", "children", "size", "max_price")
         return source.stay_search(keyword=str(keyword), check_in=str(check_in), check_out=str(check_out),
                                   **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def booking_search_flights(self, scope: ToolContext, *, origin: str | None = None, destination: str | None = None,
+                               depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """항공편 비교(booking 모듈) — 마이리얼트립 · Ignav · 구글 항공권을 불러 같은 편끼리 묶은 결과. 소스가 없으면 `None`. `[2026-10-10]`"""
+        if not self.travel or not origin or not destination or not depart_date:
+            return None
+        from app.domains.travel_ops.components.booking.offers import search_flights
+
+        wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")
+        return search_flights(self.travel, origin=str(origin), destination=str(destination), depart_date=str(depart_date),
+                              **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def booking_search_stays(self, scope: ToolContext, *, keyword: str | None = None, check_in: str | None = None,
+                             check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """숙소 비교(booking 모듈) — 마이리얼트립 목록 · 구글 호텔 목록 · 다른 곳 링크. 소스가 없으면 `None`. `[2026-10-10]`"""
+        if not self.travel or not keyword or not check_in or not check_out:
+            return None
+        from app.domains.travel_ops.components.booking.offers import search_stays
+
+        wanted = ("adults", "children", "domestic", "size", "max_price", "min_review_rating")
+        return search_stays(self.travel, keyword=str(keyword), check_in=str(check_in), check_out=str(check_out),
+                            **{key: options[key] for key in wanted if options.get(key) is not None})
 
     def route(self, scope: ToolContext, **_: Any) -> None:
         """이동 시간. `[미구현]` — Routes API 를 붙일 자리."""

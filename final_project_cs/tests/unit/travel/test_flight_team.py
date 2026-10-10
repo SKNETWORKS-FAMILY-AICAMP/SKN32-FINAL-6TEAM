@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from types import SimpleNamespace
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 from zoneinfo import ZoneInfo
@@ -10,6 +11,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from app.core.contracts import ContextPack, TeamTask, ToolNotAllowed
+from app.domains.travel_ops.components.booking.offers import search_flights
 from app.domains.travel_ops.instances.flight import FlightTeam
 from app.domains.travel_ops.instances.flight.interpret import InterpretationInvalid, needs, parse
 from app.tools.read_tools import ALLOWED_PROMPT_KEYS
@@ -44,9 +46,30 @@ class FakeLLM:
         return self.reply
 
 
+#: 옛 소스별 도구 이름 → booking 모듈이 보는 `TravelSources` 칸. 시험은 소스마다 값을 주고, booking 모듈은 진짜로 돈다
+SOURCE_SLOTS = {"read.flight_search": "travel_search", "read.flight_offers": "flight_offers", "read.flight_google": "flight_google"}
+
+
+class StubSource:
+    """어댑터 대신 — 정해 둔 값을 돌려주고 받은 인자를 남긴다."""
+
+    def __init__(self, name, value, record):
+        self.name, self.value, self.record = name, value, record
+
+    def flight_search(self, **arguments):
+        self.record.append((self.name, dict(arguments)))
+        return self.value
+
+
 class FakeTools:
+    """`[2026-10-10]` 팀은 booking 도구 하나만 부른다. 소스별 값(`read.flight_search` 등)을 주면 진짜 booking 모듈에 가짜 어댑터로 넣어 돌린다."""
+
     def __init__(self, values):
-        self.values, self.calls = values, []
+        self.calls, self.source_calls = [], []
+        travel = SimpleNamespace(**{slot: StubSource(name, values.get(name), self.source_calls)
+                                    for name, slot in SOURCE_SLOTS.items()})
+        self.values = {name: value for name, value in values.items() if name not in SOURCE_SLOTS}
+        self.values.setdefault("read.booking_search_flights", lambda arguments: search_flights(travel, **arguments))
 
     def call(self, name, context, arguments, allowed_tools, seen, budget=None):
         if name not in allowed_tools:
@@ -54,7 +77,8 @@ class FakeTools:
         assert budget is None or len(seen) < budget, f"도구 예산 {budget} 을 넘겼다"
         seen.add(name + repr(sorted(arguments.items(), key=lambda pair: pair[0])))
         self.calls.append((name, dict(arguments)))
-        return self.values.get(name)
+        value = self.values.get(name)
+        return value(dict(arguments)) if callable(value) else value
 
 
 def _run(reply, tools=None, *, text="다음 달 6일 타이베이에서 인천 가는 비행기 알아봐줘, 9일에 오는 편도", capability="flight.assist", llm=True, state=None):
@@ -73,7 +97,9 @@ def test_search_calls_the_model_once_and_both_sources_once():
     assert len(llm.calls) == 1 and llm.calls[0][0] == "flight.interpret" and llm.calls[0][2] == {"today": TODAY.isoformat()}
     wanted = {"origin": "TPE", "destination": "ICN", "depart_date": GO, "return_date": None, "domestic": False,
               "direct_only": True, "cabin": None, "max_results": 100, "adults": 2, "children": None, "infants": None}
-    assert tools.calls == [("read.flight_search", wanted), ("read.flight_offers", wanted), ("read.flight_google", wanted)]
+    assert tools.calls == [("read.booking_search_flights", wanted)], "팀은 booking 도구 하나만 부른다"
+    given = {key: value for key, value in wanted.items() if value is not None}
+    assert tools.source_calls == [("read.flight_search", given), ("read.flight_offers", given), ("read.flight_google", given)]
     assert result.outcome == "completed" and result.next_action.value == "respond"
     assert f"TPE → ICN · {GO} · 성인 2명 조건으로 찾은 결과(마이리얼트립 2개 · 판매처 비교 조회 실패 · 구글 항공권 조회 실패)를" in result.answer
     assert "출발 시간대마다 가장 싼 편을 보여 드립니다." in result.answer
@@ -86,8 +112,8 @@ def test_search_calls_the_model_once_and_both_sources_once():
     assert "TW727 (1시간 15분)" in result.answer, "국내선은 경유 칸이 없어 적지 않는다"
     assert "   · 마이리얼트립 64,000원\n" in result.answer, "국내선 편 줄에는 링크를 붙이지 않는다"
     assert "이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): https://flights.myrealtrip.com/air/b2c/x" in result.answer
-    # 판매처 비교가 None(조회 실패)이면 근거로 붙이지 않는다 — `_base._evidence` 「값이 비면 붙이지 않는다」
-    assert [item.source_id for item in result.evidence] == ["flight.interpret", "read.flight_search"]
+    assert [item.source_id for item in result.evidence] == ["flight.interpret", "read.booking_search_flights"]
+    assert result.evidence[-1].value["sources"]["ignav"] == {"status": "failed"}
 
 
 IGNAV = {"flights": [
@@ -116,7 +142,7 @@ def test_the_same_flight_from_both_sources_is_shown_once_with_both_prices():
     assert [offer["source"] for offer in shown[1]["offers"]] == ["ignav", "myrealtrip"]
     assert result.decisions[0]["both"] == [{"flight": "7C1501", "depart": "13:10", "myrealtrip": 302000, "ignav": 289000.0}], \
         "두 소스가 다 판 편만, 소스별 최저가로"
-    assert [item.source_id for item in result.evidence] == ["flight.interpret", "read.flight_search", "read.flight_offers"]
+    assert [item.source_id for item in result.evidence] == ["flight.interpret", "read.booking_search_flights"]
 
 
 TEXT_MORNING = "다음 달 6일 타이베이에서 인천 가는 비행기 알아봐줘, 9일에 오는 편도 오전 출발로"
@@ -215,7 +241,7 @@ def test_google_flights_is_a_third_price_on_the_same_flight_with_one_page_link()
     assert answer.index("구글 항공권 280,000원") < answer.index("제주항공(항공사 공식) 289,000원"), "싼 순"
     assert "구글 항공권 이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): https://www.google.com/travel/flights?" in answer
     assert "마이리얼트립 이 노선 · 날짜의 검색 결과 페이지" in answer
-    assert [item.source_id for item in result.evidence][-1] == "read.flight_google"
+    assert result.evidence[-1].value["sources"]["google"] == {"status": "ok", "count": 1}
 
 
 def test_a_round_trip_shows_the_google_round_trip_lowest_as_a_reference_line():
@@ -244,7 +270,7 @@ def test_myrealtrip_resting_after_a_429_is_said_as_resting_not_failed():
     result, _, _ = _run(SEARCH, {"read.flight_search": {"cooldown_seconds": 540, "source": "myrealtrip"},
                                  "read.flight_offers": IGNAV})
     assert "마이리얼트립은 요청 한도로 잠시 조회를 쉬는 중 · 항공사·여행사 판매처 2개" in result.answer
-    assert "read.flight_search" not in [item.source_id for item in result.evidence], "쉬는 표시는 근거가 아니다"
+    assert result.evidence[-1].value["sources"]["myrealtrip"] == {"status": "resting", "cooldown_seconds": 540}
     assert "제주항공(항공사 공식) 289,000원" in result.answer
 
 
@@ -258,7 +284,7 @@ def test_one_source_is_enough_and_both_missing_is_unknown():
 def test_a_round_trip_passes_the_return_date():
     result, _, tools = _run({**SEARCH, "return_date": BACK, "return_date_text": "9일에 오는"}, {"read.flight_search": FLIGHTS})
     assert tools.calls[0][1]["return_date"] == BACK
-    assert [name for name, _ in tools.calls] == ["read.flight_search", "read.flight_google"], "왕복은 Ignav 를 부르지 않는다"
+    assert [name for name, _ in tools.source_calls] == ["read.flight_search", "read.flight_google"], "왕복은 Ignav 를 부르지 않는다"
     assert "항공사·여행사 판매처는 편도만" in result.answer
     assert "같은 편끼리 묶어" not in result.answer, "편 목록을 준 소스가 하나뿐이면 묶었다고 하지 않는다"
 

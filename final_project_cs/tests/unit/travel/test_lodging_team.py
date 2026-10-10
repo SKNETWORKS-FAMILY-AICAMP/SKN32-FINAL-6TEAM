@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from types import SimpleNamespace
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 from zoneinfo import ZoneInfo
@@ -10,6 +11,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from app.core.contracts import ContextPack, TeamTask, ToolNotAllowed
+from app.domains.travel_ops.components.booking.offers import search_stays
 from app.domains.travel_ops.instances.lodging import LodgingTeam
 from app.domains.travel_ops.instances.lodging.interpret import InterpretationInvalid, needs, parse
 from app.tools.read_tools import ALLOWED_PROMPT_KEYS
@@ -42,11 +44,29 @@ class FakeLLM:
         return self.reply
 
 
+class StubSource:
+    """어댑터 대신 — 정해 둔 값(또는 인자를 받는 함수)을 돌려주고 받은 인자를 남긴다."""
+
+    def __init__(self, name, value, record):
+        self.name, self.value, self.record = name, value, record
+
+    def stay_search(self, **arguments):
+        self.record.append((self.name, dict(arguments)))
+        return self.value(arguments) if callable(self.value) else self.value
+
+
 class FakeTools:
-    """이름 → 값(또는 인자를 받는 함수). 권한 · 예산을 실제 도구함과 같은 순서로 본다."""
+    """이름 → 값(또는 인자를 받는 함수). 권한 · 예산을 실제 도구함과 같은 순서로 본다.
+
+    `[2026-10-10]` 찾기는 booking 도구 하나(`read.booking_search_stays`)를 부른다 — `read.stay_search` · `read.stay_google` 값을 주면 진짜 booking
+    모듈에 가짜 어댑터로 넣어 돌린다. 내 숙소(이름 찾기)는 지금처럼 `read.stay_search` 를 바로 부른다.
+    """
 
     def __init__(self, values):
-        self.values, self.calls = values, []
+        self.values, self.calls, self.source_calls = dict(values), [], []
+        travel = SimpleNamespace(travel_search=StubSource("read.stay_search", values.get("read.stay_search"), self.source_calls),
+                                 stay_google=StubSource("read.stay_google", values.get("read.stay_google"), self.source_calls))
+        self.values.setdefault("read.booking_search_stays", lambda arguments: search_stays(travel, **arguments))
 
     def call(self, name, context, arguments, allowed_tools, seen, budget=None):
         if name not in allowed_tools:
@@ -76,10 +96,11 @@ def test_search_calls_the_model_once_and_answers_from_tool_values():
     assert len(llm.calls) == 1 and llm.calls[0][0] == "lodging.interpret"
     assert llm.calls[0][2] == {"today": TODAY.isoformat()}
     name, arguments = tools.calls[0]
-    assert name == "read.stay_search"
+    assert name == "read.booking_search_stays"
     assert arguments == {"keyword": "용산", "check_in": IN, "check_out": OUT, "adults": 2, "children": None,
                          "domestic": True, "size": 20, "max_price": 200000, "min_review_rating": 4.0}
-    assert tools.calls[1][0] == "read.stay_google" and tools.calls[1][1]["keyword"] == "용산"
+    assert [source for source, _ in tools.source_calls] == ["read.stay_search", "read.stay_google"]
+    assert tools.source_calls[1][1] == {"keyword": "용산", "check_in": IN, "check_out": OUT, "adults": 2, "size": 20, "max_price": 200000}
     assert [call[1]["gid"] for call in tools.calls if call[0] == "read.stay_detail"] == [11, 12]
     assert "2. 둘째 호텔" in result.answer
     assert result.outcome == "completed" and result.next_action.value == "respond"
@@ -88,7 +109,7 @@ def test_search_calls_the_model_once_and_answers_from_tool_values():
     assert "2. 둘째 호텔 — 1박 150,000원 · 평점 없음" in result.answer and "불러오지 못했습니다" in result.answer
     assert "37곳 중 2곳" in result.answer
     sources = [item.source_id for item in result.evidence]
-    assert sources == ["lodging.interpret", "read.stay_search", "read.stay_detail:11"], "못 읽은 상세는 근거로 싣지 않는다"
+    assert sources == ["lodging.interpret", "read.booking_search_stays", "read.stay_detail:11"], "못 읽은 상세는 근거로 싣지 않는다"
     assert result.decisions[0]["shown"][1] == {"gid": 12, "name": "둘째 호텔", "detail_read": False}
 
 
@@ -132,7 +153,7 @@ def test_myrealtrip_resting_after_a_429_still_answers_with_google_and_links():
     result, _, tools = _run(SEARCH, {"read.stay_search": resting, "read.stay_google": GOOGLE})
     assert result.outcome == "completed" and "마이리얼트립 검색은 요청 한도로 잠시 조회를 쉬고 있습니다." in result.answer
     assert "밀리오레호텔 명동" in result.answer and "부킹닷컴" in result.answer
-    assert [call[0] for call in tools.calls] == ["read.stay_search", "read.stay_google"], "쉬는 중이면 상세도 안 부른다"
+    assert [call[0] for call in tools.calls] == ["read.booking_search_stays"], "쉬는 중이면 상세도 안 부른다"
     result, _, _ = _run(SEARCH, {"read.stay_search": resting})
     assert result.outcome == "completed" and "부킹닷컴" in result.answer, "구글 호텔도 없으면 링크라도"
     result, _, tools = _run(SEARCH, {"read.stay_search": STAYS, "read.stay_detail": resting})
@@ -165,9 +186,9 @@ def test_places_without_rooms_are_skipped_and_the_next_ones_fill_in():
     result, _, tools = _run(SEARCH, {"read.stay_search": stays, "read.stay_detail": full})
     assert [item["gid"] for item in result.decisions[0]["shown"]] == [1, 3, 4]
     assert [item["gid"] for item in result.decisions[0]["skipped"]] == [2]
-    assert len(tools.calls) == 6 and "객실이 없는 1곳은 건너뜀" in result.answer and "평점 없음" in result.answer
+    assert len(tools.calls) == 5 and "객실이 없는 1곳은 건너뜀" in result.answer and "평점 없음" in result.answer
     result, _, tools = _run(SEARCH, {"read.stay_search": stays, "read.stay_detail": {**DETAIL, "sold_out": True}})
-    assert len(tools.calls) == 6, "상세는 정한 횟수(4)까지만 부른다(목록 · 구글 호텔 각 1)"
+    assert len(tools.calls) == 5, "상세는 정한 횟수(4)까지만 부른다(booking 1)"
     assert "10곳 중 4곳이 가격이 없거나" in result.answer and result.decisions[0]["shown"] == []
 
 
@@ -181,7 +202,7 @@ def test_places_without_a_list_price_are_skipped_before_any_detail_call():
 
 def test_an_unreadable_detail_stops_further_detail_calls():
     result, _, tools = _run(SEARCH, {"read.stay_search": STAYS, "read.stay_detail": None})
-    assert [call[0] for call in tools.calls] == ["read.stay_search", "read.stay_google", "read.stay_detail"]
+    assert [call[0] for call in tools.calls] == ["read.booking_search_stays", "read.stay_detail"]
     assert result.decisions[0]["shown"] == [{"gid": 11, "name": "해밀톤 호텔", "detail_read": False}]
 
 
