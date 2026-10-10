@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """모델이 낸 해석을 **검증**한다 — 모델은 문장을 구조로 옮기기만 하고, 쓸 수 있는지는 서버가 정한다. `[2026-10-07]`
 
-- 프롬프트: `prompts/lodging/interpret.v2.md` (키 `lodging.interpret`). 모델 호출은 한 번이다.
+- 프롬프트: `prompts/lodging/interpret.v3.md` (키 `lodging.interpret`). 모델 호출은 한 번이다.
 - 모양이 틀리면 `InterpretationInvalid` — 고쳐 맞추지 않는다(지어내지 않는다).
 - 모델이 적은 `missing` 은 되묻는 문장을 고를 때만 본다. 무엇이 빠졌는지는 `needs()` 가 값으로 다시 센다 —
   날짜가 날짜가 아니거나, 체크아웃이 체크인보다 늦지 않거나, 체크인이 오늘보다 앞이면 그 값은 없는 것으로 본다.
@@ -12,6 +12,9 @@ from datetime import date
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+
+from app.domains.travel_ops.instances._shared.interpret_dates import (
+    CALENDAR_DAYS, ground_dates, model_context, settle_dates)
 
 #: 작업마다 서버가 움직이려면 있어야 하는 값
 REQUIRED = {"search": ("keyword", "check_in", "check_out", "adults"),
@@ -85,31 +88,22 @@ def ask(found: Interpretation, missing: list[str]) -> str:
 GROUNDS = {"check_in": "check_in_text", "check_out": "check_out_text"}
 
 
-def ground(found: Interpretation, text: str, *, has_trip: bool) -> tuple[Interpretation, list[str]]:
+def ground(found: Interpretation, text: str, *, has_trip: bool,
+           trip: dict[str, Any] | None = None) -> tuple[Interpretation, list[str]]:
     """날짜마다 모델이 적은 근거 조각이 **고객 문장에 실제로 있는지** 본다. 없으면 그 날짜를 비운다(없는 값으로 다시 묻는다).
 
     ☆2026-10-08 15:26 playdata — 「서울에서 3박 할 숙소 추천해줘」에 모델이 체크인을 오늘(2026-10-08)로 지어냈다.
       프롬프트에 「지어내지 말라」가 있었는데도 그랬다. 그래서 값 대신 **근거를 받아 서버가 문장과 맞춰 본다** —
       뜻을 서버가 해석하는 것이 아니라, 모델이 인용한 글자가 문장에 있는지만 본다(공백 무시).
-      근거가 `"trip"` 이면 Case 에 여행 일정이 붙어 있을 때만 받는다.
+    `[2026-10-10]` 확인 규칙은 `_shared/interpret_dates.ground_dates` 로 옮겼다(숙소 · 항공 공용). 모델의 `missing` 은 더 보지 않는다 —
+      맞는 날짜를 missing 에 적어 지워지던 것이 17:55 · 17:58 측정의 숙소 오답 대부분이었다.
     """
-    squeezed = "".join(text.split())
-    cleared: list[str] = []
-    for field, evidence in GROUNDS.items():
-        if getattr(found, field) is None:
-            continue
-        if field in found.missing:
-            # ★모델 스스로 「빠졌다」고 적은 값은 채워 와도 쓰지 않는다. ☆15:30 playdata — 체크인을 오늘로 채우고 근거로 「3박」을
-            #   인용하면서, 같은 답의 `missing` 에는 check_in 을 넣었다. 인용 글자는 문장에 있어 위 확인만으로는 못 걸렀다
-            cleared.append(field)
-            continue
-        quote = getattr(found, evidence)
-        if quote == "trip" and has_trip:
-            continue
-        if quote and "".join(quote.split()) in squeezed:
-            continue
-        cleared.append(field)
-    return found.model_copy(update={field: None for field in cleared}), cleared
+    return ground_dates(found, text, grounds=GROUNDS, start="check_in", end="check_out", has_trip=has_trip, trip=trip)
 
 
-__all__ = ["GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]
+def settle_years(found: Interpretation, *, today: date) -> tuple[Interpretation, list[str]]:
+    """날 · 연도를 근거 조각과 맞춘다(`_shared/interpret_dates.settle_dates`). (해석, 고친 칸)"""
+    return settle_dates(found, grounds=GROUNDS, today=today)
+
+
+__all__ = ["CALENDAR_DAYS", "model_context", "settle_years", "GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]

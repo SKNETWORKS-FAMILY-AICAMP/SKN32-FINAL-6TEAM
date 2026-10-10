@@ -28,7 +28,7 @@ from zoneinfo import ZoneInfo
 from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
 
 from app.domains.travel_ops.instances._shared._base import TravelTeamBase
-from .interpret import TIME_BANDS, Interpretation, InterpretationInvalid, ask, ground, needs, parse
+from .interpret import TIME_BANDS, Interpretation, InterpretationInvalid, ask, ground, model_context, needs, parse, settle_years
 
 logger = logging.getLogger(__name__)
 
@@ -169,9 +169,10 @@ class FlightTeam(TravelTeamBase):
             return self._escalate(task, "interpreter_missing", evidence)
         try:
             raw = await self.llm.complete(PROMPT_KEY, task.input_text,
-                                          {"today": today.isoformat(), **({"trip": trip} if trip else {})},
+                                          model_context(today, trip),   # `[2026-10-10]` 달력 · 요일을 함께 준다
                                           run_id=task.run_id)
-            found, ungrounded = ground(parse(raw), task.input_text, has_trip=trip is not None)
+            found, ungrounded = ground(parse(raw), task.input_text, has_trip=trip is not None, trip=trip)
+            found, year_fixed = settle_years(found, today=today)   # `[2026-10-10]` 연도를 말하지 않은 날짜는 연도만 서버가 정한다
         except InterpretationInvalid as exc:
             logger.warning("flight interpretation invalid case=%s %s", task.case_id, exc)
             return self._escalate(task, "interpretation_invalid", evidence, warnings=[str(exc)[:200]])
@@ -181,11 +182,11 @@ class FlightTeam(TravelTeamBase):
 
         evidence = [*evidence, Evidence(
             evidence_id=f"interpretation:{task.team_id}", source_type="customer_message", source_id=PROMPT_KEY,
-            claim="고객 문장을 모델이 옮긴 구조", value={**found.model_dump(mode="json"), "ungrounded": ungrounded}, confidence=1.0,
+            claim="고객 문장을 모델이 옮긴 구조", value={**found.model_dump(mode="json"), "ungrounded": ungrounded, "year_fixed": year_fixed}, confidence=1.0,
             observed_at=datetime.now(SEOUL))]
         decision = {"task": found.task,
                     "interpretation": found.model_dump(mode="json", exclude={"question", "missing"}),
-                    "ungrounded": ungrounded}
+                    "ungrounded": ungrounded, "year_fixed": year_fixed}
 
         if found.task == "status":
             return self._status(task, seen, evidence)
@@ -231,6 +232,14 @@ class FlightTeam(TravelTeamBase):
             + (f" · 유아 {found.infants}명" if found.infants else "")
         wanted = list(found.depart_times or [])
         pool, slow = _drop_slow(options)
+        # `[2026-10-10 사용자 결정]` 고객이 「경유도 괜찮다」(`direct_only` False)고 하지 않으면 직항만 보여 준다.
+        #   받은 결과에 직항이 하나도 없으면 빈 답 대신 경유 편을 보여 주고 그렇다고 적는다. 소스에는 고객이 말한 값만 보낸다(그대로).
+        prefer_direct = found.direct_only is not False
+        directs = [option for option in pool if not _connecting(option)]
+        no_direct = prefer_direct and not directs
+        via = len(pool) - len(directs) if prefer_direct and directs else 0
+        if via:
+            pool = directs
         picked, empty = _pick(pool, wanted)
         fallback = bool(wanted) and not picked
         if fallback:
@@ -262,14 +271,22 @@ class FlightTeam(TravelTeamBase):
                 lines.append(f"   · {offer['label']} {_won(offer.get('price_total'), offer.get('currency') or '')}{seats}{link}")
         if empty and not fallback:
             # 뺀 경유 편만 있던 시간대는 「없었다」가 아니라 「뺐다」고 적는다
-            slow_only = [name for name in empty if any(_band(option) == name for option in options)]
-            none = [name for name in empty if name not in slow_only]
+            kept_slow, _ = _drop_slow(options)
+            removed = [name for name in empty if any(_band(option) == name for option in options)]
+            slow_only = [name for name in removed if not any(_band(option) == name for option in kept_slow)]
+            via_only = [name for name in removed if name not in slow_only]
+            none = [name for name in empty if name not in removed]
             if none:
                 lines.append(f"받은 결과에 {' · '.join(BAND_LABEL[name] for name in none)} 출발 편은 없었습니다"
                              "(가격이 낮은 순으로 일부만 받습니다).")
             if slow_only:
                 lines.append(f"{' · '.join(BAND_LABEL[name] for name in slow_only)} 출발은 경유로 직항보다 "
                              f"{SLOW_FACTOR}배 넘게 걸리는 편뿐이라 뺐습니다.")
+            if via_only:
+                lines.append(f"{' · '.join(BAND_LABEL[name] for name in via_only)} 출발은 경유 편뿐이라 뺐습니다"
+                             "(직항만 보여 드립니다. 경유도 괜찮으시면 말씀해 주세요).")
+        if no_direct:
+            lines.append("받은 결과에 직항이 없어 경유 편을 보여 드립니다.")
         searches = sorted({(offer["label"], offer["link"]) for option in shown_options for offer in option["offers"]
                            if offer.get("link_kind") == "route_search" and offer.get("link")})
         pages = [f"{label} 이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): {url}" for label, url in searches]
@@ -314,7 +331,7 @@ class FlightTeam(TravelTeamBase):
                 for option in options if {offer["source"] for offer in option["offers"]} >= {"myrealtrip", "ignav"}]
         return self._respond(task, evidence, {**decision, "found": len(options), "shown": shown, "both": both,
                                               "times": wanted or None, "empty_bands": empty, "fallback": fallback,
-                                              "dropped_slow": slow},
+                                              "dropped_slow": slow, "dropped_connecting": via, "no_direct": no_direct},
                              "\n".join([head, *lines, *pages, *others, tail]))
 
     def _trip(self, task: TeamTask, seen: set[str]) -> tuple[dict[str, Any] | None, list[Evidence]]:

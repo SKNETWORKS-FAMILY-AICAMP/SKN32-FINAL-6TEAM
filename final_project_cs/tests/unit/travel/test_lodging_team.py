@@ -17,7 +17,9 @@ from app.domains.travel_ops.instances.lodging.interpret import InterpretationInv
 from app.tools.read_tools import ALLOWED_PROMPT_KEYS
 
 TODAY = datetime.now(ZoneInfo("Asia/Seoul")).date()
-IN, OUT = (TODAY + timedelta(days=30)).isoformat(), (TODAY + timedelta(days=33)).isoformat()
+#: 「다음 달 6일」 · 「9일」 — 시험 문장과 같은 날. `[2026-10-10]` 서버가 근거 조각의 날(일)에 값을 맞추므로(settle_years) 오늘+30일로 두면 문장과 어긋난다
+_NEXT = (TODAY.replace(day=1) + timedelta(days=32)).replace(day=1)
+IN, OUT = _NEXT.replace(day=6).isoformat(), _NEXT.replace(day=9).isoformat()
 SEARCH = {"task": "search", "keyword": "용산", "stay_name": None, "check_in": IN, "check_out": OUT,
           "check_in_text": "다음 달 6일부터", "check_out_text": "3박", "adults": 2,
           "children": None, "max_price_per_night": 200000, "min_rating": 4.0, "domestic": True, "missing": [],
@@ -94,7 +96,7 @@ def test_search_calls_the_model_once_and_answers_from_tool_values():
     result, llm, tools = _run(SEARCH, {"read.stay_search": STAYS,
                                        "read.stay_detail": lambda a: DETAIL if a["gid"] == 11 else None})
     assert len(llm.calls) == 1 and llm.calls[0][0] == "lodging.interpret"
-    assert llm.calls[0][2] == {"today": TODAY.isoformat()}
+    assert llm.calls[0][2]["today"] == TODAY.isoformat() and len(llm.calls[0][2]["calendar"]) == 70 and "trip" not in llm.calls[0][2]
     name, arguments = tools.calls[0]
     assert name == "read.booking_search_stays"
     assert arguments == {"keyword": "용산", "check_in": IN, "check_out": OUT, "adults": 2, "children": None,
@@ -176,8 +178,11 @@ def test_missing_values_are_asked_back_without_any_search():
 
 def test_the_server_recounts_what_is_missing_instead_of_trusting_the_model():
     """모델이 `missing=[]` 이라 해도 날짜가 지났거나 앞뒤가 뒤집혔으면 서버가 되묻는다."""
-    past = (TODAY - timedelta(days=3)).isoformat()
-    result, _, tools = _run({**SEARCH, "check_in": past, "missing": []})
+    # `[2026-10-10]` 연도를 말하지 않은 지난 날짜는 서버가 다음 해로 옮기므로(settle_years), 연도를 **말한** 지난 날짜로 본다
+    day = TODAY - timedelta(days=3)
+    quote = f"{day.year}년 {day.month}월 {day.day}일부터"
+    result, _, tools = _run({**SEARCH, "check_in": day.isoformat(), "check_in_text": quote, "missing": []},
+                            text=f"{quote} 3박 용산 근처 호텔 찾아줘")
     assert tools.calls == [] and result.decisions[0]["needs"] == ["check_in"]
     assert "체크인 날짜" in result.answer
     result, _, tools = _run({**SEARCH, "check_out": IN, "missing": []})
@@ -368,9 +373,30 @@ def test_the_prompt_key_is_registrable_and_the_file_exists():
 
 
 def test_a_rejected_date_is_shown_back():
-    result, _, _ = _run({**SEARCH, "check_in": "2023-11-06", "check_out": "2023-11-09"})
-    assert result.decisions[0]["needs"] == ["check_in"]
+    # `[2026-10-10]` 연도를 말하지 않으면 서버가 연도를 고치므로, 연도를 **말한** 지난 날짜로 본다
+    result, _, _ = _run({**SEARCH, "check_in": "2023-11-06", "check_out": "2023-11-09", "check_in_text": "2023년 11월 6일부터"},
+                        text="2023년 11월 6일부터 3박 용산 근처 호텔 찾아줘")
+    assert result.decisions[0]["needs"] == ["check_in"] and result.decisions[0]["year_fixed"] == []
     assert result.answer.startswith("체크인 날짜 2023-11-06(으)로 읽었는데")
+
+
+def test_a_wrong_year_without_a_written_year_is_fixed_by_the_server():
+    """☆2026-10-10 17:47 playdata 해석 측정 — 「1월 3일부터 2박 3일」을 2024-01-03~05 로 옮겼다."""
+    reply = {**SEARCH, "check_in": "2024-01-03", "check_out": "2024-01-05", "check_in_text": "1월 3일부터", "check_out_text": "2박 3일"}
+    result, _, tools = _run(reply, {"read.stay_search": STAYS, "read.stay_detail": lambda a: DETAIL},
+                            text="1월 3일부터 2박 3일 용산 호텔 2명")
+    got = result.decisions[0]["interpretation"]
+    assert got["check_in"][5:] == "01-03" and got["check_in"] > TODAY.isoformat() and got["check_out"][5:] == "01-05"
+    assert result.decisions[0]["year_fixed"] == ["check_in", "check_out"] and tools.calls[0][1]["check_in"] == got["check_in"]
+
+
+def test_the_model_context_carries_a_calendar_to_read_weekdays_from():
+    from datetime import date
+
+    from app.domains.travel_ops.instances.lodging.interpret import model_context
+
+    context = model_context(date(2026, 10, 10))
+    assert context["today_weekday"] == "토" and context["calendar"][6] == "2026-10-16 금" and len(context["calendar"]) == 70
 
 
 def test_the_prompts_tell_the_model_where_the_year_comes_from():
@@ -387,9 +413,10 @@ def test_a_date_whose_quote_is_not_in_the_message_is_cleared_and_asked():
     reply = {**SEARCH, "keyword": "서울", "check_in_text": "오늘", "adults": None, "missing": ["adults"],
              "question": "몇 명이 숙소에 머무실 예정인가요?"}
     result, _, tools = _run(reply, text="서울에서 3박 할 숙소 추천해줘")
-    assert tools.calls == [] and result.decisions[0]["ungrounded"] == ["check_in"]
-    assert result.decisions[0]["needs"] == ["check_in", "adults"]
-    assert result.answer.startswith("체크인 날짜 · 성인 인원을(를) 알려 주시면"), "모델 질문(인원만)은 쓰지 않는다"
+    # `[2026-10-10]` 체크인이 없으면 박 수(「3박」)로 만든 체크아웃도 비운다(interpret_dates.ground_dates)
+    assert tools.calls == [] and result.decisions[0]["ungrounded"] == ["check_in", "check_out"]
+    assert result.decisions[0]["needs"] == ["check_in", "check_out", "adults"]
+    assert result.answer.startswith("체크인 날짜 · 체크아웃 날짜 · 성인 인원을(를) 알려 주시면"), "모델 질문(인원만)은 쓰지 않는다"
 
 
 def test_trip_as_a_quote_needs_a_trip_on_the_case():
@@ -398,12 +425,15 @@ def test_trip_as_a_quote_needs_a_trip_on_the_case():
     found = parse({**SEARCH, "check_in_text": "trip", "check_out_text": "trip"})
     assert ground(found, "이번 여행 숙소", has_trip=True)[1] == []
     assert ground(found, "이번 여행 숙소", has_trip=False)[1] == ["check_in", "check_out"]
-    assert ground(parse({**SEARCH, "check_in_text": None}), "다음 달 6일부터 3박", has_trip=False)[1] == ["check_in"]
+    assert ground(parse({**SEARCH, "check_in_text": None}), "다음 달 6일부터 3박", has_trip=False)[1] == ["check_in", "check_out"], \
+        "체크인이 없으면 박 수로 만든 체크아웃도 비운다(2026-10-10)"
     assert ground(parse(SEARCH), "다음 달  6일 부터 3 박", has_trip=False)[1] == [], "공백 차이는 같은 글로 본다"
 
 
 def test_a_value_the_model_itself_lists_as_missing_is_not_used():
-    """☆2026-10-08 15:30 playdata — 체크인을 오늘로 채우고 근거로 「3박」을 인용하면서 missing 에는 check_in 을 넣었다."""
+    """☆2026-10-08 15:30 playdata — 체크인을 오늘로 채우고 근거로 「3박」을 인용하면서 missing 에는 check_in 을 넣었다.
+
+    `[2026-10-10]` 이제 missing 은 보지 않는다(맞는 날짜까지 지웠다). 같은 경우를 「박 수만 적힌 근거는 체크인 근거가 아니다」로 막는다."""
     reply = {**SEARCH, "keyword": "서울", "check_in_text": "3박", "check_out_text": "3박", "adults": None,
              "missing": ["check_in", "check_out", "adults"], "question": "체크인 날짜, 체크아웃 날짜, 성인 수를 알려주세요."}
     result, _, tools = _run(reply, text="서울에서 3박 할 숙소 추천해줘")

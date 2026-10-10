@@ -33,7 +33,7 @@ from zoneinfo import ZoneInfo
 from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
 
 from app.domains.travel_ops.instances._shared._base import TravelTeamBase
-from .interpret import Interpretation, InterpretationInvalid, ask, ground, needs, parse
+from .interpret import Interpretation, InterpretationInvalid, ask, ground, model_context, needs, parse, settle_years
 
 logger = logging.getLogger(__name__)
 
@@ -134,9 +134,10 @@ class LodgingTeam(TravelTeamBase):
             return self._escalate(task, "interpreter_missing", evidence)
         try:
             raw = await self.llm.complete(PROMPT_KEY, task.input_text,
-                                          {"today": today.isoformat(), **({"trip": trip} if trip else {})},
+                                          model_context(today, trip),   # `[2026-10-10]` 달력 · 요일을 함께 준다
                                           run_id=task.run_id)
-            found, ungrounded = ground(parse(raw), task.input_text, has_trip=trip is not None)
+            found, ungrounded = ground(parse(raw), task.input_text, has_trip=trip is not None, trip=trip)
+            found, year_fixed = settle_years(found, today=today)   # `[2026-10-10]` 연도를 말하지 않은 날짜는 연도만 서버가 정한다
         except InterpretationInvalid as exc:
             logger.warning("lodging interpretation invalid case=%s %s", task.case_id, exc)
             return self._escalate(task, "interpretation_invalid", evidence, warnings=[str(exc)[:200]])
@@ -146,10 +147,10 @@ class LodgingTeam(TravelTeamBase):
 
         evidence = [*evidence, Evidence(
             evidence_id=f"interpretation:{task.team_id}", source_type="customer_message", source_id=PROMPT_KEY,
-            claim="고객 문장을 모델이 옮긴 구조", value={**found.model_dump(mode="json"), "ungrounded": ungrounded}, confidence=1.0,
+            claim="고객 문장을 모델이 옮긴 구조", value={**found.model_dump(mode="json"), "ungrounded": ungrounded, "year_fixed": year_fixed}, confidence=1.0,
             observed_at=datetime.now(SEOUL))]
         decision = {"task": found.task, "interpretation": found.model_dump(mode="json", exclude={"question"}),
-                    "ungrounded": ungrounded}
+                    "ungrounded": ungrounded, "year_fixed": year_fixed}
 
         if found.task == "status":
             return self._status(task, seen, evidence)
