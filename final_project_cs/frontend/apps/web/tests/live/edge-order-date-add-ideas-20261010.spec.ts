@@ -47,7 +47,7 @@ for (const width of [375, 1280]) {
       expect(side.direction).toBe(side.side === 'left' ? 'row-reverse' : 'row');
       expect(xs[0] < xs[1] && xs[1] < xs[2]).toBe(side.side === 'right');
     }
-    const fill = await chips.first().locator('span').evaluate(e => getComputedStyle(e).backgroundColor);
+    const fill = await chips.first().locator(':scope > span').evaluate(e => getComputedStyle(e).backgroundColor);
     expect(fill).toBe('rgb(32, 32, 32)');
     await expect(page.locator('[role=tablist]')).toHaveCSS('opacity', '1');
     await capture(page, `01-both-sides-${width}`);

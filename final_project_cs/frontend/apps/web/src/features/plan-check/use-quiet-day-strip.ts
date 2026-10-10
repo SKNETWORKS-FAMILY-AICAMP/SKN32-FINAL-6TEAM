@@ -5,8 +5,9 @@ import { useCallback, useEffect, useRef, useState, type FocusEvent, type Keyboar
 /** Wait until scrolling, including its inertia, has stopped before restoring the floating day controls. */
 export const DAY_STRIP_IDLE_MS = 800;
 
-export function useQuietDayStrip(strip: RefObject<HTMLElement | null>, enabled: boolean, suppressed = false) {
+export function useQuietDayStrip(strip: RefObject<HTMLElement | null>, enabled: boolean, suppressed = false, listBox?: RefObject<HTMLElement | null>) {
   const [busy, setBusy] = useState(false);
+  const [atTop, setAtTop] = useState(Boolean(listBox));
   const [focused, setFocused] = useState(false);
   const pointers = useRef(new Set<number>());
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -15,11 +16,16 @@ export function useQuietDayStrip(strip: RefObject<HTMLElement | null>, enabled: 
     clearTimeout(timer.current);
     if (!pointers.current.size) timer.current = setTimeout(() => setBusy(false), DAY_STRIP_IDLE_MS);
   }, []);
-  const activity = useCallback(() => {
+  const activity = useCallback((target: EventTarget | null) => {
     if (!enabled) return;
+    const list = listBox ? listBox.current : null;
+    const keepAtTop = Boolean(list && target instanceof Node && list.contains(target) && list.scrollTop <= 1);
+    setAtTop(keepAtTop);
+    if (keepAtTop) { reveal(); return; }
+    if (listBox) setFocused(false);
     setBusy(true);
     settle();
-  }, [enabled, settle]);
+  }, [enabled, listBox, reveal, settle]);
   const inStrip = useCallback((target: EventTarget | null) => target instanceof Node && Boolean(strip.current?.contains(target)), [strip]);
 
   useEffect(() => {
@@ -48,16 +54,16 @@ export function useQuietDayStrip(strip: RefObject<HTMLElement | null>, enabled: 
   const onPointerDownCapture = useCallback((event: PointerEvent<HTMLElement>) => {
     if (!enabled || inStrip(event.target)) return;
     pointers.current.add(event.pointerId);
-    activity();
+    activity(event.target);
   }, [enabled, inStrip, activity]);
   const onPointerMoveCapture = useCallback((event: PointerEvent<HTMLElement>) => {
-    if (pointers.current.has(event.pointerId)) activity();
+    if (pointers.current.has(event.pointerId)) activity(event.target);
   }, [activity]);
-  const onWheelCapture = useCallback((event: WheelEvent<HTMLElement>) => { if (!inStrip(event.target)) activity(); }, [inStrip, activity]);
-  const onScrollCapture = useCallback((event: UIEvent<HTMLElement>) => { if (!inStrip(event.target)) activity(); }, [inStrip, activity]);
+  const onWheelCapture = useCallback((event: WheelEvent<HTMLElement>) => { if (!inStrip(event.target)) activity(event.target); }, [inStrip, activity]);
+  const onScrollCapture = useCallback((event: UIEvent<HTMLElement>) => { if (!inStrip(event.target)) activity(event.target); }, [inStrip, activity]);
   const onKeyDownCapture = useCallback((event: KeyboardEvent<HTMLElement>) => {
     if (event.key === "Tab" || inStrip(event.target)) { reveal(); return; }
-    if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)) activity();
+    if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)) activity(event.target);
   }, [inStrip, reveal, activity]);
   const onFocusCapture = useCallback(() => { setFocused(true); reveal(); }, [reveal]);
   const onBlurCapture = useCallback((event: FocusEvent<HTMLElement>) => {
@@ -66,6 +72,7 @@ export function useQuietDayStrip(strip: RefObject<HTMLElement | null>, enabled: 
 
   return {
     hidden: enabled && busy && !focused,
+    atTop,
     handlers: { onPointerDownCapture, onPointerMoveCapture, onWheelCapture, onScrollCapture, onKeyDownCapture },
     focusHandlers: { onFocusCapture, onBlurCapture },
   };

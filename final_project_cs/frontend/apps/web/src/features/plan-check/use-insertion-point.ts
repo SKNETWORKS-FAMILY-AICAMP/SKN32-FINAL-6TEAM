@@ -16,10 +16,13 @@ export function useInsertionPoint(box: RefObject<HTMLElement | null>, enabled: b
       const top = Math.max(area.top, head?.bottom ?? area.top);
       const middle = (top + area.bottom) / 2;
       let best: HTMLElement | null = null, distance = Infinity;
+      const atEnd = element.scrollHeight - element.clientHeight - element.scrollTop <= 2;
       for (const point of element.querySelectorAll<HTMLElement>("[data-insert-point]")) {
         if (point.closest("[inert]")) continue;
         const at = point.getBoundingClientRect().top;
         if (at < top + 22 || at > area.bottom - 22) continue;
+        // At the list end, append after its final stop instead of choosing an earlier central seam.
+        if (atEnd && point.dataset.insertPoint?.endsWith(":end")) { best = point; distance = -1; continue; }
         const gap = Math.abs(at - middle);
         if (gap < distance) { best = point; distance = gap; }
       }

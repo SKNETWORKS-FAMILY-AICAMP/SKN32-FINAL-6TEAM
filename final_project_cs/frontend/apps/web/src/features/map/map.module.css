@@ -81,7 +81,7 @@
 .controls[data-direction="column"] .foldArrow { transform: translate(-50%, -50%) rotate(90deg); }
 .controls[data-direction="column"] .fold[aria-expanded="true"] .foldArrow { transform: translate(-50%, -50%) rotate(270deg); }
 @media (prefers-reduced-motion: reduce) { .foldArrow { transition: none; } }
-.edgeNumbers { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: var(--color-edge-number-bg); color: var(--color-brand-paper); font-size: 12px; font-weight: 700; }
+.edgeNumbers { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: var(--color-edge-number-bg); color: var(--color-brand-paper); font-size: 12px; font-weight: 700; white-space: nowrap; }
 .edgeChip small { margin-left: 3px; padding-left: 7px; border-left: 1px solid var(--color-border-strong); font-size: 11px; font-weight: 500; }
 @media (prefers-reduced-motion: reduce) { .live .controls { transition: none; transform: none; } }
 

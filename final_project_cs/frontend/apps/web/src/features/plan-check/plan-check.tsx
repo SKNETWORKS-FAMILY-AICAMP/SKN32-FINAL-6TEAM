@@ -1025,7 +1025,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   // ★`[2026-10-04 사용자 결정]` With more than one day the list shows one day at a time, with a strip of day chips above it (and a swipe sideways to the next or
   //   the previous day); 「전체」 and the filters show every day as before. The map follows the day.
   const dayStrip = done && !changing && days.length > 0;
-  const quietDays = useQuietDayStrip(stripBox, dayStrip);
+  const quietDays = useQuietDayStrip(stripBox, dayStrip, false, bodyBox);
   const submitBox = useRef<HTMLElement>(null);
   const quietSubmit = useQuietDayStrip(submitBox, done && !changing && !inserting, collapsed);
   const listDay: number | "all" = !dayStrip || dayChoice === "all" || filtering ? "all" : mapDay;
@@ -1369,7 +1369,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
           <header className={styles.sheetHead} data-done={done || undefined} data-float={done && dayStrip ? true : undefined} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
             <h2 id="plan-check-sheet-title" className={done || dayStrip ? "sr-only" : styles.sheetTitle}>{sheetTitle}</h2>
             {dayStrip && <div ref={stripBox} className={styles.dayStrip} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
-              data-quiet={quietDays.hidden || undefined} aria-hidden={quietDays.hidden || undefined} inert={quietDays.hidden} {...quietDays.focusHandlers}
+              data-at-top={quietDays.atTop || undefined} data-quiet={quietDays.hidden || undefined} aria-hidden={quietDays.hidden || undefined} inert={quietDays.hidden} {...quietDays.focusHandlers}
               onKeyDown={(event) => {
                 if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
                 const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]'));

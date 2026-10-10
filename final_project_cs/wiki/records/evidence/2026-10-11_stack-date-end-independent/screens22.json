@@ -1,0 +1,888 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "WORKSPACE\\.tmp\\full-release-20261008\\release\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.live.config.ts",
+      "tests/live/stack-date-end-insert-20261011.spec.ts",
+      "tests/live/aligned-map-quiet-cards-20261010.spec.ts",
+      "tests/live/date-divider-motion-20261010.spec.ts",
+      "tests/live/in-map-pins-fade-20261010.spec.ts",
+      "tests/live/edge-order-date-add-ideas-20261010.spec.ts",
+      "--grep",
+      "스택 아이콘|일반 카드 무테|날짜 여백|목록 끝은|메뉴 정렬|밀린 지도|날짜 그림자는|지도 안 밀집|상단 내용 페이드|좌우 순서",
+      "--workers=1",
+      "--trace",
+      "off",
+      "--output",
+      "WORKSPACE/.tmp/uiux-handoff-20261009-2300/frontend-check/stack-date-end-final-20261011/screens22-results",
+      "--reporter=line,json"
+    ],
+    "configFile": "WORKSPACE\\.tmp\\full-release-20261008\\release\\final_project_cs\\frontend\\apps\\web\\playwright.live.config.ts",
+    "rootDir": "WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "WORKSPACE/.tmp/uiux-handoff-20261009-2300/frontend-check/stack-date-end-final-20261011/screens22-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "aligned-map-quiet-cards-20261010.spec.ts",
+      "file": "aligned-map-quiet-cards-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "메뉴 정렬·고정 거리 글자·화살표만 전환 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7569,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:53:32.477Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a846c10ffc2332119492-2f0b04fd464601111d03",
+          "file": "aligned-map-quiet-cards-20261010.spec.ts",
+          "line": 35,
+          "column": 3
+        },
+        {
+          "title": "일반 카드 무테·선택과 상태 테두리·잠금 재클릭 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2156,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:53:40.307Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a846c10ffc2332119492-a31f3c93941a1e37456f",
+          "file": "aligned-map-quiet-cards-20261010.spec.ts",
+          "line": 73,
+          "column": 3
+        },
+        {
+          "title": "밀린 지도 마커는 실제 좌표 방향으로 모서리와 선을 연결 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2290,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:53:42.491Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a846c10ffc2332119492-b6429d6982a42a08b14a",
+          "file": "aligned-map-quiet-cards-20261010.spec.ts",
+          "line": 94,
+          "column": 3
+        },
+        {
+          "title": "메뉴 정렬·고정 거리 글자·화살표만 전환 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3237,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:53:44.803Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a846c10ffc2332119492-e436246d9c94f42c3d4d",
+          "file": "aligned-map-quiet-cards-20261010.spec.ts",
+          "line": 35,
+          "column": 3
+        },
+        {
+          "title": "일반 카드 무테·선택과 상태 테두리·잠금 재클릭 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1964,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:53:48.055Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a846c10ffc2332119492-1bbb6f88a1b12a21cf79",
+          "file": "aligned-map-quiet-cards-20261010.spec.ts",
+          "line": 73,
+          "column": 3
+        },
+        {
+          "title": "밀린 지도 마커는 실제 좌표 방향으로 모서리와 선을 연결 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1632,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:53:50.035Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a846c10ffc2332119492-f3db395dab03779e15ed",
+          "file": "aligned-map-quiet-cards-20261010.spec.ts",
+          "line": 94,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "date-divider-motion-20261010.spec.ts",
+      "file": "date-divider-motion-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7810,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:53:51.700Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "date-clearance-375",
+                      "contentType": "application/json",
+                      "body": "W3sidGltZSI6NDU4MS41LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjIyfSx7InRpbWUiOjQ2MTcuNzAwMDAwMDE3ODgxLCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjIyfSx7InRpbWUiOjQ2NTIuNzAwMDAwMDE3ODgxLCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjIyfSx7InRpbWUiOjQ2ODgsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MjJ9LHsidGltZSI6NDcyNS40MDAwMDAwMDU5NjA1LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjIyfSx7InRpbWUiOjQ3NjIuNjAwMDAwMDIzODQyLCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjIyfSx7InRpbWUiOjQ3OTkuNSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoyMn0seyJ0aW1lIjo0ODM1LjMwMDAwMDAxMTkyMSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoyMn0seyJ0aW1lIjo0ODcxLjcwMDAwMDAxNzg4MSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoyMn0seyJ0aW1lIjo0OTA5LjYwMDAwMDAyMzg0MiwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoyMn0seyJ0aW1lIjo0OTQ1LjIwMDAwMDAxNzg4MSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoyMn0seyJ0aW1lIjo0OTgwLjkwMDAwMDAwNTk2MDUsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MjJ9LHsidGltZSI6NTAxNi4zMDAwMDAwMTE5MjEsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MjJ9LHsidGltZSI6NTA1MS45MDAwMDAwMDU5NjA1LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjIyfSx7InRpbWUiOjUwODguMjAwMDAwMDE3ODgxLCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjIyfSx7InRpbWUiOjUxMjUuMTAwMDAwMDIzODQyLCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjIyfSx7InRpbWUiOjUxNjAuNDAwMDAwMDA1OTYwNSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoyMn1d"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "be372b7a749ce7575407-8f4d6609f5029f041312",
+          "file": "date-divider-motion-20261010.spec.ts",
+          "line": 33,
+          "column": 3
+        },
+        {
+          "title": "날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7706,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:53:59.522Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "date-clearance-1280",
+                      "contentType": "application/json",
+                      "body": "W3sidGltZSI6NDQyOS4xMDAwMDAwMjM4NDIsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MjJ9LHsidGltZSI6NDQ4MC43MDAwMDAwMTc4ODEsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MjJ9LHsidGltZSI6NDUzMC42MDAwMDAwMjM4NDIsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MjJ9LHsidGltZSI6NDU4MS41LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjIyfSx7InRpbWUiOjQ2MzYuNDAwMDAwMDA1OTYwNSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoyMn0seyJ0aW1lIjo0NzE1LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjIyfSx7InRpbWUiOjQ3NzcuNSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoyMn0seyJ0aW1lIjo0ODM4LjEwMDAwMDAyMzg0MiwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoyMn0seyJ0aW1lIjo0OTI2LjcwMDAwMDAxNzg4MSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoyMn0seyJ0aW1lIjo0OTg1LjUsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MjJ9LHsidGltZSI6NTA0OC44MDAwMDAwMTE5MjEsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MjJ9LHsidGltZSI6NTExOC43MDAwMDAwMTc4ODEsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MjJ9LHsidGltZSI6NTE4OC44MDAwMDAwMTE5MjEsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MjJ9LHsidGltZSI6NTI2NC4xMDAwMDAwMjM4NDIsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MjJ9LHsidGltZSI6NTMxNS4yMDAwMDAwMTc4ODEsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MjJ9LHsidGltZSI6NTM5OS4xMDAwMDAwMjM4NDIsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MjJ9LHsidGltZSI6NTQ0OC40MDAwMDAwMDU5NjA1LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjIyfV0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "be372b7a749ce7575407-fe42346d7c8e89ae6bd0",
+          "file": "date-divider-motion-20261010.spec.ts",
+          "line": 33,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "edge-order-date-add-ideas-20261010.spec.ts",
+      "file": "edge-order-date-add-ideas-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "좌우 순서·검정 번호·조작 중 거리 숨김 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7058,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:54:07.268Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-1ca2b6e870de33cfd751",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 20,
+          "column": 3
+        },
+        {
+          "title": "좌우 순서·검정 번호·조작 중 거리 숨김 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8264,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:54:14.352Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-31cc64cfcd3629939a83",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 20,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "in-map-pins-fade-20261010.spec.ts",
+      "file": "in-map-pins-fade-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "지도 안 밀집 마커는 개별 표시·점선 연결·밖으로 나갈 때만 칩 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6739,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:54:22.664Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c4fbbabeca7f609e5c62-63a707291845e9bd9f0e",
+          "file": "in-map-pins-fade-20261010.spec.ts",
+          "line": 45,
+          "column": 3
+        },
+        {
+          "title": "상단 내용 페이드와 날짜·손잡이·최소 접힘 유지 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6345,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:54:29.422Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c4fbbabeca7f609e5c62-1172bb845bb9aa60c52e",
+          "file": "in-map-pins-fade-20261010.spec.ts",
+          "line": 82,
+          "column": 3
+        },
+        {
+          "title": "지도 안 밀집 마커는 개별 표시·점선 연결·밖으로 나갈 때만 칩 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6555,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:54:35.782Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c4fbbabeca7f609e5c62-d5481c05ef65be34b79e",
+          "file": "in-map-pins-fade-20261010.spec.ts",
+          "line": 45,
+          "column": 3
+        },
+        {
+          "title": "상단 내용 페이드와 날짜·손잡이·최소 접힘 유지 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6180,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:54:42.352Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c4fbbabeca7f609e5c62-0d6a9153bee6867acbb8",
+          "file": "in-map-pins-fade-20261010.spec.ts",
+          "line": 82,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "stack-date-end-insert-20261011.spec.ts",
+      "file": "stack-date-end-insert-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "스택 아이콘 안 실제 개수·좌우 순서·지도 이동 중 개수 유지 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6295,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:54:48.569Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6e547b1c575319bf7f3e-b40b3fb9b22e2522e397",
+          "file": "stack-date-end-insert-20261011.spec.ts",
+          "line": 19,
+          "column": 3
+        },
+        {
+          "title": "일반 카드 무테와 선택·검토·수정 상태 테두리 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4646,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:54:54.878Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6e547b1c575319bf7f3e-741cf3ec4241a03f5778",
+          "file": "stack-date-end-insert-20261011.spec.ts",
+          "line": 53,
+          "column": 3
+        },
+        {
+          "title": "날짜 여백·최상단 유지·스크롤 숨김·최상단 즉시 복귀 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5865,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:54:59.540Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6e547b1c575319bf7f3e-ab577bfe43c79ad55ccb",
+          "file": "stack-date-end-insert-20261011.spec.ts",
+          "line": 70,
+          "column": 3
+        },
+        {
+          "title": "목록 끝은 마지막 일정 뒤 추가·종료 시각 초안·저장 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5538,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:55:05.420Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6e547b1c575319bf7f3e-b2a04fa0384a7281f7e0",
+          "file": "stack-date-end-insert-20261011.spec.ts",
+          "line": 102,
+          "column": 3
+        },
+        {
+          "title": "스택 아이콘 안 실제 개수·좌우 순서·지도 이동 중 개수 유지 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6888,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:55:10.977Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6e547b1c575319bf7f3e-a1edae9909d934932572",
+          "file": "stack-date-end-insert-20261011.spec.ts",
+          "line": 19,
+          "column": 3
+        },
+        {
+          "title": "일반 카드 무테와 선택·검토·수정 상태 테두리 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5017,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:55:17.880Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6e547b1c575319bf7f3e-dbf8911bc7b36ea91ebc",
+          "file": "stack-date-end-insert-20261011.spec.ts",
+          "line": 53,
+          "column": 3
+        },
+        {
+          "title": "날짜 여백·최상단 유지·스크롤 숨김·최상단 즉시 복귀 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5464,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:55:22.912Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6e547b1c575319bf7f3e-31f5b82e955487c68eac",
+          "file": "stack-date-end-insert-20261011.spec.ts",
+          "line": 70,
+          "column": 3
+        },
+        {
+          "title": "목록 끝은 마지막 일정 뒤 추가·종료 시각 초안·저장 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5369,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T19:55:28.391Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6e547b1c575319bf7f3e-cb56e09fd9fe9e8ffbff",
+          "file": "stack-date-end-insert-20261011.spec.ts",
+          "line": 102,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-10T19:53:29.438Z",
+    "duration": 125314.482,
+    "expected": 22,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

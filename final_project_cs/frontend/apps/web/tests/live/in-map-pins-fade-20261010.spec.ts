@@ -70,7 +70,7 @@ for (const width of [375, 1280]) {
     await panAnchor(page, '1', r.width / 2, -60);
     await expect(chips.filter({ has: page.locator('svg.lucide-layers') })).toHaveCount(1);
     await expect(marker(page, '1')).toHaveAttribute('aria-hidden', 'true');
-    await expect(chips.first().locator('span')).toHaveCSS('background-color', 'rgb(32, 32, 32)');
+    await expect(chips.first().locator(':scope > span')).toHaveCSS('background-color', 'rgb(32, 32, 32)');
     await capture(page, `outside-${width}`);
     await panAnchor(page, '1', 8, 110);
     for (const n of ['1', '2', '4', '5']) await expect(body(page, n)).toBeVisible();
