@@ -510,12 +510,7 @@ button.headBadge { cursor: pointer; }
 .checking[data-compact] :is(.sheetHead, .dayStrip, .sheetBody, .pager) { display: none; }
 .checking[data-collapsed] .sheet { padding-top: 0; }
 .checking[data-collapsed] .handle { height: 44px; }
-.checking[data-empty-map-in-head] .map [data-empty-map-notice] { display: none; }
-.checking[data-empty-map-in-head] .sheetHead { flex-direction: column; align-items: stretch; gap: 4px; }
-.checking[data-empty-map-in-head] .sheetHead[data-float] { top: 22px; padding-top: 0; background: var(--color-surface); }
-.checking[data-empty-map-in-head] .handle { background: var(--color-surface); border-radius: 20px 20px 0 0; }
-.checking[data-empty-map-in-head] .dayStrip { flex: none; min-height: 32px; }
-.checking[data-empty-map-in-head] .sheetBody[data-under-float] { padding-top: 126px; scroll-padding-top: 126px; }
+.checking[data-empty-map-in-list] .map [data-empty-map-notice] { display: none; }
 .emptyMapNotice { margin: 0; padding: 6px 8px; border-radius: 6px; background: var(--color-surface); color: var(--color-muted); font-size: 12px; line-height: 18px; }
 .emptyMapNotice span { display: block; font-size: 11px; }
 /* ★`[2026-10-07 사용자 지시 — 날짜 줄은 지금 모양 그대로, 경계 없이 목록 위에 투명하게 떠서]` The day chips and the head buttons float over the top of the list (no line, no band of their own); the list scrolls under them. */

@@ -1,0 +1,390 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\full-release-20261008\\release\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.live.config.ts",
+      "tests/live/empty-map-notice-20261010.spec.ts",
+      "tests/live/opaque-handle-fade-20261010.spec.ts",
+      "tests/live/sheet-handle-only-20261010.spec.ts",
+      "tests/live/bottom-pending-threshold-20261010.spec.ts",
+      "--grep",
+      "좌표0개 안내|손잡이는|끝까지 드래그|시간은 보일",
+      "--trace",
+      "retain-on-failure",
+      "--output",
+      "WORKSPACE/.tmp/uiux-handoff-20261009-2300/frontend-check/scrolling-notice-final-20261010/screens8-results",
+      "--reporter=line,json"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\full-release-20261008\\release\\final_project_cs\\frontend\\apps\\web\\playwright.live.config.ts",
+    "rootDir": "WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "WORKSPACE/.tmp/uiux-handoff-20261009-2300/frontend-check/scrolling-notice-final-20261010/screens8-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "bottom-pending-threshold-20261010.spec.ts",
+      "file": "bottom-pending-threshold-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6147,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T04:51:36.810Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "495a3fb5d2716d3b0378-079b64892afcaa3458a3",
+          "file": "bottom-pending-threshold-20261010.spec.ts",
+          "line": 22,
+          "column": 3
+        },
+        {
+          "title": "시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5696,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T04:51:43.244Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "495a3fb5d2716d3b0378-a90bb3d64c5e4a462918",
+          "file": "bottom-pending-threshold-20261010.spec.ts",
+          "line": 22,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "empty-map-notice-20261010.spec.ts",
+      "file": "empty-map-notice-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8763,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T04:51:49.004Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ffbde27cc41bdf23e4d4-eb2b2136d6bc3320a90b",
+          "file": "empty-map-notice-20261010.spec.ts",
+          "line": 30,
+          "column": 3
+        },
+        {
+          "title": "좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8997,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T04:51:57.791Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ffbde27cc41bdf23e4d4-5872199684f6761295b8",
+          "file": "empty-map-notice-20261010.spec.ts",
+          "line": 30,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "opaque-handle-fade-20261010.spec.ts",
+      "file": "opaque-handle-fade-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "손잡이는 완전히 가리고 그 아래 목록은 점진적으로 보임 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5883,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T04:52:07.007Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a02042f17ed535370771-59a2c3bb3d00041da318",
+          "file": "opaque-handle-fade-20261010.spec.ts",
+          "line": 23,
+          "column": 3
+        },
+        {
+          "title": "손잡이는 완전히 가리고 그 아래 목록은 점진적으로 보임 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5350,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T04:52:12.915Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a02042f17ed535370771-4b98dc571c8ca13258d6",
+          "file": "opaque-handle-fade-20261010.spec.ts",
+          "line": 23,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "sheet-handle-only-20261010.spec.ts",
+      "file": "sheet-handle-only-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8801,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T04:52:18.291Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0187f2cf2113246629f0-fc6c220dc61ad57fee5a",
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "line": 42,
+          "column": 3
+        },
+        {
+          "title": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7568,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T04:52:27.114Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0187f2cf2113246629f0-7b938551df2097b8c294",
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "line": 42,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-10T04:51:33.945Z",
+    "duration": 61980.395,
+    "expected": 8,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1167,7 +1167,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   // The change screen's map: the day's other stops greyed, the stop being changed, and its alternatives A, B, C.
   const cards = change ? change.list : [];
   const mapStops: TripStop[] = changing ? changeStops(view, changing, cards) : stopsOf(shown, mapDay);
-  const emptyMapInHead = done && !changing && !inserting && mapTight && mapStops.length > 0 && mapStops.every(stop => !stop.coordinates);
+  const emptyMapInList = done && !changing && !inserting && mapTight && mapStops.length > 0 && mapStops.every(stop => !stop.coordinates);
   useLayoutEffect(() => {
     const box = bodyBox.current;
     if (!done || changing || inserting || !box) return;
@@ -1186,7 +1186,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     observer.observe(box);
     if (header) observer.observe(header);
     return () => observer.disconnect();
-  }, [done, changing, inserting, dayStrip, emptyMapInHead, side]);
+  }, [done, changing, inserting, dayStrip, emptyMapInList, side]);
   // ★`[2026-10-07 사용자 지시]` While the list shows only what needs a look, the map does too: those pins in the warning colours, every other pin grey and not pressable.
   const needsOnMap = done && !changing && filtering && filter === "needs";
   const looks: Record<string, PinLook> | undefined = changing ? changeLooks(view, changing, cards)
@@ -1285,7 +1285,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     return { at: order.indexOf(view.rechecking) + 1, of: order.length };
   })() : null;
 
-  return <div ref={checkingBox} className={styles.checking} data-sheet={custom !== null ? "custom" : sheet} data-changing={changing ? true : undefined} data-dragging={dragging || undefined} data-compact={compact && done && !changing && !inserting ? true : undefined} data-collapsed={collapsed && done && !changing && !inserting ? true : undefined} data-empty-map-in-head={emptyMapInHead || undefined}
+  return <div ref={checkingBox} className={styles.checking} data-sheet={custom !== null ? "custom" : sheet} data-changing={changing ? true : undefined} data-dragging={dragging || undefined} data-compact={compact && done && !changing && !inserting ? true : undefined} data-collapsed={collapsed && done && !changing && !inserting ? true : undefined} data-empty-map-in-list={emptyMapInList || undefined}
     {...quietDays.handlers} {...backGesture}
     style={custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
     <div className={styles.map}>
@@ -1364,7 +1364,6 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
         : <>
           <header className={styles.sheetHead} data-done={done || undefined} data-float={done && dayStrip ? true : undefined} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
             <h2 id="plan-check-sheet-title" className={done || dayStrip ? "sr-only" : styles.sheetTitle}>{sheetTitle}</h2>
-            {emptyMapInHead && <p className={styles.emptyMapNotice} role="status" data-empty-map-notice>{t("표시할 장소 좌표가 없어요.", "There are no place coordinates to display.")}<span>{t("일정에서 장소를 수정해 주세요.", "Edit the places in your stops.")}</span></p>}
             {dayStrip && <div ref={stripBox} className={styles.dayStrip} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
               data-quiet={quietDays.hidden || undefined} aria-hidden={quietDays.hidden || undefined} inert={quietDays.hidden} {...quietDays.focusHandlers}
               onKeyDown={(event) => {
@@ -1390,6 +1389,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
               : countText(view, t)}</p>
           </header>
           <div ref={bodyBox} className={styles.sheetBody} data-next-preview={(canRecommend || (previewing && side === "before")) && !noFixNow || undefined} data-under-float={done && dayStrip ? true : undefined} {...quietSubmit.handlers} {...follow.handlers} onScroll={follow.handlers.onScroll}>
+            {emptyMapInList && <p className={styles.emptyMapNotice} role="status" data-empty-map-notice>{t("표시할 장소 좌표가 없어요.", "There are no place coordinates to display.")}<span>{t("일정에서 장소를 수정해 주세요.", "Edit the places in your stops.")}</span></p>}
             {done && !registered && !previewing && <div className={styles.topActions}>
             <Act id="plan-recommend-all" className={styles.autoAllTop} why={frozen ?? (!actions.previewRecommendAll ? t("전체 자동 추천은 준비 중이에요", "Recommending all is coming") : noFixNow ? noFixWhy : null)} explain={explain} onPress={() => recommendAll("button")}>
               <Sparkles size={15} aria-hidden="true" />{t("전체 자동 추천", "Recommend all")}{needCount > 0 && <span className={styles.badge}>{needCount}</span>}
