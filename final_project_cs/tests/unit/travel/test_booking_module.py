@@ -44,7 +44,9 @@ def test_flights_are_merged_across_sources_with_statuses_and_links():
     (option,) = found["options"]
     assert option["best"] == 122900.0 and [offer["source"] for offer in option["offers"]] == ["ignav", "myrealtrip"]
     assert option["legs"][0]["flightNumber"] == "BX164", "편명은 묶인 다른 소스에서 빌린다"
-    assert [link["name"] for link in found["elsewhere"]] == ["네이버 항공권", "스카이스캐너", "트립닷컴"]
+    assert [link["name"] for link in found["elsewhere"]] == ["네이버 항공권", "스카이스캐너", "트립닷컴", "NOL 인터파크 투어", "카약"]
+    assert found["elsewhere"][3]["url"] == "https://tour.yanolja.com/air/search/a:ICN-a:NRT-20261020?cabin=ECONOMY&infant=0&child=0&adult=1"
+    assert found["elsewhere"][4] == {"name": "카약", "url": "https://www.kayak.co.kr/flights/ICN-NRT/2026-10-20/1adults?sort=bestflight_a"}
     assert travel.travel_search.calls == [{"origin": "ICN", "destination": "NRT", "depart_date": "2026-10-20",
                                            "domestic": False, "max_results": 100, "adults": 1}], "값이 없는 인자는 보내지 않는다"
 
@@ -57,6 +59,22 @@ def test_round_trip_skips_ignav_and_google_gives_a_reference():
     assert found["sources"]["ignav"] == {"status": "skipped", "reason": "round_trip"}
     assert found["sources"]["google"]["status"] == "reference" and found["sources"]["google"]["round_trip_lowest"] == 340015.0
     assert "&rdate=2026-10-23&flighttype=rt" in found["elsewhere"][2]["url"]
+    assert found["elsewhere"][3]["url"].startswith("https://tour.yanolja.com/air/search/a:ICN-a:NRT-20261020/a:NRT-a:ICN-20261023?")
+    assert found["elsewhere"][4]["url"].startswith("https://www.kayak.co.kr/flights/ICN-NRT/2026-10-20/2026-10-23/")
+
+
+def test_flight_links_carry_cabin_and_say_when_children_cannot_be_put_in():
+    from datetime import date
+
+    from app.domains.travel_ops.components.booking.offers.flights import elsewhere
+
+    links = elsewhere(origin="GMP", destination="CJU", depart_date=date(2026, 11, 6), return_date=None, domestic=True,
+                      cabin="BUSINESS", adults=2, children=1, infants=0)
+    nol, kayak = links[3], links[4]
+    assert nol["url"] == "https://tour.yanolja.com/air/search/a:GMP-a:CJU-20261106?cabin=BUSINESS&infant=0&child=1&adult=2"
+    assert "note" not in nol, "NOL 은 어린이 수를 받는다(2026-10-10 「3명」 확인)"
+    assert kayak == {"name": "카약", "url": "https://www.kayak.co.kr/flights/GMP-CJU/2026-11-06/business/2adults?sort=bestflight_a",
+                     "note": "어린이 · 유아 인원은 그 화면에서 넣어 주세요"}
 
 
 def test_resting_and_missing_sources_are_counted_not_guessed():

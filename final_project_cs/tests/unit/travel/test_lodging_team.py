@@ -106,7 +106,8 @@ def test_search_calls_the_model_once_and_answers_from_tool_values():
     assert result.outcome == "completed" and result.next_action.value == "respond"
     assert "1. 해밀톤 호텔 — 1박 188,597원 · 전체 622,370원(세금 포함) · 평점 4.0/5(후기 1,009)" in result.answer
     assert "https://accommodation.myrealtrip.com/union/products/11" in result.answer
-    assert "2. 둘째 호텔 — 1박 150,000원 · 평점 없음" in result.answer and "불러오지 못했습니다" in result.answer
+    assert ("2. 둘째 호텔 — 1박 150,000원(목록 가격 · 객실은 링크에서 확인) · 평점 없음 · "
+            f"https://accommodation.myrealtrip.com/union/products/12?checkIn={IN}&checkOut={OUT}&adultCount=2&childCount=0") in result.answer
     assert "37곳 중 2곳" in result.answer
     sources = [item.source_id for item in result.evidence]
     assert sources == ["lodging.interpret", "read.booking_search_stays", "read.stay_detail:11"], "못 읽은 상세는 근거로 싣지 않는다"
@@ -190,24 +191,28 @@ def test_places_without_rooms_are_skipped_and_the_next_ones_fill_in():
     result, _, tools = _run(SEARCH, {"read.stay_search": stays, "read.stay_detail": full})
     assert [item["gid"] for item in result.decisions[0]["shown"]] == [1, 3, 4]
     assert [item["gid"] for item in result.decisions[0]["skipped"]] == [2]
-    assert len(tools.calls) == 5 and "객실이 없는 1곳은 건너뜀" in result.answer and "평점 없음" in result.answer
+    assert len(tools.calls) == 3 and "객실이 없는 1곳은 건너뜀" in result.answer and "평점 없음" in result.answer
+    assert [item["detail_read"] for item in result.decisions[0]["shown"]] == [True, False, False], "상세는 앞의 2번만(2026-10-10)"
     result, _, tools = _run(SEARCH, {"read.stay_search": stays, "read.stay_detail": {**DETAIL, "sold_out": True}})
-    assert len(tools.calls) == 5, "상세는 정한 횟수(4)까지만 부른다(booking 1)"
-    assert "10곳 중 4곳이 가격이 없거나" in result.answer and result.decisions[0]["shown"] == []
+    assert len(tools.calls) == 3, "상세는 정한 횟수(2)까지만 부른다(booking 1)"
+    assert [item["gid"] for item in result.decisions[0]["shown"]] == [3, 4, 5], "나머지는 목록 값으로"
+    assert "숙소3 — 1박 100,000원(목록 가격 · 객실은 링크에서 확인)" in result.answer
 
 
 def test_places_without_a_list_price_are_skipped_before_any_detail_call():
     stays = {**STAYS, "stays": [{"gid": n, "name": f"숙소{n}", "description": "", "rating": 4.0, "review_count": 3,
                                  "price_per_night": None if n in (1, 2) else 90000} for n in range(1, 6)]}
     result, _, tools = _run(SEARCH, {"read.stay_search": stays, "read.stay_detail": lambda a: {**DETAIL, "gid": a["gid"]}})
-    assert [call[1]["gid"] for call in tools.calls if call[0] == "read.stay_detail"] == [3, 4, 5]
+    assert [call[1]["gid"] for call in tools.calls if call[0] == "read.stay_detail"] == [3, 4]
+    assert [item["gid"] for item in result.decisions[0]["shown"]] == [3, 4, 5]
     assert [(item["gid"], item["reason"]) for item in result.decisions[0]["skipped"]] == [(1, "no_price_in_list"), (2, "no_price_in_list")]
 
 
 def test_an_unreadable_detail_stops_further_detail_calls():
     result, _, tools = _run(SEARCH, {"read.stay_search": STAYS, "read.stay_detail": None})
     assert [call[0] for call in tools.calls] == ["read.booking_search_stays", "read.stay_detail"]
-    assert result.decisions[0]["shown"] == [{"gid": 11, "name": "해밀톤 호텔", "detail_read": False}]
+    assert result.decisions[0]["shown"] == [{"gid": 11, "name": "해밀톤 호텔", "detail_read": False},
+                                            {"gid": 12, "name": "둘째 호텔", "detail_read": False}], "못 읽은 뒤로는 목록 값으로"
 
 
 def test_the_models_question_is_used_only_when_it_asks_for_everything_missing():

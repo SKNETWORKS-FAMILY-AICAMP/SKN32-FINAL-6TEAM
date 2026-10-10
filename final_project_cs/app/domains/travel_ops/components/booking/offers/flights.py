@@ -118,7 +118,19 @@ def elsewhere(*, origin: str, destination: str, depart_date: date, return_date: 
             + (f"&rdate={back.isoformat()}&flighttype=rt" if back else "&flighttype=ow")
             + f"&class={'c' if seat == 'business' else 'f' if seat == 'first' else 'y'}&quantity={adults}"
             "&searchboxarg=t&locale=ko-KR&curr=KRW")
-    return [{"name": "네이버 항공권", "url": naver}, {"name": "스카이스캐너", "url": sky}, {"name": "트립닷컴", "url": trip}]
+    # `[2026-10-10 17시대 playdata 내장 브라우저 확인]` NOL 인터파크 투어 · 카약을 더한다(앞의 셋은 순서 그대로).
+    #   NOL — `travel.interpark.com/air/search/...` 가 `tour.yanolja.com` 으로 넘어가 같은 주소를 쓴다. ICN→NRT 11-06~09 왕복 2명 일반석,
+    #   GMP→CJU 11-06 편도 성인 2 · 어린이 1(「3명」), ICN→NRT 편도 1명 `BUSINESS` 모두 조건이 채워진 결과 화면. `FIRST` 는 확인 안 함.
+    #   카약 — `/flights/ICN-NRT/2026-11-06/2026-11-09/2adults` 왕복 결과 1951개, `/2026-11-06/business/1adults` 편도 비즈니스, GMP→CJU 편도 모두
+    #   채워짐. 어린이 · 유아는 나이로 받아(`children-11` 꼴) 수만으로는 못 넣는다 → 그 화면에서 넣으라고 적는다. `first` 는 확인 안 함.
+    nol_path = f"a:{o}-a:{d}-{go:%Y%m%d}" + (f"/a:{d}-a:{o}-{back:%Y%m%d}" if back else "")
+    nol = (f"https://tour.yanolja.com/air/search/{nol_path}?cabin={seat.upper()}"
+           f"&infant={infants}&child={children}&adult={adults}")
+    kayak = (f"https://www.kayak.co.kr/flights/{o}-{d}/{go.isoformat()}" + (f"/{back.isoformat()}" if back else "")
+             + (f"/{seat}" if seat != "economy" else "") + f"/{adults}adults?sort=bestflight_a")
+    kid_note = {"note": "어린이 · 유아 인원은 그 화면에서 넣어 주세요"} if children or infants else {}
+    return [{"name": "네이버 항공권", "url": naver}, {"name": "스카이스캐너", "url": sky}, {"name": "트립닷컴", "url": trip},
+            {"name": "NOL 인터파크 투어", "url": nol}, {"name": "카약", "url": kayak, **kid_note}]
 
 
 def _status(got: dict[str, Any] | None, *, absent: bool) -> dict[str, Any]:

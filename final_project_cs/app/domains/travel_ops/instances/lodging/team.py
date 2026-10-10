@@ -40,7 +40,9 @@ logger = logging.getLogger(__name__)
 PROMPT_KEY = "lodging.interpret"
 SEOUL = ZoneInfo("Asia/Seoul")
 #: 답에 싣는 숙소 수 · 그만큼 채우려고 상세를 부르는 최대 횟수(객실 없는 곳은 건너뛴다). 우리가 고른 값
-SHOWN, DETAIL_CALLS = 3, 4
+SHOWN, DETAIL_CALLS = 3, 2
+#: 목록만 있는 곳의 숙소 페이지 — 상세가 준 `shareWebLink`(☆2026-10-10 17:02 · 17:14 playdata 6곳)와 같은 모양으로 숙소 번호에서 만든다
+LIST_LINK = "https://accommodation.myrealtrip.com/union/products/{gid}?checkIn={check_in}&checkOut={check_out}&adultCount={adults}&childCount={children}"
 #: 목록에서 받는 수(찾기) · 이름으로 찾을 때 받는 수(내 숙소). 우리가 고른 값
 SEARCH_SIZE, NAME_SIZE = 20, 5
 #: 구글 호텔에서 따로 보여 주는 수. 우리가 고른 값
@@ -51,6 +53,11 @@ SPREAD_KM = 30.0
 
 def _won(value: Any) -> str:
     return f"{int(value):,}원" if isinstance(value, (int, float)) else "가격 모름"
+
+
+def _list_link(gid: Any, dates: dict[str, str], party: dict[str, Any]) -> str:
+    return LIST_LINK.format(gid=gid, check_in=dates["check_in"], check_out=dates["check_out"],
+                            adults=party.get("adults") or 1, children=party.get("children") or 0)
 
 
 def _km(a_lat: float, a_lon: float, b_lat: float, b_lon: float) -> float:
@@ -107,7 +114,7 @@ class LodgingTeam(TravelTeamBase):
         required_context=["case_state", "db_facts", "history"],
         allowed_tools=["read.booking", "read.itinerary", "read.stay_search", "read.stay_detail", "read.booking_search_stays"],
         knowledge_scope=["lodging"],
-        max_steps=7,                                  # 일정 1 + booking 1 + 상세 DETAIL_CALLS + 여유 1
+        max_steps=7,                                  # 일정 1 + booking 1 + 상세 DETAIL_CALLS(2) + 여유(내 숙소 갈래 등)
         active=True,
         implementation_revision="2026-10-07",
         default_capability="lodging.assist",
@@ -199,29 +206,34 @@ class LodgingTeam(TravelTeamBase):
                                  "지역이나 가격 · 평점 조건을 바꿔 다시 말씀해 주세요.")
         # 순서는 제공처가 준 그대로 — 우리가 다시 매기지 않는다. 다만 그 날짜에 객실이 없는 곳은 싣지 않는다.
         # ☆2026-10-07 17:48 playdata — 앞의 셋을 그대로 실었더니 둘이 「해당 날짜 객실 없음 · 가격 모름」이었다.
-        lines, shown, skipped, calls = [], [], [], 0
+        # `[2026-10-10]` 상세는 앞의 `DETAIL_CALLS` 곳만 부른다(전에는 4번까지). 나머지는 **목록 값**으로 싣고 링크는 숙소 번호로 만든다
+        #   — ☆17:14 playdata 두 문장을 이어 돌리자 7번째 호출에서 429(`retryAfter` 60). 답 하나에 마이리얼트립 최대 1 + `DETAIL_CALLS` 번.
+        lines, shown, skipped, calls, stopped = [], [], [], 0, False
         for stay in listing["stays"]:
-            if len(lines) >= SHOWN or calls >= DETAIL_CALLS:
+            if len(lines) >= SHOWN:
                 break
             if stay.get("price_per_night") is None:
-                # ★목록에 가격이 없는 곳은 상세를 부르지 않는다 — 2026-10-08 14:41 playdata 에서 상세가 「객실 없음」이던 곳
-                #   (1356616 · 3171484)이 같은 조건의 목록에서 가격 없이 왔다. 호출을 아끼려는 것이고, 상세 확인도 그대로 둔다
+                # ★목록에 가격이 없는 곳은 싣지 않는다 — 2026-10-08 14:41 playdata 에서 상세가 「객실 없음」이던 곳
+                #   (1356616 · 3171484)이 같은 조건의 목록에서 가격 없이 왔다
                 skipped.append({"gid": stay["gid"], "name": stay["name"], "reason": "no_price_in_list"})
                 continue
-            calls += 1
-            detail = self._read(task, "read.stay_detail", {"gid": stay["gid"], **dates, **party}, seen)
-            if detail and detail.get("cooldown_seconds"):
-                detail = None                         # 상세 도중 429 — 쉬는 표시는 상세가 아니다(아래에서 더 부르지 않고 멈춘다)
-            evidence = self._evidence(task, source_id=f"read.stay_detail:{stay['gid']}", claim="숙소 상세(마이리얼트립)",
-                                      value=detail, base=evidence)
-            if detail is not None and (detail.get("no_rooms") or detail.get("sold_out")):
-                skipped.append({"gid": stay["gid"], "name": stay["name"], "reason": "no_rooms"})
-                continue
+            detail = None
+            if calls < DETAIL_CALLS and not stopped:
+                calls += 1
+                detail = self._read(task, "read.stay_detail", {"gid": stay["gid"], **dates, **party}, seen)
+                if detail and detail.get("cooldown_seconds"):
+                    detail = None                     # 상세 도중 429 — 쉬는 표시는 상세가 아니다
+                evidence = self._evidence(task, source_id=f"read.stay_detail:{stay['gid']}", claim="숙소 상세(마이리얼트립)",
+                                          value=detail, base=evidence)
+                if detail is None:
+                    # ★상세를 못 읽었으면 더 부르지 않는다 — 대개 제공처가 거절한 것이고(2026-10-08 14:35 · 10-10 17:14 playdata 429),
+                    #   이어 부르면 부하만 보탠다. 이 곳과 다음 곳은 목록 값으로 싣는다
+                    stopped = True
+                elif detail.get("no_rooms") or detail.get("sold_out"):
+                    skipped.append({"gid": stay["gid"], "name": stay["name"], "reason": "no_rooms"})
+                    continue
             shown.append({"gid": stay["gid"], "name": stay["name"], "detail_read": detail is not None})
-            lines.append(self._line(len(lines) + 1, stay, detail, _distance(center, detail)))
-            if detail is None:
-                # ★상세를 못 읽었으면 더 부르지 않는다 — 대개 제공처가 거절한 것이고(2026-10-08 14:35 playdata 429), 이어 부르면 부하만 보탠다
-                break
+            lines.append(self._line(len(lines) + 1, stay, detail, _distance(center, detail), _list_link(stay["gid"], dates, party)))
         extra = self._google_block(google, [item["name"] for item in shown], booked.get("elsewhere") or [], center)
         decision = {**decision, "found": len(listing["stays"]), "shown": shown, "skipped": skipped,
                     "google": len((google or {}).get("stays") or []) if google is not None else None}
@@ -341,13 +353,15 @@ class LodgingTeam(TravelTeamBase):
         return [f"거리는 {span} 일정 장소 {center['places']}곳의 가운데에서 잰 직선거리입니다(이동 시간 아님)."]
 
     @staticmethod
-    def _line(number: int, stay: dict[str, Any], detail: dict[str, Any] | None, far: float | None = None) -> str:
+    def _line(number: int, stay: dict[str, Any], detail: dict[str, Any] | None, far: float | None = None,
+              link: str = "") -> str:
         # 후기가 없는 곳은 평점이 0.0 으로 온다(2026-10-07 17:48 playdata) — 0점이 아니라 평점이 없는 것이다
         rating = f"평점 {stay['rating']}/5" + (f"(후기 {stay['review_count']:,})" if stay.get("review_count") else "") \
             if stay.get("rating") else "평점 없음"
         if detail is None:
-            return (f"{number}. {stay['name']} — 1박 {_won(stay.get('price_per_night'))} · {rating} · "
-                    f"{stay.get('description') or ''} (상세 · 링크를 불러오지 못했습니다)")
+            about = f" · {stay['description']}" if stay.get("description") else ""
+            return (f"{number}. {stay['name']} — 1박 {_won(stay.get('price_per_night'))}(목록 가격 · 객실은 링크에서 확인) · {rating}{about}"
+                    f" · {link or '링크 없음'}")
         return (f"{number}. {stay['name']} — 1박 {_won(detail.get('price_per_night'))} · 전체 {_won(detail.get('total_price'))}(세금 포함) · "
                 f"{rating} · {detail.get('address') or '주소 모름'}" + (f" · 일정 가운데에서 {far}km" if far is not None else "")
                 + f" · {detail.get('link') or '링크 없음'}")

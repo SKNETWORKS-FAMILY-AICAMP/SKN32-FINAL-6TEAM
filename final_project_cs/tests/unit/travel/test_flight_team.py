@@ -216,6 +216,8 @@ def test_the_answer_ends_with_the_same_search_on_sites_koreans_use():
     assert f"   · 스카이스캐너: https://www.skyscanner.co.kr/transport/flights/tpe/icn/{short}/?adultsv2=2&cabinclass=economy&rtn=0" in result.answer
     assert (f"   · 트립닷컴: https://kr.trip.com/flights/showfarefirst?dcity=tpe&acity=sel&dairport=tpe&aairport=icn&ddate={GO}"
             "&flighttype=ow&class=y&quantity=2&searchboxarg=t&locale=ko-KR&curr=KRW") in result.answer, "도시(인천→서울) + 공항 코드"
+    assert f"   · NOL 인터파크 투어: https://tour.yanolja.com/air/search/a:TPE-a:ICN-{day}?cabin=ECONOMY&infant=0&child=0&adult=2" in result.answer
+    assert f"   · 카약: https://www.kayak.co.kr/flights/TPE-ICN/{GO}/2adults?sort=bestflight_a" in result.answer
 
 
 def test_a_round_trip_elsewhere_link_carries_both_dates():

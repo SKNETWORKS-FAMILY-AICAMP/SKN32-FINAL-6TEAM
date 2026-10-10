@@ -298,7 +298,8 @@ class FlightTeam(TravelTeamBase):
             merged = "같은 편끼리 묶어 " if listed > 1 else ""
             head = f"{route} · {when} · {party} 조건으로 찾은 결과({' · '.join(counted)})를 {merged}{how} 보여 드립니다."
         others = ["같은 조건으로 다른 곳에서 보기(가격은 그 사이트에서 확인):",
-                  *[f"   · {link['name']}: {link['url']}" for link in booked.get("elsewhere") or []]]
+                  *[f"   · {link['name']}" + (f"({link['note']})" if link.get("note") else "") + f": {link['url']}"
+                    for link in booked.get("elsewhere") or []]]
         tail = ("가격과 좌석은 조회 시점 참고값이며 판매처 화면에서 달라질 수 있습니다. 링크가 열리지 않으면 같은 편의 다른 판매처 링크를 써 주세요. "
                 "예약 · 결제는 링크한 판매처에서 직접 하시면 됩니다.")
         shown = [{"airline": option["airline"], "best": option["best"], "band": _band(option),
