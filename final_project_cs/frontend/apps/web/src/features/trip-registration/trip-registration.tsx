@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, CircleAlert, FileText, Paperclip, X } from "lucide-react";
-import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
+import { Button, ButtonLink, Eyebrow, PageHeading, Panel } from "@/components/ui";
 import { decideGuardian, paceOf, readCriteria, setPace, useCriteria, withCriteria } from "@/features/guardian/criteria-store";
 import { GuardianCard } from "@/features/guardian/guardian-card";
 import { ReadingCriteria } from "@/features/guardian/reading-criteria";
@@ -23,6 +23,11 @@ import { clearLoginDraft, keepLoginDraft, takeLoginDraft } from "./login-draft";
 import styles from "./trip-registration.module.css";
 
 const draftKey = "tripilot.web.registration-draft.v1";
+
+function readDraft(): string {
+  try { return sessionStorage.getItem(draftKey) ?? ""; }
+  catch { return ""; }
+}
 
 function Preferences() {
   const t = useT();
@@ -66,7 +71,6 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   const [onboarding] = useOnboarding();
   const router = useRouter();
   useEffect(() => { router.prefetch(routes.intakeStarting); }, [router]);
-  const queryClient = useQueryClient();
   const [source, setSource] = useState<string>();
   const [validation, setValidation] = useState("");
   // Raised on every press that is turned back, so the notice is brought into view again even when it says the same words.
@@ -118,16 +122,10 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
     });
   }
   // The text box keeps what was typed while the customer moves around the app (this tab's session storage).
-  const draft = useQuery({
-    queryKey: ["registration-draft"],
-    queryFn: async () => {
-      try { return sessionStorage.getItem(draftKey) ?? ""; }
-      catch { return ""; }
-    },
-    retry: false,
-    staleTime: Infinity,
-  });
-  const value = source ?? draft.data ?? "";
+  // Browser-only restoration uses an empty server snapshot, then reads synchronously after hydration.
+  // It never waits for an API response or replaces the input form with a loading screen.
+  const draft = useSyncExternalStore(never, readDraft, () => "");
+  const value = source ?? draft;
   async function continueWithAccount() {
     try {
       await keepLoginDraft({ text: value, files, ask, active });
@@ -185,7 +183,6 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   function updateSource(next: string) {
     setActive("text");
     setSource(next);
-    queryClient.setQueryData(["registration-draft"], next);
     setValidation("");
     signUp.reset();
     setRestored("");
@@ -230,7 +227,6 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
     else send(humanToken);
   }
 
-  if (draft.isPending || draft.error) return <QueryState loading={draft.isPending} error={draft.error} retry={() => void draft.refetch()} />;
   const error = validation || signUp.error?.message || restored;
   // One notice, under the panel that is chosen (the input the customer is looking at) - never at the foot of the page.
   const errorNode = error ? <div id="plan-error" className={styles.error} role="alert"><CircleAlert size={18} strokeWidth={1.8} aria-hidden="true" /><span>{error}
