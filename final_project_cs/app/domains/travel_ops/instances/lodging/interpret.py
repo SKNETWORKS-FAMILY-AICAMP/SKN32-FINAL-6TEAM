@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 from datetime import date
+import re
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -101,9 +102,23 @@ def ground(found: Interpretation, text: str, *, has_trip: bool,
     return ground_dates(found, text, grounds=GROUNDS, start="check_in", end="check_out", has_trip=has_trip, trip=trip)
 
 
-def settle_years(found: Interpretation, *, today: date) -> tuple[Interpretation, list[str]]:
-    """날 · 연도를 근거 조각과 맞춘다(`_shared/interpret_dates.settle_dates`). (해석, 고친 칸)"""
-    return settle_dates(found, grounds=GROUNDS, today=today)
+#: 「N만원대」 — 문장에 하나만 있을 때 상한을 그 구간 끝으로 맞춘다(프롬프트 규칙: 15만원대 → 159999, 20만원대 → 299999)
+_BAND = re.compile(r"(\d+)\s*만\s*원?\s*대")
+
+
+def settle_years(found: Interpretation, *, today: date, text: str = "") -> tuple[Interpretation, list[str]]:
+    """날 · 연도 · 요일을 근거 조각과 맞추고(`_shared/interpret_dates.settle_dates`), 가격 구간 상한을 맞춘다. (해석, 고친 칸)
+
+    ☆2026-10-10 21:59 playdata 해석 측정 — 「15만원대」를 150000 으로 냈다(프롬프트 예시는 159999). 모델 값이 구간의 **시작**과 같을
+      때만 끝으로 바꾼다(다른 값이면 모델이 다르게 읽은 것이니 건드리지 않는다).
+    """
+    found, fixed = settle_dates(found, grounds=GROUNDS, today=today)
+    bands = _BAND.findall(text or "")
+    if len(bands) == 1 and found.max_price_per_night == int(bands[0]) * 10000:
+        n = int(bands[0])
+        top = n * 10000 + (99999 if n % 10 == 0 else 9999)
+        found, fixed = found.model_copy(update={"max_price_per_night": top}), [*fixed, "max_price_per_night"]
+    return found, fixed
 
 
 __all__ = ["CALENDAR_DAYS", "model_context", "settle_years", "GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]

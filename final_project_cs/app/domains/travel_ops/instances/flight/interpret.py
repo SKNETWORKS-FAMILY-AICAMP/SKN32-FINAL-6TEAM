@@ -118,7 +118,7 @@ def ground(found: Interpretation, text: str, *, has_trip: bool,
     return ground_dates(found, text, grounds=GROUNDS, start="depart_date", end="return_date", has_trip=has_trip, trip=trip)
 
 
-def settle_years(found: Interpretation, *, today: date) -> tuple[Interpretation, list[str]]:
+def settle_years(found: Interpretation, *, today: date, text: str = "") -> tuple[Interpretation, list[str]]:
     """날 · 연도를 근거 조각과 맞춘다(`_shared/interpret_dates.settle_dates`). (해석, 고친 칸)"""
     return settle_dates(found, grounds=GROUNDS, today=today)
 

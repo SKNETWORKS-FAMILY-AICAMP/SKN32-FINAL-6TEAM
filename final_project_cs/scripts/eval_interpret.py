@@ -64,7 +64,7 @@ async def run_case(llm, team, case, today, trip):
     try:
         found, cleared = interpret.ground(interpret.parse(raw), case["text"], has_trip=bool(case.get("trip")),
                                           trip=trip if case.get("trip") else None)
-        found, fixed = interpret.settle_years(found, today=today)   # 팀과 같은 순서
+        found, fixed = interpret.settle_years(found, today=today, text=case["text"])   # 팀과 같은 순서
     except interpret.InterpretationInvalid as exc:
         return {"error": f"invalid {str(exc)[:120]}"}, took
     values = found.model_dump(mode="json")
@@ -84,6 +84,7 @@ def main():
     parser.add_argument("--repeat", type=int, default=1)
     parser.add_argument("--only", default="", help="쉼표로 나눈 문장 id(L01,F04 …)")
     parser.add_argument("--plain-context", action="store_true", help="달력 없이(1차 측정 때 context) — 달력의 효과를 따로 본다")
+    parser.add_argument("--set", dest="case_set", default="", help="base(처음 40문장) · hard(2026-10-10 밤 추가) · real(실제 문장) — 없으면 전부")
     args = parser.parse_args()
     global PLAIN
     PLAIN = args.plain_context
@@ -99,7 +100,8 @@ def main():
           f"모델 {settings.llm_model} · temperature {settings.llm_temperature} · seed {settings.llm_seed} · 기준일 {today} · 반복 {args.repeat}"
           + (" · 달력 없이" if PLAIN else ""))
     for team in args.teams or ["lodging", "flight"]:
-        cases = [case for case in data[team] if not only or case["id"] in only]
+        cases = [case for case in data[team] if (not only or case["id"] in only)
+                 and (not args.case_set or case.get("set", "base") == args.case_set)]
         field_total, field_ok = Counter(), Counter()
         case_ok, case_total, seconds, unstable = 0, 0, [], []
         print(f"\n== {team} · {len(cases)}문장 · 프롬프트 {sorted(Path('prompts', team).glob('interpret.v*.md'))[0].name}")

@@ -137,7 +137,7 @@ class LodgingTeam(TravelTeamBase):
                                           model_context(today, trip),   # `[2026-10-10]` 달력 · 요일을 함께 준다
                                           run_id=task.run_id)
             found, ungrounded = ground(parse(raw), task.input_text, has_trip=trip is not None, trip=trip)
-            found, year_fixed = settle_years(found, today=today)   # `[2026-10-10]` 연도를 말하지 않은 날짜는 연도만 서버가 정한다
+            found, year_fixed = settle_years(found, today=today, text=task.input_text)   # `[2026-10-10]` 연도를 말하지 않은 날짜는 연도만 서버가 정한다
         except InterpretationInvalid as exc:
             logger.warning("lodging interpretation invalid case=%s %s", task.case_id, exc)
             return self._escalate(task, "interpretation_invalid", evidence, warnings=[str(exc)[:200]])

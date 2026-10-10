@@ -74,3 +74,54 @@ def test_a_return_before_the_departure_is_left_for_needs_to_ask():
 def test_the_calendar_lets_the_model_read_weekdays():
     context = model_context(TODAY, TRIP)
     assert context["today_weekday"] == "토" and context["calendar"][6] == "2026-10-16 금" and context["trip"] == TRIP
+
+
+def test_hard_set_shapes_from_the_2159_measurement():
+    """☆2026-10-10 21:59 playdata 어려운 문장 측정에서 틀린 모양들."""
+    # 범위 근거 「13~15일」은 날을 맞추지 않는다(전에는 체크인이 15일로 바뀌었다)
+    assert _stay({"check_in": "2026-11-13", "check_out": "2026-11-15", "check_in_text": "다음달 13~15일",
+                  "check_out_text": "다음달 13~15일"}, "어른 2 초등학생 2 다음달 13~15일 경주")[0] == ("2026-11-13", "2026-11-15")
+    # 지역 이름 · 사람 수는 날짜 근거가 아니다
+    assert _stay({"check_in": "2026-10-10", "check_out": "2026-10-12", "check_in_text": "명동", "check_out_text": "2명"},
+                 "명동 2명")[1] == ["check_in", "check_out"]
+    # 「하루만」은 시작 날짜 근거가 아니다
+    assert "check_in" in _stay({"check_in": "2026-10-11", "check_in_text": "하루만"}, "이번 여행 마지막 날 하루만 공항 근처 호텔")[1]
+    # 요일 근거는 그 요일인 가장 가까운 날로 — 「금요일까지」 10-14(수) → 10-16(금)
+    got = _stay({"check_in": "2026-10-12", "check_out": "2026-10-14", "check_in_text": "월요일부터", "check_out_text": "금요일까지"},
+                "강남 비즈니스호텔 월요일부터 금요일까지 출장 1명")
+    assert got[0] == ("2026-10-12", "2026-10-16") and got[2] == ["check_out"]
+
+
+def test_a_price_band_start_becomes_the_band_end():
+    found = lodging.parse({**BASE, "max_price_per_night": 150000})
+    assert lodging.settle_years(found, today=TODAY, text="명동 2명 호텔 15만원대")[0].max_price_per_night == 159999
+    found = lodging.parse({**BASE, "max_price_per_night": 200000})
+    assert lodging.settle_years(found, today=TODAY, text="20만원 이하")[0].max_price_per_night == 200000, "이하는 그대로"
+    assert lodging.settle_years(found, today=TODAY, text="20만 원대")[0].max_price_per_night == 299999
+
+
+def test_english_dates_are_date_shaped():
+    """☆22:25 「flight from Incheon to Taipei on Nov 6 for 1」 — 근거 「Nov 6」이 지워졌다."""
+    from app.domains.travel_ops.instances._shared.interpret_dates import looks_like_date
+
+    assert looks_like_date("Nov 6") and looks_like_date("November 6th") and looks_like_date("tomorrow")
+    assert not looks_like_date("for 1") and not looks_like_date("Myeongdong")
+
+
+def test_holidays_move_the_check_in_and_the_nights_follow():
+    """☆22:28 「크리스마스에 2박」 — 12-24~26 으로 냈다."""
+    got = _stay({"check_in": "2026-12-24", "check_out": "2026-12-26", "check_in_text": "크리스마스에", "check_out_text": "2박"},
+                "해운대 근처 오션뷰 호텔 크리스마스에 2박 커플")
+    assert got[0] == ("2026-12-25", "2026-12-27") and got[2] == ["check_in", "check_out"]
+    got = _stay({"check_in": "2026-12-24", "check_out": "2026-12-25", "check_in_text": "크리스마스 이브에", "check_out_text": "1박"},
+                "크리스마스 이브에 1박")
+    assert got[0] == ("2026-12-24", "2026-12-25") and got[2] == []
+
+
+def test_a_bare_day_number_ends_a_range_whose_start_is_a_date():
+    """☆22:28 「hotel in Myeongdong Nov 6-9」 — 끝 근거가 「9」뿐."""
+    got = _stay({"check_in": "2026-11-06", "check_out": "2026-11-09", "check_in_text": "Nov 6", "check_out_text": "9"},
+                "hotel in Myeongdong Nov 6-9 for 2 people")
+    assert got[0] == ("2026-11-06", "2026-11-09") and got[1] == []
+    assert _stay({"check_in": "2026-11-06", "check_out": "2026-11-09", "check_in_text": "명동", "check_out_text": "2"},
+                 "명동 2명")[1] == ["check_in", "check_out"], "시작 근거가 날짜가 아니면 받지 않는다"
