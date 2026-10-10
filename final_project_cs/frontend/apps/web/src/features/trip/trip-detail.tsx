@@ -66,6 +66,7 @@ function DetailCard({ stop, next, dayNumber, active, onAsk, askBusy }: { stop: T
       <span className={pc.chip}>{t(`${dayNumber}일차`, `Day ${dayNumber}`)} {stop.time}{stop.endTime ? `–${stop.endTime}` : ""}</span>
       <span className={pc.pill} data-booked={stop.booking === "booked" || undefined}>{bookingLabel(stop, t)}</span>
       {stop.pinned && <span className={pc.pill}>{t("고정한 일정", "Pinned")}</span>}
+      {stop.badges?.map((badge) => <span key={badge.code} className={pc.pill}>{badge.label}</span>)}
       {stop.paused && <span className={pc.pill} data-state="review">{t("일정 정지", "Paused")}</span>}
     </div>
     <div className={pc.nameRow}><h4 id={`trip-detail-card-${stop.id}`} className={pc.changeName}>{stop.title}</h4>{info?.sourceNote && <span className={pc.sourceTag}>{info.sourceNote}</span>}</div>

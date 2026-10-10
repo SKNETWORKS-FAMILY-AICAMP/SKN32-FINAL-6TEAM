@@ -17,6 +17,8 @@ export interface TripStop {
   pinned?: boolean;
   /** Other options the server kept for this stop (best one is already applied). Shown as information. */
   otherOptions?: TripOption[];
+  /** Restaurant marks from the dining ledger (Michelin, 노포). `[2026-10-08]` The screen shows only the label, not the source. */
+  badges?: TripBadge[];
   /** Opens this place in the customer's own map app (Google Maps link from the server; no API key, no billing). */
   mapUrl?: string;
   /** What the server knows about the place (address, phone, hours, badges). Missing fields are not shown. */
@@ -50,6 +52,9 @@ export interface TripSafety {
 }
 
 export interface TripOption { key: string; name: string }
+
+/** A mark on a restaurant, in the server's words: `label` is shown; `source` is kept but not shown (a brand name could read as an endorsement). */
+export interface TripBadge { code: string; label: string; source: string }
 
 export interface PlaceInfo {
   address?: string;

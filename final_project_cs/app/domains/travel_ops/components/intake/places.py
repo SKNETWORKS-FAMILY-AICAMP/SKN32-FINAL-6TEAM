@@ -322,8 +322,13 @@ def _chain_branch(query: str, hits: list[dict[str, Any]], kakao: Any, near: tupl
     anchor = anchor_for(hint_point=hint_point, neighbours=[Neighbour(*near)] if near else [])
     pool = list(hits)
     pick = pick_branch(chain, pool, anchor)
+    # ★`[2026-10-08]` 멈추는 기준은 **이미 찾아 본 반경**이다. 처음 결과(`hits`)는 관련도 순이라 더 가까운 지점이 빠져 있을 수 있다.
+    #   ☆통합 뒤 카카오에 앞 일정 좌표를 자동으로 넣던 감싸개(`_KakaoNearHint`)가 빠지자, 관련도 순 결과의 「종로R점」(829m)이
+    #   1km 안이라는 이유로 근처를 한 번도 찾지 않고 골랐다 — 가까운 「적선점」(470m)을 놓쳤다(장소 찾기 평가 PL-011 · PL-025).
+    searched = 0
     for ask in search_requests(chain, anchor):
-        if pick.status == "picked" and (pick.distance_m or 0) <= ask["radius"]:
+        # 같은 반경의 다른 업종(음식점 · 카페)은 마저 찾는다 — 더 넓은 반경으로 넘어갈 때만 멈춘다
+        if pick.status == "picked" and (pick.distance_m or 0) <= searched < ask["radius"]:
             break
         more = kakao.search(ask["query"], near=ask["near"], radius=ask["radius"],
                             category_group_code=ask["category_group_code"], size=ask["size"])
@@ -333,6 +338,7 @@ def _chain_branch(query: str, hits: list[dict[str, Any]], kakao: Any, near: tupl
                                        if getattr(kakao, "misses", None) else "unavailable"))
             break
         pool += more
+        searched = max(searched, ask["radius"])
         pick = pick_branch(chain, pool, anchor)
     others = ", ".join(h["name"] for h in pick.alternatives)
     note = pick.note + (f" (다른 지점: {others})" if others else "")

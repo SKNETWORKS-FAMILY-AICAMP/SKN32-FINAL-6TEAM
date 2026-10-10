@@ -1,0 +1,194 @@
+{
+ "eval": "dining_alternatives",
+ "dataset": "dining_alternatives_holdout_v1.jsonl",
+ "dataset_sha": "337f9fa7f4c88dcb",
+ "label": "holdout_v3-domains",
+ "seeds": 5,
+ "mobility": true,
+ "env": {
+  "run_at": "2026-10-08T15:40:06+09:00",
+  "git_commit": "d76ecad",
+  "git_branch": "role-dining",
+  "git_dirty": false
+ },
+ "summary": {
+  "accuracy": {
+   "num": 8,
+   "den": 8,
+   "rate": 1.0
+  },
+  "acceptable": {
+   "num": 8,
+   "den": 8,
+   "rate": 1.0
+  },
+  "violations": {
+   "num": 0,
+   "den": 8,
+   "rate": 0.0
+  },
+  "violations_any_seed": {
+   "num": 0,
+   "den": 8,
+   "rate": 0.0
+  },
+  "labels": {
+   "correct": 7,
+   "ok": 0,
+   "correct_no_change": 1,
+   "wrong_violation": 0,
+   "wrong": 0,
+   "missed": 0,
+   "wrong_change": 0,
+   "unstable": 0
+  },
+  "by_group": {
+   "brand": {
+    "num": 1,
+    "den": 1,
+    "rate": 1.0
+   },
+   "move": {
+    "num": 1,
+    "den": 1,
+    "rate": 1.0
+   },
+   "sanity": {
+    "num": 2,
+    "den": 2,
+    "rate": 1.0
+   },
+   "similar": {
+    "num": 4,
+    "den": 4,
+    "rate": 1.0
+   }
+  },
+  "added_walk_min_mean": -0.9,
+  "skipped": []
+ },
+ "results": [
+  {
+   "id": "DAH-01",
+   "group": "move",
+   "why": "저녁 뒤 다음 일정이 남쪽 — 북쪽 가게는 다음 일정에 늦는다",
+   "picked": "D",
+   "picked_name": "남쪽 고깃집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": -4,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DAH-02",
+   "group": "similar",
+   "why": "초밥 → 같은 초밥이 먼저, 라멘(같은 일식)은 차선, 가까운 한식은 아니다",
+   "picked": "S",
+   "picked_name": "다른 초밥집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DAH-03",
+   "group": "brand",
+   "why": "같은 브랜드가 다음 일정 반대쪽이라 동선이 크게 는다 — 다음 일정 쪽 다른 카페",
+   "picked": "X",
+   "picked_name": "동네 카페",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": -7,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DAH-04",
+   "group": "similar",
+   "why": "40분 늦어 원래 냉면집이 닫는다 — 가까운 백반보다 냉면집",
+   "picked": "M",
+   "picked_name": "다른 냉면집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DAH-05",
+   "group": "similar",
+   "why": "가게 앞 신고 — 같은 메뉴(떡볶이)가 조금 멀어도 먼저",
+   "picked": "T",
+   "picked_name": "다른 떡볶이집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 5,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DAH-06",
+   "group": "sanity",
+   "why": "가장 가까운 곳은 브레이크 전 라스트오더가 촉박 — 여는 곳으로",
+   "picked": "A",
+   "picked_name": "종일 식당",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DAH-07",
+   "group": "similar",
+   "why": "원래 식당 종류를 모른다 — 가까운 곳",
+   "picked": "A",
+   "picked_name": "가까운 일식당",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DAH-08",
+   "group": "sanity",
+   "why": "카드만 쓰는 여행인데 근처가 모두 현금만 — 바꾸지 않는다",
+   "picked": null,
+   "picked_name": null,
+   "status": "unresolved",
+   "route": null,
+   "label": "correct_no_change"
+  }
+ ]
+}

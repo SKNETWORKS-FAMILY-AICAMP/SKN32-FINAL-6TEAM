@@ -459,6 +459,16 @@ def _meal_label(item: Item) -> str | None:
     return "아침" if hour < 10 else "점심" if hour < 16 else "저녁"
 
 
+def _badges(place: dict[str, Any] | None) -> list[dict[str, str]]:
+    """장소에 남은 가게 표시 [{"code", "label", "source"}]. 모양이 다른 것은 버린다(화면이 지어내지 않게)."""
+    out = []
+    for badge in (place or {}).get("badges") or []:
+        if isinstance(badge, dict) and all(isinstance(badge.get(key), str) and badge.get(key)
+                                           for key in ("code", "label", "source")):
+            out.append({key: badge[key] for key in ("code", "label", "source")})
+    return out
+
+
 def _item_view(item: Item, info: dict[str, Any] | None = None) -> dict[str, Any]:
     return {"item_id": str(item.item_id), "seq": item.seq, "kind": item.kind,
             "kind_label": _KIND_LABEL.get(item.kind, item.kind), "meal": _meal_label(item),
@@ -474,6 +484,8 @@ def _item_view(item: Item, info: dict[str, Any] | None = None) -> dict[str, Any]
                                "price_compare": a.get("price_compare")}
                               for a in item.detail.get("alternates") or []],
             "customer_pinned": bool(item.detail.get("customer_pinned")),
+            # ★`[2026-10-07]` 미쉐린 · 노포 표시와 출처 — 일정 생성기가 원장에서 실어 장소에 남긴 것(`planner.ledger_candidates`)
+            "badges": _badges(item.place),
             # ★`[2026-09-27]` 웹 지도 핀 · 예약 표시. 좌표는 그 고객 자신의 여행 장소다(다른 고객에게 가지 않는다)
             "lat": (item.place or {}).get("latitude"), "lon": (item.place or {}).get("longitude"),
             # ★`[2026-09-28]` 채팅의 예약 답과 같은 판정(`trip_facts.booking_fact`) — 전에는 `detail.reserved` 를 안 봤다
