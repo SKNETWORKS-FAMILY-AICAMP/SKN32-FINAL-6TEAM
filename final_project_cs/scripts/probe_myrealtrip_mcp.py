@@ -7,6 +7,7 @@
 실행 위치: final_project_cs
   python -m scripts.probe_myrealtrip_mcp                      # 도구 목록과 입력 항목
   python -m scripts.probe_myrealtrip_mcp --call getCurrentTime
+  python -m scripts.probe_myrealtrip_mcp --url https://mcp.kiwi.com      # [2026-10-09] 다른 키 없는 MCP(Kiwi.com)
   python -m scripts.probe_myrealtrip_mcp --schema searchInternationalFlights   # 그 도구의 입력 정의 원문
   python -m scripts.probe_myrealtrip_mcp --call 도구이름 --arg 이름=값 --arg 이름=값
 값은 숫자·true/false 면 그 형으로, 나머지는 글자로 보낸다. 숫자처럼 생긴 값을 글자로 보내려면 값 앞에 s: 를 붙인다(예: --arg code=s:123).
@@ -45,8 +46,8 @@ def decode(response):
 
 
 class Session:
-    def __init__(self, client):
-        self.client, self.session_id, self.next_id = client, None, 0
+    def __init__(self, client, url=URL):
+        self.client, self.session_id, self.next_id, self.url = client, None, 0, url
 
     def send(self, method, params=None, *, notify=False):
         message = {"jsonrpc": "2.0", "method": method}
@@ -59,7 +60,7 @@ class Session:
         if self.session_id:
             headers["Mcp-Session-Id"] = self.session_id
         started = time.perf_counter()
-        response = self.client.post(URL, json=message, headers=headers)
+        response = self.client.post(self.url, json=message, headers=headers)
         took = time.perf_counter() - started
         if response.headers.get("mcp-session-id"):
             self.session_id = response.headers["mcp-session-id"]
@@ -117,6 +118,7 @@ def typed(text):
 
 def main():
     parser = ArgumentParser(description=__doc__)
+    parser.add_argument("--url", default=URL, help="MCP 주소(기본 마이리얼트립). 키 없이 여는 다른 서버를 볼 때. 예: https://mcp.kiwi.com")
     parser.add_argument("--call", help="불러 볼 도구 이름")
     parser.add_argument("--arg", action="append", default=[], help="도구 입력. 이름=값. 여러 번 쓸 수 있다")
     parser.add_argument("--instructions", action="store_true", help="서버 안내문 전체를 출력하고 끝낸다")
@@ -126,7 +128,8 @@ def main():
     print(f"기기 {platform.node()} · 시각 {datetime.now(ZoneInfo('Asia/Seoul')).isoformat(timespec='seconds')}")
 
     with httpx.Client(timeout=60) as client:
-        session = Session(client)
+        session = Session(client, args.url)
+        print(f"[주소] {args.url}")
         reply, status, took = session.send("initialize", {
             "protocolVersion": PROTOCOL, "capabilities": {},
             "clientInfo": {"name": "tripilot-probe", "version": "0.1"}})

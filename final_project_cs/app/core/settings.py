@@ -267,6 +267,8 @@ class Settings(BaseSettings):
     # ★`[2026-10-08]` Ignav — 항공 검색·예약 링크(MCP https://ignav.com/mcp). 비어 있으면 부르지 않는다.
     #   지금은 `scripts/probe_ignav_mcp.py` 만 읽는다.
     ignav_api_key: str = ""
+    # ★[2026-10-09] SerpApi Google Flights — 구글 항공권 한국 설정(gl=kr · hl=ko · KRW) 검색. 무료 월 250회. 비면 쓰지 않는다
+    serpapi_api_key: str = ""
     # ★`[2026-10-01]` 네이버 검색(블로그 · 카페글) — 대체 후보에 후기 몇 건을 곁들인다. 비어 있으면 부르지 않는다.
     #   NAVER API HUB(네이버 클라우드) 「검색」 키 — 2026-07-31 부터 개발자센터 신규 발급이 끝나 HUB 로 옮겨 갔다.
     #   주소 naverapihub.apigw.ntruss.com/search/v1/{blog,cafearticle}, 헤더 X-NCP-APIGW-API-KEY-ID · X-NCP-APIGW-API-KEY.

@@ -332,6 +332,8 @@ class TravelSources:
     #: Ignav MCP — 항공편 검색 + 판매처(항공사 · OTA) 예약 링크(`ignav.py`). 키(`ignav_api_key`)가 있을 때만 붙는다(2026-10-09).
     #:  항공 팀이 마이리얼트립 결과와 나란히 놓고 비교한다.
     flight_offers: Any | None = None
+    #: SerpApi Google Flights — 구글 항공권 한국 설정 검색(`serpapi_flights.py`). 키(`serpapi_api_key`)가 있을 때만(2026-10-09).
+    flight_google: Any | None = None
     #: 키가 없어 못 붙인 소스 이름들. ★조용히 비워 두지 않는다.
     unavailable: dict[str, str] = field(default_factory=dict)
     #: 소스 전부가 같은 것을 공유한다 - 따로 두면 한 키를 두 소스가 나눠
@@ -478,6 +480,13 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
         sources.flight_offers = IgnavMcp(api_key=ignav_key, limiter=limiter)
     else:
         sources.unavailable["flight_offers"] = "ignav_api_key 없음 — 항공 비교는 마이리얼트립만"
+    # ★`[2026-10-09]` 항공 비교용 세 번째 소스(SerpApi 구글 항공권). 키가 주소에 실려 캐시를 넘기지 않는다
+    serpapi_key = (getattr(settings, "serpapi_api_key", "") or "").strip()
+    if serpapi_key:
+        from .serpapi_flights import SerpApiFlights
+        sources.flight_google = SerpApiFlights(api_key=serpapi_key, limiter=limiter)
+    else:
+        sources.unavailable["flight_google"] = "serpapi_api_key 없음 — 구글 항공권 비교 안 함"
     # ── 기상: 1차 + 대체 (v11 §0-4 결정 15) ─────────────────────────
     # ★`weather_provider` 는 **어느 쪽이 먼저인가**만 정한다. 붙일 수 있는 것은
     #   전부 붙이고 나머지를 대체로 둔다 — 1차가 못 주면 대체가 값을 낸다.

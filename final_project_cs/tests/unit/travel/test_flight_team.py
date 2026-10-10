@@ -73,9 +73,9 @@ def test_search_calls_the_model_once_and_both_sources_once():
     assert len(llm.calls) == 1 and llm.calls[0][0] == "flight.interpret" and llm.calls[0][2] == {"today": TODAY.isoformat()}
     wanted = {"origin": "TPE", "destination": "ICN", "depart_date": GO, "return_date": None, "domestic": False,
               "direct_only": True, "cabin": None, "max_results": 100, "adults": 2, "children": None, "infants": None}
-    assert tools.calls == [("read.flight_search", wanted), ("read.flight_offers", wanted)]
+    assert tools.calls == [("read.flight_search", wanted), ("read.flight_offers", wanted), ("read.flight_google", wanted)]
     assert result.outcome == "completed" and result.next_action.value == "respond"
-    assert f"TPE → ICN · {GO} · 성인 2명 조건으로 찾은 결과(마이리얼트립 2개 · 판매처 비교 조회 실패)를" in result.answer
+    assert f"TPE → ICN · {GO} · 성인 2명 조건으로 찾은 결과(마이리얼트립 2개 · 판매처 비교 조회 실패 · 구글 항공권 조회 실패)를" in result.answer
     assert "출발 시간대마다 가장 싼 편을 보여 드립니다." in result.answer
     # 시간대 순서(새벽 → 저녁) — 오후 13:10 이 저녁 18:30 보다 먼저, 전체 최저가는 표시로 알린다
     assert f"1. [오후 최저가] 제주항공 — {GO} TPE 13:10 → ICN 16:40 (직항, 2시간 30분)" in result.answer
@@ -104,7 +104,7 @@ IGNAV = {"flights": [
 def test_the_same_flight_from_both_sources_is_shown_once_with_both_prices():
     result, _, _ = _run(SEARCH, {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV})
     answer = result.answer
-    assert "찾은 결과(마이리얼트립 2개 · 항공사·여행사 판매처 2개)를" in answer
+    assert "찾은 결과(마이리얼트립 2개 · 항공사·여행사 판매처 2개 · 구글 항공권 조회 실패)를" in answer
     assert answer.count("TPE 13:10 → ICN 16:40") == 1, "같은 편은 한 번만"
     assert "TPE 13:10 → ICN 16:40 7C1501 (직항, 2시간 30분)" in answer, "편명은 묶인 Ignav 쪽에서 빌린다"
     jeju = answer.index("제주항공(항공사 공식) 289,000원: https://www.jejuair.net/x")
@@ -182,9 +182,44 @@ def test_a_connecting_flight_stays_when_there_is_no_direct_one():
     assert "1. [새벽 최저가 · 전체 최저가] 세부퍼시픽항공" in result.answer and result.decisions[0]["dropped_slow"] == 0
 
 
+def test_the_answer_ends_with_the_same_search_on_sites_koreans_use():
+    result, _, _ = _run(SEARCH, {"read.flight_search": FLIGHTS})
+    day, short = GO.replace("-", ""), GO[2:].replace("-", "")
+    assert "같은 조건으로 다른 곳에서 보기(가격은 그 사이트에서 확인):" in result.answer
+    assert f"   · 네이버 항공권: https://flight.naver.com/flights/international/TPE-ICN-{day}?adult=2&child=0&infant=0&fareType=Y" in result.answer
+    assert f"   · 스카이스캐너: https://www.skyscanner.co.kr/transport/flights/tpe/icn/{short}/?adultsv2=2&cabinclass=economy&rtn=0" in result.answer
+    assert f"   · 트립닷컴: https://kr.trip.com/flights/showfarefirst?dcity=tpe&acity=icn&ddate={GO}&triptype=ow&class=y&quantity=2" in result.answer
+
+
+def test_a_round_trip_elsewhere_link_carries_both_dates():
+    result, _, _ = _run({**SEARCH, "return_date": BACK, "return_date_text": "9일에 오는"}, {"read.flight_search": FLIGHTS})
+    assert f"TPE-ICN-{GO.replace('-', '')}/ICN-TPE-{BACK.replace('-', '')}" in result.answer
+    assert f"/{BACK[2:].replace('-', '')}/?adultsv2=2&cabinclass=economy&rtn=1" in result.answer
+    assert f"&rdate={BACK}&triptype=rt" in result.answer
+
+
+GOOGLE = {"flights": [
+    {"airline_code": "7C", "airline": "제주항공", "duration_minutes": 150, "stops": 0, "direct": True,
+     "legs": [{**LEG, "flightNumber": "7C1501"}], "price_total": 280000.0, "currency": "KRW", "seats": None,
+     "link": "https://www.google.com/travel/flights?hl=ko&gl=kr&curr=KRW&tfs=x", "link_kind": "route_search"}],
+    "total": None, "source": "serpapi_flights"}
+
+
+def test_google_flights_is_a_third_price_on_the_same_flight_with_one_page_link():
+    result, _, _ = _run(SEARCH, {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV, "read.flight_google": GOOGLE})
+    answer = result.answer
+    assert "찾은 결과(마이리얼트립 2개 · 항공사·여행사 판매처 2개 · 구글 항공권 1개)를" in answer
+    assert answer.count("TPE 13:10 → ICN 16:40") == 1, "세 소스의 같은 편은 한 번만"
+    assert "   · 구글 항공권 280,000원\n" in answer, "구글 항공권은 편 줄에 링크를 붙이지 않는다"
+    assert answer.index("구글 항공권 280,000원") < answer.index("제주항공(항공사 공식) 289,000원"), "싼 순"
+    assert "구글 항공권 이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): https://www.google.com/travel/flights?" in answer
+    assert "마이리얼트립 이 노선 · 날짜의 검색 결과 페이지" in answer
+    assert [item.source_id for item in result.evidence][-1] == "read.flight_google"
+
+
 def test_one_source_is_enough_and_both_missing_is_unknown():
     result, _, _ = _run(SEARCH, {"read.flight_search": None, "read.flight_offers": IGNAV})
-    assert result.outcome == "completed" and "찾은 결과(마이리얼트립 조회 실패 · 항공사·여행사 판매처 2개)를" in result.answer
+    assert result.outcome == "completed" and "찾은 결과(마이리얼트립 조회 실패 · 항공사·여행사 판매처 2개 · 구글 항공권 조회 실패)를" in result.answer
     result, _, _ = _run(SEARCH, {})
     assert (result.outcome, result.failure_code) == ("escalated", "unknown_항공편 검색 결과")
 
