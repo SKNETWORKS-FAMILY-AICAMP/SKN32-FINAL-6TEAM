@@ -319,7 +319,9 @@ class FlightTeam(TravelTeamBase):
         mrt = self._read(task, "read.flight_search", dict(arguments), seen)
         evidence = self._evidence(task, source_id="read.flight_search", claim="항공편 검색 결과(마이리얼트립)", value=mrt,
                                   base=evidence)
-        offers = self._read(task, "read.flight_offers", dict(arguments), seen)
+        # ★왕복은 Ignav 를 부르지 않는다(사용자 결정 2026-10-10) — ☆13:41 · 13:45 playdata ICN→NRT 왕복: Ignav 가 41.9~42.3초(전체의 90% 넘게)
+        #   걸렸고, 준 링크가 둘 다 가는 편만 예약하는 주소였다(`TripType=OneWay`). 묶음도 가는 편 · 오는 편 항공사가 달랐다(BX·7C, ZG·7C)
+        offers = None if found.return_date else self._read(task, "read.flight_offers", dict(arguments), seen)
         evidence = self._evidence(task, source_id="read.flight_offers", claim="항공편 검색 결과(Ignav · 판매처 링크)",
                                   value=offers, base=evidence)
         google = self._read(task, "read.flight_google", dict(arguments), seen)
@@ -380,7 +382,8 @@ class FlightTeam(TravelTeamBase):
                            if offer.get("link_kind") == "route_search" and offer.get("link")})
         pages = [f"{label} 이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): {url}" for label, url in searches]
         counted = [f"마이리얼트립 {len(mrt.get('flights') or [])}개" if mrt is not None else "마이리얼트립 조회 실패",
-                   f"항공사·여행사 판매처 {len(offers.get('flights') or [])}개" if offers is not None else "판매처 비교 조회 실패",
+                   f"항공사·여행사 판매처 {len(offers.get('flights') or [])}개" if offers is not None
+                   else "항공사·여행사 판매처는 편도만" if found.return_date else "판매처 비교 조회 실패",
                    ("구글 항공권 왕복 최저가 참고" if google.get("note") and not google.get("flights")
                     else f"구글 항공권 {len(google.get('flights') or [])}개")
                    if google is not None else "구글 항공권 조회 실패"]

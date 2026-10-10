@@ -235,8 +235,8 @@ def test_a_mixed_carrier_round_trip_is_flagged_and_same_price_offers_are_one_lin
            "currency": "KRW", "seller": "제주항공", "link": "https://www.jejuair.net/a?gclid=1", "link_kind": "seller_airline"}
     twin = {**one, "link": "https://www.jejuair.net/a?gclid=2"}
     result, _, _ = _run({**SEARCH, "return_date": BACK, "return_date_text": "9일에 오는"},
-                        {"read.flight_offers": {"flights": [one, twin], "source": "ignav"}})
-    assert result.answer.count("제주항공(항공사 공식) 400,000원") == 1, "gclid 만 다른 같은 판매처 · 같은 가격은 한 줄"
+                        {"read.flight_search": {"flights": [one, twin], "source": "myrealtrip"}})
+    assert result.answer.count("마이리얼트립 400,000원") == 1, "링크만 다른 같은 판매처 · 같은 가격은 한 줄"
     assert "   ※ 가는 편과 오는 편 항공사가 달라(7C · BR) 따로 예약해야 할 수 있습니다." in result.answer
 
 
@@ -248,8 +248,10 @@ def test_one_source_is_enough_and_both_missing_is_unknown():
 
 
 def test_a_round_trip_passes_the_return_date():
-    _, _, tools = _run({**SEARCH, "return_date": BACK, "return_date_text": "9일에 오는"}, {"read.flight_search": FLIGHTS})
+    result, _, tools = _run({**SEARCH, "return_date": BACK, "return_date_text": "9일에 오는"}, {"read.flight_search": FLIGHTS})
     assert tools.calls[0][1]["return_date"] == BACK
+    assert [name for name, _ in tools.calls] == ["read.flight_search", "read.flight_google"], "왕복은 Ignav 를 부르지 않는다"
+    assert "항공사·여행사 판매처는 편도만" in result.answer
 
 
 def test_missing_values_are_asked_back_without_any_search():
