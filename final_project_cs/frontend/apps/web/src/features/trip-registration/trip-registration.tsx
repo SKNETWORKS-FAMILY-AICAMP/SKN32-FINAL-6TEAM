@@ -17,6 +17,7 @@ import { beginIntake, clearIntakeFailure, intakeFailure, type PlanRequest } from
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { examplePlan } from "./example-plan";
+import { TestPlans } from "./test-plans";
 import { emptyAsk, paneOfSending, paneReason, seoulToday, type PlanAsk, type RegistrationPane } from "./model";
 import { PlanAskFields } from "./plan-ask-fields";
 import { clearLoginDraft, keepLoginDraft, takeLoginDraft } from "./login-draft";
@@ -243,6 +244,7 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
       placeholder={t("예시 — 이런 식으로 적어 주세요\n\n1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람", "Example — write it like this\n\nDAY 1 · 2026-09-15\n09:00 Hotel breakfast\n13:00 Lunch restaurant · reserved\n\nDAY 2 · 2026-09-16\n10:00 Museum visit")} />
     <div className={styles.inputMeta}><span id="plan-format">{t("날짜 · 시간 · 장소를 함께 적어 주세요.", "Include dates, times, and places.")}</span><span>{value.length.toLocaleString()} / 12,000</span></div>
     {active === "text" && errorNode}
+    <TestPlans value={value} onChoose={updateSource} disabled={pending} />
   </>;
   // 2026-09-30: file picker designed by Codex astra — the native input stays (hidden) for keyboard and screen readers.
   const filePicker = (

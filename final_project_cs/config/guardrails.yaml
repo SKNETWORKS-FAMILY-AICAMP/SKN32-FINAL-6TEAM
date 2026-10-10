@@ -679,6 +679,10 @@ travel:
 # -- 웹 남용 방어 (2026-09-28 사용자 지시 · 계획 `wiki/records/plans/2026-09-28_2130_웹_남용방어_실행계획.md`) --
 # 저장 `web_usage` · `runtime_limits`(마이그레이션 031). 코드 `app/domains/travel_ops/modules/web_account/web_guard.py`.
 # ★여기 값은 **기본값**이다. 운영 API(`/admin/limits`)로 바꾼 값이 있으면 그것이 이긴다(범위 = `bounds`).
+testing:
+  # 사용자 요청: 현재 시험 배포에서는 단축 입력을 바로 제공한다. 관리자에서 끌 수 있다.
+  intake_presets_enabled: true
+
 web_guard:
   # ★`[사용자 결정 2026-09-28]` 개발 단계라 **꺼 둔다.** 꺼져 있어도 세기는 한다(운영 API 의 오늘 사용량 · 실제 비용 산정 재료).
   limits_enabled: false

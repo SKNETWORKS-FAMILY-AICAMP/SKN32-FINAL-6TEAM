@@ -186,6 +186,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   if (query.isPending && arriving) return <PlanCheck key="plan" view={firstView} sending onBack={() => router.push(routes.newTrip)} />;
   if (query.isPending || !query.data) return shell(<QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />);
   const view = query.data;
+  const testNote = view?.test_scenario ? <p className={styles.streamNote} role="note">{t(`시험 계획 ${view.test_scenario.code} · ${view.test_scenario.name}. 검증 결과는 실제 조회에 따라 달라져요.`, `Test plan ${view.test_scenario.code} · ${view.test_scenario.name}. Results depend on live checks.`)}</p> : null;
 
   if (view.status === "reading" && follow.follow === "stalled") {
     return shell(<Panel className={styles.waiting}>
@@ -197,7 +198,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   }
   if (flow.hold) {
     // Keep the same PlanCheck instance through the survey: its paused replay must not remount at the completed target.
-    return <PlanCheck key="plan" view={reading ?? readingOf(view)} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} />;
+    return <PlanCheck key="plan" view={reading ?? readingOf(view)} notice={testNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} />;
   }
   if (reading && (view.status === "reading" || (view.status === "review" && readingSeen && !readingDrawn))) {
     const streamNote = view.status !== "reading" ? null
@@ -211,7 +212,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       : quiet >= 30 ? <div className={styles.waitWrap}><WaitNotice title={t("서버 소식이 한동안 없어요", "No news from the server for a while")} seconds={quiet}
         body={t("서버가 아직 읽고 있을 수 있어요. 조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.", "The server may still be reading. Wait a little longer, or go back and send it again.")} /></div>
       : null;
-    return <PlanCheck key="plan" view={reading} notice={streamNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
+    return <PlanCheck key="plan" view={reading} notice={<>{testNote}{streamNote}</>} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
   }
   if (view.status === "fatal") {
     return shell(<Panel className={styles.waiting}>
@@ -247,7 +248,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   // `[2026-10-05]` A date written without a year: the server took one (and says so in its own note) - the screen says which, so the customer can correct it.
   const year = assumedYear(view);
   const yearNote = year ? <p className={styles.streamNote} role="note">{t(`날짜에 해가 적혀 있지 않아 ${year}년으로 두었어요. 다르면 일정의 날짜를 고쳐 주세요.`, `Some dates had no year, so ${year} was assumed. Change the date of a stop if that is wrong.`)}</p> : null;
-  return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} notice={<>{unchecked}{asked}{yearNote}</>} onBack={() => router.push(routes.newTrip)}
+  return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} notice={<>{testNote}{unchecked}{asked}{yearNote}</>} onBack={() => router.push(routes.newTrip)}
     tripIssues={tripIssuesOf(view)}
     actions={view.review ? server.actions : {
       edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },

@@ -84,6 +84,12 @@ def open_intake(conn, *, tenant_id: str, customer_id: UUID, text: str | None,
                 files: list[tuple[str, bytes]]) -> UUID:
     """접수 한 건. `files` = [(파일 이름, 바이트)]. ★종류는 첫 바이트로 — 모르는 형식은 여기서 거절한다."""
     text = (text or "").strip()
+    from .test_plans import TestPlanRejected, expand
+
+    try:
+        text, test_scenario = expand(text, tenant_id=tenant_id, has_files=bool(files))
+    except TestPlanRejected as exc:
+        raise IntakeRejected(exc.code, exc.message) from None
     if not text and not files:
         # ★`[2026-09-30 사용자 결정 — ui 세션 전달]` 입력칸을 비운 채 「계획 확인하기」를 눌러도 **다음 화면으로 넘어간다** —
         #   읽을 것이 없으니 곧바로 확인 화면 상태(`review`)로 만든다. 그 화면에 「읽은 일정이 없어요 — 대신 짜 드릴까요?」 짜기 칸이
@@ -109,6 +115,10 @@ def open_intake(conn, *, tenant_id: str, customer_id: UUID, text: str | None,
         cur.execute("INSERT INTO trip_intakes (tenant_id, customer_id, stage) VALUES (%s,%s,'received') "
                     "RETURNING intake_id", (tenant_id, customer_id))
         intake_id = cur.fetchone()[0]
+        if test_scenario is not None:
+            cur.execute("INSERT INTO intake_test_scenarios (tenant_id, intake_id, customer_id, metadata) "
+                        "VALUES (%s,%s,%s,%s::jsonb)",
+                        (tenant_id, intake_id, customer_id, json.dumps(test_scenario, ensure_ascii=False)))
         survey_answers.inherit(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id)
         position = 0
         if text:
@@ -243,6 +253,10 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
         if row is None:
             return None
         status, stage, revision, fatal_code, fatal_detail, trip_id, received_at = row
+        cur.execute("SELECT metadata FROM intake_test_scenarios WHERE tenant_id=%s AND intake_id=%s AND customer_id=%s",
+                    (tenant_id, intake_id, customer_id))
+        scenario_row = cur.fetchone()
+        test_scenario = scenario_row[0] if scenario_row else None
         sources = _sources(conn, tenant_id, intake_id)
         cur.execute("SELECT source_id, field, value_json, method, evidence, needs_review, note FROM intake_claims "
                     "WHERE tenant_id=%s AND intake_id=%s AND revision=%s ORDER BY created_at, claim_id",
@@ -276,7 +290,10 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
             "items": _items(mine), "trip": _trip_fields(mine),
             # 남은 줄에 모델이 가리킨 결과 — 몇 개 받고 무엇을 버렸나(원문에 없는 인용). 모델을 안 불렀으면 None
             "reading": next((c["value"] for c in mine if c["field"] == "reading.llm"), None)})
+    if review is not None and test_scenario is not None:
+        review = {**review, "test_scenario": test_scenario}
     return {"intake_id": str(intake_id), "status": status, "stage": stage, "stage_label": STAGES.get(stage, stage),
+            "test_scenario": test_scenario,
             "revision": revision, "fatal": {"code": fatal_code, "detail": fatal_detail} if fatal_code else None,
             "trip_id": str(trip_id) if trip_id else None, "received_at": received_at.isoformat(),
             "sources": out_sources, "check": check, "review": review, "review_error": review_error,

@@ -38,6 +38,7 @@ export interface IntakeSource {
 
 export interface IntakeView {
   intake_id: string;
+  test_scenario?: { code: string; name: string; description: string; mode: "prepared_text"; catalog_version: string } | null;
   status: "reading" | "review" | "confirmed" | "fatal";
   /** received · transcribing · reading · checking (places and hours) · review · … — shown through `stage_label`. */
   stage: string;

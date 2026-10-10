@@ -1191,6 +1191,13 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                             dining=_dining_lookup(_ctx))
         return {"intake_id": str(intake_id), "status": "reading", "stage": "received", "human_check": human}
 
+    @router.get("/v1/web/test-scenarios")
+    def web_test_scenarios():
+        """공개된 준비 계획 원문 목록만 읽는다. 고객 정보·조회 결과·경보를 반환하지 않는다."""
+        from app.domains.travel_ops.components.intake.test_plans import catalog
+
+        return catalog(settings_module.get_settings().tenant_id)
+
     @router.get("/v1/web/trip-intakes/{intake_id}")
     def web_intake_view(intake_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
         """진행 단계 · 원본별 줄 번호 글 · 읽은 항목(값마다 근거) · 확인 필요. ★남의 접수는 404."""
