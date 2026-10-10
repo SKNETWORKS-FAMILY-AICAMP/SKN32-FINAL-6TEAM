@@ -97,6 +97,8 @@ test("지도를 확대하면 화면 밖으로 나간 일정이 가장자리에 �
   const label = (await chip.getAttribute("aria-label")) ?? "";
   expect(label).toMatch(/화면 밖에 있어요/);
   const number = /^(\d+)/.exec(label)?.[1];
+  // Expanded map tools may overlap chips; fold the tools before selecting a chip.
+  await group(page).getByRole("button", { name: "지도 단추 접기", exact: true }).click();
   await chip.click();
   await expect(page.locator(`.leaflet-marker-icon[title^="${number}."]`)).toBeInViewport({ timeout: 8_000 });   // 눌렀더니 그 핀이 화면에 들어왔다
 });
@@ -116,7 +118,8 @@ test("멀리 끌어 핀이 모두 화면 밖이면 칩 하나가 모두를 담�
   }
   await expect(chips(page)).toHaveCount(1);                                                           // 같은 쪽에 있는 핀 셋은 하나로 묶인다
   const chip = chips(page).first();
-  await expect(chip).toContainText("1 · 2 · 3");
+  await expect(chip).toHaveAttribute("aria-label", /^1 · 2 · 3번 일정이 화면 밖에 있어요/);
+  await expect(chip).toContainText("×3");
   await page.evaluate(() => {
     const pane = document.createElement("div");
     pane.id = "fake-leaflet-pane";

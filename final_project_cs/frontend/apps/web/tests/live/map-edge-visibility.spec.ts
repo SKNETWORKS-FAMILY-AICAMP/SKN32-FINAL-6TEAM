@@ -24,7 +24,8 @@ for (const width of [375, 1280]) {
     }
     const chip = map.locator("[data-edge-chip]");
     await expect(chip).toHaveCount(1);
-    await expect(chip).toContainText("1 · 2 · 3");
+    await expect(chip).toHaveAttribute("aria-label", /^1 · 2 · 3번 일정이 화면 밖에 있어요/);
+    await expect(chip).toContainText("×3");
     for (const number of [1, 2, 3]) {
       await expect(pin(page, `${number}.`)).toHaveCount(1);
       await expect(pin(page, `${number}.`)).toHaveAttribute("aria-hidden", "true");
@@ -42,6 +43,7 @@ for (const width of [375, 1280]) {
     await expect(pin(page, "1.")).toHaveAttribute("data-edge-hidden", "false");
     await expect(map.locator("[data-pin-body][data-visibility-identity]")).toHaveCount(3);
     await map.hover({ position: { x: area.width * .5, y: area.height * .5 } });
+    await map.getByRole("button", { name: "지도 단추 펼치기", exact: true }).click();
     await map.getByRole("button", { name: "모든 일정 보기", exact: true }).click({ force: true });
     await expect(map.locator("[data-edge-chip]")).toHaveCount(0);
     for (const number of [1, 2, 3]) await expect(pin(page, `${number}.`).locator("[data-pin-body]")).toBeVisible();

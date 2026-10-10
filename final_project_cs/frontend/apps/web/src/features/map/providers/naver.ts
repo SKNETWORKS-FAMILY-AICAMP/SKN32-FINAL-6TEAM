@@ -123,6 +123,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
         options.onView?.({ south: south!, west: west!, north: north!, east: east!, width: container.clientWidth, height: container.clientHeight, zoom: zoom! });
       };
       const viewListener = sdk.Event.addListener(map, "idle", sayView);
+      const movingViewListener = sdk.Event.addListener(map, "bounds_changed", sayView);
 
       function clearMarkers() {
         markers.forEach(({ marker, pin, listener, onKey }) => {
@@ -304,7 +305,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
         stayMarkers = stays.map((stay) => quietMarker(stay.coordinates, stay.label, createStayDot(stay), STAY_BOX, -1));
       }
 
-      function cleanUp() { clearTimeout(pulseTimer); clearMarkers(); clearLines(); removeMe(); clearStays(); sdk.Event.removeListener(motionListener); sdk.Event.removeListener(idleListener); sdk.Event.removeListener(zoomListener); sdk.Event.removeListener(viewListener); unwatch(); map.destroy(); }
+      function cleanUp() { clearTimeout(pulseTimer); clearMarkers(); clearLines(); removeMe(); clearStays(); sdk.Event.removeListener(motionListener); sdk.Event.removeListener(idleListener); sdk.Event.removeListener(zoomListener); sdk.Event.removeListener(viewListener); sdk.Event.removeListener(movingViewListener); unwatch(); map.destroy(); }
 
       try { update(options.points, options.selectedId, options.lines); setMe(options.me ?? null); setStays(options.stays ?? []); }
       catch (error) { cleanUp(); throw error; }

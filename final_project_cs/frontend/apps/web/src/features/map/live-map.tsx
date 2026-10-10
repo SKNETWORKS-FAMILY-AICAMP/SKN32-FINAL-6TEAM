@@ -51,7 +51,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
   useEffect(() => () => clearTimeout(settled.current), []);
 
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     latest.current = { ...latest.current, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, onZoom };
     controller.current?.update(points, selectedId, lines, selectedLineId);
   }, [points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, onZoom]);

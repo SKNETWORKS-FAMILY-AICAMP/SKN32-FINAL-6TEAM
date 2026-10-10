@@ -111,10 +111,8 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         const bounds = map.getBounds();
         options.onView?.({ south: bounds.getSouth(), west: bounds.getWest(), north: bounds.getNorth(), east: bounds.getEast(), width: container.clientWidth, height: container.clientHeight, zoom: map.getZoom() });
       };
-      map.on("moveend zoomend resize", sayView);
-      // ★`[2026-10-06 사용자 지적]` The chips for stops out of view follow the map WHILE it is dragged or flown (once a frame at most), not only when it comes to rest.
-      let viewFrame = 0;
-      map.on("move", () => { if (viewFrame || destroyed) return; viewFrame = requestAnimationFrame(() => { viewFrame = 0; sayView(); }); });
+      // Publish the same move that positions the markers; a second animation frame leaves chips on the previous viewport.
+      map.on("move zoom moveend zoomend resize", sayView);
 
       // ★`[2026-10-05 사용자 지시]` 「내 위치」: a dot under the pins (a marker that takes no press) and the accuracy circle in the vector layer.
       let me: MyLocation | null = null;
@@ -143,11 +141,11 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         programmatic = true;
         try {
           const fly = fitted && !reducedMotion();
-          if (points.length === 1) { if (fly) map.flyTo(points[0].coordinates, 15, FLIGHT); else map.setView(points[0].coordinates, 15); }
+          if (points.length === 1) { if (fly) map.flyTo(points[0].coordinates, 15, FLIGHT); else map.setView(points[0].coordinates, 15, { animate: false }); }
           else {
             const bounds = L.latLngBounds(points.map(({ coordinates }) => [coordinates.lat, coordinates.lng] as [number, number]));
             const padding = { paddingTopLeft: [50, 50 + (options.topInset ?? 0)] as [number, number], paddingBottomRight: [50, 50 + (options.bottomInset ?? 0)] as [number, number] };
-            if (fly) map.flyToBounds(bounds, { ...padding, ...FLIGHT }); else map.fitBounds(bounds, padding);
+            if (fly) map.flyToBounds(bounds, { ...padding, ...FLIGHT }); else map.fitBounds(bounds, { ...padding, animate: false });
           }
           fitted = true;
         } finally { programmatic = false; }
@@ -314,7 +312,13 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         setMe,
         setStays,
         fit: fitAll,
-        zoomBy(delta) { if (!destroyed) { if (delta > 0) map.zoomIn(); else map.zoomOut(); } },
+        zoomBy(delta) {
+          if (destroyed) return;
+          const zoom = map.getZoom() + delta;
+          // CSS zoom transforms markers before Leaflet updates its bounds. flyTo publishes each visual move instead.
+          if (reducedMotion()) map.setZoom(zoom, { animate: false });
+          else map.flyTo(map.getCenter(), zoom, FLIGHT);
+        },
         centerOn,
         resize() {
           if (destroyed || !container.clientWidth || !container.clientHeight) return;
@@ -325,7 +329,6 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         destroy() {
           if (destroyed) return;
           destroyed = true;
-          cancelAnimationFrame(viewFrame);
           clearTimeout(pulseTimer);
           clearMarkers();
           map.remove();

@@ -114,6 +114,7 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
         options.onView?.({ ...bounds, width: container.clientWidth, height: container.clientHeight, zoom });
       };
       sdk.event.addListener?.(map, "idle", sayView);
+      sdk.event.addListener?.(map, "bounds_changed", sayView);
 
       function clearMarkers() {
         markers.forEach(({ marker, onClick }) => {
