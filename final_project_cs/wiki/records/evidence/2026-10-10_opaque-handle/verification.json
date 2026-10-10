@@ -1,0 +1,50 @@
+{
+  "scope": "손잡이 불투명 가림·하단32px 페이드",
+  "mock": {
+    "passed": 8,
+    "total": 8
+  },
+  "checks": [
+    "TypeScript --noEmit",
+    "ESLint changed tests",
+    "standard Next.js production build"
+  ],
+  "screenshots": 8,
+  "tests": [
+    {
+      "name": "시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 375px",
+      "status": "passed"
+    },
+    {
+      "name": "시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 1280px",
+      "status": "passed"
+    },
+    {
+      "name": "상단 내용 페이드와 날짜·손잡이·최소 접힘 유지 375px",
+      "status": "passed"
+    },
+    {
+      "name": "상단 내용 페이드와 날짜·손잡이·최소 접힘 유지 1280px",
+      "status": "passed"
+    },
+    {
+      "name": "손잡이는 완전히 가리고 그 아래 목록은 점진적으로 보임 375px",
+      "status": "passed"
+    },
+    {
+      "name": "손잡이는 완전히 가리고 그 아래 목록은 점진적으로 보임 1280px",
+      "status": "passed"
+    },
+    {
+      "name": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 375px",
+      "status": "passed"
+    },
+    {
+      "name": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 1280px",
+      "status": "passed"
+    }
+  ],
+  "real_response_checked": false,
+  "initial_run_note": "첫10개는 모두 통과했지만 날짜 없음 변형이 화면 변환 과정에서 무시돼 같은 화면을 중복 시험했다. 변형을 제거하고 최종8개로 다시 실행했다.",
+  "pixel_probe": "실제 스크롤 레이어에 색상을 잠시 넣고 Chrome PNG에서 손잡이 내부 완전 가림 및 아래32px의 점진적 알파를 비교했다. 촬영에는 시험용 색상이 포함되지 않는다."
+}

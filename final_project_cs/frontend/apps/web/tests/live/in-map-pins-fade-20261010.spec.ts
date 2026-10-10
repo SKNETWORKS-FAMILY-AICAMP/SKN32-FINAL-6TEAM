@@ -85,7 +85,7 @@ for (const width of [375, 1280]) {
     await openFinished(page, request, undefined, { intakeEvents: 'off' }); await tiles(); await idle(page);
     await head(page, '경복궁 관람').click(); await idle(page);
     const scroll = page.locator('div[class*=sheetBody]');
-    await expect(scroll).toHaveCSS('mask-image', /linear-gradient.*32px/);
+    await expect(scroll).toHaveCSS('mask-image', /linear-gradient.*22px.*54px/);
     await expect(handle(page)).toHaveCSS('mask-image', 'none');
     await expect(page.locator('[role=tablist]')).toHaveCSS('mask-image', 'none');
     // Place the actual title across the fading boundary; it must scroll under the handle.
@@ -98,6 +98,6 @@ for (const width of [375, 1280]) {
     await expect(page.locator('[data-sheet]')).toHaveAttribute('data-collapsed', 'true');
     await expect(handle(page)).toBeVisible(); await expect(page.locator('footer[class*=footer]')).toHaveAttribute('inert', '');
     await handle(page).click(); await expect(page.locator('[data-sheet]')).not.toHaveAttribute('data-collapsed');
-    await expect(scroll).toHaveCSS('mask-image', /linear-gradient.*32px/); await noHorizontalScroll(page);
+    await expect(scroll).toHaveCSS('mask-image', /linear-gradient.*22px.*54px/); await noHorizontalScroll(page);
   });
 }
