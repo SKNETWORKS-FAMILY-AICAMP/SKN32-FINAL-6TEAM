@@ -10,6 +10,10 @@
 실행 위치: final_project_cs
   python -m scripts.try_lodging_team "11월 6일부터 9일까지 성인 2명 용산 근처 호텔 찾아줘"
   python -m scripts.try_lodging_team "해밀톤 호텔 11월 6일부터 3박 예약했어. 위치 알려줘"
+  python -m scripts.try_lodging_team "11월 6일부터 3박 성인 2명 명동 호텔" --places "37.5512,126.9882,2026-11-06;37.5796,126.9770,2026-11-07"
+
+`[2026-10-10]` `--places "위도,경도,날짜;..."` — DB 없이 일정이 붙은 Case 를 흉내 낸다. 그 장소들로 가짜 일정(`read.itinerary`)을
+만들어 팀에 주고, 팀이 그 가운데에서 거리를 재는지 본다. 장소 이름은 「장소1」… 로 붙인다(모델에 장소 이름만 간다).
 """
 import asyncio
 from datetime import UTC, datetime, timedelta
@@ -55,6 +59,16 @@ class FilePromptLLM:
         return result
 
 
+def fake_view(spec):
+    """`--places` 값 → `read.itinerary` 가 돌려주는 모양(items[].place.latitude/longitude)."""
+    items = []
+    for number, part in enumerate(filter(None, (piece.strip() for piece in spec.split(";"))), start=1):
+        lat, lon, day = (value.strip() for value in part.split(","))
+        items.append({"title": f"장소{number}", "starts_at": f"{day}T10:00:00+09:00",
+                      "place": {"place_id": f"p{number}", "name": f"장소{number}", "latitude": float(lat), "longitude": float(lon)}})
+    return {"trip": {"trip_id": "try", "party_size": None, "constraints": {}}, "items": items}
+
+
 def main():
     from app.core.contracts import ContextPack, TeamTask
     from app.domains.travel_ops.instances.lodging import LodgingTeam
@@ -63,7 +77,13 @@ def main():
     from app.domains.travel_ops.ports.data_sources.serpapi_hotels import SerpApiHotels
     from app.tools.read_tools import ReadToolbox
 
-    sentences = [arg for arg in sys.argv[1:] if arg != "--no-google"]
+    args = sys.argv[1:]
+    places = None
+    if "--places" in args:
+        at = args.index("--places")
+        places = fake_view(args[at + 1])
+        del args[at:at + 2]
+    sentences = [arg for arg in args if arg != "--no-google"]
     if not sentences:
         raise SystemExit(__doc__)
     print(f"기기 {platform.node()} · 시각 {datetime.now(ZoneInfo('Asia/Seoul')).isoformat(timespec='seconds')}")
@@ -76,10 +96,15 @@ def main():
                 google = SerpApiHotels(api_key=serpapi_key())
             except SystemExit as exc:
                 print(f"구글 호텔 안 부름 — {exc}")
-        team = LodgingTeam(ReadToolbox(lambda: None, travel=TravelSources(travel_search=source, stay_google=google)), llm)
+        toolbox = ReadToolbox(lambda: None, travel=TravelSources(travel_search=source, stay_google=google))
+        if places is not None:
+            toolbox.itinerary = lambda scope, **_: places   # DB 대신 가짜 일정(이 실행에서만)
+        team = LodgingTeam(toolbox, llm)
         case_id = uuid4()
         pack = ContextPack(pack_id=uuid4(), case_id=case_id, team_id="lodging", tenant_id="try", knowledge_scope=["lodging"],
-                           current_state={"customer_id": str(uuid4())}, estimated_input_tokens=1)
+                           current_state={"customer_id": str(uuid4()),
+                                          **({"subject_ref": {"kind": "trip", "id": str(uuid4())}} if places else {})},
+                           estimated_input_tokens=1)
         task = TeamTask(task_id=uuid4(), run_id=uuid4(), case_id=case_id, team_id="lodging", capability="lodging.assist",
                         case_version=1, input_text=text, context=pack, allowed_tools=team.manifest.allowed_tools,
                         deadline_at=datetime.now(UTC) + timedelta(seconds=90))
@@ -93,7 +118,8 @@ def main():
               + (f" · failure_code {result.failure_code}" if result.failure_code else "")
               + (f" · warnings {result.warnings}" if result.warnings else ""))
         decision = (result.decisions or [{}])[0]
-        print(f"[판단] task {decision.get('task')} · needs {decision.get('needs')} · found {decision.get('found')}")
+        print(f"[판단] task {decision.get('task')} · needs {decision.get('needs')} · found {decision.get('found')}"
+              + (f" · 일정 가운데 {decision['trip_center']}" if decision.get("trip_center") else ""))
         print(f"[근거] {[item.source_id for item in result.evidence]} · 못 가져온 것 마이리얼트립 {dict(source.misses) or '없음'}"
               + (f" · 구글 호텔 {dict(google.misses) or '없음'}" if google else ""))
         print("[답]")

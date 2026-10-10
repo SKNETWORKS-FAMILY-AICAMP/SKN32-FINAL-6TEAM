@@ -276,6 +276,7 @@ class LodgingTeam(TravelTeamBase):
 
         ★숙박 공유를 빼는 까닭 — ☆2026-10-10 14:21 playdata 「서울 명동」 앞의 셋이 숙박 공유(Bluepillow · Vio)였고 평점 · 후기가 없었다.
         ★가격이 없는 곳도 뺀다 — ☆15:37 「지요크 명동」이 가격 · 링크 없이 왔다(비교에 쓸 수 없다).
+        ★링크가 없는 곳도 뺀다 — ☆17:02 「필스테이 명동 메트로」가 가격은 있고 링크 없이 왔다(고객이 들어갈 곳이 없다. 구글 페이지 줄은 남는다).
         ★일정 가운데가 쓸 만하면(`center.usable`) 구글 목록(최대 20곳) 안에서 **가까운 순**으로 고른다. 좌표 없는 곳은 뒤로.
         """
         lines: list[str] = []
@@ -284,7 +285,7 @@ class LodgingTeam(TravelTeamBase):
         else:
             seen = {"".join(name.split()).casefold() for name in shown_names}
             picks = [stay for stay in google.get("stays") or []
-                     if stay.get("type") != "vacation rental" and stay.get("price_per_night") is not None
+                     if stay.get("type") != "vacation rental" and stay.get("price_per_night") is not None and stay.get("link")
                      and "".join(stay["name"].split()).casefold() not in seen]
             near = bool(center and center["usable"])
             if near:

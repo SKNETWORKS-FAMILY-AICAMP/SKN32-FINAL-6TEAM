@@ -133,6 +133,9 @@ def test_google_hotels_are_a_separate_block_without_shown_names_and_rentals():
     priceless = {**GOOGLE, "stays": [{**GOOGLE["stays"][2], "name": "지요크 명동", "price_per_night": None, "link": ""}]}
     other, _, _ = _run(SEARCH, {"read.stay_search": STAYS, "read.stay_detail": lambda a: DETAIL, "read.stay_google": priceless})
     assert "지요크 명동" not in other.answer, "가격 없는 곳은 뺀다"
+    linkless = {**GOOGLE, "stays": [{**GOOGLE["stays"][2], "name": "필스테이 명동 메트로", "link": ""}]}
+    other, _, _ = _run(SEARCH, {"read.stay_search": STAYS, "read.stay_detail": lambda a: DETAIL, "read.stay_google": linkless})
+    assert "필스테이 명동 메트로" not in other.answer, "링크 없는 곳은 뺀다(2026-10-10 17:02 playdata)"
     assert answer.count("해밀톤 호텔") == 1, "마이리얼트립에서 이미 보인 이름은 뺀다"
     assert "구글 호텔 검색 결과 페이지(날짜는 그 화면에서 다시 고르셔야 할 수 있습니다): https://www.google.com/travel/search?" in answer
     assert ("   · 부킹닷컴: https://www.booking.com/searchresults.ko.html?ss=%EC%9A%A9%EC%82%B0"
