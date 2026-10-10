@@ -8,7 +8,9 @@
 - 판매처 목록은 편마다 `booking_token` 으로 **한 번 더** 불러야 하고(1회 더 씀), 받은 예약 주소는 google.com 으로 보내는
   POST(`booking_request.url` + `post_data`)라 눌러서 여는 링크로 줄 수 없다. 15:08 BX164 는 판매처가 에어부산 하나였다.
   → 편마다 가격만 쓰고, 링크는 **구글 항공권 결과 페이지 하나**를 준다(`link_kind="route_search"`, 답 끝에 한 번).
-- 왕복은 결과가 가는 편만 담고 가격이 왕복 합이라 다른 소스와 같은 모양이 아니다 — 지금은 부르지 않고 빈 목록과 이유(`note`)를 준다.
+- 왕복은 결과가 가는 편만 담고 가격이 왕복 합이라 다른 소스와 편끼리 묶을 수 없다 — `[2026-10-10]` 편 목록은 비우고
+  **왕복 최저가 참고**(`price_insights.lowest_price`)와 결과 페이지 주소만 준다(`round_trip_lowest` · `page`). 1회 쓴다.
+  왕복 응답에 두 항목이 오는지는 확인 안 함 — 없으면 그 칸이 빈다.
 - 폴백 금지(`base.py` ①~④): 못 가져오면 `None` 이고 이유를 센다.
 """
 from __future__ import annotations
@@ -67,11 +69,11 @@ class SerpApiFlights(TravelSource):
             return None
         base = {"flights": [], "total": None, "origin": origin, "destination": destination,
                 "depart_date": depart_date, "return_date": return_date}
-        if return_date:
-            return self.stamp({**base, "note": "왕복은 아직 안 함"}, source=SOURCE)
         params: dict[str, Any] = {"engine": "google_flights", "departure_id": origin, "arrival_id": destination,
-                                  "outbound_date": depart_date, "type": 2, "currency": "KRW", "hl": "ko", "gl": "kr",
-                                  "api_key": self._key}
+                                  "outbound_date": depart_date, "type": 1 if return_date else 2, "currency": "KRW",
+                                  "hl": "ko", "gl": "kr", "api_key": self._key}
+        if return_date:
+            params["return_date"] = return_date
         for name, value in (("adults", adults), ("children", children), ("infants_on_lap", infants)):
             if value is not None:
                 params[name] = int(value)
@@ -82,11 +84,13 @@ class SerpApiFlights(TravelSource):
         data = self._fetch_json(URL, params)
         if data is None:
             return None
-        rows = [*(data.get("best_flights") or []), *(data.get("other_flights") or [])]
-        if not isinstance(rows, list):
-            self._miss("unexpected_shape", f"{sorted(data)[:8]}")
-            return None
         page = str((data.get("search_metadata") or {}).get("google_flights_url") or "")
+        if return_date:
+            lowest = (data.get("price_insights") or {}).get("lowest_price")
+            return self.stamp({**base, "note": "왕복은 편별 대신 최저가 참고",
+                               "round_trip_lowest": float(lowest) if isinstance(lowest, (int, float)) else None,
+                               "page": page}, source=SOURCE)
+        rows = [*(data.get("best_flights") or []), *(data.get("other_flights") or [])]
         flights = []
         for row in rows[:max(1, int(max_results))]:
             if not isinstance(row, dict):

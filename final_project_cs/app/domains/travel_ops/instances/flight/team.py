@@ -112,8 +112,13 @@ def _merge(mrt: list[dict[str, Any]], offers: list[dict[str, Any]],
                         mine["flightNumber"] = theirs["flightNumber"]
                 if option["minutes"] is None:
                     option["minutes"] = flight.get("duration_minutes")
-            if not any(offer["source"] == source and offer["link"] == (flight.get("link") or "") for offer in option["offers"]):
-                option["offers"].append(_offer(flight, source))
+            # ★같은 소스 · 같은 판매처 · 같은 가격이면 한 줄 — ☆2026-10-10 13:41 왕복에서 Ignav 가 에어부산 340,015원을
+            #   gclid 만 다른 링크로 두 번 줬다(링크로만 거르면 두 줄이 된다)
+            new = _offer(flight, source)
+            if not any(offer["source"] == source and (offer["link"] == new["link"]
+                       or (offer["label"], offer["price_total"]) == (new["label"], new["price_total"]))
+                       for offer in option["offers"]):
+                option["offers"].append(new)
     for option in options:
         won = [offer["price_total"] for offer in option["offers"]
                if isinstance(offer["price_total"], (int, float)) and offer["currency"] in ("", "KRW")]
@@ -135,10 +140,20 @@ def _band(option: dict[str, Any]) -> str | None:
 BAND_LABEL = {name: label for name, label, _, _ in TIME_BANDS}
 
 
+#: 공항 → 도시 코드(IATA 도시 코드). 트립닷컴 검색창은 도시(`dcity`) + 공항(`dairport`)을 따로 받아야 채워진다 —
+#: ☆2026-10-10 사용자 확인: `dcity=icn&acity=nrt` 는 결과만 맞고 검색창이 비었고, `dcity=sel&acity=tyo&dairport=icn&aairport=nrt` 는 다 채워졌다.
+#: 표에 없는 공항은 공항 코드를 도시 코드로 쓴다(공항 하나뿐인 도시는 대개 같다). ICN · NRT 말고는 확인 안 함
+CITY = {"ICN": "SEL", "GMP": "SEL", "NRT": "TYO", "HND": "TYO", "KIX": "OSA", "ITM": "OSA", "UKB": "OSA",
+        "CTS": "SPK", "TSA": "TPE", "TPE": "TPE", "PEK": "BJS", "PKX": "BJS", "PVG": "SHA", "SHA": "SHA",
+        "DMK": "BKK", "BKK": "BKK", "JFK": "NYC", "LGA": "NYC", "EWR": "NYC", "CDG": "PAR", "ORY": "PAR",
+        "LHR": "LON", "LGW": "LON", "FCO": "ROM", "SGN": "SGN", "HAN": "HAN"}
+
+
 def _elsewhere(found: Interpretation) -> list[tuple[str, str]]:
     """같은 조건의 **검색 결과 페이지** 주소 — 한국 사용자가 익숙한 곳. 가격은 받지 않는다(그 사이트 화면을 긁지 않는다). `[2026-10-09]`
 
-    ★주소 형식은 각 사이트 화면의 주소를 보고 만든 것이다. 2026-10-09 처음 넣을 때 열리는지는 **확인 안 함** — 사용자 확인 뒤 고친다.
+    ★주소 형식은 각 사이트 화면의 주소를 보고 만든 것이다. 2026-10-09~10 사용자가 ICN→NRT 10-20 편도 1명으로 열어 봤다 —
+      네이버 · 스카이스캐너는 조건이 다 채워진 결과 화면, 트립닷컴은 도시 + 공항 코드로 바꾼 뒤 채워졌다. 왕복 · 국내선 · 다른 공항은 확인 안 함.
     """
     go = found.depart_date
     back = found.return_date
@@ -150,10 +165,21 @@ def _elsewhere(found: Interpretation) -> list[tuple[str, str]]:
     cabin = {"BUSINESS": "business", "FIRST": "first"}.get(found.cabin or "", "economy")
     sky = (f"https://www.skyscanner.co.kr/transport/flights/{o.lower()}/{d.lower()}/{go:%y%m%d}/"
            + (f"{back:%y%m%d}/" if back else "") + f"?adultsv2={adults}&cabinclass={cabin}&rtn={1 if back else 0}")
-    trip = (f"https://kr.trip.com/flights/showfarefirst?dcity={o.lower()}&acity={d.lower()}&ddate={go.isoformat()}"
-            + (f"&rdate={back.isoformat()}&triptype=rt" if back else "&triptype=ow")
-            + f"&class={'c' if cabin == 'business' else 'f' if cabin == 'first' else 'y'}&quantity={adults}")
+    trip = (f"https://kr.trip.com/flights/showfarefirst?dcity={CITY.get(o, o).lower()}&acity={CITY.get(d, d).lower()}"
+            f"&dairport={o.lower()}&aairport={d.lower()}&ddate={go.isoformat()}"
+            + (f"&rdate={back.isoformat()}&flighttype=rt" if back else "&flighttype=ow")
+            + f"&class={'c' if cabin == 'business' else 'f' if cabin == 'first' else 'y'}&quantity={adults}"
+            "&searchboxarg=t&locale=ko-KR&curr=KRW")
     return [("네이버 항공권", naver), ("스카이스캐너", sky), ("트립닷컴", trip)]
+
+
+def _carriers(option: dict[str, Any]) -> list[str]:
+    """다리마다 운항 항공사 코드(편명 앞 두 글자, 없으면 `carrierCode`). 모르면 빈 글자."""
+    found = []
+    for leg in option["legs"]:
+        number = str(leg.get("flightNumber") or "")
+        found.append(number[:2].upper() if len(number) > 2 else str(leg.get("carrierCode") or "").upper())
+    return found
 
 
 def _minutes(option: dict[str, Any]) -> int | None:
@@ -330,6 +356,11 @@ class FlightTeam(TravelTeamBase):
             if fastest is not None and option["minutes"] == fastest:
                 tags.append("가장 짧음")
             lines.append(f"{number}. [{' · '.join(tags)}] {option['airline'] or '항공사 모름'} — {legs}")
+            codes = [code for code in _carriers(option) if code]
+            if len(option["legs"]) > 1 and len(codes) == len(option["legs"]) and len(set(codes)) > 1:
+                # ☆13:41 왕복 — 에어부산 BX164 / 제주항공 7C1104 묶음이었는데 에어부산 링크는 `TripType=OneWay` 가는 편만이었다
+                lines.append(f"   ※ 가는 편과 오는 편 항공사가 달라({' · '.join(dict.fromkeys(codes))}) 따로 예약해야 할 수 있습니다. "
+                             "판매처 화면에서 두 편이 함께 잡히는지 확인해 주세요.")
             for offer in option["offers"]:
                 seats = f" · 남은 좌석 {offer['seats']}" if isinstance(offer.get("seats"), int) else ""
                 # 국내선 마이리얼트립은 편마다가 아니라 노선 검색 주소 하나다 — 줄마다 붙이지 않고 끝에 한 번 적는다
@@ -350,8 +381,14 @@ class FlightTeam(TravelTeamBase):
         pages = [f"{label} 이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): {url}" for label, url in searches]
         counted = [f"마이리얼트립 {len(mrt.get('flights') or [])}개" if mrt is not None else "마이리얼트립 조회 실패",
                    f"항공사·여행사 판매처 {len(offers.get('flights') or [])}개" if offers is not None else "판매처 비교 조회 실패",
-                   (f"구글 항공권 {len(google.get('flights') or [])}개" + (f"({google['note']})" if google.get("note") else ""))
+                   ("구글 항공권 왕복 최저가 참고" if google.get("note") and not google.get("flights")
+                    else f"구글 항공권 {len(google.get('flights') or [])}개")
                    if google is not None else "구글 항공권 조회 실패"]
+        if google and google.get("page") and not google.get("flights"):
+            # 왕복 — 편끼리 묶지 못해 최저가 참고와 결과 페이지만 준다(`serpapi_flights.py`)
+            lowest = google.get("round_trip_lowest")
+            pages.append(f"구글 항공권 왕복 최저 참고 {_won(lowest, 'KRW') if lowest is not None else '가격 모름'}"
+                         f"(가는 편 · 오는 편 합, 편별 비교 안 함): {google['page']}")
         said = " · ".join(BAND_LABEL[name] for name in wanted)
         if fallback:
             head = (f"{route} · {when} · {party} 조건으로 찾은 결과({' · '.join(counted)})에는 {said} 출발 편이 없어, "

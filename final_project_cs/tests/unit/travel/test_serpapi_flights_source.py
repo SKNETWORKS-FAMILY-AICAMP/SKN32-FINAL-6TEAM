@@ -53,11 +53,13 @@ def test_itineraries_come_back_in_the_shared_shape_with_the_results_page_link():
     assert (via["legs"][0]["flightNumber"], via["legs"][0]["stops"], via["direct"]) == ("5J187/5J5054", 1, False)
 
 
-def test_a_round_trip_is_not_called_and_says_why():
-    fake = Fake()
+def test_a_round_trip_gives_only_the_lowest_price_and_the_page():
+    fake = Fake({**BODY, "price_insights": {"lowest_price": 245000}})
     found = SerpApiFlights(api_key="k", transport=fake).flight_search(
         origin="ICN", destination="NRT", depart_date="2026-10-20", return_date="2026-10-23")
-    assert fake.sent == [] and found["flights"] == [] and found["note"] == "왕복은 아직 안 함"
+    assert (fake.sent[0]["type"], fake.sent[0]["return_date"]) == (1, "2026-10-23")
+    assert found["flights"] == [] and found["note"] == "왕복은 편별 대신 최저가 참고"
+    assert (found["round_trip_lowest"], found["page"]) == (245000.0, PAGE)
 
 
 def test_errors_are_counted_not_guessed():

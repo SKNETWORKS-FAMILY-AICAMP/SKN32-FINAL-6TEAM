@@ -188,14 +188,15 @@ def test_the_answer_ends_with_the_same_search_on_sites_koreans_use():
     assert "같은 조건으로 다른 곳에서 보기(가격은 그 사이트에서 확인):" in result.answer
     assert f"   · 네이버 항공권: https://flight.naver.com/flights/international/TPE-ICN-{day}?adult=2&child=0&infant=0&fareType=Y" in result.answer
     assert f"   · 스카이스캐너: https://www.skyscanner.co.kr/transport/flights/tpe/icn/{short}/?adultsv2=2&cabinclass=economy&rtn=0" in result.answer
-    assert f"   · 트립닷컴: https://kr.trip.com/flights/showfarefirst?dcity=tpe&acity=icn&ddate={GO}&triptype=ow&class=y&quantity=2" in result.answer
+    assert (f"   · 트립닷컴: https://kr.trip.com/flights/showfarefirst?dcity=tpe&acity=sel&dairport=tpe&aairport=icn&ddate={GO}"
+            "&flighttype=ow&class=y&quantity=2&searchboxarg=t&locale=ko-KR&curr=KRW") in result.answer, "도시(인천→서울) + 공항 코드"
 
 
 def test_a_round_trip_elsewhere_link_carries_both_dates():
     result, _, _ = _run({**SEARCH, "return_date": BACK, "return_date_text": "9일에 오는"}, {"read.flight_search": FLIGHTS})
     assert f"TPE-ICN-{GO.replace('-', '')}/ICN-TPE-{BACK.replace('-', '')}" in result.answer
     assert f"/{BACK[2:].replace('-', '')}/?adultsv2=2&cabinclass=economy&rtn=1" in result.answer
-    assert f"&rdate={BACK}&triptype=rt" in result.answer
+    assert f"&rdate={BACK}&flighttype=rt" in result.answer
 
 
 GOOGLE = {"flights": [
@@ -215,6 +216,28 @@ def test_google_flights_is_a_third_price_on_the_same_flight_with_one_page_link()
     assert "구글 항공권 이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): https://www.google.com/travel/flights?" in answer
     assert "마이리얼트립 이 노선 · 날짜의 검색 결과 페이지" in answer
     assert [item.source_id for item in result.evidence][-1] == "read.flight_google"
+
+
+def test_a_round_trip_shows_the_google_round_trip_lowest_as_a_reference_line():
+    google = {"flights": [], "note": "왕복은 편별 대신 최저가 참고", "round_trip_lowest": 245000.0,
+              "page": "https://www.google.com/travel/flights?hl=ko&tfs=rt", "source": "serpapi_flights"}
+    result, _, _ = _run({**SEARCH, "return_date": BACK, "return_date_text": "9일에 오는"},
+                        {"read.flight_search": FLIGHTS, "read.flight_google": google})
+    assert "구글 항공권 왕복 최저가 참고)를" in result.answer
+    assert ("구글 항공권 왕복 최저 참고 245,000원(가는 편 · 오는 편 합, 편별 비교 안 함): "
+            "https://www.google.com/travel/flights?hl=ko&tfs=rt") in result.answer
+
+
+def test_a_mixed_carrier_round_trip_is_flagged_and_same_price_offers_are_one_line():
+    back = {**LEG, "origin": "ICN", "destination": "TPE", "departDate": BACK, "arriveDate": BACK, "flightNumber": "BR169"}
+    go = {**LEG, "flightNumber": "7C1501"}
+    one = {"airline_code": "7C", "airline": "제주항공", "duration_minutes": 150, "legs": [go, back], "price_total": 400000.0,
+           "currency": "KRW", "seller": "제주항공", "link": "https://www.jejuair.net/a?gclid=1", "link_kind": "seller_airline"}
+    twin = {**one, "link": "https://www.jejuair.net/a?gclid=2"}
+    result, _, _ = _run({**SEARCH, "return_date": BACK, "return_date_text": "9일에 오는"},
+                        {"read.flight_offers": {"flights": [one, twin], "source": "ignav"}})
+    assert result.answer.count("제주항공(항공사 공식) 400,000원") == 1, "gclid 만 다른 같은 판매처 · 같은 가격은 한 줄"
+    assert "   ※ 가는 편과 오는 편 항공사가 달라(7C · BR) 따로 예약해야 할 수 있습니다." in result.answer
 
 
 def test_one_source_is_enough_and_both_missing_is_unknown():
