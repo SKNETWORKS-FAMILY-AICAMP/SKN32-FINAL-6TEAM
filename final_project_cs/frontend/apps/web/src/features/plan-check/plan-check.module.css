@@ -544,7 +544,7 @@ button.headBadge { cursor: pointer; }
 }
 .sheetBody[data-under-float] {
   --handle-clearance: 22px;
-  padding-top: 64px; scroll-padding-top: 64px;
+  padding-top: 80px; scroll-padding-top: 80px;
 }
 
 /* A stop that was changed: blue, the way 「확인 필요」 is amber. A stop marked for deletion: grey, 「되돌리기」 where the bin was. */

@@ -71,12 +71,15 @@ for (const width of [375, 1280]) {
             topHit: !visible || tab.contains(document.elementFromPoint(t.x+t.width/2,t.top+.5)),
             bottomHit: !visible || tab.contains(document.elementFromPoint(t.x+t.width/2,t.bottom-.5)) };
         });
-        return {time: performance.now(),tabs};
+        const actions = e.closest('section')!.querySelector<HTMLElement>('[class*=topActions]')!.getBoundingClientRect();
+        const tabBottom = Math.max(...Array.from(e.querySelectorAll('[role=tab]')).map(tab => tab.getBoundingClientRect().bottom));
+        return {time: performance.now(),tabs,actionGap:actions.top-tabBottom};
       });
       for (const t of clearance.tabs) {
         expect(t.top).toBeGreaterThanOrEqual(12); expect(t.bottom).toBeGreaterThanOrEqual(12);
         expect(t.handleGap).toBeGreaterThanOrEqual(10); expect(t.topHit).toBe(true); expect(t.bottomHit).toBe(true);
       }
+      expect(clearance.actionGap).toBeGreaterThanOrEqual(12);
       clearances.push(clearance);
     }
     await phase(strip, 2000);
