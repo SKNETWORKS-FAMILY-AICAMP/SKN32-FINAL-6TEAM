@@ -104,7 +104,7 @@ IGNAV = {"flights": [
 def test_the_same_flight_from_both_sources_is_shown_once_with_both_prices():
     result, _, _ = _run(SEARCH, {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV})
     answer = result.answer
-    assert "찾은 결과(마이리얼트립 2개 · 항공사·여행사 판매처 2개 · 구글 항공권 조회 실패)를" in answer
+    assert "찾은 결과(마이리얼트립 2개 · 항공사·여행사 판매처 2개 · 구글 항공권 조회 실패)를 같은 편끼리 묶어" in answer
     assert answer.count("TPE 13:10 → ICN 16:40") == 1, "같은 편은 한 번만"
     assert "TPE 13:10 → ICN 16:40 7C1501 (직항, 2시간 30분)" in answer, "편명은 묶인 Ignav 쪽에서 빌린다"
     jeju = answer.index("제주항공(항공사 공식) 289,000원: https://www.jejuair.net/x")
@@ -252,6 +252,7 @@ def test_a_round_trip_passes_the_return_date():
     assert tools.calls[0][1]["return_date"] == BACK
     assert [name for name, _ in tools.calls] == ["read.flight_search", "read.flight_google"], "왕복은 Ignav 를 부르지 않는다"
     assert "항공사·여행사 판매처는 편도만" in result.answer
+    assert "같은 편끼리 묶어" not in result.answer, "편 목록을 준 소스가 하나뿐이면 묶었다고 하지 않는다"
 
 
 def test_missing_values_are_asked_back_without_any_search():

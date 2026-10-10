@@ -399,7 +399,10 @@ class FlightTeam(TravelTeamBase):
         else:
             how = (f"{said} 출발 편을 가격이 낮은 순으로 {len(shown_options)}개" if len(wanted) == 1
                    else f"{said} 출발 시간대마다 가장 싼 편을" if wanted else "출발 시간대마다 가장 싼 편을")
-            head = f"{route} · {when} · {party} 조건으로 찾은 결과({' · '.join(counted)})를 같은 편끼리 묶어 {how} 보여 드립니다."
+            # ★편 목록을 준 소스가 하나뿐이면(왕복 등) 「같은 편끼리 묶어」라고 하지 않는다 — 묶은 것이 없다
+            listed = sum(1 for got in (mrt, offers, google) if got and got.get("flights"))
+            merged = "같은 편끼리 묶어 " if listed > 1 else ""
+            head = f"{route} · {when} · {party} 조건으로 찾은 결과({' · '.join(counted)})를 {merged}{how} 보여 드립니다."
         others = ["같은 조건으로 다른 곳에서 보기(가격은 그 사이트에서 확인):",
                   *[f"   · {name}: {url}" for name, url in _elsewhere(found)]]
         tail = ("가격과 좌석은 조회 시점 참고값이며 판매처 화면에서 달라질 수 있습니다. 링크가 열리지 않으면 같은 편의 다른 판매처 링크를 써 주세요. "
