@@ -113,7 +113,11 @@ export function useReveal(target: PlanCheckView, paused = false): { view: PlanCh
   //   information (how far the check is), and movement the system asked to reduce is already off (`globals.css` ends every transition and animation).
   const { skipAnimation: reduced } = useSettings();
   const [shown, setShown] = useState(target);
-  const immediate = !paused && (reduced || (shown.stage === "done" && target.stage === "done"));
+  const [wasPaused, setWasPaused] = useState(paused);
+  // The survey already displayed the live completed result. Releasing it must not replay the frozen snapshot.
+  const completedHold = wasPaused && !paused && target.stage === "done";
+  if (wasPaused !== paused) setWasPaused(paused);
+  const immediate = !paused && (reduced || completedHold || (shown.stage === "done" && target.stage === "done"));
   // Keep the state in step with what is returned before another render can pause or restart the replay.
   // This guarded update adjusts only this hook's component; an effect would leave the old snapshot until after commit.
   if (immediate && shown !== target) setShown(target);

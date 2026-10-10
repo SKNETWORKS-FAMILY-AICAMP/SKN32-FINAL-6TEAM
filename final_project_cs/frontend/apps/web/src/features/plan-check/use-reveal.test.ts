@@ -31,8 +31,8 @@ vi.mock("react", () => ({
     const at = hooks.cursor++;
     const slot = hooks.slots[at] ??= {};
     if (slot.deps && deps.length === slot.deps.length && deps.every((value, index) => Object.is(value, slot.deps![index]))) return;
-    slot.deps = deps;
-    hooks.pending.push({ slot: at, run });
+    // Discarded renders do not commit effect dependencies in React.
+    hooks.pending.push({ slot: at, run: () => { slot.deps = deps; return run(); } });
   },
 }));
 
@@ -92,14 +92,25 @@ describe("saved edits and paused replay", () => {
     expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
   });
 
-  it("holds an incoming completed plan during the survey and resumes its first replay afterwards", () => {
+  it("opens the completed result immediately when a survey releases its hold", () => {
     vi.useFakeTimers();
     draw(received);
     expect(draw(exampleDone, true)).toEqual({ view: received, settled: false });
     vi.advanceTimersByTime(5_000);
     expect(draw(exampleDone, true).view).toBe(received);
     expect(vi.getTimerCount()).toBe(0);
-    expect(draw(exampleDone).settled).toBe(false);
+    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    expect(vi.getTimerCount()).toBe(0);
+    expect(draw(exampleDone, true).view).toBe(exampleDone);
+    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+  });
+
+  it("still paces unfinished progress after a survey releases its hold", () => {
+    vi.useFakeTimers();
+    draw(received);
+    const checking = { ...exampleDone, stage: "checking" as const };
+    draw(checking, true);
+    expect(draw(checking).settled).toBe(false);
     expect(vi.getTimerCount()).toBe(1);
   });
 

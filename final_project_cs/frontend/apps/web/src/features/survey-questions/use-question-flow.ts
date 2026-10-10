@@ -63,7 +63,7 @@ export interface QuestionFlow {
   release: () => void;
   /** 「자동으로 넘어가지 않기」: the screen stays until the customer presses the button. */
   stop: () => void;
-  /** 「계속 답하기」 on the warning. */
+  /** 「계속 답하기」 on the warning also stops automatic departure for this question session. */
   keepAnswering: () => void;
   /** Anything touched on the screen: the customer is there (restarts the idle count, and counts as having touched the questions). */
   touch: () => void;
@@ -187,7 +187,7 @@ export function useQuestionFlow({ intakeId, language, questions, loadingDone, fr
 
   const release = useCallback(() => setPhase("gone"), [setPhase]);
   const stop = useCallback(() => { setStopAuto(true); setPhase("late"); setActivity((value) => value + 1); }, [setStopAuto, setPhase, setActivity]);
-  const keepAnswering = useCallback(() => { setSeconds(TIMING.countdownS); setPhase("late"); setActivity((value) => value + 1); }, [setSeconds, setPhase, setActivity]);
+  const keepAnswering = stop;
 
   return {
     phase, hold: phase === "late" || phase === "idle" || phase === "done", shown: questions.length > 0 && phase !== "gone",

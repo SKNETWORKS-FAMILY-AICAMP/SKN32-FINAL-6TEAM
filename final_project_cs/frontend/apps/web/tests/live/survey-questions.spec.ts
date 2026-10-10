@@ -210,28 +210,31 @@ test("다 답하고 읽기가 끝나면 5초 막대 뒤에 저절로 계획 확�
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible({ timeout: 20_000 });
 });
 
-test("읽기가 끝난 뒤 30초 아무것도 안 만지면 20초 경고가 뜨고, 「계속 답하기」로 이어가며 몇 번이든 쓸 수 있다. 세는 중에는 숫자가 줄고 0이 되면 계획 확인으로 간다", async ({ page, request }) => {
+test("읽기가 끝난 뒤 30초 무응답 경고의 단일 「계속 답하기」로 자동 넘김을 멈추고 답변을 이어간다", async ({ page, request }) => {
   test.setTimeout(150_000);
   const server = await reading(page, request);
   await option(page, "택시").click();
   await expect(pager(page)).toContainText("2 / 2", { timeout: 3000 });
+  await page.clock.install();
   await finishReading(server);
   await expect(bigButton(page, "읽어 온 계획 확인하기")).toBeEnabled({ timeout: 15_000 });
   const warning = page.getByRole("alertdialog");
-  await expect(warning).toBeVisible({ timeout: 40_000 });                                              // 30초 + 여유
+  await page.clock.fastForward(30100);
+  await expect(warning).toBeVisible();
   await expect(warning).toContainText("아직 보고 계신가요?");
   await expect(warning.getByRole("button", { name: "계속 답하기" })).toBeFocused();
   const first = await warning.locator("p").first().textContent();
-  await page.waitForTimeout(3000);
+  await expect(warning.getByRole("button")).toHaveCount(1);
+  await page.clock.runFor(3000);
   expect(Number(await warning.locator("p").first().textContent())).toBeLessThan(Number(first));
-  await warning.getByRole("button", { name: "계속 답하기" }).click();                                  // 한 번 더
+  await warning.getByRole("button", { name: "계속 답하기" }).click();
   await expect(warning).toHaveCount(0);
   await expect(pager(page)).toBeVisible();
-  await expect(warning).toBeVisible({ timeout: 40_000 });
-  await page.keyboard.press("Escape");                                                                 // Esc 도 「계속 답하기」
+  await page.clock.runFor(61000);
   await expect(warning).toHaveCount(0);
-  await expect(warning).toBeVisible({ timeout: 40_000 });
-  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible({ timeout: 40_000 });   // 20초가 다 지나면 간다
+  await expect(pager(page)).toBeVisible();
+  await pager(page).getByRole("button", { name: "이전 질문 보기" }).click();
+  await expect(option(page, "택시")).toHaveAttribute("aria-pressed", "true");
 });
 
 test("모르는 종류의 질문은 그 질문만 건너뛰고 나머지는 그린다", async ({ page, request }) => {
