@@ -15,11 +15,18 @@
   목록 · 다른 곳 링크를 함께 받는다. 상세(`read.stay_detail`)는 보여 줄 곳만 이 팀이 부른다. 마이리얼트립 목록 아래에
   구글 호텔 쪽 숙소(호텔만, 이미 보인 이름은 빼고) 최대 `GOOGLE_SHOWN` 곳을 따로 보여 준다. 두 소스의 숙소 이름이 달라(한국어 · 영어 ·
   지점 표기) 같은 숙소로 묶지는 않는다. 끝에 「같은 조건으로 다른 곳에서 보기」(부킹닷컴) 링크를 붙인다. 가격은 조회 시점 참고값이다.
+- `[2026-10-10]` **일정 반영**(팀 피드백 4): Case 에 여행이 붙어 있으면 그 숙박 기간(체크인~체크아웃 날)의 일정 장소 좌표로
+  가운데를 잡는다(그 기간에 좌표 있는 장소가 없으면 일정 전체). 마이리얼트립 줄에는 상세 좌표로 그 가운데까지 거리를 붙이고(순서는
+  마이리얼트립 그대로 — 더 부르지 않으려고), 구글 호텔 줄은 목록에 좌표가 오므로 **가까운 순**으로 고른다. 장소가 `SPREAD_KM` 보다
+  넓게 흩어져 있으면(여러 도시 등) 가운데가 뜻이 없어 거리를 쓰지 않고 그렇다고 적는다. 거리는 직선거리다(이동 시간 아님).
+- 설문(`constraints.survey`)에는 숙소 문항(예산 · 숙소 유형)이 없다(`components/planning/survey.py` 2026-09-24.v1). 그래서 설문은
+  아직 숙소 고르기에 쓰지 않는다 — 문항이 생기면 연결한다.
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 import logging
+from math import asin, cos, radians, sin, sqrt
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -38,10 +45,50 @@ SHOWN, DETAIL_CALLS = 3, 4
 SEARCH_SIZE, NAME_SIZE = 20, 5
 #: 구글 호텔에서 따로 보여 주는 수. 우리가 고른 값
 GOOGLE_SHOWN = 3
+#: 일정 장소가 가운데에서 이보다 멀리 있으면 가운데로 거리를 재지 않는다(여러 도시 · 당일치기 먼 곳). 우리가 고른 값
+SPREAD_KM = 30.0
 
 
 def _won(value: Any) -> str:
     return f"{int(value):,}원" if isinstance(value, (int, float)) else "가격 모름"
+
+
+def _km(a_lat: float, a_lon: float, b_lat: float, b_lon: float) -> float:
+    """두 좌표의 직선거리(km, 하버사인)."""
+    d_lat, d_lon = radians(b_lat - a_lat), radians(b_lon - a_lon)
+    h = sin(d_lat / 2) ** 2 + cos(radians(a_lat)) * cos(radians(b_lat)) * sin(d_lon / 2) ** 2
+    return 2 * 6371.0 * asin(sqrt(h))
+
+
+def _coords(stay: dict[str, Any] | None) -> tuple[float, float] | None:
+    if not stay:
+        return None
+    lat, lon = stay.get("latitude"), stay.get("longitude")
+    return (float(lat), float(lon)) if isinstance(lat, (int, float)) and isinstance(lon, (int, float)) else None
+
+
+def trip_center(points: list[dict[str, Any]], check_in: date, check_out: date) -> dict[str, Any] | None:
+    """숙박 기간의 일정 장소 가운데. 그 기간에 좌표 있는 장소가 없으면 일정 전체로. 장소가 없으면 `None`.
+
+    돌려주는 것: latitude · longitude · places(쓴 장소 수) · window(숙박 기간 장소만 썼나) · spread_km(가장 먼 장소까지) ·
+    usable(`spread_km <= SPREAD_KM`).
+    """
+    inside = [p for p in points if p.get("day") and check_in.isoformat() <= p["day"] <= check_out.isoformat()]
+    chosen = inside or points
+    if not chosen:
+        return None
+    lat = sum(p["latitude"] for p in chosen) / len(chosen)
+    lon = sum(p["longitude"] for p in chosen) / len(chosen)
+    spread = max(_km(lat, lon, p["latitude"], p["longitude"]) for p in chosen)
+    return {"latitude": round(lat, 6), "longitude": round(lon, 6), "places": len(chosen), "window": bool(inside),
+            "spread_km": round(spread, 1), "usable": spread <= SPREAD_KM}
+
+
+def _distance(center: dict[str, Any] | None, stay: dict[str, Any] | None) -> float | None:
+    where = _coords(stay)
+    if not center or not center["usable"] or where is None:
+        return None
+    return round(_km(center["latitude"], center["longitude"], *where), 1)
 
 
 def _same_name(left: str, right: str) -> bool:
@@ -74,7 +121,7 @@ class LodgingTeam(TravelTeamBase):
         if task.capability == "lodging.status":
             return self._status(task, seen)
 
-        trip, evidence = self._trip(task, seen)
+        trip, evidence, points = self._trip(task, seen)
         today = datetime.now(SEOUL).date()
         if self.llm is None:
             return self._escalate(task, "interpreter_missing", evidence)
@@ -108,7 +155,7 @@ class LodgingTeam(TravelTeamBase):
             return self._respond(task, evidence, {**decision, "needs": missing}, ask(found, missing))
         if found.task == "my_stay":
             return self._my_stay(task, found, seen, evidence, decision)
-        return self._search(task, found, seen, evidence, decision)
+        return self._search(task, found, seen, evidence, decision, points)
 
     # ── 갈래 ────────────────────────────────────────────────────
     def _status(self, task: TeamTask, seen: set[str], base: list[Evidence] | None = None) -> TeamResult:
@@ -121,8 +168,11 @@ class LodgingTeam(TravelTeamBase):
                             decisions=[{"locked": True, "team": self.manifest.team_id}])
 
     def _search(self, task: TeamTask, found: Interpretation, seen: set[str], evidence: list[Evidence],
-                decision: dict[str, Any]) -> TeamResult:
+                decision: dict[str, Any], points: list[dict[str, Any]] | None = None) -> TeamResult:
         dates = {"check_in": found.check_in.isoformat(), "check_out": found.check_out.isoformat()}
+        center = trip_center(points or [], found.check_in, found.check_out)
+        if center is not None:
+            decision = {**decision, "trip_center": center}
         party = {"adults": found.adults, "children": found.children}
         # `[2026-10-10]` 소스 고르기 · 다른 곳 링크는 booking 모듈(`components/booking/offers/stays.py`)이 한다(팀 피드백). 상세 확인 · 고르기는 여기서
         booked = self._read(task, "read.booking_search_stays", {
@@ -133,7 +183,7 @@ class LodgingTeam(TravelTeamBase):
         states = {name: (booked.get("sources") or {}).get(name, {}).get("status", "failed") for name in ("myrealtrip", "google")}
         listing, google = booked.get("myrealtrip"), booked.get("google")
         resting = states["myrealtrip"] == "resting"
-        extra = self._google_block(google, [], booked.get("elsewhere") or [])
+        extra = self._google_block(google, [], booked.get("elsewhere") or [], center)
         if listing is None:
             why = "요청 한도로 잠시 조회를 쉬고 있습니다" if resting else "결과를 받지 못했습니다(조회 실패)"
             if (google and google.get("stays")) or resting:
@@ -141,7 +191,7 @@ class LodgingTeam(TravelTeamBase):
                 return self._respond(task, evidence, {**decision, "found": None, "resting": resting,
                                                       "google": len((google or {}).get("stays") or [])},
                                      "\n".join([f"{found.keyword} · {dates['check_in']}~{dates['check_out']} 조건으로 마이리얼트립 검색은 {why}.",
-                                                *extra]))
+                                                *self._center_line(center), *extra]))
             return self._unknown(task, "숙소 검색 결과", evidence)
         if not listing["stays"]:
             return self._respond(task, evidence, {**decision, "found": 0},
@@ -168,11 +218,11 @@ class LodgingTeam(TravelTeamBase):
                 skipped.append({"gid": stay["gid"], "name": stay["name"], "reason": "no_rooms"})
                 continue
             shown.append({"gid": stay["gid"], "name": stay["name"], "detail_read": detail is not None})
-            lines.append(self._line(len(lines) + 1, stay, detail))
+            lines.append(self._line(len(lines) + 1, stay, detail, _distance(center, detail)))
             if detail is None:
                 # ★상세를 못 읽었으면 더 부르지 않는다 — 대개 제공처가 거절한 것이고(2026-10-08 14:35 playdata 429), 이어 부르면 부하만 보탠다
                 break
-        extra = self._google_block(google, [item["name"] for item in shown], booked.get("elsewhere") or [])
+        extra = self._google_block(google, [item["name"] for item in shown], booked.get("elsewhere") or [], center)
         decision = {**decision, "found": len(listing["stays"]), "shown": shown, "skipped": skipped,
                     "google": len((google or {}).get("stays") or []) if google is not None else None}
         if not lines:
@@ -184,7 +234,7 @@ class LodgingTeam(TravelTeamBase):
                 f"{listing.get('total') or len(listing['stays'])}곳 중 {len(lines)}곳입니다(마이리얼트립 검색 순서"
                 + (f", 가격이 없거나 그 날짜에 객실이 없는 {len(skipped)}곳은 건너뜀" if skipped else "") + ").")
         tail = "가격과 잔여 객실은 조회 시점 기준이며 링크에서 다시 확인해 주세요. 예약은 링크한 페이지에서 직접 하시면 됩니다."
-        return self._respond(task, evidence, decision, "\n".join([head, *lines, *extra, tail]))
+        return self._respond(task, evidence, decision, "\n".join([head, *self._center_line(center), *lines, *extra, tail]))
 
     def _my_stay(self, task: TeamTask, found: Interpretation, seen: set[str], evidence: list[Evidence],
                  decision: dict[str, Any]) -> TeamResult:
@@ -220,11 +270,13 @@ class LodgingTeam(TravelTeamBase):
 
     # ── 부품 ────────────────────────────────────────────────────
     @staticmethod
-    def _google_block(google: dict[str, Any] | None, shown_names: list[str], links: list[dict[str, str]]) -> list[str]:
+    def _google_block(google: dict[str, Any] | None, shown_names: list[str], links: list[dict[str, str]],
+                      center: dict[str, Any] | None = None) -> list[str]:
         """구글 호텔 쪽 줄 + 다른 곳에서 보기 링크. 이미 보인 이름(공백 · 대소문자 무시)과 숙박 공유(vacation rental)는 뺀다.
 
         ★숙박 공유를 빼는 까닭 — ☆2026-10-10 14:21 playdata 「서울 명동」 앞의 셋이 숙박 공유(Bluepillow · Vio)였고 평점 · 후기가 없었다.
         ★가격이 없는 곳도 뺀다 — ☆15:37 「지요크 명동」이 가격 · 링크 없이 왔다(비교에 쓸 수 없다).
+        ★일정 가운데가 쓸 만하면(`center.usable`) 구글 목록(최대 20곳) 안에서 **가까운 순**으로 고른다. 좌표 없는 곳은 뒤로.
         """
         lines: list[str] = []
         if google is None:
@@ -233,15 +285,22 @@ class LodgingTeam(TravelTeamBase):
             seen = {"".join(name.split()).casefold() for name in shown_names}
             picks = [stay for stay in google.get("stays") or []
                      if stay.get("type") != "vacation rental" and stay.get("price_per_night") is not None
-                     and "".join(stay["name"].split()).casefold() not in seen][:GOOGLE_SHOWN]
+                     and "".join(stay["name"].split()).casefold() not in seen]
+            near = bool(center and center["usable"])
+            if near:
+                picks.sort(key=lambda stay: (_distance(center, stay) is None, _distance(center, stay) or 0.0))
+            picks = picks[:GOOGLE_SHOWN]
             if picks:
-                lines.append("구글 호텔에서 본 같은 조건 숙소(구글 순서, 숙박 공유 제외):")
+                order = "일정 장소 가운데에서 가까운 순" if near else "구글 순서"
+                lines.append(f"구글 호텔에서 본 같은 조건 숙소({order}, 숙박 공유 제외):")
                 for stay in picks:
                     rating = (f"평점 {stay['rating']:.1f}/5" + (f"(후기 {stay['review_count']:,})" if isinstance(stay.get("review_count"), int) else "")
                               if stay.get("rating") else "평점 없음")
                     star = f"{stay['hotel_class']}성급 · " if stay.get("hotel_class") else ""
+                    far = _distance(center, stay)
+                    where = (f" · 일정 가운데에서 {far}km" if far is not None else " · 거리 모름") if near else ""
                     lines.append(f"   · {stay['name']} — {star}1박 {_won(stay.get('price_per_night'))} · 전체 {_won(stay.get('total_price'))} · "
-                                 f"{rating}: {stay.get('link') or '링크 없음'}")
+                                 f"{rating}{where}: {stay.get('link') or '링크 없음'}")
             if google.get("page"):
                 lines.append(f"구글 호텔 검색 결과 페이지(날짜는 그 화면에서 다시 고르셔야 할 수 있습니다): {google['page']}")
         if links:
@@ -249,23 +308,39 @@ class LodgingTeam(TravelTeamBase):
                       *[f"   · {link['name']}: {link['url']}" for link in links]]
         return lines
 
-    def _trip(self, task: TeamTask, seen: set[str]) -> tuple[dict[str, Any] | None, list[Evidence]]:
-        """Case 에 여행이 붙어 있으면 그 일정을 모델에 줄 요약으로. 없거나 못 읽으면 `None` — 없이 해석한다."""
+    def _trip(self, task: TeamTask, seen: set[str]) -> tuple[dict[str, Any] | None, list[Evidence], list[dict[str, Any]]]:
+        """Case 에 여행이 붙어 있으면 그 일정을 모델에 줄 요약으로 + 좌표 있는 장소들(날 · 위도 · 경도, 모델에는 주지 않는다).
+        없거나 못 읽으면 `None` · 빈 목록 — 없이 해석한다. 좌표는 일정 항목의 `place`(장소 표) 값이다."""
         ref = task.context.current_state.get("subject_ref") or {}
         evidence = list(task.context.evidence)
         if ref.get("kind") != "trip" or not ref.get("id"):
-            return None, evidence
+            return None, evidence, []
         view = self._read(task, "read.itinerary", {"trip_id": ref["id"]}, seen)
         evidence = self._evidence(task, source_id="read.itinerary", claim="현재 일정 버전", value=view, base=evidence)
         if not view:
-            return None, evidence
+            return None, evidence, []
+        points = []
+        for item in view.get("items") or []:
+            where = _coords(item.get("place"))
+            if where is not None:
+                points.append({"day": str(item.get("starts_at") or "")[:10] or None, "latitude": where[0], "longitude": where[1],
+                               "title": item.get("title")})
         days = sorted(str(item["starts_at"])[:10] for item in view.get("items") or [] if item.get("starts_at"))
         return {"party_size": (view.get("trip") or {}).get("party_size"),
                 "first_day": days[0] if days else None, "last_day": days[-1] if days else None,
-                "places": [str(item.get("title")) for item in view.get("items") or [] if item.get("title")]}, evidence
+                "places": [str(item.get("title")) for item in view.get("items") or [] if item.get("title")]}, evidence, points
 
     @staticmethod
-    def _line(number: int, stay: dict[str, Any], detail: dict[str, Any] | None) -> str:
+    def _center_line(center: dict[str, Any] | None) -> list[str]:
+        if center is None:
+            return []
+        span = "이 숙박 기간" if center["window"] else "여행 전체"
+        if not center["usable"]:
+            return [f"{span} 일정 장소 {center['places']}곳이 넓게 흩어져 있어(가운데에서 가장 먼 곳 {center['spread_km']}km) 거리는 재지 않았습니다."]
+        return [f"거리는 {span} 일정 장소 {center['places']}곳의 가운데에서 잰 직선거리입니다(이동 시간 아님)."]
+
+    @staticmethod
+    def _line(number: int, stay: dict[str, Any], detail: dict[str, Any] | None, far: float | None = None) -> str:
         # 후기가 없는 곳은 평점이 0.0 으로 온다(2026-10-07 17:48 playdata) — 0점이 아니라 평점이 없는 것이다
         rating = f"평점 {stay['rating']}/5" + (f"(후기 {stay['review_count']:,})" if stay.get("review_count") else "") \
             if stay.get("rating") else "평점 없음"
@@ -273,7 +348,8 @@ class LodgingTeam(TravelTeamBase):
             return (f"{number}. {stay['name']} — 1박 {_won(stay.get('price_per_night'))} · {rating} · "
                     f"{stay.get('description') or ''} (상세 · 링크를 불러오지 못했습니다)")
         return (f"{number}. {stay['name']} — 1박 {_won(detail.get('price_per_night'))} · 전체 {_won(detail.get('total_price'))}(세금 포함) · "
-                f"{rating} · {detail.get('address') or '주소 모름'} · {detail.get('link') or '링크 없음'}")
+                f"{rating} · {detail.get('address') or '주소 모름'}" + (f" · 일정 가운데에서 {far}km" if far is not None else "")
+                + f" · {detail.get('link') or '링크 없음'}")
 
     def _respond(self, task: TeamTask, evidence: list[Evidence], decision: dict[str, Any], answer: str) -> TeamResult:
         return self._result(task, outcome="completed", confidence=1.0, evidence=evidence,

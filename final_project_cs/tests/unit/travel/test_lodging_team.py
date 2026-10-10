@@ -287,6 +287,59 @@ def test_a_trip_on_the_case_is_summarised_for_the_model():
                                       "places": ["경복궁", "남산타워"]}
 
 
+
+# ── 일정 반영(팀 피드백 4, 2026-10-10) ─────────────────────────────
+def _item(title, day, lat=None, lon=None):
+    place = {"place_id": title, "name": title, "latitude": lat, "longitude": lon} if lat is not None else None
+    return {"title": title, "starts_at": f"{day}T10:00:00+09:00", "place": place}
+
+
+NEAR_TRIP = {"trip": {"party_size": 2}, "items": [
+    _item("남산타워", IN, 37.5512, 126.9882), _item("이태원 거리", OUT, 37.5345, 126.9946),
+    _item("숙소 이전 날 장소", (TODAY + timedelta(days=10)).isoformat(), 37.2000, 127.2000),   # 숙박 기간 밖 — 빼고 잰다
+    _item("좌표 없는 일정", IN)]}
+NEAR_GOOGLE = {"stays": [
+    {"name": "먼 호텔", "type": "hotel", "price_per_night": 100000.0, "total_price": 300000.0, "rating": 4.1, "review_count": 10,
+     "hotel_class": 3, "latitude": 37.6500, "longitude": 127.0500, "link": "https://far.example"},
+    {"name": "좌표 없는 호텔", "type": "hotel", "price_per_night": 110000.0, "total_price": 330000.0, "rating": 4.0, "review_count": 5,
+     "hotel_class": None, "link": "https://none.example"},
+    {"name": "가까운 호텔", "type": "hotel", "price_per_night": 120000.0, "total_price": 360000.0, "rating": 4.2, "review_count": 20,
+     "hotel_class": 4, "latitude": 37.5430, "longitude": 126.9910, "link": "https://near.example"}],
+    "page": "https://www.google.com/travel/search?q=x", "source": "serpapi_hotels"}
+TRIP_STATE = {"subject_ref": {"kind": "trip", "id": "T1"}}
+
+
+def test_the_trip_center_of_the_stay_dates_gives_distances_and_orders_google():
+    result, llm, _ = _run(SEARCH, {"read.itinerary": NEAR_TRIP, "read.stay_search": STAYS, "read.stay_google": NEAR_GOOGLE,
+                                   "read.stay_detail": lambda a: DETAIL if a["gid"] == 11 else None}, state=TRIP_STATE)
+    center = result.decisions[0]["trip_center"]
+    assert (center["places"], center["window"], center["usable"]) == (2, True, True), "숙박 기간 밖 · 좌표 없는 장소는 빼고 잰다"
+    assert "latitude" not in str(llm.calls[0][2]["trip"]), "좌표는 모델에 주지 않는다"
+    answer = result.answer
+    assert "거리는 이 숙박 기간 일정 장소 2곳의 가운데에서 잰 직선거리입니다(이동 시간 아님)." in answer
+    assert "서울 용산구 이태원로 179 · 일정 가운데에서 1.0km · https://accommodation.myrealtrip.com/union/products/11" in answer
+    assert "구글 호텔에서 본 같은 조건 숙소(일정 장소 가운데에서 가까운 순, 숙박 공유 제외):" in answer
+    near, none, far = answer.index("가까운 호텔"), answer.index("좌표 없는 호텔"), answer.index("먼 호텔")
+    assert near < far < none, "가까운 순, 좌표 없는 곳은 뒤로"
+    assert "좌표 없는 호텔 — 1박 110,000원 · 전체 330,000원 · 평점 4.0/5(후기 5) · 거리 모름" in answer
+
+
+def test_a_spread_out_trip_does_not_use_distance_and_says_so():
+    spread = {"trip": {}, "items": [_item("서울역", IN, 37.5547, 126.9707), _item("부산역", OUT, 35.1151, 129.0422)]}
+    result, _, _ = _run(SEARCH, {"read.itinerary": spread, "read.stay_search": STAYS, "read.stay_google": NEAR_GOOGLE,
+                                 "read.stay_detail": lambda a: DETAIL}, state=TRIP_STATE)
+    assert result.decisions[0]["trip_center"]["usable"] is False
+    assert "이 숙박 기간 일정 장소 2곳이 넓게 흩어져 있어" in result.answer and "거리는 재지 않았습니다." in result.answer
+    assert "일정 가운데에서" not in result.answer and "(구글 순서, 숙박 공유 제외)" in result.answer
+    assert result.answer.index("먼 호텔") < result.answer.index("가까운 호텔"), "거리를 안 쓰면 구글 순서 그대로"
+
+
+def test_without_coordinates_in_the_trip_nothing_about_distance_is_said():
+    bare = {"trip": {}, "items": [_item("좌표 없는 일정", IN)]}
+    result, _, _ = _run(SEARCH, {"read.itinerary": bare, "read.stay_search": STAYS, "read.stay_detail": lambda a: DETAIL},
+                        state=TRIP_STATE)
+    assert "trip_center" not in result.decisions[0] and "거리" not in result.answer
+
 # ── 검증 부품 · 등록 ──────────────────────────────────────────────
 def test_parse_and_needs():
     found = parse({**MY_STAY, "stay_name": "  ", "extra_key": 1})
