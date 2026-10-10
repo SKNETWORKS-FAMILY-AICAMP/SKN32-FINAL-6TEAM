@@ -45,11 +45,13 @@ export interface IntakeStart {
 }
 
 /** What comes back to the entry page when the server refused: its sentence, and what the customer had chosen to send. */
-export interface IntakeFailure { message: string; files: File[]; plan: PlanRequest | null; loginRequired?: boolean }
+export interface IntakeFailure { message: string; files: File[]; plan: PlanRequest | null; loginRequired?: boolean; text?: string }
 
 let current: IntakeStart | null = null;
 /** A sending that failed: the entry page shows the server's sentence and gives the attached files and the planning request back. */
 let failure: IntakeFailure | null = null;
+// Keep only the current submission until its read result can decide whether it must be returned.
+let submission: { intakeId: string; text: string; files: File[] } | null = null;
 
 export function beginIntake(input: { text: string; files: File[]; language: Language; humanToken?: string | null; plan?: PlanRequest | null }): IntakeStart {
   const controller = new AbortController();
@@ -64,6 +66,7 @@ export function beginIntake(input: { text: string; files: File[]; language: Lang
   };
   result.catch(() => undefined);
   failure = null;
+  submission = null;
   current = { text: input.text, files: input.files, language: input.language, plan: input.plan ?? null, result, send, cancel: () => { controller.abort(); reject(new DOMException("Cancelled", "AbortError")); } };
   return current;
 }
@@ -86,6 +89,18 @@ export const intakeFailure = (): IntakeFailure | null => failure;
 export function clearIntakeFailure(): void { failure = null; }
 
 const arrivals = new Map<string, string>();
-export function rememberIntakeArrival(id: string, text: string): void { arrivals.set(id, text); }
+export function rememberIntakeArrival(id: string, text: string, files: File[] = []): void {
+  arrivals.set(id, text);
+  submission = { intakeId: id, text, files: [...files] };
+}
 export function intakeArrival(id: string): string | undefined { return arrivals.get(id); }
 export function clearIntakeArrival(id: string): void { arrivals.delete(id); }
+
+export function forgetIntakeSubmission(id: string): void { if (submission?.intakeId === id) submission = null; }
+
+/** Reading finished without stops: return the submitted input, without sending it again. */
+export function rememberEmptyIntake(id: string, message: string, originalText: string): void {
+  const sent = submission?.intakeId === id ? submission : null;
+  failure = { message, text: sent?.text || originalText || undefined, files: sent?.files ?? [], plan: null };
+  forgetIntakeSubmission(id);
+}

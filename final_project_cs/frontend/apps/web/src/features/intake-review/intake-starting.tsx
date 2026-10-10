@@ -82,7 +82,7 @@ export function IntakeStarting() {
         return;
       }
       if (!live || left.current) return;
-      rememberIntakeArrival(intake_id, start.text);
+      rememberIntakeArrival(intake_id, start.text, start.files);
       endIntakeStart(start);
       router.replace(routes.intake(intake_id));
     }, fail);

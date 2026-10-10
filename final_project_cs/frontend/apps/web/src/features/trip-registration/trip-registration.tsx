@@ -71,7 +71,8 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   const [onboarding] = useOnboarding();
   const router = useRouter();
   useEffect(() => { router.prefetch(routes.intakeStarting); }, [router]);
-  const [source, setSource] = useState<string>();
+  const [returned] = useState(intakeFailure);
+  const [source, setSource] = useState<string | undefined>(() => returned?.text);
   const [validation, setValidation] = useState("");
   // Raised on every press that is turned back, so the notice is brought into view again even when it says the same words.
   const [nudge, setNudge] = useState(0);
@@ -81,7 +82,6 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   const [card, setCard] = useState(false);
   // ★A sending the server refused comes back here (`intake-starting.tsx`): its sentence is shown, the attached files and the planning
   //   conditions are given back, and the panel it came from is the chosen one again.
-  const [returned] = useState(intakeFailure);
   const [files, setFiles] = useState<File[]>(() => returned?.files ?? []);
   const [restored, setRestored] = useState(() => returned?.message ?? "");
   const [ask, setAsk] = useState<PlanAsk>(() => returned?.plan ? { start: returned.plan.start_date, days: returned.plan.days, party: returned.plan.party_size, wish: returned.plan.wish } : emptyAsk);

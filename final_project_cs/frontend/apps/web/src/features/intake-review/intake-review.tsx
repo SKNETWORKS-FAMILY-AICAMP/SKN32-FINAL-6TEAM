@@ -21,7 +21,7 @@ import { tripsKey } from "@/lib/gateway";
 import { LiveError, loginRequired } from "@/lib/live/client";
 import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/lib/live/intake-events";
 import { confirmIntake, editIntake, getIntake, type IntakeEdit } from "@/lib/live/intake";
-import { clearIntakeArrival, intakeArrival } from "@/lib/live/intake-start";
+import { clearIntakeArrival, forgetIntakeSubmission, intakeArrival, rememberEmptyIntake } from "@/lib/live/intake-start";
 import type { ReviewedIntakeView } from "@/lib/live/intake-review";
 import { getIntakeRouteShapes } from "@/lib/live/route-shapes";
 import { useRouteDetail } from "@/features/map/use-route-detail";
@@ -39,8 +39,8 @@ import styles from "./intake-review.module.css";
  *
  * ★`[2026-10-03 사용자 결정]` The earlier list-style review screen is gone (it sat behind 「이전 확인 화면 열기」), and with it its
  *   「읽은 일정이 없어요 — 대신 짜 드릴까요?」 panel: asking the server to plan moved to the registration page's third panel,
- *   「계획 짜 주기」 (`features/trip-registration/`). Here, an intake the server read but found no stops in gets a short note and a link back
- *   to that page.
+ *   「계획 짜 주기」 (`features/trip-registration/`). An intake read without stops returns to registration automatically,
+ *   keeping the submitted input for correction and showing the reason there.
  */
 export function IntakeReview({ intakeId }: { intakeId: string }) {
   const t = useT();
@@ -164,8 +164,25 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const [readingDrawn, setReadingDrawn] = useState(false);
   if (query.data?.status === "reading" && !readingSeen) setReadingSeen(true);
   const readingCaughtUp = useCallback(() => setReadingDrawn(true), []);
+  // A temporary zero while reading is not an empty result. Removed stops stay in sources and do not trigger this return.
+  const emptyIntake = query.data?.status === "review" && query.data.sources.every((source) => source.items.length === 0);
+  const emptyReturned = useRef(false);
+  useEffect(() => {
+    const view = query.data;
+    if (!view || view.status === "reading") return;
+    if (!emptyIntake) { forgetIntakeSubmission(intakeId); return; }
+    if (emptyReturned.current) return;
+    emptyReturned.current = true;
+    const text = view.sources.filter((source) => source.kind === "text").flatMap((source) => source.lines.map((line) => line.text)).join("\n");
+    rememberEmptyIntake(intakeId, t("일정을 찾지 못했어요. 날짜·시간·장소를 확인해 다시 입력하거나 파일을 올려 주세요.", "No stops were found. Check the dates, times and places, then edit your plan or upload a file."), text);
+    // A corrected intake must be read again instead of reusing the completed empty snapshot.
+    queryClient.removeQueries({ queryKey: ["intake", intakeId, language], exact: true });
+    router.replace(routes.newTrip);
+  }, [emptyIntake, intakeId, language, query.data, queryClient, router, t]);
   const shell = (children: ReactNode) => <JourneyShell view="checking" title={["계획 확인", "Check your plan"]}>{children}</JourneyShell>;
 
+  // Returning takes priority over survey holds and replay of the completed read.
+  if (emptyIntake) return null;
   if (query.isPending && arriving) return <PlanCheck key="plan" view={firstView} sending onBack={() => router.push(routes.newTrip)} />;
   if (query.isPending || !query.data) return shell(<QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />);
   const view = query.data;
@@ -208,17 +225,13 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   // ★The server read it and found no stops at all (the text was not a schedule, or was empty). Stops the customer took out afterwards do not
   //   count: those leave the plan check's own 「남은 일정이 없어요」. A trip already registered from this intake (a planned one) links to the trip.
   const stopsRead = view.sources.reduce((count, source) => count + source.items.length, 0);
-  if (stopsRead === 0) {
-    const tripId = view.status === "confirmed" ? view.trip_id : null;
-    const asked = Boolean(view.check?.plan.requested);
+  if (stopsRead === 0 && view.status === "confirmed") {
+    const tripId = view.trip_id;
     return shell(<Panel className={styles.waiting}>
-      <Eyebrow>{tripId ? t("이미 등록했어요", "ALREADY REGISTERED") : t("읽은 일정이 없어요", "NO STOPS READ")}</Eyebrow>
-      <h1>{tripId ? t("이 접수는 여행으로 등록했어요", "This plan is already a trip") : t("이 글에서는 일정을 찾지 못했어요", "We found no stops in this")}</h1>
-      <p>{tripId ? t("등록한 여행은 여행 화면에서 볼 수 있어요.", "You can see the trip on its own page.")
-        : asked ? t("읽은 일정이 없어요. 글에서 일정을 짜 달라는 요청은 읽었어요 — 등록 화면의 「계획 짜 주기」에서 첫날 · 일수 · 인원을 골라 짜 보세요.", "No stops were read. We did read that you asked us to plan — use “Plan it for me” on the registration page and choose the first day, days and travelers.")
-          : t("읽은 일정이 없어요. 원문을 확인해 다시 올리거나, 등록 화면의 「계획 짜 주기」를 써 보세요.", "No stops were read. Check the original and upload it again, or use “Plan it for me” on the registration page.")}</p>
-      {tripId ? <ButtonLink href={routes.trip(tripId)} variant="primary">{t("여행 보기", "Open trip")}</ButtonLink>
-        : <ButtonLink href={routes.newTrip} variant="primary">{t("등록 화면으로", "Back to the registration page")}</ButtonLink>}
+      <Eyebrow>{t("이미 등록했어요", "ALREADY REGISTERED")}</Eyebrow>
+      <h1>{t("이 접수는 여행으로 등록했어요", "This plan is already a trip")}</h1>
+      <p>{t("등록한 여행은 여행 화면에서 볼 수 있어요.", "You can see the trip on its own page.")}</p>
+      {tripId && <ButtonLink href={routes.trip(tripId)} variant="primary">{t("여행 보기", "Open trip")}</ButtonLink>}
     </Panel>);
   }
   if (!result) return shell(<QueryState loading error={null} />);
