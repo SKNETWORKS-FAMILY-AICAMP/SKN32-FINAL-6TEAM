@@ -14,7 +14,7 @@
 - `[2026-10-10]` **비교**: 찾기는 booking 모듈(`read.booking_search_stays`)을 한 번 부른다 — 마이리얼트립 목록 · 구글 호텔(SerpApi 한국 설정)
   목록 · 다른 곳 링크를 함께 받는다. 상세(`read.stay_detail`)는 보여 줄 곳만 이 팀이 부른다. 마이리얼트립 목록 아래에
   구글 호텔 쪽 숙소(호텔만, 이미 보인 이름은 빼고) 최대 `GOOGLE_SHOWN` 곳을 따로 보여 준다. 두 소스의 숙소 이름이 달라(한국어 · 영어 ·
-  지점 표기) 같은 숙소로 묶지는 않는다. 끝에 「같은 조건으로 다른 곳에서 보기」(부킹닷컴) 링크를 붙인다. 가격은 조회 시점 참고값이다.
+  지점 표기) 같은 숙소로 묶지는 않는다. 끝에 「같은 조건으로 다른 곳에서 보기」 링크(booking 모듈이 정한 곳 — 부킹닷컴 · 익스피디아, 국내면 여기어때 · 야놀자, 해외면 호텔스닷컴 · 에어비앤비)를 붙인다. 가격은 조회 시점 참고값이다.
 - `[2026-10-10]` **일정 반영**(팀 피드백 4): Case 에 여행이 붙어 있으면 그 숙박 기간(체크인~체크아웃 날)의 일정 장소 좌표로
   가운데를 잡는다(그 기간에 좌표 있는 장소가 없으면 일정 전체). 마이리얼트립 줄에는 상세 좌표로 그 가운데까지 거리를 붙이고(순서는
   마이리얼트립 그대로 — 더 부르지 않으려고), 구글 호텔 줄은 목록에 좌표가 오므로 **가까운 순**으로 고른다. 장소가 `SPREAD_KM` 보다
@@ -306,7 +306,7 @@ class LodgingTeam(TravelTeamBase):
                 lines.append(f"구글 호텔 검색 결과 페이지(날짜는 그 화면에서 다시 고르셔야 할 수 있습니다): {google['page']}")
         if links:
             lines += ["같은 조건으로 다른 곳에서 보기(가격은 그 사이트에서 확인):",
-                      *[f"   · {link['name']}: {link['url']}" for link in links]]
+                      *[f"   · {link['name']}" + (f"({link['note']})" if link.get("note") else "") + f": {link['url']}" for link in links]]
         return lines
 
     def _trip(self, task: TeamTask, seen: set[str]) -> tuple[dict[str, Any] | None, list[Evidence], list[dict[str, Any]]]:

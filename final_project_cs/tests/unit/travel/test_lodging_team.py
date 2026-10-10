@@ -140,6 +140,7 @@ def test_google_hotels_are_a_separate_block_without_shown_names_and_rentals():
     assert "구글 호텔 검색 결과 페이지(날짜는 그 화면에서 다시 고르셔야 할 수 있습니다): https://www.google.com/travel/search?" in answer
     assert ("   · 부킹닷컴: https://www.booking.com/searchresults.ko.html?ss=%EC%9A%A9%EC%82%B0"
             f"&checkin={IN}&checkout={OUT}&group_adults=2&no_rooms=1&group_children=0") in answer
+    assert "   · 야놀자(날짜 · 인원은 그 화면에서 다시 고르셔야 합니다): https://www.yanolja.com/search/%EC%9A%A9%EC%82%B0" in answer
     assert result.decisions[0]["google"] == 3
 
 

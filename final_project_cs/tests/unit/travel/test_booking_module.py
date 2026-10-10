@@ -76,8 +76,25 @@ def test_stays_give_both_lists_and_the_booking_link():
     assert found["myrealtrip"] == mrt and found["google"] == google
     assert found["sources"] == {"myrealtrip": {"status": "ok", "count": 1}, "google": {"status": "ok", "count": 1}}
     assert "domestic" not in travel.stay_google.calls[0] and "min_review_rating" not in travel.stay_google.calls[0]
-    assert found["elsewhere"] == [{"name": "부킹닷컴", "url": "https://www.booking.com/searchresults.ko.html?ss=%EB%AA%85%EB%8F%99"
-                                                          "&checkin=2026-11-06&checkout=2026-11-09&group_adults=2&no_rooms=1&group_children=0"}]
+    assert [link["name"] for link in found["elsewhere"]] == ["부킹닷컴", "익스피디아", "여기어때", "야놀자"], "국내"
+    assert found["elsewhere"][0] == {"name": "부킹닷컴", "url": "https://www.booking.com/searchresults.ko.html?ss=%EB%AA%85%EB%8F%99"
+                                                             "&checkin=2026-11-06&checkout=2026-11-09&group_adults=2&no_rooms=1&group_children=0"}
+    assert found["elsewhere"][2]["url"] == ("https://www.yeogi.com/domestic-accommodations?keyword=%EB%AA%85%EB%8F%99"
+                                            "&checkIn=2026-11-06&checkOut=2026-11-09&personal=2")
+    assert found["elsewhere"][3]["note"], "야놀자는 날짜가 주소로 안 들어간다 — 그렇다고 적는다"
+
+
+def test_stay_links_depend_on_domestic_and_children():
+    from app.domains.travel_ops.components.booking.offers.stays import elsewhere
+
+    abroad = elsewhere(keyword="시부야", check_in="2026-11-06", check_out="2026-11-09", adults=2, children=1, domestic=False)
+    assert [link["name"] for link in abroad] == ["부킹닷컴", "익스피디아", "호텔스닷컴", "에어비앤비(숙박 공유)"]
+    assert abroad[1]["url"] == ("https://www.expedia.co.kr/Hotel-Search?destination=%EC%8B%9C%EB%B6%80%EC%95%BC"
+                                "&startDate=2026-11-06&endDate=2026-11-09&adults=2&rooms=1")
+    assert abroad[1]["note"] == "어린이 인원은 그 화면에서 넣어 주세요", "익스피디아는 어린이 나이가 있어야 한다"
+    assert abroad[3]["url"].endswith("&adults=2&children=1")
+    unknown = elsewhere(keyword="x", check_in="2026-11-06", check_out="2026-11-09", adults=None, children=None)
+    assert [link["name"] for link in unknown] == ["부킹닷컴", "익스피디아"] and "note" not in unknown[1]
 
 
 def test_the_tools_are_absent_without_sources():
