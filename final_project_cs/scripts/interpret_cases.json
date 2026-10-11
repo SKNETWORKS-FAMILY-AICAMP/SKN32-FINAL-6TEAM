@@ -22,7 +22,8 @@
     "check_out": "2026-11-09",
     "adults": 2,
     "domestic": true,
-    "needs": []
+    "needs": [],
+    "other_requests": []
    }
   },
   {
@@ -646,7 +647,8 @@
     "needs": [
      "check_in",
      "check_out"
-    ]
+    ],
+    "other_requests": "*"
    },
    "note": "날짜가 없다 → 되묻기. 욕조는 받는 칸이 없다"
   },
@@ -659,7 +661,8 @@
     "keyword": "잠실",
     "check_in": "2026-11-10",
     "check_out": "2026-11-12",
-    "adults": 3
+    "adults": 3,
+    "other_requests": "*"
    },
    "note": "띄어쓰기 없음 · 오타(예정이괴). 1달 뒤 = 11-10. 침대 각각은 받는 칸이 없다"
   },
@@ -689,7 +692,8 @@
       500000,
       499999
      ]
-    }
+    },
+    "other_requests": "*"
    },
    "note": "날짜가 없다 → 되묻기. 지역은 둘 중 고민이라 채점 안 함"
   },
@@ -752,7 +756,8 @@
       150000,
       159999
      ]
-    }
+    },
+    "other_requests": "*"
    },
    "note": "체크아웃 · 인원이 없다 → 되묻기. 「3시」는 날짜가 아니다. 얼리체크인은 받는 칸이 없다"
   }
@@ -769,7 +774,10 @@
     "return_date": null,
     "adults": 2,
     "domestic": false,
-    "needs": []
+    "needs": [],
+    "other_requests": [],
+    "max_price": null,
+    "return_times": null
    }
   },
   {
@@ -1314,7 +1322,12 @@
     "depart_date": "2026-10-27",
     "return_date": "2026-10-31",
     "adults": 1,
-    "depart_times": null
+    "depart_times": null,
+    "max_price": 500000,
+    "max_price_basis": "round_trip",
+    "return_times": [
+     "afternoon"
+    ]
    },
    "note": "가는 편 「새벽도 괜찮다」는 시간 제한이 아니다(null). 왕복 50만 원 상한 · 오는 편 오후는 받는 칸이 없다"
   },
@@ -1433,6 +1446,21 @@
        "evening"
       ]
      ]
+    },
+    "max_price": 300000,
+    "max_price_basis": "one_way",
+    "return_times": {
+     "one_of": [
+      [
+       "morning",
+       "afternoon"
+      ],
+      [
+       "morning",
+       "afternoon",
+       "evening"
+      ]
+     ]
     }
    },
    "note": "새벽 · 밤 제외 → 오전 · 오후. 가격 상한은 받는 칸이 없다 · 우리 「저녁」(18~24시)에 밤이 섞여 있어 저녁 포함도 맞다고 봄(16:13 측정 뒤)"
@@ -1488,7 +1516,8 @@
       null
      ]
     },
-    "adults": 2
+    "adults": 2,
+    "other_requests": "*"
    },
    "note": "「4일동안」 귀국은 16일 · 17일 둘 다로 읽힌다. 저가항공 제외 · 김포/인천 비교는 받는 칸이 없다"
   }

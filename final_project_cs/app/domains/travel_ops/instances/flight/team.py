@@ -113,6 +113,48 @@ def _drop_slow(options: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], int
     return kept, len(options) - len(kept)
 
 
+def _back_band(option: dict[str, Any], destination: str | None) -> str | None:
+    """오는 다리(목적지에서 떠나는 첫 다리) 출발 시각의 시간대. 오는 다리가 없거나 시각을 모르면 None."""
+    back = next((leg for leg in option["legs"][1:] if destination and leg.get("origin") == destination), None)
+    return _band({"legs": [back]}) if back else None
+
+
+def _apply_limits(pool: list[dict[str, Any]], found: Interpretation) -> tuple[list[dict[str, Any]], list[str], dict[str, Any]]:
+    """`[2026-10-11]` 오는 편 시간대 · 1인 가격 상한으로 편을 거른다. (남은 편, 답에 붙일 줄, 결정 기록)
+
+    ☆10-11 사용자 문장 「오는날에는 … 오후 출발로」 「가격은 왕복으로 50을 안넘었으면」 — 받는 칸이 없어 말없이 버려졌다.
+    - 거를 편이 하나도 남지 않으면 거르지 않고 그렇다고 적는다(빈 답 대신 — 시간대와 같은 방식).
+    - 1인 가격 = 편 가격 ÷ (성인 + 아동). 소스 가격이 일행 전체 값이라는 것은 일부 관찰(10-10 17:28 인천→나리타 2명)로 짐작한 것이고
+      **확인 안 함** — 그래서 답에 셈 방식을 적는다. 상한 기준이 「편도」이고 왕복 검색이면 상한을 두 배로 본다.
+    """
+    notes: list[str] = []
+    record: dict[str, Any] = {}
+    back_times = list(found.return_times or []) if found.return_date else []
+    if back_times:
+        said = " · ".join(BAND_LABEL[name] for name in back_times)
+        matched = [option for option in pool if _back_band(option, found.destination) in back_times]
+        if matched:
+            pool = matched
+            notes.append(f"오는 편은 {said} 출발 편만 골랐습니다.")
+        elif any(_back_band(option, found.destination) for option in pool):
+            notes.append(f"받은 결과에 오는 편 {said} 출발이 없어 오는 편 시간은 가리지 않았습니다.")
+        else:
+            notes.append(f"오는 편 시각이 받은 결과에 없어 오는 편 시간대({said})는 가리지 못했습니다.")
+        record["return_times"] = back_times
+    if found.max_price:
+        people = max(1, (found.adults or 1) + (found.children or 0))
+        cap = found.max_price * (2 if found.return_date and found.max_price_basis == "one_way" else 1)
+        within = [option for option in pool if isinstance(option.get("best"), (int, float)) and option["best"] / people <= cap]
+        basis = "가격 ÷ 인원으로 셈" if people > 1 else "1인 가격"
+        if within:
+            pool = within
+            notes.append(f"1인 {cap:,}원 이하 편만 골랐습니다({basis}).")
+        else:
+            notes.append(f"1인 {cap:,}원 이하 편이 받은 결과에 없어 가장 싼 편들을 보여 드립니다({basis}).")
+        record["price_cap"] = {"per_person": cap, "people": people, "within": len(within)}
+    return pool, notes, record
+
+
 def _pick(options: list[dict[str, Any]], wanted: list[str] | None) -> tuple[list[tuple[dict[str, Any], str]], list[str]]:
     """답에 실을 편과 그 줄의 표시, 그리고 받은 결과에 편이 없던 시간대들.
 
@@ -240,6 +282,7 @@ class FlightTeam(TravelTeamBase):
         via = len(pool) - len(directs) if prefer_direct and directs else 0
         if via:
             pool = directs
+        pool, notes, limits = _apply_limits(pool, found)
         picked, empty = _pick(pool, wanted)
         fallback = bool(wanted) and not picked
         if fallback:
@@ -287,6 +330,7 @@ class FlightTeam(TravelTeamBase):
                              "(직항만 보여 드립니다. 경유도 괜찮으시면 말씀해 주세요).")
         if no_direct:
             lines.append("받은 결과에 직항이 없어 경유 편을 보여 드립니다.")
+        lines += notes
         searches = sorted({(offer["label"], offer["link"]) for option in shown_options for offer in option["offers"]
                            if offer.get("link_kind") == "route_search" and offer.get("link")})
         pages = [f"{label} 이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): {url}" for label, url in searches]
@@ -331,7 +375,8 @@ class FlightTeam(TravelTeamBase):
                 for option in options if {offer["source"] for offer in option["offers"]} >= {"myrealtrip", "ignav"}]
         return self._respond(task, evidence, {**decision, "found": len(options), "shown": shown, "both": both,
                                               "times": wanted or None, "empty_bands": empty, "fallback": fallback,
-                                              "dropped_slow": slow, "dropped_connecting": via, "no_direct": no_direct},
+                                              "dropped_slow": slow, "dropped_connecting": via, "no_direct": no_direct,
+                                              **limits},
                              "\n".join([head, *lines, *pages, *others, tail]))
 
     def _trip(self, task: TeamTask, seen: set[str]) -> tuple[dict[str, Any] | None, list[Evidence]]:
@@ -350,6 +395,12 @@ class FlightTeam(TravelTeamBase):
                 "places": [str(item.get("title")) for item in view.get("items") or [] if item.get("title")]}, evidence
 
     def _respond(self, task: TeamTask, evidence: list[Evidence], decision: dict[str, Any], answer: str) -> TeamResult:
+        # `[2026-10-11]` 고객이 말했지만 우리가 받는 칸이 없는 요청(모델이 문장에서 그대로 옮긴 조각, 서버가 문장에 있는지 확인함)은
+        #   조용히 버리지 않고 답 끝에 적는다 — ☆10-11 사용자 문장 측정: 「욕조 있는」 「얼리체크인」 「저가항공 말고」가 말없이 사라졌다
+        others = (decision.get("interpretation") or {}).get("other_requests") or []
+        if others:
+            answer = answer + "\n말씀하신 조건 중 아직 반영하지 못한 것: " + " · ".join(f"「{item}」" for item in others) \
+                + " — 링크한 화면에서 직접 확인해 주세요."
         return self._result(task, outcome="completed", confidence=1.0, evidence=evidence,
                             next_action=NextAction.RESPOND, answer=answer[:6000], decisions=[decision])
 

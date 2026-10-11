@@ -412,3 +412,37 @@ def test_an_ungrounded_flight_date_is_cleared():
     result, _, tools = _run({**SEARCH, "depart_date_text": "내일"}, text="타이베이에서 인천 가는 비행기 2명")
     assert tools.calls == [] and result.decisions[0]["ungrounded"] == ["depart_date"]
     assert result.decisions[0]["needs"] == ["depart_date"]
+
+
+def test_a_per_person_price_cap_keeps_only_flights_under_it_and_says_how_it_counted():
+    """`[2026-10-11]` ☆사용자 문장 「가격은 왕복으로 50을 안넘었으면」 — 받는 칸이 없어 말없이 버려졌다."""
+    result, _, _ = _run({**SEARCH, "max_price": 100000}, {"read.flight_search": FLIGHTS})
+    assert "제주항공" not in result.answer and "티웨이항공" in result.answer, "2명 302,000원 = 1인 151,000원은 넘는다"
+    assert "1인 100,000원 이하 편만 골랐습니다(가격 ÷ 인원으로 셈)." in result.answer
+    assert result.decisions[0]["price_cap"] == {"per_person": 100000, "people": 2, "within": 1}
+    result, _, _ = _run({**SEARCH, "max_price": 10000}, {"read.flight_search": FLIGHTS})
+    assert "1인 10,000원 이하 편이 받은 결과에 없어 가장 싼 편들을 보여 드립니다" in result.answer and "제주항공" in result.answer
+    result, _, _ = _run({**SEARCH, "max_price": 50}, {"read.flight_search": FLIGHTS})
+    assert result.decisions[0]["price_cap"]["per_person"] == 500000, "맨숫자는 만 원 단위"
+
+
+def test_return_times_pick_the_return_leg_band():
+    from app.domains.travel_ops.instances.flight.interpret import parse
+    from app.domains.travel_ops.instances.flight.team import _apply_limits
+
+    def option(back_time, price):
+        return {"legs": [{**LEG}, {**LEG, "origin": "ICN", "destination": "TPE", "departTime": back_time}], "best": price}
+    pool = [option("09:00", 200000), option("15:00", 250000)]
+    found = parse({**SEARCH, "return_date": BACK, "return_times": ["afternoon"], "return_times_text": "오후"})
+    kept, notes, record = _apply_limits(pool, found)
+    assert [item["legs"][1]["departTime"] for item in kept] == ["15:00"] and notes == ["오는 편은 오후 출발 편만 골랐습니다."]
+    found = parse({**SEARCH, "return_date": BACK, "return_times": ["evening"], "return_times_text": "저녁"})
+    kept, notes, _ = _apply_limits(pool, found)
+    assert len(kept) == 2 and notes == ["받은 결과에 오는 편 저녁 출발이 없어 오는 편 시간은 가리지 않았습니다."]
+
+
+def test_wishes_without_a_slot_are_named_at_the_end():
+    text = "다음 달 6일 타이베이에서 인천 가는 비행기 알아봐줘, 9일에 오는 편도 창가 좌석으로"
+    result, _, _ = _run({**SEARCH, "other_requests": ["창가 좌석", "지어낸 조건"]}, {"read.flight_search": FLIGHTS}, text=text)
+    assert result.answer.endswith("말씀하신 조건 중 아직 반영하지 못한 것: 「창가 좌석」 — 링크한 화면에서 직접 확인해 주세요."), \
+        "문장에 없는 조각은 버린다"

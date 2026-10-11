@@ -440,3 +440,13 @@ def test_a_value_the_model_itself_lists_as_missing_is_not_used():
     assert tools.calls == [] and result.decisions[0]["ungrounded"] == ["check_in", "check_out"]
     assert result.decisions[0]["needs"] == ["check_in", "check_out", "adults"]
     assert result.answer == "체크인 날짜, 체크아웃 날짜, 성인 수를 알려주세요."
+
+
+def test_lodging_wishes_without_a_slot_are_named_at_the_end():
+    """`[2026-10-11]` ☆사용자 문장 「욕조 있는 숙소」 「얼리체크인」 — 말없이 사라졌다."""
+    text = "다음 달 6일부터 3박 용산 근처 욕조 있는 호텔 찾아줘"
+    result, _, _ = _run({**SEARCH, "other_requests": ["욕조 있는"]}, {"read.stay_search": STAYS, "read.stay_detail": lambda a: DETAIL},
+                        text=text)
+    assert result.answer.endswith("말씀하신 조건 중 아직 반영하지 못한 것: 「욕조 있는」 — 링크한 화면에서 직접 확인해 주세요.")
+    result, _, _ = _run({**SEARCH, "keyword": None, "other_requests": ["욕조 있는"]}, text=text)
+    assert "아직 반영하지 못한 것" in result.answer, "되묻는 답에도 적는다"

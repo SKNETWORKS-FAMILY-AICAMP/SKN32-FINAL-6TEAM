@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """모델이 낸 항공 해석을 **검증**한다 — 모델은 문장을 구조로 옮기고(도시 이름 → 공항 코드 포함), 쓸 수 있는지는 서버가 정한다. `[2026-10-08]`
 
-- 프롬프트: `prompts/flight/interpret.v4.md` (키 `flight.interpret`). 모델 호출은 한 번이다.
+- 프롬프트: `prompts/flight/interpret.v5.md` (키 `flight.interpret`). 모델 호출은 한 번이다.
 - `[2026-10-09]` 출발 시간대(`depart_times`: dawn · morning · afternoon · evening)를 받는다. 시각 경계는 서버(`TIME_BANDS`)가 정한다 —
   모델은 고객이 말한 시간대 이름만 옮기고, 근거 조각(`depart_times_text`)이 문장에 없으면 비운다(날짜와 같은 방식).
 - 모양이 틀리면 `InterpretationInvalid` — 고쳐 맞추지 않는다. 공항 코드는 영문 대문자 3글자만 받는다.
@@ -15,7 +15,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.domains.travel_ops.instances._shared.interpret_dates import (
-    CALENDAR_DAYS, ground_dates, model_context, settle_dates)
+    CALENDAR_DAYS, ground_dates, keep_quoted, model_context, settle_dates)
 
 REQUIRED = ("origin", "destination", "depart_date", "adults")
 LABELS = {"origin": "출발지", "destination": "도착지", "depart_date": "출발 날짜", "adults": "성인 인원",
@@ -48,6 +48,12 @@ class Interpretation(BaseModel):
     direct_only: bool | None = None
     depart_times: list[Band] | None = None
     depart_times_text: str | None = None
+    #: `[2026-10-11]` 오는 편 출발 시간대 · 1인 가격 상한(원)과 그 기준 · 반영 못 하는 요청(문장 조각)
+    return_times: list[Band] | None = None
+    return_times_text: str | None = None
+    max_price: int | None = Field(default=None, ge=1)
+    max_price_basis: Literal["round_trip", "one_way"] | None = None
+    other_requests: list[str] = Field(default_factory=list)
     domestic: bool | None = None
     missing: list[str] = Field(default_factory=list)
     question: str | None = None
@@ -57,8 +63,14 @@ def parse(raw: Any) -> Interpretation:
     if not isinstance(raw, dict):
         raise InterpretationInvalid(f"not an object: {type(raw).__name__}")
     cleaned = {key: (value.strip() or None) if isinstance(value, str) else value for key, value in raw.items()}
-    if cleaned.get("depart_times") == []:
-        cleaned["depart_times"] = None
+    for key in ("depart_times", "return_times"):
+        if cleaned.get(key) == []:
+            cleaned[key] = None
+    price = cleaned.get("max_price")
+    if isinstance(price, (int, float)) and not isinstance(price, bool) and 0 < price < 1000:
+        cleaned["max_price"] = int(price * 10000)      # 「왕복 50 안 넘게」 — 항공 가격의 맨숫자는 만 원 단위
+    if not isinstance(cleaned.get("other_requests"), list):
+        cleaned["other_requests"] = []
     try:
         found = Interpretation.model_validate(cleaned)
     except ValidationError as exc:
@@ -102,7 +114,8 @@ def ask(found: Interpretation, missing: list[str]) -> str:
     return f"{' · '.join(LABELS[name] for name in missing)}을(를) 알려 주시면 이어서 찾아 드리겠습니다."
 
 #: 날짜 값 → 그 값의 근거로 모델이 옮겨 적은 문장 조각 칸
-GROUNDS = {"depart_date": "depart_date_text", "return_date": "return_date_text", "depart_times": "depart_times_text"}
+GROUNDS = {"depart_date": "depart_date_text", "return_date": "return_date_text", "depart_times": "depart_times_text",
+           "return_times": "return_times_text"}
 
 
 def ground(found: Interpretation, text: str, *, has_trip: bool,
@@ -115,7 +128,8 @@ def ground(found: Interpretation, text: str, *, has_trip: bool,
     `[2026-10-10]` 확인 규칙은 `_shared/interpret_dates.ground_dates` 로 옮겼다(숙소 · 항공 공용). 모델의 `missing` 은 더 보지 않는다 —
       맞는 날짜를 missing 에 적어 지워지던 것이 17:55 · 17:58 측정의 숙소 오답 대부분이었다.
     """
-    return ground_dates(found, text, grounds=GROUNDS, start="depart_date", end="return_date", has_trip=has_trip, trip=trip)
+    found, cleared = ground_dates(found, text, grounds=GROUNDS, start="depart_date", end="return_date", has_trip=has_trip, trip=trip)
+    return found.model_copy(update={"other_requests": keep_quoted(found.other_requests, text)}), cleared
 
 
 #: 국내 출발 공항 → 문장에 있어야 하는 이름(하나라도). 서울은 인천 · 김포 둘 다로 본다
@@ -148,13 +162,18 @@ def settle_years(found: Interpretation, *, today: date, text: str = "") -> tuple
             # `[2026-10-11 사용자 결정]` 출발지를 말하지 않았으면 되묻는다 — ☆16:13 · 16:21 「일본」 「홍콩」 「영국」 문장에 출발지가 없는데
             #   모델이 인천(ICN)을 채웠다. 국내 공항만 이름으로 확인한다(해외 출발 공항은 이름 표가 없어 그대로 둔다)
             found, fixed = found.model_copy(update={"origin": None}), [*fixed, "origin"]
-    quote, times = found.depart_times_text or "", found.depart_times
-    if times and quote and not any(word in quote for word in _NEGATION):
+    for field in ("depart_times", "return_times"):
+        quote, times = getattr(found, field + "_text") or "", getattr(found, field)
+        if not times or not quote or any(word in quote for word in _NEGATION):
+            continue
         if "도 괜찮" in quote or "도괜찮" in quote or "상관없" in quote:
-            return found.model_copy(update={"depart_times": None}), [*fixed, "depart_times"]
+            found, fixed = found.model_copy(update={field: None}), [*fixed, field]
+            continue
         said = [band for band in times if any(word in quote for word in _BAND_WORDS[band])]
         if said and said != times:
-            return found.model_copy(update={"depart_times": said}), [*fixed, "depart_times"]
+            found, fixed = found.model_copy(update={field: said}), [*fixed, field]
+    if found.return_times and found.return_date is None:
+        found, fixed = found.model_copy(update={"return_times": None}), [*fixed, "return_times"]   # 편도에 오는 편 시간대는 쓸 데가 없다
     return found, fixed
 
 

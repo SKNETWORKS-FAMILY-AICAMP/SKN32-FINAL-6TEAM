@@ -368,6 +368,12 @@ class LodgingTeam(TravelTeamBase):
                 + f" · {detail.get('link') or '링크 없음'}")
 
     def _respond(self, task: TeamTask, evidence: list[Evidence], decision: dict[str, Any], answer: str) -> TeamResult:
+        # `[2026-10-11]` 고객이 말했지만 우리가 받는 칸이 없는 요청(모델이 문장에서 그대로 옮긴 조각, 서버가 문장에 있는지 확인함)은
+        #   조용히 버리지 않고 답 끝에 적는다 — ☆10-11 사용자 문장 측정: 「욕조 있는」 「얼리체크인」 「저가항공 말고」가 말없이 사라졌다
+        others = (decision.get("interpretation") or {}).get("other_requests") or []
+        if others:
+            answer = answer + "\n말씀하신 조건 중 아직 반영하지 못한 것: " + " · ".join(f"「{item}」" for item in others) \
+                + " — 링크한 화면에서 직접 확인해 주세요."
         return self._result(task, outcome="completed", confidence=1.0, evidence=evidence,
                             next_action=NextAction.RESPOND, answer=answer[:6000], decisions=[decision])
 

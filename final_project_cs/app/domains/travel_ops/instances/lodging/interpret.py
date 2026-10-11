@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """모델이 낸 해석을 **검증**한다 — 모델은 문장을 구조로 옮기기만 하고, 쓸 수 있는지는 서버가 정한다. `[2026-10-07]`
 
-- 프롬프트: `prompts/lodging/interpret.v3.md` (키 `lodging.interpret`). 모델 호출은 한 번이다.
+- 프롬프트: `prompts/lodging/interpret.v4.md` (키 `lodging.interpret`). 모델 호출은 한 번이다.
 - 모양이 틀리면 `InterpretationInvalid` — 고쳐 맞추지 않는다(지어내지 않는다).
 - 모델이 적은 `missing` 은 되묻는 문장을 고를 때만 본다. 무엇이 빠졌는지는 `needs()` 가 값으로 다시 센다 —
   날짜가 날짜가 아니거나, 체크아웃이 체크인보다 늦지 않거나, 체크인이 오늘보다 앞이면 그 값은 없는 것으로 본다.
@@ -15,7 +15,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.domains.travel_ops.instances._shared.interpret_dates import (
-    CALENDAR_DAYS, ground_dates, model_context, settle_dates)
+    CALENDAR_DAYS, ground_dates, keep_quoted, model_context, settle_dates)
 
 #: 작업마다 서버가 움직이려면 있어야 하는 값
 REQUIRED = {"search": ("keyword", "check_in", "check_out", "adults"),
@@ -43,6 +43,8 @@ class Interpretation(BaseModel):
     min_rating: float | None = Field(default=None, ge=0, le=5)
     check_in_text: str | None = None
     check_out_text: str | None = None
+    #: `[2026-10-11]` 반영 못 하는 요청(문장 조각 — 「욕조 있는」 「한강이 보이는」)
+    other_requests: list[str] = Field(default_factory=list)
     domestic: bool | None = None
     missing: list[str] = Field(default_factory=list)
     question: str | None = None
@@ -52,6 +54,8 @@ def parse(raw: Any) -> Interpretation:
     if not isinstance(raw, dict):
         raise InterpretationInvalid(f"not an object: {type(raw).__name__}")
     cleaned = {key: (value.strip() or None) if isinstance(value, str) else value for key, value in raw.items()}
+    if not isinstance(cleaned.get("other_requests"), list):
+        cleaned["other_requests"] = []
     rating = cleaned.get("min_rating")
     if isinstance(rating, (int, float)) and not isinstance(rating, bool) and 5 < rating <= 10:
         # ☆2026-10-11 16:13 playdata 사용자 문장 「평점 9.5 이상」 — 10점 만점 값을 그대로 내 해석 전체가 거절됐다. 5점 만점으로 바꾼다
@@ -103,7 +107,8 @@ def ground(found: Interpretation, text: str, *, has_trip: bool,
     `[2026-10-10]` 확인 규칙은 `_shared/interpret_dates.ground_dates` 로 옮겼다(숙소 · 항공 공용). 모델의 `missing` 은 더 보지 않는다 —
       맞는 날짜를 missing 에 적어 지워지던 것이 17:55 · 17:58 측정의 숙소 오답 대부분이었다.
     """
-    return ground_dates(found, text, grounds=GROUNDS, start="check_in", end="check_out", has_trip=has_trip, trip=trip)
+    found, cleared = ground_dates(found, text, grounds=GROUNDS, start="check_in", end="check_out", has_trip=has_trip, trip=trip)
+    return found.model_copy(update={"other_requests": keep_quoted(found.other_requests, text)}), cleared
 
 
 #: 「N만원대」 — 문장에 하나만 있을 때 상한을 그 구간 끝으로 맞춘다(프롬프트 규칙: 15만원대 → 159999, 20만원대 → 299999)

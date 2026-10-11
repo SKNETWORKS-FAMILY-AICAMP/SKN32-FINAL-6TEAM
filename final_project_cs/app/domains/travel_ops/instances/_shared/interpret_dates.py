@@ -166,6 +166,15 @@ def _trip_day(found: Any, *, grounds: dict[str, str], start: str, end: str | Non
     return found.model_copy(update=update)
 
 
+def keep_quoted(items: list[str] | None, text: str, *, limit: int = 5) -> list[str]:
+    """모델이 적은 「반영 못 하는 요청」 조각 중 고객 문장에 실제로 있는 것만(근거 확인과 같은 방식), 앞에서 `limit` 개."""
+    kept: list[str] = []
+    for item in items or []:
+        if isinstance(item, str) and item.strip() and quote_found(item.strip(), text) and item.strip() not in kept:
+            kept.append(item.strip())
+    return kept[:limit]
+
+
 def _duration_only(quote: str) -> bool:
     return bool(_DURATION.search(quote)) and not (_MONTH.search(quote) or _OFFSET.search(quote) or _WEEKDAY.search(quote))
 
@@ -280,4 +289,4 @@ def settle_dates(found: Any, *, grounds: dict[str, str], today: date) -> tuple[A
     return found.model_copy(update=update), list(update)
 
 
-__all__ = ["CALENDAR_DAYS", "WEEKDAYS", "ground_dates", "looks_like_date", "model_context", "quote_found", "settle_dates"]
+__all__ = ["CALENDAR_DAYS", "WEEKDAYS", "ground_dates", "keep_quoted", "looks_like_date", "model_context", "quote_found", "settle_dates"]

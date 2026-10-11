@@ -40,6 +40,16 @@ Return exactly these keys:
   Do not turn a clock time into a list unless it was said ("10시쯤" → ["morning"]).
 - "depart_times_text": the exact words copied from `input_text` that state that time preference (for example
   "오전에", "새벽은 싫어"), or null when "depart_times" is null.
+- "return_times", "return_times_text": the same as "depart_times" / "depart_times_text" but for the RETURN
+  flight only ("오는 날은 오후 출발" → ["afternoon"]). Never put the return flight's time in "depart_times".
+  null when the traveller said nothing about the return flight's time or there is no return flight.
+- "max_price": the most the traveller wants to pay PER PERSON, as an integer in KRW, or null. A bare number about
+  a flight price is in 만원 ("50 안 넘게" → 500000, "30만원까지" → 300000).
+- "max_price_basis": "round_trip" when that limit is for the whole round trip ("왕복으로 50"), "one_way" when it is
+  per flight ("편도 기준 30만원"), null when not said.
+- "other_requests": a list of short phrases copied exactly from `input_text` for wishes that none of the keys
+  above can hold (for example "저가항공 말고", "수하물 포함", "창가 좌석"). Do not repeat anything already captured
+  by another key. Empty list when there are none.
 - "domestic": true when BOTH airports are in South Korea, false when either is abroad, null only when an
   airport is still unknown.
 - "missing": what the traveller still has to tell us before the server can act, using only these words:

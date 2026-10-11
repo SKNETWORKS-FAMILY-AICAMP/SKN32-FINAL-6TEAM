@@ -42,6 +42,9 @@ Return exactly these keys:
 - "max_price_per_night": integer in KRW or null. "N만원 이하/까지" is N×10000 ("20만원 이하" → 200000). "N만원대" is
   the whole band up to the next step: "15만 원대" → 159999, "20만원대" → 299999, "30만원대" → 399999.
 - "min_rating": number on a 5-point scale or null ("평점 4점 이상" → 4.0, "후기 좋은 곳" → 4.0).
+- "other_requests": a list of short phrases copied exactly from `input_text` for wishes that none of the keys
+  above can hold (for example "욕조 있는", "한강이 보이는", "얼리체크인", "침대는 각각"). Do not repeat anything already
+  captured by another key. Empty list when there are none.
 - "domestic": true if the destination is in South Korea, false if abroad, null if unknown.
 - "missing": list of what the traveller still has to tell us before the server can act, using only these
   words: "keyword", "stay_name", "check_in", "check_out", "adults". For "search" the server needs keyword,
