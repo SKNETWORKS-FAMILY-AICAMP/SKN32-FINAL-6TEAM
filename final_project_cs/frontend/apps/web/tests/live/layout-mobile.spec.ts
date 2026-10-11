@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { checkPlan, mockServer, start, TRIP_ID } from "./helpers";
+import { INTAKE } from "./plan-check-kit";
 
 /**
  * `[2026-10-06 사용자 지시 — 첫 화면 · 확인 화면과 일관되게 전체를 모바일 기준으로, 메뉴에서 데스크탑을 고르면 그때 데스크탑 화면]` 계획 담기 · 내 여행 · 여행 · 마이페이지는 기본으로 휴대폰 크기 틀 안에 있고, 메뉴의
@@ -78,14 +79,14 @@ test("한 번 켜면 켜진 상태가 기본이다 — 다음 계획에서는 �
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await checkPlan(page, "켜고 진행");                                                                    // 처음에는 묻는다
-  await expect(page).toHaveURL(/\/(intakes|trips)\//, { timeout: 15_000 });
+  await expect(page).toHaveURL(new RegExp(`/intakes/${INTAKE}$`), { timeout: 15_000 });
   // 같은 브라우저에서 새 계획: 아이콘이 처음부터 켜져 있고, 누르면 카드 없이 바로 진행한다
   await page.goto("/trips/new");
   await expect(page.getByRole("button", { name: "항로 지킴이 끄기" })).toBeVisible();
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page).toHaveURL(/\/(intakes|trips)\//, { timeout: 15_000 });
+  await expect(page).toHaveURL(new RegExp(`/intakes/${INTAKE}$`), { timeout: 15_000 });
   const plans = await server.received("POST", "/plan");
   const intakes = await server.received("POST", "/v1/web/trip-intakes");
   expect(intakes.length).toBeGreaterThanOrEqual(2);

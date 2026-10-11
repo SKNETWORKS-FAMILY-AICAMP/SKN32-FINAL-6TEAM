@@ -156,6 +156,8 @@ test("연결 풀기: 「풀기」 → 「연결 풀기」 두 번 눌러야 풀�
   await row(page, "구글").getByRole("button", { name: "Google 계정으로 계속" }).click();
   await expect(page.getByRole("heading", { name: "구글 계정으로 로그인했어요" })).toBeVisible();
   await page.getByRole("link", { name: "계속하기" }).click();
+  await expect(page.getByRole("group", { name: "로그인 상태" })).toContainText("로그인한 계정으로 쓰고 있어요.");
+  await expect(row(page, "구글")).toContainText("연결됨");
   await row(page, "구글").getByRole("button", { name: "풀기" }).click();
   expect((await server.received("DELETE", "/auth/google")).length).toBe(0);   // the first press only asks
   await row(page, "구글").getByRole("button", { name: "연결 풀기" }).click();

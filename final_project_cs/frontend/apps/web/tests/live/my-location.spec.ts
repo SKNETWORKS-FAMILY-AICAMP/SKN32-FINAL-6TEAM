@@ -219,7 +219,9 @@ test("「모든 일정 보기」는 핀만 맞춘다 — 멀리 있는 내 위�
   await expect(dot).toHaveCount(1);
   const map = page.getByRole("region", { name: "여행 지도", exact: true });
   const zoom = mapPane(page).getByRole("group", { name: "지도 단추" });
-  await map.hover({ position: { x: 200, y: 120 } });                                                 // 단추는 지도에 포인터가 있을 때 보인다
+  await map.hover({ position: { x: 200, y: 120 } });
+  const expand = mapPane(page).getByRole("button", { name: "지도 단추 펼치기", exact: true });
+  if (await expand.count()) await expand.click();                                                 // 단추는 지도에 포인터가 있을 때 보인다
   await zoom.getByRole("button", { name: "축소" }).click();
   await zoom.getByRole("button", { name: "축소" }).click();
   await zoom.getByRole("button", { name: "모든 일정 보기" }).click();
@@ -237,6 +239,8 @@ test("지도 단추의 「내 위치로」: 위치 동의가 있으면 보이고
   await expect(dot).toHaveCount(1);
   const map = page.getByRole("region", { name: "여행 지도", exact: true });
   await map.hover({ position: { x: 200, y: 120 } });
+  const expand = mapPane(page).getByRole("button", { name: "지도 단추 펼치기", exact: true });
+  if (await expand.count()) await expand.click();
   const locate = mapPane(page).getByRole("group", { name: "지도 단추" }).getByRole("button", { name: "내 위치로" });
   await expect(locate).toBeVisible();
   await locate.click();
@@ -252,6 +256,8 @@ test("위치 동의가 없으면 지도 단추에 「내 위치로」가 없다"
   await openTripMap(page, false);
   const map = page.getByRole("region", { name: "여행 지도", exact: true });
   await map.hover({ position: { x: 200, y: 120 } });
+  const expand = mapPane(page).getByRole("button", { name: "지도 단추 펼치기", exact: true });
+  if (await expand.count()) await expand.click();
   const buttons = mapPane(page).getByRole("group", { name: "지도 단추" });
   await expect(buttons.getByRole("button", { name: "확대" })).toBeVisible();
   await expect(buttons.getByRole("button", { name: /내 위치/ })).toHaveCount(0);

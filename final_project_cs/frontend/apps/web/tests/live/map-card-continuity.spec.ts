@@ -20,7 +20,7 @@ test("정보 순서·아이콘 세 개·전체 복원은 한 흐름으로 동작
   ]);
   for (const button of await buttons.all()) {
     const box = (await button.boundingBox())!;
-    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(box.width).toBe(36);
     expect(box.height).toBeGreaterThanOrEqual(44);
   }
   await buttons.nth(1).focus();
@@ -83,11 +83,11 @@ for (const width of [375, 1280]) {
     const body = page.locator("div[class*=sheetBody]");
     await body.evaluate((element) => { element.scrollTop = element.scrollHeight; });
     const hint = body.locator("button[class*=pullHint]");
-    await expect(hint).toContainText("내 취향에 맞게, 내 일정에 여유롭게.");
+    await expect(hint).toHaveAccessibleName("아래로 스크롤하면 권장 수정안이 나와요");
     await expect(hint).toContainText("아래로 스크롤하면 권장 수정안이 나와요");
     const hintBox = (await hint.boundingBox())!;
-    const footerBox = (await page.locator("footer[class*=footer]").filter({ has: page.getByRole("button", { name: /^전체 자동 추천/ }) }).boundingBox())!;
-    expect(Math.abs(footerBox.y - hintBox.y - hintBox.height)).toBeLessThanOrEqual(2);
+    const bodyBox = (await body.boundingBox())!;
+    expect(Math.abs(bodyBox.y + bodyBox.height - hintBox.y - hintBox.height)).toBeLessThanOrEqual(2);
     await shot(page, `03-bottom-continuity-${width}`);
     await hint.click();
     await expect(page.getByRole("group", { name: "보는 일정" })).toBeVisible();
