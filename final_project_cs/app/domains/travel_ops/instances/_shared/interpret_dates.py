@@ -46,6 +46,8 @@ _KOREAN_NUMBER = {"일": 1, "한": 1, "이": 2, "두": 2, "삼": 3, "세": 3, "�
 _DURATION = re.compile(r"\d+\s*(일|박)\s*(정도|동안|간|쯤)")
 #: 날 없이 주만 — 「다다음주에」. 날짜가 아니다(요일 · 날 숫자 · 주말이 있으면 날짜)
 _WEEK_ONLY = re.compile(r"(다다음|다음|이번|담|저번)\s*주(?!말)")
+#: 고쳐 말한 날 — 「7일로 바꿔줘」 「8일로 변경」
+_CORRECTED = re.compile(r"(\d{1,2})\s*일\s*로\s*(?:바꿔|바꾸|변경|옮겨|해\s*줘|할게|하자)")
 #: 근거에 이 말이 있으면 월 · 일을 그 날로(앞의 것이 먼저). ☆22:28 「크리스마스에 2박」 — 프롬프트에 12-25 라고 적어도 12-24 로 냈다
 HOLIDAYS = (("크리스마스이브", (12, 24)), ("크리스마스 이브", (12, 24)), ("크리스마스", (12, 25)), ("성탄절", (12, 25)),
             ("신정", (1, 1)), ("새해", (1, 1)))
@@ -100,7 +102,7 @@ def ground_dates(found: Any, text: str, *, grounds: dict[str, str], start: str, 
     """
     trip_days = {start: (trip or {}).get("first_day"), **({end: (trip or {}).get("last_day")} if end else {})}
     cleared: list[str] = []
-    found = _trip_day(found, grounds=grounds, start=start, end=end, trip=trip)
+    found = _trip_day(found, text, grounds=grounds, start=start, end=end, trip=trip)
     for field, evidence in grounds.items():
         value, quote = getattr(found, field), getattr(found, evidence)
         if value is None:
@@ -132,6 +134,8 @@ def ground_dates(found: Any, text: str, *, grounds: dict[str, str], start: str, 
 #: 여행 일정의 첫날 · 마지막 날을 가리키는 말
 _TRIP_FIRST, _TRIP_LAST = ("첫날", "첫 날", "도착하는 날"), ("마지막 날", "마지막날", "떠나는 날")
 _NIGHT_COUNT = re.compile(r"(\d+)\s*박")
+#: 문장 속 머무는 기간 말(가격 말 「하루에 15만원」은 아니다)
+_STAY_WORDS = re.compile(r"\d+\s*박|하루만|하루\s*묵|하룻밤|이틀")
 
 
 def _nights(quote: str | None) -> int | None:
@@ -145,12 +149,22 @@ def _nights(quote: str | None) -> int | None:
     return int(match.group(1)) if match else None
 
 
-def _trip_day(found: Any, *, grounds: dict[str, str], start: str, end: str | None, trip: dict[str, Any] | None) -> Any:
+def _trip_day(found: Any, text: str, *, grounds: dict[str, str], start: str, end: str | None,
+              trip: dict[str, Any] | None) -> Any:
     """시작 근거가 「여행 첫날 · 마지막 날」이면 시작 날짜를 여행 일정의 그 날로(끝 근거가 박 수면 끝 날짜도). 여행이 없으면 그대로.
 
     ☆2026-10-11 16:21 playdata 「이번 여행 마지막 날 하루만 공항 근처 호텔」 — 근거는 맞게 적고 값은 10-11(내일)로 냈다.
+    ☆2026-10-11 16:50 playdata 같은 문장 — 이번엔 시작 근거를 「하루만」(박 수)으로 적어 시작이 비고 되물었다.
+      시작 근거가 박 수뿐이고 **문장**에 첫날 · 마지막 날 말이 한쪽만 있으면 문장의 그 말을 근거로 삼는다(박 수는 끝 날짜에).
     """
     quote = getattr(found, grounds[start], None) or ""
+    nights_quote = getattr(found, grounds[end], None) if end else None
+    if trip and _NIGHTS_ONLY.match(quote.strip()):
+        said = [words for words in (_TRIP_LAST, _TRIP_FIRST) if any(word in text for word in words)]
+        if len(said) == 1:
+            nights_quote = nights_quote or quote
+            quote = next(word for word in said[0] if word in text)
+            found = found.model_copy(update={grounds[start]: quote, **({grounds[end]: nights_quote} if end else {})})
     day = None
     if trip and any(word in quote for word in _TRIP_LAST):
         day = trip.get("last_day")
@@ -160,7 +174,12 @@ def _trip_day(found: Any, *, grounds: dict[str, str], start: str, end: str | Non
         return found
     begin = date.fromisoformat(day)
     update: dict[str, Any] = {start: begin}
-    nights = _nights(getattr(found, grounds[end], None)) if end else None
+    nights = _nights(nights_quote) if end else None
+    if end and not nights:
+        # ☆17:49 같은 문장 — 시작 근거는 「마지막 날」로 맞게 적고 끝 근거를 "null" 로 적어 끝 날짜가 비었다. 문장에 박 수 말이 하나뿐이면 그것으로
+        said = _STAY_WORDS.findall(text)
+        if len(said) == 1:
+            nights, update[grounds[end]] = _nights(said[0]), said[0]
     if end and nights:
         update[end] = begin + timedelta(days=nights)
     return found.model_copy(update=update)
@@ -248,7 +267,7 @@ def _snap_weekday(value: date, quote: str) -> date:
     return value + timedelta(days=shift if shift <= 3 else shift - 7)
 
 
-def settle_dates(found: Any, *, grounds: dict[str, str], today: date) -> tuple[Any, list[str]]:
+def settle_dates(found: Any, *, grounds: dict[str, str], today: date, text: str = "") -> tuple[Any, list[str]]:
     """날 · 연도를 근거 조각과 맞춘다. (해석, 고친 칸)
 
     - 「N일 · N주 · N달 뒤」: 시작 날짜는 오늘에서, 끝 날짜는 시작 날짜에서 센다(모델 값보다 먼저).
@@ -257,12 +276,17 @@ def settle_dates(found: Any, *, grounds: dict[str, str], today: date) -> tuple[A
     - 연도: 근거 어디에든 네 자리 연도가 있으면(고객이 연도를 말함) 아무 날짜의 연도도 바꾸지 않는다. 없으면 「오늘 이후 처음 오는
       그 월 · 일」(프롬프트 규칙 그대로)로. 기준은 모두 오늘이다 — 돌아오는 날을 떠나는 날 뒤로 밀지 않는다(앞뒤가 틀리면 `needs` 가 묻는다).
     - 근거가 `"trip"` 인 날짜는 건드리지 않는다.
+    - 고쳐 말한 날(「7일로 바꿔줘」 — 문장에 「N일로」)과 값의 날이 같으면 근거의 날로 되돌리지 않는다. ☆2026-10-11 17:58 playdata
+      F40 「11월 6일 … 아 날짜는 7일로 바꿔줘」 — 값은 11-07 로 맞게 내고 근거를 「11월 6일」로 적어 서버가 6일로 되돌렸다.
+    - 끝 날짜 근거가 박 수뿐(「4박」)이면 끝 = 시작 + 박 수(모델 셈보다 먼저). ☆2026-10-11 17:50 playdata 「3박 아니 4박으로」 —
+      근거는 「4박」으로 맞게 적고 값은 3박(11-09)으로 냈다.
     """
     quotes = [getattr(found, evidence, None) for evidence in grounds.values()]
     year_said = any(isinstance(quote, str) and _YEAR.search(quote) for quote in quotes)
     update: dict[str, date] = {}
     shift = timedelta(0)                              # 첫 날짜(시작)를 옮긴 만큼 — 박 수로 만든 끝 날짜도 같이 옮긴다
     start_field = next(iter(grounds))
+    corrected = {int(day) for day in _CORRECTED.findall(text or "")}
     for index, (field, evidence) in enumerate(grounds.items()):
         value, quote = getattr(found, field, None), getattr(found, evidence, None)
         if not isinstance(value, date) or quote in (None, "trip"):
@@ -278,7 +302,7 @@ def settle_dates(found: Any, *, grounds: dict[str, str], today: date) -> tuple[A
                 if index == 0:
                     shift = counted - value
             continue
-        moved = _holiday(value, quote) or _align_day(value, quote)
+        moved = _holiday(value, quote) or (value if value.day in corrected else _align_day(value, quote))
         if not year_said:
             moved = _on_or_after(moved, today)
         moved = _snap_weekday(moved, quote)
@@ -286,6 +310,15 @@ def settle_dates(found: Any, *, grounds: dict[str, str], today: date) -> tuple[A
             update[field] = moved
             if index == 0:
                 shift = moved - value
+    for index, (field, evidence) in enumerate(grounds.items()):
+        quote, value = getattr(found, evidence, None), update.get(field, getattr(found, field, None))
+        begin = update.get(start_field) or getattr(found, start_field, None)
+        if index == 0 or not isinstance(value, date) or not isinstance(begin, date) or not isinstance(quote, str) \
+                or not _NIGHTS_ONLY.match(quote.strip()):
+            continue
+        nights = _nights(quote)
+        if nights and value != begin + timedelta(days=nights):
+            update[field] = begin + timedelta(days=nights)
     return found.model_copy(update=update), list(update)
 
 

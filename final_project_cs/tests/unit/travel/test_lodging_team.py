@@ -185,7 +185,8 @@ def test_the_server_recounts_what_is_missing_instead_of_trusting_the_model():
                             text=f"{quote} 3박 용산 근처 호텔 찾아줘")
     assert tools.calls == [] and result.decisions[0]["needs"] == ["check_in"]
     assert "체크인 날짜" in result.answer
-    result, _, tools = _run({**SEARCH, "check_out": IN, "missing": []})
+    # `[2026-10-11]` 끝 근거가 박 수(「3박」)면 서버가 끝 = 시작 + 박 수로 다시 세므로, 끝 근거를 날로 적은 뒤집힌 날짜로 본다
+    result, _, tools = _run({**SEARCH, "check_out": IN, "check_out_text": "6일까지", "missing": []}, text="다음 달 6일부터 6일까지 용산 근처 호텔 찾아줘")
     assert tools.calls == [] and result.decisions[0]["needs"] == ["check_out"]
 
 

@@ -114,6 +114,8 @@ def ground(found: Interpretation, text: str, *, has_trip: bool,
 #: 「N만원대」 — 문장에 하나만 있을 때 상한을 그 구간 끝으로 맞춘다(프롬프트 규칙: 15만원대 → 159999, 20만원대 → 299999)
 _BAND = re.compile(r"(\d+)\s*만\s*원?\s*대")
 #: 「1박(에) 40까지」 「하루 30 정도」처럼 단위 없는 가격 숫자(만 · 원 · 천 · 박 · 명 · 일 · 월 · 시가 붙지 않은 2~3자리)
+#: 「2박으로 100만원」 — 박 수 바로 뒤의 가격은 머무는 동안 전체 값이다(1박 상한 = 값 ÷ 박 수). 「1박에 40」은 1박 값
+_TOTAL_PRICE = re.compile(r"(\d+)박(?:으로|에|동안|간)?(?:총)?(\d+)만원?")
 _BARE_PRICE = re.compile(r"(?:1박|하루|박당)에?(?:최대)?(\d{2,3})(?=까지|까진|이하|이내|선|정도|쯤|아래|안쪽)")
 
 
@@ -123,7 +125,7 @@ def settle_years(found: Interpretation, *, today: date, text: str = "") -> tuple
     ☆2026-10-10 21:59 playdata 해석 측정 — 「15만원대」를 150000 으로 냈다(프롬프트 예시는 159999). 모델 값이 구간의 **시작**과 같을
       때만 끝으로 바꾼다(다른 값이면 모델이 다르게 읽은 것이니 건드리지 않는다).
     """
-    found, fixed = settle_dates(found, grounds=GROUNDS, today=today)
+    found, fixed = settle_dates(found, grounds=GROUNDS, today=today, text=text)
     squeezed = "".join((text or "").split())
     quote = "".join((found.check_out_text or "").split())
     uses = squeezed.count(quote) if quote else 0
@@ -135,6 +137,11 @@ def settle_years(found: Interpretation, *, today: date, text: str = "") -> tuple
     if len(bare) == 1 and found.max_price_per_night in (int(bare[0]), int(bare[0]) * 1000):
         # ☆16:21 「1박에 40까진 쓸게」 — 단위 없는 숫자를 40000 으로 읽었다. 숙소 1박 가격의 맨숫자는 만 원 단위다
         found, fixed = found.model_copy(update={"max_price_per_night": int(bare[0]) * 10000}), [*fixed, "max_price_per_night"]
+    totals = _TOTAL_PRICE.findall(squeezed)
+    if len(totals) == 1 and int(totals[0][0]) > 1 and found.max_price_per_night == int(totals[0][1]) * 10000:
+        # ☆2026-10-11 17:50 playdata U-L03 「2박으로 100만원 정도」 — 전체 값 100만원을 1박 상한으로 냈다(16:50 에는 50만원으로 맞게)
+        nights, total = int(totals[0][0]), int(totals[0][1]) * 10000
+        found, fixed = found.model_copy(update={"max_price_per_night": total // nights}), [*fixed, "max_price_per_night"]
     bands = _BAND.findall(text or "")
     if len(bands) == 1 and found.max_price_per_night == int(bands[0]) * 10000:
         n = int(bands[0])

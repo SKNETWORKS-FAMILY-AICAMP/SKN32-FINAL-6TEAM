@@ -194,3 +194,45 @@ def test_an_unsaid_korean_origin_is_asked_back():
     assert found.origin is None and "origin" in fixed and flight.needs(found, today=TODAY) == ["origin"]
     assert flight.settle_years(flight.parse(raw), today=TODAY, text="인천공항에서 홍콩 " + text)[0].origin == "ICN"
     assert flight.settle_years(flight.parse({**raw, "origin": "TPE"}), today=TODAY, text=text)[0].origin == "TPE", "해외 공항은 확인 안 함"
+
+def test_shapes_left_after_the_1011_1650_measurement():
+    """☆2026-10-11 16:50 playdata 전체 측정에서 남은 2문장(L36 · U-F02)."""
+    # 시작 근거가 「하루만」(박 수)이어도 문장에 「마지막 날」이 있고 여행이 있으면 여행 마지막 날부터 1박
+    text = "이번 여행 마지막 날 하루만 공항 근처 호텔"
+    got = _stay({"check_in": "2026-10-11", "check_out": "2026-10-12", "check_in_text": "하루만", "check_out_text": "하루만"}, text, trip=TRIP)
+    assert got[0] == ("2026-11-09", "2026-11-10") and got[1] == []
+    # 끝 근거를 "null" 로 적어도(☆17:49) 문장의 박 수 말로 끝 날짜를 채운다
+    got = _stay({"check_in": "2026-11-09", "check_in_text": "마지막 날", "check_out_text": "null"}, text, trip=TRIP)
+    assert got[0] == ("2026-11-09", "2026-11-10") and got[1] == []
+    # 여행이 없으면 그대로 되묻는다
+    assert "check_in" in _stay({"check_in": "2026-10-11", "check_in_text": "하루만"}, text)[1]
+    # 첫날 · 마지막 날이 둘 다 있으면 어느 쪽인지 모르니 손대지 않는다
+    assert "check_in" in _stay({"check_in": "2026-10-11", "check_in_text": "하루만"}, "첫날이나 마지막 날 하루만", trip=TRIP)[1]
+    # 끝 근거가 「4박」이면 끝 = 시작 + 4(☆17:50 「3박 아니 4박으로」 값은 3박으로 냄)
+    got = _stay({"check_in": "2026-11-06", "check_out": "2026-11-09", "check_in_text": "11월 6일부터", "check_out_text": "4박"},
+                "11월 6일부터 3박 아니 4박으로 명동 2명")
+    assert got[0] == ("2026-11-06", "2026-11-10")
+    # 「2박으로 100만원」은 머무는 동안 전체 값 → 1박 50만원. 「1박에 40」은 그대로
+    found = lodging.parse({**BASE, "max_price_per_night": 1000000})
+    text = "2주뒤에 가족4명이 잘 숙소가 필요한데 2박으로 100만원 정도 되는 숙소 골라줘."
+    assert lodging.settle_years(found, today=TODAY, text=text)[0].max_price_per_night == 500000
+    found = lodging.parse({**BASE, "max_price_per_night": 400000})
+    assert lodging.settle_years(found, today=TODAY, text="3박 하는데 1박에 40만원까지")[0].max_price_per_night == 400000
+    # 고쳐 말한 날(「7일로 바꿔줘」)은 근거(「11월 6일」)의 날로 되돌리지 않는다(☆17:58 F40)
+    found = flight.parse({"task": "search", "origin": "ICN", "destination": "KIX", "domestic": False, "adults": 1,
+                          "depart_date": "2026-11-07", "depart_date_text": "11월 6일"})
+    text = "11월 6일 인천 출발 오사카 1명 아 날짜는 7일로 바꿔줘"
+    assert str(flight.settle_years(found, today=TODAY, text=text)[0].depart_date) == "2026-11-07"
+    assert str(flight.settle_years(found, today=TODAY, text="11월 6일 인천 출발 오사카 1명")[0].depart_date) == "2026-11-06"
+    # 항공: 「하룻밤만 자고」 → 돌아오는 날 = 가는 날 + 1
+    base = {"task": "search", "origin": "ICN", "destination": "BKK", "domestic": False, "adults": 1, "depart_date": "2026-10-11",
+            "depart_date_text": "내일 갔으면"}
+    text = "인천에서 태국으로 갈건데, 하룻밤만 자고 올거야. 내일 갔으면 좋겠는데"
+    found, _ = flight.ground(flight.parse(base), text, has_trip=False)
+    found, fixed = flight.settle_years(found, today=TODAY, text=text)
+    assert str(found.return_date) == "2026-10-12" and "return_date" in fixed
+    found, _ = flight.settle_years(flight.parse(base), today=TODAY, text="인천에서 방콕 내일 갔으면, 2박 3일")
+    assert str(found.return_date) == "2026-10-13"
+    # 「편도」라고 했거나 박 수가 없으면 채우지 않는다
+    assert flight.settle_years(flight.parse(base), today=TODAY, text="편도로 내일 갔으면, 거기서 2박")[0].return_date is None
+    assert flight.settle_years(flight.parse(base), today=TODAY, text="인천에서 방콕 내일 갔으면")[0].return_date is None

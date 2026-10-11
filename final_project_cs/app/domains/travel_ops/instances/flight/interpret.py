@@ -9,7 +9,8 @@
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
+import re
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -144,6 +145,8 @@ _KOREAN_AIRPORTS = {
 _BAND_WORDS = {"dawn": ("새벽", "첫 비행기", "첫비행기"), "morning": ("오전", "아침"), "afternoon": ("오후", "점심", "낮"),
                "evening": ("저녁", "밤", "퇴근")}
 _NEGATION = ("싫", "빼", "말고", "제외", "아니", "피해")
+#: 머무는 박 수 — 「하룻밤만 자고 올거야」 「2박 하고」. 돌아오는 날 = 가는 날 + 박 수
+_STAY = re.compile(r"(\d+)\s*박|하룻\s*밤|하루\s*(?:밤|자고)|이틀\s*밤|이틀\s*자고")
 
 
 def settle_years(found: Interpretation, *, today: date, text: str = "") -> tuple[Interpretation, list[str]]:
@@ -154,14 +157,22 @@ def settle_years(found: Interpretation, *, today: date, text: str = "") -> tuple
     - 근거에 「~도 괜찮 · 상관없」이 있고 빼는 말이 없으면 시간 제한이 아니다 → 비운다.
     - 빼는 말이 없고 근거에 시간대 말이 있으면, 근거에 나온 시간대만 남긴다(근거에 없는 시간대는 다른 구절에서 섞인 것).
     - 출발지: 국내 공항인데 문장에 그 이름이 없으면 비운다(되묻는다 — 사용자 결정 2026-10-11).
+    - 돌아오는 날이 비었고 문장에 머무는 박 수(「하룻밤만 자고」 「2박」)가 하나만 있으면 가는 날 + 박 수로 채운다. 「편도」가 있으면 안 채운다.
+      ☆2026-10-11 16:50 playdata 사용자 문장 U-F02 「하룻밤만 자고 올거야 … 내일 갔으면」 — 돌아오는 날을 비워 편도로 찾았다.
     """
-    found, fixed = settle_dates(found, grounds=GROUNDS, today=today)
+    found, fixed = settle_dates(found, grounds=GROUNDS, today=today, text=text)
     if text and found.origin in _KOREAN_AIRPORTS:
         squeezed = "".join(text.split()).casefold()
         if not any(name.casefold() in squeezed for name in _KOREAN_AIRPORTS[found.origin]):
             # `[2026-10-11 사용자 결정]` 출발지를 말하지 않았으면 되묻는다 — ☆16:13 · 16:21 「일본」 「홍콩」 「영국」 문장에 출발지가 없는데
             #   모델이 인천(ICN)을 채웠다. 국내 공항만 이름으로 확인한다(해외 출발 공항은 이름 표가 없어 그대로 둔다)
             found, fixed = found.model_copy(update={"origin": None}), [*fixed, "origin"]
+    stays = _STAY.findall(text) if text else []
+    if found.return_date is None and found.depart_date is not None and len(stays) == 1 and "편도" not in text:
+        match = _STAY.search(text)
+        nights = int(match.group(1)) if match.group(1) else (2 if "이틀" in match.group(0) else 1)
+        found = found.model_copy(update={"return_date": found.depart_date + timedelta(days=nights), "return_date_text": match.group(0)})
+        fixed = [*fixed, "return_date"]
     for field in ("depart_times", "return_times"):
         quote, times = getattr(found, field + "_text") or "", getattr(found, field)
         if not times or not quote or any(word in quote for word in _NEGATION):
