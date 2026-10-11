@@ -1,6 +1,13 @@
 import { useEffect, useRef } from "react";
-import { onToast, type BusToast } from "@/lib/toast-bus";
+import { onToast, pushToast, type BusToast } from "@/lib/toast-bus";
 import type { Translate } from "@/lib/i18n";
+
+/** 읽기 판의 안내를 결과 판의 소유자에게 넘긴다. */
+export function useReadingToastHandoff(reading: boolean, notice: { toast: BusToast } | null, hide: () => void) {
+  useEffect(() => {
+    if (!reading && notice) { pushToast(notice.toast); hide(); }
+  }, [reading, notice, hide]);
+}
 
 /** A header action takes priority over the delayed first completed-plan introduction. */
 export function usePlanIntroToast(done: boolean, show: (toast: BusToast) => void, t: Translate) {
