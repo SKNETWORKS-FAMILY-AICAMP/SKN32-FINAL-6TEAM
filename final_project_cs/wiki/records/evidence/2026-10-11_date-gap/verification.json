@@ -1,0 +1,726 @@
+{
+  "mock": {
+    "passed": 4,
+    "total": 4
+  },
+  "tests": [
+    {
+      "name": "날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 375px",
+      "status": "passed"
+    },
+    {
+      "name": "날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 1280px",
+      "status": "passed"
+    },
+    {
+      "name": "시각은 펼침·검토·되돌리기 상태에만 따라온다 375px",
+      "status": "passed"
+    },
+    {
+      "name": "시각은 펼침·검토·되돌리기 상태에만 따라온다 1280px",
+      "status": "passed"
+    }
+  ],
+  "measurements": {
+    "date-clearance-375": [
+      {
+        "time": 4751.399999976158,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 4875.699999988079,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5009.399999976158,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5156.799999982119,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5315.299999982119,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5435.199999988079,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5534.299999982119,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5650,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5803,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5936.399999976158,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 6060.0999999940395,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 6159,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 6287.5,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 6421.399999976158,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 6551.5,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 6706.5,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 6800.199999988079,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      }
+    ],
+    "date-clearance-1280": [
+      {
+        "time": 4650.5,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 4780.800000011921,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 4923.4000000059605,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5061.9000000059605,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5256.100000023842,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5418.600000023842,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5562,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5687,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5830.100000023842,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 5956.5,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 6091.5,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 6216,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 6367.9000000059605,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 6495.600000023842,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 6666.600000023842,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 6807.600000023842,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      },
+      {
+        "time": 6964.300000011921,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ],
+        "actionGap": 14
+      }
+    ]
+  },
+  "action_gap_px": {
+    "min": 14,
+    "max": 14,
+    "samples": 34
+  },
+  "initial_attempt": {
+    "passed": 2,
+    "failed": 2,
+    "reason": "padding76px resulted in actual10px gap, below12px target; adjusted to80px"
+  },
+  "checks": [
+    "TypeScript --noEmit",
+    "ESLint changed test",
+    "standard Next.js production build"
+  ],
+  "real_response_checked": false
+}

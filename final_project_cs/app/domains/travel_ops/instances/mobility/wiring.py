@@ -126,7 +126,8 @@ def mode() -> str:
 
 
 #: 설문 우선순위 「이동」 세부 코드(화면 PREFERENCES_CONTRACT) → 계산기 수단. 택시는 `[2026-10-04 #47]` 부터 넣는다. 렌트카(car)는 아직 못 다룬다
-SURVEY_MODES = {"public": ("subway", "bus"), "walk": ("walk",), "taxi": ("taxi",)}
+SURVEY_MODES = {"public": ("subway", "bus"), "walk": ("walk",), "taxi": ("taxi",),
+                "bus": ("bus",), "subway": ("subway",)}
 
 
 def modes_from_survey(constraints: dict[str, Any] | None) -> list[str] | None:

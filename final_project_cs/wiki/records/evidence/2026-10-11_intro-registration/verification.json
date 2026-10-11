@@ -1,0 +1,60 @@
+{
+  "baseline_team_commit": "5dfca512ab9bd6232653b2b4ada3de8920ab9c5d",
+  "mock_before": {
+    "reproduced": 2,
+    "total": 2,
+    "stats": {
+      "startTime": "2026-10-10T20:32:04.655Z",
+      "duration": 7439.607,
+      "expected": 0,
+      "skipped": 0,
+      "unexpected": 2,
+      "flaky": 0
+    }
+  },
+  "mock_after": {
+    "passed": 15,
+    "total": 15,
+    "stats": {
+      "startTime": "2026-10-10T20:32:54.528Z",
+      "duration": 53232.219,
+      "expected": 15,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  "static_checks": [
+    {
+      "command": "node node_modules/typescript/bin/tsc --noEmit",
+      "exit_code": 0
+    },
+    {
+      "command": "node node_modules/eslint/bin/eslint.js src/features/trip-registration/trip-registration.tsx tests/live/intro-registration-20261011.spec.ts",
+      "exit_code": 0
+    }
+  ],
+  "production_build": {
+    "runner": ".tmp/consent-serve.mjs",
+    "LIVE_SKIP_BUILD": "0",
+    "passed": true
+  },
+  "screenshots": [
+    "registration-375.png",
+    "registration-1280.png"
+  ],
+  "ux_audit": {
+    "scope": "홈 CTA → 일정 입력 폼, 로컬 초안 복원만",
+    "profile": "없음 — 기존 제품 스타일 유지",
+    "passed": [
+      "불필요한 로딩 제거",
+      "375px·1280px 가로 넘침 없음",
+      "실제 Chrome 촬영 2장 직접 확인"
+    ],
+    "not_changed": [
+      "레이아웃·모션·필수 약관 준비·SSE 정책"
+    ]
+  },
+  "real_public_service_verified": false,
+  "note": "before는 직전 production 빌드 재사용, after는 변경 후 새 production 빌드. 공개 서비스 동작과 x600 서버 배포는 미확인."
+}

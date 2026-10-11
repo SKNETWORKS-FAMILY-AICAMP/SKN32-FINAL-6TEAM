@@ -18,7 +18,7 @@ async function watch(page: Page, ms: number) {
     let last = "";
     const id = setInterval(() => {
       const reading = Array.from(document.querySelectorAll("h1")).some((h) => !h.classList.contains("sr-only") && (h.textContent ?? "").includes("계획을 확인하고 있어요"));
-      const screen = document.querySelector('[class*="plan-check-module"][class*="__screen"]') as HTMLElement | null;
+      const screen = document.querySelector('[data-device] [data-stage][data-replay]') as HTMLElement | null;
       const now = `${reading ? "읽는 화면" : "확인 화면"}(${screen?.getAttribute("data-stage") ?? "-"})`;
       if (now !== last) { w.__screens.push(`${Math.round(performance.now() - t0)}ms ${now}`); last = now; }
     }, 50);

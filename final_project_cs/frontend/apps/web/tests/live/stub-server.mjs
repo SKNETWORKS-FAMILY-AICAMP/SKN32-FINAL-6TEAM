@@ -124,6 +124,8 @@ const DEFAULTS = {
   // `[2026-10-07]` The public retention read (`GET /v1/web/legal/retention`, no session): "off" = an older server (404) | "on" = an operator changed a period on the
   //   admin screen (member data 2 years), so the server's terms version is `<TERMS_VERSION>+ret1` - the consent record then expects that version too.
   retention: "off",
+  // 약관 확인 SSE: 빠른 실제 단계 / 관찰 가능한 지연 / 조회 실패 / 옛 JSON 응답.
+  consentStream: "on",
   // ── 약관 보관 기간 (2026-10-07) ── 끝
   // how many times the trip itself fails to load (500) right after the server answered a chat message
   rereadFails: 0,
@@ -168,6 +170,7 @@ const bells = new Set();
 let scenario;
 /** The check of the plan the customer is working on (items, legs), changed by edits. */
 let board;
+let boardHistory = new Map();
 let log;
 let polls;
 // the answers saved through `POST …/trip-intakes/{id}/survey`: question id → option id
@@ -287,6 +290,7 @@ function reset() {
   guardianState = null;
   confirmed = false;
   board = freshBoard(scenario.board);
+  boardHistory = new Map();
   keys = new Set(["acop_u_known"]);
   webSessions = new Map();
   agentKeyRows = [];
@@ -485,7 +489,7 @@ function reviewOf(b) {
   const needsMoves = b.moves.filter((move) => move.status === "review").length;
   const needs = { items: needsItems, moves: needsMoves, total: needsItems + needsMoves };
   const ids = new Set(b.items.map((item) => item.id));
-  return { revision: b.revision, built_at: "2026-10-03T09:00:00+09:00", engine: "timetable", items: b.items, moves: b.moves.filter((move) => ids.has(move.from) && ids.has(move.to)), needs, ready: needs.total === 0 };
+  return { revision: b.revision, built_at: "2026-10-03T09:00:00+09:00", engine: "timetable", items: [...b.items].sort((a, z) => a.date.localeCompare(z.date) || (a.starts_at || "99:99").localeCompare(z.starts_at || "99:99") || a.index - z.index), moves: b.moves.filter((move) => ids.has(move.from) && ids.has(move.to)), needs, ready: needs.total === 0 };
 }
 
 const CANDIDATES = [
@@ -539,9 +543,11 @@ const QUESTIONS = [
 const QUESTION_IDS = new Set(QUESTIONS.map((question) => question.id));
 function withQuestions(view) {
   if (scenario.questions === "none") return view;
-  const list = QUESTIONS.map((question) => ({ ...question, answer: surveyAnswers[question.id] ?? null }));
+  const list = QUESTIONS.map((question) => ({ ...question, allow_custom: true, custom_max_length: 1000,
+    answer: typeof surveyAnswers[question.id] === "string" ? surveyAnswers[question.id] : null,
+    custom_answer: surveyAnswers[question.id]?.custom ?? null }));
   if (scenario.questions === "unknown_kind") list.push({ id: "future_pick", kind: "multi", title: "미래의 질문", why: "", options: [{ id: "a", label: "에이" }], answer: null });
-  return { ...view, questions: list, questions_version: "1" };
+  return { ...view, questions: list, questions_version: "2" };
 }
 
 function intakeView(revision) { return withQuestions(intakeBaseView(revision)); }
@@ -563,6 +569,13 @@ function intakeBaseView(revision) {
     },
   };
   const source = { source_id: "s1", kind: "text", filename: null, transcribed: false, lines: [{ ...line, read: true }], items: scenario.intake === "empty_plan" ? [] : [item], trip: {}, reading: null };
+  if (scenario.review === "on" && scenario.intake === "items") {
+    source.items = [...board.items, ...(board.removed ?? [])].map((stop) => ({
+      index: stop.index, line: stop.index + 1, day: stop.day, date: stop.date,
+      fields: Object.fromEntries(["title", "date", "starts_at", "ends_at", "kind", "place"].map((key) =>
+        [key, { value: stop[key], method: "customer", evidence: { line: stop.index + 1 }, needs_review: false, note: null }])),
+    }));
+  }
   const withReview = scenario.review === "on" && scenario.intake === "items"
     ? { review: reviewOf(board) } : scenario.review === "off" ? { review: null, review_error: "review_failed" } : {};
   return {
@@ -675,7 +688,7 @@ createServer(async (request, response) => {
   if (path === "/__test/scenario") {
     const change = JSON.parse(raw || "{}");
     scenario = { ...scenario, ...change };
-    if ("board" in change || "reread" in change) board = freshBoard(scenario.board);
+    if ("board" in change || "reread" in change) { board = freshBoard(scenario.board); boardHistory = new Map(); }
     if ("trips" in change) rows = freshRows(scenario.trips);
     return json(response, 200, scenario, origin);
   }
@@ -808,6 +821,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     if (wanted === "cookie") {
       if (sid) ended.add(sid);                                         // the guest session this browser had is ended by the server (session fixation)
       const member = makeSession("member");
+      if (!socialLinks.includes(flow.provider)) socialLinks.push(flow.provider);
       return json(response, 200, { outcome: "signed_in", provider: flow.provider, trips: 2, ...sessionBody(member) }, origin, { "Set-Cookie": setCookie(member.sid) });
     }
     keys.add("acop_u_social_account");
@@ -826,7 +840,23 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   // ── 동의 기록 (2026-10-05) ── 시작
   if (path === "/v1/web/consents") {
     if (scenario.consents === "off") return json(response, 404, { detail: "Not Found" }, origin);
-    if (request.method === "GET") return json(response, 200, consentView(), origin);
+    if (request.method === "GET") {
+      if (!request.headers.accept?.includes("text/event-stream") || scenario.consentStream === "json") return json(response, 200, consentView(), origin);
+      const write = openStream(response, origin);
+      write("accepted", { op: "consents", at: new Date().toISOString() });
+      const began = Date.now();
+      for (const stage of ["consent_records", "consent_version", "consent_required"]) {
+        if (response.destroyed) return;
+        write("stage", { stage, elapsed: (Date.now() - began) / 1000 });
+        if (scenario.consentStream === "slow") await wait(1200);
+        if (scenario.consentStream === "fail") {
+          write("error", { code: "unavailable", message: "동의 기록을 읽지 못했어요", retryable: true });
+          return response.end();
+        }
+      }
+      write("result", consentView());
+      return response.end();
+    }
     if (request.method === "POST") {
       const body = JSON.parse(raw || "{}");
       if (body.version !== consentVersion()) return json(response, 409, { error: { code: "terms_version_changed", message: "약관이 새 버전이에요", current_version: consentVersion() } }, origin);
@@ -1095,7 +1125,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   if (request.method === "POST" && path === "/v1/web/trip-intakes") {
     if (scenario.intakeDelay) await new Promise((resolve) => setTimeout(resolve, scenario.intakeDelay));
     if (scenario.intakeRefusal) return json(response, 422, { error: { code: "intake_refused", message: scenario.intakeRefusal } }, origin);
-    polls = 0; surveyAnswers = {}; confirmed = false; board = freshBoard(scenario.board);
+    polls = 0; confirmed = false; board = freshBoard(scenario.board);
     return json(response, 202, { intake_id: INTAKE_ID, status: "reading", stage: "received" }, origin);
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/survey` && request.method === "POST") {
@@ -1104,11 +1134,13 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     const answers = JSON.parse(raw || "{}").answers ?? {};
     const problems = Object.entries(answers).flatMap(([key, value]) => {
       const question = QUESTIONS.find((entry) => entry.id === key);
-      return !question ? [{ key, reason: "모르는 문항이다" }] : !question.options.some((option) => option.id === value) ? [{ key, reason: "모르는 선택지다" }] : [];
+      const custom = value && typeof value === "object" && typeof value.custom === "string" && value.custom.trim() && value.custom.length <= 1000 && Object.keys(value).length === 1;
+      return !question ? [{ key, reason: "모르는 문항이다" }] : value === null || custom || question.options.some((option) => option.id === value) ? [] : [{ key, reason: "모르는 선택지다" }];
     });
     if (scenario.surveySave === "refuse" || problems.length) return json(response, 422, { error: { code: "invalid_answers", message: "답을 받을 수 없어요", problems } }, origin);
     surveyAnswers = { ...surveyAnswers, ...answers };
-    return json(response, 200, { ok: true, answered: Object.keys(surveyAnswers).filter((key) => QUESTION_IDS.has(key)).sort(), questions_version: "1" }, origin);
+    surveyAnswers = Object.fromEntries(Object.entries(surveyAnswers).filter(([, value]) => value !== null));
+    return json(response, 200, { ok: true, answered: Object.keys(surveyAnswers).filter((key) => QUESTION_IDS.has(key)).sort(), questions_version: "2" }, origin);
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}` && request.method === "GET") { polls += 1; return json(response, 200, intakeView(board.revision), origin); }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/route-shapes` && request.method === "GET" && scenario.intakeRoutes !== "off") {
@@ -1136,6 +1168,10 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     return;
   }
   // `[2026-10-07]` The ways to go for one leg, and picking one (see `moveOptions` in the scenario).
+  // 복원 화면 시험용 이력. 실제 소유권·고정 일정 검사는 별도 API/DB 시험에서 확인한다.
+  if (request.method === "POST" && path.startsWith(`/v1/web/trip-intakes/${INTAKE_ID}/`) && !boardHistory.has(board.revision)) {
+    boardHistory.set(board.revision, { board: structuredClone(board), title: tripTitle });
+  }
   const waysPath = new RegExp(`^/v1/web/trip-intakes/${INTAKE_ID}/moves/([^/]+)~([^/]+)/(options|mode)$`).exec(path);
   if (waysPath) {
     const [, fromId, toId, kind] = waysPath;
@@ -1179,10 +1215,36 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
       return json(response, 200, { revision: board.revision, review: reviewOf(board) }, origin);
     }
   }
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/restore` && request.method === "POST") {
+    const body = JSON.parse(raw || "{}");
+    if (body.revision !== board.revision) return json(response, 409, { error: { code: "stale_revision", message: "그 사이 일정이 바뀌었어요", current_revision: board.revision } }, origin);
+    const old = boardHistory.get(body.restore_revision);
+    if (!old) return json(response, 422, { error: { code: "restore_revision_missing", message: "되돌릴 일정을 찾지 못했어요" } }, origin);
+    const revision = board.revision + 1;
+    board = { ...structuredClone(old.board), revision };
+    tripTitle = old.title;
+    return json(response, 200, intakeView(revision), origin);
+  }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/edits` && request.method === "POST") {
     if (scenario.edits === "stale") return json(response, 409, { error: { code: "stale_revision", message: "그 사이 바뀌었어요", current_revision: 2 } }, origin);
     if (scenario.edits === "not_found") return json(response, 422, { error: { code: "place_not_found", message: "「없는 곳」: 이 이름으로 장소를 찾지 못했어요" } }, origin);
     const { edits = [] } = JSON.parse(raw || "{}");
+    const newFields = new Map();
+    for (const edit of edits) {
+      const match = /^items\[(\d+)\]\.(\w+)$/.exec(edit.field);
+      if (!match || board.items.some((item) => item.index === Number(match[1]))) continue;
+      const index = Number(match[1]);
+      newFields.set(index, { ...(newFields.get(index) ?? {}), [match[2]]: edit.value });
+    }
+    for (const [index, fields] of newFields) {
+      if (!["title", "date", "starts_at", "ends_at", "kind", "place"].every((field) => field in fields)) continue;
+      const base = board.items[0];
+      board.items.push({ ...structuredClone(base), ...fields, id: `0-${index}`, index,
+        day: board.items.find((item) => item.date === fields.date)?.day ?? 1,
+        locked: false, booked: false, edited: true, status: "adjusted", can_lock: true,
+        place: { ...place(fields.place.name, 37.57, 126.98, { source: "kakao", kind: fields.kind }), ...fields.place },
+        place_state: "customer", rows: [row("place", "ok", "직접 고른 곳이에요")], rereads: [] });
+    }
     if (scenario.editRefusal === "locked" && edits.some((edit) => !edit.field.endsWith(".locked"))) return json(response, 409, { error: { code: "item_locked", message: "고정한 일정이라 바꿀 수 없어요" } }, origin);
     let retimed = false;
     for (const edit of edits) {

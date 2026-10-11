@@ -1,0 +1,17 @@
+{
+  "stage": "focused",
+  "exit_code": 0,
+  "args": [
+    "-m",
+    "pytest",
+    "-q",
+    "--tb=short",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp",
+    "WORKSPACE\\.tmp\\uiux-handoff-20261009-2300\\frontend-check\\test-plans-final-20261011\\backend\\pytest",
+    "tests/unit/travel/test_intake_test_plans.py",
+    "tests/e2e/test_intake_test_plans.py",
+    "tests/e2e/test_intake_review.py"
+  ]
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type PointerEvent } from "react";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useT } from "@/lib/settings";
 import { answerOf } from "./model";
@@ -35,12 +35,14 @@ export function QuestionPager({ flow }: { flow: QuestionFlow }) {
 
   if (!question) return null;
   const count = questions.length;
-  const picked = failed?.id === question.id ? failed.option : answerOf(question, flow.answers);
-  const skippedHere = flow.skipped.has(question.id) && !answerOf(question, flow.answers);
+  const picked = failed?.id === question.id && failed.option !== null ? failed.option : answerOf(question, flow.answers);
   const note = saved && answerOf(question, flow.answers) ? <><Check size={16} strokeWidth={1.8} aria-hidden="true" /> {t("저장했어요", "Saved")}</>
-    : skippedHere ? t("건너뛰었어요. 밀어서 돌아와 다시 답할 수 있어요.", "Skipped. Swipe back to answer it later.") : null;
+    : saved ? t("답을 취소했어요. 다시 입력해 주세요.", "Answer cleared. You can answer again.") : null;
 
-  const down = (event: PointerEvent<HTMLElement>) => { swipe.current = { x: event.clientX, y: event.clientY }; };
+  const down = (event: PointerEvent<HTMLElement>) => {
+    if ((event.target as HTMLElement).closest("input, textarea, form")) return;
+    swipe.current = { x: event.clientX, y: event.clientY };
+  };
   const up = (event: PointerEvent<HTMLElement>) => {
     const from = swipe.current;
     swipe.current = null;
@@ -49,6 +51,7 @@ export function QuestionPager({ flow }: { flow: QuestionFlow }) {
     if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy) * SWIPE_DOMINANCE) flow.navigate(dx < 0 ? 1 : -1);
   };
   const key = (event: KeyboardEvent<HTMLElement>) => {
+    if ((event.target as HTMLElement).closest("input, textarea, select")) return;
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     event.preventDefault();
     flow.navigate(event.key === "ArrowRight" ? 1 : -1);
@@ -74,16 +77,44 @@ export function QuestionPager({ flow }: { flow: QuestionFlow }) {
             {on && <Check size={16} strokeWidth={1.8} aria-hidden="true" />}{option.label}</button>;
         })}
       </div>
+      {question.allowCustom && <CustomAnswer key={`${question.id}:${answerOf(question, flow.answers) ?? ""}`}
+        questionId={question.id} answer={picked ?? null} maxLength={question.customMaxLength ?? 1000} busy={busy}
+        onSave={(value) => flow.choose(`custom:${value}`)} />}
       <div className={styles.saved} role="status" aria-live="polite">{note}</div>
       {failed?.id === question.id && <div className={styles.error} role="alert">
         <span>{t("답을 저장하지 못했어요. 연결을 확인하고 다시 시도해 주세요.", "We could not save your answer. Check the connection and try again.")}</span>
         <button type="button" onClick={flow.retry} disabled={busy}>{t("다시 시도하기", "Try again")}</button>
       </div>}
-      {!answerOf(question, flow.answers) && <button type="button" className={styles.skip} onClick={flow.skip} disabled={busy}>{t("이 질문 건너뛰기", "Skip this question")}</button>}
+      {answerOf(question, flow.answers) && <button type="button" className={styles.textButton} onClick={() => flow.choose(null)} disabled={busy}>{t("답변 취소하고 다시 입력", "Clear answer and enter again")}</button>}
     </div>
     <div className={styles.dots} aria-hidden="true">{questions.map((entry, index) => <span key={entry.id} data-on={index === at || undefined} />)}</div>
     <p className={styles.hint}>{t("좌우로 밀면 이전 · 다음 질문을 볼 수 있어요", "Swipe left or right to see the previous or next question")}</p>
   </section>;
+}
+
+function CustomAnswer({ questionId, answer, maxLength, busy, onSave }: {
+  questionId: string; answer: string | null; maxLength: number; busy: boolean; onSave: (value: string) => void;
+}) {
+  const t = useT();
+  const [draft, setDraft] = useState(answer?.startsWith("custom:") ? answer.slice(7) : "");
+  const [problem, setProblem] = useState("");
+  const input = useRef<HTMLInputElement>(null);
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    if (busy) return;
+    if (!draft.trim()) { setProblem(t("원하는 답을 적어 주세요.", "Write your answer.")); input.current?.focus(); return; }
+    onSave(draft.trim());
+  };
+  return <form className={styles.customAnswer} onSubmit={submit}>
+    <label htmlFor={`survey-custom-${questionId}`}>{t("직접 입력", "Your own answer")}</label>
+    <div><input ref={input} id={`survey-custom-${questionId}`} value={draft} maxLength={maxLength}
+      placeholder={questionId === "preferred_mobility" ? t("예: 택시 + 버스", "e.g. taxi + bus") : t("원하는 답을 적어 주세요", "Write your preference")}
+      aria-invalid={Boolean(problem)} aria-describedby={problem ? `survey-custom-${questionId}-error` : undefined}
+      onBlur={() => { if (draft.length > 0 && !draft.trim()) setProblem(t("원하는 답을 적어 주세요.", "Write your answer.")); }}
+      onFocus={() => setProblem("")} onChange={(event) => { setDraft(event.target.value); setProblem(""); }} />
+      <button type="submit" aria-busy={busy}>{busy ? t("저장 중…", "Saving…") : t("답변 저장", "Save answer")}</button></div>
+    {problem && <p id={`survey-custom-${questionId}-error`} role="alert">{problem}</p>}
+  </form>;
 }
 
 /** The line under the card once nothing is open (mockup `pagerStatus`): what happens next. */
