@@ -31,10 +31,9 @@ from app.domains.travel_ops.components.itinerary.itinerary_changes import ACTIVI
 from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TOOLS, Consent, ItineraryWork
 from app.domains.travel_ops.components.planning.pending import needs_consent, weather_only
 from app.domains.travel_ops.components.planning.safety import classify as classify_safety
-from app.domains.travel_ops.components.places.place_hours import fits, hours_on
 from . import failure_codes as fc
-from .closure_rules import holiday_dates_needed, local_date, read_closure
 from .disaster_impact import Impact, ImpactRules, assess
+from .verdicts import holidays_needed, hours_verdict
 from .judge import requests as judge_requests
 from .judge.llm import LLMJudge
 from .judge.modes import ShadowJudge
@@ -707,34 +706,32 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         #   사실이 아니라서 전처럼 단서만 붙인다.
         if not isinstance(hours, dict):
             return None, evidence, "운영시간 · 휴무를 확인하지 못해 그 부분은 판정하지 않았습니다.", {"known": False}
-        if not hours.get("known") and not hours.get("usetime_text") and not hours.get("restdate_text"):
-            return None, evidence, None, {"known": False, "empty": True, "source": hours.get("source"),
-                                          "why_unknown": hours.get("why_unknown")}
-        attributes = hours.get("attributes") or {}
-        day = hours_on(attributes, local_date(starts_at))
+        # ★`[2026-10-12]` 판정 자체는 `verdicts.hours_verdict` 하나가 한다 — 코어 계획 검증 · 감시가 끼움 자리로 같은 함수를 부른다.
+        #   여기서는 공휴일 조회(도구) · 근거 · 섀도 · 변경 제안만 맡는다.
         restdate = hours.get("restdate_text")
-        closure = None
+        holidays: dict[Any, Any] = {}
+        for when in holidays_needed(restdate, starts_at):
+            holidays[when] = self._read(task, "read.holiday", {"on": when.isoformat()}, seen)
+            if holidays[when] is None:
+                break      # ★같은 소스가 또 모른다고 할 것이다 — 응답만 늦어진다
+        if holidays:
+            evidence = self._evidence(task, source_id="read.holiday", claim="공휴일 여부",
+                                      value={d.isoformat(): v for d, v in holidays.items()}, base=evidence)
+        verdict = hours_verdict(hours, starts_at, holiday=holidays.get)
+        if verdict["empty"]:
+            return None, evidence, None, {k: verdict[k] for k in ("known", "empty", "source", "why_unknown")}
         if restdate:
-            holidays: dict[Any, Any] = {}
-            for when in holiday_dates_needed(restdate, starts_at):
-                holidays[when] = self._read(task, "read.holiday", {"on": when.isoformat()}, seen)
-                if holidays[when] is None:
-                    break      # ★같은 소스가 또 모른다고 할 것이다 — 응답만 늦어진다
-            if holidays:
-                evidence = self._evidence(task, source_id="read.holiday", claim="공휴일 여부",
-                                          value={d.isoformat(): v for d, v in holidays.items()}, base=evidence)
-            closure = read_closure(restdate, starts_at, holidays.get)
             # ★`[2026-10-09]` 판정 LLM 섀도 ①(D-CS-015) — 같은 원문 · 같은 공휴일 사실로. 비교 기준은 위 규칙 값이다.
             self._shadow(task, judge_requests.closure(restdate, starts_at,
                                                       {d.isoformat(): v for d, v in holidays.items()}),
-                         value={True: "closed", False: "not_closed"}.get(closure.value, "unknown"), basis=closure.reason)
-        closed = (closure.value if closure is not None and closure.value is not None
-                  else (day == "closed") if day is not None else None)
-        record: dict[str, Any] = {"known": bool(hours.get("known")), "source": hours.get("source"),
-                                  "closed": closed, "closure_reason": closure.reason if closure else None,
-                                  "restdate_text": restdate, "usetime_text": hours.get("usetime_text")}
+                         value={True: "closed", False: "not_closed"}.get(verdict["closed"], "unknown"),
+                         basis=verdict["closure_reason"])
+        closed, fit = verdict["closed"], verdict["within_hours"]
+        record: dict[str, Any] = {"known": verdict["known"], "source": verdict["source"],
+                                  "closed": closed, "closure_reason": verdict["closure_reason"],
+                                  "restdate_text": restdate, "usetime_text": verdict["usetime_text"]}
         if closed:
-            quote = closure.quote if closure is not None and closure.value else None
+            quote = verdict["quote"]
             record["failure_code"] = self._record_failure(task, fc.CLOSED_WEEKDAY)
             told = f"휴무 안내({restdate}) 중 「{quote}」에 해당해" if quote and restdate else "정기휴무일이라"
             return (self._closed_place_change(
@@ -742,7 +739,6 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                 answer=f"이 날은 {told} 이 일정은 바꿔야 합니다. 변경 제안을 만들었고 승인 뒤에 진행됩니다.",
                 decisions={"feasible": False, "reason": "closed_weekday", "hours": record}),
                 evidence, None, record)
-        fit = fits(attributes, starts_at, starts_at) if closed is False and day not in (None, "closed") else None
         record["within_hours"] = fit
         if fit is False:
             record["failure_code"] = self._record_failure(task, fc.OUTSIDE_HOURS)
@@ -753,7 +749,7 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                 decisions={"feasible": False, "reason": "outside_hours", "hours": record}),
                 evidence, None, record)
         note = None if fit is True else "운영시간 · 휴무를 확인하지 못해 그 부분은 판정하지 않았습니다."
-        if closure is not None and closure.needs_caveat and fit is True:
+        if verdict["needs_caveat"] and fit is True:
             note = "공휴일과 겹치는 경우 등 휴무 예외가 있을 수 있습니다."
         return None, evidence, note, record
 
@@ -927,6 +923,31 @@ class _CurrentVerdict:
         return self._verdict
 
 
+def _without_cleared_disasters(report: dict[str, Any], item: Any) -> dict[str, Any]:
+    """공유 점검 결과에서 활동 판정상 영향이 없는 재난문자 이상을 뺀다. 재난문자 말고는 그대로다.
+
+    ★실내외를 모르는(야외 위험형 · `ask`) 문자와 분류되지 않은 문자는 **남긴다** — 감시 루프에서는 묻지 않고(멘토 #3),
+      공유 점검이 이미 이상으로 센 것을 활동 쪽 「모름」으로 지우지 않는다.
+    """
+    disruptions = report.get("disruptions") or []
+    messages = [d for d in disruptions if d.get("category") == "disaster_msg"]
+    if not messages:
+        return report
+    starts_at = item.starts_at if isinstance(item.starts_at, datetime) else None
+    place = item.place or {}
+    rules = ImpactRules.load()
+
+    def cleared(message: dict[str, Any]) -> bool:
+        return bool(assess([message], place.get("weather_sensitive"), rules,
+                           at=starts_at, place_name=place.get("name")).no_effect)
+
+    others = [d for d in disruptions if d.get("category") != "disaster_msg" or not cleared(d)]
+    if len(others) == len(disruptions):
+        return report
+    return {**report, "disruptions": others, "verdict": "disrupted" if others else "clear",
+            "cleared_by_activity": len(disruptions) - len(others)}
+
+
 def plan_activity_trigger(work: ItineraryWork, task: TeamTask, ctx: dict[str, Any], item: Any):
     """감시 — 활동 항목 하나를 **다시 점검**하고 대안을 계산한다(쓰지 않는다). 결과: 변경 · `NoChange` · `Consent`(먼저 묻기) · `TeamResult`(여기서 멈춤 — 점검 소스 실패 · 모름).
 
@@ -939,6 +960,12 @@ def plan_activity_trigger(work: ItineraryWork, task: TeamTask, ctx: dict[str, An
     if report is None or report.get("verdict") == "fatal":
         # ★점검 소스가 대체까지 실패 — 「clear」로 읽지 않는다(결정 15).
         return work._escalate(task, "fatal_source_failure", ctx["evidence"])
+    if report.get("verdict") != "disrupted":
+        return NoChange("clear")
+    # ★`[2026-10-12]` 공유 점검이 이상으로 센 **재난문자**를 활동 판정(수정본 §8 + D2-1)으로 다시 본다 — 「복구 완료」 · 통제 시간이
+    #   지난 문자 · 실내 장소의 야외 위험형은 바꿀 사유가 아니다. 남는 이상이 없으면 일정을 바꾸지 않는다. 막는 쪽으로 더하지는
+    #   않는다 — 감시 루프가 활동을 부르는 것은 공유 점검이 이상이라고 한 뒤뿐이라서다(코어 끼움 자리 `activity_verdicts` 협의 중).
+    report = _without_cleared_disasters(report, item)
     if report.get("verdict") != "disrupted":
         return NoChange("clear")
     if needs_consent(report, (ctx.get("trip") or {}).get("constraints") or {}):

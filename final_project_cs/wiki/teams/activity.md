@@ -100,6 +100,9 @@ MCP 도구 5개: 장소 조회, 운영 정보 조회, 장소 실재 확인, 재�
 #### D2-1. §8 표 앞의 세 규칙 — **정리됨** `[사용자 결정 2026-10-11]` (골든셋 검수 disaster-03 · 04 · 09 · 10)
 ① 「복구가 완료」처럼 상황이 끝났다는 문자는 막지 않는다. ② 문자에 통제 시간이 있으면 방문 시각이 그 안일 때만 막는다(문제가 생긴 시각에만). ③ 그 장소를 이름으로 지목한 관람 · 운영 중단 공지는 재해구분(「기타」 포함)과 상관없이 막는다. 야외 위험형(폭염) + 야외 장소는 막는다(표 그대로). 코드 `activity/disaster_impact.py`, 낱말 `config/guardrails.yaml` `travel.safety.impact`. ★③의 「기타」 문자는 지금 코어 재난문자 판정(`disaster_msg.judge`)이 넘기기 전에 버린다 — 코어 협의 전까지 실제로는 안 닿는다.
 
+#### D2-2. 판정 규칙은 활동 팀이 정본 — 요식 팀과 같은 끼움 자리 구조 `[사용자 결정 2026-10-12]`
+코어는 사실(운영시간 원문 · 요일표 · 공휴일 · 재난문자)을 모으고, **판정은 활동 팀 함수**(`instances/activity/verdicts.py` — `hours_verdict` · `disaster_verdict` · `holidays_needed`)가 한다. 고객 문의(`team._check_feasible`)는 이미 이 함수를 쓴다. 계획 검증 · 감시 루프가 쓰려면 코어에 끼움 자리(`team_hooks/activity_verdicts`, `dining_ledger` 와 같은 모양)가 필요하다 — 코어 작업 목록은 [협의 메모](https://claude.ai/artifact/Sgr9hmS4jMr4mGTYNgqyXm). 감시 루프에서 코어가 이상이라고 부른 뒤에는 활동 팀이 재난문자를 다시 보고 영향 없는 것(복구 완료 · 통제 시간 지남 · 실내의 야외 위험형)을 거른다(`team._without_cleared_disasters`).
+
 #### D3. 정원 초과 — **정리됨: 판정 항목이 아니다** (수정본 §6)
 "인원은 판정 항목이 아니다. 대체 후보를 거르는 데만 쓴다(UC-A4)." 지금 코드는 정원 초과를 `party_over_capacity`로 막는다 → 판정에서 빼고 대체 후보 필터(UC-A4 2단계)로만 쓴다 (2.9).
 
