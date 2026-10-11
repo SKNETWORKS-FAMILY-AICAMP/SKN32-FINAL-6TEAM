@@ -28,7 +28,7 @@ import { useRouteDetail } from "@/features/map/use-route-detail";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { draftOf, editsFor, rows } from "./model";
-import { WaitNotice } from "@/components/wait-notice";
+import type { BusToast } from "@/lib/toast-bus";
 import { useQuiet } from "@/lib/use-quiet";
 import { useIntakeEvents } from "./use-intake-events";
 import styles from "./intake-review.module.css";
@@ -186,7 +186,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   if (query.isPending && arriving) return <PlanCheck key="plan" view={firstView} sending onBack={() => router.push(routes.newTrip)} />;
   if (query.isPending || !query.data) return shell(<QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />);
   const view = query.data;
-  const testNote = view?.test_scenario ? <p className={styles.streamNote} role="note">{t(`시험 계획 ${view.test_scenario.code} · ${view.test_scenario.name}. 검증 결과는 실제 조회에 따라 달라져요.`, `Test plan ${view.test_scenario.code} · ${view.test_scenario.name}. Results depend on live checks.`)}</p> : null;
+  const testNote: BusToast | null = view.test_scenario ? { text: t(`시험 계획 ${view.test_scenario.code} · ${view.test_scenario.name}`, `Test plan ${view.test_scenario.code} · ${view.test_scenario.name}`), sub: t("검증 결과는 실제 조회에 따라 달라져요.", "Results depend on live checks.") } : null;
 
   if (view.status === "reading" && follow.follow === "stalled") {
     return shell(<Panel className={styles.waiting}>
@@ -201,18 +201,16 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     return <PlanCheck key="plan" view={reading ?? readingOf(view)} notice={testNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} />;
   }
   if (reading && (view.status === "reading" || (view.status === "review" && readingSeen && !readingDrawn))) {
-    const streamNote = view.status !== "reading" ? null
-      : follow.follow === "lost" ? <div className={styles.waitWrap}><WaitNotice title={t("서버와 연결이 끊겼어요", "Lost the connection to the server")} body={t("다시 연결하는 중이에요…", "Reconnecting…")} /></div>
-      : follow.slow ? <div className={styles.waitWrap}><WaitNotice title={t("서버 응답이 늦어지고 있어요", "The server is slow to answer")} seconds={quiet > 0 ? quiet : undefined} body={stream.progress?.current?.title
+    const streamNote: BusToast | null = view.status !== "reading" ? null
+      : follow.follow === "lost" ? { text: t("서버와 연결이 끊겼어요", "Lost the connection to the server"), sub: t("다시 연결하는 중이에요…", "Reconnecting…") }
+      : follow.slow ? { text: t("서버 응답이 늦어지고 있어요", "The server is slow to answer"), sub: stream.progress?.current?.title
         // ★`[2026-10-03]` The server's `progress` packet says what it is at: name it instead of a general "taking a while".
         ? t(`「${stream.progress.current.title}」 확인이 오래 걸리고 있어요. 서버는 계속 확인하고 있어요.`, `Checking “${stream.progress.current.title}” is taking a while. The server is still at it.`)
-        : t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.")} /></div>
-      : quiet >= 60 ? <div className={styles.waitWrap}><WaitNotice title={t("1분이 넘게 서버 소식이 없어요", "No news from the server for over a minute")} seconds={quiet}
-        body={t("서버나 연결에 문제가 있을 수 있어요. 이 화면에서 더 기다리거나, 뒤로 가서 잠시 뒤에 다시 보내 주세요.", "There may be a problem with the server or the connection. Keep waiting here, or go back and send it again shortly.")} /></div>
-      : quiet >= 30 ? <div className={styles.waitWrap}><WaitNotice title={t("서버 소식이 한동안 없어요", "No news from the server for a while")} seconds={quiet}
-        body={t("서버가 아직 읽고 있을 수 있어요. 조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.", "The server may still be reading. Wait a little longer, or go back and send it again.")} /></div>
+        : t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.") }
+      : quiet >= 60 ? { text: t("1분이 넘게 서버 소식이 없어요", "No news from the server for over a minute"), sub: t("이 화면에서 더 기다리거나, 뒤로 가서 잠시 뒤에 다시 보내 주세요.", "Keep waiting here, or go back and send it again shortly.") }
+      : quiet >= 30 ? { text: t("서버 소식이 한동안 없어요", "No news from the server for a while"), sub: t("조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.", "Wait a little longer, or go back and send it again.") }
       : null;
-    return <PlanCheck key="plan" view={reading} notice={<>{testNote}{streamNote}</>} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
+    return <PlanCheck key="plan" view={reading} notice={streamNote ?? testNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
   }
   if (view.status === "fatal") {
     return shell(<Panel className={styles.waiting}>
@@ -242,13 +240,15 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const rowOf = (id: string) => rows(view).find((row) => row.key === id);
   const refusal = confirm.error instanceof LiveError ? (confirm.error.detail as { problems?: { field: string; message?: string; reason?: string }[] } | undefined) : undefined;
   // The server tried to check places, hours and legs and could not (`review: null` + `review_error`): say so — nothing it did not check is shown as fine.
-  const unchecked = view.review_error ? <p className={styles.streamNote} role="status">{t("서버가 장소·운영시간·이동 확인 결과를 만들지 못했어요. 읽은 값만 보여 드려요 — 등록할 때 서버가 다시 확인해요.", "The server could not build the place, hours and route check. Only what it read is shown — it checks again when you register.")}</p> : null;
+  const unchecked = view.review_error ? t("서버가 장소·운영시간·이동 확인 결과를 만들지 못했어요. 등록할 때 다시 확인해요.", "The server could not build the place, hours and route check. It checks again when you register.") : null;
   // The text also asked us to plan, but stops were read too: only the stops are shown, so say where the planning is.
-  const asked = view.check?.plan.requested ? <p className={styles.streamNote} role="status">{t("글에 일정을 짜 달라는 말도 있었어요. 읽은 일정만 보여 드려요 — 대신 짜 받으려면 등록 화면의 「계획 짜 주기」를 써 주세요.", "The text also asked us to plan. Only the stops it lists are shown — to have a trip planned, use “Plan it for me” on the registration page.")}</p> : null;
+  const asked = view.check?.plan.requested ? t("글에 일정을 짜 달라는 말도 있었어요. 대신 짜 받으려면 등록 화면의 「계획 짜 주기」를 써 주세요.", "The text also asked us to plan. Use “Plan it for me” on the registration page.") : null;
   // `[2026-10-05]` A date written without a year: the server took one (and says so in its own note) - the screen says which, so the customer can correct it.
   const year = assumedYear(view);
-  const yearNote = year ? <p className={styles.streamNote} role="note">{t(`날짜에 해가 적혀 있지 않아 ${year}년으로 두었어요. 다르면 일정의 날짜를 고쳐 주세요.`, `Some dates had no year, so ${year} was assumed. Change the date of a stop if that is wrong.`)}</p> : null;
-  return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} notice={<>{testNote}{unchecked}{asked}{yearNote}</>} onBack={() => router.push(routes.newTrip)}
+  const yearNote = year ? t(`날짜에 해가 적혀 있지 않아 ${year}년으로 두었어요. 다르면 일정의 날짜를 고쳐 주세요.`, `Some dates had no year, so ${year} was assumed. Change the date of a stop if that is wrong.`) : null;
+  const details = [unchecked, asked, yearNote].filter(Boolean).join("\n");
+  const finalNotice: BusToast | null = details ? { text: t("계획 확인 안내", "Plan check notice"), sub: [details, testNote?.text, testNote?.sub].filter(Boolean).join("\n"), stay: Boolean(unchecked) } : testNote;
+  return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} notice={finalNotice} onBack={() => router.push(routes.newTrip)}
     tripIssues={tripIssuesOf(view)}
     actions={view.review ? server.actions : {
       edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },

@@ -13,7 +13,7 @@ import type { TripStop } from "@/features/trip/model";
 import type { Language, Translate } from "@/lib/i18n";
 import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
-import { onToast } from "@/lib/toast-bus";
+import { onToast, pushToast, type BusToast } from "@/lib/toast-bus";
 import { foundCount, isInstantRow, needs, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type ServerProgress, type TripIssue } from "./model";
 import { Act, HeadBadges, letter, pinKindLabel, reason, type ListFilter } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
@@ -53,8 +53,8 @@ export interface PlanCheckProps {
   onBack: () => void;
   /** Called once the screen has drawn everything in `view` and held it a moment — e.g. to move on after the last line. */
   onCaughtUp?: () => void;
-  /** Shown above the screen's content — e.g. a line about the connection. */
-  notice?: ReactNode;
+  /** Uses the shared toast; arbitrary content cannot be inserted above the map. */
+  notice?: BusToast | null;
   /**
    * `[2026-10-06]` The questions asked while the server reads (`features/survey-questions/`). `top` stands under the reading screen's heading, `footer` at its bottom (it does not scroll),
    * `onActivity` hears every touch on the screen BY THE CUSTOMER (a press, a key, a wheel, a finger) - not scrolls: the screen scrolls itself too, and that is not a touch. Left out: the reading screen is as it was.
@@ -165,6 +165,18 @@ const HOLD_MS = 800;
  */
 export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, readingExtras, sending = false, ...result }: PlanCheckProps) {
   const { view, settled } = useReveal(latest, Boolean(readingExtras));
+  const { shown: shownNotice, show: showNotice, hide: hideNotice } = useToastState();
+  const onReading = view.stage === "received" || view.stage === "reading" || Boolean(readingExtras);
+  // The reading screen owns one notice; the header hands notices to this owner.
+  useEffect(() => onReading ? onToast(showNotice) : undefined, [onReading, showNotice]);
+  const notified = useRef(new Set<string>());
+  const noticeKey = notice ? JSON.stringify([notice.text, notice.sub, notice.note]) : null;
+  useEffect(() => {
+    if (!notice || !noticeKey || notified.current.has(noticeKey)) return;
+    notified.current.add(noticeKey);
+    if (onReading) showNotice(notice);
+    else pushToast(notice);
+  }, [notice, noticeKey, onReading, showNotice]);
   const t = useT();
   useEffect(() => {
     if (!settled || !onCaughtUp) return;
@@ -175,13 +187,12 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, readingExt
   // ★`[2026-10-07 사용자 지적 — 화면이 읽는 중 ↔ 확인으로 오간다]` While questions are on the screen (`readingExtras`) the reading screen STAYS, whatever stage the server has got to: the bar at its top
   //   carries the stage. It used to give way to the check screen as soon as the server's check began and was then pulled back to the reading screen when the server finished (the questions hold the page),
   //   and the check was drawn again from the first step once the customer was let through.
-  const onReading = view.stage === "received" || view.stage === "reading" || Boolean(readingExtras);
   const floating = !onReading && (view.stage === "checking" || view.stage === "done");
   return <DeviceFrame floating={floating} guardianIcon>
     <div className={styles.screen} data-stage={view.stage} data-replay={readingExtras ? "paused" : "playing"} data-floating={floating || undefined}
       {...(readingExtras && { onPointerDownCapture: readingExtras.onActivity, onKeyDownCapture: readingExtras.onActivity, onWheelCapture: readingExtras.onActivity, onTouchStartCapture: readingExtras.onActivity })}>
-      {notice}
       {onReading ? <Reading view={readingExtras ? latest : view} onBack={onBack} extras={readingExtras} /> : <Checking view={view} sourceView={latest} {...result} />}
+      {onReading && shownNotice && <ToastView key={shownNotice.stamp} toast={shownNotice.toast} onDone={hideNotice} />}
       <p className="sr-only" role="status">{sending ? t("계획을 서버로 보내고 있어요.", "Sending your plan to the server.") : announce(readingExtras ? latest : view, t)}</p>
     </div>
   </DeviceFrame>;
@@ -444,7 +455,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const stripBox = useRef<HTMLDivElement>(null);
   const markerBox = useRef<HTMLSpanElement>(null);
   // `[2026-10-06 사용자 지시]` What the customer did elsewhere on this screen (the Course Keeper turned on or off in the header) is told in THIS bar, like every other notice here.
-  useEffect(() => onToast((notice) => setToast({ text: notice.text, sub: notice.sub, ms: notice.ms, undo: Boolean(notice.action), revert: notice.action ? () => { notice.action?.run(); } : undefined, undoLabel: notice.action?.label })), [setToast]);
+  useEffect(() => onToast(showToast), [showToast]);
   // The preview is gone from the page (the plan changed some other way): the list is the plan as it is.
   const hadPreview = useRef(false);
   useEffect(() => {
@@ -1170,7 +1181,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       ? t(`${point.previous} 다음 이동 전에 일정 추가`, `Add a stop before leaving ${point.previous}`)
       : point.next ? t(`${point.next} 전에 일정 추가`, `Add a stop before ${point.next}`)
         : t(`${point.previous} 다음에 일정 추가`, `Add a stop after ${point.previous}`);
-    return <li key={point.key} className={styles.insertPoint} data-insert-point={point.key}>
+    return <li key={point.key} className={styles.insertPoint} data-insert-point={point.key} data-insert-start={!point.previous || undefined}>
       <button type="button" id={`plan-insert-${point.key}`} className={styles.insertButton} aria-label={label} aria-describedby={`plan-insert-tip-${point.key}`}
         onClick={() => { setAddingBusy(false); setInserting(point); if (sheet === "peek") setSheet("half"); }}>
         <Plus size={18} strokeWidth={1.8} aria-hidden="true" /><span id={`plan-insert-tip-${point.key}`} className={styles.iconTip} role="tooltip">{label}</span>
@@ -1353,7 +1364,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       <div className={styles.headInfo} data-title={(done && view.title) ? true : undefined}>
         {done && view.title
           ? <TripTitle title={view.title} onSave={actions.editTrip && !frozen && !registered ? renameTrip : undefined} />
-          : <><h1 className="sr-only">{t("계획을 확인하고 있어요", "Checking your plan")}</h1><HeaderProgress view={view} /></>}
+          : <><h1 className="sr-only">{t("계획을 확인하고 있어요", "Checking your plan")}</h1><HeaderProgress view={sourceView.stage === "done" ? sourceView : view} /></>}
       </div>, headerSlot)}
     <section ref={sheetBox} className={styles.sheet} aria-labelledby={inserting ? undefined : changing ? "plan-change-title" : "plan-check-sheet-title"} aria-label={inserting ? t("일정 추가", "Add a stop") : undefined}>
       {done && <button type="button" className={styles.handle} aria-label={t("목록 높이 바꾸기", "Change the list height")} title={t("눌러서 높이를 바꾸고, 잡고 끌어 원하는 높이로 맞춰요", "Press to change the height, or drag it to any height")}

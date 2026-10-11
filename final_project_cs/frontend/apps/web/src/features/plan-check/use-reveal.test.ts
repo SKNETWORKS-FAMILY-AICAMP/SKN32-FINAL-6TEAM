@@ -92,17 +92,35 @@ describe("saved edits and paused replay", () => {
     expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
   });
 
-  it("opens the completed result immediately when a survey releases its hold", () => {
+  it("reveals the first map cards after a survey without replaying completed reading", () => {
     vi.useFakeTimers();
     draw(received);
     expect(draw(exampleDone, true)).toEqual({ view: received, settled: false });
     vi.advanceTimersByTime(5_000);
     expect(draw(exampleDone, true).view).toBe(received);
     expect(vi.getTimerCount()).toBe(0);
+    const first = draw(exampleDone);
+    expect(first.view).toMatchObject({ stage: "checking", items: [], moves: [], lines: exampleDone.lines });
+    expect(first.settled).toBe(false);
+    const counts = [first.view.items.length];
+    for (let step = 0; step < 100; step += 1) {
+      vi.advanceTimersByTime(300);
+      const next = draw(exampleDone);
+      expect(["checking", "done"]).toContain(next.view.stage);
+      counts.push(next.view.items.length);
+      if (next.settled) break;
+    }
+    expect(counts.some((count) => count > 0 && count < exampleDone.items.length)).toBe(true);
+    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+  });
+
+  it("respects explicit animation skipping when questions release", () => {
+    vi.useFakeTimers();
+    draw(received);
+    draw(exampleDone, true);
+    hooks.skip = true;
     expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
     expect(vi.getTimerCount()).toBe(0);
-    expect(draw(exampleDone, true).view).toBe(exampleDone);
-    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
   });
 
   it("still paces unfinished progress after a survey releases its hold", () => {
