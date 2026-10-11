@@ -17,6 +17,16 @@
   ★시간대가 비면 「그 시간대 편이 없다」가 아니라 「받은 결과에 없다」다 — 소스마다 가격순 상위 `FETCH` 개만 받는다.
 - 되묻기는 숙소 팀과 같은 까닭으로 `waiting` 이 아니라 답(`completed`)으로 한다.
 - `flight.status` 는 전과 같다 — 잠긴 예약을 조회만 한다.
+- `[2026-10-11]` **일정 항공편 항목(`flight.itinerary`)** — 숙소 팀과 같게(사용자 10-11 「숙소랑 똑같이」). 식당 · 활동 팀의 공용 부품
+  (`_shared/itinerary_team.ItineraryWork`)을 쓴다. 여행 Case 가 **항공편 항목**(`subject_ref.part_id`, 한 항목 = 한 다리 — 가는 편 · 오는 편 따로)을
+  가리키면 이 일감이다. 문장을 모델로 해석하지 않고 항목 · 여행에서 읽는다(출발 · 도착 공항 = `detail.origin` · `detail.destination`,
+  날짜 = 항목 시작 날, 인원 = 여행 인원, 좌석 · 직항 = `detail.cabin` · `detail.direct_only`).
+  - 이미 예약한 편(`booking_id` · `locked` · `detail.booked`)은 바꾸지 않는다.
+  - 「바꿔 줘」 = 보여 준 편이 마음에 안 든다 → **새 편 3개**(같은 날 · 같은 노선 편도, 앞서 보여 준 편 · 지금 항목은 뺀다), 가격순.
+    보여 준 편은 항목 `detail.shown` 에 남긴다(숙소 팀과 같은 `itinerary.apply` — 편은 그대로, 상세만).
+  - 직항이 있으면 직항만(사용자 결정 10-10) — 새 직항이 없으면 경유까지 넓혀 다시 고르고(느린 경유는 여전히 뺀다) 그렇다고 적는다. 그래도 없으면
+    「더 찾지 못했다」.
+  - 항목은 우리 에이전트가 반영될 때 일정에 생긴다(사용자 10-11) — 그 전까지 가짜 일정 시험으로만 돈다.
 """
 from __future__ import annotations
 
@@ -28,7 +38,9 @@ from zoneinfo import ZoneInfo
 from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
 
 from app.domains.travel_ops.instances._shared._base import TravelTeamBase
-from .interpret import TIME_BANDS, Interpretation, InterpretationInvalid, ask, ground, model_context, needs, parse, settle_years
+from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TOOLS, ItineraryWork
+from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, with_request
+from .interpret import _KOREAN_AIRPORTS, TIME_BANDS, Interpretation, InterpretationInvalid, ask, ground, model_context, needs, parse, settle_years
 
 logger = logging.getLogger(__name__)
 
@@ -181,28 +193,63 @@ def _pick(options: list[dict[str, Any]], wanted: list[str] | None) -> tuple[list
     return picked, empty
 
 
-class FlightTeam(TravelTeamBase):
+def _flight_key(option: dict[str, Any]) -> str:
+    """편 하나를 가리키는 이름 — 항공사 · 편명들 · 첫 출발 시각(편명이 없는 소스가 있어 시각을 붙인다)."""
+    numbers = "/".join(str(leg.get("flightNumber") or "?") for leg in option["legs"])
+    first = option["legs"][0] if option["legs"] else {}
+    return f"{option.get('airline') or '?'} {numbers} {first.get('departDate') or ''} {first.get('departTime') or '?'}".strip()
+
+
+def _fresh_flights(options: list[dict[str, Any]], exclude: set[str], *, direct_only: bool) -> list[dict[str, Any]]:
+    """새 편 `SHOWN` 개 — 가격순(booking 모듈 순서), 앞서 보여 준 편은 뺀다. `direct_only` 면 경유가 확실한 편은 뺀다."""
+    pool, _ = _drop_slow(options)
+    out = []
+    for option in pool:
+        if len(out) >= SHOWN:
+            break
+        if (direct_only and _connecting(option)) or _flight_key(option) in exclude:
+            continue
+        out.append(option)
+    return out
+
+
+class FlightTeam(ItineraryWork, TravelTeamBase):
     manifest = TeamManifest(
         team_id="flight",
         display_name="Flight Team",
         contract_name="a_cop.team_task",
         supported_contract_versions=["1.0"],
-        capabilities=["flight.assist", "flight.status"],
+        capabilities=["flight.assist", "flight.status",
+                      "flight.itinerary",             # ★`[2026-10-11]` 일정 항공편 항목 — 새 편 3개 · 예약한 편은 그대로(숙소 팀과 같다)
+                      "flight.itinerary_question"],   # 공용 부품이 질문 Case 를 이리로 보낸다(규정을 읽고, 없으면 사람에게)
         accepted_case_types=["flight"],
-        # 정책 문서를 쓰지 않는다 — 선언하면 문서 0건으로 degraded 가 된다(`locked` 의 2026-09-22 주석과 같은 까닭)
-        required_context=["case_state", "db_facts", "history"],
-        allowed_tools=["read.booking", "read.itinerary", "read.booking_search_flights"],
-        knowledge_scope=["flight"],
-        max_steps=3,                                  # 일정 1 + booking 1 + 여유 1
+        # ★`[2026-10-11]` 식당 · 활동 · 숙소 팀과 같게 — `policy` 를 선언하고 **규정 질문만** 규정을 읽는다. 나머지는 면제.
+        #   전에는 `flight` scope 에 문서가 0건이라 선언하지 않았다 — 이제 여행 문서가 있는 취소 · 이용 조건 scope 를 둔다(항공 전용 문서는 없다).
+        required_context=["case_state", "policy", "db_facts", "history"],
+        policy_optional_capabilities=["flight.assist", "flight.status", "flight.itinerary"],
+        allowed_tools=["read.booking", "read.itinerary", "read.booking_search_flights", "read.policy", "read.booking_terms",
+                       *[name for name in ITINERARY_TOOLS if name != "read.itinerary"]],
+        knowledge_scope=["travel_cancellation", "travel_access"],
+        max_steps=4,                                  # 일정 1 + booking 1 + 여유(규정 질문 · 되돌리기) 2
         active=True,
         implementation_revision="2026-10-10",
         default_capability="flight.assist",
     )
 
+    @staticmethod
+    def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
+        """여행 Case 가 **일정 항목을 가리킬 때만**(`part_id`) 일정 관리로 — 숙소 팀과 같다. 항목 없이 여행만 붙은 Case 는 `flight.assist`."""
+        ref = (state or {}).get("subject_ref") or {}
+        if not ref.get("part_id"):
+            return None
+        return ItineraryWork.itinerary_route("flight", state)
+
     async def execute(self, task: TeamTask) -> TeamResult:
         blocked = self._guard(task)
         if blocked is not None:
             return blocked
+        if task.capability in (self.itinerary_capability, self.question_capability):
+            return await self.run_itinerary(task)
         seen: set[str] = set()
         if task.capability == "flight.status":
             return self._status(task, seen)
@@ -380,6 +427,100 @@ class FlightTeam(TravelTeamBase):
                                               "dropped_slow": slow, "dropped_connecting": via, "no_direct": no_direct,
                                               **limits},
                              "\n".join([head, *lines, *pages, *others, tail]))
+
+    # ── 일정 항공편 항목 (`flight.itinerary`, 2026-10-11) ─────────────
+    def _change(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:
+        """「바꿔 줘」 — 공용 부품(들고 있던 다른 안으로 바꾸기)을 항공편용으로 덮는다. 숙소 팀과 같은 모양:
+        예약을 우리가 하지 않으므로 **바꾸지 않고 새 편 3개**를 보여 주고, 보여 준 편은 항목 상세에 남겨 다음에 뺀다."""
+        ref, trip, items = ctx["ref"], ctx["trip"], ctx["items"]
+        target = ref.get("part_id") or ref.get("recent_part_id")
+        item = next((i for i in items if str(i.item_id) == str(target)), None) if target else None
+        if item is None:
+            return self._unknown(task, "항공편 일정 항목", ctx["evidence"])
+        if item.kind != self.manifest.team_id:
+            return self._escalate(task, "target_kind_mismatch", ctx["evidence"],
+                                  warnings=[f"{item.kind} 항목은 {self.manifest.team_id} 팀 일이 아니다"])
+        if item.locked or item.booking_id or item.detail.get("booked"):
+            return self._result(task, outcome="completed", confidence=1.0, evidence=ctx["evidence"],
+                                next_action=NextAction.RESPOND,
+                                answer=f"{item.title}은(는) 이미 예약하신 항공편이라 바꾸지 않았어요. 다른 편을 원하시면 예약하신 곳에서 "
+                                       "먼저 변경 · 취소 조건을 확인해 주세요.",
+                                decisions=[{"itinerary": "booked_kept", "item": item.title}])
+        query = self._flight_query(item, trip)
+        if query is None:
+            return self._unknown(task, "항공편 항목의 공항 · 날짜 · 인원", ctx["evidence"])
+        booked = self._read(task, "read.booking_search_flights", {**query, "max_results": FETCH}, ctx["seen"]) or {}
+        ctx["evidence"] = self._evidence(task, source_id="read.booking_search_flights",
+                                         claim="항공편 새 후보(booking: 마이리얼트립 · Ignav · 구글 항공권)", value=booked or None,
+                                         base=ctx["evidence"])
+        options = booked.get("options") or []
+        if not booked:
+            return self._unknown(task, "항공편 검색 결과", ctx["evidence"])
+        shown = [str(key) for key in item.detail.get("shown") or []]
+        exclude = {*shown, *([str(item.detail["key"])] if item.detail.get("key") else [])}
+        prefer_direct = query.get("direct_only") is not False
+        picks = _fresh_flights(options, exclude, direct_only=prefer_direct)
+        widened = False
+        if not picks and prefer_direct:
+            picks, widened = _fresh_flights(options, exclude, direct_only=False), True   # 새 직항이 없으면 경유까지
+        route = f"{query['origin']} → {query['destination']}"
+        people = query["adults"]
+        record = {"itinerary": "flight_options", "item": item.title, "query": query, "shown_before": len(shown),
+                  "widened_to_connecting": widened and bool(picks), "options": [_flight_key(option) for option in picks]}
+        links = booked.get("elsewhere") or []
+        if not picks:
+            lines = [f"{item.title} 말고 더 보여 드릴 편을 찾지 못했어요({route} · {query['depart_date']}"
+                     + (f", 앞서 보여 드린 {len(shown)}편 제외" if shown else "") + "). 일정은 그대로 두었어요."]
+            if links:
+                lines += ["같은 조건으로 다른 곳에서 보기(가격은 그 사이트에서 확인):",
+                          *[f"   · {link['name']}: {link['url']}" for link in links]]
+            return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
+                                next_action=NextAction.RESPOND, answer="\n".join(lines), decisions=[record])
+        head = (f"{item.title} 대신 볼 수 있는 편이에요({route} · {query['depart_date']} · 성인 {people}명"
+                + (f", 앞서 보여 드린 {len(shown)}편은 뺐어요" if shown else "") + ", 가격이 낮은 순):")
+        lines = [head]
+        for number, option in enumerate(picks, start=1):
+            offer = option["offers"][0] if option["offers"] else {}
+            each = (f", 1인 {_won(option['best'] / people, 'KRW')}" if isinstance(option.get("best"), (int, float)) and people else "")
+            band = BAND_LABEL.get(_band(option) or "", "시각 모름")
+            legs = " / ".join(_leg(leg) for leg in option["legs"]) or "구간 정보 없음"
+            lines.append(f"{number}. [{band}] {option['airline']} — {legs} · 총 {_won(option.get('best'), 'KRW')}"
+                         f"(성인 {people}명{each}) · {offer.get('label') or '판매처 모름'}: {offer.get('link') or '링크 없음'}")
+        if widened:
+            lines.append("새로 보여 드릴 직항이 없어 경유 편을 보여 드려요.")
+        lines.append("가격과 좌석은 조회 시점 기준이에요. 예약은 링크한 판매처에서 직접 하시면 돼요. 마음에 안 드시면 다시 말씀해 주세요 — 새 편을 찾아 드릴게요.")
+        answer = "\n".join(lines)
+        keys = [_flight_key(option) for option in picks]
+        detail = {**item.detail, "shown": [*shown, *keys], "query": query,
+                  "candidates": [{"key": key, "airline": option["airline"], "best": option.get("best"),
+                                  "legs": option["legs"], "offers": option["offers"][:3]} for key, option in zip(keys, picks)]}
+        cause = with_request({"category": "customer_request", "type": "flight_options", "from": item.title,
+                              "message": task.input_text}, task.context.current_state.get("request_id"))
+        replacement = item.replaced_by(place=None, title=item.title, detail=detail)
+        change = ItineraryChange(reason="customer_request", causes=[cause],
+                                 notice={"text": answer, "language": "ko", "causes": [cause], "options": keys, "replay": False},
+                                 replacements={item.item_id: replacement},
+                                 summary={"flight_options": keys, "shown_total": len(detail["shown"]),
+                                          "widened_to_connecting": widened})
+        return self.settle(task, ctx, change)
+
+    @staticmethod
+    def _flight_query(item: Any, trip: dict[str, Any]) -> dict[str, Any] | None:
+        """항공편 항목 · 여행 → 편도 검색 조건(한 항목 = 한 다리). 공항 · 인원을 모르면 `None`(지어내지 않는다).
+        날짜는 항목 시작 시각에 붙은 시간대 그대로의 날(출발 공항 현지 시각으로 적혀 있다고 본다 — 확인 안 함)."""
+        origin, destination = item.detail.get("origin"), item.detail.get("destination")
+        adults = trip.get("party_size")
+        if not origin or not destination or not isinstance(adults, int) or adults < 1:
+            return None
+        domestic = item.detail.get("domestic")
+        if domestic is None:
+            domestic = origin in _KOREAN_AIRPORTS and destination in _KOREAN_AIRPORTS
+        query = {"origin": str(origin), "destination": str(destination), "depart_date": item.starts_at.date().isoformat(),
+                 "domestic": bool(domestic), "adults": adults}
+        for key in ("cabin", "direct_only"):
+            if item.detail.get(key) is not None:
+                query[key] = item.detail[key]
+        return query
 
     def _trip(self, task: TeamTask, seen: set[str]) -> tuple[dict[str, Any] | None, list[Evidence]]:
         """Case 에 여행이 붙어 있으면 그 일정을 모델에 줄 요약으로(숙소 팀과 같다 — 팀끼리 import 하지 않으려고 따로 둔다)."""

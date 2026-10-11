@@ -446,3 +446,85 @@ def test_wishes_without_a_slot_are_named_at_the_end():
     result, _, _ = _run({**SEARCH, "other_requests": ["창가 좌석", "지어낸 조건"]}, {"read.flight_search": FLIGHTS}, text=text)
     assert result.answer.endswith("말씀하신 조건 중 아직 반영하지 못한 것: 「창가 좌석」 — 링크한 화면에서 직접 확인해 주세요."), \
         "문장에 없는 조각은 버린다"
+
+
+# ── 일정 항공편 항목 — `flight.itinerary` (2026-10-11, 숙소 팀과 같은 모양) ─────────
+TRIP_ID, LEG_ID = "11111111-1111-4111-8111-111111111111", "99999999-9999-4999-8999-999999999999"
+
+
+def _plan(kind="flight", detail=None, booking_id=None):
+    leg = {"item_id": LEG_ID, "seq": 1, "kind": kind, "title": "타이베이 → 인천", "place_id": None,
+           "starts_at": f"{GO}T12:00:00+09:00", "ends_at": f"{GO}T15:30:00+09:00", "locked": False,
+           "booking_id": booking_id, "replaces_item_id": None, "place": None,
+           "detail": {"origin": "TPE", "destination": "ICN", **(detail or {})}}
+    return {"trip": {"trip_id": TRIP_ID, "version": 5, "party_size": 2, "customer_id": "c"}, "items": [leg]}
+
+
+LEG_STATE = {"subject_ref": {"kind": "trip", "id": TRIP_ID, "part_id": LEG_ID, "base_version": 5},
+             "interpretation": {"report": {"type": "change"}}, "request_id": "r-flight-1"}
+WITH_VIA = {**FLIGHTS, "flights": [*FLIGHTS["flights"], FAST_VIA]}
+TW_KEY, JEJU_KEY, VIA_KEY = f"티웨이항공 TW727 {GO} 18:30", f"제주항공 ? {GO} 13:10", f"피치항공 ? {GO} 05:30"
+
+
+def _legrun(plan):
+    return _run({"task": "unclear"}, {"read.itinerary": plan, "read.flight_search": WITH_VIA},
+                text="이 비행기 다른 걸로 바꿔줘", capability="flight.itinerary", state=LEG_STATE)
+
+
+def test_a_case_pointing_at_a_flight_item_is_itinerary_work_and_a_bare_trip_stays_assist():
+    ref = {"kind": "trip", "id": TRIP_ID, "part_id": LEG_ID}
+    assert FlightTeam.select_capability(None, "x", {"subject_ref": ref}) == "flight.itinerary"
+    assert FlightTeam.select_capability(None, "x", {"subject_ref": {"kind": "trip", "id": TRIP_ID}}) is None
+    assert FlightTeam.select_capability(None, "x", {"subject_ref": ref, "interpretation": {"report": {"type": "question"}}}) \
+        == "flight.itinerary_question"
+    manifest = FlightTeam.manifest
+    assert {"flight.itinerary", "flight.itinerary_question"} <= set(manifest.capabilities)
+    assert "policy" in manifest.required_context
+    assert set(manifest.policy_optional_capabilities) == {"flight.assist", "flight.status", "flight.itinerary"}
+
+
+def test_change_on_a_flight_item_shows_new_direct_flights_by_price_and_remembers_them():
+    result, llm, tools = _legrun(_plan())
+    assert llm.calls == [], "일정 항목에서 읽는다 — 모델을 부르지 않는다"
+    searches = [arguments for name, arguments in tools.calls if name == "read.booking_search_flights"]
+    assert searches == [{"origin": "TPE", "destination": "ICN", "depart_date": GO, "domestic": False, "adults": 2, "max_results": 100}]
+    answer = result.answer
+    assert answer.startswith(f"타이베이 → 인천 대신 볼 수 있는 편이에요(TPE → ICN · {GO} · 성인 2명, 가격이 낮은 순):")
+    assert "1. [저녁] 티웨이항공 — " in answer and "총 64,000원(성인 2명, 1인 32,000원)" in answer
+    assert "2. [오후] 제주항공 — " in answer and "총 302,000원(성인 2명, 1인 151,000원)" in answer
+    assert "피치항공" not in answer, "직항이 있으면 직항만(사용자 결정 10-10)"
+    (proposal,) = result.action_proposals
+    assert proposal.action_type == "itinerary.apply" and proposal.arguments["reason"] == "customer_request"
+    new = proposal.arguments["replacements"][0]["item"]
+    assert new["kind"] == "flight" and new["detail"]["origin"] == "TPE" and new["starts_at"].startswith(GO), "편은 그대로"
+    assert new["detail"]["shown"] == [TW_KEY, JEJU_KEY]
+
+
+def test_when_no_new_direct_flight_is_left_connecting_ones_are_shown_and_said():
+    result, _, _ = _legrun(_plan(detail={"shown": [TW_KEY, JEJU_KEY]}))
+    assert "1. [새벽] 피치항공" in result.answer and "새로 보여 드릴 직항이 없어 경유 편을 보여 드려요." in result.answer
+    assert "앞서 보여 드린 2편은 뺐어요" in result.answer
+    assert result.decisions[0]["widened_to_connecting"] is True
+    assert result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["shown"] == [TW_KEY, JEJU_KEY, VIA_KEY]
+
+
+def test_when_nothing_new_is_left_it_says_so_without_changing_the_plan():
+    result, _, _ = _legrun(_plan(detail={"shown": [TW_KEY, JEJU_KEY, VIA_KEY]}))
+    assert result.action_proposals == [] and "타이베이 → 인천 말고 더 보여 드릴 편을 찾지 못했어요" in result.answer
+    assert "일정은 그대로 두었어요." in result.answer and "같은 조건으로 다른 곳에서 보기" in result.answer
+
+
+def test_a_booked_flight_is_never_changed_and_nothing_is_searched():
+    result, _, tools = _legrun(_plan(booking_id="88888888-8888-4888-8888-888888888888"))
+    assert "이미 예약하신 항공편이라 바꾸지 않았어요" in result.answer and result.action_proposals == []
+    assert [name for name, _ in tools.calls] == ["read.itinerary"]
+
+
+def test_a_non_flight_item_or_a_missing_airport_is_not_guessed():
+    result, _, _ = _legrun(_plan(kind="lodging"))
+    assert result.outcome == "escalated" and result.failure_code == "target_kind_mismatch"
+    plan = _plan()
+    del plan["items"][0]["detail"]["origin"]
+    result, _, tools = _legrun(plan)
+    assert result.outcome == "escalated" and result.failure_code.startswith("unknown_")
+    assert [name for name, _ in tools.calls] == ["read.itinerary"]
