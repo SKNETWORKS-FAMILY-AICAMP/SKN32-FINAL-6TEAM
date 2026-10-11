@@ -356,16 +356,30 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                 decisions=[{"feasible": False, "reason": "already_started",
                             "failure_code": self._record_failure(task, fc.ALREADY_STARTED),
                             "hours_elapsed": round(-remaining, 1)}])
-        # ★`[2026-10-12]` 인원은 성립 판정 항목이 아니다(D3 · 수정본 §6 — 「인원은 대체 후보를 거르는 데만 쓴다」, 구현 계획 2.9).
-        #   전에는 신청 인원 > 정원이면 `party_over_capacity` 로 막고, 둘 중 하나를 모르면 「정원 초과 여부는 판정하지 않았다」
-        #   경고를 붙였다. 정원 칸(관광공사 accomcount)은 대부분 비어 있고, 예약 인원이 맞는지는 예약할 때 업체가 확인한다.
+        # ★`[2026-10-12]` 여기 정원은 **예약 자체의 정원**(`bookings.capacity`)이다 — 넘으면 예약이 성립하지 않아 막는다.
+        #   D3(「인원은 판정 항목이 아니다」)가 말하는 것은 장소의 수용 인원(관광공사 `accomcount`)이고, 그것은 대체 후보
+        #   필터에만 쓴다. 둘을 섞어 이 판정을 뺐다가 되돌렸다(activity.md D3 범위 정정).
+        party = booking.get("party_size")
+        capacity = booking.get("capacity")
+        if party is not None and capacity is not None and party > capacity:
+            return self._result(
+                task, outcome="completed", confidence=1.0, evidence=evidence,
+                next_action=NextAction.RESPOND,
+                answer=f"인원이 정원을 넘습니다 — 신청 {party}명, 정원 {capacity}명.",
+                decisions=[{"feasible": False, "reason": "party_over_capacity",
+                            "failure_code": self._record_failure(task, fc.PARTY_OVER_CAPACITY)}])
+        # ★`[2026-10-09]` 인원 · 정원 중 하나라도 모르면 위 비교를 건너뛴다 — 「초과 아님」으로 확정한 것이 아니므로 조용히
+        #   넘기지 않고 경고로 남긴다(사용자 결정, team 통합 ③). 막지는 않는다 — 인원은 성립을 정하는 다른 점검의 재료가 아니다.
+        missing = [label for label, value in (("신청 인원", party), ("정원", capacity)) if value is None]
+        headcount_warnings = ([f"{' · '.join(missing)}을 확인하지 못했다 — 정원 초과 여부는 판정하지 않았다"]
+                              if missing else [])
         # ★`[2026-10-09]` 「모름」을 「성립」으로 읽지 않는다(team 통합 ③ — role-activity 판). 시각을 모르면 휴무 · 운영시간 ·
-        #   재난 · 기상 어느 것도 잴 수 없어 장소를 읽지 않는다.
+        #   재난 · 기상 어느 것도 잴 수 없어 장소를 읽지 않는다. 정원 초과처럼 시각 없이 확인된 불가(위)는 이미 나갔다.
         # ★`[2026-10-11]` 「정보 부족」(`insufficient_info` — 계약 밖 값)으로 끝내지 않고 고객에게 방문 시각을 묻는다(D4 · 수정본 §12).
         if remaining is None:
             return self._ask_customer(task, evidence, fc.TIME_UNKNOWN, schema=ASK_STARTS_AT, reason="time_unknown",
                                       answer="예약 시각을 확인하지 못해 성립 여부를 판정하지 않았습니다. 방문 시각을 알려 주세요.",
-                                      warnings=["예약 시각을 확인하지 못했다"])
+                                      warnings=["예약 시각을 확인하지 못했다", *headcount_warnings])
 
         place = self._read(task, "read.place", {"place_id": booking.get("place_id")}, seen)
         evidence = self._evidence(task, source_id="read.place",
@@ -376,7 +390,8 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         #   「없음」으로 단정하지 않는다. 카카오로 실재를 확인하는 갈래(구현 계획 2.5)가 붙으면 그 앞에서 나뉜다.
         if place is None:
             return self._escalate(task, fc.PLACE_UNKNOWN, evidence,
-                                  warnings=["장소·운영 정보를 확인하지 못했다 — 없음이 아니라 모르는 상태다"])
+                                  warnings=["장소·운영 정보를 확인하지 못했다 — 없음이 아니라 모르는 상태다",
+                                            *headcount_warnings])
 
         # ★성립 점검은 **한 번**이다(`read.disruptions`). 예보·특보·(붙는 대로)
         #   재난문자·대기질을 도구가 한꺼번에 본다. 무엇을 볼지(실내면 예보 안 봄)는
@@ -494,14 +509,17 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                 answer=("이 장소의 운영 정보(운영시간 · 휴무)를 확인하지 못해 그 부분은 판정하지 않았습니다. "
                         "그대로 진행할지, 다른 장소를 볼지 알려 주세요."),
                 warnings=["운영 정보가 비어 휴무 · 운영시간을 판정하지 못했다 — 「성립」으로 답하지 않고 고객에게 묻는다",
-                          *disaster_warnings])
+                          *headcount_warnings, *disaster_warnings])
 
         forecast = self._checked_value(report, "forecast")
-        warnings: list[str] = list(disaster_warnings)
-        decisions: dict[str, Any] = {"feasible": True, "place_confirmed": True}
+        warnings: list[str] = [*headcount_warnings, *disaster_warnings]
+        decisions: dict[str, Any] = {"feasible": True, "place_confirmed": True,
+                                     "headcount_checked": not missing}
         if report is not None:
             decisions["not_connected"] = report.get("not_connected", [])
         answer = f"확인한 범위에서는 성립합니다(시작까지 {remaining:.1f}시간)."
+        if missing:
+            answer += " 인원 · 정원 정보가 없어 정원 초과 여부는 판정하지 않았습니다."
         if hours_note:
             answer += " " + hours_note
             warnings.append("운영시간 · 휴무를 확인하지 못했다 — 판정에 넣지 않았다")

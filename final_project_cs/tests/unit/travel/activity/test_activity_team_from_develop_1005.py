@@ -70,11 +70,10 @@ def test_already_started_leaves_a_code_and_a_log_line(caplog):
     assert set(line) == {"event", "code", "team", "case_id", "capability"}        # 좌표·장소명·문장 없음
 
 
-def test_party_over_capacity_is_not_a_feasibility_reason():
-    """★`[2026-10-12]` 인원은 성립 판정 항목이 아니다(D3 · 수정본 §6) — 정원보다 많아도 막지 않는다."""
+def test_party_over_capacity_leaves_a_code():
     result = _run(_values(in_hours(30), policy=[object()], party=9, capacity=4))
-    assert result.decisions[0].get("reason") != "party_over_capacity"
-    assert result.decisions[0].get("failure_code") != fc.PARTY_OVER_CAPACITY
+    assert result.decisions[0]["reason"] == "party_over_capacity"
+    assert result.decisions[0]["failure_code"] == fc.PARTY_OVER_CAPACITY
 
 
 def test_a_tool_exception_is_logged_and_rethrown_not_swallowed(caplog):

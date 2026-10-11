@@ -54,7 +54,7 @@ LLM_FALLBACK_RULE: Final = "llm_fallback_rule"
 
 DESCRIPTIONS: Final[dict[str, str]] = {
     ALREADY_STARTED: "이미 시작됐거나 끝난 활동이다 — 성립을 다시 점검하지 않는다",
-    PARTY_OVER_CAPACITY: "신청 인원이 정원을 넘는다 — `[2026-10-12]` 성립 판정에서는 쓰지 않는다(D3). 대체 후보 거르기(UC-A4)용으로 남긴다",
+    PARTY_OVER_CAPACITY: "신청 인원이 정원을 넘는다",
     TOOL_ERROR: "읽기 도구(API·DB)가 예외를 냈다 — 삼키지 않고 다시 던졌다",
     # ── role-activity 판 ──
     CLOSED_WEEKDAY: "요청 요일이 정기휴무 요일이다(판정: 불가)",

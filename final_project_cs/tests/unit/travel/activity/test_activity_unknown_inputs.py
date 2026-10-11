@@ -64,6 +64,13 @@ async def test_unknown_time_does_not_read_the_place():
 
 
 @pytest.mark.asyncio
+async def test_unknown_time_does_not_hide_a_party_over_capacity():
+    result = await ActivityTeam(_tools(booking=_without_time(party_size=9))).execute(_task())
+
+    assert result.decisions[0]["reason"] == "party_over_capacity"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("capability", ["activity.check_cancelable", "activity.propose_change"])
 async def test_other_capabilities_still_escalate_without_a_time(capability):
     result = await ActivityTeam(_tools(booking=_without_time())).execute(_task(capability))
@@ -92,16 +99,35 @@ async def test_known_time_and_place_still_reach_the_checks():
     assert "read.disruptions" in [name for name, _ in tools.calls]
 
 
-# ── 인원은 성립 판정 항목이 아니다(`[2026-10-12]` D3 · 수정본 §6) ──────────────
-#   전에는 정원 초과면 막고, 인원 · 정원을 모르면 「정원 초과 여부는 판정하지 않았다」 경고를 붙였다.
+# ── 인원 · 정원 모름 — 막지 않고 경고로 남긴다(`[2026-10-09]` 사용자 결정) ──────────────
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("changes", [{"party_size": 9}, {"party_size": None}, {"capacity": None},
-                                     {"party_size": None, "capacity": None}])
-async def test_headcount_neither_blocks_nor_warns(changes):
-    result = await ActivityTeam(_tools(booking={**BOOKING, **changes})).execute(_task())
+@pytest.mark.parametrize(("drop", "label"), [(("party_size",), "신청 인원을"), (("capacity",), "정원을"),
+                                             (("party_size", "capacity"), "신청 인원 · 정원을")])
+async def test_unknown_headcount_is_warned_not_blocked(drop, label):
+    booking = {k: v for k, v in BOOKING.items() if k not in drop}
+    result = await ActivityTeam(_tools(booking=booking)).execute(_task())
 
     decision = result.decisions[0]
     assert result.outcome == "completed" and decision["feasible"] is True
-    assert "headcount_checked" not in decision
-    assert not any("정원" in w for w in result.warnings) and "정원" not in result.answer
+    assert decision["headcount_checked"] is False
+    assert any(w.startswith(label) and "정원 초과 여부는 판정하지 않았다" in w for w in result.warnings)
+    assert "정원 초과 여부는 판정하지 않았습니다" in result.answer
+
+
+@pytest.mark.asyncio
+async def test_known_headcount_adds_no_warning():
+    result = await ActivityTeam(_tools()).execute(_task())
+
+    assert result.decisions[0]["headcount_checked"] is True
+    assert not any("정원 초과" in w for w in result.warnings)
+
+
+@pytest.mark.asyncio
+async def test_unknown_headcount_is_also_warned_when_time_or_place_is_unknown():
+    no_time = await ActivityTeam(_tools(booking=_without_time(party_size=None))).execute(_task())
+    no_place = await ActivityTeam(_tools(booking={**BOOKING, "capacity": None}, place=None)).execute(_task())
+
+    assert no_time.outcome == "waiting" and no_place.outcome == "escalated"
+    for result in (no_time, no_place):
+        assert any("정원 초과 여부는 판정하지 않았다" in w for w in result.warnings)
