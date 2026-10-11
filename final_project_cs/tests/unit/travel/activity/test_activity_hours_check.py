@@ -104,6 +104,20 @@ def test_unknown_hours_are_not_read_as_open():
         assert any("운영시간 · 휴무를 확인하지 못했다" in w for w in result.warnings)
 
 
+def test_empty_operating_info_asks_the_customer_instead_of_answering_feasible():
+    """★`[2026-10-11]` 운영 정보가 **비어 있으면**(원문도 요일표도 없다) 「성립」으로 답하지 않고 그대로 진행할지 묻는다
+    (수정본 UC-A3 `4a` · 부록 A #3). 원문은 있는데 못 읽는 것(`5b`)은 위 시험처럼 단서 + 유지다."""
+    empty = {**_hours(week=None, known=False), "usetime_text": None, "restdate_text": None}
+    result, calls = _run(empty)
+    decision = result.decisions[0]
+    assert result.outcome == "waiting" and result.next_action is NextAction.WAIT_FOR_INPUT
+    assert result.required_input_schema["properties"]["proceed"]["enum"] == ["keep", "change"]
+    assert decision["feasible"] is None and decision["reason"] == "hours_unknown"
+    assert decision["failure_code"] == fc.HOURS_UNKNOWN and decision["hours"]["empty"] is True
+    assert "성립합니다" not in result.answer
+    assert "read.disruptions" in calls          # ★재난 확인을 먼저 한다(4a 는 3단계 뒤)
+
+
 def test_no_holiday_lookup_when_the_text_has_no_holiday_condition():
     _, calls = _run(_hours(restdate="매주 월요일 휴무"))
     assert "read.holiday" not in calls

@@ -34,6 +34,7 @@ from app.domains.travel_ops.components.planning.safety import classify as classi
 from app.domains.travel_ops.components.places.place_hours import fits, hours_on
 from . import failure_codes as fc
 from .closure_rules import holiday_dates_needed, local_date, read_closure
+from .disaster_impact import Impact, ImpactRules, assess
 from .judge import requests as judge_requests
 from .judge.llm import LLMJudge
 from .judge.modes import ShadowJudge
@@ -42,6 +43,18 @@ from .replacement import ReplacementMixin
 from .similarity import distance_first, preference_of, score
 
 _failure_log = logging.getLogger(fc.LOGGER_NAME)
+
+# ★`[2026-10-11]` 고객 확인 요청(`wait_for_input`)이 묻는 값 — 계약상 `required_input_schema` 가 있어야 한다(JSON Schema 모양).
+ASK_STARTS_AT: dict[str, Any] = {
+    "type": "object", "required": ["starts_at"],
+    "properties": {"starts_at": {"type": "string", "format": "date-time", "description": "방문 시각"}}}
+ASK_OUTDOOR: dict[str, Any] = {      # 수정본 UC-A3 `3b2`
+    "type": "object", "required": ["outdoor"],
+    "properties": {"outdoor": {"type": "boolean", "description": "야외 활동이면 true, 실내 활동이면 false"}}}
+ASK_PROCEED: dict[str, Any] = {      # 수정본 UC-A3 `4a`
+    "type": "object", "required": ["proceed"],
+    "properties": {"proceed": {"type": "string", "enum": ["keep", "change"],
+                               "description": "keep: 운영 정보 미확인인 채로 그대로 진행 · change: 다른 장소를 본다"}}}
 
 
 class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
@@ -84,6 +97,9 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                        "read.place_candidates",
                        # ★`[2026-10-09]` 장소 행에 실내외가 없을 때 관광공사 분류로 정한다(team 통합 ⑤)
                        "read.place_class",
+                       # ★`[2026-10-11]` 재난문자를 수정본 §8 분류표로 가른다(구현 계획 2.4) · 재난으로 막혔을 때 대체 후보 위치를 다시 본다.
+                       #   `read.disaster_points` 는 `replacement._recheck_disaster` 가 10-07 부터 부르는데 선언이 빠져 있었다.
+                       "read.disaster", "read.disaster_points",
                        *ITINERARY_TOOLS],
         # ★`[2026-09-22]` 여행 scope 로 바꿨다. 앞 값(`activity`·`cancellation`·`refund`·`weather`)
         #   가운데 **`refund` 는 쇼핑몰 코퍼스에 실재하는 scope** 라, 정책을 켜는 순간 활동 판정이
@@ -356,9 +372,10 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                               if missing else [])
         # ★`[2026-10-09]` 「모름」을 「성립」으로 읽지 않는다(team 통합 ③ — role-activity 판). 시각을 모르면 휴무 · 운영시간 ·
         #   재난 · 기상 어느 것도 잴 수 없어 장소를 읽지 않는다. 정원 초과처럼 시각 없이 확인된 불가(위)는 이미 나갔다.
+        # ★`[2026-10-11]` 「정보 부족」(`insufficient_info` — 계약 밖 값)으로 끝내지 않고 고객에게 방문 시각을 묻는다(D4 · 수정본 §12).
         if remaining is None:
-            return self._insufficient(task, evidence, fc.TIME_UNKNOWN, reason="time_unknown",
-                                      answer="예약 시각을 확인하지 못해 성립 여부를 판정하지 않았습니다.",
+            return self._ask_customer(task, evidence, fc.TIME_UNKNOWN, schema=ASK_STARTS_AT, reason="time_unknown",
+                                      answer="예약 시각을 확인하지 못해 성립 여부를 판정하지 않았습니다. 방문 시각을 알려 주세요.",
                                       warnings=["예약 시각을 확인하지 못했다", *headcount_warnings])
 
         place = self._read(task, "read.place", {"place_id": booking.get("place_id")}, seen)
@@ -366,10 +383,12 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                                   claim="장소·운영 정보", value=place, base=evidence)
         # ★전에는 장소를 몰라도 「확인한 범위에서는 성립합니다 … 판정하지 않았습니다」로 답했다 — 앞뒤가 어긋난다(활동 팀 결함 1).
         #   장소를 모르면 재난 · 휴무 점검에 넘길 좌표 · 구도 없다.
+        # ★`[2026-10-11]` 예약에 붙은 장소를 못 읽은 것은 고객이 풀 수 있는 일이 아니다 — 운영 담당자에게 넘긴다(D4, 수정본 UC-A3 `1a`).
+        #   「없음」으로 단정하지 않는다. 카카오로 실재를 확인하는 갈래(구현 계획 2.5)가 붙으면 그 앞에서 나뉜다.
         if place is None:
-            return self._insufficient(task, evidence, fc.PLACE_UNKNOWN, place_confirmed=False,
-                                      answer="장소·운영 정보가 확인되지 않아 판정하지 않았습니다.",
-                                      warnings=["장소·운영 정보를 확인하지 못했다", *headcount_warnings])
+            return self._escalate(task, fc.PLACE_UNKNOWN, evidence,
+                                  warnings=["장소·운영 정보를 확인하지 못했다 — 없음이 아니라 모르는 상태다",
+                                            *headcount_warnings])
 
         # ★성립 점검은 **한 번**이다(`read.disruptions`). 예보·특보·(붙는 대로)
         #   재난문자·대기질을 도구가 한꺼번에 본다. 무엇을 볼지(실내면 예보 안 봄)는
@@ -378,6 +397,8 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         indoor: dict[str, Any] = {}
         place_class: dict[str, Any] | None = None
         weather_pending: dict[str, Any] | None = None
+        outdoor_ask: list[dict[str, Any]] = []
+        disaster_warnings: list[str] = []
         if isinstance(place, dict):
             indoor, evidence, place_class = self._indoor_outdoor(task, booking, place, seen, evidence)
             report = self._read(task, "read.disruptions", {
@@ -401,27 +422,8 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                 return self._escalate(task, "fatal_source_failure", evidence, warnings=[
                     f"값을 끝까지 못 가져온 항목: {', '.join(failed)} — 대체 소스까지 "
                     f"실패했다(결정 15: 치명). 모르는 채로 성립이라고 답하지 않는다"])
-            # ★`[2026-10-09]` 실내외를 모르는데 **날씨 사건만** 걸렸다 — 바꾸라고 단정하지 않고 먼저 묻는다(감시 경로의
-            #   `pending.needs_consent` 와 같은 기준 · 사용자 결정 2026-09-29). 휴무가 더 확실한 불가라 휴무를 먼저 본 뒤에 답한다.
-            if report.get("verdict") == "disrupted" and report.get("indoor_unknown") and weather_only(report):
-                weather_pending = report
-            # ★이상이 **하나라도** 있으면 일정 변경 대상이다.
-            elif report.get("verdict") == "disrupted":
-                kinds = ", ".join(str(d.get("kind")) for d in report.get("disruptions", []))
-                return self._propose_change(
-                    task, booking, evidence,
-                    reason=f"일정 성립 점검 이상 — {kinds}",
-                    answer=(f"현재 {self._REGION}에 {kinds}가 발효 중이라 이 일정은 "
-                            f"바꿔야 합니다. 변경 제안을 만들었고 승인 뒤에 진행됩니다."),
-                    decisions={"feasible": False, "reason": "disrupted",
-                               "disruptions": report.get("disruptions", [])})
-            # ★`[2026-10-09]` 재난 기준을 재난 정지와 맞춘다(가 방안 — 사용자 결정). 공유 점검은 재해구분을 모르는 문자를
-            #   `unclassified` 로만 남긴다(「민방공」 위급재난인데 본문에 공습경보 낱말이 없는 경우 등). 그런데 재난 정지
-            #   (`planning/safety.classify` — 같은 서비스의 감시 경로)는 그 문자로 그날 · 여행 전체를 멈춘다. 성립 판정이
-            #   「성립」으로 답하면 둘이 어긋나므로, **같은 기준**으로 정지 대상이면 막는다. 날씨형 위급재난은 develop 결정대로
-            #   정지 대상이 아니다(실내 대체 · 안전 알림이 맡는다 — `[결정 2026-10-06 사용자]`).
-            event = self._unclassified_safety_event(report)
-            if event is not None:
+
+            def safety_change(event: Any) -> TeamResult:
                 return self._propose_change(
                     task, booking, evidence,
                     reason=f"재난 — {event.label}",
@@ -430,6 +432,47 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                     decisions={"feasible": False, "reason": "safety_event",
                                "failure_code": self._record_failure(task, fc.DISASTER_BLOCKS),
                                "safety": event.evidence()})
+            # ★`[2026-10-11]` 재난문자는 수정본 §8 재해 분류표로 가른다(D2 — 등급이 아니라 재해 성격). 공유 점검이 이상으로
+            #   센 재난문자는 빼고(`rest`) 분류 결과로 막는다. 나머지(예보 · 특보 · 교통 · 대기)는 공유 점검 판정 그대로다.
+            impact, rest, evidence, stop = self._disaster_impact(task, booking, place, report, indoor, seen, evidence)
+            if stop is not None:
+                return stop
+            # ★재난 정지 대상(그날 · 여행 전체)이 먼저다 — 정지는 대체 장소를 붙이지 않는 결정이다(`_closed_place_change` 참고).
+            safety = self._safety_event(impact, report)
+            if safety is not None:
+                return safety_change(safety)
+            if impact is not None and impact.blocks:
+                kinds = ", ".join(dict.fromkeys(str(m.get("kind")) for m in impact.blocks))
+                return self._closed_place_change(
+                    task, booking, place, seen, evidence, reason=f"재난 — {kinds}",
+                    answer=(f"이 장소가 있는 지역에 {kinds} 문자가 발령 중이라 이 일정은 바꿔야 합니다. "
+                            f"변경 제안을 만들었고 승인 뒤에 진행됩니다."),
+                    decisions={"feasible": False, "reason": "disaster_blocks",
+                               "failure_code": self._record_failure(task, fc.DISASTER_BLOCKS),
+                               "disaster": impact.record()})
+            if impact is not None:
+                outdoor_ask = impact.ask
+                disaster_warnings = [f"분류되지 않은 재해구분({m.get('kind')}) 문자가 있다 — 판정에 넣지 않고 근거로만 남겼다"
+                                     for m in impact.unclassified]
+            # ★`[2026-10-09]` 실내외를 모르는데 **날씨 사건만** 걸렸다 — 바꾸라고 단정하지 않고 먼저 묻는다(감시 경로의
+            #   `pending.needs_consent` 와 같은 기준 · 사용자 결정 2026-09-29). 휴무가 더 확실한 불가라 휴무를 먼저 본 뒤에 답한다.
+            if rest.get("verdict") == "disrupted" and rest.get("indoor_unknown") and weather_only(rest):
+                weather_pending = rest
+            # ★이상이 **하나라도** 있으면 일정 변경 대상이다.
+            elif rest.get("verdict") == "disrupted":
+                kinds = ", ".join(str(d.get("kind")) for d in rest.get("disruptions", []))
+                return self._propose_change(
+                    task, booking, evidence,
+                    reason=f"일정 성립 점검 이상 — {kinds}",
+                    answer=(f"현재 {self._REGION}에 {kinds}가 발효 중이라 이 일정은 "
+                            f"바꿔야 합니다. 변경 제안을 만들었고 승인 뒤에 진행됩니다."),
+                    decisions={"feasible": False, "reason": "disrupted",
+                               "disruptions": rest.get("disruptions", [])})
+            # ★`[2026-10-09]` 재난 기준을 재난 정지와 맞춘다(가 방안 — 사용자 결정). 공유 점검은 재해구분을 모르는 문자를
+            #   `unclassified` 로만 남긴다(「민방공」 위급재난인데 본문에 공습경보 낱말이 없는 경우 등). 그런데 재난 정지
+            #   (`planning/safety.classify` — 같은 서비스의 감시 경로)는 그 문자로 그날 · 여행 전체를 멈춘다. 성립 판정이
+            #   「성립」으로 답하면 둘이 어긋나므로, **같은 기준**으로 정지 대상이면 막는다. 날씨형 위급재난은 develop 결정대로
+            #   정지 대상이 아니다(실내 대체 · 안전 알림이 맡는다 — `[결정 2026-10-06 사용자]`).
             # ★`[2026-10-09]` 판정 LLM 섀도 ④(D-CS-015) — 공유 점검이 이상으로 세지 않고 재난 정지 대상도 아닌 문자(긴급재난 ·
             #   안전안내)의 주제 관련성. develop 판은 이 문자로 막지 않는다 — 그것이 비교 기준(`no_effect`)이다.
             quiet = self._unclassified_messages(report)
@@ -445,19 +488,28 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             closed, evidence, hours_note, hours_decision = self._hours_check(task, booking, place, seen, evidence)
             if closed is not None:
                 return closed
-        if weather_pending is not None:
-            kinds = ", ".join(str(d.get("kind")) for d in weather_pending.get("disruptions", []))
-            return self._result(
-                task, outcome="completed", confidence=0.6, evidence=evidence,
-                next_action=NextAction.RESPOND,
+        # ★`[2026-10-11]` 고객 확인은 계약대로 `waiting` · `customer_input` 이다(D4 · 수정본 §12). 전에는 `completed` 로 답하며
+        #   「말씀해 주세요」만 붙여, 코어가 답을 기다리는 Case 로 알지 못했다. 순서는 수정본 UC-A3 그대로 — 재난(`3b2`) → 운영 정보(`4a`).
+        if weather_pending is not None or outdoor_ask:
+            pending = [*(weather_pending or {}).get("disruptions", []), *outdoor_ask]
+            kinds = ", ".join(dict.fromkeys(str(d.get("kind")) for d in pending))
+            return self._ask_customer(
+                task, evidence, fc.INDOOR_UNKNOWN, schema=ASK_OUTDOOR, reason="indoor_unknown_weather",
                 answer=(f"현재 {self._REGION}에 {kinds}가 발효 중입니다. 이 장소가 실내인지 확인하지 못해 일정을 바꿔야 "
-                        f"하는지는 판정하지 않았습니다. 바꾸기를 원하시면 말씀해 주세요."),
-                decisions=[{"feasible": None, "status": "needs_confirmation", "reason": "indoor_unknown_weather",
-                            "disruptions": weather_pending.get("disruptions", []), "indoor": indoor}],
-                warnings=["실내외를 모르는 장소에 날씨 사건만 걸렸다 — 변경을 단정하지 않고 고객에게 먼저 묻는다"])
+                        f"하는지는 판정하지 않았습니다. 야외 활동인지 알려 주세요."),
+                disruptions=pending, indoor=indoor,
+                warnings=["실내외를 모르는 장소에 야외에만 영향을 주는 사건이 걸렸다 — 변경을 단정하지 않고 고객에게 먼저 묻는다",
+                          *disaster_warnings])
+        if hours_decision is not None and hours_decision.get("empty"):
+            return self._ask_customer(
+                task, evidence, fc.HOURS_UNKNOWN, schema=ASK_PROCEED, reason="hours_unknown", hours=hours_decision,
+                answer=("이 장소의 운영 정보(운영시간 · 휴무)를 확인하지 못해 그 부분은 판정하지 않았습니다. "
+                        "그대로 진행할지, 다른 장소를 볼지 알려 주세요."),
+                warnings=["운영 정보가 비어 휴무 · 운영시간을 판정하지 못했다 — 「성립」으로 답하지 않고 고객에게 묻는다",
+                          *headcount_warnings, *disaster_warnings])
 
         forecast = self._checked_value(report, "forecast")
-        warnings: list[str] = list(headcount_warnings)
+        warnings: list[str] = [*headcount_warnings, *disaster_warnings]
         decisions: dict[str, Any] = {"feasible": True, "place_confirmed": True,
                                      "headcount_checked": not missing}
         if report is not None:
@@ -530,6 +582,34 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                                                       booking.get("starts_at")),
                      value="unknown", basis="develop_does_not_read_web_notices")
 
+    def _disaster_impact(self, task: TeamTask, booking: dict, place: dict, report: dict[str, Any],
+                         indoor: dict[str, Any], seen: set[str], evidence: list
+                         ) -> tuple[Impact | None, dict[str, Any], list, TeamResult | None]:
+        """재난문자를 수정본 §8 분류표로 가른다(D2). `[2026-10-11]` 구현 계획 2.4.
+
+        반환: (분류 결과 | None, 재난문자를 뺀 점검 결과, 근거, 여기서 멈출 결과 | None).
+        ★공유 점검의 재난문자 항목이 `ok` 일 때만 한다. 미연결 · 실패는 공유 점검 판정 그대로 둔다(분류 결과 `None`).
+        ★문자는 `read.disaster` 로 다시 읽는다 — 공유 점검은 실내 장소면 날씨형 문자(호우 · 산사태 …)를 미리 빼는데,
+          §8 은 그중 여럿을 지역 위험형(실내도 막음)으로 본다. 같은 소스 · 같은 구 판정(`disaster_msg.near()`)이고 소스가
+          지역 단위로 캐시해 외부 호출은 늘지 않는다.
+        ★다시 읽지 못하면 「영향 없음」으로 보지 않고 운영 담당자에게 넘긴다(구현 계획 §2.5-E — 재난 사실을 최신으로 확인 못 함).
+        """
+        checks = [c for c in report.get("checks") or [] if isinstance(c, dict) and c.get("category") == "disaster_msg"]
+        if not checks or checks[0].get("status") != "ok":
+            return None, report, evidence, None
+        found = self._read(task, "read.disaster", {"latitude": place.get("latitude"), "longitude": place.get("longitude"),
+                                                   "at": booking.get("starts_at"), "address": place.get("address")}, seen)
+        evidence = self._evidence(task, source_id="read.disaster", claim="장소 지역의 재난문자", value=found, base=evidence)
+        if not isinstance(found, dict) or found.get("covered") is False:
+            return None, report, evidence, self._escalate(task, fc.DISASTER_UNCONFIRMED, evidence, warnings=[
+                "재난문자를 다시 읽지 못했다 — 「영향 없음」으로 보지 않는다"])
+        messages = [*(found.get("for_region") or []), *(found.get("unclassified") or [])]
+        impact = assess(messages, indoor.get("value"), ImpactRules.load())
+        others = [d for d in report.get("disruptions") or [] if d.get("category") != "disaster_msg"]
+        rest = {**report, "disruptions": others,
+                "verdict": "disrupted" if others else ("clear" if report.get("verdict") == "disrupted" else report.get("verdict"))}
+        return impact, rest, evidence, None
+
     @staticmethod
     def _unclassified_messages(report: dict[str, Any] | None) -> list[dict[str, Any]]:
         """공유 점검이 「모르는 구분」으로만 남긴 재난문자(정지 대상이 없다고 확인된 뒤에 부른다)."""
@@ -564,15 +644,28 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         return {"value": bool(value), "source": "class", "lcls1": found.get("lcls1"),
                 "lcls2": found.get("lcls2")}, evidence, found
 
-    def _insufficient(self, task: TeamTask, evidence: list, code: str, *, answer: str, warnings: list[str],
-                      **decisions: Any) -> TeamResult:
-        """「정보 부족」 — 사람에게 넘기지 않고 답하되 성립을 단정하지 않는다(`feasible: False` · `status: insufficient_info`)."""
+    def _ask_customer(self, task: TeamTask, evidence: list, code: str, *, schema: dict[str, Any], answer: str,
+                      warnings: list[str], **decisions: Any) -> TeamResult:
+        """고객 확인 요청 — `waiting` · `wait_for_input` · `wait_reason='customer_input'`(수정본 §12 · 계약 04 §5). `[2026-10-11]`
+
+        ★전에는 `completed` + `status: insufficient_info`(계약에 없는 값)로 답했다(D4). 성립을 단정하지 않는 것은 그대로다 —
+          `feasible` 은 `None`(판정하지 않음)이다. 실패 코드는 `decisions` 와 로그에만 싣는다 — 넘김(`escalated`)이 아니다.
+        ★고객의 답으로 다시 판정하는 것(재개)은 아직 없다 — 코어가 답을 Team 입력으로 넘기는 경로가 없다(구현 계획 4.4 · 코어 협의).
+        """
         return self._result(
-            task, outcome="completed", confidence=0.5, evidence=evidence,
-            next_action=NextAction.RESPOND, answer=answer,
-            decisions=[{"feasible": False, "status": "insufficient_info", **decisions,
-                        "failure_code": self._record_failure(task, code)}],
+            task, outcome="waiting", confidence=0.5, evidence=evidence,
+            next_action=NextAction.WAIT_FOR_INPUT, answer=answer, required_input_schema=schema,
+            decisions=[{"feasible": None, **decisions, "failure_code": self._record_failure(task, code)}],
             warnings=warnings)
+
+    @classmethod
+    def _safety_event(cls, impact: Impact | None, report: dict[str, Any]):
+        """재난 정지 대상 문자 — §8 분류를 했으면 다시 읽은 문자 전부에서, 못 했으면 전처럼 공유 점검의 「모르는 구분」에서. `[2026-10-11]`"""
+        if impact is None:
+            return cls._unclassified_safety_event(report)
+        causes = [{**m, "category": "disaster_msg"}
+                  for m in [*impact.blocks, *impact.ask, *impact.unclassified, *impact.no_effect]]
+        return classify_safety(causes) if causes else None
 
     @staticmethod
     def _unclassified_safety_event(report: dict[str, Any] | None):
@@ -603,8 +696,15 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             return None, evidence, None, None
         hours = self._read(task, "read.place_hours", {"place_id": booking.get("place_id"), "at": starts_at}, seen)
         evidence = self._evidence(task, source_id="read.place_hours", claim="운영시간 · 휴무", value=hours, base=evidence)
+        # ★`[2026-10-11]` 운영 정보가 **비어 있음**(`empty` — 수정본 UC-A3 `4a`, 받는 쪽이 고객에게 묻는다)과 원문은 있는데
+        #   **읽지 못함**(`5b` — 「운영시간 미확인」 단서 + 유지)을 가른다. 전에는 둘 다 단서만 붙여 「성립」으로 답했다(부록 A #3).
+        #   「비어 있음」은 도구가 장소를 찾고 **값이 없다고 답한 것**만이다. `None`(장소 id 가 없어 조회하지 않음)은 비어 있다는
+        #   사실이 아니라서 전처럼 단서만 붙인다.
         if not isinstance(hours, dict):
             return None, evidence, "운영시간 · 휴무를 확인하지 못해 그 부분은 판정하지 않았습니다.", {"known": False}
+        if not hours.get("known") and not hours.get("usetime_text") and not hours.get("restdate_text"):
+            return None, evidence, None, {"known": False, "empty": True, "source": hours.get("source"),
+                                          "why_unknown": hours.get("why_unknown")}
         attributes = hours.get("attributes") or {}
         day = hours_on(attributes, local_date(starts_at))
         restdate = hours.get("restdate_text")

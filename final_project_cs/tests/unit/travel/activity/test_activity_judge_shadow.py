@@ -17,6 +17,7 @@ import pytest
 from app.domains.travel_ops.instances.activity import ActivityTeam
 
 from ..helpers import FakeTools, pack, task
+from ._disaster import disaster_from
 from ._judge_fakes import out
 
 ALLOWED = ActivityTeam.manifest.allowed_tools
@@ -98,7 +99,7 @@ def _values(*, hours=None, sensitive=False, place_class=None, report=CLEAR):
             "read.policy": [],
             "read.place": {"place_id": "p1", "name": "경복궁", "weather_sensitive": sensitive,
                            "latitude": 37.5796, "longitude": 126.9770, "source_content_id": None},
-            "read.place_class": place_class, "read.disruptions": report, "read.place_hours": hours or _hours(),
+            "read.place_class": place_class, "read.disruptions": report, "read.disaster": disaster_from(report), "read.place_hours": hours or _hours(),
             "read.place_candidates": None, "read.holiday": None}
 
 

@@ -15,6 +15,7 @@ from app.domains.travel_ops.instances.activity import ActivityTeam
 from app.domains.travel_ops.instances.activity import failure_codes as fc
 
 from ..helpers import FakeTools, pack, task
+from ._disaster import disaster_from
 
 ALLOWED = ActivityTeam.manifest.allowed_tools
 KST = timezone(timedelta(hours=9))
@@ -38,7 +39,8 @@ def _run(report):
                                "party_size": 2, "capacity": 4},
               "read.policy": [],
               "read.place": {"place_id": "p1", "weather_sensitive": False, "latitude": 37.5, "longitude": 127.0},
-              "read.disruptions": report, "read.place_hours": OPEN_HOURS, "read.holiday": None}
+              "read.disruptions": report, "read.disaster": disaster_from(report),
+              "read.place_hours": OPEN_HOURS, "read.holiday": None}
     context = pack("activity", scope=["activity"])
     return asyncio.run(ActivityTeam(FakeTools(values)).execute(task("activity", "activity.check_feasible", context, ALLOWED)))
 

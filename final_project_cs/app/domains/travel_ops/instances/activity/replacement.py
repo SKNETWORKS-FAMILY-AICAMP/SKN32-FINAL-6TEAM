@@ -10,7 +10,10 @@ from typing import Any
 from app.core.contracts import TeamTask
 
 from . import failure_codes as fc
+from app.domains.travel_ops.components.itinerary.itinerary import weather_from_class
+
 from .alternatives import FALLBACK_DROPS, RADIUS_START_KM, preference_from_survey, rank_alternatives
+from .disaster_impact import ImpactRules, assess
 
 
 class ReplacementMixin:
@@ -100,7 +103,7 @@ class ReplacementMixin:
             if disaster_note == "all_blocked":
                 self._record_failure(task, fc.ALTERNATIVES_WITHHELD)
                 return ({"status": "withheld", "reason": "disaster_blocks"}, evidence,
-                        "근처 대체 후보도 모두 위급재난 문자가 온 지역이라 대체 장소를 안내하지 않았습니다.",
+                        "근처 대체 후보도 모두 재난 문자가 온 지역이라 대체 장소를 안내하지 않았습니다.",
                         warnings)
         if ranked["dropped_fields"]:
             warnings.append(f"유사 조건 일부({', '.join(ranked['dropped_fields'])})를 풀어서 찾은 후보다")
@@ -119,7 +122,7 @@ class ReplacementMixin:
             self._record_failure(task, fc.ALTERNATIVES_NONE if not ranked["alternatives"]
                                  else fc.ALTERNATIVES_UNCONFIRMED)
             excluded = ranked.get("disaster_excluded") or 0
-            note = (f"근처 후보 {excluded}곳은 위급재난 문자가 온 지역이라 뺐습니다."
+            note = (f"근처 후보 {excluded}곳은 재난 문자가 온 지역이라 뺐습니다."
                     if not ranked["alternatives"] and excluded
                     else f"근처(반경 {ranked['max_radius_km']:g}km)에 조건에 맞는 장소가 없습니다."
                     if not ranked["alternatives"]
@@ -140,9 +143,12 @@ class ReplacementMixin:
 
     def _recheck_disaster(self, task: TeamTask, ranked: dict[str, Any], candidates: list[dict[str, Any]],
                           starts_at: Any, seen: set[str], evidence: list) -> tuple[list, str | None]:
-        """원래 장소가 위급재난으로 막혔을 때 — 후보 위치마다 재난문자를 다시 본다. `[2026-10-07]`
+        """원래 장소가 재난으로 막혔을 때 — 후보 위치마다 재난문자를 다시 본다. `[2026-10-07]`
 
-        위급재난이 걸린 후보는 `ranked` 의 두 목록에서 **뺀다.** 그 위치의 문자를 모르는 후보는
+        ★`[2026-10-11]` 막는 기준을 등급(위급재난)에서 수정본 §8 재해 분류표로 바꿨다(D2 · UC-A4 2단계 — 성립 판정과 같은 표).
+          지역 위험형 문자가 온 구의 후보는 다 빼고, 야외 위험형은 야외 후보만 뺀다. 후보의 실내외는 관광공사 분류
+          (`weather_from_class` — 일정 짜기와 같은 규칙)로 정하고, 모르면 야외처럼 뺀다(모름을 「안 막힘」으로 읽지 않는다).
+        막히는 후보는 `ranked` 의 두 목록에서 **뺀다.** 그 위치의 문자를 모르는 후보는
         `revalidated: False` 로 두어 안내문에 싣지 않는다(모름을 「안 막힘」으로 읽지 않는다).
         반환: (근거, 상태) — 상태는 `None`(확인됨) · `"unknown"`(모르는 후보가 있음) · `"all_blocked"`.
         """
@@ -165,14 +171,18 @@ class ReplacementMixin:
 
         blocked: set[int] = set()
         unknown = False
+        rules = ImpactRules.load()
         for alternative, result in zip(listed, results):
             if not isinstance(result, dict):
                 alternative["disaster"] = "unknown"
                 alternative["revalidated"] = False
                 unknown = True
                 continue
-            messages = result.get("for_region") or []
-            if any(m.get("step") == "위급재난" for m in messages):
+            messages = [*(result.get("for_region") or []), *(result.get("unclassified") or [])]
+            row = rows.get(str(alternative.get("contentid"))) or {}
+            outdoor = weather_from_class(row.get("lclsSystm1"), row.get("lclsSystm2"))
+            # ★야외 위험형에서 실내외를 모르는 후보는 묻지 않고 뺀다 — 후보는 고객이 고른 곳이 아니다
+            if assess(messages, True if outdoor is None else outdoor, rules).blocks:
                 blocked.add(id(alternative))
             else:
                 alternative["disaster"] = "clear"
