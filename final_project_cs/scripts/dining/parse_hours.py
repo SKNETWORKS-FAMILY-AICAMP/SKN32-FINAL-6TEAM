@@ -38,6 +38,8 @@ RE_RANGE = re.compile(r"(\d{1,2})\s*:\s*(\d{2})\s*[~\-]\s*(\d{1,2})\s*:\s*(\d{2}
 RE_ONE = re.compile(r"(\d{1,2})\s*:\s*(\d{2})")
 RE_BREAK_WORD = re.compile(r"준비\s*시간|브레이크|브레익|break", re.I)
 RE_LO_WORD = re.compile(r"마지막\s*주문|라스트\s*오더|last\s*order|L\.?O\.?", re.I)
+#: 시각 없이 하루 내내 연다고 적은 표기(「상시 영업」 · 「24시간 영업」)
+RE_ALL_DAY = re.compile(r"상시\s*영업|24\s*시간")
 
 #: [평일] 처럼 대괄호로 묶은 요일 블록
 RE_BRACKET = re.compile(r"\[([^\]]{1,12})\]")
@@ -131,7 +133,7 @@ def split_blocks(text: str) -> list[tuple[tuple[int, ...] | None, str]]:
         for i, match in enumerate(marks):
             stop = marks[i + 1].start() if i + 1 < len(marks) else len(text)
             chunk = text[match.end():stop]
-            if not RE_RANGE.search(chunk):
+            if not RE_RANGE.search(chunk) and not RE_ALL_DAY.search(chunk):   # 「금요일~토요일 상시 영업」은 남긴다
                 continue
             blocks.append((days_from_token(match.group(0)) or None, chunk))
         if blocks:
@@ -163,6 +165,19 @@ def pick_ranges(chunk: str) -> tuple[list[tuple[int, int]], list[tuple[tuple[int
         # 브레이크로 잡혀 영업시간이 통째로 사라지던 원인이다.
         if '(' in after:
             after = after[:after.index('(')]
+        # ★`[2026-10-12]` 붙여 쓴 항목 경계 — 「[평일]- 11:00~21:00- 준비시간 15:00~17:00」. 시각 바로 뒤의 「-」 다음은 다음 항목이다.
+        #   ` - ` 만 경계로 봐서 「- 준비시간」을 이 범위의 낱말로 읽고 평일 영업 범위를 브레이크로 버렸다(관광공사 원문의 흔한 모양).
+        if re.match(r"\s*-\s*\D", after):
+            after = ""
+        # ★`[2026-10-12]` 뒤 낱말 바로 다음에 **시각 범위**가 오면 그 낱말은 다음 범위의 것이다 —
+        #   「토,일 12:00~21:30 브레이크타임 15:00~17:30」 의 「브레이크타임」은 15:00~17:30 의 것이다.
+        #   ☆처음엔 「시각 하나」로 봐서 「(15:00~17:00 브레이크타임)<br>21:00 라스트오더」 의 라스트오더 시각에 걸려 브레이크를 잃었다(오프트 · 띠아낭 등 6곳) —
+        #   범위(~)만 본다. 범위 뒤에 붙는 낱말(「(15:00~17:00 브레이크타임)」)은 그대로 남는다.
+        word = RE_BREAK_WORD.search(after)
+        if word:
+            rest = chunk[match.end() + word.end():match.end() + word.end() + 20]
+            if re.match(r"[^\d]{0,6}" + RE_RANGE.pattern, rest):
+                after = ""
         start = to_min(match.group(1), match.group(2))
         end = to_min(match.group(3), match.group(4))
         if end <= start:
@@ -230,6 +245,9 @@ def parse_hours(raw: str) -> tuple[dict[int, dict], list[str]]:
         if days is None and RE_DAY_WORD.search(chunk or "") and "공휴일" in chunk:
             saw_holiday_block = True
         biz, brk = pick_ranges(chunk)
+        # ★`[2026-10-12]` 「금요일~토요일 상시 영업」 · 「24시간 영업」 — 시각이 없어도 하루 내내 연다고 적은 것이다(전에는 그 요일이 모름)
+        if not biz and RE_ALL_DAY.search(chunk or ""):
+            biz = [(0, 1440)]
         los = pick_last_orders(chunk)
         for day in targets:
             per_day[day]["biz"] += biz
@@ -280,7 +298,8 @@ def parse_hours(raw: str) -> tuple[dict[int, dict], list[str]]:
 
 
 # ── 휴무 ────────────────────────────────────────────────────────
-RE_WEEKLY = re.compile(r"매주\s*([월화수목금토일요일,·/~\-\s]+)")
+#: ★`[2026-10-12]` 「매주 주말」 · 「매주 평일」도 읽는다 — 전에는 글자 묶음에 「주말」이 없어 규칙을 못 만들었다
+RE_WEEKLY = re.compile(r"매주\s*((?:주말|평일|[월화수목금토일요일,·/~\-\s])+)")
 #: 매월 둘째, 넷째 화요일 / 매월 두번 째, 네번 째 일요일
 RE_NTH = re.compile(r"매월\s*([^월화수목금토일]*?)\s*([월화수목금토일])요일")
 KOR_NTH = {"첫": 1, "한": 1, "둘": 2, "두": 2, "셋": 3, "세": 3,
