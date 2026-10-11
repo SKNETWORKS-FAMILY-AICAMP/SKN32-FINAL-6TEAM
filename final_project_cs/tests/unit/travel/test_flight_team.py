@@ -488,18 +488,20 @@ def test_change_on_a_flight_item_holds_new_direct_flights_like_dining_and_activi
     assert llm.calls == [], "일정 항목에서 읽는다 — 모델을 부르지 않는다"
     searches = [arguments for name, arguments in tools.calls if name == "read.booking_search_flights"]
     assert searches == [{"origin": "TPE", "destination": "ICN", "depart_date": GO, "domestic": False, "adults": 2, "max_results": 100}]
-    assert result.answer == ("타이베이 → 인천 대신 탈 수 있는 편이에요 — 1) 티웨이항공 TW727 18:30(1인 32,000원) · "
-                             "2) 제주항공 13:10(1인 151,000원). 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
+    assert result.answer == ("타이베이 → 인천 대신 탈 수 있는 편이에요 — 1) 제주항공 13:10(1인 151,000원) · "
+                             "2) 티웨이항공 TW727 18:30(1인 32,000원). 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다."), \
+        "원래 12:00 편 — 앞뒤 3시간 안(13:10)이 더 싼 18:30 보다 먼저(사용자 결정 10-12)"
     (proposal,) = result.action_proposals
     assert proposal.action_type == "itinerary.apply" and proposal.arguments["reason"] == "customer_request"
     new = proposal.arguments["replacements"][0]["item"]
     assert new["kind"] == "flight" and new["detail"]["origin"] == "TPE" and new["starts_at"] == f"{GO}T12:00:00+09:00", "편은 그대로"
     options = new["detail"]["alternates"]
-    assert [(o["rank"], o["key"]) for o in options] == [(1, TW_KEY), (2, JEJU_KEY)]
+    assert [(o["rank"], o["key"]) for o in options] == [(1, JEJU_KEY), (2, TW_KEY)]
     assert {"key", "name", "place_id", "starts_at", "ends_at", "walk_min"} <= set(options[0]), "식당 · 활동의 「다른 안」 칸"
-    assert options[0]["starts_at"] == f"{GO}T18:30:00+09:00" and options[0]["per_person"] == 32000 and options[0]["best"] == 64000
+    assert options[1]["starts_at"] == f"{GO}T18:30:00+09:00" and options[1]["per_person"] == 32000 and options[1]["best"] == 64000
     assert "피치항공" not in result.answer, "직항이 있으면 직항만(사용자 결정 10-10)"
-    assert new["detail"]["shown"] == [TW_KEY, JEJU_KEY]
+    assert new["detail"]["shown"] == [JEJU_KEY, TW_KEY]
+    assert proposal.arguments["summary"]["near_original"] == 1
 
 
 def test_choosing_a_flight_moves_the_item_to_its_departure_and_keeps_the_old_one_as_an_option():
@@ -519,9 +521,24 @@ def test_choosing_a_flight_moves_the_item_to_its_departure_and_keeps_the_old_one
 def test_when_no_new_direct_flight_is_left_connecting_ones_are_held_and_said():
     result, _, _ = _legrun(_plan(detail={"shown": [TW_KEY, JEJU_KEY]}))
     assert result.answer == ("타이베이 → 인천 대신 탈 수 있는 편이에요 — 1) 피치항공 05:30(1인 75,000원). 새로 보여 드릴 직항이 없어 경유 편이에요. "
-                             "고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
+                             "원래 출발(12:00) 앞뒤 3시간 안에는 새 편이 없어 다른 시간대예요. 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
     assert result.action_proposals[0].arguments["summary"]["widened_to_connecting"] is True
     assert result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["shown"] == [TW_KEY, JEJU_KEY, VIA_KEY]
+
+
+def test_new_flights_near_the_original_departure_come_first_then_the_rest_by_price():
+    from app.domains.travel_ops.instances.flight.team import _fresh_flights
+
+    def flight(clock, price):
+        return {"airline": "A", "legs": [{**LEG, "departTime": clock, "flightNumber": clock}], "best": price}
+
+    by_price = [flight("15:00", 100), flight("16:00", 200), flight("09:30", 300), flight("11:00", 400), flight("07:00", 500)]
+    picked = _fresh_flights(by_price, set(), direct_only=True, around=10 * 60)
+    assert [o["legs"][0]["departTime"] for o in picked] == ["09:30", "11:00", "07:00"], "10:00 앞뒤 3시간 안 셋 — 가격순"
+    picked = _fresh_flights(by_price[:3], set(), direct_only=True, around=10 * 60)
+    assert [o["legs"][0]["departTime"] for o in picked] == ["09:30", "15:00", "16:00"], "모자라면 나머지 가격순"
+    picked = _fresh_flights(by_price, set(), direct_only=True)
+    assert [o["legs"][0]["departTime"] for o in picked] == ["15:00", "16:00", "09:30"], "시각을 모르면 가격순 그대로"
 
 
 def test_when_nothing_new_is_left_it_says_so_without_changing_the_plan():

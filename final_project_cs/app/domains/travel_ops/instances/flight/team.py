@@ -202,17 +202,34 @@ def _flight_key(option: dict[str, Any]) -> str:
     return f"{option.get('airline') or '?'} {numbers} {first.get('departDate') or ''} {first.get('departTime') or '?'}".strip()
 
 
-def _fresh_flights(options: list[dict[str, Any]], exclude: set[str], *, direct_only: bool) -> list[dict[str, Any]]:
-    """새 편 `SHOWN` 개 — 가격순(booking 모듈 순서), 앞서 보여 준 편은 뺀다. `direct_only` 면 경유가 확실한 편은 뺀다."""
+#: 「바꿔 줘」 새 편을 고를 때 원래 편 출발 시각 앞뒤 몇 시간을 「같은 시간대」로 보나. 우리가 고른 값(2026-10-12 사용자와 정함 —
+#:  ☆10-12 00:18 playdata: 원래 10:00 편인데 가격순만 보니 후보 셋이 다 오후였다)
+NEAR_HOURS = 3
+
+
+def _clock_minutes(clock: Any) -> int | None:
+    """「HH:MM」 → 자정부터 분. 모르면 None."""
+    text = str(clock or "")
+    if len(text) != 5 or text[2] != ":" or not (text[:2] + text[3:]).isdigit():
+        return None
+    return int(text[:2]) * 60 + int(text[3:])
+
+
+def _near(option: dict[str, Any], around: int | None) -> bool:
+    """첫 다리 출발 시각이 `around`(자정부터 분) 앞뒤 `NEAR_HOURS` 시간 안인가. 어느 쪽 시각이든 모르면 거짓."""
+    first = _clock_minutes((option["legs"][0] if option["legs"] else {}).get("departTime"))
+    return around is not None and first is not None and abs(first - around) <= NEAR_HOURS * 60
+
+
+def _fresh_flights(options: list[dict[str, Any]], exclude: set[str], *, direct_only: bool,
+                   around: int | None = None) -> list[dict[str, Any]]:
+    """새 편 `SHOWN` 개 — 앞서 보여 준 편은 뺀다. `direct_only` 면 경유가 확실한 편은 뺀다.
+    `around`(원래 편 출발, 자정부터 분)가 있으면 그 앞뒤 `NEAR_HOURS` 시간 안의 편을 가격순으로 먼저, 모자라면 나머지를 가격순으로 채운다."""
     pool, _ = _drop_slow(options)
-    out = []
-    for option in pool:
-        if len(out) >= SHOWN:
-            break
-        if (direct_only and _connecting(option)) or _flight_key(option) in exclude:
-            continue
-        out.append(option)
-    return out
+    fresh = [option for option in pool
+             if not (direct_only and _connecting(option)) and _flight_key(option) not in exclude]
+    near = [option for option in fresh if _near(option, around)]
+    return (near + [option for option in fresh if not _near(option, around)])[:SHOWN]
 
 
 def _flight_option(rank: int, option: dict[str, Any], item: Any, people: int) -> dict[str, Any]:
@@ -483,12 +500,16 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
         shown = [str(key) for key in item.detail.get("shown") or []]
         exclude = {*shown, *([str(item.detail["key"])] if item.detail.get("key") else [])}
         prefer_direct = query.get("direct_only") is not False
-        picks = _fresh_flights(options, exclude, direct_only=prefer_direct)
+        clock = item.starts_at.strftime("%H:%M")
+        around = _clock_minutes(clock)   # 원래 편 출발 시각 — 그 앞뒤 편을 먼저(2026-10-12 사용자 결정)
+        picks = _fresh_flights(options, exclude, direct_only=prefer_direct, around=around)
         widened = False
         if not picks and prefer_direct:
-            picks, widened = _fresh_flights(options, exclude, direct_only=False), True   # 새 직항이 없으면 경유까지
+            picks, widened = _fresh_flights(options, exclude, direct_only=False, around=around), True   # 새 직항이 없으면 경유까지
+        near_count = sum(_near(option, around) for option in picks)
         record = {"itinerary": "flight_options", "item": item.title, "query": query, "shown_before": len(shown),
-                  "widened_to_connecting": widened and bool(picks), "options": [_flight_key(option) for option in picks]}
+                  "widened_to_connecting": widened and bool(picks), "around": clock, "near_original": near_count,
+                  "options": [_flight_key(option) for option in picks]}
         if not picks:
             return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
                                 next_action=NextAction.RESPOND, decisions=[record],
@@ -499,6 +520,7 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
                             for o in alternates)
         answer = (f"{item.title} 대신 탈 수 있는 편이에요 — {listed}."
                   + (" 새로 보여 드릴 직항이 없어 경유 편이에요." if widened else "")
+                  + (f" 원래 출발({clock}) 앞뒤 {NEAR_HOURS}시간 안에는 새 편이 없어 다른 시간대예요." if not near_count else "")
                   + " 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
         keys = [o["key"] for o in alternates]
         detail = {**item.detail, "alternates": alternates, "other_options": [o["name"] for o in alternates],
@@ -513,7 +535,7 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
         change = ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
                                  replacements={item.item_id: replacement},
                                  summary={"flight_options": keys, "shown_total": len(detail["shown"]),
-                                          "widened_to_connecting": widened})
+                                          "widened_to_connecting": widened, "near_original": near_count})
         return self.settle(task, ctx, change)
 
     def _choose(self, task: TeamTask, ctx: dict[str, Any], item: Any, choice: str) -> TeamResult:
