@@ -25,8 +25,11 @@
   지역 = 항목 `detail.area` → 장소 `district` → 장소 이름).
   - 이미 예약한 숙소(`booking_id` · `locked` · `detail.booked`)는 바꾸지 않는다(사용자 결정 10-11 「이미 예약한 숙소는 바꿀 일이 없다」).
   - 「바꿔 줘」 = 보여 준 후보가 마음에 안 든다 → **새 후보 3곳**(앞서 보여 준 곳 · 지금 항목은 뺀다). 다시 말하면 또 새 3곳.
-    보여 준 곳은 항목 `detail.shown` 에 남긴다 — 그러려고 숙소는 그대로 두고 상세만 바꾼 `itinerary.apply`(고객 요청, 판정 문 없음)를 낸다.
-    일정 판 번호가 하나 오르고 알림(이 답)이 한 번 나간다. 같은 자리에 지금 후보(`detail.candidates`)도 둔다.
+    `[2026-10-12]` 식당 · 활동과 같은 모양으로 내보낸다 — 후보는 항목의 「다른 안」(`detail.alternates`, `applied_record` 와 같은 칸 + 가격 ·
+    평점 · 링크)이고 답은 한 줄(「○○ 대신 갈 수 있는 곳이에요 — 1) … 고르시면 바꿀게요」). 숙소는 그대로 두고 상세만 바꾼
+    `itinerary.apply`(고객 요청, 판정 문 없음) — 일정 판 +1 · 알림 1번. 보여 준 곳은 `detail.shown` 에 남긴다.
+  - 고르면(`request.choice` = 후보 `key`) 그 숙소로 항목을 바꾼다 — 원래 숙소는 「다른 안」으로. 우리 후보는 MCP 소스에서 왔고 장소 표(DB)에 없어
+    `place_id` 를 비우고 이름 · 좌표 · 링크를 `detail.chosen` 에 둔다(예약 전 `detail.booked = False`).
   - 새 후보가 없으면 목록을 더 넓게(`ALTERNATE_SIZES`) 받아 다시 찾고, 그래도 없으면 그렇다고 답한다(다른 곳 링크와 함께).
   - 일정에 숙소 항목이 생기는 것은 우리 에이전트가 반영될 때다(사용자 10-11) — 그 전까지 이 길은 가짜 일정 시험으로만 돈다.
 - 설문(`constraints.survey`)에는 숙소 문항(예산 · 숙소 유형)이 없다(`components/planning/survey.py` 2026-09-24.v1). 그래서 설문은
@@ -34,6 +37,7 @@
 """
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import date, datetime, timedelta
 import logging
 from math import asin, cos, radians, sin, sqrt
@@ -44,7 +48,7 @@ from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, T
 
 from app.domains.travel_ops.instances._shared._base import TravelTeamBase
 from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TOOLS, ItineraryWork
-from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, with_request
+from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, NoChange, applied_record, with_request
 from .interpret import Interpretation, InterpretationInvalid, ask, ground, model_context, needs, parse, settle_years
 
 logger = logging.getLogger(__name__)
@@ -163,15 +167,19 @@ def _fresh_picks(booked: dict[str, Any], exclude: set[str], center: dict[str, An
         picks.append({"key": f"google:{_key(stay['name'])}", "name": stay["name"], "source": "구글 호텔",
                       "price_per_night": stay.get("price_per_night"), "rating": stay.get("rating") or None,
                       "review_count": stay.get("review_count"), "distance_km": _distance(center, stay),
+                      "latitude": (_coords(stay) or (None, None))[0], "longitude": (_coords(stay) or (None, None))[1],
                       "link": stay["link"]})
     return picks
 
 
-def _pick_line(number: int, pick: dict[str, Any]) -> str:
-    rating = (f"평점 {pick['rating']}/5" + (f"(후기 {pick['review_count']:,})" if isinstance(pick.get("review_count"), int) and pick["review_count"] else "")
-              if pick.get("rating") else "평점 없음")
-    far = f" · 일정 가운데에서 {pick['distance_km']}km" if pick.get("distance_km") is not None else ""
-    return f"{number}. {pick['name']} — 1박 {_won(pick.get('price_per_night'))} · {rating}{far} · {pick['source']}: {pick['link']}"
+def _lodging_option(rank: int, pick: dict[str, Any], item: Any) -> dict[str, Any]:
+    """새 후보 하나 → 식당 · 활동의 「다른 안」 기록 모양(`itinerary_changes.applied_record` 와 같은 칸) + 숙소 칸(가격 · 평점 · 링크 · 좌표).
+    `place_id` 는 비운다 — 우리 후보는 장소 표에 없다(고르면 `detail.chosen` 에 이름 · 좌표 · 링크를 둔다)."""
+    return {"key": pick["key"], "rank": rank, "name": pick["name"], "place_id": None, "option": None, "option_label": None,
+            "starts_at": item.starts_at.isoformat(), "ends_at": item.ends_at.isoformat() if item.ends_at else None,
+            "walk_min": None, "source": pick["source"], "price_per_night": pick.get("price_per_night"),
+            "rating": pick.get("rating"), "review_count": pick.get("review_count"), "distance_km": pick.get("distance_km"),
+            "latitude": pick.get("latitude"), "longitude": pick.get("longitude"), "link": pick["link"]}
 
 
 class LodgingTeam(ItineraryWork, TravelTeamBase):
@@ -375,7 +383,13 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
     def _change(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:
         """「바꿔 줘」 — 공용 부품(`ItineraryWork._change`, 들고 있던 다른 안으로 바꾸기)을 숙소용으로 덮는다.
 
-        숙소는 예약을 우리가 하지 않으므로 **바꾸지 않고 새 후보 3곳**을 보여 준다. 보여 준 곳은 항목 상세에 남겨 다음에 빼고 찾는다.
+        ★`[2026-10-12 사용자 지적 「왜 대본이 나가? 내보내는 건 후보」]` 식당 · 활동과 **같은 모양**으로 내보낸다:
+          - 고른 안이 없으면(`request.choice` 없음) 새 후보 3곳을 계산해 항목의 **「다른 안」(`detail.alternates`)** 자리에 싣는다 — 식당 · 활동이
+            안을 들고 있는 자리 · 모양(`key` · `name` · `place_id` · `starts_at` · `ends_at` · `rank` …)과 같다. 숙소는 그대로, 답은 한 줄
+            (「○○ 대신 갈 수 있는 곳이에요 — 1) … 고르시면 바꿀게요」, `TripDesk.propose_alternatives` 와 같은 글). 가격 · 평점 · 링크는 후보 칸에 둔다.
+          - 고른 안이 있으면(`request.choice` = 후보 `key`) 그 숙소로 항목을 바꾼다(`plan_swap` 과 같은 일 — 원래 숙소는 「다른 안」으로 돌아간다).
+            ★우리 후보(마이리얼트립 · 구글)는 장소 표에 없어 `place_id` 를 비운다 — 적용기가 장소 표에 없는 id 를 거부하므로(`itinerary_actions`).
+            고른 숙소의 이름 · 좌표 · 링크는 `detail.chosen` 에 둔다. 예약 전이다(`detail.booked = False`) — 예약은 링크에서 고객이.
         """
         ref, trip, items = ctx["ref"], ctx["trip"], ctx["items"]
         target = ref.get("part_id") or ref.get("recent_part_id")
@@ -391,6 +405,9 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                                 answer=f"{item.title}은(는) 이미 예약하신 숙소라 바꾸지 않았어요. 다른 숙소를 원하시면 예약하신 곳에서 "
                                        "먼저 취소 조건을 확인해 주세요.",
                                 decisions=[{"itinerary": "booked_kept", "item": item.title}])
+        choice = (ctx.get("request") or {}).get("choice")
+        if choice:
+            return self._choose(task, ctx, item, str(choice))
         query = self._stay_query(item, trip)
         if query is None:
             return self._unknown(task, "숙소 항목의 날짜 · 인원 · 지역", ctx["evidence"])
@@ -413,34 +430,62 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             picks = _fresh_picks(booked, exclude, center, dates, party)
             if picks or not booked:
                 break
-        links = booked.get("elsewhere") or []
         record = {"itinerary": "lodging_options", "item": item.title, "query": query, "shown_before": len(shown),
                   "sizes": sizes_used, "options": [pick["name"] for pick in picks]}
         if not picks:
             if not booked:
                 return self._unknown(task, "숙소 검색 결과", ctx["evidence"])
-            lines = [f"{item.title} 말고 더 보여 드릴 숙소를 찾지 못했어요({query['keyword']} · {dates['check_in']}~{dates['check_out']}"
-                     + (f", 앞서 보여 드린 {len(shown)}곳 제외" if shown else "") + "). 일정은 그대로 두었어요."]
-            if links:
-                lines += ["같은 조건으로 다른 곳에서 보기(가격은 그 사이트에서 확인):",
-                          *[f"   · {link['name']}: {link['url']}" for link in links]]
+            # ★식당 · 활동의 「바꿀 수 있는 다른 안이 없어요」(`ANSWERS["no_alternate"]`)와 같은 자리 — 일정은 그대로
             return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
-                                next_action=NextAction.RESPOND, answer="\n".join(lines), decisions=[record])
-        head = (f"{item.title} 대신 볼 수 있는 숙소예요({query['keyword']} · {dates['check_in']}~{dates['check_out']} · 성인 {query['adults']}명"
-                + (f", 앞서 보여 드린 {len(shown)}곳은 뺐어요" if shown else "") + "):")
-        lines = [head, *(_pick_line(n, pick) for n, pick in enumerate(picks, start=1)), *self._center_line(center)]
-        lines.append("가격과 객실은 조회 시점 기준이에요. 예약은 링크한 페이지에서 직접 하시면 돼요. 마음에 안 드시면 다시 말씀해 주세요 — 새 후보를 찾아 드릴게요.")
-        answer = "\n".join(lines)
-        detail = {**item.detail, "candidates": picks, "shown": [*shown, *(pick["name"] for pick in picks)],
-                  "query": query}
-        cause = with_request({"category": "customer_request", "type": "lodging_options", "from": item.title,
+                                next_action=NextAction.RESPOND, decisions=[record],
+                                answer=f"{item.title} 대신 갈 수 있는 숙소를 더 찾지 못했어요. 일정은 그대로 두었어요.")
+        options = [_lodging_option(rank, pick, item) for rank, pick in enumerate(picks, start=1)]
+        listed = " · ".join(f"{option['rank']}) {option['name']}" + (f"(1박 {_won(option['price_per_night'])})"
+                                                                     if option.get("price_per_night") is not None else "")
+                            for option in options)
+        answer = f"{item.title} 대신 갈 수 있는 곳이에요 — {listed}. 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다."
+        detail = {**item.detail, "alternates": options, "other_options": [option["name"] for option in options],
+                  "shown": [*shown, *(pick["name"] for pick in picks)], "query": query}
+        cause = with_request({"category": "customer_request", "type": "requested_options", "from": item.title,
                               "message": task.input_text}, task.context.current_state.get("request_id"))
         replacement = item.replaced_by(place=None, title=item.title, detail=detail)
-        change = ItineraryChange(reason="customer_request", causes=[cause],
-                                 notice={"text": answer, "language": "ko", "causes": [cause],
-                                         "options": [pick["name"] for pick in picks], "replay": False},
+        notice = {"text": answer, "language": "ko", "causes": [cause], "reason": "requested_options", "item_id": str(item.item_id),
+                  "options": [{"key": o["key"], "rank": o["rank"], "name": o["name"], "starts_at": o["starts_at"], "note": None}
+                              for o in options],
+                  "other_options": detail["other_options"], "replay": False}
+        change = ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
                                  replacements={item.item_id: replacement},
-                                 summary={"lodging_options": [pick["name"] for pick in picks], "shown_total": len(detail["shown"])})
+                                 summary={"lodging_options": [o["name"] for o in options], "shown_total": len(detail["shown"]),
+                                          **{k: v for k, v in record.items() if k in ("sizes", "shown_before")}})
+        return self.settle(task, ctx, change)
+
+    def _choose(self, task: TeamTask, ctx: dict[str, Any], item: Any, choice: str) -> TeamResult:
+        """후보 중 고른 숙소로 항목을 바꾼다 — `plan_swap` 과 같은 일(원래 숙소는 「다른 안」 끝으로, 알림 문장도 같은 꼴)."""
+        trip = ctx["trip"]
+        base = int(ctx["ref"].get("base_version") or trip["version"])
+        if trip["version"] != base:
+            return self.settle(task, ctx, NoChange("stale", {"version": trip["version"]}))
+        alternates = list(item.detail.get("alternates") or [])
+        pick = next((option for option in alternates if str(option.get("key")) == choice), None)
+        if pick is None:
+            return self._escalate(task, "itinerary_unknown_choice", ctx["evidence"],
+                                  warnings=[f"고른 안 {choice} 이(가) 이 항목의 후보에 없다: {[o.get('key') for o in alternates]}"])
+        previous = {**applied_record(item), **({k: item.detail["chosen"][k] for k in ("source", "price_per_night", "link")
+                                               if k in item.detail.get("chosen", {})})}
+        remaining = [option for option in alternates if option is not pick] + [previous]
+        detail = {**item.detail, "alternates": remaining, "other_options": [option["name"] for option in remaining],
+                  "chosen": pick, "booked": False, "customer_requested": True}
+        cause = with_request({"category": "customer_request", "type": "alternate", "from": item.title, "to": pick["name"],
+                              "message": task.input_text}, task.context.current_state.get("request_id"))
+        text = (f"요청하신 대로 {item.title} 대신 {pick['name']}(으)로 바꿨습니다. 아직 예약 전이에요"
+                + (f" — 예약은 이 링크에서 해 주세요: {pick['link']}" if pick.get("link") else "") + ".")
+        replacement = replace(item.replaced_by(place=None, title=pick["name"], detail=detail), place_id=None, place=None)
+        change = ItineraryChange(reason="customer_request", causes=[cause],
+                                 notice={"text": text, "language": "ko", "causes": [cause],
+                                         "changed": {"from": item.title, "to": pick["name"], "at": item.starts_at.isoformat()},
+                                         "other_options": detail["other_options"], "replay": False},
+                                 replacements={item.item_id: replacement},
+                                 summary={"to": pick["name"], "key": pick["key"]})
         return self.settle(task, ctx, change)
 
     @staticmethod

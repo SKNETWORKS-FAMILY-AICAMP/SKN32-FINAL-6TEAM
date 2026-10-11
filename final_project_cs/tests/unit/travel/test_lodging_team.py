@@ -501,7 +501,8 @@ def test_a_case_pointing_at_a_trip_item_is_itinerary_work_and_a_bare_trip_stays_
     assert {"read.policy", "read.booking_terms"} <= set(manifest.allowed_tools)
 
 
-def test_change_on_a_lodging_item_shows_three_new_options_and_remembers_them():
+def test_change_on_a_lodging_item_holds_three_new_options_like_dining_and_activity():
+    """`[2026-10-12 사용자]` 내보내는 것은 대본이 아니라 후보 — 식당 · 활동처럼 항목의 「다른 안」에 싣고 답은 한 줄."""
     result, llm, tools = _itinerary(_plan())
     assert llm.calls == [], "일정 항목에서 읽는다 — 모델을 부르지 않는다"
     searches = [arguments for name, arguments in tools.calls if name == "read.booking_search_stays"]
@@ -509,30 +510,51 @@ def test_change_on_a_lodging_item_shows_three_new_options_and_remembers_them():
                          "domestic": True, "size": 20}]
     assert not [name for name, _ in tools.calls if name == "read.stay_detail"], "새 후보는 목록 값만 — 상세를 부르지 않는다"
     assert result.outcome == "completed"
-    answer = result.answer
-    assert answer.startswith("기존 호텔 대신 볼 수 있는 숙소예요(중구 · " + IN + "~" + OUT + " · 성인 2명):")
-    assert "1. 해밀톤 호텔 — 1박 188,597원 · 평점 4.0/5(후기 1,009) · 마이리얼트립: https://accommodation.myrealtrip.com/union/products/11?" in answer
-    assert "2. 둘째 호텔 — 1박 150,000원 · 평점 없음 · 마이리얼트립:" in answer
-    assert "3. 가까운 호텔 — 1박 120,000원 · 평점 4.2/5(후기 20) · 일정 가운데에서 " in answer and "구글 호텔: https://near.example" in answer
+    assert result.answer == ("기존 호텔 대신 갈 수 있는 곳이에요 — 1) 해밀톤 호텔(1박 188,597원) · 2) 둘째 호텔(1박 150,000원) · "
+                             "3) 가까운 호텔(1박 120,000원). 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
     (proposal,) = result.action_proposals
     assert proposal.action_type == "itinerary.apply" and proposal.approval_required is False
     arguments = proposal.arguments
     assert arguments["reason"] == "customer_request" and arguments["base_version"] == 3
     (replaced,) = arguments["replacements"]
-    assert replaced["item_id"] == STAY_ID
     new = replaced["item"]
-    assert new["kind"] == "lodging" and new["title"] == "기존 호텔" and new["place_id"] == "33333333-3333-4333-8333-333333333333", "숙소는 그대로"
+    assert replaced["item_id"] == STAY_ID and new["title"] == "기존 호텔" and new["place_id"] == "33333333-3333-4333-8333-333333333333", "숙소는 그대로"
+    options = new["detail"]["alternates"]
+    assert [(o["rank"], o["key"], o["name"]) for o in options] == [
+        (1, "myrealtrip:11", "해밀톤 호텔"), (2, "myrealtrip:12", "둘째 호텔"), (3, "google:가까운호텔", "가까운 호텔")]
+    first = options[0]
+    assert {"key", "name", "place_id", "starts_at", "ends_at", "walk_min"} <= set(first), "식당 · 활동의 「다른 안」 칸"
+    assert first["place_id"] is None and first["starts_at"] == f"{IN}T15:00:00+09:00" and first["price_per_night"] == 188597
+    assert first["link"].startswith("https://accommodation.myrealtrip.com/union/products/11?")
+    assert options[2]["latitude"] == 37.5430 and options[2]["distance_km"] is not None
+    assert new["detail"]["other_options"] == ["해밀톤 호텔", "둘째 호텔", "가까운 호텔"]
     assert new["detail"]["shown"] == ["해밀톤 호텔", "둘째 호텔", "가까운 호텔"]
-    assert [pick["key"] for pick in new["detail"]["candidates"]] == ["myrealtrip:11", "myrealtrip:12", "google:가까운호텔"]
-    assert result.decisions[0]["lodging_options"] == ["해밀톤 호텔", "둘째 호텔", "가까운 호텔"]
+    assert [o["key"] for o in arguments["notice"]["options"]] == ["myrealtrip:11", "myrealtrip:12", "google:가까운호텔"]
+
+
+def test_choosing_an_option_moves_the_item_to_that_lodging_and_keeps_the_old_one_as_an_option():
+    plan = _plan()
+    first, _, _ = _itinerary(plan)
+    held = first.action_proposals[0].arguments["replacements"][0]["item"]["detail"]
+    plan["items"][1]["detail"] = held
+    state = {**ITEM_STATE, "subject_ref": {**ITEM_STATE["subject_ref"], "request": {"type": "change", "choice": "myrealtrip:12"}}}
+    result, _, tools = _run({"task": "unclear"}, {"read.itinerary": plan}, text="2번으로 할게", capability="lodging.itinerary",
+                            state=state)
+    assert [name for name, _ in tools.calls] == ["read.itinerary"], "고르면 다시 찾지 않는다"
+    assert result.answer.startswith("요청하신 대로 기존 호텔 대신 둘째 호텔(으)로 바꿨습니다. 아직 예약 전이에요 — 예약은 이 링크에서 해 주세요: "
+                                    "https://accommodation.myrealtrip.com/union/products/12?")
+    new = result.action_proposals[0].arguments["replacements"][0]["item"]
+    assert new["title"] == "둘째 호텔" and new["place_id"] is None, "우리 후보는 장소 표에 없다 — 이름 · 링크는 detail.chosen"
+    assert new["detail"]["chosen"]["key"] == "myrealtrip:12" and new["detail"]["booked"] is False
+    assert [o["name"] for o in new["detail"]["alternates"]] == ["해밀톤 호텔", "가까운 호텔", "기존 호텔"], "원래 숙소는 다른 안 끝으로"
+    state["subject_ref"]["request"] = {"type": "change", "choice": "nope"}
+    result, _, _ = _run({"task": "unclear"}, {"read.itinerary": plan}, capability="lodging.itinerary", state=state)
+    assert result.outcome == "escalated" and result.failure_code == "itinerary_unknown_choice"
 
 
 def test_change_again_skips_what_was_already_shown():
     result, _, _ = _itinerary(_plan(stay_detail={"shown": ["해밀톤 호텔", "둘째 호텔", "가까운 호텔"]}))
-    answer = result.answer
-    assert "앞서 보여 드린 3곳은 뺐어요" in answer
-    assert "해밀톤 호텔" not in answer and "둘째 호텔" not in answer and "가까운 호텔" not in answer
-    assert "1. 먼 호텔" in answer and "2. 좌표 없는 호텔" in answer
+    assert result.answer.startswith("기존 호텔 대신 갈 수 있는 곳이에요 — 1) 먼 호텔(1박 100,000원) · 2) 좌표 없는 호텔(1박 110,000원).")
     new = result.action_proposals[0].arguments["replacements"][0]["item"]
     assert new["detail"]["shown"] == ["해밀톤 호텔", "둘째 호텔", "가까운 호텔", "먼 호텔", "좌표 없는 호텔"]
 
@@ -543,8 +565,7 @@ def test_when_nothing_new_is_left_it_widens_once_then_says_so_without_changing_t
     sizes = [arguments["size"] for name, arguments in tools.calls if name == "read.booking_search_stays"]
     assert sizes == [20, 50]
     assert result.outcome == "completed" and result.action_proposals == []
-    assert "기존 호텔 말고 더 보여 드릴 숙소를 찾지 못했어요" in result.answer and "앞서 보여 드린 5곳 제외" in result.answer
-    assert "일정은 그대로 두었어요." in result.answer and "같은 조건으로 다른 곳에서 보기" in result.answer
+    assert result.answer == "기존 호텔 대신 갈 수 있는 숙소를 더 찾지 못했어요. 일정은 그대로 두었어요."
 
 
 def test_a_booked_lodging_is_never_changed_and_nothing_is_searched():
