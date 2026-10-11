@@ -146,7 +146,7 @@ export function ChatPane({ trip, chat, day, dayText, selected, logRef }: { trip:
         {/* ★Only the latest answer's choices can be picked — an older question is no longer open. */}
         {item.choices && item.choices.length > 0 && index === trip.messages.length - 1 && <div className={styles.choices}>
           {item.choicesTitle && <span className={styles.choicesTitle}>{item.choicesTitle}</span>}{item.choices.map((choice) =>
-          <button key={choice.message} type="button" className={styles.choice} disabled={message.isPending} onClick={() => chat.ask(choice.message)}>{choice.label}</button>)}</div>}
+          <button key={choice.message} type="button" className={styles.choice} disabled={message.isPending} onClick={() => chat.ask(choice.message, false, choice.itemId ?? null)}>{choice.label}</button>)}</div>}
         {item.needsLocation && index === trip.messages.length - 1 && trip.messages[index - 1]?.role === "user" && <div className={styles.choices}>
           <button type="button" className={styles.choice} disabled={message.isPending || chat.locating} onClick={() => void chat.askWithLocation(trip.messages[index - 1].text)}><LocateFixed size={15} strokeWidth={1.6} aria-hidden="true" />{chat.locating ? t("위치 찾는 중…", "Finding your location…") : t("내 위치 알려 주고 다시 묻기", "Share my location and ask again")}</button>
           <span className={styles.undoHint}>{t("누르면 브라우저가 위치 권한을 물어요. 위치는 이 질문에 답하는 데 써요.", "Your browser will ask first. The location is used to answer this question.")}</span></div>}</article>)}

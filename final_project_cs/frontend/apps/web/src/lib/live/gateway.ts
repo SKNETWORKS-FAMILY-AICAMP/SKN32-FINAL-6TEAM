@@ -5,6 +5,7 @@ import { streamApi } from "./stream";
 
 /** Server trip view (`GET /v1/web/trips/{id}`) — only the fields the web reads. */
 interface ServerItem {
+  badges?: { code: string; label: string; source: string }[];
   item_id: string;
   seq: number;
   kind: string;
@@ -76,6 +77,8 @@ function stop(item: ServerItem, t: Translate): TripStop {
     title: item.title, booking: item.booked ? "booked" : "unknown", notes, coordinates,
     pinned: item.customer_pinned === true,
     otherOptions: (item.other_options ?? []).filter((option) => typeof option?.key === "string" && typeof option?.name === "string"),
+    badges: (item.badges ?? []).filter((badge) => [badge?.code, badge?.label, badge?.source].every((value) => typeof value === "string" && value !== ""))
+      .map(({ code, label, source }) => ({ code, label, source })),
     placeInfo: placeInfo(item.place_info, t),
     mapUrl: mapLink(item.map_url),
     ...(item.paused === true ? { paused: true } : {}),
@@ -156,12 +159,14 @@ function warning(row: ServerWarning): TripWarning | null {
   return { code: row.code ?? "", date: row.date ?? null, reason: row.reason, remedy: typeof row.remedy === "string" && row.remedy ? row.remedy : null };
 }
 
-interface ServerTurn { role?: string; text?: string; case_id?: string | null; at?: string }
+interface ServerChoice { label?: unknown; message?: unknown; item_id?: unknown }
+interface ServerTurn { role?: string; text?: string; case_id?: string | null; at?: string; turn_id?: number;
+  reply?: { choices?: ServerChoice[]; choices_title?: unknown; more?: unknown; answer_web?: unknown } }
 
 /**
  * ★`[2026-09-29]` The conversation is the server's record (`GET /v1/web/trips/{id}/chat`) — it follows the customer to
- * another tab or device. This tab's own copy only adds what the record does not keep (the last answer's choices and,
- * in development mode, its basis). If the record cannot be read, this tab's copy is shown.
+ * another tab or device, including structured choices. This tab's own copy adds development-only basis and pending
+ * UI state. If the record cannot be read, this tab's copy is shown.
  */
 async function conversation(tripId: string, language: Language): Promise<TripMessage[]> {
   const local = readMessages(tripId);
@@ -169,14 +174,24 @@ async function conversation(tripId: string, language: Language): Promise<TripMes
   try { turns = (await api<{ turns?: ServerTurn[] }>(`/v1/web/trips/${encodeURIComponent(tripId)}/chat?limit=40`, language)).turns ?? []; }
   catch { return local; }
   const extras = new Map(local.filter((message) => message.role === "assistant").map((message) => [message.text, message]));
+  const extrasByCase = new Map(local.filter((message) => message.role === "assistant" && message.caseId).map((message) => [message.caseId, message]));
   const recorded = turns.filter((turn) => typeof turn.text === "string" && turn.text).map((turn, index) => {
     const role = turn.role === "customer" ? "user" as const : "assistant" as const;
-    const kept = role === "assistant" ? extras.get(turn.text as string) : undefined;
-    return { id: `chat-${turn.case_id ?? "x"}-${index}`, role, text: turn.text as string, createdAt: turn.at ?? "",
+    const reply = role === "assistant" ? turn.reply : undefined;
+    const text = typeof reply?.answer_web === "string" ? reply.answer_web : turn.text as string;
+    const kept = role === "assistant" ? (turn.case_id ? extrasByCase.get(turn.case_id)
+      ?? [extras.get(text), extras.get(turn.text as string)].find((entry) => entry && !entry.caseId)
+      : extras.get(text) ?? extras.get(turn.text as string)) : undefined;
+    return { id: `chat-${turn.turn_id ?? `${turn.case_id ?? "x"}-${index}`}`, role,
+      ...(turn.case_id ? { caseId: turn.case_id } : {}),
+      text, createdAt: turn.at ?? "",
       ...(kept?.choices ? { choices: kept.choices } : {}), ...(kept?.basis ? { basis: kept.basis } : {}),
       ...(kept?.changedTo ? { changedTo: kept.changedTo } : {}),
       ...(kept?.choicesTitle ? { choicesTitle: kept.choicesTitle } : {}), ...(kept?.more ? { more: kept.more } : {}),
-      ...(kept?.needsLocation ? { needsLocation: true } : {}) };
+      ...(kept?.needsLocation ? { needsLocation: true } : {}),
+      ...(reply?.choices ? { choices: choicesOf(reply.choices) } : {}),
+      ...(typeof reply?.choices_title === "string" ? { choicesTitle: reply.choices_title } : {}),
+      ...(typeof reply?.more === "string" ? { more: reply.more } : {}) };
   });
   // ★The record can lag the reply this tab just got (the server may finish writing it after answering). What this tab
   //   sent or received after the record's last turn is kept at the end — never dropped, never shown twice.
@@ -185,14 +200,22 @@ async function conversation(tripId: string, language: Language): Promise<TripMes
   //   *before* this tab received it — a time rule showed every answer twice (2026-09-29 real server, user report).
   //   A question and its answer from this tab are added only when the answer is not in the record yet.
   const answered = new Set(recorded.filter((message) => message.role === "assistant").map((message) => message.text));
+  const cases = new Set(recorded.filter((message) => message.role === "assistant").map((message) => message.caseId).filter(Boolean));
+  const cutoff = Date.parse(recorded[0]?.createdAt ?? "");
+  const eligible = (message: TripMessage) => message.caseId ? !cases.has(message.caseId)
+    && (!Number.isFinite(cutoff) || Date.parse(message.createdAt) >= cutoff)
+    : (!Number.isFinite(cutoff) || Date.parse(message.createdAt) >= cutoff);
   const tail: TripMessage[] = [];
   for (let index = 0; index < local.length; index += 1) {
     const message = local[index];
     const reply = message.role === "user" ? local[index + 1] : undefined;
     if (message.role === "user" && reply?.role === "assistant") {
-      if (!answered.has(reply.text)) tail.push(message, reply);
+      if (eligible(reply) && (reply.caseId || !answered.has(reply.text))) {
+        if (!message.caseId || !recorded.some((entry) => entry.caseId === message.caseId && entry.role === "user")) tail.push(message);
+        tail.push(reply);
+      }
       index += 1;
-    } else if (message.role === "assistant" && !answered.has(message.text)) tail.push(message);
+    } else if (message.role === "assistant" && eligible(message) && !answered.has(message.text)) tail.push(message);
   }
   return [...recorded, ...tail];
 }
@@ -226,9 +249,10 @@ function basisOf(raw: unknown[] | null | undefined): string[] {
 }
 
 /** 「다음 중 하나인가요?」 — only choices with a sentence to send are kept. */
-function choicesOf(raw: { label?: unknown; message?: unknown }[] | null | undefined): { label: string; message: string }[] {
+function choicesOf(raw: ServerChoice[] | null | undefined): NonNullable<TripMessage["choices"]> {
   return (raw ?? []).flatMap((choice) => typeof choice?.message === "string" && choice.message.trim()
-    ? [{ label: typeof choice.label === "string" && choice.label.trim() ? choice.label : choice.message, message: choice.message }] : []);
+    ? [{ label: typeof choice.label === "string" && choice.label.trim() ? choice.label : choice.message, message: choice.message,
+      ...(typeof choice.item_id === "string" && choice.item_id.trim() ? { itemId: choice.item_id } : {}) }] : []);
 }
 
 function replyFor(result: { status?: string; case_status?: string; answer?: string }, t: Translate): string {
@@ -338,7 +362,7 @@ export function createLiveGateway(): TripGateway {
       unanswered.set(tripId, { message, itemId: itemId ?? null, requestId });
       // ★`[2026-10-02]` Asked as a stream, the server says what it is doing while the model works (`stream.ts`); a lost line
       //   sends the same `request_id` again, which the server answers without acting twice.
-      const result = await streamApi<{ status?: string; case_status?: string; answer?: string; basis_sources?: unknown[] | null; choices?: { label?: unknown; message?: unknown }[] | null;
+      const result = await streamApi<{ status?: string; case_status?: string; case_id?: string; answer?: string; basis_sources?: unknown[] | null; choices?: ServerChoice[] | null;
         outcome?: { status?: string; version?: unknown } | null; more?: unknown; choices_title?: unknown; needs_location?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(itemId ? { item_id: itemId } : {}),
           // ★Only when the customer pressed 「내 위치 알려 주고 다시 묻기」 — never attached on its own.
@@ -346,8 +370,8 @@ export function createLiveGateway(): TripGateway {
       }, onProgress);
       unanswered.delete(tripId);
       const sent: TripMessage[] = [
-        { id: `${requestId}-q`, role: "user" as const, text: message, createdAt: now },
-        { id: `${requestId}-a`, role: "assistant" as const, text: replyFor(result, t), createdAt: new Date().toISOString(),
+        { id: `${requestId}-q`, caseId: result.case_id, role: "user" as const, text: message, createdAt: now },
+        { id: `${requestId}-a`, caseId: result.case_id, role: "assistant" as const, text: replyFor(result, t), createdAt: new Date().toISOString(),
           ...(basisOf(result.basis_sources).length ? { basis: basisOf(result.basis_sources) } : {}),
           ...(choicesOf(result.choices).length ? { choices: choicesOf(result.choices) } : {}),
           ...(typeof result.choices_title === "string" && result.choices_title.trim() ? { choicesTitle: result.choices_title.trim() } : {}),

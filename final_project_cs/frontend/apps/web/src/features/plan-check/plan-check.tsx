@@ -398,6 +398,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const [collapsed, setCollapsed] = useState(false);
   const [mapTight, setMapTight] = useState(false);
   const checkingBox = useRef<HTMLDivElement>(null);
+  const resetFocusPending = useRef(false);
   const sheetBox = useRef<HTMLElement>(null);
   const bodyBox = useRef<HTMLDivElement>(null);
   useEffect(() => { if (!selected) bodyBox.current?.style.removeProperty("--focus-room"); }, [selected]);
@@ -793,8 +794,9 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       return first && start !== null ? [{ id, start, end: parseHm(first.end) }] : [];
     });
     if (!changes.length) { setToast({ text: t("고정·예약 일정은 그대로 유지했어요", "Locked or booked stops were kept") }); return; }
+    resetFocusPending.current = true;
     void sendTimes(list, changes, t("시간을 모두 처음으로 되돌렸어요", "Put every time back"), true)
-      .catch((error: unknown) => setToast({ text: reason(error), stay: true }))
+      .catch((error: unknown) => { resetFocusPending.current = false; setToast({ text: reason(error), stay: true }); })
       .finally(() => requestAnimationFrame(() => {
         if (document.activeElement !== document.body && !document.activeElement?.classList.contains(styles.changeCount)) return;
         const box = checkingBox.current;
@@ -1310,6 +1312,14 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const heading = (day: PlanDay) => dayHeading(day, language, t);
   const nextDay = typeof listDay === "number" && dayAt >= 0 && dayAt < days.length - 1 && !changing ? days[dayAt + 1] : null;
   const adjustedNow = adjustedIn(previewing && side === "after" ? previewView : sourceView).size;
+  // 요청 완료 직후의 rAF는 아직 사라지기 전 변경 버튼을 볼 수 있다. 새 DOM 반영 뒤 초점을 다시 확인한다.
+  useLayoutEffect(() => {
+    if (!resetFocusPending.current || adjustedNow !== 0) return;
+    resetFocusPending.current = false;
+    if (document.activeElement !== document.body && !document.activeElement?.classList.contains(styles.changeCount)) return;
+    (checkingBox.current?.querySelector<HTMLButtonElement>(`button.${styles.mapNeeds}`)
+      ?? checkingBox.current?.querySelector<HTMLButtonElement>(`button.${styles.handle}`))?.focus();
+  }, [adjustedNow]);
   const sheetTitle = registered ? t("등록 완료", "Registered") : !done ? t("장소·운영시간 확인", "Places & hours") : previewing && side === "after" ? t("수정안", "Proposed plan") : t("계획 확인", "Plan check");
   const rechecking = view.rechecking ? (() => {
     const order = view.days.flatMap((day) => view.items.filter((item) => item.day === day.day).map((item) => item.id));

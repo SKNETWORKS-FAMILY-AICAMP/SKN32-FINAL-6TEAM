@@ -247,6 +247,23 @@ describe("live trip gateway", () => {
     expect(bodies[1]).not.toHaveProperty("item_id");
   });
 
+  it("carries restaurant marks with their source and drops a mark it cannot credit", async () => {
+    replies.push({
+      ...TRIP,
+      items: [{ ...TRIP.items[0], badges: [
+        { code: "michelin", label: "미쉐린 빕 구르망 (2026)", source: "미쉐린 가이드 서울" },
+        { code: "nopo", label: "노포" },
+        { code: "nopo", label: "노포", source: "카카오맵 노포 지도", extra: 1 },
+      ] }, TRIP.items[1]],
+    });
+    const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(trip.stops[0].badges).toEqual([
+      { code: "michelin", label: "미쉐린 빕 구르망 (2026)", source: "미쉐린 가이드 서울" },
+      { code: "nopo", label: "노포", source: "카카오맵 노포 지도" },
+    ]);
+    expect(trip.stops[1].badges).toEqual([]);
+  });
+
   it("does not quietly become a new user when the session has ended", async () => {
     useBrowser(true);
     replies.push(new Response(JSON.stringify({ error: { code: "unauthenticated", message: "no" } }), { status: 401 }));
@@ -289,6 +306,31 @@ describe("live trip gateway", () => {
     // a fresh browser: the record alone, no choices to invent
     window.sessionStorage.removeItem(`tripilot.web.live.messages:${TRIP.trip_id}`);
     expect((await gateway.getTrip(TRIP.trip_id, "ko")).messages[1]).not.toHaveProperty("choices");
+  });
+
+  it("does not append old local turns after they leave the recent server window", async () => {
+    window.sessionStorage.setItem(`tripilot.web.live.messages:${TRIP.trip_id}`, JSON.stringify([
+      { id: "old-q", role: "user", text: "옛 질문", createdAt: "2020-01-01T00:00:00Z" },
+      { id: "old-a", role: "assistant", text: "옛 답변", createdAt: "2020-01-01T00:00:01Z" },
+    ]));
+    chat = [{ role: "customer", text: "최근 질문", case_id: "new", turn_id: 55, at: "2021-01-01T00:00:00Z" },
+      { role: "assistant", text: "최근 답변", case_id: "new", turn_id: 56, at: "2021-01-01T00:00:01Z" }];
+    const result = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(result.messages.map((message) => message.text)).toEqual(["최근 질문", "최근 답변"]);
+    expect(result.messages[1].id).toBe("chat-56");
+  });
+
+  it("matches identical answer text by case and keeps a pending answer without repeating its question", async () => {
+    const gateway = createLiveGateway();
+    replies.push({ status: "answered", case_id: "pending", answer: "같은 답변" }, TRIP);
+    await gateway.sendMessage(TRIP.trip_id, "새 질문", "ko");
+    chat = [{ role: "customer", text: "옛 질문", case_id: "earlier", at: "2020-01-01T00:00:00Z" },
+      { role: "assistant", text: "같은 답변", case_id: "earlier", at: "2020-01-01T00:00:01Z" },
+      { role: "customer", text: "새 질문", case_id: "pending", at: new Date().toISOString() }];
+    const result = await gateway.getTrip(TRIP.trip_id, "ko");
+    expect(result.messages.filter((message) => message.text === "새 질문")).toHaveLength(1);
+    expect(result.messages.filter((message) => message.text === "같은 답변")).toHaveLength(2);
+    expect(result.messages.at(-1)?.caseId).toBe("pending");
   });
 
   // 2026-09-30 (teammate question Q-05): sending and re-reading are two steps.
