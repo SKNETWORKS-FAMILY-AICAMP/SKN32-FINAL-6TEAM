@@ -34,8 +34,25 @@ class _Conn:
         return self.cur
 
 
-def _row(usetime, restdate):
-    return ("126508", "경복궁", usetime, restdate)
+def _row(usetime, restdate, week=None, read=None):
+    return ("126508", "경복궁", usetime, restdate, week, read)
+
+
+def test_stored_week_is_used_for_text_rules_cannot_read():
+    # 규칙 밖 원문을 모델이 미리 펴 둔 경우 — 요청 때는 저장된 표만 본다
+    week = {d: {"open": "10:00", "close": "17:00", "last_entry": None} for d in ("mon", "tue", "wed", "thu", "fri")}
+    week |= {"sat": "closed", "sun": "closed"}
+    conn = _Conn(_row("하절기 09:00~19:00, 동절기 10:00~17:00", None, week, {"method": "llm"}))
+    wednesday = ledger.state(conn, "demo", "p1", datetime(2026, 10, 14, 11, tzinfo=KST))
+    saturday = ledger.state(conn, "demo", "p1", datetime(2026, 10, 17, 11, tzinfo=KST))
+    assert (wednesday["known"], wednesday["within_hours"]) == (True, True)
+    assert saturday["closed"] is True
+
+
+def test_read_but_unparsed_stays_unknown_without_rereading():
+    out = ledger.state(_Conn(_row("09:00~18:00", None, None, {"method": "none"})), "demo", "p1",
+                       datetime(2026, 10, 14, 10, tzinfo=KST))
+    assert out["known"] is False and out["within_hours"] is None
 
 
 def test_weekly_closure_day_is_closed():

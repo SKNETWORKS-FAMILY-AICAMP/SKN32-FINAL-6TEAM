@@ -94,6 +94,12 @@ def load(conn, data: list[dict[str, object]], *, source_file: str, file_sha256: 
     """한 트랜잭션에서 적재 기록 → 덮어쓰기 → (선택) 빠진 행 지우기. 반환 `{"loaded", "stale", "pruned", "total"}`."""
     placeholders = ", ".join(f"%({c})s" for c in TARGETS)
     updates = ", ".join(f"{c} = EXCLUDED.{c}" for c in TARGETS if c != "content_id")
+    # ★원문이 바뀐 행만 미리 편 요일표를 비운다 — 다음 `read_hours.py` 가 다시 편다. 안 바뀐 행은 모델로 읽은 값을 지키지 않으면
+    #   같은 CSV 를 다시 적재할 때마다 모델 호출을 다시 해야 한다.
+    changed = ("activity.ac_place.usetime_text IS DISTINCT FROM EXCLUDED.usetime_text "
+               "OR activity.ac_place.restdate_text IS DISTINCT FROM EXCLUDED.restdate_text")
+    updates += (f", hours_week = CASE WHEN {changed} THEN NULL ELSE activity.ac_place.hours_week END"
+                f", hours_read = CASE WHEN {changed} THEN NULL ELSE activity.ac_place.hours_read END")
     with conn.transaction(), conn.cursor() as cur:
         cur.execute("SELECT to_regclass('activity.ac_place')")
         if cur.fetchone()[0] is None:

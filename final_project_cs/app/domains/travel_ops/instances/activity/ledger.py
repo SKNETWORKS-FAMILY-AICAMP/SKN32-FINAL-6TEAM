@@ -8,9 +8,9 @@
     판정   `verdicts.hours_verdict` — 방문 시각마다 계산한다(「둘째 주 월요일 휴무」는 날짜마다 답이 다르다)
 
 ★재난은 여기서 보지 않는다. 재난문자는 실시간 사실이라 원장에 없다 — 코어가 모은 문자를 `verdicts.disaster_verdict` 에 넘긴다.
-★운영시간 원문은 **규칙으로만** 편다(`place_hours.read_by_rule` — 「HH:MM~HH:MM」 · 「매주 X요일」 · 「연중무휴」).
-  규칙 밖 원문은 요일표를 비워 운영시간 판정이 「모름」이 된다. 휴무 원문은 그래도 휴무 규칙(`closure_rules`)이 읽는다.
-  모델을 부르지 않는다 — 감시가 장소마다 부르는 함수라서다.
+★요일표는 **미리 펴 둔 것**(`ac_place.hours_week` — `scripts/activity/read_hours.py`, 규칙 · sLLM 한 번)을 읽는다.
+  아직 안 펴 둔 행은 그 자리에서 규칙으로만 편다(`place_hours.read_by_rule`). 모델을 부르지 않는다 — 감시가 장소마다 부르는 함수라서다.
+  못 편 운영시간은 「모름」이다. 휴무 원문은 그래도 휴무 규칙(`closure_rules`)이 읽는다.
 ★모르면 모른다: 원장에 없는 장소는 `None`. 「열었다」로 바꾸지 않는다.
 """
 from __future__ import annotations
@@ -25,14 +25,15 @@ from .verdicts import HolidayLookup, holidays_needed, hours_verdict
 SOURCE = "activity.ac_place"
 
 _PLACE_SQL = (
-    "SELECT a.content_id, a.name_ko, a.usetime_text, a.restdate_text FROM places p "
+    "SELECT a.content_id, a.name_ko, a.usetime_text, a.restdate_text, a.hours_week, a.hours_read FROM places p "
     "JOIN activity.ac_place a ON a.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id') "
     "WHERE p.tenant_id = %s AND p.place_id = %s LIMIT 1"
 )
+_ROW = ("content_id", "name_ko", "usetime_text", "restdate_text", "hours_week", "hours_read")
 
 
 def place_row(conn, tenant_id: str, place_id: str | None) -> dict[str, Any] | None:
-    """코어 장소 하나 → 원장 행(`content_id` · `name_ko` · `usetime_text` · `restdate_text`). 연결이 없으면 `None`."""
+    """코어 장소 하나 → 원장 행(`_ROW` 칸). 연결이 없으면 `None`."""
     if place_id is None:
         return None
     with conn.cursor() as cur:
@@ -40,15 +41,17 @@ def place_row(conn, tenant_id: str, place_id: str | None) -> dict[str, Any] | No
         row = cur.fetchone()
     if row is None:
         return None
-    return dict(zip(("content_id", "name_ko", "usetime_text", "restdate_text"), row))
+    return dict(zip(_ROW, row))
 
 
 def hours_from_row(row: dict[str, Any]) -> dict[str, Any]:
-    """원장 행 → `hours_verdict` 가 받는 모양(`read.place_hours` 와 같은 칸)."""
+    """원장 행 → `hours_verdict` 가 받는 모양(`read.place_hours` 와 같은 칸). 미리 편 요일표가 먼저, 없으면 규칙."""
     usetime, restdate = row.get("usetime_text"), row.get("restdate_text")
-    ruled = read_by_rule(usetime, restdate)
-    week = ruled.week if ruled is not None else {}
-    why = None if week else ("원문이 비어 있다" if not (usetime or restdate) else "규칙으로 펼 수 없는 운영시간 원문")
+    week = row.get("hours_week") or {}
+    if not week and row.get("hours_read") is None:      # 아직 안 펴 둔 행 — 규칙으로만
+        ruled = read_by_rule(usetime, restdate)
+        week = ruled.week if ruled is not None else {}
+    why = None if week else ("원문이 비어 있다" if not (usetime or restdate) else "펴지 못한 운영시간 원문")
     return {"known": bool(week), "attributes": {"hours_week": week} if week else {}, "source": SOURCE,
             "why_unknown": why, "usetime_text": usetime, "restdate_text": restdate}
 

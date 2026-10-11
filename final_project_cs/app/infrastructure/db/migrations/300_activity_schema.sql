@@ -46,6 +46,8 @@ CREATE TABLE IF NOT EXISTS activity.ac_place (
     brand             text,
     usetime_text      text,
     restdate_text     text,
+    hours_week        jsonb,
+    hours_read        jsonb,
     overview          text,
     fee_text          text,
     info_center       text,
@@ -73,6 +75,12 @@ COMMENT ON COLUMN activity.ac_place.usetime_text IS
     '운영시간 원문(CSV business_hours). 판정은 verdicts.hours_verdict 가 읽는다.';
 COMMENT ON COLUMN activity.ac_place.restdate_text IS
     '휴무 원문(CSV closed_days). 판정은 closure_rules.read_closure 가 읽는다.';
+COMMENT ON COLUMN activity.ac_place.hours_week IS
+    '운영시간 원문을 미리 편 요일표(place_hours 의 hours_week 모양). 비면 모름. scripts/activity/read_hours.py 가 채운다 — '
+    '규칙(place_hours.read_by_rule)으로, --model 이면 코어와 같은 sLLM(read_hours · gemma)으로. 요청 때는 모델을 부르지 않는다.';
+COMMENT ON COLUMN activity.ac_place.hours_read IS
+    '요일표를 어떻게 읽었나(method rule|llm|none · 인용 · 펴지 않은 조건 · 버린 것 · 읽은 시각). NULL 이면 아직 안 읽었다. '
+    '적재가 운영시간 · 휴무 원문을 바꾸면 둘 다 NULL 로 돌아간다.';
 COMMENT ON COLUMN activity.ac_place.overview IS
     '소개글 — 부가 참고. 분류 힌트로 쓸 수 있으나 판정 · 추천 순위에는 쓰지 않는다(2026-10-12 사용자 결정).';
 COMMENT ON COLUMN activity.ac_place.fee_text IS
