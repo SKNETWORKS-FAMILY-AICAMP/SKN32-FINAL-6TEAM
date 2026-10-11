@@ -125,3 +125,72 @@ def test_a_bare_day_number_ends_a_range_whose_start_is_a_date():
     assert got[0] == ("2026-11-06", "2026-11-09") and got[1] == []
     assert _stay({"check_in": "2026-11-06", "check_out": "2026-11-09", "check_in_text": "명동", "check_out_text": "2"},
                  "명동 2명")[1] == ["check_in", "check_out"], "시작 근거가 날짜가 아니면 받지 않는다"
+
+
+def test_user_sentence_shapes_from_the_1013_1613_measurement():
+    """☆2026-10-11 16:13 playdata 사용자가 쓴 문장 측정에서 틀린 모양들(기준일 2026-10-10)."""
+    # 「N일 · N주 · N달 뒤」는 오늘(끝 날짜는 시작 날짜)에서 센다 — 전에는 「3일」을 날(일) 숫자로 맞춰 10-03 이 됐다
+    got = _stay({"check_in": "2026-10-20", "check_out": "2026-10-22", "check_in_text": "2주뒤에", "check_out_text": "2박"},
+                "2주뒤에 가족4명이 잘 숙소가 필요한데 2박으로 종로")
+    assert got[0] == ("2026-10-24", "2026-10-26") and got[1] == []
+    got = _stay({"check_in": "2026-11-10", "check_out": "2026-11-12", "check_in_text": "1달뒤에", "check_out_text": "2박"},
+                "1달뒤에친구들이와서3명이잘수있는방이필요한데잠실쪽이고2박예정")
+    assert got[0] == ("2026-11-10", "2026-11-12")
+    assert _stay({"check_in": "2026-10-17", "check_out": "2026-10-19", "check_in_text": "일주일 뒤에", "check_out_text": "2박"},
+                 "일주일 뒤에 여자친구랑 2박으로 강남")[0] == ("2026-10-17", "2026-10-19")
+    # 기간(「3일정도」)은 시작 날짜 근거가 아니다
+    assert "check_in" in _stay({"check_in": "2026-10-03", "check_in_text": "3일정도 있을거고"}, "한강이 보이는 호텔에서 3일정도 있을거고")[1]
+    # 날 없는 주(「다다음주에」)는 날짜가 아니다
+    raw = {"task": "search", "origin": "ICN", "destination": "LHR", "domestic": False, "adults": 1, "depart_date": "2026-10-24",
+           "depart_date_text": "다다음주에 출발하려고 해"}
+    _, cleared = flight.ground(flight.parse(raw), "유럽여행을 한번 가보려고 하는데 다다음주에 출발하려고 해", has_trip=False)
+    assert cleared == ["depart_date"]
+    # 항공 「3일뒤」 · 「20일 뒤에 갔다가 2일뒤에」
+    raw = {"task": "search", "origin": "ICN", "destination": "HKG", "domestic": False, "adults": 3, "depart_date": "2026-10-20",
+           "return_date": "2026-11-02", "depart_date_text": "20일 뒤에 갔다가", "return_date_text": "2일뒤에 돌아올 예정"}
+    text = "홍콩으로 여행갈거고, 3명이서. 20일 뒤에 갔다가 2일뒤에 돌아올 예정."
+    found, _ = flight.ground(flight.parse(raw), text, has_trip=False)
+    found, _ = flight.settle_years(found, today=TODAY, text=text)
+    assert (str(found.depart_date), str(found.return_date)) == ("2026-10-30", "2026-11-01")
+
+
+def test_a_ten_point_rating_becomes_five_point():
+    assert lodging.parse({**BASE, "min_rating": 9.5}).min_rating == 4.75
+
+
+def test_user_sentence_shapes_from_the_1011_1621_measurement():
+    """☆2026-10-11 16:21 playdata 전체 측정에서 남은 모양들."""
+    # 여행 마지막 날 + 하루 → 여행 일정의 마지막 날부터 1박
+    got = _stay({"check_in": "2026-10-11", "check_out": "2026-10-12", "check_in_text": "이번 여행 마지막 날 하루만",
+                 "check_out_text": "하루"}, "이번 여행 마지막 날 하루만 공항 근처 호텔", trip=TRIP)
+    assert got[0] == ("2026-11-09", "2026-11-10") and got[1] == []
+    # 가격 말의 「하루」는 숙박 일수가 아니다
+    found = lodging.parse({**BASE, "check_in": "2026-11-12", "check_out": "2026-11-13", "check_in_text": "11월 12일에",
+                           "check_out_text": "하루"})
+    text = "서울 용산에 놀러가는데 11월 12일에 갈거고 가격은 하루에 15만원정도로 생각중이야."
+    assert lodging.settle_years(found, today=TODAY, text=text)[0].check_out is None
+    assert lodging.settle_years(found, today=TODAY, text="내일 하루 강남역 근처 호텔 2명")[0].check_out is not None
+    # 단위 없는 1박 가격은 만 원 단위
+    found = lodging.parse({**BASE, "max_price_per_night": 40000})
+    assert lodging.settle_years(found, today=TODAY, text="강남에 좋은 숙소. 가격은 1박에 40까진 쓸게.")[0].max_price_per_night == 400000
+
+
+def test_departure_bands_follow_their_quote():
+    base = {"task": "search", "origin": "ICN", "destination": "NRT", "domestic": False, "adults": 1, "depart_date": "2026-10-27"}
+    found = flight.parse({**base, "depart_times": ["dawn", "afternoon"], "depart_times_text": "가는날은 새벽에 출발해도 괜찮으니까"})
+    assert flight.settle_years(found, today=TODAY)[0].depart_times is None, "「새벽도 괜찮다」는 제한이 아니다"
+    found = flight.parse({**base, "depart_times": ["morning", "evening"], "depart_times_text": "오전에"})
+    assert flight.settle_years(found, today=TODAY)[0].depart_times == ["morning"], "근거에 없는 시간대는 뺀다"
+    found = flight.parse({**base, "depart_times": ["morning", "afternoon", "evening"], "depart_times_text": "새벽 비행기는 싫고"})
+    assert flight.settle_years(found, today=TODAY)[0].depart_times == ["morning", "afternoon", "evening"], "빼는 말이면 그대로"
+
+
+def test_an_unsaid_korean_origin_is_asked_back():
+    """`[2026-10-11 사용자 결정]` ☆16:21 「홍콩으로 여행갈거고, 3명이서」 — 출발지를 말하지 않았는데 ICN 을 채웠다."""
+    raw = {"task": "search", "origin": "ICN", "destination": "HKG", "domestic": False, "adults": 3, "depart_date": "2026-10-30",
+           "depart_date_text": "20일 뒤에"}
+    text = "홍콩으로 여행갈거고, 3명이서. 20일 뒤에 갔다가 2일뒤에 돌아올 예정."
+    found, fixed = flight.settle_years(flight.parse(raw), today=TODAY, text=text)
+    assert found.origin is None and "origin" in fixed and flight.needs(found, today=TODAY) == ["origin"]
+    assert flight.settle_years(flight.parse(raw), today=TODAY, text="인천공항에서 홍콩 " + text)[0].origin == "ICN"
+    assert flight.settle_years(flight.parse({**raw, "origin": "TPE"}), today=TODAY, text=text)[0].origin == "TPE", "해외 공항은 확인 안 함"

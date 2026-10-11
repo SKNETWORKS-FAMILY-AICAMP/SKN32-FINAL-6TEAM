@@ -162,8 +162,10 @@ def test_a_time_of_day_the_customer_said_keeps_only_those_flights():
 
 
 def test_several_times_of_day_show_the_cheapest_in_each_of_them():
-    result, _, _ = _run({**SEARCH, "depart_times": ["morning", "evening"], "depart_times_text": "오전 출발로"},
-                        {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV}, text=TEXT_MORNING)
+    # `[2026-10-11]` 서버가 근거에 없는 시간대를 빼므로(flight.interpret.settle_years) 근거도 두 시간대를 말해야 한다
+    result, _, _ = _run({**SEARCH, "depart_times": ["morning", "evening"], "depart_times_text": "오전이나 저녁 출발로"},
+                        {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV},
+                        text="다음 달 6일 타이베이에서 인천 가는 비행기 알아봐줘, 9일에 오는 편도 오전이나 저녁 출발로")
     assert "오전 · 저녁 출발 시간대마다 가장 싼 편을 보여 드립니다." in result.answer
     assert [option["band"] for option in result.decisions[0]["shown"]] == ["morning", "evening"], "오후는 고객이 빼지 않았어도 말한 것만"
     assert "1. [오전 최저가] 에바항공" in result.answer and "2. [저녁 최저가 · 전체 최저가] 티웨이항공" in result.answer

@@ -52,6 +52,10 @@ def parse(raw: Any) -> Interpretation:
     if not isinstance(raw, dict):
         raise InterpretationInvalid(f"not an object: {type(raw).__name__}")
     cleaned = {key: (value.strip() or None) if isinstance(value, str) else value for key, value in raw.items()}
+    rating = cleaned.get("min_rating")
+    if isinstance(rating, (int, float)) and not isinstance(rating, bool) and 5 < rating <= 10:
+        # ☆2026-10-11 16:13 playdata 사용자 문장 「평점 9.5 이상」 — 10점 만점 값을 그대로 내 해석 전체가 거절됐다. 5점 만점으로 바꾼다
+        cleaned["min_rating"] = round(rating / 2, 2)
     try:
         return Interpretation.model_validate(cleaned)
     except ValidationError as exc:
@@ -104,6 +108,8 @@ def ground(found: Interpretation, text: str, *, has_trip: bool,
 
 #: 「N만원대」 — 문장에 하나만 있을 때 상한을 그 구간 끝으로 맞춘다(프롬프트 규칙: 15만원대 → 159999, 20만원대 → 299999)
 _BAND = re.compile(r"(\d+)\s*만\s*원?\s*대")
+#: 「1박(에) 40까지」 「하루 30 정도」처럼 단위 없는 가격 숫자(만 · 원 · 천 · 박 · 명 · 일 · 월 · 시가 붙지 않은 2~3자리)
+_BARE_PRICE = re.compile(r"(?:1박|하루|박당)에?(?:최대)?(\d{2,3})(?=까지|까진|이하|이내|선|정도|쯤|아래|안쪽)")
 
 
 def settle_years(found: Interpretation, *, today: date, text: str = "") -> tuple[Interpretation, list[str]]:
@@ -113,6 +119,17 @@ def settle_years(found: Interpretation, *, today: date, text: str = "") -> tuple
       때만 끝으로 바꾼다(다른 값이면 모델이 다르게 읽은 것이니 건드리지 않는다).
     """
     found, fixed = settle_dates(found, grounds=GROUNDS, today=today)
+    squeezed = "".join((text or "").split())
+    quote = "".join((found.check_out_text or "").split())
+    uses = squeezed.count(quote) if quote else 0
+    if found.check_out is not None and quote in ("하루", "1박") and uses \
+            and uses == len(re.findall(re.escape(quote) + r"에?(?:약)?\d+만", squeezed)):
+        # ☆2026-10-11 16:21 「가격은 하루에 15만원정도」 — 가격 말의 「하루」를 숙박 일수로 읽어 체크아웃을 만들었다
+        found, fixed = found.model_copy(update={"check_out": None}), [*fixed, "check_out"]
+    bare = _BARE_PRICE.findall(squeezed)
+    if len(bare) == 1 and found.max_price_per_night in (int(bare[0]), int(bare[0]) * 1000):
+        # ☆16:21 「1박에 40까진 쓸게」 — 단위 없는 숫자를 40000 으로 읽었다. 숙소 1박 가격의 맨숫자는 만 원 단위다
+        found, fixed = found.model_copy(update={"max_price_per_night": int(bare[0]) * 10000}), [*fixed, "max_price_per_night"]
     bands = _BAND.findall(text or "")
     if len(bands) == 1 and found.max_price_per_night == int(bands[0]) * 10000:
         n = int(bands[0])

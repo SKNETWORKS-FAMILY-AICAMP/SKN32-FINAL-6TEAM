@@ -84,7 +84,7 @@ def main():
     parser.add_argument("--repeat", type=int, default=1)
     parser.add_argument("--only", default="", help="쉼표로 나눈 문장 id(L01,F04 …)")
     parser.add_argument("--plain-context", action="store_true", help="달력 없이(1차 측정 때 context) — 달력의 효과를 따로 본다")
-    parser.add_argument("--set", dest="case_set", default="", help="base(처음 40문장) · hard(2026-10-10 밤 추가) · real(실제 문장) — 없으면 전부")
+    parser.add_argument("--set", dest="case_set", default="", help="base(처음 40문장) · hard(10-10 밤 추가) · user(사용자가 쓴 20문장) · real(실제 문장) — 없으면 전부")
     args = parser.parse_args()
     global PLAIN
     PLAIN = args.plain_context

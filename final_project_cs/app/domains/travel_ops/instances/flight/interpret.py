@@ -118,9 +118,44 @@ def ground(found: Interpretation, text: str, *, has_trip: bool,
     return ground_dates(found, text, grounds=GROUNDS, start="depart_date", end="return_date", has_trip=has_trip, trip=trip)
 
 
+#: 국내 출발 공항 → 문장에 있어야 하는 이름(하나라도). 서울은 인천 · 김포 둘 다로 본다
+_KOREAN_AIRPORTS = {
+    "ICN": ("인천", "서울", "ICN", "Incheon", "Seoul"), "GMP": ("김포", "서울", "GMP", "Gimpo", "Seoul"),
+    "PUS": ("부산", "김해", "PUS", "Busan", "Gimhae"), "CJU": ("제주", "CJU", "Jeju"), "CJJ": ("청주", "CJJ", "Cheongju"),
+    "TAE": ("대구", "TAE", "Daegu"), "KWJ": ("광주", "KWJ", "Gwangju"), "MWX": ("무안", "MWX", "Muan"),
+    "RSU": ("여수", "RSU", "Yeosu"), "USN": ("울산", "USN", "Ulsan"), "YNY": ("양양", "YNY", "Yangyang"),
+    "KPO": ("포항", "KPO", "Pohang"), "HIN": ("사천", "진주", "HIN"), "KUV": ("군산", "KUV"), "WJU": ("원주", "WJU"),
+}
+#: 시간대 이름 → 근거에서 그 시간대를 가리키는 말
+_BAND_WORDS = {"dawn": ("새벽", "첫 비행기", "첫비행기"), "morning": ("오전", "아침"), "afternoon": ("오후", "점심", "낮"),
+               "evening": ("저녁", "밤", "퇴근")}
+_NEGATION = ("싫", "빼", "말고", "제외", "아니", "피해")
+
+
 def settle_years(found: Interpretation, *, today: date, text: str = "") -> tuple[Interpretation, list[str]]:
-    """날 · 연도를 근거 조각과 맞춘다(`_shared/interpret_dates.settle_dates`). (해석, 고친 칸)"""
-    return settle_dates(found, grounds=GROUNDS, today=today)
+    """날 · 연도를 근거 조각과 맞추고(`_shared/interpret_dates.settle_dates`), 가는 편 시간대를 근거와 맞춘다. (해석, 고친 칸)
+
+    ☆2026-10-11 16:21 playdata 「가는날은 새벽에 출발해도 괜찮으니까 … 오는날에는 … 오후 출발」 — 근거는 가는 날 부분만 적고 값은
+      [dawn, afternoon](오는 편 오후가 섞임)으로 냈다. 「새벽도 괜찮다」는 제한이 아니다.
+    - 근거에 「~도 괜찮 · 상관없」이 있고 빼는 말이 없으면 시간 제한이 아니다 → 비운다.
+    - 빼는 말이 없고 근거에 시간대 말이 있으면, 근거에 나온 시간대만 남긴다(근거에 없는 시간대는 다른 구절에서 섞인 것).
+    - 출발지: 국내 공항인데 문장에 그 이름이 없으면 비운다(되묻는다 — 사용자 결정 2026-10-11).
+    """
+    found, fixed = settle_dates(found, grounds=GROUNDS, today=today)
+    if text and found.origin in _KOREAN_AIRPORTS:
+        squeezed = "".join(text.split()).casefold()
+        if not any(name.casefold() in squeezed for name in _KOREAN_AIRPORTS[found.origin]):
+            # `[2026-10-11 사용자 결정]` 출발지를 말하지 않았으면 되묻는다 — ☆16:13 · 16:21 「일본」 「홍콩」 「영국」 문장에 출발지가 없는데
+            #   모델이 인천(ICN)을 채웠다. 국내 공항만 이름으로 확인한다(해외 출발 공항은 이름 표가 없어 그대로 둔다)
+            found, fixed = found.model_copy(update={"origin": None}), [*fixed, "origin"]
+    quote, times = found.depart_times_text or "", found.depart_times
+    if times and quote and not any(word in quote for word in _NEGATION):
+        if "도 괜찮" in quote or "도괜찮" in quote or "상관없" in quote:
+            return found.model_copy(update={"depart_times": None}), [*fixed, "depart_times"]
+        said = [band for band in times if any(word in quote for word in _BAND_WORDS[band])]
+        if said and said != times:
+            return found.model_copy(update={"depart_times": said}), [*fixed, "depart_times"]
+    return found, fixed
 
 
 __all__ = ["CALENDAR_DAYS", "model_context", "settle_years", "TIME_BANDS", "GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]

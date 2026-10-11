@@ -38,6 +38,14 @@ _DAY = re.compile(r"(\d{1,2})\s*일")
 _MONTH = re.compile(r"(\d{1,2})\s*월")
 _WEEKDAY = re.compile(r"([월화수목금토일])요일")
 _BARE_DAY = re.compile(r"^\d{1,2}$")
+#: 「N일 · N주 · N달 뒤(후)」 — 기준일(시작 날짜는 오늘, 끝 날짜는 시작 날짜)에서 센다. ☆10-11 16:13 사용자 문장 측정 — 「3일뒤」 「20일 뒤」
+#  「2주뒤」 「1달뒤」를 모델이 틀리게 셌고(10-20 · 11-02), 「3일」을 날(일) 숫자로 맞추던 규칙이 10-03 으로 망가뜨렸다
+_OFFSET = re.compile(r"(\d+|일|이|삼|사|오|한|두|세|네)?\s*(주일|일|주|달|개월)\s*(뒤|후|있다가|지나서)")
+_KOREAN_NUMBER = {"일": 1, "한": 1, "이": 2, "두": 2, "삼": 3, "세": 3, "사": 4, "네": 4, "오": 5}
+#: 기간 — 「3일정도」 「4일동안」 「2박간」. 날(일) 숫자가 아니다
+_DURATION = re.compile(r"\d+\s*(일|박)\s*(정도|동안|간|쯤)")
+#: 날 없이 주만 — 「다다음주에」. 날짜가 아니다(요일 · 날 숫자 · 주말이 있으면 날짜)
+_WEEK_ONLY = re.compile(r"(다다음|다음|이번|담|저번)\s*주(?!말)")
 #: 근거에 이 말이 있으면 월 · 일을 그 날로(앞의 것이 먼저). ☆22:28 「크리스마스에 2박」 — 프롬프트에 12-25 라고 적어도 12-24 로 냈다
 HOLIDAYS = (("크리스마스이브", (12, 24)), ("크리스마스 이브", (12, 24)), ("크리스마스", (12, 25)), ("성탄절", (12, 25)),
             ("신정", (1, 1)), ("새해", (1, 1)))
@@ -50,7 +58,7 @@ def looks_like_date(quote: str | None) -> bool:
     """근거 조각이 날짜를 말할 수 있는 모양인가(숫자 + 날짜 단위, 또는 날짜 말). 사람 수 · 지역 이름만이면 아니다."""
     if not quote:
         return False
-    return (bool(_DATE_SHAPE.search(quote)) or any(word in quote for word in _DATE_WORDS) or bool(_WEEKDAY.search(quote))
+    return (bool(_OFFSET.search(quote)) or bool(_DATE_SHAPE.search(quote)) or any(word in quote for word in _DATE_WORDS) or bool(_WEEKDAY.search(quote))
             or bool(_ENGLISH.search(quote)))
 
 
@@ -92,12 +100,16 @@ def ground_dates(found: Any, text: str, *, grounds: dict[str, str], start: str, 
     """
     trip_days = {start: (trip or {}).get("first_day"), **({end: (trip or {}).get("last_day")} if end else {})}
     cleared: list[str] = []
+    found = _trip_day(found, grounds=grounds, start=start, end=end, trip=trip)
     for field, evidence in grounds.items():
         value, quote = getattr(found, field), getattr(found, evidence)
         if value is None:
             continue
-        if field == start and quote and _NIGHTS_ONLY.match(quote.strip()):
+        if field == start and quote and (_NIGHTS_ONLY.match(quote.strip()) or _duration_only(quote)):
             cleared.append(field)
+            continue
+        if isinstance(value, date) and quote and quote != "trip" and _week_only(quote):
+            cleared.append(field)                     # ☆16:13 「다다음주에 출발」 — 날이 없는데 10-24 를 골랐다
             continue
         if quote == "trip" and has_trip:
             continue
@@ -117,6 +129,74 @@ def ground_dates(found: Any, text: str, *, grounds: dict[str, str], start: str, 
     return found.model_copy(update={field: None for field in cleared}), cleared
 
 
+#: 여행 일정의 첫날 · 마지막 날을 가리키는 말
+_TRIP_FIRST, _TRIP_LAST = ("첫날", "첫 날", "도착하는 날"), ("마지막 날", "마지막날", "떠나는 날")
+_NIGHT_COUNT = re.compile(r"(\d+)\s*박")
+
+
+def _nights(quote: str | None) -> int | None:
+    if not quote:
+        return None
+    if any(word in quote for word in ("하루", "하룻밤")):
+        return 1
+    if "이틀" in quote:
+        return 2
+    match = _NIGHT_COUNT.search(quote)
+    return int(match.group(1)) if match else None
+
+
+def _trip_day(found: Any, *, grounds: dict[str, str], start: str, end: str | None, trip: dict[str, Any] | None) -> Any:
+    """시작 근거가 「여행 첫날 · 마지막 날」이면 시작 날짜를 여행 일정의 그 날로(끝 근거가 박 수면 끝 날짜도). 여행이 없으면 그대로.
+
+    ☆2026-10-11 16:21 playdata 「이번 여행 마지막 날 하루만 공항 근처 호텔」 — 근거는 맞게 적고 값은 10-11(내일)로 냈다.
+    """
+    quote = getattr(found, grounds[start], None) or ""
+    day = None
+    if trip and any(word in quote for word in _TRIP_LAST):
+        day = trip.get("last_day")
+    elif trip and any(word in quote for word in _TRIP_FIRST):
+        day = trip.get("first_day")
+    if not day:
+        return found
+    begin = date.fromisoformat(day)
+    update: dict[str, Any] = {start: begin}
+    nights = _nights(getattr(found, grounds[end], None)) if end else None
+    if end and nights:
+        update[end] = begin + timedelta(days=nights)
+    return found.model_copy(update=update)
+
+
+def _duration_only(quote: str) -> bool:
+    return bool(_DURATION.search(quote)) and not (_MONTH.search(quote) or _OFFSET.search(quote) or _WEEKDAY.search(quote))
+
+
+def _week_only(quote: str) -> bool:
+    return bool(_WEEK_ONLY.search(quote)) and not (_WEEKDAY.search(quote) or _DAY.search(quote) or _OFFSET.search(quote))
+
+
+def _offset(quote: str, base: date) -> date | None:
+    """「N일 · N주 · N달 뒤」 → base 에서 센 날. 없으면 None."""
+    match = _OFFSET.search(quote)
+    if not match:
+        return None
+    raw, unit = match.group(1), match.group(2)
+    count = int(raw) if raw and raw.isdigit() else _KOREAN_NUMBER.get(raw or "", 1)
+    if unit == "주일" and raw in (None, "일"):        # 「일주일」
+        count = 1
+    if unit in ("일",):
+        return base + timedelta(days=count)
+    if unit in ("주", "주일"):
+        return base + timedelta(days=7 * count)
+    month = base.month - 1 + count                    # 달 · 개월
+    year, month = base.year + month // 12, month % 12 + 1
+    for day in (base.day, 30, 29, 28):
+        try:
+            return base.replace(year=year, month=month, day=day)
+        except ValueError:
+            continue
+    return None
+
+
 def _on_or_after(value: date, floor: date) -> date:
     for year in (floor.year, floor.year + 1):
         try:
@@ -130,8 +210,8 @@ def _on_or_after(value: date, floor: date) -> date:
 
 def _align_day(value: date, quote: str) -> date:
     """근거에 날(일)이 하나만 있으면 값의 날을 그 수로(월도 하나 적혀 있으면 그 달로). 박이 든 근거 · 없는 날짜는 그대로."""
-    if "박" in quote:
-        return value
+    if "박" in quote or _OFFSET.search(quote) or _DURATION.search(quote):
+        return value                                  # 「3일뒤」 「4일동안」의 숫자는 날(일)이 아니다
     days, months = _DAY.findall(quote), _MONTH.findall(quote)
     if len(days) != 1 or len(months) > 1 or len(_NUMBER.findall(quote)) != len(days) + len(months):
         return value                                  # ☆21:59 「다음달 13~15일」 — 범위(숫자가 더 있음)는 맞추지 않는다
@@ -162,7 +242,8 @@ def _snap_weekday(value: date, quote: str) -> date:
 def settle_dates(found: Any, *, grounds: dict[str, str], today: date) -> tuple[Any, list[str]]:
     """날 · 연도를 근거 조각과 맞춘다. (해석, 고친 칸)
 
-    - 날: 근거에 날(일)이 하나만 있으면 값의 날을 그 수로(범위 「13~15일」은 안 맞춤).
+    - 「N일 · N주 · N달 뒤」: 시작 날짜는 오늘에서, 끝 날짜는 시작 날짜에서 센다(모델 값보다 먼저).
+    - 날: 근거에 날(일)이 하나만 있으면 값의 날을 그 수로(범위 「13~15일」 · 「3일뒤」 · 「4일동안」은 안 맞춤).
     - 요일: 근거에 요일이 하나만 있고 날 숫자가 없으면, 값을 그 요일인 가장 가까운 날로(☆21:59 「금요일까지」 → 10-14(수)).
     - 연도: 근거 어디에든 네 자리 연도가 있으면(고객이 연도를 말함) 아무 날짜의 연도도 바꾸지 않는다. 없으면 「오늘 이후 처음 오는
       그 월 · 일」(프롬프트 규칙 그대로)로. 기준은 모두 오늘이다 — 돌아오는 날을 떠나는 날 뒤로 밀지 않는다(앞뒤가 틀리면 `needs` 가 묻는다).
@@ -172,12 +253,21 @@ def settle_dates(found: Any, *, grounds: dict[str, str], today: date) -> tuple[A
     year_said = any(isinstance(quote, str) and _YEAR.search(quote) for quote in quotes)
     update: dict[str, date] = {}
     shift = timedelta(0)                              # 첫 날짜(시작)를 옮긴 만큼 — 박 수로 만든 끝 날짜도 같이 옮긴다
+    start_field = next(iter(grounds))
     for index, (field, evidence) in enumerate(grounds.items()):
         value, quote = getattr(found, field, None), getattr(found, evidence, None)
         if not isinstance(value, date) or quote in (None, "trip"):
             continue
         if index > 0 and shift and _NIGHTS_ONLY.match(quote.strip()):
             update[field] = value + shift
+            continue
+        base = today if index == 0 else (update.get(start_field) or getattr(found, start_field, None) or today)
+        counted = _offset(quote, base)
+        if counted is not None:
+            if counted != value:
+                update[field] = counted
+                if index == 0:
+                    shift = counted - value
             continue
         moved = _holiday(value, quote) or _align_day(value, quote)
         if not year_said:
