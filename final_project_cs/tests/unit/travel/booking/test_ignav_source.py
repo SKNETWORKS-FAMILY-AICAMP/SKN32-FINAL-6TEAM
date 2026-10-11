@@ -2,8 +2,6 @@
 """Ignav MCP 어댑터 — 응답 모양(2026-10-09 11:53 playdata 실호출)을 그대로 흉내 낸 가짜 서버로 본다. 네트워크 없음."""
 from __future__ import annotations
 
-import json
-
 import httpx
 
 from app.domains.travel_ops.ports.data_sources.base import TravelSources
