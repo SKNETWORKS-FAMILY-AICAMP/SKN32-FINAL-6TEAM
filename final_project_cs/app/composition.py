@@ -449,7 +449,7 @@ def wire_domain_teams() -> list[str]:
     ★꽂지 않으면 부품은 그 팀이 없을 때의 길로 간다 — 이동은 어림값, 요식 판정은 모름,
       활동 유사도 없음, 그 종류의 감시는 건너뜀. **값을 지어내지 않는다**(`components/team_hooks/`).
     """
-    from app.domains.travel_ops.components.team_hooks import dining_ledger, legs, similarity, watch_planners
+    from app.domains.travel_ops.components.team_hooks import dining_ledger, legs, lodging_ledger, similarity, watch_planners
 
     # 이동 — 두 지점 사이 시간 · 노선 · 사고 반영. 도보 상한은 이동 팀의 가드레일에 있다.
     from app.domains.travel_ops.instances.mobility import wiring as mobility_wiring
@@ -485,6 +485,15 @@ def wire_domain_teams() -> list[str]:
                         preference_of=lambda c: activity_similarity.preference_of(c),
                         distance_first=lambda pref: activity_similarity.distance_first(pref))
 
+    # 숙소 · 항공(확장) — 보여 준 후보 기억 · 고른 MCP 숙소를 그 여행 전용 장소로 들여놓기. `[2026-10-12]` 요식 원장과 같은 모양.
+    #   ★부르는 곳(대화 부품 · 고르기 처리)은 아직 없다 — `wiki/records/reports/2026-10-12_숙소항공_원장_연결안내.md`.
+    from app.domains.travel_ops.instances.lodging import ledger as lodging_ledger_impl
+
+    lodging_ledger.register(remember=lambda *a, **kw: lodging_ledger_impl.remember_shown(*a, **kw),
+                            shown=lambda *a, **kw: lodging_ledger_impl.shown_keys(*a, **kw),
+                            adopt=lambda *a, **kw: lodging_ledger_impl.adopt_option(*a, **kw),
+                            item_key=lambda kind, query: lodging_ledger_impl.item_key(kind, query))
+
     # 감시 묶음 — 항목 종류마다 그 팀의 점검 계산.
     from app.domains.travel_ops.instances.activity import team as activity_team
     from app.domains.travel_ops.instances.dining import team as dining_team
@@ -495,7 +504,7 @@ def wire_domain_teams() -> list[str]:
     watch_planners.register("mobility", lambda *a, **kw: mobility_team.plan_mobility_trigger(*a, **kw))
 
     return ([name for name, hook in (("legs", legs), ("dining_ledger", dining_ledger),
-                                     ("similarity", similarity)) if hook.is_registered()]
+                                     ("similarity", similarity), ("lodging_ledger", lodging_ledger)) if hook.is_registered()]
             + [f"watch:{kind}" for kind in watch_planners.registered()])
 
 
