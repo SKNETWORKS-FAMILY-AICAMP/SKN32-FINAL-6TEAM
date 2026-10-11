@@ -38,4 +38,4 @@
 .mapPicker input, .mapPicker button { min-height: 44px; min-width: 0; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: var(--color-text); font: inherit; }
 .mapPicker button:disabled { opacity: .5; cursor: default; }
 .mapPicker input:focus-visible, .mapPicker button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
-.mapPicker .actions button:last-child { background: var(--color-primary); color: white; }
+.mapPicker .actions button:last-child { background: var(--color-primary); color: var(--color-brand-paper); }

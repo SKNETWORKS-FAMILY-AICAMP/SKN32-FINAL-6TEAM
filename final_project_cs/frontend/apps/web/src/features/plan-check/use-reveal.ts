@@ -114,10 +114,12 @@ export function useReveal(target: PlanCheckView, paused = false): { view: PlanCh
   const { skipAnimation: reduced } = useSettings();
   const [shown, setShown] = useState(target);
   const [wasPaused, setWasPaused] = useState(paused);
-  // The survey already displayed the live completed result. Releasing it must not replay the frozen snapshot.
+  // Questions showed the completed reading progress, but not the map's cards. Begin their first appearance at checking.
   const completedHold = wasPaused && !paused && target.stage === "done";
+  const firstMap = completedHold && shown.stage !== "done" && !reduced;
   if (wasPaused !== paused) setWasPaused(paused);
-  const immediate = !paused && (reduced || completedHold || (shown.stage === "done" && target.stage === "done"));
+  if (firstMap) setShown({ ...target, stage: "checking", items: [], moves: [] });
+  const immediate = !paused && !firstMap && (reduced || (shown.stage === "done" && target.stage === "done"));
   // Keep the state in step with what is returned before another render can pause or restart the replay.
   // This guarded update adjusts only this hook's component; an effect would leave the old snapshot until after commit.
   if (immediate && shown !== target) setShown(target);

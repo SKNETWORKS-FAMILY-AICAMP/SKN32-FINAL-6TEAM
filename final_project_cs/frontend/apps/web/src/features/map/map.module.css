@@ -5,7 +5,7 @@
    and buttons (z-index 4) of `.live`, so with real tiles on the map the chips and the buttons were painted under them (the tests have no tiles - they never showed it). The map keeps its panes to itself. */
 .canvas { isolation: isolate; z-index: 0; }
 .live[data-picking] .canvas { cursor: crosshair; }
-.coordinatePin { position: absolute; z-index: 3; transform: translate(-50%, -50%); width: 36px; height: 36px; border-radius: 50%; border: 3px solid white; background: var(--color-primary); color: white; box-shadow: 0 1px 8px #0005; display: grid; place-items: center; font-size: 24px; pointer-events: none; }
+.coordinatePin { position: absolute; z-index: 3; transform: translate(-50%, -50%); width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--color-brand-paper); background: var(--color-primary); color: var(--color-brand-paper); box-shadow: 0 1px 8px var(--color-coordinate-shadow); display: grid; place-items: center; font-size: 24px; pointer-events: none; }
 .pickCenter { position: absolute; left: 12px; bottom: 32px; z-index: 4; min-height: 44px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: var(--color-text); cursor: pointer; }
 .pickCenter:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .routeLabels { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }

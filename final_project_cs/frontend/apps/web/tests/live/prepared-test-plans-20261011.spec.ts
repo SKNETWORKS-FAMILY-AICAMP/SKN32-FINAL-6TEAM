@@ -30,8 +30,9 @@ for (const width of [375, 1280]) {
     await page.getByLabel("테스트 계획", { exact: true }).scrollIntoViewIfNeeded();
     await page.screenshot({ path: test.info().outputPath(`prepared-test-${width}.png`) });
     await checkPlan(page);
+    await expect(page.getByRole("status").filter({ hasText: "시험 계획 test1" })).toBeVisible();
     await expect(page.getByRole("article", { name: "경복궁 관람" })).toBeVisible();
-    await expect(page.getByRole("note").filter({ hasText: "시험 계획 test1" })).toBeVisible();
+    await expect(page.locator('[data-stage] > p[class*="streamNote"]')).toHaveCount(0);
     const posts = await server.received("POST", "/v1/web/trip-intakes");
     expect(posts).toHaveLength(1);
     expect(JSON.stringify(posts[0])).toContain("TEST1");

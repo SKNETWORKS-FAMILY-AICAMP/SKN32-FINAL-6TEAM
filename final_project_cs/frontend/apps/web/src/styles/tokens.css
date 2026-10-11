@@ -8,6 +8,7 @@
   /* `[2026-10-06 사용자 지적 — 애니메이션을 전체적으로 부드럽게]` 움직임의 곡선과 시간은 이 셋만 쓴다: 부드럽게 감속(들어옴 · 미끄러짐) · 부드럽게 가속(나감) · 시간. */
   --ease-soft: cubic-bezier(.22, .8, .3, 1); --ease-leave: cubic-bezier(.4, 0, .8, .4); --motion-soft: 340ms;
 
+  --color-coordinate-shadow: #0005;
   --color-shadow-light: #0002;
   --color-brand-paper: #fff;
   --color-edge-number-bg: #202020;
@@ -58,6 +59,7 @@
 
 /* White theme — the plan-check streaming mockup (`mockups/tripilot-plan-check-streaming.html`). */
 [data-theme="neutral"] {
+  --color-coordinate-shadow: #0005;
   --color-shadow-light: #0002;
   --color-brand-paper: #fff;
   --color-edge-number-bg: #202020;

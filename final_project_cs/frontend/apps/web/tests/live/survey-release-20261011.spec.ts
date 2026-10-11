@@ -31,35 +31,48 @@ async function completedQuestions(page: Page, request: APIRequestContext, touche
   // Observe committed DOM changes, including the first frame after the hold is released.
   await page.evaluate(() => {
     const stages: string[] = [];
-    Object.assign(window, { __releasedStages: stages });
+    const counts: number[] = [];
+    Object.assign(window, { __releasedStages: stages, __releasedCounts: counts });
     const sample = () => {
       const screen = document.querySelector('[data-replay="playing"][data-stage]');
-      if (screen) stages.push(screen.getAttribute("data-stage")!);
+      if (screen) { stages.push(screen.getAttribute("data-stage")!); counts.push(screen.querySelectorAll('li[data-type="item"]').length); }
     };
     new MutationObserver(sample).observe(document.body, { attributes: true, childList: true, subtree: true });
   });
 }
 
 async function completedResult(page: Page) {
+  await expect(page.locator('[data-replay="playing"]')).toHaveAttribute("data-stage", "checking");
+  // Let React commit each timer's update between virtual seconds.
+  for (let second = 0; second < 50; second += 1) {
+    await page.clock.runFor(1000);
+    await page.waitForTimeout(20);
+    if (await page.locator('[data-replay="playing"]').getAttribute("data-stage") === "done") break;
+  }
   await expect(result(page)).toBeVisible({ timeout: 2000 });
   await expect(page.locator('[data-replay="playing"]')).toHaveAttribute("data-stage", "done");
   await expect(page.getByRole("heading", { name: "계획을 확인하고 있어요", exact: true })).toHaveCount(0);
   const stages = await page.evaluate(() => (window as unknown as { __releasedStages: string[] }).__releasedStages);
   expect(stages.length).toBeGreaterThan(0);
-  expect(stages.every((stage) => stage === "done"), stages.join(" → ")).toBe(true);
+  expect(stages.every((stage) => stage === "checking" || stage === "done"), stages.join(" → ")).toBe(true);
+  expect(stages).toContain("checking");
+  const counts = await page.evaluate(() => (window as unknown as { __releasedCounts: number[] }).__releasedCounts);
+  expect(counts).toContain(0);
+  expect(counts.some((count) => count > 0 && count < 3)).toBe(true);
+  expect(counts).toContain(3);
   await noHorizontalScroll(page);
 }
 
 for (const width of [375, 1280]) {
   test.describe(`${width}px 질문 완료 이동`, () => {
     test.use({ viewport: { width, height: 812 } });
-    test("수동 확인은 완료 결과로 바로 이동하고 진행 단계를 다시 재생하지 않는다", async ({ page, request }) => {
+    test("수동 확인은 읽기를 재생하지 않고 지도 일정을 순차 표시한다", async ({ page, request }) => {
       await completedQuestions(page, request);
       await page.getByRole("button", { name: "읽어 온 계획 확인하기", exact: true }).click();
       await completedResult(page);
       if (process.env.SURVEY_RELEASE_SHOTS) await page.screenshot({ path: `${process.env.SURVEY_RELEASE_SHOTS}/result-${width}.png`, fullPage: true, animations: "disabled" });
     });
-    test("5초 자동 이동도 완료 결과로 바로 이동한다", async ({ page, request }) => {
+    test("5초 자동 이동도 지도 일정을 순차 표시한다", async ({ page, request }) => {
       await completedQuestions(page, request);
       await page.clock.fastForward(5100);
       await completedResult(page);

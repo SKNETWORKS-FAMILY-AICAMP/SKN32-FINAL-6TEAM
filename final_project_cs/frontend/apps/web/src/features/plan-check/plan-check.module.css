@@ -81,6 +81,8 @@
 .timeline { list-style: none; margin: 0; padding: 0; }
 .insertPoint { position: relative; height: 0; margin: 0 0 0 78px; z-index: 3; }
 .insertPoint[data-insert-point$=":end"] { margin-top: 24px; margin-bottom: 24px; }
+.insertPoint[data-insert-start] { height: 48px; }
+.insertPoint[data-insert-start]::after, .insertPoint[data-insert-start] > .insertButton { top: 24px; }
 .insertPoint::after { --insert-line-cycle: 3s; content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--color-border-strong); z-index: -2; opacity: 0; pointer-events: none; }
 .insertPoint[data-insert-near]::after, .insertPoint:focus-within::after { opacity: .6; animation: insertLineBreathe var(--insert-line-cycle) ease-in-out infinite; }
 .insertPoint:hover::after, .insertPoint:focus-within::after { animation-play-state: paused; }
@@ -233,6 +235,9 @@ button.moveHead { cursor: pointer; }
 .changedMark { display: inline-flex; flex: none; color: var(--color-adjusted); }
 .cardFoot { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: flex-end; gap: 4px 8px; padding: 0 12px 8px; }
 .cardFootNote { flex: 1 1 96px; min-width: 0; }
+.cardFoot:has(.needsInline) { gap: 8px 12px; padding-bottom: 12px; }
+.cardFoot:has(.needsInline) .cardFootNote { flex: 0 1 auto; }
+.cardFoot:has(.needsInline) .cardFootTools { margin-left: 0; }
 .cardFootNote .cardWritten { display: block; margin: 0; font-size: 12px; font-weight: 600; }
 .cardFootTools { display: flex; flex: none; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .cardFootTools .pill { font-size: 12px; font-weight: 600; }

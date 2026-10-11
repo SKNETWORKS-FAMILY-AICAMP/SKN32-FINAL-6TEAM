@@ -12,7 +12,6 @@ import { endIntakeStart, intakeStart, rememberIntakeArrival, rememberIntakeFailu
 import type { OpProgress } from "@/lib/live/stream";
 import { routes } from "@/lib/routes";
 import { useT } from "@/lib/settings";
-import styles from "./intake-review.module.css";
 
 /** The server has not answered the plan yet: say it is slow after this long, and that it is very slow after this long. */
 export const SLOW_AFTER_MS = 4_000;
@@ -107,5 +106,5 @@ export function IntakeStarting() {
     // Before the server has said anything the line under the title is the note (it turns into the slow notes by itself).
     return <PlanningProgress phase={phase} progress={planning} waiting={waiting} onBack={phase === "planning" ? undefined : goBack} />;
   }
-  return <PlanCheck view={view} sending notice={<p className={styles.sendingNote}>{note}</p>} onBack={goBack} />;
+  return <PlanCheck view={view} sending notice={{ text: note }} onBack={goBack} />;
 }
