@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from app.core.contracts import TeamTask
@@ -182,7 +183,8 @@ class ReplacementMixin:
             row = rows.get(str(alternative.get("contentid"))) or {}
             outdoor = weather_from_class(row.get("lclsSystm1"), row.get("lclsSystm2"))
             # ★야외 위험형에서 실내외를 모르는 후보는 묻지 않고 뺀다 — 후보는 고객이 고른 곳이 아니다
-            if assess(messages, True if outdoor is None else outdoor, rules).blocks:
+            if assess(messages, True if outdoor is None else outdoor, rules,
+                      at=starts_at if isinstance(starts_at, datetime) else None, place_name=row.get("title")).blocks:
                 blocked.add(id(alternative))
             else:
                 alternative["disaster"] = "clear"

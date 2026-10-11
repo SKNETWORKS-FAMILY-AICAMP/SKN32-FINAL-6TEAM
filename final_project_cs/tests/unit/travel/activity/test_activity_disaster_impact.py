@@ -172,3 +172,66 @@ def test_candidate_recheck_drops_every_candidate_under_a_region_wide_hazard():
 def test_candidate_recheck_keeps_indoor_candidates_under_an_outdoor_only_hazard():
     kept, _ = _recheck([_message("미세먼지")])
     assert kept == ["indoor"]
+
+
+# ── `[2026-10-11 사용자 결정]` 표 앞의 세 규칙(골든셋 검수 disaster-03 · 09 · 10) ─────────────
+
+def _at(hour):
+    return datetime(2026, 10, 14, hour, 0, tzinfo=KST)
+
+
+def _sent(kind, text, created="2026-10-14T05:30:00+09:00"):
+    return {"kind": kind, "step": "긴급재난", "text": text, "created_at": created}
+
+
+def test_a_message_naming_the_place_closed_blocks_even_as_etc():
+    """disaster-03 — 「기타」여도 그 장소의 관람 전면 중단이면 가도 못 본다."""
+    msg = _sent("기타", "[국가유산청] 경복궁 일대 시설 점검으로 금일 경복궁 관람 전면 중단")
+    impact = assess([msg], False, ImpactRules.load(), at=_at(14), place_name="경복궁")
+    assert impact.blocks and impact.blocks[0]["impact"] == "place_closed"
+
+
+def test_a_closure_naming_another_place_does_not_block():
+    msg = _sent("기타", "[국가유산청] 경복궁 일대 시설 점검으로 금일 경복궁 관람 전면 중단")
+    assert not assess([msg], False, ImpactRules.load(), at=_at(14), place_name="창덕궁").blocks
+
+
+def test_a_recovery_message_does_not_block():
+    """disaster-09 — 「복구가 완료」는 상황이 끝났다는 말이다."""
+    msg = _sent("정전", "[송파구] 잠실동 일대 정전 복구가 완료되었습니다")
+    impact = assess([msg], False, ImpactRules.load(), at=_at(14), place_name="롯데월드 어드벤처")
+    assert not impact.blocks and impact.no_effect
+
+
+@pytest.mark.parametrize(("hour", "blocks"), [(14, False), (10, True), (5, False)])
+def test_a_control_window_blocks_only_inside_it(hour, blocks):
+    """disaster-10 · 11 — 통제 06~12시. 문제가 생긴 시각에만 막는다."""
+    msg = _sent("호우", "[서울시] 호우경보로 한강공원 전면 통제 (10/14 06:00~10/14 12:00)")
+    impact = assess([msg], True, ImpactRules.load(), at=_at(hour), place_name="여의도한강공원")
+    assert bool(impact.blocks) is blocks
+
+
+def test_an_unreadable_window_falls_back_to_the_table():
+    """통제 시간을 못 읽으면 「끝났다」로 짐작하지 않는다 — 표대로 막는다."""
+    msg = _sent("호우", "[서울시] 호우경보로 한강공원 통제 중")
+    assert assess([msg], True, ImpactRules.load(), at=_at(14)).blocks
+
+
+def test_the_golden_disaster_cases_agree_with_the_decided_labels():
+    """골든셋 재난 문항(1차 라벨 · 사용자 결정 반영)을 이 규칙으로 다시 판정한다. 지역 거르기(다른 구 · 부산)는 공유 점검 몫이라 뺀다."""
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[4]
+    cases = [json.loads(line) for line in (root / "eval/activity_judge/cases.jsonl").read_text(encoding="utf-8").splitlines()]
+    first = json.loads((root / "eval/activity_judge/labels_first_pass.json").read_text(encoding="utf-8"))["labels"]
+    outdoor = {"경복궁": False, "남산공원": True, "망원한강공원": True, "롯데월드 어드벤처": False, "여의도한강공원": True}
+    rules = ImpactRules.load()
+    for case in cases:
+        if case["kind"] != "disaster_effect" or case["case_id"] in ("disaster-02", "disaster-08"):
+            continue
+        i = case["inputs"]
+        impact = assess(i["messages"], outdoor[i["place_name"]], rules,
+                        at=datetime.fromisoformat(i["starts_at"]), place_name=i["place_name"])
+        got = "blocks" if impact.blocks else "no_effect"
+        assert got in first[case["case_id"]]["acceptable"], (case["case_id"], got)

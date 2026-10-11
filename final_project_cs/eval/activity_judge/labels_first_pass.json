@@ -1,7 +1,7 @@
 {
  "labeler": "claude-opus-5-5 (1차, 사람 검수 전)",
  "labeled_on": "2026-10-11",
- "basis": "유스케이스 수정본 §8 분류표(D2) · 10-06 작성자 라벨을 다시 판정",
+ "basis": "유스케이스 수정본 §8 분류표(D2) · 10-06 작성자 라벨을 다시 판정 · 재난 4건(03·04·09·10)은 사용자 결정(2026-10-11)",
  "labels": {
   "closure-01": {
    "expected": "not_closed",
@@ -347,20 +347,20 @@
    "check": false
   },
   "disaster-03": {
-   "expected": "no_effect",
+   "expected": "blocks",
    "acceptable": [
-    "no_effect"
+    "blocks"
    ],
-   "reason": "§8: 재해구분 「기타」는 반영 안 함 → 막지 않음. ★단 본문은 「경복궁 관람 전면 중단」— 실제로는 못 간다. 표를 그대로 따를지(D2) 이런 시설 중단 공지를 따로 볼지 정해야 한다. 10-06 답은 blocks",
-   "check": true
+   "reason": "[사용자 결정 2026-10-11] 관람 전면 중단이면 가도 못 본다 — 「기타」여도 그 장소를 지목한 중단 공지는 막는다",
+   "check": false
   },
   "disaster-04": {
    "expected": "blocks",
    "acceptable": [
     "blocks"
    ],
-   "reason": "§8: 폭염=야외 위험형, 남산공원=야외 → 막음. 10-06 답은 「자제 권고라 금지 아님」 no_effect — D2 이후 기준이 바뀌었다",
-   "check": true
+   "reason": "[사용자 결정 2026-10-11] 폭염=야외 위험형, 남산공원=야외 → 막는다",
+   "check": false
   },
   "disaster-05": {
    "expected": "no_effect",
@@ -400,17 +400,16 @@
    "acceptable": [
     "no_effect"
    ],
-   "reason": "「복구가 완료」 = 해제 문자 성격 → §8 반영 안 함. ★본문에 「해제」 낱말이 없어 규칙(공유 점검)은 정전=지역 위험형으로 막는다. 해제로 볼지 확인",
-   "check": true
+   "reason": "[사용자 결정 2026-10-11] 「복구가 완료」 = 괜찮아졌다는 말 → 막지 않는다",
+   "check": false
   },
   "disaster-10": {
-   "expected": "blocks",
+   "expected": "no_effect",
    "acceptable": [
-    "blocks",
     "no_effect"
    ],
-   "reason": "§8: 호우=지역 위험형 → 표대로면 막음. ★그러나 통제가 06~12시이고 방문은 14시 — 방문 시각엔 끝난다. 표는 시간을 보지 않는다. 10-06 답은 no_effect",
-   "check": true
+   "reason": "[사용자 결정 2026-10-11] 통제 06~12시, 방문 14시 — 문제가 생긴 시각에만 막는다",
+   "check": false
   },
   "disaster-11": {
    "expected": "blocks",

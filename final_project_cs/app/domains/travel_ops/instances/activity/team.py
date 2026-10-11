@@ -604,7 +604,9 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             return None, report, evidence, self._escalate(task, fc.DISASTER_UNCONFIRMED, evidence, warnings=[
                 "재난문자를 다시 읽지 못했다 — 「영향 없음」으로 보지 않는다"])
         messages = [*(found.get("for_region") or []), *(found.get("unclassified") or [])]
-        impact = assess(messages, indoor.get("value"), ImpactRules.load())
+        starts_at = booking.get("starts_at")
+        impact = assess(messages, indoor.get("value"), ImpactRules.load(),
+                        at=starts_at if isinstance(starts_at, datetime) else None, place_name=place.get("name"))
         others = [d for d in report.get("disruptions") or [] if d.get("category") != "disaster_msg"]
         rest = {**report, "disruptions": others,
                 "verdict": "disrupted" if others else ("clear" if report.get("verdict") == "disrupted" else report.get("verdict"))}
