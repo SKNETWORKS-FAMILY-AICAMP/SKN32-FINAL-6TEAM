@@ -34,6 +34,7 @@ domain: neutral
 | [rest-endpoints.md](rest-endpoints.md) | API 요청 · 응답의 정본 — 웹 API · 계획 접수 · 여행 · Case 계약 | `app/domains/travel_ops/entry/trip_api.py` 등 |
 | [mcp-tools.md](mcp-tools.md) | 개인 AI가 쓰는 도구 3종 | `app/presentation/mcp/` |
 | [a2a-protocol.md](a2a-protocol.md) | 기업 Agent에 업무 위임 | `app/presentation/a2a/` |
+| [llm-failover.md](llm-failover.md) | 모델 서버(Ollama)가 죽거나 늦으면 서버용 OpenAI 키로 자동 전환 — 조건 · 서킷 · 개인정보 · 비용 상한 · 켜는 법 | `app/infrastructure/llm_failover.py` |
 | [auth-boundary.md](auth-boundary.md) | 인증·스코프·PII | `app/infrastructure/auth/` |
 | [web-screen-api.md](web-screen-api.md) | 사용자 웹 접수 화면·온보딩 디스코드 알림 카드의 연결 상태와 API 협의 항목(복구 이메일은 2026-10-03 에 뺌) | `frontend/apps/web/src/features/intake-review/` · `onboarding/` |
 

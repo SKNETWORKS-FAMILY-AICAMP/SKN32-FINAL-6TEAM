@@ -1,0 +1,406 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      ".tmp/consent-progress.config.ts",
+      "tests/live/map-moving-visibility-20261011.spec.ts",
+      "tests/live/map-edge-visibility.spec.ts",
+      "--workers=1",
+      "--trace=off",
+      "--reporter=line,json",
+      "--output=.tmp/map-moving-after"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\consent-progress.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/.tmp/map-moving-after",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "map-edge-visibility.spec.ts",
+      "file": "map-edge-visibility.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px: 묶인 거리 칩의 모든 마커·연결선은 숨고 복귀 시 같은 마커가 살아난다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 18200,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]')\nExpected substring: \u001b[32m\"1 · 2 · 3\"\u001b[39m\nReceived string:    \u001b[31m\"×311km\"\u001b[39m\nTimeout: 12000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]')\u001b[22m\n\u001b[2m    5 × locator resolved to <button type=\"button\" data-side=\"left\" data-multiple=\"true\" data-edge-chip=\"true\" class=\"map-module__X9JNWa__edgeChip\" aria-label=\"1 · 2 · 3번 일정이 화면 밖에 있어요 · 11km · 누르면 그곳으로 가요\">…</button>\u001b[22m\n\u001b[2m      - unexpected value \"×3\"\u001b[22m\n\u001b[2m    22 × locator resolved to <button type=\"button\" data-side=\"left\" data-multiple=\"true\" data-edge-chip=\"true\" class=\"map-module__X9JNWa__edgeChip\" aria-label=\"1 · 2 · 3번 일정이 화면 밖에 있어요 · 11km · 누르면 그곳으로 가요\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"×311km\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]')\nExpected substring: \u001b[32m\"1 · 2 · 3\"\u001b[39m\nReceived string:    \u001b[31m\"×311km\"\u001b[39m\nTimeout: 12000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]')\u001b[22m\n\u001b[2m    5 × locator resolved to <button type=\"button\" data-side=\"left\" data-multiple=\"true\" data-edge-chip=\"true\" class=\"map-module__X9JNWa__edgeChip\" aria-label=\"1 · 2 · 3번 일정이 화면 밖에 있어요 · 11km · 누르면 그곳으로 가요\">…</button>\u001b[22m\n\u001b[2m      - unexpected value \"×3\"\u001b[22m\n\u001b[2m    22 × locator resolved to <button type=\"button\" data-side=\"left\" data-multiple=\"true\" data-edge-chip=\"true\" class=\"map-module__X9JNWa__edgeChip\" aria-label=\"1 · 2 · 3번 일정이 화면 밖에 있어요 · 11km · 누르면 그곳으로 가요\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"×311km\"\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-edge-visibility.spec.ts:27:24",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-edge-visibility.spec.ts",
+                      "column": 24,
+                      "line": 27
+                    },
+                    "snippet": "  25 |     const chip = map.locator(\"[data-edge-chip]\");\n  26 |     await expect(chip).toHaveCount(1);\n> 27 |     await expect(chip).toContainText(\"1 · 2 · 3\");\n     |                        ^\n  28 |     for (const number of [1, 2, 3]) {\n  29 |       await expect(pin(page, `${number}.`)).toHaveCount(1);\n  30 |       await expect(pin(page, `${number}.`)).toHaveAttribute(\"aria-hidden\", \"true\");"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-edge-visibility.spec.ts",
+                        "column": 24,
+                        "line": 27
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]')\nExpected substring: \u001b[32m\"1 · 2 · 3\"\u001b[39m\nReceived string:    \u001b[31m\"×311km\"\u001b[39m\nTimeout: 12000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]')\u001b[22m\n\u001b[2m    5 × locator resolved to <button type=\"button\" data-side=\"left\" data-multiple=\"true\" data-edge-chip=\"true\" class=\"map-module__X9JNWa__edgeChip\" aria-label=\"1 · 2 · 3번 일정이 화면 밖에 있어요 · 11km · 누르면 그곳으로 가요\">…</button>\u001b[22m\n\u001b[2m      - unexpected value \"×3\"\u001b[22m\n\u001b[2m    22 × locator resolved to <button type=\"button\" data-side=\"left\" data-multiple=\"true\" data-edge-chip=\"true\" class=\"map-module__X9JNWa__edgeChip\" aria-label=\"1 · 2 · 3번 일정이 화면 밖에 있어요 · 11km · 누르면 그곳으로 가요\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"×311km\"\u001b[22m\n\n\n  25 |     const chip = map.locator(\"[data-edge-chip]\");\n  26 |     await expect(chip).toHaveCount(1);\n> 27 |     await expect(chip).toContainText(\"1 · 2 · 3\");\n     |                        ^\n  28 |     for (const number of [1, 2, 3]) {\n  29 |       await expect(pin(page, `${number}.`)).toHaveCount(1);\n  30 |       await expect(pin(page, `${number}.`)).toHaveAttribute(\"aria-hidden\", \"true\");\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-edge-visibility.spec.ts:27:24"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:22:27.629Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\map-moving-after\\map-edge-visibility-375px--e0896-마커·연결선은-숨고-복귀-시-같은-마커가-살아난다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\map-moving-after\\map-edge-visibility-375px--e0896-마커·연결선은-숨고-복귀-시-같은-마커가-살아난다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-edge-visibility.spec.ts",
+                    "column": 24,
+                    "line": 27
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "13d79fcdf34b853a5c81-b16b0955da90a036fd0c",
+          "file": "map-edge-visibility.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "1280px: 묶인 거리 칩의 모든 마커·연결선은 숨고 복귀 시 같은 마커가 살아난다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 17979,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]')\nExpected substring: \u001b[32m\"1 · 2 · 3\"\u001b[39m\nReceived string:    \u001b[31m\"×313km\"\u001b[39m\nTimeout: 12000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]')\u001b[22m\n\u001b[2m    5 × locator resolved to <button type=\"button\" data-side=\"left\" data-multiple=\"true\" data-edge-chip=\"true\" class=\"map-module__X9JNWa__edgeChip\" aria-label=\"1 · 2 · 3번 일정이 화면 밖에 있어요 · 13km · 누르면 그곳으로 가요\">…</button>\u001b[22m\n\u001b[2m      - unexpected value \"×3\"\u001b[22m\n\u001b[2m    22 × locator resolved to <button type=\"button\" data-side=\"left\" data-multiple=\"true\" data-edge-chip=\"true\" class=\"map-module__X9JNWa__edgeChip\" aria-label=\"1 · 2 · 3번 일정이 화면 밖에 있어요 · 13km · 누르면 그곳으로 가요\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"×313km\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]')\nExpected substring: \u001b[32m\"1 · 2 · 3\"\u001b[39m\nReceived string:    \u001b[31m\"×313km\"\u001b[39m\nTimeout: 12000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]')\u001b[22m\n\u001b[2m    5 × locator resolved to <button type=\"button\" data-side=\"left\" data-multiple=\"true\" data-edge-chip=\"true\" class=\"map-module__X9JNWa__edgeChip\" aria-label=\"1 · 2 · 3번 일정이 화면 밖에 있어요 · 13km · 누르면 그곳으로 가요\">…</button>\u001b[22m\n\u001b[2m      - unexpected value \"×3\"\u001b[22m\n\u001b[2m    22 × locator resolved to <button type=\"button\" data-side=\"left\" data-multiple=\"true\" data-edge-chip=\"true\" class=\"map-module__X9JNWa__edgeChip\" aria-label=\"1 · 2 · 3번 일정이 화면 밖에 있어요 · 13km · 누르면 그곳으로 가요\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"×313km\"\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-edge-visibility.spec.ts:27:24",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-edge-visibility.spec.ts",
+                      "column": 24,
+                      "line": 27
+                    },
+                    "snippet": "  25 |     const chip = map.locator(\"[data-edge-chip]\");\n  26 |     await expect(chip).toHaveCount(1);\n> 27 |     await expect(chip).toContainText(\"1 · 2 · 3\");\n     |                        ^\n  28 |     for (const number of [1, 2, 3]) {\n  29 |       await expect(pin(page, `${number}.`)).toHaveCount(1);\n  30 |       await expect(pin(page, `${number}.`)).toHaveAttribute(\"aria-hidden\", \"true\");"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-edge-visibility.spec.ts",
+                        "column": 24,
+                        "line": 27
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]')\nExpected substring: \u001b[32m\"1 · 2 · 3\"\u001b[39m\nReceived string:    \u001b[31m\"×313km\"\u001b[39m\nTimeout: 12000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('region', { name: '여행 지도', exact: true }).locator('[data-edge-chip]')\u001b[22m\n\u001b[2m    5 × locator resolved to <button type=\"button\" data-side=\"left\" data-multiple=\"true\" data-edge-chip=\"true\" class=\"map-module__X9JNWa__edgeChip\" aria-label=\"1 · 2 · 3번 일정이 화면 밖에 있어요 · 13km · 누르면 그곳으로 가요\">…</button>\u001b[22m\n\u001b[2m      - unexpected value \"×3\"\u001b[22m\n\u001b[2m    22 × locator resolved to <button type=\"button\" data-side=\"left\" data-multiple=\"true\" data-edge-chip=\"true\" class=\"map-module__X9JNWa__edgeChip\" aria-label=\"1 · 2 · 3번 일정이 화면 밖에 있어요 · 13km · 누르면 그곳으로 가요\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"×313km\"\u001b[22m\n\n\n  25 |     const chip = map.locator(\"[data-edge-chip]\");\n  26 |     await expect(chip).toHaveCount(1);\n> 27 |     await expect(chip).toContainText(\"1 · 2 · 3\");\n     |                        ^\n  28 |     for (const number of [1, 2, 3]) {\n  29 |       await expect(pin(page, `${number}.`)).toHaveCount(1);\n  30 |       await expect(pin(page, `${number}.`)).toHaveAttribute(\"aria-hidden\", \"true\");\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-edge-visibility.spec.ts:27:24"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:22:46.913Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\map-moving-after\\map-edge-visibility-1280px-6b668-마커·연결선은-숨고-복귀-시-같은-마커가-살아난다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\map-moving-after\\map-edge-visibility-1280px-6b668-마커·연결선은-숨고-복귀-시-같은-마커가-살아난다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-edge-visibility.spec.ts",
+                    "column": 24,
+                    "line": 27
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "13d79fcdf34b853a5c81-e7cf3fc828ad2f48703b",
+          "file": "map-edge-visibility.spec.ts",
+          "line": 9,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "map-moving-visibility-20261011.spec.ts",
+      "file": "map-moving-visibility-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px 로딩 중 새 일정의 자동 지도 이동에서도 보이는 마커를 거리 칩에 합치지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5208,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:23:05.863Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "77462f20e98f3470331c-cbcbb7147e838ce06fd3",
+          "file": "map-moving-visibility-20261011.spec.ts",
+          "line": 49,
+          "column": 3
+        },
+        {
+          "title": "375px 지도 밖 묶음을 눌러 가운데로 들어오는 마커는 이동 중에도 거리 칩에서 빠진다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6283,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:23:11.334Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "77462f20e98f3470331c-ab9aeb9aa788ca759b60",
+          "file": "map-moving-visibility-20261011.spec.ts",
+          "line": 76,
+          "column": 3
+        },
+        {
+          "title": "1280px 로딩 중 새 일정의 자동 지도 이동에서도 보이는 마커를 거리 칩에 합치지 않는다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 3605,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 93\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 370.1580810546875,\u001b[39m\n\u001b[31m+     \"y\": 258.9176940917969,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 350.5546875,\u001b[39m\n\u001b[31m+     \"y\": 247.82892608642578,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 333.479248046875,\u001b[39m\n\u001b[31m+     \"y\": 238.17009735107422,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 318.33111572265625,\u001b[39m\n\u001b[31m+     \"y\": 229.60143280029297,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 306.425048828125,\u001b[39m\n\u001b[31m+     \"y\": 222.86670684814453,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 296.0445556640625,\u001b[39m\n\u001b[31m+     \"y\": 216.99488067626953,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 287.50872802734375,\u001b[39m\n\u001b[31m+     \"y\": 212.16655731201172,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 280.58380126953125,\u001b[39m\n\u001b[31m+     \"y\": 208.24942016601562,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 275.10418701171875,\u001b[39m\n\u001b[31m+     \"y\": 205.14984130859375,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 270.999267578125,\u001b[39m\n\u001b[31m+     \"y\": 202.82785034179688,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 268.169189453125,\u001b[39m\n\u001b[31m+     \"y\": 201.22699737548828,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 266.5213623046875,\u001b[39m\n\u001b[31m+     \"y\": 200.29492950439453,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 266,\u001b[39m\n\u001b[31m+     \"y\": 200,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 93\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 370.1580810546875,\u001b[39m\n\u001b[31m+     \"y\": 258.9176940917969,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 350.5546875,\u001b[39m\n\u001b[31m+     \"y\": 247.82892608642578,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 333.479248046875,\u001b[39m\n\u001b[31m+     \"y\": 238.17009735107422,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 318.33111572265625,\u001b[39m\n\u001b[31m+     \"y\": 229.60143280029297,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 306.425048828125,\u001b[39m\n\u001b[31m+     \"y\": 222.86670684814453,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 296.0445556640625,\u001b[39m\n\u001b[31m+     \"y\": 216.99488067626953,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 287.50872802734375,\u001b[39m\n\u001b[31m+     \"y\": 212.16655731201172,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 280.58380126953125,\u001b[39m\n\u001b[31m+     \"y\": 208.24942016601562,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 275.10418701171875,\u001b[39m\n\u001b[31m+     \"y\": 205.14984130859375,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 270.999267578125,\u001b[39m\n\u001b[31m+     \"y\": 202.82785034179688,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 268.169189453125,\u001b[39m\n\u001b[31m+     \"y\": 201.22699737548828,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 266.5213623046875,\u001b[39m\n\u001b[31m+     \"y\": 200.29492950439453,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 266,\u001b[39m\n\u001b[31m+     \"y\": 200,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at assertFrames (C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-moving-visibility-20261011.spec.ts:44:24)\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-moving-visibility-20261011.spec.ts:73:5",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-moving-visibility-20261011.spec.ts",
+                      "column": 24,
+                      "line": 44
+                    },
+                    "snippet": "  42 |   expect(log.frames).toBeGreaterThan(5);\n  43 |   expect(log.inside).toBeGreaterThan(0);\n> 44 |   expect(log.failures).toEqual([]);\n     |                        ^\n  45 |   await noHorizontalScroll(page);\n  46 | }\n  47 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-moving-visibility-20261011.spec.ts",
+                        "column": 24,
+                        "line": 44
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 93\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 370.1580810546875,\u001b[39m\n\u001b[31m+     \"y\": 258.9176940917969,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 350.5546875,\u001b[39m\n\u001b[31m+     \"y\": 247.82892608642578,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 333.479248046875,\u001b[39m\n\u001b[31m+     \"y\": 238.17009735107422,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 318.33111572265625,\u001b[39m\n\u001b[31m+     \"y\": 229.60143280029297,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 306.425048828125,\u001b[39m\n\u001b[31m+     \"y\": 222.86670684814453,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 296.0445556640625,\u001b[39m\n\u001b[31m+     \"y\": 216.99488067626953,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 287.50872802734375,\u001b[39m\n\u001b[31m+     \"y\": 212.16655731201172,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 280.58380126953125,\u001b[39m\n\u001b[31m+     \"y\": 208.24942016601562,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 275.10418701171875,\u001b[39m\n\u001b[31m+     \"y\": 205.14984130859375,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 270.999267578125,\u001b[39m\n\u001b[31m+     \"y\": 202.82785034179688,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 268.169189453125,\u001b[39m\n\u001b[31m+     \"y\": 201.22699737548828,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 266.5213623046875,\u001b[39m\n\u001b[31m+     \"y\": 200.29492950439453,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"chip\": \"3번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\",\u001b[39m\n\u001b[31m+     \"hidden\": true,\u001b[39m\n\u001b[31m+     \"label\": \"3\",\u001b[39m\n\u001b[31m+     \"x\": 266,\u001b[39m\n\u001b[31m+     \"y\": 200,\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n  42 |   expect(log.frames).toBeGreaterThan(5);\n  43 |   expect(log.inside).toBeGreaterThan(0);\n> 44 |   expect(log.failures).toEqual([]);\n     |                        ^\n  45 |   await noHorizontalScroll(page);\n  46 | }\n  47 |\n    at assertFrames (C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-moving-visibility-20261011.spec.ts:44:24)\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-moving-visibility-20261011.spec.ts:73:5"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:23:17.632Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\map-moving-after\\map-moving-visibility-2026-75778-이동에서도-보이는-마커를-거리-칩에-합치지-않는다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\map-moving-after\\map-moving-visibility-2026-75778-이동에서도-보이는-마커를-거리-칩에-합치지-않는다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\map-moving-visibility-20261011.spec.ts",
+                    "column": 24,
+                    "line": 44
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "77462f20e98f3470331c-adc879d10f22f8df3440",
+          "file": "map-moving-visibility-20261011.spec.ts",
+          "line": 49,
+          "column": 3
+        },
+        {
+          "title": "1280px 지도 밖 묶음을 눌러 가운데로 들어오는 마커는 이동 중에도 거리 칩에서 빠진다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6715,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:23:22.097Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "77462f20e98f3470331c-7fad13d9fe146e1eed20",
+          "file": "map-moving-visibility-20261011.spec.ts",
+          "line": 76,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-10T21:22:05.521Z",
+    "duration": 84549.299,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

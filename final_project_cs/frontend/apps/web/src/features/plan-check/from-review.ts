@@ -4,7 +4,7 @@ import { modeChoiceOf } from "@/lib/live/move-options";
 import type { StreamLine, StreamState } from "@/lib/live/intake-events";
 import type { Candidate, CheckLine, ItemRow, MoveRow, ReviewItem, ReviewMove, ReviewedIntakeView } from "@/lib/live/intake-review";
 import { readingOf } from "./from-intake";
-import type { CheckRow, PlaceInfo, PlanCandidate, PlanCheckView, PlanItem, PlanLine, PlanMove, PlanStage, Verdict } from "./model";
+import type { CheckRow, PlaceInfo, PlanCandidate, PlanCheckView, PlanItem, PlanLine, PlanMove, PlanStage, Reread, Verdict } from "./model";
 
 /**
  * The plan-check screen's data from the server's own check (`review`, `wiki/external/rest-endpoints.md` 「확인 화면 검사 …」).
@@ -39,6 +39,13 @@ export function safePhotoUrl(url: string | null | undefined): string | null {
 export const located = (place: { latitude: number | null; longitude: number | null } | null | undefined): place is { latitude: number; longitude: number } =>
   typeof place?.latitude === "number" && typeof place?.longitude === "number";
 
+/** The two readings worth offering: a known field, two different non-empty values. One with no other reading keeps only its row's note. */
+function rereadsOf(item: ReviewItem): Reread[] {
+  return (Array.isArray(item.rereads) ? item.rereads : []).flatMap((entry) =>
+    (entry?.field === "title" || entry?.field === "booking_no") && typeof entry.current === "string" && typeof entry.other === "string" && entry.other.trim() && entry.other !== entry.current
+      ? [{ field: entry.field, current: entry.current, other: entry.other }] : []);
+}
+
 function planItem(item: ReviewItem, day: number, info: PlaceInfo | null): PlanItem {
   // The place the customer picked names the card; the words they wrote stay for the editor and as a small line under it.
   const picked = item.place_state === "customer" && item.place?.name && item.place.name !== item.title ? item.place.name : null;
@@ -46,7 +53,7 @@ function planItem(item: ReviewItem, day: number, info: PlaceInfo | null): PlanIt
     id: item.id, day, date: item.date ?? "", startsAt: item.starts_at ?? "", endsAt: item.ends_at ?? "",
     title: picked ?? item.title, ...(picked && { written: item.title }), place: item.place?.name ?? "", noPlace: item.place_state === "none", kind: item.kind ?? item.place?.kind ?? null,
     coordinates: located(item.place) ? { lat: item.place.latitude, lng: item.place.longitude } : null,
-    checks: (item.rows ?? []).map(row), verdict: verdictOf(item.status), locked: item.locked, booked: item.booked ?? null, info, suggestion: null,
+    checks: (item.rows ?? []).map(row), rereads: rereadsOf(item), verdict: verdictOf(item.status), locked: item.locked, booked: item.booked ?? null, info, suggestion: null,
   };
 }
 

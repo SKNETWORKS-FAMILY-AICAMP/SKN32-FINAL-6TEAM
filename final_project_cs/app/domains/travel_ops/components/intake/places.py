@@ -59,6 +59,8 @@ class Resolved:
     longitude: float | None = None
     place_id: str | None = None         # 우리 장소 표의 id(1·3단계)
     content_id: str | None = None       # 관광공사 id
+    #: ★`[2026-10-07 팀]` 요식 원장 가게 id — 원장에서 찾은 곳(관광공사 id 가 없어도). 등록 때 이 id 로 원장과 잇는다
+    dining_place_uid: str | None = None
     #: 관광공사 종류 번호(12 관광지 · 39 음식점 …). ★`[2026-09-28]` 운영시간 조회(`detailIntro2`)의 필수 값이다 —
     #: 전에는 싣지 않아 계획 읽기로 등록한 장소의 운영시간 조회가 늘 「필수 값 없음」 오류였다(ui 세션 실서버 시험)
     content_type_id: str | None = None
@@ -69,12 +71,14 @@ class Resolved:
     #: 이름이 딱 맞지 않지만 **종류가 맞는** 카카오 후보(「한강 카약」 → 카약 업체들, 「북한산 둘레길」 → 구간들).
     #: 여기서는 고르지 않는다 — 처리 흐름이 앞뒤 일정에 가장 가까운 하나를 고른다(설계서 §4-2)
     candidates: list[dict[str, Any]] = field(default_factory=list)
+    #: ★`[2026-10-07 팀]` 체인인데 기준 위치(지점명 · 앞뒤 일정)가 없어 고르지 않았다 — 다른 장소가 정해진 뒤 다시 찾는다(2차 찾기)
+    chain_deferred: bool = False
     #: 항목 종류 단서 — 원문 전체로 찾은 카카오 결과가 대부분 음식점이면 「dining」(「광장시장 빈대떡」 → 광장시장 + 식사)
     item_kind: str | None = None
 
     def evidence(self) -> dict[str, Any]:
         source = {"places": "places", "typo": "places", "tour_api": "tour_api", "kakao": "kakao",
-                  "dining_ledger": "dining_ledger", "dining_license": "dining_license"}.get(self.method or "")
+                  "kakao_branch": "kakao", "dining_ledger": "dining_ledger", "dining_license": "dining_license"}.get(self.method or "")
         return {"source": source, "method": self.method, "name": self.name, "query": self.query,
                 "place_id": self.place_id, "content_id": self.content_id, "tried": self.tried,
                 "blocked": self.blocked}
@@ -125,7 +129,8 @@ def narrowings(title: str) -> list[str]:
 
 
 def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, kakao: Any = None,
-            kind_hint: str | None = None, aliases: dict[str, str] | None = None, dining: Any = None) -> Resolved:
+            kind_hint: str | None = None, aliases: dict[str, str] | None = None, dining: Any = None,
+            near: tuple[float, float] | None = None) -> Resolved:
     # ★앞에 끼니 말이 있으면 식사다 — 규칙 읽기는 「12:00 점심 토속촌삼계탕」에 식사 표시를 하지 않는다(모델이 읽은 줄만)
     words = title.split()
     meal = kind_hint == "dining" or (len(words) > 1 and words[0] in MEAL_WORDS)
@@ -137,7 +142,8 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
     # 2 — 별칭(고객이 고친 표현 · 우리가 넣은 기본값). ★값은 고객 글이다 — 바꾼 이름으로 **다시 찾는다**
     alias = (aliases or {}).get(normalize(title))
     if alias and normalize(alias) != normalize(title):
-        found = resolve(alias, our_places=our_places, tour=tour, kakao=kakao, kind_hint=kind_hint, dining=dining)
+        found = resolve(alias, our_places=our_places, tour=tour, kakao=kakao, kind_hint=kind_hint, dining=dining,
+                        near=near)
         found.tried = [f"alias:{title}→{alias}"] + found.tried
         found.needs_review = True
         found.note = "; ".join(filter(None, [f"별칭으로 「{alias}」를 찾았다", found.note]))
@@ -188,6 +194,9 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
             found = _tour(tour, query, blocked)
             tried.append(f"tour_api:{query}")
             if found is not None:
+                shop = _dish_inside(dining, query, title, found, tried)
+                if shop is not None:
+                    return shop
                 done = _from_tour(found, query, title, tried)
                 done.item_kind = _food_hint(query, title, full_hits)
                 return done
@@ -195,18 +204,29 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
         # ★카카오는 **원문 전체**로만 찾는다. 좁힌 이름(뒤 단어를 뗀 것)은 우리 표·관광공사에서만 받는다 —
         #   「한강 카약」을 「한강」으로 좁혀 카카오가 강 자체를 골랐다(2026-09-27 실측). 뗀 말이 활동 자체일 수 있다.
         if kakao is not None and query == title:
-            hits = kakao.search(query)
+            # ★`[2026-10-07]` 로마자는 서울 전역 · 관련도 순 — 글자로 맞출 수 없어 관련도가 단서다. 거리순이면 앞 일정 근처의
+            #   상관없는 가게가 섞였다(「Gwangjang Market」 → 「제로커피」 …). 체인이면 `_chain_branch` 가 근처를 다시 찾는다
+            hits = kakao.search(query, anywhere=True) if not _HANGUL.search(query) else kakao.search(query)
             tried.append(f"kakao:{query}")
             if hits is None:                        # ★못 불렀다(예산 · 시간 초과 · 연결) — 결과 0건과 다르다
                 blocked.append("kakao:" + (max(kakao.misses, key=kakao.misses.get)
                                            if getattr(kakao, "misses", None) else "unavailable"))
                 hits = []
             full_hits = hits
+            landmarks = set(by_name) | set((aliases or {}).keys())
             if not _HANGUL.search(query):
-                found = _romanized(query, title, hits, tour, tried, blocked)
+                found = _romanized(query, title, hits, tour, tried, blocked, dining=dining)
+                if found is not None:
+                    return found
+                found = _chain_branch(query, hits, kakao, near, landmarks, tried, blocked)
                 if found is not None:
                     return found
                 continue
+            # ★`[2026-10-07]` 체인이면 지점을 고른다(`chain_pick`) — 지점 표시를 뗀 이름 비교(`_kakao_match`)보다 먼저.
+            #   ☆전에는 「스타벅스」가 아무 지점(관련도 1위)과 「같은 이름」이 돼 확인 없이 확정됐다(장소 찾기 평가 v0 — 11건)
+            found = _chain_branch(query, hits, kakao, near, landmarks, tried, blocked)
+            if found is not None:
+                return found
             match = _kakao_match(query, hits)
             if match is None:
                 # ★이름이 특정하지 않는다 — 종류가 맞는 후보를 **남겨 두기만** 하고 좁혀 찾기를 계속한다.
@@ -245,7 +265,7 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
 
 
 def _romanized(query: str, title: str, hits: list[dict[str, Any]], tour: Any, tried: list[str],
-               blocked: list[str]) -> Resolved | None:
+               blocked: list[str], *, dining: Any = None) -> Resolved | None:
     """로마자 이름(「Gyeongbokgung」) — 원문과 글자가 같을 수 없어서 카카오 이름을 **관광공사 확인용으로만** 쓴다.
 
     ☆2026-09-27 실측: 설계서 실측 8 에서는 카카오 1위가 경복궁이었는데, 다시 재니 1~5위가 모두 식당 체인
@@ -257,12 +277,71 @@ def _romanized(query: str, title: str, hits: list[dict[str, Any]], tour: Any, tr
         base = _BRANCH.sub("", hit["name"]).strip()
         if base and base not in names:
             names.append(base)
-    for name in names[:2]:                      # 관광공사 호출을 아낀다 — 앞의 두 이름만
+    # ★`[2026-10-07]` 그다음 첫 단어 — 근처 결과는 「광장시장 서문」 · 「광장시장 ○○집」처럼 온다(관련도 1위 「광장시장」이 밀린다)
+    for base in list(names):
+        first = base.split()[0] if " " in base else ""
+        if len(first) >= 2 and first not in names:
+            names.append(first)
+    food = sum(1 for h in hits if h.get("category_group") in ("FD6", "CE7")) * 2 > len(hits)
+    for name in names[:6]:                      # 확인할 이름 수 상한(관광공사 자리가 실제 API 인 판에서 호출을 아낀다)
         again = _tour(tour, name, blocked)
         tried.append(f"tour_api:{name}")
         if again is not None:
             return _from_tour(again, query, title, tried, via=name)
+        # ★`[2026-10-07]` 결과가 대부분 음식점이면 요식 원장에서도 확인한다(「Tosokchon Samgyetang」 → 토속촌삼계탕).
+        #   관광공사 자리가 액티비티 CSV 라 식당은 여기서만 확인된다. 원장이 확인한 곳만 받는다(카카오 값은 싣지 않는다)
+        if food and dining is not None:
+            again = _tour(dining, name, blocked, label="dining_ledger")
+            tried.append(f"dining_ledger:{name}")
+            if again is not None:
+                return _from_tour(again, query, title, tried, via=name, method="dining_ledger")
     return None
+
+
+def _chain_branch(query: str, hits: list[dict[str, Any]], kakao: Any, near: tuple[float, float] | None,
+                  landmarks: set[str], tried: list[str], blocked: list[str]) -> Resolved | None:
+    """체인점이면 어느 지점인지 고른다(`chain_pick`). 체인이 아니면 None — 부르는 쪽이 지금까지의 이름 찾기를 한다. `[2026-10-07]`
+
+    기준 위치 — 입력의 지점명(「강남역점」 · 「홍대입구역」, 카카오로 그 위치를 찾는다) > 앞뒤 일정 좌표(`near`).
+    기준이 있으면 그 근처를 거리순 · 그 브랜드 업종으로 1 → 3 → 5km 넓혀 다시 찾고 가장 가까운 지점을 **언제나 확인 필요**로.
+    기준이 없거나 · 지점명이 맞는 지점이 없거나 · 5km 밖이면 고르지 않는다(「어느 지점인가요?」). 기준이 없어 미룬 것은
+    `chain_deferred` — 다른 장소가 정해진 뒤 2차 찾기에서 다시 본다.
+    """
+    from .chain_pick import Neighbour, anchor_for, hint_request, needs_branch_pick, pick_branch, search_requests
+
+    chain = needs_branch_pick(query, hits, landmarks=landmarks)
+    if chain is None:
+        return None
+    hint_point = None
+    request = hint_request(chain)
+    if request is not None:
+        got = kakao.search(request["query"], size=1, category_group_code=request["category_group_code"], anywhere=True)
+        tried.append(f"kakao:{request['query']}(지점 위치)")
+        if got:
+            hint_point = (got[0]["latitude"], got[0]["longitude"])
+    anchor = anchor_for(hint_point=hint_point, neighbours=[Neighbour(*near)] if near else [])
+    pool = list(hits)
+    pick = pick_branch(chain, pool, anchor)
+    for ask in search_requests(chain, anchor):
+        if pick.status == "picked" and (pick.distance_m or 0) <= ask["radius"]:
+            break
+        more = kakao.search(ask["query"], near=ask["near"], radius=ask["radius"],
+                            category_group_code=ask["category_group_code"], size=ask["size"])
+        tried.append(f"kakao:{ask['query']}@{ask['radius']}m")
+        if more is None:
+            blocked.append("kakao:" + (max(kakao.misses, key=kakao.misses.get)
+                                       if getattr(kakao, "misses", None) else "unavailable"))
+            break
+        pool += more
+        pick = pick_branch(chain, pool, anchor)
+    others = ", ".join(h["name"] for h in pick.alternatives)
+    note = pick.note + (f" (다른 지점: {others})" if others else "")
+    if pick.status == "picked":
+        place = pick.place
+        return Resolved("resolved", "kakao_branch", place["name"], query, "dining", place["latitude"],
+                        place["longitude"], needs_review=True, tried=tried, blocked=blocked, note=note)
+    return Resolved("unresolved", tried=tried, needs_review=True, blocked=blocked, note=note,
+                    chain_deferred=anchor is None)
 
 
 def _typo(key: str, by_name: dict[str, dict[str, Any]]) -> tuple[dict[str, Any], float] | None:
@@ -301,13 +380,39 @@ def _from_tour(found: dict[str, Any], query: str, title: str, tried: list[str], 
         note.append(f"카카오로 「{via}」를 찾아 {'요식 원장' if method == 'dining_ledger' else '인허가 자료' if method == 'dining_license' else '관광공사'}에서 확인했다")
     if method == "dining_license":
         note.append("인허가(사업자 등록) 자료에서 찾은 식당이라 영업시간은 아직 모른다")
+    if found.get("note"):
+        note.append(str(found["note"]))         # 원장이 정확히 같은 이름 하나가 아닌 곳을 낸 이유(지점 · 앞부분 · 오타 · 메뉴)
     return Resolved("resolved", method, found.get("matched_title"), query,
                     KIND_BY_CONTENT_TYPE.get(str(found.get("content_type_id")), "activity"),
                     found.get("latitude"), found.get("longitude"), content_id=found.get("content_id"),
                     content_type_id=str(found["content_type_id"]) if found.get("content_type_id") else None,
-                    # ★카카오로 찾은 이름이 원문과 다르면(「토속촌」 → 「토속촌삼계탕」) 확인을 받는다
-                    needs_review=not _plain(query, title) or (via is not None and normalize(via) != normalize(query)),
+                    dining_place_uid=found.get("dining_place_uid"),
+                    # ★카카오로 찾은 이름이 원문과 다르면(「토속촌」 → 「토속촌삼계탕」) 확인을 받는다.
+                    #   ★`[2026-10-07 팀]` 원장이 확인 필요라고 한 곳(정확히 같은 이름 하나가 아님)도
+                    needs_review=(not _plain(query, title) or (via is not None and normalize(via) != normalize(query))
+                                  or bool(found.get("needs_review"))),
                     tried=tried, note=" · ".join(note) or None)
+
+
+def _dish_inside(dining: Any, query: str, title: str, place: dict[str, Any], tried: list[str]) -> Resolved | None:
+    """「광장시장 빈대떡」 — 좁혀 찾은 장소(광장시장) 좌표 근처에서 **뗀 말(빈대떡)이 이름에 든 원장 가게**. `[2026-10-07]`
+
+    ★뗀 말에 메뉴 말이 있을 때만(`ledger.dish_words`). 원장 가게가 없으면 None — 예전처럼 좁힌 장소를 쓴다.
+    ★언제나 확인 필요다 — 원문은 가게 이름을 말하지 않았다(「순희네빈대떡」을 원문에 없는 가게로 확정하던 사고를 되풀이하지 않는다).
+    ☆전에는 좁힌 장소(시장 · 골목)를 그대로 골라 식사가 활동이 됐다(장소 찾기 평가 v0 — 008 · 009 · 034).
+    """
+    finder = getattr(dining, "find_dish_near", None)
+    if finder is None or query == title or place.get("latitude") is None:
+        return None
+    dropped = title[len(query):].strip()
+    shop = finder(dropped, place["latitude"], place["longitude"])
+    tried.append(f"dining_ledger:{query} 근처 {dropped}")
+    if shop is None:
+        return None
+    done = _from_tour(shop, title, title, tried, method="dining_ledger")
+    done.kind, done.needs_review = "dining", True
+    done.note = " · ".join(filter(None, [f"「{query}」 안의 가게로 보고 찾았다", done.note]))
+    return done
 
 
 def _plain(query: str, title: str) -> bool:

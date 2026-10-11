@@ -53,7 +53,7 @@ def test_a_title_on_a_line_the_two_readings_disagree_about_needs_review_and_keep
     wrong = _title(view, "삼겹탕")
     assert wrong["value"] == "토속촌삼겹탕"                                                              # ★값은 읽은 그대로 — 서버는 어느 쪽이 맞는지 모른다
     assert wrong["needs_review"] is True and wrong["evidence"]["transcription_differs"]["other"] == "12:30 토속촌삼계탕 점심"
-    assert "다르게 읽었다" in wrong["note"]
+    assert "두 가지로 읽었어요" in wrong["note"]
     for clean in ("경복궁 관람", "명동난타극장", "북촌한옥마을 산책"):                                   # 다른 줄은 그대로(전처럼 규칙으로 읽은 값 — 확인 필요 아님)
         assert _title(view, clean)["needs_review"] is False
     assert (view["needs_review"] and any(n["field"].endswith(".title") and n["value"] == "토속촌삼겹탕" for n in view["needs_review"]))   # 확인 화면의 「확인 필요」 목록에 오른다
@@ -97,3 +97,64 @@ def test_without_migration_055_reading_and_saving_still_work_and_only_the_differ
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT 1 FROM information_schema.columns WHERE table_name='intake_sources' AND column_name='differs_json'")
         assert cur.fetchone() is not None                                                             # 칸이 그대로 돌아왔다
+
+
+# ───────── 계획 확인 화면이 그리는 검토 응답(`review`) `[2026-10-07 uiux 요청]` ─────────
+def _review_item(view, title):
+    return next(i for i in view["review"]["items"] if title in i["title"])
+
+
+def test_the_review_marks_the_item_for_review_and_gives_the_two_readings_to_draw_buttons(api):
+    client = _client(Vision(MISREAD, PHOTO_TEXT))
+    view = _send(client, _key(client), files=[("plan.png", PHOTO.read_bytes())])
+    item = _review_item(view, "삼겹탕")
+    assert item["status"] == "review" and item["can_lock"] is False                                    # 고객이 고를 때까지 확정 못 한다
+    assert item["rereads"] == [{"field": "title", "current": "토속촌삼겹탕", "other": "토속촌삼계탕"}]    # 줄 전체가 아니라 값만
+    [place] = [row for row in item["rows"] if row["row"] == "place"]                                   # 장소 줄 하나에 말이 덧붙는다(같은 줄이 둘로 나가지 않는다)
+    # 못 찾은 장소의 차단 판정은 두 해석 안내를 붙여도 낮추지 않는다.
+    assert item["place_state"] == "unresolved" and place["result"] == "bad"
+    assert "두 가지로 읽었어요" in place["text"] and "토속촌삼계탕" in place["text"]
+    assert view["review"]["ready"] is False
+    for clean in ("경복궁 관람", "명동난타극장"):
+        assert _review_item(view, clean)["rereads"] == []                                              # 다른 줄은 빈 목록
+
+
+def test_when_the_customer_picks_a_value_the_reread_and_the_warning_go_away(api):
+    client = _client(Vision(MISREAD, PHOTO_TEXT))
+    headers = _key(client)
+    view = _send(client, headers, files=[("plan.png", PHOTO.read_bytes())])
+    item = _review_item(view, "삼겹탕")
+    response = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/edits", headers=headers, json={
+        "revision": view["revision"],
+        "edits": [{"source_id": item["source_id"], "field": f"items[{item['index']}].title", "value": "토속촌삼계탕"}]})
+    assert response.status_code == 200, response.text
+    again = _review_item(response.json(), "삼계탕")
+    assert again["rereads"] == []
+    assert "두 가지로 읽었어요" not in " ".join(row["text"] for row in again["rows"])
+
+
+def test_the_review_event_stream_item_event_carries_the_rereads_key(api):
+    from app.domains.travel_ops.components.intake import review as review_module
+
+    assert "rereads" in review_module._ITEM_EVENT_FIELDS                                              # noqa: SLF001 — 실시간으로 내려가는 항목 이벤트도 같은 칸을 가진다
+
+
+def test_a_booking_number_read_two_ways_adds_a_booking_line_and_a_reread():
+    from app.domains.travel_ops.components.intake.review import _with_note, rereads_of
+
+    claim = {"value": "AB1234", "method": "rule", "evidence": {"transcription_differs": {"text": "예약번호 AB1234", "other": "예약번호 A81234", "other_value": "A81234"}}}
+    [reread] = rereads_of({"claims": {"booking_no": claim}})
+    assert (reread["field"], reread["current"], reread["other"]) == ("booking_no", "AB1234", "A81234") and "A81234" in reread["note"]
+    line = _with_note(None, "booking", reread["note"])
+    assert line["row"] == "booking" and line["result"] == "warn"
+    merged = _with_note({"row": "booking", "result": "ok", "text": "예약이 있다고 적혀 있어요"}, "booking", reread["note"])
+    assert merged["result"] == "warn" and merged["text"].startswith("예약이 있다고 적혀 있어요 · ")
+    assert rereads_of({"claims": {"booking_no": {**claim, "method": "customer"}}}) == []               # 고객이 고친 칸은 건너뛴다
+    assert rereads_of({"claims": {"title": {"value": "x", "method": "rule", "evidence": {}}}}) == []
+
+
+def test_a_reread_note_keeps_an_unresolved_place_blocked():
+    from app.domains.travel_ops.components.intake.review import _with_note
+
+    merged = _with_note({"row": "place", "result": "bad", "text": "장소를 정하지 못했어요"}, "place", "사진을 두 가지로 읽었어요")
+    assert merged == {"row": "place", "result": "bad", "text": "장소를 정하지 못했어요 · 사진을 두 가지로 읽었어요"}

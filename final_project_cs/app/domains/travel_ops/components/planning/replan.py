@@ -17,6 +17,8 @@
     WALK_M_PER_MIN        80   도보 분당 거리
     ORDER_MARGIN_MIN      20   라스트오더 전에 확보해야 할 주문 여유 — ★**탈락** 조건
     SEATING_BUFFER_MIN    10   도착해 자리 잡는 데 드는 시간
+    ROUTE_TOLERANCE_MIN   10   대체 식당으로 하루 이동이 이만큼까지 늘면 「동선이 비슷하다」
+    WALKABLE_LEG_MIN      20   원래 식당과 앞 · 다음 일정이 걸어서 이 분 안이면 도보 동선으로 보고 늦음을 따진다
 
 ★`[2026-09-28]` 라스트오더는 **두 값**이다(사용자 결정 — 경고는 60분, 탈락은 20분).
     ORDER_MARGIN_MIN      20   라스트오더를 **알 때** — 도착 + 20분이 라스트오더를 넘으면 탈락
@@ -37,6 +39,16 @@
   한 번에 읽어 온 판정(`state_lookup`)을 받는다. 우리 규칙(라스트오더 20분 탈락 · 60분 경고 · 서울 시각)은 원장 판정에도 건다.
 ★`[2026-10-05]` **구글 가격 비교는 선택 기능이다**(`price_lookup` 을 넘길 때만 — 설정 스위치 기본 꺼짐). 우리 9/28 규칙 「식당은
   가격으로 줄 세우지 않는다」와 팀 9/30 결정(같거나 싼 가격대 먼저)이 다르고 호출 비용이 들어 사용자 결정 전에는 끈다.
+
+★`[2026-10-07]` **식당 대체는 동선과 비슷함을 본다**(대체 식당 평가 v0 — 17건 중 12건이 장소 id 순서로 갈렸다).
+    탈락   식사 뒤 걸어서 다음 일정에 **원래 식당보다 더 늦게** 닿는 곳
+           — 원래 식당에서 다음 일정까지 걸어서 WALKABLE_LEG_MIN 안일 때만. 그보다 먼 구간은 교통을 탄다고 보고
+             도보로 탈락시키지 않는다(☆시간 여유로 재면 2시간 반 사이 97분 도보도 「걸어서 닿는다」가 됐다 — 시나리오 시험)
+           ★앞 일정 → 식당은 탈락시키지 않는다 — 식당 입장이 몇 분 늦는 것은 다음 일정을 놓치는 것과 다르다.
+             (☆앞 활동이 13:00 에 끝나고 점심이 13:00 인 계획은 원래 식당도 몇 분 늦는다 — 전부 탈락했다. 새벽 확인 시험)
+    비교   ① 늘어난 이동이 허용 범위(ROUTE_TOLERANCE_MIN) 안인가  ② 비슷한 정도(`meal_likeness` — 브랜드 > 메뉴 > 종류)
+           ③ 가격  ④ 늘어난 이동  ⑤ 원래 식당에서의 도보
+    활동 · 경로 후보는 이 칸들이 모두 0 이라 순서가 예전 그대로다.
 """
 from __future__ import annotations
 
@@ -46,6 +58,7 @@ import math
 from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
+from app.domains.travel_ops.components.planning.meal_likeness import likeness
 from app.domains.travel_ops.components.places.place_hours import break_span
 
 KST = ZoneInfo("Asia/Seoul")
@@ -55,6 +68,8 @@ LAST_ORDER_WARN_MIN = 60
 #: 시연용 순위가 없는 후보(= 실제 장소 전부)의 값 — 대본 장소의 순위(1, 2 …)보다 뒤다
 SCENARIO_PRIORITY_NONE = 1_000
 SEATING_BUFFER_MIN = 10
+ROUTE_TOLERANCE_MIN = 10
+WALKABLE_LEG_MIN = 20
 #: 같은 브랜드를 앞세우는 거리 — 이보다 먼 같은 브랜드는 거리로만 겨룬다. ★활동 팀 값(1km)을 그대로 쓴다
 BRAND_NEARBY_M = 1_000
 
@@ -90,6 +105,10 @@ class Candidate:
     price_basis: str | None = None
     #: 카드 결제 가능 여부 — **참고로 보여 주기만** 한다(순위 · 탈락에 쓰지 않는다). 참 · 거짓 · 모름(None)
     card_payment: bool | None = None
+    #: ★`[2026-10-07]` 식당 — 원래 식당과 비슷한 정도(`meal_likeness`, 0 이 가장 비슷). 식당 밖 후보는 0
+    likeness: int = 0
+    #: ★`[2026-10-07]` 식당 — 앞 일정 → 이 곳 → 다음 일정으로 바꿀 때 늘어나는 도보 분(원래 식당 대비). 모르면 0
+    added_move_min: int = 0
     #: ★`[2026-09-29]` 활동 후보만 채운다 — 원래 장소와 비슷한 정도(클수록 비슷)와 직선거리(m).
     #:  식당·경로 후보는 둘 다 0 이라 순서가 예전 그대로다(`rank` 맨 뒤, `key` 바로 앞)
     similarity: int = 0
@@ -120,8 +139,12 @@ class Candidate:
         # ☆`[2026-09-30 팀]` 식당 — 같거나 싼 가격대 → 비싼 가격대 → 모름. 모름은 탈락이 아니라 맨 뒤다
         #   (`price_compare` 는 식당 후보에만 채워진다 — 활동·경로는 0 이라 순서가 그대로다)
         price_rank = _PRICE_RANK.get(self.price_compare or "", 0)
+        # ★`[2026-10-07 팀]` 식당 — 동선 허용 범위 → 비슷함 → 가격 → 늘어난 이동 → 도보. 전에는 가격이 같으면 장소 id 순이었다.
+        #   활동 · 경로는 아래 칸이 모두 0 이라 순서가 예전 그대로다
+        far = 1 if self.added_move_min > ROUTE_TOLERANCE_MIN else 0
         return (priority if isinstance(priority, int) else SCENARIO_PRIORITY_NONE,
-                self.changed_items, fare_unknown, price_rank, self.extra_cost_krw or 0, self.shift_minutes, self.walk_min or 0,
+                self.changed_items, fare_unknown, far, self.likeness, price_rank, self.extra_cost_krw or 0, self.shift_minutes,
+                self.added_move_min, self.walk_min or 0,
                 0 if self.reversible_internally else 1, 1 if self.warnings else 0,
                 0 if self.brand_nearby else 1,
                 *((round(self.distance_m), -self.similarity) if self.distance_first
@@ -391,9 +414,12 @@ def dining_candidates(*, original: dict[str, Any], places: list[dict[str, Any]],
                       arrival: datetime, minutes: int, constraints: dict[str, Any],
                       radius_m: int, next_start: datetime | None,
                       exclude: set[str] = frozenset(), state_lookup: DiningStateLookup | None = None,
-                      arrival_for: Callable[[int], datetime] | None = None) -> list[Candidate]:
+                      arrival_for: Callable[[int], datetime] | None = None,
+                      route: "MealRoute | None" = None) -> list[Candidate]:
     """주변 식당 후보. ★조건(결제수단)은 **탈락**이지 감점이 아니다(§6-C-2).
 
+    ★`[2026-10-07 팀]` `route`(앞뒤 일정)를 주면 동선을 본다 — 걸어서 못 닿으면 탈락, 늘어난 이동은 순위에.
+      비슷함(`meal_likeness.likeness`)은 늘 순위에 넣는다. 원래 식당의 종류를 모르면 모든 후보가 같은 등급이다.
     ★`[2026-10-02 팀]` 카드 결제 가능 여부는 **참고로만** 싣는다(`Candidate.card_payment`) — 고르는 데 쓰지 않는다.
       명시된 결제 조건은 위 규칙 그대로(탈락)다.
     ★`[2026-09-30 팀]` 가격을 모른다고 떨어뜨리지 않는다 — 실제 식당 자료에는 원 단위 가격이 없어 후보가 전부
@@ -439,6 +465,9 @@ def dining_candidates(*, original: dict[str, Any], places: list[dict[str, Any]],
         candidate.ends_at = candidate.starts_at + timedelta(minutes=minutes)
         if next_start is not None and candidate.ends_at > next_start:
             candidate.rejected.append(f"다음 일정({_hm(next_start)})과 겹친다")
+        candidate.likeness = likeness(original, place)
+        if route is not None:
+            route.check(candidate, original)
         out.append(candidate)
     eligible = [c for c in out if not c.rejected]
     states = (state_lookup([{"place_id": c.key, "at": c.starts_at, "until": c.ends_at}
@@ -452,7 +481,125 @@ def dining_candidates(*, original: dict[str, Any], places: list[dict[str, Any]],
             candidate.warnings += (ledger_warnings(state) if state and state.get("linked")
                                    else dining_warnings(candidate.place, candidate.starts_at, minutes))
             candidate.card_payment = card_payment(candidate.place, state)
+    if route is not None:
+        route.refine([c for c in out if not c.rejected], original)
     return out
+
+
+#: 다음 일정이 먼 구간(교통)일 때 이동 계산기로 다시 잴 후보 수 — 도보 어림 순위의 앞에서부터. 한 구간 0.7~2초(로컬 실측)
+TRANSIT_REFINE_LIMIT = 3
+#: 소요를 물을 도착 창(떠나는 시각 + 분) — 앞에서부터. 그 창에도 못 닿는다(arrive_late)고 하면 다음 창으로
+TRANSIT_WINDOWS_MIN = (90, 180)
+
+#: 이동 계산기 — `mobility.wiring.leg_planner` 가 돌려주는 함수. (앞 장소, 뒤 장소, 도착 목표, 이보다 일찍 못 떠남) →
+#: (결과 dict(eta_min …) | None, 이유 | None). 장소는 {"key", "name", "lat", "lon"}
+LegPlanner = Callable[..., tuple[dict[str, Any] | None, Any]]
+
+
+@dataclass(frozen=True)
+class MealRoute:
+    """식사 앞뒤 일정 — 대체 식당의 동선을 재는 데만 쓴다. `[2026-10-07]`
+
+    `planned_end` 원래 식사가 끝나는 시각 — 원래 식당이었으면 다음 일정에 얼마나 늦었나를 재는 기준
+    `before` 앞 일정 (장소, 끝나는 시각) — 고객이 거기서 식당으로 온다. 가게 앞 신고 · 늦음처럼 이미 원래 식당 쪽이면 None.
+             ★늘어난 이동(순위)에만 쓴다 — 탈락시키지 않는다
+    `after`  다음 일정 (장소, 시작 시각) — 식사 뒤 거기로 간다. 원래 식당보다 더 늦게 닿으면 탈락
+    ★원래 식당에서 다음 일정까지 걸어서 `WALKABLE_LEG_MIN` 넘게 걸리면(교통을 타는 거리) 도보로 탈락시키지 않는다 —
+      늘어난 이동만 순위에 남긴다.
+    ★`[2026-10-07]` `leg`(이동 계산기)가 있으면 그 먼 구간을 **시간표로 다시 잰다**(`refine`) — 도보 어림 순위의 앞
+      `TRANSIT_REFINE_LIMIT` 곳과 원래 식당만(한 구간 0.7~2초). 원래 식당보다 다음 일정에 더 늦게 닿으면 탈락,
+      늘어난 이동은 계산기 소요 차이로 바꾼다. 계산기가 꺼져 있거나(None) 못 재면 도보 어림 그대로다.
+    """
+    planned_end: datetime
+    before: tuple[dict[str, Any], datetime] | None = None
+    after: tuple[dict[str, Any], datetime] | None = None
+    leg: LegPlanner | None = None
+
+    def check(self, candidate: Candidate, original: dict[str, Any]) -> None:
+        place = candidate.place or {}
+        if not _has_point(place) or not _has_point(original):
+            return
+        added = 0
+        if self.before is not None and _has_point(self.before[0]):
+            here = self.before[0]
+            added += walk_minutes(distance_m(here, place)) - walk_minutes(distance_m(here, original))
+        if self.after is not None and _has_point(self.after[0]):
+            there, starts = self.after
+            from_original = walk_minutes(distance_m(original, there))
+            from_candidate = walk_minutes(distance_m(place, there))
+            added += from_candidate - from_original
+            if from_original <= WALKABLE_LEG_MIN and candidate.ends_at is not None:
+                late = _late_min(candidate.ends_at + timedelta(minutes=from_candidate), starts)
+                planned_late = _late_min(self.planned_end + timedelta(minutes=from_original), starts)
+                if late > planned_late:
+                    candidate.rejected.append(f"다음 일정({_hm(starts)})에 {late}분 늦는다(식사 뒤 도보 {from_candidate}분)")
+        candidate.added_move_min = added
+
+    def refine(self, eligible: list[Candidate], original: dict[str, Any]) -> None:
+        """먼 다음 일정(교통)을 이동 계산기로 다시 잰다 — 도보 어림 순위 앞의 몇 곳만. 계산기가 없으면 아무것도 안 한다."""
+        if self.leg is None or self.after is None or not _has_point(self.after[0]) or not _has_point(original):
+            return
+        there, starts = self.after
+        walk_original = walk_minutes(distance_m(original, there))
+        if walk_original <= WALKABLE_LEG_MIN:
+            return                                            # 걸어서 닿는 구간 — 도보로 이미 쟀다
+        base = self._eta(original, there, self.planned_end)
+        if base is None:
+            return
+        for candidate in sorted(eligible, key=Candidate.rank)[:TRANSIT_REFINE_LIMIT]:
+            if candidate.ends_at is None:
+                continue
+            eta = self._eta(candidate.place, there, candidate.ends_at)
+            if eta is None:
+                continue
+            walk_candidate = walk_minutes(distance_m(candidate.place, there))
+            candidate.added_move_min += (eta - base) - (walk_candidate - walk_original)   # 도보 어림 몫을 계산기 몫으로
+            late = _late_min(candidate.ends_at + timedelta(minutes=eta), starts)
+            planned_late = _late_min(self.planned_end + timedelta(minutes=base), starts)
+            if late > planned_late:
+                candidate.rejected.append(f"다음 일정({_hm(starts)})에 {late}분 늦는다(대중교통 {eta}분 — 이동 계산기)")
+
+    def _eta(self, here: dict[str, Any], there: dict[str, Any], leave: datetime) -> int | None:
+        def point(place: dict[str, Any]) -> dict[str, Any]:
+            return {"key": str(place.get("place_id") or place.get("name")), "name": place.get("name") or "",
+                    "lat": float(place["latitude"]), "lon": float(place["longitude"])}
+
+        try:
+            # ★소요만 묻는다 — 도착 목표를 떠나는 시각 + 넉넉한 창으로. 늦는지는 부르는 쪽이 잰다(`refine`).
+            #   ☆실측(2026-10-07): 실제 도착 목표로 물으면 ①계산기가 계획 여유까지 빼고 판정해 31분 걸리는 곳도 37분 창에서
+            #   「늦음」(arrive_late)이 됐고 ②제시간에 못 닿는 질의는 모든 출발을 훑느라 10~14초 걸렸다(닿는 질의는 1초 안)
+            got, why = None, None
+            for window in TRANSIT_WINDOWS_MIN:
+                got, why = self.leg(point(here), point(there), leave + timedelta(minutes=window), leave)
+                if got is not None or not (isinstance(why, dict) and why.get("code") == "arrive_late"):
+                    break
+        except Exception:   # noqa: BLE001 — 계산기 장애로 대체를 멈추지 않는다. 도보 어림 그대로 둔다
+            return None
+        return int(got["eta_min"]) if got and got.get("eta_min") is not None else None
+
+
+def _late_min(reach: datetime, starts: datetime) -> int:
+    return max(0, int((reach - starts).total_seconds() // 60))
+
+
+def _has_point(place: dict[str, Any] | None) -> bool:
+    return bool(place) and place.get("latitude") is not None and place.get("longitude") is not None
+
+
+def meal_route(items: list[Any], meal: Any, *, from_before: bool = True, leg: LegPlanner | None = None) -> MealRoute:
+    """일정에서 식사 앞뒤의 장소 있는 항목(이동 항목 제외)으로 `MealRoute` 를 만든다.
+    `from_before=False` — 고객이 이미 원래 식당 쪽에 있다(가게 앞 신고 · 늦음). 앞 일정 동선은 재지 않는다.
+    `leg` — 이동 계산기(있으면 먼 다음 일정을 시간표로 다시 잰다)."""
+    def placed(item: Any) -> bool:
+        return item.kind != "mobility" and _has_point(item.place)
+
+    before = [i for i in items if i.seq < meal.seq and placed(i)]
+    after = [i for i in items if i.seq > meal.seq and placed(i)]
+    prev = before[-1] if before and from_before else None
+    nxt = after[0] if after else None
+    return MealRoute(planned_end=meal.ends_at or meal.starts_at + timedelta(hours=1),
+                     before=(prev.place, prev.ends_at or prev.starts_at) if prev else None,
+                     after=(nxt.place, nxt.starts_at) if nxt else None, leg=leg)
 
 
 # ── 후보: 경로 ─────────────────────────────────────────────────
@@ -738,7 +885,7 @@ def dining_notice(*, original: dict[str, Any], best: Candidate, alternates: list
                             "at": best.starts_at.isoformat()})
 
 
-__all__ = ["Candidate", "PRICE_LOOKUP_LIMIT", "activity_candidates", "alternate_record", "apply_google_prices",
+__all__ = ["Candidate", "MealRoute", "PRICE_LOOKUP_LIMIT", "meal_route", "activity_candidates", "alternate_record", "apply_google_prices",
            "card_payment", "change_notice", "choose", "dining_candidates", "dining_fits", "dining_notice",
            "dining_warnings", "distance_m", "last_order_shortfall", "ledger_warnings", "open_during", "route_candidates",
            "route_notice", "store_candidates", "walk_minutes"]

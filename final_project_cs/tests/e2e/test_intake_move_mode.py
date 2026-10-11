@@ -101,7 +101,8 @@ def test_options_lists_the_four_modes_in_a_fixed_order_with_fits_and_a_sentence_
     assert rows["subway"]["fits"] is True and rows["subway"]["label"].startswith("지하철") and rows["subway"]["grade"] == "확정"
     assert rows["subway"]["basis"] == "timetable" and rows["subway"]["fare_krw"] == 1550 and rows["subway"]["fare_is_floor"] is False
     assert rows["bus"]["fits"] is True and rows["bus"]["minutes"] == 38
-    assert rows["taxi"]["fits"] is True and rows["taxi"]["fare_is_floor"] is True and rows["taxi"]["grade"] == "추정" and rows["taxi"]["basis"] == "estimate"
+    assert rows["taxi"]["fits"] is True and rows["taxi"]["fare_is_floor"] is False and rows["taxi"]["grade"] == "추정" and rows["taxi"]["basis"] == "estimate"
+    assert rows["taxi"]["fare_is_estimate"] is True
     assert rows["walk"]["fits"] is False and rows["walk"]["fare_krw"] == 0
     assert "걸음으로는 10분 늦어요" in rows["walk"]["why_not"] and "시작해요" in rows["walk"]["why_not"]
     assert "why_not" not in rows["subway"]

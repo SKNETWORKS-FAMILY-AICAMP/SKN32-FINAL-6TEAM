@@ -17,15 +17,13 @@ from __future__ import annotations
 
 import hashlib
 
-import pytest
 
-from app.domains.travel_ops.components.intake import candidates, class_fill, embeddings, taste
-from app.domains.travel_ops.components.places.catalog_pool import _catalog_tenants
+from app.domains.travel_ops.components.intake import candidates, class_fill, embeddings
 from app.infrastructure.db.session import get_connection
 
 from .test_intake_experience_tiers import _alternatives, _palace_review, _plan_review  # noqa: F401
 from .test_intake_review import rv  # noqa: F401
-from .test_intake_similar_places import NOW, PALACE, _row
+from .test_intake_similar_places import PALACE, _row
 from .test_trip_api import api  # noqa: F401
 
 AXES = {"공원": 0, "궁": 1, "시장": 2, "한옥": 3, "전시": 4}

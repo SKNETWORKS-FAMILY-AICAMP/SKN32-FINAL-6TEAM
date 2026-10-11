@@ -68,7 +68,8 @@ def _row(mode: str, leg: Leg, b_hhmm: str) -> dict[str, Any]:
     estimate_grade = mode in ("taxi", "walk") or "선로 길이 추정" in str(leg.route) or not leg.verified
     row: dict[str, Any] = {
         "mode": mode, "label": label, "minutes": leg.minutes, "km": leg.km,
-        "fare_krw": 0 if mode == "walk" else leg.fare_krw, "fare_is_floor": mode == "taxi",
+        "fare_krw": 0 if mode == "walk" else leg.fare_krw, "fare_is_floor": False,
+        "fare_is_estimate": mode == "taxi",
         "depart": _hm(leg.depart), "arrive": _hm(leg.arrive), "slack_min": leg.slack_min, "fits": fits,
         "basis": "timetable" if mode in ("subway", "bus") else "estimate", "grade": "추정" if estimate_grade else "확정"}
     if not fits:

@@ -1,0 +1,39 @@
+{
+  "baseTeamCommit": "8635c45adb24d88ccec0704370db85602a544843",
+  "browser": "Chrome",
+  "viewports": [
+    375,
+    1280
+  ],
+  "backend": {
+    "passed": 62,
+    "total": 62,
+    "newUnit": 24,
+    "newIntake": 4,
+    "existingIntake": 34
+  },
+  "uniqueBrowserCases": {
+    "passed": 21,
+    "total": 21,
+    "new": 6,
+    "existing": 15
+  },
+  "staticChecks": {
+    "tsc": 0,
+    "eslint": 0,
+    "ruff": 0
+  },
+  "freshProductionBuild": true,
+  "buildId": "9HJ5WaT6BvcToZCCI2YO8",
+  "publicCsResponseVerified": false,
+  "productionDeploymentVerified": false,
+  "productHashes": {
+    "app/domains/travel_ops/components/intake/pipeline.py": "dcb86b7a5cb0b71a40ab9fe52533ef83553f43c554d88da7c0efd8dd874166f0",
+    "app/domains/travel_ops/entry/trip_api.py": "d01c87fb190d5e0b7aceeb88eaa7049880c2afdd1a7700da11e4ec95f261f8ad",
+    "app/domains/travel_ops/modules/web_account/web_guard.py": "32415161aedb176f69cb39829c13d10b3ebf5f5be4e4107b3686296361c55489",
+    "config/guardrails.yaml": "43390991fa87ff6fc748740c95bc04d347dc522c0223f5dcab329829786a921e",
+    "frontend/apps/web/src/features/trip-registration/trip-registration.tsx": "cff9941e2c640d6627981bd5aa8c93a0121d27f07a680abe96e0732dd08c13c8",
+    "frontend/apps/web/src/features/intake-review/intake-review.tsx": "4c190b21b20a404f4333d40024aef5aa7cf55d9eb79c72dc48eb5c660aec186d",
+    "frontend/apps/web/src/lib/live/intake.ts": "cb75c03c46ee6e3649d9039735a7b5b15cf50d122df49902174e4b929de1b343"
+  }
+}

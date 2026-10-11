@@ -1,0 +1,41 @@
+{
+  "scope": "일정 추가 진입 검색 초점 및 지도 화살표 제자리 방향 재확인",
+  "mock": {
+    "passed": 6,
+    "total": 6
+  },
+  "checks": [
+    "TypeScript --noEmit",
+    "ESLint changed source and test",
+    "standard Next.js production build"
+  ],
+  "screenshots": 8,
+  "tests": [
+    {
+      "name": "메뉴 정렬·고정 거리 글자·화살표만 전환 375px",
+      "status": "passed"
+    },
+    {
+      "name": "메뉴 정렬·고정 거리 글자·화살표만 전환 1280px",
+      "status": "passed"
+    },
+    {
+      "name": "일정 추가는 검색 초점으로 열고 검색·지우기·선택 후에도 초안을 보존한다 375px",
+      "status": "passed"
+    },
+    {
+      "name": "추가 입력 검증과 검색 초점·실제 선택 장소 저장 375px",
+      "status": "passed"
+    },
+    {
+      "name": "일정 추가는 검색 초점으로 열고 검색·지우기·선택 후에도 초안을 보존한다 1280px",
+      "status": "passed"
+    },
+    {
+      "name": "추가 입력 검증과 검색 초점·실제 선택 장소 저장 1280px",
+      "status": "passed"
+    }
+  ],
+  "initial_attempt": "시험 SVG 조회의 TypeScript 타입 오류로 빌드에서 중단. SVGSVGElement 타입을 명시한 뒤 최종 빌드·시험 통과. 화면 시험 실패로 집계하지 않음.",
+  "real_response_checked": false
+}

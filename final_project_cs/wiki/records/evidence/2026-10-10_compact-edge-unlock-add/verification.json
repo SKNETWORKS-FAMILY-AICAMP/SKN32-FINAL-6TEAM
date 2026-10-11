@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-10",
+  "unique_mock_ui": {
+    "passed": 26,
+    "total": 26,
+    "new": 6,
+    "regression": 20,
+    "first_passed": 25,
+    "first_failed": 1,
+    "zoom_rerun_passed": 2
+  },
+  "units": {
+    "passed": 30,
+    "total": 30,
+    "command": "vitest run src/features/plan-check/use-server-review-undo.test.ts src/features/plan-check/insertion-points.test.ts src/features/map/map-geometry.test.ts"
+  },
+  "static": {
+    "typescript": "passed",
+    "eslint": "passed",
+    "standard_turbopack_build": "passed"
+  },
+  "shots": {
+    "count": 12,
+    "widths": [
+      375,
+      1280
+    ]
+  },
+  "raw": [
+    "first.json",
+    "zoom-rerun.json"
+  ],
+  "public_cs_response_checked": false,
+  "deployed": false,
+  "note": "1280px initially fit every stop. Explicit zoom creates offscreen markers before checking drag visibility and width."
+}

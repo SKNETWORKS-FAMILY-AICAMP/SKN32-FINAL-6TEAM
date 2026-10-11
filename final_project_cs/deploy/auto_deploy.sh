@@ -33,8 +33,10 @@ if [ ! -d "$REPO/.git" ]; then
   rm -rf "$REPO"
   git clone --quiet --depth 1 --filter=blob:none --no-checkout --branch "$DEPLOY_BRANCH" "$DEPLOY_REPO" "$REPO" 2>>"$LOG" \
     || { log "★받기 실패(clone) — 저장소 주소·브랜치를 확인한다"; exit 1; }
-  git -C "$REPO" sparse-checkout set --cone "$CS/app" "$CS/config" "$CS/prompts" "$CS/scripts" "$CS/deploy" "$CS/frontend/apps/web" >>"$LOG" 2>&1
+  git -C "$REPO" sparse-checkout set --cone "$CS/app" "$CS/config" "$CS/prompts" "$CS/scripts" "$CS/deploy" "$CS/frontend/apps/web" "$CS/frontend/apps/admin" >>"$LOG" 2>&1
 fi
+# 이미 만들어진 배포용 체크아웃에도 운영 웹앱을 포함한다.
+git -C "$REPO" sparse-checkout set --cone "$CS/app" "$CS/config" "$CS/prompts" "$CS/scripts" "$CS/deploy" "$CS/frontend/apps/web" "$CS/frontend/apps/admin" >>"$LOG" 2>&1 || exit 1
 git -C "$REPO" fetch --quiet --depth 1 origin "$DEPLOY_BRANCH" 2>>"$LOG" || { log "받기 실패(fetch) — 네트워크 일시 문제일 수 있다, 다음 회차에 다시"; exit 0; }
 NEW="$(git -C "$REPO" rev-parse FETCH_HEAD)"
 SHORT="$(printf '%s' "$NEW" | cut -c1-10)"
@@ -44,7 +46,7 @@ if ! git -C "$REPO" cat-file -e "$NEW:$CS/deploy/docker-compose.yml" 2>/dev/null
   [ "$(cat "$STATE/last_skip" 2>/dev/null)" = "$SHORT" ] || { log "건너뜀 $SHORT — 이 커밋에는 $CS/deploy/ 가 없다(배포 구성이 아직 안 합쳐졌다)"; echo "$SHORT" > "$STATE/last_skip"; }
   exit 0
 fi
-FP="$(for p in app config prompts scripts deploy frontend/apps/web requirements.txt; do git -C "$REPO" rev-parse "$NEW:$CS/$p" 2>/dev/null || echo "-"; done | sha256sum | cut -c1-24)"
+FP="$(for p in app config prompts scripts deploy frontend/apps/web frontend/apps/admin requirements.txt; do git -C "$REPO" rev-parse "$NEW:$CS/$p" 2>/dev/null || echo "-"; done | sha256sum | cut -c1-24)"
 [ "$(cat "$STATE/deployed_fp" 2>/dev/null)" = "$FP" ] && exit 0                 # 배포에 쓰이는 폴더가 같다 — 다시 빌드할 이유가 없다
 [ "$(cat "$STATE/bad_sha" 2>/dev/null)" = "$SHORT" ] && exit 0                   # 이 커밋은 이미 실패했다 — 새 커밋이 올 때까지 기다린다
 
@@ -109,6 +111,10 @@ if TRIPILOT_TAG="$SHORT" docker compose up -d --wait --wait-timeout 240 >>"$LOG"
   # 새 이름으로 쓴 뒤 바꿔 끼운다(mv) — 실행 중인 이 파일의 내용을 제자리에서 덮으면 아래 줄이 깨진다
   [ -f "$STATE/auto_deploy.next.sh" ] && { cp "$STATE/auto_deploy.next.sh" "$BASE/auto_deploy.sh.new" && chmod +x "$BASE/auto_deploy.sh.new" && mv "$BASE/auto_deploy.sh.new" "$BASE/auto_deploy.sh"; }
   log "반영 완료 $SHORT (이전 $PREV)"
+  if [ "${TRIPILOT_ADMIN_ENABLED:-0}" = 1 ]; then
+    TRIPILOT_TAG="$SHORT" sh "$REPO/$CS/deploy/admin_up.sh" >>"$LOG" 2>&1 </dev/null \
+      || log "★운영 웹앱 반영 실패 — 고객 서비스는 정상이며 운영 웹앱은 별도 확인 필요"
+  fi
 else
   log "★새 이미지가 건강하지 않거나 불안정하다 $SHORT — 이전($PREV)으로 되돌린다"
   echo "$SHORT" > "$STATE/bad_sha"

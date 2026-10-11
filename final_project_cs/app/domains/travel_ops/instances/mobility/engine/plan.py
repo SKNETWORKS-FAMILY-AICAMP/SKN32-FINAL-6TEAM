@@ -65,7 +65,7 @@ KNOWN_MODES = frozenset(DEFAULT_MODES) | {"bike", "taxi"}
 #: ☆`[2026-10-04 문제목록 #47]` 택시는 modes 에 "taxi" 를 줄 때만 후보로 싣는다(설문 「택시」 선택). 기본 호출은 앞 판과 같다.
 #:   계획 수단을 고를 때 대중교통·도보·자전거 무리 → 혼합 무리 → **택시 무리** 순이다(택시는 가장 늦게 떠나도 되는 후보가 되기 쉬워
 #:   섞어 두면 늘 택시가 뽑히기 때문 — 여행자가 택시만 고르면 택시가, 같이 고르면 대중교통이 먼저다).
-#:   요금은 하한(정차·호출료·시계외 미포함)이고 소요는 TOPIS 시각별 속도 추정이다 — label 에 그대로 적는다.
+#:   요금은 예산 여유를 포함한 예상액이고 소요는 TOPIS 시각별 속도 추정이다 — label 에 그대로 적는다.
 #: ☆`[2026-09-30 83 E1 · 85]` 장소마다 볼 역 개수 — 규칙 candidates.장소_역_후보_최대 **변경안** 값(27 규칙 32: 규칙 파일은
 #:   모아서 한 번에 고친다). 규칙에 들어가면 규칙 값이 이긴다(Planner._station_k).
 # ☆`[2026-10-06 구글·시제품 대조]` 도로 그래프로 잰 접근 걷기가 **직선의 몇 배까지** 믿을 만한가. 실측: 우리 접근·하차 후보 83곳 중 배율 중앙 1.31(1사분위 1.14 ~ 3사분위 1.52)인데
@@ -915,7 +915,7 @@ class Planner:
             if done:
                 break
         fare = c.get("fare_won")
-        note = f"요금 하한 {fare:,}원(정차·호출료 미포함)" if fare is not None else "요금 모름"
+        note = f"예상 요금 {fare:,}원(예산 여유 포함 · 교통·대기·호출료에 따라 달라짐)" if fare is not None else "요금 모름"
         return {"eta_min": ride, "uses": [], "_legs": [], "_taxi": True, "_n": 300, "_key": ("taxi", 0, 0),
                 "_route": f"택시 {c['distance_m'] / 1000:.1f}km · {note} [{c.get('grade', '근거없음')}]",
                 "_start": guess, "_transfers": 0, "_margin": buf, "_slack": 0, "_walk_min": 0, "_walk_m": 0,
@@ -1645,7 +1645,11 @@ class Planner:
                                "planned": planned["id"],
                                "options": [{"id": o["id"], "start_min": o["_start"], "eta_min": o["eta_min"],
                                             "margin_min": o.get("_margin"), "slack_min": o.get("_slack"),
-                                            "transfers": o["_transfers"], "check": o.get("_check")}
+                                            "transfers": o["_transfers"], "check": o.get("_check"),
+                                            "wait_min": (sum(lr.wait_min for lr in o["_lr"])
+                                                         if o.get("_lr") is not None
+                                                         and all(lr.wait_min is not None for lr in o["_lr"])
+                                                         else (0 if not o["_legs"] else None))}
                                            for o in opts],
                                "left_out": left, "left_checks": left_checks, "start_min": start})
         keys = ("id", "label", "eta_min", "walk_m", "fare_krw", "uses", "transfer_car")

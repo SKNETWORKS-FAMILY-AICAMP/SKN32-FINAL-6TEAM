@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { agree, fillPlanAsk, finishOnboarding, openRegistration, start, mockServer, TRIP_ID, weekAhead, checkPlan } from "./helpers";
+import { agree, fillPlanAsk, finishOnboarding, openRegistration, start, mockServer, TRIP_ID, weekAhead, checkPlan, tripScreen } from "./helpers";
 import { needsBadge } from "./plan-check-kit";
 
 const PLAN = "10/1 09:00 경복궁 관람";
@@ -31,7 +31,7 @@ test("첫 방문: 계획을 올리면 게스트 세션이 만들어지고(쿠키
 
   await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
 
   // 서버가 실제로 받은 것: 계획 글은 접수 때, 확인은 등록할 때. 취향 설문을 안 마쳤어도 계획 담기 화면에서 정한 것(여유 「적당히」 · 항로 지킴이 「켜고 진행」)은 간다.
   const [intake] = await server.received("POST", "/v1/web/trip-intakes");
@@ -377,10 +377,11 @@ test("결과 화면의 「직접 고치기」: 서버가 장소를 못 찾으면
   await page.getByRole("button", { name: "경복궁 관람 수정" }).click();
   await page.getByText("직접 고치기 · 이름·날짜·시각·장소 없음").click();
   const editor = page.getByRole("form", { name: "「경복궁 관람」 고치기" });
-  await editor.getByRole("searchbox", { name: "장소 이름" }).fill("없는 곳");
+  await editor.getByLabel("일정 이름", { exact: true }).fill("경복궁 오전 관람");
   await editor.getByRole("button", { name: "저장" }).click();
   await expect(editor.getByRole("alert")).toHaveText("「없는 곳」: 이 이름으로 장소를 찾지 못했어요");
-  await expect(editor.getByRole("searchbox", { name: "장소 이름" })).toHaveValue("없는 곳");
+  await expect(editor.getByLabel("일정 이름", { exact: true })).toHaveValue("경복궁 오전 관람");
+  await expect(editor.getByRole("searchbox")).toHaveCount(0);
   // Leaving sends nothing more and comes back to the card's edit button.
   await editor.getByRole("button", { name: "취소" }).click();
   await page.getByRole("button", { name: "바꾸기 그만두기" }).click();
@@ -409,15 +410,15 @@ test("결과 화면: 서버에 아직 없는 잠금·자동 추천·전체 자�
   await start(page);
   await page.goto(INTAKE);
   const say = (text: string) => page.getByRole("status").filter({ hasText: text });
+  await page.getByRole("article", { name: "경복궁 관람" }).getByRole("heading").getByRole("button").click();
   const lock = page.getByRole("button", { name: "경복궁 관람 꼭 넣을 일정으로 고정" });
   await expect(lock).toHaveAttribute("aria-disabled", "true");
   await lock.click({ force: true });
   await expect(say("잠금은 준비 중이에요")).toBeVisible();
-  await page.getByRole("article", { name: "경복궁 관람" }).getByRole("heading").getByRole("button").click();
-  await page.getByRole("button", { name: "자동 추천", exact: true }).click({ force: true });
+  await page.getByRole("button", { name: "경복궁 관람 자동 추천", exact: true }).click({ force: true });
   await expect(say("자동 추천은 준비 중이에요")).toBeVisible();
   const all = page.getByRole("button", { name: /전체 자동 추천/ });
-  await expect(all).toContainText("준비 중");
+  await expect(all).toHaveAttribute("aria-disabled", "true");
   await all.click({ force: true });
   await expect(say("전체 자동 추천은 준비 중이에요")).toBeVisible();
 });

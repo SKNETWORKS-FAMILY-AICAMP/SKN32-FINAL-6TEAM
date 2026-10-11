@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>날짜 선택 복구 · 확인 필요 배치 비교</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#edf2ef;color:#213b32;font:16px/1.65 system-ui,sans-serif}main{max-width:1100px;margin:auto;padding:24px}h1{font-size:26px;line-height:1.35}h2{font-size:21px}section{margin:24px 0;padding:24px;background:white;border:1px solid #d7e1db;border-radius:18px}p{max-width:70ch}label{display:flex;gap:12px;align-items:center;flex-wrap:wrap}select{min-height:44px;padding:8px;border:1px solid #aebfb5;border-radius:10px;font:inherit;background:white;color:inherit}.compare{display:grid;grid-template-columns:1fr 1fr;gap:24px}figure{margin:16px 0;min-width:0}img{display:block;max-width:100%;height:auto}figcaption{margin-bottom:12px;font-weight:650}.recommend{color:#2e624d}a{color:#28634e}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px 8px;border-bottom:1px solid #d7e1db}.screen img{max-width:100%;width:auto;max-height:812px}.note{color:#53665d;font-size:14px}@media(max-width:650px){main{padding:16px}section{padding:16px}.compare{grid-template-columns:1fr;gap:8px}}
+</style>
+<main>
+<h1>날짜 선택 복구 · 확인 필요 배치 비교</h1>
+<p>날짜 선택 배경은 실제 탭 너비에 다시 맞춥니다. 카드 배치는 아래 추천안까지 비교했으며, 제품의 기존 배치는 유지합니다.</p>
+<label>촬영 화면 <select id="viewport"><option value="375">375px 휴대폰</option><option value="1280">1280px PC</option></select></label>
+<section>
+<h2>문제 항목을 상태 바로 왼쪽으로 모으는 안을 추천합니다</h2>
+<div class="compare">
+<figure><figcaption>현재 · 문제 항목은 왼쪽, 상태는 오른쪽</figcaption><a data-asset="status-current" href="status-current-375.png"><img data-asset="status-current" src="status-current-375.png" alt="올리브영 카드 왼쪽의 장소·시간 문제와 오른쪽 확인 필요"></a></figure>
+<figure><figcaption class="recommend">추천 · 문제 항목과 상태를 한 묶음으로</figcaption><a data-asset="status-grouped" href="status-grouped-375.png"><img data-asset="status-grouped" src="status-grouped-375.png" alt="올리브영 카드 오른쪽에 장소·시간·확인 필요를 함께 배치한 제안"></a></figure>
+</div>
+<p>접힌 카드에서는 ‘무엇을 확인해야 하나’를 짧게 묶어 읽습니다. 일정을 펼치면 각 항목의 자세한 설명을 읽습니다. 문제 항목이 많거나 폭이 좁으면 줄을 바꾸고 ‘확인 필요’는 맨 아래 오른쪽에 둡니다.</p>
+<table><thead><tr><th>비교</th><th>현재</th><th>추천</th></tr></thead><tbody><tr><td>읽기</td><td>문제 항목의 시작점이 일정해 세로로 훑기 쉽습니다.</td><td>문제 항목과 상태를 가까이 두어 하나의 안내로 읽습니다.</td></tr><tr><td>여백</td><td>문제 항목과 상태 사이에 넓은 빈 공간이 생깁니다.</td><td>문제 항목과 상태 사이12px, 카드 안쪽12px를 둡니다.</td></tr><tr><td>비율</td><td colspan="2">제목을 가장 먼저 읽고,12px의 문제 항목·상태는 보조 정보로 둡니다. 가로폭을 고정 비율로 나누지 않고 글자 길이에 맞춥니다.</td></tr></tbody></table>
+<p class="note">추천은 디자인 판단입니다. 실제 이용자를 대상으로 어느 배치가 더 빠른지 비교한 실험 결과는 아닙니다.</p>
+</section>
+<section><h2>다른 회사의 공식 기준</h2>
+<p><a href="https://atlassian.design/components/lozenge">Atlassian의 Lozenge</a>는 의미 있는 상태를 짧은 배지로 표시하며 ‘needs review’를 주의 상태의 예로 듭니다. <a href="https://www.carbondesignsystem.com/building-blocks/core/patterns/notifications">IBM Carbon의 안내 지침</a>은 문제 안내를 관련 항목 가까이에 두고 짧게 쓰도록 권합니다.</p>
+<p>두 회사가 이 카드와 똑같은 배치를 사용한다는 근거는 아닙니다. 짧은 상태 표시와 주변 설명을 구분하는 지침을 이 화면에 적용해 추천했습니다.</p></section>
+<section class="screen"><h2>수정안 왕복·직접 수정 복귀 후 날짜 선택</h2><p>탭 배지·글꼴·여백 너비와 화면 크기 변경을 감지합니다. 끄는 중에는 진행 비율을 유지하고, 놓으면 선택 탭에 정렬합니다. 새 응답에 현재 날짜가 없으면 첫 유효 날짜를 표시합니다.</p><a data-asset="date-return" href="date-return-375.png"><img data-asset="date-return" src="date-return-375.png" alt="직접 수정에서 돌아와 2일차 탭 전체에 선택 배경이 정렬된 실제 Chrome 화면"></a></section>
+<p class="note">실제 Chrome · mock 서버 촬영입니다. 공개 cs 프로젝트 서버 응답·x600 서버 배포 확인과 구분합니다.</p>
+</main>
+<script>document.querySelector('#viewport').addEventListener('change',e=>{document.querySelectorAll('[data-asset]').forEach(n=>{const path=n.dataset.asset+'-'+e.target.value+'.png';if(n.tagName==='IMG')n.src=path;else n.href=path;});});</script>
+</html>

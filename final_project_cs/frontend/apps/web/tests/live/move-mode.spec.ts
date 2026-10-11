@@ -25,7 +25,7 @@ test("서버가 이 기능을 모르면(404) 박스는 눌러 보는 순간 사�
   await expect(first(page).getByText("올리브영 인사동점을 임시로 골라서 계산했어요")).toBeVisible();     // 이동 칸의 나머지는 그대로
 });
 
-test("박스를 열면 그 구간 하나만 묻고 네 줄이 서버 순서로 나온다 — 꼬리표(추천 · 추정) · 요금(택시는 하한값) · 여유 · 늦어요 · 안 닿는 줄은 회색 + 이유", async ({ page, request }) => {
+test("박스를 열면 그 구간 하나만 묻고 네 줄이 응답 순서로 나온다 — 택시 예상 요금과 고지 · 여유 · 늦어요 · 안 닿는 줄은 회색 + 이유", async ({ page, request }) => {
   const server = await openFinished(page, request, undefined, { moveOptions: "on" });
   await openMove(page);
   await expect(box(page)).toContainText("지하철 3호선");                                                // 지금 수단
@@ -47,7 +47,8 @@ test("박스를 열면 그 구간 하나만 묻고 네 줄이 서버 순서로 �
   await expect(rows.nth(1)).toHaveAttribute("aria-disabled", "true");
   await expect(rows.nth(1)).toContainText("다음 일정이 11:00에 시작해요");                              // 서버가 쓴 이유 그대로
   await expect(rows.nth(2)).toContainText("택시");
-  await expect(rows.nth(2)).toContainText("약 9,000원~");                                              // 하한값이라 「~」
+  await expect(rows.nth(2)).toContainText("예상 9,000원");
+  await expect(rows.nth(2)).toContainText("실제 결제액은 교통·대기·호출료·할증에 따라 달라질 수 있어요");
   await expect(rows.nth(2)).toContainText("추정");
   await expect(rows.nth(2)).toContainText("여유 25분");
   await expect(rows.nth(3)).toContainText("걸음");

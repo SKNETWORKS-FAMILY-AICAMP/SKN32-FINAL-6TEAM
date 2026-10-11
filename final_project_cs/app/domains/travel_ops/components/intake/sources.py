@@ -252,6 +252,49 @@ def differing_lines(full: str, halves: list[tuple[str, str]]) -> list[dict[str, 
     return out
 
 
+def other_reading(value: str, text: str, other: str) -> str | None:
+    """`text`(전체 받아쓰기의 줄)에서 읽은 값 `value` 가 **`other`(반쪽 받아쓰기의 같은 줄)에서는 무엇으로 읽혔나**. `[2026-10-07 uiux 요청]`
+
+    두 줄을 글자 단위로 맞춰(`difflib`) `value` 가 놓인 자리를 `other` 쪽 자리로 옮겨 자른다 — 「11:00 청경궁 관람」의 「청경궁 관람」 → 「11:00 창경궁 관람」의 「창경궁 관람」.
+    화면이 「지금 값 / 다른 읽기」 두 단추를 그리고 고른 값을 그대로 보낼 수 있게 한다(줄 전체를 제목으로 보낼 수는 없다).
+    ★못 정하면 `None` — 값이 줄 안에서 글자 그대로 안 보이거나(모델이 다듬은 값) · 옮긴 결과가 비었거나 · 길이가 너무 달라 맞춤이 어긋난 것으로 보일 때 · 같은 값일 때.
+      그때 화면은 두 읽기 문장(note)만 보인다. 지어내지 않는다."""
+    import difflib
+
+    value = (value or "").strip()
+    if not value or not text or not other:
+        return None
+    start = text.find(value)
+    if start < 0:
+        return None
+    end = start + len(value)
+    ops = difflib.SequenceMatcher(None, text, other, autojunk=False).get_opcodes()
+
+    def at(position: int, *, is_end: bool) -> int:
+        for tag, i1, i2, j1, j2 in ops:
+            if is_end:
+                inside = i1 < position <= i2 or (i1 == i2 == position)
+            else:
+                inside = i1 <= position < i2 or (i1 == i2 == position)
+            if not inside:
+                continue
+            if tag == "equal":
+                return j1 + (position - i1)
+            if position == i1:
+                return j1
+            if position == i2:
+                return j2
+            return j1 + round((position - i1) * (j2 - j1) / max(1, i2 - i1))
+        return len(other)
+
+    got = other[at(start, is_end=False):at(end, is_end=True)].strip()
+    if not got or got == value:
+        return None
+    if len(got) > 3 * len(value) + 2 or len(got) * 3 + 2 < len(value):
+        return None
+    return got
+
+
 def _key(line: str) -> str:
     """반쪽 받아쓰기와 맞춰 볼 때의 열쇠 — 공백·구두점을 빼고 비교한다(글자 자체는 바꾸지 않는다)."""
     return re.sub(r"[\s·|,.:;()\[\]-]+", "", line)

@@ -1,0 +1,56 @@
+# 웹(고객 화면) 관문 — final_project_cs/frontend/apps/web 의 시험을 돌린다(2026-09-28 신설, ST4F-161).
+#   check: 린트 · 타입 검사 · 단위 시험(Vitest) · 프로덕션 빌드
+#   e2e:   데모 빌드를 브라우저로(Playwright). 백엔드 없이 돈다
+#   live:  실제 연결 빌드를 mock 서버(tests/live/stub-server.mjs)에 붙여 브라우저로
+#   ★웹 파일이 바뀐 PR·push 에서만 돈다. 이 시험들은 백엔드 없이 돌아서 다른 팀 변경으로는 결과가 바뀌지 않는다.
+#     서버가 /v1/web/* 나 설문 모양을 바꿔 웹이 깨지는 것은 develop 관문의
+#     tests/contract/test_web_client_contract.py 가 잡는다.
+#   ★실서버 시험(test:real)은 넣지 않는다 — 팀 채팅 알림 · 외부 호출 · DB 에 시험 여행이 남는다
+#     (playwright.real.config.ts 머리 주석).
+name: CI (web)
+
+on:
+  push:
+    branches: [role-manager, develop, main]
+    paths:
+      - "final_project_cs/frontend/apps/web/**"
+      - ".github/workflows/ci-web.yml"
+  pull_request:
+    branches: [role-manager, develop, main]
+    paths:
+      - "final_project_cs/frontend/apps/web/**"
+      - ".github/workflows/ci-web.yml"
+
+concurrency:
+  group: ci-web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: web (check · e2e · live)
+    runs-on: ubuntu-latest
+    env:
+      # ★.env.local 은 저장소에 없다. 값이 없으면 프로덕션 빌드는 데이터 모드가 unconfigured 가 되어
+      #   데모 시험이 전부 깨진다(src/lib/data-mode.ts). live 시험은 serve.mjs 가 live 로 덮어쓴다.
+      NEXT_PUBLIC_DATA_MODE: demo
+      NEXT_PUBLIC_MAP_PROVIDER: demo
+      # 로컬(KST)과 같은 시간대에서 돌린다 — 이유는 ci-develop.yml 의 같은 줄 참고.
+      TZ: Asia/Seoul
+    defaults:
+      run:
+        working-directory: final_project_cs/frontend/apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # package.json engines: >=22 <25
+          node-version: 22
+          cache: npm
+          cache-dependency-path: final_project_cs/frontend/apps/web/package-lock.json
+      - run: npm ci
+      - name: 린트 · 타입 · 단위 시험 · 빌드
+        run: npm run check
+      - name: 브라우저 설치
+        run: npx playwright install --with-deps chromium
+      - name: 브라우저 시험 (mock 서버)
+        run: npm run test:live

@@ -125,7 +125,7 @@ export function MoveModeBox({ move, to, ctx, locked }: { move: PlanMove; to: Pla
       {options.map((option) => {
         const on = picked(option);
         const reaches = option.fits === true;
-        const fare = option.fareKrw === null ? t("요금 미상", "Fare unknown") : option.fareKrw === 0 ? t("요금 없음", "No fare") : option.fareIsFloor ? t(`약 ${won(option.fareKrw)}~`, `from about ${won(option.fareKrw)}`) : won(option.fareKrw);
+        const fare = option.fareKrw === null ? t("요금 미상", "Fare unknown") : option.fareKrw === 0 ? t("요금 없음", "No fare") : option.fareIsEstimate ? t(`예상 ${won(option.fareKrw)}`, `Estimated ${won(option.fareKrw)}`) : option.fareIsFloor ? t(`약 ${won(option.fareKrw)}~`, `from about ${won(option.fareKrw)}`) : won(option.fareKrw);
         const slack = option.fits === null ? t("확인 못 함", "Not checked")
           : option.slackMin === null ? "" : option.slackMin < 0 ? t(`늦어요 ${Math.abs(option.slackMin)}분`, `${Math.abs(option.slackMin)} min late`) : t(`여유 ${option.slackMin}분`, `${option.slackMin} min to spare`);
         const unsure = option.grade === "추정" || option.grade === "근거없음";
@@ -146,6 +146,7 @@ export function MoveModeBox({ move, to, ctx, locked }: { move: PlanMove; to: Pla
               {!reaches && <em data-tone="no">{option.fits === null ? t("고를 수 없어요", "Cannot pick") : t("고를 수 없어요", "Cannot pick")}</em>}
             </span>
             {option.whyNot && !reaches && <span className={styles.modeWhy}>{option.whyNot}</span>}
+            {option.fareIsEstimate && <span className={styles.modeWhy}>{t("예상 요금이에요. 실제 결제액은 교통·대기·호출료·할증에 따라 달라질 수 있어요.", "Estimated fare. Traffic, waiting, booking fees and surcharges may change the final price.")}</span>}
           </span>
         </button>;
       })}

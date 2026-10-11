@@ -488,7 +488,6 @@ def with_josa(name: str) -> str:
 def _reason(candidate: dict[str, Any], original: str | None) -> str | None:
     """후보를 고른 **이유 한 문장** — 사실만. 어느 단계(`basis`)인지 · 거리 · 그 시각 영업 · 다음 일정까지 여유 중 **아는 것만** 적는다(모르면 쓰지 않거나 모른다고 쓴다)."""
     basis = candidate.get("basis")
-    place = candidate["place"]
     name = f"{with_josa(original)} " if original else ""
     if basis == "same_kind" and candidate.get("class_grade") == "estimated":
         head = f"{name}{_SAME_KIND_WORDS.get(candidate.get('similarity'), '비슷한 종류')}로 짐작되는 곳이에요(분류를 추정했어요)"

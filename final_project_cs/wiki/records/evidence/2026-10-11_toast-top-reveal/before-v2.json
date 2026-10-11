@@ -1,0 +1,232 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      ".tmp/consent-progress.config.ts",
+      "top-toast-insert-20261011.spec.ts",
+      "--grep",
+      "375px",
+      "--workers",
+      "1",
+      "--trace",
+      "off",
+      "--reporter",
+      "line,json",
+      "--output",
+      ".tmp/toast-top-before-v2"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\consent-progress.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/.tmp/toast-top-before-v2",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "top-toast-insert-20261011.spec.ts",
+      "file": "top-toast-insert-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px 시험 안내는 공통 토스트로 나오고 자동으로 사라진다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 14301,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('[data-stage] > p[class*=\"streamNote\"]')\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" locator('[data-stage] > p[class*=\"streamNote\"]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-stage] > p[class*=\"streamNote\"]')\u001b[22m\n\u001b[2m    27 × locator resolved to 1 element\u001b[22m\n\u001b[2m       - unexpected value \"1\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('[data-stage] > p[class*=\"streamNote\"]')\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" locator('[data-stage] > p[class*=\"streamNote\"]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-stage] > p[class*=\"streamNote\"]')\u001b[22m\n\u001b[2m    27 × locator resolved to 1 element\u001b[22m\n\u001b[2m       - unexpected value \"1\"\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\top-toast-insert-20261011.spec.ts:13:73",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\top-toast-insert-20261011.spec.ts",
+                      "column": 73,
+                      "line": 13
+                    },
+                    "snippet": "  11 |       view.test_scenario = { code: \"test1\", name: \"서울 2일 기본 일정\", mode: \"prepared_text\", catalog_version: \"seoul-text-v1\", description: \"시험\" };\n  12 |     }, { intakeEvents: \"off\" }, false);\n> 13 |     await expect(page.locator('[data-stage] > p[class*=\"streamNote\"]')).toHaveCount(0);\n     |                                                                         ^\n  14 |     const toast = page.getByRole(\"status\").filter({ hasText: \"시험 계획 test1\" });\n  15 |     await expect(toast).toBeVisible();\n  16 |     const toastBox = await toast.boundingBox();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\top-toast-insert-20261011.spec.ts",
+                        "column": 73,
+                        "line": 13
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('[data-stage] > p[class*=\"streamNote\"]')\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" locator('[data-stage] > p[class*=\"streamNote\"]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-stage] > p[class*=\"streamNote\"]')\u001b[22m\n\u001b[2m    27 × locator resolved to 1 element\u001b[22m\n\u001b[2m       - unexpected value \"1\"\u001b[22m\n\n\n  11 |       view.test_scenario = { code: \"test1\", name: \"서울 2일 기본 일정\", mode: \"prepared_text\", catalog_version: \"seoul-text-v1\", description: \"시험\" };\n  12 |     }, { intakeEvents: \"off\" }, false);\n> 13 |     await expect(page.locator('[data-stage] > p[class*=\"streamNote\"]')).toHaveCount(0);\n     |                                                                         ^\n  14 |     const toast = page.getByRole(\"status\").filter({ hasText: \"시험 계획 test1\" });\n  15 |     await expect(toast).toBeVisible();\n  16 |     const toastBox = await toast.boundingBox();\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\top-toast-insert-20261011.spec.ts:13:73"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T10:22:27.754Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\toast-top-before-v2\\top-toast-insert-20261011-375px-시험-안내는-공통-토스트로-나오고-자동으로-사라진다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\toast-top-before-v2\\top-toast-insert-20261011-375px-시험-안내는-공통-토스트로-나오고-자동으로-사라진다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\top-toast-insert-20261011.spec.ts",
+                    "column": 73,
+                    "line": 13
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "d742b191b126ddb17c35-e4318148e7038c13ab50",
+          "file": "top-toast-insert-20261011.spec.ts",
+          "line": 8,
+          "column": 3
+        },
+        {
+          "title": "375px 최상단은 첫 일정 앞에 추가하고 다시 올라오면 복원한다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 14373,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('[data-insert-near]')\nExpected: \u001b[32m\"1:\u001b[7mitem:0-0\u001b[27m\"\u001b[39m\nReceived: \u001b[31m\"1:\u001b[7mmove:0-0:0-1\u001b[27m\"\u001b[39m\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" locator('[data-insert-near]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-insert-near]')\u001b[22m\n\u001b[2m    27 × locator resolved to <li data-insert-near=\"\" data-insert-point=\"1:move:0-0:0-1\" class=\"plan-check-module__MjxneW__insertPoint\">…</li>\u001b[22m\n\u001b[2m       - unexpected value \"1:move:0-0:0-1\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('[data-insert-near]')\nExpected: \u001b[32m\"1:\u001b[7mitem:0-0\u001b[27m\"\u001b[39m\nReceived: \u001b[31m\"1:\u001b[7mmove:0-0:0-1\u001b[27m\"\u001b[39m\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" locator('[data-insert-near]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-insert-near]')\u001b[22m\n\u001b[2m    27 × locator resolved to <li data-insert-near=\"\" data-insert-point=\"1:move:0-0:0-1\" class=\"plan-check-module__MjxneW__insertPoint\">…</li>\u001b[22m\n\u001b[2m       - unexpected value \"1:move:0-0:0-1\"\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\top-toast-insert-20261011.spec.ts:32:24",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\top-toast-insert-20261011.spec.ts",
+                      "column": 24,
+                      "line": 32
+                    },
+                    "snippet": "  30 |     const seam = page.locator(\"[data-insert-near]\");\n  31 |     await body.evaluate((element) => { element.scrollTop = 0; });\n> 32 |     await expect(seam).toHaveAttribute(\"data-insert-point\", \"1:item:0-0\");\n     |                        ^\n  33 |     await body.evaluate((element) => { element.scrollTop = element.scrollHeight; });\n  34 |     await expect(seam).toHaveAttribute(\"data-insert-point\", \"1:end\");\n  35 |     await body.evaluate((element) => { element.scrollTop = 0; });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\top-toast-insert-20261011.spec.ts",
+                        "column": 24,
+                        "line": 32
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('[data-insert-near]')\nExpected: \u001b[32m\"1:\u001b[7mitem:0-0\u001b[27m\"\u001b[39m\nReceived: \u001b[31m\"1:\u001b[7mmove:0-0:0-1\u001b[27m\"\u001b[39m\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" locator('[data-insert-near]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-insert-near]')\u001b[22m\n\u001b[2m    27 × locator resolved to <li data-insert-near=\"\" data-insert-point=\"1:move:0-0:0-1\" class=\"plan-check-module__MjxneW__insertPoint\">…</li>\u001b[22m\n\u001b[2m       - unexpected value \"1:move:0-0:0-1\"\u001b[22m\n\n\n  30 |     const seam = page.locator(\"[data-insert-near]\");\n  31 |     await body.evaluate((element) => { element.scrollTop = 0; });\n> 32 |     await expect(seam).toHaveAttribute(\"data-insert-point\", \"1:item:0-0\");\n     |                        ^\n  33 |     await body.evaluate((element) => { element.scrollTop = element.scrollHeight; });\n  34 |     await expect(seam).toHaveAttribute(\"data-insert-point\", \"1:end\");\n  35 |     await body.evaluate((element) => { element.scrollTop = 0; });\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\top-toast-insert-20261011.spec.ts:32:24"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T10:22:43.592Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\toast-top-before-v2\\top-toast-insert-20261011--83188-은-첫-일정-앞에-추가하고-다시-올라오면-복원한다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\toast-top-before-v2\\top-toast-insert-20261011--83188-은-첫-일정-앞에-추가하고-다시-올라오면-복원한다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\top-toast-insert-20261011.spec.ts",
+                    "column": 24,
+                    "line": 32
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "d742b191b126ddb17c35-1f1eaeb8478dc04163ac",
+          "file": "top-toast-insert-20261011.spec.ts",
+          "line": 25,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T10:22:12.357Z",
+    "duration": 46967.795,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,28 @@
+
+[WebServer] (node:23096) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:24300) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+[WebServer] (node:20384) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:10584) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 8 tests using 1 worker
+
+(node:24696) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/8] tests\live\bottom-pending-threshold-20261010.spec.ts:22:3 › 시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 375px
+[2/8] tests\live\bottom-pending-threshold-20261010.spec.ts:22:3 › 시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 1280px
+[3/8] tests\live\empty-map-notice-20261010.spec.ts:30:3 › 좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 375px
+[4/8] tests\live\empty-map-notice-20261010.spec.ts:30:3 › 좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 1280px
+[5/8] tests\live\opaque-handle-fade-20261010.spec.ts:23:3 › 손잡이는 완전히 가리고 그 아래 목록은 점진적으로 보임 375px
+[6/8] tests\live\opaque-handle-fade-20261010.spec.ts:23:3 › 손잡이는 완전히 가리고 그 아래 목록은 점진적으로 보임 1280px
+[7/8] tests\live\sheet-handle-only-20261010.spec.ts:42:3 › 끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 375px
+[8/8] tests\live\sheet-handle-only-20261010.spec.ts:42:3 › 끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 1280px
+  8 passed (1.0m)

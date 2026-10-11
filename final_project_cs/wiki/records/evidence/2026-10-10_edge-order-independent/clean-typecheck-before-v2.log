@@ -1,0 +1,4 @@
+src/features/account/provider-button.tsx(7,19): error TS2307: Cannot find module './brand-assets/kakao.svg' or its corresponding type declarations.
+src/features/account/provider-button.tsx(8,19): error TS2307: Cannot find module './brand-assets/naver.png' or its corresponding type declarations.
+src/features/account/provider-button.tsx(9,21): error TS2307: Cannot find module './brand-assets/discord.svg' or its corresponding type declarations.
+

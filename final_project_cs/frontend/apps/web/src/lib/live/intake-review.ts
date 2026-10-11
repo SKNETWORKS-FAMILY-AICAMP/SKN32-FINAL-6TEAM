@@ -59,7 +59,14 @@ export interface ReviewItem {
   booked?: boolean | null;
   candidates_hint: number | null;
   rows?: CheckLine<ItemRow>[];
+  /**
+   * `[2026-10-07 cs 개발 세션 제안 계약]` A value read off a photo or scan that the server read two ways (the whole page and a half of it read the same line differently). `current` is the value it kept,
+   * `other` what the other reading gave (null when it could not tell - then only the row's note is shown). The customer picks one; it is sent as `items[i].<field>`. Absent on an older server.
+   */
+  rereads?: ReviewReread[];
 }
+
+export interface ReviewReread { field: "title" | "booking_no"; current: string; other: string | null }
 
 export type MoveStatus = "keep" | "review" | "waiting";
 export type MoveMode = "walk" | "subway" | "bus" | "taxi" | "transit" | "estimate" | null;  // `taxi`: after the customer picks it (2026-10-07 이동수단 고르기)

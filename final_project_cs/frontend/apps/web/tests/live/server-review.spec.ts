@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockServer, start, TRIP_ID, checkPlan } from "./helpers";
-import { needsBadge } from "./plan-check-kit";
+import { head, needsBadge } from "./plan-check-kit";
 
 /**
  * 계획 확인 화면(조직 판 `features/plan-check`)에 서버의 확인 결과(`review`)를 이은 부분 — 테스트용 모방 서버로 도는 자동 시험(실제 서버 아님).
@@ -65,12 +65,14 @@ test("결과: 카드는 서버의 판정(확인 필요만 말한다)과 검사 �
 
 test("잠금: 확인이 끝난 일정은 서버에 알리고 고정되며, 확인이 필요한 일정은 이유를 말하고 보내지 않는다", async ({ page, request }) => {
   const server = await openFinished(page, request);
+  await head(page, "경복궁 관람").click();
   await page.getByRole("button", { name: "경복궁 관람 꼭 넣을 일정으로 고정" }).click();
   await expect(page.getByText("경복궁 관람을 꼭 넣을 일정으로 고정했어요")).toBeVisible();
   const [lock] = await server.received("POST", "/edits");
   expect(lock.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].locked", value: true }] });   // 잠금은 혼자 간다
   await expect(page.getByRole("button", { name: "경복궁 관람 고정 풀기" })).toBeVisible();
 
+  await head(page, "올리브영").click();
   await page.getByRole("button", { name: "확인이 필요한 일정은 고정할 수 없어요" }).click({ force: true });
   await expect(page.getByText("확인이 필요한 일정은 먼저 고쳐야 고정할 수 있어요")).toBeVisible();
   expect((await server.received("POST", "/edits")).length).toBe(1);               // 보내지 않았다
@@ -309,7 +311,7 @@ test("머리의 「내 여행」을 눌러 계획 이름을 바꾸면 서버의 
 
 test("출처 줄(ⓒ한국관광공사)은 「계속 내리면 …」 안내 위에 있어서, 목록 맨 끝이 「내리면 다음이 나온다」로 읽힌다", async ({ page, request }) => {
   await openFinished(page, request);
-  const credit = page.getByText("장소 정보 출처", { exact: false });
+  const credit = page.locator("details[class*=credit] summary");
   const hint = page.getByText("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요");
   await expect(credit).toBeVisible();
   await hint.scrollIntoViewIfNeeded();
@@ -339,3 +341,37 @@ test("「전체 자동 추천」 미리 보기는 화면이 열릴 때 서버에
   expect((await server.received("POST", "/autofix")).length).toBe(1);                         // 눌러도 다시 부르지 않는다
 });
 
+
+test("사진을 두 가지로 읽은 일정: 두 읽기를 나란히 보이고, 고른 쪽을 그 일정의 이름으로 보내면 확인 필요가 풀린다", async ({ page, request }) => {
+  // `[2026-10-07 cs 개발 세션 제안 계약]` 검토 항목의 `rereads[]` - 서버는 어느 쪽이 맞는지 모른다(다른 읽기가 맞는 일이 많았다). 고르는 것은 고객이다.
+  const server = await openFinished(page, request, { reread: "on" });
+  await expect(card(page, "청경궁 관람")).toContainText("확인 필요");
+  await card(page, "청경궁 관람").getByRole("heading").getByRole("button").click();
+  await expect(page.getByText("사진에서 이 줄을 두 가지로 읽었어요", { exact: false })).toBeVisible();     // 서버 문장 그대로
+  const choices = page.getByRole("group", { name: "이름 — 사진에서 두 가지로 읽었어요" });
+  await expect(choices.getByRole("button", { name: "「청경궁 관람」 그대로 두기" })).toBeVisible();
+  await choices.getByRole("button", { name: "「창경궁 관람」 쪽으로 바꾸기" }).click();
+  await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);
+  const [pick] = await server.received("POST", "/edits");
+  expect(pick.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].title", value: "창경궁 관람" }] });
+  await expect(card(page, "창경궁 관람")).toBeVisible();
+  await expect(card(page, "창경궁 관람")).not.toContainText("확인 필요");
+  await expect(page.getByRole("group", { name: "이름 — 사진에서 두 가지로 읽었어요" })).toHaveCount(0);
+});
+
+test("사진을 두 가지로 읽은 일정: 지금 값이 맞으면 같은 값을 보내 확인만 하고, 다른 읽기가 없는 서버 응답에는 단추가 없다", async ({ page, request }) => {
+  const server = await openFinished(page, request, { reread: "on" });
+  await card(page, "청경궁 관람").getByRole("heading").getByRole("button").click();
+  await page.getByRole("button", { name: "「청경궁 관람」 그대로 두기" }).click();
+  await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);
+  const [keep] = await server.received("POST", "/edits");
+  expect(keep.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].title", value: "청경궁 관람" }] });
+  await expect(card(page, "청경궁 관람")).not.toContainText("확인 필요");
+});
+
+test("사진을 두 가지로 읽었는데 다른 읽기의 값을 못 정했으면(other null) 서버 문장만 보이고 고르는 단추는 없다", async ({ page, request }) => {
+  await openFinished(page, request, { reread: "note_only" });
+  await card(page, "청경궁 관람").getByRole("heading").getByRole("button").click();
+  await expect(page.getByText("사진에서 이 줄을 두 가지로 읽었어요", { exact: false })).toBeVisible();
+  await expect(page.getByRole("group", { name: "이름 — 사진에서 두 가지로 읽었어요" })).toHaveCount(0);
+});

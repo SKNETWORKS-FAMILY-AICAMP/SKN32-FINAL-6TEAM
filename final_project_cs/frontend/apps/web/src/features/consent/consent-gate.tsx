@@ -3,10 +3,12 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Button } from "@/components/ui";
+import { DeviceFrame } from "@/components/layout/device-frame";
+import { Onboarding } from "@/features/onboarding/onboarding";
 import { CONSENT_REQUIRED_EVENT, SESSION_CHANGED_EVENT } from "@/lib/live/client";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
-import { reconcileConsents, type ReconcileResult } from "./consent-sync";
+import { CONSENT_CHECK_STEPS, reconcileConsents, type ConsentCheckProgress, type ReconcileResult } from "./consent-sync";
 import { useRequiredConsents } from "./consent-store";
 import styles from "./consent.module.css";
 
@@ -34,30 +36,83 @@ export function ConsentGate({ children }: { children: ReactNode }) {
   const ready = useClientReady();
   const agreed = useRequiredConsents();
   const [result, setResult] = useState<ReconcileResult | null>(null);
+  const [progress, setProgress] = useState<ConsentCheckProgress | null>(null);
+  const [checking, setChecking] = useState(true);
+  const [visible, setVisible] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [retry, setRetry] = useState(0);
+  const [admitted, setAdmitted] = useState(false);
   const open = OPEN_PATHS.has(pathname);
+
+  // 처음 읽은 동의로 열었던 화면은 버전 재확인 동안에도 유지한다.
+  if (ready && agreed && !admitted) setAdmitted(true);
 
   useEffect(() => {
     if (!ready) return;
     let cancelled = false;
-    const run = () => { void reconcileConsents(language).then((answer) => { if (!cancelled) setResult(answer); }); };
+    let running = false;
+    const run = () => {
+      // 세션 확인 자체도 변경 알림을 낸다. 같은 확인을 대기열에 겹치지 않는다.
+      if (running) return;
+      running = true;
+      setChecking(true);
+      setResult(null);
+      setProgress(null);
+      void reconcileConsents(language, (next) => { if (!cancelled) setProgress(next); }).then((answer) => {
+        if (!cancelled) { setResult(answer); setChecking(false); }
+      }).finally(() => { running = false; });
+    };
     run();
     window.addEventListener(CONSENT_REQUIRED_EVENT, run);
     window.addEventListener(SESSION_CHANGED_EVENT, run);
     return () => { cancelled = true; window.removeEventListener(CONSENT_REQUIRED_EVENT, run); window.removeEventListener(SESSION_CHANGED_EVENT, run); };
-  }, [ready, language]);
+  }, [ready, language, retry]);
 
-  const needsTerms = ready && !agreed && result !== null && result !== "outdated";
-  useEffect(() => { if (needsTerms && !open) router.replace(routes.start); }, [needsTerms, open, router]);
+  useEffect(() => {
+    if (!checking || !ready) return;
+    const started = performance.now();
+    const delay = setTimeout(() => setVisible(true), 100);
+    const tick = setInterval(() => setElapsed(Math.floor((performance.now() - started) / 1000)), 1000);
+    return () => { clearTimeout(delay); clearInterval(tick); setVisible(false); setElapsed(0); };
+  }, [checking, ready]);
 
-  if (open) return <>{children}</>;
-  if (!ready) return null;
-  if (result === "outdated") {
-    return <main className={styles.gate} role="alert">
-      <h1>{t("약관이 새로 바뀌었어요", "The terms have been updated")}</h1>
-      <p>{t("이 화면은 옛 버전이에요. 새로 고침해서 새 약관을 확인해 주세요.", "This page is an older version. Reload to see the new terms.")}</p>
-      <Button variant="primary" onClick={() => window.location.reload()}>{t("새로 고침", "Reload")}</Button>
-    </main>;
-  }
-  if (agreed) return <>{children}</>;
-  return <main className={styles.gate}><p role="status">{t("약관 동의를 확인하는 중이에요…", "Checking your consent…")}</p></main>;
+  const needsTerms = ready && !agreed && result !== null && result !== "outdated" && result !== "failed";
+  useEffect(() => { if (needsTerms && !open) router.replace(`${routes.start}?terms=required`); }, [needsTerms, open, router]);
+
+  const showPage = open || (ready && result !== "outdated" && (agreed || (checking && admitted)));
+  const showError = result === "failed" || result === "outdated";
+  const step = progress?.step ?? 0;
+  const title = pathname.startsWith(routes.myPage) ? t("마이페이지", "My page")
+    : pathname === routes.newTrip ? t("새 여행", "New trip") : t("나의 여행", "My trips");
+  return <>
+    {showPage ? children : ready && !agreed && result !== "outdated" ? <Onboarding termsRequired /> : <DeviceFrame scroll headerInert>
+      {/* 동의 확인 전에 보호 API를 호출하지 않는다. 기존 화면과 같은 틀·배치를 먼저 보여 준다. */}
+      <main className={styles.waitingPage} aria-busy="true" data-consent-shell>
+        <h1>{title}</h1>
+        <div className={styles.placeholder} aria-hidden="true" />
+        <div className={styles.placeholder} aria-hidden="true" />
+        <div className={styles.placeholder} aria-hidden="true" />
+      </main>
+    </DeviceFrame>}
+    {((checking && visible && (agreed || admitted) && !open) || showError) && <div className={styles.checkLayer} data-consent-check>
+      <section className={styles.checkCard} role={showError ? "alert" : "status"} aria-label={t("약관 확인 진행", "Consent check progress")}>
+        {showError ? <>
+          <h2>{result === "outdated" ? t("약관이 새로 바뀌었어요", "The terms have been updated") : t("동의 기록을 확인하지 못했어요", "Could not check your consent record")}</h2>
+          <p>{result === "outdated" ? t("새로 고침해서 새 약관을 확인해 주세요.", "Reload to see the new terms.") : t("기존 동의는 그대로 두었어요. 다시 확인해 주세요.", "Your existing consent was kept. Please try again.")}</p>
+          <Button variant="primary" onClick={() => result === "outdated" ? window.location.reload() : setRetry((value) => value + 1)}>{result === "outdated" ? t("새로 고침", "Reload") : t("다시 확인하기", "Check again")}</Button>
+        </> : <>
+          <div className={styles.checkHead}><h2>{t("앱 사용 준비", "Getting ready")}</h2><span>{elapsed}{t("초", " s")}</span></div>
+          <p className={styles.checkNow}>{progress?.lost ? t("연결이 끊겨 다시 확인하고 있어요", "Reconnecting to check again")
+            : progress?.recording ? t("이 브라우저의 동의를 기록하고 있어요", "Recording this browser’s consent") : t(CONSENT_CHECK_STEPS[step][0], CONSENT_CHECK_STEPS[step][1])}</p>
+          <p className={styles.checkCount}>{progress?.completed ?? 0}/{CONSENT_CHECK_STEPS.length}{t("단계 완료", " steps complete")}{progress?.slow ? t(" · 응답이 늦어지고 있어요", " · The reply is taking longer") : ""}</p>
+          <ol className={styles.checkSteps}>
+            {CONSENT_CHECK_STEPS.map((label, index) => <li key={label[1]} data-state={index < step ? "done" : index === step ? "current" : "waiting"} aria-current={index === step ? "step" : undefined}>
+              <span aria-hidden="true">{index < step ? "✓" : index + 1}</span>{t(label[0], label[1])}
+              <small>{index < step ? t("완료", "Done") : index === step ? t("진행 중", "In progress") : t("대기", "Waiting")}</small>
+            </li>)}
+          </ol>
+        </>}
+      </section>
+    </div>}
+  </>;
 }

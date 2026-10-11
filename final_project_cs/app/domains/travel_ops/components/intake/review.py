@@ -175,6 +175,36 @@ def nameless_parts(row: dict[str, Any], state: str) -> dict[str, Any] | None:
     return (((row["claims"] or {}).get("place") or {}).get("evidence") or {}).get("parts")
 
 
+def rereads_of(row: dict[str, Any]) -> list[dict[str, Any]]:
+    """사진 · 스캔을 **두 번 다르게 읽은 줄**에서 나온 제목 · 예약번호 — 고객이 아직 안 골랐으면 `[{field, current, other, note}]`. `[2026-10-07 uiux 요청]`
+
+    `other` 는 반쪽 받아쓰기에서 이 값이 무엇으로 읽혔나(`evidence.transcription_differs.other_value`, 못 정하면 None). 화면은 「지금 값 / 다른 읽기」 두 단추를 그리고
+    고른 값을 `items[i].<field>` 로 보낸다 — 그러면 그 칸의 값이 고객 것(`method: customer`)이 되어 이 줄이 사라진다. 고객이 이미 고친 칸은 건너뛴다."""
+    out = []
+    for field in ("title", "booking_no"):
+        claim = (row["claims"] or {}).get(field)
+        if not claim or claim.get("method") == "customer":
+            continue
+        differs = (claim.get("evidence") or {}).get("transcription_differs")
+        if not differs:
+            continue
+        current, other = claim.get("value"), differs.get("other_value")
+        if other:
+            note = f"사진에서 「{current}」 / 「{other}」 두 가지로 읽었어요 · 원본과 맞는 쪽을 골라 주세요"
+        else:
+            note = f"사진에서 이 줄을 두 가지로 읽었어요 — 「{differs.get('text')}」 / 「{differs.get('other')}」 · 원본과 맞는 쪽을 골라 주세요"
+        out.append({"field": field, "current": current, "other": other, "note": note})
+    return out
+
+
+def _with_note(line: dict[str, str] | None, row: str, note: str) -> dict[str, str]:
+    """이미 있는 줄에 말을 덧붙이고(가장 나쁜 결과 유지) 없으면 warn 줄을 만든다 — 같은 `row` 가 두 줄로 나가지 않게."""
+    if line is None:
+        return _line(row, "warn", note)
+    result, text = _worst([(line["result"], line["text"]), ("warn", note)])
+    return _line(row, result, text)
+
+
 def _booking_line(booked: bool | None, state: str, kind: str) -> dict[str, str] | None:
     """예약 줄 — ok 예약이 있다(자동으로 안 바꾼다) · warn 예약이 있다는데 장소를 못 정했다 · unknown 식사인데 예약을 모른다. 말이 없는 일반 일정에는 줄이 없다."""
     if booked is True:
@@ -322,7 +352,7 @@ def _item_id(row: dict[str, Any], positions: dict[str, int]) -> str:
 
 #: 진행 이벤트로 내보내는 일정 칸 — 실시간 진행(`stream.Feed`)이 DB 에서 읽어 내는 `item` 이벤트와 **같은 칸**이다(같은 키가 나중 값으로 덮인다)
 _ITEM_EVENT_FIELDS = ("id", "source_id", "index", "title", "kind", "day", "date", "starts_at", "ends_at", "locked", "status",
-                      "can_lock", "place_state", "place", "candidates_hint", "booked", "parts")
+                      "can_lock", "place_state", "place", "candidates_hint", "booked", "parts", "rereads")
 
 
 def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[dict[str, Any]],
@@ -407,6 +437,14 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         lines = [_place_line(r, state, value)]
         booked = booked_of(r, state)
         booking = _booking_line(booked, state, r["kind"])
+        # ★`[2026-10-07 uiux 요청]` 사진 · 스캔을 두 번 다르게 읽은 제목 · 예약번호는 **그 일정을 「확인 필요」로 만든다**(고객이 고를 때까지) — 전에는 접수 조회에만 표시가 있고
+        #   이 검토 응답(계획 확인 화면이 그리는 것)에는 안 나왔다. 제목은 장소 줄에, 예약번호는 예약 줄에 말을 덧붙이고, 화면이 두 단추를 그릴 재료를 `rereads` 로 준다
+        rereads = rereads_of(r)
+        for reread in rereads:
+            if reread["field"] == "title":
+                lines[0] = _with_note(lines[0], "place", reread["note"])
+            else:
+                booking = _with_note(booking, "booking", reread["note"])
         if booking:
             lines.append(booking)
         t = _time_line(r, notes, overlap, order_bad)
@@ -417,7 +455,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
                      for f in ("title", "date", "starts_at", "ends_at", "place", "kind"))
         results = {ln["row"]: ln["result"] for ln in lines}
         review = (any(ln["result"] == "bad" for ln in lines) or results["place"] == "warn"
-                  or results.get("hours") == "warn")
+                  or results.get("hours") == "warn" or bool(rereads))
         status = "review" if review else ("adjusted" if edited or any(ln["result"] == "filled" for ln in lines) else "keep")
         items.append({
             "id": _item_id(r, positions), "source_id": r["source_id"], "index": r["index"], "title": r["title"],
@@ -436,6 +474,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             if state == "picked_nearest" else None,
             # 예약했다고 적혀 있나(True · False · 말 없음 None) · 이름 없는 줄이 읽힌 조각(그 밖은 None) — 후보 중심 · 문장의 재료
             "booked": booked, "parts": nameless_parts(r, state),
+            # 두 번 다르게 읽은 제목 · 예약번호 — `[{field: title | booking_no, current, other(null 이면 두 읽기 문장만), note}]`. 없으면 [] (고객이 고르면 사라진다)
+            "rereads": [{k: v for k, v in reread.items() if k != "note"} for reread in rereads],
             "rows": lines})
         # 이 일정의 검사 줄이 정해졌다 — 이동 계산(오래 걸린다) 전에 알린다. 겹침으로 확인 필요가 되는 일정은 아래 끝에서 status 가 바뀔 수 있어 최종 값이 같은 키로 덮는다
         note("item", {**{k: items[-1][k] for k in _ITEM_EVENT_FIELDS}, "place": public_place(items[-1]["place"])})

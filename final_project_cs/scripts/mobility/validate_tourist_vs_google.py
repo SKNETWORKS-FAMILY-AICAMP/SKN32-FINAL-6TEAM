@@ -5,7 +5,7 @@
   python scripts/mobility/validate_tourist_vs_google.py
 구글 응답은 합계 소요 숫자만 쓰고 **파일로 저장하지 않는다**(Google Maps Platform 약관의 콘텐츠 저장 제한). 결과는 화면 출력뿐이다.
 주의: 구글 합계는 걷기 속도·대기 가정이 구글 것이다 — 독립 정답이 아니라 **독립 참고값**이다(걷기만은 구글이 한국에서 빈 결과를 낸다)."""
-import json, math, random, re, statistics as st, sys, time, urllib.error, urllib.request
+import json, random, re, statistics as st, sys, time, urllib.error, urllib.request
 from pathlib import Path
 sys.path.insert(0, ".")
 from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
@@ -52,7 +52,7 @@ for a, b in pairs:
             d = json.load(r)
         dur = ((d.get("routes") or [{}])[0]).get("duration")
         g = round(int(dur.rstrip("s")) / 60) if dur else None
-    except Exception as ex:
+    except Exception:
         g = None
     rows.append({"from": a, "to": b, "straight_m": round(hav((SPOTS[a][1], SPOTS[a][0]), (SPOTS[b][1], SPOTS[b][0]))), "ours_min": ours, "google_min": g, "verdict": ver, "ours_route": lab})
     time.sleep(0.15)

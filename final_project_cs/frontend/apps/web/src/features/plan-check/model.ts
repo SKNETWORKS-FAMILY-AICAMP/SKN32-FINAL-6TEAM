@@ -14,6 +14,8 @@ export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown" | "pendin
 /** Place checks: place · time · hours · closed. Move checks: route · mode · arrival. */
 export type CheckKind = "place" | "time" | "hours" | "closed" | "booking" | "route" | "mode" | "arrival";
 export interface CheckRow { kind: CheckKind; result: CheckResult; text: string }
+/** `[2026-10-07]` One value read two ways off a photo: the one kept and the other reading. */
+export interface Reread { field: "title" | "booking_no"; current: string; other: string }
 
 /** A card's verdict once its checks are in. Null while it is still being checked. */
 export type Verdict = "keep" | "adjusted" | "review";
@@ -58,6 +60,8 @@ export interface PlanItem {
   /** Null when the place is not settled — it shows as 「위치 미정」 instead of a pin. */
   coordinates: Coordinates | null;
   checks: CheckRow[];
+  /** `[2026-10-07]` Values the server read two ways off a photo — the customer picks one (only those with another reading to offer). */
+  rereads?: Reread[];
   verdict: Verdict | null;
   /** Fixed by the customer: kept through re-planning and recommendations (mockup 「잠금」 — 「반드시 포함」). */
   locked: boolean;

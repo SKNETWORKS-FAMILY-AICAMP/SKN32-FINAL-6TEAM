@@ -30,7 +30,7 @@ class Kakao:
     def __init__(self, hits):
         self.hits, self.asked = hits, []
 
-    def search(self, query, size=5, near=None):
+    def search(self, query, size=5, near=None, **kw):
         self.asked.append(query)
         return self.hits.get(query, [])
 
@@ -152,7 +152,7 @@ def test_a_ledger_hit_feeds_the_near_hint_for_the_next_items():
             "latitude": 37.5777, "longitude": 126.9715, "address": "서울특별시 종로구"}
     ctx = trip_api._PlaceCtx()
     original = place_lookup.find_place_by_name
-    place_lookup.find_place_by_name = lambda conn, name: shop if name == "토속촌삼계탕" else None
+    place_lookup.find_place_by_name = lambda conn, name, **kw: shop if name == "토속촌삼계탕" else None   # near 를 받는다(2026-10-07)
     try:
         lookup = trip_api._dining_lookup(ctx)
         lookup._connect = lambda: contextlib.nullcontext()
