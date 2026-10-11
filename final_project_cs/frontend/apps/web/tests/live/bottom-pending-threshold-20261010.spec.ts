@@ -28,8 +28,9 @@ for(const width of [375,1280]) {
     const metrics=()=>body.evaluate(e=>{
       const row=e.querySelector('[data-entry-id="0-0"]')!;
       const time=row.querySelector('[data-stop-start]')!.getBoundingClientRect(),title=row.querySelector('[class*=cardTitle]')!.getBoundingClientRect();
-      const date=document.querySelector('[role=tablist]')!.getBoundingClientRect();
-      return {scroll:e.scrollTop,time:time.top,center:time.top+time.height/2,titleCenter:title.top+title.height/2,clip:date.bottom,rowBottom:row.getBoundingClientRect().bottom};
+      const header=e.closest('section')!.querySelector<HTMLElement>('header[class*=sheetHead]')!;
+      const clip=header.hasAttribute('data-float') ? header.getBoundingClientRect().bottom-parseFloat(getComputedStyle(header).paddingBottom) : e.getBoundingClientRect().top;
+      return {scroll:e.scrollTop,time:time.top,center:time.top+time.height/2,titleCenter:title.top+title.height/2,clip,rowBottom:row.getBoundingClientRect().bottom};
     });
     await body.evaluate(e=>{e.scrollTop=0}); const original=await metrics();
     expect(Math.abs(original.center-original.titleCenter)).toBeLessThan(3);

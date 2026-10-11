@@ -36,9 +36,21 @@ for (const width of [375, 1280]) {
     await head(page, '경복궁 관람').click(); await expect(time('경복궁 관람')).toHaveCSS('position', 'sticky');
     const scroll = page.locator('div[class*=sheetBody]');
     const original = await time('경복궁 관람').boundingBox();
-    await scroll.evaluate(e => { e.scrollTop += 140; });
+    // 가려지기 전에는 제목과 같이 움직이고, 실제 목록 경계를 넘긴 후에만 고정한다.
+    await scroll.evaluate(e => { e.scrollTop += 40; });
+    const visible = await time('경복궁 관람').boundingBox();
+    expect(visible!.y).toBeCloseTo(original!.y - 40, 0);
+    await scroll.evaluate(e => {
+      const button=e.querySelector<HTMLElement>('[data-entry-id="0-0"] > button')!;
+      const css=getComputedStyle(e);
+      // sticky의 실제 시작선은 스크롤 패딩 + 계산된 시각 inset이다. 행 제목으로 어림잡지 않는다.
+      const boundary=e.getBoundingClientRect().top+parseFloat(css.paddingTop)+parseFloat(getComputedStyle(button).top);
+      e.scrollTop += button.getBoundingClientRect().top-boundary+4;
+    });
+    await scroll.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
     const followed = await time('경복궁 관람').boundingBox();
-    expect(followed!.y).toBeGreaterThan(original!.y - 140 + 8);
+    await scroll.evaluate(e => { e.scrollTop += 20; });
+    expect((await time('경복궁 관람').boundingBox())!.y).toBeCloseTo(followed!.y,0);
     await capture(page, `expanded-time-${width}`);
     await head(page, '경복궁 관람').dispatchEvent('click');
     await expect(time('경복궁 관람')).toHaveCSS('position', 'relative');

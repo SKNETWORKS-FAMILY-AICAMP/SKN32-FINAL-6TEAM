@@ -323,7 +323,8 @@ test("주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 
   const problems: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") problems.push(`console: ${message.text()}`); });
   page.on("pageerror", (error) => problems.push(`exception: ${error.message}`));
-  page.on("response", (response) => { if (response.status() >= 400 && !response.url().includes("/v1/web/")) problems.push(`${response.status()} ${response.url()}`); });
+  page.on("response", (response) => { if (response.status() >= 400) problems.push(`${response.status()} ${response.request().method()} ${response.url()}`); });
+  page.on("requestfailed", (request) => { if (request.failure()?.errorText !== "net::ERR_ABORTED") problems.push(`request failed: ${request.url()} ${request.failure()?.errorText}`); });
 
   for (const path of ["/", "/start", "/trips/new", `/trips/${TRIP_ID}`, `/trips/${TRIP_ID}/results`]) {
     // ★not "networkidle": the trip screen keeps the change bell open, so the network never goes idle there

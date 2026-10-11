@@ -23,6 +23,7 @@ import { PreviewHint, ResultFooter, StopEditor, TripIssues, type Registration } 
 import { dampedScrollTo } from "@/lib/damped-scroll";
 import type { MoveOptions, MoveOptionMode } from "@/lib/live/move-options";
 import { moveToast } from "./map-description";
+import { usePlanIntroToast } from "./use-plan-intro-toast";
 import { useFollowScroll } from "./use-follow-scroll";
 import { useQuietDayStrip } from "./use-quiet-day-strip";
 import { usePullPastEnd } from "./use-pull-past-end";
@@ -383,12 +384,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       action: value.undo || value.revert ? { label: value.undoLabel ?? latest.current?.t("되돌리기", "Undo") ?? "", run: value.revert ?? (() => latest.current?.undo()) } : undefined,
     });
   }, [hideToast, showToast]);
-  const introduced = useRef(false);
-  useEffect(() => {
-    if (!done || introduced.current) return;
-    introduced.current = true;
-    setToast({ text: t("계획 확인 화면이에요", "Check your plan"), sub: t("일정을 수정하거나 권장 수정안을 확인해 주세요.", "Edit stops or view the proposed plan."), ms: 3_500 });
-  }, [done, setToast, t]);
+  usePlanIntroToast(done, showToast, t);
   const [working, setWorking] = useState(false);
   const [changeToolsOpen, setChangeToolsOpen] = useState(false);
   // `[2026-10-03 사용자]` The place search lives in the header, where the brand stands: small there, and wide while it has focus.
@@ -455,7 +451,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const stripBox = useRef<HTMLDivElement>(null);
   const markerBox = useRef<HTMLSpanElement>(null);
   // `[2026-10-06 사용자 지시]` What the customer did elsewhere on this screen (the Course Keeper turned on or off in the header) is told in THIS bar, like every other notice here.
-  useEffect(() => onToast(showToast), [showToast]);
+  // Bus ownership and the first-visit notice are registered together above.
   // The preview is gone from the page (the plan changed some other way): the list is the plan as it is.
   const hadPreview = useRef(false);
   useEffect(() => {

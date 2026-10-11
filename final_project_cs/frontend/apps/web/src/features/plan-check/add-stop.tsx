@@ -45,7 +45,9 @@ export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBu
     return () => window.removeEventListener("keydown", escape);
   }, [mapActive, endMapPick]);
   const inline = !!onCancel;
-  useEffect(() => { if (!mapPicker?.active && inline && (!search || selected)) first.current?.focus({ preventScroll: true }); }, [inline, search, selected, mapPicker?.active]);
+  const hasSearch = !!search;
+  // A new parent callback must not refocus the field and clear a just-received save error.
+  useEffect(() => { if (!mapPicker?.active && inline && (!hasSearch || selected)) first.current?.focus({ preventScroll: true }); }, [inline, hasSearch, selected, mapPicker?.active]);
   useEffect(() => { onBusy?.(busy); }, [busy, onBusy]);
   useEffect(() => { if (mapPicker?.active) mapHeading.current?.focus({ preventScroll: true }); }, [mapPicker?.active]);
   const clear = (key: Field) => { setErrors((old) => ({ ...old, [key]: undefined })); setProblem(""); };

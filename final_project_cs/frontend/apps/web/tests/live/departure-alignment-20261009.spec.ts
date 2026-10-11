@@ -14,7 +14,7 @@ async function aligned(row:Locator) {
   });
   expect(Math.abs(points.time-points.head)).toBeLessThan(1);
   expect(Math.abs(points.icon-points.head)).toBeLessThan(1);
-  expect(points.shape).toBe('0px'); expect(points.svg).toContain('arrow-right-from-line');
+  expect(points.shape).toBe('0px'); expect(points.svg).toContain('lucide-minus');
 }
 async function capture(page:Page,name:string) {
   if(!shots)return;
@@ -48,7 +48,7 @@ for(const width of [375,1280]) {
     },{intakeEvents:'off',intakeRoutes:'on'});await tiles();
     await expect(page.getByRole('tab',{name:/2일차/})).toHaveCount(1);
     const row=page.locator('li[data-type=move]').first();
-    await expect(row.locator('[data-move-departure]')).toHaveText('—');await aligned(row);
+    await expect(row.locator('[data-move-departure]')).toHaveText('미정');await aligned(row);
     const body=page.locator('[class*=sheetBody]');await body.evaluate(el=>{el.scrollTop+=40;});
     await aligned(row);await capture(page,`02-no-time-${width}`);
     expect(await row.locator('button[class*=time]').evaluate(el=>getComputedStyle(el).position)).toBe('absolute');

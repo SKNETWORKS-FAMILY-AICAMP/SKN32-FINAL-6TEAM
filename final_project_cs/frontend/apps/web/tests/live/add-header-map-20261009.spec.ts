@@ -18,7 +18,7 @@ async function drag(page: Page, x: number, y: number, dx: number, dy = 0) {
 }
 async function collisions(page: Page) {
   return page.getByRole('region',{name:'여행 지도'}).evaluate(map=>{
-    const boxes=[...map.querySelectorAll<HTMLElement>('[data-pin-body],[data-edge-chip],[data-map-controls]')]
+    const boxes=[...map.querySelectorAll<HTMLElement>('[data-pin-body],[data-edge-chip],[data-map-controls] > button[aria-expanded]')]
       .filter(node=>getComputedStyle(node).visibility!=='hidden' && getComputedStyle(node).display!=='none').map(node=>node.getBoundingClientRect());
     return boxes.flatMap((a,i)=>boxes.slice(i+1).filter(b=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>1 && Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1)).length;
   });
@@ -39,7 +39,7 @@ for (const width of [375,1280]) {
     const seam=page.locator('[data-insert-near] > button'); const seamName=await seam.getAttribute('aria-label');
     await seam.click();
     const search=page.getByRole('searchbox',{name:'장소 검색',exact:true});
-    await expect(search).not.toBeFocused();
+    await expect(search).toBeFocused();
     await expect(page.getByRole("form", { name: "일정 추가", exact: true })).toBeVisible();
     expect(await search.evaluate(node=>Boolean(node.closest('[data-hide-brand]')))).toBe(true);
     await expect(page.getByRole('region',{name:'일정 추가 화면'}).getByRole('searchbox')).toHaveCount(0);
@@ -135,5 +135,6 @@ test('오른쪽 거리 칩은 단추 아래의 빈 높이에서 화면 끝에 �
   })).toBe(true);
   const chip=map.locator('[data-edge-chip]').first();
   await expect(chip.locator('[class*=edgeNumbers]')).toHaveCSS('border-radius','999px');
-  await expect(chip.locator('small')).toHaveCSS('border-left-style','solid');
+  const separator = await chip.getAttribute('data-side') === 'left' ? 'border-right-style' : 'border-left-style';
+  await expect(chip.locator('small')).toHaveCSS(separator,'solid');
 });

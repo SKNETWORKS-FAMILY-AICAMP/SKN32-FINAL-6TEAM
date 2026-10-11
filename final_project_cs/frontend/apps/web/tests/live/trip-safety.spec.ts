@@ -169,6 +169,9 @@ test("화면이 열려 있는 동안 안전 알림이 오면 「일정 정지 �
   const state = { paused: false, resumed: 0 };
   await stage(page, state);
   await openTrip(page);
+  // 첫 알림 목록은 기존 기록이다. 화면에 반영된 뒤에만 새 재난을 도착시킨다.
+  await expect(page.getByRole("button", { name: "알림 센터 열기 · 읽지 않은 알림 2개", exact: true })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "안전 알림" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "일정 정지 중 · 알림 센터 열기" })).toHaveCount(0);
   state.paused = true;
   await expect.poll(() => server.ring(["itinerary", "notice"])).toBeGreaterThan(0);

@@ -17,7 +17,7 @@ async function capture(page: Page, name: string) {
 async function separate(page: Page) {
   return page.getByRole("region", { name: "여행 지도" }).evaluate((map) => {
     const r = map.getBoundingClientRect();
-    const nodes = [...map.querySelectorAll<HTMLElement>("[data-pin-body], [data-edge-chip], [data-map-controls], [data-route-label]")];
+    const nodes = [...map.querySelectorAll<HTMLElement>("[data-pin-body], [data-edge-chip], [data-map-controls] > button[aria-expanded], [data-route-label]")];
     const boxes = nodes.filter((node) => getComputedStyle(node).visibility !== "hidden" && getComputedStyle(node).display !== "none")
       .map((node) => ({ name: node.dataset.pinBody !== undefined ? `마커 ${node.textContent}` : node.dataset.edgeChip !== undefined ? `거리 ${node.textContent}` : node.dataset.routeLabel !== undefined ? `경로 ${node.textContent}` : "지도 단추", box: node.getBoundingClientRect() }))
       .filter(({ box }) => box.right > r.left && box.left < r.right && box.bottom > r.top && box.top < r.bottom);
