@@ -56,13 +56,14 @@ def hours_from_row(row: dict[str, Any]) -> dict[str, Any]:
             "why_unknown": why, "usetime_text": usetime, "restdate_text": restdate}
 
 
-def state(conn, tenant_id: str, place_id: str | None, at: datetime | None, until: Any = None, *,
+def state(conn, tenant_id: str, place_id: str | None, at: datetime | None, until: datetime | None = None, *,
           holiday: HolidayLookup | None = None) -> dict[str, Any] | None:
     """한 곳 · 한 시각의 휴무 · 운영시간 판정. 원장에 없거나 시각을 모르면 `None`(모름).
 
     `holiday` 는 날짜 → `read.holiday` 모양 · None. 부르는 쪽(코어)이 공휴일 소스를 넘긴다 — 휴무 원문이 공휴일 조건일 때만,
     필요한 날짜(`holidays_needed`)만 묻는다. 안 넘기면 공휴일 조건은 「모름」으로 남는다.
-    반환은 `hours_verdict` 의 칸에 `content_id` · `name` 을 더한 것. `until` 은 요식 자리와 모양을 맞추려고 받기만 한다.
+    `until` 은 일정이 끝나는 시각 — 주면 끝날 때까지 운영시간 안인지 본다(자정을 넘기면 밖). 안 주면 도착 순간만.
+    반환은 `hours_verdict` 의 칸에 `content_id` · `name` 을 더한 것.
     """
     if not isinstance(at, datetime):
         return None
@@ -76,5 +77,5 @@ def state(conn, tenant_id: str, place_id: str | None, at: datetime | None, until
             facts[day] = holiday(day)
             if facts[day] is None:
                 break      # ★같은 소스가 또 모른다고 할 것이다(team._hours_check 와 같다)
-    verdict = hours_verdict(hours, at, holiday=facts.get)
+    verdict = hours_verdict(hours, at, until=until if isinstance(until, datetime) else None, holiday=facts.get)
     return {**verdict, "content_id": row["content_id"], "name": row["name_ko"]}

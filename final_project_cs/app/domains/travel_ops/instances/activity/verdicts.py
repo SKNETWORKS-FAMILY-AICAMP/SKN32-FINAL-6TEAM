@@ -29,14 +29,27 @@ def holidays_needed(restdate_text: str | None, at: datetime) -> list[date]:
     return list(holiday_dates_needed(restdate_text, at)) if restdate_text else []
 
 
-def hours_verdict(hours: dict[str, Any] | None, at: datetime, *, holiday: HolidayLookup | None = None) -> dict[str, Any]:
+def _within(attributes: dict[str, Any], at: datetime, until: datetime | None) -> bool | None:
+    """`at`~`until` 내내 운영시간 안인가. `until` 이 없거나 `at` 보다 늦지 않으면 도착 순간만 본다.
+    ★`[2026-10-12]` 자정을 넘기면 밖이다 — 요일표는 그날 자정까지만 인정한다(`place_hours._same_day_close`, 보수적)."""
+    if not isinstance(until, datetime) or until <= at:
+        return fits(attributes, at, at)
+    if local_date(until) != local_date(at):
+        return False
+    return fits(attributes, at, until)
+
+
+def hours_verdict(hours: dict[str, Any] | None, at: datetime, *, until: datetime | None = None,
+                  holiday: HolidayLookup | None = None) -> dict[str, Any]:
     """휴무 · 운영시간 판정 — `hours` 는 `read.place_hours` 와 같은 모양(`known` · `attributes` · `source` · `why_unknown` ·
     `usetime_text` · `restdate_text`).
 
     반환 `{"known", "empty", "closed", "within_hours", "closure_reason", "quote", "needs_caveat", "source",
     "restdate_text", "usetime_text", "why_unknown"}`.
         closed        True 휴무 · False 휴무 아님 · None 모름
-        within_hours  True 운영시간 안 · False 밖 · None 모름(휴무 아님이 확인된 뒤에만 잰다)
+        within_hours  True 운영시간 안 · False 밖 · None 모름(휴무 아님이 확인된 뒤에만 잰다).
+                      `until`(끝나는 시각)을 주면 끝날 때까지 안이어야 `True` — 안 주면 도착 순간만 본다
+                      (고객 문의는 예약에 끝 시각이 없어 도착 순간만 본다)
         empty         운영 정보가 **비어 있다**(원문도 요일표도 없다 — 수정본 UC-A3 `4a`, 고객에게 물을 일)
     ★요일표(`place_hours.hours_on` · `fits` — 코어 표준)가 펴지 못하는 휴무(매월 n번째 주 · 공휴일 조건)는 휴무 원문을
       휴무 규칙(`closure_rules.read_closure`)으로 읽는다 — 원문이 정한 값이 요일 칸보다 앞선다.
@@ -53,7 +66,7 @@ def hours_verdict(hours: dict[str, Any] | None, at: datetime, *, holiday: Holida
     closure = read_closure(restdate, at, holiday or (lambda _day: None)) if restdate else None
     closed = (closure.value if closure is not None and closure.value is not None
               else (day == "closed") if day is not None else None)
-    within = fits(attributes, at, at) if closed is False and day not in (None, "closed") else None
+    within = _within(attributes, at, until) if closed is False and day not in (None, "closed") else None
     return {**base, "empty": False, "closed": closed, "within_hours": within,
             "closure_reason": closure.reason if closure else None,
             "quote": closure.quote if closure is not None and closure.value else None,

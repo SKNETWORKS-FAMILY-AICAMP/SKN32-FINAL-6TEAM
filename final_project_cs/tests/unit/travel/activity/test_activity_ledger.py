@@ -70,6 +70,23 @@ def test_open_day_within_and_outside_hours():
     assert (outside["closed"], outside["within_hours"]) == (False, False)
 
 
+def test_until_must_also_be_within_hours():
+    # 18시에 닫는 곳 — 17:00 도착이라도 19:00 까지 있는 일정은 밖, 17:50 까지면 안
+    conn = _Conn(_row("09:00~18:00", None))
+    at = datetime(2026, 10, 14, 17, tzinfo=KST)
+    assert ledger.state(conn, "demo", "p1", at)["within_hours"] is True
+    assert ledger.state(conn, "demo", "p1", at, datetime(2026, 10, 14, 19, tzinfo=KST))["within_hours"] is False
+    assert ledger.state(conn, "demo", "p1", at, datetime(2026, 10, 14, 17, 50, tzinfo=KST))["within_hours"] is True
+
+
+def test_until_past_midnight_is_outside_and_bad_until_is_ignored():
+    conn = _Conn(_row("10:00~22:00", None))
+    at = datetime(2026, 10, 14, 21, tzinfo=KST)
+    assert ledger.state(conn, "demo", "p1", at, datetime(2026, 10, 15, 0, 30, tzinfo=KST))["within_hours"] is False
+    # 끝이 시작보다 앞이거나 같으면 도착 순간만 본다
+    assert ledger.state(conn, "demo", "p1", at, datetime(2026, 10, 14, 20, tzinfo=KST))["within_hours"] is True
+
+
 def test_nth_week_closure_depends_on_the_date():
     conn = _Conn(_row("10:00~17:00", "매월 둘째 주 월요일"))
     second_monday = ledger.state(conn, "demo", "p1", datetime(2026, 10, 12, 11, tzinfo=KST))
