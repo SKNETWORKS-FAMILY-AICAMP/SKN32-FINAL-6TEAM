@@ -103,7 +103,7 @@ for (const width of [375, 1280]) {
     const line = () => seam.evaluate(e => {
       const c = getComputedStyle(e, '::after'), r = e.getBoundingClientRect();
       const button = e.querySelector('button')!.getBoundingClientRect();
-      return { opacity: Number(c.opacity), height: c.height, left: c.left, right: c.right, width: r.width, y: r.y, centerX: r.x + r.width / 2, buttonX: button.x + button.width / 2, buttonY: button.y + button.height / 2, buttonWidth: button.width, buttonHeight: button.height, animation: c.animationName, state: c.animationPlayState };
+      return { opacity: Number(c.opacity), height: c.height, left: c.left, right: c.right, width: r.width, y: r.y + parseFloat(c.top), centerX: r.x + r.width / 2, buttonX: button.x + button.width / 2, buttonY: button.y + button.height / 2, buttonWidth: button.width, buttonHeight: button.height, animation: c.animationName, state: c.animationPlayState };
     });
     await phase(seam, 0); const dim = await line();
     await phase(seam, 1500); const bright = await line();

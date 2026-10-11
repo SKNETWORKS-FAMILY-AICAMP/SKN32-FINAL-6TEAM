@@ -73,7 +73,7 @@ for(const width of [375,1280]) {
     await expect(move.locator('[data-move-departure]')).toHaveCSS('font-weight','600');
     const geometry=await move.evaluate(el=>{
       const depart=el.querySelector('[data-move-departure]')!.getBoundingClientRect(),arrive=el.querySelector('[data-move-arrival]')!.getBoundingClientRect(),header=el.querySelector('[class*=moveHead]')!.getBoundingClientRect();
-      return {centre:depart.top+depart.height/2-header.top-header.height/2,gap:arrive.top-depart.bottom};
+      return {centre:depart.top+depart.height/2-header.top-header.height/2,gap:arrive.top-el.querySelector('[class*=timeStack]')!.getBoundingClientRect().bottom};
     });expect(Math.abs(geometry.centre)).toBeLessThan(1);expect(geometry.gap).toBe(2);
     await capture(page,`04-move-range-${width}`);
     await page.emulateMedia({reducedMotion:'reduce'});

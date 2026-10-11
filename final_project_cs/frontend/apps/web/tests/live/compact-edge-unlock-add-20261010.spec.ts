@@ -54,9 +54,11 @@ for(const width of [375,1280]){
     const seam=page.locator('[data-insert-near]'),add=seam.getByRole('button');await expect(add).toBeVisible();
     await expect(add.locator("svg")).toBeVisible();
     const button=(await add.boundingBox())!,first=(await card(page,'경복궁 관람').boundingBox())!;
-    expect(Math.abs(button.x+button.width/2-first.x-first.width/2)).toBeLessThan(1);expect(button.height).toBe(44);expect(button.width).toBe(44);expect((await seam.boundingBox())!.height).toBe(0);
+    expect(Math.abs(button.x+button.width/2-first.x-first.width/2)).toBeLessThan(1);expect(button.height).toBe(44);expect(button.width).toBe(44);const seamBox=(await seam.boundingBox())!;
+    await expect(seam).toHaveAttribute('data-insert-start');
+    expect(seamBox.height).toBe(48);expect(button.y+button.height/2).toBeCloseTo(seamBox.y+24,1);
     const label=await add.getAttribute('aria-label');await capture(page,`05-add-placement-${width}`);
-    await add.click();await expect(page.getByRole('region',{name:'일정 추가',exact:true})).toBeVisible();
+    await add.click();await expect(page.getByRole('region',{name:'일정 추가 화면',exact:true})).toBeVisible();
     await page.getByRole('button',{name:'일정 추가 취소',exact:true}).click();await expect(page.getByRole('button',{name:label!,exact:true})).toBeFocused();
     await capture(page,`06-add-return-${width}`);await noHorizontalScroll(page);
   });

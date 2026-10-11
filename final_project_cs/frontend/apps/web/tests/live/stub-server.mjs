@@ -835,6 +835,10 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   if (request.method === "GET" && path === "/v1/web/support/notices") {
     return json(response, 200, { notices: [], maintenance: { enabled: false, message: "" } }, origin);
   }
+  // 실제 공개 목록 API 계약: 운영 설정으로 꺼진 경우도 정상 응답이며 고객 인증을 요구하지 않는다.
+  if (request.method === "GET" && path === "/v1/web/test-scenarios") {
+    return json(response, 200, { enabled: false, realtime_enabled: false, catalog_version: "mock-disabled", scenarios: [] }, origin);
+  }
   const auth = authenticate();
   if (auth.denied) return auth.denied();
   // ── 동의 기록 (2026-10-05) ── 시작

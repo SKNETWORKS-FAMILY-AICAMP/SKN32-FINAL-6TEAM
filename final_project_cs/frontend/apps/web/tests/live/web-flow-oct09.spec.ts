@@ -40,15 +40,16 @@ test("검증 목록에서 일정을 추가하면 6개 필드를 한 판으로 �
   await form.getByLabel("날짜", { exact: true }).fill("2026-10-01");
   await form.getByLabel("시작", { exact: true }).fill("18:30");
   await form.getByLabel("끝", { exact: true }).fill("19:30");
-  await form.getByLabel("장소 검색", { exact: true }).fill("올리브영");
-  await form.getByRole("list", { name: "장소 검색 결과" }).getByRole("button", { name: /올리브영 명동 플래그십/ }).click();
+  await page.getByRole('searchbox',{name:'장소 검색',exact:true}).fill('올리브영');
+  await page.getByRole("list", { name: "장소 검색 결과" }).getByRole("button", { name: /올리브영 명동 플래그십/ }).click();
   await form.getByLabel("일정 종류").selectOption("dining");
   await form.getByRole("button", { name: "일정에 추가", exact: true }).click();
   await expect.poll(async () => (await mock.received("POST", "/edits")).length).toBe(1);
   const edits = (await mock.received("POST", "/edits"))[0].body!.edits as { field: string; value: unknown }[];
   expect(edits).toHaveLength(6);
   expect(edits.find((entry) => entry.field.endsWith(".kind"))?.value).toBe("dining");
-  await expect(page.getByRole("article", { name: "올리브영 명동 플래그십" }).filter({ hasText: "저녁 식사" })).toBeVisible();
+  expect(edits.find((entry) => entry.field.endsWith(".title"))?.value).toBe("저녁 식사");
+  await expect(page.getByRole("article", { name: "올리브영 명동 플래그십", exact: true })).toContainText("저녁 식사");
   await expect(form).not.toBeVisible();
 });
 
@@ -57,7 +58,11 @@ test("검증 단계 점선 이동 줄에 출발과 도착 시각 및 머무름�
   await start(page);
   await page.goto(`/intakes/${INTAKE}`);
   const moves = page.locator('li[data-type="move"]');
-  await expect(moves.first()).toContainText("출발");
-  await expect(moves.first()).toContainText(/도착\s+\d{2}:\d{2}/);
-  await expect(moves.first()).toContainText("머무름");
+  const first=moves.first();
+  await expect(first.locator('[data-move-departure]')).toHaveText('10:30');
+  await expect(first.getByRole('button',{name:/나서는 시각 고치기.*도착 10:39/})).toBeVisible();
+  await first.locator('button[class*=moveHead]').click();
+  await expect(first.locator('[data-move-arrival]')).toHaveText('~10:39');
+  await expect(first.locator('[data-move-arrival]')).toHaveAttribute('aria-hidden','false');
+  await expect(first).toContainText('여유 21분');
 });

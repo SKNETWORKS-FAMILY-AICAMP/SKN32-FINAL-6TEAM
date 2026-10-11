@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import { mockServer, start, checkPlan } from "./helpers";
 
-const output = "mockups/web-flow-2026-10-09-v2";
+const output = process.env.WEB_FLOW_SHOTS ?? 'test-results/web-flow-captures';
 for (const width of [375, 1280]) {
   test(`실제 화면 촬영과 가로 넘침 확인 ${width}px`, async ({ page, request }) => {
     await mkdir(output, { recursive: true });
@@ -23,9 +23,9 @@ for (const width of [375, 1280]) {
     await capture("survey");
     await mock.scenario({ review: "on", board: "rich", readingPolls: 0 });
     await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
-    await expect(page.locator('li[data-type="move"]').first()).toContainText("도착");
+    await expect(page.locator('li[data-type="move"]').first().getByRole('button',{name:/나서는 시각 고치기.*도착 10:39/})).toBeVisible();
     await capture("validation");
-    await page.getByText("+ 일정 추가", { exact: true }).click();
+    await page.locator('[data-insert-near] > button').click();
     await page.getByLabel("일정 이름", { exact: true }).fill("저녁 식사");
     await capture("add-stop");
     await page.goto("/mypage#accounts");
