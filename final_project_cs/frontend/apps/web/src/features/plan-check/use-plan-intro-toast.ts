@@ -4,6 +4,22 @@ import type { Translate } from "@/lib/i18n";
 
 /** 읽기 판의 안내를 결과 판의 소유자에게 넘긴다. */
 export function useReadingToastHandoff(reading: boolean, notice: { toast: BusToast } | null, hide: () => void) {
+  const active = useRef({ reading, notice, since: 0 });
+  useEffect(() => {
+    active.current = { reading, notice, since: active.current.notice === notice && active.current.since > 0 ? active.current.since : Date.now() };
+  }, [reading, notice]);
+  // The starting route is replaced by a different PlanCheck instance. Its reading
+  // owner has already unsubscribed when this cleanup runs; the next owner takes
+  // the pending notice, with the original expiry and Undo callback intact.
+  useEffect(() => () => {
+    const held = active.current;
+    if (!held.reading || !held.notice) return;
+    const toast = held.notice.toast;
+    // A completed request must not carry its obsolete sending/progress text.
+    if (!toast.action && !toast.stay) return;
+    const remaining = (toast.ms ?? (toast.action ? 4_500 : 2_800)) - (Date.now() - held.since);
+    if (toast.stay || remaining > 0) pushToast({ ...toast, ...(toast.stay ? {} : { ms: remaining }) });
+  }, []);
   useEffect(() => {
     if (!reading && notice) { pushToast(notice.toast); hide(); }
   }, [reading, notice, hide]);

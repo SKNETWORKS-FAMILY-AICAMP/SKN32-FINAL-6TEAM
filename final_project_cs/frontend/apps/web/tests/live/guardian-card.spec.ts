@@ -188,3 +188,21 @@ test("영어 화면에서도 아이콘 이름 · 되돌리기 줄이 영어로 �
   await expect(page.getByRole("status").filter({ hasText: "Course Keeper is off." })).toBeVisible();
   await expect(page.getByRole("button", { name: "Turn Course Keeper on" })).toBeVisible();
 });
+
+test('시작 화면의 항로 지킴이 안내와 되돌리기가 접수 주소 교체 뒤에도 남는다',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('tripilot.web.settings.v1',JSON.stringify({language:'en'})));
+ let release!:()=>void;const held=new Promise<void>(r=>release=r);
+ await page.route('**/v1/web/trip-intakes',async route=>{if(route.request().method()!=='POST')return route.continue();const response=await route.fetch();await held;await route.fulfill({response});});
+ try{
+ await start(page);await openRegistration(page);await page.getByLabel('Your travel plan').fill('10/1 09:00 경복궁 관람');
+ await page.getByRole('button',{name:'Check my plan'}).click();await page.getByRole('dialog').getByRole('button',{name:'Turn on and go on'}).click();
+ await expect(page).toHaveURL(/intakes\/starting/);
+ await page.getByRole('button',{name:'Turn Course Keeper off'}).click();
+ await expect(page.getByRole('status').filter({hasText:'Course Keeper is off.'})).toBeVisible();
+ release();await expect(page).toHaveURL(/intakes\/[0-9a-f-]+$/);
+ const kept=page.getByRole('status').filter({hasText:'Course Keeper is off.'});
+ await expect(kept).toBeVisible();
+ await kept.getByRole('button',{name:'Undo',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Turn Course Keeper off'})).toBeVisible();
+ }finally{release();}
+});

@@ -1,11 +1,11 @@
 import { afterEach, expect, it, vi } from "vitest";
 import type { Translate } from "@/lib/i18n";
-import { onToast, pushToast, type BusToast } from "@/lib/toast-bus";
+import { onToast, pushToast, takePendingToast, type BusToast } from "@/lib/toast-bus";
 import { usePlanIntroToast, useReadingToastHandoff } from "./use-plan-intro-toast";
 
-const hooks = vi.hoisted(() => ({ refs: [] as { current: boolean }[], effects: [] as { deps?: readonly unknown[]; cleanup?: () => void }[], cursor: 0, pending: [] as (() => void)[] }));
+const hooks = vi.hoisted(() => ({ refs: [] as { current: unknown }[], effects: [] as { deps?: readonly unknown[]; cleanup?: () => void }[], cursor: 0, pending: [] as (() => void)[] }));
 vi.mock("react", () => ({
-  useRef: (initial: boolean) => { const index = hooks.cursor++; return hooks.refs[index] ??= { current: initial }; },
+  useRef: (initial: unknown) => { const index = hooks.cursor++; return hooks.refs[index] ??= { current: initial }; },
   useEffect: (run: () => void | (() => void), deps: readonly unknown[]) => {
     const index = hooks.cursor++;
     const slot = hooks.effects[index] ??= {};
@@ -23,6 +23,7 @@ function draw(done: boolean, show: (toast: BusToast) => void) {
 afterEach(() => {
   hooks.effects.forEach((effect) => effect.cleanup?.());
   hooks.refs = []; hooks.effects = []; hooks.pending = []; hooks.cursor = 0;
+  takePendingToast();
   vi.restoreAllMocks();
 });
 it("hands the reading-screen notice and undo action to the result owner at the transition", () => {
@@ -64,4 +65,38 @@ it("consumes a pending header notice before deciding whether to show the introdu
   const show = vi.fn(); draw(true, show);
   expect(show).toHaveBeenCalledTimes(1);
   expect(show).toHaveBeenLastCalledWith({ text: "Course Keeper is off.", ms: 2800 });
+});
+
+it("carries an undismissed reading notice across route replacement with remaining time", () => {
+  vi.spyOn(Date,"now").mockReturnValue(1000);
+  const run=vi.fn(), notice={toast:{text:"Course Keeper is off.",action:{label:"Undo",run}}};
+  hooks.cursor=0;
+  useReadingToastHandoff(true,notice,vi.fn());
+  hooks.pending.splice(0).forEach(effect=>effect());
+  vi.spyOn(Date,"now").mockReturnValue(1600);
+  hooks.effects.forEach(effect=>{effect.cleanup?.();effect.cleanup=undefined;});
+  const receive=vi.fn(), stop=onToast(receive);
+  try {
+    expect(receive).toHaveBeenCalledExactlyOnceWith({ ...notice.toast,ms:3900 });
+    receive.mock.calls[0][0].action.run();expect(run).toHaveBeenCalledOnce();
+  } finally {stop();}
+});
+it("does not carry a dismissed reading notice into the next route", () => {
+  const hide=vi.fn(), notice={toast:{text:"Dismissed"}};
+  for(const shown of [notice,null]) {
+    hooks.cursor=0;
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Lifecycle harness for dismissal then route unmount.
+    useReadingToastHandoff(true,shown,hide);
+    hooks.pending.splice(0).forEach(effect=>effect());
+  }
+  hooks.effects.forEach(effect=>{effect.cleanup?.();effect.cleanup=undefined;});
+  expect(takePendingToast()).toBeNull();
+});
+
+it("does not carry obsolete sending progress after the intake request completes", () => {
+  hooks.cursor=0;
+  useReadingToastHandoff(true,{toast:{text:"Sending the plan"}},vi.fn());
+  hooks.pending.splice(0).forEach(effect=>effect());
+  hooks.effects.forEach(effect=>{effect.cleanup?.();effect.cleanup=undefined;});
+  expect(takePendingToast()).toBeNull();
 });
