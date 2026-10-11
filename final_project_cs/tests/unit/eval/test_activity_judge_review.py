@@ -77,3 +77,17 @@ def test_bad_sheet_writes_nothing(sheet, bad, message):
     with pytest.raises(SystemExit, match=message):
         review.apply(sheet, reviewer="검토자")
     assert not review.HUMAN_LABELS.exists()
+
+
+def test_first_pass_fills_the_sheet_and_flags(tmp_path, monkeypatch):
+    """1차 라벨(Claude) → 사람 검수(2026-10-11 사용자 결정) — 채운 시트는 그대로 들일 수 있고 「확인 필요」가 표시된다."""
+    monkeypatch.setattr(review, "HUMAN_LABELS", tmp_path / "labels_human.json")
+    first = json.loads(review.FIRST_PASS.read_text(encoding="utf-8"))
+    path = tmp_path / "sheet.csv"
+    review.export(path, first)
+    rows = _rows(path)
+    assert all(r["정답"] for r in rows)
+    assert {r["case_id"] for r in rows if r["확인 필요"]} == {k for k, v in first["labels"].items() if v["check"]}
+    review.apply(path, reviewer="검토자")
+    stored = json.loads(review.HUMAN_LABELS.read_text(encoding="utf-8"))
+    assert stored["first_pass"] == review.FIRST_PASS.name and len(stored["labels"]) == 52

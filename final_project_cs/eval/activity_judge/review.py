@@ -2,6 +2,7 @@
 """골든셋 라벨 사람 검토(구현 계획 WS-1.1) — 검토 시트를 뽑고, 채운 시트를 사람 라벨로 들인다.
 
     python -m eval.activity_judge.review export                     # 빈 검토 시트(labels_review.csv)
+    python -m eval.activity_judge.review export --first-pass        # 1차 라벨(labels_first_pass.json)을 채운 시트
     python -m eval.activity_judge.review apply labels_review.csv --reviewer 이름
     python -m eval.activity_judge.build                             # 사람 라벨로 cases.jsonl · 매니페스트를 다시 만든다
 
@@ -9,6 +10,8 @@
   (구현 계획 WS-1.1). 보면 거기에 맞추게 된다.
 ★사람 라벨은 `labels_human.json` 에 따로 둔다. `build` 가 코드 속 작성자 라벨 위에 덮어쓴다 —
   골든셋을 다시 만들어도 사람 라벨이 지워지지 않는다.
+★`[2026-10-11 사용자 결정]` 1차 라벨(Claude) → 사람 검수도 허용한다(`--first-pass`). 1차 라벨은 `labels_first_pass.json`
+  에 근거와 함께 남기고, 판단이 갈리는 건은 「확인 필요」로 표시한다 — 검수자는 그 건부터 본다. 빈 시트(기본)는 그대로 둔다.
 ★`live_status`(웹)는 원래 라벨이 없다(실제 공지를 사람이 확인하지 않는다 — `build.py`). 시트에서 뺀다.
 ★검토 시트(.csv)는 작업용이다 — 올리지 않는다. 올리는 것은 `labels_human.json` 이다.
 """
@@ -26,6 +29,7 @@ from app.domains.travel_ops.instances.activity.judge.types import LIVE_STATUS, V
 HERE = Path(__file__).resolve().parent
 SHEET = HERE / "labels_review.csv"
 HUMAN_LABELS = HERE / "labels_human.json"
+FIRST_PASS = HERE / "labels_first_pass.json"
 WEEKDAYS = "월화수목금토일"
 
 #: 종류별 판정 기준 — 라벨이 아니라 **무엇을 묻는가**다. 시트 행마다 싣는다.
@@ -38,7 +42,7 @@ CRITERIA: dict[str, str] = {
                         "분류되지 않음: 막지 않고 경고만"),
 }
 HEADER = ["case_id", "종류", "방문 시각", "입력", "판정 기준", "고를 수 있는 값",
-          "정답", "함께 맞다고 칠 값(; 로 구분)", "메모"]
+          "정답", "함께 맞다고 칠 값(; 로 구분)", "메모", "확인 필요", "1차 근거"]
 
 
 def _when(text: str | None) -> str:
@@ -72,15 +76,21 @@ def load_cases() -> list[dict]:
     return [c for c in CASES if c["kind"] != LIVE_STATUS]
 
 
-def export(out: Path) -> None:
+def export(out: Path, first_pass: dict | None = None) -> None:
     cases = load_cases()
+    labels = (first_pass or {}).get("labels", {})
     with out.open("w", encoding="utf-8-sig", newline="") as fh:     # BOM — 엑셀이 한글을 바로 읽는다
         writer = csv.writer(fh)
         writer.writerow(HEADER)
         for c in cases:
+            first = labels.get(c["case_id"]) or {}
+            extra = ";".join(v for v in first.get("acceptable", []) if v != first.get("expected"))
             writer.writerow([c["case_id"], c["kind"], _when(c["inputs"].get("starts_at")), _inputs(c),
-                             CRITERIA[c["kind"]], " / ".join(VALUES[c["kind"]]), "", "", ""])
-    print(f"{out} — {len(cases)}건. 「정답」 칸을 채운다(필요하면 「함께 맞다고 칠 값」 · 「메모」도)")
+                             CRITERIA[c["kind"]], " / ".join(VALUES[c["kind"]]), first.get("expected") or "", extra, "",
+                             "확인 필요" if first.get("check") else "", first.get("reason", "")])
+    flagged = sum(1 for v in labels.values() if v.get("check"))
+    print(f"{out} — {len(cases)}건. 「정답」 칸을 채운다(필요하면 「함께 맞다고 칠 값」 · 「메모」도)"
+          + (f" · 1차 라벨을 채웠다 — 「확인 필요」 {flagged}건부터 본다" if labels else ""))
 
 
 def read_sheet(path: Path) -> dict[str, dict]:
@@ -116,8 +126,9 @@ def read_sheet(path: Path) -> dict[str, dict]:
 
 def apply(path: Path, reviewer: str) -> None:
     labels = read_sheet(path)
+    first = FIRST_PASS.name if FIRST_PASS.exists() else None
     HUMAN_LABELS.write_text(json.dumps({"reviewer": reviewer, "reviewed_on": date.today().isoformat(),
-                                        "labels": labels}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+                                        "first_pass": first, "labels": labels}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     from .build import CASES
     claude = {c["case_id"]: c["expected"] for c in CASES}
     changed = sorted(cid for cid, label in labels.items() if label["expected"] != claude.get(cid))
@@ -131,12 +142,13 @@ def main(argv: list[str] | None = None) -> None:
     sub = ap.add_subparsers(dest="cmd", required=True)
     ex = sub.add_parser("export")
     ex.add_argument("--out", type=Path, default=SHEET)
+    ex.add_argument("--first-pass", action="store_true", help="labels_first_pass.json 의 1차 라벨을 채운다")
     ap_apply = sub.add_parser("apply")
     ap_apply.add_argument("sheet", type=Path)
     ap_apply.add_argument("--reviewer", required=True)
     args = ap.parse_args(argv)
     if args.cmd == "export":
-        export(args.out)
+        export(args.out, json.loads(FIRST_PASS.read_text(encoding="utf-8")) if args.first_pass else None)
     else:
         apply(args.sheet, args.reviewer)
 

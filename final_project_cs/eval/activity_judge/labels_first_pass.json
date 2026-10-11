@@ -1,0 +1,433 @@
+{
+ "labeler": "claude-opus-5-5 (1차, 사람 검수 전)",
+ "labeled_on": "2026-10-11",
+ "basis": "유스케이스 수정본 §8 분류표(D2) · 10-06 작성자 라벨을 다시 판정",
+ "labels": {
+  "closure-01": {
+   "expected": "not_closed",
+   "acceptable": [
+    "not_closed"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "closure-02": {
+   "expected": "closed",
+   "acceptable": [
+    "closed"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "closure-03": {
+   "expected": "not_closed",
+   "acceptable": [
+    "not_closed"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "closure-04": {
+   "expected": "closed",
+   "acceptable": [
+    "closed"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "closure-05": {
+   "expected": "not_closed",
+   "acceptable": [
+    "not_closed",
+    "unknown"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "closure-06": {
+   "expected": "closed",
+   "acceptable": [
+    "closed",
+    "unknown"
+   ],
+   "reason": "10/9 한글날 — 공휴일이면 휴무. 공휴일 여부가 입력에 없어 unknown 도 허용",
+   "check": false
+  },
+  "closure-07": {
+   "expected": "not_closed",
+   "acceptable": [
+    "not_closed",
+    "unknown"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "closure-08": {
+   "expected": "closed",
+   "acceptable": [
+    "closed"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "closure-09": {
+   "expected": "closed",
+   "acceptable": [
+    "closed",
+    "unknown"
+   ],
+   "reason": "10/12 월요일은 공휴일이 아니라 정기휴일. 공휴일 여부가 입력에 없어 unknown 도 허용",
+   "check": false
+  },
+  "closure-10": {
+   "expected": "not_closed",
+   "acceptable": [
+    "not_closed",
+    "unknown"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "closure-11": {
+   "expected": "not_closed",
+   "acceptable": [
+    "not_closed"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "closure-12": {
+   "expected": "closed",
+   "acceptable": [
+    "closed"
+   ],
+   "reason": "2026-10 의 화요일 6·13·20·27 → 13일이 둘째 주",
+   "check": false
+  },
+  "closure-13": {
+   "expected": "not_closed",
+   "acceptable": [
+    "not_closed"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "closure-14": {
+   "expected": "closed",
+   "acceptable": [
+    "closed"
+   ],
+   "reason": "2026-10 의 수요일 7·14·21·28 → 28일이 마지막 주",
+   "check": false
+  },
+  "closure-15": {
+   "expected": "unknown",
+   "acceptable": [
+    "unknown"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "closure-16": {
+   "expected": "closed",
+   "acceptable": [
+    "closed"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "hours-01": {
+   "expected": "within",
+   "acceptable": [
+    "within"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "hours-02": {
+   "expected": "outside",
+   "acceptable": [
+    "outside"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "hours-03": {
+   "expected": "outside",
+   "acceptable": [
+    "outside"
+   ],
+   "reason": "입장마감 17:00 뒤 17:30 시작 — 입장할 수 없다",
+   "check": false
+  },
+  "hours-04": {
+   "expected": "within",
+   "acceptable": [
+    "within"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "hours-05": {
+   "expected": "outside",
+   "acceptable": [
+    "outside"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "hours-06": {
+   "expected": "within",
+   "acceptable": [
+    "within"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "hours-07": {
+   "expected": "within",
+   "acceptable": [
+    "within"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "hours-08": {
+   "expected": "outside",
+   "acceptable": [
+    "outside"
+   ],
+   "reason": "11월=동절기 17:00 마감, 입장마감 1시간 전=16:00 → 16:30 입장 불가",
+   "check": false
+  },
+  "hours-09": {
+   "expected": "within",
+   "acceptable": [
+    "within"
+   ],
+   "reason": "10월=하절기 18:00 마감, 입장 17:00까지 → 16:30 가능",
+   "check": false
+  },
+  "hours-10": {
+   "expected": "unknown",
+   "acceptable": [
+    "unknown"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "hours-11": {
+   "expected": "unknown",
+   "acceptable": [
+    "unknown"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "hours-12": {
+   "expected": "outside",
+   "acceptable": [
+    "outside"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "hours-13": {
+   "expected": "outside",
+   "acceptable": [
+    "outside"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "hours-14": {
+   "expected": "within",
+   "acceptable": [
+    "within",
+    "unknown"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "weather-01": {
+   "expected": "indoor",
+   "acceptable": [
+    "indoor"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "weather-02": {
+   "expected": "outdoor",
+   "acceptable": [
+    "outdoor"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "weather-03": {
+   "expected": "indoor",
+   "acceptable": [
+    "indoor",
+    "unknown"
+   ],
+   "reason": "실내 위주 테마파크, 야외 구역(매직아일랜드)이 있다",
+   "check": false
+  },
+  "weather-04": {
+   "expected": "outdoor",
+   "acceptable": [
+    "outdoor"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "weather-05": {
+   "expected": "indoor",
+   "acceptable": [
+    "indoor"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "weather-06": {
+   "expected": "outdoor",
+   "acceptable": [
+    "outdoor"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "weather-07": {
+   "expected": "indoor",
+   "acceptable": [
+    "indoor"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "weather-08": {
+   "expected": "outdoor",
+   "acceptable": [
+    "outdoor"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "weather-09": {
+   "expected": "indoor",
+   "acceptable": [
+    "indoor"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "weather-10": {
+   "expected": "outdoor",
+   "acceptable": [
+    "outdoor"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "disaster-01": {
+   "expected": "no_effect",
+   "acceptable": [
+    "no_effect"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "disaster-02": {
+   "expected": "no_effect",
+   "acceptable": [
+    "no_effect"
+   ],
+   "reason": "부산 해운대 — 장소(서울 종로구) 지역이 아니다",
+   "check": false
+  },
+  "disaster-03": {
+   "expected": "no_effect",
+   "acceptable": [
+    "no_effect"
+   ],
+   "reason": "§8: 재해구분 「기타」는 반영 안 함 → 막지 않음. ★단 본문은 「경복궁 관람 전면 중단」— 실제로는 못 간다. 표를 그대로 따를지(D2) 이런 시설 중단 공지를 따로 볼지 정해야 한다. 10-06 답은 blocks",
+   "check": true
+  },
+  "disaster-04": {
+   "expected": "blocks",
+   "acceptable": [
+    "blocks"
+   ],
+   "reason": "§8: 폭염=야외 위험형, 남산공원=야외 → 막음. 10-06 답은 「자제 권고라 금지 아님」 no_effect — D2 이후 기준이 바뀌었다",
+   "check": true
+  },
+  "disaster-05": {
+   "expected": "no_effect",
+   "acceptable": [
+    "no_effect"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "disaster-06": {
+   "expected": "blocks",
+   "acceptable": [
+    "blocks",
+    "unknown"
+   ],
+   "reason": "§8: 지진=지역 위험형, 서울 전역 → 막음",
+   "check": false
+  },
+  "disaster-07": {
+   "expected": "blocks",
+   "acceptable": [
+    "blocks"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "disaster-08": {
+   "expected": "no_effect",
+   "acceptable": [
+    "no_effect"
+   ],
+   "reason": "마포구 문자 — 남산공원은 마포구가 아니다",
+   "check": false
+  },
+  "disaster-09": {
+   "expected": "no_effect",
+   "acceptable": [
+    "no_effect"
+   ],
+   "reason": "「복구가 완료」 = 해제 문자 성격 → §8 반영 안 함. ★본문에 「해제」 낱말이 없어 규칙(공유 점검)은 정전=지역 위험형으로 막는다. 해제로 볼지 확인",
+   "check": true
+  },
+  "disaster-10": {
+   "expected": "blocks",
+   "acceptable": [
+    "blocks",
+    "no_effect"
+   ],
+   "reason": "§8: 호우=지역 위험형 → 표대로면 막음. ★그러나 통제가 06~12시이고 방문은 14시 — 방문 시각엔 끝난다. 표는 시간을 보지 않는다. 10-06 답은 no_effect",
+   "check": true
+  },
+  "disaster-11": {
+   "expected": "blocks",
+   "acceptable": [
+    "blocks"
+   ],
+   "reason": "",
+   "check": false
+  },
+  "disaster-12": {
+   "expected": "no_effect",
+   "acceptable": [
+    "no_effect",
+    "unknown"
+   ],
+   "reason": "「훈련」 문자 → 반영 안 함(재난 정지와 같은 exclude_keywords)",
+   "check": false
+  }
+ }
+}
