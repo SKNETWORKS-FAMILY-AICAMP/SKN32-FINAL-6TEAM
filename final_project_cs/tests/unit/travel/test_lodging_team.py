@@ -370,7 +370,8 @@ def test_the_prompt_key_is_registrable_and_the_file_exists():
     files = list(Path("prompts/lodging").glob("interpret.v*.md"))
     assert len(files) == 1 and "lodging team" in files[0].read_text(encoding="utf-8")
     manifest = LodgingTeam.manifest
-    assert manifest.default_capability == "lodging.assist" and set(manifest.capabilities) == {"lodging.assist", "lodging.status"}
+    assert manifest.default_capability == "lodging.assist" and set(manifest.capabilities) == {"lodging.assist", "lodging.status",
+                                                                                                    "lodging.itinerary", "lodging.itinerary_question"}
 
 
 def test_a_rejected_date_is_shown_back():
@@ -451,3 +452,104 @@ def test_lodging_wishes_without_a_slot_are_named_at_the_end():
     assert result.answer.endswith("말씀하신 조건 중 아직 반영하지 못한 것: 「욕조 있는」 — 링크한 화면에서 직접 확인해 주세요.")
     result, _, _ = _run({**SEARCH, "keyword": None, "other_requests": ["욕조 있는"]}, text=text)
     assert "아직 반영하지 못한 것" in result.answer, "되묻는 답에도 적는다"
+
+
+# ── 일정 숙소 항목 — `lodging.itinerary` (2026-10-11) ─────────────────
+TRIP_ID, STAY_ID = "11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"
+
+
+def _plan_item(item_id, seq, kind, title, day, place=None, *, ends=None, **extra):
+    return {"item_id": item_id, "seq": seq, "kind": kind, "title": title, "place_id": (place or {}).get("place_id"),
+            "starts_at": f"{day}T15:00:00+09:00", "ends_at": f"{ends}T11:00:00+09:00" if ends else None,
+            "locked": False, "booking_id": None, "replaces_item_id": None, "detail": {}, "place": place, **extra}
+
+
+def _plan(stay_kind="lodging", stay_detail=None, booking_id=None):
+    hotel = {"place_id": "33333333-3333-4333-8333-333333333333", "name": "기존 호텔", "kind": "lodging",
+             "latitude": 37.5600, "longitude": 126.9850, "district": "중구"}
+    stay = _plan_item(STAY_ID, 2, stay_kind, "기존 호텔", IN, hotel, ends=OUT, booking_id=booking_id)
+    stay["detail"] = dict(stay_detail or {})
+    tower = {"place_id": "44444444-4444-4444-8444-444444444444", "name": "남산타워", "latitude": 37.5512, "longitude": 126.9882}
+    street = {"place_id": "55555555-5555-4555-8555-555555555555", "name": "이태원 거리", "latitude": 37.5345, "longitude": 126.9946}
+    return {"trip": {"trip_id": TRIP_ID, "version": 3, "party_size": 2, "customer_id": "c"},
+            "items": [_plan_item("66666666-6666-4666-8666-666666666666", 1, "activity", "남산타워", IN, tower),
+                      stay,
+                      _plan_item("77777777-7777-4777-8777-777777777777", 3, "activity", "이태원 거리", OUT, street)]}
+
+
+ITEM_STATE = {"subject_ref": {"kind": "trip", "id": TRIP_ID, "part_id": STAY_ID, "base_version": 3},
+              "interpretation": {"report": {"type": "change"}}, "request_id": "r-lodging-1"}
+
+
+def _itinerary(plan, extra_tools=None):
+    tools = {"read.itinerary": plan, "read.stay_search": STAYS, "read.stay_google": NEAR_GOOGLE, **(extra_tools or {})}
+    return _run({"task": "unclear"}, tools, text="숙소 다른 데로 바꿔줘", capability="lodging.itinerary", state=ITEM_STATE)
+
+
+def test_a_case_pointing_at_a_trip_item_is_itinerary_work_and_a_bare_trip_stays_assist():
+    assert LodgingTeam.select_capability(None, "x", {"subject_ref": {"kind": "trip", "id": TRIP_ID, "part_id": STAY_ID}}) == "lodging.itinerary"
+    assert LodgingTeam.select_capability(None, "x", {"subject_ref": {"kind": "trip", "id": TRIP_ID}}) is None
+    assert LodgingTeam.select_capability(None, "x", {}) is None
+    question = {"subject_ref": {"kind": "trip", "id": TRIP_ID, "part_id": STAY_ID},
+                "interpretation": {"report": {"type": "question"}}}
+    assert LodgingTeam.select_capability(None, "x", question) == "lodging.itinerary_question"
+    assert {"lodging.itinerary", "lodging.itinerary_question"} <= set(LodgingTeam.manifest.capabilities)
+
+
+def test_change_on_a_lodging_item_shows_three_new_options_and_remembers_them():
+    result, llm, tools = _itinerary(_plan())
+    assert llm.calls == [], "일정 항목에서 읽는다 — 모델을 부르지 않는다"
+    searches = [arguments for name, arguments in tools.calls if name == "read.booking_search_stays"]
+    assert searches == [{"keyword": "중구", "check_in": IN, "check_out": OUT, "adults": 2, "children": None,
+                         "domestic": True, "size": 20}]
+    assert not [name for name, _ in tools.calls if name == "read.stay_detail"], "새 후보는 목록 값만 — 상세를 부르지 않는다"
+    assert result.outcome == "completed"
+    answer = result.answer
+    assert answer.startswith("기존 호텔 대신 볼 수 있는 숙소예요(중구 · " + IN + "~" + OUT + " · 성인 2명):")
+    assert "1. 해밀톤 호텔 — 1박 188,597원 · 평점 4.0/5(후기 1,009) · 마이리얼트립: https://accommodation.myrealtrip.com/union/products/11?" in answer
+    assert "2. 둘째 호텔 — 1박 150,000원 · 평점 없음 · 마이리얼트립:" in answer
+    assert "3. 가까운 호텔 — 1박 120,000원 · 평점 4.2/5(후기 20) · 일정 가운데에서 " in answer and "구글 호텔: https://near.example" in answer
+    (proposal,) = result.action_proposals
+    assert proposal.action_type == "itinerary.apply" and proposal.approval_required is False
+    arguments = proposal.arguments
+    assert arguments["reason"] == "customer_request" and arguments["base_version"] == 3
+    (replaced,) = arguments["replacements"]
+    assert replaced["item_id"] == STAY_ID
+    new = replaced["item"]
+    assert new["kind"] == "lodging" and new["title"] == "기존 호텔" and new["place_id"] == "33333333-3333-4333-8333-333333333333", "숙소는 그대로"
+    assert new["detail"]["shown"] == ["해밀톤 호텔", "둘째 호텔", "가까운 호텔"]
+    assert [pick["key"] for pick in new["detail"]["candidates"]] == ["myrealtrip:11", "myrealtrip:12", "google:가까운호텔"]
+    assert result.decisions[0]["lodging_options"] == ["해밀톤 호텔", "둘째 호텔", "가까운 호텔"]
+
+
+def test_change_again_skips_what_was_already_shown():
+    result, _, _ = _itinerary(_plan(stay_detail={"shown": ["해밀톤 호텔", "둘째 호텔", "가까운 호텔"]}))
+    answer = result.answer
+    assert "앞서 보여 드린 3곳은 뺐어요" in answer
+    assert "해밀톤 호텔" not in answer and "둘째 호텔" not in answer and "가까운 호텔" not in answer
+    assert "1. 먼 호텔" in answer and "2. 좌표 없는 호텔" in answer
+    new = result.action_proposals[0].arguments["replacements"][0]["item"]
+    assert new["detail"]["shown"] == ["해밀톤 호텔", "둘째 호텔", "가까운 호텔", "먼 호텔", "좌표 없는 호텔"]
+
+
+def test_when_nothing_new_is_left_it_widens_once_then_says_so_without_changing_the_plan():
+    every = ["해밀톤 호텔", "둘째 호텔", "가까운 호텔", "먼 호텔", "좌표 없는 호텔"]
+    result, _, tools = _itinerary(_plan(stay_detail={"shown": every}))
+    sizes = [arguments["size"] for name, arguments in tools.calls if name == "read.booking_search_stays"]
+    assert sizes == [20, 50]
+    assert result.outcome == "completed" and result.action_proposals == []
+    assert "기존 호텔 말고 더 보여 드릴 숙소를 찾지 못했어요" in result.answer and "앞서 보여 드린 5곳 제외" in result.answer
+    assert "일정은 그대로 두었어요." in result.answer and "같은 조건으로 다른 곳에서 보기" in result.answer
+
+
+def test_a_booked_lodging_is_never_changed_and_nothing_is_searched():
+    result, _, tools = _itinerary(_plan(booking_id="88888888-8888-4888-8888-888888888888"))
+    assert "이미 예약하신 숙소라 바꾸지 않았어요" in result.answer
+    assert result.action_proposals == [] and result.decisions[0]["itinerary"] == "booked_kept"
+    assert [name for name, _ in tools.calls] == ["read.itinerary"]
+
+
+def test_an_item_of_another_kind_is_not_lodging_work():
+    result, _, tools = _itinerary(_plan(stay_kind="activity"))
+    assert result.outcome == "escalated" and result.failure_code == "target_kind_mismatch"
+    assert [name for name, _ in tools.calls] == ["read.itinerary"]

@@ -19,12 +19,22 @@
   가운데를 잡는다(그 기간에 좌표 있는 장소가 없으면 일정 전체). 마이리얼트립 줄에는 상세 좌표로 그 가운데까지 거리를 붙이고(순서는
   마이리얼트립 그대로 — 더 부르지 않으려고), 구글 호텔 줄은 목록에 좌표가 오므로 **가까운 순**으로 고른다. 장소가 `SPREAD_KM` 보다
   넓게 흩어져 있으면(여러 도시 등) 가운데가 뜻이 없어 거리를 쓰지 않고 그렇다고 적는다. 거리는 직선거리다(이동 시간 아님).
+- `[2026-10-11]` **일정 숙소 항목(`lodging.itinerary`)** — 팀장 안내(「lodging.itinerary 로 일감 들어갈 거에요」)와 사용자 결정에 따라
+  식당 · 활동 팀과 같은 공용 부품(`_shared/itinerary_team.ItineraryWork`)을 쓴다. 여행 Case 가 **숙소 항목**(`subject_ref.part_id`)을 가리키면
+  이 일감이 된다. 문장을 모델로 해석하지 않고 항목 · 여행에서 읽는다(체크인 = 항목 시작 날, 체크아웃 = 항목 끝 날, 인원 = 여행 인원,
+  지역 = 항목 `detail.area` → 장소 `district` → 장소 이름).
+  - 이미 예약한 숙소(`booking_id` · `locked` · `detail.booked`)는 바꾸지 않는다(사용자 결정 10-11 「이미 예약한 숙소는 바꿀 일이 없다」).
+  - 「바꿔 줘」 = 보여 준 후보가 마음에 안 든다 → **새 후보 3곳**(앞서 보여 준 곳 · 지금 항목은 뺀다). 다시 말하면 또 새 3곳.
+    보여 준 곳은 항목 `detail.shown` 에 남긴다 — 그러려고 숙소는 그대로 두고 상세만 바꾼 `itinerary.apply`(고객 요청, 판정 문 없음)를 낸다.
+    일정 판 번호가 하나 오르고 알림(이 답)이 한 번 나간다. 같은 자리에 지금 후보(`detail.candidates`)도 둔다.
+  - 새 후보가 없으면 목록을 더 넓게(`ALTERNATE_SIZES`) 받아 다시 찾고, 그래도 없으면 그렇다고 답한다(다른 곳 링크와 함께).
+  - 일정에 숙소 항목이 생기는 것은 우리 에이전트가 반영될 때다(사용자 10-11) — 그 전까지 이 길은 가짜 일정 시험으로만 돈다.
 - 설문(`constraints.survey`)에는 숙소 문항(예산 · 숙소 유형)이 없다(`components/planning/survey.py` 2026-09-24.v1). 그래서 설문은
   아직 숙소 고르기에 쓰지 않는다 — 문항이 생기면 연결한다.
 """
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import logging
 from math import asin, cos, radians, sin, sqrt
 from typing import Any
@@ -33,6 +43,8 @@ from zoneinfo import ZoneInfo
 from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
 
 from app.domains.travel_ops.instances._shared._base import TravelTeamBase
+from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TOOLS, ItineraryWork
+from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, with_request
 from .interpret import Interpretation, InterpretationInvalid, ask, ground, model_context, needs, parse, settle_years
 
 logger = logging.getLogger(__name__)
@@ -49,6 +61,10 @@ SEARCH_SIZE, NAME_SIZE = 20, 5
 GOOGLE_SHOWN = 3
 #: 일정 장소가 가운데에서 이보다 멀리 있으면 가운데로 거리를 재지 않는다(여러 도시 · 당일치기 먼 곳). 우리가 고른 값
 SPREAD_KM = 30.0
+#: 일정 숙소 항목의 「바꿔 줘」 — 새 후보가 없으면 목록을 이만큼 더 받아 다시 찾는다(첫 값은 보통 찾기와 같다). 우리가 고른 값
+ALTERNATE_SIZES = (SEARCH_SIZE, 50)
+#: 한국 안 좌표인지(국내 · 해외 검색을 고른다) — 대략의 경계. 우리가 고른 값
+_KOREA = ((33.0, 38.7), (124.5, 131.0))
 
 
 def _won(value: Any) -> str:
@@ -102,28 +118,99 @@ def _same_name(left: str, right: str) -> bool:
     return "".join(left.split()).casefold() == "".join(right.split()).casefold()
 
 
-class LodgingTeam(TravelTeamBase):
+def _key(name: str) -> str:
+    return "".join(str(name).split()).casefold()
+
+
+def _points(items: list[Any], *, skip: Any = None) -> list[dict[str, Any]]:
+    """일정 항목(`Item`) → 좌표 있는 장소(날 · 위도 · 경도). 숙소 항목 자신은 뺀다(가운데를 숙소로 끌지 않게)."""
+    out = []
+    for item in items:
+        where = _coords(item.place)
+        if where is None or item.item_id == skip:
+            continue
+        out.append({"day": item.starts_at.astimezone(SEOUL).date().isoformat(), "latitude": where[0], "longitude": where[1],
+                    "title": item.title})
+    return out
+
+
+def _fresh_picks(booked: dict[str, Any], exclude: set[str], center: dict[str, Any] | None,
+                 dates: dict[str, str], party: dict[str, Any]) -> list[dict[str, Any]]:
+    """새 후보 `SHOWN` 곳 — 마이리얼트립 목록(제공처 순서, 가격 있는 곳만 · 상세는 부르지 않는다) 먼저, 모자라면 구글 호텔
+    (숙박 공유 · 가격 없음 · 링크 없음 제외, 일정 가운데가 쓸 만하면 가까운 순). 이름이 `exclude` 에 있으면 뺀다."""
+    picks: list[dict[str, Any]] = []
+    taken = set(exclude)
+    for stay in ((booked.get("myrealtrip") or {}).get("stays") or []):
+        if len(picks) >= SHOWN:
+            break
+        if stay.get("price_per_night") is None or _key(stay["name"]) in taken:
+            continue
+        taken.add(_key(stay["name"]))
+        picks.append({"key": f"myrealtrip:{stay['gid']}", "name": stay["name"], "source": "마이리얼트립",
+                      "price_per_night": stay.get("price_per_night"), "rating": stay.get("rating") or None,
+                      "review_count": stay.get("review_count"), "distance_km": None,
+                      "link": _list_link(stay["gid"], dates, party)})
+    google = [stay for stay in ((booked.get("google") or {}).get("stays") or [])
+              if stay.get("type") != "vacation rental" and stay.get("price_per_night") is not None and stay.get("link")]
+    if center and center["usable"]:
+        google.sort(key=lambda stay: (_distance(center, stay) is None, _distance(center, stay) or 0.0))
+    for stay in google:
+        if len(picks) >= SHOWN:
+            break
+        if _key(stay["name"]) in taken:
+            continue
+        taken.add(_key(stay["name"]))
+        picks.append({"key": f"google:{_key(stay['name'])}", "name": stay["name"], "source": "구글 호텔",
+                      "price_per_night": stay.get("price_per_night"), "rating": stay.get("rating") or None,
+                      "review_count": stay.get("review_count"), "distance_km": _distance(center, stay),
+                      "link": stay["link"]})
+    return picks
+
+
+def _pick_line(number: int, pick: dict[str, Any]) -> str:
+    rating = (f"평점 {pick['rating']}/5" + (f"(후기 {pick['review_count']:,})" if isinstance(pick.get("review_count"), int) and pick["review_count"] else "")
+              if pick.get("rating") else "평점 없음")
+    far = f" · 일정 가운데에서 {pick['distance_km']}km" if pick.get("distance_km") is not None else ""
+    return f"{number}. {pick['name']} — 1박 {_won(pick.get('price_per_night'))} · {rating}{far} · {pick['source']}: {pick['link']}"
+
+
+class LodgingTeam(ItineraryWork, TravelTeamBase):
     manifest = TeamManifest(
         team_id="lodging",
         display_name="Lodging Team",
         contract_name="a_cop.team_task",
         supported_contract_versions=["1.0"],
-        capabilities=["lodging.assist", "lodging.status"],
+        capabilities=["lodging.assist", "lodging.status",
+                      "lodging.itinerary",            # ★`[2026-10-11]` 일정 숙소 항목 — 새 후보 3곳 · 예약한 숙소는 그대로
+                      "lodging.itinerary_question"],  # 공용 부품이 질문 Case 를 이리로 보낸다(규정을 읽고, 없으면 사람에게)
         accepted_case_types=["lodging"],
         # 정책 문서를 쓰지 않는다 — 선언하면 문서 0건으로 degraded 가 된다(`locked` 의 2026-09-22 주석과 같은 까닭)
         required_context=["case_state", "db_facts", "history"],
-        allowed_tools=["read.booking", "read.itinerary", "read.stay_search", "read.stay_detail", "read.booking_search_stays"],
+        allowed_tools=["read.booking", "read.itinerary", "read.stay_search", "read.stay_detail", "read.booking_search_stays",
+                       "read.policy", *[name for name in ITINERARY_TOOLS if name != "read.itinerary"]],
         knowledge_scope=["lodging"],
-        max_steps=7,                                  # 일정 1 + booking 1 + 상세 DETAIL_CALLS(2) + 여유(내 숙소 갈래 등)
+        max_steps=8,                                  # 일정 1 + booking 1 + 상세 DETAIL_CALLS(2) + 여유(내 숙소 갈래 · 일정 항목 갈래의 넓혀 찾기 등)
         active=True,
         implementation_revision="2026-10-07",
         default_capability="lodging.assist",
     )
 
+    @staticmethod
+    def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
+        """여행 Case 가 **일정 항목을 가리킬 때만**(`part_id`) 일정 관리로 — 식당 팀과 같은 부품. 항목 없이 여행만 붙은 Case 는
+        지금처럼 문장 해석(`lodging.assist`)으로 간다(사용자 결정 10-11 「숙소 항목이 없으면 숙소 에이전트를 안 켠다」 — 항목을 가리키지
+        않는 문장까지 일정 관리로 보내지 않는다)."""
+        ref = (state or {}).get("subject_ref") or {}
+        if not ref.get("part_id"):
+            return None
+        return ItineraryWork.itinerary_route("lodging", state)
+
     async def execute(self, task: TeamTask) -> TeamResult:
         blocked = self._guard(task)
         if blocked is not None:
             return blocked
+        if task.capability in (self.itinerary_capability, self.question_capability):
+            return await self.run_itinerary(task)
         seen: set[str] = set()
         if task.capability == "lodging.status":
             return self._status(task, seen)
@@ -280,6 +367,97 @@ class LodgingTeam(TravelTeamBase):
                   f"{dates['check_in']}~{dates['check_out']} 숙박으로 확인했습니다. 숙소 페이지: {detail.get('link') or '링크 없음'}\n"
                   "위치는 마이리얼트립에 등록된 값입니다. 일정에는 아직 넣지 않았습니다.")
         return self._respond(task, evidence, {**decision, "my_stay": {**stay, **dates}}, answer)
+
+    # ── 일정 숙소 항목 (`lodging.itinerary`, 2026-10-11) ─────────────
+    def _change(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:
+        """「바꿔 줘」 — 공용 부품(`ItineraryWork._change`, 들고 있던 다른 안으로 바꾸기)을 숙소용으로 덮는다.
+
+        숙소는 예약을 우리가 하지 않으므로 **바꾸지 않고 새 후보 3곳**을 보여 준다. 보여 준 곳은 항목 상세에 남겨 다음에 빼고 찾는다.
+        """
+        ref, trip, items = ctx["ref"], ctx["trip"], ctx["items"]
+        target = ref.get("part_id") or ref.get("recent_part_id")
+        item = next((i for i in items if str(i.item_id) == str(target)), None) if target else None
+        if item is None:
+            return self._unknown(task, "숙소 일정 항목", ctx["evidence"])
+        if item.kind != self.manifest.team_id:
+            return self._escalate(task, "target_kind_mismatch", ctx["evidence"],
+                                  warnings=[f"{item.kind} 항목은 {self.manifest.team_id} 팀 일이 아니다"])
+        if item.locked or item.booking_id or item.detail.get("booked"):
+            return self._result(task, outcome="completed", confidence=1.0, evidence=ctx["evidence"],
+                                next_action=NextAction.RESPOND,
+                                answer=f"{item.title}은(는) 이미 예약하신 숙소라 바꾸지 않았어요. 다른 숙소를 원하시면 예약하신 곳에서 "
+                                       "먼저 취소 조건을 확인해 주세요.",
+                                decisions=[{"itinerary": "booked_kept", "item": item.title}])
+        query = self._stay_query(item, trip)
+        if query is None:
+            return self._unknown(task, "숙소 항목의 날짜 · 인원 · 지역", ctx["evidence"])
+        dates = {"check_in": query["check_in"], "check_out": query["check_out"]}
+        party = {"adults": query["adults"], "children": None}
+        center = trip_center(_points(items, skip=item.item_id), date.fromisoformat(query["check_in"]),
+                             date.fromisoformat(query["check_out"]))
+        shown = [str(name) for name in item.detail.get("shown") or []]
+        exclude = {_key(name) for name in [*shown, item.title, (item.place or {}).get("name") or ""] if name}
+        picks: list[dict[str, Any]] = []
+        booked: dict[str, Any] = {}
+        sizes_used: list[int] = []
+        for size in ALTERNATE_SIZES:
+            sizes_used.append(size)
+            booked = self._read(task, "read.booking_search_stays", {
+                "keyword": query["keyword"], **dates, **party, "domestic": query["domestic"], "size": size}, ctx["seen"]) or {}
+            ctx["evidence"] = self._evidence(task, source_id=f"read.booking_search_stays:{size}",
+                                             claim="숙소 새 후보(booking: 마이리얼트립 · 구글 호텔)", value=booked or None,
+                                             base=ctx["evidence"])
+            picks = _fresh_picks(booked, exclude, center, dates, party)
+            if picks or not booked:
+                break
+        links = booked.get("elsewhere") or []
+        record = {"itinerary": "lodging_options", "item": item.title, "query": query, "shown_before": len(shown),
+                  "sizes": sizes_used, "options": [pick["name"] for pick in picks]}
+        if not picks:
+            if not booked:
+                return self._unknown(task, "숙소 검색 결과", ctx["evidence"])
+            lines = [f"{item.title} 말고 더 보여 드릴 숙소를 찾지 못했어요({query['keyword']} · {dates['check_in']}~{dates['check_out']}"
+                     + (f", 앞서 보여 드린 {len(shown)}곳 제외" if shown else "") + "). 일정은 그대로 두었어요."]
+            if links:
+                lines += ["같은 조건으로 다른 곳에서 보기(가격은 그 사이트에서 확인):",
+                          *[f"   · {link['name']}: {link['url']}" for link in links]]
+            return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
+                                next_action=NextAction.RESPOND, answer="\n".join(lines), decisions=[record])
+        head = (f"{item.title} 대신 볼 수 있는 숙소예요({query['keyword']} · {dates['check_in']}~{dates['check_out']} · 성인 {query['adults']}명"
+                + (f", 앞서 보여 드린 {len(shown)}곳은 뺐어요" if shown else "") + "):")
+        lines = [head, *(_pick_line(n, pick) for n, pick in enumerate(picks, start=1)), *self._center_line(center)]
+        lines.append("가격과 객실은 조회 시점 기준이에요. 예약은 링크한 페이지에서 직접 하시면 돼요. 마음에 안 드시면 다시 말씀해 주세요 — 새 후보를 찾아 드릴게요.")
+        answer = "\n".join(lines)
+        detail = {**item.detail, "candidates": picks, "shown": [*shown, *(pick["name"] for pick in picks)],
+                  "query": query}
+        cause = with_request({"category": "customer_request", "type": "lodging_options", "from": item.title,
+                              "message": task.input_text}, task.context.current_state.get("request_id"))
+        replacement = item.replaced_by(place=None, title=item.title, detail=detail)
+        change = ItineraryChange(reason="customer_request", causes=[cause],
+                                 notice={"text": answer, "language": "ko", "causes": [cause],
+                                         "options": [pick["name"] for pick in picks], "replay": False},
+                                 replacements={item.item_id: replacement},
+                                 summary={"lodging_options": [pick["name"] for pick in picks], "shown_total": len(detail["shown"])})
+        return self.settle(task, ctx, change)
+
+    @staticmethod
+    def _stay_query(item: Any, trip: dict[str, Any]) -> dict[str, Any] | None:
+        """숙소 항목 · 여행 → 검색 조건. 하나라도 모르면 `None`(지어내지 않는다)."""
+        check_in = item.starts_at.astimezone(SEOUL).date()
+        check_out = item.ends_at.astimezone(SEOUL).date() if item.ends_at else None
+        if check_out is None or check_out <= check_in:
+            check_out = check_in + timedelta(days=1)   # 끝이 없거나 같은 날이면 1박으로 본다 — 답과 기록에 날짜가 그대로 보인다
+        place = item.place or {}
+        keyword = item.detail.get("area") or place.get("district") or place.get("name")
+        adults = trip.get("party_size")
+        if not keyword or not isinstance(adults, int) or adults < 1:
+            return None
+        where = _coords(place)
+        domestic = item.detail.get("domestic")
+        if domestic is None and where is not None:
+            domestic = _KOREA[0][0] <= where[0] <= _KOREA[0][1] and _KOREA[1][0] <= where[1] <= _KOREA[1][1]
+        return {"keyword": str(keyword), "check_in": check_in.isoformat(), "check_out": check_out.isoformat(),
+                "adults": adults, "domestic": domestic}
 
     # ── 부품 ────────────────────────────────────────────────────
     @staticmethod
