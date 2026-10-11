@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import type { Translate } from "@/lib/i18n";
-import { pushToast, type BusToast } from "@/lib/toast-bus";
-import { usePlanIntroToast } from "./use-plan-intro-toast";
+import { onToast, pushToast, type BusToast } from "@/lib/toast-bus";
+import { usePlanIntroToast, useReadingToastHandoff } from "./use-plan-intro-toast";
 
 const hooks = vi.hoisted(() => ({ refs: [] as { current: boolean }[], effects: [] as { deps?: readonly unknown[]; cleanup?: () => void }[], cursor: 0, pending: [] as (() => void)[] }));
 vi.mock("react", () => ({
@@ -24,6 +24,25 @@ afterEach(() => {
   hooks.effects.forEach((effect) => effect.cleanup?.());
   hooks.refs = []; hooks.effects = []; hooks.pending = []; hooks.cursor = 0;
   vi.restoreAllMocks();
+});
+it("hands the reading-screen notice and undo action to the result owner at the transition", () => {
+  const receive=vi.fn(), hide=vi.fn(), undo=vi.fn();
+  const notice={toast:{text:"Course Keeper is off.",action:{label:"Undo",run:undo}}};
+  const drawHandoff=(reading:boolean)=>{
+    hooks.cursor=0;
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Same lifecycle harness as draw above.
+    useReadingToastHandoff(reading,notice,hide);
+    hooks.pending.splice(0).forEach(run=>run());
+  };
+  drawHandoff(true);expect(hide).not.toHaveBeenCalled();
+  const stop=onToast(receive);
+  try {
+    drawHandoff(false);
+    expect(receive).toHaveBeenCalledExactlyOnceWith(notice.toast);
+    receive.mock.calls[0][0].action.run();expect(undo).toHaveBeenCalledOnce();
+    expect(hide).toHaveBeenCalledOnce();
+    drawHandoff(false);expect(receive).toHaveBeenCalledTimes(1);
+  } finally {stop();}
 });
 it("shows the normal completed-plan introduction once", () => {
   const show = vi.fn();

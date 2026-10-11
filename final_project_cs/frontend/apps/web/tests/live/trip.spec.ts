@@ -373,6 +373,7 @@ test("신호 연결이 끊겼다 다시 붙으면 그 사이 바뀐 것을 전�
   // changed while the line is down — no bell reaches the screen for this one
   await server.scenario({ proposals: "open" });
   expect(await server.hangup()).toBeGreaterThan(0);
+  await expect.poll(async () => (await server.received("GET", "/events")).length).toBeGreaterThan(1);
   await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toContainText("대체 식당 A", { timeout: 10_000 });
   expect((await server.received("GET", "/events")).length).toBeGreaterThan(1);
 });

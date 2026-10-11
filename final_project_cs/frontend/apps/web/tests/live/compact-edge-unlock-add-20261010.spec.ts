@@ -1,7 +1,7 @@
 import {expect,test,type Page} from '@playwright/test';
 import {mkdir} from 'node:fs/promises';
 import {mockServer,noHorizontalScroll} from './helpers';
-import {card,head,openFinished,INTAKE} from './plan-check-kit';
+import {head,openFinished,INTAKE} from './plan-check-kit';
 import {useMapTiles} from './capture-map-tiles';
 
 const shots=process.env.COMPACT_EDGE_SHOTS;
@@ -53,10 +53,15 @@ for(const width of [375,1280]){
     for(let i=0;i<4;i++)await page.getByRole('button',{name:'목록 높이 바꾸기'}).press('ArrowUp');
     const seam=page.locator('[data-insert-near]'),add=seam.getByRole('button');await expect(add).toBeVisible();
     await expect(add.locator("svg")).toBeVisible();
-    const button=(await add.boundingBox())!,first=(await card(page,'경복궁 관람').boundingBox())!;
-    expect(Math.abs(button.x+button.width/2-first.x-first.width/2)).toBeLessThan(1);expect(button.height).toBe(44);expect(button.width).toBe(44);const seamBox=(await seam.boundingBox())!;
     await expect(seam).toHaveAttribute('data-insert-start');
-    expect(seamBox.height).toBe(48);expect(button.y+button.height/2).toBeCloseTo(seamBox.y+24,1);
+    // 목록 높이 변경과 scroll/ResizeObserver가 끝난 뒤 같은 프레임의 좌표끼리 비교한다.
+    await expect.poll(()=>seam.evaluate((element)=>{
+      const seamBox=element.getBoundingClientRect(),button=element.querySelector('button')!.getBoundingClientRect();
+      const first=element.closest('[class*=sheetBody]')!.querySelector('article')!.getBoundingClientRect();
+      return {width:button.width,height:button.height,seamHeight:seamBox.height,
+        centredX:Math.abs(button.x+button.width/2-first.x-first.width/2)<1,
+        centredY:Math.abs(button.y+button.height/2-seamBox.y-24)<.05};
+    })).toEqual({width:44,height:44,seamHeight:48,centredX:true,centredY:true});
     const label=await add.getAttribute('aria-label');await capture(page,`05-add-placement-${width}`);
     await add.click();await expect(page.getByRole('region',{name:'일정 추가 화면',exact:true})).toBeVisible();
     await page.getByRole('button',{name:'일정 추가 취소',exact:true}).click();await expect(page.getByRole('button',{name:label!,exact:true})).toBeFocused();

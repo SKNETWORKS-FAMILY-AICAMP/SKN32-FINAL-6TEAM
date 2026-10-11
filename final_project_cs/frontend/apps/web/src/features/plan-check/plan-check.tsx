@@ -23,7 +23,7 @@ import { PreviewHint, ResultFooter, StopEditor, TripIssues, type Registration } 
 import { dampedScrollTo } from "@/lib/damped-scroll";
 import type { MoveOptions, MoveOptionMode } from "@/lib/live/move-options";
 import { moveToast } from "./map-description";
-import { usePlanIntroToast } from "./use-plan-intro-toast";
+import { usePlanIntroToast, useReadingToastHandoff } from "./use-plan-intro-toast";
 import { useFollowScroll } from "./use-follow-scroll";
 import { useQuietDayStrip } from "./use-quiet-day-strip";
 import { usePullPastEnd } from "./use-pull-past-end";
@@ -170,6 +170,8 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, readingExt
   const onReading = view.stage === "received" || view.stage === "reading" || Boolean(readingExtras);
   // The reading screen owns one notice; the header hands notices to this owner.
   useEffect(() => onReading ? onToast(showNotice) : undefined, [onReading, showNotice]);
+  // 읽기 판이 결과 판으로 바뀌어도 바로 누른 머리줄 안내와 되돌리기 동작을 새 소유자에게 넘긴다.
+  useReadingToastHandoff(onReading, shownNotice, hideNotice);
   const notified = useRef(new Set<string>());
   const noticeKey = notice ? JSON.stringify([notice.text, notice.sub, notice.note]) : null;
   useEffect(() => {
