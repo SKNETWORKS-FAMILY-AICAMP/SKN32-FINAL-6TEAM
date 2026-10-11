@@ -184,11 +184,14 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                       "lodging.itinerary",            # ★`[2026-10-11]` 일정 숙소 항목 — 새 후보 3곳 · 예약한 숙소는 그대로
                       "lodging.itinerary_question"],  # 공용 부품이 질문 Case 를 이리로 보낸다(규정을 읽고, 없으면 사람에게)
         accepted_case_types=["lodging"],
-        # 정책 문서를 쓰지 않는다 — 선언하면 문서 0건으로 degraded 가 된다(`locked` 의 2026-09-22 주석과 같은 까닭)
-        required_context=["case_state", "db_facts", "history"],
+        # ★`[2026-10-11]` 식당 · 활동 팀과 같게 — `policy` 를 선언하고 **규정 질문만** 규정을 읽게 한다. 찾기 · 예약 조회 · 일정 숙소 항목은
+        #   규정 검색 결과로 판단하지 않으므로 면제(`policy_optional_capabilities`). 전에는 `lodging` scope 에 문서가 0건이라 선언하지 않았다
+        #   (`locked` 의 2026-09-22 주석) — 이제 scope 를 여행 문서가 있는 취소 · 이용 조건으로 둔다(숙소 전용 문서는 아직 없다).
+        required_context=["case_state", "policy", "db_facts", "history"],
+        policy_optional_capabilities=["lodging.assist", "lodging.status", "lodging.itinerary"],
         allowed_tools=["read.booking", "read.itinerary", "read.stay_search", "read.stay_detail", "read.booking_search_stays",
-                       "read.policy", *[name for name in ITINERARY_TOOLS if name != "read.itinerary"]],
-        knowledge_scope=["lodging"],
+                       "read.policy", "read.booking_terms", *[name for name in ITINERARY_TOOLS if name != "read.itinerary"]],
+        knowledge_scope=["travel_cancellation", "travel_access"],
         max_steps=8,                                  # 일정 1 + booking 1 + 상세 DETAIL_CALLS(2) + 여유(내 숙소 갈래 · 일정 항목 갈래의 넓혀 찾기 등)
         active=True,
         implementation_revision="2026-10-07",

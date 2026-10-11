@@ -494,6 +494,11 @@ def test_a_case_pointing_at_a_trip_item_is_itinerary_work_and_a_bare_trip_stays_
                 "interpretation": {"report": {"type": "question"}}}
     assert LodgingTeam.select_capability(None, "x", question) == "lodging.itinerary_question"
     assert {"lodging.itinerary", "lodging.itinerary_question"} <= set(LodgingTeam.manifest.capabilities)
+    # 식당 · 활동과 같게 — 규정 질문만 규정을 읽고, 나머지는 규정 검색 결과에 막히지 않는다
+    manifest = LodgingTeam.manifest
+    assert "policy" in manifest.required_context
+    assert set(manifest.policy_optional_capabilities) == {"lodging.assist", "lodging.status", "lodging.itinerary"}
+    assert {"read.policy", "read.booking_terms"} <= set(manifest.allowed_tools)
 
 
 def test_change_on_a_lodging_item_shows_three_new_options_and_remembers_them():
