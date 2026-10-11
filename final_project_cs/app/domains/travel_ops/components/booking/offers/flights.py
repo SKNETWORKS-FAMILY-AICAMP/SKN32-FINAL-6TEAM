@@ -10,11 +10,15 @@
   - 왕복은 Ignav 를 부르지 않는다(사용자 결정 2026-10-10) — ☆13:41 · 13:45 playdata ICN→NRT 왕복: Ignav 가 41.9~42.3초(전체의 90% 넘게)
     걸렸고, 준 링크가 둘 다 가는 편만 예약하는 주소였다(`TripType=OneWay`). 묶음도 가는 편 · 오는 편 항공사가 달랐다.
   - 마이리얼트립이 429 뒤 쉬는 중이면 어댑터가 `cooldown_seconds` 표시만 준다 — 결과가 아니니 `resting` 으로 센다.
+  - 소스는 **동시에** 부른다(`[2026-10-11]`) — 전체 시간이 세 소스의 합이 아니라 가장 느린 소스(대개 Ignav)만큼이 되게.
+    ☆2026-10-11 16:57 playdata 인천→나리타 편도 2명: 전체 26.0초 = Ignav 18.7 · 마이리얼트립 1.5 · 구글 2.0 을 차례로 부른 합에 가까웠다.
+    결과 · 상태 · 묶는 순서는 전과 같다(마이리얼트립 → Ignav → 구글).
   - 구글 항공권 왕복은 편 목록 대신 왕복 최저가 참고(`round_trip_lowest`)와 결과 페이지만 온다 — `reference` 로 센다.
 - 결제 · 예약은 하지 않는다. 판매처 링크만 준다. 가격은 조회 시점 참고값이다(어느 소스도 정확성을 보장하지 않는다).
 """
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, date, datetime
 from typing import Any
 
@@ -149,7 +153,7 @@ def search_flights(travel: Any, *, origin: str, destination: str, depart_date: s
                    domestic: bool | None = None, direct_only: bool | None = None, cabin: str | None = None,
                    max_results: int = 100, adults: int | None = None, children: int | None = None,
                    infants: int | None = None) -> dict[str, Any]:
-    """항공편 비교 한 번. 소스를 차례로 부르고(마이리얼트립 → Ignav → 구글 항공권) 결과를 묶어 돌려준다.
+    """항공편 비교 한 번. 소스를 동시에 부르고 결과를 마이리얼트립 → Ignav → 구글 항공권 순으로 묶어 돌려준다.
 
     돌려주는 것: `options`(같은 편끼리 묶은 편, 편마다 판매처별 `offers` · `best`), `sources`(소스별 `status` — ok · failed · resting ·
     skipped · reference), `elsewhere`(다른 곳 검색 링크), `confirmed_at`. 소스가 하나도 결과를 못 주면 `options` 가 비고 상태로 알 수 있다.
@@ -160,14 +164,19 @@ def search_flights(travel: Any, *, origin: str, destination: str, depart_date: s
     arguments = {key: value for key, value in query.items() if value is not None}
     raw: dict[str, dict[str, Any] | None] = {}
     sources: dict[str, dict[str, Any]] = {}
-    for name, slot in SLOTS.items():
-        adapter = getattr(travel, slot, None) if travel is not None else None
+    adapters = {name: getattr(travel, slot, None) if travel is not None else None for name, slot in SLOTS.items()}
+    calls = {name: adapter for name, adapter in adapters.items()
+             if adapter is not None and not (name == "ignav" and return_date)}
+    with ThreadPoolExecutor(max_workers=max(len(calls), 1), thread_name_prefix="booking-flights") as pool:
+        futures = {name: pool.submit(adapter.flight_search, **arguments) for name, adapter in calls.items()}
+        got_by_name = {name: future.result() for name, future in futures.items()}
+    for name in SLOTS:
         if name == "ignav" and return_date:
             sources[name] = {"status": "skipped", "reason": "round_trip"}
             raw[name] = None
             continue
-        got = adapter.flight_search(**arguments) if adapter is not None else None
-        sources[name] = _status(got, absent=adapter is None)
+        got = got_by_name.get(name)
+        sources[name] = _status(got, absent=adapters[name] is None)
         raw[name] = got if sources[name]["status"] == "ok" else None
     options = merge([(name, (raw[name] or {}).get("flights") or []) for name in SLOTS])
     links = elsewhere(origin=origin, destination=destination, depart_date=date.fromisoformat(depart_date),

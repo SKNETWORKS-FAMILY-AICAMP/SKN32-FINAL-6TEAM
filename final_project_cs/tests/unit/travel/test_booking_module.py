@@ -122,3 +122,24 @@ def test_the_tools_are_absent_without_sources():
     toolbox.travel = TravelSources()
     found = toolbox.booking_search_stays(None, keyword="명동", check_in="2026-11-06", check_out="2026-11-09")
     assert found["sources"] == {"myrealtrip": {"status": "failed"}, "google": {"status": "failed"}}
+
+
+def test_sources_are_called_at_the_same_time():
+    """`[2026-10-11]` 소스를 동시에 부른다 — 전체 시간 ≈ 가장 느린 소스. ☆16:57 playdata 26.0초 = Ignav 18.7 + 마이리얼트립 1.5 + 구글 2.0 쯤."""
+    import threading
+    import time
+
+    started = threading.Barrier(3, timeout=2)
+
+    class Slow(Stub):
+        def flight_search(self, **arguments):
+            started.wait()                            # 셋이 동시에 들어와야 지나간다(차례로 부르면 2초 뒤 BrokenBarrierError)
+            time.sleep(0.2)
+            return super().flight_search(**arguments)
+
+    travel = SimpleNamespace(travel_search=Slow(MRT), flight_offers=Slow(IGNAV), flight_google=Slow(None))
+    begun = time.perf_counter()
+    found = search_flights(travel, origin="ICN", destination="NRT", depart_date="2026-10-20", adults=1, domestic=False)
+    assert time.perf_counter() - begun < 0.5
+    assert [offer["source"] for offer in found["options"][0]["offers"]] == ["ignav", "myrealtrip"]
+    assert found["sources"]["google"] == {"status": "failed"}
