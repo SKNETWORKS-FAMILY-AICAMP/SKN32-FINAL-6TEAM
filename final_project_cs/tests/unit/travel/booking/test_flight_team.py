@@ -559,6 +559,30 @@ def test_the_booking_link_skips_a_results_page_and_says_why():
     assert _booking_note(only_page, 2).startswith(" — 이 편은 검색 결과 페이지만 있어요. 그 화면에서 이스타항공 ZE607 13:10 편을 골라")
 
 
+def _legrun_with(plan, **conditions):
+    state = {**LEG_STATE, "interpretation": {"report": {"type": "change", **conditions}}}
+    return _run({"task": "unclear"}, {"read.itinerary": plan, "read.flight_search": WITH_VIA},
+                text="더 싼 걸로 바꿔줘", capability="flight.itinerary", state=state)
+
+
+def test_a_per_person_limit_from_the_intake_keeps_only_flights_under_it():
+    """`[2026-10-12]` 조건은 접수 해석이 넘긴다 — `max_price` 는 1인 값."""
+    result, llm, _ = _legrun_with(_plan(), max_price=100000)
+    assert llm.calls == []
+    assert result.answer == ("타이베이 → 인천 대신 탈 수 있는 편이에요 — 1) 티웨이항공 TW727 18:30(1인 32,000원). "
+                             "원래 출발(12:00) 앞뒤 3시간 안에는 새 편이 없어 다른 시간대예요. 말씀하신 대로 1인 100,000원 이하만 골랐어요. "
+                             "고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
+
+
+def test_cheaper_without_the_current_price_sorts_by_price_and_drops_the_time_preference():
+    result, _, _ = _legrun_with(_plan(), cheaper=True)
+    assert result.answer == ("타이베이 → 인천 대신 탈 수 있는 편이에요 — 1) 티웨이항공 TW727 18:30(1인 32,000원) · "
+                             "2) 제주항공 13:10(1인 151,000원). 지금 편 가격을 몰라 1인 가격이 낮은 순으로 골랐어요. "
+                             "고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
+    result, _, _ = _legrun_with(_plan(detail={"per_person": 100000}), cheaper=True)
+    assert "지금 편(1인 100,000원)보다 싼 편만 골랐어요." in result.answer and "제주항공" not in result.answer
+
+
 def test_when_nothing_new_is_left_it_says_so_without_changing_the_plan():
     result, _, _ = _legrun(_plan(detail={"shown": [TW_KEY, JEJU_KEY, VIA_KEY]}))
     assert result.action_proposals == []

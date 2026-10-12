@@ -255,6 +255,20 @@ def _flight_option(rank: int, option: dict[str, Any], item: Any, people: int) ->
             "link_kind": booking.get("link_kind")}
 
 
+def _conditions(ctx: dict[str, Any]) -> dict[str, Any]:
+    """「바꿔 줘」에 붙은 조건 — 접수 해석(`interpretation.report`) · 요청(`subject_ref.request`)이 준 칸만 읽는다(숙소 팀과 같은 계약).
+    `cheaper`(참이면 지금 편보다 싼 편만) · `max_price`(**1인** 원화 상한)."""
+    report = ctx.get("report") or {}
+    limit = report.get("max_price")
+    return {"cheaper": report.get("cheaper") is True,
+            "max_price": int(limit) if isinstance(limit, (int, float)) and not isinstance(limit, bool) and limit > 0 else None}
+
+
+def _per_person(option: dict[str, Any], people: int) -> float | None:
+    best = option.get("best")
+    return best / people if isinstance(best, (int, float)) and people else None
+
+
 def _booking_offer(option: dict[str, Any]) -> dict[str, Any]:
     """예약 링크로 쓸 판매처 — 링크가 있고 노선 검색 결과 페이지(`route_search`)가 아닌 곳 중 가장 싼 곳(`offers` 는 이미 가격순).
     그런 곳이 없으면 가장 싼 곳(검색 결과 페이지일 수 있다 — `link_kind` 로 알린다).
@@ -531,6 +545,21 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
         prefer_direct = query.get("direct_only") is not False
         clock = item.starts_at.strftime("%H:%M")
         around = _clock_minutes(clock)   # 원래 편 출발 시각 — 그 앞뒤 편을 먼저(2026-10-12 사용자 결정)
+        # `[2026-10-12]` 조건(접수 해석이 넘김) — 1인 가격 상한 · 지금 편보다 싸게. 지금 편 1인 값을 모르면 「더 싸게」는 가격순(시각 우선을 끈다)
+        conditions, people = _conditions(ctx), query["adults"]
+        chosen = item.detail.get("chosen") or {}
+        reference = next((value for value in (chosen.get("per_person"), item.detail.get("per_person"))
+                          if isinstance(value, (int, float)) and value > 0), None)
+        price_limit = conditions["max_price"]
+        if conditions["cheaper"] and reference is not None:
+            price_limit = min(price_limit or reference, reference - 1)
+        by_price = conditions["cheaper"] and reference is None
+        if by_price:
+            around = None
+        if price_limit is not None:
+            options = [option for option in options
+                       if (each := _per_person(option, people)) is not None and each <= price_limit]
+        asked = "더 싼" if conditions["cheaper"] else (f"1인 {_won(price_limit, 'KRW')} 이하" if price_limit is not None else "")
         picks = _fresh_flights(options, exclude, direct_only=prefer_direct, around=around)
         widened = False
         if not picks and prefer_direct:
@@ -538,18 +567,22 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
         near_count = sum(_near(option, around) for option in picks)
         record = {"itinerary": "flight_options", "item": item.title, "query": query, "shown_before": len(shown),
                   "widened_to_connecting": widened and bool(picks), "around": clock, "near_original": near_count,
+                  "conditions": {**conditions, "price_limit": price_limit, "by_price": by_price},
                   "options": [_flight_key(option) for option in picks]}
         if not picks:
             return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
                                 next_action=NextAction.RESPOND, decisions=[record],
-                                answer=f"{item.title} 대신 탈 수 있는 편을 더 찾지 못했어요. 일정은 그대로 두었어요.")
+                                answer=f"{item.title} 대신 탈 수 있는 {asked + ' ' if asked else ''}편을 더 찾지 못했어요. 일정은 그대로 두었어요.")
         people = query["adults"]
         alternates = [_flight_option(rank, option, item, people) for rank, option in enumerate(picks, start=1)]
         listed = " · ".join(f"{o['rank']}) {o['name']}" + (f"(1인 {_won(o['per_person'], 'KRW')})" if o.get("per_person") is not None else "")
                             for o in alternates)
         answer = (f"{item.title} 대신 탈 수 있는 편이에요 — {listed}."
                   + (" 새로 보여 드릴 직항이 없어 경유 편이에요." if widened else "")
-                  + (f" 원래 출발({clock}) 앞뒤 {NEAR_HOURS}시간 안에는 새 편이 없어 다른 시간대예요." if not near_count else "")
+                  + (f" 원래 출발({clock}) 앞뒤 {NEAR_HOURS}시간 안에는 새 편이 없어 다른 시간대예요." if not near_count and not by_price else "")
+                  + (" 지금 편 가격을 몰라 1인 가격이 낮은 순으로 골랐어요." if by_price
+                     else f" 지금 편(1인 {_won(reference, 'KRW')})보다 싼 편만 골랐어요." if conditions["cheaper"]
+                     else f" 말씀하신 대로 1인 {_won(price_limit, 'KRW')} 이하만 골랐어요." if price_limit is not None else "")
                   + " 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
         keys = [o["key"] for o in alternates]
         detail = {**item.detail, "alternates": alternates, "other_options": [o["name"] for o in alternates],
@@ -564,7 +597,8 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
         change = ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
                                  replacements={item.item_id: replacement},
                                  summary={"flight_options": keys, "shown_total": len(detail["shown"]),
-                                          "widened_to_connecting": widened, "near_original": near_count})
+                                          "widened_to_connecting": widened, "near_original": near_count,
+                                          "conditions": record["conditions"]})
         return self.settle(task, ctx, change)
 
     def _choose(self, task: TeamTask, ctx: dict[str, Any], item: Any, choice: str) -> TeamResult:

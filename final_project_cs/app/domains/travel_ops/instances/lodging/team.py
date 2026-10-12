@@ -161,9 +161,21 @@ def _reference_price(item: Any) -> float | None:
     return None
 
 
+def _conditions(ctx: dict[str, Any]) -> dict[str, Any]:
+    """「바꿔 줘」에 붙은 조건 — 접수 해석(`interpretation.report`) · 요청(`subject_ref.request`)이 준 칸만 읽는다(문장을 다시 해석하지 않는다).
+
+    받는 칸(`[2026-10-12]` 사용자 결정 — 조건은 접수 해석이 뽑아 넘긴다): `cheaper`(참이면 지금 숙소보다 싼 곳만) ·
+    `max_price`(숙소 1박 원화 상한). 형식이 틀린 값은 없는 것으로 본다."""
+    report = ctx.get("report") or {}
+    limit = report.get("max_price")
+    return {"cheaper": report.get("cheaper") is True,
+            "max_price": int(limit) if isinstance(limit, (int, float)) and not isinstance(limit, bool) and limit > 0 else None}
+
+
 def _fresh_picks(booked: dict[str, Any], exclude: set[str], anchor: dict[str, Any] | None,
                  dates: dict[str, str], party: dict[str, Any], reference_price: float | None = None,
-                 details: dict[Any, dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+                 details: dict[Any, dict[str, Any]] | None = None, *, price_limit: float | None = None,
+                 by_price: bool = False) -> list[dict[str, Any]]:
     """새 후보 `SHOWN` 곳. 이름이 `exclude` 에 있으면 뺀다. 상세는 부르지 않는다(목록 값만).
 
     후보 모으기: 마이리얼트립 목록(제공처 순서, 가격 있는 곳만 — 목록에 좌표가 없다) → 구글 호텔(숙박 공유 · 가격 없음 · 링크 없음 제외, 좌표 있음).
@@ -172,6 +184,7 @@ def _fresh_picks(booked: dict[str, Any], exclude: set[str], anchor: dict[str, An
       가까운 순 ③ 나머지는 모은 순서 그대로. 좌표를 모르는 곳(상세를 안 읽은 마이리얼트립)은 「가까운 곳」으로 치지 않는다(거리를 지어내지 않는다).
     ★`[2026-10-12]` 고른 셋에 마이리얼트립이 하나도 없으면 셋째 자리를 마이리얼트립 첫 곳으로 바꾼다 — 그 날짜 예약 화면으로 바로 가는 링크는
       마이리얼트립만 준다(구글 호텔 링크는 결과 페이지).
+    `price_limit` 이 있으면 1박 그 값을 넘는 곳은 뺀다. `by_price` 면 위 순서 대신 1박 가격이 낮은 순(「더 싸게」인데 원래 가격을 모를 때).
     """
     details = details or {}
     pool: list[dict[str, Any]] = []
@@ -199,6 +212,11 @@ def _fresh_picks(booked: dict[str, Any], exclude: set[str], anchor: dict[str, An
                      "price_per_night": stay.get("price_per_night"), "rating": stay.get("rating") or None,
                      "review_count": stay.get("review_count"), "distance_km": _distance(anchor, stay),
                      "latitude": where[0] if where else None, "longitude": where[1] if where else None, "link": stay["link"]})
+
+    if price_limit is not None:
+        pool = [pick for pick in pool if isinstance(pick["price_per_night"], (int, float)) and pick["price_per_night"] <= price_limit]
+    if by_price:
+        return sorted(pool, key=lambda pick: pick["price_per_night"])[:SHOWN]
 
     def order(pick: dict[str, Any]) -> tuple[bool, bool, float]:
         price = pick.get("price_per_night")
@@ -460,6 +478,12 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         center = trip_center(_points(items, skip=item.item_id), date.fromisoformat(query["check_in"]),
                              date.fromisoformat(query["check_out"]))
         anchor, reference_price = _anchor(item, center), _reference_price(item)
+        conditions = _conditions(ctx)
+        price_limit = conditions["max_price"]
+        if conditions["cheaper"] and reference_price is not None:
+            price_limit = min(price_limit or reference_price, reference_price - 1)
+        by_price = conditions["cheaper"] and reference_price is None
+        asked = "더 싼" if conditions["cheaper"] else (f"1박 {_won(price_limit)} 이하" if price_limit is not None else "")
         shown = [str(name) for name in item.detail.get("shown") or []]
         exclude = {_key(name) for name in [*shown, item.title, (item.place or {}).get("name") or ""] if name}
         picks: list[dict[str, Any]] = []
@@ -491,12 +515,14 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                     stopped = True
                 else:
                     details[stay["gid"]] = detail
-            picks = _fresh_picks(booked, exclude, anchor, dates, party, reference_price, details)
+            picks = _fresh_picks(booked, exclude, anchor, dates, party, reference_price, details,
+                                 price_limit=price_limit, by_price=by_price)
             if picks or not booked:
                 break
         record = {"itinerary": "lodging_options", "item": item.title, "query": query, "shown_before": len(shown),
                   "sizes": sizes_used, "options": [pick["name"] for pick in picks],
                   "anchor": anchor["kind"] if anchor else None, "reference_price": reference_price, "details_read": len(details),
+                  "conditions": {**conditions, "price_limit": price_limit, "by_price": by_price},
                   "near": sum(1 for pick in picks if pick["distance_km"] is not None and pick["distance_km"] <= NEAR_KM)}
         if not picks:
             if not booked:
@@ -504,7 +530,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             # ★식당 · 활동의 「바꿀 수 있는 다른 안이 없어요」(`ANSWERS["no_alternate"]`)와 같은 자리 — 일정은 그대로
             return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
                                 next_action=NextAction.RESPOND, decisions=[record],
-                                answer=f"{item.title} 대신 갈 수 있는 숙소를 더 찾지 못했어요. 일정은 그대로 두었어요.")
+                                answer=f"{item.title} 대신 갈 수 있는 {asked + ' ' if asked else ''}숙소를 더 찾지 못했어요. 일정은 그대로 두었어요.")
         options = [_lodging_option(rank, pick, item) for rank, pick in enumerate(picks, start=1)]
         def note(option: dict[str, Any]) -> str:
             parts = [f"1박 {_won(option['price_per_night'])}"] if option.get("price_per_night") is not None else []
@@ -512,7 +538,14 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                 parts.append(f"{anchor['kind']}에서 {option['distance_km']}km")
             return f"({' · '.join(parts)})" if parts else ""
         listed = " · ".join(f"{option['rank']}) {option['name']}{note(option)}" for option in options)
-        answer = f"{item.title} 대신 갈 수 있는 곳이에요 — {listed}. 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다."
+        said = ""
+        if by_price:
+            said = " 원래 숙소 가격을 몰라 1박 가격이 낮은 순으로 골랐어요."
+        elif conditions["cheaper"]:
+            said = f" 원래 숙소(1박 {_won(reference_price)})보다 싼 곳만 골랐어요."
+        elif price_limit is not None:
+            said = f" 말씀하신 대로 1박 {_won(price_limit)} 이하만 골랐어요."
+        answer = f"{item.title} 대신 갈 수 있는 곳이에요 — {listed}.{said} 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다."
         detail = {**item.detail, "alternates": options, "other_options": [option["name"] for option in options],
                   "shown": [*shown, *(pick["name"] for pick in picks)], "query": query}
         cause = with_request({"category": "customer_request", "type": "requested_options", "from": item.title,
@@ -525,7 +558,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         change = ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
                                  replacements={item.item_id: replacement},
                                  summary={"lodging_options": [o["name"] for o in options], "shown_total": len(detail["shown"]),
-                                          **{k: v for k, v in record.items() if k in ("sizes", "shown_before", "anchor", "near", "details_read")}})
+                                          **{k: v for k, v in record.items() if k in ("sizes", "shown_before", "anchor", "near", "details_read", "conditions")}})
         return self.settle(task, ctx, change)
 
     def _choose(self, task: TeamTask, ctx: dict[str, Any], item: Any, choice: str) -> TeamResult:

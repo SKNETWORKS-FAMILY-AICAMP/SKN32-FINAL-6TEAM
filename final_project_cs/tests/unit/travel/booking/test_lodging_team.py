@@ -591,6 +591,40 @@ def test_without_the_old_stays_coordinates_the_trip_center_is_the_anchor():
     assert "일정 가운데에서" in result.answer
 
 
+def _with_conditions(plan, **conditions):
+    state = {**ITEM_STATE, "interpretation": {"report": {"type": "change", **conditions}}}
+    tools = {"read.itinerary": plan, "read.stay_search": STAYS, "read.stay_google": NEAR_GOOGLE}
+    return _run({"task": "unclear"}, tools, text="더 싼 데로 바꿔줘", capability="lodging.itinerary", state=state)
+
+
+def test_a_price_limit_from_the_intake_keeps_only_stays_under_it():
+    """`[2026-10-12]` 조건은 접수 해석이 뽑아 넘긴다(사용자 결정) — 문장을 다시 해석하지 않고 `max_price` 칸만 읽는다."""
+    result, llm, _ = _with_conditions(_plan(), max_price=130000)
+    assert llm.calls == []
+    options = result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"]
+    assert [o["name"] for o in options] == ["가까운 호텔", "먼 호텔", "좌표 없는 호텔"], "13만 원 넘는 해밀톤 · 둘째는 뺀다"
+    assert "말씀하신 대로 1박 130,000원 이하만 골랐어요." in result.answer
+    assert result.decisions[0]["conditions"]["price_limit"] == 130000
+
+
+def test_cheaper_uses_the_old_stays_price_or_says_it_sorted_by_price():
+    result, _, _ = _with_conditions(_plan(stay_detail={"price_per_night": 120000}), cheaper=True)
+    options = result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"]
+    assert [o["name"] for o in options] == ["먼 호텔", "좌표 없는 호텔"], "원래 12만 원보다 싼 곳만"
+    assert "원래 숙소(1박 120,000원)보다 싼 곳만 골랐어요." in result.answer
+    result, _, _ = _with_conditions(_plan(), cheaper=True)
+    options = result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"]
+    assert [o["price_per_night"] for o in options] == [100000.0, 110000.0, 120000.0], "원래 가격을 모르면 낮은 순"
+    assert "원래 숙소 가격을 몰라 1박 가격이 낮은 순으로 골랐어요." in result.answer
+
+
+def test_a_price_limit_nothing_meets_says_so_without_changing_the_plan():
+    result, _, tools = _with_conditions(_plan(), max_price=50000)
+    assert [a["size"] for name, a in tools.calls if name == "read.booking_search_stays"] == [20, 50]
+    assert result.action_proposals == []
+    assert result.answer == "기존 호텔 대신 갈 수 있는 1박 50,000원 이하 숙소를 더 찾지 못했어요. 일정은 그대로 두었어요."
+
+
 def test_when_nothing_new_is_left_it_widens_once_then_says_so_without_changing_the_plan():
     every = ["해밀톤 호텔", "둘째 호텔", "가까운 호텔", "먼 호텔", "좌표 없는 호텔"]
     result, _, tools = _itinerary(_plan(stay_detail={"shown": every}))
