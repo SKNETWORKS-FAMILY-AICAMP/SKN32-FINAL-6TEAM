@@ -20,6 +20,7 @@ from app.domains.travel_ops.instances.dining.ledger import slot_verdicts
 from app.domains.travel_ops.entry.trip_api import build_trip_router
 from app.presentation import security
 from app.presentation.api.app import create_app
+from tests.helpers.plugin_bindings import publish_fixed_mobility
 
 START = date(2026, 10, 5)            # 월요일
 KST_OFFSET = "+09:00"
@@ -76,6 +77,9 @@ def api(monkeypatch):
     client = TestClient(create_app(
         classifier=lambda _m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
         domain_routers=[build_trip_router(check_factory=lambda: (lambda **_k: {"verdict": "clear"}))]))
+    # ☆`[2026-10-12]` 이동 계산은 시험용 고정 구간으로 명시한다 — 이동 자료(시간표) 없는 CI · 팀원 PC 에서
+    #   이동 팀이 「엔진 미준비」로 거절해(plugin-availability 계약) 이 시험들이 깨졌다. 실제 이동 정확도는 이동 팀 시험이 본다.
+    publish_fixed_mobility(client.app, source="dining_ledger_test")
 
     def auth(scope):
         return {"Authorization": "Bearer " + security._development_key(scope, original.secret_key)}
