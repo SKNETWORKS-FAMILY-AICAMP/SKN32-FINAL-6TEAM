@@ -770,7 +770,8 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
                                                                                     "trip_desk")
     if not safe_read or read_case["status"] != "running":
         move(EventType.ROUTED, {"owner_team_id": team, "capability": f"trip_desk.{action}", "routed_by": "decision_unit",
-                                "decision": decision.record(), "state_patch": read_patch})
+                                "decision": decision.record(),
+                                "state_patch": {**read_patch, "decision": decision.record()}})
     with get_connection() as fresh:
         current, now_items = store.latest(fresh, trip_id)
         history = store.versions(fresh, trip_id)

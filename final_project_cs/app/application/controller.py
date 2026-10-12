@@ -844,8 +844,7 @@ class Controller:
                             self.require_team(case.get("owner_team_id"), case_id=case_id)
                             conn.rollback()
                             try:
-                                replay = await self.run_case(tenant_id=tenant_id, case_id=case_id, actor_id=actor_id)
-                                return {**replay, "idempotent": True}
+                                return await self.run_case(tenant_id=tenant_id, case_id=case_id, actor_id=actor_id)
                             except ActiveRunError:
                                 # 같은 재시도가 먼저 시작된 경우 완료라고 하지 않고 현재 상태를 돌려준다.
                                 latest = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id) or case
@@ -942,4 +941,5 @@ class Controller:
                 latest = self.repository.get_case(latest_conn, tenant_id=tenant_id, case_id=case_id)
             if latest is None:
                 raise ControllerError("case not found")
-            return {"case_id": str(case_id), "status": latest["status"], "version": latest["version"]}
+            return {"case_id": str(case_id), "status": latest["status"], "version": latest["version"],
+                    "idempotent": True}
