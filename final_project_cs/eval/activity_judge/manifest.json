@@ -1,6 +1,6 @@
 {
  "built_on": "2026-10-06",
- "labeler": "claude(작성자) — 사람 검토 전",
+ "labeler": "사람 검토 — 송채영 (2026-10-12)",
  "cases": 60,
  "by_kind": {
   "closure": 16,
@@ -10,5 +10,7 @@
   "live_status": 8
  },
  "labeled": 52,
- "sha256": "5a0c98e5655479c7c0ce3e95d63a56ac86c344be8a430ae8b49576e1f5140bcb"
+ "sha256": "ef50c4b7fbc58e0f7662b869ca9de729ee099554f32655b3d68a863848b760ee",
+ "human_reviewed": 52,
+ "changed_from_author": 1
 }
