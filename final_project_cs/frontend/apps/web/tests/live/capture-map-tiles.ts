@@ -3,19 +3,13 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 
-const cache = resolve("../../../../.tmp/ui-map-tiles/identified-v1");
-const blockedTile = resolve("../../../../.tmp/ui-map-tiles/13_6984_3171.png");
+const cache = resolve("C:/Users/playdata2/Documents/final_workspace/.tmp/ui-map-tiles/identified-v1");
+const blockedTile = resolve("C:/Users/playdata2/Documents/final_workspace/.tmp/ui-map-tiles/13_6984_3171.png");
 const tiles = new Map<string, Promise<Buffer>>();
 
 
 
 export async function useMapTiles(page: Page) {
-  // CI는 mock 서버의 타일로 화면 동작을 검사한다. 실제 지도 촬영만 명시적으로 외부 타일을 사용한다.
-  if (process.env.UI_MAP_CAPTURE_REAL !== "1") {
-    return async () => {
-      await expect(page.locator(".leaflet-tile-loaded").first()).toBeVisible();
-    };
-  }
   await mkdir(cache, { recursive: true });
   const pending = new Set<string>();
   const errors: string[] = [];

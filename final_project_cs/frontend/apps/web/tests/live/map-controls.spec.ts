@@ -5,7 +5,7 @@ import { mapSettled, openFinished, pin } from "./plan-check-kit";
 /**
  * `[2026-10-05 사용자 선택 — 지도 단추 · 거리 눈금 · 가장자리 마커 안 B · 첫 지도 시점 안 C]` 계획 확인 화면의 지도(무료 지도 · Leaflet 빌드). mock 서버 시험이다 — 화면 반응만 본다
  * (구글·네이버 SDK 로는 확인하지 못했다: `maps.spec.ts` 의 SDK 계약 대역이 단추 없이도 도는지만 본다).
- *   - 단추: ＋ · 거리 눈금 · － · 모든 일정 보기 (위치 동의가 없으면 「내 위치」 단추는 말도 없다), 접으면 탭 하나만 남고 접은 상태는 기억된다.
+ *   - 단추: ＋ · 거리 눈금 · － · 모든 일정 보기 (위치 동의 전에도 「내 위치」 진입을 제공한다), 접으면 탭 하나만 남고 접은 상태는 기억된다.
  *   - 가장자리 마커: 화면 밖의 일정은 가장자리에 거리 칩으로 서고, 누르면 그곳으로 가며 그 일정이 골라진다.
  */
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
@@ -25,8 +25,8 @@ test("접기 단추에 거리가 함께 나오고 확대·축소·모든 일정 
   await openFinished(page, request);
   await wake(page);
   const names = await group(page).getByRole("button").evaluateAll((buttons) => buttons.map((button) => button.getAttribute("aria-label")));
-  expect(names).toEqual(["지도 단추 접기", "확대", "축소", "모든 일정 보기"]);
-  await expect(group(page).getByRole("button", { name: /내 위치/ })).toHaveCount(0);
+  expect(names).toEqual(["지도 단추 접기", "확대", "축소", "모든 일정 보기", "내 위치로"]);
+  await expect(group(page).getByRole("button", { name: /내 위치/ })).toBeVisible();
   const [plus, ruler, minus] = await Promise.all([group(page).getByRole("button", { name: "확대" }), scale(page), group(page).getByRole("button", { name: "축소" })].map((item) => item.boundingBox()));
   expect(ruler!.y).toBeLessThan(plus!.y);
   expect(plus!.y).toBeLessThan(minus!.y);

@@ -18,7 +18,8 @@ async function drag(page: Page, x: number, y: number, dx: number, dy = 0) {
 }
 async function collisions(page: Page) {
   return page.getByRole('region',{name:'여행 지도'}).evaluate(map=>{
-    const boxes=[...map.querySelectorAll<HTMLElement>('[data-pin-body],[data-edge-chip],[data-map-controls] > button[aria-expanded]')]
+    // 2026-10-11 계약: 확장 도구는 마커와 겹칠 수 있으며 거리·접기 버튼만 피한다.
+    const boxes=[...map.querySelectorAll<HTMLElement>('[data-pin-body],[data-edge-chip],[data-map-obstacle="true"]')]
       .filter(node=>getComputedStyle(node).visibility!=='hidden' && getComputedStyle(node).display!=='none').map(node=>node.getBoundingClientRect());
     return boxes.flatMap((a,i)=>boxes.slice(i+1).filter(b=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>1 && Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1)).length;
   });
@@ -40,6 +41,9 @@ for (const width of [375,1280]) {
     await seam.click();
     const search=page.getByRole('searchbox',{name:'장소 검색',exact:true});
     await expect(search).toBeFocused();
+    await expect(search).toHaveValue("");
+    await expect(page.getByRole('list',{name:'장소 검색 결과'})).toHaveCount(0);
+    expect(await api.received('GET','/place-search')).toHaveLength(0);
     await expect(page.getByRole("form", { name: "일정 추가", exact: true })).toBeVisible();
     expect(await search.evaluate(node=>Boolean(node.closest('[data-hide-brand]')))).toBe(true);
     await expect(page.getByRole('region',{name:'일정 추가 화면'}).getByRole('searchbox')).toHaveCount(0);
@@ -133,8 +137,7 @@ test('오른쪽 거리 칩은 단추 아래의 빈 높이에서 화면 끝에 �
   await expect.poll(()=>map.locator('[data-edge-chip]').evaluateAll(nodes=>{
     return nodes.some(node=>{const r=node.getBoundingClientRect(), map=node.parentElement!.getBoundingClientRect();return Math.abs(r.right-map.right)<1;});
   })).toBe(true);
-  const chip=map.locator('[data-edge-chip]').first();
+  const chip=map.locator('[data-edge-chip][data-side="right"]').first();
   await expect(chip.locator('[class*=edgeNumbers]')).toHaveCSS('border-radius','999px');
-  const separator = await chip.getAttribute('data-side') === 'left' ? 'border-right-style' : 'border-left-style';
-  await expect(chip.locator('small')).toHaveCSS(separator,'solid');
+  await expect(chip.locator('small')).toHaveCSS('border-left-style','solid');
 });

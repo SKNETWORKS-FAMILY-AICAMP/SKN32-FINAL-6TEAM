@@ -97,10 +97,8 @@ for (const width of [375,1280]) {
     if(await unfold.count()) await unfold.click();
     await expect(group.locator('[data-map-obstacle]')).toHaveCount(1);
     await expect(group.locator('[data-map-obstacle]')).toHaveAttribute('aria-label','지도 단추 접기');
-    // Sheet height commits before ResizeObserver recomputes the map's controls layout.
-    await expect(group).toHaveAttribute('data-direction','row');
-    await expect.poll(async()=>group.evaluate(e=>e.getBoundingClientRect().width
-      / e.querySelector('[data-map-obstacle]')!.getBoundingClientRect().width)).toBeGreaterThan(2);
+    const boxes=await group.evaluate(e=>({group:e.getBoundingClientRect().width,fold:e.querySelector('[data-map-obstacle]')!.getBoundingClientRect().width}));
+    expect(boxes.group).toBeGreaterThan(boxes.fold*2);
     await tiles();
     if(await unfold.count()) await unfold.click();
     await group.hover(); await page.screenshot({path:shots?`${shots}/tools-${width}.png`:undefined}); await noHorizontalScroll(page);

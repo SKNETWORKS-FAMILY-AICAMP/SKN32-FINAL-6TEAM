@@ -309,6 +309,17 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         return locked.length;
       },
       canUndo: () => undoEdits.current !== null,
+      canUndoItem: (id) => allUndo.itemTarget(latest.current, id) !== null,
+      undoItem: async (id) => {
+        const current = plan();
+        const original = allUndo.itemTarget(current, id);
+        if (!original) throw new LiveError("cannot_undo", t("이 일정의 복원할 원래 값을 확인하지 못했어요", "The original values of this stop are not available"));
+        const next = await restoreIntake(intakeId, current.revision, original.revision, language, { source_id: original.source_id, index: original.index }).catch(staleThenRethrow);
+        if (!allUndo.active) return;
+        allUndo.advance(next);
+        undoEdits.current = null;
+        take(next);
+      },
       canUndoAll: () => allUndo.canRestore(latest.current),
       undoAll: async () => {
         const current = plan();

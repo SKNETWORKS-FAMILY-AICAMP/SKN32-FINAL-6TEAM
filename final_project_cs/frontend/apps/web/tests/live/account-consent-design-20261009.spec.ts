@@ -93,7 +93,12 @@ test("관리 화면에서 선택 항목만 수정하고 기존 필수 동의 두
   await page.goto("/mypage");
   await page.getByRole("button", { name: "선택 약관 동의", exact: true }).click();
   const list = page.getByRole("list", { name: "선택 동의 항목" });
-  await expect(list.locator(":scope > li")).toHaveCount(3);
+  // 2026-10-10 계약: 서비스 개선용 이용을 포함한 선택 네 항목만 관리한다.
+  await expect(list.locator(":scope > li")).toHaveCount(4);
+  expect(await list.locator(":scope > li").evaluateAll((rows) => rows.map((row) => row.getAttribute("data-doc")))).toEqual([
+    "sensitive", "location", "alert_channel", "service_improvement",
+  ]);
+  await expect(list.locator('[data-doc="service_improvement"]')).toContainText("동의 안 함");
   await expect(page.locator('[data-doc="service_terms"], [data-doc="privacy"]')).toHaveCount(0);
   const location = list.locator('[data-doc="location"]');
   await location.getByRole("button", { name: "동의하기", exact: true }).click();
@@ -101,6 +106,7 @@ test("관리 화면에서 선택 항목만 수정하고 기존 필수 동의 두
   const posts = await mock.received("POST", "/v1/web/consents");
   const items = posts.at(-1)!.body!.items as { code: string; agreed: boolean }[];
   for (const code of ["service_terms", "privacy", "location"]) expect(items.find((item) => item.code === code)?.agreed).toBe(true);
+  for (const code of ["sensitive", "alert_channel", "service_improvement"]) expect(items.find((item) => item.code === code)?.agreed).toBe(false);
   await page.locator("#consents").scrollIntoViewIfNeeded();
   if (process.env.ACCOUNT_SHOTS) await page.screenshot({ path: `${process.env.ACCOUNT_SHOTS}/consent-optional-manager.png` });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Button } from "@/components/ui";
 import { controlsLayout, EdgeChips, MapControls } from "./map-controls";
 import type { MapAdapter, MapController, MapView, MapViewProps, StayPoint } from "./model";
@@ -15,7 +16,7 @@ export function MapUnavailable({ message }: { message: string }) {
   return <div className={styles.unavailable} role="alert"><strong>지도를 표시할 수 없어요</strong><p>{message}</p></div>;
 }
 
-export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me = null, stays = NO_STAYS, onZoom, onInteractionChange, meAvailable = false, coordinatePick }: MapViewProps & { adapter: MapAdapter; name: string }) {
+export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me = null, stays = NO_STAYS, onZoom, onInteractionChange, meAvailable = false, coordinatePick, onRequestLocation }: MapViewProps & { adapter: MapAdapter; name: string }) {
   const pointer = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const surface = useRef<HTMLDivElement>(null);
   const container = useRef<HTMLDivElement>(null);
@@ -78,6 +79,8 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
     let observer: ResizeObserver | undefined;
     let instance: MapController | undefined;
     let failed = false;
+    let pendingView: MapView | null = null;
+    let viewScheduled = false;
     const fail = (error: Error) => {
       failed = true;
       if (!cancelled) setState({ status: "error", message: error.message });
@@ -87,7 +90,17 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
       onSelect: (id) => latest.current.onSelect(id),
       onSelectLine: (id) => latest.current.onSelectLine?.(id),
       onZoom: (zoom) => latest.current.onZoom?.(zoom),          // [2026-10-05] the screen above asks for the detailed route lines once this says the map is zoomed in
-      onView: (next) => { if (!cancelled) setView(next); },
+      onView: (next) => {
+        pendingView = next;
+        if (viewScheduled) return;
+        viewScheduled = true;
+        // SDK moves can originate inside our layout effect. Leave that commit first,
+        // then switch chips and pins before paint, including instant reduced-motion jumps.
+        queueMicrotask(() => {
+          viewScheduled = false;
+          if (!cancelled && pendingView) flushSync(() => setView(pendingView));
+        });
+      },
       onInteractionChange: (active) => {
         clearTimeout(settled.current);
         if (active) { setMoving(true); latest.current.onInteractionChange?.(true); }
@@ -121,7 +134,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
   const ready = state.status === "ready";
   const canFit = points.length > 1;
   const meButton = meAvailable ? (me ? "ready" : "waiting") : "off";
-  const count = 2 + (canFit ? 1 : 0) + (meAvailable ? 1 : 0);
+  const count = 3 + (canFit ? 1 : 0);
   const layout = controlsLayout(size, topInset ?? 0, count);
   const [controlArea, setControlArea] = useState<{ left: number; top: number; right: number; bottom: number }[]>([]);
   useLayoutEffect(() => {
@@ -147,7 +160,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
     onPointerDownCapture={event => { pointer.current = { x: event.clientX, y: event.clientY, moved: false }; }}
     onPointerMoveCapture={event => { const start = pointer.current; if (start && Math.hypot(event.clientX-start.x, event.clientY-start.y)>8) start.moved = true; }}
     onClickCapture={event => {
-      if (!coordinatePick || !view || !ready || (event.target as Element).closest('[data-map-controls], [data-map-pick-center], .leaflet-control')) return;
+      if (!coordinatePick || !view || !ready || (event.target as Element).closest('[data-map-controls], [data-map-pick-center], [data-edge-chip], .leaflet-control')) return;
       event.stopPropagation(); event.preventDefault();
       if (!pointer.current || pointer.current.moved) return;
       const rect = container.current!.getBoundingClientRect(), x = event.clientX-rect.left, y = event.clientY-rect.top;
@@ -170,7 +183,10 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
         controller.current?.centerOn(target.coordinates, true);
       }} />}
     {ready && <MapControls view={view} topInset={topInset ?? 0} layout={layout} folded={folded} onFold={(next) => { setFolded(next); }} canFit={canFit} me={meButton}
-      onZoom={(delta) => controller.current?.zoomBy(delta)} onFit={() => controller.current?.fit()} onLocate={() => { if (me) controller.current?.centerOn(me.coordinates); }} />}
+      onZoom={(delta) => controller.current?.zoomBy(delta)} onFit={() => controller.current?.fit()} onLocate={() => {
+        if (me) controller.current?.centerOn(me.coordinates);
+        else onRequestLocation?.((location) => controller.current?.centerOn(location.coordinates));
+      }} />}
     {ready && coordinatePick && view && <>
       {preview && <span className={styles.coordinatePin} data-coordinate-pin aria-hidden="true" style={{ left: preview.x, top: preview.y }}>＋</span>}
       <button type="button" className={styles.pickCenter} data-map-pick-center onClick={() => coordinatePick.onPick(fromPixels(view, { x: view.width/2, y: (view.height+(topInset??0)-(bottomInset??0))/2 }))}>지도 중심 선택</button>

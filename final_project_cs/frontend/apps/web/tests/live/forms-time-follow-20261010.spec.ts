@@ -35,22 +35,24 @@ for (const width of [375, 1280]) {
     await expect(time('올리브영')).toHaveCSS('position', 'sticky');
     await head(page, '경복궁 관람').click(); await expect(time('경복궁 관람')).toHaveCSS('position', 'sticky');
     const scroll = page.locator('div[class*=sheetBody]');
-    const original = await time('경복궁 관람').boundingBox();
-    // 가려지기 전에는 제목과 같이 움직이고, 실제 목록 경계를 넘긴 후에만 고정한다.
-    await scroll.evaluate(e => { e.scrollTop += 40; });
-    const visible = await time('경복궁 관람').boundingBox();
-    expect(visible!.y).toBeCloseTo(original!.y - 40, 0);
-    await scroll.evaluate(e => {
-      const button=e.querySelector<HTMLElement>('[data-entry-id="0-0"] > button')!;
-      const css=getComputedStyle(e);
-      // sticky의 실제 시작선은 스크롤 패딩 + 계산된 시각 inset이다. 행 제목으로 어림잡지 않는다.
-      const boundary=e.getBoundingClientRect().top+parseFloat(css.paddingTop)+parseFloat(getComputedStyle(button).top);
-      e.scrollTop += button.getBoundingClientRect().top-boundary+4;
+    const metrics = () => time('경복궁 관람').evaluate(button => {
+      const clock = button.querySelector('[data-stop-start]')!.getBoundingClientRect();
+      const title = button.closest('li')!.querySelector('[class*=cardTitle]')!.getBoundingClientRect();
+      const tabs = Array.from(document.querySelectorAll('[role=tablist] button')).map(tab => tab.getBoundingClientRect());
+      return { top: clock.top, center: clock.top + clock.height / 2, titleCenter: title.top + title.height / 2, boundary: Math.max(...tabs.map(tab => tab.bottom)) };
     });
-    await scroll.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-    const followed = await time('경복궁 관람').boundingBox();
+    await scroll.evaluate(e => { e.scrollTop = 0; });
+    const original = await metrics();
+    expect(Math.abs(original.center - original.titleCenter)).toBeLessThan(3);
+    // 글자가 아직 보이면 제목과 같이 움직이고 실제 날짜 버튼 아래를 넘을 때 고정한다.
+    await scroll.evaluate(e => { e.scrollTop = 20; });
+    await expect.poll(async () => Math.abs((await metrics()).top - (original.top - 20))).toBeLessThan(1);
+    expect(Math.abs((await metrics()).center - (await metrics()).titleCenter)).toBeLessThan(3);
+    await scroll.evaluate((e, at) => { e.scrollTop = at; }, original.top - original.boundary + 20);
+    await expect.poll(async () => { const current = await metrics(); return Math.abs(current.top - current.boundary); }).toBeLessThanOrEqual(4);
+    const followed = await metrics();
     await scroll.evaluate(e => { e.scrollTop += 20; });
-    expect((await time('경복궁 관람').boundingBox())!.y).toBeCloseTo(followed!.y,0);
+    await expect.poll(async () => Math.abs((await metrics()).top - followed.top)).toBeLessThan(1);
     await capture(page, `expanded-time-${width}`);
     await head(page, '경복궁 관람').dispatchEvent('click');
     await expect(time('경복궁 관람')).toHaveCSS('position', 'relative');

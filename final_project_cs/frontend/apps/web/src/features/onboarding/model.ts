@@ -49,7 +49,8 @@ export const areaNames: Record<Area, readonly [ko: string, en: string]> = { food
 
 /** Details per area. Mobility keeps its codes: `car` is now shown as a rental car, and taxi is added. */
 export const detailOptions: Record<Area, readonly Option[]> = {
-  food: [["taste", "맛", "Taste"], ["kindness", "친절", "Kindness"], ["clean", "청결", "Cleanliness"]],
+  // `michelin` · `nopo` — the planner puts restaurants with that mark first (backend `dining/survey.py` SURVEY_LIKES). Nothing is filtered out.
+  food: [["taste", "맛", "Taste"], ["kindness", "친절", "Kindness"], ["clean", "청결", "Cleanliness"], ["michelin", "미쉐린", "Michelin"], ["nopo", "노포", "Old-school (nopo)"]],
   activity: [["extreme", "익스트림", "Extreme"], ["healing", "힐링", "Relaxation"], ["diy", "DIY", "DIY"], ["shopping", "쇼핑", "Shopping"]],
   mobility: [["public", "대중교통", "Public transit"], ["walk", "도보", "Walking"], ["car", "렌트카", "Rental car"], ["taxi", "택시", "Taxi"]],
 };
