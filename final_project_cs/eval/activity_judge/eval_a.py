@@ -30,8 +30,6 @@ from .build import DATASET
 KST = timezone(timedelta(hours=9))
 TUESDAY = datetime(2026, 11, 10, 14, 0, tzinfo=KST)      # 화요일 14시
 A1_ORDER = ("time_unknown", "disaster_blocks", "closed_weekday", "outside_hours")
-#: 문자가 그 장소에 닿는 지역 표기 — 구 이름이 없어도 시 전체 · 전국이면 닿는다
-WHOLE = ("서울특별시", "서울특별시 전체", "서울", "전국")
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -118,28 +116,18 @@ def run_a1() -> dict[str, Any]:
 # ── A4 재난 분류표 채점 ─────────────────────────────────────────────
 
 def _place_facts(name: str | None) -> tuple[str | None, bool | None]:
-    """(구, 실외 여부) — 활동 CSV 목록에서. 모르면 None."""
-    from app.domains.travel_ops.instances.activity.csv_places import CsvPlaceLookup, weather_sensitive_from_lclssystm2
+    """(구, 실외 여부) — 규칙 판정(`judge.rule`)과 같은 장소 목록 · 같은 분류 규칙. 모르면 None."""
+    from app.domains.travel_ops.instances.activity.judge.rule import _outdoor_from_class, place_facts
 
-    lookup = CsvPlaceLookup()
-    found = lookup.find(name or "")
-    if not found:
-        return None, None
-    row = lookup.find_by_content_id(found["content_id"]) or {}
-    parts = str(found.get("address") or row.get("addr1") or "").split()
-    district = parts[1] if len(parts) > 1 and parts[1].endswith("구") else None
-    return district, weather_sensitive_from_lclssystm2(row.get("lclsSystm2"))
+    facts = place_facts(name)
+    return facts.get("district"), _outdoor_from_class(facts.get("lcls1"), facts.get("lcls2")) if facts else None
 
 
 def reaches(message: dict[str, Any], district: str | None) -> bool | None:
-    """문자가 그 장소의 구에 닿나. 시 전체 · 전국은 닿는다. 구를 모르면 구 단위 문자는 `None`(모름)."""
-    regions = [str(r).strip() for r in message.get("regions") or []]
-    if any(r in WHOLE for r in regions):
-        return True
-    if district is None:
-        return None
-    return any(district in r for r in regions)
+    """문자가 그 장소의 구에 닿나 — 규칙 판정과 같은 함수."""
+    from app.domains.travel_ops.instances.activity.judge.rule import reaches as rule_reaches
 
+    return rule_reaches(message, district)
 
 def table_answer(case: dict[str, Any]) -> tuple[str, str]:
     """(분류표가 내는 답, 이유) — `blocks` · `no_effect` · `unknown`."""

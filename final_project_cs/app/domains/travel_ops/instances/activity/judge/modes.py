@@ -22,7 +22,7 @@ from typing import Any, Protocol
 
 from .. import failure_codes as fc
 from .llm import LLMJudge
-from .rule import RuleJudge, SharedCheckFacts
+from .rule import RuleJudge
 from .types import JudgeContext, JudgeRequest, Verdict
 
 SHADOW_LOGGER_NAME = "acop.activity.judge_shadow"
@@ -191,10 +191,9 @@ class LLMFirstJudge:
 
 
 def build_judge(mode: str, judge_llm: Any | None, *, runner: Any | None = None,
-                sink: Any | None = None, facts: SharedCheckFacts | None = None) -> ActivityJudge:
-    """설정 모드와 조립이 넣은 어댑터로 판정기를 고른다. 어댑터가 없으면 언제나 규칙이다.
-    `facts` 는 공유 점검의 재난 유형 목록 · 낱말 — 안 주면 규칙의 재난 영향은 `unknown`(`rule.SharedCheckFacts`)."""
-    rule = RuleJudge(facts)
+                sink: Any | None = None) -> ActivityJudge:
+    """설정 모드와 조립이 넣은 어댑터로 판정기를 고른다. 어댑터가 없으면 언제나 규칙이다."""
+    rule = RuleJudge()
     if judge_llm is None or mode == "rule":
         return rule
     llm = LLMJudge(judge_llm)
