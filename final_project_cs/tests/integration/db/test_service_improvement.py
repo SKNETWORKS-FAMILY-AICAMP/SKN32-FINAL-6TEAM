@@ -14,6 +14,7 @@ from app.infrastructure.db.migrate import apply_all
 
 NOW = datetime.now(timezone.utc)
 WEB_VALUES = web_guard.values
+_FULL_DSN: dict[int, str] = {}
 
 
 @pytest.fixture(scope="module")
@@ -22,7 +23,9 @@ def scratch():
     name = "acop_improve_" + uuid4().hex[:10]
     admin = psycopg.connect(urlunsplit(parts._replace(path="/postgres")), autocommit=True, connect_timeout=5)
     admin.execute(f'CREATE DATABASE "{name}"')
-    conn = psycopg.connect(urlunsplit(parts._replace(path="/" + name)), autocommit=True)
+    url = urlunsplit(parts._replace(path="/" + name))
+    conn = psycopg.connect(url, autocommit=True)
+    _FULL_DSN[id(conn)] = url   # `[2026-10-13]` conn.info.dsn 은 비밀번호를 빼고 돌려준다 — 다시 접속할 때는 처음 주소를 쓴다(비밀번호가 필요한 CI)
     try:
         apply_all(conn)
         yield conn
@@ -122,7 +125,7 @@ def test_parallel_generation_never_exceeds_lifetime_budget(setup):
     conn, tenant = setup
 
     def attempt(_):
-        with psycopg.connect(conn.info.dsn, autocommit=True) as other:
+        with psycopg.connect(_FULL_DSN[id(conn)], autocommit=True) as other:
             try:
                 return improvement.prepare(other, tenant, now=NOW)["status"]
             except improvement.ImprovementError as exc:
@@ -195,7 +198,7 @@ def test_real_http_optional_consent_defaults_off_records_hash_and_withdraws(setu
     from app.domains.travel_ops.modules.web_account.web_auth_api import build_auth_router
 
     conn, tenant = setup
-    settings = get_settings().model_copy(update={"tenant_id": tenant, "database_url": conn.info.dsn,
+    settings = get_settings().model_copy(update={"tenant_id": tenant, "database_url": _FULL_DSN[id(conn)],
         "web_origin": "https://web.example.test", "web_allowed_origins": "https://web.example.test",
         "public_base_url": "http://api.example.test"})
     monkeypatch.setattr(settings_module, "get_settings", lambda: settings)

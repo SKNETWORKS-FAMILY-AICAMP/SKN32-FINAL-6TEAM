@@ -78,8 +78,11 @@ class CaseEngine:
         return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
                                                     case_id=case_id, actor_id=actor_id))
 
-    def tick(self):
-        return self.opener.tick()
+    def tick(self, **kwargs):
+        from app.core.service_bindings import bind_services
+
+        with bind_services(self.controller.service_bindings):
+            return self.opener.tick(**kwargs)
 
     def message(self, *, customer_id: UUID, trip_id: UUID, text: str, request_id: str,
                 request: dict[str, Any] | None = None, part_id: UUID | None = None,

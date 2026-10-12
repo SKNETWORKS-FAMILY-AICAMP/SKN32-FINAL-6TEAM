@@ -33,6 +33,3 @@ def test_scopes_are_guardrail_owned():
         "ops:introspect", "ops:reload", "trip:read", "trip:write",
         "delegation:read", "delegation:write", "limits:read", "limits:write",
     }
-
-
-

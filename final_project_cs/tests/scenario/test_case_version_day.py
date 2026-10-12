@@ -142,8 +142,11 @@ def case_world():
                         report_extractor=_extractor, clock=clock,
                         execution_planner=fixture_plan,
                         service_overrides=replay_leg_services(SCENARIO))
-    yield {"tenant": tenant, "store": store, "trip_id": trip_id, "customer": customer, "clock": clock,
-           "engine": engine}
+    from app.core.service_bindings import bind_services
+
+    with bind_services(engine.controller.service_bindings):
+        yield {"tenant": tenant, "store": store, "trip_id": trip_id, "customer": customer, "clock": clock,
+               "engine": engine}
     cleanup_tenant(tenant)
 
 

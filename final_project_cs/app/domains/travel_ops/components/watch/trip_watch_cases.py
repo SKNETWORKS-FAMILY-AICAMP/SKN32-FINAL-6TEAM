@@ -644,4 +644,44 @@ class TripWatchCaseOpener:
                                 "item": ", ".join(o.item.title for o in outcomes)})
 
 
+    def _recover_existing(self, conn: Any, issue: Issue, case_id: str, group: list[Issue],
+                          result: CaseTickResult, opened: list[UUID]) -> None:
+        """직전 실행이 실패한 watch Case를 같은 판의 실행 관문으로 다시 보낸다."""
+        from app.core.service_bindings import current_bindings
+
+        identifier = UUID(str(case_id))
+        if identifier in opened or self.run_case is None:
+            return
+        case = self.repository.get_case(conn, tenant_id=self.store.tenant_id, case_id=identifier)
+        if case is None or str(case["status"]) != "running":
+            return
+        state = case.get("state_json") or {}
+        table = current_bindings()
+        # 운영 회차는 항상 고정 판이 있다. 명시 standalone 재생은 Controller 관문을 쓴다.
+        if table is not None:
+            try:
+                registry = table.registry
+                if registry is None:
+                    raise TeamUnavailable(case["owner_team_id"], "composition_unbound")
+                entry = registry.require_runnable(case["owner_team_id"])
+                capability = registry.capability_for(entry, case.get("intent"),
+                    input_text=state.get("customer_input") or case.get("subject"),
+                    state={**state, "issue_code": case.get("issue_code")})
+                registry.require_runnable(case["owner_team_id"], capability)
+            except TeamUnavailable as exc:
+                logger.warning("watch_recovery_unavailable team_id=%s reason=%s composition_revision=%s",
+                               exc.team_id, exc.reason, table.revision)
+                result.unavailable.append({"case_id": str(identifier), "kind": exc.team_id, "reason": exc.reason})
+                return
+        opened.append(identifier)
+        result.retried.append({**issue.record(), "case_id": str(identifier), "same_case": True})
+        trigger = state.get("trigger") or {}
+        if "batch" in trigger:
+            members = {str(member["item_id"]) for member in trigger["batch"]}
+            self._contexts[identifier] = {"trip_id": issue.trip_id,
+                                          "batch": [member for member in group if str(member.item.item_id) in members]}
+        else:
+            self._contexts[identifier] = {"trip_id": issue.trip_id, "item": issue.item, "causes": issue.causes}
+
+
 __all__ = ["CaseTickResult", "DEFAULT_LOOKAHEAD", "RETRYABLE_GUARDRAILS", "TripWatchCaseOpener"]

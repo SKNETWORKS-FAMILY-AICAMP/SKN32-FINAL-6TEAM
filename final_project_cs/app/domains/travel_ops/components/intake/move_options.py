@@ -11,13 +11,13 @@
 """
 from __future__ import annotations
 
+from app.core.team_availability import TeamUnavailable
+
 import json
 from concurrent.futures import ThreadPoolExecutor, wait
 from datetime import datetime
 from typing import Any, Callable
 from uuid import UUID
-
-from app.core.team_availability import TeamUnavailable
 
 from . import review as review_module
 from .moves import Leg, leg_between

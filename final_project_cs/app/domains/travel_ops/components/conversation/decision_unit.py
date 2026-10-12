@@ -320,7 +320,10 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
     action = raw.get("action")
     if action not in ACTIONS:
         raise DecisionFailed(f"할 일이 목록 밖이다: {action!r}")
-    change_scope = raw.get("change_scope", "none" if action not in {"apply_change", "propose_alternatives"} else None)
+    # ★`[2026-10-13]` change_scope 는 응답 형식의 필수 항목이 아니다 — 모델(또는 이전 형식의 답)이 빼면 이 칸이 생기기 전처럼
+    #   변경 요청은 장소 변경으로 본다. 모델이 time · date · mixed · unclear 라고 분명히 말한 경우만 장소 교체를 막는다.
+    #   (전에는 빼면 「해석하지 못했어요」로 떨어져 일정 변경 요청 전체가 막혔다 — CI e2e 18건)
+    change_scope = raw.get("change_scope", "place" if action in {"apply_change", "propose_alternatives"} else "none")
     if change_scope not in {"place", "time", "date", "mixed", "none", "unclear"}:
         raise DecisionFailed("변경할 대상이 유효하지 않습니다")
     scope_blocked = action in {"apply_change", "propose_alternatives"} and change_scope != "place"

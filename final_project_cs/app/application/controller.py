@@ -963,4 +963,14 @@ class Controller:
                 latest = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id) or case
                 return {"case_id": str(case_id), "status": latest["status"],
                         "version": latest["version"], "stale": True}
-        return await self.run_case(tenant_id=tenant_id, case_id=case_id, actor_id=actor_id)
+        try:
+            return await self.run_case(tenant_id=tenant_id, case_id=case_id, actor_id=actor_id)
+        except ActiveRunError:
+            # 답변 저장 직후 같은 요청의 재전송이 먼저 실행을 시작할 수 있다.
+            # 이미 실행 중인 업무를 실패로 닫거나 한 번 더 실행하지 않는다.
+            with self.connection_factory() as latest_conn:
+                latest = self.repository.get_case(latest_conn, tenant_id=tenant_id, case_id=case_id)
+            if latest is None:
+                raise ControllerError("case not found")
+            return {"case_id": str(case_id), "status": latest["status"], "version": latest["version"],
+                    "idempotent": True}

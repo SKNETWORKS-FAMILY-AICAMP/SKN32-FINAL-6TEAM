@@ -208,6 +208,21 @@ class WatchBatch:
                                          "allowed_tools": list(step.tools)})
         return work, scoped
 
+    def _scoped_work(self, step):
+        """항목 소유 Team의 도구·예산으로 계산한다. 단독 부품 시험은 명시된 연결을 쓴다."""
+        table = current_bindings()
+        if table is None:
+            return self.work, self.task
+        entry = table.registry.require_runnable(step.team_id, f"{step.team_id}.itinerary")
+        source = entry.module
+        work = copy(source)
+        context = self.task.context.model_copy(update={"team_id": step.team_id,
+            "knowledge_scope": list(entry.manifest.knowledge_scope)})
+        task = TeamTask.model_validate({**self.task.model_dump(), "team_id": step.team_id,
+            "capability": f"{step.team_id}.itinerary", "context": context,
+            "allowed_tools": list(entry.manifest.allowed_tools)})
+        return work, task
+
     # ── 진입 ────────────────────────────────────────────────────
     def run(self) -> TeamResult:
         work, task, ctx = self.work, self.task, self.ctx
@@ -387,19 +402,20 @@ class WatchBatch:
         warnings += [f"미실행 항목 — {o.item.title}: team_unavailable({', '.join(o.reasons[:2])})" for o in unavailable]
 
         if not (applied or asked or consent):
-            if unavailable:
+            if unavailable and not (stuck or retry):
                 first = unavailable[0]
                 raise TeamUnavailable(first.reasons[1] if len(first.reasons) > 1 else first.item.kind, first.reasons[0])
             if stuck or retry:
                 # 아무것도 못 바꿨다 — 단일 Case 와 같게 escalate 하고, 항목별 결과를 표지로 남긴다(`outcome:` 못 푼 것 → 감시가 고객에게 한 번에 알린다 · `retry:` 다시 열 것).
                 #   다시 열 항목이 있으면 **다시 열 수 있는 사유**(`fatal_source_failure`)로 닫는다 — 그 항목이 영원히 막히지 않게
-                code = ("fatal_source_failure" if retry else
+                code = ("fatal_source_failure" if retry or unavailable else
                         "itinerary_recheck_failed" if all(o.kind == "recheck_failed" for o in stuck) else "itinerary_unresolved")
-                tokens = [*(f"outcome:{o.item.item_id}:{o.kind}" for o in [*stuck, *retry]), *(f"retry:{o.item.item_id}" for o in retry)]
+                tokens = [*(f"outcome:{o.item.item_id}:{o.kind}" for o in [*stuck, *retry]),
+                          *(f"retry:{o.item.item_id}" for o in [*retry, *unavailable])]
                 return work._escalate(task, code, evidence, warnings=[*tokens, f"묶음 결과: {summary}"])
             return work.settle(task, ctx, NoChange("clear"))
 
-        arguments, answer = self._arguments(trip, trip["version"], outcomes, applied, asked, consent, stuck, retry)
+        arguments, answer = self._arguments(trip, trip["version"], outcomes, applied, asked, consent, stuck, [*retry, *unavailable])
         proposal = ActionProposal(
             action_type=ACTION_TYPE, arguments=arguments,
             idempotency_key=idempotency_key(
