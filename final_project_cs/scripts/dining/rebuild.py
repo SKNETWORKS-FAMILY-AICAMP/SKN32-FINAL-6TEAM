@@ -125,6 +125,7 @@ LOADS = [
 #: 적재가 끝난 뒤 가게를 보고 계산하는 것. 영문 SQL 만 둔다 — -c 로 넘긴다.
 AFTER_LOADS = [
     ("대표 분류", "SELECT dining.refresh_category()"),
+    ("음식 결", "SELECT dining.refresh_style()"),       # 231 — 사람이 고친 값(manual)은 덮지 않는다
 ]
 
 

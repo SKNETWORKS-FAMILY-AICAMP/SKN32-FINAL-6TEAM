@@ -76,8 +76,10 @@ test("폼이 열린 뒤에는 한 줄의 아이콘(되돌리기 · 취소 · 적
 
 test("고정한 일정의 시간은 잡아도 안 움직이고 이유만 말한다", async ({ page, request }) => {
   const server = await openFinished(page, request);
-  await page.getByRole("article", { name: "경복궁 관람", exact: true }).getByRole("heading").getByRole("button").click();
-  await page.getByRole("button", { name: "경복궁 관람 꼭 넣을 일정으로 고정" }).click();
+  const lock = page.getByRole("button", { name: "경복궁 관람 꼭 넣을 일정으로 고정", exact: true });
+  await expect(lock).toHaveCount(0);                                              // 접힌 카드는 종류 아이콘이고 잠금은 상세에서만 나타난다
+  await page.getByRole("button", { name: "경복궁 관람", exact: true }).click();
+  await lock.click();
   await expect(page.getByRole("button", { name: "경복궁 관람 고정 풀기" })).toBeVisible();
   const before = (await server.received("POST", "/edits")).length;                                   // 잠금 자체도 서버로 간 수정이다
   const handle = timeButton(page, "경복궁 관람");

@@ -11,7 +11,7 @@ export interface Coordinates {
 export type PinTone = "muted" | "current" | "candidate" | "warn";   // `warn` [2026-10-07]: a stop that needs a look, while the list shows only those
 
 /** A pin's own label and look, by stop id (plan check's change screen: 「A · B · C」 candidates, the rest greyed). */
-export interface PinLook { label?: string; tone?: PinTone }
+export interface PinLook { label?: string; tone?: PinTone; revealFocus?: boolean }
 
 export interface MapPoint {
   id: string;
@@ -25,6 +25,8 @@ export interface MapPoint {
   /** Shown on the pin instead of `order`. */
   label?: string;
   tone?: PinTone;
+  /** First-check replay camera target; earlier points remain available as pins or edge chips. */
+  revealFocus?: boolean;
 }
 
 /**
@@ -95,8 +97,10 @@ export interface MapViewProps {
   /** `[2026-10-05]` What the map shows, said once the map is up and each time it comes to rest after being moved, zoomed or resized. */
   onView?: (view: MapView) => void;
   onInteractionChange?: (active: boolean) => void;
-  /** `[2026-10-05]` The customer agreed to share their place: the map has a 「내 위치로」 button (it waits, greyed, for the first fix). Absent/false: no such button, and nothing said about it. */
+  /** Whether location consent was given. The button is also available before consent. */
   meAvailable?: boolean;
+  /** Read a position after consent, then move this map's camera. */
+  onRequestLocation?: (onLocated: (location: MyLocation) => void) => void;
 }
 
 export interface MapController {

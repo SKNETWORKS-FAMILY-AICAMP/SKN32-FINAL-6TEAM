@@ -3,8 +3,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 
-const cache = resolve("../../../../.tmp/ui-map-tiles/identified-v1");
-const blockedTile = resolve("../../../../.tmp/ui-map-tiles/13_6984_3171.png");
+const cache = resolve("C:/Users/playdata2/Documents/final_workspace/.tmp/ui-map-tiles/identified-v1");
+const blockedTile = resolve("C:/Users/playdata2/Documents/final_workspace/.tmp/ui-map-tiles/13_6984_3171.png");
 const tiles = new Map<string, Promise<Buffer>>();
 
 

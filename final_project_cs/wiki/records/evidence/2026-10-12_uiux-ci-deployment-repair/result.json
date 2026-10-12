@@ -1,0 +1,31 @@
+{
+  "backend_contract_security_catalog": {
+    "passed": 416,
+    "failed": 0,
+    "skipped": 0,
+    "external_network_attempts": [],
+    "business_database_access": false
+  },
+  "deployment_guard": {
+    "passed": 21,
+    "failed": 0,
+    "actual_remote_config_hash_proof_services": 3,
+    "remote_files_settings_containers_changed": false
+  },
+  "web_unit": {
+    "passed": 712,
+    "files": 87
+  },
+  "browser": {
+    "passed": 68,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "provider": "mock server"
+  },
+  "typecheck": 0,
+  "changed_file_lint": 0,
+  "production_build": 0,
+  "complete_github_ci": "pending after push",
+  "public_deployment": "not yet confirmed"
+}

@@ -44,7 +44,7 @@ test("채팅 버튼은 막대만 펼치고(입력칸에 초점 없음), 입력�
   await expect(page.getByRole("button", { name: "채팅 입력 열기" })).toBeFocused();
 });
 
-test("일차·일정·지도 선택이 이어진다: 일정을 펼쳐 「지도에서 보기」를 누르면 그 핀이 선택되고 알림 막대가 그 일정을 말하며, 핀을 누르면 그 일정이 목록에서 펼쳐진다", async ({ page }) => {
+test("일차·일정·지도 선택이 이어진다: 지도 보기는 안내 토스트 없이 핀을 선택하고, 핀을 누르면 그 일정이 목록에서 펼쳐진다", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await registerStubTrip(page);
   const timeline = tripScreen(page);
@@ -55,7 +55,7 @@ test("일차·일정·지도 선택이 이어진다: 일정을 펼쳐 「지도�
   await expect(page.locator("#stop-detail-i-b dl")).toContainText("다음 일정12:00 · 점심 식당");
   await page.locator("#stop-detail-i-b").getByRole("button", { name: "지도에서 보기" }).click();
   await expect(map.locator('.leaflet-marker-icon[title^="2. 경복궁 관람"]')).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("status").filter({ hasText: "경복궁 관람" }).first()).toBeAttached();
+  await expect(page.getByRole("status").filter({ hasText: "경복궁 관람" })).toHaveCount(0);
 
   await map.locator('.leaflet-marker-icon[title^="3. 점심 식당"]').dispatchEvent("click");     // 지도가 움직이는 동안은 .click() 의 「안정됨」 확인이 밀려서 click 이벤트를 직접 보낸다
   await expect(page.locator("#stop-button-i-c")).toHaveAttribute("aria-expanded", "true");

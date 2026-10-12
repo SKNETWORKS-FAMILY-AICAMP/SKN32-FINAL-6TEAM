@@ -284,15 +284,17 @@ def planner_shops(conn) -> list[dict[str, Any]]:
             "SELECT p.place_uid, p.name_ko, p.lat, p.lng, coalesce(p.road_address, p.jibun_address), "
             "       (SELECT min(r.external_id) FROM dining.dn_source_record r "
             "         WHERE r.place_uid = p.place_uid AND r.source_code = 'tourapi_kor_food' "
-            "           AND r.external_id IS NOT NULL) "
+            "           AND r.external_id IS NOT NULL), p.category, p.style "
             "FROM dining.dn_place p "
             "WHERE p.record_status <> 'closed' AND NOT p.is_synthetic AND p.lat IS NOT NULL AND p.lng IS NOT NULL "
             "ORDER BY p.name_ko, p.place_uid")
         rows = cur.fetchall()
         badges = shop_badges(cur)
+    # ★`[2026-10-12]` 큰 분류 · 음식 결을 싣는다 — 전에는 없어서 생성기가 고른 식당이 대체 순위에서 늘 종류 모름이었다
     return [{"place_uid": str(uid), "name": name, "lat": float(lat), "lng": float(lng),
-             "address": address, "content_id": content_id, "badges": badges.get(str(uid), [])}
-            for uid, name, lat, lng, address, content_id in rows]
+             "address": address, "content_id": content_id, "category": category, "style": style,
+             "badges": badges.get(str(uid), [])}
+            for uid, name, lat, lng, address, content_id, category, style in rows]
 
 
 #: 화면 · 일정 생성기가 쓰는 가게 표시. 순서가 곧 화면 순서다. `[2026-10-07]`
@@ -617,7 +619,7 @@ def nearby_shops(conn, tenant_id: str, around: list[tuple[float, float]], *, rad
             "SELECT p.place_uid, p.name_ko, p.lat, p.lng, "
             "       (SELECT min(r.external_id) FROM dining.dn_source_record r "
             "         WHERE r.place_uid = p.place_uid AND r.source_code = 'tourapi_kor_food' "
-            "           AND r.external_id IS NOT NULL), p.category, "
+            "           AND r.external_id IS NOT NULL), p.category, p.style, "
             "       min(dining.distance_m(p.lat, p.lng, pts.lat, pts.lng)) AS d "
             "FROM dining.dn_place p CROSS JOIN pts "
             "WHERE p.record_status <> 'closed' AND NOT p.is_synthetic "
@@ -626,15 +628,30 @@ def nearby_shops(conn, tenant_id: str, around: list[tuple[float, float]], *, rad
             "  AND NOT EXISTS (SELECT 1 FROM dining.dn_core_place_link l "
             "                   WHERE l.tenant_id = %s AND l.place_uid = p.place_uid "
             "                     AND l.core_place_id::text = ANY(%s::text[])) "
-            "GROUP BY p.place_uid, p.name_ko, p.lat, p.lng, p.category "
+            "GROUP BY p.place_uid, p.name_ko, p.lat, p.lng, p.category, p.style "
             "ORDER BY d, p.place_uid LIMIT %s",
             ([float(a) for a, _ in around], [float(b) for _, b in around], radius_m,
              tenant_id, [str(i) for i in (visible_core_ids or [])], limit))
         rows = cur.fetchall()
     # ★`[2026-10-07]` 큰 종류(`category` — 한식 · 카페디저트 · 미상 …)를 싣는다 — 대체 순위의 「비슷한 곳」(`meal_likeness`)
+    # ★`[2026-10-12]` 음식 결(`style` — 고기구이 · 국물요리 …, 231)도 — 큰 종류만으로는 고깃집과 백반집이 같았다
     return [{"place_uid": str(uid), "name": name, "latitude": float(lat), "longitude": float(lng),
-             "content_id": content_id, "category": category, "distance_m": float(d)}
-            for uid, name, lat, lng, content_id, category, d in rows]
+             "content_id": content_id, "category": category, "style": style, "distance_m": float(d)}
+            for uid, name, lat, lng, content_id, category, style, d in rows]
+
+
+def shop_profiles(conn, place_uids: list[str]) -> dict[str, dict[str, str | None]]:
+    """원장 가게의 큰 분류 · 음식 결 {place_uid: {"category", "style"}}. 읽기만 한다. `[2026-10-12]`
+
+    ★대체 순위의 「비슷한 곳」은 장소 칸(`attributes`)에서 종류를 읽는데, 일정 생성기가 고른 식당에는 종류가 없었고
+      들여놓은 장소의 종류는 들여놓을 때 값 그대로였다. 비교 직전에 원장에서 다시 읽는다(`nearby.add_nearby`).
+    """
+    if not place_uids:
+        return {}
+    with conn.cursor() as cur:
+        cur.execute("SELECT place_uid, category, style FROM dining.dn_place WHERE place_uid::text = ANY(%s::text[])",
+                    ([str(u) for u in place_uids],))
+        return {str(uid): {"category": category, "style": style} for uid, category, style in cur.fetchall()}
 
 
 def link_core_place_to(conn, tenant_id: str, core_place_id: str, place_uid: str) -> None:

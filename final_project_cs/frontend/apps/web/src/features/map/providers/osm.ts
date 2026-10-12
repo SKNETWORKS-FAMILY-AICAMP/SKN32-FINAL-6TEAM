@@ -1,7 +1,7 @@
 import type { MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_BOX, meKey, STAY_BOX, staysKey } from "./me";
-import { createPin, createPinLeader, geometryKey, layoutPins, paintPinGroups, pinArea, PIN_BOX, placePin, pointLabel, popPin, pulsePin, setPinSelected, type PinSlot } from "./pin";
+import { createPin, createPinLeader, geometryKey, layoutPins, paintPinGroups, pinArea, PIN_BOX, pinPriority, placePin, pointLabel, popPin, pulsePin, setPinSelected, type PinSlot } from "./pin";
 import { setMarkerHidden } from "./visibility";
 
 /**
@@ -23,7 +23,9 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
     async create(container, options) {
       const L = (await import("leaflet")).default;
       // ★`[2026-10-05 사용자 선택]` The map's buttons (+ − the scale ruler, all stops, my place) are drawn by the page over every provider the same way (`map-controls.tsx`): no Leaflet control here.
-      const map = L.map(container, { center: options.points[0]?.coordinates ?? SEOUL, zoom: 14, minZoom: 3, maxZoom: 18, zoomControl: false });
+      const reducedMotion = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const map = L.map(container, { center: options.points[0]?.coordinates ?? SEOUL, zoom: 14, minZoom: 3, maxZoom: 18, zoomControl: false,
+        zoomAnimation: !reducedMotion(), markerZoomAnimation: !reducedMotion(), fadeAnimation: !reducedMotion() });
       const layer = L.tileLayer(tileUrl, { maxZoom: 19, attribution: OSM_ATTRIBUTION, crossOrigin: false });
       // ★One missing tile is not a broken map (the pins still show). Only when nothing has loaded after a few failures
       //   does the screen say the map could not be shown — never a blank grey box that looks like a map.
@@ -45,8 +47,8 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       // ★`[2026-10-06 사용자 지적 — 지도가 딱딱 끊어지게 이동한다]` After the first fit the camera FLIES (a smooth, eased flight that starts from wherever the map is, and starts over smoothly if another pin arrives meanwhile)
       //   instead of cutting to the new view. The first fit and a screen that asks for less motion still cut.
       let fitted = false;
-      const reducedMotion = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const FLIGHT = { duration: 1.2, easeLinearity: 0.2 } as const;
+      // Geographic travel is longer than a UI fade, but settles before the 800ms card hold ends.
+      const FLIGHT = { duration: 0.65, easeLinearity: 0.35 } as const;
       let centredOnMe = false;           // [2026-10-05] an empty map is centred on the customer once; pins (a different set of them) reset it
       // ★The box can change size after the first fit (the sheet over the map goes up and down, a tab opens). Until the customer
       //   moves or zooms the map themselves, a new size fits the pins again; after that the map stays where they put it.
@@ -56,10 +58,16 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       map.on("moveend zoomend", () => options.onInteractionChange?.(false));
       map.on("dragstart", () => { userMoved = true; });
       map.on("zoomstart", () => { if (!programmatic) userMoved = true; });
-      let markers: { id: string; marker: ReturnType<typeof L.marker>; pin: HTMLElement; leaderMarker: ReturnType<typeof L.marker>; leaderBox: HTMLElement }[] = [];
+      let markers: { id: string; paint: string; marker: ReturnType<typeof L.marker>; pin: HTMLElement; leaderMarker: ReturnType<typeof L.marker>; leaderBox: HTMLElement }[] = [];
       let hiddenPoints = new Set<string>();
       function setHiddenPoints(ids: readonly string[]) {
-        hiddenPoints = new Set(ids);
+        // A React chip update may refer to the viewport just before an instant SDK move.
+        // Never let that older chip hide a coordinate already inside the current viewport.
+        const bounds = map.getBounds();
+        hiddenPoints = new Set(ids.filter(id => {
+          const point = points.find(point => point.id === id);
+          return point && !bounds.contains(point.coordinates);
+        }));
         markers.forEach(({ id, marker, leaderMarker }) => {
           setMarkerHidden(marker.getElement(), hiddenPoints.has(id));
           setMarkerHidden(leaderMarker.getElement(), hiddenPoints.has(id));
@@ -93,7 +101,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       let slots: Record<string, PinSlot> = {};
       function relayout() {
         if (destroyed || !markers.length || !container.clientWidth || !container.clientHeight) return;
-        slots = layoutPins(points.filter((point) => !hiddenPoints.has(point.id)).sort((a, b) => Number(b.id === selectedId) - Number(a.id === selectedId)).map((point) => {
+        slots = layoutPins(points.filter((point) => !hiddenPoints.has(point.id)).sort((a, b) => pinPriority(a, b, selectedId)).map((point) => {
           const at = map.latLngToContainerPoint([point.coordinates.lat, point.coordinates.lng]);
           return { id: point.id, x: at.x, y: at.y };
         }), pinArea(container, options), slots);
@@ -108,6 +116,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       // [2026-10-05] What the map shows goes to the screen, for the scale ruler and the chips of the stops out of view.
       const sayView = () => {
         if (destroyed || !container.clientWidth || !container.clientHeight) return;
+        setHiddenPoints([...hiddenPoints]);
         const bounds = map.getBounds();
         options.onView?.({ south: bounds.getSouth(), west: bounds.getWest(), north: bounds.getNorth(), east: bounds.getEast(), width: container.clientWidth, height: container.clientHeight, zoom: map.getZoom() });
       };
@@ -134,14 +143,15 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
           needsFit = false;
           centredOnMe = true;
           programmatic = true;
-          try { map.setView(me.coordinates, 15); } finally { programmatic = false; }
+          try { map.setView(me.coordinates, 15, reducedMotion() ? { animate: false } : undefined); } finally { programmatic = false; }
           return;
         }
         needsFit = false;
         programmatic = true;
         try {
           const fly = fitted && !reducedMotion();
-          if (points.length === 1) { if (fly) map.flyTo(points[0].coordinates, 15, FLIGHT); else map.setView(points[0].coordinates, 15, { animate: false }); }
+          const focus = points.find(point => point.revealFocus);
+          if (focus || points.length === 1) { const at = (focus ?? points[0]).coordinates; if (fly) map.flyTo(at, 15, FLIGHT); else map.setView(at, 15, { animate: false }); }
           else {
             const bounds = L.latLngBounds(points.map(({ coordinates }) => [coordinates.lat, coordinates.lng] as [number, number]));
             const padding = { paddingTopLeft: [50, 50 + (options.topInset ?? 0)] as [number, number], paddingBottomRight: [50, 50 + (options.bottomInset ?? 0)] as [number, number] };
@@ -202,10 +212,15 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         points = nextPoints;
         if (data !== previousData) {
           // A stop the map has not shown before pops in (not the first set of pins, and not the ones that were already there).
-          const known = new Set(markers.map(({ id }) => id));
+          const old = new Map(markers.map(entry => [entry.id, entry]));
           const popIn = previousData !== "";
-          clearMarkers();
+          markers = [];
           points.forEach((point) => {
+            const paint = JSON.stringify({ ...point, revealFocus: undefined });
+            const prior = old.get(point.id);
+            old.delete(point.id);
+            if (prior?.paint === paint) { markers.push(prior); return; }
+            prior?.marker.remove(); prior?.leaderMarker.remove();
             const pin = createPin(point, true);
             const leaderBox = createPinLeader(pin);
             const leaderIcon = L.divIcon({ html: leaderBox, className: "", iconSize: [PIN_BOX, PIN_BOX], iconAnchor: [PIN_BOX / 2, PIN_BOX / 2] });
@@ -217,9 +232,10 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
             // The marker's box is wider than the pin: only the pin takes presses (the rest of the box leaves the map draggable).
             const element = marker.getElement();
             if (element) element.style.pointerEvents = "none";
-            markers.push({ id: point.id, marker, pin, leaderMarker, leaderBox });
-            if (popIn && !known.has(point.id)) popPin(pin);
+            markers.push({ id: point.id, paint, marker, pin, leaderMarker, leaderBox });
+            if (popIn && !prior) popPin(pin);
           });
+          old.forEach(({ marker, leaderMarker }) => { marker.remove(); leaderMarker.remove(); });
           previousData = data;
           setHiddenPoints([...hiddenPoints]);
           relayout();
@@ -237,10 +253,10 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
           userMoved = false;            // different pins: the old view means nothing
           fit();
           relayout();
-          pulseFirst();
+          if (!points.some(point => point.revealFocus)) pulseFirst();
         } else if (nextSelectedId !== selectedId) {
           const selected = points.find(({ id }) => id === nextSelectedId);
-          if (selected) map.panTo(selected.coordinates);
+          if (selected) map.panTo(selected.coordinates, reducedMotion() ? { animate: false } : undefined);
         }
         selectedId = nextSelectedId;
         relayout();
@@ -297,8 +313,9 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         // Leaflet drops a new view while a zoom animation runs: wait for it to end.
         if ((map as unknown as { _animatingZoom?: boolean })._animatingZoom) { map.once("zoomend", () => centerOn(at, keepZoom)); return; }
         userMoved = true;
-        if (keepZoom) map.panTo([at.lat, at.lng]);
-        else map.setView([at.lat, at.lng], Math.max(map.getZoom(), 15));
+        const motion = reducedMotion() ? { animate: false } : undefined;
+        if (keepZoom) map.panTo([at.lat, at.lng], motion);
+        else map.setView([at.lat, at.lng], Math.max(map.getZoom(), 15), motion);
       }
 
       try { update(options.points, options.selectedId, options.lines); setMe(options.me ?? null); setStays(options.stays ?? []); }
@@ -314,7 +331,8 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         fit: fitAll,
         zoomBy(delta) {
           if (destroyed) return;
-          const zoom = map.getZoom() + delta;
+          const zoom = Math.min(map.getMaxZoom(), Math.max(map.getMinZoom(), Math.round(map.getZoom()) + delta));
+          if (zoom === map.getZoom()) return;
           // CSS zoom transforms markers before Leaflet updates its bounds. flyTo publishes each visual move instead.
           if (reducedMotion()) map.setZoom(zoom, { animate: false });
           else map.flyTo(map.getCenter(), zoom, FLIGHT);

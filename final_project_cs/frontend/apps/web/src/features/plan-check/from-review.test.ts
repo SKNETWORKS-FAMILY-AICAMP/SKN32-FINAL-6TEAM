@@ -141,6 +141,13 @@ describe("the check while the server is still working, from the events", () => {
     expect(view.items[0].verdict).toBeNull();                       // its status has not come: it is still being checked
   });
 
+  it("keeps a read stop's identity and missing date before any checked item arrives", () => {
+    const stream = fold([["line", { source_id: "s1", no: 2, text: "점심은 광장시장", found: { id: "0-1", index: 1, day: null, date: null, starts_at: null, title: "광장시장" } }]]);
+    const view = streamingViewOf(intake("reading", "checking"), stream);
+    expect(view.lines[1]).toEqual({ no: 2, text: "점심은 광장시장", read: true, found: { kind: "item", id: "0-1", sourceKey: "s1:1", day: null, date: null, startsAt: null, title: "광장시장" } });
+    expect(view.items).toEqual([]);
+  });
+
   it("stays on 「received」 until the server says it has started reading", () => {
     expect(streamingViewOf(intake("reading", "received"), emptyStream()).stage).toBe("received");
   });

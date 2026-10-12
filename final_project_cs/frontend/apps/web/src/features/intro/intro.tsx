@@ -93,7 +93,9 @@ export function Intro() {
   const slides = useRef<HTMLDivElement>(null);
   const [slide, setSlide] = useState(0);
   const drag = useRef<{ x: number; left: number; from: number } | null>(null);
+  const stopDragWait = useRef<(() => void) | null>(null);
   const [dragging, setDragging] = useState(false);
+  useEffect(() => () => stopDragWait.current?.(), []);
   useDocumentTitle(text.title);
 
   const sections = useCallback(() => [...(pages.current?.children ?? [])] as HTMLElement[], []);
@@ -166,6 +168,7 @@ export function Intro() {
   /** Mouse drag on PC. Touch and trackpads keep the browser's own swipe. */
   function startDrag(event: PointerEvent<HTMLDivElement>) {
     if (event.pointerType !== "mouse" || event.button !== 0 || !slides.current) return;
+    stopDragWait.current?.();
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
     drag.current = { x: event.clientX, left: slides.current.scrollLeft, from: slide };
@@ -186,7 +189,20 @@ export function Intro() {
     const target = Math.min(guide.length - 1, Math.max(0, start.from + cards));
     // Snapping stays off until the glide ends, so the browser does not re-snap halfway.
     if (Math.abs(root.scrollLeft - Math.min(target * step, root.scrollWidth - root.clientWidth)) < 1) return setDragging(false);
-    root.addEventListener("scrollend", () => setDragging(false), { once: true });
+    let timer: ReturnType<typeof setTimeout>;
+    const clean = () => {
+      clearTimeout(timer);
+      root.removeEventListener("scroll", wait);
+      root.removeEventListener("scrollend", finish);
+      stopDragWait.current = null;
+    };
+    const finish = () => { clean(); setDragging(false); };
+    // Older browsers omit scrollend; restore snapping once scrolling has been quiet.
+    const wait = () => { clearTimeout(timer); timer = setTimeout(finish, 150); };
+    stopDragWait.current = clean;
+    root.addEventListener("scroll", wait, { passive: true });
+    root.addEventListener("scrollend", finish, { once: true });
+    wait();
     showSlide(target);
   }
 

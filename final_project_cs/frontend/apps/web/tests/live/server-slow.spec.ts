@@ -70,7 +70,11 @@ test("계획을 읽는 동안 새 소식이 30초 없으면 읽는 화면이 「
   await expect(note).toHaveCount(0);                                                                   // 20초는 아직이다
   await expect(note).toBeVisible({ timeout: 20_000 });
   await expect(note).toContainText("조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.");
-  await expect(note).toContainText("초째");
+  await expect(note).toContainText("30초 이상 새 진행 소식이 없어요.");
+  await note.getByRole("button", { name: "닫기", exact: true }).click();
+  await expect(note).toHaveCount(0);
+  await page.waitForTimeout(1200); // 다음 quiet 갱신이 닫은 토스트를 다시 띄우지 않습니다.
+  await expect(note).toHaveCount(0);
   await server.scenario({ readingPolls: 0 });
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible({ timeout: 20_000 });
   await expect(note).toHaveCount(0);

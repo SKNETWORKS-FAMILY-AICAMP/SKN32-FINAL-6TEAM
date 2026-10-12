@@ -146,15 +146,22 @@ function ProfileForm({ profile }: { profile: Profile }) {
   const canSave = !saving && !webhookBad && webhookChanged;
   async function save() {
     if (!canSave) return;
+    const key = serverProfileKey(language);
+    const query = queryClient.getQueryCache().find({ queryKey: key, exact: true });
+    const sameProfile = () => Boolean(query && queryClient.getQueryCache().find({ queryKey: key, exact: true }) === query);
     setSaving(true);
     setSaveError("");
     try {
       if (webhookChanged) {
         const saved = await saveDiscordWebhook(removeWebhook ? null : webhook, language);
-        if (saved.where === "server") queryClient.setQueryData(serverProfileKey(language), saved.profile);
+        if (saved.where === "server") {
+          if (!sameProfile()) { setSaving(false); return; }
+          queryClient.setQueryData(key, saved.profile);
+        }
       }
       router.push(routes.myPage);
     } catch (error) {
+      if (query && !sameProfile()) { setSaving(false); return; }
       setSaveError(error instanceof LiveError ? error.message : t("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.", "Could not save. Please try again shortly."));
       setSaving(false);
     }

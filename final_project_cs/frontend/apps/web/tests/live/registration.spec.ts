@@ -17,9 +17,9 @@ test("작성 중인 계획은 화면을 오가도·새로고침해도 보존되�
   await expect(plan).toHaveValue(valid);
   await page.reload();
   await expect(plan).toHaveValue(valid);
-  // 게스트 인증 세션 생성은 허용하지만 계획·여행·동의 등 다른 쓰기 요청은 하나도 없어야 한다.
+  // Nothing was sent to the server for a draft: only 「계획 확인하기」 sends.
   const log = await mockServer(page.request).log();
-  expect(log.filter((entry) => entry.method === "POST" && entry.path !== "/v1/web/auth/session")).toEqual([]);
+  expect(log.filter((entry) => entry.method === "POST")).toEqual([]);
 });
 
 test("「예시 불러오기」는 글칸에 일주일 뒤부터의 서울 이틀 일정을 채울 뿐이다 — 서버에는 아무것도 가지 않고, 고칠 수 있다", async ({ page, request }) => {
@@ -33,7 +33,7 @@ test("「예시 불러오기」는 글칸에 일주일 뒤부터의 서울 이�
   expect(firstDay > today).toBe(true);                                         // never a past date
   await plan.fill(`${text}\n21:00 숙소 휴식`);
   await expect(plan).toHaveValue(/21:00 숙소 휴식$/);
-  expect((await mockServer(request).log()).filter((entry) => entry.method === "POST" && entry.path !== "/v1/web/auth/session")).toEqual([]);
+  expect((await mockServer(request).log()).filter((entry) => entry.method === "POST")).toEqual([]);
   await expect(page.getByText(/데모|시연|Demo/)).toHaveCount(0);
 });
 

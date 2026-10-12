@@ -58,7 +58,7 @@ import math
 from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
-from app.domains.travel_ops.components.planning.meal_likeness import likeness
+from app.domains.travel_ops.components.planning.meal_likeness import LIKENESS_KEYS, likeness
 from app.domains.travel_ops.components.places.place_hours import break_span
 
 KST = ZoneInfo("Asia/Seoul")
@@ -432,6 +432,15 @@ def dining_candidates(*, original: dict[str, Any], places: list[dict[str, Any]],
     """
     base_price = (original.get("attributes") or {}).get("price_krw")
     need_payment = constraints.get("payment")
+    # ★`[2026-10-12]` 원래 식당의 종류는 **후보 목록의 같은 장소**에서 먼저 읽는다 — 요식 팀이 비교 직전에 원장 지금 값으로
+    #   맞춰 둔다(`dining.nearby._with_profiles`). 일정 항목의 장소는 생성 때 값이라 종류가 없거나 옛 값일 수 있다
+    #   원장에서 비어 빠진 칸은 옛 값을 남기지 않는다(모르는 것을 아는 것처럼 비교하지 않는다)
+    listed = next((p for p in places if p["place_id"] == original["place_id"]), None)
+    profile = original
+    if listed is not None:
+        listed_attributes = listed.get("attributes") or {}
+        merged = {k: v for k, v in (original.get("attributes") or {}).items() if k not in LIKENESS_KEYS}
+        profile = {**original, "attributes": {**merged, **listed_attributes}}
     original_attributes = original.get("attributes") or {}
     original_uid = original_attributes.get("dining_place_uid")
     original_content_id = original.get("source_content_id") or original_attributes.get("source_content_id")
@@ -465,7 +474,7 @@ def dining_candidates(*, original: dict[str, Any], places: list[dict[str, Any]],
         candidate.ends_at = candidate.starts_at + timedelta(minutes=minutes)
         if next_start is not None and candidate.ends_at > next_start:
             candidate.rejected.append(f"다음 일정({_hm(next_start)})과 겹친다")
-        candidate.likeness = likeness(original, place)
+        candidate.likeness = likeness(profile, place)
         if route is not None:
             route.check(candidate, original)
         out.append(candidate)

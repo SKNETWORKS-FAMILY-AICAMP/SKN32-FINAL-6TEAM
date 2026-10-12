@@ -112,9 +112,10 @@ export interface Registration {
 }
 
 /** 제출·등록은 여행 화면의 채팅 단추와 같은 크기·위치의 플로팅 동작이다. 수정안은 기존처럼 저장 후 등록한다. */
-export function ResultFooter({ view, registration, frozen, explain, previewing = false, needsTotal, pendingRemovals = 0, onRecheck, onRegisterPreview, footerRef, muted = false, focusHandlers }: {
+export function ResultFooter({ view, registration, frozen, explain, previewing = false, needsTotal, pendingRemovals = 0, onRecheck, onRegisterPreview, footerRef, muted = false, atListEnd = false, focusHandlers }: {
   footerRef?: RefObject<HTMLElement | null>;
   muted?: boolean;
+  atListEnd?: boolean;
   focusHandlers?: { onFocusCapture: FocusEventHandler<HTMLElement>; onBlurCapture: FocusEventHandler<HTMLElement> };
   view: PlanCheckView; registration?: Registration;
   /** The plan shown is the proposed one (nothing saved yet). */
@@ -160,7 +161,7 @@ export function ResultFooter({ view, registration, frozen, explain, previewing =
         ? (registration.problems.join(" · ") || t("서버가 아직 등록할 수 없다고 해요 · 위의 확인할 것을 먼저 고쳐 주세요", "The server cannot register it yet · fix what is listed above first")) : null);
     next = <Act className={`${styles.footButton} ${tripStyles.chatFab}`} data-primary why={why} explain={explain} onPress={() => (previewing && onRegisterPreview ? onRegisterPreview() : registration?.onRegister())} aria-label={registration?.busy ? t("등록하는 중…", "Registering…") : t("여행 등록", "Register trip")} tooltip={t("여행 등록", "Register trip")}>{registration?.busy ? <span className={styles.spinner} aria-hidden="true" /> : <Check size={24} aria-hidden="true" />}</Act>;
   }
-  return <footer ref={footerRef} className={`${styles.footer} ${tripStyles.chatBar}`} data-quiet={muted || undefined} inert={muted} aria-hidden={muted || undefined} {...focusHandlers}>
+  return <footer ref={footerRef} className={`${styles.footer} ${tripStyles.chatBar}`} data-at-end={atListEnd || undefined} data-quiet={muted || undefined} inert={muted} aria-hidden={muted || undefined} {...focusHandlers}>
     {status}
     {next}
   </footer>;

@@ -46,11 +46,10 @@ export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBu
   }, [mapActive, endMapPick]);
   const inline = !!onCancel;
   const hasSearch = !!search;
-  // A new parent callback must not refocus the field and clear a just-received save error.
   useEffect(() => { if (!mapPicker?.active && inline && (!hasSearch || selected)) first.current?.focus({ preventScroll: true }); }, [inline, hasSearch, selected, mapPicker?.active]);
   useEffect(() => { onBusy?.(busy); }, [busy, onBusy]);
   useEffect(() => { if (mapPicker?.active) mapHeading.current?.focus({ preventScroll: true }); }, [mapPicker?.active]);
-  const clear = (key: Field) => { setErrors((old) => ({ ...old, [key]: undefined })); setProblem(""); };
+  const clear = (key: Field) => { setErrors((old) => ({ ...old, [key]: undefined })); };
   function errorOf(key: Field): string | undefined {
     if (key === "title" && !draft.title.trim()) return t("일정 이름을 입력해 주세요.", "Enter a stop name.");
     if (key === "date" && !draft.date) return t("날짜를 입력해 주세요.", "Enter a date.");
@@ -61,7 +60,13 @@ export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBu
     if (key === "place" && !search && !draft.place.trim()) return t("장소 이름을 입력해 주세요.", "Enter a place name.");
   }
   const blur = (key: Field) => setErrors((old) => ({ ...old, [key]: errorOf(key) }));
-  const change = (key: Field, value: string) => { if (!busy) { setDraft((current) => ({ ...current, [key]: value })); clear(key); } };
+  const change = (key: Field, value: string) => {
+    if (busy) return;
+    setDraft((current) => ({ ...current, [key]: value }));
+    clear(key);
+    if (key === "start" && draft.end && value < draft.end) clear("end");
+    setProblem("");
+  };
   function pick(place: AddStopPlace | null) {
     if (busy) return;
     setSelected(place);
@@ -70,6 +75,7 @@ export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBu
       kind: place?.placeKind === "dining" || place?.placeKind === "activity" ? place.placeKind : current.kind,
     }));
     clear("place");
+    setProblem("");
   }
   function cancel() {
     if (busy) return;

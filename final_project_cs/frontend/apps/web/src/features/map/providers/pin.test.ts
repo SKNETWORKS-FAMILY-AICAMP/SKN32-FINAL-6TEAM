@@ -1,7 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { layoutPins, PIN_BODY, pinRect, pinFacing, type PinSlot } from "./pin";
+import { layoutPins, PIN_BODY, pinRect, pinFacing, pinPriority, type PinSlot } from "./pin";
+import type { MapPoint } from "../model";
 
 const AREA = { width: 402, height: 220, top: 64 };
+
+it("공개 마커를 먼저 배치해 극단적 밀집에서도 이전 선택 마커 뒤로 숨기지 않는다", () => {
+  const points: MapPoint[] = ["selected", "other", "focus"].map((id, index) => ({ id, title: id, date: "", time: "", order: index + 1, coordinates: { lat: 37.56, lng: 126.98 }, revealFocus: id === "focus" }));
+  const sorted = [...points].sort((a, b) => pinPriority(a, b, "selected"));
+  expect(sorted.map(point => point.id)).toEqual(["focus", "selected", "other"]);
+  const slots = layoutPins(sorted.map(point => ({ id: point.id, x: 20, y: 20 })), { width: 42, height: 42 });
+  expect(slots.focus.group).toBeUndefined();
+  expect(slots.selected.group).toBe("focus");
+});
+
+it("공개가 끝나면 기존 선택 우선과 나머지 일정 순서를 유지한다", () => {
+  const points: MapPoint[] = ["first", "selected", "last"].map((id, index) => ({ id, title: id, date: "", time: "", order: index + 1, coordinates: { lat: 37.56, lng: 126.98 } }));
+  expect([...points].sort((a, b) => pinPriority(a, b, "selected")).map(point => point.id)).toEqual(["selected", "first", "last"]);
+  expect([...points].sort((a, b) => pinPriority(a, b)).map(point => point.id)).toEqual(["first", "selected", "last"]);
+});
 
 it("낮은 지도에서 단추와 거리 칩 사이의 빈 상단 띠도 사용한다", () => {
   const points = [{ id: "selected", x: 104, y: 110 }];

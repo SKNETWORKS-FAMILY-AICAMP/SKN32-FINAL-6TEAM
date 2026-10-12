@@ -5,7 +5,7 @@
    and buttons (z-index 4) of `.live`, so with real tiles on the map the chips and the buttons were painted under them (the tests have no tiles - they never showed it). The map keeps its panes to itself. */
 .canvas { isolation: isolate; z-index: 0; }
 .live[data-picking] .canvas { cursor: crosshair; }
-.coordinatePin { position: absolute; z-index: 3; transform: translate(-50%, -50%); width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--color-brand-paper); background: var(--color-primary); color: var(--color-brand-paper); box-shadow: 0 1px 8px var(--color-coordinate-shadow); display: grid; place-items: center; font-size: 24px; pointer-events: none; }
+.coordinatePin { position: absolute; z-index: 3; transform: translate(-50%, -50%); width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--color-on-primary); background: var(--color-primary); color: var(--color-on-primary); box-shadow: 0 1px 8px var(--color-shadow-strong); display: grid; place-items: center; font-size: 24px; pointer-events: none; }
 .pickCenter { position: absolute; left: 12px; bottom: 32px; z-index: 4; min-height: 44px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: var(--color-text); cursor: pointer; }
 .pickCenter:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .routeLabels { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
@@ -50,7 +50,7 @@
   display: grid; place-items: center; padding: 0; cursor: pointer; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text);
   box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 20%, transparent);
 }
-.round { width: 40px; height: 40px; border-radius: 50%; }
+.round { width: 44px; height: 44px; border-radius: 50%; }
 .round:hover, .fold:hover { background: var(--color-soft); }
 .round[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
 .fold { width: 28px; height: 28px; border-radius: 50%; }
@@ -69,6 +69,11 @@
 .edgeChip:hover { background: var(--color-soft); }
 .edgeChip:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .controls { transition: none; } }
+/* A global .01ms duration still starts a CSS transition on SDK coordinates for one frame.
+   Geographic positions must jump atomically with edge-chip visibility in reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .canvas :global(.leaflet-container), .canvas :global(.leaflet-container *) { transition: none !important; animation: none !important; }
+}
 
 /* 조작 중에는 지도 도구가 잠시 물러나고 멈춘 뒤 돌아온다. */
 .live .controls { opacity: 1; pointer-events: auto; transform: translateY(0); transition: opacity 200ms ease-out, transform 200ms ease-out; }
@@ -81,7 +86,7 @@
 .controls[data-direction="column"] .foldArrow { transform: translate(-50%, -50%) rotate(90deg); }
 .controls[data-direction="column"] .fold[aria-expanded="true"] .foldArrow { transform: translate(-50%, -50%) rotate(270deg); }
 @media (prefers-reduced-motion: reduce) { .foldArrow { transition: none; } }
-.edgeNumbers { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: var(--color-edge-number-bg); color: var(--color-brand-paper); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.edgeNumbers { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: var(--color-map-stack); color: var(--color-on-primary); font-size: 12px; font-weight: 700; white-space: nowrap; }
 .edgeChip small { margin-left: 3px; padding-left: 7px; border-left: 1px solid var(--color-border-strong); font-size: 11px; font-weight: 500; }
 @media (prefers-reduced-motion: reduce) { .live .controls { transition: none; transform: none; } }
 
@@ -96,3 +101,8 @@
 /* Read toward the offscreen destination on either half of the map. */
 .edgeChip[data-side="left"] { flex-direction: row-reverse; }
 .edgeChip[data-side="left"] small { margin-left: 0; padding-left: 0; border-left: 0; margin-right: 3px; padding-right: 7px; border-right: 1px solid var(--color-border-strong); }
+/* 공개 중 작은 지도에서도 개별 번호와 방향은 남기고, 거리는 단추 안내에 보존한다. */
+.edgeChip[data-crowded] { box-sizing: border-box; width: 44px; min-width: 44px; min-height: 36px; padding: 3px; gap: 2px; justify-content: center; }
+.edgeChip[data-crowded] > svg { flex: none; width: 10px; height: 10px; }
+.edgeChip[data-crowded] .edgeNumbers { min-width: 20px; padding: 0; }
+.edgeChip[data-crowded] small { display: none; }
