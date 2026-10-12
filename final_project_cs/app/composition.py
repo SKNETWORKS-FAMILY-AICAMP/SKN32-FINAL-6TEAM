@@ -343,6 +343,22 @@ def build_activity_judge_shadow_sink():
     return sink
 
 
+def build_activity_judge_budget():
+    """판정 LLM 호출 예산 — 판정 종류 → 「불러도 되나」. `external_call_budget` 의 두 줄로 센다. `[2026-10-13]`
+    활동 코어 전달 사항 7번.
+
+    ★줄: `activity_judge`(원문 해석) · `activity_judge_web`(웹 검색 — 호출당 비용이 약 100배라 따로 센다).
+      상한은 `guardrails.yaml travel.activity_judge.budget`. 프로세스 · 재기동과 상관없이 DB 에서 같이 센다.
+    ★넘거나 세다가 실패하면 활동이 **부르지 않는다**(`budget_exhausted` · `budget_unreadable`) — 모델 서버 넘김
+      장치(`_llm_failover_budget`)와 반대다. 판정 LLM 은 규칙 판정을 돕는 쪽이라 안 불러도 고객 답이 나간다.
+    """
+    from app.domains.travel_ops.instances.activity.judge.modes import budget_caps, budget_meter
+    from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget
+
+    budget = CallBudget(connection_factory=get_connection, caps=budget_caps())
+    return lambda kind: budget.try_reserve(budget_meter(kind))
+
+
 def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
                    config_path: str | Path | None = None,
                    config: ProjectConfig | None = None) -> TeamRegistry:
@@ -353,9 +369,11 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
     #   조용히 네트워크를 타지 않게. 위 `build_travel_sources` 와 같은 이유다.
     judge_llm = None
     shadow_sink = None
+    judge_budget = None
     if tools is None:
         judge_llm = build_activity_judge_llm()
         shadow_sink = build_activity_judge_shadow_sink() if judge_llm is not None else None
+        judge_budget = build_activity_judge_budget() if judge_llm is not None else None
         config.require_module("vector_rag", "default ReadToolbox")
         # ★바깥 소스는 **조립이 넣는다.** 도구가 스스로 만들면 테스트가 조용히
         #   네트워크를 탄다. 만드는 것 자체는 I/O 가 없다 — 호출할 때만 나간다.
@@ -408,6 +426,8 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
                     f"team '{declaration.team_id}' supports activity_judge_mode {list(supported)}, got '{mode}'")
             team.judge_llm = judge_llm
             team.judge_shadow_sink = shadow_sink
+            if hasattr(team, "judge_budget"):
+                team.judge_budget = judge_budget
         team.manifest = team.manifest.model_copy(update={"active": declaration.active,
                                                          "team_id": declaration.team_id})
         if declaration.capabilities is not None and set(declaration.capabilities) != set(team.manifest.capabilities):

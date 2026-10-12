@@ -854,6 +854,8 @@ ALLOWED_PROMPT_KEYS = frozenset({
     #   섀도 모드에서 부른다(D-CS-015) — 기본 모드 `rule` 이면 부르지 않는다.
     "activity_judge.closure", "activity_judge.operating_hours", "activity_judge.weather_sensitive",
     "activity_judge.disaster_effect", "activity_judge.live_status",
+    # ★`[2026-10-13]` 대체 후보 순서(활동 코어 전달 사항 11번) — 기본 `kind_modes.alternative_order: rule` 이면 부르지 않는다.
+    "activity_judge.alternative_order",
 })
 
 
