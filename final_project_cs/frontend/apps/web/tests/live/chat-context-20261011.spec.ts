@@ -24,6 +24,10 @@ test("채팅 선택지는 화면 선택 대신 자기 일정 ID를 보내고 새
   await page.getByRole("button", { name: "자세히 알려줘", exact: true }).click();
   await expect.poll(() => sent.length).toBe(1);
   expect(sent[0]).toMatchObject({ item_id: "i-c", message: "자세히 알려줘" });
+  // A received request is not a completed response. Wait for the pending
+  // mutation to store its reply before deliberately removing the local copy.
+  await expect(page.getByRole("log", { name: "여행 대화 이력" })).toContainText("상세를 조회했어요.");
+  await expect(page.getByRole("log", { name: "여행 대화 이력" })).toHaveAttribute("aria-busy", "false");
   // A full reload gets the structured choices from the API, without relying on tab extras.
   await page.evaluate(() => sessionStorage.clear());
   await page.reload();

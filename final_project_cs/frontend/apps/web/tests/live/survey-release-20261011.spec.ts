@@ -32,10 +32,15 @@ async function completedQuestions(page: Page, request: APIRequestContext, touche
   await page.evaluate(() => {
     const stages: string[] = [];
     const counts: number[] = [];
-    Object.assign(window, { __releasedStages: stages, __releasedCounts: counts });
+    const pins: number[] = [];
+    Object.assign(window, { __releasedStages: stages, __releasedCounts: counts, __releasedPins: pins });
     const sample = () => {
       const screen = document.querySelector('[data-replay="playing"][data-stage]');
-      if (screen) { stages.push(screen.getAttribute("data-stage")!); counts.push(screen.querySelectorAll('li[data-type="item"]').length); }
+      if (screen) {
+        stages.push(screen.getAttribute("data-stage")!);
+        counts.push(screen.querySelectorAll('li[data-type="item"]').length);
+        pins.push(screen.querySelectorAll('.leaflet-marker-icon[title]').length);
+      }
     };
     new MutationObserver(sample).observe(document.body, { attributes: true, childList: true, subtree: true });
   });
@@ -57,9 +62,14 @@ async function completedResult(page: Page) {
   expect(stages.every((stage) => stage === "checking" || stage === "done"), stages.join(" → ")).toBe(true);
   expect(stages).toContain("checking");
   const counts = await page.evaluate(() => (window as unknown as { __releasedCounts: number[] }).__releasedCounts);
-  expect(counts).toContain(0);
-  expect(counts.some((count) => count > 0 && count < 3)).toBe(true);
-  expect(counts).toContain(3);
+  // The completed reading keeps every known title in the folded list.
+  // Checking reveals checks/map pins, rather than deleting the known titles.
+  expect(counts.length).toBeGreaterThan(0);
+  expect(counts.every((count) => count === 3)).toBe(true);
+  await expect(page.locator('li[data-type="item"]')).toHaveCount(3);
+  const pins = await page.evaluate(() => (window as unknown as { __releasedPins: number[] }).__releasedPins);
+  expect(pins.some((count) => count > 0 && count < 3)).toBe(true);
+  expect(pins).toContain(3);
   await noHorizontalScroll(page);
 }
 

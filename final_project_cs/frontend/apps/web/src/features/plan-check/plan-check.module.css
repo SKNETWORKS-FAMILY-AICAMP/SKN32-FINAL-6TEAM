@@ -757,3 +757,7 @@ button.time[data-adjusted] { color: var(--color-adjusted); }
 @media (prefers-reduced-motion: reduce) { .mapChips { transition: none; transform: none; } }
 
 @media (prefers-reduced-motion: reduce) { .mapChips[data-muted] { transform: none; } }
+
+/* Match the visible time box to its line box so the range gap is exact. */
+.timeStack > time:first-child { display: block; }
+.screen[data-stage="done"] .sheetBody[data-next-preview] { padding-bottom: 0; }

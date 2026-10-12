@@ -55,7 +55,7 @@ export function StopRow({ stop, next, open, selected, onToggle, onDetail, detail
   const t = useT();
   const id = `trip-stop-${stop.id}`;
   const timeFocused = open || selected;
-  const hasTags = stop.booking === "booked" || stop.pinned || stop.paused;
+  const hasTags = stop.booking === "booked" || stop.pinned || stop.paused || !!stop.badges?.length;
   return <li className={`${pc.entry} ${styles.stopEntry}`} data-type="item" data-entry-id={stop.id} data-time-focused={timeFocused || undefined} data-time-follow={open || undefined} data-selected={selected || undefined} data-paused={stop.paused || undefined}>
     <span className={pc.time}><span className={pc.timeStack}><time data-stop-start>{stop.time}</time><time className={pc.rangeEnd} data-stop-end aria-hidden={!timeFocused}>~{stop.endTime || "—"}</time></span></span>
     <span className={pc.rail} aria-hidden="true"><span className={`${pc.dot} ${styles.stopDot}`} /></span>
