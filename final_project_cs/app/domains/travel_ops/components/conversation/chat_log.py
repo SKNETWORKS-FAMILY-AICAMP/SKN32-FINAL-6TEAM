@@ -32,15 +32,21 @@ def recent(conn, *, tenant_id: str, trip_id: UUID, limit: int = RECENT_TURNS) ->
     """오래된 것부터 최근 `limit` 턴. 표가 없는 DB(시험 · 다른 조립)면 빈 목록."""
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT role, text, case_id, created_at FROM trip_chat_turns WHERE tenant_id=%s AND trip_id=%s "
-                        "ORDER BY turn_id DESC LIMIT %s", (tenant_id, trip_id, limit))
+            cur.execute("SELECT t.role, t.text, t.case_id, t.created_at, c.state_json->'chat_reply', t.turn_id "
+                        "FROM trip_chat_turns t LEFT JOIN customer_cases c ON c.case_id=t.case_id "
+                        "AND c.tenant_id=t.tenant_id AND c.state_json->'trip_message'->>'trip_id'=t.trip_id::text "
+                        "WHERE t.tenant_id=%s AND t.trip_id=%s ORDER BY t.turn_id DESC LIMIT %s",
+                        (tenant_id, trip_id, limit))
             rows = cur.fetchall()
     except Exception as exc:                          # noqa: BLE001 — 기록이 없으면 앞 대화 없이 해석한다
         if type(exc).__name__ != "UndefinedTable":
             raise
         conn.rollback()
         return []
-    return [{"role": r[0], "text": r[1], "case_id": str(r[2]) if r[2] else None, "at": r[3].isoformat()}
+    return [{"role": r[0], "text": r[1], "case_id": str(r[2]) if r[2] else None, "at": r[3].isoformat(),
+             "turn_id": r[5],
+             **({"reply": {k: v for k, v in r[4].items() if k in ("choices", "choices_title", "more", "answer_web", "focus")}}
+                if r[0] == "assistant" and isinstance(r[4], dict) else {})}
             for r in reversed(rows)]
 
 

@@ -1,7 +1,7 @@
 import type { Coordinates, MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_BOX, ME_LABEL, meKey, STAY_BOX, staysKey } from "./me";
-import { createPin, geometryKey, layoutPins, paintPinGroups, pinArea, PIN_BOX, placePin, pointLabel, pulsePin, setPinSelected, type PinSlot } from "./pin";
+import { createPin, geometryKey, layoutPins, paintPinGroups, pinArea, PIN_BOX, pinPriority, placePin, pointLabel, pulsePin, setPinSelected, type PinSlot } from "./pin";
 import { createSdkLoader } from "./sdk-loader";
 import { setMarkerHidden } from "./visibility";
 
@@ -102,7 +102,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
       function relayout() {
         const projection = map.getProjection?.();
         if (destroyed || !projection || !markers.length || !container.clientWidth || !container.clientHeight) return;
-        const placed = points.filter((point) => !hiddenPoints.has(point.id)).sort((a, b) => Number(b.id === selectedId) - Number(a.id === selectedId)).map((point) => {
+        const placed = points.filter((point) => !hiddenPoints.has(point.id)).sort((a, b) => pinPriority(a, b, selectedId)).map((point) => {
           const at = projection.fromCoordToOffset(new sdk.LatLng(point.coordinates.lat, point.coordinates.lng));
           return { id: point.id, x: at.x, y: at.y };
         });
@@ -174,9 +174,11 @@ export function createNaverAdapter(clientId: string): MapAdapter {
           return;
         }
         needsFit = false;
-        const positions = points.map(({ coordinates }) => new sdk.LatLng(coordinates.lat, coordinates.lng));
+        const focus = points.find(point => point.revealFocus);
+        const positions = (focus ? [focus] : points).map(({ coordinates }) => new sdk.LatLng(coordinates.lat, coordinates.lng));
         if (positions.length === 1) {
-          map.setCenter(positions[0]);
+          if (focus && previousGeometry && !matchMedia("(prefers-reduced-motion: reduce)").matches) map.panTo(positions[0]);
+          else map.setCenter(positions[0]);
           map.setZoom(15);
         } else {
           map.fitBounds(positions, { top: 80 + (options.topInset ?? 0), right: 80, bottom: 80 + (options.bottomInset ?? 0), left: 80, maxZoom: 16 });

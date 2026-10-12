@@ -61,12 +61,17 @@ export function SocialAccounts() {
 
   const unlink = useMutation({
     mutationFn: (provider: SocialProvider) => unlinkSocial(provider, language),
-    onSuccess: (remaining, provider) => {
+    onMutate: () => ({ query: queryClient.getQueryCache().find({ queryKey: linksKey(language), exact: true }) }),
+    onSuccess: (remaining, provider, context) => {
+      if (!context?.query || queryClient.getQueryCache().find({ queryKey: linksKey(language), exact: true }) !== context.query) return;
       queryClient.setQueryData(linksKey(language), remaining);
       setUnlinking(null);
       setMessage({ ok: true, text: t(`${providerName(provider)[0]} 계정 연결을 풀었어요. 여행은 그대로예요.`, `Unlinked ${providerName(provider)[1]}. Your trips are unchanged.`) });
     },
-    onError: (error) => { setUnlinking(null); setMessage({ ok: false, text: reason(error) }); },
+    onError: (error, _provider, context) => {
+      if (!context?.query || queryClient.getQueryCache().find({ queryKey: linksKey(language), exact: true }) !== context.query) return;
+      setUnlinking(null); setMessage({ ok: false, text: reason(error) });
+    },
   });
 
   const busy = go.isPending || unlink.isPending || Boolean(waiting);

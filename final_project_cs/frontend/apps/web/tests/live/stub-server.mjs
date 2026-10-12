@@ -15,6 +15,7 @@
 // Live progress (SSE, server `op_stream.py`): `POST …/messages` and `POST …/plan` asked with `Accept: text/event-stream`
 // answer `accepted` → `stage` … `beat` → `result` | `error`; `GET /v1/web/trip-intakes/{id}/events` follows the reading.
 import { createServer } from "node:http";
+import { PREPARED_PLAN_CATALOG } from "./prepared-plans-fixture.mjs";
 
 const PORT = Number(process.env.STUB_PORT ?? 8043);
 const TILE_PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
@@ -228,8 +229,8 @@ function telegramChannelRefusal(body) {
 let attempts = new Map();
 // ── 동의 기록 (2026-10-05) ── 시작
 /** The terms version the page under test carries (`src/features/consent/terms-content.ts` `TERMS_VERSION`) - keep the two the same; a different one is what "server_ahead" plays. */
-const TERMS_VERSION = "2026-10-07.1";   // 웹 `terms-content.ts` 와 같은 값(2026-10-07 보관 기간 확정)
-const CONSENT_CODES = ["service_terms", "privacy", "sensitive", "location", "alert_channel"];
+const TERMS_VERSION = "2026-10-10.1";   // 웹 `terms-content.ts` 와 같은 값(2026-10-07 보관 기간 확정)
+const CONSENT_CODES = ["service_terms", "privacy", "sensitive", "location", "alert_channel", "service_improvement"];
 const CONSENT_REQUIRED = ["service_terms", "privacy"];
 /** code → { agreed, version, at } - the latest line of the append-only record (the stub keeps only that; the requests it received are the log). */
 let consentRecords = new Map();
@@ -350,10 +351,11 @@ function tripView(id = TRIP_ID) {
 }
 
 function proposals() {
-  if (scenario.proposals === "consent" || scenario.proposals === "consent_options") {
-    const filled = scenario.proposals === "consent_options";
+  if (["consent", "consent_options", "forecast", "forecast_options"].includes(scenario.proposals)) {
+    const filled = scenario.proposals.endsWith("_options");
+    const reason = scenario.proposals.startsWith("forecast") ? "forecast_advisory" : "indoor_unknown";
     return { trip_id: TRIP_ID, proposals: [{
-      proposal_id: "p-1", item_id: "i-b", base_version: 1, reason: filled ? "indoor_unknown_options" : "indoor_unknown", protected_by: null,
+      proposal_id: "p-1", item_id: "i-b", base_version: 1, reason: filled ? `${reason}_options` : reason, protected_by: null,
       safety: false, status: "open", expires_at: at(23), chosen_key: null, causes: [],
       options: filled ? [{ key: "o-9", rank: 1, name: "실내 박물관", starts_at: at(9, 30) }] : [],
     }] };
@@ -376,6 +378,7 @@ function notices() {
   if (scenario.undo !== "none") out.push({ key: "n-4", type: "change_notice", kind: null, text: "비 소식이 있어 09:30 경복궁 관람을 실내 박물관으로 바꿨어요.", version: 1, proposal_id: null, options: null, delivery: "sent", at: at(9),
     rollback: { base_version: 1, to_version: 0, request_id: "rollback:v1->v0", label: "되돌리기", path: "/rollback" } });
   if (scenario.proposals === "open") out.push({ key: "n-3", type: "proposal_request", kind: null, text: "점심 식당이 문을 닫았어요. 대체 식당을 골라 주세요.", version: 2, proposal_id: "p-1", options: [], delivery: "sent", at: at(11, 41) });
+  if (scenario.proposals === "forecast") out.push({ key: "n-forecast", type: "proposal_request", kind: "forecast_advisory", text: "경복궁 관람 — 예보 주의사항이 있어요(강수확률 80% · 풍속 35km/h). 일정은 그대로 두었어요. 「예보에 맞게 일정 변경」을 누르면 다른 곳을 찾아 보여 드려요. 답이 없으면 원래 일정을 그대로 둡니다.", version: 1, proposal_id: "p-1", options: [], delivery: "skipped", at: at(9) });
   return { notices: out };
 }
 
@@ -835,12 +838,11 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   if (request.method === "GET" && path === "/v1/web/support/notices") {
     return json(response, 200, { notices: [], maintenance: { enabled: false, message: "" } }, origin);
   }
-  // 실제 공개 목록 API 계약: 운영 설정으로 꺼진 경우도 정상 응답이며 고객 인증을 요구하지 않는다.
-  if (request.method === "GET" && path === "/v1/web/test-scenarios") {
-    return json(response, 200, { enabled: false, realtime_enabled: false, catalog_version: "mock-disabled", scenarios: [] }, origin);
-  }
+  // 공개 계획 원문 목록은 고객 세션·약관 조회 없이 읽습니다(cs trip_api.py 계약).
+  if (path === "/v1/web/test-scenarios" && request.method === "GET") return json(response, 200, PREPARED_PLAN_CATALOG, origin);
   const auth = authenticate();
   if (auth.denied) return auth.denied();
+  if (path === "/v1/web/support/inquiries" && request.method === "GET") return json(response, 200, { inquiries: [] }, origin);
   // ── 동의 기록 (2026-10-05) ── 시작
   if (path === "/v1/web/consents") {
     if (scenario.consents === "off") return json(response, 404, { detail: "Not Found" }, origin);
@@ -1105,10 +1107,10 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   if (path === `/v1/web/trips/${TRIP_ID}/proposals/p-1/choose` && request.method === "POST") {
     if (scenario.choose === "conflict") return json(response, 409, { error: { code: "already_decided", message: "안을 고르지 못했다 — 아무것도 바뀌지 않았다", detail: { status: "kept" } } }, origin);
     const body = JSON.parse(raw || "{}");
-    if (scenario.proposals === "consent" && body.key === "change") {
+    if (["consent", "forecast"].includes(scenario.proposals) && body.key === "change") {
       // the server computes other places only now, into the same proposal — or finds none and keeps the plan
       if (scenario.choose === "no_alternate") { scenario = { ...scenario, proposals: "none" }; return json(response, 200, { status: "no_alternate" }, origin); }
-      scenario = { ...scenario, proposals: "consent_options" };
+      scenario = { ...scenario, proposals: `${scenario.proposals}_options` };
       return json(response, 200, { status: "options" }, origin);
     }
     scenario = { ...scenario, proposals: "none" };
@@ -1225,8 +1227,16 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     const old = boardHistory.get(body.restore_revision);
     if (!old) return json(response, 422, { error: { code: "restore_revision_missing", message: "되돌릴 일정을 찾지 못했어요" } }, origin);
     const revision = board.revision + 1;
-    board = { ...structuredClone(old.board), revision };
-    tripTitle = old.title;
+    if (body.item) {
+      const previous = old.board.items.find(item => item.index === body.item.index);
+      const current = board.items.find(item => item.index === body.item.index);
+      if (body.item.source_id !== "s1" || !previous || !current) return json(response, 409, { error: { code: "restore_item_invalid", message: "복원할 일정을 찾지 못했어요" } }, origin);
+      if (current.locked || current.booked) return json(response, 409, { error: { code: current.locked ? "item_locked" : "item_booked", message: "보호된 일정이에요" } }, origin);
+      board = { ...board, revision, items: board.items.map(item => item.index === body.item.index ? structuredClone(previous) : item) };
+    } else {
+      board = { ...structuredClone(old.board), revision };
+      tripTitle = old.title;
+    }
     return json(response, 200, intakeView(revision), origin);
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/edits` && request.method === "POST") {

@@ -46,7 +46,7 @@ for(const width of [375,1280]){
     expect((writes[0].body!.edits as unknown[])).toHaveLength(2);await expect(recommend).toBeFocused();
     await noHorizontalScroll(page);
   });
-  test(`원형 추가 단추는 일정 사이 중앙·취소 복귀 ${width}px`,async({page,request})=>{
+  test(`원형 추가 단추는 최상단 첫 일정 앞·취소 복귀 ${width}px`,async({page,request})=>{
     await page.setViewportSize({width,height:812});await page.emulateMedia({reducedMotion:'reduce'});
     const tiles=shots?await useMapTiles(page):async()=>{};
     await openFinished(page,request,undefined,{intakeEvents:'off'});await tiles();await prepare(page);
@@ -63,7 +63,7 @@ for(const width of [375,1280]){
         centredY:Math.abs(button.y+button.height/2-seamBox.y-24)<.05};
     })).toEqual({width:44,height:44,seamHeight:48,centredX:true,centredY:true});
     const label=await add.getAttribute('aria-label');await capture(page,`05-add-placement-${width}`);
-    await add.click();await expect(page.getByRole('region',{name:'일정 추가 화면',exact:true})).toBeVisible();
+    await add.click();await expect(page.getByRole('region',{name:'일정 추가',exact:true})).toBeVisible();
     await page.getByRole('button',{name:'일정 추가 취소',exact:true}).click();await expect(page.getByRole('button',{name:label!,exact:true})).toBeFocused();
     await capture(page,`06-add-return-${width}`);await noHorizontalScroll(page);
   });

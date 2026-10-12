@@ -473,3 +473,15 @@ RAG 세션이 만든 연결 코드(커밋 6f043d36 · c431e7cb)를 사용자가 
 ## 2026-10-11 — 최신 UI develop 독립 통합 검증
 
 기존 develop 변경을 보존하여 최신 manager UI를 통합하고 단위644/644·mock 서버 화면49/49·필수 계약/보안/완료기준 검사를 통과했다. [독립 검증](records/reports/2026-10-12_0002_personal_develop_독립검증.md). 원격 반영 완료와 구분한다.
+
+
+## 2026-10-12 — 매니저 인증·SQL 안전 범위 검증
+
+인증·SQL 안전 변경을 매니저 기준으로 분리하고 관련 전체 백엔드 관문을 확인했습니다. 미포함 기능·검증 한계는 [통합 보고](records/reports/2026-10-12_manager-baseline-integration.md)에 남깁니다.
+
+- 2026-10-12: 개인 AI 연결 관리의 공통 인증 의존성·API 목록을 보완했고 CI와 같은 데이터 조건에서 API·보안 186개를 통과했습니다. [검증 기록](records/reports/2026-10-12_manager-oauth-ci-fix.md)
+
+
+## 2026-10-12 — 완료 고객 UI 변경의 매니저 통합
+
+완료 UI 점검·지도 방향·목록 끝 버튼을 기존 로그인 보호·알림 전달과 함께 통합했습니다. [범위와 검증 한계](records/reports/2026-10-12_manager-uiux-completion.md).

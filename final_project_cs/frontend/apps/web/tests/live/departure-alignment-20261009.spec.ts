@@ -23,7 +23,7 @@ async function capture(page:Page,name:string) {
   await page.screenshot({path:`${shots}/${name}.png`,fullPage:true});
 }
 for(const width of [375,1280]) {
-  test(`출발 시각·화살표·경로 한 줄 정렬 ${width}px`,async({page,request})=>{
+  test(`출발 시각·가로 선·경로 한 줄 정렬 ${width}px`,async({page,request})=>{
     await page.setViewportSize({width,height:812});await page.emulateMedia({reducedMotion:'reduce'});
     const tiles=shots?await useMapTiles(page):async()=>{};
     await openFinished(page,request,undefined,{intakeEvents:'off',intakeRoutes:'on'});await tiles();

@@ -77,7 +77,7 @@ test("여행 화면(지도 + 시트)은 서버가 준 일정·고정·다른 안
   await expect(page.getByRole("link", { name: "검증 결과 다시 보기" })).toHaveCount(0);
 });
 
-test("서버가 경로선을 주지 않으면 이동 줄은 수단·거리를 지어내지 않는다 — 출발 시각 · 걸리는 시간 · 여유만, 이동 항목이 없는 구간은 길찾기 링크만", async ({ page }) => {
+test("서버가 경로선을 주지 않으면 이동 줄은 수단·거리를 지어내지 않는다 — 출발 시각 · 걸리는 시간 · 여유만, 이동 항목이 없는 구간은 정보 없음과 길찾기 링크", async ({ page }) => {
   await openTrip(page);                                                                          // 기본 장면: route-shapes 404
   const schedule = tripScreen(page);
   const move = schedule.locator('[data-entry-id="i-m"]');
@@ -85,7 +85,10 @@ test("서버가 경로선을 주지 않으면 이동 줄은 수단·거리를 �
   await expect(move).toContainText("여유 30분");
   await expect(move).not.toContainText("도보");
   await expect(move).not.toContainText("km");
-  await expect(schedule.locator('[data-entry-id="i-a>i-b"]')).toContainText("다음 일정으로");
+  const unknownLeg = schedule.locator('[data-entry-id="i-a>i-b"]');
+  await expect(unknownLeg).toContainText("이동 정보가 아직 없어요");
+  await expect(unknownLeg.getByRole("link", { name: "지도 앱에서 길찾기" })).toHaveAttribute("href", "https://www.google.com/maps/dir/?api=1&origin=a&destination=b&travelmode=transit");
+  await expect(unknownLeg).not.toContainText(/\d+분|km/);
   await expect(schedule.locator('[data-entry-id="i-a>i-b"]')).not.toContainText("버스");
 });
 
@@ -132,6 +135,23 @@ test("실내·야외를 모르는 일정의 「바꿀까요?」: 「바꿔 줘�
   await expect(ask.getByRole("button", { name: /실내 박물관/ })).toBeVisible();              // 같은 제안을 다시 읽었다
   await expect(ask.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" })).toHaveCount(0);  // 선택지가 생기면 물음은 사라진다
   await expect(page.getByText("다른 곳을 찾았어요 — 위에서 골라 주세요.")).toBeVisible();
+});
+
+test("예보 주의 알림은 외부 발송을 건너뛰어도 변경 버튼을 보이고 누르면 대체안을 요청한다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ proposals: "forecast" });
+  await openTrip(page);
+  await openNotices(page);
+  const ask = page.getByRole("region", { name: /선택이 필요해요/ });
+  await expect(ask).toContainText("예보 주의사항이 있어요(강수확률 80% · 풍속 35km/h)");
+  await expect(ask).toContainText("답이 없으면 원래 일정을 그대로 둡니다.");
+  await ask.getByRole("button", { name: "예보에 맞게 일정 변경", exact: true }).click();
+  await expect.poll(async () => (await server.received("POST", "/choose")).length).toBe(1);
+  expect((await server.received("POST", "/choose"))[0].body).toEqual({ key: "change" });
+  await expect(ask.getByRole("button", { name: /실내 박물관/ })).toBeVisible();
+  await expect(ask.getByRole("button", { name: "예보에 맞게 일정 변경", exact: true })).toHaveCount(0);
+  await ask.getByRole("button", { name: /실내 박물관/ }).click();
+  await expect(page.getByText("고르신 곳으로 일정을 바꿨어요.")).toBeVisible();
 });
 
 test("「바꿔 줘」에 다른 곳이 없으면 원래 일정을 그대로 둔다고 알린다", async ({ page, request }) => {
@@ -461,4 +481,3 @@ test("「공유하기」의 「파일로 내려받기」는 계획서 링크와 
   expect(answer.headers()["content-disposition"]).toMatch(/^attachment; filename\*=UTF-8''triPilot-/);
   expect((await request.get(openHref.toString())).headers()["content-disposition"]).toBeUndefined();
 });
-
