@@ -541,6 +541,24 @@ def test_new_flights_near_the_original_departure_come_first_then_the_rest_by_pri
     assert [o["legs"][0]["departTime"] for o in picked] == ["15:00", "16:00", "09:30"], "시각을 모르면 가격순 그대로"
 
 
+def test_the_booking_link_skips_a_results_page_and_says_why():
+    """`[2026-10-12]` ☆이스타 편 — 가장 싼 판매처가 구글 항공권(결과 페이지)이면 그 편을 바로 고를 수 있는 다음 판매처 링크를 쓴다."""
+    from app.domains.travel_ops.instances.flight.team import _booking_note, _flight_option
+
+    item = SimpleNamespace(starts_at=datetime.fromisoformat(f"{GO}T10:00:00+09:00"))
+    option = {"airline": "이스타항공", "legs": [{**LEG, "flightNumber": "ZE607"}], "best": 300000,
+              "offers": [{"label": "구글 항공권", "price_total": 300000, "link": "https://www.google.com/travel/flights?x", "link_kind": "route_search"},
+                         {"label": "마이리얼트립", "price_total": 320000, "link": "https://air.myrealtrip.com/x", "link_kind": "search"}]}
+    pick = _flight_option(1, option, item, 2)
+    assert pick["seller"] == "구글 항공권" and pick["per_person"] == 150000, "가장 싼 값은 그대로 보인다"
+    assert (pick["link"], pick["link_seller"], pick["link_price"]) == ("https://air.myrealtrip.com/x", "마이리얼트립", 320000)
+    assert _booking_note(pick, 2) == (" — 가장 싼 구글 항공권은(는) 검색 결과 페이지라, 바로 예약할 수 있는 마이리얼트립(1인 160,000원) 링크예요: "
+                                      "https://air.myrealtrip.com/x")
+    only_page = _flight_option(1, {**option, "offers": option["offers"][:1]}, item, 2)
+    assert only_page["link_kind"] == "route_search"
+    assert _booking_note(only_page, 2).startswith(" — 이 편은 검색 결과 페이지만 있어요. 그 화면에서 이스타항공 ZE607 13:10 편을 골라")
+
+
 def test_when_nothing_new_is_left_it_says_so_without_changing_the_plan():
     result, _, _ = _legrun(_plan(detail={"shown": [TW_KEY, JEJU_KEY, VIA_KEY]}))
     assert result.action_proposals == []

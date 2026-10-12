@@ -243,12 +243,41 @@ def _flight_option(rank: int, option: dict[str, Any], item: Any, people: int) ->
     except (TypeError, ValueError):
         starts = item.starts_at.isoformat()
     offer = option["offers"][0] if option["offers"] else {}
+    booking = _booking_offer(option)
     best = option.get("best")
     return {"key": _flight_key(option), "rank": rank, "name": " ".join(part for part in (option.get("airline"), numbers, clock) if part),
             "place_id": None, "option": None, "option_label": None, "starts_at": starts, "ends_at": None, "walk_min": None,
             "airline": option.get("airline"), "legs": option["legs"], "band": _band(option), "best": best,
             "per_person": round(best / people) if isinstance(best, (int, float)) and people else None,
-            "seller": offer.get("label"), "link": offer.get("link")}
+            "seller": offer.get("label"),
+            # `[2026-10-12]` 링크는 가장 싼 곳이 아니라 「그 편을 고를 수 있는」 가장 싼 곳 — 아래 `_booking_offer`
+            "link": booking.get("link"), "link_seller": booking.get("label"), "link_price": booking.get("price_total"),
+            "link_kind": booking.get("link_kind")}
+
+
+def _booking_offer(option: dict[str, Any]) -> dict[str, Any]:
+    """예약 링크로 쓸 판매처 — 링크가 있고 노선 검색 결과 페이지(`route_search`)가 아닌 곳 중 가장 싼 곳(`offers` 는 이미 가격순).
+    그런 곳이 없으면 가장 싼 곳(검색 결과 페이지일 수 있다 — `link_kind` 로 알린다).
+
+    ☆2026-10-12 00:18 playdata 인천→나리타: 이스타 두 편은 가장 싼 판매처가 구글 항공권이라 링크가 구글 검색 결과 페이지였다 —
+      고객이 그 편을 다시 찾아야 했다. 구글 항공권은 편마다 링크를 주지 않고 결과 페이지 하나만 준다(`serpapi_flights`)."""
+    offers = option.get("offers") or []
+    direct = next((offer for offer in offers if offer.get("link") and offer.get("link_kind") != "route_search"), None)
+    return direct or (offers[0] if offers else {})
+
+
+def _booking_note(pick: dict[str, Any], people: int | None) -> str:
+    """고른 편의 예약 안내 — 링크 판매처가 가장 싼 곳과 다르면 그 까닭과 값을, 결과 페이지뿐이면 그렇다고 적는다."""
+    link = pick.get("link")
+    if not link:
+        return ""
+    if pick.get("link_kind") == "route_search":
+        return f" — 이 편은 검색 결과 페이지만 있어요. 그 화면에서 {pick['name']} 편을 골라 예약해 주세요: {link}"
+    seller, price = pick.get("link_seller"), pick.get("link_price")
+    if seller and pick.get("seller") and seller != pick["seller"] and isinstance(price, (int, float)):
+        each = f"(1인 {_won(round(price / people), 'KRW')})" if people else f"({_won(price, 'KRW')})"
+        return (f" — 가장 싼 {pick['seller']}은(는) 검색 결과 페이지라, 바로 예약할 수 있는 {seller}{each} 링크예요: {link}")
+    return f" — 예약은 이 링크에서 해 주세요: {link}"
 
 
 class FlightTeam(ItineraryWork, TravelTeamBase):
@@ -541,6 +570,7 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
     def _choose(self, task: TeamTask, ctx: dict[str, Any], item: Any, choice: str) -> TeamResult:
         """후보 중 고른 편으로 항목을 바꾼다 — 출발 시각을 그 편으로, 원래 편은 「다른 안」 끝으로. 예약 전(`detail.booked = False`)."""
         trip = ctx["trip"]
+        people = trip.get("party_size") if isinstance(trip.get("party_size"), int) else None
         base = int(ctx["ref"].get("base_version") or trip["version"])
         if trip["version"] != base:
             return self.settle(task, ctx, NoChange("stale", {"version": trip["version"]}))
@@ -557,8 +587,7 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
         starts = datetime.fromisoformat(pick["starts_at"]) if pick.get("starts_at") else item.starts_at
         cause = with_request({"category": "customer_request", "type": "alternate", "from": before, "to": pick["name"],
                               "message": task.input_text}, task.context.current_state.get("request_id"))
-        text = (f"요청하신 대로 {before} 대신 {pick['name']}(으)로 바꿨습니다. 아직 예약 전이에요"
-                + (f" — 예약은 이 링크에서 해 주세요: {pick['link']}" if pick.get("link") else "") + ".")
+        text = f"요청하신 대로 {before} 대신 {pick['name']}(으)로 바꿨습니다. 아직 예약 전이에요" + _booking_note(pick, people) + "."
         # ★도착 시각은 비운다 — 편 응답의 도착 시각은 도착 공항 현지 시각이라 출발과 같은 시간대로 적으면 틀린다(확인 안 함 — 시간대 정보가 없다)
         replacement = replace(item.replaced_by(place=None, title=item.title, detail=detail, starts_at=starts), ends_at=None)
         change = ItineraryChange(reason="customer_request", causes=[cause],
