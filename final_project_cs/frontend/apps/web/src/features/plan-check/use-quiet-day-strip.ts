@@ -29,6 +29,8 @@ export function useQuietDayStrip(strip: RefObject<HTMLElement | null>, enabled: 
   const inStrip = useCallback((target: EventTarget | null) => target instanceof Node && Boolean(strip.current?.contains(target)), [strip]);
 
   useEffect(() => {
+    // Suppression changes cancel the old idle timer in cleanup; resume it when the list is reopened.
+    if (!suppressed) settle();
     const release = (event: globalThis.PointerEvent) => { if (pointers.current.delete(event.pointerId)) settle(); };
     const blur = () => { pointers.current.clear(); settle(); };
     const tab = (event: globalThis.KeyboardEvent) => {

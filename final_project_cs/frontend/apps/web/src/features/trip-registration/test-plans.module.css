@@ -1,7 +1,35 @@
 .box { display: grid; gap: 8px; margin-top: 20px; min-width: 0; }
-.box label { font-size: 13px; font-weight: 600; }
-.box select { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-paper); color: var(--color-text); font: inherit; font-size: 13px; }
+.label { font-size: 13px; font-weight: 600; }
+.picker { min-width: 0; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-paper); scroll-margin-block: 88px; }
+.picker > summary { min-height: 48px; padding: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; list-style: none; }
+.picker > summary::-webkit-details-marker { display: none; }
+.picker > summary svg { flex-shrink: 0; }
+.picker > summary[aria-disabled="true"] { opacity: .6; cursor: default; }
+.picker[open] > summary { border-bottom: 1px solid var(--color-border); }
+.picker[open] > summary > svg { transform: rotate(180deg); }
+.selection { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.selection > span:last-child { overflow-wrap: anywhere; }
+.options { max-height: 320px; overflow-y: auto; overscroll-behavior: contain; padding: 12px; }
+.group { padding: 0; margin: 0 0 16px; border: 0; min-width: 0; }
+.group:last-child { margin-bottom: 0; }
+.group legend { display: flex; align-items: center; gap: 6px; padding: 0; margin-bottom: 6px; }
+.count { font-size: 11px; color: var(--color-muted); }
+.badge, .group button { --category-ink: var(--color-test-default-ink); --category-bg: var(--color-test-default-soft); --category-edge: var(--color-test-default-border); }
+.box [data-category="normal"] { --category-ink: var(--color-test-normal-ink); --category-bg: var(--color-test-normal-soft); --category-edge: var(--color-test-normal-border); }
+.box [data-category="time"] { --category-ink: var(--color-test-time-ink); --category-bg: var(--color-test-time-soft); --category-edge: var(--color-test-time-border); }
+.box [data-category="hours"] { --category-ink: var(--color-test-hours-ink); --category-bg: var(--color-test-hours-soft); --category-edge: var(--color-test-hours-border); }
+.box [data-category="place"] { --category-ink: var(--color-test-place-ink); --category-bg: var(--color-test-place-soft); --category-edge: var(--color-test-place-border); }
+.box [data-category="mobility"] { --category-ink: var(--color-test-mobility-ink); --category-bg: var(--color-test-mobility-soft); --category-edge: var(--color-test-mobility-border); }
+.box [data-category="input"] { --category-ink: var(--color-test-input-ink); --category-bg: var(--color-test-input-soft); --category-edge: var(--color-test-input-border); }
+.badge { display: inline-flex; align-items: center; min-height: 24px; padding: 2px 8px; border: 1px solid var(--category-edge); border-radius: 6px; color: var(--category-ink); background: var(--category-bg); font-size: 11px; font-weight: 600; line-height: 1.5; }
+.group button { display: grid; grid-template-columns: 44px minmax(0,1fr) 16px; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 10px 8px; border: 0; border-bottom: 1px solid var(--color-border); color: var(--color-text); background: transparent; text-align: left; font: inherit; font-size: 12px; cursor: pointer; }
+.group button:hover, .group button[aria-pressed="true"] { background: var(--category-bg); }
+.code { color: var(--category-ink); font-weight: 600; }
+.checked { color: var(--color-primary); }
+.unchecked { visibility: hidden; }
+.picker summary:focus-visible, .group button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 6px; }
 .help { margin: 0; font-size: 12px; line-height: 1.7; color: var(--color-muted); }
 .help button { min-height: 44px; color: var(--color-primary); text-decoration: underline; }
-.box summary { padding: 12px 0; font-size: 13px; cursor: pointer; }
+.box summary { font-size: 13px; cursor: pointer; }
+.box > details:not(.picker) > summary { padding: 12px 0; }
 .box pre { margin: 0; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; font: inherit; font-size: 12px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }

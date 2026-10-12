@@ -7,11 +7,12 @@ import { tripGateway } from "@/lib/gateway";
 import { undoChange, warmup } from "@/lib/live/extras";
 import { LiveError } from "@/lib/live/client";
 import { progressText, type OpProgress } from "@/lib/live/stream";
-import { readConsents } from "@/features/consent/consent-store";
+import { readConsents, useConsent } from "@/features/consent/consent-store";
 import { OptionalConsentPrompt } from "@/features/consent/optional-consent-prompt";
 import { currentLocation, locationFailureText, type LocationFix } from "@/lib/location";
 import { useSettings, useT } from "@/lib/settings";
 import { LinkedText } from "./linked-text";
+import { useChatFollow } from "./use-chat-follow";
 import { tripKey } from "./use-trip";
 import { noticesKey, proposalsKey } from "./use-trip-extras";
 import type { Trip, TripMessage, TripStop } from "./model";
@@ -31,23 +32,48 @@ export function useTripChat(trip: Trip, selectedId: string | null, onAsked: () =
   // The server answered but the plan did not re-read (Q-05): the reply is shown, and the plan is read again until it loads.
   const [rereading, setRereading] = useState(false);
   const [locating, setLocating] = useState(false);
+  const locationAgreed = useConsent("location");
+  const locationGeneration = useRef(0);
+  const locationAttempt = useRef(0);
+  const live = useRef(true);
+  useEffect(() => {
+    live.current = true;
+    return () => { live.current = false; locationGeneration.current += 1; };
+  }, []);
+  useEffect(() => {
+    if (!locationAgreed) locationGeneration.current += 1;
+  }, [locationAgreed]);
   const [locationError, setLocationError] = useState("");
   // A question waiting for the customer's agreement to use their location (asked in place, see `askWithLocation`).
   const [locationQuestion, setLocationQuestion] = useState<string | null>(null);
   // What the server says it is doing with the message now (live progress stream); null until it says.
   const [progress, setProgress] = useState<OpProgress | null>(null);
   const message = useMutation({
+    // Keep the cache entry that belongs to the account which sent this message.
+    // A logout removes it; a new entry with the same trip key belongs to a later session.
+    onMutate: () => ({ query: queryClient.getQueryCache().find({ queryKey: tripKey(trip.id, language), exact: true }) }),
     // ★Only a stop the customer actually picked goes to the server (`item_id`).
     mutationFn: async ({ text, itemId, location }: { text: string; clearDraft: boolean; itemId?: string | null; location?: LocationFix | null }) => {
       setProgress(null);
-      try { return await tripGateway.sendMessage(trip.id, text, language, itemId, location, setProgress); }
+      try { return { updated: await tripGateway.sendMessage(trip.id, text, language, itemId, location, setProgress), sent: null }; }
       catch (error) {
         if (!(error instanceof LiveError) || error.code !== "reply_kept") throw error;
         setRereading(true);
-        return { ...trip, messages: [...trip.messages, ...((error.detail as { sent?: TripMessage[] } | undefined)?.sent ?? [])] };
+        return { updated: null, sent: (error.detail as { sent?: TripMessage[] } | undefined)?.sent ?? [] };
       }
     },
-    onSuccess: (updated, variables) => {
+    onSuccess: (result, variables, context) => {
+      if (!context?.query || queryClient.getQueryCache().find({ queryKey: tripKey(trip.id, language), exact: true }) !== context.query) return;
+      // SSE can refresh the plan before this response reaches the mutation.
+      // Keep a newer itinerary and append only replies not already in its messages.
+      let updated = result.updated;
+      const current = queryClient.getQueryData<Trip>(tripKey(trip.id, language)) ?? trip;
+      const older = updated && typeof updated.version === "number" && typeof current.version === "number" && updated.version < current.version;
+      if (!updated || older) {
+        const seen = new Set(current.messages.map(item => item.id));
+        const appended = (updated?.messages ?? result.sent ?? []).filter(item => { if (seen.has(item.id)) return false; seen.add(item.id); return true; });
+        updated = { ...current, messages: [...current.messages, ...appended] };
+      }
       queryClient.setQueryData(tripKey(trip.id, language), updated);
       if (variables.clearDraft) setDraft("");
       // ★A message can open a choice (「알아봐 줘」 → 「선택이 필요해요」) or send a notice — read both again now, not at the next poll.
@@ -104,19 +130,26 @@ export function useTripChat(trip: Trip, selectedId: string | null, onAsked: () =
 
   // ★The server said the answer needs where the customer is. The browser is asked only now, on this press (user decision 2026-09-30) — and only with the agreement to the location item.
   async function askWithLocation(question: string) {
+    if (!live.current || message.isPending) return;
     setLocationError("");
     if (!readConsents().location) { setLocationQuestion(question); return; }
     setLocationQuestion(null);
+    const attempt = ++locationGeneration.current;
+    locationAttempt.current = attempt;
     setLocating(true);
     const result = await currentLocation();
+    // A delayed GPS answer must not submit a question after withdrawal, a newer
+    // attempt, or leaving this trip. A withdrawn then renewed consent is a new attempt too.
+    if (!live.current || attempt !== locationAttempt.current) return;
     setLocating(false);
+    if (attempt !== locationGeneration.current || !readConsents().location) return;
     if (!result.ok) { setLocationError(locationFailureText(result.reason, t)); return; }
     ask(question, false, undefined, result.fix);
   }
 
   const askAbout = (stop: TripStop) => ask(t(`${stop.date} ${stop.time} ${stop.title} 일정의 상세를 알려 주세요.`, `Tell me about the ${stop.title} stop on ${stop.date} at ${stop.time}.`), false, stop.id);
 
-  return { draft, setDraft, inputError, setInputError, rereading, locating, locationError, locationQuestion, setLocationQuestion, progress, message, undo, ask, askWithLocation, askAbout };
+  return { draft, setDraft, inputError, setInputError, rereading, locating: locating && locationAgreed, locationError, locationQuestion, setLocationQuestion, progress, message, undo, ask, askWithLocation, askAbout };
 }
 
 export type TripChat = ReturnType<typeof useTripChat>;
@@ -125,18 +158,17 @@ export type TripChat = ReturnType<typeof useTripChat>;
  * The chat pane of the sheet (mockup C안 「채팅」): the context of the question (the day and the stop picked) at the top of the conversation, the conversation, the quick questions and
  * what a message does. Typing is the chat bar's (`ChatBar`) — it stays at the bottom of the frame.
  */
-export function ChatPane({ trip, chat, day, dayText, selected, logRef }: { trip: Trip; chat: TripChat; day: string; dayText: string; selected: TripStop | null; logRef: RefObject<HTMLDivElement | null> }) {
+export function ChatPane({ trip, chat, day, dayText, selected, logRef, active }: { trip: Trip; chat: TripChat; day: string; dayText: string; selected: TripStop | null; logRef: RefObject<HTMLDivElement | null>; active: boolean }) {
   const t = useT();
   const { message, undo } = chat;
-  useEffect(() => {
-    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
-  }, [trip.messages.length, message.isPending, logRef]);
+  const latest = useChatFollow(logRef, active, trip.messages.at(-1)?.id, message.isPending);
   return <>
-    <div ref={logRef} className={styles.chatLog} role="log" aria-label={t("여행 대화 이력", "Travel conversation")} aria-live="polite" aria-relevant="additions text" aria-busy={message.isPending}>
+    <div ref={logRef} className={styles.chatLog} tabIndex={0} onScroll={latest.onScroll} role="log" aria-label={t("여행 대화 이력", "Travel conversation")} aria-live="polite" aria-relevant="additions text" aria-busy={message.isPending}>
       <div className={styles.chatContext}><strong>{dayText} · {day}</strong>
         <span>{selected ? t(`선택: ${selected.title}`, `Selected: ${selected.title}`) : t("선택한 일정이 없어요.", "No stop selected.")}</span></div>
       {trip.messages.length === 0 && <article className={styles.message} data-role="assistant"><p className={styles.messageMeta}>triPilot</p><p className={styles.bubble}>{t("등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.", "Explore your saved itinerary. Ask for a day summary, details of your selected stop, or what comes next.")}</p></article>}
       {trip.messages.map((item, index) => <article key={item.id} className={styles.message} data-role={item.role}><p className={styles.messageMeta}>{item.role === "user" ? t("나", "You") : "triPilot"}</p><p className={styles.bubble}>{item.role === "assistant" ? <LinkedText text={item.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} /> : item.text}</p>
+        {item.awaitingReply && index === trip.messages.length - 1 && <p className={styles.undoHint}>{t("답변을 기다리고 있어요. 아래에 답하시면 같은 요청을 이어서 처리해요.", "Waiting for your reply. Answer below to continue this request.")}</p>}
         {item.more && <details className={styles.more}><summary>{t("더 보기", "More")}</summary><p><LinkedText text={item.more} mapLabel={t("지도 앱으로 열기", "Open in maps app")} /></p></details>}
         {item.basis && item.basis.length > 0 && <p className={styles.devBasis}>{t("개발 모드 · 근거 ", "Dev mode · basis ")}{item.basis.join(", ")}</p>}
         {/* ★A change made from chat can be undone while it is still the plan's latest version. */}
@@ -164,6 +196,7 @@ export function ChatPane({ trip, chat, day, dayText, selected, logRef }: { trip:
       {message.isError && <div className={styles.error} role="alert"><p>{t("메시지를 보내지 못했어요.", "The message could not be sent.")} {message.error.message}</p><button type="button" className={styles.choice} onClick={() => message.variables && message.mutate(message.variables)}>{t("다시 보내기", "Send again")}</button></div>}
     </div>
     <div className={styles.prompts}>
+      {latest.away && <button type="button" className={styles.chatLatest} onClick={() => { latest.jump(); logRef.current?.focus({ preventScroll: true }); }}>{latest.unread ? t("새 메시지 · 최신 대화로 이동", "New messages · Jump to latest") : t("최신 대화로 이동", "Jump to latest")}</button>}
       <button type="button" className={styles.prompt} disabled={message.isPending} onClick={() => chat.ask(t(`${day} 하루 일정을 요약해 주세요.`, `Summarize the itinerary for ${day}.`))}>{t("하루 요약", "Day summary")}</button>
       <button type="button" className={styles.prompt} disabled={!selected || message.isPending} onClick={() => selected && chat.askAbout(selected)}>{t("선택 일정", "Selected stop")}</button>
       <button type="button" className={styles.prompt} disabled={!selected || message.isPending} onClick={() => selected && chat.ask(t(`${selected.date} ${selected.time} ${selected.title} 다음 일정을 알려 주세요.`, `What comes after ${selected.title} on ${selected.date} at ${selected.time}?`))}>{t("다음 일정", "Next stop")}</button>
@@ -201,11 +234,11 @@ export function ChatBar({ chat, open, inChat, onOpen, onClose, onEnterChat }: { 
     {!inChat && <button ref={closeButton} type="button" className={styles.chatClose} onClick={() => { backToFab.current = true; onClose(); }} aria-label={t("채팅 막대 접기", "Close the chat bar")}><X size={18} strokeWidth={1.8} aria-hidden="true" /></button>}
     <form className={styles.chatForm} onSubmit={submit} noValidate>
       <label className="sr-only" htmlFor="trip-chat-message">{t("여행 메시지", "Travel message")}</label>
-      <input id="trip-chat-message" className={styles.chatInput} value={chat.draft} maxLength={600} autoComplete="off" placeholder={t("일정에 대해 궁금한 점을 입력하세요", "Ask about your itinerary")} disabled={chat.message.isPending}
+      <input id="trip-chat-message" className={styles.chatInput} value={chat.draft} maxLength={600} autoComplete="off" placeholder={t("일정에 대해 궁금한 점을 입력하세요", "Ask about your itinerary")} readOnly={chat.message.isPending} aria-disabled={chat.message.isPending || undefined}
         aria-invalid={Boolean(chat.inputError)} aria-describedby={chat.inputError ? "trip-chat-error" : undefined}
         onFocus={() => { if (!inChat) onEnterChat(); }}
         onChange={(event) => { chat.setDraft(event.target.value); if (chat.inputError) chat.setInputError(""); }} />
-      <button type="submit" className={styles.chatSend} disabled={chat.message.isPending} aria-label={t("메시지 전송", "Send message")}><Send size={18} strokeWidth={1.8} aria-hidden="true" /></button>
+      <button type="submit" className={styles.chatSend} aria-disabled={chat.message.isPending || undefined} style={chat.message.isPending ? { opacity: .5, cursor: "not-allowed" } : undefined} aria-label={t("메시지 전송", "Send message")}><Send size={18} strokeWidth={1.8} aria-hidden="true" /></button>
     </form>
     {chat.inputError && <p id="trip-chat-error" className={styles.chatError} role="alert">{chat.inputError}</p>}
   </div>;

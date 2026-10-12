@@ -9,7 +9,7 @@ import styles from "./map.module.css";
 export const FIT_LABEL = "모든 일정 보기";
 
 /** Room (px) a vertical column of the buttons needs; below it the same buttons stand in a row, and a map too small even for that shows only the fold tab. */
-const BUTTON = 40, FOLD = 44, GAP = 8;
+const BUTTON = 44, FOLD = 44, GAP = 8;
 export type ControlsLayout = "column" | "row" | "tab";
 
 /**
@@ -33,7 +33,7 @@ export interface MapControlsProps {
   folded: boolean;
   onFold: (folded: boolean) => void;
   canFit: boolean;
-  /** `off`: the customer never agreed to share their place - no button, no word; `waiting`: agreed, no fix yet; `ready`: the button works. */
+  /** The entry stays available before consent and after a failed fix. */
   me: "off" | "waiting" | "ready";
   onZoom: (delta: 1 | -1) => void;
   onFit: () => void;
@@ -52,6 +52,7 @@ export function MapControls({ view, topInset, layout, folded, onFold, canFit, me
   useEffect(() => { folding.current = onFold; }, [onFold]);
   const arm = useCallback(() => {
     clearTimeout(timer.current);
+    if (document.querySelector("dialog[open]")) return;
     if (group.current && !folded && !held.current && !group.current?.querySelector(":focus-visible")) timer.current = setTimeout(() => folding.current(true), 5_000);
   }, [folded]);
   useEffect(() => { arm(); return () => clearTimeout(timer.current); }, [arm]);
@@ -65,7 +66,7 @@ export function MapControls({ view, topInset, layout, folded, onFold, canFit, me
       <MapTool className={styles.round} label="확대" onClick={() => onZoom(1)}><Plus size={19} strokeWidth={2.2} aria-hidden="true" /></MapTool>
       <MapTool className={styles.round} label="축소" onClick={() => onZoom(-1)}><Minus size={19} strokeWidth={2.2} aria-hidden="true" /></MapTool>
       {canFit && <MapTool className={styles.round} label={FIT_LABEL} onClick={onFit}><Scan size={18} strokeWidth={2} aria-hidden="true" /></MapTool>}
-      {me !== "off" && <MapTool className={styles.round} label="내 위치로" hint={me === "waiting" ? "내 위치를 아직 읽지 못했어요" : undefined} disabled={me === "waiting"} onClick={() => { if (me === "ready") onLocate(); }}><LocateFixed size={18} strokeWidth={2} aria-hidden="true" /></MapTool>}
+      <MapTool className={styles.round} label="내 위치로" hint={me === "off" ? "내 위치로 · 위치 이용 동의" : me === "waiting" ? "내 위치로 · 위치 다시 찾기" : undefined} onClick={onLocate}><LocateFixed size={18} strokeWidth={2} aria-hidden="true" /></MapTool>
     </>}
   </div>;
 }
@@ -91,10 +92,11 @@ function EdgeChipButton({ chip, width, moving, onGo, onLayout }: { chip: EdgeChi
   const names = chip.labels.join(" · ");
   const far = formatDistance(chip.distanceM);
   const side = chip.x < width / 2 ? "left" : "right";
-  useLayoutEffect(() => { const measured = button.current?.getBoundingClientRect().width ?? 0; if (measured / 2 !== half) setHalf(measured / 2); else onLayout?.(); }, [names, far, half, moving, onLayout]);
+  useLayoutEffect(() => { const measured = button.current?.getBoundingClientRect().width ?? 0; if (measured / 2 !== half) setHalf(measured / 2); else onLayout?.(); }, [names, far, half, moving, chip.crowded, onLayout]);
   const edgeX = chip.x >= width - 47 ? width - half - CHIP_AIR : chip.x <= 47 ? half + CHIP_AIR : chip.x;
   const left = half > 0 && width > half * 2 + CHIP_AIR * 2 ? Math.min(width - half - CHIP_AIR, Math.max(half + CHIP_AIR, edgeX)) : chip.x;
-  return <button ref={button} type="button" className={styles.edgeChip} style={{ left: `${left}px`, top: `${chip.y}px` }} data-edge-chip data-side={side} data-multiple={chip.ids.length >= 3 || undefined}
+  return <button ref={button} type="button" className={styles.edgeChip} style={{ left: `${left}px`, top: `${chip.y}px` }} data-edge-chip data-side={side} data-crowded={chip.crowded || undefined} data-multiple={chip.ids.length >= 3 || undefined}
+    title={chip.crowded ? `${names}번 일정 · ${far}` : undefined}
     aria-label={`${names}번 일정이 화면 밖에 있어요 · ${far} · 누르면 그곳으로 가요`} onClick={() => onGo(chip.ids)}>
     <ArrowRight size={13} strokeWidth={2.4} style={{ transform: `rotate(${Math.round(chip.angle)}deg)` }} aria-hidden="true" />
     <span className={styles.edgeNumbers} aria-hidden="true">{chip.ids.length >= 3 ? <><Layers size={14} strokeWidth={1.8} /><span>×{chip.ids.length}</span></> : names}</span>{!moving && <small aria-hidden="true">{far}</small>}

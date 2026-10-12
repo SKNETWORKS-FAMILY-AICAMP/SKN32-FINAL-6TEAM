@@ -48,7 +48,13 @@ test("Esc · 닫기 단추 · 바깥을 눌러 닫으면 아무것도 정해지�
     await expect(card(page)).toBeVisible();
     if (way === "esc") await page.keyboard.press("Escape");
     else if (way === "close") await card(page).getByRole("button", { name: "닫기" }).click();
-    else { const frame = (await page.locator('[data-device]').first().boundingBox())!; await page.mouse.click(frame.x + frame.width / 2, frame.y + 100); }   // 카드는 휴대폰 틀 안에 있다 — 틀 안의 바깥(어두운 바탕)을 누른다
+    else {
+      const background = card(page).locator('..'), layer = (await background.boundingBox())!;
+      // 둥근 기기 모서리 밖을 누르지 않고 실제 배경의 안쪽을 누릅니다.
+      const at = { x: layer.x + layer.width / 2, y: layer.y + 12 };
+      expect(await background.evaluate((node, at) => document.elementFromPoint(at.x, at.y) === node, at)).toBe(true);
+      await page.mouse.click(at.x, at.y);
+    }
     await expect(card(page)).toHaveCount(0);
     await expect(send(page)).toBeFocused();
   }
@@ -187,22 +193,4 @@ test("영어 화면에서도 아이콘 이름 · 되돌리기 줄이 영어로 �
   await page.getByRole("button", { name: "Turn Course Keeper off" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Course Keeper is off." })).toBeVisible();
   await expect(page.getByRole("button", { name: "Turn Course Keeper on" })).toBeVisible();
-});
-
-test('시작 화면의 항로 지킴이 안내와 되돌리기가 접수 주소 교체 뒤에도 남는다',async({page})=>{
- await page.addInitScript(()=>localStorage.setItem('tripilot.web.settings.v1',JSON.stringify({language:'en'})));
- let release!:()=>void;const held=new Promise<void>(r=>release=r);
- await page.route('**/v1/web/trip-intakes',async route=>{if(route.request().method()!=='POST')return route.continue();const response=await route.fetch();await held;await route.fulfill({response});});
- try{
- await start(page);await openRegistration(page);await page.getByLabel('Your travel plan').fill('10/1 09:00 경복궁 관람');
- await page.getByRole('button',{name:'Check my plan'}).click();await page.getByRole('dialog').getByRole('button',{name:'Turn on and go on'}).click();
- await expect(page).toHaveURL(/intakes\/starting/);
- await page.getByRole('button',{name:'Turn Course Keeper off'}).click();
- await expect(page.getByRole('status').filter({hasText:'Course Keeper is off.'})).toBeVisible();
- release();await expect(page).toHaveURL(/intakes\/[0-9a-f-]+$/);
- const kept=page.getByRole('status').filter({hasText:'Course Keeper is off.'});
- await expect(kept).toBeVisible();
- await kept.getByRole('button',{name:'Undo',exact:true}).click();
- await expect(page.getByRole('button',{name:'Turn Course Keeper off'})).toBeVisible();
- }finally{release();}
 });

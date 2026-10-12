@@ -58,12 +58,19 @@ export function WebhookView({ hasSession, guest = false }: { hasSession: boolean
   const { language } = useSettings();
   const queryClient = useQueryClient();
   const profile = useServerProfile(hasSession);
+  const key = serverProfileKey(language);
+  const captureProfile = () => ({ query: queryClient.getQueryCache().find({ queryKey: key, exact: true }) });
+  const keep = (next: ServerProfile, context: ReturnType<typeof captureProfile> | undefined) => {
+    if (!context?.query || queryClient.getQueryCache().find({ queryKey: key, exact: true }) !== context.query) return;
+    queryClient.setQueryData(key, next);
+  };
   // ★`[2026-10-05 사용자 지시]` Connecting a channel hands over a piece of personal data (the address of the customer's channel): it is asked for only once the customer has agreed to the optional
   //   alert-channel item (`alert_channel`) - asked right here, when it becomes needed, and the app works without it.
   const alertConsent = useConsent("alert_channel");
   const test = useMutation({
     mutationFn: () => testDiscordWebhook(language),
-    onSuccess: (answer) => queryClient.setQueryData(serverProfileKey(language), answer.profile),
+    onMutate: captureProfile,
+    onSuccess: (answer, _variables, context) => keep(answer.profile, context),
   });
   // ★`[2026-10-04]` 서버는 게스트의 여행을 감시·안내하지 않는다(외부 호출 비용) — 웹훅을 넣어도 알림은 로그인한 사용자만 받는다.
   const later = <span className={styles.note}>{guest
@@ -84,7 +91,8 @@ export function WebhookView({ hasSession, guest = false }: { hasSession: boolean
   // ★`[2026-10-05 사용자 지시]` 알림 받는 곳은 한 번에 한 곳(디스코드·텔레그램 중 마지막에 연결한 곳). 텔레그램이 활성일 때 「이 채널로 받기」로 디스코드로 되돌린다.
   const choose = useMutation({
     mutationFn: () => putProfile({ noticeChannel: "discord" }, language),
-    onSuccess: (next) => queryClient.setQueryData(serverProfileKey(language), next),
+    onMutate: captureProfile,
+    onSuccess: (next, _variables, context) => keep(next, context),
   });
   const connectable = profile.data?.discordConnect === true;
   const back = returned && returnText(returned, t);

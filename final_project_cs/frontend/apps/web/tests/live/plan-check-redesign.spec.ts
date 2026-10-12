@@ -35,7 +35,7 @@ test("결과 화면의 상단바는 투명하고 지도가 맨 위까지 이어�
   await openFinished(page, request);
   const header = page.locator("header[class*=header]").first();
   await expect(header).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
-  const frame = (await page.locator('[data-device]').boundingBox())!;
+  const frame = (await page.locator('div[data-floating="true"]').boundingBox())!;
   const map = (await page.getByRole("region", { name: "여행 지도" }).boundingBox())!;
   expect(Math.abs(map.y - frame.y)).toBeLessThan(2);                                                // 지도가 상단바 아래가 아니라 맨 위에서 시작한다
   await expect(page.getByRole("link", { name: /triPilot — 소개 화면/ })).toBeVisible();
@@ -81,7 +81,7 @@ test("시트 머리: 문장 대신 「! 2」 표시 하나 — 눌러서 확인 
   await expect(card(page, "경복궁 관람")).toBeVisible();
 });
 
-test("시트를 끝까지 내리면 머리·날짜 칩·목록·플로팅 제출을 접고 손잡이만 남는다(지도의 「확인 필요」는 남는다)", async ({ page, request }) => {
+test("시트를 끝까지 내리면 손잡이만 남고 플로팅 제출은 숨긴다(지도의 「확인 필요」는 남는다)", async ({ page, request }) => {
   await openFinished(page, request);
   const handle = page.getByRole("button", { name: "목록 높이 바꾸기" });
   await handle.click();
@@ -92,10 +92,17 @@ test("시트를 끝까지 내리면 머리·날짜 칩·목록·플로팅 제출
   await expect(needsBadge(page)).toBeVisible();                                                       // `[2026-10-07]` 「! n」은 지도 쪽에 있어 시트를 접어도 보인다
   await expect(bodyOf(page)).toBeHidden();
   await expect(page.getByRole("button", { name: /^전체 자동 추천/ })).toBeHidden();
-  await expect(page.getByRole("button", { name: "다시 제출", exact: true })).toBeHidden();
+  // 2026-10-10 최소 접힘 개정: 제출은 시각·클릭·키보드 접근에서 함께 숨긴다.
+  const submit = page.getByRole("button", { name: "다시 제출", exact: true, includeHidden: true });
+  const footer = page.locator("footer").filter({ has: submit });
+  await expect(submit).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "다시 제출", exact: true })).toHaveCount(0);
+  await expect(footer).toHaveAttribute("inert", "");
+  await expect(footer).toHaveCSS("opacity", "0");
   await expect(handle).toBeVisible();
   await handle.click();                                                                              // 다시 눌러 중간으로 돌아오면 목록이 돌아온다
   await expect(card(page, "경복궁 관람")).toBeVisible();
+  await expect(page.getByRole("button", { name: "다시 제출", exact: true })).toBeVisible();
 });
 
 // ── 카드 · 이동 줄 ─────────────────────────────────────────────────────────────
@@ -383,22 +390,28 @@ test("이동 줄은 앞뒤 일정의 시작 시각 사이에서 출발하는 만
   const box = async (selector: string) => (await page.locator(selector).first().boundingBox())!;
   const prev = await box('li[data-type="item"][data-entry-id="0-0"] article');
   const next = await box('li[data-type="item"][data-entry-id="0-1"] article');
-  const row = await box('li[data-type="move"][data-entry-id="0-0:0-1"] [class*="move"]:has(> [class*="moveHead"])');
-  // 이동 설명은 출발 시각에 가까운 일정 쪽에 붙는다.
+  const row = await box('li[data-type="move"][data-entry-id="0-0:0-1"] button[aria-controls="plan-move-0-0:0-1-checks"]');
+  // 이동 설명은 출발 시각에 비례하여 앞뒤 카드 사이에 놓인다.
   const above = row.y - (prev.y + prev.height), below = next.y - (row.y + row.height);
   expect(above).toBeGreaterThan(below);
-  // 출발 아이콘·작은 출발 시각은 이동 설명과 같은 높이다. 도착은 선택한 이동에서만 보인다.
-  const dot = await box('li[data-type="move"][data-entry-id="0-0:0-1"] [class*="dot"]');
+  // 출발 표시는 이동 설명 중심에 맞고 도착 시각은 선택할 때만 출발 아래에 나타난다.
+  const dot = await box('li[data-type="move"][data-entry-id="0-0:0-1"] [data-departure-mark]');
   const centre = row.y + row.height / 2;
   expect(Math.abs(dot.y + dot.height / 2 - centre)).toBeLessThan(2.5);
-  const move = page.locator('li[data-type="move"][data-entry-id="0-0:0-1"]');
-  await expect(move.locator('[data-move-end]')).toHaveCount(0);
+  const leg = page.locator('li[data-type="move"][data-entry-id="0-0:0-1"]');
+  const arrival = leg.locator('[data-move-arrival]');
+  await expect(leg.locator('[data-move-end]')).toHaveCount(0);
+  await expect(arrival).toHaveAttribute('aria-hidden', 'true');
+  await expect(arrival).toHaveCSS('opacity', '0');
+  const departureBefore = await textCentre(page, 'li[data-type="move"][data-entry-id="0-0:0-1"] [data-move-departure]');
+  await leg.locator('button[aria-controls="plan-move-0-0:0-1-checks"]').click();
+  await expect(arrival).toHaveAttribute('aria-hidden', 'false');
+  await expect(arrival).toHaveCSS('opacity', '1');
+  const departureAfter = await textCentre(page, 'li[data-type="move"][data-entry-id="0-0:0-1"] [data-move-departure]');
   const departure = await box('li[data-type="move"][data-entry-id="0-0:0-1"] [data-move-departure]');
-  expect(Math.abs(departure.y + departure.height / 2 - centre)).toBeLessThan(2.5);
-  await expect(move.locator('[data-move-arrival]')).toHaveAttribute('aria-hidden', 'true');
-  await move.locator('[class*="moveHead"]').click();
-  await expect(move.locator('[data-move-arrival]')).toHaveText('~10:39');
-  await expect(move.locator('[data-move-arrival]')).toHaveAttribute('aria-hidden', 'false');
+  const selectedArrival = (await arrival.boundingBox())!;
+  expect(selectedArrival.y).toBeGreaterThanOrEqual(departure.y + departure.height);
+  expect(Math.abs(departureAfter - departureBefore)).toBeLessThan(2);
 });
 
 test("일정 카드의 시간 · 원 · 이름은 한 줄에 놓인다(이름만 아래로 처지지 않는다)", async ({ page, request }) => {
@@ -406,8 +419,8 @@ test("일정 카드의 시간 · 원 · 이름은 한 줄에 놓인다(이름만
   for (const id of ["0-0", "0-1", "0-2"]) {
     const entry = page.locator(`li[data-type="item"][data-entry-id="${id}"]`);
     const title = (await entry.locator(`[id="plan-item-${id}"]`).boundingBox())!;
-    const timeCentre = await textCentre(page, `li[data-type="item"][data-entry-id="${id}"] button[class*="time"] time:first-child`);
-    const dot = (await entry.locator("[class*=dot]").boundingBox())!;
+    const timeCentre = await textCentre(page, `li[data-type="item"][data-entry-id="${id}"] [data-stop-start]`);
+    const dot = (await entry.locator(':scope > span[aria-hidden="true"] > span').boundingBox())!;
     const centre = (box: { y: number; height: number }) => box.y + box.height / 2;
     // 이름이 두 줄이 아니라면 이름의 가운데, 시간 글자의 가운데, 원의 가운데가 같은 높이다
     if (title.height < 26) {

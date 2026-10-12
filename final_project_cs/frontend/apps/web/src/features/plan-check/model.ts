@@ -123,7 +123,7 @@ export interface PlanMove {
 
 /** What a line of the uploaded plan turned into: the trip's date, a stop, or nothing. A stop's day or time is null when
  *  the server has not settled it — never filled in here. */
-export type LineFinding = { kind: "date"; date: string } | { kind: "item"; day: number | null; startsAt: string | null; title: string };
+export type LineFinding = { kind: "date"; date: string } | { kind: "item"; id?: string; sourceKey?: string; date?: string | null; day: number | null; startsAt: string | null; title: string };
 export interface PlanLine { no: number; text: string; read: boolean; found: LineFinding | null }
 
 export interface PlanDay { day: number; /** "YYYY-MM-DD" */ date: string }

@@ -104,7 +104,7 @@ function withStreamLines(lines: PlanLine[], intake: IntakeView, stream: StreamSt
     if (offset === undefined) continue;
     const at = offset + entry.no - 1;
     if (at < 0 || at >= next.length) continue;
-    next[at] = { ...next[at], read: true, found: entry.found ? { kind: "item", day: entry.found.day, startsAt: entry.found.starts_at, title: entry.found.title } : next[at].found };
+    next[at] = { ...next[at], read: true, found: entry.found ? { kind: "item", id: entry.found.id, sourceKey: `${entry.source_id}:${entry.found.index}`, date: entry.found.date, day: entry.found.day, startsAt: entry.found.starts_at, title: entry.found.title } : next[at].found };
   }
   return next;
 }

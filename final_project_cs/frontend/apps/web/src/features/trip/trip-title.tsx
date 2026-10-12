@@ -4,6 +4,7 @@ import { useContext, useEffect, useRef, useState, type KeyboardEvent, type React
 import { createPortal } from "react-dom";
 import { ChevronDown, Download, ExternalLink, FileText, Link2, MessageCircle, MessageSquare, MoreHorizontal, Pencil, Send, Share2, X } from "lucide-react";
 import { HeaderSlot } from "@/components/layout/device-frame";
+import { OverlayRoot } from "@/components/layout/overlay-root";
 import { Act } from "@/features/plan-check/parts";
 import pc from "@/features/plan-check/plan-check.module.css";
 import { planDownloadUrl } from "@/lib/live/plan-download";
@@ -32,19 +33,24 @@ export function TripTitle({ title, open, editing, onOpen, onClose, onEdit, onEdi
   useEffect(() => { if (editing) { cancelled.current = false; input.current?.select(); } }, [editing]);
   if (!slot) return null;
   const startEdit = () => { setDraft(title); onEdit(); };
-  function commit() {
-    if (cancelled.current) return;
-    const next = draft.trim();
+  function endEdit(restoreFocus = false) {
     onEditEnd();
+    if (restoreFocus) requestAnimationFrame(() => document.getElementById("trip-title-button")?.focus({ preventScroll: true }));
+  }
+  function commit(restoreFocus = false) {
+    if (cancelled.current) return;
+    cancelled.current = true;
+    const next = draft.trim();
+    endEdit(restoreFocus);
     if (next && next !== title) onSave(next);
   }
   const keys = (event: KeyboardEvent<HTMLElement>) => { if (event.key === "Escape" && open && !editing) { event.preventDefault(); onClose(); } };
   return createPortal(<div className={pc.headInfo} data-title data-trip-title onKeyDown={keys}>
     {editing
-      ? <form className={pc.titleForm} onSubmit={(event) => { event.preventDefault(); commit(); }}>
+      ? <form className={pc.titleForm} onSubmit={(event) => { event.preventDefault(); commit(true); }}>
         <input ref={input} className={pc.titleInput} value={draft} maxLength={80} aria-label={t("계획 이름", "Plan name")} autoComplete="off" enterKeyHint="done"
-          onChange={(event) => setDraft(event.target.value)} onBlur={commit}
-          onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); cancelled.current = true; onEditEnd(); } }} />
+          onChange={(event) => setDraft(event.target.value)} onBlur={() => commit()}
+          onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); cancelled.current = true; endEdit(true); } }} />
       </form>
       : <h1 className={`${pc.headTitle} ${styles.tripTitle}`} data-armed={open || undefined}>
         <button type="button" id="trip-title-button" className={pc.titleButton} aria-expanded={open} aria-label={t(`계획 이름 · ${title}`, `Plan name · ${title}`)}
@@ -82,7 +88,36 @@ const monthDay = (date: string) => `${date.slice(5, 7)}.${date.slice(8, 10)}`;
 export function TripShare({ trip, title, planUrl, onClose, notify }: { trip: Trip; title: string; planUrl: string; /** `finished`: the plan was sent or saved (the title row folds too). */ onClose: (finished?: boolean) => void; notify: (toast: BusToast) => void }) {
   const t = useT();
   const heading = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
+  const shade = useRef<HTMLDivElement>(null);
+  const sheet = useRef<HTMLElement>(null);
+  const overlayRoot = useContext(OverlayRoot);
+  useEffect(() => {
+    const behind: { element: HTMLElement; inert: boolean }[] = [];
+    let branch: HTMLElement | null = shade.current;
+    // The sheet is nested inside the trip main. Disable sibling branches all the way
+    // to the page root, including the floating header and chat bar.
+    while (branch && branch !== document.body) {
+      const parent: HTMLElement | null = branch.parentElement;
+      for (const element of Array.from(parent?.children ?? [])) {
+        if (element === branch || element === overlayRoot || !(element instanceof HTMLElement) || element.matches("script, style")) continue;
+        behind.push({ element, inert: element.inert });
+        element.inert = true;
+      }
+      branch = parent;
+    }
+    heading.current?.focus({ preventScroll: true });
+    return () => { behind.forEach(({ element, inert }) => { element.inert = inert; }); };
+  }, [overlayRoot]);
+  function keys(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onClose(); return; }
+    if (event.key !== "Tab" || !sheet.current) return;
+    const stops = Array.from(sheet.current.querySelectorAll<HTMLElement>('a[href], button:not(:disabled), [tabindex="0"]')).filter(element => !element.closest("[inert]"));
+    const first = stops[0], last = stops.at(-1);
+    if (!first || !last) return;
+    const at = document.activeElement;
+    if (event.shiftKey && (at === first || at === heading.current || !sheet.current.contains(at))) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && (at === last || !sheet.current.contains(at))) { event.preventDefault(); first.focus(); }
+  }
   const days = [...new Set(trip.stops.map((stop) => stop.date))].sort();
   const span = days.length ? `${monthDay(days[0])}${days.length > 1 ? ` – ${monthDay(days.at(-1)!)}` : ""} · ${t(`${days.length}일`, `${days.length} day${days.length > 1 ? "s" : ""}`)} · ${t(`${trip.stops.length}개 일정`, `${trip.stops.length} stops`)} · ` : "";
   const text = t(`${title} — 여행계획서`, `${title} — trip plan`);
@@ -94,10 +129,14 @@ export function TripShare({ trip, title, planUrl, onClose, notify }: { trip: Tri
     if (!canShare) { explain(noSheet); return; }
     navigator.share({ title, text, url: planUrl }).then(() => done(), (error: unknown) => { if (!(error instanceof DOMException && error.name === "AbortError")) explain(t("공유 창을 열지 못했어요 · 링크 복사로 보내 주세요.", "Could not open the share sheet · copy the link instead.")); });
   };
-  const copy = () => {
-    void navigator.clipboard?.writeText(planUrl).then(
-      () => done({ text: t("링크를 복사했어요", "Link copied"), sub: t(...PLAN_NOTE) }),
-      () => explain(t("링크를 복사하지 못했어요 · 여행계획서를 열어 주소를 복사해 주세요.", "Could not copy the link · open the plan and copy its address.")));
+  const copy = async () => {
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
+      await navigator.clipboard.writeText(planUrl);
+      done({ text: t("링크를 복사했어요", "Link copied"), sub: t(...PLAN_NOTE) });
+    } catch {
+      explain(t("링크를 복사하지 못했어요 · 여행계획서를 열어 주소를 복사해 주세요.", "Could not copy the link · open the plan and copy its address."));
+    }
   };
   const app = (key: string, label: string, icon: ReactNode, tone: string) => ({ key, label, icon, tone });
   const targets = [
@@ -111,14 +150,13 @@ export function TripShare({ trip, title, planUrl, onClose, notify }: { trip: Tri
   const press = (key: string) => {
     if (key === "kakao") explain(t("카카오톡 공유는 준비 중이에요 · 카카오 앱 키가 아직 없어요. 링크 복사로 보내 주세요.", "KakaoTalk sharing is coming · there is no Kakao app key yet. Copy the link instead."));
     else if (key === "discord") shareSheet(t("이 브라우저에서는 디스코드로 바로 보낼 수 없어요 · 링크를 복사해 보내 주세요.", "This browser cannot send to Discord directly · copy the link instead."));
-    else if (key === "copy") copy();
+    else if (key === "copy") void copy();
     else if (key === "more") shareSheet(t("이 브라우저에는 공유 창이 없어요 · 링크 복사로 보내 주세요.", "This browser has no share sheet · copy the link instead."));
   };
   const href = (key: string) => key === "sms" ? `sms:?&body=${encodeURIComponent(`${text} ${planUrl}`)}`
     : key === "telegram" ? `https://t.me/share/url?url=${encodeURIComponent(planUrl)}&text=${encodeURIComponent(text)}` : null;
-  return <div className={styles.shareShade} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
-    onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onClose(); } }}>
-    <section className={styles.shareSheet} role="dialog" aria-modal="true" aria-labelledby="trip-share-title" data-trip-title>
+  return <div ref={shade} className={styles.shareShade} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }} onKeyDown={keys}>
+    <section ref={sheet} className={styles.shareSheet} role="dialog" aria-modal="true" aria-labelledby="trip-share-title" data-trip-title>
       <span className={styles.shareGrip} aria-hidden="true" />
       <header className={styles.shareHead}>
         <h2 id="trip-share-title" ref={heading} tabIndex={-1}>{t("여행계획서 공유", "Share the trip plan")}</h2>
