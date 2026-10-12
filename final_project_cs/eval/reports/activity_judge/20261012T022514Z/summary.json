@@ -1,0 +1,451 @@
+{
+ "conditions": {
+  "eval_run": "20261012T022514Z",
+  "dataset_sha256": "ef50c4b7fbc58e0f7662b869ca9de729ee099554f32655b3d68a863848b760ee",
+  "labeler": "사람 검토 — 송채영 (2026-10-12)",
+  "cases": 60,
+  "repeats": 3,
+  "model": "gpt-5.4-nano",
+  "reasoning_effort": "low",
+  "web_search": true,
+  "temperature": null,
+  "seed": null,
+  "prompt_version": "activity_judge.*.v1",
+  "bootstrap": {
+   "n": 10000,
+   "seed": 7,
+   "unit": "case"
+  }
+ },
+ "elapsed_s": 260.4,
+ "kinds": {
+  "closure": {
+   "cases": 16,
+   "observations": 48,
+   "llm_accuracy": {
+    "value": 0.9583333333333334,
+    "ci95": [
+     0.875,
+     1.0
+    ],
+    "num": 46,
+    "den": 48
+   },
+   "rule_accuracy": {
+    "value": 1.0,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "num": 16,
+    "den": 16
+   },
+   "llm_minus_rule": {
+    "value": -0.041666666666666664,
+    "ci95": [
+     -0.125,
+     0.0
+    ],
+    "paired_cases": 16
+   },
+   "llm_dangerous": {
+    "num": 2,
+    "den": 48
+   },
+   "llm_safe_unknown": {
+    "num": 0,
+    "den": 48
+   },
+   "rule_dangerous": {
+    "num": 0,
+    "den": 16
+   },
+   "rule_safe_unknown": {
+    "num": 0,
+    "den": 16
+   },
+   "llm_unknown": {
+    "num": 14,
+    "den": 48
+   },
+   "llm_uncited": {
+    "num": 0,
+    "den": 48
+   },
+   "llm_call_failed": {
+    "num": 0,
+    "den": 48
+   },
+   "agree_with_rule": {
+    "num": 30,
+    "den": 30
+   },
+   "consistent_cases": {
+    "num": 14,
+    "den": 16
+   },
+   "latency_ms": {
+    "p50": 1765,
+    "p95": 3578,
+    "n": 48
+   },
+   "search_calls_mean": 0,
+   "citations_kept": {
+    "num": 0,
+    "obs": 48
+   },
+   "undated_citations": 0,
+   "cost_usd_per_call_mean": 0.000319
+  },
+  "disaster_effect": {
+   "cases": 12,
+   "observations": 36,
+   "llm_accuracy": {
+    "value": 0.9166666666666666,
+    "ci95": [
+     0.75,
+     1.0
+    ],
+    "num": 33,
+    "den": 36
+   },
+   "rule_accuracy": {
+    "value": 1.0,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "num": 12,
+    "den": 12
+   },
+   "llm_minus_rule": {
+    "value": -0.08333333333333333,
+    "ci95": [
+     -0.25,
+     0.0
+    ],
+    "paired_cases": 12
+   },
+   "llm_dangerous": {
+    "num": 3,
+    "den": 36
+   },
+   "llm_safe_unknown": {
+    "num": 0,
+    "den": 36
+   },
+   "rule_dangerous": {
+    "num": 0,
+    "den": 12
+   },
+   "rule_safe_unknown": {
+    "num": 0,
+    "den": 12
+   },
+   "llm_unknown": {
+    "num": 0,
+    "den": 36
+   },
+   "llm_uncited": {
+    "num": 0,
+    "den": 36
+   },
+   "llm_call_failed": {
+    "num": 0,
+    "den": 36
+   },
+   "agree_with_rule": {
+    "num": 33,
+    "den": 36
+   },
+   "consistent_cases": {
+    "num": 12,
+    "den": 12
+   },
+   "latency_ms": {
+    "p50": 1953,
+    "p95": 2266,
+    "n": 36
+   },
+   "search_calls_mean": 0,
+   "citations_kept": {
+    "num": 0,
+    "obs": 36
+   },
+   "undated_citations": 0,
+   "cost_usd_per_call_mean": 0.000349
+  },
+  "operating_hours": {
+   "cases": 14,
+   "observations": 42,
+   "llm_accuracy": {
+    "value": 1.0,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "num": 42,
+    "den": 42
+   },
+   "rule_accuracy": {
+    "value": 0.5714285714285714,
+    "ci95": [
+     0.2857142857142857,
+     0.7857142857142857
+    ],
+    "num": 8,
+    "den": 14
+   },
+   "llm_minus_rule": {
+    "value": 0.42857142857142855,
+    "ci95": [
+     0.21428571428571427,
+     0.7142857142857143
+    ],
+    "paired_cases": 14
+   },
+   "llm_dangerous": {
+    "num": 0,
+    "den": 42
+   },
+   "llm_safe_unknown": {
+    "num": 0,
+    "den": 42
+   },
+   "rule_dangerous": {
+    "num": 0,
+    "den": 14
+   },
+   "rule_safe_unknown": {
+    "num": 6,
+    "den": 14
+   },
+   "llm_unknown": {
+    "num": 9,
+    "den": 42
+   },
+   "llm_uncited": {
+    "num": 0,
+    "den": 42
+   },
+   "llm_call_failed": {
+    "num": 0,
+    "den": 42
+   },
+   "agree_with_rule": {
+    "num": 15,
+    "den": 15
+   },
+   "consistent_cases": {
+    "num": 14,
+    "den": 14
+   },
+   "latency_ms": {
+    "p50": 1625,
+    "p95": 2156,
+    "n": 42
+   },
+   "search_calls_mean": 0,
+   "citations_kept": {
+    "num": 0,
+    "obs": 42
+   },
+   "undated_citations": 0,
+   "cost_usd_per_call_mean": 0.000284
+  },
+  "live_status": {
+   "cases": 8,
+   "observations": 24,
+   "llm_unknown": {
+    "num": 8,
+    "den": 24
+   },
+   "llm_uncited": {
+    "num": 0,
+    "den": 24
+   },
+   "llm_call_failed": {
+    "num": 0,
+    "den": 24
+   },
+   "agree_with_rule": {
+    "num": 0,
+    "den": 0
+   },
+   "consistent_cases": {
+    "num": 5,
+    "den": 8
+   },
+   "latency_ms": {
+    "p50": 9172,
+    "p95": 15922,
+    "n": 24
+   },
+   "search_calls_mean": 3.5833333333333335,
+   "citations_kept": {
+    "num": 25,
+    "obs": 24
+   },
+   "undated_citations": 17,
+   "cost_usd_per_call_mean": 0.040689
+  },
+  "weather_sensitive": {
+   "cases": 10,
+   "observations": 30,
+   "llm_accuracy": {
+    "value": 1.0,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "num": 30,
+    "den": 30
+   },
+   "rule_accuracy": {
+    "value": 0.5,
+    "ci95": [
+     0.2,
+     0.8
+    ],
+    "num": 5,
+    "den": 10
+   },
+   "llm_minus_rule": {
+    "value": 0.5,
+    "ci95": [
+     0.2,
+     0.8
+    ],
+    "paired_cases": 10
+   },
+   "llm_dangerous": {
+    "num": 0,
+    "den": 30
+   },
+   "llm_safe_unknown": {
+    "num": 0,
+    "den": 30
+   },
+   "rule_dangerous": {
+    "num": 0,
+    "den": 10
+   },
+   "rule_safe_unknown": {
+    "num": 5,
+    "den": 10
+   },
+   "llm_unknown": {
+    "num": 0,
+    "den": 30
+   },
+   "llm_uncited": {
+    "num": 0,
+    "den": 30
+   },
+   "llm_call_failed": {
+    "num": 0,
+    "den": 30
+   },
+   "agree_with_rule": {
+    "num": 12,
+    "den": 12
+   },
+   "consistent_cases": {
+    "num": 10,
+    "den": 10
+   },
+   "latency_ms": {
+    "p50": 1375,
+    "p95": 1907,
+    "n": 30
+   },
+   "search_calls_mean": 0,
+   "citations_kept": {
+    "num": 0,
+    "obs": 30
+   },
+   "undated_citations": 0,
+   "cost_usd_per_call_mean": 0.000198
+  },
+  "_labeled_all": {
+   "cases": 52,
+   "observations": 156,
+   "llm_accuracy": {
+    "value": 0.967948717948718,
+    "ci95": [
+     0.9166666666666666,
+     1.0
+    ],
+    "num": 151,
+    "den": 156
+   },
+   "rule_accuracy": {
+    "value": 0.7884615384615384,
+    "ci95": [
+     0.6730769230769231,
+     0.8846153846153846
+    ],
+    "num": 41,
+    "den": 52
+   },
+   "llm_minus_rule": {
+    "value": 0.1794871794871795,
+    "ci95": [
+     0.057692307692307696,
+     0.3076923076923077
+    ],
+    "paired_cases": 52
+   },
+   "llm_dangerous": {
+    "num": 5,
+    "den": 156
+   },
+   "llm_safe_unknown": {
+    "num": 0,
+    "den": 156
+   },
+   "rule_dangerous": {
+    "num": 0,
+    "den": 52
+   },
+   "rule_safe_unknown": {
+    "num": 11,
+    "den": 52
+   },
+   "llm_unknown": {
+    "num": 23,
+    "den": 156
+   },
+   "llm_uncited": {
+    "num": 0,
+    "den": 156
+   },
+   "llm_call_failed": {
+    "num": 0,
+    "den": 156
+   },
+   "agree_with_rule": {
+    "num": 90,
+    "den": 93
+   },
+   "consistent_cases": {
+    "num": 50,
+    "den": 52
+   },
+   "latency_ms": {
+    "p50": 1719,
+    "p95": 2359,
+    "n": 156
+   },
+   "search_calls_mean": 0,
+   "citations_kept": {
+    "num": 0,
+    "obs": 156
+   },
+   "undated_citations": 0,
+   "cost_usd_per_call_mean": 0.000293
+  }
+ },
+ "cost_usd_total": 1.022308,
+ "observations": 180
+}

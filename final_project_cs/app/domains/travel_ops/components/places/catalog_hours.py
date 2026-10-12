@@ -13,6 +13,9 @@
 ★「바뀐 것만」은 목록의 수정 시각으로 가린다 — 관광공사의 변경 목록(`areaBasedSyncList2`)은 2026-09-10 에 0건만 돌려줘
   아직 못 쓴다(`catalog_sync.py` 머리). 목록 자체를 새로 받는 일은 `catalog_sync` 몫이다.
 ★관광공사가 답을 못 주면(속도 제한 · 공급자 문제) **적지 않고 이번 틱을 멈춘다** — 같은 곳을 다음 틱이 다시 본다.
+★`[2026-10-12 사용자]` 사람이 공식 페이지에서 확인한 운영시간(`hours_read.source = "official_web"`, 활동 CSV `field_sources`)은
+  **관광공사 응답이 채워진 칸만** 관광공사 값으로 바꾸고 그 칸의 출처를 지운다(`merge_official_web`). 두 칸 다 비어 오면 사람 값을
+  그대로 두고 목록 수정 시각만 맞춘다 — 안 맞추면 수정 시각이 계속 달라 매 틱 다시 읽는다. 관광공사 원문 행은 전처럼 덮어쓴다.
 """
 from __future__ import annotations
 
@@ -35,10 +38,36 @@ def _clock(text: str) -> time:
     return time(int(hour), int(minute))
 
 
+#: `field_sources` 칸 → 관광공사 원문 칸(`hours_origin`)
+_ORIGIN_KEY = {"business_hours": "usetime", "closed_days": "restdate"}
+
+
+def merge_official_web(read: dict[str, Any] | None, origin: dict[str, Any] | None, usetime: str | None,
+                       restdate: str | None) -> tuple[str | None, str | None, dict[str, Any]] | None:
+    """사람이 확인한 운영시간 행에 관광공사 응답을 합친다. 그 행이 아니면 None(= 응답으로 덮어쓴다).
+
+    돌려주는 것: (운영시간 글, 휴무 글, 남은 사람 출처). 관광공사 응답이 **채워진 칸만** 관광공사 글을 쓰고, 빈 칸은 사람 글과
+    출처를 그대로 둔다. 남은 출처가 없으면 그 행은 이제 관광공사 원문이다.
+    """
+    from app.domains.travel_ops.components.places.place_hours import clean
+
+    sources = (read or {}).get("field_sources") if (read or {}).get("source") == "official_web" else None
+    if not isinstance(sources, dict) or not sources:
+        return None
+    tour = {"usetime": usetime, "restdate": restdate}
+    texts = dict(tour)
+    remaining: dict[str, Any] = {}
+    for column, key in _ORIGIN_KEY.items():
+        if column in sources and not clean(tour[key]):
+            texts[key] = (origin or {}).get(key)
+            remaining[column] = sources[column]
+    return texts["usetime"], texts["restdate"], remaining
+
+
 def prefill(conn, *, tenant_id: str, source: Any, chat: Any, now: datetime, start: str, until: str,
             per_night: int, per_tick: int, retry_days: int) -> dict[str, Any]:
     """한 틱 — 창 안이면 `per_tick` 곳을 읽어 적는다. 돌려주는 것은 세는 칸(작업 출력 JSON 한 줄)."""
-    from app.domains.travel_ops.components.places.place_hours import read_hours
+    from app.domains.travel_ops.components.places.place_hours import clean, read_hours
 
     if not (_clock(start) <= now.time() < _clock(until)):
         return {"skipped": "창 밖", "window": f"{start}~{until}"}
@@ -52,7 +81,8 @@ def prefill(conn, *, tenant_id: str, source: Any, chat: Any, now: datetime, star
         if room <= 0:
             return {"skipped": "오늘 밤 몫을 다 썼다", "done_tonight": done_tonight, "per_night": per_night}
         cur.execute(
-            "SELECT pc.content_id, pc.content_type_id, pc.title, pc.source_modified_at FROM place_catalog pc "
+            "SELECT pc.content_id, pc.content_type_id, pc.title, pc.source_modified_at, ch.hours_read, ch.hours_origin "
+            "FROM place_catalog pc "
             "LEFT JOIN catalog_hours ch ON ch.tenant_id = pc.tenant_id AND ch.source = pc.source "
             "  AND ch.content_id = pc.content_id "
             "WHERE pc.tenant_id=%s AND pc.source='tour_api' AND pc.content_type_id = ANY(%s) "
@@ -65,7 +95,7 @@ def prefill(conn, *, tenant_id: str, source: Any, chat: Any, now: datetime, star
         rows = cur.fetchall()
     out: dict[str, Any] = {"asked": len(rows), "read": 0, "unknown": 0, "stopped": None,
                            "done_tonight": done_tonight}
-    for content_id, type_id, title, modified in rows:
+    for content_id, type_id, title, modified, old_read, old_origin in rows:
         try:
             intro = source.operating(str(content_id), str(type_id))
         except Exception as exc:                    # noqa: BLE001 — 한도 · 공급자 문제는 이번 틱을 멈춘다(다음 틱이 잇는다)
@@ -75,8 +105,23 @@ def prefill(conn, *, tenant_id: str, source: Any, chat: Any, now: datetime, star
             out["stopped"] = f"{title}: 운영정보를 받지 못했다"
             break
         usetime, restdate = intro.get("usetime_text"), intro.get("restdate_text")
+        merged = merge_official_web(old_read, old_origin, usetime, restdate)
+        remaining: dict[str, Any] = {}
+        if merged is not None:
+            if not clean(usetime) and not clean(restdate):          # 관광공사가 두 칸 다 비어 왔다 — 사람 값을 둔다
+                with conn.transaction(), conn.cursor() as cur:
+                    cur.execute("UPDATE catalog_hours SET source_modified_at=%s "
+                                "WHERE tenant_id=%s AND source='tour_api' AND content_id=%s",
+                                (modified, tenant_id, str(content_id)))
+                out["kept_official_web"] = out.get("kept_official_web", 0) + 1
+                continue
+            usetime, restdate, remaining = merged
+            replaced = len(old_read["field_sources"]) - len(remaining)
+            out["official_web_replaced"] = out.get("official_web_replaced", 0) + replaced
         read = read_hours(usetime, restdate, chat)
-        record = read.as_record(source="tour_api", read_at=now.isoformat())
+        record = read.as_record(source="official_web" if remaining else "tour_api", read_at=now.isoformat())
+        if remaining:
+            record["field_sources"] = remaining
         with conn.transaction(), conn.cursor() as cur:
             cur.execute(
                 "INSERT INTO catalog_hours (tenant_id, source, content_id, content_type_id, hours_week, hours_read, "

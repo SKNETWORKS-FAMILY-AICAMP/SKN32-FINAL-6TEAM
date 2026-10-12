@@ -22,6 +22,9 @@ from app.core.settings import get_guardrails
     (lambda: __import__("app.infrastructure.llm.local_ft", fromlist=["x"])
      .LocalFTTeamLLM(base_url="http://example.invalid"),
      "reliability.local_ft_call_timeout_seconds"),
+    # ★`[2026-10-06]` 활동 판정 LLM(D-CS-008) — 웹 검색이 20초를 넘어 키를 따로 뒀다
+    (lambda: __import__("app.infrastructure.llm.openai_responses", fromlist=["x"]).OpenAIResponsesJudgeLLM(),
+     "reliability.activity_judge_call_timeout_seconds"),
 ])
 def test_llm_timeout_comes_from_guardrails(factory, key):
     assert factory().timeout == float(get_guardrails().get(key))

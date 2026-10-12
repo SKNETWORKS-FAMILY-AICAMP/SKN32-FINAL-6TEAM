@@ -40,3 +40,7 @@ var/
 # 데이터 표본을 눈으로 확인하려고 저장소 루트에 뽑은 임시 파일 — 커밋하지 않는다(2026-09-30, 8월·9월 커밋에 딸려 올라간 것을 지웠다)
 /scratch_*.txt
 /spotcheck*.txt
+
+# TourAPI 상세 응답 캐시 — 이 PC 에서 받은 원본 응답(약 1만 건, 하루 한도로 2주). 커밋하지 않고 수집이 끝나면 따로 백업한다
+# (wiki/teams/db_column.md 「캐시」 절은 무시 대상이라고 적었는데 실제로 빠져 있었다 — 2026-10-12)
+app/domains/travel_ops/instances/activity/data_processing/tourapi_details_cache.jsonl

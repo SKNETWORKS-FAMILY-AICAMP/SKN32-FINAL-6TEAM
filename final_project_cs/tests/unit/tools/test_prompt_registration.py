@@ -29,7 +29,12 @@ def test_prompt_registration_allowlist_matches_cs_pack_teams():
     call raised 'no active prompt registered for response.generate') -- see
     wiki/records/reports/2026-08-30_S-PROMPT-KEY-REGISTRATION-GAP_리포트.md. This asserts
     the current, deliberate CS-pack set rather than "empty forever"."""
-    assert ALLOWED_PROMPT_KEYS == frozenset({"response.generate", "response.review_tone"})
+    assert ALLOWED_PROMPT_KEYS == frozenset({
+        "response.generate", "response.review_tone",
+        # ★`[2026-10-06]` 활동 판정 LLM(D-CS-008) 다섯 종류
+        "activity_judge.closure", "activity_judge.operating_hours", "activity_judge.weather_sensitive",
+        "activity_judge.disaster_effect", "activity_judge.live_status",
+    })
 
 
 def test_empty_prompt_directory_registers_nothing():

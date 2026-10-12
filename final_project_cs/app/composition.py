@@ -312,6 +312,36 @@ def build_mobility_departure_observer(settings, sources, *, guardrails=None):
     return build_observer(bus_arrival=bus_arrival, subway_arrival=subway_arrival,
                           basis_validator=lambda basis: mobility_wiring.validate_departure_basis(basis))
 
+def build_activity_judge_llm() -> Any | None:
+    """활동 판정 LLM(D-CS-008) — Responses API 어댑터. 쓰지 않을 때는 `None`.
+
+    ★`None` 인 경우: `activity_judge_mode = rule` 이거나 OpenAI 키가 없을 때. 그러면 Team 은 규칙 판정만 한다
+      (키가 없는데 섀도로 돌려 매번 실패를 남기지 않는다). 만드는 것 자체는 I/O 가 없다 — 부를 때 나간다.
+    ★설정 객체에 칸이 없으면(시험용 설정) `rule` 과 같다 — 조립을 깨지 않는다(`build_kakao_local` 과 같은 방식).
+    """
+    from app.infrastructure.llm.openai_responses import OpenAIResponsesJudgeLLM
+
+    settings = get_settings()
+    if getattr(settings, "activity_judge_mode", "rule") == "rule":
+        return None
+    if not (getattr(settings, "openai_api_key", "") or "").strip():
+        return None
+    return OpenAIResponsesJudgeLLM(connection_factory=get_connection)
+
+
+def build_activity_judge_shadow_sink():
+    """섀도 기록 한 줄을 표 `activity_judge_shadow` 한 행으로 쓰는 함수(A안, 2026-10-06).
+
+    ★호출마다 연결을 새로 연다 — 백그라운드 스레드에서 불리고, 판정 한 건에 한 번이라 연결 풀을 따로 두지 않는다.
+    """
+    from app.infrastructure.db.repository import create_activity_judge_shadow
+
+    def sink(record: dict[str, Any]) -> None:
+        with get_connection() as conn, conn.transaction():
+            create_activity_judge_shadow(conn, record)
+
+    return sink
+
 
 def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
                    config_path: str | Path | None = None,
@@ -319,7 +349,13 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
     """Read the declaration, dynamically load every Team, and register it."""
     config = config or load_project_config(config_path)
     _validate_modules(config)
+    # ★판정 LLM 은 운영 조립(도구를 직접 만드는 경로)에서만 넣는다 — 도구를 주입한 조립(시험)이
+    #   조용히 네트워크를 타지 않게. 위 `build_travel_sources` 와 같은 이유다.
+    judge_llm = None
+    shadow_sink = None
     if tools is None:
+        judge_llm = build_activity_judge_llm()
+        shadow_sink = build_activity_judge_shadow_sink() if judge_llm is not None else None
         config.require_module("vector_rag", "default ReadToolbox")
         # ★바깥 소스는 **조립이 넣는다.** 도구가 스스로 만들면 테스트가 조용히
         #   네트워크를 탄다. 만드는 것 자체는 I/O 가 없다 — 호출할 때만 나간다.
@@ -362,6 +398,16 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
             raise CompositionError(
                 f"team '{declaration.team_id}' implementation must provide manifest and execute"
             )
+        if judge_llm is not None and hasattr(team, "judge_llm"):
+            # ★`[2026-10-09]` 팀이 받는 모드를 밝혔으면 지킨다(D-CS-015 — develop 판 활동 팀은 `rule` · `shadow` 만).
+            #   `llm` 을 켰는데 팀이 섀도로만 돈다면 조용한 축소다 — 기동을 멈추고 이유를 말한다.
+            mode = getattr(get_settings(), "activity_judge_mode", "rule")
+            supported = getattr(team, "judge_modes", None)
+            if supported is not None and mode not in supported:
+                raise CompositionError(
+                    f"team '{declaration.team_id}' supports activity_judge_mode {list(supported)}, got '{mode}'")
+            team.judge_llm = judge_llm
+            team.judge_shadow_sink = shadow_sink
         team.manifest = team.manifest.model_copy(update={"active": declaration.active,
                                                          "team_id": declaration.team_id})
         if declaration.capabilities is not None and set(declaration.capabilities) != set(team.manifest.capabilities):

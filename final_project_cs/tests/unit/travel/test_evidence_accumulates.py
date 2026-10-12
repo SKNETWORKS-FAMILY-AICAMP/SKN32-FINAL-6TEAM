@@ -114,6 +114,6 @@ async def test_a_missing_value_adds_no_evidence_but_keeps_the_earlier_ones():
         "read.place": None,          # ★장소를 모른다
     })).execute(request)
 
-    assert result.outcome == "completed"
+    # ★`[2026-10-11]` 예약의 장소를 못 읽으면 운영 담당자에게 넘긴다(활동 팀 D4 · 수정본 UC-A3 `1a`) — 넘길 때도 앞의 근거는 남는다
+    assert result.outcome == "escalated" and result.failure_code == "place_unknown"
     assert _sources(result) == ["read.booking", "read.policy"]
-    assert "확인되지 않아" in result.answer
