@@ -195,8 +195,17 @@ class WatchBatch:
                 and watch_planners.planner(m.team_id) is not None}
 
     def _scoped_work(self, step):
-        source = (self.registry.require_runnable(step.team_id, f"{step.team_id}.itinerary").module
-                  if self.registry else self.work)
+        """항목 소유 Team 의 모듈로, **실행 계획이 그 단계에 준** 도구·호출 예산으로 계산한다.
+
+        ★`[2026-10-13]` 병합(2b5ad163)에서 이 함수가 두 벌 남아 뒤의 것(develop 판 — Team 기본 도구 전부, 계획 예산 무시)이
+          앞의 것을 덮었다. 그래서 식사 항목도 활동 팀 설정으로 돌았고 계획의 호출 예산이 걸리지 않았다
+          (test_classification_execution_plan 3건 실패). 계획 판을 남기고, develop 판이 하던 「연결 없는 단독 부품 시험은
+          받은 그대로」를 합쳤다.
+        """
+        registry = self.registry
+        if registry is None:
+            return self.work, self.task
+        source = registry.require_runnable(step.team_id, f"{step.team_id}.itinerary").module
         if source.manifest.team_id != step.team_id:
             raise PlanFailed("plan_team_unbound")
         work = copy(source)
@@ -207,21 +216,6 @@ class WatchBatch:
                                          "capability": f"{step.team_id}.itinerary", "context": context,
                                          "allowed_tools": list(step.tools)})
         return work, scoped
-
-    def _scoped_work(self, step):
-        """항목 소유 Team의 도구·예산으로 계산한다. 단독 부품 시험은 명시된 연결을 쓴다."""
-        table = current_bindings()
-        if table is None:
-            return self.work, self.task
-        entry = table.registry.require_runnable(step.team_id, f"{step.team_id}.itinerary")
-        source = entry.module
-        work = copy(source)
-        context = self.task.context.model_copy(update={"team_id": step.team_id,
-            "knowledge_scope": list(entry.manifest.knowledge_scope)})
-        task = TeamTask.model_validate({**self.task.model_dump(), "team_id": step.team_id,
-            "capability": f"{step.team_id}.itinerary", "context": context,
-            "allowed_tools": list(entry.manifest.allowed_tools)})
-        return work, task
 
     # ── 진입 ────────────────────────────────────────────────────
     def run(self) -> TeamResult:
