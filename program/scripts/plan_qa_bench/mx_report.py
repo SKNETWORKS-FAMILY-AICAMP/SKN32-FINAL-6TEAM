@@ -87,7 +87,7 @@ for name, tag in args.items():
         good_c = [(not x) if isnul else x for x in cm]
         good_m = [(not x) if isnul else x for x in mm]
         mn = mcnemar_exact(good_c, good_m)
-        out.append(f"| {NAME[cat]} | {n} | {100 * rc:.1f}% | {100 * rm:.1f}% | {100 * loss:+.1f}%p ({100 * lo:+.1f} ~ {100 * hi:+.1f}) | {mn['a_only']} : {mn['b_only']}, p={mn['p']:.3g} |")
+        out.append(f"| {NAME[cat]} | {n} | {sum(cm)}/{n} = {100 * rc:.2f}% | {sum(mm)}/{n} = {100 * rm:.2f}% | {100 * loss:+.2f}%p ({100 * lo:+.1f} ~ {100 * hi:+.1f}) | {mn['a_only']} : {mn['b_only']}, p={mn['p']:.3g} |")
         tot['nul' if isnul else 'pos'].append((pairs, cm, mm))
     # 합산
     def pool(key):
@@ -98,16 +98,16 @@ for name, tag in args.items():
     Pp, cp, mp = pool('pos')
     Pn, cn, mn_ = pool('nul')
     if Pp:
-        out.append(f'| **항목 유형 합산** | {len(Pp)} | {100 * cp / len(Pp):.1f}% | {100 * mp / len(Pp):.1f}% | {100 * (cp - mp) / len(Pp):+.1f}%p | |')
+        out.append(f'| **항목 유형 합산** | {len(Pp)} | {cp}/{len(Pp)} = {100 * cp / len(Pp):.2f}% | {mp}/{len(Pp)} = {100 * mp / len(Pp):.2f}% | {100 * (cp - mp) / len(Pp):+.2f}%p | |')
     if Pn:
-        out.append(f'| **정답 없음 유형 합산(오지목)** | {len(Pn)} | {100 * cn / len(Pn):.1f}% | {100 * mn_ / len(Pn):.1f}% | {100 * (mn_ - cn) / len(Pn):+.1f}%p | |')
-    summary.append((name, len(Pp), (mp / len(Pp) if Pp else None), (cp - mp) / len(Pp) if Pp else None, len(Pn), (mn_ / len(Pn) if Pn else None), (mn_ - cn) / len(Pn) if Pn else None))
+        out.append(f'| **정답 없음 유형 합산(오지목)** | {len(Pn)} | {cn}/{len(Pn)} = {100 * cn / len(Pn):.2f}% | {mn_}/{len(Pn)} = {100 * mn_ / len(Pn):.2f}% | {100 * (mn_ - cn) / len(Pn):+.2f}%p | |')
+    summary.append((name, len(Pp), (mp / len(Pp) if Pp else None), (cp - mp) / len(Pp) if Pp else None, len(Pn), (mn_ / len(Pn) if Pn else None), (mn_ - cn) / len(Pn) if Pn else None, mp, mn_))
 out.append('\n## 한눈에(성공 기준: 항목 선택률 ≥95% · 오지목 ≤1% · 선택률 손실 ≤2%p · 오지목 증가 ≤1%p — 시험 전에 고정한 값)\n')
 out.append('| 모델 | 항목 선택률(혼합) | 선택률 손실 | 오지목(혼합) | 오지목 증가 | 기준 통과 |')
 out.append('|---|---:|---:|---:|---:|---|')
-for name, npos, sel, loss, nnul, fp, inc in summary:
+for name, npos, sel, loss, nnul, fp, inc, selected_count, false_count in summary:
     ok = [sel is not None and sel >= 0.95, fp is not None and fp <= 0.01, loss is not None and loss <= 0.02, inc is not None and inc <= 0.01]
-    out.append(f"| {name} | {100 * sel:.1f}% (n={npos}) | {100 * loss:+.1f}%p | {100 * fp:.1f}% (n={nnul}) | {100 * inc:+.1f}%p | {sum(ok)}/4 ({'선택률' if ok[0] else '✗선택률'} · {'오지목' if ok[1] else '✗오지목'} · {'손실' if ok[2] else '✗손실'} · {'증가' if ok[3] else '✗증가'}) |")
+    out.append(f"| {name} | {selected_count}/{npos} = {100 * sel:.2f}% | {100 * loss:+.2f}%p | {false_count}/{nnul} = {100 * fp:.2f}% | {100 * inc:+.2f}%p | {sum(ok)}/4 ({'선택률' if ok[0] else '✗선택률'} · {'오지목' if ok[1] else '✗오지목'} · {'손실' if ok[2] else '✗손실'} · {'증가' if ok[3] else '✗증가'}) |")
 out.append('\n- 한계: 점추정이 기준을 넘는 것과 구간이 기준을 넘는 것은 다르다(표의 구간 참조). 코드로 이어 붙인 혼합(src=code)은 연결어 · 위치가 지름길이 될 수 있어 LLM 이 쓴 소량판(src=llm)과 나눠 봐야 한다 — 이 표는 SRC 환경변수가 없으면 합쳐 낸 값이고, `SRC=code` · `SRC=llm` 으로 나눠 따로 낸다(파일 이름에 붙음). 일정 59개 · 모델당 1회.')
 text = '\n'.join(out)
 open(os.path.join(HERE, 'results', f'mx_report{("_" + SRC) if SRC else ""}.md'), 'w', encoding='utf-8').write(text)

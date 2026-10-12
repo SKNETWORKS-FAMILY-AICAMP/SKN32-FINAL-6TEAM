@@ -79,11 +79,13 @@ class SafetyEvent:
     text: str | None                   # 재난문자 원문(그대로)
     key: str                           # 같은 사건의 지문
     shelter_type: ShelterType | None   # 안내할 대피 장소 종류 — None 이면 대피 장소 목록 없이 공식 안내만
+    simulation_id: str | None = None
 
     def evidence(self) -> dict[str, Any]:
         """정지의 근거(`trip_safety_pauses.event_json`) — 읽은 값만, 지어낸 것 없음."""
         return {"category": self.category, "kind": self.kind, "label": self.label, "step": self.step,
-                "at": self.at.isoformat() if self.at else None, "text": self.text, "level": self.level}
+                "at": self.at.isoformat() if self.at else None, "text": self.text, "level": self.level,
+                **({"mode": "simulation", "simulation_id": self.simulation_id} if self.simulation_id else {})}
 
 
 def _moment(value: Any) -> datetime | None:
@@ -116,7 +118,8 @@ def _from_quake(cause: Mapping[str, Any], rules: SafetyRules) -> SafetyEvent | N
     at = _moment(cause.get("at"))
     return SafetyEvent(level=level, category="earthquake", kind="지진", label=f"규모 {magnitude:g} 지진", step=None, at=at,
                        text=str(cause["location"]) if cause.get("location") else None,
-                       key=_key("earthquake", cause.get("at"), cause.get("location"), magnitude), shelter_type="quake_outdoor")
+                       key=_key("earthquake", cause.get("at"), cause.get("location"), magnitude), shelter_type="quake_outdoor",
+                       simulation_id=cause.get("simulation_id") if cause.get("mode") == "simulation" else None)
 
 
 def _from_message(cause: Mapping[str, Any], rules: SafetyRules) -> SafetyEvent | None:
@@ -134,7 +137,8 @@ def _from_message(cause: Mapping[str, Any], rules: SafetyRules) -> SafetyEvent |
     label = (f"{kind}({step})" if kind and step else kind or "긴급 안전 상황")
     return SafetyEvent(level=level, category="disaster_msg", kind=kind, label=label, step=step or None, at=_moment(cause.get("created_at")),
                        text=text or None, key=_key("disaster_msg", cause.get("created_at"), kind, step, text[:80]),
-                       shelter_type=_shelter_type(kind, text))
+                       shelter_type=_shelter_type(kind, text),
+                       simulation_id=cause.get("simulation_id") if cause.get("mode") == "simulation" else None)
 
 
 def classify(causes: list[Mapping[str, Any]] | None, rules: SafetyRules | None = None) -> SafetyEvent | None:

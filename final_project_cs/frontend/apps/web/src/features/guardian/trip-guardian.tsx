@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useContext, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAppToast } from "@/components/app-toast";
+import { CloseMenu } from "@/components/layout/settings-menu";
 import { tripKey, useTrip } from "@/features/trip/use-trip";
 import type { Trip } from "@/features/trip/model";
 import { setGuardian, type GuardianVia } from "@/lib/live/extras";
@@ -23,8 +24,11 @@ type Change = { enabled: boolean; via: GuardianVia };
  *   - a notification link (`/trips/{id}?guardian=on`) opens that same card at once when it is off - the link alone turns nothing on.
  * `[2026-10-06 사용자 지시]` Turned on once, it is how every plan after starts (`rememberGuardian`); turned off, that is forgotten.
  * Nothing is drawn when the server does not say (`guardian` absent: an older server, or the trip has not loaded).
+ *
+ * ★`[2026-10-07 사용자 결정 — 목업 C안]` The icon lives in the menu drawer's head, left of its close button (`tool`, for `DeviceFrame` `menuTools`), no longer in the header. The card and the
+ *   notice are drawn outside the drawer (`overlay`): pressing the icon while it is off closes the drawer first and then asks.
  */
-export function TripGuardianControl({ tripId }: { tripId: string }) {
+export function useTripGuardian(tripId: string): { tool: ReactNode; overlay: ReactNode } {
   const t = useT();
   const { language } = useSettings();
   const router = useRouter();
@@ -43,11 +47,13 @@ export function TripGuardianControl({ tripId }: { tripId: string }) {
     mutationFn: ({ enabled, via }: Change) => setGuardian(tripId, enabled, via, language),
     // The screen follows the press at once; the server's word replaces it, and a refusal puts back what was there.
     onMutate: ({ enabled, via }) => {
+      const query = queryClient.getQueryCache().find({ queryKey: key, exact: true });
       const before = queryClient.getQueryData<Trip>(key);
       queryClient.setQueryData<Trip>(key, (current) => current && { ...current, guardian: { enabled, since: current.guardian?.since ?? null, via } });
-      return { before };
+      return { before, query };
     },
-    onSuccess: (answer, { enabled }) => {
+    onSuccess: (answer, { enabled }, context) => {
+      if (!context?.query || queryClient.getQueryCache().find({ queryKey: key, exact: true }) !== context.query) return;
       queryClient.setQueryData<Trip>(key, (current) => current && { ...current, guardian: answer });
       rememberGuardian(enabled);
       show(enabled
@@ -55,6 +61,7 @@ export function TripGuardianControl({ tripId }: { tripId: string }) {
         : { text: t("항로 지킴이를 껐어요. 문제가 생기면 물어볼게요.", "Course Keeper is off. We will ask you when something goes wrong."), action: { label: t("되돌리기", "Undo"), run: () => send({ enabled: true, via: "header" }) } });
     },
     onError: (_error, variables, context) => {
+      if (!context?.query || queryClient.getQueryCache().find({ queryKey: key, exact: true }) !== context.query) return;
       if (context?.before) queryClient.setQueryData<Trip>(key, context.before);
       show({ text: t("항로 지킴이를 바꾸지 못했어요. 연결을 확인하고 다시 시도해 주세요.", "Course Keeper could not be changed. Check the connection and try again."), action: { label: t("다시 시도하기", "Try again"), run: () => send(variables) } });
     },
@@ -62,17 +69,24 @@ export function TripGuardianControl({ tripId }: { tripId: string }) {
 
   function send(next: Change) { change.mutate(next); }
 
-  if (!guardian) return null;
-  const on = guardian.enabled;
+  const on = guardian?.enabled ?? false;
   const cardOpen = pressed || (fromLink && !linkClosed && !on);
   const leaveLink = () => { setLinkClosed(true); if (fromLink) router.replace(pathname); };
 
-  return <>
-    <GuardianToggle on={on} onPress={() => { if (on) send({ enabled: false, via: "header" }); else setPressed(true); }} />
-    {cardOpen && <GuardianCard kind="notice"
+  return {
+    tool: guardian ? <DrawerToggle on={on} onOff={() => send({ enabled: false, via: "header" })} onAsk={() => setPressed(true)} /> : null,
+    overlay: <>
+    {guardian && cardOpen && <GuardianCard kind="notice" iconIn="menu"
       onPrimary={() => { const via: GuardianVia = pressed ? "header" : "notice"; setPressed(false); leaveLink(); send({ enabled: true, via }); }}
       onSecondary={() => { setPressed(false); leaveLink(); }}
       onClose={() => { setPressed(false); leaveLink(); }} />}
     {node}
-  </>;
+  </>,
+  };
+}
+
+/** The icon in the menu drawer's head: on, a press turns it off; off, the drawer closes before the card asks. */
+function DrawerToggle({ on, onOff, onAsk }: { on: boolean; onOff: () => void; onAsk: () => void }) {
+  const close = useContext(CloseMenu);
+  return <GuardianToggle on={on} onPress={() => { if (on) onOff(); else { close(); onAsk(); } }} />;
 }

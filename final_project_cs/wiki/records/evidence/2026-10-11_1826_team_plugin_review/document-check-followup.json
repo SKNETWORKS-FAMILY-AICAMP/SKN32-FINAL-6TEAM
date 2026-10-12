@@ -1,0 +1,181 @@
+{
+  "scope": [
+    "wiki/teams/team-plugin-lifecycle.md",
+    "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md"
+  ],
+  "local_links": {
+    "existing": 30,
+    "total": 30,
+    "items": [
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "../records/evidence/2026-10-11_1826_team_plugin_review/registry-observations.json",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "../records/evidence/2026-10-11_1826_team_plugin_review/source-hash-followup.json",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "../records/evidence/2026-10-11_1826_team_plugin_review/opus-review-round1.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "../records/evidence/2026-10-11_1826_team_plugin_review/opus-discussion-round2.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "../records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "composition.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "team-registry.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "team-contract/index.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "../decisions/D-CS-013-domain-folder-layout.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "../../app/composition.py",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "../../app/core/registry.py",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "../../app/core/remote_team/executor.py",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "../../app/core/remote_team/a2a_executor.py",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "../../app/application/runtime.py",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "../records/reports/2026-10-11_1831_team_plugin_design_review.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/teams/team-plugin-lifecycle.md",
+        "target": "../_backup/2026-10-11_1914_team_plugin_consensus/",
+        "exists": true
+      },
+      {
+        "source": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "target": "../evidence/2026-10-11_1826_team_plugin_review/review-prompt.txt",
+        "exists": true
+      },
+      {
+        "source": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "target": "../evidence/2026-10-11_1826_team_plugin_review/attempt-2.json",
+        "exists": true
+      },
+      {
+        "source": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "target": "../evidence/2026-10-11_1826_team_plugin_review/opus-review-round1.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "target": "../evidence/2026-10-11_1826_team_plugin_review/discussion-prompt.txt",
+        "exists": true
+      },
+      {
+        "source": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "target": "../evidence/2026-10-11_1826_team_plugin_review/attempt-3-discussion.json",
+        "exists": true
+      },
+      {
+        "source": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "target": "../evidence/2026-10-11_1826_team_plugin_review/opus-discussion-round2.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "target": "../evidence/2026-10-11_1826_team_plugin_review/source-hash-followup.json",
+        "exists": true
+      },
+      {
+        "source": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "target": "../evidence/2026-10-11_1826_team_plugin_review/document-check-followup.json",
+        "exists": true
+      },
+      {
+        "source": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "target": "../../teams/team-plugin-lifecycle.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "target": "../../teams/composition.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "target": "../../decisions/D-CS-013-domain-folder-layout.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "target": "../../teams/team-registry.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "target": "../../log.md",
+        "exists": true
+      },
+      {
+        "source": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+        "target": "../../_backup/2026-10-11_1914_team_plugin_consensus/",
+        "exists": true
+      }
+    ]
+  },
+  "fences": [
+    {
+      "file": "wiki/teams/team-plugin-lifecycle.md",
+      "fence_count": 2,
+      "balanced": true
+    },
+    {
+      "file": "wiki/records/reports/2026-10-11_1914_team_plugin_consensus.md",
+      "fence_count": 0,
+      "balanced": true
+    }
+  ],
+  "acceptance_scenarios": {
+    "rows": 24,
+    "sequential_1_to_24": true
+  },
+  "trailing_whitespace": [],
+  "mermaid_rendered": false,
+  "product_acceptance_executed": 0
+}

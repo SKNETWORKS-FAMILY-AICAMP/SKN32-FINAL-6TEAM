@@ -19,6 +19,8 @@
 import heapq, collections
 from dataclasses import dataclass, field
 
+from .bus_identity import bus_leg
+
 CRITERIA = ("최단", "최소환승", "최소도보")
 
 
@@ -255,7 +257,6 @@ AIRPORT_TYPE = "공항"
 #   구글은 17구간 중 3구간(북촌→석관동 · 망원시장→연남동 · 성북동→서촌)에서 버스+버스를 골랐고, 우리는 그 모양을 못 만들어
 #   +9~12분 느리게 나왔다(앞 둘). 판정기는 버스↔버스 환승을 이미 판정한다(v0.9.2 `_bus_bus_walk`) — 생성기만 비어 있었다.
 BUS_LINK_MAX_M_PROPOSED = 250         # 갈아탈 두 정류장 직선 상한(m) — 최종 상한은 판정기가 limits.walk_m 로 본다. 같은 정류장·길 건너 맞은편 수준만 후보로 올린다
-BUS_FROM_ROUTES_MAX = 12              # 출발 쪽 노선 수 상한(가까운 순) — 환승점 탐색 비용을 묶는다
 BUS_BUS_MAX_PROPOSED = 6              # 모양 C 후보로 내놓는 수(추정 소요 순) — 판정 개수 상한(MIX_VERIFY_MAX)은 부르는 쪽이 건다
 BUS_ACCESS_REACH_M_PROPOSED = 900     # 모양 C 의 승·하차 정류장을 찾는 반경(m) — 정류장 반경(500)보다 넓다: 구글은 북촌→석관동에서 874 m 를 걸어 탔다. 도보 상한(limits.walk_m)은 따로 넘지 않는다
 BUS_DETOUR_SLACK_M_PROPOSED = 1500    # 환승점이 도착점에서 출발점보다 이만큼까지 멀어져도 본다(m) — 마을버스·순환 노선은 일단 멀어졌다가 큰길 노선으로 갈아탄다(성북동→서촌)
@@ -411,6 +412,8 @@ class MixedGenerator:
         self.skip_at = frozenset(skip_at or ())
         self.skipped_airport = []          # 공항행 공항버스(만들지 않음 · 부르는 쪽이 no_data 로 밝힌다)
         self.no_cut = []                   # 역 앞을 한 번도 안 지나 끊지 못한 노선(근접 밖)
+        self.service_check = None          # 모든 버스 승차창을 생성 상한 전에 확인하는 호출자 조건
+        self.skipped_service = 0
 
     # ── 조각 ──
     def _walk_min(self, m):
@@ -566,11 +569,11 @@ class MixedGenerator:
                         continue
                     est = (self._walk_min(d) + (r.term_min or 0) / 2 + ride + self._walk_min(link) + self.wayfinding
                            + self.cg.transfer_wait + sub)
-                    c = MixedCandidate("A", [{"mode": "bus", "route": r.route_nm, "from": x["station_nm"],
-                                              "to": y["station_nm"]}], round(est, 1), 1, d, None, link, r.route_nm,
+                    c = MixedCandidate("A", [bus_leg(r, x, y)], round(est, 1), 1, d, None, link, r.route_nm,
                                        rec["station_nm"], None, 0.0, "추정")
                     c._rank, c._sub_lines, c._tg = sub, sorted(s_lines), tg
                     c.route_id, c.board = r.route_id, x
+                    c.bus_board_offsets = [self._walk_min(d) + (r.term_min or 0) / 2]
                     pk = self.sc.phys_key(rec)
                     cur = per_route[r.route_id].get(pk)
                     if cur is None or c.est_min < cur.est_min:
@@ -615,11 +618,11 @@ class MixedGenerator:
                     if ride is None:
                         continue
                     est = (sub + self._walk_min(link) + self.wayfinding + (r.term_min or 0) / 2 + ride + self._walk_min(d))
-                    c = MixedCandidate("B", [{"mode": "bus", "route": r.route_nm, "from": x["station_nm"],
-                                              "to": y["station_nm"]}], round(est, 1), 1, None, d, link, r.route_nm,
+                    c = MixedCandidate("B", [bus_leg(r, x, y)], round(est, 1), 1, None, d, link, r.route_nm,
                                        rec["station_nm"], None, 0.0, "추정")
                     c._rank, c._sub_lines, c._tg = sub, sorted(s_lines), sr
                     c.route_id, c.board = r.route_id, x
+                    c.bus_board_offsets = [sub + self._walk_min(link) + self.wayfinding + (r.term_min or 0) / 2]
                     pk = self.sc.phys_key(rec)
                     cur = per_route[r.route_id].get(pk)
                     if cur is None or c.est_min < cur.est_min:
@@ -635,9 +638,12 @@ class MixedGenerator:
 
         환승점 찾기: r1 의 승차 이후 정류장 s 중 도착점에서 너무 멀어지지 않는 것(도착점까지 직선이 출발점까지 직선 + slack_m 안)만 보고,
         s 둘레 `link_lim` 안의 정류장 t 가 도착점 근처에서 내리는 노선 r2 위에 있고 승차→하차 순서(seq)가 맞으면 후보다.
-        r1 이 혼자 도착점 근처까지 가면(버스 직행의 몫) 쓰지 않는다. 같은 노선 이름·공항버스·승차 분 추정이 없는 노선은 쓰지 않는다
+        직행이 있어도 더 빠른 환승일 수 있어 후보를 보존하고, 호출자의 최종 소요·환승·도보 비교에 맡긴다.
+        같은 노선 이름·공항버스·승차 분 추정이 없는 노선은 쓰지 않는다
         (추정을 못 내는 노선을 조용히 끼우지 않는다 — 혼합 A·B 와 같은 규칙)."""
         import math
+        if self.tlim < 1:
+            return []
         link_lim = BUS_LINK_MAX_M_PROPOSED if link_lim is None else link_lim
         top = BUS_BUS_MAX_PROPOSED if top is None else top
         reach_m = BUS_ACCESS_REACH_M_PROPOSED if reach_m is None else reach_m
@@ -645,14 +651,12 @@ class MixedGenerator:
         reach = min(reach_m, walk_lim)
 
         def near_by_route(lat, lng):
-            best = {}
+            best = collections.defaultdict(list)
             for d, x in _stop_index(self.bus).near(lat, lng, reach):
                 r = self.bus.by_id.get(x["route_id"])
                 if r is None or r.route_type_nm in self.excluded or r.route_type_nm == AIRPORT_TYPE:
                     continue                                   # 유형 제외 · 공항버스는 A·B 규칙대로 환승 후보에 안 쓴다
-                cur = best.get(r.route_id)
-                if cur is None or d < cur[0]:
-                    best[r.route_id] = (d, x, r)
+                best[r.route_id].append((d, x, r))
             return best
 
         board_a, alight_b = near_by_route(a_lat, a_lng), near_by_route(b_lat, b_lng)
@@ -665,43 +669,59 @@ class MixedGenerator:
             return math.hypot(dx, dy)
 
         ab = m(a_lat, a_lng, b_lat, b_lng)
-        index = _stop_index(self.bus)
+        # 도착점으로 갈 수 있는 노선의 하차 순번 이전 정류장만 색인한다.
+        # 기존 전체 색인에서 매번 제외하던 행을 먼저 빼는 것이라 유효한 후보는 그대로다.
+        last_alight = {rid: max(y['seq'] for _d, y, _r in rows) for rid, rows in alight_b.items()}
+        transfer_rows = [s for rid, rows in self.bus.stops.items() if rid in last_alight
+                         for s in rows if s['seq'] < last_alight[rid]]
+        index = _PointIndex(transfer_rows, lambda s: s.get('lat'), lambda s: s.get('lng'))
+        nearby_transfer = {}
         best = {}
-        for rid1, (da, x, r1) in sorted(board_a.items(), key=lambda kv: kv[1][0])[:BUS_FROM_ROUTES_MAX]:
-            if rid1 in alight_b:
-                continue                                       # r1 이 도착점 근처까지 간다 — 버스 직행(_bus_direct)의 몫
+        board_rows = [row for _rid, rows in sorted(board_a.items(), key=lambda kv: kv[1][0][0])
+                      for row in rows]
+        for da, x, r1 in board_rows:
+            rid1 = r1.route_id
             for sp in self.bus.stops.get(rid1, []):
                 if sp["seq"] <= x["seq"] or _VIRTUAL in str(sp.get("station_nm")) or sp.get("lat") is None:
                     continue
                 if m(sp["lat"], sp["lng"], b_lat, b_lng) >= ab + slack_m:
                     continue                                   # 도착점에서 너무 멀어지는 지점은 환승점이 아니다(slack_m 까지는 돌아가는 노선을 봐준다)
-                for dl, t in index.near(sp["lat"], sp["lng"], link_lim):
+                point = (sp['lat'], sp['lng'])
+                if point not in nearby_transfer:
+                    nearby_transfer[point] = index.near(*point, link_lim)
+                for dl, t in nearby_transfer[point]:
                     rid2 = t["route_id"]
                     if rid2 == rid1 or rid2 not in alight_b or _VIRTUAL in str(t.get("station_nm")):
                         continue
-                    db, y, r2 = alight_b[rid2]
-                    if t["seq"] >= y["seq"] or r2.route_nm == r1.route_nm:
-                        continue
-                    ride1, ride2 = self._ride(r1, x, sp), self._ride(r2, t, y)
-                    if ride1 is None or ride2 is None:
-                        continue
-                    est = (self._walk_min(da) + (r1.term_min or 0) / 2 + ride1 + self._walk_min(dl) + self.wayfinding
-                           + (r2.term_min or 0) / 2 + ride2 + self._walk_min(db))
-                    key = (rid1, rid2)
-                    cur = best.get(key)
-                    if cur is not None and cur.est_min <= est:
-                        continue
-                    c = MixedCandidate(
-                        "C", [{"mode": "bus", "route": r1.route_nm, "from": x["station_nm"], "to": sp["station_nm"]},
-                              {"mode": "bus", "route": r2.route_nm, "from": t["station_nm"], "to": y["station_nm"]}],
-                        round(est, 1), 1, da, db, dl, f"{r1.route_nm}→{r2.route_nm}", sp["station_nm"], y["station_nm"],
-                        0.0, "추정")
-                    c._rank, c._sub_lines, c._tg, c._done = est, [], [], True      # 지하철 구간이 없다 — 채울 것이 없다
-                    c.route_id, c.board = r1.route_id, x
-                    best[key] = c
+                    for db, y, r2 in alight_b[rid2]:
+                        if t["seq"] >= y["seq"] or r2.route_nm == r1.route_nm:
+                            continue
+                        ride1, ride2 = self._ride(r1, x, sp), self._ride(r2, t, y)
+                        if ride1 is None or ride2 is None:
+                            continue
+                        est = (self._walk_min(da) + (r1.term_min or 0) / 2 + ride1 + self._walk_min(dl) + self.wayfinding
+                               + (r2.term_min or 0) / 2 + ride2 + self._walk_min(db))
+                        key = (rid1, rid2)
+                        cur = best.get(key)
+                        if cur is not None and cur.est_min <= est:
+                            continue
+                        c = MixedCandidate(
+                            "C", [bus_leg(r1, x, sp), bus_leg(r2, t, y)],
+                            round(est, 1), 1, da, db, dl, f"{r1.route_nm}→{r2.route_nm}", sp["station_nm"], y["station_nm"],
+                            0.0, "추정")
+                        c._rank, c._sub_lines, c._tg, c._done = est, [], [], True
+                        c.route_id, c.board = r1.route_id, x
+                        c.bus_boards = [(r1, x), (r2, t)]
+                        first_board = self._walk_min(da) + (r1.term_min or 0) / 2
+                        c.bus_board_offsets = [first_board, first_board + ride1 + self._walk_min(dl)
+                                               + self.wayfinding + (r2.term_min or 0) / 2]
+                        if self.service_check is not None and not self.service_check(c):
+                            self.skipped_service += 1
+                            continue
+                        best[key] = c
         return sorted(best.values(), key=lambda c: (c.est_min, c.route_nm))[:top]
 
-    def materialize(self, c):
+    def materialize(self, c, *, avoid_lines=()):
         """후보 c 의 지하철 구간열을 채운다(최단 탐색 · 총 환승 상한 − 1). 성공하면 True — legs·transfers·est·도보·등급을 실제
         구간열 값으로 고친다. A 는 도착 역 후보 중 (지하철 + 이탈 도보)가 가장 짧은 쪽, B 는 출발 역 후보 중 (접근 도보 + 지하철)."""
         if getattr(c, "_done", False):
@@ -709,14 +729,15 @@ class MixedGenerator:
         cap = self.tlim - 1
         if cap < 0:
             return False
+        avoid = self.avoid | frozenset(avoid_lines or ())
         best = None
         for nm, ls, w in c._tg:
             if c.shape == "A":
                 sub = self.cg.search(c.cut_station, nm, "최단", cap, origin_lines=c._sub_lines, dest_lines=sorted(ls),
-                                     avoid_lines=self.avoid)
+                                     avoid_lines=avoid)
             else:
                 sub = self.cg.search(nm, c.cut_station, "최단", cap, origin_lines=sorted(ls), dest_lines=c._sub_lines,
-                                     avoid_lines=self.avoid)
+                                     avoid_lines=avoid)
             if sub is None or not sub.legs:
                 continue
             v = sub.est_min + self._walk_min(w)
@@ -735,8 +756,37 @@ class MixedGenerator:
         else:
             c.walk_in_m = w
         c.sub_walk_min, c.grade, c.fallback_edges = sub.walk_min, sub.grade, list(sub.fallback_edges)
+        c._materialized_rank = v
         c._done = True
         return True
+
+    def regular_alternative(self, c):
+        """기존 최단 혼합안 뒤에 추가운임 노선을 타지 않는 대안 하나를 둔다.
+
+        운임 정답을 입력하지 않는다. 현재 운임 규칙의 추가운임 노선만 피하고,
+        같은 끝점·버스 구간·환승상한으로 다시 탐색한다. 판정 개수는 호출자 상한을 따른다.
+        """
+        if c.shape == "C" or getattr(c, "_regular_variant", False) or not getattr(c, "_done", False):
+            return None
+        special = set(self.cg.R.get("fare", {}).get("subway", {}).get("special_lines", {}))
+        if not special or not any(leg.get("line") in special for leg in c.legs):
+            return None
+        import copy
+        alt = copy.copy(c)
+        alt.legs = [dict(leg) for leg in c.legs if leg.get("mode") == "bus"]
+        if len(alt.legs) != 1:
+            return None
+        alt._done, alt._regular_variant = False, True
+        alt._rank = c._materialized_rank
+        if not self.materialize(alt, avoid_lines=special):
+            return None
+        ratio = self.cg.R["candidates"]["허용_소요_배수"]["value"]
+        if alt.est_min > c.est_min * ratio or alt.legs == c.legs:
+            return None
+        if c.shape == "B" and getattr(c, "bus_board_offsets", None) is not None:
+            delta = alt._materialized_rank - c._materialized_rank
+            alt.bus_board_offsets = [offset + delta for offset in c.bus_board_offsets]
+        return alt
 
     def _finish(self, per_route):
         """노선마다 지하철 쪽 추정이 짧은 순 N개 → 전체를 추정 소요 순(같으면 노선·역 순)."""
@@ -750,7 +800,7 @@ class MixedGenerator:
 _RIDE = _weakref.WeakKeyDictionary()      # 버스 표 객체 → {route_id: (누적 분 {seq: 분}, 빈 구간 수 {seq: n})}
 
 
-def ride_estimator(v, hour=12):
+def ride_estimator(v, hour=12, day_type="weekday"):
     """혼합 후보의 **버스 승차 분 추정**(고르는 순서용 · 판정 아님) — v = 판정기(bus · bus_prof · bus_speed · R).
     구간마다 버스 구간 프로파일(41 · 평일 hour 시 p50 · min_days 이상)이 있으면 그 값, 없으면 판정기 종전 모델(거리 ÷ 표정속도 ·
     평일)로 누적한다. 공항버스처럼 표정속도 대용(간선 통계)이 실제보다 크게 느린 노선도 프로파일이 있으면 실제에 가깝다
@@ -766,14 +816,14 @@ def ride_estimator(v, hour=12):
     #   객체 id 는 그 객체를 칸 안에 같이 붙잡아 둬서(살아 있는 동안 id 가 다른 객체에 다시 쓰이지 않게) 키로 쓴다.
     #   요청마다 판정기를 얕은 복사해도 이 셋은 같은 객체라 칸이 공유되고, 설정이 다른 판정기는 다른 칸을 쓴다.
     per_bus = _RIDE.setdefault(bus, {})
-    ck = (id(prof), id(v.R), hour, md)
+    ck = (id(prof), id(v.R), hour, day_type, md)
     slot = per_bus.get(ck)
     if slot is None or slot[0] is not prof or slot[1] is not v.R:
         slot = per_bus[ck] = (prof, v.R, {})
     cache = slot[2]
 
     def build(r):
-        sp = v.bus_speed(r, "weekday")[0]
+        sp = v.bus_speed(r, day_type)[0]
         stops = bus.stops.get(r.route_id, [])
         cum, nil, tot, miss = {}, {}, 0.0, 0
         for k, st in enumerate(stops):
@@ -783,7 +833,7 @@ def ride_estimator(v, hour=12):
                 if prof is not None:
                     i, _bad = prof.row(r.route_id, prev, st)
                     if i is not None:
-                        c = prof.cell(i, "weekday", hour, "p50", md)
+                        c = prof.cell(i, day_type, hour, "p50", md)
                         m = None if c is None else c / 60.0
                 if m is None:
                     dd = st.get("sect_dist_m")

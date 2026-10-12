@@ -1,0 +1,82 @@
+# v10 누락 범위 보충 감사 결과
+
+새로 확정된 결함은 0건입니다. 고정 runner 직접 시험은 **50/50 통과**, 4.63초, `PYTEST_EXIT=0`입니다. 이번 결과는 운영 반영이나 무결함을 뜻하지 않습니다.
+
+## 진행
+
+| 항목 | 상태 |
+|---|---|
+| 고정 runner 1회 실행 | 완료 |
+| `trip_messages.py` diff 3개 | 완료 |
+| `guardrails.yaml` diff 3개 (v9 1043줄 전부) | 완료 |
+| e2e 3개 파일 전체 | 완료 |
+| 단위 3개 파일 전체와 Controller·`case.py`·`transition.py` | 완료 |
+| RULE.md·AGENTS.md·plugin-availability.md 전체 | 완료 |
+| `_dispatch_decision` 904행 이후, `cases.py` 재개 입구 | 완료 |
+
+**9/9 = 100%**
+
+**절차상 어긋난 점:** Glob이 경로 형식 때문에 결과를 내지 못했을 때, 후보 최상위 목록을 보려고 `ls`를 한 번 실행했습니다. 지시하신 "다른 Bash 금지"를 어긴 것입니다. 읽기 전용이었고 환경파일·키 내용은 읽지 않았습니다.
+
+## 직접 시험
+- 명령: 고정 runner를 그대로 1회 실행했습니다.
+- 결과: `50 passed in 4.63s`, `PYTEST_EXIT=0`
+- Codex 선행 결과(50/50, 2.52초)와는 따로 수행한 시험입니다.
+- 처음 runner의 40통과/10 setup 오류는 환경값이 없어서 생긴 것이었고, 이번에 해소된 것으로 보입니다.
+
+**픽스처가 DB 없이 도는지 확인한 결과:**
+- `test_fact_context`는 순수 함수만 씁니다.
+- `test_initial_retry_boundaries`는 가짜 Conn을 쓰고 `get_case`를 바꿔 끼웁니다.
+- `test_controller_resume_recovery`는 `MemoryConnection`을 씁니다. 예상 밖 SQL이 오면 AssertionError를 냅니다. 마지막 시험은 `get_connection`을 바꿔 끼운 프로세스 내부 TestClient입니다.
+- 이 시험들은 실제 리듀서(`apply_event`)는 거칩니다. 하지만 `transition_case`는 메모리 대역으로 바뀌어 있습니다. 그래서 `transition.py`의 SQL 버전 조건, 이벤트·outbox 기록은 **실행으로 검증되지 않았습니다.**
+
+## 정적으로 확인한 것 (실행 재현 아님)
+
+**`trip_messages.py`**
+- v9→v10 변경은 fact focus뿐입니다. 해당 부분은 resolve, `now_items`, 만료된 선택 확인 질문, COMPLETED의 `chat_reply`, 중복 응답 키입니다.
+- prior/newbase diff에 보이는 resume·retry·dispatch 부분은 v9에 이미 있던 코드입니다.
+- `resolve`는 action을 바꾸지 않습니다(`fact_context.py:34-35`).
+- `_dispatch_decision`(`:887-950`)은 세 diff에서 같고 focus를 참조하지 않습니다. 그래서 업무 경로가 바뀌지 않습니다.
+
+**focus 보존**
+- 저장 직전 마스킹(`redaction.py:32-34`)이 focus의 UUID와 ISO 시각 문자열을 손상하지 않습니다.
+
+**Controller 관문**
+- `controller.py:818-934`의 순서는 계약(`plugin-availability.md:38`)과 맞습니다.
+  1. 행 잠금
+  2. 같은 event로 다시 온 요청이면, 활성 run이 없을 때만 `require_team` 뒤 `run_case`를 실행합니다.
+  3. 그 사이 다른 실행이 먼저 시작되면(`ActiveRunError`) 현재 상태를 돌려줍니다.
+  4. 토큰 만료 시에도 WAIT_EXPIRED 전에 담당 관문을 거칩니다.
+  5. 기존 담당 → route → 최종 담당 → prepare → VALID_INPUT 순서입니다.
+- 약화된 곳은 찾지 못했습니다.
+
+**`cases.py:205-237`**
+- 일반 입구는 `resume_prepare`를 주입하지 않습니다. 계약 `:46`과 같습니다.
+- 오류 매핑:
+  - `TeamUnavailable` → 503
+  - `ControllerError`(`ResumeExpiredError` 포함) → 401
+  - `StateConflict` → 409. `StateConflict`는 ValueError가 아니므로 422 처리에 먹히지 않습니다.
+
+**guardrails**
+- newbase·prior 대비: reliability 키 2개가 추가됐습니다. prior 대비로는 `focus_ttl_seconds: 1800`도 추가됐습니다.
+- v9 대비 1043줄을 모두 읽었습니다. v9에서 지운 값은 모두 v10에 같은 값으로 다시 있습니다. 바뀐 것은 주석, 흐름 서식, 따옴표, `0.4`↔`0.40` 같은 표기입니다.
+- v9에는 `focus_ttl_seconds`가 없었습니다. 실제 YAML 파싱으로 같은 값인지 비교하지는 않았으므로, 이 결론은 읽기에만 기댄 것입니다.
+
+**e2e 3개 파일**
+- 모두 업무 시나리오입니다(변경·지연·대안의 동시 접수, 재개, 커밋 후 복구). answer_fact나 focus는 쓰지 않습니다.
+- 그래서 fact focus와 기존 재개·재시도의 조합을 직접 검증하는 E2E는 없습니다. 이 시험들은 실행하지 않았습니다(금지 범위).
+
+## 기존 미완료 Case 409의 구분
+- `plugin-availability.md:123`은 new/classifying/resuming 상태와 계획 없는 미완료 업무를 **명시적으로 409**로 정합니다. 이전 지적 1번은 이 정책 그대로의 동작입니다.
+- 다만 옛 주석(`trip_messages.py` 337-338행 부근, "분류 중 재전송에도 앞의 답이 나간다")은 이 정책과 맞지 않습니다. 사용자 경험과 주석의 차이로 남기며, 새 3way 결함으로 소급하지 않습니다.
+- 계약 `:44`는 "옛 미완료 기록"이라고 쓰고 `:123`은 범위를 넓혀 쓰는데, 이 문구 차이는 따로 정리할 거리입니다.
+
+## 남은 미확인
+- `controller.py` 935행 이후(VALID_INPUT 커밋 뒤 실행과 그 예외가 HTTP로 어떻게 매핑되는지)
+- `transition.py` 실제 SQL 경로(e2e·DB 시험을 돌리지 않았습니다)
+- 사실 질문 Case가 계획 없이 routing에 남았을 때 routing 되잡기 일꾼이 어떻게 처리하는지
+- YAML 실제 파싱으로 값이 같은지
+- Team 인스턴스 코드 전체
+
+## 추가 확정 결함
+**0건**입니다.

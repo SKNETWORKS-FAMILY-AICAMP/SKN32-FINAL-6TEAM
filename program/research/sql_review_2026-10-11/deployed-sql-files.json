@@ -1,0 +1,344 @@
+{
+  "files": [
+    {
+      "name": "001_schema.sql",
+      "sha256": "2b51b27b3bf65b351f95be056848a59f33df85019ca82075927751df1a4a119e"
+    },
+    {
+      "name": "002_domain_commerce.sql",
+      "sha256": "2f74dbfd9ce6fbaf847a0aa1eb99f4b35a3a0c057996b4ff119a3858012e0514"
+    },
+    {
+      "name": "003_outbox_tenant_scoped_dedupe.sql",
+      "sha256": "7d24f21d8710b1a453827ac58be7ac789da0e0075441c5b8c430dd167f2bcec1"
+    },
+    {
+      "name": "004_agent_runs_active_uniqueness.sql",
+      "sha256": "603f6c08dc60a96adc737d47d37f702174a5db641cda2ab1129d7b12b30e7ecc"
+    },
+    {
+      "name": "005_outbox_resolution.sql",
+      "sha256": "e8963df3fa296f139256585cc6f4791f10ea2738cae092578851662c39e007fe"
+    },
+    {
+      "name": "006_products_catalog.sql",
+      "sha256": "167e4264fda763a8b1c89c9fe70f96579bd9b9897ef7aa6a712419e113f73a04"
+    },
+    {
+      "name": "007_returns_order_item.sql",
+      "sha256": "e9957bde0eabfd29ea0218df41ffebc49dbe071a41ea4c8f567c1d841053296b"
+    },
+    {
+      "name": "008_products_return_restriction.sql",
+      "sha256": "83eb0fcbc56dd33684c256944df727f4dd55484d3ee9530f999b4e283b46ecad"
+    },
+    {
+      "name": "009_stuck_case_sweep_index.sql",
+      "sha256": "4e65eff356247b177ed87d149078dc05a68ea75b4864dc1ca08cd16cb3cd30c2"
+    },
+    {
+      "name": "010_domain_travel.sql",
+      "sha256": "73c98f0c9fa05f0d8934b012df40be9b9bb220c95c8e559178445f186cd19cbb"
+    },
+    {
+      "name": "011_place_catalog.sql",
+      "sha256": "7a8e4deaad45a39f05e52d4160068dea9196f441a9ba46f65352b6838123e4bf"
+    },
+    {
+      "name": "012_watch_observations.sql",
+      "sha256": "07075b3f3fcc758c36176827b9c72a57bfaa7d2c078a5c79b19f3a92bc58a719"
+    },
+    {
+      "name": "013_places_source_identity.sql",
+      "sha256": "30d0930b6ea128ef60c38ef715627905ded32cd70a6c544c2cb6741229fbe395"
+    },
+    {
+      "name": "014_itinerary.sql",
+      "sha256": "399a65d9395dc80b6118f65142839c7b7f03cf3a1c5bbb28d6fad4fb203ba0f5"
+    },
+    {
+      "name": "016_trip_request_key.sql",
+      "sha256": "3d28afd5baea71e3abe7ce5e90c28d0cc5226a2418bac875fcafdf7f89102899"
+    },
+    {
+      "name": "017_supplier_tier.sql",
+      "sha256": "aa2f1008897d2d6097998a5f6acb37701fb82181ba02ca9810c2fbc9bb63f74f"
+    },
+    {
+      "name": "019_delegation_and_execution_record.sql",
+      "sha256": "6cca72c241bd31b6db93801cd124303282ade0d0cedeb6e80dc1cb3f4afdf95d"
+    },
+    {
+      "name": "020_local_embedding_column.sql",
+      "sha256": "f8908652e7f7910d28ebdb702038b3567bd52fdbe9bce64d8a01079549488d78"
+    },
+    {
+      "name": "021_delegation_audit_trail.sql",
+      "sha256": "b6acad71f35f1e66c3d84b35f691956d8e24116e0a86814dad42e65ef39ab9cb"
+    },
+    {
+      "name": "022_knowledge_chunk_openai_embedding_nullable.sql",
+      "sha256": "8341aa055070bbb44dbeec981df65f1f2631ad54ed24632efe5b52db1055e719"
+    },
+    {
+      "name": "023_cancellation_terms.sql",
+      "sha256": "8d743644562cb4a97092e232460b69b48f235329a952b32ec0410e80b39a7e81"
+    },
+    {
+      "name": "024_pending_changes.sql",
+      "sha256": "59c2a61eaecb51d1929f9185f203e2fb4f3ba80a2f3e7c6f4bf7e56571d632ec"
+    },
+    {
+      "name": "025_web_user_keys.sql",
+      "sha256": "ec28ef12abddddb0a58bd2884e30a6ceeead7ecf9acadc39c9e69f2cccb14feb"
+    },
+    {
+      "name": "026_place_open_checks.sql",
+      "sha256": "8d339f5e0d752da68b40867e2a8f06cff12412d79e95712aa2b8be646e78ccf8"
+    },
+    {
+      "name": "027_external_call_budget.sql",
+      "sha256": "ed2abcf59b98636397cbb3b1c8cdbda6b1f236556d822639afd411d943d2b1e4"
+    },
+    {
+      "name": "028_trip_intakes.sql",
+      "sha256": "c2f6708344f3312c4db4770bd8a28e5fb533f37c09d19dd8390bd32018507b12"
+    },
+    {
+      "name": "029_trip_scoped_places.sql",
+      "sha256": "228bf16eb132e28d897251e370bb0514ebfd0ced6acb18de5aedc22514ea6da4"
+    },
+    {
+      "name": "030_place_aliases.sql",
+      "sha256": "b4c3963dcb715fa6924ed420218c804be16c3d16a8ac2c390b4e133b935cba3b"
+    },
+    {
+      "name": "031_web_guard.sql",
+      "sha256": "e8384e96e78d415c53f84b57f6e92ca58a9c563aeb8ea4c6047482fb7427d1e5"
+    },
+    {
+      "name": "032_pending_consent.sql",
+      "sha256": "38909b367dfb2616158f3c5d6bbebf1b01b714d3c841641c76ae36bebfb9377a"
+    },
+    {
+      "name": "033_pending_relaxed.sql",
+      "sha256": "1576c999f94ecc31d57d8b4eef1b69533d0e1d6705aa6b1e70389dcf1c803966"
+    },
+    {
+      "name": "034_trip_chat_turns.sql",
+      "sha256": "e74e3d43c670870622bc2c6977a8e0c9c4951ec215f403b643bf6c32510ce510"
+    },
+    {
+      "name": "035_pending_other_options.sql",
+      "sha256": "9ce6f3d1769df317221c9ac493cd229d17bd2506b1e2a894b34971f1670a1175"
+    },
+    {
+      "name": "036_catalog_hours.sql",
+      "sha256": "6d65c275e1a822cc1e2c003865a3c82dcedc0c8da45042426a6a6ca5959286a8"
+    },
+    {
+      "name": "037_outbox_notice_prefix_idx.sql",
+      "sha256": "775887055f2be1579ef9ab5fa7d9145dd3de6e771cfb64d52aad7b217c1ea8ea"
+    },
+    {
+      "name": "038_place_aliases_per_customer.sql",
+      "sha256": "75d9f9ecf70f353f659b511ed6db478699623b98573506c3e73756e1d1266fea"
+    },
+    {
+      "name": "039_customer_profiles.sql",
+      "sha256": "68f2bc164ff328d06112db2b2542b5cc5aff8d9c7a5496d07d25eaa4c1241713"
+    },
+    {
+      "name": "040_intake_reviews.sql",
+      "sha256": "0b321dbfccb6420db42588df76b87863b71cea749d4cc796a2a410977da3eb1f"
+    },
+    {
+      "name": "041_job_gates.sql",
+      "sha256": "e981199d8c249980a1caab778ccde4209dbe6e904ce0e4ddbaf842613ee21dab"
+    },
+    {
+      "name": "042_source_response_cache.sql",
+      "sha256": "e231deadc3b449918e8854b3f309678ee966249dabdd68f84ca43db5e7514c7e"
+    },
+    {
+      "name": "043_web_social_auth.sql",
+      "sha256": "a1dde6f0595d7dfce32375a0ee8da8636131ccb141f75b405594ccb7c0a47b96"
+    },
+    {
+      "name": "044_web_sessions.sql",
+      "sha256": "e957b2d63dcb5eb8aec4d28951918fdd0f8cbbc4559054c427a3dd4818c5fb9d"
+    },
+    {
+      "name": "045_web_agent_keys.sql",
+      "sha256": "516389edf5f93e8ff1c6250ffe8ed620ad3a0986c448ebf19ff33096dca53a8b"
+    },
+    {
+      "name": "046_consents.sql",
+      "sha256": "2816e4cab4e2d82b647fee1f23cc9fd223c34c60ac7590346a843591724e9b68"
+    },
+    {
+      "name": "047_call_budget_outcomes.sql",
+      "sha256": "090ffe165387a2266972b7814d68b6f5e942ec215691f8f130b150bc5cfcf43c"
+    },
+    {
+      "name": "048_telegram_connect.sql",
+      "sha256": "02006a68b95efe94d5e44d34b641de535793cba0e8c2bca4c77f40ba43261b43"
+    },
+    {
+      "name": "049_call_budget_provider_exhausted.sql",
+      "sha256": "a2a80afe145c8ff74a7c39658ecd959d94e544ea7d113245b0d31ed96cc9adbe"
+    },
+    {
+      "name": "050_trip_guardian_changes.sql",
+      "sha256": "5e8af8a7ef59eaa2220eee97d643583177f7fef356a7ab27a864dde086eb9cc4"
+    },
+    {
+      "name": "051_intake_survey_answers.sql",
+      "sha256": "3b10c4575e4a10fa416bd116113d0e063d517dd417384d4bad09262eb1ba2134"
+    },
+    {
+      "name": "052_safety_pause_and_shelters.sql",
+      "sha256": "5f50ab9080507ef9275446f2fa197ea92cf7ca06f63fd09ae63dc7c14dda21dc"
+    },
+    {
+      "name": "053_intake_survey_answer_history.sql",
+      "sha256": "aee466cbe529be5ce6de5e8d443fe07f5b7799ebc33186655d74562987175c32"
+    },
+    {
+      "name": "054_user_activity_events.sql",
+      "sha256": "68bd445d2b5303b9abbd79d992da7d5ddd9267eb0fa157262ece56b40de23c10"
+    },
+    {
+      "name": "055_intake_transcription_differs.sql",
+      "sha256": "ef77f6f3de70c8bbdc08552dccbe00103077483f7c25ac631dcf4ebb35267b0f"
+    },
+    {
+      "name": "056_legal_retention.sql",
+      "sha256": "d02ff78990e487e24807a731b18b68d68f86728262f370cf3ffbbe8bfb278329"
+    },
+    {
+      "name": "057_candidate_reasons.sql",
+      "sha256": "26d295ace0553be4d76fbb8d70de7a4e09baf4188e06942ea081fba8efeac2ae"
+    },
+    {
+      "name": "058_place_embeddings.sql",
+      "sha256": "fa4ca6bd2842e4930996ebee4ddc989e91fb062b744f472deea53340069b74e4"
+    },
+    {
+      "name": "060_web_auth_guest_transfer.sql",
+      "sha256": "e32f54cf40f48263b8bd05dc399146d55dee9d209a85621399ba23eb062bef20"
+    },
+    {
+      "name": "200_dining_schema.sql",
+      "sha256": "f76dec4e7223f0f57313e7e26f2d36bdc5541e1c1b910ee1d045ff641d9d7fe8"
+    },
+    {
+      "name": "201_dining_core_link.sql",
+      "sha256": "93605d53a130fbc316a96335e7352c3ea6bad3d107ac4de0b1e41b14f53b7a61"
+    },
+    {
+      "name": "202_dining_matcher.sql",
+      "sha256": "20b1f240bb8817da32166836246931df6d0a9310f310a175b9564388492ff855"
+    },
+    {
+      "name": "203_dining_holiday.sql",
+      "sha256": "fc7006090835f5008b234a7003f4ac33edebd0679f4d0cdbb9c9a69c7ea6e88e"
+    },
+    {
+      "name": "204_dining_links.sql",
+      "sha256": "b049c4115a481cfba1f5263131b77f8f838a7f1859c6de9528fd515138ab859e"
+    },
+    {
+      "name": "205_dining_attribute.sql",
+      "sha256": "f135789c8ac4487f1d5a54401763ea179d6937ac0ef47e8b09638fac993ee0aa"
+    },
+    {
+      "name": "206_dining_live_check.sql",
+      "sha256": "fa7f6c6f65ff091aca672974818a1b2dbb46ab81c92ff6685c06d694c6462180"
+    },
+    {
+      "name": "207_dining_alternatives.sql",
+      "sha256": "9ae9c9b4577051e6c8493b85c57a00d125ffece0519c6f0ac205be30db78ee3f"
+    },
+    {
+      "name": "208_dining_quality.sql",
+      "sha256": "468d14e27f3bff16dd3379539df2ab8bf2e64de064cdcacb06254d31a3a6d80d"
+    },
+    {
+      "name": "209_dining_notes.sql",
+      "sha256": "040aa944fb33885e4fd5a4de04452cb3139cdd399c9b7a1b0f65ba5b49756b17"
+    },
+    {
+      "name": "210_dining_closure_coverage.sql",
+      "sha256": "3b4bb8276a4d30c4518abf97d748f81440cbf80d113d8b694453144e89fb3db4"
+    },
+    {
+      "name": "211_dining_trial_lane.sql",
+      "sha256": "c1dbd0ae735036eff9c657c48b5e8fc2b61a955358e9c978a59789e9b77d4320"
+    },
+    {
+      "name": "212_dining_notice.sql",
+      "sha256": "4143561a317a33df3c95e4d1f7b43039e2ec66c81ce393a73ab8188786e9673c"
+    },
+    {
+      "name": "213_dining_area_district.sql",
+      "sha256": "04168b83bb15a9fbb91d2b196d1bb4f477f125c87c767ef243febb144eccabfc"
+    },
+    {
+      "name": "214_dining_category.sql",
+      "sha256": "1546afa45bfa36d6b2760d051b465556a4523f01163e0fce4f533011bfcc6e77"
+    },
+    {
+      "name": "215_dining_external_ref.sql",
+      "sha256": "9bc58d928bc805a8d39040147f4ef6c5e50cc4261c03878de9fa616fe56a214a"
+    },
+    {
+      "name": "216_dining_google_place_id.sql",
+      "sha256": "44dc663d8c543e07d6cd365523146efd1a7f7f419d71175e66a0ab61be3541f6"
+    },
+    {
+      "name": "217_dining_halal_source.sql",
+      "sha256": "042a1abf512c485801750d6bec98f8aa02241600ef260c65a473eebb01422f97"
+    },
+    {
+      "name": "218_dining_michelin.sql",
+      "sha256": "2e345e358330b7774527e1953b8e5f2984cadf798c8cb28590640ab964d318ea"
+    },
+    {
+      "name": "219_dining_alternatives_diet.sql",
+      "sha256": "89f98c2c6e2facf24d3eb8feb5fbf27a837fdef6b123ced770cf43fd6b325e37"
+    },
+    {
+      "name": "220_dining_notice_scope.sql",
+      "sha256": "feb8a52331ee965fd64445611a521dfba97404af7405693dac7172059883e422"
+    },
+    {
+      "name": "221_dining_core_promote.sql",
+      "sha256": "e1cc774bf1b3c17b9c21c2e17b67f6c533f1cf9d27302ae09cc21e5bf9e279f8"
+    },
+    {
+      "name": "222_dining_core_sync.sql",
+      "sha256": "efbc53b12631dce0c2308e020ce9bb29a39919f669a4464f5883fa85429cf03c"
+    },
+    {
+      "name": "223_ops_loader_role.sql",
+      "sha256": "701746622d8a66649a62c10f889f3c2e33ab560e4b51b300c9514295700d6672"
+    },
+    {
+      "name": "224_dining_runtime_link.sql",
+      "sha256": "7dd7bff5e79e260e9571e17044ddccc6e40c8f97ff727c210c80f4cf142a7fd4"
+    },
+    {
+      "name": "225_dining_license_search.sql",
+      "sha256": "667f162447997cad3c91975ef938710a80a24d593749d6973df6b419dba40edf"
+    },
+    {
+      "name": "226_admin_operations.sql",
+      "sha256": "6ff68da8b904e3149e208b24ccb035c37dfa333feae55c6426efeae9cb33202e"
+    },
+    {
+      "name": "230_intake_test_scenarios.sql",
+      "sha256": "1479b8b4f074ea70e9a9736173f800d379c895cd029dcd093a4804dda6084c9f"
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+
+[WebServer] (node:25840) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:28920) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:20732) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:18340) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:6568) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:15896) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:20268) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:22640) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:9968) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:25036) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:18556) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:24348) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:26880) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 16 tests using 1 worker
+
+(node:8800) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/16] tests\live\day-strip-quiet.spec.ts:18:1 › 목록을 스크롤하면 일차 줄만 사라지고 멈춘 뒤 다시 나타나며 목록 위치는 유지된다
+[2/16] tests\live\day-strip-quiet.spec.ts:35:1 › 지도를 누르고 움직이는 동안은 계속 숨고 손을 놓은 뒤 복귀한다
+[3/16] tests\live\day-strip-quiet.spec.ts:48:1 › 일차 버튼 조작은 숨기지 않고 숨은 중에도 Tab을 누르면 다시 접근할 수 있다
+[4/16] tests\live\day-strip-quiet.spec.ts:69:1 › 동작 줄이기 설정에서도 숨김·복귀가 되며 위치 이동 효과는 없다
+[5/16] tests\live\submit-at-list-end-20261011.spec.ts:10:3 › 375px 일반 동작: 목록 끝에서 스크롤 중에도 제출 표시
+[6/16] tests\live\submit-at-list-end-20261011.spec.ts:10:3 › 375px 동작 줄임: 목록 끝에서 스크롤 중에도 제출 표시
+[7/16] tests\live\submit-at-list-end-20261011.spec.ts:10:3 › 1280px 일반 동작: 목록 끝에서 스크롤 중에도 제출 표시
+[8/16] tests\live\submit-at-list-end-20261011.spec.ts:10:3 › 1280px 동작 줄임: 목록 끝에서 스크롤 중에도 제출 표시
+[9/16] tests\live\submit-at-list-end-20261011.spec.ts:44:1 › 목록 끝에서 접어도 제출은 숨고 다시 펼치면 복귀한다
+  1) tests\live\submit-at-list-end-20261011.spec.ts:44:1 › 목록 끝에서 접어도 제출은 숨고 다시 펼치면 복귀한다 ───────────
+
+    Error: expect(locator).not.toHaveAttribute() failed
+
+    Locator:  locator('footer[class*=footer]')
+    Expected: not have attribute
+    Received: have attribute
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "not toHaveAttribute" locator('footer[class*=footer]') with timeout 12000ms
+      - waiting for locator('footer[class*=footer]')
+        27 × locator resolved to <footer inert="" data-quiet="true" aria-hidden="true" class="plan-check_footer__bPd8R trip-screen_chatBar__meOlD">…</footer>
+           - unexpected value "attribute present"
+
+
+      57 |   await expect(footer).toHaveAttribute("inert");
+      58 |   await handle.click();
+    > 59 |   await expect(footer).not.toHaveAttribute("data-quiet");
+         |                            ^
+      60 | });
+      61 |
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\submit-at-list-end-20261011.spec.ts:59:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results-submit-at-list-end\submit-at-list-end-20261011-목록-끝에서-접어도-제출은-숨고-다시-펼치면-복귀한다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results-submit-at-list-end\submit-at-list-end-20261011-목록-끝에서-접어도-제출은-숨고-다시-펼치면-복귀한다\error-context.md
+
+
+
+(node:14416) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[10/16] tests\live\timeline-endpoints-20261009.spec.ts:15:3 › 출발 시각·큰 시작 시각·세로 지도 단추 375px
+  2) tests\live\timeline-endpoints-20261009.spec.ts:15:3 › 출발 시각·큰 시작 시각·세로 지도 단추 375px ────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 40
+    Received: 44
+
+      27 |     await expect(controls).toHaveAttribute('data-direction','column');
+      28 |     const dimensions=await fold.evaluate(el=>{const b=el.getBoundingClientRect(),s=el.querySelector('[role=img]')!.getBoundingClientRect(),arrow=el.querySelector('svg')!.getBoundingClientRect();return {width:b.width,height:b.height,scaleBottom:s.bottom,arrowTop:arrow.top,background:getComputedStyle(el).backgroundColor};});
+    > 29 |     expect(dimensions.width).toBeLessThanOrEqual(44); expect(dimensions.height).toBe(40); expect(dimensions.scaleBottom).toBeLessThanOrEqual(dimensions.arrowTop);
+         |                                                                                 ^
+      30 |     expect(dimensions.background).toMatch(/0\.92|92%/);
+      31 |     await capture(page,`01-times-map-${width}`); await noHorizontalScroll(page);
+      32 |   });
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\timeline-endpoints-20261009.spec.ts:29:81
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results-submit-at-list-end\timeline-endpoints-20261009-출발-시각·큰-시작-시각·세로-지도-단추-375px\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results-submit-at-list-end\timeline-endpoints-20261009-출발-시각·큰-시작-시각·세로-지도-단추-375px\error-context.md
+
+
+
+(node:27780) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[11/16] tests\live\timeline-endpoints-20261009.spec.ts:33:3 › 추가 취소 후 바깥 화면 고정·마지막 카드 전체 표시 375px
+[12/16] tests\live\timeline-endpoints-20261009.spec.ts:52:3 › 스크롤·드래그 중 제출 숨김과 유휴 복원 375px
+[13/16] tests\live\timeline-endpoints-20261009.spec.ts:15:3 › 출발 시각·큰 시작 시각·세로 지도 단추 1280px
+  3) tests\live\timeline-endpoints-20261009.spec.ts:15:3 › 출발 시각·큰 시작 시각·세로 지도 단추 1280px ───────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 40
+    Received: 44
+
+      27 |     await expect(controls).toHaveAttribute('data-direction','column');
+      28 |     const dimensions=await fold.evaluate(el=>{const b=el.getBoundingClientRect(),s=el.querySelector('[role=img]')!.getBoundingClientRect(),arrow=el.querySelector('svg')!.getBoundingClientRect();return {width:b.width,height:b.height,scaleBottom:s.bottom,arrowTop:arrow.top,background:getComputedStyle(el).backgroundColor};});
+    > 29 |     expect(dimensions.width).toBeLessThanOrEqual(44); expect(dimensions.height).toBe(40); expect(dimensions.scaleBottom).toBeLessThanOrEqual(dimensions.arrowTop);
+         |                                                                                 ^
+      30 |     expect(dimensions.background).toMatch(/0\.92|92%/);
+      31 |     await capture(page,`01-times-map-${width}`); await noHorizontalScroll(page);
+      32 |   });
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\timeline-endpoints-20261009.spec.ts:29:81
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results-submit-at-list-end\timeline-endpoints-20261009-출발-시각·큰-시작-시각·세로-지도-단추-1280px\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results-submit-at-list-end\timeline-endpoints-20261009-출발-시각·큰-시작-시각·세로-지도-단추-1280px\error-context.md
+
+
+(node:18376) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[14/16] tests\live\timeline-endpoints-20261009.spec.ts:33:3 › 추가 취소 후 바깥 화면 고정·마지막 카드 전체 표시 1280px
+[15/16] tests\live\timeline-endpoints-20261009.spec.ts:52:3 › 스크롤·드래그 중 제출 숨김과 유휴 복원 1280px
+[16/16] tests\live\timeline-endpoints-20261009.spec.ts:74:1 › 도착 시각이 없는 구간은 시각을 지어내지 않는다
+  3 failed
+    tests\live\submit-at-list-end-20261011.spec.ts:44:1 › 목록 끝에서 접어도 제출은 숨고 다시 펼치면 복귀한다 ────────────
+    tests\live\timeline-endpoints-20261009.spec.ts:15:3 › 출발 시각·큰 시작 시각·세로 지도 단추 375px ─────────────
+    tests\live\timeline-endpoints-20261009.spec.ts:15:3 › 출발 시각·큰 시작 시각·세로 지도 단추 1280px ────────────
+  13 passed (1.9m)

@@ -1,0 +1,9 @@
+{
+  "error": "AssertionError: audit used Korean 평일, but persisted day_type is weekday/holiday.",
+  "product_defect": false,
+  "source_counts": {
+    "서울역|weekday": 481,
+    "서울역|holiday": 461
+  },
+  "resolution": "Preserve previous scripts, use native persisted day_type weekday in v3. 서울역→서울 remains explicit audit-only name bridge."
+}

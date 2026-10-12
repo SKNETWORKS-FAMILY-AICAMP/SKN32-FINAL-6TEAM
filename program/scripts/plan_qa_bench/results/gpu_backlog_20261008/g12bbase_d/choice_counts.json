@@ -1,0 +1,288 @@
+{
+  "model": "Gemma-4-12B-it Q4_K_M",
+  "our_training": false,
+  "publisher_training": "Instruct release",
+  "suite": "D",
+  "saved": 2735,
+  "expected": 2735,
+  "missing": 0,
+  "failed_or_unparsed": 2,
+  "single_choice_expected": 2669,
+  "compound_diagnostic_total": 66,
+  "positive": {
+    "total": 883,
+    "correct": 779,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.8592842415386456,
+      0.90184390970679
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      0.004331618444859839
+    ]
+  },
+  "negative": {
+    "total": 1786,
+    "correct": 1475,
+    "false_pick": 311,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.8075860138646459,
+      0.8427509164056731
+    ],
+    "false_pick_wilson95": [
+      0.15724908359432682,
+      0.19241398613535404
+    ]
+  },
+  "subtypes": {
+    "absent_but_plausible": {
+      "total": 78,
+      "correct": 72,
+      "false_pick": 6,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8421677019381915,
+        0.9642695359976443
+      ],
+      "false_pick_wilson95": [
+        0.035730464002355806,
+        0.15783229806180862
+      ]
+    },
+    "change_request": {
+      "total": 79,
+      "correct": 77,
+      "false_pick": 2,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9123141537110886,
+        0.9930296326934152
+      ],
+      "false_pick_wilson95": [
+        0.006970367306584818,
+        0.08768584628891136
+      ]
+    },
+    "chitchat": {
+      "total": 1300,
+      "correct": 1015,
+      "false_pick": 285,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7574699842566947,
+        0.8024140377318948
+      ],
+      "false_pick_wilson95": [
+        0.19758596226810518,
+        0.24253001574330538
+      ]
+    },
+    "compound_intent": {
+      "total": 66,
+      "correct": 43,
+      "false_pick": 0,
+      "failed_or_missing": 2,
+      "correct_wilson95": [
+        0.5311216021303434,
+        0.7552412593807046
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05500255701354129
+      ]
+    },
+    "confusable_name": {
+      "total": 77,
+      "correct": 70,
+      "false_pick": 7,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8240388171888766,
+        0.9552642893982226
+      ],
+      "false_pick_wilson95": [
+        0.044735710601777307,
+        0.1759611828111233
+      ]
+    },
+    "context_pronoun": {
+      "total": 71,
+      "correct": 67,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8639039420002305,
+        0.9778754806983033
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05132795219689034
+      ]
+    },
+    "duplicate_place": {
+      "total": 79,
+      "correct": 76,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8941993723231529,
+        0.9870019131105641
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04637121165392266
+      ]
+    },
+    "nameless_description": {
+      "total": 75,
+      "correct": 70,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8532493994143954,
+        0.9711899371005063
+      ],
+      "false_pick_wilson95": [
+        3.469446951953614e-18,
+        0.04872384248280587
+      ]
+    },
+    "negation": {
+      "total": 72,
+      "correct": 65,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8126495420487314,
+        0.9521036800263443
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05065117259645781
+      ]
+    },
+    "ordinal_relative": {
+      "total": 80,
+      "correct": 66,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7274245802116865,
+        0.8927936355902206
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0458181295355271
+      ]
+    },
+    "out_of_scope": {
+      "total": 80,
+      "correct": 74,
+      "false_pick": 6,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8458798391878072,
+        0.9651747507069949
+      ],
+      "false_pick_wilson95": [
+        0.03482524929300514,
+        0.15412016081219287
+      ]
+    },
+    "tourist_synth_in": {
+      "total": 300,
+      "correct": 229,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7120967390716028,
+        0.8079112960834695
+      ],
+      "false_pick_wilson95": [
+        8.673617379884035e-19,
+        0.012642971224546034
+      ]
+    },
+    "tourist_synth_out": {
+      "total": 300,
+      "correct": 295,
+      "false_pick": 5,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9615846051669054,
+        0.9928605226493666
+      ],
+      "false_pick_wilson95": [
+        0.00713947735063333,
+        0.0384153948330945
+      ]
+    },
+    "typo_slang": {
+      "total": 78,
+      "correct": 78,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9530621902878059,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04693780971219429
+      ]
+    }
+  },
+  "failed_records": [
+    {
+      "i": 2714,
+      "set": "mixed12",
+      "qi": 535,
+      "type": "compound_intent",
+      "gold": 30,
+      "content": "{\"item\": [30, 31]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 894,
+      "p_null": 0.0,
+      "p_mass": 1.0
+    },
+    {
+      "i": 1053,
+      "set": "mixed9",
+      "qi": 502,
+      "type": "compound_intent",
+      "gold": 14,
+      "content": "{\"item\": [14, 15]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 915,
+      "p_null": 0.0,
+      "p_mass": 1.0
+    }
+  ],
+  "answer_sha256": "c543ce53bb6a88f434351f02074fb2b18c5e0fa6f37ce4116247ffe0b6619584",
+  "gold_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+  "execution": {
+    "job": {
+      "id": "g12bbase_d",
+      "label": "Gemma-4-12B-it Q4_K_M",
+      "our_training": false,
+      "model": "/workspace/ollama/blobs/sha256-1278394b693672ac2799eadc9a83fd98259a6a88a40acfb1dcaa6c6fc895a606",
+      "prompts": "/workspace/heavy/all_prompts.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "d_backlog_g12bbase",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 2735
+    },
+    "started": "2026-10-08T03:08:10.626266+00:00",
+    "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

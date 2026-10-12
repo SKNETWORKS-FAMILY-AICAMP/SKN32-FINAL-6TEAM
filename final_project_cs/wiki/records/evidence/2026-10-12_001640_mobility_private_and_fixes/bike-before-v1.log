@@ -1,0 +1,947 @@
+FFFFFFFFFFF..F....FFF..FFF..FF.F                                         [100%]
+================================== FAILURES ===================================
+______ test_bad_stock_response_is_rejected_and_next_call_recovers[None] _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002D9F3DAA030>
+bad = None
+
+    @pytest.mark.parametrize("bad", [
+        None, [], "broken", {"rentBikeStatus": []},
+        {"rentBikeStatus": {"row": {"stationId": "ST-1"}}},
+        {"rentBikeStatus": {"row": [None]}},
+        {"RESULT": ["INFO-100"]},
+        response(-1), response(True), response(1.5), response("-1"), response("1.5"),
+        response(None), response(float("inf")),
+    ])
+    def test_bad_stock_response_is_rejected_and_next_call_recovers(monkeypatch, bad):
+        bodies = iter([bad, response("7")])
+        monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k:
+                            io.BytesIO(json.dumps(next(bodies)).encode()))
+        gate = Gate()
+        live = BikeLive(key="test-only-secret", gate=gate)
+>       assert live.get("ST-1") is None
+               ^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.bike.BikeLive object at 0x000002D9E58B8830>
+station_id = 'ST-1'
+
+    def get(self, station_id):
+        if self.fixture is not None:
+            n = self.fixture["counts"].get(station_id)
+            if n is None:
+                return None
+            at = self.fixture.get("checked_at") or "fixture"
+            return {"available": int(n), "checked_at": at, "source_id": f"seoul_bikeList@{at}"}
+        self.last_error = None
+        if not self.key:
+            self.last_error = {"kind": "no_key"}
+            return None
+        if self.gate is not None:
+            try:
+                self.gate.acquire(self.GATE_NAME)
+            except Exception as ex:                    # noqa: BLE001 — 한도 예외(RateLimited 갈래)만 모름으로, 그 밖은 코드 결함이라 올린다
+                reason = getattr(ex, "reason", None)
+                if reason is None:
+                    raise
+                self.last_error = {"kind": "budget", "reason": reason}     # 키가 든 주소는 싣지 않는다(#50)
+                return None
+        import urllib.error
+        import urllib.request
+        try:
+            self.calls += 1
+            with urllib.request.urlopen(self.URL.format(key=self.key, sid=station_id), timeout=self.timeout) as f:
+                doc = json.loads(f.read().decode("utf-8"))
+        except urllib.error.HTTPError as ex:           # URLError 보다 먼저 — HTTPError 는 URLError 의 자식이다
+            self.last_error = {"kind": "http", "status": ex.code}
+            return None
+        except (urllib.error.URLError, TimeoutError, OSError) as ex:
+            self.last_error = {"kind": "network", "error": type(ex).__name__}
+            return None
+        except (ValueError, UnicodeDecodeError) as ex:   # JSON 이 아니다
+            self.last_error = {"kind": "bad_response", "error": type(ex).__name__}
+            return None
+>       result = (doc.get("rentBikeStatus") or {}).get("RESULT") or doc.get("RESULT") or {}
+                  ^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'get'
+
+app\domains\travel_ops\instances\mobility\engine\bike.py:123: AttributeError
+______ test_bad_stock_response_is_rejected_and_next_call_recovers[bad1] _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002D9F3DBBB00>
+bad = []
+
+    @pytest.mark.parametrize("bad", [
+        None, [], "broken", {"rentBikeStatus": []},
+        {"rentBikeStatus": {"row": {"stationId": "ST-1"}}},
+        {"rentBikeStatus": {"row": [None]}},
+        {"RESULT": ["INFO-100"]},
+        response(-1), response(True), response(1.5), response("-1"), response("1.5"),
+        response(None), response(float("inf")),
+    ])
+    def test_bad_stock_response_is_rejected_and_next_call_recovers(monkeypatch, bad):
+        bodies = iter([bad, response("7")])
+        monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k:
+                            io.BytesIO(json.dumps(next(bodies)).encode()))
+        gate = Gate()
+        live = BikeLive(key="test-only-secret", gate=gate)
+>       assert live.get("ST-1") is None
+               ^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.bike.BikeLive object at 0x000002D9F3DBBBF0>
+station_id = 'ST-1'
+
+    def get(self, station_id):
+        if self.fixture is not None:
+            n = self.fixture["counts"].get(station_id)
+            if n is None:
+                return None
+            at = self.fixture.get("checked_at") or "fixture"
+            return {"available": int(n), "checked_at": at, "source_id": f"seoul_bikeList@{at}"}
+        self.last_error = None
+        if not self.key:
+            self.last_error = {"kind": "no_key"}
+            return None
+        if self.gate is not None:
+            try:
+                self.gate.acquire(self.GATE_NAME)
+            except Exception as ex:                    # noqa: BLE001 — 한도 예외(RateLimited 갈래)만 모름으로, 그 밖은 코드 결함이라 올린다
+                reason = getattr(ex, "reason", None)
+                if reason is None:
+                    raise
+                self.last_error = {"kind": "budget", "reason": reason}     # 키가 든 주소는 싣지 않는다(#50)
+                return None
+        import urllib.error
+        import urllib.request
+        try:
+            self.calls += 1
+            with urllib.request.urlopen(self.URL.format(key=self.key, sid=station_id), timeout=self.timeout) as f:
+                doc = json.loads(f.read().decode("utf-8"))
+        except urllib.error.HTTPError as ex:           # URLError 보다 먼저 — HTTPError 는 URLError 의 자식이다
+            self.last_error = {"kind": "http", "status": ex.code}
+            return None
+        except (urllib.error.URLError, TimeoutError, OSError) as ex:
+            self.last_error = {"kind": "network", "error": type(ex).__name__}
+            return None
+        except (ValueError, UnicodeDecodeError) as ex:   # JSON 이 아니다
+            self.last_error = {"kind": "bad_response", "error": type(ex).__name__}
+            return None
+>       result = (doc.get("rentBikeStatus") or {}).get("RESULT") or doc.get("RESULT") or {}
+                  ^^^^^^^
+E       AttributeError: 'list' object has no attribute 'get'
+
+app\domains\travel_ops\instances\mobility\engine\bike.py:123: AttributeError
+_____ test_bad_stock_response_is_rejected_and_next_call_recovers[broken] ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002D9F3DBB9E0>
+bad = 'broken'
+
+    @pytest.mark.parametrize("bad", [
+        None, [], "broken", {"rentBikeStatus": []},
+        {"rentBikeStatus": {"row": {"stationId": "ST-1"}}},
+        {"rentBikeStatus": {"row": [None]}},
+        {"RESULT": ["INFO-100"]},
+        response(-1), response(True), response(1.5), response("-1"), response("1.5"),
+        response(None), response(float("inf")),
+    ])
+    def test_bad_stock_response_is_rejected_and_next_call_recovers(monkeypatch, bad):
+        bodies = iter([bad, response("7")])
+        monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k:
+                            io.BytesIO(json.dumps(next(bodies)).encode()))
+        gate = Gate()
+        live = BikeLive(key="test-only-secret", gate=gate)
+>       assert live.get("ST-1") is None
+               ^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.bike.BikeLive object at 0x000002D9F3DBA1B0>
+station_id = 'ST-1'
+
+    def get(self, station_id):
+        if self.fixture is not None:
+            n = self.fixture["counts"].get(station_id)
+            if n is None:
+                return None
+            at = self.fixture.get("checked_at") or "fixture"
+            return {"available": int(n), "checked_at": at, "source_id": f"seoul_bikeList@{at}"}
+        self.last_error = None
+        if not self.key:
+            self.last_error = {"kind": "no_key"}
+            return None
+        if self.gate is not None:
+            try:
+                self.gate.acquire(self.GATE_NAME)
+            except Exception as ex:                    # noqa: BLE001 — 한도 예외(RateLimited 갈래)만 모름으로, 그 밖은 코드 결함이라 올린다
+                reason = getattr(ex, "reason", None)
+                if reason is None:
+                    raise
+                self.last_error = {"kind": "budget", "reason": reason}     # 키가 든 주소는 싣지 않는다(#50)
+                return None
+        import urllib.error
+        import urllib.request
+        try:
+            self.calls += 1
+            with urllib.request.urlopen(self.URL.format(key=self.key, sid=station_id), timeout=self.timeout) as f:
+                doc = json.loads(f.read().decode("utf-8"))
+        except urllib.error.HTTPError as ex:           # URLError 보다 먼저 — HTTPError 는 URLError 의 자식이다
+            self.last_error = {"kind": "http", "status": ex.code}
+            return None
+        except (urllib.error.URLError, TimeoutError, OSError) as ex:
+            self.last_error = {"kind": "network", "error": type(ex).__name__}
+            return None
+        except (ValueError, UnicodeDecodeError) as ex:   # JSON 이 아니다
+            self.last_error = {"kind": "bad_response", "error": type(ex).__name__}
+            return None
+>       result = (doc.get("rentBikeStatus") or {}).get("RESULT") or doc.get("RESULT") or {}
+                  ^^^^^^^
+E       AttributeError: 'str' object has no attribute 'get'
+
+app\domains\travel_ops\instances\mobility\engine\bike.py:123: AttributeError
+______ test_bad_stock_response_is_rejected_and_next_call_recovers[bad3] _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002D9F3DB8F20>
+bad = {'rentBikeStatus': []}
+
+    @pytest.mark.parametrize("bad", [
+        None, [], "broken", {"rentBikeStatus": []},
+        {"rentBikeStatus": {"row": {"stationId": "ST-1"}}},
+        {"rentBikeStatus": {"row": [None]}},
+        {"RESULT": ["INFO-100"]},
+        response(-1), response(True), response(1.5), response("-1"), response("1.5"),
+        response(None), response(float("inf")),
+    ])
+    def test_bad_stock_response_is_rejected_and_next_call_recovers(monkeypatch, bad):
+        bodies = iter([bad, response("7")])
+        monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k:
+                            io.BytesIO(json.dumps(next(bodies)).encode()))
+        gate = Gate()
+        live = BikeLive(key="test-only-secret", gate=gate)
+        assert live.get("ST-1") is None
+>       assert live.last_error["kind"] == "bad_response"
+E       AssertionError: assert 'not_found' == 'bad_response'
+E         
+E         - bad_response
+E         + not_found
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:39: AssertionError
+______ test_bad_stock_response_is_rejected_and_next_call_recovers[bad4] _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002D9F3DBB110>
+bad = {'rentBikeStatus': {'row': {'stationId': 'ST-1'}}}
+
+    @pytest.mark.parametrize("bad", [
+        None, [], "broken", {"rentBikeStatus": []},
+        {"rentBikeStatus": {"row": {"stationId": "ST-1"}}},
+        {"rentBikeStatus": {"row": [None]}},
+        {"RESULT": ["INFO-100"]},
+        response(-1), response(True), response(1.5), response("-1"), response("1.5"),
+        response(None), response(float("inf")),
+    ])
+    def test_bad_stock_response_is_rejected_and_next_call_recovers(monkeypatch, bad):
+        bodies = iter([bad, response("7")])
+        monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k:
+                            io.BytesIO(json.dumps(next(bodies)).encode()))
+        gate = Gate()
+        live = BikeLive(key="test-only-secret", gate=gate)
+>       assert live.get("ST-1") is None
+               ^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\instances\mobility\engine\bike.py:125: in get
+    row = next((r for r in rows if r.get("stationId") == station_id), None)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <dict_keyiterator object at 0x000002D9E5885990>
+
+>   row = next((r for r in rows if r.get("stationId") == station_id), None)
+                                   ^^^^^
+E   AttributeError: 'str' object has no attribute 'get'
+
+app\domains\travel_ops\instances\mobility\engine\bike.py:125: AttributeError
+______ test_bad_stock_response_is_rejected_and_next_call_recovers[bad5] _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002D9F3DB8B60>
+bad = {'rentBikeStatus': {'row': [None]}}
+
+    @pytest.mark.parametrize("bad", [
+        None, [], "broken", {"rentBikeStatus": []},
+        {"rentBikeStatus": {"row": {"stationId": "ST-1"}}},
+        {"rentBikeStatus": {"row": [None]}},
+        {"RESULT": ["INFO-100"]},
+        response(-1), response(True), response(1.5), response("-1"), response("1.5"),
+        response(None), response(float("inf")),
+    ])
+    def test_bad_stock_response_is_rejected_and_next_call_recovers(monkeypatch, bad):
+        bodies = iter([bad, response("7")])
+        monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k:
+                            io.BytesIO(json.dumps(next(bodies)).encode()))
+        gate = Gate()
+        live = BikeLive(key="test-only-secret", gate=gate)
+>       assert live.get("ST-1") is None
+               ^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\instances\mobility\engine\bike.py:125: in get
+    row = next((r for r in rows if r.get("stationId") == station_id), None)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <list_iterator object at 0x000002D9F3DBB7C0>
+
+>   row = next((r for r in rows if r.get("stationId") == station_id), None)
+                                   ^^^^^
+E   AttributeError: 'NoneType' object has no attribute 'get'
+
+app\domains\travel_ops\instances\mobility\engine\bike.py:125: AttributeError
+______ test_bad_stock_response_is_rejected_and_next_call_recovers[bad6] _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002D9F3DBB8C0>
+bad = {'RESULT': ['INFO-100']}
+
+    @pytest.mark.parametrize("bad", [
+        None, [], "broken", {"rentBikeStatus": []},
+        {"rentBikeStatus": {"row": {"stationId": "ST-1"}}},
+        {"rentBikeStatus": {"row": [None]}},
+        {"RESULT": ["INFO-100"]},
+        response(-1), response(True), response(1.5), response("-1"), response("1.5"),
+        response(None), response(float("inf")),
+    ])
+    def test_bad_stock_response_is_rejected_and_next_call_recovers(monkeypatch, bad):
+        bodies = iter([bad, response("7")])
+        monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k:
+                            io.BytesIO(json.dumps(next(bodies)).encode()))
+        gate = Gate()
+        live = BikeLive(key="test-only-secret", gate=gate)
+>       assert live.get("ST-1") is None
+               ^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.bike.BikeLive object at 0x000002D9F3DBB4D0>
+station_id = 'ST-1'
+
+    def get(self, station_id):
+        if self.fixture is not None:
+            n = self.fixture["counts"].get(station_id)
+            if n is None:
+                return None
+            at = self.fixture.get("checked_at") or "fixture"
+            return {"available": int(n), "checked_at": at, "source_id": f"seoul_bikeList@{at}"}
+        self.last_error = None
+        if not self.key:
+            self.last_error = {"kind": "no_key"}
+            return None
+        if self.gate is not None:
+            try:
+                self.gate.acquire(self.GATE_NAME)
+            except Exception as ex:                    # noqa: BLE001 — 한도 예외(RateLimited 갈래)만 모름으로, 그 밖은 코드 결함이라 올린다
+                reason = getattr(ex, "reason", None)
+                if reason is None:
+                    raise
+                self.last_error = {"kind": "budget", "reason": reason}     # 키가 든 주소는 싣지 않는다(#50)
+                return None
+        import urllib.error
+        import urllib.request
+        try:
+            self.calls += 1
+            with urllib.request.urlopen(self.URL.format(key=self.key, sid=station_id), timeout=self.timeout) as f:
+                doc = json.loads(f.read().decode("utf-8"))
+        except urllib.error.HTTPError as ex:           # URLError 보다 먼저 — HTTPError 는 URLError 의 자식이다
+            self.last_error = {"kind": "http", "status": ex.code}
+            return None
+        except (urllib.error.URLError, TimeoutError, OSError) as ex:
+            self.last_error = {"kind": "network", "error": type(ex).__name__}
+            return None
+        except (ValueError, UnicodeDecodeError) as ex:   # JSON 이 아니다
+            self.last_error = {"kind": "bad_response", "error": type(ex).__name__}
+            return None
+        result = (doc.get("rentBikeStatus") or {}).get("RESULT") or doc.get("RESULT") or {}
+        rows = ((doc.get("rentBikeStatus") or {}).get("row")) or []
+        row = next((r for r in rows if r.get("stationId") == station_id), None)
+        if row is None:
+            # 인증 오류(INFO-100 등)와 「그 대여소 없음」을 가른다 — 응답의 결과 코드만 남긴다
+>           code = result.get("CODE")
+                   ^^^^^^^^^^
+E           AttributeError: 'list' object has no attribute 'get'
+
+app\domains\travel_ops\instances\mobility\engine\bike.py:128: AttributeError
+______ test_bad_stock_response_is_rejected_and_next_call_recovers[bad7] _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002D9F3E3CD40>
+bad = {'rentBikeStatus': {'RESULT': {'CODE': 'INFO-000'}, 'row': [{'parkingBikeTotCnt': -1, 'stationId': 'ST-1'}]}}
+
+    @pytest.mark.parametrize("bad", [
+        None, [], "broken", {"rentBikeStatus": []},
+        {"rentBikeStatus": {"row": {"stationId": "ST-1"}}},
+        {"rentBikeStatus": {"row": [None]}},
+        {"RESULT": ["INFO-100"]},
+        response(-1), response(True), response(1.5), response("-1"), response("1.5"),
+        response(None), response(float("inf")),
+    ])
+    def test_bad_stock_response_is_rejected_and_next_call_recovers(monkeypatch, bad):
+        bodies = iter([bad, response("7")])
+        monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k:
+                            io.BytesIO(json.dumps(next(bodies)).encode()))
+        gate = Gate()
+        live = BikeLive(key="test-only-secret", gate=gate)
+>       assert live.get("ST-1") is None
+E       AssertionError: assert {'available': -1, 'checked_at': '2026-10-11T23:33+09:00', 'source_id': 'seoul_bikeList@2026-10-11T23:33+09:00'} is None
+E        +  where {'available': -1, 'checked_at': '2026-10-11T23:33+09:00', 'source_id': 'seoul_bikeList@2026-10-11T23:33+09:00'} = get('ST-1')
+E        +    where get = <app.domains.travel_ops.instances.mobility.engine.bike.BikeLive object at 0x000002D9F3E3C3E0>.get
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:38: AssertionError
+______ test_bad_stock_response_is_rejected_and_next_call_recovers[bad8] _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002D9F3E3EAE0>
+bad = {'rentBikeStatus': {'RESULT': {'CODE': 'INFO-000'}, 'row': [{'parkingBikeTotCnt': True, 'stationId': 'ST-1'}]}}
+
+    @pytest.mark.parametrize("bad", [
+        None, [], "broken", {"rentBikeStatus": []},
+        {"rentBikeStatus": {"row": {"stationId": "ST-1"}}},
+        {"rentBikeStatus": {"row": [None]}},
+        {"RESULT": ["INFO-100"]},
+        response(-1), response(True), response(1.5), response("-1"), response("1.5"),
+        response(None), response(float("inf")),
+    ])
+    def test_bad_stock_response_is_rejected_and_next_call_recovers(monkeypatch, bad):
+        bodies = iter([bad, response("7")])
+        monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k:
+                            io.BytesIO(json.dumps(next(bodies)).encode()))
+        gate = Gate()
+        live = BikeLive(key="test-only-secret", gate=gate)
+>       assert live.get("ST-1") is None
+E       AssertionError: assert {'available': 1, 'checked_at': '2026-10-11T23:33+09:00', 'source_id': 'seoul_bikeList@2026-10-11T23:33+09:00'} is None
+E        +  where {'available': 1, 'checked_at': '2026-10-11T23:33+09:00', 'source_id': 'seoul_bikeList@2026-10-11T23:33+09:00'} = get('ST-1')
+E        +    where get = <app.domains.travel_ops.instances.mobility.engine.bike.BikeLive object at 0x000002D9F3E3D940>.get
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:38: AssertionError
+______ test_bad_stock_response_is_rejected_and_next_call_recovers[bad9] _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002D9F3DBAE70>
+bad = {'rentBikeStatus': {'RESULT': {'CODE': 'INFO-000'}, 'row': [{'parkingBikeTotCnt': 1.5, 'stationId': 'ST-1'}]}}
+
+    @pytest.mark.parametrize("bad", [
+        None, [], "broken", {"rentBikeStatus": []},
+        {"rentBikeStatus": {"row": {"stationId": "ST-1"}}},
+        {"rentBikeStatus": {"row": [None]}},
+        {"RESULT": ["INFO-100"]},
+        response(-1), response(True), response(1.5), response("-1"), response("1.5"),
+        response(None), response(float("inf")),
+    ])
+    def test_bad_stock_response_is_rejected_and_next_call_recovers(monkeypatch, bad):
+        bodies = iter([bad, response("7")])
+        monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k:
+                            io.BytesIO(json.dumps(next(bodies)).encode()))
+        gate = Gate()
+        live = BikeLive(key="test-only-secret", gate=gate)
+>       assert live.get("ST-1") is None
+E       AssertionError: assert {'available': 1, 'checked_at': '2026-10-11T23:33+09:00', 'source_id': 'seoul_bikeList@2026-10-11T23:33+09:00'} is None
+E        +  where {'available': 1, 'checked_at': '2026-10-11T23:33+09:00', 'source_id': 'seoul_bikeList@2026-10-11T23:33+09:00'} = get('ST-1')
+E        +    where get = <app.domains.travel_ops.instances.mobility.engine.bike.BikeLive object at 0x000002D9F3DBB440>.get
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:38: AssertionError
+______ test_bad_stock_response_is_rejected_and_next_call_recovers[bad10] ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002D9F3DB8710>
+bad = {'rentBikeStatus': {'RESULT': {'CODE': 'INFO-000'}, 'row': [{'parkingBikeTotCnt': '-1', 'stationId': 'ST-1'}]}}
+
+    @pytest.mark.parametrize("bad", [
+        None, [], "broken", {"rentBikeStatus": []},
+        {"rentBikeStatus": {"row": {"stationId": "ST-1"}}},
+        {"rentBikeStatus": {"row": [None]}},
+        {"RESULT": ["INFO-100"]},
+        response(-1), response(True), response(1.5), response("-1"), response("1.5"),
+        response(None), response(float("inf")),
+    ])
+    def test_bad_stock_response_is_rejected_and_next_call_recovers(monkeypatch, bad):
+        bodies = iter([bad, response("7")])
+        monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k:
+                            io.BytesIO(json.dumps(next(bodies)).encode()))
+        gate = Gate()
+        live = BikeLive(key="test-only-secret", gate=gate)
+>       assert live.get("ST-1") is None
+E       AssertionError: assert {'available': -1, 'checked_at': '2026-10-11T23:33+09:00', 'source_id': 'seoul_bikeList@2026-10-11T23:33+09:00'} is None
+E        +  where {'available': -1, 'checked_at': '2026-10-11T23:33+09:00', 'source_id': 'seoul_bikeList@2026-10-11T23:33+09:00'} = get('ST-1')
+E        +    where get = <app.domains.travel_ops.instances.mobility.engine.bike.BikeLive object at 0x000002D9F3DB9610>.get
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:38: AssertionError
+______ test_bad_stock_response_is_rejected_and_next_call_recovers[bad13] ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002D9F3DB97C0>
+bad = {'rentBikeStatus': {'RESULT': {'CODE': 'INFO-000'}, 'row': [{'parkingBikeTotCnt': inf, 'stationId': 'ST-1'}]}}
+
+    @pytest.mark.parametrize("bad", [
+        None, [], "broken", {"rentBikeStatus": []},
+        {"rentBikeStatus": {"row": {"stationId": "ST-1"}}},
+        {"rentBikeStatus": {"row": [None]}},
+        {"RESULT": ["INFO-100"]},
+        response(-1), response(True), response(1.5), response("-1"), response("1.5"),
+        response(None), response(float("inf")),
+    ])
+    def test_bad_stock_response_is_rejected_and_next_call_recovers(monkeypatch, bad):
+        bodies = iter([bad, response("7")])
+        monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k:
+                            io.BytesIO(json.dumps(next(bodies)).encode()))
+        gate = Gate()
+        live = BikeLive(key="test-only-secret", gate=gate)
+>       assert live.get("ST-1") is None
+               ^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.bike.BikeLive object at 0x000002D9F3DBB500>
+station_id = 'ST-1'
+
+    def get(self, station_id):
+        if self.fixture is not None:
+            n = self.fixture["counts"].get(station_id)
+            if n is None:
+                return None
+            at = self.fixture.get("checked_at") or "fixture"
+            return {"available": int(n), "checked_at": at, "source_id": f"seoul_bikeList@{at}"}
+        self.last_error = None
+        if not self.key:
+            self.last_error = {"kind": "no_key"}
+            return None
+        if self.gate is not None:
+            try:
+                self.gate.acquire(self.GATE_NAME)
+            except Exception as ex:                    # noqa: BLE001 — 한도 예외(RateLimited 갈래)만 모름으로, 그 밖은 코드 결함이라 올린다
+                reason = getattr(ex, "reason", None)
+                if reason is None:
+                    raise
+                self.last_error = {"kind": "budget", "reason": reason}     # 키가 든 주소는 싣지 않는다(#50)
+                return None
+        import urllib.error
+        import urllib.request
+        try:
+            self.calls += 1
+            with urllib.request.urlopen(self.URL.format(key=self.key, sid=station_id), timeout=self.timeout) as f:
+                doc = json.loads(f.read().decode("utf-8"))
+        except urllib.error.HTTPError as ex:           # URLError 보다 먼저 — HTTPError 는 URLError 의 자식이다
+            self.last_error = {"kind": "http", "status": ex.code}
+            return None
+        except (urllib.error.URLError, TimeoutError, OSError) as ex:
+            self.last_error = {"kind": "network", "error": type(ex).__name__}
+            return None
+        except (ValueError, UnicodeDecodeError) as ex:   # JSON 이 아니다
+            self.last_error = {"kind": "bad_response", "error": type(ex).__name__}
+            return None
+        result = (doc.get("rentBikeStatus") or {}).get("RESULT") or doc.get("RESULT") or {}
+        rows = ((doc.get("rentBikeStatus") or {}).get("row")) or []
+        row = next((r for r in rows if r.get("stationId") == station_id), None)
+        if row is None:
+            # 인증 오류(INFO-100 등)와 「그 대여소 없음」을 가른다 — 응답의 결과 코드만 남긴다
+            code = result.get("CODE")
+            self.last_error = {"kind": "not_found" if code in (None, "INFO-000", "INFO-200") else "api_error",
+                               "code": code}
+            return None
+        at = _dt.datetime.now().astimezone().isoformat(timespec="minutes")
+        # ★ 원 응답(doc·row)은 여기서 버린다. 남기는 것은 개수와 시각뿐.
+        try:
+>           n = int(row.get("parkingBikeTotCnt"))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           OverflowError: cannot convert float infinity to integer
+
+app\domains\travel_ops\instances\mobility\engine\bike.py:135: OverflowError
+____ test_bad_route_metric_is_rejected_without_storing_path[distance-True] ____
+
+field = 'distance', value = True
+
+    @pytest.mark.parametrize("field,value", [
+        (field, value) for field in ("distance", "time")
+        for value in (True, float("nan"), float("inf"), -float("inf"), -1)
+    ])
+    def test_bad_route_metric_is_rejected_without_storing_path(field, value):
+        class Router:
+            def route(self, *a, **k):
+                path = {"distance": 100, "time": 25000}
+                path[field] = value
+                return {"paths": [path]}
+        record = {}
+        bike = BikeRouter(router=Router(), record=record)
+>       assert bike.route("bike", 37.5, 127.0, 37.51, 127.01) is None
+E       AssertionError: assert {'basis': 'graphhopper', 'distance_m': 1.0, 'source_id': 'osm_bike_graph@unknown', 'time_s': 25} is None
+E        +  where {'basis': 'graphhopper', 'distance_m': 1.0, 'source_id': 'osm_bike_graph@unknown', 'time_s': 25} = route('bike', 37.5, 127.0, 37.51, 127.01)
+E        +    where route = <app.domains.travel_ops.instances.mobility.engine.bike.BikeRouter object at 0x000002D9F3DBBE00>.route
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:65: AssertionError
+____ test_bad_route_metric_is_rejected_without_storing_path[distance-nan] _____
+
+field = 'distance', value = nan
+
+    @pytest.mark.parametrize("field,value", [
+        (field, value) for field in ("distance", "time")
+        for value in (True, float("nan"), float("inf"), -float("inf"), -1)
+    ])
+    def test_bad_route_metric_is_rejected_without_storing_path(field, value):
+        class Router:
+            def route(self, *a, **k):
+                path = {"distance": 100, "time": 25000}
+                path[field] = value
+                return {"paths": [path]}
+        record = {}
+        bike = BikeRouter(router=Router(), record=record)
+>       assert bike.route("bike", 37.5, 127.0, 37.51, 127.01) is None
+E       AssertionError: assert {'basis': 'graphhopper', 'distance_m': nan, 'source_id': 'osm_bike_graph@unknown', 'time_s': 25} is None
+E        +  where {'basis': 'graphhopper', 'distance_m': nan, 'source_id': 'osm_bike_graph@unknown', 'time_s': 25} = route('bike', 37.5, 127.0, 37.51, 127.01)
+E        +    where route = <app.domains.travel_ops.instances.mobility.engine.bike.BikeRouter object at 0x000002D9F3E3D700>.route
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:65: AssertionError
+____ test_bad_route_metric_is_rejected_without_storing_path[distance-inf] _____
+
+field = 'distance', value = inf
+
+    @pytest.mark.parametrize("field,value", [
+        (field, value) for field in ("distance", "time")
+        for value in (True, float("nan"), float("inf"), -float("inf"), -1)
+    ])
+    def test_bad_route_metric_is_rejected_without_storing_path(field, value):
+        class Router:
+            def route(self, *a, **k):
+                path = {"distance": 100, "time": 25000}
+                path[field] = value
+                return {"paths": [path]}
+        record = {}
+        bike = BikeRouter(router=Router(), record=record)
+>       assert bike.route("bike", 37.5, 127.0, 37.51, 127.01) is None
+E       AssertionError: assert {'basis': 'graphhopper', 'distance_m': inf, 'source_id': 'osm_bike_graph@unknown', 'time_s': 25} is None
+E        +  where {'basis': 'graphhopper', 'distance_m': inf, 'source_id': 'osm_bike_graph@unknown', 'time_s': 25} = route('bike', 37.5, 127.0, 37.51, 127.01)
+E        +    where route = <app.domains.travel_ops.instances.mobility.engine.bike.BikeRouter object at 0x000002D9F3E3ED80>.route
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:65: AssertionError
+______ test_bad_route_metric_is_rejected_without_storing_path[time-True] ______
+
+field = 'time', value = True
+
+    @pytest.mark.parametrize("field,value", [
+        (field, value) for field in ("distance", "time")
+        for value in (True, float("nan"), float("inf"), -float("inf"), -1)
+    ])
+    def test_bad_route_metric_is_rejected_without_storing_path(field, value):
+        class Router:
+            def route(self, *a, **k):
+                path = {"distance": 100, "time": 25000}
+                path[field] = value
+                return {"paths": [path]}
+        record = {}
+        bike = BikeRouter(router=Router(), record=record)
+>       assert bike.route("bike", 37.5, 127.0, 37.51, 127.01) is None
+E       AssertionError: assert {'basis': 'graphhopper', 'distance_m': 100.0, 'source_id': 'osm_bike_graph@unknown', 'time_s': 0} is None
+E        +  where {'basis': 'graphhopper', 'distance_m': 100.0, 'source_id': 'osm_bike_graph@unknown', 'time_s': 0} = route('bike', 37.5, 127.0, 37.51, 127.01)
+E        +    where route = <app.domains.travel_ops.instances.mobility.engine.bike.BikeRouter object at 0x000002D9F3E3D610>.route
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:65: AssertionError
+______ test_bad_route_metric_is_rejected_without_storing_path[time-nan] _______
+
+field = 'time', value = nan
+
+    @pytest.mark.parametrize("field,value", [
+        (field, value) for field in ("distance", "time")
+        for value in (True, float("nan"), float("inf"), -float("inf"), -1)
+    ])
+    def test_bad_route_metric_is_rejected_without_storing_path(field, value):
+        class Router:
+            def route(self, *a, **k):
+                path = {"distance": 100, "time": 25000}
+                path[field] = value
+                return {"paths": [path]}
+        record = {}
+        bike = BikeRouter(router=Router(), record=record)
+>       assert bike.route("bike", 37.5, 127.0, 37.51, 127.01) is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.bike.BikeRouter object at 0x000002D9F3E3F7A0>
+profile = 'bike', lat1 = 37.5, lng1 = 127.0, lat2 = 37.51, lng2 = 127.01
+
+    def route(self, profile, lat1, lng1, lat2, lng2):
+        k = self.key(profile, lat1, lng1, lat2, lng2)
+        if k in self.fixture:
+            v = self.fixture[k]
+            out = {"distance_m": v["distance_m"], "time_s": v["time_s"], "basis": "fixture",
+                   "source_id": v.get("source_id") or self.source_id}
+            if profile == "foot" and v.get("foot_timing"):
+                out["foot_timing"] = dict(v["foot_timing"])
+            if v.get("quality"):
+                out["quality"] = dict(v["quality"])
+                out["optimistic"] = bool(out["quality"].get("optimistic"))
+            return out
+        self.last_error = None
+        if self.router is None:
+            self.last_error = {"kind": "no_router"}
+            return None
+        from .car import RouterDown
+        try:
+            self.calls += 1
+            doc = self.router.route((lng1, lat1), (lng2, lat2), profile=profile)   # car.py 와 같은 (lng, lat) 순서
+        except RouterDown as ex:               # 라우터에 못 닿음 — 자전거는 소요 근거없음으로 낸다(죽지 않는다)
+            self.last_error = {"kind": "router_down", "error": str(ex)[:120]}
+            return None
+        except (OSError, ValueError) as ex:    # 통신·응답 해석 실패. 그 밖의 예외(코드 결함)는 삼키지 않는다(#28)
+            self.last_error = {"kind": "router_error", "error": type(ex).__name__}
+            return None
+        paths = (doc or {}).get("paths") or []
+        if not paths:
+            self.last_error = {"kind": "no_path"}
+            return None
+        p = paths[0]
+        # ☆`[2026-09-29 문제목록 #10]` 거리·시간이 빠진 응답을 0 으로 채우지 않는다 — 앞 판은 {"paths":[{}]} 를
+        #   「0 m · 0 초 경로」로 만들었다. 빠졌으면 근거없음이다.
+        try:
+            dist, tms = float(p["distance"]), float(p["time"])
+        except (KeyError, TypeError, ValueError):
+            self.last_error = {"kind": "bad_response", "error": "distance/time 없음"}
+            return None
+        if dist < 0 or tms < 0:
+            self.last_error = {"kind": "bad_response", "error": "음수 거리·시간"}
+            return None
+        out = {"distance_m": round(dist, 1),
+>              "time_s": int(round(tms / 1000)), "basis": getattr(self.router, "basis", "graphhopper"),
+                             ^^^^^^^^^^^^^^^^^
+               "source_id": self.source_id}
+E       ValueError: cannot convert float NaN to integer
+
+app\domains\travel_ops\instances\mobility\engine\bike.py:218: ValueError
+______ test_bad_route_metric_is_rejected_without_storing_path[time-inf] _______
+
+field = 'time', value = inf
+
+    @pytest.mark.parametrize("field,value", [
+        (field, value) for field in ("distance", "time")
+        for value in (True, float("nan"), float("inf"), -float("inf"), -1)
+    ])
+    def test_bad_route_metric_is_rejected_without_storing_path(field, value):
+        class Router:
+            def route(self, *a, **k):
+                path = {"distance": 100, "time": 25000}
+                path[field] = value
+                return {"paths": [path]}
+        record = {}
+        bike = BikeRouter(router=Router(), record=record)
+>       assert bike.route("bike", 37.5, 127.0, 37.51, 127.01) is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.bike.BikeRouter object at 0x000002D9F3E3F830>
+profile = 'bike', lat1 = 37.5, lng1 = 127.0, lat2 = 37.51, lng2 = 127.01
+
+    def route(self, profile, lat1, lng1, lat2, lng2):
+        k = self.key(profile, lat1, lng1, lat2, lng2)
+        if k in self.fixture:
+            v = self.fixture[k]
+            out = {"distance_m": v["distance_m"], "time_s": v["time_s"], "basis": "fixture",
+                   "source_id": v.get("source_id") or self.source_id}
+            if profile == "foot" and v.get("foot_timing"):
+                out["foot_timing"] = dict(v["foot_timing"])
+            if v.get("quality"):
+                out["quality"] = dict(v["quality"])
+                out["optimistic"] = bool(out["quality"].get("optimistic"))
+            return out
+        self.last_error = None
+        if self.router is None:
+            self.last_error = {"kind": "no_router"}
+            return None
+        from .car import RouterDown
+        try:
+            self.calls += 1
+            doc = self.router.route((lng1, lat1), (lng2, lat2), profile=profile)   # car.py 와 같은 (lng, lat) 순서
+        except RouterDown as ex:               # 라우터에 못 닿음 — 자전거는 소요 근거없음으로 낸다(죽지 않는다)
+            self.last_error = {"kind": "router_down", "error": str(ex)[:120]}
+            return None
+        except (OSError, ValueError) as ex:    # 통신·응답 해석 실패. 그 밖의 예외(코드 결함)는 삼키지 않는다(#28)
+            self.last_error = {"kind": "router_error", "error": type(ex).__name__}
+            return None
+        paths = (doc or {}).get("paths") or []
+        if not paths:
+            self.last_error = {"kind": "no_path"}
+            return None
+        p = paths[0]
+        # ☆`[2026-09-29 문제목록 #10]` 거리·시간이 빠진 응답을 0 으로 채우지 않는다 — 앞 판은 {"paths":[{}]} 를
+        #   「0 m · 0 초 경로」로 만들었다. 빠졌으면 근거없음이다.
+        try:
+            dist, tms = float(p["distance"]), float(p["time"])
+        except (KeyError, TypeError, ValueError):
+            self.last_error = {"kind": "bad_response", "error": "distance/time 없음"}
+            return None
+        if dist < 0 or tms < 0:
+            self.last_error = {"kind": "bad_response", "error": "음수 거리·시간"}
+            return None
+        out = {"distance_m": round(dist, 1),
+>              "time_s": int(round(tms / 1000)), "basis": getattr(self.router, "basis", "graphhopper"),
+                             ^^^^^^^^^^^^^^^^^
+               "source_id": self.source_id}
+E       OverflowError: cannot convert float infinity to integer
+
+app\domains\travel_ops\instances\mobility\engine\bike.py:218: OverflowError
+____________ test_malformed_route_then_valid_route_recovers[bad0] _____________
+
+bad = []
+
+    @pytest.mark.parametrize("bad", [[], "broken", {"paths": [None]}, {"paths": {"distance": 2}}])
+    def test_malformed_route_then_valid_route_recovers(bad):
+        class Router:
+            def __init__(self):
+                self.docs = iter([bad, {"paths": [{"distance": 100.5, "time": 25000}]}])
+            def route(self, *a, **k):
+                return next(self.docs)
+        bike = BikeRouter(router=Router())
+        assert bike.route("bike", 37.5, 127.0, 37.51, 127.01) is None
+>       assert bike.last_error["kind"] == "bad_response"
+E       AssertionError: assert 'no_path' == 'bad_response'
+E         
+E         - bad_response
+E         + no_path
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:79: AssertionError
+___________ test_malformed_route_then_valid_route_recovers[broken] ____________
+
+bad = 'broken'
+
+    @pytest.mark.parametrize("bad", [[], "broken", {"paths": [None]}, {"paths": {"distance": 2}}])
+    def test_malformed_route_then_valid_route_recovers(bad):
+        class Router:
+            def __init__(self):
+                self.docs = iter([bad, {"paths": [{"distance": 100.5, "time": 25000}]}])
+            def route(self, *a, **k):
+                return next(self.docs)
+        bike = BikeRouter(router=Router())
+>       assert bike.route("bike", 37.5, 127.0, 37.51, 127.01) is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.bike.BikeRouter object at 0x000002D9F3E3D640>
+profile = 'bike', lat1 = 37.5, lng1 = 127.0, lat2 = 37.51, lng2 = 127.01
+
+    def route(self, profile, lat1, lng1, lat2, lng2):
+        k = self.key(profile, lat1, lng1, lat2, lng2)
+        if k in self.fixture:
+            v = self.fixture[k]
+            out = {"distance_m": v["distance_m"], "time_s": v["time_s"], "basis": "fixture",
+                   "source_id": v.get("source_id") or self.source_id}
+            if profile == "foot" and v.get("foot_timing"):
+                out["foot_timing"] = dict(v["foot_timing"])
+            if v.get("quality"):
+                out["quality"] = dict(v["quality"])
+                out["optimistic"] = bool(out["quality"].get("optimistic"))
+            return out
+        self.last_error = None
+        if self.router is None:
+            self.last_error = {"kind": "no_router"}
+            return None
+        from .car import RouterDown
+        try:
+            self.calls += 1
+            doc = self.router.route((lng1, lat1), (lng2, lat2), profile=profile)   # car.py 와 같은 (lng, lat) 순서
+        except RouterDown as ex:               # 라우터에 못 닿음 — 자전거는 소요 근거없음으로 낸다(죽지 않는다)
+            self.last_error = {"kind": "router_down", "error": str(ex)[:120]}
+            return None
+        except (OSError, ValueError) as ex:    # 통신·응답 해석 실패. 그 밖의 예외(코드 결함)는 삼키지 않는다(#28)
+            self.last_error = {"kind": "router_error", "error": type(ex).__name__}
+            return None
+>       paths = (doc or {}).get("paths") or []
+                ^^^^^^^^^^^^^^^
+E       AttributeError: 'str' object has no attribute 'get'
+
+app\domains\travel_ops\instances\mobility\engine\bike.py:202: AttributeError
+____________ test_malformed_route_then_valid_route_recovers[bad3] _____________
+
+bad = {'paths': {'distance': 2}}
+
+    @pytest.mark.parametrize("bad", [[], "broken", {"paths": [None]}, {"paths": {"distance": 2}}])
+    def test_malformed_route_then_valid_route_recovers(bad):
+        class Router:
+            def __init__(self):
+                self.docs = iter([bad, {"paths": [{"distance": 100.5, "time": 25000}]}])
+            def route(self, *a, **k):
+                return next(self.docs)
+        bike = BikeRouter(router=Router())
+>       assert bike.route("bike", 37.5, 127.0, 37.51, 127.01) is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_bike_response_validation_v1.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.bike.BikeRouter object at 0x000002D9F3E3D4C0>
+profile = 'bike', lat1 = 37.5, lng1 = 127.0, lat2 = 37.51, lng2 = 127.01
+
+    def route(self, profile, lat1, lng1, lat2, lng2):
+        k = self.key(profile, lat1, lng1, lat2, lng2)
+        if k in self.fixture:
+            v = self.fixture[k]
+            out = {"distance_m": v["distance_m"], "time_s": v["time_s"], "basis": "fixture",
+                   "source_id": v.get("source_id") or self.source_id}
+            if profile == "foot" and v.get("foot_timing"):
+                out["foot_timing"] = dict(v["foot_timing"])
+            if v.get("quality"):
+                out["quality"] = dict(v["quality"])
+                out["optimistic"] = bool(out["quality"].get("optimistic"))
+            return out
+        self.last_error = None
+        if self.router is None:
+            self.last_error = {"kind": "no_router"}
+            return None
+        from .car import RouterDown
+        try:
+            self.calls += 1
+            doc = self.router.route((lng1, lat1), (lng2, lat2), profile=profile)   # car.py 와 같은 (lng, lat) 순서
+        except RouterDown as ex:               # 라우터에 못 닿음 — 자전거는 소요 근거없음으로 낸다(죽지 않는다)
+            self.last_error = {"kind": "router_down", "error": str(ex)[:120]}
+            return None
+        except (OSError, ValueError) as ex:    # 통신·응답 해석 실패. 그 밖의 예외(코드 결함)는 삼키지 않는다(#28)
+            self.last_error = {"kind": "router_error", "error": type(ex).__name__}
+            return None
+        paths = (doc or {}).get("paths") or []
+        if not paths:
+            self.last_error = {"kind": "no_path"}
+            return None
+>       p = paths[0]
+            ^^^^^^^^
+E       KeyError: 0
+
+app\domains\travel_ops\instances\mobility\engine\bike.py:206: KeyError
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_stock_response_is_rejected_and_next_call_recovers[None]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_stock_response_is_rejected_and_next_call_recovers[bad1]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_stock_response_is_rejected_and_next_call_recovers[broken]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_stock_response_is_rejected_and_next_call_recovers[bad3]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_stock_response_is_rejected_and_next_call_recovers[bad4]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_stock_response_is_rejected_and_next_call_recovers[bad5]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_stock_response_is_rejected_and_next_call_recovers[bad6]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_stock_response_is_rejected_and_next_call_recovers[bad7]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_stock_response_is_rejected_and_next_call_recovers[bad8]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_stock_response_is_rejected_and_next_call_recovers[bad9]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_stock_response_is_rejected_and_next_call_recovers[bad10]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_stock_response_is_rejected_and_next_call_recovers[bad13]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_route_metric_is_rejected_without_storing_path[distance-True]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_route_metric_is_rejected_without_storing_path[distance-nan]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_route_metric_is_rejected_without_storing_path[distance-inf]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_route_metric_is_rejected_without_storing_path[time-True]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_route_metric_is_rejected_without_storing_path[time-nan]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_bad_route_metric_is_rejected_without_storing_path[time-inf]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_malformed_route_then_valid_route_recovers[bad0]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_malformed_route_then_valid_route_recovers[broken]
+FAILED tests/unit/travel/mobility/test_bike_response_validation_v1.py::test_malformed_route_then_valid_route_recovers[bad3]
+21 failed, 11 passed in 71.37s (0:01:11)
+Exception ignored in: <function Console.__del__ at 0x000002D9E4651800>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

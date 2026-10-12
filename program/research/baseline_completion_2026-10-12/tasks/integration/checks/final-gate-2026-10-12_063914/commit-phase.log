@@ -1,0 +1,30 @@
+커밋 20개 · Phase 자동 매핑 (경로 기준, 커밋 메시지 아님)
+
+  38f9e08c  P10(+2)    feat(intake): 계획 확인 화면이 그리는 검토 응답에 「다시 읽기」(rereads)를 싣고 그 일정을 확인  [P10,P4,P8]
+  129934f6  P10(+2)    feat(intake): 다르게 읽은 줄에 「다른 읽기의 값」(other_value)을 싣고 고객 안내를 존댓말로   [P10,P4,P8]
+  f4344c97  저장소 밖      docs(research): §92-11 보강 — 제품은 Ollama /api/chat + think:false 라
+  503aff22  P9(+5)     fix(eval): 엉뚱한 대상 변경 0건 · 계획 읽기 값 변조 표시 없이 새는 것 3.4% → 0.6% + Op  [P1,P10,P2,P4,P8,P9]
+  8aaf0c08  저장소 밖      docs(plan): 선별 모델 부하 시험 계획(오라클 Always Free · AWS) — 자료조사 29개 질문,
+  f281cdbb  P10(+3)    feat(llm): 모델 서버(Ollama · GPU 서버)가 모두 죽거나 늦으면 서버용 OpenAI 키로 자동 전  [P1,P10,P3,P4]
+  5b830fb8  저장소 밖      docs(eval): MX 시험 세트(잡담+일정 섞임) 설계 · 구성 · 위치 문서 — 코덱스 솔 6.1 과 1회차
+  d466ce82  저장소 밖      docs(research): 발표 30·31번 「남은 큰 문제 · 다음 주」 현황 점검과 도입까지의 격차 · 시험 
+  9e1cba03  저장소 밖      docs(research): §92-23 검토자 후보 전체 비교(소형·중형·API) · §92-24 PPO·DPO·
+  5051cd1d  저장소 밖      docs(eval): 서버에만 있던 대기열 스크립트(A24~A34 · B53 · B54 · 오라클 ARM 2차) ·
+  6ca503f4  저장소 밖      chore: 시험 세트 원문(AI Hub · KoCulture 문장 포함) 파일을 git 이 무시하게 — progr
+  08e5c7df  P10        feat(mobility): 카카오 기준 세트 40쌍 대조 도구 — 카카오 자동차 길찾기 수집(예산 가드) · 우리
+  764f7f5f  P10        docs(dining): 요식 담당 세션 인계 — 팀 develop 에 오늘 올라온 요식 작업을 새 폴더 구조로 흡
+  12f0ab5d  저장소 밖      docs(eval): 테스트 기준 표(HTML · 평가방법 조사)에 시험 세트 규모 판정의 근거(계산 · 출처 · 
+  fd21fc37  저장소 밖      docs(research): §92-22 어려운 세트 H(솔 6.1 이 만들고 루나 6.0 이 라벨) — oos1 
+  a6194abc  P8         feat(web): 사용자 결정 묶음 — 떠 있는 날짜 줄 · 지도 확인 필요 칩 · 가운데 일정 수정/삭제 4초 
+  5bcf380b  저장소 밖      docs(research): §92-21 우리 자료로 가르친 학생 모델 전체 현황 — Qwen3.5-4B 학생 74
+  de4b66e8  저장소 밖      feat(eval): 검토자 모델 비교(verifier_eval) · 솔 6.1 이 만든 어려운 세트 생성기(bui
+  4e3f1fc3  P10        docs(research): §92-18 잡담 부정 사례를 더해 다시 가르친 E4B(oos1) — 잡담 오지목 D 
+  ae993c1e  저장소 밖      feat(eval): oos 재학습 효과 보고(oos_report.py) · 검토 입력에 oos 답 더하기 — 성공
+
+Phase 별 커밋 수: P1=2, P10=7, P2=1, P3=1, P4=4, P8=4, P9=1
+
+★어느 Phase 에도 매핑되지 않은 경로 4건 (고유 3개) — 조용히 넘기지 않고 센다:
+      2x  .env.example
+      1x  app/infrastructure/llm_failover.py
+      1x  app/infrastructure/ollama_chat.py
+    → PATH_OWNERS 에 넣거나, 산출물이 아니면 IGNORED_PREFIXES 에 넣는다.

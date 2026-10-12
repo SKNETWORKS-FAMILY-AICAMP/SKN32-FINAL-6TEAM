@@ -257,3 +257,29 @@ def test_the_first_request_can_choose_the_31st_shop_when_the_first_30_are_closed
 
     assert not isinstance(plan, NoChange)
     assert plan.replacements[item.item_id].place["name"] == valid_name
+
+
+# ── 비교 직전에 원장 종류를 다시 싣는다 `[2026-10-12]` ─────────────────
+def test_original_meal_gets_the_ledgers_category_and_style_now(core, world):
+    """일정 생성기가 고른 식당은 장소 칸에 종류가 없었다 — 대체 순위가 원래 식당의 종류를 몰랐다.
+    들여놓은 장소의 옛 값도 원장 지금 값으로 맞춘다(원장에서 빈 칸은 뺀다)."""
+    tenant, shop = world
+    meal_uid = shop(_n("노루정"), *HERE)
+    stale_uid = shop(_n("옛값집"), 37.5779, 126.9716)
+    core.execute("UPDATE dining.dn_place SET category = '한식', category_method = 'manual', "
+                 "style = '고기구이', style_method = 'manual' WHERE place_uid = %s", (meal_uid,))
+    core.execute("UPDATE dining.dn_place SET category = '한식', category_method = 'manual', "
+                 "style = NULL, style_method = 'manual' WHERE place_uid = %s", (stale_uid,))
+    store, trip_id = TripStore(tenant), uuid.uuid4()
+    original = {"place_id": str(uuid.uuid4()), "name": "노루정", "kind": "dining", "latitude": HERE[0],
+                "longitude": HERE[1], "attributes": {"source": "dining_ledger", "dining_place_uid": meal_uid}}
+    stale = {"place_id": str(uuid.uuid4()), "name": "옛값집", "kind": "dining", "latitude": 37.5779,
+             "longitude": 126.9716, "attributes": {"dining_place_uid": stale_uid, "category": "카페디저트", "style": "면"}}
+
+    places = {p["place_id"]: p for p in add_nearby(core, store, trip_id, [_meal(original)], [original, stale])}
+
+    assert places[original["place_id"]]["attributes"]["category"] == "한식"
+    assert places[original["place_id"]]["attributes"]["style"] == "고기구이"
+    assert places[stale["place_id"]]["attributes"]["category"] == "한식"
+    assert "style" not in places[stale["place_id"]]["attributes"]
+    assert "category" not in original["attributes"]                      # 받은 dict 는 고치지 않는다

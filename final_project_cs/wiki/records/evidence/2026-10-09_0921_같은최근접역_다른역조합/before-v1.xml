@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="8" skipped="0" tests="12" time="4.459" timestamp="2026-10-09T09:21:42.651358+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_shared_nearest_station_v1" name="test_only_same_physical_station_pairs_are_excluded[a0-b0-expected0]" time="0.047"><failure message="assert [] == [(1, 0), (0, 1), (1, 1)]&#10;  &#10;  Right contains 3 more items, first extra item: (1, 0)&#10;  Use -v to get more diff">a = [('공통역', 100.0, frozenset({'01호선'})), ('출발보조역', 300.0, frozenset({'01호선'}))]
+b = [('공통역', 100.0, frozenset({'01호선'})), ('도착보조역', 400.0, frozenset({'01호선'}))]
+expected = [(1, 0), (0, 1), (1, 1)]
+
+    @pytest.mark.parametrize('a,b,expected', [
+        ([COMMON,LEFT], [COMMON,RIGHT], [(1,0),(0,1),(1,1)]),
+        ([COMMON], [COMMON,RIGHT], [(0,1)]),
+        ([COMMON,LEFT], [COMMON], [(1,0)]),
+        ([COMMON], [COMMON], []),
+        ([], [COMMON,RIGHT], []),
+        ([COMMON,LEFT], [], []),
+    ])
+    def test_only_same_physical_station_pairs_are_excluded(a,b,expected):
+        planner,_ = planner_with_lists(a,b)
+        _sa,_sb,pairs = planner._station_pairs(A_,B_,1200)
+&gt;       assert [(x[0],x[1]) for x in pairs] == expected
+E       assert [] == [(1, 0), (0, 1), (1, 1)]
+E         
+E         Right contains 3 more items, first extra item: (1, 0)
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_shared_nearest_station_v1.py:29: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_shared_nearest_station_v1" name="test_only_same_physical_station_pairs_are_excluded[a1-b1-expected1]" time="0.001"><failure message="assert [] == [(0, 1)]&#10;  &#10;  Right contains one more item: (0, 1)&#10;  Use -v to get more diff">a = [('공통역', 100.0, frozenset({'01호선'}))]
+b = [('공통역', 100.0, frozenset({'01호선'})), ('도착보조역', 400.0, frozenset({'01호선'}))]
+expected = [(0, 1)]
+
+    @pytest.mark.parametrize('a,b,expected', [
+        ([COMMON,LEFT], [COMMON,RIGHT], [(1,0),(0,1),(1,1)]),
+        ([COMMON], [COMMON,RIGHT], [(0,1)]),
+        ([COMMON,LEFT], [COMMON], [(1,0)]),
+        ([COMMON], [COMMON], []),
+        ([], [COMMON,RIGHT], []),
+        ([COMMON,LEFT], [], []),
+    ])
+    def test_only_same_physical_station_pairs_are_excluded(a,b,expected):
+        planner,_ = planner_with_lists(a,b)
+        _sa,_sb,pairs = planner._station_pairs(A_,B_,1200)
+&gt;       assert [(x[0],x[1]) for x in pairs] == expected
+E       assert [] == [(0, 1)]
+E         
+E         Right contains one more item: (0, 1)
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_shared_nearest_station_v1.py:29: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_shared_nearest_station_v1" name="test_only_same_physical_station_pairs_are_excluded[a2-b2-expected2]" time="0.001"><failure message="assert [] == [(1, 0)]&#10;  &#10;  Right contains one more item: (1, 0)&#10;  Use -v to get more diff">a = [('공통역', 100.0, frozenset({'01호선'})), ('출발보조역', 300.0, frozenset({'01호선'}))]
+b = [('공통역', 100.0, frozenset({'01호선'}))], expected = [(1, 0)]
+
+    @pytest.mark.parametrize('a,b,expected', [
+        ([COMMON,LEFT], [COMMON,RIGHT], [(1,0),(0,1),(1,1)]),
+        ([COMMON], [COMMON,RIGHT], [(0,1)]),
+        ([COMMON,LEFT], [COMMON], [(1,0)]),
+        ([COMMON], [COMMON], []),
+        ([], [COMMON,RIGHT], []),
+        ([COMMON,LEFT], [], []),
+    ])
+    def test_only_same_physical_station_pairs_are_excluded(a,b,expected):
+        planner,_ = planner_with_lists(a,b)
+        _sa,_sb,pairs = planner._station_pairs(A_,B_,1200)
+&gt;       assert [(x[0],x[1]) for x in pairs] == expected
+E       assert [] == [(1, 0)]
+E         
+E         Right contains one more item: (1, 0)
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_shared_nearest_station_v1.py:29: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_shared_nearest_station_v1" name="test_only_same_physical_station_pairs_are_excluded[a3-b3-expected3]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_shared_nearest_station_v1" name="test_only_same_physical_station_pairs_are_excluded[a4-b4-expected4]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_shared_nearest_station_v1" name="test_only_same_physical_station_pairs_are_excluded[a5-b5-expected5]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_shared_nearest_station_v1" name="test_same_name_other_physical_station_keeps_line_identity" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_shared_nearest_station_v1" name="test_public_leg_uses_first_feasible_other_station_pair[0]" time="0.057"><failure message="AssertionError: {'code': 'no_data', 'reason': '두 장소의 가장 가까운 역이 같다(공통역) — 도보만 본다'}&#10;assert None is not None">success_at = 0
+
+    @pytest.mark.parametrize('success_at', [0,1,2])
+    def test_public_leg_uses_first_feasible_other_station_pair(success_at):
+        planner,seen = planner_with_lists([COMMON,LEFT],[COMMON,RIGHT],
+                                          {success_at:[_opt(success_at,650)]})
+        got,why = planner.leg(A_,B_,ARR,{},True,'shared-station',not_before_dt=NB)
+&gt;       assert got is not None,why
+E       AssertionError: {'code': 'no_data', 'reason': '두 장소의 가장 가까운 역이 같다(공통역) — 도보만 본다'}
+E       assert None is not None
+
+tests\unit\travel\mobility\test_shared_nearest_station_v1.py:44: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_shared_nearest_station_v1" name="test_public_leg_uses_first_feasible_other_station_pair[1]" time="0.001"><failure message="AssertionError: {'code': 'no_data', 'reason': '두 장소의 가장 가까운 역이 같다(공통역) — 도보만 본다'}&#10;assert None is not None">success_at = 1
+
+    @pytest.mark.parametrize('success_at', [0,1,2])
+    def test_public_leg_uses_first_feasible_other_station_pair(success_at):
+        planner,seen = planner_with_lists([COMMON,LEFT],[COMMON,RIGHT],
+                                          {success_at:[_opt(success_at,650)]})
+        got,why = planner.leg(A_,B_,ARR,{},True,'shared-station',not_before_dt=NB)
+&gt;       assert got is not None,why
+E       AssertionError: {'code': 'no_data', 'reason': '두 장소의 가장 가까운 역이 같다(공통역) — 도보만 본다'}
+E       assert None is not None
+
+tests\unit\travel\mobility\test_shared_nearest_station_v1.py:44: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_shared_nearest_station_v1" name="test_public_leg_uses_first_feasible_other_station_pair[2]" time="0.001"><failure message="AssertionError: {'code': 'no_data', 'reason': '두 장소의 가장 가까운 역이 같다(공통역) — 도보만 본다'}&#10;assert None is not None">success_at = 2
+
+    @pytest.mark.parametrize('success_at', [0,1,2])
+    def test_public_leg_uses_first_feasible_other_station_pair(success_at):
+        planner,seen = planner_with_lists([COMMON,LEFT],[COMMON,RIGHT],
+                                          {success_at:[_opt(success_at,650)]})
+        got,why = planner.leg(A_,B_,ARR,{},True,'shared-station',not_before_dt=NB)
+&gt;       assert got is not None,why
+E       AssertionError: {'code': 'no_data', 'reason': '두 장소의 가장 가까운 역이 같다(공통역) — 도보만 본다'}
+E       assert None is not None
+
+tests\unit\travel\mobility\test_shared_nearest_station_v1.py:44: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_shared_nearest_station_v1" name="test_failure_names_reviewed_pairs_instead_of_nearest_only_policy" time="0.001"><failure message="assert (None is None and [] == [0, 1, 2]&#10;  &#10;  Right contains 3 more items, first extra item: 0&#10;  Use -v to get more diff)">def test_failure_names_reviewed_pairs_instead_of_nearest_only_policy():
+        planner,seen = planner_with_lists([COMMON,LEFT],[COMMON,RIGHT])
+        got,why = planner.leg(A_,B_,ARR,{},True,'shared-station',not_before_dt=NB)
+&gt;       assert got is None and seen == [0,1,2]
+E       assert (None is None and [] == [0, 1, 2]
+E         
+E         Right contains 3 more items, first extra item: 0
+E         Use -v to get more diff)
+
+tests\unit\travel\mobility\test_shared_nearest_station_v1.py:52: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_shared_nearest_station_v1" name="test_single_shared_station_has_no_zero_ride_candidate" time="0.017"><failure message="AssertionError: assert '다른 물리적 역 조합' in '두 장소의 가장 가까운 역이 같다(공통역) — 도보만 본다'">def test_single_shared_station_has_no_zero_ride_candidate():
+        planner,seen = planner_with_lists([COMMON],[COMMON])
+        got,why = planner.leg(A_,B_,ARR,{},True,'shared-only')
+        assert got is None and not seen
+&gt;       assert '다른 물리적 역 조합' in why['reason']
+E       AssertionError: assert '다른 물리적 역 조합' in '두 장소의 가장 가까운 역이 같다(공통역) — 도보만 본다'
+
+tests\unit\travel\mobility\test_shared_nearest_station_v1.py:61: AssertionError</failure></testcase></testsuite></testsuites>

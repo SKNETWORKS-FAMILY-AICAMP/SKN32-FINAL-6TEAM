@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="1.917" timestamp="2026-10-09T07:05:37.759367+09:00"><testcase classname="tests.scenario.test_departure_express_race_db_v1" name="test_late_express_change_rolls_back_departure_insert[after_observation]" time="0.404"><failure message="AssertionError: ReminderTickResult(trips=1, sent=[{'trip_id': '3016787d-45f9-4147-84c4-8fefe94fcd0d', 'key': 'departure:89e1465e-5ec5-4ea8-8763-d53f7ab8b502'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[])&#10;assert (not [{'key': 'departure:89e1465e-5ec5-4ea8-8763-d53f7ab8b502', 'trip_id': '3016787d-45f9-4147-84c4-8fefe94fcd0d'}])&#10; +  where [{'key': 'departure:89e1465e-5ec5-4ea8-8763-d53f7ab8b502', 'trip_id': '3016787d-45f9-4147-84c4-8fefe94fcd0d'}] = ReminderTickResult(trips=1, sent=[{'trip_id': '3016787d-45f9-4147-84c4-8fefe94fcd0d', 'key': 'departure:89e1465e-5ec5-4ea8-8763-d53f7ab8b502'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[]).sent">world = {'clock': &lt;tests.scenario.test_case_version_day.Clock object at 0x000001E27F1AA330&gt;, 'store': &lt;app.domains.travel_ops.... object at 0x000001E276948830&gt;, 'tenant': 'remind_96e2bf4121', 'trip_id': UUID('3016787d-45f9-4147-84c4-8fefe94fcd0d')}
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001E27F305400&gt;
+source = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-notice-race-before-v1/test_late_express_change_rolls0/express.json.gz')
+point = 'after_observation'
+
+    @pytest.mark.parametrize('point', ['after_observation', 'after_insert'])
+    def test_late_express_change_rolls_back_departure_insert(world, monkeypatch, source, point):
+        runtime, observer, reminders = setup(world, monkeypatch, source)
+        if point == 'after_observation':
+            original = reminders._payload
+    
+            def changed(*a, **kw):
+                payload = original(*a, **kw)
+                assert payload['departure_observation']['status'] == 'model_revalidated'
+                write_runs(source, 300)
+                return payload
+    
+            monkeypatch.setattr(reminders, '_payload', changed)
+        else:
+            original = world['store'].enqueue_message
+    
+            def changed(*a, **kw):
+                fresh = original(*a, **kw)
+                assert fresh
+                # 同じ 거래에서 INSERT까지 갔으나 아직 COMMIT하지 않은 지점이다.
+                write_runs(source, 300)
+                return fresh
+    
+            monkeypatch.setattr(world['store'], 'enqueue_message', changed)
+        result = reminders.tick()
+&gt;       assert not result.sent and len(result.stale) == 1 and not result.fatal, result
+E       AssertionError: ReminderTickResult(trips=1, sent=[{'trip_id': '3016787d-45f9-4147-84c4-8fefe94fcd0d', 'key': 'departure:89e1465e-5ec5-4ea8-8763-d53f7ab8b502'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[])
+E       assert (not [{'key': 'departure:89e1465e-5ec5-4ea8-8763-d53f7ab8b502', 'trip_id': '3016787d-45f9-4147-84c4-8fefe94fcd0d'}])
+E        +  where [{'key': 'departure:89e1465e-5ec5-4ea8-8763-d53f7ab8b502', 'trip_id': '3016787d-45f9-4147-84c4-8fefe94fcd0d'}] = ReminderTickResult(trips=1, sent=[{'trip_id': '3016787d-45f9-4147-84c4-8fefe94fcd0d', 'key': 'departure:89e1465e-5ec5-4ea8-8763-d53f7ab8b502'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[]).sent
+
+tests\scenario\test_departure_express_race_db_v1.py:74: AssertionError</failure></testcase><testcase classname="tests.scenario.test_departure_express_race_db_v1" name="test_late_express_change_rolls_back_departure_insert[after_insert]" time="0.286"><failure message="AssertionError: ReminderTickResult(trips=1, sent=[{'trip_id': 'cf16a7a8-f2bf-4d2d-b3a3-5dbd8bf31319', 'key': 'departure:632c3142-da91-4e8d-b045-09938bd9b20d'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[])&#10;assert (not [{'key': 'departure:632c3142-da91-4e8d-b045-09938bd9b20d', 'trip_id': 'cf16a7a8-f2bf-4d2d-b3a3-5dbd8bf31319'}])&#10; +  where [{'key': 'departure:632c3142-da91-4e8d-b045-09938bd9b20d', 'trip_id': 'cf16a7a8-f2bf-4d2d-b3a3-5dbd8bf31319'}] = ReminderTickResult(trips=1, sent=[{'trip_id': 'cf16a7a8-f2bf-4d2d-b3a3-5dbd8bf31319', 'key': 'departure:632c3142-da91-4e8d-b045-09938bd9b20d'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[]).sent">world = {'clock': &lt;tests.scenario.test_case_version_day.Clock object at 0x000001E27F5896A0&gt;, 'store': &lt;app.domains.travel_ops.... object at 0x000001E27F58B050&gt;, 'tenant': 'remind_ea69ea006a', 'trip_id': UUID('cf16a7a8-f2bf-4d2d-b3a3-5dbd8bf31319')}
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001E27F589730&gt;
+source = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-notice-race-before-v1/test_late_express_change_rolls1/express.json.gz')
+point = 'after_insert'
+
+    @pytest.mark.parametrize('point', ['after_observation', 'after_insert'])
+    def test_late_express_change_rolls_back_departure_insert(world, monkeypatch, source, point):
+        runtime, observer, reminders = setup(world, monkeypatch, source)
+        if point == 'after_observation':
+            original = reminders._payload
+    
+            def changed(*a, **kw):
+                payload = original(*a, **kw)
+                assert payload['departure_observation']['status'] == 'model_revalidated'
+                write_runs(source, 300)
+                return payload
+    
+            monkeypatch.setattr(reminders, '_payload', changed)
+        else:
+            original = world['store'].enqueue_message
+    
+            def changed(*a, **kw):
+                fresh = original(*a, **kw)
+                assert fresh
+                # 同じ 거래에서 INSERT까지 갔으나 아직 COMMIT하지 않은 지점이다.
+                write_runs(source, 300)
+                return fresh
+    
+            monkeypatch.setattr(world['store'], 'enqueue_message', changed)
+        result = reminders.tick()
+&gt;       assert not result.sent and len(result.stale) == 1 and not result.fatal, result
+E       AssertionError: ReminderTickResult(trips=1, sent=[{'trip_id': 'cf16a7a8-f2bf-4d2d-b3a3-5dbd8bf31319', 'key': 'departure:632c3142-da91-4e8d-b045-09938bd9b20d'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[])
+E       assert (not [{'key': 'departure:632c3142-da91-4e8d-b045-09938bd9b20d', 'trip_id': 'cf16a7a8-f2bf-4d2d-b3a3-5dbd8bf31319'}])
+E        +  where [{'key': 'departure:632c3142-da91-4e8d-b045-09938bd9b20d', 'trip_id': 'cf16a7a8-f2bf-4d2d-b3a3-5dbd8bf31319'}] = ReminderTickResult(trips=1, sent=[{'trip_id': 'cf16a7a8-f2bf-4d2d-b3a3-5dbd8bf31319', 'key': 'departure:632c3142-da91-4e8d-b045-09938bd9b20d'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[]).sent
+
+tests\scenario\test_departure_express_race_db_v1.py:74: AssertionError</failure></testcase></testsuite></testsuites>

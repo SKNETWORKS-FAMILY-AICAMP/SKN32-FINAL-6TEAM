@@ -1,0 +1,1792 @@
+{
+  "stage": "after",
+  "rows": [
+    {
+      "id": "N100",
+      "from": {
+        "name": "압구정로데오",
+        "lat": 37.5273,
+        "lon": 127.0402
+      },
+      "to": {
+        "name": "삼성역",
+        "lat": 37.5088,
+        "lon": 127.0632
+      },
+      "arrive": "2026-10-08T10:30:00+09:00",
+      "modes": [
+        "bus"
+      ],
+      "result": [
+        {
+          "from": "압구정로데오",
+          "to": "삼성역",
+          "planned": "bus_143",
+          "options": [
+            {
+              "id": "bus_143",
+              "label": "버스 143 한양아파트.압구정로데오역→삼성역3번출구 — 소요 가장 짧음 · 도보 거리 가장 짧음",
+              "eta_min": 27,
+              "walk_m": 438,
+              "fare_krw": 1500,
+              "uses": [
+                "버스:143"
+              ]
+            },
+            {
+              "id": "bus_143_2",
+              "label": "버스 143 청담초등학교앞→무역센터",
+              "eta_min": 28,
+              "walk_m": 797,
+              "fare_krw": 1500,
+              "uses": [
+                "버스:143"
+              ]
+            }
+          ]
+        },
+        587,
+        614,
+        "2026-10-08",
+        [
+          {
+            "label": "버스 240 한양아파트.압구정로데오역→청담초등학교앞 → 버스 143 청담초등학교앞→무역센터",
+            "code": "mix_dominated",
+            "reason": "혼합 C — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다 (소요 34분 vs 27 · 환승 1 vs 0 · 도보 9분 vs 8)"
+          },
+          {
+            "label": "그 밖 혼합 후보 3개",
+            "code": "mix_cap",
+            "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+          },
+          {
+            "label": "버스 4318 한양아파트.압구정로데오역→삼성역",
+            "code": "earlier_departure",
+            "reason": "이동 출발 09:47 출발은 재판정에서 불성립 · 09:44 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 0회 · 소요 29분"
+          },
+          {
+            "label": "버스 343 한양아파트.압구정로데오역→삼성역",
+            "code": "earlier_departure",
+            "reason": "이동 출발 09:47 출발은 재판정에서 불성립 · 09:34 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 0회 · 소요 34분"
+          },
+          {
+            "label": "그 밖 버스 직행 11개",
+            "code": "bus_more",
+            "reason": "도보 긴 쪽 — earlier_departure 9 · mix_dominated 2"
+          }
+        ]
+      ],
+      "why": null,
+      "trace": [
+        {
+          "case": "N100",
+          "date": "2026-10-08",
+          "arrive_by_min": 630,
+          "planned": "bus_143",
+          "options": [
+            {
+              "id": "bus_143",
+              "start_min": 587,
+              "eta_min": 27,
+              "margin_min": 16,
+              "slack_min": 0,
+              "transfers": 0,
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "143",
+                    "from": "한양아파트.압구정로데오역",
+                    "to": "삼성역3번출구",
+                    "route_id": "100100022",
+                    "from_sequence": 38,
+                    "to_sequence": 45,
+                    "from_stop_id": "122000057",
+                    "to_stop_id": "122000330"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 4,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 626
+              },
+              "wait_min": 3
+            },
+            {
+              "id": "bus_143_2",
+              "start_min": 587,
+              "eta_min": 28,
+              "margin_min": 15,
+              "slack_min": 0,
+              "transfers": 0,
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "143",
+                    "from": "청담초등학교앞",
+                    "to": "무역센터",
+                    "route_id": "100100022",
+                    "from_sequence": 39,
+                    "to_sequence": 44,
+                    "from_stop_id": "122000079",
+                    "to_stop_id": "122000096"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 9,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 625
+              },
+              "wait_min": 3
+            }
+          ],
+          "left_out": [
+            {
+              "label": "버스 240 한양아파트.압구정로데오역→청담초등학교앞 → 버스 143 청담초등학교앞→무역센터",
+              "code": "mix_dominated",
+              "reason": "혼합 C — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다 (소요 34분 vs 27 · 환승 1 vs 0 · 도보 9분 vs 8)"
+            },
+            {
+              "label": "그 밖 혼합 후보 3개",
+              "code": "mix_cap",
+              "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+            },
+            {
+              "label": "버스 4318 한양아파트.압구정로데오역→삼성역",
+              "code": "earlier_departure",
+              "reason": "이동 출발 09:47 출발은 재판정에서 불성립 · 09:44 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 0회 · 소요 29분"
+            },
+            {
+              "label": "버스 343 한양아파트.압구정로데오역→삼성역",
+              "code": "earlier_departure",
+              "reason": "이동 출발 09:47 출발은 재판정에서 불성립 · 09:34 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 0회 · 소요 34분"
+            },
+            {
+              "label": "그 밖 버스 직행 11개",
+              "code": "bus_more",
+              "reason": "도보 긴 쪽 — earlier_departure 9 · mix_dominated 2"
+            }
+          ],
+          "left_checks": [
+            {
+              "code": "mix_dominated",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "240",
+                    "from": "한양아파트.압구정로데오역",
+                    "to": "청담초등학교앞",
+                    "route_id": "100100407",
+                    "from_sequence": 69,
+                    "to_sequence": 70,
+                    "from_stop_id": "122000057",
+                    "to_stop_id": "122000079"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "143",
+                    "from": "청담초등학교앞",
+                    "to": "무역센터",
+                    "route_id": "100100022",
+                    "from_sequence": 39,
+                    "to_sequence": 44,
+                    "from_stop_id": "122000079",
+                    "to_stop_id": "122000096"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 3,
+                "walk_place_out": 6,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 624,
+                "fast": true
+              }
+            },
+            {
+              "code": "mix_dominated",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "145",
+                    "from": "한양아파트.압구정로데오역",
+                    "to": "압구정파출소",
+                    "route_id": "100100024",
+                    "from_sequence": 62,
+                    "to_sequence": 63,
+                    "from_stop_id": "122000056",
+                    "to_stop_id": "122000054"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "143",
+                    "from": "압구정파출소",
+                    "to": "무역센터",
+                    "route_id": "100100022",
+                    "from_sequence": 37,
+                    "to_sequence": 44,
+                    "from_stop_id": "122000055",
+                    "to_stop_id": "122000096"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 3,
+                "walk_place_out": 6,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 624,
+                "fast": true
+              }
+            },
+            {
+              "code": "mix_dominated",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "4318",
+                    "from": "한양아파트.압구정로데오역",
+                    "to": "압구정파출소",
+                    "route_id": "100100237",
+                    "from_sequence": 87,
+                    "to_sequence": 88,
+                    "from_stop_id": "122000056",
+                    "to_stop_id": "122000054"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "143",
+                    "from": "압구정파출소",
+                    "to": "무역센터",
+                    "route_id": "100100022",
+                    "from_sequence": 37,
+                    "to_sequence": 44,
+                    "from_stop_id": "122000055",
+                    "to_stop_id": "122000096"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 3,
+                "walk_place_out": 6,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 624,
+                "fast": true
+              }
+            },
+            {
+              "code": "mix_cap",
+              "check": null
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "4318",
+                    "from": "한양아파트.압구정로데오역",
+                    "to": "삼성역",
+                    "route_id": "100100237",
+                    "from_sequence": 19,
+                    "to_sequence": 26,
+                    "from_stop_id": "122000057",
+                    "to_stop_id": "122000141"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 4,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 626
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "343",
+                    "from": "한양아파트.압구정로데오역",
+                    "to": "삼성역",
+                    "route_id": "107000002",
+                    "from_sequence": 39,
+                    "to_sequence": 47,
+                    "from_stop_id": "122000057",
+                    "to_stop_id": "122000141"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 4,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 626
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "345",
+                    "from": "한양아파트.압구정로데오역",
+                    "to": "강남경찰서.강남운전면허시험장",
+                    "route_id": "124000036",
+                    "from_sequence": 57,
+                    "to_sequence": 64,
+                    "from_stop_id": "122000057",
+                    "to_stop_id": "122000356"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 4,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 625
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "301",
+                    "from": "한양아파트.압구정로데오역",
+                    "to": "강남경찰서.강남운전면허시험장",
+                    "route_id": "100100051",
+                    "from_sequence": 66,
+                    "to_sequence": 76,
+                    "from_stop_id": "122000057",
+                    "to_stop_id": "122000356"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 4,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 625
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "342",
+                    "from": "한양아파트.압구정로데오역",
+                    "to": "강남경찰서.강남운전면허시험장",
+                    "route_id": "124000038",
+                    "from_sequence": 58,
+                    "to_sequence": 68,
+                    "from_stop_id": "122000057",
+                    "to_stop_id": "122000356"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 4,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 625
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "6006",
+                    "from": "한양아파트.압구정로데오역",
+                    "to": "무역센터",
+                    "route_id": "100100506",
+                    "from_sequence": 53,
+                    "to_sequence": 56,
+                    "from_stop_id": "122000057",
+                    "to_stop_id": "122000095"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 4,
+                "walk_place_out": 8,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 622
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "343",
+                    "from": "청담초등학교앞",
+                    "to": "무역센터",
+                    "route_id": "107000002",
+                    "from_sequence": 40,
+                    "to_sequence": 46,
+                    "from_stop_id": "122000079",
+                    "to_stop_id": "122000096"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 9,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 625
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "301",
+                    "from": "일지아트홀",
+                    "to": "무역센터",
+                    "route_id": "100100051",
+                    "from_sequence": 67,
+                    "to_sequence": 75,
+                    "from_stop_id": "122000058",
+                    "to_stop_id": "122000095"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 6,
+                "walk_place_out": 8,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 622
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "342",
+                    "from": "일지아트홀",
+                    "to": "무역센터",
+                    "route_id": "124000038",
+                    "from_sequence": 59,
+                    "to_sequence": 67,
+                    "from_stop_id": "122000058",
+                    "to_stop_id": "122000095"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 6,
+                "walk_place_out": 8,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 622
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "4318",
+                    "from": "청담초등학교앞",
+                    "to": "무역센터",
+                    "route_id": "100100237",
+                    "from_sequence": 20,
+                    "to_sequence": 25,
+                    "from_stop_id": "122000079",
+                    "to_stop_id": "122000095"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 9,
+                "walk_place_out": 8,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 622
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "345",
+                    "from": "청담초등학교앞",
+                    "to": "무역센터",
+                    "route_id": "124000036",
+                    "from_sequence": 58,
+                    "to_sequence": 63,
+                    "from_stop_id": "122000079",
+                    "to_stop_id": "122000095"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 9,
+                "walk_place_out": 8,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 622
+              }
+            }
+          ],
+          "start_min": 587
+        }
+      ],
+      "seconds": 19.4751553000242
+    },
+    {
+      "id": "N022",
+      "from": {
+        "name": "송파역",
+        "lat": 37.4999,
+        "lon": 127.1124
+      },
+      "to": {
+        "name": "압구정로데오",
+        "lat": 37.5273,
+        "lon": 127.0402
+      },
+      "arrive": "2026-10-08T10:30:00+09:00",
+      "modes": [
+        "bus"
+      ],
+      "result": [
+        {
+          "from": "송파역",
+          "to": "압구정로데오",
+          "planned": "bus_301",
+          "options": [
+            {
+              "id": "bus_301",
+              "label": "버스 301 석촌역→일지아트홀.압구정노인복지관",
+              "eta_min": 62,
+              "walk_m": 892,
+              "fare_krw": 1500,
+              "uses": [
+                "버스:301"
+              ]
+            }
+          ]
+        },
+        548,
+        610,
+        "2026-10-08",
+        [
+          {
+            "label": "그 밖 혼합 후보 3개",
+            "code": "mix_cap",
+            "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+          },
+          {
+            "label": "버스 3217 송파역→봉은사역3번출구.삼성1파출소 → 버스 143 봉은사역3번출구.삼성1파출소→한양아파트.압구정로데오역",
+            "code": "earlier_departure",
+            "reason": "이동 출발 09:08 출발은 재판정에서 불성립 · 09:07 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 58분"
+          },
+          {
+            "label": "버스 360 송파역→종합운동장사거리 → 버스 345 종합운동장사거리→한양아파트.압구정로데오역",
+            "code": "earlier_departure",
+            "reason": "이동 출발 09:08 출발은 재판정에서 불성립 · 09:04 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 59분"
+          },
+          {
+            "label": "버스 3217 송파역→우리은행청담지점.청담삼익아파트 → 버스 4318 우리은행청담지점.청담삼익아파트→한양아파트.압구정로데오역",
+            "code": "earlier_departure",
+            "reason": "이동 출발 09:08 출발은 재판정에서 불성립 · 09:04 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 59분"
+          },
+          {
+            "label": "그 밖 버스 직행 7개",
+            "code": "bus_more",
+            "reason": "도보 긴 쪽 — earlier_departure 7"
+          }
+        ]
+      ],
+      "why": null,
+      "trace": [
+        {
+          "case": "N022",
+          "date": "2026-10-08",
+          "arrive_by_min": 630,
+          "planned": "bus_301",
+          "options": [
+            {
+              "id": "bus_301",
+              "start_min": 548,
+              "eta_min": 62,
+              "margin_min": 20,
+              "slack_min": 0,
+              "transfers": 0,
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "301",
+                    "from": "석촌역",
+                    "to": "일지아트홀.압구정노인복지관",
+                    "route_id": "100100051",
+                    "from_sequence": 18,
+                    "to_sequence": 35,
+                    "from_stop_id": "123000005",
+                    "to_stop_id": "122000078"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 8,
+                "walk_place_out": 7,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 623
+              },
+              "wait_min": 4
+            }
+          ],
+          "left_out": [
+            {
+              "label": "그 밖 혼합 후보 3개",
+              "code": "mix_cap",
+              "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+            },
+            {
+              "label": "버스 3217 송파역→봉은사역3번출구.삼성1파출소 → 버스 143 봉은사역3번출구.삼성1파출소→한양아파트.압구정로데오역",
+              "code": "earlier_departure",
+              "reason": "이동 출발 09:08 출발은 재판정에서 불성립 · 09:07 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 58분"
+            },
+            {
+              "label": "버스 360 송파역→종합운동장사거리 → 버스 345 종합운동장사거리→한양아파트.압구정로데오역",
+              "code": "earlier_departure",
+              "reason": "이동 출발 09:08 출발은 재판정에서 불성립 · 09:04 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 59분"
+            },
+            {
+              "label": "버스 3217 송파역→우리은행청담지점.청담삼익아파트 → 버스 4318 우리은행청담지점.청담삼익아파트→한양아파트.압구정로데오역",
+              "code": "earlier_departure",
+              "reason": "이동 출발 09:08 출발은 재판정에서 불성립 · 09:04 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 59분"
+            },
+            {
+              "label": "그 밖 버스 직행 7개",
+              "code": "bus_more",
+              "reason": "도보 긴 쪽 — earlier_departure 7"
+            }
+          ],
+          "left_checks": [
+            {
+              "code": "mix_cap",
+              "check": null
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "345",
+                    "from": "송파역",
+                    "to": "한양아파트.압구정로데오역",
+                    "route_id": "124000036",
+                    "from_sequence": 16,
+                    "to_sequence": 57,
+                    "from_stop_id": "123000007",
+                    "to_stop_id": "122000057"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 2,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 626
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "301",
+                    "from": "송파역",
+                    "to": "한양아파트.압구정로데오역",
+                    "route_id": "100100051",
+                    "from_sequence": 17,
+                    "to_sequence": 66,
+                    "from_stop_id": "123000007",
+                    "to_stop_id": "122000057"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 2,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 626
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "343",
+                    "from": "가락1동주민센터",
+                    "to": "한양아파트.압구정로데오역",
+                    "route_id": "107000002",
+                    "from_sequence": 16,
+                    "to_sequence": 39,
+                    "from_stop_id": "123000299",
+                    "to_stop_id": "122000057"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 12,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 626
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "4312",
+                    "from": "가락1동주민센터",
+                    "to": "한양아파트.압구정로데오역",
+                    "route_id": "100100500",
+                    "from_sequence": 44,
+                    "to_sequence": 66,
+                    "from_stop_id": "123000299",
+                    "to_stop_id": "122000056"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 12,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 626
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "345",
+                    "from": "석촌역",
+                    "to": "청담초등학교",
+                    "route_id": "124000036",
+                    "from_sequence": 17,
+                    "to_sequence": 31,
+                    "from_stop_id": "123000005",
+                    "to_stop_id": "122000063"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 8,
+                "walk_place_out": 9,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 621
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "4312",
+                    "from": "가락1동주민센터",
+                    "to": "일지아트홀.압구정노인복지관",
+                    "route_id": "100100500",
+                    "from_sequence": 44,
+                    "to_sequence": 65,
+                    "from_stop_id": "123000299",
+                    "to_stop_id": "122000078"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 12,
+                "walk_place_out": 7,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 623
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "343",
+                    "from": "가락1동주민센터",
+                    "to": "압구정파출소",
+                    "route_id": "107000002",
+                    "from_sequence": 16,
+                    "to_sequence": 38,
+                    "from_stop_id": "123000299",
+                    "to_stop_id": "122000055"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 12,
+                "walk_place_out": 9,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 621
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "3217",
+                    "from": "송파역",
+                    "to": "봉은사역3번출구.삼성1파출소",
+                    "route_id": "100100216",
+                    "from_sequence": 23,
+                    "to_sequence": 34,
+                    "from_stop_id": "123000007",
+                    "to_stop_id": "122000089"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "143",
+                    "from": "봉은사역3번출구.삼성1파출소",
+                    "to": "한양아파트.압구정로데오역",
+                    "route_id": "100100022",
+                    "from_sequence": 66,
+                    "to_sequence": 71,
+                    "from_stop_id": "122000089",
+                    "to_stop_id": "122000056"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 2,
+                "walk_place_out": 3,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 627,
+                "fast": true
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "360",
+                    "from": "송파역",
+                    "to": "종합운동장사거리",
+                    "route_id": "100100057",
+                    "from_sequence": 6,
+                    "to_sequence": 13,
+                    "from_stop_id": "123000007",
+                    "to_stop_id": "123000054"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "345",
+                    "from": "종합운동장사거리",
+                    "to": "한양아파트.압구정로데오역",
+                    "route_id": "124000036",
+                    "from_sequence": 23,
+                    "to_sequence": 32,
+                    "from_stop_id": "123000054",
+                    "to_stop_id": "122000056"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 2,
+                "walk_place_out": 3,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 627,
+                "fast": true
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "3217",
+                    "from": "송파역",
+                    "to": "우리은행청담지점.청담삼익아파트",
+                    "route_id": "100100216",
+                    "from_sequence": 23,
+                    "to_sequence": 36,
+                    "from_stop_id": "123000007",
+                    "to_stop_id": "122000069"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "4318",
+                    "from": "우리은행청담지점.청담삼익아파트",
+                    "to": "한양아파트.압구정로데오역",
+                    "route_id": "100100237",
+                    "from_sequence": 84,
+                    "to_sequence": 87,
+                    "from_stop_id": "122000069",
+                    "to_stop_id": "122000056"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 2,
+                "walk_place_out": 3,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 627,
+                "fast": true
+              }
+            }
+          ],
+          "start_min": 548
+        }
+      ],
+      "seconds": 22.42850140001974
+    },
+    {
+      "id": "N089",
+      "from": {
+        "name": "명동성당",
+        "lat": 37.5633,
+        "lon": 126.9872
+      },
+      "to": {
+        "name": "국립현대미술관 서울",
+        "lat": 37.5791,
+        "lon": 126.9804
+      },
+      "arrive": "2026-10-08T10:30:00+09:00",
+      "modes": [
+        "bus"
+      ],
+      "result": [
+        {
+          "from": "명동성당",
+          "to": "국립현대미술관 서울",
+          "planned": "bus_151",
+          "options": [
+            {
+              "id": "bus_151",
+              "label": "버스 151 명동.롯데영플라자→안국역6번출구.인사동문화의거리",
+              "eta_min": 37,
+              "walk_m": 1316,
+              "fare_krw": 1500,
+              "uses": [
+                "버스:151"
+              ]
+            }
+          ]
+        },
+        578,
+        615,
+        "2026-10-08",
+        [
+          {
+            "label": "그 밖 혼합 후보 3개",
+            "code": "mix_cap",
+            "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+          },
+          {
+            "label": "버스 470 국가인권위.안중근활동터→광화문역 → 버스 종로11 광화문역2번출구.KT광화문지사→정독도서관",
+            "code": "earlier_departure",
+            "reason": "이동 출발 09:38 출발은 재판정에서 불성립 · 09:31 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 37분"
+          },
+          {
+            "label": "버스 741 국가인권위.안중근활동터→광화문역 → 버스 종로11 광화문역2번출구.KT광화문지사→정독도서관",
+            "code": "earlier_departure",
+            "reason": "이동 출발 09:38 출발은 재판정에서 불성립 · 09:31 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 37분"
+          },
+          {
+            "label": "버스 470 국가인권위.안중근활동터→종로1가.종각역 → 버스 109 종로1가→경복궁",
+            "code": "earlier_departure",
+            "reason": "이동 출발 09:38 출발은 재판정에서 불성립 · 09:28 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 39분"
+          },
+          {
+            "label": "그 밖 버스 직행 7개",
+            "code": "bus_more",
+            "reason": "도보 긴 쪽 — earlier_departure 7"
+          }
+        ]
+      ],
+      "why": null,
+      "trace": [
+        {
+          "case": "N089",
+          "date": "2026-10-08",
+          "arrive_by_min": 630,
+          "planned": "bus_151",
+          "options": [
+            {
+              "id": "bus_151",
+              "start_min": 578,
+              "eta_min": 37,
+              "margin_min": 15,
+              "slack_min": 0,
+              "transfers": 0,
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "151",
+                    "from": "명동.롯데영플라자",
+                    "to": "안국역6번출구.인사동문화의거리",
+                    "route_id": "100100030",
+                    "from_sequence": 62,
+                    "to_sequence": 65,
+                    "from_stop_id": "101000043",
+                    "to_stop_id": "100000104"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 619
+              },
+              "wait_min": 4
+            }
+          ],
+          "left_out": [
+            {
+              "label": "그 밖 혼합 후보 3개",
+              "code": "mix_cap",
+              "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+            },
+            {
+              "label": "버스 470 국가인권위.안중근활동터→광화문역 → 버스 종로11 광화문역2번출구.KT광화문지사→정독도서관",
+              "code": "earlier_departure",
+              "reason": "이동 출발 09:38 출발은 재판정에서 불성립 · 09:31 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 37분"
+            },
+            {
+              "label": "버스 741 국가인권위.안중근활동터→광화문역 → 버스 종로11 광화문역2번출구.KT광화문지사→정독도서관",
+              "code": "earlier_departure",
+              "reason": "이동 출발 09:38 출발은 재판정에서 불성립 · 09:31 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 37분"
+            },
+            {
+              "label": "버스 470 국가인권위.안중근활동터→종로1가.종각역 → 버스 109 종로1가→경복궁",
+              "code": "earlier_departure",
+              "reason": "이동 출발 09:38 출발은 재판정에서 불성립 · 09:28 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 39분"
+            },
+            {
+              "label": "그 밖 버스 직행 7개",
+              "code": "bus_more",
+              "reason": "도보 긴 쪽 — earlier_departure 7"
+            }
+          ],
+          "left_checks": [
+            {
+              "code": "mix_cap",
+              "check": null
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "01A",
+                    "from": "남산예장버스환승주차장",
+                    "to": "경복궁.국립민속박물관",
+                    "route_id": "100100001",
+                    "from_sequence": 1,
+                    "to_sequence": 20,
+                    "from_stop_id": "101000331",
+                    "to_stop_id": "100000418"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 14,
+                "walk_place_out": 3,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 627
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "401",
+                    "from": "명동.롯데영플라자",
+                    "to": "덕성여중고",
+                    "route_id": "100100062",
+                    "from_sequence": 46,
+                    "to_sequence": 49,
+                    "from_stop_id": "101000043",
+                    "to_stop_id": "100000035"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 10,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 620
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "406",
+                    "from": "명동.롯데영플라자",
+                    "to": "덕성여중고",
+                    "route_id": "100100064",
+                    "from_sequence": 30,
+                    "to_sequence": 33,
+                    "from_stop_id": "101000043",
+                    "to_stop_id": "100000035"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 10,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 620
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "704",
+                    "from": "명동.롯데영플라자",
+                    "to": "덕성여중고",
+                    "route_id": "100100107",
+                    "from_sequence": 32,
+                    "to_sequence": 35,
+                    "from_stop_id": "101000043",
+                    "to_stop_id": "100000035"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 10,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 620
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "7022",
+                    "from": "명동.롯데영플라자",
+                    "to": "덕성여중고",
+                    "route_id": "100100341",
+                    "from_sequence": 39,
+                    "to_sequence": 42,
+                    "from_stop_id": "101000043",
+                    "to_stop_id": "100000035"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 10,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 620
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "162",
+                    "from": "명동.롯데영플라자",
+                    "to": "안국역6번출구.인사동문화의거리",
+                    "route_id": "100100034",
+                    "from_sequence": 55,
+                    "to_sequence": 58,
+                    "from_stop_id": "101000043",
+                    "to_stop_id": "100000104"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 619
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "01A",
+                    "from": "남산예장버스환승주차장",
+                    "to": "춘추문",
+                    "route_id": "100100001",
+                    "from_sequence": 1,
+                    "to_sequence": 19,
+                    "from_stop_id": "101000331",
+                    "to_stop_id": "100000417"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 14,
+                "walk_place_out": 12,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 618
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "470",
+                    "from": "국가인권위.안중근활동터",
+                    "to": "광화문역",
+                    "route_id": "100100073",
+                    "from_sequence": 61,
+                    "to_sequence": 65,
+                    "from_stop_id": "101000002",
+                    "to_stop_id": "100000385"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "종로11",
+                    "from": "광화문역2번출구.KT광화문지사",
+                    "to": "정독도서관",
+                    "route_id": "100900007",
+                    "from_sequence": 14,
+                    "to_sequence": 16,
+                    "from_stop_id": "100000023",
+                    "to_stop_id": "100900105"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 3,
+                "walk_place_out": 3,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 627,
+                "fast": true
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "741",
+                    "from": "국가인권위.안중근활동터",
+                    "to": "광화문역",
+                    "route_id": "123000010",
+                    "from_sequence": 72,
+                    "to_sequence": 76,
+                    "from_stop_id": "101000002",
+                    "to_stop_id": "100000385"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "종로11",
+                    "from": "광화문역2번출구.KT광화문지사",
+                    "to": "정독도서관",
+                    "route_id": "100900007",
+                    "from_sequence": 14,
+                    "to_sequence": 16,
+                    "from_stop_id": "100000023",
+                    "to_stop_id": "100900105"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 3,
+                "walk_place_out": 3,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 627,
+                "fast": true
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "470",
+                    "from": "국가인권위.안중근활동터",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100073",
+                    "from_sequence": 61,
+                    "to_sequence": 64,
+                    "from_stop_id": "101000002",
+                    "to_stop_id": "100000387"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "109",
+                    "from": "종로1가",
+                    "to": "경복궁",
+                    "route_id": "100100014",
+                    "from_sequence": 31,
+                    "to_sequence": 33,
+                    "from_stop_id": "100000330",
+                    "to_stop_id": "100000022"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 3,
+                "walk_place_out": 10,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 620,
+                "fast": true
+              }
+            }
+          ],
+          "start_min": 578
+        }
+      ],
+      "seconds": 6.166700999980094
+    },
+    {
+      "id": "N062",
+      "from": {
+        "name": "강남역",
+        "lat": 37.4979,
+        "lon": 127.0276
+      },
+      "to": {
+        "name": "봉천역",
+        "lat": 37.4825,
+        "lon": 126.9418
+      },
+      "arrive": "2026-10-09T01:30:00+09:00",
+      "modes": [
+        "bus"
+      ],
+      "result": [
+        {
+          "from": "강남역",
+          "to": "봉천역",
+          "planned": "bus_N61",
+          "options": [
+            {
+              "id": "bus_N61",
+              "label": "버스 N61 서초동진흥아파트→KT관악지점",
+              "eta_min": 64,
+              "walk_m": 962,
+              "fare_krw": 2500,
+              "uses": [
+                "버스:N61"
+              ]
+            }
+          ]
+        },
+        1447,
+        1511,
+        "2026-10-08",
+        [
+          {
+            "label": "버스 N61 강남역8번출구→봉천역.관악초등학교",
+            "code": "no_last_departure",
+            "reason": "마지막 성립 출발을 역산하지 못했다 — 22:27 은 N61 첫차(23:40) 이전이다"
+          },
+          {
+            "label": "그 밖 혼합 후보 3개",
+            "code": "mix_cap",
+            "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+          },
+          {
+            "label": "버스 640 강남역9번출구→구반포역.세화고등학교 → 버스 643 구반포역.세화고등학교→봉천역.관악초등학교",
+            "code": "earlier_departure",
+            "reason": "이동 출발 00:07 출발은 재판정에서 불성립 · 23:28 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 66분"
+          },
+          {
+            "label": "버스 740 강남역9번출구→서초동진흥아파트 → 버스 N75 서초동진흥아파트→봉천역.관악초등학교",
+            "code": "earlier_departure",
+            "reason": "이동 출발 00:07 출발은 재판정에서 불성립 · 23:48 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 67분"
+          },
+          {
+            "label": "그 밖 버스 직행 5개",
+            "code": "bus_more",
+            "reason": "도보 긴 쪽 — earlier_departure 4 · mix_dominated 1"
+          }
+        ]
+      ],
+      "why": null,
+      "trace": [
+        {
+          "case": "N062",
+          "date": "2026-10-08",
+          "arrive_by_min": 1530,
+          "planned": "bus_N61",
+          "options": [
+            {
+              "id": "bus_N61",
+              "start_min": 1447,
+              "eta_min": 64,
+              "margin_min": 19,
+              "slack_min": 0,
+              "transfers": 0,
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "N61",
+                    "from": "서초동진흥아파트",
+                    "to": "KT관악지점",
+                    "route_id": "100100589",
+                    "from_sequence": 148,
+                    "to_sequence": 168,
+                    "from_stop_id": "121000092",
+                    "to_stop_id": "120000006"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 8,
+                "walk_place_out": 8,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 1522
+              },
+              "wait_min": 10
+            }
+          ],
+          "left_out": [
+            {
+              "label": "버스 N61 강남역8번출구→봉천역.관악초등학교",
+              "code": "no_last_departure",
+              "reason": "마지막 성립 출발을 역산하지 못했다 — 22:27 은 N61 첫차(23:40) 이전이다"
+            },
+            {
+              "label": "그 밖 혼합 후보 3개",
+              "code": "mix_cap",
+              "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+            },
+            {
+              "label": "버스 640 강남역9번출구→구반포역.세화고등학교 → 버스 643 구반포역.세화고등학교→봉천역.관악초등학교",
+              "code": "earlier_departure",
+              "reason": "이동 출발 00:07 출발은 재판정에서 불성립 · 23:28 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 66분"
+            },
+            {
+              "label": "버스 740 강남역9번출구→서초동진흥아파트 → 버스 N75 서초동진흥아파트→봉천역.관악초등학교",
+              "code": "earlier_departure",
+              "reason": "이동 출발 00:07 출발은 재판정에서 불성립 · 23:48 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 67분"
+            },
+            {
+              "label": "그 밖 버스 직행 5개",
+              "code": "bus_more",
+              "reason": "도보 긴 쪽 — earlier_departure 4 · mix_dominated 1"
+            }
+          ],
+          "left_checks": [
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "mix_dominated",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "040",
+                    "from": "강남역9번출구",
+                    "to": "이수역10번출구",
+                    "route_id": "104000014",
+                    "from_sequence": 56,
+                    "to_sequence": 65,
+                    "from_stop_id": "121000091",
+                    "to_stop_id": "119000092"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "643",
+                    "from": "사당동우체국앞",
+                    "to": "봉천역.관악초등학교",
+                    "route_id": "100100096",
+                    "from_sequence": 57,
+                    "to_sequence": 67,
+                    "from_stop_id": "119000285",
+                    "to_stop_id": "120000007"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 2,
+                "walk_place_out": 3,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 1527,
+                "fast": true
+              }
+            },
+            {
+              "code": "mix_cap",
+              "check": null
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "N75",
+                    "from": "강남역9번출구",
+                    "to": "봉천역.관악초등학교",
+                    "route_id": "111000016",
+                    "from_sequence": 59,
+                    "to_sequence": 81,
+                    "from_stop_id": "121000091",
+                    "to_stop_id": "120000007"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 3,
+                "walk_place_out": 3,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 1527
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "643",
+                    "from": "지하철2호선강남역",
+                    "to": "봉천역.관악초등학교",
+                    "route_id": "100100096",
+                    "from_sequence": 46,
+                    "to_sequence": 67,
+                    "from_stop_id": "121000012",
+                    "to_stop_id": "120000007"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 6,
+                "walk_place_out": 3,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 1527
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "643",
+                    "from": "지하철2호선강남역",
+                    "to": "KT관악지점",
+                    "route_id": "100100096",
+                    "from_sequence": 46,
+                    "to_sequence": 66,
+                    "from_stop_id": "121000012",
+                    "to_stop_id": "120000006"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 6,
+                "walk_place_out": 8,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 1522
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "N75",
+                    "from": "서초동진흥아파트",
+                    "to": "KT관악지점",
+                    "route_id": "111000016",
+                    "from_sequence": 60,
+                    "to_sequence": 80,
+                    "from_stop_id": "121000092",
+                    "to_stop_id": "120000006"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 8,
+                "walk_place_out": 8,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 1522
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "640",
+                    "from": "강남역9번출구",
+                    "to": "구반포역.세화고등학교",
+                    "route_id": "100100093",
+                    "from_sequence": 41,
+                    "to_sequence": 48,
+                    "from_stop_id": "121000091",
+                    "to_stop_id": "121000023"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "643",
+                    "from": "구반포역.세화고등학교",
+                    "to": "봉천역.관악초등학교",
+                    "route_id": "100100096",
+                    "from_sequence": 52,
+                    "to_sequence": 67,
+                    "from_stop_id": "121000023",
+                    "to_stop_id": "120000007"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 2,
+                "walk_place_out": 3,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 1527,
+                "fast": true
+              }
+            },
+            {
+              "code": "earlier_departure",
+              "check": {
+                "date": "2026-10-08",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "740",
+                    "from": "강남역9번출구",
+                    "to": "서초동진흥아파트",
+                    "route_id": "100100537",
+                    "from_sequence": 54,
+                    "to_sequence": 55,
+                    "from_stop_id": "121000091",
+                    "to_stop_id": "121000092"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "N75",
+                    "from": "서초동진흥아파트",
+                    "to": "봉천역.관악초등학교",
+                    "route_id": "111000016",
+                    "from_sequence": 60,
+                    "to_sequence": 81,
+                    "from_stop_id": "121000092",
+                    "to_stop_id": "120000007"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 2,
+                "walk_place_out": 3,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 1527,
+                "fast": true
+              }
+            }
+          ],
+          "start_min": 1447
+        }
+      ],
+      "seconds": 3.8373858999984805
+    }
+  ],
+  "network_attempts": 0
+}

@@ -17,6 +17,8 @@ from datetime import datetime
 from typing import Any, Callable
 from uuid import UUID
 
+from app.core.team_availability import TeamUnavailable
+
 from . import review as review_module
 from .moves import Leg, leg_between
 from .review import MOVE_LABEL, MOVE_MODES, _dt, _hm, mode_fits, why_not
@@ -68,7 +70,8 @@ def _row(mode: str, leg: Leg, b_hhmm: str) -> dict[str, Any]:
     estimate_grade = mode in ("taxi", "walk") or "선로 길이 추정" in str(leg.route) or not leg.verified
     row: dict[str, Any] = {
         "mode": mode, "label": label, "minutes": leg.minutes, "km": leg.km,
-        "fare_krw": 0 if mode == "walk" else leg.fare_krw, "fare_is_floor": mode == "taxi",
+        "fare_krw": 0 if mode == "walk" else leg.fare_krw, "fare_is_floor": False,
+        "fare_is_estimate": mode == "taxi",
         "depart": _hm(leg.depart), "arrive": _hm(leg.arrive), "slack_min": leg.slack_min, "fits": fits,
         "basis": "timetable" if mode in ("subway", "bus") else "estimate", "grade": "추정" if estimate_grade else "확정"}
     if not fits:
@@ -99,7 +102,7 @@ def options(found: dict[str, Any], from_id: str, to_id: str, *,
     pa, pb, a_end, b_start, b_hhmm = _inputs(a, b, move)
     modes = (only,) if only else MOVE_MODES
     if engine_for_mode is None:
-        engine_for_mode = _default_factory(party_size)
+        engine_for_mode = _default_factory(party_size, found.get("taxi_pricing"))
     if engine_for_mode is None:
         raise NotAvailable("이동 계산기가 꺼져 있다")
     engines = {m: engine_for_mode(m) for m in modes}
@@ -117,6 +120,8 @@ def options(found: dict[str, Any], from_id: str, to_id: str, *,
             continue
         try:
             row = f.result()
+        except TeamUnavailable:
+            raise
         except Exception:                                   # noqa: BLE001 — 한 수단의 오류가 다른 수단을 막지 않는다
             rows.append({"mode": m, "label": MOVE_LABEL.get(m, m), "fits": None, "why_not": SLOW_TEXT})
             continue
@@ -127,11 +132,17 @@ def options(found: dict[str, Any], from_id: str, to_id: str, *,
             "recommended_mode": move.get("recommended_mode") or current, "options": rows}
 
 
-def _default_factory(party_size: int | None) -> Callable[[str], Any] | None:
+def _default_factory(party_size: int | None, pricing=None) -> Callable[[str], Any] | None:
     """기본 계산기 팩토리. 이동 팀이 없으면 None."""
     from .review import default_engine
-    if default_engine(party_size) is None:
+    from .taxi_pricing import constraints, default
+    selected = constraints(pricing)
+    if pricing == default():
+        selected = {}  # 같은 일반호출 기본값은 옛 수단 계산기 시그니처도 유지한다.
+    if (default_engine(party_size, constraints=selected) if selected else default_engine(party_size)) is None:
         return None
+    if selected:
+        return lambda mode: default_engine(party_size, [mode], constraints=selected)
     return lambda mode: default_engine(party_size, [mode])
 
 

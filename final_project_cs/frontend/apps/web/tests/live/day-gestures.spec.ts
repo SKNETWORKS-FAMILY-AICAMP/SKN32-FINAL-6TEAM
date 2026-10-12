@@ -3,7 +3,7 @@ import { mockServer } from "./helpers";
 import { openFinished, type Json } from "./plan-check-kit";
 
 /**
- * `[2026-10-05 사용자 요청 — 날짜 전환 애니메이션 · 두 손가락 확대]` 계획 확인 화면의 하루씩 보기. mock 서버 시험이다 — 화면 반응만 본다(실기기 손가락 감각은 못 봤다).
+ * `[2026-10-05 사용자 요청 — 날짜 전환 애니메이션 · 메뉴 목록 크기 조절]` 계획 확인 화면의 하루씩 보기. mock 서버 시험이다 — 화면 반응만 본다(실기기 손가락 감각은 못 봤다).
  *   - 목록이 손가락을 따라 옆으로 움직이고 옆 날이 함께 밀려 들어온다, 기준선을 넘어야 날이 바뀐다, 모자라면 되돌아간다.
  *   - 날짜 칩 아래의 표시가 손가락과 함께 칩 사이를 미끄러진다.
  *   - 첫날·마지막 날에서는 고무줄처럼 조금만 밀린다.
@@ -97,40 +97,42 @@ test("마지막 날에서 더 밀면 고무줄처럼 조금만 밀리고 「마�
   await expect(page.getByText("마지막 날이에요")).toHaveCount(0);
 });
 
-test("두 손가락으로 오므리면 줄어들다가 끝까지 오므리면 전체 일정으로, 벌리면 하루 보기로 돌아온다", async ({ page, request }) => {
+test("두 손가락은 목록 크기와 날짜를 바꾸지 않고 진행 중인 날짜 넘기기를 취소한다", async ({ page, request }) => {
   await openFinished(page, request, withDays);
   await finger(page, "pointerdown", 150, 420, 1);
-  await finger(page, "pointerdown", 250, 420, 2, false);                                             // 두 손가락 100px
-  await finger(page, "pointermove", 175, 420, 1);
-  await finger(page, "pointermove", 225, 420, 2);                                                    // 50px 로 오므림 → 절반 크기(아래쪽 한계 0.55)
-  expect(await zoomOf(page)).toBeCloseTo(0.55, 1);
-  await finger(page, "pointerup", 175, 420, 1);
-  await finger(page, "pointerup", 225, 420, 2);                                                      // 끝까지 오므리고 놓음
-  await expect(page.getByRole("tab", { name: "전체" })).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByRole("article", { name: "경복궁 관람", exact: true })).toBeVisible();
-  await expect(page.getByRole("article", { name: "N서울타워", exact: true })).toBeVisible();          // 두 날이 이어진 개요
-
-  await finger(page, "pointerdown", 190, 420, 1);
-  await finger(page, "pointerdown", 210, 420, 2, false);
-  await finger(page, "pointermove", 100, 420, 1);
-  await finger(page, "pointermove", 300, 420, 2);                                                    // 크게 벌림 → 한계까지
-  await finger(page, "pointerup", 100, 420, 1);
+  await finger(page, "pointermove", 120, 420, 1);
+  expect(await trackShift(page)).toBeCloseTo(-30, 0);
+  await finger(page, "pointerdown", 250, 420, 2, false);
+  await finger(page, "pointermove", 80, 420, 1);
+  await finger(page, "pointermove", 300, 420, 2);
+  await finger(page, "pointerup", 80, 420, 1);
   await finger(page, "pointerup", 300, 420, 2);
-  await expect(page.getByRole("tab", { name: /^1일차/ })).toHaveAttribute("aria-selected", "true");   // 하루 보기로 돌아왔다
+  expect(await zoomOf(page)).toBe(1);
+  expect(await trackShift(page)).toBe(0);
+  await expect(page.getByRole("tab", { name: /^1일차/ })).toHaveAttribute("aria-selected", "true");
+  expect(await page.locator("div[class*=sheetBody]").evaluate((el) => getComputedStyle(el).touchAction)).toContain("pinch-zoom");
 });
 
-test("조금만 오므리거나 벌리면 목록 크기만 바뀌고(범위 안) 날 보기는 그대로이며, 크기는 기억된다", async ({ page, request }) => {
+test("메뉴에서 목록 크기를 즉시 바꾸고 새로 열어도 기억하며 기본 크기로 복원한다", async ({ page, request }) => {
   await openFinished(page, request, withDays);
-  await finger(page, "pointerdown", 140, 420, 1);
-  await finger(page, "pointerdown", 260, 420, 2, false);                                             // 120px
-  await finger(page, "pointermove", 130, 420, 1);
-  await finger(page, "pointermove", 290, 420, 2);                                                    // 160px → 약 1.33 배 → 한계 1.3 으로
-  await finger(page, "pointerup", 130, 420, 1);
-  await finger(page, "pointerup", 290, 420, 2);
-  await expect(page.getByRole("tab", { name: /^1일차/ })).toHaveAttribute("aria-selected", "true");   // 하루 보기 그대로
-  await expect.poll(() => zoomOf(page)).toBeCloseTo(1.3, 1);
-  expect(await page.evaluate(() => window.localStorage.getItem("triPilot.planListZoom"))).toBe("1.3");
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  const controls = page.getByRole("group", { name: "일정 목록 크기", exact: true });
+  const increase = controls.getByRole("button", { name: "일정 목록 확대", exact: true });
+  const reduce = controls.getByRole("button", { name: "일정 목록 축소", exact: true });
+  for (let i = 0; i < 3; i++) await increase.click();
+  await expect(controls.locator("output")).toHaveText("130%");
+  await expect(increase).toBeDisabled();
+  expect(await zoomOf(page)).toBe(1.3);
+  if (process.env.LIST_ZOOM_SHOTS) await page.screenshot({ path: `${process.env.LIST_ZOOM_SHOTS}/menu-list-zoom-130.png` });
+  await page.getByRole("button", { name: "메뉴 닫기", exact: true }).click();
   await page.reload();
-  await expect(page.getByRole("tab", { name: /^1일차/ })).toBeVisible();
-  await expect.poll(() => zoomOf(page)).toBeCloseTo(1.3, 1);                                         // 다시 열어도 같은 크기
+  await expect.poll(() => zoomOf(page)).toBe(1.3);
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  for (let i = 0; i < 5; i++) await reduce.click();
+  await expect(controls.locator("output")).toHaveText("80%");
+  await expect(reduce).toBeDisabled();
+  expect(await zoomOf(page)).toBe(0.8);
+  await controls.getByRole("button", { name: "기본 크기", exact: true }).click();
+  await expect(controls.locator("output")).toHaveText("100%");
+  expect(await zoomOf(page)).toBe(1);
 });

@@ -1,0 +1,19 @@
+▲ Next.js 16.3.5 (webpack)
+
+thread '<unnamed>' (6692) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\swc-71.0.0\src\config\mod.rs:2366:14:
+called `Result::unwrap()` on an `Err` value: failed to canonicalize jsc.baseUrl(`C:\Users\playdata2\Documents\final_workspace\final_project_cs\frontend\apps\admin`)
+This is required on Windows because of UNC path.
+
+Caused by:
+    액세스가 거부되었습니다. (os error 5)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+⨯ Failed to load next.config.ts, see more info here https://nextjs.org/docs/messages/next-config-error
+
+> Build error occurred
+[Error: failed to process called `Result::unwrap()` on an `Err` value: failed to canonicalize jsc.baseUrl(`C:\Users\playdata2\Documents\final_workspace\final_project_cs\frontend\apps\admin`)
+This is required on Windows because of UNC path.
+
+Caused by:
+    액세스가 거부되었습니다. (os error 5)] {
+  code: 'GenericFailure'
+}

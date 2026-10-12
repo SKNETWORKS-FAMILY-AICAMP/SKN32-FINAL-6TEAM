@@ -1,0 +1,103 @@
+[WebServer] (node:20504) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:5084) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:17916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 10 tests using 1 worker
+
+(node:23304) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:17916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 375px 일반 ready: 목록 끝에서 버튼 이름까지 즉시 표시 (12.9s)
+[WebServer] (node:17916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+  ok  2 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 375px 일반 recheck: 목록 끝에서 버튼 이름까지 즉시 표시 (6.7s)
+[WebServer] (node:17916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+  ok  3 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 375px 동작 줄임 ready: 목록 끝에서 버튼 이름까지 즉시 표시 (4.3s)
+[WebServer] (node:17916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+  ok  4 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 375px 동작 줄임 recheck: 목록 끝에서 버튼 이름까지 즉시 표시 (4.8s)
+[WebServer] (node:17916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+  ok  5 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 1280px 일반 ready: 목록 끝에서 버튼 이름까지 즉시 표시 (6.3s)
+[WebServer] (node:17916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+  ok  6 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 1280px 일반 recheck: 목록 끝에서 버튼 이름까지 즉시 표시 (7.3s)
+[WebServer] (node:17916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+  ok  7 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 1280px 동작 줄임 ready: 목록 끝에서 버튼 이름까지 즉시 표시 (5.1s)
+[WebServer] (node:17916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+  ok  8 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 1280px 동작 줄임 recheck: 목록 끝에서 버튼 이름까지 즉시 표시 (5.7s)
+[WebServer] ⨯ Failed to generate static paths for /intakes/[intakeId]:
+[WebServer] Error: EINVAL
+[WebServer]     at ignore-listed frames {
+[WebServer]   code: 'ERR_WORKER_INIT_FAILED'
+[WebServer] }
+  x   9 tests\live\submit-end-registration-20261012.spec.ts:61:1 › 등록 불가여도 끝에서는 안내를 표시하고 스크롤로는 전송하지 않는다 (1.3s)
+(node:10208) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:17916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+  x  10 tests\live\submit-end-registration-20261012.spec.ts:73:1 › 목록 끝에서도 최소 접힘 중에는 안내를 숨기고 펼치면 복귀한다 (17.5s)
+
+
+  1) tests\live\submit-end-registration-20261012.spec.ts:61:1 › 등록 불가여도 끝에서는 안내를 표시하고 스크롤로는 전송하지 않는다 
+
+    Error: page.goto: net::ERR_INSUFFICIENT_RESOURCES at http://127.0.0.1:3199/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+    Call log:
+      - navigating to "http://127.0.0.1:3199/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", waiting until "load"
+
+
+      18 |   });
+      19 |   await start(page);
+    > 20 |   await page.goto(`/intakes/${INTAKE}`);
+         |              ^
+      21 |   await expect(page.locator("[data-stage=done]")).toHaveCount(1);
+      22 |   await expect(page.locator('[data-verdict="checking"]')).toHaveCount(0);
+      23 |   await mapSettled(page);
+        at openResult (C:\Users\playdata2\Documents\final_workspace\.tmp\submit-end-20261012-v1\runtime\tests\live\submit-end-registration-20261012.spec.ts:20:14)
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\submit-end-20261012-v1\runtime\tests\live\submit-end-registration-20261012.spec.ts:64:15
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\thread-browser-evidence\submit-end-registration-20-f2a52-에서는-안내를-표시하고-스크롤로는-전송하지-않는다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\thread-browser-evidence\submit-end-registration-20-f2a52-에서는-안내를-표시하고-스크롤로는-전송하지-않는다\error-context.md
+
+  2) tests\live\submit-end-registration-20261012.spec.ts:73:1 › 목록 끝에서도 최소 접힘 중에는 안내를 숨기고 펼치면 복귀한다 ─
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('footer[class*=footer]').getByRole('tooltip')
+    Expected: visible
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('footer[class*=footer]').getByRole('tooltip') with timeout 12000ms
+      - waiting for locator('footer[class*=footer]').getByRole('tooltip')
+
+
+      86 |   await expect(footer.getByRole("tooltip")).toBeHidden();
+      87 |   await handle.click();
+    > 88 |   await expect(footer.getByRole("tooltip")).toBeVisible();
+         |                                             ^
+      89 | });
+      90 |
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\submit-end-20261012-v1\runtime\tests\live\submit-end-registration-20261012.spec.ts:88:45
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\thread-browser-evidence\submit-end-registration-20-5c54b--최소-접힘-중에는-안내를-숨기고-펼치면-복귀한다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\thread-browser-evidence\submit-end-registration-20-5c54b--최소-접힘-중에는-안내를-숨기고-펼치면-복귀한다\error-context.md
+
+  2 failed
+    tests\live\submit-end-registration-20261012.spec.ts:61:1 › 등록 불가여도 끝에서는 안내를 표시하고 스크롤로는 전송하지 않는다 
+    tests\live\submit-end-registration-20261012.spec.ts:73:1 › 목록 끝에서도 최소 접힘 중에는 안내를 숨기고 펼치면 복귀한다 ──
+  8 passed (1.6m)

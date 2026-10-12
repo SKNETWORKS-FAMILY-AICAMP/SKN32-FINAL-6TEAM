@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>운영자 콘솔 · 예약 승인, 위임, 발송 실패</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;font-family:'IBM Plex Sans KR',sans-serif;color:#1F1E1B;background:#F4F3EF}
+a{color:#1F4E8C}a:hover{color:#163A6A}
+</style>
+</head>
+<body>
+<div style="box-sizing: border-box; width: 1440px; padding: 8px 16px; background: #1F1E1B; color: #F4F3EF; font-family: 'IBM Plex Sans KR', sans-serif; font-size: 13px">운영자 콘솔 와이어프레임 v1.1 (2026-09-29) · S-11 예약 승인 · 위임 · 발송 실패 (임시) · 정적 사본 — 값은 모두 자리표시, 버튼은 동작하지 않음 · <a href="index.html" style="color: #F4F3EF">화면 목록</a></div>
+<div style="width: 1440px; height: 900px; display: flex; background: #F4F3EF; font-family: 'IBM Plex Sans KR', sans-serif; color: #1F1E1B">
+<nav aria-label="운영자 콘솔 메뉴" style="width: 248px; flex-shrink: 0; box-sizing: border-box; padding: 24px 16px; background: #ECEAE4; border-right: 1px solid #D9D6CE; display: flex; flex-direction: column; gap: 20px">
+<a href="s02-home.html" style="display: flex; align-items: center; gap: 10px; padding: 0 8px; text-decoration: none; color: #1F1E1B">
+<span style="width: 32px; height: 32px; border-radius: 8px; background: #1F1E1B; color: #F4F3EF; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700">t</span>
+<span style="display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 700">triPilot</span><span style="font-size: 12px; color: #5B5953">운영자 콘솔</span></span>
+</a>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">운영</div>
+
+<a href="s02-home.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">홈</a>
+
+<a href="s08-inquiries.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">문의함</a>
+
+<a href="s03-users.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">사용자</a>
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">사용 · 상태</div>
+
+<a href="s06-usage.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">사용량</a>
+
+<a href="s07-server.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">서버 상태</a>
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">설정</div>
+
+<a href="s05-limits.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">한도 · 감시 조절</a>
+
+<a href="s09-notices.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">공지 · 점검</a>
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">기록</div>
+
+<a href="s10-audit.html" aria-current="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; color: #2B2A27; font-weight: 500">운영 기록</a>
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 0 12px; font-size: 12px; font-weight: 600; color: #5B5953">임시</div>
+
+<a href="s11-ops.html" aria-current="page" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; text-decoration: none; font-size: 14px; background: #1F4E8C; color: #FFFFFF; font-weight: 600">예약 승인 · 위임 · 발송 실패</a>
+
+</div>
+
+</nav>
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column">
+<header style="height: 64px; flex-shrink: 0; box-sizing: border-box; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; background: #FFFFFF; border-bottom: 1px solid #D9D6CE">
+<div style="font-size: 13px; color: #5B5953">임시 › 예약 승인 · 위임 · 발송 실패</div>
+<div style="display: flex; align-items: center; gap: 16px; font-size: 13px; color: #5B5953">
+<span>배포 [미정]</span>
+<span style="font-weight: 600; color: #1F1E1B">[운영자 ID]</span>
+<a href="s01-login.html">로그아웃</a>
+</div>
+</header>
+<main style="flex-grow: 1; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; gap: 10px">
+<h1 style="margin: 0; font-size: 28px; font-weight: 700">예약 승인 · 위임 · 발송 실패</h1>
+<span style="display: inline-flex; align-items: center; height: 26px; padding: 0 12px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px dashed #75726B; color: #3F3D38">임시 포함</span>
+</div>
+<div style="padding: 12px 16px; border: 1px dashed #BDB9AF; border-radius: 10px; font-size: 14px; color: #3F3D38">백엔드에 이미 있는 운영 기능입니다. 이번 범위에 둘지는 팀에서 정합니다. 빼면 이 화면과 메뉴의 「임시」 묶음을 통째로 지웁니다.</div>
+</div>
+<section aria-labelledby="ap-title" style="background: #FFFFFF; border: 1px solid #D9D6CE; border-radius: 12px; overflow: hidden">
+<div style="height: 56px; box-sizing: border-box; padding: 0 20px; display: flex; align-items: center; justify-content: space-between">
+<h2 id="ap-title" style="margin: 0; font-size: 16px; font-weight: 700">예약 승인 대기 · N건</h2>
+<span style="font-size: 13px; color: #5B5953">승인 · 거절 모두 사유 필수 · 승인자는 로그인한 운영자 ID로 남음</span>
+</div>
+<div role="table" aria-label="예약 승인 대기" style="display: flex; flex-direction: column">
+<div role="row" style="display: grid; grid-template-columns: 120px 100px minmax(0, 1fr) 120px 90px 180px; column-gap: 12px; align-items: center; min-height: 40px; padding: 0 20px; background: #F4F3EF; font-size: 12px; font-weight: 600; color: #5B5953"><span role="columnheader">요청 시각</span><span role="columnheader">사용자</span><span role="columnheader">여행</span><span role="columnheader">요청</span><span role="columnheader">근거</span><span role="columnheader"></span></div>
+
+<div role="row" style="display: grid; grid-template-columns: 120px 100px minmax(0, 1fr) 120px 90px 180px; column-gap: 12px; align-items: center; min-height: 58px; padding: 0 20px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5B5953">MM-DD HH:MM</span>
+<span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">[ID 02]</span>
+<span role="cell">[여행 제목]</span>
+<span role="cell">예약 변경</span>
+<span role="cell" style="font-size: 13px">N건 보기</span>
+<span role="cell" style="display: flex; gap: 8px; justify-content: flex-end">
+<button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #BDB9AF; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600">거절</button>
+<button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #1F4E8C; border-radius: 8px; background: #1F4E8C; color: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600">승인</button>
+</span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 120px 100px minmax(0, 1fr) 120px 90px 180px; column-gap: 12px; align-items: center; min-height: 58px; padding: 0 20px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5B5953">MM-DD HH:MM</span>
+<span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">[ID 06]</span>
+<span role="cell">[여행 제목]</span>
+<span role="cell">예약 취소</span>
+<span role="cell" style="font-size: 13px">N건 보기</span>
+<span role="cell" style="display: flex; gap: 8px; justify-content: flex-end">
+<button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #BDB9AF; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600">거절</button>
+<button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #1F4E8C; border-radius: 8px; background: #1F4E8C; color: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600">승인</button>
+</span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 120px 100px minmax(0, 1fr) 120px 90px 180px; column-gap: 12px; align-items: center; min-height: 58px; padding: 0 20px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5B5953">MM-DD HH:MM</span>
+<span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">[ID 08]</span>
+<span role="cell">[여행 제목]</span>
+<span role="cell">예약 변경</span>
+<span role="cell" style="font-size: 13px">N건 보기</span>
+<span role="cell" style="display: flex; gap: 8px; justify-content: flex-end">
+<button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #BDB9AF; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600">거절</button>
+<button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #1F4E8C; border-radius: 8px; background: #1F4E8C; color: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600">승인</button>
+</span>
+</div>
+
+</div>
+</section>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px">
+<section aria-labelledby="dg-title" style="background: #FFFFFF; border: 1px solid #D9D6CE; border-radius: 12px; overflow: hidden">
+<div style="box-sizing: border-box; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px">
+<h2 id="dg-title" style="margin: 0; font-size: 16px; font-weight: 700">위임</h2>
+<span style="font-size: 13px; color: #5B5953">이 사용자의 자동 실행을 서버 설정의 한계 안에서 허용 · 누가 · 왜 필수</span>
+</div>
+<div role="table" aria-label="위임" style="display: flex; flex-direction: column">
+<div role="row" style="display: grid; grid-template-columns: 100px 90px minmax(0, 1fr) 100px; column-gap: 12px; align-items: center; min-height: 40px; padding: 0 20px; background: #F4F3EF; font-size: 12px; font-weight: 600; color: #5B5953"><span role="columnheader">사용자</span><span role="columnheader">상태</span><span role="columnheader">맡긴 범위</span><span role="columnheader"></span></div>
+
+<div role="row" style="display: grid; grid-template-columns: 100px 90px minmax(0, 1fr) 100px; column-gap: 12px; align-items: center; min-height: 54px; padding: 0 20px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">[ID 01]</span>
+<span role="cell">위임 중</span>
+<span role="cell" style="font-size: 13px; color: #3F3D38">[한계 요약]</span>
+<span role="cell" style="text-align: right"><button type="button" style="height: 40px; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600">거두기</button></span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 100px 90px minmax(0, 1fr) 100px; column-gap: 12px; align-items: center; min-height: 54px; padding: 0 20px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">[ID 04]</span>
+<span role="cell">없음</span>
+<span role="cell" style="font-size: 13px; color: #3F3D38">—</span>
+<span role="cell" style="text-align: right"><button type="button" style="height: 40px; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600">주기</button></span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 100px 90px minmax(0, 1fr) 100px; column-gap: 12px; align-items: center; min-height: 54px; padding: 0 20px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">[ID 07]</span>
+<span role="cell">위임 중</span>
+<span role="cell" style="font-size: 13px; color: #3F3D38">[한계 요약]</span>
+<span role="cell" style="text-align: right"><button type="button" style="height: 40px; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600">거두기</button></span>
+</div>
+
+</div>
+</section>
+<section aria-labelledby="ob-title" style="background: #FFFFFF; border: 1px solid #D9D6CE; border-radius: 12px; overflow: hidden">
+<div style="box-sizing: border-box; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px">
+<h2 id="ob-title" style="margin: 0; font-size: 16px; font-weight: 700">알림 발송 실패 · N건</h2>
+<span style="font-size: 13px; color: #5B5953">보냈는지 알 수 없는 알림 · 처리 완료는 누가 · 왜 필수</span>
+</div>
+<div role="table" aria-label="알림 발송 실패" style="display: flex; flex-direction: column">
+<div role="row" style="display: grid; grid-template-columns: 130px 60px minmax(0, 1fr) 100px; column-gap: 12px; align-items: center; min-height: 40px; padding: 0 20px; background: #F4F3EF; font-size: 12px; font-weight: 600; color: #5B5953"><span role="columnheader">주제</span><span role="columnheader">시도</span><span role="columnheader">마지막 오류</span><span role="columnheader"></span></div>
+
+<div role="row" style="display: grid; grid-template-columns: 130px 60px minmax(0, 1fr) 100px; column-gap: 12px; align-items: center; min-height: 54px; padding: 0 20px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell">[알림 주제]</span>
+<span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">N회</span>
+<span role="cell" style="font-size: 13px; color: #5B5953">[오류 내용]</span>
+<span role="cell" style="text-align: right"><button type="button" style="height: 40px; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600">처리 완료</button></span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 130px 60px minmax(0, 1fr) 100px; column-gap: 12px; align-items: center; min-height: 54px; padding: 0 20px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell">[알림 주제]</span>
+<span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">N회</span>
+<span role="cell" style="font-size: 13px; color: #5B5953">[오류 내용]</span>
+<span role="cell" style="text-align: right"><button type="button" style="height: 40px; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600">처리 완료</button></span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 130px 60px minmax(0, 1fr) 100px; column-gap: 12px; align-items: center; min-height: 54px; padding: 0 20px; border-top: 1px solid #ECEAE4; font-size: 14px">
+<span role="cell">[알림 주제]</span>
+<span role="cell" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">N회</span>
+<span role="cell" style="font-size: 13px; color: #5B5953">[오류 내용]</span>
+<span role="cell" style="text-align: right"><button type="button" style="height: 40px; padding: 0 12px; border: 1px solid #BDB9AF; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600">처리 완료</button></span>
+</div>
+
+</div>
+</section>
+</div>
+</main>
+</div>
+</div>
+</body>
+</html>

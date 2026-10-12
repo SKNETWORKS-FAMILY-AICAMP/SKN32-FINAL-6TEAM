@@ -1,0 +1,24 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback _
+tests\e2e\test_watch_plugin_recovery.py:86: in test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback
+    first = tick()
+            ^^^^^^
+tests\e2e\test_watch_plugin_recovery.py:84: in tick
+    return watcher.tick(lookahead=timedelta(hours=14))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\watch\trip_watch_cases.py:167: in tick
+    attention = forecast_attention(conn, store=self.store, trip_id=trip_id, item=item, report=report)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\planning\pending.py:112: in forecast_attention
+    cur.execute("UPDATE pending_changes SET status='superseded', decided_at=now(), "
+..\..\..\anaconda3\Lib\site-packages\psycopg\cursor.py:117: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UndefinedColumn: column "proposal_scope" does not exist
+E   LINE 1: ...RE tenant_id=$1 AND trip_id=$2 AND item_id=$3 AND proposal_s...
+E                                                                ^
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_watch_plugin_recovery.py::test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback
+1 failed in 23.93s

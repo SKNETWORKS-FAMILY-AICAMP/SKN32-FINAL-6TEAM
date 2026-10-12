@@ -1,0 +1,144 @@
+{
+  "created_at": "2026-10-12T03:10:35.789Z",
+  "source": "datasets/mobility/raw/mobility_web21_20261012_v1/kakao-mixed-aligned-01.json",
+  "source_sha256": "f2136b03afd1e5ce37b836b7417b5f77ae29e592ba5f96451da30f92e9ffd804",
+  "code": {
+    "candidates.py": "275dfc3e54f36950c2adeb710f2a182c03d4a48805448253863644c3c9049869",
+    "plan.py": "07c93ec7b3d248b882cd81437148e106de77371ebd440d6987500aac90b6beb1",
+    "options.py": "c6c365e9acf2beda523685842c8d8b174265b0d1a4e4a974925bef68ce892c7a",
+    "verify_time.py": "1a7e43c8a9963118c43e68fd5702e54b8fa695de3f1763a6cee013bc3ca4b356",
+    "runtime.py": "38cd5785d0c99146a8849bdf2eb7a9b9e445bb6f52ce1bb8d0e8e866b8ca4cfd",
+    "departure_context.py": "83118680a84b77fdeda068ec926bc0854c367ff22fbf5d0836558717c9dde086",
+    "tests/unit/travel/mobility/test_mixed_regular_alternative_v1.py": "836a15dedd74bb968516653c20718071fb190980715015c1a89856d6a5cda05c",
+    "tests/unit/travel/mobility/test_mixed_v1.py": "f06067e81e92bdfd19bd992dcb89429d4927eadfef72bd9b95c0004b6925e7ec",
+    "tests/unit/travel/mobility/test_mixed_fare_upper_v1.py": "f91368e9b0a3e3080c68bbd2b04abd24835e1151dc8dfc8ff31ccf6e40fc881e",
+    "tests/unit/travel/mobility/test_mixed_early_bird_product_v1.py": "9cdaf21aaf56a50fcd53a62d8a3c46e085356deab1ffc5ae1a9fe7a0c05e6575"
+  },
+  "artifacts": {
+    "comparison-v1.json": {
+      "sha256": "13b190724ffbb37383fcc105b04cdfab7e3cd48cecdc9785dc960c31cb4c9ec3",
+      "bytes": 83244,
+      "incomplete": false
+    },
+    "mixed-unit-v1.log": {
+      "sha256": "367e6102af47c24edbf7bf026b96fd937a192dc95d4b8da809ac456e41989d07",
+      "bytes": 391,
+      "incomplete": false
+    },
+    "mixed-unit-v2.log": {
+      "sha256": "9af29687a7a7532f692b89f5263f5cf500290a6938622de5793f9162f58e2466",
+      "bytes": 391,
+      "incomplete": false
+    },
+    "mixed-unit-v3.log": {
+      "sha256": "33c365cc0b6f55405ee6bd79fce86ab5d7930414e274955abae5c68d1bf212b0",
+      "bytes": 391,
+      "incomplete": false
+    },
+    "planner-comparison-v1.json": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "incomplete": true
+    },
+    "planner-comparison-v2.json": {
+      "sha256": "95c3c703d44b92f2df19b94114c65b17730c57c68b85f392315c3c128926452b",
+      "bytes": 36219,
+      "incomplete": false
+    },
+    "planner-comparison-v3.json": {
+      "sha256": "f4e17ee9122082c542b25aaf9226b8c5b70489f29abf7aca437399e37e4f777a",
+      "bytes": 49302,
+      "incomplete": false
+    },
+    "planner-comparison-v4.json": {
+      "sha256": "0d7921782952de6a08ae8c036b55cfd7b49c453e31cefb58b7526288344574ed",
+      "bytes": 49302,
+      "incomplete": false
+    },
+    "planner-generated-v2.json": {
+      "sha256": "4a4f7fa624a4a4438cdfe76a47e78e030ca0164efbafb8cfde78ce3cd8546b3e",
+      "bytes": 13533,
+      "incomplete": false
+    },
+    "planner-generated-v3.json": {
+      "sha256": "daeb4c26e67b79be204b48b19e8aae75bda42ce84761e7665c26ec96946325b6",
+      "bytes": 20188,
+      "incomplete": false
+    },
+    "planner-generated-v4.json": {
+      "sha256": "daeb4c26e67b79be204b48b19e8aae75bda42ce84761e7665c26ec96946325b6",
+      "bytes": 20188,
+      "incomplete": false
+    },
+    "planner-replay-v1.log": {
+      "sha256": "b90a02c3782ab7d3191b0a1de5780ab9bdb35d1d3116ecef8512a304f6c43182",
+      "bytes": 127,
+      "incomplete": true
+    },
+    "planner-replay-v1.py": {
+      "sha256": "e3c0818945ad2e8c719635f3b6977bb86e31516a13574ab2b31fe68a535c7a7d",
+      "bytes": 4057,
+      "incomplete": false
+    },
+    "planner-replay-v2.log": {
+      "sha256": "a62314d6f948e097296e34f86dd0bb8bdc8d508d5e3a069f8fd54d66f927748d",
+      "bytes": 781,
+      "incomplete": false
+    },
+    "planner-replay-v2.py": {
+      "sha256": "66fcd92b16167169c80cd6dcbecc8f55106dcab14cdda16ffff722800d8faa95",
+      "bytes": 4231,
+      "incomplete": false
+    },
+    "planner-replay-v3.log": {
+      "sha256": "0761ca2e8ea329c1e070103c376f5071bc1aff610c6a4c717058a8663c29885f",
+      "bytes": 1185,
+      "incomplete": false
+    },
+    "planner-replay-v3.py": {
+      "sha256": "45a21dbf87171b99d7d69d0a9fcda4379a9ab30d347c4c43b1a8abbbf2de9933",
+      "bytes": 4425,
+      "incomplete": false
+    },
+    "planner-replay-v4.log": {
+      "sha256": "0761ca2e8ea329c1e070103c376f5071bc1aff610c6a4c717058a8663c29885f",
+      "bytes": 1185,
+      "incomplete": false
+    },
+    "planner-replay-v4.py": {
+      "sha256": "95abb646f0a5b111f86810f4b96add0b137ededb3aa36fe9672b8c8be9a10cd7",
+      "bytes": 4425,
+      "incomplete": false
+    },
+    "replay-v1.log": {
+      "sha256": "c1baee184d8ac4e53d29c07f1b6ae05cde237630eb0696a209efcbe03db46efc",
+      "bytes": 1039,
+      "incomplete": false
+    },
+    "replay-v1.py": {
+      "sha256": "0423ba48c07f22a127e9ecb47c9cb76ad5b43da4f22ba0e5f01d2c23baf6bf94",
+      "bytes": 4431,
+      "incomplete": false
+    },
+    "REPORT-final-v2.md": {
+      "sha256": "b03a5fc2473c6aef05ccfa2ca937bedd6f477054c5a85f2df2049d29f7acd503",
+      "bytes": 7423,
+      "incomplete": false
+    }
+  },
+  "limited_api_calls": 0,
+  "private_access": 0,
+  "commits": 0,
+  "deployments": 0,
+  "unit_tests": {
+    "result": "58 passed,4 deselected",
+    "exit_code": 0,
+    "log": "mixed-unit-v3.log",
+    "sources": [
+      "test_mixed_regular_alternative_v1.py",
+      "test_mixed_v1.py",
+      "test_mixed_fare_upper_v1.py",
+      "test_mixed_early_bird_product_v1.py"
+    ]
+  }
+}

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="7" time="4.753" timestamp="2026-10-09T07:51:27.188793+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_mixed_fare_upper_v1" name="test_both_mixed_orders_use_known_distance_upper_without_claiming_exact[True]" time="0.063"><failure message="AssertionError: assert None == (1500 + 1650)&#10; +  where None = &lt;function fare_upper_of at 0x00000199312372E0&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x00000199312FCD10&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=700, arrive_min=710, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function fare_upper_of at 0x00000199312372E0&gt; = O.fare_upper_of&#10; +    and   [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=700, arrive_min=710, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)] = rides([{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}])">rail_first = True
+
+    @pytest.mark.parametrize('rail_first', [True, False])
+    def test_both_mixed_orders_use_known_distance_upper_without_claiming_exact(rail_first):
+        v, bus, rail = fixture()
+        legs = [rail, bus] if rail_first else [bus, rail]
+        assert O.fare_of(v, legs, rides(legs)) is None
+&gt;       assert O.fare_upper_of(v, legs, rides(legs)) == 1500 + 1650
+E       AssertionError: assert None == (1500 + 1650)
+E        +  where None = &lt;function fare_upper_of at 0x00000199312372E0&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x00000199312FCD10&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=700, arrive_min=710, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function fare_upper_of at 0x00000199312372E0&gt; = O.fare_upper_of
+E        +    and   [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=700, arrive_min=710, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)] = rides([{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}])
+
+tests\unit\travel\mobility\test_mixed_fare_upper_v1.py:37: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_mixed_fare_upper_v1" name="test_both_mixed_orders_use_known_distance_upper_without_claiming_exact[False]" time="0.002"><failure message="AssertionError: assert None == (1500 + 1650)&#10; +  where None = &lt;function fare_upper_of at 0x00000199312372E0&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001993133B050&gt;, [{'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}, {'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}], [LegResult(idx=1, label='버스 101 갑→을', verdict='feasible', reason='', grade='확정', depart_min=700, arrive_min=710, wait_...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function fare_upper_of at 0x00000199312372E0&gt; = O.fare_upper_of&#10; +    and   [LegResult(idx=1, label='버스 101 갑→을', verdict='feasible', reason='', grade='확정', depart_min=700, arrive_min=710, wait_...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)] = rides([{'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}, {'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}])">rail_first = False
+
+    @pytest.mark.parametrize('rail_first', [True, False])
+    def test_both_mixed_orders_use_known_distance_upper_without_claiming_exact(rail_first):
+        v, bus, rail = fixture()
+        legs = [rail, bus] if rail_first else [bus, rail]
+        assert O.fare_of(v, legs, rides(legs)) is None
+&gt;       assert O.fare_upper_of(v, legs, rides(legs)) == 1500 + 1650
+E       AssertionError: assert None == (1500 + 1650)
+E        +  where None = &lt;function fare_upper_of at 0x00000199312372E0&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001993133B050&gt;, [{'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}, {'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}], [LegResult(idx=1, label='버스 101 갑→을', verdict='feasible', reason='', grade='확정', depart_min=700, arrive_min=710, wait_...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function fare_upper_of at 0x00000199312372E0&gt; = O.fare_upper_of
+E        +    and   [LegResult(idx=1, label='버스 101 갑→을', verdict='feasible', reason='', grade='확정', depart_min=700, arrive_min=710, wait_...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)] = rides([{'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}, {'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}])
+
+tests\unit\travel\mobility\test_mixed_fare_upper_v1.py:37: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_mixed_fare_upper_v1" name="test_missing_rail_edge_still_has_no_budget_amount" time="0.002" /><testcase classname="tests.unit.travel.mobility.test_mixed_fare_upper_v1" name="test_unsupported_rail_line_still_has_no_budget_amount" time="0.002" /><testcase classname="tests.unit.travel.mobility.test_mixed_fare_upper_v1" name="test_unknown_bus_and_misaligned_results_are_not_filled" time="0.002" /><testcase classname="tests.unit.travel.mobility.test_mixed_fare_upper_v1" name="test_consecutive_rail_legs_are_one_group" time="0.002"><failure message="AssertionError: assert None == 3150&#10; +  where None = &lt;function fare_upper_of at 0x00000199312372E0&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001993133BF50&gt;, [{'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}, {'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'B'}, {'from': 'B', 'line': '09호선', 'mode': 'subway', 'to': 'C'}], [LegResult(idx=1, label='버스 101 갑→을', verdict='feasible', reason='', grade='확정', depart_min=700, arrive_min=710, wait_...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function fare_upper_of at 0x00000199312372E0&gt; = O.fare_upper_of&#10; +    and   [LegResult(idx=1, label='버스 101 갑→을', verdict='feasible', reason='', grade='확정', depart_min=700, arrive_min=710, wait_...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)] = rides([{'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}, {'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'B'}, {'from': 'B', 'line': '09호선', 'mode': 'subway', 'to': 'C'}])">def test_consecutive_rail_legs_are_one_group():
+        v, bus, rail = fixture()
+        legs = [bus, dict(rail, to='B'), dict(rail, **{'from': 'B'})]
+&gt;       assert O.fare_upper_of(v, legs, rides(legs)) == 3150
+E       AssertionError: assert None == 3150
+E        +  where None = &lt;function fare_upper_of at 0x00000199312372E0&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001993133BF50&gt;, [{'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}, {'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'B'}, {'from': 'B', 'line': '09호선', 'mode': 'subway', 'to': 'C'}], [LegResult(idx=1, label='버스 101 갑→을', verdict='feasible', reason='', grade='확정', depart_min=700, arrive_min=710, wait_...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function fare_upper_of at 0x00000199312372E0&gt; = O.fare_upper_of
+E        +    and   [LegResult(idx=1, label='버스 101 갑→을', verdict='feasible', reason='', grade='확정', depart_min=700, arrive_min=710, wait_...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)] = rides([{'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}, {'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'B'}, {'from': 'B', 'line': '09호선', 'mode': 'subway', 'to': 'C'}])
+
+tests\unit\travel\mobility\test_mixed_fare_upper_v1.py:61: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_mixed_fare_upper_v1" name="test_public_planner_option_preserves_upper_amount_and_estimate_wording" time="0.064"><failure message="KeyError: 'fare_krw'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000199310EF200&gt;
+
+    def test_public_planner_option_preserves_upper_amount_and_estimate_wording(monkeypatch):
+        v, bus, rail = fixture()
+        runtime = Runtime(v, timetable_built_at='controlled', rules_version='controlled', stats={})
+        planner = P.Planner(runtime, modes=['bus', 'subway'])
+        legs = [bus, rail]
+        results = rides(legs)
+        option = {'eta_min': 40, 'uses': P.uses_of(legs), '_legs': legs, '_route': P.label_of(legs),
+                  '_start': 700, '_transfers': 1, '_n': 1, '_key': ('mixed', 0, 1), '_mixed': True,
+                  '_margin': 0, '_slack': 0, '_walk_min': 0, '_walk_m': 0, '_fare': None,
+                  '_severe': [], '_covered': False, '_lr': results, '_day_type': '평일'}
+        monkeypatch.setattr(planner, '_station_pairs', lambda *args: ([], [], []))
+        monkeypatch.setattr(planner, '_bus_direct', lambda *args: [])
+        monkeypatch.setattr(planner, '_bike_direct', lambda *args: ([], None))
+        monkeypatch.setattr(planner, '_mixed', lambda *args: [option])
+        got, why = planner.leg(PLACES[0], PLACES[1], datetime.fromisoformat('2026-10-05T12:30:00+09:00'),
+                               {}, True, 'controlled-mixed')
+        assert why is None
+        public = got[0]['options'][0]
+&gt;       assert public['fare_krw'] == 3150
+               ^^^^^^^^^^^^^^^^^^
+E       KeyError: 'fare_krw'
+
+tests\unit\travel\mobility\test_mixed_fare_upper_v1.py:82: KeyError</failure></testcase></testsuite></testsuites>

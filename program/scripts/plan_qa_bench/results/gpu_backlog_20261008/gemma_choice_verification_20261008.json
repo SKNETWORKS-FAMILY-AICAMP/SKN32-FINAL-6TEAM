@@ -1,0 +1,31 @@
+{
+  "checks": [
+    {
+      "suite": "D",
+      "direct_recount": true,
+      "remote_hash_match": true,
+      "fixed_prompt_hash_match": true,
+      "expected": 2735,
+      "failed_or_unparsed": 13
+    },
+    {
+      "suite": "D2",
+      "direct_recount": true,
+      "remote_hash_match": true,
+      "fixed_prompt_hash_match": true,
+      "expected": 1000,
+      "failed_or_unparsed": 0
+    },
+    {
+      "suite": "D3",
+      "direct_recount": true,
+      "remote_hash_match": true,
+      "fixed_prompt_hash_match": true,
+      "expected": 360,
+      "failed_or_unparsed": 2
+    }
+  ],
+  "model_runs": 1,
+  "new_calls": 0,
+  "compound_diagnostic_excluded_from_single_choice_only": 66
+}

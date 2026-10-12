@@ -12,7 +12,6 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from uuid import UUID
 
 import pytest
@@ -106,6 +105,10 @@ def rv(api, monkeypatch):  # noqa: F811
     """이동 계산기를 끈 환경(직선 어림값) + 시험이 넣은 관광공사 목록 · 운영시간 정리."""
     for module in (review_module, candidates_module, autofix_module):
         monkeypatch.setattr(module, "default_engine", lambda party=None: None)
+    # ★`[2026-10-07]` 원장의 「시장 안 메뉴 가게 찾기」(`find_dish_near`)를 끈다 — 이 시험의 「시장까지만 정한 식사」는 원장이 비었을 때의 동작인데,
+    #   개발 DB 원장에는 광장시장 근처 빈대떡 가게가 있어 시험 결과가 DB 내용을 따라갔다(메뉴 찾기 자체는 시험 test_intake_chain_resolve · test_dining_find_by_name)
+    from app.domains.travel_ops.instances.dining.place_lookup import LedgerPlaceLookup
+    monkeypatch.setattr(LedgerPlaceLookup, "find_dish_near", lambda self, text, latitude, longitude: None)
     op_stream._OPEN.clear()
     yield api
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
@@ -341,8 +344,10 @@ def test_a_locked_item_is_registered_as_customer_pinned(rv):
 
     with get_connection() as conn:
         items = TripStore(rv["tenant"]).latest(conn, UUID(done.json()["trip"]["trip_id"]))[1]
-    pinned = {i.title: bool(i.detail.get("customer_pinned")) for i in items}
+    pinned = {i.title: bool(i.detail.get("customer_pinned")) for i in items if i.kind != "mobility"}
     assert pinned == {"경복궁": True, "광장시장": False}      # ★감시 루프가 다시 자동으로 바꾸지 않는 일정이 된다
+    assert any(i.kind == "mobility" for i in items)
+    assert all(not i.detail.get("customer_pinned") for i in items if i.kind == "mobility")
 
 
 def test_only_existing_items_can_be_edited_and_locking_is_sent_alone(rv):
@@ -406,6 +411,7 @@ def test_a_place_the_customer_picked_is_taken_as_shown_and_stays_private_to_the_
     assert after["place_state"] == "customer" and after["place"]["name"] == "올리브영 명동 플래그십"
     assert after["place"]["source"] == "customer_pick"                    # 고객이 보낸 값은 카카오 값으로 위장하지 않는다
     assert _row(after, "place")["result"] == "ok" and after["edited"] is True and after["status"] == "adjusted"
+    assert all(m["status"] != "review" for m in done["review"]["moves"]), done["review"]
     asked_before = len(kakao.asked)
     assert asked_before >= 1                                              # 읽을 때만 물었고, 고른 값은 다시 찾지 않았다
     # 서울 밖 · 잘못된 값은 거절 — 지어낸 좌표를 받지 않는다

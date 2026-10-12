@@ -1,0 +1,230 @@
+{
+ "eval": "place_lookup",
+ "label": "deployed-20261007-approx",
+ "note": "브라우저 관찰값(이름·확인 표시·앞 일정 거리)으로 근사 채점 — 종류 · 기준 좌표 거리는 재지 않음",
+ "summary": {
+  "accuracy": {
+   "num": 25,
+   "den": 34,
+   "rate": 0.735
+  },
+  "wrong_confirmed": {
+   "num": 0,
+   "den": 34,
+   "rate": 0.0
+  },
+  "wrong_review": {
+   "num": 5,
+   "den": 34,
+   "rate": 0.147
+  },
+  "not_found": {
+   "num": 3,
+   "den": 34,
+   "rate": 0.088
+  },
+  "blocked": {
+   "num": 1,
+   "den": 34,
+   "rate": 0.029
+  },
+  "labels": {
+   "correct_confirmed": 9,
+   "correct_review": 15,
+   "correct_abstain": 1,
+   "wrong_review": 5,
+   "wrong_confirmed": 0,
+   "not_found": 3,
+   "blocked": 1
+  },
+  "by_group": {
+   "misc": {
+    "num": 7,
+    "den": 12,
+    "rate": 0.583
+   },
+   "name": {
+    "num": 7,
+    "den": 10,
+    "rate": 0.7
+   },
+   "near": {
+    "num": 11,
+    "den": 12,
+    "rate": 0.917
+   }
+  }
+ },
+ "results": [
+  {
+   "id": "PL-001",
+   "group": "name",
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-002",
+   "group": "name",
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-003",
+   "group": "name",
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-004",
+   "group": "name",
+   "label": "not_found"
+  },
+  {
+   "id": "PL-005",
+   "group": "name",
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-006",
+   "group": "name",
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-007",
+   "group": "name",
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-008",
+   "group": "name",
+   "label": "wrong_review"
+  },
+  {
+   "id": "PL-009",
+   "group": "name",
+   "label": "wrong_review"
+  },
+  {
+   "id": "PL-010",
+   "group": "name",
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-011",
+   "group": "near",
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-012",
+   "group": "near",
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-013",
+   "group": "near",
+   "label": "wrong_review"
+  },
+  {
+   "id": "PL-014",
+   "group": "near",
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-015",
+   "group": "near",
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-016",
+   "group": "near",
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-017",
+   "group": "near",
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-018",
+   "group": "near",
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-019",
+   "group": "near",
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-020",
+   "group": "near",
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-021",
+   "group": "near",
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-022",
+   "group": "near",
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-023",
+   "group": "misc",
+   "label": "not_found"
+  },
+  {
+   "id": "PL-024",
+   "group": "misc",
+   "label": "correct_abstain"
+  },
+  {
+   "id": "PL-025",
+   "group": "misc",
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-026",
+   "group": "misc",
+   "label": "wrong_review"
+  },
+  {
+   "id": "PL-027",
+   "group": "misc",
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-028",
+   "group": "misc",
+   "label": "not_found"
+  },
+  {
+   "id": "PL-029",
+   "group": "misc",
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-030",
+   "group": "misc",
+   "label": "blocked"
+  },
+  {
+   "id": "PL-031",
+   "group": "misc",
+   "label": "wrong_review"
+  },
+  {
+   "id": "PL-032",
+   "group": "misc",
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-033",
+   "group": "misc",
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-034",
+   "group": "misc",
+   "label": "correct_review"
+  }
+ ]
+}

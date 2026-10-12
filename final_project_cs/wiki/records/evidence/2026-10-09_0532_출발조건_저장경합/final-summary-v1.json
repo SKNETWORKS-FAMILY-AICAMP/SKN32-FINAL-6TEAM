@@ -1,0 +1,21 @@
+{
+  "regression": [
+    823,
+    823
+  ],
+  "related": [
+    30,
+    30
+  ],
+  "new_db": [
+    8,
+    8
+  ],
+  "source_data_hash_matches": 33,
+  "backup_files_checked": 13,
+  "visual_feature_rows": 21,
+  "render_checked": false,
+  "new_web_route_observations": 0,
+  "commit_push_deploy": false,
+  "new_followup": "택시 대체 첫 조건46.345초; 실제 API 지연 미계측"
+}

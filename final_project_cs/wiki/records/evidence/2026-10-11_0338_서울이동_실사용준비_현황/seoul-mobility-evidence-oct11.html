@@ -1,0 +1,54 @@
+<div id="mobility-evidence-oct11">
+  <style>
+    #mobility-evidence-oct11 .measure{display:grid;grid-template-columns:minmax(180px,1fr) minmax(140px,1fr) 8.5em;align-items:center;gap:10px;margin:14px 0}
+    #mobility-evidence-oct11 .track{height:12px;background:color-mix(in srgb,var(--foreground) 8%,transparent)}
+    #mobility-evidence-oct11 .mark{height:100%;background:var(--viz-series-1)}
+    #mobility-evidence-oct11 .value{text-align:right}
+    #mobility-evidence-oct11 .scope{margin:16px 0 8px}
+    #mobility-evidence-oct11 .pending{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin-top:14px}
+    #mobility-evidence-oct11 .pending div{border-bottom:1px solid var(--border);padding:10px 0;overflow-wrap:anywhere}
+    @media(max-width:560px){#mobility-evidence-oct11 .measure{grid-template-columns:minmax(0,1fr) 8.5em;gap:6px}#mobility-evidence-oct11 .track{grid-row:2;grid-column:1 / -1}#mobility-evidence-oct11 .pending{grid-template-columns:1fr}}
+  </style>
+  <h2>시험 통과와 실사용 근거의 차이</h2>
+  <div class="scope">마지막 로컬 실행 · 10월11일 03:24까지</div>
+  <div class="measure" role="img" aria-label="통제 회귀 시험 205건 중205건, 100%. 실사용 정확도가 아닙니다.">
+    <div>로컬 회귀 시험</div><div class="track"><div class="mark" style="width:100%"></div></div><div class="value tabular-nums">205/205 · 100%</div>
+  </div>
+  <div class="measure" role="img" aria-label="보유 서울 응답 개발 재생 1구간 중1구간 연결. 독립 표본 아님.">
+    <div>보유 서울 응답 연결</div><div class="track"><div class="mark" style="width:100%"></div></div><div class="value tabular-nums">1/1 · 100%</div>
+  </div>
+  <div class="text-small">신규18 + 기존186 + 기존 창 시나리오1 · 실사용 정확도와 다른 분모<br>이후 공통 코드1개 변경 · 현재 전체 코드의 재시험 값 아님</div>
+  <hr>
+  <h3>기존 웹값과의 차이</h3>
+  <div class="text-small">개발 자료 · 경로/시각 불일치 포함 · 최신 수정 뒤 전량 재측정 아님</div>
+  <div class="measure" role="img" aria-label="자동차 시간 차이 ±5분 안: 기존 카카오100쌍 중88쌍">
+    <div>자동차 시간 · ±5분</div><div class="track"><div class="mark" style="width:88%"></div></div><div class="value tabular-nums">88/100 · 88%</div>
+  </div>
+  <div class="measure" role="img" aria-label="자동차 거리 차이 ±10퍼센트 안: 기존 카카오100쌍 중53쌍">
+    <div>자동차 거리 · ±10%</div><div class="track"><div class="mark" style="width:53%"></div></div><div class="value tabular-nums">53/100 · 53%</div>
+  </div>
+  <div class="measure" role="img" aria-label="택시 예상액 차이 ±1000원 안: 기존 카카오100쌍 중55쌍">
+    <div>택시 예상액 · ±1,000원</div><div class="track"><div class="mark" style="width:55%"></div></div><div class="value tabular-nums">55/100 · 55%</div>
+  </div>
+  <div class="measure" role="img" aria-label="혼합 대중교통 운임의 웹 금액 범위 일치: 기존99경로 중33경로">
+    <div>혼합 운임 · 웹 범위 일치</div><div class="track"><div class="mark" style="width:33.3333%"></div></div><div class="value tabular-nums">33/99 · 33.3%</div>
+  </div>
+  <hr>
+  <h3>새 도보 웹 대조 · 10월10일</h3>
+  <div class="text-small">1.2km 정책 안 · 요청 좌표만 일치 · 출입점/경로 형상/실보행 미확인</div>
+  <div class="measure" role="img" aria-label="최단 웹 대비 거리 허용 ±10퍼센트: 개발1쌍 중0쌍, 차이 플러스10.6퍼센트">
+    <div>거리 · ±10% 안</div><div class="track"><div class="mark" style="width:0%"></div></div><div class="value tabular-nums">0/1 · 0%</div>
+  </div>
+  <div class="measure" role="img" aria-label="최단 웹 대비 시간 차이 ±5분: 개발1쌍 중1쌍, 차이 플러스1분">
+    <div>시간 · ±5분 안</div><div class="track"><div class="mark" style="width:100%"></div></div><div class="value tabular-nums">1/1 · 100%</div>
+  </div>
+  <div class="text-small">743m·12분 ↔ 웹 최단672m·11분 · 개발1쌍을 정확도100%로 일반화하지 않음</div>
+  <hr>
+  <h3>실사용 판정에 남은 근거</h3>
+  <div class="pending">
+    <div>실제 차량 도착 오차<br><strong>측정 표본 0건</strong></div>
+    <div>실제 탑승·도보·결제<br><strong>최근 단위의 측정 0건</strong></div>
+    <div>cs 프로젝트 서버 연결·배달<br><strong>이번 변경 확인 안 함</strong></div>
+    <div>전체 여행의 실패·대체·재조정<br><strong>종합 검증 필요</strong></div>
+  </div>
+</div>

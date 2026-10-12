@@ -1,0 +1,13 @@
+사용자가 승인한 실제 Claude Sonnet 5.5 후속 최종 독립 감사입니다. 모델을 대체하거나 하위 에이전트를 호출하지 마세요. 소스 수정·파일 생성·설치·Git 쓰기·배포·외부 운영 요청을 금지합니다. .env/키/자격증명/고객 행/접속 문자열/개인 메모/실제 데이터셋을 읽거나 출력하지 마세요. Read/Glob/Grep은 제품 소스·시험·현재 계약·해당 근거 로그만 읽으세요.
+RULE.md와 wiki/teams/team-contract/plugin-availability.md를 전부 읽고 후속 수정의 결함을 독립적으로 찾으세요. 앞선 actual Sonnet 감사의 모델메타데이터는 sonnet-post-opus-model-metadata.json이며 canonicalModel claude-sonnet-5-5 / is_error false / pytest179pass였습니다. 최신 후속 변경을 그 감사가 검증한 것으로 간주하지 마세요.
+집중 범위:
+1) app/domains/travel_ops/entry/trip_api.py 직접 Dining/Mobility 실행 우회 보완. dining_ledger.lookup_factory/slot_verdicts/planner_factory/link_core_place와 mobility_shapes.items/review가 고정 BindingTable의 required Team 관문을 거치는가? disabled/absent/load_failed에서 실제 SQL/그래프가 실행되는가? 조립은 기존 함수·클래스를 그대로 캡처하고 새 후보가 전역표를 바꾸지 않는가? _dining_lookup 지연proxy가 Activity 독립접수는 유지하고 실제 Dining호출만 거절하는가? with_ledger가 TeamUnavailable을 성공/모름으로 삼키지 않는가? 기존 등록 UID 연결·이름찾기·그래프 알고리즘 인자가 유지되는가?
+2) app/tools/read_tools.py unbound+dining_ledger=False이 non-standalone에서 None성공으로 우회하지 않는가? 바인딩된 disabled/absent/loading실패도 DB연결 전 거절하는가?
+3) app/core/remote_team/a2a_executor.py submit/poll이 None을 반환하면 계약 위반으로 거절하며 timeout sentinel과 구분하는가? 기존 Controller cleanup deadline/cancel 예산을 손상시키지 않는가?
+4) planning/replan.py MealRoute._eta, intake/moves.py, intake/move_options.py의 TeamUnavailable 재전파가 일반 오류 정책을 임의 확장하지 않고 원래 불가 이유를 보존하는가?
+5) scenarios/case_engine.py service_overrides와 새 scenarios/replay_services.py는 합성 대본 전용이며 Registry게이트를 뚫지 않는가? TripWatcher/TripDesk와 같은 고정 표를 쓰는가? 대본의 원래 입력시간·노선을 재생하며 제품에서 5분 고정 추정을 도입하지 않았는가? 이동 정확도 시험으로 오인할 근거를 만들지 않았는가?
+6) 기존 unknown Registry metadata/reroute, worker features_failure 격리 등 지난 감사 내용이 이 후속 변경으로 훼손됐는지 관련 근거만 확인하세요.
+시험 fixture가 실제 생산 의미를 약화시켜 결함을 숨기는지 검토하고 파일/행·재현·영향·확신을 구분해 한국어 존댓말로 반환하세요. HTTP 신규 회귀24+기존97=121pass, unbound관련61pass, A2A빈응답86pass, 전파신규9, replay서비스4pass 근거가 있습니다. 서로 겹친 집합을 합산해 고유시험수로 주장하지 마세요. 전체시나리오 v2는147pass1fail(outbox1개 기대에여러개), 아직완료라고부르지마세요. 고정runner가 전체시나리오148은실행하지않으므로 해당로그검토/미실행을구분하세요.
+반드시 Read로 아래 runner 본문을 먼저 확인한 뒤, Bash의 유일한 승인 명령을 그대로 실행하세요. 일반 Bash·다른 python·echo·추가pytest·조합명령은 허용하지 않습니다. runner는 고정16개 pytest파일을 실행하고 stdout전량과 PYTEST_EXIT를 출력합니다. 승인 우회를 하지 마세요:
+"C:/Users/playdata2/anaconda3/python.exe" wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/sonnet-post-opus-followup-pytest.py
+다른 기존로그는 Read로검토하세요. 테스트 출력·종료코드·검토범위·읽지못한범위·실제남은결함을최종답에명시하세요. pytest가다통과해도완벽/운영배포완료라고단정하지마세요. x600서버나cs프로젝트서버외부운영확인은하지마세요.

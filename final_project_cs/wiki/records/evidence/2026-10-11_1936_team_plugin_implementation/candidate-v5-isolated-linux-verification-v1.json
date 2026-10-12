@@ -1,0 +1,106 @@
+{
+  "created_at": "2026-10-11T22:45:59.684455+09:00",
+  "candidate": "legacy/deployment_candidates/2026-10-11_222547_plugin_v5",
+  "manifest_sha256": "2b243194cce56302846ad486b78d36f72bc9d74d0645a4c6f6df5fc7ca0f4cd1",
+  "operating_image_id": "sha256:1f1c6850f3570dc8694629e2a4cab7c36c7e86097a5e1b8b54a736a25a7ea294",
+  "runs": [
+    {
+      "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/candidate-v5-isolated-linux-v1.log",
+      "log_sha256": "05cd6b3a2ef41610961353bfa0c83e9f77f40907938eae37f9b1ba677894a640",
+      "payload_manifest": "legacy/isolated_linux_checks/2026-10-11_224132/payload-manifest.json",
+      "passed": 108,
+      "failed": 0,
+      "skipped": 0,
+      "start": {
+        "python": "3.12.15",
+        "platform": "linux",
+        "verified_files": 419,
+        "selected_tests": [
+          "tests/unit/core/test_plugin_availability.py",
+          "tests/unit/test_plugin_composition_runtime.py",
+          "tests/unit/travel/test_trip_api_plugin_boundaries.py"
+        ],
+        "database_port": 1,
+        "inherited_environment_cleared": true
+      },
+      "end": {
+        "exit_code": 0,
+        "seconds": 3.848
+      },
+      "test_files": {
+        "tests/unit/core/test_plugin_availability.py": 45,
+        "tests/unit/test_plugin_composition_runtime.py": 27,
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py": 36
+      }
+    },
+    {
+      "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/candidate-v5-isolated-linux-boundaries-v1.log",
+      "log_sha256": "fc9cfc7d52ae19467a19e9bc129cf025506a8090288b0079e25351d8ce910e2f",
+      "payload_manifest": "legacy/isolated_linux_checks/2026-10-11_224400/payload-manifest.json",
+      "passed": 67,
+      "failed": 0,
+      "skipped": 0,
+      "start": {
+        "python": "3.12.15",
+        "platform": "linux",
+        "verified_files": 423,
+        "selected_tests": [
+          "tests/unit/travel/test_plugin_worker_availability.py",
+          "tests/unit/travel/test_dining_read_tool_availability.py",
+          "tests/unit/travel/test_plugin_unavailable_propagation.py",
+          "tests/unit/travel/test_plugin_read_boundaries.py"
+        ],
+        "database_port": 1,
+        "inherited_environment_cleared": true
+      },
+      "end": {
+        "exit_code": 0,
+        "seconds": 2.279
+      },
+      "test_files": {
+        "tests/unit/travel/test_plugin_worker_availability.py": 26,
+        "tests/unit/travel/test_dining_read_tool_availability.py": 22,
+        "tests/unit/travel/test_plugin_unavailable_propagation.py": 9,
+        "tests/unit/travel/test_plugin_read_boundaries.py": 10
+      },
+      "isolation_observed": {
+        "uid": 65534,
+        "capabilities_effective": "0000000000000000",
+        "no_new_privileges": "1",
+        "root_read_only": true,
+        "interfaces": [
+          "lo"
+        ],
+        "cgroup_limits": {
+          "memory.max": "536870912",
+          "cpu.max": "100000 100000",
+          "pids.max": "128"
+        }
+      }
+    }
+  ],
+  "unique_tests_passed": 175,
+  "unique_tests_total": 175,
+  "baseline_files_unchanged": 404,
+  "candidate_runtime_files_unchanged": 50,
+  "temporary_named_container_remaining": false,
+  "cleanup_query_exit_code": 0,
+  "image_built": false,
+  "packages_installed": false,
+  "operating_application_modified": false,
+  "operating_environment_forwarded": false,
+  "operating_volumes_attached": false,
+  "database_connected": false,
+  "local_database_pytest_performed": false,
+  "writes_scope": "disposable /tmp tmpfs only",
+  "resource_limits_requested": {
+    "cpu": 1,
+    "memory_bytes": 536870912,
+    "swap_bytes": 0,
+    "pids": 128,
+    "tmpfs_bytes": 268435456
+  },
+  "network": "none",
+  "root_filesystem": "read_only",
+  "process_uid": 65534
+}

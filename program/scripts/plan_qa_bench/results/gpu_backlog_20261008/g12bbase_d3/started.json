@@ -1,0 +1,18 @@
+{
+  "job": {
+    "id": "g12bbase_d3",
+    "label": "Gemma-4-12B-it Q4_K_M",
+    "our_training": false,
+    "model": "/workspace/ollama/blobs/sha256-1278394b693672ac2799eadc9a83fd98259a6a88a40acfb1dcaa6c6fc895a606",
+    "prompts": "/workspace/heavy/all_prompts_d3.json",
+    "script": "/workspace/heavy/d_test_llama.py",
+    "tag": "d3_backlog_g12bbase",
+    "port": 8401,
+    "logprobs": "0",
+    "expected": 360
+  },
+  "started": "2026-10-08T04:08:17.225607+00:00",
+  "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+  "script_sha256": "e84b538e2069a60563357d322ba32537bdb7896e99a9503589ba5b8498372ea8",
+  "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+}

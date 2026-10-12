@@ -1,4 +1,5 @@
 import type { Coordinates } from "@/features/map/model";
+import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
 
 /**
  * The plan-check screen (after 「계획 확인하기」), built from the mockup `mockups/tripilot-plan-check-streaming.html`.
@@ -14,6 +15,8 @@ export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown" | "pendin
 /** Place checks: place · time · hours · closed. Move checks: route · mode · arrival. */
 export type CheckKind = "place" | "time" | "hours" | "closed" | "booking" | "route" | "mode" | "arrival";
 export interface CheckRow { kind: CheckKind; result: CheckResult; text: string }
+/** `[2026-10-07]` One value read two ways off a photo: the one kept and the other reading. */
+export interface Reread { field: "title" | "booking_no"; current: string; other: string }
 
 /** A card's verdict once its checks are in. Null while it is still being checked. */
 export type Verdict = "keep" | "adjusted" | "review";
@@ -58,6 +61,8 @@ export interface PlanItem {
   /** Null when the place is not settled — it shows as 「위치 미정」 instead of a pin. */
   coordinates: Coordinates | null;
   checks: CheckRow[];
+  /** `[2026-10-07]` Values the server read two ways off a photo — the customer picks one (only those with another reading to offer). */
+  rereads?: Reread[];
   verdict: Verdict | null;
   /** Fixed by the customer: kept through re-planning and recommendations (mockup 「잠금」 — 「반드시 포함」). */
   locked: boolean;
@@ -119,7 +124,7 @@ export interface PlanMove {
 
 /** What a line of the uploaded plan turned into: the trip's date, a stop, or nothing. A stop's day or time is null when
  *  the server has not settled it — never filled in here. */
-export type LineFinding = { kind: "date"; date: string } | { kind: "item"; day: number | null; startsAt: string | null; title: string };
+export type LineFinding = { kind: "date"; date: string } | { kind: "item"; id?: string; sourceKey?: string; date?: string | null; day: number | null; startsAt: string | null; title: string };
 export interface PlanLine { no: number; text: string; read: boolean; found: LineFinding | null }
 
 export interface PlanDay { day: number; /** "YYYY-MM-DD" */ date: string }
@@ -129,6 +134,10 @@ export type PlanStage = "received" | "reading" | "checking" | "done";
 export const STAGES: readonly PlanStage[] = ["received", "reading", "checking", "done"];
 
 export interface PlanCheckView {
+  /** 이동 후보의 이전 판 상태를 폐기할 때 쓰는 실제 접수 revision. */
+  revision?: number;
+  /** 이번 접수의 응답에 있는 호출 상품만 표시합니다. */
+  taxiPricing?: WebTaxiPricing | null;
   stage: PlanStage;
   /** The trip's title once the check is done. */
   title: string | null;

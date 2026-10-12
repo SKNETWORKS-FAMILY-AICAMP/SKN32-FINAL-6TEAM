@@ -1,0 +1,390 @@
+{
+  "created_at": "2026-10-08T15:39:02.774973+09:00",
+  "purpose": "개발용 기존 100쌍 재사용. 독립 검증·실제 승차 측정이 아니다.",
+  "input_sha256": {
+    "fresh_web_100_v1.json": "e6a084921f95ab9c334c49685db40a23b7be56700505ead261d969999d632fc2",
+    "fresh_ours_bus_100_v1.json": "3ff172af5f992d87e5c03fcced01c20f6ae462134d6659e4144bc1cca0aa69aa",
+    "bus_after_v8.json": "7872b599def8019af3e656842def3f09af3b6c5eb7f6a3a6bd54df0bc423f748",
+    "fresh_ours_transit_100_v1.json": "36bf8d1fcfb819ee3ec9a1b11ad03c7c4a423134a47c615ff5e0e906541534bd",
+    "subway_after_v5.json": "44d7e22ac7eae42a590e46fc03406b518742cde236c2392e0492ae01cae589ee",
+    "rail_edge_track_v2.jsonl.gz": "dd2d0eda1aaa956ba5d09d5410539ee863f8c4b023773b7c66a31caf3eb9e096",
+    "rail_distance_overlay_v1.json": "78cbe18455c12bf1d25c795427559c1b86049997cca2c1b26498739caff44c82",
+    "special_rail_fares_v1.json": "5f487d3df34979ae54455f5dcc7f522e7eb1554e0800924d9b476a268480093d"
+  },
+  "timing_note": "동시 실행 조건이 달라 처리 속도 우열을 판정하지 않는다.",
+  "mode_definition": "실제 구간열 전체의 탑승 수단이 일치하는 후보",
+  "distance_grade": "공표값·대응방향 추정은 확정 거리와 분리해 기존 오차 범위를 적용한다.",
+  "bus_before": {
+    "reference_available": 100,
+    "comparable": 52,
+    "fare_present": 51,
+    "fare_upper": 0,
+    "fare_exact_or_single_estimate": 51,
+    "time_without_wait": {
+      "ours_median": 38.0,
+      "reference_median": 35.0,
+      "absolute": {
+        "n": 52,
+        "median": 4.5,
+        "mean": 5.4423076923076925,
+        "mae": 6.365384615384615,
+        "p10": -1.0,
+        "p90": 13.0,
+        "within": 28,
+        "tolerance": 5,
+        "median_bootstrap95": [
+          2.0,
+          6.5
+        ]
+      },
+      "percent": {
+        "n": 52,
+        "median": 12.310606060606055,
+        "mean": 16.472241060837053,
+        "mae": 19.28891171271354,
+        "p10": -3.7393162393162367,
+        "p90": 38.64795918367347,
+        "within": 21,
+        "tolerance": 10,
+        "median_bootstrap95": [
+          7.3347547974413665,
+          18.575918762088886
+        ]
+      }
+    },
+    "fare_in_web_range": 35,
+    "fare_upper_covers_web_max": 0,
+    "failures": {
+      "no_data": 48
+    }
+  },
+  "bus_after": {
+    "reference_available": 100,
+    "comparable": 99,
+    "fare_present": 98,
+    "fare_upper": 58,
+    "fare_exact_or_single_estimate": 40,
+    "time_without_wait": {
+      "ours_median": 47.0,
+      "reference_median": 43.0,
+      "absolute": {
+        "n": 99,
+        "median": 1.0,
+        "mean": 1.7373737373737375,
+        "mae": 4.404040404040404,
+        "p10": -4.0,
+        "p90": 8.200000000000003,
+        "within": 69,
+        "tolerance": 5,
+        "median_bootstrap95": [
+          0.0,
+          2.0
+        ]
+      },
+      "percent": {
+        "n": 99,
+        "median": 3.703703703703698,
+        "mean": 5.564790901139908,
+        "mae": 10.696190050492831,
+        "p10": -7.035940803382665,
+        "p90": 25.728274173806614,
+        "within": 62,
+        "tolerance": 10,
+        "median_bootstrap95": [
+          0.0,
+          5.555555555555558
+        ]
+      }
+    },
+    "fare_in_web_range": 32,
+    "fare_upper_covers_web_max": 48,
+    "failures": {
+      "no_data": 1
+    }
+  },
+  "rail_before": {
+    "reference_available": 96,
+    "comparable": 93,
+    "fare_present": 68,
+    "fare_upper": 0,
+    "fare_exact_or_single_estimate": 68,
+    "time_without_wait": {
+      "ours_median": 32.0,
+      "reference_median": 34.0,
+      "absolute": {
+        "n": 93,
+        "median": -1.0,
+        "mean": -1.7311827956989247,
+        "mae": 3.838709677419355,
+        "p10": -7.0,
+        "p90": 4.0,
+        "within": 68,
+        "tolerance": 5,
+        "median_bootstrap95": [
+          -2.0,
+          -1.0
+        ]
+      },
+      "percent": {
+        "n": 93,
+        "median": -4.918032786885251,
+        "mean": -5.211654220081822,
+        "mae": 13.814397877315033,
+        "p10": -25.0,
+        "p90": 11.042128603104201,
+        "within": 52,
+        "tolerance": 10,
+        "median_bootstrap95": [
+          -7.692307692307687,
+          -2.3255813953488413
+        ]
+      }
+    },
+    "fare_in_web_range": 65,
+    "fare_upper_covers_web_max": 0,
+    "failures": {}
+  },
+  "rail_after": {
+    "reference_available": 96,
+    "comparable": 94,
+    "fare_present": 94,
+    "fare_upper": 12,
+    "fare_exact_or_single_estimate": 82,
+    "time_without_wait": {
+      "ours_median": 32.0,
+      "reference_median": 34.0,
+      "absolute": {
+        "n": 94,
+        "median": -1.0,
+        "mean": -1.6808510638297873,
+        "mae": 3.8297872340425534,
+        "p10": -7.0,
+        "p90": 4.0,
+        "within": 69,
+        "tolerance": 5,
+        "median_bootstrap95": [
+          -2.5,
+          -1.0
+        ]
+      },
+      "percent": {
+        "n": 94,
+        "median": -4.731743666169896,
+        "mean": -5.074378029524487,
+        "mae": 13.749269258325592,
+        "p10": -25.0,
+        "p90": 10.881374722838137,
+        "within": 53,
+        "tolerance": 10,
+        "median_bootstrap95": [
+          -7.692307692307687,
+          -2.3255813953488413
+        ]
+      }
+    },
+    "fare_in_web_range": 82,
+    "fare_upper_covers_web_max": 12,
+    "failures": {
+      "no_data": 4,
+      "no_service": 1
+    }
+  },
+  "bus_change": {
+    "recovered": [
+      "N001",
+      "N003",
+      "N004",
+      "N006",
+      "N007",
+      "N009",
+      "N010",
+      "N011",
+      "N013",
+      "N015",
+      "N017",
+      "N018",
+      "N019",
+      "N020",
+      "N024",
+      "N025",
+      "N029",
+      "N032",
+      "N033",
+      "N034",
+      "N035",
+      "N036",
+      "N037",
+      "N038",
+      "N040",
+      "N041",
+      "N044",
+      "N045",
+      "N047",
+      "N048",
+      "N049",
+      "N050",
+      "N051",
+      "N052",
+      "N055",
+      "N057",
+      "N059",
+      "N065",
+      "N069",
+      "N070",
+      "N072",
+      "N074",
+      "N085",
+      "N087",
+      "N088",
+      "N094",
+      "N095"
+    ],
+    "lost": [],
+    "retained": 52,
+    "paired_common_before": {
+      "ours_median": 38.0,
+      "reference_median": 35.0,
+      "absolute": {
+        "n": 52,
+        "median": 4.5,
+        "mean": 5.4423076923076925,
+        "mae": 6.365384615384615,
+        "p10": -1.0,
+        "p90": 13.0,
+        "within": 28,
+        "tolerance": 5,
+        "median_bootstrap95": [
+          2.0,
+          6.5
+        ]
+      },
+      "percent": {
+        "n": 52,
+        "median": 12.310606060606055,
+        "mean": 16.472241060837053,
+        "mae": 19.28891171271354,
+        "p10": -3.7393162393162367,
+        "p90": 38.64795918367347,
+        "within": 21,
+        "tolerance": 10,
+        "median_bootstrap95": [
+          7.3347547974413665,
+          18.575918762088886
+        ]
+      }
+    },
+    "paired_common_after": {
+      "ours_median": 37.0,
+      "reference_median": 35.0,
+      "absolute": {
+        "n": 52,
+        "median": 2.0,
+        "mean": 2.519230769230769,
+        "mae": 4.519230769230769,
+        "p10": -3.8999999999999995,
+        "p90": 9.799999999999997,
+        "within": 34,
+        "tolerance": 5,
+        "median_bootstrap95": [
+          1.0,
+          4.0
+        ]
+      },
+      "percent": {
+        "n": 52,
+        "median": 5.634920634920637,
+        "mean": 8.423545040708705,
+        "mae": 13.861177435029427,
+        "p10": -9.099365750528545,
+        "p90": 31.527272727272727,
+        "within": 26,
+        "tolerance": 10,
+        "median_bootstrap95": [
+          2.506265664160401,
+          11.616161616161612
+        ]
+      }
+    },
+    "same_route": {
+      "n": 41,
+      "before_present": 40,
+      "after_present": 40
+    }
+  },
+  "rail_change": {
+    "recovered": [
+      "N053"
+    ],
+    "lost": [],
+    "retained": 93,
+    "paired_common_before": {
+      "ours_median": 32.0,
+      "reference_median": 34.0,
+      "absolute": {
+        "n": 93,
+        "median": -1.0,
+        "mean": -1.7311827956989247,
+        "mae": 3.838709677419355,
+        "p10": -7.0,
+        "p90": 4.0,
+        "within": 68,
+        "tolerance": 5,
+        "median_bootstrap95": [
+          -2.0,
+          -1.0
+        ]
+      },
+      "percent": {
+        "n": 93,
+        "median": -4.918032786885251,
+        "mean": -5.211654220081822,
+        "mae": 13.814397877315033,
+        "p10": -25.0,
+        "p90": 11.042128603104201,
+        "within": 52,
+        "tolerance": 10,
+        "median_bootstrap95": [
+          -7.692307692307687,
+          -2.3255813953488413
+        ]
+      }
+    },
+    "paired_common_after": {
+      "ours_median": 32.0,
+      "reference_median": 34.0,
+      "absolute": {
+        "n": 93,
+        "median": -1.0,
+        "mean": -1.7311827956989247,
+        "mae": 3.838709677419355,
+        "p10": -7.0,
+        "p90": 4.0,
+        "within": 68,
+        "tolerance": 5,
+        "median_bootstrap95": [
+          -2.0,
+          -1.0
+        ]
+      },
+      "percent": {
+        "n": 93,
+        "median": -4.918032786885251,
+        "mean": -5.211654220081822,
+        "mae": 13.814397877315033,
+        "p10": -25.0,
+        "p90": 11.042128603104201,
+        "within": 52,
+        "tolerance": 10,
+        "median_bootstrap95": [
+          -7.692307692307687,
+          -2.3255813953488413
+        ]
+      }
+    },
+    "same_route": {
+      "n": 93,
+      "before_present": 68,
+      "after_present": 93
+    }
+  }
+}

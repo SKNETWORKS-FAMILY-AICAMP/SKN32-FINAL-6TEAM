@@ -1,0 +1,23 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "tests/unit/travel/test_subway_completeness_v1.py",
+    "tests/unit/travel/test_subway_boardable_v1.py",
+    "tests/unit/travel/test_subway_envelope_v1.py",
+    "tests/unit/travel/test_subway_identity_v1.py",
+    "tests/unit/travel/test_seoul_subway_arrival.py",
+    "tests/unit/travel/test_subway_observation_time.py",
+    "tests/unit/travel/test_subway_line_identity_v1.py",
+    "tests/unit/travel/test_departure_assembly_v1.py",
+    "tests/unit/travel/test_departure_watch_assembly_v1.py",
+    "tests/unit/travel/mobility/test_subway_departure_v1.py",
+    "tests/unit/travel/mobility/test_subway_binding_v1.py",
+    "tests/unit/travel/mobility/test_subway_primary_name_v1.py",
+    "-q",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\pytest-subway-completeness-after",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_1156_\uc9c0\ud558\ucca0_\ubd80\ubd84\uc751\ub2f5_\ub204\ub77d\ud574\uc18c\\after-v1.xml"
+  ],
+  "exit_code": 1
+}

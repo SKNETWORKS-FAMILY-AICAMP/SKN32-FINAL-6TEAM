@@ -188,6 +188,8 @@ class UticRouteEvents:
                     "summary": f"{road} {reason}(경찰청 UTIC 돌발정보)",
                     "title": record.get("incidentTitle"),
                     "incident_id": record.get("incidentId"),
+                    # 도로명 후보가 고객의 구간·진행 방향 중첩을 증명하지 않는다.
+                    "route_match": {"status": "unverified", "basis": "road_name_only"},
                     "ends_at": end.isoformat() if end else None}, source="utic")
                 break
         return found

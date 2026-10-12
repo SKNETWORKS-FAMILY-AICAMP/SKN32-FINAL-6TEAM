@@ -1,0 +1,44 @@
+{
+  "valen_08b_original_d3_a1": {
+    "measured_call_count": 360,
+    "latency_ms_mean": 350.97222222222223,
+    "latency_ms_p50": 342.0,
+    "latency_ms_p95": 391.0,
+    "latency_includes": "native predict, response validation and JSON serialization; excludes model load and network",
+    "path": "native choice head; not directly comparable to JSON-generation engines",
+    "max_gpu_allocated_bytes": 4727996928,
+    "input_tokens_max": 3871,
+    "repetitions": 1,
+    "errors": 0,
+    "missing": 0,
+    "answer_sha256": "2c440c42d9b599f67d7429b2ac068ec47ac8e403415d2c3b486bcf6d87752ba2"
+  },
+  "valen_08b_original_mx_a1": {
+    "measured_call_count": 4014,
+    "latency_ms_mean": 354.61833582461384,
+    "latency_ms_p50": 345.0,
+    "latency_ms_p95": 404.0,
+    "latency_includes": "native predict, response validation and JSON serialization; excludes model load and network",
+    "path": "native choice head; not directly comparable to JSON-generation engines",
+    "max_gpu_allocated_bytes": 4725241344,
+    "input_tokens_max": 3907,
+    "repetitions": 1,
+    "errors": 0,
+    "missing": 0,
+    "answer_sha256": "4039bfd830b098df1f1a0b3c002ae6f47ddfa68372c8ce9b5525e17f3d4875d3"
+  },
+  "valen_08b_original_h_a1": {
+    "measured_call_count": 1316,
+    "latency_ms_mean": 361.1740121580547,
+    "latency_ms_p50": 346.0,
+    "latency_ms_p95": 405.0,
+    "latency_includes": "native predict, response validation and JSON serialization; excludes model load and network",
+    "path": "native choice head; not directly comparable to JSON-generation engines",
+    "max_gpu_allocated_bytes": 4729505280,
+    "input_tokens_max": 3934,
+    "repetitions": 1,
+    "errors": 0,
+    "missing": 0,
+    "answer_sha256": "183c26aa7a8d67853a1f620f2360a10d19e4fb3f9d9560f3a54d312d0bb7a89b"
+  }
+}

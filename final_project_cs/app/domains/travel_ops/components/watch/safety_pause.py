@@ -53,11 +53,11 @@ class SafetyPauses:
         self.tenant_id = tenant_id
 
     def active(self, conn, trip_id: UUID, *, now: datetime | None = None) -> list[dict[str, Any]]:
-        """지금 유효한 정지 — 다시 시작하지 않았고 끝나는 시각이 안 지났다."""
+        """명시적으로 재개하지 않은 정지. 옛 until_at 값도 자동 재개의 근거로 쓰지 않는다."""
         with conn.cursor() as cur:
             cur.execute("SELECT pause_id, level, event_key, event_json, day, from_at, until_at, guidance_json, created_at, release_notified_at "
                         "FROM trip_safety_pauses WHERE tenant_id=%s AND trip_id=%s AND resumed_at IS NULL "
-                        "AND (until_at IS NULL OR until_at > COALESCE(%s, now())) ORDER BY seq", (self.tenant_id, trip_id, now))
+                        "ORDER BY seq", (self.tenant_id, trip_id))
             return [dict(zip(("pause_id", "level", "event_key", "event", "day", "from_at", "until_at", "guidance", "created_at", "release_notified_at"), row))
                     for row in cur.fetchall()]
 
@@ -65,6 +65,8 @@ class SafetyPauses:
              guidance: dict[str, Any], opened_at: datetime | None = None) -> UUID | None:
         """정지를 연다. **같은 사건으로 이미 열었으면 None**(다시 시작한 것이어도 — 같은 사건으로 두 번 멈추지 않는다)."""
         with conn.cursor() as cur:
+            cur.execute("SELECT latest_version FROM trips WHERE tenant_id=%s AND trip_id=%s FOR NO KEY UPDATE",
+                        (self.tenant_id, trip_id))
             cur.execute("INSERT INTO trip_safety_pauses (tenant_id, trip_id, level, event_key, event_json, day, from_at, until_at, guidance_json, created_at) "
                         "VALUES (%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s::jsonb,COALESCE(%s, now())) ON CONFLICT (tenant_id, trip_id, level, event_key) DO NOTHING "
                         "RETURNING pause_id",
@@ -76,9 +78,11 @@ class SafetyPauses:
     def resume(self, conn, *, trip_id: UUID, via: str, by: UUID | None = None, now: datetime | None = None) -> int:
         """다시 시작 — 열려 있는 정지를 닫는다. 돌려주는 값 = 닫은 수. `now` 는 부르는 쪽 시계(시험 · 재생) — 없으면 DB 의 지금."""
         with conn.cursor() as cur:
+            cur.execute("SELECT latest_version FROM trips WHERE tenant_id=%s AND trip_id=%s FOR NO KEY UPDATE",
+                        (self.tenant_id, trip_id))
             cur.execute("UPDATE trip_safety_pauses SET resumed_at=now(), resumed_via=%s, resumed_by=%s "
-                        "WHERE tenant_id=%s AND trip_id=%s AND resumed_at IS NULL AND (until_at IS NULL OR until_at > COALESCE(%s, now()))",
-                        (via, by, self.tenant_id, trip_id, now))
+                        "WHERE tenant_id=%s AND trip_id=%s AND resumed_at IS NULL",
+                        (via, by, self.tenant_id, trip_id))
             return cur.rowcount
 
     def mark_release_notified(self, conn, pause_id: UUID) -> bool:
@@ -336,12 +340,16 @@ class SafetySweep:
         return result
 
     def _one(self, trip_id: UUID, phase: str, now: datetime, result: SweepResult) -> None:
+        from app.domains.travel_ops.components.watch.monitoring import record
         upcoming = phase == "upcoming"
         with self._connect() as conn:
             _, items = self.store.latest(conn, trip_id)
             active = self.pauses.active(conn, trip_id, now=now)
         place = _reference_place(items, now)
+        # 운영자가 고른 시험 항목은 그 위치에서 사건이 발생한 입력으로 점검한다.
+        place = next((i.place for i in items if (i.place or {}).get("_watch_simulation")), place)
         if place is None:
+            record('safety', trip_id=trip_id, report={'verdict': 'skipped', 'reason': 'no_reference_place'})
             result.no_place += 1
             return
         if active:
@@ -349,9 +357,12 @@ class SafetySweep:
             self._remind(trip_id, active, now, result)
             self._ask_in_the_morning(trip_id, active, now, result)
         if any(p["level"] == "trip" for p in active):
+            record('safety', trip_id=trip_id, target_title=place.get('name'),
+                   report={'verdict': 'skipped', 'reason': 'trip_already_paused'})
             return                                         # 이미 여행 전체가 멈춰 있다 — 더 올릴 단계가 없다
         result.checked += 1
         report = self.check(place=place, starts_at=now, region="서울")
+        record('safety', trip_id=trip_id, target_title=place.get('name'), report=report)
         if report.get("verdict") == "fatal":
             result.fatal.append({"trip_id": str(trip_id), "failed_categories": report.get("failed_categories")})
             return                                         # 조회 실패는 정지 사유가 아니다(결정 15)

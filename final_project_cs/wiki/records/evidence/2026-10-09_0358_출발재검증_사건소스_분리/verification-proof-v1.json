@@ -1,0 +1,88 @@
+{
+  "created_at": "2026-10-09T04:08:44.435483+09:00",
+  "report": "2026-10-09_0408_출발재검증_사건소스_분리와_도보안내_검증.md",
+  "regression": {
+    "passed": 704,
+    "total": 704,
+    "process_groups": 4
+  },
+  "related_passed": 37,
+  "related_total": 37,
+  "related_scope": "최종 확대 XML의 목표 35개와 새 DB 2개; 중복 합산 안 함",
+  "before": {
+    "failed": 5,
+    "passed": 2,
+    "total": 7
+  },
+  "db_passed": 2,
+  "db_total": 2,
+  "source_hashes": [
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\components\\watch\\trip_reminders.py",
+      "sha256": "ddf6f92659701b88a403a71997e8b3e5b3f03e3522021050790e3f3327695d1d"
+    },
+    {
+      "file": "final_project_cs\\tests\\unit\\travel\\test_departure_source_gate_v1.py",
+      "sha256": "6292e41cfaf05426fc39eb92cce3d60a75c0b765509c0fbc0d5d4d63c7306024"
+    },
+    {
+      "file": "final_project_cs\\tests\\scenario\\test_departure_source_gate_db_v1.py",
+      "sha256": "a9f3e18676e3b0c246b03153db13cc76a03089f5d8bc30343d3573ba40b3b2f4"
+    },
+    {
+      "file": "final_project_cs\\scripts\\mobility\\build_readiness_visual_v16.py",
+      "sha256": "e7fdf960742818ff9955d510d4c95a6650232103bb17885ff561ab21a0687a69"
+    }
+  ],
+  "data_hashes": [
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+      "sha256": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+      "sha256": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+      "sha256": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+      "sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+    }
+  ],
+  "initial_hash_checks": [
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\tests\\unit\\travel\\mobility\\test_car_legacy_selected_snap_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\scripts\\mobility\\build_readiness_visual_v15.py",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+      "matches": true
+    }
+  ],
+  "fresh_web_routes": 0,
+  "independent_holdout": false,
+  "map_api_calls": 0
+}

@@ -1,0 +1,1182 @@
+{
+  "held_locks": [
+    {
+      "pid": 171515,
+      "command": "python3",
+      "type": "FLOCK",
+      "path": "/home/ubuntu/bench/continuous-travel-20261008/queue.lock"
+    }
+  ],
+  "health": {
+    "status": "ok"
+  },
+  "slots": [
+    {
+      "id": 0,
+      "n_ctx": 4096,
+      "speculative": false,
+      "is_processing": true,
+      "id_task": 116,
+      "n_prompt_tokens": 1279,
+      "n_prompt_tokens_processed": 1,
+      "n_prompt_tokens_cache": 0,
+      "params": {
+        "seed": 20261008,
+        "temperature": 0.0,
+        "dynatemp_range": 0.0,
+        "dynatemp_exponent": 1.0,
+        "top_k": 64,
+        "top_p": 0.949999988079071,
+        "min_p": 0.05000000074505806,
+        "top_n_sigma": -1.0,
+        "xtc_probability": 0.0,
+        "xtc_threshold": 0.10000000149011612,
+        "typical_p": 1.0,
+        "repeat_last_n": 64,
+        "repeat_penalty": 1.0,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0,
+        "dry_multiplier": 0.0,
+        "dry_base": 1.75,
+        "dry_allowed_length": 2,
+        "dry_penalty_last_n": 64,
+        "mirostat": 0,
+        "mirostat_tau": 5.0,
+        "mirostat_eta": 0.10000000149011612,
+        "adaptive_target": -1.0,
+        "adaptive_decay": 0.8999999761581421,
+        "max_tokens": 16,
+        "n_predict": 16,
+        "n_keep": 0,
+        "n_discard": 0,
+        "ignore_eos": false,
+        "stream": false,
+        "n_probs": 0,
+        "min_keep": 0,
+        "chat_format": "peg-gemma4",
+        "reasoning_format": "deepseek",
+        "reasoning_in_content": false,
+        "generation_prompt": "<|turn>model\n",
+        "samplers": [
+          "penalties",
+          "dry",
+          "top_n_sigma",
+          "top_k",
+          "typ_p",
+          "top_p",
+          "min_p",
+          "xtc",
+          "temperature"
+        ],
+        "speculative.types": "none",
+        "timings_per_token": false,
+        "post_sampling_probs": false,
+        "backend_sampling": false,
+        "lora": []
+      },
+      "next_token": [
+        {
+          "has_next_token": false,
+          "has_new_line": false,
+          "n_remain": 16,
+          "n_decoded": 0
+        }
+      ]
+    }
+  ],
+  "observed_at": "2026-10-09T02:01:26.304155+00:00",
+  "manifest": {
+    "created": "2026-10-08T05:34:17.275862+00:00",
+    "engine": "/home/ubuntu/bench/llama.cpp/build/bin/llama-server",
+    "port": 8312,
+    "cpu_count": 2,
+    "cpu_target_percent_of_two_cores": 20,
+    "memory_service_max_bytes": 10737418240,
+    "min_free_bytes": 3221225472,
+    "continuous_soak": true,
+    "sources": {
+      "d3": {
+        "path": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+        "sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+        "n": 360
+      },
+      "mx": {
+        "path": "/home/ubuntu/bench/continuous-travel-20261008/mx.json",
+        "sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+        "n": 4014
+      }
+    },
+    "jobs": [
+      {
+        "id": "e4bt_q4_d3",
+        "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+        "model_size_bytes": 5309487136,
+        "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+        "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+        "expected": 360,
+        "slots": 1,
+        "clients": 1,
+        "cache_prompt": true,
+        "context_per_slot": 4096,
+        "seed": 20261008,
+        "request_timeout_s": 900,
+        "training": "existing_trained_e4b_recipe_not_yet_matched",
+        "purpose": "ARM serving development and regression; no product adoption"
+      },
+      {
+        "id": "e4bt_q8_d3",
+        "model": "/home/ubuntu/bench/e4bt-Q8_0.gguf",
+        "model_size_bytes": 8005437472,
+        "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+        "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+        "expected": 360,
+        "slots": 1,
+        "clients": 1,
+        "cache_prompt": true,
+        "context_per_slot": 4096,
+        "seed": 20261008,
+        "request_timeout_s": 900,
+        "training": "existing_trained_e4b_recipe_not_yet_matched",
+        "purpose": "ARM serving development and regression; no product adoption"
+      },
+      {
+        "id": "e4bt_q4_grouped60_cache_ABBA_1",
+        "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+        "model_size_bytes": 5309487136,
+        "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3_grouped60_cache_diagnostic_20261009.json",
+        "prompt_sha256": "3243c20e1ffbf37a98cfd1523673e6623782d4bed772aa9559933d41a4e7516f",
+        "expected": 60,
+        "slots": 1,
+        "clients": 1,
+        "cache_prompt": true,
+        "context_per_slot": 4096,
+        "seed": 20261008,
+        "request_timeout_s": 900,
+        "training": "existing_trained_e4b_recipe_not_yet_matched",
+        "purpose": "Cache locality development diagnostic; matched ABBA repeats, 60 unique inputs",
+        "diagnostic": {
+          "version": "20261009-v1",
+          "repeat_index": 1,
+          "context_groups": 5,
+          "independent_questions": 60,
+          "repeated_calls_not_independent": true
+        }
+      },
+      {
+        "id": "e4bt_q4_grouped60_cache_ABBA_2",
+        "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+        "model_size_bytes": 5309487136,
+        "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3_grouped60_cache_diagnostic_20261009.json",
+        "prompt_sha256": "3243c20e1ffbf37a98cfd1523673e6623782d4bed772aa9559933d41a4e7516f",
+        "expected": 60,
+        "slots": 1,
+        "clients": 1,
+        "cache_prompt": false,
+        "context_per_slot": 4096,
+        "seed": 20261008,
+        "request_timeout_s": 900,
+        "training": "existing_trained_e4b_recipe_not_yet_matched",
+        "purpose": "Cache locality development diagnostic; matched ABBA repeats, 60 unique inputs",
+        "diagnostic": {
+          "version": "20261009-v1",
+          "repeat_index": 2,
+          "context_groups": 5,
+          "independent_questions": 60,
+          "repeated_calls_not_independent": true
+        }
+      },
+      {
+        "id": "e4bt_q4_grouped60_cache_ABBA_3",
+        "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+        "model_size_bytes": 5309487136,
+        "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3_grouped60_cache_diagnostic_20261009.json",
+        "prompt_sha256": "3243c20e1ffbf37a98cfd1523673e6623782d4bed772aa9559933d41a4e7516f",
+        "expected": 60,
+        "slots": 1,
+        "clients": 1,
+        "cache_prompt": false,
+        "context_per_slot": 4096,
+        "seed": 20261008,
+        "request_timeout_s": 900,
+        "training": "existing_trained_e4b_recipe_not_yet_matched",
+        "purpose": "Cache locality development diagnostic; matched ABBA repeats, 60 unique inputs",
+        "diagnostic": {
+          "version": "20261009-v1",
+          "repeat_index": 3,
+          "context_groups": 5,
+          "independent_questions": 60,
+          "repeated_calls_not_independent": true
+        }
+      },
+      {
+        "id": "e4bt_q4_grouped60_cache_ABBA_4",
+        "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+        "model_size_bytes": 5309487136,
+        "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3_grouped60_cache_diagnostic_20261009.json",
+        "prompt_sha256": "3243c20e1ffbf37a98cfd1523673e6623782d4bed772aa9559933d41a4e7516f",
+        "expected": 60,
+        "slots": 1,
+        "clients": 1,
+        "cache_prompt": true,
+        "context_per_slot": 4096,
+        "seed": 20261008,
+        "request_timeout_s": 900,
+        "training": "existing_trained_e4b_recipe_not_yet_matched",
+        "purpose": "Cache locality development diagnostic; matched ABBA repeats, 60 unique inputs",
+        "diagnostic": {
+          "version": "20261009-v1",
+          "repeat_index": 4,
+          "context_groups": 5,
+          "independent_questions": 60,
+          "repeated_calls_not_independent": true
+        }
+      },
+      {
+        "id": "e4bt_q4_d3_concurrent2",
+        "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+        "model_size_bytes": 5309487136,
+        "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+        "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+        "expected": 360,
+        "slots": 2,
+        "clients": 2,
+        "cache_prompt": true,
+        "context_per_slot": 4096,
+        "seed": 20261008,
+        "request_timeout_s": 900,
+        "training": "existing_trained_e4b_recipe_not_yet_matched",
+        "purpose": "ARM serving development and regression; no product adoption"
+      },
+      {
+        "id": "e4bt_q4_d3_nocache",
+        "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+        "model_size_bytes": 5309487136,
+        "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+        "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+        "expected": 360,
+        "slots": 1,
+        "clients": 1,
+        "cache_prompt": false,
+        "context_per_slot": 4096,
+        "seed": 20261008,
+        "request_timeout_s": 900,
+        "training": "existing_trained_e4b_recipe_not_yet_matched",
+        "purpose": "ARM serving development and regression; no product adoption"
+      },
+      {
+        "id": "e4bt_q4_mx",
+        "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+        "model_size_bytes": 5309487136,
+        "prompts": "/home/ubuntu/bench/continuous-travel-20261008/mx.json",
+        "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+        "expected": 4014,
+        "slots": 1,
+        "clients": 1,
+        "cache_prompt": true,
+        "context_per_slot": 4096,
+        "seed": 20261008,
+        "request_timeout_s": 900,
+        "training": "existing_trained_e4b_recipe_not_yet_matched",
+        "purpose": "ARM serving development and regression; no product adoption"
+      },
+      {
+        "id": "e4b_qat_original_d3",
+        "model": "/home/ubuntu/bench/models/e4b_qat_q40.gguf",
+        "model_size_bytes": 5154941280,
+        "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+        "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+        "expected": 360,
+        "slots": 1,
+        "clients": 1,
+        "cache_prompt": true,
+        "context_per_slot": 4096,
+        "seed": 20261008,
+        "request_timeout_s": 900,
+        "training": "publisher_instruct_no_our_training",
+        "purpose": "ARM serving development and regression; no product adoption"
+      },
+      {
+        "id": "e2b_qat_original_d3",
+        "model": "/home/ubuntu/bench/models/e2b_qat_q40.gguf",
+        "model_size_bytes": 3349516256,
+        "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+        "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+        "expected": 360,
+        "slots": 1,
+        "clients": 1,
+        "cache_prompt": true,
+        "context_per_slot": 4096,
+        "seed": 20261008,
+        "request_timeout_s": 900,
+        "training": "publisher_instruct_no_our_training",
+        "purpose": "ARM serving development and regression; no product adoption"
+      },
+      {
+        "id": "kanana_original_d3",
+        "model": "/home/ubuntu/bench/models/kanana2_3b_q8.gguf",
+        "model_size_bytes": 3734222720,
+        "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+        "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+        "expected": 360,
+        "slots": 1,
+        "clients": 1,
+        "cache_prompt": true,
+        "context_per_slot": 4096,
+        "seed": 20261008,
+        "request_timeout_s": 900,
+        "training": "publisher_instruct_no_our_training",
+        "purpose": "ARM serving development and regression; no product adoption"
+      },
+      {
+        "id": "exaone_original_d3",
+        "model": "/home/ubuntu/bench/models/exaone40_12b_q8.gguf",
+        "model_size_bytes": 1363939616,
+        "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+        "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+        "expected": 360,
+        "slots": 1,
+        "clients": 1,
+        "cache_prompt": true,
+        "context_per_slot": 4096,
+        "seed": 20261008,
+        "request_timeout_s": 900,
+        "training": "publisher_instruct_no_our_training",
+        "purpose": "ARM serving development and regression; no product adoption"
+      },
+      {
+        "id": "frog_original_d3",
+        "model": "/home/ubuntu/bench/models/frog4b_q8.gguf",
+        "model_size_bytes": 4622130976,
+        "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+        "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+        "expected": 360,
+        "slots": 1,
+        "clients": 1,
+        "cache_prompt": true,
+        "context_per_slot": 4096,
+        "seed": 20261008,
+        "request_timeout_s": 900,
+        "training": "publisher_coding_rl_no_our_training",
+        "purpose": "ARM serving development and regression; no product adoption"
+      }
+    ],
+    "soak_interpretation": "same fixed inputs repeated for stability; correlated, not independent accuracy samples"
+  },
+  "state": {
+    "jobs": {
+      "e4bt_q4_d3": {
+        "status": "completed",
+        "job": {
+          "id": "e4bt_q4_d3",
+          "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+          "model_size_bytes": 5309487136,
+          "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+          "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+          "expected": 360,
+          "slots": 1,
+          "clients": 1,
+          "cache_prompt": true,
+          "context_per_slot": 4096,
+          "seed": 20261008,
+          "request_timeout_s": 900,
+          "training": "existing_trained_e4b_recipe_not_yet_matched",
+          "purpose": "ARM serving development and regression; no product adoption"
+        },
+        "finished": "2026-10-08T16:56:12.981015+00:00",
+        "expected": 360,
+        "saved": 360,
+        "correct": 318,
+        "normal_correct": 107,
+        "normal_total": 120,
+        "null_correct": 211,
+        "null_total": 240,
+        "false_positive": 29,
+        "errors_or_unparsed": 0,
+        "latency_p50_s": 156.1710728800099,
+        "latency_p95_s": 174.68819515200448,
+        "latency_max_s": 179.91505146201234,
+        "repeated_soak_not_independent_accuracy": true
+      },
+      "e4bt_q8_d3": {
+        "status": "completed",
+        "job": {
+          "id": "e4bt_q8_d3",
+          "model": "/home/ubuntu/bench/e4bt-Q8_0.gguf",
+          "model_size_bytes": 8005437472,
+          "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+          "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+          "expected": 360,
+          "slots": 1,
+          "clients": 1,
+          "cache_prompt": true,
+          "context_per_slot": 4096,
+          "seed": 20261008,
+          "request_timeout_s": 900,
+          "training": "existing_trained_e4b_recipe_not_yet_matched",
+          "purpose": "ARM serving development and regression; no product adoption"
+        },
+        "finished": "2026-10-09T01:06:49.408807+00:00",
+        "expected": 360,
+        "saved": 360,
+        "correct": 315,
+        "normal_correct": 106,
+        "normal_total": 120,
+        "null_correct": 209,
+        "null_total": 240,
+        "false_positive": 31,
+        "errors_or_unparsed": 0,
+        "latency_p50_s": 110.71452203500667,
+        "latency_p95_s": 124.32256508199498,
+        "latency_max_s": 130.77805902500404,
+        "repeated_soak_not_independent_accuracy": true
+      },
+      "e4bt_q4_grouped60_cache_ABBA_1": {
+        "status": "completed",
+        "job": {
+          "id": "e4bt_q4_grouped60_cache_ABBA_1",
+          "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+          "model_size_bytes": 5309487136,
+          "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3_grouped60_cache_diagnostic_20261009.json",
+          "prompt_sha256": "3243c20e1ffbf37a98cfd1523673e6623782d4bed772aa9559933d41a4e7516f",
+          "expected": 60,
+          "slots": 1,
+          "clients": 1,
+          "cache_prompt": true,
+          "context_per_slot": 4096,
+          "seed": 20261008,
+          "request_timeout_s": 900,
+          "training": "existing_trained_e4b_recipe_not_yet_matched",
+          "purpose": "Cache locality development diagnostic; matched ABBA repeats, 60 unique inputs",
+          "diagnostic": {
+            "version": "20261009-v1",
+            "repeat_index": 1,
+            "context_groups": 5,
+            "independent_questions": 60,
+            "repeated_calls_not_independent": true
+          }
+        },
+        "finished": "2026-10-09T01:31:19.786824+00:00",
+        "expected": 60,
+        "saved": 60,
+        "correct": 58,
+        "normal_correct": 18,
+        "normal_total": 20,
+        "null_correct": 40,
+        "null_total": 40,
+        "false_positive": 0,
+        "errors_or_unparsed": 0,
+        "latency_p50_s": 10.174135704000946,
+        "latency_p95_s": 159.50080920101027,
+        "latency_max_s": 174.16298046999145,
+        "repeated_soak_not_independent_accuracy": true
+      },
+      "e4bt_q4_grouped60_cache_ABBA_2": {
+        "status": "running",
+        "job": {
+          "id": "e4bt_q4_grouped60_cache_ABBA_2",
+          "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+          "model_size_bytes": 5309487136,
+          "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3_grouped60_cache_diagnostic_20261009.json",
+          "prompt_sha256": "3243c20e1ffbf37a98cfd1523673e6623782d4bed772aa9559933d41a4e7516f",
+          "expected": 60,
+          "slots": 1,
+          "clients": 1,
+          "cache_prompt": false,
+          "context_per_slot": 4096,
+          "seed": 20261008,
+          "request_timeout_s": 900,
+          "training": "existing_trained_e4b_recipe_not_yet_matched",
+          "purpose": "Cache locality development diagnostic; matched ABBA repeats, 60 unique inputs",
+          "diagnostic": {
+            "version": "20261009-v1",
+            "repeat_index": 2,
+            "context_groups": 5,
+            "independent_questions": 60,
+            "repeated_calls_not_independent": true
+          }
+        },
+        "started": "2026-10-09T01:31:19.788011+00:00"
+      }
+    },
+    "cycle": 0
+  },
+  "active": {
+    "at": "2026-10-09T02:00:40.316595+00:00",
+    "job_id": "e4bt_q4_grouped60_cache_ABBA_2",
+    "engine_pid": 180454,
+    "expected": 60,
+    "saved": 11
+  },
+  "coverage": {
+    "e4bt_q4_d3": {
+      "saved": 360,
+      "unique_ids": 360,
+      "correct": 318,
+      "errors_or_unparsed": 0,
+      "last_row": {
+        "i": 810119,
+        "set": "d3",
+        "type": "tourist_synth_in",
+        "gold": 29,
+        "parsed": true,
+        "pick": 29,
+        "content": "{\"item\": 29}",
+        "timings": {
+          "cache_n": 1,
+          "prompt_n": 1988,
+          "prompt_ms": 173528.512,
+          "prompt_per_token_ms": 87.28798390342051,
+          "prompt_per_second": 11.456330588485654,
+          "predicted_n": 8,
+          "predicted_ms": 1726.818,
+          "predicted_per_token_ms": 246.6882857142857,
+          "predicted_per_second": 4.053698768486314
+        },
+        "correct": true,
+        "wall_s": 175.3090291499975,
+        "at": "2026-10-08T16:56:12.764966+00:00"
+      }
+    },
+    "e4bt_q4_grouped60_cache_ABBA_2": {
+      "saved": 11,
+      "unique_ids": 11,
+      "correct": 10,
+      "errors_or_unparsed": 0,
+      "last_row": {
+        "i": 810034,
+        "set": "d3",
+        "type": "negation",
+        "gold": 17,
+        "parsed": true,
+        "pick": 17,
+        "content": "{\"item\": 17}",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 1802,
+          "prompt_ms": 157797.472,
+          "prompt_per_token_ms": 87.56796448390678,
+          "prompt_per_second": 11.419701324492701,
+          "predicted_n": 8,
+          "predicted_ms": 1701.88,
+          "predicted_per_token_ms": 243.1257142857143,
+          "predicted_per_second": 4.113098455825322
+        },
+        "correct": true,
+        "wall_s": 159.50346803100547,
+        "at": "2026-10-09T02:00:40.316455+00:00"
+      }
+    },
+    "e4bt_q8_d3": {
+      "saved": 360,
+      "unique_ids": 360,
+      "correct": 315,
+      "errors_or_unparsed": 0,
+      "last_row": {
+        "i": 810119,
+        "set": "d3",
+        "type": "tourist_synth_in",
+        "gold": 29,
+        "parsed": true,
+        "pick": 29,
+        "content": "{\"item\": 29}",
+        "timings": {
+          "cache_n": 1,
+          "prompt_n": 1988,
+          "prompt_ms": 123251.601,
+          "prompt_per_token_ms": 61.99778722334004,
+          "prompt_per_second": 16.12960792290236,
+          "predicted_n": 8,
+          "predicted_ms": 1817.495,
+          "predicted_per_token_ms": 259.64214285714286,
+          "predicted_per_second": 3.8514548870835963
+        },
+        "correct": true,
+        "wall_s": 125.0840116070176,
+        "at": "2026-10-09T01:06:49.242638+00:00"
+      }
+    },
+    "e4bt_q4_grouped60_cache_ABBA_1": {
+      "saved": 60,
+      "unique_ids": 60,
+      "correct": 58,
+      "errors_or_unparsed": 0,
+      "last_row": {
+        "i": 810021,
+        "set": "d3",
+        "type": "nameless_description",
+        "gold": 22,
+        "parsed": true,
+        "pick": 22,
+        "content": "{\"item\": 22}",
+        "timings": {
+          "cache_n": 1693,
+          "prompt_n": 85,
+          "prompt_ms": 8492.688,
+          "prompt_per_token_ms": 99.91397647058824,
+          "prompt_per_second": 10.008609759360052,
+          "predicted_n": 8,
+          "predicted_ms": 1695.309,
+          "predicted_per_token_ms": 242.18699999999998,
+          "predicted_per_second": 4.129040782535809
+        },
+        "correct": true,
+        "wall_s": 10.192298242996912,
+        "at": "2026-10-09T01:31:19.621791+00:00"
+      }
+    }
+  },
+  "service": "ActiveState=active\nMainPID=171515\nNRestarts=0\nMemoryCurrent=9364500480\nCPUQuotaPerSecUSec=1.800000s\nAllowedCPUs=0-1\nMemoryMax=10737418240\n",
+  "enabled": "enabled",
+  "resources_recent": [
+    {
+      "at": "2026-10-09T01:56:29.588076+00:00",
+      "window_s": 5.001434836012777,
+      "host_cpu_busy_pct": 90.34825870646766,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 90.0238661029812,
+      "workload_memory_bytes": 9364733952,
+      "host_available_bytes": 8503144448
+    },
+    {
+      "at": "2026-10-09T01:56:34.588650+00:00",
+      "window_s": 5.000576908991206,
+      "host_cpu_busy_pct": 90.24875621890547,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 89.9397925849981,
+      "workload_memory_bytes": 9364733952,
+      "host_available_bytes": 8503156736
+    },
+    {
+      "at": "2026-10-09T01:56:39.590080+00:00",
+      "window_s": 5.00142923599924,
+      "host_cpu_busy_pct": 90.04975124378109,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 89.9675330326054,
+      "workload_memory_bytes": 9364733952,
+      "host_available_bytes": 8503152640
+    },
+    {
+      "at": "2026-10-09T01:56:44.599651+00:00",
+      "window_s": 5.0095734969945624,
+      "host_cpu_busy_pct": 90.0596421471173,
+      "host_steal_pct": 0.09940357852882704,
+      "workload_cpu_pct_of_two_cores": 89.89642536838278,
+      "workload_memory_bytes": 9364733952,
+      "host_available_bytes": 8503152640
+    },
+    {
+      "at": "2026-10-09T01:56:49.601073+00:00",
+      "window_s": 5.001418155996362,
+      "host_cpu_busy_pct": 90.15904572564612,
+      "host_steal_pct": 0.1988071570576541,
+      "workload_cpu_pct_of_two_cores": 89.99330509095057,
+      "workload_memory_bytes": 9364697088,
+      "host_available_bytes": 8503152640
+    },
+    {
+      "at": "2026-10-09T01:56:54.601638+00:00",
+      "window_s": 5.000567589013372,
+      "host_cpu_busy_pct": 89.95024875621891,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 89.95826813506892,
+      "workload_memory_bytes": 9364697088,
+      "host_available_bytes": 8503152640
+    },
+    {
+      "at": "2026-10-09T01:56:59.603088+00:00",
+      "window_s": 5.001444155990612,
+      "host_cpu_busy_pct": 90.54726368159204,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 89.98008094541339,
+      "workload_memory_bytes": 9364697088,
+      "host_available_bytes": 8502255616
+    },
+    {
+      "at": "2026-10-09T01:57:04.603671+00:00",
+      "window_s": 5.000587629008805,
+      "host_cpu_busy_pct": 90.2390438247012,
+      "host_steal_pct": 0.099601593625498,
+      "workload_cpu_pct_of_two_cores": 89.97859519345856,
+      "workload_memory_bytes": 9364697088,
+      "host_available_bytes": 8502128640
+    },
+    {
+      "at": "2026-10-09T01:57:09.605078+00:00",
+      "window_s": 5.00140415498754,
+      "host_cpu_busy_pct": 90.14925373134328,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 90.00770304696991,
+      "workload_memory_bytes": 9364697088,
+      "host_available_bytes": 8502128640
+    },
+    {
+      "at": "2026-10-09T01:57:14.605643+00:00",
+      "window_s": 5.000567309005419,
+      "host_cpu_busy_pct": 90.15904572564612,
+      "host_steal_pct": 0.09940357852882704,
+      "workload_cpu_pct_of_two_cores": 89.99884856854595,
+      "workload_memory_bytes": 9385930752,
+      "host_available_bytes": 8485351424
+    },
+    {
+      "at": "2026-10-09T01:57:19.607077+00:00",
+      "window_s": 5.001433155994164,
+      "host_cpu_busy_pct": 90.13944223107569,
+      "host_steal_pct": 0.199203187250996,
+      "workload_cpu_pct_of_two_cores": 90.00982037727853,
+      "workload_memory_bytes": 9385930752,
+      "host_available_bytes": 8485351424
+    },
+    {
+      "at": "2026-10-09T01:57:24.607653+00:00",
+      "window_s": 5.00057682901388,
+      "host_cpu_busy_pct": 89.96023856858847,
+      "host_steal_pct": 0.1988071570576541,
+      "workload_cpu_pct_of_two_cores": 89.98645863996002,
+      "workload_memory_bytes": 9385930752,
+      "host_available_bytes": 8485351424
+    },
+    {
+      "at": "2026-10-09T01:57:29.609082+00:00",
+      "window_s": 5.001428996009054,
+      "host_cpu_busy_pct": 90.24875621890547,
+      "host_steal_pct": 0.09950248756218906,
+      "workload_cpu_pct_of_two_cores": 89.98542223814974,
+      "workload_memory_bytes": 9385754624,
+      "host_available_bytes": 8485351424
+    },
+    {
+      "at": "2026-10-09T01:57:34.610161+00:00",
+      "window_s": 5.00107975298306,
+      "host_cpu_busy_pct": 90.0398406374502,
+      "host_steal_pct": 0.199203187250996,
+      "workload_cpu_pct_of_two_cores": 90.00453346729995,
+      "workload_memory_bytes": 9385754624,
+      "host_available_bytes": 8485359616
+    },
+    {
+      "at": "2026-10-09T01:57:39.610752+00:00",
+      "window_s": 5.000567869021324,
+      "host_cpu_busy_pct": 90.0695134061569,
+      "host_steal_pct": 0.19860973187686196,
+      "workload_cpu_pct_of_two_cores": 89.96062282983118,
+      "workload_memory_bytes": 9385754624,
+      "host_available_bytes": 8485359616
+    },
+    {
+      "at": "2026-10-09T01:57:44.612079+00:00",
+      "window_s": 5.001347914978396,
+      "host_cpu_busy_pct": 90.13944223107569,
+      "host_steal_pct": 0.099601593625498,
+      "workload_cpu_pct_of_two_cores": 90.02232151288857,
+      "workload_memory_bytes": 9385754624,
+      "host_available_bytes": 8485359616
+    },
+    {
+      "at": "2026-10-09T01:57:49.612648+00:00",
+      "window_s": 5.000569989002543,
+      "host_cpu_busy_pct": 90.14925373134328,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 89.95527529647207,
+      "workload_memory_bytes": 9385754624,
+      "host_available_bytes": 8485359616
+    },
+    {
+      "at": "2026-10-09T01:57:54.614079+00:00",
+      "window_s": 5.001431515993318,
+      "host_cpu_busy_pct": 90.34825870646766,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 90.00922007238407,
+      "workload_memory_bytes": 9385754624,
+      "host_available_bytes": 8485363712
+    },
+    {
+      "at": "2026-10-09T01:57:59.614653+00:00",
+      "window_s": 5.0005722290079575,
+      "host_cpu_busy_pct": 90.13944223107569,
+      "host_steal_pct": 0.099601593625498,
+      "workload_cpu_pct_of_two_cores": 89.95183539009416,
+      "workload_memory_bytes": 9406722048,
+      "host_available_bytes": 8464392192
+    },
+    {
+      "at": "2026-10-09T01:58:04.616071+00:00",
+      "window_s": 5.0014186759945005,
+      "host_cpu_busy_pct": 90.0596421471173,
+      "host_steal_pct": 0.1988071570576541,
+      "workload_cpu_pct_of_two_cores": 89.91735728074738,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8502132736
+    },
+    {
+      "at": "2026-10-09T01:58:09.616812+00:00",
+      "window_s": 5.000678750016959,
+      "host_cpu_busy_pct": 90.64676616915423,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 90.00101236226655,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8497958912
+    },
+    {
+      "at": "2026-10-09T01:58:14.618071+00:00",
+      "window_s": 5.001324954995653,
+      "host_cpu_busy_pct": 90.13944223107569,
+      "host_steal_pct": 0.099601593625498,
+      "workload_cpu_pct_of_two_cores": 89.98064593873028,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8497950720
+    },
+    {
+      "at": "2026-10-09T01:58:19.618641+00:00",
+      "window_s": 5.000566308997804,
+      "host_cpu_busy_pct": 90.14925373134328,
+      "host_steal_pct": 0.09950248756218906,
+      "workload_cpu_pct_of_two_cores": 89.98453818927203,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8497950720
+    },
+    {
+      "at": "2026-10-09T01:58:24.620081+00:00",
+      "window_s": 5.001440276013454,
+      "host_cpu_busy_pct": 90.0596421471173,
+      "host_steal_pct": 0.1988071570576541,
+      "workload_cpu_pct_of_two_cores": 90.01039203827713,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8497950720
+    },
+    {
+      "at": "2026-10-09T01:58:29.620647+00:00",
+      "window_s": 5.000567868992221,
+      "host_cpu_busy_pct": 90.0398406374502,
+      "host_steal_pct": 0.199203187250996,
+      "workload_cpu_pct_of_two_cores": 89.99093938718825,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8497950720
+    },
+    {
+      "at": "2026-10-09T01:58:34.622075+00:00",
+      "window_s": 5.001428315008525,
+      "host_cpu_busy_pct": 90.14925373134328,
+      "host_steal_pct": 0.09950248756218906,
+      "workload_cpu_pct_of_two_cores": 90.02142420974249,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8497950720
+    },
+    {
+      "at": "2026-10-09T01:58:39.622651+00:00",
+      "window_s": 5.000571829994442,
+      "host_cpu_busy_pct": 89.86083499005964,
+      "host_steal_pct": 0.1988071570576541,
+      "workload_cpu_pct_of_two_cores": 89.97021046700974,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8497950720
+    },
+    {
+      "at": "2026-10-09T01:58:44.624074+00:00",
+      "window_s": 5.001424835005309,
+      "host_cpu_busy_pct": 90.04975124378109,
+      "host_steal_pct": 0.09950248756218906,
+      "workload_cpu_pct_of_two_cores": 89.99311493192162,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8497950720
+    },
+    {
+      "at": "2026-10-09T01:58:49.624630+00:00",
+      "window_s": 5.000558428990189,
+      "host_cpu_busy_pct": 90.15904572564612,
+      "host_steal_pct": 0.1988071570576541,
+      "workload_cpu_pct_of_two_cores": 89.99185918738975,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8497958912
+    },
+    {
+      "at": "2026-10-09T01:58:54.626077+00:00",
+      "window_s": 5.001445756002795,
+      "host_cpu_busy_pct": 90.2390438247012,
+      "host_steal_pct": 0.199203187250996,
+      "workload_cpu_pct_of_two_cores": 90.0021957570439,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8497958912
+    },
+    {
+      "at": "2026-10-09T01:58:59.626647+00:00",
+      "window_s": 5.000568268995266,
+      "host_cpu_busy_pct": 90.13944223107569,
+      "host_steal_pct": 0.099601593625498,
+      "workload_cpu_pct_of_two_cores": 90.0043106681614,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8497958912
+    },
+    {
+      "at": "2026-10-09T01:59:04.628067+00:00",
+      "window_s": 5.001424515998224,
+      "host_cpu_busy_pct": 90.0695134061569,
+      "host_steal_pct": 0.19860973187686196,
+      "workload_cpu_pct_of_two_cores": 89.99247085710887,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8497958912
+    },
+    {
+      "at": "2026-10-09T01:59:09.628657+00:00",
+      "window_s": 5.000586468988331,
+      "host_cpu_busy_pct": 90.14925373134328,
+      "host_steal_pct": 0.09950248756218906,
+      "workload_cpu_pct_of_two_cores": 89.98535527594535,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8497963008
+    },
+    {
+      "at": "2026-10-09T01:59:14.630080+00:00",
+      "window_s": 5.001422436005669,
+      "host_cpu_busy_pct": 90.24875621890547,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 90.0010758458336,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8497971200
+    },
+    {
+      "at": "2026-10-09T01:59:19.630653+00:00",
+      "window_s": 5.000573469005758,
+      "host_cpu_busy_pct": 90.2390438247012,
+      "host_steal_pct": 0.199203187250996,
+      "workload_cpu_pct_of_two_cores": 89.98928878640615,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8506355712
+    },
+    {
+      "at": "2026-10-09T01:59:24.632090+00:00",
+      "window_s": 5.00143495600787,
+      "host_cpu_busy_pct": 90.35785288270378,
+      "host_steal_pct": 0.1988071570576541,
+      "workload_cpu_pct_of_two_cores": 90.0060090673089,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8506355712
+    },
+    {
+      "at": "2026-10-09T01:59:29.632715+00:00",
+      "window_s": 5.0005812689778395,
+      "host_cpu_busy_pct": 90.04975124378109,
+      "host_steal_pct": 0.09950248756218906,
+      "workload_cpu_pct_of_two_cores": 89.94536351009822,
+      "workload_memory_bytes": 9364770816,
+      "host_available_bytes": 8506355712
+    },
+    {
+      "at": "2026-10-09T01:59:34.634073+00:00",
+      "window_s": 5.0014029550075065,
+      "host_cpu_busy_pct": 90.15904572564612,
+      "host_steal_pct": 0.1988071570576541,
+      "workload_cpu_pct_of_two_cores": 90.00109650219623,
+      "workload_memory_bytes": 9364705280,
+      "host_available_bytes": 8506355712
+    },
+    {
+      "at": "2026-10-09T01:59:39.634644+00:00",
+      "window_s": 5.000569029012695,
+      "host_cpu_busy_pct": 90.13944223107569,
+      "host_steal_pct": 0.099601593625498,
+      "workload_cpu_pct_of_two_cores": 89.98701895508972,
+      "workload_memory_bytes": 9364705280,
+      "host_available_bytes": 8506355712
+    },
+    {
+      "at": "2026-10-09T01:59:44.636084+00:00",
+      "window_s": 5.0014423959946726,
+      "host_cpu_busy_pct": 90.2390438247012,
+      "host_steal_pct": 0.199203187250996,
+      "workload_cpu_pct_of_two_cores": 89.94775194457307,
+      "workload_memory_bytes": 9364705280,
+      "host_available_bytes": 8506355712
+    },
+    {
+      "at": "2026-10-09T01:59:49.636812+00:00",
+      "window_s": 5.000665989995468,
+      "host_cpu_busy_pct": 90.24875621890547,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 90.03288779949249,
+      "workload_memory_bytes": 9364705280,
+      "host_available_bytes": 8506355712
+    },
+    {
+      "at": "2026-10-09T01:59:54.638071+00:00",
+      "window_s": 5.001319435017649,
+      "host_cpu_busy_pct": 90.15904572564612,
+      "host_steal_pct": 0.09940357852882704,
+      "workload_cpu_pct_of_two_cores": 90.00184968157538,
+      "workload_memory_bytes": 9385676800,
+      "host_available_bytes": 8485384192
+    },
+    {
+      "at": "2026-10-09T01:59:59.638641+00:00",
+      "window_s": 5.000571268989006,
+      "host_cpu_busy_pct": 90.13944223107569,
+      "host_steal_pct": 0.199203187250996,
+      "workload_cpu_pct_of_two_cores": 89.99103818211962,
+      "workload_memory_bytes": 9385676800,
+      "host_available_bytes": 8485384192
+    },
+    {
+      "at": "2026-10-09T02:00:04.640095+00:00",
+      "window_s": 5.001452795986552,
+      "host_cpu_busy_pct": 90.14925373134328,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 89.96717920862487,
+      "workload_memory_bytes": 9385676800,
+      "host_available_bytes": 8485384192
+    },
+    {
+      "at": "2026-10-09T02:00:09.640721+00:00",
+      "window_s": 5.00057974900119,
+      "host_cpu_busy_pct": 90.14925373134328,
+      "host_steal_pct": 0.09950248756218906,
+      "workload_cpu_pct_of_two_cores": 90.00232424848244,
+      "workload_memory_bytes": 9385676800,
+      "host_available_bytes": 8485384192
+    },
+    {
+      "at": "2026-10-09T02:00:14.642083+00:00",
+      "window_s": 5.001409076008713,
+      "host_cpu_busy_pct": 90.14925373134328,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 89.99809716809013,
+      "workload_memory_bytes": 9385676800,
+      "host_available_bytes": 8485384192
+    },
+    {
+      "at": "2026-10-09T02:00:19.642655+00:00",
+      "window_s": 5.000571988988668,
+      "host_cpu_busy_pct": 89.96023856858847,
+      "host_steal_pct": 0.1988071570576541,
+      "workload_cpu_pct_of_two_cores": 89.88490736454801,
+      "workload_memory_bytes": 9385676800,
+      "host_available_bytes": 8485384192
+    },
+    {
+      "at": "2026-10-09T02:00:24.644089+00:00",
+      "window_s": 5.001434156001778,
+      "host_cpu_busy_pct": 90.2390438247012,
+      "host_steal_pct": 0.199203187250996,
+      "workload_cpu_pct_of_two_cores": 90.05352983794032,
+      "workload_memory_bytes": 9385676800,
+      "host_available_bytes": 8485388288
+    },
+    {
+      "at": "2026-10-09T02:00:29.644658+00:00",
+      "window_s": 5.000568309013033,
+      "host_cpu_busy_pct": 90.13944223107569,
+      "host_steal_pct": 0.099601593625498,
+      "workload_cpu_pct_of_two_cores": 89.99914053545369,
+      "workload_memory_bytes": 9385676800,
+      "host_available_bytes": 8485388288
+    },
+    {
+      "at": "2026-10-09T02:00:34.646078+00:00",
+      "window_s": 5.0014224750048015,
+      "host_cpu_busy_pct": 90.14925373134328,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 90.01265185052534,
+      "workload_memory_bytes": 9385676800,
+      "host_available_bytes": 8485392384
+    },
+    {
+      "at": "2026-10-09T02:00:39.646653+00:00",
+      "window_s": 5.000573989993427,
+      "host_cpu_busy_pct": 89.95024875621891,
+      "host_steal_pct": 0.09950248756218906,
+      "workload_cpu_pct_of_two_cores": 89.91836755136003,
+      "workload_memory_bytes": 9406648320,
+      "host_available_bytes": 8464420864
+    },
+    {
+      "at": "2026-10-09T02:00:44.648071+00:00",
+      "window_s": 5.00141859499854,
+      "host_cpu_busy_pct": 90.04975124378109,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 89.94504088297198,
+      "workload_memory_bytes": 9364701184,
+      "host_available_bytes": 8502169600
+    },
+    {
+      "at": "2026-10-09T02:00:49.648650+00:00",
+      "window_s": 5.000575949001359,
+      "host_cpu_busy_pct": 90.82751744765703,
+      "host_steal_pct": 0.19940179461615154,
+      "workload_cpu_pct_of_two_cores": 88.8060004545447,
+      "workload_memory_bytes": 9364701184,
+      "host_available_bytes": 8502169600
+    },
+    {
+      "at": "2026-10-09T02:00:54.650086+00:00",
+      "window_s": 5.001435195998056,
+      "host_cpu_busy_pct": 89.97020854021847,
+      "host_steal_pct": 0.19860973187686196,
+      "workload_cpu_pct_of_two_cores": 90.00779423478409,
+      "workload_memory_bytes": 9364701184,
+      "host_available_bytes": 8502169600
+    },
+    {
+      "at": "2026-10-09T02:00:59.650662+00:00",
+      "window_s": 5.000577428989345,
+      "host_cpu_busy_pct": 90.04975124378109,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 89.95731120814098,
+      "workload_memory_bytes": 9364701184,
+      "host_available_bytes": 8502169600
+    },
+    {
+      "at": "2026-10-09T02:01:04.652081+00:00",
+      "window_s": 5.001418596017174,
+      "host_cpu_busy_pct": 90.22931206380858,
+      "host_steal_pct": 0.09970089730807577,
+      "workload_cpu_pct_of_two_cores": 90.02421840046557,
+      "workload_memory_bytes": 9364701184,
+      "host_available_bytes": 8502173696
+    },
+    {
+      "at": "2026-10-09T02:01:09.652714+00:00",
+      "window_s": 5.00058398899273,
+      "host_cpu_busy_pct": 90.14925373134328,
+      "host_steal_pct": 0.19900497512437812,
+      "workload_cpu_pct_of_two_cores": 89.98287019885392,
+      "workload_memory_bytes": 9364701184,
+      "host_available_bytes": 8501927936
+    },
+    {
+      "at": "2026-10-09T02:01:14.654073+00:00",
+      "window_s": 5.00141187600093,
+      "host_cpu_busy_pct": 90.25844930417495,
+      "host_steal_pct": 0.1988071570576541,
+      "workload_cpu_pct_of_two_cores": 89.99077883581134,
+      "workload_memory_bytes": 9364701184,
+      "host_available_bytes": 8501927936
+    },
+    {
+      "at": "2026-10-09T02:01:19.654651+00:00",
+      "window_s": 5.000575709011173,
+      "host_cpu_busy_pct": 90.2390438247012,
+      "host_steal_pct": 0.099601593625498,
+      "workload_cpu_pct_of_two_cores": 89.99563774007736,
+      "workload_memory_bytes": 9364701184,
+      "host_available_bytes": 8501927936
+    },
+    {
+      "at": "2026-10-09T02:01:24.656074+00:00",
+      "window_s": 5.001425355003448,
+      "host_cpu_busy_pct": 90.0695134061569,
+      "host_steal_pct": 0.19860973187686196,
+      "workload_cpu_pct_of_two_cores": 90.02268714249152,
+      "workload_memory_bytes": 9364701184,
+      "host_available_bytes": 8501927936
+    }
+  ],
+  "resource_summary": {
+    "window_s": 300.0694354160223,
+    "cpu_pct_two_cores": 89.96579512529232,
+    "host_cpu_busy_pct": 90.16273476774927,
+    "host_steal_pct": 0.16582177232203224,
+    "memory_current_bytes": 9364701184,
+    "above_20_contiguous_seconds": 3175.7004368950147,
+    "five_minute_target_verified": true
+  },
+  "free_bytes": 54394716160
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+    "sha256": "79201223BD6BECF1C523BA269DC8794DEFCA631BD6FBD287DB3B21B397298CB4"
+  },
+  {
+    "path": "app/core/transition.py",
+    "sha256": "4DB72B98F64347DFE01F6EC73DFE9114D2CF96B36950097617C9C450A965BD04"
+  },
+  {
+    "path": "tests/unit/travel/test_initial_retry_boundaries.py",
+    "sha256": "1CA03C4AA6205F82625E3FEE140DE3AB854275B1EE018D7D399065D1A9673C2A"
+  },
+  {
+    "path": "tests/e2e/test_web_initial_concurrency.py",
+    "sha256": "22BB056B7387BFDB07B76B13AC9E018C6BDA5E994B0255B0A0B95E91DC9734BF"
+  }
+]

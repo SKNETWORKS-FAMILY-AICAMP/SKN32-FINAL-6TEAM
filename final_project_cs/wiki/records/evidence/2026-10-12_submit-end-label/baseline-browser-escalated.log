@@ -1,0 +1,47 @@
+[WebServer] (node:23508) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21296) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:25308) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:25312) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:13272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 tests\live\submit-end-registration-20261012.spec.ts:27:3 › 375px 일반 ready: 목록 끝에서 버튼 이름까지 즉시 표시 (34.0s)
+
+
+  1) tests\live\submit-end-registration-20261012.spec.ts:27:3 › 375px 일반 ready: 목록 끝에서 버튼 이름까지 즉시 표시 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator: locator('footer[class*=footer]').getByRole('tooltip')
+    Expected: "여행 등록"
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveText" locator('footer[class*=footer]').getByRole('tooltip') with timeout 12000ms
+      - waiting for locator('footer[class*=footer]').getByRole('tooltip')
+
+
+      39 |     await expect(footer).not.toHaveAttribute("data-quiet", { timeout: 250 });
+      40 |     await expect(footer).not.toHaveAttribute("inert");
+    > 41 |     await expect(tip).toHaveText(kind === "ready" ? "여행 등록" : "다시 제출");
+         |                       ^
+      42 |     await expect(tip).toBeVisible({ timeout: 250 });
+      43 |     await expect(tip).toHaveCSS("opacity", "1", { timeout: 250 });
+      44 |     await body.hover();
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\submit-end-20261012-v1\runtime\tests\live\submit-end-registration-20261012.spec.ts:41:23
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\browser-evidence\submit-end-registration-20-0dfd1--ready-목록-끝에서-버튼-이름까지-즉시-표시\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\browser-evidence\submit-end-registration-20-0dfd1--ready-목록-끝에서-버튼-이름까지-즉시-표시\error-context.md
+
+  1 failed
+    tests\live\submit-end-registration-20261012.spec.ts:27:3 › 375px 일반 ready: 목록 끝에서 버튼 이름까지 즉시 표시 

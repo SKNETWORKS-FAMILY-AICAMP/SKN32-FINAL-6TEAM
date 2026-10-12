@@ -283,6 +283,8 @@ class Settings(BaseSettings):
     #: 서울 열린데이터광장 「실시간 지하철 인증키」(일반 키와 **별개** · 하루 1,000건 · 활용사례 등록 심사 뒤 해제) — 실시간 도착정보
     #:  (`travel/seoul_subway.py`, `sources.subway_arrival`). ★설정에 없는 이름으로 넣으면 기동이 거부된다(`extra="forbid"` · 2026-10-05 실제로 났다).
     seoul_metro_api_key: str = ""
+    #: 서울 버스 도착정보. 비우면 공공데이터포털 공통 키를 쓴다(서비스 이용 승인 필요).
+    seoul_bus_api_key: str = ""
     #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**
     #:  기록한다(dead_letter). 보낸 것처럼 `delivered` 로 찍지 않는다.
     discord_webhook_url: str = ""
@@ -331,6 +333,8 @@ class Settings(BaseSettings):
     rate_subway_notice_per_day: int = 5000
     #: 확인(2026-10-04 공식 안내): 서울 「실시간 지하철 인증키」 하루 최대 1,000건 → 절반만(여유 2배). 도착정보는 지금 값이라 캐시를 짧게 둔다
     rate_seoul_subway_arrival_per_day: int = 500
+    #: 확인(2026-10-08): 버스도착정보 개발계정 1,000/일. 절반을 운영 한도로 둔다.
+    rate_seoul_bus_arrival_per_day: int = 500
     #: 서울 열린데이터광장 **일반 인증키**(따릉이 실시간 거치 대수 `bikeList`) 하루 상한 — ★공식 하루 한도를 못 찾았다(안내에 숫자 없음 · 「이용 제약 없이 쓰려면 활용사례 등록」)
     #:  `[미확인]` 그래서 **우리가 고른 보수적 값**이다. 이 값에서 막히면 따릉이 거치 대수가 「근거없음」이 되고(후보는 유지) 서비스는 계속된다. 0 = 제한 없음
     rate_seoul_bike_per_day: int = 1000
@@ -384,6 +388,7 @@ class Settings(BaseSettings):
             "odsay": self.rate_odsay_per_day,
             "subway_notice": self.rate_subway_notice_per_day,
             "seoul_subway_arrival": self.rate_seoul_subway_arrival_per_day,
+            "seoul_bus_arrival": self.rate_seoul_bus_arrival_per_day,
             "seoul_bike": self.rate_seoul_bike_per_day,
             "kakao": self.rate_kakao_per_day,
             "naver_search": self.rate_naver_search_per_day,

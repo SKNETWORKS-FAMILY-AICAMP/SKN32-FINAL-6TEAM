@@ -1,0 +1,78 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\playdata2\anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\deployment_candidates\2026-10-11_2204_plugin_v1
+configfile: pytest.ini
+plugins: anyio-4.14.1, langsmith-0.10.0, asyncio-0.25.2
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collecting ... collected 82 items
+
+tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[disabled] PASSED [  1%]
+tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[not_installed] PASSED [  2%]
+tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[load_failed] PASSED [  3%]
+tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[remote_unavailable] PASSED [  4%]
+tests/unit/core/test_plugin_availability.py::test_unknown_team_execution_is_not_installed_and_metadata_remains_registry_error PASSED [  6%]
+tests/unit/core/test_plugin_availability.py::test_inactive_metadata_remains_readable_but_never_runnable PASSED [  7%]
+tests/unit/core/test_plugin_availability.py::test_unavailable_metadata_registration_does_not_require_implementation PASSED [  8%]
+tests/unit/core/test_plugin_availability.py::test_disabled_declaration_without_capabilities_blocks_matching_business PASSED [  9%]
+tests/unit/core/test_plugin_availability.py::test_loaded_plugin_hook_failure_can_be_marked_unavailable_and_diagnostics_are_detached PASSED [ 10%]
+tests/unit/core/test_plugin_availability.py::test_removed_team_is_unavailable_and_duplicate_capabilities_are_configuration_failures PASSED [ 12%]
+tests/unit/core/test_plugin_availability.py::test_unavailable_capability_also_claims_unique_ownership PASSED [ 13%]
+tests/unit/core/test_plugin_availability.py::test_registry_rejects_incompatible_contract_and_undeclared_capability PASSED [ 14%]
+tests/unit/core/test_plugin_availability.py::test_static_config_never_imports_implementation PASSED [ 15%]
+tests/unit/core/test_plugin_availability.py::test_config_required_defaults_and_legacy_inactive_placeholder PASSED [ 17%]
+tests/unit/core/test_plugin_availability.py::test_static_config_rejects_invalid_declarations[teams0] PASSED [ 18%]
+tests/unit/core/test_plugin_availability.py::test_static_config_rejects_invalid_declarations[teams1] PASSED [ 19%]
+tests/unit/core/test_plugin_availability.py::test_static_config_rejects_invalid_declarations[teams2] PASSED [ 20%]
+tests/unit/core/test_plugin_availability.py::test_static_config_rejects_invalid_declarations[teams3] PASSED [ 21%]
+tests/unit/core/test_plugin_availability.py::test_local_disabled_team_execute_is_never_called Timeout (0:00:15)!
+Thread 0x00006824 (most recent call first):
+  File "C:\Users\playdata2\anaconda3\Lib\socket.py", line 295 in accept
+  File "C:\Users\playdata2\anaconda3\Lib\socket.py", line 627 in _fallback_socketpair
+  File "C:\Users\playdata2\anaconda3\Lib\asyncio\proactor_events.py", line 787 in _make_self_pipe
+  File "C:\Users\playdata2\anaconda3\Lib\asyncio\proactor_events.py", line 640 in __init__
+  File "C:\Users\playdata2\anaconda3\Lib\asyncio\windows_events.py", line 316 in __init__
+  File "C:\Users\playdata2\anaconda3\Lib\asyncio\events.py", line 720 in new_event_loop
+  File "C:\Users\playdata2\anaconda3\Lib\asyncio\events.py", line 699 in get_event_loop
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pytest_asyncio\plugin.py", line 979 in _get_event_loop_no_warn
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pytest_asyncio\plugin.py", line 758 in _temporary_event_loop_policy
+  File "C:\Users\playdata2\anaconda3\Lib\contextlib.py", line 137 in __enter__
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pytest_asyncio\plugin.py", line 1151 in event_loop
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\fixtures.py", line 923 in call_fixture_func
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\fixtures.py", line 1196 in pytest_fixture_setup
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\fixtures.py", line 1128 in execute
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\fixtures.py", line 640 in _get_active_fixturedef
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\fixtures.py", line 549 in getfixturevalue
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\fixtures.py", line 720 in _fillfixtures
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\python.py", line 1674 in setup
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 514 in setup
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 164 in pytest_runtest_setup
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 130 in runtestprotocol
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main

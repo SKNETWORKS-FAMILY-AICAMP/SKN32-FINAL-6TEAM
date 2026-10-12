@@ -1,0 +1,8 @@
+
+no tests ran in 0.00s
+ERROR: file or directory not found: tests/unit/core/test_debug_report_status.py
+
+Exception ignored in: <function Console.__del__ at 0x00000297DECF1BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

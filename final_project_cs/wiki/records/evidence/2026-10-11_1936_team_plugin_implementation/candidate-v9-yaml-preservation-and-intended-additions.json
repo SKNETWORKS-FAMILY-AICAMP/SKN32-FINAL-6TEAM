@@ -1,0 +1,66 @@
+{
+  "created_at": "2026-10-12T00:33:33.153550+09:00",
+  "files": [
+    {
+      "path": "config/project.yaml",
+      "baseline_sha256": "ffb4007bf14f65b3d338b577a426f88e8ccf5cf952a851d44ecb3ee92f920ebf",
+      "candidate_sha256": "6b1241bafae9134988fda20eeb6b1ef854115a577a95f88129bba5c4ccb3e175",
+      "existing_leaf_count": 29,
+      "preserved_existing_leaf_count": 29,
+      "changed_or_removed_existing_keys": [],
+      "added_keys": [
+        "teams[0].capabilities[0]",
+        "teams[0].capabilities[1]",
+        "teams[0].capabilities[2]",
+        "teams[0].capabilities[3]",
+        "teams[0].capabilities[4]",
+        "teams[0].hooks[0]",
+        "teams[0].hooks[1]",
+        "teams[0].required",
+        "teams[1].capabilities[0]",
+        "teams[1].capabilities[1]",
+        "teams[1].capabilities[2]",
+        "teams[1].capabilities[3]",
+        "teams[1].required",
+        "teams[2].capabilities[0]",
+        "teams[2].capabilities[1]",
+        "teams[2].capabilities[2]",
+        "teams[2].capabilities[3]",
+        "teams[2].capabilities[4]",
+        "teams[2].hooks[0]",
+        "teams[2].hooks[1]",
+        "teams[2].required",
+        "teams[3].capabilities[0]",
+        "teams[3].capabilities[1]",
+        "teams[3].capabilities[2]",
+        "teams[3].capabilities[3]",
+        "teams[3].hooks[0]",
+        "teams[3].hooks[1]",
+        "teams[3].required",
+        "teams[4].capabilities[0]",
+        "teams[4].required",
+        "teams[5].capabilities[0]",
+        "teams[5].required"
+      ]
+    },
+    {
+      "path": "config/guardrails.yaml",
+      "baseline_sha256": "a639d5151fa62eb3c9856e23ad9ff0e93d7a3c69e2b75061bca9a9161489023c",
+      "candidate_sha256": "997a714062c36d1216ca523bfe44f48a7fbb87e0e7c3d347809e673d528d4e7f",
+      "existing_leaf_count": 445,
+      "preserved_existing_leaf_count": 445,
+      "changed_or_removed_existing_keys": [],
+      "added_keys": [
+        "reliability.a2a_cancel_timeout_seconds",
+        "reliability.team_cleanup_grace_seconds"
+      ]
+    }
+  ],
+  "all_existing_values_preserved": true,
+  "intended_additions": [
+    "six Teams required=false/capabilities/hooks declarations",
+    "reliability.a2a_cancel_timeout_seconds=1",
+    "reliability.team_cleanup_grace_seconds=0.1"
+  ],
+  "host_settings_overwritten": false
+}

@@ -1,0 +1,41 @@
+[WebServer] (node:24856) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:24732) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 tests\live\monitoring.spec.ts:7:1 › 현재 상태·과거 회차·항목별 결과와 필터를 확인한다 (6.8s)
+(node:17668) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 2 tests\live\monitoring.spec.ts:33:1 › 375px에서 오류·빈 이력과 날짜 검증을 실제 화면으로 확인한다 (1.1s)
+
+
+  1) tests\live\monitoring.spec.ts:7:1 › 현재 상태·과거 회차·항목별 결과와 필터를 확인한다 ──────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('교통 통제 · 조회 실패', { exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('교통 통제 · 조회 실패', { exact: true }) with timeout 5000ms
+      - waiting for getByText('교통 통제 · 조회 실패', { exact: true })
+
+
+      19 |   await page.getByRole('button',{name:'최근 회차 상세 보기'}).click();
+      20 |   await expect(page.getByRole('heading',{name:/방문 일정 점검.*서울 시험 공원/})).toBeVisible();
+    > 21 |   await expect(page.getByText('교통 통제 · 조회 실패',{exact:true})).toBeVisible();
+         |                                                              ^
+      22 |   await expect(page.getByText('[시뮬레이션]',{exact:true})).toBeVisible();
+      23 |   await expect(page.getByText(/"precipitation_probability": 80/).first()).toBeVisible();
+      24 |   await page.getByRole('button',{name:'이전 회차 더 보기'}).click();
+        at C:\Users\playdata2\Documents\final_workspace\final_project_cs\frontend\apps\admin\tests\live\monitoring.spec.ts:21:62
+
+    Error Context: test-results\monitoring\monitoring-현재-상태·과거-회차·항목별-결과와-필터를-확인한다\error-context.md
+
+  1 failed
+    tests\live\monitoring.spec.ts:7:1 › 현재 상태·과거 회차·항목별 결과와 필터를 확인한다 ───────────────────────────────
+  1 passed (13.0s)

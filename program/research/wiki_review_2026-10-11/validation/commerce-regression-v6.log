@@ -1,0 +1,23 @@
+........................................................................ [ 13%]
+........................................................................ [ 27%]
+........................................................................ [ 40%]
+........................................................................ [ 54%]
+........................................................................ [ 68%]
+........................................................................ [ 81%]
+........................................................................ [ 95%]
+.........................                                                [100%]
+============================== warnings summary ===============================
+<unknown>:352
+tests/architecture/test_basement_layers.py::test_layer_directions_do_not_get_worse
+tests/architecture/test_composer_stays_out_of_this_repo.py::test_only_the_management_seam_knows_the_package
+tests/architecture/test_travel_ops_cells.py::test_cell_rules_do_not_get_worse
+tests/contract/test_team_tool_discipline.py::test_team_does_not_import_infrastructure_directly[devtools/judgment_log.py]
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+tests/contract/test_retired_domain_assets.py::test_current_runtime_and_business_fixtures_do_not_use_retired_assets
+  C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\instances\mobility\devtools\judgment_log.py:352: SyntaxWarning: invalid escape sequence '\d'
+    """�⺻ �α� �ڸ� `<PROCESSED>/mobility/logs`. ��`[73 �ļ� �� 3-5]` �ڷ� ������ �������� �ʾҰų�(unset �� �ڸ�ǥ�� /data)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\commerce-regression-v6.xml -
+529 passed, 6 warnings in 74.58s (0:01:14)

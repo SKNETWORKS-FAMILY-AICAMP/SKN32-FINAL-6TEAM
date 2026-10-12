@@ -1,0 +1,19 @@
+{
+  "tag": "2026-10-09_0836_버스거리_완전구간",
+  "created_at": "2026-10-09T08:36:12.832474+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0836_버스거리_완전구간/bus.py",
+      "sha256": "750a89399a5dfdcc84d9e8fb6468684932a4e3e68f3c22018329440ef49c28c4"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0836_버스거리_완전구간/mobility.md",
+      "sha256": "2189258755937ce15a9c8cef2b5396ca0958f22d0f4e79599f3bfed9e8d94af0"
+    }
+  ],
+  "debug": "wiki/records/reports/debugs/2026-10-09_0836_버스거리_완전구간_중간정류장_누락을_일부거리로_합산.md",
+  "initial_source_matches": 216,
+  "initial_artifact_matches": 6
+}

@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { KEY_STORAGE, TRIP_ID, hydrated, mockServer, noHorizontalScroll, pickMenuLanguage, registerStubTrip, start, checkPlan } from "./helpers";
+import { KEY_STORAGE, TRIP_ID, hydrated, mockServer, noHorizontalScroll, pickMenuLanguage, registerStubTrip, start, checkPlan, tripScreen } from "./helpers";
 
 /**
  * 여행 목록(첫 화면의 「내 여행」 카드 · `/trips`)과 여행 삭제 — 테스트용 모방 서버로 도는 자동 시험(실제 서버 아님).
@@ -83,7 +83,7 @@ test("첫 화면 카드·메뉴의 여행 목록 보기·전체 목록이 같은
   await page.goto("/");
   await card(page).getByRole("link", { name: /^내 여행/ }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
 
   await openMenu(page, "메뉴");
   await menuLink(page, "메뉴", "여행 목록 보기").click();
@@ -91,10 +91,10 @@ test("첫 화면 카드·메뉴의 여행 목록 보기·전체 목록이 같은
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.locator("#main-content").getByRole("link", { name: /^내 여행/ }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
 });
 
-test("첫 장에는 등록 버튼과 소개 건너뛰기 없이 아래로 가는 안내만 있고, 마지막 장의 시작 버튼은 약관·취향 설정으로 간다", async ({ page }) => {
+test("첫 장에는 등록 버튼과 소개 건너뛰기 없이 아래로 가는 안내만 있고, 마지막 장의 시작 버튼은 필수 약관 화면으로 간다", async ({ page }) => {
   await page.addInitScript(() => localStorage.removeItem("tripilot.web.consent.v1"));      // 약관에 아직 동의하지 않은 사람(앞서 심은 동의 사본을 지운다)
   await page.goto("/");
   const hero = page.locator("main > section").first();
@@ -107,7 +107,8 @@ test("첫 장에는 등록 버튼과 소개 건너뛰기 없이 아래로 가는
   await page.locator("main > section").nth(1).getByRole("button", { name: "다음 화면" }).click();
   await expect(page.locator("#start-title")).toBeInViewport();
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
-  await expect(page).toHaveURL(/\/start$/);
+  await expect(page).toHaveURL(/\/start\?terms=required$/);
+  await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
 });
 
 test("모든 로고는 홈 첫 장으로 돌아오고, 여정 화면 헤더에는 로고와 메뉴만 있다", async ({ page }) => {
@@ -420,7 +421,7 @@ test("마지막 여행을 지우면 빈 목록과 새 여행 등록만 남고, �
   await page.goBack();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
   await expect(page.getByRole("heading", { name: "여행 정보를 불러오지 못했어요" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toHaveCount(0);
+  await expect(tripScreen(page)).toHaveCount(0);
 
   // 첫 화면 카드도 삭제를 따른다.
   await page.getByRole("banner").getByRole("link", { name: "triPilot — 소개 화면으로 돌아가기" }).click();

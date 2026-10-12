@@ -1,0 +1,16 @@
+{
+  "observed_at": "2026-10-09T04:08:44.435483+09:00",
+  "map_route_observations": 0,
+  "map_api_calls": 0,
+  "sources": [
+    {
+      "url": "https://gtfs.org/documentation/realtime/feed-entities/trip-updates/",
+      "scope": "공식 본문: TripUpdate 없음은 정시 운행 증거가 아님. 사건 소스와 모델 재검증 분리는 로컬 계약에 따른 적용 판단."
+    },
+    {
+      "url": "https://arxiv.org/abs/2605.18778",
+      "title": "T-REX: Fast and Dynamic Journey Planning for Continental-Scale Public Transit Networks",
+      "scope": "초록 검토만: 대규모 시간표·환승 전처리와 실시간 갱신 전제가 있음. 이번 국소 안내 분기 수정에 알고리즘을 구현하지 않음."
+    }
+  ]
+}

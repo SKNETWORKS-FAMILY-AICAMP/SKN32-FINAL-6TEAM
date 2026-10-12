@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "ruff",
+    "check",
+    "app/domains/travel_ops/instances/mobility/engine/subway_identity.py",
+    "tests/unit/travel/mobility/test_subway_primary_name_v1.py"
+  ],
+  "exit_code": 0
+}

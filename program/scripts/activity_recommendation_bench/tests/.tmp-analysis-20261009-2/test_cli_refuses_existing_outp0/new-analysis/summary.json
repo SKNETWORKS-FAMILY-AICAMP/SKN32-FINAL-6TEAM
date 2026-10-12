@@ -1,0 +1,1009 @@
+{
+  "analysis_version": "activity-recommendation-analysis-v1",
+  "run_id": "unit-main",
+  "independent_case_count": 2,
+  "repeats": 3,
+  "arms": {
+    "rule": {
+      "scheduled_attempts": 6,
+      "observed_attempts": 6,
+      "successful_outputs": 6,
+      "status_counts": {
+        "ok": 6
+      },
+      "all_scheduled_means": {
+        "top1_correct": 1.0,
+        "ndcg3": 1.0,
+        "recall3": 1.0
+      },
+      "successful_only_means": {
+        "top1_correct": 1.0,
+        "ndcg3": 1.0,
+        "recall3": 1.0
+      },
+      "hard_violations": 0,
+      "path_cost_sum_usd": 0,
+      "path_cost_p50_usd": 0.0,
+      "path_cost_p95_usd": 0.0,
+      "path_latency_p50_ms": 0.0,
+      "path_latency_p95_ms": 0.0,
+      "cost_latency_denominator": "observed request paths, including failures; unattempted paths have no measured latency",
+      "returned_models": [],
+      "requested_models": [],
+      "own_ranker_usage": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cached_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "usage_known_calls": 0,
+        "usage_unknown_calls": 0
+      },
+      "http_failure_counts": {},
+      "validation_failure_counts": {},
+      "api_status_counts": {}
+    },
+    "nano_direct": {
+      "scheduled_attempts": 6,
+      "observed_attempts": 6,
+      "successful_outputs": 6,
+      "status_counts": {
+        "ok": 6
+      },
+      "all_scheduled_means": {
+        "top1_correct": 0.5,
+        "ndcg3": 0.9,
+        "recall3": 1.0
+      },
+      "successful_only_means": {
+        "top1_correct": 0.5,
+        "ndcg3": 0.9,
+        "recall3": 1.0
+      },
+      "hard_violations": 0,
+      "path_cost_sum_usd": 0.06,
+      "path_cost_p50_usd": 0.01,
+      "path_cost_p95_usd": 0.01,
+      "path_latency_p50_ms": 1000.0,
+      "path_latency_p95_ms": 1000.0,
+      "cost_latency_denominator": "observed request paths, including failures; unattempted paths have no measured latency",
+      "returned_models": [
+        "nano_direct-version"
+      ],
+      "requested_models": [
+        "nano_direct-alias"
+      ],
+      "own_ranker_usage": {
+        "input_tokens": 600,
+        "output_tokens": 120,
+        "cached_read_tokens": 180,
+        "cache_write_tokens": 240,
+        "reasoning_output_tokens": 60,
+        "usage_known_calls": 6,
+        "usage_unknown_calls": 0
+      },
+      "http_failure_counts": {},
+      "validation_failure_counts": {},
+      "api_status_counts": {}
+    },
+    "luna_direct": {
+      "scheduled_attempts": 6,
+      "observed_attempts": 6,
+      "successful_outputs": 6,
+      "status_counts": {
+        "ok": 6
+      },
+      "all_scheduled_means": {
+        "top1_correct": 1.0,
+        "ndcg3": 1.0,
+        "recall3": 1.0
+      },
+      "successful_only_means": {
+        "top1_correct": 1.0,
+        "ndcg3": 1.0,
+        "recall3": 1.0
+      },
+      "hard_violations": 0,
+      "path_cost_sum_usd": 0.06,
+      "path_cost_p50_usd": 0.01,
+      "path_cost_p95_usd": 0.01,
+      "path_latency_p50_ms": 1000.0,
+      "path_latency_p95_ms": 1000.0,
+      "cost_latency_denominator": "observed request paths, including failures; unattempted paths have no measured latency",
+      "returned_models": [
+        "luna_direct-version"
+      ],
+      "requested_models": [
+        "luna_direct-alias"
+      ],
+      "own_ranker_usage": {
+        "input_tokens": 600,
+        "output_tokens": 120,
+        "cached_read_tokens": 180,
+        "cache_write_tokens": 240,
+        "reasoning_output_tokens": 60,
+        "usage_known_calls": 6,
+        "usage_unknown_calls": 0
+      },
+      "http_failure_counts": {},
+      "validation_failure_counts": {},
+      "api_status_counts": {}
+    },
+    "jev_code": {
+      "scheduled_attempts": 6,
+      "observed_attempts": 6,
+      "successful_outputs": 6,
+      "status_counts": {
+        "ok": 6
+      },
+      "all_scheduled_means": {
+        "top1_correct": 1.0,
+        "ndcg3": 1.0,
+        "recall3": 1.0
+      },
+      "successful_only_means": {
+        "top1_correct": 1.0,
+        "ndcg3": 1.0,
+        "recall3": 1.0
+      },
+      "hard_violations": 0,
+      "path_cost_sum_usd": 0.06,
+      "path_cost_p50_usd": 0.01,
+      "path_cost_p95_usd": 0.01,
+      "path_latency_p50_ms": 1000.0,
+      "path_latency_p95_ms": 1000.0,
+      "cost_latency_denominator": "observed request paths, including failures; unattempted paths have no measured latency",
+      "returned_models": [
+        "jev_code-version"
+      ],
+      "requested_models": [
+        "jev_code-alias"
+      ],
+      "own_ranker_usage": {
+        "input_tokens": 600,
+        "output_tokens": 120,
+        "cached_read_tokens": 180,
+        "cache_write_tokens": 240,
+        "reasoning_output_tokens": 60,
+        "usage_known_calls": 6,
+        "usage_unknown_calls": 0
+      },
+      "http_failure_counts": {},
+      "validation_failure_counts": {},
+      "api_status_counts": {}
+    },
+    "jev_nano": {
+      "scheduled_attempts": 6,
+      "observed_attempts": 6,
+      "successful_outputs": 6,
+      "status_counts": {
+        "ok": 6
+      },
+      "all_scheduled_means": {
+        "top1_correct": 1.0,
+        "ndcg3": 1.0,
+        "recall3": 1.0
+      },
+      "successful_only_means": {
+        "top1_correct": 1.0,
+        "ndcg3": 1.0,
+        "recall3": 1.0
+      },
+      "hard_violations": 0,
+      "path_cost_sum_usd": 0.06,
+      "path_cost_p50_usd": 0.01,
+      "path_cost_p95_usd": 0.01,
+      "path_latency_p50_ms": 1000.0,
+      "path_latency_p95_ms": 1000.0,
+      "cost_latency_denominator": "observed request paths, including failures; unattempted paths have no measured latency",
+      "returned_models": [
+        "jev_nano-version"
+      ],
+      "requested_models": [
+        "jev_nano-alias"
+      ],
+      "own_ranker_usage": {
+        "input_tokens": 600,
+        "output_tokens": 120,
+        "cached_read_tokens": 180,
+        "cache_write_tokens": 240,
+        "reasoning_output_tokens": 60,
+        "usage_known_calls": 6,
+        "usage_unknown_calls": 0
+      },
+      "http_failure_counts": {},
+      "validation_failure_counts": {},
+      "api_status_counts": {},
+      "filter": {
+        "scheduled_denominator": 6,
+        "observed_filter_outputs": 6,
+        "top1_preserved_all_scheduled": 1.0,
+        "top3_recall_all_scheduled": 1.0,
+        "top1_preserved_observed": 1.0,
+        "top3_recall_observed": 1,
+        "jev_only_successful_filter_outputs": 6,
+        "jev_only_top1_preserved_all_scheduled": 1.0,
+        "jev_only_top3_recall_all_scheduled": 1.0,
+        "jev_only_top1_preserved_successful": 1.0,
+        "jev_only_top3_recall_successful": 1.0,
+        "note": "top1_preserved fields include rule-protected candidates; jev_only fields exclude rule protection"
+      }
+    },
+    "jev_luna": {
+      "scheduled_attempts": 6,
+      "observed_attempts": 6,
+      "successful_outputs": 6,
+      "status_counts": {
+        "ok": 6
+      },
+      "all_scheduled_means": {
+        "top1_correct": 1.0,
+        "ndcg3": 1.0,
+        "recall3": 1.0
+      },
+      "successful_only_means": {
+        "top1_correct": 1.0,
+        "ndcg3": 1.0,
+        "recall3": 1.0
+      },
+      "hard_violations": 0,
+      "path_cost_sum_usd": 0.06,
+      "path_cost_p50_usd": 0.01,
+      "path_cost_p95_usd": 0.01,
+      "path_latency_p50_ms": 1000.0,
+      "path_latency_p95_ms": 1000.0,
+      "cost_latency_denominator": "observed request paths, including failures; unattempted paths have no measured latency",
+      "returned_models": [
+        "jev_luna-version"
+      ],
+      "requested_models": [
+        "jev_luna-alias"
+      ],
+      "own_ranker_usage": {
+        "input_tokens": 600,
+        "output_tokens": 120,
+        "cached_read_tokens": 180,
+        "cache_write_tokens": 240,
+        "reasoning_output_tokens": 60,
+        "usage_known_calls": 6,
+        "usage_unknown_calls": 0
+      },
+      "http_failure_counts": {},
+      "validation_failure_counts": {},
+      "api_status_counts": {},
+      "filter": {
+        "scheduled_denominator": 6,
+        "observed_filter_outputs": 6,
+        "top1_preserved_all_scheduled": 1.0,
+        "top3_recall_all_scheduled": 1.0,
+        "top1_preserved_observed": 1.0,
+        "top3_recall_observed": 1,
+        "jev_only_successful_filter_outputs": 6,
+        "jev_only_top1_preserved_all_scheduled": 1.0,
+        "jev_only_top3_recall_all_scheduled": 1.0,
+        "jev_only_top1_preserved_successful": 1.0,
+        "jev_only_top3_recall_successful": 1.0,
+        "note": "top1_preserved fields include rule-protected candidates; jev_only fields exclude rule protection"
+      }
+    }
+  },
+  "paired_case_bootstrap": {
+    "nano_direct_minus_rule": {
+      "top1_correct": {
+        "mean_difference": -0.5,
+        "ci95": [
+          -1.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": -0.09999999999999998,
+        "ci95": [
+          -0.19999999999999996,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    },
+    "luna_direct_minus_rule": {
+      "top1_correct": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    },
+    "jev_code_minus_rule": {
+      "top1_correct": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    },
+    "jev_nano_minus_rule": {
+      "top1_correct": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    },
+    "jev_luna_minus_rule": {
+      "top1_correct": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    },
+    "luna_direct_minus_nano_direct": {
+      "top1_correct": {
+        "mean_difference": 0.5,
+        "ci95": [
+          0.0,
+          1.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": 0.09999999999999998,
+        "ci95": [
+          0.0,
+          0.19999999999999996
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    },
+    "jev_code_minus_nano_direct": {
+      "top1_correct": {
+        "mean_difference": 0.5,
+        "ci95": [
+          0.0,
+          1.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": 0.09999999999999998,
+        "ci95": [
+          0.0,
+          0.19999999999999996
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    },
+    "jev_nano_minus_nano_direct": {
+      "top1_correct": {
+        "mean_difference": 0.5,
+        "ci95": [
+          0.0,
+          1.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": 0.09999999999999998,
+        "ci95": [
+          0.0,
+          0.19999999999999996
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    },
+    "jev_luna_minus_nano_direct": {
+      "top1_correct": {
+        "mean_difference": 0.5,
+        "ci95": [
+          0.0,
+          1.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": 0.09999999999999998,
+        "ci95": [
+          0.0,
+          0.19999999999999996
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    },
+    "jev_code_minus_luna_direct": {
+      "top1_correct": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    },
+    "jev_nano_minus_luna_direct": {
+      "top1_correct": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    },
+    "jev_luna_minus_luna_direct": {
+      "top1_correct": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    },
+    "jev_nano_minus_jev_code": {
+      "top1_correct": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    },
+    "jev_luna_minus_jev_code": {
+      "top1_correct": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    },
+    "jev_luna_minus_jev_nano": {
+      "top1_correct": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "ndcg3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      },
+      "recall3": {
+        "mean_difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "independent_cases": 2,
+        "resamples": 100,
+        "unit": "case mean across all scheduled repeats"
+      }
+    }
+  },
+  "mcnemar_nano_vs_luna_first_repeat": {
+    "scheduled_pairs": 2,
+    "nano_only_correct": 0,
+    "luna_only_correct": 1,
+    "exact_two_sided_p": 1.0,
+    "both_observed_pairs": 2,
+    "note": "first repeat only; failures and unattempted outputs count as incorrect"
+  },
+  "consistency": {
+    "rule": {
+      "same_input": {
+        "scheduled_pairs": 2,
+        "both_successful_pairs": 2,
+        "identical_top3_pairs": 2,
+        "agreement_all_scheduled": 1.0,
+        "agreement_both_successful": 1.0,
+        "same_candidate_order_pairs": 2
+      },
+      "permuted_input": {
+        "scheduled_pairs": 2,
+        "both_successful_pairs": 2,
+        "identical_top3_pairs": 2,
+        "agreement_all_scheduled": 1.0,
+        "agreement_both_successful": 1.0,
+        "same_candidate_order_pairs": 0
+      }
+    },
+    "nano_direct": {
+      "same_input": {
+        "scheduled_pairs": 2,
+        "both_successful_pairs": 2,
+        "identical_top3_pairs": 2,
+        "agreement_all_scheduled": 1.0,
+        "agreement_both_successful": 1.0,
+        "same_candidate_order_pairs": 2
+      },
+      "permuted_input": {
+        "scheduled_pairs": 2,
+        "both_successful_pairs": 2,
+        "identical_top3_pairs": 2,
+        "agreement_all_scheduled": 1.0,
+        "agreement_both_successful": 1.0,
+        "same_candidate_order_pairs": 0
+      }
+    },
+    "luna_direct": {
+      "same_input": {
+        "scheduled_pairs": 2,
+        "both_successful_pairs": 2,
+        "identical_top3_pairs": 2,
+        "agreement_all_scheduled": 1.0,
+        "agreement_both_successful": 1.0,
+        "same_candidate_order_pairs": 2
+      },
+      "permuted_input": {
+        "scheduled_pairs": 2,
+        "both_successful_pairs": 2,
+        "identical_top3_pairs": 2,
+        "agreement_all_scheduled": 1.0,
+        "agreement_both_successful": 1.0,
+        "same_candidate_order_pairs": 0
+      }
+    },
+    "jev_code": {
+      "same_input": {
+        "scheduled_pairs": 2,
+        "both_successful_pairs": 2,
+        "identical_top3_pairs": 2,
+        "agreement_all_scheduled": 1.0,
+        "agreement_both_successful": 1.0,
+        "same_candidate_order_pairs": 2
+      },
+      "permuted_input": {
+        "scheduled_pairs": 2,
+        "both_successful_pairs": 2,
+        "identical_top3_pairs": 2,
+        "agreement_all_scheduled": 1.0,
+        "agreement_both_successful": 1.0,
+        "same_candidate_order_pairs": 0
+      }
+    },
+    "jev_nano": {
+      "same_input": {
+        "scheduled_pairs": 2,
+        "both_successful_pairs": 2,
+        "identical_top3_pairs": 2,
+        "agreement_all_scheduled": 1.0,
+        "agreement_both_successful": 1.0,
+        "same_candidate_order_pairs": 2
+      },
+      "permuted_input": {
+        "scheduled_pairs": 2,
+        "both_successful_pairs": 2,
+        "identical_top3_pairs": 2,
+        "agreement_all_scheduled": 1.0,
+        "agreement_both_successful": 1.0,
+        "same_candidate_order_pairs": 0
+      }
+    },
+    "jev_luna": {
+      "same_input": {
+        "scheduled_pairs": 2,
+        "both_successful_pairs": 2,
+        "identical_top3_pairs": 2,
+        "agreement_all_scheduled": 1.0,
+        "agreement_both_successful": 1.0,
+        "same_candidate_order_pairs": 2
+      },
+      "permuted_input": {
+        "scheduled_pairs": 2,
+        "both_successful_pairs": 2,
+        "identical_top3_pairs": 2,
+        "agreement_all_scheduled": 1.0,
+        "agreement_both_successful": 1.0,
+        "same_candidate_order_pairs": 0
+      }
+    }
+  },
+  "groups": {
+    "small1": {
+      "independent_cases": 1,
+      "scheduled_repeats_per_arm": 3,
+      "interpretation": "small synthetic stratum; descriptive only; repeats are not independent customer samples",
+      "arms": {
+        "rule": {
+          "top1_correct": 1.0,
+          "ndcg3": 1.0,
+          "recall3": 1.0
+        },
+        "nano_direct": {
+          "top1_correct": 1.0,
+          "ndcg3": 1.0,
+          "recall3": 1.0
+        },
+        "luna_direct": {
+          "top1_correct": 1.0,
+          "ndcg3": 1.0,
+          "recall3": 1.0
+        },
+        "jev_code": {
+          "top1_correct": 1.0,
+          "ndcg3": 1.0,
+          "recall3": 1.0
+        },
+        "jev_nano": {
+          "top1_correct": 1.0,
+          "ndcg3": 1.0,
+          "recall3": 1.0
+        },
+        "jev_luna": {
+          "top1_correct": 1.0,
+          "ndcg3": 1.0,
+          "recall3": 1.0
+        }
+      }
+    },
+    "small2": {
+      "independent_cases": 1,
+      "scheduled_repeats_per_arm": 3,
+      "interpretation": "small synthetic stratum; descriptive only; repeats are not independent customer samples",
+      "arms": {
+        "rule": {
+          "top1_correct": 1.0,
+          "ndcg3": 1.0,
+          "recall3": 1.0
+        },
+        "nano_direct": {
+          "top1_correct": 0.0,
+          "ndcg3": 0.8,
+          "recall3": 1.0
+        },
+        "luna_direct": {
+          "top1_correct": 1.0,
+          "ndcg3": 1.0,
+          "recall3": 1.0
+        },
+        "jev_code": {
+          "top1_correct": 1.0,
+          "ndcg3": 1.0,
+          "recall3": 1.0
+        },
+        "jev_nano": {
+          "top1_correct": 1.0,
+          "ndcg3": 1.0,
+          "recall3": 1.0
+        },
+        "jev_luna": {
+          "top1_correct": 1.0,
+          "ndcg3": 1.0,
+          "recall3": 1.0
+        }
+      }
+    }
+  },
+  "actual_spend_all_study_runs": {
+    "unique_paid_calls": 30,
+    "usage_known_cost_estimate_usd": 0.3000000000000001,
+    "usage_unknown_reservation_upper_usd": 0.0,
+    "total_cost_accounted_usd": 0.3000000000000001,
+    "unfinished_reservations": 0,
+    "reservation_exceeded_call_ids": [],
+    "billing_basis": "API usage repriced using frozen rates plus unknown-usage reservation bounds; not a provider invoice"
+  },
+  "actual_spend_this_run": {
+    "unique_paid_calls": 30,
+    "usage_known_cost_estimate_usd": 0.3000000000000001,
+    "usage_unknown_reservation_upper_usd": 0.0,
+    "total_cost_accounted_usd": 0.3000000000000001,
+    "unfinished_reservations": 0,
+    "reservation_exceeded_call_ids": [],
+    "billing_basis": "API usage repriced using frozen rates plus unknown-usage reservation bounds; not a provider invoice"
+  },
+  "deduplicated_usage_this_run": {
+    "input_tokens": 3000,
+    "output_tokens": 600,
+    "cached_read_tokens": 900,
+    "cache_write_tokens": 1200,
+    "reasoning_output_tokens": 300,
+    "usage_known_calls": 30,
+    "usage_unknown_calls": 0
+  },
+  "scheduled_rows": 36,
+  "observed_rows": 36,
+  "complete": true,
+  "limits": [
+    "AI-authored synthetic labels; root agent review is not human review",
+    "shared candidate templates limit independence and external validity",
+    "confidence intervals describe this synthetic sample only",
+    "permutation comparisons also include ordinary model variation",
+    "recommendation reason factuality and actual user satisfaction were not scored",
+    "bootstrap intervals and McNemar are exploratory; no multiplicity adjustment applied"
+  ],
+  "frozen_hashes": {
+    "config_hash": "config",
+    "prompt_hash": "prompt",
+    "dataset_hash": "866d212bb5d25361f596ebade20881896b541d5bf22390cdd49d1dbb05a707bb"
+  }
+}

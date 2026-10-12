@@ -73,7 +73,7 @@ def test_scope_guard_denies_a_principal_holding_another_scope(
 ) -> None:
     monkeypatch.setattr(
         security, "authenticate",
-        lambda _: Principal(tenant_id="t1", scopes=frozenset({"order:read"}), key_id="k"),
+        lambda _: Principal(tenant_id="t1", scopes=frozenset({"trip:read"}), key_id="k"),
     )
     with pytest.raises(HTTPException) as caught:
         require_scope(VALID_SCOPE)(authorization="Bearer whatever")

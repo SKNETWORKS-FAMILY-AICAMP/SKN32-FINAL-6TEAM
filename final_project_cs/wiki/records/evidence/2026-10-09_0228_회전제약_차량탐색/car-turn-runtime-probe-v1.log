@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\probe_car_turn_runtime_v1.py", line 30, in <module>
+    current.warm(('car',))
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\instances\mobility\engine\graph_router.py", line 182, in warm
+    self._load()
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\instances\mobility\engine\graph_router.py", line 196, in _load
+    raise RouterDown(f"���� �׷��� �ڷᰡ ����({self.dir})")
+app.domains.travel_ops.instances.mobility.engine.car.RouterDown: ���� �׷��� �ڷᰡ ����(C:\Users\playdata2\Documents\final_workspace\datasets\mobility\travel\processed\mobility\road_graph_v1)

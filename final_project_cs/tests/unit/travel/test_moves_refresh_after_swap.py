@@ -8,6 +8,7 @@ from uuid import uuid4
 from app.domains.travel_ops.components.itinerary.itinerary import Item
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
 from app.domains.travel_ops.instances.mobility import wiring
+from app.domains.travel_ops.components.team_hooks import legs
 
 KST = timezone(timedelta(hours=9))
 T = lambda hm: datetime.fromisoformat(f"2026-10-07T{hm}:00+09:00")  # noqa: E731
@@ -93,7 +94,7 @@ def test_44_swap_next_door_is_rejudged_when_the_engine_is_on(monkeypatch):
             return {"route": route, "starts_at": arrive - timedelta(minutes=19), "ends_at": arrive - timedelta(minutes=10),
                     "eta_min": 9, "left_out": []}, None
         return leg
-    monkeypatch.setattr(wiring, "leg_planner", leg_planner)
+    monkeypatch.setattr(legs, "leg_planner", leg_planner)
     swapped = meal.replaced_by(place=near, title="옆 식당 식사")
     swapped.place = near
     change = ItineraryChange(reason="customer_report", causes=[], notice={}, replacements={meal.item_id: swapped})
@@ -127,7 +128,7 @@ def test_44_the_basis_text_follows_the_new_state_so_chat_does_not_overclaim(monk
             return {"route": route, "starts_at": arrive - timedelta(minutes=19), "ends_at": arrive - timedelta(minutes=10),
                     "eta_min": 9, "left_out": []}, None
         return leg
-    monkeypatch.setattr(wiring, "leg_planner", leg_planner)
+    monkeypatch.setattr(legs, "leg_planner", leg_planner)
     new = _place("새 식당", 37.590, 127.000)
     sw = meal.replaced_by(place=new, title="새 식당 식사")
     sw.place = new

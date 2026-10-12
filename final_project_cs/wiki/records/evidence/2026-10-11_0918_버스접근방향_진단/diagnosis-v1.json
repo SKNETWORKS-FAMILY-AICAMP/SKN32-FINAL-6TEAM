@@ -1,0 +1,260 @@
+{
+  "rows": [
+    {
+      "reverse": false,
+      "result": [
+        {
+          "from": "남산타워",
+          "to": "이태원",
+          "planned": "subway_1",
+          "options": [
+            {
+              "id": "subway_1",
+              "label": "4호선 명동→삼각지 → 6호선 삼각지→이태원 — 환승 가장 적음(1회)",
+              "eta_min": 49,
+              "walk_m": 1884,
+              "fare_krw": 1550,
+              "uses": [
+                "4호선:명동",
+                "4호선:삼각지",
+                "6호선:삼각지",
+                "6호선:이태원"
+              ]
+            },
+            {
+              "id": "bus_subway_1",
+              "label": "버스 01A 남산서울타워→남산공원.구힐튼호텔 → 4호선 회현→삼각지 → 6호선 삼각지→이태원 — 도보 거리 가장 짧음 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+              "eta_min": 49,
+              "walk_m": 777,
+              "fare_krw": 1550,
+              "uses": [
+                "버스:01A",
+                "4호선:회현",
+                "4호선:삼각지",
+                "6호선:삼각지",
+                "6호선:이태원"
+              ]
+            }
+          ]
+        },
+        840,
+        889,
+        "2026-09-29",
+        [
+          {
+            "label": "그 밖 혼합 후보 6개",
+            "code": "mix_skipped",
+            "reason": "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)"
+          },
+          {
+            "label": "그 밖 혼합 후보 1개",
+            "code": "mix_skipped",
+            "reason": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"
+          },
+          {
+            "label": "그 밖 혼합 후보 30개",
+            "code": "mix_cap",
+            "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+          },
+          {
+            "label": "4호선 명동→충무로 → 3호선 충무로→약수 → 6호선 약수→이태원",
+            "code": "earlier_departure",
+            "reason": "이동 출발 14:00 출발은 재판정에서 불성립 · 13:53 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 2회 · 소요 51분"
+          },
+          {
+            "label": "버스 405 후암약수터→이태원119안전센터",
+            "code": "earlier_departure",
+            "reason": "이동 출발 14:00 출발은 재판정에서 불성립 · 13:58 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 0회 · 소요 41분"
+          },
+          {
+            "label": "버스 01A 남산서울타워→남산도서관.용산도서관 → 버스 405 남산도서관.용산도서관→이태원119안전센터",
+            "code": "earlier_departure",
+            "reason": "이동 출발 14:00 출발은 재판정에서 불성립 · 13:49 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 46분"
+          },
+          {
+            "label": "버스 01A 남산서울타워→남산공원.구힐튼호텔 → 4호선 서울역→삼각지 → 6호선 삼각지→이태원",
+            "code": "earlier_departure",
+            "reason": "이동 출발 14:00 출발은 재판정에서 불성립 · 13:59 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 2회 · 소요 50분"
+          }
+        ]
+      ],
+      "why": null,
+      "direct_405": [
+        {
+          "route": "Route(route_id='100100597', route_nm='405', route_type='3', route_type_nm='간선', term_min=15, first_min=250, last_min=1360, crosses_midnight=False, raw={'route_id': '100100597', 'route_nm': '405', 'route_type': '3', 'route_type_nm': '간선', 'route_type_grade': '확정', 'corp_nm': '삼성여객 02-793-8181', 'st_station_nm': '염곡동', 'ed_station_nm': '시청앞', 'length_km': 46.0, 'term_min': 15, 'first_time': '04:10', 'last_time': '22:40', 'crosses_midnight': False, 'grade_service_window': '확정', 'grade_wait': '추정', 'window_note': None, 'time_base_date': '2026-09-10', 'service_days': 'daily', 'service_days_grade': '추정', 'service_days_basis': None, 'source': 'seoul_bus_route', 'source_id': 'seoul_bus_route@2026-09-10', 'fetched_at': '2026-09-10', 'fetched_at_precision': 'day'})",
+          "x": {
+            "route_id": "100100597",
+            "route_nm": "405",
+            "seq": 51,
+            "station_id": "102000076",
+            "ars_id": "03170",
+            "station_nm": "후암약수터",
+            "lat": 37.548395263,
+            "lng": 126.9841668777,
+            "direction": "염곡동",
+            "sect_dist_m": 1094,
+            "transfer_yn": "N",
+            "source": "seoul_bus_route",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "fetched_at": "2026-09-10",
+            "fetched_at_precision": "day"
+          },
+          "y": {
+            "route_id": "100100597",
+            "route_nm": "405",
+            "seq": 59,
+            "station_id": "102000098",
+            "ars_id": "03192",
+            "station_nm": "이태원119안전센터",
+            "lat": 37.53479,
+            "lng": 126.996387,
+            "direction": "염곡동",
+            "sect_dist_m": 944,
+            "transfer_yn": "N",
+            "source": "seoul_bus_route",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "fetched_at": "2026-09-10",
+            "fetched_at_precision": "day"
+          },
+          "span": 8,
+          "da": 473,
+          "db": 161,
+          "in_eff": 676,
+          "out_eff": 126
+        }
+      ],
+      "trace": null,
+      "walk_capped": [
+        {
+          "straight_m": 473,
+          "routed_m": 1624,
+          "used_m": 946
+        }
+      ]
+    },
+    {
+      "reverse": true,
+      "result": [
+        {
+          "from": "이태원",
+          "to": "남산타워",
+          "planned": "subway_1",
+          "options": [
+            {
+              "id": "subway_1",
+              "label": "6호선 이태원→삼각지 → 4호선 삼각지→명동",
+              "eta_min": 45,
+              "walk_m": 1884,
+              "fare_krw": 1550,
+              "uses": [
+                "6호선:이태원",
+                "6호선:삼각지",
+                "4호선:삼각지",
+                "4호선:명동"
+              ]
+            }
+          ]
+        },
+        842,
+        887,
+        "2026-09-29",
+        [
+          {
+            "label": "그 밖 혼합 후보 6개",
+            "code": "mix_skipped",
+            "reason": "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)"
+          },
+          {
+            "label": "그 밖 혼합 후보 2개",
+            "code": "mix_skipped",
+            "reason": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"
+          },
+          {
+            "label": "그 밖 혼합 후보 28개",
+            "code": "mix_cap",
+            "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+          },
+          {
+            "label": "6호선 이태원→약수 → 3호선 약수→충무로 → 4호선 충무로→명동",
+            "code": "earlier_departure",
+            "reason": "이동 출발 14:02 출발은 재판정에서 불성립 · 13:59 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 2회 · 소요 49분"
+          },
+          {
+            "label": "버스 405 이태원119안전센터→후암약수터",
+            "code": "earlier_departure",
+            "reason": "이동 출발 14:02 출발은 재판정에서 불성립 · 13:59 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 0회 · 소요 42분"
+          },
+          {
+            "label": "6호선 이태원→약수 → 3호선 약수→동대입구 → 버스 01A 동대입구역.장충동→남산서울타워",
+            "code": "earlier_departure",
+            "reason": "이동 출발 14:02 출발은 재판정에서 불성립 · 13:59 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 2회 · 소요 37분"
+          },
+          {
+            "label": "버스 110B국민대 이태원역4번출구.해밀턴호텔→서울시기술교육원중부.블루스퀘어 → 버스 402 서울시기술교육원중부.블루스퀘어→후암약수터",
+            "code": "earlier_departure",
+            "reason": "이동 출발 14:02 출발은 재판정에서 불성립 · 13:58 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 42분"
+          },
+          {
+            "label": "6호선 이태원→버티고개 → 버스 402 장충단로입구→후암약수터",
+            "code": "earlier_departure",
+            "reason": "이동 출발 14:02 출발은 재판정에서 불성립 · 13:59 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 39분"
+          }
+        ]
+      ],
+      "why": null,
+      "direct_405": [
+        {
+          "route": "Route(route_id='100100597', route_nm='405', route_type='3', route_type_nm='간선', term_min=15, first_min=250, last_min=1360, crosses_midnight=False, raw={'route_id': '100100597', 'route_nm': '405', 'route_type': '3', 'route_type_nm': '간선', 'route_type_grade': '확정', 'corp_nm': '삼성여객 02-793-8181', 'st_station_nm': '염곡동', 'ed_station_nm': '시청앞', 'length_km': 46.0, 'term_min': 15, 'first_time': '04:10', 'last_time': '22:40', 'crosses_midnight': False, 'grade_service_window': '확정', 'grade_wait': '추정', 'window_note': None, 'time_base_date': '2026-09-10', 'service_days': 'daily', 'service_days_grade': '추정', 'service_days_basis': None, 'source': 'seoul_bus_route', 'source_id': 'seoul_bus_route@2026-09-10', 'fetched_at': '2026-09-10', 'fetched_at_precision': 'day'})",
+          "x": {
+            "route_id": "100100597",
+            "route_nm": "405",
+            "seq": 29,
+            "station_id": "102000099",
+            "ars_id": "03193",
+            "station_nm": "이태원119안전센터",
+            "lat": 37.534582,
+            "lng": 126.996812,
+            "direction": "시청앞",
+            "sect_dist_m": 727,
+            "transfer_yn": "N",
+            "source": "seoul_bus_route",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "fetched_at": "2026-09-10",
+            "fetched_at_precision": "day"
+          },
+          "y": {
+            "route_id": "100100597",
+            "route_nm": "405",
+            "seq": 38,
+            "station_id": "102000075",
+            "ars_id": "03169",
+            "station_nm": "후암약수터",
+            "lat": 37.54869,
+            "lng": 126.98432,
+            "direction": "시청앞",
+            "sect_dist_m": 652,
+            "transfer_yn": "N",
+            "source": "seoul_bus_route",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "fetched_at": "2026-09-10",
+            "fetched_at_precision": "day"
+          },
+          "span": 9,
+          "da": 195,
+          "db": 442,
+          "in_eff": 142,
+          "out_eff": 631
+        }
+      ],
+      "trace": null,
+      "walk_capped": [
+        {
+          "straight_m": 442,
+          "routed_m": 1419,
+          "used_m": 884
+        }
+      ]
+    }
+  ],
+  "network_attempts": 0
+}

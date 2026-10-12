@@ -1,0 +1,60 @@
+{"event": "reserved", "call_id": "1", "cost_usd": 0.02}
+{"event": "finished", "call_id": "1", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "2", "cost_usd": 0.02}
+{"event": "finished", "call_id": "2", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "3", "cost_usd": 0.02}
+{"event": "finished", "call_id": "3", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "4", "cost_usd": 0.02}
+{"event": "finished", "call_id": "4", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "5", "cost_usd": 0.02}
+{"event": "finished", "call_id": "5", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "6", "cost_usd": 0.02}
+{"event": "finished", "call_id": "6", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "7", "cost_usd": 0.02}
+{"event": "finished", "call_id": "7", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "8", "cost_usd": 0.02}
+{"event": "finished", "call_id": "8", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "9", "cost_usd": 0.02}
+{"event": "finished", "call_id": "9", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "10", "cost_usd": 0.02}
+{"event": "finished", "call_id": "10", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "11", "cost_usd": 0.02}
+{"event": "finished", "call_id": "11", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "12", "cost_usd": 0.02}
+{"event": "finished", "call_id": "12", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "13", "cost_usd": 0.02}
+{"event": "finished", "call_id": "13", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "14", "cost_usd": 0.02}
+{"event": "finished", "call_id": "14", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "15", "cost_usd": 0.02}
+{"event": "finished", "call_id": "15", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "16", "cost_usd": 0.02}
+{"event": "finished", "call_id": "16", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "17", "cost_usd": 0.02}
+{"event": "finished", "call_id": "17", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "18", "cost_usd": 0.02}
+{"event": "finished", "call_id": "18", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "19", "cost_usd": 0.02}
+{"event": "finished", "call_id": "19", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "20", "cost_usd": 0.02}
+{"event": "finished", "call_id": "20", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "21", "cost_usd": 0.02}
+{"event": "finished", "call_id": "21", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "22", "cost_usd": 0.02}
+{"event": "finished", "call_id": "22", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "23", "cost_usd": 0.02}
+{"event": "finished", "call_id": "23", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "24", "cost_usd": 0.02}
+{"event": "finished", "call_id": "24", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "25", "cost_usd": 0.02}
+{"event": "finished", "call_id": "25", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "26", "cost_usd": 0.02}
+{"event": "finished", "call_id": "26", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "27", "cost_usd": 0.02}
+{"event": "finished", "call_id": "27", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "28", "cost_usd": 0.02}
+{"event": "finished", "call_id": "28", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "29", "cost_usd": 0.02}
+{"event": "finished", "call_id": "29", "cost_usd": 0.01, "usage_known": true}
+{"event": "reserved", "call_id": "30", "cost_usd": 0.02}
+{"event": "finished", "call_id": "30", "cost_usd": 0.01, "usage_known": true}

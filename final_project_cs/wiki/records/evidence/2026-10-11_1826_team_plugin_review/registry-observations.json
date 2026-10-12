@@ -1,0 +1,23 @@
+{
+  "observation_checks": {
+    "matched": 4,
+    "total": 4
+  },
+  "meaning": "existing behavior reproduction, not target acceptance tests",
+  "observations": {
+    "inactive_auto_route": "case must resolve to exactly one active team: dining",
+    "inactive_direct_get_active": false,
+    "inactive_direct_execute": "inactive_team_was_executed",
+    "absent_get": "unknown team: dining"
+  },
+  "source_sha256": {
+    "app/core/registry.py": "141422d39a698f2f7198f96380243682c18706c52f14eea1a41d569338d77848",
+    "app/core/remote_team/executor.py": "b5ea00ac98b53ae40a77fc821cad119b6e543517146702b4c0b67384217dc32b",
+    "app/core/project_config.py": "79d942650243e2c70998e662c570e8d7ddd4d9f89fed39195820c7e2d1b25e0d",
+    "app/composition.py": "d95ff9a788e9d282c5a2abde1015d6ede2d575ceac742cee47946723c00a080c",
+    "app/application/controller.py": "6cfa506769e664621555e89b79257d61e7c1569e8ab33dde75f37b4778f26f0f",
+    "app/application/runtime.py": "da376aee1668d935f07fcc0adf390bdd8ebe969d23def4f61d901a90b0738853",
+    "app/domains/travel_ops/components/conversation/case_dispatch.py": "b53b9d205f75c26ee30451a7d57aca33291bfbd33c742463a644ed8f3e9618fc",
+    "app/domains/travel_ops/entry/trip_api.py": "d01c87fb190d5e0b7aceeb88eaa7049880c2afdd1a7700da11e4ec95f261f8ad"
+  }
+}

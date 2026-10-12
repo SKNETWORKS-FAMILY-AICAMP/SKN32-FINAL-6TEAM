@@ -1,0 +1,7 @@
+{
+  "checked_resources_and_hashes": 164,
+  "failures": [],
+  "passed": true,
+  "backups": 22,
+  "scope": "final local resources/evidence/backup hashes; no browser rendering"
+}

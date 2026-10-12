@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { controlsLayout } from "./map-controls";
-import { distanceM, edgeChips, formatDistance, metersPerPixel, niceScale, toPixels } from "./map-geometry";
+import { distanceM, edgeChips, formatDistance, metersPerPixel, niceScale, toPixels, type EdgeChip } from "./map-geometry";
 import type { MapPoint, MapView } from "./model";
 
 /** Seoul city hall at the middle of a 360 × 600 px view about 3.4 km wide. */
 const view: MapView = { south: 37.5435, west: 126.9575, north: 37.5895, east: 126.9985, width: 360, height: 600, zoom: 13 };
 const point = (id: string, lat: number, lng: number, order = Number(id), tone?: MapPoint["tone"]): MapPoint => ({ id, title: id, date: "", time: "", order, coordinates: { lat, lng }, tone });
+
+type Box = { left: number; top: number; right: number; bottom: number };
+// 일반 단추의150px 예약 폭과 좁은 공간 단추의44px 실제 폭을 지도 안으로 보정합니다.
+const chipBox = (chip: EdgeChip, width: number): Box => {
+  const half = chip.crowded ? 22 : 75;
+  const x = Math.max(half, Math.min(width - half, chip.x));
+  return { left: x - half, right: x + half, top: chip.y - 18, bottom: chip.y + 18 };
+};
 
 describe("toPixels", () => {
   it("puts the corners at the corners of the view and the middle at the middle", () => {
@@ -82,17 +90,17 @@ describe("chips for stops out of view", () => {
     expect(chips[0].y).toBeLessThan(120);
   });
 
-  it("does not stand one under the bar at the top, nor point at a stop shown only as context", () => {
+  it("keeps an inside coordinate under the bar as a normal pin, and ignores muted context", () => {
     const under = edgeChips(view, [point("1", 37.5885, 126.978)], { top: 64 });                       // inside the view but under the 64 px bar
-    expect(under).toHaveLength(1);
-    expect(under[0].y).toBeGreaterThanOrEqual(64);
+    expect(under).toEqual([]);
     expect(edgeChips(view, [point("1", 37.7, 126.978, 1, "muted")])).toEqual([]);
   });
 
-  it("treats what is under the sheet at the bottom as out of view, and stands its chip above the sheet", () => {
-    const [chip] = edgeChips(view, [point("1", 37.5455, 126.978)], { bottom: 24 });                    // inside the view (26 px above the edge) but under the 24 px the sheet covers
-    expect(chip.y).toBeLessThanOrEqual(600 - 24);
-    expect(edgeChips(view, [point("1", 37.5455, 126.978)])).toEqual([]);                               // with nothing over it, it is in view
+  it("keeps inside coordinates normal despite bottom placement space, but puts outside chips above it", () => {
+    expect(edgeChips(view, [point("1", 37.5455, 126.978)], { bottom: 76 })).toEqual([]);
+    const [chip] = edgeChips(view, [point("2", 37.53, 126.978)], { bottom: 76 });
+    expect(chip.ids).toEqual(["2"]);
+    expect(chip.y).toBeLessThanOrEqual(600 - 76);
   });
 
   it("keeps clear of the map's own buttons at the top right", () => {
@@ -115,14 +123,76 @@ describe("controlsLayout", () => {
   });
 });
 
-describe("a pin that could be cut by the edge", () => {
-  it("gets a chip when its coordinate is within a few px of the left edge (the drop would be cut), and none when it is well inside", () => {
+describe("physical viewport bounds", () => {
+  it.each([180, 320, 600])("공개 중 동서의 먼 일정은 실제 방향의 가장자리에 남는다 (%ipx)", height => {
+    const chips = edgeChips({ ...view, height }, [point("1", 37.5665, 126.8), point("2", 37.5665, 127.15), { ...point("3", 37.5665, 126.978), revealFocus: true }], { top: 64, bottom: 76 });
+    expect(chips).toHaveLength(2);
+    expect(chips.find(chip => chip.ids.includes("1"))!.x).toBeLessThan(view.width / 2);
+    expect(chips.find(chip => chip.ids.includes("2"))!.x).toBeGreaterThan(view.width / 2);
+  });
+  it.each([180, 320, 600])("공개 중 같은 서쪽의 이전 일정은 스택 하나로 남는다 (%ipx)", height => {
+    const chips = edgeChips({ ...view, height }, [point("1", 37.5665, 126.8), point("2", 37.567, 126.801), { ...point("3", 37.5665, 126.978), revealFocus: true }], { top: 64, bottom: 76 });
+    expect(chips).toHaveLength(1);
+    expect(chips[0].ids).toEqual(["1", "2"]);
+    expect(chips[0].labels).toEqual(["1", "2"]);
+    expect(chips[0].x).toBeLessThan(view.width / 2);
+  });
+  it.each([2, 3, 4, 5, 20])("작은 지도에서 같은 방향의 이전 %i개 일정은 빠짐없이 기존 스택에 남는다", count => {
+    const outside = Array.from({ length: count }, (_, i) => point(String(i + 1), 37.61 + i * .001, 126.978));
+    const chips = edgeChips({ ...view, height: 180 }, [...outside, { ...point("focus", 37.5665, 126.978, count + 1), revealFocus: true }], { top: 64, bottom: 76 });
+    expect(chips).toHaveLength(1);
+    expect(chips[0].ids).toEqual(outside.map(p => p.id));
+    expect(chips[0].distanceM).toBeCloseTo(distanceM({lat: 37.5665, lng: 126.978}, outside[0].coordinates));
+  });
+  it("같은 방향 스택은 지도 접기 단추를 피한다", () => {
+    const obstacle = { left: 270, top: 64, right: 360, bottom: 110 };
+    const outside = Array.from({ length: 5 }, (_, i) => point(String(i + 1), 37.61, 126.978));
+    const chips = edgeChips({ ...view, height: 180 }, [...outside, { ...point("focus", 37.5665, 126.978, 6), revealFocus: true }], { top: 64, bottom: 76, obstacles: [obstacle] });
+    expect(chips).toHaveLength(1);
+    expect(chipBox(chips[0], view.width).right).toBeLessThanOrEqual(obstacle.left - 6);
+  });
+  it("동서남북의 이전 일정은 방향별 스택으로 남으며 현재 일정은 제외한다", () => {
+    const outside = [point("1",37.5665,126.8),point("2",37.5665,126.81),point("3",37.5665,127.15),point("4",37.5665,127.16),
+      point("5",37.7,126.978),point("6",37.71,126.978),point("7",37.4,126.978),point("8",37.39,126.978)];
+    const chips=edgeChips(view,[...outside,{...point("focus",37.5665,126.978,9),revealFocus:true}],{top:64,bottom:76});
+    expect(chips.map(chip=>chip.ids).sort()).toEqual([["1","2"],["3","4"],["5","6"],["7","8"]]);
+    expect(new Set(chips.flatMap(chip=>chip.ids))).toEqual(new Set(outside.map(p=>p.id)));
+  });
+  it("같은 방향이라도 지도 안 일정은 스택에 포함하지 않는다", () => {
+    const chips=edgeChips(view,[point("1",37.5665,view.west+.001),point("2",37.5665,126.8),point("3",37.5665,126.81),{...point("focus",37.5665,126.978,4),revealFocus:true}]);
+    expect(chips.map(chip=>chip.ids)).toEqual([["2","3"]]);
+  });
+  it("낮은 지도의 첫 거리 버튼도 버리지 않고 거리·접기 단추 반대편에 둔다", () => {
+    const [chip] = edgeChips({ ...view, height: 140 }, [point("1", 37.5665, 127.1)], { top: 64, bottom: 40, obstacles: [{ left: 270, top: 64, right: 360, bottom: 110 }] });
+    expect(chip.ids).toEqual(["1"]);
+    expect(chip.x + 75).toBeLessThan(270 - 6);
+  });
+  it("카메라가 도착하기 전 새 마커의 거리 표시도 앞선 마커와 합치지 않는다", () => {
+    const chips = edgeChips(view, [point("1", 37.61, 126.978), { ...point("2", 37.612, 126.978), revealFocus: true }], { top: 64, bottom: 76 });
+    expect(chips.map(chip => chip.ids).sort()).toEqual([["1"], ["2"]]);
+  });
+  it("keeps pins at the edge and within a few px inside as normal markers", () => {
     const nearLeft = toPixels(view, { lat: 37.5665, lng: view.west });                                                  // x = 0
     expect(nearLeft.x).toBeCloseTo(0, 3);
     const edge = { lat: 37.5665, lng: view.west + (view.east - view.west) * (6 / 360) };                                   // 6 px from the left edge
-    expect(edgeChips(view, [point("1", edge.lat, edge.lng)])).toHaveLength(1);
+    expect(edgeChips(view, [point("1", edge.lat, edge.lng)])).toEqual([]);
     const inside = { lat: 37.5665, lng: view.west + (view.east - view.west) * (60 / 360) };                                // 60 px inside
     expect(edgeChips(view, [point("1", inside.lat, inside.lng)])).toEqual([]);
+  });
+
+  it("keeps all four viewport corners inside even with reserved placement space", () => {
+    const corners = [
+      point("1", view.north, view.west), point("2", view.north, view.east),
+      point("3", view.south, view.west), point("4", view.south, view.east),
+    ];
+    expect(edgeChips(view, corners, { top: 64, bottom: 76, rightKeep: 64 })).toEqual([]);
+  });
+
+  it("groups only truly outside points when a nearby inside point shares their direction", () => {
+    const chips = edgeChips(view, [point("1", 37.589, 126.978), point("2", 37.61, 126.978), point("3", 37.612, 126.978)], { top: 64, bottom: 76 });
+    expect(chips).toHaveLength(1);
+    expect(chips[0].ids).toEqual(["2", "3"]);
+    expect(edgeChips(view, [point("4", 37.5665, view.west - 0.00001)])[0].ids).toEqual(["4"]);
   });
 
   it("shows up to eight chips (it was five: with many stops spread apart the farthest ones had no sign)", () => {
@@ -130,4 +200,13 @@ describe("a pin that could be cut by the edge", () => {
     expect(edgeChips(view, far).length).toBeGreaterThan(5);
     expect(edgeChips(view, far).length).toBeLessThanOrEqual(8);
   });
+});
+
+
+it("거리 칩의 표시 한도를 넘어도 모든 일정 번호가 합쳐져 남는다", () => {
+  const view = { west: 126.9, east: 127.0, south: 37.5, north: 37.6, width: 375, height: 400, zoom: 12 };
+  const points = Array.from({ length: 40 }, (_, i) => ({ id: String(i), title: "일정", date: "2026-10-01", time: "09:00", order: i + 1, coordinates: { lat: i % 2 ? 37.8 : 37.3, lng: 126.4 + i * .03 } }));
+  const chips = edgeChips(view, points, { top: 64, bottom: 76, rightKeep: 64 });
+  expect(new Set(chips.flatMap((chip) => chip.ids)).size).toBe(40);
+  chips.forEach((chip, i) => chips.slice(i + 1).forEach((other) => expect(Math.abs(chip.y-other.y) >= 36 || Math.abs(chip.x-other.x) >= 158).toBe(true)));
 });

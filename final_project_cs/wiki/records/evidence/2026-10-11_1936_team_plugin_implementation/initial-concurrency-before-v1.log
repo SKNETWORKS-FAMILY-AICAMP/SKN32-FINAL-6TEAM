@@ -1,0 +1,37 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+______ test_concurrent_initial_message_has_one_case_and_one_application _______
+
+decided = {'calculation_calls': [('���� ���� �Ĵ�', '�溹��', datetime.datetime(2026, 9, 23, 13, 50, tzinfo=datetime.timezone(datetime.ti...sion_unit_web._Decider object at 0x0000022DBFA03350>, 'key': 'acop_u_PJcTCFgdG490SNMDp6V7TTQfG_dv1LidT9mZrBTUI-k', ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000022DBF9134A0>
+
+    def test_concurrent_initial_message_has_one_case_and_one_application(decided, monkeypatch):
+        from app.domains.travel_ops.components.conversation import trip_messages
+    
+        barrier = Barrier(2, timeout=30)
+        original = trip_messages._try_decide
+    
+        def decide(*args, **kwargs):
+            result = original(*args, **kwargs)
+            barrier.wait()
+            return result
+    
+        monkeypatch.setattr(trip_messages, "_try_decide", decide)
+        request_id = "concurrent-initial-request"
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(lambda _: _post(decided, "���� �ٸ� ���� �ٲ�", request_id), range(2)))
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT case_id FROM customer_cases WHERE state_json->'trip_message'->>'request_id'=%s", (request_id,))
+            ids = cur.fetchall()
+>           assert len(ids) == 1, ([r.status_code for r in results], ids)
+E           AssertionError: ([200, 200], [(UUID('2a6cd3bf-c93e-4265-a63d-83351b4e65b0'),), (UUID('6b0c17f8-177b-4554-b52c-9a7de414f1ee'),)])
+E           assert 2 == 1
+E            +  where 2 = len([(UUID('2a6cd3bf-c93e-4265-a63d-83351b4e65b0'),), (UUID('6b0c17f8-177b-4554-b52c-9a7de414f1ee'),)])
+
+tests\e2e\test_web_initial_concurrency.py:29: AssertionError
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.instances.dining.team:team.py:45 dining states not read case=2a6cd3bf-c93e-4265-a63d-83351b4e65b0 reason=ToolLoopExceeded
+WARNING  app.domains.travel_ops.instances.dining.team:team.py:45 dining states not read case=6b0c17f8-177b-4554-b52c-9a7de414f1ee reason=ToolLoopExceeded
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_web_initial_concurrency.py::test_concurrent_initial_message_has_one_case_and_one_application
+1 failed in 29.63s

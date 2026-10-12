@@ -1,0 +1,141 @@
+{
+  "created_at": "2026-10-09T03:09:39.731446+09:00",
+  "independent_coordinate_pairs": 1,
+  "provider_route_queries": 3,
+  "routed_providers": 2,
+  "excluded_unavailable_providers": 1,
+  "road_and_time_aligned_accuracy_rows": 0,
+  "developer_api_calls": 0,
+  "observations": [
+    {
+      "id": "C04",
+      "provider": "naver",
+      "mode": "car",
+      "observed_at": "2026-10-08T18:07:28.434Z",
+      "url": "https://map.naver.com/p/directions/3zaTgm,2ALOMg,%EC%84%9C%EC%9A%B8%20%EA%B0%95%EC%84%9C%EA%B5%AC%20%EA%B3%B5%ED%95%AD%EB%8F%99%202-104,,ADDRESS_POI/3zaSZc,2ALR7e,%EC%84%9C%EC%9A%B8%20%EA%B0%95%EC%84%9C%EA%B5%AC%20%EA%B3%B5%ED%95%AD%EB%8F%99%202-104,,ADDRESS_POI/-/car/0?c=18.00,0,0,0,dh",
+      "status": "routed",
+      "meters": 100,
+      "minutes": 1,
+      "taxi_won": 5800,
+      "fuel_won": 16,
+      "road_segment_display_m": 81,
+      "display_route_calculated_time": "오전 02:58",
+      "route_shape_observed": "northbound direct route, screenshot visually inspected; geometry not exported",
+      "requested_start": [
+        126.81659695671017,
+        37.56103677313472
+      ],
+      "requested_end": [
+        126.81649055992263,
+        37.561935578472514
+      ],
+      "requested_coordinate_alignment": true,
+      "snapped_road_alignment": false,
+      "departure_time_alignment": false,
+      "independent_holdout": false,
+      "purpose": "targeted development diagnosis of relation 4677532 and road attachment ambiguity",
+      "developer_api_calls": 0
+    },
+    {
+      "id": "C04",
+      "provider": "kakao",
+      "mode": "car",
+      "observed_at": "2026-10-08T18:02:45.104Z",
+      "url": "https://map.kakao.com/",
+      "status": "routed",
+      "meters_rounded": 800,
+      "minutes": 2,
+      "taxi_won": 5700,
+      "fuel_won": 122,
+      "route_steps": [
+        {
+          "road": "방화대로",
+          "meters": 451,
+          "action": "공항대로 방면으로 유턴"
+        },
+        {
+          "meters": 352,
+          "action": "목적지"
+        }
+      ],
+      "requested_start": [
+        126.81659695671017,
+        37.56103677313472
+      ],
+      "requested_end": [
+        126.81649055992263,
+        37.561935578472514
+      ],
+      "requested_coordinate_alignment": true,
+      "snapped_road_alignment": false,
+      "departure_time_alignment": false,
+      "independent_holdout": false,
+      "purpose": "targeted development diagnosis of relation 4677532 and road attachment ambiguity",
+      "developer_api_calls": 0
+    },
+    {
+      "id": "C04",
+      "provider": "google",
+      "mode": "car",
+      "observed_at": "2026-10-08T18:02:45.158Z",
+      "url": "https://www.google.com/maps/dir/8Q98HR68%2BCJ9/8Q98HR68%2BQHH/data=!3m1!4b1?entry=ttu&g_ep=EgoyMDI2MTAwNS4wIKXMDSoASAFQAw%3D%3D",
+      "status": "unavailable",
+      "excluded_reason": "route cannot be calculated; driving option disabled for this requested pair",
+      "from_plus_code": "8Q98HR68+CJ9",
+      "to_plus_code": "8Q98HR68+QHH",
+      "requested_start": [
+        126.81659695671017,
+        37.56103677313472
+      ],
+      "requested_end": [
+        126.81649055992263,
+        37.561935578472514
+      ],
+      "requested_coordinate_alignment": true,
+      "snapped_road_alignment": false,
+      "departure_time_alignment": false,
+      "independent_holdout": false,
+      "purpose": "targeted development diagnosis of relation 4677532 and road attachment ambiguity",
+      "developer_api_calls": 0
+    }
+  ],
+  "files": [
+    {
+      "name": "C04_google_car.json",
+      "bytes": 882,
+      "sha256": "6c138b73332c31399fd006f45829fd6e878c8ced90798f850034c65a87540ec0"
+    },
+    {
+      "name": "C04_google_visible-excerpt.txt",
+      "bytes": 188,
+      "sha256": "3b342f22fc2f0b53aee9f4340acf9e0638245de7a8535c35edd268633bd0256c"
+    },
+    {
+      "name": "C04_kakao_car.json",
+      "bytes": 893,
+      "sha256": "8c9b5dee16b643e1b10acba9e91cbbdb4eb21c606aaa60973967c890cd779c05"
+    },
+    {
+      "name": "C04_kakao_visible-excerpt.txt",
+      "bytes": 401,
+      "sha256": "9634cc42b57c4f3983075dfbdbdc0ed9bf53d568a414aae8535daee32407b993"
+    },
+    {
+      "name": "C04_naver_car.json",
+      "bytes": 1131,
+      "sha256": "09cb895bfa93de47cf010701a3b0370f6cf01a19a2e8600007458025f628236d"
+    },
+    {
+      "name": "C04_naver_visible-excerpt.txt",
+      "bytes": 115,
+      "sha256": "6c18fa8592d15c3c2cc7bd74cfcbb152e67e4e71d531acb782020be0b4ad9c34"
+    },
+    {
+      "name": "C04_osm_latest_observation.json",
+      "bytes": 1107,
+      "sha256": "9a1a9a8ddc807a625cad233cd075b8f269ebc63c4bf317b81a4776ecfb52b0fc"
+    }
+  ],
+  "text_scope": "selected visible factual excerpts, not full page or saved screenshots",
+  "licensing_scope": "factual observations for local academic diagnosis; not map tiles, photos or provider route datasets"
+}

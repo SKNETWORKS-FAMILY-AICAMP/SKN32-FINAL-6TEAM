@@ -1,0 +1,15 @@
+{
+  "started_at": "2026-10-09T10:10:52.488223+09:00",
+  "finished_at": "2026-10-09T10:10:52.587791+09:00",
+  "url": "http://swopenapi.seoul.go.kr/api/subway/sample/json/realtimeStationArrival/0/5/%EC%84%9C%EC%9A%B8",
+  "http_status": 200,
+  "response_bytes": 3616,
+  "raw_path": "datasets/mobility/raw/2026-10-09_1009_지하철응답_빈값오인_public_sample/response-v1.json",
+  "raw_sha256": "061bb931bbe628c402394d67e0795451caae238840a5768de7e65662e3eaeb9a",
+  "public_sample_requests": 1,
+  "normalized_success": true,
+  "train_count": 5,
+  "misses": {},
+  "response_code": "INFO-000",
+  "claim": "One provider snapshot for Seoul Station, replayed through public arrivals. Not train selection, journey measurement or runtime departure integration."
+}

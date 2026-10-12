@@ -1,0 +1,18 @@
+[Unit]
+Description=triPilot ARM continuous actual HTTP serving queue
+After=docker.service
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/tripilot-arm-cd.env
+ExecStart=/usr/bin/python3 ${DEPLOY_BASE}/control/serving_queue.py
+Restart=on-failure
+RestartSec=30
+MemoryMax=256M
+CPUQuota=20%
+KillMode=control-group
+TimeoutStopSec=45min
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,6 @@
+{
+  "error": "AssertionError: official binding matched but zero services because timetable has 서울역, official source 서울.",
+  "original_script": "audit_subway_selection_v1.py",
+  "resolution": "Second audit uses exact local audited 서울역→서울 bridge for one source replay only; production alias and runtime remain unchanged.",
+  "production_identity_gap_remaining": true
+}

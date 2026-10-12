@@ -1,0 +1,448 @@
+{
+  "phase": "running",
+  "updated_at_kst": "2026-10-12T21:39:46.491282+09:00",
+  "w_ids": [
+    "W11"
+  ],
+  "changed_files": [
+    ".gitignore",
+    "final_project_cs/app/application/operations_diagnostics.py",
+    "final_project_cs/app/domains/travel_ops/modules/web_account/web_cookie.py",
+    "final_project_cs/config/operations-policy.yaml",
+    "final_project_cs/deploy/arm/compose.yml",
+    "final_project_cs/deploy/docker-compose.admin.yml",
+    "final_project_cs/deploy/docker-compose.yml",
+    "final_project_cs/deploy/worker.sh",
+    "final_project_cs/scripts/map_commits_to_phase.py",
+    "final_project_cs/scripts/replay_operations_diagnostics.py",
+    "final_project_cs/tests/scenario/test_departure_express_db_v1.py",
+    "final_project_cs/tests/scenario/test_departure_party_db_v1.py",
+    "final_project_cs/tests/unit/core/test_debug_report_status.py",
+    "final_project_cs/tests/unit/ports/test_team_ports.py",
+    "final_project_cs/tests/unit/test_operations_diagnostics.py",
+    "final_project_cs/wiki/operations/unattended-operations.md",
+    "final_project_cs/wiki/quality/debug-report-current-status.json",
+    "final_project_cs/wiki/quality/debug-report-status.md",
+    "final_project_cs/wiki/quality/index.md",
+    "final_project_cs/wiki/quality/test-map.md",
+    "final_project_cs/wiki/records/reports/2026-10-12_0446_common-integration-validation.md",
+    "final_project_cs/wiki/records/reports/2026-10-12_0457_operations-replay-integration.md",
+    "final_project_cs/wiki/records/reports/2026-10-12_0520_diagnostic-delete-integration.md",
+    "final_project_cs/wiki/records/reports/2026-10-12_0530_travel-contract-integration.md",
+    "final_project_cs/wiki/records/reports/2026-10-12_0546_place-status-integration.md",
+    "final_project_cs/wiki/records/reports/2026-10-12_0552_privacy-regression-integration.md",
+    "final_project_cs/wiki/records/reports/2026-10-12_0603_initial-diagnostics-integration.md",
+    "final_project_cs/wiki/records/reports/2026-10-12_0626_review-support-db-integration.md",
+    "final_project_cs/wiki/records/reports/2026-10-12_0644_whole-suite-integration-review.md",
+    "program/baseline/triPilot-baseline-2026-10-12.html",
+    "program/baseline/triPilot-baseline-2026-10-12.md",
+    "program/plan/triPilot_구현계획서_v12.html",
+    "program/plan/triPilot_구현계획서_v12.md",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/audit_preparation.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/baseline-outline.html",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/baseline-outline.md",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/build_preparation_html.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/capture-checks.json",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/capture.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/check_replay_worker.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/summary.json",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_044433_264215_common_fix_final/integration-summary.json",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/current-review-manifest-2026-10-12_060622.json",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/current-source-manifest.json",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/finalization-flow.html",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/integration-table.html",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/integration-table.json",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/integration-table.md",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/preparation-checks.json",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/reconcile_current.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/record_common_fix_result.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/record_diagnostic_delete_checks.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/record_latest_regression.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/record_place_status_checks.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/record_preparation.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/record_review_progress.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/record_travel_contract_checks.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/record_wiki_review.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/render_preparation.cjs",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/report.md",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/review-checklist.html",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/review-checklist.md",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/review_wiki_handoff.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/run_common_fix_checks.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/run_operations_replay_checks.py",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/source-audit.json",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/status.json",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/thread-observations.json",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/v12-outline.html",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/v12-outline.md",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/w19-reconciliation.json",
+    "program/research/baseline_completion_2026-10-12/tasks/integration/wiki-review-2026-10-12_042303_375549.md"
+  ],
+  "tests": [
+    {
+      "command": [
+        "C:\\Users\\playdata2\\anaconda3\\python.exe",
+        "-B",
+        "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\run_common_fix_checks.py"
+      ],
+      "total": 228,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 228,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_044433_264215_common_fix_final/integration-summary.json"
+    },
+    {
+      "command": "python -B program/research/baseline_completion_2026-10-12/tasks/integration/run_operations_replay_checks.py",
+      "passed": 27,
+      "failed": 0,
+      "skipped": 0,
+      "total": 27,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_045538_637275_operations_replay/run.json"
+    },
+    {
+      "command": "python -B program/research/baseline_completion_2026-10-12/tasks/integration/check_replay_worker.py",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "total": 8,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_045657_378148_replay_worker/summary.json"
+    },
+    {
+      "passed": 215,
+      "failed": 0,
+      "skipped": 0,
+      "total": 215,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_050552_917634_diagnostic_callback/junit.xml"
+    },
+    {
+      "passed": 108,
+      "failed": 0,
+      "skipped": 0,
+      "total": 108,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_050924_562803_isolated_integration/junit.xml"
+    },
+    {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "total": 8,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_051445_838389_isolated_integration/junit.xml"
+    },
+    {
+      "passed": 79,
+      "failed": 0,
+      "skipped": 0,
+      "total": 79,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_052028_565873_isolated_integration/junit.xml"
+    },
+    {
+      "passed": 113,
+      "failed": 0,
+      "skipped": 0,
+      "total": 113,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_052414_983603_isolated_integration/junit.xml"
+    },
+    {
+      "passed": 113,
+      "failed": 0,
+      "skipped": 11,
+      "total": 124,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_054119_690586_isolated_integration/junit.xml"
+    },
+    {
+      "passed": 218,
+      "failed": 0,
+      "skipped": 11,
+      "total": 229,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_054657_390668_isolated_integration/junit.xml"
+    },
+    {
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_055733_173846_isolated_integration/junit.xml",
+      "sha256": "c961bd1a889e39092fe5a3cd6feac3ea1a7ce290261d0b1734038e0e1166a6d7",
+      "total": 268,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 268,
+      "source_changed": [],
+      "external_attempts": 0,
+      "own_cluster_stopped": true
+    },
+    {
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_055926_851705_isolated_integration/junit.xml",
+      "sha256": "0783f352870346961a673588ae96d7c127ed0d538e879e0d9cc1843ae1f41ad9",
+      "total": 904,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 12,
+      "passed": 892,
+      "source_changed": [],
+      "external_attempts": 0,
+      "own_cluster_stopped": true
+    },
+    {
+      "passed": 20,
+      "failed": 0,
+      "skipped": 0,
+      "total": 20,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_061303_591088_isolated_integration/junit.xml"
+    },
+    {
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "total": 6,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/support-unit-2026-10-12_0621.json"
+    },
+    {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "total": 5,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/support-screen-2026-10-12_0623.json",
+      "scope": "mock screen"
+    },
+    {
+      "label": "travel",
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_060205_589376_isolated_integration",
+      "junit_sha256": "4e346e3aadfe634d951d8ad5ea1add3fab292aa016ed4a166ec92b59a1587ee0",
+      "counts": {
+        "passed": 6892,
+        "skipped": 15,
+        "error": 37,
+        "failed": 2
+      },
+      "total": 6946,
+      "exit": 1,
+      "source_changed": [],
+      "blocked_attempts": {
+        "non_isolated_database": 12,
+        "external_or_existing_service": 4
+      },
+      "own_cluster_stopped": true
+    },
+    {
+      "label": "pglite_and_postgres",
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_061303_591088_isolated_integration",
+      "junit_sha256": "848bbed432bda99dcdbe7caf06e81432d5da4cb8086e92826fee387b9e0577d5",
+      "counts": {
+        "passed": 20
+      },
+      "total": 20,
+      "exit": 0,
+      "source_changed": [],
+      "blocked_attempts": {},
+      "own_cluster_stopped": true
+    },
+    {
+      "label": "standalone_scenarios",
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_063837_727042_isolated_integration",
+      "junit_sha256": "a01449ee453a2ab7cac42cdf1af68f498b5f4b538a097b884d27cc4a082fdddf",
+      "counts": {
+        "passed": 4
+      },
+      "total": 4,
+      "exit": 0,
+      "source_changed": [],
+      "blocked_attempts": {},
+      "own_cluster_stopped": true
+    },
+    {
+      "label": "db_security_contract",
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_063901_843730_isolated_integration",
+      "junit_sha256": "6c4555e2f53bd838947122970cb3bed874ada4b549aec5fe0d84201d684e4706",
+      "counts": {
+        "passed": 404
+      },
+      "total": 404,
+      "exit": 0,
+      "source_changed": [],
+      "blocked_attempts": {},
+      "own_cluster_stopped": true
+    },
+    {
+      "label": "historical_phase_mapping",
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_064050_588718_isolated_integration",
+      "junit_sha256": "198c677dc5a090a1a8c4df2fff83790b5073452c094956ffc1115fb39f0a0519",
+      "counts": {
+        "passed": 14
+      },
+      "total": 14,
+      "exit": 0,
+      "source_changed": [],
+      "blocked_attempts": {},
+      "own_cluster_stopped": true
+    },
+    {
+      "label": "oauth_postgres",
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_064139_625995_isolated_integration",
+      "junit_sha256": "43420c927e1605277fc01b766fe30c49de31f0f7cdb56421501f787b54b94ae9",
+      "counts": {
+        "passed": 8
+      },
+      "total": 8,
+      "exit": 0,
+      "source_changed": [],
+      "blocked_attempts": {},
+      "own_cluster_stopped": true
+    },
+    {
+      "label": "prior22-final",
+      "passed": 22,
+      "total": 22,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_064826/prior22-final.xml",
+      "junit_sha256": "5f2d87474dff3bed524af33b86b7f3d2cb1029c94911a9c6def8e4d27b8b3850",
+      "source_files": 1410,
+      "source_changed": []
+    },
+    {
+      "label": "cookie-security-final",
+      "passed": 156,
+      "total": 156,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_064826/cookie-security-final.xml",
+      "junit_sha256": "a6b407d1d1d247448cf2a7c66345c5c4b592222c0c02667db7e6702dd961da11",
+      "source_files": 1410,
+      "source_changed": []
+    },
+    {
+      "label": "mapping-final",
+      "passed": 14,
+      "total": 14,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_064826/mapping-final.xml",
+      "junit_sha256": "db042361a86ed110fe28d77d586dfee4becd93a5147ad5cbcb19f6dbe4e7e3e6",
+      "source_files": 1410,
+      "source_changed": []
+    },
+    {
+      "label": "dining_mobility_followup",
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "total": 12,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_092645_945781_isolated_integration/junit.xml"
+    },
+    {
+      "label": "data_accuracy_regression_rerun",
+      "passed": 2119,
+      "failed": 18,
+      "errors": 0,
+      "skipped": 0,
+      "total": 2137,
+      "deselected": 221,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_202211_388862_isolated_integration/junit.xml",
+      "junit_sha256": "7e89447e4b83bc98bd7ded96ea948160a52683c407618cd53e0be2beada9af5d",
+      "source_files": 1262,
+      "source_changed": [],
+      "own_cluster_stopped": true,
+      "failures_scope": "tests/unit/travel/mobility 18개 — 이동 담당 진행 중 변경과 시험 불일치, 이 작업에서 코드 수정 안 함"
+    },
+    {
+      "label": "rag_travel_corpus",
+      "passed": 17,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "total": 17,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_213215_423735_isolated_integration/junit.xml",
+      "junit_sha256": "e43ead10ce128ab170a04432b9f3b64de85b81864fdddf8598cfa523aac586b4",
+      "source_changed": [],
+      "embedding_artifact": "datasets/travel/baseline_completion_20261012/embeddings-2026-10-12_213211.json",
+      "loader_reference_cosine": 1.000000238418579
+    },
+    {
+      "label": "mobility_recheck_5files",
+      "passed": 106,
+      "failed": 18,
+      "errors": 0,
+      "skipped": 0,
+      "total": 124,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_213331_654488_isolated_integration/junit.xml",
+      "junit_sha256": "e9db4dfc22572644b08d9d1aa04f915c89971279a587cf7e30ddba7928c82334",
+      "source_changed": [
+        "app/domains/travel_ops/components/conversation/trip_messages.py (다른 담당, 이동 무관)"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "command": "python -B program/research/baseline_completion_2026-10-12/tasks/integration/capture.py",
+      "passed": 6,
+      "failed": 0,
+      "total": 6,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/capture-checks.json"
+    },
+    {
+      "command": "python -B program/research/baseline_completion_2026-10-12/tasks/integration/audit_preparation.py",
+      "passed": 15,
+      "failed": 0,
+      "total": 15,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/preparation-checks.json"
+    },
+    {
+      "command": "node program/research/baseline_completion_2026-10-12/tasks/integration/render_preparation.cjs",
+      "passed": 6,
+      "failed": 0,
+      "total": 6,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/screens/2026-10-11T19-10-41-104Z/render-checks.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\playdata2\\anaconda3\\python.exe",
+        "-B",
+        "-m",
+        "pytest",
+        "program/scripts/tests/test_wiki_governance.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_042004_641060_wiki_handoff\\pytest-temp",
+        "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_042004_641060_wiki_handoff\\governance.xml",
+        "--tb=short"
+      ],
+      "passed": 12,
+      "failed": 0,
+      "total": 12,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/summary.json"
+    }
+  ],
+  "report": "program/research/baseline_completion_2026-10-12/tasks/integration/report.md",
+  "dependencies_remaining": [
+    "도로 방향 구간 연결 근거·택시 미터의 정차/GPS/요율 세부 및 새 독립 표본",
+    "실제 개인 AI 등록·공개 HTTPS·쿠키·callback 종단",
+    "무료 관측 충족률·가격 예외·운영 영속 볼륨 인수",
+    "이동 단위 시험 실패18 — 이동 담당 판정(develop PR #41 은 다른 52건 수정)"
+  ],
+  "unresolved": [
+    "최종 인수 전 검토본 유지; 필수 외부·자료 조건 미충족",
+    "고유 시험별 후속 결과와 단일 전체 실행 결과를 구분",
+    "기존 추적 datasets57개 인덱스는 미변경"
+  ],
+  "deployment": "not_deployed",
+  "ready_reason": "사용자 지시에 따라 자료 준비와 확인된 정확도 결함의 직접 후속 구현·검증 중. 문서·제품 완료 아님.",
+  "source_manifest_sha256": "70ee01c9046a12ebd7a61103ca01502a5a6f88b76590556f79cfebfeec1b2c60",
+  "backup": "program/research/baseline_completion_2026-10-12/tasks/integration/_backup/2026-10-12_070652_final_review_snapshot",
+  "v11_sha256": "f4ad43d9154d723d13c816d42a8bf54b78491d3f706d76a08dade79795e9dca9",
+  "v11_unchanged": true,
+  "wiki_review_evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/summary.json",
+  "latest_review_report": "final_project_cs/wiki/records/reports/2026-10-12_0644_whole-suite-integration-review.md",
+  "latest_review_manifest": "program/research/baseline_completion_2026-10-12/tasks/integration/current-review-manifest-2026-10-12_070652.json",
+  "latest_suite_review": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/suite-review-2026-10-12_064405.json",
+  "review_closure_evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/review-closure-2026-10-12_070735.json",
+  "review_checks_passed": false,
+  "product_complete": false,
+  "latest_independent_review": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/independent-evidence-review-2026-10-12_070627.json",
+  "latest_independent_report": "program/research/baseline_completion_2026-10-12/tasks/verification/final-handoff-2026-10-12.md",
+  "local_data_progress": {
+    "dining_mobility_resolved": 7,
+    "related_passed": 12,
+    "corpus": "v1.1 current policy 12 documents /130 chunks; structural gate passed; final 16 changed text vectors encoding retry",
+    "road": "UTIC road-name-only automatic change prevented; stored actual events replay 28/28; direction acceptance remains 2/20",
+    "active_checks": [],
+    "own_cluster_reuse": "only exact task-owned 092645 stopped cluster; previous DB preserved; fresh separate test database",
+    "embedding": "원본 BGE-M3 실제 벡터 173개 계산 완료(21:32), 기준 문장 코사인 1.000000238; 검색 시험 17/17 통과(21:33)",
+    "disk_cleanup": "오전 격리 실행 pgdata 33개 삭제(재사용 092645 1개 보존), 결과·로그는 보존"
+  },
+  "taken_over_by": "Claude 세션 (program/research/session_handoff_2026-10-12/claude-handoff-1924.md 이어받기)",
+  "report_followup": "final_project_cs/wiki/records/reports/2026-10-12_2130_followup-data-regression.md"
+}

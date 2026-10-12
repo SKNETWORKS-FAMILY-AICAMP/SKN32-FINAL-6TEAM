@@ -1,0 +1,54 @@
+Listing tests:
+  checking-read-list-20261012.spec.ts:9:3 › 첫 마커부터 전체 읽힌 목록이 접혀 있고 현재 검증 카드만 펼쳐진다 375px
+  checking-read-list-20261012.spec.ts:9:3 › 첫 마커부터 전체 읽힌 목록이 접혀 있고 현재 검증 카드만 펼쳐진다 1280px
+  first-map-reveal-20261011.spec.ts:10:5 › 375px 실제 시간의 첫 지도 표시 › 질문 뒤 전체 일정은 먼저 접혀 있고 마커만 하나씩 등장하며 읽기 화면은 되돌아오지 않는다
+  first-map-reveal-20261011.spec.ts:10:5 › 1280px 실제 시간의 첫 지도 표시 › 질문 뒤 전체 일정은 먼저 접혀 있고 마커만 하나씩 등장하며 읽기 화면은 되돌아오지 않는다
+  loading-handoff.spec.ts:8:1 › 전송 요청 전에 클라이언트 진행 화면이 보이고, 첫 조회를 기다리는 동안에도 SSE는 먼저 연결된다
+  loading-handoff.spec.ts:36:1 › 설문에 머무는 동안 재생이 소진되지 않고 다음을 누른 순간부터 축적된 결과를 재생한다
+  loading-handoff.spec.ts:73:1 › 다음 로딩에서는 저장한 설문 답을 유지하고 첫 미응답 질문부터 이어서 보여준다
+  map-reveal-continuity-20261012.spec.ts:17:5 › 375px 순서대로 지도 표시 · 동작 줄이기 false › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다
+  map-reveal-continuity-20261012.spec.ts:17:5 › 375px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다
+  map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 false › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다
+  map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다
+  map-status-bar.spec.ts:10:1 › 위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 시간 초기화는 변경 메뉴에서 동작한다
+  map-status-bar.spec.ts:69:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다
+  map-status-bar.spec.ts:103:1 › 확대한 경로선에 수단 이름이 붙고 지도 이동·축소에 따라 바뀌며 클릭은 선으로 통과한다
+  map-status-bar.spec.ts:148:1 › 마커 선택은 일정만 열고 설명 알림을 띄우지 않는다
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intro · 375px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · terms-preferences · 375px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registration · 375px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · trips · 375px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registered-trip · 375px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · verification-redirect · 375px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · results-redirect · 375px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intake · 375px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · starting-revisit · 375px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · account · 375px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · profile · 375px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · support · 375px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · social-cancelled · 375px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intro · 1280px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · terms-preferences · 1280px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registration · 1280px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · trips · 1280px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registered-trip · 1280px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · verification-redirect · 1280px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · results-redirect · 1280px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intake · 1280px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · starting-revisit · 1280px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · account · 1280px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · profile · 1280px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · support · 1280px: 화면 표시·가로 넘침·실행 오류
+  uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · social-cancelled · 1280px: 화면 표시·가로 넘침·실행 오류
+  uiux-sonnet-map-reveal-20261012.spec.ts:24:3 › 세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 375px
+  uiux-sonnet-map-reveal-20261012.spec.ts:24:3 › 세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 1280px
+  uiux-sonnet-plan-20261012.spec.ts:20:3 › 계획 이름 편집을 Enter로 끝내면 제목 버튼에 초점이 돌아온다
+  uiux-sonnet-plan-20261012.spec.ts:20:3 › 계획 이름 편집을 Escape로 끝내면 제목 버튼에 초점이 돌아온다
+  uiux-sonnet-plan-20261012.spec.ts:37:3 › 목록 머리를 끈 직후 손잡이 첫 Enter 입력이 동작한다
+  uiux-sonnet-plan-20261012.spec.ts:37:3 › 목록 머리를 끈 직후 손잡이 첫 Space 입력이 동작한다
+  uiux-sonnet-plan-20261012.spec.ts:63:1 › 변경을 모두 되돌린 뒤 새로 바꾸면 이전 필터와 변경 메뉴가 되살아나지 않는다
+  uiux-sonnet-plan-20261012.spec.ts:76:1 › 잠금 요청이 진행 중이면 이전 시간 변경 토스트의 되돌리기가 추가 요청을 보내지 않는다
+  uiux-sonnet-plan-20261012.spec.ts:99:1 › 확인 실패 안내가 해소된 뒤 같은 실패가 다시 생기면 안내를 다시 표시한다
+  uiux-time-boundary-20261012.spec.ts:5:34 › 시각 고정은 그림자 상자가 아닌 실제 날짜 버튼 아래 기준 (375px)
+  uiux-time-boundary-20261012.spec.ts:5:34 › 시각 고정은 그림자 상자가 아닌 실제 날짜 버튼 아래 기준 (1280px)
+Total: 52 tests in 9 files

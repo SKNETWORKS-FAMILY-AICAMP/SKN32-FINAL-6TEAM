@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { readConsents, useConsent } from "@/features/consent/consent-store";
 import { createLocationSampler, getLocationStops, SEND_EVERY_MS, type LocationSampler, type LocationStops } from "@/lib/live/location-samples";
-import { locationPermission, watchLocation, type LocationFailure, type LocationFix } from "@/lib/location";
+import { currentLocation, locationPermission, watchLocation, type LocationFailure, type LocationFix } from "@/lib/location";
 import { useSettings } from "@/lib/settings";
 import type { MyLocation, StayPoint } from "./model";
 import { toStayPoints } from "./stays";
@@ -12,15 +12,32 @@ import { toStayPoints } from "./stays";
 /**
  * `[2026-10-05 사용자 지시]` 「지도가 나올 때 고객의 위치를 지도에 바로 표시」. While a map is on the page and the customer has given the location
  * consent, follow their position (`watchLocation`).
- * - ★No consent: nothing is asked, read, drawn or said (it is an optional consent — My page says it can be turned on).
- * - The browser has refused (`denied`): no dot; `failure` says why, for one line under the map. Asked before (`prompt`): the browser asks now.
+ * - No consent: no position is read, drawn or sent. The map button opens the existing optional consent prompt.
+ * - The browser has refused (`denied`): no dot; `failure` is shown through the shared toast. Asked before (`prompt`): the browser asks now.
  * - The consent turned off: following stops and the dot goes.
  */
-export function useMyLocation(active: boolean): { fix: LocationFix | null; failure: LocationFailure | null; agreed: boolean } {
+export function useMyLocation(active: boolean) {
   const agreed = useConsent("location");
   const [fix, setFix] = useState<LocationFix | null>(null);
   const [failure, setFailure] = useState<LocationFailure | null>(null);
   const on = active && agreed;
+  const generation = useRef(0);
+  const following = useRef(false);
+  const [followAttempt, setFollowAttempt] = useState(0);
+  useEffect(() => () => { generation.current += 1; }, [on]);
+  const locate = useCallback(async () => {
+    if (!active || !readConsents().location) return null;
+    const started = generation.current;
+    setFailure(null);
+    const permission = await locationPermission();
+    if (started !== generation.current || !readConsents().location) return null;
+    if (permission === "denied") { setFix(null); setFailure("denied"); return { ok: false as const, reason: "denied" as const }; }
+    const result = await currentLocation();
+    if (started !== generation.current || !readConsents().location) return null;
+    if (result.ok) { setFix(result.fix); setFailure(null); if (!following.current) setFollowAttempt(value => value + 1); return result; }
+    setFix(null); setFailure(result.reason);
+    return result;
+  }, [active]);
 
   useEffect(() => {
     if (!on) return;
@@ -29,14 +46,16 @@ export function useMyLocation(active: boolean): { fix: LocationFix | null; failu
     let found = false;
     void locationPermission().then((permission) => {
       if (stopped) return;
-      // Refused already: do not knock again (the browser would refuse at once anyway) — say so under the map.
+      // Refused already: do not knock again (the browser would refuse at once anyway) — explain through the toast.
       if (permission === "denied") { setFailure("denied"); return; }
+      following.current = true;
       stop = watchLocation(
         (next) => { found = true; setFix(next); setFailure(null); },
         (reason) => {
           // A slow or missing fix after one was shown: the dot stays where it was, and nothing is said (the next fix moves it).
           if ((reason === "timeout" || reason === "unavailable") && found) return;
           found = false;
+          if (reason === "denied" || reason === "unsupported" || reason === "insecure") following.current = false;
           setFix(null);
           setFailure(reason);
         },
@@ -44,13 +63,13 @@ export function useMyLocation(active: boolean): { fix: LocationFix | null; failu
     });
     return () => {
       stopped = true;
+      following.current = false;
       stop?.();
-      setFix(null);
-      setFailure(null);
+      if (!readConsents().location) { setFix(null); setFailure(null); }
     };
-  }, [on]);
+  }, [on, followAttempt]);
 
-  return on ? { fix, failure, agreed } : { fix: null, failure: null, agreed };
+  return on ? { fix, failure, agreed, locate } : { fix: null, failure: null, agreed, locate };
 }
 
 /** The fix as the map draws it — the same object while the position and the circle stay the same. */

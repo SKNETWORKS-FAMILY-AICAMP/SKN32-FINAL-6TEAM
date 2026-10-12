@@ -1,0 +1,160 @@
+{
+  "created_at": "2026-10-09T02:54:29.750837+09:00",
+  "local_links": [
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../../../app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../../../app/domains/travel_ops/instances/mobility/engine/car_turn_search.py",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../../../app/domains/travel_ops/instances/mobility/engine/turn_restrictions.py",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../../../scripts/mobility/build_car_turn_policy_v1.py",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../../../scripts/mobility/build_readiness_visual_v13.py",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../../../tests/unit/travel/mobility/test_car_turn_restrictions_v1.py",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../../../../datasets/mobility/processed/mobility/road_graph_v2/turn_restrictions_v1.json",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../evidence/2026-10-09_0228_회전제약_차량탐색/source-hashes.json",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../evidence/2026-10-09_0228_회전제약_차량탐색/data-binding-checks.json",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../evidence/2026-10-09_0228_회전제약_차량탐색/proof.json",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../evidence/2026-10-09_0228_회전제약_차량탐색/car-turn-regression-command.json",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../evidence/2026-10-09_0228_회전제약_차량탐색/car-turn-regression-v1.log",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../evidence/2026-10-09_0228_회전제약_차량탐색/car-turn-regression-v1.xml",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../evidence/2026-10-09_0228_회전제약_차량탐색/car-turn-runtime-probe-v2.json",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../evidence/2026-10-09_0228_회전제약_차량탐색/car-turn-pinned-v2.json",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../evidence/2026-10-09_0228_회전제약_차량탐색/car-turn-no-path-diagnosis-v1.json",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../evidence/2026-10-09_0228_회전제약_차량탐색/car-turn-topology-v2.json",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../evidence/2026-10-09_0228_회전제약_차량탐색/research-sources.json",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "assets/2026-10-09_mobility_readiness_v13/mobility-readiness.html",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "assets/2026-10-09_mobility_readiness_v13/car-turn-distances.png",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../../../app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0228_회전제약_차량탐색/graph_router.py.bak",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "../../../wiki/teams/_backup/2026-10-09_0228_회전제약_차량탐색/mobility.md.bak",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/teams/_backup/2026-10-09_0253_회전검증_보존/mobility.md",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0253_회전검증_보존/2026-10-09_0228_차량탐색_회전관계_미적용.md",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "C:/Users/playdata2/Documents/final_workspace/datasets/mobility/_backup/2026-10-09_0253_회전검증_보존/REPORT.md",
+      "exists": true
+    },
+    {
+      "source": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "target": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/reports/_backup/2026-10-09_0254_보고서_검수/2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "exists": true
+    },
+    {
+      "source": "mobility-readiness.html",
+      "target": "car-turn-distances.png",
+      "exists": true
+    },
+    {
+      "source": "mobility-readiness.html",
+      "target": "../../2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+      "exists": true
+    },
+    {
+      "source": "mobility-readiness.html",
+      "target": "../2026-10-09_mobility_readiness_v12/mobility-readiness.html",
+      "exists": true
+    }
+  ],
+  "links_passed": 29,
+  "links_total": 29,
+  "source_hashes_passed": 6,
+  "source_hashes_total": 6,
+  "feature_rows": 21,
+  "image_inspected": true,
+  "browser_render_verified": false,
+  "open_in_codex": "queued",
+  "final_ruff_returncode": 0,
+  "report_sha256": "8787edb9848613cc5a06b7dbfbf66bf4d307d1095d3755312e7ac74ffb85b3b1"
+}

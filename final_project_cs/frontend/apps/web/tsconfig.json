@@ -37,9 +37,24 @@
     ".next-live/types/**/*.ts",
     ".next-live/dev/types/**/*.ts",
     ".next-lan/types/**/*.ts",
-    ".next-lan/dev/types/**/*.ts"
+    ".next-lan/dev/types/**/*.ts",
+    ".next-consent-progress/types/**/*.ts",
+    ".next-consent-progress/dev/types/**/*.ts",
+    ".next-live-improvement-20261010/types/**/*.ts",
+    ".next-live-improvement-20261010/dev/types/**/*.ts",
+    ".next-chat-context-20261011/types/**/*.ts",
+    ".next-chat-context-20261011/dev/types/**/*.ts",
+    ".next-operations-20261012/types/**/*.ts",
+    ".next-operations-20261012/dev/types/**/*.ts",
+    ".next-taxi-20261012/types/**/*.ts",
+    ".next-taxi-20261012/dev/types/**/*.ts",
+    ".next-taxi-20261012-v4/types/**/*.ts",
+    ".next-taxi-20261012-v4/dev/types/**/*.ts",
+    ".next-integration-support-0619/types/**/*.ts",
+    ".next-integration-support-0619/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "**/_backup/**"
   ]
 }

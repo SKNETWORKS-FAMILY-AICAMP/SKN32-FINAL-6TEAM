@@ -1,0 +1,376 @@
+{
+  "requested_model": "claude-opus-5-5",
+  "initial_model": "claude-opus-5-5",
+  "available_tools": [
+    "Glob",
+    "Grep",
+    "Read"
+  ],
+  "is_error": false,
+  "subtype": "success",
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 170,
+      "outputTokens": 78357,
+      "cacheReadInputTokens": 22322761,
+      "cacheCreationInputTokens": 380614,
+      "webSearchRequests": 0,
+      "costUSD": 9.0772842,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 52662,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "canonical_models": {
+    "claude-opus-5-5": "claude-opus-5-5"
+  },
+  "permission_denials": [],
+  "tool_call_count": 113,
+  "tool_names": [
+    "Glob",
+    "Grep",
+    "Read"
+  ],
+  "read_calls": [
+    {
+      "tool_use_id": "toolu_01JynqfzuXEtM9MnPriHrVb9",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\release-manifest.json",
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01BB2FPGpvdKAnuzqiCxibhj",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\runtime-overlay.diff",
+      "limit": 1500,
+      "is_error": true
+    },
+    {
+      "tool_use_id": "toolu_01VQPKsSrYwdgLmCTXeqALj6",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\runtime-overlay.diff",
+      "limit": 900,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01PG4mLZ1u4QzrGHHZimFp5W",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\runtime-overlay.diff",
+      "offset": 900,
+      "limit": 800,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_015x6br4migTMF6mfn6ELbPG",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\runtime-overlay.diff",
+      "offset": 1700,
+      "limit": 800,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01ADTq5XJhfku89VqQwJZFz4",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\runtime-overlay.diff",
+      "offset": 2500,
+      "limit": 800,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01WMruZbCe6ZsKahQnRgVMVb",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\runtime-overlay.diff",
+      "offset": 3300,
+      "limit": 900,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01QBA2M1LwcgnARjx6bfUJ9B",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\runtime-overlay.diff",
+      "offset": 4200,
+      "limit": 900,
+      "is_error": true
+    },
+    {
+      "tool_use_id": "toolu_01DZvubcwRfTReeQLoHeBpFC",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\presentation\\api\\mcp.py",
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_017Yn9w9XiwS1NT9ycEMNPZT",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\runtime-overlay.diff",
+      "offset": 4200,
+      "limit": 500,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_0126nwRC1E1ARvpxxPEAhqrU",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\runtime-overlay.diff",
+      "offset": 4700,
+      "limit": 500,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01Tgp5ijNYWiDB77xohv8v5N",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\runtime-overlay.diff",
+      "offset": 5200,
+      "limit": 600,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_019W7kYqAp6SxBSjzZnWCisK",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\composition.py",
+      "offset": 140,
+      "limit": 500,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01DmnVD3EnVHj1MBhaWhFFfo",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\instances\\mobility\\wiring.py",
+      "offset": 40,
+      "limit": 205,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01W6BcfFtM5voUExRNSHu3cK",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\scripts\\run_sweepers.py",
+      "offset": 1,
+      "limit": 80,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01DQotVPAAckSBZXz26fNcCN",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\scripts\\run_sweepers.py",
+      "offset": 260,
+      "limit": 320,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_0136HVrbspsRT4KhBDzMarRq",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\components\\intake\\move_options.py",
+      "offset": 1,
+      "limit": 175,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01L4oHvuM2BFiCkQrKbSHXes",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\components\\planning\\planner.py",
+      "offset": 1165,
+      "limit": 80,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01YLkJyAwuFefoXi54GndQwz",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\entry\\trip_api.py",
+      "offset": 1010,
+      "limit": 60,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01X8vSJNum8CkCPeJG3S6wSR",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\entry\\trip_api.py",
+      "offset": 1925,
+      "limit": 130,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_019v6SjnJsVwR1WzwYaTVHmb",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\components\\conversation\\trip_messages.py",
+      "offset": 255,
+      "limit": 235,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_013oy3DyRc6GXwz737QHcczz",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\application\\controller.py",
+      "offset": 290,
+      "limit": 200,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01JvYsGccQh22yUZLbEfwf5B",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\application\\case_service.py",
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01RSB2Y7okHf2FJcJYCS7Vo7",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\presentation\\api\\cases.py",
+      "offset": 55,
+      "limit": 215,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01PjVJzBZDHYujWsVGZvDJmE",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\application\\controller.py",
+      "offset": 780,
+      "limit": 160,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01QndAHJxf8WjNWXD6pPvFHx",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\application\\routing_sweeper.py",
+      "offset": 25,
+      "limit": 90,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_016QDXbdoAnFQ27pvNjtpWR2",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\core\\case_lifecycle\\events.py",
+      "offset": 44,
+      "limit": 80,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_011Pcu2UsSVPsak2FXuNP8X8",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\components\\conversation\\trip_messages.py",
+      "offset": 655,
+      "limit": 90,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01L6Txw5tuP3n7u35WPgNs3X",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\config\\project.yaml",
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01D7NLWX7D1mrFrtMxpnnM7A",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\instances\\activity\\team.py",
+      "offset": 40,
+      "limit": 20,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01GQFgTfr1fiMHoF1Dfq8wRS",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\instances\\booking_handoff\\__init__.py",
+      "offset": 20,
+      "limit": 15,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01XAWkksU3hrK7Pqp3YqZRr2",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\core\\registry.py",
+      "offset": 125,
+      "limit": 100,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01UmngDZ2HUFGAdHbcFpCEsC",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\application\\controller.py",
+      "offset": 90,
+      "limit": 170,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_012d6L4kKiQh4zR9TwtkiGH5",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\presentation\\api\\app.py",
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01Eb5Bjyd4UjVvvUbGbpB9Cs",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\ops_entrypoint.py",
+      "offset": 40,
+      "limit": 60,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01TBa4uTnq8dfNxGnXKdwLmf",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\composition.py",
+      "offset": 697,
+      "limit": 70,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01BvN1HQ619KNQEtUioVYVxJ",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\entry\\trip_api.py",
+      "offset": 1216,
+      "limit": 130,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01FBgk39saNk5YHm4tVmFdRg",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\scenarios\\case_engine.py",
+      "offset": 50,
+      "limit": 25,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_018zeQcWfmuFnd3Xuagz7Jr7",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\entry\\trip_api.py",
+      "offset": 1430,
+      "limit": 20,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01QpNec6xH2eJTqWEcSdeLWL",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\components\\intake\\pipeline.py",
+      "offset": 472,
+      "limit": 40,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01JcJL2Wds2gdZE9SEMt6Toz",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\instances\\_shared\\itinerary_team.py",
+      "offset": 1,
+      "limit": 175,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01Su4fsJbMtjv7BBYZVTTvaw",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\instances\\_shared\\_base.py",
+      "offset": 60,
+      "limit": 100,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01EsHc8FtnUM3FtVz2kETdgi",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\application\\runtime.py",
+      "offset": 20,
+      "limit": 120,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01NwujiyNgi9QD8TgsD4QspS",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\core\\redaction.py",
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01MyZxhfGgM2W17pRkMwwdPf",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\instances\\__init__.py",
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01G4Tqeb7LD3cW46opCs7mAM",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\components\\watch\\trip_watch_cases.py",
+      "offset": 160,
+      "limit": 205,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_014sy5XQbCnUY88z5hABviU1",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\components\\itinerary\\itinerary_changes.py",
+      "offset": 100,
+      "limit": 50,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01XP28Bnb6zqDfR3DPpKan97",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\components\\actions\\itinerary_actions.py",
+      "offset": 225,
+      "limit": 20,
+      "is_error": false
+    },
+    {
+      "tool_use_id": "toolu_01QLwkEmLSBw5cDrCVQZoNRP",
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_222547_plugin_v5\\app\\domains\\travel_ops\\components\\planning\\pending.py",
+      "offset": 218,
+      "limit": 30,
+      "is_error": false
+    }
+  ],
+  "tool_errors": {
+    "toolu_01BB2FPGpvdKAnuzqiCxibhj": "File content (31620 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.",
+    "toolu_01QBA2M1LwcgnARjx6bfUJ9B": "File content (29915 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file."
+  },
+  "tests_executed": false,
+  "runtime_hash_count": 50,
+  "sha256_diff": {
+    "runtime_sources": {},
+    "audit_inputs": {}
+  }
+}

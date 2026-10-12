@@ -1,0 +1,71 @@
+{
+ "base_rows": 1713,
+ "added": 900,
+ "rows": 2613,
+ "none_rows": 1236,
+ "dropped_overlap": 99,
+ "per_type": {
+  "hard_N6": {
+   "pool": 229,
+   "oos1_wrong": 64,
+   "taken_wrong": 64,
+   "taken": 200
+  },
+  "hard_N1": {
+   "pool": 180,
+   "oos1_wrong": 19,
+   "taken_wrong": 19,
+   "taken": 120
+  },
+  "hard_N2": {
+   "pool": 296,
+   "oos1_wrong": 11,
+   "taken_wrong": 11,
+   "taken": 110
+  },
+  "hard_N4": {
+   "pool": 300,
+   "oos1_wrong": 15,
+   "taken_wrong": 15,
+   "taken": 100
+  },
+  "hard_N3": {
+   "pool": 300,
+   "oos1_wrong": 1,
+   "taken_wrong": 1,
+   "taken": 40
+  },
+  "hard_N5": {
+   "pool": 300,
+   "oos1_wrong": 0,
+   "taken_wrong": 0,
+   "taken": 30
+  },
+  "hard_P3": {
+   "pool": 231,
+   "oos1_wrong": 45,
+   "taken_wrong": 45,
+   "taken": 150
+  },
+  "hard_P2": {
+   "pool": 233,
+   "oos1_wrong": 8,
+   "taken_wrong": 8,
+   "taken": 55
+  },
+  "hard_P4": {
+   "pool": 234,
+   "oos1_wrong": 1,
+   "taken_wrong": 1,
+   "taken": 55
+  },
+  "hard_P1": {
+   "pool": 231,
+   "oos1_wrong": 0,
+   "taken_wrong": 0,
+   "taken": 40
+  }
+ },
+ "seed": 20261017,
+ "mined_rows": 2534
+}

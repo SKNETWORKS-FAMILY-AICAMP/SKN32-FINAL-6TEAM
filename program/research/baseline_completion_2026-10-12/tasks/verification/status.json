@@ -1,0 +1,973 @@
+{
+  "phase": "ready_for_integration",
+  "updated_at_kst": "2026-10-12T06:54:44.718270+09:00",
+  "w_ids": [
+    "W02",
+    "W07",
+    "W13",
+    "W15",
+    "W18",
+    "W24"
+  ],
+  "changed_files": [
+    "final_project_cs/tests/test-suites.json",
+    "final_project_cs/wiki/records/reports/2026-10-12_0426_baseline-verification-progress.md",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/.gitignore",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/audit_artifacts.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/audit_dependencies.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/audit_runtime_sources.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/current-results.md",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/execute.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/failure-handoff.md",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/finish_waiting_record.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/inspect_evidence.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/prepare.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/probe_a2a.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/probe_fixture_deadline.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/probe_operations_concurrency.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/probe_trip_delete.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/reconcile_manifest.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/record_snapshot.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/report.md",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/status.json",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/summarize.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/task.md",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/record_final_handoff.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/audit_final_suite_evidence.py",
+    "program/research/baseline_completion_2026-10-12/tasks/verification/final-handoff-2026-10-12.md"
+  ],
+  "tests": [
+    {
+      "label": "common-v2",
+      "state": "finished",
+      "exit": 1,
+      "counts": {
+        "passed": 806,
+        "failed": 19
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1217_\\ubc84\\uc2a4_\\uc218\\ub2e8\\ud544\\ud130\\uc640_\\ud658\\uc2b9\\ud0d0\\uc0c9_\\ub204\\ub77d]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1257_\\uc774\\ub3d9_\\uae30\\ub3d9_\\uac04\\uc811import_\\uae68\\uc9d0]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1310_\\ubd80\\ubd84\\uc21c\\ud658\\uc120_\\uc5c6\\ub294\\uc5f0\\uacb0_\\uc0dd\\uc131]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1735_\\uc2dc\\uac04\\ucd08\\uae30\\ud654_\\uc77c\\ubd80\\uc77c\\uc815\\ub9cc_\\ub418\\ub3cc\\ub9bc]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_0122_\\ucd9c\\ubc1c\\uc2dc\\uc810_\\ubc84\\uc2a4\\uc7ac\\uac80\\uc99d]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_0306_\\ucc28\\ub7c9_\\uc2e4\\uc81c\\uc120\\ud0dd\\ub3c4\\ub85c_\\uac70\\ub9ac\\uadfc\\uac70_\\uc720\\uc2e4]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1056_\\uc9c0\\ud558\\ucca0_\\ud604\\uc7ac\\ucd9c\\ubc1c_\\uc81c\\ud488\\uc5f0\\uacb0]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1125_\\uacf5\\uc2dd\\ubcd1\\uae30\\uc5ed\\uba85_\\uc885\\ucc29\\uacbd\\ub85c\\ubcf5\\uad6c]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1143_\\uc9c0\\ud558\\ucca0_\\uc2e4\\uc81c\\ud0a4_\\uc2b9\\ucc28\\uc870\\ud68c]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1945_\\uac70\\ub9ac\\uce69_\\ub9c8\\ucee4\\uc911\\ubcf5]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_2048_\\uc77c\\uc815\\uc0bd\\uc785_\\ucde8\\uc18c\\uc640\\uc785\\ub825\\ub77c\\ubca8]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-10_2120_\\ucd9c\\ubc1c\\uc548\\ub0b4_\\ud0d1\\uc2b9\\ud658\\uc2b9\\uc2dc\\uac01_\\uc5f0\\uacb0_\\uc2b9\\ucc28\\uc2dc\\uac01\\uc62c\\ub9bc]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-10_\\uc88c\\uc6b0\\ub9c8\\ucee4_\\ub0a0\\uc9dc_\\ucd94\\uac00\\uc548]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-11_1010_arm-adapter-incomplete-s]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-11_2136_plugin_independent_audit]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-11_2242_worker_feature_reregistr]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-11_web_conversation_resume]",
+        "tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-12_0000_watch_failed_run_recover]",
+        "tests/unit/ports/test_team_ports.py::test_a2a_poll_timeout_is_bounded_and_best_effort_cancels_remote"
+      ],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T04:09:22.152442+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "a2a-recheck",
+      "state": "finished",
+      "exit": 1,
+      "counts": {
+        "failed": 1
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [
+        "tests/unit/ports/test_team_ports.py::test_a2a_poll_timeout_is_bounded_and_best_effort_cancels_remote"
+      ],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T04:12:18.652345+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "operations-added-v1",
+      "state": "finished",
+      "exit": 0,
+      "counts": {
+        "passed": 26,
+        "skipped": 10
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T04:24:17.268877+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "travel-v1",
+      "state": "interrupted_not_final",
+      "visible_progress_markers": 576,
+      "visible_counts": {
+        ".": 564,
+        "F": 7,
+        "s": 5
+      },
+      "completed_reports_counts": {},
+      "failed_nodeids": [],
+      "evidence": "program\\research\\baseline_completion_2026-10-12\\tasks\\verification\\runs\\2026-10-12_035832\\travel-v1.log",
+      "scope": "완료 단계별 판정과 종료 상태를 구분. 비정상 종료는 전체 통과가 아님",
+      "completed_nodeids_count": 0,
+      "setup_teardown_errors": [],
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "crash-recheck",
+      "state": "finished",
+      "exit": 0,
+      "counts": {
+        "passed": 1
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T04:42:32.275606+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "pinned-recheck",
+      "state": "finished",
+      "exit": 1,
+      "counts": {
+        "failed": 1
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [
+        "tests/e2e/test_intake_review.py::test_a_locked_item_is_registered_as_customer_pinned"
+      ],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T04:56:12.631753+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "travel-v2",
+      "state": "native_crash",
+      "visible_progress_markers": 167,
+      "visible_counts": {
+        ".": 167
+      },
+      "completed_reports_counts": {
+        "passed": 167
+      },
+      "failed_nodeids": [],
+      "evidence": "program\\research\\baseline_completion_2026-10-12\\tasks\\verification\\runs\\2026-10-12_clean_travel\\travel-v2-progress.jsonl",
+      "scope": "완료 단계별 판정과 종료 상태를 구분. 비정상 종료는 전체 통과가 아님",
+      "completed_nodeids_count": 167,
+      "setup_teardown_errors": [],
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "travel-v3",
+      "state": "setup_failed",
+      "visible_progress_markers": 0,
+      "visible_counts": {},
+      "completed_reports_counts": {},
+      "failed_nodeids": [],
+      "evidence": "program\\research\\baseline_completion_2026-10-12\\tasks\\verification\\runs\\2026-10-12_clean_travel\\travel-v3.log",
+      "scope": "완료 단계별 판정과 종료 상태를 구분. 비정상 종료는 전체 통과가 아님",
+      "completed_nodeids_count": 0,
+      "setup_teardown_errors": [],
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "travel-v3b",
+      "state": "finished",
+      "exit": 4,
+      "counts": {},
+      "setup_teardown_errors": [],
+      "failed_nodeids": [],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T04:44:57.136325+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "travel-v3c",
+      "state": "finished",
+      "exit": 1,
+      "counts": {
+        "passed": 6662,
+        "skipped": 15,
+        "failed": 49
+      },
+      "setup_teardown_errors": [
+        "tests/integration/api/test_approval_audit_row_excluded_from_queue.py::test_approval_audit_row_does_not_appear_as_a_new_pending_item",
+        "tests/integration/api/test_approval_audit_row_excluded_from_queue.py::test_rejection_audit_row_does_not_appear_as_a_new_pending_item",
+        "tests/integration/api/test_recheck_before_execution.py::test_approval_succeeds_when_facts_still_match",
+        "tests/integration/api/test_recheck_before_execution.py::test_approval_is_blocked_when_the_booking_amount_shrank_after_the_proposal",
+        "tests/integration/api/test_recheck_before_execution.py::test_blocked_approval_records_the_reason_without_raw_values",
+        "tests/integration/api/test_recheck_before_execution.py::test_rejection_does_not_run_the_recheck",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\ube44\\uac00 \\uc640\\uc11c \\uc57c\\uc678 \\ud65c\\ub3d9\\uc744 \\ubabb \\ud558\\uac8c \\ub410\\ub2e4-scopes0-t_doc_04]",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\uc608\\uc57d\\uc744 \\uc774\\ud2c0 \\uc804\\uc5d0 \\ucde8\\uc18c\\ud558\\uba74 \\uc704\\uc57d\\uae08\\uc774 \\uc788\\ub098\\uc694-scopes1-t_doc_01]",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\uc9c0\\ud558\\ucca0 \\uc6b4\\ud589\\uc774 \\uc911\\ub2e8\\ub3fc\\uc11c \\ub2e4\\uc74c \\uc77c\\uc815\\uc5d0 \\ubabb \\uac08 \\uac83 \\uac19\\uc544\\uc694-scopes2-t_doc_08]",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\ud720\\uccb4\\uc5b4\\ub97c \\uc4f0\\ub294 \\uc77c\\ud589\\uc774 \\uc788\\ub294\\ub370 \\ub4e4\\uc5b4\\uac08 \\uc218 \\uc788\\ub098\\uc694-scopes3-t_doc_12]",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_a_scope_with_no_documents_returns_nothing",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_an_off_domain_question_still_only_returns_travel_documents",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_tenant_isolation_holds_for_the_travel_corpus",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_only_the_travel_corpus_is_loaded",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_registered_teams_only_search_travel_scopes",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_every_team_that_requires_policy_has_documents_in_its_scope",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_the_planner_grounds_a_request_in_travel_rules_only[\\ube44\\uac00 \\uc624\\uba74 \\uc57c\\uc678 \\ud65c\\ub3d9\\uc740 \\uc5b4\\ub5bb\\uac8c \\ub418\\ub098\\uc694]",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_the_planner_grounds_a_request_in_travel_rules_only[\\uc544\\uc774 \\ub3d9\\ubc18\\uc774\\ub77c \\uc720\\ubaa8\\ucc28\\ub85c \\ub2e4\\ub2d0 \\uc218 \\uc788\\ub294 \\uacf3\\uc774 \\uc88b\\uc544\\uc694]",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_the_planner_grounds_a_request_in_travel_rules_only[\\uc9c0\\ud558\\ucca0\\uc774 \\uba48\\ucd94\\uba74 \\ub2e4\\uc74c \\uc608\\uc57d\\uc740 \\uc5b4\\ub5bb\\uac8c \\ub418\\ub098\\uc694]",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_grounding_never_reaches_outside_the_travel_corpus"
+      ],
+      "failed_nodeids": [
+        "tests/e2e/test_guest_and_trip_delete.py::test_every_table_that_carries_a_trip_number_is_accounted_for",
+        "tests/e2e/test_intake_review.py::test_a_locked_item_is_registered_as_customer_pinned",
+        "tests/e2e/test_intake_review.py::test_a_place_the_customer_picked_is_taken_as_shown_and_stays_private_to_the_trip",
+        "tests/e2e/test_registered_trip_routes.py::test_booking_declared_without_a_number_stays_booked_after_registration",
+        "tests/e2e/test_trip_intake_api.py::test_a_booking_number_is_carried_and_protects_the_item",
+        "tests/e2e/test_watch_failures.py::test_a_batch_whose_close_has_no_item_tokens_is_not_announced",
+        "tests/integration/api/test_approval_audit_row_excluded_from_queue.py::test_approval_audit_row_does_not_appear_as_a_new_pending_item",
+        "tests/integration/api/test_approval_audit_row_excluded_from_queue.py::test_rejection_audit_row_does_not_appear_as_a_new_pending_item",
+        "tests/integration/api/test_openapi_surface.py::test_write_endpoints_require_a_scope_dependency",
+        "tests/integration/api/test_openapi_surface.py::test_v1_surface_is_documented_when_it_grows",
+        "tests/integration/api/test_recheck_before_execution.py::test_approval_succeeds_when_facts_still_match",
+        "tests/integration/api/test_recheck_before_execution.py::test_approval_is_blocked_when_the_booking_amount_shrank_after_the_proposal",
+        "tests/integration/api/test_recheck_before_execution.py::test_blocked_approval_records_the_reason_without_raw_values",
+        "tests/integration/api/test_recheck_before_execution.py::test_rejection_does_not_run_the_recheck",
+        "tests/integration/rag/test_rag_integration.py::test_the_travel_corpus_is_local_only_and_that_is_visible",
+        "tests/integration/rag/test_rag_integration.py::test_no_other_corpus_is_loaded_in_this_tenant",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\ube44\\uac00 \\uc640\\uc11c \\uc57c\\uc678 \\ud65c\\ub3d9\\uc744 \\ubabb \\ud558\\uac8c \\ub410\\ub2e4-scopes0-t_doc_04]",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\uc608\\uc57d\\uc744 \\uc774\\ud2c0 \\uc804\\uc5d0 \\ucde8\\uc18c\\ud558\\uba74 \\uc704\\uc57d\\uae08\\uc774 \\uc788\\ub098\\uc694-scopes1-t_doc_01]",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\uc9c0\\ud558\\ucca0 \\uc6b4\\ud589\\uc774 \\uc911\\ub2e8\\ub3fc\\uc11c \\ub2e4\\uc74c \\uc77c\\uc815\\uc5d0 \\ubabb \\uac08 \\uac83 \\uac19\\uc544\\uc694-scopes2-t_doc_08]",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\ud720\\uccb4\\uc5b4\\ub97c \\uc4f0\\ub294 \\uc77c\\ud589\\uc774 \\uc788\\ub294\\ub370 \\ub4e4\\uc5b4\\uac08 \\uc218 \\uc788\\ub098\\uc694-scopes3-t_doc_12]",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_a_scope_with_no_documents_returns_nothing",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_an_off_domain_question_still_only_returns_travel_documents",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_tenant_isolation_holds_for_the_travel_corpus",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_only_the_travel_corpus_is_loaded",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_registered_teams_only_search_travel_scopes",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_every_team_that_requires_policy_has_documents_in_its_scope",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_the_planner_grounds_a_request_in_travel_rules_only[\\ube44\\uac00 \\uc624\\uba74 \\uc57c\\uc678 \\ud65c\\ub3d9\\uc740 \\uc5b4\\ub5bb\\uac8c \\ub418\\ub098\\uc694]",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_the_planner_grounds_a_request_in_travel_rules_only[\\uc544\\uc774 \\ub3d9\\ubc18\\uc774\\ub77c \\uc720\\ubaa8\\ucc28\\ub85c \\ub2e4\\ub2d0 \\uc218 \\uc788\\ub294 \\uacf3\\uc774 \\uc88b\\uc544\\uc694]",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_the_planner_grounds_a_request_in_travel_rules_only[\\uc9c0\\ud558\\ucca0\\uc774 \\uba48\\ucd94\\uba74 \\ub2e4\\uc74c \\uc608\\uc57d\\uc740 \\uc5b4\\ub5bb\\uac8c \\ub418\\ub098\\uc694]",
+        "tests/integration/rag/test_travel_corpus_retrieval.py::test_grounding_never_reaches_outside_the_travel_corpus",
+        "tests/scenario/test_departure_express_db_v1.py::test_express_basis_change_replans_and_announces_once[tracked]",
+        "tests/scenario/test_departure_express_db_v1.py::test_express_basis_change_replans_and_announces_once[legacy]",
+        "tests/scenario/test_departure_party_db_v1.py::test_current_party_change_is_held_then_replanned_and_announced_once[size]",
+        "tests/scenario/test_departure_party_db_v1.py::test_current_party_change_is_held_then_replanned_and_announced_once[fatigue]",
+        "tests/unit/eval/test_defense_metrics.py::test_fixture_file_covers_the_v7_attack_classes",
+        "tests/unit/travel/activity/test_watch_batch_unit.py::test_the_second_item_does_not_pick_what_the_first_one_already_took",
+        "tests/unit/travel/activity/test_watch_batch_unit.py::test_every_item_gets_its_own_tool_budget",
+        "tests/unit/travel/activity/test_watch_batch_unit.py::test_a_pinned_item_is_left_out_of_the_draft_and_goes_to_the_applier_as_a_question",
+        "tests/unit/travel/activity/test_watch_batch_unit.py::test_when_nothing_can_be_changed_it_escalates_with_one_token_per_unsolved_item",
+        "tests/unit/travel/activity/test_watch_batch_unit.py::test_a_failed_source_closes_the_case_as_retryable_and_is_marked_for_guidance",
+        "tests/unit/travel/activity/test_watch_batch_unit.py::test_one_failed_source_does_not_stop_the_healthy_items_from_being_applied",
+        "tests/unit/travel/activity/test_watch_batch_unit.py::test_weather_only_with_unknown_indoor_is_asked_not_changed",
+        "tests/unit/travel/activity/test_watch_batch_unit.py::test_an_exception_in_one_item_does_not_block_the_others_and_that_item_is_kept_for_a_retry",
+        "tests/unit/travel/activity/test_watch_batch_unit.py::test_the_options_of_a_question_are_checked_against_the_whole_itinerary_too",
+        "tests/unit/travel/activity/test_watch_batch_unit.py::test_when_the_time_runs_out_the_remaining_items_are_not_started_but_kept_for_a_retry",
+        "tests/unit/travel/activity/test_watch_batch_unit.py::test_the_decision_record_keeps_the_time_and_tool_calls_of_every_item",
+        "tests/unit/travel/mobility/test_car_fare.py::test_every_check_passes",
+        "tests/unit/travel/test_classification_execution_plan.py::test_composition_executes_model_order_with_each_teams_own_scope[True]",
+        "tests/unit/travel/test_classification_execution_plan.py::test_composition_executes_model_order_with_each_teams_own_scope[False]",
+        "tests/unit/travel/test_classification_execution_plan.py::test_failed_prerequisite_defers_only_its_dependant",
+        "tests/unit/travel/test_classification_execution_plan.py::test_planned_tool_budget_is_enforced_in_the_actual_team_calculator",
+        "tests/unit/travel/test_departure_watch_v1.py::test_broken_observation_is_fatal_instead_of_replan_case",
+        "tests/unit/travel/test_dining_alternative_opening.py::test_trip_desk_uses_its_tenant_when_reading_alternative_states",
+        "tests/unit/travel/test_dining_alternative_opening.py::test_dawn_check_wires_ledger_without_calling_google_for_alternatives",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_a_closed_report_finds_an_alternative_from_the_ledger",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_a_closed_report_replans_when_the_ledger_removes_an_existing_alias",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_a_delay_that_breaks_the_meal_looks_around_the_next_meal_only",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed[False]",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed[True]",
+        "tests/unit/travel/test_moves_refresh_after_swap.py::test_44_swap_next_door_is_rejudged_when_the_engine_is_on",
+        "tests/unit/travel/test_moves_refresh_after_swap.py::test_44_the_basis_text_follows_the_new_state_so_chat_does_not_overclaim",
+        "tests/unit/travel/test_plugin_worker_availability.py::test_batch_continues_independent_kind_and_cannot_clear_all_unavailable",
+        "tests/unit/travel/test_plugin_worker_availability.py::test_disabled_activity_coordinator_does_not_block_dining_mobility_cases",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-disabled]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-not_installed]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-load_failed]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_active_http_keeps_original_ledger_and_graph_algorithms[trip-shapes]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_saved_trip_read_remains_independent[disabled]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_saved_trip_read_remains_independent[not_installed]"
+      ],
+      "network_blocks": 4,
+      "finished_at_kst": "2026-10-12T05:27:15.130050+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "batch-unit-recheck",
+      "state": "finished",
+      "exit": 0,
+      "counts": {
+        "passed": 15
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T05:17:46.307341+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "common-final-v1",
+      "state": "finished",
+      "exit": 0,
+      "counts": {
+        "passed": 871
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T04:54:54.636129+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "oauth-enabled-v1",
+      "state": "finished",
+      "exit": 0,
+      "counts": {
+        "passed": 8
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T05:03:12.377590+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "prior167-recheck",
+      "state": "finished",
+      "exit": 0,
+      "counts": {
+        "passed": 167
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T05:08:57.239381+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "remaining-unit-recheck",
+      "state": "finished",
+      "exit": 1,
+      "counts": {
+        "passed": 87,
+        "failed": 18
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [
+        "tests/unit/travel/test_departure_watch_v1.py::test_broken_observation_is_fatal_instead_of_replan_case",
+        "tests/unit/travel/test_dining_alternative_opening.py::test_trip_desk_uses_its_tenant_when_reading_alternative_states",
+        "tests/unit/travel/test_dining_alternative_opening.py::test_dawn_check_wires_ledger_without_calling_google_for_alternatives",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_a_closed_report_finds_an_alternative_from_the_ledger",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_a_closed_report_replans_when_the_ledger_removes_an_existing_alias",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_a_delay_that_breaks_the_meal_looks_around_the_next_meal_only",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed[False]",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed[True]",
+        "tests/unit/travel/test_moves_refresh_after_swap.py::test_44_swap_next_door_is_rejudged_when_the_engine_is_on",
+        "tests/unit/travel/test_moves_refresh_after_swap.py::test_44_the_basis_text_follows_the_new_state_so_chat_does_not_overclaim",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-disabled]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-not_installed]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-load_failed]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_active_http_keeps_original_ledger_and_graph_algorithms[trip-shapes]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_saved_trip_read_remains_independent[disabled]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_saved_trip_read_remains_independent[not_installed]",
+        "tests/unit/eval/test_defense_metrics.py::test_fixture_file_covers_the_v7_attack_classes",
+        "tests/unit/travel/mobility/test_car_fare.py::test_every_check_passes"
+      ],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T05:29:24.291585+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "common-final-v2",
+      "state": "native_crash",
+      "visible_progress_markers": 835,
+      "visible_counts": {
+        ".": 835
+      },
+      "completed_reports_counts": {
+        "passed": 835
+      },
+      "failed_nodeids": [],
+      "evidence": "program\\research\\baseline_completion_2026-10-12\\tasks\\verification\\runs\\2026-10-12_final_hash_1\\common-final-v2-progress.jsonl",
+      "scope": "완료 단계별 판정과 종료 상태를 구분. 비정상 종료는 전체 통과가 아님",
+      "completed_nodeids_count": 835,
+      "setup_teardown_errors": [],
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "common-final-v3",
+      "state": "finished",
+      "exit": 0,
+      "counts": {
+        "passed": 56
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T05:13:57.978697+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "common-final-v4",
+      "state": "finished",
+      "exit": 0,
+      "counts": {
+        "passed": 891,
+        "skipped": 8
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T05:29:47.186919+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "integration-recheck-v1",
+      "state": "finished",
+      "exit": 1,
+      "counts": {
+        "passed": 208,
+        "failed": 11
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [
+        "tests/e2e/test_intake_review.py::test_a_locked_item_is_registered_as_customer_pinned",
+        "tests/e2e/test_intake_review.py::test_a_place_the_customer_picked_is_taken_as_shown_and_stays_private_to_the_trip",
+        "tests/e2e/test_registered_trip_routes.py::test_booking_declared_without_a_number_stays_booked_after_registration",
+        "tests/e2e/test_trip_intake_api.py::test_a_booking_number_is_carried_and_protects_the_item",
+        "tests/e2e/test_watch_failures.py::test_a_batch_whose_close_has_no_item_tokens_is_not_announced",
+        "tests/integration/api/test_openapi_surface.py::test_write_endpoints_require_a_scope_dependency",
+        "tests/integration/api/test_openapi_surface.py::test_v1_surface_is_documented_when_it_grows",
+        "tests/unit/travel/test_classification_execution_plan.py::test_composition_executes_model_order_with_each_teams_own_scope[True]",
+        "tests/unit/travel/test_classification_execution_plan.py::test_composition_executes_model_order_with_each_teams_own_scope[False]",
+        "tests/unit/travel/test_classification_execution_plan.py::test_failed_prerequisite_defers_only_its_dependant",
+        "tests/unit/travel/test_classification_execution_plan.py::test_planned_tool_budget_is_enforced_in_the_actual_team_calculator"
+      ],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T05:19:38.384586+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "latest-unit-recheck",
+      "state": "finished",
+      "exit": 0,
+      "counts": {
+        "passed": 75
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T05:22:08.638835+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "operations-native-v1",
+      "state": "finished",
+      "exit": 0,
+      "counts": {
+        "passed": 8
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T05:31:32.935341+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "travel-failures-recheck-v2",
+      "state": "finished",
+      "exit": 1,
+      "counts": {
+        "passed": 31,
+        "failed": 22
+      },
+      "setup_teardown_errors": [],
+      "failed_nodeids": [
+        "tests/scenario/test_departure_express_db_v1.py::test_express_basis_change_replans_and_announces_once[tracked]",
+        "tests/scenario/test_departure_express_db_v1.py::test_express_basis_change_replans_and_announces_once[legacy]",
+        "tests/scenario/test_departure_party_db_v1.py::test_current_party_change_is_held_then_replanned_and_announced_once[size]",
+        "tests/scenario/test_departure_party_db_v1.py::test_current_party_change_is_held_then_replanned_and_announced_once[fatigue]",
+        "tests/unit/eval/test_defense_metrics.py::test_fixture_file_covers_the_v7_attack_classes",
+        "tests/unit/travel/mobility/test_car_fare.py::test_every_check_passes",
+        "tests/unit/travel/test_departure_watch_v1.py::test_broken_observation_is_fatal_instead_of_replan_case",
+        "tests/unit/travel/test_dining_alternative_opening.py::test_trip_desk_uses_its_tenant_when_reading_alternative_states",
+        "tests/unit/travel/test_dining_alternative_opening.py::test_dawn_check_wires_ledger_without_calling_google_for_alternatives",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_a_closed_report_finds_an_alternative_from_the_ledger",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_a_closed_report_replans_when_the_ledger_removes_an_existing_alias",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_a_delay_that_breaks_the_meal_looks_around_the_next_meal_only",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed[False]",
+        "tests/unit/travel/test_dining_nearby_fallback.py::test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed[True]",
+        "tests/unit/travel/test_moves_refresh_after_swap.py::test_44_swap_next_door_is_rejudged_when_the_engine_is_on",
+        "tests/unit/travel/test_moves_refresh_after_swap.py::test_44_the_basis_text_follows_the_new_state_so_chat_does_not_overclaim",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-disabled]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-not_installed]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-load_failed]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_active_http_keeps_original_ledger_and_graph_algorithms[trip-shapes]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_saved_trip_read_remains_independent[disabled]",
+        "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_saved_trip_read_remains_independent[not_installed]"
+      ],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T05:33:38.762157+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "travel-final-collection",
+      "state": "finished",
+      "exit": 0,
+      "counts": {},
+      "setup_teardown_errors": [],
+      "failed_nodeids": [],
+      "network_blocks": 0,
+      "finished_at_kst": "2026-10-12T05:32:04.919720+09:00",
+      "summary_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_035832/summary_053558.json"
+    },
+    {
+      "label": "prior22-independent-v2",
+      "exit": 1,
+      "selected": 22,
+      "counts": {
+        "failed": 4,
+        "passed": 18
+      },
+      "setup_errors": 0,
+      "source_changed_during_run": [],
+      "source_changed_since_run": [],
+      "finished_at_kst": "2026-10-12T06:01:34.518859+09:00",
+      "network_blocks": 0,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/prior22-independent-v2.xml",
+      "outcomes": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/prior22-independent-v2-outcomes.json",
+      "collection": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/prior22-independent-v2-collection.json",
+      "source_before": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/prior22-independent-v2-source-before.json",
+      "source_after": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/prior22-independent-v2-source-after.json"
+    },
+    {
+      "label": "affected-security-policy",
+      "exit": 0,
+      "selected": 210,
+      "counts": {
+        "passed": 210
+      },
+      "setup_errors": 0,
+      "source_changed_during_run": [],
+      "source_changed_since_run": [],
+      "finished_at_kst": "2026-10-12T06:04:09.671033+09:00",
+      "network_blocks": 0,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/affected-security-policy.xml",
+      "outcomes": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/affected-security-policy-outcomes.json",
+      "collection": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/affected-security-policy-collection.json",
+      "source_before": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/affected-security-policy-source-before.json",
+      "source_after": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/affected-security-policy-source-after.json"
+    },
+    {
+      "label": "common-followup",
+      "exit": 0,
+      "selected": 904,
+      "counts": {
+        "passed": 884,
+        "skipped": 20
+      },
+      "setup_errors": 0,
+      "source_changed_during_run": [],
+      "source_changed_since_run": [],
+      "finished_at_kst": "2026-10-12T06:06:38.379679+09:00",
+      "network_blocks": 0,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/common-followup.xml",
+      "outcomes": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/common-followup-outcomes.json",
+      "collection": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/common-followup-collection.json",
+      "source_before": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/common-followup-source-before.json",
+      "source_after": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/common-followup-source-after.json"
+    },
+    {
+      "label": "operations-optin-all",
+      "exit": 0,
+      "selected": 20,
+      "counts": {
+        "passed": 20
+      },
+      "setup_errors": 0,
+      "source_changed_during_run": [],
+      "source_changed_since_run": [],
+      "finished_at_kst": "2026-10-12T06:08:39.436363+09:00",
+      "network_blocks": 0,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/operations-optin-all.xml",
+      "outcomes": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/operations-optin-all-outcomes.json",
+      "collection": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/operations-optin-all-collection.json",
+      "source_before": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/operations-optin-all-source-before.json",
+      "source_after": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/operations-optin-all-source-after.json"
+    },
+    {
+      "label": "gate-linked-travel",
+      "exit": 0,
+      "selected": 150,
+      "counts": {
+        "passed": 150
+      },
+      "setup_errors": 0,
+      "source_changed_during_run": [],
+      "source_changed_since_run": [],
+      "finished_at_kst": "2026-10-12T06:10:12.370040+09:00",
+      "network_blocks": 0,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/gate-linked-travel.xml",
+      "outcomes": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/gate-linked-travel-outcomes.json",
+      "collection": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/gate-linked-travel-collection.json",
+      "source_before": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/gate-linked-travel-source-before.json",
+      "source_after": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/gate-linked-travel-source-after.json"
+    }
+  ],
+  "report": "report.md",
+  "dependencies_remaining": [
+    "현재 정책에 맞는 여행 검색 자료·실제 벡터16개 전제",
+    "요식 원장5개·이동 실자료2개",
+    "개인 AI 공개 HTTPS·등록·쿠키·callback 실제 종단",
+    "실경보 방향·택시 미터 정확도·무료 관측 충족률·가격 예외·운영 영속 볼륨 인수"
+  ],
+  "unresolved": [
+    "고유7850개 마지막 관측: 7827통과·2실패·14준비 오류·7건너뜀; 단일 전체 통과 아님",
+    "기존 Windows native crash 원인 미확정; 이후 새 프로세스 통과로 원인을 단정하지 않음",
+    "운영·외부 환경 현재 인수는 미실행"
+  ],
+  "deployment": "not_deployed",
+  "ready_reason": "검증 수행·실패 재검증·전체 원본 대조·환경 한계 인계 자료를 완성했습니다. 필수 실패·자료 부족을 명시하며 제품 전체 완료를 판정하지 않습니다.",
+  "initial_common_failures_latest_status": "초기 19실패는 최신 공통 871/871 실행에서 재현되지 않았습니다. 원본 이력 보존.",
+  "travel_completed_summary": {
+    "state": "finished",
+    "exit": 1,
+    "counts": {
+      "passed": 6662,
+      "skipped": 15,
+      "failed": 49
+    },
+    "setup_teardown_errors": [
+      "tests/integration/api/test_approval_audit_row_excluded_from_queue.py::test_approval_audit_row_does_not_appear_as_a_new_pending_item",
+      "tests/integration/api/test_approval_audit_row_excluded_from_queue.py::test_rejection_audit_row_does_not_appear_as_a_new_pending_item",
+      "tests/integration/api/test_recheck_before_execution.py::test_approval_succeeds_when_facts_still_match",
+      "tests/integration/api/test_recheck_before_execution.py::test_approval_is_blocked_when_the_booking_amount_shrank_after_the_proposal",
+      "tests/integration/api/test_recheck_before_execution.py::test_blocked_approval_records_the_reason_without_raw_values",
+      "tests/integration/api/test_recheck_before_execution.py::test_rejection_does_not_run_the_recheck",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\ube44\\uac00 \\uc640\\uc11c \\uc57c\\uc678 \\ud65c\\ub3d9\\uc744 \\ubabb \\ud558\\uac8c \\ub410\\ub2e4-scopes0-t_doc_04]",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\uc608\\uc57d\\uc744 \\uc774\\ud2c0 \\uc804\\uc5d0 \\ucde8\\uc18c\\ud558\\uba74 \\uc704\\uc57d\\uae08\\uc774 \\uc788\\ub098\\uc694-scopes1-t_doc_01]",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\uc9c0\\ud558\\ucca0 \\uc6b4\\ud589\\uc774 \\uc911\\ub2e8\\ub3fc\\uc11c \\ub2e4\\uc74c \\uc77c\\uc815\\uc5d0 \\ubabb \\uac08 \\uac83 \\uac19\\uc544\\uc694-scopes2-t_doc_08]",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\ud720\\uccb4\\uc5b4\\ub97c \\uc4f0\\ub294 \\uc77c\\ud589\\uc774 \\uc788\\ub294\\ub370 \\ub4e4\\uc5b4\\uac08 \\uc218 \\uc788\\ub098\\uc694-scopes3-t_doc_12]",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_a_scope_with_no_documents_returns_nothing",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_an_off_domain_question_still_only_returns_travel_documents",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_tenant_isolation_holds_for_the_travel_corpus",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_only_the_travel_corpus_is_loaded",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_registered_teams_only_search_travel_scopes",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_every_team_that_requires_policy_has_documents_in_its_scope",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_the_planner_grounds_a_request_in_travel_rules_only[\\ube44\\uac00 \\uc624\\uba74 \\uc57c\\uc678 \\ud65c\\ub3d9\\uc740 \\uc5b4\\ub5bb\\uac8c \\ub418\\ub098\\uc694]",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_the_planner_grounds_a_request_in_travel_rules_only[\\uc544\\uc774 \\ub3d9\\ubc18\\uc774\\ub77c \\uc720\\ubaa8\\ucc28\\ub85c \\ub2e4\\ub2d0 \\uc218 \\uc788\\ub294 \\uacf3\\uc774 \\uc88b\\uc544\\uc694]",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_the_planner_grounds_a_request_in_travel_rules_only[\\uc9c0\\ud558\\ucca0\\uc774 \\uba48\\ucd94\\uba74 \\ub2e4\\uc74c \\uc608\\uc57d\\uc740 \\uc5b4\\ub5bb\\uac8c \\ub418\\ub098\\uc694]",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_grounding_never_reaches_outside_the_travel_corpus"
+    ],
+    "failed_nodeids": [
+      "tests/e2e/test_guest_and_trip_delete.py::test_every_table_that_carries_a_trip_number_is_accounted_for",
+      "tests/e2e/test_intake_review.py::test_a_locked_item_is_registered_as_customer_pinned",
+      "tests/e2e/test_intake_review.py::test_a_place_the_customer_picked_is_taken_as_shown_and_stays_private_to_the_trip",
+      "tests/e2e/test_registered_trip_routes.py::test_booking_declared_without_a_number_stays_booked_after_registration",
+      "tests/e2e/test_trip_intake_api.py::test_a_booking_number_is_carried_and_protects_the_item",
+      "tests/e2e/test_watch_failures.py::test_a_batch_whose_close_has_no_item_tokens_is_not_announced",
+      "tests/integration/api/test_approval_audit_row_excluded_from_queue.py::test_approval_audit_row_does_not_appear_as_a_new_pending_item",
+      "tests/integration/api/test_approval_audit_row_excluded_from_queue.py::test_rejection_audit_row_does_not_appear_as_a_new_pending_item",
+      "tests/integration/api/test_openapi_surface.py::test_write_endpoints_require_a_scope_dependency",
+      "tests/integration/api/test_openapi_surface.py::test_v1_surface_is_documented_when_it_grows",
+      "tests/integration/api/test_recheck_before_execution.py::test_approval_succeeds_when_facts_still_match",
+      "tests/integration/api/test_recheck_before_execution.py::test_approval_is_blocked_when_the_booking_amount_shrank_after_the_proposal",
+      "tests/integration/api/test_recheck_before_execution.py::test_blocked_approval_records_the_reason_without_raw_values",
+      "tests/integration/api/test_recheck_before_execution.py::test_rejection_does_not_run_the_recheck",
+      "tests/integration/rag/test_rag_integration.py::test_the_travel_corpus_is_local_only_and_that_is_visible",
+      "tests/integration/rag/test_rag_integration.py::test_no_other_corpus_is_loaded_in_this_tenant",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\ube44\\uac00 \\uc640\\uc11c \\uc57c\\uc678 \\ud65c\\ub3d9\\uc744 \\ubabb \\ud558\\uac8c \\ub410\\ub2e4-scopes0-t_doc_04]",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\uc608\\uc57d\\uc744 \\uc774\\ud2c0 \\uc804\\uc5d0 \\ucde8\\uc18c\\ud558\\uba74 \\uc704\\uc57d\\uae08\\uc774 \\uc788\\ub098\\uc694-scopes1-t_doc_01]",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\uc9c0\\ud558\\ucca0 \\uc6b4\\ud589\\uc774 \\uc911\\ub2e8\\ub3fc\\uc11c \\ub2e4\\uc74c \\uc77c\\uc815\\uc5d0 \\ubabb \\uac08 \\uac83 \\uac19\\uc544\\uc694-scopes2-t_doc_08]",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_travel_queries_find_travel_documents[\\ud720\\uccb4\\uc5b4\\ub97c \\uc4f0\\ub294 \\uc77c\\ud589\\uc774 \\uc788\\ub294\\ub370 \\ub4e4\\uc5b4\\uac08 \\uc218 \\uc788\\ub098\\uc694-scopes3-t_doc_12]",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_a_scope_with_no_documents_returns_nothing",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_an_off_domain_question_still_only_returns_travel_documents",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_tenant_isolation_holds_for_the_travel_corpus",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_only_the_travel_corpus_is_loaded",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_registered_teams_only_search_travel_scopes",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_every_team_that_requires_policy_has_documents_in_its_scope",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_the_planner_grounds_a_request_in_travel_rules_only[\\ube44\\uac00 \\uc624\\uba74 \\uc57c\\uc678 \\ud65c\\ub3d9\\uc740 \\uc5b4\\ub5bb\\uac8c \\ub418\\ub098\\uc694]",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_the_planner_grounds_a_request_in_travel_rules_only[\\uc544\\uc774 \\ub3d9\\ubc18\\uc774\\ub77c \\uc720\\ubaa8\\ucc28\\ub85c \\ub2e4\\ub2d0 \\uc218 \\uc788\\ub294 \\uacf3\\uc774 \\uc88b\\uc544\\uc694]",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_the_planner_grounds_a_request_in_travel_rules_only[\\uc9c0\\ud558\\ucca0\\uc774 \\uba48\\ucd94\\uba74 \\ub2e4\\uc74c \\uc608\\uc57d\\uc740 \\uc5b4\\ub5bb\\uac8c \\ub418\\ub098\\uc694]",
+      "tests/integration/rag/test_travel_corpus_retrieval.py::test_grounding_never_reaches_outside_the_travel_corpus",
+      "tests/scenario/test_departure_express_db_v1.py::test_express_basis_change_replans_and_announces_once[tracked]",
+      "tests/scenario/test_departure_express_db_v1.py::test_express_basis_change_replans_and_announces_once[legacy]",
+      "tests/scenario/test_departure_party_db_v1.py::test_current_party_change_is_held_then_replanned_and_announced_once[size]",
+      "tests/scenario/test_departure_party_db_v1.py::test_current_party_change_is_held_then_replanned_and_announced_once[fatigue]",
+      "tests/unit/eval/test_defense_metrics.py::test_fixture_file_covers_the_v7_attack_classes",
+      "tests/unit/travel/activity/test_watch_batch_unit.py::test_the_second_item_does_not_pick_what_the_first_one_already_took",
+      "tests/unit/travel/activity/test_watch_batch_unit.py::test_every_item_gets_its_own_tool_budget",
+      "tests/unit/travel/activity/test_watch_batch_unit.py::test_a_pinned_item_is_left_out_of_the_draft_and_goes_to_the_applier_as_a_question",
+      "tests/unit/travel/activity/test_watch_batch_unit.py::test_when_nothing_can_be_changed_it_escalates_with_one_token_per_unsolved_item",
+      "tests/unit/travel/activity/test_watch_batch_unit.py::test_a_failed_source_closes_the_case_as_retryable_and_is_marked_for_guidance",
+      "tests/unit/travel/activity/test_watch_batch_unit.py::test_one_failed_source_does_not_stop_the_healthy_items_from_being_applied",
+      "tests/unit/travel/activity/test_watch_batch_unit.py::test_weather_only_with_unknown_indoor_is_asked_not_changed",
+      "tests/unit/travel/activity/test_watch_batch_unit.py::test_an_exception_in_one_item_does_not_block_the_others_and_that_item_is_kept_for_a_retry",
+      "tests/unit/travel/activity/test_watch_batch_unit.py::test_the_options_of_a_question_are_checked_against_the_whole_itinerary_too",
+      "tests/unit/travel/activity/test_watch_batch_unit.py::test_when_the_time_runs_out_the_remaining_items_are_not_started_but_kept_for_a_retry",
+      "tests/unit/travel/activity/test_watch_batch_unit.py::test_the_decision_record_keeps_the_time_and_tool_calls_of_every_item",
+      "tests/unit/travel/mobility/test_car_fare.py::test_every_check_passes",
+      "tests/unit/travel/test_classification_execution_plan.py::test_composition_executes_model_order_with_each_teams_own_scope[True]",
+      "tests/unit/travel/test_classification_execution_plan.py::test_composition_executes_model_order_with_each_teams_own_scope[False]",
+      "tests/unit/travel/test_classification_execution_plan.py::test_failed_prerequisite_defers_only_its_dependant",
+      "tests/unit/travel/test_classification_execution_plan.py::test_planned_tool_budget_is_enforced_in_the_actual_team_calculator",
+      "tests/unit/travel/test_departure_watch_v1.py::test_broken_observation_is_fatal_instead_of_replan_case",
+      "tests/unit/travel/test_dining_alternative_opening.py::test_trip_desk_uses_its_tenant_when_reading_alternative_states",
+      "tests/unit/travel/test_dining_alternative_opening.py::test_dawn_check_wires_ledger_without_calling_google_for_alternatives",
+      "tests/unit/travel/test_dining_nearby_fallback.py::test_a_closed_report_finds_an_alternative_from_the_ledger",
+      "tests/unit/travel/test_dining_nearby_fallback.py::test_a_closed_report_replans_when_the_ledger_removes_an_existing_alias",
+      "tests/unit/travel/test_dining_nearby_fallback.py::test_a_delay_that_breaks_the_meal_looks_around_the_next_meal_only",
+      "tests/unit/travel/test_dining_nearby_fallback.py::test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed[False]",
+      "tests/unit/travel/test_dining_nearby_fallback.py::test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed[True]",
+      "tests/unit/travel/test_moves_refresh_after_swap.py::test_44_swap_next_door_is_rejudged_when_the_engine_is_on",
+      "tests/unit/travel/test_moves_refresh_after_swap.py::test_44_the_basis_text_follows_the_new_state_so_chat_does_not_overclaim",
+      "tests/unit/travel/test_plugin_worker_availability.py::test_batch_continues_independent_kind_and_cannot_clear_all_unavailable",
+      "tests/unit/travel/test_plugin_worker_availability.py::test_disabled_activity_coordinator_does_not_block_dining_mobility_cases",
+      "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-disabled]",
+      "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-not_installed]",
+      "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-load_failed]",
+      "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_active_http_keeps_original_ledger_and_graph_algorithms[trip-shapes]",
+      "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_saved_trip_read_remains_independent[disabled]",
+      "tests/unit/travel/test_trip_api_plugin_boundaries.py::test_actual_saved_trip_read_remains_independent[not_installed]"
+    ],
+    "network_blocks": 4,
+    "finished_at_kst": "2026-10-12T05:27:15.130050+09:00"
+  },
+  "verification_execution_complete": true,
+  "latest_execution": {
+    "manifest_files": 541,
+    "common": {
+      "label": "common-followup",
+      "exit": 0,
+      "selected": 904,
+      "counts": {
+        "passed": 884,
+        "skipped": 20
+      },
+      "setup_errors": 0,
+      "source_changed_during_run": [],
+      "source_changed_since_run": [],
+      "finished_at_kst": "2026-10-12T06:06:38.379679+09:00",
+      "network_blocks": 0,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/common-followup.xml",
+      "outcomes": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/common-followup-outcomes.json",
+      "collection": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/common-followup-collection.json",
+      "source_before": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/common-followup-source-before.json",
+      "source_after": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/common-followup-source-after.json"
+    },
+    "operations_native": {
+      "label": "operations-native-v1",
+      "exit": 0,
+      "selected": 8,
+      "counts": {
+        "passed": 8
+      },
+      "setup_teardown_errors": 0,
+      "finished_at_kst": "2026-10-12T05:31:32.935341+09:00",
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_final_hash_1/operations-native-v1.xml"
+    },
+    "travel_resumed": {
+      "label": "travel-v3c",
+      "exit": 1,
+      "selected": 6746,
+      "counts": {
+        "passed": 6662,
+        "skipped": 15,
+        "failed": 49
+      },
+      "setup_teardown_errors": 20,
+      "finished_at_kst": "2026-10-12T05:27:15.130050+09:00",
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_clean_travel/travel-v3c.xml"
+    },
+    "prior_167_rechecked": {
+      "label": "prior167-recheck",
+      "exit": 0,
+      "selected": 167,
+      "counts": {
+        "passed": 167
+      },
+      "setup_teardown_errors": 0,
+      "finished_at_kst": "2026-10-12T05:08:57.239381+09:00",
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_common_final_1/prior167-recheck.xml"
+    },
+    "initial_failures_rechecked": {
+      "label": "travel-failures-recheck-v2",
+      "exit": 1,
+      "selected": 53,
+      "counts": {
+        "passed": 31,
+        "failed": 22
+      },
+      "setup_teardown_errors": 0,
+      "finished_at_kst": "2026-10-12T05:33:38.762157+09:00",
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_final_hash_1/travel-failures-recheck-v2.xml"
+    },
+    "place_status_policy": {
+      "label": "place-policy-new-v3",
+      "selected": 20,
+      "passed": 20,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exit": 0,
+      "source_changes_during_run": 0,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_final_hash_1/place-policy-new-v3.xml",
+      "scope": "전체 스키마의 격리 PostgreSQL·합성 식당 자료·HTTP 응답 대역. 실제 Google 요청 없음."
+    },
+    "operations_optin": {
+      "label": "operations-optin-all",
+      "exit": 0,
+      "selected": 20,
+      "counts": {
+        "passed": 20
+      },
+      "setup_errors": 0,
+      "source_changed_during_run": [],
+      "source_changed_since_run": [],
+      "finished_at_kst": "2026-10-12T06:08:39.436363+09:00",
+      "network_blocks": 0,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/operations-optin-all.xml",
+      "outcomes": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/operations-optin-all-outcomes.json",
+      "collection": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/operations-optin-all-collection.json",
+      "source_before": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/operations-optin-all-source-before.json",
+      "source_after": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/operations-optin-all-source-after.json"
+    },
+    "affected_security_policy": {
+      "label": "affected-security-policy",
+      "exit": 0,
+      "selected": 210,
+      "counts": {
+        "passed": 210
+      },
+      "setup_errors": 0,
+      "source_changed_during_run": [],
+      "source_changed_since_run": [],
+      "finished_at_kst": "2026-10-12T06:04:09.671033+09:00",
+      "network_blocks": 0,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/affected-security-policy.xml",
+      "outcomes": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/affected-security-policy-outcomes.json",
+      "collection": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/affected-security-policy-collection.json",
+      "source_before": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/affected-security-policy-source-before.json",
+      "source_after": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/affected-security-policy-source-after.json"
+    },
+    "gate_linked_travel": {
+      "label": "gate-linked-travel",
+      "exit": 0,
+      "selected": 150,
+      "counts": {
+        "passed": 150
+      },
+      "setup_errors": 0,
+      "source_changed_during_run": [],
+      "source_changed_since_run": [],
+      "finished_at_kst": "2026-10-12T06:10:12.370040+09:00",
+      "network_blocks": 0,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/gate-linked-travel.xml",
+      "outcomes": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/gate-linked-travel-outcomes.json",
+      "collection": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/gate-linked-travel-collection.json",
+      "source_before": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/gate-linked-travel-source-before.json",
+      "source_after": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/gate-linked-travel-source-after.json"
+    },
+    "historical_travel_collection_only": 6924
+  },
+  "current_results": "current-results.md",
+  "failure_handoff": "failure-handoff.md",
+  "cleanup": {
+    "own_postgres_stopped": true,
+    "native_optin_database_dropped": true,
+    "native_optin_role_dropped": true,
+    "evidence_and_data_preserved": true,
+    "evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/cleanup.json"
+  },
+  "business_database": "not_modified",
+  "notifications": "not_sent",
+  "additional_verification": "새 식당 조회 정책 20/20 통과. 준비 중 재시작 인자 누락 시도는 실행 0건으로 제외하고 원본 보존. 현재 검증 클러스터 정상 종료.",
+  "heartbeat_observation": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_final_hash_1/heartbeat-2026-10-12_054942.json",
+  "latest_integration_evidence_review": {
+    "evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_final_hash_1/heartbeat-2026-10-12_054942.json",
+    "counts": {
+      "passed": 218,
+      "failure": 0,
+      "error": 0,
+      "skipped": 11,
+      "reported": 229
+    },
+    "prior22_passed": 22,
+    "source_changes_since_owner_run": [],
+    "independent_rerun": false
+  },
+  "independent_recheck": {
+    "selected": 22,
+    "passed": 18,
+    "failed": 4,
+    "source_changes": 0,
+    "expanded_selected": 210,
+    "expanded_passed": 210,
+    "expanded_failed": 0,
+    "source_changes_between_runs": 0,
+    "evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/independent-selection-comparison.json"
+  },
+  "latest_independent_followup": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/followup-summary.json",
+  "existing_arm_latest_review": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/existing-arm-evidence-review.json",
+  "latest_external_evidence_review": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/external-evidence-061742.json",
+  "heartbeat_waiting": {
+    "at_kst": "2026-10-12T06:30:39.362753+09:00",
+    "evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/heartbeat-2026-10-12_063039.json",
+    "source_files": 1410,
+    "changed": 0,
+    "added": 0,
+    "removed": 0,
+    "new_tests_executed": 0,
+    "integration_state": "전체 여행 실행 소스 유지; 종료 뒤 단독 4개 초기화 수정 예정",
+    "own_cluster_stopped": true
+  },
+  "verification_evidence_complete": true,
+  "product_acceptance": "not_accepted",
+  "latest_final_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_064826/final-handoff.json",
+  "latest_final_report": "program/research/baseline_completion_2026-10-12/tasks/verification/final-handoff-2026-10-12.md",
+  "final_independent_runs": [
+    {
+      "label": "prior22-final",
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0,
+      "exit": 0,
+      "finished_at_kst": "2026-10-12T06:49:35.384719+09:00",
+      "source_files": 1410,
+      "source_changed": 0,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_064826/prior22-final-outcomes.json",
+      "junit_sha256": "5f2d87474dff3bed524af33b86b7f3d2cb1029c94911a9c6def8e4d27b8b3850"
+    },
+    {
+      "label": "cookie-security-final",
+      "passed": 156,
+      "failed": 0,
+      "skipped": 0,
+      "exit": 0,
+      "finished_at_kst": "2026-10-12T06:51:31.133419+09:00",
+      "source_files": 1410,
+      "source_changed": 0,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_064826/cookie-security-final-outcomes.json",
+      "junit_sha256": "a6b407d1d1d247448cf2a7c66345c5c4b592222c0c02667db7e6702dd961da11"
+    },
+    {
+      "label": "mapping-final",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "exit": 0,
+      "finished_at_kst": "2026-10-12T06:50:28.146049+09:00",
+      "source_files": 1410,
+      "source_changed": 0,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_064826/mapping-final-outcomes.json",
+      "junit_sha256": "db042361a86ed110fe28d77d586dfee4becd93a5147ad5cbcb19f6dbe4e7e3e6"
+    }
+  ],
+  "source_manifest_sha256": "01bc99cb1961da45d89eedebe5335ee9c6f38c06212a3e16c13f8640b97c99a4",
+  "backup": "program/research/baseline_completion_2026-10-12/tasks/verification/_backup/2026-10-12_065408_final_handoff",
+  "followup_check_termination_requested": true,
+  "followup_check_terminated": true,
+  "automation_status": "PAUSED",
+  "closure_evidence": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_064826/closure.json",
+  "closure_status_backup": "program/research/baseline_completion_2026-10-12/tasks/verification/_backup/2026-10-12_065444_automation_closed/status.json"
+}

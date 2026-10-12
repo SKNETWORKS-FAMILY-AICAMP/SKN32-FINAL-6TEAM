@@ -1,0 +1,20 @@
+{
+  "columns": {
+    "equal": true,
+    "candidate_count": 140,
+    "deployed_count": 140
+  },
+  "constraints": {
+    "equal": true,
+    "candidate_count": 36,
+    "deployed_count": 36
+  },
+  "enums": {
+    "equal": true,
+    "candidate_count": 21,
+    "deployed_count": 21
+  },
+  "table_count": 13,
+  "scope": "public: listed13 tables columns/constraints and two lifecycle enum definitions only; no rows or other schemas",
+  "read_only_confirmed": true
+}

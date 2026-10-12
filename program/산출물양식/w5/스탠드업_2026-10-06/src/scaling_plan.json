@@ -1,0 +1,126 @@
+{
+ "Luna": [
+  {
+   "from": 100,
+   "g": 0,
+   "api": false
+  },
+  {
+   "from": 700,
+   "g": 0,
+   "api": true
+  },
+  {
+   "from": 47250,
+   "g": 1,
+   "api": true
+  },
+  {
+   "from": 121400,
+   "g": 2,
+   "api": true
+  },
+  {
+   "from": 194900,
+   "g": 3,
+   "api": true
+  }
+ ],
+ "Sol": [
+  {
+   "from": 100,
+   "g": 0,
+   "api": false
+  },
+  {
+   "from": 700,
+   "g": 0,
+   "api": true
+  },
+  {
+   "from": 5850,
+   "g": 1,
+   "api": false
+  },
+  {
+   "from": 25650,
+   "g": 1,
+   "api": true
+  },
+  {
+   "from": 34000,
+   "g": 2,
+   "api": false
+  },
+  {
+   "from": 48750,
+   "g": 2,
+   "api": true
+  },
+  {
+   "from": 59100,
+   "g": 3,
+   "api": false
+  },
+  {
+   "from": 71850,
+   "g": 3,
+   "api": true
+  },
+  {
+   "from": 83350,
+   "g": 4,
+   "api": false
+  },
+  {
+   "from": 94950,
+   "g": 4,
+   "api": true
+  },
+  {
+   "from": 106500,
+   "g": 5,
+   "api": false
+  },
+  {
+   "from": 118100,
+   "g": 5,
+   "api": true
+  },
+  {
+   "from": 129600,
+   "g": 6,
+   "api": false
+  },
+  {
+   "from": 141200,
+   "g": 6,
+   "api": true
+  },
+  {
+   "from": 152700,
+   "g": 7,
+   "api": false
+  },
+  {
+   "from": 164300,
+   "g": 7,
+   "api": true
+  },
+  {
+   "from": 175800,
+   "g": 8,
+   "api": false
+  },
+  {
+   "from": 187400,
+   "g": 8,
+   "api": true
+  },
+  {
+   "from": 198900,
+   "g": 9,
+   "api": false
+  }
+ ]
+}

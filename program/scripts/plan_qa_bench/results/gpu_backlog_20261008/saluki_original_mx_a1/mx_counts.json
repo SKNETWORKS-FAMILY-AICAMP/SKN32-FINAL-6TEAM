@@ -1,0 +1,397 @@
+{
+  "model": "Underdog-Saluki-27B-1.0 IQ2-mix publisher original",
+  "our_training": false,
+  "publisher_training": "Qwen3.8 developer-trained release and publisher GSQ/RCO quantization; no triPilot fine-tuning",
+  "saved": 4014,
+  "expected": 4014,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "repetitions": 1,
+  "counts": {
+    "control": {
+      "request": {
+        "total": 1033,
+        "correct": 1008,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9645172877108487,
+          0.9835543693755363
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.0037049625938602128
+        ]
+      },
+      "no_request": {
+        "total": 974,
+        "correct": 819,
+        "false_pick": 155,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8165564540444399,
+          0.8624902298636077
+        ],
+        "false_pick_wilson95": [
+          0.13750977013639237,
+          0.18344354595556006
+        ]
+      }
+    },
+    "mixed": {
+      "request": {
+        "total": 1033,
+        "correct": 997,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.952131199005064,
+          0.9747221707406286
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.0037049625938602128
+        ]
+      },
+      "no_request": {
+        "total": 974,
+        "correct": 817,
+        "false_pick": 157,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8143925458934114,
+          0.8605634953404913
+        ],
+        "false_pick_wilson95": [
+          0.13943650465950871,
+          0.18560745410658855
+        ]
+      }
+    }
+  },
+  "paired": {
+    "request": {
+      "pairs": 1033,
+      "itineraries": 59,
+      "correct_control": 1008,
+      "correct_mixed": 997,
+      "loss_pp": 1.0648596321393997,
+      "loss_cluster95_pp": [
+        -0.09606378851696379,
+        2.24401211167537
+      ],
+      "mixed_accuracy_cluster95": [
+        0.9511241446725318,
+        0.9769511773249165
+      ],
+      "paired_exact": {
+        "a_only": 20,
+        "b_only": 9,
+        "p": 0.06142834573984146
+      },
+      "bootstrap_replicates": 2000,
+      "bootstrap_seed": 7
+    },
+    "no_request": {
+      "pairs": 974,
+      "itineraries": 59,
+      "correct_control": 819,
+      "correct_mixed": 817,
+      "loss_pp": 0.2053388090349076,
+      "loss_cluster95_pp": [
+        -1.2500652400835028,
+        1.6260576135771614
+      ],
+      "mixed_accuracy_cluster95": [
+        0.8111312526848957,
+        0.864496640176236
+      ],
+      "paired_exact": {
+        "a_only": 24,
+        "b_only": 22,
+        "p": 0.8829959121223965
+      },
+      "bootstrap_replicates": 2000,
+      "bootstrap_seed": 7
+    }
+  },
+  "subtypes_mixed": {
+    "MX1": {
+      "total": 525,
+      "correct": 509,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.951071228703813,
+        0.9811552292962467
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0072639138944599795
+      ]
+    },
+    "MX2": {
+      "total": 474,
+      "correct": 456,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9407756506977965,
+        0.9758463625552556
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.008039191137108092
+      ]
+    },
+    "MX3": {
+      "total": 457,
+      "correct": 419,
+      "false_pick": 38,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8879269572930472,
+        0.9388215756514268
+      ],
+      "false_pick_wilson95": [
+        0.061178424348573276,
+        0.11207304270695294
+      ]
+    },
+    "MX4": {
+      "total": 121,
+      "correct": 13,
+      "false_pick": 108,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.06386968355786452,
+        0.1751651619380895
+      ],
+      "false_pick_wilson95": [
+        0.8248348380619106,
+        0.9361303164421355
+      ]
+    },
+    "MX5a": {
+      "total": 236,
+      "correct": 232,
+      "false_pick": 4,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9572384055106566,
+        0.9933895681561196
+      ],
+      "false_pick_wilson95": [
+        0.0066104318438804065,
+        0.04276159448934341
+      ]
+    },
+    "MX5b": {
+      "total": 160,
+      "correct": 153,
+      "false_pick": 7,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9124569584575362,
+        0.9786483884484656
+      ],
+      "false_pick_wilson95": [
+        0.02135161155153454,
+        0.08754304154246395
+      ]
+    },
+    "MX6a": {
+      "total": 34,
+      "correct": 32,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.80906393095719,
+        0.9837173447898772
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.10151455415332376
+      ]
+    }
+  },
+  "sources": {
+    "code": {
+      "control": {
+        "request": {
+          "total": 940,
+          "correct": 917,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9635518407165776,
+            0.9836411350158406
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004070025516249234
+          ]
+        },
+        "no_request": {
+          "total": 828,
+          "correct": 701,
+          "false_pick": 127,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8204771250546253,
+            0.8695582103009395
+          ],
+          "false_pick_wilson95": [
+            0.13044178969906045,
+            0.17952287494537467
+          ]
+        }
+      },
+      "mixed": {
+        "request": {
+          "total": 940,
+          "correct": 907,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9511083014242949,
+            0.9748946748510223
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004070025516249234
+          ]
+        },
+        "no_request": {
+          "total": 828,
+          "correct": 700,
+          "false_pick": 128,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8191968219604087,
+            0.8684342090907815
+          ],
+          "false_pick_wilson95": [
+            0.1315657909092185,
+            0.1808031780395914
+          ]
+        }
+      }
+    },
+    "llm": {
+      "control": {
+        "request": {
+          "total": 93,
+          "correct": 91,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9249453736530886,
+            0.9940825001915952
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 118,
+          "false_pick": 28,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.736786564779477,
+            0.8638482709217515
+          ],
+          "false_pick_wilson95": [
+            0.13615172907824855,
+            0.263213435220523
+          ]
+        }
+      },
+      "mixed": {
+        "request": {
+          "total": 93,
+          "correct": 90,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9094061748887851,
+            0.988969387184108
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 117,
+          "false_pick": 29,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.7292972468986941,
+            0.8579901480091737
+          ],
+          "false_pick_wilson95": [
+            0.14200985199082636,
+            0.27070275310130587
+          ]
+        }
+      }
+    }
+  },
+  "aggregate_gates": {
+    "request_accuracy": true,
+    "false_pick": false,
+    "request_loss": true,
+    "false_pick_increase": true
+  },
+  "aggregate_gates_passed": 3,
+  "aggregate_gates_total": 4,
+  "subtype_gates": {
+    "MX3": false,
+    "MX4": false,
+    "MX5a": true
+  },
+  "complete_valid": true,
+  "failed_records": [],
+  "false_pick_increase_pp": 0.20533880903490787,
+  "answer_sha256": "759f2daf6261b207f4050d72b068beb3dbe294e221bd53d5044032a183658c2e",
+  "gold_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+  "execution": {
+    "job": {
+      "id": "saluki_original_mx_a1",
+      "suite": "mx",
+      "label": "Underdog-Saluki-27B-1.0 IQ2-mix publisher original",
+      "our_training": false,
+      "publisher_training": "Qwen3.8 developer-trained release and publisher GSQ/RCO quantization; no triPilot fine-tuning",
+      "model": "/tmp/tripilot-saluki-20261009/smoke_verified_model.gguf",
+      "model_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+      "model_revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+      "prompts": "/workspace/heavy/all_prompts_mx.json",
+      "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+      "expected": 4014,
+      "script": "/tmp/tripilot-saluki-20261009/saluki_eval_20261009.py",
+      "runner_sha256": "89eacd03b7a5b1175cea963940f9c16c983443110072f16dff85b8de5fb00444",
+      "tag": "saluki_original_mx_a1",
+      "port": 8401,
+      "logprobs": "1",
+      "purpose": "Matched frozen developer/regression suite; not holdout or adoption",
+      "dependency": "/tmp/tripilot-saluki-20261009/SMOKE_PASS.json",
+      "ephemeral_ram_model": true,
+      "automatic_retry": false
+    },
+    "started": "2026-10-08T17:38:55.061906+00:00",
+    "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+    "script_sha256": "89eacd03b7a5b1175cea963940f9c16c983443110072f16dff85b8de5fb00444",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "limits": [
+    "one run",
+    "existing developer/regression suite; not new independent final holdout",
+    "paired exact p does not remove shared itinerary correlation; cluster intervals supplied",
+    "no complete matched original cohort ranking",
+    "token p_null is not verbal confidence or calibrated option probability"
+  ]
+}

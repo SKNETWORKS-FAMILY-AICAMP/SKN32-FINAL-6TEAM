@@ -1,0 +1,24 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback _
+tests\e2e\test_watch_plugin_recovery.py:89: in test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback
+    assert first.opened and len(first.unavailable) == len(first.opened) and not first.ran
+E   AssertionError: assert ([{'case_id': '469be7a8-7e2f-47e2-9edc-83c97cc96531', 'issue_code': 'batch', 'item': '��� ��ī��Ÿ�� ���� ����, ������ �˾�������� ���, �溹�� �Ѻ� Ž�� �� 1��', 'items': ['��� ��ī��Ÿ�� ���� ����', '������ �˾�������� ���', '�溹�� �Ѻ� Ž��', '�Ե���Ʈ ���￪�� �ķ�ǰ ����'], ...}] and 8 == 1)
+E    +  where [{'case_id': '469be7a8-7e2f-47e2-9edc-83c97cc96531', 'issue_code': 'batch', 'item': '��� ��ī��Ÿ�� ���� ����, ������ �˾�������� ���, �溹�� �Ѻ� Ž�� �� 1��', 'items': ['��� ��ī��Ÿ�� ���� ����', '������ �˾�������� ���', '�溹�� �Ѻ� Ž��', '�Ե���Ʈ ���￪�� �ķ�ǰ ����'], ...}] = CaseTickResult(checked=4, unavailable=[{'trip_id': '281c01ea-fc1f-4055-9da5-bb0c76de358d', 'item_id': 'a9b96cf9-523c-4...], ran=[], fatal=[], unhandled=[], pinned=[], unchecked=[], expired=[], failed=[], retried=[], notified=[], relaxed=[]).opened
+E    +  and   8 = len([{'item_id': 'a9b96cf9-523c-4ca8-8051-6ded430dbf97', 'kind': 'dining', 'reason': 'not_installed', 'trip_id': '281c01ea...0dc7a47e66', 'kind': 'dining', 'reason': 'not_installed', 'trip_id': '281c01ea-fc1f-4055-9da5-bb0c76de358d', ...}, ...])
+E    +    where [{'item_id': 'a9b96cf9-523c-4ca8-8051-6ded430dbf97', 'kind': 'dining', 'reason': 'not_installed', 'trip_id': '281c01ea...0dc7a47e66', 'kind': 'dining', 'reason': 'not_installed', 'trip_id': '281c01ea-fc1f-4055-9da5-bb0c76de358d', ...}, ...] = CaseTickResult(checked=4, unavailable=[{'trip_id': '281c01ea-fc1f-4055-9da5-bb0c76de358d', 'item_id': 'a9b96cf9-523c-4...], ran=[], fatal=[], unhandled=[], pinned=[], unchecked=[], expired=[], failed=[], retried=[], notified=[], relaxed=[]).unavailable
+E    +  and   1 = len([{'case_id': '469be7a8-7e2f-47e2-9edc-83c97cc96531', 'issue_code': 'batch', 'item': '��� ��ī��Ÿ�� ���� ����, ������ �˾�������� ���, �溹�� �Ѻ� Ž�� �� 1��', 'items': ['��� ��ī��Ÿ�� ���� ����', '������ �˾�������� ���', '�溹�� �Ѻ� Ž��', '�Ե���Ʈ ���￪�� �ķ�ǰ ����'], ...}])
+E    +    where [{'case_id': '469be7a8-7e2f-47e2-9edc-83c97cc96531', 'issue_code': 'batch', 'item': '��� ��ī��Ÿ�� ���� ����, ������ �˾�������� ���, �溹�� �Ѻ� Ž�� �� 1��', 'items': ['��� ��ī��Ÿ�� ���� ����', '������ �˾�������� ���', '�溹�� �Ѻ� Ž��', '�Ե���Ʈ ���￪�� �ķ�ǰ ����'], ...}] = CaseTickResult(checked=4, unavailable=[{'trip_id': '281c01ea-fc1f-4055-9da5-bb0c76de358d', 'item_id': 'a9b96cf9-523c-4...], ran=[], fatal=[], unhandled=[], pinned=[], unchecked=[], expired=[], failed=[], retried=[], notified=[], relaxed=[]).opened
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.application.controller:controller.py:475 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=disabled composition_revision=watch-off
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_watch_plugin_recovery.py::test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback
+1 failed in 16.77s

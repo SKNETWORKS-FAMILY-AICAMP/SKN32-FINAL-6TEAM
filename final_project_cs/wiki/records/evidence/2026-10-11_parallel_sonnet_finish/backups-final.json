@@ -1,0 +1,130 @@
+[
+  {
+    "manifest": "final_project_cs\\wiki\\records\\evidence\\2026-10-11_parallel_sonnet_finish\\closing-backups.json",
+    "entries": [
+      "final_project_cs\\wiki\\records\\reports\\debugs\\_backup\\2026-10-11_2054_parallel_finish_results\\2026-10-11_19372_택시_출발직전_문맥누락.md",
+      "final_project_cs\\wiki\\records\\reports\\debugs\\_backup\\2026-10-11_2054_parallel_finish_results\\2026-10-11_1925_택시_출발시각과소요_불일치.md",
+      "final_project_cs\\wiki\\records\\reports\\debugs\\_backup\\2026-10-11_2054_parallel_finish_results\\2026-10-11_1930_후속버스_환승시간폭_누락.md",
+      "final_project_cs\\wiki\\records\\reports\\debugs\\_backup\\2026-10-11_2054_parallel_finish_results\\2026-10-11_0439_이동_기존기대결과_불일치.md",
+      "final_project_cs\\wiki\\records\\reports\\debugs\\_backup\\2026-10-11_2054_parallel_finish_results\\2026-10-11_1937_택시_출발직전_문맥누락.md",
+      "final_project_cs\\wiki\\teams\\_backup\\2026-10-11_2054_parallel_finish_results\\mobility.md"
+    ]
+  },
+  {
+    "manifest": "final_project_cs\\wiki\\records\\evidence\\2026-10-11_parallel_sonnet_finish\\fare-backups.json",
+    "entries": {
+      "backups": [
+        {
+          "source": "app/domains/travel_ops/instances/mobility/engine/options.py",
+          "backup": "app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-11_192837_transfer_boarding_interval\\options.py",
+          "sha256": "1fab9a664de14c6c3f254b8c9e1edc1ef8638918605165ec7424b819247c4eb2"
+        },
+        {
+          "source": "tests/unit/travel/mobility/test_transfer_fare_product_v1.py",
+          "backup": "tests\\unit\\travel\\mobility\\_backup\\2026-10-11_192837_transfer_boarding_interval\\test_transfer_fare_product_v1.py",
+          "sha256": "60fbb50a648fc458eaec4b799bd4a14486cd8bec4bb2d2f690a7a6bce8b2ee62"
+        },
+        {
+          "source": "wiki/teams/mobility.md",
+          "backup": "wiki\\teams\\_backup\\2026-10-11_192837_transfer_boarding_interval\\mobility.md",
+          "sha256": "272e246e69e46ae906bf465d53c270519df8672ddf6843cca2a876be7d2b6cd2"
+        }
+      ],
+      "legacy": "legacy\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\2026-10-11_192837_transfer_boarding_interval\\options.py"
+    }
+  },
+  {
+    "manifest": "final_project_cs\\wiki\\records\\evidence\\2026-10-11_parallel_sonnet_finish\\regression-backups.json",
+    "entries": [
+      {
+        "source": "tests/unit/travel/mobility/test_plan_v1.py",
+        "backup": "tests\\unit\\travel\\mobility\\_backup\\2026-10-11_194032_plan_regression_review\\test_plan_v1.py",
+        "sha256": "b86f9a5d75e689bc4f4fe283d90d874c96102d083ed8643a3b2f825bc8249ab4"
+      },
+      {
+        "source": "tests/unit/travel/mobility/plan_example_out_v1.json",
+        "backup": "tests\\unit\\travel\\mobility\\_backup\\2026-10-11_194032_plan_regression_review\\plan_example_out_v1.json",
+        "sha256": "dc86be47453c613870e56608dcf4c7b14773a424ed73fe6bc46ed41436135912"
+      },
+      {
+        "source": "tests/unit/travel/mobility/plan_example_out_all_v1.json",
+        "backup": "tests\\unit\\travel\\mobility\\_backup\\2026-10-11_194032_plan_regression_review\\plan_example_out_all_v1.json",
+        "sha256": "dbd3bbae2c56131a3bcf16025e94a56d47f655deb3f737cc3760ceca7d398d8e"
+      },
+      {
+        "source": "wiki/teams/mobility.md",
+        "backup": "wiki\\teams\\_backup\\2026-10-11_194032_plan_regression_review\\mobility.md",
+        "sha256": "8d9d72fcd8c605b650b3d79e19c14c7f2234740a5fdaefa53c68552179c441d0"
+      }
+    ]
+  },
+  {
+    "manifest": "final_project_cs\\wiki\\records\\evidence\\2026-10-11_parallel_sonnet_finish\\taxi-backups.json",
+    "entries": {
+      "backups": [
+        {
+          "source": "app/domains/travel_ops/instances/mobility/engine/plan.py",
+          "backup": "app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-11_192404_taxi_departure_consistency\\plan.py",
+          "sha256": "2282a371a0864a328921b7d3754832fe4821abc20d8e618bbb8a4f9535cd95b6"
+        },
+        {
+          "source": "wiki/teams/mobility.md",
+          "backup": "wiki\\teams\\_backup\\2026-10-11_192404_taxi_departure_consistency\\mobility.md",
+          "sha256": "24c5bf9133a026941177d6552345573e656d7a56b8d5c46524bf8e3aa9e9ddd8"
+        }
+      ],
+      "legacy": "legacy\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\2026-10-11_192404_taxi_departure_consistency\\plan.py"
+    }
+  },
+  {
+    "manifest": "final_project_cs\\wiki\\records\\evidence\\2026-10-11_parallel_sonnet_finish\\taxi-notice-backups.json",
+    "entries": [
+      {
+        "source": "app/domains/travel_ops/instances/mobility/engine/plan.py",
+        "backup": "app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-11_193721_taxi_departure_notice\\plan.py",
+        "sha256": "1b32755f5ac505395567fbd58d05d72157523b9ee2342faf6dc43049c491d8ae",
+        "legacy": "legacy\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\2026-10-11_193721_taxi_departure_notice\\plan.py"
+      },
+      {
+        "source": "app/domains/travel_ops/instances/mobility/engine/departure_context.py",
+        "backup": "app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-11_193721_taxi_departure_notice\\departure_context.py",
+        "sha256": "519c72188ae9e03f8ff8d05b4fa3b68071d3ce86d34e0bf014ba48090daac490",
+        "legacy": "legacy\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\2026-10-11_193721_taxi_departure_notice\\departure_context.py"
+      },
+      {
+        "source": "app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+        "backup": "app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-11_193721_taxi_departure_notice\\departure_observer.py",
+        "sha256": "1968f4cd26e37808cafbb814455cb86a1b828a6ba96225f11ef0261d24be3634",
+        "legacy": "legacy\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\2026-10-11_193721_taxi_departure_notice\\departure_observer.py"
+      },
+      {
+        "source": "app/domains/travel_ops/components/watch/trip_reminders.py",
+        "backup": "app\\domains\\travel_ops\\components\\watch\\_backup\\2026-10-11_193721_taxi_departure_notice\\trip_reminders.py",
+        "sha256": "a8cbbf3d3866c194eae9b7e75bb8b31077e8c6049ff30c5bb0aa3693ca0c62b6",
+        "legacy": "legacy\\final_project_cs\\app\\domains\\travel_ops\\components\\watch\\2026-10-11_193721_taxi_departure_notice\\trip_reminders.py"
+      },
+      {
+        "source": "wiki/teams/mobility.md",
+        "backup": "wiki\\teams\\_backup\\2026-10-11_193721_taxi_departure_notice\\mobility.md",
+        "sha256": "9d35dbb070fdc65cc48ae60914c50f9b357d5d2d391c1e83b7eb2dc086116b1f"
+      }
+    ]
+  },
+  {
+    "source": "wiki\\delivery\\open-items.md",
+    "backup": "wiki\\delivery\\_backup\\2026-10-11_2056_mobility_finish\\open-items.md",
+    "sha256": "83cf4c1a51a8f4044097a2bfcf81fc68057d5a590004c0e5fdf3a9f1565d856b"
+  },
+  {
+    "backup": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-11_1948_taxi_boundaries\\departure_observer.py",
+    "sha256": "7c5531c34b654c0159ebc5862d80c9f6894102cb1fc43d40aa85199d127bac1e"
+  },
+  {
+    "backup": "final_project_cs\\tests\\unit\\travel\\mobility\\_backup\\2026-10-11_1948_taxi_boundaries\\test_departure_taxi_v1.py",
+    "sha256": "7b414ffdd2f17e591c2ddc5b40d96c91fedecb7104334a2630d08c9bfac83b1d"
+  },
+  {
+    "backup": "final_project_cs\\tests\\unit\\travel\\mobility\\_backup\\2026-10-11_1948_taxi_boundaries\\test_taxi_departure_consistency_v1.py",
+    "sha256": "b3dec285bd39f2a2d58849012e86cf7da1ecba26ac484a5b9aa439c862c48366"
+  }
+]

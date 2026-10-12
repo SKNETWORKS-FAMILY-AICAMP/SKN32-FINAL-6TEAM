@@ -33,8 +33,9 @@ export function toMapLines(shapes: RouteShape[]): MapLine[] {
 export function routeNotes(shapes: RouteShape[]): string[] {
   const notes: string[] = [];
   if (shapes.some(isGuess)) notes.push("점선은 길을 몰라 두 곳을 직선으로 이은 구간이에요.");
-  if (shapes.some((shape) => shape.source === "stations")) notes.push("지하철 구간은 역 위치를 순서대로 이은 선이라 실제 선로 모양이 아니에요.");
-  if (shapes.some((shape) => shape.mode === "bus" || shape.mode === "mixed")) notes.push("버스는 정류장 정보가 없어 직선으로 이어요.");
+  if (shapes.some((shape) => shape.source === "stations" || (shape.source === "transit_stops" && shape.rides.some((ride) => ride.mode !== "bus")))) notes.push("지하철 구간은 역 위치를 순서대로 이은 선이라 실제 선로 모양이 아니에요.");
+  if (shapes.some((shape) => shape.source === "bus_stops" || (shape.source === "transit_stops" && shape.rides.some((ride) => ride.mode === "bus")))) notes.push("버스 구간은 정류장 위치를 순서대로 이은 선이라 실제 도로 모양이 아니에요.");
+  if (shapes.some((shape) => (shape.mode === "bus" || shape.mode === "mixed") && shape.source !== "bus_stops" && shape.source !== "transit_stops")) notes.push("버스는 정류장 정보가 없어 직선으로 이어요.");
   // The server says why for each guess (`note`): the road finder was off, no stop list … — shown as it wrote it, once for each distinct sentence.
   const reasons = new Set(shapes.filter(isGuess).flatMap((shape) => shape.note ? [`${shape.from ?? "출발"} → ${shape.to ?? "도착"}: ${shape.note}`] : []));
   return [...notes, ...reasons];
@@ -59,8 +60,9 @@ export function routeTags(shapes: RouteShape[]): { kinds: RouteTag[]; guessed: n
 export function rideLines(shape: RouteShape, t: (ko: string, en: string) => string): string[] {
   return shape.rides.map((ride) => [
     ride.line,
+    ride.service === "express" ? t("급행", "express") : ride.service === "local" ? t("일반", "local") : null,
     ride.from && ride.to ? `${ride.from}→${ride.to}` : null,
-    ride.count !== null ? t(`${ride.count}개 역`, `${ride.count} stations`) : null,
-    ride.filled ? null : t("역 사이는 직선", "straight between stations"),
+    ride.count !== null ? (ride.mode === "bus" ? t(`${ride.count}개 정류장`, `${ride.count} stops`) : t(`${ride.count}개 역`, `${ride.count} stations`)) : null,
+    ride.filled ? null : (ride.mode === "bus" ? t("정류장 사이는 직선", "straight between stops") : t("역 사이는 직선", "straight between stations")),
   ].filter(Boolean).join(" · "));
 }

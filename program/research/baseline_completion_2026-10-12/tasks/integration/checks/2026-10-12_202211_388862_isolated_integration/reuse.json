@@ -1,0 +1,5 @@
+{
+  "task_owned_cluster": "program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_092645_945781_isolated_integration\\pgdata",
+  "new_database": "integration_local_20261012202211388862",
+  "previous_database_preserved": true
+}

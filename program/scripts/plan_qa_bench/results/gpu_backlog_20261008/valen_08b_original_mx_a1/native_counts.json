@@ -1,0 +1,358 @@
+{
+  "model": "Valen-0.8B original native choice head",
+  "our_training": false,
+  "publisher_training": "Developer decision SFT",
+  "expected": 4014,
+  "saved": 4014,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "full": {
+    "total": 4014,
+    "correct": 661,
+    "false_pick": 1942,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.15352165772955248,
+      0.17646683793643916
+    ],
+    "false_pick_wilson95": [
+      0.4683698270454236,
+      0.49927449109595046
+    ]
+  },
+  "positive": {
+    "total": 2066,
+    "correct": 655,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.2973281801335561,
+      0.3374264544408542
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      0.0018559193528198154
+    ]
+  },
+  "negative": {
+    "total": 1948,
+    "correct": 6,
+    "false_pick": 1942,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.0014123703411443559,
+      0.006703790297366501
+    ],
+    "false_pick_wilson95": [
+      0.9932962097026335,
+      0.9985876296588557
+    ]
+  },
+  "single_expected": 4014,
+  "compound_diagnostic_only": 0,
+  "subtypes": {
+    "mx_MX1_control": {
+      "total": 525,
+      "correct": 247,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.4281501642068621,
+        0.5132311335659536
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0072639138944599795
+      ]
+    },
+    "mx_MX1_mixed": {
+      "total": 525,
+      "correct": 176,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.2961829412479716,
+        0.37668688180677423
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0072639138944599795
+      ]
+    },
+    "mx_MX2_control": {
+      "total": 474,
+      "correct": 123,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.2220758725948988,
+        0.30077842187611525
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.008039191137108092
+      ]
+    },
+    "mx_MX2_mixed": {
+      "total": 474,
+      "correct": 74,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.1262212603710688,
+        0.19154409049538107
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.008039191137108092
+      ]
+    },
+    "mx_MX3_control": {
+      "total": 457,
+      "correct": 0,
+      "false_pick": 457,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.008335749197835897
+      ],
+      "false_pick_wilson95": [
+        0.9916642508021641,
+        1.0
+      ]
+    },
+    "mx_MX3_mixed": {
+      "total": 457,
+      "correct": 4,
+      "false_pick": 453,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0034088822792374095,
+        0.022286416166776412
+      ],
+      "false_pick_wilson95": [
+        0.9777135838332237,
+        0.9965911177207626
+      ]
+    },
+    "mx_MX4_control": {
+      "total": 121,
+      "correct": 0,
+      "false_pick": 121,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.03077069794747827
+      ],
+      "false_pick_wilson95": [
+        0.9692293020525218,
+        1.0
+      ]
+    },
+    "mx_MX4_mixed": {
+      "total": 121,
+      "correct": 0,
+      "false_pick": 121,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.03077069794747827
+      ],
+      "false_pick_wilson95": [
+        0.9692293020525218,
+        1.0
+      ]
+    },
+    "mx_MX5a_control": {
+      "total": 236,
+      "correct": 0,
+      "false_pick": 236,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.01601665883614395
+      ],
+      "false_pick_wilson95": [
+        0.9839833411638562,
+        1.0
+      ]
+    },
+    "mx_MX5a_mixed": {
+      "total": 236,
+      "correct": 2,
+      "false_pick": 234,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.002327119302983828,
+        0.03036722328170005
+      ],
+      "false_pick_wilson95": [
+        0.9696327767183001,
+        0.9976728806970162
+      ]
+    },
+    "mx_MX5b_control": {
+      "total": 160,
+      "correct": 0,
+      "false_pick": 160,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.02344619517150519
+      ],
+      "false_pick_wilson95": [
+        0.9765538048284949,
+        1.0
+      ]
+    },
+    "mx_MX5b_mixed": {
+      "total": 160,
+      "correct": 0,
+      "false_pick": 160,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.02344619517150519
+      ],
+      "false_pick_wilson95": [
+        0.9765538048284949,
+        1.0
+      ]
+    },
+    "mx_MX6a_control": {
+      "total": 34,
+      "correct": 19,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.3945389925620307,
+        0.7111651775375785
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.10151455415332376
+      ]
+    },
+    "mx_MX6a_mixed": {
+      "total": 34,
+      "correct": 16,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.3145150447508847,
+        0.6326328701993107
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.10151455415332376
+      ]
+    }
+  },
+  "prompt_sha256": "0971ff51c3e4299d073093d3c08a1d55187aa2fb766d2568e4dd16c63835f004",
+  "answer_sha256": "4039bfd830b098df1f1a0b3c002ae6f47ddfa68372c8ce9b5525e17f3d4875d3",
+  "probability_kind": "Native choice head normalized candidate probability; not next token, verbal certainty or JSON output",
+  "original_content_contract_checked": true,
+  "execution": {
+    "job": {
+      "id": "valen_08b_original_mx_a1",
+      "tag": "valen_08b_original_mx_a1",
+      "suite": "mx",
+      "label": "Valen-0.8B native decision head publisher original",
+      "our_training": false,
+      "publisher_training": "Developer full decision SFT on Qwen3.5-0.8B",
+      "model": "/tmp/tripilot-valen-20261009/smoke_verified_model.safetensors",
+      "model_sha256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48",
+      "model_revision": "3bf3e6d6318385884bf85e38dea1ca59afdf93f1",
+      "prompts": "/tmp/tripilot-valen-20261009/prompts/mx.json",
+      "prompt_sha256": "0971ff51c3e4299d073093d3c08a1d55187aa2fb766d2568e4dd16c63835f004",
+      "expected": 4014,
+      "script": "/tmp/tripilot-valen-20261009/valen_native_eval_20261009_v2.py",
+      "runner_sha256": "86e3aee0a18900fa32f46cdaaefdea2f26462b70ea5a83a6a292406a481b8541",
+      "port": 8401,
+      "logprobs": "0",
+      "output_contract": "Native choice-head distribution; parsed validates API, content holds native response",
+      "dependency": "/tmp/tripilot-valen-20261009/SMOKE_PASS.json",
+      "automatic_retry": false,
+      "purpose": "Frozen original travel regression; not holdout or adoption",
+      "smoke_gate_attempt": "a2"
+    },
+    "started": "2026-10-09T01:31:01.416422+00:00",
+    "prompt_sha256": "0971ff51c3e4299d073093d3c08a1d55187aa2fb766d2568e4dd16c63835f004",
+    "script_sha256": "86e3aee0a18900fa32f46cdaaefdea2f26462b70ea5a83a6a292406a481b8541",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false,
+  "mixed_positive": {
+    "total": 1033,
+    "correct": 266,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.23177048264210162,
+      0.2850312465539527
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      0.0037049625938602128
+    ]
+  },
+  "mixed_negative": {
+    "total": 974,
+    "correct": 6,
+    "false_pick": 968,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.002826226358860603,
+      0.013374210509299392
+    ],
+    "false_pick_wilson95": [
+      0.9866257894907006,
+      0.9971737736411393
+    ]
+  },
+  "paired_positive": {
+    "pairs": 1033,
+    "itineraries": 59,
+    "correct_control": 389,
+    "correct_mixed": 266,
+    "loss_pp": 11.907066795740562,
+    "loss_cluster95_pp": [
+      9.404764971853302,
+      14.467925933110443
+    ],
+    "mixed_accuracy_cluster95": [
+      0.2279787729577831,
+      0.29011328005784126
+    ],
+    "paired_exact": {
+      "a_only": 147,
+      "b_only": 24,
+      "p": 9.219252518858911e-23
+    },
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 7
+  },
+  "control_negative": {
+    "total": 974,
+    "correct": 0,
+    "false_pick": 974,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.0,
+      0.003928508845725399
+    ],
+    "false_pick_wilson95": [
+      0.9960714911542745,
+      1.0
+    ]
+  },
+  "gates": {
+    "normal_accuracy": false,
+    "false_pick": false,
+    "normal_loss": false,
+    "false_pick_increase": true
+  },
+  "gates_passed": 1,
+  "gates_total": 4
+}

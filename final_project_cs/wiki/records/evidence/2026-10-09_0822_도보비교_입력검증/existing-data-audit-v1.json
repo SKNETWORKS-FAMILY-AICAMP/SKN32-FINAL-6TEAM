@@ -1,0 +1,92 @@
+{
+  "scope": "reaggregation of two preserved files; G04 is also in the 200 pairs; no new web or route computation",
+  "audits": [
+    {
+      "input": "datasets/mobility/raw/kakao_golden/compare_resume_200_v5.json",
+      "sha256": "d4d8affedfceabfd97fa9528d14465df9b2e573afe4cc717d48ff89f227be83a",
+      "rows": 200,
+      "prior_metrics_equal": true,
+      "coverage": {
+        "pairs": 200,
+        "walk_reference_rows": 59,
+        "walk_reference_invalid": 0,
+        "walk_product_offered": 0,
+        "walk_product_invalid": 0,
+        "walk_product_missing": 0,
+        "walk_product_unobserved": 200,
+        "walk_product_comparisons": 0,
+        "walk_raw_diagnostic_comparisons": 59,
+        "walk_diagnostic_errors": 0,
+        "web_car": 160,
+        "car_reused_by_user": 40,
+        "car_excluded_legacy_api": 0,
+        "wait_known": 200
+      }
+    },
+    {
+      "input": "datasets/mobility/raw/kakao_golden/2026-10-09_0725_도보평가_제품분모_G04_product_v2.json",
+      "sha256": "e8d9a6482e2ecb8fe50d2e502f7c2db050bd078ea65dcc0eaed9235fbb739e1c",
+      "rows": 1,
+      "prior_metrics_equal": true,
+      "coverage": {
+        "pairs": 1,
+        "walk_reference_rows": 1,
+        "walk_reference_invalid": 0,
+        "walk_product_offered": 1,
+        "walk_product_invalid": 0,
+        "walk_product_missing": 0,
+        "walk_product_unobserved": 0,
+        "walk_product_comparisons": 1,
+        "walk_raw_diagnostic_comparisons": 1,
+        "walk_diagnostic_errors": 0,
+        "web_car": 0,
+        "car_reused_by_user": 1,
+        "car_excluded_legacy_api": 0,
+        "wait_known": 1
+      }
+    }
+  ],
+  "controlled_boolean_reproduction": {
+    "before": {
+      "pairs": 1,
+      "walk_reference_rows": 1,
+      "walk_product_offered": 1,
+      "walk_product_missing": 0,
+      "walk_product_unobserved": 0,
+      "walk_product_comparisons": 1,
+      "walk_raw_diagnostic_comparisons": 0,
+      "walk_diagnostic_errors": 0,
+      "web_car": 0,
+      "car_reused_by_user": 0,
+      "car_excluded_legacy_api": 0,
+      "wait_known": 0
+    },
+    "after": {
+      "pairs": 1,
+      "walk_reference_rows": 1,
+      "walk_reference_invalid": 0,
+      "walk_product_offered": 0,
+      "walk_product_invalid": 1,
+      "walk_product_missing": 0,
+      "walk_product_unobserved": 0,
+      "walk_product_comparisons": 0,
+      "walk_raw_diagnostic_comparisons": 0,
+      "walk_diagnostic_errors": 0,
+      "web_car": 0,
+      "car_reused_by_user": 0,
+      "car_excluded_legacy_api": 0,
+      "wait_known": 0
+    }
+  },
+  "web_attempts": {
+    "browser_inventory": "success",
+    "google_existing_tab_read": "timeout; kernel reset",
+    "web_route_page_reads": {
+      "google": "inaccessible",
+      "naver": "inaccessible",
+      "kakao": "inaccessible"
+    },
+    "new_routes": 0
+  },
+  "map_developer_api_calls": 0
+}

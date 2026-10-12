@@ -1,0 +1,13 @@
+{"checked_queries": 1, "target_queries": 12}
+{"checked_queries": 2, "target_queries": 12}
+{"checked_queries": 3, "target_queries": 12}
+{"checked_queries": 4, "target_queries": 12}
+{"checked_queries": 5, "target_queries": 12}
+{"checked_queries": 6, "target_queries": 12}
+{"checked_queries": 7, "target_queries": 12}
+{"checked_queries": 8, "target_queries": 12}
+{"checked_queries": 9, "target_queries": 12}
+{"checked_queries": 10, "target_queries": 12}
+{"checked_queries": 11, "target_queries": 12}
+{"checked_queries": 12, "target_queries": 12}
+{"created_at": "2026-10-09T02:46:12.949621+09:00", "scope": "development: incoming and final edge fixed explicitly; public snap selection and real driving are not measured", "queries": 12, "repeats_per_query": 3, "developer_api_calls": 0, "baseline_target_transition_used": 12, "after_applied_rule_violations": 0, "routed_queries": 11, "no_path_queries": 1, "changed_distance_queries": 11}

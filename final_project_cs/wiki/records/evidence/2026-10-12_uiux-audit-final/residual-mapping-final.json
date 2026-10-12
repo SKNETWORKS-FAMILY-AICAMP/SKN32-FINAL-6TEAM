@@ -1,0 +1,121 @@
+[
+  {
+    "Title": "글에서 일정을 한 줄도 못 읽으면 입력 화면으로 자동 복귀하고 원문과 다시 입력할 안내를 보존한다",
+    "File": "tests/live/flow.spec.ts",
+    "OldLine": 178,
+    "NewLine": 178,
+    "Selector": "tests/live/flow.spec.ts:178"
+  },
+  {
+    "Title": "Esc · 닫기 단추 · 바깥을 눌러 닫으면 아무것도 정해지지 않고, 초점이 「계획 확인하기」로 돌아온다. Tab 은 카드 안에서만 돈다",
+    "File": "tests/live/guardian-card.spec.ts",
+    "OldLine": 41,
+    "NewLine": 41,
+    "Selector": "tests/live/guardian-card.spec.ts:41"
+  },
+  {
+    "Title": "기본은 휴대폰 크기 틀이다 — 넓은 창(1280)에서도 계획 담기 · 내 여행 · 여행 · 마이페이지가 틀 폭(402px 이하) 안에 있고 가로로 넘치지 않는다",
+    "File": "tests/live/layout-mobile.spec.ts",
+    "OldLine": 13,
+    "NewLine": 13,
+    "Selector": "tests/live/layout-mobile.spec.ts:13"
+  },
+  {
+    "Title": "위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 시간 초기화는 변경 메뉴에서 동작한다",
+    "File": "tests/live/map-status-bar.spec.ts",
+    "OldLine": 10,
+    "NewLine": 10,
+    "Selector": "tests/live/map-status-bar.spec.ts:10"
+  },
+  {
+    "Title": "마커로 연 일정의 윗부분은 전체·일차 줄 아래에 놓인다",
+    "File": "tests/live/plan-focus.spec.ts",
+    "OldLine": 10,
+    "NewLine": 10,
+    "Selector": "tests/live/plan-focus.spec.ts:10"
+  },
+  {
+    "Title": "화면이 열려 있는 동안 안전 알림이 오면 「일정 정지 중 · 안전 알림」 막대가 대피 장소를 말하고 9초 동안 남는다 — 정지가 풀리면 칩도 없다",
+    "File": "tests/live/trip-safety.spec.ts",
+    "OldLine": 166,
+    "NewLine": 166,
+    "Selector": "tests/live/trip-safety.spec.ts:166"
+  },
+  {
+    "Title": "주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 없다(없는 리소스·예외)",
+    "File": "tests/live/trip.spec.ts",
+    "OldLine": 336,
+    "NewLine": 336,
+    "Selector": "tests/live/trip.spec.ts:336"
+  },
+  {
+    "Title": "세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 375px",
+    "File": "tests/live/uiux-sonnet-map-reveal-20261012.spec.ts",
+    "OldLine": 22,
+    "NewLine": 24,
+    "Selector": "tests/live/uiux-sonnet-map-reveal-20261012.spec.ts:24"
+  },
+  {
+    "Title": "세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 1280px",
+    "File": "tests/live/uiux-sonnet-map-reveal-20261012.spec.ts",
+    "OldLine": 22,
+    "NewLine": 24,
+    "Selector": "tests/live/uiux-sonnet-map-reveal-20261012.spec.ts:24"
+  },
+  {
+    "Title": "목록 머리를 끈 직후 손잡이 첫 Enter 입력이 동작한다",
+    "File": "tests/live/uiux-sonnet-plan-20261012.spec.ts",
+    "OldLine": 37,
+    "NewLine": 37,
+    "Selector": "tests/live/uiux-sonnet-plan-20261012.spec.ts:37"
+  },
+  {
+    "Title": "목록 머리를 끈 직후 손잡이 첫 Space 입력이 동작한다",
+    "File": "tests/live/uiux-sonnet-plan-20261012.spec.ts",
+    "OldLine": 37,
+    "NewLine": 37,
+    "Selector": "tests/live/uiux-sonnet-plan-20261012.spec.ts:37"
+  },
+  {
+    "Title": "잠금 요청이 진행 중이면 이전 시간 변경 토스트의 되돌리기가 추가 요청을 보내지 않는다",
+    "File": "tests/live/uiux-sonnet-plan-20261012.spec.ts",
+    "OldLine": 69,
+    "NewLine": 76,
+    "Selector": "tests/live/uiux-sonnet-plan-20261012.spec.ts:76"
+  },
+  {
+    "Title": "확인 실패 안내가 해소된 뒤 같은 실패가 다시 생기면 안내를 다시 표시한다",
+    "File": "tests/live/uiux-sonnet-plan-20261012.spec.ts",
+    "OldLine": 92,
+    "NewLine": 99,
+    "Selector": "tests/live/uiux-sonnet-plan-20261012.spec.ts:99"
+  },
+  {
+    "Title": "등록 여행 일정0개는 날짜줄 숨김",
+    "File": "tests/live/uiux-sonnet-trip-20261012.spec.ts",
+    "OldLine": 73,
+    "NewLine": 73,
+    "Selector": "tests/live/uiux-sonnet-trip-20261012.spec.ts:73"
+  },
+  {
+    "Title": "머리 영역 드래그 직후 첫 Enter가 목록 높이를 바꾼다",
+    "File": "tests/live/uiux-sonnet-trip-20261012.spec.ts",
+    "OldLine": 103,
+    "NewLine": 107,
+    "Selector": "tests/live/uiux-sonnet-trip-20261012.spec.ts:107"
+  },
+  {
+    "Title": "머리 영역 드래그 직후 첫 Space가 목록 높이를 바꾼다",
+    "File": "tests/live/uiux-sonnet-trip-20261012.spec.ts",
+    "OldLine": 103,
+    "NewLine": 107,
+    "Selector": "tests/live/uiux-sonnet-trip-20261012.spec.ts:107"
+  },
+  {
+    "Title": "검증 이동은 출발만 표시하다 펼치면 도착을 표시하고 수단·소요·여유를 유지한다",
+    "File": "tests/live/web-flow-oct09.spec.ts",
+    "OldLine": 55,
+    "NewLine": 55,
+    "Selector": "tests/live/web-flow-oct09.spec.ts:55"
+  }
+]

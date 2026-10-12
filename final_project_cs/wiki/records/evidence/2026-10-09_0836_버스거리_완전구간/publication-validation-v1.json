@@ -1,0 +1,43 @@
+{
+  "source_hash_matches": 218,
+  "backup_hash_matches": 8,
+  "local_links": [
+    "final_project_cs/wiki/records/evidence/2026-10-09_0836_버스거리_완전구간/controlled-departure-traces-v1.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0836_버스거리_완전구간",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0836_버스거리_완전구간/existing-distance-audit-v2.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0836_버스거리_완전구간/existing-profile-audit-v1.json",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus.py",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus_profile.py",
+    "final_project_cs/tests/unit/travel/mobility/test_bus_distance_completeness_v1.py",
+    "final_project_cs/tests/unit/travel/mobility/test_bus_profile_completeness_v1.py",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v30/mobility-readiness.html",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0836_버스거리_완전구간/backup-manifest-v1.json",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0836_버스거리_완전구간/bus.py",
+    "final_project_cs/wiki/teams/_backup/2026-10-09_0836_버스거리_완전구간/mobility.md",
+    "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0840_출발판정_기존계약/test_bus_distance_completeness_v1.py",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0842_버스프로파일_완전구간/bus_profile.py",
+    "final_project_cs/wiki/teams/_backup/2026-10-09_0842_버스프로파일_완전구간/mobility.md",
+    "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0842_버스프로파일_완전구간/2026-10-09_0836_버스거리_완전구간_중간정류장_누락을_일부거리로_합산.md",
+    "final_project_cs/wiki/teams/_backup/2026-10-09_0847_버스완전구간_검증결과/mobility.md",
+    "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0847_버스완전구간_결함종료/2026-10-09_0836_버스거리_완전구간_중간정류장_누락을_일부거리로_합산.md",
+    "final_project_cs/wiki/records/reports/2026-10-09_0847_버스거리와_통행시간_완전구간_검증.md",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v29/mobility-readiness.html"
+  ],
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_0847_버스거리와_통행시간_완전구간_검증.md": "582d75ed947c00cd4c1311e5d60d8fb7768b072edb3b76e3f14f9c053e0fe5cd",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v30/mobility-readiness.html": "a02c41d796f03370707937967687d0565fc91563d5254a69c959ee5261a53ed7",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v30/readiness-catalog.json": "97585f5e1515bed7e87d5b3f207aed8ca63dfcc9bcadd873a6bca41ee406d364",
+    "final_project_cs/wiki/teams/mobility.md": "6ffe294fcf8c9832be423be9290c3fa69ea2001fea66d811a2876a8eaee73a76",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0836_버스거리_완전구간/verification-proof-v1.json": "94b5e5b65e195b212a7aeceb93174899b82a2bb6db70989363866d735b89c37a",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0836_버스거리_완전구간/backup-manifest-v1.json": "5b9fd153d25f9c2562d091ef9f589ceab46e10b6e11596aff4c07dff39a332c7"
+  },
+  "browser_render_verified": false,
+  "scan_scope": [
+    "final_project_cs/wiki/records/reports/2026-10-09_0847_버스거리와_통행시간_완전구간_검증.md",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v30/mobility-readiness.html",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v30/readiness-catalog.json",
+    "final_project_cs/wiki/teams/mobility.md",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0836_버스거리_완전구간/verification-proof-v1.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0836_버스거리_완전구간/backup-manifest-v1.json"
+  ]
+}

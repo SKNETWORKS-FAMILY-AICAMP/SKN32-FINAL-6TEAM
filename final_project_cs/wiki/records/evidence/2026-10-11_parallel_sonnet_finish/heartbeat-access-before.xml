@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="15" skipped="0" tests="33" time="7.300" timestamp="2026-10-11T21:23:55.261762+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[1e+30-walk_place_in]" time="0.164"><failure message="OverflowError: Python int too large to convert to C int">field = 'walk_place_in', value = 1e+30
+
+    @pytest.mark.parametrize('field', FIELDS)
+    @pytest.mark.parametrize('value', [1e30, 10**1000, SERVICE_DAY_MAX_MIN+0.1,
+                                      float('inf'), float('nan'), -1, True])
+    def test_corrupt_access_is_rejected_before_current_source_or_verifier(field, value):
+        runtime, context = scene()
+        context['options']['p']['check'][field] = value
+        before = deepcopy(context)
+        runtime.verify_case = lambda *a, **k: pytest.fail('잘못된 접근값으로 판정하면 안 됨')
+&gt;       got = call(runtime, context,
+                   bus_arrival=lambda *a, **k: pytest.fail('잘못된 접근값으로 API 조회하면 안 됨'))
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_departure_observer_v1.py:39: in call
+    return observe(runtime, context, 'p', now=NOW, deadline=NOW + timedelta(hours=1),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+runtime = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x000001BEA6A2CBC0&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'fixture-a'}, 'first_visit': False, 'from_place': {'lat': .....}, 'legs': [{'from': '승차', 'from_sequence': 5, 'from_stop_id': '1005', 'mode': 'bus', ...}], 'option_id': 'p'}}, ...}
+option_id = 'p'
+
+    def observe(runtime, context, option_id, *, now, deadline, origin, destination,
+                bus_arrival=None, subway_arrival=None, disruptions=(), current_party=None, current_first_visit=None):
+        """콜백의 실시간 예상과 모델 재검증을 구별한다. 일정·알림을 직접 쓰지 않는다."""
+        base = {'option_id': option_id, 'observations': [], 'timing_unit': 'model_minutes',
+                'party_check': 'current_trip_not_supplied'}
+    
+        def fail(status, reason):
+            return {**base, 'status': status, 'reason': reason}
+    
+        if not isinstance(now, datetime) or now.utcoffset() is None:
+            return fail('fatal', 'timezone_required')
+        if not isinstance(deadline, datetime) or deadline.utcoffset() is None or deadline &lt;= now:
+            return fail('needs_replan', 'deadline_passed_or_invalid')
+        if not isinstance(context, dict) or context.get('schema_version') != 1:
+            return fail('needs_replan', 'context_missing_or_version')
+        if context.get('timing_unit') != 'model_minutes':
+            return fail('needs_replan', 'timing_unit_mismatch')
+        if not (_same_place(context.get('from_place'), origin)
+                and _same_place(context.get('to_place'), destination)):
+            return fail('needs_replan', 'place_changed')
+        basis = input_basis(runtime)
+        if context.get('basis') != basis:
+            return fail('needs_replan', 'basis_changed')
+        options = context.get('options')
+        option = options.get(option_id) if isinstance(options, dict) else None
+        if not isinstance(option, dict) or option.get('option_id') != option_id:
+            return fail('needs_replan', 'option_changed')
+        check = option.get('check')
+        legs = option.get('legs')
+        party = context.get('party')
+        if not isinstance(party, dict) or not isinstance(context.get('first_visit'), bool):
+            return fail('needs_replan', 'party_context_invalid')
+        if current_party is not None or current_first_visit is not None:
+            if not isinstance(current_party, dict) or not isinstance(current_first_visit, bool):
+                return fail('fatal', 'current_party_invalid')
+            if party != current_party:
+                base['party_check'] = 'changed'
+                return fail('needs_replan', 'party_changed')
+            if context['first_visit'] != current_first_visit:
+                base['party_check'] = 'changed'
+                return fail('needs_replan', 'first_visit_changed')
+            base['party_check'] = 'matched'
+        if option.get('path_kind') == 'direct_taxi':
+            base['basis'] = basis
+            return _observe_taxi(runtime, option, base, now=now, deadline=deadline,
+                                 origin=origin, destination=destination)
+        if option.get('path_kind') == 'direct_walk':
+            base['basis'] = basis
+            return _observe_walk(runtime, context, option, base, now=now, deadline=deadline,
+                                 origin=origin, destination=destination)
+        if not isinstance(check, dict) or not legs or check.get('legs') != legs:
+            return fail('needs_replan', 'route_check_missing_or_changed')
+        if 'subway_identity' in option or 'subway_station_version' in basis:
+            from .subway_identity import boarding_identity
+            if option.get('subway_identity') != boarding_identity(runtime, legs):
+                return fail('needs_replan', 'subway_identity_changed')
+        names = ('walk_place_in', 'walk_stop_in', 'walk_stop_out', 'walk_place_out')
+        if any(not _number(check.get(key)) for key in names):
+            return fail('needs_replan', 'access_context_invalid')
+        now_local = now.astimezone(KST)
+        start = now_local.replace(second=0, microsecond=0)
+        if now_local &gt; start:
+            start += timedelta(minutes=1)
+        access = check['walk_place_in'] + check['walk_stop_in']
+        egress = check['walk_stop_out'] + check['walk_place_out']
+&gt;       ready = start + timedelta(minutes=math.ceil(access))
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OverflowError: Python int too large to convert to C int
+
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:211: OverflowError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[1e+30-walk_stop_in]" time="0.010"><failure message="OverflowError: Python int too large to convert to C int">field = 'walk_stop_in', value = 1e+30
+
+    @pytest.mark.parametrize('field', FIELDS)
+    @pytest.mark.parametrize('value', [1e30, 10**1000, SERVICE_DAY_MAX_MIN+0.1,
+                                      float('inf'), float('nan'), -1, True])
+    def test_corrupt_access_is_rejected_before_current_source_or_verifier(field, value):
+        runtime, context = scene()
+        context['options']['p']['check'][field] = value
+        before = deepcopy(context)
+        runtime.verify_case = lambda *a, **k: pytest.fail('잘못된 접근값으로 판정하면 안 됨')
+&gt;       got = call(runtime, context,
+                   bus_arrival=lambda *a, **k: pytest.fail('잘못된 접근값으로 API 조회하면 안 됨'))
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_departure_observer_v1.py:39: in call
+    return observe(runtime, context, 'p', now=NOW, deadline=NOW + timedelta(hours=1),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+runtime = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x000001BEA74C26F0&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'fixture-a'}, 'first_visit': False, 'from_place': {'lat': .....}, 'legs': [{'from': '승차', 'from_sequence': 5, 'from_stop_id': '1005', 'mode': 'bus', ...}], 'option_id': 'p'}}, ...}
+option_id = 'p'
+
+    def observe(runtime, context, option_id, *, now, deadline, origin, destination,
+                bus_arrival=None, subway_arrival=None, disruptions=(), current_party=None, current_first_visit=None):
+        """콜백의 실시간 예상과 모델 재검증을 구별한다. 일정·알림을 직접 쓰지 않는다."""
+        base = {'option_id': option_id, 'observations': [], 'timing_unit': 'model_minutes',
+                'party_check': 'current_trip_not_supplied'}
+    
+        def fail(status, reason):
+            return {**base, 'status': status, 'reason': reason}
+    
+        if not isinstance(now, datetime) or now.utcoffset() is None:
+            return fail('fatal', 'timezone_required')
+        if not isinstance(deadline, datetime) or deadline.utcoffset() is None or deadline &lt;= now:
+            return fail('needs_replan', 'deadline_passed_or_invalid')
+        if not isinstance(context, dict) or context.get('schema_version') != 1:
+            return fail('needs_replan', 'context_missing_or_version')
+        if context.get('timing_unit') != 'model_minutes':
+            return fail('needs_replan', 'timing_unit_mismatch')
+        if not (_same_place(context.get('from_place'), origin)
+                and _same_place(context.get('to_place'), destination)):
+            return fail('needs_replan', 'place_changed')
+        basis = input_basis(runtime)
+        if context.get('basis') != basis:
+            return fail('needs_replan', 'basis_changed')
+        options = context.get('options')
+        option = options.get(option_id) if isinstance(options, dict) else None
+        if not isinstance(option, dict) or option.get('option_id') != option_id:
+            return fail('needs_replan', 'option_changed')
+        check = option.get('check')
+        legs = option.get('legs')
+        party = context.get('party')
+        if not isinstance(party, dict) or not isinstance(context.get('first_visit'), bool):
+            return fail('needs_replan', 'party_context_invalid')
+        if current_party is not None or current_first_visit is not None:
+            if not isinstance(current_party, dict) or not isinstance(current_first_visit, bool):
+                return fail('fatal', 'current_party_invalid')
+            if party != current_party:
+                base['party_check'] = 'changed'
+                return fail('needs_replan', 'party_changed')
+            if context['first_visit'] != current_first_visit:
+                base['party_check'] = 'changed'
+                return fail('needs_replan', 'first_visit_changed')
+            base['party_check'] = 'matched'
+        if option.get('path_kind') == 'direct_taxi':
+            base['basis'] = basis
+            return _observe_taxi(runtime, option, base, now=now, deadline=deadline,
+                                 origin=origin, destination=destination)
+        if option.get('path_kind') == 'direct_walk':
+            base['basis'] = basis
+            return _observe_walk(runtime, context, option, base, now=now, deadline=deadline,
+                                 origin=origin, destination=destination)
+        if not isinstance(check, dict) or not legs or check.get('legs') != legs:
+            return fail('needs_replan', 'route_check_missing_or_changed')
+        if 'subway_identity' in option or 'subway_station_version' in basis:
+            from .subway_identity import boarding_identity
+            if option.get('subway_identity') != boarding_identity(runtime, legs):
+                return fail('needs_replan', 'subway_identity_changed')
+        names = ('walk_place_in', 'walk_stop_in', 'walk_stop_out', 'walk_place_out')
+        if any(not _number(check.get(key)) for key in names):
+            return fail('needs_replan', 'access_context_invalid')
+        now_local = now.astimezone(KST)
+        start = now_local.replace(second=0, microsecond=0)
+        if now_local &gt; start:
+            start += timedelta(minutes=1)
+        access = check['walk_place_in'] + check['walk_stop_in']
+        egress = check['walk_stop_out'] + check['walk_place_out']
+&gt;       ready = start + timedelta(minutes=math.ceil(access))
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OverflowError: Python int too large to convert to C int
+
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:211: OverflowError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[1e+30-walk_stop_out]" time="0.013"><failure message="AssertionError: assert ('needs_replan' == 'needs_replan'&#10;  &#10;    needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'&#10;  &#10;  - access_context_invalid&#10;  + deadline_outside_service_horizon)">field = 'walk_stop_out', value = 1e+30
+
+    @pytest.mark.parametrize('field', FIELDS)
+    @pytest.mark.parametrize('value', [1e30, 10**1000, SERVICE_DAY_MAX_MIN+0.1,
+                                      float('inf'), float('nan'), -1, True])
+    def test_corrupt_access_is_rejected_before_current_source_or_verifier(field, value):
+        runtime, context = scene()
+        context['options']['p']['check'][field] = value
+        before = deepcopy(context)
+        runtime.verify_case = lambda *a, **k: pytest.fail('잘못된 접근값으로 판정하면 안 됨')
+        got = call(runtime, context,
+                   bus_arrival=lambda *a, **k: pytest.fail('잘못된 접근값으로 API 조회하면 안 됨'))
+&gt;       assert got['status'] == 'needs_replan' and got['reason'] == 'access_context_invalid'
+E       AssertionError: assert ('needs_replan' == 'needs_replan'
+E         
+E           needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'
+E         
+E         - access_context_invalid
+E         + deadline_outside_service_horizon)
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:25: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[1e+30-walk_place_out]" time="0.013"><failure message="AssertionError: assert ('needs_replan' == 'needs_replan'&#10;  &#10;    needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'&#10;  &#10;  - access_context_invalid&#10;  + deadline_outside_service_horizon)">field = 'walk_place_out', value = 1e+30
+
+    @pytest.mark.parametrize('field', FIELDS)
+    @pytest.mark.parametrize('value', [1e30, 10**1000, SERVICE_DAY_MAX_MIN+0.1,
+                                      float('inf'), float('nan'), -1, True])
+    def test_corrupt_access_is_rejected_before_current_source_or_verifier(field, value):
+        runtime, context = scene()
+        context['options']['p']['check'][field] = value
+        before = deepcopy(context)
+        runtime.verify_case = lambda *a, **k: pytest.fail('잘못된 접근값으로 판정하면 안 됨')
+        got = call(runtime, context,
+                   bus_arrival=lambda *a, **k: pytest.fail('잘못된 접근값으로 API 조회하면 안 됨'))
+&gt;       assert got['status'] == 'needs_replan' and got['reason'] == 'access_context_invalid'
+E       AssertionError: assert ('needs_replan' == 'needs_replan'
+E         
+E           needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'
+E         
+E         - access_context_invalid
+E         + deadline_outside_service_horizon)
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:25: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000-walk_place_in]" time="0.013"><failure message="OverflowError: int too large to convert to float">field = 'walk_place_in', value = 100000000000000000...0000000000000000000
+
+    @pytest.mark.parametrize('field', FIELDS)
+    @pytest.mark.parametrize('value', [1e30, 10**1000, SERVICE_DAY_MAX_MIN+0.1,
+                                      float('inf'), float('nan'), -1, True])
+    def test_corrupt_access_is_rejected_before_current_source_or_verifier(field, value):
+        runtime, context = scene()
+        context['options']['p']['check'][field] = value
+        before = deepcopy(context)
+        runtime.verify_case = lambda *a, **k: pytest.fail('잘못된 접근값으로 판정하면 안 됨')
+&gt;       got = call(runtime, context,
+                   bus_arrival=lambda *a, **k: pytest.fail('잘못된 접근값으로 API 조회하면 안 됨'))
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_departure_observer_v1.py:39: in call
+    return observe(runtime, context, 'p', now=NOW, deadline=NOW + timedelta(hours=1),
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:203: in observe
+    if any(not _number(check.get(key)) for key in names):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:203: in &lt;genexpr&gt;
+    if any(not _number(check.get(key)) for key in names):
+               ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+value = 100000000000000000...0000000000000000000
+
+    def _number(value):
+        return (not isinstance(value, bool) and isinstance(value, (int, float))
+&gt;               and math.isfinite(value) and value &gt;= 0)
+                    ^^^^^^^^^^^^^^^^^^^^
+E       OverflowError: int too large to convert to float
+
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:15: OverflowError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000-walk_stop_in]" time="0.014"><failure message="OverflowError: int too large to convert to float">field = 'walk_stop_in', value = 100000000000000000...0000000000000000000
+
+    @pytest.mark.parametrize('field', FIELDS)
+    @pytest.mark.parametrize('value', [1e30, 10**1000, SERVICE_DAY_MAX_MIN+0.1,
+                                      float('inf'), float('nan'), -1, True])
+    def test_corrupt_access_is_rejected_before_current_source_or_verifier(field, value):
+        runtime, context = scene()
+        context['options']['p']['check'][field] = value
+        before = deepcopy(context)
+        runtime.verify_case = lambda *a, **k: pytest.fail('잘못된 접근값으로 판정하면 안 됨')
+&gt;       got = call(runtime, context,
+                   bus_arrival=lambda *a, **k: pytest.fail('잘못된 접근값으로 API 조회하면 안 됨'))
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_departure_observer_v1.py:39: in call
+    return observe(runtime, context, 'p', now=NOW, deadline=NOW + timedelta(hours=1),
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:203: in observe
+    if any(not _number(check.get(key)) for key in names):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:203: in &lt;genexpr&gt;
+    if any(not _number(check.get(key)) for key in names):
+               ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+value = 100000000000000000...0000000000000000000
+
+    def _number(value):
+        return (not isinstance(value, bool) and isinstance(value, (int, float))
+&gt;               and math.isfinite(value) and value &gt;= 0)
+                    ^^^^^^^^^^^^^^^^^^^^
+E       OverflowError: int too large to convert to float
+
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:15: OverflowError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000-walk_stop_out]" time="0.013"><failure message="OverflowError: int too large to convert to float">field = 'walk_stop_out', value = 100000000000000000...0000000000000000000
+
+    @pytest.mark.parametrize('field', FIELDS)
+    @pytest.mark.parametrize('value', [1e30, 10**1000, SERVICE_DAY_MAX_MIN+0.1,
+                                      float('inf'), float('nan'), -1, True])
+    def test_corrupt_access_is_rejected_before_current_source_or_verifier(field, value):
+        runtime, context = scene()
+        context['options']['p']['check'][field] = value
+        before = deepcopy(context)
+        runtime.verify_case = lambda *a, **k: pytest.fail('잘못된 접근값으로 판정하면 안 됨')
+&gt;       got = call(runtime, context,
+                   bus_arrival=lambda *a, **k: pytest.fail('잘못된 접근값으로 API 조회하면 안 됨'))
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_departure_observer_v1.py:39: in call
+    return observe(runtime, context, 'p', now=NOW, deadline=NOW + timedelta(hours=1),
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:203: in observe
+    if any(not _number(check.get(key)) for key in names):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:203: in &lt;genexpr&gt;
+    if any(not _number(check.get(key)) for key in names):
+               ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+value = 100000000000000000...0000000000000000000
+
+    def _number(value):
+        return (not isinstance(value, bool) and isinstance(value, (int, float))
+&gt;               and math.isfinite(value) and value &gt;= 0)
+                    ^^^^^^^^^^^^^^^^^^^^
+E       OverflowError: int too large to convert to float
+
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:15: OverflowError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000-walk_place_out]" time="0.010"><failure message="OverflowError: int too large to convert to float">field = 'walk_place_out', value = 100000000000000000...0000000000000000000
+
+    @pytest.mark.parametrize('field', FIELDS)
+    @pytest.mark.parametrize('value', [1e30, 10**1000, SERVICE_DAY_MAX_MIN+0.1,
+                                      float('inf'), float('nan'), -1, True])
+    def test_corrupt_access_is_rejected_before_current_source_or_verifier(field, value):
+        runtime, context = scene()
+        context['options']['p']['check'][field] = value
+        before = deepcopy(context)
+        runtime.verify_case = lambda *a, **k: pytest.fail('잘못된 접근값으로 판정하면 안 됨')
+&gt;       got = call(runtime, context,
+                   bus_arrival=lambda *a, **k: pytest.fail('잘못된 접근값으로 API 조회하면 안 됨'))
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_departure_observer_v1.py:39: in call
+    return observe(runtime, context, 'p', now=NOW, deadline=NOW + timedelta(hours=1),
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:203: in observe
+    if any(not _number(check.get(key)) for key in names):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:203: in &lt;genexpr&gt;
+    if any(not _number(check.get(key)) for key in names):
+               ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+value = 100000000000000000...0000000000000000000
+
+    def _number(value):
+        return (not isinstance(value, bool) and isinstance(value, (int, float))
+&gt;               and math.isfinite(value) and value &gt;= 0)
+                    ^^^^^^^^^^^^^^^^^^^^
+E       OverflowError: int too large to convert to float
+
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:15: OverflowError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[1800.1-walk_place_in]" time="0.014"><failure message="AssertionError: assert ('needs_replan' == 'needs_replan'&#10;  &#10;    needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'&#10;  &#10;  - access_context_invalid&#10;  + deadline_outside_service_horizon)">field = 'walk_place_in', value = 1800.1
+
+    @pytest.mark.parametrize('field', FIELDS)
+    @pytest.mark.parametrize('value', [1e30, 10**1000, SERVICE_DAY_MAX_MIN+0.1,
+                                      float('inf'), float('nan'), -1, True])
+    def test_corrupt_access_is_rejected_before_current_source_or_verifier(field, value):
+        runtime, context = scene()
+        context['options']['p']['check'][field] = value
+        before = deepcopy(context)
+        runtime.verify_case = lambda *a, **k: pytest.fail('잘못된 접근값으로 판정하면 안 됨')
+        got = call(runtime, context,
+                   bus_arrival=lambda *a, **k: pytest.fail('잘못된 접근값으로 API 조회하면 안 됨'))
+&gt;       assert got['status'] == 'needs_replan' and got['reason'] == 'access_context_invalid'
+E       AssertionError: assert ('needs_replan' == 'needs_replan'
+E         
+E           needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'
+E         
+E         - access_context_invalid
+E         + deadline_outside_service_horizon)
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:25: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[1800.1-walk_stop_in]" time="0.011"><failure message="AssertionError: assert ('needs_replan' == 'needs_replan'&#10;  &#10;    needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'&#10;  &#10;  - access_context_invalid&#10;  + deadline_outside_service_horizon)">field = 'walk_stop_in', value = 1800.1
+
+    @pytest.mark.parametrize('field', FIELDS)
+    @pytest.mark.parametrize('value', [1e30, 10**1000, SERVICE_DAY_MAX_MIN+0.1,
+                                      float('inf'), float('nan'), -1, True])
+    def test_corrupt_access_is_rejected_before_current_source_or_verifier(field, value):
+        runtime, context = scene()
+        context['options']['p']['check'][field] = value
+        before = deepcopy(context)
+        runtime.verify_case = lambda *a, **k: pytest.fail('잘못된 접근값으로 판정하면 안 됨')
+        got = call(runtime, context,
+                   bus_arrival=lambda *a, **k: pytest.fail('잘못된 접근값으로 API 조회하면 안 됨'))
+&gt;       assert got['status'] == 'needs_replan' and got['reason'] == 'access_context_invalid'
+E       AssertionError: assert ('needs_replan' == 'needs_replan'
+E         
+E           needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'
+E         
+E         - access_context_invalid
+E         + deadline_outside_service_horizon)
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:25: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[1800.1-walk_stop_out]" time="0.014"><failure message="AssertionError: assert ('needs_replan' == 'needs_replan'&#10;  &#10;    needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'&#10;  &#10;  - access_context_invalid&#10;  + deadline_outside_service_horizon)">field = 'walk_stop_out', value = 1800.1
+
+    @pytest.mark.parametrize('field', FIELDS)
+    @pytest.mark.parametrize('value', [1e30, 10**1000, SERVICE_DAY_MAX_MIN+0.1,
+                                      float('inf'), float('nan'), -1, True])
+    def test_corrupt_access_is_rejected_before_current_source_or_verifier(field, value):
+        runtime, context = scene()
+        context['options']['p']['check'][field] = value
+        before = deepcopy(context)
+        runtime.verify_case = lambda *a, **k: pytest.fail('잘못된 접근값으로 판정하면 안 됨')
+        got = call(runtime, context,
+                   bus_arrival=lambda *a, **k: pytest.fail('잘못된 접근값으로 API 조회하면 안 됨'))
+&gt;       assert got['status'] == 'needs_replan' and got['reason'] == 'access_context_invalid'
+E       AssertionError: assert ('needs_replan' == 'needs_replan'
+E         
+E           needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'
+E         
+E         - access_context_invalid
+E         + deadline_outside_service_horizon)
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:25: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[1800.1-walk_place_out]" time="0.013"><failure message="AssertionError: assert ('needs_replan' == 'needs_replan'&#10;  &#10;    needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'&#10;  &#10;  - access_context_invalid&#10;  + deadline_outside_service_horizon)">field = 'walk_place_out', value = 1800.1
+
+    @pytest.mark.parametrize('field', FIELDS)
+    @pytest.mark.parametrize('value', [1e30, 10**1000, SERVICE_DAY_MAX_MIN+0.1,
+                                      float('inf'), float('nan'), -1, True])
+    def test_corrupt_access_is_rejected_before_current_source_or_verifier(field, value):
+        runtime, context = scene()
+        context['options']['p']['check'][field] = value
+        before = deepcopy(context)
+        runtime.verify_case = lambda *a, **k: pytest.fail('잘못된 접근값으로 판정하면 안 됨')
+        got = call(runtime, context,
+                   bus_arrival=lambda *a, **k: pytest.fail('잘못된 접근값으로 API 조회하면 안 됨'))
+&gt;       assert got['status'] == 'needs_replan' and got['reason'] == 'access_context_invalid'
+E       AssertionError: assert ('needs_replan' == 'needs_replan'
+E         
+E           needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'
+E         
+E         - access_context_invalid
+E         + deadline_outside_service_horizon)
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:25: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[inf-walk_place_in]" time="0.013" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[inf-walk_stop_in]" time="0.013" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[inf-walk_stop_out]" time="0.074" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[inf-walk_place_out]" time="0.014" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[nan-walk_place_in]" time="0.012" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[nan-walk_stop_in]" time="0.013" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[nan-walk_stop_out]" time="0.012" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[nan-walk_place_out]" time="0.014" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[-1-walk_place_in]" time="0.013" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[-1-walk_stop_in]" time="0.012" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[-1-walk_stop_out]" time="0.013" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[-1-walk_place_out]" time="0.012" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[True-walk_place_in]" time="0.014" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[True-walk_stop_in]" time="0.012" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[True-walk_stop_out]" time="0.011" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_corrupt_access_is_rejected_before_current_source_or_verifier[True-walk_place_out]" time="0.012" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_combined_duration_cannot_escape_horizon[fields0]" time="0.012"><failure message="AssertionError: assert ('needs_replan' == 'needs_replan'&#10;  &#10;    needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'&#10;  &#10;  - access_context_invalid&#10;  + deadline_outside_service_horizon)">fields = ('walk_place_in', 'walk_stop_in')
+
+    @pytest.mark.parametrize('fields', [FIELDS[:2], FIELDS[2:]])
+    def test_combined_duration_cannot_escape_horizon(fields):
+        runtime, context = scene()
+        for field in fields:
+            context['options']['p']['check'][field] = SERVICE_DAY_MAX_MIN/2+0.1
+        got = call(runtime, context, bus_arrival=lambda *a, **k: pytest.fail('API 조회 금지'))
+&gt;       assert got['status'] == 'needs_replan' and got['reason'] == 'access_context_invalid'
+E       AssertionError: assert ('needs_replan' == 'needs_replan'
+E         
+E           needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'
+E         
+E         - access_context_invalid
+E         + deadline_outside_service_horizon)
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:38: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_combined_duration_cannot_escape_horizon[fields1]" time="0.011"><failure message="AssertionError: assert ('needs_replan' == 'needs_replan'&#10;  &#10;    needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'&#10;  &#10;  - access_context_invalid&#10;  + deadline_outside_service_horizon)">fields = ('walk_stop_out', 'walk_place_out')
+
+    @pytest.mark.parametrize('fields', [FIELDS[:2], FIELDS[2:]])
+    def test_combined_duration_cannot_escape_horizon(fields):
+        runtime, context = scene()
+        for field in fields:
+            context['options']['p']['check'][field] = SERVICE_DAY_MAX_MIN/2+0.1
+        got = call(runtime, context, bus_arrival=lambda *a, **k: pytest.fail('API 조회 금지'))
+&gt;       assert got['status'] == 'needs_replan' and got['reason'] == 'access_context_invalid'
+E       AssertionError: assert ('needs_replan' == 'needs_replan'
+E         
+E           needs_replan and 'deadline_out...rvice_horizon' == 'access_context_invalid'
+E         
+E         - access_context_invalid
+E         + deadline_outside_service_horizon)
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:38: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_valid_zero_and_fractional_durations_keep_current_boarding[values0]" time="0.014" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_valid_zero_and_fractional_durations_keep_current_boarding[values1]" time="0.012" /><testcase classname="tests.unit.travel.mobility.test_departure_access_bounds_v1" name="test_bad_notice_can_be_held_then_next_valid_notice_is_built" time="0.013"><failure message="OverflowError: Python int too large to convert to C int">def test_bad_notice_can_be_held_then_next_valid_notice_is_built():
+        runtime, context = scene()
+        broken = deepcopy(context)
+        broken['options']['p']['check']['walk_stop_in'] = 1e30
+        move, items = notice_scene()
+        queries = []
+        def source(*a, **kw):
+            queries.append(1)
+            return prediction(*a, **kw)
+        for saved, expected in [(broken, 'held'), (context, 'ok')]:
+&gt;           status, phrase = build_departure(move, items, route_events=NoEvents(), routes=None,
+                now=NOW, departure_observer=lambda *a, **kw: call(runtime, saved, bus_arrival=source))
+
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:62: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\components\watch\trip_reminders.py:481: in build_departure
+    observation = departure_observer(move, items, planned=planned, now=now, events=events, **current)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\travel\mobility\test_departure_access_bounds_v1.py:63: in &lt;lambda&gt;
+    now=NOW, departure_observer=lambda *a, **kw: call(runtime, saved, bus_arrival=source))
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\travel\mobility\test_departure_observer_v1.py:39: in call
+    return observe(runtime, context, 'p', now=NOW, deadline=NOW + timedelta(hours=1),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+runtime = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x000001BEA69AF230&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'fixture-a'}, 'first_visit': False, 'from_place': {'lat': .....}, 'legs': [{'from': '승차', 'from_sequence': 5, 'from_stop_id': '1005', 'mode': 'bus', ...}], 'option_id': 'p'}}, ...}
+option_id = 'p'
+
+    def observe(runtime, context, option_id, *, now, deadline, origin, destination,
+                bus_arrival=None, subway_arrival=None, disruptions=(), current_party=None, current_first_visit=None):
+        """콜백의 실시간 예상과 모델 재검증을 구별한다. 일정·알림을 직접 쓰지 않는다."""
+        base = {'option_id': option_id, 'observations': [], 'timing_unit': 'model_minutes',
+                'party_check': 'current_trip_not_supplied'}
+    
+        def fail(status, reason):
+            return {**base, 'status': status, 'reason': reason}
+    
+        if not isinstance(now, datetime) or now.utcoffset() is None:
+            return fail('fatal', 'timezone_required')
+        if not isinstance(deadline, datetime) or deadline.utcoffset() is None or deadline &lt;= now:
+            return fail('needs_replan', 'deadline_passed_or_invalid')
+        if not isinstance(context, dict) or context.get('schema_version') != 1:
+            return fail('needs_replan', 'context_missing_or_version')
+        if context.get('timing_unit') != 'model_minutes':
+            return fail('needs_replan', 'timing_unit_mismatch')
+        if not (_same_place(context.get('from_place'), origin)
+                and _same_place(context.get('to_place'), destination)):
+            return fail('needs_replan', 'place_changed')
+        basis = input_basis(runtime)
+        if context.get('basis') != basis:
+            return fail('needs_replan', 'basis_changed')
+        options = context.get('options')
+        option = options.get(option_id) if isinstance(options, dict) else None
+        if not isinstance(option, dict) or option.get('option_id') != option_id:
+            return fail('needs_replan', 'option_changed')
+        check = option.get('check')
+        legs = option.get('legs')
+        party = context.get('party')
+        if not isinstance(party, dict) or not isinstance(context.get('first_visit'), bool):
+            return fail('needs_replan', 'party_context_invalid')
+        if current_party is not None or current_first_visit is not None:
+            if not isinstance(current_party, dict) or not isinstance(current_first_visit, bool):
+                return fail('fatal', 'current_party_invalid')
+            if party != current_party:
+                base['party_check'] = 'changed'
+                return fail('needs_replan', 'party_changed')
+            if context['first_visit'] != current_first_visit:
+                base['party_check'] = 'changed'
+                return fail('needs_replan', 'first_visit_changed')
+            base['party_check'] = 'matched'
+        if option.get('path_kind') == 'direct_taxi':
+            base['basis'] = basis
+            return _observe_taxi(runtime, option, base, now=now, deadline=deadline,
+                                 origin=origin, destination=destination)
+        if option.get('path_kind') == 'direct_walk':
+            base['basis'] = basis
+            return _observe_walk(runtime, context, option, base, now=now, deadline=deadline,
+                                 origin=origin, destination=destination)
+        if not isinstance(check, dict) or not legs or check.get('legs') != legs:
+            return fail('needs_replan', 'route_check_missing_or_changed')
+        if 'subway_identity' in option or 'subway_station_version' in basis:
+            from .subway_identity import boarding_identity
+            if option.get('subway_identity') != boarding_identity(runtime, legs):
+                return fail('needs_replan', 'subway_identity_changed')
+        names = ('walk_place_in', 'walk_stop_in', 'walk_stop_out', 'walk_place_out')
+        if any(not _number(check.get(key)) for key in names):
+            return fail('needs_replan', 'access_context_invalid')
+        now_local = now.astimezone(KST)
+        start = now_local.replace(second=0, microsecond=0)
+        if now_local &gt; start:
+            start += timedelta(minutes=1)
+        access = check['walk_place_in'] + check['walk_stop_in']
+        egress = check['walk_stop_out'] + check['walk_place_out']
+&gt;       ready = start + timedelta(minutes=math.ceil(access))
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OverflowError: Python int too large to convert to C int
+
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:211: OverflowError</failure></testcase></testsuite></testsuites>

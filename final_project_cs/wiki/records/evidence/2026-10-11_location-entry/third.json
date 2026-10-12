@@ -1,0 +1,1221 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.location.config.ts",
+      "tests/live/location-entry.spec.ts",
+      "tests/live/map-controls.spec.ts",
+      "tests/live/my-location.spec.ts",
+      "--workers=1",
+      "--trace=off",
+      "--reporter=line,json",
+      "--output=location-results-v3"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\playwright.location.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/location-results-v3",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "location-entry.spec.ts",
+      "file": "location-entry.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13750,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:46:40.757Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-417062ffd04295ed0f25",
+          "file": "location-entry.spec.ts",
+          "line": 13,
+          "column": 34
+        },
+        {
+          "title": "1280px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 45129,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 45000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 45000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 45000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                        "column": 87,
+                        "line": 18
+                      },
+                      "message": "Error: locator.click: Test timeout of 45000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('status').filter({ hasText: '계획 확인 화면이에요' }).getByRole('button', { name: '닫기', exact: true })\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" aria-label=\"닫기\" class=\"toast-view_close__vTQwF\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not stable\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m  - element was detached from the DOM, retrying\u001b[22m\n\n\n  16 |   await openFinished(page, request);\n  17 |   const tour = page.getByRole(\"status\").filter({ hasText: \"계획 확인 화면이에요\" });\n> 18 |   if (await tour.count()) await tour.getByRole(\"button\", { name: \"닫기\", exact: true }).click();\n     |                                                                                       ^\n  19 |   await page.getByRole(\"button\", { name: \"목록 높이 바꾸기\" }).focus();\n  20 |   for (let press = 0; press < 5; press += 1) await page.keyboard.press(\"ArrowUp\");\n  21 |   await expand(page);\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts:18:87"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:46:55.224Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\location-results-v3\\location-entry-1280px-동의-전-5f1d5-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\location-results-v3\\location-entry-1280px-동의-전-5f1d5-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\\error-context.md"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-6906293f434971e6391f",
+          "file": "location-entry.spec.ts",
+          "line": 13,
+          "column": 34
+        },
+        {
+          "title": "버튼에서 동의하면 위치 점을 그리고 카메라를 그곳으로 이동하며 동의 철회 뒤에는 지운다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4972,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:47:41.389Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-5531396c0a8821cdcb67",
+          "file": "location-entry.spec.ts",
+          "line": 48,
+          "column": 1
+        },
+        {
+          "title": "시간 초과 뒤에도 버튼을 다시 눌러 성공하면 점과 카메라를 복구한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3114,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:47:47.025Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-e67b2a50a56203bec83c",
+          "file": "location-entry.spec.ts",
+          "line": 68,
+          "column": 1
+        },
+        {
+          "title": "denied: 실패 후에도 내 위치 버튼과 오류 토스트 하나를 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2617,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:47:50.157Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-adb86e2ce5f7c7c99919",
+          "file": "location-entry.spec.ts",
+          "line": 92,
+          "column": 58
+        },
+        {
+          "title": "unsupported: 실패 후에도 내 위치 버튼과 오류 토스트 하나를 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4396,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:47:52.790Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-14942cb91f52801fbc79",
+          "file": "location-entry.spec.ts",
+          "line": 92,
+          "column": 58
+        },
+        {
+          "title": "약관 전문은 동의 창을 대체하고 Esc로 돌아온 뒤 취소하면 초점을 돌려준다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4521,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:47:57.207Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-069c8e6bf18fc9e2c785",
+          "file": "location-entry.spec.ts",
+          "line": 113,
+          "column": 1
+        },
+        {
+          "title": "거절했던 권한을 허용한 뒤 버튼으로 찾으면 이후 위치 이동도 계속 따라간다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5739,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:48:01.746Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-838c1b6c518abb49d621",
+          "file": "location-entry.spec.ts",
+          "line": 130,
+          "column": 1
+        },
+        {
+          "title": "위치 권한을 확인하는 사이 동의를 철회하면 GPS 조회를 시작하지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4855,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:48:07.504Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-bc2a4e76f0f10e62663a",
+          "file": "location-entry.spec.ts",
+          "line": 150,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "map-controls.spec.ts",
+      "file": "map-controls.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "접기 단추에 거리가 함께 나오고 확대·축소·모든 일정 보기 순서로 선다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4806,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:48:12.400Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-6b1f61ac04952900ba42",
+          "file": "map-controls.spec.ts",
+          "line": 23,
+          "column": 1
+        },
+        {
+          "title": "거리 눈금은 지도에 담긴 거리를 말하고, 확대하면 더 짧은 거리로 바뀐다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6940,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:48:17.225Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-dffec8d9891a727a7cf3",
+          "file": "map-controls.spec.ts",
+          "line": 37,
+          "column": 1
+        },
+        {
+          "title": "접으면 눈금과 탭이 남고 다시 열어도 기본은 접힌 상태다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6289,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:48:24.183Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-da31b1b4c085d6a8bbf1",
+          "file": "map-controls.spec.ts",
+          "line": 52,
+          "column": 1
+        },
+        {
+          "title": "목록 창을 크게 열어 지도가 낮아지면 같은 단추가 가로 한 줄로 서고, 더 낮으면 접는 탭만 남는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5340,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:48:30.493Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-9385fccbf57020613e95",
+          "file": "map-controls.spec.ts",
+          "line": 69,
+          "column": 1
+        },
+        {
+          "title": "지도를 확대하면 화면 밖으로 나간 일정이 가장자리에 「번호 · 거리」 칩으로 서고, 누르면 그 일정으로 가며 골라진다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10344,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:48:35.858Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-d7fea47bc4987f97f85a",
+          "file": "map-controls.spec.ts",
+          "line": 88,
+          "column": 1
+        },
+        {
+          "title": "멀리 끌어 핀이 모두 화면 밖이면 칩 하나가 모두를 담아 서고(「2 · 3 · 4」), 지도 층(타일 · 핀 층) 위에 그려지고, 가장자리에서 잘리지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5916,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:48:46.223Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-ec21d5529872493fad02",
+          "file": "map-controls.spec.ts",
+          "line": 106,
+          "column": 1
+        },
+        {
+          "title": "일정이 있는 날을 처음 보여 줄 때 첫 일정의 핀이 한 번 두근거린다 (고리가 퍼졌다 사라진다)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4159,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:48:52.158Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-1b562660017dc730ee93",
+          "file": "map-controls.spec.ts",
+          "line": 141,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "my-location.spec.ts",
+      "file": "my-location.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "위치 동의가 있으면 여행 지도를 열자마자 「내 위치」가 파란 점과 정확도 원으로 보이고, 점은 누름을 받지 않아 같은 자리의 핀이 그대로 눌린다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2842,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:48:56.360Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-165ec4e89a4660eeb9ea",
+          "file": "my-location.spec.ts",
+          "line": 46,
+          "column": 1
+        },
+        {
+          "title": "위치 동의가 없으면 브라우저에 위치를 묻지도, 점을 그리지도, 서버로 보내지도 않고 아무 말도 하지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3282,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:48:59.217Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-7dd18ba2417f25e43a79",
+          "file": "my-location.spec.ts",
+          "line": 70,
+          "column": 1
+        },
+        {
+          "title": "브라우저 위치 권한이 꺼져 있으면 점 없이 기존 오류 토스트로 알린다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 954,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:49:02.521Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-c01b1b0968342df99c53",
+          "file": "my-location.spec.ts",
+          "line": 84,
+          "column": 1
+        },
+        {
+          "title": "이미 거절된 권한이면 다시 묻지 않고(위치 호출 0번) 바로 오류 토스트로 알린다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 958,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:49:03.494Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-9558bf8f548adb51e57e",
+          "file": "my-location.spec.ts",
+          "line": 93,
+          "column": 1
+        },
+        {
+          "title": "위치가 바뀌면 점이 따라 움직이고(지도는 따라가지 않는다), 정확도가 500 m 보다 나쁘면 원은 빼고 점만 둔다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2942,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:49:04.469Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-fac832d479ffa9795ade",
+          "file": "my-location.spec.ts",
+          "line": 107,
+          "column": 1
+        },
+        {
+          "title": "여행 화면은 읽은 위치를 서버에 보낸다 — 모았다가 화면이 숨겨질 때 한꺼번에, 30 m 안쪽 움직임은 새 점이 아니고 같은 점은 다시 가지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5204,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:49:07.430Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-360ae37b0122b49a7f16",
+          "file": "my-location.spec.ts",
+          "line": 124,
+          "column": 1
+        },
+        {
+          "title": "서버가 위치 동의가 없다고 하면(403 consent_required) 더는 보내지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5192,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:49:12.660Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-72e111a05fc1ca0ee317",
+          "file": "my-location.spec.ts",
+          "line": 157,
+          "column": 1
+        },
+        {
+          "title": "서버에 위치 받기가 없으면(옛 서버 404) 조용히 멈춘다 — 오류 문구도 다시 보내기도 없다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5187,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:49:17.875Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-4d28fae920568f884e02",
+          "file": "my-location.spec.ts",
+          "line": 173,
+          "column": 1
+        },
+        {
+          "title": "위치 동의를 끄면 점이 바로 사라지고 더는 위치를 따라가지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3477,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:49:23.084Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-cf00391bbc0b0f76a6cc",
+          "file": "my-location.spec.ts",
+          "line": 189,
+          "column": 1
+        },
+        {
+          "title": "계획 확인 화면의 지도에도 「내 위치」가 보이지만, 여행 번호가 없으니 서버로 보내지도 머문 곳을 묻지도 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3846,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:49:26.587Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-191aa184c9f0519a4be5",
+          "file": "my-location.spec.ts",
+          "line": 201,
+          "column": 1
+        },
+        {
+          "title": "「모든 일정 보기」는 핀만 맞춘다 — 멀리 있는 내 위치 때문에 핀이 작아지지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9218,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:49:30.483Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-381e7493fd7ad5f3694c",
+          "file": "my-location.spec.ts",
+          "line": 215,
+          "column": 1
+        },
+        {
+          "title": "지도 단추의 「내 위치로」: 위치 동의가 있으면 누를 때 지도가 내 위치로 간다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4082,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:49:39.732Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-aeb8e9467e0da7c41231",
+          "file": "my-location.spec.ts",
+          "line": 234,
+          "column": 1
+        },
+        {
+          "title": "위치 동의가 없어도 지도 단추에 「내 위치로」가 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3160,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:49:43.850Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-809bb75c7838926af674",
+          "file": "my-location.spec.ts",
+          "line": 253,
+          "column": 1
+        },
+        {
+          "title": "핀이 하나도 없는 날은 내 위치로 지도 가운데를 맞춘다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1934,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:49:47.034Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-67d43d8e8e3a801e48d6",
+          "file": "my-location.spec.ts",
+          "line": 263,
+          "column": 1
+        },
+        {
+          "title": "서버가 머문 곳을 알려 주면 그날 지도에 회색 점으로 올린다 — 가까운 일정 이름과 시각을 읽어 주고, 다른 날에는 없다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1678,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:49:48.987Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-857b6aa1a2ae8ccd719b",
+          "file": "my-location.spec.ts",
+          "line": 279,
+          "column": 1
+        },
+        {
+          "title": "위치 동의가 없으면 서버가 머문 곳을 갖고 있어도 묻지도 그리지도 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2601,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:49:50.695Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b80fbe685b59ef15b422-670a6a3806d391a48f49",
+          "file": "my-location.spec.ts",
+          "line": 292,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T12:45:44.687Z",
+    "duration": 249716.63900000002,
+    "expected": 31,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

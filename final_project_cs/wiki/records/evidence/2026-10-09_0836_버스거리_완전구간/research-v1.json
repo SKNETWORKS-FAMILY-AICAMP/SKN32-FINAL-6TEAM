@@ -1,0 +1,16 @@
+{
+  "checked_at": "2026-10-09T08:47:16.267806+09:00",
+  "sources": [
+    {
+      "url": "https://www.data.go.kr/data/15000193/openapi.do",
+      "scope": "HTML response field table names fullSectDist as 구간거리 and marks it optional; full guide not read.",
+      "not_established": "Unit convention, measured road coverage, equivalence to card charging distance."
+    },
+    {
+      "url": "https://news.seoul.go.kr/traffic/transfer_discount",
+      "scope": "Official integrated fare overview; no fare rule change in this unit."
+    }
+  ],
+  "papers_applied": [],
+  "reason": "Continuous sequence and numeric validity are input invariants; no new research algorithm applied."
+}

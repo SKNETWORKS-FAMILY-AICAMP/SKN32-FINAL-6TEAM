@@ -1,0 +1,12 @@
+{
+  "features": 21,
+  "counts": {
+    "조건부 사용": 3,
+    "개선 필요": 9,
+    "추가 검증": 9
+  },
+  "relative_links_checked": 2,
+  "relative_links_valid": 2,
+  "browser_render_verified": false,
+  "javascript_used": false
+}

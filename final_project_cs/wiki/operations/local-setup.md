@@ -5,7 +5,7 @@ description: PostgreSQL은 Windows 서비스가 아니고 Docker는 없다. 이 
 status: draft
 tags: [data]
 owners: [human:미배정]
-domain: neutral
+domain: travel
 ---
 
 # 로컬 셋업

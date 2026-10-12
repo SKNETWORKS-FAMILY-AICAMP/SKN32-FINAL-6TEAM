@@ -1,157 +1,64 @@
 ---
-type: concept
-title: 용어
-description: triPilot에서 쓰는 핵심 용어 정의. 문서와 코드가 같은 뜻으로 쓰는지 확인하는 기준
+type: guide
+title: 현재 제품 용어
+description: 현재 여행 기준과 사용 종료된 기록을 구분한다
 status: draft
-tags: [customer-operations]
-size_exempt: true
-size_exempt_reason: 용어 카탈로그. 검색 대상이므로 한 파일로 유지
-domain: neutral
+domain: travel
 ---
 
-# 용어
+# 현재 제품 용어
 
-문서와 코드가 같은 단어를 같은 뜻으로 쓰는지 확인하는 기준이다. **여기 정의와 다르게 쓰면 둘 중 하나를 고친다.**
-
-## 핵심 개념
-
-### Case
-고객 문의 하나가 만들어내는 **업무 단위**. 생성부터 종료까지 상태를 가지며 여러 Team이 관여할 수 있다.
-
-문의 = Case가 아니다. 한 문의가 여러 Case를 만들 수도, 여러 문의가 한 Case에 붙을 수도 있다.
-
-→ [`case-lifecycle.md`](../../final_project_cs/wiki/runtime/case-lifecycle.md)
-
-### Shared State
-Case의 **공식 상태**. 버전을 가지며 모든 갱신은 CAS를 거친다.
-
-**Case의 단일 원천이다.** Team이 따로 상태를 들고 있으면 안 된다.
-
-→ [`shared-state.md`](../../final_project_cs/wiki/runtime/shared-state.md)
-
-### Agent Team
-업무 책임 단위. capability·책임·권한·지식·Tool 경계가 독립될 때 만든다.
-
-~~내부에 Agent가 몇 개인지, LangGraph를 쓰는지는 Team이 결정한다. Core는 관여하지 않는다.~~ `[정정 2026-09-10]` Team은 내부 Agent 수와 구현 방식을 정하고 Core는 그 내부를 모른다는 계약 원칙을 유지하되, LangGraph 사용은 설계 문장으로 구분하며 현재는 `requirements.txt`에 `langgraph==1.2.8`이 있어도 cs·sample·composer 코드에서 동적 import를 포함해 import 0곳이고 흐름은 Controller와 Case 상태기계(12종)가 정한다(2026-09-10 LangGraph 실측).
-
-**Team이 하지 않는 것 셋.**
-- side effect를 실행하지 않는다 (`ActionProposal`만 반환)
-- read Tool을 직접 호출하지 않는다 (Context Broker가 넣어준다) — ★`[실측 2026-09-10 작업 트리]` 여행 코드는 `_read()` 로 직접 부른다(허용·예산은 `ReadToolbox.call()` 이 강제). 원칙과 코드가 갈라져 있다 → [`cs/teams/team-boundary.md`](../../final_project_cs/wiki/teams/team-boundary.md) §2
-- 다른 Team을 직접 호출하지 않는다 (Controller가 Task로 변환)
-
-→ [`team-contract.md`](../../final_project_cs/wiki/teams/team-contract/index.md)
-
-### Capability
-Team이 처리할 수 있는 **업무 종류**. `refund.calculate`, `payment.status` 같은 식별자.
-
-Controller가 capability로 Team을 찾는다. Team 이름으로 찾지 않는다.
-
-### Agentic Controller
-Case를 어느 Team으로 보낼지 정하고, 재시도·재계획·WAIT/RESUME을 통제하는 상위 오케스트레이션.
-
-**Team을 직접 생성하지 않는다.** 반드시 Registry를 거친다.
-
-→ [`agentic-controller.md`](../../final_project_cs/wiki/runtime/agentic-controller.md)
-
-### Context Broker
-Team이 필요로 하는 자료를 읽어서 한 묶음(`ContextPack`)으로 만들어 주는 계층.
-
-Team이 `required_context`를 선언하면 Broker가 예산 안에서 조합한다. 부족하면 Team이 `need_more_context`로 요청한다.
-
-→ [`context-broker.md`](../../final_project_cs/wiki/context/context-broker.md)
-
-### ContextPack
-Context Broker가 만든 자료 묶음. Team의 입력이다.
-
-**예산이 있다.** 무한정 담지 않는다.
-
-### ActionProposal
-Team이 "이걸 하자"고 제안하는 것. **실행이 아니다.**
-
-Core가 근거를 대조하고, 위험도를 판정하고, 필요하면 사람 승인을 받은 뒤에 실행한다.
-
-→ [`action-proposal.md`](../../final_project_cs/wiki/actions/action-proposal.md)
-
-### Action
-바깥 세계를 실제로 바꾸는 동작. 환불 실행, 알림 발송 등.
-
-**triPilot에서 side effect가 일어나는 유일한 경로다.**
-
-### Team Registry
-capability를 Team 구현으로 해석하는 곳.
-
-Team을 추가·교체할 때 **Core 코드가 바뀌지 않게** 하는 장치다.
-
-→ [`team-registry.md`](../../final_project_cs/wiki/teams/team-registry.md)
-
-## 구조 용어
-
-### Core (Basement)
-도메인을 모르는 공통 실행 기반. Case·Controller·Registry·Port·승인 경계·감사·평가.
-
-**도메인 어휘가 들어오면 테스트가 실패한다.** → `INV-CS-ARCH-001`
-
-### 매니저 (옛 이름: 코어 담당)
-**사람·역할·브랜치의 이름이다.** 예전 「코어 1·코어 2 담당」을 지금 「매니저」라 부르고, 조직 저장소 브랜치는 `role-manager` 다(2026-09-14 `role-core1`·`role-core2` → `role-core`, 2026-09-23 `role-manager`).
-
-코드 층 이름인 **Core** 는 바뀌지 않았다 — 설계 문서·코드에서 Core 는 여전히 Core 다.
-
-→ [../delivery/roles.md](../delivery/roles.md) §이름 대응
-
-### Pack
-도메인 지식을 담은 Team 묶음. CS Pack, Commerce Ops Pack.
-
-Core에 남는 것과 Pack으로 가는 것의 판정 기준은 **도메인 지식이 필요하면 Pack, 무관하면 Core**다.
-
-→ [../architecture/pack-model.md](../architecture/pack-model.md)
-
-### Port / Adapter
-저장소·외부 시스템을 교체 가능하게 만드는 인터페이스. `GraphStorePort`, `MessageBusPort` 등.
-
-## 연동 용어
-
-### MCP
-개인 AI가 우리 Tool과 Resource를 쓰는 경로. ChatGPT·Claude 같은 개인 AI의 실제 연결 방식.
-
-### A2A
-독립 배포된 Agent System에 **장기 실행 업무를 위임**하는 경로. Agent Card, Task lifecycle, Artifact가 있다.
-
-**단순 데이터 조회는 A2A가 아니다.** REST다.
-
-### Agent Gateway
-외부 요청이 내부로 들어오는 **Trust Boundary**.
-
-## 평가 용어
-
-### 골든셋
-평가 기준이 되는 케이스 모음. 현재 72건. `[실측]`
-
-### 근거 정합률
-모델이 제안한 필드 중 Context/DB에 실재하고 일치하는 비율.
-
-### 근거 초과율
-Context/DB에 없는데 모델이 주장한 비율. **할루시네이션 지표다.**
-
-### 적절한 기권율 / 과잉 기권율
-근거가 부족할 때 `escalate`한 비율 / 근거가 충분한데 `escalate`한 비율.
-
-**둘의 균형이 제품의 핵심 값이다.** 기권이 0이면 안전장치가 없는 것이고, 너무 많으면 자동화 이득이 사라진다.
-
-→ [../evaluation/metrics.md](../evaluation/metrics.md)
-
-## 헷갈리기 쉬운 짝
-
-| A | B | 차이 |
+| 이름 | 정확한 뜻 | 정본 |
 |---|---|---|
-| Case | 문의 | 문의는 입력, Case는 업무 단위 |
-| ActionProposal | Action | 제안 vs 실행 |
-| Team | Agent | Team은 책임 단위, Agent는 그 안의 구현 |
-| MCP | A2A | 도구 호출 vs 업무 위임 |
-| Core | Pack | 도메인 모름 vs 도메인 앎 |
-| 매니저 | Core | 사람·역할·브랜치 이름(`role-manager`, 옛 코어 담당) vs 코드 층 이름 |
-| escalate | handoff | 근거 부족으로 넘김 vs 처음부터 사람 몫 |
+| triPilot | 여행 CS 제품 | [제품 범위](scope.md) |
+| A-COPilot | 제품을 개발하는 팀 | [개발 역할](../delivery/roles.md) |
+| 에이전트 팀 | Activity·Dining·Mobility 등 업무 판단·제안 단위 | [Team 안내](../../final_project_cs/wiki/teams/index.md) |
+| TeamRegistry | 주입된 manifest·가용성으로 에이전트 팀을 선택하는 등록 장치 | [Registry](../../final_project_cs/wiki/teams/team-registry.md) |
+| Controller | Case 처리·팀 호출·결과·대기·재개 흐름을 진행하는 장치 | [실행 흐름](../../final_project_cs/wiki/runtime/agentic-controller.md) |
+| Trip·일정 버전 | 여행과 그 여행의 판별 일정·변경 이력 | [여행 계약](../../final_project_cs/wiki/external/rest-endpoints.md) |
+| Case | 한 문제를 처리하는 업무 상태·이력 단위 | [Case 계약](../../final_project_cs/wiki/teams/team-contract/index.md) |
+| Context Pack | 팀 판단에 전달하는 현재 사실·정책·이력·근거 | [Context](../../final_project_cs/wiki/context/index.md) |
+| ActionProposal | 실행 전 검증·권한·필요한 승인을 거치는 변경 제안 | [제안](../../final_project_cs/wiki/actions/action-proposal.md) |
+| WatchBatch·trip_watch_batch | 감시 회차의 문제를 묶어 처리하는 개념·구현 이름. 모니터링 도구 이름과 구분 | [감시 구조](../architecture/index.md) |
+
+모르는 대상을 ‘사람’·‘코어’·‘감시 묶음’으로 뭉뚱그리지 않습니다. 개발 담당자, 고객, 에이전트 팀, 선택 장치, 실행 흐름, 감시 작업, 모니터링 도구 중 무엇인지 명시합니다. 영어 코드 식별자는 실제 이름을 유지합니다.
+
+## 과거 기록
+
+[수정 전 문서](../records/commerce_2026-10-11/wiki--product--glossary.md)는 당시 기록입니다. 현재 여행 제품의 사양·평가·시연·완료 증거로 사용하지 않습니다. 원문 바이트는 같은 폴더의 백업에도 보존했습니다.
 
 ## 관계
 
-- [../architecture/core-vs-team.md](../architecture/core-vs-team.md) — Core/Team 경계 판정
-- [`final_project_cs/wiki/index.md`](../../final_project_cs/wiki/index.md) — 각 개념의 구현
+- [여행 사양 허브](../index.md) — 현재 정본을 찾는 입구
+
+
+## 이전 절 링크
+
+<a id="용어"></a>
+<a id="핵심-개념"></a>
+<a id="case"></a>
+<a id="shared-state"></a>
+<a id="agent-team"></a>
+<a id="capability"></a>
+<a id="agentic-controller"></a>
+<a id="context-broker"></a>
+<a id="contextpack"></a>
+<a id="actionproposal"></a>
+<a id="action"></a>
+<a id="team-registry"></a>
+<a id="구조-용어"></a>
+<a id="core-basement"></a>
+<a id="매니저-옛-이름-코어-담당"></a>
+<a id="pack"></a>
+<a id="port--adapter"></a>
+<a id="연동-용어"></a>
+<a id="mcp"></a>
+<a id="a2a"></a>
+<a id="agent-gateway"></a>
+<a id="평가-용어"></a>
+<a id="골든셋"></a>
+<a id="근거-정합률"></a>
+<a id="근거-초과율"></a>
+<a id="적절한-기권율--과잉-기권율"></a>
+<a id="헷갈리기-쉬운-짝"></a>
+<a id="관계"></a>

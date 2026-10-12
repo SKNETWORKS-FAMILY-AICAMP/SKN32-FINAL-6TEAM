@@ -1,0 +1,132 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+____ test_routing_retry_loser_returns_conflict_after_winner_has_completed _____
+tests\e2e\test_web_initial_concurrency.py:133: in test_routing_retry_loser_returns_conflict_after_winner_has_completed
+    results = list(pool.map(post, range(2)))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:619: in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:317: in _result_or_cancel
+    return fut.result(timeout)
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:401: in __get_result
+    raise self._exception
+..\..\..\anaconda3\Lib\concurrent\futures\thread.py:58: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\e2e\test_web_initial_concurrency.py:127: in post
+    answer = _post(decided, "점심 다른 데로 바꿔", request_id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\e2e\test_web_conversation_resume.py:33: in _post
+    return decided["client"].post(f"/v1/web/trips/{decided['trip']['trip_id']}/messages",
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:552: in post
+    return super().post(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:1144: in post
+    return self.request(
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:451: in request
+    return super().request(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:914: in send
+    response = self._send_handling_auth(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:354: in handle_request
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:351: in handle_request
+    portal.call(self.app, scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\anyio\from_thread.py:338: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:401: in __get_result
+    raise self._exception
+..\..\..\anaconda3\Lib\site-packages\anyio\from_thread.py:263: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\fastapi\applications.py:1054: in __call__
+    await super().__call__(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\applications.py:113: in __call__
+    await self.middleware_stack(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+app\core\service_bindings.py:134: in __call__
+    await self.app(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\cors.py:85: in __call__
+    await self.app(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:736: in app
+    await route.handle(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:290: in handle
+    await self.app(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:78: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:75: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\fastapi\routing.py:302: in app
+    raw_response = await run_endpoint_function(
+..\..\..\anaconda3\Lib\site-packages\fastapi\routing.py:215: in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\concurrency.py:38: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\anyio\to_thread.py:63: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+..\..\..\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py:2596: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py:1029: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\entry\trip_api.py:1961: in web_message
+    return _web_message_result(tenant, customer, store, trip_id, request, defer=background.add_task,
+app\domains\travel_ops\entry\trip_api.py:1973: in _web_message_result
+    result = handle_trip_message(
+app\domains\travel_ops\components\conversation\trip_messages.py:318: in handle_trip_message
+    retried = retry_initial(conn, controller=controller, tenant=tenant, trip=trip,
+app\domains\travel_ops\components\conversation\case_dispatch.py:147: in retry_initial
+    return execute(conn, controller=controller, tenant=tenant, trip=trip, case_id=case_id,
+tests\e2e\test_web_initial_concurrency.py:113: in execute
+    return original_execute(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\conversation\case_dispatch.py:91: in execute
+    transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=case["version"],
+app\core\transition.py:156: in transition_case
+    updated = apply_event(current, event_type, safe_payload)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\case_lifecycle\case.py:63: in apply_event
+    raise InvalidTransition(
+E   app.core.contracts.InvalidTransition: 허용되지 않은 전이: resolved --routed--> ? (이 상태에서 가능한 이벤트: ['cancelled_by_user'])
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.instances.dining.team:team.py:45 dining states not read case=c468be20-83bd-4a42-a4e7-17efdd01145c reason=ToolLoopExceeded
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_web_initial_concurrency.py::test_routing_retry_loser_returns_conflict_after_winner_has_completed
+1 failed in 5.23s

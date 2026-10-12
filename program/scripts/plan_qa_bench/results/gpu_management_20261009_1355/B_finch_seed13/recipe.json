@@ -1,0 +1,19 @@
+{
+  "schedule": "finch",
+  "seed": 20261013,
+  "epochs": 2,
+  "rank": 16,
+  "accum": 8,
+  "maxlen": 3072,
+  "limit": 0,
+  "family": "gemma",
+  "cosine_peak_lr": 5e-05,
+  "finch_base_rate": 2e-05,
+  "finch_cap": 5e-05,
+  "finch_alpha": 0.9,
+  "status": "started",
+  "train_sha256": "07e6f7156883f9adb91812b2306b6dd813f60b189ae1da2610ae8c20d2d55a3c",
+  "script_sha256": "c43cc981465b6a4f8e55eca5dba3c1dbaa7f7815b2c952cd71ce799052e5c874",
+  "source": "https://arxiv.org/html/2605.20005v1",
+  "adaptation": "EMA batch is one optimizer accumulation window; initial loss is sequence mean"
+}

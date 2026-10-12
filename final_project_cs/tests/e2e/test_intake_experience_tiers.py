@@ -59,7 +59,7 @@ def test_without_the_same_kind_the_palace_continues_with_outdoor_walks_and_never
     assert {c["basis"] for c in got["candidates"]} == {"similar_experience"} and all(c["similarity"] is None for c in got["candidates"])
     for c in got["candidates"]:
         assert c["experience"] == "outdoor_walk"
-        assert c["reason"].startswith("경복궁와 같은 종류는 가까이에 마땅한 곳이 없어, 야외에서 걷고 둘러보기을 하는 곳 중 가까운 곳을 골랐어요"), c["reason"]
+        assert c["reason"].startswith("경복궁과 같은 종류는 가까이에 마땅한 곳이 없어, 야외에서 걷고 둘러보기을 하는 곳 중 가까운 곳을 골랐어요"), c["reason"]
         assert f"{c['distance_m']}m" in c["reason"]                                            # 아는 값(거리)만 적는다
 
 
@@ -71,7 +71,7 @@ def test_the_same_kind_comes_first_even_when_farther_and_the_experience_fills_af
     assert ranked[0] == ("창덕궁", "same_kind")                                              # 같은 종류가 먼저
     assert {basis for _name, basis in ranked[1:]} == {"similar_experience"}
     first = got["candidates"][0]
-    assert first["similarity"] == 3 and first["reason"].startswith("경복궁와 같은 소분류(관광공사 분류)의 곳이에요")
+    assert first["similarity"] == 3 and first["reason"].startswith("경복궁과 같은 소분류(관광공사 분류)의 곳이에요")
 
 
 def test_nothing_alike_anywhere_says_so_instead_of_inventing(rv):  # noqa: F811
@@ -120,9 +120,9 @@ def _candidate(**over):
 
 def test_the_reason_uses_only_values_that_are_known():
     full = _reason(_candidate(), "경복궁")
-    assert full == "경복궁와 같은 중분류(관광공사 분류)의 곳이에요 · 경복궁에서 420m · 09:00~18:00 영업 · 다음 일정까지 25분 여유가 있어요"
+    assert full == "경복궁과 같은 중분류(관광공사 분류)의 곳이에요 · 경복궁에서 420m · 09:00~18:00 영업 · 다음 일정까지 25분 여유가 있어요"
     unknown_hours = _reason(_candidate(rows=[{"row": "hours", "result": "unknown", "text": "?"}], slack={"before": None, "after": None}), "경복궁")
-    assert unknown_hours == "경복궁와 같은 중분류(관광공사 분류)의 곳이에요 · 경복궁에서 420m · 영업시간은 확인하지 못했어요"          # 모르면 모른다고, 여유는 안 쓴다
+    assert unknown_hours == "경복궁과 같은 중분류(관광공사 분류)의 곳이에요 · 경복궁에서 420m · 영업시간은 확인하지 못했어요"          # 모르면 모른다고, 여유는 안 쓴다
     late = _reason(_candidate(slack={"before": 5, "after": -10}), "경복궁")
     assert "여유" not in late                                                              # 늦는 후보에 여유가 있다고 쓰지 않는다
     assert _reason(_candidate(basis=None, rows=[], slack=None, distance_m=None, reference=None), "경복궁") is None   # 쓸 사실이 없으면 문장을 지어내지 않는다
@@ -133,3 +133,74 @@ def test_the_experience_groups_hold_no_shops_and_each_middle_class_belongs_to_on
     every = [code for group in EXPERIENCE_GROUPS.values() for code in group["lcls2"]]
     assert len(every) == len(set(every))                                                    # 한 중분류가 두 갈래에 걸치지 않는다
     assert not any(code.startswith(("SH", "FD", "AC")) for code in every)                   # 쇼핑 · 음식 · 숙박 가지는 경험 갈래에 없다
+
+
+# ── 셋째 단: 취향 추천 ─────────────────────────────────────────────
+def _plan_review(*extra):
+    """경복궁(10:30) 하나 + 같은 날 다른 활동들(extra: (id, 이름, 번호, 시각[, 위도, 경도]) — 좌표는 목록 행과 같게 줘야 같은 곳으로 읽힌다)."""
+    base_review, base_item = _palace_review()
+    others = []
+    for item_id, name, content_id, start, *at in extra:
+        lat, lon = at if at else (PALACE[0] + 0.01, PALACE[1])
+        place = {"name": name, "latitude": lat, "longitude": lon, "kind": "activity", "source": "tour_api",
+                 "content_id": content_id, "content_type_id": "12", "ref": f"tour:{content_id}"}
+        others.append({**_item(item_id, "activity", start), "ends_at": start, "title": name, "place": place, "place_state": "found", "parts": None})
+    return {"items": [base_item, *others]}, base_item
+
+
+def test_with_nothing_alike_the_trips_own_taste_fills_the_third_tier(rv):  # noqa: F811
+    """경복궁 곁에 같은 종류도 같은 경험 갈래(공원 · 둘레길)도 없지만, 이 여행에 담은 다른 활동이 한옥마을 · 박물관이면 그 갈래의 가까운 곳이 취향 후보로 나온다."""
+    _row(rv, "960001", "12", "경복궁", *PALACE, "HS", "HS01", "HS010100")
+    _row(rv, "980001", "12", "북촌한옥마을", 37.5820, 126.9830, "VE", "VE02", "VE020100")         # 일정에 담은 곳 — 한옥마을 갈래(VE02)
+    _row(rv, "980002", "12", "서촌한옥마을", 37.5790, 126.9700, "VE", "VE02", "VE020200")         # 가까운 같은 갈래 — 취향 후보
+    _row(rv, "980003", "38", "우정약국 종로", 37.5797, 126.9771, "SH", "SH04", "SH040100")        # 쇼핑 — 취향이 아니다
+    review, item = _plan_review(("beachon", "북촌한옥마을", "980001", "14:00", 37.5820, 126.9830))
+    got = _alternatives(rv, review, item)
+    names = [c["place"]["name"] for c in got["candidates"]]
+    assert names == ["서촌한옥마을"], got
+    assert "taste" in got["notes"] and "no_alternative" not in got["notes"]
+    candidate = got["candidates"][0]
+    assert candidate["basis"] == "taste" and candidate["taste"]["with"] == ["북촌한옥마을"] and candidate["taste"]["count"] == 1
+    assert candidate["reason"].startswith("일정에 담은 「북촌한옥마을」과 같은 분류의 곳이에요"), candidate["reason"]
+
+
+def test_the_most_often_chosen_kind_is_the_taste_and_shops_and_meals_are_not_counted(rv):  # noqa: F811
+    from app.domains.travel_ops.components.intake import taste
+
+    _row(rv, "981001", "12", "A공원", 37.5800, 126.9800, "VE", "VE03", "VE030100")
+    _row(rv, "981002", "12", "B공원", 37.5810, 126.9810, "VE", "VE03", "VE030100")
+    _row(rv, "981003", "12", "C전시", 37.5820, 126.9820, "VE", "VE07", "VE070100")
+    _row(rv, "981004", "38", "D시장", 37.5830, 126.9830, "SH", "SH06", "SH060200")
+    review, item = _plan_review(("a", "A공원", "981001", "11:00"), ("b", "B공원", "981002", "12:00"), ("c", "C전시", "981003", "13:00"),
+                                ("d", "D시장", "981004", "14:00"))
+    with get_connection() as conn:
+        got = taste.profile(conn, [rv["tenant"]], review["items"], item["id"])
+    assert [(c["lcls2"], c["count"]) for c in got["classes"]] == [("VE03", 2), ("VE07", 1)], got            # 시장(쇼핑)은 센 대상이 아니다
+    assert got["classes"][0]["titles"] == ["A공원", "B공원"] and got["items_seen"] == 4                      # 분류를 아는 활동 수(시장 포함)
+    assert taste.reason_head({"with": ["A공원", "B공원"], "count": 5}) == "일정에 담은 「A공원」 · 「B공원」 등 5곳과 같은 분류의 곳이에요"
+    assert taste.reason_head({}) == "일정에 담은 곳들과 같은 분류의 곳이에요"
+
+
+def test_without_any_other_activity_there_is_no_taste_and_the_answer_stays_no_alternative(rv):  # noqa: F811
+    _row(rv, "960001", "12", "경복궁", *PALACE, "HS", "HS01", "HS010100")
+    review, item = _palace_review()
+    got = _alternatives(rv, review, item)
+    assert got["candidates"] == [] and "taste" not in got["notes"] and "no_alternative" in got["notes"]
+
+
+def test_the_taste_tier_only_fills_what_the_first_two_tiers_left_and_comes_last(park_world):
+    """같은 종류 · 비슷한 경험(공원 · 둘레길)이 이미 둘 있고 칸이 셋이면 취향 후보는 그 뒤에 한 곳만 붙는다."""
+    _row(park_world, "980001", "12", "북촌한옥마을", 37.5820, 126.9830, "VE", "VE02", "VE020100")
+    _row(park_world, "980002", "12", "서촌한옥마을", 37.5790, 126.9700, "VE", "VE02", "VE020200")
+    review, item = _plan_review(("beachon", "북촌한옥마을", "980001", "14:00", 37.5820, 126.9830))
+    got = _alternatives(park_world, review, item)
+    bases = [c["basis"] for c in got["candidates"]]
+    assert bases == ["similar_experience", "similar_experience", "taste"], got
+    assert got["candidates"][-1]["place"]["name"] == "서촌한옥마을"
+
+
+def test_the_josa_follows_the_last_syllable():
+    from app.domains.travel_ops.components.intake.candidates import with_josa
+
+    assert with_josa("경복궁") == "경복궁과" and with_josa("북촌") == "북촌과" and with_josa("서울숲") == "서울숲과"
+    assert with_josa("광장시장") == "광장시장과" and with_josa("남산타워") == "남산타워와" and with_josa("63") == "63와"

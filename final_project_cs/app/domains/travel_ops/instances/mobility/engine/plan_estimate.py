@@ -80,8 +80,9 @@ from pathlib import Path
 from .geo import same_station
 from .timeutil import fmt_min, day_type_of, MIN_DAY
 from .verify_time import leg_mode
+from .bus_identity import route_for_leg, segment_for_leg
 
-ESTIMATE_VERSION = "estimate-v1.1"
+ESTIMATE_VERSION = "estimate-v1.2"
 PRIM_TIE_BAND = 0.05     # 73 후속 3-9 — 대표 경로 동급 띠(성립 표본 대비 · 내림). 판정이 아니라 추정 표시의 안정화 값
 SLOTS = {"오전": (6 * 60, 12 * 60), "오후": (12 * 60, 18 * 60), "저녁": (18 * 60, 22 * 60), "밤": (22 * 60, 28 * 60)}
 SLOT_ALIASES = {"morning": "오전", "afternoon": "오후", "evening": "저녁", "night": "밤"}
@@ -213,8 +214,8 @@ class Estimator:
         if len(lr) != 1 or lr[0].ride_src != "profile" or lr[0].depart_min is None:
             return None
         L = lr[0]
-        r = v.bus.route(str(legs[0]["route"]))
-        seg = v.bus.segment(r.route_id, legs[0]["from"], legs[0]["to"]) if r else None
+        r = route_for_leg(v.bus, legs[0])
+        seg = segment_for_leg(v.bus, r, legs[0]) if r else None
         if seg is None:
             return None
         a, b, _ = seg
@@ -251,7 +252,7 @@ class Estimator:
             return None
         return round(pct(slot, 0.5) - min(day), 1)
 
-    def _dir_of(self, line, frm, to, day_type, dep_min, arr_min):
+    def _dir_of(self, line, frm, to, day_type, dep_min, arr_min, *, include_service=False, arrival_sec=None):
         """지하철 구간의 방향 — 판정기가 고른 편성과 **출발 분·도착 분이 둘 다 같은** 후보의 dir. 혼잡도 조회용.
         (GPT 4) 같은 분에 방향이 다른 편성이 있어도 도착 분으로 가른다. 그래도 방향이 하나로 안 정해지면 None — 혼잡도를 안 본다."""
         cands, _, _ = self.v.candidates(line, frm, to, day_type)
@@ -259,9 +260,14 @@ class Estimator:
         for dep, pv, _full in cands:
             if dep.min != dep_min:
                 continue
-            ride = _EX.ride_of(self.v.lo, line, dep, pv, frm, to)
-            if ride is not None and arr_min is not None and dep.min + math.ceil(ride) == arr_min:
-                dirs.add(dep.dir)
+            ride = self.v.ride_of(line, dep, pv, frm, to)
+            if (arrival_sec is not None
+                    and self.v._scheduled_arrival_sec(dep, pv, to) != arrival_sec):
+                continue
+            if ride is not None and arr_min is not None and self.v._scheduled_arrival_min(dep, pv, to, ride) == arr_min:
+                run = getattr(dep, 'run', None)
+                service = ('express' if run.express else 'local') if run is not None else None
+                dirs.add((dep.dir, service) if include_service else dep.dir)
         return dirs.pop() if len(dirs) == 1 else None
 
     def _crowd(self, cand, d, day_type, is_hol):
@@ -274,10 +280,14 @@ class Estimator:
         for leg, lr in zip(cand["legs"], [x for x in cand["legs_result"] if not x.label.startswith("환승")]):
             if leg_mode(leg) != "subway" or lr.depart_min is None:
                 continue
-            dr = self._dir_of(leg["line"], leg["from"], leg["to"], day_type, lr.depart_min, lr.arrive_min)
-            if dr is None:
+            identity = self._dir_of(leg["line"], leg["from"], leg["to"], day_type,
+                                    lr.depart_min, lr.arrive_min, include_service=True,
+                                    arrival_sec=getattr(lr, 'arrival_sec', None))
+            if identity is None:
                 continue
-            hit = v.cg_data.lookup(leg["line"], leg["from"], dr, day_type, d, lr.depart_min, L, is_holiday=is_hol)
+            dr, service = identity
+            hit = v.cg_data.lookup(leg["line"], leg["from"], dr, day_type, d, lr.depart_min, L,
+                                  is_holiday=is_hol, **({'service': service} if leg['line'] == '09호선' else {}))
             if hit and (best is None or hit[0] > best[0]):
                 best = (hit[0], hit[1], leg["line"], leg["from"], fmt_min((lr.depart_min // 30) * 30))
         return best
@@ -303,18 +313,26 @@ class Estimator:
                 "window": {"from": fmt_min(lo), "to": fmt_min(hi), "step_min": step}}
         buf = v.rv("buffer", "by_stage", self.stage)
 
-        # 도보 직행 — 두 장소 직선이 도보 상한 안이면 표본마다 같은 후보(32 와 같은 식)
+        # 직접 도보도 일정 안내와 같은 보행망 거리·계단 시간을 쓴다. 창마다 한 번만 조회한다.
+        # 상한은 기존 직선거리 정책이며, 아래 소요 분위는 실보행 측정 분포가 아니다.
         walk_eta = None
+        walk_missing = False
         if A["place"] and B["place"] and "walk" in self.modes:
             from .geo import meters
             dm = meters(A["place"]["lat"], A["place"]["lon"], B["place"]["lat"], B["place"]["lon"])
             if dm <= wlim:
-                walk_eta = max(1, self.P._walk(dm))
+                walk_basis = {}
+                _distance, minutes, walk_missing = self.P._walk_path(
+                    A["place"], B["place"], dm, evidence=walk_basis)
+                base["walk_basis"] = walk_basis
+                if not walk_missing:
+                    walk_eta = max(1, math.ceil(minutes))
         same = (A["station"] is not None and
                 same_station(A["station"], A.get("lines"), B["station"], B.get("lines")))   # 55 GPT #2 — 물리적 역 기준
         transit = A["station"] is not None and B["station"] is not None and not same
         if not transit and walk_eta is None:
-            why = ("두 곳의 가장 가까운 역이 같고 도보 상한 밖이다" if same
+            why = ("현재 보행망에서 직접 도보 경로를 연결하지 못했고 대중교통 후보도 없다" if walk_missing
+                   else "두 곳의 가장 가까운 역이 같고 도보 상한 밖이다" if same
                    else "도보 상한 안에 지하철역이 없다(" + (A["name"] if A["station"] is None else B["name"]) + ")")
             return {**base, "verdict": "no_data", "reason": why}
 

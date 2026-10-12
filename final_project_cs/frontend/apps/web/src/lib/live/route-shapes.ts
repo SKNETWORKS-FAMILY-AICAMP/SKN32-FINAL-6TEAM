@@ -5,14 +5,14 @@ import { api, LiveError } from "./client";
  * `[2026-10-04]` The lines to draw on the trip's map (`GET /v1/web/trips/{id}/route-shapes`, mobility session — report 「이동 파이썬 길찾기 서버없이」 §10).
  *   One shape for each move that has a placed stop before and after it. ★The server says how sure it is, and the screen must show that:
  *   - `source: "straight_line"` or `grade: "근거없음"` = the road was not known, the two places were joined by a straight line → dashed and pale;
- *   - `source: "stations"` = the station coordinates joined in order, not the real track; a bus is always straight (no stop list in the plan) — said in one line;
+ *   - `source: "stations"`, `"bus_stops"` or `"transit_stops"` = the chosen station/stop coordinates joined in order, not the real track/road — said with the map;
  *   - the line's own `attribution` (ODbL) is shown whenever a line is drawn.
  */
 export type RouteMode = "walk" | "bike" | "taxi" | "subway" | "bus" | "mixed" | "unknown";
-export type RouteSource = "local_road_graph" | "stations" | "straight_line";
+export type RouteSource = "local_road_graph" | "stations" | "bus_stops" | "transit_stops" | "straight_line";
 
 /** `[2026-10-05 이동 세션 계약]` One ride of a subway or mixed leg (`rides[]`, only where the line follows the stations): 「지하철 3호선 · 경복궁→을지로3가 · 4개 역」; `filled: false` = the stations between could not be filled in (a straight stretch). */
-export interface RouteRide { line: string; from: string | null; to: string | null; stations: string[]; count: number | null; filled: boolean }
+export interface RouteRide { mode?: "bus" | "subway"; service?: "local" | "express"; line: string; from: string | null; to: string | null; stations: string[]; count: number | null; filled: boolean }
 
 export interface RouteShape {
   /** The move item itself; the two ends are the stops around it. */
@@ -28,7 +28,7 @@ export interface RouteShape {
   note: string | null;
   /** WGS84, in the order of the line (the server sends GeoJSON `[lng, lat]`). */
   points: { lat: number; lng: number }[];
-  /** `[2026-10-06 사용자 지시]` The rides a subway or mixed line is made of - said when the line is pressed. Empty for anything else (a bus, a taxi, a walk have none). */
+  /** The rides a bus, subway or mixed line is made of, said when the line is pressed. Empty for a taxi or walk. */
   rides: RouteRide[];
 }
 
@@ -36,7 +36,7 @@ export interface RouteShapes { attribution: string; shapes: RouteShape[] }
 
 const text = (value: unknown): string | null => (typeof value === "string" && value.trim() ? value : null);
 const MODES: readonly RouteMode[] = ["walk", "bike", "taxi", "subway", "bus", "mixed", "unknown"];
-const SOURCES: readonly RouteShape["source"][] = ["local_road_graph", "stations", "straight_line"];
+const SOURCES: readonly RouteShape["source"][] = ["local_road_graph", "stations", "bus_stops", "transit_stops", "straight_line"];
 
 /** `[[lng, lat], …]` → points. A point that is not a pair of finite, in-range numbers is dropped; fewer than two left means no line. */
 export function pointsOf(coordinates: unknown): RouteShape["points"] {
@@ -57,6 +57,8 @@ function ridesOf(raw: unknown): RouteRide[] {
     if (!line) return [];                                                   // a ride with no line name has nothing true to say
     const count = Number(row.count);
     return [{
+      ...(row.mode === "bus" || row.mode === "subway" ? { mode: row.mode } : {}),
+      ...(row.service === "local" || row.service === "express" ? { service: row.service } : {}),
       line, from: text(row.from), to: text(row.to),
       stations: (Array.isArray(row.stations) ? row.stations : []).flatMap((station) => { const name = text(station); return name ? [name] : []; }),
       count: Number.isFinite(count) && count >= 0 ? Math.floor(count) : null,

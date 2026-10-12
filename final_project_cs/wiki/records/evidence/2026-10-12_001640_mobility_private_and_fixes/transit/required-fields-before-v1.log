@@ -1,0 +1,585 @@
+FFFFFFFFFFFFF...                                                         [100%]
+================================== FAILURES ===================================
+_ test_required_route_field_missing_is_rejected_before_live_lookup[bus-route] _
+
+mode = 'bus', key = 'route'
+
+    @pytest.mark.parametrize('mode,key', [
+        ('bus', 'route'), ('bus', 'from'), ('bus', 'to'),
+        ('subway', 'line'), ('subway', 'from'), ('subway', 'to'),
+    ])
+    def test_required_route_field_missing_is_rejected_before_live_lookup(mode, key):
+        runtime, context = bus_scene() if mode == 'bus' else rail_scene()
+        option = context['options']['p']
+        option.pop('subway_identity', None)  # ���� ���庻�� ���� �� �������� �����ϴ� ���� ���
+        del option['legs'][0][key]
+        del option['check']['legs'][0][key]
+        queried = []
+        def source(*a, **kw):
+            queried.append(1)
+            return (prediction if mode == 'bus' else rail_source)(*a, **kw)
+        call = bus_call if mode == 'bus' else rail_call
+>       got = call(runtime, context, **{mode+'_arrival': source})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_departure_observer_v1.py:39: in call
+    return observe(runtime, context, 'p', now=NOW, deadline=NOW + timedelta(hours=1),
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:315: in observe
+    result = runtime.verify_case(case, bus_departures=departures,
+app\domains\travel_ops\instances\mobility\engine\runtime.py:141: in verify_case
+    return verifier.verify_case(case)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2613: in verify_case
+    best = self._chain(case, now, day_type, is_sat, party, worst=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2418: in _chain
+    r = (self.verify_leg_bus(i, leg, now, day_type, worst=worst) if mode == "bus"
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x0000025915EDC380>
+idx = 0
+leg = {'from': '����', 'from_sequence': 5, 'from_stop_id': '1005', 'mode': 'bus', ...}
+now_min = 606, day_type = 'weekday', worst = False
+
+    def verify_leg_bus(self, idx, leg, now_min, day_type, worst=False):
+        """������ �뼱 ���� �ҽ���. '���� ���� ���ΰ� + ������ŭ ��ٸ��°�' �� ����.
+    
+        \uc9c0\ud558\ucca0\ucc98\ub7fc '\uadf8 \uc2dc\uac01\uc5d0 \ucd9c\ubc1c\ud558\ub294 \ucc28'\ub97c \ucc3e\uc744 \uc218 \uc5c6\ub2e4 \u2014 \uc815\ub958\uc7a5\ubcc4 \uc2dc\uac01\uc774 \uc5c6\uae30 \ub54c\ubb38\uc774\ub2e4.
+        �׷��� ��Ⱑ �����̰�, ���� �ҿ�� �ƿ� ���� �ʴ´�(rules.bus.ride_model).
+        """
+>       nm, a_nm, b_nm = str(leg["route"]), leg["from"], leg["to"]
+                             ^^^^^^^^^^^^
+E       KeyError: 'route'
+
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:787: KeyError
+_ test_required_route_field_missing_is_rejected_before_live_lookup[bus-from] __
+
+mode = 'bus', key = 'from'
+
+    @pytest.mark.parametrize('mode,key', [
+        ('bus', 'route'), ('bus', 'from'), ('bus', 'to'),
+        ('subway', 'line'), ('subway', 'from'), ('subway', 'to'),
+    ])
+    def test_required_route_field_missing_is_rejected_before_live_lookup(mode, key):
+        runtime, context = bus_scene() if mode == 'bus' else rail_scene()
+        option = context['options']['p']
+        option.pop('subway_identity', None)  # ���� ���庻�� ���� �� �������� �����ϴ� ���� ���
+        del option['legs'][0][key]
+        del option['check']['legs'][0][key]
+        queried = []
+        def source(*a, **kw):
+            queried.append(1)
+            return (prediction if mode == 'bus' else rail_source)(*a, **kw)
+        call = bus_call if mode == 'bus' else rail_call
+>       got = call(runtime, context, **{mode+'_arrival': source})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_departure_observer_v1.py:39: in call
+    return observe(runtime, context, 'p', now=NOW, deadline=NOW + timedelta(hours=1),
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:315: in observe
+    result = runtime.verify_case(case, bus_departures=departures,
+app\domains\travel_ops\instances\mobility\engine\runtime.py:141: in verify_case
+    return verifier.verify_case(case)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2613: in verify_case
+    best = self._chain(case, now, day_type, is_sat, party, worst=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2418: in _chain
+    r = (self.verify_leg_bus(i, leg, now, day_type, worst=worst) if mode == "bus"
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x0000025915EE8AD0>
+idx = 0
+leg = {'from_sequence': 5, 'from_stop_id': '1005', 'mode': 'bus', 'route': '��ȯ1', ...}
+now_min = 606, day_type = 'weekday', worst = False
+
+    def verify_leg_bus(self, idx, leg, now_min, day_type, worst=False):
+        """������ �뼱 ���� �ҽ���. '���� ���� ���ΰ� + ������ŭ ��ٸ��°�' �� ����.
+    
+        \uc9c0\ud558\ucca0\ucc98\ub7fc '\uadf8 \uc2dc\uac01\uc5d0 \ucd9c\ubc1c\ud558\ub294 \ucc28'\ub97c \ucc3e\uc744 \uc218 \uc5c6\ub2e4 \u2014 \uc815\ub958\uc7a5\ubcc4 \uc2dc\uac01\uc774 \uc5c6\uae30 \ub54c\ubb38\uc774\ub2e4.
+        �׷��� ��Ⱑ �����̰�, ���� �ҿ�� �ƿ� ���� �ʴ´�(rules.bus.ride_model).
+        """
+>       nm, a_nm, b_nm = str(leg["route"]), leg["from"], leg["to"]
+                                            ^^^^^^^^^^^
+E       KeyError: 'from'
+
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:787: KeyError
+__ test_required_route_field_missing_is_rejected_before_live_lookup[bus-to] ___
+
+mode = 'bus', key = 'to'
+
+    @pytest.mark.parametrize('mode,key', [
+        ('bus', 'route'), ('bus', 'from'), ('bus', 'to'),
+        ('subway', 'line'), ('subway', 'from'), ('subway', 'to'),
+    ])
+    def test_required_route_field_missing_is_rejected_before_live_lookup(mode, key):
+        runtime, context = bus_scene() if mode == 'bus' else rail_scene()
+        option = context['options']['p']
+        option.pop('subway_identity', None)  # ���� ���庻�� ���� �� �������� �����ϴ� ���� ���
+        del option['legs'][0][key]
+        del option['check']['legs'][0][key]
+        queried = []
+        def source(*a, **kw):
+            queried.append(1)
+            return (prediction if mode == 'bus' else rail_source)(*a, **kw)
+        call = bus_call if mode == 'bus' else rail_call
+>       got = call(runtime, context, **{mode+'_arrival': source})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_departure_observer_v1.py:39: in call
+    return observe(runtime, context, 'p', now=NOW, deadline=NOW + timedelta(hours=1),
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:315: in observe
+    result = runtime.verify_case(case, bus_departures=departures,
+app\domains\travel_ops\instances\mobility\engine\runtime.py:141: in verify_case
+    return verifier.verify_case(case)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2613: in verify_case
+    best = self._chain(case, now, day_type, is_sat, party, worst=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2418: in _chain
+    r = (self.verify_leg_bus(i, leg, now, day_type, worst=worst) if mode == "bus"
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x0000025915F0A870>
+idx = 0
+leg = {'from': '����', 'from_sequence': 5, 'from_stop_id': '1005', 'mode': 'bus', ...}
+now_min = 606, day_type = 'weekday', worst = False
+
+    def verify_leg_bus(self, idx, leg, now_min, day_type, worst=False):
+        """������ �뼱 ���� �ҽ���. '���� ���� ���ΰ� + ������ŭ ��ٸ��°�' �� ����.
+    
+        \uc9c0\ud558\ucca0\ucc98\ub7fc '\uadf8 \uc2dc\uac01\uc5d0 \ucd9c\ubc1c\ud558\ub294 \ucc28'\ub97c \ucc3e\uc744 \uc218 \uc5c6\ub2e4 \u2014 \uc815\ub958\uc7a5\ubcc4 \uc2dc\uac01\uc774 \uc5c6\uae30 \ub54c\ubb38\uc774\ub2e4.
+        �׷��� ��Ⱑ �����̰�, ���� �ҿ�� �ƿ� ���� �ʴ´�(rules.bus.ride_model).
+        """
+>       nm, a_nm, b_nm = str(leg["route"]), leg["from"], leg["to"]
+                                                         ^^^^^^^^^
+E       KeyError: 'to'
+
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:787: KeyError
+_ test_required_route_field_missing_is_rejected_before_live_lookup[subway-line] _
+
+mode = 'subway', key = 'line'
+
+    @pytest.mark.parametrize('mode,key', [
+        ('bus', 'route'), ('bus', 'from'), ('bus', 'to'),
+        ('subway', 'line'), ('subway', 'from'), ('subway', 'to'),
+    ])
+    def test_required_route_field_missing_is_rejected_before_live_lookup(mode, key):
+        runtime, context = bus_scene() if mode == 'bus' else rail_scene()
+        option = context['options']['p']
+        option.pop('subway_identity', None)  # ���� ���庻�� ���� �� �������� �����ϴ� ���� ���
+        del option['legs'][0][key]
+        del option['check']['legs'][0][key]
+        queried = []
+        def source(*a, **kw):
+            queried.append(1)
+            return (prediction if mode == 'bus' else rail_source)(*a, **kw)
+        call = bus_call if mode == 'bus' else rail_call
+>       got = call(runtime, context, **{mode+'_arrival': source})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_subway_departure_v1.py:67: in call
+    return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:315: in observe
+    result = runtime.verify_case(case, bus_departures=departures,
+app\domains\travel_ops\instances\mobility\engine\runtime.py:141: in verify_case
+    return verifier.verify_case(case)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2613: in verify_case
+    best = self._chain(case, now, day_type, is_sat, party, worst=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2422: in _chain
+    else self.verify_leg(i, leg, now, day_type, is_sat, worst=worst, party=party))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x0000025915F28F20>
+idx = 0, leg = {'from': '����', 'mode': 'subway', 'to': '��������û'}, now_min = 606
+day_type = 'holiday', is_saturday = False, worst = False, party = {}
+
+    def verify_leg(self, idx, leg, now_min, day_type, is_saturday, worst=False, party=None):
+>       line = leg["line"]
+               ^^^^^^^^^^^
+E       KeyError: 'line'
+
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:518: KeyError
+_ test_required_route_field_missing_is_rejected_before_live_lookup[subway-from] _
+
+mode = 'subway', key = 'from'
+
+    @pytest.mark.parametrize('mode,key', [
+        ('bus', 'route'), ('bus', 'from'), ('bus', 'to'),
+        ('subway', 'line'), ('subway', 'from'), ('subway', 'to'),
+    ])
+    def test_required_route_field_missing_is_rejected_before_live_lookup(mode, key):
+        runtime, context = bus_scene() if mode == 'bus' else rail_scene()
+        option = context['options']['p']
+        option.pop('subway_identity', None)  # ���� ���庻�� ���� �� �������� �����ϴ� ���� ���
+        del option['legs'][0][key]
+        del option['check']['legs'][0][key]
+        queried = []
+        def source(*a, **kw):
+            queried.append(1)
+            return (prediction if mode == 'bus' else rail_source)(*a, **kw)
+        call = bus_call if mode == 'bus' else rail_call
+>       got = call(runtime, context, **{mode+'_arrival': source})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_subway_departure_v1.py:67: in call
+    return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:315: in observe
+    result = runtime.verify_case(case, bus_departures=departures,
+app\domains\travel_ops\instances\mobility\engine\runtime.py:141: in verify_case
+    return verifier.verify_case(case)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2613: in verify_case
+    best = self._chain(case, now, day_type, is_sat, party, worst=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2422: in _chain
+    else self.verify_leg(i, leg, now, day_type, is_sat, worst=worst, party=party))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x0000025915EDCDA0>
+idx = 0, leg = {'line': '05ȣ��', 'mode': 'subway', 'to': '��������û'}, now_min = 606
+day_type = 'holiday', is_saturday = False, worst = False, party = {}
+
+    def verify_leg(self, idx, leg, now_min, day_type, is_saturday, worst=False, party=None):
+        line = leg["line"]
+>       a, b = leg["from"], leg["to"]
+               ^^^^^^^^^^^
+E       KeyError: 'from'
+
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:519: KeyError
+_ test_required_route_field_missing_is_rejected_before_live_lookup[subway-to] _
+
+mode = 'subway', key = 'to'
+
+    @pytest.mark.parametrize('mode,key', [
+        ('bus', 'route'), ('bus', 'from'), ('bus', 'to'),
+        ('subway', 'line'), ('subway', 'from'), ('subway', 'to'),
+    ])
+    def test_required_route_field_missing_is_rejected_before_live_lookup(mode, key):
+        runtime, context = bus_scene() if mode == 'bus' else rail_scene()
+        option = context['options']['p']
+        option.pop('subway_identity', None)  # ���� ���庻�� ���� �� �������� �����ϴ� ���� ���
+        del option['legs'][0][key]
+        del option['check']['legs'][0][key]
+        queried = []
+        def source(*a, **kw):
+            queried.append(1)
+            return (prediction if mode == 'bus' else rail_source)(*a, **kw)
+        call = bus_call if mode == 'bus' else rail_call
+>       got = call(runtime, context, **{mode+'_arrival': source})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_subway_departure_v1.py:67: in call
+    return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:315: in observe
+    result = runtime.verify_case(case, bus_departures=departures,
+app\domains\travel_ops\instances\mobility\engine\runtime.py:141: in verify_case
+    return verifier.verify_case(case)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2613: in verify_case
+    best = self._chain(case, now, day_type, is_sat, party, worst=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2422: in _chain
+    else self.verify_leg(i, leg, now, day_type, is_sat, worst=worst, party=party))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x0000025915EFC590>
+idx = 0, leg = {'from': '����', 'line': '05ȣ��', 'mode': 'subway'}, now_min = 606
+day_type = 'holiday', is_saturday = False, worst = False, party = {}
+
+    def verify_leg(self, idx, leg, now_min, day_type, is_saturday, worst=False, party=None):
+        line = leg["line"]
+>       a, b = leg["from"], leg["to"]
+                            ^^^^^^^^^
+E       KeyError: 'to'
+
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:519: KeyError
+________ test_empty_subway_mapping_is_not_forwarded_to_actual_verifier ________
+
+    def test_empty_subway_mapping_is_not_forwarded_to_actual_verifier():
+        runtime, context = rail_scene()
+        option = context['options']['p']
+        option.pop('subway_identity', None)
+        option['legs'] = [{}]
+        option['check']['legs'] = [{}]
+>       got = rail_call(runtime, context, subway_arrival=rail_source)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_subway_departure_v1.py:67: in call
+    return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:315: in observe
+    result = runtime.verify_case(case, bus_departures=departures,
+app\domains\travel_ops\instances\mobility\engine\runtime.py:141: in verify_case
+    return verifier.verify_case(case)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2613: in verify_case
+    best = self._chain(case, now, day_type, is_sat, party, worst=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2422: in _chain
+    else self.verify_leg(i, leg, now, day_type, is_sat, worst=worst, party=party))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x0000025915EEA660>
+idx = 0, leg = {}, now_min = 606, day_type = 'holiday', is_saturday = False
+worst = False, party = {}
+
+    def verify_leg(self, idx, leg, now_min, day_type, is_saturday, worst=False, party=None):
+>       line = leg["line"]
+               ^^^^^^^^^^^
+E       KeyError: 'line'
+
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:518: KeyError
+______________ test_non_text_subway_identity_is_held[line-None] _______________
+
+field = 'line', value = None
+
+    @pytest.mark.parametrize('field,value', [('line', None), ('line', ''), ('from', []), ('to', True)])
+    def test_non_text_subway_identity_is_held(field, value):
+        runtime, context = rail_scene()
+        option = context['options']['p']
+        option.pop('subway_identity', None)
+        option['legs'][0][field] = value
+        option['check']['legs'][0][field] = value
+        got = rail_call(runtime, context,
+                        subway_arrival=lambda *a, **kw: pytest.fail('�ջ� �� �ĺ����� ��ȸ ����'))
+>       assert got['status'] == 'needs_replan'
+E       AssertionError: assert 'fatal' == 'needs_replan'
+E         
+E         - needs_replan
+E         + fatal
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:52: AssertionError
+________________ test_non_text_subway_identity_is_held[line-] _________________
+
+field = 'line', value = ''
+
+    @pytest.mark.parametrize('field,value', [('line', None), ('line', ''), ('from', []), ('to', True)])
+    def test_non_text_subway_identity_is_held(field, value):
+        runtime, context = rail_scene()
+        option = context['options']['p']
+        option.pop('subway_identity', None)
+        option['legs'][0][field] = value
+        option['check']['legs'][0][field] = value
+        got = rail_call(runtime, context,
+                        subway_arrival=lambda *a, **kw: pytest.fail('�ջ� �� �ĺ����� ��ȸ ����'))
+>       assert got['status'] == 'needs_replan'
+E       AssertionError: assert 'fatal' == 'needs_replan'
+E         
+E         - needs_replan
+E         + fatal
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:52: AssertionError
+_____________ test_non_text_subway_identity_is_held[from-value2] ______________
+
+field = 'from', value = []
+
+    @pytest.mark.parametrize('field,value', [('line', None), ('line', ''), ('from', []), ('to', True)])
+    def test_non_text_subway_identity_is_held(field, value):
+        runtime, context = rail_scene()
+        option = context['options']['p']
+        option.pop('subway_identity', None)
+        option['legs'][0][field] = value
+        option['check']['legs'][0][field] = value
+>       got = rail_call(runtime, context,
+                        subway_arrival=lambda *a, **kw: pytest.fail('�ջ� �� �ĺ����� ��ȸ ����'))
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_subway_departure_v1.py:67: in call
+    return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:315: in observe
+    result = runtime.verify_case(case, bus_departures=departures,
+app\domains\travel_ops\instances\mobility\engine\runtime.py:141: in verify_case
+    return verifier.verify_case(case)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2613: in verify_case
+    best = self._chain(case, now, day_type, is_sat, party, worst=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2422: in _chain
+    else self.verify_leg(i, leg, now, day_type, is_sat, worst=worst, party=party))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:544: in verify_leg
+    if not self.tt.has_station(line, nm):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.verify_time.Timetable object at 0x0000025906968500>
+line = '05ȣ��', station = []
+
+    def has_station(self, line, station):
+>       return (line, station) in self.stations
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: unhashable type: 'list'
+
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:205: TypeError
+_______________ test_non_text_subway_identity_is_held[to-True] ________________
+
+field = 'to', value = True
+
+    @pytest.mark.parametrize('field,value', [('line', None), ('line', ''), ('from', []), ('to', True)])
+    def test_non_text_subway_identity_is_held(field, value):
+        runtime, context = rail_scene()
+        option = context['options']['p']
+        option.pop('subway_identity', None)
+        option['legs'][0][field] = value
+        option['check']['legs'][0][field] = value
+>       got = rail_call(runtime, context,
+                        subway_arrival=lambda *a, **kw: pytest.fail('�ջ� �� �ĺ����� ��ȸ ����'))
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_subway_departure_v1.py:67: in call
+    return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:315: in observe
+    result = runtime.verify_case(case, bus_departures=departures,
+app\domains\travel_ops\instances\mobility\engine\runtime.py:141: in verify_case
+    return verifier.verify_case(case)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2613: in verify_case
+    best = self._chain(case, now, day_type, is_sat, party, worst=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:2422: in _chain
+    else self.verify_leg(i, leg, now, day_type, is_sat, worst=worst, party=party))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:545: in verify_leg
+    sim = self.tt.similar(line, nm)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\verify_time.py:209: in similar
+    return difflib.get_close_matches(station, pool, n=n, cutoff=0.5)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\difflib.py:701: in get_close_matches
+    s.set_seq2(word)
+..\..\..\anaconda3\Lib\difflib.py:248: in set_seq2
+    self.__chain_b()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <difflib.SequenceMatcher object at 0x0000025915EFFAD0>
+
+    def __chain_b(self):
+        # Because isjunk is a user-defined (not C) function, and we test
+        # for junk a LOT, it's important to minimize the number of calls.
+        # Before the tricks described here, __chain_b was by far the most
+        # time-consuming routine in the whole module!  If anyone sees
+        # Jim Roskind, thank him again for profile.py -- I never would
+        # have guessed that.
+        # The first trick is to build b2j ignoring the possibility
+        # of junk.  I.e., we don't call isjunk at all yet.  Throwing
+        # out the junk later is much cheaper than building b2j "right"
+        # from the start.
+        b = self.b
+        self.b2j = b2j = {}
+    
+>       for i, elt in enumerate(b):
+                      ^^^^^^^^^^^^
+E       TypeError: 'bool' object is not iterable
+
+..\..\..\anaconda3\Lib\difflib.py:280: TypeError
+______ test_empty_later_leg_does_not_query_the_valid_first_vehicle[bus] _______
+
+mode = 'bus'
+
+    @pytest.mark.parametrize('mode', ['bus', 'subway'])
+    def test_empty_later_leg_does_not_query_the_valid_first_vehicle(mode):
+        runtime, context = bus_scene() if mode == 'bus' else rail_scene()
+        option = context['options']['p']
+        option['legs'].append({})
+        option['check']['legs'].append({})
+        call = bus_call if mode == 'bus' else rail_call
+>       got = call(runtime, context,
+                   **{mode+'_arrival': lambda *a, **kw: pytest.fail('�ļ� ���� �ջ� ��� ��ȸ ����')})
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:63: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_departure_observer_v1.py:39: in call
+    return observe(runtime, context, 'p', now=NOW, deadline=NOW + timedelta(hours=1),
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:238: in observe
+    observation = bus_arrival(first['route_id'], stop_id=first['from_stop_id'],
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('100',)
+kw = {'now': datetime.datetime(2026, 10, 9, 10, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), 'ready_at'...026, 10, 9, 10, 6, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), 'stop_id': '1005', 'stop_sequence': 5}
+
+>   **{mode+'_arrival': lambda *a, **kw: pytest.fail('�ļ� ���� �ջ� ��� ��ȸ ����')})
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: �ļ� ���� �ջ� ��� ��ȸ ����
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:64: Failed
+_____ test_empty_later_leg_does_not_query_the_valid_first_vehicle[subway] _____
+
+mode = 'subway'
+
+    @pytest.mark.parametrize('mode', ['bus', 'subway'])
+    def test_empty_later_leg_does_not_query_the_valid_first_vehicle(mode):
+        runtime, context = bus_scene() if mode == 'bus' else rail_scene()
+        option = context['options']['p']
+        option['legs'].append({})
+        option['check']['legs'].append({})
+        call = bus_call if mode == 'bus' else rail_call
+>       got = call(runtime, context,
+                   **{mode+'_arrival': lambda *a, **kw: pytest.fail('�ļ� ���� �ջ� ��� ��ȸ ����')})
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:63: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_subway_departure_v1.py:67: in call
+    return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:249: in observe
+    observation = subway_arrival(rail_identity['query_station'], line_id=rail_identity['line_id'],
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('����',)
+kw = {'allowed_services': [{'next_station_names': ['��������û'], 'path_station_ids': ['1005000522', '1005000523'], 'terminal_st...), 'ready_at': datetime.datetime(2026, 10, 9, 10, 6, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), ...}
+
+>   **{mode+'_arrival': lambda *a, **kw: pytest.fail('�ļ� ���� �ջ� ��� ��ȸ ����')})
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: �ļ� ���� �ջ� ��� ��ȸ ����
+
+tests\unit\travel\mobility\test_departure_route_required_fields_v1.py:64: Failed
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_departure_route_required_fields_v1.py::test_required_route_field_missing_is_rejected_before_live_lookup[bus-route]
+FAILED tests/unit/travel/mobility/test_departure_route_required_fields_v1.py::test_required_route_field_missing_is_rejected_before_live_lookup[bus-from]
+FAILED tests/unit/travel/mobility/test_departure_route_required_fields_v1.py::test_required_route_field_missing_is_rejected_before_live_lookup[bus-to]
+FAILED tests/unit/travel/mobility/test_departure_route_required_fields_v1.py::test_required_route_field_missing_is_rejected_before_live_lookup[subway-line]
+FAILED tests/unit/travel/mobility/test_departure_route_required_fields_v1.py::test_required_route_field_missing_is_rejected_before_live_lookup[subway-from]
+FAILED tests/unit/travel/mobility/test_departure_route_required_fields_v1.py::test_required_route_field_missing_is_rejected_before_live_lookup[subway-to]
+FAILED tests/unit/travel/mobility/test_departure_route_required_fields_v1.py::test_empty_subway_mapping_is_not_forwarded_to_actual_verifier
+FAILED tests/unit/travel/mobility/test_departure_route_required_fields_v1.py::test_non_text_subway_identity_is_held[line-None]
+FAILED tests/unit/travel/mobility/test_departure_route_required_fields_v1.py::test_non_text_subway_identity_is_held[line-]
+FAILED tests/unit/travel/mobility/test_departure_route_required_fields_v1.py::test_non_text_subway_identity_is_held[from-value2]
+FAILED tests/unit/travel/mobility/test_departure_route_required_fields_v1.py::test_non_text_subway_identity_is_held[to-True]
+FAILED tests/unit/travel/mobility/test_departure_route_required_fields_v1.py::test_empty_later_leg_does_not_query_the_valid_first_vehicle[bus]
+FAILED tests/unit/travel/mobility/test_departure_route_required_fields_v1.py::test_empty_later_leg_does_not_query_the_valid_first_vehicle[subway]
+13 failed, 3 passed in 34.79s
+Exception ignored in: <function Console.__del__ at 0x00000259066A1BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

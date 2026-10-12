@@ -1,14 +1,17 @@
 import { test, type Page } from "@playwright/test";
+import { resolve } from "node:path";
 import { mockServer, start } from "./helpers";
+import { head } from "./plan-check-kit";
 
 // 임시 촬영용 — 저장소에 올리지 않는다(화면을 눈으로 확인하려고 만든 것).
 const INTAKE = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
-const OUT = process.env.SHOT_DIR ?? "C:/Users/PLAYDA~1/AppData/Local/Temp/claude/C--Users-playdata2-Documents-final-workspace-final-project-ui/4d7ac9f3-839e-4efd-8226-1a89ee391951/scratchpad/shots_plan";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 test.use({ viewport: { width: 402, height: 874 } });
 
-const shot = (page: Page, name: string) => page.screenshot({ path: `${OUT}/${name}.png` });
+const shot = (page: Page, name: string) => page.screenshot({
+  path: process.env.SHOT_DIR ? resolve(process.env.SHOT_DIR, `${name}.png`) : test.info().outputPath(`${name}.png`),
+});
 
 test("촬영: 읽는 중 → 확인 재생 → 결과", async ({ page, request }) => {
   const server = mockServer(request);
@@ -29,10 +32,10 @@ test("촬영: 결과 화면의 여러 모습", async ({ page, request }) => {
   await page.getByRole("region", { name: /계획 확인/ }).waitFor();
   await page.waitForTimeout(2500);
   await shot(page, "10_done");
-  await page.getByRole("button", { name: "경복궁 관람" }).first().click();
+  await head(page, "경복궁 관람").click();
   await page.waitForTimeout(500);
   await shot(page, "11_open_card");
-  await page.getByRole("button", { name: "경복궁 관람" }).first().click();
+  await head(page, "경복궁 관람").click();
   await page.waitForTimeout(400);
   await shot(page, "12_card_toggled_off");
   await page.getByRole("button", { name: /경복궁 관람 시간 고치기/ }).click();

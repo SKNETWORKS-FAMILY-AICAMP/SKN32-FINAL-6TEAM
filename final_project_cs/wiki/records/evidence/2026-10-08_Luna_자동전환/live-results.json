@@ -1,0 +1,119 @@
+[
+  {
+    "config": {
+      "client": "FailoverChat",
+      "enabled": true,
+      "model": "gpt-6-luna",
+      "uses_server_key": true,
+      "personal_key_empty": true,
+      "budget_registered": true,
+      "daily_cap": 2000,
+      "monthly_cap": 30000
+    }
+  },
+  {
+    "op": "json",
+    "ok": true,
+    "seconds": 6.51,
+    "path": {
+      "path": "api",
+      "backend": "openai",
+      "op": "json",
+      "reasons": [
+        [
+          "ollama",
+          "connect"
+        ]
+      ],
+      "seconds": 6.51
+    },
+    "result_ok": true
+  },
+  {
+    "op": "decision",
+    "ok": true,
+    "seconds": 5.67,
+    "path": {
+      "path": "api",
+      "backend": "openai",
+      "op": "structured",
+      "reasons": [
+        [
+          "ollama",
+          "connect"
+        ]
+      ],
+      "seconds": 5.67
+    },
+    "action": "answer_fact",
+    "fact": "time",
+    "correct_target": true
+  },
+  {
+    "op": "text",
+    "ok": true,
+    "seconds": 4.09,
+    "path": {
+      "path": "api",
+      "backend": "openai",
+      "op": "text",
+      "reasons": [
+        [
+          "ollama",
+          "connect"
+        ]
+      ],
+      "seconds": 4.09
+    },
+    "response_nonempty": true
+  },
+  {
+    "successful": 3,
+    "total": 3,
+    "stats": {
+      "counters": {
+        "fail:ollama:connect": 3,
+        "ok:json:openai": 1,
+        "ok:structured:openai": 1,
+        "ok:text:openai": 1
+      },
+      "last_switch": {
+        "op": "text",
+        "to": "openai",
+        "reasons": [
+          [
+            "ollama",
+            "connect"
+          ]
+        ],
+        "at": 1791467033.014485
+      },
+      "breakers": {
+        "ollama": {
+          "state": "open",
+          "failures": 3
+        },
+        "openai": {
+          "state": "closed",
+          "failures": 0
+        }
+      }
+    }
+  },
+  {
+    "service": "tripilot-api",
+    "exit": 0,
+    "stderr_present": true
+  },
+  {
+    "worker_enabled": true,
+    "worker_model": "gpt-6-luna",
+    "worker_uses_server_key": true,
+    "worker_personal_key_empty": true
+  },
+  {
+    "service": "tripilot-worker",
+    "exit": 0,
+    "stderr_present": false
+  }
+]

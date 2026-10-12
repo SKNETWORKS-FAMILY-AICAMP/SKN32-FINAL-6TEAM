@@ -1,0 +1,12 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "tests/unit/travel/mobility/test_subway_primary_name_v1.py",
+    "-q",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\pytest-subway-primary-before",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_1125_\uacf5\uc2dd\ubcd1\uae30\uc5ed\uba85_\uc885\ucc29\uacbd\ub85c\ubcf5\uad6c\\before-v1.xml"
+  ],
+  "exit_code": 1
+}

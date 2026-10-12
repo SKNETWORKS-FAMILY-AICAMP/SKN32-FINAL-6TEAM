@@ -1,0 +1,1378 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config=playwright.location.config.ts",
+      "tests/live/registered-trip-parity-20261011.spec.ts",
+      "tests/live/shared-trip-ui-20261011.spec.ts",
+      "tests/live/route-lines.spec.ts",
+      "tests/live/trip-layout.spec.ts",
+      "tests/live/trip-marker-no-toast-20261011.spec.ts",
+      "tests/live/day-marker-recovery-20261011.spec.ts",
+      "--reporter=line,json",
+      "--output=test-results-registered-shared"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\playwright.location.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/test-results-registered-shared",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "day-marker-recovery-20261011.spec.ts",
+      "file": "day-marker-recovery-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "수정안 왕복·직접 수정 복귀 시 선택 배경 전체 정렬 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13417,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:49:18.562Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "10c93b0697627788c2f0-3faaafa845024ebbba28",
+          "file": "day-marker-recovery-20261011.spec.ts",
+          "line": 27,
+          "column": 3
+        },
+        {
+          "title": "수정안에서 보던 날짜가 없어지면 첫 유효 날짜로 복귀 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7427,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:49:34.511Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "10c93b0697627788c2f0-c7e0cff1a4a239992839",
+          "file": "day-marker-recovery-20261011.spec.ts",
+          "line": 53,
+          "column": 3
+        },
+        {
+          "title": "탭 너비 변경·숨김 복원·화면 크기 변경 시 재측정 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7477,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:49:41.969Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "10c93b0697627788c2f0-1e97063e407c68832108",
+          "file": "day-marker-recovery-20261011.spec.ts",
+          "line": 63,
+          "column": 3
+        },
+        {
+          "title": "중간 스와이프 취소·확정·빠른 연속 전환·움직임 줄이기 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11030,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:49:49.474Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "10c93b0697627788c2f0-93851623e60c25bcc8ed",
+          "file": "day-marker-recovery-20261011.spec.ts",
+          "line": 74,
+          "column": 3
+        },
+        {
+          "title": "문제 항목 배치 비교 촬영·좁은 카드 줄바꿈 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3457,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:50:00.556Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "10c93b0697627788c2f0-4c86e43bc0276d1be714",
+          "file": "day-marker-recovery-20261011.spec.ts",
+          "line": 94,
+          "column": 3
+        },
+        {
+          "title": "수정안 왕복·직접 수정 복귀 시 선택 배경 전체 정렬 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10842,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:50:04.035Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "10c93b0697627788c2f0-a80c340009cdfc88a46a",
+          "file": "day-marker-recovery-20261011.spec.ts",
+          "line": 27,
+          "column": 3
+        },
+        {
+          "title": "수정안에서 보던 날짜가 없어지면 첫 유효 날짜로 복귀 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7527,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:50:14.898Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "10c93b0697627788c2f0-92e0a9484845083d625e",
+          "file": "day-marker-recovery-20261011.spec.ts",
+          "line": 53,
+          "column": 3
+        },
+        {
+          "title": "탭 너비 변경·숨김 복원·화면 크기 변경 시 재측정 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7895,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:50:22.449Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "10c93b0697627788c2f0-76482fa2f65ba8cbd35d",
+          "file": "day-marker-recovery-20261011.spec.ts",
+          "line": 63,
+          "column": 3
+        },
+        {
+          "title": "중간 스와이프 취소·확정·빠른 연속 전환·움직임 줄이기 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12221,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:50:30.366Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "10c93b0697627788c2f0-6b2785fd834ffd43d7c9",
+          "file": "day-marker-recovery-20261011.spec.ts",
+          "line": 74,
+          "column": 3
+        },
+        {
+          "title": "문제 항목 배치 비교 촬영·좁은 카드 줄바꿈 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5609,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:50:42.610Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "10c93b0697627788c2f0-0cdbba31e4c17a7ea120",
+          "file": "day-marker-recovery-20261011.spec.ts",
+          "line": 94,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "registered-trip-parity-20261011.spec.ts",
+      "file": "registered-trip-parity-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px 일반: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12118,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:50:48.294Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b6ad8369a2b900cff97d-2dc44743bc36fddc6cbc",
+          "file": "registered-trip-parity-20261011.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "375px 동작 줄임: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7421,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:51:00.438Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b6ad8369a2b900cff97d-4416b1943bf6da1cf101",
+          "file": "registered-trip-parity-20261011.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "1280px 일반: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10664,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:51:07.893Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b6ad8369a2b900cff97d-21a663bd6ffd1c7d5864",
+          "file": "registered-trip-parity-20261011.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "1280px 동작 줄임: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6834,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:51:18.583Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b6ad8369a2b900cff97d-751230de5fafe10773a7",
+          "file": "registered-trip-parity-20261011.spec.ts",
+          "line": 9,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "route-lines.spec.ts",
+      "file": "route-lines.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "선이 있는 여행: 길을 아는 구간은 실선, 직선으로 이은 구간은 점선·옅은 색으로 그리고, 출처와 점선·버스의 뜻을 목록 끝 출처 줄에 적는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3010,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:51:25.474Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2f11db114e02812342e5-49eb73ee1408cbb67cea",
+          "file": "route-lines.spec.ts",
+          "line": 31,
+          "column": 1
+        },
+        {
+          "title": "서버에 이 경로가 아직 없으면(404) 선도 출처 문구도 오류 문구도 없이 핀만 보인다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2369,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:51:28.515Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2f11db114e02812342e5-753532f16b0e2d40b5d3",
+          "file": "route-lines.spec.ts",
+          "line": 58,
+          "column": 1
+        },
+        {
+          "title": "선을 읽다 실패하면(500) 읽지 못했다고 말하고 핀은 그대로 보인다 — 선이 없다는 말이 아니다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4236,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:51:30.912Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2f11db114e02812342e5-964675b62c04a36062c9",
+          "file": "route-lines.spec.ts",
+          "line": 67,
+          "column": 1
+        },
+        {
+          "title": "서버가 선을 늦게 줘도(길 자료를 올리는 중) 핀이 먼저 보이고, 선은 오면 그려진다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5262,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:51:35.177Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2f11db114e02812342e5-3da024547410114b9d5f",
+          "file": "route-lines.spec.ts",
+          "line": 75,
+          "column": 1
+        },
+        {
+          "title": "다른 날로 바꾸면 그 날 장소 사이의 선만 남는다(둘째 날에는 선이 없다)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3627,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:51:40.485Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2f11db114e02812342e5-dad79fb2f05539a7ac1f",
+          "file": "route-lines.spec.ts",
+          "line": 83,
+          "column": 1
+        },
+        {
+          "title": "확대하면 상세 경로선을 따로 한 번 받아 그린다: 축소 상태는 짧은 선, 확대 수준 15 이상에서 상세 선으로 바뀌고, 다시 줄여도 상세 선이 남는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13482,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:51:44.141Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2f11db114e02812342e5-4417a0951b98cb556028",
+          "file": "route-lines.spec.ts",
+          "line": 92,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "shared-trip-ui-20261011.spec.ts",
+      "file": "shared-trip-ui-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "등록 여행은 검증 날짜·테두리·스크롤 규칙을 공유한다 375px",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 20935,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('tablist', { name: '일차 고르기', includeHidden: true })\nExpected: \u001b[32m\"\"\u001b[39m\nReceived: serializes to the same string\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByRole('tablist', { name: '일차 고르기', includeHidden: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('tablist', { name: '일차 고르기', includeHidden: true })\u001b[22m\n\u001b[2m    4 × locator resolved to <div inert=\"\" role=\"tablist\" data-quiet=\"true\" aria-hidden=\"true\" aria-label=\"일차 고르기\" class=\"plan-check_dayStrip__Bct4R\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"true\"\u001b[22m\n\u001b[2m    23 × locator resolved to <div role=\"tablist\" aria-label=\"일차 고르기\" class=\"plan-check_dayStrip__Bct4R\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"null\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('tablist', { name: '일차 고르기', includeHidden: true })\nExpected: \u001b[32m\"\"\u001b[39m\nReceived: serializes to the same string\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByRole('tablist', { name: '일차 고르기', includeHidden: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('tablist', { name: '일차 고르기', includeHidden: true })\u001b[22m\n\u001b[2m    4 × locator resolved to <div inert=\"\" role=\"tablist\" data-quiet=\"true\" aria-hidden=\"true\" aria-label=\"일차 고르기\" class=\"plan-check_dayStrip__Bct4R\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"true\"\u001b[22m\n\u001b[2m    23 × locator resolved to <div role=\"tablist\" aria-label=\"일차 고르기\" class=\"plan-check_dayStrip__Bct4R\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"null\"\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts:28:25",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts",
+                      "column": 25,
+                      "line": 28
+                    },
+                    "snippet": "  26 |     await paneTab(page, \"채팅\").click(); await paneTab(page, \"일정\").click(); await aligned(page);\n  27 |     await body.evaluate(el => { el.scrollTop = 100; });\n> 28 |     await expect(strip).toHaveAttribute(\"data-quiet\", \"\");\n     |                         ^\n  29 |     await body.evaluate(el => { el.scrollTop = 0; });\n  30 |     await expect(strip).not.toHaveAttribute(\"data-quiet\");\n  31 |     await dayTab(page, /^1일차/).click(); await aligned(page);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts",
+                        "column": 25,
+                        "line": 28
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('tablist', { name: '일차 고르기', includeHidden: true })\nExpected: \u001b[32m\"\"\u001b[39m\nReceived: serializes to the same string\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByRole('tablist', { name: '일차 고르기', includeHidden: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('tablist', { name: '일차 고르기', includeHidden: true })\u001b[22m\n\u001b[2m    4 × locator resolved to <div inert=\"\" role=\"tablist\" data-quiet=\"true\" aria-hidden=\"true\" aria-label=\"일차 고르기\" class=\"plan-check_dayStrip__Bct4R\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"true\"\u001b[22m\n\u001b[2m    23 × locator resolved to <div role=\"tablist\" aria-label=\"일차 고르기\" class=\"plan-check_dayStrip__Bct4R\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"null\"\u001b[22m\n\n\n  26 |     await paneTab(page, \"채팅\").click(); await paneTab(page, \"일정\").click(); await aligned(page);\n  27 |     await body.evaluate(el => { el.scrollTop = 100; });\n> 28 |     await expect(strip).toHaveAttribute(\"data-quiet\", \"\");\n     |                         ^\n  29 |     await body.evaluate(el => { el.scrollTop = 0; });\n  30 |     await expect(strip).not.toHaveAttribute(\"data-quiet\");\n  31 |     await dayTab(page, /^1일차/).click(); await aligned(page);\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts:28:25"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:51:57.675Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-registered-shared\\shared-trip-ui-20261011-등록-여행은-검증-날짜·테두리·스크롤-규칙을-공유한다-375px\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-registered-shared\\shared-trip-ui-20261011-등록-여행은-검증-날짜·테두리·스크롤-규칙을-공유한다-375px\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-registered-shared\\shared-trip-ui-20261011-등록-여행은-검증-날짜·테두리·스크롤-규칙을-공유한다-375px\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts",
+                    "column": 25,
+                    "line": 28
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "022e628a0134f1bffc90-11b7d360ba7b164b7e47",
+          "file": "shared-trip-ui-20261011.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "수정안 전환은 휠 꼬리를 막고 새 스크롤과 일정 추가를 허용한다 375px",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 33083,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts:44:133",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts",
+                      "column": 133,
+                      "line": 44
+                    },
+                    "snippet": "  42 |     await expect.poll(() => body.evaluate(el => el.scrollTop)).toBeLessThan(2);\n  43 |     // 전환 직후 같은 휠 동작은 새 페이지를 내리지 않는다. 취소 가능한 DOM 입력도 확인한다.\n> 44 |     expect(await body.evaluate(el => !el.dispatchEvent(new WheelEvent(\"wheel\", { deltaY: 600, bubbles: true, cancelable: true })))).toBe(true);\n     |                                                                                                                                     ^\n  45 |     await expect.poll(() => body.evaluate(el => el.scrollTop)).toBeLessThan(2);\n  46 |     await page.waitForTimeout(450);\n  47 |     await body.hover({ position: { x: 40, y: 150 } }); await page.mouse.wheel(0, 160);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts",
+                        "column": 133,
+                        "line": 44
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  42 |     await expect.poll(() => body.evaluate(el => el.scrollTop)).toBeLessThan(2);\n  43 |     // 전환 직후 같은 휠 동작은 새 페이지를 내리지 않는다. 취소 가능한 DOM 입력도 확인한다.\n> 44 |     expect(await body.evaluate(el => !el.dispatchEvent(new WheelEvent(\"wheel\", { deltaY: 600, bubbles: true, cancelable: true })))).toBe(true);\n     |                                                                                                                                     ^\n  45 |     await expect.poll(() => body.evaluate(el => el.scrollTop)).toBeLessThan(2);\n  46 |     await page.waitForTimeout(450);\n  47 |     await body.hover({ position: { x: 40, y: 150 } }); await page.mouse.wheel(0, 160);\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts:44:133"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:53:28.572Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-registered-shared\\shared-trip-ui-20261011-수정-3a45d-막고-새-스크롤과-일정-추가를-허용한다-375px\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-registered-shared\\shared-trip-ui-20261011-수정-3a45d-막고-새-스크롤과-일정-추가를-허용한다-375px\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-registered-shared\\shared-trip-ui-20261011-수정-3a45d-막고-새-스크롤과-일정-추가를-허용한다-375px\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts",
+                    "column": 133,
+                    "line": 44
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "022e628a0134f1bffc90-566e13ef4e10ef848e08",
+          "file": "shared-trip-ui-20261011.spec.ts",
+          "line": 35,
+          "column": 3
+        },
+        {
+          "title": "채팅은 이전 대화를 유지하고 최신 이동·새 답변·직접 전송을 지원한다 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3927,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:55:05.369Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "022e628a0134f1bffc90-e0c074f816ef5edc335b",
+          "file": "shared-trip-ui-20261011.spec.ts",
+          "line": 61,
+          "column": 3
+        },
+        {
+          "title": "등록 여행은 검증 날짜·테두리·스크롤 규칙을 공유한다 1280px",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 26929,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('tablist', { name: '일차 고르기', includeHidden: true })\nExpected: \u001b[32m\"\"\u001b[39m\nReceived: serializes to the same string\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByRole('tablist', { name: '일차 고르기', includeHidden: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('tablist', { name: '일차 고르기', includeHidden: true })\u001b[22m\n\u001b[2m    5 × locator resolved to <div inert=\"\" role=\"tablist\" data-quiet=\"true\" aria-hidden=\"true\" aria-label=\"일차 고르기\" class=\"plan-check_dayStrip__Bct4R\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"true\"\u001b[22m\n\u001b[2m    22 × locator resolved to <div role=\"tablist\" aria-label=\"일차 고르기\" class=\"plan-check_dayStrip__Bct4R\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"null\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('tablist', { name: '일차 고르기', includeHidden: true })\nExpected: \u001b[32m\"\"\u001b[39m\nReceived: serializes to the same string\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByRole('tablist', { name: '일차 고르기', includeHidden: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('tablist', { name: '일차 고르기', includeHidden: true })\u001b[22m\n\u001b[2m    5 × locator resolved to <div inert=\"\" role=\"tablist\" data-quiet=\"true\" aria-hidden=\"true\" aria-label=\"일차 고르기\" class=\"plan-check_dayStrip__Bct4R\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"true\"\u001b[22m\n\u001b[2m    22 × locator resolved to <div role=\"tablist\" aria-label=\"일차 고르기\" class=\"plan-check_dayStrip__Bct4R\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"null\"\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts:28:25",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts",
+                      "column": 25,
+                      "line": 28
+                    },
+                    "snippet": "  26 |     await paneTab(page, \"채팅\").click(); await paneTab(page, \"일정\").click(); await aligned(page);\n  27 |     await body.evaluate(el => { el.scrollTop = 100; });\n> 28 |     await expect(strip).toHaveAttribute(\"data-quiet\", \"\");\n     |                         ^\n  29 |     await body.evaluate(el => { el.scrollTop = 0; });\n  30 |     await expect(strip).not.toHaveAttribute(\"data-quiet\");\n  31 |     await dayTab(page, /^1일차/).click(); await aligned(page);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts",
+                        "column": 25,
+                        "line": 28
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('tablist', { name: '일차 고르기', includeHidden: true })\nExpected: \u001b[32m\"\"\u001b[39m\nReceived: serializes to the same string\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByRole('tablist', { name: '일차 고르기', includeHidden: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('tablist', { name: '일차 고르기', includeHidden: true })\u001b[22m\n\u001b[2m    5 × locator resolved to <div inert=\"\" role=\"tablist\" data-quiet=\"true\" aria-hidden=\"true\" aria-label=\"일차 고르기\" class=\"plan-check_dayStrip__Bct4R\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"true\"\u001b[22m\n\u001b[2m    22 × locator resolved to <div role=\"tablist\" aria-label=\"일차 고르기\" class=\"plan-check_dayStrip__Bct4R\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"null\"\u001b[22m\n\n\n  26 |     await paneTab(page, \"채팅\").click(); await paneTab(page, \"일정\").click(); await aligned(page);\n  27 |     await body.evaluate(el => { el.scrollTop = 100; });\n> 28 |     await expect(strip).toHaveAttribute(\"data-quiet\", \"\");\n     |                         ^\n  29 |     await body.evaluate(el => { el.scrollTop = 0; });\n  30 |     await expect(strip).not.toHaveAttribute(\"data-quiet\");\n  31 |     await dayTab(page, /^1일차/).click(); await aligned(page);\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts:28:25"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:55:10.731Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-registered-shared\\shared-trip-ui-20261011-등록-여행은-검증-날짜·테두리·스크롤-규칙을-공유한다-1280px\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-registered-shared\\shared-trip-ui-20261011-등록-여행은-검증-날짜·테두리·스크롤-규칙을-공유한다-1280px\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-registered-shared\\shared-trip-ui-20261011-등록-여행은-검증-날짜·테두리·스크롤-규칙을-공유한다-1280px\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts",
+                    "column": 25,
+                    "line": 28
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "022e628a0134f1bffc90-b642cbf703ffadb091c8",
+          "file": "shared-trip-ui-20261011.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "수정안 전환은 휠 꼬리를 막고 새 스크롤과 일정 추가를 허용한다 1280px",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 17676,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts:56:60",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts",
+                      "column": 60,
+                      "line": 56
+                    },
+                    "snippet": "  54 |     await expect(page.getByRole(\"textbox\", { name: \"일정 이름\", exact: true })).toBeVisible();\n  55 |     const writes = (await mockServer(request).log()).filter(row => row.method === \"POST\" && /autofix/.test(row.path));\n> 56 |     expect(writes.some(row => row.body?.dry_run === true)).toBe(true);\n     |                                                            ^\n  57 |     expect(writes.some(row => row.body?.dry_run !== true)).toBe(true);\n  58 |     await page.getByRole(\"button\", { name: \"취소\", exact: true }).click();\n  59 |     await expect(body.locator('[data-insert-near] button[id^=\"plan-insert-\"]')).toBeVisible();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts",
+                        "column": 60,
+                        "line": 56
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  54 |     await expect(page.getByRole(\"textbox\", { name: \"일정 이름\", exact: true })).toBeVisible();\n  55 |     const writes = (await mockServer(request).log()).filter(row => row.method === \"POST\" && /autofix/.test(row.path));\n> 56 |     expect(writes.some(row => row.body?.dry_run === true)).toBe(true);\n     |                                                            ^\n  57 |     expect(writes.some(row => row.body?.dry_run !== true)).toBe(true);\n  58 |     await page.getByRole(\"button\", { name: \"취소\", exact: true }).click();\n  59 |     await expect(body.locator('[data-insert-near] button[id^=\"plan-insert-\"]')).toBeVisible();\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts:56:60"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:56:22.773Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-registered-shared\\shared-trip-ui-20261011-수정-95028-고-새-스크롤과-일정-추가를-허용한다-1280px\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-registered-shared\\shared-trip-ui-20261011-수정-95028-고-새-스크롤과-일정-추가를-허용한다-1280px\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-registered-shared\\shared-trip-ui-20261011-수정-95028-고-새-스크롤과-일정-추가를-허용한다-1280px\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\shared-trip-ui-20261011.spec.ts",
+                    "column": 60,
+                    "line": 56
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "022e628a0134f1bffc90-1a4beed5ce306827781e",
+          "file": "shared-trip-ui-20261011.spec.ts",
+          "line": 35,
+          "column": 3
+        },
+        {
+          "title": "채팅은 이전 대화를 유지하고 최신 이동·새 답변·직접 전송을 지원한다 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3804,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:57:42.352Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "022e628a0134f1bffc90-a4c76f8b1264cb9ea1bc",
+          "file": "shared-trip-ui-20261011.spec.ts",
+          "line": 61,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "trip-layout.spec.ts",
+      "file": "trip-layout.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px와 320px에서 지도 위 시트의 「일정 | 채팅」으로 칸을 바꾸고 가로로 넘치지 않으며, 빈 메시지는 막는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8898,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:57:47.192Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "85eefaef82c0b8b495fb-58b7b3a5514eb3ef1ab3",
+          "file": "trip-layout.spec.ts",
+          "line": 8,
+          "column": 1
+        },
+        {
+          "title": "채팅 버튼은 막대만 펼치고(입력칸에 초점 없음), 입력칸에 초점이 가면 채팅 칸으로 넘어간다 — 일정 칸으로 돌아오면 쓰던 글은 막대에 남는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7792,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:57:56.115Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "85eefaef82c0b8b495fb-5800f4b6d059ca53733d",
+          "file": "trip-layout.spec.ts",
+          "line": 27,
+          "column": 1
+        },
+        {
+          "title": "일차·일정·지도 선택이 이어진다: 지도 보기는 안내 토스트 없이 핀을 선택하고, 핀을 누르면 그 일정이 목록에서 펼쳐진다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10107,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:58:03.931Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "85eefaef82c0b8b495fb-dd47ccffb42c995cabc9",
+          "file": "trip-layout.spec.ts",
+          "line": 47,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "trip-marker-no-toast-20261011.spec.ts",
+      "file": "trip-marker-no-toast-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px 마커 클릭·해제와 목록의 지도 보기는 안내 토스트를 띄우지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6468,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:58:14.107Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1bd4f0eaf53a39a4d6d2-7903e473e0cfa4a037b3",
+          "file": "trip-marker-no-toast-20261011.spec.ts",
+          "line": 10,
+          "column": 3
+        },
+        {
+          "title": "1280px 마커 클릭·해제와 목록의 지도 보기는 안내 토스트를 띄우지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7097,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:58:20.608Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1bd4f0eaf53a39a4d6d2-3e1827dd377e5f14febc",
+          "file": "trip-marker-no-toast-20261011.spec.ts",
+          "line": 10,
+          "column": 3
+        },
+        {
+          "title": "실제 선택 요청 알림은 마커를 선택·해제해도 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6542,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T14:58:27.726Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1bd4f0eaf53a39a4d6d2-b965ba81c4b928378799",
+          "file": "trip-marker-no-toast-20261011.spec.ts",
+          "line": 36,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T14:47:10.336Z",
+    "duration": 699657.722,
+    "expected": 28,
+    "skipped": 0,
+    "unexpected": 4,
+    "flaky": 0
+  }
+}

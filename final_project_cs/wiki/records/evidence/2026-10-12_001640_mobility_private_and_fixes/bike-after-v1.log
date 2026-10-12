@@ -1,0 +1,150 @@
+..........................................FF....F.FF                     [100%]
+================================== FAILURES ===================================
+_____________________________ test_bike_lfd_rule ______________________________
+
+    def test_bike_lfd_rule():
+        """출발 = 목표 − (eta + @). 13:30 도착 · eta 30 · @ 10 → 12:50 출발 · 13:20 도착 · 그 출발에서 다시 판정."""
+        rt, v, calls = _fake()
+        P = Planner(rt, modes=["bike"])
+>       got, why = P.leg(A, B, _dt("13:30"), {}, True, "a_to_b")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_plan_bike_v1.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\instances\mobility\engine\plan.py:1715: in leg
+    mixed_estimate = O.mixed_fare_estimate(self.v, o['_legs'], o['_lr'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:572: in mixed_fare_estimate
+    F = _fare(v)
+        ^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+v = <tests.unit.travel.mobility.test_plan_bike_v1._fake.<locals>.V object at 0x000001623F0EFCE0>
+
+    def _fare(v):
+>       return v.R["fare"]
+               ^^^^^^^^^^^
+E       KeyError: 'fare'
+
+app\domains\travel_ops\instances\mobility\engine\options.py:115: KeyError
+__________________________ test_bike_after_prev_end ___________________________
+
+    def test_bike_after_prev_end():
+        """앞 일정이 12:55 에 끝나면 12:50 출발 자전거는 자격이 없다 → 12:55 재판정 → 늦음(5분) → 구간 못 만듦."""
+        rt, _v, _ = _fake()
+        P = Planner(rt, modes=["bike"])
+        got, why = P.leg(A, B, _dt("13:30"), {}, True, "a_to_b", not_before_dt=_dt("12:55"))
+        assert got is None and why["code"] == "arrive_late", why
+>       got, why = P.leg(A, B, _dt("13:30"), {}, True, "a_to_b", not_before_dt=_dt("12:50"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_plan_bike_v1.py:123: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\instances\mobility\engine\plan.py:1715: in leg
+    mixed_estimate = O.mixed_fare_estimate(self.v, o['_legs'], o['_lr'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:572: in mixed_fare_estimate
+    F = _fare(v)
+        ^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+v = <tests.unit.travel.mobility.test_plan_bike_v1._fake.<locals>.V object at 0x000001623F1716A0>
+
+    def _fare(v):
+>       return v.R["fare"]
+               ^^^^^^^^^^^
+E       KeyError: 'fare'
+
+app\domains\travel_ops\instances\mobility\engine\options.py:115: KeyError
+_______________________ test_bike_eta_changes_recompute _______________________
+
+    def test_bike_eta_changes_recompute():
+        """GPT 58 #3 — 재판정 소요가 첫 판정과 다르면 새 값으로 한 번 더 · 같아질 때만 싣는다(그때 slack 0 = 마지막 성립 출발).
+        줄어듦 40→30: 13:10 이 아니라 13:20 · 늘어남 30→40: 13:20 불성립에서 버리지 않고 13:10 · 계속 바뀜: 뺀다."""
+        for seq, want in (([40, 30, 30], 810 - 40), ([30, 40, 40], 810 - 50)):
+            rt, _v, calls = _fake(seq=seq)
+>           got, why = Planner(rt, modes=["bike"]).leg(A, B, _dt("13:30"), {}, True, "a_to_b")
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_plan_bike_v1.py:173: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\instances\mobility\engine\plan.py:1715: in leg
+    mixed_estimate = O.mixed_fare_estimate(self.v, o['_legs'], o['_lr'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:572: in mixed_fare_estimate
+    F = _fare(v)
+        ^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+v = <tests.unit.travel.mobility.test_plan_bike_v1._fake.<locals>.V object at 0x000001623F170A40>
+
+    def _fare(v):
+>       return v.R["fare"]
+               ^^^^^^^^^^^
+E       KeyError: 'fare'
+
+app\domains\travel_ops\instances\mobility\engine\options.py:115: KeyError
+____________________ test_bike_service_day_boundary_exact _____________________
+
+    def test_bike_service_day_boundary_exact():
+        """GPT 58 #4 — 04:00 출발(240)은 보고 03:59(239)는 안 본다(운행일 축 제한 · 운행 불가가 아님을 이유에 적는다)."""
+        rt, _v, _ = _fake()
+>       got, why = Planner(rt, modes=["bike"]).leg(A, B, _dt("04:40"), {}, True, "a_to_b")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_plan_bike_v1.py:196: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\instances\mobility\engine\plan.py:1715: in leg
+    mixed_estimate = O.mixed_fare_estimate(self.v, o['_legs'], o['_lr'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:572: in mixed_fare_estimate
+    F = _fare(v)
+        ^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+v = <tests.unit.travel.mobility.test_plan_bike_v1._fake.<locals>.V object at 0x000001623F173B90>
+
+    def _fare(v):
+>       return v.R["fare"]
+               ^^^^^^^^^^^
+E       KeyError: 'fare'
+
+app\domains\travel_ops\instances\mobility\engine\options.py:115: KeyError
+__________________ test_bike_stage_buffer_and_prev_end_exact __________________
+
+    def test_bike_stage_buffer_and_prev_end_exact():
+        """GPT 58 #8 — 진행 중 버퍼 15: 13:30 − (30+15) = 12:45 출발 · 앞 일정이 정확히 12:45 에 끝나면 싣는다(경계 포함)
+        · 출발 전·진행 중은 「출발 때 확인」 문구를 안 붙인다(실시간을 본다)."""
+        rt, _v, _ = _fake(buf=15)
+>       got, why = Planner(rt, modes=["bike"], stage="in_progress").leg(A, B, _dt("13:30"), {}, True, "a_to_b",
+                                                                         not_before_dt=_dt("12:45"))
+
+tests\unit\travel\mobility\test_plan_bike_v1.py:206: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\instances\mobility\engine\plan.py:1715: in leg
+    mixed_estimate = O.mixed_fare_estimate(self.v, o['_legs'], o['_lr'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:572: in mixed_fare_estimate
+    F = _fare(v)
+        ^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+v = <tests.unit.travel.mobility.test_plan_bike_v1._fake.<locals>.V object at 0x000001623F172390>
+
+    def _fare(v):
+>       return v.R["fare"]
+               ^^^^^^^^^^^
+E       KeyError: 'fare'
+
+app\domains\travel_ops\instances\mobility\engine\options.py:115: KeyError
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_plan_bike_v1.py::test_bike_lfd_rule - ...
+FAILED tests/unit/travel/mobility/test_plan_bike_v1.py::test_bike_after_prev_end
+FAILED tests/unit/travel/mobility/test_plan_bike_v1.py::test_bike_eta_changes_recompute
+FAILED tests/unit/travel/mobility/test_plan_bike_v1.py::test_bike_service_day_boundary_exact
+FAILED tests/unit/travel/mobility/test_plan_bike_v1.py::test_bike_stage_buffer_and_prev_end_exact
+5 failed, 47 passed, 3 deselected in 90.88s (0:01:30)
+Exception ignored in: <function Console.__del__ at 0x000001622F8CD800>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

@@ -1,0 +1,159 @@
+{
+  "created_at": "2026-10-09T12:41:18.189565+09:00",
+  "request_attempts": 2,
+  "actual_responses": 1,
+  "source": "서울특별시 OA-12764",
+  "response_rows": 18,
+  "response_total": 18,
+  "letter_train_numbers": [
+    {
+      "train_number": "A3013",
+      "direction": "상행",
+      "terminal_station_id": "1065006507",
+      "terminal_station": "검암",
+      "arrival_code": "2",
+      "eta_seconds": 0,
+      "received_age_seconds": 83,
+      "train_status": "일반"
+    },
+    {
+      "train_number": "A1019",
+      "direction": "상행",
+      "terminal_station_id": "1065006511",
+      "terminal_station": "인천공항2터미널",
+      "arrival_code": "2",
+      "eta_seconds": 0,
+      "received_age_seconds": 1218,
+      "train_status": "급행"
+    },
+    {
+      "train_number": "A2106",
+      "direction": "하행",
+      "terminal_station_id": "1065006501",
+      "terminal_station": "서울",
+      "arrival_code": "2",
+      "eta_seconds": 0,
+      "received_age_seconds": 130,
+      "train_status": "일반"
+    },
+    {
+      "train_number": "A1020",
+      "direction": "하행",
+      "terminal_station_id": "1065006501",
+      "terminal_station": "서울",
+      "arrival_code": "2",
+      "eta_seconds": 0,
+      "received_age_seconds": 890,
+      "train_status": "급행"
+    },
+    {
+      "train_number": "A3014",
+      "direction": "하행",
+      "terminal_station_id": "1065006501",
+      "terminal_station": "서울",
+      "arrival_code": "2",
+      "eta_seconds": 0,
+      "received_age_seconds": 130,
+      "train_status": "일반"
+    },
+    {
+      "train_number": "A1022",
+      "direction": "하행",
+      "terminal_station_id": "1065006501",
+      "terminal_station": "서울",
+      "arrival_code": "99",
+      "eta_seconds": 0,
+      "received_age_seconds": 890,
+      "train_status": "급행"
+    }
+  ],
+  "number_format_acceptance": {
+    "before": 0,
+    "after": 6,
+    "denominator": 6
+  },
+  "native_services": 12,
+  "native_selection_status": "no_boardable_prediction",
+  "actual_live_boarding_connection_confirmed": false,
+  "all_letter_rows_zero_eta": true,
+  "selection_exclusions": [
+    {
+      "train_number": "A3013",
+      "reason": "service_path_mismatch"
+    },
+    {
+      "train_number": "A1019",
+      "reason": "service_path_mismatch"
+    },
+    {
+      "train_number": "6098",
+      "reason": "boarding_identity_mismatch"
+    },
+    {
+      "train_number": "5558",
+      "reason": "boarding_identity_mismatch"
+    },
+    {
+      "train_number": "5054",
+      "reason": "boarding_identity_mismatch"
+    },
+    {
+      "train_number": "6100",
+      "reason": "boarding_identity_mismatch"
+    },
+    {
+      "train_number": "5070",
+      "reason": "boarding_identity_mismatch"
+    },
+    {
+      "train_number": "5056",
+      "reason": "boarding_identity_mismatch"
+    },
+    {
+      "train_number": "A2106",
+      "reason": "service_path_mismatch"
+    },
+    {
+      "train_number": "A1020",
+      "reason": "service_path_mismatch"
+    },
+    {
+      "train_number": "6097",
+      "reason": "boarding_identity_mismatch"
+    },
+    {
+      "train_number": "5067",
+      "reason": "boarding_identity_mismatch"
+    },
+    {
+      "train_number": "5059",
+      "reason": "boarding_identity_mismatch"
+    },
+    {
+      "train_number": "A3014",
+      "reason": "service_path_mismatch"
+    },
+    {
+      "train_number": "5573",
+      "reason": "boarding_identity_mismatch"
+    },
+    {
+      "train_number": "6099",
+      "reason": "boarding_identity_mismatch"
+    },
+    {
+      "train_number": "A1022",
+      "reason": "service_path_mismatch"
+    },
+    {
+      "train_number": "5061",
+      "reason": "boarding_identity_mismatch"
+    }
+  ],
+  "actual_eta_accuracy_samples": 0,
+  "actual_boardings": 0,
+  "new_map_web_samples": 0,
+  "map_developer_api_calls": 0,
+  "correction_to_collector_claim": "최초 live-source-v1.json의 고정 claim 문장은 실응답1개라고 쓰지만 실제0응답입니다. 계수·실패 기록을 우선하며 성공은retry-v2의1응답뿐입니다.",
+  "limit": "형식 수용6/6은 선택 성공률이 아닙니다. 전6행이service_path_mismatch이고ETA0입니다. 제공 종착·방향 대응과 별도의 신선한 탑승 가능 응답 검증이 필요합니다."
+}

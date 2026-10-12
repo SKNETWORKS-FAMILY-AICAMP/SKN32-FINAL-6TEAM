@@ -1,0 +1,226 @@
+{
+  "before": "final_project_cs\\tests\\unit\\travel\\mobility\\_backup\\2026-10-08_방향시간탐색_골든\\plan_example_out_all_v1.json",
+  "after": "final_project_cs\\tests\\unit\\travel\\mobility\\plan_example_out_all_v1.json",
+  "changes_n": 42,
+  "changed_sections": {
+    "left_out": 42
+  },
+  "customer_items_identical": true,
+  "customer_routes_identical": true,
+  "changes": [
+    {
+      "path": "/left_out/dinner_to_lotte_mart/2/code",
+      "before": "mix_cap",
+      "after": "mix_skipped"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/2/label",
+      "before": "그 밖 혼합 후보 369개",
+      "after": "그 밖 혼합 후보 3개"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/2/reason",
+      "before": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)",
+      "after": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/3/code",
+      "before": "before_prev_end",
+      "after": "mix_cap"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/3/label",
+      "before": "버스 402 서울역버스환승센터→숭례문.서울역4번출구",
+      "after": "그 밖 혼합 후보 372개"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/3/reason",
+      "before": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 18:56 출발은 성립 확인(역산) · 환승 0회 · 소요 20분",
+      "after": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/4/label",
+      "before": "버스 7011 서울역버스환승센터→숭례문.서울역4번출구",
+      "after": "버스 402 서울역버스환승센터→숭례문.서울역4번출구"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/4/reason",
+      "before": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 17:59 출발은 성립 확인(역산) · 환승 0회 · 소요 57분",
+      "after": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 18:56 출발은 성립 확인(역산) · 환승 0회 · 소요 20분"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/5/label",
+      "before": "버스 750B 서울역버스환승센터→숙대입구.서울시교육청역 → 4호선 숙대입구→서울역",
+      "after": "버스 7011 서울역버스환승센터→숭례문.서울역4번출구"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/5/reason",
+      "before": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 18:58 출발은 성립 확인(역산) · 환승 1회 · 소요 17분",
+      "after": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 17:59 출발은 성립 확인(역산) · 환승 0회 · 소요 57분"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/6/label",
+      "before": "1호선 서울역→시청 → 버스 1711 시청앞.덕수궁→서울역버스환승센터",
+      "after": "버스 750B 서울역버스환승센터→숙대입구.서울시교육청역 → 4호선 숙대입구→서울역"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/6/reason",
+      "before": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 18:51 출발은 성립 확인(역산) · 환승 1회 · 소요 19분",
+      "after": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 18:58 출발은 성립 확인(역산) · 환승 1회 · 소요 17분"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/7/label",
+      "before": "버스 504 서울역버스환승센터→숙대입구.서울시교육청역 → 4호선 숙대입구→서울역",
+      "after": "4호선 서울역→숙대입구 → 버스 262 청파동주민센터.숙대입구역→서울역서부"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/7/reason",
+      "before": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 18:57 출발은 성립 확인(역산) · 환승 1회 · 소요 18분",
+      "after": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 18:54 출발은 성립 확인(역산) · 환승 1회 · 소요 19분"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/8/code",
+      "before": "bus_more",
+      "after": "before_prev_end"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/8/label",
+      "before": "그 밖 버스 직행 51개",
+      "after": "버스 504 서울역버스환승센터→숙대입구.서울시교육청역 → 4호선 숙대입구→서울역"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/8/reason",
+      "before": "도보 긴 쪽 — before_prev_end 44 · no_last_departure 7",
+      "after": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 18:57 출발은 성립 확인(역산) · 환승 1회 · 소요 18분"
+    },
+    {
+      "path": "/left_out/dinner_to_lotte_mart/9",
+      "before": null,
+      "after": {
+        "label": "그 밖 버스 직행 51개",
+        "code": "bus_more",
+        "reason": "도보 긴 쪽 — before_prev_end 44 · no_last_departure 7"
+      }
+    },
+    {
+      "path": "/left_out/gyeongbokgung_to_seongsu/0/reason",
+      "before": "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 52분 vs 37 · 환승 1 vs 1 · 도보 16분 vs 13.1)",
+      "after": "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 53분 vs 37 · 환승 1 vs 1 · 도보 16분 vs 13.1)"
+    },
+    {
+      "path": "/left_out/gyeongbokgung_to_seongsu/1/reason",
+      "before": "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 65분 vs 37 · 환승 1 vs 1 · 도보 15분 vs 13.1)",
+      "after": "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 66분 vs 37 · 환승 1 vs 1 · 도보 15분 vs 13.1)"
+    },
+    {
+      "path": "/left_out/gyeongbokgung_to_seongsu/3/label",
+      "before": "그 밖 혼합 후보 20개",
+      "after": "그 밖 혼합 후보 18개"
+    },
+    {
+      "path": "/left_out/gyeongbokgung_to_seongsu/4/label",
+      "before": "그 밖 혼합 후보 33개",
+      "after": "그 밖 혼합 후보 35개"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/0/code",
+      "before": "mix_dominated",
+      "after": "mix_skipped"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/0/label",
+      "before": "버스 103 명동.롯데영플라자→우리은행종로지점 → 버스 406 우리은행종로지점→덕성여중고",
+      "after": "그 밖 혼합 후보 27개"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/0/reason",
+      "before": "혼합 C — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 40분 vs 28 · 환승 1 vs 0 · 도보 17분 vs 16.4)",
+      "after": "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/1/label",
+      "before": "그 밖 혼합 후보 27개",
+      "after": "그 밖 혼합 후보 1개"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/1/reason",
+      "before": "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)",
+      "after": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/2/code",
+      "before": "mix_skipped",
+      "after": "mix_cap"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/2/label",
+      "before": "그 밖 혼합 후보 1개",
+      "after": "그 밖 혼합 후보 183개"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/2/reason",
+      "before": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)",
+      "after": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/3/code",
+      "before": "mix_cap",
+      "after": "before_prev_end"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/3/label",
+      "before": "그 밖 혼합 후보 183개",
+      "after": "버스 7022 우리은행종로지점→경복궁역3번출구"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/3/reason",
+      "before": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)",
+      "after": "앞 일정이 09:15에 끝나고, 이동 출발 09:18 출발은 재판정에서 불성립 · 09:02 출발은 성립 확인(역산) · 환승 0회 · 소요 40분"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/4/label",
+      "before": "버스 7022 우리은행종로지점→경복궁역3번출구",
+      "after": "버스 152 명동.롯데영플라자→을지로2가.파인에비뉴 → 3호선 을지로3가→경복궁"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/4/reason",
+      "before": "앞 일정이 09:15에 끝나고, 이동 출발 09:18 출발은 재판정에서 불성립 · 09:02 출발은 성립 확인(역산) · 환승 0회 · 소요 40분",
+      "after": "앞 일정이 09:15에 끝나고, 이동 출발 09:18 출발은 재판정에서 불성립 · 09:12 출발은 성립 확인(역산) · 환승 1회 · 소요 34분"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/5/label",
+      "before": "버스 152 명동.롯데영플라자→을지로2가.파인에비뉴 → 3호선 을지로3가→경복궁",
+      "after": "버스 152 롯데백화점→북창동.남대문시장 → 버스 01A 소공동주민센터→영추문"
+    },
+    {
+      "path": "/left_out/hotel_to_gyeongbokgung/5/reason",
+      "before": "앞 일정이 09:15에 끝나고, 이동 출발 09:18 출발은 재판정에서 불성립 · 09:12 출발은 성립 확인(역산) · 환승 1회 · 소요 34분",
+      "after": "앞 일정이 09:15에 끝나고, 이동 출발 09:18 출발은 재판정에서 불성립 · 09:01 출발은 성립 확인(역산) · 환승 1회 · 소요 39분"
+    },
+    {
+      "path": "/left_out/seongsu_to_dinner/1/reason",
+      "before": "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 37분 vs 26 · 환승 1 vs 1 · 도보 5분 vs 4.8)",
+      "after": "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 36분 vs 26 · 환승 1 vs 1 · 도보 5분 vs 4.8)"
+    },
+    {
+      "path": "/left_out/seongsu_to_dinner/2/label",
+      "before": "2호선 성수→시청 → 버스 7016 시청앞.덕수궁→서울역버스환승센터",
+      "after": "2호선 성수→시청 → 버스 7016 시청역8번출구→서울역버스환승센터"
+    },
+    {
+      "path": "/left_out/seongsu_to_dinner/2/reason",
+      "before": "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 37분 vs 26 · 환승 1 vs 1 · 도보 5분 vs 4.8)",
+      "after": "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 38분 vs 26 · 환승 1 vs 1 · 도보 7분 vs 4.8)"
+    },
+    {
+      "path": "/left_out/seongsu_to_dinner/5/label",
+      "before": "그 밖 혼합 후보 6개",
+      "after": "그 밖 혼합 후보 12개"
+    },
+    {
+      "path": "/left_out/seongsu_to_dinner/6/label",
+      "before": "그 밖 혼합 후보 191개",
+      "after": "그 밖 혼합 후보 185개"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "sql_files_at_start": 90,
+  "unchanged_sql_files": 89,
+  "observed_shared_sql_changes": [
+    {
+      "file": "app\\infrastructure\\db\\migrations\\218_dining_michelin.sql",
+      "before": "541d37b82dd4d207f7d9acd08df4c808a4e7a5029b8ed403e18ba74c52fc3bc3",
+      "after": "557fb784bbf38317d06985d7a3277b164d8e2883d1bbc0c3e12e900d0f9b1f99",
+      "note": "shared change observed during task; this task did not write SQL"
+    }
+  ],
+  "sql_files_written_by_this_task": [],
+  "historical_files": [
+    {
+      "file": "002_domain_commerce.sql",
+      "sha256": "2f74dbfd9ce6fbaf847a0aa1eb99f4b35a3a0c057996b4ff119a3858012e0514",
+      "same_as_start": true
+    },
+    {
+      "file": "006_products_catalog.sql",
+      "sha256": "167e4264fda763a8b1c89c9fe70f96579bd9b9897ef7aa6a712419e113f73a04",
+      "same_as_start": true
+    },
+    {
+      "file": "007_returns_order_item.sql",
+      "sha256": "e9957bde0eabfd29ea0218df41ffebc49dbe071a41ea4c8f567c1d841053296b",
+      "same_as_start": true
+    },
+    {
+      "file": "008_products_return_restriction.sql",
+      "sha256": "83eb0fcbc56dd33684c256944df727f4dd55484d3ee9530f999b4e283b46ecad",
+      "same_as_start": true
+    }
+  ],
+  "owned_source_sha256": {
+    "app/infrastructure/db/migrate.py": "6a09c1a3661481a8ad01980cc7b86dc34f8c2556cfbeb87caec7cde5e7a4ecb6",
+    "app/infrastructure/db/migration_sql.py": "d39fb79c0d57c5c9ef9fa22206717ea59a6298d228d5fe242a87d20078f5b76f",
+    "deploy/.gitignore": "0f344d8d93522873ca448346a62f1a2910a1209027478c6056fc0239222f5ebb",
+    "deploy/Dockerfile.api": "087bbd49133b069915d4da951352f409fef6672b53a37bbcc4caca5ad97ccdec",
+    "deploy/Dockerfile.migration-safety": "1bebf7daf9f10a10e25c04ad3083ce74fe6c8e80d03281386d8d80f8e45236cd",
+    "deploy/migration_safe_deploy.py": "508930e29369a0637e74a69461d0985bedee5daf787ae40fdb75d302d46e2e34",
+    "deploy/auto_deploy.sh": "967a572414bb134cce2973e3c843d0094933987e57f357027723b7b37ae325af",
+    "deploy/server_up.sh": "9d695b60e264ea07bd1fca79a7d7090376c1bd97b735eb93b90012a704ae3453",
+    "requirements.txt": "9d0da52de4c1867bd998a5218500c670ee356b3682303b6a3db5327179b0afb7",
+    "tests/unit/core/test_migration_atomic_sql.py": "fe132187185fcd49d1c922d14a232fad641d8972adbc946a1b0fc7cebe349c8a",
+    "tests/unit/core/test_migration_safe_deploy.py": "f0cfafc60032dcd0ab005663cc2117473de59ec1c41dc3c72cf003b72b3817c5",
+    "tests/integration/db/test_migrations_rerun.py": "ddd601cdf2ad8f62114c472ba4b7d61a49d9024a226f54f4b817fa123c647ac5",
+    "wiki/data/migrations.md": "7b2eff0f11e630d8b83f3113a5da6f115b9e9033333047921667be25082a6979",
+    "wiki/records/reports/2026-10-12_migration-transaction-and-deploy-safety.md": "4c8634efd5740241af1bde6b48eaa3d57acd91db60184c895dbb1b69e448a392"
+  },
+  "protected_reports_modified_by_this_task": [],
+  "note": "Hashes of current shared files; pre-existing changes are preserved, not attributed to this task."
+}

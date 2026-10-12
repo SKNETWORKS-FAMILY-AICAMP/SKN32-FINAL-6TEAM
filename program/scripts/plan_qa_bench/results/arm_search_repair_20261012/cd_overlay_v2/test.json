@@ -1,0 +1,11 @@
+{
+  "first": {
+    "files": 15,
+    "source_guard": true,
+    "knowledge_in_image": true
+  },
+  "idempotent": true,
+  "conflict_rejected": true,
+  "passed": 3,
+  "planned": 3
+}

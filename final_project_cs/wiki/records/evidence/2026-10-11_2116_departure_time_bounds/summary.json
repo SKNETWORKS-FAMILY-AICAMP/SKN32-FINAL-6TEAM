@@ -1,0 +1,20 @@
+{
+  "same_development_cases": 33,
+  "before_passed": 18,
+  "before_failed": 15,
+  "before_overflow_failures": 7,
+  "after_same_cases_passed": 33,
+  "additional_boundaries_passed": 10,
+  "new_test_total": 43,
+  "related_passed": 160,
+  "related_total": 160,
+  "skipped": 0,
+  "data_api_calls": 0,
+  "claude_cli_reviews": 1,
+  "actual_boarding_payment_samples": 0,
+  "deployment": false,
+  "strict_feature_completion": {
+    "passed": 0,
+    "total": 21
+  }
+}

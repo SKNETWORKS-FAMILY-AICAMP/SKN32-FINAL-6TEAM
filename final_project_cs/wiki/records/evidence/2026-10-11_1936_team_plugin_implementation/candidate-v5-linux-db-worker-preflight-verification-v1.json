@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-10-11T23:15:41.628512+09:00",
+  "candidate": "legacy/deployment_candidates/2026-10-11_222547_plugin_v5",
+  "runtime_files_unchanged": 50,
+  "baseline_files_unchanged": 404,
+  "controller_db_passed": 10,
+  "web_http_db_passed": 3,
+  "generic_dependency_http_db_passed": 1,
+  "unique_passed": 14,
+  "unique_total": 14,
+  "first_web_failures": {
+    "count": 2,
+    "cause": "Public tokenizer vocabulary absent in offline image; network blocked",
+    "retested_passed": 2
+  },
+  "postgres_version": "17.11",
+  "python_version": "3.12.15",
+  "baseline_sql_applied": 85,
+  "runs": [
+    {
+      "log": "candidate-v5-isolated-linux-db-v3.log",
+      "sha256": "c732ad9a267788f30bfdba22d8d3def732b6cfa70878e6f02574f1580d9c63c3",
+      "cleanup": {
+        "operating_database_connected": false,
+        "operating_volumes_connected": false,
+        "operating_environment_forwarded": false,
+        "image_pull": false,
+        "images": [
+          "sha256:1f1c6850f3570dc8694629e2a4cab7c36c7e86097a5e1b8b54a736a25a7ea294",
+          "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"
+        ],
+        "network_internal": true,
+        "database_tmpfs_destinations": [
+          "/tmp",
+          "/var/lib/postgresql/data"
+        ],
+        "database_mounts": [],
+        "pytest_process_exit_code": 1,
+        "remaining_temporary_containers": [],
+        "remaining_temporary_network": false,
+        "cleanup_errors": []
+      }
+    },
+    {
+      "log": "candidate-v5-isolated-linux-db-http-v4.log",
+      "sha256": "ecc6a0cfd9e0fa45cf59a90f0c0f10c97ee9b8f6989640cd2ee2ea1ade91db07",
+      "cleanup": {
+        "operating_database_connected": false,
+        "operating_volumes_connected": false,
+        "operating_environment_forwarded": false,
+        "image_pull": false,
+        "images": [
+          "sha256:1f1c6850f3570dc8694629e2a4cab7c36c7e86097a5e1b8b54a736a25a7ea294",
+          "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"
+        ],
+        "network_internal": true,
+        "database_tmpfs_destinations": [
+          "/tmp",
+          "/var/lib/postgresql/data"
+        ],
+        "database_mounts": [],
+        "pytest_process_exit_code": 0,
+        "remaining_temporary_containers": [],
+        "remaining_temporary_network": false,
+        "cleanup_errors": []
+      }
+    },
+    {
+      "log": "candidate-v5-isolated-linux-db-generic-v6.log",
+      "sha256": "c8a2caf003b654bdc0d9ff576363c90574de4534f7460836d0ea243695c7b8dc",
+      "cleanup": {
+        "operating_database_connected": false,
+        "operating_volumes_connected": false,
+        "operating_environment_forwarded": false,
+        "image_pull": false,
+        "images": [
+          "sha256:1f1c6850f3570dc8694629e2a4cab7c36c7e86097a5e1b8b54a736a25a7ea294",
+          "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"
+        ],
+        "network_internal": true,
+        "database_tmpfs_destinations": [
+          "/tmp",
+          "/var/lib/postgresql/data"
+        ],
+        "database_mounts": [],
+        "pytest_process_exit_code": 0,
+        "remaining_temporary_containers": [],
+        "remaining_temporary_network": false,
+        "cleanup_errors": []
+      }
+    }
+  ],
+  "operating_database_connected": false,
+  "operating_environment_forwarded": false,
+  "operating_volumes_connected": false,
+  "operating_restart": false,
+  "deployment_performed": false,
+  "image_build_performed": false,
+  "new_public_tokenizer_data_only": {
+    "source": "https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken",
+    "sha256": "223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+    "bytes": 1681126,
+    "cache_key": "9b5ad71b2ce5302211f9c61530b329a4922fc6a4",
+    "tiktoken_version": "0.13.0",
+    "installed_source_hash_verified": true,
+    "public_tokenizer_vocabulary": true,
+    "package_install": false,
+    "model_weights": false
+  },
+  "worker_metadata": "deployed-worker-configuration-v1.json",
+  "worker_source_comparison": "deployed-worker-source-comparison-v1.json",
+  "mobility_preflight": "deployed-mobility-data-preflight-v1.json",
+  "web_key_scan": "deployed-web-contract-key-scan-v1.json",
+  "web_browser_e2e_performed": false,
+  "build_deferred_for_independent_v5_findings": true
+}

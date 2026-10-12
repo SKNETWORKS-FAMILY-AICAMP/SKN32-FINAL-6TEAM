@@ -1,0 +1,44 @@
+[
+  {
+    "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus.py",
+    "sha256": "4aece45c72798f0c018f1e664570e474a741f5379cf67b1477834d0f9abddb63",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-11_0920_버스정류장_접근후보/bus.py"
+  },
+  {
+    "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+    "sha256": "0181ab831a5b775d0d0d226c6980fb3d94cbea60826ce3bd065e1fece4e9c9ba",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-11_0920_버스정류장_접근후보/plan.py"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/mobility.md",
+    "sha256": "220a9337bc61801776e4be10ceb742b458df47fef736b60898a0b00347ecf1df",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_0920_버스정류장_접근후보/mobility.md"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_0930_버스접근후보_검증완료/mobility.md",
+    "sha256": "4324a880d9edef6c32c9ff80805b5bd522b8259b90834e4ffebcc5a58517593e"
+  },
+  {
+    "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0920_정류장최소구간_버스후보누락.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-11_0930_버스접근후보_검증완료/2026-10-11_0920_정류장최소구간_버스후보누락.md",
+    "sha256": "e6d6f794e5f18788fe8d9e006f91b98b3c7750a76f388be12ef3ac6e7f5513b5"
+  },
+  {
+    "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0932_재판정시험_도보정렬과_최신출발혼동.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-11_0930_버스접근후보_검증완료/2026-10-11_0932_재판정시험_도보정렬과_최신출발혼동.md",
+    "sha256": "ef2cbeff05aa65eaca714f455bf60cacaf5964b9fbd0cad10f20e270286834a2"
+  },
+  {
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-11_0920_버스정류장_접근후보/plan-before-earliest.py",
+    "sha256": "687ac302fc8f15321bc07f03784320ff3d5b2c8ae0aa5fb89bbb67b453a6390d"
+  },
+  {
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-11_0920_버스정류장_접근후보/test_bus_access_pairs-before-earliest.py",
+    "sha256": "e866bc7f62f513c08eb2e25901bbe2eb33e6db0c26ecf778925edac5c0db47fa"
+  },
+  {
+    "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-11_0932_후보순서_시험가정/test_plan_v1.py",
+    "sha256": "a517aa5818522c55281417cbe19e27ef408a7525d09133f3096c67d9b17eb2ac"
+  }
+]

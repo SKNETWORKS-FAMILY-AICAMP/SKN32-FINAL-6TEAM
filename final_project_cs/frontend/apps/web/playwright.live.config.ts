@@ -13,6 +13,7 @@ const LIVE_PORT = process.env.LIVE_PORT ?? "3102";
 export default defineConfig({
   testDir: "./tests/live",
   testMatch: /.*\.spec\.ts/,
+  testIgnore: ["**/_backup/**"],
   fullyParallel: false,
   workers: 1,
   timeout: 45_000,

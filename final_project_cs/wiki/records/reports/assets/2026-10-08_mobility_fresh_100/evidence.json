@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-08",
+  "reference": "Kakao Map rendered web result cards",
+  "web_window_kst": [
+    "2026-10-08T04:24:54.283+09:00",
+    "2026-10-08T04:40:21.368+09:00"
+  ],
+  "sample": {
+    "new_pairs": 100,
+    "old_pairs": 200,
+    "overlapping_unordered_coordinate_pairs": 0,
+    "short": 30,
+    "mid": 40,
+    "long": 30,
+    "transit_cards": 1449,
+    "walk": 30,
+    "bike": 30
+  },
+  "frozen_rules_sha256": "3bd0059c04e2b5591a27a3f10ef233995301d0937ad3ea1feb5db1434d5f6443",
+  "rate": 0.37,
+  "refit": false,
+  "input_sha256": {
+    "fresh_ours_bus_100_v1.json": "3ff172af5f992d87e5c03fcced01c20f6ae462134d6659e4144bc1cca0aa69aa",
+    "fresh_ours_taxi_100_v1.json": "370e682aa0aa9488158fc3c4e39b7565d8536da2ad57b2e0b9bfdcdf811f062c",
+    "fresh_ours_transit_100_v1.json": "36bf8d1fcfb819ee3ec9a1b11ad03c7c4a423134a47c615ff5e0e906541534bd",
+    "fresh_web_100_v1.json": "e6a084921f95ab9c334c49685db40a23b7be56700505ead261d969999d632fc2"
+  },
+  "design_sha256": "af6fcf5460a71e3fd18cf3cf1eabe6ef03851e56c71e69ff06620dd2fc6dbe74",
+  "transit_arrive_kst": "2026-10-08T10:30:00+09:00",
+  "bus_failure_categories": {
+    "no_selected_mode_candidate": 24,
+    "no_feasible_reviewed_candidate": 21,
+    "station_access_reason": 3
+  },
+  "limits": [
+    "Kakao transit web default mode not matched to our arrival datetime",
+    "early morning car observation only",
+    "same endpoints, not forced same road or boarding path",
+    "no actual taxi payment or measured real travel",
+    "one rail first/last exploratory path only"
+  ],
+  "checks": {
+    "unit_tests_passed": 8,
+    "local_data_calibration_test_passed": 1,
+    "aggregate_reproduction_equal": true,
+    "ruff_scripts_passed": 2
+  },
+  "sources": [
+    "https://map.kakao.com/",
+    "https://sftc.seoul.go.kr/seoul/mulga/main/contents.do?menuNo=200023"
+  ]
+}

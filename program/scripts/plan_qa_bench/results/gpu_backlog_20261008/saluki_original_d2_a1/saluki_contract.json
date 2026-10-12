@@ -1,0 +1,43 @@
+{
+  "model_revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+  "model_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+  "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+  "runner_sha256": "89eacd03b7a5b1175cea963940f9c16c983443110072f16dff85b8de5fb00444",
+  "engine_sha256": "1c58636dd53961ec7f0631a2253f6e6f5ba0f8e57b45752b1bf5367d6e4af018",
+  "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64",
+  "command": [
+    "taskset",
+    "-c",
+    "0-5",
+    "/workspace/deciders/bin/llama-server",
+    "-m",
+    "/tmp/tripilot-saluki-20261009/smoke_verified_model.gguf",
+    "-t",
+    "4",
+    "-ngl",
+    "99",
+    "-c",
+    "4096",
+    "-np",
+    "1",
+    "--port",
+    "8401",
+    "--host",
+    "127.0.0.1",
+    "--jinja"
+  ],
+  "our_training": false,
+  "context": 4096,
+  "max_tokens": 16,
+  "temperature": 0,
+  "enable_thinking": false,
+  "memory_before_load": {
+    "limit": 30999998464,
+    "used": 20384919552,
+    "headroom": 10615078912
+  },
+  "repetitions": 1,
+  "expected": 1000,
+  "GPU_owner": "existing queue worker",
+  "final_ranking": false
+}

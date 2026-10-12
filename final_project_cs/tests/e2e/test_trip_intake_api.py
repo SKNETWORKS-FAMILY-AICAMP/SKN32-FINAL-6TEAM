@@ -22,6 +22,7 @@ from fastapi.testclient import TestClient
 from app.infrastructure.db.session import get_connection
 from app.presentation.api.app import create_app
 from app.domains.travel_ops.entry.trip_api import build_trip_router
+from tests.helpers.plugin_bindings import publish_fixed_mobility
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
 
@@ -55,10 +56,13 @@ class Vision:
 
 
 def _client(vision=None):
-    return TestClient(create_app(classifier=lambda _m: {"intent": "other", "issue_code": "other",
+    """읽기·고객 수정·등록 계약용 앱에 합성 이동 계산을 명시한다. 경로 정확도 시험은 아니다."""
+    client = TestClient(create_app(classifier=lambda _m: {"intent": "other", "issue_code": "other",
                                                           "sentiment": "neutral"},
                                  domain_routers=[build_trip_router(chat_factory=(lambda: vision)
                                                                    if vision else None)]))
+    publish_fixed_mobility(client.app, source="intake_registration_test")
+    return client
 
 
 def _key(client) -> dict:
@@ -301,6 +305,7 @@ def _full_client():
         classifier=lambda _m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
         domain_routers=[build_trip_router(chat_factory=Labeler, place_factory=lambda: tour,
                                           kakao_factory=lambda: kakao)]))
+    publish_fixed_mobility(client.app, source="intake_confirm_test")
     return client, tour, kakao
 
 
@@ -346,10 +351,10 @@ def test_the_confirm_screen_fixes_a_time_and_registers_one_trip(api):
     done = _confirm(client, headers, view["intake_id"], 2)
     trip = done["trip"]
     assert done["status"] == "confirmed" and trip["created"] is True
-    got = [(i["title"], i["starts_at"][11:16], i["kind"]) for i in trip["items"]]
+    got = [(i["title"], i["starts_at"][11:16], i["kind"]) for i in trip["items"] if i["kind"] != "mobility"]
     assert got == [("경복궁", "09:00", "activity"), ("토속촌", "12:00", "dining"), ("광장시장", "18:30", "activity")]
     # 근거가 등록까지 따라간다 — 규칙으로 채운 시각 · 모델이 가리킨 원문 · 조회 출처
-    lunch = _stored(api, trip)[1].detail["provenance"]
+    lunch = [item for item in _stored(api, trip) if item.kind != "mobility"][1].detail["provenance"]
     assert lunch["starts_at"]["method"] == "rule" and lunch["title"]["method"] == "llm_span"
     assert lunch["place"]["method"] == "lookup"
     # ★관광공사에서 온 장소는 그 여행 전용 행이다(공용 표에 쌓지 않는다)
@@ -397,7 +402,7 @@ def test_an_unfound_place_is_fixed_by_name_or_left_without_a_place(api):
     assert walk["place"] is None
 
 
-def test_a_booking_number_is_carried_and_protects_the_item(api):
+def test_a_booking_number_is_carried_and_only_customer_pinning_protects_the_item(api):
     from app.domains.travel_ops.components.planning.pending import protected_reason
 
     client, _, _ = _full_client()
@@ -406,7 +411,9 @@ def test_a_booking_number_is_carried_and_protects_the_item(api):
     trip = _confirm(client, headers, view["intake_id"], view["revision"])["trip"]
     items = _stored(api, trip)
     assert items[0].detail["booking"] == {"booking_no": "KY-20931", "declared_by": "customer_plan"}
-    assert protected_reason(items[0]) == "booked"          # ★바꾸기 전에 묻는다
+    assert protected_reason(items[0]) is None  # D-020: 예약 정보만으로 자동 고정하지 않는다.
+    from dataclasses import replace
+    assert protected_reason(replace(items[0], detail={**items[0].detail, "customer_pinned": True})) == "customer_pinned"
 
 
 LUNCH_PLAN = "\n".join(["1일차 2026-10-15", "09:00 경복궁", "점심은 토속촌에서 먹을래", "15:00 광장시장"])

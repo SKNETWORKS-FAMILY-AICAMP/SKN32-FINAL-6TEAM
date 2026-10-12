@@ -1,0 +1,30 @@
+{
+  "e4bqat_oos1_d3": {
+    "request": {
+      "total": 120,
+      "trained_only_correct": 7,
+      "original_only_correct": 1,
+      "exact_p": 0.0703125
+    },
+    "no_request": {
+      "total": 240,
+      "trained_only_correct": 22,
+      "original_only_correct": 0,
+      "exact_p": 4.76837158203125e-07
+    }
+  },
+  "e4bqat_oos2_d3": {
+    "request": {
+      "total": 120,
+      "trained_only_correct": 7,
+      "original_only_correct": 1,
+      "exact_p": 0.0703125
+    },
+    "no_request": {
+      "total": 240,
+      "trained_only_correct": 22,
+      "original_only_correct": 0,
+      "exact_p": 4.76837158203125e-07
+    }
+  }
+}

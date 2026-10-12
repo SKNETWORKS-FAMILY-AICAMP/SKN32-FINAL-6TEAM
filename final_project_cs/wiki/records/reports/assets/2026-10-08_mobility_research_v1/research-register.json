@@ -1,0 +1,67 @@
+{
+  "searched_at": "2026-10-08T23:52:08.411182+09:00",
+  "cutoff": "2026-10-08",
+  "scope": "관련 공개 논문과 공식 문서 검색; 전세계 문헌 전수검색 아님",
+  "sources": [
+    {
+      "title": "Fast and Delay-Robust Multimodal Journey Planning",
+      "published": "2023-11-03 v2",
+      "url": "https://arxiv.org/html/2310.20554v2",
+      "read_scope": "초록 및 §6 Update Phase 원문",
+      "problem": "실시간 지연 때문에 탑승·환승이 성립하지 않는 후보",
+      "action": "지연으로 무효화된 후보를 제거하고 대체 후보를 다시 계산한다. 기존 정적 환승 인덱스만으로 보장하지 않는다.",
+      "status": "구현 계약 조사; Delay-ULTRA 자체를 제품에 구현한 상태 아님"
+    },
+    {
+      "title": "Real-time Bus Travel Time Prediction and Reliability Quantification: A Hybrid Markov Model",
+      "published": "2025-03-07",
+      "url": "https://arxiv.org/html/2503.05907v1",
+      "read_scope": "초록 및 §4.3 가정 검증·§5 결과 원문",
+      "problem": "평균 운행시간 하나로 불확실성을 표현하는 문제",
+      "action": "구간별 시간 분포와 상태 전이의 불확실성을 분리하는 실험 후보. 서울 반복관측 없이 해외 학습값을 이식하지 않는다.",
+      "status": "후보; 서울 수집 자료로 가정 검증과 새 시각·새 구간 검증 필요"
+    },
+    {
+      "title": "REX: A Realistic Time-Dependent Model for Multimodal Public Transport",
+      "published": "2022-09-06",
+      "url": "https://drops.dagstuhl.de/entities/document/10.4230/OASIcs.ATMOS.2022.12",
+      "read_scope": "출판사 초록·메타",
+      "problem": "차량 사이 이동·대기와 앞차보다 먼저 도착하는 차량을 단순화하는 문제",
+      "action": "접근 걷기를 끝낸 뒤 탈 수 있는 차량을 선택하고 환승시간을 보존한다. 모델 교체 전 원문 알고리즘 추가 검토.",
+      "status": "설계 검토; 출판사의 성능 수치를 우리 성능으로 쓰지 않음"
+    },
+    {
+      "title": "ChatPlanner: A Large Language Model Framework for Personalized Public Transit Routing",
+      "published": "2026-09-06 v3",
+      "url": "https://arxiv.org/abs/2606.15315v3",
+      "read_scope": "2026 개정일·초록 확인",
+      "problem": "사용자 선호를 경로 목적함수에 옮기는 문제",
+      "action": "지금의 거리·운임·실시간 근거 결함을 직접 해결하는 논문으로 채택하지 않음. 숫자 원값은 계산기·공식 자료가 소유.",
+      "status": "오늘까지 검색에서 발견; 현재 결함과 관련성 분리"
+    },
+    {
+      "title": "KAYROS: An Anytime and Exact Open-Source Solver for Duration-Minimization Time-Dependent Vehicle Routing",
+      "published": "2026-07-25",
+      "url": "https://arxiv.org/abs/2607.23116",
+      "read_scope": "2026 제출일·초록 확인",
+      "problem": "출발시각에 따라 비용이 변하는 여러 목적지 차량 최적화",
+      "action": "단일 고객 이동 구간과 여러 차량 최적화는 문제 범위가 다름. 바로 가져올 해법으로 판정하지 않음.",
+      "status": "기술 보고서; 현재 제품 적용 전제 미충족"
+    },
+    {
+      "title": "OpenStreetMap Relation:restriction",
+      "published": "공식 기술 문서; 검색 확인일 2026-10-08",
+      "url": "https://wiki.openstreetmap.org/wiki/Relation:restriction",
+      "read_scope": "from/via/to·no/only·except·conditional 공식 정의",
+      "problem": "들어온 길과 나갈 길의 회전 제약이 현재 노드 단위 탐색에서 누락될 수 있음",
+      "action": "PBF relation을 확보하고 유향 간선 상태에서 검증한다. via-way·조건부·차종 예외의 미지원 범위를 센다.",
+      "status": "실제 자료 추출 중; 경로 적용 완료 아님"
+    }
+  ],
+  "not_verified": [
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S0966692326001420",
+      "reason": "원 출판사 조회 HTTP403; 검색 요약만으로 해법 확정 안 함"
+    }
+  ]
+}

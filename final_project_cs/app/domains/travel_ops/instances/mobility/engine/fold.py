@@ -31,7 +31,7 @@ SRC_OF = [("timetable_v1", "timetable"), ("tago_subway", "timetable"),
           ("bikeseoul_foreigner_guide", "bike")]
 CAR_KEYS = ("mode", "distance_m", "topis_time_s", "gh_time_s", "day_type", "hour_start", "coverage_m", "coverage_pct",
             "n_edges", "n_links", "links", "source_id", "fare_kind", "fare_won", "meter_won", "toll_won", "toll_basis",
-            "slow_s", "slow_m", "night_rate", "out_of_city", "fare_basis")   # car_leg 로 올리는 필드 — 경로·좌표는 없다
+            "slow_s", "slow_m", "night_rate", "out_of_city", "fare_basis", "routing_evidence")   # car_leg 로 올리는 필드 — 경로·좌표는 없다
 
 
 def _car_value(car, leg_id, depart_min, arrive_min, warnings, basis):
@@ -120,7 +120,7 @@ def fold_case(case, *, task_id, basis, case_id=None):
             val["by_mode"] = {cv["mode"]: lv}
             ev.append({"evidence_id": f"mob:{lid}:car_leg:1", "source_type": "db", "source_id": sid,
                        "claim": f"{lg.get('label', lid)} — {cv['distance_m']/1000:.1f} km · {cv['topis_time_s']/60:.1f}분"
-                                + (f" · 요금 하한 {cv['fare_won']:,}원" if cv.get("fare_won") is not None else "")
+                                + (f" · 예상 요금 {cv['fare_won']:,}원" if cv.get("fare_won") is not None else "")
                                 + f" [{cv['grade']}]",
                        "value": cv, "confidence": CONF.get(cv["grade"], 0.2),
                        "observed_at": basis["decided_at"]})
@@ -166,7 +166,7 @@ def fold_case(case, *, task_id, basis, case_id=None):
         cv = _car_value(tx["car"], tlid, tx.get("depart_min"), tx.get("arrive_min"), tw, basis)
         ev.append({"evidence_id": "mob:_:car_leg:1", "source_type": "db", "source_id": sid,
                    "claim": f"택시 대안 — {cv['distance_m']/1000:.1f} km · {cv['topis_time_s']/60:.1f}분 · "
-                            f"요금 하한 {cv.get('fare_won', 0):,}원 [{cv['grade']}]",
+                            f"예상 요금 {cv.get('fare_won', 0):,}원 [{cv['grade']}]",
                    "value": cv, "confidence": CONF.get(cv["grade"], 0.2), "observed_at": basis["decided_at"]})
 
     # ── 결과 요약. ★ 이 한 건이 '구간이 조용히 사라지지 않는다'의 마지막 장치다

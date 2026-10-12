@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:/Users/playdata2/anaconda3/python.exe",
+    "-m",
+    "ruff",
+    "check",
+    "scripts/mobility/compare_kakao_golden.py",
+    "tests/unit/travel/mobility/test_walk_comparison_values_v1.py"
+  ],
+  "exit_code": 0
+}

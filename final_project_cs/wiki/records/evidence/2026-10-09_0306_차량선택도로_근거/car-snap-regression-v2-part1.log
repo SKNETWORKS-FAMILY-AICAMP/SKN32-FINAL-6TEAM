@@ -1,0 +1,44 @@
+........................................................................ [ 30%]
+........................................................................ [ 61%]
+.......................................................F................ [ 91%]
+....................                                                     [100%]
+================================== FAILURES ===================================
+_____________ test_medium_taxi_counts_distance_also_on_slow_edges _____________
+
+    def test_medium_taxi_counts_distance_also_on_slow_edges():
+        root = Path(__file__).resolve().parents[4]
+        rules = json.loads((root / "app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.json").read_text(encoding="utf-8"))
+        result = dict(distance_m=5000, slow_m=1000, slow_s=300, coverage_pct={"class": 0, "default": 0},
+                      topis_time_s=600, gh_time_s=600, depart="14:00", arrive="14:10", day_type="평일",
+                      hour_start=14, coverage_m={}, n_edges=1, links=[], n_links=0)
+        service = CarService(SimpleNamespace(compute=lambda *a, **k: result),
+                             SimpleNamespace(route=lambda *a: {}), rules)
+>       medium = service.leg((127, 37.5), (127.01, 37.5), datetime(2026, 10, 8, 14), taxi=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_taxi_billing_mode.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.car.CarService object at 0x000001CF4DDD1E50>
+s = (127, 37.5), e = (127.01, 37.5)
+depart = datetime.datetime(2026, 10, 8, 14, 0), taxi = True, kind = '중형'
+
+    def leg(self, s, e, depart, taxi=False, kind="중형"):
+        """s, e = (lng, lat) · depart = datetime. 반환: dict(경로 없음). 라우터가 없으면 RouterDown."""
+        thr = self.F[kind]["time_speed_threshold_kmh"]["value"] if taxi else None
+        route = self.router.route(s, e)
+        r = self.g.compute(route, depart, slow_threshold_kmh=thr)
+>       path = route['paths'][0]
+               ^^^^^^^^^^^^^^
+E       KeyError: 'paths'
+
+app\domains\travel_ops\instances\mobility\engine\car.py:317: KeyError
+============================== warnings summary ===============================
+tests/architecture/test_travel_ops_cells.py::test_cell_rules_do_not_get_worse
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\car-snap-regression-v2-part1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_taxi_billing_mode.py::test_medium_taxi_counts_distance_also_on_slow_edges
+1 failed, 235 passed, 19 deselected, 1 warning in 78.81s (0:01:18)

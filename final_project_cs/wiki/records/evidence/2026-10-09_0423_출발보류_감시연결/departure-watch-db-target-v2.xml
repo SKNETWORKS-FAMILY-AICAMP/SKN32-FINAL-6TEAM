@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="12" time="3.949" timestamp="2026-10-09T04:31:07.758711+09:00"><testcase classname="tests.scenario.test_departure_watch_db_v1" name="test_legacy_context_replans_through_case_once_or_preserves_announced_move[False]" time="2.039"><failure message="assert 2 == 1">world = {'clock': &lt;tests.scenario.test_case_version_day.Clock object at 0x000001643AA3DBB0&gt;, 'store': &lt;app.domains.travel_ops.... object at 0x000001643A8449B0&gt;, 'tenant': 'remind_c556019d8c', 'trip_id': UUID('0f17fd2f-b957-4660-8c2f-5732e535f5d2')}
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001642C72F200&gt;
+published = False
+
+    @pytest.mark.parametrize('published', [False, True])
+    def test_legacy_context_replans_through_case_once_or_preserves_announced_move(world, monkeypatch, published):
+        runtime, context, _ = scene()
+        runtime._v.bike_router = SimpleNamespace(available=lambda: True, route=lambda *a: {'distance_m': 300}, last_error=None)
+        wiring._STATE.update(mode='enabled', kw={})
+        monkeypatch.setattr(wiring.engine_runtime, 'get_verifier', lambda **kw: runtime)
+        world['clock'].now = _at('19:34')
+        with get_connection() as conn, conn.transaction():
+            trip, items = world['store'].latest(conn, world['trip_id'])
+            before, move, after = [next(i for i in items if i.seq == seq) for seq in (9, 10, 11)]
+            move.ends_at = _at('19:33')  # 옛 예정 도착이 지나도 다음 방문 전에는 미발행 이동을 감시한다.
+            after.starts_at = _at('19:50')
+            for key, item in [('from_place', before), ('to_place', after)]:
+                context[key] = {'lat': float(item.place['latitude']), 'lon': float(item.place['longitude'])}
+            old_context = deepcopy(context)
+            old_context['schema_version'] = 0
+            move.detail = {**move.detail, 'departure_context': old_context, 'route_def': {
+                'from': before.title, 'to': after.title, 'planned': 'walk',
+                'options': [{'id': 'walk', 'label': '도보 이동', 'eta_min': 999, 'uses': []}]}}
+            world['store'].append_version(conn, trip_id=world['trip_id'], base_version=trip['version'],
+                items=items, reason='legacy departure context fixture', causes=[])
+            if published:
+                world['store'].enqueue_message(conn, trip_id=world['trip_id'], key=f'departure:{move.item_id}',
+                    payload={'text': '이미 발행한 출발 안내'})
+        engine = CaseEngine(tenant_id=world['tenant'], check=lambda **k: {'verdict': 'clear'},
+            route_events=_NoEvents(), classifier=None, report_extractor=None, clock=world['clock'])
+        original_moment = ItineraryWork._moment
+        monkeypatch.setattr(ItineraryWork, '_moment', staticmethod(lambda value:
+            original_moment(value) if value else world['clock']()))
+        observer = composition.build_mobility_departure_observer(SimpleNamespace(mobility_data_dir='fixture'),
+            SimpleNamespace(bus_arrival=None), guardrails=POLICY)
+        engine.opener.departure_observer = observer
+        got = engine.opener.tick()
+        with get_connection() as conn:
+            current_trip, current_items = world['store'].latest(conn, world['trip_id'])
+        if published:
+            assert not got.opened and current_trip['version'] == 2
+            assert len(_notices(world)) == 1
+            return
+        assert len(got.opened) == 1 and len(got.ran) == 1, got
+        view = engine.view(got.opened[0]['case_id'])
+        assert view['case_status'] == 'resolved' and view['owner_team_id'] == 'mobility', view
+        assert current_trip['version'] == 3
+        new = next(i for i in current_items if i.seq == 10)
+        assert new.item_id != move.item_id and new.starts_at &gt;= world['clock']()
+        assert new.detail['departure_context']['schema_version'] == 1
+        assert new.detail['planner']['travel_min'] != 999
+        for _ in range(9):
+            assert not engine.opener.tick().opened
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute('SELECT count(*) FROM customer_cases WHERE tenant_id=%s', (world['tenant'],))
+            assert cur.fetchone()[0] == 1
+            cur.execute("SELECT count(*) FROM action_requests WHERE tenant_id=%s AND status='succeeded'", (world['tenant'],))
+&gt;           assert cur.fetchone()[0] == 1
+E           assert 2 == 1
+
+tests\scenario\test_departure_watch_db_v1.py:73: AssertionError</failure></testcase><testcase classname="tests.scenario.test_departure_watch_db_v1" name="test_legacy_context_replans_through_case_once_or_preserves_announced_move[True]" time="0.366" /><testcase classname="tests.unit.travel.test_departure_replan_v1" name="test_single_and_batch_replan_with_current_time_and_party[fresh-False]" time="0.004" /><testcase classname="tests.unit.travel.test_departure_replan_v1" name="test_single_and_batch_replan_with_current_time_and_party[fresh-True]" time="0.003" /><testcase classname="tests.unit.travel.test_departure_replan_v1" name="test_single_and_batch_replan_with_current_time_and_party[no_path-False]" time="0.003" /><testcase classname="tests.unit.travel.test_departure_replan_v1" name="test_single_and_batch_replan_with_current_time_and_party[no_path-True]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_replan_v1" name="test_single_and_batch_replan_with_current_time_and_party[no_data-False]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_replan_v1" name="test_single_and_batch_replan_with_current_time_and_party[no_data-True]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_replan_v1" name="test_single_and_batch_replan_with_current_time_and_party[old_time-False]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_replan_v1" name="test_single_and_batch_replan_with_current_time_and_party[old_time-True]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_replan_v1" name="test_single_and_batch_replan_with_current_time_and_party[no_context-False]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_replan_v1" name="test_single_and_batch_replan_with_current_time_and_party[no_context-True]" time="0.002" /></testsuite></testsuites>

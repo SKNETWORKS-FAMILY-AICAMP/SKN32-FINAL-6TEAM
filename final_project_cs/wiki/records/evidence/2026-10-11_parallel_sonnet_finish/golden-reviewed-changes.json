@@ -1,0 +1,670 @@
+[
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/items/1/ends_at",
+    "old": "2026-09-29T09:46:00+09:00",
+    "new": "2026-09-29T09:48:00+09:00",
+    "reviewed_cause": "보행망 접근 시간 반영; 기존 시각 등식·현재 출발 재판정 시험 유지"
+  },
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/items/3/ends_at",
+    "old": "2026-09-29T13:13:00+09:00",
+    "new": "2026-09-29T13:12:00+09:00",
+    "reviewed_cause": "보행망 접근 시간 반영; 기존 시각 등식·현재 출발 재판정 시험 유지"
+  },
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/items/3/starts_at",
+    "old": "2026-09-29T12:36:00+09:00",
+    "new": "2026-09-29T12:34:00+09:00",
+    "reviewed_cause": "보행망 접근 시간 반영; 기존 시각 등식·현재 출발 재판정 시험 유지"
+  },
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/items/5/ends_at",
+    "old": "2026-09-29T17:50:00+09:00",
+    "new": "2026-09-29T17:48:00+09:00",
+    "reviewed_cause": "보행망 접근 시간 반영; 기존 시각 등식·현재 출발 재판정 시험 유지"
+  },
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/items/5/starts_at",
+    "old": "2026-09-29T17:24:00+09:00",
+    "new": "2026-09-29T17:22:00+09:00",
+    "reviewed_cause": "보행망 접근 시간 반영; 기존 시각 등식·현재 출발 재판정 시험 유지"
+  },
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/items/7/starts_at",
+    "old": "2026-09-29T19:16:00+09:00",
+    "new": "2026-09-29T19:14:00+09:00",
+    "reviewed_cause": "보행망 접근 시간 반영; 기존 시각 등식·현재 출발 재판정 시험 유지"
+  },
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/left_out/dinner_to_lotte_mart",
+    "old": null,
+    "new": [
+      {
+        "label": "경의중앙선 서울역→디지털미디어시티 → 6호선 디지털미디어시티→연신내 → GTX-A 연신내→서울",
+        "code": "no_last_departure",
+        "reason": "마지막 성립 출발을 역산하지 못했다 — 디지털미디어시티 출발 열차의 행선지를 확인할 수 없어 연신내 까지 간다고 말할 수 없다"
+      },
+      {
+        "label": "경의중앙선 서울역→대곡 → GTX-A 대곡→서울",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "GTX-A 서울→연신내 → 6호선 연신내→디지털미디어시티 → 경의중앙선 디지털미디어시티→서울역",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "GTX-A 서울→대곡 → 경의중앙선 대곡→서울역",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "4호선 회현→충무로 → 3호선 충무로→연신내 → GTX-A 연신내→서울",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "GTX-A 서울→연신내 → 3호선 연신내→종로3가 → 5호선 종로3가→충정로",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "GTX-A 서울→연신내 → 6호선 연신내→공덕 → 5호선 공덕→충정로",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "4호선 회현→서울역",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:59 출발은 성립 확인(역산) · 환승 0회 · 소요 18분"
+      },
+      {
+        "label": "1호선 서울역→시청 → 2호선 시청→충정로",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:46 출발은 성립 확인(역산) · 환승 1회 · 소요 31분"
+      },
+      {
+        "label": "4호선 회현→서울역 → 1호선 서울역→시청 → 2호선 시청→충정로",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:28 출발은 성립 확인(역산) · 환승 2회 · 소요 49분"
+      },
+      {
+        "label": "4호선 회현→동대문역사문화공원 → 2호선 동대문역사문화공원→충정로",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:26 출발은 성립 확인(역산) · 환승 1회 · 소요 52분"
+      }
+    ],
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/routes/dinner_to_lotte_mart/options/0/eta_min",
+    "old": 4,
+    "new": 6,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/routes/dinner_to_lotte_mart/options/0/walk_m",
+    "old": 194,
+    "new": 330,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/routes/gyeongbokgung_to_seongsu/options/0/eta_min",
+    "old": 37,
+    "new": 38,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/routes/gyeongbokgung_to_seongsu/options/0/walk_m",
+    "old": 825,
+    "new": 917,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/routes/gyeongbokgung_to_seongsu/options/1/eta_min",
+    "old": 43,
+    "new": 44,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/routes/gyeongbokgung_to_seongsu/options/1/walk_m",
+    "old": 738,
+    "new": 830,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/routes/hotel_to_gyeongbokgung/options/0/eta_min",
+    "old": 28,
+    "new": 30,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_v1.json",
+    "path": "/routes/hotel_to_gyeongbokgung/options/0/walk_m",
+    "old": 993,
+    "new": 1103,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/items/1/ends_at",
+    "old": "2026-09-29T09:46:00+09:00",
+    "new": "2026-09-29T09:48:00+09:00",
+    "reviewed_cause": "보행망 접근 시간 반영; 기존 시각 등식·현재 출발 재판정 시험 유지"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/items/3/ends_at",
+    "old": "2026-09-29T13:13:00+09:00",
+    "new": "2026-09-29T13:12:00+09:00",
+    "reviewed_cause": "보행망 접근 시간 반영; 기존 시각 등식·현재 출발 재판정 시험 유지"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/items/3/starts_at",
+    "old": "2026-09-29T12:36:00+09:00",
+    "new": "2026-09-29T12:34:00+09:00",
+    "reviewed_cause": "보행망 접근 시간 반영; 기존 시각 등식·현재 출발 재판정 시험 유지"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/items/5/ends_at",
+    "old": "2026-09-29T17:50:00+09:00",
+    "new": "2026-09-29T17:48:00+09:00",
+    "reviewed_cause": "보행망 접근 시간 반영; 기존 시각 등식·현재 출발 재판정 시험 유지"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/items/5/starts_at",
+    "old": "2026-09-29T17:24:00+09:00",
+    "new": "2026-09-29T17:22:00+09:00",
+    "reviewed_cause": "보행망 접근 시간 반영; 기존 시각 등식·현재 출발 재판정 시험 유지"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/items/7/starts_at",
+    "old": "2026-09-29T19:16:00+09:00",
+    "new": "2026-09-29T19:14:00+09:00",
+    "reviewed_cause": "보행망 접근 시간 반영; 기존 시각 등식·현재 출발 재판정 시험 유지"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/dinner_to_lotte_mart",
+    "old": [
+      {
+        "label": "버스 새벽A504 서울역버스환승센터.강우규의거터→서울역버스환승센터",
+        "code": "no_last_departure",
+        "reason": "마지막 성립 출발을 역산하지 못했다 — 16:26 은 새벽A504 막차(03:30) 이후다"
+      },
+      {
+        "label": "그 밖 혼합 후보 48개",
+        "code": "mix_skipped",
+        "reason": "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)"
+      },
+      {
+        "label": "그 밖 혼합 후보 3개",
+        "code": "mix_skipped",
+        "reason": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"
+      },
+      {
+        "label": "그 밖 혼합 후보 372개",
+        "code": "mix_cap",
+        "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+      },
+      {
+        "label": "버스 402 서울역버스환승센터→숭례문.서울역4번출구",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 18:56 출발은 성립 확인(역산) · 환승 0회 · 소요 20분"
+      },
+      {
+        "label": "버스 7011 서울역버스환승센터→숭례문.서울역4번출구",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 17:59 출발은 성립 확인(역산) · 환승 0회 · 소요 57분"
+      },
+      {
+        "label": "버스 750B 서울역버스환승센터→숙대입구.서울시교육청역 → 4호선 숙대입구→서울역",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 18:58 출발은 성립 확인(역산) · 환승 1회 · 소요 17분"
+      },
+      {
+        "label": "4호선 서울역→숙대입구 → 버스 262 청파동주민센터.숙대입구역→서울역서부",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 18:54 출발은 성립 확인(역산) · 환승 1회 · 소요 19분"
+      },
+      {
+        "label": "버스 504 서울역버스환승센터→숙대입구.서울시교육청역 → 4호선 숙대입구→서울역",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:16 출발은 재판정에서 불성립 · 18:57 출발은 성립 확인(역산) · 환승 1회 · 소요 18분"
+      },
+      {
+        "label": "그 밖 버스 직행 51개",
+        "code": "bus_more",
+        "reason": "도보 긴 쪽 — before_prev_end 44 · no_last_departure 7"
+      }
+    ],
+    "new": [
+      {
+        "label": "경의중앙선 서울역→디지털미디어시티 → 6호선 디지털미디어시티→연신내 → GTX-A 연신내→서울",
+        "code": "no_last_departure",
+        "reason": "마지막 성립 출발을 역산하지 못했다 — 디지털미디어시티 출발 열차의 행선지를 확인할 수 없어 연신내 까지 간다고 말할 수 없다"
+      },
+      {
+        "label": "그 밖 혼합 후보 48개",
+        "code": "mix_skipped",
+        "reason": "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)"
+      },
+      {
+        "label": "그 밖 혼합 후보 3개",
+        "code": "mix_skipped",
+        "reason": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"
+      },
+      {
+        "label": "그 밖 혼합 후보 372개",
+        "code": "mix_cap",
+        "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+      },
+      {
+        "label": "경의중앙선 서울역→대곡 → GTX-A 대곡→서울",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "GTX-A 서울→연신내 → 6호선 연신내→디지털미디어시티 → 경의중앙선 디지털미디어시티→서울역",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "GTX-A 서울→대곡 → 경의중앙선 대곡→서울역",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "4호선 회현→충무로 → 3호선 충무로→연신내 → GTX-A 연신내→서울",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "GTX-A 서울→연신내 → 3호선 연신내→종로3가 → 5호선 종로3가→충정로",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "GTX-A 서울→연신내 → 6호선 연신내→공덕 → 5호선 공덕→충정로",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "4호선 회현→서울역",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:59 출발은 성립 확인(역산) · 환승 0회 · 소요 18분"
+      },
+      {
+        "label": "1호선 서울역→시청 → 2호선 시청→충정로",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:46 출발은 성립 확인(역산) · 환승 1회 · 소요 31분"
+      },
+      {
+        "label": "4호선 회현→서울역 → 1호선 서울역→시청 → 2호선 시청→충정로",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:28 출발은 성립 확인(역산) · 환승 2회 · 소요 49분"
+      },
+      {
+        "label": "4호선 회현→동대문역사문화공원 → 2호선 동대문역사문화공원→충정로",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:26 출발은 성립 확인(역산) · 환승 1회 · 소요 52분"
+      },
+      {
+        "label": "버스 604 서울역버스환승센터→서울의료보건고등학교.서울역서부",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 17:51 출발은 성립 확인(역산) · 환승 0회 · 소요 64분"
+      },
+      {
+        "label": "버스 1711 서울역버스환승센터→서울역버스환승센터.강우규의거터",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 17:59 출발은 성립 확인(역산) · 환승 0회 · 소요 66분"
+      },
+      {
+        "label": "버스 7016 서울역버스환승센터.강우규의거터→서울역버스환승센터",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 17:43 출발은 성립 확인(역산) · 환승 0회 · 소요 72분"
+      },
+      {
+        "label": "버스 750B 서울역버스환승센터→숙대입구.서울시교육청역 → 4호선 숙대입구→서울역",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:58 출발은 성립 확인(역산) · 환승 1회 · 소요 18분"
+      },
+      {
+        "label": "4호선 서울역→숙대입구 → 버스 262 청파동주민센터.숙대입구역→서울역서부",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:53 출발은 성립 확인(역산) · 환승 1회 · 소요 20분"
+      },
+      {
+        "label": "버스 504 서울역버스환승센터→숙대입구.서울시교육청역 → 4호선 숙대입구→서울역",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:57 출발은 성립 확인(역산) · 환승 1회 · 소요 19분"
+      },
+      {
+        "label": "그 밖 버스 직행 79개",
+        "code": "bus_more",
+        "reason": "도보 긴 쪽 — before_prev_end 68 · no_last_departure 11"
+      }
+    ],
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/gyeongbokgung_to_seongsu/0/label",
+    "old": "버스 01A 경복궁.국립민속박물관→종로2가.삼일교 → 2호선 을지로3가→성수",
+    "new": "버스 종로11 국립민속박물관→시청역 → 2호선 을지로입구→성수",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/gyeongbokgung_to_seongsu/0/reason",
+    "old": "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 53분 vs 37 · 환승 1 vs 1 · 도보 16분 vs 13.1)",
+    "new": "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 50분 vs 38 · 환승 1 vs 1 · 도보 17분 vs 14.1)",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/gyeongbokgung_to_seongsu/1/label",
+    "old": "버스 272 경복궁→신설동역 → 2호선 신설동→성수",
+    "new": "버스 01A 경복궁.국립민속박물관→종로2가.삼일교 → 2호선 을지로3가→성수",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/gyeongbokgung_to_seongsu/1/reason",
+    "old": "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 66분 vs 37 · 환승 1 vs 1 · 도보 15분 vs 13.1)",
+    "new": "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 51분 vs 38 · 환승 1 vs 1 · 도보 15분 vs 14.1)",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/gyeongbokgung_to_seongsu/3/label",
+    "old": "그 밖 혼합 후보 18개",
+    "new": "그 밖 혼합 후보 3개",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/gyeongbokgung_to_seongsu/4/label",
+    "old": "그 밖 혼합 후보 35개",
+    "new": "그 밖 혼합 후보 50개",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/gyeongbokgung_to_seongsu/5/reason",
+    "old": "이동 출발 12:36 출발은 재판정에서 불성립 · 12:28 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 45분",
+    "new": "이동 출발 12:34 출발은 재판정에서 불성립 · 12:28 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 44분",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/hotel_to_gyeongbokgung",
+    "old": [
+      {
+        "label": "그 밖 혼합 후보 27개",
+        "code": "mix_skipped",
+        "reason": "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)"
+      },
+      {
+        "label": "그 밖 혼합 후보 1개",
+        "code": "mix_skipped",
+        "reason": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"
+      },
+      {
+        "label": "그 밖 혼합 후보 183개",
+        "code": "mix_cap",
+        "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+      },
+      {
+        "label": "버스 7022 우리은행종로지점→경복궁역3번출구",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 09:15에 끝나고, 이동 출발 09:18 출발은 재판정에서 불성립 · 09:02 출발은 성립 확인(역산) · 환승 0회 · 소요 40분"
+      },
+      {
+        "label": "버스 152 명동.롯데영플라자→을지로2가.파인에비뉴 → 3호선 을지로3가→경복궁",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 09:15에 끝나고, 이동 출발 09:18 출발은 재판정에서 불성립 · 09:12 출발은 성립 확인(역산) · 환승 1회 · 소요 34분"
+      },
+      {
+        "label": "버스 152 롯데백화점→북창동.남대문시장 → 버스 01A 소공동주민센터→영추문",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 09:15에 끝나고, 이동 출발 09:18 출발은 재판정에서 불성립 · 09:01 출발은 성립 확인(역산) · 환승 1회 · 소요 39분"
+      },
+      {
+        "label": "버스 202 명동.롯데영플라자→을지로2가.파인에비뉴 → 3호선 을지로3가→경복궁",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 09:15에 끝나고, 이동 출발 09:18 출발은 재판정에서 불성립 · 09:11 출발은 성립 확인(역산) · 환승 1회 · 소요 30분"
+      }
+    ],
+    "new": [
+      {
+        "label": "버스 152 명동.롯데영플라자→을지로2가.파인에비뉴 → 3호선 을지로3가→경복궁",
+        "code": "mix_dominated",
+        "reason": "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다 (소요 36분 vs 30 · 환승 1 vs 0 · 도보 16분 vs 14)"
+      },
+      {
+        "label": "버스 152 롯데백화점→북창동.남대문시장 → 버스 01A 소공동주민센터→영추문",
+        "code": "mix_dominated",
+        "reason": "혼합 C — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다 (소요 39분 vs 30 · 환승 1 vs 0 · 도보 15분 vs 14)"
+      },
+      {
+        "label": "버스 202 명동.롯데영플라자→을지로2가.파인에비뉴 → 3호선 을지로3가→경복궁",
+        "code": "mix_dominated",
+        "reason": "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다 (소요 32분 vs 30 · 환승 1 vs 0 · 도보 16분 vs 14)"
+      },
+      {
+        "label": "그 밖 혼합 후보 27개",
+        "code": "mix_skipped",
+        "reason": "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)"
+      },
+      {
+        "label": "그 밖 혼합 후보 1개",
+        "code": "mix_skipped",
+        "reason": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"
+      },
+      {
+        "label": "그 밖 혼합 후보 183개",
+        "code": "mix_cap",
+        "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+      },
+      {
+        "label": "버스 7022 명동.롯데영플라자→경복궁역3번출구",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 09:15에 끝나고, 이동 출발 09:18 출발은 재판정에서 불성립 · 09:05 출발은 성립 확인(역산) · 환승 0회 · 소요 36분"
+      },
+      {
+        "label": "버스 7022 우리은행종로지점→경복궁역3번출구",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 09:15에 끝나고, 이동 출발 09:18 출발은 재판정에서 불성립 · 09:01 출발은 성립 확인(역산) · 환승 0회 · 소요 41분"
+      }
+    ],
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/0/reason",
+    "old": "마지막 성립 출발을 역산하지 못했다 — 14:52 은 N73 첫차(23:30) 이전이다",
+    "new": "마지막 성립 출발을 역산하지 못했다 — 14:53 은 N73 첫차(23:30) 이전이다",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/1/label",
+    "old": "2호선 성수→시청 → 버스 1711 시청앞.덕수궁→서울역버스환승센터",
+    "new": "2호선 성수→시청 → 버스 7016 시청역8번출구→서울역버스환승센터",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/1/reason",
+    "old": "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 36분 vs 26 · 환승 1 vs 1 · 도보 5분 vs 4.8)",
+    "new": "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 36분 vs 26 · 환승 1 vs 1 · 도보 6분 vs 4.8)",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/2/label",
+    "old": "2호선 성수→시청 → 버스 7016 시청역8번출구→서울역버스환승센터",
+    "new": "2호선 성수→을지로입구 → 버스 504 을지로입구.시청입구→서울역버스환승센터",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/2/reason",
+    "old": "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 38분 vs 26 · 환승 1 vs 1 · 도보 7분 vs 4.8)",
+    "new": "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 38분 vs 26 · 환승 1 vs 1 · 도보 5분 vs 4.8)",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/3/code",
+    "old": "mix_dominated",
+    "new": "mix_skipped",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/3/label",
+    "old": "2호선 성수→을지로입구 → 버스 504 을지로입구.시청입구→서울역버스환승센터",
+    "new": "그 밖 혼합 후보 30개",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/3/reason",
+    "old": "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 39분 vs 26 · 환승 1 vs 1 · 도보 6분 vs 4.8)",
+    "new": "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/4/label",
+    "old": "그 밖 혼합 후보 30개",
+    "new": "그 밖 혼합 후보 12개",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/4/reason",
+    "old": "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)",
+    "new": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/5/code",
+    "old": "mix_skipped",
+    "new": "mix_cap",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/5/label",
+    "old": "그 밖 혼합 후보 12개",
+    "new": "그 밖 혼합 후보 185개",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/5/reason",
+    "old": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)",
+    "new": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/6/code",
+    "old": "mix_cap",
+    "new": "earlier_departure",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/6/label",
+    "old": "그 밖 혼합 후보 185개",
+    "new": "2호선 성수→시청 → 버스 1711 시청앞.덕수궁→서울역버스환승센터",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/left_out/seongsu_to_dinner/6/reason",
+    "old": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)",
+    "new": "이동 출발 17:22 출발은 재판정에서 불성립 · 17:07 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 35분",
+    "reviewed_cause": "현재 보행망 접근·추가 정류장 쌍·GTX-A 후보로 제외 목록 변경; 제외·미판정 단서 보존"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/routes/dinner_to_lotte_mart/options/0/eta_min",
+    "old": 4,
+    "new": 6,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/routes/dinner_to_lotte_mart/options/0/walk_m",
+    "old": 194,
+    "new": 330,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/routes/gyeongbokgung_to_seongsu/options/0/eta_min",
+    "old": 37,
+    "new": 38,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/routes/gyeongbokgung_to_seongsu/options/0/walk_m",
+    "old": 825,
+    "new": 917,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/routes/gyeongbokgung_to_seongsu/options/1/eta_min",
+    "old": 43,
+    "new": 44,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/routes/gyeongbokgung_to_seongsu/options/1/walk_m",
+    "old": 738,
+    "new": 830,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/routes/hotel_to_gyeongbokgung/options/0/eta_min",
+    "old": 28,
+    "new": 30,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  },
+  {
+    "fixture": "plan_example_out_all_v1.json",
+    "path": "/routes/hotel_to_gyeongbokgung/options/0/walk_m",
+    "old": 993,
+    "new": 1103,
+    "reviewed_cause": "보행망 거리·시간 모델로 교체; 선택 수단·노선·운임은 그대로"
+  }
+]

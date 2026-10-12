@@ -1,0 +1,45 @@
+--- before/app/domains/travel_ops/instances/mobility/engine/subway_identity.py
++++ after/app/domains/travel_ops/instances/mobility/engine/subway_identity.py
+@@ -1,4 +1,4 @@
+-"""공식 역ID의 정확 대응과 파일 내용 판. 운행·방향·열차 선택을 추정하지 않는다."""
++"""공식 역ID의 정확 이름·주역명 대응과 파일 내용 판. 운행·방향을 추정하지 않는다."""
+ from __future__ import annotations
+ 
+ from copy import deepcopy
+@@ -8,6 +8,7 @@
+ import re
+ 
+ STATION_FILE = 'subway_realtime_stations_20260902_v1.json'
++PRIMARY_NAME_LINES = frozenset(f'{n}호선' for n in range(1, 9))
+ 
+ 
+ def canonical_line(line):
+@@ -61,6 +62,18 @@
+         if not valid_version(content_sha256):
+             raise ValueError('공식 지하철 역ID 자료의 내용 해시가 잘못됐다')
+         self._by_key = keys
++        # 서울시 설명의 주역명(부역명) 표기만 사용한다. 같은 노선에서 모호한
++        # 주역명이나 정확 이름과 충돌하는 별칭은 만들지 않는다. 공식 조회명은 유지한다.
++        primary_candidates = {}
++        for (line, station), row in keys.items():
++            match = re.fullmatch(r'([^()\s]+)\(([^()]+)\)', station)
++            if line in PRIMARY_NAME_LINES and match and match[2].strip():
++                primary_candidates.setdefault((line, match[1]), []).append(row)
++        self._by_primary_name = {key: rows[0] for key, rows in primary_candidates.items()
++                                 if len(rows) == 1 and key not in keys}
++        self._primary_conflicts = {key: [row['station_id'] for row in rows]
++                                   for key, rows in primary_candidates.items()
++                                   if len(rows) != 1 or key in keys}
+         self.content_sha256 = content_sha256
+         self.station_count = len(keys)
+         self.line_count = len(lines)
+@@ -68,7 +81,8 @@
+     def lookup(self, line, station):
+         if not isinstance(line, str) or not isinstance(station, str):
+             return None
+-        return deepcopy(self._by_key.get((canonical_line(line), station)))
++        key = (canonical_line(line), station)
++        return deepcopy(self._by_key.get(key) or self._by_primary_name.get(key))
+ 
+     def bind(self, leg):
+         if not isinstance(leg, dict) or leg.get('mode', 'subway') != 'subway':

@@ -1,0 +1,2391 @@
+{
+  "started_at": "2026-10-12T12:01:38.449883+09:00",
+  "ended_at": "2026-10-12T12:03:30.537110+09:00",
+  "rows": [
+    {
+      "mode": "bus",
+      "reference": {
+        "observed_at": "2026-10-12T02:44:47.333Z",
+        "url": "https://map.kakao.com/?map_type=TYPE_MAP&target=walk&rt=495141%2C1129713%2C496073%2C1130539&rt1=%EC%B6%9C%EB%B0%9C&rt2=%EB%8F%84%EC%B0%A9&rtIds=%2C&rtTypes=%2C",
+        "input": {
+          "from": {
+            "lat": 37.5665,
+            "lon": 126.978
+          },
+          "to": {
+            "lat": 37.56948,
+            "lon": 126.98222
+          }
+        },
+        "route_alternatives": [
+          "150",
+          "101",
+          "501"
+        ],
+        "board": {
+          "name": "시청.서울신문사",
+          "ars_id": "02137"
+        },
+        "alight": {
+          "name": "종로1가.종각역"
+        },
+        "fare_won": 1500,
+        "total_min": 11,
+        "walk_min": 8,
+        "ride_min": 3,
+        "stops": 1,
+        "access_m": 275,
+        "egress_m": 174,
+        "scope": "같은 두 정류장의 대안3노선 묶음1경로; 첫 대기 범위 웹 미명시·실탑승 별도"
+      },
+      "observed_at_kst": "2026-10-12T11:44:47.333000+09:00",
+      "departure_input_minute": "2026-10-12T11:44:00+09:00",
+      "planner_arrive_by": "2026-10-12T12:05:00+09:00",
+      "planning_buffer_min": 10,
+      "request_coordinate_alignment": true,
+      "route_geometry_alignment": null,
+      "actual_entrance_alignment": null,
+      "development_diagnostic": true,
+      "independent_holdout": false,
+      "route": null,
+      "why": {
+        "code": "arrive_late",
+        "reason": "앞 항목이 끝난 뒤(11:44) 떠나서는 12:05 도착에 맞는 후보가 없다",
+        "earliest": {
+          "status": "found",
+          "starts_at": "2026-10-12T11:44:00+09:00",
+          "ends_at": "2026-10-12T12:01:00+09:00",
+          "arrive_by": "2026-10-12T12:16:00+09:00",
+          "eta_min": 17,
+          "planned": "bus_101",
+          "label": "버스 101 서울신문사→종로1가.종각역",
+          "uses": [
+            "버스:101"
+          ],
+          "route": {
+            "from": "공개좌표 출발",
+            "to": "공개좌표 도착",
+            "planned": "bus_101",
+            "options": [
+              {
+                "id": "bus_101",
+                "label": "버스 101 서울신문사→종로1가.종각역",
+                "eta_min": 17,
+                "walk_m": 533,
+                "fare_krw": 1500,
+                "uses": [
+                  "버스:101"
+                ]
+              },
+              {
+                "id": "bus_150",
+                "label": "버스 150 서울신문사→종로1가.종각역",
+                "eta_min": 17,
+                "walk_m": 533,
+                "fare_krw": 1500,
+                "uses": [
+                  "버스:150"
+                ]
+              }
+            ]
+          },
+          "requested_arrive_by": "2026-10-12T12:05:00+09:00",
+          "slack_min": -11
+        }
+      },
+      "trace": [
+        {
+          "case": "aligned-bus~at736",
+          "date": "2026-10-12",
+          "arrive_by_min": 736,
+          "planned": "bus_101",
+          "options": [
+            {
+              "id": "bus_101",
+              "start_min": 704,
+              "eta_min": 17,
+              "margin_min": 15,
+              "slack_min": 0,
+              "transfers": 0,
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "101",
+                    "from": "서울신문사",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100006",
+                    "from_sequence": 44,
+                    "to_sequence": 45,
+                    "from_stop_id": "101000039",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 5,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              },
+              "wait_min": 4
+            },
+            {
+              "id": "bus_150",
+              "start_min": 704,
+              "eta_min": 17,
+              "margin_min": 15,
+              "slack_min": 0,
+              "transfers": 0,
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "150",
+                    "from": "서울신문사",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100029",
+                    "from_sequence": 91,
+                    "to_sequence": 92,
+                    "from_stop_id": "101000039",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 5,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              },
+              "wait_min": 4
+            }
+          ],
+          "left_out": [
+            {
+              "label": "그 밖 혼합 후보 3개",
+              "code": "mix_cap",
+              "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+            },
+            {
+              "label": "버스 7022 시청앞.덕수궁→우리은행종로지점",
+              "code": "before_prev_end",
+              "reason": "앞 일정이 11:44에 끝나고, 이동 출발 11:44 출발은 재판정에서 불성립 · 11:24 출발은 성립 확인(역산) · 환승 0회 · 소요 34분"
+            },
+            {
+              "label": "버스 501 서울신문사→종로1가.종각역",
+              "code": "before_prev_end",
+              "reason": "앞 일정이 11:44에 끝나고, 이동 출발 11:44 출발은 재판정에서 불성립 · 11:42 출발은 성립 확인(역산) · 환승 0회 · 소요 18분"
+            },
+            {
+              "label": "버스 172 서울광장→우리은행종로지점",
+              "code": "before_prev_end",
+              "reason": "앞 일정이 11:44에 끝나고, 이동 출발 11:44 출발은 재판정에서 불성립 · 11:41 출발은 성립 확인(역산) · 환승 0회 · 소요 19분"
+            },
+            {
+              "label": "버스 172 서울광장→우리은행종로지점 → 버스 7021 우리은행종로지점→청계1가.광교",
+              "code": "before_prev_end",
+              "reason": "앞 일정이 11:44에 끝나고, 이동 출발 11:44 출발은 재판정에서 불성립 · 11:31 출발은 성립 확인(역산) · 환승 1회 · 소요 24분"
+            },
+            {
+              "label": "버스 172 서울광장→우리은행종로지점 → 버스 7017 우리은행종로지점→청계1가.광교",
+              "code": "before_prev_end",
+              "reason": "앞 일정이 11:44에 끝나고, 이동 출발 11:44 출발은 재판정에서 불성립 · 11:30 출발은 성립 확인(역산) · 환승 1회 · 소요 24분"
+            },
+            {
+              "label": "버스 1711 시청앞.덕수궁→삼성본관앞 → 버스 150 소공동주민센터→종로1가.종각역",
+              "code": "before_prev_end",
+              "reason": "앞 일정이 11:44에 끝나고, 이동 출발 11:44 출발은 재판정에서 불성립 · 11:33 출발은 성립 확인(역산) · 환승 1회 · 소요 25분"
+            },
+            {
+              "label": "그 밖 버스 직행 94개",
+              "code": "bus_more",
+              "reason": "도보 긴 쪽 — before_prev_end 71 · no_last_departure 23"
+            }
+          ],
+          "left_checks": [
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "no_last_departure",
+              "check": null
+            },
+            {
+              "code": "mix_cap",
+              "check": null
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "7022",
+                    "from": "시청앞.덕수궁",
+                    "to": "우리은행종로지점",
+                    "route_id": "100100341",
+                    "from_sequence": 34,
+                    "to_sequence": 40,
+                    "from_stop_id": "101000290",
+                    "to_stop_id": "101000040"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 4,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "501",
+                    "from": "서울신문사",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100077",
+                    "from_sequence": 26,
+                    "to_sequence": 27,
+                    "from_stop_id": "101000039",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 5,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "172",
+                    "from": "서울광장",
+                    "to": "우리은행종로지점",
+                    "route_id": "100100037",
+                    "from_sequence": 78,
+                    "to_sequence": 79,
+                    "from_stop_id": "101000301",
+                    "to_stop_id": "101000040"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 5,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "506",
+                    "from": "서울신문사",
+                    "to": "을지로입구역.광교",
+                    "route_id": "100100081",
+                    "from_sequence": 48,
+                    "to_sequence": 49,
+                    "from_stop_id": "101000039",
+                    "to_stop_id": "101000141"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 5,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "8101",
+                    "from": "을지로입구.시청입구",
+                    "to": "종로1가.종각역",
+                    "route_id": "110000005",
+                    "from_sequence": 24,
+                    "to_sequence": 31,
+                    "from_stop_id": "101000058",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 6,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "청계A01",
+                    "from": "청계광장",
+                    "to": "청계1가.광교",
+                    "route_id": "100000026",
+                    "from_sequence": 1,
+                    "to_sequence": 2,
+                    "from_stop_id": "101000338",
+                    "to_stop_id": "101000119"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 7,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 732
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "470",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100073",
+                    "from_sequence": 25,
+                    "to_sequence": 64,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000387"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 732
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "721",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100112",
+                    "from_sequence": 21,
+                    "to_sequence": 69,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000387"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 732
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "720",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100111",
+                    "from_sequence": 32,
+                    "to_sequence": 81,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000387"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 732
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "741",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "123000010",
+                    "from_sequence": 22,
+                    "to_sequence": 75,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000387"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 732
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "270",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100046",
+                    "from_sequence": 22,
+                    "to_sequence": 77,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000387"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 732
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "173",
+                    "from": "을지로입구역.광교",
+                    "to": "청계1가.광교",
+                    "route_id": "110000002",
+                    "from_sequence": 36,
+                    "to_sequence": 78,
+                    "from_stop_id": "101000141",
+                    "to_stop_id": "101000119"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 732
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "370",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100061",
+                    "from_sequence": 44,
+                    "to_sequence": 53,
+                    "from_stop_id": "100000385",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "260",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100042",
+                    "from_sequence": 37,
+                    "to_sequence": 62,
+                    "from_stop_id": "100000385",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "273",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100049",
+                    "from_sequence": 43,
+                    "to_sequence": 68,
+                    "from_stop_id": "100000385",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "160",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100033",
+                    "from_sequence": 32,
+                    "to_sequence": 89,
+                    "from_stop_id": "100000385",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "271",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100047",
+                    "from_sequence": 34,
+                    "to_sequence": 92,
+                    "from_stop_id": "100000385",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "8101",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "110000005",
+                    "from_sequence": 30,
+                    "to_sequence": 31,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "160",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100033",
+                    "from_sequence": 88,
+                    "to_sequence": 89,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "260",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100042",
+                    "from_sequence": 61,
+                    "to_sequence": 62,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "370",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100061",
+                    "from_sequence": 52,
+                    "to_sequence": 53,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "271",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100047",
+                    "from_sequence": 91,
+                    "to_sequence": 92,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "273",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100049",
+                    "from_sequence": 67,
+                    "to_sequence": 68,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "6002",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100413",
+                    "from_sequence": 23,
+                    "to_sequence": 24,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "270",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100046",
+                    "from_sequence": 22,
+                    "to_sequence": 23,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "470",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100073",
+                    "from_sequence": 25,
+                    "to_sequence": 26,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "720",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100111",
+                    "from_sequence": 32,
+                    "to_sequence": 33,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "721",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100112",
+                    "from_sequence": 21,
+                    "to_sequence": 22,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "741",
+                    "from": "광화문역",
+                    "to": "종로1가.종각역",
+                    "route_id": "123000010",
+                    "from_sequence": 22,
+                    "to_sequence": 23,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "103",
+                    "from": "광화문역",
+                    "to": "우리은행종로지점",
+                    "route_id": "100100008",
+                    "from_sequence": 33,
+                    "to_sequence": 40,
+                    "from_stop_id": "100000385",
+                    "to_stop_id": "101000040"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "1711",
+                    "from": "시청앞.덕수궁",
+                    "to": "서울신문사",
+                    "route_id": "100100185",
+                    "from_sequence": 17,
+                    "to_sequence": 47,
+                    "from_stop_id": "101000290",
+                    "to_stop_id": "101000039"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 4,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 725
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "702A",
+                    "from": "광화문역",
+                    "to": "을지로입구역.광교",
+                    "route_id": "100100104",
+                    "from_sequence": 40,
+                    "to_sequence": 41,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "101000141"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "702B",
+                    "from": "광화문역",
+                    "to": "을지로입구역.광교",
+                    "route_id": "100100105",
+                    "from_sequence": 41,
+                    "to_sequence": 42,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "101000141"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "705",
+                    "from": "광화문역",
+                    "to": "을지로입구역.광교",
+                    "route_id": "100100587",
+                    "from_sequence": 34,
+                    "to_sequence": 35,
+                    "from_stop_id": "100000384",
+                    "to_stop_id": "101000141"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "201",
+                    "from": "을지로입구역.광교",
+                    "to": "우리은행종로지점",
+                    "route_id": "100100038",
+                    "from_sequence": 56,
+                    "to_sequence": 63,
+                    "from_stop_id": "101000141",
+                    "to_stop_id": "101000040"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "151",
+                    "from": "을지로입구역.광교",
+                    "to": "우리은행종로지점",
+                    "route_id": "100100030",
+                    "from_sequence": 35,
+                    "to_sequence": 63,
+                    "from_stop_id": "101000141",
+                    "to_stop_id": "101000040"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "162",
+                    "from": "을지로입구역.광교",
+                    "to": "우리은행종로지점",
+                    "route_id": "100100034",
+                    "from_sequence": 19,
+                    "to_sequence": 56,
+                    "from_stop_id": "101000141",
+                    "to_stop_id": "101000040"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "262",
+                    "from": "을지로입구역.광교",
+                    "to": "우리은행종로지점",
+                    "route_id": "100100044",
+                    "from_sequence": 45,
+                    "to_sequence": 88,
+                    "from_stop_id": "101000141",
+                    "to_stop_id": "101000040"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 10,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "종로09",
+                    "from": "시청역",
+                    "to": "시청역1호선.서울시청",
+                    "route_id": "100900003",
+                    "from_sequence": 9,
+                    "to_sequence": 12,
+                    "from_stop_id": "101900011",
+                    "to_stop_id": "101900006"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 4,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 725
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "종로11",
+                    "from": "시청역",
+                    "to": "시청역1호선.서울시청",
+                    "route_id": "100900007",
+                    "from_sequence": 9,
+                    "to_sequence": 13,
+                    "from_stop_id": "101900011",
+                    "to_stop_id": "101900006"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 4,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 725
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "6701",
+                    "from": "시청역1호선.서울시청",
+                    "to": "광화문코리아나호텔",
+                    "route_id": "100100567",
+                    "from_sequence": 23,
+                    "to_sequence": 24,
+                    "from_stop_id": "101900006",
+                    "to_stop_id": "101000275"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 3,
+                "walk_place_out": 12,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 724
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "143",
+                    "from": "롯데백화점",
+                    "to": "우리은행종로지점",
+                    "route_id": "100100022",
+                    "from_sequence": 19,
+                    "to_sequence": 91,
+                    "from_stop_id": "101000041",
+                    "to_stop_id": "101000040"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 5,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 731
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "7212",
+                    "from": "종로1가.종각역",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100499",
+                    "from_sequence": 47,
+                    "to_sequence": 96,
+                    "from_stop_id": "100000386",
+                    "to_stop_id": "100000387"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 12,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 732
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "6005",
+                    "from": "시청.서울신문사",
+                    "to": "광화문",
+                    "route_id": "100100416",
+                    "from_sequence": 30,
+                    "to_sequence": 31,
+                    "from_stop_id": "101000286",
+                    "to_stop_id": "101000226"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 5,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 725
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "173",
+                    "from": "우리은행종로지점",
+                    "to": "청계1가.광교",
+                    "route_id": "110000002",
+                    "from_sequence": 77,
+                    "to_sequence": 78,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "101000119"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 732
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "7017",
+                    "from": "우리은행종로지점",
+                    "to": "청계1가.광교",
+                    "route_id": "100100337",
+                    "from_sequence": 45,
+                    "to_sequence": 46,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "101000119"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 732
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "7021",
+                    "from": "우리은행종로지점",
+                    "to": "청계1가.광교",
+                    "route_id": "100100340",
+                    "from_sequence": 41,
+                    "to_sequence": 42,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "101000119"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 732
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "01A",
+                    "from": "서울신문사",
+                    "to": "종로2가.삼일교",
+                    "route_id": "100100001",
+                    "from_sequence": 15,
+                    "to_sequence": 23,
+                    "from_stop_id": "101000039",
+                    "to_stop_id": "100000004"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 5,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 725
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "472",
+                    "from": "서울광장",
+                    "to": "을지로입구.로얄호텔",
+                    "route_id": "100100075",
+                    "from_sequence": 49,
+                    "to_sequence": 50,
+                    "from_stop_id": "101000301",
+                    "to_stop_id": "101000057"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 5,
+                "walk_place_out": 13,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 723
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "7212",
+                    "from": "종로1가.종각역",
+                    "to": "종로2가",
+                    "route_id": "100100499",
+                    "from_sequence": 47,
+                    "to_sequence": 48,
+                    "from_stop_id": "100000386",
+                    "to_stop_id": "100000388"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 12,
+                "walk_place_out": 7,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 729
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "103",
+                    "from": "우리은행종로지점",
+                    "to": "종로2가",
+                    "route_id": "100100008",
+                    "from_sequence": 40,
+                    "to_sequence": 41,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "100000388"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 7,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 729
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "201",
+                    "from": "우리은행종로지점",
+                    "to": "종로2가",
+                    "route_id": "100100038",
+                    "from_sequence": 63,
+                    "to_sequence": 64,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "100000388"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 7,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 729
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "262",
+                    "from": "우리은행종로지점",
+                    "to": "종로2가",
+                    "route_id": "100100044",
+                    "from_sequence": 88,
+                    "to_sequence": 89,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "100000388"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 7,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 729
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "143",
+                    "from": "우리은행종로지점",
+                    "to": "종로2가",
+                    "route_id": "100100022",
+                    "from_sequence": 91,
+                    "to_sequence": 92,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "100000388"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 7,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 729
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "7022",
+                    "from": "우리은행종로지점",
+                    "to": "조계사.종로경찰서",
+                    "route_id": "100100341",
+                    "from_sequence": 40,
+                    "to_sequence": 41,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "100000105"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 8,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 728
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "151",
+                    "from": "우리은행종로지점",
+                    "to": "조계사.종로경찰서",
+                    "route_id": "100100030",
+                    "from_sequence": 63,
+                    "to_sequence": 64,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "100000105"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 8,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 728
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "162",
+                    "from": "우리은행종로지점",
+                    "to": "조계사.종로경찰서",
+                    "route_id": "100100034",
+                    "from_sequence": 56,
+                    "to_sequence": 57,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "100000105"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 8,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 728
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "401",
+                    "from": "우리은행종로지점",
+                    "to": "조계사.종로경찰서",
+                    "route_id": "100100062",
+                    "from_sequence": 47,
+                    "to_sequence": 48,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "100000105"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 8,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 728
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "406",
+                    "from": "우리은행종로지점",
+                    "to": "조계사.종로경찰서",
+                    "route_id": "100100064",
+                    "from_sequence": 31,
+                    "to_sequence": 32,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "100000105"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 8,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 728
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "704",
+                    "from": "우리은행종로지점",
+                    "to": "조계사.종로경찰서",
+                    "route_id": "100100107",
+                    "from_sequence": 33,
+                    "to_sequence": 34,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "100000105"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 8,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 728
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "1711",
+                    "from": "소공동주민센터",
+                    "to": "서울신문사",
+                    "route_id": "100100185",
+                    "from_sequence": 46,
+                    "to_sequence": 47,
+                    "from_stop_id": "101000033",
+                    "to_stop_id": "101000039"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 725
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "01A",
+                    "from": "소공동주민센터",
+                    "to": "서울신문사",
+                    "route_id": "100100001",
+                    "from_sequence": 14,
+                    "to_sequence": 15,
+                    "from_stop_id": "101000033",
+                    "to_stop_id": "101000039"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 725
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "708",
+                    "from": "소공동주민센터",
+                    "to": "서울신문사",
+                    "route_id": "123000011",
+                    "from_sequence": 31,
+                    "to_sequence": 32,
+                    "from_stop_id": "101000033",
+                    "to_stop_id": "101000039"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 725
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "7016",
+                    "from": "소공동주민센터",
+                    "to": "서울신문사",
+                    "route_id": "100100447",
+                    "from_sequence": 45,
+                    "to_sequence": 46,
+                    "from_stop_id": "101000033",
+                    "to_stop_id": "101000039"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 725
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "9401",
+                    "from": "우리은행종로지점",
+                    "to": "조계사",
+                    "route_id": "100100389",
+                    "from_sequence": 30,
+                    "to_sequence": 31,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "100000169"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 9,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 727
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "402",
+                    "from": "소공동주민센터",
+                    "to": "시청역1호선.서울시청",
+                    "route_id": "100100063",
+                    "from_sequence": 55,
+                    "to_sequence": 56,
+                    "from_stop_id": "101000033",
+                    "to_stop_id": "101900006"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 725
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "709",
+                    "from": "소공동주민센터",
+                    "to": "시청역1호선.서울시청",
+                    "route_id": "111000028",
+                    "from_sequence": 35,
+                    "to_sequence": 36,
+                    "from_stop_id": "101000033",
+                    "to_stop_id": "101900006"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 725
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "7011",
+                    "from": "소공동주민센터",
+                    "to": "시청역1호선.서울시청",
+                    "route_id": "100100450",
+                    "from_sequence": 46,
+                    "to_sequence": 47,
+                    "from_stop_id": "101000033",
+                    "to_stop_id": "101900006"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 725
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "202",
+                    "from": "롯데백화점",
+                    "to": "을지로입구.로얄호텔",
+                    "route_id": "100100039",
+                    "from_sequence": 58,
+                    "to_sequence": 74,
+                    "from_stop_id": "101000041",
+                    "to_stop_id": "101000057"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 13,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 723
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "261",
+                    "from": "롯데백화점",
+                    "to": "을지로입구.로얄호텔",
+                    "route_id": "100100043",
+                    "from_sequence": 44,
+                    "to_sequence": 82,
+                    "from_stop_id": "101000041",
+                    "to_stop_id": "101000057"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 13,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 723
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "100",
+                    "from": "롯데백화점",
+                    "to": "을지로입구.로얄호텔",
+                    "route_id": "100100549",
+                    "from_sequence": 37,
+                    "to_sequence": 79,
+                    "from_stop_id": "101000041",
+                    "to_stop_id": "101000057"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 13,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 723
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "152",
+                    "from": "롯데백화점",
+                    "to": "을지로입구.로얄호텔",
+                    "route_id": "100100031",
+                    "from_sequence": 29,
+                    "to_sequence": 103,
+                    "from_stop_id": "101000041",
+                    "to_stop_id": "101000057"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 13,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 723
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "701",
+                    "from": "우리은행종로지점",
+                    "to": "종로2가.삼일교",
+                    "route_id": "100100103",
+                    "from_sequence": 37,
+                    "to_sequence": 38,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "100000004"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 13,
+                "walk_place_out": 11,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 725
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "6015",
+                    "from": "이비스엠버서더호텔",
+                    "to": "을지로입구.로얄호텔",
+                    "route_id": "100100422",
+                    "from_sequence": 23,
+                    "to_sequence": 24,
+                    "from_stop_id": "101000246",
+                    "to_stop_id": "101000057"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 11,
+                "walk_place_out": 13,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 723
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "172",
+                    "from": "서울광장",
+                    "to": "우리은행종로지점",
+                    "route_id": "100100037",
+                    "from_sequence": 78,
+                    "to_sequence": 79,
+                    "from_stop_id": "101000301",
+                    "to_stop_id": "101000040"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "7021",
+                    "from": "우리은행종로지점",
+                    "to": "청계1가.광교",
+                    "route_id": "100100340",
+                    "from_sequence": 41,
+                    "to_sequence": 42,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "101000119"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 4,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 732,
+                "fast": true
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "172",
+                    "from": "서울광장",
+                    "to": "우리은행종로지점",
+                    "route_id": "100100037",
+                    "from_sequence": 78,
+                    "to_sequence": 79,
+                    "from_stop_id": "101000301",
+                    "to_stop_id": "101000040"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "7017",
+                    "from": "우리은행종로지점",
+                    "to": "청계1가.광교",
+                    "route_id": "100100337",
+                    "from_sequence": 45,
+                    "to_sequence": 46,
+                    "from_stop_id": "101000040",
+                    "to_stop_id": "101000119"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 4,
+                "walk_place_out": 4,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 732,
+                "fast": true
+              }
+            },
+            {
+              "code": "before_prev_end",
+              "check": {
+                "date": "2026-10-12",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "1711",
+                    "from": "시청앞.덕수궁",
+                    "to": "삼성본관앞",
+                    "route_id": "100100185",
+                    "from_sequence": 17,
+                    "to_sequence": 18,
+                    "from_stop_id": "101000290",
+                    "to_stop_id": "101000034"
+                  },
+                  {
+                    "mode": "bus",
+                    "route": "150",
+                    "from": "소공동주민센터",
+                    "to": "종로1가.종각역",
+                    "route_id": "100100029",
+                    "from_sequence": 90,
+                    "to_sequence": 92,
+                    "from_stop_id": "101000033",
+                    "to_stop_id": "100000386"
+                  }
+                ],
+                "off": 0,
+                "walk_place_in": 3,
+                "walk_place_out": 3,
+                "walk_stop_in": 0,
+                "walk_stop_out": 0,
+                "by_station": 733,
+                "fast": true
+              }
+            }
+          ],
+          "start_min": 704
+        }
+      ],
+      "planner_start_min": null,
+      "planner_end_min": null,
+      "service_date": null,
+      "elapsed_s": 81.312
+    }
+  ],
+  "network_attempts": [],
+  "developer_api_calls": 0,
+  "private_data_accesses": 0,
+  "source_hashes_before": {
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/adapter.py": "9b2b39c0c765c43a30527af38db718d642994615a50e51a716433b871fae6253",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bike.py": "7c4779e158af6d68604d365813bd6feb2554cf7c2225424a211960ff81851d07",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus.py": "bc3c969ea49456efb27aa5ba85a9bfc63a382fa9eb6f72a5217248fb459b28ea",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus_identity.py": "c5ec2c9044609d768068dc91399289a36f28ebae34b94c8b3ab563e088d13fb9",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus_profile.py": "23052d9bbf163b818625b5df13e993463999ffbf877423c05b4acb750f50a131",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/candidates.py": "09c34013559cc64c90e82d7cb42fdc46654a2e8f45ca6b3fab55fb578c0cc8fe",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car.py": "b79f62ff54216dcc6dc2d4f5c2489108c5468dab2888a1ba4063423805dc7c20",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car_fixtures.py": "bfcdce00518e8aec0a5dc63cf36cd7b8a236395de358c60461bf62d76b375af0",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car_turn_search.py": "5603573421001a92adc8c2e8244b01db49b93696c117222646035485c785e5f5",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/congestion.py": "7aa213b7761c4d900345a3699b10e3423229c1a2348e6df20ee02a11888b75e5",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/connectors.py": "7ec5eeb90eb13edfa05a7e03ade78292c33881ad2d5107960a9a42ca947b986e",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/datacheck.py": "6893cb6357dece675ce5504ccb854537de5589dc99b1228622fd0be85e6550ec",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_context.py": "83118680a84b77fdeda068ec926bc0854c367ff22fbf5d0836558717c9dde086",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py": "999b547cd894ad0aae4dfdb43b4035fb2c14f2c63dea3d56b0a06ac4273d8b86",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/errors.py": "bd7aa589e9417f6b2ea6cb9f6754c961f9c0f1b61a87d91303b746bc9fbe8a1a",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/exits.py": "cc2068c85b2b40cae263e2f59fa6c06978aa36e3e746ad617f9714b3963bb7b1",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/express.py": "8cc22b41a7e991c1fe346adb77d1f3019296feb99a90d735710a11de29d2de03",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/fold.py": "98938b3397328eb4a3c994d45846e9071a9f97aa3f9e4b1a92536d8a076c4156",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/geo.py": "df940f8a21efd4487839e0a5cee5deacb56041027d30199d6f11d57df84dff51",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/graph_router.py": "5d147feb14c4b9b3477aafde8e6517f4ccb96cce7b2a5ebc0920a0bcd322eeb8",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/guardrails.py": "9c153447273208890906ea9e36b03ca6849298f62c9e666c9fabd689cbfddad8",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/line_order.py": "3c3819e9f0cddb542863fe2a32bc56d7514cd25b54f952650add9ca9b27e6abf",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py": "c6c365e9acf2beda523685842c8d8b174265b0d1a4e4a974925bef68ce892c7a",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/paths.py": "c9256063c22fd9d9bbd54b7f5497f6d1a3f8fe3161afbd96e5df12498d282bdc",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py": "2fbc03fb2cf06e136041bbabc3d05745d3c3c792ed82ef1d18d1d03745bea20e",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan_estimate.py": "6e38d7bffe5cc23759cf5f6c51c9b6dbc9c14c371579363515c4b10db727b9c0",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/published_boarding.py": "67e1b9097cf3d46c0ae15a274a5871fcbb051a54ed130a516934acc122875370",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/runtime.py": "38cd5785d0c99146a8849bdf2eb7a9b9e445bb6f52ce1bb8d0e8e866b8ca4cfd",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/special_rail.py": "48b14321470d430f126161e8997d0b6ff29a9920bda20b3afba805385a232137",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_departure.py": "7d2150fa996a5ace3f2cc3771337de6ba0bd7a5c18984d457a9859e355f9161e",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_identity.py": "1330e72fc4da7bfd1973fcd09ccb2d51295880afa73b86f36c56a96fc757b1e4",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/taxi_budget.py": "cd7a65552ee65ac99a856a588caf55c866a6c92abed3ff139afb62e8e1ffbd1e",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/taxi_call_policy.py": "765e2d52e48c56777719912df97fe649b0b9781e1ff28add3d7b3e97761a9933",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/taxi_pricing.py": "53af926a9fd3f051c68ec3473ddaa25a3ec61711d971a8ed9983f23f29a5fc63",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/timeutil.py": "f41e35926e55b393bfb084d762b4e5718c99855fdada148d38b0ba6b7aaba36f",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/train_precision.py": "00cae96795edec643196f2da93cf5b475feef0f96fe2b087ca3abf6cb7d90066",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/transfer_walk.py": "60d0e945a8650cebd08dcf48d17c1fb9231b26679dab968e03bdfe74d76c90a2",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/turn_restrictions.py": "9f5d188552d8d252d6594f57053df6b5e52d92e95bdbd2a902c7b05c9158bff3",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py": "1a7e43c8a9963118c43e68fd5702e54b8fa695de3f1763a6cee013bc3ca4b356",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time_cli.py": "bc996c0360ac6a0733e3d52d4f3cd1d57881d41a71777ccbe6ddd1381fa3a3b5",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/__init__.py": "267fe36a5319a62ef3902a5664ef661cedfef9a69bcaaaca629c6587c825efc5",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/holidays_2026_2027.json": "b2539a7e6835bd6dd2ac3fef654d1c7f063305bbcdb9a17a7b2d4254ee67d8f4",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/metro_connectors_v1.json": "c47703c3cc1e62a311a2338550522470311b735ad1fb08413d49157bf47aec80",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.history.json": "7cb705a56d05fd7d59fa897d4796439411ffd4c726efa203d5408b89fd644279",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.json": "8ba8f8cd4df02ab9a3a424b060e6e4a07f6e6531180ff084048375c21ab94311",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/special_rail_fares_v1.json": "88ceee74a9c6e796be2b29501bc0e9f60296314b8770a123fc7611fc5a7b124e",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/taxi_call_policies_v1.json": "a33bcc406d9c80a13ab65ef4cad4a0851cb9c1319b02db9cb0ce21ab64f3be28"
+  },
+  "source_hashes_after": {
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/adapter.py": "9b2b39c0c765c43a30527af38db718d642994615a50e51a716433b871fae6253",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bike.py": "7c4779e158af6d68604d365813bd6feb2554cf7c2225424a211960ff81851d07",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus.py": "bc3c969ea49456efb27aa5ba85a9bfc63a382fa9eb6f72a5217248fb459b28ea",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus_identity.py": "c5ec2c9044609d768068dc91399289a36f28ebae34b94c8b3ab563e088d13fb9",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus_profile.py": "23052d9bbf163b818625b5df13e993463999ffbf877423c05b4acb750f50a131",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/candidates.py": "b60127f1615d0d8101e71c9322c448623118640eec467b3f3eab6c21ac81d209",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car.py": "b79f62ff54216dcc6dc2d4f5c2489108c5468dab2888a1ba4063423805dc7c20",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car_fixtures.py": "bfcdce00518e8aec0a5dc63cf36cd7b8a236395de358c60461bf62d76b375af0",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car_turn_search.py": "5603573421001a92adc8c2e8244b01db49b93696c117222646035485c785e5f5",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/congestion.py": "7aa213b7761c4d900345a3699b10e3423229c1a2348e6df20ee02a11888b75e5",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/connectors.py": "7ec5eeb90eb13edfa05a7e03ade78292c33881ad2d5107960a9a42ca947b986e",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/datacheck.py": "6893cb6357dece675ce5504ccb854537de5589dc99b1228622fd0be85e6550ec",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_context.py": "83118680a84b77fdeda068ec926bc0854c367ff22fbf5d0836558717c9dde086",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py": "999b547cd894ad0aae4dfdb43b4035fb2c14f2c63dea3d56b0a06ac4273d8b86",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/errors.py": "bd7aa589e9417f6b2ea6cb9f6754c961f9c0f1b61a87d91303b746bc9fbe8a1a",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/exits.py": "cc2068c85b2b40cae263e2f59fa6c06978aa36e3e746ad617f9714b3963bb7b1",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/express.py": "8cc22b41a7e991c1fe346adb77d1f3019296feb99a90d735710a11de29d2de03",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/fold.py": "98938b3397328eb4a3c994d45846e9071a9f97aa3f9e4b1a92536d8a076c4156",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/geo.py": "df940f8a21efd4487839e0a5cee5deacb56041027d30199d6f11d57df84dff51",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/graph_router.py": "5d147feb14c4b9b3477aafde8e6517f4ccb96cce7b2a5ebc0920a0bcd322eeb8",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/guardrails.py": "9c153447273208890906ea9e36b03ca6849298f62c9e666c9fabd689cbfddad8",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/line_order.py": "3c3819e9f0cddb542863fe2a32bc56d7514cd25b54f952650add9ca9b27e6abf",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py": "c6c365e9acf2beda523685842c8d8b174265b0d1a4e4a974925bef68ce892c7a",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/paths.py": "c9256063c22fd9d9bbd54b7f5497f6d1a3f8fe3161afbd96e5df12498d282bdc",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py": "07c93ec7b3d248b882cd81437148e106de77371ebd440d6987500aac90b6beb1",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan_estimate.py": "6e38d7bffe5cc23759cf5f6c51c9b6dbc9c14c371579363515c4b10db727b9c0",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/published_boarding.py": "67e1b9097cf3d46c0ae15a274a5871fcbb051a54ed130a516934acc122875370",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/runtime.py": "38cd5785d0c99146a8849bdf2eb7a9b9e445bb6f52ce1bb8d0e8e866b8ca4cfd",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/special_rail.py": "48b14321470d430f126161e8997d0b6ff29a9920bda20b3afba805385a232137",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_departure.py": "7d2150fa996a5ace3f2cc3771337de6ba0bd7a5c18984d457a9859e355f9161e",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_identity.py": "1330e72fc4da7bfd1973fcd09ccb2d51295880afa73b86f36c56a96fc757b1e4",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/taxi_budget.py": "cd7a65552ee65ac99a856a588caf55c866a6c92abed3ff139afb62e8e1ffbd1e",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/taxi_call_policy.py": "765e2d52e48c56777719912df97fe649b0b9781e1ff28add3d7b3e97761a9933",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/taxi_pricing.py": "53af926a9fd3f051c68ec3473ddaa25a3ec61711d971a8ed9983f23f29a5fc63",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/timeutil.py": "f41e35926e55b393bfb084d762b4e5718c99855fdada148d38b0ba6b7aaba36f",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/train_precision.py": "00cae96795edec643196f2da93cf5b475feef0f96fe2b087ca3abf6cb7d90066",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/transfer_walk.py": "60d0e945a8650cebd08dcf48d17c1fb9231b26679dab968e03bdfe74d76c90a2",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/turn_restrictions.py": "9f5d188552d8d252d6594f57053df6b5e52d92e95bdbd2a902c7b05c9158bff3",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py": "1a7e43c8a9963118c43e68fd5702e54b8fa695de3f1763a6cee013bc3ca4b356",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time_cli.py": "bc996c0360ac6a0733e3d52d4f3cd1d57881d41a71777ccbe6ddd1381fa3a3b5",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/__init__.py": "267fe36a5319a62ef3902a5664ef661cedfef9a69bcaaaca629c6587c825efc5",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/holidays_2026_2027.json": "b2539a7e6835bd6dd2ac3fef654d1c7f063305bbcdb9a17a7b2d4254ee67d8f4",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/metro_connectors_v1.json": "c47703c3cc1e62a311a2338550522470311b735ad1fb08413d49157bf47aec80",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.history.json": "7cb705a56d05fd7d59fa897d4796439411ffd4c726efa203d5408b89fd644279",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.json": "8ba8f8cd4df02ab9a3a424b060e6e4a07f6e6531180ff084048375c21ab94311",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/special_rail_fares_v1.json": "88ceee74a9c6e796be2b29501bc0e9f60296314b8770a123fc7611fc5a7b124e",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/taxi_call_policies_v1.json": "a33bcc406d9c80a13ab65ef4cad4a0851cb9c1319b02db9cb0ce21ab64f3be28"
+  },
+  "changed_sources": [
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/candidates.py",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py"
+  ],
+  "reference_sha256": {
+    "datasets/mobility/raw/mobility_web21_20261012_v1/kakao-bus-aligned-01.json": "2475387c882371257c60141e09f9527f1f177d1816a53114767aa90622eb0bef"
+  },
+  "limits": [
+    "소비자 웹 동일 요청 좌표 개발 진단; 상세 도로형상·실제 출입점은 미확정입니다.",
+    "Planner는 도착목표 인터페이스입니다. 웹 소요+정책여유를 도착목표로 삼고 웹 관측 분을 출발 하한으로 주었습니다. 실제 선택 시각을 별도 기록합니다.",
+    "자동차 CarService는 웹 observed_at KST를 정확한 출발시각으로 별도 계산했습니다.",
+    "자전거 웹은 순수 주행이고 제품은 따릉이 접근·대여·반납 포함이므로 총 시간 분모를 섞지 않습니다.",
+    "새 허용오차를 만들지 않았습니다. 기존 compare_kakao_golden 기준 시간5분·거리10%·택시비10%를 개발 진단에 참조합니다."
+  ]
+}

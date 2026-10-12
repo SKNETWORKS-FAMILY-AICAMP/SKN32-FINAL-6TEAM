@@ -30,6 +30,8 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 
 #: 사람이나 기계가 실제를 보고 넣은 출처. 이것이 있으면 실제에 맞춰진 것으로 본다.
 CONFIRMED = ("operator_check", "auto_map_check", "customer_report")
+#: 정답 대조표 「틀린방향」에서 폐업을 뜻하는 말(make_truth_sql.py 가 record_status 항목을 따로 만드는 기준과 같다).
+CLOSED_DIRECTION = "폐업"
 
 
 def connect():
@@ -64,6 +66,14 @@ def judge(cur, truth_id, place_uid, kind, expected) -> tuple[str, dict, str]:
         want = expected.get("record_status")
         return ("match" if now == want else "mismatch",
                 {"record_status": now}, f"기대 {want}, 지금 {now}")
+
+    # 폐업이라 원문이 실제와 달랐던 곳은 원장이 닫았으면 맞춘 것이다 — 닫힌 가게는 판정 · 대안에서
+    # 빠져 영업시간이 나가지 않는다. 규칙은 지우지 않으니 출처로 가르면 영영 틀림이 된다. `[2026-10-12]`
+    if CLOSED_DIRECTION in (expected.get("틀린방향") or ""):
+        cur.execute("SELECT record_status FROM dining.dn_place WHERE place_uid = %s",
+                    (place_uid,))
+        if cur.fetchone()[0] == "closed":
+            return "match", {"record_status": "closed"}, "폐업으로 닫혀 영업시간을 내보내지 않는다"
 
     # 영업시간. 어느 출처가 지금 판정을 만들고 있는가로 가른다.
     cur.execute("""

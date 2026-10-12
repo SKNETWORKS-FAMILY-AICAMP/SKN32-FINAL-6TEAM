@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="39" failures="0" errors="0" time="0.1871372">
+    <testsuite name="src/features/plan-check/from-review.test.ts" timestamp="2026-10-11T19:35:44.001Z" hostname="playdata" tests="19" failures="0" errors="0" skipped="0" time="0.1534289">
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the finished check, from the server&apos;s review &gt; preserves the saved service and actual revision used to invalidate old move candidates" time="0.0047726">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the finished check, from the server&apos;s review &gt; is done, titled by the server, with a day for every stop" time="0.0005799">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the finished check, from the server&apos;s review &gt; keeps the server&apos;s check lines and verdict as they are — a bad line stays bad" time="0.0033843">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the finished check, from the server&apos;s review &gt; turns a leg into the way from one stop to the next, with its own check lines" time="0.0007023">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the finished check, from the server&apos;s review &gt; carries the way the check uses, the way the calculator chose and what became of the customer&apos;s choice (`mode_choice`)" time="0.0006941">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the finished check, from the server&apos;s review &gt; carries a leg&apos;s minutes, arrival and slack; a straight-line guess (basis estimate) is marked estimated" time="0.0007075">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the finished check, from the server&apos;s review &gt; leaves what the server did not say empty: no arrival is 「」, no minutes or slack is null, no basis is not an estimate" time="0.0012027">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the finished check, from the server&apos;s review &gt; carries the booked flag of a stop: true, false, or null when the plan (or an older server) says nothing" time="0.0072204">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the finished check, from the server&apos;s review &gt; gives a stop with no coordinates no pin and a stop with no place the 「장소 없음」 flag" time="0.0012486">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the finished check, from the server&apos;s review &gt; names a card after the place the customer picked, and keeps the written words for the editor (2026-10-03: the name did not follow the change)" time="0.0051678">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the finished check, from the server&apos;s review &gt; settles a leg that waits (an end has no place) instead of leaving it spinning" time="0.0378826">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the finished check, from the server&apos;s review &gt; is null when the server could not build the check — never an empty 「all fine」" time="0.000328">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the check while the server is still working, from the events &gt; marks a line read and shows what was found on it before the GET has caught up" time="0.0132438">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the check while the server is still working, from the events &gt; moves to the check as soon as a stop has come, with only the lines that have come" time="0.0652384">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the check while the server is still working, from the events &gt; keeps a read stop&apos;s identity and missing date before any checked item arrives" time="0.0021696">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="the check while the server is still working, from the events &gt; stays on 「received」 until the server says it has started reading" time="0.0002423">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="candidates and photos &gt; turns a candidate into a card: rank, distance from the nearby stop, checks" time="0.000935">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="candidates and photos &gt; gives a search result no rank" time="0.0002075">
+        </testcase>
+        <testcase classname="src/features/plan-check/from-review.test.ts" name="candidates and photos &gt; asks for a photo only over http or https" time="0.000406">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/live/move-options.test.ts" timestamp="2026-10-11T19:35:44.722Z" hostname="playdata" tests="8" failures="0" errors="0" skipped="0" time="0.0219749">
+        <testcase classname="src/lib/live/move-options.test.ts" name="moveOptionsOf — the ways to go for one leg, as the server sent them &gt; keeps an estimated taxi fare distinct from a minimum fare" time="0.010223">
+        </testcase>
+        <testcase classname="src/lib/live/move-options.test.ts" name="moveOptionsOf — the ways to go for one leg, as the server sent them &gt; is none for anything that is not an answer" time="0.0014694">
+        </testcase>
+        <testcase classname="src/lib/live/move-options.test.ts" name="moveOptionsOf — the ways to go for one leg, as the server sent them &gt; reads the ways in the server&apos;s order and drops a way the screen does not know" time="0.0023809">
+        </testcase>
+        <testcase classname="src/lib/live/move-options.test.ts" name="moveOptionsOf — the ways to go for one leg, as the server sent them &gt; names a way with its own words when the server sent no label, and says the reason as the server wrote it" time="0.0015964">
+        </testcase>
+        <testcase classname="src/lib/live/move-options.test.ts" name="moveOptionsOf — the ways to go for one leg, as the server sent them &gt; keeps a taxi fare as the lowest it can be and a fare it was not given as unknown (never 0)" time="0.0004875">
+        </testcase>
+        <testcase classname="src/lib/live/move-options.test.ts" name="moveOptionsOf — the ways to go for one leg, as the server sent them &gt; decides `fits` from the slack only when the server said nothing, and never turns an explicit unknown into late" time="0.0003984">
+        </testcase>
+        <testcase classname="src/lib/live/move-options.test.ts" name="modeChoiceOf — what became of the customer&apos;s choice when the stops around the leg changed &gt; reads whether it was kept or went back to the recommendation, with the reason" time="0.0010159">
+        </testcase>
+        <testcase classname="src/lib/live/move-options.test.ts" name="refusalWhy — the server&apos;s own reason for a pick it did not take &gt; says the `why` of a `mode_not_fit` refusal, else the refusal&apos;s sentence; nothing for what is not a refusal" time="0.0008733">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/live/taxi-pricing.test.ts" timestamp="2026-10-11T19:35:45.179Z" hostname="playdata" tests="12" failures="0" errors="0" skipped="0" time="0.0117334">
+        <testcase classname="src/lib/live/taxi-pricing.test.ts" name="호출 상품을 미확인 일반호출0원으로 바꾸지 않음 &gt; keeps the confirmed kakao_general product" time="0.0042133">
+        </testcase>
+        <testcase classname="src/lib/live/taxi-pricing.test.ts" name="호출 상품을 미확인 일반호출0원으로 바꾸지 않음 &gt; keeps the confirmed km_blue_immediate product" time="0.0005444">
+        </testcase>
+        <testcase classname="src/lib/live/taxi-pricing.test.ts" name="호출 상품을 미확인 일반호출0원으로 바꾸지 않음 &gt; keeps the confirmed turu_blue_immediate product" time="0.0005751">
+        </testcase>
+        <testcase classname="src/lib/live/taxi-pricing.test.ts" name="호출 상품을 미확인 일반호출0원으로 바꾸지 않음 &gt; keeps the confirmed capsi_immediate product" time="0.0002923">
+        </testcase>
+        <testcase classname="src/lib/live/taxi-pricing.test.ts" name="호출 상품을 미확인 일반호출0원으로 바꾸지 않음 &gt; keeps the confirmed mycap_immediate product" time="0.0003027">
+        </testcase>
+        <testcase classname="src/lib/live/taxi-pricing.test.ts" name="호출 상품을 미확인 일반호출0원으로 바꾸지 않음 &gt; does not default malformed or unsupported response 0 to general" time="0.0010206">
+        </testcase>
+        <testcase classname="src/lib/live/taxi-pricing.test.ts" name="호출 상품을 미확인 일반호출0원으로 바꾸지 않음 &gt; does not default malformed or unsupported response 1 to general" time="0.0002196">
+        </testcase>
+        <testcase classname="src/lib/live/taxi-pricing.test.ts" name="호출 상품을 미확인 일반호출0원으로 바꾸지 않음 &gt; does not default malformed or unsupported response 2 to general" time="0.0001738">
+        </testcase>
+        <testcase classname="src/lib/live/taxi-pricing.test.ts" name="호출 상품을 미확인 일반호출0원으로 바꾸지 않음 &gt; does not default malformed or unsupported response 3 to general" time="0.0002192">
+        </testcase>
+        <testcase classname="src/lib/live/taxi-pricing.test.ts" name="호출 상품을 미확인 일반호출0원으로 바꾸지 않음 &gt; does not default malformed or unsupported response 4 to general" time="0.0002865">
+        </testcase>
+        <testcase classname="src/lib/live/taxi-pricing.test.ts" name="호출 상품을 미확인 일반호출0원으로 바꾸지 않음 &gt; does not default malformed or unsupported response 5 to general" time="0.0001463">
+        </testcase>
+        <testcase classname="src/lib/live/taxi-pricing.test.ts" name="호출 상품을 미확인 일반호출0원으로 바꾸지 않음 &gt; does not default malformed or unsupported response 6 to general" time="0.0003249">
+        </testcase>
+    </testsuite>
+</testsuites>

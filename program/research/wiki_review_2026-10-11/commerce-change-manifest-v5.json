@@ -1,0 +1,1657 @@
+[
+  {
+    "path": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/architecture/test_engine_serves_another_domain.py",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "437851b4d409a181ab51c5ce3117c8fc5c30eea4fe5d52a9a303b9c5fb335e37"
+  },
+  {
+    "path": "final_project_cs/tests/architecture/test_engine_serves_another_domain.py",
+    "backup": "final_project_cs/tests/architecture/_backup/2026-10-11_213423_travel-commerce-cleanup/test_engine_serves_another_domain.py",
+    "before_sha256": "4a8fb55789cb862f4631a86ba50ba6a4096f6a24aef07661766898ae1522cd02",
+    "sha256": "8ad204892cc417caaa5176c5a072eefa0b126a07605286cccfcd9eea67f4e656"
+  },
+  {
+    "path": "final_project_cs/tests/unit/tools/test_tool_budget.py",
+    "backup": "final_project_cs/tests/unit/tools/_backup/2026-10-11_213423_travel-commerce-cleanup/test_tool_budget.py",
+    "before_sha256": "a34b6dae599b031777df5362c8f45c9b16bcd2db20847d5f6514ce8faac0b3a5",
+    "sha256": "66e07b9f6f148f992637ab3eb953715dc829a48d6a4644d587713e606f65a0b7"
+  },
+  {
+    "path": "final_project_cs/tests/contract/test_team_tool_discipline.py",
+    "backup": "final_project_cs/tests/contract/_backup/2026-10-11_213423_travel-commerce-cleanup/test_team_tool_discipline.py",
+    "before_sha256": "f7a106329906d823e314b7a653d28bd8f360e04e0843b46572e9985229e6193c",
+    "sha256": "96f6b1633d2f6e1c7970e3f388ac293ef1ec914a68f6896814662ca69e994b41"
+  },
+  {
+    "path": "final_project_cs/tests/unit/core/test_proposal_verification.py",
+    "backup": "final_project_cs/tests/unit/core/_backup/2026-10-11_213423_travel-commerce-cleanup/test_proposal_verification.py",
+    "before_sha256": "f2c9268063b62e53c8e79bf85bef1305a60183c34b2fdcdda5dbb6375290e17e",
+    "sha256": "faadaccc37025998e13b5426b9b6ba4a2244fc913cc5e4cc0e05001629489155"
+  },
+  {
+    "path": "final_project_cs/eval/datasets/attack_fixtures.jsonl",
+    "backup": "final_project_cs/eval/datasets/_backup/2026-10-11_213423_travel-commerce-cleanup/attack_fixtures.jsonl",
+    "before_sha256": "6ecc7463c18d37245fe84a7209735be876342307998cab4ed6ac848fe6e36dc3",
+    "sha256": "51ca5340aa51d404cebac140b05ed2c39e20a022e56630095fea88adbfeb88fd"
+  },
+  {
+    "path": "final_project_cs/scripts/map_commits_to_phase.py",
+    "backup": "final_project_cs/scripts/_backup/2026-10-11_213423_travel-commerce-cleanup/map_commits_to_phase.py",
+    "before_sha256": "ffd69b389fe3c97d63257b92995385b4ed2b0160efc3e3a977c73a59f507dde3",
+    "sha256": "228a08d38ae64a01f55f955f8b9926e544bbf8b9fdb1e4a798f95a8bb6860db3"
+  },
+  {
+    "path": "final_project_cs/tests/unit/core/test_commit_phase_mapping.py",
+    "backup": "final_project_cs/tests/unit/core/_backup/2026-10-11_213423_travel-commerce-cleanup/test_commit_phase_mapping.py",
+    "before_sha256": "35e616dcb3a43735628e01057c941a46b9219cf01c2480cd23fa3d0088fe272c",
+    "sha256": "6315166bd080d976553e6e02b17c70a2ebb21596deb31120b09094616df23efe"
+  },
+  {
+    "path": "final_project_cs/legacy/commerce_cleanup_2026-10-11/app/presentation/api/mcp.py",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "18581bf97f90c5607820c1f001a62280c31faa0da082cafc0ae3dbe46da60049"
+  },
+  {
+    "path": "final_project_cs/app/presentation/api/mcp.py",
+    "retired_to": "final_project_cs/legacy/commerce_cleanup_2026-10-11/app/presentation/api/mcp.py",
+    "backup": "final_project_cs/app/presentation/api/_backup/2026-10-11_213423_travel-commerce-cleanup/mcp.py",
+    "before_sha256": "18581bf97f90c5607820c1f001a62280c31faa0da082cafc0ae3dbe46da60049",
+    "sha256": null
+  },
+  {
+    "path": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/contract/test_mcp_opens_a_classified_case.py",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "f0a56b450de78485ba2908b66d80fb20551b9a7fd61890911df9df27b0219198"
+  },
+  {
+    "path": "final_project_cs/tests/contract/test_mcp_opens_a_classified_case.py",
+    "retired_to": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/contract/test_mcp_opens_a_classified_case.py",
+    "backup": "final_project_cs/tests/contract/_backup/2026-10-11_213423_travel-commerce-cleanup/test_mcp_opens_a_classified_case.py",
+    "before_sha256": "f0a56b450de78485ba2908b66d80fb20551b9a7fd61890911df9df27b0219198",
+    "sha256": null
+  },
+  {
+    "path": "final_project_cs/legacy/commerce_cleanup_2026-10-11/app/presentation/api/cases.py",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "11036b3989246a85cb11884535fadd0f784393aaa2a8b7c1930be3581ab37e94"
+  },
+  {
+    "path": "final_project_cs/app/presentation/api/cases.py",
+    "backup": "final_project_cs/app/presentation/api/_backup/2026-10-11_213423_travel-commerce-cleanup/cases.py",
+    "before_sha256": "11036b3989246a85cb11884535fadd0f784393aaa2a8b7c1930be3581ab37e94",
+    "sha256": "65fe9fe16cf9176f3188743ee768426d791fe7d3497d165c039235b320687009"
+  },
+  {
+    "path": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/integration/api/test_api_runtime.py",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "9fee85b78f6d60a61e0b84e9cf7c2692b30692eb48a6bd9eaf90f2ad0b643616"
+  },
+  {
+    "path": "final_project_cs/tests/integration/api/test_api_runtime.py",
+    "backup": "final_project_cs/tests/integration/api/_backup/2026-10-11_213423_travel-commerce-cleanup/test_api_runtime.py",
+    "before_sha256": "8d487df0bcdaf0c2774081caf494dbb623e77706aa5fd7d93b30494dc05e4f05",
+    "sha256": "945a19edd8fe99d44747da416e2f6ab4b90bad99b36e1c187fadaf043b235f82"
+  },
+  {
+    "path": "final_project_cs/tests/contract/test_module_toggles.py",
+    "backup": "final_project_cs/tests/contract/_backup/2026-10-11_213423_travel-commerce-cleanup/test_module_toggles.py",
+    "before_sha256": "a2b6d297a163404d7c538345ab6d3688cc14b1af5ac77dd021b8b1b9393ea5e1",
+    "sha256": "59909c5945b845f0354d641d2a6aa85797631dea7306ffeea1f84e8cb85d7093"
+  },
+  {
+    "path": "final_project_cs/scripts/verify_module_toggles.py",
+    "backup": "final_project_cs/scripts/_backup/2026-10-11_213423_travel-commerce-cleanup/verify_module_toggles.py",
+    "before_sha256": "a875f067a00e4c4787deccd1e8c982c44651090073cfd8c9c2865db9cb84bf48",
+    "sha256": "dcc6900e8501888d64c41b0ff5d77c7eb1d8a9032f2d38497977a65c3122d206"
+  },
+  {
+    "path": "final_project_cs/tests/security/test_scope_contract.py",
+    "backup": "final_project_cs/tests/security/_backup/2026-10-11_213423_travel-commerce-cleanup/test_scope_contract.py",
+    "before_sha256": "3506d0037ede2af9d58e6aa8022037dc206cdd3909aed1b669bb47544395967b",
+    "sha256": "afb2b875e9f978e24a87e8e7ee2cae7969040b31e2d1d5eaedec4dcc7f722751"
+  },
+  {
+    "path": "final_project_cs/tests/security/test_auth_and_scope_guards.py",
+    "backup": "final_project_cs/tests/security/_backup/2026-10-11_213423_travel-commerce-cleanup/test_auth_and_scope_guards.py",
+    "before_sha256": "8e3ecdedc112f645060b407e5b041c7d62339b0f2f23f700b48855c39d8182ed",
+    "sha256": "a0ee03d1065409771ace190c69fbd9a74e7203dc95c04b16298220b4c52f958b"
+  },
+  {
+    "path": "final_project_cs/config/guardrails.yaml",
+    "backup": "final_project_cs/config/_backup/2026-10-11_213423_travel-commerce-cleanup/guardrails.yaml",
+    "before_sha256": "d0eff4d7189d8a35eed50da16b4f915f4cd82dd0d93e820d0fec839a9c02a83b",
+    "sha256": "68dc5618ca9b12c5b9cbc83dbcf8b65f5ab4e3f461a357a29a1753b683c374f7"
+  },
+  {
+    "path": "final_project_cs/app/infrastructure/db/migrations/migration-plan.json",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "31963e12fa2d8d7a178d1c3ba18de713449f0d7959a3e00235b64c4cb7a9cd58"
+  },
+  {
+    "path": "final_project_cs/app/infrastructure/db/migration_plan.py",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "00876e2387b91a57482c87896311169ded73b83ad590283406ba74c217c446e3"
+  },
+  {
+    "path": "final_project_cs/app/infrastructure/db/migrate.py",
+    "backup": "final_project_cs/app/infrastructure/db/_backup/2026-10-11_213423_travel-commerce-cleanup/migrate.py",
+    "before_sha256": "9c46f0a9e3ec19b73cf36d1618500a48a35b56981a63fb9f2d86ad82e67b4982",
+    "sha256": "fd3d0b4369c4f4a5a162fa68a7c1fea6ccf3ed8a8376429b7833036c3ac43d7c"
+  },
+  {
+    "path": "program/scripts/build_wiki_catalogs.py",
+    "backup": "program/scripts/_backup/2026-10-11_213423_travel-commerce-cleanup/build_wiki_catalogs.py",
+    "before_sha256": "9e618ce522de015d085357f5a5d7c5d46bacd93f4d9038a6e98a399580d51f10",
+    "sha256": "0d096a8ae1a7656aba00329d0c4c245dd7ed2abf176b252f9355e207ee1168a7"
+  },
+  {
+    "path": "final_project_cs/tests/architecture/test_engine_accepts_travel_policies.py",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "8ad204892cc417caaa5176c5a072eefa0b126a07605286cccfcd9eea67f4e656"
+  },
+  {
+    "path": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/architecture/test_engine_serves_another_domain.py",
+    "backup": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/architecture/_backup/2026-10-11_213529_travel-commerce-cleanup/test_engine_serves_another_domain.py",
+    "before_sha256": "437851b4d409a181ab51c5ce3117c8fc5c30eea4fe5d52a9a303b9c5fb335e37",
+    "sha256": "8ad204892cc417caaa5176c5a072eefa0b126a07605286cccfcd9eea67f4e656"
+  },
+  {
+    "path": "final_project_cs/tests/architecture/test_engine_serves_another_domain.py",
+    "retired_to": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/architecture/test_engine_serves_another_domain.py",
+    "backup": "final_project_cs/tests/architecture/_backup/2026-10-11_213529_travel-commerce-cleanup/test_engine_serves_another_domain.py",
+    "before_sha256": "8ad204892cc417caaa5176c5a072eefa0b126a07605286cccfcd9eea67f4e656",
+    "sha256": null
+  },
+  {
+    "path": "final_project_cs/tests/architecture/test_engine_accepts_travel_policies.py",
+    "backup": "final_project_cs/tests/architecture/_backup/2026-10-11_213529_travel-commerce-cleanup/test_engine_accepts_travel_policies.py",
+    "before_sha256": "8ad204892cc417caaa5176c5a072eefa0b126a07605286cccfcd9eea67f4e656",
+    "sha256": "e932cb1b469e4f80af90c900155a44f39e3fa2f47c8eae9bf0412d52925e0550"
+  },
+  {
+    "path": "final_project_cs/scripts/verify_module_toggles.py",
+    "backup": "final_project_cs/scripts/_backup/2026-10-11_213529_travel-commerce-cleanup/verify_module_toggles.py",
+    "before_sha256": "dcc6900e8501888d64c41b0ff5d77c7eb1d8a9032f2d38497977a65c3122d206",
+    "sha256": "d9a3a754aecd13c9fa0cef43a25471e2d714d25f00455aab16e95ab9a51289d9"
+  },
+  {
+    "path": "final_project_cs/tests/unit/core/test_current_migration_plan.py",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "bb5889b93645707802a280c3c3e7e579584afd9d1a0ce56557b2fe9c89a32c89"
+  },
+  {
+    "path": "final_project_cs/tests/integration/db/test_migrations_rerun.py",
+    "backup": "final_project_cs/tests/integration/db/_backup/2026-10-11_213529_travel-commerce-cleanup/test_migrations_rerun.py",
+    "before_sha256": "4dd872b120099081764e9be1125a28e0d6aa7d65bbf4e7407ad999c583a50ebd",
+    "sha256": "a3a277da4cd55908537f1e53a7d51f098ac711a229b006e1d78b1d8cfd81d993"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/AGENTS.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "c1d96fdb823d8775662fa2db4f7e0f1f4b151072e291b44c5a32bcd6fb1bc323"
+  },
+  {
+    "path": "final_project_cs/AGENTS.md",
+    "backup": "final_project_cs/_backup/2026-10-11_213940_travel-commerce-cleanup/AGENTS.md",
+    "before_sha256": "03858a9bab4befad833e4fe4673a8b4a08dcbf1896976bc55ddac8a1a208dabb",
+    "sha256": "1fdb6017b2f87e2741fb7a5d4ffb238781fa72636c0ad9dda2964ebb81b22c7b"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/CLAUDE.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "0ba7cb790723feee6e7600f9fa6e8dd67c9c4b97f43ca2c54b74dbd1a0f76a3e"
+  },
+  {
+    "path": "final_project_cs/CLAUDE.md",
+    "backup": "final_project_cs/_backup/2026-10-11_213940_travel-commerce-cleanup/CLAUDE.md",
+    "before_sha256": "daaa81e0db0055588a08b54ff553e555e9d8e4f9aebf5c11bba46bc6c45e458f",
+    "sha256": "97f4a1ad8802ebfca68316700bb3e5ec99ac394e779ddbbf0e84fb5472196507"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/RULE.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "8510e1ca45a7c0de7e6f6a3961dd3bebb322b4c33cc726ed38bd068f68882d10"
+  },
+  {
+    "path": "final_project_cs/RULE.md",
+    "backup": "final_project_cs/_backup/2026-10-11_213940_travel-commerce-cleanup/RULE.md",
+    "before_sha256": "986a30f4519889b220985eff20453670a572e3b1584341c9700135797a500c98",
+    "sha256": "d556f44a61dfbd9dfcdc0dbd332216070bbbf8c7ec7181ae5bcf16146e4b5637"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--index.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "d58a8393b08c7f55d18d0dc081283faa019895ecc360a9d135d4fbd607057127"
+  },
+  {
+    "path": "wiki/index.md",
+    "backup": "wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/index.md",
+    "before_sha256": "a6f810e28235707167cf0367eb98c975ee1df010f3b345d12827d63e1ec450c9",
+    "sha256": "49fabc684b3f528ea69bcdb95a0b042dd00b2cdad8081ac3b8159103e45837c0"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--quickstart.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "9926e57dc24741341e94803b02028cd7547e10dd8c07ebdff5873922ff279abe"
+  },
+  {
+    "path": "wiki/quickstart.md",
+    "backup": "wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/quickstart.md",
+    "before_sha256": "40ffafa707f0c53266c8e9ac52b8cf16fc88958317fa2959705a3e2b3adcb96f",
+    "sha256": "e58424f730b6c0da799501b3d836b8a85883e473ea808926161e360b24ff4f15"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--index.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "6460873a10c73406f92a77d812a83c2b8be96a3928e2453166d2bacb6ebbfa1d"
+  },
+  {
+    "path": "final_project_cs/wiki/index.md",
+    "backup": "final_project_cs/wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/index.md",
+    "before_sha256": "cc80fb2ebaa1ad17f665684e165bbbf43e157320469dfb15d3c354c347ab06e7",
+    "sha256": "8f899f2766145be75ad5440ae138607c81bfecb0fe5be2e396f8fe97872b6e4a",
+    "observed_sha256": "e5494dcf6d825f8d654d48c2d5513f4b44260d079a0887f9f20856da65874e40",
+    "subsequent_shared_change": "Retained subsequent shared-workspace edit; links and affected MCP tests rechecked. Original after-hash is preserved."
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--index.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "77631f928fa75bb4463c3b16b507604de995b5833dfeadf988d28706c2144141"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/index.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_213940_travel-commerce-cleanup/index.md",
+    "before_sha256": "f60064275debf9ba1dc892a96a98bc82dabe24e29f966449ef7cfb274ee90ea0",
+    "sha256": "bd1b80138479521869d98d9fc35b6595093602ec08ba889a42499cf05ac480fa",
+    "observed_sha256": "7c1089c5a692801dcfb2d641362f34ae21041beac199471f559711d266a79351",
+    "subsequent_shared_change": "Retained subsequent shared-workspace edit; links and affected MCP tests rechecked. Original after-hash is preserved."
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--context--corpus-authoring.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "534594c9e718d3fe5a72db0f195e8860399e196f7746172a99fe6c3aff414056"
+  },
+  {
+    "path": "final_project_cs/wiki/context/corpus-authoring.md",
+    "backup": "final_project_cs/wiki/context/_backup/2026-10-11_213940_travel-commerce-cleanup/corpus-authoring.md",
+    "before_sha256": "a4590606ba1c8df25e22b944663bf51e2ef859d03c1cd3865b7e8aab137243d7",
+    "sha256": "23e7a5e6f1c095a0789ba95e94a1b45e884159acd04c4ec3571da9980fc3f036"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--external--mcp-tools.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "49b1d14777885ea6ea2c42a46e7d41f53908f10eb1324464336e16870c0c8a4f"
+  },
+  {
+    "path": "final_project_cs/wiki/external/mcp-tools.md",
+    "backup": "final_project_cs/wiki/external/_backup/2026-10-11_213940_travel-commerce-cleanup/mcp-tools.md",
+    "before_sha256": "e8192826b1a78a3726b79ba930de2756284cdb6507deee5f8b18ad5d2699c4dd",
+    "sha256": "ec762c1b3171c84698115ca6a902351e4edfc4d7e153c60e21cc8edcb75f094c"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--operations--run.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "df4325017db78f3ba73eebbae7e3929076bbef022f85ecd0cdeb0684f8758fec"
+  },
+  {
+    "path": "final_project_cs/wiki/operations/run.md",
+    "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_213940_travel-commerce-cleanup/run.md",
+    "before_sha256": "cdca08aaaff626f3ac8e0db142f54ac2f9ec6fb3eb025e50608d5c36ffc66b56",
+    "sha256": "59a87ef87b50550419bfd1fd3c644f20ed6991df67ae81fcf8b500e8c51c83e1"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--data--migrations.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "286557810436acc520fad1935b7eb5b5b8d6067a5e96f0ae0c776d526474c432"
+  },
+  {
+    "path": "final_project_cs/wiki/data/migrations.md",
+    "backup": "final_project_cs/wiki/data/_backup/2026-10-11_213940_travel-commerce-cleanup/migrations.md",
+    "before_sha256": "ce6b38274e7d3492f476db26fda2cf284f8f5235888c00e5f9976877bacc01bb",
+    "sha256": "d3da505bbe4b930427f486bc365a50cff1fece4ffc2b5c4fa78afeb054f6be19"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--product--personas.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "cececd108a71b4e2c2287186778c6bc3f8697ded7d02c816ecf5da56deefe23f"
+  },
+  {
+    "path": "wiki/product/personas.md",
+    "backup": "wiki/product/_backup/2026-10-11_213940_travel-commerce-cleanup/personas.md",
+    "before_sha256": "6964f818a6fe176763e0e5b4ae7c1e1fe03947b2e1306bd4e1dfb3979d107a9f",
+    "sha256": "01a5acf838286548a833a0c489c56f0468e9802b27c9e59d63d226daf6bc3da4"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--product--problem.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "af4c761caba479d493de5e2adaad47db31bae0465518f366f6c2dde0727005ef"
+  },
+  {
+    "path": "wiki/product/problem.md",
+    "backup": "wiki/product/_backup/2026-10-11_213940_travel-commerce-cleanup/problem.md",
+    "before_sha256": "ccc9ef8e6385d872ed6726352f9e5304f23360455f5d2cacebe0ada4f161ae64",
+    "sha256": "ad291385a12b05177c6054e52eccf13f451e597f5a8564f813a0f4b5b0b5e263"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--product--pitch-questions.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "be9acd7cdb575663c646f37a6fbdc156d3327c89ef2ecc688094d7d7c49cdc8a"
+  },
+  {
+    "path": "wiki/product/pitch-questions.md",
+    "backup": "wiki/product/_backup/2026-10-11_213940_travel-commerce-cleanup/pitch-questions.md",
+    "before_sha256": "0e28deb443ef6a54c3e3662971367f595d2f4f9d767611798760121b63f54535",
+    "sha256": "397e59fd162836efc6440971bcbb6add295f9fd55a471d134afb62c9fd9707ce"
+  },
+  {
+    "path": "datasets/wiki/records/commerce_2026-10-11/catalog.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "42b12e72d2fd35618ed522ecd44fdddec58b5f30f9c0f383c96f6c0ab2d0fcfa"
+  },
+  {
+    "path": "datasets/wiki/catalog.md",
+    "backup": "datasets/wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/catalog.md",
+    "before_sha256": "81b0a3984694072097675654db023c7a938a587363a6e204f9c399299e90deaa",
+    "sha256": "26b5c148b568312e89eb5aa48c987c97985cf8971139ca60180ac52b492031a7"
+  },
+  {
+    "path": "datasets/wiki/records/commerce_2026-10-11/coupang-extension.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "f5ee2002d6f0258b16171941dd43c00489f23944f18d163fbe0639e0e34b0acd"
+  },
+  {
+    "path": "datasets/wiki/coupang-extension.md",
+    "backup": "datasets/wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/coupang-extension.md",
+    "before_sha256": "4320fa16cebd2aaabf56b930360c49ecde4276bfbef9c6b75ec06fab23b0c23f",
+    "sha256": "5dfef782dd20c351fec2311b7b31353592ba97eac5e7d9716b7e6bfed351b0da"
+  },
+  {
+    "path": "datasets/wiki/records/commerce_2026-10-11/distribution.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "d47a19f3d95d8a9a36d8e44dd1c11c641ea065b1b8e29968052c78a655e9abeb"
+  },
+  {
+    "path": "datasets/wiki/distribution.md",
+    "backup": "datasets/wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/distribution.md",
+    "before_sha256": "ee6d9b510e097c644183e0239d758b807a2ac5433d3c33b792a05f0c3d2315fe",
+    "sha256": "3d4dcf6ab261403e1935e66851c4dfca7db418754551024d4b6ee691dac79baf"
+  },
+  {
+    "path": "datasets/wiki/records/commerce_2026-10-11/scraper-notes.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "d4a270fe51ef5512f0b7bb87f6ee54a231dd2b95cf2fb2652a3648e49aee8932"
+  },
+  {
+    "path": "datasets/wiki/scraper-notes.md",
+    "backup": "datasets/wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/scraper-notes.md",
+    "before_sha256": "fe7fde2f6c4c0a5e87293165b6f42d35f48b0f62f1cb991b4249e77a87cc992b",
+    "sha256": "0469aaf37d569e3bdec67b1b8dcaf5b5c4dfe4cab02bc9efeb4392e6f539d921"
+  },
+  {
+    "path": "datasets/wiki/records/commerce_2026-10-11/source-selection.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "d2eecd1e6e64e081133354b653aa69b8665cf5737f51b330cfc382e7ad600ffd"
+  },
+  {
+    "path": "datasets/wiki/source-selection.md",
+    "backup": "datasets/wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/source-selection.md",
+    "before_sha256": "dfc6e1c6901e4e165072cc12f273d9db3f040cede496c04a59679fa2e191f7e2",
+    "sha256": "1d14679dcda6197db33c8830ba02b643c3e36a37dacd8d2b14abf321c6c357a1"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--blind-spots.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "4ac90ba254d20fac5a4bc9dd8f351a64bf98215240c506953827a1de08707ca1"
+  },
+  {
+    "path": "final_project_cs/wiki/quality/blind-spots.md",
+    "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_213940_travel-commerce-cleanup/blind-spots.md",
+    "before_sha256": "1bc7101f6273c832d2bcfc652aeed0ea4068c41ac1d591a6726a085ed158ab24",
+    "sha256": "7efb6126c269a1e3e75ae5691dd46b1e97ad67a5144f53a09adf9831511fd595"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--dod-evidence-drift.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "826d0e6030163f6e5152016ac2c9e32f47d251d902fce109ab546018f65997e7"
+  },
+  {
+    "path": "final_project_cs/wiki/quality/dod-evidence-drift.md",
+    "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_213940_travel-commerce-cleanup/dod-evidence-drift.md",
+    "before_sha256": "b9174286994e97bf19871ceafe0c9a8823869668c1b7d06fb1eb4fb6a221c041",
+    "sha256": "00596ae874b714f208b2521165009caf5d9eb35244a2abe49a6a965ba80374a2"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--decisions--D-001-payment-ownership.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "1a0af2482b2a22430a871d466496288c9a22ab5e9459409e16f80bc1eeead889"
+  },
+  {
+    "path": "wiki/decisions/D-001-payment-ownership.md",
+    "backup": "wiki/decisions/_backup/2026-10-11_213940_travel-commerce-cleanup/D-001-payment-ownership.md",
+    "before_sha256": "a4d1429645f9318c93bc7683f3629eed96980ec6cb187a7a8b1311a46e7ef31c",
+    "sha256": "076617df6235f278a1528c0977cb83ee08647ca60566fb8602f3a593663bb599"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--decisions--D-008-review-spam-out-of-scope.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "0b00a9e7b74613957e159c7c2e13898bf838d909a349562c65008524890e38c3"
+  },
+  {
+    "path": "wiki/decisions/D-008-review-spam-out-of-scope.md",
+    "backup": "wiki/decisions/_backup/2026-10-11_213940_travel-commerce-cleanup/D-008-review-spam-out-of-scope.md",
+    "before_sha256": "6b564380cb7aaf4f37b5b3a7aa0921f066c9dcaf5cd3500ab65a08b2277578de",
+    "sha256": "9a5ea785843153e2dd77ba80e4c44db66c4b2bd977cdb664aadf945e4f5b55f7"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--decisions--D-014-judge-rebaseline.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "5a6a3c15260798f88020d401085b3bdbb3ae4d8bb17254b78e30c1f7db5adda8"
+  },
+  {
+    "path": "wiki/decisions/D-014-judge-rebaseline.md",
+    "backup": "wiki/decisions/_backup/2026-10-11_213940_travel-commerce-cleanup/D-014-judge-rebaseline.md",
+    "before_sha256": "5a6a3c15260798f88020d401085b3bdbb3ae4d8bb17254b78e30c1f7db5adda8",
+    "sha256": "b2b112501528dd156f208259fb0425be4ad82063550560ef8786b2a842b50f8f"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--delivery--scope-verdicts.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "d03a95ec6445489e86b79a3bc3224b047aeb42fa86488b0570804e94d3f07014"
+  },
+  {
+    "path": "wiki/delivery/scope-verdicts.md",
+    "backup": "wiki/delivery/_backup/2026-10-11_213940_travel-commerce-cleanup/scope-verdicts.md",
+    "before_sha256": "b98b768ab96ac2cc60d527e11fbe63cec70e95c3b50472a507da27e72790fc94",
+    "sha256": "48dd4ee37aebeadf700042ee64204fd67abc09cbcf988b79411973c71506d0d4"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--evaluation--dod28-rerun.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "54ab97222ac1caf6f57711a51bb5e6afdea24732e83f3556a57715247533e325"
+  },
+  {
+    "path": "wiki/evaluation/dod28-rerun.md",
+    "backup": "wiki/evaluation/_backup/2026-10-11_213940_travel-commerce-cleanup/dod28-rerun.md",
+    "before_sha256": "6d6f33932631a12d5afff98436ef454c9208cfdbfb3cc326cf19bbfecb811bed",
+    "sha256": "1747512fe418362b07f00bc03866ad9d231dd20e5e036e3fc90c7c1956043621"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--governance--migration-scope--coverage-2026-09.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "4a9c1c7a084e3186962f28caab99f80de84ed0e4664e896c086d008065ab84b4"
+  },
+  {
+    "path": "wiki/governance/migration-scope/coverage-2026-09.md",
+    "backup": "wiki/governance/migration-scope/_backup/2026-10-11_213940_travel-commerce-cleanup/coverage-2026-09.md",
+    "before_sha256": "9ba3efb9697ff6059a3d860644831146ce717238c6b4640dfc2197a55212437c",
+    "sha256": "2e5bb7c7a5ef13fca77da40769e08a71f2912fd183de719e90bfddf00dc24420"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--governance--type-verification--round-9.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "7843085d7fcc830dfb8f0b49a68d247e34ae953f0ab578ef426ce59dfd9b819a"
+  },
+  {
+    "path": "wiki/governance/type-verification/round-9.md",
+    "backup": "wiki/governance/type-verification/_backup/2026-10-11_213940_travel-commerce-cleanup/round-9.md",
+    "before_sha256": "1988f38ddb1208633547602984d6096b421c7daee0836798697df13110bd04db",
+    "sha256": "0da80c06617ad5ae2efc685a5a58238e7cf06bd70a4c0c80e83790059d9002b0"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--research--dispute-cases.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "12892306bb6818db5e2feab4775d428f88f0fbff74f769dd726bac3f370c0ba8"
+  },
+  {
+    "path": "wiki/research/dispute-cases.md",
+    "backup": "wiki/research/_backup/2026-10-11_213940_travel-commerce-cleanup/dispute-cases.md",
+    "before_sha256": "8ea4e16605869ec1c265d314e085731ff8468ec7004d902c74adc8d3e293fd40",
+    "sha256": "0697b6d1d7cd2caf1309cbed2e0db14373b47a661ac21b11dba0b4f7c1925e6f"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--research--legal-basis.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "941fae9588be1a39c41bbeb94380170924c28cb725b9b7962379ac0ee89d23c4"
+  },
+  {
+    "path": "wiki/research/legal-basis.md",
+    "backup": "wiki/research/_backup/2026-10-11_213940_travel-commerce-cleanup/legal-basis.md",
+    "before_sha256": "05e6a2b6d878eec5a25bff0b2934d694c013f830a672d01bd63ffe6ba9e631fe",
+    "sha256": "9dc76925d1ae0acb75f38398a9b7d46dd3364e26464b7998cfcbf09a6a618c4c"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--invariants.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "7bac42815be1ca311a1388ede8ef44cada925bab04ba74cc4f1463600885c3b6"
+  },
+  {
+    "path": "final_project_cs/wiki/quality/invariants.md",
+    "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_214803_travel-commerce-cleanup/invariants.md",
+    "before_sha256": "1f8206280b3c4d2f6adcb3e30ee79f2a34a66422a78b460c94612f8f7d77ff57",
+    "sha256": "593531b089e76bcc527e2451e82cdf1e6d882f15d0a6596e36baa5d4ac8648b7"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--actions--evidence-check.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "d6beeb01b33fc83bb515770bc5de63e5ec87f7c4d721f8b2363f495b99b0630c"
+  },
+  {
+    "path": "final_project_cs/wiki/actions/evidence-check.md",
+    "backup": "final_project_cs/wiki/actions/_backup/2026-10-11_214803_travel-commerce-cleanup/evidence-check.md",
+    "before_sha256": "199edd4351352fab9384cc7904f3eca610486846d17d9f89b813894b688ea977",
+    "sha256": "c86661c1ccad33f0b187faa161a9b9002f06b282118dd765b8ae9d1141c94bc1"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--actions--tool-gateway.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "5afc949113b281b63b99395f26074a8d10f9ba142d44977e7c4ab374b5c6f6fb"
+  },
+  {
+    "path": "final_project_cs/wiki/actions/tool-gateway.md",
+    "backup": "final_project_cs/wiki/actions/_backup/2026-10-11_214803_travel-commerce-cleanup/tool-gateway.md",
+    "before_sha256": "0f747b85d34f787306ac480a32dbd6ba1c7c9fe5a09c1f7bc14e931a40ae2435",
+    "sha256": "1abcdfaf90f2d4cca3da6ff773dd89f438e8f09ff4cfe9350ab13f67bcc54839"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--context--travel-corpus.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "610344461ff713d5d235b7f826e51bb9f449adec8f5bf3b1ff51273701683278"
+  },
+  {
+    "path": "final_project_cs/wiki/context/travel-corpus.md",
+    "backup": "final_project_cs/wiki/context/_backup/2026-10-11_214803_travel-commerce-cleanup/travel-corpus.md",
+    "before_sha256": "c97ac5dbfbff0872cabb249e29c2c53f4f51ade3ba1d1d477290b6c94eb54909",
+    "sha256": "ad0bc64683e38c1a5e61dc3c7b7d40b818ad78b5908b9117777a7e2f3bdfa7e3"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--common-utils.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "11c294b99dca8c6d1decb8f2710865110676d321759d9c6e8cb692ebd3c15cb4"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/common-utils.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_214803_travel-commerce-cleanup/common-utils.md",
+    "before_sha256": "903185aa1f0cb89fed1e258590e3c3533631f7fce8dce867f704063c4e9fa1de",
+    "sha256": "a478b646280eb0b9cfb006b7fe39f9d1961d4fe1f51a77c2af73f919a23aa9a4"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--build-order.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "f5fb3f5a77570bdee2317fbbb081f28fb579d16bb42f3424ec979e3f8c663e66"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/build-order.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_214803_travel-commerce-cleanup/build-order.md",
+    "before_sha256": "3bab8715ff6986d14aca3819c90140c4986212ca413b7ce44176a236e318c4ed",
+    "sha256": "a0b8ebbec23e7d44b77c86ef51e34478c76a8b821363886188318865123d8caf"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--team-boundary.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "f73a11bf1326eb6e26fb238940d17f7aafacd915268423a4af93312c76859169"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/team-boundary.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_214803_travel-commerce-cleanup/team-boundary.md",
+    "before_sha256": "2859658ab1756996d466abb30ab76e184c3a790d5281d93dc82f5c12e51c2c41",
+    "sha256": "e6deece936251c620b0b14c75a7884b79ea7bf527d0afafdbeeafb5b9a77a106"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--dining.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "4b1f2c2f3c4abf4588097a969ba307b7b631adf40dd6ad921ba55750d0952d3b"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/dining.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_214803_travel-commerce-cleanup/dining.md",
+    "before_sha256": "63370e3995516600b83d744036c8205350b297ecc2f027521712bad0b946d939",
+    "sha256": "3dc875dea2c5046b35370bde5c65421ac4d5699df60ced14a9067eb80fbc073a"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--product--scope.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "da9c72dd7f4b6b1f02b2c672410f8a2aad13ee6fd64e68dff84477bfc4884275"
+  },
+  {
+    "path": "wiki/product/scope.md",
+    "backup": "wiki/product/_backup/2026-10-11_214803_travel-commerce-cleanup/scope.md",
+    "before_sha256": "81715676d76774d488567dd0f976bbeae9537eb20a5ce2445e448b340d9865aa",
+    "sha256": "f775df24631b67007828d2d356ab5d577298447f3ac6ad2bcd4ebbcc72b741d5"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--product--index.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "b145ff53212715b6669510512a3bece69bcd5da09d489fa351cb83274636adc4"
+  },
+  {
+    "path": "wiki/product/index.md",
+    "backup": "wiki/product/_backup/2026-10-11_214803_travel-commerce-cleanup/index.md",
+    "before_sha256": "96de689708d49a9afa1ce1c83055144b0e1e5a91f31e72a7ae0bd87540f3e0c5",
+    "sha256": "408eb43c3dcc0b923b16365ab75abe7a4d7974d6b2ab0a13c564438f0bf5b40e"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--product--positioning.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "f05795e273768417ffe7ad3f09fe7c8ee33ed3fb392ee17c95e8e13df688a441"
+  },
+  {
+    "path": "wiki/product/positioning.md",
+    "backup": "wiki/product/_backup/2026-10-11_214803_travel-commerce-cleanup/positioning.md",
+    "before_sha256": "c5b0417c356e1821dc86b2c73959e548d6c815530f788eda29c79adbb9abcfb7",
+    "sha256": "0657fe1f0d874be0fdef8f3ee18deb10b8ec7957ca698a15db6dedb605f7439f"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--product--glossary.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "1fd6abc23b4ef0d703704388db6cb75f27cacc2e2f5713f94da5e49587ee3660"
+  },
+  {
+    "path": "wiki/product/glossary.md",
+    "backup": "wiki/product/_backup/2026-10-11_214803_travel-commerce-cleanup/glossary.md",
+    "before_sha256": "d4e150e9012df819e183a050357b6e1d5b3deb74713815b861dd3a4b8f24ecb6",
+    "sha256": "74715481292f7bac6242a92d9f5c104bf1af700e273ed1a492a2aa6b1d10e5cb"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--business--index.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "3782f8d7dd0812c22736a4fa2add99bedab0d0a690b385c3bbe8cb2e526e7984"
+  },
+  {
+    "path": "wiki/business/index.md",
+    "backup": "wiki/business/_backup/2026-10-11_214803_travel-commerce-cleanup/index.md",
+    "before_sha256": "9f7aa7f36f446f2e36fa3faf99a676092df5144d9f3c89a90cbe1ea9e4429860",
+    "sha256": "6e1cc6c6e143d8896ea16d6299ddda27fbede7333eea15e8d1aa7bcb22ee75c4"
+  },
+  {
+    "path": "wiki/index.md",
+    "backup": "wiki/_backup/2026-10-11_214803_travel-commerce-cleanup/index.md",
+    "before_sha256": "49fabc684b3f528ea69bcdb95a0b042dd00b2cdad8081ac3b8159103e45837c0",
+    "sha256": "abb26e49c9c8aaf0f6f7ac6e8b0fd3cfbf23ff8a080ba6889580ef6ceb8ef84d"
+  },
+  {
+    "path": "wiki/quickstart.md",
+    "backup": "wiki/_backup/2026-10-11_214803_travel-commerce-cleanup/quickstart.md",
+    "before_sha256": "e58424f730b6c0da799501b3d836b8a85883e473ea808926161e360b24ff4f15",
+    "sha256": "8b513ee359e908ebeec30422ec257a19711780f767a1d3af4d2538207d0e1e02"
+  },
+  {
+    "path": "wiki/product/personas.md",
+    "backup": "wiki/product/_backup/2026-10-11_214803_travel-commerce-cleanup/personas.md",
+    "before_sha256": "01a5acf838286548a833a0c489c56f0468e9802b27c9e59d63d226daf6bc3da4",
+    "sha256": "ea094c6e9be18ca475a3894007c8ab26ff6939446841ad038292d288a06be579"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--test-map.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "e36698d244511681576e9810d8254d28ff726af9d90eeb9b45b9c14848d9d6da"
+  },
+  {
+    "path": "final_project_cs/wiki/quality/test-map.md",
+    "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_214803_travel-commerce-cleanup/test-map.md",
+    "before_sha256": "3903ec44601e2b49cc9d239d0a1a6e2088aa7202c2d65a479cc398f11225f610",
+    "sha256": "81698ca92e10530065b80dbd44f2b75d0a5279b12f10f45186601f8d85c8988e"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--domain-swap.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "6729021cc784df5076ce84902d0e4c6916ba85122c5f77543146b9f36a824a69"
+  },
+  {
+    "path": "final_project_cs/wiki/domain-swap.md",
+    "backup": "final_project_cs/wiki/_backup/2026-10-11_214803_travel-commerce-cleanup/domain-swap.md",
+    "before_sha256": "4a14f937af202516ae77df8b596c8dcab124c065b82d42eaa816631278fcfd4b",
+    "sha256": "565c636b78f74082e2d7c349fe6b48c584edf8753589ad6497b1452f1d2a177b"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--external--index.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "c8dabaabaf824c909846d170df9cbf5c03965be2d53a74cb1f68e4677aecfde9"
+  },
+  {
+    "path": "final_project_cs/wiki/external/index.md",
+    "backup": "final_project_cs/wiki/external/_backup/2026-10-11_214803_travel-commerce-cleanup/index.md",
+    "before_sha256": "6da960bcaea202c7c5bd998bea96f4ce506a6028060164322866b0bb6265e284",
+    "sha256": "db95eb960edfbbb75f9f589f83ac3e73d7134a5a53a8c9ef8039881a3ae9f749"
+  },
+  {
+    "path": "datasets/wiki/records/commerce_2026-10-11/generation.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "2b951d39b09def84604439648f2067b20f48dbefc73043bc25a9048695de2127"
+  },
+  {
+    "path": "datasets/wiki/generation.md",
+    "backup": "datasets/wiki/_backup/2026-10-11_214803_travel-commerce-cleanup/generation.md",
+    "before_sha256": "9ec9aa4f733d1b69a748ab515245a1664e9516f661d5818a14c6e9d26b28bd4a",
+    "sha256": "ceeb6e24ab14cbc930edce24e84b631bcefde2f11af275f170d1c7a176c391cc"
+  },
+  {
+    "path": "datasets/wiki/records/commerce_2026-10-11/report-split.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "cc92bc660c0e5b4628482afd49e9f27a3de2a513b9ea1bb6012106a4a01f1b71"
+  },
+  {
+    "path": "datasets/wiki/report-split.md",
+    "backup": "datasets/wiki/_backup/2026-10-11_214803_travel-commerce-cleanup/report-split.md",
+    "before_sha256": "669f30929e5158c2362600e04963be005e11108992090d8074e585c020ef7d00",
+    "sha256": "e41cb996590219e0380cf62ea7362adbe8d4586d4b74e96d020321087d508a55"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--business--error-cost.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "091213477fb548b011cea53676259a3b166df9c5fc4385ccb2d760b44bd61da0"
+  },
+  {
+    "path": "wiki/business/error-cost.md",
+    "backup": "wiki/business/_backup/2026-10-11_214803_travel-commerce-cleanup/error-cost.md",
+    "before_sha256": "af83ba4a13fd56683958feab47fe52fe08bb35bae2d6e6f81488710916092960",
+    "sha256": "297abb0118e83c750acd33d96af4859efbb544237cdd5b32be5c004bbef90264"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--business--market.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "51e32911d7ce6c66e515b942ff8d931a679d86926a0f7d7a3f9f8d6d1d2fd320"
+  },
+  {
+    "path": "wiki/business/market.md",
+    "backup": "wiki/business/_backup/2026-10-11_214803_travel-commerce-cleanup/market.md",
+    "before_sha256": "b9b8e92f9e11c975dc079721f0a6f2e3a9769a14a1ac09f07202e1fbfb7b79ac",
+    "sha256": "0bc3663fef378edadc5ca1e2cbc7f8f15a6961031c0c1acb2e68c0277dbf67fb"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--business--measure-review-time.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "f025ef0b36ca1627b92f2202ef040a2f92d94396fe801cc823604a783d565649"
+  },
+  {
+    "path": "wiki/business/measure-review-time.md",
+    "backup": "wiki/business/_backup/2026-10-11_214803_travel-commerce-cleanup/measure-review-time.md",
+    "before_sha256": "a5eaa38c76933836155a50b3bee2cacfad3441c4ffa371d4fde98fd632e7e8e6",
+    "sha256": "550d8bd3153ab5904287fa08dc8cb5e97211429fee7bbc5fbc1e0a6cf2f2c3e5"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--business--pricing.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "a8c5854621c080e793189ca699685049203eef3ee7a75c402c63d7252432c960"
+  },
+  {
+    "path": "wiki/business/pricing.md",
+    "backup": "wiki/business/_backup/2026-10-11_214803_travel-commerce-cleanup/pricing.md",
+    "before_sha256": "3dba175b1ed5d869bfdebe64aa27c595935857dccfacc3fff01deec00ecc6ade",
+    "sha256": "544831f590aa1c41e7d66d4a3e6cd1bc4b57f5810ce61274e7bc45e8eb56d031"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--business--unit-economics.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "2a6ec09c44111b1eeb8bd877c782e0016d4b0e66f7d4bcf40b7840134a89ff0d"
+  },
+  {
+    "path": "wiki/business/unit-economics.md",
+    "backup": "wiki/business/_backup/2026-10-11_214803_travel-commerce-cleanup/unit-economics.md",
+    "before_sha256": "bb4232d2c448f9c501c2fface2b577e94ef143a34204002a0eca543a0c959c6d",
+    "sha256": "91da3fbac6c5d4cb9310586f23ada9dd704b6e46c5626bc7a00b8c7bbf2a994d"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--evaluation--judge-second-opinion.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "8b3ea14e984bd4148776992aa836a998a86f32eea2255a83ad65594fdce4acdb"
+  },
+  {
+    "path": "wiki/evaluation/judge-second-opinion.md",
+    "backup": "wiki/evaluation/_backup/2026-10-11_214803_travel-commerce-cleanup/judge-second-opinion.md",
+    "before_sha256": "caf7ec707202d81f6bbb8d3fa330656dfbb528509a36a11a28877ab495f6f98a",
+    "sha256": "9b2a48458b9f5a1461067afa7d84f92a541494e99ece296071db9a6a5e4f615f"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--evidence.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "09eb680f2769ed948a9c1e324af613c9f02bd73ba64b06b91f55bcb4ce545c1f"
+  },
+  {
+    "path": "final_project_cs/wiki/quality/evidence.md",
+    "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_214803_travel-commerce-cleanup/evidence.md",
+    "before_sha256": "72185037e19c23d1c5c8cdefd7a45b33fca4ce6875bb26c1288018e157033483",
+    "sha256": "670aac81447cbd4b0e4cda81bec6e76952a463293eadf052d22441baae7107cf"
+  },
+  {
+    "path": "final_project_cs/tests/e2e/test_composer_write_channel.py",
+    "backup": "final_project_cs/tests/e2e/_backup/2026-10-11_215100_travel-commerce-cleanup/test_composer_write_channel.py",
+    "before_sha256": "45232c8c90189ddf5ce28ff39ac2a28417fac06550f98e54012c53d284bae626",
+    "sha256": "c770517774117e59eb7c05fcaa9faa1867b130979d56faff812784e5c2d0e693"
+  },
+  {
+    "path": "final_project_cs/tests/security/test_pii_redaction_runtime.py",
+    "backup": "final_project_cs/tests/security/_backup/2026-10-11_215100_travel-commerce-cleanup/test_pii_redaction_runtime.py",
+    "before_sha256": "6f8129ddc96dc0ea9373dcd6a77f740610772c0fc1d62c4650d6fa2042b12998",
+    "sha256": "88113f65f51f76822213393897683c57f37b8e522abab58f3f1b12d472c4a1b6"
+  },
+  {
+    "path": "final_project_cs/tests/unit/voc/test_feedback_runtime.py",
+    "backup": "final_project_cs/tests/unit/voc/_backup/2026-10-11_215100_travel-commerce-cleanup/test_feedback_runtime.py",
+    "before_sha256": "e238eae6b8ac168ab204e4dcc6a5a4b234c056150592810298070309aee63504",
+    "sha256": "c020b5220c79466eb5490e3c212ffb707cfea1f7b56dec5f5b2ea99ff1d7f682"
+  },
+  {
+    "path": "final_project_cs/tests/e2e/test_reload_endpoint.py",
+    "backup": "final_project_cs/tests/e2e/_backup/2026-10-11_215100_travel-commerce-cleanup/test_reload_endpoint.py",
+    "before_sha256": "2ecfea05dee8af457737740ffabc7526b9682db385bb2021051a383ca965bc48",
+    "sha256": "8ed5d530cc64f88e1e63b1125a72eced964280eab1aaf0d4dd4e89c5be66940f"
+  },
+  {
+    "path": "final_project_cs/tests/e2e/test_operations_ui.py",
+    "backup": "final_project_cs/tests/e2e/_backup/2026-10-11_215100_travel-commerce-cleanup/test_operations_ui.py",
+    "before_sha256": "cb50d3165757b9ddeb40c55591a33b385315749d92f5677b16017802fac6c5a4",
+    "sha256": "37638e7ba63738af2fffe172a76021bc45637bcd22c9fc283eabf68a6e10ff2b"
+  },
+  {
+    "path": "final_project_cs/tests/unit/core/test_case_reducer.py",
+    "backup": "final_project_cs/tests/unit/core/_backup/2026-10-11_215100_travel-commerce-cleanup/test_case_reducer.py",
+    "before_sha256": "f0193b75378791b32742cbf851c64276ffe671e5a76bf3c1aa9e997c2c82c2bf",
+    "sha256": "b9ae55a239045a673f7eba80bf0f89f3e13b22da0e3c7e1bae375a13b5dc267d"
+  },
+  {
+    "path": "final_project_cs/tests/integration/api/test_api_runtime.py",
+    "backup": "final_project_cs/tests/integration/api/_backup/2026-10-11_213423_recovered_intermediate/test_api_runtime.py",
+    "before_sha256": "945a19edd8fe99d44747da416e2f6ab4b90bad99b36e1c187fadaf043b235f82",
+    "sha256": "eb838d080b3955340c7c7a310c21da4727a112107fe52038399ed6d90ab60415",
+    "recovery": "Exact preimage reconstructed from preserved original and recorded deterministic edit; SHA256 matched."
+  },
+  {
+    "path": "final_project_cs/tests/integration/db/test_stale_write_conflict.py",
+    "backup": "final_project_cs/tests/integration/db/_backup/2026-10-11_215100_travel-commerce-cleanup/test_stale_write_conflict.py",
+    "before_sha256": "59fef0ef7ce31647ed102e95411d30e967253a4bef318a510f595ab4b17661dd",
+    "sha256": "6286631078c2af5e5148520debe85ddb67ff10d9444d2716beeb44c2b1adf769"
+  },
+  {
+    "path": "final_project_cs/tests/integration/db/test_db_integration.py",
+    "backup": "final_project_cs/tests/integration/db/_backup/2026-10-11_215100_travel-commerce-cleanup/test_db_integration.py",
+    "before_sha256": "e986f75bd2b1d530e56695078721e3aea308f4622d2c48d1f4c119b8da283f7e",
+    "sha256": "a841db27402f9241349c88ca042ea007af5d9e902dd42d6dcac1accc88d52bf7"
+  },
+  {
+    "path": "final_project_cs/tests/contract/test_contracts.py",
+    "backup": "final_project_cs/tests/contract/_backup/2026-10-11_215100_travel-commerce-cleanup/test_contracts.py",
+    "before_sha256": "05f80c29bd228acebf0538bc69d6d39dec31974c959fb28f9b334399b01efe42",
+    "sha256": "989e7ca71acd87dec7c84499d92511bc79a4e35f0895afa3ec833a9624bc3233"
+  },
+  {
+    "path": "final_project_cs/tests/unit/core/test_context_budget.py",
+    "backup": "final_project_cs/tests/unit/core/_backup/2026-10-11_215100_travel-commerce-cleanup/test_context_budget.py",
+    "before_sha256": "c09209e05e916a1cb3da9d1c6868fc74920a504d5e0c511b1dea84c844e85ecf",
+    "sha256": "07b986f1e33f999b9cbd7ad0622c4c216f4a7cba93fe48eb2b6a6f5420329636"
+  },
+  {
+    "path": "final_project_cs/tests/integration/controller/test_controller_integration.py",
+    "backup": "final_project_cs/tests/integration/controller/_backup/2026-10-11_215100_travel-commerce-cleanup/test_controller_integration.py",
+    "before_sha256": "6a32f19246e522c26597d704aa4e35e9dee19f508fb359577b99f547c6511f78",
+    "sha256": "47f4b3a93fd96a8af882602da3f93331c10a400a8610aa64af648f3b6779ad5a"
+  },
+  {
+    "path": "final_project_cs/tests/integration/controller/test_proposal_guard_blocks.py",
+    "backup": "final_project_cs/tests/integration/controller/_backup/2026-10-11_215100_travel-commerce-cleanup/test_proposal_guard_blocks.py",
+    "before_sha256": "6c76e69dd44ed2ce3f4711e84cae268b0ae99edeb7cdd96d273a10269ebd90f1",
+    "sha256": "0f95733d160c696b24c1bc7e4e08992a341d57bd30312f97e70e4233e4f2854d"
+  },
+  {
+    "path": "final_project_cs/tests/unit/infrastructure/test_graph_v7_axes.py",
+    "backup": "final_project_cs/tests/unit/infrastructure/_backup/2026-10-11_215100_travel-commerce-cleanup/test_graph_v7_axes.py",
+    "before_sha256": "3169684b7acc6c234e7a55c795ed160f3e269676228ca8359d3c0aaa7e8208f6",
+    "sha256": "2f3ae1b4b5d795306bfbbea0a0e6d3e9164de5c6308bbb404e3ade1b178898b5"
+  },
+  {
+    "path": "final_project_cs/app/core/project_config.py",
+    "backup": "final_project_cs/app/core/_backup/2026-10-11_215100_travel-commerce-cleanup/project_config.py",
+    "before_sha256": "2d3d46a7cc16861ab71b29500c2cc98bc724f17dc5632bded9c812b40c07b88d",
+    "sha256": "dd6cc0844ba12e68bbfc6ed9eaf79d54b95f894bba15d2d9a02a1b30c0214a23"
+  },
+  {
+    "path": "final_project_cs/tests/integration/api/test_api_runtime.py",
+    "backup": "final_project_cs/tests/integration/api/_backup/2026-10-11_215100_travel-commerce-cleanup/test_api_runtime.py",
+    "before_sha256": "eb838d080b3955340c7c7a310c21da4727a112107fe52038399ed6d90ab60415",
+    "sha256": "57bbf62677f1b117836dde13287be330319cfd93cd06bc952d9d2b576a2a49ac"
+  },
+  {
+    "path": "final_project_cs/tests/e2e/test_mcp_read_tools.py",
+    "backup": "final_project_cs/tests/e2e/_backup/2026-10-11_215100_travel-commerce-cleanup/test_mcp_read_tools.py",
+    "before_sha256": "2df2e7841a14b55c0f1ab02e958d8b299c16328f611d6c0c311b616329f7e25d",
+    "sha256": "3e75f8c37270dd4fafaffa519ac02c26d29d3a1155d4de8e4e3efe4e8e78f2f1",
+    "observed_sha256": "4c717a4ed6f23204dd2efe35ba0fb0c9f1a24f5a6269fdba1d80a45733539f29",
+    "subsequent_shared_change": "Retained subsequent shared-workspace edit; links and affected MCP tests rechecked. Original after-hash is preserved."
+  },
+  {
+    "path": "final_project_cs/tests/integration/db/test_stale_write_conflict.py",
+    "backup": "final_project_cs/tests/integration/db/_backup/2026-10-11_215436_travel-commerce-cleanup/test_stale_write_conflict.py",
+    "before_sha256": "6286631078c2af5e5148520debe85ddb67ff10d9444d2716beeb44c2b1adf769",
+    "sha256": "d66abee7340236280473837f557ba56a6c3de960f3d47b08efbf437d498a1b16"
+  },
+  {
+    "path": "final_project_cs/tests/integration/api/test_api_runtime.py",
+    "backup": "final_project_cs/tests/integration/api/_backup/2026-10-11_215436_travel-commerce-cleanup/test_api_runtime.py",
+    "before_sha256": "57bbf62677f1b117836dde13287be330319cfd93cd06bc952d9d2b576a2a49ac",
+    "sha256": "79dc75dbab3b6e9f720695030dcb549e84f149aa26924c82621e448e2f5a7af3"
+  },
+  {
+    "path": "final_project_cs/tests/integration/controller/test_controller_integration.py",
+    "backup": "final_project_cs/tests/integration/controller/_backup/2026-10-11_215436_travel-commerce-cleanup/test_controller_integration.py",
+    "before_sha256": "47f4b3a93fd96a8af882602da3f93331c10a400a8610aa64af648f3b6779ad5a",
+    "sha256": "1607f097a112a8ad4871a1a1715167908c5643cb952b54a10f8ac392ca49f0fa"
+  },
+  {
+    "path": "final_project_cs/scripts/check_retired_domain_assets.py",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "da3a6b933c23d962fd28f13e0c2c6e7fea838d1f873ce31f3bcfbc48f26847a6"
+  },
+  {
+    "path": "final_project_cs/tests/contract/test_retired_domain_assets.py",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "df720e2e18c7ecf07918004343583c38007662c0b47b4f83fb7f1b5f1023c12f"
+  },
+  {
+    "path": "final_project_cs/tests/integration/api/test_api_runtime.py",
+    "backup": "final_project_cs/tests/integration/api/_backup/2026-10-11_220428_travel-commerce-cleanup/test_api_runtime.py",
+    "before_sha256": "79dc75dbab3b6e9f720695030dcb549e84f149aa26924c82621e448e2f5a7af3",
+    "sha256": "780223fa85d86515fe8adcbc146424b010094c9e8d115dd153e7056f96c220c0"
+  },
+  {
+    "path": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/architecture/test_engine_serves_another_domain.py",
+    "backup": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/architecture/_backup/2026-10-11_220428_travel-commerce-cleanup/test_engine_serves_another_domain.py",
+    "before_sha256": "8ad204892cc417caaa5176c5a072eefa0b126a07605286cccfcd9eea67f4e656",
+    "sha256": "437851b4d409a181ab51c5ce3117c8fc5c30eea4fe5d52a9a303b9c5fb335e37"
+  },
+  {
+    "path": "final_project_cs/wiki/context/travel-corpus.md",
+    "backup": "final_project_cs/wiki/context/_backup/2026-10-11_220428_travel-commerce-cleanup/travel-corpus.md",
+    "before_sha256": "ad0bc64683e38c1a5e61dc3c7b7d40b818ad78b5908b9117777a7e2f3bdfa7e3",
+    "sha256": "a9cdf8795b976131429a91cb8f4198173d9c4c637a5267a6020dc67adae4d0aa"
+  },
+  {
+    "path": "final_project_cs/wiki/context/graph-retrieval.md",
+    "backup": "final_project_cs/wiki/context/_backup/2026-10-11_220428_travel-commerce-cleanup/graph-retrieval.md",
+    "before_sha256": "e61becacc128ebec796565180bfde3cb0b5655db2f0965580761efaabfcb35f2",
+    "sha256": "81ec0d9af900357e2e7dcd89533488955bc15b12699a34cd4e427bec9d4d8d4d"
+  },
+  {
+    "path": "final_project_cs/wiki/external/mcp-tools.md",
+    "backup": "final_project_cs/wiki/external/_backup/2026-10-11_220428_travel-commerce-cleanup/mcp-tools.md",
+    "before_sha256": "ec762c1b3171c84698115ca6a902351e4edfc4d7e153c60e21cc8edcb75f094c",
+    "sha256": "f6888b036a516946d62dd33ae4340db80642dd33ef6a75491443c447ab1d728e"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/README.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "014b98a24cbdbe1cd60dfb51fcf426afb16483c80f95e67140fe3c7d4fe2e63f"
+  },
+  {
+    "path": "README.md",
+    "backup": "_backup/2026-10-11_220428_travel-commerce-cleanup/README.md",
+    "before_sha256": "15898ad9fa8d399dc1afb12003e7e3dc1780e279a1eefd88234934d663129fbd",
+    "sha256": "53d3dcf7bd9d491bb8ae9c24161791abefd8a0f827474a559d9cb613a91175d8"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--external--auth-boundary.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "cbe4f8c956948536b0837c46538505c8b74e23db784ca5669feae044025416d7"
+  },
+  {
+    "path": "final_project_cs/wiki/external/auth-boundary.md",
+    "backup": "final_project_cs/wiki/external/_backup/2026-10-11_220428_travel-commerce-cleanup/auth-boundary.md",
+    "before_sha256": "97e0db42e3ba40b93a3122e406b02f8e1b5b46085d5b69f42a6af754a1150312",
+    "sha256": "76036e4d2dc7e2f4f1b54137ad641e82f3642bf1ca8873b701f19c782e8d9a8d"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--eval-harness.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "0ef76dce53f7bb9d3295ff1f5dcdfc5b3d176a0b7a198157e3e70102f8ab10d8"
+  },
+  {
+    "path": "final_project_cs/wiki/quality/eval-harness.md",
+    "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_220428_travel-commerce-cleanup/eval-harness.md",
+    "before_sha256": "06bca64fb4c2eb647ff3bfc80a88cdeef35bf023151f5253de7feeaf75690649",
+    "sha256": "2a16ae066012f02141d797458337505780888b113e5b5bc62739282ac5f95b02"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quickstart.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "6817c13ac0b872ee55e4ca129860c8abcc68bc6fb65cf66e21e6308b996a5422"
+  },
+  {
+    "path": "final_project_cs/wiki/quickstart.md",
+    "backup": "final_project_cs/wiki/_backup/2026-10-11_220428_travel-commerce-cleanup/quickstart.md",
+    "before_sha256": "39b86759573701d9bf5bc83152004093524320eccefbb07f385744ee1d7bfb60",
+    "sha256": "9909c7252d70d0f241ff0d667dd0afb363015b24792d83136da9f5f9b8cda5f7"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--architecture--pack-model.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "266ced9ddd10e8f337baffc57e883a0f81934f3f08417cff8e2e9446601ef521"
+  },
+  {
+    "path": "wiki/architecture/pack-model.md",
+    "backup": "wiki/architecture/_backup/2026-10-11_220428_travel-commerce-cleanup/pack-model.md",
+    "before_sha256": "d51d44f8bb370d0f2d95f7c853dc1aa1c2ac8f2297a2626c3bb5912067348c31",
+    "sha256": "44e254e35c995584dd5c55517d150b8a3ccba29e6eda35ffb7013a3272159fb5"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--evaluation--metrics.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "396104885bf2a2f4e16352f26c44a22487800099540f2e27859eb342c87aa3bb"
+  },
+  {
+    "path": "wiki/evaluation/metrics.md",
+    "backup": "wiki/evaluation/_backup/2026-10-11_220428_travel-commerce-cleanup/metrics.md",
+    "before_sha256": "228e6018443bd844361bc0cd785641887b809f2e63c5df16253f1c9ecae135e6",
+    "sha256": "1f9124574b488a4653d46df0235067fc577cc8e98e71c8569f6e5d39bfe232c4"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--delivery--open-items.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "c3acde82ed96c1d5a16f41097518616fa785232c536e116c34c7b985372a99c6"
+  },
+  {
+    "path": "wiki/delivery/open-items.md",
+    "backup": "wiki/delivery/_backup/2026-10-11_220428_travel-commerce-cleanup/open-items.md",
+    "before_sha256": "462f5872abba9cc3cbee70f329b97fa6c896544a5ac4e32b97deb687e74f1b65",
+    "sha256": "c06ba669116121ca0000950c6995f52e5fa96799479ae51500aa1887561fad4f"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--delivery--release-gate.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "71db6d39f93587746b8f058da77b3fc15bfbd9320736623a94c48f5d1da83963"
+  },
+  {
+    "path": "wiki/delivery/release-gate.md",
+    "backup": "wiki/delivery/_backup/2026-10-11_220428_travel-commerce-cleanup/release-gate.md",
+    "before_sha256": "a957f2dce022f05bf7337b46a71b5446850629979bcf1828b73ce88e4f29ce17",
+    "sha256": "86e2fb5728ab5baecdc7a763fc23ff87b730c0aae7423bfbabcd02833084f8bc"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--delivery--todo-user.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "aeb0fdc99ea138c6aa3878a6114eeff8b9a7fd6516fd6cf325654025edb2d977"
+  },
+  {
+    "path": "wiki/delivery/todo-user.md",
+    "backup": "wiki/delivery/_backup/2026-10-11_220428_travel-commerce-cleanup/todo-user.md",
+    "before_sha256": "3ad60eca2c897dd8fef7a4964e960d67d7e4a6cb8c4d8e086da72dfb6f678987",
+    "sha256": "64b9cd25b2ee53d484f61305ff9f1e548b4f7f8af85529c532f8f9644425d92c"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--delivery--index.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "c9ca85c0ed37637ca8a59dedf6e370a355dfda7ea6d6b5fe365aca5d13a6e757"
+  },
+  {
+    "path": "wiki/delivery/index.md",
+    "backup": "wiki/delivery/_backup/2026-10-11_220428_travel-commerce-cleanup/index.md",
+    "before_sha256": "b4f81d03f9f59924866b956faea7bb064e94a96ada2f4d3ec76ccdf896d874ce",
+    "sha256": "dccd7bd4b8298ae19255a70960763515edf235b1131f038de4def36d4fa58f62"
+  },
+  {
+    "path": "final_project_ui/tests/test_composer.py",
+    "backup": "final_project_ui/tests/_backup/2026-10-11_220428_travel-commerce-cleanup/test_composer.py",
+    "before_sha256": "350107cc0a940dbb5688285d209470e4724207ae4aa393ae6ab7e7d89e1f932f",
+    "sha256": "6f5b9c2dac774f52a36168c7fd10f99d76706d490880100e7837909255e98a6c"
+  },
+  {
+    "path": "final_project_ui/tests/test_composer_web.py",
+    "backup": "final_project_ui/tests/_backup/2026-10-11_220428_travel-commerce-cleanup/test_composer_web.py",
+    "before_sha256": "4e1ad8f0cb4ad9288b4a7181beebf53d78d653b649a23a9849b08059a2145cc4",
+    "sha256": "052b9378003cbd6659b5a25487b8e61a656fd5723bbb8783a7d871638ccc4b98"
+  },
+  {
+    "path": "final_project_ui/tests/test_readers.py",
+    "backup": "final_project_ui/tests/_backup/2026-10-11_220428_travel-commerce-cleanup/test_readers.py",
+    "before_sha256": "57bc387d3c22bc627b81aee98c3688df987745375352a894b03bc0af3118ce55",
+    "sha256": "39e4c544915d44c3f6c88cd746946a7299872692ded2015e08b46f0a8e17f692"
+  },
+  {
+    "path": "acop_dojo/acop_dojo/scenarios.py",
+    "backup": "acop_dojo/acop_dojo/_backup/2026-10-11_220428_travel-commerce-cleanup/scenarios.py",
+    "before_sha256": "f6fc66fbb69152682df70e8f241134c1c7bdd66566a8430db465716933d93d43",
+    "sha256": "3c30553d3c67dae4c3f95d43d303ca65419ebf4e1ec8dc626bfbdfcb30760418"
+  },
+  {
+    "path": "acop_dojo/acop_dojo/boss.py",
+    "backup": "acop_dojo/acop_dojo/_backup/2026-10-11_220428_travel-commerce-cleanup/boss.py",
+    "before_sha256": "b4a1bb13c98446c9a645cb4e08d3ca2c286cedf5e6aab8bea5f6da91c85e4daf",
+    "sha256": "8ff4e98af0e76d107a87c292c4d998597a26d6d1796e73d315b93c5df978ed28"
+  },
+  {
+    "path": "acop_dojo/acop_dojo/progress.py",
+    "backup": "acop_dojo/acop_dojo/_backup/2026-10-11_220428_travel-commerce-cleanup/progress.py",
+    "before_sha256": "29b26423942c4e43802d3ad8606a264ae2333025c1cb8f4762e1a1b504bb5c13",
+    "sha256": "6a8d0cc20b82618e4b426b63bde7060bef90c3d4e4f32008de652fa9e65b5fd3"
+  },
+  {
+    "path": "acop_dojo/README.md",
+    "backup": "acop_dojo/_backup/2026-10-11_220428_travel-commerce-cleanup/README.md",
+    "before_sha256": "834746c592af68e89b5b05cbe9c73cc537f69f493a96a8d079dca5c639fc4c9b",
+    "sha256": "a46a0b5296654a203b38a4abfa3493a9e4ca746648e3d27fd39c719ac0753e36"
+  },
+  {
+    "path": "acop_dojo/wiki/guide.md",
+    "backup": "acop_dojo/wiki/_backup/2026-10-11_220428_travel-commerce-cleanup/guide.md",
+    "before_sha256": "dcb21b6bbedcb14e91c8a4371e226035abb78348fe6e79135e17c942994b7728",
+    "sha256": "e98dc0ab9b40df56f4d38f2d15144c700fec5f3f80c416aabc40fb43bdf535f3"
+  },
+  {
+    "path": "final_project_cs/wiki/quickstart.md",
+    "backup": "final_project_cs/wiki/_backup/2026-10-11_221120_travel-commerce-cleanup/quickstart.md",
+    "before_sha256": "9909c7252d70d0f241ff0d667dd0afb363015b24792d83136da9f5f9b8cda5f7",
+    "sha256": "86509fab6a861c65e1d59ed4f0e3ffff7ffb8df90c1e1926d06ac8bc04e649ad"
+  },
+  {
+    "path": "wiki/architecture/pack-model.md",
+    "backup": "wiki/architecture/_backup/2026-10-11_220428_recovered_intermediate/pack-model.md",
+    "before_sha256": "44e254e35c995584dd5c55517d150b8a3ccba29e6eda35ffb7013a3272159fb5",
+    "sha256": "fb2582473d9d84a5ab5fb1cc6062ec8833176f6f9662a861c37388eebd031b77",
+    "recovery": "Exact preimage reconstructed by reversing recorded path correction; SHA256 matched."
+  },
+  {
+    "path": "final_project_cs/wiki/quality/eval-harness.md",
+    "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_221120_travel-commerce-cleanup/eval-harness.md",
+    "before_sha256": "2a16ae066012f02141d797458337505780888b113e5b5bc62739282ac5f95b02",
+    "sha256": "4dc4223c3a7906bd289db2db14c2428faa34bc91eeed7614332c187356057d98"
+  },
+  {
+    "path": "wiki/evaluation/metrics.md",
+    "backup": "wiki/evaluation/_backup/2026-10-11_221120_travel-commerce-cleanup/metrics.md",
+    "before_sha256": "1f9124574b488a4653d46df0235067fc577cc8e98e71c8569f6e5d39bfe232c4",
+    "sha256": "0dffffb4180facbd6a238f3acd8baf4da311d2764c6c1c9a4043fb49034cf707"
+  },
+  {
+    "path": "wiki/architecture/pack-model.md",
+    "backup": "wiki/architecture/_backup/2026-10-11_221120_travel-commerce-cleanup/pack-model.md",
+    "before_sha256": "fb2582473d9d84a5ab5fb1cc6062ec8833176f6f9662a861c37388eebd031b77",
+    "sha256": "1ccb3de47fa810395234132b6d6680788df885abbf255e5b478f744ef8fa8cf5"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--operations--always-on.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "a7079de40b47a84c49ee9ea50b7388a793ba2083150fab2733a4c29f11d61248"
+  },
+  {
+    "path": "final_project_cs/wiki/operations/always-on.md",
+    "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_221120_travel-commerce-cleanup/always-on.md",
+    "before_sha256": "7925f1b80d5b812de307135f163166ca3cd55659b087c3cb4f968ad1a750af61",
+    "sha256": "99c3963049b9b8d55e474e79e42b59f5ada24d10a449d5280a67ea273d2e1e50"
+  },
+  {
+    "path": "final_project_cs/wiki/operations/current-state.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "dffe61a0d74b494e939a45ea550242ef64f9ccd72f144528d7ba381edb6b2e63"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--operations--index.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "a38b7ce2170f128a6926191e7fdbb4b8617fe4d0291da130fffccd00f294679a"
+  },
+  {
+    "path": "final_project_cs/wiki/operations/index.md",
+    "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_221120_travel-commerce-cleanup/index.md",
+    "before_sha256": "a8aaa3111acf86d464593fa1a668faa01c3916b23455a8c10f4d9872a9a033af",
+    "sha256": "90059b13be2907b76052ba2f3b4e1eb8d72ef58a352bf3624dcc52366ad70021"
+  },
+  {
+    "path": "program/scripts/tests/test_dojo_travel_policy.py",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "cd9d5da5ccfec52ba5ad239e73166888fedba09e97825b3adadf8b1b0b5800d5"
+  },
+  {
+    "path": "program/scripts/tests/test_dojo_travel_policy.py",
+    "backup": "program/scripts/tests/_backup/2026-10-11_221456_travel-commerce-cleanup/test_dojo_travel_policy.py",
+    "before_sha256": "cd9d5da5ccfec52ba5ad239e73166888fedba09e97825b3adadf8b1b0b5800d5",
+    "sha256": "6daab252121dafe4dc4523113a40e0af50ce1e6fbd1122b43e11f7536517785d"
+  },
+  {
+    "path": "final_project_ui/tests/test_composer.py",
+    "backup": "final_project_ui/tests/_backup/2026-10-11_221456_travel-commerce-cleanup/test_composer.py",
+    "before_sha256": "6f5b9c2dac774f52a36168c7fd10f99d76706d490880100e7837909255e98a6c",
+    "sha256": "afdbf52013bdd34873237e520c9257559360cbfbe04ca21bb8581039e1f67d81"
+  },
+  {
+    "path": "final_project_cs/wiki/operations/current-state.md",
+    "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_221456_travel-commerce-cleanup/current-state.md",
+    "before_sha256": "dffe61a0d74b494e939a45ea550242ef64f9ccd72f144528d7ba381edb6b2e63",
+    "sha256": "35320e17129b34c41a2aedb31d13bfe701ba3787b283e179a35c5cc2d09d5c57"
+  },
+  {
+    "path": "final_project_cs/wiki/operations/always-on.md",
+    "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_221456_travel-commerce-cleanup/always-on.md",
+    "before_sha256": "99c3963049b9b8d55e474e79e42b59f5ada24d10a449d5280a67ea273d2e1e50",
+    "sha256": "2b52f6b2ab3e8048fbcb9131a54bee10092cc767c987af2ee0302cbcc05c39e8"
+  },
+  {
+    "path": "final_project_cs/wiki/data/schema/index.md",
+    "backup": "final_project_cs/wiki/data/schema/_backup/2026-10-11_221456_travel-commerce-cleanup/index.md",
+    "before_sha256": "50a1d6ba2cd59f86875185dcbed337f53646774e829904e7927f55382a558826",
+    "sha256": "c4f11f31eefc580b245387eb4de10b308afcad5d0ed29e08d17e158755fa8bb2"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--operations--troubleshooting.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "d3fdc94c406a5db15b27af1bb47d5683a8277dd6aa92f126240f468fb785b0ba"
+  },
+  {
+    "path": "final_project_cs/wiki/operations/troubleshooting.md",
+    "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_221456_travel-commerce-cleanup/troubleshooting.md",
+    "before_sha256": "1ca5de02181b4f5b29870186767cba277fdad3203f32594bf8f2e71e3a43400d",
+    "sha256": "1eabdc32239cdef2922b2611d95498d691744f84cf43655082f71e92d6a26240"
+  },
+  {
+    "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--actions--approval.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "5273b3709570f84152eb4f5d07fb6bc7f4e655c6eb14d55da091d04cdaf0fd37"
+  },
+  {
+    "path": "final_project_cs/wiki/actions/approval.md",
+    "backup": "final_project_cs/wiki/actions/_backup/2026-10-11_221456_travel-commerce-cleanup/approval.md",
+    "before_sha256": "b4dab1e17f8cb40eb2b3bc52ad59ad7fd138ec80aff4b8ee8c9f394855c59d83",
+    "sha256": "114f07554a502c807a43f07d7d8031bb0dfbcbc96a08e03ac4290955c30ddeeb"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/w18-evidence-v6.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "67f220455fff9d65cd98df7a8bd31fa63a73ea120d69237a0f72acbd1838bf30"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--delivery--milestones--final-2026-10-26.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "61a03ba54175720b75c0d5f4aaff60683e3b19fa7ff6665893557c85095c78be"
+  },
+  {
+    "path": "wiki/delivery/milestones/final-2026-10-26.md",
+    "backup": "wiki/delivery/milestones/_backup/2026-10-11_221653_travel-commerce-cleanup/final-2026-10-26.md",
+    "before_sha256": "11e8e2d0fc9c92697bbde59566bdca59c5b30cacd7a21e9501c2cd724e82a8d3",
+    "sha256": "51ec8bfc5d1e3cc1366bd40a9bbc36d897413f2cb0af5fdbd5b3ca3e856422f5"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--delivery--milestones--index.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "60a031e265851bb192be6e1a4978ff0b5d4396a192679cef9aaa45e44d1380ac"
+  },
+  {
+    "path": "wiki/delivery/milestones/index.md",
+    "backup": "wiki/delivery/milestones/_backup/2026-10-11_221653_travel-commerce-cleanup/index.md",
+    "before_sha256": "3ce3475a488013af154529a60afaccfc28c966975fd6c3dbeb591cc4df16fb67",
+    "sha256": "8b4fdf805140e6f532d768729ed28fe48894d8fa872c01c4746262b450bc7eac"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--delivery--milestones--midterm-2026-09-15.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "3e99bdeaf2b62252184e92c2a4587f1b653190704ac0e17c3357916023cd7590"
+  },
+  {
+    "path": "wiki/delivery/milestones/midterm-2026-09-15.md",
+    "backup": "wiki/delivery/milestones/_backup/2026-10-11_221653_travel-commerce-cleanup/midterm-2026-09-15.md",
+    "before_sha256": "2734331fc0354f076b5034f0e67e14599c10b68c21e08e7d9426bacdb90fdced",
+    "sha256": "8464d25a74ffbb448c8652ce72f2fa81a25dfe19d4dfe20615a107486058b954"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--research--index.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "6f2354d7bde61004a6d64f79427713dc556e045093b0b37b43d99d761819ac29"
+  },
+  {
+    "path": "wiki/research/index.md",
+    "backup": "wiki/research/_backup/2026-10-11_221653_travel-commerce-cleanup/index.md",
+    "before_sha256": "51ca72f10fbc2dd6bacff9753e9feeb142f6d50444ed01bbb1858ce7df88e582",
+    "sha256": "338f2f3692e7773850e7f0b82ea362afba793fd0f60d90fbef2a98191b531218"
+  },
+  {
+    "path": "wiki/records/commerce_2026-10-11/wiki--business--infrastructure-cost.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "5e2361e6b81d6d9e4573db790fd1dd37e466341880f35c65011de84eda5a7a61"
+  },
+  {
+    "path": "wiki/business/infrastructure-cost.md",
+    "backup": "wiki/business/_backup/2026-10-11_221653_travel-commerce-cleanup/infrastructure-cost.md",
+    "before_sha256": "e6bc75a4d5d59849398a7be34b9667f0201cff23971138c215fa279ddd676d09",
+    "sha256": "d415622608c75037bb7a6805b557288d603c095da32a9b729aef23c5311176c4"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/wiki-check-commerce-v5.json",
+    "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_221653_travel-commerce-cleanup/wiki-check-commerce-v5.json",
+    "before_sha256": "80425ec46fd7f79402f8fe39b949eb93e0eaa85e2c584799b9a222f079e1bf1c",
+    "sha256": "10b2a70c93bcef87b1e69e7d51014ed53a16484b461d406e4c8943f73bb15904"
+  },
+  {
+    "path": "wiki/delivery/milestones/final-2026-10-26.md",
+    "backup": "wiki/delivery/milestones/_backup/2026-10-11_222116_travel-commerce-cleanup/final-2026-10-26.md",
+    "before_sha256": "51ec8bfc5d1e3cc1366bd40a9bbc36d897413f2cb0af5fdbd5b3ca3e856422f5",
+    "sha256": "b64a343447d6133db01fe085f42fb00929f34d14bf556a8e551d5ac67d7c3ffb"
+  },
+  {
+    "path": "final_project_cs/tests/integration/api/_backup/2026-10-11_213423_recovered_intermediate/test_api_runtime.py",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "945a19edd8fe99d44747da416e2f6ab4b90bad99b36e1c187fadaf043b235f82"
+  },
+  {
+    "path": "wiki/architecture/_backup/2026-10-11_220428_recovered_intermediate/pack-model.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "44e254e35c995584dd5c55517d150b8a3ccba29e6eda35ffb7013a3272159fb5"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/findings-v6.json",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "a7d599fa1ae3826a7512fb3866683b5faa2a4882ecb90e4303ba0938126d85c6"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/wiki-review-v1.html",
+    "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_222116_travel-commerce-cleanup/wiki-review-v1.html",
+    "before_sha256": "7067ffb705f9e5318e9e0a11ae4c93af1fb098cf489689d451d4372a977f25e3",
+    "sha256": "9fdcc96ccbddbc9e494358a47dadc4db1874c2eb38b695415fb5679a3f0aef6c"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/wiki-review-v3.html",
+    "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_222116_travel-commerce-cleanup/wiki-review-v3.html",
+    "before_sha256": "9e3d0f8206c8b929bc6e1a56e8b75b2af85d0e5793315498ffc07651ae140b41",
+    "sha256": "b67a9ccfe426905d3df23367dc810f83bb73f2467a2478b9f67b69ebf50f7f59"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/wiki-review-v6.html",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "b67a9ccfe426905d3df23367dc810f83bb73f2467a2478b9f67b69ebf50f7f59"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/w18-check-flow-v6.svg",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "90d6755b9ec2ac8a3de73a57723b221fdb11a60d56fea4fbcdbb11773e3c7a40"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/commerce-w18-review-v6.html",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "8f8e01a870326ddde5a1885733c571e3aaa5d256133d919493239cfecf61e088"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/commerce-regression-v6.xml",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "a62afdb646c56da38a8a7336c0aba4b39454a8cf9c61a6b30c8123f6582e0838"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/commerce-regression-v6.log",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "0355b16ef1b5f1cc612413764bdbb6646f15ee838d27f94045ecc24377a4b517"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/commerce-integration-v6.xml",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "f4b3108e71a1d3d77ef4237732da59ff8f5b7c0c4b2cddb3e2a5b6eed00c2dc3"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/commerce-integration-v6.log",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "45a22657baa390c692c0bf7efeda27d1a6c2f130bbbacbbb5af367aacbbfc3d8"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/commerce-ui-v7.xml",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "fe0cde8a4f730ff02bb7a745d07b0f6f9c3193b5b3d706267a6a2456b93648cf"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/commerce-ui-v7.log",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "153343282895e8278c470e17812089a825a0d3108b37f6aa51a7fabdd9808258"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/commerce-tools-v7.xml",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "958d214bac73de6190a8fc6b7ed70015b7f1869006d0e02edd8aa0e6e849e6c5"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/commerce-tools-v7.log",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "7c8bf3e82b10dea77f91348f88fea67a32f55d1256427e10ec76543a14dd88d7"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/commerce-corpus-v6.log",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "c312c579779d3feb7518519dc3736feb0a31830bd8c57f28093aaa3a3fb3cd29"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/commerce-eval-v6.log",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "2d9e5656f7074793ae6c784f68b762178b53f91ca295d81c3aa63f47b2c494bc"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/commerce-guard-v6.log",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "b3bbd256c00da69dcbf108c232045692da30ae8c987c93ec42ba02d559e52d44"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/test-summary-v6.json",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "3aac35760230f32d87d8e825e5db4ed87cadf47c161fd1f41389dddaa9d749db"
+  },
+  {
+    "path": "final_project_cs/wiki/records/reports/2026-10-11_commerce-cleanup-and-W18-v6.md",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "a4f7ade45c8a8e9c4458d045b053345ca97951c4e9a4ab0929d1cbbfa0e2b52c"
+  },
+  {
+    "path": "final_project_cs/wiki/log.md",
+    "backup": "final_project_cs/wiki/_backup/2026-10-11_222309_travel-commerce-cleanup/log.md",
+    "before_sha256": "6b7a302e98e41e8e1e4db83627cb986bd5a2c4552edac43b3e13fb233c570eaa",
+    "sha256": "23c64ede5873067b80f8ef872b37363520fab944bb5cab346e17d3db4aa23039"
+  },
+  {
+    "path": "wiki/log.md",
+    "backup": "wiki/_backup/2026-10-11_222309_travel-commerce-cleanup/log.md",
+    "before_sha256": "e750f57a473bc8820bc2599ddca77d912a121126232d9d3ae3b58f53338888e1",
+    "sha256": "ac8e09096a27dee154a7ec9abfa3c81154861a6e4a61c146f1470db16e5501c0"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/wiki-review-v1.html",
+    "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_222309_travel-commerce-cleanup/wiki-review-v1.html",
+    "before_sha256": "9fdcc96ccbddbc9e494358a47dadc4db1874c2eb38b695415fb5679a3f0aef6c",
+    "sha256": "528a42e1196e218733486759adc91e5669a3d7a836fa6bcad0bed48c1741cd9c"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/wiki-review-v3.html",
+    "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_222309_travel-commerce-cleanup/wiki-review-v3.html",
+    "before_sha256": "b67a9ccfe426905d3df23367dc810f83bb73f2467a2478b9f67b69ebf50f7f59",
+    "sha256": "f3a5b007f5f2d150c56dc4c5dcb147b5d5d214427ae07d95a90532f0aa9e58d8"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/wiki-review-v6.html",
+    "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_222309_travel-commerce-cleanup/wiki-review-v6.html",
+    "before_sha256": "b67a9ccfe426905d3df23367dc810f83bb73f2467a2478b9f67b69ebf50f7f59",
+    "sha256": "f3a5b007f5f2d150c56dc4c5dcb147b5d5d214427ae07d95a90532f0aa9e58d8"
+  },
+  {
+    "path": "final_project_cs/.dockerignore",
+    "backup": "final_project_cs/_backup/2026-10-11_222432_travel-commerce-cleanup/.dockerignore",
+    "before_sha256": "647b52f3a93baa83836f34360b8a158385ea84c8c3ce3f13646dfe41809cb964",
+    "sha256": "b379be3b85b83be567b673c515e55cf6d968019c09d75c8ed9cf1eba6b06362f"
+  },
+  {
+    "path": "final_project_cs/scripts/check_retired_domain_assets.py",
+    "backup": "final_project_cs/scripts/_backup/2026-10-11_222432_travel-commerce-cleanup/check_retired_domain_assets.py",
+    "before_sha256": "da3a6b933c23d962fd28f13e0c2c6e7fea838d1f873ce31f3bcfbc48f26847a6",
+    "sha256": "b9a2fe79b3560f7b092c34c893c36badd0009e4c44a766537ff2d1502110305c"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/team-contract/plugin-availability.md",
+    "backup": "final_project_cs/wiki/teams/team-contract/_backup/2026-10-11_222432_travel-commerce-cleanup/plugin-availability.md",
+    "before_sha256": "b3a38111cbf84ef18db1451b11c1e1ea3ccac7c67cc119ddaeb69630ad544010",
+    "sha256": "434119974af008d3418bb26fd28fe3ce27fbbad137f17f13fcbd2cbf5f499bb3"
+  },
+  {
+    "path": "wiki/log.md",
+    "backup": "wiki/_backup/2026-10-11_222432_travel-commerce-cleanup/log.md",
+    "before_sha256": "ac8e09096a27dee154a7ec9abfa3c81154861a6e4a61c146f1470db16e5501c0",
+    "sha256": "f558dd8e5ebd10c88cc6449eef312ee14801ed4b8325d41177ad0d4bff1ac97a"
+  },
+  {
+    "path": "final_project_cs/wiki/records/reports/2026-10-11_commerce-cleanup-and-W18-v6.md",
+    "backup": "final_project_cs/wiki/records/reports/_backup/2026-10-11_222432_travel-commerce-cleanup/2026-10-11_commerce-cleanup-and-W18-v6.md",
+    "before_sha256": "a4f7ade45c8a8e9c4458d045b053345ca97951c4e9a4ab0929d1cbbfa0e2b52c",
+    "sha256": "c2429a83e8e9c97ebc0b36ca82235d29e3793e8f76d7fe477ad438ee6599d0ea"
+  },
+  {
+    "path": "final_project_cs/scripts/ops/jobs.py",
+    "backup": "final_project_cs/scripts/ops/_backup/2026-10-11_222635_travel-commerce-cleanup/jobs.py",
+    "before_sha256": "ee699d55fc8a53279566496b0873c1918ad39d23b78c0a2e4f5e2b9ad8c5cce3",
+    "sha256": "8e68d2971ad3dea1524138e3858b5f835a86739b7f61c1f57f5e3347145c9f4a"
+  },
+  {
+    "path": "final_project_cs/deploy/worker.sh",
+    "backup": "final_project_cs/deploy/_backup/2026-10-11_222635_travel-commerce-cleanup/worker.sh",
+    "before_sha256": "183d8fec9d02d0fa6699303bb07b5a4d83c39338a837dd1ba3c5fe1385bfc43f",
+    "sha256": "9f7ea939fef89daf4d27a6a7efd20ceece22dacd703d5d0fc8f2f5e634505d3a"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/commerce-w18-review-v6.html",
+    "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_222635_travel-commerce-cleanup/commerce-w18-review-v6.html",
+    "before_sha256": "8f8e01a870326ddde5a1885733c571e3aaa5d256133d919493239cfecf61e088",
+    "sha256": "3cb292cbb9616943522389e82d594c9e7c9c1a90188a5fc67f7dbf27ef94f945"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/commerce-final-target-v8.xml",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "1da2f4f92ab49c3a02c9b42ff692575c44abc5095aa1e07cfd4e42a04cf788c4"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/commerce-final-target-v8.log",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "8e992a70d94c0118dd9e6ffda6337c43d68a8ccf864a5b177c7c0b69ef6b002c"
+  },
+  {
+    "path": "final_project_cs/wiki/records/reports/2026-10-11_commerce-cleanup-and-W18-v6.md",
+    "backup": "final_project_cs/wiki/records/reports/_backup/2026-10-11_222635_travel-commerce-cleanup/2026-10-11_commerce-cleanup-and-W18-v6.md",
+    "before_sha256": "c2429a83e8e9c97ebc0b36ca82235d29e3793e8f76d7fe477ad438ee6599d0ea",
+    "sha256": "c7f9dd8c299ba550a82115dad942d81d96e6603e869947dcb43893fbbe3daf21"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/w18-ops-v9.xml",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "4358877e4752b1ddb75f8647c644a5cc9527608e5d385f65c152c57e175e2509"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/validation/w18-ops-v9.log",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "55866841a78e3fc292531d1821ac9337b22b1fe45651176396d2baf9e0d8dac2"
+  },
+  {
+    "path": "final_project_cs/wiki/records/reports/2026-10-11_commerce-cleanup-and-W18-v6.md",
+    "backup": "final_project_cs/wiki/records/reports/_backup/2026-10-11_222752_travel-commerce-cleanup/2026-10-11_commerce-cleanup-and-W18-v6.md",
+    "before_sha256": "c7f9dd8c299ba550a82115dad942d81d96e6603e869947dcb43893fbbe3daf21",
+    "sha256": "a33dc6c1bf678a671dac5b04c5ff3b1e8aee66d715e2ce4adaa71c43834c50ca"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/backup-validation-v9.json",
+    "backup": null,
+    "before_sha256": null,
+    "sha256": "e81e334f35b578509d1bb0fb71ea51e829b39f4680a9ce9ae0be994768478738"
+  }
+]

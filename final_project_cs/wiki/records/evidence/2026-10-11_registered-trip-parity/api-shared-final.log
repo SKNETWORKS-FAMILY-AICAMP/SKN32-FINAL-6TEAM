@@ -1,0 +1,32 @@
+.F......................                                                 [100%]
+================================== FAILURES ===================================
+_ test_legacy_routes_use_only_linked_customer_review_without_rewriting_trip_items _
+
+api = {'auth': <function api.<locals>.auth at 0x0000023633C993A0>, 'calculation_calls': [], 'client': <starlette.testclient.TestClient object at 0x0000023633C1B230>, 'customer': UUID('6fc91b42-bd46-4fe9-a8cb-42a67b5e3f43'), ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000236334752E0>
+
+    def test_legacy_routes_use_only_linked_customer_review_without_rewriting_trip_items(api, monkeypatch):
+        client, headers, view, trip = registered(monkeypatch)
+        trip_id = UUID(trip["trip_id"])
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("DELETE FROM itinerary_items WHERE tenant_id=%s AND trip_id=%s AND kind='mobility'", (api["tenant"], trip_id))
+            cur.execute("UPDATE itinerary_items SET detail=detail #- '{intake,source_id}' #- '{intake,index}' "
+                        "WHERE tenant_id=%s AND trip_id=%s", (api["tenant"], trip_id))
+        for suffix in ("", "?detail=true"):
+            response = client.get(f"/v1/web/trips/{trip_id}/route-shapes{suffix}", headers=headers)
+            assert response.status_code == 200, response.text
+            shapes = response.json()["shapes"]
+            assert len(shapes) == 2 and all(len(shape["line"]["coordinates"]) >= 2 for shape in shapes)
+            assert response.json()["detail"] == bool(suffix)
+        shown = client.get(f"/v1/web/trips/{trip_id}", headers=headers)
+        assert shown.status_code == 200, shown.text
+        assert len([item for item in shown.json()["items"] if item["kind"] == "mobility"]) == 2
+        again = _confirm(client, headers, view["intake_id"], view["revision"])
+>       assert again["created"] is False and again["trip"]["trip_id"] == trip_id
+               ^^^^^^^^^^^^^^^^
+E       KeyError: 'created'
+
+tests\e2e\test_registered_trip_routes.py:59: KeyError
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_registered_trip_routes.py::test_legacy_routes_use_only_linked_customer_review_without_rewriting_trip_items
+1 failed, 23 passed in 427.64s (0:07:07)

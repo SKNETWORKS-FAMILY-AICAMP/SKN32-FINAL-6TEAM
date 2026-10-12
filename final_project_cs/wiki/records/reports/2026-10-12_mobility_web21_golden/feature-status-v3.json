@@ -1,0 +1,1300 @@
+{
+  "created_at": "2026-10-12T12:10:22.647833+09:00",
+  "status": "범위별 검증 갱신·혼합M01최종결과 반영",
+  "counts": {
+    "features_documented": 21,
+    "features_total": 21,
+    "whole_feature_readiness_numerator": null,
+    "whole_feature_readiness_percent": null
+  },
+  "common_runtime_checks": {
+    "passed": 24,
+    "total": 24,
+    "evidence": ".tmp/mobility_web21_20261012/runtime-tests-v2.xml",
+    "scope": "정밀표 경로/manifest/재적재 공통24개;21기능 수와합산금지"
+  },
+  "map_existing_checks": [
+    {
+      "name": "선택편성→지도 문맥",
+      "passed": 28,
+      "total": 28,
+      "percent": 100.0,
+      "kind": "관련회귀",
+      "evidence": ".tmp/mobility_web21_20261012/map-replay-v1/backend-service-tests-v1.log",
+      "scope": "Python"
+    },
+    {
+      "name": "기존 형상·재적재",
+      "passed": 26,
+      "total": 26,
+      "percent": 100.0,
+      "kind": "관련회귀",
+      "evidence": ".tmp/mobility_web21_20261012/map-replay-v1/backend-service-regression-v1.log",
+      "scope": "Python;종료시콘솔정리예외는로그에보존"
+    },
+    {
+      "name": "웹파서·설명",
+      "passed": 19,
+      "total": 19,
+      "percent": 100.0,
+      "kind": "관련회귀",
+      "evidence": ".tmp/mobility_web21_20261012/map-replay-v1/web-service-tests-v1.json",
+      "scope": "웹모델·실제SDK아님"
+    },
+    {
+      "name": "TypeScript 검사 exit0",
+      "passed": 1,
+      "total": 1,
+      "percent": 100.0,
+      "kind": "타입검사",
+      "evidence": ".tmp/mobility_web21_20261012/map-replay-v1/REPORT-service-v1.md",
+      "scope": "보고서와MANIFEST-v3로그근거;빈로그만으로성공추론안함"
+    }
+  ],
+  "live_source_existing_checks": {
+    "passed": 121,
+    "total": 121,
+    "evidence": "datasets/mobility/raw/live_web_golden_20261012_v1/REPORT.md",
+    "scope": "소스·조회회귀;공표셀/사건/재고 분모와합산금지"
+  },
+  "features": [
+    {
+      "id": 1,
+      "name": "택시 예상 요금",
+      "status": "범위별 검증있음",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/car.py",
+          "sha256_now": "b79f62ff54216dcc6dc2d4f5c2489108c5468dab2888a1ba4063423805dc7c20"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/taxi_pricing.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/taxi_pricing.py",
+          "sha256_now": "53af926a9fd3f051c68ec3473ddaa25a3ec61711d971a8ed9983f23f29a5fc63"
+        }
+      ],
+      "web_golden_kind": "택시 예상액·통행료·거리·교통시간",
+      "alignment": "차종·동일좌표·동일추천도로·조회시각·통행료/플랫폼료 포함 여부",
+      "executed_metrics": [
+        {
+          "name": "제공서울 미터오차±1000원",
+          "passed": 2,
+          "total": 4,
+          "percent": 50.0,
+          "kind": "개인자료 익명집계",
+          "evidence": "final_project_cs/wiki/records/reports/2026-10-12_taxi_pretrip_web/REPORT.md",
+          "scope": "현재정책 과거자료 재생;4건 모두 과소추정"
+        },
+        {
+          "name": "새 같은좌표 웹 미터견적±10%",
+          "passed": 0,
+          "total": 1,
+          "percent": 0.0,
+          "kind": "소비자웹 개발진단",
+          "evidence": ".tmp/mobility_web21_20261012/aligned-replay-v1/summary-v1.json",
+          "scope": "새1OD5500대4800,+14.58%;기존실결제4건과별도분모"
+        }
+      ],
+      "related_existing_regression": {
+        "passed": 19,
+        "total": 19,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/evidence/2026-10-12_mobility_coverage/taxi-regression-v1/result.xml",
+          "final_project_cs/wiki/records/reports/2026-10-12_taxi_pretrip_web/python-result.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "미터 ±1000원 기존 개발 기준, 새 범위는 동결 후 검증",
+      "fallback": "서울시 택시요율 + 브랜드 공식 호출약관; 웹 미터견적",
+      "remaining": "제공실결제4/4과소추정·새웹1OD는+14.58%과대.형상·저속시간 원인과새표본정확도 보강",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        ".tmp/mobility_web21_20261012/aligned-replay-v1/summary-v1.json",
+        "final_project_cs/wiki/records/reports/2026-10-12_taxi_pretrip_web/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "택시 예산 여유 계산",
+      "status": "범위별 검증있음",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/car.py",
+          "sha256_now": "b79f62ff54216dcc6dc2d4f5c2489108c5468dab2888a1ba4063423805dc7c20"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/taxi_call_policy.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/taxi_call_policy.py",
+          "sha256_now": "765e2d52e48c56777719912df97fe649b0b9781e1ff28add3d7b3e97761a9933"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/taxi_budget.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/taxi_budget.py",
+          "sha256_now": "cd7a65552ee65ac99a856a588caf55c866a6c92abed3ff139afb62e8e1ffbd1e"
+        }
+      ],
+      "web_golden_kind": "택시 예상액·공식 호출료 범위",
+      "alignment": "미터·옵션·통행료 동일항목, 예산은 비교 전에 고정",
+      "executed_metrics": [
+        {
+          "name": "사전상품료 상단 포함 예산",
+          "passed": 4,
+          "total": 4,
+          "percent": 100.0,
+          "kind": "개인자료 익명집계",
+          "evidence": "final_project_cs/wiki/records/reports/2026-10-12_taxi_pretrip_web/REPORT.md",
+          "scope": "현재정책 재생, 당시 출발전 견적 또는 미래 보장 아님"
+        }
+      ],
+      "related_existing_regression": {
+        "passed": 102,
+        "total": 102,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/reports/2026-10-12_taxi_pretrip_web/python-result.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "예산초과0원, 예상 범위/상단을 점요금과 구별",
+      "fallback": "공식상품료 범위 + 유효한 사전견적",
+      "remaining": "예산4/4 범위는 확보;새 표본 초과율·운영 저장왕복",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        "final_project_cs/wiki/records/reports/2026-10-12_taxi_pretrip_web/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "자동차 소요 시간",
+      "status": "연결·관련회귀 확인",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/car.py",
+          "sha256_now": "b79f62ff54216dcc6dc2d4f5c2489108c5468dab2888a1ba4063423805dc7c20"
+        }
+      ],
+      "web_golden_kind": "자동차 추천 경로별 소요",
+      "alignment": "현재 교통·출발시각·차종·동일도로·교통반영 모드",
+      "executed_metrics": [
+        {
+          "name": "새 같은좌표 차량시간±5분",
+          "passed": 1,
+          "total": 1,
+          "percent": 100.0,
+          "kind": "소비자웹 개발진단",
+          "evidence": ".tmp/mobility_web21_20261012/aligned-replay-v1/summary-v1.json",
+          "scope": "웹관측출발228초대4분;현재교통 독립실측아님"
+        }
+      ],
+      "related_existing_regression": {
+        "passed": 8,
+        "total": 8,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/reports/2026-10-12_taxi_pretrip_web/python-result.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "기존개발기준±5분;도로형상·현재교통실측별도",
+      "fallback": "TOPIS 공개소통 + 보유요일/시간대 프로파일",
+      "remaining": "같은요청좌표1OD시간차−12초;형상·현재교통일치미확정",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        ".tmp/mobility_web21_20261012/aligned-replay-v1/summary-v1.json",
+        "final_project_cs/wiki/records/reports/2026-10-12_taxi_pretrip_web/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "자동차 경로 거리",
+      "status": "연결·관련회귀 확인",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+          "sha256_now": "5d147feb14c4b9b3477aafde8e6517f4ccb96cce7b2a5ebc0920a0bcd322eeb8"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car_turn_search.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/car_turn_search.py",
+          "sha256_now": "5603573421001a92adc8c2e8244b01db49b93696c117222646035485c785e5f5"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/turn_restrictions.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/turn_restrictions.py",
+          "sha256_now": "9f5d188552d8d252d6594f57053df6b5e52d92e95bdbd2a902c7b05c9158bff3"
+        }
+      ],
+      "web_golden_kind": "선택 자동차 경로 거리·도로 순서·회전",
+      "alignment": "같은 핀·추천안·도로·진행방향; 다른추천안의 거리차를 엔진오류로 단정 금지",
+      "executed_metrics": [],
+      "related_existing_regression": null,
+      "tolerance": "기존개발기준±10%;같은도로형상미확정으로독립정확도집계보류",
+      "fallback": "OSM 회전/유턴 제약 + TOPIS 도로통제",
+      "remaining": "새같은요청좌표862.7m대웹1.0km;반올림·도로선택·snap접근차이분리",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ],
+      "diagnostics": {
+        "web_distance_display": "1.0km",
+        "product_distance_m": 862.7,
+        "acceptance_eligible": false,
+        "reason": "웹거리반올림·상세도로형상·실제출입점미확정"
+      }
+    },
+    {
+      "id": 5,
+      "name": "대중교통 전체 소요 시간",
+      "status": "최종회귀 통과·전체범위 보강",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+          "sha256_now": "1a7e43c8a9963118c43e68fd5702e54b8fa695de3f1763a6cee013bc3ca4b356"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+          "sha256_now": "07c93ec7b3d248b882cd81437148e106de77371ebd440d6987500aac90b6beb1"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+          "sha256_now": "999b547cd894ad0aae4dfdb43b4035fb2c14f2c63dea3d56b0a06ac4273d8b86"
+        }
+      ],
+      "web_golden_kind": "대중교통 전체소요·도보·대기·환승 분해",
+      "alignment": "문앞~문앞과 첫승차~마지막하차 구분·요일·시각·같은 노선/급행",
+      "executed_metrics": [
+        {
+          "name": "지하철 최종 같은범위 시간±5분",
+          "passed": 6,
+          "total": 6,
+          "percent": 100.0,
+          "kind": "소비자웹+공식열차",
+          "evidence": "datasets/mobility/raw/subway_train_precision_20261012_v1/consumer-final-comparison-v2.json",
+          "scope": "기존6경로 첫승차~마지막하차;문앞 전체시간 아님"
+        }
+      ],
+      "related_existing_regression": {
+        "passed": 39,
+        "total": 39,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/evidence/2026-10-12_mobility_coverage/transit/transit-regression-v2.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "첫승차~마지막하차 ±5분;6/6. 문앞전체시간 허용오차는 별도 동결 필요",
+      "fallback": "공식열차 예정도착초 + 기본시간표 + 접근보행망",
+      "remaining": "6경로 시간·공식fixture 최종회귀 통과;다른OD 문앞전체시간·버스첫대기 범위 별도",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        "datasets/mobility/raw/subway_train_precision_20261012_v1/consumer-comparison-v1.json",
+        "datasets/mobility/raw/subway_train_precision_20261012_v1/consumer-final-comparison-v2.json",
+        "final_project_cs/wiki/records/reports/2026-10-12_subway_web_golden/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "지하철 경로 산출",
+      "status": "범위별 검증있음",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/candidates.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/candidates.py",
+          "sha256_now": "275dfc3e54f36950c2adeb710f2a182c03d4a48805448253863644c3c9049869"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+          "sha256_now": "1a7e43c8a9963118c43e68fd5702e54b8fa695de3f1763a6cee013bc3ca4b356"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/express.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/express.py",
+          "sha256_now": "8cc22b41a7e991c1fe346adb77d1f3019296feb99a90d735710a11de29d2de03"
+        }
+      ],
+      "web_golden_kind": "역순서·환승역·노선·방향·일반/급행·종착",
+      "alignment": "경로 순서를 식별·대안은 별도표본·같은 열차 종류",
+      "executed_metrics": [
+        {
+          "name": "선택편성·정차순서",
+          "passed": 6,
+          "total": 6,
+          "percent": 100.0,
+          "kind": "소비자웹",
+          "evidence": "final_project_cs/wiki/records/reports/2026-10-12_subway_web_golden/REPORT.md",
+          "scope": "기존6경로 선택편성 대응;새 전체후보 전역검증 아님"
+        },
+        {
+          "name": "선택 일반/급행 서비스 최종",
+          "passed": 6,
+          "total": 6,
+          "percent": 100.0,
+          "kind": "소비자웹+제품",
+          "evidence": "datasets/mobility/raw/subway_train_precision_20261012_v1/consumer-final-comparison-v2.json",
+          "scope": "같은 기존6경로;새 독립6OD 아님"
+        }
+      ],
+      "related_existing_regression": {
+        "passed": 51,
+        "total": 51,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/evidence/2026-10-12_mobility_coverage/transit/transit-regression-v2.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "노선/역/순서/서비스종류 정확일치",
+      "fallback": "공식노선/급행 정차표 + 로컬 노선순서",
+      "remaining": "6경로 정차대응;신규 다중경로 전역/운행예외",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        "datasets/mobility/raw/subway_train_precision_20261012_v1/consumer-final-comparison-v2.json",
+        "final_project_cs/wiki/records/reports/2026-10-12_subway_web_golden/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "버스 직행·환승 경로",
+      "status": "새 웹경로 제공·운임 일치",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/candidates.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/candidates.py",
+          "sha256_now": "275dfc3e54f36950c2adeb710f2a182c03d4a48805448253863644c3c9049869"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+          "sha256_now": "07c93ec7b3d248b882cd81437148e106de77371ebd440d6987500aac90b6beb1"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus.py",
+          "sha256_now": "bc3c969ea49456efb27aa5ba85a9bfc63a382fa9eb6f72a5217248fb459b28ea"
+        }
+      ],
+      "web_golden_kind": "버스번호·정류장ID·방향·환승·도보",
+      "alignment": "같은 정류장입구·승하차순서·시간·운행일·노선변경",
+      "executed_metrics": [
+        {
+          "name": "같은 버스OD 운임 원단위 일치",
+          "passed": 1,
+          "total": 1,
+          "percent": 100.0,
+          "kind": "소비자웹+실제Planner",
+          "evidence": ".tmp/mobility_web21_20261012/aligned-replay-v1/summary-v1.json",
+          "scope": "ARS02137→01011;101·150의 같은1OD"
+        },
+        {
+          "name": "같은OD 웹 대안노선 제공",
+          "passed": 2,
+          "total": 3,
+          "percent": 66.67,
+          "kind": "실제Planner",
+          "evidence": ".tmp/mobility_web21_20261012/aligned-replay-v1/summary-v1.json",
+          "scope": "101·150 제공;501은공통출발/도착목표조건에서제외.3OD아님"
+        },
+        {
+          "name": "혼합 웹경로 자동후보 생성",
+          "passed": 3,
+          "total": 3,
+          "percent": 100.0,
+          "kind": "실제Planner",
+          "evidence": ".tmp/mobility_web21_20261012/mixed-replay-v1/planner-comparison-v4.json",
+          "scope": "같은1OD3선택경로;수정전2/3→3/3"
+        },
+        {
+          "name": "혼합 웹경로 최종옵션 제공",
+          "passed": 2,
+          "total": 3,
+          "percent": 66.67,
+          "kind": "실제Planner",
+          "evidence": ".tmp/mobility_web21_20261012/mixed-replay-v1/planner-comparison-v4.json",
+          "scope": "M01·M02제공. M03은공통12:09출발에서불성립해earlier_departure로제외;수정전1/3→2/3"
+        }
+      ],
+      "related_existing_regression": {
+        "passed": 6,
+        "total": 6,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/evidence/2026-10-12_mobility_coverage/transit/transit-regression-v2.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "노선/방향/정류장 정확일치·시간허용오차 별도",
+      "fallback": "서울 버스노선·정류장 + 배차/통행시간 프로파일",
+      "remaining": "혼합M01누락수정후3/3생성·2/3제공. M03은공통출발조건에따른제외이며미제공을숨기지않음;새OD범위확대",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        ".tmp/mobility_web21_20261012/aligned-replay-v1/summary-v1.json",
+        ".tmp/mobility_web21_20261012/mixed-replay-v1/planner-comparison-v4.json",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "지하철 요금",
+      "status": "범위별 검증있음",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py",
+          "sha256_now": "c6c365e9acf2beda523685842c8d8b174265b0d1a4e4a974925bef68ce892c7a"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/special_rail.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/special_rail.py",
+          "sha256_now": "48b14321470d430f126161e8997d0b6ff29a9920bda20b3afba805385a232137"
+        }
+      ],
+      "web_golden_kind": "지하철 성인 교통카드 요금",
+      "alignment": "같은 노선/별도철도·조조·승객자격·요금개정시점",
+      "executed_metrics": [
+        {
+          "name": "지하철 웹운임 정확일치",
+          "passed": 6,
+          "total": 6,
+          "percent": 100.0,
+          "kind": "소비자웹",
+          "evidence": "datasets/mobility/raw/subway_train_precision_20261012_v1/consumer-comparison-v1.json",
+          "scope": "성인카드6경로"
+        },
+        {
+          "name": "AREX 공식운임 양방향",
+          "passed": 72,
+          "total": 72,
+          "percent": 100.0,
+          "kind": "공표운임",
+          "evidence": "final_project_cs/wiki/records/reports/2026-10-12_subway_web_golden/REPORT.md",
+          "scope": "단독 일반열차36쌍·양방향"
+        },
+        {
+          "name": "최종 소비자웹 성인카드 운임",
+          "passed": 6,
+          "total": 6,
+          "percent": 100.0,
+          "kind": "소비자웹+제품",
+          "evidence": "datasets/mobility/raw/subway_train_precision_20261012_v1/consumer-final-comparison-v2.json",
+          "scope": "기존6경로 재검증;독립표본추가 아님"
+        }
+      ],
+      "related_existing_regression": null,
+      "tolerance": "성인카드 동일경로 원 단위 정확일치",
+      "fallback": "서울 지하철 공식요율 + AREX 공표운임 + 신분당선 별도료",
+      "remaining": "6경로·72쌍 일치;다른 혼합노선/자격/조조 조건 별도",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        "datasets/mobility/raw/subway_train_precision_20261012_v1/consumer-comparison-v1.json",
+        "datasets/mobility/raw/subway_train_precision_20261012_v1/consumer-final-comparison-v2.json",
+        "final_project_cs/wiki/records/reports/2026-10-12_subway_web_golden/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "버스·지하철 환승 요금",
+      "status": "범위별 검증있음",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py",
+          "sha256_now": "c6c365e9acf2beda523685842c8d8b174265b0d1a4e4a974925bef68ce892c7a"
+        }
+      ],
+      "web_golden_kind": "버스+지하철 합계요금·세부환승",
+      "alignment": "성인1인1카드·하차태그·동일노선·환승창·승차횟수·조조·별도철도",
+      "executed_metrics": [
+        {
+          "name": "버스 요율·경계·제외",
+          "passed": 3441,
+          "total": 3441,
+          "percent": 100.0,
+          "kind": "공식요율 계산",
+          "evidence": "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md",
+          "scope": "혼합OD 웹 운임 정답 수가 아님"
+        },
+        {
+          "name": "같은OD 선택 혼합경로 운임",
+          "passed": 3,
+          "total": 3,
+          "percent": 100.0,
+          "kind": "소비자웹+실제운임함수",
+          "evidence": ".tmp/mobility_web21_20261012/mixed-replay-v1/comparison-v1.json",
+          "scope": "고유1OD의3선택경로1650/2350/1500원;실제결제 아님"
+        },
+        {
+          "name": "실제Planner 제공혼합옵션 운임 일치",
+          "passed": 2,
+          "total": 2,
+          "percent": 100.0,
+          "kind": "실제Planner+소비자웹",
+          "evidence": ".tmp/mobility_web21_20261012/mixed-replay-v1/planner-comparison-v4.json",
+          "scope": "제공된M01·M02의2/2;선택운임함수3/3과별도분모"
+        }
+      ],
+      "related_existing_regression": null,
+      "tolerance": "원 단위 정확일치, 조건 없는 실제 결제 주장 금지",
+      "fallback": "서울 통합환승 요율/환승창 + 별도노선료",
+      "remaining": "선택운임함수3/3·실제제공옵션2/2일치. 전역혼합경로최적해·다른OD/자격·실제결제는별도",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        ".tmp/mobility_web21_20261012/mixed-replay-v1/comparison-v1.json",
+        ".tmp/mobility_web21_20261012/mixed-replay-v1/planner-comparison-v4.json",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "장소 사이 도보 거리",
+      "status": "범위별 검증있음",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+          "sha256_now": "5d147feb14c4b9b3477aafde8e6517f4ccb96cce7b2a5ebc0920a0bcd322eeb8"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+          "sha256_now": "07c93ec7b3d248b882cd81437148e106de77371ebd440d6987500aac90b6beb1"
+        }
+      ],
+      "web_golden_kind": "도보 추천경로 거리·횡단·입구",
+      "alignment": "같은 출입구 좌표·추천 경로·제품 1.2km 이내·우회/계단 허용조건",
+      "executed_metrics": [
+        {
+          "name": "1.2km정책 내 도보안 제공",
+          "passed": 3,
+          "total": 3,
+          "percent": 100.0,
+          "kind": "제품실행",
+          "evidence": ".tmp/mobility_web21_20261012/spatial-replay-v1/REPORT.md",
+          "scope": "방향3건·독립OD2개;웹핀미정 정확도분모0"
+        },
+        {
+          "name": "새 같은좌표 도보거리±10%",
+          "passed": 0,
+          "total": 1,
+          "percent": 0.0,
+          "kind": "소비자웹 개발진단",
+          "evidence": ".tmp/mobility_web21_20261012/aligned-replay-v1/summary-v1.json",
+          "scope": "743m대672m,+10.565%;상세형상·출입점 미확정"
+        }
+      ],
+      "related_existing_regression": null,
+      "tolerance": "기존 개발기준거리±10%;실제형상·출입점 정렬은 별도",
+      "fallback": "로컬 보행망 + 공식환승거리; 같은좌표 소비자웹",
+      "remaining": "새같은요청좌표 거리+10.57%로기존기준실패;형상·snap·횡단보도 경로차이 원인 해결",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        ".tmp/mobility_web21_20261012/aligned-replay-v1/summary-v1.json",
+        ".tmp/mobility_web21_20261012/spatial-replay-v1/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "도보·역 접근 시간",
+      "status": "범위별 검증있음",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+          "sha256_now": "5d147feb14c4b9b3477aafde8e6517f4ccb96cce7b2a5ebc0920a0bcd322eeb8"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/transfer_walk.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/transfer_walk.py",
+          "sha256_now": "60d0e945a8650cebd08dcf48d17c1fb9231b26679dab968e03bdfe74d76c90a2"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/exits.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/exits.py",
+          "sha256_now": "cc2068c85b2b40cae263e2f59fa6c06978aa36e3e746ad617f9714b3963bb7b1"
+        }
+      ],
+      "web_golden_kind": "도보/역접근 시간·출입구·환승보행",
+      "alignment": "역중심과역출구 구분·동일핀·계단·도보속도",
+      "executed_metrics": [
+        {
+          "name": "1.2km정책 내 도보시간 제공",
+          "passed": 3,
+          "total": 3,
+          "percent": 100.0,
+          "kind": "제품실행",
+          "evidence": ".tmp/mobility_web21_20261012/spatial-replay-v1/REPORT.md",
+          "scope": "공개ETA20/20/8분;웹시간 정확도분모0"
+        },
+        {
+          "name": "새 같은좌표 도보시간±5분",
+          "passed": 1,
+          "total": 1,
+          "percent": 100.0,
+          "kind": "소비자웹 개발진단",
+          "evidence": ".tmp/mobility_web21_20261012/aligned-replay-v1/summary-v1.json",
+          "scope": "12분대11분;같은요청좌표·형상미확정·실보행아님"
+        }
+      ],
+      "related_existing_regression": null,
+      "tolerance": "웹계산/개인실보행 구별·새허용오차 사전동결",
+      "fallback": "보행망 정밀초·계단 + 서울 공식환승거리",
+      "remaining": "1OD개발시간기준통과;웹4km/h와개인보행·역접근·계단조건은별도",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        ".tmp/mobility_web21_20261012/aligned-replay-v1/summary-v1.json",
+        ".tmp/mobility_web21_20261012/spatial-replay-v1/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_subway_web_golden/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "자전거 경로",
+      "status": "연결·관련회귀 확인",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bike.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/bike.py",
+          "sha256_now": "7c4779e158af6d68604d365813bd6feb2554cf7c2225424a211960ff81851d07"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+          "sha256_now": "5d147feb14c4b9b3477aafde8e6517f4ccb96cce7b2a5ebc0920a0bcd322eeb8"
+        }
+      ],
+      "web_golden_kind": "자전거 경로·전용/혼합도로·교량 진입",
+      "alignment": "같은 핀·추천안·자전거종류·계단 끌기/엘리베이터",
+      "executed_metrics": [
+        {
+          "name": "새 같은좌표 따릉이 경로 제공",
+          "passed": 1,
+          "total": 1,
+          "percent": 100.0,
+          "kind": "실제Planner",
+          "evidence": ".tmp/mobility_web21_20261012/aligned-replay-v1/summary-v1.json",
+          "scope": "총16분·1000원 제공;웹770m경로의형상정확도판정아님"
+        }
+      ],
+      "related_existing_regression": {
+        "passed": 42,
+        "total": 42,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/evidence/2026-10-12_mobility_coverage/map-bike/bike-tests-v1/result.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "노드/교량 연결·금지도 정확일치·거리오차 기준 별도",
+      "fallback": "로컬 자전거망 + 서울시 교량 자전거시설",
+      "remaining": "제품후보제공됨;소비자자전거 최단770m의상세형상·교량접근 별도",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        ".tmp/mobility_web21_20261012/aligned-replay-v1/summary-v1.json",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "자전거 소요 시간",
+      "status": "연결·관련회귀 확인",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+          "sha256_now": "1a7e43c8a9963118c43e68fd5702e54b8fa695de3f1763a6cee013bc3ca4b356"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bike.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/bike.py",
+          "sha256_now": "7c4779e158af6d68604d365813bd6feb2554cf7c2225424a211960ff81851d07"
+        }
+      ],
+      "web_golden_kind": "자전거 주행시간·거리",
+      "alignment": "주행만/접근+대여+반납 총시간 구별·자전거종류",
+      "executed_metrics": [],
+      "related_existing_regression": {
+        "passed": 24,
+        "total": 24,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/evidence/2026-10-12_mobility_coverage/map-bike/bike-tests-v1/result.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "대여/반납 추가시간 별도·새오차 기준 사전동결",
+      "fallback": "주행모델 + 공식 따릉이 권종/초과료",
+      "remaining": "웹순수주행4분과제품따릉이총16분을직접정확도로비교하지않음;주행부분 분해대조 필요",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ],
+      "diagnostics": {
+        "web_ride_min": 4,
+        "product_total_min": 16,
+        "acceptance_eligible": false,
+        "reason": "순수주행과접근·대여·반납포함총시간 범위차이"
+      }
+    },
+    {
+      "id": 14,
+      "name": "첫차·막차·출발 시각",
+      "status": "범위별 검증있음",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/published_boarding.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/published_boarding.py",
+          "sha256_now": "67e1b9097cf3d46c0ae15a274a5871fcbb051a54ed130a516934acc122875370"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+          "sha256_now": "1a7e43c8a9963118c43e68fd5702e54b8fa695de3f1763a6cee013bc3ca4b356"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/timeutil.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/timeutil.py",
+          "sha256_now": "f41e35926e55b393bfb084d762b4e5718c99855fdada148d38b0ba6b7aaba36f"
+        }
+      ],
+      "web_golden_kind": "첫차·막차·출발/도착분·행선지",
+      "alignment": "평일/토/공휴일·자정 이후 서비스일·같은 일반/급행·종착",
+      "executed_metrics": [
+        {
+          "name": "AREX 첫차·막차 경계",
+          "passed": 8,
+          "total": 8,
+          "percent": 100.0,
+          "kind": "공식웹 공표",
+          "evidence": "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md",
+          "scope": "홍대입구 평일/휴일·양방향 첫막;전체노선 아님"
+        }
+      ],
+      "related_existing_regression": {
+        "passed": 36,
+        "total": 36,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/evidence/2026-10-12_mobility_coverage/transit/transit-regression-v2.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "공표분 정확일치·지연실도착과 구별",
+      "fallback": "운영기관 공표 첫막차 + 서비스일/휴일 달력",
+      "remaining": "공표8경계 외 다른노선·휴일/단축운행",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        "final_project_cs/wiki/records/reports/2026-10-12_subway_web_golden/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "환승·역 출구·승차 칸",
+      "status": "범위별 검증있음",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py",
+          "sha256_now": "c6c365e9acf2beda523685842c8d8b174265b0d1a4e4a974925bef68ce892c7a"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/exits.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/exits.py",
+          "sha256_now": "cc2068c85b2b40cae263e2f59fa6c06978aa36e3e746ad617f9714b3963bb7b1"
+        }
+      ],
+      "web_golden_kind": "빠른환승칸·노선별 승강장·출구·출구주변",
+      "alignment": "같은진행방향·일반/급행·역/노선ID·환승목적노선",
+      "executed_metrics": [
+        {
+          "name": "홍대입구 출구번호 존재",
+          "passed": 9,
+          "total": 9,
+          "percent": 100.0,
+          "kind": "공식웹+보유좌표",
+          "evidence": "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md",
+          "scope": "번호 존재만;출구좌표·최단환승칸 정확도 아님"
+        },
+        {
+          "name": "같은 혼합경로 빠른환승칸·출구",
+          "passed": 2,
+          "total": 2,
+          "percent": 100.0,
+          "kind": "소비자웹+실제제품함수",
+          "evidence": ".tmp/mobility_web21_20261012/mixed-replay-v1/comparison-v1.json",
+          "scope": "M01교대환승1-1·동대입구6번;한경로의2필드·개방/출구좌표실측아님"
+        }
+      ],
+      "related_existing_regression": {
+        "passed": 53,
+        "total": 53,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/evidence/2026-10-12_mobility_coverage/transit/transit-regression-v2.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "칸/출구번호 정확일치·좌표 별도",
+      "fallback": "공식 역안내도·출구 + 같은방향 소비자웹 빠른환승",
+      "remaining": "M01칸1-1·출구6일치;다른경로/방향·실제출구개방·웹고객화면전파 별도",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        ".tmp/mobility_web21_20261012/mixed-replay-v1/comparison-v1.json",
+        "final_project_cs/wiki/records/reports/2026-10-12_subway_web_golden/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "실시간 도착정보",
+      "status": "연결·관련회귀 확인",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+          "sha256_now": "999b547cd894ad0aae4dfdb43b4035fb2c14f2c63dea3d56b0a06ac4273d8b86"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_departure.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_departure.py",
+          "sha256_now": "7d2150fa996a5ace3f2cc3771337de6ba0bd7a5c18984d457a9859e355f9161e"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+          "sha256_now": "1a7e43c8a9963118c43e68fd5702e54b8fa695de3f1763a6cee013bc3ca4b356"
+        }
+      ],
+      "web_golden_kind": "현재도착분·차량/열차번호·행선지·예측생성시각",
+      "alignment": "관측시각·동일차량·노선·방향·급행·생성/수집시각",
+      "executed_metrics": [],
+      "related_existing_regression": {
+        "passed": 52,
+        "total": 52,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/evidence/2026-10-12_mobility_coverage/transit/transit-regression-v2.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "공급자표시 일치/신선도와 실제도착오차 별도",
+      "fallback": "공식도착정보 + 열차시간표 대체",
+      "remaining": "공식화면20행 확보;열차ID/생성시각 없어 동일열차 ETA오차 미산출",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 17,
+      "name": "혼잡 안내",
+      "status": "범위별 검증있음",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/congestion.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/congestion.py",
+          "sha256_now": "7aa213b7761c4d900345a3699b10e3423229c1a2348e6df20ee02a11888b75e5"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py",
+          "sha256_now": "c6c365e9acf2beda523685842c8d8b174265b0d1a4e4a974925bef68ce892c7a"
+        }
+      ],
+      "web_golden_kind": "웹 혼잡등급·시간대·일반/급행",
+      "alignment": "통계혼잡/실시간차량혼잡 구분·같은시간대·방향·서비스",
+      "executed_metrics": [
+        {
+          "name": "9호선 공표 평균혼잡 셀",
+          "passed": 8208,
+          "total": 8208,
+          "percent": 100.0,
+          "kind": "공식공표웹",
+          "evidence": "datasets/mobility/raw/live_web_golden_20261012_v1/REPORT.md",
+          "scope": "공식 2026년 30분 평균 공표값, 실제 현재 열차 혼잡 아님"
+        }
+      ],
+      "related_existing_regression": {
+        "passed": 16,
+        "total": 16,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/evidence/2026-10-12_mobility_coverage/transit/transit-regression-v2.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "동일노선·방향·일반/급행·30분슬롯 공표 소수1자리 정확일치",
+      "fallback": "서울시 일반/급행별 30분 평균 공표혼잡",
+      "remaining": "공표참조값 대조완료;현재 특정열차 혼잡은 다른 주장",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        "datasets/mobility/raw/live_web_golden_20261012_v1/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "무정차·도로 사고 감시",
+      "status": "범위별 검증있음",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/ports/data_sources/subway_notice.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/ports/data_sources/subway_notice.py",
+          "sha256_now": "e9f5956b813e75953c7b2ee33345a2313469ef8a1804bff66376b34740e99b4b"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/ports/data_sources/utic.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/ports/data_sources/utic.py",
+          "sha256_now": "57b69f48b48143476f885b31852056a6a7fbf98f187f9434c245eb15adb76045"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/ports/data_sources/its_traffic.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/ports/data_sources/its_traffic.py",
+          "sha256_now": "ef34bd2f2b5c1c25caba3d1e390196822c31e20df455bcbcc9a8fb7b70940abe"
+        }
+      ],
+      "web_golden_kind": "지도 사고/통제 표시·무정차 안내",
+      "alignment": "같은구간·방향·유효시각·발표시각·해제 여부",
+      "executed_metrics": [
+        {
+          "name": "TOPIS 사건 종류/통제 분류",
+          "passed": 42,
+          "total": 42,
+          "percent": 100.0,
+          "kind": "공식웹 사실 재생",
+          "evidence": "datasets/mobility/raw/live_web_golden_20261012_v1/REPORT.md",
+          "scope": "TOPIS 표시 종류의 기존 분류 함수 재생;경로영향 검증 아님"
+        }
+      ],
+      "related_existing_regression": {
+        "passed": 53,
+        "total": 53,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/evidence/2026-10-12_mobility_coverage/transit/transit-regression-v2.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "명시 사건종류·전면/부분통제 분류 정확일치;경로영향 판정 포함 안 함",
+      "fallback": "지하철 공지 + TOPIS/UTIC/ITS; 방향미검증은 보류",
+      "remaining": "42건분류 통과;도로명만 일치한 경로영향 unresolved·탐지/해제지연 별도",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        "datasets/mobility/raw/live_web_golden_20261012_v1/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "따릉이 대여·반납·재고",
+      "status": "범위별 검증있음",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bike.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/bike.py",
+          "sha256_now": "7c4779e158af6d68604d365813bd6feb2554cf7c2225424a211960ff81851d07"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+          "sha256_now": "1a7e43c8a9963118c43e68fd5702e54b8fa695de3f1763a6cee013bc3ca4b356"
+        }
+      ],
+      "web_golden_kind": "대여소위치·가용대수·반납위치",
+      "alignment": "동일대여소ID·조회시각·자전거종류·오래된재고 거절",
+      "executed_metrics": [
+        {
+          "name": "대여소번호·이름 대응",
+          "passed": 3,
+          "total": 3,
+          "percent": 100.0,
+          "kind": "공식웹+제품자료",
+          "evidence": "datasets/mobility/raw/live_web_golden_20261012_v1/REPORT.md",
+          "scope": "공개3대여소 유일식별"
+        },
+        {
+          "name": "관측재고 제품부품 재생",
+          "passed": 3,
+          "total": 3,
+          "percent": 100.0,
+          "kind": "공식웹 사실 재생",
+          "evidence": "datasets/mobility/raw/live_web_golden_20261012_v1/REPORT.md",
+          "scope": "실제API재조회·대여·반납 아님"
+        }
+      ],
+      "related_existing_regression": {
+        "passed": 32,
+        "total": 32,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/evidence/2026-10-12_mobility_coverage/map-bike/bike-tests-v1/result.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "공개번호+정확이름 유일매핑·관측재고 정수 정확일치;시점실시간성 별도",
+      "fallback": "공식 공개재고 + 보유 대여소 식별자료",
+      "remaining": "3재고값 재생완료;현재단말기·대여·반납 거래 별도",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        "datasets/mobility/raw/live_web_golden_20261012_v1/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 20,
+      "name": "사건 후 일정 자동 조정",
+      "status": "연결·관련회귀 확인",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/wiring.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/wiring.py",
+          "sha256_now": "86e329552e023fdd0e224cafff7052f952007d9bbbd359f081581c68b45471c2"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/team.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/team.py",
+          "sha256_now": "bb4f52559af260f80cc18eb0c5f146f799a761286da220f72d892848435d686c"
+        }
+      ],
+      "web_golden_kind": "정상/우회 대안의 경로·시간",
+      "alignment": "여행현재판·사건영향·지연·출발하한·인원·API권한",
+      "executed_metrics": [],
+      "related_existing_regression": {
+        "passed": 17,
+        "total": 17,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/evidence/2026-10-12_mobility_coverage/transit/transit-regression-v2.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "CAS/멱등·최신판·중복0 정확일치",
+      "fallback": "공식 사건입력 + 현재조건 재경로 + 공통 적용계약",
+      "remaining": "DB적용·최신계획서·통지 실제왕복 미확인",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    },
+    {
+      "id": 21,
+      "name": "지도 경로 표시",
+      "status": "급행 표시 수정·회귀 통과",
+      "product_paths": [
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/route_shape.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/route_shape.py",
+          "sha256_now": "bf0d4077620141b3084fed21bdc3a94d820ebc889d0e4bf86df719119f8916ee"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/shape_transit.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/shape_transit.py",
+          "sha256_now": "e06f545b82bee5a15a37559d30159998832f7c8ccd57b7966f9a1bc2f8f1ebf6"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_context.py",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_context.py",
+          "sha256_now": "83118680a84b77fdeda068ec926bc0854c367ff22fbf5d0836558717c9dde086"
+        },
+        {
+          "path": "final_project_cs/frontend/apps/web/src/lib/live/route-shapes.ts",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/src/lib/live/route-shapes.ts",
+          "sha256_now": "09c1596a201a13d13f384a28d1d8f19e3c6bad3f967e3c452ff923ae0d449f2c"
+        },
+        {
+          "path": "final_project_cs/frontend/apps/web/src/features/map/route-lines.ts",
+          "link": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/src/features/map/route-lines.ts",
+          "sha256_now": "84c5d6bc1d40cee8e6cec8a2750379b635524651edbf97d1355f1268d46dc3e9"
+        }
+      ],
+      "web_golden_kind": "지도선·선택노선·역/정류장·시작끝핀",
+      "alignment": "동일좌표·선택옵션/판·축순서·화면크기·원본/단순화형상",
+      "executed_metrics": [
+        {
+          "name": "일반/급행 표시 포함 공개경로 재생",
+          "passed": 2,
+          "total": 2,
+          "percent": 100.0,
+          "kind": "제품→웹모델",
+          "evidence": ".tmp/mobility_web21_20261012/map-replay-v1/REPORT-service-v1.md",
+          "scope": "S01일반·S02급행;실제휴대폰·SDK·HTTP아님"
+        }
+      ],
+      "related_existing_regression": {
+        "passed": 30,
+        "total": 30,
+        "kind": "기존 선택 관련회귀",
+        "evidence": [
+          "final_project_cs/wiki/records/evidence/2026-10-12_mobility_coverage/taxi-regression-v1/result.xml"
+        ],
+        "scope": "동일행 안 classname+name 중복제거;다른 기능과 겹치므로 전체합산금지"
+      },
+      "tolerance": "좌표48/48 기존대조; 거리/선편차 신규허용오차 별도",
+      "fallback": "제품 형상/좌표 + 무료 외부지도 링크",
+      "remaining": "급행전파수정2경로통과. 실제cs프로젝트서버HTTP·휴대폰SDK렌더링·출발포함역수문구 별도",
+      "whole_feature_percent": null,
+      "operating_environment_verified": false,
+      "evidence_links": [
+        ".tmp/mobility_web21_20261012/map-replay-v1/REPORT-service-v1.md",
+        ".tmp/mobility_web21_20261012/map-replay-v1/REPORT.md",
+        "final_project_cs/wiki/records/reports/2026-10-12_제공택시자료_검증완료와21개대체검증.md"
+      ]
+    }
+  ],
+  "official_secondary_urls": [
+    "https://news.seoul.go.kr/traffic/archives/1659?listPage=1",
+    "https://news.seoul.go.kr/traffic/traffic_price",
+    "https://news.seoul.go.kr/traffic/archives/345",
+    "https://www.airportrailroad.com/train/normal/fare",
+    "https://www.airportrailroad.com/train/normal/live",
+    "https://topis.seoul.go.kr/",
+    "https://topis.seoul.go.kr/map/openBicMap.do",
+    "https://data.seoul.go.kr/dataList/OA-22197/F/1/datasetView.do"
+  ],
+  "evidence_sha256": {
+    ".tmp/mobility_web21_20261012/aligned-replay-v1/REPORT.md": "da8f21fb95b32c876be34febc213e25c0cf87cf5a3d803f2f62971b5754c3908",
+    ".tmp/mobility_web21_20261012/aligned-replay-v1/summary-v1.json": "f62f29f6851d12426fb915a9c56cefbf666c32a09cc5d4407dd17585475ef224",
+    ".tmp/mobility_web21_20261012/coverage-audit-v1.json": "c34fd0ad45cd34f305bb65f227580709e68808c8e8245da418cea2ad06cb8b49",
+    ".tmp/mobility_web21_20261012/map-replay-v1/MANIFEST-v3.json": "462aaee7b2c50369ffef2209b1f38555d67644d8090c48bed8f31e222463118c",
+    ".tmp/mobility_web21_20261012/map-replay-v1/REPORT-service-v1.md": "ec6d3022962a096b29d27d5ad2dd3a9ecc73b915421d64a865222f89099343a0",
+    ".tmp/mobility_web21_20261012/map-replay-v1/REPORT.md": "7c48d9dc7aefc7c220e1cce6d00e6fc4c97b688d7e6b10505128436ef2d62bfb",
+    ".tmp/mobility_web21_20261012/map-replay-v1/backend-service-regression-v1.log": "f0df9a964393e2eb062f670f7f83ccb438443154b7fb57e1890de457497aff5b",
+    ".tmp/mobility_web21_20261012/map-replay-v1/backend-service-tests-v1.log": "57fea6f6888af0768bea0f75bc7a6210bef3fbe579ad9a011c51a824565b7a56",
+    ".tmp/mobility_web21_20261012/map-replay-v1/web-service-tests-v1.json": "bb7466fa3245fa75fad94f7f1c96c3823bc5b13e6fbfe933644e4295aa483bc6",
+    ".tmp/mobility_web21_20261012/mixed-replay-v1/REPORT-fare-v1.md": "202ca8f8c8863159801a800e4e9ef62b7c475f6b69b7337d3e386408cbfb2f44",
+    ".tmp/mobility_web21_20261012/mixed-replay-v1/comparison-v1.json": "13b190724ffbb37383fcc105b04cdfab7e3cd48cecdc9785dc960c31cb4c9ec3",
+    ".tmp/mobility_web21_20261012/mixed-replay-v1/mixed-unit-v2.log": "9af29687a7a7532f692b89f5263f5cf500290a6938622de5793f9162f58e2466",
+    ".tmp/mobility_web21_20261012/mixed-replay-v1/planner-comparison-v4.json": "0d7921782952de6a08ae8c036b55cfd7b49c453e31cefb58b7526288344574ed",
+    ".tmp/mobility_web21_20261012/runtime-tests-v2.xml": "8084b4c7dca3e0a1fa7ad819d679a43a3e26d24af8b4adbccecfceb6c6dc0ab4",
+    ".tmp/mobility_web21_20261012/selection-tests-v4.xml": "ef809ed42d92c7aa04b11e483991339e405ecf6fd86b350154cf7918b4c3121c",
+    ".tmp/mobility_web21_20261012/spatial-replay-v1/result-v1.json": "c255aa09b482396c11b3d3066320784008dcfd13eb0ed2269d0f0c7dfb216d4e",
+    "datasets/mobility/raw/live_web_golden_20261012_v1/REPORT.md": "4684627bfdabd66307c49c136e3ef20e43c8e01d5c699f423dda73952719e24e",
+    "datasets/mobility/raw/live_web_golden_20261012_v1/summary-v2.json": "c83a1eab7905da860bed07f73e7d97c7af179092b7933e13eddf1d987eb469c5",
+    "datasets/mobility/raw/subway_train_precision_20261012_v1/consumer-comparison-v1.json": "e8f081bd2d8aa4c814f8e5bdd6162ad89b1564605f9bbfe8d560ccef301e30e8",
+    "datasets/mobility/raw/subway_train_precision_20261012_v1/consumer-final-comparison-v2.json": "90b438d13b6e1b39f296ef96fca3149e6ed0e60b08958d314bd046abe919d4cd",
+    "datasets/mobility/raw/subway_train_precision_20261012_v1/legacy-baseline-pytest-v1.xml": "c1837adb90c3a334f552d91fa5cda3ddd6e2bfff52a7e6e58f067d1b24bb8487",
+    "datasets/mobility/raw/subway_train_precision_20261012_v1/loop-boundary-pytest-v1.xml": "db3215fa6b7825ec4fa604e81385570236b29ff52e103090c9c3b3c2cad81135",
+    "datasets/mobility/raw/subway_train_precision_20261012_v1/precision-regression-pytest-v1.xml": "8f91c92aa543f775f9df5d2f32115284a2f83ef1e04121470a861be19b66a889",
+    "datasets/mobility/raw/subway_train_precision_20261012_v1/source-comparison-v1.json": "fabf07807727e4808fdf8a5390bb1cdad8fada487346e7305cff5fb1996c81cc"
+  },
+  "limits": [
+    "소비자웹값·공표값·제품제공·회귀는서로다른분모입니다.",
+    "기능21행작성100%는기능전체실사용100%가아닙니다.",
+    "지하철웹운임·예정시간검증에추가필수현장탑승을요구하지않습니다.",
+    "실제운영·거래·도착측정이필요한주장을웹참조값으로대신하지않습니다.",
+    "버스재생중candidates.py와plan.py동시작업변경2개가있었고결과에전후해시를보존했습니다."
+  ],
+  "common_executed_regressions": [
+    {
+      "name": "정밀표·fixture 회귀",
+      "passed": 114,
+      "total": 114,
+      "percent": 100.0,
+      "kind": "기존실행",
+      "evidence": "datasets/mobility/raw/subway_train_precision_20261012_v1/precision-regression-pytest-v1.xml",
+      "scope": "공식기대값 갱신 관련114개"
+    },
+    {
+      "name": "기존기준선 회귀",
+      "passed": 22,
+      "total": 22,
+      "percent": 100.0,
+      "kind": "기존실행",
+      "evidence": "datasets/mobility/raw/subway_train_precision_20261012_v1/legacy-baseline-pytest-v1.xml",
+      "scope": "기존22개"
+    },
+    {
+      "name": "순환선 종료경계",
+      "passed": 2,
+      "total": 2,
+      "percent": 100.0,
+      "kind": "기존실행",
+      "evidence": "datasets/mobility/raw/subway_train_precision_20261012_v1/loop-boundary-pytest-v1.xml",
+      "scope": "경계2개"
+    },
+    {
+      "name": "정밀표 런타임",
+      "passed": 24,
+      "total": 24,
+      "percent": 100.0,
+      "kind": "기존실행",
+      "evidence": ".tmp/mobility_web21_20261012/runtime-tests-v2.xml",
+      "scope": "공통24개"
+    },
+    {
+      "name": "선택열차·Estimator·혼잡 연결",
+      "passed": 20,
+      "total": 20,
+      "percent": 100.0,
+      "kind": "기존실행",
+      "evidence": ".tmp/mobility_web21_20261012/selection-tests-v4.xml",
+      "scope": "공통20개"
+    }
+  ],
+  "mixed_candidate_checks": {
+    "new_regression": {
+      "passed": 25,
+      "total": 25,
+      "evidence": ".tmp/mobility_web21_20261012/mixed-replay-v1/mixed-unit-v2.log"
+    },
+    "generated": {
+      "passed": 3,
+      "total": 3
+    },
+    "provided": {
+      "passed": 2,
+      "total": 3
+    },
+    "M01": {
+      "fare_won": 1650,
+      "eta_min": 44,
+      "walk_m": 627
+    },
+    "M02": {
+      "fare_won": 2350,
+      "eta_min": 43
+    },
+    "M03_exclusion": "earlier_departure:공통12:09에서불성립·12:03역산출발은성립",
+    "scope": "고유1OD의3선택경로;웹열차시각상세와전체소요범위가달라시간정확도통과로세지않음"
+  },
+  "pending_followup": {
+    "mixed_M01_candidate_fix": "수정후3/3생성·2/3제공최종결과반영완료;M03제외계약보존",
+    "whole_feature_readiness": "개별표본·회귀분모를21기능완료분모로변환하지않음"
+  }
+}

@@ -1,0 +1,39 @@
+...........F.........                                                    [100%]
+================================== FAILURES ===================================
+_________ test_the_confirm_screen_fixes_a_time_and_registers_one_trip _________
+
+api = {'auth': <function api.<locals>.auth at 0x000002042CB76980>, 'calculation_calls': [], 'client': <starlette.testclient.TestClient object at 0x000002042CCA0D70>, 'customer': UUID('6df0d1fb-10ab-417c-b2e2-78786cef0641'), ...}
+
+    def test_the_confirm_screen_fixes_a_time_and_registers_one_trip(api):
+        client, _, _ = _full_client()
+        headers = _key(client)
+        view = _send(client, headers, text=CHAT_PLAN)
+        source = view["sources"][0]["source_id"]
+        # \uc2dc\uac01 \uc5c6\ub294 \u300c\uc810\uc2ec\u300d\uc740 12:00, \u300c\uc800\ub141\uc5d4 \uad11\uc7a5\uc2dc\uc7a5\u300d\uc740 18:00 \u2014 \uc6d0\ubb38\uc758 \ub07c\ub2c8 \ub9d0\ub85c \uaddc\uce59 \ubc30\uce58\ub77c\uace0 \uc801\ud78c\ub2e4
+        assert view["check"]["ready"] is True, view["check"]["problems"]
+        filled = {f["field"]: f["value"] for f in view["check"]["filled"] if f["field"].endswith("starts_at")}
+        # (\ubaa8\ub378\uc774 \uac00\ub9ac\ud0a8 \ud56d\ubaa9\uc740 \uaddc\uce59\uc774 \uc77d\uc740 \ud56d\ubaa9 \ub4a4\uc5d0 \ubc88\ud638\uac00 \ubd99\ub294\ub2e4 \u2014 \uacbd\ubcf5\uad81 0 \xb7 \ud1a0\uc18d\ucd0c 1 \xb7 \uad11\uc7a5\uc2dc\uc7a5 2)
+        assert filled == {"items[1].starts_at": "12:00", "items[2].starts_at": "18:00"}
+        # ������ ��������� �������� ��ģ�� �� �� ��
+        fixed = _edit(client, headers, view, {"source_id": source, "field": "items[2].starts_at", "value": "18:30"})
+        assert fixed["revision"] == 2
+        assert [f["field"] for f in fixed["check"]["filled"] if f["field"].endswith("starts_at")] == ["items[1].starts_at"]
+        # \u2605\ub0a1\uc740 \ud310\uc73c\ub85c \uace0\uce58\uac70\ub098 \ub4f1\ub85d\ud558\uba74 409 \u2014 \ub2e4\ub978 \ud0ed\uc758 \uace0\uce68\uc744 \uc870\uc6a9\ud788 \ub36e\uc9c0 \uc54a\ub294\ub2e4
+        _edit(client, headers, view, {"source_id": source, "field": "items[2].title", "value": "�������"}, status=409)
+        stale = _confirm(client, headers, view["intake_id"], 1, status=409)
+        assert stale["error"]["code"] == "stale_revision"
+        done = _confirm(client, headers, view["intake_id"], 2)
+        trip = done["trip"]
+        assert done["status"] == "confirmed" and trip["created"] is True
+        got = [(i["title"], i["starts_at"][11:16], i["kind"]) for i in trip["items"]]
+>       assert got == [("�溹��", "09:00", "activity"), ("�����", "12:00", "dining"), ("�������", "18:30", "activity")]
+E       AssertionError: assert [('�溹��', '09:..., 'activity')] == [('�溹��', '09:..., 'activity')]
+E         
+E         At index 1 diff: ('���� 5�� �� 0.5km', '11:55', 'mobility') != ('�����', '12:00', 'dining')
+E         Left contains 2 more items, first extra item: ('���� 5�� �� 2.6km', '18:25', 'mobility')
+E         Use -v to get more diff
+
+tests\e2e\test_trip_intake_api.py:355: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_trip_intake_api.py::test_the_confirm_screen_fixes_a_time_and_registers_one_trip
+1 failed, 20 passed in 106.21s (0:01:46)

@@ -1,0 +1,20 @@
+[
+  {
+    "script": "tago_subway_collect.py",
+    "controlled_resultCode": "30",
+    "actual_return": {
+      "items": "",
+      "totalCount": 0
+    },
+    "false_success": true
+  },
+  {
+    "script": "tago_retry_empty.py",
+    "controlled_resultCode": "30",
+    "actual_return": [
+      [],
+      "ok"
+    ],
+    "false_success": true
+  }
+]

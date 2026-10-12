@@ -1,0 +1,183 @@
+{
+  "feature_rows": 21,
+  "accessible_svg_count": 1,
+  "local_links": [
+    {
+      "source": "wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v16\\mobility-readiness.html",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\reports\\2026-10-09_0408_출발재검증_사건소스_분리와_도보안내_검증.md",
+      "exists": true
+    },
+    {
+      "source": "wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v16\\mobility-readiness.html",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v15\\mobility-readiness.html",
+      "exists": true
+    },
+    {
+      "source": "wiki\\records\\reports\\2026-10-09_0408_출발재검증_사건소스_분리와_도보안내_검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\watch\\trip_reminders.py",
+      "exists": true
+    },
+    {
+      "source": "wiki\\records\\reports\\2026-10-09_0408_출발재검증_사건소스_분리와_도보안내_검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\unit\\travel\\test_departure_source_gate_v1.py",
+      "exists": true
+    },
+    {
+      "source": "wiki\\records\\reports\\2026-10-09_0408_출발재검증_사건소스_분리와_도보안내_검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\scenario\\test_departure_source_gate_db_v1.py",
+      "exists": true
+    },
+    {
+      "source": "wiki\\records\\reports\\2026-10-09_0408_출발재검증_사건소스_분리와_도보안내_검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\scripts\\mobility\\build_readiness_visual_v16.py",
+      "exists": true
+    },
+    {
+      "source": "wiki\\records\\reports\\2026-10-09_0408_출발재검증_사건소스_분리와_도보안내_검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v16\\mobility-readiness.html",
+      "exists": true
+    },
+    {
+      "source": "wiki\\records\\reports\\2026-10-09_0408_출발재검증_사건소스_분리와_도보안내_검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0358_출발재검증_사건소스_분리\\departure-gate-before-v1.xml",
+      "exists": true
+    },
+    {
+      "source": "wiki\\records\\reports\\2026-10-09_0408_출발재검증_사건소스_분리와_도보안내_검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0358_출발재검증_사건소스_분리\\departure-gate-regression-v1-commands.json",
+      "exists": true
+    },
+    {
+      "source": "wiki\\records\\reports\\2026-10-09_0408_출발재검증_사건소스_분리와_도보안내_검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0358_출발재검증_사건소스_분리\\verification-proof-v1.json",
+      "exists": true
+    },
+    {
+      "source": "wiki\\records\\reports\\2026-10-09_0408_출발재검증_사건소스_분리와_도보안내_검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0358_출발재검증_사건소스_분리\\web-research-v1.json",
+      "exists": true
+    },
+    {
+      "source": "wiki\\records\\reports\\2026-10-09_0408_출발재검증_사건소스_분리와_도보안내_검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0358_출발재검증_사건소스_분리\\before-backup.json",
+      "exists": true
+    },
+    {
+      "source": "wiki\\records\\reports\\2026-10-09_0408_출발재검증_사건소스_분리와_도보안내_검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0358_출발재검증_사건소스_분리\\publication-backups-v1.json",
+      "exists": true
+    }
+  ],
+  "hashes": [
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\components\\watch\\trip_reminders.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\tests\\unit\\travel\\test_departure_source_gate_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\tests\\scenario\\test_departure_source_gate_db_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\scripts\\mobility\\build_readiness_visual_v16.py",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+      "matches": true
+    }
+  ],
+  "backups_verified": 4,
+  "prior_web_files_verified": 7,
+  "evidence_manifest": [
+    {
+      "file": "before-backup.json",
+      "sha256": "a294bbd2c42937e4fd25e3db2cf30a4761271470db4055c6a32459c49882bf34"
+    },
+    {
+      "file": "departure-gate-before-v1.log",
+      "sha256": "81af91983e20018601677e0474e17fe4f91494bc50847f59a18e1a74193c71a2"
+    },
+    {
+      "file": "departure-gate-before-v1.xml",
+      "sha256": "c9d991b4105e8e94f22f8ad037fd919e9de097c7bf0fe0b5e4ee4c6648a89f0d"
+    },
+    {
+      "file": "departure-gate-regression-v1-commands.json",
+      "sha256": "2f1de5dfd1f97be22ce16b8d6ca2bc976aa216a32190ee74e051e785c206a241"
+    },
+    {
+      "file": "departure-gate-regression-v1-part1.log",
+      "sha256": "4e6be1459ba30a5d453551867234ad47f4105cadba873027a79dab2e3f812a5a"
+    },
+    {
+      "file": "departure-gate-regression-v1-part1.xml",
+      "sha256": "e78032529a3afcb1da67a35f44fb6e349441ab6a397bc6a50e445fb168f17d55"
+    },
+    {
+      "file": "departure-gate-regression-v1-part2.log",
+      "sha256": "50c14d4e371f464828ae181b9118f9952f4259b87ae7ec15c670ea8a095b7d5d"
+    },
+    {
+      "file": "departure-gate-regression-v1-part2.xml",
+      "sha256": "ff0a14a27fd1e8207e643180a793b2c4fe6ae0a5cedd5f57b7ae2d85a0ede8a5"
+    },
+    {
+      "file": "departure-gate-regression-v1-part3.log",
+      "sha256": "34012358ccc3a3331b4f62a13df54b49394ab1e82170ad6876f2be23f0fb3cf9"
+    },
+    {
+      "file": "departure-gate-regression-v1-part3.xml",
+      "sha256": "ae7416701ab3e438ad7ec8a6bbad10750970dbc65cfb0de335c86c331d30932e"
+    },
+    {
+      "file": "departure-gate-regression-v1-part4.log",
+      "sha256": "ce9a706fc786162a65e5fd7d8031d0f544fd06eb5bdf7157dcbb7b9ce7c589e9"
+    },
+    {
+      "file": "departure-gate-regression-v1-part4.xml",
+      "sha256": "bdd0c3ed463f8337d1348cdf3ecc5cd6547ee5e5680e57851b0ee66a5d5ea9ae"
+    },
+    {
+      "file": "departure-gate-target-v1.xml",
+      "sha256": "6750c32ccb976aaa6cea260792af5dcae705a4c2a793d119e43c9931528958ba"
+    },
+    {
+      "file": "publication-backups-v1.json",
+      "sha256": "869cfc01a4a4acf4cd955f2cf7d621106f007958e17ba34b3fea908e33191304"
+    },
+    {
+      "file": "published-output-v1.json",
+      "sha256": "028967d8dd7e9056cf12df747b9f8743fe0145305a19821ff1d2ec3271957fe5"
+    },
+    {
+      "file": "run_departure_gate_regression_v1.py",
+      "sha256": "b8234cd4857490bf9c1ecf6b76ccacfd6ab5bf627391e9952bc505692a44fc84"
+    },
+    {
+      "file": "verification-proof-v1.json",
+      "sha256": "65d8e251e2a1c2c862e0d39e1bc48948b3427b643fdedc4be9dd514d747a2441"
+    },
+    {
+      "file": "web-research-v1.json",
+      "sha256": "b3f745f4ccf0113c25f9c2ad05646297ef614249df636a5d2829cd6cfb266bee"
+    }
+  ],
+  "html_browser_render_checked": false,
+  "browser_check_blocked": "브라우저 URL 보안 정책이 file: 프로토콜을 차단함. 브라우저 우회 없이 정적 구조 검증만 수행."
+}

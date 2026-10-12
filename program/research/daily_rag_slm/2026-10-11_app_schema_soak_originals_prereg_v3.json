@@ -1,0 +1,30 @@
+{
+  "created_at_utc": "2026-10-11T01:15:58.307522+00:00",
+  "purpose": "Fixed 800-token application JSON stability; 400-token failures retained and excluded only from this distinct profile, never original accuracy denominator",
+  "duration_seconds": 21600,
+  "phase_seconds": 3600,
+  "concurrency_phases": [
+    1,
+    2,
+    1,
+    2,
+    1,
+    2
+  ],
+  "slots": 2,
+  "context_total": 8192,
+  "output_budget": 800,
+  "unique_conditions": 12,
+  "consecutive_failure_limit": 3,
+  "prerequisite": "24/24 success over exactly12 conditions and repeats1,2 at800; no alteration of failed400 predecessor records",
+  "independent_accuracy": false,
+  "adoption": false,
+  "automatic_retry": false,
+  "our_training": false,
+  "publisher_training": true,
+  "selection": "Saluki original, Gemma E4B Instruct original Q4_K_M, Gemma E4B QAT original Q4_0; publishers trained, no our-data adapter",
+  "memory_guard": "Reuse existing model files; single existing GPU A worker; minimum3GiB disk; no new weights",
+  "stopping": "6h or3 consecutive failures; completed/failed not automatically restarted",
+  "latency_acceptance": "Descriptive p50/p95 by concurrency with errors retained, no cross-model speed claim without matched alternation; no product acceptance from soak",
+  "semantic_acceptance": "All calls recorded including failures; any semantic/JSON failure keeps adoption false"
+}

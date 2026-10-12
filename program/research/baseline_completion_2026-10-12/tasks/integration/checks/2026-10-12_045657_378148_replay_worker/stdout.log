@@ -1,0 +1,6 @@
+CALL -m scripts.replay_operations_diagnostics --prune
+CALL -m scripts.run_sweepers --once
+CALL -m scripts.run_outbox_worker --once --drain
+CALL -m scripts.replay_operations_diagnostics --prune
+CALL -m scripts.run_sweepers --once
+CALL -m scripts.run_outbox_worker --once --drain

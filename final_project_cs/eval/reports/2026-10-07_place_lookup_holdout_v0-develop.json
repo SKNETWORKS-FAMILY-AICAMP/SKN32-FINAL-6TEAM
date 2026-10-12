@@ -1,0 +1,287 @@
+{
+ "eval": "place_lookup",
+ "dataset": "place_lookup_holdout_v1.jsonl",
+ "dataset_sha": "2b30e3d73ba1f642",
+ "label": "holdout-v0-develop",
+ "env": {
+  "run_at": "2026-10-07T05:32:50+00:00",
+  "today": "2026-10-07",
+  "layout": "develop",
+  "kakao": "live",
+  "llm": "off",
+  "git_commit": "8d08f1b",
+  "git_branch": "role-dining",
+  "git_dirty": true,
+  "db": "dining_rebuild",
+  "ledger_open_places": 1767,
+  "places": 6,
+  "aliases": 5
+ },
+ "summary": {
+  "accuracy": {
+   "num": 3,
+   "den": 12,
+   "rate": 0.25
+  },
+  "wrong_confirmed": {
+   "num": 1,
+   "den": 12,
+   "rate": 0.083
+  },
+  "wrong_review": {
+   "num": 1,
+   "den": 12,
+   "rate": 0.083
+  },
+  "not_found": {
+   "num": 7,
+   "den": 12,
+   "rate": 0.583
+  },
+  "blocked": {
+   "num": 0,
+   "den": 12,
+   "rate": 0.0
+  },
+  "labels": {
+   "correct_confirmed": 1,
+   "correct_review": 1,
+   "correct_abstain": 1,
+   "wrong_review": 1,
+   "wrong_confirmed": 1,
+   "not_found": 7,
+   "blocked": 0
+  },
+  "by_group": {
+   "misc": {
+    "num": 1,
+    "den": 5,
+    "rate": 0.2
+   },
+   "name": {
+    "num": 2,
+    "den": 4,
+    "rate": 0.5
+   },
+   "near": {
+    "num": 0,
+    "den": 3,
+    "rate": 0.0
+   }
+  }
+ },
+ "results": [
+  {
+   "id": "PLH-01",
+   "group": "name",
+   "input": "12:30 이문설롱탕",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PLH-02",
+   "group": "near",
+   "input": "12:30 성수족빨",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PLH-03",
+   "group": "misc",
+   "input": "12:30 통인시장 기름떡볶이",
+   "place": "통인시장",
+   "source": "tour_api",
+   "method": "tour_api",
+   "kind": "dining",
+   "review": true,
+   "km": 0.02,
+   "note": "원문 「통인시장 기름떡볶이」에서 「통인시장」로 좁혔다",
+   "blocked": [],
+   "checks": {
+    "brand": false,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5808,
+    126.9699
+   ],
+   "label": "wrong_review",
+   "why_wrong": "brand"
+  },
+  {
+   "id": "PLH-04",
+   "group": "name",
+   "input": "12:30 진옥화할매",
+   "place": "진옥화할매원조닭한마리 본점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다 · 이름이 원문과 달라 확인이 필요하다(「진옥화할매원조닭한마리 본점」)",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5703,
+    127.0057
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PLH-05",
+   "group": "name",
+   "input": "12:30 하동관",
+   "place": "하동관 명동본점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5644,
+    126.985
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PLH-06",
+   "group": "near",
+   "input": "12:30 파리바게뜨",
+   "place": "파리바게뜨 양재본점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": 9.7,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": false,
+    "kind": true
+   },
+   "at": [
+    37.4853,
+    127.0372
+   ],
+   "label": "wrong_confirmed",
+   "why_wrong": "near"
+  },
+  {
+   "id": "PLH-07",
+   "group": "near",
+   "input": "15:00 이디야 홍대입구역",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PLH-08",
+   "group": "misc",
+   "input": "12:30 Paris Baguette",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PLH-09",
+   "group": "misc",
+   "input": "12:30 Myeongdong Kyoja",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PLH-10",
+   "group": "misc",
+   "input": "12:30 근처 칼국수집",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  },
+  {
+   "id": "PLH-11",
+   "group": "misc",
+   "input": "18:00 저녁 고기집",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "correct_abstain"
+  },
+  {
+   "id": "PLH-12",
+   "group": "name",
+   "input": "12:30 남산돈까스",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "not_found"
+  }
+ ]
+}

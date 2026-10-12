@@ -25,6 +25,14 @@ HERE = Path(__file__).resolve().parent
 MARK = "mobility_full"
 
 
+def pytest_ignore_collect(collection_path, config):
+    """보존한 옛 시험은 현재 제품의 시험 목록에 섞지 않는다."""
+    path = Path(collection_path)
+    if path.is_relative_to(HERE) and '_backup' in path.relative_to(HERE).parts:
+        return True
+    return None
+
+
 def pytest_configure(config):
     config.addinivalue_line(
         "markers",

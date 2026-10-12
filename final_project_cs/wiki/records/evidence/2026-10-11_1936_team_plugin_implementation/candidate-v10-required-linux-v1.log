@@ -1,0 +1,117 @@
+ISOLATED_LINUX_BEGIN {"python": "3.12.15", "platform": "linux", "verified_files": 1291, "selected_tests": ["tests/architecture/test_basement_is_domain_free.py", "tests/architecture/test_basement_layers.py", "tests/architecture/test_composer_stays_out_of_this_repo.py", "tests/architecture/test_engine_accepts_travel_policies.py", "tests/architecture/test_ops_app_is_separate.py", "tests/architecture/test_records_live_in_wiki.py", "tests/architecture/test_state_diagram_matches_code.py", "tests/architecture/test_supplier_tier_gate.py", "tests/architecture/test_travel_ops_cells.py", "tests/contract/test_active_prompts_are_the_deployed_set.py", "tests/contract/test_api_key_file.py", "tests/contract/test_case_state_table.py", "tests/contract/test_consumer_idempotency_contract.py", "tests/contract/test_contracts.py", "tests/contract/test_core_isolation.py", "tests/contract/test_declared_refs_are_savable.py", "tests/contract/test_declared_tools_exist.py", "tests/contract/test_every_screen_is_reachable.py", "tests/contract/test_guardrail_numbers_are_not_hardcoded.py", "tests/contract/test_introspection_contract.py", "tests/contract/test_module_toggles.py", "tests/contract/test_proposal_fields_are_declared.py", "tests/contract/test_retired_domain_assets.py", "tests/contract/test_team_contract.py", "tests/contract/test_team_layout.py", "tests/contract/test_team_tool_discipline.py", "tests/contract/test_web_client_contract.py", "tests/security/test_admin_json_gateway.py", "tests/security/test_auth_and_scope_guards.py", "tests/security/test_no_infra_in_tracked_files.py", "tests/security/test_pii_redaction_runtime.py", "tests/security/test_query_scope.py", "tests/security/test_scope_contract.py"], "database": "ephemeral-synthetic-only", "inherited_environment_cleared": true}
+SYNTHETIC_DATABASE_READY {"baseline_migrations": 85, "database": "synthetic", "user": "synthetic", "operating_data_copied": false}
+============================= test session starts ==============================
+platform linux -- Python 3.12.15, pytest-8.4.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /tmp/candidate-check
+configfile: pytest.ini
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collecting ... collected 382 items / 4 errors / 1 deselected / 381 selected
+
+==================================== ERRORS ====================================
+____ ERROR collecting tests/architecture/test_state_diagram_matches_code.py ____
+ImportError while importing test module '/tmp/candidate-check/tests/architecture/test_state_diagram_matches_code.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.12/site-packages/_pytest/python.py:498: in importtestmodule
+    mod = import_path(
+/usr/local/lib/python3.12/site-packages/_pytest/pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+/usr/local/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:186: in exec_module
+    exec(co, module.__dict__)
+tests/architecture/test_state_diagram_matches_code.py:20: in <module>
+    from scripts.make_state_diagram import OUT, render  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ModuleNotFoundError: No module named 'scripts.make_state_diagram'
+_____________ ERROR collecting tests/contract/test_api_key_file.py _____________
+tests/contract/test_api_key_file.py:69: in <module>
+    @pytest.mark.parametrize("name", sorted(_template_names()))
+                                            ^^^^^^^^^^^^^^^^^
+tests/contract/test_api_key_file.py:38: in _template_names
+    return set(_ASSIGNMENT.findall(TEMPLATE.read_text(encoding="utf-8")))
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/candidate-check/.env.apikeys.example'
+______ ERROR collecting tests/contract/test_declared_refs_are_savable.py _______
+ImportError while importing test module '/tmp/candidate-check/tests/contract/test_declared_refs_are_savable.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.12/site-packages/_pytest/python.py:498: in importtestmodule
+    mod = import_path(
+/usr/local/lib/python3.12/site-packages/_pytest/pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+/usr/local/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:186: in exec_module
+    exec(co, module.__dict__)
+tests/contract/test_declared_refs_are_savable.py:22: in <module>
+    from app.composer_host import IMPLEMENTATIONS
+app/composer_host.py:22: in <module>
+    from acop_composer.host import AuthPolicy, ComposerHost, ConfigInvalid, Implementation
+E   ModuleNotFoundError: No module named 'acop_composer'
+________ ERROR collecting tests/contract/test_retired_domain_assets.py _________
+ImportError while importing test module '/tmp/candidate-check/tests/contract/test_retired_domain_assets.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.12/site-packages/_pytest/python.py:498: in importtestmodule
+    mod = import_path(
+/usr/local/lib/python3.12/site-packages/_pytest/pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+/usr/local/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:186: in exec_module
+    exec(co, module.__dict__)
+tests/contract/test_retired_domain_assets.py:3: in <module>
+    from scripts.check_retired_domain_assets import check_tree
+E   ModuleNotFoundError: No module named 'scripts.check_retired_domain_assets'
+=============================== warnings summary ===============================
+../../usr/local/lib/python3.12/site-packages/starlette/testclient.py:51
+  /usr/local/lib/python3.12/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+<unknown>:353
+  <unknown>:353: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR tests/architecture/test_state_diagram_matches_code.py
+ERROR tests/contract/test_api_key_file.py - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/candidate-check/.env.apikeys.example'
+ERROR tests/contract/test_declared_refs_are_savable.py
+ERROR tests/contract/test_retired_domain_assets.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 4 errors during collection !!!!!!!!!!!!!!!!!!!!
+================= 1 deselected, 2 warnings, 4 errors in 2.63s ==================
+ISOLATED_LINUX_END {"exit_code": 2, "seconds": 3.064}
+ISOLATED_DB_ORCHESTRATION {"operating_database_connected": false, "operating_volumes_connected": false, "operating_environment_forwarded": false, "image_pull": false, "images": ["sha256:8e49ec862b1ff798fe96c8a54af61bdcddcd888ef57070e50dab9c18d3ce2892", "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"], "network_internal": true, "database_tmpfs_destinations": ["/tmp", "/var/lib/postgresql/data"], "database_mounts": [], "pytest_process_exit_code": 2, "remaining_temporary_containers": [], "remaining_temporary_network": false, "cleanup_errors": []}

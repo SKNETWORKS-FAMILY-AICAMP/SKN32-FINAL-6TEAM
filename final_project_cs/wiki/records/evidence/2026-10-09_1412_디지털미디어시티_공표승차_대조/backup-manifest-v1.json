@@ -1,0 +1,22 @@
+[
+  {
+    "path": "datasets/mobility/processed/mobility/published_boarding_timetable_v1.json",
+    "backup": "datasets/mobility/processed/mobility/_backup/2026-10-09_1412_디지털미디어시티_공표승차_대조/published_boarding_timetable_v1.json",
+    "sha256": "102616cdd14c5cead2f2bfd618bf5b70b1c0e445a6eb6a473b38f6bec41991e0"
+  },
+  {
+    "path": "datasets/mobility/processed/mobility/MANIFEST_git_v1.json",
+    "backup": "datasets/mobility/processed/mobility/_backup/2026-10-09_1412_디지털미디어시티_공표승차_대조/MANIFEST_git_v1.json",
+    "sha256": "cdc4519e3b5aa9061523b3ac790201bedb0cdc120dfdf9d1bbc510f26b5f2618"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_1412_디지털미디어시티_공표승차_대조/mobility.md",
+    "sha256": "dc618825cecded8c8b89d30271e8e7d86b70f86a04603ad603b3c34e7ffcd8e2"
+  },
+  {
+    "path": "datasets/mobility/REPORT.md",
+    "backup": "datasets/mobility/_backup/2026-10-09_1412_디지털미디어시티_공표승차_대조/REPORT.md",
+    "sha256": "5a38bae9d7c9802950a3c9844bba28c1868c97637143d4cb883a8a97bb8c604f"
+  }
+]

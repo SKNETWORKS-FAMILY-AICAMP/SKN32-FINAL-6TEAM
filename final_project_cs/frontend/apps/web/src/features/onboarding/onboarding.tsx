@@ -19,12 +19,21 @@ import { PreferencesSummary, QuestionCarousel } from "./preferences";
 import { TermsCardBody, TermsReader, termsDoc } from "./terms";
 import styles from "./onboarding.module.css";
 
+/**
+ * ★`[2026-10-12 사용자 지시]` The terms card opens with its animation once. The consent gate first shows the open terms while it checks the server,
+ * then sends the customer to `/start?terms=required` — that second drawing of the same card is shown without the opening animation.
+ */
+let termsShownOnce = false;
+
 /** Discord alerts, terms and travel preferences before the first plan. Everything stays in page state. */
-export function Onboarding() {
+export function Onboarding({ termsRequired = false }: { termsRequired?: boolean } = {}) {
+  const [quietOpen] = useState(() => termsRequired && termsShownOnce);
+  useEffect(() => { termsShownOnce = termsRequired && !quietOpen; }, [termsRequired, quietOpen]);
   const t = useT();
   const { language } = useSettings();
   const router = useRouter();
-  const [state, setState] = useOnboarding();
+  const [storedState, setState] = useOnboarding();
+  const state = termsRequired && !storedState.agreed ? { ...storedState, open: 1 as const } : storedState;
   // ★「Continue my trip」 follows the server's list (newest first), not a value this page happened to see: another tab or device counts too.
   const latestTrip = useTrips().data?.[0];
   // The document whose full text is open (null = none). `termsOpen` is what the rest of the screen reacts to.
@@ -133,7 +142,9 @@ export function Onboarding() {
   /**
    * 「동의하고 다음으로」: this press is what records the consent (the browser's copy at once, the server's record right behind it).
    * ★`[2026-10-06 사용자 지시]` The first agreement goes straight on to registering a plan — the preference survey is no longer part of the first run
-   *   (it stays here as the third card, opened from the menu / My page). A customer who already agreed and only changes their boxes stays on this screen.
+   *   (it stays here as the third card, opened from the menu / My page).
+   * ★`[2026-10-12 사용자 지시]` A customer who already agreed (e.g. sent back here because the consent check failed) goes to My trips —
+   *   this press never opens the preference card (「여행 취향 설정 완료」 kept coming back after re-agreeing).
    */
   function continueTerms() {
     if (!requiredAgreed(state.choices)) return;
@@ -141,9 +152,7 @@ export function Onboarding() {
     void saveConsents(state.choices, language);
     flushWebhook(state.choices.alert_channel);
     feedback("complete");
-    if (firstAgreement) { router.push(routes.newTrip); return; }
-    setState((current) => ({ ...current, open: 2 }));
-    setSceneStage(2);
+    router.push(firstAgreement ? routes.newTrip : routes.trips);
   }
 
   function closeTerms() {
@@ -173,7 +182,7 @@ export function Onboarding() {
   </section>;
 
   return <DeviceFrame headerInert={termsOpen}>
-    <div className={styles.setup} data-terms={termsOpen}>
+    <div className={styles.setup} data-terms={termsOpen} data-quiet-open={quietOpen || undefined}>
       <Scene stage={sceneStage} step={state.step - INTRO_STEP} totalSteps={questions.length + 1} complete={state.complete} pulse={pulse} sizes="(max-width: 720px) 100vw, 402px" />
       <div className={styles.scroller} data-locked={expanded} inert={termsOpen}>
         <main id="main-content" className={`${styles.phone} ${firstRender ? styles.firstRender : ""}`}>
@@ -190,8 +199,8 @@ export function Onboarding() {
                 onWebhook={editWebhook} onContinue={() => openCard(1)} />)}
             {card(1, state.agreed,
               cardHead(1, t("약관 동의", "Terms & consent"), state.agreed ? t("필수 내용을 확인했어요.", "Required consent completed.") : t("시작하기 전에 확인해 주세요.", "A quick check before you begin."), false, state.agreed),
-              <TermsCardBody t={t} choices={state.choices} consentMotion={consentMotion} alertTyped={Boolean(state.webhook.trim())}
-                onReadDoc={setReaderCode} onToggle={toggle} onContinue={continueTerms} />)}
+              <>{termsRequired && !state.agreed && <p className={styles.termsIntro} role="status">{t("이용을 위해서는 필수 약관 동의가 필요해요.", "Please agree to the required terms to use the service.")}</p>}<TermsCardBody t={t} choices={state.choices} consentMotion={consentMotion} alertTyped={Boolean(state.webhook.trim())}
+                onReadDoc={setReaderCode} onToggle={toggle} onContinue={continueTerms} /></>)}
             {card(2, state.complete,
               cardHead(2, t("여행 취향 알아보기", "Your travel preferences"), state.complete ? t(`${questions.length}가지 질문을 모두 마쳤어요.`, `All ${questions.length} questions completed.`) : t(`${questions.length}가지 질문으로 더 나다운 여행.`, `${questions.length} questions for a trip that fits you.`), !state.agreed, state.complete),
               state.complete

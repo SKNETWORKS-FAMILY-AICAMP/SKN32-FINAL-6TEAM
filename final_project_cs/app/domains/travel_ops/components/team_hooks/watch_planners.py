@@ -15,11 +15,15 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
+from app.core.service_bindings import collect_registration, current_bindings, read_binding
+
 _planners: dict[str, Callable[..., Any]] = {}
 
 
 def register(kind: str, planner: Callable[..., Any]) -> None:
     """조립 때 종류마다 한 번. 같은 종류를 다시 등록하면 **교체**한다(재조립 대비)."""
+    if collect_registration("watch_planners", {kind: planner}):
+        return
     _planners[kind] = planner
 
 
@@ -28,9 +32,16 @@ def clear() -> None:
 
 
 def registered() -> tuple[str, ...]:
+    table = current_bindings()
+    if table is not None:
+        return tuple(sorted(key for (group, key) in table.values if group == "watch_planners"))
     return tuple(sorted(_planners))
 
 
 def planner(kind: str) -> Callable[..., Any] | None:
     """항목 종류 → 점검 계산 함수. ★없으면 `None`(그 팀이 조립에 없거나 모르는 종류)."""
-    return _planners.get(kind)
+    result = read_binding("watch_planners", kind, _planners.get(kind))
+    if result is None and current_bindings() is not None:
+        import logging
+        logging.getLogger(__name__).warning("watch_kind_unavailable kind=%s", kind)
+    return result

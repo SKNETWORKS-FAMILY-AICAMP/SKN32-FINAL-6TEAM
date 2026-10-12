@@ -1,0 +1,25 @@
+...........F....                                                         [100%]
+================================== FAILURES ===================================
+_ test_change_uses_team_proposal_and_duplicate_does_not_apply_or_notify_twice _
+
+decided = {'calculation_calls': [('���� ���� �Ĵ�', '�溹��', datetime.datetime(2026, 9, 23, 13, 50, tzinfo=datetime.timezone(datetime.ti...sion_unit_web._Decider object at 0x000001C7F73A8B60>, 'key': 'acop_u_RhMUbpJHmIZV133iHyofZkDuiakfbo89_TdGg6aCCpo', ...}
+
+    def test_change_uses_team_proposal_and_duplicate_does_not_apply_or_notify_twice(decided):
+        first = _say(decided, "���� �ٸ� ���� �ٲ�", "resume-single-change")
+        assert first["status"] == "adjusted" and first["outcome"]["version"] == 2, first
+        state = _saved(first["case_id"])[3]
+        assert len(state["applied_actions"]) == 1
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT count(*) FROM agent_runs WHERE case_id=%s", (first["case_id"],))
+            assert cur.fetchone()[0] == 1
+            cur.execute("SELECT count(*) FROM action_requests WHERE case_id=%s AND status='succeeded'", (first["case_id"],))
+>           assert cur.fetchone()[0] == 1
+E           assert 2 == 1
+
+tests\e2e\test_web_conversation_resume.py:94: AssertionError
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.instances.dining.team:team.py:45 dining states not read case=fa3b34fc-b1ef-4bed-81bf-b50bf2adfd38 reason=ToolLoopExceeded
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_1936_team_plugin_implementation\conversation-final-joint-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_web_conversation_resume.py::test_change_uses_team_proposal_and_duplicate_does_not_apply_or_notify_twice
+1 failed, 15 passed in 123.63s (0:02:03)

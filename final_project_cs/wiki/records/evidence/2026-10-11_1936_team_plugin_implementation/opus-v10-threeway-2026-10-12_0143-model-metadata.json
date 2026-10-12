@@ -1,0 +1,127 @@
+{
+  "requested_model": "claude-opus-5-5",
+  "exit_code": 0,
+  "is_error": false,
+  "canonical_models": {
+    "claude-opus-5-5": "claude-opus-5-5"
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 54,
+      "outputTokens": 15088,
+      "cacheReadInputTokens": 2161380,
+      "cacheCreationInputTokens": 145479,
+      "webSearchRequests": 0,
+      "costUSD": 1.8980839999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 6499,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "direct_Read_calls": [
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-11_1936_team_plugin_implementation\\opus-v10-threeway-2026-10-12_0134-result.txt"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-11_1936_team_plugin_implementation\\v10-threeway-2026-10-12_0140-unit-v2.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\merge-evidence\\app\\domains\\travel_ops\\components\\conversation\\trip_messages.py.prior-v10.diff"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\merge-evidence\\app\\domains\\travel_ops\\components\\conversation\\trip_messages.py.v9-v10.diff"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\merge-evidence\\app\\domains\\travel_ops\\components\\conversation\\trip_messages.py.newbase-v10.diff"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\app\\domains\\travel_ops\\components\\conversation\\trip_messages.py",
+      "offset": 850,
+      "limit": 110
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\app\\domains\\travel_ops\\components\\conversation\\fact_context.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\merge-evidence\\config\\guardrails.yaml.newbase-v10.diff"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\merge-evidence\\config\\guardrails.yaml.prior-v10.diff"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\merge-evidence\\config\\guardrails.yaml.v9-v10.diff"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\merge-evidence\\config\\guardrails.yaml.v9-v10.diff",
+      "offset": 656,
+      "limit": 390
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\tests\\e2e\\test_web_initial_concurrency.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\tests\\e2e\\test_web_conversation_resume.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\tests\\e2e\\test_web_resume_commit_recovery.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\tests\\unit\\travel\\test_fact_context.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\tests\\unit\\travel\\test_initial_retry_boundaries.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\tests\\unit\\core\\test_controller_resume_recovery.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\app\\application\\controller.py",
+      "offset": 180,
+      "limit": 20
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\app\\application\\controller.py",
+      "offset": 300,
+      "limit": 70
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\app\\application\\controller.py",
+      "offset": 785,
+      "limit": 150
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\app\\core\\transition.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\app\\core\\case_lifecycle\\case.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\app\\core\\redaction.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\RULE.md"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\AGENTS.md"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\teams\\team-contract\\plugin-availability.md"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-12_012943_plugin_v10\\app\\presentation\\api\\cases.py",
+      "offset": 200,
+      "limit": 42
+    }
+  ],
+  "tools": {
+    "Grep": 6,
+    "Glob": 5,
+    "Bash": 2,
+    "Read": 27
+  },
+  "num_turns": 41
+}

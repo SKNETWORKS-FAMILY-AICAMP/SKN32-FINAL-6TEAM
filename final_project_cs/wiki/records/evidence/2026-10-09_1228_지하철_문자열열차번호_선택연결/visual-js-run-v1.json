@@ -1,0 +1,10 @@
+{
+  "command": [
+    "C:\\Program Files\\nodejs\\node.EXE",
+    "--check",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_1228_지하철_문자열열차번호_선택연결\\visual-script-v1.js"
+  ],
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": ""
+}

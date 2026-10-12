@@ -1,0 +1,119 @@
+{
+  "created_at": "2026-10-09T13:21:44.097382+09:00",
+  "browser_snapshots": 3,
+  "unique_stations": 2,
+  "direction_groups": 6,
+  "display_rows": 30,
+  "numeric_minute_rows": 30,
+  "positive_minute_rows": 29,
+  "zero_minute_rows": 1,
+  "api_actual_success_responses": 1,
+  "api_raw_rows": 17,
+  "api_airport_filtered_rows": 5,
+  "api_airport_zero_eta_rows": 5,
+  "current_product_selection": {
+    "source": "seoul_subway_arrival",
+    "line_id": "1065",
+    "station_id": "1065006502",
+    "target_station_id": "1065006503",
+    "confirmed_at": "2026-10-09T04:17:25.411426+00:00",
+    "observation_age_seconds": 0.0,
+    "ready_at": "2026-10-09T13:19:25.411426+09:00",
+    "excluded": [
+      {
+        "train_number": "A2119",
+        "reason": "arrives_before_ready"
+      },
+      {
+        "train_number": "A2116",
+        "reason": "service_path_mismatch"
+      },
+      {
+        "train_number": "A1022",
+        "reason": "service_path_mismatch"
+      },
+      {
+        "train_number": "A2114",
+        "reason": "service_path_mismatch"
+      },
+      {
+        "train_number": "A1024",
+        "reason": "service_path_mismatch"
+      }
+    ],
+    "status": "no_boardable_prediction",
+    "reason": "no_vehicle_after_ready"
+  },
+  "web_current_airport_direction_minutes": [
+    6,
+    12,
+    21,
+    28,
+    36
+  ],
+  "same_train_paired_rows": 0,
+  "actual_eta_error_samples": 0,
+  "actual_boardings": 0,
+  "automated_fallback_connected": false,
+  "missing_for_product": [
+    "공급자 예측 생성시각",
+    "열차/운행 식별자",
+    "응답 역 귀속 및 전체 범위 근거",
+    "분 단위 반올림/절삭 정의"
+  ],
+  "transition_observations": [
+    {
+      "new_selection": "홍대입구",
+      "previous_station_first_last": [
+        "05:37",
+        "00:34",
+        "05:24",
+        "00:04"
+      ],
+      "updated_first_last": [
+        "05:34",
+        "00:31",
+        "05:28",
+        "00:08"
+      ]
+    },
+    {
+      "new_selection": "공덕",
+      "previous_station_first_last": [
+        "05:34",
+        "00:31",
+        "05:28",
+        "00:08"
+      ],
+      "updated_first_last": [
+        "05:37",
+        "00:34",
+        "05:24",
+        "00:04"
+      ]
+    }
+  ],
+  "limits": "웹3스냅샷은 같은 시간대 반복이며 독립 운행/정확도 표본이 아니다. API와 웹의 열차 식별자가 대응하지 않아 ETA 오차를 계산하지 않는다. 두 UI 전환은 선택값만으로 목록 귀속을 보장할 수 없다는 근거이며 공급자 내부 원인은 미확인.",
+  "research_sources": [
+    "https://www.airportrailroad.com/train/normal/live",
+    "https://gtfs.org/documentation/realtime/feed-entities/trip-updates/",
+    "https://old.gtfs.org/realtime/best-practices/"
+  ],
+  "research_application": "GTFS의 안정적 운행 식별·개별 예측 생성시각 분리 원칙을 참고. AREX가 GTFS를 제공하거나 같은 정확도를 보장한다고 추정하지 않는다.",
+  "collection_failures": [
+    {
+      "script": "collect_arex_gap_v1.py",
+      "reason": "arrivals에 line_id 인자를 잘못 전달; HTTP 이전 TypeError"
+    },
+    {
+      "script": "collect_arex_gap_v2.py",
+      "reason": "정상 정규화 자료 미확보; assert 실패·HTTP 응답 계수 미기록"
+    },
+    {
+      "script": "collect_arex_gap_v3.py",
+      "reason": "권한 검토 후 정상 응답1개; 계수/원문 보존"
+    }
+  ],
+  "screenshot_captured": false,
+  "screenshot_limit": "CUA 화면 캡처 호출은 실패했고 DOM 표시값으로 관측했다."
+}

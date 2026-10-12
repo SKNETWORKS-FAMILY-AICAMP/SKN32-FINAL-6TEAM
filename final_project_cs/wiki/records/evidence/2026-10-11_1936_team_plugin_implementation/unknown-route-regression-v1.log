@@ -1,0 +1,37 @@
+..........................................................F............. [ 45%]
+........................................................................ [ 91%]
+.............                                                            [100%]
+================================== FAILURES ===================================
+___ test_a_rerouted_case_keeps_its_team_when_the_capability_is_asked_again ____
+
+    def test_a_rerouted_case_keeps_its_team_when_the_capability_is_asked_again():
+        """\u2605`[2026-10-07]` \uc7ac\ubc30\ubd84\uc774 \uc131\uacf5\ud55c Case \ub294 \uc6d0\ub798 \uc885\ub958(`unknown`)\ub85c\ub294 \ubc1b\ub294 \ud300\uc774 \uc5c6\ub2e4 \u2014 \ub4a4\uc5d0\uc11c \uae30\ub2a5\uc744 \ub2e4\uc2dc \ubb3c\uc744 \ub54c \ud130\uc9c0\uc9c0 \uc54a\uace0 **\ub2f4\ub2f9 \ud300**\uc73c\ub85c \ucc3e\ub294\ub2e4.
+        ������ �̰��� ���� ������ ������ Case �� ��ٷ� �׾���(`tests/scenario/test_case_question.py::test_the_two_reports_stay_what_they_were`)."""
+        from app.core.registry import RegistryError
+    
+        controller = _controller_with(lambda **_: None, [_Manifest("dining", ["dining"])])
+        rerouted = {"subject": "������ �ݾҾ��", "issue_code": "unknown_thing", "owner_team_id": "dining", "intent": None}
+>       assert controller._capability(rerouted) == "dining.check"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_routing_reroute.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\application\controller.py:170: in _capability
+    entry = self.require_team(owner, case_id=case.get("case_id"))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.application.controller.Controller object at 0x000001CCA63EB200>
+team_id = 'dining', capability = None
+
+    def require_team(self, team_id: str, capability: str | None = None, *, case_id=None):
+        """���� ���¿� ������ � ����� ����� ���� ������ ȹ���Ѵ�."""
+        try:
+>           return self.registry.require_runnable(team_id, capability)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: '_Registry' object has no attribute 'require_runnable'
+
+app\application\controller.py:182: AttributeError
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_routing_reroute.py::test_a_rerouted_case_keeps_its_team_when_the_capability_is_asked_again
+1 failed, 156 passed in 7.96s

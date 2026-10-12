@@ -1,10 +1,51 @@
 import { describe, expect, it } from "vitest";
-import { layoutPins, PIN_BODY, pinRect, type PinSlot } from "./pin";
+import { layoutPins, PIN_BODY, pinRect, pinFacing, pinPriority, type PinSlot } from "./pin";
+import type { MapPoint } from "../model";
 
 const AREA = { width: 402, height: 220, top: 64 };
+
+it("공개 마커를 먼저 배치해 극단적 밀집에서도 이전 선택 마커 뒤로 숨기지 않는다", () => {
+  const points: MapPoint[] = ["selected", "other", "focus"].map((id, index) => ({ id, title: id, date: "", time: "", order: index + 1, coordinates: { lat: 37.56, lng: 126.98 }, revealFocus: id === "focus" }));
+  const sorted = [...points].sort((a, b) => pinPriority(a, b, "selected"));
+  expect(sorted.map(point => point.id)).toEqual(["focus", "selected", "other"]);
+  const slots = layoutPins(sorted.map(point => ({ id: point.id, x: 20, y: 20 })), { width: 42, height: 42 });
+  expect(slots.focus.group).toBeUndefined();
+  expect(slots.selected.group).toBe("focus");
+});
+
+it("공개가 끝나면 기존 선택 우선과 나머지 일정 순서를 유지한다", () => {
+  const points: MapPoint[] = ["first", "selected", "last"].map((id, index) => ({ id, title: id, date: "", time: "", order: index + 1, coordinates: { lat: 37.56, lng: 126.98 } }));
+  expect([...points].sort((a, b) => pinPriority(a, b, "selected")).map(point => point.id)).toEqual(["selected", "first", "last"]);
+  expect([...points].sort((a, b) => pinPriority(a, b)).map(point => point.id)).toEqual(["first", "selected", "last"]);
+});
+
+it("낮은 지도에서 단추와 거리 칩 사이의 빈 상단 띠도 사용한다", () => {
+  const points = [{ id: "selected", x: 104, y: 110 }];
+  const obstacles = [{ left: 132, top: 70, right: 365, bottom: 122 }, { left: -6, top: 103, right: 111, bottom: 149 }];
+  const slots = layoutPins(points, { width: 375, height: 212, top: 64, bottom: 76, obstacles, gap: 4 });
+  const rect = pinRect(104, 110, slots.selected);
+  expect(rect.top).toBeGreaterThanOrEqual(64);
+  expect(rect.bottom).toBeLessThanOrEqual(99);
+  expect(rect.right).toBeLessThanOrEqual(128);
+});
 const rects = (points: { id: string; x: number; y: number }[], slots: Record<string, PinSlot>) => points.map((point) => pinRect(point.x, point.y, slots[point.id]));
 const overlaps = (a: ReturnType<typeof pinRect>, b: ReturnType<typeof pinRect>) =>
   Math.min(a.right, b.right) > Math.max(a.left, b.left) && Math.min(a.bottom, b.bottom) > Math.max(a.top, b.top);
+
+it("지도 안의 메뉴 아래·하단·가장자리 좌표는 개별 몸통으로 빈 곳에 배치한다", () => {
+  const points = [{ id: "top", x: 180, y: 8 }, { id: "near", x: 181, y: 9 }, { id: "bottom", x: 180, y: 296 }, { id: "left", x: 2, y: 150 }, { id: "right", x: 373, y: 150 }];
+  const area = { width: 375, height: 300, top: 64, bottom: 76, gap: 4 };
+  const slots = layoutPins(points, area);
+  const bodies = rects(points, slots);
+  points.forEach((point, i) => {
+    expect(slots[point.id].group).toBeUndefined();
+    const body = bodies[i];
+    expect(body.left).toBeGreaterThanOrEqual(0); expect(body.right).toBeLessThanOrEqual(375);
+    expect(body.top).toBeGreaterThanOrEqual(64); expect(body.bottom).toBeLessThanOrEqual(224);
+    bodies.slice(i+1).forEach((other) => expect(overlaps(body, other)).toBe(false));
+  });
+  expect(slots.top.push).toBeGreaterThan(0); expect(slots.bottom.push).toBeGreaterThan(0);
+});
 
 describe("where a numbered pin stands beside its coordinate", () => {
   it("puts the body up and to the right of the coordinate when nothing is near (the tip of the drop is the coordinate)", () => {
@@ -53,4 +94,31 @@ describe("where a numbered pin stands beside its coordinate", () => {
     expect(body.right).toBeLessThanOrEqual(AREA.width + 1);
     expect(slots.a.side).toBe("sw");                                                            // below and to the left of the coordinate: the only side that is inside
   });
+});
+
+
+describe("지도 도구와 밀집된 마커", () => {
+  it("거리 칩과 지도 단추를 피하고 빈 자리가 없으면 마커를 묶는다", () => {
+    const obstacles = [{ left: 240, top: 64, right: 360, bottom: 190 }];
+    const points = Array.from({ length: 40 }, (_, i) => ({ id: String(i), x: 250, y: 110 }));
+    const slots = layoutPins(points, { width: 375, height: 240, top: 64, bottom: 40, obstacles, gap: 4 });
+    const bodies = points.filter((point) => !slots[point.id].group).map((point) => pinRect(point.x, point.y, slots[point.id]));
+    expect(Object.values(slots).some((slot) => slot.group)).toBe(true);
+    expect(Object.keys(slots)).toHaveLength(40);
+    bodies.forEach((body, i) => {
+      expect(body.top).toBeGreaterThanOrEqual(64); expect(body.bottom).toBeLessThanOrEqual(200);
+      obstacles.forEach((obstacle) => expect(overlaps(body, obstacle)).toBe(false));
+      bodies.slice(i+1).forEach((other) => expect(overlaps(body, other)).toBe(false));
+    });
+  });
+});
+
+// A displaced marker can cross to the opposite side of its original slot.
+it.each([
+  ["ne", { left: 80, top: 10, right: 114, bottom: 44 }],
+  ["nw", { left: 10, top: 10, right: 44, bottom: 44 }],
+  ["se", { left: 80, top: 80, right: 114, bottom: 114 }],
+  ["sw", { left: 10, top: 80, right: 44, bottom: 114 }],
+] as const)("옮긴 마커 %s의 모서리는 실제 좌표를 향한다", (side, rect) => {
+  expect(pinFacing(rect, { x: 60, y: 60 })).toBe(side);
 });

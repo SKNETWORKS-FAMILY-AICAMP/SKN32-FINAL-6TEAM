@@ -1,0 +1,528 @@
+[WebServer] (node:27152) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21800) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:20360) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:20360) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:16496) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:19816) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:18812) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:18064) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:28144) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:7092) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:27504) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:28656) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+[WebServer] (node:27468) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:19736) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 19 tests using 1 worker
+
+(node:15672) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   1 tests\live\consent.spec.ts:17:1 › 처음 온 사람은 다른 화면으로 가도 약관 화면으로 돌아오고, 약관 화면에는 필수 둘 · 선택 넷과 초안 표시가 있다 (100ms)
+(node:13824) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   2 tests\live\consent.spec.ts:34:1 › 동의하고 다음으로를 누르면 여섯 항목이 서버에 기록된다: 고른 것만 true, 본 한국어 글의 지문(sha256)과 함께 (88ms)
+(node:12680) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   3 tests\live\consent.spec.ts:56:1 › 관리자가 보관 기간을 고친 cs 프로젝트 서버면 약관 글에 서버의 기간이 실리고, 동의는 서버의 약관 버전과 그 글의 지문으로 기록된다 (136ms)
+(node:18756) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   4 tests\live\consent.spec.ts:75:1 › 선택 항목을 하나도 안 골라도 필수 둘만으로 앱을 쓸 수 있다 (113ms)
+(node:26240) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   5 tests\live\consent.spec.ts:89:1 › 옛 서버(동의 기록을 모름, 404)에서도 동의는 이 브라우저에 남고 앱은 열린다 (160ms)
+(node:28120) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   6 tests\live\consent.spec.ts:98:1 › 서버에 동의 기록이 있으면 이 브라우저에 사본이 없어도 앱이 열리고, 선택 항목은 서버 기록대로 보인다(서버가 이긴다) (94ms)
+(node:17204) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   7 tests\live\consent.spec.ts:111:1 › 다른 기기에서 필수 동의를 철회했으면 이 브라우저의 사본이 있어도 약관 화면으로 돌아간다 (102ms)
+(node:8308) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   8 tests\live\consent.spec.ts:120:1 › 서버가 동의 없이는 막는데(gate) 이 브라우저에 사본만 있으면, 사본을 서버에 기록하고 통과한다 (101ms)
+(node:25344) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   9 tests\live\consent.spec.ts:129:1 › 서버가 필수 동의가 없다고 막으면(403 consent_required) 약관 화면으로 보낸다 (189ms)
+(node:9060) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  10 tests\live\consent.spec.ts:138:1 › 서버의 약관이 이 화면보다 새 버전이면 새로 고침을 안내한다(옛 약관으로 동의를 받지 않는다) (98ms)
+(node:26532) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  11 tests\live\consent.spec.ts:145:1 › 약관 SSE를 기다려도 마이페이지는 남고 실제 단계와 완료 수를 기존 화면 위에 보인다 (158ms)
+(node:26480) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  12 tests\live\consent.spec.ts:175:1 › 동의 사본 없이 확인하는 첫 화면은 열린 약관이고, 보호 조회는 동의 확인이 끝난 다음 시작한다 (147ms)
+(node:25448) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  13 tests\live\consent.spec.ts:188:1 › 동의 조회 실패를 미동의로 바꾸지 않고 같은 화면에서 다시 확인한다 (149ms)
+(node:8244) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  14 tests\live\consent.spec.ts:205:3 › 마이페이지의 약관 동의 관리 › 서비스 개선 선택 동의는 기본 꺼짐이며 켜고 철회해도 기본 서비스를 계속 이용한다 (151ms)
+(node:24396) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  15 tests\live\consent.spec.ts:229:3 › 마이페이지의 약관 동의 관리 › 선택 항목은 언제든 켜고 끌 수 있고, 바꿀 때마다 서버에 기록된다(철회도 새 기록) (127ms)
+(node:22948) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  16 tests\live\consent.spec.ts:250:3 › 마이페이지의 약관 동의 관리 › 필수 항목 요약과 철회는 관리 목록에서 빼고 선택 넷만 수정한다 (483ms)
+(node:4020) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  17 tests\live\consent.spec.ts:260:3 › 마이페이지의 약관 동의 관리 › 약관 전문을 다시 읽을 수 있다(읽기만, 동의 단추 없음) (122ms)
+(node:22016) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  18 tests\live\consent.spec.ts:274:1 › 알림 채널(디스코드·텔레그램)을 연결하려는 순간에야 선택 동의를 받고, 동의 없이는 연결 단추가 없다 (160ms)
+(node:16600) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  19 tests\live\consent.spec.ts:291:1 › 알림 채널 동의를 철회하면 연결해 둔 웹훅이 지워진 것으로 다시 읽힌다 (214ms)
+
+
+  1) tests\live\consent.spec.ts:17:1 › 처음 온 사람은 다른 화면으로 가도 약관 화면으로 돌아오고, 약관 화면에는 필수 둘 · 선택 넷과 초안 표시가 있다 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-처음-온-사람은-다른-화면으로-가-831bc-화면에는-필수-둘-·-선택-넷과-초안-표시가-있다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-처음-온-사람은-다른-화면으로-가-831bc-화면에는-필수-둘-·-선택-넷과-초안-표시가-있다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-처음-온-사람은-다른-화면으로-가-831bc-화면에는-필수-둘-·-선택-넷과-초안-표시가-있다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests\live\consent.spec.ts:34:1 › 동의하고 다음으로를 누르면 여섯 항목이 서버에 기록된다: 고른 것만 true, 본 한국어 글의 지문(sha256)과 함께 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-동의하고-다음으로를-누르면-여섯--432f2-rue-본-한국어-글의-지문-sha256-과-함께\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-동의하고-다음으로를-누르면-여섯--432f2-rue-본-한국어-글의-지문-sha256-과-함께\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-동의하고-다음으로를-누르면-여섯--432f2-rue-본-한국어-글의-지문-sha256-과-함께\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) tests\live\consent.spec.ts:56:1 › 관리자가 보관 기간을 고친 cs 프로젝트 서버면 약관 글에 서버의 기간이 실리고, 동의는 서버의 약관 버전과 그 글의 지문으로 기록된다 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-관리자가-보관-기간을-고친-cs--17d48-는-서버의-약관-버전과-그-글의-지문으로-기록된다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-관리자가-보관-기간을-고친-cs--17d48-는-서버의-약관-버전과-그-글의-지문으로-기록된다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-관리자가-보관-기간을-고친-cs--17d48-는-서버의-약관-버전과-그-글의-지문으로-기록된다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) tests\live\consent.spec.ts:75:1 › 선택 항목을 하나도 안 골라도 필수 둘만으로 앱을 쓸 수 있다 ──────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-선택-항목을-하나도-안-골라도-필수-둘만으로-앱을-쓸-수-있다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-선택-항목을-하나도-안-골라도-필수-둘만으로-앱을-쓸-수-있다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-선택-항목을-하나도-안-골라도-필수-둘만으로-앱을-쓸-수-있다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) tests\live\consent.spec.ts:89:1 › 옛 서버(동의 기록을 모름, 404)에서도 동의는 이 브라우저에 남고 앱은 열린다 ───────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-옛-서버-동의-기록을-모름-404-에서도-동의는-이-브라우저에-남고-앱은-열린다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-옛-서버-동의-기록을-모름-404-에서도-동의는-이-브라우저에-남고-앱은-열린다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-옛-서버-동의-기록을-모름-404-에서도-동의는-이-브라우저에-남고-앱은-열린다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) tests\live\consent.spec.ts:98:1 › 서버에 동의 기록이 있으면 이 브라우저에 사본이 없어도 앱이 열리고, 선택 항목은 서버 기록대로 보인다(서버가 이긴다) 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-서버에-동의-기록이-있으면-이-브-f06e8-선택-항목은-서버-기록대로-보인다-서버가-이긴다-\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-서버에-동의-기록이-있으면-이-브-f06e8-선택-항목은-서버-기록대로-보인다-서버가-이긴다-\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-서버에-동의-기록이-있으면-이-브-f06e8-선택-항목은-서버-기록대로-보인다-서버가-이긴다-\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) tests\live\consent.spec.ts:111:1 › 다른 기기에서 필수 동의를 철회했으면 이 브라우저의 사본이 있어도 약관 화면으로 돌아간다 ──────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-다른-기기에서-필수-동의를-철회했으면-이-브라우저의-사본이-있어도-약관-화면으로-돌아간다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-다른-기기에서-필수-동의를-철회했으면-이-브라우저의-사본이-있어도-약관-화면으로-돌아간다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-다른-기기에서-필수-동의를-철회했으면-이-브라우저의-사본이-있어도-약관-화면으로-돌아간다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) tests\live\consent.spec.ts:120:1 › 서버가 동의 없이는 막는데(gate) 이 브라우저에 사본만 있으면, 사본을 서버에 기록하고 통과한다 ────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-서버가-동의-없이는-막는데-gat-3cd09-에-사본만-있으면-사본을-서버에-기록하고-통과한다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-서버가-동의-없이는-막는데-gat-3cd09-에-사본만-있으면-사본을-서버에-기록하고-통과한다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-서버가-동의-없이는-막는데-gat-3cd09-에-사본만-있으면-사본을-서버에-기록하고-통과한다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  9) tests\live\consent.spec.ts:129:1 › 서버가 필수 동의가 없다고 막으면(403 consent_required) 약관 화면으로 보낸다 ───────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-서버가-필수-동의가-없다고-막으면-403-consent-required-약관-화면으로-보낸다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-서버가-필수-동의가-없다고-막으면-403-consent-required-약관-화면으로-보낸다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-서버가-필수-동의가-없다고-막으면-403-consent-required-약관-화면으로-보낸다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10) tests\live\consent.spec.ts:138:1 › 서버의 약관이 이 화면보다 새 버전이면 새로 고침을 안내한다(옛 약관으로 동의를 받지 않는다) ──────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-서버의-약관이-이-화면보다-새-버전이면-새로-고침을-안내한다-옛-약관으로-동의를-받지-않는다-\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-서버의-약관이-이-화면보다-새-버전이면-새로-고침을-안내한다-옛-약관으로-동의를-받지-않는다-\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-서버의-약관이-이-화면보다-새-버전이면-새로-고침을-안내한다-옛-약관으로-동의를-받지-않는다-\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  11) tests\live\consent.spec.ts:145:1 › 약관 SSE를 기다려도 마이페이지는 남고 실제 단계와 완료 수를 기존 화면 위에 보인다 ──────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-약관-SSE를-기다려도-마이페이지는-남고-실제-단계와-완료-수를-기존-화면-위에-보인다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-약관-SSE를-기다려도-마이페이지는-남고-실제-단계와-완료-수를-기존-화면-위에-보인다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-약관-SSE를-기다려도-마이페이지는-남고-실제-단계와-완료-수를-기존-화면-위에-보인다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  12) tests\live\consent.spec.ts:175:1 › 동의 사본 없이 확인하는 첫 화면은 열린 약관이고, 보호 조회는 동의 확인이 끝난 다음 시작한다 ─────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-동의-사본-없이-확인하는-첫-화면은-열린-약관이고-보호-조회는-동의-확인이-끝난-다음-시작한다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-동의-사본-없이-확인하는-첫-화면은-열린-약관이고-보호-조회는-동의-확인이-끝난-다음-시작한다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-동의-사본-없이-확인하는-첫-화면은-열린-약관이고-보호-조회는-동의-확인이-끝난-다음-시작한다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  13) tests\live\consent.spec.ts:188:1 › 동의 조회 실패를 미동의로 바꾸지 않고 같은 화면에서 다시 확인한다 ─────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-동의-조회-실패를-미동의로-바꾸지-않고-같은-화면에서-다시-확인한다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-동의-조회-실패를-미동의로-바꾸지-않고-같은-화면에서-다시-확인한다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-동의-조회-실패를-미동의로-바꾸지-않고-같은-화면에서-다시-확인한다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  14) tests\live\consent.spec.ts:205:3 › 마이페이지의 약관 동의 관리 › 서비스 개선 선택 동의는 기본 꺼짐이며 켜고 철회해도 기본 서비스를 계속 이용한다 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-마이페이지의-약관-동의-관리-서비-d5084-짐이며-켜고-철회해도-기본-서비스를-계속-이용한다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-마이페이지의-약관-동의-관리-서비-d5084-짐이며-켜고-철회해도-기본-서비스를-계속-이용한다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-마이페이지의-약관-동의-관리-서비-d5084-짐이며-켜고-철회해도-기본-서비스를-계속-이용한다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  15) tests\live\consent.spec.ts:229:3 › 마이페이지의 약관 동의 관리 › 선택 항목은 언제든 켜고 끌 수 있고, 바꿀 때마다 서버에 기록된다(철회도 새 기록) 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-마이페이지의-약관-동의-관리-선택-43dea-고-바꿀-때마다-서버에-기록된다-철회도-새-기록-\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-마이페이지의-약관-동의-관리-선택-43dea-고-바꿀-때마다-서버에-기록된다-철회도-새-기록-\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-마이페이지의-약관-동의-관리-선택-43dea-고-바꿀-때마다-서버에-기록된다-철회도-새-기록-\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  16) tests\live\consent.spec.ts:250:3 › 마이페이지의 약관 동의 관리 › 필수 항목 요약과 철회는 관리 목록에서 빼고 선택 넷만 수정한다 ─────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-마이페이지의-약관-동의-관리-필수-항목-요약과-철회는-관리-목록에서-빼고-선택-넷만-수정한다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-마이페이지의-약관-동의-관리-필수-항목-요약과-철회는-관리-목록에서-빼고-선택-넷만-수정한다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-마이페이지의-약관-동의-관리-필수-항목-요약과-철회는-관리-목록에서-빼고-선택-넷만-수정한다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  17) tests\live\consent.spec.ts:260:3 › 마이페이지의 약관 동의 관리 › 약관 전문을 다시 읽을 수 있다(읽기만, 동의 단추 없음) ────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-마이페이지의-약관-동의-관리-약관-전문을-다시-읽을-수-있다-읽기만-동의-단추-없음-\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-마이페이지의-약관-동의-관리-약관-전문을-다시-읽을-수-있다-읽기만-동의-단추-없음-\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-마이페이지의-약관-동의-관리-약관-전문을-다시-읽을-수-있다-읽기만-동의-단추-없음-\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  18) tests\live\consent.spec.ts:274:1 › 알림 채널(디스코드·텔레그램)을 연결하려는 순간에야 선택 동의를 받고, 동의 없이는 연결 단추가 없다 ──
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-알림-채널-디스코드·텔레그램-을--4f9f8--선택-동의를-받고-동의-없이는-연결-단추가-없다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-알림-채널-디스코드·텔레그램-을--4f9f8--선택-동의를-받고-동의-없이는-연결-단추가-없다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-알림-채널-디스코드·텔레그램-을--4f9f8--선택-동의를-받고-동의-없이는-연결-단추가-없다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  19) tests\live\consent.spec.ts:291:1 › 알림 채널 동의를 철회하면 연결해 둔 웹훅이 지워진 것으로 다시 읽힌다 ───────────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\consent-알림-채널-동의를-철회하면-연결해-둔-웹훅이-지워진-것으로-다시-읽힌다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\consent-알림-채널-동의를-철회하면-연결해-둔-웹훅이-지워진-것으로-다시-읽힌다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\consent-알림-채널-동의를-철회하면-연결해-둔-웹훅이-지워진-것으로-다시-읽힌다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  19 failed
+    tests\live\consent.spec.ts:17:1 › 처음 온 사람은 다른 화면으로 가도 약관 화면으로 돌아오고, 약관 화면에는 필수 둘 · 선택 넷과 초안 표시가 있다 
+    tests\live\consent.spec.ts:34:1 › 동의하고 다음으로를 누르면 여섯 항목이 서버에 기록된다: 고른 것만 true, 본 한국어 글의 지문(sha256)과 함께 
+    tests\live\consent.spec.ts:56:1 › 관리자가 보관 기간을 고친 cs 프로젝트 서버면 약관 글에 서버의 기간이 실리고, 동의는 서버의 약관 버전과 그 글의 지문으로 기록된다 
+    tests\live\consent.spec.ts:75:1 › 선택 항목을 하나도 안 골라도 필수 둘만으로 앱을 쓸 수 있다 ───────────────────────────
+    tests\live\consent.spec.ts:89:1 › 옛 서버(동의 기록을 모름, 404)에서도 동의는 이 브라우저에 남고 앱은 열린다 ────────────────
+    tests\live\consent.spec.ts:98:1 › 서버에 동의 기록이 있으면 이 브라우저에 사본이 없어도 앱이 열리고, 선택 항목은 서버 기록대로 보인다(서버가 이긴다) 
+    tests\live\consent.spec.ts:111:1 › 다른 기기에서 필수 동의를 철회했으면 이 브라우저의 사본이 있어도 약관 화면으로 돌아간다 ───────────
+    tests\live\consent.spec.ts:120:1 › 서버가 동의 없이는 막는데(gate) 이 브라우저에 사본만 있으면, 사본을 서버에 기록하고 통과한다 ─────
+    tests\live\consent.spec.ts:129:1 › 서버가 필수 동의가 없다고 막으면(403 consent_required) 약관 화면으로 보낸다 ────────
+    tests\live\consent.spec.ts:138:1 › 서버의 약관이 이 화면보다 새 버전이면 새로 고침을 안내한다(옛 약관으로 동의를 받지 않는다) ────────
+    tests\live\consent.spec.ts:145:1 › 약관 SSE를 기다려도 마이페이지는 남고 실제 단계와 완료 수를 기존 화면 위에 보인다 ────────────
+    tests\live\consent.spec.ts:175:1 › 동의 사본 없이 확인하는 첫 화면은 열린 약관이고, 보호 조회는 동의 확인이 끝난 다음 시작한다 ───────
+    tests\live\consent.spec.ts:188:1 › 동의 조회 실패를 미동의로 바꾸지 않고 같은 화면에서 다시 확인한다 ───────────────────────
+    tests\live\consent.spec.ts:205:3 › 마이페이지의 약관 동의 관리 › 서비스 개선 선택 동의는 기본 꺼짐이며 켜고 철회해도 기본 서비스를 계속 이용한다 
+    tests\live\consent.spec.ts:229:3 › 마이페이지의 약관 동의 관리 › 선택 항목은 언제든 켜고 끌 수 있고, 바꿀 때마다 서버에 기록된다(철회도 새 기록) 
+    tests\live\consent.spec.ts:250:3 › 마이페이지의 약관 동의 관리 › 필수 항목 요약과 철회는 관리 목록에서 빼고 선택 넷만 수정한다 ───────
+    tests\live\consent.spec.ts:260:3 › 마이페이지의 약관 동의 관리 › 약관 전문을 다시 읽을 수 있다(읽기만, 동의 단추 없음) ──────────
+    tests\live\consent.spec.ts:274:1 › 알림 채널(디스코드·텔레그램)을 연결하려는 순간에야 선택 동의를 받고, 동의 없이는 연결 단추가 없다 ────
+    tests\live\consent.spec.ts:291:1 › 알림 채널 동의를 철회하면 연결해 둔 웹훅이 지워진 것으로 다시 읽힌다 ─────────────────────

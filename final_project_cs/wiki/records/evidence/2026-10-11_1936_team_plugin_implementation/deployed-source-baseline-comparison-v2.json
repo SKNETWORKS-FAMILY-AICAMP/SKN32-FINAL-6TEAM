@@ -1,0 +1,428 @@
+{
+  "baseline": "legacy/deployment_baselines/2026-10-11_214932",
+  "files_reviewed": 52,
+  "same": 4,
+  "different_or_new": 48,
+  "files": [
+    {
+      "path": "app/application/case_service.py",
+      "baseline_exists": true,
+      "baseline_sha256": "abb94f303f8ce69b06e71cea2505756012d6851c0e782882744c45c446caf39b",
+      "current_sha256": "c674b9364757be713ac460c0aee9c355b0b321ce4eb99569cd18f223b5b8b1bf",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/application/controller.py",
+      "baseline_exists": true,
+      "baseline_sha256": "29d552fdce24762fa80fb41c80dff95400f399a86404fee1a9b40bcaff3f509c",
+      "current_sha256": "c1ad476afb283bf75da5c07468b724bd7ccbdb18079fe2a939996aca6f514116",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/application/runtime.py",
+      "baseline_exists": true,
+      "baseline_sha256": "5c40317e90c2eec8f723b211950919e19c147d1ed942f6677be7e86043563a4a",
+      "current_sha256": "b4499bb2cf4e13b42b4d13ff34f547bd1d2b90c798c5683a5abfe7f737923949",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/composition.py",
+      "baseline_exists": true,
+      "baseline_sha256": "65db593ba8119cee7fbbbeb99e011947fc748f5f287ef52081c658f54680b7cb",
+      "current_sha256": "5ef24bd2f8642eaadd55cb72506208b3f212cecd7adeba9618848a2f0a8cc80d",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/core/case_lifecycle/events.py",
+      "baseline_exists": true,
+      "baseline_sha256": "1f9575bba19b085588f7a4f87127e8c4692799e3f44ceed4035699a27ecc1ffd",
+      "current_sha256": "e1271eed99fd35000815de6a60b931f40b23211a44ed95b23ef360a226418560",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/core/contracts.py",
+      "baseline_exists": true,
+      "baseline_sha256": "84498c64300b7ef3769e3cbd6bec0a57004ef54c9a31a8441990632525ec7fa0",
+      "current_sha256": "84498c64300b7ef3769e3cbd6bec0a57004ef54c9a31a8441990632525ec7fa0",
+      "equal": true,
+      "normalized_newline_text_equal": true
+    },
+    {
+      "path": "app/core/project_config.py",
+      "baseline_exists": true,
+      "baseline_sha256": "79d942650243e2c70998e662c570e8d7ddd4d9f89fed39195820c7e2d1b25e0d",
+      "current_sha256": "dd6cc0844ba12e68bbfc6ed9eaf79d54b95f894bba15d2d9a02a1b30c0214a23",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/core/registry.py",
+      "baseline_exists": true,
+      "baseline_sha256": "141422d39a698f2f7198f96380243682c18706c52f14eea1a41d569338d77848",
+      "current_sha256": "b538ae5aae7a1b459caaa6468ef31f1ab6f651db497884b5e35ebf1feb1ad5db",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/core/remote_team/a2a_executor.py",
+      "baseline_exists": true,
+      "baseline_sha256": "61707596e3380b325d8c7720740d357eed2036a7b0f494e5e9f5a63a3a97a8f7",
+      "current_sha256": "55207f95df494ba87e4e82b195bc242cae32da20923fb5a576d554ccadb64928",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/core/remote_team/executor.py",
+      "baseline_exists": true,
+      "baseline_sha256": "15eceba3e8bfc17b8affa7114caf5837c8e1365e8b4c1a2e3b52221d5c30d5ed",
+      "current_sha256": "5acad19f9e2e04adc3f3c637c4105a5b559ba3eb238ae639951e9f828a2c4724",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/core/service_bindings.py",
+      "baseline_exists": false,
+      "baseline_sha256": null,
+      "current_sha256": "aed8d61157f2c09b4fb40457b3d7a6824952b5b33c92e379329fb1cecf46c948",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/core/team_availability.py",
+      "baseline_exists": false,
+      "baseline_sha256": null,
+      "current_sha256": "1ef185a44b5a49bac30672a8a66cbab11f28e3a4b67b46cc05b2787e6c7f63e9",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "baseline_exists": false,
+      "baseline_sha256": null,
+      "current_sha256": "5c4f516f4ddcb42e307dc243460058e4a2a871d7c949f1881160bc6311094be9",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_intake.py",
+      "baseline_exists": true,
+      "baseline_sha256": "c95aac45d63941bfd67f57b4755ae1ba62d364f4088b416abe9629c732da7d1d",
+      "current_sha256": "812a8f90c968d0bbd20591785ea90a77aa2d919e01024fdde00c2fe2ae82e374",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/core_hooks/__init__.py",
+      "baseline_exists": true,
+      "baseline_sha256": "1a6ae601867f0a6fa5c2de25d1e08d6ae2e0a406010a9597295925e9addcf590",
+      "current_sha256": "14851a2b31914f35bc80e4597f2506da8e7187c1550055ba09a6a310c92f8fcc",
+      "equal": false,
+      "normalized_newline_text_equal": true
+    },
+    {
+      "path": "app/domains/travel_ops/components/core_hooks/routing.py",
+      "baseline_exists": false,
+      "baseline_sha256": null,
+      "current_sha256": "28c03d0bd9d6a4ff7792c8a3735a9a099f5e2aed31b729da4fb9ebc874fa05c0",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/customer/service_improvement.py",
+      "baseline_exists": false,
+      "baseline_sha256": null,
+      "current_sha256": "2da955e9ae815b6c14949d2f780c0aea127653db59c2ef5ae98fc26034010d49",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/intake/hours.py",
+      "baseline_exists": true,
+      "baseline_sha256": "7e9e130a68b0083cfe15cb3560146395e1a1887417b10677d63be552e95af2d7",
+      "current_sha256": "110edfcf6140bfc34ac41ab1a07df9afbe8247529f4780479a0912793edb9c20",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/intake/review.py",
+      "baseline_exists": true,
+      "baseline_sha256": "89834c2ad9234634cf6dbc6ca4f19955859ee0434f0bd591b8b496486bd942c4",
+      "current_sha256": "6fb8f787c5d23ecf8098fd5701a398ba96f996e81b5831ed4353f08f11d893b0",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/itinerary/itinerary_changes.py",
+      "baseline_exists": true,
+      "baseline_sha256": "7d8be4ba9623cd41fed61694a474a456268f1c0fa032ec8644805d1b58696396",
+      "current_sha256": "e8ebb982a96cdb2e72fc98b050cf9318159d2e00587f5d6ca83a3076680db51a",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/itinerary/move_judge.py",
+      "baseline_exists": true,
+      "baseline_sha256": "fcdbb9265e2bf15c9ebfd4f329d3b0fd0f43f8d62a36fdb006462d05c3c2bd66",
+      "current_sha256": "1f5a63a25c07272bc559639054f57f6c0f48c4b0f33057d29590fe5c84261228",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/__init__.py",
+      "baseline_exists": true,
+      "baseline_sha256": "2583a9b8e553df41d1767bf4cf2a97a37531fb4f6e04f87e853cff3cde74ce9a",
+      "current_sha256": "2583a9b8e553df41d1767bf4cf2a97a37531fb4f6e04f87e853cff3cde74ce9a",
+      "equal": true,
+      "normalized_newline_text_equal": true
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+      "baseline_exists": true,
+      "baseline_sha256": "f84069b4ec33a8f7b308d13faac404d53e068ed81f4461f29b6afd232f319572",
+      "current_sha256": "a67aa9b68f299e483fb96548085d10e9e2697a8fbb3b43dee2d553630e4374cd",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/legs.py",
+      "baseline_exists": true,
+      "baseline_sha256": "12083104441c498be69fe3096750d76d1b67d21aca2622cf42511805becfd414",
+      "current_sha256": "45dc4ed054b6eb3650be7075fe885a3680076e2a0d72fa3b76c60042d3ee4636",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/similarity.py",
+      "baseline_exists": true,
+      "baseline_sha256": "72421a6fad4da51c628130e0bb9e8abe15ede65b1b09c37218f19a689c9bd32b",
+      "current_sha256": "f93c81f78b54a25a1995127009896eb7ac1ebfff96c4d47a4c4c925c25d5acc1",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/watch_planners.py",
+      "baseline_exists": true,
+      "baseline_sha256": "b5e13674ca9fa6354c6b2243f4a24c271c4c3e69be6b72f398e67cb1c75833b4",
+      "current_sha256": "997bc25edf70018ed7ed53629623133fbbd4d9267705e93e87f1c72ace15e287",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/departure_revalidation.py",
+      "baseline_exists": false,
+      "baseline_sha256": null,
+      "current_sha256": "c2452891d584c31d6e598fc2020d1739b14929a343bf41102b19ab2a77a85bd5",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/monitoring.py",
+      "baseline_exists": false,
+      "baseline_sha256": null,
+      "current_sha256": "b18c2abc3177073ec5bebc3324eb67fe3e4f8813e34115a8e84c2d581a744800",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_reminders.py",
+      "baseline_exists": true,
+      "baseline_sha256": "7ddc90b38beb992df6fbca5836861af5032bc1326942e67c4ec66683180b6eb8",
+      "current_sha256": "37ca4b95232ad03433a3ee95ae8024244c9c3e091ec752ec68fb96fd4405de41",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch.py",
+      "baseline_exists": true,
+      "baseline_sha256": "af8a77ed14ead2dcf2864aa58035b670d8546ce825e4d7863a6706ae2bb97ae7",
+      "current_sha256": "5f8deb741ff7e516b5dcbb69060c518e73537cb88a9ae78465d1bb2cdb6d2c98",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch_batch.py",
+      "baseline_exists": true,
+      "baseline_sha256": "28c9a98a46037328ef4dd03d5078bb8b7873a590993c0cacf09373358f5b1239",
+      "current_sha256": "8fd65aa82ed3e25d1bb73c3a9854d6a72ccd3d20f0d4eef5e2c8be2eff18831f",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch_cases.py",
+      "baseline_exists": true,
+      "baseline_sha256": "a9f00baea09ded5e53dffb0ac5442ce88e4281bef69a43125c8aa08bd48370ff",
+      "current_sha256": "70d9107fa9cf8f29aa18a1509ef9a009b4ead9777ded949136da357c70e186e1",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "baseline_exists": true,
+      "baseline_sha256": "8f5b44bf52eba7af6f2dac044cbed956c16a5e49acf281037cf77a24b2b1c491",
+      "current_sha256": "c7c96c6b129b956b12726724b5e7a373bf2c747a9bb913cf3bb0074d84ca8dbd",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/instances/_shared/conversation_work.py",
+      "baseline_exists": false,
+      "baseline_sha256": null,
+      "current_sha256": "7d7c83424d5a1dc8d25d3af8d67d4a8390c12a73c44a65e2e39264dbf7b593a4",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/instances/_shared/itinerary_team.py",
+      "baseline_exists": true,
+      "baseline_sha256": "9fe983d0b6c37950707a5e475b8906a4937cea279d605bbe42dcf8ca014e1470",
+      "current_sha256": "baf66b6d64beb80c873982ce1f3ee87ac838c914461bef1e7d9e5da4cb3d1cfd",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/instances/activity/team.py",
+      "baseline_exists": true,
+      "baseline_sha256": "c917f4b4407ff150c5e854e279f183a0b13a6babba76467cfa27b184b5006426",
+      "current_sha256": "c917f4b4407ff150c5e854e279f183a0b13a6babba76467cfa27b184b5006426",
+      "equal": true,
+      "normalized_newline_text_equal": true
+    },
+    {
+      "path": "app/domains/travel_ops/instances/dining/ledger.py",
+      "baseline_exists": true,
+      "baseline_sha256": "ed4df44f60cf785611609ffe3c04f90cd2a49cb47f13d076a18e2b3156771104",
+      "current_sha256": "f3b6a212300c4e2dc9f73a36f2f65ec41b63a89eb2ccfce4b3d0b8cdd9da0c22",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/instances/dining/team.py",
+      "baseline_exists": true,
+      "baseline_sha256": "db339581d9013cdce73b3035334795a4aa385642094d5327609cbf56484c0feb",
+      "current_sha256": "d08d294e8b66f9a6715e3c3d993fbb91cbadb4e454a21dbb06e7bf44be3bccf3",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/instances/mobility/team.py",
+      "baseline_exists": true,
+      "baseline_sha256": "31fe89edd5cd9f891051ef3f62cc7fef6f339a8d6fdd5ee3af7a06f40ebfa737",
+      "current_sha256": "bb4f52559af260f80cc18eb0c5f146f799a761286da220f72d892848435d686c",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/modules/live_progress/op_stream.py",
+      "baseline_exists": true,
+      "baseline_sha256": "99190d5b7c7d05cb1e9a03ad274d72e401b1f01625b9708fefb7c4de0cdab230",
+      "current_sha256": "7cb3cefad314e1fa7774c53e3b67d0dfb20ac8b5d332a8395e323628f112526e",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/modules/mcp/mcp_server.py",
+      "baseline_exists": true,
+      "baseline_sha256": "d870d6383cc38fb85f1e378db9020420ac203111974f5615e932b24274616fb7",
+      "current_sha256": "778b4c4b05979b40320b91885dd4d43ae1ae606a2f6a3471e56984ec62192e36",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/domains/travel_ops/ports/data_sources/simulation_hook.py",
+      "baseline_exists": false,
+      "baseline_sha256": null,
+      "current_sha256": "b8a4f1c72aebda4684b9e07cf646b08cc2d60e99e053c68f4a3cea8f302e1986",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/infrastructure/a2a/http_transport.py",
+      "baseline_exists": true,
+      "baseline_sha256": "e83d29a0d3262c8f1e0faae697da4324e9c834353e84dc184ccefa0693557409",
+      "current_sha256": "cc064c4d18b424c01d3f0b3e5e26141908cd1e7948f415b7d25707e6ae341ffb",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/infrastructure/db/repository.py",
+      "baseline_exists": true,
+      "baseline_sha256": "7b4f58fa9d8a996bd9a9aa9155aeff2dd9bf59d2389cbec7f7f3f73d06d9f0fb",
+      "current_sha256": "4f259ed535944434fe634ce46dbd29f92e6b6d24007f58126897d2153f10e008",
+      "equal": false,
+      "normalized_newline_text_equal": true
+    },
+    {
+      "path": "app/presentation/a2a/travel_remote_agent.py",
+      "baseline_exists": true,
+      "baseline_sha256": "e77baec94223da7a872a8d6654b00d839109987c5c7536718981a8767ded13f8",
+      "current_sha256": "fc55034010458508e7f6fef64a675c4b96b1636b312e2ee33bfdb8e563b2f187",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/presentation/api/app.py",
+      "baseline_exists": true,
+      "baseline_sha256": "a0cd256703a1092b12a3e63f55d0f6cc2ab4bcbad4c0faf706bca8ba6ae8f5b1",
+      "current_sha256": "f244b49623fd37c1269e6b84fd1d5f7dfbc68149e6890504b73b1b5ecae73490",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/presentation/api/cases.py",
+      "baseline_exists": true,
+      "baseline_sha256": "4b3a220d774e50a9b6fe9b85a803bd14bc04f76012d47a91cdff5be786c8e5c1",
+      "current_sha256": "65fe9fe16cf9176f3188743ee768426d791fe7d3497d165c039235b320687009",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "app/presentation/errors.py",
+      "baseline_exists": true,
+      "baseline_sha256": "3cbcc9f7355769bbaf708dbcf7350447e653af6c327439db2c8d57829013d529",
+      "current_sha256": "43e8750916f0a16f9c896baa885a7c405bbc9962281ee756c37a353dcdefef76",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "config/guardrails.yaml",
+      "baseline_exists": true,
+      "baseline_sha256": "a639d5151fa62eb3c9856e23ad9ff0e93d7a3c69e2b75061bca9a9161489023c",
+      "current_sha256": "68dc5618ca9b12c5b9cbc83dbcf8b65f5ab4e3f461a357a29a1753b683c374f7",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "config/project.yaml",
+      "baseline_exists": true,
+      "baseline_sha256": "ffb4007bf14f65b3d338b577a426f88e8ccf5cf952a851d44ecb3ee92f920ebf",
+      "current_sha256": "93933a817abb5ff1f9c16dfafc2e14a100131210814927ff208663b6e283db97",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    },
+    {
+      "path": "requirements.txt",
+      "baseline_exists": true,
+      "baseline_sha256": "a3989f9b47491eb52a7a0d97e3d8681a47f3caa75fddd6059f59f80203807ce5",
+      "current_sha256": "a3989f9b47491eb52a7a0d97e3d8681a47f3caa75fddd6059f59f80203807ce5",
+      "equal": true,
+      "normalized_newline_text_equal": true
+    },
+    {
+      "path": "scripts/run_sweepers.py",
+      "baseline_exists": true,
+      "baseline_sha256": "e4fad8bde234e3e754852c0004fa80de5a66d0c31635a52affad9ad70190fb35",
+      "current_sha256": "66ea951a6a7f86f9576723edbb1d4e71048056b46bf657fa6798cddbc85f8eb0",
+      "equal": false,
+      "normalized_newline_text_equal": false
+    }
+  ],
+  "scope_note": "Chosen dependency review set; not a complete release manifest or attribution of current worktree changes.",
+  "text_same": 6,
+  "byte_same": 4,
+  "newline_only_difference": 2
+}

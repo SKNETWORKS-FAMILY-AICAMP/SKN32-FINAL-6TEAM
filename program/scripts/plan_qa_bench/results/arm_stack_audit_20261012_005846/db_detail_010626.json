@@ -1,0 +1,64 @@
+{
+  "utc": "2026-10-11T16:06:27.713035+00:00",
+  "db": {
+    "place_sources": [
+      {
+        "tenant_id": "arm-serving-test",
+        "source_name": "dining_ledger",
+        "kind": "dining",
+        "n": 1226,
+        "coordinates": 1226
+      },
+      {
+        "tenant_id": "arm-serving-test",
+        "source_name": "tour_api",
+        "kind": "activity",
+        "n": 3,
+        "coordinates": 3
+      },
+      {
+        "tenant_id": "arm-serving-test",
+        "source_name": "tour_api",
+        "kind": "dining",
+        "n": 1,
+        "coordinates": 1
+      },
+      {
+        "tenant_id": "arm-serving-test",
+        "source_name": "tour_api",
+        "kind": "lodging",
+        "n": 1,
+        "coordinates": 1
+      },
+      {
+        "tenant_id": "arm-serving-test",
+        "source_name": null,
+        "kind": "activity",
+        "n": 9,
+        "coordinates": 8
+      },
+      {
+        "tenant_id": "arm-serving-test",
+        "source_name": null,
+        "kind": "dining",
+        "n": 6,
+        "coordinates": 6
+      },
+      {
+        "tenant_id": "arm-serving-test",
+        "source_name": null,
+        "kind": "lodging",
+        "n": 1,
+        "coordinates": 1
+      }
+    ],
+    "llm_models": [],
+    "outbox_status": [
+      {
+        "status": "dead_letter",
+        "n": 82
+      }
+    ],
+    "agent_status": []
+  }
+}

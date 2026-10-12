@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="8.852" timestamp="2026-10-11T19:38:38.858218+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_departure_taxi_v1" name="test_generated_taxi_context_is_revalidated_at_current_departure" time="0.259"><failure message="AssertionError: assert 'vehicle' == 'direct_taxi'&#10;  &#10;  - direct_taxi&#10;  + vehicle">def test_generated_taxi_context_is_revalidated_at_current_departure():
+        runtime, context, _, deadline = scene()
+        before = deepcopy(context)
+&gt;       assert context['options']['taxi']['path_kind'] == 'direct_taxi'
+E       AssertionError: assert 'vehicle' == 'direct_taxi'
+E         
+E         - direct_taxi
+E         + vehicle
+
+tests\unit\travel\mobility\test_departure_taxi_v1.py:55: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_taxi_v1" name="test_current_taxi_duration_and_fare_reach_notice_without_changing_stored_plan" time="0.002"><failure message="AssertionError: assert 'held' == 'ok'&#10;  &#10;  - ok&#10;  + held">def test_current_taxi_duration_and_fare_reach_notice_without_changing_stored_plan():
+        runtime, context, route, deadline = scene()
+        runtime._v.car.seconds = 1200
+        runtime._v.car.fare = 19000
+        result = call(runtime, context, deadline)
+        move = Item(item_id=uuid4(), seq=1, kind='mobility', title='택시 이동', place_id=None,
+                    starts_at=NOW, ends_at=NOW+timedelta(minutes=10), detail={'route_def': route})
+        following = Item(item_id=uuid4(), seq=2, kind='activity', title='서울 관람', place_id=None,
+                         starts_at=deadline, ends_at=deadline+timedelta(hours=1), detail={})
+        before = deepcopy(move)
+        status, phrase = build_departure(move, [move, following], route_events=NoEvents(), routes=None,
+            now=NOW, departure_observer=lambda *a, **kw: result)
+&gt;       assert status == 'ok'
+E       AssertionError: assert 'held' == 'ok'
+E         
+E         - ok
+E         + held
+
+tests\unit\travel\mobility\test_departure_taxi_v1.py:82: AssertionError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,25 @@
+
+ RUN  v5.0.1 C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011
+
+ ❯ src/lib/live/location-samples.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/lib/live/location-samples.test.ts [ src/lib/live/location-samples.test.ts ]
+Error: ENOENT: no such file or directory, open 'C:\Users\playdata2\AppData\Local\Packages\sandbox.{3f3ad5e1-34c6-4a85-a64d-21bcd3580bb5}\AC\Temp\Y-kG4hA7z3VuQTBmsOStQ\ssr\58ff140ed5ee8e90097f178a6bb93caa246617de'
+ ❯ src/lib/live/location-samples.ts:2:1
+      1| import type { Language } from "../i18n";
+      2| import { distanceM, type LocationFix } from "../location";
+       | ^
+      3| import { api, LiveError } from "./client";
+      4|
+ ❯ src/lib/live/location-samples.test.ts:4:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  25 passed (25)
+   Start at  21:37:22
+   Duration  1.16s (transform 57%, import 33%, worker 5%, tests 4%)
+

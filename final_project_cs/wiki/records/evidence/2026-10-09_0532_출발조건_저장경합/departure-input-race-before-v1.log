@@ -1,0 +1,73 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+_ test_inputs_changed_after_calculation_discard_notice_without_version_change[size] _
+
+world = {'clock': <tests.scenario.test_case_version_day.Clock object at 0x0000027AC2114830>, 'store': <app.domains.travel_ops.... object at 0x0000027AC21E2C30>, 'tenant': 'remind_94ff4189b5', 'trip_id': UUID('baed7615-3579-475e-979c-61904dc1c60c')}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000027AC21C7D40>
+field = 'size'
+
+    @pytest.mark.parametrize('field', ['size', 'constraints'])
+    def test_inputs_changed_after_calculation_discard_notice_without_version_change(world, monkeypatch, field):
+        world['clock'].now = _at('10:50')
+        reminders = _reminders(world, route_events=_NoEvents())
+        original = reminders._payload
+    
+        def calculate_then_change(*args, **kwargs):
+            payload = original(*args, **kwargs)
+            with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+                trip, _ = world['store'].latest(conn, world['trip_id'])
+                if field == 'size':
+                    cur.execute('UPDATE trips SET party_size=party_size+1 WHERE tenant_id=%s AND trip_id=%s',
+                                (world['tenant'], world['trip_id']))
+                else:
+                    constraints = {**trip['constraints'], 'mobility_ease': 'needs_rest'}
+                    cur.execute('UPDATE trips SET constraints=%s::jsonb WHERE tenant_id=%s AND trip_id=%s',
+                                (json.dumps(constraints), world['tenant'], world['trip_id']))
+            return payload
+    
+        monkeypatch.setattr(reminders, '_payload', calculate_then_change)
+        outcome = reminders.tick()
+>       assert not outcome.sent and len(outcome.stale) == 1 and outcome.already == 0, outcome
+E       AssertionError: ReminderTickResult(trips=1, sent=[{'trip_id': 'baed7615-3579-475e-979c-61904dc1c60c', 'key': 'departure:ebd18144-5039-4eaa-b52a-e722efe546ac'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[])
+E       assert (not [{'key': 'departure:ebd18144-5039-4eaa-b52a-e722efe546ac', 'trip_id': 'baed7615-3579-475e-979c-61904dc1c60c'}])
+E        +  where [{'key': 'departure:ebd18144-5039-4eaa-b52a-e722efe546ac', 'trip_id': 'baed7615-3579-475e-979c-61904dc1c60c'}] = ReminderTickResult(trips=1, sent=[{'trip_id': 'baed7615-3579-475e-979c-61904dc1c60c', 'key': 'departure:ebd18144-5039-4eaa-b52a-e722efe546ac'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[]).sent
+
+tests\scenario\test_departure_input_race_db_v1.py:32: AssertionError
+_ test_inputs_changed_after_calculation_discard_notice_without_version_change[constraints] _
+
+world = {'clock': <tests.scenario.test_case_version_day.Clock object at 0x0000027AC23055B0>, 'store': <app.domains.travel_ops.... object at 0x0000027AC22C1460>, 'tenant': 'remind_86b477da4b', 'trip_id': UUID('5c73857f-f565-4bef-9609-84aad4ad4e00')}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000027AC23054C0>
+field = 'constraints'
+
+    @pytest.mark.parametrize('field', ['size', 'constraints'])
+    def test_inputs_changed_after_calculation_discard_notice_without_version_change(world, monkeypatch, field):
+        world['clock'].now = _at('10:50')
+        reminders = _reminders(world, route_events=_NoEvents())
+        original = reminders._payload
+    
+        def calculate_then_change(*args, **kwargs):
+            payload = original(*args, **kwargs)
+            with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+                trip, _ = world['store'].latest(conn, world['trip_id'])
+                if field == 'size':
+                    cur.execute('UPDATE trips SET party_size=party_size+1 WHERE tenant_id=%s AND trip_id=%s',
+                                (world['tenant'], world['trip_id']))
+                else:
+                    constraints = {**trip['constraints'], 'mobility_ease': 'needs_rest'}
+                    cur.execute('UPDATE trips SET constraints=%s::jsonb WHERE tenant_id=%s AND trip_id=%s',
+                                (json.dumps(constraints), world['tenant'], world['trip_id']))
+            return payload
+    
+        monkeypatch.setattr(reminders, '_payload', calculate_then_change)
+        outcome = reminders.tick()
+>       assert not outcome.sent and len(outcome.stale) == 1 and outcome.already == 0, outcome
+E       AssertionError: ReminderTickResult(trips=1, sent=[{'trip_id': '5c73857f-f565-4bef-9609-84aad4ad4e00', 'key': 'departure:0ed1aa9e-d0ae-4060-b625-6b81a42e197a'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[])
+E       assert (not [{'key': 'departure:0ed1aa9e-d0ae-4060-b625-6b81a42e197a', 'trip_id': '5c73857f-f565-4bef-9609-84aad4ad4e00'}])
+E        +  where [{'key': 'departure:0ed1aa9e-d0ae-4060-b625-6b81a42e197a', 'trip_id': '5c73857f-f565-4bef-9609-84aad4ad4e00'}] = ReminderTickResult(trips=1, sent=[{'trip_id': '5c73857f-f565-4bef-9609-84aad4ad4e00', 'key': 'departure:0ed1aa9e-d0ae-4060-b625-6b81a42e197a'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[]).sent
+
+tests\scenario\test_departure_input_race_db_v1.py:32: AssertionError
+- generated xml file: <workspace>\.tmp\mobility_complete_20261008\departure-input-race-before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/scenario/test_departure_input_race_db_v1.py::test_inputs_changed_after_calculation_discard_notice_without_version_change[size]
+FAILED tests/scenario/test_departure_input_race_db_v1.py::test_inputs_changed_after_calculation_discard_notice_without_version_change[constraints]
+2 failed, 2 deselected in 1.93s

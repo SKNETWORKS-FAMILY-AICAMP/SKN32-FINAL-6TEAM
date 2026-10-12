@@ -1,0 +1,41 @@
+{
+  "created_at": "2026-10-09T08:15:21.901584+09:00",
+  "source_hash_matches": 213,
+  "backup_hash_matches": 7,
+  "local_links": [
+    "final_project_cs/wiki/records/evidence/2026-10-09_0806_도착조회_완료시각",
+    "final_project_cs/app/domains/travel_ops/ports/data_sources/seoul_bus.py",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+    "final_project_cs/tests/unit/travel/mobility/test_arrival_query_clock_v1.py",
+    "final_project_cs/tests/unit/travel/mobility/test_arrival_query_assembly_v1.py",
+    "final_project_cs/wiki/teams/mobility.md",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v28/mobility-readiness.html",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0806_도착조회_완료시각/backup-manifest-v1.json",
+    "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_0806_도착조회_완료시각/seoul_bus.py",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0806_도착조회_완료시각/departure_observer.py",
+    "final_project_cs/wiki/teams/_backup/2026-10-09_0806_도착조회_완료시각/mobility.md",
+    "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0808_도착조회_시험시각표기/test_arrival_query_clock_v1.py",
+    ".tmp/mobility_complete_20261008/_backup/2026-10-09_0808_도착조회_시험시각표기/arrival-clock-work-v1.json",
+    "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0815_도착조회_해결기록/2026-10-09_0806_도착조회_완료시각_정상_신규응답을_미래시각으로_거절.md",
+    "final_project_cs/wiki/teams/_backup/2026-10-09_0815_도착조회_검증결과/mobility.md",
+    "final_project_cs/wiki/records/reports/2026-10-09_0815_버스조회_완료시각과_출발접근_재검증.md",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v27/mobility-readiness.html"
+  ],
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_0815_버스조회_완료시각과_출발접근_재검증.md": "cac2c2566267a7716000ce3f93b9c0d0220b9dbb483f034cd67d6f8432793978",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v28/mobility-readiness.html": "6b5a71e480464d7ba646b78dae6e37fd38ef25ed8553b33239ee29f94fdd585d",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v28/readiness-catalog.json": "cb0c8bceb8015a5dd35db858429eb5c5e47161eab3f590cbb3939415242286a3",
+    "final_project_cs/wiki/teams/mobility.md": "037a6dc74f97dc597a0ad39550d46f95af42c08031a1f57cc8465477e777e9ce",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0806_도착조회_완료시각/verification-proof-v1.json": "b0dbe783359a2e7e4450ff3f51df7751b9c332792039e98f9e3add5ce87ad4f9",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0806_도착조회_완료시각/backup-manifest-v1.json": "e5337eddfc7b5644ffe80c293477e12f8074ae57932912c00486982433a40f4e"
+  },
+  "browser_render_verified": false,
+  "scan_scope": [
+    "final_project_cs/wiki/records/reports/2026-10-09_0815_버스조회_완료시각과_출발접근_재검증.md",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v28/mobility-readiness.html",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v28/readiness-catalog.json",
+    "final_project_cs/wiki/teams/mobility.md",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0806_도착조회_완료시각/verification-proof-v1.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0806_도착조회_완료시각/backup-manifest-v1.json"
+  ]
+}

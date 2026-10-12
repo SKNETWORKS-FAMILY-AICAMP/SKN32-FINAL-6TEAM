@@ -1,0 +1,215 @@
+{
+  "checked_at": "2026-10-12T01:11:49.131729+09:00",
+  "backups": [
+    "final_project_cs\\wiki\\teams\\_backup\\2026-10-12_011148_web_fixes_final\\mobility.md",
+    "datasets\\mobility\\_backup\\2026-10-12_011148_web_fixes_final\\REPORT.md"
+  ],
+  "report_links": [
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\fare-before-after-v2.png",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\map-before-after-v2.png",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\options.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\plan.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\rules_v0.3.json",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\reports\\2026-10-12_0040_공식요율_광역조조와신분당선환승_수정검증.md",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\reports\\2026-10-12_0100_혼합환승_첫버스조조_조건부연결검증.md",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bike.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\verify_time.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\departure_observer.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\congestion.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\candidates.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\reports\\2026-10-12_0045_직행존재로사라진_버스환승후보_복구검증.md",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\route_shape.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\shape_transit.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\departure_context.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\components\\intake\\moves.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\components\\intake\\review.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\components\\intake\\registered_moves.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\scripts\\mobility\\build_car_turn_policy_v1.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "datasets\\mobility\\scripts\\reduce_75.py",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\reports\\2026-10-12_0115_자료재생성_9호선급행보존_검증.md",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\timing\\public-data-recovery.json",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\integrated\\result.xml",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\car\\public.xml",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\crowd-regeneration\\after.xml",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\verification-summary-v1.json",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\integrated\\execution.json",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\golden\\diagnosis.json",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\golden\\update.json",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\datacheck-v1.json",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\datacheck-v2.json",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\readiness-21-v1.md",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\current-readiness-and-hashes-v1.json",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\records\\evidence\\2026-10-12_mobility_web_fixes\\walking\\access-evidence.json",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\wiki\\teams\\_backup\\2026-10-12_010000_web_recovery_docs",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-12_003136_web_bike_fare",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\_backup\\2026-10-12_003136_web_fares",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\scripts\\mobility\\_backup\\2026-10-12_car_exception",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "final_project_cs\\tests\\unit\\travel\\mobility\\_backup\\2026-10-12_verified_bus_transfer_candidates",
+      "exists": true
+    },
+    {
+      "origin": "final_project_cs\\wiki\\records\\reports\\2026-10-12_웹근거_이동결함개선_최종검증.md",
+      "target": "datasets\\mobility\\scripts\\_backup\\2026-10-12_0110_preserve_line9_express",
+      "exists": true
+    }
+  ],
+  "missing": []
+}

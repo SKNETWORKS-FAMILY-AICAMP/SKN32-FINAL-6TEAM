@@ -128,9 +128,11 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
             key = f"p{len(places) + 1}"
             places.append(_place_in(key, row["place"], row["kind"]))
         detail: dict[str, Any] = {"provenance": row["provenance"],
-                                  "intake": {"intake_id": intake_id, "revision": revision}}
-        if row["booking_no"]:
-            detail["booking"] = {"booking_no": row["booking_no"], "declared_by": "customer_plan"}
+                                  "intake": {"intake_id": intake_id, "revision": revision,
+                                             "source_id": row["source_id"], "index": row["index"]}}
+        if row["booking_no"] or row["booked"] is True:
+            detail["booking"] = {"declared_by": "customer_plan",
+                                 **({"booking_no": row["booking_no"]} if row["booking_no"] else {})}
         if row["locked"]:
             # ★`[2026-10-02 사용자 지시]` 고객이 「꼭 넣을 일정」으로 고정했다 — 등록되면 **감시 루프가 다시 자동으로 바꾸지 않고**
             #   바꾸기 전에 묻는다(`pending.protected_reason` 「customer_pinned」 · `trip_watch`). 되살린 항목과 같은 표시다.
@@ -143,6 +145,10 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
     body = {"request_id": f"intake:{intake_id}:r{revision}", "title": _title(trip, sources),
             "locale": "ko", "party_size": _int_value(trip.get("party_size")),
             "places": places, "items": items}
+    from . import taxi_pricing
+    pricing = taxi_pricing.from_trip(trip)
+    if pricing is not None:
+        body["constraints"] = taxi_pricing.constraints(pricing, body.get("constraints"))
     plan = _plan_basis(trip, rows, sources, first_day)
     if not rows and not plan["requested"]:
         problems.append(Problem("no_items", "items", "읽은 일정이 없습니다 — 항목을 하나 이상 넣어 주세요"))
@@ -269,6 +275,9 @@ def _place_in(key: str, place: dict[str, Any], kind: str) -> dict[str, Any]:
             attributes[_SOURCE_ATTRS[source]] = str(place["content_id"])
             if place.get("content_type_id") and source != "dining_license":     # 인허가 관리번호는 관광공사 종류 번호와 짝이 아니다
                 attributes["source_content_type_id"] = str(place["content_type_id"])
+        if source == "dining_ledger" and place.get("dining_place_uid"):
+            # ★`[2026-10-07 팀]` 원장 가게 id — 관광공사 id 가 없는 원장 가게도 등록 때 원장과 잇는다(trip_api 등록)
+            attributes["dining_place_uid"] = str(place["dining_place_uid"])
     elif source == "customer_pick":
         # ★`[2026-10-02]` 고객이 후보 · 검색 · 지도에서 고른 장소 — 관광공사 · 카카오 값으로 위장하지 않는다. 공용 장소 표에 섞이지 않게
         #   그 여행 전용 행으로만 들어간다(`trip_api.EXTERNAL_PLACE_SOURCES`). 관광공사 번호는 운영시간 표를 찾는 데만 쓴다.

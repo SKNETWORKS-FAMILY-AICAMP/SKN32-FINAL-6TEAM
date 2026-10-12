@@ -1,0 +1,27 @@
+{
+  "utc": "2026-10-11T16:07:22.363018+00:00",
+  "delivery": [
+    {
+      "topic": "trip.notice",
+      "status": "dead_letter",
+      "last_error": "ACOP_DISCORD_WEBHOOK_URL 이 비어 있다 — 알림을 보내지 않았다",
+      "n": 82,
+      "first_available": "2026-10-09 16:31:58.381698+00:00",
+      "latest_available": "2026-10-11 13:06:31.146807+00:00",
+      "min_attempts": 3,
+      "max_attempts": 3
+    }
+  ],
+  "channel_configuration": {
+    "tripilot-arm-api-1": {
+      "ACOP_KAKAO_REST_API_KEY": true,
+      "ACOP_RATE_TOUR_API_PER_DAY": true,
+      "ACOP_TOUR_API_KEY": true
+    },
+    "tripilot-arm-worker-1": {
+      "ACOP_RATE_TOUR_API_PER_DAY": true,
+      "ACOP_KAKAO_REST_API_KEY": true,
+      "ACOP_TOUR_API_KEY": true
+    }
+  }
+}

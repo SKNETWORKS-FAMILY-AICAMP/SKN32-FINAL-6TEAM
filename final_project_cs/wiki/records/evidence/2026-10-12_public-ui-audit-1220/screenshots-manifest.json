@@ -1,0 +1,219 @@
+[
+  {
+    "file": "01-old-test-picker.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 30622,
+    "sha256": "b8b69f2c1b0f4e9f12ca539d6e08de955af9ce3aaf370af6bbc72d1a5e37592b"
+  },
+  {
+    "file": "02-intake-start.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 22579,
+    "sha256": "7d990e5f1f9fd421968f528de4bb4e63c067bdbb9ca06c9f2b29e7e532b6351e"
+  },
+  {
+    "file": "03-fresh-service.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 55882,
+    "sha256": "05079731282bbebdda2a4f535acd5dd2a45c1e82dc6ed889d17a04b54078a993"
+  },
+  {
+    "file": "04-intake-reading.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 34771,
+    "sha256": "96d96c78c769bda16ff994707eae274d1c8e6d0deabe0889c00c7c5e5b7a680b"
+  },
+  {
+    "file": "05-verification-result.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 49072,
+    "sha256": "04212e7b40eef942788a14192dfbd7e0973baea0a2e337a4cf9e150119750cdf"
+  },
+  {
+    "file": "06-service-map-tools.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 55630,
+    "sha256": "2418cd69d61466dd13b5ed2fc35e4ce599f46d8c4c6bd118077e88e56e82313c"
+  },
+  {
+    "file": "07-verification-bottom.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 56387,
+    "sha256": "73b5c39256d29e6291dbb4a4515c16ab2aed32965a4389b76b90df2bf13d2686"
+  },
+  {
+    "file": "08-proposal-transition.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 49694,
+    "sha256": "ef7aa4fb43114fa515c30ac5630a92aa147f41737233a1edbecd2b4537b6a314"
+  },
+  {
+    "file": "09-service-marker-toast.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 55606,
+    "sha256": "ac06875321a706708398419ca183b8a64f4a9185a4b0ab7edc4ad1b6dbe4712e"
+  },
+  {
+    "file": "10-changed-card.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 51098,
+    "sha256": "92b537d367b84367f851b2ae820d4aa53db219e2ee9a358546bb579fdd688cdb"
+  },
+  {
+    "file": "11-service-marker-settled.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 55882,
+    "sha256": "05079731282bbebdda2a4f535acd5dd2a45c1e82dc6ed889d17a04b54078a993"
+  },
+  {
+    "file": "12-changed-card-expanded.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 53661,
+    "sha256": "951175a2956c45bc5328f929075fd14aff9126a75fca5ac1c5b4ef0e855a257b"
+  },
+  {
+    "file": "13-test2-start.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 22636,
+    "sha256": "b18f0ec9d6b9be9085229491a0338d4563df8cc5910152c5ec206a6c77e84039"
+  },
+  {
+    "file": "14-test2-reading.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 35829,
+    "sha256": "1ef50bbae84b330f6a3dbcfc959b0e152d5daa2caeee1a96990a804eb7d408fb"
+  },
+  {
+    "file": "15-test2-reveal-next.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 55029,
+    "sha256": "d95beb1533721c837f9a6056870849f75d9f157fe4224f5a8dd12f6c3759c410"
+  },
+  {
+    "file": "16-service-marker-selected.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 55882,
+    "sha256": "05079731282bbebdda2a4f535acd5dd2a45c1e82dc6ed889d17a04b54078a993"
+  },
+  {
+    "file": "17-complete-bottom-label.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 53790,
+    "sha256": "1da56a558efdea70807e1d032c928d7c1b12d49f448d1b766e3bfaf4ed506f24"
+  },
+  {
+    "file": "18-marker-toast-real-click.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 53188,
+    "sha256": "9287b74ae6d14982f1aaf2f9b5e2e364edd5ed53702c8e27dc9fde8509a8b1a8"
+  },
+  {
+    "file": "19-completed-intake-reopened.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 53107,
+    "sha256": "bc859e18fed2075f7305909b5fc0e81a2ff36a0fa4fd276d1dc2a79fcbb23130"
+  },
+  {
+    "file": "20-intro-start.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 14384,
+    "sha256": "a602954b3e73c23470e0ef511e09d91442d7ee3bb3f206964e3e22503d3f6818"
+  },
+  {
+    "file": "21-intro-next-immediate.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 34230,
+    "sha256": "72345a30d457840ce0e0a7662a876b329a105c13418c053992e353f9f2cf07ed"
+  },
+  {
+    "file": "22-intro-next-settled.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 34230,
+    "sha256": "72345a30d457840ce0e0a7662a876b329a105c13418c053992e353f9f2cf07ed"
+  },
+  {
+    "file": "23-original-return.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 49976,
+    "sha256": "7e9bd3a83c857d1c35fe2799f89c8736afec165bce50dc8417b9b0310492b56e"
+  },
+  {
+    "file": "24-test-picker-visible.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 32229,
+    "sha256": "dc8ecc5f77d9d5b39080fe44d2d8b4a633c4e2ee04c41ce2beb4fd6577cb1715"
+  },
+  {
+    "file": "25-picker-375.jpg",
+    "width": 375,
+    "height": 812,
+    "bytes": 29357,
+    "sha256": "1a1b19d9618827a45aceb22f42bff8b962cc4c77ad2efe1c9e7886c3c0eebeab"
+  },
+  {
+    "file": "26-verification-375.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 55001,
+    "sha256": "bdb59d386e4908e01b28517761bd6f20a7d7332cb35028c2f8a2355bf8497469"
+  },
+  {
+    "file": "27-service-375.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 58856,
+    "sha256": "85a6f41a60a34954ff2ace1683c1f5e3482512ff9fd83f2ee8bc9bb2636598fd"
+  },
+  {
+    "file": "28-verification-mobile-measured.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 55033,
+    "sha256": "afdff92336f7719edeab174455a55c957c0aa4f94d6f41d0b4b14674d2dbcd1e"
+  },
+  {
+    "file": "29-service-mobile-measured.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 58856,
+    "sha256": "85a6f41a60a34954ff2ace1683c1f5e3482512ff9fd83f2ee8bc9bb2636598fd"
+  },
+  {
+    "file": "30-review-375-verified.jpg",
+    "width": 375,
+    "height": 812,
+    "bytes": 53206,
+    "sha256": "22b8699aea79268bc19f729b117fe30a6ff485ec6c89308255e28882e5d2aed0"
+  },
+  {
+    "file": "31-service-375-verified.jpg",
+    "width": 375,
+    "height": 812,
+    "bytes": 58462,
+    "sha256": "7085944fd9630546b1e5e5509e1d1b5ce8a7796ae44f3e96cb6be1cfaf1e1b20"
+  }
+]

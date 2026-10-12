@@ -1,0 +1,104 @@
+{
+  "phase": "ready_for_integration",
+  "updated_at_kst": "2026-10-12T04:18:15.263258+09:00",
+  "w_ids": [
+    "W16",
+    "W20",
+    "W22",
+    "W23",
+    "W25"
+  ],
+  "changed_files": [
+    "program/scripts/check_wiki.py",
+    "program/scripts/build_wiki_catalogs.py",
+    "program/scripts/tests/test_wiki_governance.py",
+    "wiki/governance/document-standard.md",
+    "wiki/governance/front-matter.md",
+    "wiki/governance/review-policy.md",
+    "wiki/governance/evidence-grades.md",
+    "wiki/governance/implementation-state.md",
+    "wiki/governance/index.md",
+    "wiki/delivery/roles.md",
+    "final_project_cs/wiki/teams/code-layout.md",
+    "program/research/wiki_review_2026-10-11/findings-v2.json",
+    "final_project_cs/wiki/data/migration-inventory.generated.md",
+    "wiki/governance/implementation-inventory.generated.md",
+    "wiki/governance/implementation-inventory.generated.json",
+    "wiki/records/reports/2026-10-12_review-policy-before-followup.md",
+    "wiki/records/reports/2026-10-12_evidence-grades-before-followup.md",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/apply_documents.py",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/backups.json",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/changed-files.json",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/check-after.json",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/check-before.json",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/check-final.json",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/check-handoff.json",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/check_owned_paths.py",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/cs-tests.xml",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/findings-preservation.json",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/finish_report.py",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/governance-tests-final.xml",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/governance-tests.xml",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/handoff.json",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/owned-paths.json",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/refresh_findings.py",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/report.md",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/reproducibility.json",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/state-recording.html",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/status.json",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/tests.json",
+    "program/research/baseline_completion_2026-10-12/tasks/wiki/verify_outputs.py"
+  ],
+  "tests": [
+    {
+      "command": "python -m pytest program/scripts/tests/test_wiki_governance.py -q --basetemp=program/research/baseline_completion_2026-10-12/tasks/wiki/_test_tmp_3 --junitxml=program/research/baseline_completion_2026-10-12/tasks/wiki/governance-tests-final.xml --tb=short",
+      "cwd": "워크스페이스 루트",
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/wiki/governance-tests-final.xml",
+      "junit_timestamp": "2026-10-12T04:12:45.322763+09:00",
+      "output_written_at_kst": "2026-10-12T04:12:45.766906+09:00"
+    },
+    {
+      "command": "python -m pytest tests/contract/test_team_layout.py tests/architecture/test_travel_ops_cells.py tests/architecture/test_state_diagram_matches_code.py -q --basetemp=../program/research/baseline_completion_2026-10-12/tasks/wiki/_cs_test_tmp_2 --tb=short --junitxml=../program/research/baseline_completion_2026-10-12/tasks/wiki/cs-tests.xml",
+      "cwd": "final_project_cs",
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/wiki/cs-tests.xml",
+      "junit_timestamp": "2026-10-12T04:08:54.768210+09:00",
+      "output_written_at_kst": "2026-10-12T04:09:33.162410+09:00"
+    },
+    {
+      "command": "python program/scripts/check_wiki.py --include-records --json-output program/research/baseline_completion_2026-10-12/tasks/wiki/check-handoff.json",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "violations": 4,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/wiki/check-handoff.json"
+    },
+    {
+      "command": "python program/scripts/build_wiki_catalogs.py --check",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "program/research/baseline_completion_2026-10-12/tasks/wiki/reproducibility.json"
+    }
+  ],
+  "report": "program/research/baseline_completion_2026-10-12/tasks/wiki/report.md",
+  "dependencies_remaining": [
+    "auth",
+    "orchestration",
+    "operations",
+    "existing:Mobility",
+    "integration"
+  ],
+  "unresolved": [
+    "전체 wiki 기본 검사는 4건으로 실패. 정확한 다른 담당 문서 경로는 handoff.json 참조",
+    "현재 적용 대상 93개 중 90개 상태 필드 일부 미적용. 기능별 결과와 환경 증거 확인 후 담당자가 반영",
+    "브라우저 미리보기 시간 초과; 흐름도 정적 검사만 완료"
+  ],
+  "deployment": "not_deployed",
+  "ready_reason": "담당 문서·검사·생성기 구현, 회귀 12/12·구조 12/12·경로 51/51 및 생성 재현 증거 준비. 전체 wiki 실패와 기능별 미확인은 숨기지 않고 통합 접합부로 인계. 전체 제품 완료·관문 통과 선언 아님"
+}

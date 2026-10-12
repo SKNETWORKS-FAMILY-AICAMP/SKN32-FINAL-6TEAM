@@ -1,0 +1,6 @@
+{
+  "job": "e4bqat_oos1_h",
+  "our_training": true,
+  "issue": "Publisher-only description was copied from original and said no our-travel additional training; adapter and our_training=True prove this is a trained variant.",
+  "resolution": "Normalize derived publisher description; preserve original execution metadata; future refill descriptions separate publisher training and our adapter."
+}

@@ -1,0 +1,21 @@
+--- before/test_departure_context_storage_v1.py
++++ after/test_departure_context_storage_v1.py
+@@ -67,6 +67,8 @@
+ 
+ 
+ def test_new_place_rejudgment_replaces_old_context(monkeypatch):
++    from app.domains.travel_ops.components.team_hooks import legs
++
+     act, move, meal = scene()
+     move.detail["departure_context"] = {"old": True}
+     new_context = {"schema_version": 1, "to_place": {"name": "새 식당"}, "options": {}}
+@@ -76,7 +78,8 @@
+                     "starts_at": arrival - timedelta(minutes=19), "ends_at": arrival - timedelta(minutes=10),
+                     "eta_min": 9, "departure_context": new_context}, None
+         return leg
+-    monkeypatch.setattr(wiring, "leg_planner", builder)
++    # 일정 변경 부품이 읽는 끼움 위치에 대역을 넣는다. 조립 후 원본 함수 교체는 전달되지 않는다.
++    monkeypatch.setattr(legs, "leg_planner", builder)
+     place = _place("새 식당", 37.5755, 126.9855)
+     changed = meal.replaced_by(place=place, title="새 식당")
+     changed.place = place

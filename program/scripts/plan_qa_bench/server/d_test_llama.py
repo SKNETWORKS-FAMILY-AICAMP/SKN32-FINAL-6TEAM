@@ -41,6 +41,9 @@ t0 = time.time()
 try:
     for k, it in enumerate(todo):
         body = {'messages': [{'role': 'user', 'content': it['prompt']}], 'max_tokens': 16, 'temperature': 0, 'cache_prompt': True, 'chat_template_kwargs': {'enable_thinking': False}}
+        if os.environ.get('LOGPROBS') == '1':     # [2026-10-07] 답 자리 토큰의 「없음」 대 숫자 확률을 같이 남긴다 — 「없음」 확률 문턱 · 거부권 결합을 오프라인으로 계산하려고
+            body['logprobs'] = True
+            body['top_logprobs'] = 20
         t1 = time.perf_counter()
         try:
             req = urllib.request.Request(f'http://127.0.0.1:{PORT}/v1/chat/completions', data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'})
@@ -49,6 +52,18 @@ try:
             mm = re.search(r'"item"\s*:\s*(null|\d+)', txt)
             rec = {'i': it['i'], 'set': it['set'], 'qi': it['qi'], 'type': it['type'], 'gold': it['gold'], 'content': txt[:60], 'parsed': bool(mm),
                    'pick': None if (not mm or mm.group(1) == 'null') else int(mm.group(1)), 'ms': round((time.perf_counter() - t1) * 1000)}
+            if os.environ.get('LOGPROBS') == '1':
+                import math
+                lp = (r['choices'][0].get('logprobs') or {}).get('content') or []
+                for tk in lp:
+                    t = tk['token'].strip()
+                    if t == 'null' or t.isdigit():              # 값 자리의 첫 토큰
+                        alts = tk.get('top_logprobs') or []
+                        pn = sum(math.exp(a['logprob']) for a in alts if a['token'].strip() == 'null')
+                        pi = sum(math.exp(a['logprob']) for a in alts if a['token'].strip().isdigit())
+                        rec['p_null'] = round(pn / (pn + pi), 6) if (pn + pi) > 0 else None
+                        rec['p_mass'] = round(pn + pi, 4)
+                        break
         except Exception as e:  # noqa: BLE001
             rec = {'i': it['i'], 'set': it['set'], 'qi': it['qi'], 'type': it['type'], 'gold': it['gold'], 'error': repr(e)[:100]}
         f.write(json.dumps(rec, ensure_ascii=False) + '\n')

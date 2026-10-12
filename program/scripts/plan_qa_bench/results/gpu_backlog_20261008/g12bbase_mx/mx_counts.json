@@ -1,0 +1,387 @@
+{
+  "model": "Gemma-4-12B-it Q4_K_M",
+  "our_training": false,
+  "publisher_training": "See publisher model card",
+  "saved": 4014,
+  "expected": 4014,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "repetitions": 1,
+  "counts": {
+    "control": {
+      "request": {
+        "total": 1033,
+        "correct": 1010,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9668111815877302,
+          0.9851183459242351
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.0037049625938602128
+        ]
+      },
+      "no_request": {
+        "total": 974,
+        "correct": 782,
+        "false_pick": 192,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.776721551878628,
+          0.8266482425577396
+        ],
+        "false_pick_wilson95": [
+          0.1733517574422604,
+          0.22327844812137204
+        ]
+      }
+    },
+    "mixed": {
+      "request": {
+        "total": 1033,
+        "correct": 993,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9477016462612934,
+          0.9714359826332383
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.0037049625938602128
+        ]
+      },
+      "no_request": {
+        "total": 974,
+        "correct": 773,
+        "false_pick": 201,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.7670892781093251,
+          0.8178726242933906
+        ],
+        "false_pick_wilson95": [
+          0.18212737570660942,
+          0.2329107218906749
+        ]
+      }
+    }
+  },
+  "paired": {
+    "request": {
+      "pairs": 1033,
+      "itineraries": 59,
+      "correct_control": 1010,
+      "correct_mixed": 993,
+      "loss_pp": 1.6456921587608906,
+      "loss_cluster95_pp": [
+        0.8720930232558155,
+        2.3837722875510265
+      ],
+      "mixed_accuracy_cluster95": [
+        0.9496111812870773,
+        0.9726569169207318
+      ],
+      "paired_exact": {
+        "a_only": 19,
+        "b_only": 2,
+        "p": 0.00022125244140625
+      },
+      "bootstrap_replicates": 2000,
+      "bootstrap_seed": 7
+    },
+    "no_request": {
+      "pairs": 974,
+      "itineraries": 59,
+      "correct_control": 782,
+      "correct_mixed": 773,
+      "loss_pp": 0.9240246406570842,
+      "loss_cluster95_pp": [
+        -0.6085347144284029,
+        2.3397924287353034
+      ],
+      "mixed_accuracy_cluster95": [
+        0.7623837640322383,
+        0.8237793079703908
+      ],
+      "paired_exact": {
+        "a_only": 40,
+        "b_only": 31,
+        "p": 0.34247099841986794
+      },
+      "bootstrap_replicates": 2000,
+      "bootstrap_seed": 7
+    }
+  },
+  "subtypes_mixed": {
+    "MX1": {
+      "total": 525,
+      "correct": 504,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9396262994079514,
+        0.9736908998091454
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0072639138944599795
+      ]
+    },
+    "MX2": {
+      "total": 474,
+      "correct": 455,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9382460778082545,
+        0.9741904467998065
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.008039191137108092
+      ]
+    },
+    "MX3": {
+      "total": 457,
+      "correct": 411,
+      "false_pick": 46,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8683439281964935,
+        0.9236855062516245
+      ],
+      "false_pick_wilson95": [
+        0.07631449374837557,
+        0.13165607180350652
+      ]
+    },
+    "MX4": {
+      "total": 121,
+      "correct": 3,
+      "false_pick": 118,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.008467314305269862,
+        0.07036434076877973
+      ],
+      "false_pick_wilson95": [
+        0.9296356592312203,
+        0.9915326856947302
+      ]
+    },
+    "MX5a": {
+      "total": 236,
+      "correct": 219,
+      "false_pick": 17,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8876807028669835,
+        0.9545423264342829
+      ],
+      "false_pick_wilson95": [
+        0.04545767356571702,
+        0.11231929713301637
+      ]
+    },
+    "MX5b": {
+      "total": 160,
+      "correct": 140,
+      "false_pick": 20,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.814809889465813,
+        0.9176054641555581
+      ],
+      "false_pick_wilson95": [
+        0.08239453584444192,
+        0.18519011053418696
+      ]
+    },
+    "MX6a": {
+      "total": 34,
+      "correct": 34,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8984854458466761,
+        0.9999999999999999
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.10151455415332376
+      ]
+    }
+  },
+  "sources": {
+    "code": {
+      "control": {
+        "request": {
+          "total": 940,
+          "correct": 918,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9648178386657503,
+            0.9844941370123782
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004070025516249234
+          ]
+        },
+        "no_request": {
+          "total": 828,
+          "correct": 673,
+          "false_pick": 155,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.7848104498952415,
+            0.8379043649378293
+          ],
+          "false_pick_wilson95": [
+            0.16209563506217073,
+            0.21518955010475854
+          ]
+        }
+      },
+      "mixed": {
+        "request": {
+          "total": 940,
+          "correct": 901,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9437860564975012,
+            0.9695029201035553
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004070025516249234
+          ]
+        },
+        "no_request": {
+          "total": 828,
+          "correct": 664,
+          "false_pick": 164,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.7734187540550269,
+            0.8276573220386708
+          ],
+          "false_pick_wilson95": [
+            0.17234267796132924,
+            0.22658124594497314
+          ]
+        }
+      }
+    },
+    "llm": {
+      "control": {
+        "request": {
+          "total": 93,
+          "correct": 92,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.94158082764513,
+            0.9980993579713445
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 109,
+          "false_pick": 37,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.6703220936464399,
+            0.8101857749145428
+          ],
+          "false_pick_wilson95": [
+            0.1898142250854573,
+            0.3296779063535601
+          ]
+        }
+      },
+      "mixed": {
+        "request": {
+          "total": 93,
+          "correct": 92,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.94158082764513,
+            0.9980993579713445
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 109,
+          "false_pick": 37,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.6703220936464399,
+            0.8101857749145428
+          ],
+          "false_pick_wilson95": [
+            0.1898142250854573,
+            0.3296779063535601
+          ]
+        }
+      }
+    }
+  },
+  "aggregate_gates": {
+    "request_accuracy": true,
+    "false_pick": false,
+    "request_loss": true,
+    "false_pick_increase": true
+  },
+  "aggregate_gates_passed": 3,
+  "aggregate_gates_total": 4,
+  "subtype_gates": {
+    "MX3": false,
+    "MX4": false,
+    "MX5a": false
+  },
+  "complete_valid": true,
+  "failed_records": [],
+  "false_pick_increase_pp": 0.924024640657084,
+  "answer_sha256": "1c0963a3adc6aa7f24d89c8b38434b8aaf69672556b8d303ca82d8ed2e1d5729",
+  "gold_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+  "execution": {
+    "job": {
+      "id": "g12bbase_mx",
+      "label": "Gemma-4-12B-it Q4_K_M",
+      "our_training": false,
+      "model": "/workspace/ollama/blobs/sha256-1278394b693672ac2799eadc9a83fd98259a6a88a40acfb1dcaa6c6fc895a606",
+      "prompts": "/workspace/heavy/all_prompts_mx.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "mx_backlog_g12bbase",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 4014
+    },
+    "started": "2026-10-08T02:20:02.901985+00:00",
+    "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "limits": [
+    "one run",
+    "existing developer/regression suite; not new independent final holdout",
+    "paired exact p does not remove shared itinerary correlation; cluster intervals supplied",
+    "no complete matched original cohort ranking",
+    "token p_null is not verbal confidence or calibrated option probability"
+  ]
+}

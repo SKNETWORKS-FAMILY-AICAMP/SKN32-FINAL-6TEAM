@@ -1,0 +1,388 @@
+{
+  "files": [
+    {
+      "relative": "saluki_original_d3_a1/started.json",
+      "bytes": 1460,
+      "sha256": "07636f17e5b9d7f289862fdc5c4dabcab2aced959a77677bcc1b5d1d782a9dce"
+    },
+    {
+      "relative": "saluki_original_d3_a1/job.log",
+      "bytes": 393,
+      "sha256": "08407ecd094d3261b23e18a5fe60aa458140d7a720c46e22ff7f579a350f1b4e"
+    },
+    {
+      "relative": "saluki_original_d3_a1/saluki_contract.json",
+      "bytes": 1174,
+      "sha256": "51048032200b3d9d7752fc4222fdc41b38fed60974bec1c4f324645edc4c3ff6"
+    },
+    {
+      "relative": "saluki_original_d3_a1/dtest_server_saluki_original_d3_a1.log",
+      "bytes": 283468,
+      "sha256": "ca01cbed0033737e6439835e05992730b9b1351b1ccbf9d040eefbb361fd5927"
+    },
+    {
+      "relative": "saluki_original_d3_a1/saluki_resources.jsonl",
+      "bytes": 20716,
+      "sha256": "bb13077d4448817ab7b65bcb54035fcdce481ac490c71ada799339a28bd021a9"
+    },
+    {
+      "relative": "saluki_original_d3_a1/context_lengths.json",
+      "bytes": 28894,
+      "sha256": "d78d906e7cebeb065b419e2df519818f6e0e4fbc13d0a27000adbe3bdc43ea21"
+    },
+    {
+      "relative": "saluki_original_d3_a1/d_test_saluki_original_d3_a1.jsonl",
+      "bytes": 99839,
+      "sha256": "5b86af3ef778caff431196a0f9274be815f54e6ea405e1b1f77bebef4798335f"
+    },
+    {
+      "relative": "saluki_original_d3_a1/saluki_summary.json",
+      "bytes": 332,
+      "sha256": "bede72794041dbea6d2d0197e15042eef2bffe24ff9bb1a5a722b1d9b5f70567"
+    },
+    {
+      "relative": "saluki_original_mx_a1/started.json",
+      "bytes": 1461,
+      "sha256": "a07b79b50bc4bf7ffbb63bdf21da47cd52a0184ce1eada78c91b41a6920aa1c0"
+    },
+    {
+      "relative": "saluki_original_mx_a1/job.log",
+      "bytes": 1652,
+      "sha256": "d2baa1394a30b19f74c638add0c40ee9c083242539b2baf391f7aa22dc8160bc"
+    },
+    {
+      "relative": "saluki_original_mx_a1/saluki_contract.json",
+      "bytes": 1175,
+      "sha256": "503ca0531cec2463ff5875b5974d3e21015fd17e67b632f9370b7883ac26e5de"
+    },
+    {
+      "relative": "saluki_original_mx_a1/dtest_server_saluki_original_mx_a1.log",
+      "bytes": 3323591,
+      "sha256": "ed8af7f3e06f3a0c22281025bea967519719fa4dc1738ba48600d8296b1a69c6"
+    },
+    {
+      "relative": "saluki_original_mx_a1/saluki_resources.jsonl",
+      "bytes": 186541,
+      "sha256": "01f7650d3a7b056ae431bd6e62d7f66badd0e2277f3f1d5cb106bc6b85cd55a5"
+    },
+    {
+      "relative": "saluki_original_mx_a1/context_lengths.json",
+      "bytes": 325230,
+      "sha256": "ca9cf62b4e888bd9cea0b00a768df479c4166faa6929543795887988850c239e"
+    },
+    {
+      "relative": "saluki_original_mx_a1/d_test_saluki_original_mx_a1.jsonl",
+      "bytes": 1255075,
+      "sha256": "759f2daf6261b207f4050d72b068beb3dbe294e221bd53d5044032a183658c2e"
+    },
+    {
+      "relative": "saluki_original_mx_a1/saluki_summary.json",
+      "bytes": 336,
+      "sha256": "85baa97e7ed0211856bb8e26b9457aee6e199aaa079d47f2f566e2e827c71ade"
+    },
+    {
+      "relative": "saluki_original_h_a1/started.json",
+      "bytes": 1457,
+      "sha256": "72ba7e10866c243f20c2ac9d649a3f899643970d1f6bf9bfe8f7a4644dc6c616"
+    },
+    {
+      "relative": "saluki_original_h_a1/job.log",
+      "bytes": 719,
+      "sha256": "a848d198d73401ac02f0a713567d20a8f40c9676413135355400c1914c31cfd9"
+    },
+    {
+      "relative": "saluki_original_h_a1/saluki_contract.json",
+      "bytes": 1176,
+      "sha256": "984ee97ef7c0140be953986ec1a352d4bb5b9987fa202b7a2385f7cc83929829"
+    },
+    {
+      "relative": "saluki_original_h_a1/dtest_server_saluki_original_h_a1.log",
+      "bytes": 1082638,
+      "sha256": "4d7e02de776560351a96a47881a056112575d1f9f528cad02eb761009f9c8899"
+    },
+    {
+      "relative": "saluki_original_h_a1/saluki_resources.jsonl",
+      "bytes": 61874,
+      "sha256": "f9cf4993ab91115274e2a0a84606e3731bd2fe546f9aed1685e1182d2e959113"
+    },
+    {
+      "relative": "saluki_original_h_a1/context_lengths.json",
+      "bytes": 105376,
+      "sha256": "4690971f4ba056ed9e7a7c4197576b2e63abc1b0b7505e2b64f386b7083f20fa"
+    },
+    {
+      "relative": "saluki_original_h_a1/d_test_saluki_original_h_a1.jsonl",
+      "bytes": 400396,
+      "sha256": "99b238b1f5454a88092cb820d15d71a467a4c4aa0082cbb07e35888beb139dca"
+    },
+    {
+      "relative": "saluki_original_h_a1/saluki_summary.json",
+      "bytes": 334,
+      "sha256": "c688450f9fa5f3dcf7fb53637f8cf9a9b01b52d5a9a0412d7b785c7e8534c6cc"
+    },
+    {
+      "relative": "saluki_original_d_a1/started.json",
+      "bytes": 1455,
+      "sha256": "55dca1aa467711f9cba8e52db4b7e61d739ffb1883615ccbb2d9723cab91aca1"
+    },
+    {
+      "relative": "saluki_original_d_a1/job.log",
+      "bytes": 1183,
+      "sha256": "718303f479e5cb1709cb954a3b568722935e9643d810c0a53c2269c68e283547"
+    },
+    {
+      "relative": "saluki_original_d_a1/saluki_contract.json",
+      "bytes": 1176,
+      "sha256": "6c4e1dc8780de103b6d150811f83617408787f2899721a4d48137cb1360cc9c1"
+    },
+    {
+      "relative": "saluki_original_d_a1/dtest_server_saluki_original_d_a1.log",
+      "bytes": 2258640,
+      "sha256": "eb8dea6c62a7934ce70fab890e9c94611f93a6a44a475d41df6ce0e42091b6f4"
+    },
+    {
+      "relative": "saluki_original_d_a1/saluki_resources.jsonl",
+      "bytes": 124065,
+      "sha256": "13b079769e8f7cdd2b307f4c8dd13e18a0fee3d273ab4c8151c1b455bc54317c"
+    },
+    {
+      "relative": "saluki_original_d_a1/context_lengths.json",
+      "bytes": 212316,
+      "sha256": "6e7aac7b2e87c45f27f31572170e6786e92af8b52f4d20569fa93c40968bbe6d"
+    },
+    {
+      "relative": "saluki_original_d_a1/d_test_saluki_original_d_a1.jsonl",
+      "bytes": 858376,
+      "sha256": "b0ffe4268f6869c8417724955b820c361f45e6203b3eaa3a7911ec407e3fac3f"
+    },
+    {
+      "relative": "saluki_original_d_a1/saluki_summary.json",
+      "bytes": 336,
+      "sha256": "31803b947d6dd6ecc6ffa37abe630cb5882b4179025a97eeb2f0ad8012e9d29f"
+    },
+    {
+      "relative": "saluki_original_d2_a1/started.json",
+      "bytes": 1461,
+      "sha256": "b62f760950e5409de409b7e2d6235fa4340229e8c9589ba3103b1accb67e057b"
+    },
+    {
+      "relative": "saluki_original_d2_a1/job.log",
+      "bytes": 631,
+      "sha256": "d8bae614b282ae45866d5ce69ff947c8fdeba63039ad343a4f1ec0d460f437a3"
+    },
+    {
+      "relative": "saluki_original_d2_a1/saluki_contract.json",
+      "bytes": 1176,
+      "sha256": "2b3b5459bf425c3989d70bb9d299856574a12edbe6d5b7756e38cd8464e03bfc"
+    },
+    {
+      "relative": "saluki_original_d2_a1/dtest_server_saluki_original_d2_a1.log",
+      "bytes": 790920,
+      "sha256": "cb7767dcc02d807eb9598fc388458b413d37c11de65684d48d9b1907c9bd83bb"
+    },
+    {
+      "relative": "saluki_original_d2_a1/saluki_resources.jsonl",
+      "bytes": 58644,
+      "sha256": "c172237f2f483859bac7c4f8e60e35e0e91c24fb48b0d12dd1bb2b7b93b1e7de"
+    },
+    {
+      "relative": "saluki_original_d2_a1/context_lengths.json",
+      "bytes": 80096,
+      "sha256": "82a3f15b524693f07dbd99a4af1a26956a76ed79cfd86c34588393790cb4f686"
+    },
+    {
+      "relative": "saluki_original_d2_a1/d_test_saluki_original_d2_a1.jsonl",
+      "bytes": 326102,
+      "sha256": "3f8fe49d2da397b787019d7b4763fa1401f7d934f757a3ba774c8a6fa88fd2e8"
+    },
+    {
+      "relative": "saluki_original_d2_a1/saluki_summary.json",
+      "bytes": 335,
+      "sha256": "6880f7401ecf96c8b13fe611d13d5d9fc36c084fd1a6f69f4af2b51111c2758f"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_d/started.json",
+      "bytes": 1455,
+      "sha256": "252dd87d779ffc18ff51290e6ed27bc80bdd74fb1287697002c0ef4f452f871a"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_d/job.log",
+      "bytes": 382,
+      "sha256": "90e17e265f452c85d0d6159154fadc33489464d39d967c60944cc94c9f8cfffb"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_d/dtest_server_d_backlog_e4bbase_cosine_s20261012.log",
+      "bytes": 2244214,
+      "sha256": "8149122bc44633b1d19808f31075caaacf539e668d13b95a670450b8aa94fbc0"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_d/d_test_d_backlog_e4bbase_cosine_s20261012.jsonl",
+      "bytes": 486936,
+      "sha256": "ef333e1b3bba387bfe3560ce37c73cac92baa39d2003140011370c16d8a93cd1"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_d/started.json",
+      "bytes": 1455,
+      "sha256": "564043a23b586779b4074a287931ce453d36bc218886faae17604ad68bf2c774"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_d/job.log",
+      "bytes": 375,
+      "sha256": "3cd8b72b45d3bf39bd16b2fc205cc68b6a8b280a9f5a885d4391a8968d166816"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_d/dtest_server_d_backlog_e4bqat_cosine_s20261012.log",
+      "bytes": 2243072,
+      "sha256": "fc03090b69e52890ff3e3a15ef88924eb2e16aed60024c6866d35c665bb6eb37"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_d/d_test_d_backlog_e4bqat_cosine_s20261012.jsonl",
+      "bytes": 494778,
+      "sha256": "7dd61307b101136e746f0c3e167ee61d1947e63fd986fd4b3d68ea2e386c11ac"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_d2/started.json",
+      "bytes": 1460,
+      "sha256": "45f8ef98af3152d5b062c26dcc0a8b8b078f0b3306383c5d6a1571d612cf670f"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_d2/job.log",
+      "bytes": 221,
+      "sha256": "e37ef721221087a1bee82bcfda148a01ff40737e6d761690f8a1e46eabe0e254"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_d2/dtest_server_d2_backlog_e4bbase_cosine_s20261012.log",
+      "bytes": 785398,
+      "sha256": "dee5cd6f9a2a3cf7beac2be6dd5cddc5fa1b0a914c184958198d3d8dca2627b0"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_d2/d_test_d2_backlog_e4bbase_cosine_s20261012.jsonl",
+      "bytes": 188287,
+      "sha256": "6fb26541cabc3043436289599044883efc9a5af59e2c39b24b8f15720f7d1ca6"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_d2/started.json",
+      "bytes": 1460,
+      "sha256": "4ea7b29dcf250db17d7a696cae5da5c585e2a24d665135983c0d773476cc5482"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_d2/job.log",
+      "bytes": 217,
+      "sha256": "08e827d8b8e70226e73a2fd4e281de238c518c4f22c2901c6c49a49db8a43a95"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_d2/dtest_server_d2_backlog_e4bqat_cosine_s20261012.log",
+      "bytes": 785398,
+      "sha256": "eb91439e5d9f7371ff60149be0c21f7d9f184bcf01b7f12ef3e8a461db729fc5"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_d2/d_test_d2_backlog_e4bqat_cosine_s20261012.jsonl",
+      "bytes": 191739,
+      "sha256": "8c10f2685ef28fe9079d3cf1eed3fd2c676401fe915b8c70afe76eec1f48333a"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_h/started.json",
+      "bytes": 1457,
+      "sha256": "1683459c5de3df5475b382cd26f864d844a390389875faffac8e1f07e1c8f9f0"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_h/job.log",
+      "bytes": 217,
+      "sha256": "4840f8260b5b8342d8df144a6d69e193cc79ce0daa741ef8aa7ef51a3244b224"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_h/dtest_server_h_backlog_e4bbase_cosine_s20261012.log",
+      "bytes": 1074973,
+      "sha256": "f58a2802565fc562dc9e8bb15ccc7083cce3b194e7447f7adc645324434eca09"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_h/d_test_h_backlog_e4bbase_cosine_s20261012.jsonl",
+      "bytes": 223838,
+      "sha256": "28b5ff9dc2acc0e2a594311d28adbf76a5232333dcf7335a350fd01f82deee03"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_h/started.json",
+      "bytes": 1457,
+      "sha256": "09619aa904cb2de1db37c68785c49d6a1c7f442390a935fa4792c2bc590c29e0"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_h/job.log",
+      "bytes": 213,
+      "sha256": "34d71eb516ada53ea951696b8e703d36cb87e692112b616ef169522908207ba5"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_h/dtest_server_h_backlog_e4bqat_cosine_s20261012.log",
+      "bytes": 1074979,
+      "sha256": "638bf2a78eed9098a762faf133370f3a9568b8f7997d279f7b63102b924d60f5"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_h/d_test_h_backlog_e4bqat_cosine_s20261012.jsonl",
+      "bytes": 228678,
+      "sha256": "3209ba253e2f86e6fd2f05c7b40608901c4ff05a20cb98be7017129f566e735f"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_mx/started.json",
+      "bytes": 1460,
+      "sha256": "0d96aba6631dd31ee261cdc64c8e74f8eec4041b43b018d26aefd9b746b0b4ca"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_mx/job.log",
+      "bytes": 559,
+      "sha256": "af4d3e49c5023c3204a9e01ad6b5cd26454f97d845455553bdd3fce11f903cbc"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_mx/dtest_server_mx_backlog_e4bbase_cosine_s20261012.log",
+      "bytes": 3305081,
+      "sha256": "23dd3492d7e522799880169d549e1abe73abb84dedcd6a19257d05d483a88eae"
+    },
+    {
+      "relative": "e4bbase_cosine_s20261012_mx/d_test_mx_backlog_e4bbase_cosine_s20261012.jsonl",
+      "bytes": 713567,
+      "sha256": "aeecc361c924590476ad349c85924a19b6578c0156389307faeb047b233954ae"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_mx/started.json",
+      "bytes": 1460,
+      "sha256": "ec132f2d7a0e8d7a3c384675f0c5e4679bb59843240fb579c97e82b00d7ecf6b"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_mx/job.log",
+      "bytes": 547,
+      "sha256": "57d34f03b3615d755686793e2dd11b97095a4c6c6d403412675a4d703621faf5"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_mx/dtest_server_mx_backlog_e4bqat_cosine_s20261012.log",
+      "bytes": 3304002,
+      "sha256": "e219776508c2732c375a70ab4f5f16850a79367fb5b381712eb825bd4f43c023"
+    },
+    {
+      "relative": "e4bqat_cosine_s20261012_mx/d_test_mx_backlog_e4bqat_cosine_s20261012.jsonl",
+      "bytes": 724154,
+      "sha256": "89bd585e56b00688cdeef3210c1c17dc9438cac97c2e1088cd1da4b5bebcf7d9"
+    }
+  ],
+  "remote_local_sha_match": [
+    72,
+    72
+  ],
+  "jobs": [
+    "saluki_original_d3_a1",
+    "saluki_original_mx_a1",
+    "saluki_original_h_a1",
+    "saluki_original_d_a1",
+    "saluki_original_d2_a1",
+    "e4bbase_cosine_s20261012_d",
+    "e4bqat_cosine_s20261012_d",
+    "e4bbase_cosine_s20261012_d2",
+    "e4bqat_cosine_s20261012_d2",
+    "e4bbase_cosine_s20261012_h",
+    "e4bqat_cosine_s20261012_h",
+    "e4bbase_cosine_s20261012_mx",
+    "e4bqat_cosine_s20261012_mx"
+  ],
+  "saved": 27555,
+  "expected": 27555,
+  "originals": 5,
+  "our_trained_jobs": 8,
+  "observed_at_utc": "2026-10-08T22:55:16.188099+00:00"
+}

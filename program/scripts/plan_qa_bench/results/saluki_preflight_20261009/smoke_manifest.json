@@ -1,0 +1,29 @@
+{
+  "source": "program/scripts/plan_qa_bench/results/empty_probe/all_prompts_d3.json",
+  "source_rows": 360,
+  "source_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+  "selected_rows": 12,
+  "request_rows": 6,
+  "no_request_rows": 6,
+  "selected_ids": [
+    810000,
+    810004,
+    810009,
+    810016,
+    810019,
+    810025,
+    800000,
+    800001,
+    800002,
+    800120,
+    800121,
+    800122
+  ],
+  "smoke_sha256": "3b9a5b20fcb236fc5c140b353d2f05ff439dfe9be48a418de82bbaaafbaec726",
+  "prompt_text_unchanged": true,
+  "source_match_to_GPU_canonical_pending": true,
+  "gold_is_metadata_not_model_input": true,
+  "selection_rule": "one item each of six request types and first three items each of two no-request types",
+  "not_independent_holdout": true,
+  "purpose": "load/template/parser/memory smoke only"
+}

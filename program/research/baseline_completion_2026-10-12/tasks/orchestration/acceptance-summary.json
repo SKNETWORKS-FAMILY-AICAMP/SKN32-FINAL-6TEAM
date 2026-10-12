@@ -1,0 +1,681 @@
+{
+  "unit": {
+    "passed": 179,
+    "total": 179,
+    "evidence": "unit-final.xml"
+  },
+  "isolated_db": {
+    "passed": 129,
+    "total": 129,
+    "denominator": "3개 실행에서 동일 시험을 중복 제거하고 마지막 결과를 사용. 현재 사양으로 바꾼 시험 이름 3개를 대응시켰다.",
+    "runs": [
+      {
+        "run": "2026-10-12_042915",
+        "passed": 94,
+        "total": 97,
+        "exit": 1
+      },
+      {
+        "run": "2026-10-12_043751",
+        "passed": 53,
+        "total": 56,
+        "exit": 1
+      },
+      {
+        "run": "2026-10-12_044322",
+        "passed": 3,
+        "total": 3,
+        "exit": 0
+      }
+    ]
+  },
+  "network_blocks": 0,
+  "latest_db_outcomes": {
+    "tests/scenario/test_execution_plan_isolation.py::test_discovery_failure_keeps_only_affected_item_and_recovers_next_tick": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 5.375923499999772
+    },
+    "tests/scenario/test_execution_plan_isolation.py::test_discovery_exception_does_not_abort_independent_item": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 2.383650900000248
+    },
+    "tests/scenario/test_execution_plan_isolation.py::test_classification_failure_has_no_fixed_order_fallback_and_recovers": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 5.99388399999998
+    },
+    "tests/scenario/test_execution_plan_isolation.py::test_concurrent_proposals_from_same_version_write_only_once": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.4165628000000652
+    },
+    "tests/scenario/test_execution_plan_isolation.py::test_setting_changed_during_calculation_rejects_old_batch_notice": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.6334555000003093
+    },
+    "tests/scenario/test_execution_plan_isolation.py::test_expired_legacy_safety_pause_stays_active_until_manual_resume": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.6194259999997485
+    },
+    "tests/scenario/test_watch_batch.py::test_two_broken_items_of_one_trip_become_one_case_one_version_and_one_notice": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 2.8815362999998797
+    },
+    "tests/scenario/test_watch_batch.py::test_with_batching_off_each_item_keeps_its_own_case_version_and_notice": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 3.096968000000288
+    },
+    "tests/scenario/test_watch_batch.py::test_one_that_cannot_be_solved_does_not_block_the_rest_and_is_told_in_the_same_notice": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 1.9806993000001967
+    },
+    "tests/scenario/test_watch_batch.py::test_a_pinned_item_is_asked_while_the_rest_is_applied_and_the_question_is_against_the_new_version": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 2.5778337000001557
+    },
+    "tests/scenario/test_watch_batch.py::test_when_every_item_is_protected_no_version_is_written_and_each_question_is_against_the_current_version": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 3.5615459000000556
+    },
+    "tests/scenario/test_watch_batch.py::test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 4.100390899999638
+    },
+    "tests/scenario/test_watch_batch.py::test_the_safety_line_comes_first_and_the_notice_is_a_safety_alert": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 2.1525550999999723
+    },
+    "tests/scenario/test_watch_batch.py::test_an_item_already_covered_by_a_single_case_is_not_pulled_into_a_later_batch": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 3.548203299999841
+    },
+    "tests/scenario/test_watch_batch.py::test_a_source_failure_inside_a_completed_batch_is_reopened_alone_on_the_next_tick": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 3.1760188000002927
+    },
+    "tests/scenario/test_case_version_day.py::test_the_case_version_runs_the_whole_day_like_the_trip_version": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 8.518084799999997
+    },
+    "tests/scenario/test_case_version_day.py::test_re_requests_run_through_cases": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 7.1992841000001135
+    },
+    "tests/scenario/test_case_version_day.py::test_a_stale_base_version_is_escalated_not_applied": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 5.394406699999763
+    },
+    "tests/scenario/test_case_version_day.py::test_another_customers_trip_is_not_found": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.15978020000011384
+    },
+    "tests/scenario/test_case_version_day.py::test_the_same_disruption_opens_one_case": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 1.9006865999999718
+    },
+    "tests/scenario/test_case_version_day.py::test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_wrong": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 8.27061679999997
+    },
+    "tests/scenario/test_case_version_day.py::test_a_failing_interpreter_is_recorded_and_the_case_still_routes_by_classification": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.9922265999998672
+    },
+    "tests/scenario/test_case_version_day.py::test_every_notice_carries_the_plan_link_whichever_path_made_it": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 6.403213399999913
+    },
+    "tests/e2e/test_trip_guardian.py::test_on_and_off_change_the_stored_choice_and_leave_a_record": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 3.6310088999998698
+    },
+    "tests/e2e/test_trip_guardian.py::test_unanswered_is_off_and_explicit_skip_records_the_choice": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 2.2547058000000106
+    },
+    "tests/e2e/test_trip_guardian.py::test_a_pinned_item_is_still_asked_while_it_is_on": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.568548599999758
+    },
+    "tests/e2e/test_trip_guardian.py::test_only_a_logged_in_cookie_session_can_turn_it_on": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 4.165553400000135
+    },
+    "tests/e2e/test_trip_guardian.py::test_someone_elses_or_a_missing_trip_is_the_same_404": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 3.154663000000255
+    },
+    "tests/e2e/test_trip_guardian.py::test_a_wrong_body_is_refused[body0]": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.6543792000002213
+    },
+    "tests/e2e/test_trip_guardian.py::test_a_wrong_body_is_refused[body1]": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.8328105999999025
+    },
+    "tests/e2e/test_trip_guardian.py::test_a_wrong_body_is_refused[body2]": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.5033764999998311
+    },
+    "tests/e2e/test_trip_guardian.py::test_a_wrong_body_is_refused[body3]": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.4623435000003155
+    },
+    "tests/e2e/test_trip_guardian.py::test_a_wrong_body_is_refused[body4]": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.4891093999999612
+    },
+    "tests/e2e/test_trip_guardian.py::test_a_trip_without_a_survey_is_off_and_unrecorded": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.7360113999998248
+    },
+    "tests/e2e/test_trip_guardian.py::test_a_choice_made_at_registration_reads_back_as_registration": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.739106300000003
+    },
+    "tests/e2e/test_trip_guardian.py::test_skip_at_registration_reads_back_as_off": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.4412458000001607
+    },
+    "tests/e2e/test_trip_guardian.py::test_deleting_the_trip_deletes_its_guardian_record": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.844551600000159
+    },
+    "tests/e2e/test_trip_guardian.py::test_an_automatic_change_says_the_guardian_did_it_only_when_it_is_on": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.0967162000001736
+    },
+    "tests/e2e/test_trip_guardian.py::test_a_trip_that_never_turned_it_on_gets_no_changed_mark": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.1336700000001656
+    },
+    "tests/e2e/test_trip_guardian.py::test_the_off_user_gets_the_turn_on_offer_with_the_alternatives": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.5537423999999191
+    },
+    "tests/e2e/test_trip_guardian.py::test_the_offer_is_not_attached_where_turning_it_on_would_change_nothing[override0]": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.9975589999999102
+    },
+    "tests/e2e/test_trip_guardian.py::test_the_offer_is_not_attached_where_turning_it_on_would_change_nothing[override1]": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.8312425999997686
+    },
+    "tests/e2e/test_trip_guardian.py::test_the_offer_is_not_attached_where_turning_it_on_would_change_nothing[override2]": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.2466577000000143
+    },
+    "tests/e2e/test_trip_guardian.py::test_the_offer_is_not_attached_where_turning_it_on_would_change_nothing[override3]": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.318322700000408
+    },
+    "tests/e2e/test_trip_guardian.py::test_the_web_notice_list_carries_the_guardian_part": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.6842439999995804
+    },
+    "tests/e2e/test_trip_guardian.py::test_the_case_version_path_marks_it_too": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.0524421000000075
+    },
+    "tests/e2e/test_trip_guardian.py::test_the_outside_channels_get_the_lines_as_links": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.0005598000002464687
+    },
+    "tests/e2e/test_trip_guardian.py::test_the_record_cannot_be_rewritten": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.9003225000001294
+    },
+    "tests/e2e/test_safety_pause.py::test_an_earthquake_stops_the_rest_of_that_day_and_the_watchers_skip_it": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.37910520000014
+    },
+    "tests/e2e/test_safety_pause.py::test_the_safety_notice_leads_with_safety_and_lists_nearby_shelters_from_the_table": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.9331372999999985
+    },
+    "tests/e2e/test_safety_pause.py::test_the_same_event_does_not_stop_or_notify_twice": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.3856786999999713
+    },
+    "tests/e2e/test_safety_pause.py::test_an_event_from_yesterday_does_not_stop_today": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.6755843000000823
+    },
+    "tests/e2e/test_safety_pause.py::test_a_war_alert_stops_the_whole_trip_and_guides_to_civil_defense_shelters": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.150037099999736
+    },
+    "tests/e2e/test_safety_pause.py::test_a_big_earthquake_stops_the_whole_trip_and_a_later_severe_event_upgrades_a_day_stop": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.1124118000002454
+    },
+    "tests/e2e/test_safety_pause.py::test_with_no_shelter_data_the_notice_says_so_and_does_not_invent": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.2449764000002688
+    },
+    "tests/e2e/test_safety_pause.py::test_when_nothing_is_nearby_the_notice_says_nothing_was_found": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.3613522999999077
+    },
+    "tests/e2e/test_safety_pause.py::test_a_fire_is_stopped_with_official_guidance_only_no_shelter_list": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.9410807999997814
+    },
+    "tests/e2e/test_safety_pause.py::test_a_failed_check_never_stops_anything": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.9516728999997213
+    },
+    "tests/e2e/test_safety_pause.py::test_ordinary_messages_and_a_clear_check_stop_nothing": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.506436499999836
+    },
+    "tests/e2e/test_safety_pause.py::test_a_trip_outside_its_dates_is_not_swept": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.46964410000009593
+    },
+    "tests/e2e/test_safety_pause.py::test_a_trip_that_has_not_started_is_stopped_by_a_severe_event_until_the_user_resumes": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.497122799999943
+    },
+    "tests/e2e/test_safety_pause.py::test_a_day_level_event_does_not_stop_a_trip_that_has_not_started": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.410070899999937
+    },
+    "tests/e2e/test_safety_pause.py::test_an_earthquake_of_magnitude_six_stops_a_trip_that_has_not_started": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.9251266999999643
+    },
+    "tests/e2e/test_safety_pause.py::test_an_upcoming_trip_with_an_ordinary_message_or_a_failed_check_is_not_stopped": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.4786254000000554
+    },
+    "tests/e2e/test_safety_pause.py::test_the_trip_view_tells_an_upcoming_stop_apart": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.6902193000000807
+    },
+    "tests/e2e/test_safety_pause.py::test_the_reference_place_is_the_ongoing_then_next_then_last_item": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.0006063000000722241
+    },
+    "tests/e2e/test_safety_pause.py::test_an_official_release_is_told_once_and_the_stop_stays_until_the_user_resumes": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 3.163590600000134
+    },
+    "tests/e2e/test_safety_pause.py::test_a_release_of_another_kind_of_event_does_not_count": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.2040544000001319
+    },
+    "tests/e2e/test_safety_pause.py::test_resuming_closes_the_stop_and_the_same_event_does_not_stop_it_again": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.3986777000000075
+    },
+    "tests/e2e/test_safety_pause.py::test_a_new_different_event_after_resuming_stops_it_again": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.321592799999962
+    },
+    "tests/e2e/test_safety_pause.py::test_a_paused_trip_is_not_touched_by_the_watcher_tick": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 3.3907054000001153
+    },
+    "tests/e2e/test_safety_pause.py::test_the_trip_view_shows_the_stop_and_marks_the_paused_items": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 3.1439132999998947
+    },
+    "tests/e2e/test_safety_pause.py::test_resume_endpoint_is_for_the_owner_only_and_leaves_the_itinerary_alone": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 10.1539358
+    },
+    "tests/e2e/test_safety_pause.py::test_web_notices_carry_the_safety_guidance": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.7286644999999226
+    },
+    "tests/e2e/test_safety_pause.py::test_nearest_is_sorted_by_distance_and_limited_by_radius": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.15596569999979693
+    },
+    "tests/e2e/test_safety_pause.py::test_the_loader_upserts_without_duplicating_and_replace_clears_the_old_rows": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.8663430999999946
+    },
+    "tests/e2e/test_safety_pause.py::test_deleting_the_trip_deletes_its_stops": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.8080903000000035
+    },
+    "tests/e2e/test_safety_pause.py::test_while_paused_the_first_guidance_is_sent_again_every_interval_with_the_shelters": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.915288099999998
+    },
+    "tests/e2e/test_safety_pause.py::test_after_an_official_release_the_reminder_says_it_is_still_paused_until_the_user_resumes": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.4186579000001984
+    },
+    "tests/e2e/test_safety_pause.py::test_reminders_stop_at_the_cap": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 1.5603261999999631
+    },
+    "tests/e2e/test_safety_pause.py::test_reminders_stop_when_the_user_resumes": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.10302159999992
+    },
+    "tests/e2e/test_safety_pause.py::test_reminders_can_be_turned_off_in_the_settings": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.1127354000000196
+    },
+    "tests/e2e/test_safety_pause.py::test_the_next_morning_asks_once_whether_to_continue_and_never_resumes_by_itself": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 5.858255699999972
+    },
+    "tests/e2e/test_safety_pause.py::test_the_morning_question_after_an_official_release_says_it_was_lifted_but_still_paused": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 4.608080999999856
+    },
+    "tests/e2e/test_safety_pause.py::test_no_morning_question_after_the_user_resumed_or_when_it_is_turned_off": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 2.145652599999721
+    },
+    "tests/e2e/test_safety_recovery.py::test_districts_are_read_in_order_without_duplicates": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.00045930000032967655
+    },
+    "tests/e2e/test_safety_recovery.py::test_a_district_name_of_another_city_is_not_read_as_seoul": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.0003956000000471249
+    },
+    "tests/e2e/test_safety_recovery.py::test_items_are_sorted_into_affected_unknown_and_unaffected_by_the_named_districts": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.000529999999798747
+    },
+    "tests/e2e/test_safety_recovery.py::test_an_earthquake_or_a_text_without_districts_leaves_everything_unknown": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.0005263000002742046
+    },
+    "tests/e2e/test_safety_recovery.py::test_the_filter_drops_candidates_in_the_affected_area_and_marks_the_unknown_ones": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.00038429999995059916
+    },
+    "tests/e2e/test_safety_recovery.py::test_resuming_returns_the_brief_and_it_is_empty_before_resuming": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 4.0272555999999895
+    },
+    "tests/e2e/test_safety_recovery.py::test_a_choice_is_recorded_shown_again_and_never_changes_the_density": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 11.111324499999682
+    },
+    "tests/e2e/test_safety_recovery.py::test_replacing_the_affected_only_proposes_and_leaves_the_itinerary_alone": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 11.700437599999987
+    },
+    "tests/e2e/test_safety_recovery.py::test_an_unknown_pause_or_someone_elses_trip_is_not_found": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 13.758834300000217
+    },
+    "tests/e2e/test_safety_recovery.py::test_an_earthquake_brief_has_no_confirmed_item_and_the_event_text_is_shown": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 5.351976800000102
+    },
+    "tests/e2e/test_safety_recovery.py::test_deleting_the_trip_deletes_its_activity_records": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 17.57067599999982
+    },
+    "tests/e2e/test_safety_recovery.py::test_suggestions_are_requested_only_for_confirmed_items_with_the_area_filter": {
+      "outcome": "passed",
+      "run": "2026-10-12_042915",
+      "seconds": 0.0005489000000125088
+    },
+    "tests/e2e/test_ask_first.py::test_ask_first_does_not_change_the_day_and_asks_instead": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 2.0198993999997583
+    },
+    "tests/e2e/test_ask_first.py::test_the_watcher_does_not_ask_the_same_thing_every_three_minutes": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 2.537286700000095
+    },
+    "tests/e2e/test_ask_first.py::test_choosing_an_option_applies_it_and_closes_the_question": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 2.1344057000001158
+    },
+    "tests/e2e/test_ask_first.py::test_keeping_the_original_changes_nothing": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 1.55454409999993
+    },
+    "tests/e2e/test_ask_first.py::test_no_answer_until_the_item_ends_closes_it_without_changing": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 1.8603769999999713
+    },
+    "tests/e2e/test_ask_first.py::test_a_stale_choice_is_refused": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 1.6689698000000135
+    },
+    "tests/e2e/test_ask_first.py::test_an_item_marked_do_not_change_is_asked_about_even_by_default": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 1.115371100000175
+    },
+    "tests/e2e/test_ask_first.py::test_what_counts_as_a_safety_event[report0-True]": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.0003613000003497291
+    },
+    "tests/e2e/test_ask_first.py::test_what_counts_as_a_safety_event[report1-True]": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.0003725999999915075
+    },
+    "tests/e2e/test_ask_first.py::test_what_counts_as_a_safety_event[report2-True]": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.0008041000000957865
+    },
+    "tests/e2e/test_ask_first.py::test_what_counts_as_a_safety_event[report3-False]": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.0023823999999876833
+    },
+    "tests/e2e/test_ask_first.py::test_what_counts_as_a_safety_event[report4-False]": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.0010280999999849882
+    },
+    "tests/e2e/test_ask_first.py::test_what_counts_as_a_safety_event[report5-False]": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.00038130000029923394
+    },
+    "tests/e2e/test_ask_first.py::test_what_counts_as_a_safety_event[None-False]": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.00034529999993537785
+    },
+    "tests/e2e/test_ask_first.py::test_ask_first_with_a_safety_event_only_alerts": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.00042860000030486844
+    },
+    "tests/e2e/test_ask_first.py::test_unanswered_safety_event_alerts_and_explicit_enable_allows_change": {
+      "outcome": "passed",
+      "run": "2026-10-12_044322",
+      "seconds": 0.0007515000002058514
+    },
+    "tests/e2e/test_ask_first.py::test_a_do_not_change_item_hit_by_a_safety_event_is_asked_with_a_safety_head": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.000418699999954697
+    },
+    "tests/e2e/test_ask_first.py::test_money_alone_does_not_protect_an_item": {
+      "outcome": "passed",
+      "run": "2026-10-12_044322",
+      "seconds": 0.0004969999999957508
+    },
+    "tests/e2e/test_trip_survey.py::test_without_a_survey_nothing_changes": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.270719999999983
+    },
+    "tests/e2e/test_trip_survey.py::test_pace_fills_the_density_target_and_the_team_default_day": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.2608864999997422
+    },
+    "tests/e2e/test_trip_survey.py::test_each_pace_maps_to_its_preset[moderate-0.55]": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.23433909999994285
+    },
+    "tests/e2e/test_trip_survey.py::test_each_pace_maps_to_its_preset[packed-0.7]": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.22747700000036275
+    },
+    "tests/e2e/test_trip_survey.py::test_a_density_the_user_gave_wins_over_the_survey": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.2391922000001614
+    },
+    "tests/e2e/test_trip_survey.py::test_a_density_without_a_target_takes_the_target_from_the_survey": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.18311080000012225
+    },
+    "tests/e2e/test_trip_survey.py::test_a_malformed_survey_is_refused_and_nothing_is_stored[survey0-on_disruption]": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.0822294999998121
+    },
+    "tests/e2e/test_trip_survey.py::test_a_malformed_survey_is_refused_and_nothing_is_stored[survey1-pace]": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.06731219999983296
+    },
+    "tests/e2e/test_trip_survey.py::test_a_malformed_survey_is_refused_and_nothing_is_stored[survey2-unknown_question]": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.08860770000001139
+    },
+    "tests/e2e/test_trip_survey.py::test_a_malformed_survey_is_refused_and_nothing_is_stored[survey3-version]": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.08311630000025616
+    },
+    "tests/e2e/test_trip_survey.py::test_team_defined_details_are_kept_as_given": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.30134640000005675
+    },
+    "tests/e2e/test_trip_survey.py::test_the_unanswered_default_requires_asking_first": {
+      "outcome": "passed",
+      "run": "2026-10-12_044322",
+      "seconds": 0.00047590000031050295
+    },
+    "tests/e2e/test_trip_survey.py::test_no_item_days_means_no_invented_window": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.00028639999982260633
+    },
+    "tests/e2e/test_trip_survey.py::test_the_filled_window_uses_every_item_day_once": {
+      "outcome": "passed",
+      "run": "2026-10-12_043751",
+      "seconds": 0.0003428999998504878
+    }
+  },
+  "finished_at_kst": "2026-10-12T04:43:59.881485+09:00"
+}

@@ -1,0 +1,24 @@
+Perform a narrowly scoped, independent READ-ONLY closing delta review of frozen candidate v12:
+C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_022208_plugin_v12
+The prior actual Opus/Sonnet v11 full review found two static concerns, which Codex then reproduced with actual state reducers and memory/component seams. Those BEFORE reproductions are not real DB/HTTP tests. v11 original full isolated Linux 468/468 is preserved. v12 full isolated Linux run is separately underway; inspect its result only if already available, otherwise do not claim it passed.
+
+ONLY product delta from v11 is trip_messages.py _run_decision:
+1. safe_read validates snapshot.base_version against both current_context.version (before resolver/classification) and fresh current.version (after classification/routing but before answer).
+2. safe_read detail calls _place_extras on a separate get_connection connection. The component place_info may rollback its connection on known SQL errors; separate connection preserves the main Case lock and uncommitted state transitions. Non-safe legacy paths unchanged.
+
+Required reads within candidate (full relevant functions):
+- app/domains/travel_ops/components/conversation/trip_messages.py _run_decision and handle_trip_message existing retry entry.
+- fact_read_retry.py: restore, lock_read_case, retry_read.
+- app/domains/travel_ops/components/places/place_info.py: place_info/_catalog_row rollback handling.
+- tests/unit/travel/test_fact_read_recovery.py new version drift and rollback cases.
+- tests/e2e/test_fact_read_recovery_web.py new context/fresh race cases and rollback completion case.
+- review-notes/read-boundary-followup.md.
+v11 corresponding product source is permitted for comparison. No shared product/credentials/customer data may be read.
+
+Check the version checks reject before answering and roll back Case transitions rather than losing input; the second check is after uncommitted classification/routing and outer connection must rollback on failure. Check no same-connection savepoint is incorrectly trusted to contain an inner conn.rollback. Separate enrichment connection must not call LLM/Team or mutate Case. Check the new HTTP tests use a real append_version on another connection rather than merely returning a fabricated version, and use current public fixed409 JSON rather than unsafe exception text. GPS must stay memory-only. Business gating and side-effect once semantics must remain unchanged. Do not expand to unrelated redesigns. Distinguish any residual read staleness that is permitted by point-in-time reads from this specific mixed-version bug; do not demand global itinerary locks as an unrequested policy change.
+
+Execute this exact synthetic pure unit command ONCE with a sufficiently long timeout (do not run it in background):
+"C:/Users/playdata2/anaconda3/python.exe" wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/v12-read-boundary-final-unit.py
+PreToolUse denies every other Bash command including ls/cd/chains. Use Read/Glob/Grep for inspection. No edits/writes, DB/network/HTTP/operating API/deployment. Never read .env, keys, credentials, customer data, datasets, connection secrets. Runner uses synthetic placeholder settings and external IO0. Expected94 tests but report actual result. It includes A30+B14+existing50, not actual PG/HTTP. Do not claim the model directly executed DB tests.
+
+Report in Korean: confirmed defects first with exact candidate file/line and minimal prerequisite/repro; separate static concerns from executed evidence. If none found in this narrow delta, say that narrowly. Include direct files read, exact test count/output, actual model and unverified conditions/permission denials. No source modification.

@@ -1,9 +1,21 @@
+---
+type: guide
+title: Case 상태 전이도
+description: 코드의 상태·전이 표에서 만드는 상태 전이도와 전이 목록
+status: draft
+domain: neutral
+automation:
+  command: python -m scripts.make_state_diagram
+  owner: process:state-diagram
+  manual_edit: false
+---
+
 <!-- 이 파일은 `python -m scripts.make_state_diagram` 이 만든다. 손으로 고치지 않는다. -->
 <!-- 출처: app/core/case_lifecycle/events.py:TRANSITIONS -->
 
 # Case 상태 전이도 (자동 생성)
 
-상태 12개 · 전이 25개. 이 표에 없는 전이는 `transition_case()` 가 거부한다.
+상태 12개 · 전이 26개. 이 표에 없는 전이는 `transition_case()` 가 거부한다.
 
 ```mermaid
 stateDiagram-v2
@@ -30,6 +42,7 @@ stateDiagram-v2
     waiting_external --> escalated: wait_expired
     resuming --> escalated: resume_failed
     resuming --> running: resumed
+    resuming --> resuming: routed
     resolved --> cancelled: cancelled_by_user
     escalated --> cancelled: cancelled_by_user
     failed --> escalated: failure_escalated
@@ -62,7 +75,12 @@ stateDiagram-v2
 |  | `wait_expired` | `escalated` |
 | `resuming` | `resume_failed` | `escalated` |
 |  | `resumed` | `running` |
+|  | `routed` | `resuming` |
 | `resolved` | `cancelled_by_user` | `cancelled` |
 | `escalated` | `cancelled_by_user` | `cancelled` |
 | `failed` | `failure_escalated` | `escalated` |
 | `cancelled` | 없음 | 끝 |
+
+## 관계
+
+- [Case 생명주기](case-lifecycle.md) — 상태와 전이의 책임·경계

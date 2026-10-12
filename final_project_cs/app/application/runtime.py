@@ -24,6 +24,12 @@
 from __future__ import annotations
 
 import threading
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import dataclass
+from functools import wraps
+
+from app.core.service_bindings import bind_services
 from typing import Any
 
 #: 반영 상태. ★`pending_reload` 를 쓰지 않는다 — 이 런타임은 스스로 폴링하지
@@ -38,6 +44,15 @@ STATE_FAILED = "reload_failed"
 STATE_UNKNOWN = "unknown"
 
 
+@dataclass(frozen=True)
+class RuntimeSnapshot:
+    controller: Any
+    revision: str | None
+
+
+_pinned: ContextVar[tuple | None] = ContextVar("runtime_snapshot", default=None)
+
+
 class RuntimeComposition:
     """조립된 Controller 하나 + 그것을 만든 revision.
 
@@ -47,19 +62,47 @@ class RuntimeComposition:
 
     def __init__(self, controller: Any, revision: str | None) -> None:
         self._lock = threading.Lock()
-        self._controller = controller
-        self._revision = revision
+        self._reload_lock = threading.Lock()
+        self._snapshot = RuntimeSnapshot(controller, revision)
         self._error: str | None = None
         self._failed_revision: str | None = None
 
+    def snapshot(self) -> RuntimeSnapshot:
+        pinned = _pinned.get()
+        if pinned is not None and pinned[0] is self:
+            return pinned[1]
+        return self.published_snapshot()
+
+    def published_snapshot(self) -> RuntimeSnapshot:
+        """Control-plane reads observe the published generation, not a request pin."""
+        with self._lock:
+            return self._snapshot
+
+    def serialize_reload(self, method):
+        @wraps(method)
+        def call(*args, **kwargs):
+            with self._reload_lock:
+                return method(*args, **kwargs)
+        return call
+
+    @contextmanager
+    def pin(self):
+        snapshot = self.snapshot()
+        token = _pinned.set((self, snapshot))
+        try:
+            with bind_services(getattr(snapshot.controller, "service_bindings", None)):
+                yield snapshot
+        finally:
+            _pinned.reset(token)
+
     @property
     def controller(self) -> Any:
-        return self._controller
+        return self.snapshot().controller
 
     @property
     def active_revision(self) -> str | None:
         """★`None` 은 "모름" 이다(주입된 Controller 등). 지어내지 않는다."""
-        return self._revision
+        return self.snapshot().revision
 
     @property
     def last_error(self) -> str | None:
@@ -73,15 +116,21 @@ class RuntimeComposition:
         """저장소의 선언과 견줘 지금 상태를 말한다."""
         if self._error is not None and self._failed_revision == desired_revision:
             return STATE_FAILED
-        if self._revision is None or desired_revision is None:
+        active_revision = self.published_snapshot().revision
+        if active_revision is None or desired_revision is None:
             return STATE_UNKNOWN
-        return STATE_ACTIVE if self._revision == desired_revision else STATE_STALE
+        return STATE_ACTIVE if active_revision == desired_revision else STATE_STALE
 
     def swap(self, controller: Any, revision: str | None) -> None:
         """새 조립으로 갈아 끼운다. 성공한 조립만 여기 들어온다."""
+        table = getattr(controller, "service_bindings", None)
+        if table is not None:
+            if table.revision != revision or getattr(controller, "composition_revision", None) != revision:
+                raise ValueError("controller and service table revision must match publication")
+            if table.registry is not controller.registry:
+                raise ValueError("controller and service table must share a registry")
         with self._lock:
-            self._controller = controller
-            self._revision = revision
+            self._snapshot = RuntimeSnapshot(controller, revision)
             self._error = None
             self._failed_revision = None
 

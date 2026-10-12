@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-09",
+  "observed_at_kst": "2026-10-09T10:15:13.532449+09:00",
+  "papers": [
+    {
+      "id": "2610.09412v1",
+      "title": "Finding the Right Balance: Relevance and Diversity in LLM Retrieval",
+      "publication": "2026-10-07",
+      "checked": "2026-10-09",
+      "recency": "Newly reviewed recent paper; not claimed published after last survey",
+      "sources": [
+        "https://arxiv.org/abs/2610.09412",
+        "https://arxiv.org/html/2610.09412v1",
+        "https://github.com/GuillaumeBrouillette/finding-the-right-balance"
+      ],
+      "official_code_commit": "not pinned; independently implemented equations, no upstream source copied",
+      "problem": "Repeated similar evidence can occupy top-k; indiscriminate diversity can displace correct evidence",
+      "method": "RNG score with strict closer-neighbor obstruction and selective Vendi/MMR; h1 exact nearest fallback",
+      "conditions": "Strong/weak encoders, fixed pools; multi-evidence QA, controlled duplicates/overlap; h deployment estimator remains unresolved",
+      "cost": "Existing normalized embeddings, small CPU matrix operations; no teacher/generator/model download",
+      "risk": "False h2 assumption and clean-pool diversification lower relevance; alternate acceptable gold documents do not establish complementary evidence",
+      "developer_sets": "RAG A180 and previously used B160; not itinerary A-E or fresh holdout",
+      "holdout": "New independent travel retrieval evidence labels required; previously used H not read",
+      "criteria": "Each set Recall@3>=90%, null false display<=2%, shown gold>=dense baseline, no new null false positives",
+      "state": "Implemented, logic7/7; frozen five-variant measurement complete; gates failed; not adopted"
+    },
+    {
+      "id": "2609.34776v1",
+      "title": "Page-Aware Retrieval-Augmented Generation for EvalLLM 2026",
+      "publication": "2026-09-28",
+      "checked": "2026-10-09",
+      "recency": "Recent background found after expanding window",
+      "sources": [
+        "https://arxiv.org/abs/2609.34776",
+        "https://arxiv.org/html/2609.34776v1"
+      ],
+      "official_code_commit": "Not identified in inspected manuscript; implementation availability not exhaustively established",
+      "problem": "Semantic and lexical retrieval disagree; multi-part request may need separate evidence",
+      "method": "Page-aware PDF chunks, dense/BM25 RRF, cross-encoder, optional query decomposition",
+      "conditions": "French PDF595 challenge; 220-word chunks/40 overlap; RRF constant60/pools60; rerank25; gpt-5.4-mini generation",
+      "cost": "RRF CPU low; cross-encoder/decomposition add inference and latency",
+      "risk": "Dense or fused retrieval can underperform BM25; decomposition prompts/count/aggregation incompletely specified",
+      "developer_sets": "Same frozen RAG A180/B160 for isolated RRF component only",
+      "holdout": "New independent retrieval labels; no final holdout accessed",
+      "criteria": "Same per-set retrieval/null gate as preregistration; no full-PDF or generator reproduction claim",
+      "state": "RRF component implemented/tested; A null false4->2, B recall35->33; failed, no product change"
+    },
+    {
+      "id": "2509.20758v3",
+      "title": "SFT Doesn't Always Hurt General Capabilities",
+      "publication": "2025-09-25",
+      "revision_date": "2026-01-28",
+      "checked": "2026-10-09",
+      "recency": "Older background/reproduction candidate; not new October result",
+      "sources": [
+        "https://arxiv.org/abs/2509.20758",
+        "https://arxiv.org/html/2509.20758v3"
+      ],
+      "official_code_commit": "Not pinned in this review; implementation deferred",
+      "problem": "Our trained models trade lower false picks for lower normal-request accuracy",
+      "method": "Low learning rate and detached token-loss-dependent TALR weights with floor; weighted mean over supervised tokens, not weight renormalization",
+      "conditions": "Domain supervised tasks and general capability checks; validate tau/floor/masking and packed batches before recipe",
+      "cost": "Same teacher-free forward/backward, added per-token loss and class diagnostics",
+      "risk": "Rare item IDs and null tokens may receive lower weight; short JSON target differs from paper tasks",
+      "developer_sets": "Fixed normal/null/compound and D/H/E regression diagnostics; current FINCH/cosine repeat must finish first",
+      "holdout": "Independent travel normal240/null480, human adjudication and frozen hashes pending",
+      "criteria": "No normal-request regression, null upper limit and independent holdout; multiple paired seeds, no best-seed selection",
+      "state": "Method reviewed; not implemented, queued or adopted; resume with class/token-loss probe after existing controlled schedules"
+    }
+  ],
+  "survey_scope": "Selected primary sources, not exhaustive publication inventory; searched last-day terms then broadened recent window",
+  "search_queries": [
+    "site.arxiv.org/abs/2610 Oct2026 retrieval augmented generation small language model",
+    "site.arxiv.org 8Oct2026 retrieval fine tuning"
+  ],
+  "preregistration": "program/research/daily_rag_slm/2026-10-09_retrieval_prereg_v1.json",
+  "measurement": "program/scripts/rag_gate/results/daily_20261009_selective_v1/summary.json",
+  "code": "program/scripts/rag_gate/rag_improve/selective_retrieval_20261009.py",
+  "no_more_parameter_tuning_on_same_sets_today": true,
+  "independent_validation_completed": false,
+  "adopted": false
+}

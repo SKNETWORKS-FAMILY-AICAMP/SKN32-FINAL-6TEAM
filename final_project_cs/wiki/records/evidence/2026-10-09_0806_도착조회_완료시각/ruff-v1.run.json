@@ -1,0 +1,13 @@
+{
+  "command": [
+    "C:/Users/playdata2/anaconda3/python.exe",
+    "-m",
+    "ruff",
+    "check",
+    "app/domains/travel_ops/ports/data_sources/seoul_bus.py",
+    "app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+    "tests/unit/travel/mobility/test_arrival_query_clock_v1.py",
+    "tests/unit/travel/mobility/test_arrival_query_assembly_v1.py"
+  ],
+  "exit_code": 0
+}

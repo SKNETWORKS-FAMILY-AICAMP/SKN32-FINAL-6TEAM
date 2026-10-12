@@ -27,6 +27,8 @@ export const itemEdit = {
   /** `[2026-10-07]` What kind of stop it is — `dining` goes with a meal place picked for an activity stop (`basis: meal_inferred`), or the meal lands in an activity. */
   kind: (item: Target, kind: string) => edit(item, "kind", kind),
   date: (item: Target, isoDate: string) => edit(item, "date", isoDate),
+  /** `[2026-10-07]` The customer picked one of two readings of a photo's line (the stop's name or its booking number) — the value goes as written. */
+  reading: (item: Target, field: "title" | "booking_no", value: string) => edit(item, field, value),
   starts: (item: Target, hhmm: string) => edit(item, "starts_at", hhmm),
   ends: (item: Target, hhmm: string) => edit(item, "ends_at", hhmm),
 };

@@ -1,0 +1,76 @@
+from pathlib import Path
+import hashlib
+import json
+import os
+import subprocess
+import sys
+import time
+
+W = Path(__file__).resolve().parents[2]
+CS = W / 'final_project_cs'
+TMP = Path(__file__).parent
+metadata = json.loads((TMP / 'express-notice-race-work-v1.json').read_text(encoding='utf8'))
+EV = CS / 'wiki/records/evidence' / metadata['tag']
+prior = json.loads((CS / 'wiki/records/evidence/2026-10-09_0648_저장안내_급행판/regression-end-hashes-v1.json').read_text(encoding='utf8'))
+files = {W / name for name in prior if '/_backup/' not in name}
+files.update((CS / 'tests/unit/travel/mobility').glob('*.py'))
+files.update((CS / 'tests/unit/travel').glob('test_departure*.py'))
+files.update((CS / 'tests/scenario').glob('test_departure*.py'))
+files.update((CS / 'app/domains/travel_ops/components/watch').glob('*.py'))
+files.update(CS / name for name in ('app/composition.py',
+    'app/domains/travel_ops/instances/mobility/wiring.py',
+    'app/domains/travel_ops/components/itinerary/itinerary.py',
+    'app/domains/travel_ops/instances/_shared/itinerary_team.py',
+    'app/domains/travel_ops/scenarios/case_engine.py',
+    'app/infrastructure/db/session.py', 'tests/scenario/test_trip_reminders.py',
+    'tests/scenario/test_reminder_query_budget_v1.py'))
+files = {p for p in files if p.is_file()}
+sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+
+def snapshot(name):
+    result = {p.relative_to(W).as_posix(): sha(p) for p in sorted(files)}
+    target = EV / name
+    assert not target.exists()
+    target.write_text(json.dumps(result, indent=2), encoding='utf8')
+    return result
+
+part = sys.argv[1]
+if part == 'start':
+    print(json.dumps({'start_files': len(snapshot('regression-start-hashes-v1.json'))}), flush=True)
+elif part == 'end':
+    end = snapshot('regression-end-hashes-v1.json')
+    start = json.loads((EV / 'regression-start-hashes-v1.json').read_text(encoding='utf8'))
+    assert start == end
+    print(json.dumps({'unchanged_files': len(end)}), flush=True)
+else:
+    if part == 'base':
+        tests = sorted(p for p in (CS / 'tests/unit/travel/mobility').glob('test_*.py')
+                       if p.name not in ('test_taxi_fallback.py', 'test_review_fixes_wiring.py'))
+    elif part == 'taxi':
+        tests = [CS / 'tests/unit/travel/mobility/test_taxi_fallback.py']
+    elif part == 'wiring':
+        tests = [CS / 'tests/unit/travel/mobility/test_review_fixes_wiring.py']
+    elif part == 'integration':
+        tests = sorted((CS / 'tests/unit/travel').glob('test_departure*.py'))
+        tests += sorted((CS / 'tests/scenario').glob('test_departure*.py'))
+        tests += [CS / 'tests/scenario/test_trip_reminders.py', CS / 'tests/scenario/test_reminder_query_budget_v1.py']
+    else:
+        raise ValueError(part)
+    temp = TMP / f'express-notice-race-temp-v1-{part}'
+    temp.mkdir(exist_ok=False)
+    env = dict(os.environ, TEMP=str(temp), TMP=str(temp), TMPDIR=str(temp), PYTHONIOENCODING='utf8')
+    command = [sys.executable, '-m', 'pytest', *[str(p.relative_to(CS)) for p in tests], '-q',
+               '-o', 'faulthandler_timeout=90', '-m', 'not live and not mobility_full',
+               '--basetemp', str(TMP / f'express-notice-race-full-pytest-v1-{part}'),
+               '--junitxml', str(TMP / f'express-notice-race-full-v1-{part}.xml')]
+    log = TMP / f'express-notice-race-full-v1-{part}.log'
+    assert not log.exists()
+    started = time.perf_counter()
+    with log.open('w', encoding='utf8') as out:
+        result = subprocess.run(command, cwd=CS, env=env, stdout=out, stderr=subprocess.STDOUT, timeout=900)
+    record = dict(part=part, exit_code=result.returncode, seconds=time.perf_counter()-started)
+    target = TMP / f'express-notice-race-run-v1-{part}.json'
+    assert not target.exists()
+    target.write_text(json.dumps(record), encoding='utf8')
+    print(json.dumps(record), flush=True)
+    sys.exit(result.returncode)

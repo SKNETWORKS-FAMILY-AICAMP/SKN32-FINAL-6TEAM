@@ -294,3 +294,71 @@ def test_datacheck_reads_the_manifest_the_mobility_owner_ships(mini):
     tt.write_text(tt.read_text(encoding="utf-8").replace("01호선", "01호선 ", 1), encoding="utf-8")   # 내용만 바뀐다
     bad = datacheck.check()
     assert not bad["ok"] and {m["file"] for m in bad["mismatched"]} == {"timetable"}, bad
+
+
+def test_precision_timetable_override_does_not_read_unrelated_sidecar(mini, tmp_path):
+    """다른 시간표를 지정하면 원래 자료 폴더의 보조표를 섞지 않는다."""
+    from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
+    m = mini / "travel" / "processed" / "mobility"
+    (m / "published_train_precision_v1.json.gz").write_bytes(b"unrelated-invalid-sidecar")
+    alternate = tmp_path / "alternate"
+    alternate.mkdir()
+    timetable = alternate / "timetable_v1.jsonl"
+    timetable.write_bytes((m / "timetable_v1.jsonl").read_bytes())
+    rt = build_verifier(data_dir=mini, paths={"timetable": timetable}, quiet=True,
+                        gh_url="", seoul_key="", local_router=False)
+    assert rt._v.tt.train_precision is None
+    assert Path(rt.source_mtimes["train_precision"][0]) == alternate / "published_train_precision_v1.json.gz"
+    assert 'train_precision' not in rt.changed_sources()
+    (alternate / "published_train_precision_v1.json.gz").write_bytes(b'newly-created')
+    assert 'train_precision' in rt.changed_sources()
+
+
+def test_precision_explicit_path_is_loaded_and_watched(mini, tmp_path):
+    """명시한 보조표가 실제 적재되고 변경 감시도 같은 파일을 본다."""
+    import gzip
+    import hashlib
+    from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
+    m = mini / "travel" / "processed" / "mobility"
+    companion = tmp_path / "explicit-precision.json.gz"
+    doc = {"schema_version": 1, "runs": [],
+           "timetable_sha256": hashlib.sha256((m / "timetable_v1.jsonl").read_bytes()).hexdigest()}
+    with gzip.open(companion, "wt", encoding="utf-8") as f:
+        json.dump(doc, f)
+    rt = build_verifier(data_dir=mini, paths={"train_precision": companion}, quiet=True,
+                        gh_url="", seoul_key="", local_router=False)
+    assert rt._v.tt.train_precision is not None
+    assert Path(rt.source_mtimes["train_precision"][0]) == companion
+    assert "train_precision" not in rt.changed_sources()
+    previous = companion.stat().st_mtime
+    os.utime(companion, (previous + 2, previous + 2))
+    assert "train_precision" in rt.changed_sources()
+
+
+def test_precision_manifest_declared_file_cannot_disappear(mini):
+    """보조표 없는 옛 자료는 허용하되 명세에 약속한 보조표 누락은 막는다."""
+    from app.domains.travel_ops.instances.mobility.engine import datacheck
+    paths.configure(mini)
+    datacheck.write_manifest()
+    mp = datacheck.manifest_path()
+    doc = json.loads(mp.read_text(encoding='utf-8'))
+    doc['files']['train_precision'] = {'name': 'published_train_precision_v1.json.gz',
+                                       'bytes': 123, 'sha256': 'not-used'}
+    mp.write_text(json.dumps(doc), encoding='utf-8')
+    result = datacheck.check()
+    assert not result['ok']
+    assert {m['file'] for m in result['mismatched']} == {'train_precision'}
+
+
+def test_precision_change_preserving_mtime_is_detected(mini):
+    from app.domains.travel_ops.instances.mobility.engine.runtime import Runtime, _precision_signature
+    m = mini / 'travel' / 'processed' / 'mobility'
+    sidecar = m / 'published_train_precision_v1.json.gz'
+    sidecar.write_bytes(b'first')
+    mt = sidecar.stat().st_mtime
+    rt = Runtime(None, timetable_built_at='test', rules_version='test', stats={},
+                 source_mtimes={'train_precision': (str(sidecar), mt)},
+                 train_precision_source=_precision_signature(sidecar))
+    sidecar.write_bytes(b'other')
+    os.utime(sidecar, (mt, mt))
+    assert rt.changed_sources() == ['train_precision']

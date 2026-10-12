@@ -1,0 +1,12 @@
+[
+  {
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-09_0228_회전제약_차량탐색\\graph_router.py.bak",
+    "file": "app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+    "sha256": "93E46FC0CBB876FA205E636C66D14B6A944FDBB581B07C07D1EBCA0C7A942A18"
+  },
+  {
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\teams\\_backup\\2026-10-09_0228_회전제약_차량탐색\\mobility.md.bak",
+    "file": "wiki/teams/mobility.md",
+    "sha256": "704E5A16C7A2A711EC4E8A4F8C0061FD2F5537268CD804A8EE2B1388F34E4CBD"
+  }
+]

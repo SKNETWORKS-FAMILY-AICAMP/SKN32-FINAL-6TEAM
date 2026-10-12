@@ -39,7 +39,7 @@ def test_arrivals_are_normalized_and_the_key_stays_in_the_path_only():
     t = got["trains"]
     assert [(x["line"], x["direction"], x["eta_seconds"]) for x in t] == [("2호선", "내선", 180), ("7호선", "상행", 0)]
     assert t[0]["message"] == "3분 후 (역삼)" and "raw" not in t[0]
-    assert seen[0].startswith("http://swopenapi.seoul.go.kr/api/subway/" + KEY + "/json/realtimeStationArrival/0/20/")
+    assert seen[0].startswith("http://swopenapi.seoul.go.kr/api/subway/" + KEY + "/json/realtimeStationArrival/0/1000/")
     assert "%EA%B0%95%EB%82%A8" in seen[0] and clean_station("강남역") == "강남" and clean_station("서울") == "서울"
 
 

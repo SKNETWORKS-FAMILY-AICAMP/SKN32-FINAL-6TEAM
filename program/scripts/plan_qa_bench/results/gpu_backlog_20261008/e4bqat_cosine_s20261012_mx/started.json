@@ -1,0 +1,24 @@
+{
+  "job": {
+    "id": "e4bqat_cosine_s20261012_mx",
+    "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+    "our_training": true,
+    "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+    "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+    "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+    "prompts": "/workspace/heavy/all_prompts_mx.json",
+    "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+    "script": "/workspace/heavy/d_test_llama_lp.py",
+    "tag": "mx_backlog_e4bqat_cosine_s20261012",
+    "port": 8401,
+    "logprobs": "1",
+    "expected": 4014,
+    "purpose": "Missing evaluation of completed cosine comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+    "lora": "/tmp/tripilot_cosine_s20261012_20261009_lora.gguf",
+    "lora_sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b"
+  },
+  "started": "2026-10-08T22:01:07.055118+00:00",
+  "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+  "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+  "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+}

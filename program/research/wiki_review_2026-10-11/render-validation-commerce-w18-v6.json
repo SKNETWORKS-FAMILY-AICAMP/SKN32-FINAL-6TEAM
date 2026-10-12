@@ -1,0 +1,87 @@
+{
+  "passed": 19,
+  "total": 19,
+  "checks": [
+    {
+      "name": "1280px 페이지 가로 넘침 없음",
+      "pass": true
+    },
+    {
+      "name": "375px 페이지 가로 넘침 없음",
+      "pass": true
+    },
+    {
+      "name": "새 검토 HTML 로컬 링크",
+      "pass": true,
+      "detail": {
+        "checked": 17,
+        "broken": []
+      }
+    },
+    {
+      "name": "그림 접근성 제목·설명",
+      "pass": true
+    },
+    {
+      "name": "그림 시작·종료·판단 조건",
+      "pass": true
+    },
+    {
+      "name": "키보드 링크 접근",
+      "pass": true
+    },
+    {
+      "name": "wiki-review-v1.html W13·W18 반영",
+      "pass": true
+    },
+    {
+      "name": "wiki-review-v1.html 기존 W16 보존",
+      "pass": true
+    },
+    {
+      "name": "wiki-review-v3.html W13·W18 반영",
+      "pass": true
+    },
+    {
+      "name": "wiki-review-v3.html 기존 W16 보존",
+      "pass": true
+    },
+    {
+      "name": "wiki-review-v3.html 전체25개 보존",
+      "pass": true
+    },
+    {
+      "name": "wiki-review-v3.html 반영13개 필터",
+      "pass": true
+    },
+    {
+      "name": "wiki-review-v3.html 남은12개 필터",
+      "pass": true
+    },
+    {
+      "name": "wiki-review-v6.html W13·W18 반영",
+      "pass": true
+    },
+    {
+      "name": "wiki-review-v6.html 기존 W16 보존",
+      "pass": true
+    },
+    {
+      "name": "wiki-review-v6.html 전체25개 보존",
+      "pass": true
+    },
+    {
+      "name": "wiki-review-v6.html 반영13개 필터",
+      "pass": true
+    },
+    {
+      "name": "wiki-review-v6.html 남은12개 필터",
+      "pass": true
+    },
+    {
+      "name": "브라우저 스크립트 오류 없음",
+      "pass": true,
+      "detail": []
+    }
+  ]
+}

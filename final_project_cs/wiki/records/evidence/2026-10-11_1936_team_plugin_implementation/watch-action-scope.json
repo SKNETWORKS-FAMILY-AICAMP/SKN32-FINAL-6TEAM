@@ -1,0 +1,34 @@
+{
+  "actions": [
+    [
+      "case.create",
+      "succeeded",
+      "watch:8c8e71b8-2dce-43d2-8f4c-2856a18f0895:800ce739-89fe-43a2-a38f-29a54ce1349e:030aad14988b",
+      "resolved"
+    ],
+    [
+      "case.create",
+      "succeeded",
+      "watch:8c8e71b8-2dce-43d2-8f4c-2856a18f0895:5b5e4ba7-665d-45bc-8f86-6f588b7098e0:030aad14988b",
+      "resolved"
+    ],
+    [
+      "case.create",
+      "succeeded",
+      "watch:8c8e71b8-2dce-43d2-8f4c-2856a18f0895:ebd59f81-97ef-4d4d-ba8a-ce2f12d06886:030aad14988b",
+      "resolved"
+    ],
+    [
+      "case.create",
+      "succeeded",
+      "watch:8c8e71b8-2dce-43d2-8f4c-2856a18f0895:328e5f44-54e8-47ce-a731-f9fa76023ef0:030aad14988b",
+      "resolved"
+    ]
+  ],
+  "outbox": [
+    [
+      "trip.notice",
+      "8c8e71b8-2dce-43d2-8f4c-2856a18f0895:v1"
+    ]
+  ]
+}

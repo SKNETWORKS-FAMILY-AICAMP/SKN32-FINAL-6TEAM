@@ -1,0 +1,547 @@
+{
+  "runtime": {
+    "seconds": 34.0188627000025,
+    "top_own": [
+      {
+        "file": "decoder.py",
+        "line": 343,
+        "name": "raw_decode",
+        "primitive_calls": 1222900,
+        "calls": 1222900,
+        "own_seconds": 7.346125600000001,
+        "cumulative_seconds": 7.346125600000001
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+        "line": 137,
+        "name": "load",
+        "primitive_calls": 2,
+        "calls": 2,
+        "own_seconds": 3.1055865000000002,
+        "cumulative_seconds": 22.5744283
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+        "line": 145,
+        "name": "add",
+        "primitive_calls": 733418,
+        "calls": 733418,
+        "own_seconds": 2.8911752,
+        "cumulative_seconds": 9.738395500000001
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/timeutil.py",
+        "line": 59,
+        "name": "_parse",
+        "primitive_calls": 736286,
+        "calls": 736286,
+        "own_seconds": 2.6261582000000003,
+        "cumulative_seconds": 4.5336281000000005
+      },
+      {
+        "file": "decoder.py",
+        "line": 332,
+        "name": "decode",
+        "primitive_calls": 1222900,
+        "calls": 1222900,
+        "own_seconds": 2.1716900000000003,
+        "cumulative_seconds": 11.481939
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'get' of 'dict' objects>",
+        "primitive_calls": 8257396,
+        "calls": 8257396,
+        "own_seconds": 2.0597193000000003,
+        "cumulative_seconds": 2.0597193000000003
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/bus_profile.py",
+        "line": 62,
+        "name": "load",
+        "primitive_calls": 2,
+        "calls": 2,
+        "own_seconds": 1.9836403,
+        "cumulative_seconds": 6.2209452
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'match' of 're.Pattern' objects>",
+        "primitive_calls": 3183104,
+        "calls": 3183104,
+        "own_seconds": 1.8925746,
+        "cumulative_seconds": 1.8925746
+      },
+      {
+        "file": "__init__.py",
+        "line": 299,
+        "name": "loads",
+        "primitive_calls": 1222900,
+        "calls": 1222900,
+        "own_seconds": 1.21268,
+        "cumulative_seconds": 13.282194200000001
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/congestion.py",
+        "line": 28,
+        "name": "load",
+        "primitive_calls": 2,
+        "calls": 2,
+        "own_seconds": 0.8058814000000001,
+        "cumulative_seconds": 2.8427312000000002
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'group' of 're.Match' objects>",
+        "primitive_calls": 2209490,
+        "calls": 2209490,
+        "own_seconds": 0.7253797000000001,
+        "cumulative_seconds": 0.7253797000000001
+      },
+      {
+        "file": "_compression.py",
+        "line": 66,
+        "name": "readinto",
+        "primitive_calls": 29884,
+        "calls": 29884,
+        "own_seconds": 0.6539366000000001,
+        "cumulative_seconds": 1.2767926
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'end' of 're.Match' objects>",
+        "primitive_calls": 2445800,
+        "calls": 2445800,
+        "own_seconds": 0.5512954,
+        "cumulative_seconds": 0.5512954
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method builtins.isinstance>",
+        "primitive_calls": 3463341,
+        "calls": 3463341,
+        "own_seconds": 0.5325415,
+        "cumulative_seconds": 0.5327678
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'strip' of 'str' objects>",
+        "primitive_calls": 1876053,
+        "calls": 1876053,
+        "own_seconds": 0.5142202,
+        "cumulative_seconds": 0.5142202
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'startswith' of 'str' objects>",
+        "primitive_calls": 1226154,
+        "calls": 1226154,
+        "own_seconds": 0.41762760000000004,
+        "cumulative_seconds": 0.41762760000000004
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'add' of 'set' objects>",
+        "primitive_calls": 1114776,
+        "calls": 1114776,
+        "own_seconds": 0.397654,
+        "cumulative_seconds": 0.397654
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'append' of 'list' objects>",
+        "primitive_calls": 1442647,
+        "calls": 1442647,
+        "own_seconds": 0.37287610000000004,
+        "cumulative_seconds": 0.37287610000000004
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'decompress' of 'zlib._ZlibDecompressor' objects>",
+        "primitive_calls": 29884,
+        "calls": 29884,
+        "own_seconds": 0.3699712,
+        "cumulative_seconds": 0.3699712
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/timeutil.py",
+        "line": 30,
+        "name": "to_min",
+        "primitive_calls": 736286,
+        "calls": 736286,
+        "own_seconds": 0.3394627,
+        "cumulative_seconds": 4.8730908
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method _codecs.utf_8_decode>",
+        "primitive_calls": 38707,
+        "calls": 38707,
+        "own_seconds": 0.2756485,
+        "cumulative_seconds": 0.2756485
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method builtins.len>",
+        "primitive_calls": 1418520,
+        "calls": 1419014,
+        "own_seconds": 0.21423850000000003,
+        "cumulative_seconds": 0.21432720000000002
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'sort' of 'list' objects>",
+        "primitive_calls": 6236,
+        "calls": 6236,
+        "own_seconds": 0.20598860000000002,
+        "cumulative_seconds": 0.34105040000000003
+      },
+      {
+        "file": "gzip.py",
+        "line": 346,
+        "name": "closed",
+        "primitive_calls": 1020392,
+        "calls": 1020392,
+        "own_seconds": 0.1834124,
+        "cumulative_seconds": 0.1834124
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/runtime.py",
+        "line": 156,
+        "name": "build_verifier",
+        "primitive_calls": 2,
+        "calls": 2,
+        "own_seconds": 0.1671621,
+        "cumulative_seconds": 33.856256300000005
+      }
+    ],
+    "targeted": []
+  },
+  "plan": {
+    "seconds": 47.61802569999418,
+    "top_own": [
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+        "line": 187,
+        "name": "_load",
+        "primitive_calls": 9,
+        "calls": 9,
+        "own_seconds": 8.6814505,
+        "cumulative_seconds": 32.2955623
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+        "line": 67,
+        "name": "decode_polyline",
+        "primitive_calls": 584058,
+        "calls": 584058,
+        "own_seconds": 5.377268,
+        "cumulative_seconds": 6.9483296
+      },
+      {
+        "file": "decoder.py",
+        "line": 343,
+        "name": "raw_decode",
+        "primitive_calls": 1370770,
+        "calls": 1370770,
+        "own_seconds": 4.518882700000001,
+        "cumulative_seconds": 4.518882700000001
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/car.py",
+        "line": 50,
+        "name": "hav",
+        "primitive_calls": 1364410,
+        "calls": 1364410,
+        "own_seconds": 2.8425827000000004,
+        "cumulative_seconds": 4.4621636
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'get' of 'dict' objects>",
+        "primitive_calls": 11019521,
+        "calls": 11019521,
+        "own_seconds": 2.4867705,
+        "cumulative_seconds": 2.4867705
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'append' of 'array.array' objects>",
+        "primitive_calls": 8428282,
+        "calls": 8428282,
+        "own_seconds": 2.3070042,
+        "cumulative_seconds": 2.3070042
+      },
+      {
+        "file": "decoder.py",
+        "line": 332,
+        "name": "decode",
+        "primitive_calls": 1370770,
+        "calls": 1370770,
+        "own_seconds": 2.1067457000000003,
+        "cumulative_seconds": 8.5683708
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+        "line": 312,
+        "name": "_adjacency",
+        "primitive_calls": 14,
+        "calls": 14,
+        "own_seconds": 2.0133646,
+        "cumulative_seconds": 2.9594019
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+        "line": 99,
+        "name": "_read_jsonl",
+        "primitive_calls": 1004970,
+        "calls": 1004970,
+        "own_seconds": 1.4078978,
+        "cumulative_seconds": 10.690654400000001
+      },
+      {
+        "file": "__init__.py",
+        "line": 299,
+        "name": "loads",
+        "primitive_calls": 1370770,
+        "calls": 1370770,
+        "own_seconds": 1.2766575,
+        "cumulative_seconds": 10.461110900000001
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'match' of 're.Pattern' objects>",
+        "primitive_calls": 2768970,
+        "calls": 2768970,
+        "own_seconds": 1.2513448,
+        "cumulative_seconds": 1.2513448
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method builtins.ord>",
+        "primitive_calls": 13076375,
+        "calls": 13076375,
+        "own_seconds": 1.0726930000000001,
+        "cumulative_seconds": 1.0726930000000001
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/car_turn_search.py",
+        "line": 13,
+        "name": "pieces",
+        "primitive_calls": 5,
+        "calls": 5,
+        "own_seconds": 1.0567816,
+        "cumulative_seconds": 7.289411
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'append' of 'list' objects>",
+        "primitive_calls": 4651887,
+        "calls": 4651887,
+        "own_seconds": 0.8945288,
+        "cumulative_seconds": 0.8945288
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method builtins.min>",
+        "primitive_calls": 1489720,
+        "calls": 1489720,
+        "own_seconds": 0.7402697,
+        "cumulative_seconds": 5.521542200000001
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/car.py",
+        "line": 70,
+        "name": "__init__",
+        "primitive_calls": 1,
+        "calls": 1,
+        "own_seconds": 0.6791313,
+        "cumulative_seconds": 3.4559583000000003
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'end' of 're.Match' objects>",
+        "primitive_calls": 2741540,
+        "calls": 2741540,
+        "own_seconds": 0.5228809,
+        "cumulative_seconds": 0.5228809
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method math.radians>",
+        "primitive_calls": 5815904,
+        "calls": 5815904,
+        "own_seconds": 0.5214775,
+        "cumulative_seconds": 0.5214775
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/car_turn_search.py",
+        "line": 58,
+        "name": "<genexpr>",
+        "primitive_calls": 1555931,
+        "calls": 1555931,
+        "own_seconds": 0.4969681,
+        "cumulative_seconds": 4.7766792
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method builtins.len>",
+        "primitive_calls": 3279092,
+        "calls": 3279101,
+        "own_seconds": 0.4963232,
+        "cumulative_seconds": 0.4963266
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'startswith' of 'str' objects>",
+        "primitive_calls": 1370829,
+        "calls": 1370829,
+        "own_seconds": 0.4200013,
+        "cumulative_seconds": 0.4200013
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method builtins.max>",
+        "primitive_calls": 1281306,
+        "calls": 1281306,
+        "own_seconds": 0.4069532,
+        "cumulative_seconds": 0.40703330000000004
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'decompress' of 'zlib._ZlibDecompressor' objects>",
+        "primitive_calls": 23769,
+        "calls": 23769,
+        "own_seconds": 0.4033144,
+        "cumulative_seconds": 0.4033144
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method math.cos>",
+        "primitive_calls": 3087084,
+        "calls": 3087084,
+        "own_seconds": 0.39915310000000004,
+        "cumulative_seconds": 0.39915310000000004
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method math.sin>",
+        "primitive_calls": 2728820,
+        "calls": 2728820,
+        "own_seconds": 0.3697926,
+        "cumulative_seconds": 0.3697926
+      }
+    ],
+    "targeted": [
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/car_turn_search.py",
+        "line": 54,
+        "name": "heuristic",
+        "primitive_calls": 251061,
+        "calls": 251061,
+        "own_seconds": 0.20271740000000002,
+        "cumulative_seconds": 5.2897572
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/plan.py",
+        "line": 1462,
+        "name": "leg",
+        "primitive_calls": 1,
+        "calls": 1,
+        "own_seconds": 0.00022840000000000002,
+        "cumulative_seconds": 47.6175949
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+        "line": 2504,
+        "name": "verify_case",
+        "primitive_calls": 7,
+        "calls": 12,
+        "own_seconds": 0.00028060000000000004,
+        "cumulative_seconds": 10.2034959
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/car.py",
+        "line": 50,
+        "name": "hav",
+        "primitive_calls": 1364410,
+        "calls": 1364410,
+        "own_seconds": 2.8425827000000004,
+        "cumulative_seconds": 4.4621636
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+        "line": 312,
+        "name": "_adjacency",
+        "primitive_calls": 14,
+        "calls": 14,
+        "own_seconds": 2.0133646,
+        "cumulative_seconds": 2.9594019
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/car.py",
+        "line": 312,
+        "name": "leg",
+        "primitive_calls": 5,
+        "calls": 5,
+        "own_seconds": 0.00027770000000000003,
+        "cumulative_seconds": 9.0087902
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/runtime.py",
+        "line": 152,
+        "name": "leg",
+        "primitive_calls": 5,
+        "calls": 5,
+        "own_seconds": 0.0002065,
+        "cumulative_seconds": 12.4655181
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+        "line": 187,
+        "name": "_load",
+        "primitive_calls": 9,
+        "calls": 9,
+        "own_seconds": 8.6814505,
+        "cumulative_seconds": 32.2955623
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/car_turn_search.py",
+        "line": 13,
+        "name": "pieces",
+        "primitive_calls": 5,
+        "calls": 5,
+        "own_seconds": 1.0567816,
+        "cumulative_seconds": 7.289411
+      }
+    ]
+  },
+  "output_sha256": "6d02518a8f4354298ef25481edc8ddc4bb06555ebcae7e57b3b4a0d20bc86578"
+}

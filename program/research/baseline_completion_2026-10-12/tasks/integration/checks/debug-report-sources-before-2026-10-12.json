@@ -1,0 +1,674 @@
+{
+  "captured_at_kst": "2026-10-12T04:37:07.283404+09:00",
+  "files": [
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-12_1600_RAG코퍼스_섹션이_보일러플레이트로_채워짐.md",
+      "sha256": "a186d627e5f33f3a8ff02dce49d59cde274536925e1625fdfc0033f0fee82ce8"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-12_1720_RAG코퍼스_v2_문장템플릿과_게이트_구멍.md",
+      "sha256": "201dcbebc07ea667592fc5bdaf69892d263310d5aa6e746df0a3e4e39538f0a8"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-12_1830_S-API가_실행되지_않는다.md",
+      "sha256": "353456b8fa21d0a7cfee62ebd1f4ac04974db11a63883529fa1cfd8663bd589a"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-12_2010_RAG검색이_한번도_동작한적이_없다.md",
+      "sha256": "a3be977c1aa917d1654890dbf03aa2f4942a7a300d57963d5c169081ca7bf223"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-12_2230_Controller가_resuming에서_resumed를_건너뛴다.md",
+      "sha256": "f05d6b6aa40cf168efea1b58ae4fe9b833f3d4409d52605bf030654ad0d32109"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-13_1200_평가가_환각인용에_점수를_준다.md",
+      "sha256": "e88687d70a90a44136838873a647bfb04c830cfd4468bdbb17805ec72366d55a"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-13_1230_PII가_평문으로_저장된다.md",
+      "sha256": "39fa90d4a556031e299789e2e305da63f72cd1b6cd8c76c076a25278f5c2c260"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-13_1400_모듈화가_순환import로_실패했다.md",
+      "sha256": "c94f53158102034017d6a28ea3017c52b6fbe389aa67d092289a615fc7c5dec8"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-13_1500_Proposed군이_실제시스템을_돌리지_않는다.md",
+      "sha256": "1861aa4c2ef517053bf8ddafa7f65ac5e8411bf0b6516c3c635f246288cb392e"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-13_1600_Team의_LLM_실호출_경로가_동작한적이_없다.md",
+      "sha256": "c44b8f782185f044edd6705b317fc6a7f14d2a01d80e8d3424aebebabeafb037"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-13_1800_next_action_지표가_어휘일치를_잰다.md",
+      "sha256": "5f098e676cdc7048bb316374de1625a81b6cff9e5b58bef13c286478de0491aa"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-14_시계에_걸린_테스트가_가끔_실패한다.md",
+      "sha256": "a33102a4cae9b4a802e7ebd17aacbc4d8015c3f7a0e423254933631a08d28caa"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-17_2250_UI승인큐_유령항목.md",
+      "sha256": "13e0f8c53cd1dbf196996134a2520942eef0d84fa39a1542dd220b1e6d10e1c8"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-17_2310_Case생성_승인큐_유령항목.md",
+      "sha256": "beeb02187f27c12473fde6030dc3bea28a00d8ad1380bf409851d6a335e0356c"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-17_2340_프롬프트_감사추적_미연결.md",
+      "sha256": "67bec1a98f7914d7c44987d337e1b68b53549da2890adc14cdc22cbab00f90f8"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-19_composition_단일인자_Team_llm_오배선.md",
+      "sha256": "0aac575f67ce32b83105a557abe1988a2c35fe5b367e2d9e81b7687ed745a521"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-08-31_버전대조_가드_중복.md",
+      "sha256": "6694441510265ab96c63f11a5b7d96a927571ffa44ab2f64fea2387117972b1b"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md",
+      "sha256": "4062761f970bf229e4ae6501280501763943727175bd679ffc8e383ab419fac6"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-01_Case상세_API_evidence_value가_항상_빈값이다.md",
+      "sha256": "fc1e68cb7555dd98c3be9022c42186c98752f3bc8df4b14797e0ac505bb82ea3"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md",
+      "sha256": "0f085e297c167ffec0503374b4b423b41a44c3a9577376d2adf6d20e3b4c76be"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-01_Controller가_LLM호출을_트랜잭션_안에서_한다.md",
+      "sha256": "66138f92f890dd6d6e8b43dbf0cbff1a594f6705977177074bb318df823977f6"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-01_분류_빈라벨_통과.md",
+      "sha256": "74b77d475ce3556595571e1d422ce4fc96083c2d7115600143a811db21250e4f"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-01_환불금액_균등분할_가정.md",
+      "sha256": "a7c292b6111c188eb277d4a9b6b7202fdc80cd9fdffb3fa0576a9ba9509b80b3"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-02_한국어_문의에_영어로_답한다.md",
+      "sha256": "a11cecb0e09ad0f1f95d56478e2e0159d69cf1e990971e37024e55c1319161f5"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-03_반품제한을_안_보고_정책근거상_가능하다고_답한다.md",
+      "sha256": "73c483d625f611ca40a942f9bed3995770b451288068a995d506c32e6363a784"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-03_접수응답이_에이전트_실행을_기다렸다.md",
+      "sha256": "0124511db00212d0e316db5476c169c4061cbea41e4274508da082763d9cd9a1"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-06_B가_Proposed를_이긴다.md",
+      "sha256": "1307c888f7ccb67321d735619059125e98a8aa3dfe7e6d77e1bcb2df04e26f2b"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-06_judge의_policy_grounding이_상수다.md",
+      "sha256": "0a41c0f4ec5d921be768c5e07ea06c8a7e285c196e76ab390be6254abb7984a2"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-09_max_steps가_강제되지_않는다.md",
+      "sha256": "59bd124a117b962f33299671243af717dcf425398dbca0e07877ee0acb323fc0"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-11_여행_멱등키_대상충돌.md",
+      "sha256": "e2b47b4fc3b74563ac120dfce78a40853399a3f3890ab2d887b733d415199e2f"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-17_1450_여행_승인제안이_근거대조에서_전부_막힌다.md",
+      "sha256": "33e1532a6a517931cadb5f1608a2514d56bbd43096e90009473cce4bb835759e"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-18_1425_UUID가_전화번호로_가려져_Case가_가끔_사람에게_간다.md",
+      "sha256": "e5e5e6e3cd980c891406c1c67bfdea7057ab88265c5c8c822706959ff3b331e9"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-18_1520_ODsay_키를_넣으면_감시소스_조립이_죽는다.md",
+      "sha256": "2aca2678a58970983b4bfa55caaea4a9777b9d22188c80ee891bf6fcf7dd3bfd"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-22_위임_다시주기가_철회기록을_덮는다.md",
+      "sha256": "73b830b6e798e7c2e65f9a1977d65570d1189d5e45069d65acebc3fa686ad8fd"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-22_정책scope에_문서가_0건인_팀들.md",
+      "sha256": "dafc5f149ccaeed26f05224a6f434d2f04d4c57080e9c46b2d64aec6af373a42"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md",
+      "sha256": "e5caeccb890baf8a66872d94b6cded75dce6512443bf2d7c98857e01fc4ce7cd"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-05_마이그레이션_재실행이_보류변경_제약에서_멈춘다.md",
+      "sha256": "ebff5b091175d489c65d3e2e048097c83322ffc95d1f3ee4a880043c9309c4b6"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-08_1217_버스_수단필터와_환승탐색_누락.md",
+      "sha256": "5c82add139c64a26f25c6f151a14b44dfbdc7924a5dbb68ae73a89eae6e91d3f"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-08_1257_이동_기동_간접import_깨짐.md",
+      "sha256": "9747dd3a5ac9419098e9fab6d612109784fe03968b9b47f496245652a0b5460e"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-08_1310_부분순환선_없는연결_생성.md",
+      "sha256": "51bcf3e3648857242d84de0094a76fcdeaca80ab42e675e3a17c1c32d0adf049"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-08_1416_버스_후속구간_운행창과_방향_누락.md",
+      "sha256": "3898cb151ef95d4e6ba63c3b3e0a264f47ed8f3ce2210e63d35c967e6b69879a"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-08_1452_약관확인_빈화면_진행없음.md",
+      "sha256": "a5e0ea3aed3db0a2f38642613a2014fd4314edcd4bddb5bc48c1cde000b6f1c9"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-08_1624_변경버튼_분산_일정목록_가림.md",
+      "sha256": "ffd4be8082d116b1fcfdc8612a0c8161a3a61d896e5bc1baba277b2b8b95f20e"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-08_1735_시간초기화_일부일정만_되돌림.md",
+      "sha256": "328c091534514b77a130df3072850c6825bd8aeae46ae93a8555ea6bebcad59e"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-08_2225_Luna_자동전환_미연결.md",
+      "sha256": "7b62e8db89c3704ec2cf4c6343f7558e5a12d5b449c45679309f9768b89b370d"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-08_약관SSE_재검사_공용설정_들여쓰기.md",
+      "sha256": "e08eac4f2caf1ea849f8d730a66ee470cc861da067fd37b7b2f236d1803b1f5e"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-08_일차줄_조작중_일정가림.md",
+      "sha256": "2a2132d0a4902025c60d28a775bed1cf2631622246f2ee8ea99e7d4d97ed35de"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-08_제출직후_멈춤_설문뒤_재생소진.md",
+      "sha256": "ae9380cc3717a09bc1b03dde9006f7119e1c5c7456a1985cc043f0123948b961"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-08_지도표시_분산과_마커중복안내.md",
+      "sha256": "9e56c583f2c8558a262fc19a2761a1a19b075d5633405e74d4bce23743b7bf77"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0008_버스_선택정류장_순번소실.md",
+      "sha256": "8d607d56b263b0932b4c7dd153347cad85835184d488b685831a55946028b0c1"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0035_출발안내_옵션별_구간문맥_소실.md",
+      "sha256": "0b88b4b34b52feeac04b3e1f1d6e027ef5e1c0a04cf56923874fd3e7fcb9ecc6"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0104_버스_공급시각_신선도.md",
+      "sha256": "212d52403da38b9ea0bc3ebfe282626ce1ae85c2b79617c1cac2071e152cefd8"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0122_출발시점_버스재검증.md",
+      "sha256": "ccf42e64350cd525cc0c0d9e08ff680ba1b433cdfe84a5c87d95dbe9485dd1af"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0147_출발알림_관측조립.md",
+      "sha256": "38cd7e85cb0e0927288554cafbc716933cd992048a24695a55b3fcad74e00884"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0213_도보출발_구간형식_보류.md",
+      "sha256": "5db2f113463f992b3397a074bf6b3f5f41ea71ff08b2018c410668be9dcb4d27"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0228_차량탐색_회전관계_미적용.md",
+      "sha256": "8f7e259e1c21cb0780d986da113c62f9b2ebf40bc04251773ce45ab80c1d21bb"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0253_회전적용후_유일출구_금지자료_경로미확보.md",
+      "sha256": "1b278fbb7f846a9792c5810fede43f33a4111d7fc0c49331cd02eae228c3ce8d"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0306_차량_실제선택도로_거리근거_유실.md",
+      "sha256": "e2cfdaf3430f63b5fee57a097d6b26eb0bf30dfadb91e81433afb5e0e5d35f8b"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0336_회전자료없는_차량_실제선택거리_유실.md",
+      "sha256": "7bd22d495013199a8eba033ee1c727701a9b5e74a98b995b01968e7b5ccab525"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0347_도로위_좌표이동후_다른도로_재선택.md",
+      "sha256": "d28a21329e314dd8da6096fe025bb2934e7471aba291c344a3c871d42b59fd09"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0358_사건소스_누락시_현재출발_재검증_우회.md",
+      "sha256": "94e1fa9ea0c40f1a929c4e2d05d5048c4da1b0474aae14de223944159ef0c9a0"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0423_출발보류_감시연결.md",
+      "sha256": "38adab059e561147c76c2cee876492a899deec0b4f6d22e6a20fccf2315311e7"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0441_출발안내_발행경합과_동행조건_검증공백.md",
+      "sha256": "04076496c568ff1cf9aa68b85e7b0f1decaa5973bfcc29e3fab3bafe8ad171f1"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0450_출발안내_원자검증.md",
+      "sha256": "44fe8eb8f1d9b1cabd190acbddffc7e31e44fb322ecf6da696bc61bea8fa2178"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0513_현재동행_출발대조.md",
+      "sha256": "fc56bda45b1b71401a1d5d6e53426a2635e6b3dab03e0ddde2226ee8aab33b65"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0527_시각화_현재잔여_정정.md",
+      "sha256": "fb9bcf918816107d3d6fd51a5c39974d3eb19889ac6e7e951c24422e8ba3b7ed"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0532_출발조건_저장경합.md",
+      "sha256": "247399133c6f03201abf91b247f791c0abe7e19bec777de6ae5e7a99b11ec1bf"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0550_택시대체_계산지연_추가검증.md",
+      "sha256": "32c202168572025b6acdfadf9fbc597fec39045e8f708984f8ca50d29110828d"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0600_회전탐색_同位置_거리반복.md",
+      "sha256": "2edc00501a114d6cdeb962ae50b304f236fe42f98c0775f4e7c46c0fd30a9df4"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0613_급행_운행표_변경이_다음계산에_반영되지않음.md",
+      "sha256": "3b4a8bf7597c95e2543bedbd16132c9d001adc24778988e8d68a6d4af123c0b6"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0648_급행표_변경을_저장출발안내에서_놓침.md",
+      "sha256": "cffac21c7ca3f5f12981184f957b24471ad242692d97bcc66428bfd3734ee718"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0704_급행조회후_안내저장사이_표교체를_놓침.md",
+      "sha256": "6f606b02285ae7f114315840a0e12e82d61506dd585a8f352f78d8731eba16fe"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0725_도보대조가_정책밖_원시시간을_제품오차로_집계.md",
+      "sha256": "105447b3447a0e0924d56f3ef5a02a3f6576fe409851cd72e9a98704d54d019c"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0737_통합환승_야간창이_이전하차시각을_사용.md",
+      "sha256": "40c91f55eb6469c5b9e83b165a9703f670ece352a78f770a5e26fe0c5591b30e"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0751_혼합운임_거리범위연결_상단계산을_혼합후보에서_누락.md",
+      "sha256": "a3b8168ee7e60d0b9c1485506b5d7ed474efcabeeda08431daa8525bf349987c"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0806_도착조회_완료시각_정상_신규응답을_미래시각으로_거절.md",
+      "sha256": "e2855c2416d1e2e0391e814ec82e328e013353309aeafeeecb8675e1ae1c5f2b"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0822_도보비교_입력검증_논리값과_비정상수치를_도보비교에_집계.md",
+      "sha256": "0910c06732f0f8ffa7a71f5fc3aa767f2d85303e49b771ebc373f7d0f6f9c75a"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0836_버스거리_완전구간_중간정류장_누락을_일부거리로_합산.md",
+      "sha256": "8ca68c3be2f3a9eeb189aaa82b25983317cd23bc6a99e95b8e583361b183cb97"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0852_혼합요금_조조경계_버스조조_불확실성으로_혼합상단요금까지_누락.md",
+      "sha256": "6f409b2cd741124b4b95530fc157731f1ed397812d826094e8cc76228993a4f0"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0909_시간대도보_보행망시간_미연결.md",
+      "sha256": "7b4c71d5af38aa32a1403abef513f27e5de707f3591e9eaedccab25879e0a347"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0921_최근접역이_같을때_전체역조합_제외.md",
+      "sha256": "57470d6a1efffa0e191e558ac9237183e8fc7841dc3e6d9e912a82824b7eb33f"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0936_지하철도착_식별정보누락과_숫자변환오류.md",
+      "sha256": "03450c0d89032a629f5c59fbece65dd97a73be6263aeb008c665420947cd79c5"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0955_실시간지하철_세호선_필터누락.md",
+      "sha256": "32429ab9df58cbcfaa284ee096f3fa98d3ad327f374b572fcacb17a2adf66742"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1009_지하철응답_빈값오인.md",
+      "sha256": "0bb8ed6c6ca96bdbd84ccbe48fabb66c0d4b65da5d2c25c868460509d6d28cca"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1023_계획지하철_공식ID연결.md",
+      "sha256": "7632266b0cf472b42c5fc4fe715097a99182014cb5e2d5cb68ac46aa4160e0c9"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1039_지하철_접근후열차_선택.md",
+      "sha256": "03cbd88299b7973561b4a8c72713f1cfcbec0be45bba1b8663ae0e39de3040df"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1056_지하철_현재출발_제품연결.md",
+      "sha256": "65035b457da8884a66f7972038892e4cb495c37c1ad08e180a3bb121aa910c8d"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1125_공식병기역명_종착경로복구.md",
+      "sha256": "70cdeef83c79864d23e721a8240af5d24e6f23fbd70750878f1240473a494a5a"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1143_지하철_실제키_승차조회.md",
+      "sha256": "504d5651bad3f9c3e646bb7250b6ffc2493c24082d3ebcb7ddadf29c76291afd"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1156_지하철_부분응답_누락해소.md",
+      "sha256": "28266de86cb999330f5acc2d83c2e8a525e5879ccac4013a54b713acad5e6d0b"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1222_도보판정_제품범위와_웹조회실패.md",
+      "sha256": "5e6abaa79b7e0ece6ac7867498b74f0c81d7c43fac9a90d59b2f076524f1a176"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1228_지하철_문자열열차번호_선택연결.md",
+      "sha256": "e7c6a0758b48a6223a0331fea057f780d50818dce34cab1cbeb166e0fe0ccc52"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1248_지하철_방면과_인접역ID_대조.md",
+      "sha256": "484530d6becfaebef8cfe461e1f3a2562e99f8ecfab06bcde630c5841399f87b"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1321_공항철도_공식웹_대체정보_확보.md",
+      "sha256": "3f1c163d6bbd89ea44f719d714e27d957a13def264e0c171c74a98f61fddd20c"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1343_공항철도_공표승차시간_대조.md",
+      "sha256": "e6953d25a910745b43ceded01ca847c3bcd012a7cd45def330db8378c490e293"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1357_지하철_수집실패_완료오인_수정.md",
+      "sha256": "7adc5bd0d4a8b0c80f66788114f1437a92ce7d21b378e2f69d45ed20ff96acc2"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1412_디지털미디어시티_공표승차_대조.md",
+      "sha256": "1979dea0ddf5288fa5f9244897bffa14f997a1a17c0e5826c0cd9e19df83a522"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1426_김포공항_공표승차_대조.md",
+      "sha256": "899e16a9e39b061eb0ea0877af0ecb67cbf5517989de4045d8a6a034eb33a7d5"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1723_직접장소편집_이동미반영.md",
+      "sha256": "ada3975f9e1ae858f55ebebf1cfdd20119e728eaf43ac5858116383d7c170f3b"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1945_거리칩_마커중복.md",
+      "sha256": "b191180c4ee8fea984328894cafaee3c862cd48511787dd943f6f6dc9c3e56ef"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_2012_고객미연결_운영디스코드_오발송.md",
+      "sha256": "afbbe684434ed59fe1b5a701d7081ce6278f8b6862a893884f4d69c9706ab06b"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_2022_일정추가_장소선택누락.md",
+      "sha256": "56eb25e4df27e314eccb84b1e1514a0559e6ad5411fdf7cb3f03f9724977c646"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_2048_일정삽입_취소와입력라벨.md",
+      "sha256": "c730d161c0059a5fb4eb66329c4025273195890fdcfbedf432d64c0749499c71"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_2113_예보주의_알림누락.md",
+      "sha256": "a8e122d405401f14e657d6c526492dba3c850399ca95d1391c02a25ae4c4cc39"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_2154_낮은지도_마커거리칩겹침.md",
+      "sha256": "f3c5baa74298316493f2f243f57de463b887cdf3d89970b6b832b754b56b7b3d"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_2208_카드하단_상태중복조건.md",
+      "sha256": "9daaa266a7048ecaa42083c7355c8210b90adc8604034e5dedcc12c3d2484ca9"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_2225_감시이력_시험진입점.md",
+      "sha256": "7c33c72d8b5b52de6ac7250a0878c0258e128414b33ec07e42484bd678a4869a"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_2228_감시이력_최근회차_시각경계.md",
+      "sha256": "24b95b6f19d61e70c8498b573fdb1bfc9683e314d6561a08ae152eb557d1c6b0"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_2230_감시이력_조회실패_화면표기.md",
+      "sha256": "afcd13c0108f9cc4e7a7070be825c928450ae5193f667c57ea5e25b5ad1c7784"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_2256_API한도_DB의존성.md",
+      "sha256": "2a048525069cebf426018145828123aacc8a7396d1038c22a22316e9e0c129e4"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_2256_API한도_계측시간대.md",
+      "sha256": "c99c2d647dc3adc23f3d7974fced60de835a71fedf4cba2974d95811b0d54f6c"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_2256_관리자_중계경로_누락.md",
+      "sha256": "2496b9c38f1cccdbf28fb62ab6c58ad3f1b3e49b7758eeb8f1c310dcac1850f0"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_2256_기존문서_상태검사11건.md",
+      "sha256": "75845831d3cd3031cafa3cc23e47422b8f14214b3da286dfff20819c25c1e5e4"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_재난시뮬레이션_알림시각列.md",
+      "sha256": "88ff6164ec0700b48b66d906082772c749c9897d1f5c704d910baa1bf7c4eb4d"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_통합인증_게스트일정_미이관.md",
+      "sha256": "c72f77f11b9efaefea7c799ec43fd7c9ca24aa3a53479a97a41e4a24826c208d"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_0124_arm-worker-healthcheck-deploy-wait.md",
+      "sha256": "eff09351a731c531ad47c90017366f0e3ebf7278b58dd5e9d97430307c671713"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_0311_차량회전자료_내용갱신.md",
+      "sha256": "d91bc0e254ed45ecfa18fe7bdf58a10ff9b61c3bb17c56a9786919eb924087ce"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_0420_먼마커_잠금도구_추가배치.md",
+      "sha256": "1adc2ca1086fed407ea06d67f522fa5f4efc07e52cfe0cc7b11284a7b99c407b"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_0526_activity-hours-filter-after-limit.md",
+      "sha256": "d4650d52674a7cb845d34ae3b572240a7357a2f40c394219158f971db5c2bb6f"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_0630_지도화살표_옆이동.md",
+      "sha256": "7e4f9770fae700ea53faae0d1752c2eb9da55fa72419779edcfda47d7f1dfc96"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_0913_도로자료_원자교체_감지.md",
+      "sha256": "f4aa3e5b101f94a89bdf3a8b34b72be3dd32d6f036d52e2df4837cf50a7b1d35"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_1333_손잡이목록비침.md",
+      "sha256": "6c55e5ba931fbbd33901a0a92285c1e3a211629ae8f784ca9fac7453ee8d92b7"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_1345_좌표안내고정.md",
+      "sha256": "427ad038c12bcfdb79bb450677393775eff44565dbeae7f0ac7e8f9b5910b2ed"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_1359_일정추가검색초점.md",
+      "sha256": "39db1bbfc6068dff547666dd230b662cf639e2ae50622b4f324b5d69b575b0dd"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_1415_arm-blocked-horizon.md",
+      "sha256": "489c24dd0aaea7d9c2c6c3f49ac9ef1349596e0e0c502926e9b5a52d6d8e0323"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_2120_출발안내_탑승환승시각_연결_승차시각올림.md",
+      "sha256": "75bb5ecc09832e183028b5960e96e0a90f99534bfbf33947713021fbf28af1e4"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_메뉴정렬_마커방향.md",
+      "sha256": "a5b2150bb5280762928530f5cbf19eb13c88d8cfeef32c5ddd0d8e34b8624092"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_일반시각고정_중복장소_추가입력누락.md",
+      "sha256": "3ad980a27977a5dc3a28b360b851c852df41f3c6f47f601a120ddca98dc978f5"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_좌우마커_날짜_추가안.md",
+      "sha256": "546af4f8c78efb7350e82129f10454ebf276739c17d63bf9cdc1b0fa5411bfa3"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_좌표안내_상단가림.md",
+      "sha256": "6f0554b8ee92bfe47fa2b2b903f84d55e9da7ac8d2b2a6ca53c801e73ce6b199"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_지도안좌표_화면밖오분류_상단내용.md",
+      "sha256": "fe0f76882750c9c0cc7b6e34ec64460c551f003685b69e4ec0f2f365d0f92c70"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_최소접힘_빈영역_보내기버튼.md",
+      "sha256": "5cd9aac7345c6d96a0496df0af57308b59be89fbb48201c4f46d0057671d8ca7"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-10_하단공백_미정시각_이른고정.md",
+      "sha256": "7cb5614a975e9b68568f0509e669392e4d0190d281d316a9e824d0319565ffb2"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0317_미발행출발_지연복구.md",
+      "sha256": "3d8a59fc292eb729caa3648a2fb130e18e0b711fcb9f56defc5e470728789c78"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0349_날짜탭아래여백누락.md",
+      "sha256": "4ec6c2a3fd62e1b9c47edaf0ac15d2cde634bc1b7daf887190c39dd1f288c6ff"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0400_지도도구영역과직접좌표지정.md",
+      "sha256": "6b861fbd58288313d4ba62e78ac4158cc910d210be7da9392915188c8a2e4bd5"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0421_혼합환승_제품운임_연결.md",
+      "sha256": "d9ed7c24eea37510b3e728e7701e091db3c163734790d8cda98b46851a45a4ca"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0434_스택개수_날짜최상단_끝삽입.md",
+      "sha256": "6487c0ddd86397835c91290355228270a601b0fc81a3586f570370c03ca8fe1d"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0439_이동_기존기대결과_불일치.md",
+      "sha256": "98bb6506fb9fa1c8a00843234609e2a2b31896eb539dcf0cf70e4771d295f57a"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0442_team_redo_wording.md",
+      "sha256": "31518e253085afd8d4d2dd4d9f2651b757905d3f0057c6f7bc59f094336dac9a"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0501_날짜선택배경_재측정누락.md",
+      "sha256": "e1e61a025969d515e3a58ab211ac05e66c2d95c434d06c666a482ad2d29a8412"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0531_시작버튼_로컬초안로딩.md",
+      "sha256": "22aab661d03ce55c86322f06e5dc59f28c5880d4bbd9f21a46ae9701a0588470"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0541_완료후_이전진행문구.md",
+      "sha256": "503d61368ad37c6f73db52ca734fafb4b3072a55bc614373559737e19579c8a8"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0556_설문완료_재재생.md",
+      "sha256": "c8e0e1f81b0c3c9566cc61c747f30d687f2701f77a1e3a78100d78494dcf7749"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0615_지도이동_마커합침.md",
+      "sha256": "5ebf76a8bd7005cda638fa60aacaa589247dbfe07372d936f1c8c0a3a1d3ebb9"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0643_빈일정_질문화면잔류.md",
+      "sha256": "0db599bfeb49542b170b0759d12f94e596f08cd93a3e55809bab30a97dfd79c1"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0710_테스트코드_일반글접수.md",
+      "sha256": "b1df745d25572a6c2cc14ce0dabe99d0f8e6f715623157dec10860a76ac2b9a3"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0825_상단안내_첫삽입_등장누락.md",
+      "sha256": "82cdf08149a1a7dcfad19e47383adcaec18af22d31f648b4356607b938c92e68"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0920_정류장최소구간_버스후보누락.md",
+      "sha256": "27c59171595915d5b5ec1661db5a31288dd54688b928568df938513d1d1a9618"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_0932_재판정시험_도보정렬과_최신출발혼동.md",
+      "sha256": "0a1fbf5d07b47947559f7c8446036d3836d80ee6116fff8ed75cdf026348e211"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_1010_arm-adapter-incomplete-success.md",
+      "sha256": "1c3bf3b08e5e3490efd0da393e924dcc0996d980ac92fa2c513c2bfed3bbe174"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_1515_단일방향_유턴금지_일괄제외.md",
+      "sha256": "850603953b744ea813667138a218d44e97d90a239a030ca27ac2f62b766e5669"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_1831_inactive_team_execution.md",
+      "sha256": "20cca5d7c0e2166e005022916b223d21a8aa470db4a0a99be3442716c586115a"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_1925_택시_출발시각과소요_불일치.md",
+      "sha256": "cc84fa32d84ec065d624bea967d85ba5b05f253d54950d290d78732a4cf7cc6b"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_1930_후속버스_환승시간폭_누락.md",
+      "sha256": "f4401530693d69b95dbea2a791e391b5d0020d8842820d9076e974e3eb7ebbb0"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_1937_택시_출발직전_문맥누락.md",
+      "sha256": "19ddeff3deab30b1a4d45a3fe57eaa3de768d6dfd7063508d34e162db9e5383e"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_2116_출발접근시간_범위누락.md",
+      "sha256": "cef53f7560d760aae388d41ec8943b8d766b9a8da074795eeb1f082a5ed4e256"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_2135_worker_composition_stops_independent_jobs.md",
+      "sha256": "b16226a338f20945fdf192cb12f41bffb89940ca36e52031525e9c3a9139b860"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_2136_plugin_independent_audit.md",
+      "sha256": "1b58ec60d4ada3e7278161e78f22c7a35f7be1cb52ccdd85c541091f6fc5ec6d"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_2151_worker_feature_wiring_stops_cleanup.md",
+      "sha256": "64eed35f0e14fa6d87b96cc442b2400d03351c338c66ea09ddc1a38c576e6732"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_2242_worker_feature_reregistration_loses_pointer_state.md",
+      "sha256": "13b2b942eb72fb97ae0f312f3b7ad8910d4f6828fb56e9a2e31408ce6dfca8cc"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_web_conversation_resume.md",
+      "sha256": "d7917b05900b59aaf1e5f0d3b47719b36e1181ec0819e4ae997c06852e7a1ab9"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_날짜탭부유_손잡이가림.md",
+      "sha256": "4a5af06167492aaaa37f6bb2c90685f830eb1b8d52302f2a06c6688e11f87621"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_내위치버튼_숨김.md",
+      "sha256": "10b155e53deac9a2f9dd4a1fe92d44c36cba14d3ba1a6e0dbadb1a4eabf5f403"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_문제항목_상태_묶음.md",
+      "sha256": "05a87bca351e44e4a4ee0c729374cc794d0a8f3a446d86986571cad71fe88790"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-11_전송안내_중복표시.md",
+      "sha256": "278ac1275254a7b2c074120fbe287bb90c5ef757152528257c58098cc220a698"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/debugs/2026-10-12_0000_watch_failed_run_recovery.md",
+      "sha256": "3f61fd9116cc19dbf7938e453a284c70d7e5c99c61f60caddd29556c709be3d1"
+    }
+  ],
+  "annotations": 18
+}

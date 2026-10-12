@@ -11,7 +11,10 @@
 """
 from __future__ import annotations
 
+from app.core.team_availability import TeamUnavailable
+
 import math
+from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
@@ -39,6 +42,9 @@ class Leg:
     latest_depart: datetime | None = None
     #: 계산기가 고른 경로 후보의 `uses`(「2호선:을지로입구」 · 「버스:103」) — 지도에 경로선을 그릴 때 탄 역을 알려고 저장한다(응답에는 안 싣는다)
     uses: tuple[str, ...] = ()
+    #: 등록 전후 지도·출발 재검증에 쓰는 내부 선택 문맥. 공개 검사 응답에는 싣지 않는다.
+    departure_context: dict[str, Any] | None = None
+    selected_option_id: str | None = None
 
     @property
     def tight(self) -> bool:
@@ -53,6 +59,20 @@ class Leg:
 def _place(key: str, name: str, lat: float, lon: float) -> dict[str, Any]:
     return {"key": key, "name": name, "kind": "activity", "lat": lat, "lon": lon, "weather_sensitive": None,
             "attributes": {}}
+
+
+def selected_context(context: Any, option_id: Any) -> dict[str, Any] | None:
+    """저장 계산기의 선택 후보만 복사한다. 오래되거나 어긋난 문맥은 연결하지 않는다."""
+    if (not isinstance(context, dict) or type(context.get('schema_version')) is not int
+            or context['schema_version'] != 1 or not isinstance(option_id, str) or not option_id):
+        return None
+    options = context.get('options')
+    option = options.get(option_id) if isinstance(options, dict) else None
+    if not isinstance(option, dict) or option.get('option_id') != option_id:
+        return None
+    result = deepcopy(context)
+    result['options'] = {option_id: deepcopy(option)}
+    return result
 
 
 def straight_km(a: dict[str, Any], b: dict[str, Any]) -> float:
@@ -125,7 +145,9 @@ def leg_between(engine: Any, a: dict[str, Any], b: dict[str, Any], a_end: dateti
                     got, verified = later, True
             elif walking:
                 verified = True
-    except Exception as exc:                          # noqa: BLE001 — 계산기 하나의 오류가 확인 화면을 막지 않는다
+    except TeamUnavailable:
+        raise
+    except Exception as exc:                          # noqa: BLE001 — 일반 계산 오류의 기존 화면 정책 유지
         return _estimate(a, b, a_end, b_start, f"이동 계산기 오류({type(exc).__name__})")
     if got is None:
         reason = str((why or {}).get("reason") or (why or {}).get("code") or "계산기가 이 구간을 못 채웠어요")
@@ -139,9 +161,12 @@ def leg_between(engine: Any, a: dict[str, Any], b: dict[str, Any], a_end: dateti
     else:
         depart, arrive = got["starts_at"], got["ends_at"]
     km = (option.get("walk_m") / 1000) if code == "walk" and option.get("walk_m") is not None else straight_km(a, b)
+    # 끝나는 대로 떠나는 어림 시각으로 바꾼 경우에는 원래 편성·승차 시각을 재사용하지 않는다.
+    context = (selected_context(got.get('departure_context'), option.get('id'))
+               if verified and got['starts_at'] >= a_end else None)
     return Leg(code, label, str(option.get("label") or f"{a['name']} → {b['name']}"), minutes, round(km, 1), depart, arrive,
                int((b_start - arrive).total_seconds() // 60), "timetable", None, option.get("fare_krw"), verified, latest,
-               tuple(str(u) for u in option.get("uses") or ()))
+               tuple(str(u) for u in option.get("uses") or ()), context, option.get('id') if context else None)
 
 
 def late_text(slack: int) -> str:

@@ -1,0 +1,51 @@
+학습 문제 1713/1713 · 평균 길이 2006 토큰 · 정답 토큰 평균 7.2
+Loading weights:   0%|          | 0/426 [00:00<?, ?it/s]Loading weights:   0%|          | 1/426 [00:00<00:51,  8.31it/s]Loading weights:   3%|▎         | 14/426 [00:00<00:05, 72.10it/s]Loading weights:  14%|█▍        | 61/426 [00:00<00:01, 241.45it/s]Loading weights:  23%|██▎       | 100/426 [00:00<00:01, 291.65it/s]Loading weights:  34%|███▍      | 146/426 [00:00<00:00, 349.96it/s]Loading weights:  44%|████▍     | 187/426 [00:00<00:00, 365.64it/s]Loading weights:  55%|█████▌    | 235/426 [00:00<00:00, 399.28it/s]Loading weights:  65%|██████▌   | 277/426 [00:00<00:00, 398.65it/s]Loading weights:  75%|███████▍  | 318/426 [00:00<00:00, 398.53it/s]Loading weights:  85%|████████▌ | 363/426 [00:01<00:00, 413.04it/s]Loading weights:  96%|█████████▋| 411/426 [00:01<00:00, 425.50it/s]Loading weights: 100%|██████████| 426/426 [00:01<00:00, 355.70it/s]
+모델 올림 Qwen3_5ForCausalLM · GPU 메모리 2.9GB
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+trainable params: 30,474,240 || all params: 4,236,225,536 || trainable%: 0.7194
+ep 1 step 10/429 loss 0.1574 lr 1.05e-04 6.1분 · 남은 약 255분 · 최대 GPU 5.0GB
+ep 1 step 20/429 loss 0.0911 lr 2.00e-04 12.2분 · 남은 약 250분 · 최대 GPU 5.0GB
+ep 1 step 30/429 loss 0.0737 lr 2.00e-04 18.3분 · 남은 약 243분 · 최대 GPU 5.0GB
+ep 1 step 40/429 loss 0.0565 lr 1.99e-04 24.4분 · 남은 약 237분 · 최대 GPU 5.0GB
+ep 1 step 50/429 loss 0.0624 lr 1.98e-04 30.5분 · 남은 약 231분 · 최대 GPU 5.0GB
+ep 1 step 60/429 loss 0.0603 lr 1.96e-04 36.6분 · 남은 약 225분 · 최대 GPU 5.0GB
+ep 1 step 70/429 loss 0.0483 lr 1.94e-04 42.6분 · 남은 약 219분 · 최대 GPU 5.0GB
+ep 1 step 80/429 loss 0.0646 lr 1.91e-04 48.8분 · 남은 약 213분 · 최대 GPU 5.0GB
+ep 1 step 90/429 loss 0.0769 lr 1.88e-04 54.8분 · 남은 약 207분 · 최대 GPU 5.0GB
+ep 1 step 100/429 loss 0.0376 lr 1.84e-04 61.0분 · 남은 약 201분 · 최대 GPU 5.0GB
+ep 1 step 110/429 loss 0.0460 lr 1.80e-04 67.1분 · 남은 약 195분 · 최대 GPU 5.0GB
+ep 1 step 120/429 loss 0.1344 lr 1.75e-04 73.1분 · 남은 약 188분 · 최대 GPU 5.0GB
+ep 1 step 130/429 loss 0.0376 lr 1.70e-04 79.2분 · 남은 약 182분 · 최대 GPU 5.0GB
+ep 1 step 140/429 loss 0.1293 lr 1.65e-04 85.4분 · 남은 약 176분 · 최대 GPU 5.0GB
+ep 1 step 150/429 loss 0.0566 lr 1.59e-04 91.5분 · 남은 약 170분 · 최대 GPU 5.0GB
+ep 1 step 160/429 loss 0.0672 lr 1.53e-04 97.7분 · 남은 약 164분 · 최대 GPU 5.0GB
+ep 1 step 170/429 loss 0.0487 lr 1.47e-04 103.7분 · 남은 약 158분 · 최대 GPU 5.0GB
+ep 1 step 180/429 loss 0.0566 lr 1.41e-04 109.8분 · 남은 약 152분 · 최대 GPU 5.0GB
+ep 1 step 190/429 loss 0.0206 lr 1.34e-04 116.1분 · 남은 약 146분 · 최대 GPU 5.0GB
+ep 1 step 200/429 loss 0.1012 lr 1.27e-04 122.2분 · 남은 약 140분 · 최대 GPU 5.0GB
+ep 1 step 210/429 loss 0.0737 lr 1.20e-04 128.2분 · 남은 약 134분 · 최대 GPU 5.0GB
+ep 2 step 220/429 loss 0.0234 lr 1.13e-04 133.8분 · 남은 약 127분 · 최대 GPU 5.0GB
+ep 2 step 230/429 loss 0.0261 lr 1.07e-04 139.8분 · 남은 약 121분 · 최대 GPU 5.0GB
+ep 2 step 240/429 loss 0.0210 lr 9.96e-05 145.9분 · 남은 약 115분 · 최대 GPU 5.0GB
+ep 2 step 250/429 loss 0.0423 lr 9.28e-05 152.0분 · 남은 약 109분 · 최대 GPU 5.0GB
+ep 2 step 260/429 loss 0.0286 lr 8.60e-05 158.2분 · 남은 약 103분 · 최대 GPU 5.0GB
+ep 2 step 270/429 loss 0.0251 lr 7.94e-05 164.2분 · 남은 약 97분 · 최대 GPU 5.0GB
+ep 2 step 280/429 loss 0.0188 lr 7.30e-05 170.3분 · 남은 약 91분 · 최대 GPU 5.0GB
+ep 2 step 290/429 loss 0.0254 lr 6.68e-05 176.4분 · 남은 약 85분 · 최대 GPU 5.0GB
+ep 2 step 300/429 loss 0.0222 lr 6.09e-05 182.5분 · 남은 약 78분 · 최대 GPU 5.0GB
+ep 2 step 310/429 loss 0.0367 lr 5.52e-05 188.7분 · 남은 약 72분 · 최대 GPU 5.0GB
+ep 2 step 320/429 loss 0.0146 lr 4.99e-05 194.8분 · 남은 약 66분 · 최대 GPU 5.0GB
+ep 2 step 330/429 loss 0.0128 lr 4.49e-05 200.9분 · 남은 약 60분 · 최대 GPU 5.0GB
+ep 2 step 340/429 loss 0.0063 lr 4.03e-05 207.0분 · 남은 약 54분 · 최대 GPU 5.0GB
+ep 2 step 350/429 loss 0.0369 lr 3.61e-05 213.1분 · 남은 약 48분 · 최대 GPU 5.0GB
+ep 2 step 360/429 loss 0.0064 lr 3.24e-05 219.3분 · 남은 약 42분 · 최대 GPU 5.0GB
+ep 2 step 370/429 loss 0.0195 lr 2.91e-05 225.3분 · 남은 약 36분 · 최대 GPU 5.0GB
+ep 2 step 380/429 loss 0.0122 lr 2.63e-05 231.4분 · 남은 약 30분 · 최대 GPU 5.0GB
+ep 2 step 390/429 loss 0.0102 lr 2.40e-05 237.5분 · 남은 약 24분 · 최대 GPU 5.0GB
+ep 2 step 400/429 loss 0.0042 lr 2.22e-05 243.5분 · 남은 약 18분 · 최대 GPU 5.0GB
+ep 2 step 410/429 loss 0.0066 lr 2.10e-05 249.7분 · 남은 약 12분 · 최대 GPU 5.0GB
+ep 2 step 420/429 loss 0.0087 lr 2.02e-05 255.8분 · 남은 약 5분 · 최대 GPU 5.0GB
+ep 2 step 429/429 loss 0.0163 lr 2.00e-05 261.3분 · 남은 약 0분 · 최대 GPU 5.0GB
+ep 2 step 430/429 loss 0.0001 lr 2.00e-05 261.4분 · 남은 약 -1분 · 최대 GPU 5.0GB
+저장 /root/adapters/spark_s1_4b_oos 총 261.4분

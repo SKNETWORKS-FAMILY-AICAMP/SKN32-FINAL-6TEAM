@@ -10,9 +10,11 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 import httpx
+import pytest
 
 from app.domains.travel_ops.ports.data_sources.utic import UticIncidents, UticRouteEvents
 from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_route_adjustment
 from app.domains.travel_ops.components.watch.trip_watch import TripTickResult, TripWatcher
 
 KST = ZoneInfo("Asia/Seoul")
@@ -94,3 +96,28 @@ def test_a_planned_subway_route_is_counted_as_unchecked():
     assert result.unchecked == [{"trip_id": result.unchecked[0]["trip_id"], "item": item.title,
                                  "targets": ["3호선:경복궁", "4호선:서울역"]}]
     assert result.fatal == [] and result.adjusted == []
+
+
+@pytest.mark.parametrize("stored_before_marker", [False, True])
+def test_live_road_name_match_does_not_auto_change_an_unverified_direction(stored_before_marker):
+    # 실제 UTIC 파서 → 사건 어댑터 → 공통 조정 함수. 다른 방향도 같은 도로명을 갖는다.
+    events = _events(_record("[집회] 세종대로 서울역에서 광화문 방향 전면 통제"))
+    found = events.affecting(["도로:세종대로"])
+    assert found["도로:세종대로"]["route_match"] == {"status": "unverified", "basis": "road_name_only"}
+    if stored_before_marker:
+        found["도로:세종대로"].pop("route_match")
+    item = _item()  # 경복궁 → 서울역: 위 사건과 반대 방향의 명시적 시험 조건
+    plan = plan_route_adjustment(item=item, following=None, route=ROUTE, events=found, now=NOW)
+    assert isinstance(plan, NoChange) and plan.status == "unresolved"
+    assert plan.detail["reason"] == "route_applicability_unverified"
+    assert plan.detail["causes"][0]["incident_id"] == "X1"
+    assert item.detail.get("option") is None
+
+
+def test_verified_replay_event_keeps_existing_route_selection():
+    # 재생 자료가 명시한 영향 조건은 기존 계약 그대로 유지한다.
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
+    found = {"도로:세종대로": {"effect": "road_control", "mode": "replay", "summary": "시험 통제"}}
+    plan = plan_route_adjustment(item=_item(), following=None, route=ROUTE, events=found, now=NOW)
+    assert isinstance(plan, ItineraryChange)
+    assert plan.replacements[next(iter(plan.replacements))].detail["option"] == "subway"

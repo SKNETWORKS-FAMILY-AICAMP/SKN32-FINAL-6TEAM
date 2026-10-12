@@ -1,0 +1,20 @@
+--- before/turn_restrictions.py
++++ after/turn_restrictions.py
+@@ -12,10 +12,14 @@
+ 
+ 
+ def signature(path):
+-    if not path.exists():
++    try:
++        stat = path.stat()
++    except FileNotFoundError:
+         return None
+-    stat = path.stat()
+-    return stat.st_mtime_ns, stat.st_size
++    # 원자 교체는 크기·수정시각이 같아도 다른 파일이다.
++    # 파일 식별자가 없는 파일시스템에서는 내용으로 교체를 검사한다.
++    identity = (stat.st_dev, stat.st_ino) if stat.st_ino else sha256(path)
++    return identity, stat.st_mtime_ns, stat.st_size
+ 
+ 
+ def graph_signature(directory):

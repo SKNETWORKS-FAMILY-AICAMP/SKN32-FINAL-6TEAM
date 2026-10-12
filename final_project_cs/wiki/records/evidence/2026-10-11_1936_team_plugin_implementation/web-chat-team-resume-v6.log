@@ -1,0 +1,10 @@
+.................F....................                                   [100%]
+================================== FAILURES ===================================
+___________ test_a_change_request_still_answers_with_what_happened ____________
+tests\e2e\test_web_api.py:419: in test_a_change_request_still_answers_with_what_happened
+    assert resumed_state["customer_input"]["message"] == "30���̿�"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: string indices must be integers, not 'str'
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_web_api.py::test_a_change_request_still_answers_with_what_happened
+1 failed, 37 passed in 51.36s

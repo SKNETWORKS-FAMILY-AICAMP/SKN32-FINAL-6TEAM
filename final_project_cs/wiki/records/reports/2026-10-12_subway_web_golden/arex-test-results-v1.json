@@ -1,0 +1,30 @@
+{
+  "developer_api_calls": 0,
+  "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-12_110043_arex_published_fare",
+  "attempts": [
+    {
+      "files": 4,
+      "passed": 56,
+      "failed": 1,
+      "errors": 1,
+      "seconds": 27.96,
+      "exit_code": 1,
+      "failure": "New test incorrectly expected the existing 15-minute gate uncertainty to end at 06:40. Corrected to 06:45 without changing the production gate policy.",
+      "error": "pytest default temporary directory creation failed under sandbox. Reran using a fresh workspace --basetemp path."
+    },
+    {
+      "command": "C:/Users/playdata2/anaconda3/python.exe -X utf8 -m pytest tests/unit/travel/mobility/test_arex_published_fare.py tests/unit/travel/mobility/test_special_rail_fare.py tests/unit/travel/mobility/test_subway_fare_upper.py tests/unit/travel/mobility/test_fare_est_v1.py tests/unit/travel/mobility/test_mixed_fare_upper_v1.py tests/unit/travel/mobility/test_fare_discount_upper_v1.py tests/unit/travel/mobility/test_transfer_fare_product_v1.py tests/unit/travel/mobility/test_fare_official_web_20261012.py --basetemp .tmp/pytest_arex_20261012_v2 -q",
+      "files": 8,
+      "passed": 143,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "new_arex_cases": 35,
+      "seconds": 23.47,
+      "exit_code": 0,
+      "post_test_warning": "pyreadline3 Console.__del__ raised an ignored Windows handle OSError after successful pytest exit."
+    }
+  ],
+  "scope": "Local unit/product fare composition, offline. No mock server screen test or deployed cs project application response was performed.",
+  "checked_on": "2026-10-12"
+}

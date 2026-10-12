@@ -1,0 +1,91 @@
+{
+  "original_job": "e4bqat_original_d2",
+  "trained_job": "e4bqat_oos2r_d2",
+  "suite": "D2",
+  "original_model": "Gemma-4-E4B-it QAT Q4_0 original",
+  "our_adapter_model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos2r adapter",
+  "original_answer_sha256": "a40db4a5e853db2c28331843575e23e3b4aed64ebbb196b0e7d8be456607845e",
+  "trained_answer_sha256": "b853d29a958df9454c76a8225f86613e39a3b53c3647109d39059154a6dfc92f",
+  "full_ids_gold_type_match": true,
+  "frozen_input_script_engine_model_match": true,
+  "registered_adapter_hash_match": true,
+  "original_our_training": false,
+  "adapter_our_training": true,
+  "groups": {
+    "positive": {
+      "total": 0,
+      "original": {
+        "total": 0,
+        "correct": 0,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.0,
+          1.0
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          1.0
+        ]
+      },
+      "our_travel_adapter": {
+        "total": 0,
+        "correct": 0,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.0,
+          1.0
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          1.0
+        ]
+      },
+      "trained_only_correct": 0,
+      "original_only_correct": 0,
+      "exact_p": 1
+    },
+    "negative": {
+      "total": 1000,
+      "original": {
+        "total": 1000,
+        "correct": 931,
+        "false_pick": 68,
+        "failed_or_missing": 1,
+        "correct_wilson95": [
+          0.9135852797713628,
+          0.9451160544140889
+        ],
+        "false_pick_wilson95": [
+          0.05399245780853015,
+          0.08531386152298948
+        ]
+      },
+      "our_travel_adapter": {
+        "total": 1000,
+        "correct": 999,
+        "false_pick": 1,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9943574414020421,
+          0.9998234536293739
+        ],
+        "false_pick_wilson95": [
+          0.00017654637062607809,
+          0.0056425585979579355
+        ]
+      },
+      "trained_only_correct": 69,
+      "original_only_correct": 1,
+      "exact_p": 1.2027867851011065e-19
+    }
+  },
+  "repetitions": 1,
+  "final_ranking": false,
+  "limitations": [
+    "existing developer/regression suite",
+    "paired exact test does not replace independent holdout or seed repeats",
+    "no direct speed comparison"
+  ]
+}

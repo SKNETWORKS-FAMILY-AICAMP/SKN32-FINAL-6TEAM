@@ -330,8 +330,13 @@ def test_g4_dir_same_minute():
         def travel_min_on_path(self, line, path, to):
             return {"U": 12, "D": 5}[path]
 
+    from app.domains.travel_ops.instances.mobility.engine.verify_time import Verifier
+
     class V:
         lo = Lo()
+        ride_of = Verifier.ride_of
+        _scheduled_arrival_sec = staticmethod(Verifier._scheduled_arrival_sec)
+        _scheduled_arrival_min = Verifier._scheduled_arrival_min
 
         def __init__(self, deps):
             self.deps = deps

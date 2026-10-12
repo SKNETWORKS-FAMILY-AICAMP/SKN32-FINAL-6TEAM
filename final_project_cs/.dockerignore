@@ -17,3 +17,6 @@ node_modules/
 **/__pycache__/
 *.pyc
 .git
+
+# 과거 원문 백업을 실행 이미지에 복사하지 않는다.
+**/_backup/

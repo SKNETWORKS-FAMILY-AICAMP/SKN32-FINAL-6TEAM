@@ -1,0 +1,264 @@
+{
+  "checked_at_kst": "2026-10-12T04:13:20.068102+09:00",
+  "scope": "역할·코드 위치 안내 2개 본문의 로컬 링크 대상. 경로 존재가 기능 통과·담당 배정·외부 약관 적합성을 뜻하지 않음",
+  "checked": 51,
+  "passed": 51,
+  "rows": [
+    {
+      "source": "wiki/delivery/roles.md",
+      "target": "../../README.md#팀-소개",
+      "exists": true
+    },
+    {
+      "source": "wiki/delivery/roles.md",
+      "target": "../../final_project_cs/RULE.md",
+      "exists": true
+    },
+    {
+      "source": "wiki/delivery/roles.md",
+      "target": "../../final_project_cs/wiki/data/migrations.md",
+      "exists": true
+    },
+    {
+      "source": "wiki/delivery/roles.md",
+      "target": "../../final_project_cs/wiki/records/reports/2026-10-11_2117_W16-responsibility-review.md",
+      "exists": true
+    },
+    {
+      "source": "wiki/delivery/roles.md",
+      "target": "../../final_project_cs/wiki/teams/code-layout.md",
+      "exists": true
+    },
+    {
+      "source": "wiki/delivery/roles.md",
+      "target": "../../final_project_cs/wiki/teams/team-contract/index.md",
+      "exists": true
+    },
+    {
+      "source": "wiki/delivery/roles.md",
+      "target": "../../program/research/baseline_completion_2026-10-12/tasks/wiki/report.md",
+      "exists": true
+    },
+    {
+      "source": "wiki/delivery/roles.md",
+      "target": "../../program/research/sql_review_2026-10-11/references/manifest.json",
+      "exists": true
+    },
+    {
+      "source": "wiki/delivery/roles.md",
+      "target": "../governance/document-standard.md",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../../program/research/baseline_completion_2026-10-12/tasks/wiki/report.md",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../../wiki/delivery/roles.md",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../../wiki/governance/document-standard.md",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/application/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/application/proposal_guard.py",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/core/actions.py",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/core/contracts.py",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/core/registry.py",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/domains/travel_ops/components/actions/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/domains/travel_ops/entry/trip_api.py",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/domains/travel_ops/instances/activity/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/domains/travel_ops/instances/booking_handoff/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/domains/travel_ops/instances/dining/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/domains/travel_ops/instances/locked/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/domains/travel_ops/instances/mobility/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/domains/travel_ops/modules/web_account/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/infrastructure/db/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/presentation/security.py",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../app/presentation/ui/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../config/project.yaml",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../eval/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../frontend/apps/web/src/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../frontend/apps/web/tests/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../tests/architecture/test_travel_ops_cells.py",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../tests/contract/test_core_isolation.py",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../tests/contract/test_team_layout.py",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../tests/contract/test_team_tool_discipline.py",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../tests/contract/test_web_client_contract.py",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../tests/integration/travel/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../tests/security/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../tests/unit/travel/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../tests/unit/travel/activity/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../tests/unit/travel/dining/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../tests/unit/travel/mobility/",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../../tests/unit/travel/test_evidence_accumulates.py",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../data/migrations.md",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../decisions/D-CS-013-domain-folder-layout.md",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../external/web-screen-api.md",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../quality/index.md",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "../records/reports/2026-10-11_2117_W16-responsibility-review.md",
+      "exists": true
+    },
+    {
+      "source": "final_project_cs/wiki/teams/code-layout.md",
+      "target": "team-contract/index.md",
+      "exists": true
+    }
+  ],
+  "readme_sha256": "53d3dcf7bd9d491bb8ae9c24161791abefd8a0f827474a559d9cb613a91175d8"
+}

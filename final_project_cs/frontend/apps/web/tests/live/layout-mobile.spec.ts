@@ -6,7 +6,7 @@ import { checkPlan, mockServer, start, TRIP_ID } from "./helpers";
  * (2026-10-07 사용자 지시: 데스크탑 화면과 그 스위치는 없앴다.) 항로 지킴이 카드와 알림은 그 틀 안에서 틀 폭에 맞게 뜨고, 한 번 켜면 켜진 상태가 기본이다. 테스트용 mock 서버로 도는 자동 시험이다(화면 반응 — 실서버 확인 아님).
  */
 const PLAN = "10/1 09:00 경복궁 관람";
-const device = (page: Page) => page.locator('[class*="__device"]').first();
+const device = (page: Page) => page.locator('div[data-journey], div[data-floating]').first();
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
@@ -16,13 +16,16 @@ test("기본은 휴대폰 크기 틀이다 — 넓은 창(1280)에서도 계획 
   await start(page);
   for (const path of ["/trips/new", "/trips", `/trips/${TRIP_ID}`, "/mypage"]) {
     await page.goto(path);
+    if (path === `/trips/${TRIP_ID}`) await expect(page.getByRole("region", { name: "여행 지도", exact: true })).toBeVisible();
     await expect(device(page)).toBeVisible();
     const frame = (await device(page).boundingBox())!;
     expect(frame.width).toBeLessThanOrEqual(402.5);
-    const main = (await page.locator("#main-content").boundingBox())!;
+    const root = page.locator("#main-content");
+    await expect(root).toBeVisible();
+    const main = (await root.boundingBox())!;
     expect(main.width).toBeLessThanOrEqual(402.5);
     expect(main.x).toBeGreaterThanOrEqual(frame.x - 1);
-    expect(await device(page).evaluate((element) => { const scroller = element.querySelector('[class*="__scroll"]') as HTMLElement | null; return scroller ? scroller.scrollWidth <= scroller.clientWidth : true; })).toBe(true);
+    expect(await device(page).evaluate((element) => element.scrollWidth <= element.clientWidth && Array.from(element.querySelectorAll<HTMLElement>('[class*="scroll"]')).every(scroller => scroller.scrollWidth <= scroller.clientWidth))).toBe(true);
   }
 });
 
@@ -42,11 +45,12 @@ test("항로 지킴이 카드는 휴대폰 틀 안에서 틀 폭에 맞는 아�
   expect(sheet.y + sheet.height).toBeLessThanOrEqual(frame.y + frame.height + 1);
 });
 
-test("항로 지킴이를 끄면 알림이 틀 안에서 틀 폭에 맞는 하얀 카드로 뜨고 몇 초 뒤 저절로 사라진다. 아이콘은 메뉴 버튼과 같은 흰색 반투명이고 위에 말풍선이 없다", async ({ page, request }) => {
+test("항로 지킴이를 끄면 알림이 틀 안에서 틀 폭에 맞는 하얀 카드로 뜨고 몇 초 뒤 저절로 사라진다. 메뉴 서랍 머리의 아이콘은 메뉴 버튼과 같은 흰색 반투명이고 위에 말풍선이 없다", async ({ page, request }) => {
   await mockServer(request).scenario({ guardian: "on" });
   await page.setViewportSize({ width: 1280, height: 900 });
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();                                // `[2026-10-07 목업 C안]` 여행의 아이콘은 메뉴 서랍 머리(닫기 ✕ 왼쪽)에 있다
   const icon = page.getByRole("button", { name: "항로 지킴이 끄기" });
   await expect(icon).toBeVisible();
   // 메뉴 버튼과 같은 바탕(반투명 흰색)
@@ -77,14 +81,16 @@ test("한 번 켜면 켜진 상태가 기본이다 — 다음 계획에서는 �
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await checkPlan(page, "켜고 진행");                                                                    // 처음에는 묻는다
-  await expect(page).toHaveURL(/\/(intakes|trips)\//, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/(?:intakes|trips)\/(?!new(?:$|[/?#])|starting(?:$|[/?#]))[^/?#]+/, { timeout: 15_000 });
+  await expect.poll(async () => (await server.received("POST", "/v1/web/trip-intakes")).length).toBe(1);
   // 같은 브라우저에서 새 계획: 아이콘이 처음부터 켜져 있고, 누르면 카드 없이 바로 진행한다
   await page.goto("/trips/new");
   await expect(page.getByRole("button", { name: "항로 지킴이 끄기" })).toBeVisible();
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page).toHaveURL(/\/(intakes|trips)\//, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/(?:intakes|trips)\/(?!new(?:$|[/?#])|starting(?:$|[/?#]))[^/?#]+/, { timeout: 15_000 });
+  await expect.poll(async () => (await server.received("POST", "/v1/web/trip-intakes")).length).toBe(2);
   const plans = await server.received("POST", "/plan");
   const intakes = await server.received("POST", "/v1/web/trip-intakes");
   expect(intakes.length).toBeGreaterThanOrEqual(2);

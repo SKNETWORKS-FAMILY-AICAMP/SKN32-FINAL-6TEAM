@@ -36,7 +36,10 @@ def build(recs):
         g.write(json.dumps({"_meta": True, "source_id": "synthetic", "dates": [20260601, 20260913]}) + "\n")
         for r in recs:
             g.write(json.dumps(r) + "\n")
-    return BusSegProfile.load(f.name)
+    try:
+        return BusSegProfile.load(f.name)     # load 는 끝까지 읽어 메모리에 올린다 — 바로 지워도 된다
+    finally:
+        Path(f.name).unlink(missing_ok=True)  # delete=False 라 안 지우면 임시 폴더(TMP 가 cwd 면 저장소)에 남는다
 
 
 STOPS = [{"seq": i, "station_id": f"S{i}", "sect_dist_m": 600} for i in range(1, 6)]

@@ -53,6 +53,18 @@ def create_ops_app(*, routers: list | None = None) -> FastAPI:
     app = FastAPI(title="triPilot 운영 콘솔")
     app.add_middleware(LoopbackOnly)
     mount_ui(app)
+    # 관리자 웹앱의 JSON 표면도 이 운영 프로세스에만 등록한다.
+    from app.presentation.admin_api import build_router as build_admin_router, operator, require
+
+    app.include_router(build_admin_router(snapshot_provider=composition.build_admin_snapshot))
+    from app.presentation.admin_limits_api import build_router as build_limits_router
+    app.include_router(build_limits_router(operator_dependency=operator, require_permission=require))
+    from app.presentation.admin_operations_api import build_router as build_operations_router
+    app.include_router(build_operations_router(operator_dependency=operator, require_permission=require))
+    from app.domains.travel_ops.entry.admin_simulation_api import build_router as build_simulation_router
+    app.include_router(build_simulation_router(operator_dependency=operator, require_permission=require))
+    from app.domains.travel_ops.entry.admin_watch_api import build_router as build_watch_router
+    app.include_router(build_watch_router(operator_dependency=operator, require_permission=require))
     for router in (composition.build_ops_routers() if routers is None else routers):
         app.include_router(router)
     install_error_handlers(app)

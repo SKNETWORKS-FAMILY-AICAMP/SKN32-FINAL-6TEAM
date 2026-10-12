@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>여행 활동 대체 추천 흐름</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@400;500;600&family=Geist+Mono&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;padding:32px;background:#fbfcfd;color:#161c28;font-family:'Geist','Noto Sans KR','Malgun Gothic',sans-serif}.frame{max-width:960px;margin:auto}h1{font-family:'Instrument Serif','Noto Serif KR',serif;font-size:28px;font-weight:400;margin:0 0 24px}.lead{font-size:16px;line-height:1.6;margin:0 0 20px}svg{width:100%;display:block}.node{fill:#fff;stroke:#161c28;stroke-width:1}.input{fill:#f1f4f8;stroke:#7a8599}.optional{fill:#fbfcfd;stroke:#6b7488;stroke-dasharray:4 3}.focal{fill:#faf3e6;stroke:#a8720c}.name{font-family:'Geist','Noto Sans KR','Malgun Gothic',sans-serif;font-size:16px;font-weight:600;fill:#161c28;text-anchor:middle}.detail,.legend{font-family:'Geist','Noto Sans KR','Malgun Gothic',sans-serif;font-size:12px;fill:#6b7488;text-anchor:middle}.path{fill:none;stroke:#6b7488;stroke-width:1.2;marker-end:url(#recommendation-flow-arrow)}.skip{stroke-dasharray:4 3}.foot{font-size:12px;line-height:1.6;color:#6b7488;margin-top:16px}@media(max-width:640px){body{padding:16px}.drawing{overflow-x:auto}svg{min-width:900px}}@media print{body{padding:0}.drawing{overflow:visible}}
+</style></head><body><main class="frame">
+<h1>조건은 코드로, 취향의 의미는 모델로</h1>
+<p class="lead">고객의 취향과 중요도를 전달받은 Activity가 방문 가능 후보를 확보합니다. 의미 평가 뒤에는 코드로 순위를 계산하고, 추가 효과가 확인된 요청에서만 Luna 재정렬을 사용합니다.</p>
+<div class="drawing"><svg viewBox="0 0 960 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="recommendation-flow-title recommendation-flow-desc">
+<title id="recommendation-flow-title">여행 활동 대체 추천 흐름</title>
+<desc id="recommendation-flow-desc">고객 분석 정보를 코어가 Activity에 전달하고, 규칙 추천과 취향 의미 평가를 거쳐 필요할 때만 모델로 재정렬한 뒤 코드가 후보와 조건을 다시 검증하는 제안 구조입니다.</desc>
+<defs><marker id="recommendation-flow-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#6b7488"/></marker><marker id="recommendation-flow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#a8720c"/></marker><marker id="recommendation-flow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#2f5bd8"/></marker></defs>
+<rect width="960" height="420" fill="#fbfcfd"/>
+<path class="path" d="M180 72H216"/><path class="path" d="M376 72H412"/><path class="path" d="M592 72H668"/><path class="path" d="M502 104V172"/><path class="path" d="M592 204H668"/>
+<path class="path" d="M908 72H932Q940 72 940 80V272Q940 280 932 280H864Q856 280 856 288V296"/>
+<path class="path skip" d="M502 236V256Q502 264 510 264H704Q712 264 712 272V296"/>
+<path class="path skip" d="M788 236V296"/>
+<rect class="node input" x="20" y="40" width="160" height="64" rx="8"/><text class="name" x="100" y="68">고객 분석 결과</text><text class="detail" x="100" y="88">취향·기피·중요도</text>
+<rect class="node" x="216" y="40" width="160" height="64" rx="8"/><text class="name" x="296" y="68">코어 전달</text><text class="detail" x="296" y="88">여행 맥락·공통 계약</text>
+<rect class="node focal" x="412" y="40" width="180" height="64" rx="8"/><text class="name" x="502" y="68">활동 후보 확인</text><text class="detail" x="502" y="88">휴무·예산·시간·안전</text>
+<rect class="node" x="668" y="40" width="240" height="64" rx="8"/><text class="name" x="788" y="68">규칙 추천</text><text class="detail" x="788" y="88">거리·분류·중요도로 계산</text>
+<rect class="node" x="412" y="172" width="180" height="64" rx="8"/><text class="name" x="502" y="200">취향 의미 평가</text><text class="detail" x="502" y="220">Jev API(유료) 등</text>
+<rect class="node optional" x="668" y="172" width="240" height="64" rx="8"/><text class="name" x="788" y="200">필요할 때 재정렬</text><text class="detail" x="788" y="220">Luna · 개선 효과 검증 후</text>
+<rect class="node focal" x="668" y="296" width="240" height="64" rx="8"/><text class="name" x="788" y="324">코드 재검증·최고안</text><text class="detail" x="788" y="344">실제 후보 ID·조건·근거</text>
+<line x1="20" y1="384" x2="940" y2="384" stroke="#dbe0ea" stroke-width="1"/>
+<text class="legend" x="220" y="404">실선: 기본 처리 흐름</text><text class="legend" x="636" y="404">점선: 재정렬을 생략하거나 선택적으로 호출</text>
+</svg></div>
+<p class="foot">2026-10-09 연구 제안입니다. 운영 코드에 반영한 완료 구조가 아닙니다. 이번 소액 시험은 고정 후보의 재정렬을 비교하며, 후보 검색 품질과 사람의 실제 선호 검수는 별도입니다. 문서용 가로 그림이며 작은 화면에서는 가로로 볼 수 있습니다.</p>
+</main></body></html>

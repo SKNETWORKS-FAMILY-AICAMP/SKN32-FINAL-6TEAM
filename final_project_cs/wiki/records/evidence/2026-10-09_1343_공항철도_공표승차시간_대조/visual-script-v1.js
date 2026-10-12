@@ -1,0 +1,1 @@
+document.getElementById('filter').addEventListener('change',function(){document.querySelectorAll('article[data-status]').forEach(card=>{card.hidden=this.value!=='전체'&&card.dataset.status!==this.value;});});

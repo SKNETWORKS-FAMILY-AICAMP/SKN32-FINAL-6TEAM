@@ -1,0 +1,29 @@
+--- before/departure_observer.py
++++ after/departure_observer.py
+@@ -19,6 +19,17 @@
+     """변환 전에 운행일 범위를 검사한다. 초대형 정수도 실수로 변환하지 않는다."""
+     return (not isinstance(value, bool) and isinstance(value, (int, float))
+             and 0 <= value <= SERVICE_DAY_MAX_MIN)
++
++
++def _valid_saved_leg(leg):
++    """승차 경로의 필수 표시·식별 이름을 조회 전에 검사한다."""
++    if not isinstance(leg, dict):
++        return False
++    mode = leg.get('mode', 'subway')
++    if mode not in ('bus', 'subway'):
++        return True
++    required = ('from', 'to', 'route' if mode == 'bus' else 'line')
++    return all(isinstance(leg.get(key), str) and bool(leg[key].strip()) for key in required)
+ 
+ 
+ def _same_place(saved, current):
+@@ -200,7 +211,7 @@
+         return _observe_walk(runtime, context, option, base, now=now, deadline=deadline,
+                              origin=origin, destination=destination)
+     if (not isinstance(check, dict) or not isinstance(legs, list) or not legs
+-            or any(not isinstance(leg, dict) for leg in legs) or check.get('legs') != legs):
++            or any(not _valid_saved_leg(leg) for leg in legs) or check.get('legs') != legs):
+         return fail('needs_replan', 'route_check_missing_or_changed')
+     if 'subway_identity' in option or 'subway_station_version' in basis:
+         from .subway_identity import boarding_identity

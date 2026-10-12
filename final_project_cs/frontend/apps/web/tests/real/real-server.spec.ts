@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { finishOnboarding, start } from "../live/helpers";
+import { finishOnboarding, openNotices, openTitle, paneTab, start, tripScreen } from "../live/helpers";
 
 /**
  * A brand-new customer on the REAL server: first visit → survey → plan → read → confirm → trip screen → chat → map.
@@ -78,26 +78,26 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   await expect(page).toHaveURL(/\/trips\/[0-9a-f-]{36}$/, { timeout: 120_000 });
   const tripId = page.url().split("/").pop();
   console.log("REAL_TRIP_ID", tripId);
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
 
-  // 여행 화면: 서버가 등록한 일정과 서버가 보낸 통지
-  const schedule = page.locator("#trip-pane-schedule");
+  // 여행 화면(지도 + 시트, `[2026-10-07]` 목업 C안): 서버가 등록한 일정과, 종 아래의 서버가 보낸 통지
+  const schedule = tripScreen(page);
   await expect(schedule.getByText("경복궁").first()).toBeVisible();
   await expect(schedule.getByText("광장시장").first()).toBeVisible();
-  const notices = page.locator("details").filter({ hasText: "받은 알림" });
-  await expect(notices).toBeVisible();
-  await notices.locator("summary").click();
-  await expect(notices).toContainText("여행 일정이 준비되었습니다");
-  await expect(page.getByRole("link", { name: "여행계획서 열기" })).toHaveAttribute("href", /\/plan\/[0-9a-f-]{36}\?t=/);
+  const center = await openNotices(page);
+  await center.getByRole("tab", { name: /받은 알림/ }).click();
+  await expect(center.getByRole("tabpanel")).toContainText("여행 일정이 준비되었습니다");
+  await center.getByRole("button", { name: "알림 센터 닫기" }).click();
+  await expect((await openTitle(page)).getByRole("link", { name: "여행계획서 열기" })).toHaveAttribute("href", /\/plan\/[0-9a-f-]{36}\?t=/);
 
   // 내 여행: 같은 브라우저(같은 키)로 첫 화면에 돌아오면 방금 만든 여행이 카드에 있다
   await page.goto("/");
   await expect(page.getByRole("region", { name: "내 여행", exact: true }).getByRole("link").first()).toBeVisible();
   await page.goto(`/trips/${tripId}`);
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
 
   // 채팅: 화면의 빠른 질문 4개에 서버가 이 여행의 사실로 답한다(규정 검색으로 새지 않는다)
-  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  await paneTab(page, "채팅").click();
   const chat = page.locator("#trip-pane-chat");
   const last = () => chat.locator("article[data-role=assistant]").last();
   const notRule = /규정에서 이 질문에 맞는 내용은 찾지 못했어요|담당자에게 넘겼어요/;
@@ -122,9 +122,9 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   expect(booking).toContain("예약 기록 없음");
   expect(booking).toContain("광장시장");
 
-  await page.getByRole("button", { name: "일정", exact: true }).click();
+  await paneTab(page, "일정").click();
   await schedule.getByText("경복궁").first().click();
-  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  await paneTab(page, "채팅").click();
   const detail = await ask("선택 일정");
   expect(detail).toContain("경복궁 관람");
   expect(detail).toMatch(/주소|운영시간/);            // 주소·운영시간 줄이 있다 — 값은 관광공사 식별자가 있어야 채워진다(2026-09-28 실측: 식별자 없는 장소는 「모름」)
@@ -133,9 +133,8 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   const next = await ask("다음 일정");
   expect(next).toContain("광장시장");
 
-  // 지도: 실제 구글 지도가 서버 좌표로 그려진다
-  await page.getByRole("button", { name: /지도|방문 순서/, exact: false }).first().click();
-  const map = page.locator("#trip-pane-map");
+  // 지도: 실제 구글 지도가 서버 좌표로 그려진다(지도는 시트 뒤에 늘 있다)
+  const map = page.getByRole("region", { name: "여행 지도", exact: true });
   await expect(map.locator(".gm-style")).toHaveCount(1, { timeout: 60_000 });
   expect(await map.locator("img").count()).toBeGreaterThan(0);
 });
@@ -158,9 +157,9 @@ test("같은 사용자의 두 번째 여행: 등록 화면의 「계획 짜 주�
   console.log("REAL_PLAN_TRIP_ID", page.url().split("/").pop());
 
   // 서버가 짠 일정: 첫날 첫 항목이 08:00 아침 식사, 첫 활동은 그 뒤(09:00 이후)
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible({ timeout: 60_000 });
-  await expect(page.locator("#trip-pane-schedule time").first()).toBeVisible({ timeout: 60_000 });
-  const times = await page.locator("#trip-pane-schedule time").allInnerTexts();
+  await expect(tripScreen(page)).toBeVisible({ timeout: 60_000 });
+  await expect(tripScreen(page).locator("time").first()).toBeVisible({ timeout: 60_000 });
+  const times = await tripScreen(page).locator("time").allInnerTexts();
   console.log("REAL_PLAN_FIRST_DAY_TIMES", times.join(" "));
   expect(times[0]).toBe("08:00");
   expect(times.length).toBeGreaterThanOrEqual(3);

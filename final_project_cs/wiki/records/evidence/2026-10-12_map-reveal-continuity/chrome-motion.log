@@ -1,0 +1,130 @@
+[WebServer] (node:24188) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:15780) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:17620) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:6208) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:20924) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:5880) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21940) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:29256) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:10912) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:24608) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:25148) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:30328) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1320) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 4 tests using 1 worker
+
+(node:21216) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 375px 순서대로 지도 표시 · 동작 줄이기 false › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (11.1s)
+  x  2 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 375px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (9.5s)
+(node:30216) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 3 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 false › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (10.8s)
+  x  4 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (9.4s)
+
+
+  1) tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 375px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 8
+
+    - Array []
+    + Array [
+    +   "{\"label\":\"1\",\"x\":188,\"y\":107,\"at\":5087.4000000059605,\"transform\":\"translate3d(-814px, -55px, 0px)\",\"chips\":[\"1번 일정이 화면 밖에 있어요 · 3.8km · 누르면 그곳으로 가요\"]}",
+    +   "{\"label\":\"1\",\"x\":188,\"y\":107,\"at\":5098,\"transform\":\"translate3d(-814px, -55px, 0px)\",\"chips\":[\"1번 일정이 화면 밖에 있어요 · 3.8km · 누르면 그곳으로 가요\"]}",
+    +   "{\"label\":\"2\",\"x\":188,\"y\":107,\"at\":6827,\"transform\":\"translate3d(663px, -13px, 0px)\",\"chips\":[\"2 · 1번 일정이 화면 밖에 있어요 · 1.9km · 누르면 그곳으로 가요\"]}",
+    +   "{\"label\":\"2\",\"x\":188,\"y\":107,\"at\":6833,\"transform\":\"translate3d(663px, -13px, 0px)\",\"chips\":[\"2 · 1번 일정이 화면 밖에 있어요 · 1.9km · 누르면 그곳으로 가요\"]}",
+    +   "{\"label\":\"3\",\"x\":187,\"y\":108,\"at\":8322,\"transform\":\"translate3d(392px, 1231px, 0px)\",\"chips\":[\"3 · 2번 일정이 화면 밖에 있어요 · 540m · 누르면 그곳으로 가요\",\"1번 일정이 화면 밖에 있어요 · 2km · 누르면 그곳으로 가요\"]}",
+    +   "{\"label\":\"3\",\"x\":187,\"y\":108,\"at\":8334.800000011921,\"transform\":\"translate3d(392px, 1231px, 0px)\",\"chips\":[\"3 · 2번 일정이 화면 밖에 있어요 · 540m · 누르면 그곳으로 가요\",\"1번 일정이 화면 밖에 있어요 · 2km · 누르면 그곳으로 가요\"]}",
+    + ]
+
+       99 |       });
+      100 |       await test.info().attach("reveal-frame-evidence", { body: JSON.stringify(log), contentType: "application/json" });
+    > 101 |       expect(log.failures).toEqual([]);
+          |                            ^
+      102 |       if (reduced) expect(log.animations).toEqual([]);
+      103 |       else { expect(new Set(log.positions).size).toBeGreaterThan(8); expect(log.animations).toContain(300); }
+      104 |       if (tilesReady) await tilesReady();
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\map-reveal-continuity-20261012.spec.ts:101:28
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\map-reveal-motion\map-reveal-continuity-2026-c6a76-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\map-reveal-motion\map-reveal-continuity-2026-c6a76-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\map-reveal-motion\map-reveal-continuity-2026-c6a76-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\map-reveal-motion\map-reveal-continuity-2026-c6a76-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\map-reveal-motion\map-reveal-continuity-2026-c6a76-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 7
+
+    - Array []
+    + Array [
+    +   "{\"label\":\"1\",\"x\":200,\"y\":101,\"at\":5064.5999999940395,\"transform\":\"translate3d(-802px, -61px, 0px)\",\"chips\":[\"1번 일정이 화면 밖에 있어요 · 3.8km · 누르면 그곳으로 가요\"]}",
+    +   "{\"label\":\"2\",\"x\":200,\"y\":101,\"at\":6824.399999976158,\"transform\":\"translate3d(676px, -19px, 0px)\",\"chips\":[\"2번 일정이 화면 밖에 있어요 · 1.9km · 누르면 그곳으로 가요\",\"1번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\"]}",
+    +   "{\"label\":\"2\",\"x\":200,\"y\":101,\"at\":6827.199999988079,\"transform\":\"translate3d(676px, -19px, 0px)\",\"chips\":[\"2번 일정이 화면 밖에 있어요 · 1.9km · 누르면 그곳으로 가요\",\"1번 일정이 화면 밖에 있어요 · 2.3km · 누르면 그곳으로 가요\"]}",
+    +   "{\"label\":\"3\",\"x\":200,\"y\":102,\"at\":8294.5,\"transform\":\"translate3d(405px, 1225px, 0px)\",\"chips\":[\"3 · 2 · 1번 일정이 화면 밖에 있어요 · 540m · 누르면 그곳으로 가요\"]}",
+    +   "{\"label\":\"3\",\"x\":200,\"y\":102,\"at\":8305,\"transform\":\"translate3d(405px, 1225px, 0px)\",\"chips\":[\"3 · 2 · 1번 일정이 화면 밖에 있어요 · 540m · 누르면 그곳으로 가요\"]}",
+    + ]
+
+       99 |       });
+      100 |       await test.info().attach("reveal-frame-evidence", { body: JSON.stringify(log), contentType: "application/json" });
+    > 101 |       expect(log.failures).toEqual([]);
+          |                            ^
+      102 |       if (reduced) expect(log.animations).toEqual([]);
+      103 |       else { expect(new Set(log.positions).size).toBeGreaterThan(8); expect(log.animations).toContain(300); }
+      104 |       if (tilesReady) await tilesReady();
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\map-reveal-continuity-20261012.spec.ts:101:28
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\map-reveal-motion\map-reveal-continuity-2026-aa6f1-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\map-reveal-motion\map-reveal-continuity-2026-aa6f1-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\map-reveal-motion\map-reveal-continuity-2026-aa6f1-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\map-reveal-motion\map-reveal-continuity-2026-aa6f1-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\map-reveal-motion\map-reveal-continuity-2026-aa6f1-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 375px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 
+    tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 
+  2 passed (1.1m)

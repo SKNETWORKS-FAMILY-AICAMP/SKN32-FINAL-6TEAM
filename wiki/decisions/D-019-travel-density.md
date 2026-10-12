@@ -3,6 +3,7 @@ type: decision
 title: 여행 밀도 관측 경고
 status: draft
 domain: travel
+impl_scope: cs — 여행 제품의 도메인 결정이다. sample의 참고 구현 계약을 바꾸지 않는다
 ---
 
 # D-019 여행 밀도 — 관측 경고 + 자동 변경 판단

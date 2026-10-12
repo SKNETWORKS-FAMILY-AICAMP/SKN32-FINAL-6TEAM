@@ -1,0 +1,72 @@
+{
+  "collected": 1006,
+  "executed": 1006,
+  "passed": 1000,
+  "failed": 0,
+  "skipped": 6,
+  "unexecuted": 0,
+  "failures": [],
+  "skips": [
+    {
+      "test": "tests/e2e/test_safety_pause.py::test_with_no_shelter_data_the_notice_says_so_and_does_not_invent",
+      "reason": "이 개발 DB 에는 실제 대피 장소 자료가 적재돼 있다 — 「자료 없음」 경로는 빈 표에서만 본다"
+    },
+    {
+      "test": "tests/e2e/test_trip_dining_ledger.py::test_the_planner_takes_meals_from_the_ledger_and_every_meal_is_open_then",
+      "reason": "원장에 실제 가게가 있는 DB 다 — 시험이 세운 가게만으로 초안을 짤 수 없다(CI DB 에서 돈다)"
+    },
+    {
+      "test": "tests/e2e/test_trip_dining_ledger.py::test_a_lunch_at_a_dinner_only_shop_is_swapped_by_the_ledger",
+      "reason": "원장에 실제 가게가 있는 DB 다 — 시험이 세운 가게만으로 초안을 짤 수 없다(CI DB 에서 돈다)"
+    },
+    {
+      "test": "tests/e2e/test_trip_dining_ledger.py::test_registering_the_plan_links_its_meals_to_the_ledger",
+      "reason": "원장에 실제 가게가 있는 DB 다 — 시험이 세운 가게만으로 초안을 짤 수 없다(CI DB 에서 돈다)"
+    },
+    {
+      "test": "tests/e2e/test_trip_dining_ledger.py::test_registration_refuses_a_meal_the_ledger_says_is_closed",
+      "reason": "원장에 실제 가게가 있는 DB 다 — 시험이 세운 가게만으로 초안을 짤 수 없다(CI DB 에서 돈다)"
+    },
+    {
+      "test": "tests/e2e/test_trip_dining_ledger.py::test_registration_accepts_a_meal_the_ledger_says_is_open",
+      "reason": "원장에 실제 가게가 있는 DB 다 — 시험이 세운 가게만으로 초안을 짤 수 없다(CI DB 에서 돈다)"
+    }
+  ],
+  "skip_reason_counts": {
+    "이 개발 DB 에는 실제 대피 장소 자료가 적재돼 있다 — 「자료 없음」 경로는 빈 표에서만 본다": 1,
+    "원장에 실제 가게가 있는 DB 다 — 시험이 세운 가게만으로 초안을 짤 수 없다(CI DB 에서 돈다)": 5
+  },
+  "source_files_at_start": 404,
+  "source_changed_since_start": [
+    "app/domains/travel_ops/components/conversation/decision_unit.py",
+    "app/domains/travel_ops/components/conversation/trip_messages.py",
+    "app/domains/travel_ops/components/intake/assemble.py",
+    "app/domains/travel_ops/entry/trip_api.py"
+  ],
+  "added_nodeids_since_v2_collection": [
+    "tests/e2e/test_dining_core_places.py::test_같은_이름_지점도_모두_올라가고_두_번_돌려도_같다",
+    "tests/e2e/test_dining_core_places.py::test_동기화가_요일별_영업시간과_식사_조건을_채운다",
+    "tests/e2e/test_dining_core_places.py::test_요식_식당과_이름이_같은_장소도_등록_문장이_실패하지_않는다",
+    "tests/e2e/test_dining_core_places.py::test_운영_테넌트_밖에는_올리지_않는다",
+    "tests/e2e/test_dining_core_places.py::test_폐업한_식당은_동기화_뒤_모든_요일이_쉬는_날이다",
+    "tests/e2e/test_intake_item_restore.py::test_only_selected_item_restored_other_item_and_trip_claims_exactly_kept",
+    "tests/e2e/test_intake_item_restore.py::test_scoped_restore_refuses_protected_item_without_saving[booked-item_booked]",
+    "tests/e2e/test_intake_item_restore.py::test_scoped_restore_refuses_protected_item_without_saving[locked-item_locked]",
+    "tests/e2e/test_intake_item_restore.py::test_scoped_restore_rejects_unknown_target_and_other_customer",
+    "tests/e2e/test_intake_test_plans.py::test_normal_codes_expand_and_keep_category_in_intake[test13]",
+    "tests/e2e/test_intake_test_plans.py::test_normal_codes_expand_and_keep_category_in_intake[test14]",
+    "tests/e2e/test_intake_test_plans.py::test_normal_codes_expand_and_keep_category_in_intake[test15]",
+    "tests/e2e/test_intake_test_plans.py::test_rejected_code_does_not_create_empty_intake[test16-unknown_test_scenario]",
+    "tests/e2e/test_mcp_read_tools.py::test_an_unavailable_required_move_engine_returns_503_without_an_estimate"
+  ],
+  "removed_nodeids_since_v2_collection": [
+    "tests/e2e/test_dining_core_places.py::test_�_�׳�Ʈ_�ۿ���_�ø���_�ʴ´�",
+    "tests/e2e/test_dining_core_places.py::test_���_�Ĵ��_�̸���_����_��ҵ�_���_������_��������_�ʴ´�",
+    "tests/e2e/test_dining_core_places.py::test_����_�̸�_������_���_�ö󰡰�_��_��_������_����",
+    "tests/e2e/test_dining_core_places.py::test_����ȭ��_���Ϻ�_�����ð���_�Ļ�_������_ä���",
+    "tests/e2e/test_dining_core_places.py::test_�����_�Ĵ���_����ȭ_��_���_������_����_���̴�",
+    "tests/e2e/test_intake_test_plans.py::test_rejected_code_does_not_create_empty_intake[test13-unknown_test_scenario]",
+    "tests/e2e/test_mcp_read_tools.py::test_a_server_without_the_judge_returns_a_straight_line_estimate_and_says_it"
+  ],
+  "note": "별도 격리 DB 재실행은 이 전체 실행 결과에 합산하지 않습니다."
+}

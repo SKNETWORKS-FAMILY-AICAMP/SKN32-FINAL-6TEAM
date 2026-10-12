@@ -1,0 +1,61 @@
+{
+  "registry": {
+    "dining": {
+      "available": false,
+      "reason": "disabled",
+      "capabilities": []
+    }
+  },
+  "results": [
+    {
+      "tool": "read.dining_state",
+      "rejected_unavailable": false,
+      "returned": {
+        "place_id": "synthetic-place",
+        "linked": false,
+        "available": false,
+        "reason": "\uc694\uc2dd \ud45c\uac00 \uc774 DB \uc5d0 \uc5c6\ub2e4(\ub9c8\uc774\uadf8\ub808\uc774\uc158 200~219 \ubbf8\uc801\uc6a9)",
+        "open_at_slot": null,
+        "order_ok": null,
+        "needs_check": null,
+        "needs_holiday_check": null,
+        "holiday_context": null,
+        "attributes": {},
+        "hours": null,
+        "break": null,
+        "dietary": [],
+        "dietary_absent": [],
+        "card_payment": null,
+        "confirmed_at": null,
+        "source": "dining_ledger"
+      },
+      "connection_sql_events": 2
+    },
+    {
+      "tool": "read.dining_states",
+      "rejected_unavailable": false,
+      "returned": {
+        "synthetic-place": {
+          "place_id": "synthetic-place",
+          "linked": false,
+          "available": false,
+          "reason": "\uc694\uc2dd \ud45c\uac00 \uc774 DB \uc5d0 \uc5c6\ub2e4(\ub9c8\uc774\uadf8\ub808\uc774\uc158 200~219 \ubbf8\uc801\uc6a9)",
+          "open_at_slot": null,
+          "order_ok": null,
+          "needs_check": null,
+          "needs_holiday_check": null,
+          "holiday_context": null,
+          "attributes": {},
+          "hours": null,
+          "break": null,
+          "dietary": [],
+          "dietary_absent": [],
+          "card_payment": null,
+          "confirmed_at": null,
+          "source": "dining_ledger"
+        }
+      },
+      "connection_sql_events": 2
+    }
+  ]
+}

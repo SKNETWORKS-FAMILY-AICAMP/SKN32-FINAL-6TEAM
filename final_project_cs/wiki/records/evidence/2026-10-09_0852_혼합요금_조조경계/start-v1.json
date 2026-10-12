@@ -1,0 +1,24 @@
+{
+  "tag": "2026-10-09_0852_혼합요금_조조경계",
+  "created_at": "2026-10-09T08:52:42.393878+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0852_혼합요금_조조경계/options.py",
+      "sha256": "5b89a8581ec95bcbe177890eec192e089e36c7cbe1f2de4584185ed3c0e3231d"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0852_혼합요금_조조경계/plan.py",
+      "sha256": "5ca945b41c920304d40b8527e5a8608e589804072b038ac7b0533142d22dbd22"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0852_혼합요금_조조경계/mobility.md",
+      "sha256": "6ffe294fcf8c9832be423be9290c3fa69ea2001fea66d811a2876a8eaee73a76"
+    }
+  ],
+  "initial_source_matches": 218,
+  "initial_artifact_matches": 6,
+  "debug": "wiki/records/reports/debugs/2026-10-09_0852_혼합요금_조조경계_버스조조_불확실성으로_혼합상단요금까지_누락.md"
+}

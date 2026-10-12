@@ -46,7 +46,7 @@ from app.domains.travel_ops.components.itinerary.itinerary import Item, StaleIti
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, refresh_moves_around
 from app.domains.travel_ops.components.itinerary.itinerary_checks import Violation, check_itinerary, parts_from_items
 from app.domains.travel_ops.components.planning import guardian
-from app.domains.travel_ops.components.planning.pending import PendingStore, decide, options_for, proposal_notice
+from app.domains.travel_ops.components.planning.pending import PendingStore, decide, options_for, proposal_notice, proposal_scope
 
 ACTION_TYPE = "itinerary.apply"
 NOTICE_TOPIC = "trip.notice"
@@ -83,6 +83,14 @@ def introduced_violations(trip: Mapping[str, Any], current: list[Item], new_item
 def _plain(value: Any) -> Any:
     """제안 인자·통지는 DB(jsonb)로 간다 — 시각·UUID 를 문자열로 고정한다."""
     return json.loads(json.dumps(value, ensure_ascii=False, default=str))
+
+
+def _notice(trip: Mapping[str, Any], value: Any) -> Any:
+    from app.domains.travel_ops.components.watch.simulation import stamp_notice
+    payload = _plain(value)
+    current = trip.get("simulation") or {}
+    simulated = next((c for c in payload.get("causes", []) if c.get("mode") == "simulation"), None)
+    return stamp_notice(payload, (simulated or {}).get("simulation_id") or current.get("run_id")) if current.get("active") or simulated else payload
 
 
 def change_arguments(*, trip_id: UUID | str, base_version: int, change: ItineraryChange) -> dict[str, Any]:
@@ -128,6 +136,9 @@ class ItineraryApply:
         trip_id = UUID(str(arguments["trip_id"]))
         base = int(arguments["base_version"])
         try:
+            departure_ids = _departure_replacement_ids(arguments)
+            # 설정 변경·재난 정지와 동일한 여행 행에서 직렬화한 뒤 최신 조건을 읽는다.
+            store.lock_trip(conn, trip_id)
             trip, current = store.latest(conn, trip_id)
         except KeyError as exc:
             raise ActionRejected("trip not found") from exc
@@ -135,6 +146,12 @@ class ItineraryApply:
             raise ActionRejected("trip not found")        # ★남의 여행 — 있는지도 말하지 않는다
         if trip["version"] != base:
             raise ActionConflict(f"trip {trip_id} moved from v{base} to v{trip['version']}")
+        from app.domains.travel_ops.components.watch.safety_pause import SafetyPauses
+        if SafetyPauses(tenant_id).active(conn, trip_id):
+            raise ActionRejected("safety_pause_requires_customer_resume")
+        for item_id in departure_ids:
+            if store.message_exists(conn, trip_id=trip_id, key=f"departure:{item_id}"):
+                raise ActionConflict(f"departure already announced: {item_id}")
         if arguments.get("consent"):
             return _ask_consent(conn, tenant_id=tenant_id, trip=trip, trip_id=trip_id, base=base,
                                 current=current, arguments=arguments)
@@ -197,11 +214,10 @@ def _ask_instead(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id:
                  current: list[Item], replacements: Mapping[UUID, Item],
                  arguments: Mapping[str, Any]) -> AppliedAction | None:
     """바꿀 항목 중 하나라도 판정이 「바꾸지 말라」면 **바꾸지 않고 묻는다.** None 이면 바꿔도 된다."""
-    from app.domains.travel_ops.components.itinerary.plan_link import plan_url
 
     causes = list(arguments.get("causes") or [])
     report = {"disruptions": causes}           # ★안전 사건 여부는 원인의 종류(`category`)로 가른다
-    pending = PendingStore(tenant_id)
+    PendingStore(tenant_id)
     for item_id, best in replacements.items():
         item = next(i for i in current if i.item_id == item_id)
         decision = decide(constraints=trip.get("constraints"), item=item, report=report)
@@ -210,7 +226,9 @@ def _ask_instead(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id:
         summary, outbox = _open_ask(conn, tenant_id=tenant_id, trip=trip, trip_id=trip_id, base=base, item=item,
                                     best=best, decision=decision, causes=causes)
         return AppliedAction(result_ref=f"trip:{trip_id}:proposal:{summary['proposal_id']}", summary=summary,
-                             outbox=outbox)
+                             outbox=outbox,
+                             answer=(outbox[0].payload["text"] if outbox else
+                                     f"{summary['item']} — 일정은 그대로 두었어요. 계획서 링크에서 대안을 골라 주세요."))
     return None
 
 
@@ -226,7 +244,8 @@ def _open_ask(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id: UU
     already = proposal_id is None
     if already:                               # 이미 물었다 — 다시 알리지 않는다
         proposal_id = next(row["proposal_id"] for row in pending.list(conn, trip_id)
-                           if row["item_id"] == item.item_id and row["base_version"] == base)
+                           if row["item_id"] == item.item_id and row["base_version"] == base
+                           and proposal_scope(row["reason"], row["cause_json"]) == proposal_scope(decision.reason, causes))
     summary = _plain({"status": "asked", "already": already, "trip_id": str(trip_id),
                       "version": base, "proposal_id": str(proposal_id), "item": item.title,
                       "reason": decision.reason, "protected_by": decision.protected_by,
@@ -234,7 +253,7 @@ def _open_ask(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id: UU
     outbox = [] if already else [OutboxMessage(
         topic=NOTICE_TOPIC, dedupe_key=f"{trip_id}:proposal:{proposal_id}",
         # ★`[2026-10-06]` 꺼 둔 사용자에게 「다른 안」을 보낼 때는 「항로 지킴이 켜기」를 같이 싣는다(`planning/guardian.annotate`)
-        payload=_plain(guardian.annotate(
+        payload=_notice(trip, guardian.annotate(
             {"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
              **proposal_notice(item=item, decision=decision, causes=causes, options=options, proposal_id=proposal_id)},
             constraints=trip.get("constraints"), trip_id=trip_id)))]
@@ -254,7 +273,7 @@ def _version_notice(*, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, v
     payload = _plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
                       **dict(arguments.get("notice") or {}), "version": version, **offer})
     # ★`[2026-10-06]` 항로 지킴이가 켜져 있으면 「항로 지킴이가 바꿨어요」 표시를 싣는다(`planning/guardian.annotate` — 시나리오용 여행 버전과 같은 규칙)
-    payload = _plain(guardian.annotate(payload, constraints=trip.get("constraints"), trip_id=trip_id))
+    payload = _notice(trip, guardian.annotate(payload, constraints=trip.get("constraints"), trip_id=trip_id))
     return OutboxMessage(topic=NOTICE_TOPIC, payload=payload, dedupe_key=f"{trip_id}:v{version}")
 
 
@@ -290,6 +309,10 @@ def _apply_batch(conn: Any, *, store: TripStore, tenant_id: str, trip: Mapping[s
             to_apply[item_id] = best
         else:
             to_ask.append((item, best, decision, causes))
+
+    if "applied" in batch and {str(k) for k in to_apply} != set(batch["applied"]):
+        # 계획 중에 항로 지킴이/보호 설정이 바뀌었다. 옛 적용 안내를 새 질문과 섞지 않는다.
+        raise ActionConflict("guardian or protection changed during planning")
 
     version: int | None = None
     if to_apply:
@@ -332,7 +355,7 @@ def _apply_batch(conn: Any, *, store: TripStore, tenant_id: str, trip: Mapping[s
     if version is None and guidance:
         outbox.append(OutboxMessage(
             topic=NOTICE_TOPIC, dedupe_key=f"{trip_id}:guidance:{guidance_key(guidance)}",
-            payload=_plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id), **dict(guidance)})))
+            payload=_notice(trip, {"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id), **dict(guidance)})))
     if not outbox and not asked:
         raise ActionRejected("itinerary.apply changes nothing")
     result_ref = (f"trip:{trip_id}:v{version}" if version is not None
@@ -347,11 +370,23 @@ def _apply_batch(conn: Any, *, store: TripStore, tenant_id: str, trip: Mapping[s
         outbox=outbox)
 
 
+def _departure_replacement_ids(arguments: Mapping[str, Any]) -> list[UUID]:
+    """단일·묶음 원인을 보고 출발지 재탐색의 전제가 필요한 항목을 고른다."""
+    if arguments.get("reason") in CHOSEN_BY_CUSTOMER:
+        return []
+    batch = arguments.get("batch") or {}
+    causes_of = batch.get("causes") or {}
+    wanted = []
+    for entry in arguments.get("replacements") or []:
+        causes = causes_of.get(str(entry["item_id"])) or arguments.get("causes") or []
+        if any(cause.get("category") == "departure_revalidation" for cause in causes):
+            wanted.append(UUID(str(entry["item_id"])))
+    return wanted
+
+
 def _ask_consent(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, base: int,
                  current: list[Item], arguments: Mapping[str, Any]) -> AppliedAction:
     """「바꿀까요?」 보류 제안을 열고 묻는 알림을 바깥함에 싣는다. **일정은 안 바꾼다.**"""
-    from app.domains.travel_ops.components.planning.pending import CONSENT_REASON, Decision, consent_notice
-    from app.domains.travel_ops.components.itinerary.plan_link import plan_url
 
     causes = list(arguments.get("causes") or [])
     wanted = str((arguments.get("consent") or {}).get("item_id"))
@@ -361,7 +396,9 @@ def _ask_consent(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id:
     summary, outbox = _open_consent(conn, tenant_id=tenant_id, trip=trip, trip_id=trip_id, base=base, item=item,
                                     causes=causes,
                                     indoor_unknown=bool((arguments.get("consent") or {}).get("indoor_unknown", True)))
-    return AppliedAction(result_ref=f"trip:{trip_id}:proposal:{summary['proposal_id']}", summary=summary, outbox=outbox)
+    return AppliedAction(result_ref=f"trip:{trip_id}:proposal:{summary['proposal_id']}", summary=summary, outbox=outbox,
+                         answer=(outbox[0].payload["text"] if outbox else
+                                 f"{item.title} — 일정은 그대로 두었어요. 계획서 링크에서 변경 여부를 골라 주세요."))
 
 
 def _open_consent(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, base: int, item: Item,
@@ -376,13 +413,14 @@ def _open_consent(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id
     already = proposal_id is None
     if already:                                   # 이미 물었다 — 다시 알리지 않는다
         proposal_id = next(row["proposal_id"] for row in pending.list(conn, trip_id)
-                           if row["item_id"] == item.item_id and row["base_version"] == base)
+                           if row["item_id"] == item.item_id and row["base_version"] == base
+                           and proposal_scope(row["reason"], row["cause_json"]) == proposal_scope(CONSENT_REASON, causes))
     summary = _plain({"status": "asked", "already": already, "trip_id": str(trip_id), "version": base,
                       "proposal_id": str(proposal_id), "item": item.title, "reason": CONSENT_REASON,
                       "protected_by": None, "safety": False})
     outbox = [] if already else [OutboxMessage(
         topic=NOTICE_TOPIC, dedupe_key=f"{trip_id}:proposal:{proposal_id}",
-        payload=_plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
+        payload=_notice(trip, {"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
                         **consent_notice(item=item, causes=causes, proposal_id=proposal_id,
                                          indoor_unknown=indoor_unknown)}))]
     return summary, outbox

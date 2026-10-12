@@ -34,7 +34,7 @@ export const KNOWN_SESSION = "known-session";
 export const SESSION_COOKIE = "tripilot_sid_dev";
 
 export const CONSENT_STORAGE = "tripilot.web.consent.v1";
-export type ConsentSeed = Partial<Record<"service_terms" | "privacy" | "sensitive" | "location" | "alert_channel", boolean>>;
+export type ConsentSeed = Partial<Record<"service_terms" | "privacy" | "sensitive" | "location" | "alert_channel" | "service_improvement", boolean>>;
 
 /**
  * `[2026-10-05]` The customer has already agreed to the CURRENT terms in this browser: the required items (and `extra` ones, e.g. `{ location: true }`), recorded as the
@@ -43,7 +43,7 @@ export type ConsentSeed = Partial<Record<"service_terms" | "privacy" | "sensitiv
  */
 export async function agree(page: Page, extra: ConsentSeed = {}) {
   await page.addInitScript(([key, version, items]) => {
-    if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ version, items: { service_terms: true, privacy: true, sensitive: false, location: false, alert_channel: false, ...items }, at: "2026-10-05T09:00:00.000Z", synced: true }));
+    if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ version, items: { service_terms: true, privacy: true, sensitive: false, location: false, alert_channel: false, service_improvement: false, ...items }, at: "2026-10-05T09:00:00.000Z", synced: true }));
   }, [CONSENT_STORAGE, TERMS_VERSION, extra] as const);
 }
 
@@ -65,7 +65,7 @@ export async function alsoAgree(page: Page, extra: ConsentSeed) {
  */
 export async function start(page: Page, session: string | null = "acop_u_known", seedConsent = true) {
   await page.addInitScript(() => {
-    if (!localStorage.getItem("tripilot.web.settings.v1")) localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko", navigation: "fixed" }));
+    if (!localStorage.getItem("tripilot.web.settings.v1")) localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko" }));
   });
   if (session) {
     await page.context().addCookies([{ name: SESSION_COOKIE, value: session === "acop_u_known" ? KNOWN_SESSION : session, url: STUB }]);
@@ -80,7 +80,7 @@ export async function startWithOldKey(page: Page, key = "acop_u_known") {
 }
 
 /** Finish the onboarding: agree to the terms, skip every question but the last, answer that one. Leaves the summary open. */
-export async function finishOnboarding(page: Page, beforeTerms?: () => Promise<void>, optional: Array<"sensitive" | "location" | "alert_channel"> = []) {
+export async function finishOnboarding(page: Page, beforeTerms?: () => Promise<void>, optional: Array<"sensitive" | "location" | "alert_channel" | "service_improvement"> = []) {
   await page.goto("/start");
   await beforeTerms?.();
   await page.getByRole("button", { name: /약관 동의/ }).click();
@@ -153,9 +153,9 @@ export async function noHorizontalScroll(page: Page) {
  * `[2026-10-05]` Consent is per item: 서비스 이용약관 and 개인정보 수집·이용 are required. `[2026-10-05 사용자 지시]` A required item is ticked at once - no reading to the end first.
  * ★`[2026-10-06 사용자 지시]` The FIRST agreement goes straight on to the plan screen (the preference survey is not part of the first run any more). So that the many
  *   start-screen tests that continue with the preferences keep their steps, this helper then opens the preferences from the menu, as a customer would (`openPreferencesFromMenu`).
- *   A customer who had already agreed and only changes their boxes stays on /start with the preferences card open, as before.
+ * ★`[2026-10-12 사용자 지시]` A customer who had already agreed goes to My trips too (the press never opens the preferences card) — the helper then opens the preferences from the menu the same way.
  */
-export async function agreeTerms(page: Page, optional: Array<"sensitive" | "location" | "alert_channel"> = []) {
+export async function agreeTerms(page: Page, optional: Array<"sensitive" | "location" | "alert_channel" | "service_improvement"> = []) {
   await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
   const alreadyAgreed = (await page.locator("#consent-service_terms").isChecked()) && (await page.locator("#consent-privacy").isChecked());
   for (const code of ["service_terms", "privacy"]) {
@@ -165,8 +165,7 @@ export async function agreeTerms(page: Page, optional: Array<"sensitive" | "loca
   }
   for (const code of optional) await page.locator(`#consent-${code}`).evaluate((input: HTMLInputElement) => { if (!input.checked) input.click(); });
   await page.getByRole("button", { name: "동의하고 다음으로" }).click();
-  if (alreadyAgreed) return;
-  await expect(page).toHaveURL(/\/trips\/new$/);
+  await expect(page).toHaveURL(alreadyAgreed ? /\/trips$/ : /\/trips\/new$/);
   await openPreferencesFromMenu(page);
 }
 
@@ -216,6 +215,32 @@ export async function checkPlan(page: Page, choice: "켜고 진행" | "건너뛰
 }
 
 /**
+ * `[2026-10-07]` The registered trip's screen (map + sheet, `features/trip/trip-screen.tsx`): its plan pane is there once the trip has loaded. (The old screen's heading 「나의 여행」 is gone —
+ * the header's title is the trip's own name.)
+ */
+export const tripScreen = (page: Page) => page.locator("#trip-pane-schedule");
+
+/** Open the trip's notices (the bell beside the menu): the choices, the undo, the warnings, the notices, the history, the plan links. */
+export async function openNotices(page: Page) {
+  await page.getByRole("button", { name: "알림 센터 열기" }).click();
+  await expect(page.getByRole("dialog", { name: "알림" })).toBeVisible();
+  return page.getByRole("dialog", { name: "알림" });
+}
+
+/** The two panes of the trip's sheet: 「일정 | 채팅」. */
+export const paneTab = (page: Page, name: "일정" | "채팅") => page.getByRole("tab", { name, exact: true });
+
+/** `[2026-10-07 목업 C안 B]` Open the trip's name in the header: the row 「여행계획서 열기 · 공유하기」 under it. */
+export async function openTitle(page: Page) {
+  await page.locator("#trip-title-button").click();
+  await expect(page.getByRole("group", { name: "여행계획서" })).toBeVisible();
+  return page.getByRole("group", { name: "여행계획서" });
+}
+
+/** A day chip in the trip's sheet head (「전체 · 1일차 · 2일차 …」). */
+export const dayTab = (page: Page, name: RegExp) => page.getByRole("tablist", { name: "일차 고르기" }).getByRole("tab", { name });
+
+/**
  * Register a trip the way a customer does, against the test mock server: write a plan, 「계획 확인하기」, wait for the plan-check screen's result,
  * 「여행 등록」, and land on the trip screen (the mock's one trip, `TRIP_ID`). Needs the mock's default scenario (a plan whose check passes).
  */
@@ -226,5 +251,5 @@ export async function registerStubTrip(page: Page, plan = "10/1 09:00 경복궁 
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
   await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
-  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect(tripScreen(page)).toBeVisible();
 }

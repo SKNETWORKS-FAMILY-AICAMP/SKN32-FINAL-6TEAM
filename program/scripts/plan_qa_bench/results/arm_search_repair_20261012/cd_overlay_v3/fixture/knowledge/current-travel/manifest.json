@@ -1,0 +1,37 @@
+{
+  "version": "1.0",
+  "tenant_id": "demo",
+  "collection": "current-travel",
+  "documents": [
+    {
+      "document_id": "t_current_dining_01",
+      "file": "documents/dining.md",
+      "section_count": 1
+    },
+    {
+      "document_id": "t_current_activity_01",
+      "file": "documents/activity.md",
+      "section_count": 1
+    },
+    {
+      "document_id": "t_current_mobility_01",
+      "file": "documents/mobility.md",
+      "section_count": 1
+    },
+    {
+      "document_id": "t_current_cancellation_01",
+      "file": "documents/cancellation.md",
+      "section_count": 1
+    },
+    {
+      "document_id": "t_current_weather_01",
+      "file": "documents/weather.md",
+      "section_count": 1
+    },
+    {
+      "document_id": "t_current_access_01",
+      "file": "documents/access.md",
+      "section_count": 1
+    }
+  ]
+}

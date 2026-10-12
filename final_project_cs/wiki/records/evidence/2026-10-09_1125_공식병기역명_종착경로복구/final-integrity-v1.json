@@ -1,0 +1,8 @@
+{
+  "verified_at": "2026-10-09T11:38:13.263649+09:00",
+  "source_test_data_matches": 254,
+  "artifact_matches": 29,
+  "backup_matches": 6,
+  "browser_render_verified": false,
+  "commit_push_deploy": false
+}

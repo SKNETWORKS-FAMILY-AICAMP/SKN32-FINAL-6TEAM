@@ -3,13 +3,17 @@ type: contract
 title: 모델 서버 장애 시 OpenAI 로 자동 전환
 description: Ollama(GPU 서버)가 모두 죽거나 늦으면 서버용 OpenAI 키로 자동으로 넘기는 장치 — 넘기는 조건 · 회로 차단기 · 개인정보 · 비용 상한 · 켜는 법
 status: draft
-tags: [llm, reliability, security]
+tags: [agent, state, security]
 owners: [human:미배정]
 domain: neutral
 domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도메인 낱말이 없다. 코드 `app/infrastructure/llm_failover.py`
 ---
 
 # 모델 서버 장애 시 OpenAI 로 자동 전환
+
+## 2026-10-08 사용자 지정 운영 모델
+
+공개 배포 환경에서는 `ACOP_LLM_FAILOVER_ENABLED=true`, `ACOP_LLM_FAILOVER_MODEL=gpt-6-luna`로 전환한다. 키는 `ACOP_OPENAI_API_KEY_SERVER`만 사용한다. 로컬 개발 환경의 스위치 기본 꺼짐은 유지한다. GPT-6 호출은 `max_completion_tokens`를 쓰고, Luna는 짧은 JSON·문장 추출을 위해 `reasoning_effort=none`을 명시한다. 개인 키를 대신 쓰거나 복사하지 않는다. 호출 상한·마스킹·전환 경로 기록은 기존 계약을 유지한다. 실제 적용 여부와 시험은 해당 날짜 작업 리포트로 확인한다.
 
 `[2026-10-07 사용자 지시]` 「올라마나 외부 GPU 서버가 모두 장애면 서버키(개인키 말고)로 자동 전환돼서 동작하게」.
 코드 [llm_failover.py](../../app/infrastructure/llm_failover.py) · 시험 `tests/unit/infrastructure/test_llm_failover.py` · `test_retriever_failover.py`.
@@ -95,3 +99,7 @@ domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도�
 - **실서버 확인:** 서버용 키로 **실제 OpenAI** 를 불러 넘어가는 것을 확인했다 — json · text · structured · embedding 각 1번, 규정 검색 1번(로컬 개발 DB), 결정 단위 재생 약 300번(모델 비교, 위 표). Ollama 자리는 닫힌 포트였다. x600 서버의 실제 Ollama · GPU 서버를 죽여 보는 시험, **배포 환경에 켜는 일은 하지 않았다**.
 - 결정 단위 정확도는 위 표(실제 대화 66문장)만 쟀다 — 다른 호출(번역 · 분류 · 계획 읽기)의 OpenAI 경로 정확도는 `[미측정]`. 재생 도구는 `from_settings` 를 쓰므로 스위치가 꺼진 개발 환경에서는 늘 Ollama 만 잰다(OpenAI 경로로 재려면 `ACOP_OLLAMA_BASE_URL` 을 닫힌 주소로 두고 스위치를 켠다).
 - 지표는 프로세스를 다시 띄우면 0 으로 돌아간다(영구 기록은 로그).
+
+## 운영 반영 확인 — 2026-10-08
+
+GPT-6 Luna 자동 전환을 운영 환경에 반영했고 실제 Ollama 연결 실패를 거친 응답 3/3이 API로 성공했다. [작업 리포트](../records/reports/2026-10-08_2245_Luna_자동전환_운영반영.md).

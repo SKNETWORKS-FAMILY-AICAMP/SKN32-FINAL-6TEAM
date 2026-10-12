@@ -1,0 +1,458 @@
+[
+  {
+    "path": "final_project_cs/frontend/apps/web/src/components/app-toast.tsx",
+    "working": "1000d688b3af5a4ab02d0f00d55d950ea6a95a0f",
+    "teamManager": "0dba79032871ebfea04bca0fdee83a15a780687c",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/components/layout/device-frame.tsx",
+    "working": "2064cc51a36bf0d4a7e9fc9eab697b8e86ca8aa2",
+    "teamManager": "2064cc51a36bf0d4a7e9fc9eab697b8e86ca8aa2",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/account/account.module.css",
+    "working": "924ebe9a4daa611fd63f4ba98fff941d527a4349",
+    "teamManager": "924ebe9a4daa611fd63f4ba98fff941d527a4349",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/account/social-accounts.tsx",
+    "working": "e6fca0adf04db68cb6e07a8bbac5b6dd47976668",
+    "teamManager": "e6fca0adf04db68cb6e07a8bbac5b6dd47976668",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/consent/consent-manager.tsx",
+    "working": "7040aaa206fa3e9780a8034403efab7ba201ca0c",
+    "teamManager": "7040aaa206fa3e9780a8034403efab7ba201ca0c",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/consent/consent-model.ts",
+    "working": "7ea487fa7672b8bde0cd7adaf4323e05664c1592",
+    "teamManager": "7ea487fa7672b8bde0cd7adaf4323e05664c1592",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/consent/consent-sync.test.ts",
+    "working": "a74dd18bde20456e064f36cd529a4b18220c8129",
+    "teamManager": "a74dd18bde20456e064f36cd529a4b18220c8129",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/consent/optional-consent-prompt.tsx",
+    "working": "2376a054778b74a1bce39e07b007d3e395aad9d6",
+    "teamManager": "2376a054778b74a1bce39e07b007d3e395aad9d6",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/consent/terms-content.test.ts",
+    "working": "96c0a9c834ecb4583095921302f37600f65eba55",
+    "teamManager": "96c0a9c834ecb4583095921302f37600f65eba55",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/consent/terms-content.ts",
+    "working": "3e5ee12889d7cad988044efdc26e55320b40dbf6",
+    "teamManager": "3e5ee12889d7cad988044efdc26e55320b40dbf6",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/guardian/trip-guardian.tsx",
+    "working": "b4fd73373c290f5143bedf8df069d5e55e025290",
+    "teamManager": "b4fd73373c290f5143bedf8df069d5e55e025290",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/intake-review/intake-review.tsx",
+    "working": "165ed4e352858027c9d507d7a6a6e42816c5950d",
+    "teamManager": "9ae4a4ae41a35eeabb7a1d5a4fca874727138753",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/intro/intro.tsx",
+    "working": "04f40ea37d8df89fa48da50b8a5fbcfcda682b55",
+    "teamManager": "04f40ea37d8df89fa48da50b8a5fbcfcda682b55",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/live-map.tsx",
+    "working": "b933537bb596927581f817bec015c291290106ea",
+    "teamManager": "b933537bb596927581f817bec015c291290106ea",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/location-consent.module.css",
+    "working": "441f40da4f9411bfa9a49595b0e44d348a52bc76",
+    "teamManager": "441f40da4f9411bfa9a49595b0e44d348a52bc76",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/location-consent.tsx",
+    "working": "6297861fe7f458427cd98d6559a84ea92433e1c8",
+    "teamManager": "6297861fe7f458427cd98d6559a84ea92433e1c8",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/map-controls.tsx",
+    "working": "a0a9931d24ce86fdc6c3c93e02c517df713e61d0",
+    "teamManager": "a0a9931d24ce86fdc6c3c93e02c517df713e61d0",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/map-geometry.test.ts",
+    "working": "87a631613ce4b11b201f54d5a01fc2d3020a64ad",
+    "teamManager": "87a631613ce4b11b201f54d5a01fc2d3020a64ad",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/map-geometry.ts",
+    "working": "93b606395edf4ff42494a7320e25edbe3e6c84b0",
+    "teamManager": "93b606395edf4ff42494a7320e25edbe3e6c84b0",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/map.module.css",
+    "working": "1fdc34878b6ac5ef067a4361a972cd70a985f801",
+    "teamManager": "1fdc34878b6ac5ef067a4361a972cd70a985f801",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/model.ts",
+    "working": "b83c8bcadc8c2ce7ba95f1e7a07fefa65c3c9e87",
+    "teamManager": "b83c8bcadc8c2ce7ba95f1e7a07fefa65c3c9e87",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/providers/google.ts",
+    "working": "4a167848a3384b3224e03a7f78a9d1cc8e50c697",
+    "teamManager": "4a167848a3384b3224e03a7f78a9d1cc8e50c697",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/providers/naver.ts",
+    "working": "2c681856b33a5422128ead1b923479f5ee558941",
+    "teamManager": "2c681856b33a5422128ead1b923479f5ee558941",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/providers/osm-camera.test.ts",
+    "working": "f064b5a6805886e4b4b91630d38b3ceb655c665f",
+    "teamManager": "f064b5a6805886e4b4b91630d38b3ceb655c665f",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/providers/osm.ts",
+    "working": "fc987800b7a2e54b5201964605080c9642dfa0df",
+    "teamManager": "fc987800b7a2e54b5201964605080c9642dfa0df",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/providers/pin.test.ts",
+    "working": "7941821cf33e766c4b0d301d1202f6a72f44714d",
+    "teamManager": "7941821cf33e766c4b0d301d1202f6a72f44714d",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/providers/pin.ts",
+    "working": "ab15d32fea878344cb73f1b05bdcac184e9ae26d",
+    "teamManager": "ab15d32fea878344cb73f1b05bdcac184e9ae26d",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/route-lines.ts",
+    "working": "b273dc403607d5f9a54abfbe73852a693c388560",
+    "teamManager": "49f1bf86fa70dc2bffd65fc54c6c935d380c169b",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/route-transit-stops.test.ts",
+    "working": "53dd11689e4d66f504f4e075577202d13ad67b53",
+    "teamManager": "53dd11689e4d66f504f4e075577202d13ad67b53",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/trip-map.tsx",
+    "working": "6dd73b99970229cd971102f97c49dd927372ad09",
+    "teamManager": "6dd73b99970229cd971102f97c49dd927372ad09",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/map/use-my-location.ts",
+    "working": "728f763a0e67ae4479115201be2bc51245967968",
+    "teamManager": "728f763a0e67ae4479115201be2bc51245967968",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/onboarding/model.ts",
+    "working": "34b0184572fe0d3055314401c382507696180f9c",
+    "teamManager": "34b0184572fe0d3055314401c382507696180f9c",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/add-stop.module.css",
+    "working": "2ad722f02673551fe7a9e4344b7d174a10b46a92",
+    "teamManager": "2ad722f02673551fe7a9e4344b7d174a10b46a92",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/add-stop.tsx",
+    "working": "81e06f6d9d2ed44026abbe949dd0214acd72e2a5",
+    "teamManager": "7caec2f122cba0f6c485644003c2fda4483812bf",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/checking-list.test.ts",
+    "working": "e88c2f5eac2ae25560c5fcdd435e8e1441cbb89f",
+    "teamManager": "e88c2f5eac2ae25560c5fcdd435e8e1441cbb89f",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/checking-list.ts",
+    "working": "f1ee208e69fd363d325b9e262ec38f891cb73c51",
+    "teamManager": "f1ee208e69fd363d325b9e262ec38f891cb73c51",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/from-intake.test.ts",
+    "working": "75f9183440f592559c13bc4a84ed65a68379429b",
+    "teamManager": "75f9183440f592559c13bc4a84ed65a68379429b",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/from-intake.ts",
+    "working": "0b488d8cf3ea258d6dac8857fe0438e175b087bd",
+    "teamManager": "0b488d8cf3ea258d6dac8857fe0438e175b087bd",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/from-review.test.ts",
+    "working": "a315efa0c87c5e39bc413b80aa04f8da470eb245",
+    "teamManager": "c19a3172b87d95f5e42940c7e56dcf65629b051c",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/from-review.ts",
+    "working": "3abb5735d61e27e0c7e3e428fc53ff7aac282881",
+    "teamManager": "ec0e1b0c1cc998fd0279ea6c663937c73ffe3bf2",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/list-zoom.ts",
+    "working": "a4c3938e5464fdcfec48544298959b3ec77c5d05",
+    "teamManager": "a4c3938e5464fdcfec48544298959b3ec77c5d05",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/model.ts",
+    "working": "c00e9d2db6f758dc901257021e11fa4d58150157",
+    "teamManager": "07605f23ac9b70a7bb1b88bfb72778767c638036",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/plan-check.module.css",
+    "working": "e2d5d451ea1ad06426a87409f58e51b7a28c6e2b",
+    "teamManager": "e2d5d451ea1ad06426a87409f58e51b7a28c6e2b",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/plan-check.tsx",
+    "working": "afd40da7ee4404e56756f21fa8a02c8fe290ae80",
+    "teamManager": "8f243f3882029986462138f446c1bb236bbb3666",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/plan-rows.tsx",
+    "working": "0bc340e06ea394c76b3fb8cdde61639d07e19b46",
+    "teamManager": "4cb38ff11fa5040c4632d7cdd03fa96c65606c9d",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/result-parts.tsx",
+    "working": "f4dfbaf81b87f20694343447ccac8f712753774c",
+    "teamManager": "f4dfbaf81b87f20694343447ccac8f712753774c",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/review-item-undo.test.ts",
+    "working": "4e9d18d147610e6660ebb8213df5df777e7afc3e",
+    "teamManager": "4e9d18d147610e6660ebb8213df5df777e7afc3e",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/review-undo.ts",
+    "working": "5d64a081c97f527aa1a4f483dcf4dc66ea17d713",
+    "teamManager": "5d64a081c97f527aa1a4f483dcf4dc66ea17d713",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/use-day-marker.ts",
+    "working": "709395a6a1573f4a5c471c529fbb1dd1ca93ed3e",
+    "teamManager": "709395a6a1573f4a5c471c529fbb1dd1ca93ed3e",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/use-list-end.ts",
+    "working": "5da1b9ae9b96b3e7d8763fd98ffe00899ce9a419",
+    "teamManager": "5da1b9ae9b96b3e7d8763fd98ffe00899ce9a419",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/use-page-scroll-reset.ts",
+    "working": "98cf10664411e7efbcbc1ad86ae411309f130a68",
+    "teamManager": "98cf10664411e7efbcbc1ad86ae411309f130a68",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/use-quiet-day-strip.ts",
+    "working": "8a091f23c92bf7089cb30ea1ad906691ec40e266",
+    "teamManager": "8a091f23c92bf7089cb30ea1ad906691ec40e266",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/use-server-review-undo.test.ts",
+    "working": "e5f4079540640014724cea09f2f78eefa4697902",
+    "teamManager": "d77481f024d863ca491bef7123c9571e07026e52",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/use-server-review.ts",
+    "working": "da9fbbc1a24df4b06f017ebf474bd6d791b6c9a1",
+    "teamManager": "da9fbbc1a24df4b06f017ebf474bd6d791b6c9a1",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/plan-check/use-time-inset.ts",
+    "working": "b71243c6f51e04f5094d8204bb58aef356f1dd63",
+    "teamManager": "b71243c6f51e04f5094d8204bb58aef356f1dd63",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/profile/profile.tsx",
+    "working": "37ae10061eb0a34038fde3c4d4c5ed6633c58153",
+    "teamManager": "c43d463e54761dac33ad743585d26e56d2388429",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/profile/telegram.tsx",
+    "working": "2b5cfbe698fe04772966fa9313a78270711f5833",
+    "teamManager": "2b5cfbe698fe04772966fa9313a78270711f5833",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/profile/webhook.tsx",
+    "working": "09c9f3323d28eaf998f04cd34096386d6adcec71",
+    "teamManager": "09c9f3323d28eaf998f04cd34096386d6adcec71",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/support/support.test.ts",
+    "working": "e32b93abf964809401f1870fb752cd7be4b8f783",
+    "teamManager": "e32b93abf964809401f1870fb752cd7be4b8f783",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/support/support.tsx",
+    "working": "cd634e96106a3a3a5a54986728db95150f88cbe2",
+    "teamManager": "3dc9882772ac7d44f55893541f1868aeb50577e4",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/trip-registration/test-plans.module.css",
+    "working": "9f5c69d1c20651ae4a91dd8aa15385f7f18e78fa",
+    "teamManager": "9f5c69d1c20651ae4a91dd8aa15385f7f18e78fa",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/trip-registration/test-plans.tsx",
+    "working": "33d0210a28bb17511ecf95474b6b064ba60dd676",
+    "teamManager": "33d0210a28bb17511ecf95474b6b064ba60dd676",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/trip/model.ts",
+    "working": "2471fb3f0b5153d3eda74ec4ace7f9cf1bb50c9e",
+    "teamManager": "fc52b74e296525de7f3e592fd8f0b11d0817133d",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/trip/trip-attention.tsx",
+    "working": "034910078f522db28629cdda56f3b6312ba4cfb9",
+    "teamManager": "034910078f522db28629cdda56f3b6312ba4cfb9",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/trip/trip-chat.tsx",
+    "working": "cc57fd09127e1c2e7451260b96ae4ee35e805b5c",
+    "teamManager": "049df6fd7f7629c6fa495a353b6190995d01b9b5",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/trip/trip-detail.tsx",
+    "working": "8b7df2528befbcd54c184ae02e6247bb7e2577f0",
+    "teamManager": "10f21ed2ec6a6b459014ea2d59a261aaaf165503",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/trip/trip-rows.tsx",
+    "working": "2c4f804149be0dbb90ff02d0bfff295cd27c2bf0",
+    "teamManager": "8d4af991a14ff674a550604d84c5ac9eec55571a",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/trip/trip-screen.module.css",
+    "working": "df77494b3ab947f8e9aa70e80e190bf201bfd1a0",
+    "teamManager": "df77494b3ab947f8e9aa70e80e190bf201bfd1a0",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/trip/trip-screen.tsx",
+    "working": "3e24af537d30ec5fd2334be301dba67f5f9567c2",
+    "teamManager": "b0ae4833415e6bc729ace9a45839ce43d7445aa2",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/trip/trip-title.tsx",
+    "working": "c6c428873619260060f55004aeec0804f79ed9b2",
+    "teamManager": "c6c428873619260060f55004aeec0804f79ed9b2",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/features/trip/use-chat-follow.ts",
+    "working": "ada719a3e5949be78e016f2fae73ee92bbbe4644",
+    "teamManager": "ada719a3e5949be78e016f2fae73ee92bbbe4644",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/lib/live/gateway.test.ts",
+    "working": "2e5b9256458e8dd923ad2163dfc8ca634a2793d1",
+    "teamManager": "7a7b62664ede466edcef92128776c15e096aff9f",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/lib/live/gateway.ts",
+    "working": "a30c952cb78cb0e1ce0528e2ccdef8633bb16b08",
+    "teamManager": "bdd62553493d9ed430ae617803fe7e0068a8e73d",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/lib/live/intake.ts",
+    "working": "4894a97cdb49f9b900ba560882f58511826aa094",
+    "teamManager": "4894a97cdb49f9b900ba560882f58511826aa094",
+    "matches": true
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/lib/live/route-shapes.ts",
+    "working": "482f074c730307067d65fcebdb8c10a84840ca71",
+    "teamManager": "b7999aaf0657fb62e164316b2b7c788bb2d7a502",
+    "matches": false
+  },
+  {
+    "path": "final_project_cs/frontend/apps/web/src/styles/tokens.css",
+    "working": "3a60e0ec554abd87c8b5006d961d392b34403176",
+    "teamManager": "3a60e0ec554abd87c8b5006d961d392b34403176",
+    "matches": true
+  }
+]

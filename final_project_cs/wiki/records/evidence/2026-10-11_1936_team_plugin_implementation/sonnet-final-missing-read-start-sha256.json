@@ -1,0 +1,14 @@
+{
+  "app/domains/travel_ops/components/intake/review.py": "3c0134cf84cb75d015444e482233925d6b4fa8703e38d9b78f8cfce7bd8d5cf8",
+  "app/domains/travel_ops/entry/trip_api.py": "d2bb56bc3f4b50a7126c57119f6d02e2dfac753266fee4955d5522cf014e8e69",
+  "app/domains/travel_ops/components/team_hooks/dining_ledger.py": "c376d1de069a80d711f730defa2b9fe38ecd7f2fafd3365a0a143a3902d2c39b",
+  "app/domains/travel_ops/components/team_hooks/mobility_shapes.py": "6fb09caa4daa255464a8ab89f3f9d6bba208e1b448c682f4c28a9bd3b94a4699",
+  "app/core/service_bindings.py": "aed8d61157f2c09b4fb40457b3d7a6824952b5b33c92e379329fb1cecf46c948",
+  "app/composition.py": "c443eaf2d379cd1ccc02e28f37639fb4d1abaeb483fb8b5114e1943303679995",
+  "scripts/run_sweepers.py": "4fe84f5b123a66b27f2a8e1b9a8d4d0d0bbd932006e374c8db4007a2cd515600",
+  "tests/unit/travel/test_trip_api_plugin_boundaries.py": "bd21ad2e47386c1c2484a7b389f6ada2b8f887c4961b7b093f5fa81d7d77e37e",
+  "tests/unit/travel/test_plugin_worker_availability.py": "1f1e464ceb664842f791eea44872494a79a30f90019f52ecd13f0d599d3ca97f",
+  "tests/scenario/test_watch_batch.py": "d50f2fbb40f3c81d6c8008015e1b0f0688a4fa49ddbcf9d21283ad0b056fd646",
+  "wiki/teams/team-contract/plugin-availability.md": "434119974af008d3418bb26fd28fe3ce27fbbad137f17f13fcbd2cbf5f499bb3",
+  "wiki\\records\\evidence\\2026-10-11_1936_team_plugin_implementation\\sonnet-final-delta-pytest.py": "92bbbc38ae05bbde6c9fd2fd5861e1d2506c51ceede3195e312d3ecc87243abe"
+}

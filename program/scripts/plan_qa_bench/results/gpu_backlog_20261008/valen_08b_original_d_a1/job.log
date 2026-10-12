@@ -1,0 +1,30 @@
+Loading weights:   0%|          | 0/506 [00:00<?, ?it/s]Loading weights: 100%|██████████| 506/506 [00:00<00:00, 5066.04it/s]
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+valen_08b_original_d_a1 100 / 2735
+valen_08b_original_d_a1 200 / 2735
+valen_08b_original_d_a1 300 / 2735
+valen_08b_original_d_a1 400 / 2735
+valen_08b_original_d_a1 500 / 2735
+valen_08b_original_d_a1 600 / 2735
+valen_08b_original_d_a1 700 / 2735
+valen_08b_original_d_a1 800 / 2735
+valen_08b_original_d_a1 900 / 2735
+valen_08b_original_d_a1 1000 / 2735
+valen_08b_original_d_a1 1100 / 2735
+valen_08b_original_d_a1 1200 / 2735
+valen_08b_original_d_a1 1300 / 2735
+valen_08b_original_d_a1 1400 / 2735
+valen_08b_original_d_a1 1500 / 2735
+valen_08b_original_d_a1 1600 / 2735
+valen_08b_original_d_a1 1700 / 2735
+valen_08b_original_d_a1 1800 / 2735
+valen_08b_original_d_a1 1900 / 2735
+valen_08b_original_d_a1 2000 / 2735
+valen_08b_original_d_a1 2100 / 2735
+valen_08b_original_d_a1 2200 / 2735
+valen_08b_original_d_a1 2300 / 2735
+valen_08b_original_d_a1 2400 / 2735
+valen_08b_original_d_a1 2500 / 2735
+valen_08b_original_d_a1 2600 / 2735
+valen_08b_original_d_a1 2700 / 2735
+{"expected": 2735, "saved": 2735, "parsed": 2735, "errors": 0, "missing": 0, "correct": 564, "model_sha256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48", "smoke": false, "max_gpu_allocated": 4727671296, "memory": {"used": 30981279744, "limit": 30999998464, "headroom": 18718720}}

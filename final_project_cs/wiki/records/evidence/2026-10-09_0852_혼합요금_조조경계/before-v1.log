@@ -1,0 +1,412 @@
+FFFF.FFFFFFFFFFFFFFFFFFF.                                                [100%]
+================================== FAILURES ===================================
+_ test_mixed_upper_does_not_depend_on_early_bird_or_a_crossing_boarding_window[375-True] _
+
+rail_first = True, first_board = 375
+
+    @pytest.mark.parametrize('rail_first', [True, False])
+    @pytest.mark.parametrize('first_board', [375, 385])
+    def test_mixed_upper_does_not_depend_on_early_bird_or_a_crossing_boarding_window(rail_first, first_board):
+        v, bus, rail = fixture()
+        legs = [rail, bus] if rail_first else [bus, rail]
+        results = rides(legs)
+        for i, lr in enumerate(results):
+            lr.depart_min = first_board + i * 10
+            lr.arrive_min = lr.depart_min + 8
+        assert O.fare_of(v, legs, results) is None
+>       assert O.fare_upper_of(v, legs, results) == 3150
+E       AssertionError: assert None == 3150
+E        +  where None = <function fare_upper_of at 0x000002562DB74FE0>(<app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000002562DC00D40>, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=375, arrive_min=383, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where <function fare_upper_of at 0x000002562DB74FE0> = O.fare_upper_of
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:23: AssertionError
+_ test_mixed_upper_does_not_depend_on_early_bird_or_a_crossing_boarding_window[375-False] _
+
+rail_first = False, first_board = 375
+
+    @pytest.mark.parametrize('rail_first', [True, False])
+    @pytest.mark.parametrize('first_board', [375, 385])
+    def test_mixed_upper_does_not_depend_on_early_bird_or_a_crossing_boarding_window(rail_first, first_board):
+        v, bus, rail = fixture()
+        legs = [rail, bus] if rail_first else [bus, rail]
+        results = rides(legs)
+        for i, lr in enumerate(results):
+            lr.depart_min = first_board + i * 10
+            lr.arrive_min = lr.depart_min + 8
+        assert O.fare_of(v, legs, results) is None
+>       assert O.fare_upper_of(v, legs, results) == 3150
+E       AssertionError: assert 2540 == 3150
+E        +  where 2540 = <function fare_upper_of at 0x000002562DB74FE0>(<app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000002562DA266F0>, [{'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}, {'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}], [LegResult(idx=1, label='버스 101 갑→을', verdict='feasible', reason='', grade='확정', depart_min=375, arrive_min=383, wait_...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where <function fare_upper_of at 0x000002562DB74FE0> = O.fare_upper_of
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:23: AssertionError
+_ test_mixed_upper_does_not_depend_on_early_bird_or_a_crossing_boarding_window[385-True] _
+
+rail_first = True, first_board = 385
+
+    @pytest.mark.parametrize('rail_first', [True, False])
+    @pytest.mark.parametrize('first_board', [375, 385])
+    def test_mixed_upper_does_not_depend_on_early_bird_or_a_crossing_boarding_window(rail_first, first_board):
+        v, bus, rail = fixture()
+        legs = [rail, bus] if rail_first else [bus, rail]
+        results = rides(legs)
+        for i, lr in enumerate(results):
+            lr.depart_min = first_board + i * 10
+            lr.arrive_min = lr.depart_min + 8
+        assert O.fare_of(v, legs, results) is None
+>       assert O.fare_upper_of(v, legs, results) == 3150
+E       AssertionError: assert 2840 == 3150
+E        +  where 2840 = <function fare_upper_of at 0x000002562DB74FE0>(<app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000002562DCA9A60>, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=385, arrive_min=393, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where <function fare_upper_of at 0x000002562DB74FE0> = O.fare_upper_of
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:23: AssertionError
+_ test_mixed_upper_does_not_depend_on_early_bird_or_a_crossing_boarding_window[385-False] _
+
+rail_first = False, first_board = 385
+
+    @pytest.mark.parametrize('rail_first', [True, False])
+    @pytest.mark.parametrize('first_board', [375, 385])
+    def test_mixed_upper_does_not_depend_on_early_bird_or_a_crossing_boarding_window(rail_first, first_board):
+        v, bus, rail = fixture()
+        legs = [rail, bus] if rail_first else [bus, rail]
+        results = rides(legs)
+        for i, lr in enumerate(results):
+            lr.depart_min = first_board + i * 10
+            lr.arrive_min = lr.depart_min + 8
+        assert O.fare_of(v, legs, results) is None
+>       assert O.fare_upper_of(v, legs, results) == 3150
+E       AssertionError: assert None == 3150
+E        +  where None = <function fare_upper_of at 0x000002562DB74FE0>(<app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000002562DCAA5A0>, [{'from': '갑', 'mode': 'bus', 'route': '101', 'to': '을'}, {'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}], [LegResult(idx=1, label='버스 101 갑→을', verdict='feasible', reason='', grade='확정', depart_min=385, arrive_min=393, wait_...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where <function fare_upper_of at 0x000002562DB74FE0> = O.fare_upper_of
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:23: AssertionError
+_ test_known_bus_upper_uses_the_rule_amount_without_a_discount[\uac04\uc120-1500] _
+
+kind = '간선', won = 1500
+
+    @pytest.mark.parametrize('kind,won', [('간선', 1500), ('지선', 1500), ('순환', 1400),
+                                       ('마을', 1200), ('광역', 3000), ('심야', 2500)])
+    def test_known_bus_upper_uses_the_rule_amount_without_a_discount(kind, won):
+        v, bus, _ = fixture()
+        v.bus.route('101').route_type_nm = kind
+        result = rides([bus])
+        result[0].depart_min = 385
+>       assert O.bus_fare_upper(v, [bus], result) == won
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:38: AttributeError
+_ test_known_bus_upper_uses_the_rule_amount_without_a_discount[\uc9c0\uc120-1500] _
+
+kind = '지선', won = 1500
+
+    @pytest.mark.parametrize('kind,won', [('간선', 1500), ('지선', 1500), ('순환', 1400),
+                                       ('마을', 1200), ('광역', 3000), ('심야', 2500)])
+    def test_known_bus_upper_uses_the_rule_amount_without_a_discount(kind, won):
+        v, bus, _ = fixture()
+        v.bus.route('101').route_type_nm = kind
+        result = rides([bus])
+        result[0].depart_min = 385
+>       assert O.bus_fare_upper(v, [bus], result) == won
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:38: AttributeError
+_ test_known_bus_upper_uses_the_rule_amount_without_a_discount[\uc21c\ud658-1400] _
+
+kind = '순환', won = 1400
+
+    @pytest.mark.parametrize('kind,won', [('간선', 1500), ('지선', 1500), ('순환', 1400),
+                                       ('마을', 1200), ('광역', 3000), ('심야', 2500)])
+    def test_known_bus_upper_uses_the_rule_amount_without_a_discount(kind, won):
+        v, bus, _ = fixture()
+        v.bus.route('101').route_type_nm = kind
+        result = rides([bus])
+        result[0].depart_min = 385
+>       assert O.bus_fare_upper(v, [bus], result) == won
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:38: AttributeError
+_ test_known_bus_upper_uses_the_rule_amount_without_a_discount[\ub9c8\uc744-1200] _
+
+kind = '마을', won = 1200
+
+    @pytest.mark.parametrize('kind,won', [('간선', 1500), ('지선', 1500), ('순환', 1400),
+                                       ('마을', 1200), ('광역', 3000), ('심야', 2500)])
+    def test_known_bus_upper_uses_the_rule_amount_without_a_discount(kind, won):
+        v, bus, _ = fixture()
+        v.bus.route('101').route_type_nm = kind
+        result = rides([bus])
+        result[0].depart_min = 385
+>       assert O.bus_fare_upper(v, [bus], result) == won
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:38: AttributeError
+_ test_known_bus_upper_uses_the_rule_amount_without_a_discount[\uad11\uc5ed-3000] _
+
+kind = '광역', won = 3000
+
+    @pytest.mark.parametrize('kind,won', [('간선', 1500), ('지선', 1500), ('순환', 1400),
+                                       ('마을', 1200), ('광역', 3000), ('심야', 2500)])
+    def test_known_bus_upper_uses_the_rule_amount_without_a_discount(kind, won):
+        v, bus, _ = fixture()
+        v.bus.route('101').route_type_nm = kind
+        result = rides([bus])
+        result[0].depart_min = 385
+>       assert O.bus_fare_upper(v, [bus], result) == won
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:38: AttributeError
+_ test_known_bus_upper_uses_the_rule_amount_without_a_discount[\uc2ec\uc57c-2500] _
+
+kind = '심야', won = 2500
+
+    @pytest.mark.parametrize('kind,won', [('간선', 1500), ('지선', 1500), ('순환', 1400),
+                                       ('마을', 1200), ('광역', 3000), ('심야', 2500)])
+    def test_known_bus_upper_uses_the_rule_amount_without_a_discount(kind, won):
+        v, bus, _ = fixture()
+        v.bus.route('101').route_type_nm = kind
+        result = rides([bus])
+        result[0].depart_min = 385
+>       assert O.bus_fare_upper(v, [bus], result) == won
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:38: AttributeError
+___________ test_unsupported_bus_has_no_upper_amount[\uacf5\ud56d] ____________
+
+kind = '공항'
+
+    @pytest.mark.parametrize('kind', ['공항', '투어', '없는유형', None])
+    def test_unsupported_bus_has_no_upper_amount(kind):
+        v, bus, _ = fixture()
+        v.bus.route('101').route_type_nm = kind
+>       assert O.bus_fare_upper(v, [bus], rides([bus])) is None
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:45: AttributeError
+___________ test_unsupported_bus_has_no_upper_amount[\ud22c\uc5b4] ____________
+
+kind = '투어'
+
+    @pytest.mark.parametrize('kind', ['공항', '투어', '없는유형', None])
+    def test_unsupported_bus_has_no_upper_amount(kind):
+        v, bus, _ = fixture()
+        v.bus.route('101').route_type_nm = kind
+>       assert O.bus_fare_upper(v, [bus], rides([bus])) is None
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:45: AttributeError
+_____ test_unsupported_bus_has_no_upper_amount[\uc5c6\ub294\uc720\ud615] ______
+
+kind = '없는유형'
+
+    @pytest.mark.parametrize('kind', ['공항', '투어', '없는유형', None])
+    def test_unsupported_bus_has_no_upper_amount(kind):
+        v, bus, _ = fixture()
+        v.bus.route('101').route_type_nm = kind
+>       assert O.bus_fare_upper(v, [bus], rides([bus])) is None
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:45: AttributeError
+_______________ test_unsupported_bus_has_no_upper_amount[None] ________________
+
+kind = None
+
+    @pytest.mark.parametrize('kind', ['공항', '투어', '없는유형', None])
+    def test_unsupported_bus_has_no_upper_amount(kind):
+        v, bus, _ = fixture()
+        v.bus.route('101').route_type_nm = kind
+>       assert O.bus_fare_upper(v, [bus], rides([bus])) is None
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:45: AttributeError
+_________ test_invalid_rule_amount_does_not_become_a_budget_value[-1] _________
+
+amount = -1
+
+    @pytest.mark.parametrize('amount', [-1, float('nan'), float('inf'), True, '1500', None])
+    def test_invalid_rule_amount_does_not_become_a_budget_value(amount):
+        v, bus, _ = fixture()
+        v.R['fare']['bus']['by_type']['value']['간선'] = amount
+>       assert O.bus_fare_upper(v, [bus], rides([bus])) is None
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:52: AttributeError
+________ test_invalid_rule_amount_does_not_become_a_budget_value[nan] _________
+
+amount = nan
+
+    @pytest.mark.parametrize('amount', [-1, float('nan'), float('inf'), True, '1500', None])
+    def test_invalid_rule_amount_does_not_become_a_budget_value(amount):
+        v, bus, _ = fixture()
+        v.R['fare']['bus']['by_type']['value']['간선'] = amount
+>       assert O.bus_fare_upper(v, [bus], rides([bus])) is None
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:52: AttributeError
+________ test_invalid_rule_amount_does_not_become_a_budget_value[inf] _________
+
+amount = inf
+
+    @pytest.mark.parametrize('amount', [-1, float('nan'), float('inf'), True, '1500', None])
+    def test_invalid_rule_amount_does_not_become_a_budget_value(amount):
+        v, bus, _ = fixture()
+        v.R['fare']['bus']['by_type']['value']['간선'] = amount
+>       assert O.bus_fare_upper(v, [bus], rides([bus])) is None
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:52: AttributeError
+________ test_invalid_rule_amount_does_not_become_a_budget_value[True] ________
+
+amount = True
+
+    @pytest.mark.parametrize('amount', [-1, float('nan'), float('inf'), True, '1500', None])
+    def test_invalid_rule_amount_does_not_become_a_budget_value(amount):
+        v, bus, _ = fixture()
+        v.R['fare']['bus']['by_type']['value']['간선'] = amount
+>       assert O.bus_fare_upper(v, [bus], rides([bus])) is None
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:52: AttributeError
+________ test_invalid_rule_amount_does_not_become_a_budget_value[1500] ________
+
+amount = '1500'
+
+    @pytest.mark.parametrize('amount', [-1, float('nan'), float('inf'), True, '1500', None])
+    def test_invalid_rule_amount_does_not_become_a_budget_value(amount):
+        v, bus, _ = fixture()
+        v.R['fare']['bus']['by_type']['value']['간선'] = amount
+>       assert O.bus_fare_upper(v, [bus], rides([bus])) is None
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:52: AttributeError
+________ test_invalid_rule_amount_does_not_become_a_budget_value[None] ________
+
+amount = None
+
+    @pytest.mark.parametrize('amount', [-1, float('nan'), float('inf'), True, '1500', None])
+    def test_invalid_rule_amount_does_not_become_a_budget_value(amount):
+        v, bus, _ = fixture()
+        v.R['fare']['bus']['by_type']['value']['간선'] = amount
+>       assert O.bus_fare_upper(v, [bus], rides([bus])) is None
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:52: AttributeError
+______________ test_unknown_bus_or_unmatched_ride_is_not_filled _______________
+
+    def test_unknown_bus_or_unmatched_ride_is_not_filled():
+        v, bus, _ = fixture()
+        bad = dict(bus, route='없는노선')
+>       assert O.bus_fare_upper(v, [bad], rides([bad])) is None
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'bus_fare_upper'. Did you mean: 'subway_fare_upper'?
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:58: AttributeError
+__ test_public_mixed_option_carries_undiscounted_upper_and_explanation[True] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002562DE55CD0>
+rail_first = True
+
+    @pytest.mark.parametrize('rail_first', [True, False])
+    def test_public_mixed_option_carries_undiscounted_upper_and_explanation(monkeypatch, rail_first):
+        v, bus, rail = fixture()
+        runtime = Runtime(v, timetable_built_at='controlled', rules_version='controlled', stats={})
+        planner = P.Planner(runtime, modes=['bus', 'subway'])
+        legs = [rail, bus] if rail_first else [bus, rail]
+        results = rides(legs)
+        for i, lr in enumerate(results):
+            lr.depart_min = 370 + i * 10
+            lr.arrive_min = lr.depart_min + 8
+        option = {'eta_min': 40, 'uses': P.uses_of(legs), '_legs': legs, '_route': P.label_of(legs),
+                  '_start': 370, '_transfers': 1, '_n': 1, '_key': ('mixed', 0, 1), '_mixed': True,
+                  '_margin': 0, '_slack': 0, '_walk_min': 0, '_walk_m': 0, '_fare': None,
+                  '_severe': [], '_covered': False, '_lr': results, '_day_type': '평일'}
+        snapshot = deepcopy(option)
+        monkeypatch.setattr(planner, '_station_pairs', lambda *args: ([], [], []))
+        monkeypatch.setattr(planner, '_bus_direct', lambda *args: [])
+        monkeypatch.setattr(planner, '_bike_direct', lambda *args: ([], None))
+        monkeypatch.setattr(planner, '_mixed', lambda *args: [deepcopy(option)])
+        got, why = planner.leg(PLACES[0], PLACES[1], datetime.fromisoformat('2026-10-09T06:50:00+09:00'),
+                               {}, True, 'controlled-mixed')
+        assert why is None
+        public = got[0]['options'][0]
+>       assert public['fare_krw'] == 3150
+E       assert 2540 == 3150
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:85: AssertionError
+_ test_public_mixed_option_carries_undiscounted_upper_and_explanation[False] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002562DDD8B00>
+rail_first = False
+
+    @pytest.mark.parametrize('rail_first', [True, False])
+    def test_public_mixed_option_carries_undiscounted_upper_and_explanation(monkeypatch, rail_first):
+        v, bus, rail = fixture()
+        runtime = Runtime(v, timetable_built_at='controlled', rules_version='controlled', stats={})
+        planner = P.Planner(runtime, modes=['bus', 'subway'])
+        legs = [rail, bus] if rail_first else [bus, rail]
+        results = rides(legs)
+        for i, lr in enumerate(results):
+            lr.depart_min = 370 + i * 10
+            lr.arrive_min = lr.depart_min + 8
+        option = {'eta_min': 40, 'uses': P.uses_of(legs), '_legs': legs, '_route': P.label_of(legs),
+                  '_start': 370, '_transfers': 1, '_n': 1, '_key': ('mixed', 0, 1), '_mixed': True,
+                  '_margin': 0, '_slack': 0, '_walk_min': 0, '_walk_m': 0, '_fare': None,
+                  '_severe': [], '_covered': False, '_lr': results, '_day_type': '평일'}
+        snapshot = deepcopy(option)
+        monkeypatch.setattr(planner, '_station_pairs', lambda *args: ([], [], []))
+        monkeypatch.setattr(planner, '_bus_direct', lambda *args: [])
+        monkeypatch.setattr(planner, '_bike_direct', lambda *args: ([], None))
+        monkeypatch.setattr(planner, '_mixed', lambda *args: [deepcopy(option)])
+        got, why = planner.leg(PLACES[0], PLACES[1], datetime.fromisoformat('2026-10-09T06:50:00+09:00'),
+                               {}, True, 'controlled-mixed')
+        assert why is None
+        public = got[0]['options'][0]
+>       assert public['fare_krw'] == 3150
+E       assert 2540 == 3150
+
+tests\unit\travel\mobility\test_fare_discount_upper_v1.py:85: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_0852_혼합요금_조조경계\before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_mixed_upper_does_not_depend_on_early_bird_or_a_crossing_boarding_window[375-True]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_mixed_upper_does_not_depend_on_early_bird_or_a_crossing_boarding_window[375-False]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_mixed_upper_does_not_depend_on_early_bird_or_a_crossing_boarding_window[385-True]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_mixed_upper_does_not_depend_on_early_bird_or_a_crossing_boarding_window[385-False]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_known_bus_upper_uses_the_rule_amount_without_a_discount[\uac04\uc120-1500]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_known_bus_upper_uses_the_rule_amount_without_a_discount[\uc9c0\uc120-1500]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_known_bus_upper_uses_the_rule_amount_without_a_discount[\uc21c\ud658-1400]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_known_bus_upper_uses_the_rule_amount_without_a_discount[\ub9c8\uc744-1200]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_known_bus_upper_uses_the_rule_amount_without_a_discount[\uad11\uc5ed-3000]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_known_bus_upper_uses_the_rule_amount_without_a_discount[\uc2ec\uc57c-2500]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_unsupported_bus_has_no_upper_amount[\uacf5\ud56d]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_unsupported_bus_has_no_upper_amount[\ud22c\uc5b4]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_unsupported_bus_has_no_upper_amount[\uc5c6\ub294\uc720\ud615]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_unsupported_bus_has_no_upper_amount[None]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_invalid_rule_amount_does_not_become_a_budget_value[-1]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_invalid_rule_amount_does_not_become_a_budget_value[nan]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_invalid_rule_amount_does_not_become_a_budget_value[inf]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_invalid_rule_amount_does_not_become_a_budget_value[True]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_invalid_rule_amount_does_not_become_a_budget_value[1500]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_invalid_rule_amount_does_not_become_a_budget_value[None]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_unknown_bus_or_unmatched_ride_is_not_filled
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_public_mixed_option_carries_undiscounted_upper_and_explanation[True]
+FAILED tests/unit/travel/mobility/test_fare_discount_upper_v1.py::test_public_mixed_option_carries_undiscounted_upper_and_explanation[False]
+23 failed, 2 passed in 5.22s
+Exception ignored in: <function Console.__del__ at 0x000002561E415E40>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

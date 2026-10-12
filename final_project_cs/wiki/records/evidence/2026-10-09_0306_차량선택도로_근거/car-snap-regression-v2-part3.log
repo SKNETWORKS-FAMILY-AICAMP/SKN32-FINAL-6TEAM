@@ -1,0 +1,258 @@
+........................................................................ [ 33%]
+........................................................................ [ 66%]
+..............FFFF...................................................... [100%]
+================================== FAILURES ===================================
+____________ test_before_first_train_falls_back_to_a_labelled_taxi ____________
+
+    def test_before_first_train_falls_back_to_a_labelled_taxi():
+>       out = _run("05:00")          # 첫차(05:34) 전
+              ^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_taxi_fallback.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_taxi_fallback.py:45: in _run
+    return P.plan(_PLACES, _items("2026-10-07", start, end, arrive), 1, {}, runtime=_runtime_with_car(), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:1859: in plan
+    got, why = P.leg(pa, pb, _parse_dt(b["starts_at"]), party, first_visit,
+app\domains\travel_ops\instances\mobility\engine\plan.py:1514: in leg
+    sa, sb, pairs = self._station_pairs(a_place, b_place, wlim)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:1147: in _station_pairs
+    sa, sb = self._near_stations(a_place, wlim), self._near_stations(b_place, wlim)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:499: in _near_stations
+    d = self._eff(place["lat"], place["lon"], tlat, tlon, d)     # #13 \u2014 \ucd9c\uad6c(\uc5c6\uc73c\uba74 \uc5ed)\uae4c\uc9c0 \uae38\ub85c
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:341: in _eff
+    r = br.route(prof, lat1, lng1, lat2, lng2)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\bike.py:195: in route
+    doc = self.router.route((lng1, lat1), (lng2, lat2), profile=profile)   # car.py 와 같은 (lng, lat) 순서
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\graph_router.py:406: in route
+    self._load()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.graph_router.GraphRouter object at 0x000001FEE3D37350>
+
+    def _load(self):
+        if self._loaded:
+            return
+        with self._lock:
+            if self._loaded:
+                return
+            import time
+            t0 = time.monotonic()
+            if not self.available():
+                raise RouterDown(f"도로 그래프 자료가 없다({self.dir})")
+            if self._records is None:
+                from .turn_restrictions import graph_signature
+                self._graph_signature = graph_signature(self.dir)
+            nodes = self._records["nodes"] if self._records is not None else _read_jsonl(self.dir / "nodes.jsonl.gz")
+            edges = self._records["edges"] if self._records is not None else _read_jsonl(self.dir / "edges.jsonl.gz")
+            self.nid, self.nlat, self.nlon = {}, array.array("d"), array.array("d")
+            for r in nodes:
+                self.nid[r["id"]] = len(self.nlat)
+                self.nlat.append(r["lat"])
+                self.nlon.append(r["lon"])
+            self.hw_code, self.hw_name = {}, []
+            A = array.array
+            self.eu, self.ev, self.elen, self.eway = A("i"), A("i"), A("f"), A("q")
+            self.ehw, self.ems, self.eflag, self.eow, self.ebow = A("H"), A("f"), A("B"), A("b"), A("b")
+            self.has_foot = False
+            self.eg = []
+            self.bb = [A("d"), A("d"), A("d"), A("d")]          # 간선 경계 상자(minlat, minlon, maxlat, maxlon)
+            self.grid = {}
+            self.skipped = 0
+            for r in edges:
+                u, v = self.nid.get(r["u"]), self.nid.get(r["v"])
+                if u is None or v is None:
+                    self.skipped += 1
+                    continue
+                e = len(self.eu)
+                self.eu.append(u)
+                self.ev.append(v)
+                self.elen.append(float(r["len"]))
+>               self.eway.append(int(r["way"]))
+E               MemoryError
+
+app\domains\travel_ops\instances\mobility\engine\graph_router.py:225: MemoryError
+__________________________ test_daytime_is_untouched __________________________
+
+    def test_daytime_is_untouched():
+>       r = _route(_run("10:30", "08:00", "08:30"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_taxi_fallback.py:63: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_taxi_fallback.py:45: in _run
+    return P.plan(_PLACES, _items("2026-10-07", start, end, arrive), 1, {}, runtime=_runtime_with_car(), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:1859: in plan
+    got, why = P.leg(pa, pb, _parse_dt(b["starts_at"]), party, first_visit,
+app\domains\travel_ops\instances\mobility\engine\plan.py:1514: in leg
+    sa, sb, pairs = self._station_pairs(a_place, b_place, wlim)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:1147: in _station_pairs
+    sa, sb = self._near_stations(a_place, wlim), self._near_stations(b_place, wlim)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:499: in _near_stations
+    d = self._eff(place["lat"], place["lon"], tlat, tlon, d)     # #13 \u2014 \ucd9c\uad6c(\uc5c6\uc73c\uba74 \uc5ed)\uae4c\uc9c0 \uae38\ub85c
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:341: in _eff
+    r = br.route(prof, lat1, lng1, lat2, lng2)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\bike.py:195: in route
+    doc = self.router.route((lng1, lat1), (lng2, lat2), profile=profile)   # car.py 와 같은 (lng, lat) 순서
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\graph_router.py:406: in route
+    self._load()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.graph_router.GraphRouter object at 0x000001FEE3D37350>
+
+    def _load(self):
+        if self._loaded:
+            return
+        with self._lock:
+            if self._loaded:
+                return
+            import time
+            t0 = time.monotonic()
+            if not self.available():
+                raise RouterDown(f"도로 그래프 자료가 없다({self.dir})")
+            if self._records is None:
+                from .turn_restrictions import graph_signature
+                self._graph_signature = graph_signature(self.dir)
+            nodes = self._records["nodes"] if self._records is not None else _read_jsonl(self.dir / "nodes.jsonl.gz")
+            edges = self._records["edges"] if self._records is not None else _read_jsonl(self.dir / "edges.jsonl.gz")
+            self.nid, self.nlat, self.nlon = {}, array.array("d"), array.array("d")
+            for r in nodes:
+>               self.nid[r["id"]] = len(self.nlat)
+                ^^^^^^^^^^^^^^^^^
+E               MemoryError
+
+app\domains\travel_ops\instances\mobility\engine\graph_router.py:204: MemoryError
+___________ test_explicit_modes_without_taxi_keep_the_old_no_result ___________
+
+    def test_explicit_modes_without_taxi_keep_the_old_no_result():
+>       out = _run("05:00", modes=["subway", "bus", "walk"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_taxi_fallback.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_taxi_fallback.py:45: in _run
+    return P.plan(_PLACES, _items("2026-10-07", start, end, arrive), 1, {}, runtime=_runtime_with_car(), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:1859: in plan
+    got, why = P.leg(pa, pb, _parse_dt(b["starts_at"]), party, first_visit,
+app\domains\travel_ops\instances\mobility\engine\plan.py:1514: in leg
+    sa, sb, pairs = self._station_pairs(a_place, b_place, wlim)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:1147: in _station_pairs
+    sa, sb = self._near_stations(a_place, wlim), self._near_stations(b_place, wlim)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:499: in _near_stations
+    d = self._eff(place["lat"], place["lon"], tlat, tlon, d)     # #13 \u2014 \ucd9c\uad6c(\uc5c6\uc73c\uba74 \uc5ed)\uae4c\uc9c0 \uae38\ub85c
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:341: in _eff
+    r = br.route(prof, lat1, lng1, lat2, lng2)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\bike.py:195: in route
+    doc = self.router.route((lng1, lat1), (lng2, lat2), profile=profile)   # car.py 와 같은 (lng, lat) 순서
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\graph_router.py:406: in route
+    self._load()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.graph_router.GraphRouter object at 0x000001FEE3D37350>
+
+    def _load(self):
+        if self._loaded:
+            return
+        with self._lock:
+            if self._loaded:
+                return
+            import time
+            t0 = time.monotonic()
+            if not self.available():
+                raise RouterDown(f"도로 그래프 자료가 없다({self.dir})")
+            if self._records is None:
+                from .turn_restrictions import graph_signature
+                self._graph_signature = graph_signature(self.dir)
+            nodes = self._records["nodes"] if self._records is not None else _read_jsonl(self.dir / "nodes.jsonl.gz")
+            edges = self._records["edges"] if self._records is not None else _read_jsonl(self.dir / "edges.jsonl.gz")
+            self.nid, self.nlat, self.nlon = {}, array.array("d"), array.array("d")
+            for r in nodes:
+>               self.nid[r["id"]] = len(self.nlat)
+                ^^^^^^^^^^^^^^^^^
+E               MemoryError
+
+app\domains\travel_ops\instances\mobility\engine\graph_router.py:204: MemoryError
+_________________ test_switch_off_restores_the_old_behaviour __________________
+
+    def test_switch_off_restores_the_old_behaviour():
+        orig = P.TAXI_FALLBACK_ON_SERVICE_HOURS_PROPOSED
+        try:
+            P.TAXI_FALLBACK_ON_SERVICE_HOURS_PROPOSED = False
+>           out = _run("05:00")
+                  ^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_taxi_fallback.py:77: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_taxi_fallback.py:45: in _run
+    return P.plan(_PLACES, _items("2026-10-07", start, end, arrive), 1, {}, runtime=_runtime_with_car(), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:1859: in plan
+    got, why = P.leg(pa, pb, _parse_dt(b["starts_at"]), party, first_visit,
+app\domains\travel_ops\instances\mobility\engine\plan.py:1514: in leg
+    sa, sb, pairs = self._station_pairs(a_place, b_place, wlim)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:1147: in _station_pairs
+    sa, sb = self._near_stations(a_place, wlim), self._near_stations(b_place, wlim)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:499: in _near_stations
+    d = self._eff(place["lat"], place["lon"], tlat, tlon, d)     # #13 \u2014 \ucd9c\uad6c(\uc5c6\uc73c\uba74 \uc5ed)\uae4c\uc9c0 \uae38\ub85c
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:341: in _eff
+    r = br.route(prof, lat1, lng1, lat2, lng2)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\bike.py:195: in route
+    doc = self.router.route((lng1, lat1), (lng2, lat2), profile=profile)   # car.py 와 같은 (lng, lat) 순서
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\graph_router.py:406: in route
+    self._load()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.graph_router.GraphRouter object at 0x000001FEE3D37350>
+
+    def _load(self):
+        if self._loaded:
+            return
+        with self._lock:
+            if self._loaded:
+                return
+            import time
+            t0 = time.monotonic()
+            if not self.available():
+                raise RouterDown(f"도로 그래프 자료가 없다({self.dir})")
+            if self._records is None:
+                from .turn_restrictions import graph_signature
+                self._graph_signature = graph_signature(self.dir)
+            nodes = self._records["nodes"] if self._records is not None else _read_jsonl(self.dir / "nodes.jsonl.gz")
+            edges = self._records["edges"] if self._records is not None else _read_jsonl(self.dir / "edges.jsonl.gz")
+            self.nid, self.nlat, self.nlon = {}, array.array("d"), array.array("d")
+            for r in nodes:
+>               self.nid[r["id"]] = len(self.nlat)
+                ^^^^^^^^^^^^^^^^^
+E               MemoryError
+
+app\domains\travel_ops\instances\mobility\engine\graph_router.py:204: MemoryError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\car-snap-regression-v2-part3.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_taxi_fallback.py::test_before_first_train_falls_back_to_a_labelled_taxi
+FAILED tests/unit/travel/mobility/test_taxi_fallback.py::test_daytime_is_untouched
+FAILED tests/unit/travel/mobility/test_taxi_fallback.py::test_explicit_modes_without_taxi_keep_the_old_no_result
+FAILED tests/unit/travel/mobility/test_taxi_fallback.py::test_switch_off_restores_the_old_behaviour
+4 failed, 212 passed, 179 deselected in 65.03s (0:01:05)

@@ -1,0 +1,12 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\playdata2\anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\playdata2\Documents\final_workspace\final_project_cs
+configfile: pytest.ini
+plugins: anyio-4.14.1, langsmith-0.10.0, asyncio-0.25.2
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collecting ... collected 1 item
+
+tests/integration/controller/test_plugin_unavailable.py::test_independent_candidate_sort_omits_similarity_without_replacing_activity_business PASSED [100%]
+
+============================== 1 passed in 2.56s ==============================

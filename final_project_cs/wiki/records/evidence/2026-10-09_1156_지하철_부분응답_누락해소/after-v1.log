@@ -1,0 +1,28 @@
+........................................................................ [ 25%]
+........................................................................ [ 50%]
+......................F................................................. [ 76%]
+....................................................................     [100%]
+================================== FAILURES ===================================
+_______ test_arrivals_are_normalized_and_the_key_stays_in_the_path_only _______
+
+    def test_arrivals_are_normalized_and_the_key_stays_in_the_path_only():
+        seen = []
+        got = _src(OK, seen=seen).arrivals("강남역")
+        assert got["station"] == "강남" and got["source"] == "seoul_subway_arrival" and got["kind"] == "subway_arrival"
+        t = got["trains"]
+        assert [(x["line"], x["direction"], x["eta_seconds"]) for x in t] == [("2호선", "내선", 180), ("7호선", "상행", 0)]
+        assert t[0]["message"] == "3분 후 (역삼)" and "raw" not in t[0]
+>       assert seen[0].startswith("http://swopenapi.seoul.go.kr/api/subway/" + KEY + "/json/realtimeStationArrival/0/20/")
+E       AssertionError: assert False
+E        +  where False = <built-in method startswith of str object at 0x00000220EA0CFAF0>((('http://swopenapi.seoul.go.kr/api/subway/' + 'SECRETKEY123456') + '/json/realtimeStationArrival/0/20/'))
+E        +    where <built-in method startswith of str object at 0x00000220EA0CFAF0> = 'http://swopenapi.seoul.go.kr/api/subway/SECRETKEY123456/json/realtimeStationArrival/0/1000/%EA%B0%95%EB%82%A8'.startswith
+
+tests\unit\travel\test_seoul_subway_arrival.py:42: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_1156_지하철_부분응답_누락해소\after-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_seoul_subway_arrival.py::test_arrivals_are_normalized_and_the_key_stays_in_the_path_only
+1 failed, 283 passed in 6.90s
+Exception ignored in: <function Console.__del__ at 0x00000220DA685D00>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

@@ -1,0 +1,11 @@
+{
+  "checked_at": "2026-10-09T10:32:58.213773+09:00",
+  "source_and_artifact_hash_matches": 244,
+  "syntax_command": [
+    "C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1007-641-0_26.1007.641.0_x64__3k8sg7r9htsxt/dependencies/node/bin/node.exe",
+    "--check",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\subway-binding-visual-script-v1.js"
+  ],
+  "syntax_exit_code": 0,
+  "browser_render_verified": false
+}

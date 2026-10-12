@@ -89,6 +89,8 @@ class ReadToolbox:
     kakao: Any | None = None
     #: ★`[2026-09-30]` 구글 장소(`GooglePlaces`) — 식당 가격(`read.place_price`)만 쓴다. 없으면 「모름」.
     google_places: Any | None = None
+    #: 운영 조립만 주입하는 무료 휴무 관측. 시험·시나리오 기본값은 외부 조회 없음.
+    place_status: Any | None = None
 
     def _one(self, sql: str, params: tuple[Any, ...], columns: tuple[str, ...]) -> dict[str, Any] | None:
         with self.connection_factory() as conn:
@@ -279,12 +281,14 @@ class ReadToolbox:
         ★`open_at_slot` 이 NULL 이면 **모름**이다. 받는 쪽이 「아니다」로 읽으면
           안 된다 — 그 구분은 Team 이 한다.
         """
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+        dining_ledger.require_state_provider(registered_place=True)
         if not self.dining_ledger:
             return None
-        from app.domains.travel_ops.instances.dining.ledger import dining_state
         with self.connection_factory() as conn:
-            return dining_state(conn, scope.tenant_id, place_id, at, until,
-                                order_margin_min=order_margin_min)
+            return dining_ledger.state(conn, scope.tenant_id, place_id, at, until,
+                                       order_margin_min=order_margin_min)
 
     def dining_states(self, scope: ToolContext, *, slots: list[dict[str, Any]],
                       order_margin_min: int | None = None, **_: Any) -> dict[str, dict[str, Any] | None] | None:
@@ -293,14 +297,15 @@ class ReadToolbox:
         ★`[2026-10-05]` 라스트오더 주문 여유(`order_ok`)를 함께 낸다 — 기본은 대체 계산의 탈락 기준(20분, `replan.ORDER_MARGIN_MIN`).
         ★요식 원장을 쓰지 않는 조립(시나리오 모드 — `dining_ledger=False`)은 `None` — 계산은 장소 목록의 영업시간으로 돌아간다.
         """
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+        dining_ledger.state_lookup(None, scope.tenant_id)
         if not self.dining_ledger:
             return None
-        from app.domains.travel_ops.instances.dining.ledger import dining_states
-
         with self.connection_factory() as conn:
             if order_margin_min is None:
-                return dining_states(conn, scope.tenant_id, slots)
-            return dining_states(conn, scope.tenant_id, slots, order_margin_min=order_margin_min)
+                return dining_ledger.states(conn, scope.tenant_id, slots)
+            return dining_ledger.states(conn, scope.tenant_id, slots, order_margin_min=order_margin_min)
 
     def place_price(self, scope: ToolContext, *, place_ids: list[str] | None = None,
                     **_: Any) -> dict[str, dict[str, int | None] | None] | None:
@@ -499,14 +504,25 @@ class ReadToolbox:
         place = {"place_id": place_id, "latitude": latitude, "longitude": longitude,
                  "weather_sensitive": None if weather_sensitive is None else bool(weather_sensitive),
                  "district": district}
-        if self.check is not None:
-            return self.check(place=place, starts_at=_as_datetime(starts_at), region=str(region))
-        if self.travel is None:
+        if self.check is None and self.travel is None:
             return None
-        from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
-
-        return DisruptionCheck(self.travel).check(
-            place=place, starts_at=_as_datetime(starts_at), region=str(region))
+        if place_id:
+            from app.domains.travel_ops.components.watch.simulation import case_place
+            connection = self.connection_factory()
+            if connection is not None:
+                with connection as conn:
+                    place = case_place(conn, tenant=scope.tenant_id, customer_id=scope.customer_id,
+                                       case_id=scope.case_id, place=place)
+        if self.check is not None:
+            report = self.check(place=place, starts_at=_as_datetime(starts_at), region=str(region))
+        else:
+            from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+            report = DisruptionCheck(self.travel).check(place=place, starts_at=_as_datetime(starts_at), region=str(region))
+        if self.place_status is not None and place_id and not place.get('_watch_simulation') and report is not None:
+            from datetime import UTC, datetime
+            return self.place_status.merge_case(scope, place=place, start=_as_datetime(starts_at), report=report,
+                                                now=datetime.now(UTC))
+        return report
 
     def weather_warning(self, scope: ToolContext, *, region: str = "서울",
                         **_: Any) -> dict[str, Any] | None:

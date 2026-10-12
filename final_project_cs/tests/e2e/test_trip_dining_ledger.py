@@ -76,6 +76,11 @@ def api(monkeypatch):
     client = TestClient(create_app(
         classifier=lambda _m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
         domain_routers=[build_trip_router(check_factory=lambda: (lambda **_k: {"verdict": "clear"}))]))
+    # 원장 식당 선택·영업 판정은 실제 구현으로 검증한다. 이동만 명시 시험용 계산 표를 사용한다.
+    from app.domains.travel_ops.components.planning.planner import MOVE_BUFFER_MIN
+    from tests.helpers.plugin_bindings import publish_fixed_mobility
+
+    publish_fixed_mobility(client.app, source="dining_ledger_scenario_test", arrival_buffer_min=MOVE_BUFFER_MIN)
 
     def auth(scope):
         return {"Authorization": "Bearer " + security._development_key(scope, original.secret_key)}

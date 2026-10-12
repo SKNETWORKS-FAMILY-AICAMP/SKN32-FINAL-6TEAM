@@ -1,74 +1,44 @@
 ---
 type: guide
-title: triPilot 시작하기
-description: triPilot이 무엇이고 어느 문서부터 읽어야 하는지 알려주는 진입점. 도메인은 여행이다
+title: wiki 빠른 시작
+description: 현재 여행 기준과 사용 종료된 기록을 구분한다
 status: draft
 domain: travel
 ---
 
-# triPilot 시작하기
+# wiki 빠른 시작
 
-★**[2026-09-08 판올림] 도메인이 여행으로 바뀌었다.** 기준선은 지금 **v11**(2026-09-10)이다 — 읽을 때 **v11** 과 대조한다. `[실측 2026-09-10]` 비-기록 176문서 중 85개(48%)에 커머스 낱말이 남아 있는데 **상당수는 남는 게 맞다**(대조군·기록). 문서별 판정은 front matter 의 `domain` 축이 갖고 있다 → [governance/domain-axis.md](governance/domain-axis.md). 옛 도메인 서술은 지우지 않고 그 시점 사실로 남긴다.
+현재 사양을 찾을 때는 아래 순서로 읽습니다. 오래된 문서와 현재 코드가 다르면 후속 확정 결정·계약을 확인하고 현재 안내를 수정합니다.
 
-triPilot은 **여행 지속관리 CS 플랫폼**이다. 외부 에이전트나 LLM이 만든 일정을 받아 **현실에서 성립하는지 검증하고, 여행이 끝날 때까지 상황 변화를 먼저 감지해 남은 일정을 조정한다.**
-
-**계획을 만드는 것은 우리 일이 아니다.** 계획 생성기를 만들면 트리플·Mindtrip·범용 에이전트와 정면으로 겹친다. 우리 가치는 계획이 현실에서 성립하는지 확인하는 데 있다 → 계획서 v11 §4-A.
-
-## 30초 요약
-
-| | |
+| 찾는 내용 | 정본 |
 |---|---|
-| 무엇 | 여행 일정의 검증·감시·조정층. 계획 생성기가 아니다 |
-| 핵심 주장 | 동작하게 만들기는 쉽다. **믿을 수 있게** 만들기가 어렵다 (도메인이 바뀌어도 그대로다) |
-| 1순위 고객 | **처음 한국에 자유여행 오는 외국인 개인·친구 그룹** (인바운드) |
-| 접점 | **둘** — 개인 에이전트 **API** + **여행계획서 링크**(토큰, 로그인 없음). 자체 앱·음성은 만들지 않는다 |
-| 판매 형태 | 팀당 여행 이용권. 기준 7일·4인·**서울 1도시** `[결정 2026-09-10 — 앞 판은 2도시]`, **팀당 49,000원(VAT 포함) · 인당 12,250원** `[결정 2026-09-10 — v11 §0-4 결정 13. 앞 판 2도시 59,000원에서 내렸다]` |
-| 릴리스 대상 | `final_project_cs` |
-| 일정 | 최종발표 2026-10-26 — 2026-09-10 기준 **6주 4일**. MVP는 구현 단계 1(**계획·검증·지속관리**)까지 `[정정 2026-09-10]` |
-| 팀 | 6명 |
+| 제품 목적·고객·범위 | [제품 안내](product/index.md) |
+| 확정된 변경과 이유 | [결정 목록](decisions/index.md) |
+| 구조·선택 장치·실행 흐름 | [아키텍처](architecture/index.md) |
+| 현재 구현·API·시험 | [cs wiki](../final_project_cs/wiki/index.md) |
+| 담당·검토·파일 위치 | [개발 역할](delivery/roles.md)·[코드 경로](../final_project_cs/wiki/teams/code-layout.md) |
+| 자료·평가·출처 | [데이터 폴더 안내](../datasets/README.md)·[여행 코퍼스](../final_project_cs/wiki/context/travel-corpus.md) |
 
-**승계한 것과 버린 것.** 코어 계약·Case 생명주기·동시성·감사·평가 하네스는 그대로 쓴다. Team 모듈과 도메인 데이터는 전량 신규다. 커머스 Team 4종과 VOC & Store Manager는 MVP 경로에서 빠졌다 → v11 §0-2.
+wiki는 현재 사실 하나를 한 곳에서 관리하고, 조사·실행 결과·이전 판단은 기록으로 연결합니다. [문서 표준](governance/document-standard.md)을 따릅니다. 과거 상용 CS 사례를 여행 평가의 재료로 가져오지 않습니다.
 
-**말하지 않는 것.** "LLM으로 여행 계획을 짜 준다"로 설명하면 기존 제품과 구분되지 않는다. 우리가 파는 것은 **계획이 성립하는지 확인하고 여행 중 변화를 먼저 잡는 것**이다.
+## 과거 기록
 
-## 지금 무엇을 하려는가
+[수정 전 문서](records/commerce_2026-10-11/wiki--quickstart.md)는 당시 기록입니다. 현재 여행 제품의 사양·평가·시연·완료 증거로 사용하지 않습니다. 원문 바이트는 같은 폴더의 백업에도 보존했습니다.
 
-| 하려는 일 | 여기부터 |
-|---|---|
-| 제품이 뭔지 알고 싶다 | 계획서 v11 §0-1·§1 (**wiki의 product/는 아직 쇼핑몰 기준**) |
-| 무엇을 만들고 안 만드나 | [product/scope.md](product/scope.md) — 여행 MVP 범위로 갱신됨 |
-| 누가 왜 쓰는지 알고 싶다 | v11 §1·§2. wiki [product/personas.md](product/personas.md)는 쇼핑몰 페르소나다 |
-| 코드를 고치려 한다 | [`final_project_cs/wiki/quickstart.md`](../final_project_cs/wiki/quickstart.md) |
-| Team을 추가하려 한다 | [architecture/core-vs-team.md](architecture/core-vs-team.md) — 나누는 기준은 도메인과 무관하게 유효하다. 여행 Team 목록은 v11 §5 |
-| 평가를 돌리려 한다 | [evaluation/protocol.md](evaluation/protocol.md) — 하네스는 승계, **정답 시나리오는 교체 대상**(골든셋 72건은 쇼핑몰) |
-| 왜 이렇게 설계했는지 궁금하다 | [decisions/index.md](decisions/index.md) |
-| 사업성 숫자가 필요하다 | [business/unit-economics.md](business/unit-economics.md) |
-| 발표 자료를 만든다 | [delivery/milestones/index.md](delivery/milestones/index.md) |
-| 문서를 쓰려 한다 | [governance/document-standard.md](governance/document-standard.md) |
+## 관계
 
-## 저장소 지도
+- [여행 사양 허브](index.md) — 현재 정본을 찾는 입구
 
-| 저장소 | 역할 | wiki |
-|---|---|---|
-| `program` | 계획·결정·평가 기준·사업성 | 여기 |
-| `final_project_cs` | **릴리스 대상** | [wiki](../final_project_cs/wiki/index.md) |
-| `final_project_sample` | 계약 선검증. cs로 이식하는 관계 | [wiki](../final_project_sample/wiki/index.md) |
-| `acop_dojo` | 학습 도장 | [wiki](../acop_dojo/wiki/index.md) |
-| `datasets` | 데이터셋 | [wiki](../datasets/wiki/index.md) |
 
-sample의 예시 Team과 검증 상태를 cs의 릴리스 완료로 간주하지 않는다.
+## 이전 절 링크
 
-## 사실이 충돌하면
+<a id="tripilot-시작하기"></a>
+<a id="30초-요약"></a>
+<a id="지금-무엇을-하려는가"></a>
+<a id="저장소-지도"></a>
+<a id="사실이-충돌하면"></a>
+<a id="다음"></a>
 
-1. 실행되는 테스트 결과
-2. 해당 저장소 `CLAUDE.md`의 기준 사실 표
-3. `status: stable` 문서
-4. 계획서 **v11** (범위·결정·일정)
-5. 중앙 허브 문서
-6. `status: draft` 문서
+## 별도 참고 구현
 
-★**도메인 사실이 충돌하면 기준선이 이긴다 — 지금 v11 이다.** 2026-09-08 이전 문서는 쇼핑몰 기준으로 쓰였다. **판이 올라가면 이 줄도 같이 고친다** — v10 이라고 박아 뒀다가 하루 만에 낡았다.
-
-## 다음
-
-[index.md](index.md)가 8개 영역의 지도다. 도메인 교체로 무엇이 낡았는지는 그 페이지의 「여행 판올림」 절에 있다.
+[참고 sample wiki](../final_project_sample/wiki/index.md)는 계약 인프라를 검증하는 별도 구현입니다. 그 업무 자료·완료 결과를 여행 릴리스 증거로 쓰지 않습니다.

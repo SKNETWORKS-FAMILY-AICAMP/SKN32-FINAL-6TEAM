@@ -1,0 +1,99 @@
+{
+  "model": "Gemma-4-12B-it Q4_K_M",
+  "our_training": false,
+  "publisher_training": "Google Instruct release; no triPilot fine-tuning",
+  "saved": 835,
+  "expected": 835,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "metadata_matches": 835,
+  "counts": {
+    "all": {
+      "total": 835,
+      "B": 789,
+      "C": 696,
+      "first_item_diagnostic": 728,
+      "false_pick": 22,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.8067515663778316,
+        0.8572594861791941
+      ]
+    },
+    "single": {
+      "total": 583,
+      "B": 559,
+      "C": 475,
+      "first_item_diagnostic": 505,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.7811910522753932,
+        0.8441908025402439
+      ]
+    },
+    "compound": {
+      "total": 66,
+      "B": 66,
+      "C": 57,
+      "first_item_diagnostic": 59,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.7607040702832047,
+        0.9265667973433106
+      ]
+    },
+    "no_request": {
+      "total": 186,
+      "B": 164,
+      "C": 164,
+      "first_item_diagnostic": 164,
+      "false_pick": 22,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.8274133461040541,
+        0.9205792203359217
+      ]
+    }
+  },
+  "answer_sha256": "74127382252cb662572a752a6a880b0c76ed227eeb98375b089c39acd19b3edc",
+  "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+  "execution": {
+    "job": {
+      "id": "g12bbase_multi_items_bc_a1",
+      "label": "Gemma-4-12B-it Q4_K_M",
+      "our_training": false,
+      "model": "/workspace/ollama/blobs/sha256-1278394b693672ac2799eadc9a83fd98259a6a88a40acfb1dcaa6c6fc895a606",
+      "prompts": "/tmp/tripilot-multi-items-20261009/prompts.json",
+      "script": "/tmp/tripilot-multi-items-20261009/multi_items_eval_20261009.py",
+      "tag": "g12bbase_multi_items_bc_a1",
+      "port": 8401,
+      "logprobs": "0",
+      "expected": 835,
+      "suite": "multi_items_bc",
+      "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+      "runner_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+      "model_sha256": "1278394b693672ac2799eadc9a83fd98259a6a88a40acfb1dcaa6c6fc895a606",
+      "output_contract": "Strict items array; same itinerary/question/information; max_tokens64; fixed single/no-request/compound denominators",
+      "role": "Previously missing multi-item B/C role; not a rerun of completed single-item D/E and not independent holdout",
+      "automatic_retry": false,
+      "comparison_runs": 1,
+      "publisher_training": "Google Instruct release; no triPilot fine-tuning"
+    },
+    "started": "2026-10-09T02:21:55.024704+00:00",
+    "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+    "script_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "failed_records": [],
+  "repetitions": 1,
+  "independent_holdout": false,
+  "final_ranking": false,
+  "limits": [
+    "Changed output contract; compare only models with this exact contract",
+    "Existing development fixture; not new independent holdout",
+    "No output grammar enforcement; exact JSON and allowed IDs required",
+    "Failure and missing count as wrong; observed false picks separately reported"
+  ]
+}

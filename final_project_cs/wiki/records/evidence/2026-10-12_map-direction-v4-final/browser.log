@@ -1,0 +1,173 @@
+[WebServer] (node:8348) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:18464) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 10 tests using 1 worker
+
+(node:15100) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 tests\live\checking-read-list-20261012.spec.ts:9:3 › 첫 마커부터 전체 읽힌 목록이 접혀 있고 현재 검증 카드만 펼쳐진다 375px (12.2s)
+  ok  2 tests\live\checking-read-list-20261012.spec.ts:9:3 › 첫 마커부터 전체 읽힌 목록이 접혀 있고 현재 검증 카드만 펼쳐진다 1280px (11.4s)
+  ok  3 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 375px 순서대로 지도 표시 · 동작 줄이기 false › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (11.4s)
+  ok  4 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 375px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (10.0s)
+  ok  5 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 false › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (12.0s)
+  ok  6 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (10.4s)
+  x   7 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 두 일정은 실제 방향의 개별 거리 버튼으로 남는다 375px (20.7s)
+(node:17860) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   8 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 두 일정은 실제 방향의 개별 거리 버튼으로 남는다 1280px (20.9s)
+(node:10036) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   9 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 1번·동쪽 2번은 실제 방향의 개별 거리 버튼으로 남는다 375px (20.8s)
+(node:16596) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  10 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 1번·동쪽 2번은 실제 방향의 개별 거리 버튼으로 남는다 1280px (21.0s)
+
+
+  1) tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 두 일정은 실제 방향의 개별 거리 버튼으로 남는다 375px 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  getByRole('region', { name: '여행 지도', exact: true }).locator('.leaflet-marker-icon[title^="3."]')
+    Expected: "0"
+    Received: ""
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveAttribute" getByRole('region', { name: '여행 지도', exact: true }).locator('.leaflet-marker-icon[title^="3."]') with timeout 12000ms
+      - waiting for getByRole('region', { name: '여행 지도', exact: true }).locator('.leaflet-marker-icon[title^="3."]')
+        27 × locator resolved to <div tabindex="0" role="button" aria-pressed="false" data-edge-hidden="false" title="3. 광장시장 · 2026-10-01 12:30" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive">…</div>
+           - unexpected value "null"
+
+
+      129 |       await tilesReady();
+      130 |       // 투명한 SDK 마커 박스뿐 아니라 실제 번호 본체도 중앙에서 밀려나지 않아야 합니다.
+    > 131 |       await expect(marker("3")).toHaveAttribute("data-push", "0");
+          |                                 ^
+      132 |       const bodyDelta = await marker("3").locator("[data-pin-body]").evaluate(node => {
+      133 |         const map = node.closest('[aria-label="여행 지도"]')!.getBoundingClientRect(), body = node.getBoundingClientRect();
+      134 |         return [Math.abs(body.x + body.width / 2 - map.x - map.width / 2), Math.abs(body.y + body.height / 2 - map.y - map.height / 2)];
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:131:33
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\map-direction-20261012-v4\browser-evidence\uiux-sonnet-map-reveal-202-1c5f1-실제-방향의-개별-거리-버튼으로-남는다-375px\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\map-direction-20261012-v4\browser-evidence\uiux-sonnet-map-reveal-202-1c5f1-실제-방향의-개별-거리-버튼으로-남는다-375px\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\map-direction-20261012-v4\browser-evidence\uiux-sonnet-map-reveal-202-1c5f1-실제-방향의-개별-거리-버튼으로-남는다-375px\error-context.md
+
+  2) tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 두 일정은 실제 방향의 개별 거리 버튼으로 남는다 1280px 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  getByRole('region', { name: '여행 지도', exact: true }).locator('.leaflet-marker-icon[title^="3."]')
+    Expected: "0"
+    Received: ""
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveAttribute" getByRole('region', { name: '여행 지도', exact: true }).locator('.leaflet-marker-icon[title^="3."]') with timeout 12000ms
+      - waiting for getByRole('region', { name: '여행 지도', exact: true }).locator('.leaflet-marker-icon[title^="3."]')
+        27 × locator resolved to <div tabindex="0" role="button" aria-pressed="false" data-edge-hidden="false" title="3. 광장시장 · 2026-10-01 12:30" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive">…</div>
+           - unexpected value "null"
+
+
+      129 |       await tilesReady();
+      130 |       // 투명한 SDK 마커 박스뿐 아니라 실제 번호 본체도 중앙에서 밀려나지 않아야 합니다.
+    > 131 |       await expect(marker("3")).toHaveAttribute("data-push", "0");
+          |                                 ^
+      132 |       const bodyDelta = await marker("3").locator("[data-pin-body]").evaluate(node => {
+      133 |         const map = node.closest('[aria-label="여행 지도"]')!.getBoundingClientRect(), body = node.getBoundingClientRect();
+      134 |         return [Math.abs(body.x + body.width / 2 - map.x - map.width / 2), Math.abs(body.y + body.height / 2 - map.y - map.height / 2)];
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:131:33
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\map-direction-20261012-v4\browser-evidence\uiux-sonnet-map-reveal-202-dd8e7-제-방향의-개별-거리-버튼으로-남는다-1280px\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\map-direction-20261012-v4\browser-evidence\uiux-sonnet-map-reveal-202-dd8e7-제-방향의-개별-거리-버튼으로-남는다-1280px\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\map-direction-20261012-v4\browser-evidence\uiux-sonnet-map-reveal-202-dd8e7-제-방향의-개별-거리-버튼으로-남는다-1280px\error-context.md
+
+  3) tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 1번·동쪽 2번은 실제 방향의 개별 거리 버튼으로 남는다 375px 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  getByRole('region', { name: '여행 지도', exact: true }).locator('.leaflet-marker-icon[title^="3."]')
+    Expected: "0"
+    Received: ""
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveAttribute" getByRole('region', { name: '여행 지도', exact: true }).locator('.leaflet-marker-icon[title^="3."]') with timeout 12000ms
+      - waiting for getByRole('region', { name: '여행 지도', exact: true }).locator('.leaflet-marker-icon[title^="3."]')
+        27 × locator resolved to <div tabindex="0" role="button" aria-pressed="false" data-edge-hidden="false" title="3. 광장시장 · 2026-10-01 12:30" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive">…</div>
+           - unexpected value "null"
+
+
+      129 |       await tilesReady();
+      130 |       // 투명한 SDK 마커 박스뿐 아니라 실제 번호 본체도 중앙에서 밀려나지 않아야 합니다.
+    > 131 |       await expect(marker("3")).toHaveAttribute("data-push", "0");
+          |                                 ^
+      132 |       const bodyDelta = await marker("3").locator("[data-pin-body]").evaluate(node => {
+      133 |         const map = node.closest('[aria-label="여행 지도"]')!.getBoundingClientRect(), body = node.getBoundingClientRect();
+      134 |         return [Math.abs(body.x + body.width / 2 - map.x - map.width / 2), Math.abs(body.y + body.height / 2 - map.y - map.height / 2)];
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:131:33
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\map-direction-20261012-v4\browser-evidence\uiux-sonnet-map-reveal-202-0171b-실제-방향의-개별-거리-버튼으로-남는다-375px\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\map-direction-20261012-v4\browser-evidence\uiux-sonnet-map-reveal-202-0171b-실제-방향의-개별-거리-버튼으로-남는다-375px\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\map-direction-20261012-v4\browser-evidence\uiux-sonnet-map-reveal-202-0171b-실제-방향의-개별-거리-버튼으로-남는다-375px\error-context.md
+
+  4) tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 1번·동쪽 2번은 실제 방향의 개별 거리 버튼으로 남는다 1280px 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  getByRole('region', { name: '여행 지도', exact: true }).locator('.leaflet-marker-icon[title^="3."]')
+    Expected: "0"
+    Received: ""
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveAttribute" getByRole('region', { name: '여행 지도', exact: true }).locator('.leaflet-marker-icon[title^="3."]') with timeout 12000ms
+      - waiting for getByRole('region', { name: '여행 지도', exact: true }).locator('.leaflet-marker-icon[title^="3."]')
+        27 × locator resolved to <div tabindex="0" role="button" aria-pressed="false" data-edge-hidden="false" title="3. 광장시장 · 2026-10-01 12:30" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive">…</div>
+           - unexpected value "null"
+
+
+      129 |       await tilesReady();
+      130 |       // 투명한 SDK 마커 박스뿐 아니라 실제 번호 본체도 중앙에서 밀려나지 않아야 합니다.
+    > 131 |       await expect(marker("3")).toHaveAttribute("data-push", "0");
+          |                                 ^
+      132 |       const bodyDelta = await marker("3").locator("[data-pin-body]").evaluate(node => {
+      133 |         const map = node.closest('[aria-label="여행 지도"]')!.getBoundingClientRect(), body = node.getBoundingClientRect();
+      134 |         return [Math.abs(body.x + body.width / 2 - map.x - map.width / 2), Math.abs(body.y + body.height / 2 - map.y - map.height / 2)];
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:131:33
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\map-direction-20261012-v4\browser-evidence\uiux-sonnet-map-reveal-202-0a70e-제-방향의-개별-거리-버튼으로-남는다-1280px\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\map-direction-20261012-v4\browser-evidence\uiux-sonnet-map-reveal-202-0a70e-제-방향의-개별-거리-버튼으로-남는다-1280px\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\map-direction-20261012-v4\browser-evidence\uiux-sonnet-map-reveal-202-0a70e-제-방향의-개별-거리-버튼으로-남는다-1280px\error-context.md
+
+  4 failed
+    tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 두 일정은 실제 방향의 개별 거리 버튼으로 남는다 375px 
+    tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 두 일정은 실제 방향의 개별 거리 버튼으로 남는다 1280px 
+    tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 1번·동쪽 2번은 실제 방향의 개별 거리 버튼으로 남는다 375px 
+    tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 1번·동쪽 2번은 실제 방향의 개별 거리 버튼으로 남는다 1280px 
+  6 passed (2.7m)

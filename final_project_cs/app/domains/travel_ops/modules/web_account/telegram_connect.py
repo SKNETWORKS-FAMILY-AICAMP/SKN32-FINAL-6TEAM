@@ -14,9 +14,7 @@
 """
 from __future__ import annotations
 
-import base64
 import hashlib
-import hmac
 import logging
 import re
 import secrets
@@ -25,10 +23,8 @@ from typing import Any, Callable
 from uuid import UUID
 
 import httpx
-from cryptography.fernet import Fernet, InvalidToken
 from psycopg import errors as pg_errors
 
-import app.core.settings as settings_module
 from app.core.settings import get_guardrails
 from app.infrastructure.notify import telegram as client
 

@@ -1,0 +1,116 @@
+{
+  "complete": true,
+  "repeats_per_model": 1,
+  "our_training": {
+    "MAI-Code-1.1-Flash": false,
+    "FrogNano-4B-2609": false
+  },
+  "direct": {
+    "actual_request": {
+      "scores": {
+        "MAI-Code-1.1-Flash": {
+          "correct": 102,
+          "n": 120,
+          "wilson95": [
+            0.775324706432755,
+            0.9029618770741527
+          ]
+        },
+        "FrogNano-4B-2609": {
+          "correct": 95,
+          "n": 120,
+          "wilson95": [
+            0.7105232156701865,
+            0.8547156039189031
+          ]
+        }
+      },
+      "paired_MAI_vs_FrogNano": {
+        "a_only": 14,
+        "b_only": 7,
+        "p": 0.18924713134765625
+      }
+    },
+    "chitchat": {
+      "scores": {
+        "MAI-Code-1.1-Flash": {
+          "correct": 226,
+          "n": 240,
+          "wilson95": [
+            0.9044798071390819,
+            0.9649375635792078
+          ]
+        },
+        "FrogNano-4B-2609": {
+          "correct": 231,
+          "n": 240,
+          "wilson95": [
+            0.9302797673678065,
+            0.9801478566862516
+          ]
+        }
+      },
+      "paired_MAI_vs_FrogNano": {
+        "a_only": 5,
+        "b_only": 10,
+        "p": 0.30175781249999994
+      }
+    }
+  },
+  "verification": {
+    "retain_correct": {
+      "scores": {
+        "MAI-Code-1.1-Flash": {
+          "correct": 89,
+          "n": 112,
+          "wilson95": [
+            0.71066346806868,
+            0.8590807381240136
+          ]
+        },
+        "FrogNano-4B-2609": {
+          "correct": 97,
+          "n": 112,
+          "wilson95": [
+            0.7907354335192549,
+            0.9171285802353042
+          ]
+        }
+      },
+      "paired_MAI_vs_FrogNano": {
+        "a_only": 10,
+        "b_only": 18,
+        "p": 0.1849333420395851
+      }
+    },
+    "reject_wrong": {
+      "scores": {
+        "MAI-Code-1.1-Flash": {
+          "correct": 76,
+          "n": 92,
+          "wilson95": [
+            0.7360155731778724,
+            0.8900183033749829
+          ]
+        },
+        "FrogNano-4B-2609": {
+          "correct": 80,
+          "n": 92,
+          "wilson95": [
+            0.7857198638002064,
+            0.9237851962930296
+          ]
+        }
+      },
+      "paired_MAI_vs_FrogNano": {
+        "a_only": 5,
+        "b_only": 9,
+        "p": 0.4239501953125
+      }
+    }
+  },
+  "latency_comparable": false,
+  "confidence_comparable": false,
+  "copilot_cli_version": "1.0.91",
+  "checked_at": "2026-10-08T04:01:42.112754+09:00"
+}

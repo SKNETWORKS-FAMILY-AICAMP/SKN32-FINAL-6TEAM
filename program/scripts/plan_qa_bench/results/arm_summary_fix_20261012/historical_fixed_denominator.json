@@ -1,0 +1,38 @@
+{
+  "unrelated_conversation": {
+    "planned": 1300,
+    "completed": 1300,
+    "failed": 0,
+    "unfinished": 0,
+    "pinned": 69,
+    "attempted_change_with_target": 18,
+    "recognized_policy": 22,
+    "correct_policy_source": 0,
+    "unresolved": 0,
+    "denominator": 1300
+  },
+  "answerable_policy": {
+    "planned": 148,
+    "completed": 148,
+    "failed": 0,
+    "unfinished": 0,
+    "pinned": 33,
+    "attempted_change_with_target": 7,
+    "recognized_policy": 109,
+    "correct_policy_source": 92,
+    "unresolved": 0,
+    "denominator": 148
+  },
+  "limits": [
+    "Repeated text retains the original row denominator; unique text shares its cached decision.",
+    "Unresolved requests are not counted as correct refusals.",
+    "Source correctness requires replies from the same recorded corpus; decision recognition is separate.",
+    "This is a development regression, not independent product acceptance."
+  ],
+  "input_sha256": {
+    "pool": "4249cccfc60b9a02c77944a02a03c17f250b6caff6643630e6de9b39f7cb8dde",
+    "decisions": "5f75930227d0b6c529f8c0d23914efafd7ee3ff4377f97bd46e14684cbb6f06b",
+    "replies": "1caf7c2da69f33de69a608df7bbf836bc1f06957b46f24a2fb072e75186f5d00"
+  },
+  "scorer_sha256": "b882ef9f080c536138c22e208b9862550ce83e6ee067be9f7c25f6e857807f50"
+}

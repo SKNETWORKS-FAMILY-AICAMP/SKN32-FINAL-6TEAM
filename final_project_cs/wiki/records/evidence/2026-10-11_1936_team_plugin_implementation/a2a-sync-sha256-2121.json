@@ -1,0 +1,5 @@
+{
+  "app/core/remote_team/a2a_executor.py": "26b1eb460a66619f348202e2352ffa7803b59c7ad38e6c3ea41c83fe8aaaa223",
+  "tests/unit/core/test_plugin_availability.py": "f415fc1a3c8cf3fe1fde9258892836e5c04ef239392d84570b05d36547b012b7",
+  "wiki/teams/team-contract/plugin-availability.md": "daf821c6d2cc247e4ce037d08411df5c131cbbdaadba6c820148f88c6ba00560"
+}

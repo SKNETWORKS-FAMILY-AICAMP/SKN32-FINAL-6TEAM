@@ -36,6 +36,8 @@ _PURGE: tuple[tuple[str, str], ...] = (
     ("user_activity_events", "trip_id"),             # ★`[2026-10-06]` 채팅 기록과 같은 기본값 — 비식별로 남길지는 사용자 결정 대기
     ("place_open_checks", "trip_id"),
     ("dining.dn_notice", "trip_id"),
+    ("ops_lookup_usage", "trip_id"),
+    ("ops_lookup_checks", "trip_id"),
 )
 
 

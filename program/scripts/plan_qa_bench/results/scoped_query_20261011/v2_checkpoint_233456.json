@@ -1,0 +1,38 @@
+{
+  "observed_at_kst": "2026-10-11T23:34:56.805043+09:00",
+  "version": "v2",
+  "total_planned": 3,
+  "completed": 3,
+  "original_strict_pass": 1,
+  "local_parser_semantic_pass": 3,
+  "independent_holdout": false,
+  "oracle_deployed": false,
+  "checks": [
+    {
+      "key": "empty_afternoon",
+      "completed": true,
+      "semantic_pass": true,
+      "new_model_call": false,
+      "original_strict_pass": false,
+      "seconds": 325.7418715899694,
+      "rendered": "전체 여행 날짜 오후 범위에는 등록된 일정이 없어요. 일정을 바꾸지는 않았어요."
+    },
+    {
+      "key": "day_two_paraphrase",
+      "completed": true,
+      "semantic_pass": true,
+      "new_model_call": false,
+      "original_strict_pass": false,
+      "seconds": 385.7652658490115,
+      "rendered": "1월 2일(수) 오후 일정 1개를 확인했어요.\n· 1월 2일(수) 15:00~16:00 2일차 15시 서울 관람(활동) — 대체 일정 검토 가능 — 예약 기록이 없으므로 실제 예약 여부는 확인해야 해요.\n아직 바꾸지는 않았어요. 실제 변경 전에는 후보의 시간·이동 조건도 확인해요."
+    },
+    {
+      "key": "existing_time",
+      "completed": true,
+      "semantic_pass": true,
+      "new_model_call": false,
+      "original_strict_pass": true,
+      "seconds": 339.0707621520269
+    }
+  ]
+}

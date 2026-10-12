@@ -1,0 +1,11 @@
+{
+  "utc": "2026-10-11T15:16:11.333970+00:00",
+  "unit": "tripilot-arm-scope-holdout-20261012-v2",
+  "remote_dir": "/home/ubuntu/bench/scope-holdout-20261012-v2",
+  "manifest_sha256": "14cc508a1f1747bebb11899b5bf6aacdc6b391793ea693079ec338d695791ee0",
+  "planned": 8,
+  "worker_type": "finite_targeted_model_holdout_no_new_engine",
+  "waits_existing_app_batch": true,
+  "our_finetuning": false,
+  "model_adoption": false
+}

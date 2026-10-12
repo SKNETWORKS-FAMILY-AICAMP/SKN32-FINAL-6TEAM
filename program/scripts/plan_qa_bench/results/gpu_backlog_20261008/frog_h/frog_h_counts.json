@@ -1,0 +1,173 @@
+{
+  "model": "FrogNano-4B-2609",
+  "our_training": false,
+  "publisher_training": "coding RL",
+  "suite": "H",
+  "saved": 1316,
+  "expected": 1316,
+  "repetitions": 1,
+  "missing": 0,
+  "errors_or_unparsed": 0,
+  "positive": {
+    "total": 461,
+    "correct": 419,
+    "false_pick": 0,
+    "failed_or_unparsed": 0,
+    "correct_wilson95": [
+      0.8791379436394489,
+      0.9318912639455448
+    ]
+  },
+  "negative": {
+    "total": 855,
+    "correct": 478,
+    "false_pick": 377,
+    "failed_or_unparsed": 0,
+    "correct_wilson95": [
+      0.5255935856464892,
+      0.5920066989726148
+    ]
+  },
+  "false_pick_wilson95": [
+    0.4079933010273853,
+    0.47440641435351094
+  ],
+  "subtypes": {
+    "hard_N1": {
+      "total": 118,
+      "correct": 0,
+      "false_pick": 118,
+      "failed_or_unparsed": 0,
+      "correct_wilson95": [
+        0.0,
+        0.03152833902249433
+      ]
+    },
+    "hard_N2": {
+      "total": 150,
+      "correct": 116,
+      "false_pick": 34,
+      "failed_or_unparsed": 0,
+      "correct_wilson95": [
+        0.6999980606806022,
+        0.8330182057315159
+      ]
+    },
+    "hard_N3": {
+      "total": 150,
+      "correct": 148,
+      "false_pick": 2,
+      "failed_or_unparsed": 0,
+      "correct_wilson95": [
+        0.9526930912996325,
+        0.9963358708487731
+      ]
+    },
+    "hard_N4": {
+      "total": 150,
+      "correct": 51,
+      "false_pick": 99,
+      "failed_or_unparsed": 0,
+      "correct_wilson95": [
+        0.2690333503042941,
+        0.4189571278934905
+      ]
+    },
+    "hard_N5": {
+      "total": 150,
+      "correct": 135,
+      "false_pick": 15,
+      "failed_or_unparsed": 0,
+      "correct_wilson95": [
+        0.8415651883318529,
+        0.9384586161736859
+      ]
+    },
+    "hard_N6": {
+      "total": 137,
+      "correct": 28,
+      "false_pick": 109,
+      "failed_or_unparsed": 0,
+      "correct_wilson95": [
+        0.14535931499766055,
+        0.27952593769543
+      ]
+    },
+    "hard_P1": {
+      "total": 118,
+      "correct": 114,
+      "false_pick": 0,
+      "failed_or_unparsed": 0,
+      "correct_wilson95": [
+        0.9160723989651733,
+        0.9867401663528403
+      ]
+    },
+    "hard_P2": {
+      "total": 110,
+      "correct": 105,
+      "false_pick": 0,
+      "failed_or_unparsed": 0,
+      "correct_wilson95": [
+        0.8979840649336309,
+        0.9804305393407652
+      ]
+    },
+    "hard_P3": {
+      "total": 113,
+      "correct": 87,
+      "false_pick": 0,
+      "failed_or_unparsed": 0,
+      "correct_wilson95": [
+        0.6842069516052853,
+        0.8378680089068997
+      ]
+    },
+    "hard_P4": {
+      "total": 120,
+      "correct": 113,
+      "false_pick": 0,
+      "failed_or_unparsed": 0,
+      "correct_wilson95": [
+        0.8844740796636988,
+        0.9714589899997798
+      ]
+    }
+  },
+  "latency_ms": {
+    "n": 1316,
+    "p50": 457.0,
+    "p90": 485.0,
+    "p95": 489.0,
+    "p99": 494.8499999999999,
+    "max": 1426,
+    "mean": 458.9825227963526
+  },
+  "answer_sha256": "a20559de544d4fb37ccddc46ff099ca3d6f2ff1ed797827a7075994f6e2167e6",
+  "gold_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+  "execution": {
+    "job": {
+      "id": "frog_h",
+      "label": "FrogNano-4B-2609",
+      "our_training": false,
+      "model": "/workspace/ollama/blobs/sha256-ea42d264c21d88b9bf6ce583bb3fd4dfddb22eb5b30efba9e305c56f75974c86",
+      "prompts": "/workspace/heavy/all_prompts_h.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "h_backlog_frog",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 1316
+    },
+    "started": "2026-10-08T00:46:14.339393+00:00",
+    "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "limits": [
+    "One run; no repeat variance",
+    "Synthetic developer diagnostic, not the new independent final holdout",
+    "Question Wilson intervals do not account for shared itinerary correlation",
+    "No completed matched original cohort ranking yet",
+    "p_null from generated token position is not a calibrated option distribution"
+  ]
+}

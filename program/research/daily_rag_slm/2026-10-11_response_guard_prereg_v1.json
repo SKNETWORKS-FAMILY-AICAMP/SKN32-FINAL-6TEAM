@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-11",
+  "frozen_before_edit": "2026-10-11T01:07:28.760354+00:00",
+  "target": "adapter rejects incomplete upstream outputs; not a decoder reproduction or accuracy fix",
+  "acceptance": {
+    "unit_and_http": "all cases pass; invalid input400 versus invalid upstream502",
+    "recorded_replay": "all previously empty/length outputs rejected; every complete recorded JSON retained byte-identically",
+    "serving_adoption": "pending exact ARM app regression; no deployment in this run"
+  },
+  "dataset": "existing synthetic app-schema diagnostics240 calls; development only; no independent holdout",
+  "cost": "one local parse per response; zero extra LLM calls; no retry",
+  "regression": "non-JSON chat unchanged; JSON full-schema/domain validation remains application responsibility; stop required; usage/timings retained",
+  "candidate_research": "budget-aware constrained decoding and separate syntax/semantic gates",
+  "queued_work": "preserve A soak, B missing dependency queue and ARM benchmark; future pending work must meet preregistered purpose"
+}

@@ -10,8 +10,9 @@ import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
 from app.presentation import security
 from app.presentation.api.app import create_app
-from app.presentation.api.cases import _mcp_cases, _mcp_detail, _mcp_open
-from app.application.controller import ControllerError
+from app.application.controller import Controller, ControllerError
+from app.core.registry import TeamRegistry
+from app.core.contracts import StateConflict
 
 
 @pytest.fixture()
@@ -64,9 +65,13 @@ def api_fixture(monkeypatch):
 
     try:
         def classifier(_message: str) -> dict[str, str]:
-            return {"intent": "billing", "issue_code": "payment_failed", "sentiment": "negative"}
+            return {"intent": "incident_report", "issue_code": "activity_cancel_or_change", "sentiment": "negative"}
 
-        yield {"client": TestClient(create_app(classifier=classifier)), "tenant": tenant, "customer": customer, "other_customer": other_customer, "token": token}
+        controller = Controller(TeamRegistry([]))
+        async def leave_case_for_test(**kwargs):
+            return {}
+        controller.run_case = leave_case_for_test
+        yield {"client": TestClient(create_app(controller=controller, classifier=classifier)), "tenant": tenant, "customer": customer, "other_customer": other_customer, "token": token, "controller": controller}
     finally:
         cleanup()
 
@@ -91,7 +96,7 @@ def test_post_case_enters_injected_controller_runtime(api_fixture):
 
     app = create_app(
         controller=FakeController(),
-        classifier=lambda _message: {"intent": "billing", "issue_code": "payment_failed", "sentiment": "negative"},
+        classifier=lambda _message: {"intent": "incident_report", "issue_code": "activity_cancel_or_change", "sentiment": "negative"},
     )
     response = TestClient(app).post(
         "/v1/cases",
@@ -103,7 +108,7 @@ def test_post_case_enters_injected_controller_runtime(api_fixture):
     assert calls[0]["tenant_id"] == api_fixture["tenant"]
 
 
-@pytest.mark.parametrize("scope", ["case:read", "case:write", "order:read", "return:read", "action:approve", "mcp:read"])
+@pytest.mark.parametrize("scope", ["case:read", "case:write", "action:approve", "mcp:read"])
 def test_unauthorized_matrix_for_each_scope_and_rest_endpoint(api_fixture, scope):
     case_id = create_case(api_fixture, "matrix-" + scope)
     client = api_fixture["client"]
@@ -118,7 +123,7 @@ def test_unauthorized_matrix_for_each_scope_and_rest_endpoint(api_fixture, scope
     expected = {"create": 201 if scope == "case:write" else 403,
                 "list": 200 if scope == "case:read" else 403,
                 "detail": 200 if scope == "case:read" else 403,
-                "message": 422 if scope == "case:write" else 403,
+                "message": 401 if scope == "case:write" else 403,
                 "approve": 404 if scope == "action:approve" else 403}
     for name, (method, url, body) in requests.items():
         response = getattr(client, method)(url, headers=headers, json=body) if body else getattr(client, method)(url, headers=headers)
@@ -138,15 +143,6 @@ def test_same_create_request_ten_times_has_one_action_request(api_fixture):
         assert cur.fetchone()[0] == 1
 
 
-def test_same_mcp_open_request_ten_times_has_one_case_and_action_request(api_fixture):
-    results = [_mcp_open(str(api_fixture["customer"]), "repeat from mcp", "test") for _ in range(10)]
-    assert len({result["case_id"] for result in results}) == 1
-    with get_connection() as conn, conn.cursor() as cur:
-        cur.execute("SELECT count(*) FROM customer_cases WHERE tenant_id=%s", (api_fixture["tenant"],))
-        assert cur.fetchone()[0] == 1
-        cur.execute("SELECT count(*) FROM action_requests WHERE tenant_id=%s AND action_type=%s",
-                    (api_fixture["tenant"], "mcp.open_support_case"))
-        assert cur.fetchone()[0] == 1
 
 
 def test_concurrent_identical_create_requests_produce_one_case(api_fixture):
@@ -198,15 +194,6 @@ def test_reusing_idempotency_key_with_a_different_body_is_409(api_fixture):
     assert r2.json()["error"]["code"] == "idempotency_key_reused"
 
 
-def test_concurrent_identical_mcp_open_requests_produce_one_case(api_fixture):
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        results = list(pool.map(
-            lambda _: _mcp_open(str(api_fixture["customer"]), "race me from mcp", "test"), range(2)))
-    case_ids = {result["case_id"] for result in results}
-    assert len(case_ids) == 1, f"concurrent identical MCP opens produced {len(case_ids)} distinct cases: {case_ids}"
-    with get_connection() as conn, conn.cursor() as cur:
-        cur.execute("SELECT count(*) FROM customer_cases WHERE tenant_id=%s", (api_fixture["tenant"],))
-        assert cur.fetchone()[0] == 1
 
 
 def test_case_from_other_customer_is_not_found(api_fixture):
@@ -232,7 +219,7 @@ def test_message_route_passes_issued_resume_token_to_controller(api_fixture):
 
     client = TestClient(create_app(
         controller=ResumeController(),
-        classifier=lambda _message: {"intent": "billing", "issue_code": "payment_failed", "sentiment": "negative"},
+        classifier=lambda _message: {"intent": "incident_report", "issue_code": "activity_cancel_or_change", "sentiment": "negative"},
     ))
     headers = {"Authorization": api_fixture["token"]("case:write")}
     valid = client.post(f"/v1/cases/{case_id}/messages", headers=headers,
@@ -246,27 +233,6 @@ def test_message_route_passes_issued_resume_token_to_controller(api_fixture):
     assert invalid.json()["error"]["code"] == "invalid_resume_token"
 
 
-def test_mcp_open_support_case_changes_only_case_state(api_fixture):
-    before = {}
-    with get_connection() as conn, conn.cursor() as cur:
-        # ★MCP 는 read-only 다. 돈·예약 상태를 건드리지 않는다.
-        for table in ("action_requests", "bookings", "supplier_bookings"):
-            cur.execute(f"SELECT count(*) FROM {table} WHERE tenant_id=%s", (api_fixture["tenant"],))
-            before[table] = cur.fetchone()[0]
-    result = _mcp_open(str(api_fixture["customer"]), "open from mcp", "test")
-    # ★`routing` 이 들어왔다(2026-09-06). 전에는 MCP 경로가 분류를 **시도조차
-    #   하지 않고** `classification_unavailable` 을 적어 늘 escalated 였다 —
-    #   계약(`CLAUDE.md` §0.2 · `docs/handoff/03`)이 "Case 생성과 분류 시작까지"
-    #   라고 정한 것과 어긋나 있었다. 이제 분류에 성공하면 routing 으로 간다.
-    #   ★이 테스트가 보는 것은 상태가 아니라 **돈·예약을 안 건드린다** 는 것이다.
-    assert result["status"] in {"classifying", "routing", "escalated"}
-    assert _mcp_cases(str(api_fixture["customer"]), 20)
-    assert _mcp_detail(str(api_fixture["customer"]), result["case_id"])["case_id"] == result["case_id"]
-    with get_connection() as conn, conn.cursor() as cur:
-        for table, count in before.items():
-            cur.execute(f"SELECT count(*) FROM {table} WHERE tenant_id=%s", (api_fixture["tenant"],))
-            actual = cur.fetchone()[0]
-            assert actual == (count + 1 if table == "action_requests" else count)
 
 
 def test_normal_create_and_detail_flow(api_fixture):
@@ -303,7 +269,7 @@ def test_create_classifies_case_and_records_classified_event(api_fixture):
         )
         events = [row[0] for row in cur.fetchall()]
 
-    assert case == ("routing", "billing", "payment_failed", "negative")
+    assert case == ("routing", "incident_report", "activity_cancel_or_change", "negative")
     assert events == ["created", "classified"]
 
 
@@ -331,32 +297,20 @@ def test_create_escalates_when_injected_classifier_fails(api_fixture):
         assert cur.fetchall() == [("created", None), ("classification_failed", "classification_failed")]
 
 
-def test_state_conflict_is_rendered_as_409(api_fixture):
+def test_state_conflict_is_rendered_as_409(api_fixture, monkeypatch):
+    def conflict(**kwargs):
+        raise StateConflict("fixture version conflict")
+    monkeypatch.setattr(api_fixture["controller"], "resume_customer_input", conflict)
     case_id = create_case(api_fixture, "conflict")
     response = api_fixture["client"].post(
         f"/v1/cases/{case_id}/messages",
         headers={"Authorization": api_fixture["token"]("case:write")},
         json={"request_id": "conflict-message", "message": "follow up", "expected_version": 0},
     )
-    assert response.status_code == 422
-    assert response.json()["error"]["code"] == "validation_error"
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "state_conflict"
 
 
-@pytest.mark.parametrize("tool", [_mcp_cases, _mcp_detail, _mcp_open])
-def test_mcp_read_scope_tools_execute_only_with_mcp_principal(api_fixture, tool):
-    principal = security.authenticate(api_fixture["token"]("mcp:read"))
-    assert "mcp:read" in principal.scopes
-    if tool is _mcp_cases:
-        assert tool(str(api_fixture["customer"]), 20) == []
-    elif tool is _mcp_detail:
-        case_id = create_case(api_fixture, "mcp-detail")
-        assert tool(str(api_fixture["customer"]), str(case_id))["case_id"] == str(case_id)
-    else:
-        result = tool(str(api_fixture["customer"]), "mcp tool", "test")
-        # ★`routing` 추가(2026-09-06) — MCP 경로가 분류를 하게 되면서 성공 시
-        #   routing 으로 간다. 이 테스트가 보는 것은 상태가 아니라 **mcp 원칙이
-        #   있어야만 tool 이 돈다** 는 것이다.
-        assert result["status"] in {"classifying", "routing", "escalated"}
 
 
 # ── 2026-09-01: 분류기가 "일부만" 돌려준 경우 ────────────────────────
@@ -369,7 +323,7 @@ def test_mcp_read_scope_tools_execute_only_with_mcp_principal(api_fixture, tool)
 
 @pytest.mark.parametrize("missing", ["intent", "issue_code", "sentiment"])
 def test_create_escalates_when_the_classifier_omits_a_required_label(api_fixture, missing):
-    labels = {"intent": "billing", "issue_code": "payment_failed", "sentiment": "negative"}
+    labels = {"intent": "incident_report", "issue_code": "activity_cancel_or_change", "sentiment": "negative"}
     labels.pop(missing)
     client = TestClient(create_app(classifier=lambda _message: dict(labels)))
     response = client.post(
@@ -409,7 +363,7 @@ def test_create_escalates_when_a_label_is_blank(api_fixture):
       순간 XPASS 로 알려줬고, 그래서 표식을 뗀다.
     """
     client = TestClient(create_app(classifier=lambda _message: {
-        "intent": "billing", "issue_code": "  ", "sentiment": "negative"}))
+        "intent": "incident_report", "issue_code": "  ", "sentiment": "negative"}))
     response = client.post(
         "/v1/cases",
         headers={"Authorization": api_fixture["token"]("case:write")},
@@ -441,7 +395,7 @@ def test_create_does_not_wait_for_the_agent_run(api_fixture):
 
     app = create_app(
         controller=SlowController(),
-        classifier=lambda _m: {"intent": "billing", "issue_code": "payment_failed",
+        classifier=lambda _m: {"intent": "incident_report", "issue_code": "activity_cancel_or_change",
                                "sentiment": "negative"},
     )
     response = TestClient(app).post(
@@ -458,7 +412,7 @@ def test_create_does_not_wait_for_the_agent_run(api_fixture):
     assert set(body) == {"case_id", "status", "version", "intent", "issue_code",
                          "sentiment", "links"}
     # 분류는 접수 안에서 끝난다(LLM 한 번) — 그래서 여기서 바로 보인다
-    assert body["intent"] == "billing"
+    assert body["intent"] == "incident_report"
     # TestClient 는 응답을 보낸 **뒤** background task 를 돌린다. 즉 실행은
     # 일어나되 응답을 붙잡지 않았다.
     assert len(started) == 1
@@ -472,7 +426,7 @@ def test_a_failing_detached_run_does_not_break_the_intake(api_fixture, caplog):
 
     app = create_app(
         controller=ExplodingController(),
-        classifier=lambda _m: {"intent": "billing", "issue_code": "payment_failed",
+        classifier=lambda _m: {"intent": "incident_report", "issue_code": "activity_cancel_or_change",
                                "sentiment": "negative"},
     )
     with caplog.at_level("ERROR"):

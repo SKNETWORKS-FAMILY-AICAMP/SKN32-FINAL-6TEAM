@@ -1,0 +1,40 @@
+program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_092645_945781_isolated_integration
+등록: 5e7b7141-dfa1-4181-8ecb-76cfc6c9b06b
+등록: 66c18c9d-af9a-41ed-9234-1f30961e0e87
+활성 프롬프트 2개 검증 완료 (등록/재사용 2개)
+==============================================================
+TourAPI 음식점 영업시간 구조화 · 표본 1598건
+==============================================================
+  영업 구간 생성         1466   91.7%
+  요일마다 다름           335   21.0%
+  브레이크 있음           443   27.7%
+  라스트오더 있음          698   43.7%
+  휴무 규칙 생성          663   41.5%
+
+[사람이 봐야 할 것]
+   153  에 영업 범위가 여럿
+    20  원문 없음
+    20  명절 이름이 적혀 있지 않아 설과 추석으로 본다
+    13   마지막 주문 [270] 이 구간 밖
+    12   마지막 주문 [60] 이 구간 밖
+    11  휴무 여부를 업소에 문의하라는 표기가 있다
+    11   마지막 주문 [1230] 이 구간 밖
+    10  연도 없는 특정일 표기라 날짜 규칙으로 담지 못함
+     8  해석하지 못한 휴무 표기
+     7   마지막 주문 [640] 이 구간 밖
+
+저장: C:\Users\playdata2\Documents\final_workspace\program\research\baseline_completion_2026-10-12\tasks\integration\checks\2026-10-12_092645_945781_isolated_integration\dining-build\parsed_hours.json
+장소 1598, 영업 규칙 9934, 구간 12784, 휴무 규칙 958
+저장: C:\Users\playdata2\Documents\final_workspace\program\research\baseline_completion_2026-10-12\tasks\integration\checks\2026-10-12_092645_945781_isolated_integration\dining-build\load_200.sql
+식당 70 (새로 67, 기존 3) / 근거 {'localdata_food': 55, 'localdata_rest': 7, 'operator_check': 8, 'vegan_curated': 70}
+영업시간 검수 비건식당_영업시간_검수.csv: {'식당': 0, '영업 규칙': 0, '구간': 0, '휴무 규칙': 0, '물러난 관광공사 규칙': 0}
+→ C:\Users\playdata2\Documents\final_workspace\program\research\baseline_completion_2026-10-12\tasks\integration\checks\2026-10-12_092645_945781_isolated_integration\dining-build\vegan.sql
+............                                                             [100%]
+============================== warnings summary ===============================
+..\..\..\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290
+  C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; anyio
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\program\research\baseline_completion_2026-10-12\tasks\integration\checks\2026-10-12_092645_945781_isolated_integration\junit.xml -
+12 passed, 1 warning in 45.47s

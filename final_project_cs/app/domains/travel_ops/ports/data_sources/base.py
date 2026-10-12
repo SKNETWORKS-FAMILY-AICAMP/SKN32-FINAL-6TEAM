@@ -326,6 +326,8 @@ class TravelSources:
     transit: Any | None = None
     #: 서울 열린데이터광장 실시간 지하철 도착정보(「실시간 지하철 인증키」) — **지금 값**. `arrivals(역, line=…)`. 판정에 넣지 않고 같이 놓고 보는 용도(2026-10-05)
     subway_arrival: Any | None = None
+    #: 서울 버스 지금 도착정보. 노선 ID·정류소 ID·순번으로 방향을 구별한다.
+    bus_arrival: Any | None = None
     route: Any | None = None
     #: 키가 없어 못 붙인 소스 이름들. ★조용히 비워 두지 않는다.
     unavailable: dict[str, str] = field(default_factory=dict)
@@ -597,11 +599,21 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
     metro_key = (getattr(settings, "seoul_metro_api_key", "") or "").strip()
     if metro_key:
         from .seoul_subway import SeoulSubwayArrival
-        sources.subway_arrival = SeoulSubwayArrival(service_key=metro_key, limiter=limiter, cache=cache)
+        sources.subway_arrival = SeoulSubwayArrival(service_key=metro_key, limiter=limiter, cache=cache,
+            cache_ttl_seconds=guardrails.get('travel.subway_arrival_cache_seconds'))
     else:
         sources.unavailable["subway_arrival"] = (
             "ACOP_SEOUL_METRO_API_KEY 가 비어 있다. 서울 열린데이터광장 「실시간 지하철 인증키」를 .env.apikeys 에 채운다. "
             "★일반 인증키(ACOP_SEOUL_OPENAPI_KEY)와 **다른 키**다.")
+    bus_key = _public_data_key(settings, "seoul_bus_api_key")
+    if bus_key:
+        from .seoul_bus import SeoulBusArrival
+        sources.bus_arrival = SeoulBusArrival(service_key=bus_key, limiter=limiter, cache=cache,
+                                             cache_ttl_seconds=float(guardrails.get("travel.bus_arrival_cache_seconds") or 30))
+    else:
+        sources.unavailable["bus_arrival"] = (
+            "ACOP_DATA_GO_KR_KEY(또는 ACOP_SEOUL_BUS_API_KEY)가 비어 있다. "
+            "공공데이터포털 「서울특별시_버스도착정보조회 서비스」 활용신청 후 채운다.")
     if len(route_event_sources) == 1:
         sources.route_events = route_event_sources[0]
     elif route_event_sources:

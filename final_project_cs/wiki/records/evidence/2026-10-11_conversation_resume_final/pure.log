@@ -1,0 +1,10 @@
+........................................................................ [ 44%]
+........................................................................ [ 89%]
+.................                                                        [100%]
+============================== warnings summary ===============================
+tests/architecture/test_basement_layers.py::test_layer_directions_do_not_get_worse
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_conversation_resume_final\pure.junit.xml -
+161 passed, 1 warning in 9.55s

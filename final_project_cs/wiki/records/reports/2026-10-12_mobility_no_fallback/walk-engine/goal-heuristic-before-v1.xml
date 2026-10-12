@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="9.137" timestamp="2026-10-12T16:42:32.500371+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_graph_router_goal_heuristic_v1" name="test_astar_preserves_fastest_of_spatially_separated_car_goal_candidates" time="0.488"><failure message="assert 14462 == 11593 ± 1&#10;  &#10;  comparison failed&#10;  Obtained: 14462&#10;  Expected: 11593 ± 1">def test_astar_preserves_fastest_of_spatially_separated_car_goal_candidates():
+        records=_records();start=(127.,37.5);goal=(127.002,37.5)
+        astar=GraphRouter(records=records);astar._load()
+        snaps=astar._snap_many('car',*goal)
+        assert len(snaps)==2
+        assert abs(snaps[0].dist-snaps[1].dist)&lt;12
+        assert hav(snaps[0].pt,snaps[1].pt)&gt;200
+        got=astar.route(start,goal,'car')['paths'][0]
+        reference=GraphRouter(records=records);reference.force_dijkstra=True
+        expected=reference.route(start,goal,'car')['paths'][0]
+        assert expected['time']&lt;13000
+&gt;       assert got['time']==pytest.approx(expected['time'],abs=1)
+E       assert 14462 == 11593 ± 1
+E         
+E         comparison failed
+E         Obtained: 14462
+E         Expected: 11593 ± 1
+
+tests\unit\travel\mobility\test_graph_router_goal_heuristic_v1.py:44: AssertionError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,90 @@
+...............................F...................                      [100%]
+================================== FAILURES ===================================
+_______________ test_a2a_hanging_cancel_is_bounded_and_recorded _______________
+
+caplog = <_pytest.logging.LogCaptureFixture object at 0x0000021D33EF9CD0>
+
+    @pytest.mark.asyncio
+    async def test_a2a_hanging_cancel_is_bounded_and_recorded(caplog):
+        import asyncio
+        class HangingCancel(Transport):
+            async def poll(self, remote, value):
+                await asyncio.sleep(10)
+            async def cancel(self, remote):
+                await asyncio.sleep(10)
+        value = task().model_copy(update={"deadline_at": datetime.now(UTC) + timedelta(milliseconds=30)})
+        executor = A2ATeamExecutor(HangingCancel({"status": "working"}), lambda _: "endpoint", registry=TeamRegistry([Team()]), cancel_timeout_seconds=0.03)
+        started = asyncio.get_running_loop().time()
+        result = await executor.execute(value)
+        assert asyncio.get_running_loop().time() - started < 0.5
+        assert result.failure_code == "remote_deadline_exceeded"
+>       record = next(record for record in caplog.records if record.message == "a2a_cancel_failed")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       StopIteration
+
+tests\unit\core\test_plugin_availability.py:287: StopIteration
+
+The above exception was the direct cause of the following exception:
+
+self = <Coroutine test_a2a_hanging_cancel_is_bounded_and_recorded>
+
+    def runtest(self) -> None:
+        self.obj = wrap_in_sync(
+            # https://github.com/pytest-dev/pytest-asyncio/issues/596
+            self.obj,  # type: ignore[has-type]
+        )
+>       super().runtest()
+
+..\..\..\anaconda3\Lib\site-packages\pytest_asyncio\plugin.py:533: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\site-packages\pytest_asyncio\plugin.py:1052: in inner
+    _loop.run_until_complete(task)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <ProactorEventLoop running=False closed=False debug=False>
+future = <Task finished name='Task-27' coro=<test_a2a_hanging_cancel_is_bounded_and_recorded() done, defined at C:\Users\playda...l_project_cs\tests\unit\core\test_plugin_availability.py:273> exception=RuntimeError('coroutine raised StopIteration')>
+
+    def run_until_complete(self, future):
+        """Run until the Future is done.
+    
+        If the argument is a coroutine, it is wrapped in a Task.
+    
+        WARNING: It would be disastrous to call run_until_complete()
+        with the same coroutine twice -- it would wrap it in two
+        different Tasks and that can't be good.
+    
+        Return the Future's result, or raise its exception.
+        """
+        self._check_closed()
+        self._check_running()
+    
+        new_task = not futures.isfuture(future)
+        future = tasks.ensure_future(future, loop=self)
+        if new_task:
+            # An exception is raised if the future didn't complete, so there
+            # is no need to log the "destroy pending task" message
+            future._log_destroy_pending = False
+    
+        future.add_done_callback(_run_until_complete_cb)
+        try:
+            self.run_forever()
+        except:
+            if new_task and future.done() and not future.cancelled():
+                # The coroutine raised a BaseException. Consume the exception
+                # to not log a warning, the caller doesn't have access to the
+                # local task.
+                future.exception()
+            raise
+        finally:
+            future.remove_done_callback(_run_until_complete_cb)
+        if not future.done():
+            raise RuntimeError('Event loop stopped before Future completed.')
+    
+>       return future.result()
+               ^^^^^^^^^^^^^^^
+E       RuntimeError: coroutine raised StopIteration
+
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: RuntimeError
+=========================== short test summary info ===========================
+FAILED tests/unit/core/test_plugin_availability.py::test_a2a_hanging_cancel_is_bounded_and_recorded
+1 failed, 50 passed in 7.59s

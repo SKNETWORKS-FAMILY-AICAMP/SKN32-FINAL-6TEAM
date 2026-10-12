@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/.env*)",
+      "Read(**/*credential*)",
+      "Read(**/*secret*)",
+      "Read(**/.ssh/**)",
+      "Read(**/datasets/**)",
+      "Read(**/memory/**)",
+      "Edit",
+      "Write",
+      "Bash(*curl*)",
+      "Bash(*wget*)",
+      "Bash(*ssh*)",
+      "Bash(*git*)",
+      "Bash(*.env*)"
+    ]
+  }
+}

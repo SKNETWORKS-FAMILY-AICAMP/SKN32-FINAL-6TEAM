@@ -1,0 +1,1 @@
+const select=document.querySelector('#filter');select.addEventListener('change',()=>{const cards=[...document.querySelectorAll('article')];cards.forEach(a=>a.hidden=select.value!=='all'&&a.dataset.status!==select.value);document.querySelector('#visible').textContent=cards.filter(a=>!a.hidden).length+'/21개 표시';});

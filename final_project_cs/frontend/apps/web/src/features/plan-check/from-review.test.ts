@@ -35,6 +35,14 @@ describe("the finished check, from the server's review", () => {
       rows: [{ row: "closed", result: "bad", text: "수요일은 쉬어요" }] })],
     moves: [move()],
   };
+  it("preserves the saved service and actual revision used to invalidate old move candidates", () => {
+    const next = intake("review", "review", { revision: 4, review: { ...review, revision: 4, taxi_pricing: { product: "capsi_immediate", quotes: [] } } });
+    const mapped = reviewResultOf(next, readingOf(next))!;
+    expect(mapped.revision).toBe(4);
+    expect(mapped.taxiPricing).toEqual({ product: "capsi_immediate", quotes: [] });
+    const older = intake("review", "review", { review });
+    expect(reviewResultOf(older, readingOf(older))!.taxiPricing).toBeNull();
+  });
   const view = reviewResultOf(intake("review", "review", { review, check: { ready: true, problems: [], filled: [], items: 2, title: "10월 서울 여행", plan: { requested: false, start_date: null, days: null, party_size: null, preferences: "" } } }), readingOf(intake("review", "review")))!;
 
   it("is done, titled by the server, with a day for every stop", () => {
@@ -139,6 +147,13 @@ describe("the check while the server is still working, from the events", () => {
     expect(view.items).toHaveLength(1);
     expect(view.items[0].checks).toEqual([{ kind: "place", result: "ok", text: "경복궁" }]);
     expect(view.items[0].verdict).toBeNull();                       // its status has not come: it is still being checked
+  });
+
+  it("keeps a read stop's identity and missing date before any checked item arrives", () => {
+    const stream = fold([["line", { source_id: "s1", no: 2, text: "점심은 광장시장", found: { id: "0-1", index: 1, day: null, date: null, starts_at: null, title: "광장시장" } }]]);
+    const view = streamingViewOf(intake("reading", "checking"), stream);
+    expect(view.lines[1]).toEqual({ no: 2, text: "점심은 광장시장", read: true, found: { kind: "item", id: "0-1", sourceKey: "s1:1", day: null, date: null, startsAt: null, title: "광장시장" } });
+    expect(view.items).toEqual([]);
   });
 
   it("stays on 「received」 until the server says it has started reading", () => {

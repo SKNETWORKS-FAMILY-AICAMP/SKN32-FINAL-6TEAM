@@ -1,3 +1,11 @@
+---
+type: research
+title: 여행 API 경쟁 조사
+description: 2026-09-11 공개 자료로 조사한 여행 API 경쟁군
+status: draft
+domain: travel
+---
+
 # 여행 일정·관리 API/MCP 경쟁업체 전수조사
 
 ## 조사 결론
@@ -191,4 +199,3 @@ TripIt API는 항공·숙박·철도·차량·활동·식당 등 여행 객체�
 [^16]: TripIt. “[Notification API](https://tripit.github.io/api/doc/v1/notification.html).” Accessed 2026-09-11.
 [^17]: SAP Concur. “[Itinerary Service v1](https://github.com/concur/developer.concur.com/blob/preview/src/api-reference/travel/itinerary/itinerary.markdown).” Accessed 2026-09-11.
 [^18]: NOL. “[NOL API Documentation 1.2.0](https://open-api.swallow.goglobal.travel/).” Accessed 2026-09-11.
-

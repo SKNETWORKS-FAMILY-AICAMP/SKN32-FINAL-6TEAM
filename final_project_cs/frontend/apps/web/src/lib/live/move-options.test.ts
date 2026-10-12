@@ -14,6 +14,10 @@ const BODY = {
 };
 
 describe("moveOptionsOf — the ways to go for one leg, as the server sent them", () => {
+  it("keeps an estimated taxi fare distinct from a minimum fare", () => {
+    const result = moveOptionsOf({ options: [{ mode: "taxi", fare_krw: 9000, fare_is_floor: false, fare_is_estimate: true }] });
+    expect(result!.options[0]).toMatchObject({ fareKrw: 9000, fareIsFloor: false, fareIsEstimate: true });
+  });
   it("is none for anything that is not an answer", () => {
     for (const raw of [null, undefined, "x", [], 3]) expect(moveOptionsOf(raw)).toBeNull();
   });

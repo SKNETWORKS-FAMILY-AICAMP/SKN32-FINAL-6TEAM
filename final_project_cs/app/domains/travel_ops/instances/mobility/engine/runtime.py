@@ -25,6 +25,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import threading
 from pathlib import Path
@@ -44,30 +45,45 @@ def _load_verify_time():
     return _vt
 
 
+def _precision_signature(path):
+    p = Path(path)
+    return str(p), hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else None
+
+
 def default_paths():
     from .paths import PROCESSED                            # noqa: E402
     p = PROCESSED / "mobility"
     c = PKG / "rules"
     # ☆`[73 후속 · 3-4]` 실 시간표는 gz 가 있으면 그것(75 데이터 git · 75 MB → 1.8 MB) · 없으면 텍스트. 판정기는 확장자로 연다.
     from .paths import timetable_file                        # noqa: E402
-    return {"timetable": timetable_file(p),
+    from .subway_identity import STATION_FILE
+    from .published_boarding import FILE as BOARDING_FILE
+    result = {"timetable": timetable_file(p),
             "order": p / "line_station_order_v1.json",
             "transfer_walk": p / "transfer_walk_v1.json",
             "bus_route": p / "bus_route_v1.jsonl",
             "bus_stops": p / "bus_stops_v1.jsonl",
             "station_coords": p / "station_coords.json",
+            "subway_stations": p / STATION_FILE,
+            "published_boarding": p / BOARDING_FILE,
+            "train_precision": p / "published_train_precision_v1.json.gz",
             "station_exits": p / "station_exits_v1.json",      # 19번 방 — 지하철↔버스 환승(OSM 출구, 추정)
             "bike_stations": p / "bike_stations_v1.jsonl",     # 22번 방 — 따릉이 운영 대여소(없어도 돈다 · 자전거 근거없음)
             "bus_profile": p / "bus_seg_profile_v1.jsonl.gz",  # 41번 방 — 버스 구간 통행시간(없어도 돈다 · 표정속도 모델)
             "meta": p / "timetable_v1_meta.json",
             "rules": c / "rules_v0.3.json",
-            "holidays": c / "holidays_2026_2027.json"}
+            "holidays": c / "holidays_2026_2027.json",
+            "special_rail_fares": c / "special_rail_fares_v1.json"}
+    from .line_order import distance_source_paths
+    return dict(result, **distance_source_paths(result['order']))
 
 
 class Runtime:
     """판정기 하나 + 어댑터가 basis 로 쓸 출처 값."""
 
-    def __init__(self, verifier, *, timetable_built_at, rules_version, stats, source_mtimes=None, build_kw=None):
+    def __init__(self, verifier, *, timetable_built_at, rules_version, stats, source_mtimes=None, build_kw=None,
+                 express_sources=None, subway_stations=None, subway_station_source=None,
+                 published_boarding_source=None, train_precision_source=None):
         self._v = verifier
         self.timetable_built_at = timetable_built_at
         self.rules_version = rules_version
@@ -75,6 +91,11 @@ class Runtime:
         # ☆`[2026-09-29 문제목록 #32]` 적재한 파일의 수정 시각 — get_verifier 가 바뀐 것을 알아채 다시 올린다
         self.source_mtimes = dict(source_mtimes or {})
         self.build_kw = dict(build_kw or {})
+        self.express_sources = dict(express_sources) if express_sources is not None else None
+        self.subway_stations = subway_stations
+        self.subway_station_source = subway_station_source
+        self.published_boarding_source = published_boarding_source
+        self.train_precision_source = train_precision_source
 
     @property
     def timetable_stale(self):
@@ -83,17 +104,52 @@ class Runtime:
     def changed_sources(self):
         """적재 뒤 바뀐(또는 사라진) 입력 파일 이름들."""
         out = []
+        if self.train_precision_source is not None:
+            if _precision_signature(self.train_precision_source[0]) != self.train_precision_source:
+                out.append('train_precision')
+        if self.published_boarding_source is not None:
+            from .published_boarding import source_signature as boarding_signature
+            if boarding_signature(self.published_boarding_source[0]) != self.published_boarding_source:
+                out.append('published_boarding')
+        if self.subway_station_source is not None:
+            from .subway_identity import source_signature
+            if source_signature(self.subway_station_source[0]) != self.subway_station_source:
+                out.append('subway_stations')
+        if self.express_sources is not None:
+            from .express import source_signatures
+            current = source_signatures()
+            for line in sorted(set(current) | set(self.express_sources)):
+                if current.get(line) != self.express_sources.get(line):
+                    out.append('express:' + line)
         for k, (path, mt) in self.source_mtimes.items():
             p = Path(path)
             now = p.stat().st_mtime if p.exists() else None
             if now != mt:
                 out.append(k)
-        return out
+        # v1을 적재한 뒤 v2가 새로 생기는 경우도 입력 교체다.
+        # 기존 파일의 수정 시각만 보면 새 거리 자료를 영원히 놓친다.
+        order = self.source_mtimes.get('order')
+        if order:
+            from .line_order import distance_source_paths
+            selected = distance_source_paths(order[0])
+            for key in ('rail_track', 'rail_distance_overlay'):
+                loaded = self.source_mtimes.get(key)
+                previous = Path(loaded[0]) if loaded else None
+                if selected.get(key) != previous and key not in out:
+                    out.append(key)
+        return list(dict.fromkeys(out))
 
-    def verify_case(self, case):
+    def verify_case(self, case, *, bus_departures=None, subway_departures=None):
         # 56 ① — 건마다 얕은 복사본에서 돈다. 판정기가 건마다 재할당하는 상태(_case_date · disr · _leg_cache ·
         #   lfd_capped)를 여러 스레드가 같은 객체에서 섞지 않게(plan.Planner · plan_estimate 와 같은 방식).
-        return copy.copy(self._v).verify_case(case)
+        verifier = copy.copy(self._v)
+        # 출발 관측의 정확 첫 승차 위치와 시각만 내부 인자로 받는다.
+        # 고객 case JSON에 관측을 넣지 않고, 현재 예측으로 출발 역산도 하지 않는다.
+        verifier._bus_departures = copy.deepcopy(bus_departures or {})
+        verifier._subway_departures = copy.deepcopy(subway_departures or {})
+        if bus_departures or subway_departures:
+            verifier.lfd_enabled = False
+        return verifier.verify_case(case)
 
 
 _CAR_GRAPHS: dict = {}
@@ -156,9 +212,15 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
     P = default_paths()
     if paths:
         P = dict(P, **{k: Path(v) for k, v in paths.items()})
+        if "timetable" in paths and "train_precision" not in paths:
+            P["train_precision"] = P["timetable"].with_name("published_train_precision_v1.json.gz")
+        from .line_order import distance_source_paths
+        P.pop('rail_track', None)
+        P.pop('rail_distance_overlay', None)
+        P.update(distance_source_paths(P['order']))
 
     # station_exits 는 없어도 돈다(역 좌표로 대신) — 단 경고를 찍는다
-    missing = [k for k, v in P.items() if k not in ("meta", "station_exits", "bike_stations", "bus_profile") and not Path(v).exists()]
+    missing = [k for k, v in P.items() if k not in ("meta", "station_exits", "bike_stations", "bus_profile", "subway_stations", "published_boarding", "train_precision") and not Path(v).exists()]
     if missing:
         # #24 — 어디를 봤는지 같이 말한다(자료 폴더 · 그 값이 어디서 왔나). 배포 확인은 datacheck.py
         raise RuntimeError(f"판정기 입력이 없다: {missing} (자료 폴더 {_paths.DATA_DIR} · 출처 {_paths.SOURCE}) — "
@@ -172,21 +234,44 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
     rules = json.loads(Path(P["rules"]).read_text(encoding="utf-8"))
     from .guardrails import resolve as _resolve_guardrails
     rules = _resolve_guardrails(rules)       # #49 — 정책 수치(value_from)를 guardrails.yaml 에서 채운다
+    special_rail = json.loads(Path(P['special_rail_fares']).read_text(encoding='utf-8'))
+    rules['fare']['subway']['special_lines'] = special_rail['lines']
+    rules['fare']['subway']['published_od_fares'] = special_rail.get('published_od_fares', {})
     # ☆#5 — 덮는 해를 아는 달력. 표 밖의 날짜는 평일로 짐작하지 않고 CalendarOutOfRange 로 멈춘다
     from .timeutil import HolidayCalendar
     holidays = HolidayCalendar.from_doc(json.loads(Path(P["holidays"]).read_text(encoding="utf-8")))
-    lo = vt.LineOrder.load(str(P["order"]))
-    tt = vt.Timetable.load(str(P["timetable"]), wanted, express=True)   # 9호선·1호선은 열차 단위 표(급행)로 읽는다
-    tw = vt.TransferWalk.load(str(P["transfer_walk"]),
+    from .line_order import LineOrder
+    from .transfer_walk import TransferWalk
+    from .bus import BusRoutes
+    from .geo import StationCoords
+    from .exits import StationExits
+    from .bike import BikeStations, BikeLive, BikeRouter
+    from .congestion import Congestion
+    from .bus_profile import BusSegProfile
+    lo = LineOrder.load(str(P["order"]))
+    from .subway_identity import load as load_subway_stations, source_signature as subway_signature
+    subway_stations, subway_station_source = load_subway_stations(P['subway_stations'])
+    from .express import source_signatures
+    express_sources = source_signatures()
+    from .published_boarding import load as load_boarding, source_signature as boarding_signature
+    published, published_source = load_boarding(P['published_boarding'])
+    previous_published = getattr(_SINGLETON, 'published_boarding_source', None)
+    if (previous_published is not None and previous_published[0] == published_source[0]
+            and previous_published[1] is not None and published is None):
+        raise RuntimeError('이미 사용하던 공표 승차 시간 자료가 사라졌다')
+    precision_source = _precision_signature(P['train_precision'])
+    tt = vt.Timetable.load(str(P["timetable"]), wanted, express=True,
+                           published_boarding=published, train_precision_path=P["train_precision"])   # 9호선·1호선은 열차 단위 표(급행)로 읽는다
+    tw = TransferWalk.load(str(P["transfer_walk"]),
                               rules["measured_baseline"]["kakao_walk_speed_mps"]["value"])
-    bus = vt.BusRoutes.load(str(P["bus_route"]), str(P["bus_stops"]))
-    sc = vt.StationCoords.load(str(P["station_coords"]))
-    ex = vt.StationExits.load(str(P["station_exits"]))
+    bus = BusRoutes.load(str(P["bus_route"]), str(P["bus_stops"]))
+    sc = StationCoords.load(str(P["station_coords"]))
+    ex = StationExits.load(str(P["station_exits"]))
     # 따릉이(v0.7 · 22번 방). 실시간 조회는 .env SEOUL_OPENAPI_KEY, 라우터는 .env MOBILITY_GH_URL(21번과 같은 주소) — 둘 다 없으면 근거없음으로 낸다.
-    bk = vt.BikeStations.load(str(P["bike_stations"]))
+    bk = BikeStations.load(str(P["bike_stations"]))
     import os
     # #48 — 서버는 설정 값(seoul_key)을 넘긴다. "" 는 끔, None 은 명령줄 관례(환경변수)
-    bike_live = (vt.BikeLive(key=seoul_key, gate=bike_gate) if seoul_key else None) if seoul_key is not None else vt.BikeLive.from_env()
+    bike_live = (BikeLive(key=seoul_key, gate=bike_gate) if seoul_key else None) if seoul_key is not None else BikeLive.from_env()
     # 라우터는 21번 car.py 의 make_router 로 — 23 이 CarService 를 끼울 때 같은 객체를 나눠 쓴다.
     gh = (gh_url if gh_url is not None else os.environ.get("MOBILITY_GH_URL"))         or (None if gh_url == "" else ((rules.get("car") or {}).get("graphhopper") or {}).get("url", {}).get("value"))
     bike_router = None
@@ -204,15 +289,15 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
             router_obj, router_kind = gr, "local"
     car = None
     if router_obj is not None:
-        bike_router = vt.BikeRouter(router_obj, {}, (rules.get("bike") or {}).get("pbf_date") or "2026-09-18")
+        bike_router = BikeRouter(router_obj, {}, (rules.get("bike") or {}).get("pbf_date") or "2026-09-18")
         # ☆서비스 런타임은 전엔 택시 서비스(car)를 한 번도 끼우지 않았다 - 라우터가 떠 있어도 택시는 늘 「소요 근거없음」이었다.
         #   속도 프로파일 자료가 없으면 첫 호출에서 RouterDown(근거없음)으로 답한다(_LazyCar).
         car = _LazyCar(router_obj, rules, holidays)
     # 혼잡도(v0.8 · 39번 방 · @ 부품) — 파일이 없으면 가산 없음(근거없음). 판정기 CLI 와 같은 두 파일.
     cg_dir = Path(P["timetable"]).parent
-    cg_data = vt.Congestion.load([cg_dir / "congestion_v1.jsonl", cg_dir / "congestion_line9_v1.jsonl"], wanted)
+    cg_data = Congestion.load([cg_dir / "congestion_v1.jsonl", cg_dir / "congestion_line9_v1.jsonl"], wanted)
     # 버스 구간 통행시간 프로파일(v0.9 · 41번 방) — 파일이 없으면 종전 모델(거리 ÷ 표정속도)
-    bus_prof = vt.BusSegProfile.load(P["bus_profile"])
+    bus_prof = BusSegProfile.load(P["bus_profile"])
     verifier = vt.Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, car=car, bk=bk, bike_live=bike_live,
                            bike_router=bike_router, cg_data=cg_data, bus_prof=bus_prof)
 
@@ -227,6 +312,8 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
         except (ValueError, OSError):
             built, meta_d = None, {}
     built_at = f"built:{built}" if built else f"fetched:{tt.fetched_at}"
+    if published is not None:
+        built_at += f'|boarding:{published_source[1]}'
 
     # ☆`[2026-09-29 문제목록 #32]` 시간표가 오래됐는지 — 기준(일)은 guardrails mobility.staleness.timetable_warn_days.
     #   앞 판은 규칙에 기준만 있고 코드가 보지 않았다. 판정 불가가 아니라 재수집 신호다 — 경고로 싣는다.
@@ -257,10 +344,13 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
              "bus_routes": len(bus.by_id) if bus else 0,
              "transfer_pairs": len(tw.pairs) if tw else 0,
              "station_coords": len(sc.by_key) if sc else 0,
+             "subway_station_ids": subway_stations.station_count if subway_stations else 0,
+             "subway_station_identity": 'available' if subway_stations else 'unavailable',
              "station_exits": sum(len(x) for x in ex.exits.values()) if ex else 0,
              "bike_stations": len(bk.rows) if bk else 0,
              "bike_live": bool(bike_live), "bike_router": bool(bike_router), "router": router_kind, "car": bool(car),
              "timetable_age_days": age_days, "timetable_age_basis": age_basis, "timetable_stale": stale, "data_dir_source": _paths.SOURCE}
+    stats['published_boarding'] = published.summary() if published is not None else []
     if not quiet:
         # ★ 출발없음을 같이 찍는다(2026-09-14). 수집 행 수(463,326)와 올라간 행 수가 달라서,
         #   이 줄만 보면 "46만이라더니 44만이네"가 된다. 차이는 출발 시각이 '000000'(출발 없음)인 행이다.
@@ -280,8 +370,22 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
     if stale and not quiet:
         print(f"[mobility] ! 시간표 수집이 {age_days}일 전이다(기준 {rules['staleness']['timetable_warn_days']['value']}일) — 재수집이 필요하다")
     mtimes = {k: (str(v), Path(v).stat().st_mtime) for k, v in P.items() if Path(v).exists()}
+    if 'train_precision' not in mtimes:
+        mtimes['train_precision'] = (str(P['train_precision']), None)
+    if _precision_signature(P['train_precision']) != precision_source:
+        raise RuntimeError('이동 판정기를 구성하는 사이 공식 열차 시각 보조표가 바뀌었다')
+    if source_signatures() != express_sources:
+        raise RuntimeError('이동 판정기를 구성하는 사이 급행 운행표가 바뀌었다')
+    if subway_signature(P['subway_stations']) != subway_station_source:
+        raise RuntimeError('이동 판정기를 구성하는 사이 공식 지하철 역ID 자료가 바뀌었다')
+    if boarding_signature(P['published_boarding']) != published_source:
+        raise RuntimeError('이동 판정기를 구성하는 사이 공표 승차 시간 자료가 바뀌었다')
     return Runtime(verifier, timetable_built_at=built_at,
                    rules_version=rules["rules_version"], stats=stats, source_mtimes=mtimes,
+                   express_sources=express_sources,
+                   subway_stations=subway_stations, subway_station_source=subway_station_source,
+                   published_boarding_source=published_source,
+                   train_precision_source=precision_source,
                    build_kw={"paths": paths, "wanted": wanted, "quiet": True, "data_dir": data_dir,
                              "gh_url": gh_url, "seoul_key": seoul_key, "guardrails_path": guardrails_path,
                              "local_router": local_router, "bike_gate": bike_gate})

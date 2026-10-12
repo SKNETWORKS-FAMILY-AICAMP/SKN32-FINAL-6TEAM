@@ -1,0 +1,17 @@
+app/core/registry.py
+app/core/project_config.py
+app/core/remote_team/executor.py
+app/core/remote_team/a2a_executor.py
+app/application/controller.py
+app/application/runtime.py
+app/composition.py
+app/presentation/api/app.py
+app/presentation/api/cases.py
+app/presentation/errors.py
+app/domains/travel_ops/entry/trip_api.py
+app/domains/travel_ops/components/conversation/case_dispatch.py
+app/domains/travel_ops/components/team_hooks/dining_ledger.py
+app/domains/travel_ops/components/team_hooks/legs.py
+app/domains/travel_ops/components/team_hooks/similarity.py
+app/domains/travel_ops/components/team_hooks/watch_planners.py
+app/domains/travel_ops/components/team_hooks/__init__.py

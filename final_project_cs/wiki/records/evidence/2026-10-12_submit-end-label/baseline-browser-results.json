@@ -1,0 +1,158 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.submit.config.ts",
+      "--grep",
+      "375px 일반 ready"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\playwright.submit.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/submit-end-20261012-v1/runtime/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/submit-end-20261012-v1/browser-evidence",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/submit-end-20261012-v1/runtime/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "submit-end-registration-20261012.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../browser-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "submit-end-registration-20261012.spec.ts",
+      "file": "submit-end-registration-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px 일반 ready: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 34007,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('footer[class*=footer]').getByRole('tooltip')\nExpected: \u001b[32m\"여행 등록\"\u001b[39m\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" locator('footer[class*=footer]').getByRole('tooltip') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('footer[class*=footer]').getByRole('tooltip')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('footer[class*=footer]').getByRole('tooltip')\nExpected: \u001b[32m\"여행 등록\"\u001b[39m\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" locator('footer[class*=footer]').getByRole('tooltip') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('footer[class*=footer]').getByRole('tooltip')\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts:41:23",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts",
+                      "column": 23,
+                      "line": 41
+                    },
+                    "snippet": "  39 |     await expect(footer).not.toHaveAttribute(\"data-quiet\", { timeout: 250 });\n  40 |     await expect(footer).not.toHaveAttribute(\"inert\");\n> 41 |     await expect(tip).toHaveText(kind === \"ready\" ? \"여행 등록\" : \"다시 제출\");\n     |                       ^\n  42 |     await expect(tip).toBeVisible({ timeout: 250 });\n  43 |     await expect(tip).toHaveCSS(\"opacity\", \"1\", { timeout: 250 });\n  44 |     await body.hover();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts",
+                        "column": 23,
+                        "line": 41
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('footer[class*=footer]').getByRole('tooltip')\nExpected: \u001b[32m\"여행 등록\"\u001b[39m\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" locator('footer[class*=footer]').getByRole('tooltip') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('footer[class*=footer]').getByRole('tooltip')\u001b[22m\n\n\n  39 |     await expect(footer).not.toHaveAttribute(\"data-quiet\", { timeout: 250 });\n  40 |     await expect(footer).not.toHaveAttribute(\"inert\");\n> 41 |     await expect(tip).toHaveText(kind === \"ready\" ? \"여행 등록\" : \"다시 제출\");\n     |                       ^\n  42 |     await expect(tip).toBeVisible({ timeout: 250 });\n  43 |     await expect(tip).toHaveCSS(\"opacity\", \"1\", { timeout: 250 });\n  44 |     await body.hover();\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts:41:23"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T02:14:32.440Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\browser-evidence\\submit-end-registration-20-0dfd1--ready-목록-끝에서-버튼-이름까지-즉시-표시\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\browser-evidence\\submit-end-registration-20-0dfd1--ready-목록-끝에서-버튼-이름까지-즉시-표시\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts",
+                    "column": 23,
+                    "line": 41
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-8cff631c78ffd1234cbb",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 27,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-12T02:14:00.562Z",
+    "duration": 67983.37599999999,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

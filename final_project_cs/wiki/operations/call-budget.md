@@ -3,12 +3,14 @@ type: runbook
 title: 외부 API 호출 한도 — 어떻게 막고 어떻게 보나
 description: 키마다 하루·월 호출 상한을 DB 로 세어 한도가 차면 호출을 멈추는 층, 여유율 보고, 개발 PC와 서버가 같은 키를 쓸 때의 주의
 status: draft
-tags: [operations, budget]
+tags: [release, cost]
 owners: [human:미배정]
 domain: neutral
 ---
 
 # 외부 API 호출 한도 — 어떻게 막고 어떻게 보나
+
+2026-10-09: 관리자웹앱의 **사용량 → API 환경설정 한도**에서 현재 읽은 ENV 상한·기본값·DB 마지막 기록 상한을 비교할 수 있다. 조회만으로 외부 API를 호출하지 않는다. [계약](../external/api-environment-limits.md) · [구현·검증 리포트](../records/reports/2026-10-09_2256_API환경설정_한도조회.md).
 
 `[2026-10-05 사용자 지시 — 이동 세션 인계]`
 

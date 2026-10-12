@@ -1,0 +1,128 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="3" time="2.087" timestamp="2026-10-09T04:57:47.529040+09:00"><testcase classname="tests.scenario.test_departure_atomic_choice_db_v1" name="test_customer_chosen_change_keeps_existing_apply_contract[customer_request]" time="0.461"><failure message="app.core.actions.ActionConflict: departure already announced: 57ffb5e4-1419-4fea-bbc4-38e5436be978">world = {'clock': &lt;tests.scenario.test_case_version_day.Clock object at 0x000001E221BDEC30&gt;, 'store': &lt;app.domains.travel_ops.... object at 0x000001E22180B9B0&gt;, 'tenant': 'remind_4a712145e5', 'trip_id': UUID('40a93d9d-cadf-43b6-979b-f0841f1a8a87')}
+reason = 'customer_request'
+
+    @pytest.mark.parametrize('reason', ['customer_request', 'rollback', 'customer_choice'])
+    def test_customer_chosen_change_keeps_existing_apply_contract(world, reason):
+        trip, _, move, arguments = _proposal(world)
+        # 보류 제안은 원래 발생 원인을 보존해도 직접 선택한 변경임을 reason으로 구분한다.
+        arguments['reason'] = reason
+        with get_connection() as conn, conn.transaction():
+            world['store'].enqueue_message(conn, trip_id=world['trip_id'], key=f'departure:{move.item_id}',
+                payload={'version': trip['version'], 'text': '이미 안내'})
+        with get_connection() as conn, conn.transaction():
+&gt;           result = ItineraryApply().apply(conn, tenant_id=world['tenant'], customer_id=trip['customer_id'],
+                case_id=None, arguments=arguments)
+
+tests\scenario\test_departure_atomic_choice_db_v1.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;app.domains.travel_ops.components.actions.itinerary_actions.ItineraryApply object at 0x000001E221B366C0&gt;
+conn = &lt;psycopg.Connection [BAD] at 0x1e230040830&gt;
+
+    def apply(self, conn: Any, *, tenant_id: str, customer_id: UUID, case_id: UUID,
+              arguments: Mapping[str, Any]) -&gt; AppliedAction:
+        store = TripStore(tenant_id)
+        trip_id = UUID(str(arguments["trip_id"]))
+        base = int(arguments["base_version"])
+        try:
+            departure_ids = _departure_replacement_ids(arguments)
+            if departure_ids:
+                store.lock_trip(conn, trip_id)
+            trip, current = store.latest(conn, trip_id)
+        except KeyError as exc:
+            raise ActionRejected("trip not found") from exc
+        if str(trip["customer_id"]) != str(customer_id):
+            raise ActionRejected("trip not found")        # ★남의 여행 — 있는지도 말하지 않는다
+        if trip["version"] != base:
+            raise ActionConflict(f"trip {trip_id} moved from v{base} to v{trip['version']}")
+        for item_id in departure_ids:
+            if store.message_exists(conn, trip_id=trip_id, key=f"departure:{item_id}"):
+&gt;               raise ActionConflict(f"departure already announced: {item_id}")
+E               app.core.actions.ActionConflict: departure already announced: 57ffb5e4-1419-4fea-bbc4-38e5436be978
+
+app\domains\travel_ops\components\actions\itinerary_actions.py:143: ActionConflict</failure></testcase><testcase classname="tests.scenario.test_departure_atomic_choice_db_v1" name="test_customer_chosen_change_keeps_existing_apply_contract[rollback]" time="0.244"><failure message="app.core.actions.ActionConflict: departure already announced: 62ec493c-8eca-4af8-a12c-6c4b40f6e240">world = {'clock': &lt;tests.scenario.test_case_version_day.Clock object at 0x000001E22FFAD490&gt;, 'store': &lt;app.domains.travel_ops.... object at 0x000001E22FEF5F40&gt;, 'tenant': 'remind_8a305b1a71', 'trip_id': UUID('f216bbb4-d519-443b-a190-f610168fb0ea')}
+reason = 'rollback'
+
+    @pytest.mark.parametrize('reason', ['customer_request', 'rollback', 'customer_choice'])
+    def test_customer_chosen_change_keeps_existing_apply_contract(world, reason):
+        trip, _, move, arguments = _proposal(world)
+        # 보류 제안은 원래 발생 원인을 보존해도 직접 선택한 변경임을 reason으로 구분한다.
+        arguments['reason'] = reason
+        with get_connection() as conn, conn.transaction():
+            world['store'].enqueue_message(conn, trip_id=world['trip_id'], key=f'departure:{move.item_id}',
+                payload={'version': trip['version'], 'text': '이미 안내'})
+        with get_connection() as conn, conn.transaction():
+&gt;           result = ItineraryApply().apply(conn, tenant_id=world['tenant'], customer_id=trip['customer_id'],
+                case_id=None, arguments=arguments)
+
+tests\scenario\test_departure_atomic_choice_db_v1.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;app.domains.travel_ops.components.actions.itinerary_actions.ItineraryApply object at 0x000001E22FFD3C50&gt;
+conn = &lt;psycopg.Connection [BAD] at 0x1e2304b9fd0&gt;
+
+    def apply(self, conn: Any, *, tenant_id: str, customer_id: UUID, case_id: UUID,
+              arguments: Mapping[str, Any]) -&gt; AppliedAction:
+        store = TripStore(tenant_id)
+        trip_id = UUID(str(arguments["trip_id"]))
+        base = int(arguments["base_version"])
+        try:
+            departure_ids = _departure_replacement_ids(arguments)
+            if departure_ids:
+                store.lock_trip(conn, trip_id)
+            trip, current = store.latest(conn, trip_id)
+        except KeyError as exc:
+            raise ActionRejected("trip not found") from exc
+        if str(trip["customer_id"]) != str(customer_id):
+            raise ActionRejected("trip not found")        # ★남의 여행 — 있는지도 말하지 않는다
+        if trip["version"] != base:
+            raise ActionConflict(f"trip {trip_id} moved from v{base} to v{trip['version']}")
+        for item_id in departure_ids:
+            if store.message_exists(conn, trip_id=trip_id, key=f"departure:{item_id}"):
+&gt;               raise ActionConflict(f"departure already announced: {item_id}")
+E               app.core.actions.ActionConflict: departure already announced: 62ec493c-8eca-4af8-a12c-6c4b40f6e240
+
+app\domains\travel_ops\components\actions\itinerary_actions.py:143: ActionConflict</failure></testcase><testcase classname="tests.scenario.test_departure_atomic_choice_db_v1" name="test_customer_chosen_change_keeps_existing_apply_contract[customer_choice]" time="0.250"><failure message="app.core.actions.ActionConflict: departure already announced: 94bbde1f-cfd6-48b6-96e4-c5af0c5dbd5e">world = {'clock': &lt;tests.scenario.test_case_version_day.Clock object at 0x000001E22FEF5F70&gt;, 'store': &lt;app.domains.travel_ops.... object at 0x000001E230043350&gt;, 'tenant': 'remind_f97a8c74a4', 'trip_id': UUID('addf4a50-2695-41e1-a15b-ed4e3012392a')}
+reason = 'customer_choice'
+
+    @pytest.mark.parametrize('reason', ['customer_request', 'rollback', 'customer_choice'])
+    def test_customer_chosen_change_keeps_existing_apply_contract(world, reason):
+        trip, _, move, arguments = _proposal(world)
+        # 보류 제안은 원래 발생 원인을 보존해도 직접 선택한 변경임을 reason으로 구분한다.
+        arguments['reason'] = reason
+        with get_connection() as conn, conn.transaction():
+            world['store'].enqueue_message(conn, trip_id=world['trip_id'], key=f'departure:{move.item_id}',
+                payload={'version': trip['version'], 'text': '이미 안내'})
+        with get_connection() as conn, conn.transaction():
+&gt;           result = ItineraryApply().apply(conn, tenant_id=world['tenant'], customer_id=trip['customer_id'],
+                case_id=None, arguments=arguments)
+
+tests\scenario\test_departure_atomic_choice_db_v1.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;app.domains.travel_ops.components.actions.itinerary_actions.ItineraryApply object at 0x000001E2304BB470&gt;
+conn = &lt;psycopg.Connection [BAD] at 0x1e230432630&gt;
+
+    def apply(self, conn: Any, *, tenant_id: str, customer_id: UUID, case_id: UUID,
+              arguments: Mapping[str, Any]) -&gt; AppliedAction:
+        store = TripStore(tenant_id)
+        trip_id = UUID(str(arguments["trip_id"]))
+        base = int(arguments["base_version"])
+        try:
+            departure_ids = _departure_replacement_ids(arguments)
+            if departure_ids:
+                store.lock_trip(conn, trip_id)
+            trip, current = store.latest(conn, trip_id)
+        except KeyError as exc:
+            raise ActionRejected("trip not found") from exc
+        if str(trip["customer_id"]) != str(customer_id):
+            raise ActionRejected("trip not found")        # ★남의 여행 — 있는지도 말하지 않는다
+        if trip["version"] != base:
+            raise ActionConflict(f"trip {trip_id} moved from v{base} to v{trip['version']}")
+        for item_id in departure_ids:
+            if store.message_exists(conn, trip_id=trip_id, key=f"departure:{item_id}"):
+&gt;               raise ActionConflict(f"departure already announced: {item_id}")
+E               app.core.actions.ActionConflict: departure already announced: 94bbde1f-cfd6-48b6-96e4-c5af0c5dbd5e
+
+app\domains\travel_ops\components\actions\itinerary_actions.py:143: ActionConflict</failure></testcase></testsuite></testsuites>

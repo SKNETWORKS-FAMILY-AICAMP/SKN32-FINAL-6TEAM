@@ -1,0 +1,111 @@
+{
+  "mock": {
+    "passed": 16,
+    "total": 16,
+    "final_build_cases": 12,
+    "previous_map_regression_cases": 4,
+    "note": "마지막 변경은 AddStop의 Esc와 선택 행 여백이다. 지도 코드는 직전 16/16 때와 같다."
+  },
+  "cases": [
+    {
+      "name": "시각은 펼침·검토·되돌리기 상태에만 따라온다 375px",
+      "file": "forms-time-follow-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "직접 수정은 장소 입력 중복 없이 원래 장소와 거절된 초안을 유지한다 375px",
+      "file": "forms-time-follow-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "일정 추가는 검색 초점으로 열고 검색·지우기·선택 후에도 초안을 보존한다 375px",
+      "file": "forms-time-follow-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "추가 입력 검증과 검색 초점·실제 선택 장소 저장 375px",
+      "file": "forms-time-follow-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "시각은 펼침·검토·되돌리기 상태에만 따라온다 1280px",
+      "file": "forms-time-follow-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "직접 수정은 장소 입력 중복 없이 원래 장소와 거절된 초안을 유지한다 1280px",
+      "file": "forms-time-follow-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "일정 추가는 검색 초점으로 열고 검색·지우기·선택 후에도 초안을 보존한다 1280px",
+      "file": "forms-time-follow-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "추가 입력 검증과 검색 초점·실제 선택 장소 저장 1280px",
+      "file": "forms-time-follow-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "검색에 없는 장소를 지도에서 지정하고 좌표 원값을 저장 375px",
+      "file": "map-direct-pick-20261011.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "위치 지정 취소·중심 선택과 확장 도구 375px",
+      "file": "map-direct-pick-20261011.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "검색에 없는 장소를 지도에서 지정하고 좌표 원값을 저장 1280px",
+      "file": "map-direct-pick-20261011.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "위치 지정 취소·중심 선택과 확장 도구 1280px",
+      "file": "map-direct-pick-20261011.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "지도 안 밀집 마커는 개별 표시·점선 연결·밖으로 나갈 때만 칩 375px",
+      "file": "in-map-pins-fade-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "상단 내용 페이드와 날짜·손잡이·최소 접힘 유지 375px",
+      "file": "in-map-pins-fade-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "지도 안 밀집 마커는 개별 표시·점선 연결·밖으로 나갈 때만 칩 1280px",
+      "file": "in-map-pins-fade-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "상단 내용 페이드와 날짜·손잡이·최소 접힘 유지 1280px",
+      "file": "in-map-pins-fade-20261010.spec.ts",
+      "status": "passed"
+    }
+  ],
+  "unit": {
+    "passed": 21,
+    "total": 21
+  },
+  "existing_coordinate_contract": {
+    "passed": 1,
+    "total": 1
+  },
+  "checks": [
+    "TypeScript --noEmit",
+    "ESLint changed files",
+    "standard Next.js production build"
+  ],
+  "real_response_checked": false,
+  "first_attempt": {
+    "passed": 11,
+    "failed": 1,
+    "reason": "Chrome의 정수 이벤트 좌표에 시험이 소수점까지 기대해 0.9px 차이가 났다. 시험 클릭 위치를 정수로 맞췄다."
+  },
+  "screenshots": 8
+}

@@ -1,0 +1,57 @@
+{
+  "created_at": "2026-10-09T12:06:08.590262+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/app/domains/travel_ops/ports/data_sources/seoul_subway.py",
+      "backup": "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_1156_지하철_부분응답_누락해소/seoul_subway.py",
+      "sha256": "0c09abbf2e3946da97eafdb237153c77f5e3578133d32856286331d10c4ab679"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/ports/data_sources/subway_boarding.py",
+      "backup": "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_1156_지하철_부분응답_누락해소/subway_boarding.py",
+      "sha256": "80f29f1a2018c3fa488e9e5cdd955dfbe4f44f230af4b802ab6b20f9a89a00fc"
+    },
+    {
+      "source": "final_project_cs/tests/unit/travel/test_subway_boardable_v1.py",
+      "backup": "final_project_cs/tests/unit/travel/_backup/2026-10-09_1156_지하철_부분응답_누락해소/test_subway_boardable_v1.py",
+      "sha256": "903a1f56fa1c723ee153b4808e1cfcd0874407523125d0ea47839c8ded0c5812"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_1156_지하철_부분응답_누락해소/mobility.md",
+      "sha256": "c18ecb1b6e4b4122d4171acb465cfaf20a6ed883633ed29f34723d1f28002fcd"
+    },
+    {
+      "source": "final_project_cs/tests/unit/travel/test_seoul_subway_arrival.py",
+      "backup": "final_project_cs/tests/unit/travel/_backup/2026-10-09_1156_지하철_부분응답_누락해소/test_seoul_subway_arrival.py",
+      "sha256": "24ea5811b3e5e4a2967a1a388f633d91f3817351294087a6b6e752fae58113c9"
+    },
+    {
+      "source": ".tmp/mobility_complete_20261008/collect_subway_completeness_after_v1.py",
+      "backup": ".tmp/mobility_complete_20261008/_backup/2026-10-09_1210_수집설명_오탈자/collect_subway_completeness_after_v1.py",
+      "sha256": "a700ccc11ee006bd6fb96f7c0eba218086137fed01add4cdfa70902987deec38"
+    },
+    {
+      "source": "final_project_cs/wiki/records/evidence/2026-10-09_1156_지하철_부분응답_누락해소/after-live-v1.json",
+      "backup": "final_project_cs/wiki/records/evidence/2026-10-09_1156_지하철_부분응답_누락해소/_backup/2026-10-09_1210_수집설명_오탈자/after-live-v1.json",
+      "sha256": "c2f53f21f136c2da98d2651000b9253d71415fae87c66b476fa561847058fc92"
+    },
+    {
+      "source": "datasets/mobility/raw/2026-10-09_1156_지하철_부분응답_누락해소/after-acquisition-v1.json",
+      "backup": "datasets/mobility/raw/2026-10-09_1156_지하철_부분응답_누락해소/_backup/2026-10-09_1210_수집설명_오탈자/after-acquisition-v1.json",
+      "sha256": "c2f53f21f136c2da98d2651000b9253d71415fae87c66b476fa561847058fc92"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_1206_부분응답_검증기록/mobility.md",
+      "sha256": "16fc597e236119e24bf116ae4b19412d4cbc38a38c9f0f0bf380d3ed34138363",
+      "created_at": "2026-10-09T12:06:08.852504+09:00"
+    },
+    {
+      "source": "datasets/mobility/REPORT.md",
+      "backup": "datasets/mobility/_backup/2026-10-09_1206_부분응답_검증기록/REPORT.md",
+      "sha256": "bcb11fd37acc26af412ad841c6c29467f5c395368174593aba6a36149d26e60e",
+      "created_at": "2026-10-09T12:06:08.874125+09:00"
+    }
+  ]
+}

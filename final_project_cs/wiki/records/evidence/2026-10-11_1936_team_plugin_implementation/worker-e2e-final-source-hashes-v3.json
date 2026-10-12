@@ -1,0 +1,62 @@
+[
+  {
+    "file": "scripts/run_sweepers.py",
+    "sha256": "4fe84f5b123a66b27f2a8e1b9a8d4d0d0bbd932006e374c8db4007a2cd515600"
+  },
+  {
+    "file": "tests/unit/travel/test_plugin_worker_availability.py",
+    "sha256": "1f1e464ceb664842f791eea44872494a79a30f90019f52ecd13f0d599d3ca97f"
+  },
+  {
+    "file": "tests/helpers/plugin_bindings.py",
+    "sha256": "0b3decda08f412bb65282cdeb94812f3d67967e95eba0f8f8d3f6e3848617020"
+  },
+  {
+    "file": "tests/e2e/test_trip_api.py",
+    "sha256": "483c73ccea271c00365a420ad6e30626894ad507379843f3c6d711d2808c1095"
+  },
+  {
+    "file": "tests/e2e/test_case_version_rest.py",
+    "sha256": "f91cebe94b9ab8e6aef37c2455f477ff3299bcaac410f53531b736edb2daf621"
+  },
+  {
+    "file": "tests/e2e/test_decision_unit_web.py",
+    "sha256": "34bd0851742cb681fffc4b96bb5d96f6bf8e7a0c26b511b1045bfc87b82a50eb"
+  },
+  {
+    "file": "tests/e2e/test_desk_gate.py",
+    "sha256": "c6243fe26a09fee6589603ae4e6b35e9dc041fc8e4ec859d66c87ce2af2e6a73"
+  },
+  {
+    "file": "tests/e2e/test_mcp_read_tools.py",
+    "sha256": "4c717a4ed6f23204dd2efe35ba0fb0c9f1a24f5a6269fdba1d80a45733539f29"
+  },
+  {
+    "file": "tests/e2e/test_intake_transcription_differs_db.py",
+    "sha256": "ee5a858789a648e79c9ae87680e4e888537d0e4c3342c0b30c49d37a1f513236"
+  },
+  {
+    "file": "tests/e2e/test_trip_intake_api.py",
+    "sha256": "447f5d64d726799439df630aff965ce91cc6f11e188b0701d772aeb387182649"
+  },
+  {
+    "file": "tests/e2e/test_trip_planner.py",
+    "sha256": "cd049d08490e4bd29e0058a270e5efdb24f8d48adfcfc1b6b4be1f53ae33e904"
+  },
+  {
+    "file": "tests/e2e/test_trip_dining_ledger.py",
+    "sha256": "18abb7d916f9c015d8e6715897c5de5a6779bf3e202b18f8e1a6d48068a4b66a"
+  },
+  {
+    "file": "tests/e2e/test_web_api.py",
+    "sha256": "450efdd87bdff2eae131bb04be632167a8bf98ff71c0343e2eee9f05cb6d92c9"
+  },
+  {
+    "file": "tests/e2e/test_op_stream.py",
+    "sha256": "4e8056bf6aa23e9fa646c2374709df84cfe68abb5e83f3f4e729b782bd66ca92"
+  },
+  {
+    "file": "wiki/teams/team-contract/plugin-availability.md",
+    "sha256": "434119974af008d3418bb26fd28fe3ce27fbbad137f17f13fcbd2cbf5f499bb3"
+  }
+]

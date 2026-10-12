@@ -1,0 +1,42 @@
+{
+  "e4bbase_finch_s20261012_multi_items_bc_a1/started.json": {
+    "sha256": "90fa9036a9ba094a14a29c1d7caf120c0107fd16b55a2dacd408bb484dd53692",
+    "bytes": 1913
+  },
+  "e4bbase_finch_s20261012_multi_items_bc_a1/job.log": {
+    "sha256": "84d3beb125225e5d85a1759041ae2c0ecba32a6195c69ee8479b3b3ffb1992d1",
+    "bytes": 128
+  },
+  "e4bbase_finch_s20261012_multi_items_bc_a1/multi_contract.json": {
+    "sha256": "296f176d5f4c164c128c964dca7160217669c7fa06496fabcee35c4e24a2b8b8",
+    "bytes": 371
+  },
+  "e4bbase_finch_s20261012_multi_items_bc_a1/dtest_server_e4bbase_finch_s20261012_multi_items_bc_a1.log": {
+    "sha256": "46116d74e6ae3ee80131fb6b15b0a405c0460ae699f254f36261de147f89ad17",
+    "bytes": 681697
+  },
+  "e4bbase_finch_s20261012_multi_items_bc_a1/d_test_e4bbase_finch_s20261012_multi_items_bc_a1.jsonl": {
+    "sha256": "56e1d1682a66421d44ae876bc5b236e75d66ba641fd695b94626473969d52ba4",
+    "bytes": 268601
+  },
+  "e4bqat_finch_s20261012_multi_items_bc_a1/started.json": {
+    "sha256": "2862839b6a290921a9ed5a3f103bd76aa3695daa790ee9e3ade07e6b6b44e600",
+    "bytes": 1913
+  },
+  "e4bqat_finch_s20261012_multi_items_bc_a1/job.log": {
+    "sha256": "84d3beb125225e5d85a1759041ae2c0ecba32a6195c69ee8479b3b3ffb1992d1",
+    "bytes": 128
+  },
+  "e4bqat_finch_s20261012_multi_items_bc_a1/multi_contract.json": {
+    "sha256": "296f176d5f4c164c128c964dca7160217669c7fa06496fabcee35c4e24a2b8b8",
+    "bytes": 371
+  },
+  "e4bqat_finch_s20261012_multi_items_bc_a1/dtest_server_e4bqat_finch_s20261012_multi_items_bc_a1.log": {
+    "sha256": "52e87e883d5b6a1738dd08ff1e258070178bc484f8d7c272e85b921f52c1d070",
+    "bytes": 681697
+  },
+  "e4bqat_finch_s20261012_multi_items_bc_a1/d_test_e4bqat_finch_s20261012_multi_items_bc_a1.jsonl": {
+    "sha256": "9b195fb47816460f01e43393efbbd8a46818c2c54e6829225127d5d8151cbf96",
+    "bytes": 268627
+  }
+}

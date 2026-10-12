@@ -1,0 +1,267 @@
+{
+  "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+  "our_training": true,
+  "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+  "suite": "D",
+  "saved": 2735,
+  "expected": 2735,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "single_choice_expected": 2669,
+  "compound_diagnostic_total": 66,
+  "positive": {
+    "total": 883,
+    "correct": 768,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.8459516455998412,
+      0.8903693659012989
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      0.004331618444859839
+    ]
+  },
+  "negative": {
+    "total": 1786,
+    "correct": 1764,
+    "false_pick": 22,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.9814191944847233,
+      0.99185136610883
+    ],
+    "false_pick_wilson95": [
+      0.008148633891170085,
+      0.018580805515276737
+    ]
+  },
+  "subtypes": {
+    "absent_but_plausible": {
+      "total": 78,
+      "correct": 78,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9530621902878059,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04693780971219429
+      ]
+    },
+    "change_request": {
+      "total": 79,
+      "correct": 75,
+      "false_pick": 4,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8769228272429488,
+        0.9801359572199815
+      ],
+      "false_pick_wilson95": [
+        0.019864042780018548,
+        0.12307717275705116
+      ]
+    },
+    "chitchat": {
+      "total": 1300,
+      "correct": 1290,
+      "false_pick": 10,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9858980840502198,
+        0.9958163654640191
+      ],
+      "false_pick_wilson95": [
+        0.004183634535980886,
+        0.014101915949780153
+      ]
+    },
+    "compound_intent": {
+      "total": 66,
+      "correct": 65,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9190407973793359,
+        0.9973203594560177
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05500255701354129
+      ]
+    },
+    "confusable_name": {
+      "total": 77,
+      "correct": 73,
+      "false_pick": 4,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8739071685752308,
+        0.9796152814963542
+      ],
+      "false_pick_wilson95": [
+        0.020384718503645788,
+        0.12609283142476915
+      ]
+    },
+    "context_pronoun": {
+      "total": 71,
+      "correct": 70,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.92443949479751,
+        0.9975093967294558
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05132795219689034
+      ]
+    },
+    "duplicate_place": {
+      "total": 79,
+      "correct": 78,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9317242812303406,
+        0.9977620061449501
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04637121165392266
+      ]
+    },
+    "nameless_description": {
+      "total": 75,
+      "correct": 68,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.819653131504585,
+        0.9540514766093995
+      ],
+      "false_pick_wilson95": [
+        3.469446951953614e-18,
+        0.04872384248280587
+      ]
+    },
+    "negation": {
+      "total": 72,
+      "correct": 68,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8656798403400208,
+        0.9781857840186834
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05065117259645781
+      ]
+    },
+    "ordinal_relative": {
+      "total": 80,
+      "correct": 79,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9325372992233133,
+        0.9977900244795476
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0458181295355271
+      ]
+    },
+    "out_of_scope": {
+      "total": 80,
+      "correct": 80,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9541818704644728,
+        0.9999999999999999
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0458181295355271
+      ]
+    },
+    "tourist_synth_in": {
+      "total": 300,
+      "correct": 199,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6080919973085686,
+        0.7144446320914131
+      ],
+      "false_pick_wilson95": [
+        8.673617379884035e-19,
+        0.012642971224546034
+      ]
+    },
+    "tourist_synth_out": {
+      "total": 300,
+      "correct": 296,
+      "false_pick": 4,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9662244697474675,
+        0.9948030382606411
+      ],
+      "false_pick_wilson95": [
+        0.005196961739358857,
+        0.03377553025253262
+      ]
+    },
+    "typo_slang": {
+      "total": 78,
+      "correct": 78,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9530621902878059,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04693780971219429
+      ]
+    }
+  },
+  "failed_records": [],
+  "answer_sha256": "7dd61307b101136e746f0c3e167ee61d1947e63fd986fd4b3d68ea2e386c11ac",
+  "gold_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+  "execution": {
+    "job": {
+      "id": "e4bqat_cosine_s20261012_d",
+      "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+      "our_training": true,
+      "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "prompts": "/workspace/heavy/all_prompts.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "d_backlog_e4bqat_cosine_s20261012",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 2735,
+      "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+      "purpose": "Missing evaluation of completed cosine comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+      "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+      "lora": "/tmp/tripilot_cosine_s20261012_20261009_lora.gguf",
+      "lora_sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b"
+    },
+    "started": "2026-10-08T16:34:16.020987+00:00",
+    "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

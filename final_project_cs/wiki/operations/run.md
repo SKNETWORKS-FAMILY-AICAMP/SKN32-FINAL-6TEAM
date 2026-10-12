@@ -1,143 +1,57 @@
 ---
 type: guide
-title: 실행
-description: 테스트·평가·서버를 돌리는 명령
+title: 현재 여행 코드 실행·검증
+description: 현재 여행 기준과 사용 종료된 기록을 구분한다
 status: draft
-tags: [testing, evaluation]
-owners: [human:미배정]
-domain: commerce
-domain_note: 코드가 아직 커머스다 — 여행 전환 층 9(시연 시드가 쇼핑몰 시나리오 둘) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md
+domain: travel
 ---
 
-# 실행
+# 현재 여행 코드 실행·검증
 
-## 테스트
+아래 명령은 **cs 프로젝트 폴더**에서 실행합니다. 필요한 로컬 개발 DB·환경 설정은 [로컬 개발 안내](local-setup.md)를 먼저 확인합니다. 실행 명령의 존재와 실제 통과·배포 상태를 구분합니다.
 
-**계층 경계부터 본다.** 가장 빠르고 가장 근본적이다.
+## 회귀 시험
 
-```bash
-python -m pytest tests/architecture -q
+```powershell
+python -m pytest tests/architecture tests/contract tests/security -q
+python -m pytest tests/e2e/test_mcp_server.py tests/e2e/test_mcp_read_tools.py -q
+python -m pytest tests/integration/db/test_migrations_rerun.py -q
 ```
 
-```bash
-python -m pytest tests/contract -q
-```
+DB·외부 서비스가 필요한 시험은 전제 조건을 확인합니다. 건너뜀은 통과가 아닙니다. 전체 제품 시험이 필요하면 `python -m pytest -q`를 실행하고 live 시험 포함 여부를 기록합니다.
 
-```bash
-python -m pytest tests/security -q
-```
+## 여행 자료·관문
 
-```bash
-python -m pytest -q
-```
-
-`[실측]` 2026-08-30 기준 **406 passed** (`-m "not live"`) · skipped 0 · failed 0
-
-live 마크는 별도로 돌린다.
-
-```bash
-python -m pytest -m live -q
-```
-
-## DoD 검증
-
-```bash
+```powershell
+python -m scripts.check_corpus
+python -m pytest tests/unit/eval/test_travel_classification_eval.py tests/integration/rag/test_travel_corpus_retrieval.py -q
 python -m scripts.verify_dod_v11
 ```
 
-DoD 항목과 evidence 파일 존재를 검사한다.
+여행 분류 재생은 [현재 replay 구현](../../eval/travel_classification/replay.py)을 사용합니다. 실제 모델 호출·비용이 발생하므로 데이터·반복·출력 위치를 정한 뒤 실행합니다. 과거 `eval.runners.proposed`·`golden.jsonl`·`seed_demo_cases`는 현재 실행 안내에서 사용하지 않습니다.
 
-## 코퍼스 게이트
+## SQL·지속 실행
 
-```bash
-python -m scripts.check_corpus
-```
+SQL 입력·역사 보존·보류 파일은 [SQL 적용 안내](../data/migrations.md)가 소유합니다. 문서 정리로 기존 DB를 삭제하거나 적용 완료로 표시하지 않습니다. 장기 실행의 프로세스·환경별 상태는 [지속 운영 안내](always-on.md)에서 확인합니다.
 
-**건수만 세지 않는다.** 중복률·제목 점유율·조사 오류를 함께 본다. → [../context/rag-retrieval.md](../context/rag-retrieval.md)
+## 과거 기록
 
-## 평가
-
-```bash
-python -m eval.runners.proposed --dataset eval/datasets/golden.jsonl --repeats 3 --seed 7
-```
-
-```bash
-python -m eval.stats.bootstrap --input eval/reports/raw.jsonl --n 10000
-```
-
-```bash
-python -m eval.stats.mcnemar --input eval/reports/pairs.jsonl
-```
-
-**결과 파일의 도메인을 확인한다.** `case_id`가 `g-billing-*`이면 옛 도메인이라 무효다. → [../quality/eval-harness.md](../quality/eval-harness.md)
-
-## 시연 데이터
-
-```bash
-python -m scripts.seed_demo_cases   # ★[2026-09-10] 작업 트리에서 삭제됨(git 에만 있다). 여행 시드는 미추적 scripts/seed_travel.py
-```
-
-`[실측]` 재실행이 안전하다. `case_id`가 `uuid5`로 고정돼 있고 `cases_in_tenant`가 불변이다.
-
-시나리오 2종이 만들어진다.
-
-| 시나리오 | 결과 |
-|---|---|
-| cust_01 / ORD-0101 배송완료 미수령 | `waiting_approval`에서 멈춤 |
-| cust_02 / ORD-0201 교환 기한 문의 | `resolved` 종단 |
-
-**하드코딩 UUID가 없다.** `scripts.seed`가 만든 실제 주문·배송 행을 조회해 근거로 쓴다. ★`[실측 2026-09-10 작업 트리]` `seed.py`·`seed_demo_cases.py` 는 **작업 트리에서 지워졌고 git 에만 남아 있다.** 여행 시드 `seed_travel.py` 가 작업 트리에 있고 **미추적**이다 — 이 절의 쇼핑몰 시나리오 둘은 지금 그대로 돌릴 수 없다.
-
-## 개발 서버
-
-`.claude/launch.json`의 `acop-ui` (포트 8041, `--reload`)
-
-`[실측]` **모듈 선언(`config/project.yaml`)을 바꿨을 땐 `--reload`를 믿지 말고 프로세스를 다시 띄운다.** 모듈 조립은 기동 때 한 번만 일어나고, reload 자식 프로세스가 남아 **옛 코드를 서빙한 적이 있다.** 토글 검증 때는 그래서 `--reload` 없이 8042로 따로 띄웠다. → [MODULE-TOGGLES 검증 로그](../records/evidence/MODULE-TOGGLES_실효화_검증.md) §4
-
-## 멈춘 Case 되잡기
-
-```bash
-python -m scripts.run_sweepers --interval 60
-```
-
-`classifying`·`routing`에 임계값(300초·600초) 넘게 남은 Case를 다시 처리한다. 출력의 `errored`가 0이 아니면 사람이 본다. 임계값·주기의 뜻은 [../quality/guardrails.md](../quality/guardrails.md).
-
-`[2026-09-18]` 같은 실행이 여행도 돈다 — 순서대로:
-
-| 이름 | 하는 일 |
-|---|---|
-| `trip_cases` | ★기본 감시. 곧 시작할 일정 항목을 점검하고 깨졌으면 **시스템 Case** 를 열어 Team 이 고친다(Case 버전) |
-| `trip_dawn` | `[2026-09-25]` 새벽 식당 영업 확인 — 03:00~08:00 창에서만 그날 식사 일정이 계획한 시각에 여는지 구글 장소로 본다. 항목·날짜마다 한 번. 키(`ACOP_GOOGLE_MAPS_API_KEY`)가 없으면 `disabled`. 값은 가드레일 `travel.dawn_check.*` (D-020) |
-| `trip_reminders` | 일정 안내 — `[2026-09-24]` 하루 시작(없으면 08:00) → 다음 일정(각 일정 시작) → 이동(**이동 항목이 시작하는 그 시각**). 전날 안내는 껐다. Case 를 안 만든다. 값은 가드레일 `travel.reminders.*` |
-| `trip_places` | `[2026-09-28]` 끝난 여행의 **전용 장소 행**(029) 정리 — 마지막 일정이 끝나고 `travel.trip_place_retention_hours`(24) 지나면 좌표·외부 식별자를 비운다(이름은 남긴다). 약관(관광공사 로컬 저장 · 카카오 운영정책 제5조). `app/domains/travel_ops/components/itinerary/trip_places.py` |
-| `trip` | 시나리오용 여행 버전의 감시. `--only trip` 으로만 돈다 — `trip_cases` 와 함께 돌리지 않는다 |
-
-`fatal`(경로·점검 소스가 대체까지 실패)이 0 이 아니면 `--once` 는 exit 1 이다.
-
-★`[2026-09-22]` **이것을 손으로 띄우지 않고 상시로 돌리는 배치**와 살아 있는지 보는 점검(`python -m scripts.ops.healthcheck`)은 → [always-on.md](always-on.md)
-
-화면 4개.
-
-```
-/ui/cases  /ui/approvals  /ui/voc  /ui/trace
-```
-
-## ★ 백엔드 통과만으로 완료라고 하지 않는다
-
-`[실측]` 이 프로젝트의 규칙이다.
-
-> UI가 있으면 매 단계 **실제로 열어서** 확인한다.
-
-**테스트만으로는 안 잡힌 결함이 실제로 두 건 있었다.**
-
-| 결함 | 어떻게 찾았나 |
-|---|---|
-| 승인이 409로 막힘 | 브라우저에서 승인 버튼을 눌러 봄 |
-| 감사 기록이 대기 큐에 유령으로 남음 | 동 |
+[수정 전 문서](../records/commerce_2026-10-11/wiki--operations--run.md)는 당시 기록입니다. 현재 여행 제품의 사양·평가·시연·완료 증거로 사용하지 않습니다. 원문 바이트는 같은 폴더의 백업에도 보존했습니다.
 
 ## 관계
 
-- [local-setup.md](local-setup.md) — 준비
-- [troubleshooting.md](troubleshooting.md) — 막히면
-- [../quality/eval-harness.md](../quality/eval-harness.md) — 평가 상세
-- [../quality/test-map.md](../quality/test-map.md) — 테스트 위치
+- [여행 사양 허브](../../../wiki/index.md) — 현재 정본을 찾는 입구
+
+
+## 이전 절 링크
+
+<a id="실행"></a>
+<a id="테스트"></a>
+<a id="dod-검증"></a>
+<a id="코퍼스-게이트"></a>
+<a id="평가"></a>
+<a id="시연-데이터"></a>
+<a id="개발-서버"></a>
+<a id="멈춘-case-되잡기"></a>
+<a id="-백엔드-통과만으로-완료라고-하지-않는다"></a>
+<a id="관계"></a>

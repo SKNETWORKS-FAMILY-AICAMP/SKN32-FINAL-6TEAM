@@ -1,0 +1,42 @@
+
+[WebServer] (node:12688) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:19988) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+
+[WebServer] (node:14656) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:24460) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 22 tests using 1 worker
+
+
+(node:23572) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/22] tests\live\aligned-map-quiet-cards-20261010.spec.ts:35:3 › 메뉴 정렬·고정 거리 글자·화살표만 전환 375px
+[2/22] tests\live\aligned-map-quiet-cards-20261010.spec.ts:73:3 › 일반 카드 무테·선택과 상태 테두리·잠금 재클릭 375px
+[3/22] tests\live\aligned-map-quiet-cards-20261010.spec.ts:94:3 › 밀린 지도 마커는 실제 좌표 방향으로 모서리와 선을 연결 375px
+[4/22] tests\live\aligned-map-quiet-cards-20261010.spec.ts:35:3 › 메뉴 정렬·고정 거리 글자·화살표만 전환 1280px
+[5/22] tests\live\aligned-map-quiet-cards-20261010.spec.ts:73:3 › 일반 카드 무테·선택과 상태 테두리·잠금 재클릭 1280px
+[6/22] tests\live\aligned-map-quiet-cards-20261010.spec.ts:94:3 › 밀린 지도 마커는 실제 좌표 방향으로 모서리와 선을 연결 1280px
+[7/22] tests\live\date-divider-motion-20261010.spec.ts:33:3 › 날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 375px
+[8/22] tests\live\date-divider-motion-20261010.spec.ts:33:3 › 날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 1280px
+[9/22] tests\live\edge-order-date-add-ideas-20261010.spec.ts:20:3 › 좌우 순서·검정 번호·조작 중 거리 숨김 375px
+[10/22] tests\live\edge-order-date-add-ideas-20261010.spec.ts:20:3 › 좌우 순서·검정 번호·조작 중 거리 숨김 1280px
+[11/22] tests\live\in-map-pins-fade-20261010.spec.ts:45:3 › 지도 안 밀집 마커는 개별 표시·점선 연결·밖으로 나갈 때만 칩 375px
+[12/22] tests\live\in-map-pins-fade-20261010.spec.ts:82:3 › 상단 내용 페이드와 날짜·손잡이·최소 접힘 유지 375px
+[13/22] tests\live\in-map-pins-fade-20261010.spec.ts:45:3 › 지도 안 밀집 마커는 개별 표시·점선 연결·밖으로 나갈 때만 칩 1280px
+[14/22] tests\live\in-map-pins-fade-20261010.spec.ts:82:3 › 상단 내용 페이드와 날짜·손잡이·최소 접힘 유지 1280px
+[15/22] tests\live\stack-date-end-insert-20261011.spec.ts:19:3 › 스택 아이콘 안 실제 개수·좌우 순서·지도 이동 중 개수 유지 375px
+[16/22] tests\live\stack-date-end-insert-20261011.spec.ts:53:3 › 일반 카드 무테와 선택·검토·수정 상태 테두리 375px
+[17/22] tests\live\stack-date-end-insert-20261011.spec.ts:70:3 › 날짜 여백·최상단 유지·스크롤 숨김·최상단 즉시 복귀 375px
+[18/22] tests\live\stack-date-end-insert-20261011.spec.ts:102:3 › 목록 끝은 마지막 일정 뒤 추가·종료 시각 초안·저장 375px
+[19/22] tests\live\stack-date-end-insert-20261011.spec.ts:19:3 › 스택 아이콘 안 실제 개수·좌우 순서·지도 이동 중 개수 유지 1280px
+[20/22] tests\live\stack-date-end-insert-20261011.spec.ts:53:3 › 일반 카드 무테와 선택·검토·수정 상태 테두리 1280px
+[21/22] tests\live\stack-date-end-insert-20261011.spec.ts:70:3 › 날짜 여백·최상단 유지·스크롤 숨김·최상단 즉시 복귀 1280px
+[22/22] tests\live\stack-date-end-insert-20261011.spec.ts:102:3 › 목록 끝은 마지막 일정 뒤 추가·종료 시각 초안·저장 1280px
+  22 passed (2.1m)

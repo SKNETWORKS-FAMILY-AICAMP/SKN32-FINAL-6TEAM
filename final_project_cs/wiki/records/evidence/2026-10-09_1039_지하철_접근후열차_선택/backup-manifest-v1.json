@@ -1,0 +1,30 @@
+{
+  "created_at": "2026-10-09T10:52:35.795886+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/app/domains/travel_ops/ports/data_sources/seoul_subway.py",
+      "backup": "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_1039_지하철_접근후열차_선택/seoul_subway.py",
+      "sha256": "aa4821d856c511e47eb81a92769983ef032a05d6d07db9bbf3d33c25867307ff"
+    },
+    {
+      "source": "final_project_cs/tests/unit/travel/test_subway_boardable_v1.py",
+      "backup": "final_project_cs/tests/unit/travel/_backup/2026-10-09_1039_지하철_접근후열차_선택_입력경계보강/test_subway_boardable_v1.py",
+      "sha256": "7c964965d4689dbd252ff475d1e99c06d8f7a2f9223fa5f8effa4ae218a5ebae"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/ports/data_sources/subway_boarding.py",
+      "backup": "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_1039_지하철_접근후열차_선택_입력경계보강/subway_boarding.py",
+      "sha256": "e64aa913134f5f9f3fc7428655941eb7c4d79b14c444fd065304121f5b23a1c2"
+    },
+    {
+      "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1039_지하철_접근후열차_선택.md",
+      "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_1052_열차선택_검증종료/2026-10-09_1039_지하철_접근후열차_선택.md",
+      "sha256": "899e68bf54263ba4f7f79318a01cdc0adc444d196e1c39b957ef147da49ec12c"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_1052_열차선택_결과기록/mobility.md",
+      "sha256": "620475aa00199cef01041608f56b6bc16fc77f99d71617a0c89de08c0d4bcf42"
+    }
+  ]
+}

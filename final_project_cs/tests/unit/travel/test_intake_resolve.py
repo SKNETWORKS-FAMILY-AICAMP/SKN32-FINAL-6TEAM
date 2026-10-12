@@ -7,7 +7,8 @@
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components.intake.dates import resolve_dates
 from app.domains.travel_ops.components.intake.llm_spans import label_lines
@@ -86,6 +87,19 @@ def test_a_time_comes_from_rereading_the_quote_not_from_the_model():
     assert claims[0].method == "llm_span" and lines[0][claims[0].span.start:claims[0].span.end] == "오후 3시 반"
 
 
+def test_relative_now_uses_the_intake_timestamp_for_time_and_date():
+    anchor = datetime(2026, 10, 12, 11, 7, tzinfo=ZoneInfo("Asia/Seoul"))
+    lines = ["남부터미널 지금 당장 갈거야"]
+    claims, items, _ = label_lines(lines, [1], Chat([
+        {"line": 1, "quote": "남부터미널", "role": "place"},
+        {"line": 1, "quote": "지금 당장", "role": "time"},
+    ]), now=anchor)
+    assert items[0].start == "11:07"
+    assert claims[0].value == "11:07" and claims[0].note == "접수 시각 기준 현재 시각"
+    dated, ask = resolve_dates([{"day": None, "date": items[0].date, "line": 1}], today=anchor.date(), lines=lines)
+    assert dated[0].value == "2026-10-12" and not ask
+
+
 def test_a_plan_request_is_flagged():
     _, items, report = label_lines(["서울 3일 일정 짜 줘"], [1], Chat([{"line": 1, "quote": "일정 짜 줘",
                                                                    "role": "plan_request"}]))
@@ -113,7 +127,7 @@ class Kakao:
     def __init__(self, hits, around=None):
         self.hits, self.around, self.asked, self.near_asked = hits, around or {}, [], []
 
-    def search(self, query, size=5, near=None):
+    def search(self, query, size=5, near=None, **kw):
         if near is not None:                       # 앞뒤 일정 근처 거리순 재검색
             self.near_asked.append((query, near))
             return self.around.get(query, [])
@@ -212,7 +226,7 @@ def test_kakao_that_could_not_be_called_is_named():
     class Down(Kakao):
         misses = {"budget_exhausted": 1}
 
-        def search(self, query, size=5):
+        def search(self, query, size=5, **kw):
             return None
 
     found = resolve("을지로 노가리골목", our_places=[], tour=Tour({}), kakao=Down({}))

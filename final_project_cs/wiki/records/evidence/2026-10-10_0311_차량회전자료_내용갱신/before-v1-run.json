@@ -1,0 +1,9 @@
+{
+  "command": "python -m pytest tests/unit/travel/mobility/test_turn_policy_content_reload_v1.py -q -p no:cacheprovider --basetemp=../.tmp/mobility_complete_20261008/turn_reload_before_v1 --junitxml=wiki/records/evidence/2026-10-10_0311_차량회전자료_내용갱신/before-v1.xml",
+  "cwd": "final_project_cs",
+  "failed": 4,
+  "passed": 1,
+  "total": 5,
+  "evidence": "before-v1.xml",
+  "full_console_log_saved": false
+}

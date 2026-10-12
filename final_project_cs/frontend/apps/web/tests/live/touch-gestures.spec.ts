@@ -56,43 +56,40 @@ test("진짜 터치: 위아래로 끌면 목록이 스크롤될 뿐 날은 안 �
   await expect.poll(() => sheetBody(page).evaluate((element) => element.scrollTop), { timeout: 3000 }).toBeGreaterThan(before);   // 목록이 스크롤됐다(브라우저가 세로 이동을 가져갔다)
 });
 
-test("진짜 터치: 두 손가락을 오므리면 끝까지 오므린 뒤 전체 일정으로, 벌리면 하루 보기로 돌아온다", async ({ page, request }) => {
+test("진짜 터치: 두 손가락 확대·축소는 브라우저 배율에 적용되고 목록 크기와 날짜는 유지된다", async ({ page, request }) => {
   await openFinished(page, request, withDays);
   const cdp = await page.context().newCDPSession(page);
   const box = (await sheetBody(page).boundingBox())!;
   const cx = box.x + box.width / 2, cy = box.y + 120;
-  await touch(cdp, "touchStart", [{ x: cx - 60, y: cy, id: 1 }, { x: cx + 60, y: cy, id: 2 }]);       // 오므린다: 120px → 20px
-  for (let step = 1; step <= 10; step += 1) {
-    const half = 60 - (40 * step) / 10;
-    await touch(cdp, "touchMove", [{ x: cx - half, y: cy, id: 1 }, { x: cx + half, y: cy, id: 2 }], 25);
-  }
-  await touch(cdp, "touchEnd", [], 80);
-  await expect(page.getByRole("tab", { name: "전체" })).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByRole("article", { name: "N서울타워", exact: true })).toBeVisible();            // 두 날이 이어진 개요
-  await touch(cdp, "touchStart", [{ x: cx - 10, y: cy, id: 1 }, { x: cx + 10, y: cy, id: 2 }]);       // 벌린다: 20px → 280px
-  for (let step = 1; step <= 10; step += 1) {
-    const half = 10 + (130 * step) / 10;
-    await touch(cdp, "touchMove", [{ x: cx - half, y: cy, id: 1 }, { x: cx + half, y: cy, id: 2 }], 25);
-  }
-  await touch(cdp, "touchEnd", [], 80);
+  const scale = () => page.evaluate(() => window.visualViewport!.scale);
+  const initial = await scale();
+  const pinch = async (from: number, to: number) => {
+    await touch(cdp, "touchStart", [{ x: cx - from, y: cy, id: 1 }, { x: cx + from, y: cy, id: 2 }]);
+    for (let i = 1; i <= 12; i++) {
+      const half = from + (to - from) * i / 12;
+      await touch(cdp, "touchMove", [{ x: cx - half, y: cy, id: 1 }, { x: cx + half, y: cy, id: 2 }], 25);
+    }
+    await touch(cdp, "touchEnd", [], 80);
+  };
+  await pinch(20, 90);
+  await expect.poll(scale).toBeGreaterThan(initial);
+  const enlarged = await scale();
+  await pinch(90, 20);
+  await expect.poll(scale).toBeLessThan(enlarged);
+  expect(await page.locator("div[class*=dayZoom]").evaluate((el) => Number(getComputedStyle(el).zoom))).toBe(1);
   await expect(tab(page, /^1일차/)).toHaveAttribute("aria-selected", "true");
 });
 
-test("진짜 터치: 오므려 전체 일정이 된 뒤에도 옆으로 쓸면 보고 있던 날의 하루 보기로 돌아가고, 그다음 쓸기로 날이 바뀐다", async ({ page, request }) => {
-  // `[2026-10-07 사용자 지적 — 확대 · 축소를 하다 보면 좌우로 넘기기가 막힌다]` 줄인 상태에서 조금 더 오므리면 전체 일정 보기가 되는데, 거기서는 옆으로 쓸어도 아무 일도 없었다.
+test("진짜 터치: 전체 일정에서도 옆으로 쓸면 하루 보기로 돌아가고 다음 쓸기로 날이 바뀐다", async ({ page, request }) => {
   await openFinished(page, request, withDays);
+  await page.getByRole("tab", { name: "전체", exact: true }).click();
   const cdp = await page.context().newCDPSession(page);
   const box = (await sheetBody(page).boundingBox())!;
-  const cx = box.x + box.width / 2, cy = box.y + 120;
-  await touch(cdp, "touchStart", [{ x: cx - 60, y: cy, id: 1 }, { x: cx + 60, y: cy, id: 2 }]);
-  for (let step = 1; step <= 10; step += 1) { const half = 60 - (40 * step) / 10; await touch(cdp, "touchMove", [{ x: cx - half, y: cy, id: 1 }, { x: cx + half, y: cy, id: 2 }], 25); }
-  await touch(cdp, "touchEnd", [], 80);
-  await expect(page.getByRole("tab", { name: "전체" })).toHaveAttribute("aria-selected", "true");
-  const y = box.y + 110;                                                                            // 떠 있는 날짜 줄(위 64px) 아래의 목록에서 쓴다
+  const y = box.y + 110;
   await drag(cdp, [box.x + box.width - 30, y], [box.x + 40, y + 6]);
-  await expect(tab(page, /^1일차/)).toHaveAttribute("aria-selected", "true");                        // 맨 위에 보이던 날(1일차)의 하루 보기
+  await expect(tab(page, /^1일차/)).toHaveAttribute("aria-selected", "true");
   await drag(cdp, [box.x + box.width - 30, y], [box.x + 40, y + 6]);
-  await expect(tab(page, /^2일차/)).toHaveAttribute("aria-selected", "true");                        // 다시 평소처럼 넘어간다
+  await expect(tab(page, /^2일차/)).toHaveAttribute("aria-selected", "true");
 });
 
 test("진짜 터치: 수정 · 삭제는 평소엔 숨어 있고, 목록을 스크롤하면 가운데에 가까운 일정 하나에만 4초 동안 보인다", async ({ page, request }) => {

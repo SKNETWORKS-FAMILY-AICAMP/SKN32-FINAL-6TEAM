@@ -29,7 +29,7 @@ def make_project(root: Path) -> Path:
 SAMPLE_CONFIG = {
     "modules": {"vector_rag": {"enabled": True}, "a2a_executor": {"enabled": False}},
     "ports": {"team_executor": "local"},
-    "teams": [{"team_id": "billing", "active": True, "implementation_ref": "app.x:Billing"}],
+    "teams": [{"team_id": "activity", "active": True, "implementation_ref": "app.x:Activity"}],
 }
 
 
@@ -56,7 +56,7 @@ def test_composer_screen_shows_modules_ports_teams_and_revision(tmp_path, monkey
     assert "name='module_vector_rag' checked" in body
     assert "name='module_a2a_executor' " in body and "name='module_a2a_executor' checked" not in body
     assert "name='port_team_executor' value='local'" in body
-    assert "value='billing'" in body and "value='app.x:Billing'" in body
+    assert "value='activity'" in body and "value='app.x:Activity'" in body
 
 
 def test_validate_builds_the_config_from_checked_modules_not_from_raw_json(tmp_path, monkeypatch):
@@ -80,13 +80,13 @@ def test_validate_builds_the_config_from_checked_modules_not_from_raw_json(tmp_p
         "module_vector_rag": "on",  # 체크됨 유지
         # module_a2a_executor 는 안 보냄 = 체크 해제
         "port_team_executor": "a2a",  # 값을 바꿔서 제출
-        "team_id_0": "billing", "implementation_ref_0": "app.x:Billing", "active_0": "on",
+        "team_id_0": "activity", "implementation_ref_0": "app.x:Activity", "active_0": "on",
     })
     assert response.status_code == 200
     assert calls == [{
         "modules": {"vector_rag": {"enabled": True}, "a2a_executor": {"enabled": False}},
         "ports": {"team_executor": "a2a"},
-        "teams": [{"team_id": "billing", "active": True, "implementation_ref": "app.x:Billing"}],
+        "teams": [{"team_id": "activity", "active": True, "implementation_ref": "app.x:Activity"}],
     }]
     assert "검증 통과" in response.text
 
@@ -102,7 +102,7 @@ def test_add_team_appends_a_blank_row_without_calling_the_target(tmp_path, monke
 
     response = TestClient(create_app()).post("/composer", data={
         "csrf_token": _CSRF_TOKEN, "path": str(project), "add_team": "1",
-        "team_id_0": "billing", "implementation_ref_0": "app.x:Billing", "active_0": "on",
+        "team_id_0": "activity", "implementation_ref_0": "app.x:Activity", "active_0": "on",
     })
     assert response.status_code == 200
     assert calls == []  # ★대상에 요청조차 안 나갔다 — 화면만 다시 그린다
@@ -119,11 +119,11 @@ def test_remove_team_drops_the_row_without_calling_the_target(tmp_path, monkeypa
 
     response = TestClient(create_app()).post("/composer", data={
         "csrf_token": _CSRF_TOKEN, "path": str(project), "remove_team": "0",
-        "team_id_0": "billing", "implementation_ref_0": "app.x:Billing", "active_0": "on",
+        "team_id_0": "activity", "implementation_ref_0": "app.x:Activity", "active_0": "on",
     })
     assert response.status_code == 200
     assert calls == []
-    assert "value='billing'" not in response.text
+    assert "value='activity'" not in response.text
 
 
 def test_apply_without_a_reason_is_refused_before_calling_the_target(tmp_path, monkeypatch):
@@ -198,7 +198,7 @@ def test_structure_diagram_explains_component_module_instance_and_teams_are_inst
     body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
 
     assert "고정</b> = 컴포넌트" in body and "모듈</b> = 선택" in body and "인스턴스</b> = 개수가 바뀐다" in body
-    # ★SAMPLE_CONFIG 의 team_id "billing" — 인스턴스 노드로 그려져야 한다
+    # ★SAMPLE_CONFIG 의 team_id "activity" — 인스턴스 노드로 그려져야 한다
     assert "node--instance" in body
     assert "class='node node--module" in body  # vector_rag 같은 모듈도 여전히 그려진다
     assert "class='node node--component" in body  # REST API 같은 고정 컴포넌트도 그려진다
@@ -252,11 +252,11 @@ def test_a_non_numeric_remove_team_does_not_crash(tmp_path, monkeypatch):
     for bad in ("abc", "", "1.5", "９９"):
         response = client.post("/composer", data={
             "csrf_token": _CSRF_TOKEN, "path": str(project), "remove_team": bad,
-            "team_id_0": "billing", "implementation_ref_0": "app.x:Billing", "active_0": "on",
+            "team_id_0": "activity", "implementation_ref_0": "app.x:Activity", "active_0": "on",
         })
         assert response.status_code == 200, f"remove_team={bad!r} 에서 죽었다"
         # ★숫자가 아니면 아무 행도 지우지 않는다
-        assert "value='billing'" in response.text
+        assert "value='activity'" in response.text
 
 
 def test_unconnected_composer_screen_says_how_to_connect(tmp_path, monkeypatch):
@@ -638,7 +638,7 @@ def test_change_without_a_reason_is_refused(tmp_path, monkeypatch):
     project = make_project(tmp_path)
     body = TestClient(create_app()).post("/composer/instance", data={
         "csrf_token": _CSRF_TOKEN, "path": str(project), "operation": "delete",
-        "resource_type": "team", "instance_id": "billing", "base_revision": "rev-1",
+        "resource_type": "team", "instance_id": "activity", "base_revision": "rev-1",
         "reason": "  "}).text
 
     assert "사유" in body
@@ -652,7 +652,7 @@ def test_instance_route_requires_the_csrf_token(tmp_path, monkeypatch):
     project = make_project(tmp_path)
     response = TestClient(create_app()).post("/composer/instance", data={
         "path": str(project), "operation": "delete", "resource_type": "team",
-        "instance_id": "billing", "base_revision": "rev-1", "reason": "확인"})
+        "instance_id": "activity", "base_revision": "rev-1", "reason": "확인"})
 
     # ★거부는 4xx 가 아니라 **안내 페이지**다(`_csrf_denied`) — 이 저장소의
     #   기존 관례를 그대로 따른다. 중요한 것은 대상을 부르지 않았다는 사실이다.
@@ -729,7 +729,7 @@ def test_the_selected_mode_reaches_the_client(tmp_path, monkeypatch):
 
     TestClient(create_app()).post("/composer/instance", data={
         "csrf_token": _CSRF_TOKEN, "path": str(project), "operation": "delete",
-        "resource_type": "team", "instance_id": "billing", "base_revision": "rev-1",
+        "resource_type": "team", "instance_id": "activity", "base_revision": "rev-1",
         "reason": "방식 전달 확인"})
 
     assert seen["deployment_id"] == "customer-42"

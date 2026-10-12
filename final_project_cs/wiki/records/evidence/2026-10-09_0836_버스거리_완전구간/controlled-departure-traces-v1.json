@@ -1,0 +1,79 @@
+{
+  "traces": [
+    {
+      "mode": "distance",
+      "before": {
+        "status": "realtime",
+        "reason": "예정 10:09 +@10분(최악 10:09 + 버퍼 10분) · 여유 39분",
+        "departure_at": "2026-10-09T10:00:00+09:00",
+        "eta_min": 11,
+        "leg_results": [
+          {
+            "idx": 0,
+            "verdict": "feasible",
+            "depart_min": 607,
+            "arrive_min": 609,
+            "wait_min": 1,
+            "ride_min": 2.0,
+            "ride_src": "speed"
+          }
+        ]
+      },
+      "after": {
+        "status": "fatal",
+        "reason": "no_data",
+        "departure_at": null,
+        "eta_min": null,
+        "leg_results": [
+          {
+            "idx": 0,
+            "verdict": "feasible",
+            "depart_min": 607,
+            "arrive_min": null,
+            "wait_min": 1,
+            "ride_min": null,
+            "ride_src": null
+          }
+        ]
+      }
+    },
+    {
+      "mode": "profile",
+      "before": {
+        "status": "realtime",
+        "reason": "예정 10:09 +@10분(최악 10:09 + 버퍼 10분) · 여유 39분",
+        "departure_at": "2026-10-09T10:00:00+09:00",
+        "eta_min": 11,
+        "leg_results": [
+          {
+            "idx": 0,
+            "verdict": "feasible",
+            "depart_min": 607,
+            "arrive_min": 609,
+            "wait_min": 1,
+            "ride_min": 2.0,
+            "ride_src": "profile_partial"
+          }
+        ]
+      },
+      "after": {
+        "status": "fatal",
+        "reason": "no_data",
+        "departure_at": null,
+        "eta_min": null,
+        "leg_results": [
+          {
+            "idx": 0,
+            "verdict": "feasible",
+            "depart_min": 607,
+            "arrive_min": null,
+            "wait_min": 1,
+            "ride_min": null,
+            "ride_src": null
+          }
+        ]
+      }
+    }
+  ],
+  "scope": "synthetic missing seq6, not actual missing source data or passenger observation"
+}

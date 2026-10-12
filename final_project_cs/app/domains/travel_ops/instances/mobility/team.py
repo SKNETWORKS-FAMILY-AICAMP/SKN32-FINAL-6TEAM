@@ -14,7 +14,8 @@ from typing import Any
 from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
 
 from app.domains.travel_ops.instances._shared._base import TravelTeamBase
-from app.domains.travel_ops.components.itinerary.itinerary_changes import (NoChange, next_after, place_before, plan_route_adjustment, route_of,
+from app.domains.travel_ops.components.itinerary.itinerary_changes import (DepartureReplanUnavailable,
+                                NoChange, next_after, place_before, plan_departure_adjustment, plan_route_adjustment, route_of,
                                 route_targets)
 from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TOOLS, ItineraryWork
 
@@ -150,7 +151,27 @@ class MobilityTeam(ItineraryWork, TravelTeamBase):
 def plan_mobility_trigger(work: ItineraryWork, task: TeamTask, ctx: dict[str, Any], item: Any):
     """감시 — 이동 항목 하나의 구간 사건을 **다시 읽고** 경로를 다시 고를 안을 계산한다(쓰지 않는다). 결과: 변경 · `NoChange` · `TeamResult`(여기서 멈춤).
     ★`[2026-10-03]` `MobilityTeam.handle_trigger` 에서 떼어 냈다 — 같은 여행의 문제 묶음(`trip_watch_batch`)이 한 초안 위에서 항목마다 부른다."""
+    trigger = task.context.current_state.get("trigger") or {}
+    member = next((entry for entry in trigger.get("batch", [])
+                   if str(entry.get("item_id")) == str(item.item_id)), trigger)
+    departure = "departure_revalidation" in (member.get("categories") or [])
     route = route_of(item) if item.kind == "mobility" else None
+    if departure and item.kind == "mobility":
+        now = max(ctx["at"], work._moment(None))  # queued Case는 감지 시각을 현재 시각으로 재사용하지 않는다.
+        targets = route_targets(route) if route else []
+        events = {}
+        if targets:
+            view = work._read(task, "read.route_events", {"targets": targets}, ctx["seen"])
+            ctx["evidence"] = work._evidence(task, source_id="read.route_events", claim="재탐색 전 현재 구간 사건",
+                                            value=view, base=ctx["evidence"])
+            if view is None or view.get("events") is None:
+                return work._escalate(task, "fatal_source_failure", ctx["evidence"])
+            events = view["events"]
+        try:
+            return plan_departure_adjustment(item=item, previous=place_before(ctx["items"], item),
+                following=next_after(ctx["items"], item), now=now, events=events, trip=ctx["trip"])
+        except DepartureReplanUnavailable as exc:
+            return work._escalate(task, "fatal_source_failure", ctx["evidence"], warnings=[str(exc)])
     if route is None:
         return work._unknown(task, "경로 정의", ctx["evidence"])
     view = work._read(task, "read.route_events", {"targets": route_targets(route)}, ctx["seen"])

@@ -1,0 +1,38 @@
+▲ Next.js 16.3.5 (webpack)
+✓ Running next.config.ts took 393ms
+- Experiments (use with caution):
+  · cpus: 1
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 69s
+  Running TypeScript ...
+  Finished TypeScript in 20.5s ...
+  Collecting page data using 1 worker ...
+  Generating static pages using 1 worker (0/11) ...
+  Generating static pages using 1 worker (2/11) 
+  Generating static pages using 1 worker (5/11) 
+  Generating static pages using 1 worker (8/11) 
+✓ Generating static pages using 1 worker (11/11) in 2.4s
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /auth/done
+├ ƒ /intakes/[intakeId]
+├ ○ /intakes/starting
+├ ○ /mypage
+├ ○ /mypage/edit
+├ ƒ /start
+├ ○ /support
+├ ○ /trips
+├ ƒ /trips/[tripId]
+├ ƒ /trips/[tripId]/results
+├ ƒ /trips/[tripId]/verification
+└ ○ /trips/new
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

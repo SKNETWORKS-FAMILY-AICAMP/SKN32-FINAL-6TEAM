@@ -1,0 +1,22 @@
+[WebServer] (node:25648) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:27088) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 11 tests using 1 worker
+
+(node:1656) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 tests\live\location-entry.spec.ts:13:34 › 375px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다 (13.3s)
+  ok  2 tests\live\location-entry.spec.ts:13:34 › 1280px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다 (13.6s)
+  ok  3 tests\live\location-entry.spec.ts:48:1 › 버튼에서 동의하면 위치 점을 그리고 카메라를 그곳으로 이동하며 동의 철회 뒤에는 지운다 (5.2s)
+  ok  4 tests\live\location-permission-entry-20261012.spec.ts:8:1 › 최초 약관에서 고른 위치 동의를 지도까지 이어 받아 다시 동의를 묻지 않는다 (2.4s)
+  ok  5 tests\live\location-permission-entry-20261012.spec.ts:28:41 › trip: 브라우저 권한 미결정 상태이면 지도 진입만으로 위치를 요청하고 앱 동의 창은 반복하지 않는다 (1.3s)
+  ok  6 tests\live\location-permission-entry-20261012.spec.ts:28:41 › check: 브라우저 권한 미결정 상태이면 지도 진입만으로 위치를 요청하고 앱 동의 창은 반복하지 않는다 (4.7s)
+  ok  7 tests\live\my-location.spec.ts:46:1 › 위치 동의가 있으면 여행 지도를 열자마자 「내 위치」가 파란 점과 정확도 원으로 보이고, 점은 누름을 받지 않아 같은 자리의 핀이 그대로 눌린다 (3.6s)
+  ok  8 tests\live\my-location.spec.ts:70:1 › 위치 동의가 없으면 브라우저에 위치를 묻지도, 점을 그리지도, 서버로 보내지도 않고 아무 말도 하지 않는다 (3.5s)
+  ok  9 tests\live\my-location.spec.ts:84:1 › 브라우저 위치 권한이 꺼져 있으면 점 없이 기존 오류 토스트로 알린다 (1.6s)
+  ok 10 tests\live\my-location.spec.ts:93:1 › 이미 거절된 권한이면 다시 묻지 않고(위치 호출 0번) 바로 오류 토스트로 알린다 (1.3s)
+  ok 11 tests\live\my-location.spec.ts:201:1 › 계획 확인 화면의 지도에도 「내 위치」가 보이지만, 여행 번호가 없으니 서버로 보내지도 머문 곳을 묻지도 않는다 (2.3s)
+
+  11 passed (56.4s)

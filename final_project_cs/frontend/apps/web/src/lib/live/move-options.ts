@@ -23,6 +23,7 @@ export interface MoveOption {
   fareKrw: number | null;
   /** A taxi fare is the lowest it can be (shown with 「~」), never the exact one. */
   fareIsFloor: boolean;
+  fareIsEstimate: boolean;
   depart: string | null;
   arrive: string | null;
   /** Minutes left before the next stop starts; negative = late. */
@@ -70,7 +71,8 @@ export function moveOptionsOf(raw: unknown): MoveOptions | null {
     const grade = entry.grade === "확정" || entry.grade === "추정" || entry.grade === "근거없음" ? entry.grade : null;
     return [{
       mode, label: text(entry.label) ?? MODE_WORDS[mode][0], minutes: number(entry.minutes), km: number(entry.km), fareKrw: number(entry.fare_krw),
-      fareIsFloor: entry.fare_is_floor === true, depart: text(entry.depart), arrive: text(entry.arrive), slackMin, fits, whyNot: text(entry.why_not),
+      fareIsFloor: entry.fare_is_floor === true, fareIsEstimate: entry.fare_is_estimate === true,
+      depart: text(entry.depart), arrive: text(entry.arrive), slackMin, fits, whyNot: text(entry.why_not),
       basis: entry.basis === "timetable" || entry.basis === "estimate" ? entry.basis : null, grade,
     }];
   });

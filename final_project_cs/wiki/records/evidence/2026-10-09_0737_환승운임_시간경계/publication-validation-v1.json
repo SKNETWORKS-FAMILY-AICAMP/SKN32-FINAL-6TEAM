@@ -1,0 +1,73 @@
+{
+  "created_at": "2026-10-09T07:43:46.986083+09:00",
+  "source_hash_matches": 209,
+  "backup_hash_matches": 4,
+  "local_links": [
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_0743_통합환승_승차기준_시간경계_검증.md",
+      "target": "final_project_cs/wiki/records/evidence/2026-10-09_0737_환승운임_시간경계"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_0743_통합환승_승차기준_시간경계_검증.md",
+      "target": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_0743_통합환승_승차기준_시간경계_검증.md",
+      "target": "final_project_cs/tests/unit/travel/mobility/test_transfer_fare_clock_v1.py"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_0743_통합환승_승차기준_시간경계_검증.md",
+      "target": "final_project_cs/wiki/teams/mobility.md"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_0743_통합환승_승차기준_시간경계_검증.md",
+      "target": "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v26/mobility-readiness.html"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_0743_통합환승_승차기준_시간경계_검증.md",
+      "target": "final_project_cs/wiki/records/evidence/2026-10-09_0737_환승운임_시간경계/backup-manifest-v1.json"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_0743_통합환승_승차기준_시간경계_검증.md",
+      "target": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0737_환승운임_시간경계/options.py"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_0743_통합환승_승차기준_시간경계_검증.md",
+      "target": "final_project_cs/wiki/teams/_backup/2026-10-09_0737_환승운임_시간경계/mobility.md"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_0743_통합환승_승차기준_시간경계_검증.md",
+      "target": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0743_통합환승_부분해결기록/2026-10-09_0737_통합환승_야간창이_이전하차시각을_사용.md"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_0743_통합환승_승차기준_시간경계_검증.md",
+      "target": "final_project_cs/wiki/teams/_backup/2026-10-09_0743_통합환승_검증결과/mobility.md"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v26/mobility-readiness.html",
+      "target": "final_project_cs/wiki/records/reports/2026-10-09_0743_통합환승_승차기준_시간경계_검증.md"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v26/mobility-readiness.html",
+      "target": "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v25/mobility-readiness.html"
+    }
+  ],
+  "features": 21,
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_0743_통합환승_승차기준_시간경계_검증.md": "37cf5472122e29ccff1a52b8967c9c80e83cfa7b032b5644728d3bc1bb684ece",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v26/mobility-readiness.html": "6b2b185044f76cafef30c71ea2a7891216838db100f931b5a3b56a8e082e5da6",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v26/readiness-catalog.json": "d38db6059b531a01cf7ed8f1e42dd9f26c0009a89f756e28b7f6c9920c57c280",
+    "final_project_cs/wiki/teams/mobility.md": "3e0dd2d00dfb751cac8c1fde5720b31185bcb4f58b2f25a6ef26a2fa919563d8",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0737_환승운임_시간경계/verification-proof-v1.json": "8ef5a7d98f2ee74fea66f355c86211dd8995a1f7aae6ef846204f5b0d3295f7f",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0737_환승운임_시간경계/backup-manifest-v1.json": "6b2219fcb698a2e0adcf669809bbf5c4b723de4c6ceb6383bbf9172b353aa3af"
+  },
+  "browser_render_verified": false,
+  "ip_pattern_scan_scope": [
+    "final_project_cs/wiki/records/reports/2026-10-09_0743_통합환승_승차기준_시간경계_검증.md",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v26/mobility-readiness.html",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v26/readiness-catalog.json",
+    "final_project_cs/wiki/teams/mobility.md",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0737_환승운임_시간경계/verification-proof-v1.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0737_환승운임_시간경계/backup-manifest-v1.json"
+  ]
+}

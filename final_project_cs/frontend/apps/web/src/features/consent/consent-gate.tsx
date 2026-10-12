@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Button } from "@/components/ui";
 import { DeviceFrame } from "@/components/layout/device-frame";
+import { Onboarding } from "@/features/onboarding/onboarding";
 import { CONSENT_REQUIRED_EVENT, SESSION_CHANGED_EVENT } from "@/lib/live/client";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
@@ -86,9 +87,10 @@ export function ConsentGate({ children }: { children: ReactNode }) {
   const title = pathname.startsWith(routes.myPage) ? t("마이페이지", "My page")
     : pathname === routes.newTrip ? t("새 여행", "New trip") : t("나의 여행", "My trips");
   return <>
-    {showPage ? children : <DeviceFrame scroll headerInert>
-      {/* 동의 확인 전에 보호 API를 호출하지 않는다. 기존 화면과 같은 틀·배치를 먼저 보여 준다.
-          ★`[2026-10-12]` 동의가 없으면 여기서 온보딩을 그리지 않는다 — 확인 뒤 `/start?terms=required` 로 보내면서 온보딩이 한 번 더 그려져 열림 애니메이션이 두 번 돌았다. 약관 화면은 `/start` 에서만 그린다. */}
+    {/* ★`[2026-10-12]` 동의 사본이 없으면 확인하는 동안 열린 약관을 먼저 보인다. 확인 뒤 `/start?terms=required` 로 가며 온보딩이 다시 그려질 때
+        열림 애니메이션이 두 번 돌지 않게, 온보딩이 두 번째 그림에서는 애니메이션을 끈다(`onboarding.tsx` 의 `termsShownOnce`). */}
+    {showPage ? children : ready && !agreed && result !== "outdated" ? <Onboarding termsRequired /> : <DeviceFrame scroll headerInert>
+      {/* 동의 확인 전에 보호 API를 호출하지 않는다. 기존 화면과 같은 틀·배치를 먼저 보여 준다. */}
       <main className={styles.waitingPage} aria-busy="true" data-consent-shell>
         <h1>{title}</h1>
         <div className={styles.placeholder} aria-hidden="true" />

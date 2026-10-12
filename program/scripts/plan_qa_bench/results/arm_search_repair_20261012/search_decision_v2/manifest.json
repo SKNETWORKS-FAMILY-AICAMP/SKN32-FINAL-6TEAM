@@ -1,0 +1,6 @@
+{
+  "expected_runtime_sha256": "43a6ccf159ab118450fc45b584547892663fd78e89ec596b00385e29b0d60162",
+  "new_sha256": "4c9adeb311933cdfce35da9b85f7e47823e221141481601a6260971bd7327ef7",
+  "change": "prompt scope only; no trained model or new keyword routing",
+  "cases_frozen_before_apply": true
+}

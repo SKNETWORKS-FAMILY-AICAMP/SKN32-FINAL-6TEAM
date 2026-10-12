@@ -1,0 +1,13 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "ruff",
+    "check",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\datasets\\mobility\\scripts\\_tago_checked.py",
+    "tests/unit/travel/mobility/test_tago_collection_integrity_v1.py"
+  ],
+  "cwd": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs",
+  "exit_code": 1,
+  "finished_at": "2026-10-09T13:59:22.801327+09:00"
+}

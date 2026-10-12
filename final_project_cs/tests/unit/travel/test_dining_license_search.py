@@ -100,7 +100,7 @@ def test_only_open_seoul_food_shops_are_loaded(tmp_path):
 def test_the_intake_lookup_falls_back_to_the_license_table_when_the_ledger_misses(monkeypatch):
     from app.domains.travel_ops.instances.dining import place_lookup
 
-    monkeypatch.setattr(place_lookup, "find_place_by_name", lambda conn, name: None)
+    monkeypatch.setattr(place_lookup, "find_place_by_name", lambda conn, name, near=None: None)
     seen = {}
 
     def fake(conn, name, near=None):

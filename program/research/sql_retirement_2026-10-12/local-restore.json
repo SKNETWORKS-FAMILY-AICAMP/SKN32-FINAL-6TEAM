@@ -1,0 +1,12 @@
+{
+  "temporary_database": "tripilot_retire_check_local_20261012",
+  "restored_old_tables": {
+    "orders": 0,
+    "order_items": 0,
+    "shipments": 0,
+    "returns": 0,
+    "products": 0
+  },
+  "schema_restored": true,
+  "old5_data_restored": true
+}

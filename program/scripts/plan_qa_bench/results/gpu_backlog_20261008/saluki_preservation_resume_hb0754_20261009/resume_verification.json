@@ -1,0 +1,24 @@
+{
+  "partial_prefix": {
+    "bytes": 7196936192,
+    "sha": "25757940a19f3fcd1355828d2319a5163871a6e0eb0b2b5e2b9bfb51a7b1e8f1",
+    "free": 15115063296
+  },
+  "tail": {
+    "path": "/tmp/tripilot-saluki-20261009/preservation_tail_hb0754.bin",
+    "bytes": 701432960,
+    "sha": "a9f075121358b0e77a4a61b4a3cc5c9384272965acb4ad9432f391cdb70288f8",
+    "prefix_sha": "25757940a19f3fcd1355828d2319a5163871a6e0eb0b2b5e2b9bfb51a7b1e8f1"
+  },
+  "result": {
+    "status": "complete_verified_tail_resume",
+    "timestamp": 1791500821.7931511,
+    "expected": 7898369152,
+    "saved": 7898369152,
+    "sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+    "original_failure_preserved": "/root/saluki_original_20261009/_backup/hb0754_before_verified_tail_resume",
+    "new_resume_method": "verified prefix and separate bounded tail SCP; no repeated 7.9GB pipe",
+    "GPU_used": false,
+    "storage": "Existing B root disk; not off-machine durable archive"
+  }
+}

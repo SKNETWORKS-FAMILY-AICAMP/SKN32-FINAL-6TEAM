@@ -1,0 +1,129 @@
+{
+  "observed_at_kst": "2026-10-11T23:36:15.033638+09:00",
+  "issue": "existing afternoon schedule changeability interpreted as new destination proposal",
+  "stages": {
+    "reproduction": "completed_actual_app_failure",
+    "investigation": "completed_local_contract_and_actual_model",
+    "implementation": "completed_local_only",
+    "review": "self_review_only",
+    "measurement": "completed_development_semantic_diagnosis_latency_failed",
+    "independent_holdout": "pending",
+    "oracle_deployment": "not_applied"
+  },
+  "tests": {
+    "unit": {
+      "passed": 48,
+      "total": 48,
+      "raw": "program\\scripts\\plan_qa_bench\\results\\scoped_query_20261011\\unit_v4.xml"
+    },
+    "mock_model_app_local_db": {
+      "passed": 24,
+      "total": 24,
+      "raw": "program\\scripts\\plan_qa_bench\\results\\scoped_query_20261011\\e2e_local.xml"
+    },
+    "contract_security": {
+      "passed": 312,
+      "total": 312,
+      "raw": "program\\scripts\\plan_qa_bench\\results\\scoped_query_20261011\\contract_security_review.xml"
+    },
+    "initial_model": {
+      "passed": 1,
+      "total": 3,
+      "raw": "program\\scripts\\plan_qa_bench\\results\\scoped_query_20261011\\model_trial_answers_v1.jsonl"
+    },
+    "initial_raw_parser_replay": {
+      "passed": 2,
+      "total": 3,
+      "new_model_calls": false,
+      "raw": "program\\scripts\\plan_qa_bench\\results\\scoped_query_20261011\\v1_parser_replay_v2.json"
+    },
+    "model_v2": {
+      "completed": 3,
+      "total": 3,
+      "status": "completed_development_only",
+      "exec_session": 63826,
+      "script": ".tmp/scoped_model_trial_v2_20261011.py",
+      "raw": "program\\scripts\\plan_qa_bench\\results\\scoped_query_20261011\\model_trial_answers_v2.jsonl",
+      "raw_strict_pass": 1,
+      "semantic_scope_passed": 2,
+      "semantic_scope_total": 2,
+      "regression_pending": 0,
+      "local_parser_semantic_passed": 3,
+      "local_parser_semantic_total": 3,
+      "independent_holdout": false
+    },
+    "app_db_scoped_final": {
+      "passed": 1,
+      "total": 1,
+      "raw": "program\\scripts\\plan_qa_bench\\results\\scoped_query_20261011\\e2e_scoped_v4.xml",
+      "repeat_not_independent_model_sample": true
+    }
+  },
+  "failed_or_incomplete_initial_checks": [
+    {
+      "check": "sandbox_e2e",
+      "passed": 3,
+      "errors": 20,
+      "status": "failed_due_local_network_permission"
+    },
+    {
+      "check": "sandbox_contract_security",
+      "observed_failures_min": 3,
+      "observed_errors_min": 4,
+      "total": null,
+      "status": "interrupted_before_completion_environment_restriction"
+    }
+  ],
+  "deployment_gate": [
+    "semantic correct final answer on separate fixed holdout",
+    "ordinary chat/read vs write/booking and pin regression",
+    "actual browser answer before client timeout",
+    "targeted candidate patch against actual runtime hashes"
+  ],
+  "resume": [
+    "V2 completed. Do not rerun it. New local parser snapshots: python .tmp/aggregate_scoped_model_20261011.py v2; preserves original strict verdict.",
+    "Do not deploy on development examples alone; latency and independent holdout remain unresolved.",
+    "Preserve existing remote training/evaluations; do not replace whole trip_messages.py from dirty workspace.",
+    "Prepared but NOT run: .tmp/scoped_model_telemetry_20261011.py. Do not duplicate ongoing v2 calls."
+  ],
+  "report": "final_project_cs/wiki/records/reports/2026-10-11_2320_afternoon-scope-query.md",
+  "backups": [
+    "final_project_cs\\wiki\\external\\rest-endpoints\\_backup\\2026-10-11_232045_afternoon_scope_record\\web-intakes.md",
+    "final_project_cs\\wiki\\_backup\\2026-10-11_232045_afternoon_scope_record\\log.md",
+    "program\\research\\daily_rag_slm\\_backup\\2026-10-11_232045_afternoon_scope_record\\index.md",
+    "program\\research\\daily_rag_slm\\_backup\\2026-10-11_232045_afternoon_scope_record\\2026-10-11.md",
+    "final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\_backup\\2026-10-11_225249_scoped_read\\decision_unit.py",
+    "final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\_backup\\2026-10-11_225249_scoped_read\\trip_messages.py",
+    "final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\_backup\\2026-10-11_225557_query_validation\\decision_unit.py",
+    "final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\_backup\\2026-10-11_225557_query_validation\\schedule_query.py",
+    "final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\_backup\\2026-10-11_230403_duplicate_read_choice\\decision_unit.py",
+    "final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\_backup\\2026-10-11_230423_comment_language\\decision_unit.py",
+    "final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\_backup\\2026-10-11_231235_read_intent_v2\\decision_unit.py",
+    "final_project_cs\\wiki\\records\\reports\\_backup\\2026-10-11_233151_scoped_checkpoint\\2026-10-11_2320_afternoon-scope-query.md",
+    "final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\_backup\\2026-10-11_232235_empty_place_guard\\schedule_query.py",
+    "final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\_backup\\2026-10-11_232632_query_choices_type_guard\\decision_unit.py",
+    "final_project_cs\\tests\\unit\\travel\\_backup\\2026-10-11_225557_query_validation\\test_schedule_query.py",
+    "final_project_cs\\tests\\unit\\travel\\_backup\\2026-10-11_230403_duplicate_read_choice\\test_schedule_query.py",
+    "final_project_cs\\tests\\unit\\travel\\_backup\\2026-10-11_231235_read_intent_v2\\test_schedule_query.py",
+    "final_project_cs\\tests\\unit\\travel\\_backup\\2026-10-11_232235_empty_place_guard\\test_schedule_query.py",
+    "final_project_cs\\tests\\unit\\travel\\_backup\\2026-10-11_232632_query_choices_type_guard\\test_schedule_query.py",
+    "final_project_cs\\wiki\\records\\reports\\_backup\\2026-10-11_233614_scoped_final\\2026-10-11_2320_afternoon-scope-query.md",
+    "program\\research\\daily_rag_slm\\_backup\\2026-10-11_233614_scoped_final\\2026-10-11.md",
+    "program\\research\\daily_rag_slm\\_backup\\2026-10-11_233614_scoped_final\\scoped_query_repair_2026-10-11_v1.json"
+  ],
+  "latency_observation": {
+    "raw_seconds": [
+      325.7418715899694,
+      385.7652658490115,
+      339.0707621520269
+    ],
+    "resident_model": true,
+    "cache_warning": {
+      "prompt_state_mib": 105.349,
+      "cache_limit_mib": 64,
+      "action": "skipped_cache_state"
+    },
+    "latency_attribution_measured": false,
+    "runtime_settings_changed": false
+  }
+}

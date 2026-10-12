@@ -1,0 +1,1804 @@
+{
+  "created_at": "2026-10-12T00:17:47.957710+09:00",
+  "candidate": "2026-10-12_001736_plugin_v9",
+  "runtime_files": 51,
+  "changed_python_files": 49,
+  "declaration_changes": [
+    {
+      "path": "app/application/case_intake.py",
+      "new_declarations": [
+        "create_case_once"
+      ],
+      "changed_declarations": [],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/application/case_service.py",
+      "new_declarations": [
+        "CaseService._validate_resume_hash",
+        "CaseService.validate_customer_input",
+        "ResumeRequestConflict",
+        "ResumeTokenExpired"
+      ],
+      "changed_declarations": [
+        "CaseService",
+        "CaseService.validate_resume"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/application/controller.py",
+      "new_declarations": [
+        "Controller._execute_team_task",
+        "Controller._execution_timeout",
+        "Controller._resume",
+        "Controller.require_team",
+        "Controller.resume_customer_input",
+        "ResumeExpiredError"
+      ],
+      "changed_declarations": [
+        "Controller",
+        "Controller._apply_auto_proposals",
+        "Controller._apply_result",
+        "Controller._capability",
+        "Controller._event_for_result",
+        "Controller._maybe_review",
+        "Controller._task",
+        "Controller.resume",
+        "Controller.run_case"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/application/runtime.py",
+      "new_declarations": [
+        "RuntimeComposition.pin",
+        "RuntimeComposition.published_snapshot",
+        "RuntimeComposition.serialize_reload",
+        "RuntimeComposition.snapshot",
+        "RuntimeSnapshot"
+      ],
+      "changed_declarations": [
+        "RuntimeComposition",
+        "RuntimeComposition.__init__",
+        "RuntimeComposition.active_revision",
+        "RuntimeComposition.controller",
+        "RuntimeComposition.state",
+        "RuntimeComposition.swap"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/composition.py",
+      "new_declarations": [
+        "_configure_mobility",
+        "_configure_mobility_once",
+        "_wire_domain_providers"
+      ],
+      "changed_declarations": [
+        "build_controller",
+        "build_domain_routers",
+        "build_registry",
+        "build_team_executor",
+        "wire_domain_teams"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/core/actions.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "AppliedAction"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/core/case_lifecycle/events.py",
+      "new_declarations": [],
+      "changed_declarations": [],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/core/project_config.py",
+      "new_declarations": [
+        "TeamConfig.validate_declared_names"
+      ],
+      "changed_declarations": [
+        "ProjectConfig",
+        "ProjectConfig.validate_team_ids",
+        "TeamConfig",
+        "_validate_active_team_implementations"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/core/registry.py",
+      "new_declarations": [
+        "TeamRegistry.availability",
+        "TeamRegistry.declare_case_types",
+        "TeamRegistry.declare_unavailable",
+        "TeamRegistry.require_runnable"
+      ],
+      "changed_declarations": [
+        "TeamRegistry",
+        "TeamRegistry.__init__",
+        "TeamRegistry.register",
+        "TeamRegistry.resolve"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/core/remote_team/a2a_executor.py",
+      "new_declarations": [
+        "A2ATeamExecutor._discard_resolution",
+        "A2ATeamExecutor._is_async_callable",
+        "A2ATeamExecutor._resolve",
+        "A2ATeamExecutor._transport_method",
+        "A2ATeamExecutor._validate_result_identity",
+        "A2ATeamExecutor.cleanup_budget_seconds"
+      ],
+      "changed_declarations": [
+        "A2ATeamExecutor",
+        "A2ATeamExecutor.__init__",
+        "A2ATeamExecutor._call_within_deadline",
+        "A2ATeamExecutor._cancel_best_effort",
+        "A2ATeamExecutor._map",
+        "A2ATeamExecutor._poll",
+        "A2ATeamExecutor._submit",
+        "A2ATeamExecutor.execute"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/core/remote_team/executor.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "LocalTeamExecutor",
+        "LocalTeamExecutor.execute",
+        "ToolScopeViolation"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/core/service_bindings.py",
+      "new_declarations": [
+        "BindingTable",
+        "BindingTable.__post_init__",
+        "PinCompositionMiddleware",
+        "PinCompositionMiddleware.__call__",
+        "PinCompositionMiddleware.__init__",
+        "bind_services",
+        "collect_registration",
+        "collect_services",
+        "collecting_services",
+        "current_bindings",
+        "read_binding",
+        "standalone_services",
+        "use_instance_bindings"
+      ],
+      "changed_declarations": [],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/core/team_availability.py",
+      "new_declarations": [
+        "TeamContractViolation",
+        "TeamUnavailable",
+        "TeamUnavailable.__init__",
+        "unavailable_payload"
+      ],
+      "changed_declarations": [],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/__init__.py",
+      "new_declarations": [
+        "__getattr__"
+      ],
+      "changed_declarations": [],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/actions/itinerary_actions.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "_ask_consent",
+        "_ask_instead"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "new_declarations": [
+        "_interpret_reply",
+        "_matches_implicit_reply",
+        "_prepare_candidates",
+        "_resume_route",
+        "_run",
+        "descriptor",
+        "execute",
+        "response",
+        "resume_pending",
+        "retry_initial"
+      ],
+      "changed_declarations": [],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_intake.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "validate"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+      "new_declarations": [
+        "_dispatch_decision",
+        "_report_dispatch_plan"
+      ],
+      "changed_declarations": [
+        "_clarify_with_choices",
+        "_open_message_case",
+        "_run_decision",
+        "handle_trip_message"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/core_hooks/routing.py",
+      "new_declarations": [],
+      "changed_declarations": [],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/intake/hours.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "_apply_ledger_by_uid",
+        "facts_for"
+      ],
+      "removed_declarations": [
+        "_ledger_uid"
+      ]
+    },
+    {
+      "path": "app/domains/travel_ops/components/intake/move_options.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "options"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/intake/moves.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "leg_between"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/intake/review.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "default_engine"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/itinerary/itinerary_checks.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "with_ledger"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/itinerary/move_judge.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "judge"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/planning/replan.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "MealRoute",
+        "MealRoute._eta"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+      "new_declarations": [
+        "_http_provider",
+        "catalog_state",
+        "link_core_place",
+        "lookup_factory",
+        "planner_factory",
+        "require_link_core_place",
+        "require_planner_factory",
+        "require_slot_verdicts",
+        "require_state_provider",
+        "slot_verdicts"
+      ],
+      "changed_declarations": [
+        "add_nearby",
+        "clear",
+        "find_by_name",
+        "is_registered",
+        "register",
+        "state",
+        "state_lookup",
+        "states"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/legs.py",
+      "new_declarations": [
+        "observe_departure"
+      ],
+      "changed_declarations": [
+        "basis",
+        "clear",
+        "disruptions_from_events",
+        "is_registered",
+        "leg_planner",
+        "register",
+        "walk_limit_m"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/mobility_shapes.py",
+      "new_declarations": [
+        "_provider",
+        "clear",
+        "items",
+        "register",
+        "review"
+      ],
+      "changed_declarations": [],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/similarity.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "distance_first",
+        "is_registered",
+        "preference_of",
+        "register",
+        "scorer"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/watch_planners.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "planner",
+        "register",
+        "registered"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "TripTickResult",
+        "TripWatcher",
+        "TripWatcher.tick"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch_batch.py",
+      "new_declarations": [
+        "skipped_watch",
+        "unavailable_reason"
+      ],
+      "changed_declarations": [
+        "WatchBatch",
+        "WatchBatch._one",
+        "WatchBatch._result"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch_cases.py",
+      "new_declarations": [
+        "TripWatchCaseOpener._recover_existing"
+      ],
+      "changed_declarations": [
+        "CaseTickResult",
+        "TripWatchCaseOpener",
+        "TripWatchCaseOpener._attempt",
+        "TripWatchCaseOpener._open_issues",
+        "TripWatchCaseOpener.tick"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "MessageIn",
+        "_dining_lookup",
+        "_ledger_verdicts",
+        "_planner_ledger",
+        "_trip_view",
+        "build_trip_router"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/instances/_shared/conversation_work.py",
+      "new_declarations": [
+        "_choice",
+        "_fresh_change",
+        "_fresh_plan",
+        "_propose_alternatives",
+        "_target",
+        "_text",
+        "delay_minutes",
+        "replies",
+        "run_conversation",
+        "wait_for_input"
+      ],
+      "changed_declarations": [],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/instances/_shared/itinerary_team.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "ItineraryWork",
+        "ItineraryWork.run_itinerary"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/instances/dining/ledger.py",
+      "new_declarations": [
+        "catalog_state"
+      ],
+      "changed_declarations": [],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/instances/dining/team.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "DiningTeam",
+        "DiningTeam.handle_report"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/modules/live_progress/op_stream.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "_Run",
+        "_Run.defer",
+        "error_payload",
+        "run"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/domains/travel_ops/modules/mcp/mcp_server.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "McpApiError",
+        "McpApiError.text"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/infrastructure/a2a/http_transport.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "A2AHttpTransport",
+        "A2AHttpTransport.submit"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/introspection/contract.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "snapshot"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/presentation/a2a/travel_remote_agent.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "_artifact"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/presentation/api/app.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "_mount_reload",
+        "create_app"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/presentation/api/cases.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "MessageRequest",
+        "build_router"
+      ],
+      "removed_declarations": [
+        "_mcp_cases",
+        "_mcp_classifier",
+        "_mcp_detail",
+        "_mcp_open",
+        "_mcp_principal"
+      ]
+    },
+    {
+      "path": "app/presentation/errors.py",
+      "new_declarations": [
+        "team_unavailable_error"
+      ],
+      "changed_declarations": [
+        "install_error_handlers"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "app/tools/read_tools.py",
+      "new_declarations": [],
+      "changed_declarations": [
+        "ReadToolbox",
+        "ReadToolbox.dining_state",
+        "ReadToolbox.dining_states"
+      ],
+      "removed_declarations": []
+    },
+    {
+      "path": "scripts/run_sweepers.py",
+      "new_declarations": [
+        "_CompositionFailed",
+        "_FeaturesFailed",
+        "_in_round",
+        "_round_result",
+        "_run_bound_once",
+        "_run_jobs",
+        "_team_job",
+        "_wire_features"
+      ],
+      "changed_declarations": [
+        "_report_errors",
+        "_run_once",
+        "_run_trip_dawn",
+        "_run_trip_reminders",
+        "_run_trip_watch",
+        "_run_trip_watch_cases",
+        "_watch_if_due",
+        "main"
+      ],
+      "removed_declarations": []
+    }
+  ],
+  "new_application_imports": [
+    {
+      "path": "app/application/controller.py",
+      "line": 17,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/application/controller.py",
+      "line": 18,
+      "import": "from app.core.service_bindings import use_instance_bindings",
+      "module": "app.core.service_bindings",
+      "symbol": "use_instance_bindings",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/application/controller.py",
+      "line": 23,
+      "import": "from app.application.case_service import ActiveRunError, CaseService, ResumeRequestConflict, ResumeTokenError, ResumeTokenExpired",
+      "module": "app.application.case_service",
+      "symbol": "ActiveRunError",
+      "resolved": true,
+      "target": "app/application/case_service.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/application/controller.py",
+      "line": 23,
+      "import": "from app.application.case_service import ActiveRunError, CaseService, ResumeRequestConflict, ResumeTokenError, ResumeTokenExpired",
+      "module": "app.application.case_service",
+      "symbol": "ResumeRequestConflict",
+      "resolved": true,
+      "target": "app/application/case_service.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/application/controller.py",
+      "line": 23,
+      "import": "from app.application.case_service import ActiveRunError, CaseService, ResumeRequestConflict, ResumeTokenError, ResumeTokenExpired",
+      "module": "app.application.case_service",
+      "symbol": "ResumeTokenExpired",
+      "resolved": true,
+      "target": "app/application/case_service.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/application/controller.py",
+      "line": 24,
+      "import": "from app.core.redaction import masked",
+      "module": "app.core.redaction",
+      "symbol": "masked",
+      "resolved": true,
+      "target": "app/core/redaction.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/application/runtime.py",
+      "line": 32,
+      "import": "from app.core.service_bindings import bind_services",
+      "module": "app.core.service_bindings",
+      "symbol": "bind_services",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/composition.py",
+      "line": 17,
+      "import": "from app.core.project_config import ProjectConfig, load_project_config, config_revision",
+      "module": "app.core.project_config",
+      "symbol": "config_revision",
+      "resolved": true,
+      "target": "app/core/project_config.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/composition.py",
+      "line": 19,
+      "import": "from app.core.service_bindings import BindingTable, collect_services, collect_registration, collecting_services",
+      "module": "app.core.service_bindings",
+      "symbol": "BindingTable",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/composition.py",
+      "line": 19,
+      "import": "from app.core.service_bindings import BindingTable, collect_services, collect_registration, collecting_services",
+      "module": "app.core.service_bindings",
+      "symbol": "collect_services",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/composition.py",
+      "line": 19,
+      "import": "from app.core.service_bindings import BindingTable, collect_services, collect_registration, collecting_services",
+      "module": "app.core.service_bindings",
+      "symbol": "collect_registration",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/composition.py",
+      "line": 19,
+      "import": "from app.core.service_bindings import BindingTable, collect_services, collect_registration, collecting_services",
+      "module": "app.core.service_bindings",
+      "symbol": "collecting_services",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/composition.py",
+      "line": 287,
+      "import": "from app.domains.travel_ops.components.core_hooks.routing import KNOWN_TEAM_CASE_TYPES",
+      "module": "app.domains.travel_ops.components.core_hooks.routing",
+      "symbol": "KNOWN_TEAM_CASE_TYPES",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/core_hooks/routing.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/composition.py",
+      "line": 506,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/composition.py",
+      "line": 541,
+      "import": "from app.domains.travel_ops.components.team_hooks import dining_ledger, legs, mobility_shapes, similarity, watch_planners",
+      "module": "app.domains.travel_ops.components.team_hooks",
+      "symbol": "mobility_shapes",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/team_hooks/mobility_shapes.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/composition.py",
+      "line": 553,
+      "import": "from app.domains.travel_ops.instances.mobility import route_shape as mobility_route_shape",
+      "module": "app.domains.travel_ops.instances.mobility",
+      "symbol": "route_shape",
+      "resolved": true,
+      "target": "app/domains/travel_ops/instances/mobility/route_shape.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/composition.py",
+      "line": 575,
+      "import": "from app.domains.travel_ops.instances.dining.place_lookup import LedgerPlaceLookup",
+      "module": "app.domains.travel_ops.instances.dining.place_lookup",
+      "symbol": "LedgerPlaceLookup",
+      "resolved": true,
+      "target": "app/domains/travel_ops/instances/dining/place_lookup.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/composition.py",
+      "line": 596,
+      "import": "from app.domains.travel_ops.instances.activity.team import plan_activity_trigger",
+      "module": "app.domains.travel_ops.instances.activity.team",
+      "symbol": "plan_activity_trigger",
+      "resolved": true,
+      "target": "app/domains/travel_ops/instances/activity/team.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/composition.py",
+      "line": 599,
+      "import": "from app.domains.travel_ops.instances.dining.team import plan_dining_trigger",
+      "module": "app.domains.travel_ops.instances.dining.team",
+      "symbol": "plan_dining_trigger",
+      "resolved": true,
+      "target": "app/domains/travel_ops/instances/dining/team.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/composition.py",
+      "line": 602,
+      "import": "from app.domains.travel_ops.instances.mobility.team import plan_mobility_trigger",
+      "module": "app.domains.travel_ops.instances.mobility.team",
+      "symbol": "plan_mobility_trigger",
+      "resolved": true,
+      "target": "app/domains/travel_ops/instances/mobility/team.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/core/registry.py",
+      "line": 7,
+      "import": "from app.core.team_availability import TeamContractViolation, TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamContractViolation",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/core/registry.py",
+      "line": 7,
+      "import": "from app.core.team_availability import TeamContractViolation, TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/core/remote_team/a2a_executor.py",
+      "line": 11,
+      "import": "from app.core.team_availability import TeamContractViolation, TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamContractViolation",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/core/remote_team/a2a_executor.py",
+      "line": 11,
+      "import": "from app.core.team_availability import TeamContractViolation, TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/core/remote_team/a2a_executor.py",
+      "line": 12,
+      "import": "from app.core.remote_team.executor import ToolScopeViolation",
+      "module": "app.core.remote_team.executor",
+      "symbol": "ToolScopeViolation",
+      "resolved": true,
+      "target": "app/core/remote_team/executor.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/core/remote_team/a2a_executor.py",
+      "line": 13,
+      "import": "from app.core.settings import get_guardrails",
+      "module": "app.core.settings",
+      "symbol": "get_guardrails",
+      "resolved": true,
+      "target": "app/core/settings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/core/service_bindings.py",
+      "line": 81,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/core/service_bindings.py",
+      "line": 88,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "line": 10,
+      "import": "from app.core.contracts import StateConflict",
+      "module": "app.core.contracts",
+      "symbol": "StateConflict",
+      "resolved": true,
+      "target": "app/core/contracts.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "line": 11,
+      "import": "from app.core.case_lifecycle.events import EventType",
+      "module": "app.core.case_lifecycle.events",
+      "symbol": "EventType",
+      "resolved": true,
+      "target": "app/core/case_lifecycle/events.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "line": 12,
+      "import": "from app.core.transition import transition_case",
+      "module": "app.core.transition",
+      "symbol": "transition_case",
+      "resolved": true,
+      "target": "app/core/transition.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "line": 13,
+      "import": "from app.infrastructure.db import repository",
+      "module": "app.infrastructure.db",
+      "symbol": "repository",
+      "resolved": true,
+      "target": "app/infrastructure/db/repository.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "line": 14,
+      "import": "from app.infrastructure.db.session import get_connection",
+      "module": "app.infrastructure.db.session",
+      "symbol": "get_connection",
+      "resolved": true,
+      "target": "app/infrastructure/db/session.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "line": 152,
+      "import": "from app.application.controller import ResumeExpiredError",
+      "module": "app.application.controller",
+      "symbol": "ResumeExpiredError",
+      "resolved": true,
+      "target": "app/application/controller.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "line": 179,
+      "import": "from .trip_intake import extract",
+      "module": "app.domains.travel_ops.components.conversation.trip_intake",
+      "symbol": "extract",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/conversation/trip_intake.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "line": 217,
+      "import": "from app.domains.travel_ops.components.itinerary.itinerary import TripStore",
+      "module": "app.domains.travel_ops.components.itinerary.itinerary",
+      "symbol": "TripStore",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/itinerary/itinerary.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "line": 233,
+      "import": "from app.domains.travel_ops.components.itinerary.itinerary import TripStore",
+      "module": "app.domains.travel_ops.components.itinerary.itinerary",
+      "symbol": "TripStore",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/itinerary/itinerary.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "line": 305,
+      "import": "from app.application.case_service import ActiveRunError",
+      "module": "app.application.case_service",
+      "symbol": "ActiveRunError",
+      "resolved": true,
+      "target": "app/application/case_service.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+      "line": 619,
+      "import": "from app.application.case_intake import create_case_once, IdempotencyConflict",
+      "module": "app.application.case_intake",
+      "symbol": "create_case_once",
+      "resolved": true,
+      "target": "app/application/case_intake.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+      "line": 619,
+      "import": "from app.application.case_intake import create_case_once, IdempotencyConflict",
+      "module": "app.application.case_intake",
+      "symbol": "IdempotencyConflict",
+      "resolved": true,
+      "target": "app/application/case_intake.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+      "line": 620,
+      "import": "from app.core.contracts import StateConflict",
+      "module": "app.core.contracts",
+      "symbol": "StateConflict",
+      "resolved": true,
+      "target": "app/core/contracts.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+      "line": 621,
+      "import": "from app.core.idempotency import idempotency_key",
+      "module": "app.core.idempotency",
+      "symbol": "idempotency_key",
+      "resolved": true,
+      "target": "app/core/idempotency.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+      "line": 693,
+      "import": "from app.domains.travel_ops.components.conversation import case_dispatch",
+      "module": "app.domains.travel_ops.components.conversation",
+      "symbol": "case_dispatch",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+      "line": 857,
+      "import": "from app.domains.travel_ops.components.conversation import case_dispatch",
+      "module": "app.domains.travel_ops.components.conversation",
+      "symbol": "case_dispatch",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+      "line": 1064,
+      "import": "from app.domains.travel_ops.components.conversation import case_dispatch",
+      "module": "app.domains.travel_ops.components.conversation",
+      "symbol": "case_dispatch",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+      "line": 326,
+      "import": "from app.domains.travel_ops.components.conversation.case_dispatch import resume_pending",
+      "module": "app.domains.travel_ops.components.conversation.case_dispatch",
+      "symbol": "resume_pending",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+      "line": 308,
+      "import": "from app.core.redaction import masked",
+      "module": "app.core.redaction",
+      "symbol": "masked",
+      "resolved": true,
+      "target": "app/core/redaction.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+      "line": 309,
+      "import": "from app.core.contracts import StateConflict",
+      "module": "app.core.contracts",
+      "symbol": "StateConflict",
+      "resolved": true,
+      "target": "app/core/contracts.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+      "line": 316,
+      "import": "from app.domains.travel_ops.components.conversation.case_dispatch import retry_initial",
+      "module": "app.domains.travel_ops.components.conversation.case_dispatch",
+      "symbol": "retry_initial",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+      "line": 468,
+      "import": "from app.domains.travel_ops.components.conversation import case_dispatch",
+      "module": "app.domains.travel_ops.components.conversation",
+      "symbol": "case_dispatch",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/domains/travel_ops/components/intake/move_options.py",
+      "line": 14,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/intake/moves.py",
+      "line": 14,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/intake/review.py",
+      "line": 341,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/intake/review.py",
+      "line": 350,
+      "import": "from app.core.service_bindings import current_bindings",
+      "module": "app.core.service_bindings",
+      "symbol": "current_bindings",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/itinerary/itinerary_checks.py",
+      "line": 264,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/itinerary/move_judge.py",
+      "line": 31,
+      "import": "from app.core.service_bindings import current_bindings",
+      "module": "app.core.service_bindings",
+      "symbol": "current_bindings",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/itinerary/move_judge.py",
+      "line": 32,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/planning/replan.py",
+      "line": 55,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+      "line": 16,
+      "import": "from app.core.service_bindings import collect_registration, read_binding",
+      "module": "app.core.service_bindings",
+      "symbol": "collect_registration",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+      "line": 16,
+      "import": "from app.core.service_bindings import collect_registration, read_binding",
+      "module": "app.core.service_bindings",
+      "symbol": "read_binding",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+      "line": 118,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/legs.py",
+      "line": 15,
+      "import": "from app.core.service_bindings import collect_registration, current_bindings, read_binding",
+      "module": "app.core.service_bindings",
+      "symbol": "collect_registration",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/legs.py",
+      "line": 15,
+      "import": "from app.core.service_bindings import collect_registration, current_bindings, read_binding",
+      "module": "app.core.service_bindings",
+      "symbol": "current_bindings",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/legs.py",
+      "line": 15,
+      "import": "from app.core.service_bindings import collect_registration, current_bindings, read_binding",
+      "module": "app.core.service_bindings",
+      "symbol": "read_binding",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/legs.py",
+      "line": 16,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/mobility_shapes.py",
+      "line": 6,
+      "import": "from app.core.service_bindings import collect_registration, read_binding",
+      "module": "app.core.service_bindings",
+      "symbol": "collect_registration",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/mobility_shapes.py",
+      "line": 6,
+      "import": "from app.core.service_bindings import collect_registration, read_binding",
+      "module": "app.core.service_bindings",
+      "symbol": "read_binding",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/mobility_shapes.py",
+      "line": 7,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/similarity.py",
+      "line": 14,
+      "import": "from app.core.service_bindings import collect_registration, read_binding",
+      "module": "app.core.service_bindings",
+      "symbol": "collect_registration",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/similarity.py",
+      "line": 14,
+      "import": "from app.core.service_bindings import collect_registration, read_binding",
+      "module": "app.core.service_bindings",
+      "symbol": "read_binding",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/watch_planners.py",
+      "line": 18,
+      "import": "from app.core.service_bindings import collect_registration, current_bindings, read_binding",
+      "module": "app.core.service_bindings",
+      "symbol": "collect_registration",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/watch_planners.py",
+      "line": 18,
+      "import": "from app.core.service_bindings import collect_registration, current_bindings, read_binding",
+      "module": "app.core.service_bindings",
+      "symbol": "current_bindings",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/watch_planners.py",
+      "line": 18,
+      "import": "from app.core.service_bindings import collect_registration, current_bindings, read_binding",
+      "module": "app.core.service_bindings",
+      "symbol": "read_binding",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch.py",
+      "line": 79,
+      "import": "from app.domains.travel_ops.components.watch.trip_watch_batch import skipped_watch",
+      "module": "app.domains.travel_ops.components.watch.trip_watch_batch",
+      "symbol": "skipped_watch",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/watch/trip_watch_batch.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch_batch.py",
+      "line": 45,
+      "import": "from app.core.service_bindings import current_bindings, read_binding",
+      "module": "app.core.service_bindings",
+      "symbol": "current_bindings",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch_batch.py",
+      "line": 45,
+      "import": "from app.core.service_bindings import current_bindings, read_binding",
+      "module": "app.core.service_bindings",
+      "symbol": "read_binding",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch_batch.py",
+      "line": 46,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch_cases.py",
+      "line": 39,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch_cases.py",
+      "line": 51,
+      "import": "from app.application.case_service import ActiveRunError",
+      "module": "app.application.case_service",
+      "symbol": "ActiveRunError",
+      "resolved": true,
+      "target": "app/application/case_service.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch_cases.py",
+      "line": 470,
+      "import": "from app.core.service_bindings import current_bindings",
+      "module": "app.core.service_bindings",
+      "symbol": "current_bindings",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch_cases.py",
+      "line": 134,
+      "import": "from app.domains.travel_ops.components.watch.trip_watch_batch import skipped_watch",
+      "module": "app.domains.travel_ops.components.watch.trip_watch_batch",
+      "symbol": "skipped_watch",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/watch/trip_watch_batch.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch_cases.py",
+      "line": 320,
+      "import": "from app.domains.travel_ops.components.watch.trip_watch_batch import unavailable_reason",
+      "module": "app.domains.travel_ops.components.watch.trip_watch_batch",
+      "symbol": "unavailable_reason",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/watch/trip_watch_batch.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_watch_cases.py",
+      "line": 179,
+      "import": "from app.core.service_bindings import current_bindings",
+      "module": "app.core.service_bindings",
+      "symbol": "current_bindings",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "line": 48,
+      "import": "from app.core.contracts import StateConflict",
+      "module": "app.core.contracts",
+      "symbol": "StateConflict",
+      "resolved": true,
+      "target": "app/core/contracts.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "line": 49,
+      "import": "from app.application.controller import ControllerError",
+      "module": "app.application.controller",
+      "symbol": "ControllerError",
+      "resolved": true,
+      "target": "app/application/controller.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "line": 50,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "line": 51,
+      "import": "from app.core.team_availability import unavailable_payload",
+      "module": "app.core.team_availability",
+      "symbol": "unavailable_payload",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "line": 104,
+      "import": "from app.domains.travel_ops.components.team_hooks import dining_ledger",
+      "module": "app.domains.travel_ops.components.team_hooks",
+      "symbol": "dining_ledger",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "line": 428,
+      "import": "from app.domains.travel_ops.components.team_hooks import dining_ledger",
+      "module": "app.domains.travel_ops.components.team_hooks",
+      "symbol": "dining_ledger",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "line": 442,
+      "import": "from app.domains.travel_ops.components.team_hooks import dining_ledger",
+      "module": "app.domains.travel_ops.components.team_hooks",
+      "symbol": "dining_ledger",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "line": 960,
+      "import": "from app.domains.travel_ops.components.team_hooks import dining_ledger",
+      "module": "app.domains.travel_ops.components.team_hooks",
+      "symbol": "dining_ledger",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "line": 1281,
+      "import": "from app.domains.travel_ops.components.team_hooks import mobility_shapes",
+      "module": "app.domains.travel_ops.components.team_hooks",
+      "symbol": "mobility_shapes",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/team_hooks/mobility_shapes.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "line": 2448,
+      "import": "from app.domains.travel_ops.components.team_hooks import mobility_shapes",
+      "module": "app.domains.travel_ops.components.team_hooks",
+      "symbol": "mobility_shapes",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/team_hooks/mobility_shapes.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "line": 845,
+      "import": "from app.domains.travel_ops.components.team_hooks import dining_ledger",
+      "module": "app.domains.travel_ops.components.team_hooks",
+      "symbol": "dining_ledger",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "line": 1690,
+      "import": "from app.domains.travel_ops.components.team_hooks import dining_ledger",
+      "module": "app.domains.travel_ops.components.team_hooks",
+      "symbol": "dining_ledger",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/domains/travel_ops/entry/trip_api.py",
+      "line": 913,
+      "import": "from app.domains.travel_ops.components.team_hooks import dining_ledger",
+      "module": "app.domains.travel_ops.components.team_hooks",
+      "symbol": "dining_ledger",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/domains/travel_ops/instances/_shared/conversation_work.py",
+      "line": 8,
+      "import": "from app.core.contracts import NextAction, TeamResult, TeamTask",
+      "module": "app.core.contracts",
+      "symbol": "NextAction",
+      "resolved": true,
+      "target": "app/core/contracts.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/instances/_shared/conversation_work.py",
+      "line": 8,
+      "import": "from app.core.contracts import NextAction, TeamResult, TeamTask",
+      "module": "app.core.contracts",
+      "symbol": "TeamResult",
+      "resolved": true,
+      "target": "app/core/contracts.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/instances/_shared/conversation_work.py",
+      "line": 8,
+      "import": "from app.core.contracts import NextAction, TeamResult, TeamTask",
+      "module": "app.core.contracts",
+      "symbol": "TeamTask",
+      "resolved": true,
+      "target": "app/core/contracts.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/instances/_shared/conversation_work.py",
+      "line": 9,
+      "import": "from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_fresh_alternate, plan_swap",
+      "module": "app.domains.travel_ops.components.itinerary.itinerary_changes",
+      "symbol": "NoChange",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/itinerary/itinerary_changes.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/instances/_shared/conversation_work.py",
+      "line": 9,
+      "import": "from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_fresh_alternate, plan_swap",
+      "module": "app.domains.travel_ops.components.itinerary.itinerary_changes",
+      "symbol": "plan_fresh_alternate",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/itinerary/itinerary_changes.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/instances/_shared/conversation_work.py",
+      "line": 9,
+      "import": "from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_fresh_alternate, plan_swap",
+      "module": "app.domains.travel_ops.components.itinerary.itinerary_changes",
+      "symbol": "plan_swap",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/itinerary/itinerary_changes.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/instances/_shared/conversation_work.py",
+      "line": 215,
+      "import": "from app.domains.travel_ops.components.planning.pending import options_from",
+      "module": "app.domains.travel_ops.components.planning.pending",
+      "symbol": "options_from",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/planning/pending.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/instances/_shared/conversation_work.py",
+      "line": 123,
+      "import": "from app.domains.travel_ops.components.conversation.trip_facts import fact_reply",
+      "module": "app.domains.travel_ops.components.conversation.trip_facts",
+      "symbol": "fact_reply",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/conversation/trip_facts.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/instances/_shared/itinerary_team.py",
+      "line": 130,
+      "import": "from .conversation_work import run_conversation",
+      "module": "app.domains.travel_ops.instances._shared.conversation_work",
+      "symbol": "run_conversation",
+      "resolved": true,
+      "target": "app/domains/travel_ops/instances/_shared/conversation_work.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/instances/_shared/itinerary_team.py",
+      "line": 156,
+      "import": "from .conversation_work import run_conversation",
+      "module": "app.domains.travel_ops.instances._shared.conversation_work",
+      "symbol": "run_conversation",
+      "resolved": true,
+      "target": "app/domains/travel_ops/instances/_shared/conversation_work.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/instances/dining/team.py",
+      "line": 111,
+      "import": "from app.domains.travel_ops.instances._shared.conversation_work import wait_for_input",
+      "module": "app.domains.travel_ops.instances._shared.conversation_work",
+      "symbol": "wait_for_input",
+      "resolved": true,
+      "target": "app/domains/travel_ops/instances/_shared/conversation_work.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/domains/travel_ops/modules/live_progress/op_stream.py",
+      "line": 111,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/presentation/api/app.py",
+      "line": 11,
+      "import": "from app.core.service_bindings import PinCompositionMiddleware",
+      "module": "app.core.service_bindings",
+      "symbol": "PinCompositionMiddleware",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/presentation/api/cases.py",
+      "line": 16,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/presentation/api/cases.py",
+      "line": 17,
+      "import": "from app.core.registry import RegistryError",
+      "module": "app.core.registry",
+      "symbol": "RegistryError",
+      "resolved": true,
+      "target": "app/core/registry.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/presentation/api/cases.py",
+      "line": 18,
+      "import": "from app.presentation.errors import team_unavailable_error",
+      "module": "app.presentation.errors",
+      "symbol": "team_unavailable_error",
+      "resolved": true,
+      "target": "app/presentation/errors.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/presentation/errors.py",
+      "line": 10,
+      "import": "from app.core.team_availability import TeamUnavailable, unavailable_payload",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/presentation/errors.py",
+      "line": 10,
+      "import": "from app.core.team_availability import TeamUnavailable, unavailable_payload",
+      "module": "app.core.team_availability",
+      "symbol": "unavailable_payload",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "app/tools/read_tools.py",
+      "line": 282,
+      "import": "from app.domains.travel_ops.components.team_hooks import dining_ledger",
+      "module": "app.domains.travel_ops.components.team_hooks",
+      "symbol": "dining_ledger",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "app/tools/read_tools.py",
+      "line": 298,
+      "import": "from app.domains.travel_ops.components.team_hooks import dining_ledger",
+      "module": "app.domains.travel_ops.components.team_hooks",
+      "symbol": "dining_ledger",
+      "resolved": true,
+      "target": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+      "kind": "child_module"
+    },
+    {
+      "path": "scripts/run_sweepers.py",
+      "line": 83,
+      "import": "from app.core.service_bindings import bind_services, current_bindings",
+      "module": "app.core.service_bindings",
+      "symbol": "bind_services",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "scripts/run_sweepers.py",
+      "line": 83,
+      "import": "from app.core.service_bindings import bind_services, current_bindings",
+      "module": "app.core.service_bindings",
+      "symbol": "current_bindings",
+      "resolved": true,
+      "target": "app/core/service_bindings.py",
+      "kind": "declared_symbol"
+    },
+    {
+      "path": "scripts/run_sweepers.py",
+      "line": 84,
+      "import": "from app.core.team_availability import TeamUnavailable",
+      "module": "app.core.team_availability",
+      "symbol": "TeamUnavailable",
+      "resolved": true,
+      "target": "app/core/team_availability.py",
+      "kind": "declared_symbol"
+    }
+  ],
+  "unresolved_application_imports": [],
+  "new_unbound_call_roots": [],
+  "dynamic_import_sites": [
+    {
+      "path": "app/composition.py",
+      "line": 153,
+      "literal_target": null
+    }
+  ],
+  "limits": [
+    "Static declarations do not execute constructors or prove dynamic provider availability.",
+    "Attribute call member semantics require the separate functional suite.",
+    "Factory imports selected from configuration are verified by composition tests."
+  ]
+}

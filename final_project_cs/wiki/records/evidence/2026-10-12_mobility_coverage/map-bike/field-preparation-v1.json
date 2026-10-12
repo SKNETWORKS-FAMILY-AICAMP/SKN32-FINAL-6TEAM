@@ -1,0 +1,156 @@
+{
+  "checked_at": "2026-10-11T17:59:39.364021+00:00",
+  "checks_passed": 9,
+  "checks_total": 9,
+  "execution_kind": "현행 제품 함수 AST 분리 실행, 통제 설정. 실제 HTTP/DB/브라우저 시험 아님",
+  "checks": [
+    {
+      "name": "coordinate order lat,lon",
+      "passed": true
+    },
+    {
+      "name": "official api=1 and fixed transit contract",
+      "passed": true
+    },
+    {
+      "name": "no waypoint and no developer API key",
+      "passed": true
+    },
+    {
+      "name": "under official 2048 URL length limit",
+      "passed": true
+    },
+    {
+      "name": "move link and day leg agree",
+      "passed": true
+    },
+    {
+      "name": "place link is search with coordinate",
+      "passed": true
+    },
+    {
+      "name": "plan token format preserved",
+      "passed": true
+    },
+    {
+      "name": "plan token isolates tenant and trip",
+      "passed": true
+    },
+    {
+      "name": "plan URL uses token query",
+      "passed": true
+    }
+  ],
+  "public_map_links": {
+    "directions": "https://www.google.com/maps/dir/?api=1&origin=37.5445%2C127.0374&destination=37.5404%2C127.0706&travelmode=transit",
+    "places": [
+      "https://www.google.com/maps/search/?api=1&query=37.5445%2C127.0374",
+      "https://www.google.com/maps/search/?api=1&query=37.5404%2C127.0706"
+    ]
+  },
+  "code_sha256": {
+    "final_project_cs/app/domains/travel_ops/entry/trip_api.py": "3df254dece0ba0d17c4776c687b67b0ae1abf9779ecbec0910ef01f655d94b8f",
+    "final_project_cs/app/domains/travel_ops/components/itinerary/plan_link.py": "d9bd5d44d58ef79dd6b55a9eba3d5b6f17586a351bb7f797036ff9c979e17831"
+  },
+  "field_cases": [
+    {
+      "feature_id": 19,
+      "name": "따릉이 전체 이용",
+      "status": "현장 측정 준비 / 물리 대여·반납 0건",
+      "preconditions": [
+        "본인이 공식 앱에 로그인하고 이용 가능한 권종·대여 조건을 확인",
+        "실제 구매·대여는 사람이 직접 진행",
+        "출발/도착 대여소 ID와 양끝 좌표 고정",
+        "Bluetooth/GPS 및 카메라 권한 상태 확인"
+      ],
+      "prediction_before_trip": [
+        "code_sha256",
+        "data_sha256",
+        "party_size",
+        "purchase_channel",
+        "selected_pass",
+        "predicted_rent_station_id",
+        "predicted_return_station_id",
+        "predicted_walk_min",
+        "predicted_ride_min",
+        "predicted_rent_return_min",
+        "predicted_total_min",
+        "predicted_pass_won",
+        "predicted_overtime_won"
+      ],
+      "observations_required": [
+        "observed_at_timezone",
+        "station_available_bikes_and_observed_at",
+        "rent_started_at",
+        "rent_completed_at",
+        "arrived_at_return_station",
+        "lock_completed_at",
+        "official_app_return_confirmed_at",
+        "actual_pass_won",
+        "actual_overtime_won",
+        "masked_evidence_files"
+      ],
+      "comparison": [
+        "대여·승차·반납·도보 시간을 분리해 비교",
+        "동일 권종·구매 채널·초과시간에서 요금 합산 비교",
+        "조회시각 재고와 대여 성공을 별도로 기록"
+      ],
+      "acceptance": {
+        "fare_tolerance_won": null,
+        "duration_tolerance_min": null,
+        "policy": "현장 허용오차를 임의로 만들지 않습니다. 확정 기준 없이는 통과를 선언하지 않습니다."
+      },
+      "cannot_replace_by_web": [
+        "실물 잠금 해제",
+        "실물 자전거 확보",
+        "실제 반납 완료",
+        "실제 청구 금액"
+      ],
+      "physical_completed": 0,
+      "physical_required": 1
+    },
+    {
+      "feature_id": 21,
+      "name": "지도 표시와 휴대폰 연결",
+      "status": "모델·375px 도식 검증 완료 / 실제 휴대폰 0건",
+      "product_paths": [
+        "웹 세션: /v1/web/trips/{trip_id}/route-shapes",
+        "접수 확인: /v1/web/trip-intakes/{intake_id}/route-shapes",
+        "로그인 없는 여행계획서: /plan/{trip_id}?t=<여행 토큰>"
+      ],
+      "auth_boundary": "여행계획서 토큰 링크와 웹 지도 API의 세션 자격은 별개입니다. 토큰 링크가 세션 API 접근권을 주지는 않습니다.",
+      "observations_required": [
+        "phone_os_version",
+        "browser_version",
+        "maps_app_installed_and_active",
+        "viewport_css_width",
+        "plan_link_opened_without_login",
+        "latest_trip_version_visible",
+        "public_origin_destination_matched",
+        "map_link_opened_app_or_browser",
+        "selected_transit_route",
+        "route_shape_points_and_stop_order",
+        "caption_approximation_visible",
+        "horizontal_overflow_px",
+        "masked_screenshots"
+      ],
+      "acceptance": {
+        "horizontal_overflow_px": 0,
+        "coordinate_order": "lat,lon 링크와 lng,lat GeoJSON를 각각 유지",
+        "shape_claim": "정류장/역 연결선은 실제 도로/선로로 주장하지 않음",
+        "physical_phone_cases_completed": 0,
+        "physical_phone_cases_required": 1
+      },
+      "not_covered": [
+        "실제 모바일 브라우저 렌더",
+        "실제 지도 앱 전환",
+        "여행 토큰 DB 인증 응답",
+        "실제 지도 타일·도로·선로 일치"
+      ]
+    }
+  ],
+  "network_attempts": 0,
+  "developer_api_calls": 0,
+  "actual_http_measurements": 0,
+  "physical_measurements": 0
+}

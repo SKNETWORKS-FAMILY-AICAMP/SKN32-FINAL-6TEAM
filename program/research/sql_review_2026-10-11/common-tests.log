@@ -1,0 +1,8 @@
+
+no tests ran in 50.65s
+ERROR: Classify new test files first: tests/e2e/test_schedule_query_web.py
+
+Exception ignored in: <function Console.__del__ at 0x000002246E341940>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

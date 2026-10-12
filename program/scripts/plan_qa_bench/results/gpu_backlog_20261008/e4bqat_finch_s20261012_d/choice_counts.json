@@ -1,0 +1,267 @@
+{
+  "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel finch 5e-5 seed20261012 adapter",
+  "our_training": true,
+  "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+  "suite": "D",
+  "saved": 2735,
+  "expected": 2735,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "single_choice_expected": 2669,
+  "compound_diagnostic_total": 66,
+  "positive": {
+    "total": 883,
+    "correct": 775,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.8544278246373106,
+      0.8976795485192902
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      0.004331618444859839
+    ]
+  },
+  "negative": {
+    "total": 1786,
+    "correct": 1779,
+    "false_pick": 7,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.9919316555841659,
+      0.9981001660988286
+    ],
+    "false_pick_wilson95": [
+      0.0018998339011714834,
+      0.008068344415834124
+    ]
+  },
+  "subtypes": {
+    "absent_but_plausible": {
+      "total": 78,
+      "correct": 78,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9530621902878059,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04693780971219429
+      ]
+    },
+    "change_request": {
+      "total": 79,
+      "correct": 79,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9536287883460772,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04637121165392266
+      ]
+    },
+    "chitchat": {
+      "total": 1300,
+      "correct": 1298,
+      "false_pick": 2,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9944078832123694,
+        0.9995779969207975
+      ],
+      "false_pick_wilson95": [
+        0.00042200307920248247,
+        0.005592116787630568
+      ]
+    },
+    "compound_intent": {
+      "total": 66,
+      "correct": 64,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8960747808829028,
+        0.9916500898013463
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05500255701354129
+      ]
+    },
+    "confusable_name": {
+      "total": 77,
+      "correct": 74,
+      "false_pick": 2,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8916001812736711,
+        0.986662049959409
+      ],
+      "false_pick_wilson95": [
+        0.007152159807893181,
+        0.08984582779753134
+      ]
+    },
+    "context_pronoun": {
+      "total": 71,
+      "correct": 69,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9029849988335054,
+        0.9922407364173166
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05132795219689034
+      ]
+    },
+    "duplicate_place": {
+      "total": 79,
+      "correct": 77,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9123141537110886,
+        0.9930296326934152
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04637121165392266
+      ]
+    },
+    "nameless_description": {
+      "total": 75,
+      "correct": 67,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8033863715352693,
+        0.9449508723782568
+      ],
+      "false_pick_wilson95": [
+        3.469446951953614e-18,
+        0.04872384248280587
+      ]
+    },
+    "negation": {
+      "total": 72,
+      "correct": 71,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9254339785252386,
+        0.9975440481170943
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05065117259645781
+      ]
+    },
+    "ordinal_relative": {
+      "total": 80,
+      "correct": 78,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9133556701442198,
+        0.9931171067970292
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0458181295355271
+      ]
+    },
+    "out_of_scope": {
+      "total": 80,
+      "correct": 80,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9541818704644728,
+        0.9999999999999999
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0458181295355271
+      ]
+    },
+    "tourist_synth_in": {
+      "total": 300,
+      "correct": 208,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6389838112035251,
+        0.7427942399229839
+      ],
+      "false_pick_wilson95": [
+        8.673617379884035e-19,
+        0.012642971224546034
+      ]
+    },
+    "tourist_synth_out": {
+      "total": 300,
+      "correct": 297,
+      "false_pick": 3,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9710165066376601,
+        0.9965933815622847
+      ],
+      "false_pick_wilson95": [
+        0.003406618437715286,
+        0.02898349336233983
+      ]
+    },
+    "typo_slang": {
+      "total": 78,
+      "correct": 78,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9530621902878059,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04693780971219429
+      ]
+    }
+  },
+  "failed_records": [],
+  "answer_sha256": "d780f0d5a2b487c66d73a477022bdd2699a0034af113f8eb11d597518a29ce55",
+  "gold_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+  "execution": {
+    "job": {
+      "id": "e4bqat_finch_s20261012_d",
+      "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel finch 5e-5 seed20261012 adapter",
+      "our_training": true,
+      "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "prompts": "/workspace/heavy/all_prompts.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "d_backlog_e4bqat_finch_s20261012",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 2735,
+      "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+      "purpose": "Missing evaluation of completed FINCH learning-rate comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+      "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+      "lora": "/tmp/tripilot-trained-adapters-20261008/finch_s20261012_lora_f16.gguf",
+      "lora_sha256": "d96f5ce87bf3df7a0a7f7701389743642d47f02c79f5d7e389a6ae0e8fb062cd"
+    },
+    "started": "2026-10-08T23:17:35.074444+00:00",
+    "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

@@ -26,6 +26,10 @@ class StaleItinerary(RuntimeError):
     """기준 버전이 낡았다 — 다른 쪽이 먼저 일정을 바꿨다."""
 
 
+class StaleDeparture(RuntimeError):
+    """계산한 출발 안내가 현재 일정과 달라 저장하지 않았다."""
+
+
 @dataclass
 class Item:
     item_id: UUID
@@ -97,7 +101,8 @@ PLACE_COLUMNS = ("place_id", "name", "kind", "latitude", "longitude",
 def _place(row: tuple) -> dict[str, Any]:
     place = dict(zip(PLACE_COLUMNS, row))
     place["place_id"] = str(place["place_id"])
-    attributes = place.get("attributes") or {}
+    attributes = dict(place.get("attributes") or {})
+    attributes.pop("_watch_simulation", None)  # 운영자 설정에서 붙이는 예약 필드다. 장소 입력은 권한이 아니다.
     # ★판정이 바로 쓰는 속성은 위로 올린다 — 점검은 `district` 를 장소에서 읽는다.
     return {**attributes, **place, "attributes": attributes}
 
@@ -284,6 +289,16 @@ class TripStore:
         return (row[0], row[1]) if row else None
 
     # ── 읽기 ────────────────────────────────────────────────────
+    def lock_trip(self, conn, trip_id: UUID) -> int:
+        """안내 저장/출발 재탐색 적용을 같은 여행 행에서 직렬화한다. 트랜잭션이 잠금을 소유한다."""
+        with conn.cursor() as cur:
+            cur.execute("SELECT latest_version FROM trips WHERE tenant_id=%s AND trip_id=%s "
+                        "FOR NO KEY UPDATE", (self.tenant_id, trip_id))
+            row = cur.fetchone()
+        if row is None:
+            raise KeyError(f"trip {trip_id} 없음")
+        return int(row[0])
+
     def latest(self, conn, trip_id: UUID) -> tuple[dict[str, Any], list[Item]]:
         with conn.cursor() as cur:
             cur.execute("SELECT trip_id, customer_id, title, locale, party_size, latest_version, "
@@ -294,6 +309,10 @@ class TripStore:
             raise KeyError(f"trip {trip_id} 없음")
         trip = dict(zip(("trip_id", "customer_id", "title", "locale", "party_size",
                          "version", "constraints"), row))
+        from app.domains.travel_ops.components.watch.simulation import state
+        current = state(conn, self.tenant_id, trip_id)
+        if current.get("run_id"):
+            trip["simulation"] = {k: current.get(k) for k in ("active", "categories", "expires_at", "run_id")}
         return trip, self.items(conn, trip_id, trip["version"])
 
     def items(self, conn, trip_id: UUID, version: int) -> list[Item]:
@@ -312,30 +331,30 @@ class TripStore:
             item = Item(*row[:11])
             item.place = _place(row[11:]) if row[11] is not None else None
             out.append(item)
+        from app.domains.travel_ops.components.watch.simulation import attach
+        attach(conn, self.tenant_id, trip_id, version, out)
         return out
 
     def _open_trips(self, conn, columns: str, now: datetime | None, order: str = "") -> list[tuple]:
         """진행 중(`active`)이고 **재난으로 정지되지 않은** 여행. 감시 · 안내 반복이 모두 여기를 지난다.
 
         ★`[2026-10-06 사용자 결정]` 재난 정지(`trip_safety_pauses`)가 열려 있으면 그 여행은 감시 · 안내에서 빠진다 — 정지한 일정에 「곧 시작해요」 · 대체 장소 교체가 나가면 안 된다.
-          유효한 정지 = 다시 시작하지 않았고(`resumed_at` 없음) 끝나는 시각이 안 지났다(`until_at` — 그날 정지는 자정, 여행 전체 정지는 없음). `now` 는 부르는 쪽 시계(시험 · 재생이 시계를 바꾼다) — 없으면 DB 의 지금.
-        ★마이그레이션 052 가 안 올라간 DB 에서도 감시는 돈다 — 표가 없으면 정지 없는 쿼리로 물러서고 경고를 남긴다(정지 줄이 있을 수 없는 DB 다)."""
+          유효한 정지 = 다시 시작하지 않았다(`resumed_at` 없음). 옛 `until_at` 값이나 자정 경과로 자동 해제하지 않는다.
+        ★정지 표를 읽을 수 없으면 자동 감시를 보류하고 오류를 남긴다."""
         base = ("SELECT " + columns + " FROM trips t WHERE t.tenant_id=%s AND t.status='active' AND " + scope_sql("t"))
         paused = (" AND NOT EXISTS (SELECT 1 FROM trip_safety_pauses p WHERE p.tenant_id=t.tenant_id AND p.trip_id=t.trip_id "
-                  "AND p.resumed_at IS NULL AND (p.until_at IS NULL OR p.until_at > COALESCE(%s, now())))")
+                  "AND p.resumed_at IS NULL)")
         try:
             with conn.transaction(), conn.cursor() as cur:
-                cur.execute(base + paused + order, (self.tenant_id, now))
+                cur.execute(base + paused + order, (self.tenant_id,))
                 return cur.fetchall()
-        except Exception as exc:                           # noqa: BLE001 — 표가 없는 DB 만 물러선다. 다른 오류는 그대로 올린다
+        except Exception as exc:                           # noqa: BLE001 — 정지 상태를 모르면 자동 감시를 시작하지 않는다
             if type(exc).__name__ != "UndefinedTable":
                 raise
             import logging
 
-            logging.getLogger(__name__).warning("trip_safety_pauses missing — watching without pauses (migration 052?)")
-            with conn.cursor() as cur:
-                cur.execute(base + order, (self.tenant_id,))
-                return cur.fetchall()
+            logging.getLogger(__name__).error("safety_pause_storage_unavailable — automatic watch held")
+            raise
 
     def active_trip_ids(self, conn, now: datetime | None = None) -> list[UUID]:
         """진행 중인 여행. 안내 되잡기 작업이 읽는다. ★`[2026-10-06]` 누구를 빼는지는 여기서 정하지 않는다 — 좁히는 규칙을 가진 쪽이 꽂는다
@@ -348,7 +367,28 @@ class TripStore:
         found = []
         for trip_id, version in trips:
             for item in self.items(conn, trip_id, version):
-                if start <= item.starts_at < end:
+                simulated = (item.place or {}).get("_watch_simulation")
+                if start <= item.starts_at < end or (simulated and (item.ends_at or item.starts_at) > start):
+                    found.append((trip_id, item))
+        return found
+
+    def pending_departures(self, conn, *, now: datetime) -> list[tuple[UUID, Item]]:
+        """안내 미발행 이동을 다음 방문 시작 전까지 계획 출발지 기준으로 다시 본다.
+
+        바깥함 행은 탑승 증거가 아니다. 이미 안내한 이동의 재출발을 추정하지 않는 제외 조건이다.
+        여행 범위·재난 정지는 active_trip_ids의 기존 조건을 따른다.
+        """
+        found = []
+        for trip_id in self.active_trip_ids(conn, now):
+            _, items = self.latest(conn, trip_id)
+            ordered = sorted(items, key=lambda item: item.seq)
+            for item in ordered:
+                if item.kind != "mobility" or item.starts_at > now:
+                    continue
+                following = next((i for i in ordered if i.seq > item.seq and i.kind != "mobility"), None)
+                if following is None or now >= following.starts_at:
+                    continue
+                if not self.message_exists(conn, trip_id=trip_id, key=f"departure:{item.item_id}"):
                     found.append((trip_id, item))
         return found
 
@@ -500,8 +540,17 @@ class TripStore:
                      json.dumps(item.detail, ensure_ascii=False, default=str)))
         return new_version
 
+    def message_exists(self, conn, *, trip_id: UUID, key: str) -> bool:
+        """같은 안내의 기존 행만 읽는다. 발행 경합은 최종 INSERT의 UNIQUE가 막는다."""
+        with conn.cursor() as cur:
+            cur.execute("SELECT EXISTS (SELECT 1 FROM outbox WHERE tenant_id=%s "
+                        "AND topic=%s AND dedupe_key=%s)",
+                        (self.tenant_id, "trip.notice", f"{trip_id}:{key}"))
+            return bool(cur.fetchone()[0])
+
     def enqueue_message(self, conn, *, trip_id: UUID, key: str,
-                        payload: dict[str, Any]) -> bool:
+                        payload: dict[str, Any],
+                        expected_departure_inputs: dict[str, Any] | None = None) -> bool:
         """일정 버전에 딸리지 않은 안내(하루 시작·출발·하루 정리 — v11 §6-B 의 ②·③).
 
         ★같은 `key` 는 두 번 들어가지 않는다(`outbox` UNIQUE). 버전 통지와 키가 겹치지
@@ -509,6 +558,30 @@ class TripStore:
         ★`[2026-09-22]` 부르는 쪽이 안 넣었으면 **계획서 링크를 여기서 붙인다** — 시나리오 모드의
           안내가 링크 없이 나가고 있었다(되잡기 작업은 넣어 주고 있었다).
         """
+        from app.domains.travel_ops.components.watch.simulation import mark_notice
+        payload = mark_notice(conn, self.tenant_id, trip_id, payload)
+        if key.startswith("departure:"):
+            version = self.lock_trip(conn, trip_id)
+            # 다른 일정 변경은 append_version의 UPDATE가 같은 행에서 직렬화한다.
+            if payload.get("version") is not None and payload["version"] != version:
+                raise StaleDeparture("departure itinerary version changed")
+            with conn.cursor() as cur:
+                if expected_departure_inputs is not None:
+                    if not isinstance(expected_departure_inputs, dict) or set(expected_departure_inputs) != {"party_size", "constraints"}:
+                        raise ValueError("invalid departure input snapshot")
+                    cur.execute("SELECT party_size IS NOT DISTINCT FROM %s "
+                                "AND constraints IS NOT DISTINCT FROM %s::jsonb "
+                                "FROM trips WHERE tenant_id=%s AND trip_id=%s",
+                                (expected_departure_inputs["party_size"],
+                                 json.dumps(expected_departure_inputs["constraints"]), self.tenant_id, trip_id))
+                    current = cur.fetchone()
+                    if current is None or not current[0]:
+                        raise StaleDeparture("departure trip inputs changed")
+                cur.execute("SELECT EXISTS (SELECT 1 FROM itinerary_items WHERE tenant_id=%s "
+                            "AND trip_id=%s AND version=%s AND item_id=%s AND kind='mobility')",
+                            (self.tenant_id, trip_id, version, UUID(key.split(":", 1)[1])))
+                if not cur.fetchone()[0]:
+                    raise StaleDeparture("departure item is no longer current")
         if "plan_url" not in payload:
             from app.domains.travel_ops.components.itinerary.plan_link import plan_url
 
@@ -535,6 +608,8 @@ class TripStore:
         ★`[2026-09-20]` **계획서 링크도 싣는다.** 상태의 정본은 링크인데(v11 §6-A) 변경 통지에만
           링크가 없었다 — 일정 안내(②·③)에는 붙고 ①에는 안 붙는 상태였다.
         """
+        from app.domains.travel_ops.components.watch.simulation import mark_notice
+        payload = mark_notice(conn, self.tenant_id, trip_id, {**payload, "version": version})
         if "plan_url" not in payload:
             from app.domains.travel_ops.components.itinerary.plan_link import plan_url
 
@@ -566,4 +641,4 @@ class TripStore:
         return guardian.annotate(payload, constraints=row[0] if row else None, trip_id=trip_id)
 
 
-__all__ = ["Item", "StaleItinerary", "TripStore"]
+__all__ = ["Item", "StaleItinerary", "StaleDeparture", "TripStore"]

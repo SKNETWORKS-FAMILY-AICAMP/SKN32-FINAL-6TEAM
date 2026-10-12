@@ -1,0 +1,22 @@
+[
+  {
+    "path": "datasets/mobility/scripts/_tago_checked.py",
+    "backup": "datasets\\mobility\\scripts\\_backup\\2026-10-09_135949_収集検証修正\\_tago_checked.py",
+    "sha256": "95662255f401da9e52778e2ec039ce3021c27406100a3d9dbded54df3b93b9cd"
+  },
+  {
+    "path": "datasets/mobility/scripts/tago_subway_collect.py",
+    "backup": "datasets\\mobility\\scripts\\_backup\\2026-10-09_135949_収集検証修正\\tago_subway_collect.py",
+    "sha256": "32f5ffee89fc24e81878b0868450efa95fb3e647f0188860f8e02b03535f0f98"
+  },
+  {
+    "path": "final_project_cs/tests/unit/travel/mobility/test_tago_collection_integrity_v1.py",
+    "backup": "final_project_cs\\tests\\unit\\travel\\mobility\\_backup\\2026-10-09_135949_収集検証修正\\test_tago_collection_integrity_v1.py",
+    "sha256": "e34c56dc479d44e458bc1edf2ca08b7912c4f768f59c7df313a41fa459a967ca"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs\\wiki\\teams\\_backup\\2026-10-09_135949_収集検証修正\\mobility.md",
+    "sha256": "b752e20c332724eaedd9d31d6b07a053232d86e212f13c588ff193ce76e7887f"
+  }
+]

@@ -1,0 +1,741 @@
+[WebServer] (node:29916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:28852) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21412) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:5700) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 158 tests using 1 worker
+
+(node:18728) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok   1 tests\live\bottom-pending-threshold-20261010.spec.ts:22:3 › 시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 375px (7.0s)
+  ok   2 tests\live\bottom-pending-threshold-20261010.spec.ts:22:3 › 시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 1280px (5.8s)
+  ok   3 tests\live\completed-progress-20261011.spec.ts:7:5 › 375px 완료 상태 › 질문이 남아 완료 화면을 붙잡아도 마지막 7/8 진행 문구는 사라지고 결과 화면에서도 되살아나지 않는다 (9.4s)
+  ok   4 tests\live\completed-progress-20261011.spec.ts:7:5 › 1280px 완료 상태 › 질문이 남아 완료 화면을 붙잡아도 마지막 7/8 진행 문구는 사라지고 결과 화면에서도 되살아나지 않는다 (9.3s)
+  ok   5 tests\live\date-divider-motion-20261010.spec.ts:33:3 › 날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 375px (10.8s)
+  ok   6 tests\live\date-divider-motion-20261010.spec.ts:33:3 › 날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 1280px (14.0s)
+  ok   7 tests\live\departure-alignment-20261009.spec.ts:26:3 › 출발 시각·가로 선·경로 한 줄 정렬 375px (2.7s)
+  ok   8 tests\live\departure-alignment-20261009.spec.ts:41:3 › 시각 누락·떠 있는 일차·스크롤 정렬 375px (3.2s)
+  ok   9 tests\live\departure-alignment-20261009.spec.ts:26:3 › 출발 시각·가로 선·경로 한 줄 정렬 1280px (2.5s)
+  ok  10 tests\live\departure-alignment-20261009.spec.ts:41:3 › 시각 누락·떠 있는 일차·스크롤 정렬 1280px (2.5s)
+  x   11 tests\live\flow.spec.ts:178:1 › 글에서 일정을 한 줄도 못 읽으면 입력 화면으로 자동 복귀하고 원문과 다시 입력할 안내를 보존한다 (14.2s)
+(node:30332) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  12 tests\live\flow.spec.ts:315:1 › 읽은 접수를 열면 새 결과 화면이 서버가 찾은 장소와 판정을 보이고, 옛 확인 화면으로 가는 길은 없다 (2.5s)
+  ok  13 tests\live\forms-time-follow-20261010.spec.ts:24:3 › 시각은 펼침·검토·되돌리기 상태에만 따라온다 375px (6.4s)
+  ok  14 tests\live\forms-time-follow-20261010.spec.ts:24:3 › 시각은 펼침·검토·되돌리기 상태에만 따라온다 1280px (6.3s)
+  x   15 tests\live\guardian-card.spec.ts:41:1 › Esc · 닫기 단추 · 바깥을 눌러 닫으면 아무것도 정해지지 않고, 초점이 「계획 확인하기」로 돌아온다. Tab 은 카드 안에서만 돈다 (14.4s)
+(node:24624) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  16 tests\live\in-map-pins-fade-20261010.spec.ts:45:3 › 지도 안 밀집 마커는 개별 표시·점선 연결·밖으로 나갈 때만 칩 375px (8.8s)
+  ok  17 tests\live\in-map-pins-fade-20261010.spec.ts:82:3 › 상단 내용 페이드와 날짜·손잡이·최소 접힘 유지 375px (7.7s)
+  ok  18 tests\live\in-map-pins-fade-20261010.spec.ts:45:3 › 지도 안 밀집 마커는 개별 표시·점선 연결·밖으로 나갈 때만 칩 1280px (7.5s)
+  ok  19 tests\live\in-map-pins-fade-20261010.spec.ts:82:3 › 상단 내용 페이드와 날짜·손잡이·최소 접힘 유지 1280px (8.2s)
+  x   20 tests\live\layout-mobile.spec.ts:13:1 › 기본은 휴대폰 크기 틀이다 — 넓은 창(1280)에서도 계획 담기 · 내 여행 · 여행 · 마이페이지가 틀 폭(402px 이하) 안에 있고 가로로 넘치지 않는다 (1.7s)
+(node:16208) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  21 tests\live\layout-mobile.spec.ts:29:1 › 항로 지킴이 카드는 휴대폰 틀 안에서 틀 폭에 맞는 아래 시트로 뜬다(화면 전체를 덮는 따로 노는 카드가 아니다) (1.8s)
+  ok  22 tests\live\layout-mobile.spec.ts:45:1 › 항로 지킴이를 끄면 알림이 틀 안에서 틀 폭에 맞는 하얀 카드로 뜨고 몇 초 뒤 저절로 사라진다. 메뉴 서랍 머리의 아이콘은 메뉴 버튼과 같은 흰색 반투명이고 위에 말풍선이 없다 (6.6s)
+  ok  23 tests\live\location-entry.spec.ts:13:34 › 375px: 동의 전에도 왼쪽 내 위치 버튼·도움말·버튼별 누름 영역을 제공하고 취소 시 위치를 읽지 않는다 (12.3s)
+  ok  24 tests\live\location-entry.spec.ts:13:34 › 1280px: 동의 전에도 왼쪽 내 위치 버튼·도움말·버튼별 누름 영역을 제공하고 취소 시 위치를 읽지 않는다 (12.7s)
+  ok  25 tests\live\map-card-continuity.spec.ts:10:1 › 정보 순서·아이콘 세 개·전체 복원은 한 흐름으로 동작한다 (7.5s)
+  ok  26 tests\live\map-card-continuity.spec.ts:72:3 › 긴 제목·작은 하단 안내·플로팅 제출·수정안 미리 보기 (375px) (2.1s)
+  ok  27 tests\live\map-card-continuity.spec.ts:72:3 › 긴 제목·작은 하단 안내·플로팅 제출·수정안 미리 보기 (1280px) (2.2s)
+  ok  28 tests\live\map-controls.spec.ts:23:1 › 접기 단추에 거리가 함께 나오고 확대·축소·모든 일정 보기 순서로 선다 (4.6s)
+  ok  29 tests\live\map-controls.spec.ts:37:1 › 거리 눈금은 지도에 담긴 거리를 말하고, 확대하면 더 짧은 거리로 바뀐다 (6.6s)
+  ok  30 tests\live\map-controls.spec.ts:52:1 › 접으면 눈금과 탭이 남고 다시 열어도 기본은 접힌 상태다 (5.9s)
+  ok  31 tests\live\map-controls.spec.ts:69:1 › 목록 창을 크게 열어 지도가 낮아지면 같은 단추가 가로 한 줄로 서고, 더 낮으면 접는 탭만 남는다 (4.9s)
+  ok  32 tests\live\map-controls.spec.ts:88:1 › 지도를 확대하면 화면 밖으로 나간 일정이 가장자리에 「번호 · 거리」 칩으로 서고, 누르면 그 일정으로 가며 골라진다 (9.0s)
+  ok  33 tests\live\map-controls.spec.ts:106:1 › 멀리 끌어 핀이 모두 화면 밖이면 칩 하나가 모두를 담아 서고(「2 · 3 · 4」), 지도 층(타일 · 핀 층) 위에 그려지고, 가장자리에서 잘리지 않는다 (6.1s)
+  ok  34 tests\live\map-controls.spec.ts:141:1 › 일정이 있는 날을 처음 보여 줄 때 첫 일정의 핀이 한 번 두근거린다 (고리가 퍼졌다 사라진다) (4.1s)
+  ok  35 tests\live\map-direct-pick-20261011.spec.ts:22:3 › 검색에 없는 장소를 지도에서 지정하고 좌표 원값을 저장 375px (4.8s)
+  ok  36 tests\live\map-direct-pick-20261011.spec.ts:66:3 › 위치 지정 취소·중심 선택과 확장 도구 375px (4.3s)
+  ok  37 tests\live\map-direct-pick-20261011.spec.ts:22:3 › 검색에 없는 장소를 지도에서 지정하고 좌표 원값을 저장 1280px (4.1s)
+  ok  38 tests\live\map-direct-pick-20261011.spec.ts:66:3 › 위치 지정 취소·중심 선택과 확장 도구 1280px (4.2s)
+  ok  39 tests\live\map-edge-visibility.spec.ts:9:3 › 375px: 묶인 거리 칩의 모든 마커·연결선은 숨고 복귀 시 같은 마커가 살아난다 (7.2s)
+  ok  40 tests\live\map-edge-visibility.spec.ts:9:3 › 1280px: 묶인 거리 칩의 모든 마커·연결선은 숨고 복귀 시 같은 마커가 살아난다 (6.9s)
+  ok  41 tests\live\map-moving-visibility-20261011.spec.ts:51:3 › 375px 확대·축소하는 동안 보이는 마커를 숨기거나 거리 칩에 합치지 않는다 (7.9s)
+  ok  42 tests\live\map-moving-visibility-20261011.spec.ts:71:3 › 375px 로딩 중 새 일정의 자동 지도 이동에서도 보이는 마커를 거리 칩에 합치지 않는다 (4.6s)
+  ok  43 tests\live\map-moving-visibility-20261011.spec.ts:98:3 › 375px 지도 밖 묶음을 눌러 가운데로 들어오는 마커는 이동 중에도 거리 칩에서 빠진다 (6.4s)
+  ok  44 tests\live\map-moving-visibility-20261011.spec.ts:51:3 › 1280px 확대·축소하는 동안 보이는 마커를 숨기거나 거리 칩에 합치지 않는다 (6.2s)
+  ok  45 tests\live\map-moving-visibility-20261011.spec.ts:71:3 › 1280px 로딩 중 새 일정의 자동 지도 이동에서도 보이는 마커를 거리 칩에 합치지 않는다 (4.6s)
+  ok  46 tests\live\map-moving-visibility-20261011.spec.ts:98:3 › 1280px 지도 밖 묶음을 눌러 가운데로 들어오는 마커는 이동 중에도 거리 칩에서 빠진다 (6.5s)
+  x   47 tests\live\map-status-bar.spec.ts:10:1 › 위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 시간 초기화는 변경 메뉴에서 동작한다 (17.2s)
+(node:28908) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  48 tests\live\map-status-bar.spec.ts:62:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다 (2.4s)
+  ok  49 tests\live\map-status-bar.spec.ts:96:1 › 확대한 경로선에 수단 이름이 붙고 지도 이동·축소에 따라 바뀌며 클릭은 선으로 통과한다 (13.2s)
+  ok  50 tests\live\onboarding.spec.ts:14:1 › 소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 마치면 등록 화면에 취향이 이어진다 (15.2s)
+  ok  51 tests\live\onboarding.spec.ts:283:1 › 소개의 첫 단어는 「나의 계획」이고, 처음 동의하면 취향 설문 없이 바로 계획 올리는 화면으로 가며, 취향 설문은 메뉴에서 따로 연다 (2026-10-06 사용자 지시) (3.1s)
+  ok  52 tests\live\onboarding.spec.ts:303:1 › 약관에 동의하지 않았으면 소개 버튼은 시작 화면으로 가고, 다른 화면은 열리지 않고 약관 화면으로 돌아가며, 동의한 뒤에는 마이페이지의 여행 취향이 설정 전이라고 알린다 (2.4s)
+  ok  53 tests\live\plan-check-map-detail.spec.ts:42:1 › 경로 설명 알림은 하얀 카드다: 휴대폰 틀 안 머리줄 아래, 틀 폭에 맞고 테두리 빛 · 고리 움직임이 한 번 지나가며, 몇 초 뒤 저절로 사라지고 단추 위에 있는 동안은 남는다 (20.8s)
+  ok  54 tests\live\plan-check-redesign.spec.ts:34:1 › 결과 화면의 상단바는 투명하고 지도가 맨 위까지 이어지며, 홈 표시·계획 이름·메뉴만 지도 위에 떠 있다 (1.4s)
+  ok  55 tests\live\plan-check-redesign.spec.ts:84:1 › 시트를 끝까지 내리면 손잡이만 남고 플로팅 제출은 숨긴다(지도의 「확인 필요」는 남는다) (6.0s)
+  ok  56 tests\live\plan-check-redesign.spec.ts:387:1 › 이동 줄은 앞뒤 일정의 시작 시각 사이에서 출발하는 만큼 위에서 내려와, 시각이 더 가까운 일정 쪽에 붙는다 (2.0s)
+  ok  57 tests\live\plan-check-redesign.spec.ts:417:1 › 일정 카드의 시간 · 원 · 이름은 한 줄에 놓인다(이름만 아래로 처지지 않는다) (4.2s)
+  ok  58 tests\live\plan-check-screen.spec.ts:297:1 › 핀을 누르면 선택한 이름·종류가 나오고 다시 누르면 확인 필요 안내로 돌아온다 (7.4s)
+  x   59 tests\live\plan-focus.spec.ts:10:1 › 마커로 연 일정의 윗부분은 전체·일차 줄 아래에 놓인다 (45.2s)
+(node:23300) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  60 tests\live\reading-hold.spec.ts:34:1 › 질문이 붙은 계획을 보내면 읽는 화면이 질문과 함께 그대로 있다가 확인 화면으로 한 번만 간다(확인 화면에서 읽는 화면으로 되끌려 오지 않는다) (18.0s)
+  ok  61 tests\live\reading-hold.spec.ts:51:1 › 이미 읽은 계획을 뒤로 · 앞으로로 다시 열면 읽는 화면이 5초 뜨지 않고 곧장 확인 화면이며, 한 번 열린 뒤에는 다시 읽는 화면이 되지 않는다 (18.6s)
+  ok  62 tests\live\registration.spec.ts:9:1 › 작성 중인 계획은 화면을 오가도·새로고침해도 보존되고, 「이전」은 소개 화면(약관 동의 뒤)으로 간다 (946ms)
+  ok  63 tests\live\registration.spec.ts:25:1 › 「예시 불러오기」는 글칸에 일주일 뒤부터의 서울 이틀 일정을 채울 뿐이다 — 서버에는 아무것도 가지 않고, 고칠 수 있다 (831ms)
+  ok  64 tests\live\route-lines.spec.ts:31:1 › 선이 있는 여행: 길을 아는 구간은 실선, 직선으로 이은 구간은 점선·옅은 색으로 그리고, 출처와 점선·버스의 뜻을 목록 끝 출처 줄에 적는다 (861ms)
+  ok  65 tests\live\route-lines.spec.ts:58:1 › 서버에 이 경로가 아직 없으면(404) 선도 출처 문구도 오류 문구도 없이 핀만 보인다 (729ms)
+  ok  66 tests\live\route-lines.spec.ts:67:1 › 선을 읽다 실패하면(500) 읽지 못했다고 말하고 핀은 그대로 보인다 — 선이 없다는 말이 아니다 (761ms)
+  ok  67 tests\live\route-lines.spec.ts:75:1 › 서버가 선을 늦게 줘도(길 자료를 올리는 중) 핀이 먼저 보이고, 선은 오면 그려진다 (4.1s)
+  ok  68 tests\live\route-lines.spec.ts:83:1 › 다른 날로 바꾸면 그 날 장소 사이의 선만 남는다(둘째 날에는 선이 없다) (1.2s)
+  ok  69 tests\live\route-lines.spec.ts:92:1 › 확대하면 상세 경로선을 따로 한 번 받아 그린다: 축소 상태는 짧은 선, 확대 수준 15 이상에서 상세 선으로 바뀌고, 다시 줄여도 상세 선이 남는다 (9.0s)
+  ok  70 tests\live\scroll-end.spec.ts:24:1 › 권장 수정안이 없으면 맨 끝 표시는 처음부터 꺼져 있고 이유를 말한다 (서버를 다시 부르지 않는다) (1.7s)
+  ok  71 tests\live\scroll-end.spec.ts:62:1 › 권장 수정안이 있으면 표시는 그대로이고 누르면 수정안이 열린다 (꺼지지 않는다) (1.3s)
+  ok  72 tests\live\server-review.spec.ts:107:1 › 수정 화면: 서버의 대체 후보가 순위·거리와 함께 나오고, 바꾸면 좌표까지 서버로 가며, 되돌리기는 이전 장소를 다시 보낸다 (2.4s)
+  ok  73 tests\live\server-review.spec.ts:223:1 › 서버의 확인 결과를 못 만들었으면(review: null) 못 만들었다고 말하고 읽은 값만 보인다 — 이동·자동 추천 같은 서버 일은 열지 않는다 (919ms)
+  ok  74 tests\live\server-review.spec.ts:252:1 › 전체 자동 추천은 저장 없이 수정안만 보여 주고, 변경 전 쪽으로 돌아가면 변경 전 모습이 그대로 있다 — 서버에는 아무것도 저장되지 않았다 (2.5s)
+  ok  75 tests\live\server-review.spec.ts:316:1 › 출처 줄(ⓒ한국관광공사)은 수정안 안내 위에 있어서, 목록 맨 끝이 「내리면 다음이 나온다」로 읽힌다 (1.9s)
+  ok  76 tests\live\server-review.spec.ts:326:1 › 전체 자동 추천이 바꿀 곳을 못 찾으면 이유만 말하지 않고, 사용자가 직접 고쳐야 하는 첫 곳을 열어 그 자리로 옮긴다 (2.4s)
+  ok  77 tests\live\server-slow.spec.ts:60:1 › 계획을 읽는 동안 새 소식이 30초 없으면 읽는 화면이 「서버 소식이 한동안 없어요」라고 말하고, 읽기가 끝나면 사라진다 (37.3s)
+  ok  78 tests\live\session.spec.ts:139:1 › 게스트의 제한에 걸리면(403 guest_trip_limit · login_required) 서버 문장 그대로 알리고, 계정을 연결하러 가는 길을 보인다 — 읽은 계획은 그대로다 (5.7s)
+  ok  79 tests\live\time-direct-drag.spec.ts:77:1 › 고정한 일정의 시간은 잡아도 안 움직이고 이유만 말한다 (4.3s)
+  ok  80 tests\live\trip-list.spec.ts:97:1 › 첫 장에는 등록 버튼과 소개 건너뛰기 없이 아래로 가는 안내만 있고, 마지막 장의 시작 버튼은 필수 약관 화면으로 간다 (1.9s)
+  x   81 tests\live\trip-safety.spec.ts:166:1 › 화면이 열려 있는 동안 안전 알림이 오면 「일정 정지 중 · 안전 알림」 막대가 대피 장소를 말하고 9초 동안 남는다 — 정지가 풀리면 칩도 없다 (12.7s)
+(node:6152) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  82 tests\live\trip.spec.ts:80:1 › 서버가 경로선을 주지 않으면 이동 줄은 수단·거리를 지어내지 않는다 — 출발 시각 · 걸리는 시간 · 여유만, 이동 항목이 없는 구간은 정보 없음과 길찾기 링크 (1.2s)
+  x   83 tests\live\trip.spec.ts:336:1 › 주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 없다(없는 리소스·예외) (8.7s)
+(node:19580) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  84 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intro · 375px: 화면 표시·가로 넘침·실행 오류 (1.2s)
+  ok  85 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · terms-preferences · 375px: 화면 표시·가로 넘침·실행 오류 (1.2s)
+  ok  86 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registration · 375px: 화면 표시·가로 넘침·실행 오류 (1.1s)
+  ok  87 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · trips · 375px: 화면 표시·가로 넘침·실행 오류 (968ms)
+  ok  88 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registered-trip · 375px: 화면 표시·가로 넘침·실행 오류 (1.4s)
+  ok  89 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · verification-redirect · 375px: 화면 표시·가로 넘침·실행 오류 (1.4s)
+  ok  90 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · results-redirect · 375px: 화면 표시·가로 넘침·실행 오류 (1.4s)
+  ok  91 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intake · 375px: 화면 표시·가로 넘침·실행 오류 (1.3s)
+  ok  92 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · starting-revisit · 375px: 화면 표시·가로 넘침·실행 오류 (1.1s)
+  ok  93 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · account · 375px: 화면 표시·가로 넘침·실행 오류 (966ms)
+  ok  94 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · profile · 375px: 화면 표시·가로 넘침·실행 오류 (1.2s)
+  ok  95 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · support · 375px: 화면 표시·가로 넘침·실행 오류 (909ms)
+  ok  96 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · social-cancelled · 375px: 화면 표시·가로 넘침·실행 오류 (947ms)
+  ok  97 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intro · 1280px: 화면 표시·가로 넘침·실행 오류 (995ms)
+  ok  98 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · terms-preferences · 1280px: 화면 표시·가로 넘침·실행 오류 (1.2s)
+  ok  99 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registration · 1280px: 화면 표시·가로 넘침·실행 오류 (1.1s)
+  ok 100 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · trips · 1280px: 화면 표시·가로 넘침·실행 오류 (915ms)
+  ok 101 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registered-trip · 1280px: 화면 표시·가로 넘침·실행 오류 (1.4s)
+  ok 102 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · verification-redirect · 1280px: 화면 표시·가로 넘침·실행 오류 (1.4s)
+  ok 103 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · results-redirect · 1280px: 화면 표시·가로 넘침·실행 오류 (1.5s)
+  ok 104 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intake · 1280px: 화면 표시·가로 넘침·실행 오류 (1.5s)
+  ok 105 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · starting-revisit · 1280px: 화면 표시·가로 넘침·실행 오류 (1.4s)
+  ok 106 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · account · 1280px: 화면 표시·가로 넘침·실행 오류 (1.1s)
+  ok 107 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · profile · 1280px: 화면 표시·가로 넘침·실행 오류 (1.0s)
+  ok 108 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · support · 1280px: 화면 표시·가로 넘침·실행 오류 (1.0s)
+  ok 109 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · social-cancelled · 1280px: 화면 표시·가로 넘침·실행 오류 (1.0s)
+  ok 110 tests\live\uiux-share-location-20261012.spec.ts:14:34 › 공유창 Tab 순환·배경 비활성화·Esc 초점 복귀 (375px) (1.7s)
+  ok 111 tests\live\uiux-share-location-20261012.spec.ts:14:34 › 공유창 Tab 순환·배경 비활성화·Esc 초점 복귀 (1280px) (1.9s)
+  ok 112 tests\live\uiux-share-location-20261012.spec.ts:38:56 › 클립보드 missing에서도 복사 실패를 알리고 공유창을 유지한다 (1.6s)
+  ok 113 tests\live\uiux-share-location-20261012.spec.ts:38:56 › 클립보드 refused에서도 복사 실패를 알리고 공유창을 유지한다 (1.7s)
+  ok 114 tests\live\uiux-share-location-20261012.spec.ts:89:1 › GPS 대기 중 위치 동의를 철회하면 질문과 위치를 전송하지 않는다 (3.3s)
+  ok 115 tests\live\uiux-share-location-20261012.spec.ts:99:1 › GPS 대기 중 철회 후 다시 동의해도 취소된 요청은 보내지 않고 새 클릭은 보낸다 (3.5s)
+  ok 116 tests\live\uiux-share-location-20261012.spec.ts:113:1 › GPS 대기 중 여행 화면을 나가면 늦게 도착한 위치로 질문을 보내지 않는다 (3.3s)
+  ok 117 tests\live\uiux-share-location-20261012.spec.ts:123:1 › 위치 동의가 유지된 요청은 GPS 응답 뒤 질문과 위치를 한 번 전송한다 (3.1s)
+  ok 118 tests\live\uiux-sonnet-add-20261012.spec.ts:14:1 › 추가 거절 안내는 필드 초점 이동으로 없어지지 않고 입력 수정 때 지워진다 (2.6s)
+  ok 119 tests\live\uiux-sonnet-add-20261012.spec.ts:28:1 › 시작 시각을 앞당겨 끝 시각이 유효해지면 이전 순서 오류를 지운다 (2.6s)
+  ok 120 tests\live\uiux-sonnet-map-20261012.spec.ts:8:3 › 직접 위치 지정 중 먼 일정 버튼을 눌러도 새 좌표를 고르지 않는다 375px (3.1s)
+  ok 121 tests\live\uiux-sonnet-map-20261012.spec.ts:8:3 › 직접 위치 지정 중 먼 일정 버튼을 눌러도 새 좌표를 고르지 않는다 1280px (3.2s)
+  ok 122 tests\live\uiux-sonnet-map-crowded-20261012.spec.ts:9:3 › 180px 지도에서 이전 4개 거리 단추의 번호 중심을 누를 수 있다 (2.7s)
+  ok 123 tests\live\uiux-sonnet-map-crowded-20261012.spec.ts:9:3 › 180px 지도에서 이전 5개 거리 단추의 번호 중심을 누를 수 있다 (2.1s)
+  ok 124 tests\live\uiux-sonnet-plan-20261012.spec.ts:20:3 › 계획 이름 편집을 Enter로 끝내면 제목 버튼에 초점이 돌아온다 (2.0s)
+  ok 125 tests\live\uiux-sonnet-plan-20261012.spec.ts:20:3 › 계획 이름 편집을 Escape로 끝내면 제목 버튼에 초점이 돌아온다 (4.4s)
+  x  126 tests\live\uiux-sonnet-plan-20261012.spec.ts:37:3 › 목록 머리를 끈 직후 손잡이 첫 Enter 입력이 동작한다 (17.1s)
+(node:19800) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  127 tests\live\uiux-sonnet-plan-20261012.spec.ts:37:3 › 목록 머리를 끈 직후 손잡이 첫 Space 입력이 동작한다 (17.3s)
+(node:18684) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 128 tests\live\uiux-sonnet-plan-20261012.spec.ts:56:1 › 변경을 모두 되돌린 뒤 새로 바꾸면 이전 필터와 변경 메뉴가 되살아나지 않는다 (4.8s)
+  x  129 tests\live\uiux-sonnet-plan-20261012.spec.ts:69:1 › 잠금 요청이 진행 중이면 이전 시간 변경 토스트의 되돌리기가 추가 요청을 보내지 않는다 (17.7s)
+(node:21612) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  130 tests\live\uiux-sonnet-plan-20261012.spec.ts:92:1 › 확인 실패 안내가 해소된 뒤 같은 실패가 다시 생기면 안내를 다시 표시한다 (16.5s)
+(node:24284) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 131 tests\live\uiux-sonnet-remaining-20261012.spec.ts:6:1 › scrollend 이벤트가 없는 브라우저에서도 소개 카드 드래그 뒤 스냅이 복원된다 (1.6s)
+  ok 132 tests\live\uiux-sonnet-remaining-20261012.spec.ts:31:1 › 여행 화면의 작은 목록에서는 채팅 내용 조각이 그려지지 않는다 (1.2s)
+  ok 133 tests\live\uiux-sonnet-trip-20261012.spec.ts:15:34 › 알림 센터 탭·재렌더 초점 유지와 Tab 순환 375px (1.6s)
+  ok 134 tests\live\uiux-sonnet-trip-20261012.spec.ts:15:34 › 알림 센터 탭·재렌더 초점 유지와 Tab 순환 1280px (1.9s)
+  ok 135 tests\live\uiux-sonnet-trip-20261012.spec.ts:50:1 › 알림의 일정에서 보기는 채팅·상세에서 목록을 열고 해당 제목으로 키보드 초점을 옮긴다 (1.9s)
+  ok 136 tests\live\uiux-sonnet-trip-20261012.spec.ts:73:36 › 등록 여행 하루 일정도 날짜줄 표시 (883ms)
+  x  137 tests\live\uiux-sonnet-trip-20261012.spec.ts:73:36 › 등록 여행 일정0개는 날짜줄 숨김 (12.6s)
+(node:17140) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 138 tests\live\uiux-sonnet-trip-20261012.spec.ts:91:40 › 제목 편집 Enter 종료 뒤 제목 버튼으로 초점 복귀 (2.2s)
+  ok 139 tests\live\uiux-sonnet-trip-20261012.spec.ts:91:40 › 제목 편집 Escape 종료 뒤 제목 버튼으로 초점 복귀 (2.4s)
+  x  140 tests\live\uiux-sonnet-trip-20261012.spec.ts:103:39 › 머리 영역 드래그 직후 첫 Enter가 목록 높이를 바꾼다 (13.5s)
+(node:27104) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  141 tests\live\uiux-sonnet-trip-20261012.spec.ts:103:39 › 머리 영역 드래그 직후 첫 Space가 목록 높이를 바꾼다 (13.8s)
+(node:10600) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 142 tests\live\uiux-sonnet-trip-20261012.spec.ts:121:1 › 채팅 Enter 전송 동안 입력 초점·초안을 유지하고 중복 전송하지 않는다 (3.9s)
+  ok 143 tests\live\uiux-sonnet-trip-20261012.spec.ts:144:38 › 문의 전송 성공 뒤 키보드 초점과 초안 처리 (1.2s)
+  ok 144 tests\live\uiux-sonnet-trip-20261012.spec.ts:144:38 › 문의 전송 실패 뒤 키보드 초점과 초안 처리 (1.1s)
+  ok 145 tests\live\uiux-time-boundary-20261012.spec.ts:5:34 › 시각 고정은 그림자 상자가 아닌 실제 날짜 버튼 아래 기준 (375px) (3.4s)
+  ok 146 tests\live\uiux-time-boundary-20261012.spec.ts:5:34 › 시각 고정은 그림자 상자가 아닌 실제 날짜 버튼 아래 기준 (1280px) (2.6s)
+  ok 147 tests\live\web-flow-captures.spec.ts:5:3 › 실제 화면 촬영과 가로 넘침 확인 375px (7.5s)
+  ok 148 tests\live\web-flow-captures.spec.ts:5:3 › 실제 화면 촬영과 가로 넘침 확인 1280px (7.5s)
+  ok 149 tests\live\web-flow-oct09.spec.ts:32:1 › 검증 목록에서 일정을 추가하면 6개 필드를 한 판으로 보내고 새 카드에 반영한다 (3.8s)
+  x  150 tests\live\web-flow-oct09.spec.ts:55:1 › 검증 이동은 출발만 표시하다 펼치면 도착을 표시하고 수단·소요·여유를 유지한다 (13.3s)
+(node:22236) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 151 tests\live\first-map-reveal-20261011.spec.ts:9:5 › 375px 실제 시간의 첫 지도 표시 › 질문 뒤 일정과 마커가 하나씩 등장하고 읽기 화면은 되돌아오지 않는다 (8.6s)
+  ok 152 tests\live\first-map-reveal-20261011.spec.ts:9:5 › 1280px 실제 시간의 첫 지도 표시 › 질문 뒤 일정과 마커가 하나씩 등장하고 읽기 화면은 되돌아오지 않는다 (9.2s)
+(node:17124) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 153 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 375px 순서대로 지도 표시 · 동작 줄이기 false › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (10.7s)
+  ok 154 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 375px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (9.1s)
+  ok 155 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 false › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (10.5s)
+  ok 156 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (9.2s)
+  x  157 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:22:3 › 세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 375px (17.2s)
+(node:1904) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  158 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:22:3 › 세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 1280px (17.2s)
+
+
+  1) tests\live\flow.spec.ts:178:1 › 글에서 일정을 한 줄도 못 읽으면 입력 화면으로 자동 복귀하고 원문과 다시 입력할 안내를 보존한다 ────────
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByLabel('첫날')
+    Expected: 0
+    Received: 1
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveCount" getByLabel('첫날') with timeout 12000ms
+      - waiting for getByLabel('첫날')
+        27 × locator resolved to 1 element
+           - unexpected value "1"
+
+
+      192 |   await expect(page.getByRole("heading", { name: /일정을 짜 달라고 하셨어요|대신 짜 드릴까요/ })).toHaveCount(0);
+      193 |   await expect(page.getByRole("button", { name: /이 조건으로 짜서 등록/ })).toHaveCount(0);
+    > 194 |   await expect(page.getByLabel("첫날")).toHaveCount(0);
+          |                                       ^
+      195 |   expect(await server.received("POST", "/plan")).toHaveLength(0);
+      196 | });
+      197 |
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\flow.spec.ts:194:39
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\flow-글에서-일정을-한-줄도-못-읽으면-입력-화면으로-자동-복귀하고-원문과-다시-입력할-안내를-보존한다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\flow-글에서-일정을-한-줄도-못-읽으면-입력-화면으로-자동-복귀하고-원문과-다시-입력할-안내를-보존한다\error-context.md
+
+  2) tests\live\guardian-card.spec.ts:41:1 › Esc · 닫기 단추 · 바깥을 눌러 닫으면 아무것도 정해지지 않고, 초점이 「계획 확인하기」로 돌아온다. Tab 은 카드 안에서만 돈다 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByRole('dialog')
+    Expected: 0
+    Received: 1
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveCount" getByRole('dialog') with timeout 12000ms
+      - waiting for getByRole('dialog')
+        27 × locator resolved to 1 element
+           - unexpected value "1"
+
+
+      50 |     else if (way === "close") await card(page).getByRole("button", { name: "닫기" }).click();
+      51 |     else { const layer = (await card(page).locator('..').boundingBox())!; await page.mouse.click(layer.x + 4, layer.y + 4); } // 휴대폰 틀 유무와 무관하게 실제 어두운 배경을 누릅니다.
+    > 52 |     await expect(card(page)).toHaveCount(0);
+         |                              ^
+      53 |     await expect(send(page)).toBeFocused();
+      54 |   }
+      55 |   expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\guardian-card.spec.ts:52:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\guardian-card-Esc-·-닫기-단추--1fef0-인하기」로-돌아온다-Tab-은-카드-안에서만-돈다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\guardian-card-Esc-·-닫기-단추--1fef0-인하기」로-돌아온다-Tab-은-카드-안에서만-돈다\error-context.md
+
+  3) tests\live\layout-mobile.spec.ts:13:1 › 기본은 휴대폰 크기 틀이다 — 넓은 창(1280)에서도 계획 담기 · 내 여행 · 여행 · 마이페이지가 틀 폭(402px 이하) 안에 있고 가로로 넘치지 않는다 
+
+    TypeError: Cannot read properties of null (reading 'width')
+
+      19 |     await expect(device(page)).toBeVisible();
+      20 |     const frame = (await device(page).boundingBox())!;
+    > 21 |     expect(frame.width).toBeLessThanOrEqual(402.5);
+         |                  ^
+      22 |     const main = (await page.locator("#main-content").boundingBox())!;
+      23 |     expect(main.width).toBeLessThanOrEqual(402.5);
+      24 |     expect(main.x).toBeGreaterThanOrEqual(frame.x - 1);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\layout-mobile.spec.ts:21:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\layout-mobile-기본은-휴대폰-크기-틀-3e9ba--402px-이하-안에-있고-가로로-넘치지-않는다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\layout-mobile-기본은-휴대폰-크기-틀-3e9ba--402px-이하-안에-있고-가로로-넘치지-않는다\error-context.md
+
+  4) tests\live\map-status-bar.spec.ts:10:1 › 위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 시간 초기화는 변경 메뉴에서 동작한다 ────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('group', { name: '일정 확인과 변경' }).getByText('위치 미정 · 호텔', { exact: true })
+    Expected: visible
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('group', { name: '일정 확인과 변경' }).getByText('위치 미정 · 호텔', { exact: true }) with timeout 12000ms
+      - waiting for getByRole('group', { name: '일정 확인과 변경' }).getByText('위치 미정 · 호텔', { exact: true })
+
+
+      30 |   await page.getByRole("status").filter({ hasText: /시간을 바꿨어요/ }).getByRole("button", { name: "닫기", exact: true }).click();
+      31 |   const group = page.getByRole("group", { name: "일정 확인과 변경" });
+    > 32 |   await expect(group.getByText("위치 미정 · 호텔", { exact: true })).toBeVisible();
+         |                                                                ^
+      33 |   const [need, change, location, bar] = await Promise.all([needsBadge(page).boundingBox(), changedBadge(page).boundingBox(), group.getByText("위치 미정 · 호텔", { exact: true }).boundingBox(), group.boundingBox()]);
+      34 |   expect(need!.x).toBeGreaterThanOrEqual(location!.x + location!.width - 1);
+      35 |   expect(change!.x).toBeGreaterThanOrEqual(need!.x + need!.width - 1);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\map-status-bar.spec.ts:32:64
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\map-status-bar-위치·확인·변경-표시-a1d5c-란히-놓이고-시간-초기화는-변경-메뉴에서-동작한다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\map-status-bar-위치·확인·변경-표시-a1d5c-란히-놓이고-시간-초기화는-변경-메뉴에서-동작한다\error-context.md
+
+  5) tests\live\plan-focus.spec.ts:10:1 › 마커로 연 일정의 윗부분은 전체·일차 줄 아래에 놓인다 ───────────────────────────
+
+    Test timeout of 45000ms exceeded.
+
+    Error: locator.click: Test timeout of 45000ms exceeded.
+    Call log:
+      - waiting for locator('.leaflet-marker-icon[title^="1. 경복궁 관람"]').locator('[data-pin-body]')
+        - locator resolved to <div data-pin-body="" data-facing="se" data-pin-label="1">1</div>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not visible
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not visible
+        - retrying click action
+          - waiting 100ms
+        68 × waiting for element to be visible, enabled and stable
+           - element is not visible
+         - retrying click action
+           - waiting 500ms
+
+
+      29 |   for (const [label, title] of [["3. 광장시장", "광장시장"], ["1. 경복궁 관람", "경복궁 관람"], ["3. 광장시장", "광장시장"]]) {
+      30 |     await mapSettled(page);
+    > 31 |     await pin(page, label).locator("[data-pin-body]").click();
+         |                                                       ^
+      32 |     await expect(pin(page, label)).toHaveAttribute("aria-pressed", "true");
+      33 |     await belowHeader(title);
+      34 |   }
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\plan-focus.spec.ts:31:55
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\plan-focus-마커로-연-일정의-윗부분은-전체·일차-줄-아래에-놓인다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\plan-focus-마커로-연-일정의-윗부분은-전체·일차-줄-아래에-놓인다\error-context.md
+
+  6) tests\live\trip-safety.spec.ts:166:1 › 화면이 열려 있는 동안 안전 알림이 오면 「일정 정지 중 · 안전 알림」 막대가 대피 장소를 말하고 9초 동안 남는다 — 정지가 풀리면 칩도 없다 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('button', { name: '알림 센터 열기 · 읽지 않은 알림 1개', exact: true })
+    Expected: visible
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('button', { name: '알림 센터 열기 · 읽지 않은 알림 1개', exact: true }) with timeout 12000ms
+      - waiting for getByRole('button', { name: '알림 센터 열기 · 읽지 않은 알림 1개', exact: true })
+
+
+      170 |   await stage(page, state);
+      171 |   await openTrip(page);
+    > 172 |   await expect(page.getByRole("button", { name: "알림 센터 열기 · 읽지 않은 알림 1개", exact: true })).toBeVisible(); // 기존 알림 조회가 반영된 뒤 새 안전 알림을 보낸다
+          |                                                                                           ^
+      173 |   await expect(page.getByRole("button", { name: "일정 정지 중 · 알림 센터 열기" })).toHaveCount(0);
+      174 |   state.paused = true;
+      175 |   await expect.poll(() => server.ring(["itinerary", "notice"])).toBeGreaterThan(0);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\trip-safety.spec.ts:172:91
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\trip-safety-화면이-열려-있는-동안-안-6952c-고-9초-동안-남는다-—-정지가-풀리면-칩도-없다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\trip-safety-화면이-열려-있는-동안-안-6952c-고-9초-동안-남는다-—-정지가-풀리면-칩도-없다\error-context.md
+
+  7) tests\live\trip.spec.ts:336:1 › 주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 없다(없는 리소스·예외) ───────────────────
+
+    Error: 실패 응답: ["404 http://127.0.0.1:8187/v1/web/test-scenarios"]
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 3
+
+    - Array []
+    + Array [
+    +   "console: Failed to load resource: the server responded with a status of 404 (Not Found) http://127.0.0.1:8187/v1/web/test-scenarios",
+    + ]
+
+      355 |     await page.waitForTimeout(1_500);
+      356 |   }
+    > 357 |   expect(problems, `실패 응답: ${JSON.stringify(failedResponses)}`).toEqual([]);
+          |                                                                 ^
+      358 | });
+      359 |
+      360 | test("여행 화면을 열면 채팅 모델 예열을 서버에 한 번 청하고(사용자 키로), 키가 없는 첫 화면에서는 청하지 않는다", async ({ page, request }) => {
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\trip.spec.ts:357:65
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\trip-주요-화면을-여는-동안-브라우저-콘솔에-오류가-하나도-없다-없는-리소스·예외-\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\trip-주요-화면을-여는-동안-브라우저-콘솔에-오류가-하나도-없다-없는-리소스·예외-\error-context.md
+
+  8) tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:22:3 › 세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 375px 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('[data-stage="checking"]')
+    Expected: visible
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('[data-stage="checking"]') with timeout 12000ms
+      - waiting for locator('[data-stage="checking"]')
+
+
+       96 |     await expect(marker("3")).toBeVisible();
+       97 |     await expect(map).not.toHaveAttribute("data-moving");
+    >  98 |     await expect(page.locator('[data-stage="checking"]')).toBeVisible();
+          |                                                           ^
+       99 |     for (const label of ["1", "2"]) {
+      100 |       const chip = map.getByRole("button", { name: new RegExp(`^${label}번 일정이 화면 밖에 있어요 · [\\d.]+[km]+`) });
+      101 |       await expect(chip).toHaveCount(1);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:98:59
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-map-reveal-202-08f40--먼-일정은-각각-거리-버튼으로-남는다-375px\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-map-reveal-202-08f40--먼-일정은-각각-거리-버튼으로-남는다-375px\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-map-reveal-202-08f40--먼-일정은-각각-거리-버튼으로-남는다-375px\error-context.md
+
+  9) tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:22:3 › 세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 1280px 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('[data-stage="checking"]')
+    Expected: visible
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('[data-stage="checking"]') with timeout 12000ms
+      - waiting for locator('[data-stage="checking"]')
+
+
+       96 |     await expect(marker("3")).toBeVisible();
+       97 |     await expect(map).not.toHaveAttribute("data-moving");
+    >  98 |     await expect(page.locator('[data-stage="checking"]')).toBeVisible();
+          |                                                           ^
+       99 |     for (const label of ["1", "2"]) {
+      100 |       const chip = map.getByRole("button", { name: new RegExp(`^${label}번 일정이 화면 밖에 있어요 · [\\d.]+[km]+`) });
+      101 |       await expect(chip).toHaveCount(1);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:98:59
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-map-reveal-202-74233-먼-일정은-각각-거리-버튼으로-남는다-1280px\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-map-reveal-202-74233-먼-일정은-각각-거리-버튼으로-남는다-1280px\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-map-reveal-202-74233-먼-일정은-각각-거리-버튼으로-남는다-1280px\error-context.md
+
+  10) tests\live\uiux-sonnet-plan-20261012.spec.ts:37:3 › 목록 머리를 끈 직후 손잡이 첫 Enter 입력이 동작한다 ─────────
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  locator('[data-sheet]')
+    Expected: "custom"
+    Received: "half"
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveAttribute" locator('[data-sheet]') with timeout 12000ms
+      - waiting for locator('[data-sheet]')
+        27 × locator resolved to <div data-sheet="half" class="plan-check_checking__2JrBO">…</div>
+           - unexpected value "half"
+
+
+      47 |     await page.mouse.move(x, y); await page.mouse.down();
+      48 |     await page.mouse.move(x, y - 75, { steps: 8 }); await page.mouse.up();
+    > 49 |     await expect(page.locator("[data-sheet]")).toHaveAttribute("data-sheet", "custom");
+         |                                                ^
+      50 |     await page.getByRole("button", { name: "목록 높이 바꾸기" }).focus();
+      51 |     await page.keyboard.press(key);
+      52 |     await expect(page.locator("[data-sheet]")).toHaveAttribute("data-sheet", "half");
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-plan-20261012.spec.ts:49:48
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-plan-20261012-목록-머리를-끈-직후-손잡이-첫-Enter-입력이-동작한다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-plan-20261012-목록-머리를-끈-직후-손잡이-첫-Enter-입력이-동작한다\error-context.md
+
+  11) tests\live\uiux-sonnet-plan-20261012.spec.ts:37:3 › 목록 머리를 끈 직후 손잡이 첫 Space 입력이 동작한다 ─────────
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  locator('[data-sheet]')
+    Expected: "custom"
+    Received: "half"
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveAttribute" locator('[data-sheet]') with timeout 12000ms
+      - waiting for locator('[data-sheet]')
+        27 × locator resolved to <div data-sheet="half" class="plan-check_checking__2JrBO">…</div>
+           - unexpected value "half"
+
+
+      47 |     await page.mouse.move(x, y); await page.mouse.down();
+      48 |     await page.mouse.move(x, y - 75, { steps: 8 }); await page.mouse.up();
+    > 49 |     await expect(page.locator("[data-sheet]")).toHaveAttribute("data-sheet", "custom");
+         |                                                ^
+      50 |     await page.getByRole("button", { name: "목록 높이 바꾸기" }).focus();
+      51 |     await page.keyboard.press(key);
+      52 |     await expect(page.locator("[data-sheet]")).toHaveAttribute("data-sheet", "half");
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-plan-20261012.spec.ts:49:48
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-plan-20261012-목록-머리를-끈-직후-손잡이-첫-Space-입력이-동작한다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-plan-20261012-목록-머리를-끈-직후-손잡이-첫-Space-입력이-동작한다\error-context.md
+
+  12) tests\live\uiux-sonnet-plan-20261012.spec.ts:69:1 › 잠금 요청이 진행 중이면 이전 시간 변경 토스트의 되돌리기가 추가 요청을 보내지 않는다 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('status').filter({ hasText: '바뀐 일정을 다시 확인하는 중이에요' })
+    Expected: visible
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('status').filter({ hasText: '바뀐 일정을 다시 확인하는 중이에요' }) with timeout 12000ms
+      - waiting for getByRole('status').filter({ hasText: '바뀐 일정을 다시 확인하는 중이에요' })
+
+
+      83 |     await expect.poll(() => hits).toBe(1);
+      84 |     await timeNotice(page).getByRole("button", { name: "되돌리기", exact: true }).click();
+    > 85 |     await expect(page.getByRole("status").filter({ hasText: "바뀐 일정을 다시 확인하는 중이에요" })).toBeVisible();
+         |                                                                                       ^
+      86 |     expect(hits).toBe(1);
+      87 |     await expect(page.getByRole("button", { name: "경복궁 관람 꼭 넣을 일정으로 고정", exact: true })).toHaveAttribute("aria-disabled", "true");
+      88 |   } finally { release(); }
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-plan-20261012.spec.ts:85:87
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-plan-20261012--5e443-경-토스트의-되돌리기가-추가-요청을-보내지-않는다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-plan-20261012--5e443-경-토스트의-되돌리기가-추가-요청을-보내지-않는다\error-context.md
+
+  13) tests\live\uiux-sonnet-plan-20261012.spec.ts:92:1 › 확인 실패 안내가 해소된 뒤 같은 실패가 다시 생기면 안내를 다시 표시한다 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('status').filter({ hasText: '장소·운영시간·이동 확인 결과를 만들지 못했어요' })
+    Expected: visible
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('status').filter({ hasText: '장소·운영시간·이동 확인 결과를 만들지 못했어요' }) with timeout 12000ms
+      - waiting for getByRole('status').filter({ hasText: '장소·운영시간·이동 확인 결과를 만들지 못했어요' })
+
+
+      101 |   await openFinished(page, request, withFailure, { intakeEvents: "off" });
+      102 |   const notice = page.getByRole("status").filter({ hasText: "장소·운영시간·이동 확인 결과를 만들지 못했어요" });
+    > 103 |   await expect(notice).toBeVisible();
+          |                        ^
+      104 |   await notice.getByRole("button", { name: "닫기", exact: true }).click();
+      105 |   for (const [failure, name] of [[false, "확인 복구 여행"], [true, "다시 확인 실패 여행"]] as const) {
+      106 |     failed = failure;
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-plan-20261012.spec.ts:103:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-plan-20261012--5cbe0-뒤-같은-실패가-다시-생기면-안내를-다시-표시한다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-plan-20261012--5cbe0-뒤-같은-실패가-다시-생기면-안내를-다시-표시한다\error-context.md
+
+  14) tests\live\uiux-sonnet-trip-20261012.spec.ts:73:36 › 등록 여행 일정0개는 날짜줄 숨김 ──────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('#trip-pane-schedule')
+    Expected: visible
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('#trip-pane-schedule') with timeout 12000ms
+      - waiting for locator('#trip-pane-schedule')
+
+
+      4 | async function openTrip(page: Page) {
+      5 |   await page.goto(`/trips/${TRIP_ID}`);
+    > 6 |   await expect(tripScreen(page)).toBeVisible();
+        |                                  ^
+      7 | }
+      8 |
+      9 | test.beforeEach(async ({ page, request }) => {
+        at openTrip (C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-trip-20261012.spec.ts:6:34)
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-trip-20261012.spec.ts:81:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-trip-20261012-등록-여행-일정0개는-날짜줄-숨김\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-trip-20261012-등록-여행-일정0개는-날짜줄-숨김\error-context.md
+
+  15) tests\live\uiux-sonnet-trip-20261012.spec.ts:103:39 › 머리 영역 드래그 직후 첫 Enter가 목록 높이를 바꾼다 ───────
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  locator('[data-sheet]')
+    Expected: "custom"
+    Received: "half"
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveAttribute" locator('[data-sheet]') with timeout 12000ms
+      - waiting for locator('[data-sheet]')
+        27 × locator resolved to <div data-sheet="half" class="plan-check_checking__2JrBO">…</div>
+           - unexpected value "half"
+
+
+      111 |   await page.mouse.up();
+      112 |   const checking = page.locator("[data-sheet]");
+    > 113 |   await expect(checking).toHaveAttribute("data-sheet", "custom");
+          |                          ^
+      114 |   const handle = page.getByRole("button", { name: "목록 높이 바꾸기", exact: true });
+      115 |   await handle.focus();
+      116 |   await handle.press(key);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-trip-20261012.spec.ts:113:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-trip-20261012-머리-영역-드래그-직후-첫-Enter가-목록-높이를-바꾼다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-trip-20261012-머리-영역-드래그-직후-첫-Enter가-목록-높이를-바꾼다\error-context.md
+
+  16) tests\live\uiux-sonnet-trip-20261012.spec.ts:103:39 › 머리 영역 드래그 직후 첫 Space가 목록 높이를 바꾼다 ───────
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  locator('[data-sheet]')
+    Expected: "custom"
+    Received: "half"
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveAttribute" locator('[data-sheet]') with timeout 12000ms
+      - waiting for locator('[data-sheet]')
+        27 × locator resolved to <div data-sheet="half" class="plan-check_checking__2JrBO">…</div>
+           - unexpected value "half"
+
+
+      111 |   await page.mouse.up();
+      112 |   const checking = page.locator("[data-sheet]");
+    > 113 |   await expect(checking).toHaveAttribute("data-sheet", "custom");
+          |                          ^
+      114 |   const handle = page.getByRole("button", { name: "목록 높이 바꾸기", exact: true });
+      115 |   await handle.focus();
+      116 |   await handle.press(key);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-trip-20261012.spec.ts:113:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-trip-20261012-머리-영역-드래그-직후-첫-Space가-목록-높이를-바꾼다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\uiux-sonnet-trip-20261012-머리-영역-드래그-직후-첫-Space가-목록-높이를-바꾼다\error-context.md
+
+  17) tests\live\web-flow-oct09.spec.ts:55:1 › 검증 이동은 출발만 표시하다 펼치면 도착을 표시하고 수단·소요·여유를 유지한다 ─────────
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('li[data-type="move"]').first()
+    Expected substring: "출발"
+    Received string:    "10:30~10:39지하철 3호선 9분 · 0.6km여유 21분!"
+    Timeout: 12000ms
+
+    Call log:
+      - Expect "toContainText" locator('li[data-type="move"]').first() with timeout 12000ms
+      - waiting for locator('li[data-type="move"]').first()
+        26 × locator resolved to <li data-type="move" data-verdict="review" data-entry-id="0-0:0-1" class="plan-check_entry__ApYcM">…</li>
+           - unexpected value "10:30~10:39지하철 3호선 9분 · 0.6km여유 21분!"
+
+
+      58 |   await page.goto(`/intakes/${INTAKE}`);
+      59 |   const moves = page.locator('li[data-type="move"]');
+    > 60 |   await expect(moves.first()).toContainText("출발");
+         |                               ^
+      61 |   await expect(moves.first()).toContainText(/도착\s+\d{2}:\d{2}/);
+      62 |   await expect(moves.first()).toContainText("머무름");
+      63 | });
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\web-flow-oct09.spec.ts:60:31
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\final-evidence\web-flow-oct09-검증-이동은-출발만-표시하다-펼치면-도착을-표시하고-수단·소요·여유를-유지한다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\final-evidence\web-flow-oct09-검증-이동은-출발만-표시하다-펼치면-도착을-표시하고-수단·소요·여유를-유지한다\error-context.md
+
+  17 failed
+    tests\live\flow.spec.ts:178:1 › 글에서 일정을 한 줄도 못 읽으면 입력 화면으로 자동 복귀하고 원문과 다시 입력할 안내를 보존한다 ─────────
+    tests\live\guardian-card.spec.ts:41:1 › Esc · 닫기 단추 · 바깥을 눌러 닫으면 아무것도 정해지지 않고, 초점이 「계획 확인하기」로 돌아온다. Tab 은 카드 안에서만 돈다 
+    tests\live\layout-mobile.spec.ts:13:1 › 기본은 휴대폰 크기 틀이다 — 넓은 창(1280)에서도 계획 담기 · 내 여행 · 여행 · 마이페이지가 틀 폭(402px 이하) 안에 있고 가로로 넘치지 않는다 
+    tests\live\map-status-bar.spec.ts:10:1 › 위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 시간 초기화는 변경 메뉴에서 동작한다 ─────
+    tests\live\plan-focus.spec.ts:10:1 › 마커로 연 일정의 윗부분은 전체·일차 줄 아래에 놓인다 ────────────────────────────
+    tests\live\trip-safety.spec.ts:166:1 › 화면이 열려 있는 동안 안전 알림이 오면 「일정 정지 중 · 안전 알림」 막대가 대피 장소를 말하고 9초 동안 남는다 — 정지가 풀리면 칩도 없다 
+    tests\live\trip.spec.ts:336:1 › 주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 없다(없는 리소스·예외) ────────────────────
+    tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:22:3 › 세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 375px 
+    tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:22:3 › 세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 1280px 
+    tests\live\uiux-sonnet-plan-20261012.spec.ts:37:3 › 목록 머리를 끈 직후 손잡이 첫 Enter 입력이 동작한다 ───────────
+    tests\live\uiux-sonnet-plan-20261012.spec.ts:37:3 › 목록 머리를 끈 직후 손잡이 첫 Space 입력이 동작한다 ───────────
+    tests\live\uiux-sonnet-plan-20261012.spec.ts:69:1 › 잠금 요청이 진행 중이면 이전 시간 변경 토스트의 되돌리기가 추가 요청을 보내지 않는다 
+    tests\live\uiux-sonnet-plan-20261012.spec.ts:92:1 › 확인 실패 안내가 해소된 뒤 같은 실패가 다시 생기면 안내를 다시 표시한다 ──
+    tests\live\uiux-sonnet-trip-20261012.spec.ts:73:36 › 등록 여행 일정0개는 날짜줄 숨김 ────────────────────────
+    tests\live\uiux-sonnet-trip-20261012.spec.ts:103:39 › 머리 영역 드래그 직후 첫 Enter가 목록 높이를 바꾼다 ─────────
+    tests\live\uiux-sonnet-trip-20261012.spec.ts:103:39 › 머리 영역 드래그 직후 첫 Space가 목록 높이를 바꾼다 ─────────
+    tests\live\web-flow-oct09.spec.ts:55:1 › 검증 이동은 출발만 표시하다 펼치면 도착을 표시하고 수단·소요·여유를 유지한다 ───────────
+  141 passed (17.1m)

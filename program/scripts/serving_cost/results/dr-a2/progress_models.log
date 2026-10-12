@@ -1,0 +1,187 @@
+[15:39:36] 전체 시험 시작
+[15:39:36] Q8 -> Q4_K_M 다시 양자화 시작
+[15:45:04] 양자화 끝 5309487136 바이트
+[15:45:04] 서버 시작 q8 np=1 ctx=4096
+[15:46:46] 서버 준비 {"status":"ok"}
+워밍업 115334 ms prompt_n 1917
+일정 0 끝 378 초
+일정 1 끝 639 초
+일정 2 끝 901 초
+일정 3 끝 1154 초
+일정 4 끝 1408 초
+추가 cold 0 1518 초
+추가 cold 1 1633 초
+추가 cold 2 1746 초
+추가 cold 3 1859 초
+추가 cold 4 1972 초
+추가 cold 5 2082 초
+추가 cold 6 2191 초
+추가 cold 7 2300 초
+추가 cold 8 2410 초
+추가 cold 9 2525 초
+섞어 묻기 0 0 2533 초
+섞어 묻기 0 1 2541 초
+섞어 묻기 0 2 2549 초
+섞어 묻기 1 0 2557 초
+섞어 묻기 1 1 2565 초
+섞어 묻기 1 2 2572 초
+섞어 묻기 2 0 2580 초
+섞어 묻기 2 1 2588 초
+섞어 묻기 2 2 2596 초
+끝 2596 초
+[16:30:03] 끝 q8 np=1
+DONE_q8_np1
+[16:30:03] 서버 시작 q8 np=2 ctx=8192
+[16:31:15] 서버 준비 {"status":"ok"}
+워밍업 113519 ms prompt_n 1917
+동시 2 두 번째 묶음 끝 1135 초
+끝 2249 초
+[17:08:45] 끝 q8 np=2
+DONE_q8_np2
+[17:08:45] 서버 시작 q4 np=1 ctx=4096
+[17:10:31] 서버 준비 {"status":"ok"}
+워밍업 154882 ms prompt_n 1917
+일정 0 끝 498 초
+일정 1 끝 838 초
+일정 2 끝 1183 초
+일정 3 끝 1518 초
+일정 4 끝 1853 초
+추가 cold 0 2007 초
+추가 cold 1 2167 초
+추가 cold 2 2325 초
+추가 cold 3 2480 초
+추가 cold 4 2639 초
+추가 cold 5 2792 초
+추가 cold 6 2945 초
+추가 cold 7 3117 초
+추가 cold 8 3273 초
+추가 cold 9 3432 초
+섞어 묻기 0 0 3442 초
+섞어 묻기 0 1 3452 초
+섞어 묻기 0 2 3462 초
+섞어 묻기 1 0 3471 초
+섞어 묻기 1 1 3481 초
+섞어 묻기 1 2 3491 초
+섞어 묻기 2 0 3501 초
+섞어 묻기 2 1 3510 초
+섞어 묻기 2 2 3520 초
+끝 3520 초
+[18:09:11] 끝 q4 np=1
+DONE_q4_np1
+[18:09:11] 서버 시작 q4 np=2 ctx=8192
+[18:09:17] 서버 준비 {"status":"ok"}
+워밍업 153722 ms prompt_n 1917
+동시 2 두 번째 묶음 끝 1511 초
+끝 3077 초
+[19:00:34] 끝 q4 np=2
+DONE_q4_np2
+ALL_DONE_A2
+[08:17:44] === 모델 시험 대기열 시작 ===
+[08:17:44] 받기 bartowski/FrogNano-4B-2609-GGUF/FrogNano-4B-2609-Q8_0.gguf
+[08:18:47] 받음 frog4b_q8.gguf 4622130976 바이트
+[08:18:47] 서버 시작 frog4b_q8 np=1 ctx=4096
+[08:19:08] 서버 준비 {"status":"ok"}
+워밍업 103862 ms prompt_n 1957
+일정 0 끝 762 초
+일정 1 끝 1422 초
+일정 2 끝 2083 초
+일정 3 끝 2744 초
+일정 4 끝 3408 초
+추가 cold 0 3511 초
+추가 cold 1 3612 초
+추가 cold 2 3712 초
+추가 cold 3 3815 초
+추가 cold 4 3915 초
+섞어 묻기 0 0 3944 초
+섞어 묻기 0 1 3974 초
+섞어 묻기 0 2 4003 초
+섞어 묻기 1 0 4032 초
+섞어 묻기 1 1 4062 초
+섞어 묻기 1 2 4093 초
+섞어 묻기 2 0 4122 초
+섞어 묻기 2 1 4152 초
+섞어 묻기 2 2 4181 초
+끝 4181 초
+[09:28:50] 끝 frog4b_q8 np=1
+DONE_frog4b_q8_np1
+[09:28:50] 받기 unsloth/gemma-4-E2B-it-GGUF/gemma-4-E2B-it-Q8_0.gguf
+[09:30:01] 받음 e2b_q8.gguf 5048352864 바이트
+[09:30:01] 서버 시작 e2b_q8 np=1 ctx=4096
+[09:30:13] 서버 준비 {"status":"ok"}
+워밍업 83769 ms prompt_n 1917
+일정 0 끝 292 초
+일정 1 끝 499 초
+일정 2 끝 707 초
+일정 3 끝 907 초
+일정 4 끝 1108 초
+추가 cold 0 1191 초
+추가 cold 1 1278 초
+추가 cold 2 1364 초
+추가 cold 3 1448 초
+추가 cold 4 1533 초
+섞어 묻기 0 0 1539 초
+섞어 묻기 0 1 1545 초
+섞어 묻기 0 2 1552 초
+섞어 묻기 1 0 1558 초
+섞어 묻기 1 1 1564 초
+섞어 묻기 1 2 1571 초
+섞어 묻기 2 0 1577 초
+섞어 묻기 2 1 1583 초
+섞어 묻기 2 2 1590 초
+끝 1590 초
+[09:56:47] 끝 e2b_q8 np=1
+DONE_e2b_q8_np1
+[09:56:47] 받기 unsloth/gemma-4-12b-it-GGUF/gemma-4-12b-it-Q4_K_M.gguf
+[09:58:42] 받음 g12b_q4km.gguf 7121861440 바이트
+[09:58:42] 서버 시작 g12b_q4km np=1 ctx=4096
+[10:00:49] 서버 준비 {"status":"ok"}
+워밍업 421624 ms prompt_n 1921
+일정 0 끝 1021 초
+일정 1 끝 1618 초
+Traceback (most recent call last):
+  File "/home/ubuntu/bench/bench_a2l.py", line 109, in <module>
+    call(head, items, rng, 'extra_cold', 100 + k, 'cold', cache=False)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/bench/bench_a2l.py", line 67, in call
+    r = post('/v1/chat/completions', body)
+  File "/home/ubuntu/bench/bench_a2l.py", line 51, in post
+    return json.load(urllib.request.urlopen(req, timeout=timeout))
+                     ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/urllib/request.py", line 187, in urlopen
+    return opener.open(url, data, timeout)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/urllib/request.py", line 487, in open
+    response = self._open(req, data)
+  File "/usr/lib/python3.14/urllib/request.py", line 504, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+                              '_open', req)
+  File "/usr/lib/python3.14/urllib/request.py", line 464, in _call_chain
+    result = func(*args)
+  File "/usr/lib/python3.14/urllib/request.py", line 1350, in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/urllib/request.py", line 1325, in do_open
+    r = h.getresponse()
+  File "/usr/lib/python3.14/http/client.py", line 1459, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/http/client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/http/client.py", line 305, in _read_status
+    raise RemoteDisconnected("Remote end closed connection without"
+                             " response")
+http.client.RemoteDisconnected: Remote end closed connection without response
+[10:27:49] 끝 g12b_q4km np=1
+DONE_g12b_q4km_np1
+[10:27:49] 받기 gpustack/bge-m3-GGUF/bge-m3-Q8_0.gguf
+[10:27:57] 받음 bge_m3_q8.gguf 634553760 바이트
+질의 1건(약 20토큰) {'호출 수': 40, '건당 평균 초': 0.081, '호출 중앙 초': 0.075, '토큰/초': 192.1}
+질의 8건 묶음 {'호출 수': 10, '건당 평균 초': 0.074, '호출 중앙 초': 0.594, '토큰/초': 210.5}
+규정 조각 1건(약 300토큰) {'호출 수': 10, '건당 평균 초': 0.729, '호출 중앙 초': 0.72, '토큰/초': 213.7}
+규정 조각 8건 묶음 {'호출 수': 4, '건당 평균 초': 0.74, '호출 중앙 초': 6.139, '토큰/초': 208.9}
+EMBED_DONE
+[10:28:41] === 모델 시험 대기열 끝 ===
+ALL_DONE_MODELS
+[10:37:14] === 모델 시험 대기열 2 시작 ===
+[10:37:14] 받기 google/gemma-4-E4B-it-qat-q4_0-gguf/gemma-4-E4B_q4_0-it.gguf

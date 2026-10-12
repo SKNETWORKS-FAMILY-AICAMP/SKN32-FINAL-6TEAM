@@ -1,0 +1,36 @@
+[WebServer] (node:8980) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:15956) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 tests\live\monitoring.spec.ts:7:1 › 현재 상태·과거 회차·항목별 결과와 필터를 확인한다 (45.1s)
+(node:23340) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 2 tests\live\monitoring.spec.ts:33:1 › 375px에서 오류·빈 이력과 날짜 검증을 실제 화면으로 확인한다 (1.2s)
+
+
+  1) tests\live\monitoring.spec.ts:7:1 › 현재 상태·과거 회차·항목별 결과와 필터를 확인한다 ──────────────────────────────
+
+    Test timeout of 45000ms exceeded.
+
+    Error: locator.selectOption: Test timeout of 45000ms exceeded.
+    Call log:
+      - waiting for getByLabel('여행', { exact: true })
+
+
+      25 |   await expect(page.getByRole('cell',{name:'수동',exact:true})).toBeVisible();
+      26 |   await page.getByLabel('회차 상태').selectOption('failed');
+    > 27 |   await page.getByLabel('여행',{exact:true}).selectOption('trip-1');
+         |                                            ^
+      28 |   await page.getByRole('button',{name:'기간·조건 조회'}).click();
+      29 |   await expect.poll(()=>queries.some(q=>q.includes('status=failed')&&q.includes('trip_id=trip-1'))).toBe(true);
+      30 |   if(process.env.MONITORING_SCREENSHOT){await page.setViewportSize({width:1280,height:900});await page.screenshot({path:process.env.MONITORING_SCREENSHOT,fullPage:true});}
+        at C:\Users\playdata2\Documents\final_workspace\final_project_cs\frontend\apps\admin\tests\live\monitoring.spec.ts:27:44
+
+    Error Context: test-results\monitoring\monitoring-현재-상태·과거-회차·항목별-결과와-필터를-확인한다\error-context.md
+
+  1 failed
+    tests\live\monitoring.spec.ts:7:1 › 현재 상태·과거 회차·항목별 결과와 필터를 확인한다 ───────────────────────────────
+  1 passed (51.3s)

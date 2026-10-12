@@ -1,0 +1,11 @@
+{
+  "report_links_checked": 15,
+  "report_links_missing": [],
+  "code_data_hashes_checked": 113,
+  "code_data_hash_mismatches": [
+    "final_project_cs/app/domains/travel_ops/components/intake/candidates.py"
+  ],
+  "backup_entries": 56,
+  "private_route_card_or_receipt_rows_in_report": false,
+  "developer_api_calls": 0
+}

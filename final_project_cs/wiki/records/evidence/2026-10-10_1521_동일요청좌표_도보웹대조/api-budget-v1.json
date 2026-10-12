@@ -1,0 +1,13 @@
+{
+  "limited_api_calls": 0,
+  "limited_api_retries": 0,
+  "minimum_daily_reserve_percent": 20,
+  "quota_usage_before": "미확인",
+  "quota_usage_after": "미확인",
+  "remaining_before": "미확인",
+  "remaining_after": "미확인",
+  "reset_at": "미확인",
+  "reservation": "공유 사용량 미확인으로 API 미호출",
+  "official_web_observations_separate": true,
+  "runtime_limits_changed": false
+}

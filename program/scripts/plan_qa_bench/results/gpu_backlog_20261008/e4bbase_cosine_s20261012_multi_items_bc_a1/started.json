@@ -1,0 +1,29 @@
+{
+  "job": {
+    "id": "e4bbase_cosine_s20261012_multi_items_bc_a1",
+    "label": "Gemma-4-E4B-it Q4_K_M with our-travel cosine 5e-5 seed20261012 adapter",
+    "our_training": true,
+    "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+    "prompts": "/tmp/tripilot-multi-items-20261009/prompts.json",
+    "script": "/tmp/tripilot-multi-items-20261009/multi_items_eval_20261009.py",
+    "tag": "e4bbase_cosine_s20261012_multi_items_bc_a1",
+    "port": 8401,
+    "logprobs": "1",
+    "expected": 835,
+    "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+    "model_sha256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+    "lora": "/tmp/tripilot_cosine_s20261012_20261009_lora.gguf",
+    "lora_sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b",
+    "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+    "purpose": "Missing evaluation of completed cosine comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+    "suite": "multi_items_bc",
+    "runner_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+    "output_contract": "strict items array with 64 output tokens; separately scored B and C",
+    "role": "missing multi-item response contract; same existing travel fixture; not prior D/E or independent holdout",
+    "automatic_retry": false
+  },
+  "started": "2026-10-09T01:10:59.184193+00:00",
+  "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+  "script_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+  "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+}

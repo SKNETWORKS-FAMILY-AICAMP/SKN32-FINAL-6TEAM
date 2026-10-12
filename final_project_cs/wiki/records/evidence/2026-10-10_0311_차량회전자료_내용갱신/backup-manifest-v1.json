@@ -1,0 +1,12 @@
+[
+  {
+    "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/turn_restrictions.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-10_031329_회전내용갱신_수정전/turn_restrictions.py",
+    "sha256": "5ed6abddfc65ef809ebff6d584ffc3dcd3aa49e5b29eb227b5f822626ede20e5"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-10_031329_회전내용갱신_수정전/mobility.md",
+    "sha256": "3fa575868529b1dab87d7c6e13a78f60ce7538a08096c5203a364d72f8fc6a5b"
+  }
+]

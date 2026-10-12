@@ -1,0 +1,109 @@
+{
+  "created_at": "2026-10-09T09:11:36.204634+09:00",
+  "inputs": {
+    "datasets/mobility/processed/mobility/road_graph_v2/edges.jsonl.gz": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb",
+    "datasets/mobility/processed/mobility/road_graph_v2/MANIFEST.json": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd",
+    "datasets/mobility/processed/mobility/road_graph_v2/nodes.jsonl.gz": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38",
+    "datasets/mobility/processed/mobility/road_graph_v2/turn_restrictions_v1.json": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c",
+    "final_project_cs/tests/unit/travel/mobility/golden_pairs_v1.json": "77d706489ee0afaa2cdbe98565697ad3bdfdf442bbd6db32e226ffaf5e8fb380"
+  },
+  "controlled_cases": [
+    {
+      "case": "短い平地",
+      "before": 7,
+      "after": 3,
+      "verdict": "feasible"
+    },
+    {
+      "case": "우회 평지",
+      "before": 7,
+      "after": 11,
+      "verdict": "feasible"
+    },
+    {
+      "case": "경로 미발견",
+      "before": 7,
+      "after": null,
+      "verdict": "no_data"
+    },
+    {
+      "case": "계단",
+      "before": 7,
+      "after": 9,
+      "verdict": "feasible"
+    }
+  ],
+  "existing_pair": {
+    "a": "잠실역 8번출구 앞",
+    "alat": 37.5133,
+    "alon": 127.1002,
+    "b": "잠실 롯데월드몰",
+    "blat": 37.5131,
+    "blon": 127.104,
+    "straight_m": 336,
+    "bucket": "short",
+    "origin": "2026-10-07 앞선 14쌍",
+    "id": "G04"
+  },
+  "replay_order": "ABBA",
+  "estimates": [
+    {
+      "variant": "before",
+      "p50_min": 8,
+      "walk_basis": null,
+      "sample_minutes": [
+        8,
+        8
+      ]
+    },
+    {
+      "variant": "after",
+      "p50_min": 8,
+      "walk_basis": {
+        "source": "straight_distance_model",
+        "degraded": true,
+        "reason": "walking_router_unavailable"
+      },
+      "sample_minutes": [
+        8,
+        8
+      ]
+    },
+    {
+      "variant": "after",
+      "p50_min": 8,
+      "walk_basis": {
+        "source": "straight_distance_model",
+        "degraded": true,
+        "reason": "walking_router_unavailable"
+      },
+      "sample_minutes": [
+        8,
+        8
+      ]
+    },
+    {
+      "variant": "before",
+      "p50_min": 8,
+      "walk_basis": null,
+      "sample_minutes": [
+        8,
+        8
+      ]
+    }
+  ],
+  "schedule_option": {
+    "id": "walk",
+    "label": "도보",
+    "eta_min": 8,
+    "walk_m": 471,
+    "fare_krw": 0,
+    "uses": []
+  },
+  "native_unique_pairs": 1,
+  "after_matches": 2,
+  "network_attempts": 0,
+  "new_web_samples": 0,
+  "actual_walks": 0,
+  "scope": "Stored G04 coordinates on local OSM graph; not new independent accuracy or browser observation."
+}

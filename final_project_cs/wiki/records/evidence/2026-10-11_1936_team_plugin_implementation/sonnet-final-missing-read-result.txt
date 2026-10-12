@@ -1,0 +1,45 @@
+읽은 범위에서 확정된 새 결함은 없습니다. 낮은 확신의 관찰이 하나 있습니다.
+
+**실제로 Read한 6파일과 구간**
+- **A** `trip_api.py`
+  - `_create_trip` 799–874와 `_insert` 876–938
+  - `create_plan` 940–982
+  - `web_intake_route_shapes` 1270–1289
+  - `plan_and_register` 1660–1732
+- **B** `dining_ledger.py`: 전체(153행)와 `service_bindings.read_binding` 76–101
+- **C** `run_sweepers.py`: 85–225와 440–560. `composition.build_controller`와 `wire_optional_features`(427–558)도 읽었습니다.
+- **D** `test_plugin_worker_availability.py`: 1–115
+- **E** `test_watch_batch.py`: 1–290
+- **F** `test_trip_api_plugin_boundaries.py`: 전체
+
+계약은 `plugin-availability.md` 전체를 읽었습니다. 193건 실행 증거 JSON 두 개는 읽지 않았습니다.
+
+**판단**
+- **A**
+  - `require_link_core_place()`는 `get_connection` 전에 있습니다(849–852).
+  - `create_plan`과 `plan_and_register`의 `require_planner_factory()`도 DB 연결 전에 있습니다.
+  - 이미 완료된 동일 요청의 조회(957, 1668)는 그 관문보다 앞이라 유지됩니다.
+  - 저장 검사가 `None`이면 `mobility_shapes.review`를 호출하지 않고 `[]`을 돌려줍니다(1288). `detail` 인자도 그대로 전달됩니다.
+- **B**
+  - `_http_provider`는 `read_binding(required_team="dining")`을 거칩니다. 고정된 조립 판의 Registry에서 `require_runnable`을 확인하고, 제공자가 없으면 `not_installed`로 거절합니다.
+  - 바인딩이 없고 standalone도 아니면 `composition_unbound`로 거절합니다.
+  - `register`는 구현을 캡처만 하고 전역 `_http_providers`는 standalone 경로에서만 쓰입니다.
+- **C**
+  - 성공했을 때만 `_features_ready=True`가 됩니다. 락 안에서 실패하면 플래그를 올리지 않아 다음 회차에 재시도합니다.
+  - 회차마다 초기화하지 않고, `build_controller`도 항목 짚기 전역을 지우지 않습니다. 상태 보존과 오염 방지에 문제가 없습니다.
+- **D**
+  - 실제 `OllamaItemPointer`의 `_http`만 합성 응답으로 바꿨습니다. 같은 객체 유지(`len(pointers)==1`, `_POINTER is first`)와 데워진 상태(`stops[1]`)를 단언하고, 실패 후 재시도 시험도 있습니다. 생산 의미를 숨기지 않습니다.
+- **E**
+  - `current_places`를 원래 일정 장소로만 정하고, 새 후보에만 `default=ROAD`를 적용합니다.
+  - 알림 1개, 다음 2회는 0건, 판 `[1]` 유지, `escalated`, `existing>=2` 단언이 모두 남아 있어 약화되지 않았습니다.
+- **F**
+  - 3상태×3경로 9건은 레지스트리가 먼저 거절하게 되어 있습니다. 제공자는 `forbidden`이고 DB 호출은 0회로 단언합니다.
+  - `review` 가 `None`인 순수 읽기 2건은 설계상 의도된 독립 읽기입니다. 공통 관문을 우회하는 것이 아닙니다.
+
+**낮은 확신의 관찰 (결함 확정 아님, 약 40%)**
+`trip_api.py:849–852`의 UID 연결 관문이 멱등 조회(`by_request_key`, 859)보다 앞에 있습니다. 그래서 식당 UID가 있는 `/v1/trips` 등록이 이미 끝난 뒤, Dining이 꺼진 상태에서 같은 요청을 다시 보내면 `duplicate`가 아니라 503이 나옵니다. 계약은 "이미 완료한 동일 요청의 독립 조회 유지"를 plan 경로에 대해서만 명시합니다. 의도된 동작일 수 있어, 정책 확인 사항으로만 남깁니다.
+
+**재실행 없음 / 미검증 범위**
+- 이번 호출에서는 시험을 다시 돌리지 않았고 소스도 수정하지 않았습니다.
+- D 시험은 `build_controller`를 일부러 실패시키므로, 실제 Team 조립 회차와 항목 짚기 상태가 함께 도는 경로는 시험으로 확인되지 않았습니다. 이 부분은 C와 `composition.py` 읽기로만 판단했습니다.
+- 운영 서버, 실제 DB, 실제 Ollama 응답, 모델 정확도, 동시 요청 경합은 검증하지 않았습니다.

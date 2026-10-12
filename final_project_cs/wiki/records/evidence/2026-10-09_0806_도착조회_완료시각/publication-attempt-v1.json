@@ -1,0 +1,7 @@
+{
+  "outcome": "stopped before report and document mutations",
+  "reason": "expected 212 hashes, actual 213; prior coverage excluded seoul_bus.py",
+  "prior_count": 210,
+  "new_source_and_tests": 3,
+  "preserved_evidence_verified_before_resume": true
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "sha256": "99cff4d7f59ee9625b5f03fef9555a8c61726373a795e3b892a4e2529940889e",
+    "file": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car_turn_search.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0600_회전탐색_중복거리/car_turn_search.py"
+  },
+  {
+    "sha256": "30d70cc0b8d3a69dfebbea9e126764eacdaa309920fd98732704dc9d03e27bbb",
+    "file": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0600_회전탐색_중복거리/mobility.md"
+  }
+]

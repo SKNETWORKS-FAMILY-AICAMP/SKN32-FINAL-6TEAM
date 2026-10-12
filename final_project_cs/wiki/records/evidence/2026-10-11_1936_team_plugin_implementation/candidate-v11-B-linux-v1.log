@@ -1,0 +1,42 @@
+ISOLATED_LINUX_BEGIN {"python": "3.12.15", "platform": "linux", "verified_files": 1310, "selected_tests": ["tests/unit/travel/test_implicit_reply_recency.py", "tests/e2e/test_reply_recency_web.py"], "database": "ephemeral-synthetic-only", "inherited_environment_cleared": true}
+SYNTHETIC_DATABASE_READY {"baseline_migrations": 85, "database": "synthetic", "user": "synthetic", "operating_data_copied": false}
+SYNTHETIC_PROMPTS_REGISTERED {"public_prompt_fixture": true, "operating_prompts_read": false}
+============================= test session starts ==============================
+platform linux -- Python 3.12.15, pytest-8.4.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /tmp/candidate-check
+configfile: pytest.ini
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collecting ... collected 14 items / 1 error
+
+==================================== ERRORS ====================================
+_____________ ERROR collecting tests/e2e/test_reply_recency_web.py _____________
+ImportError while importing test module '/tmp/candidate-check/tests/e2e/test_reply_recency_web.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.12/site-packages/_pytest/python.py:498: in importtestmodule
+    mod = import_path(
+/usr/local/lib/python3.12/site-packages/_pytest/pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+/usr/local/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:186: in exec_module
+    exec(co, module.__dict__)
+tests/e2e/test_reply_recency_web.py:3: in <module>
+    from .test_decision_unit_web import decided  # noqa: F401
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ImportError: attempted relative import with no known parent package
+=========================== short test summary info ============================
+ERROR tests/e2e/test_reply_recency_web.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+=============================== 1 error in 0.18s ===============================
+ISOLATED_LINUX_END {"exit_code": 2, "seconds": 0.415}
+ISOLATED_DB_ORCHESTRATION {"operating_database_connected": false, "operating_volumes_connected": false, "operating_environment_forwarded": false, "image_pull": false, "images": ["sha256:8e49ec862b1ff798fe96c8a54af61bdcddcd888ef57070e50dab9c18d3ce2892", "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"], "network_internal": true, "database_tmpfs_destinations": ["/tmp", "/var/lib/postgresql/data"], "database_mounts": [], "pytest_process_exit_code": 2, "remaining_temporary_containers": [], "remaining_temporary_network": false, "cleanup_errors": []}

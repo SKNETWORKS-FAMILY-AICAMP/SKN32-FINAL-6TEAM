@@ -1,0 +1,33 @@
+digraph flow {
+  graph [rankdir=TB, fontname="Malgun Gothic", nodesep=0.45, ranksep=0.28, dpi=200, pad=0.15];
+  node  [shape=box, style="rounded,filled", fillcolor="#EEF4EF", color="#2D5F48", fontname="Malgun Gothic", fontsize=12, margin="0.14,0.06", width=2.6];
+  edge  [color="#5F6B64", fontname="Malgun Gothic", fontsize=10, arrowsize=0.7];
+
+  home   [label="SCR-01 소개  /"];
+  consent[label="SCR-02 약관 동의  /start 의 약관 카드\n동의 전이면 확인 장치가 이 주소로 보냄", fillcolor="#F6EAD4", color="#C8913A"];
+  newp   [label="SCR-04 계획 올리기  /trips/new"];
+  card   [label="SCR-05 항로 지킴이 카드\n켜고 진행 / 건너뛰기", fillcolor="#F6EAD4", color="#C8913A"];
+  start  [label="SCR-06 올리는 중  /intakes/starting"];
+  read   [label="SCR-07 읽는 중 + 질문  /intakes/{접수번호}"];
+  check  [label="SCR-08 계획 확인(결과)  같은 주소"];
+  trip   [label="SCR-09 여행  /trips/{여행번호}\n일정 · 지도 · 채팅 탭", fillcolor="#2D5F48", fontcolor="white"];
+
+  menu   [label="메뉴에서 여는 화면\nSCR-10 내 여행  /trips\nSCR-03 여행 취향 설문  /start 의 셋째 카드\nSCR-11 마이페이지  /mypage · /mypage/edit", fillcolor="#FFFFFF", color="#9FB0A6", width=3.2];
+  social [label="업체 로그인 화면(앱 밖)\n→ SCR-12 소셜 로그인 완료  /auth/done", fillcolor="#FFFFFF", color="#9FB0A6", width=3.2];
+  out    [label="앱 밖\n알림 글(디스코드 · 텔레그램, 고객 채널을 연결한 경우)\n여행계획서 링크(서버 페이지)", fillcolor="#FFFFFF", color="#9FB0A6", width=3.2];
+
+  home -> newp [label=" 내 일정 시작하기(동의한 사람)"];
+  home -> consent [style=dashed, label=" 동의 전이면"];
+  consent -> newp [label=" 동의하고 다음으로"];
+  newp -> card [label=" 계획 확인하기"];
+  card -> start;
+  start -> read [label=" 계획을 올린 경우"];
+  start -> trip [style=dashed, label=" 계획 짜 주기(테스트)"];
+  read -> check [label=" 읽기 끝"];
+  check -> trip [label=" 여행 등록"];
+  menu -> trip [style=dashed, label=" 여행 고르기"];
+  menu -> social [style=dashed, label=" 마이페이지 소셜 연결"];
+  out -> trip [style=dashed, label=" 알림 링크"];
+  {rank=same; newp; menu;}
+  {rank=same; check; out;}
+}

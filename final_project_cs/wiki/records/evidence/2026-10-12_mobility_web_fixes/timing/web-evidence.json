@@ -1,0 +1,41 @@
+{
+  "checked_date_kst": "2026-10-12",
+  "developer_api_calls": 0,
+  "sources": [
+    {
+      "title": "GTFS Schedule Reference",
+      "url": "https://gtfs.org/documentation/schedule/reference/",
+      "sections": ["Term Definitions: Service day", "Field Types: Date/Time"],
+      "finding": "운행일은 달력 날짜와 다를 수 있고 자정 이후 운행은 24시를 넘는 시각으로 같은 운행일에 표시합니다.",
+      "application": "날짜와 초 올림 순서를 분리합니다. 서울의 04:00 경계 자체는 GTFS 요구가 아니라 기존 timeutil의 프로젝트 계약입니다."
+    },
+    {
+      "title": "GTFS Realtime Reference",
+      "url": "https://gtfs.org/documentation/realtime/reference/",
+      "sections": ["FeedHeader.timestamp", "TripUpdate.timestamp", "StopTimeUpdate.ScheduleRelationship"],
+      "finding": "생성·차량 관측 시각을 구별하고 실시간 데이터의 신선도를 확인해야 합니다. 무정차(SKIPPED)는 해당 정류장에서 정차하지 않음을 뜻합니다.",
+      "application": "이 명세를 서울 API 형식으로 오인하지 않고 시각·경로 식별의 검토 기준으로만 사용했습니다. GTFS 수집기를 추가하지 않았습니다."
+    },
+    {
+      "title": "서울시 지하철 실시간 도착정보",
+      "url": "https://data.seoul.go.kr/dataList/OA-12764/A/1/datasetView.do",
+      "section": "기타 유의사항",
+      "finding": "recptnDt는 생성 시각이며 현재 시각까지 흐른 시간만큼 도착 예측을 앞당겨 사용해야 합니다. 서울시 외 역은 미제공 범위가 있습니다.",
+      "application": "현 어댑터의 provider_generation_time 보정과 evaluated_at 이후 접근 재계산을 대조했습니다. API를 호출하지 않았으며 이번 수정은 재계산 시 운행일 경계 보존입니다."
+    },
+    {
+      "title": "서울교통공사 역코드로 지하철 열차 시간표 검색",
+      "url": "https://data.seoul.go.kr/dataList/OA-101/A/1/datasetView.do",
+      "section": "자료 설명",
+      "finding": "역별 시간표는 실제 도착 시각과 다를 수 있습니다. 운영기관·역 범위가 제한됩니다.",
+      "limitation": "openApiView 명세 페이지는 Internal Error였고 WEEK_TAG 상세값을 새로 확인하지 못했습니다. 요일 상세값을 새 공식확인으로 주장하지 않습니다."
+    },
+    {
+      "title": "서울시 9호선 혼잡도 정보",
+      "url": "https://data.seoul.go.kr/dataList/OA-22197/F/1/datasetView.do",
+      "section": "자료 설명 및 파일 목록",
+      "finding": "혼잡도는 역·방향·평일/휴일별 30분 평균입니다. 6량 정원 922명이 100%이며 2026 종합 XLSX의 수정일은 2026-09-09입니다.",
+      "application": "2026 자료가 든 로컬 공개자료 백업에서 현재 완행과 동일함을 확인한 뒤 누락 급행 행을 복원했습니다. 실시간 열차별 혼잡 실측으로 주장하지 않습니다."
+    }
+  ]
+}

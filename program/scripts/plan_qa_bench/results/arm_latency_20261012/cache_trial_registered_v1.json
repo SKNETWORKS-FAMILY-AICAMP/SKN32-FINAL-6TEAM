@@ -1,0 +1,8 @@
+{
+  "utc": "2026-10-11T15:44:22.941001+00:00",
+  "registered": true,
+  "unit": "tripilot-arm-cache256-20261012-v1",
+  "remote_dir": "/home/ubuntu/bench/app-cache256-20261012-v1",
+  "applied": "pending_receipt",
+  "planned_http_cases": 2
+}

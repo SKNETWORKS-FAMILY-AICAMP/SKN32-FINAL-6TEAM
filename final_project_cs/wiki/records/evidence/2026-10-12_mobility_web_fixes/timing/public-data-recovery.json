@@ -1,0 +1,19 @@
+{
+  "source": "datasets\\mobility\\_backup\\2026-10-01_before_pr23_24_26\\processed\\mobility\\congestion_line9_v1.jsonl",
+  "source_sha256": "9d9e331c467f71bb5b7c5f8c54e1cc578b24cb020dc3f010c19786f0595eb7db",
+  "target": "datasets\\mobility\\processed\\mobility\\congestion_line9_v1.jsonl",
+  "before_sha256": "27f836cea82ddf3b8554b5900b44de79a2f729e6e53f9576a565dd2b1327b57b",
+  "after_sha256": "1b680c5dd069334b9a3fb4e03f0cbe7ab8cca35ed05792994775b007c70e9ae0",
+  "backup": "datasets\\mobility\\processed\\mobility\\_backup\\2026-10-12_recover_line9_express",
+  "before_rows": 5776,
+  "after_rows": 8208,
+  "restored_express_rows": 2432,
+  "current_local_equals_backup_local": true,
+  "service_counts": {
+    "local": 5776,
+    "express": 2432
+  },
+  "developer_api_calls": 0,
+  "new_downloads": 0,
+  "basis": "보유 2026 공개자료의 2026-10-01 백업에서 누락 행 복원; 새 수집·실측 아님"
+}

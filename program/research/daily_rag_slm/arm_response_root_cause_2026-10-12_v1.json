@@ -1,0 +1,68 @@
+{
+  "observed_at_utc": "2026-10-11T15:51:02.672378+00:00",
+  "research_new_sources": "not_performed_maintenance_turn",
+  "review_completed": true,
+  "implemented": true,
+  "measured": true,
+  "model": "publisher Gemma-4-E4B QAT Q4_0",
+  "our_finetuning": false,
+  "compact_adopted": false,
+  "targeted_model_holdout": {
+    "passed": 8,
+    "planned": 8,
+    "product_independent": false
+  },
+  "unit_tests": {
+    "passed": 44,
+    "planned": 44
+  },
+  "runtime_fixed_model_checks": {
+    "passed": 4,
+    "planned": 4
+  },
+  "api_patch_applied": true,
+  "real_http": {
+    "observed_at_utc": "2026-10-11T15:41:20.369357+00:00",
+    "passed": 2,
+    "planned": 2,
+    "completed": 2,
+    "itinerary_unchanged": true,
+    "real_model": true,
+    "independent_product_accuracy": false,
+    "weights": "publisher QAT original, no our finetuning"
+  },
+  "cpu_settings_applied": true,
+  "latency_gain_proven": false,
+  "engine_timing_breakdown": {
+    "scope": {
+      "prompt_tokens": 1830,
+      "prompt_seconds": 133.58368,
+      "generated_tokens": 149,
+      "generation_seconds": 45.71872,
+      "engine_seconds": 179.3024,
+      "wall_seconds": 179.53239943803055
+    },
+    "time": {
+      "prompt_tokens": 466,
+      "prompt_seconds": 37.27704,
+      "generated_tokens": 68,
+      "generation_seconds": 25.75492,
+      "engine_seconds": 63.03196,
+      "wall_seconds": 63.25706210703356
+    }
+  },
+  "cache_capacity_changed": true,
+  "cache_http": {
+    "passed": 2,
+    "completed": 2,
+    "planned": 2
+  },
+  "pending": [
+    "latency repeat and queue instrumentation",
+    "cache capacity validation",
+    "fresh CD image inclusion and revalidation",
+    "human-reviewed independent product holdout"
+  ],
+  "latest_evidence": "program\\scripts\\plan_qa_bench\\results\\arm_latency_20261012\\cache_checkpoint_005101.json",
+  "report": "final_project_cs\\wiki\\records\\reports\\2026-10-12_0038_arm-latency-root-cause.md"
+}

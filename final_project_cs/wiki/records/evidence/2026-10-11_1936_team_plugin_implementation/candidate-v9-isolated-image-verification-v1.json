@@ -1,0 +1,59 @@
+{
+  "operating_service_modified": false,
+  "operating_database_connected": false,
+  "operating_volumes_connected": false,
+  "operating_environment_forwarded": false,
+  "package_install": false,
+  "image_pull": false,
+  "build_network": "none",
+  "image_id": "sha256:9f14e94f2f0acfee4a20a8dde2fac6d9d2f154be69cccf7f9b98b6368e574bed",
+  "inherited_config_matches": {
+    "Entrypoint": true,
+    "Cmd": true,
+    "WorkingDir": true,
+    "User": true,
+    "Volumes": true
+  },
+  "inherited_environment_matches": true,
+  "runtime_hash_verification": {
+    "verified_runtime_files": 51,
+    "packages": {
+      "fastapi": "0.116.1",
+      "pydantic": "2.13.4",
+      "psycopg": "3.3.4",
+      "httpx": "0.28.1",
+      "PyYAML": "6.0.2",
+      "uvicorn": "0.35.0",
+      "starlette": "0.47.3",
+      "pytest": "8.4.2"
+    }
+  },
+  "offline_tokenizer_smoke": {
+    "public_asset_sha256": "223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+    "token_counts": [
+      8,
+      4,
+      3
+    ],
+    "network_attempts": 0,
+    "read_only_cache": true,
+    "cache_file_bytes": 1681126,
+    "package_install": false,
+    "model_calls": 0
+  },
+  "public_assets": 1,
+  "success": true,
+  "created_at": "2026-10-12T00:22:02.739707+09:00",
+  "candidate": "2026-10-12_001736_plugin_v9",
+  "build_log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/candidate-v9-isolated-image-build-v2.log",
+  "base_local_tag_verified_before_after": true,
+  "build_metadata_network_attempts_measured": false,
+  "first_attempt": {
+    "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/candidate-v9-isolated-image-build-v1.log",
+    "registry_metadata_attempt": true,
+    "pull_success": false,
+    "target_created": false
+  },
+  "runtime_cache_network_attempts": 0,
+  "build_warning": "InvalidDefaultArgInFrom: BASE_IMAGE must be supplied; explicit verified argument was supplied"
+}

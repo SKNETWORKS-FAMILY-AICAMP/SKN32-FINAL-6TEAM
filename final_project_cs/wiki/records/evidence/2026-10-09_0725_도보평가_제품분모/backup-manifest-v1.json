@@ -1,0 +1,52 @@
+[
+  {
+    "source": "final_project_cs/scripts/mobility/compare_kakao_golden.py",
+    "backup": "final_project_cs/scripts/mobility/_backup/2026-10-09_0725_도보평가_제품분모/compare_kakao_golden.py",
+    "sha256": "5cd9e156377a91b0981a5939898092333857ca7a4049d12d40cf68c3faf6250f"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0725_도보평가_제품분모/mobility.md",
+    "sha256": "9db7e8741efb04b259eb2351cb1a180b5691f929fafaeab99469c7e549d27116"
+  },
+  {
+    "source": ".tmp/mobility_complete_20261008/run_walk_evaluation_v1.py",
+    "backup": ".tmp/mobility_complete_20261008/_backup/2026-10-09_0729_도보평가_반복실행/run_walk_evaluation_v1.py",
+    "sha256": "c0bf9617da340ba2d5896689474225c35cebb36a3b98c8ee31cbdde6d5b0ff29"
+  },
+  {
+    "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0725_도보대조가_정책밖_원시시간을_제품오차로_집계.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0731_도보평가_결함상태/2026-10-09_0725_도보대조가_정책밖_원시시간을_제품오차로_집계.md",
+    "sha256": "714ce69d19f9657f7753b7d61f7f9b62f80e19af851448455ec02ac2312e871f"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0731_도보평가_결과기록/mobility.md",
+    "sha256": "bb48154b1b1b6377820f201990860aa6176682e1a8d845caccffd45d9ad2bca4"
+  },
+  {
+    "source": "datasets/mobility/REPORT.md",
+    "backup": "datasets/mobility/_backup/2026-10-09_0731_도보평가_로컬재실행/REPORT.md",
+    "sha256": "0173de0125084596463fc52d952c4a1787e7db7a17937573ff43ddd2cddaef47"
+  },
+  {
+    "source": "intermediate own edit",
+    "backup": "final_project_cs/scripts/mobility/_backup/2026-10-09_0725_도보평가_초稿/compare_kakao_golden.py",
+    "sha256": "749fe5f75269fe3f4e55d04e2eef3e4efa285a2086646c9a7f7c6d56e13c0b93"
+  },
+  {
+    "source": "intermediate own edit",
+    "backup": "final_project_cs/scripts/mobility/_backup/2026-10-09_0728_도보평가_미관측구분/compare_kakao_golden.py",
+    "sha256": "cc142ad2e93663e0efbc6b1ddf5b5bef6327a3b8c9e5591aefc8c62c8f2d7e60"
+  },
+  {
+    "source": "intermediate own edit",
+    "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0725_도보평가_초稿/test_walk_comparison_scope_v1.py",
+    "sha256": "8f4dd6d9a1c0628bad0a7ed0f16dd0313aa5641c65503b0723893e9b24b8f76c"
+  },
+  {
+    "source": "intermediate own edit",
+    "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0728_도보평가_미관측구분/test_walk_comparison_scope_v1.py",
+    "sha256": "b3a645e93d2c971b3c7fd8ad8bc37f6433d247128c584841c15c120613491599"
+  }
+]

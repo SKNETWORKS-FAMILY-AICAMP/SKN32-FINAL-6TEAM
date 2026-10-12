@@ -1,0 +1,5 @@
+{
+  "status": "failed_before_mutation",
+  "reason": "run.json UTF-8 read used platform cp949 default",
+  "recovery": "explicit UTF-8 in publisher v2, v1 preserved"
+}

@@ -34,6 +34,8 @@ from datetime import UTC, datetime, timedelta
 import math
 from typing import Any, Callable
 
+from .simulation_hook import inputs, record_result, resolve
+
 #: 아직 못 붙인 항목과 그 이유. ★활용신청이 끝나 어댑터가 붙으면 여기서 지운다.
 #:  재난문자는 여기 없다 — 샘플 CSV 판이 붙어 있고(`disaster_msg.py`), 소스가
 #:  없을 때의 이유는 조립이 `unavailable["disaster"]` 에 적는다.
@@ -107,6 +109,10 @@ class DisruptionCheck:
             "air_quality": lambda: self._air(place, starts_at, sensitive),
             "earthquake": lambda: self._earthquake(place, starts_at),
         }
+        simulated = resolve(place)
+        if simulated:
+            for name, row in inputs(simulated, place).items():
+                jobs[name] = lambda row=row: row
         # ★동시에 돌린다 — 소스 하나가 느려도 나머지를 기다리게 하지 않는다.
         with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
             futures = {name: pool.submit(job) for name, job in jobs.items()}
@@ -119,7 +125,7 @@ class DisruptionCheck:
         advisories = [item for check in checks for item in check.pop("_advisories", [])]
         failed = [check["category"] for check in checks if check["status"] == "failed"]
         verdict = "fatal" if failed else ("disrupted" if disruptions else "clear")
-        return {
+        report = {
             "verdict": verdict,
             "disruptions": disruptions,
             "advisories": advisories,
@@ -132,6 +138,9 @@ class DisruptionCheck:
             "checked_at": datetime.now(UTC).isoformat(),
             "indoor_unknown": indoor_unknown,
         }
+        if simulated:
+            record_result(simulated, report, safety_only=False)
+        return report
 
     def check_safety(self, *, place: dict[str, Any], starts_at: datetime | None, region: str = "서울") -> dict[str, Any]:
         """**재난 사건만**(재난문자 · 지진) 점검한다 — 재난 시 일정 정지 반복(`SafetySweep`)이 쓴다. `[2026-10-06]`
@@ -142,6 +151,18 @@ class DisruptionCheck:
             "disaster_msg": lambda: self._disaster(place, starts_at, region, False),
             "earthquake": lambda: self._earthquake(place, starts_at),
         }
+        simulated = resolve(place)
+        if simulated:
+            # 정지가 먼저 걸려 일반 감시에서 빠져도 켠 N종의 점검 근거는 남긴다.
+            full = self.check(place=place, starts_at=starts_at, region=region)
+            safety_categories = {"disaster_msg", "earthquake"}
+            failed = [name for name in full["failed_categories"] if name in safety_categories]
+            disruptions = [cause for cause in full["disruptions"] if cause["category"] in safety_categories]
+            report = {**full, "verdict": "fatal" if failed else "disrupted" if disruptions else "clear",
+                      "failed_categories": failed, "disruptions": disruptions, "advisories": [],
+                      "checks": [row for row in full["checks"] if row["category"] in safety_categories]}
+            record_result(simulated, report, safety_only=True)
+            return report
         with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
             futures = {name: pool.submit(job) for name, job in jobs.items()}
             checks = [futures[name].result() for name in jobs]
@@ -149,10 +170,13 @@ class DisruptionCheck:
         for check in checks:
             check.pop("_advisories", None)
         failed = [check["category"] for check in checks if check["status"] == "failed"]
-        return {"verdict": "fatal" if failed else ("disrupted" if disruptions else "clear"), "disruptions": disruptions,
+        report = {"verdict": "fatal" if failed else ("disrupted" if disruptions else "clear"), "disruptions": disruptions,
                 "checks": checks, "failed_categories": failed,
                 "not_connected": [c["category"] for c in checks if c["status"] == "not_connected"],
                 "place_id": place.get("place_id"), "region": region, "checked_at": datetime.now(UTC).isoformat()}
+        if simulated:
+            record_result(simulated, report, safety_only=True)
+        return report
 
     def released(self, *, place: dict[str, Any], since: datetime, at: datetime, region: str = "서울") -> list[dict[str, Any]] | None:
         """`since` 부터 `at` 까지 온 **재난 해제 문자**. 소스가 해제 조회를 못 하거나 못 읽었으면 `None`(모름 — 「해제 없음」이 아니다)."""

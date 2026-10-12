@@ -1,0 +1,17 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\playdata2\anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\playdata2\Documents\final_workspace\final_project_cs
+configfile: pytest.ini
+plugins: anyio-4.14.1, langsmith-0.10.0, asyncio-0.25.2
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collecting ... collected 6 items
+
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.06] PASSED [ 16%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.08] PASSED [ 33%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.1] PASSED [ 50%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.06] PASSED [ 66%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.08] PASSED [ 83%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.1] PASSED [100%]
+
+============================== 6 passed in 5.56s ==============================

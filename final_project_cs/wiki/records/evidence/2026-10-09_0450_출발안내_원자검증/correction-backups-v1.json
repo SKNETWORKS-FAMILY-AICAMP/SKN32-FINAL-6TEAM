@@ -1,0 +1,22 @@
+[
+  {
+    "file": "tests/scenario/test_departure_atomic_db_v1.py",
+    "backup": "tests\\scenario\\_backup\\2026-10-09_0456_동시연결시험\\test_departure_atomic_db_v1.py",
+    "sha256": "bd038f1202db678659e52884893e09222e62e5c838ce326779bce7ea17c4390a"
+  },
+  {
+    "file": "app/domains/travel_ops/components/actions/itinerary_actions.py",
+    "backup": "app\\domains\\travel_ops\\components\\actions\\_backup\\2026-10-09_0458_직접선택_보존\\itinerary_actions.py",
+    "sha256": "19b6bed61cda80f77367bfb350333a4a47c3f0dc22a082fb6c0602f72f0e2cd2"
+  },
+  {
+    "file": "wiki/records/reports/debugs/2026-10-09_0450_출발안내_원자검증.md",
+    "backup": "wiki\\records\\reports\\debugs\\_backup\\2026-10-09_0458_직접선택_보존\\2026-10-09_0450_출발안내_원자검증.md",
+    "sha256": "ecc54404087a3c7bc886f81c5d40b764102ae233c8fbe28f2f0c2341a8b5c4bb"
+  },
+  {
+    "file": "tests/unit/travel/test_departure_assembly_v1.py",
+    "backup": "tests\\unit\\travel\\_backup\\2026-10-09_0500_조립시험_결과계약\\test_departure_assembly_v1.py",
+    "sha256": "992e1f65105485684b65bbde3ee666d4d9f1805d2a9664e589c9808b32b9cf07"
+  }
+]

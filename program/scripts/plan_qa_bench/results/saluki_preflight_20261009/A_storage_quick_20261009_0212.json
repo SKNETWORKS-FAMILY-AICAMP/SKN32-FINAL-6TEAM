@@ -1,0 +1,181 @@
+{
+  "machine": "A",
+  "utc": "2026-10-08T17:10:48Z",
+  "memory": "MemTotal:       263965424 kB\nMemFree:        35243464 kB\nMemAvailable:   225585192 kB\nBuffers:           80032 kB\nCached:         185056704 kB\nSwapCached:            0 kB\nActive:         37615316 kB\nInactive:       173236736 kB\nActive(anon):   17254572 kB\nInactive(anon):  8780612 kB\nActive(file):   20360744 kB\nInactive(file): 164456124 kB\nUnevictable:       30792 kB\nMlocked:           27720 kB\nSwapTotal:             0 kB\nSwapFree:              0 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:                76 kB\nWriteback:             0 kB\nAnonPages:      25744436 kB\nMapped:          5311396 kB\nShmem:            310792 kB\nKReclaimable:    9219912 kB\nSlab:           11947112 kB\nSReclaimable:    9219912 kB\nSUnreclaim:      2727200 kB\nKernelStack:       74880 kB\nPageTables:       133944 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    131982712 kB\nCommitted_AS:   140065216 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:      753260 kB\nVmallocChunk:          0 kB\nPercpu:           139008 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:     77824 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:    278528 kB\nFilePmdMapped:         0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:    232829124 kB\nDirectMap2M:    33372160 kB\nDirectMap1G:     2097152 kB\n",
+  "processes": " 342497       1   59074 python3 /tmp/tripilot-a-backlog-20261008/gpu_eval_queue.py --root /tmp/tripilot-a-backlog-20261008\n 350523  342497     174 /usr/bin/python3 /workspace/heavy/d_test_llama_lp.py\n 350524  350523     174 /workspace/deciders/bin/llama-server -m /workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c -t 4 -ngl 99 -c 4096 -np 1 --port 8401 --host 127.0.0.1 --jinja --lora /tmp/tripilot_cosine_s20261012_20261009_lora.gguf\n 350629  350627       0 /bin/sh -c ps -eo pid,ppid,etimes,args | grep -E 'gpu_eval_queue.py|llama-server|d_test_llama|run_B5[4-8]|qlora_train|saluki'\n 350631  350629       0 grep -E gpu_eval_queue.py|llama-server|d_test_llama|run_B5[4-8]|qlora_train|saluki",
+  "gpu": "3462 MiB, 74 %, 16380 MiB",
+  "mounts": [
+    {
+      "target": "/",
+      "fstype": "overlay",
+      "free": 8664154112,
+      "options": "rw,relatime,lowerdir=/var/lib/docker/165536.165536/overlay2/l/VR4JJ2A7ESRE3F6VCYIX5C7LJ7:/var/lib/docker/165536.165536/overlay2/l/G5CGLF6RQYDUSBWYAURUOEBBUM:/var/lib/docker/165536.165536/overlay2/l/L7XKN4LHJQNPNS7TZEM2ZU5JI6:/var/lib/docker/165536.165536/overlay2/l/TYRCSPWYDCXK4L6YE72YO4TWGL:/var/lib/docker/165536.165536/overlay2/l/ZXKER6FDYONQZDACKD5AVJSFKD:/var/lib/docker/165536.165536/overlay2/l/FHBYVV27O5L4LHXWDKXSAM7I2P:/var/lib/docker/165536.165536/overlay2/l/2EEVSIF5DJ3SOLQJESCFJ723KL:/var/lib/docker/165536.165536/overlay2/l/WE4HUCPUCRMMGQRVD7HI6JNYR2:/var/lib/docker/165536.165536/overlay2/l/I2WP3TYKEHLZ6DJLDB45WZIYRZ:/var/lib/docker/165536.165536/overlay2/l/ON4AR4BGZLF7MTA2JB543WAS7Q:/var/lib/docker/165536.165536/overlay2/l/JKRDPVD3DDACF7XPY4SFOGNGPK:/var/lib/docker/165536.165536/overlay2/l/724ESVGSOMZCTZQVOZTQX576CO:/var/lib/docker/165536.165536/overlay2/l/YVVQX5ZQAPGPCPQ2VCWDB3TDV3:/var/lib/docker/165536.165536/overlay2/l/YW7DQHGFFJ6KOL3MDUS4U2DFTA:/var/lib/docker/165536.165536/overlay2/l/VFAKQHGV6BTEKJJNCJKYFVPACA:/var/lib/docker/165536.165536/overlay2/l/P3IDQXZUOOBEXCCLR5VYM6SO5I:/var/lib/docker/165536.165536/overlay2/l/NILB46TD2KPXBV443HM4XTO7DC:/var/lib/docker/165536.165536/overlay2/l/XD7DD7YHYRWZQPWFZJ3ZO3ES4Q:/var/lib/docker/165536.165536/overlay2/l/RFKV552PWNKNUZXG2KO6MMIQWG:/var/lib/docker/165536.165536/overlay2/l/I53GF4Q4XUEKNKJSM3Z7YIPF3A:/var/lib/docker/165536.165536/overlay2/l/SF3XD2WNYDVPQMUU4VYVYUYGWJ:/var/lib/docker/165536.165536/overlay2/l/BFZFWUMJ23ZEDC5R5KXPLAM4WL:/var/lib/docker/165536.165536/overlay2/l/R4ABKL7ZQUDJD3OVW4LVS2XPNK:/var/lib/docker/165536.165536/overlay2/l/W6IRF6H2QNLCL6S52QDZVGHJ5G:/var/lib/docker/165536.165536/overlay2/l/26NYG3QRHVQ7T332PYX4LWGOBV:/var/lib/docker/165536.165536/overlay2/l/B72AGOMMS6LRXXVGNX6HEKECLT:/var/lib/docker/165536.165536/overlay2/l/SOMVIRWVKCNYS6HLWCRRH6VJ6K:/var/lib/docker/165536.165536/overlay2/l/X5LTBFS67AGLVNL22YOD7HMKOW:/var/lib/docker/165536.165536/overlay2/l/A4J7MLN2QPBHQAU6B3EPXNUNBG:/var/lib/docker/165536.165536/overlay2/l/P2ZQBEHXNCR53WHCMPSZFTXPX6:/var/lib/docker/165536.165536/overlay2/l/OBBNIQISBHB5FFASCK32TORRTY:/var/lib/docker/165536.165536/overlay2/l/6NTPIUNWG7PNPLDP7Z4OMA33ZT:/var/lib/docker/165536.165536/overlay2/l/IM6EFHQ6OTIUCXEL2JKNBEBKGO:/var/lib/docker/165536.165536/overlay2/l/7OK7W5LDEQCZITMLXW347TX5OM:/var/lib/docker/165536.165536/overlay2/l/WVGPDT5WJZACNZU4KLC5S7PHQS,upperdir=/var/lib/docker/165536.165536/overlay2/e8b23b6f105aa99d449573eca2a5420df48fa47f5619ca1c2ad70b36a84b2f39/diff,workdir=/var/lib/docker/165536.165536/overlay2/e8b23b6f105aa99d449573eca2a5420df48fa47f5619ca1c2ad70b36a84b2f39/work,nouserxattr"
+    },
+    {
+      "target": "/dev",
+      "fstype": "tmpfs",
+      "free": 67108864,
+      "options": "rw,nosuid,size=65536k,mode=755,uid=165536,gid=165536,inode64"
+    },
+    {
+      "target": "/dev/pts",
+      "fstype": "devpts",
+      "free": 0,
+      "options": "rw,nosuid,noexec,relatime,gid=165541,mode=620,ptmxmode=666"
+    },
+    {
+      "target": "/dev/mqueue",
+      "fstype": "mqueue",
+      "free": 0,
+      "options": "rw,nosuid,nodev,noexec,relatime"
+    },
+    {
+      "target": "/dev/shm",
+      "fstype": "tmpfs",
+      "free": 15000002560,
+      "options": "rw,nosuid,nodev,noexec,relatime,size=14648440k,uid=165536,gid=165536,inode64"
+    },
+    {
+      "target": "/dev/null",
+      "fstype": "devtmpfs",
+      "free": 135034466304,
+      "options": "rw,nosuid,relatime,size=131869596k,nr_inodes=32967399,mode=755,inode64"
+    },
+    {
+      "target": "/dev/random",
+      "fstype": "devtmpfs",
+      "free": 135034466304,
+      "options": "rw,nosuid,relatime,size=131869596k,nr_inodes=32967399,mode=755,inode64"
+    },
+    {
+      "target": "/dev/full",
+      "fstype": "devtmpfs",
+      "free": 135034466304,
+      "options": "rw,nosuid,relatime,size=131869596k,nr_inodes=32967399,mode=755,inode64"
+    },
+    {
+      "target": "/dev/tty",
+      "fstype": "devtmpfs",
+      "free": 135034466304,
+      "options": "rw,nosuid,relatime,size=131869596k,nr_inodes=32967399,mode=755,inode64"
+    },
+    {
+      "target": "/dev/zero",
+      "fstype": "devtmpfs",
+      "free": 135034466304,
+      "options": "rw,nosuid,relatime,size=131869596k,nr_inodes=32967399,mode=755,inode64"
+    },
+    {
+      "target": "/dev/urandom",
+      "fstype": "devtmpfs",
+      "free": 135034466304,
+      "options": "rw,nosuid,relatime,size=131869596k,nr_inodes=32967399,mode=755,inode64"
+    },
+    {
+      "target": "/dev/nvidia-modeset",
+      "fstype": "devtmpfs",
+      "free": 135034466304,
+      "options": "rw,nosuid,relatime,size=131869596k,nr_inodes=32967399,mode=755,inode64"
+    },
+    {
+      "target": "/dev/nvidia-uvm",
+      "fstype": "devtmpfs",
+      "free": 135034466304,
+      "options": "rw,nosuid,relatime,size=131869596k,nr_inodes=32967399,mode=755,inode64"
+    },
+    {
+      "target": "/dev/nvidia-uvm-tools",
+      "fstype": "devtmpfs",
+      "free": 135034466304,
+      "options": "rw,nosuid,relatime,size=131869596k,nr_inodes=32967399,mode=755,inode64"
+    },
+    {
+      "target": "/dev/nvidiactl",
+      "fstype": "devtmpfs",
+      "free": 135034466304,
+      "options": "rw,nosuid,relatime,size=131869596k,nr_inodes=32967399,mode=755,inode64"
+    },
+    {
+      "target": "/dev/nvidia7",
+      "fstype": "devtmpfs",
+      "free": 135034466304,
+      "options": "rw,nosuid,relatime,size=131869596k,nr_inodes=32967399,mode=755,inode64"
+    },
+    {
+      "target": "/run/nvidia-persistenced/socket",
+      "fstype": "tmpfs",
+      "free": 27010072576,
+      "options": "rw,nosuid,nodev,noexec,relatime,size=26396544k,mode=755,inode64"
+    },
+    {
+      "target": "/workspace",
+      "fstype": "fuse",
+      "free": 496203798806528,
+      "options": "rw,nosuid,nodev,relatime,user_id=0,group_id=0,allow_other"
+    },
+    {
+      "target": "/etc/resolv.conf",
+      "fstype": "xfs",
+      "free": 12242302861312,
+      "options": "rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,sunit=256,swidth=256,usrquota,prjquota"
+    },
+    {
+      "target": "/etc/hostname",
+      "fstype": "xfs",
+      "free": 12242302861312,
+      "options": "rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,sunit=256,swidth=256,usrquota,prjquota"
+    },
+    {
+      "target": "/etc/hosts",
+      "fstype": "xfs",
+      "free": 12242302861312,
+      "options": "rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,sunit=256,swidth=256,usrquota,prjquota"
+    },
+    {
+      "target": "/run/nvidia-ctk-hook12c900ab-0b42-4336-9618-7e8daf458930",
+      "fstype": "tmpfs",
+      "free": 0,
+      "options": "rw,relatime,size=4k,uid=165536,gid=165536,inode64"
+    }
+  ],
+  "locks": [
+    {
+      "path": "/tmp/tripilot-a-backlog-20261008/queue.lock",
+      "busy": true
+    }
+  ],
+  "/sys/fs/cgroup/memory/memory.limit_in_bytes": "30999998464",
+  "/sys/fs/cgroup/memory/memory.usage_in_bytes": "16120373248",
+  "named_roots": {
+    "/workspace": {
+      "free": 496203798806528,
+      "writable": true
+    },
+    "/tmp": {
+      "free": 8664154112,
+      "writable": true
+    },
+    "/root": {
+      "free": 8664154112,
+      "writable": true
+    },
+    "/dev/shm": {
+      "free": 15000002560,
+      "writable": true
+    },
+    "/mnt": {
+      "free": 8664154112,
+      "writable": true
+    },
+    "/opt": {
+      "free": 8664154112,
+      "writable": true
+    }
+  },
+  "model_candidates": [],
+  "engine_source_dirs": [
+    "/workspace/ollama",
+    "/tmp/llama_build",
+    "/root/.ollama"
+  ]
+}

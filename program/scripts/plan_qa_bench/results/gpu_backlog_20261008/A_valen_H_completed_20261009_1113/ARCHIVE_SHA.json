@@ -1,0 +1,34 @@
+{
+  "valen_08b_original_h_a1/d_test_valen_08b_original_h_a1.jsonl": {
+    "bytes": 6171114,
+    "sha256": "183c26aa7a8d67853a1f620f2360a10d19e4fb3f9d9560f3a54d312d0bb7a89b"
+  },
+  "valen_08b_original_h_a1/job.log": {
+    "bytes": 1215,
+    "sha256": "64e83fce0b0261c6637fb133ae08bb77ef831b20c526e50019c4db6b54086678"
+  },
+  "valen_08b_original_h_a1/started.json": {
+    "bytes": 1536,
+    "sha256": "1f0af4b1b6f7013044be19ed9be6da3ca3e5a74a470cb0d46c7c33d54f5b43be"
+  },
+  "valen_08b_original_h_a1/valen_contract.json": {
+    "bytes": 2696,
+    "sha256": "26c70f3299f65312574d457e1dfce0274ff76e657b0528acabe5fee6a25f876b"
+  },
+  "valen_08b_original_h_a1/valen_resources.jsonl": {
+    "bytes": 18943,
+    "sha256": "b1ef9ffda04f37cf95119b42ff7663a10717349e2e1223169111481109f3e2bc"
+  },
+  "valen_08b_original_h_a1/valen_summary.json": {
+    "bytes": 342,
+    "sha256": "1cf72d91c894902951dbd37e235c5dcd95aeabc939702340ae20764c91c51686"
+  },
+  "snapshot.json": {
+    "bytes": 18366,
+    "sha256": "ebe8d418404933404eecf8f8a6a4917b98b38216383c6dc4340846e81a0c3d0b"
+  },
+  "manifest.json": {
+    "bytes": 91091,
+    "sha256": "a4974c4ebf4640b8b1ef1006f7d373bba9b6810325cdbde74eadf4724cbde94a"
+  }
+}

@@ -1,0 +1,8 @@
+........................................................................ [ 97%]
+..                                                                       [100%]
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_0921_같은최근접역_다른역조합\after-v1.xml -
+74 passed, 4 deselected in 2.89s
+Exception ignored in: <function Console.__del__ at 0x000001C83D105EE0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

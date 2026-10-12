@@ -1,0 +1,19 @@
+{
+  "checked_at": "2026-10-09T09:28:12.807769+09:00",
+  "sources": [
+    {
+      "url": "https://arxiv.org/html/2603.12592v4",
+      "scope": "abstract, introduction and section3; missing transfer connections can omit journeys, pruning requires specific ordering/monotonic assumptions",
+      "algorithm_applied": false
+    },
+    {
+      "url": "https://data.seoul.go.kr/dataList/openApiView.do?infId=OA-12764&srvType=A",
+      "scope": "official subway arrival field table: next stationID, terminalID, train type, generated timestamp and arrival seconds",
+      "purpose": "Prerequisite check for pending realtime subway matching; no subway selector or arrival override implemented"
+    }
+  ],
+  "reason_for_unit": "Existing nearest-equal guard removes all otherwise valid station pairs before timetable validation.",
+  "new_web_samples": 0,
+  "map_developer_api_calls": 0,
+  "actual_trips": 0
+}

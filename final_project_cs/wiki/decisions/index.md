@@ -24,6 +24,7 @@ domain: neutral
 
 | ID | 결정 | 상태 | 영향 |
 |---|---|---|---|
+| [D-CS-015](D-CS-015-local-embedding-bge-m3.md) | **임베딩은 로컬 bge-m3 로 쓴다 — 품질 비교 없이 운영 사정으로 정했다** `[2026-10-12]` — OpenAI 크레딧 소진으로 2026-09-22 전환. 다른 모델과 같은 조건 비교는 없었다. 교체 여부는 여행 규정 질의 세트 비교 뒤 | draft | RAG · 임베딩 |
 | [D-CS-001](D-CS-001-composer-ui-removal.md) | `/ui/composer` 폐기 | draft | 인증 경계 |
 | [D-CS-002](D-CS-002-finetuned-model-not-adopted.md) | **파인튜닝 모델 채택 안 함** | draft | 평가·자체호스팅 |
 | [D-CS-003](D-CS-003-composer-scope.md) | **Composer 범위 — 세 층** | draft | Composer·UI |

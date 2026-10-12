@@ -1,0 +1,29 @@
+문서 300개 검사
+불변식 84개 (automated 연결 103개)
+코드 역방향 표식 62개
+검사 범위: {"excluded_backup_directories": 58, "excluded_staging_directories": 5, "current_documents": 297, "record_documents": 1264, "generated_documents": 3}
+기록 1264개 — 현재 문서 규칙 제외. 기록 링크 통계: 미실행 (--include-records로 실행)
+도메인 축 표시 299/300 = 100%  (neutral 174 · travel 125)
+    미표시 1개 — 위반 아님. 다음 교체 때 대상인지 알 수 없다
+
+[8] 문서가 인용한 코드 파일이 없다 — 위반 아니고 집계다
+    ★둘을 가려야 한다 — 「삭제를 기록한 결정 문서」는 맞고,
+      「근거로 인용했는데 사라진 것」은 근거 없는 문장이 남은 것이다
+    final_project_cs/wiki/decisions/D-CS-001-composer-ui-removal.md -> app/presentation/api/composer.py
+    final_project_cs/wiki/decisions/D-CS-004-composer-boundary.md -> app/application/composer_service.py
+    final_project_cs/wiki/decisions/D-CS-004-composer-boundary.md -> app/presentation/api/composer.py
+    final_project_cs/wiki/decisions/D-CS-004-composer-boundary.md -> app/presentation/composer_auth.py
+    wiki/decisions/D-004-self-hosting-rationale.md -> eval/finetune/serve.py
+    wiki/decisions/D-006-composer-ownership.md -> app/application/composer_service.py
+    wiki/decisions/D-006-composer-ownership.md -> app/presentation/api/composer.py
+    wiki/decisions/D-011-composer-v3-gap.md -> app/application/composer_service.py
+
+[1] 인용한 코드 파일이 디스크엔 있고 git 이 모른다 — 위반 아니고 집계다
+    ★미커밋 구현을 근거로 쓴 것이다. 되돌려지면 그 문장이 거짓이 된다.
+      근거로 남기려면 「작업 트리 기준」이라고 적는다 — governance/evidence-grades.md
+    wiki/log.md -> eval/reports/raw_proposed.jsonl
+
+경고 [2] 300줄 초과 (분할 검토)
+    final_project_cs/wiki/external/web-flow-2026-10-09.md  (322줄)
+    final_project_cs/wiki/teams/booking-handoff.md  (303줄)
+통과. 위반 없음.

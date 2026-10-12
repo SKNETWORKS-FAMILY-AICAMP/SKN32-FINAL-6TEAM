@@ -1,0 +1,11 @@
+........................................................................ [ 73%]
+..........................                                               [100%]
+============================== warnings summary ===============================
+tests/e2e/test_mcp_server.py: 13 warnings
+tests/e2e/test_mcp_read_tools.py: 5 warnings
+  C:\Users\playdata2\anaconda3\Lib\contextlib.py:105: DeprecationWarning: Use `streamable_http_client` instead.
+    self.gen = func(*args, **kwds)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\commerce-integration-v6.xml -
+98 passed, 18 warnings in 131.68s (0:02:11)
