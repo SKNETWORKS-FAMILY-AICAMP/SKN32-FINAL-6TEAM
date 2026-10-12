@@ -121,7 +121,7 @@ export function slackAfter(stops: readonly TimedStop[], legs: readonly TimedLeg[
 }
 
 // `[2026-10-12 사용자 결정 — 멘토링 코멘트]` The space between two stops is no longer drawn from the free time along a curve (`gapPx` · `leadPx`, 2026-10-04 · 10-07):
-// the line is drawn to scale, 1 minute = 1.2 px (`time-rail.ts`).
+// the line is drawn to scale, 1 minute = 0.8 px since `[2026-10-13 ④]` (was 1.2), long free time folded (`time-rail.ts`).
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // How far a stop can go

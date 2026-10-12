@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { parseHm } from "./time-plan";
-import { RAIL_PX_PER_MIN, railSpans, railY, type RailPoint, type RailRow } from "./time-rail";
+import { freePx, RAIL_FOLD_OVER_MIN, RAIL_PX_PER_MIN, railSpans, railY, type RailPoint, type RailRow } from "./time-rail";
 import styles from "./plan-check.module.css";
 
 /**
@@ -36,6 +36,34 @@ function readRow(row: HTMLElement): RailRow {
     : { kind: "stay", start: minuteOf(row.dataset.start), end: minuteOf(row.dataset.end) };
 }
 
+/** The height a card's own content takes, whatever height it was given (a `min-height` only adds empty room at its bottom). Offsets, not boxes: a card moving in is not measured mid-move. */
+function contentHeight(card: HTMLElement): number {
+  const parts = Array.from(card.children).filter((child): child is HTMLElement => child instanceof HTMLElement && child.offsetParent !== null);
+  if (parts.length === 0) return card.offsetHeight;
+  const style = getComputedStyle(card);
+  const bottom = Math.max(...parts.map((part) => (part.offsetParent === card ? part.offsetTop : part.offsetTop - card.offsetTop) + part.offsetHeight));
+  return bottom + parseFloat(style.paddingBottom) + parseFloat(style.borderBottomWidth);
+}
+
+/**
+ * `[2026-10-13 사용자 결정 — 줄 간격 ④ · 카드 테두리 · 카드 크기 통일]` A folded card is at least as tall as its time (its end where the stop ends — the empty room stays inside its frame), and
+ * every folded card of the day is as tall as the tallest of them, so the cards line up. The time still reads off the line: its ⊖ stands where the stop ends, inside the card.
+ * An opened card, a past one and a past one opened again keep their own height.
+ */
+function evenCards(rows: readonly HTMLElement[], spans: readonly { from: number | null; to: number | null }[]) {
+  const folded: { card: HTMLElement; need: number }[] = [];
+  rows.forEach((row, index) => {
+    const card = row.dataset.rail === "move" ? null : row.querySelector<HTMLElement>(":scope > article");
+    if (!card) return;
+    if (row.hasAttribute("data-past") || row.hasAttribute("data-rail-open") || row.hasAttribute("data-past-open")) { card.style.removeProperty("min-height"); return; }
+    const { from, to } = spans[index];
+    const byTime = from !== null && to !== null ? DOT_Y + Math.max(0, to - from) * RAIL_PX_PER_MIN - card.offsetTop : 0;
+    folded.push({ card, need: Math.max(contentHeight(card), byTime) });
+  });
+  const tallest = Math.ceil(Math.max(0, ...folded.map((entry) => entry.need)));
+  folded.forEach(({ card }) => { card.style.minHeight = `${tallest}px`; });
+}
+
 /** Lowest point a stop row's own content reaches (its card, or its past line) — the time column is fixed (`TIME_BOTTOM`) and may be stuck to the top while scrolling. */
 function contentBottom(row: HTMLElement): number {
   const parts = Array.from(row.children).filter((child): child is HTMLElement => child instanceof HTMLElement && (child.tagName === "ARTICLE" || child.tagName === "DIV"));
@@ -49,8 +77,11 @@ function contentBottom(row: HTMLElement): number {
 function layoutRail(list: HTMLElement): RailPoint[] {
   const rows = Array.from(list.querySelectorAll<HTMLElement>(":scope > [data-rail]"));
   const spans = railSpans(rows.map(readRow));
+  evenCards(rows, spans);
   const segments: Segment[] = [];
   const caps: { y: number; past: boolean }[] = [];
+  /** `[2026-10-13 ④]` Where long free time was folded: a break mark on the line. */
+  const breaks: number[] = [];
   const points: RailPoint[] = [];
   let cursor: number | null = null;
   const free = (y1: number, y2: number) => { if (y2 - y1 > .5) segments.push({ kind: "free", y1, y2 }); };
@@ -101,8 +132,9 @@ function layoutRail(list: HTMLElement): RailPoint[] {
     const before = rows[index - 1];
     const room = before && before.dataset.rail !== "move" && !before.hasAttribute("data-past") ? Math.max(0, before.offsetHeight - contentBottom(before)) : 0;
     if (depart === null || arrive === null || from === null || to === null || arrive < depart) {
-      // Not known when it leaves and arrives: no dashes, a thin line for the time between the two stops.
-      const length = from !== null && to !== null ? px(to - from) : 0;
+      // Not known when it leaves and arrives: no dashes, a thin line for the time between the two stops (folded when long).
+      const length = from !== null && to !== null ? freePx(to - from) : 0;
+      if (from !== null && to !== null && to - from > RAIL_FOLD_OVER_MIN) breaks.push(top + length / 2);
       row.style.setProperty("--dep", `${Math.max(0, DEP_ROOM - room)}px`);
       row.style.minHeight = `${Math.max(0, length - DOT_Y)}px`;
       free(top, top + length);
@@ -110,7 +142,8 @@ function layoutRail(list: HTMLElement): RailPoint[] {
       cursor = top + length;
       return;
     }
-    const wait = px(depart - from), after = px(to - arrive);
+    // Waiting to leave and the free time after arriving are folded when long; the travelling itself is always to scale.
+    const wait = freePx(depart - from), after = freePx(to - arrive);
     const pad = Math.max(0, DEP_ROOM - wait - room);
     const departY = top + pad + wait;
     row.style.setProperty("--dep", `${pad + wait}px`);
@@ -122,6 +155,8 @@ function layoutRail(list: HTMLElement): RailPoint[] {
     segments.push({ kind: "travel", y1: departY, y2: departY + travel });
     free(departY + travel, departY + travel + after);
     points.push({ minute: from, y: top + pad }, { minute: depart, y: departY }, { minute: arrive, y: departY + travel }, { minute: to, y: departY + travel + after });
+    if (depart - from > RAIL_FOLD_OVER_MIN) breaks.push(top + pad + wait / 2);
+    if (to - arrive > RAIL_FOLD_OVER_MIN) breaks.push(departY + travel + after / 2);
     cursor = departY + travel + after;
   });
 
@@ -142,6 +177,11 @@ function layoutRail(list: HTMLElement): RailPoint[] {
     mark.className = styles.railCap;
     if (cap.past) mark.dataset.past = "";
     mark.style.top = `${cap.y}px`;
+    return mark;
+  }), ...breaks.map((y) => {
+    const mark = document.createElement("i");
+    mark.className = styles.railBreak;
+    mark.style.top = `${y}px`;
     return mark;
   }));
   return points;

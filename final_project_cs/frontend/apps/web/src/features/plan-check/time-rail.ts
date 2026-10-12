@@ -4,8 +4,19 @@
  * Pure (no DOM): the screen measures the rows and draws the line from these spans (`rail-list.tsx`).
  */
 
-/** How long a minute is on the line. 90 minutes = 108 px. */
-export const RAIL_PX_PER_MIN = 1.2;
+/**
+ * How long a minute is on the line. `[2026-10-13 사용자 결정 — 줄 간격 ④]` 0.8 px (90 minutes = 72 px; it was 1.2 px): a stop's card is as tall as its time (`rail-list.tsx`),
+ * so the empty room under a short card stays inside its frame.
+ */
+export const RAIL_PX_PER_MIN = 0.8;
+/** `[2026-10-13 ④]` Free time longer than this (waiting to leave, after arriving, or between two stops with no way known) is folded: drawn this short, with a break mark — its length is said in words. */
+export const RAIL_FOLD_OVER_MIN = 60;
+export const RAIL_FOLD_PX = 30;
+
+/** The length of free time on the line: to scale, or folded when it is long. */
+export function freePx(minutes: number): number {
+  return minutes > RAIL_FOLD_OVER_MIN ? RAIL_FOLD_PX : Math.max(0, minutes) * RAIL_PX_PER_MIN;
+}
 
 /** One row as the line reads it: a stop (start and end) or the way after it (when it leaves and arrives). Minutes since midnight; null = not known. */
 export type RailRow =
