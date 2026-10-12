@@ -52,10 +52,14 @@ function contentHeight(card: HTMLElement): number {
  */
 function evenCards(rows: readonly HTMLElement[], spans: readonly { from: number | null; to: number | null }[]) {
   const folded: { card: HTMLElement; need: number }[] = [];
+  // Measure with every foot back in the flow: with `data-even` a foot sits at the bottom of the room it was given, and measuring that would feed the room back into the
+  // height — the card grew a little on every layout and never settled (2026-10-13 CI: card-status-group 「element is not stable」). The min-heights stay meanwhile, so
+  // nothing around moves.
+  for (const card of rows.map((row) => row.querySelector<HTMLElement>(":scope > article"))) if (card) delete card.dataset.even;
   rows.forEach((row, index) => {
     const card = row.dataset.rail === "move" ? null : row.querySelector<HTMLElement>(":scope > article");
     if (!card) return;
-    if (row.hasAttribute("data-past") || row.hasAttribute("data-rail-open") || row.hasAttribute("data-past-open")) { card.style.removeProperty("min-height"); delete card.dataset.even; return; }
+    if (row.hasAttribute("data-past") || row.hasAttribute("data-rail-open") || row.hasAttribute("data-past-open")) { card.style.removeProperty("min-height"); return; }
     const { from, to } = spans[index];
     const byTime = from !== null && to !== null ? DOT_Y + Math.max(0, to - from) * RAIL_PX_PER_MIN - card.offsetTop : 0;
     folded.push({ card, need: Math.max(contentHeight(card), byTime) });
