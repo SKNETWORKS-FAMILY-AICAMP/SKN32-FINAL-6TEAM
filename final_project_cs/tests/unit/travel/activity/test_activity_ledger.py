@@ -79,6 +79,27 @@ def test_until_must_also_be_within_hours():
     assert ledger.state(conn, "demo", "p1", at, datetime(2026, 10, 14, 17, 50, tzinfo=KST))["within_hours"] is True
 
 
+def test_closing_midway_is_told_apart_from_closed_on_arrival():
+    # 19시에 닫는 곳 — 18~20시는 「중간에 닫힘(60분)」, 19~20시는 「도착 때 이미 닫힘」, 18~19시는 문제없음
+    conn = _Conn(_row("10:00~19:00", None))
+    day = lambda h: datetime(2026, 10, 14, h, tzinfo=KST)  # noqa: E731
+    midway = ledger.state(conn, "demo", "p1", day(18), day(20))
+    already = ledger.state(conn, "demo", "p1", day(19), day(20))
+    fine = ledger.state(conn, "demo", "p1", day(18), day(19))
+    assert (midway["within_hours"], midway["cut_short"], midway["closes_at"], midway["usable_minutes"]) == \
+        (False, True, "19:00", 60)
+    assert (already["within_hours"], already["cut_short"], already["closes_at"]) == (False, False, None)
+    assert (fine["within_hours"], fine["cut_short"]) == (True, False)
+
+
+def test_cut_short_unknown_without_until_or_hours():
+    at = datetime(2026, 10, 14, 18, tzinfo=KST)
+    assert ledger.state(_Conn(_row("10:00~19:00", None)), "demo", "p1", at)["cut_short"] is None
+    unknown = ledger.state(_Conn(_row("하절기 09:00~19:00, 동절기 10:00~17:00", None)), "demo", "p1", at,
+                           datetime(2026, 10, 14, 20, tzinfo=KST))
+    assert unknown["cut_short"] is None
+
+
 def test_until_past_midnight_is_outside_and_bad_until_is_ignored():
     conn = _Conn(_row("10:00~22:00", None))
     at = datetime(2026, 10, 14, 21, tzinfo=KST)

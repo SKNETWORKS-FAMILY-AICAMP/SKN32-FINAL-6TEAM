@@ -15,13 +15,16 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Any, Callable
 
-from app.domains.travel_ops.components.places.place_hours import fits, hours_on
+from zoneinfo import ZoneInfo
+
+from app.domains.travel_ops.components.places.place_hours import DayHours, fits, hours_on
 
 from .closure_rules import holiday_dates_needed, local_date, read_closure
 from .disaster_impact import ImpactRules, assess
 
 #: 공휴일 사실 — 날짜 → `read.holiday` 와 같은 모양(`{"is_holiday": bool, "holiday_name": str | None}`) · None(모름)
 HolidayLookup = Callable[[date], "dict[str, Any] | None"]
+_SEOUL = ZoneInfo("Asia/Seoul")
 
 
 def holidays_needed(restdate_text: str | None, at: datetime) -> list[date]:
@@ -39,6 +42,23 @@ def _within(attributes: dict[str, Any], at: datetime, until: datetime | None) ->
     return fits(attributes, at, until)
 
 
+def _cut_short(attributes: dict[str, Any], day: Any, at: datetime, until: datetime | None) -> dict[str, Any]:
+    """도착 때는 열려 있는데 끝나기 전에 닫나 — `{"cut_short", "closes_at", "usable_minutes"}`. `[2026-10-12 사용자 요청]`
+    ★「이미 닫힘」(다른 곳으로)과 「중간에 닫힘」(N분만 머물 수 있다 · 앞당기기)은 안내 · 대안이 다르다. `within_hours` 는 둘 다 False 로
+      두고(막는 판정은 그대로) 이 칸이 둘을 가른다. 끝 시각이 없거나 도착 때 이미 밖이면 `cut_short` 는 False(밖) · None(못 잼)."""
+    if not isinstance(until, datetime) or until <= at or not isinstance(day, DayHours):
+        return {"cut_short": None, "closes_at": None, "usable_minutes": None}
+    arrival_open = fits(attributes, at, at)
+    if arrival_open is not True or _within(attributes, at, until) is not False:
+        return {"cut_short": False if arrival_open is not None else None, "closes_at": None, "usable_minutes": None}
+    local = at.astimezone(_SEOUL) if at.tzinfo else at
+    usable = (day.closes.hour * 60 + day.closes.minute) - (local.hour * 60 + local.minute)
+    if usable <= 0:
+        # ★코어 `fits` 는 닫는 시각 정각 도착(19:00 도착 · 19:00 닫음)을 「안」으로 본다 — 머물 시간이 없으니 이미 닫힘이다
+        return {"cut_short": False, "closes_at": None, "usable_minutes": None}
+    return {"cut_short": True, "closes_at": day.closes.strftime("%H:%M"), "usable_minutes": usable}
+
+
 def hours_verdict(hours: dict[str, Any] | None, at: datetime, *, until: datetime | None = None,
                   holiday: HolidayLookup | None = None) -> dict[str, Any]:
     """휴무 · 운영시간 판정 — `hours` 는 `read.place_hours` 와 같은 모양(`known` · `attributes` · `source` · `why_unknown` ·
@@ -50,6 +70,8 @@ def hours_verdict(hours: dict[str, Any] | None, at: datetime, *, until: datetime
         within_hours  True 운영시간 안 · False 밖 · None 모름(휴무 아님이 확인된 뒤에만 잰다).
                       `until`(끝나는 시각)을 주면 끝날 때까지 안이어야 `True` — 안 주면 도착 순간만 본다
                       (고객 문의는 예약에 끝 시각이 없어 도착 순간만 본다)
+        cut_short     True 도착 때는 열려 있지만 끝나기 전에 닫는다(`closes_at` 닫는 시각 · `usable_minutes` 머물 수 있는 분)
+                      · False 그렇지 않다 · None 못 쟀다(끝 시각 없음 · 운영시간 모름)
         empty         운영 정보가 **비어 있다**(원문도 요일표도 없다 — 수정본 UC-A3 `4a`, 고객에게 물을 일)
     ★요일표(`place_hours.hours_on` · `fits` — 코어 표준)가 펴지 못하는 휴무(매월 n번째 주 · 공휴일 조건)는 휴무 원문을
       휴무 규칙(`closure_rules.read_closure`)으로 읽는다 — 원문이 정한 값이 요일 칸보다 앞선다.
@@ -66,8 +88,11 @@ def hours_verdict(hours: dict[str, Any] | None, at: datetime, *, until: datetime
     closure = read_closure(restdate, at, holiday or (lambda _day: None)) if restdate else None
     closed = (closure.value if closure is not None and closure.value is not None
               else (day == "closed") if day is not None else None)
-    within = _within(attributes, at, until) if closed is False and day not in (None, "closed") else None
-    return {**base, "empty": False, "closed": closed, "within_hours": within,
+    measurable = closed is False and day not in (None, "closed")
+    within = _within(attributes, at, until) if measurable else None
+    cut = _cut_short(attributes, day, at, until) if measurable else {"cut_short": None, "closes_at": None,
+                                                                     "usable_minutes": None}
+    return {**base, "empty": False, "closed": closed, "within_hours": within, **cut,
             "closure_reason": closure.reason if closure else None,
             "quote": closure.quote if closure is not None and closure.value else None,
             "needs_caveat": bool(closure is not None and closure.needs_caveat)}
