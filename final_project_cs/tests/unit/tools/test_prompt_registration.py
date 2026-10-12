@@ -28,8 +28,13 @@ def test_prompt_registration_allowlist_matches_cs_pack_teams():
     silently broke ResponseGenerationReviewTeam's DB-audited LLM path (every real
     call raised 'no active prompt registered for response.generate') -- see
     wiki/records/reports/2026-08-30_S-PROMPT-KEY-REGISTRATION-GAP_리포트.md. This asserts
-    the current, deliberate CS-pack set rather than "empty forever"."""
-    assert ALLOWED_PROMPT_KEYS == frozenset({"response.generate", "response.review_tone"})
+    the current, deliberate CS-pack set rather than "empty forever".
+
+    `[2026-10-12]` 숙소 · 항공 확장 에이전트의 해석 프롬프트 둘(`lodging.interpret` · `flight.interpret`)이
+    더해졌다 — 두 팀이 모델에 해석을 맡기는 길(`instances/lodging` · `instances/flight` 의 `PROMPT_KEY`).
+    이 목록이 바뀌면 이 시험도 같이 고친다(목록 밖 키는 등록되지 않는다)."""
+    assert ALLOWED_PROMPT_KEYS == frozenset({"response.generate", "response.review_tone",
+                                             "lodging.interpret", "flight.interpret"})
 
 
 def test_empty_prompt_directory_registers_nothing():
