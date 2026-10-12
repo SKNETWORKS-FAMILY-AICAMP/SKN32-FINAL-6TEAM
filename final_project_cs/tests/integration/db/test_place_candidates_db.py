@@ -46,7 +46,7 @@ INSERT = ("INSERT INTO place_catalog (tenant_id, source, content_id, content_typ
 def _raw(cid, title, l1, sgg, closed):
     return json.dumps({"contentid": cid, "title": title, "lclsSystm1": l1,
                        "lclsSystm2": l1 + "01", "lclsSystm3": l1 + "010100",
-                       "sigungucode": sgg, "closed_days": closed,
+                       "lDongSignguCd": sgg, "closed_days": closed,
                        "business_hours": "09:00~18:00"}, ensure_ascii=False)
 
 

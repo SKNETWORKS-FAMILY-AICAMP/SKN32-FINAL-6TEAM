@@ -1,0 +1,225 @@
+# 2026-10-11 15:54 — activity_total_data.csv 컬럼을 db_column.md(29개)에 맞췄다
+
+## 결론
+
+`activity_total_data.csv` 헤더와 `fill_tourapi_details.py` 를 `wiki/teams/db_column.md`(정본, 29개 컬럼)에 맞췄다.
+옛 시군구 코드 `sigungucode` 는 지우고 법정동 시군구 `lDongSignguCd` 로 바꿨으며, 그 값을 읽던 코드 4곳도 함께 고쳤다(사용자 결정 「a」).
+기존 값은 하나도 바뀌지 않았고(백업과 대조), TourAPI 는 이번에 부르지 않았다(남은 호출 11,300건).
+
+## 사용자 결정 (2026-10-11)
+
+- `age_limit` · `experience_guide` 둘 다 남긴다(26·27번). 처음에 `experience_guide` 를 빼기로 했다가 같은 날 정정.
+- `indoor_outdoor` · `indoor_outdoor_source` 를 남긴다(28·29번) — 오늘 사람이 고친 값 569행이 들어 있다.
+- `sigungucode` → `lDongSignguCd` 로 바꾸면서 코드도 같이 고친다(a).
+
+## 변경 파일
+
+| 파일 | 내용 |
+|---|---|
+| `wiki/teams/db_column.md` | 25 → 29개. 26 `age_limit` · 27 `experience_guide` · 28·29 실내외 추가, 결정 기록 |
+| `wiki/teams/activity.md` | 1326행 절 앞에 「옛 판 — 정본은 db_column.md」와 바뀐 점 |
+| `app/.../data_processing/fill_tourapi_details.py` | 다시 씀 — 29개 `COLUMNS` 순서로 쓴다 · `migrate()`(이름 바꾸기 `info_center→tel` · `reservation→reservation_info` · `spend_time→spendtime`, `sigungucode` 지움, 모르는 컬럼이면 멈춤) · detailCommon2 칸(`tel`·`homepage`·`modifiedtime`·`lDongSignguCd`) · detailIntro2 표를 문서대로 · `tel` 은 common 이 빌 때만 문의처 · 브랜드 행 `lDongSignguCd` 를 같은 구 TourAPI 행 코드로(한 구에 코드가 여럿이면 안 채우고 셈) |
+| `app/.../data_processing/tourapi_client.py:29` | `parents[5]` → `parents[6]` — `data_processing/` 로 옮겨진 뒤 `app/.env.apikeys` 를 찾아 키를 못 읽었다 |
+| `app/.../data_processing/activity_total_data.csv` | 헤더 29개로 옮김(아래 실행) |
+| `app/domains/travel_ops/components/itinerary/itinerary.py:186,427` | `raw_json->>'sigungucode'` → `'lDongSignguCd'` |
+| `app/domains/travel_ops/instances/activity/db_search/place_candidates.py:12,72` | 반환 키 `sigungucode` → `lDongSignguCd` |
+| `app/tools/read_tools.py:676` | docstring 반환 모양 |
+| `scripts/enrich_place_catalog_from_csv.py:44` | `NEW_ROW_KEYS` |
+| 테스트 5개 | `test_activity_data_quality.py`(헤더 29개 정확히 · `lDongSignguCd` 는 빈칸 또는 3자리 · 실내외 값·출처 검사 추가) · `test_db_search_place_candidates.py` · `test_activity_alternatives.py` · `integration/db/test_place_candidates_db.py` · `e2e/test_indoor_unknown_consent.py` 의 픽스처 키 |
+
+★`sigungucode` 를 바꿔도 판정·순위는 달라지지 않는다 — 유사도 점수는 10-05 부터 `lcls1~3` 만 보고(`activity/similarity.py:25`),
+대체 장소는 10-02 부터 반경으로 잰다(`alternatives.py:40`). 값은 `catalog_class["sigungu"]` · 후보 행에 실려 다닐 뿐이다.
+
+## 실행과 검증
+
+```
+python -m app.domains.travel_ops.instances.activity.data_processing.fill_tourapi_details --dry-run
+  컬럼 옮김: {'sigungucode 지움': 6338, 'info_center→tel': 1}
+  대상 5651행 {'12': 775, '14': 571, '28': 116, '15': 197, '38': 3992} · 아직 안 부른 호출 11300건
+... --dry-run --types 12 14 28 15
+  대상 1659행 · 아직 안 부른 호출 3316건
+... --max-calls 0        # 부르지 않고 옮기기 + 캐시 반영만
+  CSV 반영: {'homepage': 1, 'modifiedtime': 1, 'lDongSignguCd': 1, 'eventstartdate': 1, 'eventenddate': 1,
+            '브랜드 구 코드 모름': 664, '브랜드 lDongSignguCd': 23}
+```
+
+- 백업(옮기기 전 CSV)과 행마다 대조: 6,338행 · 기존 값이 바뀐 칸 0 · 새로 채워진 칸 `lDongSignguCd` 24(1566행 + 양천구 브랜드 23) · `homepage`·`modifiedtime`·`eventstartdate`·`eventenddate` 각 1(1566행).
+- 실내외 출처 분포 그대로: llm v2 5,513 · human:2026-10-11 569 · human:2026-10-10 256.
+- `.venv` pytest — `test_activity_data_quality.py` · `test_db_search_place_candidates.py` · `test_activity_alternatives.py` · `tests/unit/travel/activity`: **399 passed**.
+- 더 넓은 실행(`tests/unit` 전체 + DB·e2e 두 파일)은 결과를 아래 「추가 검증」에 적는다.
+  ★`.venv` 는 Python 3.11.9 라 `app/domains/travel_ops/components/conversation/trip_messages.py` 의 f-string(3.12 문법)에서
+  수집 오류 3건이 난다 — 이번 변경과 무관하고 그 파일은 건드리지 않았다(`git status` 깨끗).
+
+## 추가 검증 (`tests/unit` 전체, `.venv` Python 3.11.9)
+
+- 첫 실행(`tests/unit` + DB·e2e 두 파일): 14 failed · 3,091 passed · 25 errors.
+  그중 **이번 변경 탓은 `tests/unit/travel/test_fill_tourapi_details.py` 하나**였다 — 옛 판(`EXTRA_FIELDS` · `info_center` 등)을 보고 있었다.
+  29개 컬럼 규칙(옮기기 · 모르는 컬럼이면 멈춤 · 문의처 대체 · 실내외 안 건드림 · 브랜드 구 코드)으로 다시 써서 **10 passed**.
+- 다시 실행(`tests/unit`): **8 failed · 3,092 passed · 12 errors** — 모두 이번 변경과 무관하다(실패만 따로 다시 돌려 원인 확인).
+
+| 원인 | 실패 | 오류 |
+|---|---|---|
+| `trip_messages.py` 917행 f-string 이 3.12 문법이라 3.11 에서 못 읽는다 | `test_answers_are_korean` 2 · `test_delay_knock_on` 1 · `test_seoul_hour_readers` 1 | 수집 오류 3(`test_change_target` · `test_intake_transcription_differs` · `test_owner_team_routing`) |
+| `.venv` 에 `pyproj` 가 없다 | `test_dining_license_search` 2 | – |
+| 로컬 DB 연결 시간 초과(`psycopg ConnectionTimeout`) | `test_feedback` 1 · `test_feedback_runtime` 1 | `test_graph_v7_axes` 4 · `test_shared_source_cache` 5 |
+
+- e2e `test_indoor_unknown_consent.py` 7건도 DB 연결 시간 초과로 시작 전에 멈췄다 — DB 를 띄운 뒤 다시 돌려야 확인된다.
+
+## 본 수집 1일차 (2026-10-11 21:41~21:51, `--max-calls 800`)
+
+- 800건 호출, 멈춤·오류 없음. 관광지(12) 400곳의 detailCommon2 · detailIntro2. 남은 호출 **10,500건**(관광지 375곳부터 이어서).
+- 시작 직전 백업(스크래치 `activity_total_data.before_fetch_day1.csv`)과 대조: 6,338행 · 순서 같음 · **기존 값이 바뀐 칸 0**.
+- 새로 채워진 칸: `lDongSignguCd` 1,032(관광지 400 + 브랜드 632) · `modifiedtime` 400 · `tel` 384 · `homepage` 279 · `experience_guide` 37 · `age_limit` 11 · `capacity` 8.
+- 안 채워진 칸은 응답이 비어서다(스크립트 문제 아님): 관광지 `chkpet` 은 받은 395건 **모두 빈칸**이다. `overview` · `business_hours` · `closed_days` 는 이미 값이 있던 행이 대부분이라 그대로 뒀다(관광지 영업시간 746/775행이 이미 있음).
+- detailIntro2 응답 자체가 빈 곳 6곳 — 캐시에 「없음」으로 남는다.
+- ★브랜드 행 32곳은 `중구` 에 코드가 둘(`140` 41행 · `170` 1행)이라 규칙대로 채우지 않았다. `170` 은 「서울로 7017」(TourAPI 주소 「서울특별시 중구 한강대로 405」, 코드는 용산구) 한 곳뿐이다.
+  → **사용자 결정 A(같은 날)**: 한 구에 코드가 여럿이면 한 코드가 95% 이상(`BRAND_CODE_SHARE`)일 때만 쓰는 다수 규칙으로 바꿨다.
+  호출 없이(`--max-calls 0`) 다시 반영: 중구 브랜드 32곳(올리브영 24 · 아트박스 3 · 무신사 3 · 다이소 2)에 `140`. 기존 값 변경 0 · **브랜드 빈칸 0**.
+  테스트 `test_brand_rows_take_the_code_of_their_gu_only_when_one_code_dominates`(19:1 은 채움 · 50:50 은 비움) 포함 33 passed.
+
+## 본 수집 2일차 (2026-10-12 02:56~03:32)
+
+- 호출 **998건**(+ 원인 확인 curl 2건 = 하루 한도 1,000 다 씀). 관광지(12) 나머지 375곳 끝 → 문화시설(14) 124곳 · 행사(15) 1곳. 남은 호출 **9,502건**(쇼핑 외 1,518건).
+
+| 실행 | 시각 | 호출 | 끝 |
+|---|---|---|---|
+| `--max-calls 800` | 02:56~02:59 | 293 | 멈춤 — `detailIntro2 네트워크 오류: The read operation timed out` |
+| `--max-calls 507` | 03:00~03:01 | 72 | 멈춤 — `[WinError 10060]`(호스트 응답 없음) |
+| `--max-calls 435` | 03:05 | 10 | 멈춤 — `[WinError 10060]` |
+| (curl 원인 확인) | 03:05~03:14 사이 | 2 | 정상 |
+| `--max-calls 423` (다시 부르기 넣은 뒤) | 03:14~03:19 | 423 | 끝까지 |
+| `--max-calls 200` | 03:30~03:32 | 200 | 끝까지 |
+
+- **원인 확인(curl)**: 키 없이 3번 — DNS ~0.01s · TCP ~0.02–0.06s · TLS ~0.05–0.09s · 401(키 없으니 정상).
+  키를 넣어 마지막에 실패한 `detailIntro2` 129552(아차산)와 `detailCommon2` 129552 — 둘 다 **200 · `resultCode 0000`**(0.18s · 1.2s).
+  → 키·한도·그 장소 문제가 아니라 **일시 끊김**이다. 멈춘 장소가 매번 달랐고, 이어 갈수록 짧게 멈췄다(293 → 72 → 10).
+- **고침(사용자 결정 2)** `tourapi_client.py` — 네트워크 오류(응답을 못 받음: `URLError` · `TimeoutError` · `ConnectionError`)만
+  `RETRY_WAITS_SECONDS = (10, 30, 60)` 대로 기다렸다 다시 부르고, 세 번 다 실패하면 전처럼 멈춘다. 다시 부를 때 한 줄 찍는다(키는 안 찍는다).
+  응답을 받은 오류(`HTTPError` · JSON 이 아닌 응답 · `resultCode` ≠ `0000`)는 다시 부르지 않고 바로 멈춘다 — 한도만 태운다.
+  테스트 `tests/unit/travel/test_tourapi_client_retry.py` 3개(기다렸다 성공 · 세 번 실패 후 멈춤 + 키 안 찍힘 · HTTP 오류와 한도 응답은 바로 멈춤) + `test_fill_tourapi_details.py` → **13 passed**.
+  ★고친 뒤 두 번(623건)은 네트워크 오류가 한 번도 안 나서 **다시 부르기가 실제로 돈 적은 아직 없다.**
+- 2일차 시작 직전 백업(스크래치 `activity_total_data.before_fetch_day2.csv`)과 대조: 6,338행 · 순서 같음 · **기존 값이 바뀐 칸 0**.
+- 새로 채워진 칸: `lDongSignguCd` 497 · `modifiedtime` 497 · `tel` 485 · `homepage` 401 · `experience_guide` 41 · `capacity` 17 · `age_limit` 16 · `spendtime` 8 · `pet` 6 · `fee` 1.
+  문화시설 `business_hours` · `closed_days` 는 이미 값이 있던 행이라 그대로 뒀다.
+- 캐시 1,800줄. detailIntro2 응답이 빈 곳 4곳(1일차 6곳에 더해) — 「없음」으로 남는다.
+- **브랜드 행 `lDongSignguCd` 빈칸 0** (1일차 664 → 0).
+
+### 빈칸 검토 → `addr2` 옮기기 (2026-10-12, 사용자 결정 「1번」)
+
+- 수집된 900행의 빈칸 대부분은 **API 에 그 타입 필드가 없거나**(관광지 `fee` · `reservation_info` · `spendtime` 등) **응답이 비어서**(관광지 `chkpet` 769/775 등)다 — 다시 불러도 안 채워진다.
+- 응답에 있는데 안 옮기던 칸이 `addr2` 였다 → `fill_tourapi_details.py` `COMMON_COLUMNS` 에 `addr2` 추가(빈칸만 채움).
+  테스트 `test_addr2_comes_from_detail_common_only_into_blank_cells` 포함 **14 passed**.
+- `--max-calls 0` 으로 반영: **`addr2` 3칸**(별마당도서관 「스타필드 코엑스몰 B1」 · 서울 중구문화원 「한화빌딩 1층」 · 양천문화원 「2층 양천문화원」). 직전 백업(`activity_total_data.before_addr2.csv`)과 대조 — 기존 값 변경 0 · 호출 0.
+- 남은 검토 항목(아직 안 함): 응답이 빈 10곳 다시 부르기(코코리컬러 강남·홍대는 공통정보도 없음) · `detailInfo2` 로 관광지 `fee` 를 채울 수 있는지 10곳 표본.
+
+### TourAPI 밖 값의 약관 검토 → 출처 칸 `field_sources` (2026-10-12)
+
+- **약관 검토(법률 자문 아님)**: 지도 API 값을 CSV·DB 에 채우는 것은 위반이다 — 카카오 운영정책 제5조 20호(캐시) · 30호(사전 승낙 없는 복제),
+  카카오 데브톡 답변(2026-08) 「REST API는 실시간 호출로만 … "임시 저장" 형태의 사용은 허용하지 않습니다」 · 네이버 검색 API 특약(2026-09-07, 저장·캐싱 금지 — 언론·개발자 기록으로 확인, 원문 미확인) · 구글은 `D-CS-010`.
+  웹 화면 자동 수집(검색 결과 · 지도 서비스 · 블로그)은 약관에 더해 부정경쟁방지법 위험(야놀자·여기어때 — 형사 무죄 2021도1533, 민사 배상 인정).
+  **허용 범위로 본 것**: 그 장소의 공식 홈페이지 · 지자체 · 공공기관 페이지에서 **사실만** 사람이 옮기고 출처를 남긴다.
+- **사용자 결정**: ① JSON 칸 하나 ② 나중에 TourAPI 값이 오면 **TourAPI 값으로 바꾼다** ③ 허용 출처는 공식 홈페이지 · 지자체 · 공공기관.
+- **계약 먼저**: `wiki/teams/db_column.md` — 30번 `field_sources`, 「TourAPI 밖에서 채운 값」 절(형식 `{컬럼: {by, url, checked}}` · 허용 컬럼 10개 · 입력 원칙), 「빈 칸만 채운다」의 예외.
+- **코드**: `fill_tourapi_details.py` — `COLUMNS` 30개 · `HUMAN_FILLABLE` · `source_errors()`(허용 밖 컬럼 · 빈 칸의 출처 · by/url/checked 오류 → **호출·쓰기 전에 멈춤**) · `apply_cache()` 가 출처 있는 칸을 TourAPI 값으로 바꾸고 출처를 지움(`<컬럼>(사람 값→TourAPI)` 로 셈).
+  `merge_tourapi_new.py` 문구 29 → 30개. 테스트 `test_activity_data_quality.py` 헤더 30개.
+- **검증**: 새 시험 5개(허용 컬럼 · 오류 7종 · TourAPI 값으로 바꿈 · 빈 응답이면 사람 값 유지 · 형식 오류면 호출·쓰기 없이 멈춤) 포함
+  `test_fill_tourapi_details.py` + `test_tourapi_client_retry.py` + `test_activity_data_quality.py` **42 passed**.
+  `--max-calls 0` 으로 CSV 헤더 30개(끝에 `field_sources`) · 직전 백업 대조 6,338행 · 순서 같음 · 기존 값 변경 0 · 호출 0.
+- ~~아직 안 한 것: DB 적재(`enrich_place_catalog_from_csv.py`)는 `field_sources` 를 옮기지 않는다~~ → **반영(같은 날, 아래)**.
+
+### DB 적재에 `field_sources` 반영 (2026-10-12)
+
+- DB 로 가는 칸 중 사람이 채울 수 있는 것은 영업시간 글 두 칸(`business_hours` · `closed_days` → `catalog_hours`)뿐이다(브랜드 외 다른 칸은 이 스크립트가 원래 옮기지 않는다).
+- `scripts/enrich_place_catalog_from_csv.py`: `hours_sources()` · `hours_record()` 를 새로 두고, 사람이 채운 칸이 있는 행은 `hours_read.source = "official_web"` + `hours_read.field_sources`(url · 확인한 날)로 적는다.
+  관광공사 원문 행은 전처럼 `activity_csv`. 브랜드 매장 새 행(`_insert_new_stores`)도 같은 함수로 적는다. 시작할 때 `fill_tourapi_details.source_errors()` 로 검사해 형식이 틀리면 **DB 에 쓰지 않고 멈춘다**. 출력에 「사람이 채운 영업시간(official_web) N행」.
+- 검증: 새 시험 `tests/unit/travel/test_enrich_place_catalog_sources.py` 4개(영업시간 두 칸만 따라감 · 사람이 채운 행만 출처 · 기록의 source · 형식 오류면 DB 안 건드림) 포함 **46 passed**.
+  ★실제 DB 로 세어 보기(쓰기 없음)는 **60초 안에 끝나지 않아 끊었다**. ~~로컬 DB 가 안 떠 있는 것으로 보인다~~ → **정정**(아래 「DB 통합 테스트」): 나중에 다시 돌리니 DB 는 떠 있었고 2.7초에 끝났다. 처음 멈춘 원인은 확인 못 했다.
+- ★**남은 문제 ① 화면 출처 표시**: `place_info.py` 는 관광공사 목록에 있는 장소면 `source_note = "ⓒ한국관광공사"` 하나만 내고, 웹 화면(`trip-rows.tsx` · `trip-detail.tsx`)은 그것만 보인다.
+  영업시간 출처(`hours_source` ← `hours_read.source`)는 응답에 있지만 화면에 안 나온다 → 사람 값이 들어가면 **「출처 ⓒ한국관광공사」 아래 사람 값이 보인다.** 사람 값을 DB 에 올리기 전에 고쳐야 한다.
+- ★**남은 문제 ② 새벽 작업과의 관계**: `catalog_hours.prefill` 은 관광공사 목록 수정 시각이 바뀐 곳을 다시 읽어 **덮어쓴다** — 관광공사 응답이 비어도(`hours_week` NULL) 사람 값을 지운다.
+  결정 ②는 「TourAPI 에 **값이 있으면** 바꾼다」라 어긋난다.
+  → ①② **둘 다 고침(같은 날, 아래)**.
+
+### 화면 출처 표시 · 새벽 작업 고침 (2026-10-12, 사용자 「둘 다 고쳐줘 — 관광공사 응답이 채워져 있을 때만 덮어쓰도록」)
+
+- **계약 먼저**: `wiki/external/rest-endpoints.md` 장소 정보에 `hours_evidence` 추가 · `official_web` 이면 `source_note` 에 덧붙이는 규칙. `wiki/teams/db_column.md` 에 새벽 작업 · 보이는 곳 규칙.
+- **① 출처 표시** `components/places/place_info.py` — `official_web_note()`: 사람이 확인한 운영시간이면 `source_note` = 「ⓒ한국관광공사 · 휴무일: 공식 페이지(2026-10-12 확인)」(주소 등은 여전히 관광공사라 앞은 그대로), `hours_evidence` 에 칸별 url · 확인한 날.
+  화면 코드는 고치지 않았다 — 화면은 `source_note` 문자열을 그대로 보인다(`trip-rows.tsx` · `trip-detail.tsx`).
+  채팅 `conversation/trip_facts.py` 의 「영업시간(저장된 값)」 줄도 같은 표시를 붙인다. 채팅의 「관광공사 안내 원문」 줄은 관광공사를 실시간으로 부른 값이라 그대로다.
+- **② 새벽 작업** `components/places/catalog_hours.py` — `merge_official_web()`: `official_web` 행은 **관광공사 응답이 채워진 칸만**(태그만 있으면 빈 칸) 관광공사 글로 바꾸고 그 칸의 출처를 지운다.
+  사람 칸이 다 바뀌면 `source = tour_api` 로 돌아간다. 두 칸 다 비어 오면 사람 값을 두고 `source_modified_at` 만 맞춘다(안 맞추면 매 틱 다시 읽어 한도를 쓴다). 관광공사 원문 행은 전처럼 덮어쓴다. 출력에 `kept_official_web` · `official_web_replaced`.
+- **검증**: 새 시험 `tests/unit/travel/test_official_web_hours.py` **9 passed**(합치기 3 · 가짜 연결로 새벽 작업 한 틱 4 — 빈 응답이면 수정 시각만 · 채워진 칸만 바꿈 · 다 채우면 tour_api · 관광공사 행은 전처럼 덮어씀 · 출처 표시 · `place_info` 응답 · 채팅 줄).
+  `tests/unit/travel` 전체: **4 failed · 2,431 passed · 77 skipped · 3 errors** — 실패·오류는 위 「추가 검증」 표의 무관한 원인과 같은 테스트다(3.12 f-string · `pyproj`).
+  ~~DB 가 필요한 통합 테스트는 돌리지 못했다 — 로컬 DB 가 꺼져 있다~~ → **정정 · 돌림(아래)**.
+
+### DB 통합 테스트 (2026-10-12)
+
+- **DB 는 이미 떠 있었다** — `127.0.0.1:5433/acop_cs` = PostgreSQL 16.15(Debian 빌드), `connect_timeout=8` 로 즉시 연결. `place_catalog` 6,177행 · `catalog_hours` 0행.
+  (이 PC 에는 Windows 서비스 `postgresql-x64-18` 도 돈다 — 5433 의 16.15 와는 다른 서버다. `wiki/operations/local-setup.md` 의 `pg_ctl` 경로는 다른 PC(`playdata2`) 기준이다.)
+- 적재 세어 보기(쓰기 없음): `python -m scripts.enrich_place_catalog_from_csv <csv>` → 2.7초 · 「사람이 채운 영업시간(official_web) 0행」 — 지금 CSV 에 사람 값이 없어 예상대로다. DB 에 쓰지 않았다.
+- `tests/integration/travel/test_place_info.py` · `test_activity_catalog_pool.py`(새벽 작업 실 DB 포함) · `tests/integration/tools/test_place_hours_lookup.py` → **19 passed**.
+- 넓게: `tests/integration/travel` · `tests/integration/db` · e2e `test_intake_review.py` · `test_indoor_unknown_consent.py` · `test_watch_relaxed.py` → **130 passed**
+  (10/11 에 DB 시간 초과로 못 돌린 `test_indoor_unknown_consent.py` 7건 포함).
+
+### 공식 페이지 검색으로 빈칸 채우기 — `by=claude` (2026-10-12, 사용자 결정 「by=claude 추가」 · 「휴무·영업시간·연락처」)
+
+- **계약**: `db_column.md` `by` 에 `claude`(Claude 가 공식 페이지 **본문을 열어** 확인, 근거 문구 `quote` 필수) 추가. 검사(`source_errors`)가 `claude` 의 `quote` 누락을 잡는다.
+  화면 표시는 「공식 페이지(2026-10-12 **AI 확인**)」, `hours_evidence[].by`. 테스트 30 passed.
+- **대상**: 수집된 900행 중 `closed_days` · `business_hours` · `tel` 빈칸 — **75곳 110칸**(아직 수집 안 한 행은 TourAPI 가 덮으므로 뺐다).
+- **결과: 9곳 10칸 채움**(휴무일 5 · 영업시간 3 · 연락처 2) — 북촌문화센터 · 종로 무계원 · 서울생활사박물관 · 상촌재(휴무일 · 전화) · 배봉산숲속도서관 · 문화비축기지 · 충무로영상센터 오재미동 · 탈영역우정국 · 석파정.
+  근거 원본(url · 인용문) `claude_web_findings_2026-10-12.jsonl`(세션 스크래치). 반영 전 백업과 대조: 6,338행 · 기존 값 변경 0. `--max-calls 0` 재실행 — 형식 검사 통과 · 관광공사 값으로 바뀐 칸 0.
+- **못 채운 100칸과 이유**:
+  - **원래 없는 값**(거리 · 골목 · 상권 · 산 · 계곡 · 기념비 · 공원 · 관광특구 — 경리단길 · 익선동 · 노가리골목 · 관악산 · 백사실계곡 · 독립선언문 배부 터 등): 공식 페이지에 휴무일 · 대표 전화가 없다. 지어내지 않았다.
+  - **공식 페이지에 그 사실이 안 적힘**: 롯데월드 · 코엑스 아쿠아리움(그날 운영시간만) · 리얼 이스케이프(월~일 영업만 — 「연중무휴」라고는 안 씀) · 법룡사 · 양천생활안전체험교육관 · 성수연방 · 서울 인디스페이스 · 안국사 · 홍제천인공폭포.
+  - **시설마다 달라 한 값으로 못 적음**: 서울성북 미디어문화마루 · 심산기념문화센터.
+  - **페이지를 못 읽음**: 광나루안전체험관(본문이 스크립트로만 뜸) · 수도박물관(HTTP 500) · 스탈릿성수(없는 페이지) · 클럽케이서울(인증서 오류).
+  - **공식 페이지가 없거나 언론 · 여행 사이트 · 지도 서비스에만 있음**: 위라이드 서울전차 · 플로팅아일랜드 · 서울웨이브아트센터 · 기억의 터 · 남산인권숲 등 — 허용 출처가 아니라 적지 않았다.
+  - **해당 없음**: 끝난 행사(2025 카페&베이커리페어 · 가족 예술축제) · 학교(중앙고 · 성신여대) · 개별 상점(코코리컬러 · 이문원한의원 · 하이드앤시크).
+- ★`by=claude` 값은 **사람 검토 전**이다. 검토한 사람이 `by` 를 `human` 으로 바꾼다. DB 에는 아직 올리지 않았다(`enrich_place_catalog_from_csv.py --apply` 안 돌림).
+
+### 사람이 채울 목록 · 「해당 없음」 · 행 정리 (2026-10-12, 사용자 결정)
+
+- 남은 100칸을 `data_processing/manual_fill_todo_2026-10-12.csv` 로 만들었다(A 확인 필요 40 · B 원래 없을 수 있음 42 · C 정리 대상 18).
+- **사용자 결정**: 「B 는 모두 해당 없음」 · 「C 의 끝난 행사 · 코코리컬러만 정리하고 나머지는 남긴다」.
+- **「해당 없음」 표시(계약 먼저)**: `db_column.md` — 칸은 **비운 채** `field_sources` 에 `{"by": "human", "na": true, "checked", "note"}`. 빈 칸 = 모름, 빈 칸 + `na` = 원래 없음.
+  칸에 「해당 없음」 글자를 넣지 않은 까닭: 다른 코드가 그 글자를 전화번호 · 영업시간 글로 읽는다.
+  `source_errors()` 가 `na` 를 검사(빈 칸에만 · url 없이 · 키 · 날짜) · `apply_cache()` 는 TourAPI 가 그 칸을 채우면 `na` 를 지운다(`<칸>(해당 없음→TourAPI)`) · DB 적재(`hours_sources`)는 `na` 를 출처로 싣지 않는다.
+  시험 3개 추가 — 관련 5개 파일 **59 passed**(데이터 품질 시험 포함).
+- **반영**: B 42칸(영업시간 13 · 휴무일 14 · 연락처 15)에 `na`. 행 4개 지움 — 3432447 2025 서울 카페&베이커리페어 · 3310483 가족 예술축제 [톡톡] · 4091313 코코리컬러 강남점 · 4091320 코코리컬러 홍대점(6,338 → **6,334행**).
+  백업(`activity_total_data.csv.before_na`)과 대조: 빠진 행은 그 4개뿐 · 바뀐 칸은 `field_sources` 29행뿐.
+  네 행은 git HEAD 에 있으므로 `merge_tourapi_new.py` 의 `removed_ids()` 가 「의도적으로 지운 행」으로 보고 다시 넣지 않는다(목록 병합 시).
+- 할 일 목록은 **49칸**으로 줄었다(A 40 · C 남긴 것 9 — 성신여대 두 곳 · 중앙고 · 이문원한의원 · 하이드앤시크).
+- ~~★**DB 는 아직 그대로**: `place_catalog` 에 지운 행 중 3개가 남아 있다~~ → **지움(같은 날, 사용자 「DB에서도 3행 지워줘」)**:
+  - 참조 확인: `place_catalog` 를 가리키는 외래키 없음 · `catalog_hours` 0 · `place_embeddings` 0 · `places.source_content_id` 0. 가족 예술축제(3310483)는 원래 DB 에 없었다.
+  - 행 전체(`row_to_json`)를 `_backup/2026-10-12_0523_place_catalog_delete_3rows/place_catalog_rows.jsonl` 에 남기고 한 트랜잭션에서 `DELETE`(tenant `demo` · source `tour_api`) — **3행 삭제, `place_catalog` 6,177 → 6,174**, 그 id 남은 행 0.
+  - 되돌리기: 백업 jsonl 의 각 행을 `INSERT … SELECT * FROM json_populate_record(null::place_catalog, %s)` 로 다시 넣는다.
+  - ★`_backup/` 와 `tourapi_details_cache.jsonl` 은 **`.gitignore` 에 없다**(`git check-ignore` 결과 없음) — 커밋에 섞이지 않게 해야 한다(db_column.md 는 캐시가 무시 대상이라고 적고 있어 문서와 다르다).
+    → **캐시는 고침(같은 날)**: `final_project_cs/.gitignore` 에 `tourapi_details_cache.jsonl` 경로 추가 — `git check-ignore` 로 무시됨 확인 · `git status` 에서 사라짐. `_backup/` 은 아직 무시 대상이 아니다.
+
+### 사용자가 직접 준 값 반영 (2026-10-12)
+
+- **계약**: `db_column.md` — `url` 은 `claude` 에만 필수, `human` 은 url 없이 `note`(「사용자 확인」)로 받는다. 검사: url 도 note 도 없는 사람 값 · url 없는 claude 값은 오류.
+  화면 표시는 url 없는 사람 값이면 「휴무일: 직접 확인(2026-10-12)」(「공식 페이지」라고 하지 않는다). 시험 2개 추가 · 관련 시험 통과.
+- **반영 7칸**(`by=human` · `note=사용자 확인`): 광나루안전체험관 휴무일 · 수도박물관 휴무일 · 클럽케이서울 휴무일(「찜질방 연중무휴 (피트니스: 주중 05:00-23:00, 주말 및 공휴일 06:00-22:00)」) · 연락처(「찜질방 02-563-1145 / 피트니스 02-539-8181」) ·
+  스탈릿성수 휴무일(「점포 별로 상이함」) · 연락처(「없음」 → 「해당 없음」 `na` 표시) · 롯데월드 아쿠아리움 휴무일(「연중무휴」).
+  백업 대조: 6,334행 · 바뀐 칸 휴무일 5 · 연락처 1 · `field_sources` 5 · **값이 있던 칸을 덮어쓴 것 0**. 할 일 49 → **42칸**.
+- **두 번째 묶음 8칸**(같은 방식): 리얼 이스케이프 · 코엑스 아쿠아리움 · 법룡사 휴무일 「연중무휴」 · 탈영역우정국 휴무일 「월요일 휴관」 · 서울 인디스페이스 휴무일 「추석 전일/당일 휴관」 · 석파정 연락처 「02-395-0100」 · 안국사 영업시간 「상시개방」 · 홍제천인공폭포 영업시간 「8:00~21:00」.
+  백업 대조: 바뀐 칸 휴무일 5 · 연락처 1 · 영업시간 2 · `field_sources` 8 · 덮어쓴 것 0. 할 일 42 → **34칸**.
+- ★롯데월드 아쿠아리움 **영업시간**(사용자 「월·화·수·목 10:00~20:00 금·토·일 10:00~22:00」)은 넣지 않았다 — 칸에 TourAPI 값(「10:00~20:00 (입장마감 19:00)」)이 있고, 사람은 TourAPI 칸을 고치지 않는다는 규칙이다.
+
+## 남은 일 · 주의
+
+1. **DB 재적재 전까지** `place_catalog.raw_json` 에는 옛 `sigungucode` 만 있어 `catalog_class["sigungu"]` · 후보의 `lDongSignguCd` 가 비어 온다(판정에는 안 쓰인다). 재적재: `scripts/load_place_catalog_csv.py`.
+2. ~~**브랜드 행 664곳의 `lDongSignguCd` 는 빈칸**이다~~ → 2일차(2026-10-12) 수집 뒤 **빈칸 0**.
+3. ~~`scripts/merge_tourapi_new.py` 는 아직 `sigungucode` 칸에 쓴다~~ → **고침(같은 날)**:
+   - `merge_tourapi_new.py` — 새 행의 시군구를 `lDongSignguCd` 에 쓴다. 목록 행에 값이 있으면 그대로, 없으면 현재 CSV 의 같은 구 코드(한 구에 코드가 여럿이면 비움). 목록의 옛 `sigungucode` 는 쓰지 않는다. 옛 헤더 CSV 면 `KeyError` 대신 이유를 말하고 멈춘다. 독스트링 「21개 컬럼」 → 현재 헤더(29개).
+   - `fetch_tourapi_list.py` — 목록 CSV 에 `lDongSignguCd` 칸 추가(`areaBasedList2` 응답의 같은 이름 필드. 응답에 없으면 빈칸 → 위 같은 구 규칙 · `fill_tourapi_details.py` 가 채운다).
+   - 확인: 3행짜리 시험 목록으로 시험 실행(실제 CSV md5 그대로) · 스크래치 복사본에 `--write` → 6,340행 · 헤더 29개 그대로 · 양천구 행 `470`(같은 구 규칙, 목록의 옛 코드 `19` 무시) · 강남구 행 `680`(목록 값).
+4. 본 수집: 쇼핑 외 3,316건(약 4일) → 쇼핑. **2일차 뒤 남은 호출 9,502건(쇼핑 외 1,518건 ≈ 2일 → 쇼핑 ≈ 10일).** 다음은 문화시설(14) 125번째부터. 하루 한도 1,000건(`ACOP_RATE_TOUR_API_PER_DAY`). 앱이 같은 키를 쓰면 `--max-calls 800` 정도로 여유를 둔다.
+5. 캐시 `tourapi_details_cache.jsonl` 은 수집이 끝나면 따로 백업한다(db_column.md).
+
+## 참조
+
+- `wiki/teams/db_column.md` · `wiki/teams/activity.md` 「인원·예약 확인용 컬럼」 절
+- 백업: 세션 스크래치 `activity_total_data.before_migration.csv` · `fill_tourapi_details.before.py` · `tourapi_details_cache.jsonl`
+- 백업(2일차, 2026-10-12 세션 스크래치): `activity_total_data.before_fetch_day2.csv` · `activity_total_data.before_fetch_day2e.csv`(200건 실행 직전) · `tourapi_details_cache.before_day2.jsonl` · `tourapi_client.before_retry.py` · `activity_total_data.before_addr2.csv` · `fill_tourapi_details.before_addr2.py` · `*.before_sources.*`(db_column · fill 스크립트 · CSV · 테스트 · enrich 스크립트) · `*.before_official_web`(place_info · catalog_hours · trip_facts · rest-endpoints · db_column)

@@ -9,7 +9,7 @@ _spec = importlib.util.spec_from_file_location("activity_load_places", ROOT / "s
 load_places = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(load_places)
 
-HEADER = ("contentid,contenttypeid,title,addr1,addr2,sigungucode,mapx,mapy,lclsSystm1,lclsSystm2,lclsSystm3,"
+HEADER = ("contentid,contenttypeid,title,addr1,addr2,lDongSignguCd,mapx,mapy,lclsSystm1,lclsSystm2,lclsSystm3,"
           "overview,business_hours,closed_days,fee,brand\n")
 
 
@@ -42,5 +42,14 @@ def test_blank_id_or_name_skipped_and_first_duplicate_wins(tmp_path):
 
 def test_real_csv_loads_every_row():
     data = load_places.rows(load_places.CSV_PATH)
-    assert len(data) == 6338
+    assert len(data) == 6334   # [2026-10-11] 4행 정리 — 리포트 2026-10-11_1554_Activity_CSV_컬럼정리 §반영
     assert len({r["content_id"] for r in data}) == len(data)
+
+
+def test_every_mapped_column_exists_in_the_real_csv():
+    """★`[2026-10-12]` CSV 컬럼 이름이 바뀌어도 적재는 오류 없이 NULL 을 넣는다 — 머지 뒤 네 칸이 그렇게 비었다."""
+    import csv
+
+    with open(load_places.CSV_PATH, encoding="utf-8-sig", newline="") as fh:
+        header = set(next(csv.reader(fh)))
+    assert [src for src, _ in load_places.COLUMNS if src not in header] == []

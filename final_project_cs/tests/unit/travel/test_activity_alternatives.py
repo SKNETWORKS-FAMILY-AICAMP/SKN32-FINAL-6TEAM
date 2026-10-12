@@ -30,7 +30,7 @@ CSV_PATH = (Path(__file__).resolve().parents[3]
 def _place(cid, *, l1="HS", l2="HS01", l3="HS010100", ctype="12", sgg="23",
            x=126.9770, y=37.5796, closed="연중무휴", title=None, brand=None, hours=None):
     return {"brand": brand, "contentid": cid, "title": title or f"장소{cid}", "contenttypeid": ctype,
-            "lclsSystm1": l1, "lclsSystm2": l2, "lclsSystm3": l3, "sigungucode": sgg,
+            "lclsSystm1": l1, "lclsSystm2": l2, "lclsSystm3": l3, "lDongSignguCd": sgg,
             "mapx": str(x), "mapy": str(y), "closed_days": closed,
             "business_hours": hours}
 
@@ -305,7 +305,7 @@ def test_sigungu_is_no_longer_compared():
     """★`[2026-10-02]` 옆 구라도 가까우면 후보다 — 시군구 경계 문제."""
     result = rank_alternatives(ORIGIN, [_at_km("next_gu", 0.3, sgg="1")], SATURDAY)
     assert [a["contentid"] for a in result["alternatives"]] == ["next_gu"]
-    assert "sigungucode" not in result["matched_fields"]
+    assert "lDongSignguCd" not in result["matched_fields"]
 
 
 def test_unknown_preference_is_rejected():

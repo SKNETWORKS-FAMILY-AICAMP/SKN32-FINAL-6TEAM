@@ -21,7 +21,7 @@ NEW = datetime(2026, 9, 28, tzinfo=UTC)
 def _record(cid, *, title, l1="HS", sgg="23", lon=126.98, lat=37.58,
             closed="연중무휴", fetched=NEW):
     raw = {"contentid": cid, "title": title, "lclsSystm1": l1, "lclsSystm2": l1 + "01",
-           "lclsSystm3": l1 + "010100", "sigungucode": sgg,
+           "lclsSystm3": l1 + "010100", "lDongSignguCd": sgg,
            "mapx": "117.99", "mapy": "19.69",        # ★원본 좌표 — 쓰지 않아야 한다
            "closed_days": closed, "business_hours": "09:00~18:00"}
     return (cid, "12", title, lat, lon, l1, raw, fetched)
@@ -79,7 +79,7 @@ def test_returns_origin_and_candidates_in_the_csv_shape():
     first = pool["candidates"][0]
     assert first == {"contentid": "c1", "title": "성균관 명륜당", "contenttypeid": "12",
                      "lclsSystm1": "HS", "lclsSystm2": "HS01", "lclsSystm3": "HS010100",
-                     "sigungucode": "23", "brand": None, "mapx": "126.98", "mapy": "37.58",
+                     "lDongSignguCd": "23", "brand": None, "mapx": "126.98", "mapy": "37.58",
                      "closed_days": "연중무휴", "business_hours": "09:00~18:00",
                      "addr1": None}   # ★`[2026-10-07]` 재난문자를 후보의 구로 거르는 데 쓴다(이 행은 주소 없음)
     assert pool["source"] == "place_catalog:" + "+".join(DEFAULT_SOURCES)
@@ -111,7 +111,7 @@ def test_pool_is_narrowed_by_the_max_radius_bounding_box():
     find_place_candidates(lambda: conn, "t1", "126511")
     (sql1, p1), (sql2, p2) = conn.executed
     assert (sql1, p1) == (ORIGIN_SQL, ("t1", list(DEFAULT_SOURCES), "126511"))
-    assert sql2 == POOL_SQL and "sigungucode" not in POOL_SQL
+    assert sql2 == POOL_SQL and "lDongSignguCd" not in POOL_SQL
     assert p2 == ("t1", list(DEFAULT_SOURCES), "126511", *bounding_box(37.58, 126.98, RADIUS_MAX_KM))
 
 

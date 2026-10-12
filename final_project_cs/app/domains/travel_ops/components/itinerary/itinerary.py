@@ -183,7 +183,7 @@ def catalog_activity_places(conn, tenant_id: str, trip_id: UUID, *, near: dict[s
         cur.execute(
             "SELECT pc.source, pc.content_id, pc.content_type_id, pc.title, pc.latitude, pc.longitude, "
             "pc.raw_json->>'lclsSystm1', pc.raw_json->>'lclsSystm2', pc.raw_json->>'lclsSystm3', "
-            "pc.raw_json->>'sigungucode', pc.raw_json->>'brand', ch.hours_week, ch.hours_read FROM place_catalog pc "
+            "pc.raw_json->>'lDongSignguCd', pc.raw_json->>'brand', ch.hours_week, ch.hours_read FROM place_catalog pc "
             "LEFT JOIN catalog_hours ch ON ch.tenant_id = pc.tenant_id AND ch.source = pc.source "
             "AND ch.content_id = pc.content_id AND ch.hours_week IS NOT NULL "
             "WHERE pc.tenant_id=%s AND pc.source = ANY(%s) AND pc.latitude BETWEEN %s AND %s "
@@ -424,7 +424,7 @@ class TripStore:
         with conn.cursor() as cur:
             cur.execute("SELECT " + ", ".join("p." + column for column in PLACE_COLUMNS)
                         + ", p.trip_scope, pc.raw_json->>'lclsSystm1', pc.raw_json->>'lclsSystm2',"
-                        " pc.raw_json->>'lclsSystm3', pc.raw_json->>'sigungucode', pc.raw_json->>'brand'"
+                        " pc.raw_json->>'lclsSystm3', pc.raw_json->>'lDongSignguCd', pc.raw_json->>'brand'"
                         " FROM places p LEFT JOIN place_catalog pc ON pc.tenant_id = p.tenant_id"
                         " AND pc.source = COALESCE(p.attributes->>'catalog_source', 'tour_api')"
                         " AND pc.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id',"

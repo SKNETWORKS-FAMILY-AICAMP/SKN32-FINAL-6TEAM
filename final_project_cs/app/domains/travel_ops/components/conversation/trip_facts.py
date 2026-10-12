@@ -488,7 +488,11 @@ def _hours_answer(item: Any, lookup: dict[str, Any] | None) -> str:
             lines.append(f"쉬는 날(원문): {_clean(lookup['rest_text'])}")
     stored = _stored_hours(item.place or {}, _local(item.starts_at).date())
     if stored:
-        lines.append(f"{name} 영업시간(저장된 값): {stored}")
+        # ★`[2026-10-12 사용자]` 사람이 공식 페이지에서 확인한 값이면 그 출처를 붙인다(db_column.md 30번 `field_sources`)
+        from app.domains.travel_ops.components.places.place_info import official_web_note
+
+        note, _ = official_web_note(((item.place or {}).get("attributes") or {}).get("hours_read") or {})
+        lines.append(f"{name} 영업시간(저장된 값{' · ' + note if note else ''}): {stored}")
     if not lines:
         return f"{name}의 운영시간은 모르겠어요{_lookup_note(lookup)}."
     return "\n".join(lines)

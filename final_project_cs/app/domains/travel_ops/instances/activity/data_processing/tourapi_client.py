@@ -7,6 +7,7 @@
 
 ★실패를 성공처럼 넘기지 않는다. 오류 응답(한도 초과 포함)이나 JSON 이 아닌 응답을 받으면
   **그 자리에서 멈춘다.** 계속 부르면 한도만 더 태운다.
+  네트워크 오류(응답을 못 받음)만 `RETRY_WAITS_SECONDS` 대로 기다렸다 다시 부르고, 그래도 안 되면 멈춘다.
 
 ★받은 응답은 캐시(`tourapi_details_cache.jsonl`)에 한 줄씩 바로 쓰고, 다시 돌리면 **캐시에 있는 건 부르지 않는다.**
   개발 계정 하루 한도(보통 1,000건)에 걸려 멈춰도 다음 날 이어서 받는다.
@@ -18,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -25,7 +27,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-PROJECT = Path(__file__).resolve().parents[5]
+# ★parents[6] = final_project_cs. data_processing/ 로 옮겨진 뒤 parents[5](= app/)로 남아 있어 키 파일을 못 찾았다(2026-10-11).
+PROJECT = Path(__file__).resolve().parents[6]
 DATA_DIR = Path(__file__).resolve().parent   # 작업용 데이터는 이 폴더에 둔다
 APIKEYS_FILE = PROJECT / ".env.apikeys"
 CACHE_FILE = DATA_DIR / "tourapi_details_cache.jsonl"
@@ -35,6 +38,10 @@ BASE_URL = "https://apis.data.go.kr/B551011/KorService2"
 #: 응답 대기(초). ★2026-09-26 실행에서 10초 대기로 read timeout 이 반복돼 둘 다 늘렸다.
 CALL_INTERVAL_SECONDS = 0.5
 TIMEOUT_SECONDS = 30
+#: 네트워크 오류(연결 안 됨·응답 없음)일 때만 다시 부르기 전 기다리는 초. 다 쓰면 멈춘다.
+#: ★2026-10-12 하루에 세 번(293·72·10건째) WinError 10060 · read timeout 으로 멈췄고, 바로 curl 로 같은 호출을
+#:   부르니 정상이었다 — 일시 끊김이라 기다렸다 다시 부른다. 오류 응답·한도 초과(=응답을 받은 경우)는 다시 안 부른다.
+RETRY_WAITS_SECONDS = (10, 30, 60)
 
 
 class StopFetching(RuntimeError):
@@ -94,6 +101,28 @@ def append_cache(content_id: str, operation: str, item: dict[str, Any] | None) -
 
 
 # ── 호출 ───────────────────────────────────────────────────────
+def _fetch_body(url: str, operation: str) -> str:
+    """응답 본문. 네트워크 오류면 `RETRY_WAITS_SECONDS` 대로 기다렸다 다시 부르고, 다 쓰면 멈춘다.
+
+    ★HTTP 오류(`HTTPError` — 서버가 답은 했다)는 다시 부르지 않고 바로 멈춘다. 한도만 더 태울 수 있다.
+    """
+    for wait in (*RETRY_WAITS_SECONDS, None):
+        try:
+            with urllib.request.urlopen(url, timeout=TIMEOUT_SECONDS) as response:
+                return response.read().decode("utf-8")
+        except urllib.error.HTTPError as error:
+            raise StopFetching(f"{operation} HTTP 오류: {error.code} {error.reason}") from None
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as error:
+            # ★error 에 URL 을 붙여 출력하지 않는다 — URL 에 키가 있다.
+            reason = getattr(error, "reason", error)
+            if wait is None:
+                raise StopFetching(f"{operation} 네트워크 오류({len(RETRY_WAITS_SECONDS)}번 다시 불러도 실패): "
+                                   f"{reason}") from None
+            print(f"  {operation} 네트워크 오류 — {wait}초 뒤 다시 부른다: {reason}", flush=True)
+            time.sleep(wait)
+    raise AssertionError("unreachable")
+
+
 def call_tourapi(operation: str, params: dict[str, str], service_key: str) -> dict[str, Any] | None:
     """상세 API 한 번. 항목 하나(dict)를 돌려주고, 공급자가 「없음」이라 하면 None.
 
@@ -102,13 +131,7 @@ def call_tourapi(operation: str, params: dict[str, str], service_key: str) -> di
     """
     query = urllib.parse.urlencode({"serviceKey": service_key, "MobileOS": "ETC", "MobileApp": "acop",
                                     "_type": "json", **params})
-    try:
-        with urllib.request.urlopen(f"{BASE_URL}/{operation}?{query}", timeout=TIMEOUT_SECONDS) as response:
-            body = response.read().decode("utf-8")
-    except (urllib.error.URLError, TimeoutError) as error:
-        # ★error 에 URL 을 붙여 출력하지 않는다 — URL 에 키가 있다.
-        raise StopFetching(f"{operation} 네트워크 오류: {getattr(error, 'reason', error)}") from None
-
+    body = _fetch_body(f"{BASE_URL}/{operation}?{query}", operation)
     try:
         payload = json.loads(body)
     except json.JSONDecodeError:

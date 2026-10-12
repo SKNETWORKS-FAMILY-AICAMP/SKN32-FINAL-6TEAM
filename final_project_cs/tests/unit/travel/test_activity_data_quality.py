@@ -22,9 +22,13 @@ from scripts.load_place_catalog_csv import (  # noqa: I001
 CSV_PATH = (Path(__file__).resolve().parents[3] / "app" / "domains" / "travel_ops" / "instances" / "activity"
             / "data_processing" / "activity_total_data.csv")
 
-COLUMNS = ["contentid", "contenttypeid", "title", "addr1", "addr2", "sigungucode",
+#: `[2026-10-11]` `wiki/teams/db_column.md` 의 30개 — 이 순서 그대로다(`fill_tourapi_details.COLUMNS` 가 이 모양으로 쓴다).
+COLUMNS = ["contentid", "contenttypeid", "title", "addr1", "addr2", "lDongSignguCd",
            "mapx", "mapy", "lclsSystm1", "lclsSystm2", "lclsSystm3",
-           "overview", "business_hours", "closed_days", "fee", "brand"]
+           "overview", "business_hours", "closed_days", "fee", "brand",
+           "tel", "homepage", "modifiedtime", "capacity", "reservation_info", "spendtime",
+           "eventstartdate", "eventenddate", "pet", "age_limit", "experience_guide",
+           "indoor_outdoor", "indoor_outdoor_source", "field_sources"]
 #: 브랜드 행 contentid 접두어 → 적재 출처. 후보 조회(`DEFAULT_SOURCES`)가 읽는 출처와 맞아야 한다.
 BRAND_PREFIX = {"OY": "oliveyoung", "DS": "daiso", "AB": "artbox", "MS": "musinsa"}
 #: 브랜드 분류코드(memory: 올영·다이소·아트박스 = SH040300, 무신사는 텍스리펀 매장만 SH040300 나머지 SH070100)
@@ -44,14 +48,8 @@ def _is_brand(row: dict[str, str]) -> bool:
 
 # ── CSV 형식 ────────────────────────────────────────────────────
 
-#: `[2026-10-01]` 인원·예약 확인용 칸 — `fill_tourapi_details` 가 맨 뒤에 붙인다. 아직 안 돌렸으면 없어도 된다.
-EXTRA_COLUMNS = ["info_center", "reservation", "capacity", "spend_time", "age_limit", "experience_guide"]
-
-
 def test_columns_are_exactly_the_expected_ones(rows):
-    keys = list(rows[0].keys())
-    assert keys[:len(COLUMNS)] == COLUMNS
-    assert keys[len(COLUMNS):] in ([], EXTRA_COLUMNS)      # 일부만 있는 헤더는 허용하지 않는다
+    assert list(rows[0].keys()) == COLUMNS
 
 
 def test_every_row_has_id_and_title(rows):
@@ -97,8 +95,16 @@ def test_classification_codes_are_well_formed_and_nested(rows):
         assert not l3 or (re.fullmatch(r"[A-Z]{2}\d{6}", l3) and l3.startswith(l2)), (r["contentid"], l3)
 
 
-def test_sigungu_code_is_a_number(rows):
-    assert all(r["sigungucode"].isdigit() for r in rows)
+def test_ldong_signgu_code_is_blank_or_three_digits(rows):
+    """`lDongSignguCd` 는 법정동 시군구 3자리(예: 양천구 470). TourAPI 상세를 아직 안 받은 행은 비어 있다(모름)."""
+    bad = [r["contentid"] for r in rows if r["lDongSignguCd"] and not re.fullmatch(r"\d{3}", r["lDongSignguCd"])]
+    assert not bad, f"lDongSignguCd 형식이 틀렸다: {bad[:5]}"
+
+
+def test_indoor_outdoor_values_and_sources(rows):
+    """실내외는 indoor·outdoor·mixed·빈칸(모름)뿐이고, 값마다 출처(llm: · human:)가 붙는다."""
+    assert {r["indoor_outdoor"] for r in rows} <= {"indoor", "outdoor", "mixed", ""}
+    assert all(r["indoor_outdoor_source"].startswith(("llm:", "human:")) for r in rows if r["indoor_outdoor"])
 
 
 # ── 브랜드 행 ───────────────────────────────────────────────────
