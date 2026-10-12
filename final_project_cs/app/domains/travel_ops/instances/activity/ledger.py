@@ -57,6 +57,24 @@ def hours_from_row(row: dict[str, Any]) -> dict[str, Any]:
             "why_unknown": why, "usetime_text": usetime, "restdate_text": restdate}
 
 
+def indoor(conn, tenant_id: str, place_id: str | None) -> dict[str, Any] | None:
+    """한 곳의 실내외 — 저장된 값(`activity.ac_indoor`, 우선순위 가장 높은 줄). `[2026-10-12]` D-CS-015 개정 2.
+
+    반환 `{"outdoor": bool, "decided_by": "operator|customer|llm|class", "notice": str | None, "content_id"}` · 모르면 `None`.
+    `notice` 는 모델이 정한 값일 때만 고객 답에 붙일 안내(`notices.INDOOR_AUTO`). 코어가 끼움 자리로 부른다(협의 메모 요청 3)."""
+    from . import indoor_store
+    from .notices import INDOOR_AUTO
+
+    row = place_row(conn, tenant_id, place_id)
+    if row is None:
+        return None
+    found = indoor_store.read(conn, row["content_id"])
+    if found is None:
+        return None
+    return {"outdoor": found["outdoor"], "decided_by": found["decided_by"], "content_id": row["content_id"],
+            "notice": INDOOR_AUTO if found["decided_by"] == "llm" else None}
+
+
 def state(conn, tenant_id: str, place_id: str | None, at: datetime | None, until: datetime | None = None, *,
           holiday: HolidayLookup | None = None) -> dict[str, Any] | None:
     """한 곳 · 한 시각의 휴무 · 운영시간 판정. 원장에 없거나 시각을 모르면 `None`(모름).

@@ -104,6 +104,14 @@ def load(conn, data: list[dict[str, object]], *, source_file: str, file_sha256: 
         cur.execute("SELECT to_regclass('activity.ac_place')")
         if cur.fetchone()[0] is None:
             raise SystemExit("activity.ac_place 가 없다 — 마이그레이션 300 을 먼저 돌린다(python -m app.infrastructure.db.migrate)")
+        # ★`[2026-10-12]` 관광공사 분류가 바뀐 장소는 실내외의 class · llm 줄을 지운다(다시 정한다 — D-CS-015 개정 2).
+        #   고객 · 운영자가 정한 줄은 남긴다. 표(301)가 아직 없으면 건너뛴다.
+        cur.execute("SELECT to_regclass('activity.ac_indoor')")
+        has_indoor = cur.fetchone()[0] is not None
+        before = {}
+        if has_indoor:
+            cur.execute("SELECT content_id, lcls1, lcls2 FROM activity.ac_place")
+            before = {cid: (l1, l2) for cid, l1, l2 in cur.fetchall()}
         cur.execute("INSERT INTO activity.ac_load_meta (source_file, file_sha256, row_count) VALUES (%s, %s, %s) "
                     "RETURNING load_id", (source_file, file_sha256, len(data)))
         load_id = cur.fetchone()[0]
@@ -111,6 +119,11 @@ def load(conn, data: list[dict[str, object]], *, source_file: str, file_sha256: 
             f"INSERT INTO activity.ac_place ({', '.join(TARGETS)}, load_id) VALUES ({placeholders}, %(load_id)s) "
             f"ON CONFLICT (content_id) DO UPDATE SET {updates}, load_id = EXCLUDED.load_id, updated_at = now()",
             [{**r, "load_id": load_id} for r in data])
+        changed = [r["content_id"] for r in data
+                   if r["content_id"] in before and before[r["content_id"]] != (r["lcls1"], r["lcls2"])]
+        if changed:
+            cur.execute("DELETE FROM activity.ac_indoor WHERE content_id = ANY(%s) AND decided_by IN ('class', 'llm')",
+                        (changed,))
         cur.execute("SELECT count(*) FROM activity.ac_place WHERE load_id <> %s", (load_id,))
         stale = cur.fetchone()[0]
         pruned = 0
