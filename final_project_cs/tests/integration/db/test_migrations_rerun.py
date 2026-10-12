@@ -75,6 +75,8 @@ def test_이유마다_행이_있는_DB_에_다시_돌려도_멈추지_않고_좁
     assert _allowed(scratch) == FINAL_REASONS
     got = {r[0] for r in scratch.execute("SELECT reason FROM pending_changes").fetchall()}
     assert got == FINAL_REASONS                                     # 행은 하나도 잃지 않았다
+    for table in ("orders", "order_items", "shipments", "returns", "products"):
+        assert scratch.execute("SELECT to_regclass(%s)", ("public." + table,)).fetchone()[0] is None
 
 
 def test_옛_DB_도_넓어진다(scratch):
@@ -86,3 +88,116 @@ def test_옛_DB_도_넓어진다(scratch):
     assert _allowed(scratch) == {"ask_first", "protected", "safety_alert"}
     apply_all(scratch)
     assert _allowed(scratch) == FINAL_REASONS
+
+
+def test_fresh_database_has_travel_schema_without_retired_commerce_tables(scratch):
+    apply_all(scratch)
+    for table in ("orders", "order_items", "shipments", "returns", "products"):
+        assert scratch.execute("SELECT to_regclass(%s)", ("public." + table,)).fetchone()[0] is None
+    for table in ("trips", "customers", "customer_cases"):
+        assert scratch.execute("SELECT to_regclass(%s)", ("public." + table,)).fetchone()[0] is not None
+
+
+def _plan(tmp_path, monkeypatch, sources):
+    import json
+    from app.infrastructure.db import migrate
+    for name, source in sources.items():
+        (tmp_path / name).write_text(source, encoding="utf-8")
+    (tmp_path / "migration-plan.json").write_text(json.dumps({"version": 1, "historical_files": []}))
+    monkeypatch.setattr(migrate, "MIGRATION_DIR", tmp_path)
+
+
+def test_forced_failure_rolls_back_earlier_ddl_and_existing_row(scratch, tmp_path, monkeypatch):
+    import psycopg
+    scratch.execute("CREATE TABLE travel_atomic_probe (id int PRIMARY KEY, value text)")
+    scratch.execute("INSERT INTO travel_atomic_probe VALUES (1, 'before')")
+    _plan(tmp_path, monkeypatch, {
+        "001.sql": "BEGIN; CREATE TABLE new_travel_probe(id int); "
+                   "UPDATE travel_atomic_probe SET value='after'; COMMIT;",
+        "002.sql": "BEGIN; INSERT INTO new_travel_probe VALUES (7); COMMIT;",
+        "003.sql": "SELECT 1/0;",
+    })
+    with pytest.raises(psycopg.errors.DivisionByZero):
+        apply_all(scratch)
+    assert scratch.execute("SELECT to_regclass('new_travel_probe')").fetchone()[0] is None
+    assert scratch.execute("SELECT value FROM travel_atomic_probe").fetchone()[0] == 'before'
+
+
+def test_full_plan_nested_success_belongs_to_caller_transaction(scratch):
+    class RollBackCaller(Exception):
+        pass
+    with pytest.raises(RollBackCaller):
+        with scratch.transaction():
+            apply_all(scratch)
+            assert scratch.execute("SELECT to_regclass('trips')").fetchone()[0] == 'trips'
+            apply_all(scratch)
+            raise RollBackCaller()
+    assert scratch.execute("SELECT to_regclass('trips')").fetchone()[0] is None
+    assert scratch.execute("SELECT to_regnamespace('dining')").fetchone()[0] is None
+
+
+def test_nested_failure_keeps_callers_prior_work(scratch, tmp_path, monkeypatch):
+    import psycopg
+    scratch.execute("CREATE TABLE caller_travel_probe (value text)")
+    _plan(tmp_path, monkeypatch, {
+        "001.sql": "BEGIN; CREATE TABLE nested_travel_probe(id int); COMMIT;",
+        "002.sql": "SELECT 1/0;",
+    })
+    with scratch.transaction():
+        scratch.execute("INSERT INTO caller_travel_probe VALUES ('caller')")
+        with pytest.raises(psycopg.errors.DivisionByZero):
+            apply_all(scratch)
+        assert scratch.execute("SELECT to_regclass('nested_travel_probe')").fetchone()[0] is None
+    assert scratch.execute("SELECT value FROM caller_travel_probe").fetchone()[0] == 'caller'
+
+
+def test_invalid_later_file_is_rejected_before_first_change(scratch, tmp_path, monkeypatch):
+    _plan(tmp_path, monkeypatch, {
+        "001.sql": "CREATE TABLE never_created_travel_probe(id int);",
+        "002.sql": "BEGIN; SELECT 1; COMMIT AND CHAIN;",
+    })
+    with pytest.raises(ValueError):
+        apply_all(scratch)
+    assert scratch.execute("SELECT to_regclass('never_created_travel_probe')").fetchone()[0] is None
+
+
+def test_literals_and_dollar_function_execute_unchanged(scratch, tmp_path, monkeypatch):
+    _plan(tmp_path, monkeypatch, {
+        "001.sql": """-- 서울 COMMIT;
+BEGIN;
+/* BEGIN; /* COMMIT; */ 끝 */
+CREATE TABLE travel_phrases(value text);
+CREATE FUNCTION travel_phrase() RETURNS text LANGUAGE plpgsql AS $fn$
+BEGIN RETURN 'BEGIN; COMMIT; 서울'; END;
+$fn$;
+INSERT INTO travel_phrases SELECT travel_phrase();
+COMMIT;
+""",
+    })
+    apply_all(scratch)
+    assert scratch.execute("SELECT value FROM travel_phrases").fetchone()[0] == 'BEGIN; COMMIT; 서울'
+
+
+def test_old_runner_savepoint_error_and_partial_commit_reproduced(scratch):
+    import psycopg
+    # 과거 구현과 같은 transaction()+명시적 COMMIT. 새 실행기는 사용하지 않는다.
+    with pytest.raises(psycopg.errors.NoActiveSqlTransaction):
+        with scratch.transaction():
+            with scratch.transaction():
+                scratch.execute("BEGIN; CREATE TABLE old_travel_probe(id int); COMMIT;")
+    assert scratch.execute("SELECT to_regclass('old_travel_probe')").fetchone()[0] == 'old_travel_probe'
+
+
+def test_full_plan_forced_failure_rolls_back_all_travel_schema_and_row(scratch, monkeypatch):
+    import psycopg
+    from app.infrastructure.db import migrate
+    scratch.execute("CREATE TABLE existing_travel_probe(value text)")
+    scratch.execute("INSERT INTO existing_travel_probe VALUES ('before')")
+    full_sql = migrate.compiled_sql()
+    monkeypatch.setattr(migrate, 'compiled_sql', lambda: full_sql +
+        "\nUPDATE existing_travel_probe SET value='after'; SELECT 1/0;")
+    with pytest.raises(psycopg.errors.DivisionByZero):
+        migrate.apply_all(scratch)
+    assert scratch.execute("SELECT value FROM existing_travel_probe").fetchone()[0] == 'before'
+    assert scratch.execute("SELECT to_regclass('trips')").fetchone()[0] is None
+    assert scratch.execute("SELECT to_regnamespace('dining')").fetchone()[0] is None
