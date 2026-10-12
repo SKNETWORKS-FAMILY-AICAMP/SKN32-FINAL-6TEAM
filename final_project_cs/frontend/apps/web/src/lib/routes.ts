@@ -7,6 +7,8 @@ export const routes = {
   /** `[2026-10-12 사용자 지시]` 문의하기: the list of my inquiries (`/support`) and the form that writes a new one (`/support/new`). */
   support: "/support",
   supportNew: "/support/new",
+  /** One of my inquiries: its title and text, and the answer under them once there is one. */
+  supportInquiry: (id: string) => `/support/${encodeURIComponent(id)}`,
   /** Where a social sign-in sends the browser back to (with a one-time ticket in the address, which the page removes at once). */
   authDone: "/auth/done",
   newTrip: "/trips/new",

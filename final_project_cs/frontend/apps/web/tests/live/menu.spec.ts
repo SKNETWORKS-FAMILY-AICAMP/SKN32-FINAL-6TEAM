@@ -3,8 +3,8 @@ import { agree, mockServer, paneTab, registerStubTrip, start, TRIP_ID, useKorean
 
 test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); await agree(page); });
 
-test("메뉴는 프로필·여행 목록·여행 취향 설문·문의하기·언어·테마·일정 목록 크기·애니메이션 순서이고, Tab 순환과 Esc(언어 목록 먼저, 메뉴 다음)·포커스 복귀를 지키며, 링크는 메뉴를 닫는다", async ({ page, request }) => {
-  // The eight base rows: profile, trips, survey, 문의하기 (`[2026-10-12]` moved here from the my-page card), language, theme,
+test("메뉴는 프로필·여행 목록·여행 취향 설문·문의함·언어·테마·일정 목록 크기·애니메이션 순서이고, Tab 순환과 Esc(언어 목록 먼저, 메뉴 다음)·포커스 복귀를 지키며, 링크는 메뉴를 닫는다", async ({ page, request }) => {
+  // The eight base rows: profile, trips, survey, 문의함 (`[2026-10-12]` moved here from the my-page card, once named 문의하기), language, theme,
   // schedule list size (42df598c), skip-animation. Both old layout switches are removed.
   // with a social sign-in provider set up the menu has one more (「계정 연결 · 로그인」, covered by social-login.spec).
   await mockServer(request).scenario({ social: "off" });
@@ -15,7 +15,7 @@ test("메뉴는 프로필·여행 목록·여행 취향 설문·문의하기·�
   const profile = menu.getByRole("link", { name: /마이페이지/ });
   const trips = menu.getByRole("link", { name: "여행 목록 보기" });
   const survey = menu.getByRole("button", { name: "여행 취향 설문" });
-  const support = menu.getByRole("link", { name: "문의하기", exact: true });
+  const support = menu.getByRole("link", { name: "문의함", exact: true });
   const language = menu.getByRole("button", { name: /LANGUAGE/ });
   const green = menu.getByRole("button", { name: "그린", exact: true });
   const white = menu.getByRole("button", { name: "화이트", exact: true });
@@ -193,7 +193,7 @@ test("등록 여행 메뉴의 모든 항목에 Tab으로 닿고 항로 지킴이
   for (const next of [
     menu.getByRole("link", { name: "여행 목록 보기" }),
     menu.getByRole("button", { name: "여행 취향 설문" }),
-    menu.getByRole("link", { name: "문의하기", exact: true }),
+    menu.getByRole("link", { name: "문의함", exact: true }),
     menu.getByRole("button", { name: /LANGUAGE/ }),
     menu.getByRole("button", { name: "그린", exact: true }),
     menu.getByRole("button", { name: "화이트", exact: true }),
