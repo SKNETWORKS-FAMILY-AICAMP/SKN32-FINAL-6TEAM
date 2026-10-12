@@ -474,6 +474,8 @@ RAG 세션이 만든 연결 코드(커밋 6f043d36 · c431e7cb)를 사용자가 
 
 - 2026-10-11: 팀 develop 기존 변경을 보존하여 UIUX를 통합하고 색상 규칙·공개 API 계약 목록을 보완했다. [검증 보고](records/reports/2026-10-11_2100_develop_UIUX_통합.md).
 
+- 2026-10-11: Activity·Dining 고정 브랜치의 실행 코드와 기존 평가를 대조했다. Activity 사람 라벨 검토·Dining 실제 모델 종단 평가·정책 검색 검증을 우선순위로 정리했다. [AI 구성과 검증 인계 조사](records/reports/2026-10-11_2320_Activity_Dining_AI_검증조사.md) · [근거](records/evidence/2026-10-11_2320_Activity_Dining_AI_검증조사_근거.md). 새 모델 평가·DB 변경·커밋·푸시는 수행하지 않았다.
+
 ## 2026-10-11 — 안내·첫 추가·순차 등장 매니저 검증
 
 완료 UI 인계를 매니저 기준에서 독립 검증하고 전송 안내 중복 및 기존 CI 오류를 보완했다. 단위643/643·mock 서버 화면49/49 통과. [통합 검증](records/reports/2026-10-11_toast_manager_독립검증.md).
