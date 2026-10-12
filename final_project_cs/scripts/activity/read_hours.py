@@ -6,13 +6,15 @@
 
 두 단계
     1. 모델 없이(기본)      규칙으로 펴지는 곳만 채운다. 나머지는 `method: none` 으로 적어 둔다(다시 볼 대상).
-    2. `--model`            아직 못 편 곳(요일표가 비었고 원문이 있는 곳)을 코어 설정의 Ollama 모델(`ollama_model`, 기본 gemma4:12b)로 편다.
-                            주소(`ACOP_OLLAMA_BASE_URL`)가 비어 있으면 아무것도 안 하고 멈춘다.
+    2. `--model`            아직 못 편 곳(요일표가 비었고 원문이 있는 곳)을 모델로 편다 — 기본 **API**(OpenAI, `activity_judge_model`),
+                            `--local` 이면 sLLM(Ollama). `[2026-10-12]` D-CS-015 개정 2 「지금은 API, 조건이 갖춰지면 sLLM」.
+    3. `--sample 30`        모델이 읽은 곳 무작위 30곳을 사람 확인 시트로 — 30곳 중 위험 오답 1 · 단순 오답 2 를 넘으면 모델 값을 쓰지 않는다.
 
 사용법
     python scripts/activity/read_hours.py                    규칙으로 (처음 한 번, 또는 적재 뒤 원문이 바뀐 곳)
-    python scripts/activity/read_hours.py --model --limit 50 모델로 50곳만
-    python scripts/activity/read_hours.py --model            모델로 남은 곳 전부(한 곳씩 커밋 — 끊겨도 이어서 된다)
+    python scripts/activity/read_hours.py --model --limit 50 모델(API)로 50곳만
+    python scripts/activity/read_hours.py --model            모델(API)로 남은 곳 전부(한 곳씩 커밋 — 끊겨도 이어서 된다, 약 1,636곳 ≈ $0.5)
+    python scripts/activity/read_hours.py --sample 30        사람 확인 시트
 """
 from __future__ import annotations
 
@@ -51,14 +53,43 @@ def read_one(usetime: str | None, restdate: str | None, chat) -> tuple[dict | No
     return (read.week or None), read.as_record(source=SOURCE, read_at=now)
 
 
-def _chat():
+def _chat(*, local: bool = False):
+    """모델 — 기본은 **API**(판정 LLM 과 같은 `activity_judge_model`, D-CS-015 개정 2 「지금은 API」). `local` 이면 sLLM(Ollama).
+    ★sLLM 으로 바꾸는 조건(서버 안정 · 골든셋 측정 통과 · 호출량 다시 많아짐)은 확정본 「모델」 절."""
     from app.core.settings import get_settings
-    from app.infrastructure.ollama_chat import from_settings
 
-    chat = from_settings(get_settings())
-    if chat is None:
-        raise SystemExit("모델 서버 주소(ACOP_OLLAMA_BASE_URL)가 비어 있다 — 규칙 단계만 하려면 --model 없이 돌린다")
-    return chat
+    settings = get_settings()
+    if local:
+        from app.infrastructure.ollama_chat import from_settings
+
+        chat = from_settings(settings)
+        if chat is None:
+            raise SystemExit("모델 서버 주소(ACOP_OLLAMA_BASE_URL)가 비어 있다 — API 로 읽으려면 --local 없이 돌린다")
+        return chat
+    if not (getattr(settings, "openai_api_key", "") or "").strip():
+        raise SystemExit("OpenAI 키가 없다 — 규칙 단계만 하려면 --model 없이 돌린다")
+    from app.infrastructure.llm_failover import OpenAIChat
+
+    return OpenAIChat(api_key=settings.openai_api_key, model=getattr(settings, "activity_judge_model", "gpt-5.4-nano"),
+                      timeout=45.0)
+
+
+def sample_sheet(conn, n: int, path: str) -> int:
+    """모델이 읽은 곳 무작위 `n` 곳 → 사람 확인 시트(CSV). D-CS-015 개정 2 「되돌리는 조건」 — 30곳 중 위험 오답 1 · 단순 2."""
+    import csv
+
+    with conn.cursor() as cur:
+        cur.execute("SELECT content_id, name_ko, usetime_text, restdate_text, hours_week, hours_read FROM activity.ac_place "
+                    "WHERE hours_read->>'method' = 'llm' ORDER BY random() LIMIT %s", (n,))
+        rows = cur.fetchall()
+    with open(path, "w", encoding="utf-8-sig", newline="") as fh:
+        writer = csv.writer(fh)
+        writer.writerow(["content_id", "장소", "운영시간 원문", "휴무 원문", "모델이 편 요일표", "인용",
+                         "맞음/위험 오답/단순 오답", "메모"])
+        for cid, name, use, rest, week, read in rows:
+            writer.writerow([cid, name, use, rest, json.dumps(week, ensure_ascii=False),
+                             " | ".join((read or {}).get("quotes") or []), "", ""])
+    return len(rows)
 
 
 def run(conn, *, chat=None, limit: int | None = None) -> dict[str, int]:
@@ -81,13 +112,21 @@ def run(conn, *, chat=None, limit: int | None = None) -> dict[str, int]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--model", action="store_true", help="못 편 곳을 코어 설정의 Ollama 모델로 편다")
+    parser.add_argument("--model", action="store_true", help="못 편 곳을 모델로 편다 — 기본 API(OpenAI), --local 이면 sLLM")
+    parser.add_argument("--local", action="store_true", help="--model 과 함께 — 코어 설정의 Ollama(sLLM)로")
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--sample", type=int, default=None, metavar="N",
+                        help="모델이 읽은 곳 N 곳을 사람 확인 시트로 뽑는다(읽지 않는다)")
+    parser.add_argument("--sheet", default="hours_sample_review.csv", help="--sample 시트 경로(작업용 — 올리지 않는다)")
     args = parser.parse_args()
     import psycopg
     from load_places import dsn
 
-    chat = _chat() if args.model else None
+    if args.sample:
+        with psycopg.connect(dsn()) as conn:
+            print(f"확인 시트 {sample_sheet(conn, args.sample, args.sheet)}곳 → {args.sheet}")
+        return
+    chat = _chat(local=args.local) if args.model else None
     with psycopg.connect(dsn(), autocommit=True) as conn:      # ★autocommit — `run` 의 한 곳씩 트랜잭션이 진짜 커밋이 되게
         result = run(conn, chat=chat, limit=args.limit)
         with conn.cursor() as cur:

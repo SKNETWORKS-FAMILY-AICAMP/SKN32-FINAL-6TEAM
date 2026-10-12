@@ -41,6 +41,22 @@ def test_empty_text_is_recorded_as_empty():
     assert week is None and record["dropped"] == ["원문이 비어 있다"]
 
 
+def test_the_default_model_is_the_api_and_local_needs_a_server(monkeypatch):
+    """D-CS-015 개정 2 — 지금은 API(OpenAIChat). sLLM(--local)은 서버 주소가 없으면 멈춘다(부르지 않는다)."""
+    from types import SimpleNamespace
+
+    import app.core.settings as settings_module
+
+    fake = SimpleNamespace(openai_api_key="sk-test", activity_judge_model="gpt-5.4-nano", ollama_base_url="")
+    monkeypatch.setattr(settings_module, "get_settings", lambda: fake)
+    chat = read_hours._chat()
+    assert type(chat).__name__ == "OpenAIChat" and chat.model == "gpt-5.4-nano"
+    import pytest
+
+    with pytest.raises(SystemExit):
+        read_hours._chat(local=True)
+
+
 def test_model_stage_uses_core_reader_with_quote_check():
     chat = _Chat()
     week, record = read_hours.read_one("평일 10:00~17:00", "토·일 휴관", chat)
