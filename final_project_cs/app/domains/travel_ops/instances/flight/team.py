@@ -496,12 +496,18 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
         pages = [f"{label} 이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): {url}" for label, url in searches]
         sources = booked["sources"]
         count = {name: sources[name].get("count", 0) for name in sources}
+        # `[2026-10-12]` 상한 안에 답하지 않은 소스(`timeout`)는 「응답이 늦어 뺌」 — 조회 실패와 가른다
+        late = {name: f"{int(sources[name].get('seconds') or 0)}초 안에 답이 없어 뺌" for name in sources
+                if sources[name].get("status") == "timeout"}
         counted = [{"ok": f"마이리얼트립 {count.get('myrealtrip')}개",
-                    "resting": "마이리얼트립은 요청 한도로 잠시 조회를 쉬는 중"}.get(states["myrealtrip"], "마이리얼트립 조회 실패"),
+                    "resting": "마이리얼트립은 요청 한도로 잠시 조회를 쉬는 중",
+                    "timeout": f"마이리얼트립은 {late.get('myrealtrip')}"}.get(states["myrealtrip"], "마이리얼트립 조회 실패"),
                    {"ok": f"항공사·여행사 판매처 {count.get('ignav')}개",
-                    "skipped": "항공사·여행사 판매처는 편도만"}.get(states["ignav"], "판매처 비교 조회 실패"),
+                    "skipped": "항공사·여행사 판매처는 편도만",
+                    "timeout": f"항공사·여행사 판매처는 {late.get('ignav')}"}.get(states["ignav"], "판매처 비교 조회 실패"),
                    {"ok": f"구글 항공권 {count.get('google')}개",
-                    "reference": "구글 항공권 왕복 최저가 참고"}.get(states["google"], "구글 항공권 조회 실패")]
+                    "reference": "구글 항공권 왕복 최저가 참고",
+                    "timeout": f"구글 항공권은 {late.get('google')}"}.get(states["google"], "구글 항공권 조회 실패")]
         if states["google"] == "reference" and sources["google"].get("page"):
             # 왕복 — 편끼리 묶지 못해 최저가 참고와 결과 페이지만 준다(`serpapi_flights.py`)
             lowest = sources["google"].get("round_trip_lowest")

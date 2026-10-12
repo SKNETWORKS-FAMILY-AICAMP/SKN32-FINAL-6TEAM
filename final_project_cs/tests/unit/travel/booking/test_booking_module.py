@@ -143,3 +143,27 @@ def test_sources_are_called_at_the_same_time():
     assert time.perf_counter() - begun < 0.5
     assert [offer["source"] for offer in found["options"][0]["offers"]] == ["ignav", "myrealtrip"]
     assert found["sources"]["google"] == {"status": "failed"}
+
+
+def test_a_source_slower_than_the_limit_is_left_out_as_timeout(monkeypatch):
+    """`[2026-10-12]` 소스마다 기다리는 시간에 상한 — 늦은 소스는 `timeout` 으로 세고 받은 소스로만 묶는다. 걸린 시간도 돌려준다."""
+    import time
+
+    from app.domains.travel_ops.components.booking.offers import flights
+
+    monkeypatch.setattr(flights, "SOURCE_WAIT_SECONDS", 0.3)
+
+    class Late(Stub):
+        def flight_search(self, **arguments):
+            time.sleep(1.0)
+            return super().flight_search(**arguments)
+
+    travel = SimpleNamespace(travel_search=Stub(MRT), flight_offers=Late(IGNAV), flight_google=Stub(None))
+    begun = time.perf_counter()
+    found = search_flights(travel, origin="ICN", destination="NRT", depart_date="2026-10-20", adults=1, domestic=False)
+    assert time.perf_counter() - begun < 0.8, "늦은 소스를 끝까지 기다리지 않는다"
+    assert found["sources"]["ignav"] == {"status": "timeout", "seconds": 0.3}
+    assert found["sources"]["myrealtrip"] == {"status": "ok", "count": 1}
+    assert [offer["source"] for offer in found["options"][0]["offers"]] == ["myrealtrip"], "늦은 소스의 편은 묶지 않는다"
+    assert found["elapsed"]["ignav"] is None and isinstance(found["elapsed"]["myrealtrip"], float)
+
