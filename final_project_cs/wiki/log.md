@@ -11,7 +11,7 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 ## 2026-10-12 — role-activity-test 머지 뒤 깨진 관광공사 다시 받기
 
-머지(`74ec376b`)로 합친 뒤에만 깨지는 두 곳을 고쳤다 — `refresh_places` 의 `INTRO_FIELDS` 풀기 · CSV 행 수 기대값. `load_places` 의 옛 컬럼 이름은 판단이 필요해 남겼다. [결함 리포트](records/reports/debugs/2026-10-12_2230_test머지_뒤_관광공사_다시받기가_죽는다.md).
+머지(`74ec376b`)로 합친 뒤에만 깨지는 두 곳을 고쳤다 — `refresh_places` 의 `INTRO_FIELDS` 풀기 · CSV 행 수 기대값. `load_places` 가 옛 CSV 컬럼 이름을 읽어 네 칸이 비던 것도 새 이름에 맞췄다. [결함 리포트](records/reports/debugs/2026-10-12_2230_test머지_뒤_관광공사_다시받기가_죽는다.md).
 
 ## 2026-10-10 — UIUX 완료 인계 통합
 

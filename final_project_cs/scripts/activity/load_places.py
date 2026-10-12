@@ -1,6 +1,6 @@
 """활동 장소 CSV 를 `activity.ac_place` 에 적재한다. `[2026-10-12]`
 
-입력: `instances/activity/data_processing/activity_total_data.csv` (6,338행). 다른 파일은 `--csv` 로.
+입력: `instances/activity/data_processing/activity_total_data.csv` (6,334행). 다른 파일은 `--csv` 로.
 적재: content_id 기준으로 덮어쓴다(같은 CSV 를 다시 돌려도 같은 결과). CSV 에서 빠진 행은 지우지 않고 수만 알려 준다 —
       지우려면 `--prune`. 마이그레이션 300 이 먼저 돌아 있어야 한다.
 접속: `ACTIVITY_DSN` 이 있으면 그것, 없으면 앱과 같은 코어 설정(`ACOP_DATABASE_URL`).
@@ -21,15 +21,18 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))                       # final_project_cs
 CSV_PATH = os.path.join(ROOT, "app", "domains", "travel_ops", "instances", "activity",
                         "data_processing", "activity_total_data.csv")
-#: CSV 칸 → 표 칸. CSV 에 없는 칸(상세 수집 6칸이 아직 없을 때)은 NULL 로 들어간다.
+#: CSV 칸 → 표 칸. CSV 에 없는 칸은 NULL 로 들어간다.
+#: ★`[2026-10-12]` CSV 컬럼 이름이 바뀌었다(`fill_tourapi_details.RENAMED`, wiki/teams/db_column.md) — 옛 이름을 읽던
+#:   네 칸이 role-activity-test 머지(74ec376b) 뒤 조용히 NULL 이 됐다. `sigungu_code` 에는 이제 법정동 시군구 코드
+#:   (`lDongSignguCd`)가 들어간다 — 옛 `sigungucode` 와 체계가 다르다. 이 칸을 읽는 앱 코드는 없다(인덱스만).
 COLUMNS = (
     ("contentid", "content_id"), ("contenttypeid", "content_type_id"), ("title", "name_ko"),
-    ("addr1", "addr1"), ("addr2", "addr2"), ("sigungucode", "sigungu_code"),
+    ("addr1", "addr1"), ("addr2", "addr2"), ("lDongSignguCd", "sigungu_code"),
     ("lclsSystm1", "lcls1"), ("lclsSystm2", "lcls2"), ("lclsSystm3", "lcls3"), ("brand", "brand"),
     ("business_hours", "usetime_text"), ("closed_days", "restdate_text"),
     ("overview", "overview"), ("fee", "fee_text"),
-    ("info_center", "info_center"), ("reservation", "reservation_text"), ("capacity", "capacity_text"),
-    ("spend_time", "spend_time"), ("age_limit", "age_limit"), ("experience_guide", "experience_guide"),
+    ("tel", "info_center"), ("reservation_info", "reservation_text"), ("capacity", "capacity_text"),
+    ("spendtime", "spend_time"), ("age_limit", "age_limit"), ("experience_guide", "experience_guide"),
 )
 TARGETS = [t for _, t in COLUMNS] + ["name_key", "lat", "lng"]
 
