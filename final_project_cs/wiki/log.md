@@ -489,3 +489,7 @@ RAG 세션이 만든 연결 코드(커밋 6f043d36 · c431e7cb)를 사용자가 
 ## 2026-10-12 — 파이썬 CI 관문 정리(코어)
 
 같은 커밋에 같은 시험이 두 번 돌던 것을 나눴습니다 — `role-manager` 는 빠른 관문만, `develop` · `main` 은 전체 관문만 돕니다(같은 커밋을 두 브랜치에 올리면 4번 → 2번). 저장소 맨 위 문서만 바뀐 push 는 건너뛰고(PR 은 그대로), job 마다 제한 시간을 두었습니다. main 필수 검사 「Docker 빌드」가 배포와 무관한 참고 구현체 이미지를 빌드하던 것을 cs 배포 이미지(`deploy/Dockerfile.api`)로 바꿨습니다. [언제 무엇이 도나](operations/local-setup.md)
+
+## 2026-10-13 — 파이썬 CI 2차 정리: 같은 커밋 1번 · 전체 시험 병렬(코어)
+
+전체 관문 하나가 role-manager · develop · main push 를 맡고, 같은 커밋이 연달아 오면 앞 실행을 취소해 끝까지 도는 것은 1번입니다(1차 정리 2번 → 1번, Codex 와 2회차 합의 — role-manager 에만 올리는 일이 실제로 있어 role-manager 검사를 빼지 않았습니다). 빠른 관문은 role-manager 로 오는 PR 용으로만 남겼습니다. 전체 시험은 pytest-xdist 4개 일꾼으로 나눠 돌리고, 일꾼마다 본 DB 를 틀로 복사한 자기 DB 를 씁니다(`conftest.py`). 로컬 확인: e2e 25개 파일 4개 일꾼 274 통과 · 실패 0. [언제 무엇이 도나](operations/local-setup.md)
