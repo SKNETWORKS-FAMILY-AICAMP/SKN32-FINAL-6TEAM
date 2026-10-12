@@ -596,6 +596,46 @@ def test_a_chosen_google_hotel_is_not_rechecked_and_says_so():
     assert result.action_proposals[0].arguments["summary"]["price_check"]["reason"] == "no_recheck_tool"
 
 
+def test_the_same_stay_from_both_sources_is_shown_once_as_myrealtrip():
+    """`[2026-10-12]` ☆18:53 playdata 명동 — 「밀리오레 호텔 서울 명동」(마이리얼트립)과 「밀리오레호텔 명동」(구글)이 42m. 이름 핵심이 같고
+    100m 안이면 같은 숙소로 보고 마이리얼트립만 남긴다. 핵심이 같아도 멀면 다른 숙소, 한쪽이 다른 쪽을 품는 이름은 다른 숙소."""
+    from app.domains.travel_ops.instances.lodging.team import _core, _fresh_picks
+
+    assert _core("밀리오레 호텔 서울 명동") == _core("밀리오레호텔 명동") == "밀리오레명동"
+    booked = {"myrealtrip": {"stays": [{"gid": 1, "name": "밀리오레 호텔 서울 명동", "price_per_night": 250342},
+                                       {"gid": 2, "name": "롯데시티호텔 명동", "price_per_night": 300000},
+                                       {"gid": 3, "name": "스탠포드호텔 명동", "price_per_night": 200000}]},
+              "google": {"stays": [
+                  {"name": "밀리오레호텔 명동", "type": "hotel", "price_per_night": 240000.0, "latitude": 37.56372, "longitude": 126.98290,
+                   "link": "https://g/1"},
+                  {"name": "롯데시티호텔 명동", "type": "hotel", "price_per_night": 290000.0, "latitude": 37.5650, "longitude": 126.9840,
+                   "link": "https://g/2"},
+                  {"name": "카페스탠포드 명동", "type": "hotel", "price_per_night": 150000.0, "latitude": 37.5600, "longitude": 126.9860,
+                   "link": "https://g/3"}]}}
+    details = {1: {"latitude": 37.56340, "longitude": 126.98270}}
+    picks = _fresh_picks(booked, set(), None, {"check_in": IN, "check_out": OUT}, {"adults": 2, "children": None}, details=details)
+    picks += _fresh_picks(booked, {p["name"] for p in picks}, None, {"check_in": IN, "check_out": OUT},
+                          {"adults": 2, "children": None}, details=details)
+    names = [pick["name"] for pick in picks]
+    assert "밀리오레호텔 명동" not in names and "밀리오레 호텔 서울 명동" in names, "42m · 같은 핵심 — 마이리얼트립만"
+    assert "카페스탠포드 명동" in names, "이름을 품는 것은 같은 숙소로 보지 않는다"
+    assert names.count("롯데시티호텔 명동") == 1, "마이리얼트립 좌표를 모르면 이름 핵심만으로 묶는다"
+    far = {"myrealtrip": {"stays": booked["myrealtrip"]["stays"][:1]},
+           "google": {"stays": [{**booked["google"]["stays"][0], "latitude": 37.5700}]}}
+    names = [p["name"] for p in _fresh_picks(far, set(), None, {"check_in": IN, "check_out": OUT}, {"adults": 2, "children": None},
+                                             details=details)]
+    assert "밀리오레호텔 명동" in names, "핵심이 같아도 100m 넘게 떨어지면 다른 숙소(지점)로 본다"
+
+
+def test_a_stay_shown_before_does_not_come_back_under_the_other_sources_name():
+    from app.domains.travel_ops.instances.lodging.team import _fresh_picks
+
+    booked = {"myrealtrip": {"stays": []}, "google": {"stays": [
+        {"name": "밀리오레호텔 명동", "type": "hotel", "price_per_night": 240000.0, "latitude": 37.5637, "longitude": 126.9829,
+         "link": "https://g/1"}]}}
+    assert _fresh_picks(booked, {"밀리오레호텔서울명동"}, None, {"check_in": IN, "check_out": OUT}, {"adults": 2, "children": None}) == []
+
+
 def test_change_again_skips_what_was_already_shown():
     result, _, _ = _itinerary(_plan(stay_detail={"shown": ["해밀톤 호텔", "둘째 호텔", "가까운 호텔"]}))
     assert result.answer.startswith("기존 호텔 대신 갈 수 있는 곳이에요 — 1) 먼 호텔(1박 100,000원 · 원래 숙소에서 11.5km) · "

@@ -45,6 +45,7 @@ from dataclasses import replace
 from datetime import date, datetime, timedelta
 import logging
 from math import asin, cos, radians, sin, sqrt
+import re
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -134,6 +135,20 @@ def _key(name: str) -> str:
     return "".join(str(name).split()).casefold()
 
 
+#: `[2026-10-12]` 소스 간 같은 숙소 — 이름에서 빼는 말(괄호 안 · 「호텔」 · 「서울」 · 공백 · 문장부호)
+_NOT_NAME = re.compile(r"\(.*?\)|\[.*?\]|호텔|hotel|서울|seoul|[\s\-_·,.&']", re.IGNORECASE)
+#: 이름 핵심이 같아도 둘 다 좌표가 있고 이보다 멀면 다른 숙소로 본다(m). 우리가 고른 값 —
+#: ☆10-12 18:53 playdata 명동(`scripts/probe_stay_duplicates.py`): 같은 숙소(밀리오레 호텔 서울 명동 · 밀리오레호텔 명동) 42m,
+#:   이름이 다른 가장 가까운 숙소 122m. 한쪽이 다른 쪽을 품는 이름(「더 스테이 호텔」 · 「더 스테이 휴 명동」, 「스탠포드호텔 명동」 ·
+#:   「카페스탠포드 명동」)은 다른 숙소였다 — 그래서 **핵심이 같을 때만** 같은 숙소로 본다(포함은 안 본다).
+SAME_STAY_M = 100
+
+
+def _core(name: str) -> str:
+    """숙소 이름 핵심 — 「밀리오레 호텔 서울 명동」 · 「밀리오레호텔 명동」 → 「밀리오레명동」. 영어 · 한국어 표기가 다르면 못 묶는다(확인 안 함)."""
+    return _NOT_NAME.sub("", str(name or "")).casefold()
+
+
 def _points(items: list[Any], *, skip: Any = None) -> list[dict[str, Any]]:
     """일정 항목(`Item`) → 좌표 있는 장소(날 · 위도 · 경도). 숙소 항목 자신은 뺀다(가운데를 숙소로 끌지 않게)."""
     out = []
@@ -176,6 +191,15 @@ def _conditions(ctx: dict[str, Any]) -> dict[str, Any]:
             "max_price": int(limit) if isinstance(limit, (int, float)) and not isinstance(limit, bool) and limit > 0 else None}
 
 
+def _same_stay(pick: dict[str, Any], name: str, where: tuple[float, float] | None) -> bool:
+    """후보 `pick` 과 다른 소스의 숙소(`name` · 좌표)가 같은 숙소인가 — 이름 핵심이 같고, 둘 다 좌표가 있으면 `SAME_STAY_M` 안."""
+    if not _core(name) or _core(pick["name"]) != _core(name):
+        return False
+    if where is None or pick.get("latitude") is None or pick.get("longitude") is None:
+        return True
+    return _km(pick["latitude"], pick["longitude"], *where) * 1000 <= SAME_STAY_M
+
+
 def _fresh_picks(booked: dict[str, Any], exclude: set[str], anchor: dict[str, Any] | None,
                  dates: dict[str, str], party: dict[str, Any], reference_price: float | None = None,
                  details: dict[Any, dict[str, Any]] | None = None, *, price_limit: float | None = None,
@@ -193,8 +217,10 @@ def _fresh_picks(booked: dict[str, Any], exclude: set[str], anchor: dict[str, An
     details = details or {}
     pool: list[dict[str, Any]] = []
     taken = set(exclude)
+    # `[2026-10-12]` 앞서 보여 준 곳은 소스가 달라도(이름 핵심이 같으면) 뺀다 — 마이리얼트립에서 보인 곳이 다음엔 구글 이름으로 다시 나오지 않게
+    shown_cores = {_core(name) for name in exclude if _core(name)}
     for stay in ((booked.get("myrealtrip") or {}).get("stays") or []):
-        if stay.get("price_per_night") is None or _key(stay["name"]) in taken:
+        if stay.get("price_per_night") is None or _key(stay["name"]) in taken or _core(stay["name"]) in shown_cores:
             continue
         detail = details.get(stay["gid"])
         if detail and (detail.get("no_rooms") or detail.get("sold_out")):
@@ -208,10 +234,13 @@ def _fresh_picks(booked: dict[str, Any], exclude: set[str], anchor: dict[str, An
                      "link": _list_link(stay["gid"], dates, party)})
     for stay in ((booked.get("google") or {}).get("stays") or []):
         if stay.get("type") == "vacation rental" or stay.get("price_per_night") is None or not stay.get("link") \
-                or _key(stay["name"]) in taken:
+                or _key(stay["name"]) in taken or _core(stay["name"]) in shown_cores:
+            continue
+        where = _coords(stay)
+        # `[2026-10-12]` 마이리얼트립에 이미 있는 같은 숙소면 뺀다(마이리얼트립 쪽이 그 날짜 예약 화면 링크를 준다)
+        if any(_same_stay(pick, stay["name"], where) for pick in pool if pick["source"] == "마이리얼트립"):
             continue
         taken.add(_key(stay["name"]))
-        where = _coords(stay)
         pool.append({"key": f"google:{_key(stay['name'])}", "name": stay["name"], "source": "구글 호텔",
                      "price_per_night": stay.get("price_per_night"), "rating": stay.get("rating") or None,
                      "review_count": stay.get("review_count"), "distance_km": _distance(anchor, stay),
@@ -665,7 +694,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
     @staticmethod
     def _google_block(google: dict[str, Any] | None, shown_names: list[str], links: list[dict[str, str]],
                       center: dict[str, Any] | None = None) -> list[str]:
-        """구글 호텔 쪽 줄 + 다른 곳에서 보기 링크. 이미 보인 이름(공백 · 대소문자 무시)과 숙박 공유(vacation rental)는 뺀다.
+        """구글 호텔 쪽 줄 + 다른 곳에서 보기 링크. 이미 보인 이름(이름 핵심 `_core` — 공백 · 「호텔」 · 「서울」 무시)과 숙박 공유(vacation rental)는 뺀다.
 
         ★숙박 공유를 빼는 까닭 — ☆2026-10-10 14:21 playdata 「서울 명동」 앞의 셋이 숙박 공유(Bluepillow · Vio)였고 평점 · 후기가 없었다.
         ★가격이 없는 곳도 뺀다 — ☆15:37 「지요크 명동」이 가격 · 링크 없이 왔다(비교에 쓸 수 없다).
@@ -676,10 +705,11 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         if google is None:
             lines.append("구글 호텔 비교는 받지 못했습니다(조회 실패).")
         else:
-            seen = {"".join(name.split()).casefold() for name in shown_names}
+            # `[2026-10-12]` 이름 핵심(`_core`)으로 비교 — 「밀리오레 호텔 서울 명동」(마이리얼트립)과 「밀리오레호텔 명동」(구글)은 같은 곳
+            seen = {_core(name) for name in shown_names if _core(name)}
             picks = [stay for stay in google.get("stays") or []
                      if stay.get("type") != "vacation rental" and stay.get("price_per_night") is not None and stay.get("link")
-                     and "".join(stay["name"].split()).casefold() not in seen]
+                     and _core(stay["name"]) not in seen]
             near = bool(center and center["usable"])
             if near:
                 picks.sort(key=lambda stay: (_distance(center, stay) is None, _distance(center, stay) or 0.0))
