@@ -1,5 +1,4 @@
 from pathlib import Path
-import json
 
 HERE = Path(__file__).resolve().parent
 source = HERE/'walk_web_20261010_v1.py'

@@ -2,7 +2,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from threading import Barrier
-from uuid import UUID
 
 import pytest
 
@@ -15,9 +14,9 @@ from app.domains.travel_ops.components.planning.safety import classify
 from app.domains.travel_ops.components.watch.safety_pause import SafetyPauses
 from app.infrastructure.db.session import get_connection
 from tests.unit.travel.execution_plan_fixture import fixture_plan
-from .test_case_version_day import case_world
+from .test_case_version_day import case_world  # noqa: F401 — 픽스처를 그대로 쓴다
 from .test_watch_batch import (SKY, LUNCH, ROAD, FATAL, _engine, _tick, _outbox,
-                               _latest, _versions, guardrails)
+                               _latest, _versions, guardrails)  # noqa: F401 — guardrails 는 픽스처
 
 
 def _arguments(world):

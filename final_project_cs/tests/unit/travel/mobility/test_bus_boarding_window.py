@@ -1,5 +1,4 @@
 """두 번째 버스는 여정 전체 구간 대신 실제 환승 승차 무렵을 검사한다."""
-from types import SimpleNamespace
 
 from tests.unit.travel.mobility.test_bus_service_direction import _window
 

@@ -1,7 +1,6 @@
 from pathlib import Path
 from datetime import datetime
-from collections import Counter
-import hashlib, json, sys, socket, shutil, time
+import hashlib, json, sys, socket, time
 sys.stdout.reconfigure(encoding='utf8')
 root=Path(__file__).resolve().parents[2]; repo=root/'final_project_cs'
 sys.path.insert(0,str(repo))

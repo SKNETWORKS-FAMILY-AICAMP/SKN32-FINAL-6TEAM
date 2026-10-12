@@ -1,6 +1,6 @@
 from pathlib import Path
 from datetime import datetime
-import hashlib,json,sys
+import hashlib,json
 base=Path(__file__).parent
 prefix=Path(__file__).name.removesuffix('-extract.py')
 start=json.loads((base/(prefix+'-start-sha256.json')).read_text(encoding='utf-8'))

@@ -66,7 +66,7 @@
 """
 from __future__ import annotations
 
-from . import express as _EX
+from . import express as _EX  # noqa: F401 — 불러오기만 해도 급행 표가 준비된다(원래 동작 유지)
 import statistics
 import argparse
 import collections

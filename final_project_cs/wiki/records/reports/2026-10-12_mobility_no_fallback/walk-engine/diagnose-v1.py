@@ -15,7 +15,7 @@ def blocked(*a,**kw):
     network.append(True)
     raise RuntimeError('network_disabled')
 socket.socket.connect=blocked;socket.socket.connect_ex=blocked;socket.create_connection=blocked
-from app.domains.travel_ops.instances.mobility.engine.graph_router import GraphRouter,decode_polyline
+from app.domains.travel_ops.instances.mobility.engine.graph_router import GraphRouter
 from app.domains.travel_ops.instances.mobility.engine.car import hav
 G=W/'datasets/mobility/processed/mobility/road_graph_v2'
 router=GraphRouter(G)

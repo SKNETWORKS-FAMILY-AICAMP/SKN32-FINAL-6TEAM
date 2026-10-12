@@ -3,7 +3,6 @@ import ast
 import datetime
 import hashlib
 import json
-import re
 import shutil
 
 ROOT = Path(__file__).resolve().parents[3]

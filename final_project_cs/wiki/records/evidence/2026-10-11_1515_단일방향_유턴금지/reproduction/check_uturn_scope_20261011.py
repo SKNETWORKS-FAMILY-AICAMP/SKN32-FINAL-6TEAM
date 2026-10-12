@@ -1,5 +1,4 @@
 from pathlib import Path
-from datetime import datetime
 import json, sys, socket
 root=Path(__file__).resolve().parents[2];repo=root/'final_project_cs';sys.path.insert(0,str(repo))
 out=repo/'wiki/records/evidence/2026-10-11_1515_단일방향_유턴금지'

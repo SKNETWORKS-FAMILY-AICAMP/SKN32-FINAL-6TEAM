@@ -122,7 +122,7 @@ def test_settings_actor_is_signed_operator(client, monkeypatch):
 
 def test_customer_support_ownership_filter(monkeypatch):
     from app.domains.travel_ops.modules.web_account import admin_customer_api
-    owner, other = str(uuid4()), str(uuid4())
+    owner, _other = str(uuid4()), str(uuid4())
     observed = []
     class Connection:
         def execute(self, sql, args):

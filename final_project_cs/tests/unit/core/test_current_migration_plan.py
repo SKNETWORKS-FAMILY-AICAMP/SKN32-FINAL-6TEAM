@@ -2,7 +2,6 @@
 import json
 import re
 from contextlib import contextmanager
-from pathlib import Path
 import pytest
 from app.infrastructure.db.migration_plan import migration_files
 from app.infrastructure.db import migrate

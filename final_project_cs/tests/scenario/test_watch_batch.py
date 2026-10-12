@@ -19,7 +19,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 from contextvars import Context
-from app.domains.travel_ops.scenarios.replay_services import replay_leg_services
 
 import pytest
 

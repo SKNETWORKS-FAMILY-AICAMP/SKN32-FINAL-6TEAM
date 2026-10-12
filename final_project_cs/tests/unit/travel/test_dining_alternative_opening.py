@@ -7,7 +7,6 @@ from uuid import uuid4
 import pytest
 
 from app.domains.travel_ops.instances.dining import DiningTeam
-from app.domains.travel_ops.instances.dining import ledger as dining_ledger_impl
 from app.domains.travel_ops.components.team_hooks import dining_ledger
 from app.domains.travel_ops.components.itinerary.itinerary import Item
 from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_closed, plan_closed_on_day, plan_delay
@@ -143,7 +142,6 @@ def test_trip_desk_uses_its_tenant_when_reading_alternative_states(monkeypatch):
     from contextlib import nullcontext
     from types import SimpleNamespace
 
-    from app.domains.travel_ops.instances.dining import ledger
     from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
 
     origin, candidate = place(), place(hours=False)

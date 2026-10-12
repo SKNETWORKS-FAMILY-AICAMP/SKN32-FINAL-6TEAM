@@ -1,6 +1,5 @@
 from pathlib import Path
 from datetime import date, datetime
-import hashlib
 import json
 import sys
 import time

@@ -115,7 +115,6 @@ def test_engine_source_has_no_domain_vocabulary():
         assert word not in code, f"엔진에 도메인 어휘 '{word}' 가 있다"
 
 def test_policy_changes_control_the_verdict_without_engine_changes():
-    from dataclasses import replace
     from app.domains.travel_ops.components.core_hooks.verification_policy import TRAVEL_OPS_POLICY
     assert set(RAIL_PASS_POLICY.references).isdisjoint(TRAVEL_OPS_POLICY.references)
     facts = rail_pass_facts(collections={"rail_passes": {PASS: {"paid_cents": 1_000_000, "seat_limit": 1}}})

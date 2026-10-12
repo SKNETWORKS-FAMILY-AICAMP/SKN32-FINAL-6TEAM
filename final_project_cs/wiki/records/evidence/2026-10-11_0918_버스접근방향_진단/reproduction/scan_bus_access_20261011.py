@@ -1,4 +1,6 @@
-exec(open(__file__.replace('scan_bus_access_','scan_bus_pairs_'),encoding='utf8').read().split('rows=[]')[0])
+_ns = {'__file__': __file__}
+exec(open(__file__.replace('scan_bus_access_','scan_bus_pairs_'),encoding='utf8').read().split('rows=[]')[0], _ns)
+design, b, radius, root, json = (_ns[k] for k in ('design', 'b', 'radius', 'root', 'json'))
 rows=[]
 for p in design['pairs']:
     chosen=b.routes_between(p['alat'],p['alon'],p['blat'],p['blon'],radius)

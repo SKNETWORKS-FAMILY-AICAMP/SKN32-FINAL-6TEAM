@@ -185,7 +185,7 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
             if slot == "dining":
                 if dining is None:
                     continue
-                found = _tour(dining, query, blocked, label="dining_ledger")
+                found = _tour(dining, query, blocked, label="dining_ledger", near=near)
                 tried.append(f"dining_ledger:{query}")
                 if found is not None:
                     # ★`[2026-10-05]` 원장에 없어 인허가(사업자 등록) 자료에서 찾은 가게는 출처가 따로다 — 영업시간을 모른다
@@ -244,7 +244,7 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                 food = meal or match["category_group"] in ("FD6", "CE7")
                 for slot in (("dining", "tour") if food else ("tour", "dining")):
                     if slot == "dining":
-                        again = (_tour(dining, match["name"], blocked, label="dining_ledger")
+                        again = (_tour(dining, match["name"], blocked, label="dining_ledger", near=near)
                                  if dining is not None and match["name"] != query else None)
                         if again is not None:
                             tried.append(f"dining_ledger:{match['name']}")
@@ -369,12 +369,18 @@ def _typo(key: str, by_name: dict[str, dict[str, Any]]) -> tuple[dict[str, Any],
     return best
 
 
-def _tour(tour: Any, name: str, blocked: list[str], *, label: str = "tour_api") -> dict[str, Any] | None:
-    """관광공사 자리 · 요식 원장이 같은 계약(`find` + `misses`)이다. `label` 은 막힌 조회에 붙는 이름."""
+def _tour(tour: Any, name: str, blocked: list[str], *, label: str = "tour_api",
+          near: tuple[float, float] | None = None) -> dict[str, Any] | None:
+    """관광공사 자리 · 요식 원장이 같은 계약(`find` + `misses`)이다. `label` 은 막힌 조회에 붙는 이름.
+
+    `near` — 앞뒤 일정 좌표(`pipeline._near_hint`). 원장만 받는다(같은 이름 여럿 · 「근처 국밥집」에서 가까운 곳을 고른다).
+    ★`[2026-10-08]` 전에는 넘기지 않았다 — 원장은 `trip_api._PlaceCtx` 로만 근처를 받았는데, 통합(5abf28a)에서 그 ctx 를 채우던
+      관광지 CSV · 카카오 감싸개가 빠져 앞 일정이 관광지 · 카카오에서 찾힌 곳이면 기준점이 없었다(재측정 PL-023 · PLH-10).
+    """
     if tour is None:
         return None
     before = dict(getattr(tour, "misses", {}) or {})
-    found = tour.find(name, area_code=SEOUL_AREA_CODE)
+    found = tour.find(name, area_code=SEOUL_AREA_CODE, **({"near": near} if near is not None else {}))
     for reason, count in (getattr(tour, "misses", {}) or {}).items():
         if count > before.get(reason, 0) and reason not in NOT_THERE:
             blocked.append(f"{label}:{reason}")

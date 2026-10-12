@@ -142,6 +142,41 @@ test("서버의 약관이 이 화면보다 새 버전이면 새로 고침을 안
   await expect(page.getByRole("alert", { name: "약관 확인 진행" })).toContainText("약관이 새로 바뀌었어요");
 });
 
+for (const wait of [{ ms: 500, visible: false }, { ms: 1200, visible: true }]) {
+  test(`동의 응답 ${wait.ms}ms 대기에서는 준비 안내가 ${wait.visible ? "나타나고 응답 후 닫힌다" : "나타나지 않는다"}`, async ({ page, request }) => {
+    const server = mockServer(request);
+    await server.scenario({ consents: "on", consentStream: "json" });
+    await server.consents({ service_terms: true, privacy: true });
+    await start(page);
+    const clockStart = new Date("2026-10-12T12:00:00+09:00");
+    await page.clock.install({ time: clockStart });
+    await page.clock.pauseAt(new Date(clockStart.getTime() + 1000));
+    let release!: () => void;
+    let received!: () => void;
+    const held = new Promise<void>((resolve) => { release = resolve; });
+    const requested = new Promise<void>((resolve) => { received = resolve; });
+    await page.route("**/v1/web/consents", async (route) => {
+      if (route.request().method() !== "GET") return route.continue();
+      received();
+      await held;
+      await route.continue();
+    });
+    try {
+      await page.goto("/mypage");
+      await requested;
+      const progress = page.getByRole("status", { name: "약관 확인 진행" });
+      await page.clock.runFor(wait.ms);
+      await expect(progress).toHaveCount(wait.visible ? 1 : 0);
+      await expect(page.getByRole("heading", { name: "마이페이지", exact: true })).toBeVisible();
+      release();
+      await expect(progress).toHaveCount(0);
+      await expect.poll(async () => (await server.received("GET", "/v1/web/consents")).length).toBeGreaterThan(0);
+    } finally {
+      release();
+    }
+  });
+}
+
 test("약관 SSE를 기다려도 마이페이지는 남고 실제 단계와 완료 수를 기존 화면 위에 보인다", async ({ page, request, context }) => {
   const server = mockServer(request);
   await server.scenario({ consents: "on", retention: "on", consentStream: "slow" });

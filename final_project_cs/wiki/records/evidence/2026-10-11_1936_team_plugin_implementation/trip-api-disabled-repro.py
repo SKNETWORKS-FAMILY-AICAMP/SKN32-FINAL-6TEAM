@@ -1,7 +1,6 @@
 """Real HTTP routes with synthetic identity/store/SQL cursor; no database or network."""
 import json
 from contextlib import contextmanager
-from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import patch
 from uuid import uuid4

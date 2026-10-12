@@ -2,7 +2,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.domains.travel_ops.components.conversation import service_help, trip_messages
+from app.domains.travel_ops.components.conversation import trip_messages
 from app.domains.travel_ops.entry.trip_api import build_trip_router
 from app.infrastructure.db.session import get_connection
 from app.presentation.api.app import create_app

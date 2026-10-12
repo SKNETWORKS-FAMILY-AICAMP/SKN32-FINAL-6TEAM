@@ -5,7 +5,6 @@ import hashlib
 import hmac
 import json
 from datetime import UTC, datetime, timedelta
-from typing import Any
 from uuid import UUID, uuid4
 
 from psycopg.types.json import Jsonb

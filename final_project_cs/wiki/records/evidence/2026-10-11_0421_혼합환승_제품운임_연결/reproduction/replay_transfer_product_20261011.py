@@ -3,7 +3,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import fields
 from datetime import datetime
 from pathlib import Path
-from collections import Counter
 import hashlib
 import json
 import socket

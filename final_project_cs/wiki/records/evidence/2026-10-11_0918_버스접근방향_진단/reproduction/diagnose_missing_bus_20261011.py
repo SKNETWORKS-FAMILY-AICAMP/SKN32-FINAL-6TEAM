@@ -26,7 +26,7 @@ def deny(*args, **kw):
 socket.socket.connect = deny
 socket.socket.connect_ex = deny
 from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
-from app.domains.travel_ops.instances.mobility.engine.plan import Planner, service_day
+from app.domains.travel_ops.instances.mobility.engine.plan import Planner
 rt = build_verifier(quiet=True, local_router=True, seoul_key='', gh_url='', data_dir=str(root/'datasets/mobility/processed'))
 print('정적 자료 로딩 완료', flush=True)
 a = {'key':'ns','name':'남산타워','lat':37.5512,'lon':126.9882}

@@ -1,7 +1,7 @@
 from pathlib import Path
 from datetime import datetime
 from collections import Counter
-import dataclasses,gzip,hashlib,json,socket,sys,time
+import dataclasses,gzip,hashlib,json,socket,sys
 ROOT=Path(__file__).resolve().parents[2]; CS=ROOT/'final_project_cs'
 sys.path.insert(0,str(CS));sys.stdout.reconfigure(encoding='utf8')
 BASE=ROOT/'datasets/mobility/processed/mobility'

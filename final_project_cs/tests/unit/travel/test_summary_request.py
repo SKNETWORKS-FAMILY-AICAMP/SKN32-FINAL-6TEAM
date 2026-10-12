@@ -2,7 +2,6 @@ from datetime import date, datetime, timezone
 from types import SimpleNamespace
 import pytest
 from app.domains.travel_ops.components.conversation.summary_request import decide_summary
-from app.domains.travel_ops.components.conversation import read_requests
 
 ITEMS = [SimpleNamespace(kind="activity", starts_at=datetime(2031,3,10,15,30,tzinfo=timezone.utc))]
 

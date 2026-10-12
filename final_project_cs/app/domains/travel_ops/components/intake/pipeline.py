@@ -404,6 +404,8 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                 _require_lockable(conn, tenant_id, intake_id, current, source_rows, current_claims, source_id, field_name)
             if field_name.endswith(".place") and isinstance(value, dict) and value.get("content_id"):
                 value = _verified_content_id(conn, tenant_id, value)
+            if field_name.endswith(".place") and isinstance(value, dict) and value.get("source") == "customer_pick":
+                value = _linked_ledger_pick(conn, tenant_id, value)
             if field_name.endswith(".place") and value is not None and "latitude" not in value:
                 if our_places is None:
                     our_places = _our_places(conn, tenant_id)
@@ -672,6 +674,41 @@ def _verified_content_id(conn, tenant_id: str, value: dict[str, Any]) -> dict[st
     ok = (bool(row) and row[0] is not None and row[1] is not None
           and distance_m(float(row[0]), float(row[1]), float(value["latitude"]), float(value["longitude"])) <= CONTENT_ID_MATCH_M)
     return value if ok else {**value, "content_id": None, "content_type_id": None}
+
+
+#: 고른 식당을 공용 원장 식당 행과 같은 곳으로 보는 거리 — 후보는 그 행의 좌표를 그대로 돌려보내므로 넉넉할 필요가 없다(우리가 고른 값)
+LEDGER_PICK_MATCH_M = 50
+
+
+def _linked_ledger_pick(conn, tenant_id: str, value: dict[str, Any]) -> dict[str, Any]:
+    """고객이 후보 · 검색에서 고른 식당을 **요식 원장 가게 번호**(`dining_place_uid`)와 잇는다. `[2026-10-10]`
+
+    ★왜. 원장 후보(`candidates._ledger_places`)는 `ref: place:{id}` 만 싣고, 웹은 고른 곳을 이름 · 좌표로만 돌려보낸다. 서버는 `place_id` 를
+      받지 않으므로(남의 여행 전용 행을 가리킬 수 있다) 고른 식당이 원장과 끊겨 확인 화면 · 등록 판정이 「모름」이 됐다.
+      결함: `wiki/records/reports/debugs/2026-10-10_고른_원장식당이_원장과_끊긴다.md`
+    ★고객이 보낸 번호를 믿지 않고 서버가 찾는다 — **공용**(`trip_scope IS NULL`) 원장 식당 행 중 이름이 **정확히 같고** 좌표가
+      `LEDGER_PICK_MATCH_M` 안인 곳이 **한 가게**일 때만 잇는다. 둘 이상이거나 없으면 전처럼 둔다(고르지 않는다 — 다른 가게의 영업시간으로
+      판정하는 것이 가장 나쁘다). 활동으로 고른 곳은 건드리지 않는다.
+    """
+    if value.get("kind") not in (None, "dining"):
+        return value
+    from .hours import _tenants
+    from .places import distance_m
+
+    try:
+        with conn.transaction(), conn.cursor() as cur:       # 세이브포인트 — 원장 열이 없는 DB 에서도 바깥 트랜잭션을 깨지 않는다
+            cur.execute("SELECT latitude, longitude, attributes->>'dining_place_uid' FROM places "
+                        "WHERE tenant_id = ANY(%s) AND source_name = 'dining_ledger' AND trip_scope IS NULL AND kind = 'dining' "
+                        "AND name = %s AND attributes ? 'dining_place_uid'", (_tenants(tenant_id), str(value["name"])))
+            rows = cur.fetchall()
+    except Exception as exc:                                  # noqa: BLE001 — 원장 열이 없는 DB(시험 · 다른 조립)면 잇지 않는다
+        if type(exc).__name__ not in ("UndefinedColumn", "UndefinedTable"):
+            raise
+        return value
+    uids = {str(uid) for lat, lon, uid in rows
+            if uid and lat is not None and lon is not None
+            and distance_m(float(lat), float(lon), float(value["latitude"]), float(value["longitude"])) <= LEDGER_PICK_MATCH_M}
+    return {**value, "dining_place_uid": uids.pop()} if len(uids) == 1 else value
 
 
 def _canonical(field_name: str) -> str:

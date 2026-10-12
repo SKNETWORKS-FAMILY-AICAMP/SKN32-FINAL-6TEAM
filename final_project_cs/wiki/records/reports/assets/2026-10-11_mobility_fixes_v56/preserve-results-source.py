@@ -1,6 +1,5 @@
 """검증 결과와 변경 전후 그림을 새 이름으로 보존하고 해결한 결함 기록을 닫는다."""
 from datetime import datetime, timezone, timedelta
-import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -119,7 +118,7 @@ for name,reason in entries:
                       '[동일 입력 전후 재생](../../evidence/2026-10-11_parallel_sonnet_finish/fixes-before-after.json).',1)
     path.write_text(text,encoding='utf8')
 
-report=f'''# 택시 출발·환승 운임 결함 3건 수정과 기존 실패 7건 정리
+report='''# 택시 출발·환승 운임 결함 3건 수정과 기존 실패 7건 정리
 
 택시 시각 불일치, 후속 버스 할인 경계 누락, 택시 출발 안내 보류를 실제 코드에서 수정했습니다. 관련 시험283/283이 통과했습니다. 로컬 구현·검증 결과이며 전체 실사용 완료나 운영 반영을 뜻하지 않습니다.
 

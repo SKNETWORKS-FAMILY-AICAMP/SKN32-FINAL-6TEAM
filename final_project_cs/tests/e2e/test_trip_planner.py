@@ -31,6 +31,7 @@ from app.domains.travel_ops.entry.trip_api import build_trip_router
 from app.presentation import security
 from app.presentation.api.app import create_app
 from tests.helpers.plugin_bindings import publish_fixed_mobility
+from app.domains.travel_ops.components.planning.planner import MOVE_BUFFER_MIN
 
 START = date(2026, 10, 5)
 

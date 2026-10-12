@@ -107,8 +107,16 @@ def test_loop_operation_end_uses_absolute_arrival_second(last_min,allowed):
 @pytest.fixture(scope='module')
 def real_runtime():
     from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
-    root=next(p for p in Path(__file__).resolve().parents if (p/'datasets/mobility/processed').exists())
-    rt=build_verifier(data_dir=str(root/'datasets/mobility/processed'),gh_url='',seoul_key='',quiet=True,local_router=False)
+    # `[2026-10-13]` 이동 시간표(datasets, git 밖)가 없거나 모자란 환경(CI · 팀원 PC)에서는 건너뛴다
+    root=next((p for p in Path(__file__).resolve().parents if (p/'datasets/mobility/processed').exists()), None)
+    if root is None:
+        pytest.skip('이동 시간표 자료(datasets/mobility/processed)가 없는 환경')
+    try:
+        rt=build_verifier(data_dir=str(root/'datasets/mobility/processed'),gh_url='',seoul_key='',quiet=True,local_router=False)
+    except RuntimeError as exc:
+        if '판정기 입력이 없다' not in str(exc):
+            raise
+        pytest.skip(f'이동 시간표 자료가 모자란 환경: {exc}')
     rt._v.lfd_enabled=False
     return rt
 

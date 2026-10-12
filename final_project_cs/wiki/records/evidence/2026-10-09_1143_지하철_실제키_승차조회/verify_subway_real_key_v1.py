@@ -1,13 +1,11 @@
 from pathlib import Path
-from datetime import datetime,timedelta,UTC
+from datetime import datetime,timedelta
 from copy import deepcopy
-import importlib.util,json,hashlib,sys,httpx
+import importlib.util,json,hashlib,sys
 ROOT=Path(__file__).resolve().parents[2];CS=ROOT/'final_project_cs';sys.path.insert(0,str(CS))
 from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
-from app.domains.travel_ops.instances.mobility.engine.departure_context import input_basis
 from app.domains.travel_ops.instances.mobility.engine.departure_observer import observe
 from app.domains.travel_ops.instances.mobility.engine.subway_departure import boarding_services
-from app.domains.travel_ops.ports.data_sources.seoul_subway import SeoulSubwayArrival,select_boardable_arrival
 work=json.loads((Path(__file__).parent/'subway-real-key-work-v1.json').read_text(encoding='utf8'));ev=ROOT/work['evidence'];rawdir=ROOT/work['raw']
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 def save(p,d):

@@ -3,13 +3,12 @@ import asyncio
 import base64
 import copy
 import hashlib
-import re
 import threading
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from urllib.parse import parse_qs, urlsplit
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI, Request

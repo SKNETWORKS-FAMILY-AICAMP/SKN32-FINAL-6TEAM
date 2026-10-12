@@ -103,7 +103,8 @@ def test_a_resolved_report_says_what_closed_it():
 def test_current_annotations_reference_existing_reports():
     assert set(status_entries()) <= {p.name for p in REPORTS}
     for name, entry in status_entries().items():
-        assert entry["source_sha256"] == hashlib.sha256((DEBUG_DIR / name).read_bytes()).hexdigest()
+        # `[2026-10-13]` 줄바꿈(CRLF·LF)은 빼고 잰다 — git 은 LF 로 저장하고 Windows 작업 폴더는 CRLF 라, 바이트 그대로 재면 CI 에서만 어긋났다
+        assert entry["source_sha256"] == hashlib.sha256((DEBUG_DIR / name).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def test_unannotated_ambiguous_history_still_fails():

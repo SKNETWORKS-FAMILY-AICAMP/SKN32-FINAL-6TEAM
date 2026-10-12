@@ -1,5 +1,4 @@
 from pathlib import Path
-from dataclasses import asdict
 import collections
 import hashlib
 import importlib.util

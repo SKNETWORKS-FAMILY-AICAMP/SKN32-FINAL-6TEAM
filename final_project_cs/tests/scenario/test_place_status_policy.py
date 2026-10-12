@@ -189,7 +189,7 @@ def test_day_watch_and_team_read_share_free_closure_without_duplicate_diagnostic
         with get_connection() as conn:
             conn.execute('UPDATE dining.dn_live_check SET asked_at=%s WHERE place_uid=%s', (datetime.now(UTC)-timedelta(seconds=1), w.uid))
             saved = conn.execute('SELECT customer_id,state_json FROM customer_cases WHERE case_id=%s', (case_id,)).fetchone()
-            target = conn.execute('SELECT kind,trip_scope FROM places WHERE place_id=%s', (w.meal.place_id,)).fetchone()
+            _target = conn.execute('SELECT kind,trip_scope FROM places WHERE place_id=%s', (w.meal.place_id,)).fetchone()
         assert saved[0] == w.customer and saved[1].get('subject_ref',{}).get('id') == str(w.trip), saved
         assert w.meal.kind == 'dining'  # 숙소 안 조식도 장소 종류가 아닌 일정 항목으로 확인한다.
         report = tools.disruptions(scope, place_id=w.meal.place_id, starts_at=w.meal.starts_at)

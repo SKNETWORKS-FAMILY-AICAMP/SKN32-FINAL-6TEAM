@@ -14,6 +14,9 @@ SCRIPTS = Path(__file__).resolve().parents[5] / 'datasets/mobility/scripts'
 
 @pytest.fixture
 def checked(monkeypatch):
+    # `[2026-10-13]` 수집 스크립트는 datasets(git 밖)에 있다 — 없는 환경(CI · 팀원 PC)에서는 건너뛴다
+    if not (SCRIPTS / '_tago_checked.py').exists():
+        pytest.skip('버스 수집 스크립트(datasets/mobility/scripts, git 밖)가 없는 환경')
     monkeypatch.syspath_prepend(str(SCRIPTS))
     return importlib.import_module('_tago_checked')
 

@@ -16,6 +16,5 @@ def decide_summary(day: date, *, message: str, items: list) -> Decision:
     if day not in days:
         raise ValueError("이 여행에 해당 날짜의 일정이 없습니다")
     query = {"day": f"d{(day-days[0]).days+1}", "period": "all", "kind": "all", "position": "all"}
-    read = {"fact": "day", "target_item": "none", "reference": "none", "origin_item": "none", "query": query, "text": ""}
     return Decision("answer_fact", None, None, "schedule", None, "", query=query,
                     raw={"source": "explicit_summary_button", "model_called": False, "summary_day": iso})

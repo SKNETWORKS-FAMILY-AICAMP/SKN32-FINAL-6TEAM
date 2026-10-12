@@ -294,7 +294,6 @@ def test_geocode_without_license_data_stops_before_api_call(mn, monkeypatch):
 
 
 def test_main_missing_license_source_never_overwrites_sql(mn, tmp_path, monkeypatch):
-    import csv
     monkeypatch.setattr(mn, "RAW", str(tmp_path / "missing"))
     monkeypatch.setattr(mn, "OUT", str(tmp_path))
     monkeypatch.setattr(mn.sys, "argv", ["script"])

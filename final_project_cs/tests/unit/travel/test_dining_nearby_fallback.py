@@ -8,7 +8,6 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from app.domains.travel_ops.instances.dining import nearby
-from app.domains.travel_ops.instances.dining import ledger as dining_ledger_impl
 from app.domains.travel_ops.components.team_hooks import dining_ledger
 from app.domains.travel_ops.components.itinerary.itinerary import Item
 

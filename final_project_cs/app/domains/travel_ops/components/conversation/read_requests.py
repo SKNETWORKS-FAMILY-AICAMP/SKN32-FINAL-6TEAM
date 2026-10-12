@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import datetime
 
 from . import fact_context, schedule_query, trip_facts
 

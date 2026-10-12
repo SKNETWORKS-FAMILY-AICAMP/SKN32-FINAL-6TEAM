@@ -18,7 +18,7 @@ from app.core.project_config import ProjectConfig, load_project_config, config_r
 from app.core.registry import TeamRegistry
 from app.core.service_bindings import BindingTable, collect_services, collect_registration, collecting_services
 from app.core.remote_team.a2a_executor import A2ATeamExecutor
-from app.core.remote_team.executor import LocalTeamExecutor, TeamExecutorPort
+from app.core.remote_team.executor import TeamExecutorPort
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
 from app.core.settings import get_settings
