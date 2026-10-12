@@ -1,5 +1,7 @@
 "use client";
 
+import { silenceSnapshot, type SilenceSnapshot } from "./silence-snapshot";
+
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -102,6 +104,15 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const linesRead = query.data?.sources.reduce((count, source) => count + source.lines.filter((line) => line.read).length, 0) ?? 0;
   const quiet = useQuiet([query.data?.stage, linesRead, stream.stage, stream.order.length, stream.done ? 1 : 0, stream.progress?.phase, stream.progress?.done].join("|"),
     query.data?.status === "reading" && follow.follow !== "stalled");
+  const silenceRef = useRef<SilenceSnapshot>(null);
+  const [silence, setSilence] = useState<SilenceSnapshot>(null);
+  useEffect(() => {
+    const next = silenceSnapshot(silenceRef.current, quiet);
+    if (next !== silenceRef.current) {
+      silenceRef.current = next;
+      setSilence(next);
+    }
+  }, [quiet]);
   // Without the server's own check (`view.review`) a change goes through the intake's edit call, which answers with the new plan.
   const edit = useMutation({
     mutationFn: ({ revision, edits }: { revision: number; edits: IntakeEdit[] }) => editIntake(intakeId, revision, edits, language),
@@ -207,8 +218,8 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
         // ★`[2026-10-03]` The server's `progress` packet says what it is at: name it instead of a general "taking a while".
         ? t(`「${stream.progress.current.title}」 확인이 오래 걸리고 있어요. 서버는 계속 확인하고 있어요.`, `Checking “${stream.progress.current.title}” is taking a while. The server is still at it.`)
         : t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.") }
-      : quiet >= 60 ? { text: t("1분이 넘게 서버 소식이 없어요", "No news from the server for over a minute"), sub: t("이 화면에서 더 기다리거나, 뒤로 가서 잠시 뒤에 다시 보내 주세요.", "Keep waiting here, or go back and send it again shortly."), note: t("60초 이상 새 진행 소식이 없어요.", "No new progress for at least 60 seconds.") }
-      : quiet >= 30 ? { text: t("서버 소식이 한동안 없어요", "No news from the server for a while"), sub: t("조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.", "Wait a little longer, or go back and send it again."), note: t("30초 이상 새 진행 소식이 없어요.", "No new progress for at least 30 seconds.") }
+      : silence?.stage === 60 ? { text: t("1분이 넘게 서버 소식이 없어요", "No news from the server for over a minute"), sub: t("이 화면에서 더 기다리거나, 뒤로 가서 잠시 뒤에 다시 보내 주세요.", "Keep waiting here, or go back and send it again shortly."), note: t("60초 이상 새 진행 소식이 없어요.", "No new progress for at least 60 seconds.") }
+      : silence?.stage === 30 ? { text: t("서버 소식이 한동안 없어요", "No news from the server for a while"), sub: t("조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.", "Wait a little longer, or go back and send it again."), note: t("30초 이상 새 진행 소식이 없어요.", "No new progress for at least 30 seconds.") }
       : null;
     return <PlanCheck key="plan" view={reading} notice={streamNote ?? testNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
   }

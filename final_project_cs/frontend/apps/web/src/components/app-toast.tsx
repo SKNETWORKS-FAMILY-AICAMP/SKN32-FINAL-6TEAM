@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, type ReactNode } from "react";
-import { pushToast, type BusToast } from "@/lib/toast-bus";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
+import { clearPendingToast, pushToast, takePendingToast, type BusToast } from "@/lib/toast-bus";
 import { ToastView, useToastState } from "./toast-view";
 
 /**
@@ -10,7 +10,19 @@ import { ToastView, useToastState } from "./toast-view";
  */
 export function useAppToast(): { show: (toast: BusToast) => void; node: ReactNode } {
   const { shown, show: showHere, hide } = useToastState();
-  const show = useCallback((next: BusToast) => { if (!pushToast(next)) showHere(next); }, [showHere]);
-  const node = shown ? <ToastView key={shown.stamp} toast={shown.toast} onDone={hide} /> : null;
+  const local = useRef<BusToast | null>(null);
+  useEffect(() => {
+    const held = takePendingToast();
+    if (held) { local.current = held; showHere(held); }
+  }, [showHere]);
+  const show = useCallback((next: BusToast) => {
+    if (!pushToast(next)) { local.current = next; showHere(next); }
+  }, [showHere]);
+  const dismiss = useCallback(() => {
+    if (local.current) clearPendingToast(local.current);
+    local.current = null;
+    hide();
+  }, [hide]);
+  const node = shown ? <ToastView key={shown.stamp} toast={shown.toast} onDone={dismiss} /> : null;
   return { show, node };
 }
