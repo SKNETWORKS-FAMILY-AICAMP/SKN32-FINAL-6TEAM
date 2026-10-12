@@ -15,38 +15,34 @@ test("마커로 연 일정의 윗부분은 전체·일차 줄 아래에 놓인�
   await expect(page.getByRole("tablist", { name: "일차 고르기" })).toBeVisible();
   const belowHeader = async (title: string) => {
     await expect.poll(async () => {
-      // The latest bottom-flush contract forbids extra alignment padding at the end.
-      // Require the 12px target where reachable, or the exact physical scroll limit.
-      return card(page, title).evaluate((article) => {
-        const row = article.closest<HTMLElement>('li[data-type="item"]')!;
-        const body = article.closest<HTMLElement>('div[class*="sheetBody"]')!;
-        const head = document.querySelector<HTMLElement>('header[class*="sheetHead"]')!;
-        const heading = article.querySelector<HTMLElement>('h1,h2,h3,h4,h5,h6')!;
-        const bodyBox = body.getBoundingClientRect(), headBox = head.getBoundingClientRect();
-        const headingBox = heading.getBoundingClientRect();
-        const visibleTop = Math.max(bodyBox.top, headBox.bottom);
-        const target = body.scrollTop + row.getBoundingClientRect().top - visibleTop - 12;
-        const reachable = Math.max(0, Math.min(target, body.scrollHeight - body.clientHeight));
-        return {
-          aligned: Math.abs(body.scrollTop - reachable) <= 2,
-          headingVisible: headingBox.top >= visibleTop && headingBox.bottom <= bodyBox.bottom,
-        };
-      });
-    }).toEqual({ aligned: true, headingVisible: true });
+      const row = await card(page, title).boundingBox();
+      const heading = await card(page, title).getByRole("heading").boundingBox();
+      const head = await page.locator("header[class*=sheetHead]").boundingBox();
+      const body = await page.locator("div[class*=sheetBody]").boundingBox();
+      if (!row || !heading || !head || !body) return false;
+      const gap = row.y - head.y - head.height;
+      return gap >= 10 && gap <= 20 && heading.y >= head.y + head.height && heading.y + heading.height <= body.y + body.height;
+    }).toBe(true);
     await expect(page.getByRole("tablist", { name: "일차 고르기" })).not.toHaveAttribute("data-quiet", "true");
     await expect(page.getByRole("tablist", { name: "일차 고르기" })).toHaveCSS("opacity", "1");
   };
   for (const [label, title] of [["3. 광장시장", "광장시장"], ["1. 경복궁 관람", "경복궁 관람"], ["3. 광장시장", "광장시장"]]) {
     await mapSettled(page);
-    const edge = page.getByRole("button", { name: new RegExp(`^${label.split(".")[0]}번 일정이 화면 밖에 있어요`) });
-    if (await edge.isVisible()) {
-      await edge.click();
+    const map = page.getByRole("region", { name: "여행 지도", exact: true });
+    await expect(map).not.toHaveAttribute("data-moving", "true");
+    const marker = pin(page, label);
+    const body = marker.locator("[data-pin-body]");
+    if (await marker.getAttribute("data-edge-hidden") === "true") {
+      const number = label.split(".")[0];
+      // 화면 밖 일정은 거리 버튼으로 돌아온다. 단일 버튼은 그 일정도 바로 선택한다.
+      await map.getByRole("button", { name: new RegExp(`^(?:\\d+ · )*${number}(?: · \\d+)*번 일정이 화면 밖에 있어요 ·`) }).click();
+      await expect(map).not.toHaveAttribute("data-moving", "true");
+      await expect(body).toBeVisible();
       await mapSettled(page);
-    }
-    if (await pin(page, label).getAttribute("aria-pressed") !== "true") {
-      await pin(page, label).locator("[data-pin-body]").click();
-    }
-    await expect(pin(page, label)).toHaveAttribute("aria-pressed", "true");
+      // 여러 일정 버튼이 다른 첫 일정을 선택했다면, 복원된 목표 마커를 직접 고른다.
+      if (await marker.getAttribute("aria-pressed") !== "true") await body.click();
+    } else await body.click();
+    await expect(marker).toHaveAttribute("aria-pressed", "true");
     await belowHeader(title);
   }
   await shot(page, "06-marker-below-days");

@@ -13,10 +13,10 @@ from app.core.contracts import CaseStatus, InvalidTransition
 from app.core.case_lifecycle.case import CaseProjection, apply_event, fold_events, validate_payload
 from app.core.case_lifecycle.events import EventType
 
-CREATED_PAYLOAD = {"channel": "personal_ai", "message": "해지했는데 결제가 됐어요"}
+CREATED_PAYLOAD = {"channel": "personal_ai", "message": "예약한 활동을 취소해야 해요"}
 CLASSIFIED_PAYLOAD = {
-    "intent": "billing",
-    "issue_code": "post_cancel_charge",
+    "intent": "incident_report",
+    "issue_code": "activity_cancel_or_change",
     "sentiment": "negative",
 }
 ROUTED_PAYLOAD = {"owner_team_id": "activity", "capability": "activity.check_feasible"}
@@ -43,8 +43,8 @@ def test_happy_path_to_running() -> None:
     case = apply_event(case, EventType.ROUTED, ROUTED_PAYLOAD)
     assert case.status is CaseStatus.RUNNING
     assert case.version == 3
-    assert case.intent == "billing"
-    assert case.issue_code == "post_cancel_charge"
+    assert case.intent == "incident_report"
+    assert case.issue_code == "activity_cancel_or_change"
     assert case.sentiment == "negative"
     assert case.owner_team_id == "activity"
 
@@ -68,12 +68,12 @@ def test_cancelled_is_terminal() -> None:
 
 def test_missing_payload_key_is_rejected() -> None:
     with pytest.raises(InvalidTransition, match="필수 키가 없다"):
-        validate_payload(EventType.CLASSIFIED, {"intent": "billing"})
+        validate_payload(EventType.CLASSIFIED, {"intent": "incident_report"})
 
 
 def test_classified_requires_all_three_labels() -> None:
     """★감성·의도·이슈 셋 다 있어야 한다 (v5 §2 인라인 분류)."""
-    partial = {"intent": "billing", "issue_code": "x"}
+    partial = {"intent": "incident_report", "issue_code": "x"}
     with pytest.raises(InvalidTransition):
         apply_event(
             apply_event(new_case(), EventType.CREATED, CREATED_PAYLOAD),

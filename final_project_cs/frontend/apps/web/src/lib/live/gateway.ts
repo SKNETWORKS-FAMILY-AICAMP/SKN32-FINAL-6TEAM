@@ -1,6 +1,6 @@
-import type { Trip, TripChange, TripGateway, TripGuardian, TripMessage, TripMove, TripSafety, TripStop, TripWarning } from "../../features/trip/model";
+import type { Trip, TripChange, TripGateway, TripGuardian, TripMessage, TripMessageResume, TripMove, TripSafety, TripStop, TripWarning } from "../../features/trip/model";
 import { translator, type Language, type Translate } from "../i18n";
-import { api, hasSession, LiveError } from "./client";
+import { api, currentSession, hasSession, LiveError } from "./client";
 import { streamApi } from "./stream";
 
 /** Server trip view (`GET /v1/web/trips/{id}`) — only the fields the web reads. */
@@ -42,6 +42,7 @@ interface ServerSafety {
   resume?: { label?: unknown; path?: unknown } | null;
 }
 interface ServerTrip {
+  simulation?: { active: boolean; categories: string[]; expires_at: string } | null;
   trip_id: string; title: string; version: number; items: ServerItem[]; plan_url: string;
   history?: ServerHistory[]; warnings?: ServerWarning[];
   safety?: ServerSafety | null;
@@ -160,12 +161,14 @@ function warning(row: ServerWarning): TripWarning | null {
   return { code: row.code ?? "", date: row.date ?? null, reason: row.reason, remedy: typeof row.remedy === "string" && row.remedy ? row.remedy : null };
 }
 
-interface ServerTurn { role?: string; text?: string; case_id?: string | null; at?: string }
+interface ServerChoice { label?: unknown; message?: unknown; item_id?: unknown }
+interface ServerTurn { role?: string; text?: string; case_id?: string | null; at?: string; turn_id?: number;
+  reply?: { choices?: ServerChoice[]; choices_title?: unknown; more?: unknown; answer_web?: unknown } }
 
 /**
  * ★`[2026-09-29]` The conversation is the server's record (`GET /v1/web/trips/{id}/chat`) — it follows the customer to
- * another tab or device. This tab's own copy only adds what the record does not keep (the last answer's choices and,
- * in development mode, its basis). If the record cannot be read, this tab's copy is shown.
+ * another tab or device, including structured choices. This tab's own copy adds development-only basis and pending
+ * UI state. If the record cannot be read, this tab's copy is shown.
  */
 async function conversation(tripId: string, language: Language): Promise<TripMessage[]> {
   const local = readMessages(tripId);
@@ -173,14 +176,24 @@ async function conversation(tripId: string, language: Language): Promise<TripMes
   try { turns = (await api<{ turns?: ServerTurn[] }>(`/v1/web/trips/${encodeURIComponent(tripId)}/chat?limit=40`, language)).turns ?? []; }
   catch { return local; }
   const extras = new Map(local.filter((message) => message.role === "assistant").map((message) => [message.text, message]));
+  const extrasByCase = new Map(local.filter((message) => message.role === "assistant" && message.caseId).map((message) => [message.caseId, message]));
   const recorded = turns.filter((turn) => typeof turn.text === "string" && turn.text).map((turn, index) => {
     const role = turn.role === "customer" ? "user" as const : "assistant" as const;
-    const kept = role === "assistant" ? extras.get(turn.text as string) : undefined;
-    return { id: `chat-${turn.case_id ?? "x"}-${index}`, role, text: turn.text as string, createdAt: turn.at ?? "",
+    const reply = role === "assistant" ? turn.reply : undefined;
+    const text = typeof reply?.answer_web === "string" ? reply.answer_web : turn.text as string;
+    const kept = role === "assistant" ? (turn.case_id ? extrasByCase.get(turn.case_id)
+      ?? [extras.get(text), extras.get(turn.text as string)].find((entry) => entry && !entry.caseId)
+      : extras.get(text) ?? extras.get(turn.text as string)) : undefined;
+    return { id: `chat-${turn.turn_id ?? `${turn.case_id ?? "x"}-${index}`}`, role,
+      ...(turn.case_id ? { caseId: turn.case_id } : {}),
+      text, createdAt: turn.at ?? "",
       ...(kept?.choices ? { choices: kept.choices } : {}), ...(kept?.basis ? { basis: kept.basis } : {}),
       ...(kept?.changedTo ? { changedTo: kept.changedTo } : {}),
       ...(kept?.choicesTitle ? { choicesTitle: kept.choicesTitle } : {}), ...(kept?.more ? { more: kept.more } : {}),
-      ...(kept?.needsLocation ? { needsLocation: true } : {}) };
+      ...(kept?.needsLocation ? { needsLocation: true } : {}), ...(kept?.awaitingReply ? { awaitingReply: true } : {}),
+      ...(reply?.choices ? { choices: choicesOf(reply.choices) } : {}),
+      ...(typeof reply?.choices_title === "string" ? { choicesTitle: reply.choices_title } : {}),
+      ...(typeof reply?.more === "string" ? { more: reply.more } : {}) };
   });
   // ★The record can lag the reply this tab just got (the server may finish writing it after answering). What this tab
   //   sent or received after the record's last turn is kept at the end — never dropped, never shown twice.
@@ -189,14 +202,22 @@ async function conversation(tripId: string, language: Language): Promise<TripMes
   //   *before* this tab received it — a time rule showed every answer twice (2026-09-29 real server, user report).
   //   A question and its answer from this tab are added only when the answer is not in the record yet.
   const answered = new Set(recorded.filter((message) => message.role === "assistant").map((message) => message.text));
+  const cases = new Set(recorded.filter((message) => message.role === "assistant").map((message) => message.caseId).filter(Boolean));
+  const cutoff = Date.parse(recorded[0]?.createdAt ?? "");
+  const eligible = (message: TripMessage) => message.caseId ? !cases.has(message.caseId)
+    && (!Number.isFinite(cutoff) || Date.parse(message.createdAt) >= cutoff)
+    : (!Number.isFinite(cutoff) || Date.parse(message.createdAt) >= cutoff);
   const tail: TripMessage[] = [];
   for (let index = 0; index < local.length; index += 1) {
     const message = local[index];
     const reply = message.role === "user" ? local[index + 1] : undefined;
     if (message.role === "user" && reply?.role === "assistant") {
-      if (!answered.has(reply.text)) tail.push(message, reply);
+      if (eligible(reply) && (reply.caseId || !answered.has(reply.text))) {
+        if (!message.caseId || !recorded.some((entry) => entry.caseId === message.caseId && entry.role === "user")) tail.push(message);
+        tail.push(reply);
+      }
       index += 1;
-    } else if (message.role === "assistant" && !answered.has(message.text)) tail.push(message);
+    } else if (message.role === "assistant" && eligible(message) && !answered.has(message.text)) tail.push(message);
   }
   return [...recorded, ...tail];
 }
@@ -230,9 +251,10 @@ function basisOf(raw: unknown[] | null | undefined): string[] {
 }
 
 /** 「다음 중 하나인가요?」 — only choices with a sentence to send are kept. */
-function choicesOf(raw: { label?: unknown; message?: unknown }[] | null | undefined): { label: string; message: string }[] {
+function choicesOf(raw: ServerChoice[] | null | undefined): NonNullable<TripMessage["choices"]> {
   return (raw ?? []).flatMap((choice) => typeof choice?.message === "string" && choice.message.trim()
-    ? [{ label: typeof choice.label === "string" && choice.label.trim() ? choice.label : choice.message, message: choice.message }] : []);
+    ? [{ label: typeof choice.label === "string" && choice.label.trim() ? choice.label : choice.message, message: choice.message,
+      ...(typeof choice.item_id === "string" && choice.item_id.trim() ? { itemId: choice.item_id } : {}) }] : []);
 }
 
 function replyFor(result: { status?: string; case_status?: string; answer?: string }, t: Translate): string {
@@ -278,6 +300,7 @@ async function read(tripId: string, language: Language): Promise<Trip> {
     planUrl: server.plan_url || undefined,
     version: typeof server.version === "number" ? server.version : undefined,
     safety: safetyOf(server.safety),
+    simulation: server.simulation ?? null,
     guardian: guardianOf(server.guardian),
     history: (server.history ?? []).map(change),
     warnings: (server.warnings ?? []).map(warning).filter((item): item is TripWarning => item !== null),
@@ -291,13 +314,6 @@ async function read(tripId: string, language: Language): Promise<Trip> {
     }))),
   };
 }
-
-/**
- * A message whose send failed, by trip. Sending the same text again reuses its `request_id`, so a message the server
- * did receive (the reply was lost on the way back) is not acted on twice — the server answers a known `request_id` with
- * the first result (`open_case`). Cleared once the server answers.
- */
-const unanswered = new Map<string, { message: string; itemId: string | null; requestId: string }>();
 
 /**
  * ★`[2026-10-03]` 여행 삭제 — 서버에 아직 없다(`DELETE`도 `POST …/delete`도 `app/` 의 라우트에 없음, 백엔드 요청서
@@ -323,6 +339,10 @@ async function removeTrip(tripId: string, language: Language): Promise<void> {
 
 /** Live adapter over `/v1/web/*`. Registration goes through the plan-check screen (`lib/live/intake*.ts`), not through here. */
 export function createLiveGateway(): TripGateway {
+  // Resume credentials belong to one trip and login session. Reloads deliberately leave correlation to the API.
+  const pending = new Map<string, { resume: TripMessageResume; session: string | null }>();
+  // Failed sends retain the same request id and resume credentials, including on a user-triggered retry.
+  const sending = new Map<string, { message: string; itemId: string | null; requestId: string; resume?: TripMessageResume }>();
   return {
     async listTrips(language) {
       // ★No session means this browser has registered nothing. Asking with the list would make a guest session — a new server user —
@@ -332,35 +352,53 @@ export function createLiveGateway(): TripGateway {
       return trips.map((row) => ({ id: row.trip_id, title: row.title, createdAt: row.created_at, version: row.version }));
     },
     getTrip: read,
-    deleteTrip: removeTrip,
-    async sendMessage(tripId, message, language, itemId, location, onProgress) {
+    async deleteTrip(tripId, language) {
+      await removeTrip(tripId, language);
+      pending.delete(tripId);
+      sending.delete(tripId);
+    },
+    async sendMessage(tripId, message, language, itemId, location, onProgress, explicitResume) {
       const t = translator(language);
       const now = new Date().toISOString();
-      const earlier = unanswered.get(tripId);
-      const requestId = earlier && earlier.message === message && earlier.itemId === (itemId ?? null)
+      const waiting = pending.get(tripId);
+      if (waiting && waiting.session !== (currentSession()?.csrf ?? null)) { pending.delete(tripId); sending.delete(tripId); }
+      const earlier = sending.get(tripId);
+      const retry = earlier && earlier.message === message && earlier.itemId === (itemId ?? null)
+        && (!explicitResume || (earlier.resume?.case_id === explicitResume.case_id
+          && earlier.resume.resume_token === explicitResume.resume_token && earlier.resume.expected_version === explicitResume.expected_version));
+      const requestId = retry
         ? earlier.requestId : `web-${now}-${Math.random().toString(36).slice(2, 8)}`;
-      unanswered.set(tripId, { message, itemId: itemId ?? null, requestId });
+      const resume = retry ? earlier.resume : explicitResume ?? pending.get(tripId)?.resume;
+      sending.set(tripId, { message, itemId: itemId ?? null, requestId, resume });
       // ★`[2026-10-02]` Asked as a stream, the server says what it is doing while the model works (`stream.ts`); a lost line
       //   sends the same `request_id` again, which the server answers without acting twice.
-      const result = await streamApi<{ status?: string; case_status?: string; answer?: string; basis_sources?: unknown[] | null; choices?: { label?: unknown; message?: unknown }[] | null;
+      const result = await streamApi<{ status?: string; case_status?: string; case_id?: string; version?: number; resume_token?: string | null;
+        required_input_schema?: Record<string, unknown> | null; answer?: string; basis_sources?: unknown[] | null; choices?: ServerChoice[] | null;
         outcome?: { status?: string; version?: unknown } | null; more?: unknown; choices_title?: unknown; needs_location?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(itemId ? { item_id: itemId } : {}),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(resume ?? {}), ...(itemId ? { item_id: itemId } : {}),
           // ★Only when the customer pressed 「내 위치 알려 주고 다시 묻기」 — never attached on its own.
           ...(location ? { location: { lat: location.lat, lng: location.lng, accuracy_m: location.accuracyM, at: location.at } } : {}) }),
       }, onProgress);
-      unanswered.delete(tripId);
+      sending.delete(tripId);
+      const awaitingReply = result.case_status === "waiting_input";
+      if (awaitingReply && typeof result.case_id === "string" && result.case_id) {
+        pending.set(tripId, { session: currentSession()?.csrf ?? null, resume: { case_id: result.case_id,
+          ...(typeof result.resume_token === "string" && result.resume_token ? { resume_token: result.resume_token } : {}),
+          ...(typeof result.version === "number" && Number.isInteger(result.version) ? { expected_version: result.version } : {}) } });
+      } else pending.delete(tripId);
       const sent: TripMessage[] = [
-        { id: `${requestId}-q`, role: "user" as const, text: message, createdAt: now },
-        { id: `${requestId}-a`, role: "assistant" as const, text: replyFor(result, t), createdAt: new Date().toISOString(),
+        { id: `${requestId}-q`, caseId: result.case_id, role: "user" as const, text: message, createdAt: now },
+        { id: `${requestId}-a`, caseId: result.case_id, role: "assistant" as const, text: replyFor(result, t), createdAt: new Date().toISOString(),
           ...(basisOf(result.basis_sources).length ? { basis: basisOf(result.basis_sources) } : {}),
           ...(choicesOf(result.choices).length ? { choices: choicesOf(result.choices) } : {}),
           ...(typeof result.choices_title === "string" && result.choices_title.trim() ? { choicesTitle: result.choices_title.trim() } : {}),
           ...(typeof result.more === "string" && result.more.trim() ? { more: result.more.trim() } : {}),
           ...(result.needs_location === true && !location ? { needsLocation: true } : {}),
+          ...(awaitingReply ? { awaitingReply: true } : {}),
           // ★A change the customer asked for in chat can be undone from the answer (user decision 2026-09-29).
           ...(result.status === "adjusted" && typeof result.outcome?.version === "number" && result.outcome.version > 1
             ? { changedTo: result.outcome.version } : {}) }];
-      writeMessages(tripId, [...readMessages(tripId), ...sent]);
+      writeMessages(tripId, [...readMessages(tripId).map((previous) => ({ ...previous, awaitingReply: false })), ...sent]);
       // ★Sending and re-reading are two steps (2026-09-30, teammate question Q-05). The server has answered; a failed
       //   re-read must not turn that into "not sent" — the customer would send again and the change would run twice.
       //   The caller shows the reply it got (`detail.sent`) and re-reads later.

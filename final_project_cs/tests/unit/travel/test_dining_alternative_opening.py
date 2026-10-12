@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 
 from app.domains.travel_ops.instances.dining import DiningTeam
-from app.domains.travel_ops.instances.dining import ledger as dining_ledger_impl
+from app.domains.travel_ops.components.team_hooks import dining_ledger
 from app.domains.travel_ops.components.itinerary.itinerary import Item
 from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_closed, plan_closed_on_day, plan_delay
 from app.domains.travel_ops.components.planning.replan import dining_candidates, dining_fits
@@ -142,7 +142,6 @@ def test_trip_desk_uses_its_tenant_when_reading_alternative_states(monkeypatch):
     from contextlib import nullcontext
     from types import SimpleNamespace
 
-    from app.domains.travel_ops.instances.dining import ledger
     from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
 
     origin, candidate = place(), place(hours=False)
@@ -154,7 +153,7 @@ def test_trip_desk_uses_its_tenant_when_reading_alternative_states(monkeypatch):
         seen.append((connection, tenant_id, slots))
         return {s["place_id"]: {"linked": True, "open_at_slot": True} for s in slots}
 
-    monkeypatch.setattr(ledger, "dining_states", states, raising=False)
+    monkeypatch.setattr(dining_ledger, "states", states)
     desk = TripDesk(store=SimpleNamespace(tenant_id="tenant-a"), connection_factory=lambda: nullcontext(conn))
     monkeypatch.setattr(desk, "_read", lambda _: ({"version": 1}, [item], [origin, candidate]))
     monkeypatch.setattr(desk, "_outcome", lambda _id, _version, _items, plan, **_: plan)
@@ -164,9 +163,9 @@ def test_trip_desk_uses_its_tenant_when_reading_alternative_states(monkeypatch):
 
 
 def test_batch_read_tool_uses_scope_tenant_and_existing_ledger_lookup(monkeypatch):
+    from app.domains.travel_ops.instances.dining import ledger
     from contextlib import nullcontext
 
-    from app.domains.travel_ops.instances.dining import ledger
     from app.tools.read_tools import ReadToolbox
 
     conn, seen = object(), []
@@ -208,14 +207,14 @@ def test_dawn_check_wires_ledger_without_calling_google_for_alternatives(monkeyp
 
     # ★`[2026-10-06]` 새벽 점검은 요식 팀을 직접 부르지 않는다 — 조립이 꽂아 둔 자리를 거친다(D-CS-013).
     #   그래서 **꽂는 쪽**(요식 원장)을 바꿔 끼운다. 자리가 호출 때 모듈에서 읽으므로 그대로 먹는다.
-    monkeypatch.setattr(dining_ledger_impl, "dining_states", states)
+    monkeypatch.setattr(dining_ledger, "state_lookup", lambda c, t: lambda slots: states(c, t, slots))
     monkeypatch.setattr(dawn_check, "apply_or_ask", lambda *_, **__: {"status": "adjusted", "version": 2})
     checker = dawn_check.DawnCheck(
         store=store, connection_factory=lambda: nullcontext(conn), clock=lambda: at("03:00"),
         source=SimpleNamespace(open_verdict=google_verdict), start=at("03:00").time(), until=at("08:00").time())
     monkeypatch.setattr(checker, "_provider_id", lambda *_: "google-original")
     monkeypatch.setattr(checker, "_closed_places", lambda *_: set())
-    monkeypatch.setattr(checker, "_insert_check", lambda *_: None)
+    monkeypatch.setattr(checker, "_insert_check", lambda *_, **__: None)
     result = dawn_check.DawnResult()
     checker._check(uuid4(), item, item.starts_at.date(), [origin, candidate], result)
     assert len(result.adjusted) == 1 and result.unresolved == []

@@ -1,0 +1,43 @@
+# 환경 수집 — C — 2026-10-06T06:10:56Z
+## GPU
+NVIDIA RTX 4000 Ada Generation, 580.173.02, 20475 MiB
+CUDA Version: 13.0
+## CPU·메모리
+128
+ AMD EPYC 7702 64-Core Processor
+Mem:             503         103         236          26         193         399
+## OS
+PRETTY_NAME="Ubuntu 24.04.3 LTS"
+## 파이썬 환경별 라이브러리
+- /usr/bin/python3: 3.12.3
+    torch 2.8.0+cu128
+    numpy 2.1.2
+- /opt/venv/bin/python: 3.12.3
+    torch 2.11.0+cu128
+    transformers 5.18.0
+    peft 0.21.2
+    accelerate 1.15.0
+    sentence_transformers 6.1.0
+    huggingface_hub 1.33.0
+    safetensors 0.8.0
+    numpy 2.5.3
+    scikit-learn 1.9.1
+## 추론 엔진
+/opt/llama/bin/llama-server: version: 0.5.0-dev (build 1, commit 4ebdf2c)
+## 허깅페이스 캐시(수정판 해시 · 받은 시각)
+## 폴더로 받은 모델(수정판 해시 · 받은 시각 · 크기)
+## GGUF 파일(경로 · 크기 · 수정 시각)
+## LoRA 어댑터(기반 모델 · r · alpha · 수정 시각)
+## 끝
+77d14580c6732ca2f3745750c1dc1fd446d8bcee
+e4bt-Q8_0.gguf sha256 ec8928ddd97522596fe4e11bc0561212c352cc29aaea20f9d8d7813b22d812c5 (서버 B 원본과 같음)
+{"name": "intfloat/multilingual-e5-base", "heads": {"intent": ["itinerary_submit", "incident_report", "confirm_request", "adjust_reject", "other"], "sentiment": ["positive", "neutral", "negative"], "severity": ["low", "medium", "high", "critical"], "case_type": ["activity", "dining", "mobility", "booking", "lodging", "flight", "other"]}, "epochs": 20, "lr": 3e-05, "maxlen": 96, "dev_macro_f1": 0.8972}
+## 모델 파일 확인(수동 보충 2026-10-06)
+Winnow-E4B Q8 GGUF 허깅페이스 수정판(서버 C 에서 받은 것): aabbd52f5dfce0f7d9d22ca9e53e75259d865239 — 서버 A 의 사본(수정판 1b257e8f…, 2026-10-03)과 수정판 해시는 다르지만 파일 내용은 SHA-256 840e3f50e5a9c218727f44e121d1b37cc9e2c3b318c8eb422ba6ef2e27b618a2 로 같다(저장소가 그 사이 갱신된 것으로 보인다).
+가르친 E4B Q8 GGUF: SHA-256 ec8928ddd97522596fe4e11bc0561212c352cc29aaea20f9d8d7813b22d812c5 (서버 B 원본과 같음)
+
+## 모델 파일 확인(수동 보충 2026-10-06)
+Winnow-E4B Q8 GGUF 허깅페이스 수정판(서버 C 에서 받은 것): aabbd52f5dfce0f7d9d22ca9e53e75259d865239 - 서버 A 의 사본(수정판 1b257e8f..., 2026-10-03)과 수정판 해시는 다르지만 파일 내용은 SHA-256 840e3f50e5a9c218727f44e121d1b37cc9e2c3b318c8eb422ba6ef2e27b618a2 로 같다(저장소가 그 사이 갱신된 것으로 보인다).
+가르친 E4B Q8 GGUF: SHA-256 ec8928ddd97522596fe4e11bc0561212c352cc29aaea20f9d8d7813b22d812c5 (서버 B 원본과 같음)
+허깅페이스 캐시(서버 C, HF_HOME=/root/hf): Qwen/Qwen3-Embedding-0.6B 97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3 · intfloat/multilingual-e5-base d128750597153bb5987e10b1c3493a34e5a4502a (둘 다 서버 A·B 의 수정판과 같다) · 받은 시각 2026-10-06 05:08~05:13 UTC
+winnow-inference 커밋 77d14580c6732ca2f3745750c1dc1fd446d8bcee (서버 A 에서 복사)

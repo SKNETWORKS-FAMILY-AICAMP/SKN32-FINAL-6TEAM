@@ -1,0 +1,214 @@
+@startuml
+title A-COP PostgreSQL ERD
+left to right direction
+skinparam backgroundColor #faf9ff
+skinparam shadowing false
+skinparam linetype ortho
+skinparam ArrowColor #4b5563
+skinparam LineColor #4b5563
+skinparam packageStyle rectangle
+skinparam package {
+  BackgroundColor<<tenant>> #dbeafe
+  BorderColor<<tenant>> #2563eb
+  BackgroundColor<<casecore>> #fef3c7
+  BorderColor<<casecore>> #d97706
+  BackgroundColor<<execution>> #dcfce7
+  BorderColor<<execution>> #16a34a
+  BackgroundColor<<action>> #fee2e2
+  BorderColor<<action>> #dc2626
+  BackgroundColor<<messaging>> #e0e7ff
+  BorderColor<<messaging>> #4f46e5
+  BackgroundColor<<llm>> #ede9fe
+  BorderColor<<llm>> #7c3aed
+  BackgroundColor<<rag>> #cffafe
+  BorderColor<<rag>> #0891b2
+  BackgroundColor<<analytics>> #fce7f3
+  BorderColor<<analytics>> #db2777
+}
+skinparam entity {
+  BorderColor #7c3aed
+  BackgroundColor #f5f3ff
+}
+
+package "테넌시 / 고객" <<tenant>> {
+  entity tenants {
+    +tenant_id: text <<PK>>
+    name: text
+  }
+  entity customers {
+    +customer_id: uuid <<PK>>
+    tenant_id: text <<FK>>
+    external_id: text
+    .. UNIQUE(tenant_id, external_id) ..
+  }
+  entity customer_cases {
+    +case_id: uuid <<PK>>
+    tenant_id: text
+    customer_id: uuid <<FK>>
+    status: case_status
+    subject: text
+    version: int
+  }
+}
+
+package "Case 코어 (이벤트 소싱)" <<casecore>> {
+  entity case_events {
+    +event_id: uuid <<PK>>
+    tenant_id: text
+    case_id: uuid <<FK>>
+    aggregate_version: int
+    event_type: text
+    .. UNIQUE(case_id, aggregate_version) ..
+  }
+}
+
+package "실행" <<execution>> {
+  entity agent_runs {
+    +run_id: uuid <<PK>>
+    tenant_id: text
+    case_id: uuid <<FK>>
+    graph_revision: text
+    status: text
+  }
+  entity team_tasks {
+    +task_id: uuid <<PK>>
+    run_id: uuid <<FK>>
+    team_id: text
+    contract_version: text
+    status: text
+  }
+}
+
+package "Action · 승인" <<action>> {
+  entity action_requests {
+    +action_id: uuid <<PK>>
+    tenant_id: text
+    case_id: uuid <<FK>>
+    action_type: text
+    idempotency_key: text
+    status: action_status
+    .. UNIQUE(tenant_id, idempotency_key) ..
+  }
+  entity action_approvals {
+    +approval_id: uuid <<PK>>
+    action_id: uuid <<FK>>
+    approver_id: text
+    decision: text
+  }
+}
+
+package "메시징" <<messaging>> {
+  entity outbox {
+    +message_id: uuid <<PK>>
+    tenant_id: text
+    topic: text
+    dedupe_key: text
+    status: text
+    .. UNIQUE(topic, dedupe_key) ..
+  }
+}
+
+package "LLM · 프롬프트" <<llm>> {
+  entity prompts {
+    +prompt_id: uuid <<PK>>
+    prompt_key: text
+    version: text
+    sha256: text
+    model_family: text
+    active: boolean
+    .. UNIQUE(prompt_key, version) ..
+    .. UNIQUE(prompt_key, sha256) ..
+  }
+  entity llm_calls {
+    +call_id: uuid <<PK>>
+    run_id: uuid <<FK>>
+    prompt_id: uuid <<FK>>
+    provider: text
+    model: text
+    cost_microusd: bigint
+  }
+}
+
+package "지식 (RAG)" <<rag>> {
+  entity knowledge_documents {
+    +document_id: uuid <<PK>>
+    tenant_id: text
+    title: text
+    source_uri: text
+    scope: text
+    version: text
+  }
+  entity knowledge_chunks {
+    +chunk_id: uuid <<PK>>
+    document_id: uuid <<FK>>
+    chunk_no: int
+    embedding: vector(1536)
+    .. UNIQUE(document_id, chunk_no) ..
+  }
+}
+
+package "분석" <<analytics>> {
+  entity feedback_analytics_reports {
+    +report_id: uuid <<PK>>
+    tenant_id: text
+    period_start: date
+    period_end: date
+    metrics_json: jsonb
+    .. UNIQUE(tenant_id, period_start, period_end) ..
+  }
+}
+
+enum case_status {
+  new
+  classifying
+  routing
+  running
+  waiting_input
+  waiting_approval
+  waiting_external
+  resuming
+  resolved
+  escalated
+  failed
+  cancelled
+}
+
+enum action_status {
+  proposed
+  pending_approval
+  approved
+  rejected
+  executing
+  succeeded
+  failed
+  unknown
+  cancelled
+}
+
+tenants ||--o{ customers
+customers ||--o{ customer_cases
+customer_cases ||--o{ case_events
+customer_cases ||--o{ agent_runs
+agent_runs ||--o{ team_tasks
+customer_cases ||--o{ action_requests
+action_requests ||--o{ action_approvals
+agent_runs ||--o{ llm_calls
+prompts ||--o{ llm_calls
+knowledge_documents ||--o{ knowledge_chunks
+
+case_status .. customer_cases : status
+action_status .. action_requests : status
+
+note right of knowledge_chunks
+embedding vector(1536)는 pgvector 확장을 사용한다.
+end note
+
+legend bottom right
+|=표기 |=의미|
+|<#f5f3ff>|테이블|
+|+컬럼|PK|
+|<<FK>>|외래 키|
+|1 대 다|실선 관계의 카디널리티|
+|ENUM|DDL의 상태 타입|
+endlegend
+@enduml

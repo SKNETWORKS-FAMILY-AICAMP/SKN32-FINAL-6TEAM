@@ -88,6 +88,62 @@ def ledger_ready(conn) -> bool:
         return bool(cur.fetchone()[0])
 
 
+def _catalog_uid(conn, content_id: str | None, place: dict[str, Any]) -> str | None:
+    """읽은 장소 → 원장 가게 번호. 관광공사 번호(`tourapi_kor_food`)가 하나의 가게로 이어질 때만, 번호가 없으면 이름이 원장에서 하나로 정해질 때만.
+    둘 이상이면 고르지 않는다(모름) — 다른 가게의 영업시간으로 판정하는 것이 가장 나쁘다(`ledger.slot_verdicts` · `find_place_by_name` 과 같은 규칙).
+
+    ★`[2026-10-10]` 장소가 원장 가게 번호(`dining_place_uid`)를 이미 들고 있으면 그것이 먼저다 — 전에는 이 값을 안 보고 관광공사 번호로만 찾아서
+      관광공사 번호가 없는 원장 가게(미쉐린 · 노포 큐레이션 · 하동관 …, 로컬 전체 원장 1,888곳 중 325곳)는 확인 화면에서 늘 「모름」이었다.
+      이름으로 찾았는데 관광공사 번호가 없으면 **정확히 같은 이름 하나**일 때만 그 가게 번호를 쓴다(지점 · 앞부분 · 오타로 고른 가게는 쓰지 않는다).
+      결함: `wiki/records/reports/debugs/2026-10-10_고른_원장식당이_원장과_끊긴다.md`"""
+
+    uid = str(place.get("dining_place_uid") or "").strip()
+    if uid:
+        with conn.cursor() as cur:
+            cur.execute("SELECT place_uid::text FROM dining.dn_place WHERE place_uid::text = %s AND record_status <> 'closed'",
+                        (uid,))
+            row = cur.fetchone()
+        return str(row[0]) if row else None
+    if not content_id:
+        found = find_place_by_name(conn, str(place.get("name") or ""))
+        content_id = str(found["content_id"]) if found and found.get("content_id") else None
+        if (content_id is None and found and found.get("match") == "exact" and not found.get("needs_review")
+                and found.get("dining_place_uid")):
+            return str(found["dining_place_uid"])
+    if not content_id:
+        return None
+    with conn.cursor() as cur:
+        cur.execute("SELECT p.place_uid::text FROM dining.dn_place p WHERE p.record_status <> 'closed' AND p.place_uid IN "
+                    "(SELECT r.place_uid FROM dining.dn_source_record r WHERE r.source_code = 'tourapi_kor_food' "
+                    "AND r.external_id = %s AND r.match_status <> 'rejected') LIMIT 2", (content_id,))
+        rows = cur.fetchall()
+    return str(rows[0][0]) if len(rows) == 1 else None
+
+
+def catalog_state(conn, content_id, place, start, end, *, order_margin_min=DEFAULT_ORDER_MARGIN_MIN):
+    """등록 전 원장 판정도 팀 내부의 단일 가게 번호 확인을 거친다."""
+    uid = _catalog_uid(conn, content_id, place)
+    if uid is None:
+        return None
+    with conn.cursor() as cur:
+        at = start if start.tzinfo else start.replace(tzinfo=KST)
+        until = end or at
+        if until.tzinfo is None:
+            until = until.replace(tzinfo=KST)
+        cur.execute("SELECT dining.open_at_slot(%s::uuid, %s, %s), dining.needs_last_order_check(%s::uuid, %s, %s), "
+                    "dining.holiday_context(%s::uuid, %s), "
+                    "dining.core_attributes(%s::uuid, (%s::timestamptz AT TIME ZONE 'Asia/Seoul')::date)",
+                    (uid, at, until, uid, at, until, uid, at, uid, at))
+        open_at, needs_check, holiday, attributes = cur.fetchone()
+        order_ok = None
+        if open_at is True:
+            cur.execute("SELECT dining.open_at_slot(%s::uuid, %s, %s)",
+                        (uid, at + timedelta(minutes=order_margin_min), until))
+            order_ok = cur.fetchone()[0]
+    return {"open_at_slot": open_at, "order_ok": order_ok, "needs_check": needs_check,
+            "attributes": attributes, "holiday_context": holiday}
+
+
 def _unavailable(place_id: str | None) -> dict[str, Any]:
     """원장이 없는 DB. 「영업 안 함」이 아니라 「원장에 물을 수 없음」이다."""
     return {"place_id": str(place_id) if place_id is not None else None, "linked": False,

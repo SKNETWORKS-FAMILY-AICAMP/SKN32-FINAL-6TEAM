@@ -3,7 +3,7 @@
 
 # Case 상태 전이도 (자동 생성)
 
-상태 12개 · 전이 25개. 이 표에 없는 전이는 `transition_case()` 가 거부한다.
+상태 12개 · 전이 26개. 이 표에 없는 전이는 `transition_case()` 가 거부한다.
 
 ```mermaid
 stateDiagram-v2
@@ -30,6 +30,7 @@ stateDiagram-v2
     waiting_external --> escalated: wait_expired
     resuming --> escalated: resume_failed
     resuming --> running: resumed
+    resuming --> resuming: routed
     resolved --> cancelled: cancelled_by_user
     escalated --> cancelled: cancelled_by_user
     failed --> escalated: failure_escalated
@@ -62,6 +63,7 @@ stateDiagram-v2
 |  | `wait_expired` | `escalated` |
 | `resuming` | `resume_failed` | `escalated` |
 |  | `resumed` | `running` |
+|  | `routed` | `resuming` |
 | `resolved` | `cancelled_by_user` | `cancelled` |
 | `escalated` | `cancelled_by_user` | `cancelled` |
 | `failed` | `failure_escalated` | `escalated` |

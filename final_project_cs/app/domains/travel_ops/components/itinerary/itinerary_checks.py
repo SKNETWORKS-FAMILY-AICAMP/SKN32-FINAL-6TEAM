@@ -261,8 +261,12 @@ def with_ledger(parts: Iterable[Part],
              for part in parts if part.kind == "dining" and (key := _ledger_key(part))]
     if not slots:
         return parts
+    from app.core.team_availability import TeamUnavailable
+
     try:
         verdicts = lookup(slots)
+    except TeamUnavailable:
+        raise
     except Exception as exc:   # noqa: BLE001 — 요식 표가 없는 DB · 연결 실패. 판정하지 않는다(모름)
         logger.warning("dining ledger verdicts unavailable slots=%d reason=%s: %s",
                        len(slots), type(exc).__name__, str(exc)[:200])

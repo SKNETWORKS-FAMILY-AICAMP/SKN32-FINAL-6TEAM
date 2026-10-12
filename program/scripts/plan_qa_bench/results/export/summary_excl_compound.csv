@@ -1,0 +1,48 @@
+﻿model,kind,fair_comparison,n_excl,correct_excl,n_compound,correct_compound,acc_excl,acc_compound
+⚠ 공정 비교 아님 · 참고용 기준선: Claude Opus 5.5 — 세트 묶음 풀이 + 생각 설정 통제 불가(켜졌을 수 있음),direct_reference_unfair,False,769,768,66,62,0.9987,0.9394
+⚠ 공정 비교 아님 · 참고용 기준선: Claude Fable 5.1 — 세트 묶음 풀이 + 생각 설정 통제 불가(켜졌을 수 있음),direct_reference_unfair,False,769,768,66,50,0.9987,0.7576
+Claude Opus 5.5 문제별(생각 끔·CLI),direct,True,769,764,66,22,0.9935,0.3333
+Claude Fable 5.1 문제별(생각 끔·CLI),direct,True,769,764,66,31,0.9935,0.4697
+Qwen3.8 27B (올라마),direct,True,769,749,66,44,0.974,0.6667
+decider-chat Gemma4-31B bf16,direct,True,769,748,66,53,0.9727,0.803
+L5 규칙 → OpenJev 26B(앞단 없음),combo,True,769,744,66,51,0.9675,0.7727
+"H4 규칙 → Decider-12B 확신 ≥ τ 이면 그대로, 아니면 L6",combo,True,769,744,66,48,0.9675,0.7273
+L5 규칙 → decider-chat 31B(앞단 없음),combo,True,769,744,66,51,0.9675,0.7727
+OpenJev 26B Q4_K_M,direct,True,769,743,66,53,0.9662,0.803
+L5 규칙 → Decider-12B(앞단 없음),combo,True,769,736,66,48,0.9571,0.7273
+Ens3 다수결(L6 · V9 · L5-Decider-12B),combo,True,769,736,66,55,0.9571,0.8333
+H2 L6 → E4B 확신 < τ 이면 Decider-12B,combo,True,769,734,66,52,0.9545,0.7879
+L3 규칙→26B,combo,True,769,733,66,46,0.9532,0.697
+L5 규칙 → Winnow-12B(앞단 없음),combo,True,769,733,66,45,0.9532,0.6818
+Gemma 4 26B-A4B Q4_K_M (올라마),direct,True,769,732,66,48,0.9519,0.7273
+Decider-12B 8비트,direct,True,769,729,66,50,0.948,0.7576
+Decider-12B bf16,direct,True,769,728,66,50,0.9467,0.7576
+L5 규칙 → pplx-decider 27B(앞단 없음),combo,True,769,728,66,47,0.9467,0.7121
+H1 L6 → (게이트 음성·E4B 없음)이면 Decider-12B,combo,True,769,725,66,52,0.9428,0.7879
+pplx-decider 27B NF4,direct,True,769,725,66,48,0.9428,0.7273
+"J2 로컬 확신도 앞단(E4B QAT 확신 ≥ τ 이면 그대로, 아니면 12B)",combo,True,769,724,66,51,0.9415,0.7727
+Winnow-12B Q8,direct,True,769,723,66,47,0.9402,0.7121
+L5 규칙 → Cygnet(앞단 없음),combo,True,769,722,66,43,0.9389,0.6515
+L1 규칙→E4B QAT,combo,True,769,719,66,51,0.935,0.7727
+L6 규칙→게이트(e16d 임베딩)→E4B QAT,combo,True,769,718,66,51,0.9337,0.7727
+L5 규칙 → Hopper 12B(앞단 없음),combo,True,769,717,66,51,0.9324,0.7727
+L2 규칙→12B,combo,True,769,709,66,46,0.922,0.697
+V2 ML 분기,combo,True,769,707,66,59,0.9194,0.8939
+V3 그래프 문지기,combo,True,769,707,66,60,0.9194,0.9091
+Jev-Omni 묶음 읽기(20개 이하씩),direct,True,769,706,66,42,0.9181,0.6364
+C1 V1 구조(넘김 = OpenJev 26B),combo,True,769,706,66,56,0.9181,0.8485
+"V9 전문가 구조(Jev 없음, E4B/E4B/12B)",combo,True,769,706,66,57,0.9181,0.8636
+C1 V1 구조(넘김 = decider-chat 31B),combo,True,769,705,66,59,0.9168,0.8939
+V5 RL 식 정책,combo,True,769,705,66,60,0.9168,0.9091
+Y2 게이트(e16d 임베딩),combo,True,769,704,66,61,0.9155,0.9242
+Gemma 4 12B (올라마),direct,True,769,703,66,48,0.9142,0.7273
+Gemma 4 E4B QAT (올라마),direct,True,769,701,66,52,0.9116,0.7879
+"Cygnet(얼린 Gemma-4-12B-it 글자 읽기, 8비트)",direct,True,769,698,66,44,0.9077,0.6667
+C1 V1 구조(넘김 = Decider-12B),combo,True,769,696,66,57,0.9051,0.8636
+C1 V1 구조(넘김 = Winnow-12B),combo,True,769,694,66,56,0.9025,0.8485
+V1 앞단 e16d,combo,True,769,694,66,61,0.9025,0.9242
+C1 V1 구조(넘김 = pplx-decider 27B),combo,True,769,694,66,56,0.9025,0.8485
+"Hopper 12B(얼린 Gemma-4-12B-it + LoRA r32, 8비트 적재)",direct,True,769,690,66,53,0.8973,0.803
+C1 V1 구조(넘김 = Cygnet),combo,True,769,689,66,54,0.896,0.8182
+C1 V1 구조(넘김 = Hopper 12B),combo,True,769,680,66,57,0.8843,0.8636
+B0 기준(e16c),combo,True,769,671,66,59,0.8726,0.8939

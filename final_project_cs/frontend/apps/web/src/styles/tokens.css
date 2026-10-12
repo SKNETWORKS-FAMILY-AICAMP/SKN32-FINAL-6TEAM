@@ -7,17 +7,6 @@
 :root, [data-theme="green"] {
   /* `[2026-10-06 사용자 지적 — 애니메이션을 전체적으로 부드럽게]` 움직임의 곡선과 시간은 이 셋만 쓴다: 부드럽게 감속(들어옴 · 미끄러짐) · 부드럽게 가속(나감) · 시간. */
   --ease-soft: cubic-bezier(.22, .8, .3, 1); --ease-leave: cubic-bezier(.4, 0, .8, .4); --motion-soft: 340ms;
-
-  --color-coordinate-shadow: #0005;
-  --color-shadow-light: #0002;
-  --color-brand-paper: #fff;
-  --color-edge-number-bg: #202020;
-  --mask-opaque: #000;
-  --color-brand-ink: #191919;
-  --color-brand-border: #d8dfdb;
-  --color-brand-kakao: #fee500;
-  --color-brand-naver: #03a94d;
-  --color-brand-discord: #5865f2;
   color-scheme: light;
   --color-text: #24392f;
   /* `[2026-10-07 사용자 결정 — 흐린 글자 한 단계 진하게]` 흐린 글자(--color-faint)는 흰 바탕 · 연한 바탕에서 읽기 기준 4.5:1 이상, 보조 글자(--color-muted)는 그보다 한 단계 진하게(5.5:1 이상). 이전: muted #6d7c73(4.4:1) · faint #a5b1a9(2.2:1) / 화이트 muted #86868c(3.6:1) · faint #b9b9bd(2.0:1) */
@@ -55,21 +44,42 @@
   --color-on-inverse: #ffffff;
   --color-scrim: rgba(36, 57, 47, 0.45);
   --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
+  /* 승인된 브랜드·시험 분류·지도 스택 색은 두 테마에서 동일하게 유지합니다. */
+  --color-shadow-soft: #0002;
+  --color-shadow-strong: #0005;
+  --color-dialog-backdrop: rgb(0 0 0 / 28%);
+  --color-social-surface: #ffffff;
+  --color-kakao-text: #191919;
+  --color-kakao-border: #d8dfdb;
+  --color-kakao: #fee500;
+  --color-naver: #03a94d;
+  --color-discord: #5865f2;
+  --color-map-stack: #202020;
+  --color-test-default-ink: #47565d;
+  --color-test-default-soft: #edf1f3;
+  --color-test-default-border: #cbd4d9;
+  --color-test-normal-ink: #235d42;
+  --color-test-normal-soft: #e8f3ec;
+  --color-test-normal-border: #c4ddce;
+  --color-test-time-ink: #795111;
+  --color-test-time-soft: #fff3d7;
+  --color-test-time-border: #ead7a9;
+  --color-test-hours-ink: #943f33;
+  --color-test-hours-soft: #fcece7;
+  --color-test-hours-border: #e9c8be;
+  --color-test-place-ink: #69498c;
+  --color-test-place-soft: #f1ebf8;
+  --color-test-place-border: #d8c9e8;
+  --color-test-mobility-ink: #285f89;
+  --color-test-mobility-soft: #e8f1fa;
+  --color-test-mobility-border: #bed4e7;
+  --color-test-input-ink: #226765;
+  --color-test-input-soft: #e6f3f1;
+  --color-test-input-border: #bcdcd7;
 }
 
 /* White theme — the plan-check streaming mockup (`mockups/tripilot-plan-check-streaming.html`). */
 [data-theme="neutral"] {
-  --color-coordinate-shadow: #0005;
-  --color-shadow-light: #0002;
-  --color-brand-paper: #fff;
-  --color-edge-number-bg: #202020;
-  --mask-opaque: #000;
-  --color-brand-ink: #191919;
-  --color-brand-border: #d8dfdb;
-  --color-brand-kakao: #fee500;
-  --color-brand-naver: #03a94d;
-  --color-brand-discord: #5865f2;
-
   --color-text: #1c1c1e;
   --color-muted: #5f5f65;
   --color-border: #dadad6;
@@ -103,4 +113,36 @@
   --color-inverse: #26262a;
   --color-on-inverse: #ffffff;
   --color-scrim: rgba(28, 28, 30, 0.45);
+  /* 승인된 브랜드·시험 분류·지도 스택 색은 두 테마에서 동일하게 유지합니다. */
+  --color-shadow-soft: #0002;
+  --color-shadow-strong: #0005;
+  --color-dialog-backdrop: rgb(0 0 0 / 28%);
+  --color-social-surface: #ffffff;
+  --color-kakao-text: #191919;
+  --color-kakao-border: #d8dfdb;
+  --color-kakao: #fee500;
+  --color-naver: #03a94d;
+  --color-discord: #5865f2;
+  --color-map-stack: #202020;
+  --color-test-default-ink: #47565d;
+  --color-test-default-soft: #edf1f3;
+  --color-test-default-border: #cbd4d9;
+  --color-test-normal-ink: #235d42;
+  --color-test-normal-soft: #e8f3ec;
+  --color-test-normal-border: #c4ddce;
+  --color-test-time-ink: #795111;
+  --color-test-time-soft: #fff3d7;
+  --color-test-time-border: #ead7a9;
+  --color-test-hours-ink: #943f33;
+  --color-test-hours-soft: #fcece7;
+  --color-test-hours-border: #e9c8be;
+  --color-test-place-ink: #69498c;
+  --color-test-place-soft: #f1ebf8;
+  --color-test-place-border: #d8c9e8;
+  --color-test-mobility-ink: #285f89;
+  --color-test-mobility-soft: #e8f1fa;
+  --color-test-mobility-border: #bed4e7;
+  --color-test-input-ink: #226765;
+  --color-test-input-soft: #e6f3f1;
+  --color-test-input-border: #bcdcd7;
 }

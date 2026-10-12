@@ -1,0 +1,105 @@
+{
+ "codex_made": [
+  {
+   "model": "Claude Fable 5.1(상용)",
+   "kind": "claude",
+   "note": "mix12 · 정답 집합 출제자",
+   "B": 653,
+   "C": 647,
+   "n": 659,
+   "comp": 50
+  },
+  {
+   "model": "Claude Opus 5.5(상용)",
+   "kind": "claude",
+   "note": "mix12 · 정답 집합 출제자",
+   "B": 649,
+   "C": 643,
+   "n": 659,
+   "comp": 50
+  },
+  {
+   "model": "Qwen3.8 27B(파인튜닝 없음, 로컬)",
+   "kind": "local",
+   "note": "",
+   "B": 642,
+   "C": 593,
+   "n": 659,
+   "comp": 50
+  },
+  {
+   "model": "Gemma 4 E4B 파인튜닝(약 4B, 로컬)",
+   "kind": "local_ft",
+   "note": "학습 자료를 Claude 가 만듦",
+   "B": 642,
+   "C": 592,
+   "n": 659,
+   "comp": 50
+  },
+  {
+   "model": "Gemma 4 26B-A4B(파인튜닝 없음, 로컬)",
+   "kind": "local",
+   "note": "",
+   "B": 625,
+   "C": 576,
+   "n": 659,
+   "comp": 50
+  }
+ ],
+ "claude_made": [
+  {
+   "model": "Codex Sol(상용)",
+   "kind": "codex",
+   "note": "mix8~11 출제자",
+   "B": 175,
+   "C": 175,
+   "n": 176,
+   "comp": 16
+  },
+  {
+   "model": "Codex Astra(상용)",
+   "kind": "codex",
+   "note": "mix8~11 출제자",
+   "B": 175,
+   "C": 175,
+   "n": 176,
+   "comp": 16
+  },
+  {
+   "model": "Gemma 4 E4B 파인튜닝(약 4B, 로컬)",
+   "kind": "local_ft",
+   "note": "학습 자료를 Claude 가 만듦",
+   "B": 174,
+   "C": 158,
+   "n": 176,
+   "comp": 16
+  },
+  {
+   "model": "Gemma 4 26B-A4B(파인튜닝 없음, 로컬)",
+   "kind": "local",
+   "note": "",
+   "B": 172,
+   "C": 156,
+   "n": 176,
+   "comp": 16
+  },
+  {
+   "model": "Qwen3.8 27B(파인튜닝 없음, 로컬)",
+   "kind": "local",
+   "note": "",
+   "B": 172,
+   "C": 156,
+   "n": 176,
+   "comp": 16
+  },
+  {
+   "model": "Codex Luna(상용)",
+   "kind": "codex",
+   "note": "mix8~11 출제자",
+   "B": 170,
+   "C": 170,
+   "n": 176,
+   "comp": 16
+  }
+ ]
+}

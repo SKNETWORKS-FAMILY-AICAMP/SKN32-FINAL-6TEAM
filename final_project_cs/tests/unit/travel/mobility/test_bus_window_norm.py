@@ -3,15 +3,8 @@
 # 판정 회귀(night_legs_v1.json)가 못 보는 것을 잠근다 — A21 보정 결과 자체(판정은 service_days=None 에서 먼저 끊긴다),
 # 혼합 캐시 중단, 24시 넘은 역전, 기준일보다 이른 날짜.
 import sys
-from pathlib import Path
 
-# ☆`[2026-09-29 문제목록 #56]` 저장소 맨 위를 parents[5] 로 세면 시험 폴더·스크립트 폴더를 옮길 때 엉뚱한 곳을 본다 —
-#   final_project_cs/ 가 있는 조상을 위로 찾는다(82: build_bus_all_v1 은 갱신 스크립트 자리 datasets/mobility/scripts/). 없으면 건너뛰지 않고 이유를 말하며 멈춘다(조용한 스킵 금지)
-REPO = next((p for p in Path(__file__).resolve().parents if (p / "final_project_cs" / "app").is_dir()), None)
-if REPO is None:
-    raise RuntimeError(f"final_project_cs/ 를 못 찾았다(시작: {Path(__file__).resolve()}) — 저장소 맨 위에 있어야 한다")
-sys.path.insert(0, str(REPO / "datasets" / "mobility" / "scripts"))
-from build_bus_all_v1 import normalize_window  # noqa: E402
+from scripts.mobility.bus_window import normalize_window
 
 B = "20260910"
 

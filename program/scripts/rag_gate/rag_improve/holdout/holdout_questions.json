@@ -1,0 +1,1564 @@
+{
+"questions": [
+{
+"q": "내일 하는 체험 오늘 취소해도 돼요?",
+"type": "answerable",
+"gold": [
+"t_doc_01#c4"
+],
+"partial": [
+"t_doc_01#c3",
+"t_doc_01#c1"
+],
+"writer_intent": "in_topic",
+"note": "72시간 미만은 요청 접수"
+},
+{
+"q": "시작 직전에 날짜 바꾸면 어떻게 돼요?",
+"type": "answerable",
+"gold": [
+"t_doc_01#c4"
+],
+"partial": [
+"t_doc_01#c2",
+"t_doc_01#c11"
+],
+"writer_intent": "in_topic",
+"note": "72시간 미만 승인 대기(변경에 준용)"
+},
+{
+"q": "예약한 클래스 시간만 옮기고 싶어요",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_01#c4",
+"t_doc_01#c11",
+"t_doc_01#c3"
+],
+"writer_intent": "in_topic",
+"note": "활동 시간 변경 절차 직접 서술 없음"
+},
+{
+"q": "당일에 못 가게 됐는데 어디다 말해요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_01#c4",
+"t_doc_06#c5",
+"t_doc_01#c1"
+],
+"writer_intent": "in_topic",
+"note": "접수처 불명확, 활동·식당 모호"
+},
+{
+"q": "며칠 전까지 빼야 손해 안 봐요?",
+"type": "answerable",
+"gold": [
+"t_doc_01#c3",
+"t_doc_11#c11"
+],
+"partial": [
+"t_doc_01#c4"
+],
+"writer_intent": "in_topic",
+"note": "시작 72시간 전까지 무료"
+},
+{
+"q": "이미 시작한 프로그램도 바꿀 수 있어?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_01#c4",
+"t_doc_01#c2"
+],
+"writer_intent": "in_topic",
+"note": "시작 후 변경 서술 없음"
+},
+{
+"q": "취소 누르면 바로 처리돼요?",
+"type": "answerable",
+"gold": [
+"t_doc_01#c4",
+"t_doc_11#c1"
+],
+"partial": [
+"t_doc_11#c6",
+"t_doc_10#c8"
+],
+"writer_intent": "in_topic",
+"note": "즉시 아님, 접수·판정·변경 단계"
+},
+{
+"q": "이 장소 그냥 가도 되는 곳인지 어떻게 알아요?",
+"type": "answerable",
+"gold": [
+"t_doc_02#c4"
+],
+"partial": [
+"t_doc_02#c2",
+"t_doc_02#c1"
+],
+"writer_intent": "in_topic",
+"note": "예약 안 받는다는 표기로 확인"
+},
+{
+"q": "예약 없이 들어가는 곳은 뭘 보고 구분해요?",
+"type": "answerable",
+"gold": [
+"t_doc_02#c4",
+"t_doc_02#c2"
+],
+"partial": [
+"t_doc_02#c1"
+],
+"writer_intent": "in_topic",
+"note": "표기와 일정 항목 속성"
+},
+{
+"q": "공짜로 볼 수 있는 곳은 어떻게 정해요?",
+"type": "answerable",
+"gold": [
+"t_doc_02#c3"
+],
+"partial": [
+"t_doc_02#c2",
+"t_doc_02#c5"
+],
+"writer_intent": "in_topic",
+"note": "장소 정보에 무료 표기 시만"
+},
+{
+"q": "입장료 안 받는 곳이면 취소할 것도 없나요?",
+"type": "answerable",
+"gold": [
+"t_doc_02#c5",
+"t_doc_02#c6"
+],
+"partial": [
+"t_doc_03#c8"
+],
+"writer_intent": "in_topic",
+"note": "무료·무예약만 취소 대상 아님"
+},
+{
+"q": "예약 안 한 일정도 문제 생기면 알려줘요?",
+"type": "answerable",
+"gold": [
+"t_doc_03#c10",
+"t_doc_03#c2"
+],
+"partial": [
+"t_doc_02#c5",
+"t_doc_03#c1"
+],
+"writer_intent": "in_topic",
+"note": "재확인 후 달라지면 안내"
+},
+{
+"q": "공짜 공원이 닫혀도 알려주나요?",
+"type": "answerable",
+"gold": [
+"t_doc_03#c2",
+"t_doc_03#c10"
+],
+"partial": [
+"t_doc_03#c1",
+"t_doc_03#c3",
+"t_doc_03#c5"
+],
+"writer_intent": "in_topic",
+"note": "휴관 재확인·변경 시 안내"
+},
+{
+"q": "궁궐이 갑자기 휴관이면 어떡해요?",
+"type": "answerable",
+"gold": [
+"t_doc_03#c2"
+],
+"partial": [
+"t_doc_03#c9",
+"t_doc_03#c1"
+],
+"writer_intent": "in_topic",
+"note": "임시 휴관 시 대체 제안"
+},
+{
+"q": "산책로가 막혔다는데 일정 어떻게 해요?",
+"type": "answerable",
+"gold": [
+"t_doc_03#c3",
+"t_doc_03#c9"
+],
+"partial": [
+"t_doc_03#c5"
+],
+"writer_intent": "in_topic",
+"note": "통제 시 대체 경로·장소 제안"
+},
+{
+"q": "전시 보러 가는데 임시 휴무면 알려줘요?",
+"type": "answerable",
+"gold": [
+"t_doc_03#c2"
+],
+"partial": [
+"t_doc_03#c10",
+"t_doc_03#c1"
+],
+"writer_intent": "in_topic",
+"note": "임시 휴관 재확인·대체 제안"
+},
+{
+"q": "산길 못 가게 하면 대신 어디 가요?",
+"type": "answerable",
+"gold": [
+"t_doc_03#c3",
+"t_doc_03#c9"
+],
+"partial": [],
+"writer_intent": "in_topic",
+"note": "다른 경로·장소 제안"
+},
+{
+"q": "공사 때문에 못 들어가면 어쩌죠?",
+"type": "answerable",
+"gold": [
+"t_doc_03#c5",
+"t_doc_03#c9"
+],
+"partial": [
+"t_doc_03#c2"
+],
+"writer_intent": "in_topic",
+"note": "닫힌 구역 안내·대체 장소"
+},
+{
+"q": "박물관 문 닫는 날인지 미리 걸러줘?",
+"type": "answerable",
+"gold": [
+"t_doc_03#c1"
+],
+"partial": [
+"t_doc_03#c10",
+"t_doc_03#c2"
+],
+"writer_intent": "in_topic",
+"note": "방문일 기준 휴관 확인"
+},
+{
+"q": "공원 일부만 출입 제한이면 가도 돼요?",
+"type": "answerable",
+"gold": [
+"t_doc_03#c5"
+],
+"partial": [
+"t_doc_03#c3"
+],
+"writer_intent": "in_topic",
+"note": "닫힌 구역 아니면 영향 없음"
+},
+{
+"q": "비 오면 한강 일정 미룰 수 있어요?",
+"type": "answerable",
+"gold": [
+"t_doc_04#c5",
+"t_doc_04#c11"
+],
+"partial": [
+"t_doc_04#c2",
+"t_doc_04#c6"
+],
+"writer_intent": "in_topic",
+"note": "남은 기간 내 자리 있으면 순연"
+},
+{
+"q": "태풍 와서 야외 투어 못 하면 어떻게 돼요?",
+"type": "answerable",
+"gold": [
+"t_doc_04#c4",
+"t_doc_04#c5"
+],
+"partial": [
+"t_doc_04#c1",
+"t_doc_04#c11",
+"t_doc_05#c11"
+],
+"writer_intent": "in_topic",
+"note": "업체 중단 시 위약금 없음, 순연/취소"
+},
+{
+"q": "눈 때문에 못 가면 돈 돌려받나요?",
+"type": "answerable",
+"gold": [
+"t_doc_04#c4"
+],
+"partial": [
+"t_doc_04#c11",
+"t_doc_11#c4",
+"t_doc_11#c9"
+],
+"writer_intent": "in_topic",
+"note": "업체 중단이면 위약금 없음(비 사례 준용)"
+},
+{
+"q": "비 와서 하루 밀면 다른 일정도 밀려요?",
+"type": "answerable",
+"gold": [
+"t_doc_04#c6"
+],
+"partial": [
+"t_doc_04#c5",
+"t_doc_04#c7"
+],
+"writer_intent": "in_topic",
+"note": "그날 남은 항목 다시 계산"
+},
+{
+"q": "날씨 때문에 못 하면 누가 접어줘요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_04#c1",
+"t_doc_04#c11",
+"t_doc_04#c4"
+],
+"writer_intent": "in_topic",
+"note": "취소 주체가 명시되지 않음"
+},
+{
+"q": "바람 세서 유람선 안 뜨면 어쩌죠?",
+"type": "answerable",
+"gold": [
+"t_doc_04#c4",
+"t_doc_04#c5"
+],
+"partial": [
+"t_doc_04#c2",
+"t_doc_04#c11"
+],
+"writer_intent": "in_topic",
+"note": "업체 중단 위약금 없음, 순연 안내"
+},
+{
+"q": "소나기 정도는 그냥 진행인가요?",
+"type": "answerable",
+"gold": [
+"t_doc_04#c2"
+],
+"partial": [
+"t_doc_04#c11",
+"t_doc_04#c3"
+],
+"writer_intent": "in_topic",
+"note": "예보 값만으론 취소 안 함"
+},
+{
+"q": "미세먼지 심한 날 야외 일정 괜찮아요?",
+"type": "answerable",
+"gold": [
+"t_doc_05#c1"
+],
+"partial": [
+"t_doc_05#c2"
+],
+"writer_intent": "in_topic",
+"note": "나쁨 이상 실내 대안 권고"
+},
+{
+"q": "폭염 문자 뜨면 낮 일정 바꿔줘요?",
+"type": "answerable",
+"gold": [
+"t_doc_05#c3"
+],
+"partial": [
+"t_doc_05#c8"
+],
+"writer_intent": "in_topic",
+"note": "12~15시 야외 항목 이동 안"
+},
+{
+"q": "너무 추운 날엔 야외 어떻게 해요?",
+"type": "answerable",
+"gold": [
+"t_doc_05#c4"
+],
+"partial": [],
+"writer_intent": "in_topic",
+"note": "한파 특보 아침 일정 늦춤"
+},
+{
+"q": "지진 났다는 문자 오면 어떻게 해요?",
+"type": "answerable",
+"gold": [
+"t_doc_05#c5",
+"t_doc_05#c6"
+],
+"partial": [
+"t_doc_05#c7"
+],
+"writer_intent": "in_topic",
+"note": "규모·거리 기준 검토, 시설 공지"
+},
+{
+"q": "공기 안 좋은 날 아이 데리고 나가도 될까요?",
+"type": "answerable",
+"gold": [
+"t_doc_05#c2"
+],
+"partial": [
+"t_doc_05#c1"
+],
+"writer_intent": "in_topic",
+"note": "어린이 일행 실내 안 먼저 제안"
+},
+{
+"q": "더위 먹을 것 같은데 실내로 돌려줘요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_05#c3",
+"t_doc_05#c8"
+],
+"writer_intent": "in_topic",
+"note": "폭염은 시간 이동, 실내 전환은 복합 시"
+},
+{
+"q": "저녁 예약 한 시간 늦출 수 있어요?",
+"type": "answerable",
+"gold": [
+"t_doc_06#c2",
+"t_doc_06#c8"
+],
+"partial": [
+"t_doc_06#c3",
+"t_doc_06#c9"
+],
+"writer_intent": "in_topic",
+"note": "브레이크타임·동선 여유 조건"
+},
+{
+"q": "식당 같이 가는 사람 하나 늘리고 싶어요",
+"type": "answerable",
+"gold": [
+"t_doc_06#c4"
+],
+"partial": [
+"t_doc_06#c9"
+],
+"writer_intent": "in_topic",
+"note": "인원 증가는 자리 확인 후"
+},
+{
+"q": "늦을 것 같은데 식당에 말해줘요?",
+"type": "answerable",
+"gold": [
+"t_doc_06#c3"
+],
+"partial": [
+"t_doc_09#c8",
+"t_doc_06#c5"
+],
+"writer_intent": "in_topic",
+"note": "15분 안쪽이면 식당에 알림"
+},
+{
+"q": "4명에서 3명으로 줄이면 문제 없나요?",
+"type": "answerable",
+"gold": [
+"t_doc_06#c4"
+],
+"partial": [],
+"writer_intent": "in_topic",
+"note": "감소는 대개 가능, 코스 최소 인원"
+},
+{
+"q": "점심 예약 시간 앞당기고 싶은데요",
+"type": "answerable",
+"gold": [
+"t_doc_06#c8"
+],
+"partial": [
+"t_doc_06#c2",
+"t_doc_06#c9"
+],
+"writer_intent": "in_topic",
+"note": "앞뒤 이동·여유 15분 조건"
+},
+{
+"q": "한 명 못 와서 식당 사람 수 바꿔야 해요",
+"type": "answerable",
+"gold": [
+"t_doc_06#c4"
+],
+"partial": [
+"t_doc_06#c5"
+],
+"writer_intent": "in_topic",
+"note": "식당 확인까지 요청 상태"
+},
+{
+"q": "예약 시간 지나서 도착하면 자리 없어져요?",
+"type": "answerable",
+"gold": [
+"t_doc_06#c3"
+],
+"partial": [
+"t_doc_06#c5",
+"t_doc_09#c8"
+],
+"writer_intent": "in_topic",
+"note": "15분 안쪽 알리면 유지"
+},
+{
+"q": "식당 닫았을 때 다른 데는 뭐 보고 추천해요?",
+"type": "answerable",
+"gold": [
+"t_doc_07#c1",
+"t_doc_07#c2",
+"t_doc_07#c3"
+],
+"partial": [
+"t_doc_07#c4",
+"t_doc_07#c5",
+"t_doc_06#c7"
+],
+"writer_intent": "in_topic",
+"note": "휴무 이유별, 영업·동선 기준"
+},
+{
+"q": "대신 갈 밥집은 어떤 기준으로 골라요?",
+"type": "answerable",
+"gold": [
+"t_doc_07#c2",
+"t_doc_07#c3",
+"t_doc_07#c5"
+],
+"partial": [
+"t_doc_07#c4",
+"t_doc_07#c1"
+],
+"writer_intent": "in_topic",
+"note": "영업·동선·성격 기준"
+},
+{
+"q": "비슷한 메뉴 파는 집으로 바꿔줘요?",
+"type": "answerable",
+"gold": [
+"t_doc_07#c5"
+],
+"partial": [
+"t_doc_07#c4"
+],
+"writer_intent": "in_topic",
+"note": "가격대·분위기·업종 맞춤"
+},
+{
+"q": "다른 식당 추천할 때 거리도 따져?",
+"type": "answerable",
+"gold": [
+"t_doc_07#c3"
+],
+"partial": [
+"t_doc_07#c2"
+],
+"writer_intent": "in_topic",
+"note": "실제 이동 시간 기준"
+},
+{
+"q": "자리 없다고 하면 옆 가게로 알아봐줘요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_07#c1",
+"t_doc_07#c7",
+"t_doc_06#c1"
+],
+"writer_intent": "in_topic",
+"note": "만석 사유 직접 서술 없음"
+},
+{
+"q": "바꾼 식당이 더 비싸면 어떡해요?",
+"type": "answerable",
+"gold": [
+"t_doc_07#c5",
+"t_doc_07#c9"
+],
+"partial": [],
+"writer_intent": "in_topic",
+"note": "가격대 다르면 먼저 알림, 재요청"
+},
+{
+"q": "후기 좋은 곳 위주로 골라주나요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_07#c5",
+"t_doc_07#c2",
+"t_doc_07#c3"
+],
+"writer_intent": "in_topic",
+"note": "후기 기준은 조각에 없음"
+},
+{
+"q": "지하철 멈췄는데 다른 길 알려줘요?",
+"type": "answerable",
+"gold": [
+"t_doc_08#c4"
+],
+"partial": [
+"t_doc_08#c1",
+"t_doc_08#c2"
+],
+"writer_intent": "in_topic",
+"note": "중단 시 우회 경로 안내"
+},
+{
+"q": "버스 계속 안 와요. 어떻게 가요?",
+"type": "answerable",
+"gold": [
+"t_doc_08#c4",
+"t_doc_08#c1"
+],
+"partial": [
+"t_doc_08#c3",
+"t_doc_08#c10"
+],
+"writer_intent": "in_topic",
+"note": "중단/지연 구분 후 우회"
+},
+{
+"q": "열차 한 시간 늦는대요 일정 어쩌죠",
+"type": "answerable",
+"gold": [
+"t_doc_08#c3"
+],
+"partial": [
+"t_doc_08#c5",
+"t_doc_08#c1",
+"t_doc_09#c7"
+],
+"writer_intent": "in_topic",
+"note": "여유 흡수 여부, 15분 미만 조정"
+},
+{
+"q": "파업 때문에 못 타면 대안 있어요?",
+"type": "answerable",
+"gold": [
+"t_doc_08#c4"
+],
+"partial": [
+"t_doc_08#c5",
+"t_doc_09#c4",
+"t_doc_08#c1"
+],
+"writer_intent": "in_topic",
+"note": "대체 경로 하나 제시"
+},
+{
+"q": "택시 말고 갈 방법 찾아줄 수 있어요?",
+"type": "answerable",
+"gold": [
+"t_doc_08#c4"
+],
+"partial": [
+"t_doc_10#c6"
+],
+"writer_intent": "in_topic",
+"note": "우회 경로·비용 증가 고지"
+},
+{
+"q": "노선 끊겼다는데 지금 어디로 가요?",
+"type": "answerable",
+"gold": [
+"t_doc_08#c10",
+"t_doc_08#c4"
+],
+"partial": [
+"t_doc_08#c2",
+"t_doc_08#c6"
+],
+"writer_intent": "in_topic",
+"note": "놓침/중단 되묻고 다음 편·우회"
+},
+{
+"q": "환승 놓치면 누구 책임이에요?",
+"type": "answerable",
+"gold": [
+"t_doc_09#c2",
+"t_doc_09#c3",
+"t_doc_09#c4"
+],
+"partial": [
+"t_doc_08#c10"
+],
+"writer_intent": "in_topic",
+"note": "원인별 책임 구분"
+},
+{
+"q": "갈아타는 시간 너무 빡빡하면 알려줘요?",
+"type": "answerable",
+"gold": [
+"t_doc_09#c5"
+],
+"partial": [
+"t_doc_09#c6",
+"t_doc_08#c3"
+],
+"writer_intent": "in_topic",
+"note": "여유 부족은 짤 때부터 경고"
+},
+{
+"q": "연착돼서 다음 차 놓쳤는데 어떡해요?",
+"type": "answerable",
+"gold": [
+"t_doc_09#c2"
+],
+"partial": [
+"t_doc_09#c3",
+"t_doc_08#c10"
+],
+"writer_intent": "in_topic",
+"note": "앞 편 지연은 구제 확인"
+},
+{
+"q": "갈아탈 때 여유는 보통 몇 분 잡아요?",
+"type": "answerable",
+"gold": [
+"t_doc_09#c5"
+],
+"partial": [
+"t_doc_09#c6",
+"t_doc_08#c6"
+],
+"writer_intent": "in_topic",
+"note": "도시 안 최소 15분"
+},
+{
+"q": "기차 놓친 건 제 잘못인가요?",
+"type": "answerable",
+"gold": [
+"t_doc_09#c2",
+"t_doc_09#c3"
+],
+"partial": [
+"t_doc_09#c4",
+"t_doc_08#c10"
+],
+"writer_intent": "in_topic",
+"note": "원인별 구분, 책임 문장 안 적음"
+},
+{
+"q": "앞 일정이 늦어져서 못 탔으면 보상돼요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_09#c1",
+"t_doc_09#c3",
+"t_doc_09#c2"
+],
+"writer_intent": "in_topic",
+"note": "활동 지연의 보상 서술 없음"
+},
+{
+"q": "기차표 돈 돌려받는 거 대신 해줘요?",
+"type": "answerable",
+"gold": [
+"t_doc_10#c3",
+"t_doc_10#c1"
+],
+"partial": [
+"t_doc_10#c2"
+],
+"writer_intent": "in_topic",
+"note": "대신 신청 안 함, 안내까지"
+},
+{
+"q": "KTX 못 타게 됐는데 어떡하죠?",
+"type": "answerable",
+"gold": [
+"t_doc_10#c1",
+"t_doc_10#c3"
+],
+"partial": [
+"t_doc_10#c2",
+"t_doc_08#c10"
+],
+"writer_intent": "in_topic",
+"note": "환불 창구·기한 안내"
+},
+{
+"q": "택시 예약 접으면 돈 어디서 받아요?",
+"type": "answerable",
+"gold": [
+"t_doc_10#c2",
+"t_doc_10#c1"
+],
+"partial": [
+"t_doc_10#c3"
+],
+"writer_intent": "in_topic",
+"note": "산 경로별 환불 창구"
+},
+{
+"q": "고속버스 표 못 쓰게 됐는데 어떻게 해요?",
+"type": "answerable",
+"gold": [
+"t_doc_10#c1",
+"t_doc_10#c2"
+],
+"partial": [
+"t_doc_10#c3",
+"t_doc_10#c5"
+],
+"writer_intent": "in_topic",
+"note": "창구·기한 안내, 일정 별도"
+},
+{
+"q": "이동편 취소 건은 어디까지 봐줘요?",
+"type": "answerable",
+"gold": [
+"t_doc_10#c1",
+"t_doc_10#c5"
+],
+"partial": [
+"t_doc_10#c3",
+"t_doc_10#c10"
+],
+"writer_intent": "in_topic",
+"note": "창구 안내·일정 재조정, 금액 제외"
+},
+{
+"q": "교통권은 직접 돌려받아야 하나요?",
+"type": "answerable",
+"gold": [
+"t_doc_10#c3",
+"t_doc_10#c1"
+],
+"partial": [
+"t_doc_10#c2"
+],
+"writer_intent": "in_topic",
+"note": "신청은 직접, 안내 지원"
+},
+{
+"q": "렌터카 예약 빼는 방법도 알려줘요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_10#c2",
+"t_doc_10#c1",
+"t_doc_11#c1"
+],
+"writer_intent": "in_topic",
+"note": "렌터카 언급 없음, 환불 창구 일반"
+},
+{
+"q": "돈 돌려받으려면 어떻게 해야 해요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_11#c1",
+"t_doc_11#c9",
+"t_doc_11#c4"
+],
+"writer_intent": "in_topic",
+"note": "환급 방법 직접 서술 없음"
+},
+{
+"q": "예약 접으면 얼마 떼요?",
+"type": "answerable",
+"gold": [
+"t_doc_11#c4",
+"t_doc_01#c3"
+],
+"partial": [
+"t_doc_06#c6",
+"t_doc_10#c1"
+],
+"writer_intent": "in_topic",
+"note": "약관이 정함, 72시간 전 무료"
+},
+{
+"q": "돈 들어오는 데 며칠 걸려요?",
+"type": "answerable",
+"gold": [
+"t_doc_11#c9"
+],
+"partial": [
+"t_doc_10#c5",
+"t_doc_10#c1"
+],
+"writer_intent": "in_topic",
+"note": "업체 일정 따름, 며칠 단정 안 함"
+},
+{
+"q": "업체 사정으로 막히면 전액 돌려받나요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_04#c4",
+"t_doc_11#c4",
+"t_doc_06#c7"
+],
+"writer_intent": "in_topic",
+"note": "전액 명시 없음, 우천 사례만"
+},
+{
+"q": "제 사정으로 못 가도 돌려받을 수 있어요?",
+"type": "answerable",
+"gold": [
+"t_doc_01#c3",
+"t_doc_11#c4"
+],
+"partial": [
+"t_doc_04#c4",
+"t_doc_01#c4",
+"t_doc_11#c11"
+],
+"writer_intent": "in_topic",
+"note": "72시간 전 무료, 이후 약관"
+},
+{
+"q": "돈 문제는 업체랑 직접 얘기해야 돼요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_10#c3",
+"t_doc_11#c4",
+"t_doc_11#c9"
+],
+"writer_intent": "in_topic",
+"note": "직접 대응 범위 일부만 서술"
+},
+{
+"q": "기한 넘겼는데 방법 없을까요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_01#c4",
+"t_doc_11#c8",
+"t_doc_10#c9"
+],
+"writer_intent": "in_topic",
+"note": "어느 기한인지 불명확"
+},
+{
+"q": "휠체어로도 갈 수 있는 곳인가요?",
+"type": "answerable",
+"gold": [
+"t_doc_12#c2"
+],
+"partial": [
+"t_doc_12#c1"
+],
+"writer_intent": "in_topic",
+"note": "출입구·내부·화장실 확인"
+},
+{
+"q": "아기 데리고 가도 되는 코스예요?",
+"type": "answerable",
+"gold": [
+"t_doc_12#c3"
+],
+"partial": [
+"t_doc_12#c11",
+"t_doc_12#c1"
+],
+"writer_intent": "in_topic",
+"note": "유모차·수유·연령 제한 확인"
+},
+{
+"q": "할머니가 오래 못 걸으세요",
+"type": "answerable",
+"gold": [
+"t_doc_12#c4"
+],
+"partial": [
+"t_doc_12#c11",
+"t_doc_12#c2"
+],
+"writer_intent": "in_topic",
+"note": "거리·계단·쉴 곳 값 안내"
+},
+{
+"q": "채식만 하는데 식당 맞춰줘요?",
+"type": "answerable",
+"gold": [
+"t_doc_12#c5",
+"t_doc_12#c7"
+],
+"partial": [
+"t_doc_07#c4",
+"t_doc_12#c6"
+],
+"writer_intent": "in_topic",
+"note": "식이 조건 반영, 표기 있을 때만"
+},
+{
+"q": "알레르기 있는 아이라 식당 걱정돼요",
+"type": "answerable",
+"gold": [
+"t_doc_12#c5",
+"t_doc_12#c6"
+],
+"partial": [
+"t_doc_12#c8",
+"t_doc_07#c4"
+],
+"writer_intent": "in_topic",
+"note": "표기 기준, 현장 확인 안내"
+},
+{
+"q": "유모차 들어가는 곳 위주로 짜줘요?",
+"type": "answerable",
+"gold": [
+"t_doc_12#c3",
+"t_doc_12#c7"
+],
+"partial": [
+"t_doc_12#c11"
+],
+"writer_intent": "in_topic",
+"note": "유모차 이동 확인, 조건 자동 반영"
+},
+{
+"q": "무릎 안 좋은 부모님 계단 많은 곳 빼줘요",
+"type": "answerable",
+"gold": [
+"t_doc_12#c4",
+"t_doc_12#c7"
+],
+"partial": [
+"t_doc_12#c11"
+],
+"writer_intent": "in_topic",
+"note": "계단 유무 값 제공, 조건 반영"
+},
+{
+"q": "경복궁 입장료 얼마예요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_02#c3"
+],
+"writer_intent": "specific_fact",
+"note": "입장료 금액 값 없음"
+},
+{
+"q": "롯데월드 오늘 몇 시까지 해요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "specific_fact",
+"note": "시설 운영시간 값 없음"
+},
+{
+"q": "남산타워 전망대 전화번호 알려줘요",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "specific_fact",
+"note": "연락처 정보 없음"
+},
+{
+"q": "지금 서울 기온 몇 도예요?",
+"type": "uncovered",
+"gold": [],
+"partial": [
+"t_doc_04#c2"
+],
+"writer_intent": "specific_fact",
+"note": "실시간 기온 값 없음"
+},
+{
+"q": "국립중앙박물관 휴관일이 무슨 요일이에요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_03#c1"
+],
+"writer_intent": "specific_fact",
+"note": "휴관일은 공지 확인, 요일 값 없음"
+},
+{
+"q": "한강 유람선 성인 요금 얼마예요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "specific_fact",
+"note": "요금 값 없음"
+},
+{
+"q": "오늘 미세먼지 수치 몇이에요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_05#c1"
+],
+"writer_intent": "specific_fact",
+"note": "전달 방식만, 수치 값 없음"
+},
+{
+"q": "광화문 근처 김치찌개집 전화번호 알려줘요",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "specific_fact",
+"note": "식당 연락처 정보 없음"
+},
+{
+"q": "명동교자 영업시간 알려주세요",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_06#c2",
+"t_doc_07#c2",
+"t_doc_06#c11"
+],
+"writer_intent": "specific_fact",
+"note": "영업 정보 조회 원칙만, 값 없음"
+},
+{
+"q": "서울 지하철 1호선 막차 몇 시예요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_08#c6"
+],
+"writer_intent": "specific_fact",
+"note": "막차는 조회값 사용, 시각 없음"
+},
+{
+"q": "N서울타워 케이블카 왕복 요금 얼마예요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "specific_fact",
+"note": "요금 값 없음"
+},
+{
+"q": "내일 서울 강수확률 몇 퍼센트예요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_04#c2",
+"t_doc_04#c10"
+],
+"writer_intent": "specific_fact",
+"note": "예보 전달 원칙만, 값 없음"
+},
+{
+"q": "인천공항에서 서울역 공항철도 요금 얼마예요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "specific_fact",
+"note": "교통 요금 값 없음"
+},
+{
+"q": "창덕궁 후원 관람 시간 몇 시예요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "specific_fact",
+"note": "관람시간 값 없음"
+},
+{
+"q": "어제 2호선 몇 분 지연됐어요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_09#c2",
+"t_doc_10#c4"
+],
+"writer_intent": "specific_fact",
+"note": "지연 기록 원칙만, 실제 값 없음"
+},
+{
+"q": "서울 시티투어버스 첫차 시각 알려줘요",
+"type": "uncovered",
+"gold": [],
+"partial": [
+"t_doc_08#c6"
+],
+"writer_intent": "specific_fact",
+"note": "운행 시각 값 없음"
+},
+{
+"q": "동대문 DDP 주차요금 얼마예요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "specific_fact",
+"note": "주차요금 정보 없음"
+},
+{
+"q": "오늘 서울 일몰 시간 몇 시예요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "specific_fact",
+"note": "일몰 시각 정보 없음"
+},
+{
+"q": "어린이대공원 입장료 어른 얼마예요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_02#c3"
+],
+"writer_intent": "specific_fact",
+"note": "입장료 금액 값 없음"
+},
+{
+"q": "광장시장 빈대떡집 전화번호 좀요",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "specific_fact",
+"note": "식당 연락처 정보 없음"
+},
+{
+"q": "인천발 제주행 항공권 환불하고 싶어요",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_09#c9",
+"t_doc_10#c1",
+"t_doc_10#c2"
+],
+"writer_intent": "near",
+"note": "항공 변경 어려움만, 환불 절차 없음"
+},
+{
+"q": "호텔 체크인 날짜 바꿔주세요",
+"type": "answerable",
+"gold": [
+"t_doc_09#c9"
+],
+"partial": [
+"t_doc_11#c2"
+],
+"writer_intent": "near",
+"note": "숙소는 직접 변경 어려움(부정 답)"
+},
+{
+"q": "비자 연장은 어디서 해요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "near",
+"note": "비자 정보 없음"
+},
+{
+"q": "여행자 보험 가입하려는데 추천해줘요",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "near",
+"note": "보험 정보 없음"
+},
+{
+"q": "항공편 위탁수하물 무게 제한이 몇 kg이에요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "near",
+"note": "수하물 규정 없음"
+},
+{
+"q": "부산 호텔 예약도 취소해줄 수 있어요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_09#c9",
+"t_doc_11#c1"
+],
+"writer_intent": "near",
+"note": "숙소 변경 어려움만, 취소 직접 서술 없음"
+},
+{
+"q": "일본 가는 비행기 좌석 업그레이드되나요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "near",
+"note": "항공 좌석 정보 없음"
+},
+{
+"q": "환전은 어디서 하는 게 나아요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "near",
+"note": "환전 정보 없음"
+},
+{
+"q": "여권 잃어버렸는데 어떻게 해요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "near",
+"note": "여권 분실 정보 없음"
+},
+{
+"q": "해외 로밍 요금제 뭐가 좋아요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "near",
+"note": "로밍 정보 없음"
+},
+{
+"q": "에어비앤비 숙소 호스트가 취소했어요",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_09#c9",
+"t_doc_11#c1"
+],
+"writer_intent": "near",
+"note": "숙소 일반 서술만"
+},
+{
+"q": "제주도 렌터카 보험 어떤 걸로 들어요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "near",
+"note": "렌터카 보험 정보 없음"
+},
+{
+"q": "공항 면세점 쇼핑 환급 받는 법 알려줘요",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "near",
+"note": "세금 환급 정보 없음"
+},
+{
+"q": "크루즈 여행 예약 변경하고 싶어요",
+"type": "uncovered",
+"gold": [],
+"partial": [
+"t_doc_09#c9"
+],
+"writer_intent": "near",
+"note": "크루즈 언급 없음"
+},
+{
+"q": "다음 달 도쿄 여행 일정도 짜줄 수 있어요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "near",
+"note": "일정 생성·도쿄 범위 서술 없음"
+},
+{
+"q": "항공사 마일리지 적립 어떻게 해요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "near",
+"note": "마일리지 정보 없음"
+},
+{
+"q": "입국 심사 때 뭐 물어봐요?",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "near",
+"note": "입국심사 정보 없음"
+},
+{
+"q": "비행기 연착 보상금 받을 수 있어요?",
+"type": "near_miss",
+"gold": [],
+"partial": [
+"t_doc_10#c4",
+"t_doc_09#c2",
+"t_doc_09#c9"
+],
+"writer_intent": "near",
+"note": "지연 배상은 수단별 확인, 항공 명시 없음"
+},
+{
+"q": "부산 해운대 일정도 같이 봐줘요?",
+"type": "uncovered",
+"gold": [],
+"partial": [
+"t_doc_03#c4"
+],
+"writer_intent": "near",
+"note": "지원 도시 범위 서술 없음"
+},
+{
+"q": "카드 해외 결제 수수료 줄이는 법이요",
+"type": "uncovered",
+"gold": [],
+"partial": [],
+"writer_intent": "near",
+"note": "카드 수수료 정보 없음"
+},
+{
+"q": "안녕하세요",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "인사"
+},
+{
+"q": "너 이름이 뭐야?",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "잡담"
+},
+{
+"q": "오늘 점심 뭐 먹을까?",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "일상 잡담"
+},
+{
+"q": "심심한데 농담 하나 해줘",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "잡담"
+},
+{
+"q": "1+1은 뭐야?",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "일반 상식"
+},
+{
+"q": "지구에서 달까지 얼마나 멀어?",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "일반 상식"
+},
+{
+"q": "파이썬으로 리스트 정렬하는 법 알려줘",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "서비스 무관"
+},
+{
+"q": "사랑이 뭘까요",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "잡담"
+},
+{
+"q": "좋아하는 색깔 있어?",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "잡담"
+},
+{
+"q": "고마워요 수고했어요",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "인사"
+},
+{
+"q": "월드컵 우승 많이 한 나라가 어디야?",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "일반 상식"
+},
+{
+"q": "감기 걸렸는데 약 뭐 먹어요?",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "서비스 무관"
+},
+{
+"q": "로또 번호 하나만 찍어줘",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "서비스 무관"
+},
+{
+"q": "너 사람이야 AI야?",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "잡담"
+},
+{
+"q": "오늘 기분이 별로예요",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "잡담"
+},
+{
+"q": "대한민국 수도가 어디예요?",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "일반 상식"
+},
+{
+"q": "주식 뭐 사면 좋아요?",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "서비스 무관"
+},
+{
+"q": "잘 자요~",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "인사"
+},
+{
+"q": "영어로 사과가 뭐야?",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "일반 상식"
+},
+{
+"q": "요즘 인기 있는 드라마 추천해줘",
+"type": "offtopic",
+"gold": [],
+"partial": [],
+"writer_intent": "offtopic",
+"note": "서비스 무관"
+}
+]
+}

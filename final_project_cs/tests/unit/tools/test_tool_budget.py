@@ -22,7 +22,7 @@ import pytest
 from app.core.contracts import ToolNotAllowed
 from app.tools.read_tools import ReadToolbox, ToolBudgetExceeded, ToolLoopExceeded
 
-ALLOWED = ["read.policy", "read.order"]
+ALLOWED = ["read.policy", "read.booking"]
 
 
 def _toolbox() -> ReadToolbox:
@@ -93,4 +93,4 @@ def test_permission_is_checked_before_budget():
     """
     toolbox, seen = _toolbox(), set()
     with pytest.raises(ToolNotAllowed):
-        toolbox.call("read.shipment", None, {}, ALLOWED, seen, budget=0)
+        toolbox.call("read.place", None, {}, ALLOWED, seen, budget=0)

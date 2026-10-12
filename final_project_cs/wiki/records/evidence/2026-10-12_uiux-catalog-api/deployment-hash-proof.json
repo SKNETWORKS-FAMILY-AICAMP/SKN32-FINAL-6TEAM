@@ -1,0 +1,23 @@
+{
+  "baseline_hash_matches": {
+    "tripilot-api": false,
+    "tripilot-worker": false,
+    "tripilot-web": true
+  },
+  "tag_metadata": {
+    "tripilot-api": {
+      "declared": "afeb62460b",
+      "live": "df1d013359"
+    },
+    "tripilot-worker": {
+      "declared": "afeb62460b",
+      "live": "df1d013359"
+    }
+  },
+  "hash_matches_after_only_tag_reconstruction": {
+    "tripilot-api": true,
+    "tripilot-worker": true,
+    "tripilot-web": true
+  },
+  "remote_files_or_settings_changed": false
+}

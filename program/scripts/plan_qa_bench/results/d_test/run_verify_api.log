@@ -1,0 +1,30 @@
+api_luna gpt-6-luna 남은 204 / 204
+api_luna 25 / 204 54 초 · 오류 0
+api_luna 50 / 204 95 초 · 오류 0
+api_luna 75 / 204 135 초 · 오류 0
+api_luna 100 / 204 177 초 · 오류 0
+api_luna 125 / 204 221 초 · 오류 0
+api_luna 150 / 204 260 초 · 오류 0
+api_luna 175 / 204 301 초 · 오류 0
+api_luna 200 / 204 343 초 · 오류 0
+끝 api_luna 349 초 · 오류 0
+api_sol61 gpt-6.1-sol 남은 204 / 204
+api_sol61 25 / 204 62 초 · 오류 0
+api_sol61 50 / 204 126 초 · 오류 0
+api_sol61 75 / 204 195 초 · 오류 0
+api_sol61 100 / 204 259 초 · 오류 0
+api_sol61 125 / 204 313 초 · 오류 0
+api_sol61 150 / 204 366 초 · 오류 0
+api_sol61 175 / 204 421 초 · 오류 0
+api_sol61 200 / 204 477 초 · 오류 0
+끝 api_sol61 485 초 · 오류 0
+api_astra gpt-6-astra 남은 204 / 204
+api_astra 25 / 204 63 초 · 오류 0
+api_astra 50 / 204 127 초 · 오류 0
+api_astra 75 / 204 190 초 · 오류 0
+api_astra 100 / 204 255 초 · 오류 0
+api_astra 125 / 204 320 초 · 오류 0
+api_astra 150 / 204 385 초 · 오류 0
+api_astra 175 / 204 447 초 · 오류 0
+api_astra 200 / 204 512 초 · 오류 0
+끝 api_astra 526 초 · 오류 0

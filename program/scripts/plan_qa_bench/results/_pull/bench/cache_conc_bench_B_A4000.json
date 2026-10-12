@@ -1,0 +1,40 @@
+{
+ "model": "gemma4:e4b-it-qat",
+ "A_same_itinerary_sequential": {
+  "n": 40,
+  "workers": 1,
+  "sec_per_q": 0.42108320593833926,
+  "q_per_hour": 8549.379194493835,
+  "avg_prompt_tokens_evaluated": 1975.175
+ },
+ "B_changing_itinerary_sequential": {
+  "n": 40,
+  "workers": 1,
+  "sec_per_q": 1.1889193952083588,
+  "q_per_hour": 3027.95968718224,
+  "avg_prompt_tokens_evaluated": 1839.775
+ },
+ "C_concurrency": {
+  "2": {
+   "n": 40,
+   "workers": 2,
+   "sec_per_q": 0.95070680975914,
+   "q_per_hour": 3786.656372969553,
+   "avg_prompt_tokens_evaluated": 1839.775
+  },
+  "4": {
+   "n": 40,
+   "workers": 4,
+   "sec_per_q": 0.7067873537540436,
+   "q_per_hour": 5093.469741470179,
+   "avg_prompt_tokens_evaluated": 1839.775
+  },
+  "8": {
+   "n": 40,
+   "workers": 8,
+   "sec_per_q": 0.5286743223667145,
+   "q_per_hour": 6809.4852496029935,
+   "avg_prompt_tokens_evaluated": 1839.775
+  }
+ }
+}

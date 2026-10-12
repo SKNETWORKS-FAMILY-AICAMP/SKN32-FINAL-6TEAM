@@ -38,7 +38,7 @@ def ui_fixture(monkeypatch):
         cur.execute("INSERT INTO customers (customer_id,tenant_id,external_id) VALUES (%s,%s,%s)", (customer, tenant, "masked-customer"))
         cur.execute("""INSERT INTO customer_cases (case_id,tenant_id,customer_id,status,subject,state_json,intent,issue_code,sentiment,owner_team_id,version)
                        VALUES (%s,%s,%s,'waiting_approval',%s,%s,%s,%s,%s,%s,1)""",
-                    (case_id, tenant, customer, "seed UI case", '{"answer":"masked answer"}', "billing", "post_cancel_charge", "negative", "Billing"))
+                    (case_id, tenant, customer, "seed UI case", '{"answer":"masked answer"}', "incident_report", "activity_cancel_or_change", "negative", "activity"))
         cur.execute("""INSERT INTO case_events (tenant_id,case_id,aggregate_version,event_type,payload_json,actor_type,actor_id)
                        VALUES (%s,%s,1,'approval_required',%s,'system','masked-actor')""", (tenant, case_id, '{"action_id":"seed"}'))
         for action_id, evidence in ((evidence_action, [{"source_type": "policy", "source_id": "doc#1", "claim": "policy claim"}]), (empty_action, [])):
@@ -64,7 +64,7 @@ def ui_fixture(monkeypatch):
 def test_cases_detail_and_trace_render_seed_data(ui_fixture):
     client = ui_fixture["client"]
     case_id = ui_fixture["case_id"]
-    assert "post_cancel_charge" in client.get("/ui/cases").text
+    assert "activity_cancel_or_change" in client.get("/ui/cases").text
     detail = client.get(f"/ui/cases/{case_id}").text
     assert "masked answer" in detail and "policy" not in detail
     trace = client.get(f"/ui/cases/{case_id}/trace").text

@@ -5,7 +5,7 @@ import { TERMS_DOCS, TERMS_VERSION } from "../../src/features/consent/terms-cont
 import { agree, agreeTerms, CONSENT_STORAGE, mockServer, start, useKorean } from "./helpers";
 
 /**
- * `[2026-10-05 사용자 지시]` 약관 동의: 항목별(필수 둘 · 선택 셋)로 받고, 서버 DB 기록에 남기고, 필수에 동의해야 앱을 쓸 수 있다.
+ * `[2026-10-05 사용자 지시]` 약관 동의: 항목별(필수 둘 · 선택 넷)로 받고, 서버 DB 기록에 남기고, 필수에 동의해야 앱을 쓸 수 있다.
  * mock 서버 시험(화면 반응) - 화면이 무엇을 보내고 서버 기록과 어떻게 맞추는지를 본다. 실제 서버의 DB 기록과 게이트는 서버 시험·실서버 확인이 따로 본다.
  * 약관 글 자체(법무 검토 전 초안)의 내용은 여기서 보지 않는다 - `terms-content.test.ts`.
  */
@@ -14,7 +14,7 @@ test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 const sha256 = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
 const startCard = (page: import("@playwright/test").Page) => page.getByRole("button", { name: /약관 동의/ });
 
-test("처음 온 사람은 다른 화면으로 가도 약관 화면으로 돌아오고, 약관 화면에는 필수 둘 · 선택 셋과 초안 표시가 있다", async ({ page }) => {
+test("처음 온 사람은 다른 화면으로 가도 약관 화면으로 돌아오고, 약관 화면에는 필수 둘 · 선택 넷과 초안 표시가 있다", async ({ page }) => {
   await useKorean(page);                                                                 // 세션도 동의도 없는 첫 방문
   await page.goto("/mypage");
   await expect(page).toHaveURL(/\/start\?terms=required$/);
@@ -22,16 +22,16 @@ test("처음 온 사람은 다른 화면으로 가도 약관 화면으로 돌아
   await expect(page.getByRole("status").filter({ hasText: "이용을 위해서는 필수 약관 동의가 필요해요." })).toBeVisible();
   if (process.env.LOADING_SHOTS) await page.screenshot({ path: `${process.env.LOADING_SHOTS}/04-required-terms.png`, fullPage: true });
   const items = page.getByRole("list", { name: "동의 항목" }).locator(":scope > li");                // 항목 줄만(전문 상자 안의 목록은 제외)
-  await expect(items).toHaveCount(5);
+  await expect(items).toHaveCount(6);
   await expect(items.nth(0)).toContainText("[필수]");
   await expect(items.nth(1)).toContainText("[필수]");
-  for (const at of [2, 3, 4]) await expect(items.nth(at)).toContainText("[선택]");
+  for (const at of [2, 3, 4, 5]) await expect(items.nth(at)).toContainText("[선택]");
   await expect(page.getByText("AI 작성 초안")).toHaveCount(0);                                  // `[2026-10-07 사용자 결정]` 보관 기간을 확정하고 안내문은 내렸다
   await expect(page.getByText(/【확정 필요/)).toHaveCount(0);                                     // 빈칸이 남지 않았다
   await expect(page.locator('[data-doc="privacy"] label')).toContainText("저는 만 14세 이상입니다");   // 만 14세 미만은 쓸 수 없다 - 동의할 때 확인
 });
 
-test("동의하고 다음으로를 누르면 다섯 항목이 서버에 기록된다: 고른 것만 true, 본 한국어 글의 지문(sha256)과 함께", async ({ page, request }) => {
+test("동의하고 다음으로를 누르면 여섯 항목이 서버에 기록된다: 고른 것만 true, 본 한국어 글의 지문(sha256)과 함께", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ consents: "on" });
   await useKorean(page);
@@ -44,7 +44,7 @@ test("동의하고 다음으로를 누르면 다섯 항목이 서버에 기록�
   const [post] = await server.received("POST", "/v1/web/consents");
   const body = post.body as { version: string; items: { code: string; agreed: boolean; text_sha256: string }[] };
   expect(body.version).toBe(TERMS_VERSION);
-  expect(body.items.map((item) => [item.code, item.agreed])).toEqual([["service_terms", true], ["privacy", true], ["sensitive", false], ["location", true], ["alert_channel", false]]);
+  expect(body.items.map((item) => [item.code, item.agreed])).toEqual([["service_terms", true], ["privacy", true], ["sensitive", false], ["location", true], ["alert_channel", false], ["service_improvement", false]]);
   for (const item of body.items) {
     const doc = TERMS_DOCS.find((entry) => entry.code === item.code)!;
     expect(item.text_sha256).toBe(sha256(docText(doc)));                                   // 브라우저가 계산한 지문 = 정본 글에서 계산한 지문
@@ -142,6 +142,41 @@ test("서버의 약관이 이 화면보다 새 버전이면 새로 고침을 안
   await expect(page.getByRole("alert", { name: "약관 확인 진행" })).toContainText("약관이 새로 바뀌었어요");
 });
 
+for (const wait of [{ ms: 500, visible: false }, { ms: 1200, visible: true }]) {
+  test(`동의 응답 ${wait.ms}ms 대기에서는 준비 안내가 ${wait.visible ? "나타나고 응답 후 닫힌다" : "나타나지 않는다"}`, async ({ page, request }) => {
+    const server = mockServer(request);
+    await server.scenario({ consents: "on", consentStream: "json" });
+    await server.consents({ service_terms: true, privacy: true });
+    await start(page);
+    const clockStart = new Date("2026-10-12T12:00:00+09:00");
+    await page.clock.install({ time: clockStart });
+    await page.clock.pauseAt(new Date(clockStart.getTime() + 1000));
+    let release!: () => void;
+    let received!: () => void;
+    const held = new Promise<void>((resolve) => { release = resolve; });
+    const requested = new Promise<void>((resolve) => { received = resolve; });
+    await page.route("**/v1/web/consents", async (route) => {
+      if (route.request().method() !== "GET") return route.continue();
+      received();
+      await held;
+      await route.continue();
+    });
+    try {
+      await page.goto("/mypage");
+      await requested;
+      const progress = page.getByRole("status", { name: "약관 확인 진행" });
+      await page.clock.runFor(wait.ms);
+      await expect(progress).toHaveCount(wait.visible ? 1 : 0);
+      await expect(page.getByRole("heading", { name: "마이페이지", exact: true })).toBeVisible();
+      release();
+      await expect(progress).toHaveCount(0);
+      await expect.poll(async () => (await server.received("GET", "/v1/web/consents")).length).toBeGreaterThan(0);
+    } finally {
+      release();
+    }
+  });
+}
+
 test("약관 SSE를 기다려도 마이페이지는 남고 실제 단계와 완료 수를 기존 화면 위에 보인다", async ({ page, request, context }) => {
   const server = mockServer(request);
   await server.scenario({ consents: "on", retention: "on", consentStream: "slow" });
@@ -202,6 +237,30 @@ test("동의 조회 실패를 미동의로 바꾸지 않고 같은 화면에서 
 });
 
 test.describe("마이페이지의 약관 동의 관리", () => {
+  test("서비스 개선 선택 동의는 기본 꺼짐이며 켜고 철회해도 기본 서비스를 계속 이용한다", async ({ page, request }) => {
+    const server = mockServer(request);
+    await server.scenario({ consents: "on" });
+    await start(page);
+    await page.goto("/mypage");
+    await page.getByRole("button", { name: "선택 약관 동의", exact: true }).click();
+    const row = page.locator('[data-doc="service_improvement"]');
+    await expect(row).toContainText("동의 안 함");
+    await row.getByRole("button", { name: "동의하기" }).click();
+    await expect(row).toContainText("동의함");
+    await row.getByRole("button", { name: "동의 철회" }).click();
+    await expect(row.getByRole("alert")).toContainText("검토 대기 합성 자료는 폐기");
+    await row.getByRole("button", { name: "철회하기" }).click();
+    await expect(row).toContainText("동의 안 함");
+    await expect(page).toHaveURL(/\/mypage$/);
+    const posts = await server.received("POST", "/v1/web/consents");
+    expect(posts.slice(-2).map((entry) => (entry.body as { items: { code: string; agreed: boolean }[] }).items.find((item) => item.code === "service_improvement")?.agreed)).toEqual([true, false]);
+    if (process.env.CONSENT_SHOTS) {
+      await page.screenshot({ path: `${process.env.CONSENT_SHOTS}/improvement-desktop.png`, fullPage: true });
+      await page.setViewportSize({ width: 375, height: 812 });
+      await page.screenshot({ path: `${process.env.CONSENT_SHOTS}/improvement-mobile.png`, fullPage: true });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
+  });
   test("선택 항목은 언제든 켜고 끌 수 있고, 바꿀 때마다 서버에 기록된다(철회도 새 기록)", async ({ page, request }) => {
     const server = mockServer(request);
     await server.scenario({ consents: "on" });
@@ -223,12 +282,12 @@ test.describe("마이페이지의 약관 동의 관리", () => {
     expect(posts.slice(-2).map((entry) => (entry.body as { items: { code: string; agreed: boolean }[] }).items.find((item) => item.code === "location")?.agreed)).toEqual([true, false]);
   });
 
-  test("필수 항목 요약과 철회는 관리 목록에서 빼고 선택 셋만 수정한다", async ({ page, request }) => {
+  test("필수 항목 요약과 철회는 관리 목록에서 빼고 선택 넷만 수정한다", async ({ page, request }) => {
     await mockServer(request).scenario({ consents: "on" });
     await start(page);
     await page.goto("/mypage");
     await page.getByRole("button", { name: "선택 약관 동의", exact: true }).click();
-    await expect(page.getByRole("list", { name: "선택 동의 항목" }).locator(":scope > li")).toHaveCount(3);
+    await expect(page.getByRole("list", { name: "선택 동의 항목" }).locator(":scope > li")).toHaveCount(4);
     await expect(page.locator('[data-doc="service_terms"], [data-doc="privacy"]')).toHaveCount(0);
     await expect(page.getByRole("button", { name: "약관 전문 확인" })).toBeVisible();
   });

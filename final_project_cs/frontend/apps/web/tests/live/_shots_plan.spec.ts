@@ -1,15 +1,17 @@
 import { test, type Page } from "@playwright/test";
-import { head } from "./plan-check-kit";
+import { resolve } from "node:path";
 import { mockServer, start } from "./helpers";
+import { head } from "./plan-check-kit";
 
-// 화면 촬영은 시험 결과 폴더에만 기록한다.
+// 임시 촬영용 — 저장소에 올리지 않는다(화면을 눈으로 확인하려고 만든 것).
 const INTAKE = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
-const OUT = process.env.SHOT_DIR ?? "test-results/shots-plan";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 test.use({ viewport: { width: 402, height: 874 } });
 
-const shot = (page: Page, name: string) => page.screenshot({ path: `${OUT}/${name}.png` });
+const shot = (page: Page, name: string) => page.screenshot({
+  path: process.env.SHOT_DIR ? resolve(process.env.SHOT_DIR, `${name}.png`) : test.info().outputPath(`${name}.png`),
+});
 
 test("촬영: 읽는 중 → 확인 재생 → 결과", async ({ page, request }) => {
   const server = mockServer(request);

@@ -1,0 +1,107 @@
+{
+  "model_hashes": [
+    {
+      "file": "sentiment/config.json",
+      "sha256": "ee25d2c301d2da5973ba372a9f603c4d3d543d5177b563070ad28b1d836240cb",
+      "size": 1090,
+      "result": "OK"
+    },
+    {
+      "file": "sentiment/model.safetensors",
+      "sha256": "0643492761ba8a6f090365a29b17c48a7ecbc65a61ea18a1088abc2c24e52595",
+      "size": 743556072,
+      "result": "OK"
+    },
+    {
+      "file": "sentiment/tokenizer.json",
+      "sha256": "940a1eac3be32bc073b7da1ac0a073d343dbd5dc409e71327395634749ab5eea",
+      "size": 3192183,
+      "result": "OK"
+    },
+    {
+      "file": "sentiment/tokenizer_config.json",
+      "sha256": "0fe650d7e0e9121581b26ef7fd5a3ae296efff1f5eafbce334be6c58ec386adf",
+      "size": 451,
+      "result": "OK"
+    },
+    {
+      "file": "sentiment/metrics.json",
+      "sha256": "5684763a42c1c2192c76bcc2b12e48b6c717cf8d0bf3e33e99533463691e6862",
+      "size": 4226,
+      "result": "OK"
+    },
+    {
+      "file": "intent/config.json",
+      "sha256": "ca9616e3ea14d9441dacb4016763dbef8d2405e25bf08c5281933cce0dda9fb6",
+      "size": 1258,
+      "result": "OK"
+    },
+    {
+      "file": "intent/model.safetensors",
+      "sha256": "ae686b2658f143818f64e2eed2498f1e0529ee4afb38b345e726fc8221405229",
+      "size": 743565308,
+      "result": "OK"
+    },
+    {
+      "file": "intent/tokenizer.json",
+      "sha256": "940a1eac3be32bc073b7da1ac0a073d343dbd5dc409e71327395634749ab5eea",
+      "size": 3192183,
+      "result": "OK"
+    },
+    {
+      "file": "intent/tokenizer_config.json",
+      "sha256": "0fe650d7e0e9121581b26ef7fd5a3ae296efff1f5eafbce334be6c58ec386adf",
+      "size": 451,
+      "result": "OK"
+    },
+    {
+      "file": "intent/metrics.json",
+      "sha256": "f89ad2838e8d6f8e7bc82f3877ecb5a013f5d2f8e2d0e9a2eb682114e2c4303d",
+      "size": 16038,
+      "result": "OK"
+    },
+    {
+      "file": "issue_code/config.json",
+      "sha256": "d8cf32f45a0b0a191c97fcb98df094dcf1b66368cd66bb8c933dc9f8ca9e47bb",
+      "size": 2018,
+      "result": "OK"
+    },
+    {
+      "file": "issue_code/model.safetensors",
+      "sha256": "07aa5d630a5b622a97f2b113cc9fdf5c185bdb3c014b01512344b881f60ac148",
+      "size": 743602220,
+      "result": "OK"
+    },
+    {
+      "file": "issue_code/tokenizer.json",
+      "sha256": "940a1eac3be32bc073b7da1ac0a073d343dbd5dc409e71327395634749ab5eea",
+      "size": 3192183,
+      "result": "OK"
+    },
+    {
+      "file": "issue_code/tokenizer_config.json",
+      "sha256": "0fe650d7e0e9121581b26ef7fd5a3ae296efff1f5eafbce334be6c58ec386adf",
+      "size": 451,
+      "result": "OK"
+    },
+    {
+      "file": "issue_code/metrics.json",
+      "sha256": "94e1fe5c9903b4e0905dfd90253c73c3a762cc3325ed05a74684d9d7ed51de9e",
+      "size": 23840,
+      "result": "OK"
+    },
+    {
+      "file": "tfidf_baseline/metrics.json",
+      "sha256": "ef53a7e50763e9238a8a727ccd0c639d6bcbe3b50e416b5a04d0bfbe13735930",
+      "size": 3414,
+      "result": "OK"
+    },
+    {
+      "file": "tfidf_baseline/model.joblib",
+      "sha256": "8deae3aef673d1b4385cc5aad8e3277d3dc65f84b32b1fd23f417c95ea3ba6c0",
+      "size": 15324305,
+      "result": "OK"
+    }
+  ],
+  "docx_reopen_checks": "PASS"
+}

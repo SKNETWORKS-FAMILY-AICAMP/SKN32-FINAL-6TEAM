@@ -58,6 +58,27 @@ describe("live trip gateway", () => {
     expect((calls[0].init.headers as Record<string, string>)["X-User-Key"]).toBeUndefined();
   });
 
+  it("keeps a structured choice target and restores it from the API record in a fresh gateway", async () => {
+    const gateway = createLiveGateway();
+    replies.push({ status: "answered", answer: "경복궁 주소", choices: [{ label: "자세히 알려줘", message: "자세히 알려줘", item_id: "a" }] });
+    const first = await gateway.sendMessage(TRIP.trip_id, "경복궁 어디야", "ko");
+    expect(first.messages.at(-1)?.choices?.[0]).toEqual({ label: "자세히 알려줘", message: "자세히 알려줘", itemId: "a" });
+    window.sessionStorage.clear?.();
+    // A different tab has no local extras: the server record must carry the choice itself.
+    window.sessionStorage.removeItem(`tripilot.web.live.messages:${TRIP.trip_id}`);
+    chat = [{ role: "customer", text: "경복궁 어디야", case_id: "case-a" },
+      { role: "assistant", text: "경복궁 주소 · 혹시 이런 뜻이었나요?", case_id: "case-a",
+        reply: { answer_web: "경복궁 주소", choices_title: "혹시 이런 뜻이었나요?", more: "예약 기록",
+          choices: [{ label: "자세히 알려줘", message: "자세히 알려줘", item_id: "a" }] } }];
+    const restored = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(restored.messages).toHaveLength(2);
+    expect(restored.messages.at(-1)).toMatchObject({ text: "경복궁 주소", more: "예약 기록",
+      choices: [{ label: "자세히 알려줘", message: "자세히 알려줘", itemId: "a" }] });
+    replies.push({ answer: "상세" });
+    await gateway.sendMessage(TRIP.trip_id, "자세히 알려줘", "ko", restored.messages.at(-1)?.choices?.[0].itemId);
+    expect(JSON.parse(calls.filter(c => c.init.method === "POST").at(-1)!.init.body as string)).toMatchObject({ item_id: "a" });
+  });
+
   it("does not make a guest just to open a trip: a browser with no session is told at once, with the way back", async () => {
     useBrowser(false);
     const failure = await createLiveGateway().getTrip(TRIP.trip_id, "ko").catch((error: unknown) => error);
@@ -308,6 +329,31 @@ describe("live trip gateway", () => {
     expect((await gateway.getTrip(TRIP.trip_id, "ko")).messages[1]).not.toHaveProperty("choices");
   });
 
+  it("does not append old local turns after they leave the recent server window", async () => {
+    window.sessionStorage.setItem(`tripilot.web.live.messages:${TRIP.trip_id}`, JSON.stringify([
+      { id: "old-q", role: "user", text: "옛 질문", createdAt: "2020-01-01T00:00:00Z" },
+      { id: "old-a", role: "assistant", text: "옛 답변", createdAt: "2020-01-01T00:00:01Z" },
+    ]));
+    chat = [{ role: "customer", text: "최근 질문", case_id: "new", turn_id: 55, at: "2021-01-01T00:00:00Z" },
+      { role: "assistant", text: "최근 답변", case_id: "new", turn_id: 56, at: "2021-01-01T00:00:01Z" }];
+    const result = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(result.messages.map((message) => message.text)).toEqual(["최근 질문", "최근 답변"]);
+    expect(result.messages[1].id).toBe("chat-56");
+  });
+
+  it("matches identical answer text by case and keeps a pending answer without repeating its question", async () => {
+    const gateway = createLiveGateway();
+    replies.push({ status: "answered", case_id: "pending", answer: "같은 답변" }, TRIP);
+    await gateway.sendMessage(TRIP.trip_id, "새 질문", "ko");
+    chat = [{ role: "customer", text: "옛 질문", case_id: "earlier", at: "2020-01-01T00:00:00Z" },
+      { role: "assistant", text: "같은 답변", case_id: "earlier", at: "2020-01-01T00:00:01Z" },
+      { role: "customer", text: "새 질문", case_id: "pending", at: new Date().toISOString() }];
+    const result = await gateway.getTrip(TRIP.trip_id, "ko");
+    expect(result.messages.filter((message) => message.text === "새 질문")).toHaveLength(1);
+    expect(result.messages.filter((message) => message.text === "같은 답변")).toHaveLength(2);
+    expect(result.messages.at(-1)?.caseId).toBe("pending");
+  });
+
   // 2026-09-30 (teammate question Q-05): sending and re-reading are two steps.
   it("keeps the server's reply when only the re-read after it fails — it is not reported as 'not sent'", async () => {
     const gateway = createLiveGateway();
@@ -346,6 +392,102 @@ describe("live trip gateway", () => {
   });
 
   // 2026-09-30: the customer's position from the browser, sent only after the server asked for it.
+  describe("continuing a request that is waiting for input", () => {
+    const wait = { status: "clarify", case_status: "waiting_input", case_id: "case-dining", version: 4,
+      resume_token: "resume-private", answer: "몇 분쯤 늦으세요?", required_input_schema: { required: ["minutes"] } };
+    const resume = { case_id: wait.case_id, resume_token: wait.resume_token, expected_version: wait.version };
+    const bodies = () => calls.filter((call) => call.url.endsWith("/messages")).map((call) => JSON.parse(String(call.init.body)) as Record<string, unknown>);
+
+    it("continues the same Case and clears it after completion without storing its token", async () => {
+      const gateway = createLiveGateway();
+      replies.push(wait);
+      const asked = await gateway.sendMessage(TRIP.trip_id, "늦어요", "ko");
+      expect(asked.messages.at(-1)?.awaitingReply).toBe(true);
+      expect(window.sessionStorage.getItem("tripilot.web.live.messages:" + TRIP.trip_id)).not.toContain(wait.resume_token);
+      replies.push({ case_status: "completed", answer: "30분 늦는 것으로 반영했어요." });
+      const finished = await gateway.sendMessage(TRIP.trip_id, "30분이요", "ko");
+      expect(bodies()[1]).toMatchObject(resume);
+      expect(finished.messages.some((message) => message.awaitingReply)).toBe(false);
+      replies.push({ case_status: "completed", answer: "네." });
+      await gateway.sendMessage(TRIP.trip_id, "다음 일정은요?", "ko");
+      expect(bodies()[2]).not.toHaveProperty("case_id");
+    });
+
+    it("keeps pending requests separate when switching between trips", async () => {
+      const gateway = createLiveGateway();
+      replies.push(wait);
+      await gateway.sendMessage(TRIP.trip_id, "늦어요", "ko");
+      replies.push({ case_status: "completed", answer: "다른 여행이에요." });
+      await gateway.sendMessage("another-trip", "30분이요", "ko");
+      expect(bodies()[1]).not.toHaveProperty("case_id");
+      replies.push({ case_status: "completed", answer: "반영했어요." });
+      await gateway.sendMessage(TRIP.trip_id, "30분이요", "ko");
+      expect(bodies()[2]).toMatchObject(resume);
+    });
+
+    it("uses the renewed token and Case version when more information is still needed", async () => {
+      const gateway = createLiveGateway();
+      replies.push(wait);
+      await gateway.sendMessage(TRIP.trip_id, "늦어요", "ko");
+      replies.push({ ...wait, version: 8, resume_token: "renewed-private" });
+      await gateway.sendMessage(TRIP.trip_id, "많이요", "ko");
+      replies.push({ case_status: "completed", answer: "반영했어요." });
+      await gateway.sendMessage(TRIP.trip_id, "30분이요", "ko");
+      expect(bodies()[2]).toMatchObject({ case_id: wait.case_id, resume_token: "renewed-private", expected_version: 8 });
+    });
+
+    it("retries a failed reply with the same request id and resume credentials", async () => {
+      const gateway = createLiveGateway();
+      replies.push(wait);
+      await gateway.sendMessage(TRIP.trip_id, "늦어요", "ko");
+      replies.push(new Response("{}", { status: 502 }));
+      await expect(gateway.sendMessage(TRIP.trip_id, "30분이요", "ko")).rejects.toBeInstanceOf(LiveError);
+      replies.push({ case_status: "completed", answer: "반영했어요." });
+      await gateway.sendMessage(TRIP.trip_id, "30분이요", "ko");
+      expect(bodies()[2]).toEqual(bodies()[1]);
+    });
+
+    it("does not restore resume credentials from conversation storage after a reload", async () => {
+      replies.push(wait);
+      await createLiveGateway().sendMessage(TRIP.trip_id, "늦어요", "ko");
+      replies.push({ case_status: "completed", answer: "반영했어요." });
+      await createLiveGateway().sendMessage(TRIP.trip_id, "30분이요", "ko");
+      expect(bodies()[1]).not.toHaveProperty("case_id");
+      expect(bodies()[1]).not.toHaveProperty("resume_token");
+    });
+
+    it("reads waiting and completion from SSE results just as from JSON", async () => {
+      const gateway = createLiveGateway();
+      replies.push(new Response(`event: result\ndata: ${JSON.stringify(wait)}\n\n`, { headers: { "Content-Type": "text/event-stream" } }));
+      expect((await gateway.sendMessage(TRIP.trip_id, "늦어요", "ko")).messages.at(-1)?.awaitingReply).toBe(true);
+      replies.push(new Response('event: result\ndata: {"case_status":"completed","answer":"반영했어요."}\n\n', { headers: { "Content-Type": "text/event-stream" } }));
+      expect((await gateway.sendMessage(TRIP.trip_id, "30분이요", "ko")).messages.at(-1)?.awaitingReply).toBeUndefined();
+      expect(bodies()[1]).toMatchObject(resume);
+    });
+
+    it("drops credentials when the login session is no longer the one that received them", async () => {
+      const gateway = createLiveGateway();
+      replies.push(wait);
+      await gateway.sendMessage(TRIP.trip_id, "늦어요", "ko");
+      resetSessionState();
+      replies.push({ case_status: "completed", answer: "반영했어요." });
+      await gateway.sendMessage(TRIP.trip_id, "30분이요", "ko");
+      expect(bodies()[1]).not.toHaveProperty("case_id");
+    });
+
+    it("accepts explicit correlation and never reuses a failed reply id for a different Case", async () => {
+      const gateway = createLiveGateway();
+      replies.push(new Response("{}", { status: 502 }));
+      await expect(gateway.sendMessage(TRIP.trip_id, "30분이요", "ko", null, null, undefined, resume)).rejects.toBeInstanceOf(LiveError);
+      const other = { ...resume, case_id: "another-case", resume_token: "another-private" };
+      replies.push({ case_status: "completed", answer: "반영했어요." });
+      await gateway.sendMessage(TRIP.trip_id, "30분이요", "ko", null, null, undefined, other);
+      expect(bodies()[0]).toMatchObject(resume);
+      expect(bodies()[1]).toMatchObject(other);
+      expect(bodies()[1].request_id).not.toBe(bodies()[0].request_id);
+    });
+  });
+
   it("marks an answer that needs the customer's position, and sends the position only when given", async () => {
     const gateway = createLiveGateway();
     const bodies = () => calls.filter((call) => call.url.endsWith("/messages")).map((call) => JSON.parse(String(call.init.body)) as Record<string, unknown>);

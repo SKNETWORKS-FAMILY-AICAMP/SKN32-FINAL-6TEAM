@@ -33,10 +33,10 @@ if [ ! -d "$REPO/.git" ]; then
   rm -rf "$REPO"
   git clone --quiet --depth 1 --filter=blob:none --no-checkout --branch "$DEPLOY_BRANCH" "$DEPLOY_REPO" "$REPO" 2>>"$LOG" \
     || { log "★받기 실패(clone) — 저장소 주소·브랜치를 확인한다"; exit 1; }
-  git -C "$REPO" sparse-checkout set --cone "$CS/app" "$CS/config" "$CS/prompts" "$CS/scripts" "$CS/deploy" "$CS/frontend/apps/web" "$CS/frontend/apps/admin" >>"$LOG" 2>&1
+  git -C "$REPO" sparse-checkout set --cone "$CS/app" "$CS/config" "$CS/knowledge" "$CS/prompts" "$CS/scripts" "$CS/deploy" "$CS/frontend/apps/web" "$CS/frontend/apps/admin" >>"$LOG" 2>&1
 fi
 # 이미 만들어진 배포용 체크아웃에도 운영 웹앱을 포함한다.
-git -C "$REPO" sparse-checkout set --cone "$CS/app" "$CS/config" "$CS/prompts" "$CS/scripts" "$CS/deploy" "$CS/frontend/apps/web" "$CS/frontend/apps/admin" >>"$LOG" 2>&1 || exit 1
+git -C "$REPO" sparse-checkout set --cone "$CS/app" "$CS/config" "$CS/knowledge" "$CS/prompts" "$CS/scripts" "$CS/deploy" "$CS/frontend/apps/web" "$CS/frontend/apps/admin" >>"$LOG" 2>&1 || exit 1
 git -C "$REPO" fetch --quiet --depth 1 origin "$DEPLOY_BRANCH" 2>>"$LOG" || { log "받기 실패(fetch) — 네트워크 일시 문제일 수 있다, 다음 회차에 다시"; exit 0; }
 NEW="$(git -C "$REPO" rev-parse FETCH_HEAD)"
 SHORT="$(printf '%s' "$NEW" | cut -c1-10)"
@@ -46,7 +46,7 @@ if ! git -C "$REPO" cat-file -e "$NEW:$CS/deploy/docker-compose.yml" 2>/dev/null
   [ "$(cat "$STATE/last_skip" 2>/dev/null)" = "$SHORT" ] || { log "건너뜀 $SHORT — 이 커밋에는 $CS/deploy/ 가 없다(배포 구성이 아직 안 합쳐졌다)"; echo "$SHORT" > "$STATE/last_skip"; }
   exit 0
 fi
-FP="$(for p in app config prompts scripts deploy frontend/apps/web frontend/apps/admin requirements.txt; do git -C "$REPO" rev-parse "$NEW:$CS/$p" 2>/dev/null || echo "-"; done | sha256sum | cut -c1-24)"
+FP="$(for p in app config knowledge prompts scripts deploy frontend/apps/web frontend/apps/admin requirements.txt; do git -C "$REPO" rev-parse "$NEW:$CS/$p" 2>/dev/null || echo "-"; done | sha256sum | cut -c1-24)"
 [ "$(cat "$STATE/deployed_fp" 2>/dev/null)" = "$FP" ] && exit 0                 # 배포에 쓰이는 폴더가 같다 — 다시 빌드할 이유가 없다
 [ "$(cat "$STATE/bad_sha" 2>/dev/null)" = "$SHORT" ] && exit 0                   # 이 커밋은 이미 실패했다 — 새 커밋이 올 때까지 기다린다
 
@@ -59,6 +59,12 @@ mkdir -p "$REPO/$CS/var"
 [ -f "$STATE/notice_phrasebook.json" ] && cp "$STATE/notice_phrasebook.json" "$REPO/$CS/var/notice_phrasebook.json"
 [ -f "$REPO/$CS/var/notice_phrasebook.json" ] || echo '{}' > "$REPO/$CS/var/notice_phrasebook.json"
 
+# 실행 중 이미지 ID와 실제 Compose 구성을 변경 전에 보관한다.
+GUARD="$REPO/$CS/deploy/migration_safe_deploy.py"
+SAFETY_STATE="$STATE/migration-safety-$SHORT-$(date +%s)"
+command -v python3 >/dev/null 2>&1 || { log "★python3 필요 — 변경 전 중단"; exit 1; }
+(cd "$BASE" && python3 "$GUARD" snapshot --state-dir "$SAFETY_STATE") >>"$LOG" 2>&1 \
+  || { log "★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단"; exit 1; }
 cp -p "$BASE/docker-compose.yml" "$STATE/docker-compose.prev.yml" 2>/dev/null
 cp "$REPO/$CS/deploy/docker-compose.yml" "$BASE/docker-compose.yml"
 cp "$REPO/$CS/deploy/auto_deploy.sh" "$STATE/auto_deploy.next.sh" 2>/dev/null          # 스크립트 갱신은 다음 회차에(실행 중인 자신을 덮지 않는다)
@@ -68,15 +74,20 @@ export TRIPILOT_SRC="./repo/$CS"
 PREV="$(cat "$STATE/current_tag" 2>/dev/null || echo local)"
 
 # ── 3. 빌드 — 실패해도 실행 중인 것은 그대로 ─────────────────────
-if ! TRIPILOT_TAG="$SHORT" nice -n 10 docker compose build >"$STATE/build_$SHORT.log" 2>&1 </dev/null; then
+if ! TRIPILOT_TAG="$SHORT" timeout --foreground --kill-after=15s 600 nice -n 10 docker compose build >"$STATE/build_$SHORT.log" 2>&1 </dev/null; then
   log "★빌드 실패 $SHORT — 실행 중인 것은 그대로 둔다(자세한 것: state/build_$SHORT.log)"
   echo "$SHORT" > "$STATE/bad_sha"; cp -p "$STATE/docker-compose.prev.yml" "$BASE/docker-compose.yml" 2>/dev/null
   exit 1
 fi
 
 # ── 4. 마이그레이션(앞으로 가기뿐) ───────────────────────────────
-if ! TRIPILOT_TAG="$SHORT" docker compose up -d tripilot-db >>"$LOG" 2>&1 </dev/null \
-   || ! TRIPILOT_TAG="$SHORT" docker compose run --rm --no-deps tripilot-api python -m app.infrastructure.db.migrate >>"$LOG" 2>&1 </dev/null; then
+if ! TRIPILOT_TAG="$SHORT" python3 "$GUARD" check --state-dir "$SAFETY_STATE" >>"$LOG" 2>&1; then
+  log "★이미지 자체·Compose SQL 안전 계약 불일치 — DB 적용 전 중단"
+  echo "$SHORT" > "$STATE/bad_sha"; cp -p "$STATE/docker-compose.prev.yml" "$BASE/docker-compose.yml"
+  exit 1
+fi
+if ! TRIPILOT_TAG="$SHORT" timeout --foreground --kill-after=15s 120 docker compose up -d --no-recreate tripilot-db >>"$LOG" 2>&1 </dev/null \
+   || ! TRIPILOT_TAG="$SHORT" python3 "$GUARD" migrate --state-dir "$SAFETY_STATE" --timeout 180 >>"$LOG" 2>&1 </dev/null; then
   log "★마이그레이션 실패 $SHORT — 실행 중인 것은 그대로 둔다"
   echo "$SHORT" > "$STATE/bad_sha"; cp -p "$STATE/docker-compose.prev.yml" "$BASE/docker-compose.yml" 2>/dev/null
   exit 1
@@ -84,21 +95,8 @@ fi
 
 # ── 5. 반영 — 건강해질 때까지 기다린 뒤 **한 번 더 지켜본다** ─────────────
 # ★`up --wait` 만으로는 모자랐다(시험 E): 건강 검사가 없는 컨테이너(일꾼)가 죽었다 살아나기를 반복해도 「실행 중」으로 보고 통과시켰다.
-#   그래서 반영 뒤 SETTLE_SECONDS(기본 30초) 동안 지켜보고 ①컨테이너가 넷(DB · API · 웹 · 일꾼) 다 있고 ②모두 실행 중이며 ③**재시작이 한 번도 없어야** 성공으로 본다.
-settle_ok() {
-  sleep "${SETTLE_SECONDS:-30}"
-  ids="$(docker compose ps -q </dev/null)"
-  [ "$(printf '%s
-' "$ids" | grep -c .)" -ge 4 ] || { log "  ✗ 컨테이너가 4개 미만이다"; return 1; }
-  bad=0
-  for c in $ids; do
-    s="$(docker inspect -f '{{.Name}} {{.State.Status}} 재시작 {{.RestartCount}}' "$c" </dev/null)"
-    case "$s" in *" running 재시작 0") ;; *) log "  ✗ $s"; bad=1 ;; esac
-  done
-  return "$bad"
-}
-
-if TRIPILOT_TAG="$SHORT" docker compose up -d --wait --wait-timeout 240 >>"$LOG" 2>&1 </dev/null && settle_ok; then
+#   API·웹·일꾼별 이미지 ID와 건강 상태를 검사하고 관찰 중 재생성·재시작을 거부한다. DB는 재생성하지 않는다.
+if TRIPILOT_TAG="$SHORT" python3 "$GUARD" rollout --state-dir "$SAFETY_STATE" --timeout 240 --settle "${SETTLE_SECONDS:-30}" >>"$LOG" 2>&1 </dev/null; then
   echo "$SHORT" > "$STATE/current_tag"; echo "$FP" > "$STATE/deployed_fp"; echo "$NEW" > "$STATE/deployed_sha"
   : > "$STATE/bad_sha"
   # 이름표 없이 다시 만들어질 때(`docker compose up` 을 손으로 칠 때 등) 옛 이미지(local)로 뜨는 사고를 막는다 —
@@ -116,14 +114,11 @@ if TRIPILOT_TAG="$SHORT" docker compose up -d --wait --wait-timeout 240 >>"$LOG"
       || log "★운영 웹앱 반영 실패 — 고객 서비스는 정상이며 운영 웹앱은 별도 확인 필요"
   fi
 else
-  log "★새 이미지가 건강하지 않거나 불안정하다 $SHORT — 이전($PREV)으로 되돌린다"
+  log "★새 이미지 반영 실패 $SHORT — 저장한 실제 이미지 ID 복구 결과를 확인한다"
   echo "$SHORT" > "$STATE/bad_sha"
   cp -p "$STATE/docker-compose.prev.yml" "$BASE/docker-compose.yml" 2>/dev/null
-  if TRIPILOT_TAG="$PREV" docker compose up -d --wait --wait-timeout 240 >>"$LOG" 2>&1 </dev/null; then
-    log "되돌림 완료 — 서비스는 $PREV 로 돈다"
-  else
-    log "★★되돌림도 실패 — 사람이 봐야 한다(docker compose ps · docker logs)"
-  fi
+  # rollout 자체가 실제 이전 이미지 ID로 복구하고 확인한다. 태그로 다시 덮지 않는다.
+  log "복구 결과는 위 migration_safe_deploy 기록 확인 — 자동 재시도하지 않는다"
   exit 1
 fi
 

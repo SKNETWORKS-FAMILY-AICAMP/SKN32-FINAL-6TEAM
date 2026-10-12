@@ -173,9 +173,11 @@ def _artifact(request_payload: dict[str, Any], *, place_id: str | None = None,
     ★**모르면 만들지 않는다.** `place_id` 가 없으면 확인했다고 말하지 않는다 —
       `input-required` 로 되묻는 이유가 그것이다.
     """
+    identity = {name: request_payload[name] for name in ("task_id", "run_id", "team_id")}
     observed_at = "2026-09-10T00:00:00+00:00"
     if place_id is None:
         return {
+            **identity,
             "outcome": "waiting",
             "answer": None,
             "confidence": 0.0,
@@ -184,6 +186,7 @@ def _artifact(request_payload: dict[str, Any], *, place_id: str | None = None,
             "wait_reason": "customer_input",
         }
     return {
+        **identity,
         "outcome": "completed",
         "answer": f"장소 원장에서 확인했습니다 (place_id={place_id})"
                   + (f", 방문 예정 {visit_at} 기준 운영합니다" if visit_at else ""),

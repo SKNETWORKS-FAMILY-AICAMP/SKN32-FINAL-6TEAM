@@ -1,0 +1,134 @@
+<svg viewBox="0 0 1216 704" role="img" aria-labelledby="v2-main-title v2-main-desc" xmlns="http://www.w3.org/2000/svg">
+  <title id="v2-main-title">여행 Team과 코어 계약 경계</title>
+  <desc id="v2-main-desc">외부 에이전트는 POST /v1/cases로 요청한다. Controller는 선택된 로컬 팀에 TeamTask를 보내고 TeamResult와 제안을 받는다. Activity, Dining, Mobility는 MVP이고 Booking Handoff는 MVP 다음이다. Lodging과 Flight는 등록만 되어 있으며 한 파일에서 예약을 잠김 취급한다. 여섯 로컬 팀은 TravelTeamBase를 공통 부모로 사용한다. Place Verification은 미등록 원격 시뮬레이터이며 A2A 실행기는 꺼져 있다. 승인 이후 공급자 실행은 미구현이며 사람 승인과 공급자 실행의 책임 경계는 2장에 있다.</desc>
+
+  <defs>
+    <marker id="v2-main-arrow" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#6b7488"/>
+    </marker>
+    <marker id="v2-main-arrow-link" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#2f5bd8"/>
+    </marker>
+    <marker id="v2-main-arrow-muted" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#7a8599"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1216" height="704" fill="#fbfcfd"/>
+
+  <g fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.10)" stroke-width="0.8">
+    <rect x="352" y="140" width="528" height="132" rx="8"/>
+    <rect x="40" y="324" width="912" height="288" rx="8"/>
+  </g>
+
+  <g fill="#7a8599" font-family="'Geist Mono',monospace" font-size="8" font-weight="400" letter-spacing="0.14em">
+    <text x="616" y="160" text-anchor="middle">CORE · KEEP</text>
+    <text x="64" y="348">TEAM MODULES · 6 LOCAL · JUDGE ONLY</text>
+  </g>
+
+  <g fill="none" stroke="#6b7488" stroke-width="1">
+    <path d="M472 92 V176" stroke="#2f5bd8" stroke-width="1.2" marker-end="url(#v2-main-arrow-link)"/>
+    <path d="M472 248 V364"/>
+    <path d="M144 364 H848"/>
+    <path d="M144 364 V388" marker-end="url(#v2-main-arrow)"/>
+    <path d="M320 364 V388" marker-end="url(#v2-main-arrow)"/>
+    <path d="M496 364 V388" marker-end="url(#v2-main-arrow)"/>
+    <path d="M672 364 V388" marker-end="url(#v2-main-arrow)"/>
+    <path d="M848 364 V388" stroke="#7a8599" stroke-dasharray="4 4" marker-end="url(#v2-main-arrow-muted)"/>
+    <path d="M568 212 H664" stroke="#7a8599" stroke-dasharray="4 4" marker-end="url(#v2-main-arrow-muted)"/>
+    <path d="M928 558 H952 V296 H592 V264 H552 V248" stroke-width="1.2" marker-end="url(#v2-main-arrow)"/>
+  </g>
+
+  <g fill="#6b7488" font-family="'Geist Mono',monospace" font-size="9" font-weight="400">
+    <text x="488" y="116" fill="#2f5bd8">POST /v1/cases</text>
+    <text x="488" y="288">TeamTask</text>
+    <rect x="700" y="280" width="120" height="16" rx="2" fill="#fbfcfd"/>
+    <text x="760" y="291" text-anchor="middle">ACTIONPROPOSAL</text>
+    <text x="616" y="200" fill="#7a8599" text-anchor="middle">UNIMPLEMENTED</text>
+  </g>
+
+  <g fill="#fbfcfd" stroke="#161c28" stroke-width="1">
+    <rect x="384" y="40" width="176" height="52" rx="6"/>
+    <rect x="376" y="176" width="192" height="72" rx="6"/>
+    <rect x="664" y="176" width="192" height="72" rx="6"/>
+    <rect x="64" y="528" width="864" height="60" rx="6"/>
+  </g>
+
+  <g fill="#ffffff" stroke="#161c28" stroke-width="1">
+    <rect x="64" y="388" width="160" height="104" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c"/>
+    <rect x="240" y="388" width="160" height="104" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c"/>
+    <rect x="416" y="388" width="160" height="104" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c"/>
+    <rect x="592" y="388" width="160" height="104" rx="6"/>
+    <rect x="768" y="388" width="160" height="104" rx="6" fill="transparent" stroke-dasharray="4 4"/>
+    <rect x="976" y="388" width="208" height="104" rx="6" fill="transparent" stroke-dasharray="4 4"/>
+  </g>
+
+  <g fill="transparent" stroke="rgba(22,28,40,0.40)" stroke-width="0.8">
+    <rect x="72" y="396" width="32" height="16" rx="2" stroke="rgba(168,114,12,0.50)"/>
+    <rect x="248" y="396" width="32" height="16" rx="2" stroke="rgba(168,114,12,0.50)"/>
+    <rect x="424" y="396" width="32" height="16" rx="2" stroke="rgba(168,114,12,0.50)"/>
+    <rect x="600" y="396" width="36" height="16" rx="2"/>
+    <rect x="776" y="396" width="36" height="16" rx="2"/>
+    <rect x="984" y="396" width="64" height="16" rx="2"/>
+    <rect x="672" y="184" width="56" height="16" rx="2"/>
+  </g>
+
+  <g fill="#6b7488" font-family="'Geist Mono',monospace" font-size="7" font-weight="400" text-anchor="middle" letter-spacing="0.08em">
+    <text x="88" y="408" fill="#a8720c">MVP</text>
+    <text x="264" y="408" fill="#a8720c">MVP</text>
+    <text x="440" y="408" fill="#a8720c">MVP</text>
+    <text x="618" y="408">NEXT</text>
+    <text x="794" y="408">STUB</text>
+    <text x="1016" y="408">REMOTE OFF</text>
+    <text x="690" y="196">UNBUILT</text>
+  </g>
+
+  <g fill="#161c28" font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" font-weight="600" text-anchor="middle">
+    <text x="472" y="64">외부 에이전트</text>
+    <text x="472" y="196">Controller</text>
+    <text x="760" y="220">승인 이후 공급자 실행</text>
+    <text x="144" y="436">Activity</text>
+    <text x="320" y="436">Dining</text>
+    <text x="496" y="436">Mobility</text>
+    <text x="672" y="436">Booking Handoff</text>
+    <text x="848" y="436">Lodging / Flight</text>
+    <text x="1080" y="436">Place Verification</text>
+    <text x="496" y="548">TravelTeamBase</text>
+  </g>
+
+  <g fill="rgba(22,28,40,0.80)" font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" text-anchor="middle">
+    <text x="472" y="80">일정·요청 입력</text>
+    <text x="472" y="216">판단 위임·승인 등록</text>
+    <text x="760" y="236">책임 경계는 2장</text>
+    <text x="144" y="456">활동 가능 여부</text>
+    <text x="320" y="456">영업·요청 조건</text>
+    <text x="496" y="456">현재 구간 정보 모름</text>
+    <text x="672" y="456">예약 대조·제안</text>
+    <text x="848" y="456">예약은 잠김 취급</text>
+    <text x="1080" y="456">원격 시뮬레이터</text>
+    <text x="496" y="564">여섯 로컬 팀의 공통 부모 · 선택된 로컬 팀 → Controller: TeamResult · 제안 반환</text>
+  </g>
+
+  <g fill="#6b7488" font-family="'Geist Mono',monospace" font-size="9" font-weight="400" text-anchor="middle">
+    <text x="472" y="236">controller.py:215</text>
+    <text x="144" y="476">activity.py:127</text>
+    <text x="320" y="476">dining.py:64</text>
+    <text x="496" y="476">mobility.py:54~55</text>
+    <text x="672" y="476">booking_handoff.py:65</text>
+    <text x="848" y="476">locked_bookings.py:37</text>
+    <text x="1080" y="476">travel_remote_agent.py:44</text>
+    <text x="496" y="580">_guard · _read · _evidence · _result · _escalate · _unknown · _proposal (_base.py 177 lines)</text>
+  </g>
+
+  <g fill="#7a8599" font-family="'Geist Mono',monospace" font-size="8" font-weight="400" letter-spacing="0.14em">
+    <text x="40" y="648">LEGEND</text>
+  </g>
+
+  <g fill="rgba(22,28,40,0.80)" font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400">
+    <text x="120" y="648">KEEP = 코어 계약 유지 · MVP = MVP 범위 · NEXT = MVP 다음 · STUB = 등록만 · REMOTE OFF = 원격 미등록·A2A 꺼짐 · UNBUILT = 미구현</text>
+    <text x="40" y="680">로컬 팀 · 등록만 · 원격 미등록 · 공급자 실행 미구현 · 로컬 실행 설정:</text>
+  </g>
+  <g fill="#6b7488" font-family="'Geist Mono',monospace" font-size="9" font-weight="400">
+    <text x="456" y="680">team_executor: local · a2a_executor.enabled: false</text>
+  </g>
+</svg>

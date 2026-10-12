@@ -65,6 +65,8 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
     """`exchange` — 코드를 사용자 고유 번호로 바꾸는 것(시험이 가짜 업체를 꽂는다). 없으면 업체에 실제로 묻는다.
     `human_verify` — 사람 확인(Turnstile)을 갈아 끼우는 자리(시험)."""
     router = APIRouter()
+    from .personal_ai_api import build_personal_ai_router
+    router.include_router(build_personal_ai_router())
     router.include_router(build_agent_keys_router())        # `[2026-10-04 D-CS-012]` 에이전트 키(쿠키 로그인한 회원만)
     router.include_router(build_consents_router())          # `[2026-10-05]` 약관 동의 기록 · 사용 조건(게이트는 `web_cookie.authenticate`)
     router.include_router(build_public_retention_router())  # `[2026-10-07]` 약관 보관 기간 공개 읽기(키 없음 · 개인 정보 없음)
@@ -304,6 +306,8 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
             remaining = web_auth.links(conn, tenant_id=tenant, customer_id=customer)
             if not remaining:        # ★마지막 연결을 풀면 게스트가 된다 — 복구 불가능한 계정에 강한 에이전트 키만 남지 않게 거둔다(D-CS-012)
                 web_agent_keys.revoke_all(conn, tenant_id=tenant, customer_id=customer)
+                from .personal_ai_store import revoke_customer
+                revoke_customer(conn, tenant, customer)
             return {"links": remaining}
 
     return router

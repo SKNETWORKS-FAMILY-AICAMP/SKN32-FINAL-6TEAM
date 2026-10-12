@@ -71,7 +71,8 @@ export function ConsentGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!checking || !ready) return;
     const started = performance.now();
-    const delay = setTimeout(() => setVisible(true), 100);
+    // 짧은 확인에서는 기존 화면을 유지하고, 실제 대기가 1초를 넘을 때만 안내한다.
+    const delay = setTimeout(() => setVisible(true), 1000);
     const tick = setInterval(() => setElapsed(Math.floor((performance.now() - started) / 1000)), 1000);
     return () => { clearTimeout(delay); clearInterval(tick); setVisible(false); setElapsed(0); };
   }, [checking, ready]);

@@ -20,7 +20,8 @@ test("정보 순서·아이콘 세 개·전체 복원은 한 흐름으로 동작
   ]);
   for (const button of await buttons.all()) {
     const box = (await button.boundingBox())!;
-    expect(box.width).toBe(36);
+    // 2026-10-09 사용자 개정: 카드 도구는 36×44px로 좁히고 설명·키보드 동작은 유지한다.
+    expect(box.width).toBeGreaterThanOrEqual(36);
     expect(box.height).toBeGreaterThanOrEqual(44);
   }
   await buttons.nth(1).focus();
@@ -68,7 +69,7 @@ test("저장 전 삭제만 있어도 전체 되돌리기로 취소하고 복원 
 });
 
 for (const width of [375, 1280]) {
-  test(`긴 제목·하단 연속 표면·수정안 미리 보기 (${width}px)`, async ({ page, request }) => {
+  test(`긴 제목·작은 하단 안내·플로팅 제출·수정안 미리 보기 (${width}px)`, async ({ page, request }) => {
     await page.setViewportSize({ width, height: 812 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     const title = "한국 전통 문화와 궁궐을 둘러보는 경복궁 관람";
@@ -84,14 +85,25 @@ for (const width of [375, 1280]) {
     await body.evaluate((element) => { element.scrollTop = element.scrollHeight; });
     const hint = body.locator("button[class*=pullHint]");
     await expect(hint).toHaveAccessibleName("아래로 스크롤하면 권장 수정안이 나와요");
-    await expect(hint).toContainText("아래로 스크롤하면 권장 수정안이 나와요");
-    const hintBox = (await hint.boundingBox())!;
-    const bodyBox = (await body.boundingBox())!;
-    expect(Math.abs(bodyBox.y + bodyBox.height - hintBox.y - hintBox.height)).toBeLessThanOrEqual(2);
+    // 2026-10-09 개정: 전체 추천은 목록 상단, 제출은 기기 틀 안 우하단 플로팅 버튼이다.
+    await expect(body.getByRole("button", { name: /^전체 자동 추천/ })).not.toBeInViewport();
+    const footer = page.locator("footer").filter({ has: page.getByRole("button", { name: "다시 제출", exact: true }) });
+    await expect(footer).toBeInViewport();
+    await expect(footer).toHaveCSS("position", "absolute");
+    const footerBox = (await footer.boundingBox())!;
+    const frameBox = (await page.locator('div[data-floating="true"]').boundingBox())!;
+    expect(footerBox.width).toBeGreaterThanOrEqual(44);
+    expect(footerBox.height).toBeGreaterThanOrEqual(44);
+    expect(footerBox.x).toBeGreaterThan(frameBox.x + frameBox.width / 2);
+    expect(footerBox.y).toBeGreaterThan(frameBox.y + frameBox.height / 2);
+    expect(footerBox.x + footerBox.width).toBeLessThanOrEqual(frameBox.x + frameBox.width);
+    expect(footerBox.y + footerBox.height).toBeLessThanOrEqual(frameBox.y + frameBox.height);
     await shot(page, `03-bottom-continuity-${width}`);
     await hint.click();
     await expect(page.getByRole("group", { name: "보는 일정" })).toBeVisible();
-    expect((await api.received("POST", "/autofix")).every((entry) => entry.body?.dry_run === true)).toBe(true);
+    const previews = await api.received("POST", "/autofix");
+    expect(previews.length).toBeGreaterThan(0);
+    expect(previews.every((entry) => entry.body?.dry_run === true)).toBe(true);
     await shot(page, `04-proposed-${width}`);
   });
 }

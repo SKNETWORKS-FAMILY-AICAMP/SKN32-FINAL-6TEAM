@@ -14,7 +14,7 @@ const DAY_TWO_STOP: Json = {
 };
 /** ★2026-10-06 사용자 지시: 경로선 설명은 공통 알림 막대를 사용한다. 마커 설명 알림은 2026-10-08 사용자 지시로 제거했다. */
 const callout = (page: import("@playwright/test").Page, text: RegExp | string) => page.getByRole("status").filter({ hasText: text });
-const device = (page: import("@playwright/test").Page) => page.locator('[data-device]').first();
+const device = (page: import("@playwright/test").Page) => page.locator('div[data-floating="true"]').first();
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
 test("마커는 해당 일정만 열고 중복 설명 알림을 띄우지 않는다 — 다른 마커와 재선택도 같다", async ({ page, request }) => {

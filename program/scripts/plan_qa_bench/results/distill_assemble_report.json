@@ -1,0 +1,106 @@
+{
+ "near_threshold": 0.8,
+ "no_compound": false,
+ "val_personas": [
+  "p09",
+  "p10"
+ ],
+ "per_persona": {
+  "p01": {
+   "split": "train",
+   "사용": 165,
+   "제외_평가문장유사": 2,
+   "제외_평가문장일치": 9
+  },
+  "p02": {
+   "split": "train",
+   "사용": 164,
+   "제외_평가문장일치": 10,
+   "제외_평가문장유사": 2
+  },
+  "p03": {
+   "split": "train",
+   "사용": 164,
+   "제외_평가문장일치": 11,
+   "제외_평가문장유사": 1
+  },
+  "p04": {
+   "split": "train",
+   "사용": 163,
+   "제외_평가문장일치": 9,
+   "제외_평가문장유사": 4
+  },
+  "p05": {
+   "split": "train",
+   "제외_평가문장일치": 9,
+   "사용": 167
+  },
+  "p06": {
+   "split": "train",
+   "사용": 164,
+   "제외_평가문장유사": 3,
+   "제외_평가문장일치": 9
+  },
+  "p07": {
+   "split": "train",
+   "사용": 166,
+   "제외_평가문장일치": 10
+  },
+  "p08": {
+   "split": "train",
+   "사용": 160,
+   "제외_평가문장일치": 13,
+   "제외_평가문장유사": 3
+  },
+  "p09": {
+   "split": "val",
+   "사용": 158,
+   "제외_평가문장일치": 15,
+   "제외_평가문장유사": 3
+  },
+  "p10": {
+   "split": "val",
+   "사용": 167,
+   "제외_평가문장일치": 8,
+   "제외_평가문장유사": 1
+  }
+ },
+ "train": {
+  "n": 1313,
+  "null": 236,
+  "null_ratio": 0.18,
+  "by_type": {
+   "context_pronoun": 120,
+   "duplicate_place": 128,
+   "confusable_name": 128,
+   "compound_intent": 128,
+   "negation": 128,
+   "typo_slang": 128,
+   "out_of_scope": 80,
+   "nameless_description": 128,
+   "ordinal_relative": 113,
+   "change_request": 117,
+   "absent_but_plausible": 115
+  },
+  "avg_prompt_chars": 2827
+ },
+ "val": {
+  "n": 325,
+  "null": 61,
+  "null_ratio": 0.188,
+  "by_type": {
+   "context_pronoun": 31,
+   "duplicate_place": 32,
+   "confusable_name": 32,
+   "compound_intent": 32,
+   "negation": 32,
+   "typo_slang": 32,
+   "out_of_scope": 22,
+   "nameless_description": 32,
+   "ordinal_relative": 24,
+   "change_request": 26,
+   "absent_but_plausible": 30
+  },
+  "avg_prompt_chars": 2779
+ }
+}

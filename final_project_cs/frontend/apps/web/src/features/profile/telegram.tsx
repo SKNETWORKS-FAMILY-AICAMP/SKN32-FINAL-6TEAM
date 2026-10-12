@@ -54,7 +54,14 @@ export function TelegramRow({ hasSession, guest = false }: { hasSession: boolean
   const [now, setNow] = useState(0);                                // the clock of the countdown: set when the link arrives and each second after
   const [arrived, setArrived] = useState(false);                    // the connection was seen while we waited
   const [confirming, setConfirming] = useState(false);              // 「연결 풀기」 pressed once: 「정말 풀기」 / 「취소」
-  const keep = (next: ServerProfile) => queryClient.setQueryData(serverProfileKey(language), next);
+  const key = serverProfileKey(language);
+  const captureProfile = () => ({ query: queryClient.getQueryCache().find({ queryKey: key, exact: true }) });
+  const sameProfile = (context: ReturnType<typeof captureProfile> | undefined) => Boolean(context?.query && queryClient.getQueryCache().find({ queryKey: key, exact: true }) === context.query);
+  const keep = (next: ServerProfile, context: ReturnType<typeof captureProfile> | undefined) => {
+    if (!sameProfile(context)) return false;
+    queryClient.setQueryData(key, next);
+    return true;
+  };
 
   const start = useMutation({
     mutationFn: () => startTelegramConnect(language),
@@ -64,13 +71,14 @@ export function TelegramRow({ hasSession, guest = false }: { hasSession: boolean
       try { window.open(link, "_blank", "noopener"); } catch { /* refused: the visible link is the way */ }
     },
   });
-  const test = useMutation({ mutationFn: () => testTelegram(language), onSuccess: (answer) => keep(answer.profile) });
+  const test = useMutation({ mutationFn: () => testTelegram(language), onMutate: captureProfile, onSuccess: (answer, _variables, context) => { keep(answer.profile, context); } });
   const release = useMutation({
     mutationFn: () => disconnectTelegram(language),
-    onSuccess: (next) => { keep(next); setConfirming(false); setWaiting(null); setArrived(false); test.reset(); },
-    onError: () => setConfirming(false),
+    onMutate: captureProfile,
+    onSuccess: (next, _variables, context) => { if (!keep(next, context)) return; setConfirming(false); setWaiting(null); setArrived(false); test.reset(); },
+    onError: (_error, _variables, context) => { if (sameProfile(context)) setConfirming(false); },
   });
-  const choose = useMutation({ mutationFn: () => putProfile({ noticeChannel: "telegram" }, language), onSuccess: keep });
+  const choose = useMutation({ mutationFn: () => putProfile({ noticeChannel: "telegram" }, language), onMutate: captureProfile, onSuccess: (next, _variables, context) => { keep(next, context); } });
 
   // While we wait for the tap in Telegram: ask the server again every 2 seconds, and count down once a second. At the end of the time, look one last time.
   useEffect(() => {

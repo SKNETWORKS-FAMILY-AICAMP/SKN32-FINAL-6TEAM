@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>여행 코드 자리 정리 · 끼움 자리 · 라우팅 재배분 브리핑</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #1f2937; --muted: #5b6474; --soft: #8b93a3;
+    --line: #d5d9e0; --hair: rgba(31,41,55,.12);
+    --accent: #d9541e; --accent-tint: #fdeee6;
+    --code: #f1f3f6; --link: #1d4ed8;
+    --good: #047857; --good-tint: #e7f6ef; --warn: #b45309; --warn-tint: #fdf3e2;
+    --bad: #b91c1c; --bad-tint: #fdeaea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1420; --card: #171e2d; --ink: #e6e9ef; --muted: #a3acbd; --soft: #7d879a;
+      --line: #2f394d; --hair: rgba(230,233,239,.14);
+      --accent: #ff8a5b; --accent-tint: #33201a;
+      --code: #1d2536; --link: #7ea6ff;
+      --good: #34d399; --good-tint: #0f2a22; --warn: #fbbf24; --warn-tint: #2c2410;
+      --bad: #f87171; --bad-tint: #2c1618;
+    }
+  }
+  :root[data-theme="dark"] {
+      --bg: #0f1420; --card: #171e2d; --ink: #e6e9ef; --muted: #a3acbd; --soft: #7d879a;
+      --line: #2f394d; --hair: rgba(230,233,239,.14);
+      --accent: #ff8a5b; --accent-tint: #33201a;
+      --code: #1d2536; --link: #7ea6ff;
+      --good: #34d399; --good-tint: #0f2a22; --warn: #fbbf24; --warn-tint: #2c2410;
+      --bad: #f87171; --bad-tint: #2c1618;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.75;
+         font-family: "Noto Sans KR", "Malgun Gothic", Arial, sans-serif; overflow-x: hidden; }
+  header { padding: 40px 24px 8px; max-width: 1000px; margin: 0 auto; }
+  .eyebrow { font: 600 12px/1 ui-monospace, Consolas, monospace; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+  h1 { margin: 12px 0 12px; font-size: 30px; line-height: 1.35; font-weight: 700; }
+  .lead { margin: 0; font-size: 17px; color: var(--muted); max-width: 48em; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 16px 24px 56px; }
+  section { margin: 34px 0; }
+  h2 { font-size: 21px; margin: 0 0 4px; }
+  h3 { font-size: 16px; margin: 20px 0 6px; }
+  .sub { margin: 0 0 14px; color: var(--muted); font-size: 14.5px; }
+  .card { background: var(--card); border: 1px solid var(--hair); border-radius: 8px; padding: 20px; }
+  .urgent { border-color: var(--bad); background: var(--bad-tint); }
+  .ok { border-color: var(--good); background: var(--good-tint); }
+  .note { border-color: var(--warn); background: var(--warn-tint); }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; margin: 10px 0; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  code, .mono { font-family: ui-monospace, Consolas, monospace; font-size: 13px;
+                background: var(--code); padding: 1px 5px; border-radius: 4px; }
+  pre { background: var(--code); border: 1px solid var(--hair); border-radius: 6px;
+        padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.65; }
+  pre code { background: none; padding: 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .big { font-size: 20px; font-weight: 700; line-height: 1.4; }
+  b.lbl { display: block; font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  ul { padding-left: 1.2em; } li { margin: 5px 0; }
+  a { color: var(--link); }
+  hr { border: 0; border-top: 1px solid var(--hair); margin: 30px 0; }
+  @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">triPilot · 2026-10-06 · 매니저</div>
+  <h1>여행 코드의 <b>자리</b>를 정리했습니다 — 파일을 옮기고, 서로 부르는 방향을 뒤집었습니다</h1>
+  <p class="lead">기능은 바뀌지 않았습니다(라우팅 재배분 하나만 새 동작). 다만 <b>파일 경로가 거의 전부 바뀌었습니다.</b>
+  각자 브랜치에서 작업 중이면 합칠 때 import 가 깨집니다 — 아래 2번이 대응표입니다.</p>
+</header>
+
+<div class="wrap">
+
+<section>
+  <div class="card urgent">
+    <b class="lbl">가장 급한 것</b>
+    <p class="big" style="margin:0 0 10px">내 코드에서 <code>app.modules.travel_ops…</code> 를 부르고 있다면 전부 바뀝니다.</p>
+    <p style="margin:0">새 뿌리는 <code>app.domains.travel_ops</code> 이고, 그 아래가 <b>여섯 칸</b>으로 갈렸습니다.
+    <code>app/infrastructure/travel/</code>(관광공사 · 기상청 · 교통 등 외부 소스)도 여행 묶음 안으로 들어왔습니다.
+    대응표는 바로 아래에 있고, 못 찾는 파일은 <code>git show --name-status 0d0b96c0 | grep 파일이름</code> 으로 찾습니다.</p>
+  </div>
+</section>
+
+<section>
+  <h2>1. 무엇을 왜 했나</h2>
+  <p class="sub">한 폴더에 69개 파일이 섞여 있어서, 무엇이 끌 수 있는 기능이고 무엇이 꼭 있어야 하는 부품인지 코드만 봐서는 알 수 없었습니다.</p>
+  <div class="card">
+    <table>
+      <tr><th style="width:30%">한 일</th><th>왜</th></tr>
+      <tr><td><b>① 파일을 칸으로 나눴다</b></td>
+          <td>업무 영역 하나를 폴더로 묶고 그 안을 역할별로 가르는 방식(모듈러 모놀리스). 어떤 파일이 어떤 성격인지 <b>자리로 드러나게</b> 했습니다.</td></tr>
+      <tr><td><b>② 서로 부르는 방향을 뒤집었다</b></td>
+          <td>필수 부품이 「끌 수 있는 기능」과 「팀 내부」를 직접 부르고 있었습니다(20곳). 그러면 그 기능을 끄거나 팀을 빼는 순간 부품이 깨집니다 — <b>「꽂고 뺄 수 있다」가 거짓</b>이었습니다.</td></tr>
+      <tr><td><b>③ 라우팅이 어긋나면 한 번 더 고른다</b></td>
+          <td>받는 팀이 없으면 Case 가 <code>escalated</code> 로 끝났는데, 우리 제품에는 <b>사람 운영자 큐가 없습니다</b> — 그 Case 는 아무도 받지 않습니다.</td></tr>
+      <tr><td><b>④ 시험 10건의 컴퓨터 의존을 없앴다</b></td>
+          <td>일정 생성기 시험이 <b>개발 DB 에 요식 원장 자료가 있는 사람에게만</b> 붉었습니다. 원인을 찾아 고정했습니다.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>2. 경로 대응표 — 내 코드가 깨졌다면 여기를 봅니다</h2>
+  <p class="sub">폴더 단위입니다. 파일 165개가 옮겨졌고, 아래는 그것을 묶은 것입니다.</p>
+  <div class="card">
+    <table>
+      <tr><th style="width:46%">옛 자리</th><th>새 자리</th><th style="width:8%">파일</th></tr>
+      <tr><td class="mono">app/infrastructure/travel/</td><td class="mono">app/domains/travel_ops/<b>ports/data_sources/</b></td><td>28</td></tr>
+      <tr><td class="mono">app/modules/travel_ops/mobility/</td><td class="mono">app/domains/travel_ops/<b>instances/mobility/</b></td><td>32</td></tr>
+      <tr><td class="mono">app/modules/travel_ops/dining/</td><td class="mono">app/domains/travel_ops/<b>instances/dining/</b></td><td>8</td></tr>
+      <tr><td class="mono">app/modules/travel_ops/activity/</td><td class="mono">app/domains/travel_ops/<b>instances/activity/</b></td><td>5</td></tr>
+      <tr><td class="mono">app/modules/travel_ops/intake/</td><td class="mono">app/domains/travel_ops/<b>components/intake/</b></td><td>18</td></tr>
+      <tr><td class="mono">app/modules/travel_ops/ (일정 · 계획 파일들)</td><td class="mono">app/domains/travel_ops/<b>components/itinerary/</b> · <b>planning/</b> · <b>places/</b></td><td>19</td></tr>
+      <tr><td class="mono">app/modules/travel_ops/ (감시 · 대화 파일들)</td><td class="mono">app/domains/travel_ops/<b>components/watch/</b> · <b>conversation/</b></td><td>17</td></tr>
+      <tr><td class="mono">app/modules/travel_ops/ (웹 계정 · MCP · 실시간 진행)</td><td class="mono">app/domains/travel_ops/<b>modules/</b>web_account · mcp · live_progress</td><td>16</td></tr>
+      <tr><td class="mono">app/modules/travel_ops/ (HTTP 경로)</td><td class="mono">app/domains/travel_ops/<b>entry/</b></td><td>2</td></tr>
+      <tr><td class="mono">app/domain/ (Case 상태 규칙)</td><td class="mono">app/core/<b>case_lifecycle/</b></td><td>—</td></tr>
+    </table>
+    <p style="margin:12px 0 0; font-size:14px; color:var(--muted)">
+      ★ <code>domain</code>(옛 Case 상태 규칙)과 <code>domains</code>(업무 묶음)가 겹쳐 헷갈리던 것을 이참에 갈랐습니다.<br>
+      ★ 한 파일이 어디로 갔는지 정확히 보려면 — <code>git log --follow -- 옛/경로/파일.py</code></p>
+  </div>
+</section>
+
+<section>
+  <h2>3. 칸이 여섯입니다 — 새 파일은 어디에 두나</h2>
+  <div class="card">
+<pre><code>app/domains/travel_ops/
+├─ modules/      <b>끌 수 있는 기능</b>    꺼도 나머지가 돈다 (web_account · mcp · live_progress)
+├─ instances/    <b>에이전트 팀</b>        팀 하나 = 폴더 하나 (activity · dining · mobility · booking_handoff · locked · _shared)
+├─ components/   <b>필수 부품</b>          빼면 여행 서비스가 안 돈다 (itinerary · planning · places · intake ·
+│                                       conversation · actions · booking · watch · customer · core_hooks · team_hooks)
+├─ ports/        <b>바꿔 끼우는 자리</b>    구현을 갈아 끼운다 (data_sources — 관광공사 · 기상청 · 교통 …)
+├─ entry/        <b>고객 입구</b>          HTTP 경로
+└─ scenarios/    시연 · 하루 대조 시험용 조립</code></pre>
+    <table>
+      <tr><th style="width:34%">이런 걸 만들면</th><th>여기에 둡니다</th></tr>
+      <tr><td>우리 팀(활동 · 요식 · 이동)의 판정 · 계산</td><td class="mono">instances/&lt;우리 팀&gt;/</td></tr>
+      <tr><td>여러 팀이 같이 쓰는 일정 · 감시 · 대화 로직</td><td class="mono">components/&lt;성격&gt;/</td></tr>
+      <tr><td>꺼도 서비스가 도는 부가 기능</td><td class="mono">modules/&lt;기능&gt;/</td></tr>
+      <tr><td>외부 API 를 부르는 코드</td><td class="mono">ports/data_sources/</td></tr>
+    </table>
+    <p style="margin:10px 0 0; font-size:14px; color:var(--muted)">
+      ★ <b>팀이 다른 팀 안을 직접 부르면 시험이 막습니다</b>(<code>tests/architecture/test_travel_ops_cells.py</code>).
+      팀끼리는 플랫폼 코어를 거쳐서만 만납니다.</p>
+  </div>
+</section>
+
+<section>
+  <h2>4. 끼움 자리 — 부품이 우리 팀을 부르는 방식이 바뀌었습니다</h2>
+  <p class="sub">여기가 이번 변경에서 가장 중요한 대목입니다. 실무에서는 <b>의존성 역전(DIP) · 포트와 어댑터</b>라고 부릅니다.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <b class="lbl">전 — 부품이 팀 이름을 알았다</b>
+<pre><code># components/watch/dawn_check.py
+from ...instances.dining.ledger \
+     import dining_states
+
+states = dining_states(conn, tenant, slots)</code></pre>
+      <p style="margin:8px 0 0; font-size:14px; color:var(--bad)"><b>요식 팀을 빼면 감시가 import 단계에서 죽는다</b></p>
+    </div>
+    <div class="card">
+      <b class="lbl">후 — 부품은 자리만 안다</b>
+<pre><code># components/watch/dawn_check.py
+from ...components.team_hooks \
+     import dining_ledger
+
+states = dining_ledger.states(conn, tenant, slots)</code></pre>
+      <p style="margin:8px 0 0; font-size:14px; color:var(--good)"><b>요식 팀이 없으면 <code>None</code>(모름) — 안 죽는다</b></p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <b class="lbl">꽂는 쪽은 조립 한 군데 — <code>app/composition.py</code></b>
+<pre><code>def wire_domain_teams():
+    dining_ledger.register(add_nearby=…, states=…, state=…, find_by_name=…)
+    legs.register(leg_planner=…, disruptions_from_events=…, walk_limit_m=…)
+    similarity.register(score=…, preference_of=…, distance_first=…)
+    watch_planners.register("dining", …)   # 활동 · 이동도 같은 모양</code></pre>
+    <h3>자리 일곱</h3>
+    <table>
+      <tr><th style="width:30%">자리</th><th>부품이 묻는 것</th><th style="width:18%">꽂는 쪽</th><th style="width:24%">안 꽂으면</th></tr>
+      <tr><td class="mono">team_hooks/legs</td><td>이동 시간 · 노선 · 사고 · 도보 상한</td><td>이동 팀</td><td>계산기 <code>None</code>(어림값)</td></tr>
+      <tr><td class="mono">team_hooks/dining_ledger</td><td>근처 식당 · 시간대 영업 판정 · 이름 찾기</td><td>요식 팀</td><td>판정 <code>None</code>(모름)</td></tr>
+      <tr><td class="mono">team_hooks/similarity</td><td>활동 유사도 · 설문 선호 · 거리 우선</td><td>활동 팀</td><td>점수 <code>None</code>(거리만)</td></tr>
+      <tr><td class="mono">team_hooks/watch_planners</td><td>항목 종류별 감시 판정</td><td>세 팀</td><td><code>None</code> — 그 종류는 안 함</td></tr>
+      <tr><td class="mono">itinerary/trip_scope</td><td>감시 · 안내 대상 좁히기</td><td>웹 계정</td><td><code>TRUE</code> — 전부 감시</td></tr>
+      <tr><td class="mono">settings_hook</td><td>운영자가 화면에서 바꾼 값</td><td>웹 남용 방어</td><td><code>None</code> — 가드레일 기본값</td></tr>
+      <tr><td class="mono">progress_hook</td><td>진행 알림 포장(SSE)</td><td>실시간 진행</td><td><code>[]</code> — 실시간 화면만 없음</td></tr>
+    </table>
+    <div class="note card" style="margin-top:12px">
+      <b>★ 안 꽂혔을 때의 답은 「새로 만든 기본값」이 아닙니다.</b> 일곱 모두 <b>그 팀 · 기능이 조립에 없을 때 부품이 원래 가던 길</b> 그대로입니다.
+      영업 여부를 모르면서 「열었다」로 답하지 않고, 다른 팀 계산으로 대신하지도 않습니다 — <b>값을 지어내지 않는다</b>는 규칙 그대로입니다.
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>5. 라우팅이 어긋나면 한 번 더 고릅니다 <span style="font-weight:400;color:var(--muted)">(새 동작)</span></h2>
+  <div class="card">
+    <p style="margin-top:0">분류가 붙인 대상 종류를 받는 팀이 없으면 Case 는 <code>escalated</code> 로 끝났습니다.
+    「모르는 것을 아무 팀에나 보내지 않는다」는 맞지만, <b>우리에겐 사람 운영자 큐가 없습니다.</b> 그래서 그 Case 는 아무도 받지 않습니다.</p>
+    <table>
+      <tr><th style="width:38%">들어온 길</th><th><code>escalated</code> 가 되면</th></tr>
+      <tr><td>고객이 웹 · 계획서에서 말을 걸었다</td><td><b>답이 바로 화면에 나갑니다</b> — 「말씀을 제대로 알아듣지 못해 일정은 바꾸지 않았어요」 + 할 수 있는 일 예시. 사람 대기 약속은 하지 않습니다.</td></tr>
+      <tr><td>감시 루프 · 에이전트 API 가 Case 를 열었다</td><td><b>아무 말도 안 나갑니다</b> — 알림을 만들지 않습니다. 여기가 구멍이었습니다.</td></tr>
+    </table>
+    <h3>어떻게 고르나 — 지어내지 않습니다</h3>
+    <ul>
+      <li>고를 수 있는 값은 <b>지금 등록된 팀이 실제로 받는 종류</b>뿐입니다(목록은 코어가 넘깁니다 — 어휘를 재배분기에 적어 두지 않았습니다).</li>
+      <li>목록 밖을 내면 <b>한 번만</b> 다시 묻고, 그래도 밖이면 포기합니다.</li>
+      <li><b>돌려받은 답도 그대로 믿지 않습니다</b> — 그 종류로 팀 등록부에 <b>다시 물어</b> 실제 받는 팀이 있을 때만 넘깁니다.</li>
+      <li>Case 당 <b>한 번만</b>. 포기하면 종전대로 <code>escalated</code> 입니다(그 길을 없애지 않고, 그리로 가는 수를 줄입니다).</li>
+      <li>끄는 스위치: <code>travel.routing.reroute_enabled</code>(기본 켬). 모델 호출은 <b>라우팅이 실패한 Case 에만</b> 최대 2회입니다.</li>
+    </ul>
+    <p style="margin-bottom:0; color:var(--warn)"><b>★ 실서버 확인(서버 응답): 안 했습니다.</b> 이 PC 는 OpenAI 크레딧이 없고 로컬 Ollama 도 떠 있지 않아
+    <b>실제 모델이 어떤 팀을 고르는지는 아직 못 봤습니다.</b> x600 서버의 cs 프로젝트 서버에 배포한 뒤 확인합니다. 지금까지는 mock 시험 10/10(동작 규칙)입니다.</p>
+  </div>
+</section>
+
+<section>
+  <h2>6. 시험을 돌릴 때 알아 둘 것 셋</h2>
+  <div class="card">
+    <table>
+      <tr><th style="width:30%">무엇</th><th>내용</th></tr>
+      <tr><td><b>시험도 조립된 상태로 돈다</b></td>
+          <td><code>tests/conftest.py</code> 가 매번 팀 배선을 꽂습니다. 단위 시험은 조립을 거치지 않아서, 안 꽂으면 「팀이 하나도 없는 상태」를 재게 됩니다.
+          팀이 <b>없는</b> 상태를 재려면 그 자리의 <code>clear()</code> 를 직접 부릅니다.</td></tr>
+      <tr><td><b>팀 함수를 바꿔 끼울 때</b></td>
+          <td>부품 모듈이 아니라 <b>팀 쪽 함수</b>를 patch 합니다 — 예: <code>dawn_check.dining_states</code>(✕) → <code>instances.dining.ledger.dining_states</code>(○).
+          자리는 부를 때 모듈에서 읽으므로 그대로 먹습니다.</td></tr>
+      <tr><td><b>일정 생성기 시험은 원장을 끈다</b></td>
+          <td><code>tests/e2e/test_trip_planner.py</code> 가 요식 원장을 끄고 돕니다. 원장은 <b>테넌트와 무관한 공용 표</b>라, 자료를 넣은 기계에서는 후보가
+          12곳이 아니라 1,778곳이 되어 10건이 그 기계에서만 붉었습니다(이 PC 실측 1,766곳).</td></tr>
+    </table>
+    <p style="margin:12px 0 0; font-size:14px; color:var(--muted)">
+      ★ 큰 묶음을 한 번에 돌리면 개발 DB 가 겹쳐 간헐 실패가 납니다 — <b>나눠 돌리세요</b>(구조 · 계약 · 단위 · 보안 / 통합 / e2e · 시나리오).</p>
+  </div>
+</section>
+
+<section>
+  <h2>7. 검증 결과</h2>
+  <div class="card ok">
+    <table>
+      <tr><th style="width:40%">묶음</th><th>결과</th></tr>
+      <tr><td>구조 · 계약 · 단위 · 보안</td><td><b>2,789 통과</b> · 실패 0</td></tr>
+      <tr><td>통합</td><td>404 통과 · 8 실패 — 전부 RAG, 이 PC 의 로컬 임베딩 서버가 꺼져 연결 거부</td></tr>
+      <tr><td>e2e · 시나리오</td><td><b>847 통과</b> · 실패 0 (앞서 붉던 10건이 사라졌습니다)</td></tr>
+      <tr><td>칸끼리 규칙</td><td>네 줄 <b>모두 0</b> — 옮긴 날에는 20곳이 어기고 있었습니다</td></tr>
+      <tr><td>ruff(F · E9)</td><td>전환 전과 같은 수 — 새로 생긴 것 0</td></tr>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>8. 오늘 올라간 커밋</h2>
+  <div class="card">
+    <table>
+      <tr><th style="width:15%">커밋</th><th>무엇</th><th style="width:18%">누가</th></tr>
+      <tr><td class="mono">112a7177</td><td>웹 계정 · 실시간 진행이 필수 부품을 끌고 가지 않게 — 끼움 자리 셋</td><td>매니저</td></tr>
+      <tr><td class="mono">0ea64300</td><td>항로 지킴이 켜기 · 끄기 · 알림 + 로딩 중 질문(서버 몫)</td><td>cs 개발</td></tr>
+      <tr><td class="mono">79b2c607</td><td>웹 첫 진행 변경(소개 · 메뉴)</td><td>설문 담당</td></tr>
+      <tr><td class="mono">bd1c98fe</td><td>부품이 팀 내부를 부르던 14곳을 끼움 자리 넷으로</td><td>매니저</td></tr>
+      <tr><td class="mono">563bca5a</td><td>라우팅 재배분 + 생성기 시험 10건 컴퓨터 의존 제거</td><td>매니저</td></tr>
+      <tr><td class="mono">4177dbf3</td><td>날짜 넘기기 제스처 — 시간 · 원 자리에서 시작한 옆으로 쓸기</td><td>화면 담당</td></tr>
+    </table>
+    <p style="margin:10px 0 0; font-size:14px; color:var(--muted)">
+      ★ <code>112a7177</code> 과 <code>0ea64300</code> 은 <b>같이 가야 합니다</b> — 앞 커밋이 뒤 커밋의 코드를 부릅니다(따로 올리면 알림이 조용히 실패).</p>
+  </div>
+</section>
+
+<section>
+  <h2>9. 아직 안 된 것</h2>
+  <div class="card note">
+    <ul style="margin:0">
+      <li><b>실제 모델로 라우팅 재배분 확인</b> — x600 서버의 cs 프로젝트 서버에 배포한 뒤 봅니다.</li>
+      <li><b>재배분도 실패하면 고객에게 알릴지</b> — 지금은 조용합니다. 정해야 합니다.</li>
+      <li><b>멈춘 Case 를 되잡는 장치</b> — <code>escalated</code> 로 선 Case 를 다시 시도하는 sweeper 가 없습니다.</li>
+      <li><b>플랫폼 코어 쪽 폴더 점검</b> — <code>app/core</code> · <code>app/application</code> · <code>app/infrastructure</code> · <code>app/presentation</code> 은 이번에 안 건드렸습니다.</li>
+    </ul>
+  </div>
+</section>
+
+<hr>
+
+<section>
+  <h2>더 자세히 — 기록 문서</h2>
+  <div class="card">
+    <table>
+      <tr><th style="width:46%">문서</th><th>무엇이 적혀 있나</th></tr>
+      <tr><td class="mono">wiki/decisions/D-CS-013-domain-folder-layout.md</td><td>폴더를 왜 이렇게 나눴나, 칸 규칙, 이름 합의 근거</td></tr>
+      <tr><td class="mono">wiki/decisions/D-CS-014-routing-reroute.md</td><td>라우팅 재배분 — 결정과 안전장치</td></tr>
+      <tr><td class="mono">wiki/records/reports/2026-10-06_0300_업무도메인_폴더이동_리포트.md</td><td>옮기면서 걸린 것 일곱과 고친 법</td></tr>
+      <tr><td class="mono">wiki/records/reports/2026-10-06_0620_웹계정_끼움자리_전환_리포트.md</td><td>기능 쪽 의존 끊기</td></tr>
+      <tr><td class="mono">wiki/records/reports/2026-10-06_0700_팀쪽_끼움자리넷_전환_리포트.md</td><td>팀 쪽 의존 끊기 — 걸린 것과 고친 법</td></tr>
+      <tr><td class="mono">wiki/records/reports/2026-10-06_0800_라우팅_재배분_리포트.md</td><td>재배분 · 시험 10건 원인 분석</td></tr>
+      <tr><td class="mono">wiki/teams/composition.md</td><td>칸 구조와 끼움 자리 일곱 표</td></tr>
+      <tr><td class="mono">wiki/log.md</td><td>오늘 변경 요약</td></tr>
+    </table>
+  </div>
+</section>
+
+<p style="color:var(--soft); font-size:13px; margin-top:30px">
+  작성 2026-10-06 · 매니저 세션 · 수치는 모두 시험 실행 결과를 세어 적었습니다.
+</p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 1350" role="img" aria-label="triPilot 프로젝트 폴더 구조 1장 전체 내용">
+<rect width="2400" height="1350" fill="#FFFFFF"/>
+<text x="60" y="70" font-family="Arial, Noto Sans KR, sans-serif" font-size="52" font-weight="800" fill="#0F172A">triPilot 프로젝트 폴더 구조</text>
+<text x="60" y="112" font-family="Arial, Noto Sans KR, sans-serif" font-size="24" font-weight="500" fill="#64748B">원본 HTML 트리 76줄 전체 수록 · 16:9 한 장용 2열 구성</text>
+<text x="2340" y="70" text-anchor="end" font-family="Consolas, monospace" font-size="30" font-weight="700" fill="#0F172A">project/</text>
+<line x1="60" y1="138" x2="2340" y2="138" stroke="#0F172A" stroke-width="3"/>
+<text x="60" y="185" font-family="Arial, Noto Sans KR, sans-serif" font-size="24" font-weight="800" fill="#0F172A">01 · app / presentation / core</text>
+<text x="1230" y="185" font-family="Arial, Noto Sans KR, sans-serif" font-size="24" font-weight="800" fill="#0F172A">02 · infrastructure / modules / tests / eval / wiki</text>
+<line x1="1200" y1="165" x2="1200" y2="1230" stroke="#CBD5E1" stroke-width="2"/>
+<rect x="60" y="202" width="1110" height="23" rx="3" fill="#F8FAFC" opacity="0.78"/>
+<rect x="60" y="202" width="5" height="23" rx="2" fill="#334155"/>
+<text data-source-line="1" x="76" y="220" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#334155">project/</text>
+<rect x="60" y="227" width="1110" height="23" rx="3" fill="#F8FAFC" opacity="0.78"/>
+<rect x="60" y="227" width="5" height="23" rx="2" fill="#334155"/>
+<text data-source-line="2" x="76" y="245" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#334155">├─ app/</text>
+<rect x="60" y="252" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="252" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="3" x="76" y="270" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  ├─ presentation/                              # 외부 요청/응답 경계</text>
+<rect x="60" y="277" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="277" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="4" x="76" y="295" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  ├─ api/                                   # [Core2] REST/OpenAPI endpoint</text>
+<rect x="60" y="302" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="302" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="5" x="76" y="320" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  ├─ mcp/                                   # [Core2] Personal AI용 MCP endpoint</text>
+<rect x="60" y="327" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="327" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="6" x="76" y="345" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  ├─ a2a/                                   # [Core2] Remote Agent A2A ingress / Agent Card</text>
+<rect x="60" y="352" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="352" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="7" x="76" y="370" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  ├─ web/                                   # [UX] 사용자/운영자 UI 연결</text>
+<rect x="60" y="377" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="377" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="8" x="76" y="395" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  └─ schemas/                               # REST/MCP/A2A Request·Response DTO</text>
+<rect x="60" y="402" width="1110" height="23" rx="3" fill="#F8FAFC" opacity="0.78"/>
+<rect x="60" y="402" width="5" height="23" rx="2" fill="#334155"/>
+<text data-source-line="9" x="76" y="420" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#334155">│  │</text>
+<rect x="60" y="427" width="1110" height="23" rx="3" fill="#F8FAFC" opacity="0.78"/>
+<rect x="60" y="427" width="5" height="23" rx="2" fill="#334155"/>
+<text data-source-line="10" x="76" y="445" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#334155">│  ├─ core/</text>
+<rect x="60" y="452" width="1110" height="23" rx="3" fill="#F5F3FF" opacity="0.78"/>
+<rect x="60" y="452" width="5" height="23" rx="2" fill="#7C3AED"/>
+<text data-source-line="11" x="76" y="470" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#7C3AED">│  │  ├─ case_runtime/                          # [Core1] Customer Case 실행 전체</text>
+<rect x="60" y="477" width="1110" height="23" rx="3" fill="#F5F3FF" opacity="0.78"/>
+<rect x="60" y="477" width="5" height="23" rx="2" fill="#7C3AED"/>
+<text data-source-line="12" x="76" y="495" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#7C3AED">│  │  │  ├─ case/                               # Lifecycle, Event, owner, status</text>
+<rect x="60" y="502" width="1110" height="23" rx="3" fill="#F5F3FF" opacity="0.78"/>
+<rect x="60" y="502" width="5" height="23" rx="2" fill="#7C3AED"/>
+<text data-source-line="13" x="76" y="520" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#7C3AED">│  │  │  ├─ orchestration/                      # Controller, Top-Level LangGraph, routing/replan</text>
+<rect x="60" y="527" width="1110" height="23" rx="3" fill="#F5F3FF" opacity="0.78"/>
+<rect x="60" y="527" width="5" height="23" rx="2" fill="#7C3AED"/>
+<text data-source-line="14" x="76" y="545" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#7C3AED">│  │  │  ├─ state/                              # Shared State, checkpoint, version</text>
+<rect x="60" y="552" width="1110" height="23" rx="3" fill="#F5F3FF" opacity="0.78"/>
+<rect x="60" y="552" width="5" height="23" rx="2" fill="#7C3AED"/>
+<text data-source-line="15" x="76" y="570" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#7C3AED">│  │  │  ├─ concurrency/                        # CAS, Optimistic Concurrency, conflict</text>
+<rect x="60" y="577" width="1110" height="23" rx="3" fill="#F5F3FF" opacity="0.78"/>
+<rect x="60" y="577" width="5" height="23" rx="2" fill="#7C3AED"/>
+<text data-source-line="16" x="76" y="595" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#7C3AED">│  │  │  ├─ registry/                           # Local/A2A Team Registry, Capability resolution</text>
+<rect x="60" y="602" width="1110" height="23" rx="3" fill="#F5F3FF" opacity="0.78"/>
+<rect x="60" y="602" width="5" height="23" rx="2" fill="#7C3AED"/>
+<text data-source-line="17" x="76" y="620" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#7C3AED">│  │  │  ├─ messaging/                          # Local MessageBus Port, Task/Event</text>
+<rect x="60" y="627" width="1110" height="23" rx="3" fill="#F5F3FF" opacity="0.78"/>
+<rect x="60" y="627" width="5" height="23" rx="2" fill="#7C3AED"/>
+<text data-source-line="18" x="76" y="645" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#7C3AED">│  │  │  ├─ remote_team/                        # RemoteTeamPort, A2A Task lifecycle mapping</text>
+<rect x="60" y="652" width="1110" height="23" rx="3" fill="#F5F3FF" opacity="0.78"/>
+<rect x="60" y="652" width="5" height="23" rx="2" fill="#7C3AED"/>
+<text data-source-line="19" x="76" y="670" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#7C3AED">│  │  │  ├─ context/</text>
+<rect x="60" y="677" width="1110" height="23" rx="3" fill="#F5F3FF" opacity="0.78"/>
+<rect x="60" y="677" width="5" height="23" rx="2" fill="#7C3AED"/>
+<text data-source-line="20" x="76" y="695" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#7C3AED">│  │  │  │  ├─ broker/                          # Context Broker orchestration</text>
+<rect x="60" y="702" width="1110" height="23" rx="3" fill="#F5F3FF" opacity="0.78"/>
+<rect x="60" y="702" width="5" height="23" rx="2" fill="#7C3AED"/>
+<text data-source-line="21" x="76" y="720" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#7C3AED">│  │  │  │  ├─ vector_retrieval/                # Vector RAG Port</text>
+<rect x="60" y="727" width="1110" height="23" rx="3" fill="#F5F3FF" opacity="0.78"/>
+<rect x="60" y="727" width="5" height="23" rx="2" fill="#7C3AED"/>
+<text data-source-line="22" x="76" y="745" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#7C3AED">│  │  │  │  ├─ graph_retrieval/                 # GraphStorePort (MVP: SQL Adapter)</text>
+<rect x="60" y="752" width="1110" height="23" rx="3" fill="#F5F3FF" opacity="0.78"/>
+<rect x="60" y="752" width="5" height="23" rx="2" fill="#7C3AED"/>
+<text data-source-line="23" x="76" y="770" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#7C3AED">│  │  │  │  └─ memory/                          # Memory Port</text>
+<rect x="60" y="777" width="1110" height="23" rx="3" fill="#F5F3FF" opacity="0.78"/>
+<rect x="60" y="777" width="5" height="23" rx="2" fill="#7C3AED"/>
+<text data-source-line="24" x="76" y="795" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#7C3AED">│  │  │  └─ contracts/                          # TeamTask, TeamResult, CaseContext, RemoteTask</text>
+<rect x="60" y="802" width="1110" height="23" rx="3" fill="#F8FAFC" opacity="0.78"/>
+<rect x="60" y="802" width="5" height="23" rx="2" fill="#334155"/>
+<text data-source-line="25" x="76" y="820" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#334155">│  │  │</text>
+<rect x="60" y="827" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="827" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="26" x="76" y="845" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  ├─ access_action/                         # [Core2] 외부 진입과 실제 Action 실행</text>
+<rect x="60" y="852" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="852" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="27" x="76" y="870" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  │  ├─ gateway/                            # Agent Gateway / Trust Boundary</text>
+<rect x="60" y="877" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="877" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="28" x="76" y="895" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  │  ├─ auth/                               # OAuth, Token, Scope, Agent Identity</text>
+<rect x="60" y="902" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="902" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="29" x="76" y="920" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  │  ├─ interop/</text>
+<rect x="60" y="927" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="927" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="30" x="76" y="945" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  │  │  ├─ mcp/                             # MCP transport/auth</text>
+<rect x="60" y="952" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="952" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="31" x="76" y="970" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  │  │  └─ a2a/                             # A2A HTTP/Auth/Agent Card Adapter</text>
+<rect x="60" y="977" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="977" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="32" x="76" y="995" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  │  ├─ tools/                              # Tool / Action Gateway</text>
+<rect x="60" y="1002" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="1002" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="33" x="76" y="1020" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  │  ├─ approval/                           # 고위험 Action 승인</text>
+<rect x="60" y="1027" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="1027" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="34" x="76" y="1045" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  │  ├─ idempotency/                        # 중복 Side Effect 방지</text>
+<rect x="60" y="1052" width="1110" height="23" rx="3" fill="#EFF6FF" opacity="0.78"/>
+<rect x="60" y="1052" width="5" height="23" rx="2" fill="#1D4ED8"/>
+<text data-source-line="35" x="76" y="1070" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#1D4ED8">│  │  │  └─ audit/                              # Action / 외부 Agent 호출 추적</text>
+<rect x="60" y="1077" width="1110" height="23" rx="3" fill="#F8FAFC" opacity="0.78"/>
+<rect x="60" y="1077" width="5" height="23" rx="2" fill="#334155"/>
+<text data-source-line="36" x="76" y="1095" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#334155">│  │  │</text>
+<rect x="60" y="1102" width="1110" height="23" rx="3" fill="#F8FAFC" opacity="0.78"/>
+<rect x="60" y="1102" width="5" height="23" rx="2" fill="#475569"/>
+<text data-source-line="37" x="76" y="1120" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#475569">│  │  └─ shared/</text>
+<rect x="60" y="1127" width="1110" height="23" rx="3" fill="#F8FAFC" opacity="0.78"/>
+<rect x="60" y="1127" width="5" height="23" rx="2" fill="#475569"/>
+<text data-source-line="38" x="76" y="1145" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#475569">│  │     ├─ errors/                              # Conflict, RemoteAgentError 등 공통 오류</text>
+<rect x="60" y="1152" width="1110" height="23" rx="3" fill="#F8FAFC" opacity="0.78"/>
+<rect x="60" y="1152" width="5" height="23" rx="2" fill="#475569"/>
+<text data-source-line="39" x="76" y="1170" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#475569">│  │     └─ observability/                       # Local/A2A trace/log/metric 형식</text>
+<rect x="60" y="1177" width="1110" height="23" rx="3" fill="#F8FAFC" opacity="0.78"/>
+<rect x="60" y="1177" width="5" height="23" rx="2" fill="#334155"/>
+<text data-source-line="40" x="76" y="1195" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#334155">│  │</text>
+<rect x="1230" y="202" width="1110" height="23" rx="3" fill="#F0F9FF" opacity="0.78"/>
+<rect x="1230" y="202" width="5" height="23" rx="2" fill="#0369A1"/>
+<text data-source-line="41" x="1246" y="220" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0369A1">│  ├─ infrastructure/</text>
+<rect x="1230" y="227" width="1110" height="23" rx="3" fill="#F0F9FF" opacity="0.78"/>
+<rect x="1230" y="227" width="5" height="23" rx="2" fill="#0369A1"/>
+<text data-source-line="42" x="1246" y="245" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0369A1">│  │  ├─ db/                                    # PostgreSQL Source of Truth</text>
+<rect x="1230" y="252" width="1110" height="23" rx="3" fill="#F0F9FF" opacity="0.78"/>
+<rect x="1230" y="252" width="5" height="23" rx="2" fill="#0369A1"/>
+<text data-source-line="43" x="1246" y="270" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0369A1">│  │  ├─ vectorstore/                           # pgvector / Vector Search Adapter</text>
+<rect x="1230" y="277" width="1110" height="23" rx="3" fill="#F0F9FF" opacity="0.78"/>
+<rect x="1230" y="277" width="5" height="23" rx="2" fill="#0369A1"/>
+<text data-source-line="44" x="1246" y="295" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0369A1">│  │  ├─ graphstore/                            # Graph DB / SQL-PGQ / graph extension Adapter</text>
+<rect x="1230" y="302" width="1110" height="23" rx="3" fill="#F0F9FF" opacity="0.78"/>
+<rect x="1230" y="302" width="5" height="23" rx="2" fill="#0369A1"/>
+<text data-source-line="45" x="1246" y="320" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0369A1">│  │  ├─ graph_projection/                      # RDB Event → Node/Edge Projection 동기화</text>
+<rect x="1230" y="327" width="1110" height="23" rx="3" fill="#F0F9FF" opacity="0.78"/>
+<rect x="1230" y="327" width="5" height="23" rx="2" fill="#0369A1"/>
+<text data-source-line="46" x="1246" y="345" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0369A1">│  │  ├─ messaging/                             # in-process/Redis/Redis Streams/RabbitMQ</text>
+<rect x="1230" y="352" width="1110" height="23" rx="3" fill="#F0F9FF" opacity="0.78"/>
+<rect x="1230" y="352" width="5" height="23" rx="2" fill="#0369A1"/>
+<text data-source-line="47" x="1246" y="370" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0369A1">│  │  ├─ a2a/                                   # A2A Client/Server transport 구현</text>
+<rect x="1230" y="377" width="1110" height="23" rx="3" fill="#F0F9FF" opacity="0.78"/>
+<rect x="1230" y="377" width="5" height="23" rx="2" fill="#0369A1"/>
+<text data-source-line="48" x="1246" y="395" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0369A1">│  │  ├─ auth/                                  # OAuth/Token 검증 Adapter</text>
+<rect x="1230" y="402" width="1110" height="23" rx="3" fill="#F0F9FF" opacity="0.78"/>
+<rect x="1230" y="402" width="5" height="23" rx="2" fill="#0369A1"/>
+<text data-source-line="49" x="1246" y="420" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0369A1">│  │  ├─ integrations/                          # 결제·계정·알림 외부 Business API</text>
+<rect x="1230" y="427" width="1110" height="23" rx="3" fill="#F0F9FF" opacity="0.78"/>
+<rect x="1230" y="427" width="5" height="23" rx="2" fill="#0369A1"/>
+<text data-source-line="50" x="1246" y="445" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0369A1">│  │  └─ llm/                                   # LLM Provider Adapter</text>
+<rect x="1230" y="452" width="1110" height="23" rx="3" fill="#F8FAFC" opacity="0.78"/>
+<rect x="1230" y="452" width="5" height="23" rx="2" fill="#334155"/>
+<text data-source-line="51" x="1246" y="470" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#334155">│  │</text>
+<rect x="1230" y="477" width="1110" height="23" rx="3" fill="#ECFDF5" opacity="0.78"/>
+<rect x="1230" y="477" width="5" height="23" rx="2" fill="#0F766E"/>
+<text data-source-line="52" x="1246" y="495" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0F766E">│  └─ modules/</text>
+<rect x="1230" y="502" width="1110" height="23" rx="3" fill="#ECFDF5" opacity="0.78"/>
+<rect x="1230" y="502" width="5" height="23" rx="2" fill="#0F766E"/>
+<text data-source-line="53" x="1246" y="520" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0F766E">│     └─ customer_ops/</text>
+<rect x="1230" y="527" width="1110" height="23" rx="3" fill="#ECFDF5" opacity="0.78"/>
+<rect x="1230" y="527" width="5" height="23" rx="2" fill="#0F766E"/>
+<text data-source-line="54" x="1246" y="545" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0F766E">│        ├─ team_modules/</text>
+<rect x="1230" y="552" width="1110" height="23" rx="3" fill="#ECFDF5" opacity="0.78"/>
+<rect x="1230" y="552" width="5" height="23" rx="2" fill="#0F766E"/>
+<text data-source-line="55" x="1246" y="570" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0F766E">│        │  ├─ local_team_a/                    # 내부 Local Team Module</text>
+<rect x="1230" y="577" width="1110" height="23" rx="3" fill="#ECFDF5" opacity="0.78"/>
+<rect x="1230" y="577" width="5" height="23" rx="2" fill="#0F766E"/>
+<text data-source-line="56" x="1246" y="595" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0F766E">│        │  ├─ local_team_b/</text>
+<rect x="1230" y="602" width="1110" height="23" rx="3" fill="#ECFDF5" opacity="0.78"/>
+<rect x="1230" y="602" width="5" height="23" rx="2" fill="#0F766E"/>
+<text data-source-line="57" x="1246" y="620" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0F766E">│        │  └─ remote_team_demo/                # A2A로 독립 배포 가능한 PoC Team</text>
+<rect x="1230" y="627" width="1110" height="23" rx="3" fill="#ECFDF5" opacity="0.78"/>
+<rect x="1230" y="627" width="5" height="23" rx="2" fill="#0F766E"/>
+<text data-source-line="58" x="1246" y="645" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#0F766E">│        └─ feedback/                           # 감성·의도·이슈 분석 Capability</text>
+<rect x="1230" y="652" width="1110" height="23" rx="3" fill="#F8FAFC" opacity="0.78"/>
+<rect x="1230" y="652" width="5" height="23" rx="2" fill="#334155"/>
+<text data-source-line="59" x="1246" y="670" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#334155">│</text>
+<rect x="1230" y="677" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="677" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="60" x="1246" y="695" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">├─ tests/</text>
+<rect x="1230" y="702" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="702" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="61" x="1246" y="720" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">│  ├─ case_runtime/                             # State/Concurrency/Local-A2A routing</text>
+<rect x="1230" y="727" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="727" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="62" x="1246" y="745" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">│  ├─ access_action/                            # OAuth/MCP/A2A/Auth/Idempotency</text>
+<rect x="1230" y="752" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="752" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="63" x="1246" y="770" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">│  ├─ graph_retrieval/                          # Vector-only vs Vector+Graph 평가</text>
+<rect x="1230" y="777" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="777" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="64" x="1246" y="795" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">│  ├─ team_modules/                             # Team별 Agent/RAG/Memory 평가</text>
+<rect x="1230" y="802" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="802" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="65" x="1246" y="820" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">│  └─ e2e/                                      # Personal AI / Remote Agent / Local Team 시나리오</text>
+<rect x="1230" y="827" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="827" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="66" x="1246" y="845" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">├─ eval/</text>
+<rect x="1230" y="852" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="852" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="67" x="1246" y="870" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">│  ├─ datasets/                                 # golden 72 / holdout 24</text>
+<rect x="1230" y="877" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="877" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="68" x="1246" y="895" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">│  ├─ runners/                                  # A / B / Proposed 실행기</text>
+<rect x="1230" y="902" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="902" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="69" x="1246" y="920" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">│  └─ stats/                                    # bootstrap 95% CI, McNemar</text>
+<rect x="1230" y="927" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="927" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="70" x="1246" y="945" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">└─ wiki/                                       # ★2026-09-08 docs/ 를 여기로 통합했다</text>
+<rect x="1230" y="952" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="952" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="71" x="1246" y="970" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">   ├─ (본문)                                     # 설계·운영 사실. 읽는 순서는 여기 먼저</text>
+<rect x="1230" y="977" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="977" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="72" x="1246" y="995" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">   └─ records/                                  # 작업 기록 — 고치지 않는다</text>
+<rect x="1230" y="1002" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="1002" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="73" x="1246" y="1020" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">      ├─ handoff/                               # 계약 문서</text>
+<rect x="1230" y="1027" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="1027" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="74" x="1246" y="1045" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">      ├─ reports/                               # 리포트 · 결함 기록</text>
+<rect x="1230" y="1052" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="1052" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="75" x="1246" y="1070" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">      ├─ evidence/                              # DoD 근거</text>
+<rect x="1230" y="1077" width="1110" height="23" rx="3" fill="#FFFBEB" opacity="0.78"/>
+<rect x="1230" y="1077" width="5" height="23" rx="2" fill="#B45309"/>
+<text data-source-line="76" x="1246" y="1095" xml:space="preserve" font-family="Consolas, Noto Sans Mono CJK KR, monospace" font-size="16" font-weight="600" fill="#B45309">      └─ plans · manuals · labeling · submission 등</text>
+<line x1="60" y1="1248" x2="2340" y2="1248" stroke="#CBD5E1" stroke-width="2"/>
+<rect x="60" y="1274" width="22" height="22" rx="4" fill="#7C3AED"/>
+<text x="92" y="1293" font-family="Arial, Noto Sans KR, sans-serif" font-size="20" font-weight="700" fill="#334155">Core 1</text>
+<rect x="260" y="1274" width="22" height="22" rx="4" fill="#1D4ED8"/>
+<text x="292" y="1293" font-family="Arial, Noto Sans KR, sans-serif" font-size="20" font-weight="700" fill="#334155">Core 2</text>
+<rect x="460" y="1274" width="22" height="22" rx="4" fill="#475569"/>
+<text x="492" y="1293" font-family="Arial, Noto Sans KR, sans-serif" font-size="20" font-weight="700" fill="#334155">공통</text>
+<rect x="640" y="1274" width="22" height="22" rx="4" fill="#0369A1"/>
+<text x="672" y="1293" font-family="Arial, Noto Sans KR, sans-serif" font-size="20" font-weight="700" fill="#334155">인프라</text>
+<rect x="840" y="1274" width="22" height="22" rx="4" fill="#0F766E"/>
+<text x="872" y="1293" font-family="Arial, Noto Sans KR, sans-serif" font-size="20" font-weight="700" fill="#334155">Team</text>
+<rect x="1020" y="1274" width="22" height="22" rx="4" fill="#B45309"/>
+<text x="1052" y="1293" font-family="Arial, Noto Sans KR, sans-serif" font-size="20" font-weight="700" fill="#334155">검증·기록</text>
+<text x="2340" y="1293" text-anchor="end" font-family="Arial, Noto Sans KR, sans-serif" font-size="18" fill="#64748B">프로젝트명 triPilot · 팀명 A-COPilot</text>
+</svg>

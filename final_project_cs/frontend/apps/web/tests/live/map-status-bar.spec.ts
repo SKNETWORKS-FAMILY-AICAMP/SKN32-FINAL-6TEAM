@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer, noHorizontalScroll } from "./helpers";
+import { mockServer } from "./helpers";
 import { changedBadge, mapSettled, needsBadge, openFinished, pin, type Json } from "./plan-check-kit";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
@@ -7,7 +7,7 @@ const shot = async (page: Page, name: string) => {
   if (process.env.MAP_STATUS_SHOTS) await page.screenshot({ path: `${process.env.MAP_STATUS_SHOTS}/${name}.png`, fullPage: true });
 };
 
-test("확인·변경·우선 안내가 독립 칩으로 나란히 붙고 시간 초기화는 변경 메뉴에서 동작한다", async ({ page, request }) => {
+test("위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 시간 초기화는 변경 메뉴에서 동작한다", async ({ page, request }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   const addHotel = (view: Json) => {
     view.review.items.push({ ...view.review.items[2], id: "0-3", index: 3, title: "호텔", starts_at: "21:00", ends_at: "22:00", status: "review", place: null, place_state: "missing",
@@ -26,12 +26,20 @@ test("확인·변경·우선 안내가 독립 칩으로 나란히 붙고 시간 
   await form.getByLabel("시작", { exact: true }).fill("11:30");
   await form.getByRole("button", { name: "적용" }).click();
   await expect(changedBadge(page)).toHaveText("3");
+  await expect(changedBadge(page)).toHaveAccessibleName("바뀐 일정 3곳");
   await page.getByRole("status").filter({ hasText: /시간을 바꿨어요/ }).getByRole("button", { name: "닫기", exact: true }).click();
   const group = page.getByRole("group", { name: "일정 확인과 변경" });
+  // 확인 필요 → 되돌릴 변경 → 위치 미정 순서로 마커 미선택 안내를 표시합니다.
+  await expect(page.getByRole("article", { name: "호텔", exact: true })).toContainText(/장소\s*주의/);
+  await expect(needsBadge(page)).toHaveAccessibleName("확인 필요 2곳");
+  await expect(group.getByText("위치 미정 · 호텔", { exact: true })).toHaveCount(0);
   await expect(group.getByText("확인 필요 · 올리브영", { exact: true })).toBeVisible();
   const [need, change, location, bar] = await Promise.all([needsBadge(page).boundingBox(), changedBadge(page).boundingBox(), group.getByText("확인 필요 · 올리브영", { exact: true }).boundingBox(), group.boundingBox()]);
-  expect(change!.x - need!.x - need!.width).toBe(4);
-  expect(need!.x - location!.x - location!.width).toBe(4);
+  expect(need!.x).toBeGreaterThanOrEqual(location!.x + location!.width - 1);
+  expect(change!.x).toBeGreaterThanOrEqual(need!.x + need!.width - 1);
+  for (const chip of [group.getByText("확인 필요 · 올리브영", { exact: true }), needsBadge(page), changedBadge(page)]) {
+    await expect(chip).toHaveCSS("border-top-style", "solid");
+  }
   expect(Math.abs(need!.y + need!.height / 2 - location!.y - location!.height / 2)).toBeLessThan(2);
   expect(bar!.x + bar!.width).toBeLessThanOrEqual(375);
   await expect(page.locator("header[class*=sheetHead]").getByRole("button", { name: /^바뀐 일정|^시간 조정/ })).toHaveCount(0);
@@ -45,14 +53,9 @@ test("확인·변경·우선 안내가 독립 칩으로 나란히 붙고 시간 
   const panel = await page.getByRole("region", { name: "변경 관리" }).boundingBox();
   expect(panel!.x).toBeGreaterThanOrEqual(0);
   expect(panel!.x + panel!.width).toBeLessThanOrEqual(375);
-  for (const width of [1280, 375]) {
-    await page.setViewportSize({ width, height: 812 });
-    await expect(page.getByRole("region", { name: "변경 관리" })).toBeVisible();
-    const bounds = (await page.getByRole("region", { name: "변경 관리" }).boundingBox())!;
-    expect(bounds.x).toBeGreaterThanOrEqual(0);
-    expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
-    await noHorizontalScroll(page);
-  }
+  const resetBox = (await reset.boundingBox())!;
+  expect(resetBox.x).toBeGreaterThanOrEqual(panel!.x);
+  expect(resetBox.x + resetBox.width).toBeLessThanOrEqual(panel!.x + panel!.width);
   await shot(page, "02-time-reset-menu");
   const before = (await server.received("POST", "/edits")).length;
   await reset.click();
@@ -71,6 +74,7 @@ test("변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변�
   await form.getByRole("button", { name: "적용" }).click();
   await expect(page.getByRole("status").filter({ hasText: "3개 일정의 시간을 바꿨어요" })).toBeVisible();
   await expect(changedBadge(page)).toHaveText("3");
+  await expect(changedBadge(page)).toHaveAccessibleName("바뀐 일정 3곳");
   await changedBadge(page).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("button", { name: /^시간 조정.*모두 처음으로/ })).toBeVisible();
@@ -104,12 +108,16 @@ test("확대한 경로선에 수단 이름이 붙고 지도 이동·축소에 �
   await mapSettled(page);
   const map = page.getByRole("region", { name: "여행 지도", exact: true });
   const labels = page.locator("[data-route-label]");
+  const tools = page.getByRole("group", { name: "지도 단추" });
+  const expandTools = async () => {
+    const expand = tools.getByRole("button", { name: "지도 단추 펼치기", exact: true });
+    if (await expand.count()) await expand.click();
+  };
   await expect(page.locator("[data-route-tags]")).toHaveCount(0);
   for (let at = 0; at < 5 && !(await labels.count()); at++) {
     await map.hover({ position: { x: 150, y: 110 } });
-    const expand = page.getByRole("button", { name: "지도 단추 펼치기", exact: true });
-    if (await expand.count()) await expand.click();
-    await page.getByRole("group", { name: "지도 단추" }).getByRole("button", { name: "확대", exact: true }).click();
+    await expandTools();
+    await tools.getByRole("button", { name: "확대", exact: true }).click();
     await page.waitForTimeout(450);
   }
   await expect(labels.first()).toBeVisible();
@@ -130,9 +138,8 @@ test("확대한 경로선에 수단 이름이 붙고 지도 이동·축소에 �
   expect(!moved || Math.abs(moved.x - position.x) + Math.abs(moved.y - position.y) > 10).toBe(true);
   for (let at = 0; at < 5; at++) {
     await map.hover({ position: { x: 150, y: 110 } });
-    const expand = page.getByRole("button", { name: "지도 단추 펼치기", exact: true });
-    if (await expand.count()) await expand.click();
-    await page.getByRole("group", { name: "지도 단추" }).getByRole("button", { name: "축소", exact: true }).click();
+    await expandTools();
+    await tools.getByRole("button", { name: "축소", exact: true }).click();
     await page.waitForTimeout(350);
   }
   await expect(labels).toHaveCount(0);

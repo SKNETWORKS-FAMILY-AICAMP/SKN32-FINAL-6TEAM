@@ -1,0 +1,23 @@
+test_g96.jsonl gpt-6-sol 남은 4 / 96
+test_g96.jsonl 끝 gpt-6-sol 오류 0 10 초
+test_cx.jsonl gpt-6-sol 남은 380 / 400
+test_cx.jsonl 20 / 380 39 초
+test_cx.jsonl 40 / 380 71 초
+test_cx.jsonl 60 / 380 106 초
+test_cx.jsonl 80 / 380 138 초
+test_cx.jsonl 100 / 380 173 초
+test_cx.jsonl 120 / 380 207 초
+test_cx.jsonl 140 / 380 241 초
+test_cx.jsonl 160 / 380 274 초
+test_cx.jsonl 180 / 380 307 초
+test_cx.jsonl 200 / 380 339 초
+test_cx.jsonl 220 / 380 370 초
+test_cx.jsonl 240 / 380 404 초
+test_cx.jsonl 260 / 380 439 초
+test_cx.jsonl 280 / 380 477 초
+test_cx.jsonl 300 / 380 506 초
+test_cx.jsonl 320 / 380 545 초
+test_cx.jsonl 340 / 380 601 초
+test_cx.jsonl 360 / 380 627 초
+test_cx.jsonl 380 / 380 660 초
+test_cx.jsonl 끝 gpt-6-sol 오류 0 660 초

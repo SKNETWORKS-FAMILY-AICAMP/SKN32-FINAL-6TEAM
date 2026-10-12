@@ -1,0 +1,23 @@
+mix11 10/163 58초
+mix11 20/163 79초
+mix11 30/163 115초
+mix11 40/163 160초
+mix11 50/163 181초
+mix11 60/163 226초
+mix11 70/163 261초
+mix11 80/163 293초
+mix11 90/163 330초
+mix11 100/163 371초
+mix11 110/163 395초
+mix11 120/163 420초
+mix11 130/163 456초
+mix11 140/163 484초
+mix11 150/163 517초
+mix11 160/163 554초
+mix11 163/163 563초
+gpt-6-luna mix11: 맞음 149/163 · 요청 둘 제외 140/149 · 파싱 163 · 오류 0 · 호출당 토큰 평균 1514 · 문제당 3.5초(작업 2개 병렬)
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\program\scripts\plan_qa_bench\codex_solve.py", line 89, in <module>
+    rows = done['rows']
+           ~~~~^^^^^^^^
+KeyError: 'rows'

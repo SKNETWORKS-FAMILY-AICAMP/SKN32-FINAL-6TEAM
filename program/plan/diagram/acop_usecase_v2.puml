@@ -1,0 +1,102 @@
+@startuml
+title A-COP 계획 기반 유스케이스 — Runtime / CS Pack / Commerce Ops Pack
+left to right direction
+skinparam backgroundColor #faf9ff
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam ArrowColor #4b5563
+skinparam LineColor #4b5563
+skinparam usecaseBorderThickness 1
+skinparam usecase {
+  BorderColor #6b7280
+  BackgroundColor<<common>> #dbeafe
+  BorderColor<<common>> #2563eb
+  BackgroundColor<<core>> #fef3c7
+  BorderColor<<core>> #d97706
+  BackgroundColor<<cs>> #dcfce7
+  BorderColor<<cs>> #16a34a
+  BackgroundColor<<commerce>> #ede9fe
+  BorderColor<<commerce>> #7c3aed
+  BackgroundColor<<approval>> #fee2e2
+  BorderColor<<approval>> #dc2626
+}
+
+actor "고객" as Customer
+actor "외부 개인 AI\n(REST / MCP)" as PersonalAI
+actor "외부 기업 Agent\n(A2A)" as EnterpriseAgent
+
+rectangle "A-COP Runtime" {
+  package "Core 1 — Case Runtime & Coordination" {
+    usecase "Case 등록" as Create <<common>>
+    usecase "Case 분류\nintent / issue / sentiment" as Classify <<common>>
+    usecase "Context Pack 구성" as Context <<common>>
+    usecase "Team 실행 조정" as Execute <<core>>
+    usecase "Case 상태 대기·재개·재계획" as WaitResume <<core>>
+    usecase "TeamResult 정규화" as Normalize <<core>>
+    usecase "ActionProposal 생성" as Proposal <<approval>>
+    usecase "Human Approval" as Approval <<approval>>
+    usecase "승인된 Action 실행·감사" as Action <<approval>>
+  }
+
+  package "CS Pack — 착수 확정" {
+    usecase "VOC & Store Manager\n집계·alert·위임 제안" as VOC <<cs>>
+    usecase "Response Generation & Review\nGEN → REV → 응답/에스컬레이션" as Response <<cs>>
+  }
+
+  package "Commerce Ops Pack — 검증 쇼핑몰 연계" {
+    usecase "Procurement +\nOrder & Payment" as Procurement <<commerce>>
+    usecase "Fulfillment &\nLogistics" as Fulfillment <<commerce>>
+    usecase "Return & Refund\n(Mock)" as Return <<commerce>>
+    usecase "Catalog & Verification\n(A2A Remote)" as Catalog <<commerce>>
+  }
+}
+
+rectangle "외부 연동 경계" {
+  usecase "개인 AI Tool/Resource\n조회·Case 요청" as MCP <<common>>
+  usecase "기업 업무 위임\nAgent Card → Task → Artifact" as A2A <<commerce>>
+}
+
+' 운영자는 뒤에서 선언하고 Approval·VOC 쪽으로 숨은 엣지를 걸어
+' Core 1 박스를 가로지르지 않고 오른쪽 클러스터에 배치되게 유도한다.
+actor "운영자" as Operator
+
+Customer --> Create
+Customer --> MCP
+PersonalAI --> MCP
+EnterpriseAgent --> A2A
+Operator --> Approval
+Operator --> VOC
+Operator -[hidden]right-> Approval
+Operator -[hidden]right-> VOC
+
+Create ..> Classify : <<include>>
+Classify ..> Context : <<include>>
+Context ..> Execute : <<include>>
+Execute ..> Normalize : <<include>>
+Execute ..> VOC : capability
+Execute ..> Response : capability
+Execute ..> Procurement : capability
+Execute ..> Fulfillment : capability
+Execute ..> Return : capability
+Execute ..> Catalog : capability / A2A
+Execute ..> WaitResume : <<extend>>
+Normalize ..> Proposal : if action proposed
+Proposal ..> Approval : if high-risk
+Approval ..> Action : approved
+MCP ..> Create : <<include>>
+A2A ..> Catalog : remote team
+
+legend bottom right
+|=색상 |=의미|
+|<#dbeafe>|공통 접근·조회·Context|
+|<#fef3c7>|Core 실행·조정|
+|<#dcfce7>|CS Pack Team|
+|<#ede9fe>|Commerce Ops / A2A Team|
+|<#fee2e2>|Action·승인 경계|
+|=선 |=의미|
+|실선|액터 연관|
+|점선 <<include>>|필수 포함|
+|점선 <<extend>>|조건부 확장|
+endlegend
+@enduml

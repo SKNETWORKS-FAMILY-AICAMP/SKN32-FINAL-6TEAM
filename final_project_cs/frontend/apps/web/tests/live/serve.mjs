@@ -7,6 +7,8 @@ import { spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 
 const provider = process.env.MAP_TEST_PROVIDER === "naver" || process.env.MAP_TEST_PROVIDER === "google" ? process.env.MAP_TEST_PROVIDER : "osm";
+// Concurrent runs may use different mock ports; their bundles must keep those addresses separate too.
+const distDir = process.env.LIVE_DIST_DIR ?? ".next-live";
 
 const env = {
   ...process.env,
@@ -20,12 +22,12 @@ const env = {
   NEXT_PUBLIC_GOOGLE_MAP_ID: provider === "google" ? "test-google-map" : "",
   // The human check calls Cloudflare; these tests stay on the test mock server, so it is off here (a dev .env.local may set it).
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: "",
-  NEXT_DIST_DIR: ".next-live",
+  NEXT_DIST_DIR: distDir,
 };
 const shell = process.platform === "win32";
 
 // LIVE_SKIP_BUILD=1 reuses the build already in `.next-live` (a long run is split in batches so a shared, low-memory machine is not pushed over its limit).
-const reuse = process.env.LIVE_SKIP_BUILD === "1" && existsSync(".next-live/BUILD_ID");
+const reuse = process.env.LIVE_SKIP_BUILD === "1" && existsSync(`${distDir}/BUILD_ID`);
 if (!reuse) {
   const build = spawnSync("npx", ["next", "build"], { env, stdio: "inherit", shell });
   if (build.status !== 0) process.exit(build.status ?? 1);

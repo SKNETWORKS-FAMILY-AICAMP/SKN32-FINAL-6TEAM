@@ -1,0 +1,2038 @@
+{
+ "sets": {
+  "distill_p07": {
+   "today": "2027-10-14",
+   "items": [
+    {
+     "id": 1,
+     "date": "2027-10-19",
+     "start": "12:30",
+     "kind": "mobility",
+     "title": "KTX로 광명역 도착",
+     "place": "광명역"
+    },
+    {
+     "id": 2,
+     "date": "2027-10-19",
+     "start": "13:10",
+     "kind": "mobility",
+     "title": "펫택시로 명동 호텔 이동",
+     "place": "알로프트 서울 명동"
+    },
+    {
+     "id": 3,
+     "date": "2027-10-19",
+     "start": "14:30",
+     "kind": "lodging",
+     "title": "호텔 체크인",
+     "place": "알로프트 서울 명동"
+    },
+    {
+     "id": 4,
+     "date": "2027-10-19",
+     "start": "15:30",
+     "kind": "activity",
+     "title": "남산 북측순환로 단풍 산책",
+     "place": "남산 북측순환로"
+    },
+    {
+     "id": 5,
+     "date": "2027-10-19",
+     "start": "18:30",
+     "kind": "dining",
+     "title": "명동함흥면옥에서 저녁",
+     "place": "명동함흥면옥"
+    },
+    {
+     "id": 6,
+     "date": "2027-10-20",
+     "start": "08:30",
+     "kind": "dining",
+     "title": "이삭토스트로 아침",
+     "place": "이삭토스트 명동점"
+    },
+    {
+     "id": 7,
+     "date": "2027-10-20",
+     "start": "10:10",
+     "kind": "activity",
+     "title": "백사실계곡 단풍 산책",
+     "place": "백사실계곡"
+    },
+    {
+     "id": 8,
+     "date": "2027-10-20",
+     "start": "11:40",
+     "kind": "activity",
+     "title": "윤동주 시인의 언덕 산책",
+     "place": "윤동주 시인의 언덕"
+    },
+    {
+     "id": 9,
+     "date": "2027-10-20",
+     "start": "12:40",
+     "kind": "dining",
+     "title": "계열사에서 치킨 점심",
+     "place": "계열사"
+    },
+    {
+     "id": 10,
+     "date": "2027-10-20",
+     "start": "14:30",
+     "kind": "dining",
+     "title": "블루보틀 광화문점에서 커피",
+     "place": "블루보틀 광화문점"
+    },
+    {
+     "id": 11,
+     "date": "2027-10-20",
+     "start": "16:00",
+     "kind": "activity",
+     "title": "안산자락길 데크길 걷기",
+     "place": "안산자락길"
+    },
+    {
+     "id": 12,
+     "date": "2027-10-20",
+     "start": "18:30",
+     "kind": "dining",
+     "title": "양미옥에서 곱창 저녁",
+     "place": "양미옥 을지로점"
+    },
+    {
+     "id": 13,
+     "date": "2027-10-21",
+     "start": "09:00",
+     "kind": "mobility",
+     "title": "렌터카 픽업",
+     "place": "롯데렌터카 을지로지점"
+    },
+    {
+     "id": 14,
+     "date": "2027-10-21",
+     "start": "10:30",
+     "kind": "activity",
+     "title": "물의정원 강변 산책",
+     "place": "물의정원"
+    },
+    {
+     "id": 15,
+     "date": "2027-10-21",
+     "start": "12:00",
+     "kind": "dining",
+     "title": "팔당 초계국수로 점심",
+     "place": "팔당 초계국수 본점"
+    },
+    {
+     "id": 16,
+     "date": "2027-10-21",
+     "start": "13:30",
+     "kind": "dining",
+     "title": "스타벅스 더북한강R점 펫존에서 커피",
+     "place": "스타벅스 더북한강R점"
+    },
+    {
+     "id": 17,
+     "date": "2027-10-21",
+     "start": "15:00",
+     "kind": "activity",
+     "title": "두물머리 단풍 산책",
+     "place": "두물머리"
+    },
+    {
+     "id": 18,
+     "date": "2027-10-21",
+     "start": "16:30",
+     "kind": "dining",
+     "title": "연핫도그 간식",
+     "place": "두물머리 연핫도그"
+    },
+    {
+     "id": 19,
+     "date": "2027-10-21",
+     "start": "19:00",
+     "kind": "dining",
+     "title": "명동함흥면옥에서 비빔냉면",
+     "place": "명동함흥면옥"
+    },
+    {
+     "id": 20,
+     "date": "2027-10-22",
+     "start": "10:00",
+     "kind": "lodging",
+     "title": "호텔 체크아웃",
+     "place": "알로프트 서울 명동"
+    },
+    {
+     "id": 21,
+     "date": "2027-10-22",
+     "start": "10:30",
+     "kind": "mobility",
+     "title": "렌터카로 방배동 이동",
+     "place": "방배동 카페골목"
+    },
+    {
+     "id": 22,
+     "date": "2027-10-22",
+     "start": "11:00",
+     "kind": "activity",
+     "title": "몽마르뜨공원 반려견 산책",
+     "place": "몽마르뜨공원"
+    },
+    {
+     "id": 23,
+     "date": "2027-10-22",
+     "start": "12:30",
+     "kind": "dining",
+     "title": "브루클린 더 버거 조인트에서 점심",
+     "place": "브루클린 더 버거 조인트"
+    },
+    {
+     "id": 24,
+     "date": "2027-10-22",
+     "start": "14:00",
+     "kind": "activity",
+     "title": "서리풀공원 누에다리 산책",
+     "place": "서리풀공원"
+    },
+    {
+     "id": 25,
+     "date": "2027-10-22",
+     "start": "15:30",
+     "kind": "mobility",
+     "title": "여의도에서 렌터카 반납",
+     "place": "롯데렌터카 여의도지점"
+    },
+    {
+     "id": 26,
+     "date": "2027-10-22",
+     "start": "16:00",
+     "kind": "lodging",
+     "title": "호텔 체크인",
+     "place": "글래드 여의도"
+    },
+    {
+     "id": 27,
+     "date": "2027-10-22",
+     "start": "18:30",
+     "kind": "dining",
+     "title": "화목순대국에서 저녁",
+     "place": "화목순대국"
+    },
+    {
+     "id": 28,
+     "date": "2027-10-23",
+     "start": "07:30",
+     "kind": "activity",
+     "title": "샛강생태공원 아침 산책",
+     "place": "샛강생태공원"
+    },
+    {
+     "id": 29,
+     "date": "2027-10-23",
+     "start": "10:00",
+     "kind": "mobility",
+     "title": "지하철로 정발산역 이동",
+     "place": "정발산역"
+    },
+    {
+     "id": 30,
+     "date": "2027-10-23",
+     "start": "10:40",
+     "kind": "activity",
+     "title": "일산호수공원 단풍 산책",
+     "place": "일산호수공원"
+    },
+    {
+     "id": 31,
+     "date": "2027-10-23",
+     "start": "12:30",
+     "kind": "dining",
+     "title": "일산칼국수 본점에서 점심",
+     "place": "일산칼국수 본점"
+    },
+    {
+     "id": 32,
+     "date": "2027-10-23",
+     "start": "14:00",
+     "kind": "activity",
+     "title": "스타필드 고양 반려견 동반 쇼핑",
+     "place": "스타필드 고양"
+    },
+    {
+     "id": 33,
+     "date": "2027-10-23",
+     "start": "18:00",
+     "kind": "dining",
+     "title": "스타필드 고양에서 저녁",
+     "place": "스타필드 고양"
+    },
+    {
+     "id": 34,
+     "date": "2027-10-23",
+     "start": "19:30",
+     "kind": "mobility",
+     "title": "지하철로 샛강역 복귀",
+     "place": "샛강역"
+    },
+    {
+     "id": 35,
+     "date": "2027-10-24",
+     "start": "07:30",
+     "kind": "activity",
+     "title": "샛강생태공원 반려견 아침 산책",
+     "place": "샛강생태공원"
+    },
+    {
+     "id": 36,
+     "date": "2027-10-24",
+     "start": "09:30",
+     "kind": "mobility",
+     "title": "펫택시로 하남 이동",
+     "place": "미사경정공원 정문"
+    },
+    {
+     "id": 37,
+     "date": "2027-10-24",
+     "start": "10:00",
+     "kind": "activity",
+     "title": "미사경정공원 단풍길 걷기",
+     "place": "미사경정공원"
+    },
+    {
+     "id": 38,
+     "date": "2027-10-24",
+     "start": "12:00",
+     "kind": "dining",
+     "title": "마방집에서 한정식 점심",
+     "place": "마방집"
+    },
+    {
+     "id": 39,
+     "date": "2027-10-24",
+     "start": "14:30",
+     "kind": "activity",
+     "title": "성내천 산책로 걷기",
+     "place": "성내천"
+    },
+    {
+     "id": 40,
+     "date": "2027-10-24",
+     "start": "16:00",
+     "kind": "dining",
+     "title": "위례 애견동반 카페에서 휴식",
+     "place": "카페 온더그린 위례점"
+    },
+    {
+     "id": 41,
+     "date": "2027-10-24",
+     "start": "18:30",
+     "kind": "dining",
+     "title": "쉐이크쉑 강남점에서 저녁",
+     "place": "쉐이크쉑 강남점"
+    },
+    {
+     "id": 42,
+     "date": "2027-10-24",
+     "start": "20:00",
+     "kind": "mobility",
+     "title": "지하철로 샛강역 복귀",
+     "place": "샛강역"
+    },
+    {
+     "id": 43,
+     "date": "2027-10-25",
+     "start": "08:30",
+     "kind": "dining",
+     "title": "호텔 조식",
+     "place": "글래드 여의도"
+    },
+    {
+     "id": 44,
+     "date": "2027-10-25",
+     "start": "10:30",
+     "kind": "lodging",
+     "title": "호텔 체크아웃",
+     "place": "글래드 여의도"
+    },
+    {
+     "id": 45,
+     "date": "2027-10-25",
+     "start": "11:30",
+     "kind": "activity",
+     "title": "사운즈 한남 구경",
+     "place": "사운즈 한남"
+    },
+    {
+     "id": 46,
+     "date": "2027-10-25",
+     "start": "12:30",
+     "kind": "dining",
+     "title": "타르틴 베이커리에서 브런치",
+     "place": "타르틴 베이커리 한남점"
+    },
+    {
+     "id": 47,
+     "date": "2027-10-25",
+     "start": "13:30",
+     "kind": "dining",
+     "title": "블루보틀 한남점에서 커피",
+     "place": "블루보틀 한남점"
+    },
+    {
+     "id": 48,
+     "date": "2027-10-25",
+     "start": "15:00",
+     "kind": "mobility",
+     "title": "펫택시로 광명역 이동",
+     "place": "광명역"
+    },
+    {
+     "id": 49,
+     "date": "2027-10-25",
+     "start": "16:10",
+     "kind": "mobility",
+     "title": "KTX 타고 귀가",
+     "place": "광명역"
+    }
+   ],
+   "qs": [
+    {
+     "q": "가운데 거 강아지 데려가도 돼?",
+     "gold": 7,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "수요일 오전 일정 뭐 있어?"
+      },
+      {
+       "role": "service",
+       "text": "수요일 오전에는 08:30 이삭토스트로 아침, 10:10 백사실계곡 단풍 산책, 11:40 윤동주 시인의 언덕 산책이 있어요."
+      }
+     ]
+    },
+    {
+     "q": "거기 애견 동반 식당 있어?",
+     "gold": 33,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "토요일 저녁 어디서 먹어?"
+      },
+      {
+       "role": "service",
+       "text": "토요일 저녁은 18:00 스타필드 고양에서 드시는 일정이에요."
+      }
+     ]
+    },
+    {
+     "q": "그 집 예약 필요해?",
+     "gold": 23,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "금요일 점심 어디야"
+      },
+      {
+       "role": "service",
+       "text": "금요일 점심은 12:30 브루클린 더 버거 조인트예요."
+      }
+     ]
+    },
+    {
+     "q": "세 번째 거 몇 시간 잡혀 있어?",
+     "gold": 37,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "일요일 오전 일정 알려줘"
+      },
+      {
+       "role": "service",
+       "text": "일요일 오전엔 07:30 샛강생태공원 반려견 아침 산책, 09:30 펫택시로 하남 이동, 10:00 미사경정공원 단풍길 걷기가 있어요."
+      }
+     ]
+    },
+    {
+     "q": "거기 몇 시까지 해?",
+     "gold": 5,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "화요일 저녁 메뉴 뭐야"
+      },
+      {
+       "role": "service",
+       "text": "화요일 저녁은 18:30 명동함흥면옥에서 드세요. 냉면집이에요."
+      }
+     ]
+    },
+    {
+     "q": "그 카페 테라스 있어요?",
+     "gold": 47,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "마지막 날 커피 어디서 마셔?"
+      },
+      {
+       "role": "service",
+       "text": "마지막 날 13:30 블루보틀 한남점에서 커피 일정이 있어요."
+      }
+     ]
+    },
+    {
+     "q": "뒤에 거 입장료 있어?",
+     "gold": 17,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "목요일에 산책하는 데 어디어디야"
+      },
+      {
+       "role": "service",
+       "text": "목요일엔 10:30 물의정원 강변 산책, 15:00 두물머리 단풍 산책이 있어요."
+      }
+     ]
+    },
+    {
+     "q": "마지막 거 애들 먹기 괜찮아?",
+     "gold": 12,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "수요일 오후 일정"
+      },
+      {
+       "role": "service",
+       "text": "수요일 오후에는 12:40 계열사 치킨 점심, 14:30 블루보틀 광화문점 커피, 16:00 안산자락길 데크길 걷기, 18:30 양미옥 곱창 저녁이 있어요."
+      }
+     ]
+    },
+    {
+     "q": "두번째 호텔 체크인 몇 시야",
+     "gold": 26,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "호텔 어디야?"
+      },
+      {
+       "role": "service",
+       "text": "첫날부터 금요일 아침까지는 알로프트 서울 명동, 금요일 오후부터 마지막 날까지는 글래드 여의도에 묵으세요."
+      }
+     ]
+    },
+    {
+     "q": "거기 강아지 들어갈 수 있어?",
+     "gold": 41,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "일요일 저녁 뭐 먹어"
+      },
+      {
+       "role": "service",
+       "text": "일요일 저녁은 18:30 쉐이크쉑 강남점이에요."
+      }
+     ]
+    },
+    {
+     "q": "그럼 일요일 거는 8시로 미뤄줘",
+     "gold": 35,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "토요일 아침 뭐 해?"
+      },
+      {
+       "role": "service",
+       "text": "토요일 07:30 샛강생태공원 아침 산책이 있어요."
+      },
+      {
+       "role": "customer",
+       "text": "일요일은?"
+      },
+      {
+       "role": "service",
+       "text": "일요일도 07:30 샛강생태공원 반려견 아침 산책이에요."
+      }
+     ]
+    },
+    {
+     "q": "그 집 포장 되나?",
+     "gold": 19,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "목요일 저녁 어디야"
+      },
+      {
+       "role": "service",
+       "text": "목요일 저녁은 19:00 명동함흥면옥에서 비빔냉면이에요."
+      }
+     ]
+    },
+    {
+     "q": "뒤에 거 한 시간 늦춰도 돼?",
+     "gold": 25,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "렌터카 언제 받고 언제 반납해?"
+      },
+      {
+       "role": "service",
+       "text": "목요일 09:00 롯데렌터카 을지로지점에서 픽업하고, 금요일 15:30 롯데렌터카 여의도지점에서 반납해요."
+      }
+     ]
+    },
+    {
+     "q": "앞에 거 예약됐어?",
+     "gold": 48,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "마지막 날 이동 어떻게 해?"
+      },
+      {
+       "role": "service",
+       "text": "마지막 날 15:00 펫택시로 광명역 이동, 16:10 KTX 타고 귀가하세요."
+      }
+     ]
+    },
+    {
+     "q": "그 산책 코스 얼마나 걸려?",
+     "gold": 4,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "첫날 도착하고 뭐 해?"
+      },
+      {
+       "role": "service",
+       "text": "첫날 12:30 광명역 도착 후 13:10 펫택시로 명동 호텔 이동, 14:30 호텔 체크인, 15:30 남산 북측순환로 단풍 산책이 있어요."
+      }
+     ]
+    },
+    {
+     "q": "처음 거 화장실 있어?",
+     "gold": 22,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "금요일 공원 두 군데 어디야"
+      },
+      {
+       "role": "service",
+       "text": "금요일엔 11:00 몽마르뜨공원 반려견 산책, 14:00 서리풀공원 누에다리 산책이 있어요."
+      }
+     ]
+    },
+    {
+     "q": "함흥면옥 화요일 저녁 몇시?",
+     "gold": 5,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "명동함흥면옥 목요일 거 취소 가능?",
+     "gold": 19,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "샛강생태공원 토요일 산책 몇시부터야",
+     "gold": 28,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일요일 샛강생태공원 산책 비 오면 어떡해?",
+     "gold": 35,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "스타필드 고양 쇼핑은 몇 시에 시작해?",
+     "gold": 32,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "스타필드 고양에서 저녁 먹는 거 몇시야",
+     "gold": 33,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "글래드 여의도 조식 몇 시예요",
+     "gold": 43,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "글래드 여의도 체크아웃 시간 늦출 수 있나요",
+     "gold": 44,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "글래드 여의도 금요일 체크인 몇 시?",
+     "gold": 26,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "알로프트 명동 체크아웃 몇 시야",
+     "gold": 20,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "알로프트 서울 명동 첫날 체크인 시간",
+     "gold": 3,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "첫날 광명역 도착 몇 시야",
+     "gold": 1,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "마지막 날 광명역에서 KTX 몇 시 출발이야",
+     "gold": 49,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "샛강역 토요일 복귀 지하철 몇 시야",
+     "gold": 34,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일요일 샛강역 가는 지하철 좀 늦게 해줘",
+     "gold": 42,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "마지막 날 광명역 가는 펫택시 몇 시?",
+     "gold": 48,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "블루보틀 광화문점 몇 시에 가?",
+     "gold": 10,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "블루보틀 한남점은 몇시야",
+     "gold": 47,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "롯데렌터카 을지로지점 픽업 시간",
+     "gold": 13,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "롯데렌터카 여의도지점 반납 몇시까지?",
+     "gold": 25,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일산칼국수 본점 웨이팅 길어?",
+     "gold": 31,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일산호수공원 몇 시 도착이야",
+     "gold": 30,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "두물머리 연핫도그 몇시에 들러?",
+     "gold": 18,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "두물머리 산책 몇 시간 잡혀있어?",
+     "gold": 17,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "물의정원 주차 되나요",
+     "gold": 14,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "몽마르뜨공원 반려견 산책 몇 시?",
+     "gold": 22,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "서리풀공원 누에다리 몇시 가요",
+     "gold": 24,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "윤동주 시인의 언덕 가는 시간",
+     "gold": 8,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "미사경정공원 걷는 거 몇 시?",
+     "gold": 37,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "블루보틀 삼청점은 언제 가?",
+     "gold": null,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "윤동주문학관 입장 시간 알려줘",
+     "gold": null,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "필동면옥 예약 몇시야?",
+     "gold": null,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "계열사 점심 취소하고 블루보틀 광화문점 시간 알려줘",
+     "gold": 9,
+     "gold_set": [
+      9,
+      10
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "화목순대국 30분 미루고 글래드 체크인도 늦춰줘",
+     "gold": 27,
+     "gold_set": [
+      27,
+      26
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "물의정원 산책 빼고 두물머리 산책 시간 늘려줘",
+     "gold": 14,
+     "gold_set": [
+      14,
+      17
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일산칼국수 예약하고 일산호수공원 몇시 도착인지도",
+     "gold": 31,
+     "gold_set": [
+      31,
+      30
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "마방집 예약해주고 미사경정공원 단풍길 몇 시인지도",
+     "gold": 38,
+     "gold_set": [
+      38,
+      37
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "쉐이크쉑 강남점 취소하고 위례 카페 좀 길게",
+     "gold": 41,
+     "gold_set": [
+      41,
+      40
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "남산 북측순환로 몇시고 화요일 함흥면옥 예약 됐어?",
+     "gold": 4,
+     "gold_set": [
+      4,
+      5
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "타르틴 브런치 당기고 블루보틀 한남점은 빼줘",
+     "gold": 46,
+     "gold_set": [
+      46,
+      47
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "백사실계곡 시간 알려주고 윤동주 시인의 언덕도",
+     "gold": 7,
+     "gold_set": [
+      7,
+      8
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "몽마르뜨공원 산책 줄이고 브루클린 버거 예약해줘",
+     "gold": 22,
+     "gold_set": [
+      22,
+      23
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "스타벅스 더북한강R점 펫존 자리 확인하고 연핫도그 몇 시인지도",
+     "gold": 16,
+     "gold_set": [
+      16,
+      18
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "양미옥 저녁 취소하고 안산자락길 좀 늦게 시작하자",
+     "gold": 12,
+     "gold_set": [
+      12,
+      11
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "사운즈 한남 짧게 하고 광명역 가는 펫택시 일찍 불러줘",
+     "gold": 45,
+     "gold_set": [
+      45,
+      48
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "성내천 산책 빼고 마방집 점심 한시로 미뤄줘",
+     "gold": 39,
+     "gold_set": [
+      39,
+      38
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "알로프트 체크아웃 늦추고 방배동 가는 렌터카도 미뤄줘",
+     "gold": 20,
+     "gold_set": [
+      20,
+      21
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "서리풀공원 몇 시고 렌터카 반납은 어디서 해?",
+     "gold": 24,
+     "gold_set": [
+      24,
+      25
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "몽마르뜨공원 말고 서리풀공원 몇시야",
+     "gold": 24,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "블루보틀 광화문 말고 한남점 시간",
+     "gold": 47,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "샛강역 아니고 샛강생태공원 토요일 산책 시간",
+     "gold": 28,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "함흥면옥 화요일 말고 목요일 거 몇시?",
+     "gold": 19,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "체크인 말고 알로프트 체크아웃 시간 알려줘",
+     "gold": 20,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일산호수공원 말고 일산칼국수 몇 시?",
+     "gold": 31,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "점심 말고 수요일 저녁 어디야",
+     "gold": 12,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "두물머리 산책 말고 연핫도그 먹는 시간",
+     "gold": 18,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "픽업 아니고 렌터카 반납 시간이요",
+     "gold": 25,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "토요일 말고 일요일 샛강 산책 몇시?",
+     "gold": 35,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "마방집 말고 그 다음 일정 뭐야",
+     "gold": 39,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "계열사 아니고 그 바로 전 일정 몇 시였지",
+     "gold": 8,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "쇼핑 말고 스타필드 고양 저녁 몇시?",
+     "gold": 33,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "물의정원 말고 스타벅스 더북한강 몇 시에 가",
+     "gold": 16,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "조식 말고 글래드 여의도 체크아웃 몇 시?",
+     "gold": 44,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "KTX 말고 마지막 날 펫택시 몇 시 예약했어?",
+     "gold": 48,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "블루보틀한남 몇시임",
+     "gold": 47,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "함흥면옥 화욜 저녁 몇시얌",
+     "gold": 5,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "샛강공원 토욜 몇시ㅠㅠ",
+     "gold": 28,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일산칼국쑤 웨이팅 김?",
+     "gold": 31,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "글래드 체크인 몇시임",
+     "gold": 26,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "알로프트 첵아웃 언제얌",
+     "gold": 20,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "연핫도그 몇시에먹어",
+     "gold": 18,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "쉑쉑 강남 저녁 예약됨?",
+     "gold": 41,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "몽마르뜨공원 강쥐 산책 몇시",
+     "gold": 22,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "백사실 계곡 단풍 이쁨? ㅋㅋ",
+     "gold": 7,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "타르틴 브런치 몇시ㅠ",
+     "gold": 46,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "스벅 북한강 펫존 몇시에 감",
+     "gold": 16,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "미사경정 단풍길 몇시얌",
+     "gold": 37,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "남산 북측 산책 몇시임?",
+     "gold": 4,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "화목순대국 금욜 저녁 ㄱㄱ?",
+     "gold": 27,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "ktx 귀가 몇시 출발?",
+     "gold": 49,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "ㅋㅋㅋㅋ 고마워",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "안녕하세요",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "파이썬 리스트 정렬 어떻게 해?",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "비트코인 지금 얼마야",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "너 누가 만들었어?",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "우리 강아지 이름 지어줘",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "강아지 발톱 깎는 법 알려줘",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "엑셀 vlookup 쓰는 법",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "내일 서울 날씨 어때?",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "심심해 놀아줘",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "수고하셨습니다~",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "환율 지금 얼마예요?",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "너 이름이 뭐야",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "오케이 고마워요 ㅎㅎ",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "토요일 점심 뭐야"
+      },
+      {
+       "role": "service",
+       "text": "토요일 12:30 일산칼국수 본점에서 점심이에요."
+      }
+     ]
+    },
+    {
+     "q": "넷플릭스 추천 좀",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "강아지 사료 뭐가 좋아?",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "서울타워 있는 산 아래 둘레길 도는 거 몇 시야?",
+     "gold": 4,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "물 흐르는 숲속 골짜기 가는 거 몇 시야?",
+     "gold": 7,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "서시 쓴 사람 기리는 동산 언제 가?",
+     "gold": 8,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "부암동 통닭집 몇 시에 가?",
+     "gold": 9,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "소 내장 구워 먹는 데 몇 시야",
+     "gold": 12,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "양평 가는 날 새콤한 닭 육수 면요리 집 몇 시야?",
+     "gold": 15,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "인어 로고 체인점 강변 매장 몇 시에 들러?",
+     "gold": 16,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "막대에 꽂은 소시지 빵 사먹는 거 몇 시?",
+     "gold": 18,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "두 강 만나는 데서 큰 느티나무 보는 거 언제야",
+     "gold": 17,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "애벌레 모양 다리 건너는 거 몇 시야?",
+     "gold": 24,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "돼지 국밥집 몇 시에 가?",
+     "gold": 27,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "집에 가는 기차 몇 시 출발이야?",
+     "gold": 49,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "강아지랑 같이 들어가는 대형 몰에서 물건 사는 거 몇 시부터?",
+     "gold": 32,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "하남 오래된 시골밥상 집 몇시 예약이야?",
+     "gold": 38,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "샌프란시스코에서 온 빵집 가는 거 몇시야",
+     "gold": 46,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "차 돌려주는 거 몇 시야?",
+     "gold": 25,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "목요일 첫 식사 몇 시?",
+     "gold": 15,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "여행 마지막 일정 뭐야",
+     "gold": 49,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "이틀째 세번째 일정",
+     "gold": 8,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일산호수공원 바로 다음 거 뭐야?",
+     "gold": 31,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "몽마르뜨공원 끝나고 뭐 해?",
+     "gold": 23,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "마지막 날 첫 일정",
+     "gold": 43,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "금요일 마지막 일정",
+     "gold": 27,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "첫날 두 번째 일정 몇 시야",
+     "gold": 2,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일요일 세 번째 일정 뭐야",
+     "gold": 37,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "수요일 마지막 식사 어디",
+     "gold": 12,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "토요일 첫 일정 몇시야",
+     "gold": 28,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "두물머리 산책 바로 전 일정",
+     "gold": 16,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "셋째 날 마지막 일정 몇 시?",
+     "gold": 19,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "마방집 다음에 뭐 있어?",
+     "gold": 39,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "토요일 점심 먹고 다음 일정",
+     "gold": 32,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일요일 끝에서 두번째",
+     "gold": 41,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "남산 북측순환로 산책 30분 미뤄줘",
+     "gold": 4,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "계열사 점심 빼줘",
+     "gold": 9,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "안산자락길 한 시간 당겨줘",
+     "gold": 11,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "팔당 초계국수 취소할게요",
+     "gold": 15,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "브루클린 더 버거 조인트 1시로 바꿔줘",
+     "gold": 23,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일산호수공원 산책 30분 늘려줘",
+     "gold": 30,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "성내천 산책 취소해주세요",
+     "gold": 39,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "위례 카페 빼고 쉬는 시간으로 해줘",
+     "gold": 40,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "사운즈 한남 30분 당겨주세요",
+     "gold": 45,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "양미옥 저녁 7시로 미뤄줘",
+     "gold": 12,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "이삭토스트 아침 빼줘",
+     "gold": 6,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "그거 30분 미뤄줘",
+     "gold": null,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일정 하나 취소하고 싶어요",
+     "gold": null,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "좀 당겨줄 수 있어?",
+     "gold": null,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "그거 한 시간 늦춰줘",
+     "gold": 32,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "토요일 오후에 뭐 해?"
+      },
+      {
+       "role": "service",
+       "text": "토요일 14:00 스타필드 고양 반려견 동반 쇼핑이 있어요."
+      }
+     ]
+    },
+    {
+     "q": "그거 5시로 미뤄줘",
+     "gold": 26,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "금요일 숙소 체크인 몇 시?"
+      },
+      {
+       "role": "service",
+       "text": "금요일 16:00 글래드 여의도 체크인이에요."
+      }
+     ]
+    },
+    {
+     "q": "경복궁 한복 입고 가는 거 몇 시야?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "남산타워 전망대 표 예매해줘",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "광장시장 빈대떡 먹는 날 언제야",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "롯데월드타워 서울스카이 몇 시에 올라가?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "북촌한옥마을 산책 일정 있어?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "서울숲 강아지 산책 몇시야",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "올림픽공원 나홀로나무 언제 가?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "하늘공원 억새 보러 가는 날 알려줘",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "명동성당 들르는 시간 있어?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "국립중앙박물관 관람 몇 시?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "더현대 서울 강아지 데리고 가는 거 언제?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "여의도 한강공원 피크닉 몇시?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "창덕궁 후원 단풍 예약 됐어?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "남이섬 가는 배 몇 시야?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "가로수길 쇼핑 일정 몇 시야",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "청계천 야경 산책 언제 해?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    }
+   ]
+  }
+ }
+}

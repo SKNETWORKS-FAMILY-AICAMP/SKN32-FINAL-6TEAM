@@ -7,10 +7,11 @@
  *   sensitive      민감정보(종교·식사 제한 등) 수집·이용          선택
  *   location       개인위치정보 수집·이용(위치기반서비스 약관 포함)   선택
  *   alert_channel  알림 수신 채널 정보(디스코드 웹훅·텔레그램 대화) 수집·이용   선택
+ *   service_improvement  제한된 여행 수치의 합성·서비스 개선용 이용       선택
  *
  * 항목 이름(코드)은 서버 동의 기록(`/v1/web/consents`)과 같은 값이다 - 바꾸면 서버 계약도 바꿔야 한다.
  */
-export const CONSENT_CODES = ["service_terms", "privacy", "sensitive", "location", "alert_channel"] as const;
+export const CONSENT_CODES = ["service_terms", "privacy", "sensitive", "location", "alert_channel", "service_improvement"] as const;
 export type ConsentCode = (typeof CONSENT_CODES)[number];
 
 /** 이것이 모두 동의돼야 앱을 쓸 수 있다. */
@@ -19,7 +20,7 @@ export const OPTIONAL_CONSENTS: readonly ConsentCode[] = CONSENT_CODES.filter((c
 
 export type ConsentMap = Record<ConsentCode, boolean>;
 
-export const noConsents = (): ConsentMap => ({ service_terms: false, privacy: false, sensitive: false, location: false, alert_channel: false });
+export const noConsents = (): ConsentMap => ({ service_terms: false, privacy: false, sensitive: false, location: false, alert_channel: false, service_improvement: false });
 
 /** 필수 동의가 모두 있나. */
 export function requiredAgreed(consents: Partial<Record<ConsentCode, boolean>>): boolean {

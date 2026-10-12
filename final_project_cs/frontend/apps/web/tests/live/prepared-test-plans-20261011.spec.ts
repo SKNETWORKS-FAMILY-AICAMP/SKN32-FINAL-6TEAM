@@ -23,7 +23,7 @@ for (const width of [375, 1280]) {
     });
     await openPlans(page);
     await page.getByLabel("나의 여행 계획").fill("  TEST1  ");
-    await expect(page.getByLabel("테스트 계획", { exact: true })).toHaveValue("test1");
+    await expect(page.getByLabel("테스트 계획", { exact: true })).toContainText("test1 ·");
     await page.getByText("준비된 계획 원문 보기", { exact: true }).click();
     await expect(page.locator("details pre").filter({ hasText: "1일차 · 2026-10-18" })).toContainText("14:00~15:30 창덕궁 관람");
     await noHorizontalScroll(page);
@@ -44,11 +44,12 @@ for (const width of [375, 1280]) {
     await mockServer(request).reset();
     await openPlans(page);
     const select = page.getByLabel("테스트 계획", { exact: true });
-    await select.selectOption("test12");
+    await select.click();
+    await page.locator('button[data-plan-code="test12"]').click();
     await expect(page.getByLabel("나의 여행 계획")).toHaveValue("test12");
     await expect(page.getByRole("status").filter({ hasText: "서울의 활동·식사·이동" })).toBeVisible();
     await page.getByLabel("나의 여행 계획").fill("test1을 참고해서 서울을 여행할 거예요");
-    await expect(select).toHaveValue("");
+    await expect(select).toContainText("분류별 테스트 계획 선택");
     await expect(page.getByText("준비된 계획 원문 보기", { exact: true })).toHaveCount(0);
     await noHorizontalScroll(page);
   });

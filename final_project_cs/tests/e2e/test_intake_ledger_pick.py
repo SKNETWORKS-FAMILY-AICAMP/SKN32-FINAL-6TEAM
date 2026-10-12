@@ -22,7 +22,7 @@ import pytest
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
-from app.domains.travel_ops.components.intake import hours as hours_module
+from app.domains.travel_ops.instances.dining import ledger as ledger_module
 from app.domains.travel_ops.components.intake.assemble import _place_in
 from app.domains.travel_ops.components.intake.pipeline import LEDGER_PICK_MATCH_M, _linked_ledger_pick
 
@@ -129,7 +129,7 @@ def test_the_review_uses_the_ledger_number_without_a_tour_id(ledger):
         uid = _shop(cur, NAME)
         ledger["uids"].append(uid)
     with get_connection() as conn:
-        assert hours_module._ledger_uid(conn, None, {"name": "다른 이름이어도", "dining_place_uid": uid}) == uid
+        assert ledger_module._catalog_uid(conn, None, {"name": "다른 이름이어도", "dining_place_uid": uid}) == uid
 
 
 def test_the_review_does_not_use_a_closed_ledger_shop(ledger):
@@ -137,7 +137,7 @@ def test_the_review_does_not_use_a_closed_ledger_shop(ledger):
         uid = _shop(cur, NAME, status="closed")
         ledger["uids"].append(uid)
     with get_connection() as conn:
-        assert hours_module._ledger_uid(conn, None, {"name": NAME, "dining_place_uid": uid}) is None
+        assert ledger_module._catalog_uid(conn, None, {"name": NAME, "dining_place_uid": uid}) is None
 
 
 # ── ③ 등록 몸통에 원장 가게 번호가 실린다 ──────────────────────────────

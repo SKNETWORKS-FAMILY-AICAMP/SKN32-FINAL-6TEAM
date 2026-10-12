@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Case 상태 전이 — diagram-design 샘플</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* 토큰은 semantic role 로만 부른다 (style-guide.md §Tokens).
+     값은 A-COP 자체 팔레트 — program/onboarding/trace/draw.py 에서 가져왔다.
+     accent 만 이 그림의 초점용이고, 담당별 색(코어1 파랑 등)은 이 타입에 안 쓴다.
+     상태 전이는 전부 코어 1 소유라 소유를 색으로 가를 대상이 없기 때문이다. */
+  :root {
+    --paper:#fbfcfd; --paper-2:#f1f4f8;
+    --ink:#161c28; --muted:#6b7488; --soft:#98a1b4;
+    --rule:rgba(22,28,40,.12); --rule-solid:#dbe0ea;
+    --accent:#a8720c; --accent-tint:rgba(168,114,12,.10);
+    --link:#2f5bd8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#141821; --paper-2:#1c222d;
+      --ink:#e9edf4; --muted:#9aa4b6; --soft:#6f7a8d;
+      --rule:rgba(233,237,244,.12); --rule-solid:rgba(191,192,192,.25);
+      --accent:#d9a441; --accent-tint:rgba(217,164,65,.14);
+      --link:#7fa0e8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#141821; --paper-2:#1c222d;
+    --ink:#e9edf4; --muted:#9aa4b6; --soft:#6f7a8d;
+    --rule:rgba(233,237,244,.12); --rule-solid:rgba(191,192,192,.25);
+    --accent:#d9a441; --accent-tint:rgba(217,164,65,.14);
+    --link:#7fa0e8;
+  }
+
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Geist","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+    display:flex; justify-content:center; padding:44px 24px 64px;
+  }
+  .sheet { width:100%; max-width:1000px; }
+  .eyebrow {
+    font-family:"Geist Mono",ui-monospace,monospace; font-size:8px; font-weight:500;
+    letter-spacing:.18em; text-transform:uppercase; color:var(--soft); margin:0 0 10px;
+  }
+  h1 {
+    font-family:"Instrument Serif","Noto Serif KR",serif; font-weight:400;
+    font-size:34px; line-height:1.15; margin:0 0 8px; letter-spacing:-.01em;
+  }
+  .standfirst { margin:0 0 26px; color:var(--muted); font-size:14px; max-width:62ch; line-height:1.65; }
+  .frame { background:var(--paper-2); border:1px solid var(--rule); border-radius:10px; padding:8px; overflow-x:auto; }
+  svg { display:block; width:100%; height:auto; min-width:720px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; margin-top:20px; }
+  .card { border:1px solid var(--rule); border-radius:8px; padding:12px 14px; }
+  .card h2 {
+    font-family:"Geist Mono",ui-monospace,monospace; font-size:8px; font-weight:500;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--soft); margin:0 0 5px;
+  }
+  .card p { margin:0; font-size:13px; line-height:1.6; color:var(--muted); }
+  .card strong { color:var(--ink); font-weight:600; }
+  footer { margin-top:22px; padding-top:14px; border-top:1px solid var(--rule); font-size:11.5px; color:var(--soft); line-height:1.7; }
+  footer code { font-family:"Geist Mono",ui-monospace,monospace; font-size:11px; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <p class="eyebrow">A-COP · v8 §19 · State machine</p>
+  <h1>Case 상태 전이</h1>
+  <p class="standfirst">12개 상태 중 <strong>9개만 그린다.</strong> <code>escalated</code>·<code>failed</code>·<code>cancelled</code> 는
+    어느 상태에서든 갈 수 있어 화살표로 그리면 선이 상태 수만큼 늘어난다. 주석 한 줄로 대신한다.</p>
+
+  <div class="frame">
+  <svg viewBox="0 0 960 600" role="img" aria-label="Case 상태 전이 다이어그램. new에서 classifying, routing, running을 거쳐 resolved로 간다. running에서 세 가지 보류 상태로 갈라지고 resuming을 거쳐 running으로 돌아온다.">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+      </marker>
+      <marker id="ah-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+      </marker>
+    </defs>
+
+    <!-- 보류 경계 -->
+    <rect x="516" y="252" width="316" height="212" rx="10"
+          fill="none" stroke="var(--rule-solid)" stroke-dasharray="3 4"/>
+    <text x="532" y="274" font-family="Geist Mono, monospace" font-size="8" font-weight="500"
+          letter-spacing="1.4" fill="var(--soft)">WAITING · 며칠 걸릴 수 있다</text>
+
+    <!-- 시작점 -->
+    <circle cx="34" cy="152" r="6" fill="var(--ink)"/>
+
+    <!-- 주 흐름 -->
+    <g font-family="Geist, Noto Sans KR, sans-serif" font-size="12" font-weight="600" text-anchor="middle">
+      <rect x="56" y="130" width="118" height="44" rx="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+      <text x="115" y="157" fill="var(--ink)">new</text>
+
+      <rect x="222" y="130" width="118" height="44" rx="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+      <text x="281" y="157" fill="var(--ink)">classifying</text>
+
+      <rect x="388" y="130" width="118" height="44" rx="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+      <text x="447" y="157" fill="var(--ink)">routing</text>
+
+      <rect x="554" y="130" width="118" height="44" rx="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+      <text x="613" y="157" fill="var(--ink)">running</text>
+
+      <rect x="782" y="130" width="126" height="44" rx="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+      <text x="845" y="157" fill="var(--ink)">resolved</text>
+
+      <!-- 보류 3종 -->
+      <rect x="540" y="288" width="140" height="40" rx="8" fill="var(--paper)" stroke="var(--muted)"/>
+      <text x="610" y="313" font-size="11.5" fill="var(--ink)">waiting_input</text>
+
+      <rect x="540" y="340" width="140" height="40" rx="8" fill="var(--paper)" stroke="var(--muted)"/>
+      <text x="610" y="365" font-size="11.5" fill="var(--ink)">waiting_approval</text>
+
+      <rect x="540" y="392" width="140" height="40" rx="8" fill="var(--paper)" stroke="var(--muted)"/>
+      <text x="610" y="417" font-size="11.5" fill="var(--ink)">waiting_external</text>
+
+      <!-- ★ 초점 하나. 이 노드가 없으면 보류가 다시 못 이어진다 -->
+      <rect x="286" y="338" width="126" height="44" rx="8"
+            fill="var(--accent-tint)" stroke="var(--accent)" stroke-width="1.6"/>
+      <text x="349" y="365" fill="var(--accent)">resuming</text>
+    </g>
+
+    <!-- 종료점 -->
+    <circle cx="936" cy="152" r="8" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+    <circle cx="936" cy="152" r="5" fill="var(--ink)"/>
+
+    <g fill="none" stroke="var(--muted)" stroke-width="1.2" marker-end="url(#ah)">
+      <path d="M42,152 H54"/>
+      <path d="M174,152 H220"/>
+      <path d="M340,152 H386"/>
+      <path d="M506,152 H552"/>
+      <path d="M672,152 H780"/>
+      <path d="M908,152 H926"/>
+    </g>
+
+    <!-- running → 보류 3종. 오른쪽으로 나가 통로를 타고 내려간다 -->
+    <g fill="none" stroke="var(--muted)" stroke-width="1.2">
+      <path d="M660,174 C 720,196 728,214 728,252"/>
+      <path d="M728,252 V 412" stroke-dasharray="0"/>
+    </g>
+    <g fill="none" stroke="var(--muted)" stroke-width="1.2" marker-end="url(#ah)">
+      <path d="M728,308 H 684"/>
+      <path d="M728,360 H 684"/>
+      <path d="M728,412 H 684"/>
+    </g>
+
+    <!-- 보류 → resuming. 왼쪽 변에서 나와 한 점으로 모인다 -->
+    <g fill="none" stroke="var(--accent)" stroke-width="1.2" marker-end="url(#ah-a)">
+      <path d="M540,308 C 480,308 470,344 416,348"/>
+      <path d="M540,360 H 416"/>
+      <path d="M540,412 C 480,412 470,376 416,372"/>
+    </g>
+
+    <!-- resuming → running -->
+    <path d="M286,360 C 232,360 224,236 258,214 C 300,188 470,214 552,166"
+          fill="none" stroke="var(--accent)" stroke-width="1.4" marker-end="url(#ah-a)"/>
+
+    <!-- 전이 라벨 -->
+    <g font-family="Geist Mono, monospace" font-size="8" letter-spacing=".5" fill="var(--soft)" text-anchor="middle">
+      <text x="197" y="145">created</text>
+      <text x="363" y="145">classified</text>
+      <text x="529" y="145">team_task</text>
+      <text x="726" y="145">completed</text>
+      <text x="762" y="240">보류 발생</text>
+      <text x="352" y="300">resume_token 검증</text>
+    </g>
+
+    <!-- 어느 상태에서든 가능한 전이는 그리지 않고 주석으로 -->
+    <g font-family="Geist Mono, monospace" font-size="8.5" fill="var(--soft)">
+      <text x="56" y="470" font-weight="500" letter-spacing="1.2">그리지 않은 전이</text>
+      <text x="56" y="492" font-family="Geist Mono, monospace">* → escalated  (자동 처리 한계 · TTL 만료 · 승인 반려)</text>
+      <text x="56" y="510">* → failed     (복구 불가)</text>
+      <text x="56" y="528">* → cancelled  (취소)</text>
+      <text x="56" y="552" fill="var(--soft)">세 상태는 대부분의 상태에서 도달 가능하다. 화살표로 그리면 선이 상태 수만큼 늘어난다.</text>
+    </g>
+  </svg>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <h2>초점 하나</h2>
+      <p><strong>resuming</strong> 만 강조색이다. 이 노드가 없으면 보류된 Case 가 다시 이어지지 못한다 — 한 줄 파이프라인과 갈리는 지점이다.</p>
+    </div>
+    <div class="card">
+      <h2>담당 색을 안 썼다</h2>
+      <p>상태 전이는 전부 <strong>코어 1</strong> 소유라 소유를 색으로 가를 대상이 없다. 코어1 파랑·코어2 빨강은 담당이 섞이는 그림에서만 쓴다.</p>
+    </div>
+    <div class="card">
+      <h2>12 → 9</h2>
+      <p>어느 상태에서든 갈 수 있는 <strong>escalated·failed·cancelled</strong> 는 주석으로 뺐다. 그리면 선이 상태 수만큼 늘어난다.</p>
+    </div>
+  </div>
+
+  <footer>
+    <code>cathrynlavery/diagram-design</code> v2.6 의 <code>type-state.md</code> 규칙을 따라 그렸다 —
+    상태는 <code>rx=8</code> 둥근 사각형, 시작은 채운 점, 끝은 링 점, 전이 라벨은 모노,
+    강조색은 읽는 사람이 주목할 노드 하나. 토큰은 semantic role 로만 부르고 값은
+    <code>program/onboarding/trace/draw.py</code> 의 A-COP 팔레트를 넣었다.
+    원본 정의는 <code>program/plan/A-COP_구현계획서_v8.md</code> §19.
+  </footer>
+</div>
+</body>
+</html>
