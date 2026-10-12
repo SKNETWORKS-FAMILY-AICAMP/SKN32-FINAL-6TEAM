@@ -1,0 +1,32 @@
+# 로컬 개발용 PostgreSQL (WSL2 + Docker Desktop) — conda pgv(5433)를 대체한다.
+#   기동:  docker compose -f docker/compose.db.yml up -d        (final_project_cs 폴더에서)
+#   상태:  docker compose -f docker/compose.db.yml ps
+#   psql:  docker exec -it acop-cs-db psql -U postgres -d acop_cs
+#   중지:  docker compose -f docker/compose.db.yml stop          (데이터는 볼륨에 남는다)
+#
+# ★.env 의 ACOP_DATABASE_URL(postgresql+psycopg://postgres@127.0.0.1:5433/acop_cs)을 그대로 쓰려고
+#   비밀번호 없이 붙게(trust) 했다. 대신 127.0.0.1 에만 열어 이 PC 밖에서는 못 붙는다 — 로컬 개발 전용.
+# ★extension(vector·pgcrypto)은 마이그레이션이 만든다(wiki/operations/local-setup.md). 여기서 만들지 않는다.
+# ★이미지 pgvector/pgvector:pg16 — 이전 서버(PostgreSQL 16.15, vector 0.8.6)와 같은 16 계열.
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: acop-cs-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: acop_cs
+      POSTGRES_HOST_AUTH_METHOD: trust
+      TZ: Asia/Seoul
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - acop-cs-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d acop_cs"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  acop-cs-pgdata:

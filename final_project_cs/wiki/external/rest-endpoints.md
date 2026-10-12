@@ -626,7 +626,11 @@ GET   /admin/limits/events?limit=50      scope limits:read
 `{address, phone, category, hours: [{day: "월", weekday: 1, open: "HH:MM", close: "HH:MM", last_order: "HH:MM"|null}] | null,
 hours_source: [원장 출처 코드] | null, tags: ["card_payment","michelin","parking","takeout","vegetarian_menu","kids_allowed","halal",…],
 michelin: {level, year} | null, source: "dining_ledger" | "tour_api" | "places" | …, source_note: "ⓒ한국관광공사" · "미쉐린 가이드 서울" | null,
-hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표로 펴지 않은 조건 원문] | null}`(뒤 두 칸은 원장 밖 장소만).
+hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표로 펴지 않은 조건 원문] | null,
+hours_evidence: [{column: "business_hours"|"closed_days", url, checked, by: "human"|"claude"}] | null}`(뒤 세 칸은 원장 밖 장소만).
+★`[2026-10-12 사용자]` **사람이 공식 페이지에서 확인한 운영시간**(`catalog_hours.hours_read.source = "official_web"`, `wiki/teams/db_column.md` 30번 `field_sources`)이면
+`hours_source` 는 `["official_web"]`, `hours_evidence` 에 칸별 url · 확인한 날, `source_note` 끝에 「운영시간 · 휴무일: 공식 페이지(2026-10-12 확인)」처럼 그 칸을 덧붙인다 — Claude 가 찾은 값(`by=claude`)이 섞이면 「(2026-10-12 AI 확인)」 · url 없이 사용자가 직접 확인한 값이면 「휴무일: 직접 확인(2026-10-12)」
+(화면은 `source_note` 만 보인다 — 붙이지 않으면 사람 값이 「ⓒ한국관광공사」 아래 보인다). 관광공사 원문이면 `hours_evidence` 는 null 이고 `source_note` 는 전과 같다.
 ★`[2026-09-29]` **원장 밖 장소(활동 등)** — 주소는 관광공사 목록(`place_catalog`, 식별자 → 같은 이름·500m), 운영시간은 관광공사 원문을 요일별로 옮긴 값
 (`hours[]` 에 `closed: true|false` · `last_entry`(입장 마감) — 활동은 `last_order` 가 늘 null), 전화는 관광공사 문의처. 1분 작업(`run_sweepers` 의 `place_facts`)이
 진행 중인 여행에 새로 들어온 장소를 한 번 읽어 적는다 — 등록 직후 1~2분은 주소만 보일 수 있다.

@@ -217,7 +217,7 @@ def test_a_catalog_place_is_offered_after_consent_and_registered_only_when_chose
                     "raw_json) VALUES (%s,'tour_api','t-ve07-1','14','시험 전시관',%s,%s,%s)",
                     (api["tenant"], 37.5140, 127.1030,
                      _json.dumps({"lclsSystm1": "VE", "lclsSystm2": "VE07", "lclsSystm3": "VE070100",
-                                  "sigungucode": "18"})))
+                                  "lDongSignguCd": "18"})))
     try:
         trip_id = _create_with(api, {"payment": "card"}, request_id="catalog")
         api["tick"]("09:00")
@@ -276,7 +276,7 @@ def test_catalog_candidates_use_the_hours_already_read_in_the_db(api):
                         "longitude, raw_json) VALUES (%s,'tour_api',%s,'14',%s,%s,%s,%s)",
                         (api["tenant"], cid, title, lat, 127.1030,
                          _json.dumps({"lclsSystm1": "VE", "lclsSystm2": "VE07", "lclsSystm3": "VE070100",
-                                      "sigungucode": "18"})))
+                                      "lDongSignguCd": "18"})))
             if week is not None:
                 cur.execute("INSERT INTO catalog_hours (tenant_id, source, content_id, hours_week, hours_read, read_at) "
                             "VALUES (%s,'tour_api',%s,%s,%s, now())",
@@ -312,7 +312,7 @@ def test_a_brand_store_is_offered_and_registered_without_a_tourism_number(api):
                     "raw_json) VALUES (%s,'oliveyoung','OY-TEST-1','38','시험 올리브영 잠실점',%s,%s,%s)",
                     (api["tenant"], 37.5141, 127.1030,
                      _json.dumps({"lclsSystm1": "SH", "lclsSystm2": "SH04", "lclsSystm3": "SH040100",
-                                  "sigungucode": "18", "brand": "올리브영"})))
+                                  "lDongSignguCd": "18", "brand": "올리브영"})))
         cur.execute("INSERT INTO catalog_hours (tenant_id, source, content_id, hours_week, hours_read, read_at) "
                     "VALUES (%s,'oliveyoung','OY-TEST-1',%s,%s, now())",
                     (api["tenant"], _json.dumps(week), _json.dumps({"method": "csv_rule"})))

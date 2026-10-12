@@ -9,7 +9,7 @@
 
     {"origin":     {"contentid", "title", "contenttypeid",
                     "lclsSystm1", "lclsSystm2", "lclsSystm3",
-                    "sigungucode", "brand", "mapx", "mapy",
+                    "lDongSignguCd", "brand", "mapx", "mapy",
                     "closed_days", "business_hours"},
      "candidates": [<origin 과 같은 모양의 행>, ...],
      "source": "place_catalog:tour_api+oliveyoung+...", "confirmed_at": "..."}
@@ -69,7 +69,7 @@ def to_candidate(record: dict[str, Any]) -> dict[str, Any]:
         "lclsSystm1": _text(record.get("large_class_code")) or _text(raw.get("lclsSystm1")),
         "lclsSystm2": _text(raw.get("lclsSystm2")),
         "lclsSystm3": _text(raw.get("lclsSystm3")),
-        "sigungucode": _text(raw.get("sigungucode")),
+        "lDongSignguCd": _text(raw.get("lDongSignguCd")),
         "brand": _text(raw.get("brand")),
         "mapx": None if lon is None else str(lon),
         "mapy": None if lat is None else str(lat),

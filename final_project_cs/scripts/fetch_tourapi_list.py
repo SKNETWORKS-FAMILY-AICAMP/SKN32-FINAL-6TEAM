@@ -31,7 +31,7 @@ BASE = "https://apis.data.go.kr/B551011/KorService2/areaBasedList2"
 CATEGORIES = ["EV", "EX", "HS", "LS", "NA", "VE", "SH"]
 PAGE_SIZE = 1000
 INTERVAL = 0.3
-COLUMNS = ["contentid", "contenttypeid", "title", "addr1", "addr2", "areacode", "sigungucode", "mapx", "mapy",
+COLUMNS = ["contentid", "contenttypeid", "title", "addr1", "addr2", "areacode", "sigungucode", "lDongSignguCd", "mapx", "mapy",
            "firstimage", "cpyrhtDivCd", "lclsSystm1", "lclsSystm2", "lclsSystm3"]
 
 

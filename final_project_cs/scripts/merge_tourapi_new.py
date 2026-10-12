@@ -3,8 +3,12 @@
 - 이름과 주소가 **모두** 같은 장소는 이미 있는 것으로 보고 넣지 않는다.
 - 이미 contentid 가 있는 행은 넣지 않는다.
 - 커밋 이력에서 **의도적으로 지운 행**(폐점·중복 정리)은 다시 넣지 않는다.
-- 새 행은 21개 컬럼 형식으로 만든다. 상세(영업시간·개요 등)는 비워 둔다 — 상세 수집은 별도 단계다.
-- sigungucode 는 주소의 구 이름으로 채운다(TourAPI 는 지역코드가 빈 행에 시군구 코드를 주지 않는다).
+- 새 행은 현재 CSV 헤더(`wiki/teams/db_column.md` 의 30개) 그대로 만든다. 상세(영업시간·개요 등)는 비워 둔다
+  — 상세 수집은 `fill_tourapi_details.py` 단계다.
+- `[2026-10-11]` 시군구는 `lDongSignguCd`(법정동) 칸에 쓴다. 목록 행에 그 값이 있으면 그대로, 없으면 현재 CSV 에서
+  같은 구 행들이 쓰는 코드로 채운다(한 구에 코드가 여럿이면 비운다). 목록의 옛 `sigungucode` 는 체계가 달라 쓰지 않는다.
+  못 채운 칸은 `fill_tourapi_details.py` 가 detailCommon2 로 채운다.
+- 현재 CSV 헤더가 30개 컬럼이 아니면(옛 헤더) 멈춘다 — 먼저 `fill_tourapi_details.py` 를 한 번 돌려 옮긴다.
 
 사용:
     python -X utf8 scripts/merge_tourapi_new.py           # 시험(파일 수정 없음, 건수만 출력)
@@ -51,6 +55,11 @@ def gu_of(a: str):
     return m.group(1) if m else None
 
 
+def signgu_of(r: dict, code: dict) -> str:
+    """목록 행에 법정동 시군구 코드가 있으면 그것, 없으면 같은 구의 코드(없으면 빈칸)."""
+    return (r.get("lDongSignguCd") or "").strip() or code.get(gu_of(r["addr1"]), "")
+
+
 def removed_ids(current: set[str]) -> set[str]:
     """커밋 이력에 있었지만 지금은 없는 contentid — 의도적으로 지운 행이다."""
     commits = subprocess.run(["git", "-C", str(REPO), "log", "--all", "--format=%H", "--", REL],
@@ -75,6 +84,8 @@ def main() -> None:
     cur_rows = list(csv.reader(CSV_PATH.open(encoding="utf-8-sig", newline="")))
     head, cur = cur_rows[0], cur_rows[1:]
     I = {c: head.index(c) for c in head}
+    if "lDongSignguCd" not in I or "sigungucode" in I:
+        raise SystemExit("옛 헤더다 — 먼저 fill_tourapi_details.py(--max-calls 0)를 돌려 db_column.md 의 30개 컬럼으로 옮긴다")
     lst = list(csv.DictReader(LIST_PATH.open(encoding="utf-8-sig", newline="")))
 
     cur_ids = {r[0] for r in cur}
@@ -87,9 +98,9 @@ def main() -> None:
     code = collections.defaultdict(collections.Counter)
     for r in cur:
         g = gu_of(r[I["addr1"]])
-        if g and r[I["sigungucode"]]:
-            code[g][r[I["sigungucode"]]] += 1
-    code = {g: c.most_common(1)[0][0] for g, c in code.items()}
+        if g and r[I["lDongSignguCd"]].strip():
+            code[g][r[I["lDongSignguCd"]].strip()] += 1
+    code = {g: next(iter(c)) for g, c in code.items() if len(c) == 1}   # 한 구에 코드가 여럿이면 쓰지 않는다
 
     stat = collections.Counter()
     add, seen, maybe = [], set(), []
@@ -123,8 +134,8 @@ def main() -> None:
     print(f"  ⇒ 추가할 장소: {len(add)}건")
     by = collections.Counter(r["lclsSystm1"] for r in add)
     print("  분류별:", ", ".join(f"{k} {v}" for k, v in sorted(by.items())))
-    nog = [r for r in add if gu_of(r["addr1"]) not in code]
-    print(f"  구 코드를 못 찾는 행: {len(nog)} {[r['title'] for r in nog[:5]]}")
+    nog = [r for r in add if not signgu_of(r, code)]
+    print(f"  lDongSignguCd 를 못 채우는 행(fill_tourapi_details.py 가 채운다): {len(nog)} {[r['title'] for r in nog[:5]]}")
     print(f"  주소는 같고 이름이 비슷해 중복일 수 있는 추가 행: {len(maybe)} ({DUP_PATH.name} 에 저장)")
 
     if not args.write:
@@ -137,7 +148,7 @@ def main() -> None:
                   "cpyrhtDivCd", "lclsSystm1", "lclsSystm2", "lclsSystm3"):
             if c in I:                      # 삭제된 열(firstimage 등)은 건너뛴다
                 row[I[c]] = r.get(c, "") or ""
-        row[I["sigungucode"]] = code.get(gu_of(r["addr1"]), "")
+        row[I["lDongSignguCd"]] = signgu_of(r, code)
         if "data_source" in I:
             row[I["data_source"]] = "tour_api"
         new_rows.append(row)

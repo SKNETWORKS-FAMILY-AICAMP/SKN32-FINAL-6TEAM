@@ -106,6 +106,8 @@ def place_info(conn, tenant_id: str, place: dict[str, Any] | None) -> dict[str, 
     read = attributes.get("hours_read") or {}
     raw = (catalog or {}).get("raw") or {}
     from_tour = source == "tour_api" or catalog is not None or read.get("source") == "tour_api"
+    hours_note, hours_evidence = official_web_note(read)
+    notes = [note for note in ("ⓒ한국관광공사" if from_tour else None, hours_note) if note]
     return {"address": attributes.get("address") or (catalog or {}).get("address"),
             "phone": attributes.get("phone") or (raw.get("tel") or "").strip() or None,
             "category": None, "hours": hours, "hours_source": hours_source,
@@ -114,8 +116,38 @@ def place_info(conn, tenant_id: str, place: dict[str, Any] | None) -> dict[str, 
                 _plain(text) for text in ((attributes.get("hours_origin") or {}).get("usetime"),
                                          (attributes.get("hours_origin") or {}).get("restdate")) if _plain(text)] or None,
             "hours_conditions": list(read.get("conditions") or []) or None,
+            "hours_evidence": hours_evidence,
             "tags": [], "michelin": None, "source": "tour_api" if from_tour else source,
-            "source_note": "ⓒ한국관광공사" if from_tour else None}
+            "source_note": " · ".join(notes) or None}
+
+
+#: `field_sources` 칸 → 사람이 읽는 이름
+_HOURS_COLUMN_LABEL = {"business_hours": "운영시간", "closed_days": "휴무일"}
+
+
+def official_web_note(read: dict[str, Any]) -> tuple[str | None, list[dict[str, str]] | None]:
+    """사람이 공식 페이지에서 확인한 운영시간이면 (출처 표시 한 줄, 칸별 근거). 아니면 (None, None).
+
+    ★`[2026-10-12 사용자]` 활동 CSV `field_sources`(db_column.md 30번)로 들어온 값 — 화면은 `source_note` 만 보여서,
+      붙이지 않으면 사람이 확인한 운영시간이 「ⓒ한국관광공사」 아래 보인다.
+    """
+    sources = read.get("field_sources") if read.get("source") == "official_web" else None
+    if not isinstance(sources, dict) or not sources:
+        return None, None
+    columns = [column for column in _HOURS_COLUMN_LABEL if isinstance(sources.get(column), dict)]
+    if not columns:
+        return None, None
+    checked = max(str(sources[column].get("checked") or "") for column in columns)
+    # ★`[2026-10-12 사용자]` Claude 가 찾은 값(`by=claude`, 사람 검토 전)은 「AI 확인」으로 구분한다
+    who = "AI 확인" if any(sources[column].get("by") == "claude" for column in columns) else "확인"
+    # url 없는 사람 값(사용자가 직접 확인)은 「공식 페이지」라고 하지 않는다
+    labels = " · ".join(_HOURS_COLUMN_LABEL[column] for column in columns)
+    if all(sources[column].get("url") for column in columns):
+        note = f"{labels}: 공식 페이지({checked} {who})"
+    else:
+        note = f"{labels}: 직접 확인({checked})"
+    return note, [{"column": column, "url": sources[column].get("url"), "checked": sources[column].get("checked"),
+                   "by": sources[column].get("by")} for column in columns]
 
 
 #: 관광공사 목록에서 이름으로 찾을 때 좌표가 이만큼 안이어야 같은 곳으로 본다 — 운영시간 읽기(`place_hours.py`)와 같은 값
