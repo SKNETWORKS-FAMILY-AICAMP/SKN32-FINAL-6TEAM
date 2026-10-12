@@ -13,7 +13,7 @@ import type { PinLook } from "@/features/map/model";
 import { rideLines, routeNotes, visibleShapes } from "@/features/map/route-lines";
 import { hasValidCoordinates } from "@/features/map/map-points";
 import { useRouteDetail } from "@/features/map/use-route-detail";
-import { readListZoom, writeListZoom } from "@/features/plan-check/list-zoom";
+import { useListZoom } from "@/features/plan-check/list-zoom";
 import { useTimeInset } from "@/features/plan-check/use-time-inset";
 import { useDayMarker } from "@/features/plan-check/use-day-marker";
 import { useQuietDayStrip } from "@/features/plan-check/use-quiet-day-strip";
@@ -100,7 +100,7 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   const days = tripDays(trip);
   const [day, setDay] = useState(days[0] ?? "");
   const [all, setAll] = useState(false);
-  const [listZoom, setListZoom] = useState(readListZoom);
+  const listZoom = useListZoom();
   const mapDay = days.includes(day) ? day : days[0] ?? "";
   const dayAt = days.indexOf(mapDay);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -235,13 +235,6 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   const quietDays = useQuietDayStrip(stripBox, pane === "plan" && !detailId, false, bodyBox);
 
   useTimeInset(bodyBox, sheetBox, pane === "plan" && !detailId, `${all}|${dayAt}|${compact}`);
-  function endPinch(zoom: number) {
-    const value = !all && zoom <= 0.7 && days.length > 1 ? 1 : all && zoom >= 1.45 ? 1 : Math.round(Math.min(1.3, Math.max(0.8, zoom)) * 20) / 20;
-    dayTrack.current?.style.setProperty("zoom", value === 1 ? "" : String(value));
-    setListZoom(value); writeListZoom(value);
-    if (!all && zoom <= 0.7 && days.length > 1) chooseAll();
-    else if (all && zoom >= 1.45) goDay(mapDay, false);
-  }
 
   // ── The two panes: the plan, and the chat beside it. A turn made by a swipe lands where the finger left it (no second slide). ──
   function goPane(next: "plan" | "chat", bySwipe = false) {
@@ -272,8 +265,6 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
       const next = days[dayAt + delta];
       if (next) goDay(next, false);
     },
-    pinch: pane === "plan" && !centerOpen, zoom: listZoom,
-    onPinch: (zoom) => dayTrack.current?.style.setProperty("zoom", String(zoom)), onPinchEnd: endPinch,
     overview: all, onOverviewSwipe: () => goDay(mapDay, false),
   });
   // Swiping the chat to the right: back to the plan.
@@ -285,7 +276,6 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
     onPeek: () => undefined,
     onProgress: () => undefined,
     onTurn: (delta) => { if (delta === -1) goPane("plan", true); },
-    pinch: false, zoom: 1, onPinch: () => undefined, onPinchEnd: () => undefined,
   });
 
   // ── Picks on the map and in the list ──
