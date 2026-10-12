@@ -19,6 +19,8 @@
 /* The survey row is a button (it opens the start screen's preferences card), drawn like the links. */
 button.link { width: 100%; border: 0; background: transparent; font-family: inherit; text-align: left; cursor: pointer; }
 button.link:hover { background: var(--color-soft); }
+/* `[2026-10-13 사용자 지적]` 위 `border: 0`(버튼 기본 테두리 지우기)이 판의 줄 사이 선까지 지워 「여행 목록 보기」와 이 줄 사이에만 선이 없었다 — 그 선은 되살린다. */
+.board > * + button.link { border-top: 1px solid var(--color-border); }
 .profile { display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 12px 15px; color: var(--color-text); text-decoration: none; }
 .profile:hover { background: var(--color-soft); }
 .profile > svg { flex: none; color: var(--color-muted); }
