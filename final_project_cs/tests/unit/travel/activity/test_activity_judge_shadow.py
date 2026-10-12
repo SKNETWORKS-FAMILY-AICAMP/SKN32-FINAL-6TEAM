@@ -224,7 +224,7 @@ def test_turning_a_kind_off_never_changes_what_the_customer_gets(monkeypatch):
     assert _customer_view(_run(values, llm=ContraryJudgeLLM(), request=request)) == with_all
 
 
-@pytest.mark.parametrize("bad", ["llm", "off", False, "Shadow"])
+@pytest.mark.parametrize("bad", ["off", False, "Shadow"])      # `llm` 은 D-CS-015 개정 2 로 받는다(10-12)
 def test_an_unaccepted_kind_mode_stops_instead_of_guessing(bad):
     from app.domains.travel_ops.instances.activity.judge.modes import kind_mode
 

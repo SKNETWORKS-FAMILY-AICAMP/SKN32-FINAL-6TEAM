@@ -36,7 +36,7 @@ from .disaster_impact import Impact, ImpactRules, assess
 from .verdicts import holidays_needed, hours_verdict
 from .judge import requests as judge_requests
 from .judge.llm import LLMJudge
-from .judge.modes import ShadowJudge, kind_mode
+from .judge.modes import ShadowJudge, kind_mode, rule_first
 from .judge.types import LIVE_STATUS, JudgeContext, JudgeRequest, Verdict
 from .notices import HOURS_AUTO_READ, with_notice
 from .replacement import ReplacementMixin
@@ -447,6 +447,14 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             safety = self._safety_event(impact, report)
             if safety is not None:
                 return safety_change(safety)
+            # ★`[2026-10-12]` D-CS-015 개정 2 — 분류표에 없는 문자는 LLM 에 맡긴다. 「막는다」만 받는다(조심하는 쪽).
+            if impact is not None and not impact.blocks and impact.unclassified:
+                by_model = self._rule_first(task, judge_requests.disaster_effect(
+                    place.get("name"), "activity", impact.unclassified, booking.get("starts_at"), indoor.get("value")),
+                    basis="unclassified_kind")
+                if by_model is not None:
+                    impact.blocks.extend({**m, "impact": "llm"} for m in impact.unclassified)
+                    impact.unclassified.clear()
             if impact is not None and impact.blocks:
                 kinds = ", ".join(dict.fromkeys(str(m.get("kind")) for m in impact.blocks))
                 return self._closed_place_change(
@@ -568,6 +576,17 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                            tenant_id=task.context.tenant_id)
         ShadowJudge(_CurrentVerdict(current), LLMJudge(self.judge_llm), runner=self.judge_runner,
                     sink=self.judge_shadow_sink, budget=self.judge_budget).judge(ctx, request)
+
+    def _rule_first(self, task: TeamTask, request: JudgeRequest, *, basis: str | None) -> Verdict | None:
+        """규칙이 「모름」인 판정을 LLM 에 맡긴다 — 종류 모드가 `llm` 이고 판정 LLM 이 꽂혀 있을 때만. `[2026-10-12]` D-CS-015 개정 2.
+        휴무 · 재난은 조심하는 쪽만 받는다(`modes.rule_first`). 못 정하면 `None`."""
+        if self.judge_llm is None or kind_mode(request.kind) != "llm":
+            return None
+        ctx = JudgeContext(case_id=task.case_id, capability=task.capability, run_id=task.run_id,
+                           tenant_id=task.context.tenant_id)
+        verdict = rule_first(ctx, request, Verdict(request.kind, "unknown", "rule", basis=basis),
+                             LLMJudge(self.judge_llm), budget=self.judge_budget)
+        return verdict if verdict.known else None
 
     def _shadow_live_status(self, task: TeamTask, booking: dict, place: Any, seen: set[str], indoor: dict[str, Any],
                             place_class: dict[str, Any] | None, remaining: float) -> None:
@@ -732,6 +751,13 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                                                       {d.isoformat(): v for d, v in holidays.items()}),
                          value={True: "closed", False: "not_closed"}.get(verdict["closed"], "unknown"),
                          basis=verdict["closure_reason"])
+        # ★`[2026-10-12]` D-CS-015 개정 2 — 규칙이 휴무 원문을 못 읽었으면 LLM 에 맡긴다. 「휴무다」만 받는다(조심하는 쪽).
+        if verdict["closed"] is None and restdate:
+            by_model = self._rule_first(task, judge_requests.closure(
+                restdate, starts_at, {d.isoformat(): v for d, v in holidays.items()}), basis=verdict["closure_reason"])
+            if by_model is not None:
+                verdict = {**verdict, "closed": True, "closure_reason": "llm", "auto_read": True,
+                           "quote": by_model.quotes[0] if by_model.quotes else None}
         closed, fit = verdict["closed"], verdict["within_hours"]
         record: dict[str, Any] = {"known": verdict["known"], "source": verdict["source"],
                                   "closed": closed, "closure_reason": verdict["closure_reason"],

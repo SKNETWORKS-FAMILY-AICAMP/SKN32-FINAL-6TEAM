@@ -76,8 +76,15 @@ def default_runner() -> BackgroundRunner:
         return _runner
 
 
-#: 종류별로 받는 값(`travel.activity_judge.kind_modes`). ★`llm` 은 아직 받지 않는다 — D-CS-015 개정 전. `[2026-10-12]`
-KIND_MODES = ("rule", "shadow")
+#: 종류별로 받는 값(`travel.activity_judge.kind_modes`). `[2026-10-12]`
+#:  `llm` = **규칙이 모를 때만** LLM(`rule_first`) — D-CS-015 개정 2(2026-10-12 사용자 결정)로 받는다. 실시간 운영은 섀도만.
+KIND_MODES = ("rule", "shadow", "llm")
+#: `llm` 을 받지 않는 종류 — 웹 검색 · 라벨 없음(D-CS-015 개정 2 ⑤)
+_NO_LLM_KINDS = frozenset({"live_status"})
+#: 조심하는 쪽 — 이 종류에서 LLM 이 **확정해도 되는** 값. 그 밖의 확정 값(풀어 주는 쪽 · 「휴무 아님」 「괜찮다」)은 모름으로 내린다.
+#:  10-12 재평가에서 LLM 의 오답 5건이 모두 풀어 주는 쪽이었다(closure-06 · disaster-04) — D-CS-015 개정 2 「지키는 것」.
+CAUTIOUS_VALUES: dict[str, frozenset[str]] = {"closure": frozenset({"closed"}),
+                                              "disaster_effect": frozenset({"blocks"})}
 
 
 def kind_mode(kind: str, modes: Any = None) -> str:
@@ -93,7 +100,33 @@ def kind_mode(kind: str, modes: Any = None) -> str:
     value = modes.get(kind, "rule")
     if value not in KIND_MODES:
         raise ValueError(f"travel.activity_judge.kind_modes.{kind} = {value!r} — {list(KIND_MODES)} 중 하나여야 한다")
+    if value == "llm" and kind in _NO_LLM_KINDS:
+        raise ValueError(f"travel.activity_judge.kind_modes.{kind} 는 llm 을 받지 않는다(D-CS-015 개정 2 — 섀도만)")
     return value
+
+
+def rule_first(ctx: JudgeContext, request: JudgeRequest, rule: Verdict, llm: LLMJudge, *,
+               budget: Any | None = None) -> Verdict:
+    """규칙이 답했으면 규칙. **규칙이 모를 때만** LLM — D-CS-015 개정 2. `[2026-10-12]`
+
+    ★휴무 · 재난은 조심하는 쪽 값(`CAUTIOUS_VALUES`)만 받는다 — LLM 이 「휴무 아님 · 괜찮다」로 확정하면 규칙의 「모름」을 돌려준다.
+    ★호출 실패 · 인용 검증 탈락 · 예산 초과는 규칙의 「모름」 그대로다(지어내지 않는다).
+    """
+    if rule.known:
+        return rule
+    if budget is not None:
+        try:
+            if not budget(request.kind):
+                return replace(rule, dropped=[*rule.dropped, "llm:budget_exhausted"])
+        except Exception:  # noqa: BLE001 — 세지 못하면 부르지 않는다(ShadowJudge 와 같다)
+            return replace(rule, dropped=[*rule.dropped, "llm:budget_unreadable"])
+    verdict = _run(llm.judge(ctx, request))
+    if not verdict.known:
+        return replace(rule, dropped=[*rule.dropped, f"llm:{verdict.failure_code or 'unknown'}"])
+    allowed = CAUTIOUS_VALUES.get(request.kind)
+    if allowed is not None and verdict.value not in allowed:
+        return replace(rule, dropped=[*rule.dropped, f"llm_relaxing_not_accepted:{verdict.value}"])
+    return verdict
 
 
 def _run(coro) -> Any:
