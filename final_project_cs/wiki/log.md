@@ -431,3 +431,7 @@ RAG 세션이 만든 연결 코드(커밋 6f043d36 · c431e7cb)를 사용자가 
 ## 2026-10-13 — 파이썬 CI 2차 정리: 같은 커밋 1번 · 전체 시험 병렬(코어)
 
 전체 관문 하나가 role-manager · develop · main push 를 맡고, 같은 커밋이 연달아 오면 앞 실행을 취소해 끝까지 도는 것은 1번입니다(1차 정리 2번 → 1번, Codex 와 2회차 합의 — role-manager 에만 올리는 일이 실제로 있어 role-manager 검사를 빼지 않았습니다). 빠른 관문은 role-manager 로 오는 PR 용으로만 남겼습니다. 전체 시험은 pytest-xdist 4개 일꾼으로 나눠 돌리고, 일꾼마다 본 DB 를 틀로 복사한 자기 DB 를 씁니다(`conftest.py`). 로컬 확인: e2e 25개 파일 4개 일꾼 274 통과 · 실패 0. [언제 무엇이 도나](operations/local-setup.md)
+
+## 2026-10-13 — 파이썬 CI: role-manager 검사 제거(사용자 결정)
+
+role-manager 는 검사하지 않고 develop · main 에서만 전체 관문이 1번 돕니다(같은 커밋을 role-manager → develop 으로 올리면 1번). 빠른 관문은 손으로 돌릴 때만 남겼습니다. 병렬 전체 관문 실측: develop 255초(병렬 전 606초).
