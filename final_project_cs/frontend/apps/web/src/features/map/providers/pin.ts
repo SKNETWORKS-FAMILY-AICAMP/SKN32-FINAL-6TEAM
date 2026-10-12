@@ -184,7 +184,10 @@ export function placePin(pin: HTMLElement, slot: PinSlot, leaderBox?: HTMLElemen
   }
 }
 
-export function setPinSelected(pin: HTMLElement, selected: boolean) {
+/** `[2026-10-13 사용자 지시]` 검증 로딩 화면에서 지금 드러나는 마커(`revealFocus`)는 선택 색으로 칠하고 선택된 마커보다 크게 보인다. */
+export const REVEAL_SCALE = 1.3;
+
+export function setPinSelected(pin: HTMLElement, selected: boolean, reveal = false) {
   const tone = pin.dataset.tone;
   const body = bodyOf(pin);
   // A muted pin is context only: it never takes the selection and is not pressed.
@@ -192,11 +195,12 @@ export function setPinSelected(pin: HTMLElement, selected: boolean) {
     Object.assign(body.style, { background: "var(--color-subtle)", color: "var(--color-faint)", borderColor: "var(--color-border-strong)", boxShadow: "none", pointerEvents: "none", transform: "none" });
     return;
   }
-  body.style.background = selected ? "var(--color-selected)" : tone === "current" ? "var(--color-text)" : tone === "warn" ? "var(--color-warning-soft)" : "var(--color-surface)";
-  body.style.color = selected || tone === "current" ? "var(--color-on-primary)" : tone === "candidate" ? "var(--color-success)" : tone === "warn" ? "var(--color-warning)" : "var(--color-text)";
-  body.style.borderColor = selected ? "var(--color-selected)" : tone === "candidate" ? "var(--color-success)" : tone === "warn" ? "var(--color-warning)" : "var(--color-text)";
-  body.style.boxShadow = selected ? `0 0 0 3px color-mix(in srgb, var(--color-selected) 35%, var(--color-surface)), 0 3px 12px ${shadow}` : `0 2px 8px ${shadow}`;
-  body.style.transform = selected ? "scale(1.14)" : "none";
+  const lit = selected || reveal;
+  body.style.background = lit ? "var(--color-selected)" : tone === "current" ? "var(--color-text)" : tone === "warn" ? "var(--color-warning-soft)" : "var(--color-surface)";
+  body.style.color = lit || tone === "current" ? "var(--color-on-primary)" : tone === "candidate" ? "var(--color-success)" : tone === "warn" ? "var(--color-warning)" : "var(--color-text)";
+  body.style.borderColor = lit ? "var(--color-selected)" : tone === "candidate" ? "var(--color-success)" : tone === "warn" ? "var(--color-warning)" : "var(--color-text)";
+  body.style.boxShadow = lit ? `0 0 0 3px color-mix(in srgb, var(--color-selected) 35%, var(--color-surface)), 0 3px 12px ${shadow}` : `0 2px 8px ${shadow}`;
+  body.style.transform = reveal ? `scale(${REVEAL_SCALE})` : selected ? "scale(1.14)" : "none";
   body.style.pointerEvents = "auto";
 }
 
