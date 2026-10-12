@@ -889,7 +889,7 @@ def _answer_here(conn, *, kind: str, fix: Any, trip: dict[str, Any], items: list
                                               radius_m=NEARBY_HERE_RADIUS_M)
             state_lookup = dining_ledger.state_lookup(conn, store.tenant_id)
         found, radius, sought = plan_nearby(wanted, trip=trip, places=places, origin=fix.as_origin(), at=at,
-                                            state_lookup=state_lookup)
+                                            state_lookup=state_lookup, items=items)
         text = trip_here.nearby(kind, fix, found=found, radius_m=radius, sought=sought)
     return {"status": "answered", "text": (note + " " if note else "") + text}
 

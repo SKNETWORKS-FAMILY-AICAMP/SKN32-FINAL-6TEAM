@@ -32,7 +32,7 @@ from app.domains.travel_ops.components.itinerary.itinerary import Item
 from app.domains.travel_ops.components.itinerary.itinerary_checks import seoul
 from app.domains.travel_ops.components.planning.replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, DiningStateLookup, activity_candidates, alternate_record,
                      apply_google_prices, brand_of, change_notice, choose, dining_candidates, dining_fits, dining_notice,
-                     meal_route, route_candidates, route_notice, store_candidates)
+                     MealRoute, meal_route, route_candidates, route_notice, store_candidates)
 
 #: 구글 가격 조회 — 장소 목록 → {place_id: {level, low, high}}. ★선택 기능(스위치 기본 꺼짐 — `replan` 머리말)
 PriceLookup = Callable[[list[dict[str, Any]]], "dict[str, dict[str, int | None] | None] | None"]
@@ -772,7 +772,8 @@ def plan_dining_disrupted(*, trip: dict[str, Any], items: list[Item], places: li
         original=meal.place, places=places, arrival=meal.starts_at, minutes=duration,
         constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
         next_start=following.starts_at if following else None, exclude={str(meal.place["place_id"])},
-        state_lookup=state_lookup), key=lambda c: c.rank())
+        state_lookup=state_lookup,
+        route=meal_route(items, meal, leg=_leg_engine(trip))), key=lambda c: c.rank())
     best, alternates, rejected = choose(candidates, recheck)
     if best is None:
         return NoChange("unresolved", {"causes": causes, "rejected": {c.name: c.rejected for c in rejected}})
@@ -978,21 +979,31 @@ RELAX_WANT = 3
 
 
 def plan_nearby(kind: str, *, trip: dict[str, Any], places: list[dict[str, Any]], origin: dict[str, Any],
-                at: datetime, state_lookup: DiningStateLookup | None = None) -> tuple[list[Any], int | None, int]:
-    """고객의 **현재 위치**(`origin` — `latitude` · `longitude` 를 가진 가짜 장소) 둘레에서 **지금 갈 수 있는** 곳. `[2026-09-30]`
+                at: datetime, state_lookup: DiningStateLookup | None = None,
+                items: list[Item] = ()) -> tuple[list[Any], int | None, int]:
+    """고객의 **현재 위치**(`origin` — `latitude` · `longitude` 를 가진 좌표 기준점) 둘레에서 **지금 갈 수 있는** 곳. `[2026-09-30]`
     돌려주는 것: (후보들 좋은 순 — 최선 + 다른 안, 찾은 반경 m 또는 None, 살펴본 곳 수). `kind` = `dining` | `activity`.
 
     ★「다른 데로 바꿔」와 같은 후보 계산이다(식당은 요식 원장 판정, 활동은 그 시각 영업) — 다른 것은 **기준점이 좌표**라는 것뿐이다.
       일정을 바꾸지 않는다(부르는 쪽이 목록만 답한다). 반경은 식당 700m → 1.5km → 3km, 활동 1.5km → 3km.
-    ★좌표는 여기서 거리 계산에만 쓰고 어디에도 담지 않는다(`trip_here` 머리 — 개인정보)."""
+    ★좌표는 여기서 거리 계산에만 쓰고 어디에도 담지 않는다(`trip_here` 머리 — 개인정보).
+    ★`[2026-10-08]` 요식업은 현재 위치에서 걷는 시간을 입장 시각에 더하고, `items`의 다음 일정까지 동선을 검사한다.
+      `items`가 없으면 다음 일정 제약은 적용할 수 없다. 이동 계산기는 기존 끼움 자리로 받는다."""
     if kind == "dining":
         minutes = 60
+        # 현재 위치에서 출발한다. 진행 중인 항목은 건너뛰고 다음 일정의 시작 시각을 지킨다.
+        following = min((i for i in items if i.kind != "mobility" and i.place and i.starts_at > at),
+                        key=lambda i: (i.starts_at, i.seq), default=None)
+        route = MealRoute(planned_end=at, before=(origin, at),
+                          after=(following.place, following.starts_at) if following else None,
+                          leg=_leg_engine(trip))
         seen = 0
         for radius in ALTERNATE_RADII_M["dining"]:
             candidates = dining_candidates(
                 original=origin, places=places, arrival=at, minutes=minutes,
-                constraints=trip.get("constraints") or {}, radius_m=radius, next_start=None, exclude=set(),
-                state_lookup=state_lookup)
+                constraints=trip.get("constraints") or {}, radius_m=radius,
+                next_start=following.starts_at if following else None, exclude=set(),
+                state_lookup=state_lookup, arrival_for=lambda walk: at + timedelta(minutes=walk), route=route)
             best, alternates, rejected = choose(candidates)
             seen = len(rejected) + (1 if best is not None else 0) + len(alternates)
             if best is not None:
@@ -1037,7 +1048,8 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
             found = dining_candidates(original=center, places=places, arrival=start, minutes=duration,
                                       constraints=constraints, radius_m=radius,
                                       next_start=following.starts_at if following else None,
-                                      exclude={original, str(center["place_id"])}, state_lookup=state_lookup)
+                                      exclude={original, str(center["place_id"])}, state_lookup=state_lookup,
+                                      route=meal_route(items, current, leg=_leg_engine(trip)))
         else:
             found = [c for c in activity_candidates(original=center, places=places, start=start, end=end, causes=list(causes),
                                                     radius_m=radius)
@@ -1130,7 +1142,8 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
                 original=current.place, places=places, arrival=current.starts_at, minutes=duration,
                 constraints=trip.get("constraints") or {}, radius_m=radius,
                 next_start=following.starts_at if following else None, exclude={original},
-                state_lookup=state_lookup)
+                state_lookup=state_lookup,
+                route=meal_route(items, current, leg=_leg_engine(trip)))
             if price_lookup is not None:
                 apply_google_prices(candidates, original=current.place, lookup=price_lookup)
             best, alternates, rejected = choose(candidates)

@@ -1,0 +1,47 @@
+
+[WebServer] (node:28684) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:15736) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+
+[WebServer] (node:27840) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:10292) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 25 tests using 1 worker
+
+
+(node:21092) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/25] tests\live\compact-edge-unlock-add-20261010.spec.ts:12:3 › 먼 일정 거리 숨김·좁은 마커·조작 후 복귀 375px
+[2/25] tests\live\compact-edge-unlock-add-20261010.spec.ts:35:3 › 전체 잠금 해제는 목록 맨 위·한 요청·스크롤에 사라짐 375px
+[3/25] tests\live\compact-edge-unlock-add-20261010.spec.ts:49:3 › 원형 추가 단추는 일정 사이 중앙·취소 복귀 375px
+[4/25] tests\live\compact-edge-unlock-add-20261010.spec.ts:12:3 › 먼 일정 거리 숨김·좁은 마커·조작 후 복귀 1280px
+[5/25] tests\live\compact-edge-unlock-add-20261010.spec.ts:35:3 › 전체 잠금 해제는 목록 맨 위·한 요청·스크롤에 사라짐 1280px
+[6/25] tests\live\compact-edge-unlock-add-20261010.spec.ts:49:3 › 원형 추가 단추는 일정 사이 중앙·취소 복귀 1280px
+[7/25] tests\live\day-strip-quiet.spec.ts:18:1 › 목록을 스크롤하면 일차 줄만 사라지고 멈춘 뒤 다시 나타나며 목록 위치는 유지된다
+[8/25] tests\live\day-strip-quiet.spec.ts:35:1 › 지도를 누르고 움직이는 동안은 계속 숨고 손을 놓은 뒤 복귀한다
+[9/25] tests\live\day-strip-quiet.spec.ts:48:1 › 일차 버튼 조작은 숨기지 않고 숨은 중에도 Tab을 누르면 다시 접근할 수 있다
+[10/25] tests\live\day-strip-quiet.spec.ts:69:1 › 동작 줄이기 설정에서도 숨김·복귀가 되며 위치 이동 효과는 없다
+[11/25] tests\live\edge-order-date-add-ideas-20261010.spec.ts:21:3 › 좌우 순서·동일한 채움색·조작 중 거리 숨김 375px
+[12/25] tests\live\edge-order-date-add-ideas-20261010.spec.ts:64:3 › 하루 일정도 날짜 표시·스크롤 중 숨김·정지 후 복귀·미선택 안내 375px
+[13/25] tests\live\edge-order-date-add-ideas-20261010.spec.ts:78:3 › 일정 추가 네 배치안 비교 촬영 375px
+[14/25] tests\live\edge-order-date-add-ideas-20261010.spec.ts:101:3 › 확인할 내용이 없으면 되돌릴 수 있는 변경 내용을 안내 375px
+[15/25] tests\live\edge-order-date-add-ideas-20261010.spec.ts:21:3 › 좌우 순서·동일한 채움색·조작 중 거리 숨김 1280px
+[16/25] tests\live\edge-order-date-add-ideas-20261010.spec.ts:64:3 › 하루 일정도 날짜 표시·스크롤 중 숨김·정지 후 복귀·미선택 안내 1280px
+[17/25] tests\live\edge-order-date-add-ideas-20261010.spec.ts:78:3 › 일정 추가 네 배치안 비교 촬영 1280px
+[18/25] tests\live\edge-order-date-add-ideas-20261010.spec.ts:101:3 › 확인할 내용이 없으면 되돌릴 수 있는 변경 내용을 안내 1280px
+[19/25] tests\live\focused-times-lock-20261010.spec.ts:19:3 › 접힌 카드 종류 아이콘·상세 잠금·키보드 초점 375px
+[20/25] tests\live\focused-times-lock-20261010.spec.ts:48:3 › 선택한 일정·이동만 시각 두 줄·애니메이션 375px
+[21/25] tests\live\focused-times-lock-20261010.spec.ts:19:3 › 접힌 카드 종류 아이콘·상세 잠금·키보드 초점 1280px
+[22/25] tests\live\focused-times-lock-20261010.spec.ts:48:3 › 선택한 일정·이동만 시각 두 줄·애니메이션 1280px
+[23/25] tests\live\focused-times-lock-20261010.spec.ts:87:1 › 잠금은 시작·출발 드래그와 내용 변경을 막고 이웃 일정은 고정 경계까지만 움직인다
+[24/25] tests\live\focused-times-lock-20261010.spec.ts:114:1 › 시간 변경 후 잠그면 되돌리기를 먼저 막고 요청을 보내지 않는다
+[25/25] tests\live\focused-times-lock-20261010.spec.ts:127:1 › 재확인 상태인 잠근 일정도 상세에서 잠금 해제할 수 있다
+  2 skipped
+  23 passed (1.9m)
+

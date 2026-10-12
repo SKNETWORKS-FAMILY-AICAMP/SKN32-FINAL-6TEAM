@@ -1,0 +1,7 @@
+.box { display: grid; gap: 8px; margin-top: 20px; min-width: 0; }
+.box label { font-size: 13px; font-weight: 600; }
+.box select { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-paper); color: var(--color-text); font: inherit; font-size: 13px; }
+.help { margin: 0; font-size: 12px; line-height: 1.7; color: var(--color-muted); }
+.help button { min-height: 44px; color: var(--color-primary); text-decoration: underline; }
+.box summary { padding: 12px 0; font-size: 13px; cursor: pointer; }
+.box pre { margin: 0; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; font: inherit; font-size: 12px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }

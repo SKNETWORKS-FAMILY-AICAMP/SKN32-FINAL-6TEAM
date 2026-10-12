@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui";
 import type { Translate } from "@/lib/i18n";
@@ -9,6 +9,7 @@ import type { ConsentCode } from "./consent-model";
 import { consentedAt, readConsents, useConsent } from "./consent-store";
 import { saveConsents, type SendResult } from "./consent-sync";
 import { plainTitle } from "./terms-text";
+import { TermsBody } from "./terms-body";
 import { TermsViewer } from "./terms-viewer";
 import { TERMS_EFFECTIVE, type TermsDoc } from "./terms-content";
 import { useLiveTerms } from "./terms-live";
@@ -31,17 +32,19 @@ function resultText(result: SendResult, agreed: boolean, t: Translate): { ok: bo
   }
 }
 
-function Row({ doc, onView }: { doc: TermsDoc; onView: (doc: TermsDoc) => void }) {
+function Row({ doc }: { doc: TermsDoc }) {
   const t = useT();
   const { language } = useSettings();
   const queryClient = useQueryClient();
   const agreed = useConsent(doc.code);
+  const [expanded, setExpanded] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const at = agreed ? consentedAt() : null;
 
   async function change(next: boolean) {
+    if (doc.required) return;                       // management edits optional items only
     setBusy(true);
     setMessage(null);
     setConfirming(false);
@@ -61,30 +64,64 @@ function Row({ doc, onView }: { doc: TermsDoc; onView: (doc: TermsDoc) => void }
     <p className={styles.managerNote}>{t(doc.summary[0], doc.summary[1])}</p>
     {confirming && <p className={styles.failed} role="alert">{t(...WITHDRAW[doc.code])}</p>}
     <div className={styles.itemActions}>
-      <Button variant="quiet" onClick={() => onView(doc)}>{t("전문 보기", "Read in full")}</Button>
+      <Button variant="quiet" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? t("전문 접기", "Hide full text") : t("전문 보기", "Read in full")}</Button>
       {agreed
         ? (confirming
           ? <><Button variant="primary" disabled={busy} onClick={() => void change(false)}>{t("철회하기", "Withdraw")}</Button><Button disabled={busy} onClick={() => setConfirming(false)}>{t("취소", "Cancel")}</Button></>
           : <Button variant="quiet" disabled={busy} onClick={() => setConfirming(true)}>{t("동의 철회", "Withdraw")}</Button>)
         : !doc.required && <Button disabled={busy} onClick={() => void change(true)}>{t("동의하기", "Agree")}</Button>}
     </div>
+    {expanded && <article data-optional-full className={styles.optionalFull} aria-label={t(...plainTitle(doc.title))}><TermsBody doc={doc} t={t} /></article>}
     {message && <p className={message.ok ? styles.ok : styles.failed} role={message.ok ? "status" : "alert"}>{message.text}</p>}
   </li>;
 }
 
 /**
- * `[2026-10-05 사용자 지시]` 마이페이지 「동의 관리」: 어떤 항목에 동의했는지 보고, 약관 전문을 다시 읽고, 선택 항목은 언제든 켜고 끈다(필수 항목의 철회는 서비스 중단이라
- * 한 번 더 확인한다). 바꾼 것은 이 브라우저와 서버의 동의 기록(추가만 하는 표)에 함께 남는다.
+ * `[2026-10-09 사용자 지시]` 필수 약관은 전문 창에서 읽고, 선택 동의만 관리한다. 최초 필수 동의와 철회 API는 기존 계약을 유지한다.
  */
 export function ConsentManager() {
   const t = useT();
-  const [viewing, setViewing] = useState<TermsDoc | null>(null);
+  const [requiredOpen, setRequiredOpen] = useState(false);
+  const [optionalOpen, setOptionalOpen] = useState(false);
   const { version, docs } = useLiveTerms(useSettings().language);
   if (!docs.length) return null;
   return <div className={styles.manager} id="consents">
     <h2 className={styles.managerTitle}>{t("약관 동의 관리", "Manage consents")}</h2>
-    <p className={styles.managerNote}>{t(`약관 버전 ${version} (시행 ${TERMS_EFFECTIVE}). 선택 항목은 동의하지 않아도 앱을 쓸 수 있고, 언제든 철회할 수 있어요.`, `Terms version ${version} (effective ${TERMS_EFFECTIVE}). Optional items can be declined without losing the app, and withdrawn at any time.`)}</p>
-    <ul className={styles.items} aria-label={t("동의 항목", "Consent items")}>{docs.map((doc) => <Row key={doc.code} doc={doc} onView={setViewing} />)}</ul>
-    {viewing && <TermsViewer doc={viewing} onClose={() => setViewing(null)} />}
+    <div className={styles.managerButtons}>
+      <Button variant="quiet" onClick={() => setRequiredOpen(true)}>{t("약관 전문 확인", "Read full terms")}</Button>
+      <Button variant="quiet" onClick={() => setOptionalOpen(true)}>{t("선택 약관 동의", "Optional consents")}</Button>
+    </div>
+    {optionalOpen && <OptionalConsents onClose={() => setOptionalOpen(false)}>
+      <p className={styles.managerNote}>{t(`약관 버전 ${version} (시행 ${TERMS_EFFECTIVE}). 선택 항목은 동의하지 않아도 앱을 쓸 수 있고, 언제든 철회할 수 있어요.`, `Terms version ${version} (effective ${TERMS_EFFECTIVE}). Optional items can be declined and withdrawn at any time.`)}</p>
+      <ul className={styles.items} aria-label={t("선택 동의 항목", "Optional consent items")}>{docs.filter((doc) => !doc.required).map((doc) => <Row key={doc.code} doc={doc} />)}</ul>
+    </OptionalConsents>}
+    {requiredOpen && docs.some((doc) => doc.required) && <TermsViewer doc={docs.find((doc) => doc.required)!} documents={docs.filter((doc) => doc.required)} onClose={() => setRequiredOpen(false)} />}
   </div>;
+}
+
+/** 선택 동의는 별도 창에서 상세 내용을 읽고 관리한다. */
+function OptionalConsents({ children, onClose }: { children: ReactNode; onClose: () => void }) {
+  const t = useT();
+  const dialog = useRef<HTMLDialogElement>(null);
+  const close = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const node = dialog.current;
+    const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    node?.showModal(); close.current?.focus();
+    return () => { node?.close(); trigger?.focus({ preventScroll: true }); };
+  }, []);
+  function keepFocus(event: KeyboardEvent<HTMLDialogElement>) {
+    if (event.key !== "Tab") return;
+    const targets = [...event.currentTarget.querySelectorAll<HTMLElement>('button, a[href], [tabindex]')]
+      .filter((node) => node.tabIndex >= 0 && !node.matches(":disabled") && node.getClientRects().length > 0);
+    const first = targets[0], last = targets.at(-1);
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+  }
+  return <dialog ref={dialog} className={styles.viewer} aria-modal="true" aria-labelledby="optional-consents-title"
+    onKeyDown={keepFocus} onCancel={(event) => { event.preventDefault(); onClose(); }}>
+    <header className={styles.viewerHead}><h2 id="optional-consents-title">{t("선택 약관 동의", "Optional consents")}</h2>
+      <button ref={close} type="button" className={styles.viewerClose} aria-label={t("선택 약관 닫기", "Close optional consents")} onClick={onClose}>×</button></header>
+    <div className={styles.optionalBody}>{children}</div>
+  </dialog>;
 }

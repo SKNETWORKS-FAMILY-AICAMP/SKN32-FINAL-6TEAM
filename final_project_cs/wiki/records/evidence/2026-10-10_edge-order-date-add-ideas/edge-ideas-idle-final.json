@@ -1,0 +1,540 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      ".tmp/consent-progress.config.ts",
+      "tests/live/edge-order-date-add-ideas-20261010.spec.ts",
+      "tests/live/focused-times-lock-20261010.spec.ts",
+      "--grep-invert",
+      "네 배치안",
+      "--reporter=line,json",
+      "--workers=1",
+      "--output=.tmp/edge-ideas-idle-results"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\consent-progress.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/.tmp/edge-ideas-idle-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "edge-order-date-add-ideas-20261010.spec.ts",
+      "file": "edge-order-date-add-ideas-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "좌우 순서·동일한 채움색·조작 중 거리 숨김 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5856,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:45:42.590Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-db1bc1d6237831e39a90",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 21,
+          "column": 3
+        },
+        {
+          "title": "하루 일정도 날짜 표시·스크롤 중 숨김·정지 후 복귀·미선택 안내 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7495,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:45:48.700Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-4130e9821a90730c5aff",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 64,
+          "column": 3
+        },
+        {
+          "title": "확인할 내용이 없으면 되돌릴 수 있는 변경 내용을 안내 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6375,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:45:56.218Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-dc57a1fa82108c52a4f1",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 101,
+          "column": 3
+        },
+        {
+          "title": "좌우 순서·동일한 채움색·조작 중 거리 숨김 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5518,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:46:02.609Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-8804fabb1044407d451d",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 21,
+          "column": 3
+        },
+        {
+          "title": "하루 일정도 날짜 표시·스크롤 중 숨김·정지 후 복귀·미선택 안내 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5375,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:46:08.147Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-4d274c30e29dc1b200b1",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 64,
+          "column": 3
+        },
+        {
+          "title": "확인할 내용이 없으면 되돌릴 수 있는 변경 내용을 안내 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6555,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:46:13.539Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-f4ee3d6887eece01593a",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 101,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "focused-times-lock-20261010.spec.ts",
+      "file": "focused-times-lock-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "접힌 카드 종류 아이콘·상세 잠금·키보드 초점 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2545,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:46:20.135Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-fb59148c79e286225670",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 19,
+          "column": 3
+        },
+        {
+          "title": "선택한 일정·이동만 시각 두 줄·애니메이션 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4908,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:46:22.695Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-9feef039dbe35fa21233",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 48,
+          "column": 3
+        },
+        {
+          "title": "접힌 카드 종류 아이콘·상세 잠금·키보드 초점 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2352,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:46:27.617Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-8a86569ff7187ae5901a",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 19,
+          "column": 3
+        },
+        {
+          "title": "선택한 일정·이동만 시각 두 줄·애니메이션 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2706,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:46:29.982Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-2cf4c7f4bc8ee726253a",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 48,
+          "column": 3
+        },
+        {
+          "title": "잠금은 시작·출발 드래그와 내용 변경을 막고 이웃 일정은 고정 경계까지만 움직인다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5293,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:46:32.705Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-ad5308d168b5cce634cd",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 87,
+          "column": 1
+        },
+        {
+          "title": "시간 변경 후 잠그면 되돌리기를 먼저 막고 요청을 보내지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2543,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:46:38.012Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-a4ee59d97739910e82c5",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 114,
+          "column": 1
+        },
+        {
+          "title": "재확인 상태인 잠근 일정도 상세에서 잠금 해제할 수 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1979,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:46:40.574Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bed4f45ae1eefe4a52b9-341b71de5ce4d72a98ef",
+          "file": "focused-times-lock-20261010.spec.ts",
+          "line": 127,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T19:45:40.818Z",
+    "duration": 62810.776000000005,
+    "expected": 13,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

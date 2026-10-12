@@ -1,0 +1,92 @@
+{
+  "baseTeamCommit": "5ded30ca3e1f1669276c4fcb768b6d408613ce1c",
+  "browser": "Chrome",
+  "viewports": [
+    375,
+    1280
+  ],
+  "uniqueBrowserCases": {
+    "passed": 49,
+    "total": 49,
+    "definition": "Latest outcome per test title: 29 earlier unchanged cases plus 12 completion/map cases plus 8 layout/toast/add cases; last result per title; repeated cases excluded"
+  },
+  "runs": {
+    "chrome-final": {
+      "startTime": "2026-10-11T10:31:55.152Z",
+      "duration": 281634.64300000004,
+      "expected": 43,
+      "skipped": 0,
+      "unexpected": 2,
+      "flaky": 0
+    },
+    "final-recheck": {
+      "startTime": "2026-10-11T11:47:42.834Z",
+      "duration": 273087.507,
+      "expected": 16,
+      "skipped": 0,
+      "unexpected": 4,
+      "flaky": 0
+    },
+    "layout-add-final": {
+      "startTime": "2026-10-11T11:53:28.788Z",
+      "duration": 36351.023,
+      "expected": 8,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  "unit": {
+    "passed": 19,
+    "total": 19
+  },
+  "actualTimeFrames": {
+    "375": {
+      "counts": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "pins": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "firstToThirdMs": 3883
+    },
+    "1280": {
+      "counts": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "pins": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "firstToThirdMs": 3950
+    }
+  },
+  "staticChecks": {
+    "tsc": 0,
+    "eslint": 0
+  },
+  "freshProductionBuild": true,
+  "buildId": "x0CpFWULRMq2rjUEtIGYU",
+  "publicCsResponseVerified": false,
+  "productionDeploymentVerified": false,
+  "productHashes": {
+    "frontend/apps/web/src/features/intake-review/intake-review.tsx": "0dce9ef16ab4614d96f3257a97c91b3afa799e03971c7567bea63b2750334f18",
+    "frontend/apps/web/src/features/intake-review/intake-starting.tsx": "c182a1df752849f7a5e168cd2eff493ae2935fa0284e0156826c8cfe3ff4175f",
+    "frontend/apps/web/src/features/plan-check/plan-check.module.css": "b45a7800cb34beb7b261b76a54b7c91c9fad811a892803531f6802b26a10579f",
+    "frontend/apps/web/src/features/plan-check/plan-check.tsx": "7401a53a73a7b59f994c5219ead613b75b736042dc5565ce91af965984015b15",
+    "frontend/apps/web/src/features/plan-check/use-insertion-point.ts": "c67a66ee1f8c3325c7ce92cfd2038bd06a33d993c9138361225f2a450c7e9dc0",
+    "frontend/apps/web/src/features/plan-check/use-reveal.test.ts": "fe3f0a62dc16c9cbe452a07ac4de7f1a41bf1b905e137e79f2f07de9ca790fe3",
+    "frontend/apps/web/src/features/plan-check/use-reveal.ts": "23d872cd2a26cd19c9a18a01473988cf2f90a16652394b1c10baff237db2c2fc"
+  }
+}

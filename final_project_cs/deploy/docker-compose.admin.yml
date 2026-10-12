@@ -1,0 +1,28 @@
+# 명시적으로 켜는 운영 프로파일. 공개 프록시의 네트워크에는 연결하지 않는다.
+services:
+  tripilot-admin:
+    profiles: [operations]
+    build:
+      context: ${TRIPILOT_SRC:-./src}
+      dockerfile: deploy/Dockerfile.admin
+      args:
+        API_IMAGE: tripilot-api:${TRIPILOT_TAG:-local}
+    image: tripilot-admin:${TRIPILOT_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      tripilot-db:
+        condition: service_healthy
+    env_file: [.env, .env.apikeys, .env.admin]
+    environment:
+      ACOP_DATABASE_URL: postgresql+psycopg://acop:${TRIPILOT_DB_PASSWORD}@tripilot-db:5432/acop_cs
+      ACOP_OPS_API_BASE_URL: http://tripilot-api:8043
+      ACOP_MOBILITY_DATA_DIR: /data/mobility/processed
+      ADMIN_OPS_API_URL: http://127.0.0.1:8070
+    ports:
+      - "127.0.0.1:${TRIPILOT_ADMIN_PORT:-3300}:3300"
+    volumes:
+      - ${TRIPILOT_MOBILITY_DIR:-./datasets/mobility/processed}:/data/mobility/processed:ro
+      - tripilot_ops:/srv/var/ops
+    networks: [internal]
+    mem_limit: 2g
+    cpus: 1

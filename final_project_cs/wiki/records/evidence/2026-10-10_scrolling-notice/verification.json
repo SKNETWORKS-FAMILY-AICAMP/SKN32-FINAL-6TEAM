@@ -1,0 +1,48 @@
+{
+  "scope": "좁은 지도의 좌표 안내가 목록과 함께 스크롤",
+  "mock": {
+    "passed": 8,
+    "total": 8
+  },
+  "checks": [
+    "TypeScript --noEmit",
+    "ESLint changed source and test",
+    "standard Next.js production build"
+  ],
+  "screenshots": 10,
+  "tests": [
+    {
+      "name": "시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 375px",
+      "status": "passed"
+    },
+    {
+      "name": "시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 1280px",
+      "status": "passed"
+    },
+    {
+      "name": "좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 375px",
+      "status": "passed"
+    },
+    {
+      "name": "좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 1280px",
+      "status": "passed"
+    },
+    {
+      "name": "손잡이는 완전히 가리고 그 아래 목록은 점진적으로 보임 375px",
+      "status": "passed"
+    },
+    {
+      "name": "손잡이는 완전히 가리고 그 아래 목록은 점진적으로 보임 1280px",
+      "status": "passed"
+    },
+    {
+      "name": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 375px",
+      "status": "passed"
+    },
+    {
+      "name": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 1280px",
+      "status": "passed"
+    }
+  ],
+  "real_response_checked": false
+}

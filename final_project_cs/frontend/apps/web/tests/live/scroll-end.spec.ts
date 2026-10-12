@@ -4,7 +4,7 @@ import { needsBadge } from "./plan-check-kit";
 
 /**
  * `[2026-10-05 사용자 선택 — 스크롤 끝 안 A]` 계획 확인 화면의 목록 맨 끝: 권장 수정안이 없으면 「계속 내리면 …」 표시는 꺼지고 이유를 말하고,
- * 더 밀어도 화면이 위로 튀지 않고 그 자리에서 흔들리며 알림은 한 번만 뜬다. 테스트용 모방 서버로 도는 자동 시험(실제 서버 아님).
+ * 더 밀어도 화면이 위로 튀지 않고 그 자리에서 흔들리며 알림은 한 번만 뜬다. mock 서버로 도는 화면 반응 시험이다.
  */
 const INTAKE = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 
@@ -61,6 +61,9 @@ test("끝에서 더 밀어도 화면은 위로 튀지 않고 그 자리에서 �
 
 test("권장 수정안이 있으면 표시는 그대로이고 누르면 수정안이 열린다 (꺼지지 않는다)", async ({ page, request }) => {
   await openFinished(page, request);
-  await expect(page.getByText("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요")).toBeVisible();
+  const preview = page.getByRole("button", { name: "아래로 스크롤하면 권장 수정안이 나와요", exact: true });
+  await expect(preview).toBeVisible();
+  await preview.click();
+  await expect(page.getByRole("heading", { name: "수정안", exact: true })).toBeVisible();
   await expect(hint(page)).toHaveCount(0);
 });

@@ -1,0 +1,360 @@
+{
+  "mock_ui": {
+    "passed": 16,
+    "total": 16,
+    "new": 6,
+    "regression": 10
+  },
+  "runs": [
+    {
+      "run": "first",
+      "passed": 2,
+      "total": 6,
+      "tests": [
+        {
+          "file": "plan-check-screen.spec.ts",
+          "title": "결과: 손잡이는 시트를 높게·낮게·중간으로 돌린다",
+          "status": "passed"
+        },
+        {
+          "file": "plan-check-screen.spec.ts",
+          "title": "결과: 목록 높이는 손잡이를 잡고 끌면 원하는 높이로 맞춰지고, 위·아래 화살표로도 바뀌며, 누르면 다시 눈금으로 돌아간다",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 375px",
+          "status": "failed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "클릭 최소 단계·키보드 하한·복귀가 같은 상태 375px",
+          "status": "failed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 1280px",
+          "status": "timedOut"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "클릭 최소 단계·키보드 하한·복귀가 같은 상태 1280px",
+          "status": "failed"
+        }
+      ]
+    },
+    {
+      "run": "final",
+      "passed": 5,
+      "total": 8,
+      "tests": [
+        {
+          "file": "empty-map-notice-20261010.spec.ts",
+          "title": "좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 375px",
+          "status": "failed"
+        },
+        {
+          "file": "empty-map-notice-20261010.spec.ts",
+          "title": "좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 1280px",
+          "status": "failed"
+        },
+        {
+          "file": "plan-check-screen.spec.ts",
+          "title": "결과: 손잡이는 시트를 높게·낮게·중간으로 돌린다",
+          "status": "passed"
+        },
+        {
+          "file": "plan-check-screen.spec.ts",
+          "title": "결과: 목록 높이는 손잡이를 잡고 끌면 원하는 높이로 맞춰지고, 위·아래 화살표로도 바뀌며, 누르면 다시 눈금으로 돌아간다",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 375px",
+          "status": "timedOut"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "클릭 최소 단계·키보드 하한·복귀가 같은 상태 375px",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 1280px",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "클릭 최소 단계·키보드 하한·복귀가 같은 상태 1280px",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "run": "verified",
+      "passed": 14,
+      "total": 16,
+      "tests": [
+        {
+          "file": "day-strip-quiet.spec.ts",
+          "title": "목록을 스크롤하면 일차 줄만 사라지고 멈춘 뒤 다시 나타나며 목록 위치는 유지된다",
+          "status": "passed"
+        },
+        {
+          "file": "day-strip-quiet.spec.ts",
+          "title": "지도를 누르고 움직이는 동안은 계속 숨고 손을 놓은 뒤 복귀한다",
+          "status": "passed"
+        },
+        {
+          "file": "day-strip-quiet.spec.ts",
+          "title": "일차 버튼 조작은 숨기지 않고 숨은 중에도 Tab을 누르면 다시 접근할 수 있다",
+          "status": "passed"
+        },
+        {
+          "file": "day-strip-quiet.spec.ts",
+          "title": "동작 줄이기 설정에서도 숨김·복귀가 되며 위치 이동 효과는 없다",
+          "status": "passed"
+        },
+        {
+          "file": "empty-map-notice-20261010.spec.ts",
+          "title": "좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 375px",
+          "status": "failed"
+        },
+        {
+          "file": "empty-map-notice-20261010.spec.ts",
+          "title": "좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 1280px",
+          "status": "failed"
+        },
+        {
+          "file": "plan-check-screen.spec.ts",
+          "title": "시스템의 「동작 줄이기」가 켜져 있어도 단계별 재생은 그대로 보인다 — 읽는 화면이 먼저 나오고 결과는 한참 뒤에야 뜬다",
+          "status": "passed"
+        },
+        {
+          "file": "plan-check-screen.spec.ts",
+          "title": "결과: 일차 칩을 누르면 목록과 지도가 그 날로 바뀐다",
+          "status": "passed"
+        },
+        {
+          "file": "plan-check-screen.spec.ts",
+          "title": "결과: 손잡이는 시트를 높게·낮게·중간으로 돌린다",
+          "status": "passed"
+        },
+        {
+          "file": "plan-check-screen.spec.ts",
+          "title": "결과: 목록 높이는 손잡이를 잡고 끌면 원하는 높이로 맞춰지고, 위·아래 화살표로도 바뀌며, 누르면 다시 눈금으로 돌아간다",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 375px",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "클릭 최소 단계·키보드 하한·복귀가 같은 상태 375px",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 1280px",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "클릭 최소 단계·키보드 하한·복귀가 같은 상태 1280px",
+          "status": "passed"
+        },
+        {
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "title": "스크롤·드래그 중 제출 숨김과 유휴 복원 375px",
+          "status": "passed"
+        },
+        {
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "title": "스크롤·드래그 중 제출 숨김과 유휴 복원 1280px",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "run": "complete",
+      "passed": 6,
+      "total": 6,
+      "tests": [
+        {
+          "file": "empty-map-notice-20261010.spec.ts",
+          "title": "좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 375px",
+          "status": "passed"
+        },
+        {
+          "file": "empty-map-notice-20261010.spec.ts",
+          "title": "좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 1280px",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 375px",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "클릭 최소 단계·키보드 하한·복귀가 같은 상태 375px",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 1280px",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "클릭 최소 단계·키보드 하한·복귀가 같은 상태 1280px",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "run": "release",
+      "passed": 16,
+      "total": 16,
+      "tests": [
+        {
+          "file": "day-strip-quiet.spec.ts",
+          "title": "목록을 스크롤하면 일차 줄만 사라지고 멈춘 뒤 다시 나타나며 목록 위치는 유지된다",
+          "status": "passed"
+        },
+        {
+          "file": "day-strip-quiet.spec.ts",
+          "title": "지도를 누르고 움직이는 동안은 계속 숨고 손을 놓은 뒤 복귀한다",
+          "status": "passed"
+        },
+        {
+          "file": "day-strip-quiet.spec.ts",
+          "title": "일차 버튼 조작은 숨기지 않고 숨은 중에도 Tab을 누르면 다시 접근할 수 있다",
+          "status": "passed"
+        },
+        {
+          "file": "day-strip-quiet.spec.ts",
+          "title": "동작 줄이기 설정에서도 숨김·복귀가 되며 위치 이동 효과는 없다",
+          "status": "passed"
+        },
+        {
+          "file": "empty-map-notice-20261010.spec.ts",
+          "title": "좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 375px",
+          "status": "passed"
+        },
+        {
+          "file": "empty-map-notice-20261010.spec.ts",
+          "title": "좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 1280px",
+          "status": "passed"
+        },
+        {
+          "file": "plan-check-screen.spec.ts",
+          "title": "시스템의 「동작 줄이기」가 켜져 있어도 단계별 재생은 그대로 보인다 — 읽는 화면이 먼저 나오고 결과는 한참 뒤에야 뜬다",
+          "status": "passed"
+        },
+        {
+          "file": "plan-check-screen.spec.ts",
+          "title": "결과: 일차 칩을 누르면 목록과 지도가 그 날로 바뀐다",
+          "status": "passed"
+        },
+        {
+          "file": "plan-check-screen.spec.ts",
+          "title": "결과: 손잡이는 시트를 높게·낮게·중간으로 돌린다",
+          "status": "passed"
+        },
+        {
+          "file": "plan-check-screen.spec.ts",
+          "title": "결과: 목록 높이는 손잡이를 잡고 끌면 원하는 높이로 맞춰지고, 위·아래 화살표로도 바뀌며, 누르면 다시 눈금으로 돌아간다",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 375px",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "클릭 최소 단계·키보드 하한·복귀가 같은 상태 375px",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "끝까지 드래그하면 손잡이만 남고 다시 올리면 복원 1280px",
+          "status": "passed"
+        },
+        {
+          "file": "sheet-handle-only-20261010.spec.ts",
+          "title": "클릭 최소 단계·키보드 하한·복귀가 같은 상태 1280px",
+          "status": "passed"
+        },
+        {
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "title": "스크롤·드래그 중 제출 숨김과 유휴 복원 375px",
+          "status": "passed"
+        },
+        {
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "title": "스크롤·드래그 중 제출 숨김과 유휴 복원 1280px",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "run": "paint",
+      "passed": 2,
+      "total": 2,
+      "tests": [
+        {
+          "file": "empty-map-notice-20261010.spec.ts",
+          "title": "좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 375px",
+          "status": "passed"
+        },
+        {
+          "file": "empty-map-notice-20261010.spec.ts",
+          "title": "좌표0개 안내가 메뉴·도구·목록에 가리지 않고 좌표 복원 시 해제 1280px",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "static": {
+    "typescript": "passed",
+    "eslint": "passed",
+    "production_build": "passed"
+  },
+  "screenshots": 10,
+  "gallery_checks": [
+    {
+      "width": 375,
+      "selected": "375",
+      "images": 5,
+      "passed": true
+    },
+    {
+      "width": 375,
+      "selected": "1280",
+      "images": 5,
+      "passed": true
+    },
+    {
+      "width": 1280,
+      "selected": "375",
+      "images": 5,
+      "passed": true
+    },
+    {
+      "width": 1280,
+      "selected": "1280",
+      "images": 5,
+      "passed": true
+    }
+  ],
+  "public_cs_response": {
+    "html_status": 200,
+    "intake_screen_checked": false,
+    "reason": "새 브라우저에서 약관 첫 화면으로 이동"
+  },
+  "deployed_by_this_task": false
+}

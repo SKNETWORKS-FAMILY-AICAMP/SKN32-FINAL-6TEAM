@@ -1,0 +1,701 @@
+{
+  "mock": {
+    "passed": 6,
+    "total": 6
+  },
+  "tests": [
+    {
+      "name": "날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 375px",
+      "status": "passed"
+    },
+    {
+      "name": "날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 1280px",
+      "status": "passed"
+    },
+    {
+      "name": "하루 일정도 날짜 표시·스크롤 중 숨김·정지 후 복귀·미선택 안내 375px",
+      "status": "passed"
+    },
+    {
+      "name": "하루 일정도 날짜 표시·스크롤 중 숨김·정지 후 복귀·미선택 안내 1280px",
+      "status": "passed"
+    },
+    {
+      "name": "일정 추가는 검색 초점으로 열고 검색·지우기·선택 후에도 초안을 보존한다 375px",
+      "status": "passed"
+    },
+    {
+      "name": "일정 추가는 검색 초점으로 열고 검색·지우기·선택 후에도 초안을 보존한다 1280px",
+      "status": "passed"
+    }
+  ],
+  "measurements": {
+    "date-clearance-375": [
+      {
+        "time": 5376.5,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 5597.0999999940395,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 5820.20000000298,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 6043,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 6287.79999999702,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 6480.0999999940395,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 6659.5,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 6874.20000000298,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 7043.70000000298,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 7213.0999999940395,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 7392.899999991059,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 7581.0999999940395,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 7763.79999999702,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 7976.20000000298,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 8193.39999999106,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 8408.20000000298,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 8631.39999999106,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      }
+    ],
+    "date-clearance-1280": [
+      {
+        "time": 5163.29999999702,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 5430.20000000298,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 5664.600000008941,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 5914.70000000298,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 6125.79999999702,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 6356.9000000059605,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 6616.5,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 6897,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 7147.20000000298,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 7444.600000008941,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 7707,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 7980.5,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 8240.90000000596,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 8579.70000000298,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 8847.70000000298,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 9095.20000000298,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      },
+      {
+        "time": 9335.29999999702,
+        "tabs": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          },
+          {
+            "top": 12,
+            "bottom": 12,
+            "handleGap": 10,
+            "topHit": true,
+            "bottomHit": true
+          }
+        ]
+      }
+    ]
+  },
+  "cycle_samples_per_width": 17,
+  "widths": [
+    375,
+    1280
+  ],
+  "checks": [
+    "TypeScript --noEmit",
+    "ESLint changed browser test",
+    "standard Next.js production build"
+  ],
+  "video": {
+    "seconds": 12,
+    "fps": 5,
+    "frames": 60,
+    "method": "actual Chrome CSS phases every200ms, encoded H264 with right1px pad"
+  },
+  "real_response_checked": false
+}

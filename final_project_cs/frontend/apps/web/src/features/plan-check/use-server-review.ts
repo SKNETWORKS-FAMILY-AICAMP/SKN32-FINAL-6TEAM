@@ -5,7 +5,7 @@ import { autofixUndo, restorePlace } from "@/features/intake-review/autofix-undo
 import { editsFor, rows } from "@/features/intake-review/model";
 import { translator, type Language, type Translate } from "@/lib/i18n";
 import { LiveError } from "@/lib/live/client";
-import { editIntake, type IntakeEdit } from "@/lib/live/intake";
+import { editIntake, restoreIntake, type IntakeEdit } from "@/lib/live/intake";
 import { getMoveOptions, setMoveMode as postMoveMode, type MoveOptions } from "@/lib/live/move-options";
 import { itemEdit } from "@/lib/live/intake-edits";
 import {
@@ -16,6 +16,8 @@ import { planCandidate, safePhotoUrl } from "./from-review";
 import type { PlaceInfo } from "./model";
 import type { AutoResult, PlaceChoice, PlanCheckActions } from "./plan-check";
 import { retimeEdits } from "./retime-edits";
+import { ReviewUndo } from "./review-undo";
+import { newStopEdits } from "./new-stop";
 
 /** How many alternatives get their photos fetched (A, B, C) — each is one call to the tourism photo service. */
 const PHOTO_CANDIDATES = 3;
@@ -42,13 +44,21 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   /** Read the plan again (an edit was refused as stale). */
   reread: () => void;
 }): { actions: PlanCheckActions; dirty: boolean; rechecking: string | null; infos: Readonly<Record<string, PlaceInfo>>; preview: ReviewedIntakeView | null } {
-  const [dirty, setDirty] = useState(false);
+  const [dirtyState, setDirtyState] = useState({ intakeId, value: false });
+  const dirty = dirtyState.intakeId === intakeId && dirtyState.value;
+  const setDirty = useMemo(() => (value: boolean) => setDirtyState({ intakeId, value }), [intakeId]);
   // `[2026-10-03]` 「전체 자동 추천」 is first only SHOWN (the server's dry run saves nothing): the plan as it would be, kept with the revision it was asked on.
   const [previewed, setPreviewed] = useState<{ view: ReviewedIntakeView; base: number } | null>(null);
   const [rechecking, setRechecking] = useState<string | null>(null);
   const [infos, setInfos] = useState<Record<string, PlaceInfo>>({});
   const latest = useRef<ReviewedIntakeView | undefined>(view);
   const undoEdits = useRef<IntakeEdit[] | null>(null);
+  const allUndo = useMemo(() => new ReviewUndo(intakeId), [intakeId]);
+  useEffect(() => {
+    undoEdits.current = null;
+    allUndo.activate();
+    return () => { allUndo.deactivate(); };
+  }, [allUndo]);
   const pickable = useRef(new Map<string, CandidatePlace>());
   /** `[2026-10-07]` The ways to go for a leg, asked when its box is opened and kept for the revision they were asked on (a re-opened box asks nothing). */
   const moveWays = useRef(new Map<string, Promise<MoveOptions | null>>());
@@ -61,22 +71,22 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
    * on screen (while the check is still being drawn), so pushing past the end — or the button — shows it at once instead of waiting for the server.
    * One per revision; a failed one is simply asked again when it is needed.
    */
-  const warmed = useRef<{ base: number; ask: Promise<Awaited<ReturnType<typeof autofixIntake>>> } | null>(null);
+  const warmed = useRef<{ intakeId: string; base: number; ask: Promise<Awaited<ReturnType<typeof autofixIntake>>> } | null>(null);
   const needsLook = (view?.review?.needs?.total ?? 0) > 0;
   const warmRevision = view?.status === "review" ? view.revision : null;
   useEffect(() => {
-    if (warmRevision === null || !needsLook || warmed.current?.base === warmRevision) return;
+    if (warmRevision === null || !needsLook || (warmed.current?.intakeId === intakeId && warmed.current.base === warmRevision)) return;
     const ask = autofixIntake(intakeId, warmRevision, language, true);
-    warmed.current = { base: warmRevision, ask };
+    warmed.current = { intakeId, base: warmRevision, ask };
     ask.catch(() => { if (warmed.current?.ask === ask) warmed.current = null; });
   }, [intakeId, language, warmRevision, needsLook]);
-  useEffect(() => { if (view) latest.current = view; });
+  useEffect(() => { latest.current = view?.intake_id === intakeId ? view : undefined; }, [view, intakeId]);
 
   const actions = useMemo<PlanCheckActions>(() => {
     const t = translator(language);
     const gone = () => new LiveError("item_gone", t("그 일정은 이미 없어요", "That stop is already gone"));
     const plan = (): ReviewedIntakeView => {
-      if (!latest.current) throw gone();
+      if (!latest.current || latest.current.intake_id !== intakeId || !allUndo.active) throw gone();
       return latest.current;
     };
     const itemOf = (id: string): ReviewItem => {
@@ -86,7 +96,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
     };
     const targetOf = (item: ReviewItem) => ({ source_id: item.source_id, index: item.index });
     const staleThenRethrow = (error: unknown): never => {
-      if (error instanceof LiveError && error.code === "stale_revision") reread();
+      if (allUndo.active && error instanceof LiveError && error.code === "stale_revision") reread();
       throw error;
     };
     /** The stop's alternatives for the revision shown — asked once (a failure is not kept, so it is asked again). */
@@ -101,14 +111,21 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       return ask;
     };
     // Any answer that is the plan itself (a change, an undo, a re-check) ends a preview: it was a picture of the plan before that.
-    const take = (next: ReviewedIntakeView) => { latest.current = next; setPreviewed(null); apply(next); };
+    const take = (next: ReviewedIntakeView) => {
+      if (!allUndo.active || next.intake_id !== intakeId) return;
+      latest.current = next; setPreviewed(null); apply(next);
+    };
     /**
      * Send edits. ★`changed` says "the plan is no longer the one that was last checked" and is set BEFORE the new plan is
      * drawn: the other way round, the footer is drawn once with neither "nothing to fix" nor "check again" pending and offers
      * 「여행 등록」 for an instant (a click in that instant registered an unchecked plan — found by the browser test).
      */
     async function save(edits: IntakeEdit[], changed = false) {
-      const next = await editIntake(intakeId, plan().revision, edits, language).catch(staleThenRethrow);
+      const before = plan();
+      const next = await editIntake(intakeId, before.revision, edits, language).catch(staleThenRethrow);
+      if (!allUndo.active) throw gone();
+      if (edits.some((edit) => !edit.field.endsWith(".locked"))) allUndo.remember(before, next);
+      else allUndo.advance(next);
       if (changed) setDirty(true);
       take(next);
     }
@@ -137,6 +154,14 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
     };
 
     return {
+      add: async (draft) => {
+        const current = plan();
+        const source = current.sources[0];
+        if (!source) throw new LiveError("source_missing", t("일정을 넣을 원본을 찾지 못했어요. 다시 열어 주세요.", "No source to add this stop to. Reopen the plan."));
+        const { index, edits } = newStopEdits(source, draft);
+        await save(edits, true);
+        undoEdits.current = [{ source_id: source.source_id, field: `items[${index}].removed`, value: true }];
+      },
       edit: async (id, draft) => {
         const item = itemOf(id);
         const row = rows(plan()).find((entry) => entry.source.source_id === item.source_id && entry.item.index === item.index);
@@ -180,7 +205,10 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const move = plan().review?.moves.find((entry) => `${entry.from}:${entry.to}` === id);
         if (!move) throw gone();
         const answer = await postMoveMode(intakeId, move.from, move.to, plan().revision, mode, language).catch(staleThenRethrow);
-        take({ ...plan(), revision: answer.revision, review: answer.review });
+        if (!allUndo.active) return;
+        const next = { ...plan(), revision: answer.revision, review: answer.review };
+        allUndo.advance(next);
+        take(next);
       },
 
       candidates: async (id) => {
@@ -198,6 +226,15 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         return cards;
       },
       candidateNotes: (id) => candidateNotes.current.get(id) ?? [],
+      searchToAdd: async (id, words) => {
+        const item = itemOf(id);
+        const found = await searchPlaces(intakeId, item, plan().revision, words, language).catch(staleThenRethrow);
+        if (!allUndo.active) throw gone();
+        return found.results.map((result) => ({
+          ...planCandidate(result, id, "search", { category: result.place.category, address: result.place.address, photos: [], kind: result.place.kind, origin: result.place.source }),
+          pickedPlace: pickedPlace(result.place),
+        }));
+      },
       search: async (id, words) => {
         const item = itemOf(id);
         const found = await searchPlaces(intakeId, item, plan().revision, words, language).catch(staleThenRethrow);
@@ -227,7 +264,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       // Show how 「전체 자동 추천」 would change the plan — saves nothing (the server's dry run), so scrolling or pressing never changes the plan.
       previewRecommendAll: async (): Promise<AutoResult> => {
         const base = plan().revision;
-        const early = warmed.current?.base === base ? warmed.current.ask : null;
+        const early = warmed.current?.intakeId === intakeId && warmed.current.base === base ? warmed.current.ask : null;
         const result = await (early ?? autofixIntake(intakeId, base, language, true)).catch(() => autofixIntake(intakeId, base, language, true)).catch(staleThenRethrow);
         setPreviewed(result.view.preview && result.changed.length ? { view: result.view, base } : null);
         return autoResultOf(result, t);
@@ -236,16 +273,21 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       hasRecommendation: async (): Promise<boolean | null> => {
         // The effect of the screen can run before this hook has taken the plan (`latest` is set after the first paint): not known yet, not an error.
         const base = latest.current?.revision;
-        const ask = base !== undefined && warmed.current?.base === base ? warmed.current.ask : null;
+        const ask = base !== undefined && warmed.current?.intakeId === intakeId && warmed.current.base === base ? warmed.current.ask : null;
         if (!ask) return null;
         return ask.then((result) => result.changed.length > 0, () => null);
       },
       // Save what the preview showed: the same call without `dry_run` — the server makes the plan it showed.
       applyRecommended: async (): Promise<AutoResult> => {
-        const result = await autofixIntake(intakeId, plan().revision, language).catch(staleThenRethrow);
+        const before = plan();
+        const result = await autofixIntake(intakeId, before.revision, language).catch(staleThenRethrow);
+        if (!allUndo.active) throw gone();
         // ★`[2026-10-04 사용자 지시]` The server checked the plan it made (the dry run the customer was looking at): saving it is not a change the customer has to send again,
         //   so the plan is not marked 「changed since the last check」 — 「여행 등록」 stays open. (A change by hand still is: `save(edits, true)`.)
-        if (result.changed.length) undoEdits.current = autofixUndo(result.changed);          // null when it cannot put ALL of it back
+        if (result.changed.length) {
+          allUndo.remember(before, result.view);
+          undoEdits.current = autofixUndo(result.changed);          // null when it cannot put ALL of it back
+        }
         take(result.view);
         return autoResultOf(result, t);
       },
@@ -261,7 +303,24 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const item = itemOf(id);
         await save([itemEdit.lock(targetOf(item), locked)]);        // a lock goes alone; it does not touch what 「되돌리기」 holds
       },
+      unlockAll: async () => {
+        const locked = plan().review?.items.filter((item) => item.locked) ?? [];
+        if (locked.length) await save(locked.map((item) => itemEdit.lock(targetOf(item), false)));
+        return locked.length;
+      },
       canUndo: () => undoEdits.current !== null,
+      canUndoAll: () => allUndo.canRestore(latest.current),
+      undoAll: async () => {
+        const current = plan();
+        const original = allUndo.target(current);
+        if (original === null) throw new LiveError("cannot_undo", t("복원할 원래 판을 확인하지 못했어요. 현재 변경은 그대로 두었어요.", "The original revision is not available. Your changes were kept."));
+        const next = await restoreIntake(intakeId, current.revision, original, language).catch(staleThenRethrow);
+        if (!allUndo.active) return;
+        allUndo.restored(next);
+        undoEdits.current = null;
+        setDirty(false);                            // restore saved the final check in the same transaction
+        take(next);
+      },
       undo: async () => {
         const edits = undoEdits.current;
         if (!edits) throw new LiveError("cannot_undo", t("이번 변경은 되돌릴 수 없어요 · 이전 장소를 알 수 없어서요", "This change cannot be undone — the earlier place is not known"));
@@ -276,6 +335,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const ticker = ids.length > 1 ? setInterval(() => { at = (at + 1) % ids.length; setRechecking(ids[at]); }, RECHECK_STEP_MS) : undefined;
         try {
           const next = await revalidateIntake(intakeId, plan().revision, language).catch(staleThenRethrow);
+          if (!allUndo.active) return;
           setDirty(false);                                          // before the checked plan is drawn (see `save`)
           take(next);
         } finally {
@@ -284,10 +344,10 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         }
       },
     };
-  }, [intakeId, language, apply, reread]);
+  }, [intakeId, language, apply, reread, allUndo, setDirty]);
 
   // The preview shows only while the plan it was asked on is still the plan (an answer from elsewhere — a re-read after a stale edit — ends it too).
-  const preview = previewed && view && previewed.base === view.revision ? previewed.view : null;
+  const preview = previewed && view && previewed.view.intake_id === intakeId && previewed.base === view.revision ? previewed.view : null;
   return { actions, dirty, rechecking, infos, preview };
 }
 

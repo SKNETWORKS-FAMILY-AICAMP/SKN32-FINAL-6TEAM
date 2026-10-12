@@ -2,29 +2,30 @@
 
 import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, ChevronsDown, ChevronsRight, ChevronsUp, Pencil, Search, Undo2, X } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, RotateCcw, ChevronDown, ChevronsDown, ChevronsRight, Sparkles, Pencil, Plus, Undo2, LockOpen } from "lucide-react";
 import { DeviceFrame, HeaderSlot } from "@/components/layout/device-frame";
 import { ToastView, useToastState } from "@/components/toast-view";
 import { TripMap } from "@/features/map";
 import { routeNotes, visibleShapes } from "@/features/map/route-lines";
 import type { RouteShapes } from "@/lib/live/route-shapes";
-import type { PinLook } from "@/features/map/model";
+import type { Coordinates, PinLook } from "@/features/map/model";
 import type { TripStop } from "@/features/trip/model";
 import type { Language, Translate } from "@/lib/i18n";
 import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
-import { onToast } from "@/lib/toast-bus";
+import { onToast, pushToast, type BusToast } from "@/lib/toast-bus";
 import { foundCount, isInstantRow, needs, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type ServerProgress, type TripIssue } from "./model";
 import { Act, HeadBadges, letter, pinKindLabel, reason, type ListFilter } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
 import { dayTimes, withTimes } from "./day-times";
 import { DayList, type RowContext } from "./plan-rows";
-import { ResultFooter, StopEditor, TripIssues, type Registration } from "./result-parts";
+import { PreviewHint, ResultFooter, StopEditor, TripIssues, type Registration } from "./result-parts";
 import { dampedScrollTo } from "@/lib/damped-scroll";
 import type { MoveOptions, MoveOptionMode } from "@/lib/live/move-options";
-import { moveToast, stopToast } from "./map-description";
-import { RouteTags } from "./route-tags";
+import { moveToast } from "./map-description";
+import { usePlanIntroToast, useReadingToastHandoff } from "./use-plan-intro-toast";
 import { useFollowScroll } from "./use-follow-scroll";
+import { useQuietDayStrip } from "./use-quiet-day-strip";
 import { usePullPastEnd } from "./use-pull-past-end";
 import { useDayGestures } from "./use-day-gestures";
 import { formatHm, moveStop, parseHm, type Retime } from "./time-plan";
@@ -32,6 +33,11 @@ import { TimeDragOverlay } from "./time-drag-overlay";
 import { heldTexts, useTimeEdit } from "./use-time-edit";
 import { useCenterTools } from "./use-center-tools";
 import { REVEAL_MS, useReveal } from "./use-reveal";
+import { AddStop, type AddStopPlace, type NewStop } from "./add-stop";
+import type { InsertionPoint } from "./insertion-points";
+import { useInsertionPoint } from "./use-insertion-point";
+import { PlaceSearchHeader } from "./place-search-header";
+import { useBackgroundBack } from "./use-background-back";
 import styles from "./plan-check.module.css";
 
 /** `[2026-10-05]` The size of the day list the customer pinched it to is kept in this browser (a convenience: the screen is the same without it). */
@@ -48,8 +54,8 @@ export interface PlanCheckProps {
   onBack: () => void;
   /** Called once the screen has drawn everything in `view` and held it a moment — e.g. to move on after the last line. */
   onCaughtUp?: () => void;
-  /** Shown above the screen's content — e.g. a line about the connection. */
-  notice?: ReactNode;
+  /** Uses the shared toast; arbitrary content cannot be inserted above the map. */
+  notice?: BusToast | null;
   /**
    * `[2026-10-06]` The questions asked while the server reads (`features/survey-questions/`). `top` stands under the reading screen's heading, `footer` at its bottom (it does not scroll),
    * `onActivity` hears every touch on the screen BY THE CUSTOMER (a press, a key, a wheel, a finger) - not scrolls: the screen scrolls itself too, and that is not a touch. Left out: the reading screen is as it was.
@@ -91,6 +97,8 @@ export interface AutoResult {
  * coming, so the screen is whole either way.
  */
 export interface PlanCheckActions {
+  add?: (draft: NewStop) => Promise<void>;
+  searchToAdd?: (anchorId: string, query: string) => Promise<AddStopPlace[]>;
   /** Save one stop's details as drafted (the server looks a typed place up again and checks the plan again). */
   edit?: (id: string, draft: ItemDraft) => Promise<void>;
   /**
@@ -126,12 +134,16 @@ export interface PlanCheckActions {
   discardPreview?: () => void;
   /** Fix a stop so re-planning and recommendations keep it (「잠금」 — 「반드시 포함」). */
   lock?: (id: string, locked: boolean) => Promise<void>;
+  unlockAll?: () => Promise<number>;
   /** `[2026-10-07]` Keep one of two readings of a photo's line (`value` = the kept one or the other) for the stop's name or booking number; the plan is checked again. */
   pickReading?: (id: string, field: "title" | "booking_no", value: string) => Promise<void>;
   /** Put back what the last change, delete or recommendation changed (「되돌리기」). */
   undo?: () => Promise<void>;
   /** Whether the last change can be put back (a change whose earlier place is not known cannot) — the screen offers 「되돌리기」 only when it can. */
   canUndo?: () => boolean;
+  /** Restore all saved customer edits for this intake together. */
+  undoAll?: () => Promise<void>;
+  canUndoAll?: () => boolean;
   /** Check the whole plan again without changing it (「다시 제출」); the view says which stop it is at (`rechecking`). `ids` = the stops that were changed (the ones shown being checked). */
   recheck?: (ids?: string[]) => Promise<void>;
   /**
@@ -153,7 +165,21 @@ const HOLD_MS = 800;
  * A phone-sized page of its own, like the start screen.
  */
 export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, readingExtras, sending = false, ...result }: PlanCheckProps) {
-  const { view, settled } = useReveal(latest);
+  const { view, settled } = useReveal(latest, Boolean(readingExtras));
+  const { shown: shownNotice, show: showNotice, hide: hideNotice } = useToastState();
+  const onReading = view.stage === "received" || view.stage === "reading" || Boolean(readingExtras);
+  // The reading screen owns one notice; the header hands notices to this owner.
+  useEffect(() => onReading ? onToast(showNotice) : undefined, [onReading, showNotice]);
+  // 읽기 판이 결과 판으로 바뀌어도 바로 누른 머리줄 안내와 되돌리기 동작을 새 소유자에게 넘긴다.
+  useReadingToastHandoff(onReading, shownNotice, hideNotice);
+  const notified = useRef(new Set<string>());
+  const noticeKey = notice ? JSON.stringify([notice.text, notice.sub, notice.note]) : null;
+  useEffect(() => {
+    if (!notice || !noticeKey || notified.current.has(noticeKey)) return;
+    notified.current.add(noticeKey);
+    if (onReading) showNotice(notice);
+    else pushToast(notice);
+  }, [notice, noticeKey, onReading, showNotice]);
   const t = useT();
   useEffect(() => {
     if (!settled || !onCaughtUp) return;
@@ -164,14 +190,13 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, readingExt
   // ★`[2026-10-07 사용자 지적 — 화면이 읽는 중 ↔ 확인으로 오간다]` While questions are on the screen (`readingExtras`) the reading screen STAYS, whatever stage the server has got to: the bar at its top
   //   carries the stage. It used to give way to the check screen as soon as the server's check began and was then pulled back to the reading screen when the server finished (the questions hold the page),
   //   and the check was drawn again from the first step once the customer was let through.
-  const onReading = view.stage === "received" || view.stage === "reading" || Boolean(readingExtras);
   const floating = !onReading && (view.stage === "checking" || view.stage === "done");
   return <DeviceFrame floating={floating} guardianIcon>
-    <div className={styles.screen} data-stage={view.stage} data-floating={floating || undefined}
+    <div className={styles.screen} data-stage={view.stage} data-replay={readingExtras ? "paused" : "playing"} data-floating={floating || undefined}
       {...(readingExtras && { onPointerDownCapture: readingExtras.onActivity, onKeyDownCapture: readingExtras.onActivity, onWheelCapture: readingExtras.onActivity, onTouchStartCapture: readingExtras.onActivity })}>
-      {notice}
-      {onReading ? <Reading view={view} onBack={onBack} extras={readingExtras} /> : <Checking view={view} {...result} />}
-      <p className="sr-only" role="status">{sending ? t("계획을 서버로 보내고 있어요.", "Sending your plan to the server.") : announce(view, t)}</p>
+      {onReading ? <Reading view={readingExtras ? latest : view} onBack={onBack} extras={readingExtras} /> : <Checking view={view} sourceView={latest} {...result} />}
+      {onReading && shownNotice && <ToastView key={shownNotice.stamp} toast={shownNotice.toast} onDone={hideNotice} />}
+      <p className="sr-only" role="status">{sending ? t("계획을 서버로 보내고 있어요.", "Sending your plan to the server.") : announce(readingExtras ? latest : view, t)}</p>
     </div>
   </DeviceFrame>;
 }
@@ -200,7 +225,8 @@ function ProgressBar({ view }: { view: PlanCheckView }) {
   const reached = (index: number) => view.stage === "done" || (index === 0 ? view.stage !== "received" : index === last ? false : exact >= (index / last) * 100 - 0.05);
   const waitingAt = labels.findIndex((_, index) => !reached(index));
   // ★`[2026-10-03]` The server's "장소 3/14 · 광장시장" count comes while it reads, so the big bar says it too.
-  const at = view.serverProgress ? serverProgressText(view.serverProgress, t) : null;
+  // A terminal result supersedes the last partial SSE count; never announce it as still running.
+  const at = view.stage !== "done" && view.serverProgress ? serverProgressText(view.serverProgress, t) : null;
   return <div className={styles.progress} data-size="large" role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
     aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%${at ? ` · ${at}` : ""}`}>
     <div className={styles.track}><span className={styles.fill} style={{ width: `${Math.min(100, exact)}%` }} /></div>
@@ -224,7 +250,7 @@ function HeaderProgress({ view }: { view: PlanCheckView }) {
   const value = Math.round(progress(view));
   // ★`[2026-10-03 사용자 지시]` What the server says it is at ("3/14 · 광장시장 운영시간 확인 중"): only when it sent a `progress` packet.
   // ★A "places" count belongs to the reading: once the check has begun, a left-over "13/14 · … 장소 확인 중" would keep saying that while the hours and legs are drawn.
-  const at = view.serverProgress && view.serverProgress.phase !== "places" ? serverProgressText(view.serverProgress, t) : null;
+  const at = view.stage !== "done" && view.serverProgress && view.serverProgress.phase !== "places" ? serverProgressText(view.serverProgress, t) : null;
   return <div className={styles.headProgress} role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
     aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%${at ? ` · ${at}` : ""}`}>
     <span className={styles.headStep}>{labels[current]}<b>{value}%</b></span>
@@ -315,10 +341,10 @@ function Reading({ view, onBack, extras }: { view: PlanCheckView; onBack: () => 
 const SHEETS = ["half", "full", "peek"] as const;
 type Sheet = (typeof SHEETS)[number];
 
-/** Under this height (px) the sheet keeps only its handle and its two buttons: there is no room left for a list worth reading (`[2026-10-04 사용자]`). */
+/** Under this height (px) there is no room left for a list worth reading. */
 const COMPACT_BELOW = 190;
-/** The least the sheet can be dragged to: the handle and the buttons. */
-const SHEET_MIN = 104;
+/** The fully folded sheet keeps only a handle with a 44px press target. */
+const SHEET_MIN = 44;
 
 interface Toast { text: string; sub?: string; undo?: boolean; /** An error: it stays until closed or swiped away. */ stay?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string; /** How long it stays when the default is too short (`lib/toast-bus.ts`). */ ms?: number }
 
@@ -332,12 +358,13 @@ function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: Readon
 }
 
 /** ③④⑤ The map under a floating bar, the sheet over it. Once done, the list and the map are worked together. */
-function Checking({ view, actions = {}, registration, tripIssues = [], previewView = null, routes = null, onMapZoom }: { view: PlanCheckView } & ResultProps) {
+function Checking({ view, sourceView, actions = {}, registration, tripIssues = [], previewView = null, routes = null, onMapZoom }: { view: PlanCheckView; sourceView: PlanCheckView } & ResultProps) {
   const t = useT();
   const { language, skipAnimation } = useSettings();
   const done = view.stage === "done";
   // What the customer picked once the check is done: one card or move open, one place selected, one day on the map.
   const [openAt, setOpenAt] = useState<{ list: "before" | "after"; id: string } | null>(null);
+  const [mapMoving, setMapMoving] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   // `[2026-10-06 사용자 지시]` The route line the customer pressed on the map (the id of its shape): drawn picked, its leg opened in the list and described in the card over the map.
   const [selectedLine, setSelectedLine] = useState<string | null>(null);
@@ -359,18 +386,22 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
       action: value.undo || value.revert ? { label: value.undoLabel ?? latest.current?.t("되돌리기", "Undo") ?? "", run: value.revert ?? (() => latest.current?.undo()) } : undefined,
     });
   }, [hideToast, showToast]);
+  usePlanIntroToast(done, showToast, t);
   const [working, setWorking] = useState(false);
-  const searchInput = useRef<HTMLInputElement>(null);
+  const [changeToolsOpen, setChangeToolsOpen] = useState(false);
   // `[2026-10-03 사용자]` The place search lives in the header, where the brand stands: small there, and wide while it has focus.
   const headerSlot = useContext(HeaderSlot);
-  const [searchOpen, setSearchOpen] = useState(false);
   // The list's height: one of three presets (the handle cycles them) or a height the customer dragged it to.
   const [custom, setCustom] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
   const [compact, setCompact] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [mapTight, setMapTight] = useState(false);
   const checkingBox = useRef<HTMLDivElement>(null);
+  const resetFocusPending = useRef(false);
   const sheetBox = useRef<HTMLElement>(null);
   const bodyBox = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (!selected) bodyBox.current?.style.removeProperty("--focus-room"); }, [selected]);
   // `[2026-10-05 사용자 지시]` The plan as it was and the proposed plan are TWO PAGES, like the first screens of the app: one is shown at a time, and the turn from one to the other
   //   happens past a threshold (the pull at the end / the start of the list fills a bar, let go early and it springs back) with the dots to say where we are - not one list glued
   //   together. Where the customer had got to on the plan as it was is kept (`pageAt`) for the way back.
@@ -402,6 +433,10 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   // `[2026-10-04]` Stops changed since the plan was last sent (and what each had been); stops marked for deletion (really taken out when the plan is sent again).
   const [changed, setChanged] = useState<Record<string, string>>({});
   const [removed, setRemoved] = useState<string[]>([]);
+  const [inserting, setInserting] = useState<InsertionPoint | null>(null);
+  const [mapPicking, setMapPicking] = useState(false);
+  const [mapCoordinate, setMapCoordinate] = useState<Coordinates | null>(null);
+  const [addingBusy, setAddingBusy] = useState(false);
   const removedSet = useMemo(() => new Set(removed), [removed]);
   // `[2026-10-04 사용자]` 한 번 더 확인할 때 바뀐 곳만 확인 표시가 다시 하나씩 켜진다.
   const [replay, setReplay] = useState<{ ids: string[]; at: number } | null>(null);
@@ -419,7 +454,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const stripBox = useRef<HTMLDivElement>(null);
   const markerBox = useRef<HTMLSpanElement>(null);
   // `[2026-10-06 사용자 지시]` What the customer did elsewhere on this screen (the Course Keeper turned on or off in the header) is told in THIS bar, like every other notice here.
-  useEffect(() => onToast((notice) => setToast({ text: notice.text, sub: notice.sub, ms: notice.ms, undo: Boolean(notice.action), revert: notice.action ? () => { notice.action?.run(); } : undefined, undoLabel: notice.action?.label })), [setToast]);
+  // Bus ownership and the first-visit notice are registered together above.
   // The preview is gone from the page (the plan changed some other way): the list is the plan as it is.
   const hadPreview = useRef(false);
   useEffect(() => {
@@ -432,8 +467,15 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   useEffect(() => {
     const element = sheetBox.current;
     if (!element || typeof ResizeObserver === "undefined") return;
-    const watcher = new ResizeObserver(() => { lastSheetHeight.current = element.offsetHeight; const next = element.getBoundingClientRect().height < COMPACT_BELOW; setCompact((current) => current === next ? current : next); });
+    const watcher = new ResizeObserver(() => {
+      const height = element.offsetHeight;
+      lastSheetHeight.current = height;
+      setCompact(height < COMPACT_BELOW);
+      setCollapsed(height <= SHEET_MIN);
+      setMapTight((checkingBox.current?.clientHeight ?? 0) - height < 136);
+    });
     watcher.observe(element);
+    if (checkingBox.current) watcher.observe(checkingBox.current);
     return () => watcher.disconnect();
   }, []);
   // ★`[2026-10-06 사용자 지적 — 여행 일정 창 확대·축소가 부드럽지 않다]` The list takes its new height at once (nothing inside re-flows while it moves; the map's edge follows with the same curve) and SLIDES there as a transform
@@ -465,9 +507,9 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   /** Back to the card's own button after the change screen closes. */
   const refocus = (id: string, which: "edit" | "delete") => requestAnimationFrame(() => document.getElementById(`plan-${which}-${id}`)?.focus());
 
-  const firstDay = shown.days[0]?.day ?? 1;
+  const firstDay = shown.days.find((day) => shown.items.some((item) => item.day === day.day))?.day ?? 1;
   // While checking, the map follows the day being checked; once done it shows the day picked (the first by default).
-  const mapDay = changing ? changing.day : done ? chosenDay ?? firstDay : shown.items.at(-1)?.day ?? firstDay;
+  const mapDay = changing ? changing.day : done ? (chosenDay !== null && shown.items.some((item) => item.day === chosenDay) ? chosenDay : firstDay) : shown.items.at(-1)?.day ?? firstDay;
   const days = shown.days.filter((day) => shown.items.some((item) => item.day === day.day));
   // Places the server could not settle have no pin; say so on the map, as the mockup's 「위치 미정」 tag does.
   const unlocated = changing ? [] : shown.items.filter((item) => item.day === mapDay && item.verdict !== null && !item.coordinates);
@@ -496,17 +538,29 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   function pick(id: string, from: "map" | "list", list: "before" | "after" = previewing && side === "after" ? "after" : "before") {
     const item = shown.items.find((entry) => entry.id === id);
     if (!item) return;
-    if (selected === id) { setSelected(null); closeOpen(id); if (from === "map") setToast(null); return; }
+    if (selected === id) { setSelected(null); closeOpen(id); return; }
+    // A marker replaces the route explanation with the list's own place details.
+    if (selectedLine && from === "map") setToast(null);
     setSelectedLine(null);
     setSelected(id);
     setChosenDay(item.day);
     setOpen(id, list);
     if (from === "map") {
       if (sheet === "peek") setSheet("half");
-      const bringUp = () => requestAnimationFrame(() => document.getElementById(`${list === "after" ? "after-" : ""}plan-card-${id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+      const bringUp = () => requestAnimationFrame(() => requestAnimationFrame(() => {
+        const box = bodyBox.current;
+        const card = document.getElementById(`${list === "after" ? "after-" : ""}plan-card-${id}`);
+        const row = card?.closest<HTMLElement>('li[data-type="item"]') ?? card;
+        if (!box || !row) return;
+        const head = sheetBox.current?.querySelector<HTMLElement>(`header.${styles.sheetHead}`);
+        const visibleTop = Math.max(box.getBoundingClientRect().top, head?.getBoundingClientRect().bottom ?? 0) + 12;
+        // Reserve only the missing room; the source and preview hint already provide space below the final stop.
+        box.style.removeProperty("--focus-room");
+        const target = box.scrollTop + row.getBoundingClientRect().top - visibleTop;
+        box.style.setProperty("--focus-room", `${Math.max(0, target - (box.scrollHeight - box.clientHeight))}px`);
+        dampedScrollTo(box, target);
+      }));
       bringUp();
-      // ★`[2026-10-06 사용자 지시 — 마커를 누르면 그 설명이 알림으로]` What the pin says, in the one notice every screen uses.
-      showToast(stopToast({ item, order: mapStops.findIndex((stop) => stop.id === id) + 1 || 1 }, t, bringUp));
     }
   }
   /**
@@ -613,6 +667,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   }
   /** `[2026-10-07]` The customer said which reading of the photo is right. Keeping the current one only confirms it; the other one changes the name (or booking number). */
   function pickReading(item: PlanItem, reread: Reread, value: string) {
+    if (item.locked) { setToast({ text: t("고정한 일정이라 바꿀 수 없어요 · 잠금을 풀면 수정할 수 있어요", "Locked · unlock it to change it") }); return; }
     const was = wasText(item);
     const what = reread.field === "title" ? t("이름", "name") : t("예약번호", "booking number");
     void run(async () => {
@@ -628,8 +683,16 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     const on = !item.locked;
     void run(async () => {
       await actions.lock!(item.id, on);
+      if (on && timeEdit.edit?.id === item.id) timeEdit.close();
       return on ? { text: t(`${eul(item.title)} 꼭 넣을 일정으로 고정했어요`, `Locked ${item.title} in`), sub: t("다시 짜거나 바꿔도 빠지지 않게 서버에 알렸어요", "Re-planning and recommendations keep it") }
         : { text: t(`${item.title} 고정을 풀었어요`, `Unlocked ${item.title}`), sub: t("이제 바꾸거나 삭제할 수 있어요", "It can be changed or deleted now") };
+    }, true);
+  }
+  function unlockAll() {
+    void run(async () => {
+      const count = await actions.unlockAll!();
+      requestAnimationFrame(() => document.getElementById("plan-recommend-all")?.focus({ preventScroll: true }));
+      return { text: t(`일정 ${count}개의 잠금을 모두 풀었어요`, `Unlocked all ${count} stops`) };
     }, true);
   }
   /**
@@ -649,11 +712,15 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     refocus(item.id, "delete");
   }
   // ★`[2026-10-04 사용자 지시]` The time at the left of a stop is changed in place (`useTimeEdit`): typed, dragged by the grip or stepped, the stops around it pushed along if the switch is on.
-  //   What it looked like when the screen opened is kept (`baseline`): a stop whose time differs has 「되돌리기」, and the head has 「시간 초기화」.
+  //   What it looked like when the screen opened is kept (`baseline`): a stop whose time differs has 「되돌리기」, and the change menu has 「바꾼 시간 모두 되돌리기」.
   const baseline = useRef<Record<string, { start: string; end: string }>>({});
   useEffect(() => {
-    if (done && view.items.length && !Object.keys(baseline.current).length) baseline.current = Object.fromEntries(view.items.map((item) => [item.id, { start: item.startsAt, end: item.endsAt }]));
-  }, [done, view.items]);
+    if (sourceView.stage !== "done") return;
+    // Capture the complete snapshot, before the paced drawing can fall behind a later time edit.
+    for (const item of sourceView.items) {
+      if (!baseline.current[item.id]) baseline.current[item.id] = { start: item.startsAt, end: item.endsAt };
+    }
+  }, [sourceView.stage, sourceView.items]);
   const adjustedIn = (plan: PlanCheckView | null) => new Set((plan?.items ?? []).filter((item) => {
     const first = baseline.current[item.id];
     return first !== undefined && (first.start !== item.startsAt || first.end !== item.endsAt);
@@ -666,6 +733,11 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   /** Send a batch of new times - ONE request, however many stops move - and say what was done; the toast's 「되돌리기」 sends the old times back. */
   async function sendTimes(list: "before" | "after", changes: Retime[], text: string, quiet = false): Promise<void> {
     const plan = list === "after" && previewView ? previewView : view;
+    const fixed = changes.find((change) => {
+      const item = plan.items.find((entry) => entry.id === change.id);
+      return item && (item.locked || item.booked === true) && (item.startsAt !== formatHm(change.start) || item.endsAt !== (change.end === null ? "" : formatHm(change.end)));
+    });
+    if (fixed) throw new Error(t("고정·예약 일정의 시간은 바꿀 수 없어요 · 잠금을 풀거나 다른 일정을 조정해 주세요", "Locked or booked times cannot change · unlock it or adjust another stop"));
     const was = changes.flatMap((change) => { const old = timesOf(plan, change.id); return old ? [old] : []; });
     const title = (id: string) => plan.items.find((entry) => entry.id === id)?.title ?? id;
     const clock = (change: Retime) => `${formatHm(change.start)}${change.end === null ? "" : `–${formatHm(change.end)}`}`;
@@ -697,6 +769,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   });
   /** One stop back to the time it had when the screen opened (the stops around it are pushed only if that is needed to make room). */
   function revertTime(item: PlanItem) {
+    if (item.locked || item.booked === true) { setToast({ text: t("고정·예약 일정의 시간은 바꿀 수 없어요", "Locked or booked times cannot change") }); return; }
     const first = baseline.current[item.id];
     const list = previewing && side === "after" ? "after" : "before";
     const plan = list === "after" && previewView ? previewView : view;
@@ -711,14 +784,27 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   /** Every stop whose time was changed back to the time it had when the screen opened, in one request. */
   function resetTimes() {
     const list = previewing && side === "after" ? "after" : "before";
-    const plan = list === "after" && previewView ? previewView : view;
+    // A completed edit can already change three stops while useReveal has drawn only one. Undo the actual snapshot.
+    const plan = list === "after" && previewView ? previewView : sourceView;
     const changes = [...adjustedIn(plan)].flatMap((id): Retime[] => {
+      const item = plan.items.find((entry) => entry.id === id);
+      if (item?.locked || item?.booked === true) return [];
       const first = baseline.current[id];
       const start = parseHm(first?.start ?? "");
       return first && start !== null ? [{ id, start, end: parseHm(first.end) }] : [];
     });
-    if (!changes.length) return;
-    void sendTimes(list, changes, t("시간을 모두 처음으로 되돌렸어요", "Put every time back"), true).catch((error: unknown) => setToast({ text: reason(error), stay: true }));
+    if (!changes.length) { setToast({ text: t("고정·예약 일정은 그대로 유지했어요", "Locked or booked stops were kept") }); return; }
+    resetFocusPending.current = true;
+    void sendTimes(list, changes, t("시간을 모두 처음으로 되돌렸어요", "Put every time back"), true)
+      .catch((error: unknown) => { resetFocusPending.current = false; setToast({ text: reason(error), stay: true }); })
+      .finally(() => requestAnimationFrame(() => {
+        if (document.activeElement !== document.body && !document.activeElement?.classList.contains(styles.changeCount)) return;
+        const box = checkingBox.current;
+        // The trigger disappears after all changes are undone; leave keyboard focus on the adjacent check button instead.
+        (box?.querySelector<HTMLButtonElement>(`button.${styles.changeCount}`)
+          ?? box?.querySelector<HTMLButtonElement>(`button.${styles.mapNeeds}`)
+          ?? box?.querySelector<HTMLButtonElement>(`button.${styles.handle}`))?.focus();
+      }));
   }
   /** What the recommendation did or would do, as the line under the toast title. */
   const changesLine = (outcome: AutoResult) => outcome.changes.slice(0, 2).join(" · ") + (outcome.changes.length > 2 ? t(` 외 ${outcome.changes.length - 2}곳`, ` and ${outcome.changes.length - 2} more`) : "")
@@ -844,6 +930,20 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     setToast(null);
     void run(async () => { await actions.undo!(); return { text: t("되돌렸어요", "Undone"), sub: t("바꾸기 전으로 돌렸어요", "Back to how it was") }; });
   }
+  function undoAll() {
+    void run(async () => {
+      if (!actions.canUndoAll?.()) {
+        if (!removed.length) return null;
+        setRemoved([]);
+        return { text: t("삭제 대기를 취소했어요", "Cancelled pending deletions") };
+      }
+      await actions.undoAll!();
+      setChanged({}); setRemoved([]); setFilter(null); setChangeToolsOpen(false); setOpen(null);
+      setRecommended(null); setSide("before"); actions.discardPreview?.();
+      requestAnimationFrame(() => checkingBox.current?.querySelector<HTMLButtonElement>(`button.${styles.mapNeeds}`)?.focus());
+      return { text: t("변경사항을 모두 되돌렸어요", "All changes undone") };
+    }, true);
+  }
   useEffect(() => { latest.current = { t, undo }; });
 
   // The checks of the stops that were changed come in once more, one at a time, after the plan has been checked again.
@@ -924,11 +1024,22 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const needCount = needsLeft(shown, removedSet).total;
   const changedMap: Record<string, string> = previewing && side === "after" && recommended ? { ...changed, ...recommended.was } : changed;
   const changedCount = Object.keys(changedMap).filter((id) => !removedSet.has(id)).length;
+  const firstNeed = shown.items.find((item) => item.verdict === "review" && !removedSet.has(item.id));
+  const firstMoveNeed = shown.moves.find((move) => move.verdict === "review" && !removedSet.has(move.fromId) && !removedSet.has(move.toId));
+  const changedItem = shown.items.find((item) => changedMap[item.id] && !removedSet.has(item.id));
+  const mapSummary = !done || changing || registered ? null
+    : firstNeed ? t(`확인 필요 · ${firstNeed.title}`, `Needs a look · ${firstNeed.title}`)
+      : firstMoveNeed ? t(`이동 확인 · ${shown.items.find((item) => item.id === firstMoveNeed.fromId)?.title ?? ""} → ${shown.items.find((item) => item.id === firstMoveNeed.toId)?.title ?? ""}`, `Check travel · ${shown.items.find((item) => item.id === firstMoveNeed.fromId)?.title ?? ""} → ${shown.items.find((item) => item.id === firstMoveNeed.toId)?.title ?? ""}`)
+        : actions.canUndoAll?.() ? changedItem ? t(`변경됨 · ${changedItem.title}`, `Changed · ${changedItem.title}`) : removed.length > 0 ? t(`삭제한 일정 ${removed.length}곳 · 되돌리기 가능`, `${removed.length} removed stops · can undo`) : t("변경한 내용 · 되돌리기 가능", "Changes · can undo") : null;
+
   // The filter ends by itself when nothing is left to show.
   const filtering = done && filter !== null && (filter === "needs" ? needCount > 0 : changedCount > 0);
   // ★`[2026-10-04 사용자 결정]` With more than one day the list shows one day at a time, with a strip of day chips above it (and a swipe sideways to the next or
   //   the previous day); 「전체」 and the filters show every day as before. The map follows the day.
-  const dayStrip = done && !changing && days.length > 1;
+  const dayStrip = done && !changing && days.length > 0;
+  const quietDays = useQuietDayStrip(stripBox, dayStrip, false, bodyBox);
+  const submitBox = useRef<HTMLElement>(null);
+  const quietSubmit = useQuietDayStrip(submitBox, done && !changing && !inserting, collapsed);
   const listDay: number | "all" = !dayStrip || dayChoice === "all" || filtering ? "all" : mapDay;
   const dayAt = days.findIndex((day) => day.day === listDay);
   const needsOfDay = (day: number) => timeline(shown, day).filter((entry) => (entry.type === "item" ? entry.item.verdict : entry.move.verdict) === "review"
@@ -948,10 +1059,13 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   }
   function chooseAllDays() { setSlide(null); setFilter(null); setDayChoice("all"); bodyBox.current?.scrollTo({ top: 0 }); }
   const neighbourOf = (side: -1 | 1) => (dayAt < 0 ? undefined : days[dayAt + side]);
+  const markerProgress = useRef({ shift: 0, width: 1 });
+  const measureMarker = useRef<() => void>(() => {});
   /** Where the marker under the day chips stands: on the chip of the day shown, or between it and its neighbour while the list is dragged (`shift` of `width`: negative = toward the next day). */
   function placeMarker(shift = 0, width = 1) {
+    markerProgress.current = { shift, width };
     const strip = stripBox.current, marker = markerBox.current;
-    if (!strip || !marker) return;
+    if (!strip || !marker || !strip.clientWidth) return;
     const tabs = Array.from(strip.querySelectorAll<HTMLElement>('[role="tab"]'));
     const at = listDay === "all" ? 0 : dayAt + 1;
     const here = tabs[at];
@@ -971,7 +1085,23 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     const tab = stripBox.current?.querySelectorAll<HTMLElement>('[role="tab"]')[listDay === "all" ? 0 : dayAt + 1];
     tab?.scrollIntoView?.({ inline: "center", block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   // eslint-disable-next-line react-hooks/exhaustive-deps -- `placeMarker` reads the current day itself
-  }, [listDay, dayStrip, days.length, language]);
+  }, [listDay, dayStrip, days.length, language, side, compact, inserting]);
+  useLayoutEffect(() => {
+    measureMarker.current = () => placeMarker(markerProgress.current.shift, markerProgress.current.width);
+  });
+  // `[2026-10-11]` Badge/font widths and hidden→visible layouts can change without changing the day.
+  // Observe the tabs as well as the strip; keep the current drag fraction while remeasuring.
+  useLayoutEffect(() => {
+    const strip = stripBox.current;
+    if (!dayStrip || !strip) return;
+    let live = true;
+    const measure = () => { if (live) measureMarker.current(); };
+    const observer = new ResizeObserver(measure);
+    observer.observe(strip, { box: "border-box" });
+    strip.querySelectorAll<HTMLElement>('[role="tab"]').forEach((tab) => observer.observe(tab, { box: "border-box" }));
+    void document.fonts.ready.then(measure);
+    return () => { live = false; observer.disconnect(); };
+  }, [dayStrip, days.length]);
   /** Pinched as far in as it goes, the day list becomes the overview of every day; pinched as far out as it goes from the overview, one day. Between: the size the customer asked for stays. */
   function endPinch(zoom: number) {
     const zoomEl = zoomBox.current;
@@ -982,7 +1112,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   }
   useCenterTools(bodyBox, done && !changing);
   useDayGestures(bodyBox, {
-    swipe: dayStrip && !filtering,
+    swipe: dayStrip && !filtering && !inserting,
     hasPrev: dayAt > 0,
     hasNext: dayAt >= 0 && dayAt < days.length - 1,
     track: () => trackBox.current,
@@ -1024,8 +1154,40 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
     onEnd: previewing && side === "before" ? () => flip("after") : canRecommend && !frozen ? (noFixNow ? nudge : () => recommendAll("pull")) : undefined,
     onStart: previewing && side === "after" ? () => flip("before") : undefined,
   });
+  const creditMuted = Boolean(slide || turn || swap || peek.side !== 0 || pull.progress > 0);
+  // 애니메이션이 없는 설정이나 DOM 교체로 종료 이벤트가 빠져도 출처가 숨은 채 남지 않는다.
+  useEffect(() => {
+    if (!slide && !turn && !swap) return;
+    const timer = setTimeout(() => { setSlide(null); setTurn(null); setSwap(null); }, matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 650);
+    return () => clearTimeout(timer);
+  }, [slide, turn, swap]);
   // `[2026-10-03 사용자]` While the check is drawn row by row the list follows the newest row (it stayed at the top while rows were added below).
-  const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view);
+  const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view, "center");
+  const canInsert = Boolean(actions.add) && done && !registered && !previewing && !changing && !filtering && !frozen && !timeEdit.edit && !removed.length;
+  useInsertionPoint(bodyBox, canInsert && !inserting, `${planKey}|${listDay}|${listZoom}`);
+  const closeInsertion = (key: string) => {
+    if (addingBusy) return;
+    setMapPicking(false); setMapCoordinate(null); setInserting(null); setSlide("prev");
+    requestAnimationFrame(() => {
+      const button = document.getElementById(`plan-insert-${key}`);
+      const box = bodyBox.current;
+      if (box && button) dampedScrollTo(box, box.scrollTop + button.getBoundingClientRect().top - box.getBoundingClientRect().top - box.clientHeight / 2 + button.offsetHeight / 2);
+      button?.focus({ preventScroll: true });
+    });
+  };
+  const backGesture = useBackgroundBack(Boolean(inserting) && !addingBusy, () => { if (mapPicking) setMapPicking(false); else if (inserting) closeInsertion(inserting.key); });
+  const renderInsertion = (point: InsertionPoint) => {
+    const label = point.side === "before-move"
+      ? t(`${point.previous} 다음 이동 전에 일정 추가`, `Add a stop before leaving ${point.previous}`)
+      : point.next ? t(`${point.next} 전에 일정 추가`, `Add a stop before ${point.next}`)
+        : t(`${point.previous} 다음에 일정 추가`, `Add a stop after ${point.previous}`);
+    return <li key={point.key} className={styles.insertPoint} data-insert-point={point.key} data-insert-start={!point.previous || undefined}>
+      <button type="button" id={`plan-insert-${point.key}`} className={styles.insertButton} aria-label={label} aria-describedby={`plan-insert-tip-${point.key}`}
+        onClick={() => { setAddingBusy(false); setInserting(point); if (sheet === "peek") setSheet("half"); }}>
+        <Plus size={18} strokeWidth={1.8} aria-hidden="true" /><span id={`plan-insert-tip-${point.key}`} className={styles.iconTip} role="tooltip">{label}</span>
+      </button>
+    </li>;
+  };
   // ★`[2026-10-06 사용자 지적 — 첫 화면이 왜 애매하게 1일차 마지막 일정에 가 있나]` While the check is drawn the list follows the newest row, so it ends where the last row was drawn - in the middle of day 1.
   //   When the check is done the list goes back to the very top (the first stop of the first day), once.
   const wentTop = useRef(false);
@@ -1038,6 +1200,26 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   // The change screen's map: the day's other stops greyed, the stop being changed, and its alternatives A, B, C.
   const cards = change ? change.list : [];
   const mapStops: TripStop[] = changing ? changeStops(view, changing, cards) : stopsOf(shown, mapDay);
+  const emptyMapInList = done && !changing && !inserting && mapTight && mapStops.length > 0 && mapStops.every(stop => !stop.coordinates);
+  useLayoutEffect(() => {
+    const box = bodyBox.current;
+    if (!done || changing || inserting || !box) return;
+    const header = sheetBox.current?.querySelector<HTMLElement>(`header.${styles.sheetHead}`);
+    const measure = () => {
+      const css = getComputedStyle(box);
+      const overlayBottom = header?.hasAttribute("data-float")
+        ? header.getBoundingClientRect().bottom - parseFloat(getComputedStyle(header).paddingBottom) : box.getBoundingClientRect().top;
+      const hiddenAbove = Math.max(0, overlayBottom - box.getBoundingClientRect().top);
+      // Native sticky starts at the padded scroll edge; the text also has an optical lead above it.
+      const inset = hiddenAbove - parseFloat(css.paddingTop) - parseFloat(css.getPropertyValue("--stop-time-lead"));
+      box.style.setProperty("--time-stick-inset", `${inset}px`);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(box);
+    if (header) observer.observe(header);
+    return () => observer.disconnect();
+  }, [done, changing, inserting, dayStrip, emptyMapInList, side]);
   // ★`[2026-10-07 사용자 지시]` While the list shows only what needs a look, the map does too: those pins in the warning colours, every other pin grey and not pressable.
   const needsOnMap = done && !changing && filtering && filter === "needs";
   const looks: Record<string, PinLook> | undefined = changing ? changeLooks(view, changing, cards)
@@ -1057,8 +1239,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   // The lines belong to the plan as it is: for the proposed one only those between stops it did not change are still true (a changed place moves its ends).
   const lineShapes = !routes || changing ? null : previewing && side === "after" && recommended
     ? { ...routes, shapes: routes.shapes.filter((shape) => !(shape.fromItemId in recommended.was) && !(shape.toItemId in recommended.was)) } : routes;
-  // The lines of the day on the map (what the legend names).
-  const routeShapes = visibleShapes(lineShapes?.shapes, mapStops);
+  // The lines of the day on the map, for attribution and source notes.
   const drawn = visibleShapes(lineShapes?.shapes, mapStops);
 
   const applyWhy = !changing ? null : !actions.replace ? t("장소 바꾸기는 준비 중이에요", "Changing the place is coming")
@@ -1130,53 +1311,78 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
   const contextAfter = contextFor({ ...changed, ...(recommended?.was ?? {}) }, "after");
   const heading = (day: PlanDay) => dayHeading(day, language, t);
   const nextDay = typeof listDay === "number" && dayAt >= 0 && dayAt < days.length - 1 && !changing ? days[dayAt + 1] : null;
-  const adjustedNow = adjustedIn(previewing && side === "after" ? previewView : view).size;
+  const adjustedNow = adjustedIn(previewing && side === "after" ? previewView : sourceView).size;
+  // 요청 완료 직후의 rAF는 아직 사라지기 전 변경 버튼을 볼 수 있다. 새 DOM 반영 뒤 초점을 다시 확인한다.
+  useLayoutEffect(() => {
+    if (!resetFocusPending.current || adjustedNow !== 0) return;
+    resetFocusPending.current = false;
+    if (document.activeElement !== document.body && !document.activeElement?.classList.contains(styles.changeCount)) return;
+    (checkingBox.current?.querySelector<HTMLButtonElement>(`button.${styles.mapNeeds}`)
+      ?? checkingBox.current?.querySelector<HTMLButtonElement>(`button.${styles.handle}`))?.focus();
+  }, [adjustedNow]);
   const sheetTitle = registered ? t("등록 완료", "Registered") : !done ? t("장소·운영시간 확인", "Places & hours") : previewing && side === "after" ? t("수정안", "Proposed plan") : t("계획 확인", "Plan check");
   const rechecking = view.rechecking ? (() => {
     const order = view.days.flatMap((day) => view.items.filter((item) => item.day === day.day).map((item) => item.id));
     return { at: order.indexOf(view.rechecking) + 1, of: order.length };
   })() : null;
 
-  return <div ref={checkingBox} className={styles.checking} data-sheet={custom !== null ? "custom" : sheet} data-changing={changing ? true : undefined} data-dragging={dragging || undefined} data-compact={compact && done && !changing ? true : undefined}
-    style={custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
+  return <div ref={checkingBox} className={styles.checking} data-sheet={custom !== null ? "custom" : sheet} data-changing={changing ? true : undefined} data-dragging={dragging || undefined} data-compact={compact && done && !changing && !inserting ? true : undefined} data-collapsed={collapsed && done && !changing && !inserting ? true : undefined} data-empty-map-in-list={emptyMapInList || undefined}
+    {...quietDays.handlers} {...backGesture}
+    style={mapPicking ? { "--sheet-h": "min(320px, 55%)" } as CSSProperties : custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
     <div className={styles.map}>
-      <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" topInset={64} bottomInset={24} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin}
+      <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" onInteractionChange={setMapMoving} topInset={64} bottomInset={76} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin}
+        coordinatePick={mapPicking ? { value: mapCoordinate, onPick: setMapCoordinate } : undefined}
         selectedLineId={selectedLine ?? undefined} onSelectLine={done && !changing ? onLine : undefined} />
     </div>
-    {/* `[2026-10-05 사용자 지시]` 지도 아래 안내 줄: 위치 미정 표시와, 지도에 그려진 선이 무엇인지 말하는 태그(선 색 + 수단 이름). */}
-    {(unlocated.length > 0 || routeShapes.length > 0 || pinned || (done && !changing && needCount > 0)) && <div className={styles.mapChips}>
+    {/* `[2026-10-08 사용자 지시]` 확인·변경·장소 표시는 같은 막대에, 이동 수단 이름은 확대된 경로선에 표시한다. */}
+    {!mapPicking && (unlocated.length > 0 || pinned || mapSummary || (done && !changing && !registered && (needCount > 0 || changedCount > 0 || removed.length > 0 || actions.canUndoAll?.()))) && <div className={styles.mapChips} data-muted={mapMoving || undefined} inert={mapMoving} aria-hidden={mapMoving || undefined}>
+      <div className={styles.statusTools} role="group" aria-label={t("일정 확인과 변경", "Plan checks and changes")}>
+      {pinned
+        ? <p className={styles.picked} aria-live="polite"><b>{pinned.title}</b>{(pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category) && <> · {pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category}</>}</p>
+        : mapSummary ? <p className={styles.picked} data-map-summary aria-live="polite">{mapSummary}</p> : unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
       {/* ★`[2026-10-07 사용자 지시 — 「! 2」는 지도 쪽에]` The count of what needs a look stands on the map; pressed, the list and the map show only those. */}
       {done && !changing && !registered && needCount > 0 && <button type="button" className={styles.mapNeeds} aria-pressed={filter === "needs" && filtering}
         onClick={() => setFilter(filter === "needs" && filtering ? null : "needs")} aria-label={t(`확인 필요 ${needCount}곳`, `${needCount} to check`)}
         title={filter === "needs" && filtering ? t("눌러서 전체 일정 보기", "Press to show every stop") : t("눌러서 확인이 필요한 곳만 모아 보기", "Press to show only the stops that need a look")}>
         <span className={styles.mark} data-result="warn" aria-hidden="true">!</span><b>{needCount}</b></button>}
-      {pinned
-        ? <p className={styles.picked} aria-live="polite"><b>{pinned.title}</b>{(pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category) && <> · {pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category}</>}</p>
-        : unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
-      {routeShapes.length > 0 && <RouteTags shapes={routeShapes} />}
+      {done && !changing && !registered && changedCount > 0 && <div className={styles.changeTools}>
+        <button type="button" className={styles.changeCount} aria-expanded={changeToolsOpen} aria-controls="plan-change-tools"
+          aria-describedby="plan-change-count-tip"
+          aria-label={t(`바뀐 일정 ${changedCount}곳`, `${changedCount} changed`)}
+          onClick={() => { setChangeToolsOpen(!changeToolsOpen); setFilter(changeToolsOpen ? null : "changed"); }}>
+          <span className={styles.mark} data-result="filled"><ArrowLeftRight size={13} strokeWidth={1.8} aria-hidden="true" /></span><b>{changedCount}</b>
+        </button>
+        <span id="plan-change-count-tip" role="tooltip" className={styles.iconTip}>{t(`바뀐 일정 ${changedCount}곳`, `${changedCount} changed`)}</span>
+        {changeToolsOpen && <section id="plan-change-tools" className={styles.changePanel} aria-label={t("변경 관리", "Manage changes")}
+          onKeyDown={(event) => { if (event.key === "Escape") { setChangeToolsOpen(false); event.currentTarget.parentElement?.querySelector<HTMLButtonElement>("button")?.focus(); } }}>
+          <p>{t(`바뀐 일정 ${changedCount}곳을 보고 있어요.`, `Showing ${changedCount} changed stops.`)}</p>
+          {adjustedNow > 0 && <button type="button" className={styles.resetTimes} onClick={() => { resetTimes(); setChangeToolsOpen(false); }}
+            aria-label={t(`시간 조정 ${adjustedNow}곳 모두 처음으로`, `Put the ${adjustedNow} changed times back`)}>
+            <Undo2 size={14} aria-hidden="true" />{t("바꾼 시간 모두 되돌리기", "Undo all time changes")}
+          </button>}
+          <button type="button" onClick={() => { setFilter(null); setChangeToolsOpen(false); }}>{t("전체 일정 보기", "Show all stops")}</button>
+        </section>}
+      </div>}
+      {done && !changing && !registered && (removed.length > 0 || (actions.undoAll && actions.canUndoAll?.())) && <Act className={styles.undoAll} why={frozen} explain={explain} onPress={undoAll}
+        aria-label={t("전체 되돌리기", "Undo all changes")} tooltip={t("전체 되돌리기", "Undo all changes")}><RotateCcw size={17} strokeWidth={1.8} aria-hidden="true" /></Act>}
+      </div>
     </div>}
-    {changing && headerSlot && createPortal(
-      <div className={styles.headSearch} data-open={searchOpen || undefined} data-hide-brand>
-        <BackButton onBack={endChange} label={t("바꾸기 그만두기", "Stop changing")} />
-        <div className={styles.searchField}>
-          <Search size={16} strokeWidth={1.8} aria-hidden="true" />
-          <input ref={searchInput} type="search" value={query} placeholder={t(`${changing.title} 대신 찾을 장소`, `A place instead of ${changing.title}`)}
-            aria-label={t("장소 검색", "Search places")} autoComplete="off" onChange={(event) => setQuery(event.target.value)}
-            onFocus={() => setSearchOpen(true)} onBlur={() => setSearchOpen(false)}
-            onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); if (query) setQuery(""); else endChange(); } }} />
-          {query && <button type="button" className={styles.clear} aria-label={t("검색어 지우기", "Clear the search")} onClick={() => { setQuery(""); searchInput.current?.focus(); }}><X size={12} strokeWidth={2} aria-hidden="true" /></button>}
-        </div>
-      </div>, headerSlot)}
-    {!changing && headerSlot && createPortal(
+    {changing && <PlaceSearchHeader query={query} onQuery={setQuery} onBack={endChange} backLabel={t("바꾸기 그만두기", "Stop changing")} escapeClears placeholder={t(`${changing.title} 대신 찾을 장소`, `A place instead of ${changing.title}`)} />}
+    {!changing && !inserting && headerSlot && createPortal(
       <div className={styles.headInfo} data-title={(done && view.title) ? true : undefined}>
         {done && view.title
           ? <TripTitle title={view.title} onSave={actions.editTrip && !frozen && !registered ? renameTrip : undefined} />
-          : <><h1 className="sr-only">{t("계획을 확인하고 있어요", "Checking your plan")}</h1><HeaderProgress view={view} /></>}
+          : <><h1 className="sr-only">{t("계획을 확인하고 있어요", "Checking your plan")}</h1><HeaderProgress view={sourceView.stage === "done" ? sourceView : view} /></>}
       </div>, headerSlot)}
-    <section ref={sheetBox} className={styles.sheet} aria-labelledby={changing ? "plan-change-title" : "plan-check-sheet-title"}>
+    <section ref={sheetBox} className={styles.sheet} aria-labelledby={inserting ? undefined : changing ? "plan-change-title" : "plan-check-sheet-title"} aria-label={inserting ? t("일정 추가", "Add a stop") : undefined}>
       {done && <button type="button" className={styles.handle} aria-label={t("목록 높이 바꾸기", "Change the list height")} title={t("눌러서 높이를 바꾸고, 잡고 끌어 원하는 높이로 맞춰요", "Press to change the height, or drag it to any height")}
         onClick={cycleSheet} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet} onKeyDown={nudgeSheet}><span aria-hidden="true" /></button>}
-      {changing && change
+      {inserting ? <div className={`${styles.change} ${styles.page}`} data-slide="next">
+        <AddStop key={inserting.key} date={inserting.date} initial={{ start: inserting.start, end: inserting.end }} blocked={frozen} onBusy={setAddingBusy} onCancel={() => closeInsertion(inserting.key)}
+          mapPicker={{ active: mapPicking, value: mapCoordinate, onStart: () => { setMapCoordinate(null); setMapPicking(true); }, onClose: () => setMapPicking(false) }}
+          search={actions.searchToAdd ? (query) => actions.searchToAdd!(inserting.anchorId, query) : undefined}
+          onSave={async (draft) => { await actions.add!(draft); setAddingBusy(false); setInserting(null); setSlide("prev"); setToast({ text: t("일정을 추가하고 앞뒤 이동시간을 다시 확인했어요.", "Added the stop and checked travel times around it.") }); }} />
+      </div> : changing && change
         ? <PlaceChange item={changing} session={change} search={search} explain={explain} applyWhy={applyWhy} candidatesSupported={Boolean(actions.candidates)}
             onIndex={(index) => setChange({ ...change, index })} onApply={(candidate) => replace(changing, { candidate })} onApplyName={(name) => replace(changing, { name })}
             onPick={(candidate) => {
@@ -1199,9 +1405,10 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
                 }} />}
             </details>} />
         : <>
-          <header className={styles.sheetHead} data-float={done && dayStrip ? true : undefined} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
-            <h2 id="plan-check-sheet-title" className={dayStrip ? "sr-only" : styles.sheetTitle}>{sheetTitle}</h2>
+          <header className={styles.sheetHead} data-done={done || undefined} data-float={done && dayStrip ? true : undefined} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
+            <h2 id="plan-check-sheet-title" className={done || dayStrip ? "sr-only" : styles.sheetTitle}>{sheetTitle}</h2>
             {dayStrip && <div ref={stripBox} className={styles.dayStrip} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
+              data-at-top={quietDays.atTop || undefined} data-quiet={quietDays.hidden || undefined} aria-hidden={quietDays.hidden || undefined} inert={quietDays.hidden} {...quietDays.focusHandlers}
               onKeyDown={(event) => {
                 if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
                 const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]'));
@@ -1220,57 +1427,60 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
               })}
             </div>}
 
-            {done && !registered && adjustedNow > 0 && <button type="button" className={styles.resetTimes} onClick={resetTimes} aria-label={t(`시간 조정 ${adjustedNow}곳 모두 처음으로`, `Put the ${adjustedNow} changed time${adjustedNow > 1 ? "s" : ""} back`)} title={t("바꾼 시간을 모두 처음으로", "Put every changed time back")}><Undo2 size={13} strokeWidth={1.8} aria-hidden="true" />{t("시간 초기화", "Reset times")}</button>}
             <p className={styles.count}>{done
-              ? <HeadBadges needs={needCount} changed={changedCount} filter={filtering ? filter : null} onFilter={setFilter} registered={registered} rechecking={rechecking} needsOnMap />
+              ? (registered || rechecking ? <HeadBadges needs={needCount} changed={0} filter={null} onFilter={setFilter} registered={registered} rechecking={rechecking} needsOnMap /> : null)
               : countText(view, t)}</p>
           </header>
-          <div ref={bodyBox} className={styles.sheetBody} data-under-float={done && dayStrip ? true : undefined} {...follow.handlers} onScroll={follow.handlers.onScroll}>
+          <div ref={bodyBox} className={styles.sheetBody} data-next-preview={(canRecommend || (previewing && side === "before")) && !noFixNow || undefined} data-under-float={done && dayStrip ? true : undefined} {...quietSubmit.handlers} {...follow.handlers} onScroll={follow.handlers.onScroll}>
+            {emptyMapInList && <p className={styles.emptyMapNotice} role="status" data-empty-map-notice>{t("표시할 장소 좌표가 없어요.", "There are no place coordinates to display.")}<span>{t("일정에서 장소를 수정해 주세요.", "Edit the places in your stops.")}</span></p>}
+            {done && !registered && !previewing && <div className={styles.topActions}>
+            <Act id="plan-recommend-all" className={styles.autoAllTop} why={frozen ?? (!actions.previewRecommendAll ? t("전체 자동 추천은 준비 중이에요", "Recommending all is coming") : noFixNow ? noFixWhy : null)} explain={explain} onPress={() => recommendAll("button")}>
+              <Sparkles size={15} aria-hidden="true" />{t("전체 자동 추천", "Recommend all")}{needCount > 0 && <span className={styles.badge}>{needCount}</span>}
+            </Act>
+            {view.items.some((item) => item.locked) && <Act className={styles.unlockAllTop} why={frozen ?? (!actions.unlockAll ? t("전체 잠금 해제는 준비 중이에요", "Unlocking all is coming") : null)} explain={explain} onPress={unlockAll}>
+              <LockOpen size={15} aria-hidden="true" />{t("전체 잠금 해제", "Unlock all")}
+            </Act>}
+            </div>}
+            {done && !registered && !previewing && !view.items.length && actions.add && <AddStop date={days[0]?.date ?? ""} blocked={frozen} onSave={actions.add} />}
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
             {filtering && <p className={styles.filterNote} role="status">{filter === "changed" ? t("바뀐 곳만 보는 중이에요", "Showing only what changed") : t("확인이 필요한 곳만 보는 중이에요", "Showing only what needs a look")}
               <button type="button" onClick={() => setFilter(null)}>{t("전체 보기", "Show all")}</button></p>}
             {(() => {
               const proposed = previewing && side === "after" && previewView;
               /** A day of the list as the page shows it (also drawn beside the page while it is dragged). */
-              const dayList = (which: number | "all") => proposed
+              const dayList = (which: number | "all", insert = true) => proposed
                 ? <DayList view={listAfter ?? previewView} days={previewView.days.filter((day) => previewView.items.some((item) => item.day === day.day))} listDay={which} ctx={contextAfter} mapDay={mapDay} onShowDay={showDay} heading={heading} />
-                : <DayList view={listBefore} days={days} listDay={which} ctx={contextBefore} mapDay={mapDay} onShowDay={showDay} heading={heading} />;
+                : <DayList view={listBefore} days={days} listDay={which} ctx={{ ...contextBefore, insertion: insert && canInsert ? renderInsertion : undefined }} mapDay={mapDay} onShowDay={showDay} heading={heading} />;
               const near = peek.side === 0 ? undefined : neighbourOf(peek.side);
               const zoomStyle = listZoom === 1 ? undefined : { zoom: listZoom };
               return <div ref={trackBox} className={styles.dayTrack}>
                 {near && <div className={styles.peek} data-side={peek.side} style={{ top: peek.top, ...zoomStyle }} aria-hidden="true" inert>
                   <span className={styles.peekBadge}>{t(`놓으면 ${near.day}일차`, `Let go for day ${near.day}`)}</span>
-                  {dayList(near.day)}
+                  {dayList(near.day, false)}
                 </div>}
                 {peek.side !== 0 && peek.edge && <p className={styles.edgeNote} data-side={peek.side} style={{ top: peek.top + 28 }} aria-hidden="true">{peek.side === 1 ? t("마지막 날이에요", "Last day") : t("첫날이에요", "First day")}</p>}
                 <div ref={zoomBox} className={styles.dayZoom} data-swap={swap ?? undefined} style={zoomStyle} onAnimationEnd={(event) => { if (event.target === event.currentTarget) setSwap(null); }}>
               <div key={`${proposed ? "after" : "before"}:${String(listDay)}`} className={styles.page} data-slide={slide ?? undefined} data-proposed={proposed ? true : undefined} data-turn={turn ?? undefined}
-                data-pull={pull.edge ?? undefined} data-shake={shake || undefined} style={{ "--pull": pull.progress } as CSSProperties} onAnimationEnd={() => setTurn(null)}>
-                {proposed && <Act className={styles.pullHintTop} why={frozen} explain={explain} onPress={() => flip("before")} data-edge={pull.edge ?? undefined} style={{ "--pull": pull.edge === "start" ? pull.progress : 0 } as CSSProperties}>
-                  <ChevronsUp size={16} strokeWidth={1.8} aria-hidden="true" />
-                  <span>{t("계속 올리면 변경 전 일정이에요", "Keep going up for the plan as it was")}</span>
-                  <span className={styles.pullBar} aria-hidden="true"><span /></span>
-                </Act>}
+                data-pull={pull.edge ?? undefined} data-shake={shake || undefined} style={{ "--pull": pull.progress } as CSSProperties} onAnimationEnd={(event) => { if (event.target === event.currentTarget) { setTurn(null); setSlide(null); } }}>
+                {proposed && <PreviewHint direction="up" text={t("계속 올리면 변경 전 일정이에요", "Keep going up for the plan as it was")} why={frozen} explain={explain} onPress={() => flip("before")} edge={pull.edge ?? undefined} progress={pull.edge === "start" ? pull.progress : 0} />}
                 {dayList(listDay)}
               </div>
                 </div>
               </div>;
             })()}
             {/* ★`[2026-10-03 사용자]` 출처 줄이 「계속 내리면 …」 안내 위에 있어야, 목록 맨 끝에 그 안내가 보여 「내리면 다음이 나온다」가 읽힌다. */}
-            {done && view.items.length > 0 && <p className={styles.credit}>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a>
-              {drawn.length > 0 && <><br />{lineShapes?.attribution}{routeNotes(drawn).map((note) => <span key={note} data-route-note><br />{note}</span>)}</>}</p>}
+            {done && view.items.length > 0 && <details className={styles.credit} data-muted={creditMuted || undefined} inert={creditMuted} aria-hidden={creditMuted || undefined}>
+              <summary aria-label={t("출처와 경로 안내 펼치기", "Show sources and route notes")}><span>{t("ⓒ한국관광공사", "ⓒKorea Tourism Organization")}{drawn.length > 0 && lineShapes?.attribution && ` · ${lineShapes.attribution.includes("OpenStreetMap") ? "© OpenStreetMap" : lineShapes.attribution}`}</span><ChevronDown size={14} strokeWidth={1.8} aria-hidden="true" /></summary>
+              <div className={styles.creditDetails}><p>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></p>
+                {drawn.length > 0 && <p>{lineShapes?.attribution}{routeNotes(drawn).map((note) => <span key={note} data-route-note>{note}</span>)}</p>}
+              </div></details>}
             {nextDay && <p className={styles.dayHint}>{t(`옆으로 밀면 ${nextDay.day}일차${nextDay.date ? ` ${dayLabel(nextDay.date, language)}` : ""} 일정이 나와요`, `Swipe sideways for day ${nextDay.day}`)}<ChevronsRight size={15} strokeWidth={1.8} aria-hidden="true" /></p>}
             {(canRecommend || (previewing && side === "before")) && (canRecommend && !previewing && noFixNow
-              ? <Act className={styles.pullHint} why={frozen ?? noFixWhy} explain={frozen ? explain : nudge} onPress={nudge}>
+              ? <Act className={styles.pullEmpty} why={frozen ?? noFixWhy} explain={frozen ? explain : nudge} onPress={nudge}>
                 <ChevronsDown size={16} strokeWidth={1.8} aria-hidden="true" />
                 <span>{t("권장 수정안이 없어서 더 보여 드릴 게 없어요", "No recommended fix, so there is nothing more to show")}</span>
               </Act>
-              : <Act className={styles.pullHint} why={frozen} explain={explain} onPress={previewing ? () => flip("after") : () => recommendAll("button")} data-edge={pull.edge ?? undefined}
-                style={{ "--pull": pull.progress } as CSSProperties}>
-                <ChevronsDown size={16} strokeWidth={1.8} aria-hidden="true" />
-                <span>{previewing ? t("계속 내리면 수정안이에요", "Keep going down for the proposed plan") : t("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요", "Keep scrolling to see the plan with the recommended fixes")}</span>
-                <span className={styles.pullBar} aria-hidden="true"><span /></span>
-              </Act>)}
+              : <PreviewHint direction="down" text={previewing ? t("아래로 스크롤하면 수정안이 나와요", "Scroll down for the proposed plan") : t("아래로 스크롤하면 권장 수정안이 나와요", "Scroll down for the recommended plan")} why={frozen} explain={explain} onPress={previewing ? () => flip("after") : () => recommendAll("button")} edge={pull.edge ?? undefined} progress={pull.progress} />)}
             {done && !view.items.length && <p className={styles.empty}>{t("남은 일정이 없어요", "No stops left")}</p>}
             {!done && !follow.following && <button type="button" className={styles.followPill} onClick={follow.resume}><ChevronsDown size={14} strokeWidth={1.8} aria-hidden="true" />{t("확인 중인 곳으로", "Follow the check")}</button>}
           </div>
@@ -1278,10 +1488,11 @@ function Checking({ view, actions = {}, registration, tripIssues = [], previewVi
             <button type="button" className={styles.pagerDot} aria-current={side === "before" ? "step" : undefined} aria-label={t("1. 변경 전 일정", "1. The plan as it was")} onClick={() => turnTo("before")}><span aria-hidden="true" /></button>
             <button type="button" className={styles.pagerDot} aria-current={side === "after" ? "step" : undefined} aria-label={t("2. 수정안", "2. The proposed plan")} onClick={() => turnTo("after")}><span aria-hidden="true" /></button>
           </div>}
-          {done && <ResultFooter view={shown} registration={registration} frozen={frozen} explain={explain} needsTotal={needCount} pendingRemovals={removed.length}
-            previewing={previewing && side === "after"} onAutoAll={actions.previewRecommendAll && (() => recommendAll("button"))} onRecheck={actions.recheck || actions.remove ? recheck : undefined} onRegisterPreview={registerPreview} />}
+
         </>}
     </section>
+          {done && !changing && !inserting && <ResultFooter footerRef={submitBox} muted={collapsed || quietSubmit.hidden || mapMoving} focusHandlers={quietSubmit.focusHandlers} view={shown} registration={registration} frozen={frozen} explain={explain} needsTotal={needCount} pendingRemovals={removed.length}
+            previewing={previewing && side === "after"} onRecheck={actions.recheck || actions.remove ? recheck : undefined} onRegisterPreview={registerPreview} />}
     {timeEdit.drag && <TimeDragOverlay drag={timeEdit.drag} />}
     {shownToast && <ToastView key={shownToast.stamp} toast={shownToast.toast} onDone={hideToast} />}
   </div>;
