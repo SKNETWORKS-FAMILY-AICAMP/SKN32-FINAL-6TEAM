@@ -6,6 +6,11 @@ export function pointLabel(point: MapPoint) {
   return `${point.label ?? point.order}. ${point.title}${when ? ` · ${when}` : ""}`;
 }
 
+/** 먼저 공개하는 마커를 지키고, 공개가 끝난 화면에서는 선택한 마커를 먼저 배치한다. */
+export function pinPriority(a: MapPoint, b: MapPoint, selectedId?: string): number {
+  return Number(!!b.revealFocus) - Number(!!a.revealFocus) || Number(b.id === selectedId) - Number(a.id === selectedId);
+}
+
 /**
  * ★`[2026-10-04 사용자 지시 · 코덱스 의견]` 핀 겹침. 핀은 목업처럼 작은 번호 물방울(34px, 흰 바탕에 짙은 테두리)이고, 그 꼭짓점이 장소의 좌표에 닿는다.
  * 서울 도심의 일정은 한 지점 300m 안에 모이는 일이 흔해서 핀끼리 포개지므로, 핀마다 **꼭짓점이 어느 모서리인지**(`side`: 몸통이 좌표의 오른쪽 위 · 왼쪽 위 · 오른쪽 아래 ·
@@ -216,20 +221,19 @@ export function pulsePin(pin: HTMLElement) {
 }
 
 /**
- * `[2026-10-06 사용자 지시 — 새 마커가 생길 때 시선이 갈 시간을 주고 부드럽게]` A pin that has just appeared (a stop the check has just drawn) pops in: it grows from small with a little overshoot and fades in, over
- * about half a second, so the eye catches it. Done with the browser's own animation API; a screen that asks for less motion gets nothing.
+ * Newly revealed pins fade into their resting size without overshoot. Reduced motion is instant.
  */
 export function popPin(pin: HTMLElement) {
   if (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const body = bodyOf(pin);
   if (!body || typeof body.animate !== "function") return;
   const rest = body.style.transform || "none";
-  body.animate([{ transform: "scale(.2)", opacity: 0 }, { transform: "scale(1.22)", opacity: 1, offset: 0.6 }, { transform: rest === "none" ? "scale(1)" : rest, opacity: 1 }], { duration: 520, easing: "cubic-bezier(.2, .9, .3, 1)" });
+  body.animate([{ transform: "scale(.88)", opacity: 0 }, { transform: rest === "none" ? "scale(1)" : rest, opacity: 1 }], { duration: 300, easing: "cubic-bezier(.16, 1, .3, 1)" });
 }
 
 /** Presentation-only updates must not reset the user's camera. */
 export function geometryKey(points: MapPoint[]) {
-  return JSON.stringify(points.map(({ id, coordinates }) => [id, coordinates.lat, coordinates.lng]));
+  return JSON.stringify(points.map(({ id, coordinates, revealFocus }) => [id, coordinates.lat, coordinates.lng, !!revealFocus]));
 }
 
 /** 거리·화살표 버튼과 거리 칩만 피한다. 펼친 나머지 도구는 마커와 겹쳐도 된다. */

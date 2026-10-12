@@ -21,13 +21,18 @@ def test_the_three_scenario_sentences_pass_with_the_values_they_contain():
 
 @pytest.mark.parametrize("raw", [
     {"type": "delay", "minutes": 90},            # ★문장에는 70 — 모델이 숫자를 만들어 냈다
-    {"type": "delay", "minutes": None},
+    {"type": "delay", "minutes": True},
     {"type": "delay", "minutes": 0},
     {"type": "unknown"},
     "not a dict",
 ])
-def test_made_up_or_missing_delay_values_are_refused(raw):
+def test_made_up_or_invalid_delay_values_are_refused(raw):
     assert validate(raw, DELAY) is None
+
+
+def test_missing_delay_is_preserved_for_the_team_to_ask_back():
+    assert validate({"type": "delay", "minutes": None}, "식당에 늦어요") == {
+        "type": "delay", "minutes": None}
 
 
 def test_a_product_that_is_not_in_the_sentence_is_dropped_and_none_left_is_refused():

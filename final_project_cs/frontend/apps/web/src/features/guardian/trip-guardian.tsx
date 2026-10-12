@@ -47,11 +47,13 @@ export function useTripGuardian(tripId: string): { tool: ReactNode; overlay: Rea
     mutationFn: ({ enabled, via }: Change) => setGuardian(tripId, enabled, via, language),
     // The screen follows the press at once; the server's word replaces it, and a refusal puts back what was there.
     onMutate: ({ enabled, via }) => {
+      const query = queryClient.getQueryCache().find({ queryKey: key, exact: true });
       const before = queryClient.getQueryData<Trip>(key);
       queryClient.setQueryData<Trip>(key, (current) => current && { ...current, guardian: { enabled, since: current.guardian?.since ?? null, via } });
-      return { before };
+      return { before, query };
     },
-    onSuccess: (answer, { enabled }) => {
+    onSuccess: (answer, { enabled }, context) => {
+      if (!context?.query || queryClient.getQueryCache().find({ queryKey: key, exact: true }) !== context.query) return;
       queryClient.setQueryData<Trip>(key, (current) => current && { ...current, guardian: answer });
       rememberGuardian(enabled);
       show(enabled
@@ -59,6 +61,7 @@ export function useTripGuardian(tripId: string): { tool: ReactNode; overlay: Rea
         : { text: t("항로 지킴이를 껐어요. 문제가 생기면 물어볼게요.", "Course Keeper is off. We will ask you when something goes wrong."), action: { label: t("되돌리기", "Undo"), run: () => send({ enabled: true, via: "header" }) } });
     },
     onError: (_error, variables, context) => {
+      if (!context?.query || queryClient.getQueryCache().find({ queryKey: key, exact: true }) !== context.query) return;
       if (context?.before) queryClient.setQueryData<Trip>(key, context.before);
       show({ text: t("항로 지킴이를 바꾸지 못했어요. 연결을 확인하고 다시 시도해 주세요.", "Course Keeper could not be changed. Check the connection and try again."), action: { label: t("다시 시도하기", "Try again"), run: () => send(variables) } });
     },

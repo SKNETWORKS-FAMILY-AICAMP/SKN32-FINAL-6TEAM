@@ -1,0 +1,46 @@
+A-COP 계획 기반 UML v2 근거·검증 보고서
+
+1. 참고한 절과 핵심 사실
+
+- §1-2: 하나의 A-COP Runtime(Core) 위에 CS Pack과 Commerce Ops Pack을 둔다. CS Pack은 VOC & Store Manager, Response Generation & Review이며, 검증 쇼핑몰 연계 범위는 Procurement+Order & Payment, Fulfillment & Logistics, Return & Refund(Mock), Catalog & Verification(A2A Remote)이다.
+- §7-B: 외부 접근은 REST/MCP/운영 UI/Personal AI/Remote Agent이며 Core 1이 Case·Controller·Registry·TeamExecutorPort·WAIT/RESUME·Replan을 조정한다. Context Broker는 읽기 정보를, Core 2는 승인·idempotency·audit을 담당한다.
+- §8: Gateway, Customer Case Layer, Team Registry/Contract, Context Broker, Message Broker, Shared State, Tool/Action Layer, Controller의 경계를 둔다.
+- §8-A: Message Broker는 Task/Event 전달, Context Broker는 판단용 Context Pack 구성이다. 둘은 합치지 않는다.
+- §8-B: Team은 Registry 등록형 모듈이다. Local/A2A 실행은 TeamExecutorPort로 분리하고 양쪽 결과를 TeamResult로 정규화한다. Response Generation & Review는 하나의 Team Module이며 Return은 Mock, Catalog는 A2A Remote다.
+- §9: 개인 AI는 REST/MCP로 Case·조회·작업 요청을 보낼 수 있다. 쓰기와 고위험 작업에는 scope, idempotency, audit, 승인 경계가 있다.
+- §9-C: 개인 AI 경로는 MCP, 고객사 Agent 플랫폼의 업무 위임은 A2A다. A2A는 Agent Card·Task 생명주기·Artifact를 포함한다.
+- §9-E: ActionProposal은 evidence·대상·금액·수량·scope·approval을 실행 전 대조하고, 불일치/degraded/parse 실패는 자동 실행하지 않고 escalated/audit으로 남긴다.
+- §10: 구독 해지 후 결제는 Return & Refund가 Context를 읽고 ActionProposal을 반환하며, 반복 불만은 VOC가 alert와 위임 제안을 만든다.
+- §11: Case·event·run·team task·action·approval 및 knowledge 관계가 핵심 데이터 구조다.
+- §16: Core 1은 Case/Controller/Registry/TeamExecutorPort/Message Broker, Core 2는 Gateway/API/MCP/A2A/Action/approval/audit, Team은 TeamResult를 생성하고 side effect를 실행하지 않는다.
+- §19: new→classifying→routing→running, waiting_input/approval/external→resuming→running, resolved/escalated/failed/cancelled 상태 전이를 정의한다.
+- §21: Evidence, ContextPack, TeamTask, ActionProposal, TeamResult, TeamManifest, TeamModule 계약을 정식 정의한다.
+- §27: 인라인 분류, action·approval·idempotency·unknown, LOCAL/A2A 동일 TeamResult, A2A 왕복, GEN→REV 검증 등을 DoD로 둔다.
+
+2. 간결화 적용과 전후 비교
+
+- v2는 skinparam linetype ortho를 적용했다.
+- v1의 명시적 클래스 관계선은 20개, v2는 13개로 줄였다(35% 감소).
+- Controller→CaseProjection/TeamTask/TeamResult 등 계약 필드로 이미 드러나는 직접 연결을 제거했다.
+- 계약, Runtime, Access/Action, Registered Team Modules를 package로 묶었다.
+- together 블록으로 계약·Team을 2행에 배치했다.
+- 핵심 관계만 남겼다: Controller의 Registry/Context/Executor/Action 경계, TeamModule 계약, Gateway 진입, Registry 등록, MessageBus 전달.
+
+3. 계획서 절 대조표
+
+| 다이어그램 요소 | 근거 |
+|---|---|
+| 고객·운영자·개인 AI·기업 Agent 액터 | §9, §9-C, §16 |
+| Case 등록·분류·Context Pack | §8-2, §8-4, §19, §27-9 |
+| Team 실행과 6개 Team | §1-2, §8-B, §10, §16 |
+| ActionProposal·승인·실행 직전 대조 | §8-7, §9, §9-E, §21, §27-11/24/25 |
+| TeamTask·TeamResult·ContextPack·Evidence | §21 |
+| TeamRegistry·TeamModule·TeamExecutorPort | §8-3, §8-B, §21, §27-8/19/20 |
+| Message Broker와 Context Broker | §7-B, §8, §8-A |
+| REST/MCP와 A2A 분리 | §9, §9-C, §27-26/27 |
+| Case 상태 전이·WAIT/RESUME | §8, §19, §9-C |
+| GEN→REV | §8-B, §27-29 |
+
+4. 렌더링
+
+`render_acop_v2.py`를 실행했으나 PlantUML 서버 접속 단계에서 Windows `WinError 10013`(권한에 의해 소켓 연결 차단)이 발생했다. 따라서 세 SVG는 생성되지 않았다. 이는 소스 작성 실패가 아니라 외부 렌더링 서비스 접근 실패다. 원본 실행 로그는 `acop_v2_render.log`다.

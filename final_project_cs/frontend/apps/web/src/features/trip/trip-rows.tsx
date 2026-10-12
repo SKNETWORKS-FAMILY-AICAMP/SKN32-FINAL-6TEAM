@@ -40,7 +40,7 @@ export function placeRows(stop: TripStop, t: Translate, where = true) {
 
 export function bookingLabel(stop: TripStop, t: Translate) {
   if (stop.booking === "booked") return t("예약 있음", "Booking noted");
-  return t("예약 정보 없음", "Booking not specified");
+  return null;
 }
 
 /**
@@ -54,20 +54,23 @@ export function StopRow({ stop, next, open, selected, onToggle, onDetail, detail
 }) {
   const t = useT();
   const id = `trip-stop-${stop.id}`;
-  return <li className={`${pc.entry} ${styles.stopEntry}`} data-entry-id={stop.id} data-selected={selected || undefined} data-paused={stop.paused || undefined}>
-    <span className={`${pc.time} ${styles.stopTime}`}><time>{stop.time}</time>{stop.endTime && <small>{stop.endTime}</small>}</span>
+  const timeFocused = open || selected;
+  const hasTags = stop.booking === "booked" || stop.pinned || stop.paused || !!stop.badges?.length;
+  return <li className={`${pc.entry} ${styles.stopEntry}`} data-type="item" data-entry-id={stop.id} data-time-focused={timeFocused || undefined} data-time-follow={open || undefined} data-selected={selected || undefined} data-paused={stop.paused || undefined}>
+    <span className={pc.time}><span className={pc.timeStack}><time data-stop-start>{stop.time}</time><time className={pc.rangeEnd} data-stop-end aria-hidden={!timeFocused}>~{stop.endTime || "—"}</time></span></span>
     <span className={pc.rail} aria-hidden="true"><span className={`${pc.dot} ${styles.stopDot}`} /></span>
     <article id={`trip-card-${stop.id}`} className={`${pc.card} ${styles.stopCard}`} data-open={open || undefined} aria-labelledby={`${id}-title`}>
-      <div className={styles.stopHead}>
-        <button type="button" className={styles.stopToggle} id={`stop-button-${stop.id}`} aria-expanded={open} aria-controls={`stop-detail-${stop.id}`} onClick={onToggle}>
+      <div className={`${pc.cardTop} ${styles.stopHead}`}>
+        <button type="button" className={`${pc.cardHead} ${styles.stopToggle}`} id={`stop-button-${stop.id}`} aria-expanded={open} aria-controls={`stop-detail-${stop.id}`} onClick={onToggle}>
+          <MapPin size={18} strokeWidth={1.8} aria-hidden="true" />
           <span className={styles.stopName}>
             <strong id={`${id}-title`} className={pc.cardTitle}>{stop.title}</strong>
-            <span className={styles.stopTags}>
-              <span className={pc.pill} data-booked={stop.booking === "booked" || undefined}>{bookingLabel(stop, t)}</span>
+            {hasTags && <span className={styles.stopTags}>
+              {stop.booking === "booked" && <span className={pc.pill} data-booked>{bookingLabel(stop, t)}</span>}
               {stop.pinned && <span className={pc.pill}>{t("고정한 일정", "Pinned")}</span>}
               {stop.badges?.map((badge) => <span key={badge.code} className={pc.pill}>{badge.label}</span>)}
               {stop.paused && <span className={pc.pill} data-state="review">{t("일정 정지", "Paused")}</span>}
-            </span>
+            </span>}
           </span>
         </button>
         {/* `[2026-10-08 사용자 지시]` 「상세 보기」는 카드를 펼쳤을 때만 나오고, ＋/－ 는 늘 맨 오른쪽이다. 오른쪽 끝의 ＋/－ 는 같은 접기 단추의 누르는 자리일 뿐이라
@@ -98,7 +101,7 @@ export function StopFacts({ stop, next, brief = false }: { stop: TripStop; next:
     {!brief && <><dt>{t("날짜", "Date")}</dt><dd>{stop.date}</dd>
       <dt>{t("예정 시간", "Planned time")}</dt><dd>{stop.time}</dd></>}
     {placeRows(stop, t, !brief)}
-    <dt>{t("예약 표시", "Booking note")}</dt><dd>{bookingLabel(stop, t)}</dd>
+    {stop.booking === "booked" && <><dt>{t("예약 표시", "Booking note")}</dt><dd>{bookingLabel(stop, t)}</dd></>}
     <dt>{t("다음 일정", "Next stop")}</dt><dd>{next ? `${next.time} · ${next.title}` : t("이날 마지막 일정", "Last stop of the day")}</dd>
     {stop.otherOptions && stop.otherOptions.length > 0 && <><dt>{t("다른 안", "Other options")}</dt><dd>{stop.otherOptions.map((option) => option.name).join(" · ")}</dd></>}
     {marks.length > 0 && <><dt>{t("식당 표시", "Restaurant marks")}</dt><dd>{marks.map((badge) => badge.label).join(" · ")}</dd></>}
@@ -141,12 +144,12 @@ export function LegRow({ leg, open, onToggle }: { leg: TripLeg; open: boolean; o
   const freeSays = late ? t(`${Math.abs(leg.slack!)}분 늦어요`, `${Math.abs(leg.slack!)} min late`) : free ? t(`여유 ${free}`, `${free} free`) : null;
   const extra = gapPx(leg.slack) - GAP_BASE_PX;
   const directions = leg.directions && <a className={styles.legLink} href={leg.directions} target="_blank" rel="noopener noreferrer"><ExternalLink size={14} strokeWidth={1.8} aria-hidden="true" />{t("지도 앱에서 길찾기", "Directions in maps app")}</a>;
-  const time: ReactNode = leg.move ? <><b>{leg.move.departAt}</b><small>{t("출발", "leave")}</small></> : null;
+  const time: ReactNode = leg.move ? <span className={pc.timeStack}><time data-move-departure>{leg.move.departAt || t("미정", "TBD")}</time><time className={pc.rangeEnd} data-move-arrival aria-hidden={!open}>{leg.move.arriveAt ? `~${leg.move.arriveAt}` : t("미정", "TBD")}</time></span> : null;
   if (!summary) {
     return <li className={`${pc.entry} ${styles.legEntry}`} data-type="move" data-entry-id={leg.id}>
       <span className={pc.time} />
-      <span className={pc.rail} aria-hidden="true"><span className={pc.dot} /></span>
-      <div className={pc.moveCol}><p className={`${pc.move} ${styles.legPlain}`}><span className={pc.modeIcon}><ModeIcon mode={null} /></span>{t("다음 일정으로", "Next stop")}{directions && <> · {directions}</>}</p></div>
+      <span className={pc.rail} aria-hidden="true"><span className={`${pc.dot} ${pc.departureMark}`}>−</span></span>
+      <div className={pc.moveCol}><p className={`${pc.move} ${styles.legPlain}`}><span className={pc.modeIcon}><ModeIcon mode={null} /></span>{t("이동 정보가 아직 없어요", "Travel details are not available yet")}{directions && <><br />{directions}</>}</p></div>
     </li>;
   }
   const guess = leg.shape && isGuess(leg.shape);
@@ -155,9 +158,9 @@ export function LegRow({ leg, open, onToggle }: { leg: TripLeg; open: boolean; o
     leg.move ? [t(`${leg.move.departAt} 출발`, `Leave ${leg.move.departAt}`), leg.move.arriveAt && t(`${leg.move.arriveAt} 도착`, `arrive ${leg.move.arriveAt}`)].filter(Boolean).join(" → ") : null,
     ...(leg.shape ? rideLines(leg.shape, t) : []),
   ].filter(Boolean) as string[];
-  return <li className={`${pc.entry} ${styles.legEntry}`} data-type="move" data-entry-id={leg.id}>
-    <span className={pc.time}>{time}</span>
-    <span className={pc.rail} aria-hidden="true"><span className={pc.dot} /></span>
+  return <li className={`${pc.entry} ${styles.legEntry}`} data-type="move" data-entry-id={leg.id} data-time-focused={open || undefined}>
+    <div className={pc.moveClock}><span className={pc.time}>{time}</span></div>
+    <span className={pc.rail} aria-hidden="true"><span className={`${pc.dot} ${pc.departureMark}`}>−</span></span>
     <div className={pc.moveCol}>
       <div className={pc.move} data-open={open || undefined}>
         <button type="button" className={pc.moveHead} aria-expanded={open} aria-controls={`trip-leg-${leg.id}`} onClick={onToggle}>

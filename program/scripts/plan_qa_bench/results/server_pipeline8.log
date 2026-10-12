@@ -1,0 +1,27 @@
+[11:30] hf.co/meta-models/Muse-Glimmer-30B-GGUF:Q4_K_M
+hf.co/meta-models/Muse-Glimmer-30B-GGUF:Q4_K_M 25.03s/q errors=0
+[12:10] kanana-3b
+  File "/workspace/rerank_job/llm_point2.py", line 72, in <module>
+    r = hf.ask(text)
+        ^^^^^^^^^^^^
+  File "/workspace/rerank_job/llm_point2.py", line 40, in ask
+    out = self.m.generate(ids, max_new_tokens=24, do_sample=False)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/rtenv/lib/python3.12/site-packages/transformers/generation/utils.py", line 2655, in generate
+    batch_size = inputs_tensor.shape[0]
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/rtenv/lib/python3.12/site-packages/transformers/tokenization_utils_base.py", line 289, in __getattr__
+    raise AttributeError
+AttributeError
+[12:11] Qwen/Qwen3-Reranker-4B
+Qwen/Qwen3-Reranker-4B OK 269s
+[12:16] jinaai/jina-reranker-v3.5
+jinaai/jina-reranker-v3.5 OK 71s
+[12:17] Qwen/Qwen3-VL-Reranker-2B
+Qwen/Qwen3-VL-Reranker-2B OK 132s
+[12:19] Qwen/Qwen3-VL-Embedding-8B
+Qwen/Qwen3-VL-Embedding-8B FAIL NotImplementedError('Cannot copy out of meta tensor; no data! Please use torch.nn.Module.to_empty() instead of torch.nn.Module.to() when moving module from meta to a different device.')
+[12:21] P8DONE

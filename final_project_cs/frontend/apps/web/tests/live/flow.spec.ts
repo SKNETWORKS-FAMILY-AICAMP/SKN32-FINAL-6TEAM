@@ -175,7 +175,7 @@ test("설문을 마치지 않았으면 등록 화면이 그 사실을 알리고,
   expect(confirm.body).toEqual({ revision: 1, survey: { version: "2026-09-24.v1", pace: "moderate", on_disruption: "replace" } });
 });
 
-test("글에서 일정을 한 줄도 못 읽으면 옛 확인 화면 대신 짧은 안내와 등록 화면으로 가는 링크만 나온다(짜 달라는 말을 읽었으면 「계획 짜 주기」를 권한다)", async ({ page, request }) => {
+test("글에서 일정을 한 줄도 못 읽으면 입력 화면으로 자동 복귀하고 원문과 다시 입력할 안내를 보존한다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ intake: "empty_plan" });
   await start(page);
@@ -187,13 +187,11 @@ test("글에서 일정을 한 줄도 못 읽으면 옛 확인 화면 대신 짧�
   await expect(page.locator("#plan-error")).toHaveText("일정을 찾지 못했어요. 날짜·시간·장소를 확인해 다시 입력하거나 파일을 올려 주세요.");
   await expect(page.getByLabel("나의 여행 계획")).toHaveValue("서울 이틀 조용한 곳으로 짜 주세요");
   expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(1);
-  // 옛 화면의 「대신 짜 드릴까요?」 칸과 그 입력들은 없다 — 일정 짜기는 등록 화면의 세 번째 칸이 한다
+  expect(await server.received("POST", "/confirm")).toHaveLength(0);
+  // 빈 결과 확인 화면을 유지하거나 입력 복원만으로 새 계획을 제출하지 않는다.
   await expect(page.getByRole("heading", { name: /일정을 짜 달라고 하셨어요|대신 짜 드릴까요/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /이 조건으로 짜서 등록/ })).toHaveCount(0);
-  // 새 등록 화면의 정식 계획 짜기 필드는 유지되며, 빈 읽기 결과가 그 칸을 자동 선택하지 않는다.
-  await expect(page.locator('[data-pane="plan"]').getByLabel("첫날", { exact: true })).toHaveCount(1);
-  await expect(page.locator('[data-pane="text"]')).toHaveAttribute("aria-current", "true");
-  await expect(page.locator('[data-pane="plan"]')).not.toHaveAttribute("aria-current", "true");
+  await expect(page.getByRole("heading", { name: "계획을 확인하고 있어요", exact: true })).toHaveCount(0);
   expect(await server.received("POST", "/plan")).toHaveLength(0);
 });
 
@@ -319,8 +317,7 @@ test("읽은 접수를 열면 새 결과 화면이 서버가 찾은 장소와 �
   await start(page);
   await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
   await expect(page.getByRole("heading", { name: "내 여행", level: 1 })).toBeVisible();            // the server's trip title
-  await expect(needsBadge(page)).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /전체 자동 추천/ })).toHaveAttribute("aria-disabled", "true");              // 머리에는 ✓ 하나(고칠 곳이 없다)
+  await expect(page.locator("span[class*=headBadge][data-kind=ok]")).toHaveCount(0);             // 완료·미등록 화면의 상단 정상 표시를 반복하지 않는다.
   const card = page.getByRole("article", { name: "경복궁 관람" });
   await expect(card).not.toContainText("확인 필요");                                                // 괜찮은 일정에는 아무 말도 붙지 않는다
   const head = card.getByRole("heading").getByRole("button");

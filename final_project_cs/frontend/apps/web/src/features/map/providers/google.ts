@@ -1,7 +1,7 @@
 import type { Coordinates, MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_LABEL, meKey, staysKey } from "./me";
-import { createPin, geometryKey, layoutPins, paintPinGroups, pinArea, placePin, pointLabel, pulsePin, setPinSelected, type PinSlot } from "./pin";
+import { createPin, geometryKey, layoutPins, paintPinGroups, pinArea, pinPriority, placePin, pointLabel, pulsePin, setPinSelected, type PinSlot } from "./pin";
 import { createSdkLoader } from "./sdk-loader";
 import { setMarkerHidden } from "./visibility";
 
@@ -95,7 +95,7 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
         const middle = projection && center ? projection.fromLatLngToPoint(center) : null;
         if (destroyed || !projection || !middle || typeof zoom !== "number" || !markers.length || !container.clientWidth || !container.clientHeight) return;
         const scale = 2 ** zoom;
-        const placed = points.filter((point) => !hiddenPoints.has(point.id)).sort((a, b) => Number(b.id === selectedId) - Number(a.id === selectedId)).flatMap((point) => {
+        const placed = points.filter((point) => !hiddenPoints.has(point.id)).sort((a, b) => pinPriority(a, b, selectedId)).flatMap((point) => {
           const world = projection.fromLatLngToPoint(point.coordinates);
           return world ? [{ id: point.id, x: (world.x - middle.x) * scale + container.clientWidth / 2, y: (world.y - middle.y) * scale + container.clientHeight / 2 }] : [];
         });
@@ -166,8 +166,11 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
           return;
         }
         needsFit = false;
-        if (points.length === 1) {
-          map.setCenter(points[0].coordinates);
+        const focus = points.find(point => point.revealFocus);
+        if (focus || points.length === 1) {
+          const at = (focus ?? points[0]).coordinates;
+          if (focus && previousGeometry && !matchMedia("(prefers-reduced-motion: reduce)").matches) map.panTo(at);
+          else map.setCenter(at);
           map.setZoom(15);
         } else {
           const bounds = new sdk.LatLngBounds();

@@ -1,0 +1,24 @@
+test_g96.jsonl gpt-6-luna 남은 3 / 96
+test_g96.jsonl 끝 gpt-6-luna 오류 0 10 초
+test_cx.jsonl gpt-6-luna 남은 400 / 400
+test_cx.jsonl 20 / 400 76 초
+test_cx.jsonl 40 / 400 139 초
+test_cx.jsonl 60 / 400 191 초
+test_cx.jsonl 80 / 400 271 초
+test_cx.jsonl 100 / 400 349 초
+test_cx.jsonl 120 / 400 431 초
+test_cx.jsonl 140 / 400 503 초
+test_cx.jsonl 160 / 400 580 초
+test_cx.jsonl 180 / 400 641 초
+test_cx.jsonl 200 / 400 691 초
+test_cx.jsonl 220 / 400 752 초
+test_cx.jsonl 240 / 400 828 초
+test_cx.jsonl 260 / 400 899 초
+test_cx.jsonl 280 / 400 949 초
+test_cx.jsonl 300 / 400 1014 초
+test_cx.jsonl 320 / 400 1108 초
+test_cx.jsonl 340 / 400 1186 초
+test_cx.jsonl 360 / 400 1223 초
+test_cx.jsonl 380 / 400 1302 초
+test_cx.jsonl 400 / 400 1376 초
+test_cx.jsonl 끝 gpt-6-luna 오류 0 1376 초

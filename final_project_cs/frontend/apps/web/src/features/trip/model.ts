@@ -92,6 +92,8 @@ export interface TripWarning {
 
 export interface TripMessage {
   id: string;
+  /** Stable request identity for reconciling the recent record with this tab's replies. */
+  caseId?: string;
   role: "assistant" | "user";
   text: string;
   createdAt: string;
@@ -99,7 +101,7 @@ export interface TripMessage {
    *  operator turned on `web.dev_mode`; customers never see it. */
   basis?: string[];
   /** The server did not understand and asks 「다음 중 하나인가요?」: each choice's `message` is a sentence it will understand. */
-  choices?: { label: string; message: string }[];
+  choices?: { label: string; message: string; itemId?: string }[];
   /** The server's heading for `choices` — 「혹시 이런 뜻이었나요?」 when it answered and offers other readings. */
   choicesTitle?: string;
   /** The rest of a long answer, folded under 「더 보기」 (the answer itself keeps only the core). */
@@ -108,7 +110,12 @@ export interface TripMessage {
   changedTo?: number;
   /** The answer needs where the customer is now (「여기서 어떻게 가?」): the screen offers to ask the browser and send again. */
   needsLocation?: boolean;
+  /** The current request is waiting for the customer's answer; no resume token is kept in the conversation. */
+  awaitingReply?: boolean;
 }
+
+/** An explicit reply to an open request. Kept in memory; never persisted with chat messages. */
+export interface TripMessageResume { case_id: string; resume_token?: string; expected_version?: number }
 
 /**
  * `[2026-10-07]` A move between two stops as the server keeps it (an item of kind `mobility`): when to leave and when to arrive, in Seoul time. How it is travelled (mode · distance ·
@@ -129,6 +136,7 @@ export interface TripMove {
 
 /** Web view model of one trip, read from `GET /v1/web/trips/{id}` (not a claim that the Case API returns this shape). */
 export interface Trip {
+  simulation?: { active: boolean; categories: string[]; expires_at: string } | null;
   id: string;
   /** `[2026-10-07]` The trip's name as the server keeps it (「내 여행」); absent on a server that does not send one. */
   title?: string;
@@ -175,7 +183,7 @@ export interface TripGateway {
   /** `location`: where the customer is, from the browser, sent only after the server said the answer needs it. */
   /** `onProgress`: what the server is doing while it works on the message. */
   sendMessage(tripId: string, message: string, language: Language, itemId?: string | null, location?: LocationFix | null,
-    onProgress?: (progress: OpProgress) => void): Promise<Trip>;
+    onProgress?: (progress: OpProgress) => void, resume?: TripMessageResume): Promise<Trip>;
   /**
    * Delete one trip on the server, or reject with why it was not deleted. A server that has no delete call yet
    * rejects with a `LiveError` whose code is `delete_unsupported` (backend request 2026-10-03).

@@ -335,14 +335,22 @@ class _Budgeted:
 
 
 def default_engine(party_size: int | None, modes: list[str] | None = None) -> Callable[..., Any] | None:
-    """이동 계산기(시간표 판정). 꺼져 있거나 이동 팀이 조립에 없으면 None.
+    """이동 계산기(시간표 판정). 제품 조립 불가는 전파하고 명시적 standalone의 기존 None 계약은 유지한다.
     ★`[2026-10-06]` 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013 `team_hooks/legs.py`).
     `modes` `[2026-10-07 이동수단 고르기]` 이 수단만으로 후보를 만드는 계산기 — 고객이 구간 수단을 골랐을 때 쓴다."""
+    from app.core.team_availability import TeamUnavailable
+
     try:
         from app.domains.travel_ops.components.team_hooks import legs
 
         return legs.leg_planner(party_size, {}, modes=modes)
-    except Exception:                                     # noqa: BLE001 — 계산기 장애가 확인 화면을 막지 않는다
+    except TeamUnavailable:
+        raise
+    except Exception:                                     # noqa: BLE001 — 독립 실행의 기존 확인 화면 계약
+        from app.core.service_bindings import current_bindings
+
+        if current_bindings() is not None:
+            raise
         return None
 
 

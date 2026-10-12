@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>A-COP 에이전트팀 구성 브리핑</title>
+<style>
+  :root {
+    --bg: #f7f8fb;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --line: #d1d5db;
+    --accent: #0f766e;
+    --accent2: #1d4ed8;
+    --accent3: #7c3aed;
+    --soft: #ecfeff;
+    --soft2: #eef2ff;
+    --soft3: #f5f3ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, "Noto Sans KR", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+  }
+  header {
+    background: linear-gradient(135deg, #0f766e, #1d4ed8);
+    color: white;
+    padding: 40px 32px 32px;
+  }
+  header h1 { margin: 0 0 10px; font-size: 34px; }
+  header p { margin: 6px 0; opacity: .96; }
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  .section {
+    background: var(--card);
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 24px;
+    margin: 0 0 20px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, .05);
+  }
+  h2 {
+    margin: 0 0 14px;
+    font-size: 24px;
+    color: #111827;
+  }
+  h3 {
+    margin: 18px 0 10px;
+    font-size: 18px;
+    color: #111827;
+  }
+  .lead {
+    font-size: 16px;
+    color: var(--muted);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .card {
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 16px;
+    background: white;
+  }
+  .pill {
+    display: inline-block;
+    background: #e0f2fe;
+    color: #075985;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    margin: 0 6px 6px 0;
+  }
+  ul { margin: 8px 0 0 18px; }
+  li { margin-bottom: 6px; }
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid #d1d5db;
+    padding: 10px 12px;
+    vertical-align: top;
+  }
+  th {
+    background: #f3f4f6;
+    text-align: left;
+  }
+  .diagram svg text { text-rendering: geometricPrecision; }
+  .diagram {
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 12px;
+    background: linear-gradient(180deg, #ffffff, #fbfbfd);
+    overflow-x: auto;
+  }
+  .mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    padding: 14px;
+    border-radius: 12px;
+    white-space: pre-wrap;
+  }
+  .kpi {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .kpi .box {
+    border: 1px solid #dbeafe;
+    background: #f8fbff;
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .kpi .n {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+  .small { font-size: 14px; color: var(--muted); }
+  .diagram-label { font-size: 14px; font-weight: 800; letter-spacing: .02em; color: #0f172a; }
+  .diagram-caption { font-size: 13px; font-weight: 600; color: #475569; }
+  .footer {
+    font-size: 13px; color: var(--muted); text-align: center; margin: 28px 0 60px;
+  }
+  @media (max-width: 900px) {
+    .grid, .grid-3, .kpi {
+      grid-template-columns: 1fr;
+    }
+    header h1 { font-size: 28px; }
+  }
+
+  .diagram svg text {
+    stroke: none !important;
+    text-shadow: none !important;
+    paint-order: normal !important;
+  }
+
+
+  /* ---- Why Agentic / CSS-only diagrams ---- */
+  .acop-callout {
+    margin: 16px 0;
+    padding: 18px 20px;
+    border: 2px solid #2563eb;
+    border-radius: 16px;
+    background: #eff6ff;
+    color: #0f172a;
+    font-size: 17px;
+    font-weight: 700;
+  }
+  .acop-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 18px;
+  }
+  .acop-compare-card {
+    border: 1px solid #dbe2ea;
+    border-radius: 16px;
+    padding: 18px;
+    background: #fff;
+  }
+  .acop-compare-card.old { border-top: 5px solid #94a3b8; }
+  .acop-compare-card.new { border-top: 5px solid #2563eb; background: #f8fbff; }
+  .acop-compare-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 12px;
+  }
+  .acop-flow {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    max-width: 620px;
+    margin: 10px auto;
+  }
+  .acop-node {
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 11px 14px;
+    background: #fff;
+    text-align: center;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .acop-node.blue { background: #eef2ff; border-color: #a5b4fc; }
+  .acop-node.green { background: #ecfdf5; border-color: #86efac; }
+  .acop-node.orange { background: #fff7ed; border-color: #fdba74; }
+  .acop-node.purple { background: #f5f3ff; border-color: #c4b5fd; }
+  .acop-arrow {
+    text-align: center;
+    font-size: 24px;
+    line-height: 1.1;
+    color: #475569;
+    font-weight: 800;
+    padding: 3px 0;
+  }
+  .acop-team-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .acop-team {
+    border: 1px solid #a5b4fc;
+    border-radius: 12px;
+    padding: 12px 8px;
+    background: #f5f3ff;
+    text-align: center;
+    font-weight: 800;
+    color: #312e81;
+  }
+  .acop-team small {
+    display: block;
+    margin-top: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+  }
+  .acop-reasons {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .acop-reason {
+    border: 1px solid #dbe2ea;
+    border-radius: 16px;
+    padding: 16px;
+    background: #fff;
+  }
+  .acop-reason .num {
+    display: inline-flex;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #1d4ed8;
+    color: white;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .acop-reason h3 { margin: 4px 0 8px; }
+  .acop-map {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-top: 14px;
+  }
+  .acop-map-box {
+    border: 1px solid #dbe2ea;
+    border-radius: 14px;
+    padding: 14px;
+    background: #f8fafc;
+  }
+  .acop-map-arrow {
+    font-size: 28px;
+    font-weight: 800;
+    color: #2563eb;
+  }
+  .acop-arch {
+    max-width: 760px;
+    margin: 16px auto 4px;
+  }
+  .acop-source-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .acop-source {
+    border: 1px solid #a7f3d0;
+    background: #f0fdf4;
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+    font-weight: 700;
+  }
+  .acop-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-left: 4px solid #0f766e;
+    background: #f0fdfa;
+    color: #334155;
+    border-radius: 8px;
+  }
+  .acop-level {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #e0e7ff;
+    color: #3730a3;
+    font-weight: 800;
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  .acop-graph-grid {
+    display: grid;
+    grid-template-columns: 1.15fr .85fr;
+    gap: 16px;
+  }
+  @media (max-width: 900px) {
+    .acop-compare, .acop-reasons, .acop-graph-grid { grid-template-columns: 1fr; }
+    .acop-team-grid, .acop-source-grid { grid-template-columns: 1fr; }
+    .acop-map { grid-template-columns: 1fr; }
+    .acop-map-arrow { transform: rotate(90deg); text-align: center; }
+  }
+
+
+  .gv-wrap { border:1px solid #e5e7eb; border-radius:16px; background:#fff; padding:14px; overflow-x:auto; }
+  .gv-svg { width:100%; height:auto; min-width:760px; display:block; }
+  .component-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:16px; }
+  .component-card { border:1px solid #dbe2ea; border-radius:14px; padding:15px; background:#fff; }
+  .component-card h3 { margin:0 0 8px; font-size:17px; }
+  .component-card .role { font-weight:800; color:#1d4ed8; margin-bottom:6px; }
+  .component-card .io { margin-top:8px; padding:9px 10px; background:#f8fafc; border-radius:9px; font-size:13px; color:#475569; }
+  .slot-title { display:inline-block; padding:7px 12px; border-radius:10px; background:linear-gradient(135deg,#6d28d9,#4f46e5); color:white; font-weight:900; letter-spacing:.02em; box-shadow:0 5px 14px rgba(79,70,229,.22); }
+  .folder-tree { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; background:#0f172a; color:#e2e8f0; border-radius:14px; padding:18px; white-space:pre-wrap; overflow-x:auto; line-height:1.72; }
+  .why-box { padding:14px 16px; border-left:4px solid #2563eb; background:#eff6ff; border-radius:10px; margin-top:14px; }
+  .ownership-table td:first-child { width:22%; font-weight:800; background:#f8fafc; }
+  .role-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .role-card { border:1px solid #dbe2ea; border-radius:16px; padding:16px; background:#fff; }
+  .role-card h3 { margin:0 0 10px; }
+  .role-card.runtime { border-top:5px solid #7c3aed; }
+  .role-card.integration { border-top:5px solid #0f766e; }
+  .role-card.agent { border-top:5px solid #2563eb; }
+  .role-card.ui { border-top:5px solid #f59e0b; }
+  .boundary-note { font-size:13px; color:#475569; background:#f8fafc; border-radius:10px; padding:9px 11px; margin-top:10px; }
+  @media (max-width:900px){ .component-grid,.role-grid{grid-template-columns:1fr;} .gv-svg{min-width:680px;} }
+
+
+/* ===== Expandable component cards ===== */
+details.component-detail {
+  border: 1px solid #dbe2ea;
+  border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(15,23,42,.05);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+details.component-detail:hover { border-color:#93c5fd; box-shadow:0 8px 22px rgba(37,99,235,.10); transform:translateY(-1px); }
+details.component-detail[open] { border-color:#60a5fa; box-shadow:0 10px 28px rgba(37,99,235,.13); }
+details.component-detail summary { cursor:pointer; list-style:none; padding:18px; user-select:none; }
+details.component-detail summary::-webkit-details-marker { display:none; }
+.cd-title-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.cd-title { font-size:18px; font-weight:900; color:#0f172a; }
+.cd-toggle { flex:0 0 auto; border-radius:999px; padding:5px 9px; background:#f1f5f9; color:#475569; font-size:12px; font-weight:800; }
+details.component-detail[open] .cd-toggle::after { content:'접기'; }
+details.component-detail:not([open]) .cd-toggle::after { content:'자세히'; }
+.cd-role { display:inline-block; margin-top:9px; padding:5px 9px; border-radius:999px; background:#eff6ff; color:#1d4ed8; font-size:13px; font-weight:800; }
+.cd-summary { margin:10px 0 0; color:#334155; line-height:1.62; }
+.cd-body { border-top:1px solid #e2e8f0; padding:18px; background:#f8fafc; }
+.cd-body h4 { margin:14px 0 8px; color:#0f172a; font-size:15px; }
+.cd-body h4:first-child { margin-top:0; }
+.cd-body ul { margin:8px 0 12px 20px; }
+.cd-terms { display:grid; gap:0; margin:0 0 12px; }
+.cd-term { display:grid; grid-template-columns:150px 1fr; gap:12px; padding:9px 0; border-bottom:1px dashed #dbe2ea; }
+.cd-term:last-child { border-bottom:0; }
+.cd-term strong { color:#334155; }
+.cd-term span { color:#475569; line-height:1.58; }
+.cd-io { padding:10px 12px; border-radius:10px; background:#eef2ff; color:#312e81; font-weight:700; line-height:1.55; }
+@media(max-width:800px){ .cd-term{grid-template-columns:1fr;gap:3px;} }
+
+
+  /* ===== A2A / Graph extension ===== */
+  .interop-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .interop-card {
+    border: 1px solid #cbd5e1;
+    border-radius: 13px;
+    padding: 12px 10px;
+    background: #fff;
+    text-align: center;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .interop-card small {
+    display: block;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 650;
+  }
+  .protocol-badge {
+    display: inline-block;
+    margin-top: 7px;
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 900;
+  }
+  .protocol-rest { background:#dbeafe; color:#1e40af; }
+  .protocol-mcp { background:#dcfce7; color:#166534; }
+  .protocol-a2a { background:#f3e8ff; color:#6b21a8; }
+
+  .context-source-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+  }
+  .context-source-card {
+    border: 1px solid #86efac;
+    background: #f0fdf4;
+    border-radius: 11px;
+    padding: 10px 8px;
+    text-align: center;
+    color: #14532d;
+    font-weight: 800;
+  }
+  .context-source-card small {
+    display:block;
+    margin-top:3px;
+    color:#4b5563;
+    font-size:11px;
+    font-weight:650;
+  }
+
+  .detail-architecture {
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+  .da-box {
+    border: 1px solid #cbd5e1;
+    border-radius: 15px;
+    background: #fff;
+    padding: 14px;
+    text-align: center;
+    color: #0f172a;
+  }
+  .da-box strong {
+    display:block;
+    margin-bottom:5px;
+    font-size:16px;
+  }
+  .da-blue { background:#eff6ff; border-color:#93c5fd; }
+  .da-green { background:#f0fdf4; border-color:#86efac; }
+  .da-violet { background:#f5f3ff; border-color:#c4b5fd; }
+  .da-orange { background:#fff7ed; border-color:#fdba74; }
+  .da-arrow {
+    text-align:center;
+    font-size:25px;
+    font-weight:900;
+    line-height:1.1;
+    color:#475569;
+    padding:4px 0;
+  }
+  .da-coord-row {
+    display:grid;
+    grid-template-columns:minmax(0,1.2fr) 72px minmax(0,1.2fr) 72px minmax(0,1.2fr);
+    align-items:center;
+    gap:8px;
+  }
+  .da-side-arrow {
+    text-align:center;
+    color:#475569;
+    font-size:13px;
+    font-weight:900;
+  }
+  .da-side-arrow .arr {
+    display:block;
+    font-size:25px;
+    line-height:1;
+    margin-bottom:2px;
+  }
+  .da-context-stack {
+    display:grid;
+    gap:8px;
+  }
+  .da-context-sources {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;
+  }
+  .da-context-source {
+    padding:8px 5px;
+    border:1px solid #bbf7d0;
+    border-radius:9px;
+    background:#fff;
+    color:#166534;
+    font-size:12px;
+    font-weight:800;
+    text-align:center;
+  }
+  .dispatch-panel {
+    border:2px solid #7c3aed;
+    border-radius:17px;
+    background:#faf5ff;
+    overflow:hidden;
+    box-shadow:0 8px 24px rgba(124,58,237,.10);
+  }
+  .dispatch-title {
+    padding:11px 14px;
+    background:#6d28d9;
+    color:white;
+    font-weight:900;
+    font-size:17px;
+    text-align:center;
+  }
+  .dispatch-body { padding:14px; }
+  .dispatch-branches {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .dispatch-branch {
+    border:1px solid #d8b4fe;
+    border-radius:14px;
+    background:white;
+    padding:13px;
+  }
+  .dispatch-branch h4 {
+    margin:0 0 8px;
+    color:#4c1d95;
+    font-size:15px;
+  }
+  .mini-flow {
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    align-items:stretch;
+  }
+  .mini-node {
+    padding:8px 9px;
+    border:1px solid #cbd5e1;
+    border-radius:9px;
+    background:#f8fafc;
+    text-align:center;
+    font-size:12px;
+    font-weight:800;
+    color:#334155;
+  }
+  .mini-arrow {
+    text-align:center;
+    color:#64748b;
+    font-weight:900;
+  }
+  .da-result-row {
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    gap:12px;
+    align-items:center;
+  }
+  .role-chip {
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:900;
+    margin-top:6px;
+  }
+  .role-core1 { background:#ede9fe;color:#5b21b6; }
+  .role-core2 { background:#dbeafe;color:#1d4ed8; }
+
+  .protocol-compare td:first-child {
+    font-weight:900;
+    white-space:nowrap;
+  }
+  .graph-flow {
+    display:grid;
+    grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;
+    gap:8px;
+    align-items:center;
+    margin:15px 0;
+  }
+  .graph-flow .module-arrow { transform:none; }
+  .graph-model-grid {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+  }
+  .graph-entity {
+    border:1px solid #c4b5fd;
+    background:#faf5ff;
+    color:#5b21b6;
+    border-radius:12px;
+    padding:11px 7px;
+    text-align:center;
+    font-weight:900;
+  }
+  .graph-edge-list {
+    margin-top:12px;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+  }
+  .graph-edge {
+    border-left:4px solid #7c3aed;
+    background:#f8fafc;
+    border-radius:8px;
+    padding:8px 10px;
+    color:#334155;
+    font-size:13px;
+  }
+  .phase-grid {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+    margin-top:14px;
+  }
+  .phase-card {
+    border:1px solid #dbe2ea;
+    border-radius:14px;
+    padding:14px;
+    background:#fff;
+  }
+  .phase-card h4 { margin:0 0 7px;color:#0f172a; }
+  .phase-required { border-top:5px solid #2563eb; }
+  .phase-poc { border-top:5px solid #7c3aed; }
+  .phase-stretch { border-top:5px solid #0f766e; }
+
+  @media (max-width: 900px) {
+    .interop-grid, .context-source-grid-4, .graph-model-grid, .phase-grid { grid-template-columns:1fr; }
+    .da-coord-row { grid-template-columns:1fr; }
+    .da-side-arrow .arr { transform:rotate(90deg); }
+    .dispatch-branches { grid-template-columns:1fr; }
+    .graph-flow { grid-template-columns:1fr; }
+    .graph-flow .module-arrow { transform:rotate(90deg); }
+    .graph-edge-list { grid-template-columns:1fr; }
+  }
+
+  /* ===== Module selection diagram ===== */
+  .module-diagram {
+    padding: 18px;
+    border: 1px solid #dbe2ea;
+    border-radius: 18px;
+    background: #f8fafc;
+  }
+  .module-top-flow {
+    display: grid;
+    grid-template-columns: 1fr 46px 1.2fr 46px 1fr;
+    gap: 10px;
+    align-items: center;
+  }
+  .module-box {
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    background: #ffffff;
+    padding: 14px;
+    text-align: center;
+    color: #334155;
+    line-height: 1.5;
+  }
+  .module-box strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #0f172a;
+    font-size: 16px;
+  }
+  .module-box.registry {
+    background: #f0fdf4;
+    border-color: #86efac;
+  }
+  .module-arrow {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 900;
+    color: #475569;
+  }
+  .module-contract {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-left: 4px solid #f59e0b;
+    border-radius: 9px;
+    background: #fff7ed;
+    color: #7c2d12;
+    line-height: 1.6;
+  }
+  @media (max-width: 900px) {
+    .module-top-flow { grid-template-columns: 1fr; }
+    .module-arrow { transform: rotate(90deg); }
+  }
+p.explain-small { color: chocolate; line-height: 1.3; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<p class="small">A-COP / TEAM MODULE BRIEFING</p>
+<h1>A-COP 에이전트팀 구성 브리핑</h1>
+<p class="lead">업무 하나를 통째로 맡는 Team Module과 외부 Agent에게 일을 맡기는 A2A Module을 구분하고, 슬롯 자격·LLM 사용·평가 가능성을 따로 판정한다.</p>
+</header>
+
+<div class="acop-callout"><strong>착수 축을 구분한다.</strong> VOC &amp; Store Manager와 Response Generation &amp; Review는 이번 프로젝트 주제인 CS Pack에 속하므로 10주 착수를 확정한다. Procurement + Order &amp; Payment, Fulfillment &amp; Logistics, Return &amp; Refund, Catalog &amp; Verification은 검증 쇼핑몰을 실제로 운영하기 위한 Commerce Ops Pack 범위이며, 해당 프로젝트의 진행 상황과 일정에 따라 조정될 수 있다. 6명 팀 전체가 이 구성으로 고정된다는 뜻은 아니다.</div>
+
+<section class="section">
+<h2>1. 한눈에</h2>
+<div class="diagram">
+<div class="card"><h3>팀 모듈 슬롯 (LOCAL)</h3><p><code>Registry</code> 등록 · <code>TeamExecutorPort</code> 실행 · <code>TeamTask/TeamResult</code> 계약</p><div class="grid-3"><div class="card">Procurement + Order &amp; Payment</div><div class="card">Fulfillment &amp; Logistics</div><div class="card">Return &amp; Refund</div><div class="card">VOC &amp; Store Manager</div><div class="card">Response Generation &amp; Review</div></div></div>
+<div class="card"><h3>A2A 모듈 슬롯 (Remote)</h3><p><code>execution_type: A2A</code> · Agent Card · Task 왕복 · Artifact</p><div class="card"><strong>Catalog &amp; Verification</strong></div></div>
+<div class="card"><h3>슬롯에 들어가지 않는 것</h3><div class="grid"><div class="card"><strong>Customer Operations &amp; Complaint</strong><br/>진입·분류 층</div><div class="card"><strong>개별 계산·집계 기능</strong><br/>다른 Team Module의 tool·룰</div></div></div>
+</div>
+<p class="explain-small">쉬운 풀이: Team Module은 업무 하나를 통째로 맡는 자리다. 여기 꽂히면 Core가 알아서 불러준다.</p>
+<div class="table-wrap"><table><thead><tr><th>슬롯</th><th>모듈</th><th>현재 착수 판단</th></tr></thead><tbody>
+<tr><td>Team</td><td>Procurement + Order &amp; Payment</td><td>착수 목록에 있으나 Commerce 실측은 없음 · <span class="pill">검증 쇼핑몰 연계</span></td></tr><tr><td>Team</td><td>Fulfillment &amp; Logistics</td><td>착수 목록, 현재 실측 없음 · <span class="pill">검증 쇼핑몰 연계</span></td></tr><tr><td>Team</td><td>VOC &amp; Store Manager</td><td>착수 — 구현됨 · <span class="pill">CS Pack 확정</span></td></tr><tr><td>Team</td><td>Return &amp; Refund</td><td>Registry 계약 + Mock — 없음 · <span class="pill">검증 쇼핑몰 연계</span></td></tr><tr><td>Team</td><td>Response Generation &amp; Review</td><td>착수 축 — 골격만 · <span class="pill">CS Pack 확정</span></td></tr><tr><td>A2A</td><td>Catalog &amp; Verification</td><td>별도 왕복 목표 — 골격만 · <span class="pill">검증 쇼핑몰 연계</span></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="section">
+<h2>2. 세 질문을 분리한다</h2>
+<div class="acop-callout"><strong>이 셋을 하나로 묶어서 판정하던 것이 오류였다.</strong></div>
+<p class="explain-small">쉬운 풀이: <strong>자리가 되는가</strong>와 <strong>LLM을 쓰는가</strong>와 <strong>채점이 되는가</strong>는 서로 다른 질문이다. 예전엔 이걸 하나로 묶어서 판정했다.</p>
+<div class="table-wrap"><table><thead><tr><th>질문</th><th>판정 기준</th><th>결과</th></tr></thead><tbody>
+<tr><td>이 자리에 들어가는가</td><td>Team Contract를 만족하는가</td><td>Team Module / A2A Module / 아님</td></tr><tr><td>안에서 LLM을 쓰는가</td><td>Team이 정하는 구현 선택</td><td>슬롯 분류에 영향 없음</td></tr><tr><td>채점할 수 있는가</td><td>정답셋·임의 배정 비의존·평가 여력</td><td>MVP 착수 / Phase 2</td></tr>
+</tbody></table></div>
+<p>FILTER-1·2·3은 두 번째 질문, 즉 내부에 LLM이 필요한지를 판단하는 도구다.</p>
+</section>
+
+<section class="section"><h2>3. 팀 모듈 슬롯 조건 4가지</h2>
+<p class="explain-small">쉬운 풀이: 네 조건을 모두 만족해야 Team Module이다. 내부에서 LLM을 쓰는지는 별도 결정이다.</p>
+<div class="grid"><div class="card"><h3>1</h3><p>Capability·책임·권한·지식·Tool 경계가 독립된다.</p></div><div class="card"><h3>2</h3><p><code>TeamTask</code>(capability + ContextPack)를 입력으로 받는다.</p></div><div class="card"><h3>3</h3><p><code>TeamResult</code>(answer / warnings / decisions / action_proposals / need_more_context)를 반환한다.</p></div><div class="card"><h3>4</h3><p>side effect를 직접 실행하지 않고 <code>ActionProposal</code>만 반환한다.</p></div></div>
+<p class="explain-small">쉬운 풀이: 팀은 “이렇게 하자”고 제안만 한다. 돈이 오가는 실행은 Controller가 승인 받고 한다.</p>
+<p>내부 구현은 LLM 다중 호출, SQL 집계, 임계값 규칙 중에서 선택할 수 있다. Core는 <code>TeamManifest</code>와 표준 Contract만 본다.</p>
+</section>
+
+<section class="section"><h2>4. 팀 모듈 상세</h2>
+<p class="explain-small">쉬운 풀이: 각 Team은 맡은 업무와 권한 경계가 다르다. 실측 상태는 설계 문서와 따로 적었다.</p>
+<div class="table-wrap"><table><thead><tr><th>모듈</th><th>Capability</th><th>외부 대기 주체</th><th>권한 경계</th><th>내부 구현</th><th>실측 상태</th></tr></thead><tbody>
+<tr><td>Order &amp; Payment</td><td>주문 조회, 결제 상태, 취소·부분취소 제안</td><td>PG·마켓플레이스 API</td><td>상태 변경은 Controller 승인</td><td>LLM 판단 + 결정론 계산</td><td><span class="pill">없음</span></td></tr>
+<tr><td>Fulfillment &amp; Logistics</td><td>배송 추적, 지연·분실·통관 분기</td><td>택배사·통관·판매자</td><td>조회·알림 제안만</td><td>LLM 판단 + 조회 tool</td><td><span class="pill">없음</span></td></tr>
+<tr><td>Return &amp; Refund</td><td>반품·교환 사유, 증빙, 정책 판정</td><td>고객·판매자·반품 adapter</td><td>실행은 승인 후</td><td>LLM 판단 + 정책 RAG</td><td><span class="pill">없음</span></td></tr>
+<tr><td>VOC &amp; Store Manager</td><td>이상징후·반복 불만·공급처 성능 감시</td><td>내부 운영자·대상 Team</td><td>직접 호출·side effect 금지</td><td>집계·임계값 규칙</td><td><span class="pill">구현됨</span></td></tr>
+<tr><td>Response Generation &amp; Review</td><td>고객 문장 생성·검증·반려 시 재작성</td><td>없음. 실패 시 운영자</td><td>side effect 없음</td><td>규칙 + LLM 생성·검증</td><td><span class="pill">골격만</span></td></tr>
+<tr><td>Procurement</td><td>구매·대체·재시도 제안</td><td>공급처·마켓플레이스</td><td>승인·idempotency·금액 한도</td><td>Order &amp; Payment와 통합 예정</td><td><span class="pill">없음</span></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="section"><h2>5. VOC와 Response를 Team Module로 두는 이유</h2>
+<p class="explain-small">쉬운 풀이: VOC는 반복되는 문제를 세고 알림을 제안한다. Response는 모든 Team의 결과를 같은 기준으로 문장화하고 검사한다.</p>
+<div class="grid"><div class="card"><h3>VOC &amp; Store Manager</h3><p>집계·시계열·임계값이라는 고유 지식과 관측·알림 tool 경계를 가진다. 배치는 실행 형태일 뿐 슬롯을 결정하지 않는다.</p></div><div class="card"><h3>Response Generation &amp; Review</h3><p>응답 생성과 검증이라는 독립 Capability를 가진다. GEN과 REV는 별도 Team이 아니라 한 모듈 안의 두 호출이다.</p></div></div>
+<p>Response는 문장 생성·검증의 기준을 모듈 하나에 모으고, 자기 출력을 자기가 채점하는 문제를 줄인다.</p>
+</section>
+
+<section class="section"><h2>6. A2A Module — Catalog &amp; Verification</h2>
+<p class="explain-small">쉬운 풀이: A2A Remote는 우리 서버 밖에 있는 남의 AI에게 일을 맡기는 것이다. 중간에 “자료가 더 필요하다”고 되물어올 수 있다.</p>
+<div class="acop-callout"><strong>Catalog &amp; Verification</strong>은 SKU·Variant·가격·규제 증거를 확인하고 Quote artifact를 만든다. 구매·등록 side effect는 하지 않는다.</div>
+<div class="table-wrap"><table><thead><tr><th>왜 Remote인가</th><th>A2A로 검증할 것</th></tr></thead><tbody><tr><td>공급처·외부 카탈로그라는 조직 밖 주체와 왕복한다.</td><td>Agent Card, input-required, 장기 Task, Artifact, 인증·실패·취소</td></tr></tbody></table></div>
+</section>
+
+<section class="section"><h2>7. 슬롯에 들어가지 않는 것</h2>
+<p class="explain-small">쉬운 풀이: Customer Operations는 여러 업무를 처음 받는 입구다. 개별 계산은 독립된 업무가 아니라 해당 Team의 도구다.</p>
+<div class="table-wrap"><table><thead><tr><th>후보</th><th>슬롯이 아닌 이유</th><th>실제 위치</th></tr></thead><tbody><tr><td>Customer Operations &amp; Complaint</td><td>여러 모듈의 권한·대기·지식의 합집합</td><td>Case intake·분류·escalation 층</td></tr><tr><td>환불 금액 계산·반품 D-day·재고 누적 감지</td><td>독립 권한·지식 경계가 없음</td><td>해당 Team의 tool·룰</td></tr></tbody></table></div>
+</section>
+
+<section class="section"><h2>8. 착수 판정</h2>
+<p class="explain-small">쉬운 풀이: 슬롯 자격이 있다고 바로 착수하는 것은 아니다. 팀을 늘리면 채점표도 같이 늘어난다. 그게 진짜 한계다.</p>
+<div class="acop-callout"><code>정답셋 존재 AND 임의 배정 비의존 AND Core loop 필요 AND 평가 여력</code></div>
+<p><strong>슬롯 자격과 착수 시점은 다른 축이다.</strong> VOC &amp; Store Manager와 Response Generation &amp; Review는 CS Pack의 10주 확정 축이고, 나머지 Commerce Ops Pack 모듈은 검증 쇼핑몰 프로젝트의 진행 상황과 일정에 따라 조정되는 연계 축이다. 모듈마다 golden/holdout 라벨, 라우팅 평가, Registry record, contract test, prompt version, Context Pack 예산이 늘어난다.</p>
+</section>
+
+<section class="section"><h2>9. 확장 방법</h2>
+<p class="explain-small">쉬운 풀이: 새 팀을 넣을 때 프로그램을 뜯는 게 아니라 명단에 등록만 한다.</p>
+<div class="module-diagram"><div class="module-top-flow"><div class="module-box registry"><strong>Registry 등록</strong><br/>capability · version · scope</div><div class="module-arrow">→</div><div class="module-box"><strong>Prompt / Knowledge</strong><br/>팀별 prompt·retrieval·memory</div><div class="module-arrow">→</div><div class="module-box"><strong>Golden Case Set</strong><br/>채점·회귀·holdout</div></div></div>
+<p><strong>불변:</strong> Controller · <code>TeamTask/TeamResult</code> 계약 · Core의 승인·idempotency·감사 경계 · 평가 하네스.</p>
+</section>
+
+<section class="section"><h2>10. 남은 결정</h2>
+<p class="explain-small">쉬운 풀이: 아직 정하지 않은 항목은 미결로 남긴다. 결정 전에는 착수 수와 통합 범위를 확정하지 않는다.</p>
+<div class="acop-callout"><strong>모두 미결</strong></div><div class="table-wrap"><table><thead><tr><th>미결 항목</th><th>현재 주의점</th></tr></thead><tbody>
+<tr><td>CS Pack 도메인</td><td>SaaS/Commerce 중 미확정. Commerce로 가정해 재산정하지 않는다.</td></tr><tr><td>Order·Return 통합 여부</td><td>Bitext 라벨·한국어 품질·사람 라벨 부담을 확인한 뒤 결정한다.</td></tr><tr><td>Commerce Ops 연계 모듈 착수 범위</td><td>검증 쇼핑몰 프로젝트의 진행 상황과 일정에 따라 정한다.</td></tr><tr><td>golden 60 / holdout 20 배분</td><td>Return이 Mock일 때 몫을 어디로 옮길지 미결이다.</td></tr><tr><td>VOC 내부 LLM 시점</td><td>위임 판단 골든셋을 마련할 시점이 미결이다.</td></tr><tr><td>Response 톤 판정</td><td>경고로 둘지 사람 라벨로 재시도 사유로 승격할지 미결이다.</td></tr><tr><td>실데이터 비식별·골든셋 반입</td><td>담당과 기준이 미결이다.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="section">
+<h2>11. 사람 6명의 역할 분담</h2>
+<div class="acop-note">
+  <strong>여기부터는 앞의 1~10절과 다른 축이다.</strong> 1~10절은 시스템이 Registry에 등록하는
+  Agent Team <strong>모듈</strong> 이야기이고(Commerce Ops Pack 슬롯, 대부분 vision·미착수),
+  이 11절은 실제로 <strong>사람 6명이 무엇을 하는지</strong>다. 사람의 담당 경계는 코드의 컴포넌트 경계와
+  같지 않다 — 한 사람이 수직 기능 하나를 끝까지 본다.
+</div>
+<p class="lead">
+  Core를 "Coordination 로직 담당"과 "Backend 구현 담당"으로 쪼개지 않는다.
+  같은 기능 흐름에서 정책과 실제 무결성 구현이 서로 붙어 있기 때문에,
+  <strong>Core 1은 Case Runtime을, Core 2는 Access/Action을 각각 end-to-end로 담당</strong>한다.
+</p>
+<p class="small">Agent Team은 Tool을 직접 호출하지 않는다. 읽기는 Context Broker가 미리 제공하고, 쓰기는 ActionProposal로 반환한다. 따라서 Team 개발자 3명은 Core 2 인터페이스를 보지 않아도 된다. 두 Core의 접점은 ExecuteAction / ActionResult 한 쌍이다.</p>
+<h3>11-1. Core Platform</h3>
+<div class="role-grid">
+<div class="role-card runtime">
+<h3>Core 1 · Case Runtime &amp; Coordination</h3>
+<ul>
+<li>Customer Case lifecycle / Case Event / owner</li>
+<li>Shared State / checkpoint / version</li>
+<li>State Repository / Transaction</li>
+<li><strong>CAS / Optimistic Concurrency / Conflict 감지</strong></li>
+<li>Agentic Controller / Top-Level LangGraph</li>
+<li>Team routing / parallel 여부 / ownership / retry / replan / cancel</li>
+<li>WAIT / RESUME / Case-level approval state</li>
+<li>Agent Team Registry / Team Contract</li>
+<li><strong>Message Broker / MessageBus Port + Adapter</strong></li><li>Local/A2A 실행 분기, RemoteTeamPort, A2A Task → Case State 매핑</li><li>Graph Context Port / GraphRAG orchestration</li>
+<li>Context Broker 공통 orchestration Port</li>
+</ul>
+<div class="boundary-note">
+<strong>한 사람이 끝까지 보는 흐름:</strong>
+    "Team 간 경합 발생 → State CAS로 충돌 감지 → CONFLICT 반환 → Controller가 최신 State 기준 Retry/Replan"
+  </div>
+</div>
+<div class="role-card integration">
+<h3>Core 2 · Access &amp; Action Platform</h3>
+<ul>
+<li>Agent Gateway / Trust Boundary</li>
+<li>OAuth / Access Token / Scope / External AI Client</li>
+<li>REST/OpenAPI / MCP endpoint</li><li>A2A ingress / outbound HTTP·Auth Adapter / Agent Card endpoint</li>
+<li>Tool / Action Gateway</li>
+<li>Business Capability API</li>
+<li>고위험 Action 권한/승인 검증</li>
+<li><strong>Idempotency — 동일 Side Effect 중복 실행 방지</strong></li>
+<li>Audit Log</li>
+<li>결제/계정/알림 등 외부 시스템 Integration</li>
+</ul>
+<div class="boundary-note">
+<strong>한 사람이 끝까지 보는 흐름:</strong>
+    "외부 AI 인증 → Scope 검증 → Action 요청 → 승인/Idempotency 확인 → 외부 시스템에 실제 1회 실행 → Audit"
+  </div>
+</div>
+</div>
+<h3>11-2. Agent Team Module 개발 — 모델 3명</h3>
+<div class="role-card agent">
+<p>착수 시점에는 <strong>VOC &amp; Store Manager · Response Generation &amp; Review</strong>를 CS Pack의 확정 축으로 두고 3명을 배치한다. <strong>Procurement + Order &amp; Payment · Fulfillment &amp; Logistics · Return &amp; Refund · Catalog &amp; Verification</strong>은 검증 쇼핑몰 프로젝트를 운영하기 위한 Commerce Ops Pack 연계 축이며, 그 프로젝트의 진행 범위와 일정에 따라 배치가 달라질 수 있다. 6명 팀 전체가 이 구성으로 고정되는 것은 아니다. Team 하나가 무거우면 2명을 붙이고, 가벼우면 한 사람이 둘을 본다.</p>
+<ul>
+<li>Team 내부 Agent / Subgraph 구조</li>
+<li>Team 내부 Agent 간 병렬 실행·merge·retry 정책</li>
+<li>업무별 Prompt / Tool 사용 전략</li>
+<li>Team 전용 Knowledge Scope / Retrieval / Rerank</li>
+<li>Team 전용 Episodic Memory 정책</li>
+<li>Team 단위 테스트 / 실패 / 재처리 시나리오</li>
+<li>PoC 대상 Team 1개는 독립 프로세스로 배포하고 A2A Remote Team으로 연결 가능</li></ul>
+<div class="boundary-note">
+  예: Team 3개면 각 1명, Team 2개면 2명+1명. 내부 경합은 해당 Team이 책임하고, Team 간 경합은 Core 1이 책임한다.
+</div>
+</div>
+<h3>11-3. UX / Observability / Evaluation</h3>
+<div class="role-card ui">
+<ul>
+<li>사용자 / 운영자 Web UI</li>
+<li>Case 상태 / Agent Trace / Shared State 시각화</li><li>Local vs A2A Remote Task 상태와 Graph 근거 경로 시각화</li>
+<li>Human Approval 화면</li>
+<li>Baseline vs Agentic Evaluation Harness</li>
+<li>Case 해결률 / 재처리 / latency / cost / Tool 호출 지표</li>
+<li>통합 데모 / 평가 리포트</li>
+</ul>
+<div class="boundary-note">
+  Core나 Agent Team의 내부 로직을 다시 구현하지 않고, 시스템을 보이게 만들고 품질을 측정하는 역할로 고정한다.
+  검증이 앞이고 프론트가 뒤다 — 이 1명의 1순위는 화면이 아니라 "좋아졌다"를 숫자로 증명하는 것이다.
+</div>
+</div>
+<h3>11-4. 책임 경계</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>질문 / 구현 항목</th><th>담당</th></tr></thead>
+<tbody>
+<tr><td>두 Team이 같은 Case를 동시에 실행해도 되는가?</td><td><strong>Core 1</strong></td></tr>
+<tr><td>Case owner / routing / retry / replan은?</td><td><strong>Core 1</strong></td></tr>
+<tr><td>Shared State version / CAS / Optimistic Concurrency / Transaction은?</td><td><strong>Core 1</strong></td></tr>
+<tr><td>Message Broker로 Task/Event를 어떻게 전달할까?</td><td><strong>Core 1</strong></td></tr>
+<tr><td>외부 AI가 누구이며 어떤 Scope로 들어오는가?</td><td><strong>Core 2</strong></td></tr>
+<tr><td>같은 환불/계정 변경 Action이 두 번 실행되지 않게 하는가?</td><td><strong>Core 2</strong> — Idempotency</td></tr>
+<tr><td>선택된 Team 내부에서 문제를 어떻게 해결하는가?</td><td><strong>Agent Team 개발자 3명</strong></td></tr>
+<tr><td>한 Team 내부 Agent 간 경합은?</td><td><strong>해당 Agent Team</strong></td></tr>
+<tr><td>사용자/운영자 화면과 전체 품질 평가는?</td><td><strong>UX / Evaluation 1명</strong></td></tr>
+<tr><td>Remote A2A Task를 Case State와 어떻게 연결하는가?</td><td><strong>Core 1</strong></td></tr><tr><td>A2A HTTP/Auth/Agent Card Endpoint를 어떻게 제공하는가?</td><td><strong>Core 2</strong></td></tr><tr><td>GraphRAG 관계 탐색과 Context Pack 통합은?</td><td><strong>Core 1</strong></td></tr><tr><td>Remote Team 자체 Agent/Subgraph는?</td><td><strong>해당 Agent Team</strong></td></tr></tbody>
+</table>
+</div>
+<h3>11-5. DB도 "백엔드 담당 1명"에게 몰지 않는다</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>데이터 영역</th><th>주 소유자</th><th>예시</th></tr></thead>
+<tbody>
+<tr><td>Case Runtime 데이터</td><td><strong>Core 1</strong></td><td>customer_cases, case_events, shared_state, agent_runs, team_registry 관련 Repository</td></tr>
+<tr><td>Access / Action 데이터</td><td><strong>Core 2</strong></td><td>external_ai_clients, oauth_connections, action_requests, approvals, audit_logs</td></tr>
+<tr><td>공통 DB 기반</td><td><strong>공통 합의</strong></td><td>SQLAlchemy Base, connection, Alembic convention, 공통 timestamp/error 규칙</td></tr>
+</tbody>
+</table>
+</div>
+<div class="why-box">
+<strong>결론:</strong>
+  아키텍처 컴포넌트는 분리한다. 하지만 사람 역할까지 Controller / Repository / Broker / DB처럼 잘게 나누지 않는다.
+  <strong>Core 1은 "Case를 안전하게 끝까지 실행"하고, Core 2는 "외부 요청과 실제 Action을 안전하게 끝까지 실행"</strong>한다.
+</div>
+</section>
+<footer class="footer"><p>사실 기준: <code>program/research/에이전트팀_구성.md</code> · <code>A-COP_구현계획서_v8.md</code> §16 · <code>program/research/20260816_0535_설계_A-COP_시스템지도.md</code> §16</p></footer>
+</div>
+</body>
+</html>

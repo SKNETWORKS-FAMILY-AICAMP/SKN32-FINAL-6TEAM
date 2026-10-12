@@ -42,7 +42,7 @@ for (const width of [375, 1280]) {
       await page.getByRole("button", { name: "자동으로 넘어가지 않기" }).click();
       await noHorizontalScroll(page);
       if (process.env.COMPLETED_SHOTS) {
-        await page.locator('[class*="plan-check-module"][class*="__reading"]').evaluate((element) => element.scrollTo({ top: 0, behavior: "instant" }));
+        await page.locator('#main-content > div').filter({ has: page.getByRole('heading', { name: '계획을 확인하고 있어요', exact: true }) }).evaluate((element) => element.scrollTo({ top: 0, behavior: "instant" }));
         await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
         await page.screenshot({ path: `${process.env.COMPLETED_SHOTS}/completed-questions-${width}.png`, fullPage: true });
       }

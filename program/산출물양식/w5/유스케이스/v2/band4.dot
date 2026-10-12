@@ -1,0 +1,38 @@
+digraph UC {
+  graph [rankdir=LR, splines=spline, nodesep=0.42, ranksep=0.9, pad=0.2, fontname="Malgun Gothic", bgcolor="transparent", ordering=out];
+  node [fontname="Malgun Gothic", fontsize=13];
+  edge [fontname="Malgun Gothic", fontsize=11, color="#5f6b64", penwidth=1.4, arrowhead=none, arrowsize=0.9];
+  { rank=min; timer [shape=box, style="rounded,filled", fillcolor="#f6ead4", color="#c8913a", penwidth=1.6, label=<<FONT POINT-SIZE="11" COLOR="#8a5f1c">«시간»</FONT><BR/><B>시간</B><BR/><FONT POINT-SIZE="11" COLOR="#5f6b64">3분 · 03:00 · 알림 시각 · 1분</FONT>>]; }
+  subgraph cluster_sys { label=<<B>triPilot · 4 자동 관리</B>>; fontsize=16; fontcolor="#2f6c9a"; style="rounded"; color="#2f6c9a"; penwidth=2.2; margin=20;
+    u10 [shape=ellipse, style="filled", fillcolor="#fffdf7", color="#7f8f86", penwidth=1.6, margin="0.12,0.04", label=<<FONT POINT-SIZE="10" COLOR="#7d867f">UC-10</FONT><BR/>외부 변화 감시<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">3분마다</FONT>>];
+    u11 [shape=ellipse, style="filled", fillcolor="#fffdf7", color="#7f8f86", penwidth=1.6, margin="0.12,0.04", label=<<FONT POINT-SIZE="10" COLOR="#7d867f">UC-11</FONT><BR/>새벽 정기 점검<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">03:00~08:00 · 항목 · 날짜마다 한 번</FONT>>];
+    u15 [shape=ellipse, style="filled", fillcolor="#fffdf7", color="#7f8f86", penwidth=1.6, margin="0.12,0.04", label=<<FONT POINT-SIZE="10" COLOR="#7d867f">UC-15</FONT><BR/>일정 알림 보내기<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">하루 시작 · 다음 일정 · 출발</FONT>>];
+    u16 [shape=ellipse, style="filled", fillcolor="#fffdf7", color="#7f8f86", penwidth=1.6, margin="0.12,0.04", label=<<FONT POINT-SIZE="10" COLOR="#7d867f">UC-16</FONT><BR/>오류 알림 받기<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">상시 작업이 연속 실패할 때</FONT>>];
+    w1 [shape=ellipse, style="filled", fillcolor="#f3f6f1", color="#9fb0a6", penwidth=1.6, margin="0.12,0.04", label=<소스 수집<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">소스마다 한 번 · 값 · 지문</FONT>>];
+    w2 [shape=ellipse, style="filled", fillcolor="#f3f6f1", color="#9fb0a6", penwidth=1.6, margin="0.12,0.04", label=<바뀐 값에 걸린 항목 고르기<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">변화 없으면 사건 0 · 알림 0</FONT>>];
+    w3 [shape=ellipse, style="filled", fillcolor="#fbf4e6", color="#c8913a", penwidth=1.6, margin="0.12,0.04", label=<대체 소스로 다시 읽기<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">1차 실패 시 · 대체도 실패면 오류</FONT>>];
+    o1 [shape=ellipse, style="filled", fillcolor="#f3f6f1", color="#9fb0a6", penwidth=1.6, margin="0.12,0.04", label=<영업시간 조회<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">계획한 시각에 여나</FONT>>];
+    n1 [shape=ellipse, style="filled", fillcolor="#f3f6f1", color="#9fb0a6", penwidth=1.6, margin="0.12,0.04", label=<출발 시각 계산<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">다음 시작 − 이동 − 여유</FONT>>];
+    n2 [shape=ellipse, style="filled", fillcolor="#f3f6f1", color="#9fb0a6", penwidth=1.6, margin="0.12,0.04", label=<문구틀 번역<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">언어마다 처음 한 번 · 값은 원값</FONT>>];
+    n3 [shape=ellipse, style="filled", fillcolor="#f3f6f1", color="#9fb0a6", penwidth=1.6, margin="0.12,0.04", label=<알림 배달<BR/><FONT POINT-SIZE="10" COLOR="#5f6b64">3번까지 다시 · 중복 0</FONT>>];
+  }
+  { rank=max; watch [shape=box, style="rounded,filled", fillcolor="#f6ead4", color="#c8913a", penwidth=1.6, label=<<FONT POINT-SIZE="11" COLOR="#8a5f1c">«시스템»</FONT><BR/><B>외부 데이터 6종</B><BR/><FONT POINT-SIZE="11" COLOR="#5f6b64">날씨 · 특보 · 예보 · 재난문자 · 교통 2</FONT>>]; google [shape=box, style="rounded,filled", fillcolor="#f6ead4", color="#c8913a", penwidth=1.6, label=<<FONT POINT-SIZE="11" COLOR="#8a5f1c">«시스템»</FONT><BR/><B>장소 · 영업 정보</B><BR/><FONT POINT-SIZE="11" COLOR="#5f6b64">같은 액터 · Google(새벽만)</FONT>>]; ai [shape=box, style="rounded,filled", fillcolor="#f6ead4", color="#c8913a", penwidth=1.6, label=<<FONT POINT-SIZE="11" COLOR="#8a5f1c">«시스템»</FONT><BR/><B>AI 모델</B><BR/><FONT POINT-SIZE="11" COLOR="#5f6b64">같은 액터 · 시험 중</FONT>>]; discord [shape=box, style="rounded,filled", fillcolor="#f6ead4", color="#c8913a", penwidth=1.6, label=<<FONT POINT-SIZE="11" COLOR="#8a5f1c">«시스템»</FONT><BR/><B>디스코드</B><BR/><FONT POINT-SIZE="11" COLOR="#5f6b64">같은 액터</FONT>>]; operator [shape=none, margin=0, label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="2"><TR><TD><IMG SRC="actor.png"/></TD></TR><TR><TD><B>운영자</B></TD></TR></TABLE>>]; }
+  timer -> u10;
+  timer -> u11;
+  timer -> u15;
+  timer -> u16;
+  u10 -> w1 [style=dashed, arrowhead=vee, label="«include»", fontcolor="#2d5f48", color="#2d5f48"];
+  u10 -> w2 [style=dashed, arrowhead=vee, label="«include»", fontcolor="#2d5f48", color="#2d5f48"];
+  w1 -> w3 [style=dashed, dir=back, arrowtail=vee, label="«extend»", fontcolor="#8a5f1c", color="#c8913a"];
+  u11 -> o1 [style=dashed, arrowhead=vee, label="«include»", fontcolor="#2d5f48", color="#2d5f48"];
+  u15 -> n1 [style=dashed, arrowhead=vee, label="«include»", fontcolor="#2d5f48", color="#2d5f48"];
+  u15 -> n2 [style=dashed, arrowhead=vee, label="«include»", fontcolor="#2d5f48", color="#2d5f48"];
+  u15 -> n3 [style=dashed, arrowhead=vee, label="«include»", fontcolor="#2d5f48", color="#2d5f48"];
+  w1 -> watch;
+  w3 -> watch;
+  o1 -> google;
+  n2 -> ai;
+  n3 -> discord;
+  u16 -> operator;
+  u10 -> u11 -> u15 -> u16 [style=invis, constraint=false];
+}

@@ -1,0 +1,18 @@
+### 전문가 단계를 가르친 Jev 계열 모델(Winnow-E4B + QLoRA)과 가르친 E4B 로 놓은 구성 — 요청 둘 제외 769문제(mix8~12)
+규칙·ML 판별기 단계는 서버 C 에서 실제 호출한 결과, 전문가 답·확신도는 서버 B 에서 같은 조건(HF 4비트 + 어댑터)으로 저장한 평가 결과. 문턱·유형별 전문가·라우터는 한 세트 빼고 고른 값(leave-one-set-out).
+| 구성 | 정답/769 | 요청 둘 A · B (/66) | 단독 가르친 E4B 와(이쪽만 : 단독만, p) |
+|---|---:|---|---|
+| 단독 가르친 E4B(규칙·ML 없음) | **750** (97.5%) | 66 · 66 | — |
+| 단독 가르친 Winnow-E4B(Jev 계열) | **756** (98.3%) | 65 · 65 | 10 : 4 (p=0.18) |
+| S1 규칙 → ML → 가르친 E4B | **747** (97.1%) | 64 · 65 | 4 : 7 (p=0.549) |
+| S2 규칙 → ML → 가르친 Winnow-E4B(Jev 계열) | **752** (97.8%) | 63 · 64 | 12 : 10 (p=0.832) |
+| S3a 규칙 → ML → 가르친 E4B, 확신 낮으면 가르친 Winnow-E4B 로 인계 | **752** (97.8%) | 64 · 65 | 11 : 9 (p=0.824) |
+| S3b 규칙 → ML → 가르친 Winnow-E4B, 확신 낮으면 가르친 E4B 로 인계 | **750** (97.5%) | 63 · 64 | 10 : 10 (p=1) |
+| S4 규칙 → ML(유형 판별기) → 유형별로 더 나은 가르친 모델에 보냄 | **751** (97.7%) | 64 · 65 | 9 : 8 (p=1) |
+| S5 규칙 → ML(학습한 라우터) → 두 가르친 모델 중 고름 | **751** (97.7%) | 63 · 64 | 10 : 9 (p=1) |
+| (상한) 두 가르친 모델 중 하나라도 맞히면 맞음 — 고르는 방법 없음 | **755** (98.2%) | 64 · 65 | 12 : 7 (p=0.359) |
+
+- 규칙·ML 거름이 끝낸 문제 158/769 · 두 전문가가 서로 다른 답을 낸 문제(거름 뒤) 12
+- 확신도 인계 문턱(세트별로 고른 값): 앞 전문가=가르친 E4B [0.95, 0.98, 0.98, 0.995, 0.98] · 앞 전문가=가르친 Winnow-E4B [0.8, 0.5, 0.5, 0.5, 0.5]
+- 유형 판별기(증류 학습 자료 1313문제로 글자 2~4-gram 로지스틱 학습) 시험 세트 유형 정확도 79.6% · 세트별로 고른 「유형 → 전문가」: nameless_description:W / nameless_description:W / nameless_description:W / nameless_description:W / nameless_description:W
+- 유형별 정답(거름 뒤 · 단독 기준): absent_but_plausible E4B 78 / Winnow 77 (/78) · change_request E4B 79 / Winnow 79 (/79) · confusable_name E4B 76 / Winnow 76 (/77) · context_pronoun E4B 70 / Winnow 69 (/71) · duplicate_place E4B 79 / Winnow 78 (/79) · nameless_description E4B 63 / Winnow 70 (/75) · negation E4B 72 / Winnow 72 (/72) · ordinal_relative E4B 75 / Winnow 77 (/80) · out_of_scope E4B 80 / Winnow 80 (/80) · typo_slang E4B 78 / Winnow 78 (/78)

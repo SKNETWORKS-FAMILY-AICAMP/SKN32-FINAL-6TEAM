@@ -1,0 +1,176 @@
+{"job": "heavy", "q": "거기 예약돼 있어?", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 16, "gold": 16, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "그 미술관 입장료는?", "path": "verify", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": 23, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "마지막 거 취소", "path": "point", "why": "순서만 있고 조건 없음", "slots": {"pos": "last"}, "answer": 39, "gold": 39, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "뒤에 거 삭제해줘", "path": "point", "why": "앞뒤 관계인데 기준 항목 불명(조건 후보 0개)", "slots": {"rel": "next"}, "answer": 34, "gold": 34, "experts": ["anchor:e4b", "gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "그 호텔 짐 맡길 수 있나?", "path": "point", "why": "조건(날=None 종류=lodging 끼니=None 키워드=체크인) 후보 2개", "slots": {"kind": "lodging", "kw": "체크인"}, "answer": 21, "gold": 21, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "마지막 날 걸로 예약해줘", "path": "point", "why": "조건(날=d7 종류=None 끼니=None 키워드=None) 후보 9개", "slots": {"day": "d7"}, "answer": 50, "gold": 50, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "아침 거 시간 미뤄줘", "path": "struct", "why": "조건(날=None 종류=None 끼니=breakfast 키워드=None) 후보 1개", "slots": {"meal": "breakfast"}, "answer": 28, "gold": 28, "experts": []}
+{"job": "heavy", "q": "앞에 거는 비 오면 빼줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 12, "gold": 12, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "두번째 호텔 어디야", "path": "struct", "why": "조건(날=None 종류=lodging 끼니=None 키워드=체크인) 후보 2개 중 2번째", "slots": {"pos": 2, "kind": "lodging", "kw": "체크인"}, "answer": 26, "gold": 26, "experts": []}
+{"job": "heavy", "q": "처음 체크인 시간이 뭐지?", "path": "struct", "why": "조건(날=None 종류=lodging 끼니=None 키워드=체크인) 후보 2개 중 first번째", "slots": {"pos": "first", "kind": "lodging", "kw": "체크인"}, "answer": 4, "gold": 4, "experts": []}
+{"job": "heavy", "q": "일요일 청계천 몇 시야", "path": "point", "why": "조건(날=d2 종류=None 끼니=None 키워드=None) 후보 7개", "slots": {"day": "d2"}, "answer": 12, "gold": 12, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "야경 청계천 취소", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 49, "gold": 49, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "일요일 어니언 몇 시", "path": "point", "why": "조건(날=d2 종류=None 끼니=None 키워드=None) 후보 7개", "slots": {"day": "d2"}, "answer": 11, "gold": 11, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "목요일 어니언 예약함?", "path": "point", "why": "조건(날=d6 종류=None 끼니=None 키워드=None) 후보 8개", "slots": {"day": "d6"}, "answer": 37, "gold": 37, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "한강에서 먹는 저녁은 몇 시?", "path": "point", "why": "조건(날=None 종류=dining 끼니=dinner 키워드=None) 후보 7개", "slots": {"kind": "dining", "meal": "dinner"}, "answer": 34, "gold": 34, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "한강 피크닉 시간 알려줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 33, "gold": 33, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "국립민속박물관 몇 시", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 15, "gold": 15, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "국립중앙박물관 시간", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 29, "gold": 29, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "공예박물관 몇시", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 10, "gold": 10, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "통인시장 언제 가", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 17, "gold": 17, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "남대문시장 시간", "path": "verify", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": 31, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "뚝섬 한강공원 몇 시", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 39, "gold": 39, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "스테이 서촌 체크인 몇 시", "path": "point", "why": "조건(날=None 종류=lodging 끼니=None 키워드=체크인) 후보 2개", "slots": {"kind": "lodging", "kw": "체크인"}, "answer": 26, "gold": 26, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "경희궁은 언제 가?", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "heavy", "q": "토속촌 예약하고 통인시장 몇 시인지도", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 16, "gold": 16, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "서울숲 취소하고 뚝섬 자전거도 빼줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 38, "gold": 38, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "명동교자 시간 당기고 남대문시장 늦춰줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 30, "gold": 30, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "정동극장 몇 시야 그리고 티켓도 알려줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 5, "gold": 5, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "서울로7017 빼고 한강 피크닉 앞당겨줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 32, "gold": 32, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "하동관 취소하고 광화문광장 시간 알려줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 20, "gold": 20, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "인사동 점심 취소, 쌈지길은 그대로", "path": "point", "why": "조건(날=None 종류=None 끼니=lunch 키워드=None) 후보 7개", "slots": {"meal": "lunch"}, "answer": 46, "gold": 46, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "태극당 시간 알려주고 교보문고도", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 48, "gold": 48, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "닭한마리 말고 첫날 점심 시간", "path": "struct", "why": "조건(날=d1 종류=None 끼니=lunch 키워드=None) 후보 1개", "slots": {"day": "d1", "meal": "lunch"}, "answer": 2, "gold": 2, "experts": []}
+{"job": "heavy", "q": "성수동 카페거리 말고 서울숲 시간", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 38, "gold": 38, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "이태원 브런치 말고 그 전에 리움 시간", "path": "struct", "why": "기준 항목 24 의 앞", "slots": {"rel": "prev", "anchor": 24}, "answer": 23, "gold": 23, "experts": ["anchor:e4b"]}
+{"job": "heavy", "q": "광장시장 저녁 말고 아침 거 취소", "path": "struct", "why": "조건(날=None 종류=None 끼니=breakfast 키워드=None) 후보 1개", "slots": {"meal": "breakfast"}, "answer": 28, "gold": 28, "experts": []}
+{"job": "heavy", "q": "하동관 말고 셋째 날 낮 식당 시간", "path": "struct", "why": "조건(날=d3 종류=dining 끼니=lunch 키워드=None) 후보 1개", "slots": {"day": "d3", "kind": "dining", "meal": "lunch"}, "answer": 16, "gold": 16, "experts": []}
+{"job": "heavy", "q": "종묘 말고 그 다음 일정 뭐야", "path": "struct", "why": "기준 항목 44 의 다음", "slots": {"rel": "next", "anchor": 44}, "answer": 45, "gold": 45, "experts": ["anchor:e4b"]}
+{"job": "heavy", "q": "명동교자 말고 이문설농탕 시간", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 27, "gold": 27, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "홍대 버스킹 말고 연남동 시간", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 41, "gold": 41, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "광장시장 빈대떡 시간ㅇㅇ", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 13, "gold": 13, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "경복공 몇시야", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 14, "gold": 14, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "북초 몇시?", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 8, "gold": 8, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "리움미술관 몇시양", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 23, "gold": 23, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "전쟁기렴관 시간", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 25, "gold": 25, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "성수 카페거리 몇시욤", "path": "point", "why": "조건(날=None 종류=dining 끼니=None 키워드=None) 후보 18개", "slots": {"kind": "dining"}, "answer": 36, "gold": 36, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "종묘 시간임?", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 44, "gold": 44, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "우래옥 첫날 몇시얌", "path": "point", "why": "조건(날=d1 종류=None 끼니=None 키워드=None) 후보 6개", "slots": {"day": "d1"}, "answer": 2, "gold": 2, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "너 이름이 뭐야", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "heavy", "q": "환율 알려줘", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "heavy", "q": "김치찌개 레시피 알려줘", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "heavy", "q": "서울 지하철 요금 얼마야", "path": "gate", "why": "조건(날=None 종류=mobility 끼니=None 키워드=None) 후보 5개", "slots": {"kind": "mobility"}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "heavy", "q": "한국어로 안녕 어떻게 말해", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "heavy", "q": "근데 너 AI야?", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "heavy", "q": "비행기 티켓 얼마야?", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "heavy", "q": "오늘 뭐 먹지 추천해줘", "path": "gate", "why": "조건(날=None 종류=dining 끼니=None 키워드=None) 후보 18개", "slots": {"kind": "dining"}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "heavy", "q": "공연 보는 거", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 5, "gold": 5, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "전쟁 역사 보는 곳", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 25, "gold": 25, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "대형 미술관 가는 거", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 23, "gold": 23, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "빵집에서 간식 먹는 거", "path": "point", "why": "조건(날=None 종류=dining 끼니=None 키워드=None) 후보 18개", "slots": {"kind": "dining"}, "answer": 48, "gold": 48, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "책방 구경하는 일정", "path": "point", "why": "조건(날=None 종류=activity 끼니=None 키워드=None) 후보 24개", "slots": {"kind": "activity"}, "answer": 47, "gold": 47, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "시장에서 김밥 먹는 아침", "path": "struct", "why": "조건(날=None 종류=dining 끼니=breakfast 키워드=None) 후보 1개", "slots": {"kind": "dining", "meal": "breakfast"}, "answer": 28, "gold": 28, "experts": []}
+{"job": "heavy", "q": "고가도로 공원 산책", "path": "verify", "why": "조건(날=None 종류=activity 끼니=None 키워드=None) 후보 24개", "slots": {"kind": "activity"}, "answer": null, "gold": 32, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "한강에서 자전거 타는 거", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 39, "gold": 39, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "마지막 날 체크아웃 바로 다음 일정", "path": "struct", "why": "기준 항목 43 의 다음", "slots": {"day": "d7", "kind": "lodging", "rel": "next", "kw": "체크아웃", "anchor": 43}, "answer": 44, "gold": 44, "experts": ["anchor:e4b"]}
+{"job": "heavy", "q": "다섯째 날 저녁 식사", "path": "struct", "why": "조건(날=d5 종류=dining 끼니=dinner 키워드=None) 후보 1개", "slots": {"day": "d5", "kind": "dining", "meal": "dinner"}, "answer": 34, "gold": 34, "experts": []}
+{"job": "heavy", "q": "둘째 날 마지막 일정", "path": "struct", "why": "조건(날=d2 종류=None 끼니=None 키워드=None) 후보 7개 중 last번째", "slots": {"day": "d2", "pos": "last"}, "answer": 13, "gold": 13, "experts": []}
+{"job": "heavy", "q": "여섯째 날 점심", "path": "struct", "why": "조건(날=d6 종류=None 끼니=lunch 키워드=None) 후보 1개", "slots": {"day": "d6", "meal": "lunch"}, "answer": 37, "gold": 37, "experts": []}
+{"job": "heavy", "q": "이틀째 첫 일정", "path": "struct", "why": "조건(날=d2 종류=None 끼니=None 키워드=None) 후보 7개 중 first번째", "slots": {"day": "d2", "pos": "first"}, "answer": 7, "gold": 7, "experts": []}
+{"job": "heavy", "q": "청계천 걷고 나서 바로 뭐 먹어?", "path": "point", "why": "조건(날=None 종류=dining 끼니=None 키워드=None) 후보 18개", "slots": {"kind": "dining"}, "answer": 13, "gold": 13, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "삼청동 점심 바로 전 일정", "path": "struct", "why": "기준 항목 9 의 앞", "slots": {"meal": "lunch", "rel": "prev", "anchor": 9}, "answer": 8, "gold": 8, "experts": ["anchor:e4b"]}
+{"job": "heavy", "q": "닷새째 아침", "path": "struct", "why": "조건(날=d5 종류=None 끼니=breakfast 키워드=None) 후보 1개", "slots": {"day": "d5", "meal": "breakfast"}, "answer": 28, "gold": 28, "experts": []}
+{"job": "heavy", "q": "이거 취소해줘", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "heavy", "q": "시간 좀 미뤄줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "heavy", "q": "서울숲 취소", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 38, "gold": 38, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "종묘 11시로 바꿔줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 44, "gold": 44, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "홍대 버스킹 없애줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 42, "gold": 42, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "그거 한 시간 뒤로", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 31, "gold": 31, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "취소해줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 25, "gold": 25, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "저녁 취소해줘", "path": "point", "why": "조건(날=None 종류=None 끼니=dinner 키워드=None) 후보 7개", "slots": {"meal": "dinner"}, "answer": 50, "gold": null, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "동대문디자인플라자 몇시", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "heavy", "q": "코엑스 별마당도서관 가?", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "heavy", "q": "잠실 롯데월드 어드벤처 언제야", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "heavy", "q": "한강 유람선 몇 시야", "path": "verify", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "heavy", "q": "동묘 벼룩시장 몇 시", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "heavy", "q": "강남 교보문고는 몇 시?", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "heavy", "q": "롯데백화점 본점 시간", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "heavy", "q": "서울역사박물관 몇 시야", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "mix4", "q": "거기 조식 되나?", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 4, "gold": 4, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "그 집 웨이팅 심해?", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 30, "gold": 30, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "카페 쪽 취소할래", "path": "point", "why": "조건(날=None 종류=dining 끼니=None 키워드=None) 후보 18개", "slots": {"kind": "dining"}, "answer": 18, "gold": 18, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "그거 한 시간만 뒤로", "path": "point", "why": "앞뒤 관계인데 기준 항목 불명(조건 후보 0개)", "slots": {"rel": "next"}, "answer": 37, "gold": 37, "experts": ["anchor:e4b", "gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "맨 끝에 거 시간 확인해줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 51, "gold": 51, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "첫번째 거 몇 시였지", "path": "point", "why": "순서만 있고 조건 없음", "slots": {"pos": "first"}, "answer": 10, "gold": 10, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "거기 마지막 날에도 가나?", "path": "point", "why": "조건(날=d7 종류=None 끼니=None 키워드=None) 후보 9개", "slots": {"day": "d7"}, "answer": 50, "gold": 50, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "저녁 식당은 예약했어?", "path": "point", "why": "조건(날=None 종류=dining 끼니=dinner 키워드=None) 후보 7개", "slots": {"kind": "dining", "meal": "dinner"}, "answer": 41, "gold": 41, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "토요일 우래옥", "path": "point", "why": "조건(날=d1 종류=None 끼니=None 키워드=None) 후보 6개", "slots": {"day": "d1"}, "answer": 2, "gold": 2, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "금요일 우래옥 시간 알려줘", "path": "point", "why": "조건(날=d7 종류=None 끼니=None 키워드=None) 후보 9개", "slots": {"day": "d7"}, "answer": 50, "gold": 50, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "광장시장 두번째 방문 몇 시", "path": "point", "why": "순서만 있고 조건 없음", "slots": {"pos": 2}, "answer": 13, "gold": 28, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "첫번째 광장시장 취소해줘", "path": "point", "why": "순서만 있고 조건 없음", "slots": {"pos": "first"}, "answer": 13, "gold": 13, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "화요일 체크인 시간", "path": "struct", "why": "조건(날=d4 종류=lodging 끼니=None 키워드=체크인) 후보 1개", "slots": {"day": "d4", "kind": "lodging", "kw": "체크인"}, "answer": 26, "gold": 26, "experts": []}
+{"job": "mix4", "q": "수요일 광장시장", "path": "point", "why": "조건(날=d5 종류=None 끼니=None 키워드=None) 후보 7개", "slots": {"day": "d5"}, "answer": 28, "gold": 28, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "일요일 광장시장", "path": "point", "why": "조건(날=d2 종류=None 끼니=None 키워드=None) 후보 7개", "slots": {"day": "d2"}, "answer": 13, "gold": 13, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "한강 공원 가는 저녁 식사", "path": "point", "why": "조건(날=None 종류=dining 끼니=dinner 키워드=None) 후보 7개", "slots": {"kind": "dining", "meal": "dinner"}, "answer": 34, "gold": 34, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "창덕궁 후원 시간", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 7, "gold": 7, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "정동극장 티켓", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 5, "gold": 5, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "전쟁기념관 입장 시간", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 25, "gold": 25, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "이문설농탕 몇 시에 가", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 27, "gold": 27, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "발우공양 예약 시간", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 46, "gold": 46, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "명동교자 시간", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 30, "gold": 30, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "서울역 도착 몇 시", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 1, "gold": 1, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "국립현대미술관은 언제 가?", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "mix4", "q": "경복궁 취소하고 국립민속박물관 시간 알려줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 14, "gold": 14, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "북촌 시간 옮기고 삼청동 수제비도 늦춰줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 8, "gold": 8, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "종묘 예약하고 쌈지길 몇 시인지도 알려줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 44, "gold": 44, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "전쟁기념관 몇 시야? 그리고 리움은?", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 25, "gold": 25, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "서울숲 빼고 뚝섬 자전거 한 시간 당겨줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 38, "gold": 38, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "이문설농탕 취소, 호텔 체크인은 그대로", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 27, "gold": 27, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "청계천 야경 시간 알려주고 우래옥도", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 49, "gold": 49, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "남대문시장 미루고 서울로7017도 빼줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 31, "gold": 31, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "국립중앙박물관 말고 남대문시장 시간", "path": "verify", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": 31, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "리움 말고 그 다음 일정 시간", "path": "struct", "why": "기준 항목 23 의 다음", "slots": {"rel": "next", "anchor": 23}, "answer": 24, "gold": 24, "experts": ["anchor:e4b"]}
+{"job": "mix4", "q": "우래옥 말고 첫날 저녁 시간", "path": "struct", "why": "조건(날=d1 종류=None 끼니=dinner 키워드=None) 후보 1개", "slots": {"day": "d1", "meal": "dinner"}, "answer": 6, "gold": 6, "experts": []}
+{"job": "mix4", "q": "경복궁 말고 통인시장 취소", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 17, "gold": 17, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "토속촌 말고 그 전 일정", "path": "point", "why": "앞뒤 관계인데 기준 항목 불명(조건 후보 0개)", "slots": {"rel": "prev"}, "answer": null, "gold": 15, "experts": ["anchor:e4b", "gate:e4b", "point:12b"]}
+{"job": "mix4", "q": "창덕궁 말고 셋째 날 첫 일정", "path": "struct", "why": "조건(날=d3 종류=None 끼니=None 키워드=None) 후보 7개 중 first번째", "slots": {"day": "d3", "pos": "first"}, "answer": 14, "gold": 14, "experts": []}
+{"job": "mix4", "q": "광장시장 아침 말고 저녁 거 시간", "path": "point", "why": "조건(날=None 종류=None 끼니=dinner 키워드=None) 후보 7개", "slots": {"meal": "dinner"}, "answer": 6, "gold": 13, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "하동관 말고 이문설농탕 시간", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 27, "gold": 27, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "종묘 몇시얌", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 44, "gold": 44, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "서울숲 몇시임?", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 38, "gold": 38, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "교보문고 몇시욤", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 47, "gold": 47, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "태극당 시간ㅇㅇ", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 48, "gold": 48, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "청계천 야경 몇싱", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 49, "gold": 49, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "경복궁 몇시양", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 14, "gold": 14, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "수제비집 취소ㅠㅠ", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 9, "gold": 9, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "연남동 저녁 몇 시얌", "path": "point", "why": "조건(날=None 종류=None 끼니=dinner 키워드=None) 후보 7개", "slots": {"meal": "dinner"}, "answer": 41, "gold": 41, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "내일 비 와?", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "mix4", "q": "ㅋㅋㅋㅋㅋ", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "mix4", "q": "비트코인 얼마야", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "mix4", "q": "자바스크립트 코드 짜줘", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "mix4", "q": "너 몇 살이야", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "mix4", "q": "택시 앱 뭐 써야 돼?", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "mix4", "q": "감사합니다 수고하세요", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "mix4", "q": "환불 규정 알려줘", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b"]}
+{"job": "mix4", "q": "궁궐 구경하는 거 첫날", "path": "struct+point", "why": "조건(날=d1 종류=activity 끼니=None 키워드=None) 후보 2개 — 되묻기 — 후보 안에서 짚기 전문가가 3 선택", "slots": {"day": "d1", "kind": "activity"}, "answer": 3, "gold": 3, "experts": ["point:12b"]}
+{"job": "mix4", "q": "냉면집 마지막 날 저녁", "path": "struct", "why": "조건(날=d7 종류=None 끼니=dinner 키워드=None) 후보 1개", "slots": {"day": "d7", "meal": "dinner"}, "answer": 50, "gold": 50, "experts": []}
+{"job": "mix4", "q": "설렁탕 저녁", "path": "point", "why": "조건(날=None 종류=None 끼니=dinner 키워드=None) 후보 7개", "slots": {"meal": "dinner"}, "answer": 27, "gold": 27, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "칼국수 점심", "path": "point", "why": "조건(날=None 종류=None 끼니=lunch 키워드=None) 후보 7개", "slots": {"meal": "lunch"}, "answer": 30, "gold": 30, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "한옥마을 걷는 거", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 8, "gold": 8, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "야경 보는 산책", "path": "point", "why": "조건(날=None 종류=activity 끼니=None 키워드=None) 후보 24개", "slots": {"kind": "activity"}, "answer": 49, "gold": 49, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "수제비 먹는 점심", "path": "point", "why": "조건(날=None 종류=dining 끼니=lunch 키워드=None) 후보 7개", "slots": {"kind": "dining", "meal": "lunch"}, "answer": 9, "gold": 9, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "극장 가는 거", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 5, "gold": 5, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "목요일 세번째 일정", "path": "struct", "why": "조건(날=d6 종류=None 끼니=None 키워드=None) 후보 8개 중 3번째", "slots": {"day": "d6", "pos": 3}, "answer": 37, "gold": 37, "experts": []}
+{"job": "mix4", "q": "화요일 첫 일정", "path": "struct", "why": "조건(날=d4 종류=None 끼니=None 키워드=None) 후보 7개 중 first번째", "slots": {"day": "d4", "pos": "first"}, "answer": 21, "gold": 21, "experts": []}
+{"job": "mix4", "q": "이틀째 첫 식사", "path": "struct", "why": "조건(날=d2 종류=dining 끼니=None 키워드=None) 후보 3개 중 first번째", "slots": {"day": "d2", "pos": "first", "kind": "dining"}, "answer": 9, "gold": 9, "experts": []}
+{"job": "mix4", "q": "여행 두번째 식사", "path": "struct", "why": "조건(날=None 종류=dining 끼니=None 키워드=None) 후보 18개 중 2번째", "slots": {"pos": 2, "kind": "dining"}, "answer": 6, "gold": 6, "experts": []}
+{"job": "mix4", "q": "닷새째 두번째 식사", "path": "struct", "why": "조건(날=d5 종류=dining 끼니=None 키워드=None) 후보 3개 중 2번째", "slots": {"day": "d5", "pos": 2, "kind": "dining"}, "answer": 30, "gold": 30, "experts": []}
+{"job": "mix4", "q": "정동극장 다음에 뭐 먹어?", "path": "struct", "why": "기준 항목 6 의 다음", "slots": {"kind": "dining", "rel": "next", "anchor": 6}, "answer": 7, "gold": 6, "experts": ["anchor:e4b"]}
+{"job": "mix4", "q": "종묘 바로 전 일정", "path": "struct", "why": "기준 항목 44 의 앞", "slots": {"rel": "prev", "anchor": 44}, "answer": 43, "gold": 43, "experts": ["anchor:e4b"]}
+{"job": "mix4", "q": "일곱째 날 마지막 식사", "path": "struct", "why": "조건(날=d7 종류=dining 끼니=None 키워드=None) 후보 3개 중 last번째", "slots": {"day": "d7", "pos": "last", "kind": "dining"}, "answer": 50, "gold": 50, "experts": []}
+{"job": "mix4", "q": "경복궁 한 시간 늦춰줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 14, "gold": 14, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "통인시장 빼줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 17, "gold": 17, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "리움 취소할게요", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 23, "gold": 23, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "쌈지길 30분 당겨줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 45, "gold": 45, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "일정 좀 바꿔줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "mix4", "q": "그 시간 미뤄주세요", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "mix4", "q": "그거 취소해줘", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 47, "gold": 47, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "삭제해줘", "path": "gate", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": 29, "experts": ["gate:e4b"]}
+{"job": "mix4", "q": "남산 케이블카 몇 시", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "mix4", "q": "홍대 클럽 언제 가", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": 42, "gold": null, "experts": ["gate:e4b", "point:12b", "verify:12b"]}
+{"job": "mix4", "q": "강남역 쇼핑 몇 시", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "mix4", "q": "올림픽공원 몇 시", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "mix4", "q": "서울랜드 몇 시야", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "mix4", "q": "익선동 한옥거리 언제 가?", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}
+{"job": "mix4", "q": "이화여대 앞 쇼핑 시간", "path": "point", "why": "앞뒤 관계인데 기준 항목 불명(조건 후보 0개)", "slots": {"rel": "prev"}, "answer": null, "gold": null, "experts": ["anchor:e4b", "gate:e4b", "point:12b"]}
+{"job": "mix4", "q": "가로수길 몇 시", "path": "point", "why": "구조 조건 없음", "slots": {}, "answer": null, "gold": null, "experts": ["gate:e4b", "point:12b"]}

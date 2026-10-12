@@ -48,7 +48,13 @@ test("Esc · 닫기 단추 · 바깥을 눌러 닫으면 아무것도 정해지�
     await expect(card(page)).toBeVisible();
     if (way === "esc") await page.keyboard.press("Escape");
     else if (way === "close") await card(page).getByRole("button", { name: "닫기" }).click();
-    else { const frame = (await page.locator('[data-device]').first().boundingBox())!; await page.mouse.click(frame.x + frame.width / 2, frame.y + 100); }   // 카드는 휴대폰 틀 안에 있다 — 틀 안의 바깥(어두운 바탕)을 누른다
+    else {
+      const background = card(page).locator('..'), layer = (await background.boundingBox())!;
+      // 둥근 기기 모서리 밖을 누르지 않고 실제 배경의 안쪽을 누릅니다.
+      const at = { x: layer.x + layer.width / 2, y: layer.y + 12 };
+      expect(await background.evaluate((node, at) => document.elementFromPoint(at.x, at.y) === node, at)).toBe(true);
+      await page.mouse.click(at.x, at.y);
+    }
     await expect(card(page)).toHaveCount(0);
     await expect(send(page)).toBeFocused();
   }

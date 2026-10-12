@@ -16,6 +16,14 @@ const constantValues: string[] = [
 ].sort((a, b) => b.length - a.length); // longest first, so a value that contains another is removed whole
 
 describe("terms documents (one per consent item)", () => {
+  it("keeps improvement optional and discloses bounded fields, withdrawal and separate synthetic review", () => {
+    const doc = TERMS_DOCS.find((entry) => entry.code === "service_improvement")!;
+    expect(doc.required).toBe(false);
+    const ko = doc.sections.map((section) => section.body[0]).join("\n");
+    const en = doc.sections.map((section) => section.body[1]).join("\n");
+    for (const phrase of ["모델 학습·평가", "원본", "7일", "5년", "개별 회수", "선택", "건강·종교·식사 제한", "익명성이 확인된"]) expect(ko).toContain(phrase);
+    for (const phrase of ["model training/evaluation", "7 days", "5 years", "individually", "optional", "confirmed anonymous"]) expect(en).toContain(phrase);
+  });
   it("has exactly one document for each consent code", () => {
     expect(TERMS_DOCS.map((doc) => doc.code).sort()).toEqual([...CONSENT_CODES].sort());
   });

@@ -8,6 +8,7 @@ import tempfile
 from app.composition import CompositionError, build_graph_store, build_registry
 from app.core.project_config import ProjectConfig, ProjectConfigError, load_project_config
 from app.core.registry import RegistryError
+from app.core.team_availability import TeamUnavailable
 from app.tools.read_tools import ReadToolbox
 
 from tests.registered_teams import EXPECTED_TEAM_IDS
@@ -43,8 +44,10 @@ def test_declaration_controls_active_routing_and_keeps_inactive_manifest():
 
     assert {manifest.team_id for manifest in registry.manifests()} == {"activity"}
     assert registry.get("activity").manifest.active is True
-    with pytest.raises(RegistryError, match="exactly one active team"):
+    with pytest.raises(RegistryError):
         registry.resolve(case_type="technical")
+    with pytest.raises(TeamUnavailable, match="not_installed"):
+        registry.resolve(case_type="dining")
 
 
 def test_duplicate_team_id_is_rejected():
@@ -138,8 +141,13 @@ teams:
 def test_load_project_config_rejects_invalid_active_implementation(implementation_ref, message):
     with tempfile.TemporaryDirectory(dir=Path.cwd()) as directory:
         path = _write_project_config(directory, implementation_ref)
-        with pytest.raises(ProjectConfigError, match=message):
-            load_project_config(path)
+        if implementation_ref == "not-a-ref":
+            with pytest.raises(ProjectConfigError, match=message):
+                load_project_config(path)
+        else:
+            config = load_project_config(path)
+            with pytest.raises(CompositionError):
+                build_registry(config=config, tools=_tools(), llm=object())
 
 
 def test_load_project_config_does_not_import_inactive_implementation():

@@ -99,9 +99,9 @@ export function editIntake(intakeId: string, revision: number, edits: IntakeEdit
 }
 
 /** Restore a completed historical revision atomically; protected stops or a stale revision reject the whole request. */
-export function restoreIntake(intakeId: string, revision: number, restoreRevision: number, language: Language): Promise<ReviewedIntakeView> {
+export function restoreIntake(intakeId: string, revision: number, restoreRevision: number, language: Language, item?: { source_id: string; index: number }): Promise<ReviewedIntakeView> {
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/restore`, language, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, restore_revision: restoreRevision }),
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, restore_revision: restoreRevision, ...(item && { item }) }),
   });
 }
 

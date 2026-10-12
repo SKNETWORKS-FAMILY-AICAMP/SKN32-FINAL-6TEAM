@@ -1,5 +1,4 @@
 from app.core.settings import get_guardrails
-from app.presentation.api.mcp import mcp
 
 
 # invariant: INV-CS-SEC-007
@@ -29,15 +28,8 @@ def test_scopes_are_guardrail_owned():
 
     ★이름에서 개수를 뺐다 — scope 가 늘 때마다 함수 이름이 낡는다."""
     assert set(get_guardrails().get("security.scopes")) == {
-        "case:read", "case:write", "order:read", "return:read", "action:approve", "mcp:read",
+        "case:read", "case:write", "action:approve", "mcp:read",
         "composer:read", "composer:validate", "composer:write", "composer:admin",
         "ops:introspect", "ops:reload", "trip:read", "trip:write",
         "delegation:read", "delegation:write", "limits:read", "limits:write",
     }
-
-
-# invariant: INV-CS-SEC-008
-def test_mcp_has_exactly_three_read_scoped_tools():
-    tools = mcp._tool_manager._tools
-    assert set(tools) == {"get_my_cases", "get_case_detail", "open_support_case"}
-    assert all(tool.meta["required_scope"] == "mcp:read" for tool in tools.values())

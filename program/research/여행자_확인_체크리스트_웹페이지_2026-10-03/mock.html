@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>triPilot · 확인 결과 목표 화면</title>
+<style>
+:root{
+  color-scheme:light;
+  --ink:#24392f;--muted:#6d7c73;--line:#dce3dd;
+  --white:#ffffff;--bg:#f3f5f3;--paper:#f7f9f3;
+  --primary:#2e6047;--pressed:#254f3a;--green:#e9f2eb;
+  --gray:#f6f7f5;--amber:#82693e;--amber-bg:#faf6ec;
+  --amber-line:#e5d9c1;--error:#965640;--error-bg:#fdf3ed;
+  --error-line:#ecd2c7;--outer:#e9eee7;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--outer);color:var(--ink);
+  font:14px/1.65 "Segoe UI","Malgun Gothic",sans-serif;word-break:keep-all;overflow-wrap:break-word;
+}
+button,input{font:inherit}
+button,a,summary,label{-webkit-tap-highlight-color:transparent}
+button,a,summary,input{touch-action:manipulation}
+button{cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--primary);outline-offset:3px}
+h1,h2,h3,p{margin:0}
+h1{font-size:25px;line-height:1.35;letter-spacing:-.8px}
+h2{font-size:21px;line-height:1.4;letter-spacing:-.6px}
+h3{font-size:16px;line-height:1.5}
+small,.small{font-size:12px}
+.muted{color:var(--muted)}
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+.page-header,.page-footer{max-width:1254px;margin:auto;padding:28px 0 20px}
+.page-header p{margin-top:7px;color:var(--muted);font-size:13px}
+.page-header .eyebrow{color:var(--primary);font-weight:700;letter-spacing:1px;margin:0 0 5px}
+.scenes{
+  display:grid;grid-template-columns:repeat(3,402px);
+  justify-content:center;align-items:start;gap:24px;padding:0 18px;
+}
+.scene{min-width:0}
+.scene-label{font-size:14px;margin:0 0 10px;font-weight:700}
+.phone{
+  width:402px;max-width:100%;border:1px solid var(--line);
+  border-radius:26px;overflow:hidden;background:var(--white);
+}
+.appbar{
+  min-height:62px;padding:14px 18px;display:flex;align-items:center;
+  justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:8px;font-weight:750;font-size:18px;letter-spacing:-.5px}
+.brand svg{width:24px;height:24px;color:var(--primary)}
+.target-label{
+  font-size:11px;color:var(--muted);background:var(--gray);
+  border:1px solid var(--line);padding:3px 8px;border-radius:999px;white-space:nowrap;
+}
+.screen{padding:20px 16px}
+.intro{margin-top:7px;color:var(--muted);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:13px}
+.chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 8px;border:1px solid var(--line);border-radius:999px;
+  background:var(--gray);font-size:11px;font-weight:600;line-height:1.5;
+}
+.good{color:var(--primary);background:var(--green);border-color:var(--line)}
+.warn{color:var(--amber);background:var(--amber-bg);border-color:var(--amber-line)}
+.bad{color:var(--error);background:var(--error-bg);border-color:var(--error-line)}
+.neutral{color:var(--muted);background:var(--gray)}
+.legend{
+  margin-top:14px;padding:11px 12px;border:1px solid var(--line);
+  border-radius:13px;background:var(--paper);font-size:12px;
+}
+.legend summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:600}
+.legend p{margin:5px 0;color:var(--muted)}
+.legend-grid{display:grid;gap:6px;padding:4px 0}
+.toolbar{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:18px 0 14px}
+.toolbar h3{font-size:14px}
+.switch-label{
+  display:flex;align-items:center;gap:7px;min-height:44px;
+  cursor:pointer;font-size:12px;position:relative;
+}
+.switch-label input{position:absolute;right:0;width:38px;height:24px;opacity:0;margin:0}
+.switch-track{
+  width:38px;height:24px;background:var(--line);border:1px solid var(--muted);
+  border-radius:999px;position:relative;flex:none;
+}
+.switch-track:before{
+  content:"";position:absolute;width:18px;height:18px;top:2px;left:2px;
+  border-radius:50%;background:var(--white);
+}
+.switch-label input:checked+.switch-track{background:var(--primary);border-color:var(--primary)}
+.switch-label input:checked+.switch-track:before{transform:translateX(14px)}
+.switch-label input:focus-visible+.switch-track{outline:3px solid var(--primary);outline-offset:3px}
+.timeline{position:relative}
+.timeline:before{
+  content:"";position:absolute;left:57px;top:24px;bottom:30px;
+  width:1px;background:var(--line);
+}
+.stop,.journey{position:relative;display:grid;grid-template-columns:44px 12px minmax(0,1fr);column-gap:8px}
+.stop{padding-bottom:22px}
+.time{font-size:12px;font-weight:650;padding-top:13px;font-variant-numeric:tabular-nums}
+.dot{
+  width:12px;height:12px;border-radius:50%;margin-top:18px;position:relative;
+  border:2px solid var(--primary);background:var(--primary);
+}
+.dot.bad-dot{background:var(--error);border-color:var(--error)}
+.dot.wait-dot{background:var(--white);border-color:var(--muted)}
+.dot.warn-dot{background:var(--amber);border-color:var(--amber)}
+.place{min-width:0}
+.place-heading{display:flex;align-items:center;gap:8px;justify-content:space-between;min-height:44px;text-decoration:none}
+.place-heading .chevron{font-size:23px;color:var(--muted);flex:none}
+.place-heading small{font-size:12px;font-weight:400;color:var(--muted)}
+.place-status{font-size:11px;color:var(--muted);margin:-1px 0 7px}
+.check{border-top:1px solid var(--line)}
+.check:first-of-type{border-top:0}
+.check summary{
+  min-height:44px;padding:9px 0;display:grid;
+  grid-template-columns:18px minmax(0,1fr) 12px;gap:5px;align-items:start;
+  cursor:pointer;font-size:13px;list-style:none;
+}
+summary::-webkit-details-marker{display:none}
+.check summary:after{content:"＋";color:var(--muted);font-size:12px}
+.check[open]>summary:after{content:"−"}
+.mark{font-size:16px;font-weight:700;line-height:1.4;text-align:center}
+.mark.pass{color:var(--primary)}
+.mark.fail{color:var(--error)}
+.mark.caution{color:var(--amber)}
+.mark.pending{color:var(--muted)}
+.evidence{
+  padding:10px;margin:0 0 10px 23px;background:var(--gray);
+  border:1px solid var(--line);border-radius:9px;font-size:12px;color:var(--muted);
+}
+.evidence p+p{margin-top:5px}
+.evidence strong{color:var(--ink);font-weight:600}
+.static-check{display:flex;gap:7px;padding:10px 0;font-size:13px;align-items:flex-start}
+.static-check .mark{width:18px;flex:none}
+.journey{padding-bottom:20px}
+.journey-card{
+  grid-column:3;padding:10px 11px;background:var(--paper);
+  border:1px solid var(--line);border-radius:13px;
+}
+.journey-card h3{font-size:12px}
+.journey-card>p{font-size:12px;color:var(--muted);margin:3px 0}
+.journey-card .evidence{margin-left:0}
+.resolution{
+  padding:12px;background:var(--error-bg);border:1px solid var(--error-line);
+  border-radius:13px;margin:5px 0 10px;
+}
+.resolution h3{font-size:13px;color:var(--error)}
+.resolution p{font-size:12px;margin-top:5px}
+.prefilled{display:block;font-size:13px;font-weight:700;margin:9px 0}
+.button{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  min-height:44px;border:1px solid var(--line);border-radius:9px;
+  background:var(--white);color:var(--ink);padding:9px 12px;
+  text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;
+  text-align:center;
+}
+.button.primary{background:var(--primary);border-color:var(--primary);color:var(--white)}
+.button.primary:active{background:var(--pressed)}
+.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+.actions>*{flex:1 1 auto}
+.compact-disclosure{margin-top:6px}
+.compact-disclosure>summary{
+  display:flex;align-items:center;justify-content:space-between;gap:7px;
+  min-height:44px;font-size:12px;font-weight:600;cursor:pointer;list-style:none;
+}
+.compact-disclosure>summary:after{content:"＋";color:var(--muted)}
+.compact-disclosure[open]>summary:after{content:"−"}
+.candidate{
+  border:1px solid var(--line);border-radius:13px;
+  background:var(--white);padding:12px;margin-top:9px;
+}
+.candidate h3{font-size:14px}
+.candidate p{font-size:12px;color:var(--muted);margin-top:5px}
+.candidate.first{border-color:var(--primary);background:var(--green)}
+.candidate .travel{color:var(--primary);font-weight:650}
+.candidate .chip{margin-bottom:7px}
+.choice-input{width:18px;height:18px;accent-color:var(--primary);flex:none}
+.choice{display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer}
+.choice input{margin:0}
+.chosen{display:none;color:var(--primary);font-size:12px;margin-top:6px}
+.choice:has(input:checked)+.chosen{display:block}
+.field-label{display:block;font-size:12px;font-weight:600;margin:9px 0 5px}
+.search-field{
+  width:100%;min-width:0;min-height:44px;padding:10px 11px;
+  color:var(--ink);background:var(--white);border:1px solid var(--line);border-radius:9px;
+}
+.search-field::placeholder{color:var(--muted)}
+.full{width:100%;margin-top:8px}
+.blocked{color:var(--muted);font-size:12px;border-top:1px dashed var(--line);padding-top:8px}
+.blocked p+p{margin-top:6px}
+.pending-box{border:1px dashed var(--line);border-radius:13px;padding:11px;background:var(--gray)}
+.pending-box .static-check{padding:0}
+.day-card{padding:14px;border:1px solid var(--amber-line);border-radius:13px;background:var(--white)}
+.day-title{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.day-title .mark{color:var(--amber)}
+.day-card .button{margin:4px 0 9px 23px}
+.bottom-note{font-size:12px;color:var(--muted);margin:14px 0 0}
+.filter-empty-note{display:none;color:var(--error);font-size:12px;margin-bottom:14px}
+#timeline-screen:has(#problem-only:checked) .nonproblem{display:none}
+#timeline-screen:has(#problem-only:checked) .filter-empty-note{display:block}
+#timeline-screen:has(#problem-only:checked) .timeline:before{display:none}
+.sheet-backdrop{padding-top:20px;background:var(--bg)}
+.backdrop-caption{font-size:12px;color:var(--muted);padding:0 18px 16px}
+.sheet{
+  border-top:1px solid var(--line);border-radius:24px 24px 0 0;
+  background:var(--white);padding:9px 18px 22px;
+}
+.grabber{width:36px;height:4px;background:var(--line);border-radius:999px;margin:0 auto 17px}
+.sheet-meta{display:flex;gap:7px;align-items:center;font-size:12px;color:var(--muted);margin-bottom:6px}
+.conclusion{font-size:13px;color:var(--error);margin-top:9px}
+.section{margin-top:23px}
+.section-heading{margin-bottom:9px}
+.section-caption{font-size:12px;color:var(--muted);margin:5px 0 9px}
+.sheet .check summary{font-size:13px}
+.understanding{padding:14px;background:var(--paper);border:1px solid var(--line);border-radius:13px}
+.understanding>p{font-size:13px;margin-top:6px}
+.manual{
+  padding:14px;background:var(--paper);border:1px solid var(--primary);
+  border-radius:13px;margin-top:22px;
+}
+.manual h3{color:var(--primary)}
+.manual .choice{font-size:13px;align-items:flex-start;padding:10px 0}
+.manual .choice input{margin-top:3px}
+.reservation-state{display:none;font-size:12px;color:var(--primary);font-weight:650;margin-bottom:7px}
+.manual:has(#reserved:checked) .reservation-state{display:block}
+.manual p{font-size:12px;color:var(--muted)}
+.summary-box{
+  margin:15px 0 12px;padding:13px;border-radius:13px;
+  border:1px solid var(--line);background:var(--paper);
+}
+.summary-box strong{font-size:14px;display:block}
+.summary-box p{font-size:12px;margin-top:6px}
+.data-note{
+  margin-top:10px;border-top:1px solid var(--line);
+  padding-top:9px;color:var(--muted);
+}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 10px}
+.filters button{
+  min-height:44px;padding:7px 11px;border:1px solid var(--line);
+  border-radius:999px;background:var(--white);color:var(--ink);font-size:12px;
+}
+.filters button[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:var(--white)}
+.filter-status{font-size:12px;color:var(--muted);margin-bottom:13px}
+.catalog-group{border:1px solid var(--line);border-radius:13px;margin-top:9px;overflow:hidden}
+.catalog-group>summary{
+  min-height:56px;display:flex;align-items:center;justify-content:space-between;
+  gap:8px;padding:12px;cursor:pointer;list-style:none;background:var(--white);
+}
+.catalog-group>summary:after{content:"＋";color:var(--muted);flex:none}
+.catalog-group[open]>summary:after{content:"−"}
+.category-title{flex:1;font-size:14px;font-weight:650}
+.category-count{color:var(--muted);font-size:11px}
+.catalog{list-style:none;margin:0;padding:0 12px;background:var(--white)}
+.catalog li{border-top:1px solid var(--line);padding:12px 0;display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.catalog li>p{width:100%;font-size:13px;line-height:1.65;margin-top:3px}
+.item-meta{font-size:10px;letter-spacing:.2px;color:var(--muted);margin-right:auto}
+.state{font-size:10px;font-weight:600;border-radius:999px;padding:3px 7px;border:1px solid var(--line)}
+[data-state="ready"] .state{background:var(--green);color:var(--primary)}
+[data-state="partial"] .state{background:var(--amber-bg);border-color:var(--amber-line);color:var(--amber)}
+[data-state="soon"] .state{background:var(--gray);color:var(--muted)}
+[data-state="self"] .state{background:var(--paper);border-color:var(--primary);color:var(--primary)}
+[data-state="out"] .state{background:var(--gray);color:var(--muted);border-style:dashed}
+[hidden]{display:none!important}
+.page-footer{font-size:12px;color:var(--muted);padding-top:22px;padding-bottom:32px}
+@media(min-width:860px) and (max-width:1300px){
+  .scenes{grid-template-columns:repeat(2,402px)}
+  .page-header,.page-footer{max-width:828px}
+}
+@media(max-width:859px){
+  .scenes{grid-template-columns:minmax(0,402px);gap:28px;padding:0 12px}
+  .page-header,.page-footer{max-width:426px;padding-left:12px;padding-right:12px}
+  .phone{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<header class="page-header">
+  <p class="eyebrow">triPilot · DESIGN PREVIEW</p>
+  <h1>확인 결과, 근거까지 이어서</h1>
+  <p>외부에서 가져온 서울 일정의 확인 결과와 대안을 보여 주는 목표 화면입니다.</p>
+</header>
+
+<main class="scenes">
+  <!-- ① 일정 타임라인 -->
+  <section class="scene" aria-labelledby="scene-one">
+    <h2 class="scene-label" id="scene-one">① 일정 타임라인</h2>
+    <div class="phone">
+      <header class="appbar">
+        <span class="brand">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 18V7a3 3 0 0 1 6 0v10a3 3 0 0 0 6 0V6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="5" cy="18" r="2" fill="currentColor"/>
+            <circle cx="17" cy="5" r="2" fill="currentColor"/>
+          </svg>
+          triPilot
+        </span>
+        <span class="target-label">목표 화면</span>
+      </header>
+
+      <div class="screen" id="timeline-screen">
+        <h2>확인 결과</h2>
+        <p class="intro">문제 1곳에 대안을 넣어 두었어요. 확정 전에도 일정은 쓸 수 있어요.</p>
+        <div class="chips" aria-label="전체 일정 확인 결과">
+          <span class="chip good">통과 5</span>
+          <span class="chip warn">주의 1</span>
+          <span class="chip bad">문제 1</span>
+          <span class="chip neutral">확인 중 1</span>
+          <span class="chip neutral">당일·나중에 확인 5</span>
+        </div>
+        <p class="small muted" style="margin-top:7px">전체 일정 기준이며, 아래에는 1일차 일부를 보여 드려요.</p>
+
+        <details class="legend">
+          <summary>결과 표시와 근거 읽는 법</summary>
+          <div class="legend-grid">
+            <span>✓ 통과 · 확인한 조건에 맞아요</span>
+            <span>✗ 문제 있음 · 대안을 함께 보여 드려요</span>
+            <span>! 주의 · 통과했지만 살펴봐 주세요</span>
+            <span>○ 해당 없음·당일에 확인 · 아직 때가 아니에요</span>
+            <span>⋯ 확인 중 · 아직 완료되지 않았어요</span>
+            <span>☐ 직접 확인하세요 · 예약처럼 직접 아는 정보예요</span>
+          </div>
+          <p>확인 줄을 펼치면 이유, 출처와 확인 시각이 보여요.</p>
+          <p>장소 점은 그 장소의 가장 나쁜 결과를 따라요(문제 → 주의 → 확인 중 → 통과). 당일에 확인할 줄은 점 색을 바꾸지 않아요.</p>
+        </details>
+
+        <div class="toolbar">
+          <h3>1일차 · 10월 14일 화요일</h3>
+          <label class="switch-label">
+            문제만 보기
+            <input id="problem-only" type="checkbox" role="switch">
+            <span class="switch-track" aria-hidden="true"></span>
+          </label>
+        </div>
+        <p class="filter-empty-note">문제가 있는 점심 일정 1곳을 보고 있어요.</p>
+
+        <div class="timeline">
+          <article class="stop nonproblem" aria-labelledby="palace-title">
+            <time class="time">10:00</time>
+            <span class="dot" aria-hidden="true"></span>
+            <div class="place">
+              <a class="place-heading" href="#palace-evidence">
+                <h3 id="palace-title">경복궁 <small>활동</small></h3>
+                <span class="chevron" aria-hidden="true">›</span>
+                <span class="sr-only">경복궁 확인 내용 자세히</span>
+              </a>
+              <p class="place-status">✓ 3줄 통과 · ○ 날씨는 당일 아침에 확인해요</p>
+
+              <details class="check" id="palace-evidence">
+                <summary><span class="mark pass">✓</span><span><span class="sr-only">통과. </span>장소가 실제로 있는지 확인합니다</span></summary>
+                <div class="evidence">
+                  <p><strong>확인 내용</strong> · 일정의 이름과 주소가 같은 장소로 연결되었어요.</p>
+                  <p><strong>출처</strong> · 한국관광공사 장소 정보</p>
+                  <p><strong>확인 시각</strong> · 10월 2일 15:40</p>
+                  <p><strong>방법</strong> · 이름·주소·좌표를 대조했어요.</p>
+                </div>
+              </details>
+              <details class="check">
+                <summary><span class="mark pass">✓</span><span><span class="sr-only">통과. </span>10:00에 열려 있는지 확인합니다</span></summary>
+                <div class="evidence">
+                  <p><strong>확인 내용</strong> · 시연 데이터에서는 방문일 10:00 입장이 가능한 것으로 설정되어 있어요.</p>
+                  <p><strong>출처</strong> · 시연용 운영시간·휴무일 응답</p>
+                  <p><strong>확인 시각</strong> · 10월 2일 15:40</p>
+                  <p><strong>방법</strong> · 방문일·휴무 예외·도착 시각을 대조했어요. 실제 관람 안내가 아니에요.</p>
+                </div>
+              </details>
+              <details class="check">
+                <summary><span class="mark pass">✓</span><span><span class="sr-only">통과. </span>머무는 동안 문 닫기 전인지 확인합니다</span></summary>
+                <div class="evidence">
+                  <p><strong>확인 내용</strong> · 예정 종료 11:20이 시연 데이터의 종료 시각 안에 들어가요.</p>
+                  <p><strong>출처</strong> · 가져온 일정·시연용 운영시간 응답</p>
+                  <p><strong>확인 시각</strong> · 10월 2일 15:40</p>
+                  <p><strong>방법</strong> · 시작 시각에 체류 80분을 더해 비교했어요.</p>
+                </div>
+              </details>
+              <details class="check">
+                <summary><span class="mark pending">○</span><span>날씨는 당일 아침에 확인합니다</span></summary>
+                <div class="evidence">
+                  <p><strong>당일에 확인</strong> · 아직 확인할 때가 아니에요.</p>
+                  <p><strong>예정</strong> · 방문일 아침에 시간대별 예보와 특보를 확인해요.</p>
+                  <p><strong>출처·확인 시각</strong> · 조회 전이에요.</p>
+                </div>
+              </details>
+            </div>
+          </article>
+
+          <div class="journey nonproblem">
+            <div class="journey-card">
+              <h3>경복궁 → 청기와가든</h3>
+              <p>지하철 약 15분 · 임시 대안 위치 기준</p>
+              <details class="check">
+                <summary><span class="mark pass">✓</span><span><span class="sr-only">통과. </span>이동 시간이 일정 사이(40분)에 들어갑니다</span></summary>
+                <div class="evidence">
+                  <p><strong>확인 내용</strong> · 11:20~12:00 사이에 이동 15분이 들어가며, 25분이 남아요.</p>
+                  <p><strong>출처</strong> · 가져온 일정·시연용 대중교통 경로 응답</p>
+                  <p><strong>확인 시각</strong> · 10월 2일 15:42</p>
+                  <p><strong>방법</strong> · 미확인 원래 장소 대신 채워 둔 대안 좌표로 도보·환승 포함 시간을 비교했어요.</p>
+                  <p>장소를 바꾸면 이 줄도 다시 확인해요.</p>
+                </div>
+              </details>
+            </div>
+          </div>
+
+          <article class="stop" aria-labelledby="lunch-title">
+            <time class="time">12:00</time>
+            <span class="dot bad-dot" aria-hidden="true"></span>
+            <div class="place">
+              <a class="place-heading" href="#restaurant-sheet">
+                <h3 id="lunch-title">청기와가든 <small>점심식사</small></h3>
+                <span class="chevron" aria-hidden="true">›</span>
+                <span class="sr-only">청기와가든 항목 상세 보기</span>
+              </a>
+              <p class="place-status">✗ 문제 있음 · 대안을 채워 두었어요</p>
+              <details class="check">
+                <summary><span class="mark fail">✗</span><span><span class="sr-only">문제 있음. </span>장소가 실제로 있는지 확인합니다</span></summary>
+                <div class="evidence">
+                  <p><strong>이유</strong> · 일정의 위치 조건에 맞는 같은 이름을 찾지 못했어요. 폐업이나 부재를 확정한 것은 아니에요.</p>
+                  <p><strong>출처</strong> · 시연용 장소 검색 응답·가져온 일정</p>
+                  <p><strong>확인 시각</strong> · 10월 2일 15:41</p>
+                  <p><strong>방법</strong> · 장소 이름·지역·주소의 일치를 비교했어요.</p>
+                </div>
+              </details>
+
+              <div class="resolution">
+                <h3>이렇게 이해했어요</h3>
+                <p>같은 이름을 못 찾아 가장 비슷한 ‘예시 한정식집’을 넣어 두었어요.</p>
+                <span class="prefilled">현재 채워진 대안 · 예시 한정식집</span>
+                <p>점심 한식 · 원래 동선 근처 · 추가 이동 +0분</p>
+                <div class="actions">
+                  <a class="button primary" href="#keep-choice">이대로 두기</a>
+                  <a class="button" href="#direct-pick">직접 고르기</a>
+                </div>
+                <details class="compact-disclosure">
+                  <summary>다른 후보 보기(2)</summary>
+                  <div class="candidate">
+                    <h3>후보 B · 한식 밥집</h3>
+                    <p>점심 한식이라는 목적이 비슷해요.</p>
+                    <p class="travel">추가 이동 +4분</p>
+                  </div>
+                  <div class="candidate">
+                    <h3>후보 C · 솥밥집</h3>
+                    <p>다음 일정 방향으로 이동하기 좋아요.</p>
+                    <p class="travel">추가 이동 +7분</p>
+                  </div>
+                  <a class="button full" href="#other-candidates">상세에서 후보 비교하기</a>
+                </details>
+              </div>
+              <div class="blocked">
+                <p>○ 영업시간 · 장소가 정해지면 확인해요</p>
+                <p>○ 브레이크타임 · 장소가 정해지면 확인해요</p>
+                <p>○ 머무는 시간 · 장소가 정해지면 확인해요</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="stop nonproblem" aria-labelledby="seongsu-title">
+            <time class="time">14:00</time>
+            <span class="dot wait-dot" aria-hidden="true"></span>
+            <div class="place">
+              <a class="place-heading" href="#seongsu-progress">
+                <h3 id="seongsu-title">성수동 거리</h3>
+                <span class="chevron" aria-hidden="true">›</span>
+                <span class="sr-only">성수동 거리 확인 진행 상황 자세히</span>
+              </a>
+              <p class="place-status">⋯ 확인 중 · 아직 완료되지 않았어요</p>
+              <div class="pending-box" id="seongsu-progress">
+                <p class="static-check"><span class="mark pending">⋯</span><span>앞 일정이 바뀌어 이동 시간을 다시 계산하고 있어요</span></p>
+                <p class="small muted" style="margin-top:8px">계산이 끝나면 새 도착 시각과 근거를 보여 드려요.</p>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <section class="day-card nonproblem" aria-labelledby="day-title">
+          <div class="day-title"><span class="mark" aria-hidden="true">!</span><h3 id="day-title">하루 전체 · 주의</h3></div>
+          <details class="check">
+            <summary><span class="mark pass">✓</span><span><span class="sr-only">통과. </span>일정이 서로 겹치지 않습니다</span></summary>
+            <div class="evidence">
+              <p><strong>확인 내용</strong> · 입력된 시작·종료 시각끼리 겹치지 않아요.</p>
+              <p><strong>출처</strong> · 가져온 1일차 일정의 시작·종료 시각</p>
+              <p><strong>확인 시각</strong> · 10월 2일 15:42</p>
+              <p><strong>방법</strong> · 시간순으로 정렬해 앞 일정 종료와 다음 일정 시작을 비교했어요. 재계산 중인 이동 시간은 별도예요.</p>
+            </div>
+          </details>
+          <details class="check">
+            <summary><span class="mark caution">!</span><span>하루가 빡빡해요(쉬는 틈 적음)</span></summary>
+            <div class="evidence">
+              <p><strong>주의</strong> · 입력 시각은 겹치지 않지만, 이동을 빼면 연속으로 쉬는 틈이 적어요.</p>
+              <p><strong>출처</strong> · 가져온 일정·시연용 휴식 간격 계산</p>
+              <p><strong>확인 시각</strong> · 10월 2일 15:42</p>
+              <p><strong>방법</strong> · 일정 사이 여유에서 이동 시간을 뺐어요. 일행의 실제 체력은 직접 살펴봐 주세요.</p>
+            </div>
+          </details>
+          <button class="button" type="button" title="목표 화면의 휴식 추가 버튼입니다">쉬는 시간 넣기</button>
+          <p class="static-check muted"><span class="mark pending">○</span><span>막차는 마지막 일정이 정해지면 확인해요</span></p>
+        </section>
+        <p class="bottom-note">여행이 끝날 때까지 변경 사항을 살펴보고, 확인한 시각을 함께 남겨요.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ② 항목 상세 -->
+  <section class="scene" aria-labelledby="scene-two">
+    <h2 class="scene-label" id="scene-two">② 항목 상세</h2>
+    <div class="phone">
+      <header class="appbar">
+        <span class="brand">triPilot</span>
+        <span class="target-label">항목 상세 · 목표 화면</span>
+      </header>
+      <div class="sheet-backdrop">
+        <p class="backdrop-caption">1일차 일정 / 12:00 점심식사</p>
+        <article class="sheet" id="restaurant-sheet" aria-labelledby="restaurant-title">
+          <div class="grabber" aria-hidden="true"></div>
+          <div class="sheet-meta"><span class="chip bad">✗ 문제 있음</span><span>12:00 · 점심식사</span></div>
+          <h2 id="restaurant-title">청기와가든</h2>
+          <p class="conclusion">같은 장소인지 확인하지 못해, 가장 비슷한 대안 1곳을 넣어 두었어요.</p>
+          <p class="intro">확정 전에도 일정은 쓸 수 있어요. 장소를 정하면 영업시간과 이동을 다시 확인해요.</p>
+
+          <section class="section" aria-labelledby="server-check-title">
+            <h3 class="section-heading" id="server-check-title">서버가 확인한 것</h3>
+            <p class="section-caption">각 줄을 펼쳐 확인 내용과 근거를 볼 수 있어요.</p>
+            <details class="check" open>
+              <summary><span class="mark fail">✗</span><span>문제 있음 · 장소가 실제로 있는지 확인합니다</span></summary>
+              <div class="evidence">
+                <p><strong>확인 내용</strong> · 입력한 이름과 위치에 동시에 맞는 장소를 찾지 못했어요.</p>
+                <p><strong>출처</strong> · 시연용 장소 검색 응답·가져온 일정</p>
+                <p><strong>확인 시각</strong> · 10월 2일 15:41</p>
+                <p><strong>방법</strong> · 이름·지역·주소를 대조했지만 일치하는 결과가 없었어요.</p>
+                <p>검색으로 확인하지 못했다는 뜻이며, 실제로 없는 가게라고 단정하지 않아요.</p>
+              </div>
+            </details>
+            <details class="check">
+              <summary><span class="mark pass">✓</span><span>통과 · 임시 대안까지 이동 시간이 40분 안에 들어갑니다</span></summary>
+              <div class="evidence">
+                <p><strong>확인 내용</strong> · 임시 대안까지 약 15분으로 계산되었어요.</p>
+                <p><strong>출처</strong> · 시연용 대중교통 경로 응답·가져온 일정</p>
+                <p><strong>확인 시각</strong> · 10월 2일 15:42</p>
+                <p><strong>방법</strong> · 경복궁 종료 11:20부터 점심 시작 12:00까지의 40분과 대안 좌표로 계산한 도보·환승 포함 시간을 비교했어요.</p>
+              </div>
+            </details>
+            <details class="check">
+              <summary><span class="mark pending">○</span><span>해당 없음 · 영업시간은 장소가 정해지면 확인해요</span></summary>
+              <div class="evidence">
+                <p><strong>이유</strong> · 원래 장소가 확인되지 않아 적용할 영업시간이 아직 없어요.</p>
+                <p><strong>출처·확인 시각</strong> · 영업정보 조회 전이에요.</p>
+                <p><strong>방법</strong> · 장소가 정해지면 방문 요일·12:00 도착·브레이크타임을 대조해요.</p>
+              </div>
+            </details>
+            <details class="check">
+              <summary><span class="mark pending">⋯</span><span>확인 중 · 다음 일정까지 이동을 다시 계산하고 있어요</span></summary>
+              <div class="evidence">
+                <p><strong>이유</strong> · 임시 대안 위치가 반영되어 다음 경로가 달라졌어요.</p>
+                <p><strong>출처</strong> · 시연용 경로 재계산 요청</p>
+                <p><strong>요청 시각</strong> · 10월 2일 15:42 · 확인 완료 시각은 아직 없어요.</p>
+                <p><strong>방법</strong> · 임시 대안에서 성수동 거리까지의 도착 예정 시각을 계산하고 있어요.</p>
+              </div>
+            </details>
+          </section>
+
+          <section class="section understanding" aria-labelledby="understood-title">
+            <h3 id="understood-title">이렇게 이해했어요</h3>
+            <p>같은 이름을 못 찾아 가장 비슷한 ‘예시 한정식집’을 넣어 두었어요.</p>
+            <p class="section-caption">한식을 먹는 점심 일정과 원래 동선을 우선했어요.</p>
+            <div class="candidate first">
+              <span class="chip good">1순위 · 일정에 미리 채워짐</span>
+              <h3>예시 한정식집</h3>
+              <p>일정에 적힌 한식 목적과 가깝고, 경복궁 다음 동선을 가장 적게 바꿔요.</p>
+              <p class="travel">추가 이동 시간 +0분</p>
+              <label class="choice">
+                <input class="choice-input" type="radio" name="detail-candidate" value="first" checked>
+                <span>이대로 두기</span>
+              </label>
+              <p class="chosen">이 후보가 현재 일정에 채워져 있어요.</p>
+            </div>
+            <p class="section-caption">후보명과 위치는 시연용으로 구성했어요. 추가 이동 시간은 1순위 대안 기준이에요.</p>
+          </section>
+
+          <details class="compact-disclosure section" id="other-candidates">
+            <summary>다른 후보 보기(2)</summary>
+            <div class="candidate">
+              <h3>후보 B · 한식 밥집</h3>
+              <p>점심에 한식을 먹으려던 의도와 비슷해요. 도보 구간이 조금 늘어요.</p>
+              <p class="travel">추가 이동 시간 +4분</p>
+              <label class="choice">
+                <input class="choice-input" type="radio" name="detail-candidate" value="second">
+                <span>이 후보 고르기</span>
+              </label>
+              <p class="chosen">시안에서 선택했어요. 실제 일정에는 저장되지 않아요.</p>
+            </div>
+            <div class="candidate">
+              <h3>후보 C · 솥밥집</h3>
+              <p>다음 일정인 성수동 방향으로 이동하기 좋아요. 점심 전 이동은 더 길어요.</p>
+              <p class="travel">추가 이동 시간 +7분</p>
+              <label class="choice">
+                <input class="choice-input" type="radio" name="detail-candidate" value="third">
+                <span>이 후보 고르기</span>
+              </label>
+              <p class="chosen">시안에서 선택했어요. 실제 일정에는 저장되지 않아요.</p>
+            </div>
+          </details>
+
+          <section class="section" id="direct-pick" aria-labelledby="direct-title">
+            <h3 id="direct-title">직접 고르기</h3>
+            <label class="field-label" for="place-search">장소 이름 또는 주소로 검색</label>
+            <input class="search-field" id="place-search" type="search" placeholder="장소 이름이나 주소를 입력하세요" aria-describedby="search-help">
+            <button class="button full" type="button" title="목표 화면의 검색 버튼입니다">검색</button>
+            <button class="button full" type="button" title="목표 화면의 지도 선택 버튼입니다">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z" stroke="currentColor" stroke-width="1.5"/>
+                <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+              지도에서 위치로 고르기
+            </button>
+            <p class="section-caption" id="search-help">지도에 핀을 찍어 고를 수도 있어요. 이 시안에서는 검색·지도 연결과 저장을 실행하지 않아요.</p>
+          </section>
+
+          <section class="manual" aria-labelledby="manual-title">
+            <h3 id="manual-title">☐ 직접 확인하세요</h3>
+            <p style="margin-top:6px">예약 여부는 직접 알려 주셔야 해요.</p>
+            <label class="choice">
+              <input class="choice-input" id="reserved" type="checkbox">
+              <span>이 식당을 예약해 두었나요?<br><strong>예약 있음으로 표시</strong></span>
+            </label>
+            <div class="reservation-state">예약 있음 · 예약 장소 미확인</div>
+            <p>예약했다면 「예약 있음」으로 표시해 주세요. 이 항목은 길 안내·알림 근거에서 빠지고 ‘예약 장소 미확인’으로 남아요.</p>
+          </section>
+
+          <p class="bottom-note">근거 출처와 확인 시각은 결과와 함께 남아요. 다시 확인하면 최신 결과로 바뀌어요.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 전체 체크리스트: 모든 문장을 정적 HTML로 제공 -->
+  <section class="scene" aria-labelledby="scene-three">
+    <h2 class="scene-label" id="scene-three">③ 우리가 확인하는 것</h2>
+    <div class="phone">
+      <header class="appbar">
+        <span class="brand">triPilot</span>
+        <span class="target-label">서비스 범위</span>
+      </header>
+      <div class="screen">
+        <h2>우리가 확인하는 것</h2>
+        <p class="intro">장소 하나부터 하루 전체까지, 일정표를 직접 살펴볼 때 필요한 질문을 모았어요.</p>
+
+        <div class="summary-box">
+          <strong>72가지 중 서비스 범위 안 66가지</strong>
+          <p>확인해 드려요 5 · 일부만 확인해요 23 · 준비 중 34 · 직접 확인 4</p>
+          <p class="small muted">범위 밖 6가지(숙소·항공·통신 등)는 따로 표시해요.</p>
+        </div>
+        <p class="small muted">칩은 우리가 얼마나 확인해 드리는지를 뜻해요. 개별 일정의 통과·문제 결과와는 별개예요. ‘일부만’은 확보된 정보가 있을 때만 확인해요.</p>
+
+        <nav class="filters" aria-label="체크리스트 지원 상태 필터">
+          <button type="button" data-filter="all" aria-pressed="true">전부</button>
+          <button type="button" data-filter="ready" aria-pressed="false">확인해 드려요</button>
+          <button type="button" data-filter="partial" aria-pressed="false">일부만</button>
+          <button type="button" data-filter="soon" aria-pressed="false">준비 중</button>
+          <button type="button" data-filter="self" aria-pressed="false">직접 확인</button>
+        </nav>
+        <p class="filter-status" id="filter-status" role="status" aria-live="polite">전체 72가지 · 범주를 펼쳐 읽어 보세요.</p>
+        <noscript><p class="small muted">필터 없이도 각 범주를 펼쳐 모든 항목을 읽을 수 있어요.</p></noscript>
+
+        <div id="catalog">
+          <details class="catalog-group">
+            <summary><span class="category-title">P. 장소가 진짜인가</span><span class="category-count">3가지</span></summary>
+            <ul class="catalog">
+              <li data-state="ready"><span class="item-meta">일정 항목</span><span class="state">확인해 드려요</span><p>일정의 이름이 실제 있는 그 장소인지 확인합니다 (같은 이름의 다른 곳·다른 지점이 아닌지 포함)</p></li>
+              <li data-state="partial"><span class="item-meta">일정 항목</span><span class="state">일부만 확인해요</span><p>폐업·이전·장기 휴업하지 않았는지 확인합니다</p></li>
+              <li data-state="partial"><span class="item-meta">일정 항목</span><span class="state">일부만 확인해요</span><p>주소·지도 핀·입구가 일정의 설명과 맞는지 확인합니다</p></li>
+            </ul>
+          </details>
+
+          <details class="catalog-group" open>
+            <summary><span class="category-title">O. 그 시각에 열려 있나</span><span class="category-count">7가지</span></summary>
+            <ul class="catalog">
+              <li data-state="partial"><span class="item-meta">일정 항목</span><span class="state">일부만 확인해요</span><p>방문 요일이 정기 휴무·공휴일·대체공휴일에 걸리지 않는지 확인합니다</p></li>
+              <li data-state="partial"><span class="item-meta">일정 항목</span><span class="state">일부만 확인해요</span><p>도착 시각이 영업시간·입장 마감 안인지 확인합니다</p></li>
+              <li data-state="partial"><span class="item-meta">일정 항목</span><span class="state">일부만 확인해요</span><p>머무는 동안 문 닫기 전에 끝나는지 확인합니다</p></li>
+              <li data-state="partial"><span class="item-meta">일정 항목</span><span class="state">일부만 확인해요</span><p>식당의 브레이크타임·라스트오더에 걸리지 않는지 확인합니다</p></li>
+              <li data-state="partial"><span class="item-meta">일정 항목</span><span class="state">일부만 확인해요</span><p>그 요일·그 끼니에 영업하는 곳인지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>가려는 전시·체험·구역이 따로 닫혀 있지 않은지 확인합니다 (전시 교체·보수 포함)</p></li>
+              <li data-state="partial"><span class="item-meta">일정 항목</span><span class="state">일부만 확인해요</span><p>당일 임시 휴무·단축 영업 공지가 없는지 확인합니다</p></li>
+            </ul>
+          </details>
+
+          <details class="catalog-group">
+            <summary><span class="category-title">R. 예약·표</span><span class="category-count">9가지</span></summary>
+            <ul class="catalog">
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>사전 예약·입장권이 꼭 필요한 곳인지 확인합니다</p></li>
+              <li data-state="self"><span class="item-meta">일정 항목</span><span class="state">직접 확인</span><p>예약한 날짜·시간·인원·지점이 일정과 같은지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>시간 지정 입장은 몇 분까지 늦어도 되는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>매진·현장 발권 조기 마감 가능성이 있는지 확인합니다</p></li>
+              <li data-state="self"><span class="item-meta">일정 항목</span><span class="state">직접 확인</span><p>식당 예약이 확정이고 도착 기한이 언제인지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>인기 식당의 대기 등록 방법과 예상 대기를 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>단체·어린이·외국인 등 일행에 적용되는 예약 조건을 확인합니다</p></li>
+              <li data-state="self"><span class="item-meta">일정 항목</span><span class="state">직접 확인</span><p>예약 확인서·QR·신분 확인 자료를 준비했는지 확인합니다</p></li>
+              <li data-state="self"><span class="item-meta">일정 항목</span><span class="state">직접 확인</span><p>취소·변경·환불 마감 전에 조치할 수 있는지 확인합니다</p></li>
+            </ul>
+          </details>
+
+          <details class="catalog-group">
+            <summary><span class="category-title">T. 시간이 맞나·일정 짜임새</span><span class="category-count">10가지</span></summary>
+            <ul class="catalog">
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>관람·체험에 필요한 시간을 충분히 잡았는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>식사 시간이 다음 일정과 맞는지 확인합니다</p></li>
+              <li data-state="partial"><span class="item-meta">일정 항목</span><span class="state">일부만 확인해요</span><p>입장 대기·보안검사·매표 시간을 반영했는지 확인합니다</p></li>
+              <li data-state="partial"><span class="item-meta">일정 항목</span><span class="state">일부만 확인해요</span><p>사진·짐 보관·화장실에 쓸 여유 시간이 있는지 확인합니다</p></li>
+              <li data-state="ready"><span class="item-meta">하루 전체</span><span class="state">확인해 드려요</span><p>일정끼리 겹치거나 사이가 0분인 곳이 없는지 확인합니다</p></li>
+              <li data-state="partial"><span class="item-meta">하루 전체</span><span class="state">일부만 확인해요</span><p>하루 길이·걷는 양이 일행의 체력에 맞고 쉴 틈이 있는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">하루 전체</span><span class="state">준비 중</span><p>점심·저녁 끼니가 제때 들어 있는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">하루 전체</span><span class="state">준비 중</span><p>같은 장소를 두 번 잡지 않았는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">하루 전체</span><span class="state">준비 중</span><p>하루 동선이 지도 위에서 왔다 갔다 하지 않는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">여행 전체</span><span class="state">준비 중</span><p>날짜와 요일이 서로 맞는지 확인합니다</p></li>
+            </ul>
+          </details>
+
+          <details class="catalog-group" open>
+            <summary><span class="category-title">M. 길과 교통</span><span class="category-count">13가지</span></summary>
+            <ul class="catalog">
+              <li data-state="partial"><span class="item-meta">이동 구간</span><span class="state">일부만 확인해요</span><p>앞 장소에서 이 장소까지 이동 시간이 일정 간격 안에 들어가는지 확인합니다</p></li>
+              <li data-state="partial"><span class="item-meta">이동 구간</span><span class="state">일부만 확인해요</span><p>장소 사이에 실제로 탈 수 있는 경로가 있고 수단이 현실적인지 확인합니다</p></li>
+              <li data-state="partial"><span class="item-meta">이동 구간</span><span class="state">일부만 확인해요</span><p>이동 시간이 그 요일·그 시각 기준(혼잡 포함)인지 확인합니다</p></li>
+              <li data-state="partial"><span class="item-meta">이동 구간</span><span class="state">일부만 확인해요</span><p>환승·출구·역 안 걷는 시간이 들어 있는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">이동 구간</span><span class="state">준비 중</span><p>버스 방향·승차 위치가 맞는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">이동 구간</span><span class="state">준비 중</span><p>배차 간격이 한 대 놓쳐도 감당할 수 있는지 확인합니다</p></li>
+              <li data-state="partial"><span class="item-meta">하루 전체</span><span class="state">일부만 확인해요</span><p>막차·첫차 시간 안인지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">이동 구간</span><span class="state">준비 중</span><p>걷는 거리·경사·계단이 일행에게 무리가 아닌지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">이동 구간</span><span class="state">준비 중</span><p>택시를 부를 수 있는지·승차 위치·예상 정체를 확인합니다</p></li>
+              <li data-state="ready"><span class="item-meta">이동 구간</span><span class="state">확인해 드려요</span><p>행사·집회·공사로 길이 막히지 않는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">이동 구간</span><span class="state">준비 중</span><p>지하철 장애·버스 우회가 없는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">하루 전체</span><span class="state">준비 중</span><p>첫 일정까지 숙소에서 갈 수 있고 마지막 일정 뒤 돌아올 수 있는지 확인합니다</p></li>
+              <li data-state="out"><span class="item-meta">여행 전체</span><span class="state">범위 밖</span><p>공항·역 이동에 여유가 있는지 확인합니다</p></li>
+            </ul>
+          </details>
+
+          <details class="catalog-group">
+            <summary><span class="category-title">W. 날씨·환경</span><span class="category-count">5가지</span></summary>
+            <ul class="catalog">
+              <li data-state="ready"><span class="item-meta">일정 항목</span><span class="state">확인해 드려요</span><p>그 시간대의 비·눈·폭염·한파·특보가 야외 일정에 영향을 주지 않는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>날씨 때문에 야외 행사·체험이 취소되거나 제한되지 않는지 확인합니다</p></li>
+              <li data-state="ready"><span class="item-meta">하루 전체</span><span class="state">확인해 드려요</span><p>미세먼지가 긴 야외 일정에 적합한지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>일몰·야간 시각이 야경·전망·촬영 목적에 맞는지, 밤 이용이 안전한지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>벚꽃·단풍 같은 계절 경관이 방문 시기에 맞는지 확인합니다</p></li>
+            </ul>
+          </details>
+
+          <details class="catalog-group">
+            <summary><span class="category-title">F. 먹을 수 있나</span><span class="category-count">5가지</span></summary>
+            <ul class="catalog">
+              <li data-state="partial"><span class="item-meta">일정 항목</span><span class="state">일부만 확인해요</span><p>메뉴가 일행의 알레르기·종교·채식 조건에 맞는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>먹으려던 메뉴가 그 요일·끼니에 파는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>재료 소진·조기 마감 가능성이 있는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>최소 주문·1인 1메뉴·식사 시간 제한이 일행과 맞는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>유아·휠체어·큰 짐과 함께 앉을 수 있는지 확인합니다</p></li>
+            </ul>
+          </details>
+
+          <details class="catalog-group">
+            <summary><span class="category-title">C. 돈·결제</span><span class="category-count">4가지</span></summary>
+            <ul class="catalog">
+              <li data-state="partial"><span class="item-meta">하루 전체</span><span class="state">일부만 확인해요</span><p>입장료·식사비·이동비가 예산에 드는지 확인합니다</p></li>
+              <li data-state="partial"><span class="item-meta">일정 항목</span><span class="state">일부만 확인해요</span><p>쓰려는 결제 수단이 통하는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>현금만 받는 곳인지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>외국 발행 카드가 예약·현장에서 받아지는지 확인합니다</p></li>
+            </ul>
+          </details>
+
+          <details class="catalog-group">
+            <summary><span class="category-title">G. 우리 일행에게 맞나</span><span class="category-count">7가지</span></summary>
+            <ul class="catalog">
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>나이·국적에 따른 입장 조건·할인 증빙이 맞는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>복장·신발·촬영·반입 물품 규정에 맞는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>한국어 외 안내·주문 지원이 필요한 일행에게 되는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>휠체어·유모차로 출입구·엘리베이터·화장실을 쓸 수 있는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>어린이·반려동물 동반과 연령 제한이 일행에게 맞는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>큰 짐을 맡길 수 있는지 확인합니다</p></li>
+              <li data-state="soon"><span class="item-meta">일정 항목</span><span class="state">준비 중</span><p>여행 취향·테마에 맞는 곳인지 확인합니다</p></li>
+            </ul>
+          </details>
+
+          <details class="catalog-group">
+            <summary><span class="category-title">L. 당일 대응</span><span class="category-count">3가지</span></summary>
+            <ul class="catalog">
+              <li data-state="partial"><span class="item-meta">이동 구간</span><span class="state">일부만 확인해요</span><p>지금 위치에서 다음 장소까지 새 도착 예정 시각이 예약을 지킬 수 있는지 확인합니다</p></li>
+              <li data-state="partial"><span class="item-meta">하루 전체</span><span class="state">일부만 확인해요</span><p>앞 일정이 늦어졌을 때 뒤 일정이 아직 성립하는지 확인합니다</p></li>
+              <li data-state="out"><span class="item-meta">하루 전체</span><span class="state">범위 밖</span><p>일행이 흩어졌을 때 만날 곳과 연락 방법이 통하는지 확인합니다</p></li>
+            </ul>
+          </details>
+
+          <details class="catalog-group">
+            <summary><span class="category-title">X. 서비스 범위 밖 준비물</span><span class="category-count">4가지</span></summary>
+            <ul class="catalog">
+              <li data-state="out"><span class="item-meta">여행 전체</span><span class="state">범위 밖</span><p>교통카드와 잔액이 준비됐는지 확인합니다</p></li>
+              <li data-state="out"><span class="item-meta">여행 전체</span><span class="state">범위 밖</span><p>데이터·와이파이로 지도와 예약 QR을 쓸 수 있는지 확인합니다</p></li>
+              <li data-state="out"><span class="item-meta">하루 전체</span><span class="state">범위 밖</span><p>휴대전화 배터리와 충전 수단이 충분한지 확인합니다</p></li>
+              <li data-state="out"><span class="item-meta">여행 전체</span><span class="state">범위 밖</span><p>항공·입국 절차 때문에 서울 일정의 시작·끝 시각이 바뀌지 않는지 확인합니다</p></li>
+            </ul>
+          </details>
+
+          <details class="catalog-group">
+            <summary><span class="category-title">H. 확인한 정보를 믿을 수 있나</span><span class="category-count">2가지</span></summary>
+            <ul class="catalog">
+              <li data-state="partial"><span class="item-meta">일정 항목</span><span class="state">일부만 확인해요</span><p>확인한 정보가 언제 기준인지 보여 줍니다</p></li>
+              <li data-state="partial"><span class="item-meta">일정 항목</span><span class="state">일부만 확인해요</span><p>확인한 정보의 출처가 공식인지 보여 줍니다</p></li>
+            </ul>
+          </details>
+        </div>
+        <p class="bottom-note">‘직접 확인’은 예약 여부처럼 본인만 아는 정보예요. 체크하면 서버가 그 항목을 길 안내·알림의 근거로 쓰지 않아요.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="page-footer">
+  ※ 화면 속 장소·시각·결과는 설명용 예시이며, 실제 서비스 값이 아닙니다
+</footer>
+
+<script>
+/* 필터만 보강합니다. 스크립트가 없어도 72개 항목을 모두 읽을 수 있습니다. */
+(() => {
+  const buttons = [...document.querySelectorAll("[data-filter]")];
+  const groups = [...document.querySelectorAll(".catalog-group")];
+  const status = document.getElementById("filter-status");
+  const initialOpen = new Map(groups.map(group => [group, group.open]));
+  const labels = {
+    all: "전체",
+    ready: "확인해 드려요",
+    partial: "일부만 확인해요",
+    soon: "준비 중",
+    self: "직접 확인"
+  };
+
+  buttons.forEach(button => {
+    button.addEventListener("click", () => {
+      const filter = button.dataset.filter;
+      let total = 0;
+
+      buttons.forEach(item => {
+        item.setAttribute("aria-pressed", String(item === button));
+      });
+
+      groups.forEach(group => {
+        const rows = [...group.querySelectorAll("li[data-state]")];
+        let count = 0;
+
+        rows.forEach(row => {
+          const visible = filter === "all" || row.dataset.state === filter;
+          row.hidden = !visible;
+          if (visible) count++;
+        });
+
+        group.hidden = count === 0;
+        group.open = filter === "all" ? initialOpen.get(group) : count > 0;
+        group.querySelector(".category-count").textContent =
+          filter === "all" ? `${rows.length}가지` : `${count}/${rows.length}가지`;
+        total += count;
+      });
+
+      status.textContent = `${labels[filter]} ${total}가지 · 2026-10-02 서버 현황 기준이에요.`;
+    });
+  });
+})();
+</script>
+</body>
+</html>

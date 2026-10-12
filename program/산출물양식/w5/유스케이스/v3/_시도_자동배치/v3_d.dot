@@ -1,0 +1,27 @@
+digraph UC {
+  graph [rankdir=LR, splines=ortho, nodesep=0.42, ranksep=0.95, pad=0.15, bgcolor="transparent", fontname="Malgun Gothic", forcelabels=true];
+  node [fontname="Malgun Gothic", fontsize=14];
+  edge [color="#606b7e", penwidth=1.15, arrowsize=0.7, fontname="NanumGothicCoding", fontsize=9];
+  { rank=min; req [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.10,0.06", label=<<TABLE BORDER="0" CELLPADDING="1" CELLSPACING="4"><TR><TD ROWSPAN="2"><IMG SRC="ic_person.png"/></TD><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">요청하는 쪽</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">여행자 · AI 비서 앱(위와 같은 행위자)</FONT></TD></TR></TABLE>>]; }
+  subgraph cluster_g { label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="12" COLOR="#727d90">B · 여행 중 요청 — 읽고, 근거로 답하고, 바꿀 일은 조율로</FONT>>; labeljust=l; style="rounded,filled"; fillcolor="#f1f4f8"; color="#dbe0ea"; penwidth=1; margin=16;
+    u06 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="11" COLOR="#a8720c">UC-06  </FONT><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">채팅으로 묻기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">하루 요약 · 다음 이동 · 규정</FONT><BR ALIGN="LEFT"/>>];
+    u07 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="11" COLOR="#a8720c">UC-07  </FONT><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">바꿔 달라고 하기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">바로 바꾸고 다른 안 셋까지</FONT><BR ALIGN="LEFT"/>>];
+    u08 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="11" COLOR="#a8720c">UC-08  </FONT><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">문제 알리기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">늦음 · 휴무</FONT><BR ALIGN="LEFT"/>>];
+    u09 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="11" COLOR="#a8720c">UC-09  </FONT><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">다른 안 고르기 · 되돌리기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">「선택이 필요해요」 · 앞 판으로</FONT><BR ALIGN="LEFT"/>>];
+    g [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">근거 찾기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">여행 규정 · 예약 취소 조건</FONT><BR ALIGN="LEFT"/>>];
+    q [shape=box, style="rounded,filled", fillcolor="#f8f3ea", color="#d6b680", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">요청 읽기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">요청 종류 5 · 대상 항목 · 문제 코드</FONT><BR ALIGN="LEFT"/>>];
+    v [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">새 판 저장</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">기준 판이 그대로일 때만</FONT><BR ALIGN="LEFT"/>>];
+  }
+  { rank=max; ai [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.10,0.06", label=<<TABLE BORDER="0" CELLPADDING="1" CELLSPACING="4"><TR><TD ROWSPAN="2"><IMG SRC="ic_spark.png"/></TD><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">AI 모델</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">같은 행위자 · 시험 중</FONT></TD></TR></TABLE>>]; }
+  req -> u06 [arrowhead=none];
+  req -> u07 [arrowhead=none];
+  req -> u08 [arrowhead=none];
+  req -> u09 [arrowhead=none];
+  u06 -> g [style=dashed, arrowhead=vee];
+  u06 -> q [style=dashed, arrowhead=vee];
+  u07 -> q [style=dashed, arrowhead=vee];
+  u08 -> q [style=dashed, arrowhead=vee];
+  u09 -> v [style=dashed, arrowhead=vee];
+  g -> ai [arrowhead=none];
+  q -> ai [arrowhead=none];
+}

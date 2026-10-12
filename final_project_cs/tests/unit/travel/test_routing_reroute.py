@@ -109,6 +109,11 @@ def _controller_with(reroute, teams):
         def get(self, team_id):                              # 이미 정해진 담당 팀 — 재배분으로 라우팅된 Case 가 쓴다
             return _Entry()
 
+        def require_runnable(self, team_id, capability=None):
+            assert team_id == "dining"
+            assert capability in (None, "dining.check")
+            return self.get(team_id)
+
         @staticmethod
         def capability_for(entry, intent=None, *, input_text=None, state=None):
             return "dining.check"

@@ -45,6 +45,8 @@ def _team_modules() -> list[Path]:
     """`manifest = TeamManifest(...)` 를 선언한 파일만 Team 으로 본다."""
     found = []
     for path in sorted(MODULES_ROOT.rglob("*.py")):
+        if "_backup" in path.parts or "__pycache__" in path.parts:
+            continue
         tree = ast.parse(path.read_text(encoding="utf-8"))
         if any(isinstance(node, ast.Assign)
                and any(getattr(target, "id", "") == "manifest" for target in node.targets)
@@ -101,7 +103,8 @@ def _team_package_files() -> list[Path]:
         base = path.parent.parent if path.parent.name == team_name else path.parent
         for folder in (base / team_name, base / f"{team_name}_engine"):
             if folder.is_dir() and folder != MODULES_ROOT:
-                out.update(p for p in folder.rglob("*.py") if "__pycache__" not in p.parts)
+                out.update(p for p in folder.rglob("*.py")
+                           if not {"__pycache__", "_backup"}.intersection(p.parts))
     return sorted(out)
 
 
@@ -153,8 +156,8 @@ def test_tool_outside_allowed_tools_is_refused_at_runtime():
     """allowlist 밖의 tool 이름은 실행 전에 거부된다."""
     toolbox = ReadToolbox(lambda: None)
     with pytest.raises(ToolNotAllowed) as caught:
-        toolbox.call("read.order", None, {}, ["read.policy"], set())
-    assert "read.order" in str(caught.value)
+        toolbox.call("read.booking", None, {}, ["read.policy"], set())
+    assert "read.booking" in str(caught.value)
 
 
 def test_unknown_tool_is_refused_even_when_allowlisted():

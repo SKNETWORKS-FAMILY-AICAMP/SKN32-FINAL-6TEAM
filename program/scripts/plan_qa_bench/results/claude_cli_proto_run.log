@@ -1,0 +1,29 @@
+mix8 10/171 42초
+mix8 14/171 51초
+claude-opus-5-5 mix8_proto_compound_intent: 맞음 14/14 · 파싱 14 · 비용 합 1.076달러(CLI 보고값) · 입력 토큰 평균 22428
+mix9 10/165 31초
+mix9 13/165 36초
+claude-opus-5-5 mix9_proto_compound_intent: 맞음 12/13 · 파싱 13 · 비용 합 0.497달러(CLI 보고값) · 입력 토큰 평균 25971
+mix10 9/160 22초
+claude-opus-5-5 mix10_proto_compound_intent: 맞음 9/9 · 파싱 9 · 비용 합 0.356달러(CLI 보고값) · 입력 토큰 평균 31066
+mix11 10/163 27초
+mix11 14/163 35초
+claude-opus-5-5 mix11_proto_compound_intent: 맞음 14/14 · 파싱 14 · 비용 합 0.538달러(CLI 보고값) · 입력 토큰 평균 26833
+mix12 10/176 26초
+mix12 16/176 41초
+claude-opus-5-5 mix12_proto_compound_intent: 맞음 16/16 · 파싱 16 · 비용 합 0.707달러(CLI 보고값) · 입력 토큰 평균 34588
+mix8 10/171 31초
+mix8 14/171 45초
+claude-fable-5-1 mix8_proto_compound_intent: 맞음 14/14 · 파싱 14 · 비용 합 2.129달러(CLI 보고값) · 입력 토큰 평균 33746
+mix9 10/165 34초
+mix9 13/165 42초
+claude-fable-5-1 mix9_proto_compound_intent: 맞음 12/13 · 파싱 13 · 비용 합 1.222달러(CLI 보고값) · 입력 토큰 평균 35622
+mix10 9/160 31초
+claude-fable-5-1 mix10_proto_compound_intent: 맞음 9/9 · 파싱 9 · 비용 합 0.841달러(CLI 보고값) · 입력 토큰 평균 31139
+mix11 10/163 38초
+mix11 14/163 57초
+claude-fable-5-1 mix11_proto_compound_intent: 맞음 14/14 · 파싱 14 · 비용 합 1.302달러(CLI 보고값) · 입력 토큰 평균 31362
+mix12 10/176 38초
+mix12 16/176 57초
+claude-fable-5-1 mix12_proto_compound_intent: 맞음 15/16 · 파싱 16 · 비용 합 1.610달러(CLI 보고값) · 입력 토큰 평균 32564
+PROTO_DONE

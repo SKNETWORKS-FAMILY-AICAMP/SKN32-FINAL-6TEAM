@@ -1,0 +1,19 @@
+--- a/datasets/commerce/coupang_order_history/scripts/extension_nextdata_ref/README.md
++++ b/datasets/commerce/coupang_order_history/scripts/extension_nextdata_ref/README.md
+@@ -1,4 +1,6 @@
+-# 쿠팡 주문내역 추출 확장 프로그램
++# (참고판) 쿠팡 주문내역 추출 확장 — 목록만 읽는 `__NEXT_DATA__` 참고 구현
++
++★현행 확장은 `../extension/`(5.4.1)이다. 이 폴더는 목록만 읽고 상세·배송에 가지 않으며 `DeliveryRegion`을 항상 `null`로 두고 팝업을 닫으면 멈추는 초기 참고판이다. 설치해서 쓰려면 `../extension/README.md`를 따른다.
+ 
+ 이미 로그인된 Chrome의 쿠팡 주문목록을 읽어 로컬 JSON 파일로 저장한다.
+ 
+@@ -37,7 +39,7 @@
+ 1. Chrome 주소창에 `chrome://extensions`를 입력한다.
+ 2. 오른쪽 위의 **개발자 모드**를 켠다.
+ 3. 왼쪽 위의 **압축해제된 확장 프로그램을 로드**를 누른다.
+-4. 파일 선택 창에서 이 `scripts/extension/` 폴더를 선택한다.
++4. 파일 선택 창에서 이 `scripts/extension_nextdata_ref/` 폴더를 선택한다(현행 확장은 `scripts/extension/`).
+ 5. 확장 프로그램 목록에 **쿠팡 주문내역 추출**이 표시되는지 확인한다.
+ 6. Chrome 도구 모음의 퍼즐 아이콘을 누르고 **쿠팡 주문내역 추출**을 고정한다.
+ 

@@ -1,0 +1,9 @@
+[08:39] gpt-oss:20b
+gpt-oss:20b 6.37s/q errors=0
+[08:52] hf.co/deul/Kanana-2-30b-a3b-instruct-2601-GGUF:Q4_K_M
+hf.co/deul/Kanana-2-30b-a3b-instruct-2601-GGUF:Q4_K_M 14.96s/q errors=0
+[09:20] gemma4:26b
+gemma4:26b 8.67s/q errors=0
+[09:37] hf-local:kakaocorp/kanana-2-3b-instruct
+[09:37] qwen3.8:27b
+qwen3.8:27b 45.06s/q errors=0

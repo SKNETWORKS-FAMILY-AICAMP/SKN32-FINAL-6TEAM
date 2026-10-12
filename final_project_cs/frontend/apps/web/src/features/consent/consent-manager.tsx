@@ -17,6 +17,7 @@ import styles from "./consent.module.css";
 
 /** What turning an item off does - said before it is done. */
 const WITHDRAW: Record<ConsentCode, [string, string]> = {
+  service_improvement: ["철회해도 서비스를 계속 이용할 수 있어요. 이후 개선 자료에서 제외하고 검토 대기 합성 자료는 폐기해요. 이미 익명성 검토를 마친 합성본은 개인과 연결되지 않아 개별 회수할 수 없어요.", "You can keep using the service. Future improvement processing excludes you and pending synthetic candidates are discarded. Already approved anonymous data cannot be individually recalled because it is no longer linked to you."],
   service_terms: ["철회하면 서비스를 쓸 수 없어요. 처음 화면의 약관 동의로 돌아가요.", "If you withdraw, you can no longer use the service. You go back to the consent screen."],
   privacy: ["철회하면 서비스를 쓸 수 없어요. 처음 화면의 약관 동의로 돌아가요.", "If you withdraw, you can no longer use the service. You go back to the consent screen."],
   sensitive: ["종교·식사 제한 같은 취향 답을 서버에서 지워요. 앱은 그대로 쓸 수 있어요.", "Answers such as religion and food restrictions are deleted from the server. You can keep using the app."],

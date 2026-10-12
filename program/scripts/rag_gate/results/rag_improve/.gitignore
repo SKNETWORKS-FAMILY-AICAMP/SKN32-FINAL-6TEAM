@@ -1,0 +1,4 @@
+emb_cache.json
+rerank_cache.json
+*.log
+topics_for_writer.txt

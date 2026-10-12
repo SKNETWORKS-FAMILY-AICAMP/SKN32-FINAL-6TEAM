@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1416 2264" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="tp-mas-title tp-mas-desc">
+<title id="tp-mas-title">triPilot 멀티 에이전트 흐름 — 케이스 하나가 지나가는 길</title>
+<desc id="tp-mas-desc">일정 위험 모니터링(외부 정보 6종 · 3분 주기)이 연 케이스를 오케스트레이터(코드)가 문제 코드로 라우팅해 요식업 또는 액티비티 에이전트 하나에 태스크(할 일 · 컨텍스트 · 허용 도구 · 90초)를 맡긴다. 에이전트는 읽기 도구로 일정을 다시 점검하고 후보를 한 곳씩 다시 확인해 일정마다 변경 초안 최대 3개를 돌려준다. 바뀐 장소의 앞뒤 이동은 공용 도구인 이동 판정기가 다시 판정한다. 오케스트레이터는 기능 검증(근거 대조 · 반영 전 확인)과 체크리스트 검증을 거쳐 새 일정 버전으로 반영하고 아웃박스 워커가 알린다. 고객 문장은 분류 모델(언어 모델)이 먼저 라벨을 붙인다.</desc>
+<defs><style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;display=swap');</style><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b7488"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a8720c"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5bd8"/></marker><marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8599"/></marker><style>.name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#161c28;text-anchor:middle}.focal-name{fill:#a8720c}.sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#6b7488;text-anchor:middle}.io{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#161c28}.io-k{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#7a8599}.tag{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;font-weight:500;letter-spacing:0.08em;text-anchor:middle}.lab{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:500;text-anchor:middle}.lab-mono{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;letter-spacing:0.14em;text-anchor:middle}.tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28;text-anchor:middle}.zone{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#6b7488}.leg{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.hub-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#fbfcfd;text-anchor:middle}.hub-sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:rgba(251,252,253,0.78);text-anchor:middle}.layer-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#161c28}.layer-note{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.layer-tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28}</style></defs>
+<rect width="1416" height="2264" fill="#fbfcfd"/>
+<rect x="24" y="24" width="1344" height="144" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="40" y="44" class="zone">① 트리거 — 일정 위험 모니터링 · 고객 요청</text>
+<rect x="24" y="184" width="916" height="376" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="40" y="204" class="zone">② 오케스트레이터 [코드] — 라우팅 · 태스크 만들기</text>
+<rect x="952" y="184" width="416" height="376" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="968" y="204" class="zone">채팅 · 개인 AI 길 — 에이전트 안 거침</text>
+<rect x="24" y="576" width="1344" height="728" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="328" y="596" class="zone">③ 에이전트 — 둘 중 하나가 받는다 · 에이전트끼리 직접 부르지 않는다</text>
+<rect x="24" y="1320" width="1344" height="656" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="40" y="1340" class="zone">④ 검증 · 반영 [오케스트레이터]</text>
+<rect x="24" y="1992" width="1344" height="160" rx="8" fill="rgba(22,28,40,0.025)" stroke="rgba(22,28,40,0.12)" stroke-width="1"/><text x="504" y="2012" class="zone">⑤ 알림 · 고객 · 다음 주기</text>
+<!-- 화살표 먼저 -->
+<path d="M700 152 L700 216" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1160 160 L1160 216" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 312 L700 344" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 440 L700 464" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M580 504 L268 504 A8 8 0 0 0 260 512 L260 616" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M820 504 L1132 504 A8 8 0 0 1 1140 512 L1140 616" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 544 L700 1176" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M260 712 L260 744" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M260 856 L260 888" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M260 1000 L260 1032" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M480 1112 L504 1112 A8 8 0 0 0 512 1104 L512 1072 A8 8 0 0 0 504 1064 L480 1064" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<path d="M260 1144 L260 1176" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1140 712 L1140 744" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1140 856 L1140 888" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1140 968 L1140 1032" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1260 928 L1368 928 A8 8 0 0 1 1376 936 L1376 1224 A8 8 0 0 1 1368 1232 L1360 1232" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M920 1112 L896 1112 A8 8 0 0 1 888 1104 L888 1072 A8 8 0 0 1 896 1064 L920 1064" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<path d="M1140 1144 L1140 1176" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M480 1232 L560 1232" fill="none" stroke="#6b7488" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M920 1232 L840 1232" fill="none" stroke="#6b7488" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M260 1288 L260 1304 A8 8 0 0 0 268 1312 L652 1312 A8 8 0 0 1 660 1320 L660 1352" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1140 1288 L1140 1304 A8 8 0 0 1 1132 1312 L748 1312 A8 8 0 0 0 740 1320 L740 1352" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 1288 L700 1352" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M520 1400 L440 1400" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 1448 L700 1480" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M520 1528 L248 1528 A8 8 0 0 1 240 1520 L240 1440" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 1576 L700 1608" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M520 1656 L188 1656 A8 8 0 0 1 180 1648 L180 1440" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 1704 L700 1736" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 1816 L700 1848" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M820 1776 L960 1776" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M520 1904 L440 1904" fill="none" stroke="#6b7488" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M700 1960 L700 2024" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1120 1824 L1120 2048 A8 8 0 0 1 1112 2056 L880 2056" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M520 2072 L440 2072" fill="none" stroke="#2f5bd8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<path d="M120 2024 L120 1696 A8 8 0 0 1 128 1688 L520 1688" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<path d="M1360 276 L1380 276 A8 8 0 0 1 1388 284 L1388 1648 A8 8 0 0 1 1380 1656 L880 1656" fill="none" stroke="#6b7488" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M1160 392 L1160 368" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 2136 L700 2160 A8 8 0 0 0 708 2168 L1392 2168 A8 8 0 0 0 1400 2160 L1400 48 A8 8 0 0 0 1392 40 L768 40 A8 8 0 0 0 760 48 L760 56" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<!-- 이름표 -->
+<rect x="708" y="176" width="44" height="16" rx="2" fill="#fbfcfd"/><text x="730" y="188" class="lab" fill="#6b7488">케이스</text>
+<rect x="344" y="480" width="152" height="16" rx="2" fill="#fbfcfd"/><text x="420" y="492" class="lab" fill="#6b7488">식당 문제 → 태스크 맡김</text>
+<rect x="900" y="512" width="200" height="16" rx="2" fill="#fbfcfd"/><text x="1000" y="524" class="lab" fill="#6b7488">활동 문제 · 묶음 → 태스크 맡김</text>
+<rect x="708" y="600" width="204" height="16" rx="2" fill="#fbfcfd"/><text x="810" y="612" class="lab" fill="#6b7488">이동 일정 사고 → 도구 직접 호출</text>
+<rect x="268" y="864" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="300" y="876" class="lab" fill="#6b7488">문제 있음</text>
+<rect x="520" y="1080" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="552" y="1092" class="lab" fill="#a8720c">다음 후보</text>
+<rect x="268" y="1152" width="52" height="16" rx="2" fill="#fbfcfd"/><text x="294" y="1164" class="lab" fill="#6b7488">다 봤음</text>
+<rect x="1148" y="864" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="1180" y="876" class="lab" fill="#6b7488">문제 있음</text>
+<rect x="1148" y="984" width="44" height="16" rx="2" fill="#fbfcfd"/><text x="1170" y="996" class="lab" fill="#6b7488">아니오</text>
+<rect x="1272" y="904" width="100" height="16" rx="2" fill="#fbfcfd"/><text x="1322" y="916" class="lab" fill="#6b7488">예 → 바꿀까요?</text>
+<rect x="816" y="1080" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="848" y="1092" class="lab" fill="#a8720c">다음 후보</text>
+<rect x="1148" y="1152" width="52" height="16" rx="2" fill="#fbfcfd"/><text x="1174" y="1164" class="lab" fill="#6b7488">다 봤음</text>
+<rect x="372" y="1320" width="136" height="16" rx="2" fill="#fbfcfd"/><text x="440" y="1332" class="lab" fill="#6b7488">초안 최대 3개 돌려줌</text>
+<rect x="884" y="1320" width="148" height="16" rx="2" fill="#fbfcfd"/><text x="958" y="1332" class="lab" fill="#6b7488">항목마다 초안 최대 3개</text>
+<rect x="464" y="1376" width="32" height="16" rx="2" fill="#fbfcfd"/><text x="480" y="1388" class="lab" fill="#6b7488">멈춤</text>
+<rect x="708" y="1456" width="32" height="16" rx="2" fill="#fbfcfd"/><text x="724" y="1468" class="lab" fill="#6b7488">초안</text>
+<rect x="348" y="1504" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="380" y="1516" class="lab" fill="#6b7488">대조 실패</text>
+<rect x="708" y="1584" width="32" height="16" rx="2" fill="#fbfcfd"/><text x="724" y="1596" class="lab" fill="#6b7488">통과</text>
+<rect x="304" y="1632" width="92" height="16" rx="2" fill="#fbfcfd"/><text x="350" y="1644" class="lab" fill="#6b7488">불일치 · 충돌</text>
+<rect x="708" y="1824" width="124" height="16" rx="2" fill="#fbfcfd"/><text x="770" y="1836" class="lab" fill="#6b7488">아니오 → 자동 반영</text>
+<rect x="880" y="1752" width="20" height="16" rx="2" fill="#fbfcfd"/><text x="890" y="1764" class="lab" fill="#6b7488">예</text>
+<rect x="708" y="1984" width="160" height="16" rx="2" fill="#fbfcfd"/><text x="788" y="1996" class="lab" fill="#6b7488">새 버전 · 그대로 둔 이유</text>
+<rect x="968" y="2032" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="1000" y="2044" class="lab" fill="#6b7488">묻는 알림</text>
+<rect x="440" y="2048" width="80" height="16" rx="2" fill="#fbfcfd"/><text x="480" y="2060" class="lab" fill="#2f5bd8">알림 + 링크</text>
+<rect x="252" y="1696" width="172" height="16" rx="2" fill="#fbfcfd"/><text x="338" y="1708" class="lab" fill="#a8720c">다시 확인 · 고객이 고른 것</text>
+<rect x="1172" y="1500" width="208" height="16" rx="2" fill="#fbfcfd"/><text x="1276" y="1512" class="lab" fill="#6b7488">일정 · 신고 초안 → 반영 전 확인</text>
+<rect x="1072" y="2144" width="256" height="16" rx="2" fill="#fbfcfd"/><text x="1200" y="2156" class="lab" fill="#a8720c">다음 3분 주기 · 다시 일정 위험 모니터링</text>
+<!-- 상자 -->
+<rect x="520" y="56" width="360" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="520" y="56" width="360" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="528" y="64" width="36" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="546" y="73" class="tag" fill="#161c28">WATCH</text>
+<text x="700" y="92" class="name">일정 위험 모니터링 (3분 주기)</text>
+<text x="536" y="112" class="io-k">입력</text>
+<text x="568" y="112" class="io">지금부터 90분 안 일정 · 외부 정보 6종</text>
+<text x="536" y="132" class="io-k">출력</text>
+<text x="568" y="132" class="io">케이스 · 문제 코드는 규칙이 붙임(묶음 최대 6)</text>
+<rect x="960" y="48" width="400" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="960" y="48" width="400" height="112" rx="6" fill="rgba(47,91,216,0.03)" stroke="#2f5bd8" stroke-width="1" stroke-dasharray="5,3"/>
+<rect x="968" y="56" width="60" height="12" rx="2" fill="none" stroke="#2f5bd8" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="998" y="65" class="tag" fill="#2f5bd8">CLASSIFIER</text>
+<text x="1160" y="84" class="name">결정 모델 — gemma4:12b [언어 모델]</text>
+<text x="976" y="104" class="io-k">입력</text>
+<text x="1008" y="104" class="io">고객 문장 + 이 여행의 일정 · 이력 · 앞 대화</text>
+<text x="976" y="124" class="io-k">출력</text>
+<text x="1008" y="124" class="io">할 일 · 대상 일정 · 질문 종류(보기 안에서만)</text>
+<text x="976" y="144" class="io-k"></text>
+<text x="994" y="144" class="io">서버가 보기 밖 값 · 없는 일정 번호를 거름</text>
+<rect x="960" y="216" width="400" height="152" rx="6" fill="#fbfcfd"/>
+<rect x="960" y="216" width="400" height="152" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="968" y="224" width="32" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="984" y="233" class="tag" fill="#161c28">GATE</text>
+<text x="1160" y="252" class="name">갈래 나누기 → 여행 창구 [코드]</text>
+<text x="976" y="272" class="io-k">일정</text>
+<text x="1008" y="272" class="io">바꾸기 · 후보 · 되돌리기 · 다시 적용 → ④</text>
+<text x="976" y="292" class="io-k">사실</text>
+<text x="1008" y="292" class="io">주소 · 시간 · 예약 · 길찾기 · 근처 → 규칙 답</text>
+<text x="976" y="312" class="io-k">규정</text>
+<text x="1008" y="312" class="io">취소 · 환불 · 날씨 → RAG 최대 3조각</text>
+<text x="976" y="332" class="io-k">신고</text>
+<text x="1008" y="332" class="io">늦음 · 휴무 → 대체안 계산 → ④</text>
+<text x="976" y="352" class="io-k">모름</text>
+<text x="1008" y="352" class="io">보기 버튼으로 되묻기 · 잡담은 짧은 답</text>
+<rect x="960" y="392" width="400" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="960" y="392" width="400" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="968" y="400" width="28" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="982" y="409" class="tag" fill="#161c28">MCP</text>
+<text x="1160" y="428" class="name">개인 AI 입구 — MCP 도구 14 [코드]</text>
+<text x="976" y="448" class="io-k">입력</text>
+<text x="1008" y="448" class="io">개인 AI 호출 — 사용자 키 · 본인 여행만</text>
+<text x="976" y="468" class="io-k">출력</text>
+<text x="1008" y="468" class="io">위험 점검 · 이동 판정 · 일정 · 신고 …</text>
+<rect x="520" y="216" width="360" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="520" y="216" width="360" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="528" y="224" width="40" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="548" y="233" class="tag" fill="#161c28">ROUTER</text>
+<text x="700" y="252" class="name">라우팅</text>
+<text x="536" y="272" class="io-k">입력</text>
+<text x="568" y="272" class="io">문제 코드 · 확인된 대상 힌트(먼저)</text>
+<text x="536" y="292" class="io-k">출력</text>
+<text x="568" y="292" class="io">담당 1곳 · 못 정하면 멈춤</text>
+<rect x="520" y="344" width="360" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="520" y="344" width="360" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="528" y="352" width="32" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="544" y="361" class="tag" fill="#161c28">TASK</text>
+<text x="700" y="380" class="name">태스크 만들기</text>
+<text x="536" y="400" class="io-k">입력</text>
+<text x="568" y="400" class="io">케이스 · 지금 일정 버전 · 담당</text>
+<text x="536" y="420" class="io-k">출력</text>
+<text x="568" y="420" class="io">할 일 · 컨텍스트 · 허용 도구 · 90초</text>
+<polygon points="700,464 820,504 700,544 580,504" fill="#fbfcfd"/>
+<polygon points="700,464 820,504 700,544 580,504" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="508" class="name">누구에게?</text>
+<rect x="40" y="616" width="440" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="616" width="440" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="2.2"/>
+<rect x="48" y="624" width="80" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="88" y="633" class="tag" fill="#161c28">AGENT · DINING</text>
+<text x="260" y="652" class="name">요식업 에이전트</text>
+<text x="56" y="672" class="io-k">입력</text>
+<text x="88" y="672" class="io">태스크 — 문제 난 식사 일정 · 원인</text>
+<text x="56" y="692" class="io-k">출력</text>
+<text x="88" y="692" class="io">변경 초안 최대 3개 / 그대로 / 대안 없음 / 멈춤</text>
+<rect x="40" y="744" width="440" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="744" width="440" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="260" y="780" class="name">1. 일정 읽기 + 지금 일정 재점검</text>
+<text x="56" y="800" class="io-k">입력</text>
+<text x="88" y="800" class="io">케이스의 여행 · 일정</text>
+<text x="56" y="820" class="io-k">도구</text>
+<text x="88" y="820" class="io">일정 읽기 · 사건 재점검</text>
+<text x="56" y="840" class="io-k">출력</text>
+<text x="88" y="840" class="io">문제 있음 / 없음 → 그대로 / 확인 불가 → 멈춤</text>
+<rect x="40" y="888" width="440" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="888" width="440" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="260" y="924" class="name">2. 대체 식당 후보 만들기</text>
+<text x="56" y="944" class="io-k">입력</text>
+<text x="88" y="944" class="io">문제 난 식사의 시각 · 위치 · 조건</text>
+<text x="56" y="964" class="io-k">도구</text>
+<text x="88" y="964" class="io">장소 목록 · 대체 식당 원장</text>
+<text x="56" y="984" class="io-k">출력</text>
+<text x="88" y="984" class="io">순위를 매긴 후보 목록</text>
+<rect x="40" y="1032" width="440" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="1032" width="440" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="260" y="1068" class="name">3. 후보 1곳씩 다시 점검</text>
+<text x="56" y="1088" class="io-k">입력</text>
+<text x="88" y="1088" class="io">후보 목록(순위순)</text>
+<text x="56" y="1108" class="io-k">도구</text>
+<text x="88" y="1108" class="io">사건 재점검 · 식당 상태</text>
+<text x="56" y="1128" class="io-k">출력</text>
+<text x="88" y="1128" class="io">통과한 후보 — 최대 3곳까지 봄</text>
+<rect x="40" y="1176" width="440" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="1176" width="440" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="260" y="1212" class="name">4. 초안 만들기</text>
+<text x="56" y="1232" class="io-k">입력</text>
+<text x="88" y="1232" class="io">통과한 후보</text>
+<text x="56" y="1252" class="io-k">도구</text>
+<text x="88" y="1252" class="io">이동 판정기 — 바뀐 곳 앞뒤 이동</text>
+<text x="56" y="1272" class="io-k">출력</text>
+<text x="88" y="1272" class="io">변경 초안 최대 3개(1순위 + 다른 안 2)</text>
+<rect x="920" y="616" width="440" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="920" y="616" width="440" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="2.2"/>
+<rect x="928" y="624" width="92" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="974" y="633" class="tag" fill="#161c28">AGENT · ACTIVITY</text>
+<text x="1140" y="652" class="name">액티비티 에이전트</text>
+<text x="936" y="672" class="io-k">입력</text>
+<text x="968" y="672" class="io">태스크 — 활동 일정 · 원인 · 설문 · 묶음</text>
+<text x="936" y="692" class="io-k">출력</text>
+<text x="968" y="692" class="io">항목마다 초안 최대 3개 / 바꿀까요? / 멈춤</text>
+<rect x="920" y="744" width="440" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="920" y="744" width="440" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1140" y="780" class="name">1. 일정 읽기 + 지금 일정 재점검</text>
+<text x="936" y="800" class="io-k">입력</text>
+<text x="968" y="800" class="io">케이스의 여행 · 일정</text>
+<text x="936" y="820" class="io-k">도구</text>
+<text x="968" y="820" class="io">일정 읽기 · 사건 재점검</text>
+<text x="936" y="840" class="io-k">출력</text>
+<text x="968" y="840" class="io">문제 있음 / 없음 → 그대로 / 확인 불가 → 멈춤</text>
+<polygon points="1140,888 1260,928 1140,968 1020,928" fill="#fbfcfd"/>
+<polygon points="1140,888 1260,928 1140,968 1020,928" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1140" y="932" class="name">날씨만 · 실내 모름?</text>
+<rect x="920" y="1032" width="440" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="920" y="1032" width="440" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1140" y="1068" class="name">2. 후보 1곳씩 다시 점검</text>
+<text x="936" y="1088" class="io-k">입력</text>
+<text x="968" y="1088" class="io">장소 목록의 비슷한 곳 → 가까운 곳 · 설문</text>
+<text x="936" y="1108" class="io-k">도구</text>
+<text x="968" y="1108" class="io">장소 목록 · 사건 재점검</text>
+<text x="936" y="1128" class="io-k">출력</text>
+<text x="968" y="1128" class="io">통과한 후보 — 최대 6곳까지 봄</text>
+<rect x="920" y="1176" width="440" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="920" y="1176" width="440" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1140" y="1212" class="name">3. 초안 만들기</text>
+<text x="936" y="1232" class="io-k">입력</text>
+<text x="968" y="1232" class="io">통과한 후보(묶음이면 식당 · 이동 항목도)</text>
+<text x="936" y="1252" class="io-k">도구</text>
+<text x="968" y="1252" class="io">이동 판정기 · 묶음이면 요식 계산(항목마다 12번)</text>
+<text x="936" y="1272" class="io-k">출력</text>
+<text x="968" y="1272" class="io">항목마다 초안 최대 3개 / 바꿀까요?</text>
+<rect x="560" y="1176" width="280" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="560" y="1176" width="280" height="112" rx="6" fill="rgba(22,28,40,0.04)" stroke="#6b7488" stroke-width="1.4" stroke-dasharray="6,3"/>
+<text x="700" y="1212" class="name">이동 판정기 [공용 도구]</text>
+<text x="576" y="1232" class="io-k">입력</text>
+<text x="608" y="1232" class="io">앞뒤 장소 · 시각 · 사고 난 이동</text>
+<text x="576" y="1252" class="io-k">출력</text>
+<text x="608" y="1252" class="io">출발 시각 · 경로 · 소요</text>
+<text x="576" y="1272" class="io-k"></text>
+<text x="594" y="1272" class="io">에이전트 아님 · 직접 호출</text>
+<rect x="520" y="1352" width="360" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="520" y="1352" width="360" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="528" y="1360" width="40" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="548" y="1369" class="tag" fill="#161c28">RESULT</text>
+<text x="700" y="1388" class="name">초안 받기 — 오케스트레이터</text>
+<text x="536" y="1408" class="io-k">입력</text>
+<text x="568" y="1408" class="io">변경 초안 · 바꿀까요? · 대안 없음 · 멈춤</text>
+<text x="536" y="1428" class="io-k">출력</text>
+<text x="568" y="1428" class="io">초안 → 기능 검증 · 대안 없음 → 비슷한 안 묻기</text>
+<rect x="40" y="1360" width="400" height="80" rx="40" fill="#fbfcfd"/>
+<rect x="40" y="1360" width="400" height="80" rx="40" fill="#ffffff" stroke="#161c28" stroke-width="1.8" stroke-dasharray="3,3"/>
+<text x="240" y="1386" class="name">멈춤 — 일정 그대로</text>
+<text x="240" y="1404" class="sub">오류는 그 케이스만 · 5분 지나 다시 보면 최대 3번</text>
+<text x="240" y="1422" class="sub">근거 대조 실패는 고객 알림 없음(한계)</text>
+<rect x="520" y="1480" width="360" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="520" y="1480" width="360" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="528" y="1488" width="56" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="556" y="1497" class="tag" fill="#161c28">VALIDATOR</text>
+<text x="700" y="1516" class="name">기능 검증 ① 근거 대조</text>
+<text x="536" y="1536" class="io-k">입력</text>
+<text x="568" y="1536" class="io">변경 초안 · 오케스트레이터 컨텍스트</text>
+<text x="536" y="1556" class="io-k">출력</text>
+<text x="568" y="1556" class="io">통과 / 대조 실패 → 멈춤</text>
+<rect x="520" y="1608" width="360" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="520" y="1608" width="360" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="528" y="1616" width="36" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="546" y="1625" class="tag" fill="#161c28">APPLY</text>
+<text x="700" y="1644" class="name">기능 검증 ② 반영 전 확인</text>
+<text x="536" y="1664" class="io-k">입력</text>
+<text x="568" y="1664" class="io">초안(또는 고객이 고른 안) · 일정 버전</text>
+<text x="536" y="1684" class="io-k">출력</text>
+<text x="568" y="1684" class="io">통과 / 소유 · 버전 · 장소 불일치 → 멈춤</text>
+<polygon points="700,1736 820,1776 700,1816 580,1776" fill="#fbfcfd"/>
+<polygon points="700,1736 820,1776 700,1816 580,1776" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="700" y="1780" class="name">고객에게 물을까?</text>
+<rect x="520" y="1848" width="360" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="520" y="1848" width="360" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="528" y="1856" width="40" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="548" y="1865" class="tag" fill="#161c28">COMMIT</text>
+<text x="700" y="1884" class="name">체크리스트 검증 → 반영(새 일정 버전)</text>
+<text x="536" y="1904" class="io-k">입력</text>
+<text x="568" y="1904" class="io">바꾼 뒤 일정 전체</text>
+<text x="536" y="1924" class="io-k">도구</text>
+<text x="568" y="1924" class="io">체크리스트: 겹침 · 이동 · 영업 · 예산 · 밀도</text>
+<text x="536" y="1944" class="io-k">출력</text>
+<text x="568" y="1944" class="io">새 위반 없으면 새 버전 · 있으면 다음 순위</text>
+<rect x="160" y="1856" width="280" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="160" y="1856" width="280" height="96" rx="6" fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="300" y="1892" class="name">에이전트 수행 평가 기록</text>
+<text x="176" y="1912" class="io-k">입력</text>
+<text x="208" y="1912" class="io">체크리스트 통과 · 탈락 항목</text>
+<text x="176" y="1932" class="io-k">출력</text>
+<text x="208" y="1932" class="io">에이전트 수행 지표(구현 예정)</text>
+<rect x="960" y="1728" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="960" y="1728" width="320" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="968" y="1736" width="32" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="984" y="1745" class="tag" fill="#161c28">HITL</text>
+<text x="1120" y="1764" class="name">묻기 열기 (사람 확인)</text>
+<text x="976" y="1784" class="io-k">입력</text>
+<text x="1008" y="1784" class="io">보호 · 고정 · 먼저 물어봐 · 비슷한 안</text>
+<text x="976" y="1804" class="io-k">출력</text>
+<text x="1008" y="1804" class="io">보류 초안 + 묻는 알림</text>
+<rect x="520" y="2024" width="360" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="520" y="2024" width="360" height="112" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="528" y="2032" width="52" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="554" y="2041" class="tag" fill="#161c28">NOTIFIER</text>
+<text x="700" y="2060" class="name">아웃박스 워커 → Discord</text>
+<text x="536" y="2080" class="io-k">입력</text>
+<text x="568" y="2080" class="io">새 버전 · 묻기 · 그대로 둔 이유 · 안내</text>
+<text x="536" y="2100" class="io-k">도구</text>
+<text x="568" y="2100" class="io">번역 — 외국어 고객만 언어 모델</text>
+<text x="536" y="2120" class="io-k">출력</text>
+<text x="568" y="2120" class="io">Discord + 링크 · 실패면 1분 뒤 다시 · 3번</text>
+<rect x="40" y="2024" width="400" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="2024" width="400" height="112" rx="6" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="240" y="2060" class="name">고객 응답 ⏸</text>
+<text x="56" y="2080" class="io-k">입력</text>
+<text x="88" y="2080" class="io">알림 · 계획서 링크</text>
+<text x="56" y="2100" class="io-k">출력</text>
+<text x="88" y="2100" class="io">다른 안 고르기 · 되돌리기</text>
+<text x="56" y="2120" class="io-k"></text>
+<text x="74" y="2120" class="io">「바꿔 줘」 — 답 없으면 그대로</text>
+<line x1="32" y1="2200" x2="1384" y2="2200" stroke="rgba(22,28,40,0.12)" stroke-width="0.8"/>
+<text x="32" y="2220" class="lab-mono" fill="#6b7488" text-anchor="start">LEGEND</text>
+<rect x="104" y="2208" width="28" height="16" rx="3" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="140" y="2220" class="leg">고객</text>
+<rect x="192" y="2208" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="228" y="2220" class="leg">처리 단계</text>
+<rect x="312" y="2208" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="2.2"/>
+<text x="348" y="2220" class="leg">에이전트</text>
+<rect x="424" y="2208" width="28" height="16" rx="3" fill="rgba(22,28,40,0.04)" stroke="#6b7488" stroke-width="1.4" stroke-dasharray="6,3"/>
+<text x="460" y="2220" class="leg">공용 도구</text>
+<rect x="544" y="2208" width="28" height="16" rx="3" fill="rgba(47,91,216,0.03)" stroke="#2f5bd8" stroke-width="1" stroke-dasharray="5,3"/>
+<text x="580" y="2220" class="leg">언어 모델</text>
+<rect x="664" y="2208" width="28" height="16" rx="3" fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="700" y="2220" class="leg">구현 예정</text>
+<polygon points="798,2208 812,2216 798,2224 784,2216" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="820" y="2220" class="leg">판단</text>
+<line x1="872" y1="2216" x2="900" y2="2216" stroke="#2f5bd8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<text x="908" y="2220" class="leg">고객에게</text>
+<line x1="984" y1="2216" x2="1012" y2="2216" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<text x="1020" y="2220" class="leg">되돌아가는 루프</text>
+</svg>

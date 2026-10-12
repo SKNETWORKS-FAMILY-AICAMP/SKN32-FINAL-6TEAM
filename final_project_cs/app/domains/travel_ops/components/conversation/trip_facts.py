@@ -260,6 +260,8 @@ def look_up_place(place: dict[str, Any] | None, source: Any) -> dict[str, Any]:
     try:
         if not out["address"]:
             common = source.by_content_id(content_id, type_id)
+            if common:
+                out.update({k: common.get(k) for k in ("category", "homepage")})
             if common and common.get("address"):
                 out["address"] = common["address"]
             else:
@@ -268,6 +270,7 @@ def look_up_place(place: dict[str, Any] | None, source: Any) -> dict[str, Any]:
         if intro:
             out["hours_text"], out["rest_text"] = intro.get("usetime_text"), intro.get("restdate_text")
             out["phone"] = out["phone"] or intro.get("info_phone")
+            out.update({k: intro.get(k) for k in ("price_text", "reservation_text")})
         else:
             out["failed"].append("운영시간 조회 결과 없음")
     except Exception as exc:                                  # noqa: BLE001 — 조회 실패도 답에 그대로 말한다

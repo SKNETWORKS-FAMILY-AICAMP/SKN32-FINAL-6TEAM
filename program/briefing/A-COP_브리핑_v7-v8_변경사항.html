@@ -1,0 +1,274 @@
+<title>브리핑 v7→v8 차이점</title>
+<style>
+  :root {
+    --paper: #f2f4f8; --surface: #ffffff; --surface-2: #eceff5;
+    --ink: #161a23; --ink-muted: #5b6474; --ink-faint: #8791a1; --border: #dde1ea;
+    --accent: #3d4fc4; --accent-soft: #e4e7fa; --accent-ink: #26308f;
+    --old: #b3283f; --old-soft: #fbe4e7;
+    --new: #16794f; --new-soft: #dff3e8;
+    --shadow: 0 1px 2px rgba(20,24,34,.05), 0 10px 26px -14px rgba(20,24,34,.18);
+  }
+  :root[data-theme="dark"] {
+    --paper: #0e1116; --surface: #171b23; --surface-2: #1d222c;
+    --ink: #e9ebf1; --ink-muted: #9aa2b3; --ink-faint: #6b7485; --border: #2a3040;
+    --accent: #8b9bff; --accent-soft: #212a54; --accent-ink: #cdd5ff;
+    --old: #e8899a; --old-soft: #3a1d24;
+    --new: #7fd6ac; --new-soft: #10301f;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 32px -16px rgba(0,0,0,.6);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0e1116; --surface: #171b23; --surface-2: #1d222c;
+      --ink: #e9ebf1; --ink-muted: #9aa2b3; --ink-faint: #6b7485; --border: #2a3040;
+      --accent: #8b9bff; --accent-soft: #212a54; --accent-ink: #cdd5ff;
+      --old: #e8899a; --old-soft: #3a1d24;
+      --new: #7fd6ac; --new-soft: #10301f;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 32px -16px rgba(0,0,0,.6);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink);
+    font-family: -apple-system, "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif;
+    line-height: 1.6; }
+  .mono, code { font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", Consolas, monospace; font-size: .93em; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  header.hero { margin-bottom: 26px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 12px; }
+  .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  h1 { font-size: clamp(24px, 3.6vw, 30px); font-weight: 800; letter-spacing: -0.01em; margin: 0 0 10px; text-wrap: balance; }
+  .lede { color: var(--ink-muted); font-size: 15px; max-width: 66ch; margin: 0; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border);
+    border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 24px 0 8px; }
+  .stat { background: var(--surface); padding: 14px 14px; }
+  .stat .k { font-size: 10.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px; }
+  .stat .v { font-size: 14.5px; font-weight: 800; }
+
+  .toc { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 28px 0 40px; }
+  .toc a { display: block; text-decoration: none; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; font-size: 13px; }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .n { color: var(--accent); font-weight: 800; margin-right: 6px; }
+
+  section.change { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 22px; }
+  section.change h2 { font-size: 17px; font-weight: 800; margin: 0 0 4px; }
+  section.change .one-liner { color: var(--ink-muted); font-size: 13.5px; margin: 0 0 16px; }
+
+  .easy-note { background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0;
+    padding: 12px 16px; margin: 14px 0 18px; font-size: 13.5px; color: var(--ink); }
+  .easy-note .lbl { display: block; font-weight: 800; color: var(--accent-ink); margin-bottom: 4px; font-size: 12.5px; }
+  .easy-note .guess { color: var(--ink-faint); font-size: 12px; margin-top: 6px; display: block; }
+
+  .diff-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 16px; }
+  @media (max-width: 640px) { .diff-pair { grid-template-columns: 1fr; } }
+  .diff-col { border-radius: 10px; padding: 12px 14px; font-size: 13px; border: 1px solid var(--border); }
+  .diff-col.old { background: var(--old-soft); }
+  .diff-col.new { background: var(--new-soft); }
+  .diff-col .tag { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 6px; }
+  .diff-col.old .tag { color: var(--old); }
+  .diff-col.new .tag { color: var(--new); }
+  .diff-col ul { margin: 0; padding-left: 18px; }
+  .diff-col li { margin-bottom: 4px; }
+
+  .arrow-note { text-align: center; font-size: 12px; color: var(--ink-faint); margin: -6px 0 14px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0 16px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-size: 11px; text-transform: uppercase; color: var(--ink-faint); font-weight: 700; }
+  tr:last-child td { border-bottom: none; }
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+
+  .minor-list { font-size: 13px; }
+  .minor-list li { margin-bottom: 8px; }
+  .minor-list .old-txt { color: var(--old); text-decoration: line-through; opacity: .8; }
+  .minor-list .new-txt { color: var(--new); font-weight: 600; }
+
+  footer { margin-top: 52px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 12px; color: var(--ink-faint); }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">A-COP 브리핑 · 쉬운설명판</div>
+    <h1>v7 → v8, 뭐가 바뀌었나</h1>
+    <p class="lede">
+      <code>A-COP_브리핑_v7_쉬운설명.html</code>과 <code>A-COP_브리핑_v8_쉬운설명.html</code>을
+      줄 단위로 대조한 결과. 자구 수정이 아니라 <b>팀 구조와 일정 자체가 새 기준선으로 갈아끼워졌다.</b>
+    </p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="k">변경 블록</div><div class="v">10곳</div></div>
+    <div class="stat"><div class="k">팀 구성</div><div class="v">3+1개 → 2+4개</div></div>
+    <div class="stat"><div class="k">DoD 항목</div><div class="v">28 → 29</div></div>
+    <div class="stat"><div class="k">일정 표기</div><div class="v">추상 주차 → 실제 캘린더</div></div>
+  </div>
+
+  <div class="toc">
+    <a href="#c1"><span class="n">1</span>Team 구조 개편</a>
+    <a href="#c2"><span class="n">2</span>도메인 팩 재정의</a>
+    <a href="#c3"><span class="n">3</span>일정(WBS) 전면 교체</a>
+    <a href="#c4"><span class="n">4</span>버리는 순서 갱신</a>
+    <a href="#c5"><span class="n">5</span>자구 수정 5건</a>
+  </div>
+
+  <div class="easy-note" style="margin-bottom:8px;">
+    <span class="lbl">💬 전체 요약 — 한 줄로</span>
+    v7은 "지금 CS 3팀 만들고, 쇼핑몰 운영은 나중에"였다면, v8은 "CS 2팀은 반드시 지금 만들고,
+    쇼핑몰 실무 4팀은 실제 연동 파트너(검증 쇼핑몰)가 정해지는 대로 붙인다"로 바뀌었습니다.
+    말만 바뀐 게 아니라 팀 개수(3+1→2+4)와 일정 표기(추상 주차→실제 캘린더), DoD 개수(28→29)까지
+    전부 이 새 구조에 맞춰 한 번에 갱신됐습니다.
+  </div>
+
+  <section class="change" id="c1" style="margin-top:24px;border-top:none;padding-top:0;">
+    <h2>1. Team 구조 개편 — 이름만 바뀐 게 아니다</h2>
+    <p class="one-liner">Local Team 3개 + Remote 1개 구조가, "CS Pack 확정축 2개 + Commerce Ops 연계축 4개" 구조로 바뀌었다.</p>
+
+    <div class="diff-pair">
+      <div class="diff-col old">
+        <span class="tag">v7 — Local 3 + Remote 1</span>
+        <ul>
+          <li>Billing Team</li>
+          <li>Technical Team</li>
+          <li>VOC Team</li>
+          <li>(Remote) Catalog &amp; Verification Team</li>
+        </ul>
+      </div>
+      <div class="diff-col new">
+        <span class="tag">v8 — 확정축 2 + 연계축 4</span>
+        <ul>
+          <li><b>CS Pack (10주 확정 착수)</b><br>VOC &amp; Store Manager<br>Response Generation &amp; Review</li>
+          <li><b>Commerce Ops 연계축 (일정 따라 조정)</b><br>Procurement + Order &amp; Payment<br>Fulfillment &amp; Logistics<br>Return &amp; Refund<br>Catalog &amp; Verification (A2A Remote)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="arrow-note">본문 내 "VOC Team 경계" 설명, pill 목록, 위임 예시 문장 전부 새 이름으로 일괄 교체됨</div>
+
+    <div class="easy-note">
+      <span class="lbl">💬 쉬운 설명</span>
+      v7은 "Billing(요금)·Technical(기술)·VOC(피드백)" 3개 팀이 CS 문의만 나눠 처리하는 구조였습니다.
+      v8은 이걸 두 그룹으로 다시 나눕니다. <b>① CS Pack(무조건 10주 안에 만드는 것)</b> — 문의를 받아
+      분류·집계하는 "VOC &amp; Store Manager"와, 답변을 실제로 만들고 근거를 검증하는
+      "Response Generation &amp; Review". <b>② Commerce Ops 연계축(검증 쇼핑몰이 정해지는 대로 맞춰 넣는 것)</b>
+      — 발주, 배송, 반품·환불, 상품 검증까지 총 4개 팀. 즉 "CS만 하던 팀"에서 "CS는 확정하고,
+      쇼핑몰 실무(주문·배송·반품)는 상대가 정해지는 대로 붙이는" 구조로 바뀐 겁니다.
+      <span class="guess">※ Response Generation &amp; Review가 새 정식 Team으로 승격된 것으로 보이는데,
+      이건 DoD가 28→29개로 늘어난 것과 맞물려 보입니다(29번이 "Response Generation &amp; Review 검증" 항목).</span>
+    </div>
+  </section>
+
+  <section class="change" id="c2">
+    <h2>2. 도메인 팩 다이어그램·쉬운설명 재정의</h2>
+    <p class="one-liner">"10주 구현 vs vision(나중 계획)"이라는 이분법이, "CS Pack 확정축 vs Commerce Ops 연계축(검증 쇼핑몰 일정에 맞춰 조정)"으로 바뀌었다.</p>
+
+    <div class="diff-pair">
+      <div class="diff-col old">
+        <span class="tag">v7</span>
+        "지금 10주에 만드는 것은 고객센터용 묶음(CS Pack)이고, 쇼핑몰 운영용 묶음(Commerce Ops Pack)은
+        나중 계획(vision)입니다."
+      </div>
+      <div class="diff-col new">
+        <span class="tag">v8</span>
+        "고객 문의를 맡는 VOC &amp; Store Manager와 답변을 만들고 검토하는 Response Generation &amp; Review를
+        CS Pack의 확정축으로 삼습니다. 발주·주문·결제, 물류, 반품·환불, 상품 검증은 Commerce Ops 연계축으로
+        나누어 검증 쇼핑몰과 일정에 맞춰 조정합니다."
+      </div>
+    </div>
+    <div class="arrow-note">"나중에 할 수도 있는 것" → "검증 쇼핑몰 연계 여부에 따라 조정되는 것"으로 위상이 바뀜</div>
+
+    <div class="easy-note">
+      <span class="lbl">💬 쉬운 설명</span>
+      v7의 표현은 "Commerce Ops Pack은 vision(먼 미래 계획)"이라 심사 자리에서 "그럼 지금은 왜 얘기하냐"는
+      질문을 받기 쉬운 표현이었습니다. v8은 이걸 "검증 쇼핑몰(우리와 실제로 연동할 파트너 쇼핑몰)이
+      정해지는 시점과 범위에 맞춰 진행한다"로 바꿨습니다. 똑같이 "지금 당장은 안 만든다"는 뜻이지만,
+      "언제·왜 만들지 조건이 이미 정해져 있다"는 느낌으로 바뀐 겁니다 — 계획이 없는 게 아니라
+      외부 변수(파트너 확정)에 달려있다는 걸 명확히 한 것으로 보입니다.
+    </div>
+  </section>
+
+  <section class="change" id="c3">
+    <h2>3. 일정(WBS) — 추상적 주차에서 실제 캘린더로</h2>
+    <p class="one-liner">"1~2주차, 3~4주차..." 식 상대 표기가 실제 날짜가 박힌 WBS로 전면 교체됐다. 중간발표(9/15)·최종발표(10/26) 고정일도 처음 등장.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>v7 (추상 주차)</th><th>v8 (실제 캘린더)</th></tr>
+        <tr><td>1~2주차 — Capability, Case/Contract, ERD, Baseline</td><td>선행 8/17~8/27 — WBS·기획·요구사항 초안, DoD 1~29 대조</td></tr>
+        <tr><td>3~4주차 — Core Runtime, Local Team, RAG, Web API</td><td>1W~2W 8/28~9/10 — 공식 양식 동결, seed·knowledge 적재, DB 설계</td></tr>
+        <tr><td>5~6주차 — MCP/OAuth, Agent Team Module, Dashboard</td><td>3W 9/11~9/17 — PII masking·RAG 적재·평가, <b>9/15 중간발표</b></td></tr>
+        <tr><td>7주차 — A2A Remote Team PoC</td><td>4W~6W 9/18~10/14 — 보완, Graph/A2A 경계와 테스트 정리</td></tr>
+        <tr><td>8~9주차 — LOCAL/A2A 동일결과 시연, Graph 비교 또는 안정화</td><td>7W~8W 10/15~10/24 — 웹앱·구성도·서비스 테스트, 발표물 동결<br>9W — 최종 보완, <b>10/26 최종발표</b></td></tr>
+      </table>
+    </div>
+
+    <div class="easy-note">
+      <span class="lbl">💬 쉬운 설명</span>
+      v7은 "n주차"처럼 프로젝트 시작일 기준 상대 주차로 일정을 표시했습니다. 팀 안에서는 편하지만,
+      부트캠프 공식 발표 일정(중간발표·최종발표)이나 다른 팀·심사 일정과 맞출 때는 "그래서 그게 몇 월
+      며칠이냐"를 매번 계산해야 하는 문제가 있었습니다. v8은 실제 날짜를 그대로 못박았습니다 —
+      <b>중간발표 9월 15일</b>, <b>최종발표 10월 26일</b>이 고정되면서, 그 사이 구간(선행·1W~9W)도
+      전부 실제 캘린더에 맞춰 재배치됐습니다. "이번 주에 뭘 해야 하지"를 계산 없이 바로 알 수 있게 된 게
+      핵심 변화입니다.
+    </div>
+  </section>
+
+  <section class="change" id="c4">
+    <h2>4. "버리는 순서"(fallback) 갱신</h2>
+    <p class="one-liner">일정이 빠듯할 때 뭘 먼저 포기할지의 순서도, 새 팀 구조에 맞춰 다시 짜였다.</p>
+
+    <div class="diff-pair">
+      <div class="diff-col old">
+        <span class="tag">v7</span>
+        ① Graph 비교 실험 → ② A2A Remote PoC → ③ MCP tool 축소<br><br>
+        지키는 것: Team 2개 + 평가 하니스
+      </div>
+      <div class="diff-col new">
+        <span class="tag">v8</span>
+        ① Graph 외부 Adapter 비교 → ② A2A Remote 확장 시나리오 →
+        ③ MCP tool 추가와 Commerce Ops 확장 → ④ 화면 장식과 추가 Team<br><br>
+        지키는 것: CS Pack 확정축 + 운영 UI + 평가 harness
+      </div>
+    </div>
+
+    <div class="easy-note">
+      <span class="lbl">💬 쉬운 설명</span>
+      "버리는 순서"는 시간이 부족해질 때 뭐부터 포기할지 미리 정해둔 우선순위입니다. v7에서는
+      "MCP tool 축소"가 마지막 카드였는데(이미 만든 기능을 줄인다), v8에서는 "MCP tool 추가와
+      Commerce Ops 확장 자체를 안 한다"로 바뀌었습니다. 즉 v7은 "만든 걸 줄인다"는 방어였고,
+      v8은 "애초에 확장축(Commerce Ops) 쪽은 여유 있을 때만 손댄다"는 더 보수적인 방어로 바뀐
+      겁니다. 대신 반드시 지키는 것도 명확해졌습니다 — CS Pack 확정축, 운영 UI, 평가 harness
+      이 세 가지는 무슨 일이 있어도 끝까지 지킵니다.
+    </div>
+  </section>
+
+  <section class="change" id="c5">
+    <h2>5. 그 외 자구 수정 5건</h2>
+    <ul class="minor-list">
+      <li>제목 <span class="old-txt">브리핑 v7</span> → <span class="new-txt">브리핑 v8</span> (2곳)</li>
+      <li>"어느 팀에게 맡길지 정하면..." 문장의 예시가 <span class="old-txt">요금팀·기술팀·VOC팀</span> →
+        <span class="new-txt">VOC &amp; Store Manager 또는 Response Generation &amp; Review</span></li>
+      <li>위임 예시 문장의 주체가 <span class="old-txt">Billing Team</span> →
+        <span class="new-txt">VOC &amp; Store Manager</span></li>
+      <li>마지막 요약 줄의 CS Pack 구성 표기가 <span class="old-txt">Billing/Technical/VOC</span> →
+        <span class="new-txt">VOC &amp; Store Manager/Response Generation &amp; Review</span></li>
+      <li>Team 소속 설명 "Billing·Technical·VOC는 Local Team" 문장이 통째로
+        "확정축 2개는 10주 착수, 연계축 4개는 일정 따라 조정" 문장으로 재작성됨</li>
+    </ul>
+
+    <div class="easy-note">
+      <span class="lbl">💬 쉬운 설명</span>
+      전부 새로운 내용은 아니고, 1번에서 팀 이름이 바뀐 걸 문서 전체에 일관되게 반영한 것뿐입니다.
+      본문 중간중간 예시 문장에 옛날 팀 이름(Billing Team, 요금팀·기술팀·VOC팀)이 남아있으면
+      읽는 사람이 헷갈리니까, 그런 곳을 전부 찾아서 새 이름으로 맞춘 청소 작업입니다.
+    </div>
+  </section>
+
+  <footer>
+    비교 대상: <code>program/briefing/archive/A-COP_브리핑_v7_쉬운설명 (2).html</code> ↔
+    <code>program/briefing/A-COP_브리핑_v8_쉬운설명.html</code> — <code>diff</code> 원본 99줄을
+    10개 주제로 묶어 정리. 순수 공백·들여쓰기 차이는 없었고 전부 의미 있는 내용 변경이었다.
+  </footer>
+
+</div>

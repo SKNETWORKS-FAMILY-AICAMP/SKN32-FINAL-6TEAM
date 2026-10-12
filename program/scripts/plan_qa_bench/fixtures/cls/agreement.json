@@ -1,0 +1,96 @@
+{
+ "CL(학습: Claude 작성 · Codex 교차)": {
+  "n_author": 720,
+  "n_crossed": 720,
+  "agree": {
+   "intent": 0.975,
+   "case_type": 0.9639,
+   "sentiment": 0.95,
+   "severity": 0.8708
+  },
+  "kappa": {
+   "intent": 0.9677,
+   "case_type": 0.957,
+   "sentiment": 0.9206,
+   "severity": 0.8009
+  },
+  "all4": 0.7903,
+  "intent_confusion_top": [
+   [
+    [
+     "other",
+     "confirm_request"
+    ],
+    10
+   ],
+   [
+    [
+     "incident_report",
+     "confirm_request"
+    ],
+    4
+   ],
+   [
+    [
+     "itinerary_submit",
+     "adjust_reject"
+    ],
+    1
+   ],
+   [
+    [
+     "confirm_request",
+     "incident_report"
+    ],
+    1
+   ],
+   [
+    [
+     "adjust_reject",
+     "confirm_request"
+    ],
+    1
+   ],
+   [
+    [
+     "adjust_reject",
+     "incident_report"
+    ],
+    1
+   ]
+  ]
+ },
+ "CX(시험: Codex 작성 · Claude 교차)": {
+  "n_author": 400,
+  "n_crossed": 400,
+  "agree": {
+   "intent": 0.995,
+   "case_type": 0.9225,
+   "sentiment": 0.8875,
+   "severity": 0.8825
+  },
+  "kappa": {
+   "intent": 0.9935,
+   "case_type": 0.9065,
+   "sentiment": 0.7947,
+   "severity": 0.8225
+  },
+  "all4": 0.71,
+  "intent_confusion_top": [
+   [
+    [
+     "incident_report",
+     "other"
+    ],
+    1
+   ],
+   [
+    [
+     "confirm_request",
+     "incident_report"
+    ],
+    1
+   ]
+  ]
+ }
+}

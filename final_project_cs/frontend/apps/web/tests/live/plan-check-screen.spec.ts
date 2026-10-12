@@ -305,7 +305,7 @@ test("핀을 누르면 선택한 이름·종류가 나오고 다시 누르면 �
   await expect(page.getByText("확인 필요 · 올리브영")).toBeVisible();
   await mapSettled(page);
   await pin(page, "1. 경복궁 관람").locator("[data-pin-body]").click();
-  const picked = page.locator("[class*=picked]");
+  const picked = page.getByRole("group", { name: "일정 확인과 변경" }).locator('p[aria-live="polite"]');
   await expect(picked).toContainText("경복궁 관람");
   await expect(picked).toContainText("액티비티");
   await expect(page.getByText("확인 필요 · 올리브영")).toHaveCount(0);                              // 그 자리를 이름이 차지한다

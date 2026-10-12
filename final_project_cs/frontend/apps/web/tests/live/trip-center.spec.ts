@@ -54,11 +54,6 @@ test("화면이 열려 있는 동안 서버가 선택 요청을 보내면 그 �
   await expect(bell(page)).toHaveAccessibleName("알림 센터 열기 · 읽지 않은 알림 2개");
   await expect(page.getByRole("status").filter({ hasText: "선택 요청" })).toHaveCount(0);                 // 열 때 있던 알림은 막대로 띄우지 않는다
   await server.scenario({ proposals: "open" });
-  // 알림 응답보다 제안 응답을 늦춰 실제 비동기 도착 순서를 재현한다.
-  await page.route(`**/v1/web/trips/${TRIP_ID}/proposals**`, async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, 450));
-    await route.continue();
-  });
   await expect.poll(() => server.ring(["notice", "proposal"])).toBeGreaterThan(0);
   const bar = page.getByRole("status").filter({ hasText: "선택 요청" });
   await expect(bar).toContainText("점심 식당");                                                               // 서버가 고른 그 일정

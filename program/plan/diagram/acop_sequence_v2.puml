@@ -1,0 +1,74 @@
+@startuml
+title A-COP 계획 기반 Case 생명주기 — 분류·Context·Team·승인
+skinparam backgroundColor #faf9ff
+skinparam shadowing false
+skinparam sequence {
+  LifeLineBorderColor #7c3aed
+  LifeLineBackgroundColor #f5f3ff
+  ParticipantBorderColor #7c3aed
+  ParticipantBackgroundColor #ede9fe
+  ArrowColor #4b5563
+}
+
+actor "고객 / 개인 AI" as Client
+participant "API Gateway" as Gateway
+participant "Case Runtime" as Runtime
+participant "Classifier" as Classifier
+participant "Controller" as Controller
+participant "TeamRegistry" as Registry
+participant "ContextBroker" as Context
+participant "TeamExecutor" as Executor
+participant "선택된 Team" as Team
+participant "Core 2\nAction & Approval" as Core2
+actor "운영자" as Operator
+
+Client -> Gateway: Case 요청 (REST/MCP)
+Gateway -> Gateway: 인증·scope·ownership 검사
+Gateway -> Runtime: Case 생성
+Runtime -> Runtime: new → classifying
+Runtime -> Classifier: 인라인 분류
+Classifier --> Runtime: intent / issue / sentiment
+Runtime -> Runtime: classifying → routing
+Runtime --> Client: Case view / case_id
+
+Client -> Controller: 실행 또는 resume
+Controller -> Registry: capability resolve
+Registry --> Controller: TeamManifest + execution_type
+Controller -> Context: ContextPack 요청
+Context --> Controller: 최소 ContextPack
+Controller -> Controller: TeamTask 구성
+Controller -> Executor: TeamTask 전달
+Executor -> Team: LOCAL 실행 또는 A2A 위임
+Team --> Executor: TeamResult
+Executor --> Controller: 정규화된 TeamResult
+
+alt 추가 입력 필요
+  Controller -> Runtime: running → waiting_input
+  Runtime --> Client: 질문 / resume token
+  Client -> Controller: 추가 입력
+  Controller -> Runtime: waiting_input → resuming → running
+else 외부 callback 대기
+  Controller -> Runtime: running → waiting_external
+  Executor --> Controller: callback / Artifact
+  Controller -> Runtime: waiting_external → resuming → running
+else ActionProposal 있음
+  Controller -> Core2: 근거·최신 상태·scope 대조
+  alt 승인 필요
+    Core2 -> Runtime: running → waiting_approval
+    Runtime --> Operator: 승인 요청
+    Operator -> Core2: 승인 / 거절
+    Core2 -> Core2: 실행 직전 재검증·idempotency·audit
+    Core2 --> Controller: ActionResult
+    Controller -> Runtime: resuming → running
+  else 자동 실행 가능
+    Core2 -> Core2: 실행 직전 재검증·audit
+    Core2 --> Controller: ActionResult
+  end
+else 완료 응답
+  Controller -> Runtime: running → resolved
+  Runtime --> Client: 응답·근거·trace
+else 근거 불일치·실패·timeout
+  Controller -> Runtime: escalated / failed / unknown 기록
+  Runtime --> Operator: 운영자 handoff + audit
+end
+@enduml

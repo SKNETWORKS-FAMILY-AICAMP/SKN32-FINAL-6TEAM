@@ -1,0 +1,11 @@
+--- a/datasets/commerce/coupang_order_history/docs/README.md
++++ b/datasets/commerce/coupang_order_history/docs/README.md
+@@ -3,6 +3,8 @@
+ 사용자가 실제 쿠팡 화면에서 복사해 준 HTML을 분석한 결과다.
+ 
+ 확장의 선택자는 전부 이 자료에서 나왔다. 페이지 구조가 바뀌어 파서가 깨지면 여기부터 본다.
++
++★2026-09-06 주의 — 확장 5.4.1(2026-08-21)부터 **주문 목록은 `__NEXT_DATA__` JSON으로 읽고 DOM 카드·다음 버튼을 쓰지 않는다.** 따라서 `실제HTML_주문카드.md`·`실제HTML_페이지네이션.md`의 선택자는 현행 코드에 없다(폐기된 방식의 기록). `실제HTML_주문상세_배송조회.md`는 상세·배송 문서 파싱에 여전히 쓰인다. `재작성_계획.md`·`클릭_구현_계획.md`는 REPORT.md가 적은 대로 폐기된 방식의 원인 분석 기록이다.
+ 
+ | 파일 | 내용 |
+ |---|---|

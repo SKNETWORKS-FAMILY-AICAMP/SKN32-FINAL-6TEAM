@@ -1,0 +1,102 @@
+<svg viewBox="0 0 1480 964" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="wf-f10-title wf-f10-desc">
+<title id="wf-f10-title">F10 새벽 영업 확인</title>
+<desc id="wf-f10-desc">새벽 영업 확인 — 기능별 워크플로</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b7488"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a8720c"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5bd8"/></marker><marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8599"/></marker><style>.name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#161c28;text-anchor:middle}.focal-name{fill:#a8720c}.sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#6b7488;text-anchor:middle}.io{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#161c28}.io-k{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#7a8599}.tag{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;font-weight:500;letter-spacing:0.08em;text-anchor:middle}.lab{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:500;text-anchor:middle}.lab-mono{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;letter-spacing:0.14em;text-anchor:middle}.tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28;text-anchor:middle}.zone{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#6b7488}.leg{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.hub-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#fbfcfd;text-anchor:middle}.hub-sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:rgba(251,252,253,0.78);text-anchor:middle}.layer-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#161c28}.layer-note{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.layer-tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28}</style></defs>
+<rect width="1480" height="964" fill="#fbfcfd"/>
+<!-- 화살표 먼저 -->
+<path d="M624 116 L624 160" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M624 244 L624 284" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M728 200 L1168 200 A8 8 0 0 1 1176 208 L1176 660" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M624 368 L624 408" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M740 328 L1116 328 A8 8 0 0 1 1124 336 L1124 660" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M508 328 L332 328 A8 8 0 0 0 324 336 L324 780" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M624 488 L624 532" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M732 464 L884 464 A8 8 0 0 1 892 472 L892 532" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M732 436 L1060 436 A8 8 0 0 1 1068 444 L1068 660" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M624 612 L624 656" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M728 572 L744 572 A8 8 0 0 1 752 580 L752 688 A8 8 0 0 0 760 696 L1012 696" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M624 740 L624 780" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M524 696 L404 696 A8 8 0 0 0 396 704 L396 780" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<!-- 이름표 -->
+<rect x="632" y="256" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="664" y="268" class="lab" fill="#6b7488">조회 가능</text>
+<rect x="740" y="176" width="84" height="16" rx="2" fill="#fbfcfd"/><text x="782" y="188" class="lab" fill="#6b7488">조회 조건 밖</text>
+<rect x="632" y="380" width="32" height="16" rx="2" fill="#fbfcfd"/><text x="648" y="392" class="lab" fill="#6b7488">닫힘</text>
+<rect x="752" y="304" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="784" y="316" class="lab" fill="#6b7488">닫힘 아님</text>
+<rect x="432" y="304" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="464" y="316" class="lab" fill="#6b7488">조회 실패</text>
+<rect x="632" y="500" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="664" y="512" class="lab" fill="#6b7488">자동 변경</text>
+<rect x="744" y="472" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="776" y="484" class="lab" fill="#6b7488">보호·설문</text>
+<rect x="744" y="412" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="776" y="424" class="lab" fill="#6b7488">없음·소멸</text>
+<rect x="632" y="624" width="52" height="16" rx="2" fill="#fbfcfd"/><text x="658" y="636" class="lab" fill="#6b7488">안 선택</text>
+<rect x="764" y="672" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="796" y="684" class="lab" fill="#6b7488">모두 탈락</text>
+<rect x="632" y="752" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="664" y="764" class="lab" fill="#6b7488">저장 성공</text>
+<rect x="448" y="672" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="480" y="684" class="lab" fill="#6b7488">동시 변경</text>
+<!-- 상자 -->
+<rect x="524" y="40" width="200" height="76" rx="38" fill="#fbfcfd"/>
+<rect x="524" y="40" width="200" height="76" rx="38" fill="rgba(22,28,40,0.05)" stroke="#6b7488" stroke-width="1"/>
+<text x="624" y="64" class="name">시작 — 새벽 영업 확인</text>
+<text x="624" y="82" class="sub">1분마다, 한국 시각 기준</text>
+<text x="624" y="100" class="sub">03:00 이상 08:00 미만</text>
+<rect x="524" y="160" width="204" height="84" rx="6" fill="#fbfcfd"/>
+<rect x="524" y="160" width="204" height="84" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="626" y="188" class="name">조회 대상 확인 [코드]</text>
+<text x="626" y="208" class="sub">조회 키·예산·재난 정지 확인</text>
+<text x="626" y="226" class="sub">오늘 남은 미판정 장소만 조회</text>
+<polygon points="624,288 738,328 624,368 510,328" fill="#fbfcfd"/>
+<polygon points="624,288 738,328 624,368 510,328" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="624" y="332" class="name">영업이 가능한가?</text>
+<polygon points="624,408 732,448 624,488 516,448" fill="#fbfcfd"/>
+<polygon points="624,408 732,448 624,488 516,448" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="624" y="452" class="name">바꿀 수 있는가?</text>
+<polygon points="624,532 726,572 624,612 522,572" fill="#fbfcfd"/>
+<polygon points="624,532 726,572 624,612 522,572" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="624" y="576" class="name">일정에 맞는가?</text>
+<rect x="524" y="656" width="200" height="84" rx="6" fill="#fbfcfd"/>
+<rect x="524" y="656" width="200" height="84" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="624" y="684" class="name">새 판·알림 저장 [코드]</text>
+<text x="624" y="704" class="sub">기준 판 확인 후 함께 저장</text>
+<text x="624" y="722" class="sub">동시 변경이면 저장 취소</text>
+<rect x="768" y="536" width="244" height="76" rx="38" fill="#fbfcfd"/>
+<rect x="768" y="536" width="244" height="76" rx="38" fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="890" y="560" class="name">⏸ 변경 선택 대기</text>
+<text x="890" y="578" class="sub">일정 유지, 선택지 최대 3개 알림</text>
+<text x="890" y="596" class="sub">무응답이면 원래 일정 유지</text>
+<rect x="1012" y="660" width="220" height="76" rx="38" fill="#fbfcfd"/>
+<rect x="1012" y="660" width="220" height="76" rx="38" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1122" y="684" class="name">끝 — 일정 유지 종료</text>
+<text x="1122" y="702" class="sub">판정·미해결 기록, 일정 유지</text>
+<text x="1122" y="720" class="sub">재판정 탈락만 유지 알림 요청</text>
+<rect x="248" y="784" width="220" height="76" rx="38" fill="#fbfcfd"/>
+<rect x="248" y="784" width="220" height="76" rx="38" fill="#ffffff" stroke="#161c28" stroke-width="1.8" stroke-dasharray="3,3"/>
+<text x="358" y="808" class="name">오류 — 조회·저장 실패</text>
+<text x="358" y="826" class="sub">실패면 판정·새 판 저장 취소</text>
+<text x="358" y="844" class="sub">↻ 새벽 창·예산 안 다음 회차</text>
+<rect x="512" y="784" width="224" height="76" rx="38" fill="#fbfcfd"/>
+<rect x="512" y="784" width="224" height="76" rx="38" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="624" y="808" class="name">끝 — 변경 완료</text>
+<text x="624" y="826" class="sub">새 판 1개·변경 알림 요청 1개</text>
+<text x="624" y="844" class="sub">되돌리기 정보 제공</text>
+<line x1="32" y1="920" x2="1448" y2="920" stroke="rgba(22,28,40,0.12)" stroke-width="0.8"/>
+<text x="32" y="940" class="lab-mono" fill="#6b7488" text-anchor="start">LEGEND</text>
+<rect x="104" y="928" width="28" height="16" rx="8" fill="rgba(22,28,40,0.05)" stroke="#6b7488" stroke-width="1"/>
+<text x="140" y="940" class="leg">시작</text>
+<rect x="192" y="928" width="28" height="16" rx="8" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="228" y="940" class="leg">끝</text>
+<rect x="268" y="928" width="28" height="16" rx="8" fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="304" y="940" class="leg">기다림</text>
+<rect x="368" y="928" width="28" height="16" rx="8" fill="#ffffff" stroke="#161c28" stroke-width="1" stroke-dasharray="3,3"/>
+<text x="404" y="940" class="leg">오류로 끝남</text>
+<rect x="500" y="928" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="536" y="940" class="leg">코드</text>
+<rect x="588" y="928" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="2.2"/>
+<text x="624" y="940" class="leg">담당 에이전트</text>
+<rect x="732" y="928" width="28" height="16" rx="3" fill="rgba(22,28,40,0.04)" stroke="#6b7488" stroke-width="1.4" stroke-dasharray="6,3"/>
+<text x="768" y="940" class="leg">공용 도구</text>
+<rect x="852" y="928" width="28" height="16" rx="3" fill="rgba(47,91,216,0.03)" stroke="#2f5bd8" stroke-width="1" stroke-dasharray="5,3"/>
+<text x="888" y="940" class="leg">언어 모델이 돕는 자리</text>
+<rect x="1048" y="928" width="28" height="16" rx="3" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="1084" y="940" class="leg">고객 · 개인 AI</text>
+<polygon points="1218,928 1232,936 1218,944 1204,936" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1240" y="940" class="leg">코드의 판단</text>
+<line x1="1336" y1="936" x2="1364" y2="936" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<text x="1372" y="940" class="leg">반복</text>
+</svg>

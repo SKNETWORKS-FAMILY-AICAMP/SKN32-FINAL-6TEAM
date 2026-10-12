@@ -248,7 +248,7 @@ class _Talk:
 
     def json(self, system, message):
         if "늦을" in message:
-            return {"type": "delay", "minutes": 30, "products": []}
+            return {"type": "delay", "minutes": 30 if "30" in message else None, "products": []}
         if "바꿔" in message:
             return {"type": "change", "minutes": None, "products": []}
         if "?" in message or "요?" in message:
@@ -261,6 +261,7 @@ def _chat_client(api, search=None, place=None, classifier_down=False):
 
     from app.domains.travel_ops.entry.trip_api import build_trip_router
     from app.presentation.api.app import create_app
+    from tests.helpers.plugin_bindings import publish_fixed_mobility
 
     def classify(message):
         if classifier_down:
@@ -269,16 +270,20 @@ def _chat_client(api, search=None, place=None, classifier_down=False):
             return {"intent": "incident_report", "issue_code": "dining_hours", "sentiment": "negative"}
         return {"intent": "confirm_request", "issue_code": "other", "sentiment": "neutral"}
 
-    return TestClient(create_app(
+    client = TestClient(create_app(
         classifier=lambda _m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
         domain_routers=[build_trip_router(classifier_factory=lambda: classify, chat_factory=_Talk,
+                                          check_factory=lambda: (lambda **_k: {"verdict": "clear"}),
                                           policy_search_factory=(lambda: search) if search else None,
                                           place_factory=(lambda: place) if place else None)]))
+    # 채팅 정책·일정 변경의 시험용 입력이며 실제 경로 정확도는 별도 엔진 시험이 본다.
+    publish_fixed_mobility(client.app, source="web_chat_scenario_test")
+    return client
 
 
-def _say(client, key, trip_id, text, request_id):
+def _say(client, key, trip_id, text, request_id, *, at="2030-01-01T09:00:00+09:00"):
     response = client.post(f"/v1/web/trips/{trip_id}/messages", headers=_h(key),
-                           json={"request_id": request_id, "message": text, "at": "2030-01-01T09:00:00+09:00"})
+                           json={"request_id": request_id, "message": text, "at": at})
     assert response.status_code == 200, response.text
     body = response.json()
     assert body.get("answer"), body                       # ★어떤 결과든 답 문장이 있다
@@ -378,19 +383,42 @@ def test_small_talk_gets_what_we_can_do_and_the_trip_facts(api):
 def test_a_change_request_still_answers_with_what_happened(api):
     me = _session(api)
     client = _chat_client(api)
-    trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-5"), headers=_h(me["user_key"])).json()
-    body = _say(client, me["user_key"], trip["trip_id"], "식당에 30분 늦을 것 같아요", "late-1")
-    # ★「답이 있다」만 보지 않는다 — 그 처리 결과의 문장이어야 한다(`trip_replies.outcome_reply`)
-    from app.domains.travel_ops.components.conversation.trip_replies import outcome_reply
-
-    assert body["report"]["type"] == "delay" and body["report"]["minutes"] == 30
-    assert body["answer"] == outcome_reply(body["status"], body["outcome"], "식당에 30분 늦을 것 같아요"), body
+    submitted = copy.deepcopy(_web_body(api, request_id="q-5"))
+    # 30분 지연으로 기존 식당의 휴식 시간과 겹쳐 실제 변경이 필요한 합성 조건이다.
+    next(p for p in submitted["places"] if p["key"] == "seongsu_lunch")["attributes"]["break"] = ["14:10", "17:00"]
+    registered = client.post("/v1/web/trips", json=submitted, headers=_h(me["user_key"]))
+    assert registered.status_code == 201, registered.text
+    trip = registered.json()
+    # 변경은 합성 여행의 실제 날짜에 접수한다. 다른 날이면 Team이 not_today로 막는 것이 맞다.
+    at = f"{DAY}T12:00:00+09:00"
+    body = _say(client, me["user_key"], trip["trip_id"], "식당에 30분 늦을 것 같아요", "late-1", at=at)
+    # 「답이 있다」만 보지 않는다. Team이 만든 실제 변경 이유·대상·시각이 답과 업무 기록에 같다.
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT owner_team_id,state_json FROM customer_cases WHERE case_id=%s", (body["case_id"],))
+        owner, state = cur.fetchone()
+        request = state["subject_ref"]["request"]
+    assert owner == "dining" and request["action"] == "report_delay" and request["minutes"] == 30
+    assert body["case_status"] == "resolved" and body["status"] == "adjusted", body
+    assert body["answer"] == state["answer"] and body["outcome"]["to"] in body["answer"], body
+    assert "성수 점심 식당" in body["answer"] and "13:30" in body["answer"] and "14:10" in body["answer"], body
     assert "자동으로 처리하지 못한" not in body["answer"], body          # 아는 결과다 — 되묻는 문장이 아니다
-    again = _say(client, me["user_key"], trip["trip_id"], "식당에 30분 늦을 것 같아요", "late-1")
+    again = _say(client, me["user_key"], trip["trip_id"], "식당에 30분 늦을 것 같아요", "late-1", at=at)
     assert again["status"] == "duplicate" and again["answer"] == "같은 요청을 이미 받았어요.\n" + body["answer"]
-    # 원문에 없는 값(분 수)은 받지 않는다 — 그래도 못 알아들었다는 **답**이 나간다
-    vague = _say(client, me["user_key"], trip["trip_id"], "식당에 늦을 것 같아요", "late-2")
-    assert vague["status"] == "escalated" and "알아듣지 못해" in vague["answer"]
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM itinerary_versions WHERE trip_id=%s", (trip["trip_id"],))
+        assert cur.fetchone()[0] == 2                 # 최초 등록 + 한 번 변경; 중복은 판을 늘리지 않는다.
+    # 원문에 없는 분 수는 만들지 않고 같은 업무에서 질문·답변·재개한다.
+    vague = _say(client, me["user_key"], trip["trip_id"], "식당에 늦을 것 같아요", "late-2", at=at)
+    assert vague["case_status"] == "waiting_input" and vague["required_input_schema"]["required"] == ["minutes"], vague
+    resumed = _say(client, me["user_key"], trip["trip_id"], "30분이요", "late-3", at=at)
+    assert resumed["case_id"] == vague["case_id"] and resumed["case_status"] == "resolved", resumed
+    assert resumed["status"] == resumed["outcome"]["status"] and resumed["status"] in ("still_fits", "knock_on"), resumed
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT state_json FROM customer_cases WHERE case_id=%s", (vague["case_id"],))
+        resumed_state = cur.fetchone()[0]
+        assert resumed_state["customer_input"] == "30분이요"
+        cur.execute("SELECT count(*) FROM itinerary_versions WHERE trip_id=%s", (trip["trip_id"],))
+        assert cur.fetchone()[0] == 2                 # 새 식당은 30분 지연에도 가능하여 추가 변경하지 않는다.
 
 
 # ── 이 여행의 사실을 묻는 말 — 화면의 빠른 질문 문장 그대로 (2026-09-28, ui 세션 인계) ─────────────

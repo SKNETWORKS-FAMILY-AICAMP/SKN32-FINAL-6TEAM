@@ -4,7 +4,7 @@
 「팝업스토어 줄이 길어서 점심에 70분 늦을 것 같아요」 → `{"type": "delay", "minutes": 70}`
 
 ★뽑는 것은 **고객이 말한 것뿐**이다. 모델이 채운 값은 규칙으로 다시 본다:
-    delay      분(1~1440 정수)이 있어야 한다
+    delay      분(1~1440 정수)을 확인한다. 없으면 입력 대기로 넘겨 묻는다
     closed     추가 값 없음
     stock_out  상품 이름이 하나 이상 있어야 하고, 각 이름이 **고객 문장에 실제로 나와야** 한다
     rollback   되돌릴 일정 버전 번호가 있어야 하고 그 숫자가 **문장에 나와야** 한다(`[2026-09-17]` —
@@ -72,9 +72,11 @@ def validate(raw: Any, message: str) -> dict[str, Any] | None:
         return {"type": "other"}
     if kind == "delay":
         minutes = raw.get("minutes")
+        if minutes is None:
+            return {"type": "delay", "minutes": None}
         if isinstance(minutes, str) and minutes.strip().isdigit():
             minutes = int(minutes)
-        if not isinstance(minutes, int) or not 1 <= minutes <= 24 * 60:
+        if isinstance(minutes, bool) or not isinstance(minutes, int) or not 1 <= minutes <= 24 * 60:
             return None
         if str(minutes) not in re.findall(r"\d+", message):
             return None                      # ★문장에 없는 숫자를 만들어 냈다

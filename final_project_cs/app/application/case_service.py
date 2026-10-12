@@ -22,6 +22,14 @@ class ResumeTokenError(ValueError):
     pass
 
 
+class ResumeTokenExpired(ResumeTokenError):
+    """유효한 토큰의 대기 기간만 만료되었다."""
+
+
+class ResumeRequestConflict(ValueError):
+    """같은 요청 식별자를 다른 입력에 재사용했다."""
+
+
 class CaseService:
     def __init__(self, *, graph_revision: str = "controller-v1") -> None:
         self.graph_revision = graph_revision
@@ -77,18 +85,52 @@ class CaseService:
                 ).isoformat(),
                 "resume_token_used": False, "wait_reason": wait_reason}
 
-    def validate_resume(self, case: dict[str, Any], token: str, *, event_id: str | None = None) -> str | None:
+    def validate_resume(self, case: dict[str, Any], token: str, *, event_id: str | None = None,
+                        message_hash: str | None = None) -> str | None:
+        return self._validate_resume_hash(case, self.token_hash(token), event_id=event_id,
+                                          message_hash=message_hash)
+
+    def validate_customer_input(self, case: dict[str, Any], *, event_id: str | None,
+                                message_hash: str | None) -> str | None:
+        """고객 소유권을 확인한 내부 웹 입구만 사용한다."""
         state = case.get("state_json") or {}
+        # 이미 소비한 요청의 재전송은 종료 상태에서도 같은 결과를 반환한다.
+        recorded = next((r for r in state.get("resume_requests", [])
+                         if event_id and r["request_id"] == event_id), None)
+        if recorded is not None:
+            return self._validate_resume_hash(case, recorded["token_hash"], event_id=event_id,
+                                              message_hash=message_hash)
+        if str(case["status"]) != "waiting_input" or state.get("wait_reason") != "customer_input":
+            raise ResumeTokenError("case is not waiting for customer input")
+        token_hash = state.get("resume_token_hash")
+        if not token_hash:
+            raise ResumeTokenError("invalid resume token metadata")
+        return self._validate_resume_hash(case, token_hash, event_id=event_id,
+                                          message_hash=message_hash)
+
+    def _validate_resume_hash(self, case: dict[str, Any], token_hash: str, *,
+                              event_id: str | None, message_hash: str | None) -> str | None:
+        state = case.get("state_json") or {}
+        for request in state.get("resume_requests", []):
+            if event_id and request["request_id"] == event_id:
+                if request["token_hash"] != token_hash:
+                    raise ResumeTokenError("invalid resume token")
+                if request.get("message_hash") != message_hash:
+                    raise ResumeRequestConflict("resume request id reused with different message")
+                return "idempotent"
+        # 이전 판에서 만든 콜백·승인 재개 기록도 계속 읽는다.
         if event_id and state.get("last_resume_event_id") == event_id:
-            return "idempotent"
+            if state.get("resume_token_hash") == token_hash and message_hash is None:
+                return "idempotent"
+            raise ResumeRequestConflict("resume request id reused with different message")
         if state.get("resume_token_used"):
             raise ResumeTokenError("resume token has already been used")
-        if state.get("resume_token_hash") != self.token_hash(token):
+        if state.get("resume_token_hash") != token_hash:
             raise ResumeTokenError("invalid resume token")
         expires = datetime.fromisoformat(state["resume_token_expires_at"])
         if expires.tzinfo is None:
             expires = expires.replace(tzinfo=UTC)
         if datetime.now(UTC) >= expires:
-            raise ResumeTokenError("resume token expired")
+            raise ResumeTokenExpired("resume token expired")
         return None
 

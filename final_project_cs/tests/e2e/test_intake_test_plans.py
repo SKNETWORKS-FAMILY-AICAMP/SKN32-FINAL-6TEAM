@@ -12,7 +12,7 @@ def test_code_expands_before_reading_and_remains_scoped_through_recheck(rv):
     headers = _key(client)
     listing = client.get("/v1/web/test-scenarios")
     assert listing.status_code == 200
-    assert len(listing.json()["scenarios"]) == 12
+    assert len(listing.json()["scenarios"]) == 15
     view = _send(client, headers, " TEST1 ")
     assert view["status"] == "review"
     assert sum(len(s["items"]) for s in view["sources"]) == 6
@@ -32,7 +32,7 @@ def test_code_expands_before_reading_and_remains_scoped_through_recheck(rv):
     assert ordinary["test_scenario"] is None
 
 
-@pytest.mark.parametrize("text,code", (("test13", "unknown_test_scenario"), ("test1rt", "live_test_not_ready")))
+@pytest.mark.parametrize("text,code", (("test16", "unknown_test_scenario"), ("test1rt", "live_test_not_ready")))
 def test_rejected_code_does_not_create_empty_intake(rv, text, code):
     client, _, _ = _client()
     headers = _key(client)
@@ -58,3 +58,15 @@ def test_disabled_codes_and_file_mix_are_refused(rv, monkeypatch):
     disabled = client.post("/v1/web/trip-intakes", headers=headers, data={"text": "test1"})
     assert disabled.status_code == 422
     assert disabled.json()["error"]["code"] == "test_scenarios_disabled"
+
+
+@pytest.mark.parametrize("code", ("test13", "test14", "test15"))
+def test_normal_codes_expand_and_keep_category_in_intake(rv, code):
+    client, _, _ = _client()
+    headers = _key(client)
+    view = _send(client, headers, code)
+    assert view["status"] == "review"
+    assert sum(len(source["items"]) for source in view["sources"]) == 2
+    assert view["test_scenario"]["code"] == code
+    assert view["test_scenario"]["category"] == "normal"
+    assert view["review"]["test_scenario"] == view["test_scenario"]

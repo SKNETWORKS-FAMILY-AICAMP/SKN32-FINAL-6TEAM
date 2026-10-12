@@ -75,66 +75,193 @@ import argparse
 import json
 import sys
 import time
+import logging
+import threading
+from contextvars import ContextVar
+from functools import wraps
 
+from app.core.service_bindings import bind_services, current_bindings
+from app.core.team_availability import TeamUnavailable
 from app.application.classification_sweeper import sweep_stuck_classifying
 from app.application.routing_sweeper import sweep_stuck_routing
 from app.core.settings import get_settings
 from app.infrastructure.db.session import get_connection
 
 
+_round_controller: ContextVar[object | None] = ContextVar("sweeper_controller", default=None)
+logger = logging.getLogger(__name__)
+_features_ready = False
+_features_lock = threading.Lock()
+
+
+class _CompositionFailed(RuntimeError):
+    """작업 실행 전에 후보 조립이 실패했음을 구분한다."""
+
+
+class _FeaturesFailed(RuntimeError):
+    """감시 범위 연결까지 포함한 기능 초기화 실패를 구분한다."""
+
+
+def _wire_features():
+    """프로세스 설정의 상태 있는 제공자를 성공 후 교체하지 않는다. 실패는 재시도한다."""
+    global _features_ready
+    from app import composition
+    with _features_lock:
+        if _features_ready:
+            return
+        try:
+            composition.wire_optional_features()
+        except Exception as exc:
+            logger.error("sweeper_features_failed error_type=%s", type(exc).__name__)
+            raise _FeaturesFailed() from exc
+        _features_ready = True
+
+
+def _in_round(method):
+    """한 회차의 Controller와 계산 표를 함께 보존한다. 중첩 작업도 같은 판이다."""
+    @wraps(method)
+    def call(*args, **kwargs):
+        if _round_controller.get() is not None:
+            return method(*args, **kwargs)
+        from app import composition
+
+        try:
+            controller = composition.build_controller()
+        except Exception as exc:
+            logger.error("sweeper_composition_failed error_type=%s", type(exc).__name__)
+            raise _CompositionFailed() from exc
+        _wire_features()
+        token = _round_controller.set(controller)
+        try:
+            with bind_services(getattr(controller, "service_bindings", None)):
+                return method(*args, **kwargs)
+        finally:
+            _round_controller.reset(token)
+    return call
+
+
+def _team_job(method):
+    """필수 계산 불가는 성공으로 바꾸지 않고, 독립 작업은 다음으로 진행한다."""
+    @wraps(method)
+    def call(*args, **kwargs):
+        try:
+            return method(*args, **kwargs)
+        except TeamUnavailable as exc:
+            table = current_bindings()
+            logger.warning("sweeper_team_unavailable job=%s team_id=%s reason=%s composition_revision=%s",
+                           method.__name__, exc.team_id, exc.reason, getattr(table, "revision", None))
+            counts = {"team_unavailable": 1, "skipped": 1}
+            if exc.reason in {"engine_unavailable", "composition_unbound"}:
+                counts["fatal"] = 1  # 활성 Team의 필수 데이터 장애는 의도적 비활성과 구분한다.
+            return counts
+    return call
+
+
 def _run_once(tenant_id: str, only: str | None) -> dict[str, dict[str, int]]:
+    # 독립 정리 작업만 요청한 회차에는 Team 조립을 요구하지 않는다.
+    if only in (None, "routing", "trip", "trip_cases", "trip_dawn", "trip_reminders"):
+        try:
+            return _run_bound_once(tenant_id, only)
+        except _CompositionFailed:
+            failed = {"composition": {"fatal": 1}}
+            try:
+                _wire_features()
+            except _FeaturesFailed:
+                failed["features"] = {"fatal": 1}
+            return {**failed, **_run_jobs(tenant_id, only, composition_failed=True,
+                                         features_failed="features" in failed)}
+        except _FeaturesFailed:
+            return {"features": {"fatal": 1}, **_run_jobs(tenant_id, only, features_failed=True)}
+    try:
+        _wire_features()
+    except _FeaturesFailed:
+        return {"features": {"fatal": 1}, **_run_jobs(tenant_id, only, features_failed=True)}
+    return _run_jobs(tenant_id, only)
+
+
+@_in_round
+def _run_bound_once(tenant_id: str, only: str | None) -> dict[str, dict[str, int]]:
+    return _run_jobs(tenant_id, only)
+
+
+def _run_jobs(tenant_id: str, only: str | None, *, composition_failed=False,
+              features_failed=False) -> dict[str, dict[str, int]]:
     from app import composition
 
     result: dict[str, dict[str, int]] = {}
+
+    def run(name, work, *, team=False):
+        if team and (composition_failed or features_failed):
+            reason = "features_unavailable" if features_failed else "composition_unavailable"
+            result[name] = {reason: 1, "skipped": 1, "fatal": 1}
+            return
+        try:
+            result[name] = work()
+        except TeamUnavailable as exc:
+            logger.warning("sweeper_job_unavailable job=%s team_id=%s reason=%s composition_revision=%s",
+                           name, exc.team_id, exc.reason, getattr(current_bindings(), "revision", None))
+            result[name] = {"team_unavailable": 1, "skipped": 1}
+            if exc.reason in {"engine_unavailable", "composition_unbound"}:
+                result[name]["fatal"] = 1
+        except Exception as exc:
+            logger.error("sweeper_job_failed job=%s error_type=%s composition_revision=%s",
+                         name, type(exc).__name__, getattr(current_bindings(), "revision", None))
+            result[name] = {"fatal": 1}
+
     if only in (None, "classifying"):
-        classifier = composition.build_classifier()
-        with get_connection() as conn:
-            result["classifying"] = sweep_stuck_classifying(
-                conn, tenant_id=tenant_id, classifier=classifier, actor_id="sweeper")
+        def classify():
+            classifier = composition.build_classifier()
+            with get_connection() as conn:
+                return sweep_stuck_classifying(conn, tenant_id=tenant_id, classifier=classifier, actor_id="sweeper")
+        run("classifying", classify)
     if only in (None, "routing"):
-        controller = composition.build_controller()
+        def route():
+            controller = _round_controller.get()
+            if controller is None:
+                raise RuntimeError("routing sweeper requires a bound composition")
 
-        def run_case(*, tenant_id: str, case_id, actor_id: str):
-            # ★Controller 의 run_case 는 coroutine 이다. sweeper 는 동기 루프라
-            #   여기서 돌려 준다 — sweeper 가 asyncio 를 알 필요가 없다.
-            import asyncio
+            def run_case(*, tenant_id: str, case_id, actor_id: str):
+                import asyncio
+                return asyncio.run(controller.run_case(tenant_id=tenant_id, case_id=case_id, actor_id=actor_id))
 
-            return asyncio.run(controller.run_case(
-                tenant_id=tenant_id, case_id=case_id, actor_id=actor_id))
-
-        with get_connection() as conn:
-            result["routing"] = sweep_stuck_routing(
-                conn, tenant_id=tenant_id, run_case=run_case, actor_id="sweeper")
+            with get_connection() as conn:
+                return sweep_stuck_routing(conn, tenant_id=tenant_id, run_case=run_case, actor_id="sweeper")
+        run("routing", route, team=True)
     # ★`[결정 2026-09-18]` 기본 감시는 **Case 버전**(`trip_cases`)이다. 시나리오용 여행 버전(`trip`)은
     #   `--only trip` 으로만 돈다. 둘을 함께 돌리지 않는다 — 같은 사건을 두 경로가 다룬다.
     if only == "trip":
-        result["trip"] = _run_trip_watch(tenant_id)
+        run("trip", lambda: _run_trip_watch(tenant_id), team=True)
     if only == "trip_safety":
-        result["trip_safety"] = _run_trip_safety(tenant_id)
+        run("trip_safety", lambda: _run_trip_safety(tenant_id), team=features_failed)
     if only in (None, "trip_cases"):
         # ★`[2026-10-03 사용자 결정]` 감시는 **3분 주기**(D-017) — 일꾼은 1분마다 돌지만 감시는 주기 문을 지난 회차에만 돈다. `--only trip_cases` 는 문을 안 본다(손으로 부르는 것)
-        result["trip_cases"] = _watch_if_due(tenant_id, forced=only == "trip_cases")
+        if features_failed:
+            result["trip_cases"] = {"features_unavailable": 1, "skipped": 1, "fatal": 1}
+        elif composition_failed:
+            run("trip_cases", lambda: _watch_if_due(tenant_id, forced=only == "trip_cases", composition_failed=True))
+        else:
+            run("trip_cases", lambda: _watch_if_due(tenant_id, forced=only == "trip_cases"))
     # ★새벽 식당 확인 — 창(03:00~08:00) 밖이면 아무것도 안 부른다. 하루 시작 알림보다 **먼저** 돈다
     if only in (None, "trip_dawn"):
-        result["trip_dawn"] = _run_trip_dawn(tenant_id)
+        run("trip_dawn", lambda: _run_trip_dawn(tenant_id), team=True)
     # ★감시 **뒤에** 돈다 — 변경 통지가 먼저 나가고, 안내는 바뀐 최신 일정으로 계산된다(v11 §6-B).
     if only in (None, "trip_reminders"):
-        result["trip_reminders"] = _run_trip_reminders(tenant_id)
+        run("trip_reminders", lambda: _run_trip_reminders(tenant_id), team=True)
     # ★`[2026-09-29]` 여행에 새로 들어온 장소의 운영시간 · 문의 전화를 관광공사에서 한 번 읽어 적는다(`place_info.py`)
     #   — 일정 상세에 보이고 판정기 · 새벽 확인이 쓴다. 새 장소만 읽으므로 평소에는 0건이다
     if only in (None, "place_facts"):
-        result["place_facts"] = _run_place_facts(tenant_id)
+        run("place_facts", lambda: _run_place_facts(tenant_id))
     if only in (None, "catalog_hours"):
         # ★`[2026-09-29 사용자 지시]` 관광공사 목록 운영시간 새벽 읽기 — 창(03:00~08:00) 밖이면 아무것도 안 한다
-        result["catalog_hours"] = _run_catalog_hours(tenant_id)
+        run("catalog_hours", lambda: _run_catalog_hours(tenant_id))
     # ★끝난 여행의 전용 장소 행(029)에서 외부 서비스 값(좌표·식별자)을 비운다 — 약관, `trip_places.py` 머리
     if only in (None, "trip_places"):
-        result["trip_places"] = _run_trip_places(tenant_id)
+        run("trip_places", lambda: _run_trip_places(tenant_id))
     # ★`[2026-09-28]` 웹 남용 방어 — 여행을 하나도 안 만든 사용자 키 정리 + 오래된 사용량 줄(주소 해시 48시간) 삭제
     if only in (None, "web_guard"):
-        result["web_guard"] = _run_web_guard(tenant_id)
+        run("web_guard", lambda: _run_web_guard(tenant_id))
     if only == "retention":
-        result["retention"] = _run_retention(tenant_id, forced=True)
+        run("retention", lambda: _run_retention(tenant_id, forced=True))
     return result
 
 
@@ -210,7 +337,12 @@ def _run_trip_places(tenant_id: str) -> dict[str, object]:
                            retention_hours=float(get_guardrails().get("travel.trip_place_retention_hours")))
 
 
+@_in_round
+@_team_job
 def _run_trip_dawn(tenant_id: str) -> dict[str, object]:
+    table = current_bindings()
+    if table is not None:
+        table.registry.require_runnable("dining")
     from datetime import datetime
     from zoneinfo import ZoneInfo
 
@@ -237,6 +369,8 @@ def _run_trip_dawn(tenant_id: str) -> dict[str, object]:
     return outcome.counts()
 
 
+@_in_round
+@_team_job
 def _run_trip_reminders(tenant_id: str) -> dict[str, int]:
     from datetime import datetime
     from zoneinfo import ZoneInfo
@@ -256,21 +390,32 @@ def _run_trip_reminders(tenant_id: str) -> dict[str, int]:
             "held": len(outcome.held), "fatal": len(outcome.fatal), "no_route": outcome.no_route}
 
 
-def _watch_if_due(tenant_id: str, *, forced: bool) -> dict[str, int]:
+def _watch_if_due(tenant_id: str, *, forced: bool, composition_failed=False) -> dict[str, int]:
     """감시(`trip_cases`)를 주기 문 뒤에서 돌린다. 문이 닫혀 있으면 `{"skipped_until_due": 1}` — 아무것도 안 부른다(외부 소스 포함).
 
     ☆왜: 이 일꾼은 1분마다 도는데 감시는 3분 주기다(`reliability.watch_interval_seconds`). 일꾼 전체를 3분으로 바꾸면 일정 출발 안내와 멈춘 Case 되잡기가
       늦어져서 감시만 막는다. 일꾼은 회차마다 새 프로세스라 마지막 실행 시각은 DB 에 둔다(`job_gates`, 마이그레이션 041).
     """
-    if not forced:
-        from app.application.job_gate import WATCH_GATE, claim, interval_seconds
-        from app.core.settings import get_guardrails
+    from app.application.job_gate import WATCH_GATE, claim, interval_seconds
+    from app.core.settings import get_guardrails
 
-        _, min_seconds = interval_seconds(get_guardrails())
+    interval, min_seconds = interval_seconds(get_guardrails())
+    if not forced:
         with get_connection() as conn, conn.transaction():
             if not claim(conn, tenant_id=tenant_id, gate=WATCH_GATE, min_seconds=min_seconds):
                 return {"skipped_until_due": 1}
-    return _run_trip_watch_cases(tenant_id)
+    def work():
+        if not composition_failed:
+            return _run_trip_watch_cases(tenant_id)
+        # 조립이 실패해도 재난 점검은 같은 주기 문 안에서 수행한다.
+        counts = {"composition_unavailable": 1, "skipped": 1, "fatal": 1}
+        try:
+            counts.update({f"safety_{key}": value for key, value in _run_trip_safety(tenant_id).items()})
+        except Exception as exc:
+            logger.error("sweeper_job_failed job=trip_safety error_type=%s", type(exc).__name__)
+            counts["safety_errored"] = 1
+        return counts
+    return work()
 
 
 def _run_trip_safety(tenant_id: str) -> dict[str, int]:
@@ -289,12 +434,13 @@ def _run_trip_safety(tenant_id: str) -> dict[str, int]:
     return sweep.tick().counts()
 
 
+@_in_round
+@_team_job
 def _run_trip_watch_cases(tenant_id: str) -> dict[str, int]:
     import asyncio
     from datetime import datetime
     from zoneinfo import ZoneInfo
 
-    from app import composition
     from app.infrastructure.db import repository
     from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
     from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
@@ -311,7 +457,7 @@ def _run_trip_watch_cases(tenant_id: str) -> dict[str, int]:
         logging.getLogger(__name__).exception("safety sweep failed")
         safety = {"safety_errored": 1}
     sources = build_travel_sources(get_settings())
-    controller = composition.build_controller()
+    controller = _round_controller.get()
 
     def run_case(**kwargs):
         # ★Controller 의 run_case 는 coroutine 이다 — sweeper 는 동기 루프라 여기서 돌린다.
@@ -326,9 +472,11 @@ def _run_trip_watch_cases(tenant_id: str) -> dict[str, int]:
     return {**safety, "checked": outcome.checked, "opened": len(outcome.opened), "existing": len(outcome.existing),
             "ran": len(outcome.ran), "escalated": escalated, "fatal": len(outcome.fatal),
             "unhandled": len(outcome.unhandled), "pinned": len(outcome.pinned),
-            "unchecked": len(outcome.unchecked)}
+            "unchecked": len(outcome.unchecked), "team_unavailable": len(getattr(outcome, "unavailable", []))}
 
 
+@_in_round
+@_team_job
 def _run_trip_watch(tenant_id: str) -> dict[str, int]:
     from datetime import datetime
     from zoneinfo import ZoneInfo
@@ -350,7 +498,8 @@ def _run_trip_watch(tenant_id: str) -> dict[str, int]:
     return {"checked": outcome.checked, "adjusted": len(outcome.adjusted),
             "fatal": len(outcome.fatal), "unresolved": len(outcome.unresolved),
             "unhandled": len(outcome.unhandled), "pinned": len(outcome.pinned),
-            "unchecked": len(outcome.unchecked), "rechecked": len(outcome.rechecked)}
+            "unchecked": len(outcome.unchecked), "rechecked": len(outcome.rechecked),
+            "team_unavailable": len(getattr(outcome, "unavailable", []))}
 
 
 def _report_errors(result: dict[str, dict[str, int]]) -> int:
@@ -367,8 +516,8 @@ def _report_errors(result: dict[str, dict[str, int]]) -> int:
         fatal = int(counts.get("fatal", 0))
         if fatal:
             total += fatal
-            print(f"★{name} sweeper: fatal={fatal} — 소스가 대체까지 실패해 판정하지 못한 "
-                  f"일정 항목이 있다(결정 15)", file=sys.stderr, flush=True)
+            print(f"★{name} sweeper: fatal={fatal} — 필수 조립·계산 또는 작업이 실패했다. "
+                  "작업별 운영 로그를 확인해야 한다", file=sys.stderr, flush=True)
         errored = int(counts.get("errored", 0))
         if errored:
             total += errored
@@ -376,6 +525,14 @@ def _report_errors(result: dict[str, dict[str, int]]) -> int:
                   f"— 아무것도 기록하지 못했다. 다음 회차에 또 걸린다",
                   file=sys.stderr, flush=True)
     return total
+
+
+def _round_result(tenant_id, only):
+    try:
+        return _run_once(tenant_id, only)
+    except Exception as exc:
+        logger.error("sweeper_round_failed error_type=%s", type(exc).__name__)
+        return {"round": {"errored": 1}}
 
 
 def main() -> int:
@@ -391,7 +548,7 @@ def main() -> int:
 
     tenant_id = get_settings().tenant_id
     if args.interval is None:
-        result = _run_once(tenant_id, args.only)
+        result = _round_result(tenant_id, args.only)
         print(json.dumps(result, ensure_ascii=False, sort_keys=True))
         # ★한 번 돌고 끝나는 모드는 exit code 가 유일한 신호다. cron 이 이걸 본다.
         return 1 if _report_errors(result) else 0
@@ -399,7 +556,7 @@ def main() -> int:
     # ★상주 모드에서도 한 회차의 결과를 그때그때 낸다. 다 끝나고 모아 내면
     #   중간에 죽었을 때 아무 기록도 안 남는다.
     while True:
-        result = _run_once(tenant_id, args.only)
+        result = _round_result(tenant_id, args.only)
         print(json.dumps(result, ensure_ascii=False, sort_keys=True), flush=True)
         # ★여기서는 **끝내지 않는다.** 상주 sweeper 가 첫 실패에 멈추면 되잡기
         #   자체가 멈춘다 — 멈춘 Case 를 되잡는 장치가 멈추는 것이 더 나쁘다.

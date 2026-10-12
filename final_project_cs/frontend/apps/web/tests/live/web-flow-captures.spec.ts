@@ -1,11 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
 import { mockServer, start, checkPlan } from "./helpers";
 
-const output = process.env.WEB_FLOW_SHOTS ?? 'test-results/web-flow-captures';
 for (const width of [375, 1280]) {
-  test(`실제 화면 촬영과 가로 넘침 확인 ${width}px`, async ({ page, request }) => {
-    await mkdir(output, { recursive: true });
+  test(`실제 화면 촬영과 가로 넘침 확인 ${width}px`, async ({ page, request }, testInfo) => {
     await page.setViewportSize({ width, height: 900 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     const mock = mockServer(request);
@@ -14,7 +11,7 @@ for (const width of [375, 1280]) {
     await start(page);
     const capture = async (name: string) => {
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
-      await page.screenshot({ path: `${output}/${name}-${width}.png`, fullPage: true });
+      await page.screenshot({ path: testInfo.outputPath(`${name}-${width}.png`), fullPage: true });
     };
     await page.goto("/trips/new");
     await page.getByLabel("나의 여행 계획").fill("10/1 09:00 경복궁 관람");
@@ -23,9 +20,9 @@ for (const width of [375, 1280]) {
     await capture("survey");
     await mock.scenario({ review: "on", board: "rich", readingPolls: 0 });
     await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
-    await expect(page.locator('li[data-type="move"]').first().getByRole('button',{name:/나서는 시각 고치기.*도착 10:39/})).toBeVisible();
+    await expect(page.locator('li[data-type="move"]').first().locator("[data-move-departure]")).toHaveText("10:30");
     await capture("validation");
-    await page.locator('[data-insert-near] > button').click();
+    await page.locator("[data-insert-near] > button").click();
     await page.getByLabel("일정 이름", { exact: true }).fill("저녁 식사");
     await capture("add-stop");
     await page.goto("/mypage#accounts");

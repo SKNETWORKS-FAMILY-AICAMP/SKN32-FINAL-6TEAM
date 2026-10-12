@@ -24,9 +24,14 @@ RUN pip install -r requirements.txt
 COPY app ./app
 COPY config ./config
 COPY prompts ./prompts
+COPY knowledge/ingest.py ./knowledge/ingest.py
+COPY knowledge/travel ./knowledge/travel
 COPY scripts ./scripts
 COPY var/notice_phrasebook.json ./var/notice_phrasebook.json
 COPY deploy/worker.sh ./deploy/worker.sh
+
+# 현재 SQL 계획·제외 목록을 검증한다. DB에는 연결하지 않는다.
+RUN python -m app.infrastructure.db.migrate --check > /srv/migration-safety.json
 
 # 기록이 쌓이는 곳(`var/ops`) — 서버에서 볼륨으로 붙인다.
 RUN mkdir -p /srv/var/ops && chmod +x /srv/deploy/worker.sh

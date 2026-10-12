@@ -17,7 +17,8 @@ async function capture(page: Page, name: string) {
 async function separate(page: Page) {
   return page.getByRole("region", { name: "여행 지도" }).evaluate((map) => {
     const r = map.getBoundingClientRect();
-    const nodes = [...map.querySelectorAll<HTMLElement>("[data-pin-body], [data-edge-chip], [data-map-controls] > button[aria-expanded], [data-route-label]")];
+    // 확장 도구는 겹칠 수 있고 거리·접기 버튼만 배치 장애물이다.
+    const nodes = [...map.querySelectorAll<HTMLElement>('[data-pin-body], [data-edge-chip], [data-map-obstacle="true"], [data-route-label]')];
     const boxes = nodes.filter((node) => getComputedStyle(node).visibility !== "hidden" && getComputedStyle(node).display !== "none")
       .map((node) => ({ name: node.dataset.pinBody !== undefined ? `마커 ${node.textContent}` : node.dataset.edgeChip !== undefined ? `거리 ${node.textContent}` : node.dataset.routeLabel !== undefined ? `경로 ${node.textContent}` : "지도 단추", box: node.getBoundingClientRect() }))
       .filter(({ box }) => box.right > r.left && box.left < r.right && box.bottom > r.top && box.top < r.bottom);
@@ -98,7 +99,10 @@ for (const width of [375, 1280]) {
     const dialog = page.getByRole("dialog", { name: "선택 약관 동의", exact: true });
     const close = dialog.getByRole("button", { name: "선택 약관 닫기" });
     await expect(close).toBeFocused();
-    await expect(dialog.locator("li[data-doc]")).toHaveCount(3);
+    const optional = dialog.locator("li[data-doc]");
+    await expect(optional).toHaveCount(4);
+    expect(await optional.evaluateAll(nodes => nodes.map(node => (node as HTMLElement).dataset.doc))).toEqual(["sensitive", "location", "alert_channel", "service_improvement"]);
+    await expect(dialog.locator('[data-doc="service_improvement"]')).toContainText("동의 안 함");
     await expect(dialog).toContainText("동의하지 않아도");
     await capture(page, `05-optional-dialog-${width}`);
     await close.focus(); await page.keyboard.press("Shift+Tab");

@@ -10,7 +10,8 @@
   그리고 B 에만 있어야 하는 것: 버전마다 Case 가 붙어 있다(`itinerary_versions.case_id`),
   적용 기록(`action_requests` succeeded), 담당 Team.
 
-★LLM 만 흉내 낸다(분류기 · 신고 추출). 감시 · Controller · Team · 적용 · 통지는 실제 코드다.
+★분류·신고 추출은 대역, 이동은 양쪽 모두 동일한 대본 경로 재생이다.
+감시 · Controller · Team · 적용 · 통지는 실제 코드다. 이동 정확도는 재지 않는다.
 """
 from __future__ import annotations
 
@@ -30,6 +31,7 @@ from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionChec
 from app.domains.travel_ops.ports.data_sources.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
                                               ReplayWarning, ReplayWeather)
 from app.domains.travel_ops.scenarios.case_engine import CaseEngine, cleanup_tenant
+from app.domains.travel_ops.scenarios.replay_services import replay_leg_services
 from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
 from app.domains.travel_ops.components.core_hooks.subjects import resolve_subject
 from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
@@ -115,15 +117,17 @@ def _sources(clock):
 
 
 @pytest.fixture()
-def trip_world():
+def trip_world(case_world):
+    from app.core.service_bindings import bind_services
     tenant = "tripver_" + uuid4().hex[:10]
     store, customer, trip_id = _seed(tenant)
     clock = Clock(_at("08:00"))
     check, route_events = _sources(clock)
-    yield {"tenant": tenant, "store": store, "trip_id": trip_id, "customer": customer, "clock": clock,
-           "watcher": TripWatcher(store=store, check=check, connection_factory=get_connection, clock=clock,
-                                  route_events=route_events),
-           "desk": TripDesk(store=store, connection_factory=get_connection, dining_ledger=False)}
+    with bind_services(case_world["engine"].controller.service_bindings):
+        yield {"tenant": tenant, "store": store, "trip_id": trip_id, "customer": customer, "clock": clock,
+               "watcher": TripWatcher(store=store, check=check, connection_factory=get_connection, clock=clock,
+                                      route_events=route_events),
+               "desk": TripDesk(store=store, connection_factory=get_connection, dining_ledger=False)}
     cleanup_tenant(tenant)
 
 
@@ -134,9 +138,13 @@ def case_world():
     clock = Clock(_at("08:00"))
     check, route_events = _sources(clock)
     engine = CaseEngine(tenant_id=tenant, check=check, route_events=route_events, classifier=_classifier,
-                        report_extractor=_extractor, clock=clock)
-    yield {"tenant": tenant, "store": store, "trip_id": trip_id, "customer": customer, "clock": clock,
-           "engine": engine}
+                        report_extractor=_extractor, clock=clock,
+                        service_overrides=replay_leg_services(SCENARIO))
+    from app.core.service_bindings import bind_services
+
+    with bind_services(engine.controller.service_bindings):
+        yield {"tenant": tenant, "store": store, "trip_id": trip_id, "customer": customer, "clock": clock,
+               "engine": engine}
     cleanup_tenant(tenant)
 
 
@@ -345,7 +353,7 @@ def test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_
     check, route_events = _sources(world["clock"])
     world["engine"] = CaseEngine(tenant_id=world["tenant"], check=check, route_events=route_events,
                                  classifier=_gemma_like_classifier, report_extractor=_extractor,
-                                 clock=world["clock"])
+                                 clock=world["clock"], service_overrides=replay_leg_services(SCENARIO))
     outcomes = _run_case_day(world)
     for key, team in (("p3", "dining"), ("p7", "dining"), ("a8", "activity")):
         view = outcomes[key]
@@ -370,7 +378,8 @@ def test_a_failing_interpreter_is_recorded_and_the_case_still_routes_by_classifi
     world = dict(case_world)
     check, route_events = _sources(world["clock"])
     world["engine"] = CaseEngine(tenant_id=world["tenant"], check=check, route_events=route_events,
-                                 classifier=_classifier, report_extractor=broken, clock=world["clock"])
+                                 classifier=_classifier, report_extractor=broken, clock=world["clock"],
+                                 service_overrides=replay_leg_services(SCENARIO))
     view = _say(world, "closed")
     assert view["owner_team_id"] == "dining", view          # 분류 접두(dining_hours)로 갔다
     assert view["case_status"] != "resolved", view           # 추출이 죽었는데 확답하지 않는다

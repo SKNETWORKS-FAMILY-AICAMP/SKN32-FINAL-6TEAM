@@ -19,11 +19,22 @@
   도메인도 섬긴다」는 대조군은 코드가 아니라 검사로 남겼다 —
   `tests/architecture/test_engine_serves_another_domain.py`.
 """
-from app.domains.travel_ops.instances.activity import ActivityTeam
-from app.domains.travel_ops.instances.booking_handoff import BookingHandoffTeam
-from app.domains.travel_ops.instances.dining import DiningTeam
-from app.domains.travel_ops.instances.locked import FlightTeam, LodgingTeam
-from app.domains.travel_ops.instances.mobility import MobilityTeam
+from importlib import import_module
+
+
+_TEAM_EXPORTS = {
+    "ActivityTeam": "activity", "BookingHandoffTeam": "booking_handoff",
+    "DiningTeam": "dining", "FlightTeam": "locked", "LodgingTeam": "locked",
+    "MobilityTeam": "mobility",
+}
+
+
+def __getattr__(name):
+    """Import a Team only when its public compatibility export is requested."""
+    module = _TEAM_EXPORTS.get(name)
+    if module is None:
+        raise AttributeError(name)
+    return getattr(import_module(f"{__name__}.instances.{module}"), name)
 
 __all__ = [
     "ActivityTeam",

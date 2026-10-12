@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사람 평가 35개</title>
+<script>document.documentElement.className += ' js';</script>
+<style>
+:root{
+  --bg:#f4f5f8; --card:#fff; --ink:#1c2230; --sub:#5b6577; --line:#dde1e8;
+  --ok:#1b7f45; --okbg:#e5f4ec; --mid:#9a6200; --midbg:#fff1d2; --bad:#bf3326; --badbg:#fde6e3; --unk:#566074; --unkbg:#eaedf2;
+  --evi:#eaf1ff; --evi-line:#bccdf2; --claude:#f1ecfb; --claude-line:#cdbff0; --accent:#2f5bd8;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#13161c; --card:#1c212b; --ink:#e8ebf1; --sub:#9ba5b7; --line:#2d3441;
+    --ok:#52c488; --okbg:#173326; --mid:#e5ad4d; --midbg:#3a2d12; --bad:#ef7d70; --badbg:#3d1b18; --unk:#a5afc0; --unkbg:#272d38;
+    --evi:#1b2742; --evi-line:#34487a; --claude:#2a2340; --claude-line:#4c3f7a; --accent:#7ea0ff;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:14px 16px 60px}
+h1{font-size:18px;margin:6px 0 2px}
+.sub{color:var(--sub);font-size:13px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.lab{font-size:12px;font-weight:700;color:var(--sub);margin:14px 0 4px;letter-spacing:.02em}
+.box{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;white-space:pre-wrap;word-break:break-word}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:2px 10px;color:var(--sub)}
+.evi{background:var(--evi);border:1px solid var(--evi-line);border-radius:10px;padding:10px 12px;margin:6px 0;font-size:15px}
+.evi b{display:block;font-size:12px;color:var(--accent);margin-bottom:2px}
+.evi small{display:block;color:var(--sub);font-size:12px;margin-bottom:4px}
+.chk{font-size:14px;padding:4px 2px 4px 22px;position:relative;color:var(--sub)}
+.chk::before{content:"•";position:absolute;left:6px}
+.chk.y{color:var(--ok)} .chk.y::before{content:"✔";left:3px}
+.chk.n{color:var(--bad)} .chk.n::before{content:"✘";left:3px}
+.claude{border:1px solid var(--claude-line);background:var(--claude);border-radius:10px;padding:10px 12px;margin-top:14px;font-size:15px}
+.claude small{display:block;color:var(--sub);font-size:12px;margin-bottom:3px}
+.claude .v{font-weight:700}
+.claude.ok .v{color:var(--ok)} .claude.mid .v{color:var(--mid)} .claude.bad .v{color:var(--bad)}
+.choices{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
+@media (min-width:560px){.choices{grid-template-columns:repeat(4,1fr)}}
+.ch{font:inherit;color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:12px;padding:12px 8px;cursor:pointer;text-align:center;min-height:76px}
+.ch b{display:block;font-size:18px}
+.ch span{display:block;font-size:12px;color:var(--sub);line-height:1.35;margin-top:2px}
+.ch.ok{border-color:var(--ok)} .ch.mid{border-color:var(--mid)} .ch.bad{border-color:var(--bad)} .ch.unk{border-color:var(--unk)}
+.ch.ok.on{background:var(--okbg)} .ch.mid.on{background:var(--midbg)} .ch.bad.on{background:var(--badbg)} .ch.unk.on{background:var(--unkbg)}
+.ch.on b::after{content:" ✓"}
+.nav{display:flex;gap:10px;justify-content:space-between;margin-top:14px;align-items:center;flex-wrap:wrap}
+.btn{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 14px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:disabled{opacity:.4;cursor:default}
+.bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin:6px 0 8px}
+.bar i{display:block;height:100%;background:var(--accent);width:0}
+.dots{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.dot{width:16px;height:16px;border-radius:4px;border:1px solid var(--line);background:var(--card);cursor:pointer;padding:0}
+.dot.ok{background:var(--ok);border-color:var(--ok)} .dot.mid{background:var(--mid);border-color:var(--mid)} .dot.bad{background:var(--bad);border-color:var(--bad)} .dot.unk{background:var(--unk);border-color:var(--unk)}
+.dot.cur{outline:2px solid var(--accent);outline-offset:1px}
+.top{display:flex;gap:10px;justify-content:space-between;align-items:flex-end;flex-wrap:wrap}
+.who{font-size:12px;color:var(--sub)} .who input{font:inherit;width:84px;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+textarea{width:100%;font:inherit;font-size:14px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
+table{border-collapse:collapse;width:100%;font-size:14px} th,td{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left} th{color:var(--sub);font-weight:600}
+.banner{background:var(--midbg);border:1px solid var(--mid);border-radius:10px;padding:10px 12px;margin:12px 0;font-size:14px}
+.pick{margin-top:10px;font-size:15px}
+.needjs{display:none} .js .needjs{display:block} .js .nojs{display:none}
+@media print{.needjs{display:none!important} .nojs{display:block!important} .card{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>사람 평가 35개</h1>
+  <p class="sub">시스템이 낸 답이 맞는지 하나씩 골라 주세요. 질문 · 알림 문장은 모두 합성(만든 것)이고 실제 고객 말이 아닙니다.</p>
+  <div id="app" class="needjs"></div>
+  <!--STATIC-->
+</div>
+<script>
+(function(){
+var DATA = __DATA__;
+var KEY = 'tripilot-human-eval-v2';
+var CH = [
+  {v:'맞다', t:'ok', hint:{규정:'그대로 보내도 돼요', 번역:'뜻 · 숫자 · 단위 그대로'}},
+  {v:'중간', t:'mid', hint:{규정:'틀린 말은 없지만 딱 맞진 않아요', 번역:'뜻은 맞는데 어색해요'}},
+  {v:'틀리다', t:'bad', hint:{규정:'엉뚱하거나 오해할 말이 있어요', 번역:'숫자 · 단위 · 뜻이 바뀌었어요'}},
+  {v:'모름', t:'unk', hint:{규정:'자료만으로는 판단이 안 돼요', 번역:'그 언어를 몰라 판단이 안 돼요'}}
+];
+var TONE = {}; CH.forEach(function(c){ TONE[c.v] = c.t; });
+var LANG = {en:'영어', ja:'일본어', 'zh-CN':'중국어(간체)'};
+var S = {idx:0, who:'A', ans:{}, memo:{}, view:'card'};
+var app = document.getElementById('app');
+
+function load(){
+  try{ var t = localStorage.getItem(KEY); if(t){ var o = JSON.parse(t);
+    S.idx = Math.min(Math.max(o.idx|0, 0), DATA.length-1); S.who = o.who || 'A'; S.ans = o.ans || {}; S.memo = o.memo || {}; } }catch(e){}
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify({idx:S.idx, who:S.who, ans:S.ans, memo:S.memo})); }catch(e){} }
+function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
+function answered(){ return DATA.filter(function(d){ return S.ans[d.id]; }).length; }
+
+function head(){
+  var top = el('div', 'top');
+  var left = el('div');
+  left.appendChild(el('div', 'sub', '답함 ' + answered() + ' / ' + DATA.length));
+  var who = el('label', 'who', '평가자 ');
+  var inp = el('input'); inp.value = S.who; inp.maxLength = 12;
+  inp.oninput = function(){ S.who = inp.value.trim() || 'A'; save(); };
+  who.appendChild(inp); top.appendChild(left); top.appendChild(who);
+  app.appendChild(top);
+  var bar = el('div', 'bar'), fill = el('i'); fill.style.width = Math.round(answered() / DATA.length * 100) + '%';
+  bar.appendChild(fill); app.appendChild(bar);
+  var dots = el('div', 'dots');
+  DATA.forEach(function(d, i){
+    var b = el('button', 'dot' + (S.ans[d.id] ? ' ' + TONE[S.ans[d.id]] : '') + (S.view === 'card' && i === S.idx ? ' cur' : ''));
+    b.title = d.id; b.setAttribute('aria-label', d.id);
+    b.onclick = function(){ S.idx = i; S.view = 'card'; save(); render(); };
+    dots.appendChild(b);
+  });
+  app.appendChild(dots);
+}
+
+function card(){
+  var d = DATA[S.idx], isTr = d.kind === '번역';
+  var c = el('div', 'card');
+  var r = el('div', 'row');
+  r.appendChild(el('span', 'pill', d.id + ' · ' + (S.idx + 1) + '/' + DATA.length));
+  r.appendChild(el('span', 'pill', isTr ? '알림 번역' : '규정 질문 답'));
+  c.appendChild(r);
+  c.appendChild(el('div', 'lab', isTr ? '원문(한국어) → ' + (LANG[d.lang] || d.lang) + '로 번역' : '고객이 한 말'));
+  c.appendChild(el('div', 'box', d.q));
+  c.appendChild(el('div', 'lab', isTr ? '번역 결과' : '시스템이 한 답'));
+  c.appendChild(el('div', 'box', d.a));
+  c.appendChild(el('div', 'lab', '확인 자료'));
+  d.ev.blocks.forEach(function(b){
+    var e = el('div', 'evi'); e.appendChild(el('b', null, b.label));
+    if(b.where) e.appendChild(el('small', null, b.where));
+    e.appendChild(el('div', null, b.text)); c.appendChild(e);
+  });
+  d.ev.checks.forEach(function(k){ c.appendChild(el('div', 'chk ' + (k.ok === true ? 'y' : k.ok === false ? 'n' : ''), k.t)); });
+  var cl = el('div', 'claude ' + TONE[d.claude]);
+  cl.appendChild(el('small', null, 'Claude 의견 — 참고만 하세요. 틀릴 수 있어요.'));
+  var v = el('div'); v.appendChild(el('span', 'v', '예상: ' + d.claude)); v.appendChild(document.createTextNode(' — ' + d.why));
+  cl.appendChild(v); c.appendChild(cl);
+
+  var ch = el('div', 'choices');
+  CH.forEach(function(o, n){
+    var b = el('button', 'ch ' + o.t + (S.ans[d.id] === o.v ? ' on' : ''));
+    b.appendChild(el('b', null, o.v)); b.appendChild(el('span', null, o.hint[d.kind]));
+    b.title = '단축키 ' + (n + 1);
+    b.onclick = function(){ choose(o.v); };
+    ch.appendChild(b);
+  });
+  c.appendChild(ch);
+
+  var nav = el('div', 'nav');
+  var prev = el('button', 'btn', '← 이전'); prev.disabled = S.idx === 0; prev.onclick = function(){ go(-1); };
+  var memoBtn = el('button', 'btn', S.memo[d.id] ? '메모 보기' : '메모 남기기');
+  var next = el('button', 'btn', S.idx === DATA.length - 1 ? '결과 보기 →' : '다음 →'); next.onclick = function(){ go(1); };
+  nav.appendChild(prev); nav.appendChild(memoBtn); nav.appendChild(next); c.appendChild(nav);
+  var memo = el('textarea'); memo.rows = 2; memo.placeholder = '한마디 메모(선택)'; memo.value = S.memo[d.id] || '';
+  memo.style.display = S.memo[d.id] ? 'block' : 'none'; memo.style.marginTop = '10px';
+  memo.oninput = function(){ if(memo.value) S.memo[d.id] = memo.value; else delete S.memo[d.id]; save(); };
+  memoBtn.onclick = function(){ memo.style.display = memo.style.display === 'none' ? 'block' : 'none'; if(memo.style.display === 'block') memo.focus(); };
+  c.appendChild(memo);
+  app.appendChild(c);
+}
+
+function choose(v){
+  var d = DATA[S.idx]; S.ans[d.id] = v; save();
+  render();
+  setTimeout(function(){ if(S.view === 'card' && DATA[S.idx].id === d.id) go(1); }, 350);
+}
+function go(n){
+  var i = S.idx + n;
+  if(i >= DATA.length){ S.view = 'done'; } else if(i >= 0){ S.idx = i; S.view = 'card'; }
+  save(); render(); window.scrollTo(0, 0);
+}
+
+function csvText(){
+  function q(s){ return '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"'; }
+  var out = ['id,종류,고객 입력,시스템 답,Claude 예상,Claude 이유,사람 판정,사람 메모,평가자'];
+  DATA.forEach(function(d){
+    out.push([d.id, d.kind === '번역' ? '알림 번역' : '규정 질문 답', d.kind === '번역' ? '[원문 한국어 알림 → ' + d.lang + '] ' + d.q : d.q, d.a, d.claude, d.why,
+      S.ans[d.id] || '', S.memo[d.id] || '', S.who].map(q).join(','));
+  });
+  return out.join('\r\n');
+}
+
+function done(){
+  var n = answered();
+  var c = el('div', 'card');
+  c.appendChild(el('div', 'lab', n === DATA.length ? '다 했어요 — 고마워요' : '답한 것 ' + n + ' / ' + DATA.length + ' (남은 건 위 네모를 눌러 이어서 하세요)'));
+  var kinds = ['규정', '번역'], rows = ['맞다', '중간', '틀리다', '모름'];
+  var t = el('table'), h = el('tr');
+  ['내 판정', '규정 질문 답', '알림 번역'].forEach(function(x){ h.appendChild(el('th', null, x)); }); t.appendChild(h);
+  rows.forEach(function(v){
+    var tr = el('tr'); tr.appendChild(el('td', null, v));
+    kinds.forEach(function(k){ tr.appendChild(el('td', null, DATA.filter(function(d){ return d.kind === k && S.ans[d.id] === v; }).length + '개')); });
+    t.appendChild(tr);
+  });
+  c.appendChild(t);
+  var judged = DATA.filter(function(d){ return S.ans[d.id] && S.ans[d.id] !== '모름'; });
+  var same = judged.filter(function(d){ return S.ans[d.id] === d.claude; });
+  c.appendChild(el('p', null, 'Claude 예상과 같은 판정: ' + same.length + ' / ' + judged.length + ' (모름 제외). 다르게 고른 것은 아래에 있어요.'));
+  var diff = judged.filter(function(d){ return S.ans[d.id] !== d.claude; });
+  var ul = el('div');
+  diff.forEach(function(d){
+    var b = el('button', 'btn', d.id + ' · 나 ' + S.ans[d.id] + ' / Claude ' + d.claude);
+    b.style.margin = '3px 6px 3px 0'; b.onclick = function(){ S.idx = DATA.indexOf(d); S.view = 'card'; save(); render(); window.scrollTo(0, 0); };
+    ul.appendChild(b);
+  });
+  c.appendChild(ul);
+  var row = el('div', 'nav');
+  var dl = el('button', 'btn primary', '결과 파일(CSV) 내려받기');
+  dl.onclick = function(){
+    try{
+      var blob = new Blob(['﻿' + csvText()], {type:'text/csv;charset=utf-8'});
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '사람평가_' + S.who + '.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+    }catch(e){ alert('내려받기가 막혀 있어요. 아래 글을 복사해서 메모장에 붙여넣고 .csv 로 저장하세요.'); }
+  };
+  var back = el('button', 'btn', '← 문제로 돌아가기'); back.onclick = function(){ S.view = 'card'; render(); };
+  row.appendChild(back); row.appendChild(dl); c.appendChild(row);
+  c.appendChild(el('div', 'lab', '내려받기가 안 되면 — 아래 글을 전부 복사해서 메모장에 붙여넣고 「사람평가.csv」로 저장'));
+  var ta = el('textarea'); ta.rows = 5; ta.readOnly = true; ta.value = csvText(); ta.onfocus = function(){ ta.select(); };
+  c.appendChild(ta);
+  var reset = el('button', 'btn', '내 판정 전부 지우고 처음부터');
+  reset.style.marginTop = '12px';
+  reset.onclick = function(){ if(confirm('지금까지 고른 판정과 메모가 모두 지워져요. 계속할까요?')){ S.ans = {}; S.memo = {}; S.idx = 0; S.view = 'card'; save(); render(); } };
+  c.appendChild(reset);
+  app.appendChild(c);
+}
+
+function render(){
+  app.innerHTML = '';
+  head();
+  if(S.view === 'done') done(); else card();
+}
+document.addEventListener('keydown', function(e){
+  var tag = (e.target && e.target.tagName) || '';
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || e.ctrlKey || e.metaKey || e.altKey) return;
+  if(S.view === 'card' && e.key >= '1' && e.key <= '4'){ choose(CH[+e.key - 1].v); }
+  else if(e.key === 'ArrowRight'){ go(1); } else if(e.key === 'ArrowLeft' && S.idx > 0){ go(-1); }
+});
+load(); render();
+})();
+</script>
+</body>
+</html>

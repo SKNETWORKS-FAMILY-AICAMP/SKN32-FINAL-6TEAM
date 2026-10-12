@@ -24,6 +24,7 @@ from app.infrastructure.db.session import get_connection
 from app.domains.travel_ops.ports.data_sources.base import TravelSources
 from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
 from app.domains.travel_ops.scenarios.case_engine import CaseEngine, cleanup_tenant
+from app.domains.travel_ops.scenarios.replay_services import replay_leg_services
 
 from .test_case_version_day import SCENARIO, Clock, _at, _classifier, _extractor, _seed
 
@@ -59,7 +60,8 @@ def _world(fire_district: str):
     clock = Clock(_at("11:45"))                 # 점심(13:00)이 90분 앞 창에 들어온다
     check = DisruptionCheck(TravelSources(disaster=FireIn(fire_district)), limits=lambda: (60, 30)).check
     engine = CaseEngine(tenant_id=tenant, check=check, route_events=None, classifier=_classifier,
-                        report_extractor=_extractor, clock=clock)
+                        report_extractor=_extractor, clock=clock,
+                        service_overrides=replay_leg_services(SCENARIO))
     return {"tenant": tenant, "store": store, "trip_id": trip_id, "engine": engine}
 
 

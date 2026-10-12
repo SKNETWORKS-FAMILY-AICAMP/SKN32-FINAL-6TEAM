@@ -103,12 +103,13 @@ for (const width of [375, 1280]) {
     const line = () => seam.evaluate(e => {
       const c = getComputedStyle(e, '::after'), r = e.getBoundingClientRect();
       const button = e.querySelector('button')!.getBoundingClientRect();
-      return { opacity: Number(c.opacity), height: c.height, left: c.left, right: c.right, width: r.width, y: r.y + parseFloat(c.top), centerX: r.x + r.width / 2, buttonX: button.x + button.width / 2, buttonY: button.y + button.height / 2, buttonWidth: button.width, buttonHeight: button.height, animation: c.animationName, state: c.animationPlayState };
+      return { opacity: Number(c.opacity), height: c.height, left: c.left, right: c.right, width: r.width, y: r.y + Number.parseFloat(c.top), lineTop: Number.parseFloat(c.top), start: e.hasAttribute('data-insert-start'), centerX: r.x + r.width / 2, buttonX: button.x + button.width / 2, buttonY: button.y + button.height / 2, buttonWidth: button.width, buttonHeight: button.height, animation: c.animationName, state: c.animationPlayState };
     });
     await phase(seam, 0); const dim = await line();
     await phase(seam, 1500); const bright = await line();
     expect(bright.opacity - dim.opacity).toBeGreaterThan(.45);
     expect(bright.height).toBe('1px'); expect(bright.left).toBe('0px'); expect(bright.right).toBe('0px');
+    expect(bright.lineTop).toBe(bright.start ? 24 : 0);
     expect(bright.buttonX).toBeCloseTo(bright.centerX, 1); expect(bright.buttonY).toBeCloseTo(bright.y, 1);
     expect(bright.buttonWidth).toBe(44); expect(bright.buttonHeight).toBe(44);
     expect(bright.buttonX).toBe(dim.buttonX); expect(bright.buttonY).toBe(dim.buttonY);

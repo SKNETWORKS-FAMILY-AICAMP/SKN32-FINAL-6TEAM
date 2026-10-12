@@ -1,0 +1,31 @@
+## mix4 (처음 보는 88문제) — 사전에 고른 배치 gate/anchor/point = e4b/e4b/12b
+  e4b/e4b/e4b    65/88=74% 엉뚱 3 못 찾음 20 · 평균 약 2.6초/질문(추정) · 처리 {'point': 47, 'verify': 19, 'struct': 13, 'gate': 9}
+  e4b/e4b/12b    81/88=92% 엉뚱 4 못 찾음 3 · 평균 약 4.9초/질문(추정) · 처리 {'point': 65, 'struct': 13, 'verify': 1, 'gate': 9}  ← 사전 지정
+  e4b/12b/e4b    65/88=74% 엉뚱 4 못 찾음 19 · 평균 약 2.6초/질문(추정) · 처리 {'point': 46, 'struct': 15, 'verify': 18, 'gate': 9}
+  e4b/12b/12b    81/88=92% 엉뚱 5 못 찾음 2 · 평균 약 4.9초/질문(추정) · 처리 {'point': 63, 'struct': 15, 'verify': 1, 'gate': 9}
+  12b/e4b/e4b    65/88=74% 엉뚱 3 못 찾음 20 · 평균 약 4.1초/질문(추정) · 처리 {'point': 47, 'verify': 20, 'struct': 13, 'gate': 8}
+  12b/e4b/12b    81/88=92% 엉뚱 4 못 찾음 3 · 평균 약 6.5초/질문(추정) · 처리 {'point': 65, 'struct': 13, 'verify': 2, 'gate': 8}
+  12b/12b/e4b    65/88=74% 엉뚱 4 못 찾음 19 · 평균 약 4.1초/질문(추정) · 처리 {'point': 46, 'struct': 15, 'verify': 19, 'gate': 8}
+  12b/12b/12b    81/88=92% 엉뚱 5 못 찾음 2 · 평균 약 6.4초/질문(추정) · 처리 {'point': 63, 'struct': 15, 'verify': 2, 'gate': 8}
+
+유형별(사전 지정 배치):
+  context_pronoun        8/8
+  duplicate_place        7/8
+  confusable_name        8/8
+  compound_intent        8/8
+  negation               5/8
+  typo_slang             8/8
+  out_of_scope           8/8
+  nameless_description   8/8
+  ordinal_relative       7/8
+  change_request         7/8
+  absent_but_plausible   7/8
+
+틀린 문제:
+  [duplicat] 광장시장 두번째 방문 몇 시 | 정답 28:광장시장 마약김밥 | 답 13:광장시장 빈대떡  (point)
+  [negation] 국립중앙박물관 말고 남대문시장 시간 | 정답 31:남대문시장 구경 | 답 없음 (verify)
+  [negation] 토속촌 말고 그 전 일정 | 정답 15:국립민속박물관 관 | 답 없음 (point)
+  [negation] 광장시장 아침 말고 저녁 거 시간 | 정답 13:광장시장 빈대떡  | 답 6:닭한마리 저녁 (point)
+  [ordinal_] 정동극장 다음에 뭐 먹어? | 정답 6:닭한마리 저녁 | 답 7:창덕궁 후원 관람 (struct)
+  [change_r] 삭제해줘 | 정답 29:국립중앙박물관 관 | 답 없음 (gate)
+  [absent_b] 홍대 클럽 언제 가 | 정답 없음 | 답 42:홍대 버스킹 구경 (point)

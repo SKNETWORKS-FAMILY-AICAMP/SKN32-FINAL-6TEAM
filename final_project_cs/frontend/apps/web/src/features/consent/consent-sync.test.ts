@@ -80,7 +80,7 @@ describe("the browser's copy of the consents and the server's record", () => {
     expect(post.init.method).toBe("POST");
     const body = JSON.parse(String(post.init.body)) as { version: string; items: { code: string; agreed: boolean; text_sha256: string }[] };
     expect(body.version).toBe(TERMS_VERSION);
-    expect(body.items.map((item) => [item.code, item.agreed])).toEqual([["service_terms", true], ["privacy", true], ["sensitive", false], ["location", true], ["alert_channel", false]]);
+    expect(body.items.map((item) => [item.code, item.agreed])).toEqual([["service_terms", true], ["privacy", true], ["sensitive", false], ["location", true], ["alert_channel", false], ["service_improvement", false]]);
     for (const item of body.items) expect(item.text_sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(consentsSynced()).toBe(true);
   });

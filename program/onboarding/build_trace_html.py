@@ -1,0 +1,164 @@
+# -*- coding: utf-8 -*-
+"""취소·환불 한 건이 지나는 길. 한 파일로 만든다.
+
+    python program/onboarding/build_trace_html.py
+
+한 파일 안에 둘이 들어간다.
+
+  1. 낱장 열두 장. 그림이 아니라 HTML 이다. 진행바를 따라 한 장씩 바뀌고
+     오른쪽 칸에 지금까지 만들어진 것이 쌓인다. 단계마다 실제 코드와
+     그 코드의 쉬운 풀이를 덮어 띄운다.
+  2. 낱장으로 담을 수 없는 판 여덟 장. 이것도 그림이 아니라 HTML 이다.
+
+★낱장을 PNG 로 붙이지 않는다. 그림으로 붙이면 글자를 긁을 수 없고 검색도 안 되고
+  화면 크기에 맞지도 않는다. 같은 내용을 HTML 로 다시 그린다. 내용은 그림을 그리는
+  `trace/steps.py` 에서 그대로 가져오므로 그림과 화면이 어긋날 수 없다.
+
+★PNG 를 한 장도 안 쓴다. 예전엔 일곱 장을 base64 로 박아 2.1MB 였는데,
+  그림이라 글자를 긁을 수 없었다. 지금은 0.1MB 다. 그림 파일은
+  `trace/images/` 에 그대로 있고 옛 영상 스크립트가 쓴다.
+"""
+import json
+import os
+import sys
+
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+
+from doc_says import SAYS  # noqa: E402
+from line_notes import NOTES  # noqa: E402
+from sheet_data import BAR, SHEETS  # noqa: E402
+from trace_data import FILES_NOTE, STEPS  # noqa: E402
+
+OUT = os.path.join(HERE, "취소환불_케이스_추적_그림.html")
+
+#: 팀원 이름. 담당 대조에 쓴다. 출처는 program/plan/A-COP_스프린트_에픽_설계.md.
+TEAM = ("최연우", "정세환", "송채영", "서유현", "김지혜")
+
+#: trace_data 는 색을 이름으로, steps.py 는 16진수로 쓴다. 짝을 여기서 못 박는다.
+HUE = {"red": "#b8442f", "blue": "#2f5bd8", "green": "#0d7a4d",
+       "purple": "#6b3fa0", "grey": "#6b7488"}
+
+
+def dump(value):
+    """<script> 안에 넣어도 안전한 JSON.
+
+    ★json.dumps 는 `<` 를 그대로 둔다. 실제 코드 조각이나 설명에 `</script>` 가
+      한 번이라도 들어오면 브라우저가 거기서 스크립트를 끊어 파일이 통째로
+      깨진다. 지금은 그런 글자가 없지만, 없다는 사실에 기대면 안 된다.
+    """
+    out = json.dumps(value, ensure_ascii=False)
+    for cp in (0x3c, 0x3e, 0x2028, 0x2029):
+        out = out.replace(chr(cp), "%su%04x" % (chr(92), cp))
+    return out
+
+
+def notes_for(key, lines):
+    """줄 주석을 줄 수에 맞춰 돌려준다. 없으면 None.
+
+    ★줄 수가 안 맞으면 조용히 밀린다. 3번 줄 설명이 4번 줄에 붙는 것은
+      설명이 아예 없는 것보다 나쁘다. 어긋나면 여기서 멈춘다.
+    """
+    got = NOTES.get(key)
+    if got is None:
+        return None
+    if len(got) != len(lines):
+        raise SystemExit("%s 의 주석이 %d개인데 줄은 %d개다" % (key, len(got), len(lines)))
+    return got if any(n.strip() for n in got) else None
+
+
+def check(pack):
+    """두 출처가 같은 12단계를 말하는지 대조한다.
+
+    ★개수만 세면 안 된다. 실제로 4번 단계 제목이 한쪽은 "의도·이슈·감성",
+      다른 쪽은 "의도와 이슈와 감성" 으로 갈라져 있었는데 개수 검사는
+      그것을 그대로 통과시켰다. 번호와 제목과 색을 전부 맞춰 본다.
+    """
+    if len(pack) != len(SHEETS):
+        raise SystemExit("낱장 %d 개인데 누적 패킷은 %d 개다" % (len(SHEETS), len(pack)))
+    if len(BAR) != len(SHEETS):
+        raise SystemExit("진행바 %d 칸인데 낱장은 %d 장이다" % (len(BAR), len(SHEETS)))
+    bad = []
+    if [s["n"] for s in SHEETS] != list(range(1, len(SHEETS) + 1)):
+        bad.append("낱장 번호가 1..%d 가 아니다: %s"
+                   % (len(SHEETS), [s["n"] for s in SHEETS]))
+    for a, b in zip(SHEETS, pack):
+        if a["n"] != b["n"]:
+            bad.append("번호가 다르다: 낱장 %s, 누적 %s" % (a["n"], b["n"]))
+        if a["head"] != b["title"]:
+            bad.append("%d번 제목이 다르다\n    낱장  %s\n    누적  %s"
+                       % (a["n"], a["head"], b["title"]))
+        # ★담당도 대조한다. 낱장의 "담당" 칸은 steps.py 가, 지도에 뜨는 owner 는
+        #   trace_data.py 가 들고 있어서 한쪽만 고치면 조용히 갈라진다.
+        #   실제로 2026-09-01 VOC 재판정 때 낱장은 최연우, 지도는 송채영이었다.
+        #
+        #   ★사람 이름만 본다. owner 에는 "근거 조합", "공통" 처럼 갈래 이름이
+        #     들어가는 자리가 있어서, 글자를 통째로 맞추면 헛걸린다.
+        sheet_who = {n for n in TEAM
+                     for v in dict((k, v) for k, v in a["coord"]).get("담당", [])
+                     if n in v}
+        pack_who = {n for n in TEAM if n in b["owner"]}
+        if sheet_who and pack_who and sheet_who != pack_who:
+            bad.append("%d번 담당이 다르다: 낱장 %s, 지도 %s"
+                       % (a["n"], " ".join(sorted(sheet_who)), b["owner"]))
+        want = HUE.get(b["color"])
+        if want is None:
+            bad.append("%d번 색 이름을 모른다: %s" % (a["n"], b["color"]))
+        elif want != a["color"]:
+            bad.append("%d번 색이 다르다: 낱장 %s, 누적 %s(%s)"
+                       % (a["n"], a["color"], b["color"], want))
+    for i, (a, b) in enumerate(zip(SHEETS, BAR)):
+        if a["color"] != b["color"]:
+            bad.append("%d번 진행바 색이 낱장과 다르다: %s vs %s"
+                       % (a["n"], b["color"], a["color"]))
+    if bad:
+        raise SystemExit("두 출처가 어긋났다. trace/steps.py 가 원본이다.\n  "
+                         + "\n  ".join(bad))
+
+
+def main():
+    from page_parts import CSS, JS, PAGE
+    from plates import all_plates
+
+    pack = [{"n": s["n"], "title": s["title"], "owner": s["owner"],
+             "color": s["color"],
+             "add": [[k, nm, lines, notes_for("pack-%d-%d" % (s["n"], i), lines)]
+                     for i, (k, nm, lines) in enumerate(s["add"])],
+             "state": list(s["state"]) if s.get("state") else None,
+             "code": [dict(c, notes=notes_for("code-%d-%s" % (s["n"], c["key"]),
+                                              c["code"].split(chr(10))))
+                      for c in s["code"]]}
+            for s in STEPS]
+
+    check(pack)
+
+    # 낱장 칸마다 '이 칸이 무엇인가' 설명을 얹는다. 없으면 물음표가 안 뜬다.
+    sheets = [dict(sh, in_say=SAYS.get("in-%d" % sh["n"]),
+                   out_say=SAYS.get("out-%d" % sh["n"]),
+                   in_notes=notes_for("sin-%d" % sh["n"], sh["in_lines"]),
+                   out_notes=notes_for("sout-%d" % sh["n"], sh["out_lines"]))
+              for sh in SHEETS]
+
+    js = (JS
+          .replace("__BAR__", dump(BAR))
+          .replace("__SHEETS__", dump(sheets))
+          .replace("__PACK__", dump(pack))
+          .replace("__NOTE__", dump(FILES_NOTE)))
+
+    page = PAGE % {"css": CSS, "plates": all_plates(), "js": js}
+    # ★최종 경로에 바로 쓰지 않는다. 쓰다가 죽으면 반쪽짜리 HTML 이 남고,
+    #   그것이 멀쩡한 파일인 줄 알고 전달된다.
+    tmp = OUT + ".part"
+    with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(page)
+    os.replace(tmp, OUT)
+    print("만듦: %s" % OUT)
+    print("  %.1f MB · 낱장 %d장 · 판 8장 · 코드 %d조각 · 그림 파일 0장"
+          % (os.path.getsize(OUT) / 1048576, len(SHEETS),
+             sum(len(s["code"]) for s in STEPS)))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

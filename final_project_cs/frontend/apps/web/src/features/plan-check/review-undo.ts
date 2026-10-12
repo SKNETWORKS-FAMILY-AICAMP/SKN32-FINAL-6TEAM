@@ -1,5 +1,11 @@
 import type { ReviewedIntakeView } from "@/lib/live/intake-review";
 
+function itemValues(view: ReviewedIntakeView, sourceId: string, index: number, detailsOnly = false): string {
+  const fields = view.sources.find(source => source.source_id === sourceId)?.items.find(item => item.index === index)?.fields;
+  return JSON.stringify(Object.entries(fields ?? {}).filter(([key]) => !detailsOnly || !["starts_at", "ends_at"].includes(key))
+    .map(([key, field]) => [key, field?.value]).sort(([a], [b]) => String(a).localeCompare(String(b))));
+}
+
 /** Values only: provenance and check results may change without changing the customer's plan. */
 function valuesOf(view: ReviewedIntakeView): string {
   const sources = view.sources.map((source) => ({
@@ -19,6 +25,7 @@ export class ReviewUndo {
   private original: { revision: number; values: string } | null = null;
   private revision: number | null = null;
   private unavailable = false;
+  private items = new Map<string, { revision: number; source_id: string; index: number; details: string }>();
   active = true;
 
   constructor(readonly intakeId: string) {}
@@ -32,6 +39,13 @@ export class ReviewUndo {
       if (before.status === "review" && !before.preview && before.review?.revision === before.revision) {
         this.original = { revision: before.revision, values: valuesOf(before) };
       } else this.unavailable = true;
+    }
+    if (before.status === "review" && !before.preview && before.review?.revision === before.revision) {
+      for (const item of before.review.items ?? []) {
+        if (!this.items.has(item.id) && itemValues(before, item.source_id, item.index) !== itemValues(next, item.source_id, item.index)) {
+          this.items.set(item.id, { revision: before.revision, source_id: item.source_id, index: item.index, details: itemValues(before, item.source_id, item.index, true) });
+        }
+      }
     }
     this.advance(next);
   }
@@ -47,6 +61,13 @@ export class ReviewUndo {
 
   target(view: ReviewedIntakeView): number | null {
     return this.canRestore(view) ? this.original!.revision : null;
+  }
+
+  itemTarget(view: ReviewedIntakeView | undefined, id: string): { revision: number; source_id: string; index: number } | null {
+    const original = this.items.get(id);
+    if (!this.active || !original || !view || view.intake_id !== this.intakeId || view.preview || view.status !== "review" || view.revision !== this.revision) return null;
+    if (itemValues(view, original.source_id, original.index, true) === original.details) return null;
+    return { revision: original.revision, source_id: original.source_id, index: original.index };
   }
 
   /** Called only after an atomic restore succeeded. A failed attempt leaves the original available. */

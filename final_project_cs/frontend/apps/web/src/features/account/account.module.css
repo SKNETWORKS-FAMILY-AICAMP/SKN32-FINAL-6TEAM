@@ -19,17 +19,17 @@
 .socialButton > span:last-child { flex: 1; text-align: center; }
 .socialButton:disabled { opacity: .4; cursor: default; }
 .socialButton:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
-.socialButton:not(:disabled):hover { box-shadow: 0 1px 4px var(--color-shadow-light); }
-.socialButton[data-brand="kakao"] { background: var(--color-brand-paper); color: var(--color-brand-ink); border-color: var(--color-brand-border); border-radius: 24px; }
-.providerMark[data-brand="kakao"] { background: var(--color-brand-kakao); color: var(--color-brand-ink); }
-.socialButton[data-brand="naver"], .providerMark[data-brand="naver"] { background: var(--color-brand-naver); color: var(--color-brand-paper); }
-.socialButton[data-brand="discord"], .providerMark[data-brand="discord"] { background: var(--color-brand-discord); color: var(--color-brand-paper); }
+.socialButton:not(:disabled):hover { box-shadow: 0 1px 4px var(--color-shadow-soft); }
+.socialButton[data-brand="kakao"] { background: var(--color-social-surface); color: var(--color-kakao-text); border-color: var(--color-kakao-border); border-radius: 24px; }
+.providerMark[data-brand="kakao"] { background: var(--color-kakao); color: var(--color-kakao-text); }
+.socialButton[data-brand="naver"], .providerMark[data-brand="naver"] { background: var(--color-naver); color: var(--color-social-surface); }
+.socialButton[data-brand="discord"], .providerMark[data-brand="discord"] { background: var(--color-discord); color: var(--color-social-surface); }
 .providerIcon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: 0 0 20px; overflow: hidden; }
 .providerIcon svg, .providerIcon img { width: 20px; height: 20px; object-fit: contain; }
 /* Official Naver icon includes its clearspace: show the original centre at 1:1, not a smaller N. */
 .providerIcon[data-provider-icon="naver"] img { position: absolute; width: 48px; height: 48px; max-width: none; }
 .providerIdentity { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 650; }
-.providerMark { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 8px; background: var(--color-brand-paper); }
+.providerMark { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 8px; background: var(--color-social-surface); }
 /* `[2026-10-05]` A row that is a brand's own button (Google's): no frame of ours around it. */
 .providers li.brandRow { display: block; padding: 0; border: 0; background: none; }
 .linkedTag { font-size: 11px; font-weight: 650; color: var(--color-primary); }
