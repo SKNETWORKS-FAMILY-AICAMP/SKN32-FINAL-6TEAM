@@ -146,6 +146,10 @@ CONTRACT_V1_PATHS = {
     "/v1/web/agent-keys",
     "/v1/web/consents",
     "/v1/web/agent-keys/{key_id}",
+    # 개인 AI 연결 관리는 회원 쿠키로만, 폐기는 Origin·CSRF와 본인 소유를 검사한다.
+    # 계약: wiki/external/personal-ai-oauth.md 「연결 관리 REST 경계」.
+    "/v1/web/agent-connections",
+    "/v1/web/agent-connections/{connection_id}",
     # ★2026-10-04 이동 경로선(이동 세션 255a873f) — 화면이 이동 항목의 경로선을 그린다(읽기, 사용자 키/쿠키). 계약 `wiki/records/reports/2026-10-04_0400_이동_파이썬_길찾기_서버없이_리포트.md`
     "/v1/web/trips/{trip_id}/route-shapes",
     # ★2026-10-04 접수 확인 화면용 경로선(ui 세션 요청) — 등록 전 지도에 그린다(읽기, 사용자 키/쿠키, 저장된 검사만)

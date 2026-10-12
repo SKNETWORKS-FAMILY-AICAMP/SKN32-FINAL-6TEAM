@@ -40,8 +40,10 @@ def member(request, *, optional=False):
 def build_personal_ai_router(provider_factory=configured_provider):
     router = APIRouter()
 
-    async def require_member(request: Request):
-        return await asyncio.to_thread(member, request)
+    async def require_member(who=Depends(web_cookie.require_identity)):
+        if who.via != "cookie" or who.session is None or who.session.kind != "member":
+            raise HTTPException(403, {"error": {"code": "member_cookie_required", "message": "브라우저에서 로그인해 주세요."}})
+        return who
 
     def provider():
         return provider_factory()

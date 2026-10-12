@@ -305,6 +305,33 @@ def test_sdk_revoke_refresh_disables_access(env):
     assert env.p.resolve(first["access_token"]) is None
 
 
+@pytest.mark.parametrize("method", ["GET", "DELETE"])
+@pytest.mark.parametrize("credential,expected", [("missing", 401), ("guest", 403), ("key", 403)])
+def test_connection_management_requires_member_cookie(env, monkeypatch, method, credential, expected):
+    first = tokens(env)
+    grant = env.p.connections(env.customer)[0]["connection_id"]
+    monkeypatch.setattr(web_cookie, "resolve_key", lambda *a, **k: env.customer if k.get("raw") == "legacy-user-key" else None)
+    headers = {"Origin": BASE, "X-CSRF-Token": web_cookie.csrf_token(digest("guest"))}
+    if credential == "guest":
+        headers["Cookie"] = f"{web_cookie.cookie_name()}=guest"
+    elif credential == "key":
+        headers["X-User-Key"] = "legacy-user-key"
+    path = "/v1/web/agent-connections" + ("/" + grant if method == "DELETE" else "")
+    assert env.client.request(method, path, headers=headers).status_code == expected
+    assert env.p.resolve(first["access_token"]) is not None
+
+
+@pytest.mark.parametrize("origin,csrf", [(BASE, ""), (BASE, "wrong"), ("https://other.example.test", "valid")])
+def test_rest_disconnect_rejects_invalid_origin_or_csrf(env, origin, csrf):
+    first = tokens(env)
+    grant = env.p.connections(env.customer)[0]["connection_id"]
+    headers = {"Cookie": f"{web_cookie.cookie_name()}=member", "Origin": origin}
+    if csrf:
+        headers["X-CSRF-Token"] = web_cookie.csrf_token(digest("member")) if csrf == "valid" else csrf
+    assert env.client.delete("/v1/web/agent-connections/" + grant, headers=headers).status_code == 403
+    assert env.p.resolve(first["access_token"]) is not None
+
+
 def test_browser_disconnect_confirmation_names_own_client_and_requires_csrf(env):
     first = tokens(env)
     grant = env.p.connections(env.customer)[0]['connection_id']
