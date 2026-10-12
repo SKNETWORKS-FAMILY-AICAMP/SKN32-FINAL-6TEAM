@@ -38,6 +38,7 @@ from .judge import requests as judge_requests
 from .judge.llm import LLMJudge
 from .judge.modes import ShadowJudge, kind_mode
 from .judge.types import LIVE_STATUS, JudgeContext, JudgeRequest, Verdict
+from .notices import HOURS_AUTO_READ, with_notice
 from .replacement import ReplacementMixin
 from .similarity import distance_first, preference_of, score
 
@@ -734,14 +735,17 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         closed, fit = verdict["closed"], verdict["within_hours"]
         record: dict[str, Any] = {"known": verdict["known"], "source": verdict["source"],
                                   "closed": closed, "closure_reason": verdict["closure_reason"],
-                                  "restdate_text": restdate, "usetime_text": verdict["usetime_text"]}
+                                  "restdate_text": restdate, "usetime_text": verdict["usetime_text"],
+                                  "auto_read": verdict["auto_read"]}
+        # ★`[2026-10-12]` D-CS-015 개정 2 — 모델이 읽은 요일표로 판정했으면 안내를 붙인다(`notices`)
+        auto = HOURS_AUTO_READ if verdict["auto_read"] else None
         if closed:
             quote = verdict["quote"]
             record["failure_code"] = self._record_failure(task, fc.CLOSED_WEEKDAY)
             told = f"휴무 안내({restdate}) 중 「{quote}」에 해당해" if quote and restdate else "정기휴무일이라"
             return (self._closed_place_change(
                 task, booking, place, seen, evidence, reason=f"휴무 — {quote or '정기휴무일'}",
-                answer=f"이 날은 {told} 이 일정은 바꿔야 합니다. 변경 제안을 만들었고 승인 뒤에 진행됩니다.",
+                answer=with_notice(f"이 날은 {told} 이 일정은 바꿔야 합니다. 변경 제안을 만들었고 승인 뒤에 진행됩니다.", auto),
                 decisions={"feasible": False, "reason": "closed_weekday", "hours": record}),
                 evidence, None, record)
         record["within_hours"] = fit
@@ -749,13 +753,15 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             record["failure_code"] = self._record_failure(task, fc.OUTSIDE_HOURS)
             return (self._closed_place_change(
                 task, booking, place, seen, evidence, reason="운영시간 밖",
-                answer=("예약 시각이 운영시간 밖이라 이 일정은 바꿔야 합니다. "
-                        "변경 제안을 만들었고 승인 뒤에 진행됩니다."),
+                answer=with_notice("예약 시각이 운영시간 밖이라 이 일정은 바꿔야 합니다. "
+                                   "변경 제안을 만들었고 승인 뒤에 진행됩니다.", auto),
                 decisions={"feasible": False, "reason": "outside_hours", "hours": record}),
                 evidence, None, record)
         note = None if fit is True else "운영시간 · 휴무를 확인하지 못해 그 부분은 판정하지 않았습니다."
         if verdict["needs_caveat"] and fit is True:
             note = "공휴일과 겹치는 경우 등 휴무 예외가 있을 수 있습니다."
+        if fit is True:
+            note = with_notice(note, auto)
         return None, evidence, note, record
 
     def _closed_place_change(self, task: TeamTask, booking: dict, place: dict, seen: set[str], evidence: list, *,

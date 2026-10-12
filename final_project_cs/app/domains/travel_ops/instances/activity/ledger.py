@@ -53,6 +53,7 @@ def hours_from_row(row: dict[str, Any]) -> dict[str, Any]:
         week = ruled.week if ruled is not None else {}
     why = None if week else ("원문이 비어 있다" if not (usetime or restdate) else "펴지 못한 운영시간 원문")
     return {"known": bool(week), "attributes": {"hours_week": week} if week else {}, "source": SOURCE,
+            "hours_read": row.get("hours_read") if row.get("hours_week") else None,     # 모델이 읽었나(notices) — 저장된 표를 쓸 때만
             "why_unknown": why, "usetime_text": usetime, "restdate_text": restdate}
 
 

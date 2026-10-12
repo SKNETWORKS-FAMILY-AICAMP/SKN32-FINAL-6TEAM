@@ -21,6 +21,7 @@ from app.domains.travel_ops.components.places.place_hours import DayHours, fits,
 
 from .closure_rules import holiday_dates_needed, local_date, read_closure
 from .disaster_impact import ImpactRules, assess
+from .notices import hours_read_by_model
 
 #: 공휴일 사실 — 날짜 → `read.holiday` 와 같은 모양(`{"is_holiday": bool, "holiday_name": str | None}`) · None(모름)
 HolidayLookup = Callable[[date], "dict[str, Any] | None"]
@@ -92,7 +93,10 @@ def hours_verdict(hours: dict[str, Any] | None, at: datetime, *, until: datetime
     within = _within(attributes, at, until) if measurable else None
     cut = _cut_short(attributes, day, at, until) if measurable else {"cut_short": None, "closes_at": None,
                                                                      "usable_minutes": None}
-    return {**base, "empty": False, "closed": closed, "within_hours": within, **cut,
+    # ★`[2026-10-12]` D-CS-015 개정 2 — 모델이 읽은 요일표로 판정했으면 고객 답에 안내를 붙인다(`notices.HOURS_AUTO_READ`).
+    #   휴무를 원문 규칙(`closure`)이 정했으면 요일표를 안 쓴 것이라 붙이지 않는다.
+    auto_read = hours_read_by_model(hours) and day is not None and not (closure is not None and closure.value is not None)
+    return {**base, "empty": False, "closed": closed, "within_hours": within, **cut, "auto_read": auto_read,
             "closure_reason": closure.reason if closure else None,
             "quote": closure.quote if closure is not None and closure.value else None,
             "needs_caveat": bool(closure is not None and closure.needs_caveat)}
