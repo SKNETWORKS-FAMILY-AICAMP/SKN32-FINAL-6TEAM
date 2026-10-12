@@ -113,9 +113,18 @@ export function edgeChips(view: MapView, points: readonly MapPoint[], area: Edge
     if (!area.obstacles && area.rightKeep && y < top + 140) x = Math.min(x, view.width - area.rightKeep - CHIP_INSET_X);
     return [{ id: point.id, label: point.label ?? String(point.order), x, y, angle: (Math.atan2(dy, dx) * 180) / Math.PI, distance: distanceM(middle, point.coordinates), order: point.order }];
   }).sort((a, b) => a.order - b.order);
+  // 현재 지도에서 향하는 가장자리가 같은 이전 일정만 기존 스택으로 묶는다.
+  // 새로 등장하는 일정은 카메라 도착 전에도 이전 스택과 분리한다.
+  const directionOf = (angle: number) => {
+    const dx = Math.cos(rad(angle)), dy = Math.sin(rad(angle));
+    return Math.abs(dx) * Math.max(1, rect.bottom - rect.top - CHIP_INSET_Y * 2) >= Math.abs(dy) * Math.max(1, view.width - CHIP_INSET_X * 2)
+      ? dx < 0 ? "left" : "right" : dy < 0 ? "top" : "bottom";
+  };
   const groups: EdgeChip[] = [];
   for (const entry of found) {
-    const near = revealing ? undefined : groups.find((group) => Math.hypot(group.x - entry.x, group.y - entry.y) < GROUP_PX);
+    const near = groups.find(group => revealing
+      ? entry.id !== focusId && !group.ids.includes(focusId!) && directionOf(group.angle) === directionOf(entry.angle)
+      : Math.hypot(group.x - entry.x, group.y - entry.y) < GROUP_PX);
     if (near) { near.ids.push(entry.id); near.labels.push(entry.label); near.distanceM = Math.min(near.distanceM, entry.distance); }
     else groups.push({ ids: [entry.id], labels: [entry.label], x: entry.x, y: entry.y, angle: entry.angle, distanceM: entry.distance });
   }

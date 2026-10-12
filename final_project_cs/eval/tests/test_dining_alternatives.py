@@ -85,3 +85,21 @@ def test_holdout_shape_and_accepted_places_keep_the_route():
         _, items, places = da.build(case)
         for key in case["expect"].get("accept", []):
             assert not da.route_check(case, items, places, key, _visit(case, items, places, key))["violation"], case["id"]
+
+
+STYLE_DEV = da.ROOT / "eval" / "datasets" / "dining_alternatives_style_v1.jsonl"
+STYLE_HOLDOUT = da.ROOT / "eval" / "datasets" / "dining_alternatives_style_holdout_v1.jsonl"
+
+
+def test_style_sets_shape_and_accepted_places_keep_the_route():
+    """음식 결 세트 `[2026-10-12]` — 개발 4 · 확인용 4. 장소는 원장처럼 `category` · `style` 칸을 쓴다.
+    ★확인용 세트를 보며 계산 코드를 고치지 않는다(고치기 전 · 뒤 한 번씩만 쟀다)."""
+    dev, holdout = da.load_cases(STYLE_DEV), da.load_cases(STYLE_HOLDOUT)
+    assert len(dev) == 4 and len(holdout) == 4
+    ids = [c["id"] for c in dev + holdout]
+    assert len(set(ids)) == 8 and not set(ids) & {c["id"] for c in da.load_cases()}
+    for case in dev + holdout:
+        _, items, places = da.build(case)
+        assert places["O"]["attributes"].get("category"), case["id"]
+        for key in case["expect"].get("accept", []):
+            assert not da.route_check(case, items, places, key, _visit(case, items, places, key))["violation"], case["id"]

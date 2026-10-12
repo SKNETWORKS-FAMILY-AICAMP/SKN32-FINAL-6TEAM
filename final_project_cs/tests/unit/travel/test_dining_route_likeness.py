@@ -142,3 +142,45 @@ def test_non_dining_candidates_keep_old_order():
     a = Candidate(key="b", place=None, changed_items=1, extra_cost_krw=100, shift_minutes=0)
     b = Candidate(key="a", place=None, changed_items=1, extra_cost_krw=200, shift_minutes=0)
     assert choose([b, a])[0].key == "b"                     # 비용이 먼저 — 새 칸은 모두 0
+
+
+# ── 음식 결 `[2026-10-12]` ──
+def styled(key, east_m, category, style=None):
+    place = shop(key, east_m, category=category)
+    if style:
+        place["attributes"]["style"] = style
+    return place
+
+
+def test_same_style_ranks_between_dish_and_kind():
+    grill = styled("노루정", 0, "한식", "고기구이")
+    assert ml.likeness(grill, styled("불향", 0, "한식", "고기구이")) == ml.STYLE
+    assert ml.likeness(grill, styled("소담", 0, "한식", "한상차림")) == ml.KIND
+    assert ml.likeness(grill, styled("마루", 0, "한식")) == ml.KIND                   # 후보 결을 모르면 큰 종류로
+    assert ml.DISH < ml.STYLE < ml.KIND < ml.UNKNOWN < ml.OTHER
+
+
+def test_same_style_but_known_different_kind_is_not_similar():
+    """라멘 · 냉면은 둘 다 면이지만 일식 · 한식이다 — 결은 나라를 말하지 않는다."""
+    ramen = styled("라멘집", 0, "일식", "면")
+    assert ml.likeness(ramen, styled("냉면집아님", 0, "한식", "면")) == ml.OTHER
+    assert ml.likeness(styled("무명", 0, "미상", "면"), styled("어느집", 0, "한식", "면")) == ml.STYLE   # 종류를 모르면 결로
+
+
+def test_original_profile_is_read_from_the_listed_place():
+    """일정 항목의 장소에는 종류가 없어도 후보 목록의 같은 장소(요식 팀이 원장 값으로 맞춤)에서 읽는다."""
+    bare = shop("O", 0)                                         # 생성기가 만든 장소 — 종류 없음
+    listed = styled("O", 0, "한식", "고기구이")
+    near, far = styled("A", 150, "한식", "한상차림"), styled("B", -350, "한식", "고기구이")
+    route = MealRoute(planned_end=NOON + timedelta(hours=1))
+    by_key = {c.key: c for c in _cands(bare, [listed, near, far], route)}
+    assert by_key["B"].likeness == ml.STYLE and by_key["A"].likeness == ml.KIND
+    assert choose([by_key["A"], by_key["B"]])[0].key == "B"
+
+
+def test_stale_style_on_the_item_is_dropped_when_the_list_has_none():
+    old = styled("O", 0, "한식", "면")
+    listed = shop("O", 0, category="한식")                        # 원장에서 결이 비었다
+    route = MealRoute(planned_end=NOON + timedelta(hours=1))
+    cand = _cands(old, [listed, styled("A", 100, "한식", "면")], route)[0]
+    assert cand.likeness == ml.KIND

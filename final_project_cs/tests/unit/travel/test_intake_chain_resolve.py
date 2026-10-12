@@ -56,6 +56,25 @@ def test_branch_name_is_located_anywhere_and_beats_the_neighbour():
     assert station["anywhere"] is True                                   # 지점명 위치는 앞 일정 근처가 아니라 서울 전역에서
 
 
+class RelevanceFirstKakao(FakeKakao):
+    """관련도 순 첫 결과에는 1km 안의 먼 지점만 있고, 더 가까운 지점은 근처(거리순) 찾기에만 나온다 — 통합 뒤 실측 모양."""
+
+    def search(self, query, size=5, near=None, radius=None, category_group_code=None, anywhere=False, **kw):
+        self.calls.append({"query": query, "near": near, "radius": radius, "group": category_group_code,
+                           "anywhere": anywhere})
+        if near is None:
+            return [hit("스타벅스 종로R점", 37.5713, 126.9790), hit("스타벅스 강남역신분당역사점", 37.4969, 127.0282)]
+        return [hit("스타벅스 적선점", 37.5767, 126.9737), hit("스타벅스 종로R점", 37.5713, 126.9790)]
+
+
+def test_a_branch_within_the_first_radius_still_gets_a_nearby_search():
+    """☆2026-10-08 — 관련도 순 결과의 종로R점(앞 일정에서 ~850m)이 1km 안이라 근처를 찾지 않고 골랐다. 가까운 적선점(~400m)을 놓쳤다."""
+    kakao = RelevanceFirstKakao()
+    found = _resolve("스타벅스", near=GYEONGBOK, kakao=kakao)
+    assert found.name == "스타벅스 적선점"
+    assert any(c["near"] is not None and c["radius"] == 1000 for c in kakao.calls)
+
+
 def test_romanized_chain_searches_by_relevance_first():
     kakao = FakeKakao()
     found = _resolve("Starbucks", near=GYEONGBOK, kakao=kakao)

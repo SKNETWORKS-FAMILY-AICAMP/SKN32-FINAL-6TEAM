@@ -26,6 +26,7 @@ import type { Language, Translate } from "@/lib/i18n";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast, type BusToast } from "@/lib/toast-bus";
 import type { Notice, Proposal } from "@/lib/live/extras";
+import { resolveNoticeTarget } from "./notice-target";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { ChatBar, ChatPane, useTripChat } from "./trip-chat";
 import { LegRow, legSummary, StopRow } from "./trip-rows";
@@ -383,16 +384,27 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   }
 
   /** A notice the server sent while the trip is open: one bar, the newest (a new bar replaces the one shown). */
-  const announce = useEffectEvent((notice: Notice) => showToast(noticeToast(notice, trip, proposals.data ?? [], t, () => openCenter("notices"))));
+  const announce = useEffectEvent((notice: Notice, targets: Proposal[]) => showToast(noticeToast(notice, trip, targets, t, () => openCenter("notices"))));
   const known = useRef<Set<string> | null>(null);
+  const newestNotice = useRef<string | null>(null);
+  const { data: targetProposals, refetch: refetchProposals } = proposals;
   useEffect(() => {
     if (!notices.data) return;
     const before = known.current;
+    if (!before) { known.current = new Set(notices.data.map((notice) => notice.key)); return; }
     known.current = new Set(notices.data.map((notice) => notice.key));
-    if (!before) return;                                                       // what was there when the screen opened is not news
     const fresh = notices.data.filter((notice) => !before.has(notice.key)).sort((a, b) => Date.parse(b.at) - Date.parse(a.at))[0];
-    if (fresh) announce(fresh);
-  }, [notices.data]);
+    if (!fresh) return;
+    newestNotice.current = fresh.key;
+    // 수신 즉시 중복을 기록한다. 선택 요청만 대상 제안을 기다리며 다른 종류 알림의 조회는 지연하지 않는다.
+    void resolveNoticeTarget(fresh, targetProposals ?? [], async () => {
+      const result = await refetchProposals({ cancelRefetch: false });
+      return result.data ?? [];
+    }).then((targets) => {
+      // 더 최신 알림이 먼저 표시됐다면 늦게 온 이전 조회가 그 알림을 덮지 않는다.
+      if (newestNotice.current === fresh.key) announce(fresh, targets);
+    });
+  }, [notices.data, targetProposals, refetchProposals]);
 
   // ── Keys: Esc closes what is on top. ──
   function onKey(event: KeyboardEvent<HTMLElement>) {

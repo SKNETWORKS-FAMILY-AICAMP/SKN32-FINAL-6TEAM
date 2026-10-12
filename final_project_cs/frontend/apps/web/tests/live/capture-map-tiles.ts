@@ -10,6 +10,12 @@ const tiles = new Map<string, Promise<Buffer>>();
 
 
 export async function useMapTiles(page: Page) {
+  // CI는 mock 서버의 타일로 화면 동작을 검사한다. 실제 지도 촬영만 명시적으로 외부 타일을 사용한다.
+  if (process.env.UI_MAP_CAPTURE_REAL !== "1") {
+    return async () => {
+      await expect(page.locator(".leaflet-tile-loaded").first()).toBeVisible();
+    };
+  }
   await mkdir(cache, { recursive: true });
   const pending = new Set<string>();
   const errors: string[] = [];

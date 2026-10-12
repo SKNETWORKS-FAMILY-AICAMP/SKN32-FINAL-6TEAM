@@ -341,20 +341,17 @@ test("주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 
   // And for the consent record (`consents: "on"`): an older server without it answers 404 and the browser logs that (the screen then keeps the browser's own copy).
   await server.scenario({ proposals: "open", bell: "on", routeShapes: "on", consents: "on", retention: "on" });
   const problems: string[] = [];
-  const failedResponses: string[] = [];
-  page.on("console", (message) => { if (message.type() === "error") problems.push(`console: ${message.text()} ${message.location().url}`); });
+  page.on("console", (message) => { if (message.type() === "error") problems.push(`console: ${message.text()}`); });
   page.on("pageerror", (error) => problems.push(`exception: ${error.message}`));
-  page.on("response", (response) => {
-    if (response.status() >= 400) failedResponses.push(`${response.status()} ${response.url()}`);
-    if (response.status() >= 400 && !response.url().includes("/v1/web/")) problems.push(`${response.status()} ${response.url()}`);
-  });
+  page.on("response", (response) => { if (response.status() >= 400) problems.push(`${response.status()} ${response.request().method()} ${response.url()}`); });
+  page.on("requestfailed", (request) => { if (request.failure()?.errorText !== "net::ERR_ABORTED") problems.push(`request failed: ${request.url()} ${request.failure()?.errorText}`); });
 
   for (const path of ["/", "/start", "/trips/new", `/trips/${TRIP_ID}`, `/trips/${TRIP_ID}/results`]) {
     // ★not "networkidle": the trip screen keeps the change bell open, so the network never goes idle there
     await page.goto(path, { waitUntil: "load" });
     await page.waitForTimeout(1_500);
   }
-  expect(problems, `실패 응답: ${JSON.stringify(failedResponses)}`).toEqual([]);
+  expect(problems).toEqual([]);
 });
 
 test("여행 화면을 열면 채팅 모델 예열을 서버에 한 번 청하고(사용자 키로), 키가 없는 첫 화면에서는 청하지 않는다", async ({ page, request }) => {
@@ -396,6 +393,7 @@ test("신호 연결이 끊겼다 다시 붙으면 그 사이 바뀐 것을 전�
   // changed while the line is down — no bell reaches the screen for this one
   await server.scenario({ proposals: "open" });
   expect(await server.hangup()).toBeGreaterThan(0);
+  await expect.poll(async () => (await server.received("GET", "/events")).length).toBeGreaterThan(1);
   await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toContainText("대체 식당 A", { timeout: 10_000 });
   expect((await server.received("GET", "/events")).length).toBeGreaterThan(1);
 });

@@ -24,6 +24,7 @@ import { PreviewHint, ResultFooter, StopEditor, TripIssues, type Registration } 
 import { dampedScrollTo } from "@/lib/damped-scroll";
 import type { MoveOptions, MoveOptionMode } from "@/lib/live/move-options";
 import { moveToast } from "./map-description";
+import { usePlanIntroToast, useReadingToastHandoff } from "./use-plan-intro-toast";
 import { useFollowScroll } from "./use-follow-scroll";
 import { readListZoom, writeListZoom } from "./list-zoom";
 import { useTimeInset } from "./use-time-inset";
@@ -170,12 +171,13 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, readingExt
   const onReading = view.stage === "received" || view.stage === "reading" || Boolean(readingExtras);
   // The reading screen owns one notice; the header hands notices to this owner.
   useEffect(() => onReading ? onToast(showNotice) : undefined, [onReading, showNotice]);
-  const notified = useRef<string | null>(null);
+  // 읽기 판이 결과 판으로 바뀌어도 바로 누른 머리줄 안내와 되돌리기 동작을 새 소유자에게 넘긴다.
+  useReadingToastHandoff(onReading, shownNotice, hideNotice);
+  const notified = useRef(new Set<string>());
   const noticeKey = notice ? JSON.stringify([notice.text, notice.sub, notice.note]) : null;
   useEffect(() => {
-    if (!notice || !noticeKey) { notified.current = null; return; }
-    if (notified.current === noticeKey) return;
-    notified.current = noticeKey;
+    if (!notice || !noticeKey || notified.current.has(noticeKey)) return;
+    notified.current.add(noticeKey);
     if (onReading) showNotice(notice);
     else pushToast(notice);
   }, [notice, noticeKey, onReading, showNotice]);
@@ -393,12 +395,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       action: value.undo || value.revert ? { label: value.undoLabel ?? latest.current?.t("되돌리기", "Undo") ?? "", run: value.revert ?? (() => latest.current?.undo()) } : undefined,
     });
   }, [hideToast, showToast]);
-  const introduced = useRef(false);
-  useEffect(() => {
-    if (!done || introduced.current) return;
-    introduced.current = true;
-    setToast({ text: t("계획 확인 화면이에요", "Check your plan"), sub: t("일정을 수정하거나 권장 수정안을 확인해 주세요.", "Edit stops or view the proposed plan."), ms: 3_500 });
-  }, [done, setToast, t]);
+  usePlanIntroToast(done, showToast, t);
   const [working, setWorking] = useState(false);
   const changingNow = useRef(false);
   const [changeToolsOpen, setChangeToolsOpen] = useState(false);
@@ -411,6 +408,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const [collapsed, setCollapsed] = useState(false);
   const [mapTight, setMapTight] = useState(false);
   const checkingBox = useRef<HTMLDivElement>(null);
+  const resetFocusPending = useRef(false);
   const sheetBox = useRef<HTMLElement>(null);
   const bodyBox = useRef<HTMLDivElement>(null);
   useEffect(() => { if (!selected) bodyBox.current?.style.removeProperty("--focus-room"); }, [selected]);
@@ -466,7 +464,6 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const stripBox = useRef<HTMLDivElement>(null);
   const markerBox = useRef<HTMLSpanElement>(null);
   // `[2026-10-06 사용자 지시]` What the customer did elsewhere on this screen (the Course Keeper turned on or off in the header) is told in THIS bar, like every other notice here.
-  useEffect(() => onToast(showToast), [showToast]);
   // The preview is gone from the page (the plan changed some other way): the list is the plan as it is.
   const hadPreview = useRef(false);
   useEffect(() => {
@@ -816,8 +813,9 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       return first && start !== null ? [{ id, start, end: parseHm(first.end) }] : [];
     });
     if (!changes.length) { setToast({ text: t("고정·예약 일정은 그대로 유지했어요", "Locked or booked stops were kept") }); return; }
+    resetFocusPending.current = true;
     void sendTimes(list, changes, t("시간을 모두 처음으로 되돌렸어요", "Put every time back"), true)
-      .catch((error: unknown) => setToast({ text: reason(error), stay: true }))
+      .catch((error: unknown) => { resetFocusPending.current = false; setToast({ text: reason(error), stay: true }); })
       .finally(() => requestAnimationFrame(() => {
         if (document.activeElement !== document.body && !document.activeElement?.classList.contains(styles.changeCount)) return;
         const box = checkingBox.current;
@@ -1290,6 +1288,14 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const heading = (day: PlanDay) => dayHeading(day, language, t);
   const nextDay = typeof listDay === "number" && dayAt >= 0 && dayAt < days.length - 1 && !changing ? days[dayAt + 1] : null;
   const adjustedNow = adjustedIn(previewing && side === "after" ? previewView : sourceView).size;
+  // 요청 완료 직후의 rAF는 아직 사라지기 전 변경 버튼을 볼 수 있다. 새 DOM 반영 뒤 초점을 다시 확인한다.
+  useLayoutEffect(() => {
+    if (!resetFocusPending.current || adjustedNow !== 0) return;
+    resetFocusPending.current = false;
+    if (document.activeElement !== document.body && !document.activeElement?.classList.contains(styles.changeCount)) return;
+    (checkingBox.current?.querySelector<HTMLButtonElement>(`button.${styles.mapNeeds}`)
+      ?? checkingBox.current?.querySelector<HTMLButtonElement>(`button.${styles.handle}`))?.focus();
+  }, [adjustedNow]);
   const sheetTitle = registered ? t("등록 완료", "Registered") : !done ? t("장소·운영시간 확인", "Places & hours") : previewing && side === "after" ? t("수정안", "Proposed plan") : t("계획 확인", "Plan check");
   const rechecking = view.rechecking ? (() => {
     const order = view.days.flatMap((day) => view.items.filter((item) => item.day === day.day).map((item) => item.id));

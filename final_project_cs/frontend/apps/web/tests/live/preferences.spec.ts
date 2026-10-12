@@ -221,7 +221,8 @@ test("영어·키보드로 통합 카드를 쓰고, PC 기기 틀·375px·320px�
     await openSurvey(page);
     await skipTo(page, PRIORITY);
     for (const name of ["음식", "이동", "활동"] as const) await area(page, name).click();
-    for (const name of ["청결", "맛", "친절", "택시", "대중교통", "도보", "렌트카", "익스트림", "힐링", "DIY", "쇼핑"]) await detail(page, name).click();
+    // Every detail is picked — the check below reads each button's rank badge (미쉐린 · 노포 were added 2026-10-07).
+    for (const name of ["청결", "맛", "친절", "미쉐린", "노포", "택시", "대중교통", "도보", "렌트카", "익스트림", "힐링", "DIY", "쇼핑"]) await detail(page, name).click();
     await noHorizontalScroll(page);
     const clear = await page.locator("[id^=details-] button").evaluateAll((buttons) => buttons.every((button) => {
       const badge = button.querySelector("span[aria-hidden=true]")!.getBoundingClientRect();
