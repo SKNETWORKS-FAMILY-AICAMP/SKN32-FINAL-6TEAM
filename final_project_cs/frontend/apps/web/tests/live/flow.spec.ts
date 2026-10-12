@@ -51,7 +51,7 @@ test("첫 방문: 계획을 올리면 게스트 세션이 만들어지고(쿠키
   await expect(page.getByText("발급된 토큰")).toHaveCount(0);
 });
 
-test("서버가 읽는 동안 새 계획 확인 화면이 서버의 원문 줄을 읽는 중으로 보이고, 읽기가 끝나면 확인 화면으로 넘어간다", async ({ page, request }) => {
+test("서버가 읽는 동안 새 계획 확인 화면이 읽는 중(막대 · 찾은 일정)으로 보이고, 읽기가 끝나면 확인 화면으로 넘어간다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ readingPolls: 3 });
   await start(page);
@@ -63,8 +63,9 @@ test("서버가 읽는 동안 새 계획 확인 화면이 서버의 원문 줄�
   // Reading: the server's own line, not yet read; the bar and the back arrow of the new screen.
   await expect(page.getByRole("heading", { name: "계획을 확인하고 있어요", level: 1 })).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "계획 확인 진행" })).toBeVisible();
-  const line = page.getByRole("listitem").filter({ hasText: "10/1 09:00 경복궁 관람" });
-  await expect(line).toContainText("읽는 중");
+  // `[2026-10-07 사용자 지시]` 줄별 목록(「올린 계획」)은 없다 — 막대와 「찾은 일정 n개」만 있다
+  await expect(page.getByText("찾은 일정")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "10/1 09:00 경복궁 관람" })).toHaveCount(0);
 
   // Reading ends: the screen draws the line as read, holds a moment, then the review takes over. (What a read line
   // shows is held by the unit test of `readingOf`; the moment itself is too short to assert here.)
@@ -182,14 +183,17 @@ test("글에서 일정을 한 줄도 못 읽으면 옛 확인 화면 대신 짧�
   await page.getByLabel("나의 여행 계획").fill("서울 이틀 조용한 곳으로 짜 주세요");
   await checkPlan(page);
 
-  await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
-  await expect(page.getByRole("heading", { name: "이 글에서는 일정을 찾지 못했어요" })).toBeVisible();
-  await expect(page.getByText("글에서 일정을 짜 달라는 요청은 읽었어요", { exact: false })).toBeVisible();
-  await expect(page.getByRole("link", { name: "등록 화면으로" })).toHaveAttribute("href", "/trips/new");
+  await expect(page).toHaveURL(/\/trips\/new$/);
+  await expect(page.locator("#plan-error")).toHaveText("일정을 찾지 못했어요. 날짜·시간·장소를 확인해 다시 입력하거나 파일을 올려 주세요.");
+  await expect(page.getByLabel("나의 여행 계획")).toHaveValue("서울 이틀 조용한 곳으로 짜 주세요");
+  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(1);
   // 옛 화면의 「대신 짜 드릴까요?」 칸과 그 입력들은 없다 — 일정 짜기는 등록 화면의 세 번째 칸이 한다
   await expect(page.getByRole("heading", { name: /일정을 짜 달라고 하셨어요|대신 짜 드릴까요/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /이 조건으로 짜서 등록/ })).toHaveCount(0);
-  await expect(page.getByLabel("첫날")).toHaveCount(0);
+  // 새 등록 화면의 정식 계획 짜기 필드는 유지되며, 빈 읽기 결과가 그 칸을 자동 선택하지 않는다.
+  await expect(page.locator('[data-pane="plan"]').getByLabel("첫날", { exact: true })).toHaveCount(1);
+  await expect(page.locator('[data-pane="text"]')).toHaveAttribute("aria-current", "true");
+  await expect(page.locator('[data-pane="plan"]')).not.toHaveAttribute("aria-current", "true");
   expect(await server.received("POST", "/plan")).toHaveLength(0);
 });
 
@@ -315,7 +319,8 @@ test("읽은 접수를 열면 새 결과 화면이 서버가 찾은 장소와 �
   await start(page);
   await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
   await expect(page.getByRole("heading", { name: "내 여행", level: 1 })).toBeVisible();            // the server's trip title
-  await expect(page.locator("span[class*=headBadge][data-kind=ok]")).toBeVisible();              // 머리에는 ✓ 하나(고칠 곳이 없다)
+  await expect(needsBadge(page)).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /전체 자동 추천/ })).toHaveAttribute("aria-disabled", "true");              // 머리에는 ✓ 하나(고칠 곳이 없다)
   const card = page.getByRole("article", { name: "경복궁 관람" });
   await expect(card).not.toContainText("확인 필요");                                                // 괜찮은 일정에는 아무 말도 붙지 않는다
   const head = card.getByRole("heading").getByRole("button");
@@ -376,10 +381,11 @@ test("결과 화면의 「직접 고치기」: 서버가 장소를 못 찾으면
   await page.getByRole("button", { name: "경복궁 관람 수정" }).click();
   await page.getByText("직접 고치기 · 이름·날짜·시각·장소 없음").click();
   const editor = page.getByRole("form", { name: "「경복궁 관람」 고치기" });
-  await editor.getByRole("searchbox", { name: "장소 이름" }).fill("없는 곳");
+  await editor.getByLabel("일정 이름", { exact: true }).fill("경복궁 오전 관람");
   await editor.getByRole("button", { name: "저장" }).click();
   await expect(editor.getByRole("alert")).toHaveText("「없는 곳」: 이 이름으로 장소를 찾지 못했어요");
-  await expect(editor.getByRole("searchbox", { name: "장소 이름" })).toHaveValue("없는 곳");
+  await expect(editor.getByLabel("일정 이름", { exact: true })).toHaveValue("경복궁 오전 관람");
+  await expect(editor.getByRole("searchbox")).toHaveCount(0);
   // Leaving sends nothing more and comes back to the card's edit button.
   await editor.getByRole("button", { name: "취소" }).click();
   await page.getByRole("button", { name: "바꾸기 그만두기" }).click();
@@ -408,15 +414,15 @@ test("결과 화면: 서버에 아직 없는 잠금·자동 추천·전체 자�
   await start(page);
   await page.goto(INTAKE);
   const say = (text: string) => page.getByRole("status").filter({ hasText: text });
+  await page.getByRole("article", { name: "경복궁 관람" }).getByRole("heading").getByRole("button").click();
   const lock = page.getByRole("button", { name: "경복궁 관람 꼭 넣을 일정으로 고정" });
   await expect(lock).toHaveAttribute("aria-disabled", "true");
   await lock.click({ force: true });
   await expect(say("잠금은 준비 중이에요")).toBeVisible();
-  await page.getByRole("article", { name: "경복궁 관람" }).getByRole("heading").getByRole("button").click();
-  await page.getByRole("button", { name: "자동 추천", exact: true }).click({ force: true });
+  await page.getByRole("button", { name: "경복궁 관람 자동 추천", exact: true }).click({ force: true });
   await expect(say("자동 추천은 준비 중이에요")).toBeVisible();
   const all = page.getByRole("button", { name: /전체 자동 추천/ });
-  await expect(all).toContainText("준비 중");
+  await expect(all).toHaveAttribute("aria-disabled", "true");
   await all.click({ force: true });
   await expect(say("전체 자동 추천은 준비 중이에요")).toBeVisible();
 });

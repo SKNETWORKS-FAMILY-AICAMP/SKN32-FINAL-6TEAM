@@ -61,6 +61,8 @@ def straight_km(a: dict[str, Any], b: dict[str, Any]) -> float:
 
 def mode_of(option: dict[str, Any]) -> tuple[str, str]:
     """계산기가 고른 경로 후보 → (수단 코드, 화면 말). 타는 노선(`uses` — 「5호선:광화문」 · 「버스:103」)에서 읽는다."""
+    if str(option.get("id")) == "taxi":
+        return "taxi", "택시"                          # ☆`[2026-10-07]` 택시는 uses 가 비어 도보로 읽히던 것
     if str(option.get("id")) == "walk" or not option.get("uses"):
         return "walk", "도보"
     lines: list[str] = []

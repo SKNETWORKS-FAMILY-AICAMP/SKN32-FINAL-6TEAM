@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { agree, mockServer, paneTab, registerStubTrip, useKorean } from "./helpers";
+import { agree, mockServer, paneTab, registerStubTrip, start, TRIP_ID, useKorean } from "./helpers";
 
 test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); await agree(page); });
 
-test("메뉴는 프로필·여행 목록·여행 취향 설문·언어·테마·애니메이션·데스크탑 스위치 순서이고, Tab 순환과 Esc(언어 목록 먼저, 메뉴 다음)·포커스 복귀를 지키며, 링크는 메뉴를 닫는다", async ({ page, request }) => {
-  // The seven base rows (profile · trips · survey · language · theme · skip-animation switch · desktop-layout switch; the survey row and the desktop switch `[2026-10-06]`; the floating switch is gone `[2026-10-07]`):
-  // with a social sign-in provider set up the menu has an eighth (「계정 연결 · 로그인」, covered by social-login.spec).
+test("메뉴는 프로필·여행 목록·여행 취향 설문·언어·테마·애니메이션 순서이고, Tab 순환과 Esc(언어 목록 먼저, 메뉴 다음)·포커스 복귀를 지키며, 링크는 메뉴를 닫는다", async ({ page, request }) => {
+  // The six base rows: profile, trips, survey, language, theme, skip-animation. Both old layout switches are removed.
+  // with a social sign-in provider set up the menu has a seventh (「계정 연결 · 로그인」, covered by social-login.spec).
   await mockServer(request).scenario({ social: "off" });
   await page.goto("/trips/new");
   const open = page.getByRole("button", { name: "메뉴", exact: true });
@@ -18,25 +18,24 @@ test("메뉴는 프로필·여행 목록·여행 취향 설문·언어·테마·
   const green = menu.getByRole("button", { name: "그린", exact: true });
   const white = menu.getByRole("button", { name: "화이트", exact: true });
   const skip = menu.getByRole("switch", { name: "애니메이션 건너뛰기" });
-  const desktop = menu.getByRole("switch", { name: "데스크탑 화면으로 보기" });
   const close = menu.getByRole("button", { name: "메뉴 닫기" });
-  const tops = await Promise.all([profile, trips, survey, language, green, skip, desktop].map(async (item) => (await item.boundingBox())!.y));
+  const tops = await Promise.all([profile, trips, survey, language, green, skip].map(async (item) => (await item.boundingBox())!.y));
   expect([...tops].sort((a, b) => a - b)).toEqual(tops);
-  // One board holds exactly these seven rows; the language row is the home card's picker with its caption.
+  // One board holds exactly these six rows; the language row is the home card's picker with its caption.
   expect(await profile.evaluate((link) => {
     const board = link.parentElement!;
-    return board.children.length === 7 && Boolean(board.querySelector('a[href="/trips"]')) && Boolean(board.querySelector('[role="switch"]')) && board.textContent!.includes("LANGUAGE · 언어") && board.textContent!.includes("THEME · 테마");
+    return board.children.length === 6 && Boolean(board.querySelector('a[href="/trips"]')) && Boolean(board.querySelector('[role="switch"]')) && board.textContent!.includes("LANGUAGE · 언어") && board.textContent!.includes("THEME · 테마");
   })).toBe(true);
 
   await expect(profile).toBeFocused();
-  for (const next of [trips, survey, language, green, white, skip, desktop, close, profile]) {
+  for (const next of [trips, survey, language, green, white, skip, close, profile]) {
     await page.keyboard.press("Tab");
     await expect(next).toBeFocused();
   }
   await page.keyboard.press("Shift+Tab");
   await expect(close).toBeFocused();
   await page.keyboard.press("Shift+Tab");
-  await expect(desktop).toBeFocused();
+  await expect(skip).toBeFocused();
 
   // The language card opens with Enter, its options join the cycle, and Escape closes the list before the menu.
   await language.focus();
@@ -171,3 +170,32 @@ test("「애니메이션 건너뛰기」 스위치는 기본 꺼짐이고, 켜�
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem("tripilot.web.settings.v1") ?? "{}").skipAnimation)).toBe(false);
 });
 
+
+
+test("등록 여행 메뉴의 모든 항목에 Tab으로 닿고 항로 지킴이와 닫기 뒤 처음으로 돌아온다", async ({ page, request }) => {
+  await mockServer(request).scenario({ social: "off", guardian: "on" });
+  await start(page);
+  await page.goto(`/trips/${TRIP_ID}`);
+  await expect(page.getByRole("button", { name: "채팅 입력 열기" })).toBeVisible();
+  const open = page.getByRole("button", { name: "메뉴", exact: true });
+  await open.click();
+  const menu = page.getByRole("dialog", { name: "메뉴" });
+  const first = menu.getByRole("link", { name: /마이페이지/ });
+  const keeper = menu.getByRole("button", { name: "항로 지킴이 끄기" });
+  await expect(first).toBeFocused();
+  await expect(menu.getByRole("switch", { name: "플로팅 버튼 사용" })).toHaveCount(0);
+  await expect(menu.getByRole("switch", { name: "데스크탑 화면으로 보기" })).toHaveCount(0);
+  for (const next of [
+    menu.getByRole("link", { name: "여행 목록 보기" }),
+    menu.getByRole("button", { name: "여행 취향 설문" }),
+    menu.getByRole("button", { name: /LANGUAGE/ }),
+    menu.getByRole("button", { name: "그린", exact: true }),
+    menu.getByRole("button", { name: "화이트", exact: true }),
+    menu.getByRole("switch", { name: "애니메이션 건너뛰기" }), keeper,
+    menu.getByRole("button", { name: "메뉴 닫기" }), first,
+  ]) { await page.keyboard.press("Tab"); await expect(next).toBeFocused(); }
+  await page.keyboard.press("Shift+Tab");
+  await expect(menu.getByRole("button", { name: "메뉴 닫기" })).toBeFocused();
+  await page.keyboard.press("Shift+Tab"); await expect(keeper).toBeFocused();
+  await page.keyboard.press("Escape"); await expect(open).toBeFocused();
+});

@@ -319,11 +319,12 @@ test("주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 
   // which the browser logs by itself — that one is expected there (the screen falls back to re-reading every 30 s).
   // The same for the route lines (`routeShapes: "on"`): a server without `route-shapes` answers 404 and the browser logs it — the screen then draws pins only.
   // And for the consent record (`consents: "on"`): an older server without it answers 404 and the browser logs that (the screen then keeps the browser's own copy).
-  await server.scenario({ proposals: "open", bell: "on", routeShapes: "on", consents: "on" });
+  await server.scenario({ proposals: "open", bell: "on", routeShapes: "on", consents: "on", retention: "on" });
   const problems: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") problems.push(`console: ${message.text()}`); });
   page.on("pageerror", (error) => problems.push(`exception: ${error.message}`));
-  page.on("response", (response) => { if (response.status() >= 400 && !response.url().includes("/v1/web/")) problems.push(`${response.status()} ${response.url()}`); });
+  page.on("response", (response) => { if (response.status() >= 400) problems.push(`${response.status()} ${response.request().method()} ${response.url()}`); });
+  page.on("requestfailed", (request) => { if (request.failure()?.errorText !== "net::ERR_ABORTED") problems.push(`request failed: ${request.url()} ${request.failure()?.errorText}`); });
 
   for (const path of ["/", "/start", "/trips/new", `/trips/${TRIP_ID}`, `/trips/${TRIP_ID}/results`]) {
     // ★not "networkidle": the trip screen keeps the change bell open, so the network never goes idle there
@@ -372,6 +373,7 @@ test("신호 연결이 끊겼다 다시 붙으면 그 사이 바뀐 것을 전�
   // changed while the line is down — no bell reaches the screen for this one
   await server.scenario({ proposals: "open" });
   expect(await server.hangup()).toBeGreaterThan(0);
+  await expect.poll(async () => (await server.received("GET", "/events")).length).toBeGreaterThan(1);
   await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toContainText("대체 식당 A", { timeout: 10_000 });
   expect((await server.received("GET", "/events")).length).toBeGreaterThan(1);
 });

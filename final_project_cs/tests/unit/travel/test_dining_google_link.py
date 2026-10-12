@@ -123,3 +123,23 @@ def test_같은_주소에_둘이면_고르지_않는다(gl, normalize):
 def test_주소가_같아도_멀면_붙이지_않는다(gl, normalize):
     c = dict(cand("ChIJa", "Doctor Vegan", 37.5540, 127.0560), formattedAddress="서울 성동구 연무장길 1")
     assert gl.judge(gl.Place(**OURS), [c], normalize).status == "none"
+
+
+@pytest.mark.parametrize("ours_name, theirs", [("부일숯불갈비", "부일갈비"), ("림스치킨 서울혜화점", "림스치킨 혜화점"),
+                                               ("국수지짐미", "국수 지짐이"), ("본가 을지오뎅도루묵", "본가을지오뎅알도루묵")])
+def test_아주_가깝고_이름이_닮으면_후보로_붙인다(gl, normalize, ours_name, theirs):
+    v = gl.judge(gl.Place(**dict(OURS, name=ours_name)), [cand("ChIJa", theirs, 37.5441, 127.0561)], normalize)
+    assert v.status == "matched" and v.reason.startswith("이름 비슷")
+    assert theirs not in v.reason                     # 구글 이름을 남기지 않는다
+
+
+def test_닮았어도_30m_밖이면_붙이지_않는다(gl, normalize):
+    v = gl.judge(gl.Place(**dict(OURS, name="부일숯불갈비")), [cand("ChIJa", "부일갈비", 37.5450, 127.0560)], normalize)
+    assert v.status == "none"
+
+
+def test_가깝고_닮은_곳이_둘이면_고르지_않는다(gl, normalize):
+    ours = gl.Place(**dict(OURS, name="부일숯불갈비"))
+    v = gl.judge(ours, [cand("ChIJa", "부일갈비", 37.5441, 127.0561, "1"), cand("ChIJb", "부일솟불갈비", 37.5441, 127.0561, "2")],
+                 normalize)
+    assert v.status == "ambiguous"

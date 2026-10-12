@@ -7,8 +7,11 @@
 ★외래키가 없어 **자동으로 안 지워지는 표는 이름을 대어 지운다**(아래 `_PURGE`). 새 표가 여행 번호를 들고 생기면 걸리는 시험이 있다(`tests/e2e/test_trip_delete.py`).
   `trips` 를 지우면 `itinerary_versions` · `itinerary_items` · `pending_changes` 는 CASCADE 로 따라 지워진다.
   `places.trip_scope`(이 여행 전용 장소 행 — 외부 값이라 다른 고객에게 재사용하면 안 된다)는 외래키가 없다 — 요청서 목록에 빠져 있던 것을 표 조회로 찾아 더했다.
-★운영 쪽은 **지우지도 가리지도 않는다.** `case_events` 는 append-only 다. 그 여행을 가리키는 **열린 Case**(`state_json.subject_ref.id`)는 상태 전이표(`domain/events.py`)가 허용하는
-  **정상 전이만으로 `cancelled` 까지 닫는다**(가장 짧은 길을 찾아 한 걸음씩 — 이유 `trip_deleted`). 해결(`resolved`)된 Case 는 기록이라 그대로 둔다.
+★운영 쪽은 먼저 **정상 전이로 닫는다.** 그 여행을 가리키는 **열린 Case**(`state_json.subject_ref.id`)는 상태 전이표(`domain/events.py`)가 허용하는
+  **정상 전이만으로 `cancelled` 까지 닫는다**(가장 짧은 길을 찾아 한 걸음씩 — 이유 `trip_deleted`).
+★`[2026-10-07 사용자 결정 — 약관 보관 기간]` 약관이 「처리 기록 — 여행 · 게스트 자료가 지워질 때 **함께 파기**」라고 적는다. 그래서 닫은 **뒤에** 그 여행을 가리키는 Case 전부(해결된 것 포함)와
+  딸린 줄(`case_events` · `action_requests` · `agent_runs`)을 지운다 — `case_events` 는 append-only 가 **코드 규칙**이고(DB 트리거는 없다) **이 파기가 유일한 예외**다(`purge_cases`).
+  설정 `retention.case_follows_trip` 이 false 면 옛 동작(닫기만, 기록은 남김). 사용자 행에 걸린 그 여행과 무관한 Case 는 회원 · 게스트 정리(`member_cleanup` · `guest_cleanup`)가 지운다.
 ★바깥함(`outbox`)의 그 여행 알림(`trip.notice`, `dedupe_key` 가 `{trip_id}:` 로 시작)은 **대기분만 취소가 아니라 전부 지운다** — 알림 문장에 일정이 실려 있다.
 ★`trip_id` 가 NULL 인 옛 접수 · 알림은 고객 번호만으로 지우지 않는다(여행과 연결이 확인된 행만).
 """
@@ -19,6 +22,7 @@ from typing import Any
 from uuid import UUID
 
 from app.core.contracts import CaseStatus
+from app.core.settings import get_guardrails
 from app.core.transition import transition_case
 from app.core.case_lifecycle.events import REQUIRED_PAYLOAD_KEYS, TRANSITIONS, EventType
 
@@ -72,6 +76,26 @@ def close_cases(conn, *, tenant_id: str, customer_id: UUID, trip_id: UUID) -> in
     return closed
 
 
+def case_ids_for_trip(conn, *, tenant_id: str, customer_id: UUID, trip_id: UUID) -> list[UUID]:
+    """그 여행을 가리키는 Case 전부(상태 무관) — 파기 대상."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT case_id FROM customer_cases WHERE tenant_id=%s AND customer_id=%s AND state_json->'subject_ref'->>'id' = %s",
+                    (tenant_id, customer_id, str(trip_id)))
+        return [row[0] for row in cur.fetchall()]
+
+
+def purge_cases(conn, *, tenant_id: str, case_ids: list[UUID]) -> dict[str, int]:
+    """Case 와 딸린 줄을 **지운다**(약관의 처리 기록 파기). ★`case_events` 를 지우는 곳은 이 함수 하나뿐이다. 지운 수를 표별로 돌려준다."""
+    out = {"case_events": 0, "action_requests": 0, "agent_runs": 0, "customer_cases": 0}
+    if not case_ids:
+        return out
+    with conn.cursor() as cur:
+        for table in out:
+            cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s AND case_id = ANY(%s)", (tenant_id, case_ids))
+            out[table] = cur.rowcount
+    return out
+
+
 def delete_trip(conn, *, tenant_id: str, customer_id: UUID, trip_id: UUID) -> dict[str, Any] | None:
     """여행 하나를 지운다. 없는 여행 · 남의 여행이면 None. 지운 것을 세어 돌려준다(조용히 넘기지 않는다)."""
     with conn.cursor() as cur:
@@ -80,6 +104,9 @@ def delete_trip(conn, *, tenant_id: str, customer_id: UUID, trip_id: UUID) -> di
         if cur.fetchone() is None:
             return None
     counts: dict[str, Any] = {"cases_closed": close_cases(conn, tenant_id=tenant_id, customer_id=customer_id, trip_id=trip_id)}
+    if get_guardrails().get("retention.case_follows_trip"):
+        ids = case_ids_for_trip(conn, tenant_id=tenant_id, customer_id=customer_id, trip_id=trip_id)
+        counts["cases_purged"] = purge_cases(conn, tenant_id=tenant_id, case_ids=ids)["customer_cases"]
     with conn.cursor() as cur:
         cur.execute("DELETE FROM outbox WHERE tenant_id=%s AND topic='trip.notice' AND dedupe_key LIKE %s",
                     (tenant_id, f"{trip_id}:%"))
@@ -98,4 +125,4 @@ def delete_trip(conn, *, tenant_id: str, customer_id: UUID, trip_id: UUID) -> di
     return counts
 
 
-__all__ = ["REASON", "close_cases", "delete_trip"]
+__all__ = ["REASON", "case_ids_for_trip", "close_cases", "delete_trip", "purge_cases"]

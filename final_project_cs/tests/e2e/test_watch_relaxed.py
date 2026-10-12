@@ -24,7 +24,6 @@ from uuid import UUID
 
 import pytest
 
-from app.core import settings as settings_module
 from app.infrastructure.db.session import get_connection
 from app.domains.travel_ops.components.watch import watch_relaxed
 from app.domains.travel_ops.components.planning.replan import WEATHER_LIKE

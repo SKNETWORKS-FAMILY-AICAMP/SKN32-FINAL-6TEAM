@@ -24,6 +24,7 @@ domain: neutral
 
 | 문서 | 답하는 질문 |
 |---|---|
+| [slm-model-evaluation.md](slm-model-evaluation.md) | 새 모델 원본 비교·추가 학습·채택을 어떻게 구분하는가 |
 | [invariants.md](invariants.md) | 무엇을 깨면 안 되는가 |
 | [test-map.md](test-map.md) | 이 규칙은 어느 테스트가 지키는가 |
 | [blind-spots.md](blind-spots.md) | 어긴 걸 못 잡는 곳이 어딘가 |

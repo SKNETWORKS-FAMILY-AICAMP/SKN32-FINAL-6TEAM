@@ -47,6 +47,13 @@ export const heldTexts = (kind: TimeKind, held: Exclude<Held, null>): readonly [
     : ["여유를 다 썼어요 · 더 늦추면 뒤 일정이 밀려요", "The free time is used up · going on pushes the stops behind"])
   : ["앞 일정과 붙었어요 · 더 당기면 앞 일정이 당겨져요", "Touching the stop before · going on pulls it earlier"];
 
+/** The wording of the overlay while the drag has gone past that end and the other stops are being pushed (`delta` > 0 later, < 0 earlier) - it stays up as long as they move. */
+export const pushingTexts = (kind: TimeKind, delta: number): readonly [string, string] => delta < 0
+  ? ["앞 일정과 붙었어요 · 앞 일정이 당겨지고 있어요", "Touching the stop before · it is being pulled earlier"]
+  : kind === "depart"
+    ? ["여유를 다 썼어요 · 다음 일정이 밀리고 있어요", "The free time is used up · the next stops are being pushed"]
+    : ["여유를 다 썼어요 · 뒤 일정이 밀리고 있어요", "The free time is used up · the stops behind are being pushed"];
+
 /** The pointer handlers of something a time is dragged by (the grip in the form, the time itself, its dot). */
 export interface Grab { onPointerDown: (event: PointerEvent<HTMLElement>) => void; onPointerMove: (event: PointerEvent<HTMLElement>) => void; onPointerUp: (event: PointerEvent<HTMLElement>) => void; onPointerCancel: (event: PointerEvent<HTMLElement>) => void }
 /** A press that moves this far (px) up or down is a drag; one that does not is a tap (it opens the form). */
@@ -125,6 +132,7 @@ export function useTimeEdit({ views, commit, onNotice }: {
     if (index === undefined || !limits) return { changes: [], range: { min: 0, max: 0 }, along: [], problem: "이 일정은 시작 시각이 없어서 시간을 고칠 수 없어요.", day: null, title: item.title };
     const range = edit.push ? limits.reach : limits.own;
     const none = (problem: string): TimePreview => ({ changes: [], range, along: [], problem, day: times, title: item.title });
+    if (item.locked || item.booked === true) return none("고정·예약 일정의 시간은 바꿀 수 없어요.");
     const wording = (min: number, max: number, what: string) => `${min === max ? `지금 ${what}(${formatHm(min)})에서 움직일 수 없어요` : `가능한 시각은 ${formatHm(min)} ~ ${formatHm(max)}이에요`}${edit.push ? "" : " · 앞뒤 일정도 함께 밀면 더 넓어져요"}.`;
     const alongOf = (changes: Retime[]) => changes.filter((change) => change.id !== item.id).map((change) => ({
       title: view.items.find((entry) => entry.id === change.id)?.title ?? change.id,
@@ -242,7 +250,7 @@ export function useTimeEdit({ views, commit, onNotice }: {
       const taken = grabbed.current;
       if (!taken) return;
       const { value, held: now } = draggedTo(taken.origin, event.clientY - taken.y);
-      if (now && heldBefore.current !== now && edit) say(edit.kind, now);
+      // ★`[2026-10-07 사용자 지시]` No notice while dragging: the overlay of the day says it (and keeps saying it while the next stops are pushed) - the notice stood right over that overlay and hid it.
       heldBefore.current = now;
       setHeld(now);
       setValue(formatHm(value));
@@ -279,7 +287,7 @@ export function useTimeEdit({ views, commit, onNotice }: {
   const handle = (item: PlanItem, list: List, kind: TimeKind = "start"): Grab => ({
     onPointerDown: (event) => {
       swallow.current = false;
-      if (busy || (event.pointerType === "mouse" && event.button !== 0)) return;
+      if (busy || item.locked || item.booked === true || (event.pointerType === "mouse" && event.button !== 0)) return;
       const already = edit?.id === item.id && edit.list === list && edit.kind === kind;
       const origin = already ? valueMinutes() : parseHm(kind === "depart" ? build(item, list, kind).end : item.startsAt);
       if (origin === null) return;

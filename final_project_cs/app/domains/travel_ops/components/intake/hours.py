@@ -148,12 +148,27 @@ def _apply_ledger(conn, tenant_id: str, core_id: str, start: datetime, end: date
 
 def _ledger_uid(conn, content_id: str | None, place: dict[str, Any]) -> str | None:
     """읽은 장소 → 원장 가게 번호. 관광공사 번호(`tourapi_kor_food`)가 하나의 가게로 이어질 때만, 번호가 없으면 이름이 원장에서 하나로 정해질 때만.
-    둘 이상이면 고르지 않는다(모름) — 다른 가게의 영업시간으로 판정하는 것이 가장 나쁘다(`ledger.slot_verdicts` · `find_place_by_name` 과 같은 규칙)."""
+    둘 이상이면 고르지 않는다(모름) — 다른 가게의 영업시간으로 판정하는 것이 가장 나쁘다(`ledger.slot_verdicts` · `find_place_by_name` 과 같은 규칙).
+
+    ★`[2026-10-10]` 장소가 원장 가게 번호(`dining_place_uid`)를 이미 들고 있으면 그것이 먼저다 — 전에는 이 값을 안 보고 관광공사 번호로만 찾아서
+      관광공사 번호가 없는 원장 가게(미쉐린 · 노포 큐레이션 · 하동관 …, 로컬 전체 원장 1,888곳 중 325곳)는 확인 화면에서 늘 「모름」이었다.
+      이름으로 찾았는데 관광공사 번호가 없으면 **정확히 같은 이름 하나**일 때만 그 가게 번호를 쓴다(지점 · 앞부분 · 오타로 고른 가게는 쓰지 않는다).
+      결함: `wiki/records/reports/debugs/2026-10-10_고른_원장식당이_원장과_끊긴다.md`"""
     from app.domains.travel_ops.components.team_hooks import dining_ledger
 
+    uid = str(place.get("dining_place_uid") or "").strip()
+    if uid:
+        with conn.cursor() as cur:
+            cur.execute("SELECT place_uid::text FROM dining.dn_place WHERE place_uid::text = %s AND record_status <> 'closed'",
+                        (uid,))
+            row = cur.fetchone()
+        return str(row[0]) if row else None
     if not content_id:
         found = dining_ledger.find_by_name(conn, str(place.get("name") or ""))
-        content_id = str(found["content_id"]) if found else None
+        content_id = str(found["content_id"]) if found and found.get("content_id") else None
+        if (content_id is None and found and found.get("match") == "exact" and not found.get("needs_review")
+                and found.get("dining_place_uid")):
+            return str(found["dining_place_uid"])
     if not content_id:
         return None
     with conn.cursor() as cur:

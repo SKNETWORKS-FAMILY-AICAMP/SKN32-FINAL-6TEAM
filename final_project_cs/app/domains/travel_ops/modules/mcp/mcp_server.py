@@ -402,10 +402,13 @@ def build_server(backend: Backend, *, write_enabled: bool = False, env_key: str 
 
     @server.tool(name="tripilot_plan_trip", annotations=WRITE, title="서버가 일정 짜기",
                  description="서버의 일정 생성기가 서울 여행을 짜서 판정을 통과한 것만 등록한다. 첫날(start_date) · 일수(1~7) · 인원(1~4) 과 선택 사항 preferences(취향 · 못 먹는 것 등 글)를 준다. "
+                             "재난 뒤 다시 짤 때는 tripilot_get_recovery_brief 의 constraints.avoid_districts 를 avoid_districts 로(그 구의 장소가 후보에서 빠진다) · 사용자가 「오늘은 가볍게」를 골랐을 때만 lighter_day=true 로 준다(밀도 목표를 한 단계 낮춘다 — 임의로 켜지 않는다). "
                              "못 짜면 이유와 완화 조건을 돌려준다(지어낸 일정은 등록하지 않는다). 시간이 걸릴 수 있다(수십 초).")
     async def plan_trip(ctx: Context, start_date: Annotated[str, Field(description="첫날 YYYY-MM-DD")],
                         days: Annotated[int, Field(ge=1, le=7)] = 2, party_size: Annotated[int, Field(ge=1, le=4)] = 2,
-                        preferences: Annotated[str | None, Field(description="취향 · 조건을 글로")] = None) -> dict[str, Any]:
+                        preferences: Annotated[str | None, Field(description="취향 · 조건을 글로")] = None,
+                        avoid_districts: Annotated[list[str] | None, Field(description="재난 뒤 다시 짤 때 제외할 서울 자치구(tripilot_get_recovery_brief 의 constraints.avoid_districts)")] = None,
+                        lighter_day: Annotated[bool, Field(description="사용자가 「오늘은 가볍게」를 골랐을 때만 true — 밀도 목표를 한 단계 낮춘다(임의로 켜지 않는다)")] = False) -> dict[str, Any]:
         if not _DAY.match(start_date):
             raise ToolError("start_date 는 YYYY-MM-DD 형식이에요")
         intake = await call(ctx, "POST", "/v1/web/trip-intakes", form={"text": (preferences or "").strip()})
@@ -421,6 +424,8 @@ def build_server(backend: Backend, *, write_enabled: bool = False, env_key: str 
             raise ToolError("읽는 데 시간이 너무 오래 걸려요 — 잠시 뒤 다시 시도해 주세요")
         plan = {"revision": view["revision"], "start_date": start_date, "days": days, "party_size": party_size,
                 "keep_read_items": False}
+        if avoid_districts or lighter_day:
+            plan["recovery"] = {"avoid_districts": list(avoid_districts or []), "lighter_day": bool(lighter_day)}
         return await call(ctx, "POST", f"/v1/web/trip-intakes/{intake_id}/plan", json=plan)
 
     return server

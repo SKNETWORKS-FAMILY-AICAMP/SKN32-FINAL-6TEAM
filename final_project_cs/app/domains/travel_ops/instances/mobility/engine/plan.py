@@ -55,7 +55,7 @@ from .timeutil import MIN_DAY, SERVICE_DAY_START_MIN
 from .verify_time import leg_mode
 
 KST = timezone(timedelta(hours=9))
-PLAN_VERSION = "plan-v2.9"   # 2026-10-07 — 1호선 열차 단위 표 반영 · (v2.8) 9호선 급행 열차 단위 표 반영 · (v2.7) 혼합이 15분 이상 앞서면 계획 수단 · (v2.6) 지하 연결통로 표 반영(역과 이어진 건물 걷기 단축) · (v2.5) 버스→버스 환승 후보(모양 C) 추가 · 기본 호출에서 버스를 두 번 타는 후보가 더 나올 수 있다 / (v2.4) 87 — 지하철+버스 혼합 후보(환승 1회 · A 버스→지하철 · B 지하철→버스) · 지하철만·버스만 후보는 v2.3 과 같다
+PLAN_VERSION = "plan-v2.10"   # 2026-10-07 — 대중교통 운행 시간 밖이면 택시로 대체 · (v2.9) 1호선 열차 단위 표 반영 · (v2.8) 9호선 급행 열차 단위 표 반영 · (v2.7) 혼합이 15분 이상 앞서면 계획 수단 · (v2.6) 지하 연결통로 표 반영(역과 이어진 건물 걷기 단축) · (v2.5) 버스→버스 환승 후보(모양 C) 추가 · 기본 호출에서 버스를 두 번 타는 후보가 더 나올 수 있다 / (v2.4) 87 — 지하철+버스 혼합 후보(환승 1회 · A 버스→지하철 · B 지하철→버스) · 지하철만·버스만 후보는 v2.3 과 같다
 # (v2.3 · 86) 가장 이른 도착 모드(Planner.earliest · earliest_on_late) 추가 · 기본 호출 결과는 v2.2 와 같다
 # (v2.2 · 58) modes 에 bike 를 주면 자전거 후보를 싣는다 · 기본(bike 없음)은 v2.1 과 같다 · 모양 무변경
 # 56 (2026-09-27 · 본인) — modes 를 안 주면 지하철·버스·도보. 자전거는 modes 에 "bike" 를 줄 때만(48 결정 8 · ◆선호 「요청 시만」).
@@ -65,7 +65,7 @@ KNOWN_MODES = frozenset(DEFAULT_MODES) | {"bike", "taxi"}
 #: ☆`[2026-10-04 문제목록 #47]` 택시는 modes 에 "taxi" 를 줄 때만 후보로 싣는다(설문 「택시」 선택). 기본 호출은 앞 판과 같다.
 #:   계획 수단을 고를 때 대중교통·도보·자전거 무리 → 혼합 무리 → **택시 무리** 순이다(택시는 가장 늦게 떠나도 되는 후보가 되기 쉬워
 #:   섞어 두면 늘 택시가 뽑히기 때문 — 여행자가 택시만 고르면 택시가, 같이 고르면 대중교통이 먼저다).
-#:   요금은 하한(정차·호출료·시계외 미포함)이고 소요는 TOPIS 시각별 속도 추정이다 — label 에 그대로 적는다.
+#:   요금은 예산 여유를 포함한 예상액이고 소요는 TOPIS 시각별 속도 추정이다 — label 에 그대로 적는다.
 #: ☆`[2026-09-30 83 E1 · 85]` 장소마다 볼 역 개수 — 규칙 candidates.장소_역_후보_최대 **변경안** 값(27 규칙 32: 규칙 파일은
 #:   모아서 한 번에 고친다). 규칙에 들어가면 규칙 값이 이긴다(Planner._station_k).
 # ☆`[2026-10-06 구글·시제품 대조]` 도로 그래프로 잰 접근 걷기가 **직선의 몇 배까지** 믿을 만한가. 실측: 우리 접근·하차 후보 83곳 중 배율 중앙 1.31(1사분위 1.14 ~ 3사분위 1.52)인데
@@ -81,6 +81,9 @@ CONNECTOR_MAX_M_PROPOSED = 700           # 역에서 이만큼 안의 장소만 
 #:   (GPT 87 #2)이라 아무리 빨라도 기존 후보가 하나라도 있으면 계획이 못 됐다 — 카카오 대조(2026-10-07, 명동성당→북서울꿈의숲: 직행 버스 64분 vs 지하철+버스 49분)에서
 #:   15분 앞서는 안이 옵션에만 남았다. None 이면 종전대로(혼합은 추가만).
 MIX_PLAN_GAIN_MIN_PROPOSED = 15
+#: 대중교통이 **운행 시간 때문에**(첫차 전 · 막차 뒤 · 배차 공백) 하나도 안 맞을 때 택시로 대체해 싣는다(2026-10-07 새벽 도착 04:30 요구에
+#:   「결과 없음」만 나오던 것 — 값을 모르는 상황을 만들지 않는다, 결정 15). 사용자가 modes 로 택시를 뺀 요청이면 쓰지 않는다. False 면 종전.
+TAXI_FALLBACK_ON_SERVICE_HOURS_PROPOSED = True
 # ☆`[2026-10-06]` 가장 가까운 출구까지의 길 거리가 직선의 이 배수를 넘으면 **같은 역의 다른 출구**도 길 거리로 따져 가장 짧은 것을 쓴다.
 #   실측(접근·하차 후보 83곳): 직선으로 가장 가까운 출구 하나만 보면 8곳이 2배를 넘는데, 모든 출구 중 길 거리 최소로 고르면 3곳으로 준다 —
 #   남대문시장→시청 4,065 m → 824 m(8.1배 → 1.6배), 광화문 209 m → 79 m(3.0배 → 1.1배), 회현 416 → 249 m. 길 거리가 직선에 가까운 곳(중앙 1.28배)은 영향이 없다.
@@ -261,6 +264,7 @@ class Planner:
         # 후보 수단 거르기(예: {"subway"}) — None 이면 DEFAULT_MODES(자전거 뺌 · 56).
         #   빈 목록·모르는 수단은 거절한다(GPT 56 #9 — 빈 목록이 조용히 기본으로 넓어지지 않게).
         self.modes = set(DEFAULT_MODES) if modes is None else set(modes)
+        self._modes_explicit = modes is not None      # 호출자가 수단을 직접 정했나(택시 대체를 쓸지 가른다)
         if not self.modes or not self.modes <= KNOWN_MODES:
             raise ValueError(f"modes 는 {sorted(KNOWN_MODES)} 중 하나 이상 — 받은 값 {sorted(self.modes)}")
         self.trace = None                                 # 시험·대조용 — 리스트를 주면 구간마다 내부 값을 적는다
@@ -877,6 +881,15 @@ class Planner:
                 out.append(mc)
         return out
 
+    def _service_hours_blocked(self, why, left):
+        """대중교통 후보가 **운행 시간 때문에** 없는가 — 판정기 대표 이유가 첫차 전·공백·막차 뒤이거나, 뺀 후보의 이유가 모두 그렇다.
+        역이 멀어서(걸어갈 역이 없음 · 데이터 없음) 못 만든 것과 가른다 — 그건 택시로 덮을 일이 아니다."""
+        if (why or {}).get("code") in EARLIEST_WAIT_CODES:
+            return True
+        timed = [e for e in left if e.get("code") in EARLIEST_WAIT_CODES
+                 or (e.get("code") == "no_last_departure" and any(k in str(e.get("reason")) for k in ("첫차", "막차", "필요 시각")))]
+        return bool(timed)
+
     def _taxi_option(self, a_place, b_place, sdate, arrive_by, buf, left):
         """택시 후보 하나 또는 None(이유는 left). 판정기의 택시 서비스(`v.car` — 로컬 도로 그래프 또는 GraphHopper + TOPIS 속도 + 요금 산식)로
         잰다. 도착 목표에서 거꾸로 두 번 맞춘다(첫 추정 출발 −30분 → 그 소요로 다시) — 출발 시각이 바뀌면 속도 프로파일이 달라진다."""
@@ -902,7 +915,7 @@ class Planner:
             if done:
                 break
         fare = c.get("fare_won")
-        note = f"요금 하한 {fare:,}원(정차·호출료 미포함)" if fare is not None else "요금 모름"
+        note = f"예상 요금 {fare:,}원(예산 여유 포함 · 교통·대기·호출료에 따라 달라짐)" if fare is not None else "요금 모름"
         return {"eta_min": ride, "uses": [], "_legs": [], "_taxi": True, "_n": 300, "_key": ("taxi", 0, 0),
                 "_route": f"택시 {c['distance_m'] / 1000:.1f}km · {note} [{c.get('grade', '근거없음')}]",
                 "_start": guess, "_transfers": 0, "_margin": buf, "_slack": 0, "_walk_min": 0, "_walk_m": 0,
@@ -1503,6 +1516,16 @@ class Planner:
             else:
                 keep.append(o)
         opts = keep
+        if (not opts and TAXI_FALLBACK_ON_SERVICE_HOURS_PROPOSED and (not getattr(self, "_modes_explicit", False) or "taxi" in self.modes)
+                and self._service_hours_blocked(why, left) and getattr(self.v, "car", None) is not None):
+            tx = self._taxi_option(a_place, b_place, sdate, arrive_by, buf, left)
+            if tx is not None:
+                first = next((str(e.get("reason")) for e in left if e.get("code") in EARLIEST_WAIT_CODES
+                              or e.get("code") == "no_last_departure"), str((why or {}).get("reason") or ""))
+                tx["_fallback"] = "service_hours"
+                opts = [tx]
+                left.append({"_o": {"_legs": []}, "label": "대중교통", "code": "transit_hours_taxi",
+                             "reason": "대중교통이 이 시각 운행 시간 밖이라 택시로 대체했다 — " + first[:120]})
         if not opts:
             # #29 — 뺀 후보가 이유와 함께 skipped 항목에 실린다(코어로는 안 나간다). 대표 이유는 종전대로:
             #   표기 불통과만 있으면 그 이유, 아니면 판정기 이유(why)
@@ -1594,6 +1617,10 @@ class Planner:
             taken.add(o["id"])
         O.add_reasons(opts)
         for o in opts:
+            if o.get("_fallback") == "service_hours":
+                o["label"] = o.get("label") or o["_route"]
+                o["label"] += " · 대중교통 운행 시간 밖이라 택시로 대체"
+        for o in opts:
             if o["_walk_m"] is not None:
                 o["walk_m"] = int(round(o["_walk_m"]))
             if o["_fare"] is not None:
@@ -1618,7 +1645,11 @@ class Planner:
                                "planned": planned["id"],
                                "options": [{"id": o["id"], "start_min": o["_start"], "eta_min": o["eta_min"],
                                             "margin_min": o.get("_margin"), "slack_min": o.get("_slack"),
-                                            "transfers": o["_transfers"], "check": o.get("_check")}
+                                            "transfers": o["_transfers"], "check": o.get("_check"),
+                                            "wait_min": (sum(lr.wait_min for lr in o["_lr"])
+                                                         if o.get("_lr") is not None
+                                                         and all(lr.wait_min is not None for lr in o["_lr"])
+                                                         else (0 if not o["_legs"] else None))}
                                            for o in opts],
                                "left_out": left, "left_checks": left_checks, "start_min": start})
         keys = ("id", "label", "eta_min", "walk_m", "fare_krw", "uses", "transfer_car")

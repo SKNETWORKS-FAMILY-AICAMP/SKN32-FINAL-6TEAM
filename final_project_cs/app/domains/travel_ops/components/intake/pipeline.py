@@ -26,7 +26,7 @@ from . import survey_answers
 from .areas import areas_for
 from .assemble import assemble, effective
 from .rules import read_plan
-from .sources import UnsupportedSource, sniff, to_text
+from .sources import UnsupportedSource, other_reading, sniff, to_text
 
 KST = ZoneInfo("Asia/Seoul")
 log = logging.getLogger(__name__)
@@ -84,6 +84,12 @@ def open_intake(conn, *, tenant_id: str, customer_id: UUID, text: str | None,
                 files: list[tuple[str, bytes]]) -> UUID:
     """접수 한 건. `files` = [(파일 이름, 바이트)]. ★종류는 첫 바이트로 — 모르는 형식은 여기서 거절한다."""
     text = (text or "").strip()
+    from .test_plans import TestPlanRejected, expand
+
+    try:
+        text, test_scenario = expand(text, tenant_id=tenant_id, has_files=bool(files))
+    except TestPlanRejected as exc:
+        raise IntakeRejected(exc.code, exc.message) from None
     if not text and not files:
         # ★`[2026-09-30 사용자 결정 — ui 세션 전달]` 입력칸을 비운 채 「계획 확인하기」를 눌러도 **다음 화면으로 넘어간다** —
         #   읽을 것이 없으니 곧바로 확인 화면 상태(`review`)로 만든다. 그 화면에 「읽은 일정이 없어요 — 대신 짜 드릴까요?」 짜기 칸이
@@ -109,6 +115,11 @@ def open_intake(conn, *, tenant_id: str, customer_id: UUID, text: str | None,
         cur.execute("INSERT INTO trip_intakes (tenant_id, customer_id, stage) VALUES (%s,%s,'received') "
                     "RETURNING intake_id", (tenant_id, customer_id))
         intake_id = cur.fetchone()[0]
+        if test_scenario is not None:
+            cur.execute("INSERT INTO intake_test_scenarios (tenant_id, intake_id, customer_id, metadata) "
+                        "VALUES (%s,%s,%s,%s::jsonb)",
+                        (tenant_id, intake_id, customer_id, json.dumps(test_scenario, ensure_ascii=False)))
+        survey_answers.inherit(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id)
         position = 0
         if text:
             raw = text.encode("utf-8")
@@ -157,12 +168,9 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                 result = to_text(data, filename=source["filename"] or "", see=see)
                 with connect() as conn, conn.transaction(), conn.cursor() as cur:
                     _hold_reading(cur, tenant_id, intake_id)          # 받아쓰는 동안 실패로 확정됐으면 결과를 저장하지 않고 물러난다
-                    cur.execute("UPDATE intake_sources SET transcript=%s, transcribed=%s, missing_json=%s, "
-                                "seconds=%s WHERE source_id=%s AND tenant_id=%s",
-                                (result.text, bool(result.transcribed_pages) or result.kind == "image",
-                                 json.dumps(result.missing, ensure_ascii=False), result.seconds,
-                                 source["source_id"], tenant_id))
+                    _store_transcript(conn, cur, source["source_id"], tenant_id, result)
                 source["transcript"] = result.text
+                source["differs_json"] = result.differs
         _stage(connect, tenant_id, intake_id, "reading")
         with connect() as conn:
             our_places = _our_places(conn, tenant_id)
@@ -185,7 +193,8 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
 
             read_source(source["transcript"] or "", chat=chat, tour=tour, kakao=kakao, our_places=our_places,
                         aliases=aliases, areas=areas, dining=dining, today=today or datetime.now(KST).date(),
-                        on_rows=_claim_sink(connect, tenant_id, intake_id, source["source_id"]), on_progress=places_progress)
+                        on_rows=_claim_sink(connect, tenant_id, intake_id, source["source_id"]), on_progress=places_progress,
+                        differs=differs_by_line(source.get("differs_json")))
         # 검사 — 읽은 장소의 운영시간 · 휴무 · 이동(`review.py`). 실패해도 읽은 값은 그대로 확인 화면으로 간다(검사만 비고 이유가 남는다)
         _stage(connect, tenant_id, intake_id, "checking")
         try:
@@ -244,6 +253,10 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
         if row is None:
             return None
         status, stage, revision, fatal_code, fatal_detail, trip_id, received_at = row
+        cur.execute("SELECT metadata FROM intake_test_scenarios WHERE tenant_id=%s AND intake_id=%s AND customer_id=%s",
+                    (tenant_id, intake_id, customer_id))
+        scenario_row = cur.fetchone()
+        test_scenario = scenario_row[0] if scenario_row else None
         sources = _sources(conn, tenant_id, intake_id)
         cur.execute("SELECT source_id, field, value_json, method, evidence, needs_review, note FROM intake_claims "
                     "WHERE tenant_id=%s AND intake_id=%s AND revision=%s ORDER BY created_at, claim_id",
@@ -272,12 +285,15 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
         read_lines = {c["evidence"].get("line") for c in raw_claims if c["source_id"] == source["source_id"]}
         out_sources.append({
             "source_id": str(source["source_id"]), "kind": source["kind"], "filename": source["filename"],
-            "transcribed": source["transcribed"], "missing": source["missing_json"], "seconds": source["seconds"],
+            "transcribed": source["transcribed"], "missing": source["missing_json"], "differs": source.get("differs_json") or [], "seconds": source["seconds"],
             "lines": [{"no": n, "text": text, "read": n in read_lines} for n, text in enumerate(lines, start=1)],
             "items": _items(mine), "trip": _trip_fields(mine),
             # 남은 줄에 모델이 가리킨 결과 — 몇 개 받고 무엇을 버렸나(원문에 없는 인용). 모델을 안 불렀으면 None
             "reading": next((c["value"] for c in mine if c["field"] == "reading.llm"), None)})
+    if review is not None and test_scenario is not None:
+        review = {**review, "test_scenario": test_scenario}
     return {"intake_id": str(intake_id), "status": status, "stage": stage, "stage_label": STAGES.get(stage, stage),
+            "test_scenario": test_scenario,
             "revision": revision, "fatal": {"code": fatal_code, "detail": fatal_detail} if fatal_code else None,
             "trip_id": str(trip_id) if trip_id else None, "received_at": received_at.isoformat(),
             "sources": out_sources, "check": check, "review": review, "review_error": review_error,
@@ -359,10 +375,11 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
         batch = [(str(e.get("source_id") or ""), str(e.get("field") or ""), e.get("value")) for e in edits]
         unlocking = {(sid, _item_no(f)) for sid, f, v in batch if f.endswith(".locked") and v is False}
         existing = {(str(c["source_id"]), _item_no(c["field"])) for c in current_claims if c["field"].startswith("items[")}
+        added = _new_items(batch, existing, sources)
         locking = {(sid, _item_no(f)) for sid, f, v in batch if f.endswith(".locked") and v is True}
         for sid, field_name, value in batch:
-            # ★이 접수에 있는 일정만 고친다 — 없는 번호를 보내 일정이 새로 생기면(`items[500].title`) 날짜·장소 없는 항목이 끼어든다(웹은 있는 일정만 고친다)
-            if field_name.startswith("items[") and field_name.count("]") == 1 and (sid, _item_no(field_name)) not in existing:
+            # 신규 항목은 다음 번호와 필수 여섯 칸을 한 번에 보낸 요청만 허용한다.
+            if field_name.startswith("items[") and field_name.count("]") == 1 and (sid, _item_no(field_name)) not in existing | added:
                 raise IntakeRejected("unknown_item", f"{field_name}: 이 접수에 없는 일정입니다")
             # ★고정은 그 판의 검사로만 판단한다 — 같은 요청에서 장소를 비우거나 시각을 바꾸는 것과 섞으면 고정이 바뀐 값에 걸린다. 고정은 따로 보낸다
             if field_name.startswith("items[") and not field_name.endswith(".locked") and (sid, _item_no(field_name)) in locking:
@@ -382,6 +399,8 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                 _require_lockable(conn, tenant_id, intake_id, current, source_rows, current_claims, source_id, field_name)
             if field_name.endswith(".place") and isinstance(value, dict) and value.get("content_id"):
                 value = _verified_content_id(conn, tenant_id, value)
+            if field_name.endswith(".place") and isinstance(value, dict) and value.get("source") == "customer_pick":
+                value = _linked_ledger_pick(conn, tenant_id, value)
             if field_name.endswith(".place") and value is not None and "latitude" not in value:
                 if our_places is None:
                     our_places = _our_places(conn, tenant_id)
@@ -400,6 +419,33 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
             if via:
                 evidence = {**evidence, "via": via}            # 전체 자동 추천이 낸 값이면 그렇게 적는다(고객이 고른 값과 구별)
             rows.append((source_id if field_name.startswith("items[") else None, field_name, value, evidence, note))
+        # 직접 고른 장소도 자동 추천과 마찬가지로 이동시간을 반영한다. 저장 전에
+        # 계산하므로 불가능한 배치는 claim·별칭·revision을 모두 원래대로 유지한다.
+        touched = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
+                   if field.endswith(".place") and isinstance(value, dict) and value.get("latitude") is not None}
+        if (touched or added) and via != "autofix":
+            from . import direct_schedule
+            from .assemble import collect
+            prospective = [{**c, "source_id": str(c["source_id"]) if c["source_id"] is not None else None}
+                           for c in current_claims] + [
+                {"source_id": sid, "field": field, "value": value, "method": "customer", "evidence": evidence,
+                 "needs_review": False, "note": note} for sid, field, value, evidence, note in rows]
+            got = collect(sources=[{**s, "source_id": str(s["source_id"])} for s in source_rows], claims=prospective)
+            if added:
+                from ..planning.planner import MAX_DAYS
+                dates = sorted({r["date"] for r in got.rows if r["date"]})
+                if dates and (date.fromisoformat(dates[-1]) - date.fromisoformat(dates[0])).days >= MAX_DAYS:
+                    raise IntakeRejected("trip_too_long", "서울 여행은 최대 7일까지 추가할 수 있습니다")
+            party = (got.trip.get("party_size") or {}).get("value")
+            try:
+                adjusted = direct_schedule.fit(conn, tenant_id=tenant_id, rows=got.rows, touched=touched, party_size=party,
+                                               mode_picks=review_module.picked_modes(prospective))
+            except direct_schedule.ScheduleConflict as exc:
+                raise IntakeConflict(exc.code, str(exc)) from exc
+            for change in adjusted:
+                evidence = {"source": "customer", "via": "direct_schedule", "basis": change["basis"]}
+                note = "장소 변경에 따라 앞뒤 이동시간을 반영해 재배치" + ("(어림 이동시간)" if change["basis"] == "estimate" else "")
+                rows.append((change["source_id"], change["field"], change["value"], evidence, note))
         new = current + 1
         # 앞 판을 그대로 옮기고(만든 순서 유지) 고친 값을 뒤에 얹는다 — 칸마다 마지막 값이 이긴다
         cur.execute("INSERT INTO intake_claims (intake_id, tenant_id, revision, source_id, field, value_json, method, "
@@ -416,10 +462,115 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                          note))
         cur.execute("UPDATE trip_intakes SET revision=%s, updated_at=now() WHERE tenant_id=%s AND intake_id=%s",
                     (new, tenant_id, intake_id))
-    # 새 판의 검사 — 바뀌지 않은 구간은 앞 판의 값을 쓴다. 실패해도 고친 값은 이미 저장됐다(조회가 다시 계산한다)
-    _review_of(conn, tenant_id, intake_id, new, _sources(conn, tenant_id, intake_id),
-               effective(_claims(conn, tenant_id, intake_id, new)), force=True)
+        # 검사까지 같은 트랜잭션에 저장한다. 새 장소만 반영되고 이동 검사는
+        # 옛 상태인 중간 판을 다른 화면에서 읽지 않게 한다.
+        found, error = _review_of(conn, tenant_id, intake_id, new, source_rows,
+                                  effective(_claims(conn, tenant_id, intake_id, new)), force=True)
+        if found is None:
+            raise IntakeConflict("schedule_check_failed", "변경 후 검사를 끝내지 못해 저장하지 않았어요. 다시 시도해 주세요.", reason=error)
     return new
+
+
+def restore(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int,
+            restore_revision: int) -> dict[str, Any]:
+    """완료된 과거 판의 원값을 새 판으로 복원한다. 보호·검사 실패는 전체 롤백한다."""
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute("SELECT status, revision FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s AND customer_id=%s "
+                    "FOR UPDATE", (tenant_id, intake_id, customer_id))
+        row = cur.fetchone()
+        if row is None:
+            raise LookupError("intake")
+        status, current = row
+        if status != "review":
+            raise IntakeConflict("intake_not_editable", "지금은 전체 되돌리기를 할 수 없습니다", status=status)
+        if revision != current:
+            raise IntakeConflict("stale_revision", "그 사이 다른 화면에서 고쳤습니다 — 새로 불러와 주세요",
+                                 current_revision=current)
+        old_review = review_module.load(conn, tenant_id, intake_id, restore_revision)
+        if not 1 <= restore_revision < current or not old_review or old_review.get("revision") != restore_revision:
+            raise IntakeConflict("restore_revision_invalid", "복원할 완료된 이전 판을 찾지 못했어요")
+        before = effective(_claims(conn, tenant_id, intake_id, restore_revision))
+        now = effective(_claims(conn, tenant_id, intake_id, current))
+        if not before:
+            raise IntakeConflict("restore_revision_invalid", "복원할 이전 값이 없어요")
+        source_rows = _sources(conn, tenant_id, intake_id)
+        _protect_restore(now, before, source_rows)
+        new = current + 1
+        # 유효 값만 복사하여 같은 시각 claim의 UUID 정렬에 따라 값이 뒤집히지 않게 한다.
+        # 원래 method/evidence도 유지한다. 빈 값·없던 장소를 임의의 값으로 바꾸지 않는다.
+        for claim in before:
+            cur.execute("INSERT INTO intake_claims (intake_id,tenant_id,revision,source_id,field,value_json,method,"
+                        "evidence,needs_review,note) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                        (intake_id, tenant_id, new, claim["source_id"], claim["field"],
+                         json.dumps(claim["value"], ensure_ascii=False, default=str), claim["method"],
+                         json.dumps(claim["evidence"], ensure_ascii=False, default=str), claim["needs_review"], claim["note"]))
+        cur.execute("UPDATE trip_intakes SET revision=%s, updated_at=now() WHERE tenant_id=%s AND intake_id=%s",
+                    (new, tenant_id, intake_id))
+        # 장소 재조회나 direct_schedule.fit 없이 원값 그대로 다시 검사한다.
+        found, error = _review_of(conn, tenant_id, intake_id, new, source_rows, before, force=True)
+        if found is None:
+            raise IntakeConflict("schedule_check_failed", "되돌린 후 검사를 끝내지 못해 저장하지 않았어요", reason=error)
+        return view(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id)
+
+
+def _protect_restore(now, before, sources) -> None:
+    """현재 보호 일정의 값·상태·실제 조립 시각을 바꾸는 역사 복원을 막는다."""
+    def fields(claims):
+        out = {}
+        for claim in claims:
+            field = claim["field"]
+            if field.startswith("items["):
+                out.setdefault((str(claim["source_id"]), _item_no(field)), {})[field.split("].", 1)[-1]] = claim["value"]
+        return out
+
+    current, target = fields(now), fields(before)
+    from .assemble import collect
+    def assembled(claims):
+        return {(str(r["source_id"]), r["index"]): r for r in collect(sources=sources, claims=claims).rows}
+    current_rows, target_rows = assembled(now), assembled(before)
+    for key, values in current.items():
+        locked = values.get("locked") is True
+        booked = values.get("booked") is True or bool(values.get("booking_no"))
+        if not locked and not booked:
+            continue
+        desired = target.get(key)
+        # 잠금·예약 상태 자체를 되돌려 보호를 없애는 것도 허용하지 않는다.
+        same_values = desired is not None and {**values, "removed": values.get("removed", False),
+                                               "locked": values.get("locked", False)} == {
+            **desired, "removed": desired.get("removed", False), "locked": desired.get("locked", False)}
+        a, b = current_rows.get(key), target_rows.get(key)
+        same_slot = (a is None and b is None) or (a is not None and b is not None and
+                    all(a.get(f) == b.get(f) for f in ("date", "start", "end", "place", "kind", "title")))
+        if not same_values or not same_slot:
+            raise IntakeConflict("item_locked" if locked else "item_booked",
+                                 "잠금·예약 일정이 달라져 전체 되돌리기를 저장하지 않았어요")
+
+
+def _new_items(batch, existing, sources) -> set[tuple[str, int]]:
+    """신규 한 항목을 기존 edits 계약으로 생성한다. 삭제 번호도 재사용하지 않는다."""
+    required = {"title", "date", "starts_at", "ends_at", "kind", "place"}
+    added = {(sid, _item_no(f)) for sid, f, _ in batch if f.startswith("items[") and (sid, _item_no(f)) not in existing}
+    if not added:
+        return set()
+    if len(added) != 1:
+        raise IntakeRejected("unknown_item", "새 일정은 한 번에 하나씩 추가해 주세요")
+    sid, index = next(iter(added))
+    next_index = max((i for s, i in existing if s == sid), default=-1) + 1
+    fields = {f.rsplit(".", 1)[-1]: v for s, f, v in batch if s == sid and _item_no(f) == index}
+    if sid not in sources or index != next_index or not required <= fields.keys():
+        raise IntakeRejected("unknown_item", "새 일정은 다음 번호에 이름·날짜·시작·끝·종류·장소를 함께 보내 주세요")
+    if len([1 for s, f, _ in batch if s == sid and _item_no(f) == index]) != len(fields):
+        raise IntakeRejected("invalid_value", "새 일정의 같은 칸을 두 번 보낼 수 없습니다")
+    for name in required:
+        _checked(f"items[{index}].{name}", fields[name])
+    if fields["starts_at"] >= fields["ends_at"]:
+        raise IntakeRejected("invalid_value", "새 일정의 끝은 시작보다 늦어야 합니다")
+    if fields.get("removed") is True or fields.get("locked") is True:
+        raise IntakeRejected("invalid_value", "새 일정은 추가한 뒤 확인하고 고정하거나 빼 주세요")
+    place = fields["place"]
+    if not isinstance(place, dict) or place.get("none") is True:
+        raise IntakeRejected("invalid_value", "새 일정의 장소를 먼저 골라 주세요")
+    return added
 
 
 def current_review(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int | None = None,
@@ -510,6 +661,41 @@ def _verified_content_id(conn, tenant_id: str, value: dict[str, Any]) -> dict[st
     ok = (bool(row) and row[0] is not None and row[1] is not None
           and distance_m(float(row[0]), float(row[1]), float(value["latitude"]), float(value["longitude"])) <= CONTENT_ID_MATCH_M)
     return value if ok else {**value, "content_id": None, "content_type_id": None}
+
+
+#: 고른 식당을 공용 원장 식당 행과 같은 곳으로 보는 거리 — 후보는 그 행의 좌표를 그대로 돌려보내므로 넉넉할 필요가 없다(우리가 고른 값)
+LEDGER_PICK_MATCH_M = 50
+
+
+def _linked_ledger_pick(conn, tenant_id: str, value: dict[str, Any]) -> dict[str, Any]:
+    """고객이 후보 · 검색에서 고른 식당을 **요식 원장 가게 번호**(`dining_place_uid`)와 잇는다. `[2026-10-10]`
+
+    ★왜. 원장 후보(`candidates._ledger_places`)는 `ref: place:{id}` 만 싣고, 웹은 고른 곳을 이름 · 좌표로만 돌려보낸다. 서버는 `place_id` 를
+      받지 않으므로(남의 여행 전용 행을 가리킬 수 있다) 고른 식당이 원장과 끊겨 확인 화면 · 등록 판정이 「모름」이 됐다.
+      결함: `wiki/records/reports/debugs/2026-10-10_고른_원장식당이_원장과_끊긴다.md`
+    ★고객이 보낸 번호를 믿지 않고 서버가 찾는다 — **공용**(`trip_scope IS NULL`) 원장 식당 행 중 이름이 **정확히 같고** 좌표가
+      `LEDGER_PICK_MATCH_M` 안인 곳이 **한 가게**일 때만 잇는다. 둘 이상이거나 없으면 전처럼 둔다(고르지 않는다 — 다른 가게의 영업시간으로
+      판정하는 것이 가장 나쁘다). 활동으로 고른 곳은 건드리지 않는다.
+    """
+    if value.get("kind") not in (None, "dining"):
+        return value
+    from .hours import _tenants
+    from .places import distance_m
+
+    try:
+        with conn.transaction(), conn.cursor() as cur:       # 세이브포인트 — 원장 열이 없는 DB 에서도 바깥 트랜잭션을 깨지 않는다
+            cur.execute("SELECT latitude, longitude, attributes->>'dining_place_uid' FROM places "
+                        "WHERE tenant_id = ANY(%s) AND source_name = 'dining_ledger' AND trip_scope IS NULL AND kind = 'dining' "
+                        "AND name = %s AND attributes ? 'dining_place_uid'", (_tenants(tenant_id), str(value["name"])))
+            rows = cur.fetchall()
+    except Exception as exc:                                  # noqa: BLE001 — 원장 열이 없는 DB(시험 · 다른 조립)면 잇지 않는다
+        if type(exc).__name__ not in ("UndefinedColumn", "UndefinedTable"):
+            raise
+        return value
+    uids = {str(uid) for lat, lon, uid in rows
+            if uid and lat is not None and lon is not None
+            and distance_m(float(lat), float(lon), float(value["latitude"]), float(value["longitude"])) <= LEDGER_PICK_MATCH_M}
+    return {**value, "dining_place_uid": uids.pop()} if len(uids) == 1 else value
 
 
 def _canonical(field_name: str) -> str:
@@ -689,7 +875,8 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, ki
         raise IntakeRejected("place_not_found", f"「{name}」: {found.note}")
     resolved = {"name": found.name, "kind": found.kind, "latitude": found.latitude, "longitude": found.longitude,
                 "place_id": found.place_id, "content_id": found.content_id,
-                "content_type_id": found.content_type_id, "source": found.evidence()["source"]}
+                "content_type_id": found.content_type_id, "source": found.evidence()["source"],
+                **({"dining_place_uid": found.dining_place_uid} if found.dining_place_uid else {})}
     return resolved, {**found.evidence(), "typed": name}, found.note
 
 
@@ -698,7 +885,8 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 our_places: list[dict[str, Any]] | None = None, today: date,
                 aliases: dict[str, str] | None = None, areas: Any = None, dining: Any = None,
                 on_rows: Callable[[list[dict[str, Any]]], None] | None = None,
-                on_progress: Callable[[str, int, int, int, str | None], None] | None = None) -> list[dict[str, Any]]:
+                on_progress: Callable[[str, int, int, int, str | None], None] | None = None,
+                differs: dict[int, dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·lookup)과 근거가 붙는다.
 
     `on_rows` — 값 줄이 **생길 때마다 묶음으로** 알려 준다(규칙으로 읽은 줄 → 모델이 가리킨 줄 → 날짜 → 장소가 하나씩 찾아질 때마다).
@@ -709,6 +897,9 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
 
     `areas` `[2026-10-03 ui 세션 요청서 「장소 해석 개선」]` — 지명 사전(`areas.py`). 이름 없이 **종류 + 지역만** 적은 줄(「성수 예약 식당」)을 알아보는 데 쓴다(`line_parts.py`) —
     그런 줄은 가게 이름으로 **찾지 않는다**(없는 가게를 찾아 글자를 줄여 가던 것이 틀린 장소와 엉뚱한 후보의 뿌리였다). 사전이 없으면(None) 지역 말은 이름 조각으로 남고 종류 · 끼니만 있는 줄만 알아본다.
+
+    `differs` `[2026-10-06 사용자 지시 — 값 변조 줄이기]` — 사진 · 스캔 받아쓰기가 같은 줄을 **두 번 다르게 읽은 곳**(`sources.differing_lines`). 그 줄에서 읽은 제목 · 예약번호는 「확인 필요」로 표시한다 —
+    고객이 확인하기 전에는 확정 값으로 쓰지 않는다(`flag_differing`).
 
     `dining` `[2026-10-05]` — 요식 원장 이름 조회(`dining/place_lookup.py`, 관광공사 자리와 같은 계약 `find` + `misses`). 식사 항목은 이것이 먼저, 그 밖의 항목은 관광공사 자리 뒤다(`places.resolve`). 없으면(None) 건너뛴다."""
     from .dates import resolve_dates
@@ -724,6 +915,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     def send(batch: list[dict[str, Any]]) -> None:
         batch = [r for r in batch if id(r) not in sent]
         sent.update(id(r) for r in batch)
+        flag_differing(batch, differs)
         if on_rows is not None and batch:
             on_rows(batch)
 
@@ -813,7 +1005,8 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                     on_progress("places", placed, titled, index, item["title"])
                 continue
             resolved[index] = resolve(item["title"], our_places=our_places or [], tour=tour, kakao=kakao,
-                                      kind_hint="dining" if item["meal"] else None, aliases=aliases, dining=dining)
+                                      kind_hint="dining" if item["meal"] else None, aliases=aliases, dining=dining,
+                                      near=_near_hint(index, items, resolved, dated))
             if resolved[index].status == "resolved":
                 # 이름이 특정된 곳은 앞뒤 일정을 볼 필요가 없다 — 찾은 즉시 알린다(실시간 진행에서 한 곳씩 나타난다)
                 early[index] = _place_rows(index, resolved[index], items=items, resolved=resolved, dated=dated, rows=rows,
@@ -822,6 +1015,14 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 placed += 1
                 if on_progress is not None:
                     on_progress("places", placed, titled, index, item["title"])
+    # ★`[2026-10-07 팀]` 체인인데 기준 위치(지점명 · 앞뒤 일정)가 없어 미룬 항목(`chain_deferred`)은 다른 장소가 정해진 뒤 한 번 더 찾는다
+    for index, found in list(resolved.items()):
+        if getattr(found, "chain_deferred", False) and index not in early:
+            point = _near_hint(index, items, resolved, dated)
+            if point is not None:
+                resolved[index] = resolve(items[index]["title"], our_places=our_places or [], tour=tour, kakao=kakao,
+                                          kind_hint="dining" if items[index]["meal"] else None, aliases=aliases,
+                                          dining=dining, near=point)
     for index in sorted(set(resolved) | nameless):
         if index in early:
             rows.extend(early[index])
@@ -838,6 +1039,29 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     return rows
 
 
+def flag_differing(rows: list[dict[str, Any]], differs: dict[int, dict[str, Any]] | None) -> None:
+    """읽은 값 줄(제목 · 예약번호) 가운데 **받아쓰기가 두 번 다르게 읽은 줄**에서 나온 것을 「확인 필요」로 고친다(제자리). 근거에 두 읽기를 남긴다.
+
+    ★값은 바꾸지 않는다 — 어느 쪽이 맞는지 서버는 모른다. 확인 화면이 두 읽기를 보이고 고객이 고른다."""
+    if not differs:
+        return
+    for row in rows:
+        field = str(row.get("field") or "")
+        if not (field.endswith(".title") or field.endswith(".booking_no")):
+            continue
+        evidence = row.get("evidence") or {}
+        unlike = differs.get(evidence.get("line"))
+        if unlike is None:
+            continue
+        row["needs_review"] = True
+        # ★`[2026-10-07 uiux 요청]` `other_value` — 반쪽 받아쓰기에서는 **이 값이 무엇으로 읽혔나**(줄 전체가 아니라 값만). 화면이 「지금 값 / 다른 읽기」 단추를 그리고 고른 값을 보낸다. 못 정하면 `None`
+        row["evidence"] = {**evidence, "transcription_differs": {"text": unlike.get("text"), "other": unlike.get("other"), "ratio": unlike.get("ratio"),
+                                                                  "other_value": other_reading(str(row.get("value") or ""), str(unlike.get("text") or ""),
+                                                                                               str(unlike.get("other") or ""))}}
+        note = f"사진에서 이 줄을 두 가지로 읽었어요 — 「{unlike.get('text')}」 / 「{unlike.get('other')}」 · 원본과 맞는 쪽을 골라 주세요"
+        row["note"] = f"{row['note']} · {note}" if row.get("note") else note
+
+
 def _place_rows(index: int, found: Any, *, items: list[dict[str, Any]], resolved: dict[int, Any], dated: Any,
                 rows: list[dict[str, Any]], kakao: Any, nearest: Any, kind_hits: Any) -> list[dict[str, Any]]:
     """찾은 결과 하나 → 그 항목의 장소 값 줄(+ 종류 줄). 이름이 특정하지 않으면 종류가 맞는 후보 중 앞뒤 일정에 가장 가까운 곳을 고른다."""
@@ -849,7 +1073,8 @@ def _place_rows(index: int, found: Any, *, items: list[dict[str, Any]], resolved
         value = {"name": found.name, "kind": found.kind, "latitude": found.latitude,
                  "longitude": found.longitude, "place_id": found.place_id, "content_id": found.content_id,
                  "content_type_id": found.content_type_id,
-                 "source": evidence["source"]}
+                 "source": evidence["source"],
+                 **({"dining_place_uid": found.dining_place_uid} if found.dining_place_uid else {})}
     elif found.candidates:
         # ★설계서 §4-2 — 이름이 특정하지 않으면 종류가 맞는 후보 중 **같은 날 앞뒤 일정에 가장 가까운 곳** 하나.
         #   선택지를 나열하지 않는다. 고른 이유(거리)를 근거에 남기고 확인을 받는다
@@ -914,6 +1139,33 @@ def _neighbours(index: int, items: list[dict[str, Any]], resolved: dict[int, Any
         if pick is not None:
             near.append(_coords(resolved[pick]))
     return near
+
+
+def _cluster_centre(found) -> tuple[float, float] | None:
+    """정하지 못했지만 후보가 서로 붙어 있으면(홍대입구역 출구들) 그 가운데 — 어느 후보든 위치가 거의 같다. `[2026-10-07 팀]`
+    ☆전에는 「홍대입구역 → 교촌치킨」의 홍대입구역이 기준이 되지 못해 종로 지점을 골랐다(5.7km)."""
+    from .chain_pick import CLUSTER_M, centre, spread_m
+
+    if found is None or found.status == "resolved" or not getattr(found, "candidates", None):
+        return None
+    points = [(float(c["latitude"]), float(c["longitude"])) for c in found.candidates
+              if c.get("latitude") is not None and c.get("longitude") is not None]
+    # 관련도 1위 후보에서 CLUSTER_M 안에 절반 이상이 모였나 — 「홍대입구역 사거리」 하나가 섞여 서로 가장 먼 거리는 555m 였다
+    tight = [point for point in points if spread_m([points[0], point]) <= CLUSTER_M] if points else []
+    return centre(tight) if tight and len(tight) * 2 >= len(points) else None
+
+
+def _near_hint(index: int, items: list[dict[str, Any]], resolved: dict[int, Any], dated) -> tuple[float, float] | None:
+    """체인 지점 · 같은 이름 여럿을 고르는 **기준 좌표** — 같은 날(날짜를 모르면 같은 원본) 가장 가까운 앞 항목, 없으면 뒤 항목의
+    좌표(정하지 못한 항목은 후보가 붙어 있을 때 그 가운데). 없으면 None — 부르는 쪽이 고르지 않고 「어느 곳인가요?」로 둔다. `[2026-10-07 팀 포팅]`"""
+    day = dated[index].value if index < len(dated) else None
+    same = [i for i in range(len(items)) if i != index and (day is None or (i < len(dated) and dated[i].value == day))]
+    for i in sorted([i for i in same if i < index], reverse=True) + sorted(i for i in same if i > index):
+        found = resolved.get(i)
+        point = _coords(found) or _cluster_centre(found)
+        if point is not None:
+            return point
+    return None
 
 
 def _coords(found) -> tuple[float, float] | None:
@@ -1037,9 +1289,43 @@ def _trip_fields(claims: list[dict[str, Any]]) -> dict[str, Any]:
 def _sources(conn, tenant_id: str, intake_id: UUID) -> list[dict[str, Any]]:
     columns = ("source_id", "position", "kind", "filename", "transcript", "transcribed", "missing_json", "seconds")
     with conn.cursor() as cur:
+        try:
+            with conn.transaction():                              # ★마이그레이션 055(`differs_json`)가 안 올라간 DB 에서도 읽는다 — 그때는 「다르게 읽은 줄」이 없는 것으로 본다
+                cur.execute(f"SELECT {', '.join(columns)}, differs_json FROM intake_sources WHERE tenant_id=%s AND intake_id=%s "
+                            "ORDER BY position", (tenant_id, intake_id))
+                return [dict(zip((*columns, "differs_json"), r)) for r in cur.fetchall()]
+        except Exception as exc:                                  # noqa: BLE001 — 칸이 없을 때만 물러난다
+            if type(exc).__name__ != "UndefinedColumn":
+                raise
+            log.warning("intake_sources.differs_json missing — reading without it (migration 055?)")
         cur.execute(f"SELECT {', '.join(columns)} FROM intake_sources WHERE tenant_id=%s AND intake_id=%s "
                     "ORDER BY position", (tenant_id, intake_id))
         return [dict(zip(columns, r)) for r in cur.fetchall()]
+
+
+def _store_transcript(conn, cur, source_id: Any, tenant_id: str, result: Any) -> None:
+    """받아쓴 글 · 빠진 줄 · 다르게 읽은 줄을 저장한다. 055 가 안 올라간 DB 에서는 다르게 읽은 줄만 빼고 저장한다(경고)."""
+    base = (result.text, bool(result.transcribed_pages) or result.kind == "image", json.dumps(result.missing, ensure_ascii=False), result.seconds)
+    try:
+        with conn.transaction():
+            cur.execute("UPDATE intake_sources SET transcript=%s, transcribed=%s, missing_json=%s, seconds=%s, differs_json=%s "
+                        "WHERE source_id=%s AND tenant_id=%s", (*base, json.dumps(result.differs, ensure_ascii=False), source_id, tenant_id))
+        return
+    except Exception as exc:                                      # noqa: BLE001
+        if type(exc).__name__ != "UndefinedColumn":
+            raise
+        log.warning("intake_sources.differs_json missing — transcript saved without it (migration 055?)")
+    cur.execute("UPDATE intake_sources SET transcript=%s, transcribed=%s, missing_json=%s, seconds=%s "
+                "WHERE source_id=%s AND tenant_id=%s", (*base, source_id, tenant_id))
+
+
+def differs_by_line(rows: Any) -> dict[int, dict[str, Any]]:
+    """저장된 「다르게 읽은 줄」 → {줄 번호: 줄 정보}. 모양이 이상한 줄은 건너뛴다(없는 것으로 본다)."""
+    out: dict[int, dict[str, Any]] = {}
+    for row in rows or []:
+        if isinstance(row, dict) and isinstance(row.get("line"), int):
+            out[row["line"]] = row
+    return out
 
 
 def _hold_reading(cur, tenant_id: str, intake_id: UUID) -> None:

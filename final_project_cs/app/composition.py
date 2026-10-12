@@ -28,6 +28,36 @@ from app.core.redaction import masked
 from app.tools.read_tools import ReadToolbox
 
 
+def _llm_failover_budget(settings: Any):
+    """모델 서버 넘김 장치(`llm_failover.py`)가 **API 로 넘긴 호출**을 세는 장치 — `external_call_budget` 의 `openai_failover` 줄(일 · 월 상한).
+    ★인프라는 도메인의 `CallBudget` 을 모르므로(계층 규칙) 조립 루트가 만들어 꽂는다. 한도 표를 못 읽으면 **부른다**(서비스를 살리는 쪽) — 경고를 남긴다.
+    한도를 넘으면 `False` — 넘김 장치가 더 부르지 않고 실패로 올린다."""
+    import logging
+
+    from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget
+    from app.infrastructure.llm_failover import METER
+
+    budget = CallBudget(connection_factory=get_connection,
+                        caps={METER: {"day": int(settings.llm_failover_daily_cap), "month": int(settings.llm_failover_monthly_cap)}})
+
+    def allowed() -> bool:
+        try:
+            return bool(budget.try_reserve(METER))
+        except Exception as exc:                                  # noqa: BLE001 — 세는 일이 서비스를 막지 않게
+            logging.getLogger("app.llm_failover").warning("call budget unreadable (%s) — calling the API anyway", type(exc).__name__)
+            return True
+    return allowed
+
+
+def _register_llm_failover() -> None:
+    from app.infrastructure.llm_failover import register_budget_provider
+
+    register_budget_provider(_llm_failover_budget)
+
+
+_register_llm_failover()           # import 때 한 번 — 꽂기만 한다(I/O 없음, 부를 때 일한다)
+
+
 def build_classifier(*, config: ProjectConfig | None = None):
     """Build the configured classifier, failing explicitly when unconfigured.
 
@@ -483,6 +513,7 @@ def build_domain_routers() -> list:
     wire_optional_features()                      # 동(고객 API 앱 경로)
     wire_domain_teams()                           # 동
     from app.domains.travel_ops.entry.trip_api import build_trip_router
+    from app.domains.travel_ops.modules.web_account.admin_customer_api import build_router as build_customer_support_router
 
     def check_factory():
         from app.core.settings import get_settings
@@ -539,7 +570,15 @@ def build_domain_routers() -> list:
             #   운영 화면 `/ui/delegations` 가 이 경로를 부른다.
             build_delegation_router(),
             # ★소셜 로그인(구글 먼저) — 업체 설정이 없으면 `GET /v1/web/auth/providers` 가 빈 목록이고 나머지는 「쓸 수 없다」로 답한다(2026-10-03)
-            build_auth_router()]
+            build_auth_router(),
+            build_customer_support_router()]
+
+
+def build_admin_snapshot(conn, tenant_id: str, default_chat_limit: int):
+    """운영 화면의 도메인 조회를 조립 자리에서 제공한다."""
+    from app.domains.travel_ops.modules.web_account.admin_snapshot import snapshot
+
+    return snapshot(conn, tenant_id, default_chat_limit)
 
 
 def build_ops_routers() -> list:
@@ -549,9 +588,9 @@ def build_ops_routers() -> list:
     ★`[2026-09-30 사용자 지시]` **시나리오(시연) 모드는 운영 앱에서 뗐다** — 실서비스 운영 화면과 데모가 같은 프로세스에 있으면
       안 된다. 압축 보관: `legacy/scenario_mode/scenario_mode_2026-09-30.zip`(복원 방법은 그 안의 README.md).
     """
-    from app.domains.travel_ops.modules.web_account.web_limits_api import build_limits_router
+    from app.domains.travel_ops.modules.web_account.web_limits_api import build_limits_router, build_retention_ops_router
 
-    return [build_limits_router()]
+    return [build_limits_router(), build_retention_ops_router()]
 
 
 def build_subject_resolver():

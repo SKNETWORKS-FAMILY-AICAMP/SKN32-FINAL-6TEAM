@@ -1,0 +1,249 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\full-release-20261008\\release\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.live.config.ts",
+      "tests/live/date-divider-motion-20261010.spec.ts",
+      "tests/live/forms-time-follow-20261010.spec.ts",
+      "--grep",
+      "날짜|시각은 펼침",
+      "--workers=1",
+      "--trace",
+      "retain-on-failure",
+      "--output",
+      "WORKSPACE/.tmp/uiux-handoff-20261009-2300/frontend-check/date-gap-final-20261011/screens4-results",
+      "--reporter=line,json"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\full-release-20261008\\release\\final_project_cs\\frontend\\apps\\web\\playwright.live.config.ts",
+    "rootDir": "WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "WORKSPACE/.tmp/uiux-handoff-20261009-2300/frontend-check/date-gap-final-20261011/screens4-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "date-divider-motion-20261010.spec.ts",
+      "file": "date-divider-motion-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12735,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T18:57:37.367Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "date-clearance-375",
+                      "contentType": "application/json",
+                      "body": "W3sidGltZSI6NTA0NC4xOTk5OTk5ODgwNzksInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MTR9LHsidGltZSI6NTMyOS44OTk5OTk5NzYxNTgsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MTR9LHsidGltZSI6NTYwMS42OTk5OTk5ODgwNzksInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MTR9LHsidGltZSI6NTg0Mi41LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjE0fSx7InRpbWUiOjYwMTAuMDk5OTk5OTk0MDM5NSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoxNH0seyJ0aW1lIjo2MTkzLjM5OTk5OTk3NjE1OCwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoxNH0seyJ0aW1lIjo2MzU5Ljg5OTk5OTk3NjE1OCwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoxNH0seyJ0aW1lIjo2NTE1LjM5OTk5OTk3NjE1OCwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoxNH0seyJ0aW1lIjo2NzM3LjU5OTk5OTk5NDAzOTUsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MTR9LHsidGltZSI6NjkwMSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoxNH0seyJ0aW1lIjo3MDc3Ljg5OTk5OTk3NjE1OCwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoxNH0seyJ0aW1lIjo3MjY0LjUsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MTR9LHsidGltZSI6NzQ1Ny4xOTk5OTk5ODgwNzksInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MTR9LHsidGltZSI6NzY0My41OTk5OTk5OTQwMzk1LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjE0fSx7InRpbWUiOjc4MDkuNjk5OTk5OTg4MDc5LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjE0fSx7InRpbWUiOjgwMDcuNSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoxNH0seyJ0aW1lIjo4MTgzLjM5OTk5OTk3NjE1OCwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoxNH1d"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "be372b7a749ce7575407-8f4d6609f5029f041312",
+          "file": "date-divider-motion-20261010.spec.ts",
+          "line": 33,
+          "column": 3
+        },
+        {
+          "title": "날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13291,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T18:57:50.412Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "date-clearance-1280",
+                      "contentType": "application/json",
+                      "body": "W3sidGltZSI6NTE5NC4wOTk5OTk5OTQwMzk1LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjE0fSx7InRpbWUiOjU0MjguMzAwMDAwMDExOTIxLCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjE0fSx7InRpbWUiOjU1OTIsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MTR9LHsidGltZSI6NTc1MS41LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjE0fSx7InRpbWUiOjYwMDAuNjk5OTk5OTg4MDc5LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjE0fSx7InRpbWUiOjYxODIuNjk5OTk5OTg4MDc5LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjE0fSx7InRpbWUiOjY0MDMuOTAwMDAwMDA1OTYwNSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoxNH0seyJ0aW1lIjo2NTQwLjU5OTk5OTk5NDAzOTUsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MTR9LHsidGltZSI6Njc1MS4xOTk5OTk5ODgwNzksInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MTR9LHsidGltZSI6Njg5MS40MDAwMDAwMDU5NjA1LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjE0fSx7InRpbWUiOjcwNTIuODAwMDAwMDExOTIxLCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjE0fSx7InRpbWUiOjcyMjEuOTAwMDAwMDA1OTYwNSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoxNH0seyJ0aW1lIjo3MzYzLCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjE0fSx7InRpbWUiOjc0OTcsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV0sImFjdGlvbkdhcCI6MTR9LHsidGltZSI6NzY2NS41LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dLCJhY3Rpb25HYXAiOjE0fSx7InRpbWUiOjc4ODUuNSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoxNH0seyJ0aW1lIjo4MDUxLjY5OTk5OTk4ODA3OSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XSwiYWN0aW9uR2FwIjoxNH1d"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "be372b7a749ce7575407-fe42346d7c8e89ae6bd0",
+          "file": "date-divider-motion-20261010.spec.ts",
+          "line": 33,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "forms-time-follow-20261010.spec.ts",
+      "file": "forms-time-follow-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "시각은 펼침·검토·되돌리기 상태에만 따라온다 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5757,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T18:58:03.754Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "594da042d82c8d244e97-3625962cfdef87688cdf",
+          "file": "forms-time-follow-20261010.spec.ts",
+          "line": 24,
+          "column": 3
+        },
+        {
+          "title": "시각은 펼침·검토·되돌리기 상태에만 따라온다 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6144,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T18:58:09.531Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "594da042d82c8d244e97-1be22dfbbef342c1ec21",
+          "file": "forms-time-follow-20261010.spec.ts",
+          "line": 24,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-10T18:57:34.157Z",
+    "duration": 43071.171,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

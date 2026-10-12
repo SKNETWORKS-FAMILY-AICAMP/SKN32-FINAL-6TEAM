@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import { useId, type CSSProperties, type ReactNode } from "react";
 import type { Translate } from "@/lib/i18n";
 import { useT } from "@/lib/settings";
 import type { CheckKind, CheckResult, CheckRow, PlaceInfo, Verdict } from "./model";
@@ -20,6 +20,23 @@ export function Checks({ id, rows }: { id?: string; rows: CheckRow[] }) {
       <span className={styles.checkText}>{row.result === "pending" ? t("확인하는 중…", "Checking…") : row.text}</span>
       <span className="sr-only">{resultLabel(row.result, t)}</span>
     </li>)}</ul>;
+}
+
+/**
+ * `[2026-10-07 사용자 지시 — 카드의 둘째 줄에 사용자 입력이 필요한 요소를 ✕ 장소 처럼]` What of a stop the customer still has to deal with, one chip each (「✕ 장소」 · 「! 시간」), so a card that is shut still says what is wrong with it.
+ * Only the checks that went wrong (`bad` · `warn`) - a fine one, one still being checked and one waiting on the place (`unknown`) are not the customer's to do.
+ */
+export function needsOf(rows: CheckRow[]): CheckRow[] { return rows.filter((row) => row.result === "bad" || row.result === "warn"); }
+export function NeedsLine({ rows, inline = false }: { rows: CheckRow[]; inline?: boolean }) {
+  const t = useT();
+  const wrong = needsOf(rows);
+  if (!wrong.length) return null;
+  const Box = inline ? "span" : "p";
+  return <Box className={inline ? styles.needsInline : styles.needs}>{wrong.map((row, index) =>
+    <span key={`${row.kind}-${index}`} className={styles.need} data-result={row.result}>
+      <span className={styles.mark} data-result={row.result} aria-hidden="true">{GLYPH[row.result]}</span>
+      <b>{kindLabel(row.kind, t)}</b><span className="sr-only">{resultLabel(row.result, t)}</span>
+    </span>)}</Box>;
 }
 
 /** ★`[2026-10-04 사용자 지시]` Only 「확인 필요」 is said: a stop that is simply fine (or was adjusted a little by the server) carries no word — the old 「조정」 told no one anything. */
@@ -64,6 +81,13 @@ export function placeKindLabel(kind: string | null | undefined, t: Translate): s
   return null;
 }
 
+/** `[2026-10-07 사용자 지시]` The word under a picked pin on the map: 「액티비티」 for a thing to do, 「식당」 for a meal; none when the server does not class the stop. */
+export function pinKindLabel(kind: string | null | undefined, t: Translate): string | null {
+  if (kind === "dining") return t("식당", "Food");
+  if (kind === "activity") return t("액티비티", "Activity");
+  return null;
+}
+
 /** Where the server found a place (its `source`) — shown small beside the name, so a result says what it came from. */
 export function sourceLabel(origin: string | null | undefined, t: Translate): string | null {
   switch (origin) {
@@ -93,14 +117,15 @@ export function SourceTag({ origin }: { origin: string | null | undefined }) {
 export const reason = (error: unknown) => error instanceof Error ? error.message : String(error);
 
 /** A button that stays reachable when it cannot act: pressing it says why (mockup: 「꺼진 버튼을 누르면 이유를 알려 준다」). */
-export function Act({ why, onPress, explain, className, children, title, ...rest }: {
+export function Act({ why, onPress, explain, className, children, title, tooltip, ...rest }: {
   why: string | null; onPress: () => void; explain: (why: string) => void; className?: string; children: ReactNode;
-  id?: string; title?: string; "aria-label"?: string; "aria-pressed"?: boolean; "data-primary"?: boolean; "data-edge"?: string; style?: CSSProperties;
+  id?: string; title?: string; tooltip?: string; "aria-label"?: string; "aria-pressed"?: boolean; "data-primary"?: boolean; "data-edge"?: string; style?: CSSProperties;
   /** `[2026-10-05]` Something a time is dragged by: the pointer handlers of a drag, and the mark for the cursor and the touch (`data-grab`). */
   "data-grab"?: boolean; onPointerDown?: Grab["onPointerDown"]; onPointerMove?: Grab["onPointerMove"]; onPointerUp?: Grab["onPointerUp"]; onPointerCancel?: Grab["onPointerCancel"];
 }) {
-  return <button type="button" className={className} aria-disabled={why ? true : undefined} title={why ?? title} {...rest}
-    onClick={() => why ? explain(why) : onPress()}>{children}</button>;
+  const tip = useId();
+  return <button type="button" className={className} aria-disabled={why ? true : undefined} title={tooltip ? undefined : why ?? title} aria-describedby={tooltip ? tip : undefined} {...rest}
+    onClick={() => why ? explain(why) : onPress()}>{children}{tooltip && <span id={tip} role="tooltip" className={styles.iconTip}>{tooltip}</span>}</button>;
 }
 
 /** 「A」 「B」 「C」 for the change screen's cards and pins (the current stop is card 0). */
@@ -113,16 +138,18 @@ export type ListFilter = "needs" | "changed";
  * ★`[2026-10-04 사용자 지시]` The sheet's head says the state in marks and numbers, not a sentence that wrapped to a second line (「장소 3곳 확인 필요」):
  * 「! 3」 = three need a look, 「✎ 2」 = two were changed — each can be pressed to see only those. Nothing to say: a single ✓.
  */
-export function HeadBadges({ needs, changed, filter, onFilter, registered, rechecking }: {
+export function HeadBadges({ needs, changed, filter, onFilter, registered, rechecking, needsOnMap = false }: {
   needs: number; changed: number; filter: ListFilter | null; onFilter: (next: ListFilter | null) => void;
   registered: boolean; rechecking: { at: number; of: number } | null;
+  /** `[2026-10-07]` The 「! n」 count stands on the map instead of here. */
+  needsOnMap?: boolean;
 }) {
   const t = useT();
   if (registered) return <span className={styles.headBadge} data-kind="ok"><span className={styles.mark} data-result="ok" aria-hidden="true">✓</span>{t("등록 완료", "Registered")}</span>;
   if (rechecking) return <span className={styles.headBadge} data-kind="wait" role="status"><span className={styles.spinner} aria-hidden="true" />{rechecking.at}/{rechecking.of}<span className="sr-only">{t("재검증 중", "Checking again")}</span></span>;
   const toggle = (kind: ListFilter) => onFilter(filter === kind ? null : kind);
   return <span className={styles.headBadges}>
-    {needs > 0 && <button type="button" className={styles.headBadge} data-kind="needs" aria-pressed={filter === "needs"} onClick={() => toggle("needs")}
+    {needs > 0 && !needsOnMap && <button type="button" className={styles.headBadge} data-kind="needs" aria-pressed={filter === "needs"} onClick={() => toggle("needs")}
       aria-label={t(`확인 필요 ${needs}곳`, `${needs} to check`)} title={filter === "needs" ? t("눌러서 전체 일정 보기", "Press to show every stop") : t("눌러서 확인이 필요한 곳만 모아 보기", "Press to show only what needs a look")}>
       <span className={styles.mark} data-result="warn" aria-hidden="true">!</span><b>{needs}</b></button>}
     {changed > 0 && <button type="button" className={styles.headBadge} data-kind="changed" aria-pressed={filter === "changed"} onClick={() => toggle("changed")}

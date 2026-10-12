@@ -1,0 +1,159 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      ".tmp/consent-progress.config.ts",
+      "tests/live/empty-intake-return-20261011.spec.ts",
+      "-g",
+      "375px 読|375px 읽는",
+      "--workers=1",
+      "--trace=off",
+      "--reporter=line,json",
+      "--output=.tmp/empty-intake-before"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\consent-progress.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/.tmp/empty-intake-before",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "empty-intake-return-20261011.spec.ts",
+      "file": "empty-intake-return-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px 읽는 중 0개는 기다리고 완료 0개는 질문 유지보다 먼저 입력으로 돌아가 글을 고쳐 다시 보낸다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 7878,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/trips\\/new$/\u001b[39m\nReceived string:  \u001b[31m\"http://127.0.0.1:3167/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    14 × locator resolved to <html lang=\"ko\" data-theme=\"green\">…</html>\u001b[22m\n\u001b[2m       - unexpected value \"http://127.0.0.1:3167/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/trips\\/new$/\u001b[39m\nReceived string:  \u001b[31m\"http://127.0.0.1:3167/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    14 × locator resolved to <html lang=\"ko\" data-theme=\"green\">…</html>\u001b[22m\n\u001b[2m       - unexpected value \"http://127.0.0.1:3167/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\"\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\empty-intake-return-20261011.spec.ts:31:24",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\empty-intake-return-20261011.spec.ts",
+                      "column": 24,
+                      "line": 31
+                    },
+                    "snippet": "  29 |     await server.scenario({ readingPolls: 0 });\n  30 |     release();\n> 31 |     await expect(page).toHaveURL(/\\/trips\\/new$/, { timeout: 5000 });\n     |                        ^\n  32 |     await expect(page.locator(\"#plan-error\")).toHaveText(notice);\n  33 |     await expect(page.getByLabel(\"나의 여행 계획\")).toHaveValue(source);\n  34 |     await expect(questions).toHaveCount(0);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\empty-intake-return-20261011.spec.ts",
+                        "column": 24,
+                        "line": 31
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/trips\\/new$/\u001b[39m\nReceived string:  \u001b[31m\"http://127.0.0.1:3167/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    14 × locator resolved to <html lang=\"ko\" data-theme=\"green\">…</html>\u001b[22m\n\u001b[2m       - unexpected value \"http://127.0.0.1:3167/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\"\u001b[22m\n\n\n  29 |     await server.scenario({ readingPolls: 0 });\n  30 |     release();\n> 31 |     await expect(page).toHaveURL(/\\/trips\\/new$/, { timeout: 5000 });\n     |                        ^\n  32 |     await expect(page.locator(\"#plan-error\")).toHaveText(notice);\n  33 |     await expect(page.getByLabel(\"나의 여행 계획\")).toHaveValue(source);\n  34 |     await expect(questions).toHaveCount(0);\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\empty-intake-return-20261011.spec.ts:31:24"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:45:12.917Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\empty-intake-before\\empty-intake-return-202610-fe1b4-보다-먼저-입력으로-돌아가-글을-고쳐-다시-보낸다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\empty-intake-before\\empty-intake-return-202610-fe1b4-보다-먼저-입력으로-돌아가-글을-고쳐-다시-보낸다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\empty-intake-return-20261011.spec.ts",
+                    "column": 24,
+                    "line": 31
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "757b1c591c53433fa48f-a15aeccfb4db5853d515",
+          "file": "empty-intake-return-20261011.spec.ts",
+          "line": 8,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-10T21:45:11.164Z",
+    "duration": 10734.101,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

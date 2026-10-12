@@ -93,7 +93,7 @@ test("영어 화면과 PC·375px·320px에서 메뉴는 스크롤로 끝까지 �
     await page.getByRole("button", { name: "메뉴", exact: true }).click();
     const menu = page.getByRole("dialog", { name: "메뉴" });
     await menu.getByRole("button", { name: /LANGUAGE/ }).click();
-    const last = menu.getByRole("switch", { name: "데스크탑 화면으로 보기" });         // 메뉴의 마지막 줄
+    const last = menu.getByRole("switch", { name: "애니메이션 건너뛰기" });         // 메뉴의 마지막 줄
     await last.scrollIntoViewIfNeeded();
     await expect(last).toBeInViewport();
     expect(await menu.evaluate((panel) => panel.scrollWidth <= panel.clientWidth)).toBe(true);

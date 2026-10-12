@@ -1,0 +1,377 @@
+{
+ "eval": "dining_alternatives",
+ "dataset": "dining_alternatives_v1.jsonl",
+ "dataset_sha": "98839bd8e55b1362",
+ "label": "v2-transit",
+ "seeds": 5,
+ "mobility": true,
+ "env": {
+  "run_at": "2026-10-07T14:20:29+09:00",
+  "git_commit": "8d08f1b",
+  "git_branch": "role-dining",
+  "git_dirty": true
+ },
+ "summary": {
+  "accuracy": {
+   "num": 19,
+   "den": 19,
+   "rate": 1.0
+  },
+  "acceptable": {
+   "num": 19,
+   "den": 19,
+   "rate": 1.0
+  },
+  "violations": {
+   "num": 0,
+   "den": 19,
+   "rate": 0.0
+  },
+  "violations_any_seed": {
+   "num": 0,
+   "den": 19,
+   "rate": 0.0
+  },
+  "labels": {
+   "correct": 18,
+   "ok": 0,
+   "correct_no_change": 1,
+   "wrong_violation": 0,
+   "wrong": 0,
+   "missed": 0,
+   "wrong_change": 0,
+   "unstable": 0
+  },
+  "by_group": {
+   "brand": {
+    "num": 3,
+    "den": 3,
+    "rate": 1.0
+   },
+   "move": {
+    "num": 5,
+    "den": 5,
+    "rate": 1.0
+   },
+   "sanity": {
+    "num": 3,
+    "den": 3,
+    "rate": 1.0
+   },
+   "similar": {
+    "num": 6,
+    "den": 6,
+    "rate": 1.0
+   },
+   "transit": {
+    "num": 2,
+    "den": 2,
+    "rate": 1.0
+   }
+  },
+  "added_walk_min_mean": -0.8,
+  "skipped": []
+ },
+ "results": [
+  {
+   "id": "DA-001",
+   "group": "move",
+   "why": "다음 일정이 동쪽 — 원래 식당에 더 가까운 서쪽 가게는 다음 일정에 늦는다",
+   "picked": "E",
+   "picked_name": "동쪽 국밥집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-002",
+   "group": "move",
+   "why": "앞 일정이 서쪽 멀리 — 동쪽 가게는 식사 시작에 늦게 도착한다",
+   "picked": "W",
+   "picked_name": "서쪽 국밥집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": -3,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-003",
+   "group": "move",
+   "why": "가게 앞에서 휴무 신고 — 다음 일정이 북쪽이면 남쪽 가게는 늦는다",
+   "picked": "U",
+   "picked_name": "북쪽 칼국수집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 1,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-004",
+   "group": "move",
+   "why": "30분 늦어 원래 식당이 문을 닫는다 — 다음 일정 쪽 가게여야 다음에 안 늦는다",
+   "picked": "W",
+   "picked_name": "서쪽 백반집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": -4,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-005",
+   "group": "move",
+   "why": "다음 일정이 없다 — 가까운 같은 종류(대조군)",
+   "picked": "A",
+   "picked_name": "가까운 국밥집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-006",
+   "group": "similar",
+   "why": "삼계탕 → 같은 삼계탕집이 조금 멀어도 카페 · 국밥보다 낫다",
+   "picked": "S",
+   "picked_name": "다른 삼계탕집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-007",
+   "group": "similar",
+   "why": "같은 삼계탕집이 다음 일정 반대쪽 멀리 — 동선이 크게 늘면 가까운 한식이 낫다",
+   "picked": "G",
+   "picked_name": "다음 일정 쪽 국밥집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": -5,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-008",
+   "group": "similar",
+   "why": "짜장면 → 가까운 한식 · 일식보다 중식",
+   "picked": "C",
+   "picked_name": "다른 중국집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-009",
+   "group": "similar",
+   "why": "카페 → 가까운 한식당보다 카페",
+   "picked": "C",
+   "picked_name": "다른 카페",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-010",
+   "group": "similar",
+   "why": "파스타 → 같은 파스타가 먼저, 피자는 차선",
+   "picked": "T",
+   "picked_name": "다른 파스타집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-011",
+   "group": "similar",
+   "why": "원래 식당의 종류를 모른다 — 가까운 곳(대조군)",
+   "picked": "A",
+   "picked_name": "가까운 식당",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-012",
+   "group": "brand",
+   "why": "스타벅스 → 가까운 다른 카페보다 같은 브랜드 다른 지점",
+   "picked": "B",
+   "picked_name": "스타벅스 다라점",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-013",
+   "group": "brand",
+   "why": "교촌치킨 → 같은 브랜드가 먼저, 다른 치킨집은 차선",
+   "picked": "B",
+   "picked_name": "교촌치킨 다라점",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-014",
+   "group": "brand",
+   "why": "같은 브랜드가 반경 밖 — 반경 안의 같은 종류",
+   "picked": "X",
+   "picked_name": "동네 카페",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-015",
+   "group": "sanity",
+   "why": "가장 가까운 곳이 브레이크타임 — 여는 곳으로",
+   "picked": "A",
+   "picked_name": "여는 식당",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-016",
+   "group": "sanity",
+   "why": "카드만 쓰는 여행 — 현금만 받는 가까운 곳은 탈락",
+   "picked": "A",
+   "picked_name": "카드 식당",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-017",
+   "group": "sanity",
+   "why": "근처가 모두 닫았다 — 바꾸지 않는다",
+   "picked": null,
+   "picked_name": null,
+   "status": "unresolved",
+   "route": null,
+   "label": "correct_no_change"
+  },
+  {
+   "id": "DA-018",
+   "group": "transit",
+   "why": "다음 일정이 잠실(교통) — 직선으로는 필동이 가깝지만 역 앞 가게가 실제로 빠르다(이동 계산기)",
+   "picked": "A",
+   "picked_name": "을지로입구역 앞 칼국수집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "basis": "mobility",
+    "added_walk_min": -5,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DA-019",
+   "group": "transit",
+   "why": "가게 앞 휴무 신고 · 다음 일정 잠실 — 역 앞 가게여야 안 늦는다(이동 계산기)",
+   "picked": "A",
+   "picked_name": "을지로입구역 앞 칼국수집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "basis": "mobility",
+    "added_walk_min": 1,
+    "violation": false
+   },
+   "label": "correct"
+  }
+ ]
+}

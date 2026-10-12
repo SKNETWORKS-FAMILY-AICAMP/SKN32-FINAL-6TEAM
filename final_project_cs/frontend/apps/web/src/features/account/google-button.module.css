@@ -1,6 +1,6 @@
 /*
  * `[2026-10-05 사용자 지시]` The Google button, as Google gives it: the HTML/CSS of the "Sign in with Google" button generator
- * (developers.google.com/identity/branding-guidelines, 「HTML 버튼 요소 생성」, light theme, rectangular, standard size), copied
+ * (developers.google.com/identity/branding-guidelines, 「HTML 버튼 요소 생성」, light theme, pill shape, standard size), copied
  * unchanged except for the class names (a CSS module renames them) and two additions that are not part of the brand: the keyboard
  * focus ring and the width that fills the row.
  * ★Do not recolour or redraw it. Google's rules: the standard-colour "G" on a white button, no black-and-white G, no hand-drawn
@@ -15,15 +15,15 @@
   background-color: #ffffff;
   background-image: none;
   border: 1px solid #747775;
-  -webkit-border-radius: 4px;
-  border-radius: 4px;
+  -webkit-border-radius: 24px;
+  border-radius: 24px;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
   color: #1f1f1f;
   cursor: pointer;
   font-family: "Roboto", arial, sans-serif;
   font-size: 14px;
-  height: 40px;
+  height: 48px;
   letter-spacing: 0.25px;
   outline: none;
   overflow: hidden;

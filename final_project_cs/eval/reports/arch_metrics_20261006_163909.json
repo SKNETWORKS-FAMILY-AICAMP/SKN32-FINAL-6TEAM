@@ -1,0 +1,1668 @@
+{
+  "run_id": "20261006_163909",
+  "repeat": 3,
+  "llm": "흉내(분류·추출)",
+  "sources": "재생",
+  "summary": {
+    "scenario_runs": 30,
+    "scenario_passed": 30,
+    "violations": 0,
+    "fit_calls": 39,
+    "first_rank_pass": 39,
+    "later_rank_pass": 0,
+    "all_failed": 0,
+    "skip_why": {
+      "schedule": 0,
+      "density": 0
+    },
+    "tick_with_notice_s": {
+      "n": 18,
+      "p50": 0.3656037999999171,
+      "p95": 0.7691848000000618,
+      "max": 0.8422863999999208
+    },
+    "tick_quiet_s": {
+      "n": 30,
+      "p50": 0.1052118000000064,
+      "p95": 0.15686319999997522
+    },
+    "message_s": {
+      "n": 36,
+      "p50": 0.30081170000005386,
+      "p95": 0.45407890000001316,
+      "max": 0.5377538000000186
+    },
+    "retick": {
+      "n": 48,
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    "rollback_steps": [
+      {
+        "case": "t-swap-rollback#1",
+        "step": "rollback:2",
+        "kind": "rollback",
+        "seconds": 0.45407890000001316,
+        "notices": 1,
+        "opened": null
+      },
+      {
+        "case": "t-swap-rollback#2",
+        "step": "rollback:2",
+        "kind": "rollback",
+        "seconds": 0.2906139000000394,
+        "notices": 1,
+        "opened": null
+      },
+      {
+        "case": "t-swap-rollback#3",
+        "step": "rollback:2",
+        "kind": "rollback",
+        "seconds": 0.3284504000000652,
+        "notices": 1,
+        "opened": null
+      }
+    ]
+  },
+  "outcomes": [
+    {
+      "case": "t-confirmed#1",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 6,
+      "notices": 5,
+      "cases": {
+        "resolved": 6,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-quiet#1",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 1,
+      "notices": 0,
+      "cases": {
+        "resolved": 0,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-air-only#1",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 2,
+      "notices": 1,
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-route-only#1",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 3,
+      "notices": 2,
+      "cases": {
+        "resolved": 2,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-delay-only#1",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 2,
+      "notices": 1,
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-closed-only#1",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 2,
+      "notices": 1,
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-stock-only#1",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 1,
+      "notices": 0,
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-delay-long#1",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 1,
+      "notices": 0,
+      "cases": {
+        "resolved": 0,
+        "escalated": 1
+      }
+    },
+    {
+      "case": "t-cash-only#1",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 3,
+      "notices": 2,
+      "cases": {
+        "resolved": 2,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-swap-rollback#1",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 4,
+      "notices": 3,
+      "cases": {
+        "resolved": 3,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-confirmed#2",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 6,
+      "notices": 5,
+      "cases": {
+        "resolved": 6,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-quiet#2",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 1,
+      "notices": 0,
+      "cases": {
+        "resolved": 0,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-air-only#2",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 2,
+      "notices": 1,
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-route-only#2",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 3,
+      "notices": 2,
+      "cases": {
+        "resolved": 2,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-delay-only#2",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 2,
+      "notices": 1,
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-closed-only#2",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 2,
+      "notices": 1,
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-stock-only#2",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 1,
+      "notices": 0,
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-delay-long#2",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 1,
+      "notices": 0,
+      "cases": {
+        "resolved": 0,
+        "escalated": 1
+      }
+    },
+    {
+      "case": "t-cash-only#2",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 3,
+      "notices": 2,
+      "cases": {
+        "resolved": 2,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-swap-rollback#2",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 4,
+      "notices": 3,
+      "cases": {
+        "resolved": 3,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-confirmed#3",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 6,
+      "notices": 5,
+      "cases": {
+        "resolved": 6,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-quiet#3",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 1,
+      "notices": 0,
+      "cases": {
+        "resolved": 0,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-air-only#3",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 2,
+      "notices": 1,
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-route-only#3",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 3,
+      "notices": 2,
+      "cases": {
+        "resolved": 2,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-delay-only#3",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 2,
+      "notices": 1,
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-closed-only#3",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 2,
+      "notices": 1,
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-stock-only#3",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 1,
+      "notices": 0,
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-delay-long#3",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 1,
+      "notices": 0,
+      "cases": {
+        "resolved": 0,
+        "escalated": 1
+      }
+    },
+    {
+      "case": "t-cash-only#3",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 3,
+      "notices": 2,
+      "cases": {
+        "resolved": 2,
+        "escalated": 0
+      }
+    },
+    {
+      "case": "t-swap-rollback#3",
+      "passed": true,
+      "failures": [],
+      "violations": 0,
+      "versions": 4,
+      "notices": 3,
+      "cases": {
+        "resolved": 3,
+        "escalated": 0
+      }
+    }
+  ],
+  "fits": [
+    {
+      "case": "t-confirmed#1",
+      "rank": 1,
+      "chosen": true,
+      "options": 2,
+      "skipped": []
+    },
+    {
+      "case": "t-confirmed#1",
+      "rank": 1,
+      "chosen": true,
+      "options": 2,
+      "skipped": []
+    },
+    {
+      "case": "t-confirmed#1",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-confirmed#1",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-confirmed#1",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-air-only#1",
+      "rank": 1,
+      "chosen": true,
+      "options": 2,
+      "skipped": []
+    },
+    {
+      "case": "t-route-only#1",
+      "rank": 1,
+      "chosen": true,
+      "options": 2,
+      "skipped": []
+    },
+    {
+      "case": "t-route-only#1",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-delay-only#1",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-closed-only#1",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-cash-only#1",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-cash-only#1",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-swap-rollback#1",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-confirmed#2",
+      "rank": 1,
+      "chosen": true,
+      "options": 2,
+      "skipped": []
+    },
+    {
+      "case": "t-confirmed#2",
+      "rank": 1,
+      "chosen": true,
+      "options": 2,
+      "skipped": []
+    },
+    {
+      "case": "t-confirmed#2",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-confirmed#2",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-confirmed#2",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-air-only#2",
+      "rank": 1,
+      "chosen": true,
+      "options": 2,
+      "skipped": []
+    },
+    {
+      "case": "t-route-only#2",
+      "rank": 1,
+      "chosen": true,
+      "options": 2,
+      "skipped": []
+    },
+    {
+      "case": "t-route-only#2",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-delay-only#2",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-closed-only#2",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-cash-only#2",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-cash-only#2",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-swap-rollback#2",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-confirmed#3",
+      "rank": 1,
+      "chosen": true,
+      "options": 2,
+      "skipped": []
+    },
+    {
+      "case": "t-confirmed#3",
+      "rank": 1,
+      "chosen": true,
+      "options": 2,
+      "skipped": []
+    },
+    {
+      "case": "t-confirmed#3",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-confirmed#3",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-confirmed#3",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-air-only#3",
+      "rank": 1,
+      "chosen": true,
+      "options": 2,
+      "skipped": []
+    },
+    {
+      "case": "t-route-only#3",
+      "rank": 1,
+      "chosen": true,
+      "options": 2,
+      "skipped": []
+    },
+    {
+      "case": "t-route-only#3",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-delay-only#3",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-closed-only#3",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-cash-only#3",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-cash-only#3",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    },
+    {
+      "case": "t-swap-rollback#3",
+      "rank": 1,
+      "chosen": true,
+      "options": 1,
+      "skipped": []
+    }
+  ],
+  "times": [
+    {
+      "case": "t-confirmed#1",
+      "step": "tick:09:00",
+      "kind": "tick",
+      "seconds": 0.7691848000000618,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-confirmed#1",
+      "step": "tick:10:45",
+      "kind": "tick",
+      "seconds": 0.36328600000001643,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-confirmed#1",
+      "step": "say:delay",
+      "kind": "say",
+      "seconds": 0.26217189999999846,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-confirmed#1",
+      "step": "tick:14:50",
+      "kind": "tick",
+      "seconds": 0.07880729999999403,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-confirmed#1",
+      "step": "tick:17:10",
+      "kind": "tick",
+      "seconds": 0.35898359999998775,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-confirmed#1",
+      "step": "say:closed",
+      "kind": "say",
+      "seconds": 0.319253099999969,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-confirmed#1",
+      "step": "say:stock_out",
+      "kind": "say",
+      "seconds": 0.3398651999999629,
+      "notices": 0,
+      "opened": null
+    },
+    {
+      "case": "t-quiet#1",
+      "step": "tick:09:00",
+      "kind": "tick",
+      "seconds": 0.10066300000005413,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-quiet#1",
+      "step": "tick:10:45",
+      "kind": "tick",
+      "seconds": 0.08273180000003322,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-quiet#1",
+      "step": "tick:14:50",
+      "kind": "tick",
+      "seconds": 0.10792739999999412,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-quiet#1",
+      "step": "tick:17:10",
+      "kind": "tick",
+      "seconds": 0.12416880000000674,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-air-only#1",
+      "step": "tick:09:00",
+      "kind": "tick",
+      "seconds": 0.42571079999993344,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-air-only#1",
+      "step": "tick:10:45",
+      "kind": "tick",
+      "seconds": 0.09656059999997524,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-air-only#1",
+      "step": "tick:14:50",
+      "kind": "tick",
+      "seconds": 0.09922660000006545,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-air-only#1",
+      "step": "tick:17:10",
+      "kind": "tick",
+      "seconds": 0.10548769999991237,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-route-only#1",
+      "step": "tick:09:00",
+      "kind": "tick",
+      "seconds": 0.16661009999995713,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-route-only#1",
+      "step": "tick:10:45",
+      "kind": "tick",
+      "seconds": 0.4448932000000241,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-route-only#1",
+      "step": "tick:14:50",
+      "kind": "tick",
+      "seconds": 0.11257119999993392,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-route-only#1",
+      "step": "tick:17:10",
+      "kind": "tick",
+      "seconds": 0.3721788000000288,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-delay-only#1",
+      "step": "say:delay",
+      "kind": "say",
+      "seconds": 0.33639210000001185,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-closed-only#1",
+      "step": "say:closed",
+      "kind": "say",
+      "seconds": 0.29681110000001354,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-stock-only#1",
+      "step": "say:stock_out",
+      "kind": "say",
+      "seconds": 0.2749321000000009,
+      "notices": 0,
+      "opened": null
+    },
+    {
+      "case": "t-delay-long#1",
+      "step": "say:delay:200",
+      "kind": "say",
+      "seconds": 0.26094689999990806,
+      "notices": 0,
+      "opened": null
+    },
+    {
+      "case": "t-cash-only#1",
+      "step": "say:closed",
+      "kind": "say",
+      "seconds": 0.3232983000000331,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-cash-only#1",
+      "step": "say:delay",
+      "kind": "say",
+      "seconds": 0.4389264000000139,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-swap-rollback#1",
+      "step": "say:delay",
+      "kind": "say",
+      "seconds": 0.5377538000000186,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-swap-rollback#1",
+      "step": "swap:5",
+      "kind": "swap",
+      "seconds": 0.4838778999999249,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-swap-rollback#1",
+      "step": "rollback:2",
+      "kind": "rollback",
+      "seconds": 0.45407890000001316,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-confirmed#2",
+      "step": "tick:09:00",
+      "kind": "tick",
+      "seconds": 0.5791347000000542,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-confirmed#2",
+      "step": "tick:10:45",
+      "kind": "tick",
+      "seconds": 0.4955029000000195,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-confirmed#2",
+      "step": "say:delay",
+      "kind": "say",
+      "seconds": 0.42024340000000393,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-confirmed#2",
+      "step": "tick:14:50",
+      "kind": "tick",
+      "seconds": 0.10788930000001073,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-confirmed#2",
+      "step": "tick:17:10",
+      "kind": "tick",
+      "seconds": 0.47358859999997094,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-confirmed#2",
+      "step": "say:closed",
+      "kind": "say",
+      "seconds": 0.42387589999998454,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-confirmed#2",
+      "step": "say:stock_out",
+      "kind": "say",
+      "seconds": 0.355959299999995,
+      "notices": 0,
+      "opened": null
+    },
+    {
+      "case": "t-quiet#2",
+      "step": "tick:09:00",
+      "kind": "tick",
+      "seconds": 0.12502250000000004,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-quiet#2",
+      "step": "tick:10:45",
+      "kind": "tick",
+      "seconds": 0.1144565000000739,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-quiet#2",
+      "step": "tick:14:50",
+      "kind": "tick",
+      "seconds": 0.12171169999999165,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-quiet#2",
+      "step": "tick:17:10",
+      "kind": "tick",
+      "seconds": 0.0944589000000633,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-air-only#2",
+      "step": "tick:09:00",
+      "kind": "tick",
+      "seconds": 0.8422863999999208,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-air-only#2",
+      "step": "tick:10:45",
+      "kind": "tick",
+      "seconds": 0.11347169999999096,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-air-only#2",
+      "step": "tick:14:50",
+      "kind": "tick",
+      "seconds": 0.09293109999998705,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-air-only#2",
+      "step": "tick:17:10",
+      "kind": "tick",
+      "seconds": 0.13066410000010364,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-route-only#2",
+      "step": "tick:09:00",
+      "kind": "tick",
+      "seconds": 0.11765680000007706,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-route-only#2",
+      "step": "tick:10:45",
+      "kind": "tick",
+      "seconds": 0.44467199999996865,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-route-only#2",
+      "step": "tick:14:50",
+      "kind": "tick",
+      "seconds": 0.15686319999997522,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-route-only#2",
+      "step": "tick:17:10",
+      "kind": "tick",
+      "seconds": 0.3463027999999895,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-delay-only#2",
+      "step": "say:delay",
+      "kind": "say",
+      "seconds": 0.29501809999999296,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-closed-only#2",
+      "step": "say:closed",
+      "kind": "say",
+      "seconds": 0.35349380000002384,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-stock-only#2",
+      "step": "say:stock_out",
+      "kind": "say",
+      "seconds": 0.2553821000000198,
+      "notices": 0,
+      "opened": null
+    },
+    {
+      "case": "t-delay-long#2",
+      "step": "say:delay:200",
+      "kind": "say",
+      "seconds": 0.2452614999999696,
+      "notices": 0,
+      "opened": null
+    },
+    {
+      "case": "t-cash-only#2",
+      "step": "say:closed",
+      "kind": "say",
+      "seconds": 0.3605943999999681,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-cash-only#2",
+      "step": "say:delay",
+      "kind": "say",
+      "seconds": 0.3305354999999963,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-swap-rollback#2",
+      "step": "say:delay",
+      "kind": "say",
+      "seconds": 0.24642370000003666,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-swap-rollback#2",
+      "step": "swap:5",
+      "kind": "swap",
+      "seconds": 0.2987026999999216,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-swap-rollback#2",
+      "step": "rollback:2",
+      "kind": "rollback",
+      "seconds": 0.2906139000000394,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-confirmed#3",
+      "step": "tick:09:00",
+      "kind": "tick",
+      "seconds": 0.3650552000000289,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-confirmed#3",
+      "step": "tick:10:45",
+      "kind": "tick",
+      "seconds": 0.311843700000054,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-confirmed#3",
+      "step": "say:delay",
+      "kind": "say",
+      "seconds": 0.252841500000045,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-confirmed#3",
+      "step": "tick:14:50",
+      "kind": "tick",
+      "seconds": 0.09318319999999858,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-confirmed#3",
+      "step": "tick:17:10",
+      "kind": "tick",
+      "seconds": 0.3036258000000771,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-confirmed#3",
+      "step": "say:closed",
+      "kind": "say",
+      "seconds": 0.26728160000004664,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-confirmed#3",
+      "step": "say:stock_out",
+      "kind": "say",
+      "seconds": 0.22170300000004772,
+      "notices": 0,
+      "opened": null
+    },
+    {
+      "case": "t-quiet#3",
+      "step": "tick:09:00",
+      "kind": "tick",
+      "seconds": 0.09063709999998082,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-quiet#3",
+      "step": "tick:10:45",
+      "kind": "tick",
+      "seconds": 0.11193770000011227,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-quiet#3",
+      "step": "tick:14:50",
+      "kind": "tick",
+      "seconds": 0.09179899999992358,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-quiet#3",
+      "step": "tick:17:10",
+      "kind": "tick",
+      "seconds": 0.0867795000000342,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-air-only#3",
+      "step": "tick:09:00",
+      "kind": "tick",
+      "seconds": 0.3621550999999954,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-air-only#3",
+      "step": "tick:10:45",
+      "kind": "tick",
+      "seconds": 0.07036109999990003,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-air-only#3",
+      "step": "tick:14:50",
+      "kind": "tick",
+      "seconds": 0.07512189999999919,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-air-only#3",
+      "step": "tick:17:10",
+      "kind": "tick",
+      "seconds": 0.12664219999999204,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-route-only#3",
+      "step": "tick:09:00",
+      "kind": "tick",
+      "seconds": 0.0849299000000201,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-route-only#3",
+      "step": "tick:10:45",
+      "kind": "tick",
+      "seconds": 0.33555490000003374,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-route-only#3",
+      "step": "tick:14:50",
+      "kind": "tick",
+      "seconds": 0.1052118000000064,
+      "notices": 0,
+      "opened": 0
+    },
+    {
+      "case": "t-route-only#3",
+      "step": "tick:17:10",
+      "kind": "tick",
+      "seconds": 0.3656037999999171,
+      "notices": 1,
+      "opened": 1
+    },
+    {
+      "case": "t-delay-only#3",
+      "step": "say:delay",
+      "kind": "say",
+      "seconds": 0.29212810000001355,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-closed-only#3",
+      "step": "say:closed",
+      "kind": "say",
+      "seconds": 0.2917499999999791,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-stock-only#3",
+      "step": "say:stock_out",
+      "kind": "say",
+      "seconds": 0.25098609999997734,
+      "notices": 0,
+      "opened": null
+    },
+    {
+      "case": "t-delay-long#3",
+      "step": "say:delay:200",
+      "kind": "say",
+      "seconds": 0.23218929999995908,
+      "notices": 0,
+      "opened": null
+    },
+    {
+      "case": "t-cash-only#3",
+      "step": "say:closed",
+      "kind": "say",
+      "seconds": 0.3507752000000437,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-cash-only#3",
+      "step": "say:delay",
+      "kind": "say",
+      "seconds": 0.2721410999999989,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-swap-rollback#3",
+      "step": "say:delay",
+      "kind": "say",
+      "seconds": 0.30081170000005386,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-swap-rollback#3",
+      "step": "swap:5",
+      "kind": "swap",
+      "seconds": 0.3390385000000151,
+      "notices": 1,
+      "opened": null
+    },
+    {
+      "case": "t-swap-rollback#3",
+      "step": "rollback:2",
+      "kind": "rollback",
+      "seconds": 0.3284504000000652,
+      "notices": 1,
+      "opened": null
+    }
+  ],
+  "retick": [
+    {
+      "case": "t-confirmed#1",
+      "step": "tick:09:00",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-confirmed#1",
+      "step": "tick:10:45",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-confirmed#1",
+      "step": "tick:14:50",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-confirmed#1",
+      "step": "tick:17:10",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-quiet#1",
+      "step": "tick:09:00",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-quiet#1",
+      "step": "tick:10:45",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-quiet#1",
+      "step": "tick:14:50",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-quiet#1",
+      "step": "tick:17:10",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-air-only#1",
+      "step": "tick:09:00",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-air-only#1",
+      "step": "tick:10:45",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-air-only#1",
+      "step": "tick:14:50",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-air-only#1",
+      "step": "tick:17:10",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-route-only#1",
+      "step": "tick:09:00",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-route-only#1",
+      "step": "tick:10:45",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-route-only#1",
+      "step": "tick:14:50",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-route-only#1",
+      "step": "tick:17:10",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-confirmed#2",
+      "step": "tick:09:00",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-confirmed#2",
+      "step": "tick:10:45",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-confirmed#2",
+      "step": "tick:14:50",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-confirmed#2",
+      "step": "tick:17:10",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-quiet#2",
+      "step": "tick:09:00",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-quiet#2",
+      "step": "tick:10:45",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-quiet#2",
+      "step": "tick:14:50",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-quiet#2",
+      "step": "tick:17:10",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-air-only#2",
+      "step": "tick:09:00",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-air-only#2",
+      "step": "tick:10:45",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-air-only#2",
+      "step": "tick:14:50",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-air-only#2",
+      "step": "tick:17:10",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-route-only#2",
+      "step": "tick:09:00",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-route-only#2",
+      "step": "tick:10:45",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-route-only#2",
+      "step": "tick:14:50",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-route-only#2",
+      "step": "tick:17:10",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-confirmed#3",
+      "step": "tick:09:00",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-confirmed#3",
+      "step": "tick:10:45",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-confirmed#3",
+      "step": "tick:14:50",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-confirmed#3",
+      "step": "tick:17:10",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-quiet#3",
+      "step": "tick:09:00",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-quiet#3",
+      "step": "tick:10:45",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-quiet#3",
+      "step": "tick:14:50",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-quiet#3",
+      "step": "tick:17:10",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-air-only#3",
+      "step": "tick:09:00",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-air-only#3",
+      "step": "tick:10:45",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-air-only#3",
+      "step": "tick:14:50",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-air-only#3",
+      "step": "tick:17:10",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-route-only#3",
+      "step": "tick:09:00",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-route-only#3",
+      "step": "tick:10:45",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-route-only#3",
+      "step": "tick:14:50",
+      "new_notices": 0,
+      "new_versions": 0
+    },
+    {
+      "case": "t-route-only#3",
+      "step": "tick:17:10",
+      "new_notices": 0,
+      "new_versions": 0
+    }
+  ]
+}

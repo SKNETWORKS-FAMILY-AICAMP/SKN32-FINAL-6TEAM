@@ -21,7 +21,8 @@ from app.core.settings import get_guardrails
 from app.infrastructure.db.session import get_connection
 from app.presentation.security import Principal, require_scope
 
-from app.domains.travel_ops.modules.web_account import web_guard
+from app.domains.travel_ops.components.customer import retention
+from app.domains.travel_ops.modules.web_account import retention_api, web_guard
 
 
 class LimitsPatchIn(BaseModel):
@@ -125,5 +126,26 @@ def build_limits_router() -> APIRouter:
 
     return router
 
+def build_retention_ops_router() -> APIRouter:
+    """약관 보관 기간 운영 보기/바꾸기 — `[2026-10-07]`. 값 · 문장 · 이력은 `retention.py`, 보기 모양은 `retention_api.ops_view`. scope 는 제한값과 같은 `limits:*`."""
+    router = APIRouter(tags=["ops-retention"])
 
-__all__ = ["LimitsPatchIn", "build_limits_router"]
+    @router.get("/admin/retention")
+    def read_retention(principal: Principal = Depends(require_scope("limits:read"))):
+        with get_connection() as conn:
+            return retention_api.ops_view(conn, principal.tenant_id)
+
+    @router.patch("/admin/retention")
+    def patch_retention(body: retention_api.RetentionPatchIn, principal: Principal = Depends(require_scope("limits:write"))):
+        with get_connection() as conn:
+            try:
+                done = retention.update(conn, principal.tenant_id, expected_revision=body.expected_revision, changes=body.changes,
+                                        actor=body.actor, key_id=principal.key_id, reason=body.reason)
+            except retention.RetentionError as exc:
+                raise retention_api.error(exc.status, exc.code, exc.message, **exc.extra) from None
+            return {**retention_api.ops_view(conn, principal.tenant_id), "changed": done["changed"]}
+
+    return router
+
+
+__all__ = ["LimitsPatchIn", "build_limits_router", "build_retention_ops_router"]

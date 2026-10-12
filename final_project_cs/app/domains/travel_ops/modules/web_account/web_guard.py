@@ -111,10 +111,16 @@ def specs() -> dict[str, LimitSpec]:
                                         str(guard.get("web_guard.map_provider.default")), choices=choices)
     # ★`[2026-09-29 사용자 지시]` 개발 모드 — 켜면 웹 채팅 응답에 근거(`basis`)를 싣는다. 고객 문장에는 늘 싣지 않는다
     out["web.dev_mode"] = LimitSpec("web.dev_mode", "개발 모드(근거 보이기)", "", "choice", "off", choices=("off", "on"))
+    out["testing.intake_presets_enabled"] = LimitSpec(
+        "testing.intake_presets_enabled", "준비된 시험 일정 입력(test1~test12)", "", "bool",
+        bool(guard.get("testing.intake_presets_enabled")))
     # ★`[2026-09-29 Codex 3회차 합의]` 채팅 결정 단위 — 재기동 없이 끄고 켠다(오변경이 보이면 곧바로 shadow 로)
     out["chat.decision_mode"] = LimitSpec("chat.decision_mode", "채팅 해석 방식(결정 단위)", "", "choice",
                                           _mode_text(guard.get("travel.decision_unit.mode")),
                                           choices=("off", "shadow", "on"))
+    # ★`[2026-10-07 사용자 결정 — 약관 보관 기간]` 회원 자료 정리 모드 — off · dry_run(세기만) · on(지움). 기본 dry_run, on 은 사용자가 건수를 보고 승인한 뒤에(`member_cleanup`)
+    out["retention.purge_mode"] = LimitSpec("retention.purge_mode", "회원 자료 정리 모드(지움은 승인 뒤에만 on)", "", "choice",
+                                            _mode_text(guard.get("retention.purge_mode")), choices=("off", "dry_run", "on"))
     return out
 
 
@@ -225,8 +231,21 @@ def count(tenant_id: str, action: str, *, customer_id: UUID | str, ip: str,
     midnight = datetime.combine(now.date() + timedelta(days=1), datetime.min.time(), tzinfo=KST)
     used: dict[str, int] = {}
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        if action == "message":
+            from app.application.admin_service import AdminPolicyRefused, access_policy, consume_chat
+
+            try:
+                consume_chat(conn, tenant_id=tenant_id, customer_id=customer_id, now=now)
+            except AdminPolicyRefused as exc:
+                from fastapi import HTTPException
+
+                raise HTTPException(exc.status, {"error": {"code": exc.code, "message": exc.message}}) from None
         for kind, who, scope in rows:
             cap = int(limits[f"web.{action}.{scope}"])
+            if action == "message" and kind == "key":
+                operator_cap = access_policy(conn, tenant_id, str(customer_id), now)["chat_limit"]
+                if operator_cap is not None:
+                    cap = int(operator_cap)
             got = _bump(cur, tenant_id, kind, who, action, day, cap if enabled else None)
             if got is None:
                 cur.execute("SELECT used FROM web_usage WHERE tenant_id=%s AND who_kind=%s AND who=%s AND action=%s "

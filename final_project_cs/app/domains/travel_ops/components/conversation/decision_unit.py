@@ -251,9 +251,77 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
             continue
         choices.append({"action": option["action"], "item": item, "change": change,
                         "fact": option.get("fact") if option.get("fact") in FACTS else "none"})
-    return Decision(action=action, item=by_alias.get(target), change=changes_by.get(change_alias), fact=fact,
-                    minutes=minutes, question=str(raw.get("question") or "").strip()[:200], raw=raw, seconds=seconds,
-                    choices=choices[:3])
+    decision = Decision(action=action, item=by_alias.get(target), change=changes_by.get(change_alias), fact=fact,
+                        minutes=minutes, question=str(raw.get("question") or "").strip()[:200], raw=raw, seconds=seconds,
+                        choices=choices[:3])
+    return guard_target(decision, stops=stops, changes=changes, history=history, selected=selected, message=message or "")
+
+
+#: 문장이 대상을 **가려 주는 말** — 날 · 순서 · 때(오늘 · 다음 · 방금). 이것이 있으면 모델이 센 순번 표시(`item_lines`)를 믿는다.
+_PINPOINT = re.compile(r"\d+\s*일\s*차|\d+\s*일\s*째|\d+\s*번째|\d+\s*월\s*\d+\s*일|(?:첫|둘|셋|넷|다섯|여섯|일곱|두|세|네)\s*(?:째|번째)|첫|처음|마지막|내일|모레|오늘|어제|글피|다음|이전|방금|아까|그날|이틀|사흘")
+#: 이름이 겹치는지 볼 때 **빼는** 두 글자 — 일정 이름이 아니라 요청 문장의 흔한 말이다
+_COMMON_WORDS = ("식당", "활동", "일정", "점심", "저녁", "아침", "숙소", "카페", "맛집", "다른", "바꿔", "바꿀", "변경", "추천", "알아", "알려", "휴무", "문을", "닫았", "열었", "오늘", "내일",
+                 "있는", "없는", "으로", "에서", "해줘", "주세", "세요", "어요", "아요", "거기", "여기", "저기", "그거", "이거", "말고", "걸로", "데로", "하는", "해서", "래요", "대요")
+_CHANGING = ("apply_change", "propose_alternatives", "report_closed")
+
+
+def _grams(text: str) -> set[str]:
+    """한 낱말 안의 두 글자 조각 — 이름이 문장에 나오는지 가늠한다(낱말 사이를 잇는 조각은 만들지 않는다)."""
+    out: set[str] = set()
+    for token in re.findall(r"[0-9A-Za-z가-힣]+", text.lower()):
+        out.update(token[i:i + 2] for i in range(len(token) - 1))
+    return out - set(_COMMON_WORDS)
+
+
+def _name_of(item: Any) -> str:
+    return str((item.place or {}).get("name") or item.title or "")
+
+
+def guard_target(decision: Decision, *, stops: list[Stop], changes: list[Change], history: list[dict[str, Any]], selected: str, message: str) -> Decision:
+    """★`[2026-10-06 사용자 지시 — 엉뚱한 대상 변경 0건]` **문장이 가리키지 않은 일정을 모델이 짐작으로 바꾸게 두지 않는다.**
+
+    ☆실제 사고(재생 시험 2026-09-30, 7일 여행): 「저녁 식당 바꿔 줘」 — 날을 말하지 않았고 저녁 식당이 7곳인데 모델이 3일차 저녁 식당을 골라 바꾸기로 했다(정답은 화면에서 고른 날의 것이거나 되묻기).
+    모델은 **고르기만** 한다는 약속(위 머리말)대로, 바꾸는 할 일(`_CHANGING`)에 낸 대상이 **근거 있는지**를 서버가 따로 본다. 근거가 하나도 없으면 바꾸지 않고 **되묻는다**(후보 = 같은 종류 · 같은 끼니 일정, 화면에서 고른 날 가까운 순 3곳).
+    근거 = ①화면에서 고른 일정이다 ②문장 속 이름이 그 일정 이름과 **가장 많이** 겹치고 그렇게 겹치는 일정이 그것 하나다(여럿이면 날 · 순서가 있어야 한다) ③직전 대화에 그 일정 이름이 나왔거나 가장 최근 변경의 대상이다 ④문장에 날 · 순서 · 때를 가리키는 말이 있다(`_PINPOINT`)
+    ⑤같은 종류(식당이면 같은 끼니)의 일정이 여행에 **하나뿐**이다 ⑥날을 말하지 않은 약속대로다(화면에서 고른 일정이 있으면 그 날 · 없으면 1일차에 같은 종류가 하나뿐이고 그것을 골랐다).
+    되묻는 쪽으로만 바꾼다 — 대상을 대신 정해 주지 않는다."""
+    item = decision.item
+    if decision.action not in _CHANGING or item is None:
+        return decision
+    target = next((s for s in stops if s.item is item), None)
+    if target is None:
+        return decision
+    # ⑤ 같은 종류 · 같은 끼니가 하나뿐이면 가리킬 것이 하나다
+    peers = [s for s in stops if s.item.kind == item.kind and (item.kind != "dining" or _meal(s.item) == _meal(item))]
+    if len(peers) <= 1:
+        return decision
+    if target.alias == selected:                                                      # ①
+        return decision
+    if _PINPOINT.search(message):                                                     # ④
+        return decision
+    said = _grams(message)
+    overlap = {s.alias: len(said & _grams(_name_of(s.item))) for s in stops}
+    best = max(overlap.values(), default=0)
+    leaders = [s for s in stops if best and overlap[s.alias] == best]                  # 문장과 이름이 **가장 많이** 겹치는 일정 — 「한강」 두 글자만 겹치는 다른 곳에 밀리지 않는다
+    if target in leaders and len(leaders) == 1:                                       # ②
+        return decision
+    talk = " ".join(str(t.get("text") or "") for t in history[-4:])
+    if (changes and changes[-1].target_item_id == item.item_id) or (talk and _grams(talk) & _grams(_name_of(item))):   # ③
+        return decision
+    # ⑥ 날을 말하지 않았을 때의 **약속**(머리말 · `SYSTEM` — 「날을 말하지 않은 첫/두 번째는 1일차」 · 화면에서 고른 일정은 그 날): 화면에서 고른 일정이 있으면 그 날, 없으면 1일차.
+    #   그 날에 같은 종류(식당이면 같은 끼니)가 **하나뿐**이고 그것을 골랐으면 약속대로다. 그 밖의 날을 골랐거나 그 날에 여럿이면 짐작이다 → 되묻는다
+    first = stops[0].item.starts_at if stops else None
+    picked = next((s.item for s in stops if s.alias == selected), None)
+    ref_day = _day_no(picked, first) if picked is not None else 1
+    on_that_day = [s for s in peers if _day_no(s.item, first) == ref_day]
+    if len(on_that_day) == 1 and on_that_day[0] is target:
+        return decision
+    ordered = sorted(peers, key=lambda s: (abs(_day_no(s.item, first) - ref_day), s.item.starts_at))[:3]
+    if target not in ordered:                                                         # 모델이 본 해석도 후보 하나로 남긴다(맞았을 수도 있다)
+        ordered = ordered[:2] + [target]
+    raw = {**decision.raw, "guard": {"ambiguous_target": target.alias, "asked": [s.alias for s in ordered]}}
+    return replace(decision, action="clarify", item=None, change=None, raw=raw,
+                   choices=[{"action": decision.action, "item": s.item, "change": None, "fact": "none"} for s in ordered])
 
 
 _FACT_KO = {"detail": "자세히", "address": "주소", "phone": "전화번호", "hours": "운영시간", "time": "몇 시에 가는지",
@@ -342,5 +410,5 @@ def labels(decision: Decision) -> dict[str, str]:
     return {"intent": intent, "issue_code": code, "sentiment": sentiment}
 
 
-__all__ = ["ACTIONS", "Change", "Decision", "DecisionFailed", "FACTS", "LOCATION_FACTS", "NEAR_FACTS", "fact_first", "maybe_meant", "Stop", "SYSTEM", "changes_of", "choice_message",
+__all__ = ["ACTIONS", "Change", "Decision", "DecisionFailed", "FACTS", "LOCATION_FACTS", "NEAR_FACTS", "fact_first", "guard_target", "maybe_meant", "Stop", "SYSTEM", "changes_of", "choice_message",
            "decide", "item_lines", "labels", "stops_of"]

@@ -269,6 +269,9 @@ def _place_in(key: str, place: dict[str, Any], kind: str) -> dict[str, Any]:
             attributes[_SOURCE_ATTRS[source]] = str(place["content_id"])
             if place.get("content_type_id") and source != "dining_license":     # 인허가 관리번호는 관광공사 종류 번호와 짝이 아니다
                 attributes["source_content_type_id"] = str(place["content_type_id"])
+        if source == "dining_ledger" and place.get("dining_place_uid"):
+            # ★`[2026-10-07 팀]` 원장 가게 id — 관광공사 id 가 없는 원장 가게도 등록 때 원장과 잇는다(trip_api 등록)
+            attributes["dining_place_uid"] = str(place["dining_place_uid"])
     elif source == "customer_pick":
         # ★`[2026-10-02]` 고객이 후보 · 검색 · 지도에서 고른 장소 — 관광공사 · 카카오 값으로 위장하지 않는다. 공용 장소 표에 섞이지 않게
         #   그 여행 전용 행으로만 들어간다(`trip_api.EXTERNAL_PLACE_SOURCES`). 관광공사 번호는 운영시간 표를 찾는 데만 쓴다.
@@ -277,6 +280,9 @@ def _place_in(key: str, place: dict[str, Any], kind: str) -> dict[str, Any]:
             attributes["pick_origin"] = str(place["origin"])
         if place.get("content_id"):
             attributes["source_content_id"] = str(place["content_id"])
+        if place.get("dining_place_uid"):
+            # ★`[2026-10-10]` 서버가 공용 원장 식당 행과 같은 곳으로 확인한 경우만 있다(`pipeline._linked_ledger_pick`) — 등록 판정 · 원장 연결이 이 번호로 간다
+            attributes["dining_place_uid"] = str(place["dining_place_uid"])
     return {"key": key, "name": place["name"], "kind": place.get("kind") or kind,
             "lat": float(place["latitude"]), "lon": float(place["longitude"]),
             "weather_sensitive": None, "attributes": attributes}   # ★`[2026-09-29]` 모름 — 확실한 분류로 채운다(`fill_weather_sensitive`)

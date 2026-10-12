@@ -92,9 +92,24 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
          use_engine: bool = True, now: datetime | None = None) -> dict[str, Any]:
     """검증을 끝낸 대체 일정. `{changes:[{id, source_id, index, title, from, to, reason, edits}], kept:[{id, title, reason}]}`.
     DB 에 쓰지 않는다 — 적용은 부르는 쪽이 `edits` 로 한다."""
-    if engine is None and use_engine:
+    defaulted = engine is None and use_engine
+    if defaulted:
         engine = default_engine(None)
     budget = _Budgeted(engine, ENGINE_BUDGET_S) if engine is not None else None
+    # ★`[2026-10-07 이동수단 고르기 · 계약 ⓒ]` 고객이 고른 수단이 살아 있는(`kept`) 구간은 그 수단의 계산기로 시각을 맞춘다 — 추천 수단으로 맞추면 적용한 뒤
+    #   고른 수단이 안 닿아 추천으로 되돌아간다. 못 닿으면 그 구간은 새 판의 검사에서 `dropped` + 이유로 알린다(`review.build`).
+    kept_modes = {f"{m['from']}~{m['to']}": m["mode_choice"]["mode"] for m in review.get("moves", [])
+                  if (m.get("mode_choice") or {}).get("state") == "kept"}
+    by_mode: dict[str, Any] = {}
+
+    def engine_for(a_id: Any, b_id: Any) -> Any:
+        mode = kept_modes.get(f"{a_id}~{b_id}") if defaulted else None
+        if not mode:
+            return budget
+        if mode not in by_mode:
+            eng = default_engine(None, [mode])
+            by_mode[mode] = _Budgeted(eng, ENGINE_BUDGET_S) if eng is not None else budget
+        return by_mode[mode]
     # 바꾸는 동안의 기준 상태 — 앞 일정이 바뀌면 그 값으로 다음 일정을 맞춘다
     items = [{**it, "rows": list(it["rows"])} for it in review["items"]]
     late_into = {m["to"] for m in review["moves"] if m["status"] == "review"}
@@ -111,7 +126,8 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
                 before_end = _dt(before["date"], before["ends_at"] or before["starts_at"])
                 this_start = _dt(item["date"], item["starts_at"])
                 if before_end is not None and this_start is not None:
-                    leg = leg_between(budget, _pt(before["place"], "prev"), _pt(item["place"], "cand"), before_end, this_start, deep=False)
+                    leg = leg_between(engine_for(before["id"], item["id"]), _pt(before["place"], "prev"), _pt(item["place"], "cand"),
+                                      before_end, this_start, deep=False)
                     late = not leg.ok
         if not placed_bad and not late:
             continue
@@ -145,7 +161,15 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
         done = None
         failed: set[str] = set()
         for place in places:
-            fit = _fit_window(conn, tenant_id, item, place, prev, nxt, start, duration, budget, require_known=hours_problem)
+            # 고른 수단이 있는 구간만 그 수단의 계산기를 따로 넘긴다(없으면 종전 호출 그대로)
+            extra: dict[str, Any] = {}
+            ep = engine_for(prev["id"], item["id"]) if prev else None
+            en = engine_for(item["id"], nxt["id"]) if nxt else None
+            if ep is not None and ep is not budget:
+                extra["engine_prev"] = ep
+            if en is not None and en is not budget:
+                extra["engine_next"] = en
+            fit = _fit_window(conn, tenant_id, item, place, prev, nxt, start, duration, budget, require_known=hours_problem, **extra)
             if isinstance(fit, str):
                 failed.add(fit)
                 continue
@@ -204,7 +228,8 @@ def _pick(place: dict[str, Any], item: dict[str, Any]) -> dict[str, Any]:
 
 def _fit_window(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], prev: dict[str, Any] | None,
                 nxt: dict[str, Any] | None, start: datetime, duration: timedelta,
-                engine: Any, *, require_known: bool = False) -> tuple[datetime, datetime, bool] | str:
+                engine: Any, *, require_known: bool = False, engine_prev: Any = None,
+                engine_next: Any = None) -> tuple[datetime, datetime, bool] | str:
     """이 곳에서 앞 · 뒤 일정에 닿으면서 운영시간 안에 드는 (시작, 끝). 못 맞추면 None.
 
     운영시간이 어긋나면 먼저 **시각을 옮겨** 본다 — 열기 전이면 여는 시각으로 미루고, 닫는 시각을 넘으면 거기까지로 줄인다(머무는 시간이 30분 이상 남아야 한다).
@@ -219,7 +244,7 @@ def _fit_window(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any
     if prev and prev["place"]:
         prev_end = _dt(prev["date"], prev["ends_at"] or prev["starts_at"])
         if prev_end is not None:
-            arrive = earliest_start(engine, prev["place"], place, prev_end)
+            arrive = earliest_start(engine_prev or engine, prev["place"], place, prev_end)
             if arrive is None:
                 return "travel"                              # 앞 일정에서 이 곳에 닿는 시각을 못 맞춘다 — 이 후보는 안 된다
             earliest = max(start, arrive)
@@ -227,7 +252,7 @@ def _fit_window(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any
     if nxt and nxt["place"]:
         next_start = _dt(nxt["date"], nxt["starts_at"])
         if next_start is not None:
-            latest = latest_end(engine, place, nxt["place"], next_start)
+            latest = latest_end(engine_next or engine, place, nxt["place"], next_start)
             if latest is None:
                 return "travel"                              # 이 곳에서 다음 일정에 닿는 끝을 못 맞춘다
     new_start = earliest

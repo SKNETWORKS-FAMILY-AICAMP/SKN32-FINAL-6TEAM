@@ -1,0 +1,652 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      ".tmp/consent-progress.config.ts",
+      "tests/live/map-moving-visibility-20261011.spec.ts",
+      "tests/live/map-edge-visibility.spec.ts",
+      "tests/live/map-controls.spec.ts",
+      "--workers=1",
+      "--trace=off",
+      "--reporter=line,json",
+      "--output=.tmp/map-moving-verified"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\consent-progress.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/.tmp/map-moving-verified",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "map-controls.spec.ts",
+      "file": "map-controls.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "접기 단추에 거리가 함께 나오고 확대·축소·모든 일정 보기 순서로 선다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2893,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:31:17.621Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-6b1f61ac04952900ba42",
+          "file": "map-controls.spec.ts",
+          "line": 23,
+          "column": 1
+        },
+        {
+          "title": "거리 눈금은 지도에 담긴 거리를 말하고, 확대하면 더 짧은 거리로 바뀐다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5349,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:31:20.783Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-dffec8d9891a727a7cf3",
+          "file": "map-controls.spec.ts",
+          "line": 37,
+          "column": 1
+        },
+        {
+          "title": "접으면 눈금과 탭이 남고 다시 열어도 기본은 접힌 상태다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4417,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:31:26.148Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-da31b1b4c085d6a8bbf1",
+          "file": "map-controls.spec.ts",
+          "line": 52,
+          "column": 1
+        },
+        {
+          "title": "목록 창을 크게 열어 지도가 낮아지면 같은 단추가 가로 한 줄로 서고, 더 낮으면 접는 탭만 남는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3247,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:31:30.581Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-9385fccbf57020613e95",
+          "file": "map-controls.spec.ts",
+          "line": 69,
+          "column": 1
+        },
+        {
+          "title": "지도를 확대하면 화면 밖으로 나간 일정이 가장자리에 「번호 · 거리」 칩으로 서고, 누르면 그 일정으로 가며 골라진다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8750,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:31:33.845Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-d7fea47bc4987f97f85a",
+          "file": "map-controls.spec.ts",
+          "line": 88,
+          "column": 1
+        },
+        {
+          "title": "멀리 끌어 핀이 모두 화면 밖이면 칩 하나가 모두를 담아 서고(「2 · 3 · 4」), 지도 층(타일 · 핀 층) 위에 그려지고, 가장자리에서 잘리지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5856,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:31:42.615Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-ec21d5529872493fad02",
+          "file": "map-controls.spec.ts",
+          "line": 106,
+          "column": 1
+        },
+        {
+          "title": "일정이 있는 날을 처음 보여 줄 때 첫 일정의 핀이 한 번 두근거린다 (고리가 퍼졌다 사라진다)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3475,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:31:48.489Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e68dee7f57701b1b5d68-1b562660017dc730ee93",
+          "file": "map-controls.spec.ts",
+          "line": 141,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "map-edge-visibility.spec.ts",
+      "file": "map-edge-visibility.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px: 묶인 거리 칩의 모든 마커·연결선은 숨고 복귀 시 같은 마커가 살아난다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7141,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:31:51.999Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "13d79fcdf34b853a5c81-b16b0955da90a036fd0c",
+          "file": "map-edge-visibility.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "1280px: 묶인 거리 칩의 모든 마커·연결선은 숨고 복귀 시 같은 마커가 살아난다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6806,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:31:59.155Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "13d79fcdf34b853a5c81-e7cf3fc828ad2f48703b",
+          "file": "map-edge-visibility.spec.ts",
+          "line": 9,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "map-moving-visibility-20261011.spec.ts",
+      "file": "map-moving-visibility-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px 확대·축소하는 동안 보이는 마커를 숨기거나 거리 칩에 합치지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10903,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:32:05.999Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "moving-pin-frames",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjM5NSwiaW5zaWRlIjo0MzcsImZhaWx1cmVzIjpbXSwic3RvcCI6dHJ1ZX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "77462f20e98f3470331c-2569b7a438d6e9f6856c",
+          "file": "map-moving-visibility-20261011.spec.ts",
+          "line": 51,
+          "column": 3
+        },
+        {
+          "title": "375px 로딩 중 새 일정의 자동 지도 이동에서도 보이는 마커를 거리 칩에 합치지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4902,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:32:16.920Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "moving-pin-frames",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjI0MiwiaW5zaWRlIjozODEsImZhaWx1cmVzIjpbXSwic3RvcCI6dHJ1ZX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "77462f20e98f3470331c-cbcbb7147e838ce06fd3",
+          "file": "map-moving-visibility-20261011.spec.ts",
+          "line": 71,
+          "column": 3
+        },
+        {
+          "title": "375px 지도 밖 묶음을 눌러 가운데로 들어오는 마커는 이동 중에도 거리 칩에서 빠진다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6466,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:32:21.849Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "moving-pin-frames",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjM0LCJpbnNpZGUiOjYyLCJmYWlsdXJlcyI6W10sInN0b3AiOnRydWV9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "77462f20e98f3470331c-ab9aeb9aa788ca759b60",
+          "file": "map-moving-visibility-20261011.spec.ts",
+          "line": 98,
+          "column": 3
+        },
+        {
+          "title": "1280px 확대·축소하는 동안 보이는 마커를 숨기거나 거리 칩에 합치지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9270,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:32:28.332Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "moving-pin-frames",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjM5NywiaW5zaWRlIjo0NTMsImZhaWx1cmVzIjpbXSwic3RvcCI6dHJ1ZX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "77462f20e98f3470331c-c596cac29f3134c4e587",
+          "file": "map-moving-visibility-20261011.spec.ts",
+          "line": 51,
+          "column": 3
+        },
+        {
+          "title": "1280px 로딩 중 새 일정의 자동 지도 이동에서도 보이는 마커를 거리 칩에 합치지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4866,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:32:37.626Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "moving-pin-frames",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjI0MiwiaW5zaWRlIjozODQsImZhaWx1cmVzIjpbXSwic3RvcCI6dHJ1ZX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "77462f20e98f3470331c-adc879d10f22f8df3440",
+          "file": "map-moving-visibility-20261011.spec.ts",
+          "line": 71,
+          "column": 3
+        },
+        {
+          "title": "1280px 지도 밖 묶음을 눌러 가운데로 들어오는 마커는 이동 중에도 거리 칩에서 빠진다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6379,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:32:42.508Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "moving-pin-frames",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjM2LCJpbnNpZGUiOjY0LCJmYWlsdXJlcyI6W10sInN0b3AiOnRydWV9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "77462f20e98f3470331c-7fad13d9fe146e1eed20",
+          "file": "map-moving-visibility-20261011.spec.ts",
+          "line": 98,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-10T21:31:15.644Z",
+    "duration": 94188.192,
+    "expected": 15,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

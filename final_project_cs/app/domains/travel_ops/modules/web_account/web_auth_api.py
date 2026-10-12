@@ -33,6 +33,7 @@ from app.domains.travel_ops.modules.web_account import web_cookie
 from app.domains.travel_ops.modules.web_account import web_guard
 from app.domains.travel_ops.modules.web_account.web_agent_keys_api import build_agent_keys_router
 from app.domains.travel_ops.modules.web_account.consents_api import build_consents_router
+from app.domains.travel_ops.modules.web_account.retention_api import build_public_retention_router
 from app.domains.travel_ops.modules.web_account.web_session import add_key, new_customer
 
 #: 콜백이 웹으로 돌려보낼 때 쓰는 오류 코드(요청서) — 이 밖의 이유는 전부 `failed`
@@ -66,6 +67,7 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
     router = APIRouter()
     router.include_router(build_agent_keys_router())        # `[2026-10-04 D-CS-012]` 에이전트 키(쿠키 로그인한 회원만)
     router.include_router(build_consents_router())          # `[2026-10-05]` 약관 동의 기록 · 사용 조건(게이트는 `web_cookie.authenticate`)
+    router.include_router(build_public_retention_router())  # `[2026-10-07]` 약관 보관 기간 공개 읽기(키 없음 · 개인 정보 없음)
 
     def _tenant() -> str:
         return settings_module.get_settings().tenant_id
@@ -133,7 +135,10 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
             raise _error(410, "ticket_invalid", "이 로그인 표를 쓸 수 없다 — 처음부터 다시 한다")
         tenant = _tenant()
         with get_connection() as conn, conn.transaction():
-            got = web_auth.exchange(conn, tenant_id=tenant, ticket=body.ticket, client_nonce=body.client_nonce)
+            try:
+                got = web_auth.exchange(conn, tenant_id=tenant, ticket=body.ticket, client_nonce=body.client_nonce)
+            except web_auth.GuestTransferRefused:
+                raise _error(409, "guest_transfer_changed", "로그인 도중 계정 상태가 바뀌었어요. 지금 일정을 그대로 두고 다시 로그인해 주세요.") from None
             if got is None:
                 raise _error(410, "ticket_invalid", "이 로그인 표를 쓸 수 없다 — 처음부터 다시 한다")
             out: dict[str, Any] = {"outcome": got["outcome"], "provider": got["provider"],
@@ -232,9 +237,15 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
         if body.mode == "link":
             customer = _customer(http)                          # 연결은 로그인 상태(쿠키 세션 또는 키)가 있어야 한다(없으면 401 `unauthenticated`)
         else:
-            # 로그인 시작은 인증 없이도 열린다 — 이미 로그인 상태가 있으면 사람 확인을 건너뛴다(CSRF 는 이 자리에서 안 본다: 상태를 안 바꾼다)
-            if web_cookie.authenticate(http, required=False, csrf=False) is None:
+            # 게스트 출처를 기록하는 쓰기이므로 쿠키의 Origin과 CSRF도 확인한다.
+            identity = web_cookie.authenticate(http, required=False)
+            if identity is None:
                 _human(body.turnstile_token or x_turnstile_token, http)
+            else:
+                from .guest_policy import is_guest
+                with get_connection() as conn:
+                    if is_guest(conn, tenant_id=_tenant(), customer_id=identity.customer_id):
+                        customer = identity.customer_id
         verifier = oauth.new_verifier()
         with get_connection() as conn, conn.transaction():
             state, nonce = web_auth.begin(conn, tenant_id=_tenant(), provider=provider, mode=body.mode, customer_id=customer,

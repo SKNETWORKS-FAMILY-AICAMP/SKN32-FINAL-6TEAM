@@ -45,7 +45,7 @@ export function ReadingFooter({ flow }: { flow: QuestionFlow }) {
 
 /**
  * The 20-second warning (mockup `screenIdle`): nobody touched anything for 30 seconds while questions were open after the reading. An `alertdialog` that counts down to the plan check;
- * 「계속 답하기」 (as many times as wanted) or 「자동으로 넘어가지 않기」 keep the screen. Esc is 「계속 답하기」. The behind is `inert`, Tab goes round inside.
+ * 「계속 답하기」 keeps the screen and stops automatic departure. Esc has the same effect. The behind is `inert`, Tab goes round inside.
  */
 export function IdleWarning({ flow }: { flow: QuestionFlow }) {
   const t = useT();
@@ -86,7 +86,6 @@ export function IdleWarning({ flow }: { flow: QuestionFlow }) {
         <p className={styles.countdown} aria-hidden="true">{seconds}</p>
         <p id={copyId} className={styles.countCopy}>{t(`아직 보고 계신가요? ${seconds}초 뒤에 계획 확인 화면으로 넘어가요`, `Are you still there? The plan check opens in ${seconds} seconds`)}</p>
         <button ref={first} type="button" className={styles.big} onClick={keep}>{t("계속 답하기", "Keep answering")}</button>
-        <button type="button" className={styles.textButton} onClick={flow.stop}>{t("자동으로 넘어가지 않기", "Do not go on by itself")}</button>
         <p className="sr-only" role="status">{announce}</p>
       </section>
     </div>,

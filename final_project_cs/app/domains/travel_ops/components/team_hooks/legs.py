@@ -38,11 +38,14 @@ def is_registered() -> bool:
     return _leg_planner is not None
 
 
-def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None):
+def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None, modes=None):
     """구간 계산기를 만든다 → `leg(a, b, 도착목표, 그전엔안됨)` → (결과, None) 또는 (None, 이유).
-    ★이동 팀이 없거나 계산기가 꺼져 있으면 `None` — 부르는 쪽이 어림값으로 간다."""
+    ★이동 팀이 없거나 계산기가 꺼져 있으면 `None` — 부르는 쪽이 어림값으로 간다.
+    `modes`(`["subway"]` 처럼 이 수단만으로) 는 주었을 때만 이동 팀에 넘긴다 — 안 받는 옛 등록 함수도 그대로 돈다."""
     if _leg_planner is None:
         return None
+    if modes:
+        return _leg_planner(party_size, constraints, disruptions=disruptions, modes=modes)
     return _leg_planner(party_size, constraints, disruptions=disruptions)
 
 

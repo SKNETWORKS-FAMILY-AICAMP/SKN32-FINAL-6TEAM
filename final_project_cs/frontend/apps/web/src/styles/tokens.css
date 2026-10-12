@@ -7,9 +7,21 @@
 :root, [data-theme="green"] {
   /* `[2026-10-06 사용자 지적 — 애니메이션을 전체적으로 부드럽게]` 움직임의 곡선과 시간은 이 셋만 쓴다: 부드럽게 감속(들어옴 · 미끄러짐) · 부드럽게 가속(나감) · 시간. */
   --ease-soft: cubic-bezier(.22, .8, .3, 1); --ease-leave: cubic-bezier(.4, 0, .8, .4); --motion-soft: 340ms;
+
+  --color-coordinate-shadow: #0005;
+  --color-shadow-light: #0002;
+  --color-brand-paper: #fff;
+  --color-edge-number-bg: #202020;
+  --mask-opaque: #000;
+  --color-brand-ink: #191919;
+  --color-brand-border: #d8dfdb;
+  --color-brand-kakao: #fee500;
+  --color-brand-naver: #03a94d;
+  --color-brand-discord: #5865f2;
   color-scheme: light;
   --color-text: #24392f;
-  --color-muted: #6d7c73;
+  /* `[2026-10-07 사용자 결정 — 흐린 글자 한 단계 진하게]` 흐린 글자(--color-faint)는 흰 바탕 · 연한 바탕에서 읽기 기준 4.5:1 이상, 보조 글자(--color-muted)는 그보다 한 단계 진하게(5.5:1 이상). 이전: muted #6d7c73(4.4:1) · faint #a5b1a9(2.2:1) / 화이트 muted #86868c(3.6:1) · faint #b9b9bd(2.0:1) */
+  --color-muted: #56645b;
   --color-border: #dce3dd;
   --color-surface: #ffffff;
   --color-background: #f3f5f3;
@@ -27,7 +39,7 @@
   --color-error-border: #ecd2c7;
   /* Roles added 2026-10-03 for the plan-check screen (user-approved list); the white theme below redefines them too. */
   --color-text-secondary: #4a5d52;
-  --color-faint: #a5b1a9;
+  --color-faint: #66746b;
   --color-divider: #e8ede9;
   --color-subtle-strong: #e4e9e5;
   --color-border-strong: #c3cdc6;
@@ -47,8 +59,19 @@
 
 /* White theme — the plan-check streaming mockup (`mockups/tripilot-plan-check-streaming.html`). */
 [data-theme="neutral"] {
+  --color-coordinate-shadow: #0005;
+  --color-shadow-light: #0002;
+  --color-brand-paper: #fff;
+  --color-edge-number-bg: #202020;
+  --mask-opaque: #000;
+  --color-brand-ink: #191919;
+  --color-brand-border: #d8dfdb;
+  --color-brand-kakao: #fee500;
+  --color-brand-naver: #03a94d;
+  --color-brand-discord: #5865f2;
+
   --color-text: #1c1c1e;
-  --color-muted: #86868c;
+  --color-muted: #5f5f65;
   --color-border: #dadad6;
   --color-surface: #ffffff;
   --color-background: #f2f2ef;
@@ -65,7 +88,7 @@
   --color-error-soft: #fde5de;
   --color-error-border: #f2b8a8;
   --color-text-secondary: #48484d;
-  --color-faint: #b9b9bd;
+  --color-faint: #707074;
   --color-divider: #ebebe7;
   --color-subtle-strong: #ececea;
   --color-border-strong: #c2c2c6;

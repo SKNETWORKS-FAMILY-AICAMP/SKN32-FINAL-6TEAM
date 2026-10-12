@@ -8,7 +8,7 @@ export interface Coordinates {
  * How a pin looks besides selected: `muted` — shown for context, not pressable (the other stops while one is being
  * changed); `current` — the stop being changed; `candidate` — a place it could change to.
  */
-export type PinTone = "muted" | "current" | "candidate";
+export type PinTone = "muted" | "current" | "candidate" | "warn";   // `warn` [2026-10-07]: a stop that needs a look, while the list shows only those
 
 /** A pin's own label and look, by stop id (plan check's change screen: 「A · B · C」 candidates, the rest greyed). */
 export interface PinLook { label?: string; tone?: PinTone }
@@ -71,6 +71,8 @@ export interface StayPoint {
 export interface MapView { south: number; west: number; north: number; east: number; width: number; height: number; zoom: number }
 
 export interface MapViewProps {
+  /** 클릭한 좌표의 미리보기. 저장은 일정 입력 화면에서 별도로 확인한다. */
+  coordinatePick?: { value: Coordinates | null; onPick: (at: Coordinates) => void };
   points: MapPoint[];
   selectedId?: string;
   onSelect: (stopId: string) => void;
@@ -92,12 +94,16 @@ export interface MapViewProps {
   onZoom?: (zoom: number) => void;
   /** `[2026-10-05]` What the map shows, said once the map is up and each time it comes to rest after being moved, zoomed or resized. */
   onView?: (view: MapView) => void;
+  onInteractionChange?: (active: boolean) => void;
   /** `[2026-10-05]` The customer agreed to share their place: the map has a 「내 위치로」 button (it waits, greyed, for the first fix). Absent/false: no such button, and nothing said about it. */
   meAvailable?: boolean;
 }
 
 export interface MapController {
   update(points: MapPoint[], selectedId?: string, lines?: MapLine[], selectedLineId?: string): void;
+  /** 거리 칩이 대신 표시하는 일정의 마커만 숨긴다. 좌표·경로·선택·카메라는 유지한다. */
+  setHiddenPoints(ids: readonly string[]): void;
+  relayout?(): void;
   /**
    * `[2026-10-04 사용자 지시]` Back to the whole picture: the place and the zoom where every pin shows (what the map did when the pins first came).
    * ★`[2026-10-05]` Pins only — 「내 위치」 is left out (far away, it would shrink the pins to nothing). A map with no pins centres on 「내 위치」 instead.

@@ -153,3 +153,7 @@ abl_no_*.jsonl   ← ablation 5종 전부
 - [../../../wiki/evaluation/protocol.md](../../../wiki/evaluation/protocol.md) — 평가 설계
 - [../../../wiki/evaluation/metrics.md](../../../wiki/evaluation/metrics.md) — 지표 정의
 - [../../../wiki/business/infrastructure-cost.md](../../../wiki/business/infrastructure-cost.md) — 원가를 여기서 뽑는다
+
+## 일정 항목 인식 모델의 비교
+
+원본 비교·추가 학습·최종 채택 조건은 [모델 평가 기준](slm-model-evaluation.md), 날짜별 실측은 [연구 기록](../../../program/research/daily_rag_slm/index.md)에서 확인한다.

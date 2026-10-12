@@ -194,6 +194,34 @@ def parse_day(cell: str) -> tuple[str, list[tuple[int, int]]]:
     return "intervals", spans
 
 
+def apply_break(day: tuple[str, list[tuple[int, int]]], cell: str | None) -> tuple[str, list[tuple[int, int]]]:
+    """「브레이크타임」 칸(모든 영업일에 같은 쉬는 구간, 여럿이면 쉼표)을 요일 구간에서 뺀다. `[2026-10-07]`
+
+    빈칸 · 「없음」 · 「모름」이면 그대로. 칸이 없는 옛 시트(비건 · 미쉐린)는 None 이라 그대로다.
+    브레이크가 영업 구간 밖에 걸리면 그 요일은 그대로 둔다(그날은 쉬는 시간이 없다).
+    """
+    cell = (cell or "").strip()
+    coverage, spans = day
+    if not cell or cell in ("없음", "모름") or coverage != "intervals":
+        return day
+    try:
+        kind, rest = parse_day(cell)
+    except ValueError:
+        kind, rest = "", []
+    if kind != "intervals":
+        raise ValueError(f"브레이크타임 칸을 읽지 못함: {cell!r}")
+    out = list(spans)
+    for b0, b1 in rest:              # 「03:00-04:00, 15:00-16:00」처럼 쉬는 구간이 여럿일 수 있다
+        cut = []
+        for start, end in out:
+            if start < b0 and b1 < end:
+                cut += [(start, b0), (b1, end)]
+            else:
+                cut.append((start, end))
+        out = cut
+    return coverage, out
+
+
 RE_TIME = re.compile(r"(조식|점심|런치|저녁|디너)?\s*(\d{1,2}):(\d{2})")
 RE_DAY_EXCEPTION = re.compile(r"\(([^)]*)\)")
 
@@ -314,11 +342,13 @@ def hours_sql(place_of: dict[str, str], existing: set[str], sheet: str, *, tag: 
         record = (place_records or {}).get(label)
         place_sql = (f"(SELECT place_uid FROM dining.dn_source_record WHERE record_id = {q(record)})"
                      if record else q(place_uid))
-        days = [parse_day(row[d]) for d in DAYS]
+        days = [apply_break(parse_day(row[d]), row.get("브레이크타임")) for d in DAYS]
         extra_state, extra_rules = parse_extra_closure(row["정기휴무 외"])
 
         rec_id = str(uuid.uuid5(NS, f"record:{tag}-hours:{label}:{checked}"))
         raw = {k: row[k] for k in DAYS + ["라스트오더", "정기휴무 외", "확인일", "메모"]}
+        if (row.get("브레이크타임") or "").strip():
+            raw["브레이크타임"] = row["브레이크타임"]
         body.append(
             "INSERT INTO dining.dn_source_record (record_id, load_id, source_code, external_id, "
             "place_uid, match_status, raw_json) VALUES ("

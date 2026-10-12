@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>지도 안 마커 · 검정 번호 · 상단 페이드</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef2ef;color:#203d32;font-family:system-ui,sans-serif;line-height:1.6}main{max-width:1060px;margin:auto;padding:24px 16px 48px}h1{font-size:24px;line-height:1.35;margin:0 0 12px}h2{font-size:19px;margin:0 0 8px}p{margin:0 0 16px}label{display:flex;align-items:center;gap:12px;margin:20px 0}select{font:inherit;padding:8px 12px;background:white;border:1px solid #bccbc3;border-radius:10px}section{padding:20px;margin:20px 0;background:white;border-radius:18px}img{display:block;width:auto;max-width:100%;max-height:812px;margin:auto;border:1px solid #d5dfd9;border-radius:14px}a{color:inherit}figure{margin:0}
+</style>
+<main>
+<h1>지도 안에서는 각각의 마커로 보입니다</h1>
+<p>실제 화면을 촬영했습니다. 메뉴 근처와 가장자리도 지도 안에 있으면 개별 마커를 유지하고, 겹침을 피해 옮긴 마커는 실제 위치와 점선으로 연결합니다.</p>
+<label for="width">촬영 화면 <select id="width"><option value="375">375px 휴대폰</option><option value="1280">1280px 넓은 화면</option></select></label>
+<section><h2>메뉴 가까이에 있는 장소</h2><p>같은 위치에 가까이 모인 장소도 지도 안에서는 번호를 따로 표시합니다. 메뉴를 피해 옮긴 마커의 점선이 실제 좌표를 가리킵니다.</p><figure><a href="screenshots/inside-top-375.png"><img data-shot="inside-top" src="screenshots/inside-top-375.png" alt="상단 메뉴 근처의 장소들이 개별 번호와 점선으로 표시된 화면"></a></figure></section>
+<section><h2>화면 밖으로 나간 뒤</h2><p>실제 지도 경계를 벗어났을 때만 거리 칩으로 바뀝니다. 번호와 여러 일정 아이콘의 바탕은 검정입니다.</p><figure><a href="screenshots/outside-375.png"><img data-shot="outside" src="screenshots/outside-375.png" alt="화면 밖의 여러 일정이 검정 아이콘과 거리로 표시된 화면"></a></figure></section>
+<section><h2>지도 가장자리로 돌아온 뒤</h2><p>다시 지도 안에 들어오면 각각의 마커가 복원됩니다. 화면 끝에서 잘리지 않도록 몸통을 옮깁니다.</p><figure><a href="screenshots/inside-edge-375.png"><img data-shot="inside-edge" src="screenshots/inside-edge-375.png" alt="왼쪽 가장자리의 장소가 개별 마커와 점선으로 복원된 화면"></a></figure></section>
+<section><h2>손잡이 부근에서 서서히 사라지는 내용</h2><p>목록을 위로 스크롤하면 상단 32px에서 내용이 서서히 흐려집니다. 손잡이와 날짜 버튼은 선명하게 유지됩니다.</p><figure><a href="screenshots/fade-375.png"><img data-shot="fade" src="screenshots/fade-375.png" alt="스크롤한 카드가 손잡이 부근에서 흐려지고 날짜 버튼은 선명한 화면"></a></figure></section>
+<p>mock 서버 화면 검증 결과이며 공개 배포 화면과 구분합니다.</p>
+</main>
+<script>document.querySelector('#width').addEventListener('change',event=>{for(const img of document.querySelectorAll('[data-shot]')){const url=`screenshots/${img.dataset.shot}-${event.target.value}.png`;img.src=url;img.parentElement.href=url}})</script>
+</html>

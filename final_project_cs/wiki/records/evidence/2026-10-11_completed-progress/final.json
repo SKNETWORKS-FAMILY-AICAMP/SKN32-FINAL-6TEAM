@@ -1,0 +1,320 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      ".tmp/consent-progress.config.ts",
+      "tests/live/completed-progress-20261011.spec.ts",
+      "tests/live/progress.spec.ts",
+      "-g",
+      "완료 상태|접수 읽기:.*(진행 알림|진행 스트림|스트림이 없는)",
+      "--workers=1",
+      "--trace=off",
+      "--reporter=line,json",
+      "--output=.tmp/completed-final"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\consent-progress.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/.tmp/completed-final",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "completed-progress-20261011.spec.ts",
+      "file": "completed-progress-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "375px 완료 상태",
+          "file": "completed-progress-20261011.spec.ts",
+          "line": 5,
+          "column": 8,
+          "specs": [
+            {
+              "title": "질문이 남아 완료 화면을 붙잡아도 마지막 7/8 진행 문구는 사라지고 결과 화면에서도 되살아나지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4771,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-10T20:46:50.407Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "649ddf95fec2fb90e85f-584cc048a184d304072f",
+              "file": "completed-progress-20261011.spec.ts",
+              "line": 7,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "1280px 완료 상태",
+          "file": "completed-progress-20261011.spec.ts",
+          "line": 5,
+          "column": 8,
+          "specs": [
+            {
+              "title": "질문이 남아 완료 화면을 붙잡아도 마지막 7/8 진행 문구는 사라지고 결과 화면에서도 되살아나지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3362,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-10T20:46:55.451Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "649ddf95fec2fb90e85f-255acf7124d8eb787a98",
+              "file": "completed-progress-20261011.spec.ts",
+              "line": 7,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "progress.spec.ts",
+      "file": "progress.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "접수 읽기: 서버의 진행 스트림을 따라 다시 읽고(1.5초 조회 없음), 읽기가 끝나면 확인 화면으로 넘어간다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4335,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T20:46:58.876Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ca3a771848969cb77bf6-e45f3fc3f1feaede461b",
+          "file": "progress.spec.ts",
+          "line": 94,
+          "column": 1
+        },
+        {
+          "title": "접수 읽기: 서버의 진행 알림(progress)이 오면 머리글 막대에 「3/14 · 광장시장 이동 확인 중」처럼 서버가 말한 대로 보인다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3401,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T20:47:03.229Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ca3a771848969cb77bf6-075446dfd36722fff7ac",
+          "file": "progress.spec.ts",
+          "line": 104,
+          "column": 1
+        },
+        {
+          "title": "접수 읽기: 진행 알림을 안 보내는 서버면 막대는 지금처럼 움직이고 「x/y」 줄은 말하지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3926,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T20:47:06.647Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ca3a771848969cb77bf6-ee04684441fcdaf46825",
+          "file": "progress.spec.ts",
+          "line": 113,
+          "column": 1
+        },
+        {
+          "title": "접수 읽기: 스트림이 없는 옛 서버(404)면 전처럼 1.5초마다 다시 읽어 확인 화면으로 넘어간다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7914,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T20:47:10.590Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ca3a771848969cb77bf6-554c0d224b3f8c0150e4",
+          "file": "progress.spec.ts",
+          "line": 123,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-10T20:46:48.744Z",
+    "duration": 30794.434,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

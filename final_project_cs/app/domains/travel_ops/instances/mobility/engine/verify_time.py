@@ -67,7 +67,7 @@
 #   rejected_by_limit 성립하지만 동행 상한 초과로 탈락
 #   unknown           근거 없음
 #   ※ 탈락과 불가를 구분하는 게 핵심이다. 탈락은 "되지만 이 일행에게 무리", 불가는 "안 된다".
-import argparse, json, math, os, sys, difflib, collections, gzip
+import json, math, difflib, collections, gzip
 from dataclasses import dataclass, field
 from datetime import date as _date, datetime as _datetime, timedelta as _timedelta
 from pathlib import Path
@@ -77,20 +77,20 @@ from pathlib import Path
 PKG = Path(__file__).resolve().parent
 RULES_DIR = PKG / "rules"
 
-from .paths import REPO_ROOT                                            # noqa: E402
-from .line_order import LineOrder                                       # noqa: E402
-from .transfer_walk import TransferWalk, ceil1                          # noqa: E402
-from .bus import BusRoutes                                              # noqa: E402
-from .bus_profile import BusSegProfile, worst_not_before_best, board_caps, last_pass_early  # noqa: E402
-from .geo import StationCoords, meters                                  # noqa: E402
-from .exits import StationExits                                         # noqa: E402
-from .candidates import (CandidateGraph, MixedGenerator, interleave, mix_rule, ride_estimator,  # noqa: E402
+from .paths import REPO_ROOT                                            # noqa: E402, F401
+from .line_order import LineOrder                                       # noqa: E402, F401
+from .transfer_walk import TransferWalk, ceil1                          # noqa: E402, F401
+from .bus import BusRoutes                                              # noqa: E402, F401
+from .bus_profile import BusSegProfile, worst_not_before_best, board_caps, last_pass_early  # noqa: E402, F401
+from .geo import StationCoords, meters                                  # noqa: E402, F401
+from .exits import StationExits                                         # noqa: E402, F401
+from .candidates import (CandidateGraph, MixedGenerator, interleave, mix_rule, ride_estimator,  # noqa: E402, F401
                          MIX_MAX_PROPOSED, MIX_CUTS_PER_ROUTE_PROPOSED)
-from .car import CarGraph, CarService, RouterDown, make_router          # noqa: E402
-from .congestion import Congestion                                       # noqa: E402
-from .bike import (BikeStations, BikeLive, BikeRouter,                  # noqa: E402
+from .car import CarGraph, CarService, RouterDown, make_router          # noqa: E402, F401
+from .congestion import Congestion                                       # noqa: E402, F401
+from .bike import (BikeStations, BikeLive, BikeRouter,                  # noqa: E402, F401
                    party_excluded as bike_party_excluded, fare as bike_fare)
-from .timeutil import (to_min, to_service_min, fmt_min,                 # noqa: E402
+from .timeutil import (to_min, to_service_min, fmt_min,                 # noqa: E402, F401
                        fmt_wall, day_type_of, MIN_DAY, HolidayCalendar)
 
 from . import express as EX                                           # noqa: E402  급행 있는 노선(9호선)의 열차 단위 운행표
@@ -1587,7 +1587,8 @@ class Verifier:
             ev.append(self._ev_rule("taxi.fare.산식", "확정"))
             ev.append({"source_type": "policy", "source_id": "seoul_taxi_fare@2023-02-01(확인 2026-09-19)",
                        "grade": "추정", "observed_at": "2026-09-19",
-                       "claim": f"택시({c['fare_kind']}) 요금 하한 {c['fare_won']:,}원 = 미터 {c['meter_won']:,}"
+                       "claim": f"택시({c['fare_kind']}) 예상 요금 {c['fare_won']:,}원 = 미터 {c['meter_won']:,}"
+                                + (f" + 예산 여유 {c['planning_reserve_won']:,}" if c.get("planning_reserve_won") else "")
                                 + (f" + 통행료 {c['toll_won']:,}" if c["toll_won"] else "")
                                 + f" · 심야율 {c['night_rate']:g} · 저속 {c['slow_s']}초"})
             ev.append(self._ev_rule("car.택시_대기", "근거없음"))
@@ -1627,7 +1628,7 @@ class Verifier:
         ride = ceil1(c["topis_time_s"] / 60)                # #2 올림
         arr = int(now_min) + math.ceil(ride)
         return dict(base, verdict="feasible", grade=c["grade"],
-                    reason=f"{c['distance_m']/1000:.1f} km · 소요 {ride:g}분 · 요금 하한 {c['fare_won']:,}원({c['fare_kind']})",
+                    reason=f"{c['distance_m']/1000:.1f} km · 소요 {ride:g}분 · 예상 요금 {c['fare_won']:,}원({c['fare_kind']})",
                     depart_min=int(now_min), arrive_min=arr, ride_min=ride,
                     distance_m=c["distance_m"], fare_won=c["fare_won"], fare_kind=c["fare_kind"],
                     warnings=self._car_warnings(c), evidence=self._car_evidence(c),
@@ -1650,7 +1651,7 @@ class Verifier:
         ride = ceil1(c["topis_time_s"] / 60)                # #2 올림
         arr = int(now_min) + math.ceil(ride)
         reason = (f"{fmt_min(now_min)} 출발 · {c['distance_m']/1000:.1f} km · 소요 {ride:g}분"
-                  + (f" · 요금 하한 {c['fare_won']:,}원({c['fare_kind']}) · 대기 0분(근거없음)" if taxi else ""))
+                  + (f" · 예상 요금 {c['fare_won']:,}원({c['fare_kind']}) · 대기 0분(근거없음)" if taxi else ""))
         return LegResult(idx, label, "feasible", reason, grade=c["grade"],
                          depart_min=int(now_min), arrive_min=arr, wait_min=0 if taxi else None,
                          ride_min=ride, ride_grade=c["grade"],
@@ -2350,7 +2351,7 @@ class Verifier:
                     i, label, "feasible",
                     f"도보 {walk:g}분{dist_txt}"
                     + (f" + 길찾기 {wf}분" if wf else " (초행 아님)")
-                    + f" = +{add}분", grade=tg, warnings=twarn, worst=worst))
+                    + f" = +{add}분", grade=tg, warnings=twarn, worst=worst, wait_min=0))
             r = (self.verify_leg_bus(i, leg, now, day_type, worst=worst) if mode == "bus"
                  else self._cached_leg(("bike", i, json.dumps(leg, sort_keys=True, ensure_ascii=False), now),
                                        lambda: self.verify_leg_bike(i, leg, now, day_type, party, case.get("bike_live")))

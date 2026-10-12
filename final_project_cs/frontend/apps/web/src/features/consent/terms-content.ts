@@ -14,8 +14,9 @@ import type { ConsentCode } from "./consent-model";
  *   `wiki/records/plans/2026-10-05_약관_초안/00_법무확인_목록.md` 의 대조 표에 있다. 그 폴더의 01~05 는 이 파일의 한국어 본문 사본이다.
  * - ★정해지지 않은 값은 지어내지 않는다 — 본문에 「【확정 필요: …】」를 직접 쓰지 않고 `OPERATOR` · `RETENTION` 상수를 끼워 넣는다(시험이 지킨다).
  */
-export const TERMS_VERSION = "2026-10-05.1";   // `[2026-10-05]` .1 = 운영 주체 · 문의 연락처 · 보호책임자를 채웠다(글이 바뀌었으니 버전을 올린다). 서버 `consent.terms_version` 과 같이 올린다
-export const TERMS_STATUS: "draft" | "reviewed" = "draft";
+export const TERMS_VERSION = "2026-10-07.1";   // `[2026-10-07 사용자 결정]` .1 = 보관 기간 5칸을 추천값으로 확정 · 「AI 작성 초안」 안내 뺌. 서버 `consent.terms_version` 과 같은 값(cs 구축 세션에 요청)
+// 이전 판 2026-10-05.1 = 운영 주체 · 문의 연락처 · 보호책임자를 채웠다(글이 바뀌었으니 버전을 올린다). 서버 `consent.terms_version` 과 같이 올린다
+export const TERMS_STATUS: "draft" | "reviewed" = "reviewed";   // `[2026-10-07 사용자 결정]` 보관 기간 확정 · 안내문(「AI 작성 초안 …」)을 더 띄우지 않는다. ★변호사 검토를 했다는 뜻이 아니다 — 안내를 내리기로 한 사용자 결정이다
 /** 시행일("YYYY-MM-DD"). 확정 전에는 초안 작성일. */
 export const TERMS_EFFECTIVE = "2026-10-05";
 
@@ -42,6 +43,7 @@ export type Bilingual = readonly [ko: string, en: string];
  * 보유 · 이용 기간. 약관 본문은 이 값을 끼워 넣는다.
  * - 서버 코드 · 설정으로 확인한 값은 그 값을 쓰고 근거를 주석에 적는다.
  * - ★정해지지 않은 값은 「【확정 필요: …】」 + 「추천값(확정 전)」으로 둔다 — 사용자(운영 주체)가 정하면 값만 바꾼다(정하면 `TERMS_VERSION` 을 올린다).
+ * - `[2026-10-07 사용자 결정]` 남은 5칸(회원 자료 · 처리 기록 · 동의 기록 · 위치 점 · 위치 확인자료)을 추천값으로 확정했다. 나중에는 관리자 화면에서 고친 값을 서버에서 읽는다(서버 요청함).
  */
 export const RETENTION = {
   /** 근거: `config/guardrails.yaml` `web_guard.guest_idle_hours: 168` · `guest.trip_grace_days: 3` · `guest.trip_keep_max_days: 180`, 계산 `travel_ops/modules/web_account/guest_cleanup.py:8-10,88`. */
@@ -61,13 +63,13 @@ export const RETENTION = {
   ],
   /** 서버에 회원 자료의 보관 기한 규칙이 없다(회원은 게스트 정리 대상이 아니다 — `guest_cleanup.py:6`). */
   memberData: [
-    "【확정 필요: 회원의 여행 · 대화 기록 보관 기간 — 추천값(확정 전): 회원이 지우거나 탈퇴를 요청할 때까지, 다만 마지막 이용 후 1년이 지나면 파기】",
-    "【확정 필요: 회원의 여행 · 대화 기록 보관 기간】 (to be decided — recommended, not yet confirmed: until the member deletes it or asks to leave, and destroyed 1 year after the last use)",
+    "회원이 지우거나 탈퇴를 요청할 때까지, 다만 마지막 이용 후 1년이 지나면 파기",
+    "until the member deletes it or asks to leave, and destroyed 1 year after the last use",
   ],
   /** 여행을 지워도 처리 기록(Case)은 남는다 — `trip_delete.py:10`, 채팅 문장이 Case 에 실린다 — `trip_messages.py:570-574`. 보관 기한 규칙 없음. */
   caseRecords: [
-    "【확정 필요: 처리 기록(질문 문장과 처리 경과) 보관 기간 — 지금은 여행을 지워도 남음. 추천값(확정 전): 여행이 지워지거나 게스트 자료가 지워질 때 함께 파기】",
-    "【확정 필요: 처리 기록 보관 기간】 (to be decided — currently kept even after the trip is deleted; recommended, not yet confirmed: destroyed together with the trip or the guest's data)",
+    "여행이 지워지거나 게스트 자료가 지워질 때 함께 파기",
+    "destroyed together with the trip or the guest's data",
   ],
   /** 근거: `guardrails.yaml` `web_guard.ip_retention_hours: 48`, 지우는 곳 `web_guard.py:296-305`, 날짜를 섞은 HMAC `web_guard.py:170-173`. */
   abuseIpToken: ["48시간", "48 hours"],
@@ -75,23 +77,26 @@ export const RETENTION = {
   usageCounts: ["35일", "35 days"],
   /** 서버 설정 `consent.evidence_retention_days: 1825`(기록한 때부터 계산 — `consents.py:186-193`). 요청서는 「서비스 종료 후 5년」을 추천했다 — 기준 시점이 다르다. */
   consentRecords: [
-    "【확정 필요: 동의 기록 보관 기간 — 추천값(확정 전): 기록한 때부터 5년(지금 서버 설정 1,825일)】",
-    "【확정 필요: 동의 기록 보관 기간】 (to be decided — recommended, not yet confirmed: 5 years from the time of recording; the server is currently set to 1,825 days)",
+    "기록한 때부터 5년",
+    "5 years from the time of recording",
   ],
   /** 요청서 `2026-10-05_동의기록_위치수집_백엔드_요청.md` 「정할 것」 추천값. 서버 구현 전. */
   locationPoints: [
-    "【확정 필요: 위치 점 · 머문 지점 보관 기간 — 추천값(확정 전): 여행이 끝난 뒤 7일】",
-    "【확정 필요: 위치 점 · 머문 지점 보관 기간】 (to be decided — recommended, not yet confirmed: 7 days after the trip ends)",
+    "여행이 끝난 뒤 7일",
+    "7 days after the trip ends",
   ],
   /**
    * 위치정보법 제16조 제2항의 이용 · 제공사실 확인자료. 법에는 기간이 없고, 고시 「위치정보의 관리적·기술적 보호조치 기준」(방송통신위원회고시 제2022-11호)
    * 제6조 제5항이 취급대장을 「최소 6개월 이상」 보관하라고 한다(조사 2026-10-05, 고시 최신판 여부는 미확인). 동의를 철회하면 같은 법 제24조 제4항에 따라 지체 없이 파기한다. 서버 구현 전.
    */
   locationFactLog: [
-    "【확정 필요: 위치정보 이용 · 제공사실 확인자료 보관 기간 — 추천값(확정 전): 기록한 때부터 6개월(관련 고시의 최소 보관 기간)】",
-    "【확정 필요: 위치정보 이용 · 제공사실 확인자료 보관 기간】 (to be decided — recommended, not yet confirmed: 6 months from recording, the minimum in the related public notice)",
+    "기록한 때부터 6개월",
+    "6 months from the time of recording",
   ],
 } as const satisfies Record<string, Bilingual>;
+
+/** 보관 기간 칸마다 [한국어, English] 문장 — 서버가 준 문장으로 바꿔 끼울 수 있게 글자 그대로가 아닌 넓은 타입. */
+export type Retention = { readonly [K in keyof typeof RETENTION]: Bilingual };
 
 export interface TermsSection {
   heading: Bilingual;
@@ -129,6 +134,12 @@ const LANGUAGE_SECTION: TermsSection = {
   ],
 };
 
+/**
+ * 문서 다섯 개를 보관 기간 문장으로 조립한다. `[2026-10-07 사용자 결정 · cs 구축 세션 요청]` 보관 기간은 관리자 화면에서 바뀔 수 있어, 웹은 cs 프로젝트 서버
+ * (`GET /v1/web/legal/retention`)의 문장을 끼워 넣어 다시 조립한다(`terms-live.ts`). 서버를 못 읽으면 위 `RETENTION`(기본값)으로 조립한 `TERMS_DOCS` 를 쓴다.
+ * ★매개변수 이름이 `RETENTION` 인 것은 일부러다 — 본문을 한 글자도 고치지 않고 서버 문장으로 바꿔 끼우려고 바깥 상수를 가린다.
+ */
+export function buildTermsDocs(RETENTION: Retention): readonly TermsDoc[] {
 const serviceTerms: TermsDoc = {
   code: "service_terms",
   required: true,
@@ -1111,5 +1122,8 @@ const alertChannel: TermsDoc = {
   ],
 };
 
-/** 순서 = 동의 화면에 보이는 순서(`CONSENT_CODES` 와 같다). */
-export const TERMS_DOCS: readonly TermsDoc[] = [serviceTerms, privacy, sensitive, location, alertChannel];
+  return [serviceTerms, privacy, sensitive, location, alertChannel];
+}
+
+/** 순서 = 동의 화면에 보이는 순서(`CONSENT_CODES` 와 같다). 기본값(`RETENTION`)으로 조립한 판 — 서버 문장을 읽으면 `terms-live.ts` 가 바꿔 낸다. */
+export const TERMS_DOCS: readonly TermsDoc[] = buildTermsDocs(RETENTION);

@@ -14,6 +14,8 @@ export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown" | "pendin
 /** Place checks: place · time · hours · closed. Move checks: route · mode · arrival. */
 export type CheckKind = "place" | "time" | "hours" | "closed" | "booking" | "route" | "mode" | "arrival";
 export interface CheckRow { kind: CheckKind; result: CheckResult; text: string }
+/** `[2026-10-07]` One value read two ways off a photo: the one kept and the other reading. */
+export interface Reread { field: "title" | "booking_no"; current: string; other: string }
 
 /** A card's verdict once its checks are in. Null while it is still being checked. */
 export type Verdict = "keep" | "adjusted" | "review";
@@ -53,9 +55,13 @@ export interface PlanItem {
   /** The place's name as the server holds it ("" when none), and whether the customer chose 「장소 없음」. */
   place: string;
   noPlace: boolean;
+  /** `[2026-10-07]` What kind of stop the server classes it (`activity` · `dining`), for the tag under the map when its pin is picked — null when it does not say. */
+  kind?: string | null;
   /** Null when the place is not settled — it shows as 「위치 미정」 instead of a pin. */
   coordinates: Coordinates | null;
   checks: CheckRow[];
+  /** `[2026-10-07]` Values the server read two ways off a photo — the customer picks one (only those with another reading to offer). */
+  rereads?: Reread[];
   verdict: Verdict | null;
   /** Fixed by the customer: kept through re-planning and recommendations (mockup 「잠금」 — 「반드시 포함」). */
   locked: boolean;
@@ -80,6 +86,11 @@ export interface PlanCandidate {
   coordinates: Coordinates | null;
   info: PlaceInfo | null;
   checks: CheckRow[];
+  /** `[2026-10-07]` Which step of the server's ladder it came from, and its one-sentence reason (both only when the server sent them). */
+  basis?: "same_kind" | "similar_experience" | "meal_inferred" | "lodging" | "lodging_meal" | "taste" | null;
+  /** What kind of stop the place makes (`dining` · `activity`) when the server says so — picked for a stop of another kind, the kind is sent with it. */
+  placeKind?: string | null;
+  reason?: string | null;
 }
 
 /** The way from one place to the next on the same day. */
@@ -102,6 +113,10 @@ export interface PlanMove {
   slackMin: number | null;
   /** `[2026-10-04]` The time is a straight-line guess (`basis` estimate), not a timetable — said so on the screen instead of passing it off as exact. */
   estimated: boolean;
+  /** `[2026-10-07]` The way the check uses now (`walk` · `subway` · `bus` · `taxi` · `transit` · `estimate`), the way the calculator chose, and what became of the customer's choice (`kept` · `dropped` + why). */
+  modeKey?: string | null;
+  recommendedMode?: string | null;
+  modeChoice?: { mode: string | null; state: "kept" | "dropped" | null; why: string | null } | null;
   checks: CheckRow[];
   verdict: Verdict | null;
 }

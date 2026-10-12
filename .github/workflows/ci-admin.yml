@@ -2,12 +2,12 @@ name: CI (admin)
 
 on:
   push:
-    branches: [develop, main]
+    branches: [role-manager, develop, main]
     paths:
       - "final_project_cs/frontend/apps/admin/**"
       - ".github/workflows/ci-admin.yml"
   pull_request:
-    branches: [develop, main]
+    branches: [role-manager, develop, main]
     paths:
       - "final_project_cs/frontend/apps/admin/**"
       - ".github/workflows/ci-admin.yml"

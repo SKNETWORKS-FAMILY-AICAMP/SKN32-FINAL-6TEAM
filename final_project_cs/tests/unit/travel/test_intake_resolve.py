@@ -113,7 +113,7 @@ class Kakao:
     def __init__(self, hits, around=None):
         self.hits, self.around, self.asked, self.near_asked = hits, around or {}, [], []
 
-    def search(self, query, size=5, near=None):
+    def search(self, query, size=5, near=None, **kw):
         if near is not None:                       # 앞뒤 일정 근처 거리순 재검색
             self.near_asked.append((query, near))
             return self.around.get(query, [])
@@ -212,7 +212,7 @@ def test_kakao_that_could_not_be_called_is_named():
     class Down(Kakao):
         misses = {"budget_exhausted": 1}
 
-        def search(self, query, size=5):
+        def search(self, query, size=5, **kw):
             return None
 
     found = resolve("을지로 노가리골목", our_places=[], tour=Tour({}), kakao=Down({}))

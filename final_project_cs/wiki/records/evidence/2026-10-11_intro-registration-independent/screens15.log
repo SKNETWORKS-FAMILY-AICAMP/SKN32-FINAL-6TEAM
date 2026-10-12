@@ -1,0 +1,35 @@
+
+[WebServer] (node:29568) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:17696) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+
+[WebServer] (node:13236) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:26432) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 15 tests using 1 worker
+
+(node:26976) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/15] tests\live\intake-start.spec.ts:36:1 › 누르면 서버의 답을 기다리지 않고 곧바로 진행 화면으로 넘어가고(줄별 목록 없이 막대와 「보내는 중」), 서버가 받으면 그 접수의 실시간 진행으로 이어져 결과가 나온다
+[2/15] tests\live\intake-start.spec.ts:62:1 › 서버가 계획을 거절하면 등록 화면으로 돌아와 서버의 문장을 보이고, 쓴 글과 올리려던 파일이 그대로 있어 고쳐 다시 보낼 수 있다
+[3/15] tests\live\intake-start.spec.ts:85:1 › 보내는 중에 뒤로 가기 화살표를 누르면 등록 화면으로 돌아가 글이 그대로 있고, 오류 문장은 뜨지 않는다
+[4/15] tests\live\intake-start.spec.ts:100:1 › 보내는 중에 새로고침하면(보내던 계획은 메모리에만 있어 사라진다) 등록 화면으로 돌아가고, 쓴 글은 그대로다
+[5/15] tests\live\intake-start.spec.ts:110:1 › 세션이 없는 첫 방문도 누르는 순간 진행 화면으로 넘어가고, 게스트 세션은 그 사이에 만들어진다
+[6/15] tests\live\intake-start.spec.ts:125:1 › 서버가 몇 초 넘게 답이 없으면 진행 화면이 「서버가 답하는 데 시간이 걸리고 있어요」라고 알리고, 답이 오면 그대로 이어진다
+[7/15] tests\live\intro-registration-20261011.spec.ts:25:5 › 375px 시작 화면 › 홈 버튼으로 입력 화면을 열 때 로컬 초안 때문에 로딩 화면이 끼어들지 않는다
+[8/15] tests\live\intro-registration-20261011.spec.ts:42:5 › 375px 시작 화면 › 응답이 없는 cs 프로젝트 API와 무관하게 초안을 복원하고 다시 입력할 수 있다
+[9/15] tests\live\intro-registration-20261011.spec.ts:54:5 › 375px 시작 화면 › 브라우저 임시 저장을 쓸 수 없어도 입력 화면을 표시하고 저장 불가를 알린다
+[10/15] tests\live\intro-registration-20261011.spec.ts:25:5 › 1280px 시작 화면 › 홈 버튼으로 입력 화면을 열 때 로컬 초안 때문에 로딩 화면이 끼어들지 않는다
+[11/15] tests\live\intro-registration-20261011.spec.ts:42:5 › 1280px 시작 화면 › 응답이 없는 cs 프로젝트 API와 무관하게 초안을 복원하고 다시 입력할 수 있다
+[12/15] tests\live\intro-registration-20261011.spec.ts:54:5 › 1280px 시작 화면 › 브라우저 임시 저장을 쓸 수 없어도 입력 화면을 표시하고 저장 불가를 알린다
+[13/15] tests\live\registration.spec.ts:9:1 › 작성 중인 계획은 화면을 오가도·새로고침해도 보존되고, 「이전」은 소개 화면(약관 동의 뒤)으로 간다
+[14/15] tests\live\registration.spec.ts:25:1 › 「예시 불러오기」는 글칸에 일주일 뒤부터의 서울 이틀 일정을 채울 뿐이다 — 서버에는 아무것도 가지 않고, 고칠 수 있다
+[15/15] tests\live\registration.spec.ts:40:1 › 320px에서 홈과 등록 화면이 가로로 넘치지 않는다
+  15 passed (41.3s)

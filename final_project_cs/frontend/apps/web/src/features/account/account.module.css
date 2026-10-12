@@ -15,6 +15,21 @@
 .providers { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .providers li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-soft); }
 .providerName { font-size: 13px; font-weight: 650; }
+.socialButton { width: 100%; max-width: 400px; height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 12px; border: 1px solid transparent; border-radius: 12px; font-family: Arial, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; }
+.socialButton > span:last-child { flex: 1; text-align: center; }
+.socialButton:disabled { opacity: .4; cursor: default; }
+.socialButton:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+.socialButton:not(:disabled):hover { box-shadow: 0 1px 4px var(--color-shadow-light); }
+.socialButton[data-brand="kakao"] { background: var(--color-brand-paper); color: var(--color-brand-ink); border-color: var(--color-brand-border); border-radius: 24px; }
+.providerMark[data-brand="kakao"] { background: var(--color-brand-kakao); color: var(--color-brand-ink); }
+.socialButton[data-brand="naver"], .providerMark[data-brand="naver"] { background: var(--color-brand-naver); color: var(--color-brand-paper); }
+.socialButton[data-brand="discord"], .providerMark[data-brand="discord"] { background: var(--color-brand-discord); color: var(--color-brand-paper); }
+.providerIcon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: 0 0 20px; overflow: hidden; }
+.providerIcon svg, .providerIcon img { width: 20px; height: 20px; object-fit: contain; }
+/* Official Naver icon includes its clearspace: show the original centre at 1:1, not a smaller N. */
+.providerIcon[data-provider-icon="naver"] img { position: absolute; width: 48px; height: 48px; max-width: none; }
+.providerIdentity { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 650; }
+.providerMark { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 8px; background: var(--color-brand-paper); }
 /* `[2026-10-05]` A row that is a brand's own button (Google's): no frame of ours around it. */
 .providers li.brandRow { display: block; padding: 0; border: 0; background: none; }
 .linkedTag { font-size: 11px; font-weight: 650; color: var(--color-primary); }
@@ -28,4 +43,3 @@
 .choices { display: grid; gap: 6px; margin: 0; padding: 0; border: 0; min-width: 0; }
 .choices legend { padding: 0; margin-bottom: 4px; font-size: 11px; color: var(--color-muted); }
 .choices label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text); }
-

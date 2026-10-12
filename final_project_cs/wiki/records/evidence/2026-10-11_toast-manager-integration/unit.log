@@ -1,0 +1,17 @@
+
+> @tripilot/web@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.1 WORKSPACE/.tmp/toast-manager-20261011/final_project_cs/frontend/apps/web
+
+
+ Test Files  79 passed (79)
+      Tests  643 passed (643)
+   Start at  21:13:35
+   Duration  8.43s (transform 37%, import 34%, tests 24%, worker 5%)
+
+  Transform  transforming modules took 6.47s · 37% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

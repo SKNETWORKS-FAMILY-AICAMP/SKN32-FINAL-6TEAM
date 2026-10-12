@@ -1,13 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import { checkPlan, mockServer, start, TRIP_ID } from "./helpers";
+import { INTAKE } from "./plan-check-kit";
 
 /**
  * `[2026-10-06 사용자 지시 — 첫 화면 · 확인 화면과 일관되게 전체를 모바일 기준으로, 메뉴에서 데스크탑을 고르면 그때 데스크탑 화면]` 계획 담기 · 내 여행 · 여행 · 마이페이지는 기본으로 휴대폰 크기 틀 안에 있고, 메뉴의
- * 「데스크탑 화면으로 보기」를 켜면 넓은 화면이 된다. 항로 지킴이 카드와 알림은 그 틀 안에서 틀 폭에 맞게 뜨고, 한 번 켜면 켜진 상태가 기본이다. 테스트용 mock 서버로 도는 자동 시험이다(화면 반응 — 실서버 확인 아님).
+ * (2026-10-07 사용자 지시: 데스크탑 화면과 그 스위치는 없앴다.) 항로 지킴이 카드와 알림은 그 틀 안에서 틀 폭에 맞게 뜨고, 한 번 켜면 켜진 상태가 기본이다. 테스트용 mock 서버로 도는 자동 시험이다(화면 반응 — 실서버 확인 아님).
  */
 const PLAN = "10/1 09:00 경복궁 관람";
-// `[2026-10-08]` 틀은 `data-device` 로 찾는다 — CSS 모듈 클래스 이름은 빌드 몫이라(Next 16.4 부터 `<해시>_<이름>`) 선택자로 쓰지 않는다.
-const device = (page: Page) => page.locator("[data-device]").first();
+const device = (page: Page) => page.locator('[data-device]').first();
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
@@ -23,26 +23,8 @@ test("기본은 휴대폰 크기 틀이다 — 넓은 창(1280)에서도 계획 
     const main = (await page.locator("#main-content").boundingBox())!;
     expect(main.width).toBeLessThanOrEqual(402.5);
     expect(main.x).toBeGreaterThanOrEqual(frame.x - 1);
-    expect(await device(page).evaluate((element) => { const scroller = element.querySelector("[data-device-scroll]") as HTMLElement | null; return scroller ? scroller.scrollWidth <= scroller.clientWidth : true; })).toBe(true);
+    expect(await device(page).evaluate((element) => { const scroller = element.querySelector('[data-device-scroll]') as HTMLElement | null; return scroller ? scroller.scrollWidth <= scroller.clientWidth : true; })).toBe(true);
   }
-});
-
-test("메뉴의 「데스크탑 화면으로 보기」를 켜면 넓은 화면이 되고(이 브라우저가 기억한다), 끄면 다시 휴대폰 크기 틀이다", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await start(page);
-  await page.goto("/trips/new");
-  const narrow = (await page.locator("#main-content").boundingBox())!.width;
-  expect(narrow).toBeLessThanOrEqual(402.5);
-  await page.getByRole("button", { name: "메뉴" }).click();
-  const toggle = page.getByRole("switch", { name: "데스크탑 화면으로 보기" });
-  await expect(toggle).not.toBeChecked();
-  await toggle.click();                                                                                  // 켜는 순간 화면 틀이 바뀌어 메뉴도 새로 그려진다
-  await expect.poll(async () => (await page.locator("#main-content").boundingBox())!.width).toBeGreaterThan(600);
-  await page.reload();                                                                                  // 기억한다
-  await expect.poll(async () => (await page.locator("#main-content").boundingBox())!.width).toBeGreaterThan(600);
-  await page.getByRole("button", { name: "메뉴" }).click();
-  await page.getByRole("switch", { name: "데스크탑 화면으로 보기" }).click();
-  await expect.poll(async () => (await page.locator("#main-content").boundingBox())!.width).toBeLessThanOrEqual(402.5);
 });
 
 test("항로 지킴이 카드는 휴대폰 틀 안에서 틀 폭에 맞는 아래 시트로 뜬다(화면 전체를 덮는 따로 노는 카드가 아니다)", async ({ page }) => {
@@ -97,14 +79,14 @@ test("한 번 켜면 켜진 상태가 기본이다 — 다음 계획에서는 �
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await checkPlan(page, "켜고 진행");                                                                    // 처음에는 묻는다
-  await expect(page).toHaveURL(/\/(intakes|trips)\//, { timeout: 15_000 });
+  await expect(page).toHaveURL(new RegExp(`/intakes/${INTAKE}$`), { timeout: 15_000 });
   // 같은 브라우저에서 새 계획: 아이콘이 처음부터 켜져 있고, 누르면 카드 없이 바로 진행한다
   await page.goto("/trips/new");
   await expect(page.getByRole("button", { name: "항로 지킴이 끄기" })).toBeVisible();
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page).toHaveURL(/\/(intakes|trips)\//, { timeout: 15_000 });
+  await expect(page).toHaveURL(new RegExp(`/intakes/${INTAKE}$`), { timeout: 15_000 });
   const plans = await server.received("POST", "/plan");
   const intakes = await server.received("POST", "/v1/web/trip-intakes");
   expect(intakes.length).toBeGreaterThanOrEqual(2);

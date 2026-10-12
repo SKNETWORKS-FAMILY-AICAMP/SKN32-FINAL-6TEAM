@@ -15,6 +15,9 @@
 .toast[data-tone="warn"] { --tone: var(--color-warning); }
 .toast[data-tone="ok"] { --tone: var(--color-success); }
 .toast[data-tone="changed"] { --tone: var(--color-selected); }
+/* `[2026-10-07 사용자 결정]` An error stays until it is closed or swiped away: it takes the finger (the others let presses through to the map), and its stripe is the error colour. */
+.toast[data-tone="error"] { --tone: var(--color-error); }
+.toast[data-stay] { pointer-events: auto; touch-action: pan-y; cursor: grab; }
 .toast[data-badge] { grid-template-columns: auto minmax(0, 1fr) auto auto; grid-template-areas: "badge body action close"; }
 .toast[data-stacked] { grid-template-areas: "body body close" "action action action"; }
 .toast[data-badge][data-stacked] { grid-template-areas: "badge body body close" ". action action action"; }
