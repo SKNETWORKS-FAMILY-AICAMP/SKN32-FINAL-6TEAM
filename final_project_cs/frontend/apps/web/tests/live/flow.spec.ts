@@ -45,7 +45,7 @@ test("첫 방문: 계획을 올리면 게스트 세션이 만들어지고(쿠키
   expect(await server.received("POST", "/v1/web/auth/session")).toHaveLength(1);       // 게스트 세션은 한 번만 만들어졌다
 
   // 마이페이지: 게스트라고 말하고, 키는 보여 주지도 받지도 않는다.
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");                                   // `[2026-10-13]` 로그인 상태는 「로그인 · 계정」 화면
   await expect(page.getByRole("group", { name: "로그인 상태" })).toContainText("게스트로 쓰고 있어요");
   await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
   await expect(page.getByText("발급된 토큰")).toHaveCount(0);

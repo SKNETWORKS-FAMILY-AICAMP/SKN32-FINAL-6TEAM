@@ -47,7 +47,9 @@ test("시간 변경은 제목 옆 체크만 보이고 되돌리기는 펼친 카
   await undo.scrollIntoViewIfNeeded();
   const box = (await item.boundingBox())!;
   const button = (await undo.boundingBox())!;
-  expect(button.height).toBeGreaterThanOrEqual(44);
+  // `[2026-10-13 CI 점검]` develop 의 「compact undo」(0b33deb8): 보이는 단추는 작고(약 26px) 손가락 영역 44px 는 `::after` 가 맡는다 — 보이는 상자만 재던 이 줄이 늘 실패했다.
+  const touch = await undo.evaluate((element) => parseFloat(getComputedStyle(element, "::after").height));
+  expect(Math.max(button.height, touch)).toBeGreaterThanOrEqual(44);
   expect(box.x + box.width - button.x - button.width).toBeLessThan(16);
   expect(box.y + box.height - button.y - button.height).toBeLessThan(16);
   await toast(page, "1개 일정의 시간을 바꿨어요").getByRole("button", { name: "닫기", exact: true }).click();

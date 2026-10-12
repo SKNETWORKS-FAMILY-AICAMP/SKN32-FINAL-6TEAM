@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockServer, start } from "./helpers";
 
 /**
- * `[2026-10-04 사용자 지시 · 서버 D-CS-012]` 마이페이지 「에이전트 연결」 — 회원만, 키는 만든 직후 한 번만 보인다.
+ * `[2026-10-04 사용자 지시 · 서버 D-CS-012]` 마이페이지 「에이전트 연결」(`[2026-10-13]` `/mypage/agents`) — 회원만, 키는 만든 직후 한 번만 보인다.
  * mock 서버 시험이다 — 화면이 무엇을 보내고 어떻게 반응하는지를 본다. 서버가 실제로 키를 만들고 폐기하는지는 실서버 확인이 따로 본다.
  */
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
@@ -12,10 +12,11 @@ const card = (page: Page) => page.getByRole("group", { name: "에이전트 연�
 test("게스트는 키를 만들 수 없다 — 로그인하면 쓸 수 있다고 알리고, 계정을 연결하러 가는 길을 보인다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page);                                                       // 기본 세션 = 게스트
-  await page.goto("/mypage");
+  await page.goto("/mypage/agents");
   await expect(card(page)).toContainText("로그인한 사용자만 에이전트를 연결할 수 있어요");
   await expect(card(page).getByRole("button", { name: "키 만들기" })).toHaveCount(0);
-  await expect(card(page).getByRole("link", { name: /소셜 계정을 연결하면/ })).toHaveAttribute("href", "/mypage#accounts");
+  // `[2026-10-13 마이페이지 A안]` 키는 「에이전트 연결」 화면에, 로그인은 「로그인 · 계정」 화면에서 하고 이 화면으로 돌아온다.
+  await expect(card(page).getByRole("link", { name: /로그인 · 계정」에서 로그인하면/ })).toHaveAttribute("href", "/mypage/account?returnTo=%2Fmypage%2Fagents");
   expect(await server.received("GET", "/v1/web/agent-keys")).toHaveLength(0);   // 게스트로는 목록을 묻지도 않는다
 });
 
@@ -23,7 +24,7 @@ test("회원: 이름·권한·기간을 정해 키를 만들면 키가 한 번 �
   const server = mockServer(request);
   await server.scenario({ sessionKind: "member" });
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/agents");
   await expect(card(page)).toContainText("아직 만든 키가 없어요");
   const make = card(page).getByRole("button", { name: "키 만들기" });
   await expect(make).toBeDisabled();                                        // 이름이 없으면 만들 수 없다
@@ -56,7 +57,7 @@ test("회원: 이름·권한·기간을 정해 키를 만들면 키가 한 번 �
 test("키는 화면 상태에만 있다: 브라우저 저장소에 남지 않고, 새로 고치면 다시 볼 수 없다", async ({ page, request }) => {
   await mockServer(request).scenario({ sessionKind: "member" });
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/agents");
   await card(page).getByLabel(/^이름/).fill("서버");
   await card(page).getByRole("button", { name: "키 만들기" }).click();
   const fresh = card(page).getByRole("status", { name: "새 키" });
@@ -77,7 +78,7 @@ test("폐기는 두 번 눌러야 한다(폐기 → 폐기하기): 취소하면 
   const server = mockServer(request);
   await server.scenario({ sessionKind: "member" });
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/agents");
   await card(page).getByLabel(/^이름/).fill("쓰던 키");
   await card(page).getByRole("button", { name: "키 만들기" }).click();
   await card(page).getByRole("button", { name: "따로 보관했어요" }).click();
@@ -99,7 +100,7 @@ test("폐기는 두 번 눌러야 한다(폐기 → 폐기하기): 취소하면 
 test("사용 중인 키가 한도(409 agent_key_limit)면 서버 문장 그대로 알리고, 키 글자는 만들어지지 않는다", async ({ page, request }) => {
   await mockServer(request).scenario({ sessionKind: "member", agentKeys: "limit" });
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/agents");
   await card(page).getByLabel(/^이름/).fill("열한 번째");
   await card(page).getByRole("button", { name: "키 만들기" }).click();
   await expect(card(page).getByRole("alert")).toContainText("사용 중인 에이전트 키가 10개예요");
@@ -109,7 +110,7 @@ test("사용 중인 키가 한도(409 agent_key_limit)면 서버 문장 그대�
 test("서버가 아직 이 기능을 모르면(404) 「서버가 준비 중」이라고만 말하고 만들 단추를 두지 않는다", async ({ page, request }) => {
   await mockServer(request).scenario({ sessionKind: "member", agentKeys: "off" });
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/agents");
   await expect(card(page)).toContainText("에이전트 연결은 서버가 준비 중이에요");
   await expect(card(page).getByRole("button", { name: "키 만들기" })).toHaveCount(0);
 });

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { fillPlanAsk, openRegistration, start, mockServer, TRIP_ID, weekAhead, checkPlan, paneTab, tripScreen } from "./helpers";
+import { fillPlanAsk, openRegistration, start, mockServer, TRIP_ID, weekAhead, checkPlan, tripScreen, openPane } from "./helpers";
 
 // `[2026-10-02]` The server answers long work as a progress stream (`op_stream.py`): chat and 「plan it for me」 when
 // asked with `Accept: text/event-stream`, and an intake's reading on `GET …/events`. The screen shows what the server
@@ -11,7 +11,7 @@ const openChat = async (page: Page) => {
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(tripScreen(page)).toBeVisible();
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   return page.locator("#trip-pane-chat");
 };
 

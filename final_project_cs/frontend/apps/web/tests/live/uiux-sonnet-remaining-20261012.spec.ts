@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockServer, paneTab, start, TRIP_ID } from "./helpers";
+import { mockServer, start, TRIP_ID, openPane } from "./helpers";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
@@ -33,7 +33,7 @@ test("여행 화면의 작은 목록에서는 채팅 내용 조각이 그려지�
   await page.emulateMedia({ reducedMotion: "reduce" });
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   const handle = page.getByRole("button", { name: "목록 높이 바꾸기", exact: true });
   await handle.focus();
   for (let i = 0; i < 14; i += 1) await page.keyboard.press("ArrowDown");

@@ -41,7 +41,7 @@ test("여행이 없으면 「아직 등록한 여행이 없어요」가 뜨고, 
 
 test("게스트의 마이페이지: 「로그인 상태」 칸이 사라지는 때와 제한을 말하고, 토큰은 보여 주지도 받지도 않는다", async ({ page }) => {
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");                                                // `[2026-10-13 마이페이지 A안]` 로그인 상태는 「로그인 · 계정」 화면
   const status = page.getByRole("group", { name: "로그인 상태" });
   await expect(status).toBeVisible();
   await expect(status).toContainText("게스트로 쓰고 있어요");
@@ -54,14 +54,16 @@ test("게스트의 마이페이지: 「로그인 상태」 칸이 사라지는 �
   await expect(page.getByText("발급된 토큰")).toHaveCount(0);
   await expect(page.getByRole("group", { name: "토큰 관리" })).toHaveCount(0);
   await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
+  await page.goto("/mypage");
   await expect(page.locator("#main-content").getByText("게스트", { exact: true })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "내 상태" }).getByRole("link", { name: /^로그인 · 계정/ })).toContainText("게스트");
 });
 
 test("회원의 마이페이지: 로그아웃하면 보안 토큰과 함께 서버에 알리고, 그 뒤로는 세션이 없는 모습이 된다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ sessionKind: "member" });
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");
   const status = page.getByRole("group", { name: "로그인 상태" });
   await expect(status).toContainText("로그인한 계정으로 쓰고 있어요");
   await status.getByRole("button", { name: "로그아웃" }).click();
@@ -82,11 +84,10 @@ test("로그아웃하면 이전 계정의 여행이 화면 캐시에 남지 않�
   await page.getByRole("region", { name: "내 여행", exact: true }).getByRole("link").click();
   await expect(page.locator("#trip-pane-schedule").getByText("경복궁 관람")).toBeVisible();
   await page.evaluate(() => { (window as unknown as { __stayed?: boolean }).__stayed = true; });                   // 이 표시가 남아 있으면 페이지를 새로 읽지 않은 것이다
+  // `[2026-10-13]` 메뉴 맨 아래 「로그아웃」(마이페이지와 같은 처리 — 읽어 둔 것을 버린다) 뒤 첫 화면으로 간다 — 앱 안의 이동이다.
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
-  await page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: /마이페이지/ }).click();             // 앱 안에서 옮긴다(새로 읽지 않는다)
-  const status = page.getByRole("group", { name: "로그인 상태" });
-  await status.getByRole("button", { name: "로그아웃" }).click();
-  await expect(status.getByRole("status")).toContainText("로그아웃했어요");
+  await page.getByRole("dialog", { name: "메뉴" }).getByRole("button", { name: "로그아웃" }).click();
+  await expect(page).toHaveURL(/\/$/);
   await page.route((url) => url.pathname.endsWith(`/v1/web/trips/${TRIP_ID}`), async (route) => { await new Promise((resolve) => setTimeout(resolve, 4_000)); await route.abort(); });   // 다시 읽기를 붙잡아 둔다
   await page.goBack();                                                                                              // 재로딩 없는 뒤로가기
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
@@ -150,7 +151,7 @@ test("게스트의 제한에 걸리면(403 guest_trip_limit · login_required) �
   await expect(alert).toContainText("로그인하면 더 만들 수 있어요");            // 서버의 문장 그대로
   const way = alert.getByRole("link", { name: "계정으로 계속하기", exact: true });
   const returnTo = new URL(page.url()).pathname;
-  const accountHref = `/mypage?returnTo=${encodeURIComponent(returnTo)}#accounts`;
+  const accountHref = `/mypage/account?returnTo=${encodeURIComponent(returnTo)}`;   // `[2026-10-13]` 로그인 · 계정 화면
   const accountUrl = new URL(accountHref, page.url()).href;
   await expect(way).toHaveAttribute("href", accountHref);
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();   // 읽은 계획은 그대로 보인다

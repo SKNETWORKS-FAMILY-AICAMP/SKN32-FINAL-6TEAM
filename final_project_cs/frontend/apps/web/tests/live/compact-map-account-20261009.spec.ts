@@ -86,11 +86,12 @@ for (const width of [375, 1280]) {
   test(`흰 소셜 버튼과 분리한 선택 약관 ${width}px`, async ({ page, request }) => {
     await mockServer(request).scenario({ consents: "on" });
     await page.setViewportSize({ width, height: 812 });
-    await start(page); await page.goto("/mypage#accounts");
+    await start(page); await page.goto("/mypage/account");
     const kakao = page.getByRole("button", { name: "Kakao 계정으로 계속", exact: true });
     await expect(kakao).toHaveCSS("background-color", "rgb(255, 255, 255)");
     const google = page.getByRole("button", { name: "Google 계정으로 계속", exact: true });
     await expect(google).toHaveCSS("border-radius", "24px");
+    await page.goto("/mypage/consents");                                   // `[2026-10-13 마이페이지 A안]` 약관 카드는 「약관 · 동의」 화면
     await page.locator("#consents").scrollIntoViewIfNeeded();
     await expect(page.getByRole("list", { name: "선택 동의 항목" })).toHaveCount(0);
     await capture(page, `04-social-and-terms-${width}`);

@@ -8,7 +8,7 @@ test("375px 화면의 네 소셜 버튼은 같은 크기와 정렬로 공식 아
   await page.route("**/v1/web/auth/providers", (route) => route.fulfill({ json: { providers: ["google", "kakao", "naver", "discord"].map((id) => ({ id })) } }));
   await page.setViewportSize({ width: 375, height: 812 });
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");
   const group = page.getByRole("group", { name: "소셜 계정" });
   const companies = ["Google", "Kakao", "Naver", "Discord"];
   const boxes: { x: number; width: number; height: number }[] = [];
@@ -34,7 +34,7 @@ test("375px 화면의 네 소셜 버튼은 같은 크기와 정렬로 공식 아
 
 test("연결된 계정에도 공식 아이콘과 회사 이름이 남고 연결 해제 후 같은 버튼으로 돌아온다", async ({ page }) => {
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");
   const group = page.getByRole("group", { name: "소셜 계정" });
   await group.getByRole("button", { name: "Kakao 계정으로 계속" }).click();
   await expect(page.getByRole("heading", { name: "카카오 계정으로 로그인했어요" })).toBeVisible();
@@ -51,7 +51,7 @@ test("필수 약관 전문은 두 문서를 읽는 대화창이며 탭 초점·�
   await mockServer(request).scenario({ consents: "on" });
   await page.setViewportSize({ width: 375, height: 812 });
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/consents");
   const trigger = page.getByRole("button", { name: "약관 전문 확인" });
   await trigger.click();
   const dialog = page.getByRole("dialog", { name: "약관 전문", exact: true });
@@ -90,7 +90,7 @@ test("관리 화면에서 선택 항목만 수정하고 기존 필수 동의 두
   const mock = mockServer(request);
   await mock.scenario({ consents: "on" });
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/consents");
   await page.getByRole("button", { name: "선택 약관 동의", exact: true }).click();
   const list = page.getByRole("list", { name: "선택 동의 항목" });
   // 2026-10-10 계약: 서비스 개선용 이용을 포함한 선택 네 항목만 관리한다.

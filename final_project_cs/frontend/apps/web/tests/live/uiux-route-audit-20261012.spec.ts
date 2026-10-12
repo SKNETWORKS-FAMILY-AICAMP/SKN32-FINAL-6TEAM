@@ -16,6 +16,11 @@ const screens = [
   { name: "starting-revisit", path: "/intakes/starting", final: "/trips/new" },
   { name: "account", path: "/mypage" },
   { name: "profile", path: "/mypage/edit" },
+  // `[2026-10-13 마이페이지 A안]` the screens each status line opens
+  { name: "account-signin", path: "/mypage/account" },
+  { name: "account-alerts", path: "/mypage/alerts" },
+  { name: "account-consents", path: "/mypage/consents" },
+  { name: "account-agents", path: "/mypage/agents" },
   { name: "support", path: "/support" },
   { name: "social-cancelled", path: "/auth/done?error=cancelled" },
 ];

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
-import { dayTab, mockServer, noHorizontalScroll, paneTab, start, TRIP_ID, tripScreen } from "./helpers";
+import { beforeTheTrip, dayTab, mockServer, noHorizontalScroll, start, TRIP_ID, tripScreen, openPane } from "./helpers";
 import { openFinished } from "./plan-check-kit";
 
 const shots = "mockups/registered-trip-parity-2026-10-11-v1";
@@ -19,6 +19,8 @@ async function aligned(page: Page) {
     return Math.max(Math.abs(a.left - b.left), Math.abs(a.right - b.right), Math.abs(a.top - b.top));
   })).toBeLessThan(1);
 }
+// `[2026-10-13]` 가짜 서버 여행(2026-10-01)이 「지난 일정」으로 그려지지 않게 여행 전날로 시계를 고정한다(helpers.ts beforeTheTrip).
+test.beforeEach(async ({ page }) => { await beforeTheTrip(page); });
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 for (const width of [375, 1280]) {
   test(`등록 여행은 검증 날짜·테두리·스크롤 규칙을 공유한다 ${width}px`, async ({ page }) => {
@@ -27,25 +29,23 @@ for (const width of [375, 1280]) {
     await aligned(page);
     const strip = page.getByRole("tablist", { name: "일차 고르기", includeHidden: true });
     const body = page.locator("#trip-pane-schedule > div");
-    await expect(page.locator("#trip-card-i-a")).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+    await expect(page.locator("#trip-card-i-a")).toHaveCSS("border-top-color", "rgb(195, 205, 198)");   // `[2026-10-13 ④]` 접힌 카드는 테두리를 두른다(10-10 무테를 바꿈)
     await dayTab(page, /^2일차/).click(); await aligned(page);
-    await paneTab(page, "채팅").click(); await paneTab(page, "일정").click(); await aligned(page);
+    await openPane(page, "채팅"); await openPane(page, "일정"); await aligned(page);
     await body.evaluate(el => { el.scrollTop = 100; });
     await expect(strip).toHaveAttribute("data-quiet", "true");
     await body.evaluate(el => { el.scrollTop = 0; });
     await expect(strip).not.toHaveAttribute("data-quiet");
     await dayTab(page, /^1일차/).click(); await aligned(page);
+    // `[2026-10-13 CI 점검]` develop 42df598c(10-12)부터 두 손가락은 브라우저 확대 몫이다 — 목록 크기(메뉴에서 바꾼다)와 날짜를 바꾸지 않는다(day-gestures.spec 과 같다).
+    //   이 시험만 옛 「벌리면 목록 1.3 · 오므리면 전체」를 보고 있어 develop 에서도 실패했다.
     await finger(page, "pointerdown", 140, 1); await finger(page, "pointerdown", 260, 2);
     await finger(page, "pointermove", 130, 1); await finger(page, "pointermove", 290, 2);
     await finger(page, "pointerup", 130, 1); await finger(page, "pointerup", 290, 2);
-    await expect.poll(() => page.evaluate(() => localStorage.getItem("triPilot.planListZoom"))).toBe("1.3");
     await finger(page, "pointerdown", 150, 1); await finger(page, "pointerdown", 250, 2);
     await finger(page, "pointermove", 190, 1); await finger(page, "pointermove", 210, 2);
     await finger(page, "pointerup", 190, 1); await finger(page, "pointerup", 210, 2);
-    await expect(dayTab(page, /^전체$/)).toHaveAttribute("aria-selected", "true");
-    await finger(page, "pointerdown", 190, 1); await finger(page, "pointerdown", 210, 2);
-    await finger(page, "pointermove", 100, 1); await finger(page, "pointermove", 300, 2);
-    await finger(page, "pointerup", 100, 1); await finger(page, "pointerup", 300, 2);
+    expect(await page.evaluate(() => localStorage.getItem("triPilot.planListZoom"))).toBeNull();
     await expect(dayTab(page, /^1일차/)).toHaveAttribute("aria-selected", "true"); await aligned(page);
     await noHorizontalScroll(page);
     await mkdir(shots, { recursive: true }); await page.screenshot({ path: `${shots}/shared-${width}.png` });
@@ -94,7 +94,7 @@ for (const width of [375, 1280]) {
       if (extra) turns.push({ role: "assistant", case_id: "new-answer", at: "2026-10-01T09:00:00Z", text: "새로 도착한 여행 안내입니다." });
       await route.fulfill({ response, json: { trip_id: TRIP_ID, turns } });
     });
-    await start(page); await page.goto(`/trips/${TRIP_ID}`); await paneTab(page, "채팅").click();
+    await start(page); await page.goto(`/trips/${TRIP_ID}`); await openPane(page, "채팅");
     const log = page.getByRole("log", { name: "여행 대화 이력" });
     const end = () => log.evaluate(el => el.scrollHeight - el.clientHeight - el.scrollTop);
     await expect.poll(end).toBeLessThan(2);

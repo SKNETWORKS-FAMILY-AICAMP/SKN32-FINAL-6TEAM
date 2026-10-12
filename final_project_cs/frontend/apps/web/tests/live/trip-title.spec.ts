@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer, openTitle, start, TRIP_ID, tripScreen } from "./helpers";
+import { beforeTheTrip, mockServer, openTitle, start, TRIP_ID, tripScreen, chatButton } from "./helpers";
 
 /**
  * `[2026-10-07 사용자 결정 — 목업 C안 3단계]` 제목 펼침(B안) · 여행계획서 공유 · 일정 「상세 보기」. mock 서버 시험이다 — 화면 반응만 본다.
@@ -7,6 +7,8 @@ import { mockServer, openTitle, start, TRIP_ID, tripScreen } from "./helpers";
  *   - 공유하기: 보낼 곳(카카오톡은 키가 없어 준비 중 · 메시지 sms: · 텔레그램 공유 주소 · 링크 복사 · 더보기)과 「파일로 내려받기」.
  *   - 상세 보기: 그날 일정마다 카드 한 장(옆으로 넘기기 · 점), 지도는 그날 일정만(보는 일정 진하게, 경로선 없음), 사진은 서버가 아직 주지 않아 준비 중.
  */
+// `[2026-10-13]` 가짜 서버 여행(2026-10-01)이 「지난 일정」으로 그려지지 않게 여행 전날로 시계를 고정한다(helpers.ts beforeTheTrip).
+test.beforeEach(async ({ page }) => { await beforeTheTrip(page); });
 test.beforeEach(async ({ page, request }) => {
   await mockServer(request).reset();
   await start(page);
@@ -130,7 +132,7 @@ test("상세 보기는 Esc 로도 닫히고, 「이 일정 질문하기」는 �
   await expect(page.locator("#stop-button-i-a")).toHaveAttribute("aria-expanded", "true");
   await page.getByRole("button", { name: "아침 식당 상세 보기" }).click();
   await page.locator('[data-card-id="i-a"]').getByRole("button", { name: "이 일정 질문하기" }).click();
-  await expect(page.getByRole("tab", { name: "채팅", exact: true })).toHaveAttribute("aria-selected", "true");
+  await expect(chatButton(page)).toHaveAttribute("aria-pressed", "true");                          // `[2026-10-13]` 채팅 버튼 하나(눌림 = 채팅 칸)
   await expect.poll(async () => (await server.received("POST", "/messages")).length).toBe(1);
 });
 

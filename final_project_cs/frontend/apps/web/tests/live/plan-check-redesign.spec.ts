@@ -369,11 +369,10 @@ test("일정 사이 간격은 비는 시간만큼 벌어지고, 15분 넘게 비
   expect(Math.abs((textBox.y + textBox.height / 2) - (freeBox.y + freeBox.height / 2))).toBeLessThan(3);
   await expect(move.locator("[class*=moveText]")).toContainText("지하철 3호선");
   await expect(page.getByText(/^여유 /)).toHaveCount(1);                                              // 올리브영 → 광장시장은 14분이라 말은 없다(간격만)
-  // `[2026-10-07 사용자 지시]` 벌어진 공간은 이동 줄의 위와 아래로 나뉜다 — 이동 줄이 앞뒤 일정의 시작 시각 사이에서 출발하는 만큼 위에서 내려온다(09:00 → 11:00 사이 10:30 출발은 75%)
-  const spaces = await move.locator("div[class*=freeGap]").evaluateAll((elements) => elements.map((element) => Math.round(element.getBoundingClientRect().height)));
-  expect(spaces).toHaveLength(2);
-  expect(spaces[0] + spaces[1]).toBeGreaterThanOrEqual(15);                                            // 21분이면 기본 간격(14px)에 더해 19px 가량 더 벌어진다
-  expect(spaces[0]).toBeGreaterThan(spaces[1]);                                                        // 나중 일정(11:00)에 더 가까우니 아래 공간이 더 좁다
+  // `[2026-10-12 사용자 결정 — 줄 길이 = 실제 시간 · 2026-10-13 ④ 1분 = 0.8px]` 사이 공간은 왼쪽 줄의 길이가 시간을 그린다 — 옛 「이동 줄 위 · 아래로 나뉜 빈칸」(freeGap, 10-07)은 없어졌다.
+  const segments = await page.locator("[data-rail-lines] > i").evaluateAll((lines) => lines.map((line) => ({ kind: (line as HTMLElement).dataset.kind, height: line.getBoundingClientRect().height })));
+  expect(segments.some((segment) => segment.kind === "travel" && Math.abs(segment.height - 9 * 0.8) < 1)).toBe(true);   // 지하철 9분 = 점선 7.2px
+  expect(segments.some((segment) => segment.kind === "free" && Math.abs(segment.height - 21 * 0.8) < 1)).toBe(true);    // 도착 뒤 여유 21분 = 가는 선 16.8px
 });
 
 /** 글자 자체의 세로 가운데(단추의 위 안쪽 여백은 빼고 잰다). */

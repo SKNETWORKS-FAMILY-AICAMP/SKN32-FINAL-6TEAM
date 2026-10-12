@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { agree, agreeTerms, checkPlan, hydrated, mockServer, noHorizontalScroll, openPreferencesFromMenu, openPreferencesFromMyPage, paneTab, pickMenuLanguage, registerStubTrip, useKorean } from "./helpers";
+import { agree, agreeTerms, checkPlan, hydrated, mockServer, noHorizontalScroll, openPreferencesFromMenu, openPreferencesFromMyPage, pickMenuLanguage, registerStubTrip, useKorean, openPane } from "./helpers";
 
 /** Write a plan and press 「계획 확인하기」: the app goes to the plan-check screen of the mock server's intake. */
 async function sendPlan(page: Page) {
@@ -179,7 +179,7 @@ test("메뉴에서 바꾼 언어는 새로고침 후에도 유지되고, 여행 
   await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
   await registerStubTrip(page);
   // `[2026-10-07 사용자 결정 — 목업 C안]` 여행 화면은 시트의 「일정 | 채팅」으로 칸을 바꾼다(플로팅 버튼 스위치는 없다).
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   await expect(page.locator("#trip-pane-chat")).not.toHaveAttribute("inert");
   await noHorizontalScroll(page);
 });
@@ -312,8 +312,10 @@ test("약관에 동의하지 않았으면 소개 버튼은 시작 화면으로 �
   await expect(page).toHaveURL(/\/start\?terms=required$/);
   await agree(page);
   await page.goto("/mypage");
-  await expect(page.getByText("아직 설정하지 않았어요. 설정하면 일정을 확인할 때 반영돼요.")).toBeVisible();
-  await page.locator("section").filter({ has: page.getByRole("heading", { name: "여행 취향", exact: true }) }).getByRole("button", { name: "설정하기", exact: true }).click();
+  // `[2026-10-13 마이페이지 A안]` 여행 취향은 상태 줄 하나 — 누르면 시작 화면의 취향 카드.
+  const preferences = page.getByRole("navigation", { name: "내 상태" }).getByRole("button", { name: /^여행 취향/ });
+  await expect(preferences).toContainText("아직 설정하지 않았어요");
+  await preferences.click();
   await expect(page).toHaveURL(/\/start$/);
 });
 
