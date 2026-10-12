@@ -19,14 +19,13 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
 
 import pytest
 
 from app.infrastructure.db.session import get_connection
 from app.domains.travel_ops.components.customer import consents
 
-from .test_guest_and_trip_delete import _customer_of, _link, _make_trip
+from .test_guest_and_trip_delete import _customer_of, _make_trip
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
 from .test_web_agent_keys import _agent, _make_key, _member
 from .test_web_api import _h
@@ -107,7 +106,7 @@ def test_the_gate_does_not_ask_for_optional_items(gate):
     _guest(gate)
     state = _agree_required(gate["client"])
     assert {item["code"]: item["agreed"] for item in state["items"]} == {"service_terms": True, "privacy": True, "sensitive": False,
-                                                                       "location": False, "alert_channel": False}
+                                                                       "location": False, "alert_channel": False, "service_improvement": False}
     assert gate["client"].get("/v1/web/trips").status_code == 200
 
 

@@ -3,7 +3,7 @@
 
 계약 `wiki/records/plans/2026-10-05_동의기록_위치수집_백엔드_요청.md` · HTTP `consents_api.py` · 게이트 `web_cookie.authenticate`.
 
-★동의 항목 다섯 — 필수 둘(`service_terms` · `privacy`)은 **지금 약관 버전으로** 동의돼 있어야 앱을 쓴다. 선택 셋(`sensitive` · `location` · `alert_channel`)은 앱을 막지 않는다
+★동의 항목 여섯 — 필수 둘(`service_terms` · `privacy`)은 **지금 약관 버전으로** 동의돼 있어야 앱을 쓴다. 선택 넷(`sensitive` · `location` · `alert_channel` · `service_improvement`)은 앱을 막지 않는다
   (개인정보 보호법이 「꼭 필요한 최소한을 넘는 정보에 동의하지 않는다고 서비스를 거부하는 것」을 금한다는 알려진 규정 — ★조문을 읽어 확인하지 않았다 `[법무 확인 필요]`).
 ★기록은 **추가만** 한다(`consent_events`): 철회도 새 줄이고 지우지도 고치지도 않는다(DB 트리거가 지킨다). 현재 상태는 사용자 · 코드별 가장 최근 줄(`consent_current`).
   주소는 원문이 아니라 서버 비밀로 만든 해시(`ip_hash`)만 둔다. 사용자 행에는 외래키를 걸지 않는다 — 게스트가 정리돼도 증빙은 보관 기간 동안 남는다.
@@ -30,7 +30,7 @@ from . import retention
 
 log = logging.getLogger(__name__)
 
-CODES = ("service_terms", "privacy", "sensitive", "location", "alert_channel")
+CODES = ("service_terms", "privacy", "sensitive", "location", "alert_channel", "service_improvement")
 _SHA = re.compile(r"^[0-9a-f]{64}$")
 MAX_USER_AGENT = 300
 #: 게이트를 면제하는 길 — 동의하러 가는 길(동의 · 로그인 · 세션 만들기)은 막을 수 없다. 건강 확인 · 공개 계획서 링크 · 메신저 웹훅은 사용자 인증을 안 거치므로 게이트에 닿지 않는다
@@ -83,15 +83,21 @@ def _is_ok(rows: dict[str, tuple[bool, str, str, datetime]], version: str) -> bo
     return all(code in rows and rows[code][0] and rows[code][1] == version for code in required_codes())
 
 
-def state(conn, tenant_id: str, user_id: UUID) -> dict[str, Any]:
+def state(conn, tenant_id: str, user_id: UUID, *, progress: Callable[[str], None] | None = None) -> dict[str, Any]:
     """`GET /v1/web/consents` 의 모양. 기록이 없는 항목은 `agreed:false` · 나머지 null. `ok` = 필수가 모두 **지금 버전으로** 동의됨."""
+    if progress:
+        progress("consent_records")
     rows = _current_rows(conn, tenant_id, user_id)
     items = []
     for code in CODES:
         row = rows.get(code)
         items.append({"code": code, "agreed": bool(row and row[0]), "version": row[1] if row else None,
                       "agreed_at": row[3].isoformat() if row else None})
+    if progress:
+        progress("consent_version")
     version = current_version(conn, tenant_id)
+    if progress:
+        progress("consent_required")
     return {"current_version": version, "required": list(required_codes()), "items": items, "ok": _is_ok(rows, version)}
 
 
@@ -130,10 +136,12 @@ def record(conn, *, tenant_id: str, user_id: UUID, session_kind: str, version: A
         if code in parsed:
             raise ConsentError(422, "invalid_items", "같은 항목이 두 번 들어 있어요")
         parsed[code] = (agreed, digest)
-    before = _current_rows(conn, tenant_id, user_id)
     agent = (user_agent or "")[:MAX_USER_AGENT] or None
     withdrawn: list[str] = []
     with conn.transaction(), conn.cursor() as cur:
+        # 합성 추출/승인과 철회가 엇갈리지 않도록 같은 tenant 잠금을 쓴다.
+        cur.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))", ("service-improvement:" + tenant_id,))
+        before = _current_rows(conn, tenant_id, user_id)
         for code, (agreed, digest) in parsed.items():
             old = before.get(code)
             if old is not None and old[0] == agreed and old[1] == version and old[2] == digest:
@@ -145,6 +153,9 @@ def record(conn, *, tenant_id: str, user_id: UUID, session_kind: str, version: A
                 withdrawn.append(code)
         for code in withdrawn:
             purge(conn, tenant_id, user_id, code)
+        if set(withdrawn) & {"service_terms", "privacy", "service_improvement"}:
+            from .service_improvement import invalidate_pending
+            invalidate_pending(conn, tenant_id)
     return state(conn, tenant_id, user_id)
 
 
