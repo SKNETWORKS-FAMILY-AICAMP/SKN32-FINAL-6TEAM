@@ -646,10 +646,21 @@ def wire_optional_features() -> list[str]:
     from app.domains.travel_ops.components.conversation import item_pointer
 
     pointer = item_pointer.register_from_settings(get_settings())
+
+    # ★`[2026-10-13 사용자 지시]` 공지 「끝났나」 2차 확인 — 규칙이 「끝남」이라 한 공지를 가르친 모델이 한 번 더 본다. `.env` 에
+    #  `ACOP_OLLAMA_NOTICE_MODEL` 이 있을 때만 꽂는다(없으면 규칙만). 켜고 끄기: 가드레일 `travel.notice_end.mode`(off · shadow · on).
+    from app.domains.travel_ops.ports.data_sources import notice_end_model
+
+    notice_judge = notice_end_model.register_from_settings(get_settings())
+    # `[2026-10-13 사용자 결정]` 여행 영향이 없다고 보고 보내지 않은 「기타」 재난 문자를 DB 에 남긴다(관리자 웹앱 「걸러진 재난 문자」)
+    from app.domains.travel_ops.components.watch import notice_exclusions
+
+    notice_exclusions.register()
     return (list(trip_scope.registered())
             + (["settings"] if settings_hook.is_registered() else [])
             + (["progress"] if progress_hook.is_registered() else [])
-            + (["item_pointer"] if pointer is not None else []))
+            + (["item_pointer"] if pointer is not None else [])
+            + (["notice_end_model"] if notice_judge is not None else []))
 
 
 def wire_domain_teams(*, config: ProjectConfig | None = None, registry: TeamRegistry | None = None) -> list[str]:

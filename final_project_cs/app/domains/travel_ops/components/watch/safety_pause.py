@@ -29,6 +29,7 @@ from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStor
 from app.domains.travel_ops.components.itinerary.trip_scope import extra_sql as scope_sql
 from app.domains.travel_ops.components.places import shelters as shelters_module
 from app.domains.travel_ops.components.planning.safety import SafetyEvent, SafetyRules, classify
+from app.domains.travel_ops.ports.data_sources.notice_status import notice_status
 
 logger = logging.getLogger(__name__)
 KST = ZoneInfo("Asia/Seoul")
@@ -448,7 +449,7 @@ def _matching_release(event: dict[str, Any], rows: list[dict[str, Any]], rules: 
     words = [w for w in rules.trip_keywords if w in text]
     for row in rows:
         body = str(row.get("text") or "")
-        if "해제" not in body:
+        if not notice_status(body).ended:              # 공용 판정 — 「해제 예정」은 해제가 아니다 `[2026-10-12]`
             continue
         if (kind and str(row.get("kind") or "") == kind) or any(w in body for w in words):
             return row

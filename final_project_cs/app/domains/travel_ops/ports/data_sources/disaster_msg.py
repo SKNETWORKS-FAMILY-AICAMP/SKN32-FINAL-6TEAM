@@ -21,7 +21,8 @@
 판정에 넣는 기준(데이터를 보고 정했다):
     - 「기타」는 넣지 않는다 — 샘플의 기타 31건은 **실종자 찾기**다. 넣으면 실종자
       문자 한 통으로 서울 전역의 일정이 바뀐다
-    - 본문에 「해제」가 있으면 넣지 않는다 — 「통제가 완전 해제되었음」이 실제로 있다
+    - 본문이 「끝났다」를 말하면 넣지 않는다 — 「통제가 완전 해제되었음」이 실제로 있다. ★`[2026-10-12]` 판정은 공용 `notice_status`
+      (「해제」 낱말 하나가 아니다 — 「집회 종료되어 정상 운행」·「파업 철회」·「모든 차로 개방」도 끝, 「해제 예정」·「그 외 구간 해제」는 끝이 아니다)
     - 목록에 없는 재해구분은 이상으로 세지 않고 `unclassified` 로 **보이게** 남긴다
 """
 from __future__ import annotations
@@ -37,6 +38,8 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from .base import TravelSource
+from .notice_impact import impact_detail
+from .notice_status import notice_status
 
 logger = logging.getLogger(__name__)
 
@@ -49,18 +52,43 @@ KST = ZoneInfo("Asia/Seoul")
 #:  재해구분·지역·시각 분포는 원본 그대로다(호우 61·기타 31·교통통제 4·산사태 4).
 DEFAULT_SAMPLE_PATH = Path(__file__).resolve().parent / "samples" / "disaster_msg_2023-09.csv"
 
+#: ★`[2026-10-13 확인]` 재난문자 재해구분의 **공식 목록 41종**(대분류 4) — 국민안전24 재난문자 조회 화면의 목록을 옮겼다.
+#:   전국 문자 3년치(63,276건)에 나온 이름 36개가 모두 이 안에 있다. 기록: `wiki/records/reports/2026-10-13_재난문자_재해구분_공식목록.md`
+#:   ★이 목록에 없는 이름이 오면 정부가 새로 더한 것이다 — 본문으로 판정하고(`judge` · 규칙 또는 모델) 경고를 남긴다.
+OFFICIAL_KINDS = frozenset({
+    # 자연재난 DST100 · 17
+    "태풍", "홍수", "호우", "대설", "지진해일", "지진", "한파", "황사", "강풍", "건조",
+    "폭염", "산사태", "안개", "풍랑", "미세먼지", "대조기", "가뭄",
+    # 사회재난 DST200 · 18
+    "교통통제", "산불", "화재", "붕괴", "폭발", "교통사고", "환경오염사고", "에너지", "통신",
+    "교통", "금융", "의료", "수도", "전염병", "정전", "가스", "AI", "가축질병",
+    # 비상대비 DST400 · 5
+    "화생방사고", "폭동", "테러", "비상사태", "민방공",
+    # 기타재난 DST500 · 1
+    "기타"})
 #: 날씨가 일으키는 재해 — ★날씨 영향을 받는 장소에만 적용한다(점검이 가른다).
+#:   `[2026-10-13 사용자 승인]` 공식 목록의 안개 · 미세먼지 · 대조기를 더했다. 낙뢰는 공식 이름이 아니지만 해가 없어 둔다
 WEATHER_KINDS = frozenset({"호우", "태풍", "대설", "강풍", "폭염", "한파", "산사태",
-                           "풍랑", "황사", "홍수", "낙뢰"})
+                           "풍랑", "황사", "홍수", "낙뢰", "안개", "미세먼지", "대조기"})
 #: 장소를 가리지 않는 재해 — 가는 길이 막히거나 시설이 닫힌다.
-#: ★`[2026-10-06 사용자 결정 — 재난 시 일정 정지]` 민방위 · 화산 · 원전 · 방사능을 더했다 — 전쟁 · 활화산 폭발 같은 심각한 사건이 「모르는 구분」으로 빠져 정지 판정에 안 닿던 것을 막는다
-#:   `[미확인]` 실제 재해구분명이 이 이름들인지는 못 봤다 — 모르는 이름이어도 본문 낱말(`travel.safety.trip_keywords`)이 있으면 들어온다(`judge`)
+#: ★`[2026-10-06 사용자 결정 — 재난 시 일정 정지]` 화산 · 원전 · 방사능을 더했다 — 전쟁 · 활화산 폭발 같은 심각한 사건이 「모르는 구분」으로 빠져 정지 판정에 안 닿던 것을 막는다.
+#:   셋은 공식 이름이 아니다 — 본문 낱말(`travel.safety.trip_keywords`)로도 들어온다(`judge`)
+#: ★`[2026-10-13 사용자 승인]` 공식 목록의 교통사고 · 교통 · 환경오염사고 · 화생방사고 · 폭동 · 비상사태 · 민방공을 더했다.
+#:   「민방위」는 공식 이름이 「민방공」이라 바꿨다(옛 이름으로는 민방공 문자가 한 번도 안 걸렸다)
 PLACE_KINDS = frozenset({"교통통제", "화재", "산불", "지진", "지진해일", "붕괴",
-                         "정전", "가스", "폭발", "테러", "민방위", "화산", "원전", "방사능"})
+                         "정전", "가스", "폭발", "테러", "민방공", "화산", "원전", "방사능",
+                         "교통사고", "교통", "환경오염사고", "화생방사고", "폭동", "비상사태"})
 DISRUPTIVE_KINDS = WEATHER_KINDS | PLACE_KINDS
+#: `[2026-10-13 사용자 승인]` 이름만으로는 일정을 바꾸지 않는 공식 재해구분 — 생활 기반(수도 · 통신 · 에너지 · 금융 · 의료)이나 여행과 먼 것(가축질병 · 가뭄 · 건조).
+#:   ★본문은 여전히 본다(`judge` — 규칙 또는 모델). 본문에 여행 영향이 없으면 「기타」처럼 걸러진 문자 기록에 남긴다 — 「알아보지 못한 구분」이 아니다.
+#:   전염병: 2023-09~2026-10 서울 26건은 말라리아 경보 같은 생활 안내였다. 「AI」 1건은 실종자 찾기 문자였다(잘못 붙은 구분)
+RECORD_ONLY_KINDS = frozenset({"전염병", "수도", "통신", "에너지", "금융", "의료", "가축질병", "가뭄", "건조", "AI"})
+assert OFFICIAL_KINDS <= DISRUPTIVE_KINDS | RECORD_ONLY_KINDS | {"기타"}, "공식 재해구분이 어느 갈래에도 없다"
 #: 설정(`config/guardrails.yaml`)을 못 읽을 때만 쓰는 값 — 정본은 `travel.safety.*` 한 곳이다
 _FALLBACK_SEVERE = ("공습경보", "경계경보", "화산", "분화", "전쟁", "미사일", "방사능", "생화학")
-_FALLBACK_EXCLUDE = ("훈련", "해제", "실제 상황이 아")
+_FALLBACK_EXCLUDE = ("훈련", "실제 상황이 아")
+#: 공식 목록에 없는 재해구분을 이미 경고한 이름 — 같은 이름을 회차마다 되풀이해 경고하지 않는다
+_warned_new_kinds: set[str] = set()
 
 
 def _safety_words() -> tuple[tuple[str, ...], tuple[str, ...]]:
@@ -184,6 +212,16 @@ def parse_row(raw: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+#: `[2026-10-13 사용자 결정]` 여행 영향이 없다고 보고 보내지 않은 「기타」 문자를 넘겨받아 남기는 곳(관리자 웹앱에서 사안 · 건수를 본다).
+#:  조립이 꽂는다(`components/watch/notice_exclusions.register`). 비어 있으면 남기지 않는다(시험 · 조립 전).
+_excluded_sink: Any = None
+
+
+def set_excluded_sink(sink: Any) -> None:
+    global _excluded_sink
+    _excluded_sink = sink
+
+
 def judge(rows: list[dict[str, Any]], *, region: str, district: str | list[str] | None,
           window_start: datetime, at: datetime) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """창 안·지역 안의 행 → (이상으로 셀 문자, 모르는 구분). 판정 규칙은 모듈 docstring."""
@@ -193,8 +231,8 @@ def judge(rows: list[dict[str, Any]], *, region: str, district: str | list[str] 
         if not (window_start <= row["created_at"] <= at
                 and _covers(row["regions"], region, district)):
             continue
-        # ★해제 문자는 이상이 아니다. ★`[2026-10-06]` 훈련 문자도 이상이 아니다(`travel.safety.exclude_keywords` — 「민방위 훈련」 한 통으로 일정이 바뀌면 안 된다)
-        if "해제" in row["text"] or any(word in row["text"] for word in exclude_words):
+        # ★끝난 사건의 문자(해제 · 종료 · 철회 · 개방 …)는 이상이 아니다 — 공용 판정 `notice_status`. ★`[2026-10-06]` 훈련 문자도 이상이 아니다(`travel.safety.exclude_keywords` — 「민방위 훈련」 한 통으로 일정이 바뀌면 안 된다)
+        if notice_status(row["text"]).ended or any(word in row["text"] for word in exclude_words):
             continue
         item = {"kind": row["kind"], "step": row["step"], "text": row["text"],
                 "created_at": row["created_at"].isoformat(),
@@ -203,22 +241,39 @@ def judge(rows: list[dict[str, Any]], *, region: str, district: str | list[str] 
         # ★`[2026-10-06]` 재해구분이 모르는 값이어도(기타 · 새 이름) 본문에 심각 낱말(공습경보 · 화산 …)이 있으면 이상이다 — 전쟁 · 화산 폭발이 「모르는 구분」으로 빠지지 않게
         if row["kind"] in DISRUPTIVE_KINDS or any(word in row["text"] for word in severe_words):
             messages.append(item)
-        elif row["kind"] != "기타":
-            unclassified.append(item)                # ★모르는 구분은 보이게 남긴다
+            continue
+        # ★`[2026-10-13 사용자 결정]` 「기타」 · 모르는 구분(교통사고 등)은 본문으로 여행 영향을 가른다 — 공용 판정 `notice_impact`(규칙 또는 모델).
+        #   전에는 「기타」를 통째로 버렸다(2026 서울 「기타」 고유 208건 중 189건이 여행에 영향이 있었다). 재해구분은 원값 그대로 두고 `impact` 칸을 붙인다.
+        #   영향 있음 → 이상으로 센다(야외 위험 outdoor 는 날씨형처럼 날씨 영향 장소에만).
+        #   ★영향 없음(규칙과 모델 둘 다) → 「기타」는 에이전트에 보내지 않는다(전과 같다) — 우리가 못 찾은 영향을 에이전트가 찾을 수 없다(사용자 2026-10-13).
+        #     모르는 구분(「기타」가 아닌 새 이름)은 전처럼 `unclassified` 로 보이게 남긴다.
+        detail = impact_detail(row["text"])
+        item = {**item, "impact": detail["impact"], "impact_by": detail["by"]}
+        if detail["impact"] is not None:
+            messages.append({**item, "weather": detail["impact"] == "outdoor"})
+        elif row["kind"] not in OFFICIAL_KINDS:
+            # ★공식 목록(41종)에 없는 이름 — 정부가 새로 더한 구분이다. 보이게 남기고 경고한다(목록을 갱신할 신호)
+            if row["kind"] not in _warned_new_kinds:
+                _warned_new_kinds.add(row["kind"])
+                logger.warning("재난문자 공식 목록에 없는 재해구분 %r — OFFICIAL_KINDS 갱신 필요", row["kind"])
+            unclassified.append(item)
+        elif _excluded_sink is not None:            # 「기타」 · 기록만 구분(`RECORD_ONLY_KINDS`) — 걸러진 문자 기록
+            _excluded_sink({**item, "model_checked": detail.get("model_checked", False), "prompt_version": detail.get("prompt_version")})
     return messages, unclassified
 
 
 def judge_released(rows: list[dict[str, Any]], *, region: str, district: str | list[str] | None,
                    window_start: datetime, at: datetime) -> list[dict[str, Any]]:
-    """창 안 · 지역 안의 **해제 문자**(본문에 「해제」). 재해구분은 가리지 않는다 — 어느 사건의 해제인지는 부르는 쪽이 가른다(`safety_pause._matching_release`)."""
+    """창 안 · 지역 안의 **해제 문자**(공용 판정 `notice_status` 가 「끝남」 — 근거 조각은 `release_basis`). 재해구분은 가리지 않는다 — 어느 사건의 해제인지는 부르는 쪽이 가른다(`safety_pause._matching_release`)."""
     out = []
     for row in rows:
         if not (window_start <= row["created_at"] <= at and _covers(row["regions"], region, district)):
             continue
-        if "해제" not in row["text"]:
+        status = notice_status(row["text"])
+        if not status.ended:
             continue
         out.append({"kind": row["kind"], "step": row["step"], "text": row["text"], "created_at": row["created_at"].isoformat(),
-                    "regions": row["regions"], "serial": row["serial"]})
+                    "regions": row["regions"], "serial": row["serial"], "release_basis": status.basis})
     return out
 
 
@@ -366,6 +421,14 @@ class DisasterMsgApi(TravelSource):
         body = payload.get("body")
         if body is None:
             body = []                                  # ★건수 0 이면 null 로 온다(실측)
+        # ★`[2026-10-13 실측]` 본문이 `{"items": [...]}` 로 싸여 오기도 한다 — 전국 63,276건을 1,000건씩 받을 때 28쪽이 이 모양이었다
+        #   (나머지 쪽은 목록 그대로). 전에는 이 모양을 「모름」으로 버려 그 회차의 재난 문자가 통째로 빠졌다
+        if isinstance(body, dict) and isinstance(body.get("items"), (list, dict)):
+            body = body["items"]
+            if isinstance(body, dict):
+                body = body.get("item") or []
+            if isinstance(body, dict):
+                body = [body]
         if not isinstance(body, list):
             self._miss("unexpected_shape", type(body).__name__)
             return None
@@ -422,5 +485,5 @@ class DisasterMsgApi(TravelSource):
 
 
 __all__ = ["API_ENDPOINT", "DEFAULT_SAMPLE_PATH", "DISRUPTIVE_KINDS", "DisasterMsgApi",
-           "DisasterMsgCsv", "PLACE_KINDS", "SEOUL_GU_NAMES", "WEATHER_KINDS", "judge", "judge_released",
-           "parse_row", "seoul_districts"]
+           "DisasterMsgCsv", "OFFICIAL_KINDS", "PLACE_KINDS", "RECORD_ONLY_KINDS", "SEOUL_GU_NAMES", "WEATHER_KINDS",
+           "judge", "judge_released", "parse_row", "seoul_districts"]

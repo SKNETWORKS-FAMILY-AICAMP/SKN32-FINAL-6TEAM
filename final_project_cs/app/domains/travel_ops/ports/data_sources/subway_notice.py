@@ -13,7 +13,8 @@
 
 ★왜 제목 글자를 읽나(= 구조화된 칸이 모자란다). 시작·종료를 가르는 칸이 없다 — `nonstopYn` 은 **종료 알림에도 Y** 였다
   (「여의나루역 무정차 통과 종료」). `xcseSitnBgngDt/EndDt` 는 실측 거의 비어 있다. 그래서 같은 호선·같은 역을 말하는 **가장 최근 알림**의
-  제목으로 정한다: 「무정차」가 있고 종료어(종료·해제·재개·정상·복구·완료·해소)가 없으면 진행 중, 종료어가 있으면 끝.
+  제목으로 정한다: 「무정차」가 있고 공용 판정(`notice_status`)이 「끝남」이 아니면 진행 중, 「끝남」이면 끝.
+  `[2026-10-12]` 전에는 이 파일만의 종료어 7개(종료·해제·재개·정상·복구·완료·해소)였다 — 「철회」를 못 잡고 「종료 예정」·「복구 작업 중」을 끝으로 읽었다.
 ★역은 대상의 전체 역 이름 뒤에 「역」이 있거나, 「혜화, 한성대입구역」처럼 명시적 구분자로 나열한 역 목록에 있을 때 같은 역으로 본다.
   앞의 한글 경계를 확인해 「대방」이 「신대방」에 걸리지 않게 한다. 마지막 「역」을 공유한 목록은 공백을 포함하지 않는 역명 토큰으로만 잇는다.
   **남은 한계:** 호선 누락·자유 문장·괄호 부역명이 섞인 생략형은 이 규칙으로 복원하지 않는다. 2026-10-04 조사 당시의 무정차 138건 중
@@ -30,6 +31,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from .base import TravelSource
+from .notice_status import notice_status
 
 ENDPOINT = "https://apis.data.go.kr/B553766/ntce/getNtceList"
 KST = ZoneInfo("Asia/Seoul")
@@ -37,7 +39,6 @@ KST = ZoneInfo("Asia/Seoul")
 ACTIVE_HOURS = 3
 #: 한 번에 읽는 최신 알림 수. 최근 몇 시간만 보므로 한 쪽이면 충분하다(실측 하루 발생 몇 건 안팎)
 PAGE_SIZE = 100
-END_WORDS = ("종료", "해제", "재개", "정상", "복구", "완료", "해소")
 #: 서울교통공사 1~8호선만 이 소스의 대상이다(9호선·공항철도·경의선 등은 알림이 없다)
 SUPPORTED_LINES = frozenset(f"{n}호선" for n in range(1, 9))
 
@@ -74,7 +75,7 @@ def mentions_station(text: str, station: str) -> bool:
 
 def is_nonstop_start(title: str) -> bool:
     """제목이 무정차 통과의 **시작·진행 중** 알림인가."""
-    return "무정차" in title and not any(word in title for word in END_WORDS)
+    return "무정차" in title and not notice_status(title).ended
 
 
 class SubwayNotices(TravelSource):

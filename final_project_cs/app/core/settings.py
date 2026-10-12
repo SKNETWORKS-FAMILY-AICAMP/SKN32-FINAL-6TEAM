@@ -153,6 +153,11 @@ class Settings(BaseSettings):
     #:  켜고 끄기는 가드레일 `travel.pointer.mode`. 모델이 못 부르면 규칙으로 돌아간다(`item_pointer.py`).
     ollama_pointer_model: str = ""
     ollama_pointer_timeout_seconds: float = 30.0
+    #: ★`[2026-10-13 사용자 지시]` 공지 「끝났나」 **2차 확인** 모델(Ollama 에 올린 이름, 예 `tripilot-pointer:e4b-ft`). 비우면 규칙만 쓴다.
+    #:  켜고 끄기는 가드레일 `travel.notice_end.mode`. 규칙과 모델이 둘 다 끝남일 때만 끝남이고, 모델을 못 부르면 규칙 결과를 쓴다(`notice_end_model.py`).
+    ollama_notice_model: str = ""
+    #:  ★첫 호출은 모델을 올리느라 길다(2026-10-13 x600 실측 53.7초, 이어지는 호출 약 1.3초) — 감시 루프는 고객을 기다리게 하지 않으므로 넉넉히 둔다
+    ollama_notice_timeout_seconds: float = 90.0
     # ── 모델 서버가 죽거나 늦을 때 **서버용 OpenAI 키**로 넘기는 장치 `[2026-10-07 사용자 지시]` ──
     #:  「올라마나 외부 GPU 서버가 모두 장애면 서버키(개인키 말고)로 자동 전환돼서 동작하게」. 코드 `app/infrastructure/llm_failover.py`.
     #:  ★스위치는 **기본 꺼짐**이다 — 개발 PC 에서 모델 서버 연결이 끊겼을 때 시험 · 측정이 조용히 유료 API 로 새지 않게. 운영(배포) 환경 파일에서만 켠다.

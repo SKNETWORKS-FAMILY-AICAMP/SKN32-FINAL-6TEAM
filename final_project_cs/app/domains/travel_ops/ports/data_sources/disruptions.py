@@ -257,7 +257,9 @@ class DisruptionCheck:
         rows = [{"category": "disaster_msg", "kind": item.get("kind"),
                  "step": item.get("step"), "text": item.get("text"),
                  "created_at": item.get("created_at"), "source": value.get("source"),
-                 "mode": mode}
+                 "mode": mode,
+                 # `[2026-10-13]` 「기타」 · 모르는 구분이면 본문으로 가른 여행 영향 종류(road · bus · rail · utility · crowd · hazard · outdoor)와 누가 냈는지
+                 **({"impact": item["impact"], "impact_by": item.get("impact_by")} if item.get("impact") else {})}
                 for item in value.get("for_region") or []]
         weather = [bool(item.get("weather")) for item in value.get("for_region") or []]
         disruptions = [row for row, is_weather in zip(rows, weather) if sensitive or not is_weather]
