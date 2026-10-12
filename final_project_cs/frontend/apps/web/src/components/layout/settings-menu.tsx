@@ -86,6 +86,8 @@ export function SettingsMenu({ className = "", tools }: { className?: string; to
         </Link>
         <Link href={routes.trips} className={styles.link} onClick={close}>{t("여행 목록 보기", "View trip list")}<ChevronRight size={18} aria-hidden="true" /></Link>
         <button type="button" className={styles.link} onClick={openSurvey}>{t("여행 취향 설문", "Travel preferences survey")}<ChevronRight size={18} aria-hidden="true" /></button>
+        {/* `[2026-10-12 사용자 지시]` 문의하기는 마이페이지 카드에서 이 메뉴로 옮겼다. */}
+        <Link href={routes.support} className={styles.link} onClick={close}>{t("문의하기", "Contact support")}<ChevronRight size={18} aria-hidden="true" /></Link>
         {(providers.data?.length ?? 0) > 0 && <Link href={`${routes.myPage}#accounts`} className={styles.link} onClick={close}>{t("계정 연결 · 로그인", "Link account · Sign in")}<ChevronRight size={18} aria-hidden="true" /></Link>}
         {/* The same card as the home intro, caption included. */}
         <LanguagePicker caption={<>LANGUAGE · <span lang="ko">언어</span></>} />

@@ -162,7 +162,7 @@ for (const failure of [false, true]) test(`문의 전송 ${failure ? "실패" : 
     await waiting;
     return failure ? route.fulfill({ status: 503, json: { error: { code: "busy", message: "잠시 뒤 다시 시도해 주세요." } } }) : route.fulfill({ json: { inquiry } });
   });
-  await page.goto("/support");
+  await page.goto("/support/new");   // `[2026-10-12]` the form is its own screen; the list is `/support`
   const title = page.getByRole("textbox", { name: "제목", exact: true });
   const body = page.getByRole("textbox", { name: "문의 내용", exact: true });
   await title.fill(inquiry.title); await body.fill(inquiry.body);
@@ -175,15 +175,15 @@ for (const failure of [false, true]) test(`문의 전송 ${failure ? "실패" : 
   await pending.press("Enter");
   expect(sent).toBe(1);
   release();
-  await expect(body).toHaveJSProperty("readOnly", false);
   if (failure) {
+    await expect(body).toHaveJSProperty("readOnly", false);
     await expect(page.locator("#main-content").getByRole("alert")).toContainText("입력한 내용은 그대로예요");
     await expect(send).toBeFocused();
     await expect(body).toHaveValue(inquiry.body);
   } else {
+    // `[2026-10-12]` A recorded inquiry goes back to the list, which says so once.
+    await expect(page).toHaveURL(/\/support$/);
     await expect(page.locator("#main-content").getByRole("status")).toContainText("내용을 기록했어요");
-    await expect(title).toBeFocused();
-    await expect(body).toHaveValue("");
   }
   expect(sent).toBe(1);
 });

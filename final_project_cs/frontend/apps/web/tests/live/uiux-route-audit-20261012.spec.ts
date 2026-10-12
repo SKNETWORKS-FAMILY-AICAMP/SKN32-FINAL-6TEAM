@@ -40,7 +40,7 @@ for (const width of [375, 1280]) {
         await expect(page.locator("button[data-plan-code]")).toHaveCount(15);
       }
       if (screen.name === "support") {
-        await expect(page.getByText("아직 접수한 문의가 없어요. 위에서 첫 문의를 보내 주세요.", { exact: true })).toBeVisible();
+        await expect(page.getByText("아직 접수한 문의가 없어요. 위의 「문의 작성」으로 첫 문의를 보내 주세요.", { exact: true })).toBeVisible();
         await expect(page.locator("#main-content").getByRole("alert")).toHaveCount(0);
       }
       if (tilesReady) await tilesReady();

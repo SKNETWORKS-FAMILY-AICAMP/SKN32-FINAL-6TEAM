@@ -8,6 +8,11 @@
 .error { color: var(--color-error); }
 .success { color: var(--color-primary); }
 .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+/* `[2026-10-12]` 왼쪽 「여행에서 다시 요청」 · 오른쪽 「문의 작성」을 한 줄에: 좁으면 왼쪽 단추의 글자가 줄바꿈되고 오른쪽은 그대로다. */
+.actions { display: flex; align-items: stretch; justify-content: space-between; gap: 8px; }
+.actions > :first-child { flex: 0 1 auto; min-width: 0; }
+.actions > :last-child { flex: none; }
+.iconButton { width: 46px; padding: 0; flex: none; }
 .list { padding: 0; margin: 0; list-style: none; display: grid; gap: 16px; }
 .inquiry { border-top: 1px solid var(--color-border); padding-top: 16px; }
 .inquiry summary { min-height: 44px; font-weight: 600; overflow-wrap: anywhere; }
