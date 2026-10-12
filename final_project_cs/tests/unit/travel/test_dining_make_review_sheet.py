@@ -23,10 +23,11 @@ def rs():
     return mod
 
 
-def shop(name, *, category="한식", style=None, method=None, michelin=False, firstmenu=None, sources=("tourapi_kor_food",)):
+def shop(name, *, category="한식", style=None, method=None, michelin=False, firstmenu=None, sources=("tourapi_kor_food",),
+         cuisine=None):
     return {"name": name, "address": "서울특별시 종로구 종로 1", "road": "서울특별시 종로구 종로 1", "jibun": None,
             "category": category, "style": style, "style_method": method, "sources": list(sources),
-            "michelin": michelin, "firstmenu": firstmenu}
+            "michelin": michelin, "firstmenu": firstmenu, "cuisine": cuisine}
 
 
 def licence(rs, name, uptae):
@@ -81,3 +82,18 @@ def test_엑셀은_드롭다운이_있고_적재기가_그대로_읽는다(rs, t
 
 def test_결_설명은_결_목록과_빠짐없이_같다(rs):
     assert set(rs.STYLE_HELP) == {*rs.mc.STYLES, rs.mc.NO_STYLE}
+
+
+def test_분류_초안은_결이_나라_하나로_정해질_때만_미쉐린은_요리_종류를_메모에(rs):
+    shops = {"u-snack": shop("연희김밥", category="미상", style="분식"),
+             "u-bar": shop("둘리호프", category="미상", style="술집"),           # 술집은 나라가 갈린다 — 비운다
+             "u-kept": shop("이전초안집", category="미상", style="분식"),
+             "u-mic": shop("가이드집", style=None, michelin=True, cuisine="프렌치")}
+    previous = [{"place_uid": "u-kept", "분류 초안": "중식", "초안 근거": "사람"}]
+    rows, _ = rs.build_rows(shops, previous, rs.lc.index([]))
+    by = {r["place_uid"]: r for r in rows}
+    assert (by["u-snack"]["분류 초안"], by["u-snack"]["초안 근거"]) == ("한식", "결 「분식」")
+    assert by["u-bar"]["분류 초안"] == ""
+    assert by["u-kept"]["분류 초안"] == "중식"                          # 이전 시트의 초안을 덮지 않는다
+    assert "미쉐린 요리 「프렌치」" in by["u-mic"]["메모"]
+    assert set(rs.STYLE_CATEGORY) <= set(rs.mc.STYLES) and set(rs.STYLE_CATEGORY.values()) <= set(rs.mc.ALLOWED)

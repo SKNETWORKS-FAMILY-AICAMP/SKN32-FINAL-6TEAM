@@ -15,7 +15,12 @@
 -- 207 의 cuisine_tags 와 다르다. 그것은 여러 태그를 붙이는 SQL 안의 유사도이고 지금 대체 순위는 쓰지 않는다.
 -- 결은 한 곳에 하나다 — 「같은 결인가」가 설명이 된다(「같은 고깃집이라 골랐어요」).
 --
--- 무엇을 먼저 보는가 — 214 와 같다.
+-- 무엇을 먼저 보는가 — 214 와 같고, 미쉐린 가이드가 맨 앞이다.
+--   0  미쉐린 가이드의 요리 종류(michelin_guide 출처의 「요리」)  가이드가 정한 것 `[2026-10-12 사용자]`
+--      바비큐 → 고기구이 · 냉면 → 면 · 곰탕 → 국물요리 · 스시 → 초밥 · 이탤리언 → 이탈리안 · 타이 → 아시아요리 …
+--      프렌치 · 컨템퍼러리 · 이노베이티브 · 모던 · 클래식 퀴진과 「한식」 「일식」처럼 나라만 말하는 것은 비운다 —
+--      코스·다이닝인지 한 접시 식당인지 가이드가 말하지 않는다. 사람이 검수 시트에서 정한다(style_of_guide).
+--      메뉴 원문이 없는 미쉐린 116곳이 결을 못 받던 것을 채운다(2026-10-12).
 --   1  대표메뉴(firstmenu)  가게가 스스로 내세운 것
 --   2  가게 이름
 --   3  취급메뉴(treatmenu)  곁들이 메뉴가 많아 가장 잘 틀린다
@@ -136,6 +141,25 @@ COMMENT ON FUNCTION dining.course_of_text IS
     '「코스요리」 · 「런치코스」 · 「OO 다이닝」이면 코스·다이닝. 무엇의 코스인지는 style_of_text 가 먼저 본다.';
 
 
+CREATE OR REPLACE FUNCTION dining.style_of_guide(p_cuisine text)
+RETURNS text
+LANGUAGE sql
+IMMUTABLE
+AS $fn$
+    SELECT CASE
+        WHEN t ~ '프렌치|컨템퍼러리|이노베이티브|모던|클래식' THEN NULL   -- 코스인지 사람이 본다
+        WHEN t ~ '이탤리언' THEN '이탈리안'
+        WHEN t ~ '타이|싱가포리안|아시안|베트남' THEN '아시아요리'
+        WHEN t ~ '쿠시아게' THEN '돈가스·튀김'
+        ELSE dining.style_of_text(t)
+    END
+    FROM (SELECT coalesce(p_cuisine, '') AS t) s
+$fn$;
+
+COMMENT ON FUNCTION dining.style_of_guide IS
+    '미쉐린 가이드 요리 종류에서 결 하나. 코스인지 가이드가 말하지 않는 것(프렌치 · 컨템퍼러리 …)과 나라만 말하는 것은 NULL 이다.';
+
+
 -- ──────────────────────────────────────────────────────────────
 -- 한 곳의 결 — 214 classify_category 와 같은 원문을 같은 순서로 본다
 -- ──────────────────────────────────────────────────────────────
@@ -154,7 +178,17 @@ AS $fn$
         ORDER BY lm.fetched_at DESC, sr.record_id
         LIMIT 1
     )
+    , guide AS (
+        SELECT sr.raw_json ->> '요리' AS cuisine
+        FROM dining.dn_source_record sr
+        WHERE sr.place_uid = p_place_uid
+          AND sr.source_code = 'michelin_guide'
+          AND sr.raw_json ? '요리'
+        ORDER BY sr.record_id
+        LIMIT 1
+    )
     SELECT coalesce(
+        dining.style_of_guide((SELECT cuisine FROM guide)),
         dining.style_of_text((SELECT firstmenu FROM src)),
         dining.style_of_text(p.name_ko),
         dining.style_of_text((SELECT treatmenu FROM src)),
@@ -166,7 +200,7 @@ AS $fn$
 $fn$;
 
 COMMENT ON FUNCTION dining.classify_style IS
-    '대표메뉴, 가게 이름, 취급메뉴 순으로 본다. 무엇의 코스인지 모르는 코스는 코스·다이닝. 어디서도 안 걸리면 NULL 이다.';
+    '미쉐린 가이드 요리 종류, 대표메뉴, 가게 이름, 취급메뉴 순으로 본다. 무엇의 코스인지 모르는 코스는 코스·다이닝. 어디서도 안 걸리면 NULL 이다.';
 
 
 -- ──────────────────────────────────────────────────────────────

@@ -11,6 +11,9 @@
 초안.
     결 초안은 인허가 업태에서만 낸다(같은 주소 · 같은 상호 — `license_closure` 의 대조 함수). 업태가 결 하나로 정해질 때만
     (냉면집 → 면 · 횟집 → 해산물 · 호프 → 술집 …). 한식 · 일식 · 경양식처럼 넓은 업태는 초안을 비운다.
+    분류 초안이 비었고 분류가 미상이면 결에서 낸다 — 결이 나라 하나로 정해질 때만(분식 → 한식 · 초밥 → 일식 …, `STYLE_CATEGORY`).
+    고기구이 · 술집 · 닭요리처럼 나라가 갈리는 결은 비운다.
+    미쉐린은 가이드 요리 종류를 메모에 적는다(결은 231 `style_of_guide` 가 분명한 것만 채운다 — 프렌치 · 컨템퍼러리 같은 것은 사람 몫).
     구글 · 카카오 값은 넣지 않는다(저장 금지) — 지도 링크만 둔다. 사람이 보고 판단한다.
 
 엑셀.
@@ -43,6 +46,11 @@ UPTAE_STYLE = {"식육(숯불구이)": "고기구이", "냉면집": "면", "탕�
                "횟집": "해산물", "호프/통닭": "술집", "정종/대포집/소주방": "술집", "커피숍": "커피·차", "다방": "커피·차",
                "까페": "커피·차", "전통찻집": "커피·차", "제과점영업": "베이커리·디저트", "뷔페식": "뷔페",
                "패스트푸드": "버거·샌드위치", "외국음식전문점(인도,태국등)": "아시아요리"}
+#: 결 → 대표 분류. 나라가 하나로 정해지는 결만. 없는 결(고기구이 · 면 · 해산물 · 닭요리 · 덮밥 · 아시아요리 · 술집 · 뷔페 ·
+#: 코스·다이닝)은 분류 초안을 비운다 `[2026-10-12 사용자]`
+STYLE_CATEGORY = {"국물요리": "한식", "한상차림": "한식", "분식": "한식", "족발·보쌈": "한식", "초밥": "일식",
+                  "돈가스·튀김": "일식", "중식요리": "중식", "이탈리안": "양식", "버거·샌드위치": "양식", "브런치": "양식",
+                  "커피·차": "카페디저트", "베이커리·디저트": "카페디저트"}
 SOURCE_LABEL = {"tourapi_kor_food": "관광공사", "michelin_guide": "미쉐린", "nopo_kakao_curation": "노포", "vegan_curated": "비건",
                 "halal_curated": "할랄", "localdata_food": "인허가", "localdata_rest": "인허가"}
 #: 사람이 보기 좋게 묶는 순서 — 메뉴 원문이 있는 곳부터, 미쉐린은 따로
@@ -146,7 +154,11 @@ def build_rows(shops: dict[str, dict[str, Any]], previous: list[dict[str, str]],
         sources = " · ".join(dict.fromkeys(SOURCE_LABEL[s] for s in shop["sources"] if s in SOURCE_LABEL)) or "-"
         memo = [old["메모"]] if old.get("메모") else []
         if shop["michelin"]:
-            memo.append("미쉐린 — 가이드 페이지의 요리 종류를 참고한다")
+            cuisine = shop.get("cuisine")
+            memo.append(f"미쉐린 요리 「{cuisine}」" if cuisine else "미쉐린 — 가이드 페이지의 요리 종류를 참고한다")
+        category_draft = {}
+        if needs_category and not old.get("분류 초안") and STYLE_CATEGORY.get(shop["style"]):
+            category_draft = {"분류 초안": STYLE_CATEGORY[shop["style"]], "초안 근거": f"결 「{shop['style']}」"}
         if needs_style:
             memo.append(f"결이 없다고 보면 [확인] 결에 「{mc.NO_STYLE}」")
         query = urllib.parse.quote(f"{shop['name']} {shop['address'] or ''}".strip())
@@ -154,7 +166,7 @@ def build_rows(shops: dict[str, dict[str, Any]], previous: list[dict[str, str]],
             "묶음": group_of(sources, shop["michelin"], shop["firstmenu"]), "할 일": task(needs_category, needs_style),
             "place_uid": uid, "상호": shop["name"], "주소": shop["address"] or "", "들어온 곳": sources,
             "대표메뉴(관광공사)": shop["firstmenu"] or "", "현재 분류": shop["category"] or "",
-            **{c: old.get(c, "") for c in CARRY},
+            **{c: old.get(c, "") for c in CARRY}, **category_draft,
             "현재 결": shop["style"] or "", "결 초안": draft,
             "결 초안 근거": ("규칙(관광공사 메뉴 · 상호)" if not needs_style
                          else f"인허가 업태 「{' · '.join(uptae)}」" if uptae else "인허가 자료에서 같은 주소 · 같은 상호를 못 찾음"),
@@ -255,9 +267,12 @@ def load_shops(dsn: str) -> dict[str, dict[str, Any]]:
                    EXISTS (SELECT 1 FROM dining.dn_attribute a WHERE a.place_uid = p.place_uid AND a.attr_code = 'michelin'
                             AND a.retired_at IS NULL),
                    (SELECT s.raw_json ->> 'firstmenu' FROM dining.dn_source_record s
-                     WHERE s.place_uid = p.place_uid AND s.source_code = 'tourapi_kor_food' LIMIT 1)
+                     WHERE s.place_uid = p.place_uid AND s.source_code = 'tourapi_kor_food' LIMIT 1),
+                   (SELECT s.raw_json ->> '요리' FROM dining.dn_source_record s
+                     WHERE s.place_uid = p.place_uid AND s.source_code = 'michelin_guide' LIMIT 1)
               FROM dining.dn_place p WHERE p.record_status <> 'closed' AND NOT p.is_synthetic""").fetchall()
-    keys = ("name", "address", "road", "jibun", "category", "style", "style_method", "sources", "michelin", "firstmenu")
+    keys = ("name", "address", "road", "jibun", "category", "style", "style_method", "sources", "michelin", "firstmenu",
+            "cuisine")
     return {row[0]: {**dict(zip(keys, row[1:])), "sources": row[8] or []} for row in rows}
 
 
