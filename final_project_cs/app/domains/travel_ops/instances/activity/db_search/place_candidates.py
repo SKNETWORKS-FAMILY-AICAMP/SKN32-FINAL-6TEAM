@@ -49,7 +49,11 @@ _SELECT = ("SELECT content_id, content_type_id, title, latitude, longitude, "
            "WHERE tenant_id=%s AND source = ANY(%s) ")
 
 ORIGIN_SQL = _SELECT + "AND content_id=%s ORDER BY source LIMIT 1"
+#: ★`[2026-10-12]` 관광공사 목록에서 내려간 장소(끝난 축제 · 폐업 · 비공개 — `activity.ac_place.delisted_at`, 303)는 후보로 내지 않는다.
+#:  원래 장소(ORIGIN)는 거르지 않는다 — 고객이 이미 고른 곳이다.
 POOL_SQL = (_SELECT + "AND content_id <> %s "
+            "AND NOT EXISTS (SELECT 1 FROM activity.ac_place a WHERE a.content_id = place_catalog.content_id "
+            "AND a.delisted_at IS NOT NULL) "
             "AND latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s "
             "ORDER BY content_id")
 

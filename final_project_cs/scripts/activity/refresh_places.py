@@ -46,6 +46,30 @@ def hours_from_intro(intro: dict[str, Any] | None, type_id: str) -> tuple[str | 
     return pick(use_field), pick(rest_field)
 
 
+def mark_listing(conn, listed_ids: set[str], *, dry_run: bool = False) -> dict[str, int]:
+    """목록에 없는 관광공사 장소(숫자 id)는 내려간 표시, 다시 나타난 장소는 표시를 푼다. `[2026-10-12]` 303.
+    ★목록 **전체**를 받았을 때만 부른다 — 분류 하나만 받고 부르면 나머지가 전부 내려간 것으로 잡힌다."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT content_id, delisted_at IS NOT NULL FROM activity.ac_place WHERE content_id ~ '^[0-9]+$'")
+        state = dict(cur.fetchall())
+    gone = [cid for cid, delisted in state.items() if cid not in listed_ids and not delisted]
+    back = [cid for cid, delisted in state.items() if cid in listed_ids and delisted]
+    if not dry_run:
+        with conn.cursor() as cur:
+            cur.execute("UPDATE activity.ac_place SET delisted_at = now() WHERE content_id = ANY(%s)", (gone,))
+            cur.execute("UPDATE activity.ac_place SET delisted_at = NULL WHERE content_id = ANY(%s)", (back,))
+    return {"delisted": len(gone), "relisted": len(back),
+            "delisted_total": sum(1 for cid, d in state.items() if (d and cid not in back) or cid in gone)}
+
+
+def new_rows_since(conn, listed: Iterable[dict[str, Any]], since: str) -> list[dict[str, Any]]:
+    """원장에 없고 `since`(YYYYMMDD) 이후 **등록된** 서울 장소 — 새 장소 병합 후보(`merge_tourapi_new.py`)."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT content_id FROM activity.ac_place")
+        known = {r[0] for r in cur.fetchall()}
+    return [r for r in listed if str(r.get("contentid")) not in known and str(r.get("createdtime") or "")[:8] >= since]
+
+
 def refresh(conn, listed: Iterable[dict[str, Any]], fetch_intro: IntroFetcher, *, max_calls: int | None = None,
             dry_run: bool = False) -> dict[str, int]:
     """목록 행들로 원장을 맞춘다. 반환 — 기준점 · 그대로 · 바뀜 · 다시 받음 · 원문 바뀜 · 원장에 없음 · 상한에 걸림."""
@@ -94,7 +118,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--max-calls", type=int, default=300, help="상세(detailIntro2) 호출 상한")
-    parser.add_argument("--only", default=None, help="한 분류만(시험) — 예: HS")
+    parser.add_argument("--only", default=None, help="한 분류만(시험) — 예: HS. 이때는 내려간 표시를 하지 않는다")
+    parser.add_argument("--new-since", default=None, metavar="YYYYMMDD",
+                        help="원장에 없고 이 날 이후 등록된 서울 장소를 병합 목록(tourapi_seoul_list.csv)으로 저장")
     args = parser.parse_args()
     import psycopg
     from fetch_tourapi_list import fetch_category, load_key
@@ -110,6 +136,22 @@ def main() -> None:
     fetch_intro = lambda cid, type_id: call_tourapi("detailIntro2", {"contentId": cid, "contentTypeId": type_id}, key)  # noqa: E731
     with psycopg.connect(dsn(), autocommit=True) as conn:
         result = refresh(conn, listed, fetch_intro, max_calls=args.max_calls, dry_run=args.dry_run)
+        if not args.only:
+            listing = mark_listing(conn, {str(r.get("contentid")) for r in listed}, dry_run=args.dry_run)
+            print(f"목록에서 내려감 {listing['delisted']:,} · 다시 올라옴 {listing['relisted']:,} "
+                  f"(내려간 표시 전체 {listing['delisted_total']:,}) — 대체 후보에서 뺀다")
+        if args.new_since:
+            import csv
+
+            from fetch_tourapi_list import COLUMNS, OUT_PATH
+
+            fresh = new_rows_since(conn, listed, args.new_since)
+            with open(OUT_PATH, "w", encoding="utf-8-sig", newline="") as fh:
+                writer = csv.DictWriter(fh, fieldnames=COLUMNS, extrasaction="ignore")
+                writer.writeheader()
+                writer.writerows(fresh)
+            print(f"{args.new_since} 이후 등록된 새 장소 {len(fresh):,}곳 → {OUT_PATH.name} "
+                  "(python -X utf8 scripts/merge_tourapi_new.py 로 병합 — 작업용, 올리지 않는다)")
     print(f"목록 서울 {len(listed):,}행 → 기준점 {result['baseline']:,} · 그대로 {result['same']:,} · 바뀜 {result['changed']:,}"
           f"(다시 받음 {result['refetched']:,} · 원문 바뀜 {result['text_changed']:,} · 상한에 걸림 {result['over_limit']:,})"
           f" · 원장에 없음 {result['not_in_ledger']:,}" + (" — dry-run, 쓰지 않았다" if args.dry_run else ""))

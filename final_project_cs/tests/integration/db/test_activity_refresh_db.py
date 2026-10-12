@@ -22,9 +22,9 @@ def _reachable() -> str | None:
     try:
         with psycopg.connect(database_dsn(), connect_timeout=3) as conn, conn.cursor() as cur:
             cur.execute("SELECT count(*) FROM information_schema.columns WHERE table_schema='activity' "
-                        "AND table_name='ac_place' AND column_name='source_modified_at'")
+                        "AND table_name='ac_place' AND column_name='delisted_at'")
             if not cur.fetchone()[0]:
-                return "302 가 안 돌았다 — migrate 먼저"
+                return "302 · 303 이 안 돌았다 — migrate 먼저"
     except Exception as exc:  # noqa: BLE001
         return f"DB 에 연결할 수 없다: {type(exc).__name__}"
     return None
@@ -103,3 +103,25 @@ def test_the_call_limit_and_dry_run_write_nothing_beyond(cid):
         row = _row(conn, cid)
     assert limited["over_limit"] == 1 and dry["text_changed"] == 1
     assert row[0] == "20261001000000" and row[1] == "09:00~18:00"            # 둘 다 쓰지 않았다
+
+
+def test_a_place_missing_from_the_full_list_is_marked_and_unmarked_when_it_returns(cid):
+    def delisted(conn):
+        with conn.cursor() as cur:
+            cur.execute("SELECT delisted_at IS NOT NULL FROM activity.ac_place WHERE content_id = %s", (cid,))
+            return cur.fetchone()[0]
+
+    with get_connection() as conn:                                     # 끝에서 되돌린다 — 다른 장소 표시를 남기지 않는다
+        gone = refresh_places.mark_listing(conn, {"1"})                # 목록에 없다
+        assert gone["delisted"] >= 1 and delisted(conn) is True
+        back = refresh_places.mark_listing(conn, {cid})                # 다시 나타났다
+        assert back["relisted"] >= 1 and delisted(conn) is False
+        conn.rollback()
+
+
+def test_new_rows_are_only_unknown_places_registered_since_the_date(cid):
+    listed = [{"contentid": cid, "createdtime": "20261005000000"},          # 이미 원장에 있음
+              {"contentid": "9999999998", "createdtime": "20261005000000"},  # 새로 등록
+              {"contentid": "9999999997", "createdtime": "20250101000000"}]  # 오래전 등록 — 일부러 뺐을 수 있다
+    with get_connection() as conn:
+        assert [r["contentid"] for r in refresh_places.new_rows_since(conn, listed, "20260929")] == ["9999999998"]

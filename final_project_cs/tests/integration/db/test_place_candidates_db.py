@@ -119,3 +119,20 @@ def test_loaded_demo_data_finds_alternatives_for_changgyeonggung():
                                           RADIUS_MAX_KM)
     assert all(lat0 <= float(c["mapy"]) <= lat1 and lng0 <= float(c["mapx"]) <= lng1
                for c in pool["candidates"])
+
+
+def test_delisted_places_are_not_candidates(tenant):
+    """`[2026-10-12]` 관광공사 목록에서 내려간 곳(끝난 축제 · 폐업)은 대체 후보로 내지 않는다(303)."""
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("INSERT INTO activity.ac_load_meta (source_file, file_sha256, row_count) VALUES ('t', %s, 1) "
+                    "RETURNING load_id", ("0" * 64,))
+        load_id = cur.fetchone()[0]
+        cur.execute("INSERT INTO activity.ac_place (content_id, content_type_id, name_ko, name_key, load_id, delisted_at) "
+                    "VALUES ('same_l1', '12', '같은 대분류', 'x', %s, now())", (load_id,))
+        try:
+            from contextlib import nullcontext
+
+            pool = find_place_candidates(lambda: nullcontext(conn), tenant, "o1")      # 같은 연결 — 넣은 행을 되돌릴 수 있게
+            assert "same_l1" not in [c["contentid"] for c in pool["candidates"]]
+        finally:
+            conn.rollback()
