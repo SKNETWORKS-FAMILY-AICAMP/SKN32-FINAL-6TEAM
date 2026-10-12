@@ -39,7 +39,10 @@ def hours_from_intro(intro: dict[str, Any] | None, type_id: str) -> tuple[str | 
     """detailIntro2 → (운영시간 원문, 휴무 원문) — 종류별 필드는 `fill_tourapi_details.INTRO_FIELDS` 그대로."""
     from app.domains.travel_ops.instances.activity.data_processing.fill_tourapi_details import INTRO_FIELDS
 
-    use_field, rest_field, _ = INTRO_FIELDS.get(str(type_id), (None, None, None))
+    # ★`[2026-10-12]` INTRO_FIELDS 가 (운영시간, 휴무, 요금) 튜플에서 {컬럼: 필드} 로 바뀌었다(eee8a076) —
+    #   튜플로 풀던 이 줄이 role-activity-test 머지(74ec376b) 뒤 ValueError 로 죽었다. 컬럼 이름으로 꺼낸다.
+    fields = INTRO_FIELDS.get(str(type_id), {})
+    use_field, rest_field = fields.get("business_hours"), fields.get("closed_days")
     def pick(field):
         value = str((intro or {}).get(field) or "").strip() if field else ""
         return value or None

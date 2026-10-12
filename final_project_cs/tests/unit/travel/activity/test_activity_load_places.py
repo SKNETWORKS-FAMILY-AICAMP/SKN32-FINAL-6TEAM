@@ -42,5 +42,5 @@ def test_blank_id_or_name_skipped_and_first_duplicate_wins(tmp_path):
 
 def test_real_csv_loads_every_row():
     data = load_places.rows(load_places.CSV_PATH)
-    assert len(data) == 6338
+    assert len(data) == 6334   # [2026-10-11] 4행 정리 — 리포트 2026-10-11_1554_Activity_CSV_컬럼정리 §반영
     assert len({r["content_id"] for r in data}) == len(data)
