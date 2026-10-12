@@ -243,11 +243,15 @@ class BikeRouter:
         if not math.isfinite(dist) or not math.isfinite(tms) or dist < 0 or tms < 0:
             self.last_error = {"kind": "bad_response", "error": "비유한값·음수 거리·시간"}
             return None
+        # 경로마다 어느 자료로 찾았는지(서울시 도보 그래프 · OSM)는 중계 라우터가 경로에 싣는다 — 있으면 그것을 근거로 쓴다
         out = {"distance_m": round(dist, 1),
-               "time_s": int(round(tms / 1000)), "basis": getattr(self.router, "basis", "graphhopper"),
-               "source_id": self.source_id}
+               "time_s": int(round(tms / 1000)),
+               "basis": p.get("basis") if isinstance(p.get("basis"), str) else getattr(self.router, "basis", "graphhopper"),
+               "source_id": p.get("source_id") if isinstance(p.get("source_id"), str) else self.source_id}
         if profile == "foot" and getattr(self.router, "is_local", False) and p.get("foot_timing"):
             out["foot_timing"] = dict(p["foot_timing"])
+        if isinstance(p.get("walk_candidates"), dict):      # 서울 안 걸음 — 두 보행 자료 후보와 고른 쪽(walk_router)
+            out["walk_candidates"] = p["walk_candidates"]
         q = p.get("quality")
         if q:                                          # 로컬 길찾기가 낸 품질 표시(낙관 가능 · 접근 거리 · 큰길 비율)
             out["quality"] = q

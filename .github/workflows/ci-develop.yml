@@ -6,16 +6,11 @@
 #   통합·e2e 와 Docker 빌드는 main 관문(ci-main.yml)에서 본다.
 #   실제 LLM 호출 시험(live)은 pytest.ini 가 기본으로 빼 둔다.
 #
-# ★언제 도나 `[2026-10-12 2차 정리]` — **role-manager 로 오는 PR 과 손으로 돌릴 때만.** push 에서는 돌지 않는다.
-#   push 는 전체 관문(ci-main.yml) 하나가 role-manager · develop · main 모두에서 맡는다 — 같은 커밋을 연달아
-#   올리면 앞 실행이 취소되어 완료 1번(ci-main.yml 머리 주석).
-#   ☆1차 정리(d30ce431)는 role-manager push = 이 파일, develop push = 전체 관문으로 나눠 같은 커밋에 2번이었다.
-#   ☆그 전(10-08 통합 커밋 ~ 10-12)은 두 파일 모두 role-manager · develop 에서 돌아 4번이었다.
+# ★언제 도나 `[2026-10-13 사용자 결정]` — **손으로 돌릴 때만**(Actions 탭 → Run workflow). 자동으로는 돌지 않는다.
+#   role-manager 는 검사하지 않고, develop · main 은 전체 관문(ci-main.yml)이 1번 본다.
 name: CI (develop)
 
 on:
-  pull_request:
-    branches: [role-manager]
   workflow_dispatch:
 
 permissions:

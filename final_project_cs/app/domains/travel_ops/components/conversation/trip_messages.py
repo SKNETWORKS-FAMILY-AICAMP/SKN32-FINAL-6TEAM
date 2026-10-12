@@ -739,15 +739,26 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         from .fact_read_retry import NEW_REQUEST
         raise StateConflict(NEW_REQUEST)
     context_now = datetime.now(timezone.utc)  # 문맥 만료는 고객이 보낸 여행 시각으로 연장하지 않는다.
+    turns = ([{"role": "assistant", "reply": {"focus": read_snapshot.get("focus") or {}}}]
+             if safe_read else chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id))
     decision, focus, stale_selection = fact_context.resolve(
         decision, items=context_items, message=message, selected=selected,
-        turns=([{"role": "assistant", "reply": {"focus": read_snapshot.get("focus") or {}}}]
-               if safe_read else chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id)),
+        turns=turns,
         version=current_context["version"], now=context_now,
         ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")))
     # 복합 읽기는 각 질문의 대상·범위를 따로 검증한다.
     if decision.reads:
         focus, stale_selection = None, False
+    if safe_read:
+        # ★`[2026-10-13]` 문맥으로 **고친 대상**으로 읽기 기록을 다시 만든다 — 아래 ROUTED 가 결정과 함께 저장한다.
+        #   Case 를 열 때 만든 기록은 고치기 전 대상이라, 저장된 결정(고친 대상)과 기록이 어긋나
+        #   중단 뒤 재시도가 다른 일정을 답할 수 있었다. develop 의 복구 수정(07202a63 계열)이 병합(2b5ad163)에서 빠졌던 것을
+        #   되살렸다(tests/e2e/test_recovery_read_merge_web.py).
+        from .fact_read_retry import read_snapshot as snapshot_read
+
+        read_snapshot = snapshot_read(
+            decision, at=at, selected=selected, trip={"trip_id": trip_id, "version": current_context["version"]},
+            turns=turns) or read_snapshot
     from app.domains.travel_ops.components.conversation import case_dispatch
 
     plan = (_dispatch_decision(conn, controller=controller, tenant=tenant, trip_id=trip_id, case_id=case_id,

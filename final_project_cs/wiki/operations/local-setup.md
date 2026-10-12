@@ -171,16 +171,17 @@ python -m scripts.check_env
 | 전체를 병렬로 | `python -m pytest -q -n 4 --dist loadfile` — 일꾼마다 `<DB 이름>_gw0` 같은 자기 DB 를 본 DB 를 틀로 복사해 쓴다(`final_project_cs/conftest.py`). 본 DB 에 다른 접속(개발 서버 등)이 있으면 복사가 실패하니 **시험용 DB 에서만** 쓴다 |
 | 환경값 | CI 와 같게 — `.github/workflows/ci-main.yml` 의 `env` 칸(시험용 가짜 값)과 위 `PYTHONPATH` |
 
-**GitHub 검사(파이썬)는 언제 무엇을 도나** `[2026-10-12 2차 정리]` — 같은 커밋에는 전체 관문이 끝까지 1번 돈다.
+**GitHub 검사(파이썬)는 언제 무엇을 도나** `[2026-10-13 사용자 결정]` — role-manager 는 검사하지 않는다. develop · main 에서 1번.
 
 | 언제 | 도는 검사 | 걸리는 시간 |
 |---|---|---|
-| `role-manager` · `develop` · `main` 에 push · `develop` · `main` 으로 오는 PR | 전체 관문 `CI (main)` — 린트 + 전체 시험(live · rag 제외, 4개 일꾼 병렬) + 배포 이미지(`deploy/Dockerfile.api`) 빌드 | 병렬 전 약 7~10분 `[실측]` · 병렬 뒤 `[미측정 — 이 판의 첫 GitHub 실행으로 잰다]` |
-| `role-manager` 로 오는 PR | 빠른 관문 `CI (develop)` — 린트 + 아키텍처·계약·단위·보안 | 약 1~2분 `[실측]` |
+| `develop` · `main` 에 push · `develop` · `main` 으로 오는 PR | 전체 관문 `CI (main)` — 린트 + 전체 시험(live · rag 제외, 4개 일꾼 병렬) + 배포 이미지(`deploy/Dockerfile.api`) 빌드 | 약 4분 `[실측 1회 — 10-13 develop 255초, 병렬 전 606초]` |
+| `role-manager` 에 push | 검사 없음 | 0 |
+| 손으로 돌릴 때만 | 빠른 관문 `CI (develop)` — 린트 + 아키텍처·계약·단위·보안 | 약 1~2분 `[실측]` |
 | 저장소 맨 위 문서(`wiki/` · `program/` · 맨 위 `*.md`)만 바뀐 push | 건너뜀 (PR 은 건너뛰지 않는다) | 0 |
 
-- 같은 커밋을 `role-manager` → `develop` 순으로 몇 초 간격에 올리면 뒤 실행이 앞 실행을 취소해 **끝까지 도는 것은 1번**이다(취소된 실행은 회색 — 실패가 아니다). 앞 실행이 다 끝난 뒤에 올리면 한 번 더 돈다.
-- 이력: 10-08 통합 커밋이 두 관문을 두 브랜치 모두에서 돌게 넓혀 4번 → 10-12 1차 정리 2번 → 2차 정리 1번. role-manager 에만 올리는 일도 실제로 있어서 role-manager push 를 검사에서 빼지 않았다(Codex 와 2회차 합의).
+- 같은 커밋을 `role-manager` → `develop` 순으로 올리면 develop 에서 **1번**만 돈다.
+- 이력: 10-08 통합 커밋이 이유 기록 없이 두 관문을 role-manager · develop 모두에서 돌게 넓혀 4번 → 10-12 1차 정리 2번 → 10-13 1번.
 - `final_project_cs/wiki/` 만 바뀐 push 는 건너뛰지 **않는다** — 계약 시험이 그 문서(상태 표 등)를 코드와 대조한다.
 - 병렬은 실무 표준 방식이다 — pytest-xdist 로 나누고 일꾼마다 DB 를 따로 둔다(pytest-django 가 `test_<이름>_gw0` 을 만드는 것과 같다). 한 파일의 시험은 한 일꾼이 순서대로 돈다(`--dist loadfile`).
 - 각 job 에 제한 시간(빠른 20분 · 전체 40분)이 있다. 넘기면 멈춘 시험이 있다는 뜻이다 — 로그 끝의 `--durations` 표(오래 걸린 시험 25개)부터 본다.
