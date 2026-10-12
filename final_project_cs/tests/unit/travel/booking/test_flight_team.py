@@ -510,12 +510,47 @@ def test_choosing_a_flight_moves_the_item_to_its_departure_and_keeps_the_old_one
     plan["items"][0]["detail"] = first.action_proposals[0].arguments["replacements"][0]["item"]["detail"]
     state = {**LEG_STATE, "subject_ref": {**LEG_STATE["subject_ref"], "request": {"type": "change", "choice": JEJU_KEY}}}
     result, _, tools = _run({"task": "unclear"}, {"read.itinerary": plan}, text="2번", capability="flight.itinerary", state=state)
-    assert [name for name, _ in tools.calls] == ["read.itinerary"], "고르면 다시 찾지 않는다"
+    assert [name for name, _ in tools.calls] == ["read.itinerary", "read.booking_search_flights"], \
+        "`[2026-10-12]` 고르면 같은 조건으로 한 번 더 찾아 가격을 확인한다"
     assert result.answer.startswith("요청하신 대로 타이베이 → 인천 대신 제주항공 13:10(으)로 바꿨습니다. 아직 예약 전이에요")
+    assert result.answer.endswith(" 지금 가격은 다시 확인하지 못했어요(보여 드릴 때 1인 151,000원) — 예약 전에 링크에서 확인해 주세요."), \
+        "소스가 모두 답하지 않았다 — 바꾸되 확인하지 못했다고 적는다"
     new = result.action_proposals[0].arguments["replacements"][0]["item"]
     assert new["starts_at"] == f"{GO}T13:10:00+09:00" and new["ends_at"] is None
     assert new["detail"]["chosen"]["key"] == JEJU_KEY and new["detail"]["key"] == JEJU_KEY and new["detail"]["booked"] is False
     assert [o["name"] for o in new["detail"]["alternates"]] == ["티웨이항공 TW727 18:30", "타이베이 → 인천"]
+
+
+def _choose_jeju(search):
+    """제주항공 13:10 을 보여 준 뒤, 고르는 순간 `search`(마이리얼트립 값)로 다시 찾는다."""
+    plan = _plan()
+    first, _, _ = _legrun(plan)
+    plan["items"][0]["detail"] = first.action_proposals[0].arguments["replacements"][0]["item"]["detail"]
+    state = {**LEG_STATE, "subject_ref": {**LEG_STATE["subject_ref"], "request": {"type": "change", "choice": JEJU_KEY}}}
+    return _run({"task": "unclear"}, {"read.itinerary": plan, "read.flight_search": search}, text="2번",
+                capability="flight.itinerary", state=state)[0]
+
+
+def test_choosing_rechecks_the_price_and_says_it_is_the_same_or_changed():
+    """`[2026-10-12]` 고를 때 가격 재확인 — 같으면 그대로라고, 바뀌면 바뀐 값으로 바꾸고 두 값을 적는다."""
+    same = _choose_jeju(WITH_VIA)
+    assert same.answer.endswith(" 지금 가격도 1인 151,000원 그대로예요.")
+    assert same.action_proposals[0].arguments["summary"]["price_check"] == {"status": "same", "before": 151000, "now": 151000}
+    dearer = {**WITH_VIA, "flights": [{**WITH_VIA["flights"][0], "price_total": 340000}, *WITH_VIA["flights"][1:]]}
+    changed = _choose_jeju(dearer)
+    assert changed.answer.endswith(" 보여 드릴 때 1인 151,000원이던 가격이 지금 1인 170,000원이에요.")
+    new = changed.action_proposals[0].arguments["replacements"][0]["item"]
+    assert new["detail"]["chosen"]["per_person"] == 170000 and new["detail"]["chosen"]["key"] == JEJU_KEY
+    assert [o["name"] for o in new["detail"]["alternates"]] == ["티웨이항공 TW727 18:30", "타이베이 → 인천"]
+
+
+def test_a_chosen_flight_its_source_no_longer_lists_is_not_applied():
+    """그 편을 준 소스(마이리얼트립)가 답했는데 편이 없다 — 바꾸지 않고 그렇다고 답한다."""
+    gone = _choose_jeju({**WITH_VIA, "flights": WITH_VIA["flights"][1:]})
+    assert gone.action_proposals == []
+    assert gone.answer == ("제주항공 13:10 편을 다시 찾아보니 지금은 나오지 않아요(매진됐거나 시각이 바뀌었을 수 있어요). "
+                           "일정은 그대로 두었어요. 다른 후보를 고르시거나 「바꿔 줘」라고 하시면 새로 찾아 드릴게요.")
+    assert gone.decisions[0]["price_check"]["status"] == "gone"
 
 
 def test_when_no_new_direct_flight_is_left_connecting_ones_are_held_and_said():

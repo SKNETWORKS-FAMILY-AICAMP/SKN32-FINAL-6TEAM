@@ -543,9 +543,12 @@ def test_choosing_an_option_moves_the_item_to_that_lodging_and_keeps_the_old_one
     state = {**ITEM_STATE, "subject_ref": {**ITEM_STATE["subject_ref"], "request": {"type": "change", "choice": "myrealtrip:12"}}}
     result, _, tools = _run({"task": "unclear"}, {"read.itinerary": plan}, text="2번으로 할게", capability="lodging.itinerary",
                             state=state)
-    assert [name for name, _ in tools.calls] == ["read.itinerary"], "고르면 다시 찾지 않는다"
+    assert [name for name, _ in tools.calls] == ["read.itinerary", "read.stay_detail"], \
+        "`[2026-10-12]` 고르면 다시 찾지는 않고, 고른 곳 상세만 한 번 더 읽어 가격을 본다"
     assert result.answer.startswith("요청하신 대로 기존 호텔 대신 둘째 호텔(으)로 바꿨습니다. 아직 예약 전이에요 — 예약은 이 링크에서 해 주세요: "
                                     "https://accommodation.myrealtrip.com/union/products/12?")
+    assert result.answer.endswith(" 지금 가격은 다시 확인하지 못했어요(보여 드릴 때 1박 150,000원) — 예약 전에 링크에서 확인해 주세요."), \
+        "상세를 못 읽었다 — 바꾸되 확인하지 못했다고 적는다"
     new = result.action_proposals[0].arguments["replacements"][0]["item"]
     assert new["title"] == "둘째 호텔" and new["place_id"] is None, "우리 후보는 장소 표에 없다 — 이름 · 링크는 detail.chosen"
     assert new["detail"]["chosen"]["key"] == "myrealtrip:12" and new["detail"]["booked"] is False
@@ -553,6 +556,44 @@ def test_choosing_an_option_moves_the_item_to_that_lodging_and_keeps_the_old_one
     state["subject_ref"]["request"] = {"type": "change", "choice": "nope"}
     result, _, _ = _run({"task": "unclear"}, {"read.itinerary": plan}, capability="lodging.itinerary", state=state)
     assert result.outcome == "escalated" and result.failure_code == "itinerary_unknown_choice"
+
+
+def _choose(choice, detail=None):
+    """후보를 보여 준 뒤 `choice` 를 고른다. 고를 때 상세(`read.stay_detail`)는 `detail` 을 돌려준다."""
+    plan = _plan()
+    first, _, _ = _itinerary(plan)
+    plan["items"][1]["detail"] = first.action_proposals[0].arguments["replacements"][0]["item"]["detail"]
+    state = {**ITEM_STATE, "subject_ref": {**ITEM_STATE["subject_ref"], "request": {"type": "change", "choice": choice}}}
+    return _run({"task": "unclear"}, {"read.itinerary": plan, "read.stay_detail": detail}, text="고를게",
+                capability="lodging.itinerary", state=state)
+
+
+def test_choosing_rechecks_the_nightly_price_and_says_it_is_the_same_or_changed():
+    """`[2026-10-12]` 고를 때 가격 재확인 — 목록 1박과 상세 1박 평균은 같은 기준(☆10-12 18:22 playdata)."""
+    same, _, tools = _choose("myrealtrip:12", {**DETAIL, "gid": 12, "price_per_night": 150000})
+    assert [a for name, a in tools.calls if name == "read.stay_detail"] == [
+        {"gid": "12", "check_in": IN, "check_out": OUT, "adults": 2, "children": None}]
+    assert same.answer.endswith(" 지금 가격도 1박 150,000원 그대로예요.")
+    assert same.action_proposals[0].arguments["summary"]["price_check"] == {"status": "same", "before": 150000, "now": 150000}
+    changed, _, _ = _choose("myrealtrip:12", {**DETAIL, "gid": 12, "price_per_night": 171000})
+    assert changed.answer.endswith(" 보여 드릴 때 1박 150,000원이던 가격이 지금 1박 171,000원이에요.")
+    new = changed.action_proposals[0].arguments["replacements"][0]["item"]
+    assert new["detail"]["chosen"]["price_per_night"] == 171000 and new["title"] == "둘째 호텔"
+    assert [o["name"] for o in new["detail"]["alternates"]] == ["가까운 호텔", "해밀톤 호텔", "기존 호텔"]
+
+
+def test_a_chosen_stay_without_rooms_now_is_not_applied():
+    gone, _, _ = _choose("myrealtrip:12", {**DETAIL, "gid": 12, "no_rooms": True})
+    assert gone.action_proposals == []
+    assert gone.answer == ("둘째 호텔은(는) 다시 확인해 보니 그 날짜에 남은 객실이 없어요. 일정은 그대로 두었어요. "
+                           "다른 후보를 고르시거나 「바꿔 줘」라고 하시면 새로 찾아 드릴게요.")
+
+
+def test_a_chosen_google_hotel_is_not_rechecked_and_says_so():
+    result, _, tools = _choose("google:가까운호텔", DETAIL)
+    assert [name for name, _ in tools.calls] == ["read.itinerary"], "구글 호텔 한 곳만 다시 볼 도구가 없다"
+    assert result.answer.endswith(" 지금 가격은 다시 확인하지 못했어요(보여 드릴 때 1박 120,000원) — 예약 전에 링크에서 확인해 주세요.")
+    assert result.action_proposals[0].arguments["summary"]["price_check"]["reason"] == "no_recheck_tool"
 
 
 def test_change_again_skips_what_was_already_shown():

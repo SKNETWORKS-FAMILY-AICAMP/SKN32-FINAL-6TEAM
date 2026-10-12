@@ -32,6 +32,10 @@
     `place_id` 를 비우고 이름 · 좌표 · 링크를 `detail.chosen` 에 둔다(예약 전 `detail.booked = False`).
   - 새 후보가 없으면 목록을 더 넓게(`ALTERNATE_SIZES`) 받아 다시 찾고, 그래도 없으면 그렇다고 답한다(다른 곳 링크와 함께).
   - 일정에 숙소 항목이 생기는 것은 우리 에이전트가 반영될 때다(사용자 10-11) — 그 전까지 이 길은 가짜 일정 시험으로만 돈다.
+  - `[2026-10-12]` **고를 때 가격 재확인** — 마이리얼트립 후보를 고르면 그 숙소 상세(`read.stay_detail`)를 한 번 더 읽어 1박 값을 다시 본다.
+    목록 1박(`price`)과 상세 1박 평균(`averagePrice`)은 같은 기준(세금 전)이다 — ☆10-12 18:22 playdata 명동 3박 두 곳 모두 같았다
+    (`scripts/probe_price_basis.py`). 바뀌면 새 값으로 바꾸고 답에 적는다. 그 날짜에 객실이 없으면 바꾸지 않고 그렇다고 답한다.
+    상세를 못 읽으면(429 등) 바꾸되 「다시 확인하지 못했다」고 적는다. 구글 호텔 후보는 한 곳만 다시 볼 도구가 없어 확인하지 않고 그렇게 적는다.
 - 설문(`constraints.survey`)에는 숙소 문항(예산 · 숙소 유형)이 없다(`components/planning/survey.py` 2026-09-24.v1). 그래서 설문은
   아직 숙소 고르기에 쓰지 않는다 — 문항이 생기면 연결한다.
 """
@@ -232,6 +236,18 @@ def _fresh_picks(booked: dict[str, Any], exclude: set[str], anchor: dict[str, An
         if first is not None:
             picks = [*picks[:SHOWN - 1], first]
     return picks
+
+
+def _price_note(check: dict[str, Any]) -> str:
+    """고를 때 가격 재확인 결과 한 문장(앞에 빈칸). 1박 값을 모르면 아무것도 적지 않는다."""
+    before, now = check.get("before"), check.get("now")
+    if check["status"] == "changed":
+        return f" 보여 드릴 때 1박 {_won(before)}이던 가격이 지금 1박 {_won(now)}이에요."
+    if check["status"] == "same":
+        return f" 지금 가격도 1박 {_won(now)} 그대로예요."
+    if before is not None:
+        return f" 지금 가격은 다시 확인하지 못했어요(보여 드릴 때 1박 {_won(before)}) — 예약 전에 링크에서 확인해 주세요."
+    return ""
 
 
 def _lodging_option(rank: int, pick: dict[str, Any], item: Any) -> dict[str, Any]:
@@ -572,23 +588,59 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         if pick is None:
             return self._escalate(task, "itinerary_unknown_choice", ctx["evidence"],
                                   warnings=[f"고른 안 {choice} 이(가) 이 항목의 후보에 없다: {[o.get('key') for o in alternates]}"])
+        held = pick
+        pick, check = self._recheck(task, ctx, item, pick)
+        if check["status"] == "gone":
+            return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
+                                next_action=NextAction.RESPOND,
+                                decisions=[{"itinerary": "lodging_gone", "item": item.title, "choice": held["key"], "price_check": check}],
+                                answer=f"{held['name']}은(는) 다시 확인해 보니 그 날짜에 남은 객실이 없어요. 일정은 그대로 두었어요. "
+                                       "다른 후보를 고르시거나 「바꿔 줘」라고 하시면 새로 찾아 드릴게요.")
         previous = {**applied_record(item), **({k: item.detail["chosen"][k] for k in ("source", "price_per_night", "link")
                                                if k in item.detail.get("chosen", {})})}
-        remaining = [option for option in alternates if option is not pick] + [previous]
+        remaining = [option for option in alternates if option is not held] + [previous]
         detail = {**item.detail, "alternates": remaining, "other_options": [option["name"] for option in remaining],
                   "chosen": pick, "booked": False, "customer_requested": True}
         cause = with_request({"category": "customer_request", "type": "alternate", "from": item.title, "to": pick["name"],
                               "message": task.input_text}, task.context.current_state.get("request_id"))
         text = (f"요청하신 대로 {item.title} 대신 {pick['name']}(으)로 바꿨습니다. 아직 예약 전이에요"
-                + (f" — 예약은 이 링크에서 해 주세요: {pick['link']}" if pick.get("link") else "") + ".")
+                + (f" — 예약은 이 링크에서 해 주세요: {pick['link']}" if pick.get("link") else "") + "." + _price_note(check))
         replacement = replace(item.replaced_by(place=None, title=pick["name"], detail=detail), place_id=None, place=None)
         change = ItineraryChange(reason="customer_request", causes=[cause],
                                  notice={"text": text, "language": "ko", "causes": [cause],
                                          "changed": {"from": item.title, "to": pick["name"], "at": item.starts_at.isoformat()},
                                          "other_options": detail["other_options"], "replay": False},
                                  replacements={item.item_id: replacement},
-                                 summary={"to": pick["name"], "key": pick["key"]})
+                                 summary={"to": pick["name"], "key": pick["key"], "price_check": check})
         return self.settle(task, ctx, change)
+
+    def _recheck(self, task: TeamTask, ctx: dict[str, Any], item: Any,
+                 pick: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+        """고른 숙소의 1박 값을 다시 본다(마이리얼트립 상세 1번). → (바꿀 때 쓸 후보, 확인 결과).
+
+        확인 결과 `status`: `same` · `changed`(새 값으로) · `gone`(그 날짜 객실 없음 · 매진) · `unchecked`(구글 호텔 · 상세를 못 읽음 · 조건 모름)."""
+        before = pick.get("price_per_night")
+        source, _, gid = str(pick.get("key") or "").partition(":")
+        if source != "myrealtrip" or not gid:
+            return pick, {"status": "unchecked", "before": before, "now": None, "reason": "no_recheck_tool"}
+        query = item.detail.get("query") or self._stay_query(item, ctx["trip"])
+        if not query:
+            return pick, {"status": "unchecked", "before": before, "now": None, "reason": "no_query"}
+        detail = self._read(task, "read.stay_detail", {"gid": gid, "check_in": query["check_in"], "check_out": query["check_out"],
+                                                       "adults": query["adults"], "children": None}, ctx["seen"])
+        if detail and detail.get("cooldown_seconds"):
+            detail = None
+        ctx["evidence"] = self._evidence(task, source_id=f"read.stay_detail:{gid}:recheck", claim="고른 숙소 가격 재확인(마이리얼트립 상세)",
+                                         value=detail, base=ctx["evidence"])
+        if detail is None:
+            return pick, {"status": "unchecked", "before": before, "now": None, "reason": "detail_unreadable"}
+        if detail.get("sold_out") or detail.get("no_rooms"):
+            return pick, {"status": "gone", "before": before, "now": None}
+        now = detail.get("price_per_night")
+        if not isinstance(now, (int, float)) or before is None:
+            return pick, {"status": "unchecked", "before": before, "now": now, "reason": "no_price"}
+        status = "same" if now == before else "changed"
+        return ({**pick, "price_per_night": now} if status == "changed" else pick), {"status": status, "before": before, "now": now}
 
     @staticmethod
     def _stay_query(item: Any, trip: dict[str, Any]) -> dict[str, Any] | None:

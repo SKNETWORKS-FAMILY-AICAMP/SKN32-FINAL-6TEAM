@@ -28,6 +28,9 @@
   - 직항이 있으면 직항만(사용자 결정 10-10) — 새 직항이 없으면 경유까지 넓혀 다시 고르고(느린 경유는 여전히 뺀다) 그렇다고 적는다. 그래도 없으면
     「더 찾지 못했다」.
   - 항목은 우리 에이전트가 반영될 때 일정에 생긴다(사용자 10-11) — 그 전까지 가짜 일정 시험으로만 돈다.
+  - `[2026-10-12]` **고를 때 가격 재확인** — 후보를 보여 준 뒤 시간이 지나 값이 바뀔 수 있어, 고르는 순간 같은 조건으로 한 번 더 찾아
+    고른 편을 다시 본다(`_recheck`). 값이 바뀌면 바뀐 값으로 바꾸고 답에 적는다. 그 편의 소스가 모두 답했는데 편이 없으면 바꾸지 않고
+    그렇다고 답한다. 찾기에 실패했거나 그 편의 소스 중 답하지 않은 곳이 있으면 바꾸되 「다시 확인하지 못했다」고 적는다.
 """
 from __future__ import annotations
 
@@ -252,7 +255,22 @@ def _flight_option(rank: int, option: dict[str, Any], item: Any, people: int) ->
             "seller": offer.get("label"),
             # `[2026-10-12]` 링크는 가장 싼 곳이 아니라 「그 편을 고를 수 있는」 가장 싼 곳 — 아래 `_booking_offer`
             "link": booking.get("link"), "link_seller": booking.get("label"), "link_price": booking.get("price_total"),
-            "link_kind": booking.get("link_kind")}
+            "link_kind": booking.get("link_kind"),
+            # `[2026-10-12]` 이 편을 준 소스 — 고를 때 다시 찾아 편이 없을 때 「소스가 답했는데 없다」와 「소스가 답하지 않았다」를 가른다
+            "sources": list(dict.fromkeys(str(offer.get("source")) for offer in option.get("offers") or [] if offer.get("source")))}
+
+
+def _same_flight(option: dict[str, Any], pick: dict[str, Any]) -> bool:
+    """다시 찾은 편이 고른 편과 같은가 — 항공사 · 첫 다리 출발 공항 · 날짜 · 시각 · 마지막 다리 도착 공항 · 다리 수.
+    편명은 보지 않는다 — 편명은 소스마다 있거나 없어(묶일 때 빌려 온다) 같은 편이어도 열쇠(`_flight_key`)가 달라질 수 있다."""
+    def mark(flight: dict[str, Any]) -> tuple[Any, ...] | None:
+        legs = flight.get("legs") or []
+        if not legs:
+            return None
+        first, last = legs[0], legs[-1]
+        return (flight.get("airline"), first.get("origin"), first.get("departDate"), first.get("departTime"),
+                last.get("destination"), len(legs))
+    return mark(option) is not None and mark(option) == mark(pick)
 
 
 def _conditions(ctx: dict[str, Any]) -> dict[str, Any]:
@@ -292,6 +310,18 @@ def _booking_note(pick: dict[str, Any], people: int | None) -> str:
         each = f"(1인 {_won(round(price / people), 'KRW')})" if people else f"({_won(price, 'KRW')})"
         return (f" — 가장 싼 {pick['seller']}은(는) 검색 결과 페이지라, 바로 예약할 수 있는 {seller}{each} 링크예요: {link}")
     return f" — 예약은 이 링크에서 해 주세요: {link}"
+
+
+def _price_note(check: dict[str, Any]) -> str:
+    """고를 때 가격 재확인 결과 한 문장(앞에 빈칸). 1인 값을 모르면 아무것도 적지 않는다."""
+    before, now = check.get("before"), check.get("now")
+    if check["status"] == "changed":
+        return f" 보여 드릴 때 1인 {_won(before, 'KRW')}이던 가격이 지금 1인 {_won(now, 'KRW')}이에요."
+    if check["status"] == "same":
+        return f" 지금 가격도 1인 {_won(now, 'KRW')} 그대로예요."
+    if before is not None:
+        return f" 지금 가격은 다시 확인하지 못했어요(보여 드릴 때 1인 {_won(before, 'KRW')}) — 예약 전에 링크에서 확인해 주세요."
+    return ""
 
 
 class FlightTeam(ItineraryWork, TravelTeamBase):
@@ -614,14 +644,23 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
             return self._escalate(task, "itinerary_unknown_choice", ctx["evidence"],
                                   warnings=[f"고른 안 {choice} 이(가) 이 항목의 후보에 없다: {[o.get('key') for o in alternates]}"])
         before = (item.detail.get("chosen") or {}).get("name") or item.title
+        held = pick
+        pick, check = self._recheck(task, ctx, item, pick, people)
+        if check["status"] == "gone":
+            return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
+                                next_action=NextAction.RESPOND,
+                                decisions=[{"itinerary": "flight_gone", "item": item.title, "choice": held["key"], "price_check": check}],
+                                answer=f"{held['name']} 편을 다시 찾아보니 지금은 나오지 않아요(매진됐거나 시각이 바뀌었을 수 있어요). "
+                                       "일정은 그대로 두었어요. 다른 후보를 고르시거나 「바꿔 줘」라고 하시면 새로 찾아 드릴게요.")
         previous = {**applied_record(item), "key": str(item.detail.get("key") or item.item_id), "name": before}
-        remaining = [option for option in alternates if option is not pick] + [previous]
+        remaining = [option for option in alternates if option is not held] + [previous]
         detail = {**item.detail, "alternates": remaining, "other_options": [option["name"] for option in remaining],
                   "chosen": pick, "key": pick["key"], "booked": False, "customer_requested": True}
         starts = datetime.fromisoformat(pick["starts_at"]) if pick.get("starts_at") else item.starts_at
         cause = with_request({"category": "customer_request", "type": "alternate", "from": before, "to": pick["name"],
                               "message": task.input_text}, task.context.current_state.get("request_id"))
-        text = f"요청하신 대로 {before} 대신 {pick['name']}(으)로 바꿨습니다. 아직 예약 전이에요" + _booking_note(pick, people) + "."
+        text = (f"요청하신 대로 {before} 대신 {pick['name']}(으)로 바꿨습니다. 아직 예약 전이에요" + _booking_note(pick, people) + "."
+                + _price_note(check))
         # ★도착 시각은 비운다 — 편 응답의 도착 시각은 도착 공항 현지 시각이라 출발과 같은 시간대로 적으면 틀린다(확인 안 함 — 시간대 정보가 없다)
         replacement = replace(item.replaced_by(place=None, title=item.title, detail=detail, starts_at=starts), ends_at=None)
         change = ItineraryChange(reason="customer_request", causes=[cause],
@@ -629,8 +668,36 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
                                          "changed": {"from": before, "to": pick["name"], "at": starts.isoformat()},
                                          "other_options": detail["other_options"], "replay": False},
                                  replacements={item.item_id: replacement},
-                                 summary={"to": pick["name"], "key": pick["key"]})
+                                 summary={"to": pick["name"], "key": pick["key"], "price_check": check})
         return self.settle(task, ctx, change)
+
+    def _recheck(self, task: TeamTask, ctx: dict[str, Any], item: Any, pick: dict[str, Any],
+                 people: int | None) -> tuple[dict[str, Any], dict[str, Any]]:
+        """고른 편을 같은 조건으로 한 번 더 찾는다(booking 도구 1번). → (바꿀 때 쓸 편, 확인 결과).
+
+        확인 결과 `status`: `same`(1인 값 그대로) · `changed`(바뀜 — 새 값으로) · `gone`(그 편의 소스가 모두 답했는데 편이 없다) ·
+        `unchecked`(찾기 실패 · 조건 모름 · 답하지 않은 소스가 있다 — 보여 줄 때 값 그대로 쓴다)."""
+        before = pick.get("per_person")
+        unchecked = {"status": "unchecked", "before": before, "now": None}
+        query = item.detail.get("query") or self._flight_query(item, ctx["trip"])
+        if not query:
+            return pick, unchecked
+        booked = self._read(task, "read.booking_search_flights", {**query, "max_results": FETCH}, ctx["seen"]) or {}
+        ctx["evidence"] = self._evidence(task, source_id="read.booking_search_flights:recheck",
+                                         claim="고른 편 가격 재확인(booking)", value=booked or None, base=ctx["evidence"])
+        fresh = next((option for option in booked.get("options") or [] if _same_flight(option, pick)), None)
+        if fresh is None:
+            states = booked.get("sources") or {}
+            mine = pick.get("sources") or [name for name, state in states.items() if state.get("status") != "skipped"]
+            answered = bool(states) and bool(mine) and all((states.get(name) or {}).get("status") == "ok" for name in mine)
+            return pick, ({"status": "gone", "before": before, "now": None} if answered else unchecked)
+        renewed = {**_flight_option(pick.get("rank") or 1, fresh, item, people or 1), "key": pick["key"], "name": pick["name"]}
+        if not people:
+            renewed["per_person"] = None
+        now = renewed.get("per_person")
+        if before is None or now is None:
+            return renewed, {"status": "unchecked", "before": before, "now": now}
+        return renewed, {"status": "same" if now == before else "changed", "before": before, "now": now}
 
     @staticmethod
     def _flight_query(item: Any, trip: dict[str, Any]) -> dict[str, Any] | None:
