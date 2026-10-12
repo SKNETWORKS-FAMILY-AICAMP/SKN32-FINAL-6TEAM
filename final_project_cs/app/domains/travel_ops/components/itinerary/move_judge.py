@@ -28,6 +28,9 @@ import re
 from datetime import datetime, timedelta
 from typing import Any, Callable
 
+from app.core.service_bindings import current_bindings
+from app.core.team_availability import TeamUnavailable
+
 from app.domains.travel_ops.components.conversation.trip_here import SEOUL_BOX
 from app.domains.travel_ops.components.planning.replan import distance_m, walk_minutes
 from app.domains.travel_ops.components.team_hooks import legs
@@ -146,10 +149,16 @@ def judge(*, origin: dict[str, Any], dest: dict[str, Any], now: datetime, depart
     head["basis"] = basis
     try:
         leg = legs.leg_planner(party_size, constraints or {})
+    except TeamUnavailable:
+        raise
     except Exception:                                                  # noqa: BLE001 — 판정기를 못 만들면 「못 쓴다」
         logger.exception("move judge: leg planner could not be built")
+        if current_bindings() is not None:
+            raise TeamUnavailable("mobility", "engine_unavailable") from None
         return _unavailable(head, origin, dest, "engine_error", "이동 판정기를 쓰는 중 오류가 났어요")
     if leg is None:
+        if current_bindings() is not None:
+            raise TeamUnavailable("mobility", "engine_unavailable")
         why = f"이동 판정기가 꺼져 있거나 쓸 수 없어요(상태: {(basis or {}).get('mode', '알 수 없음')})"
         return _unavailable(head, origin, dest, "engine_unavailable", why)
     try:
@@ -162,8 +171,12 @@ def judge(*, origin: dict[str, Any], dest: dict[str, Any], now: datetime, depart
             if not _valid(got):
                 raise ValueError("판정기가 이상한 모양을 돌려줬다")
             out = _judged(got, tz=tz)
+    except TeamUnavailable:
+        raise
     except Exception:                                                  # noqa: BLE001 — 판정기 오류는 500 이 아니라 「못 쓴다」
         logger.exception("move judge: engine failed")
+        if current_bindings() is not None:
+            raise TeamUnavailable("mobility", "engine_unavailable") from None
         return _unavailable(head, origin, dest, "engine_error", "이동 판정 중 오류가 났어요")
     if got is None:
         reason = _reason(why)

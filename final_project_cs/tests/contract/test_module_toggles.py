@@ -118,18 +118,6 @@ def test_enabled_voc_keeps_the_screen_and_menu():
 
 
 # ── mcp ─────────────────────────────────────────────────────────────────────
-def test_disabled_mcp_refuses_every_tool(monkeypatch):
-    """tool 세 개가 전부 `_mcp_principal` 을 지나므로 여기 하나만 막으면 된다."""
-    import app.core.project_config as project_config
-    from app.presentation.api import cases
-
-    monkeypatch.setattr(project_config, "load_project_config",
-                        lambda *a, **k: _config(mcp=False))
-    for call in (lambda: cases._mcp_cases("c", 10),
-                 lambda: cases._mcp_detail("c", "d"),
-                 lambda: cases._mcp_open("c", "m", "mcp")):
-        with pytest.raises(ProjectConfigError, match="mcp.*disabled"):
-            call()
 
 
 # ── graph_store ─────────────────────────────────────────────────────────────

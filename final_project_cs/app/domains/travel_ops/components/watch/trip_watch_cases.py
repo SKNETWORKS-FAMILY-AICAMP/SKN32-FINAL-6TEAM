@@ -36,6 +36,8 @@
 """
 from __future__ import annotations
 
+from app.core.team_availability import TeamUnavailable
+
 import hashlib
 import json
 import logging
@@ -46,6 +48,7 @@ from typing import Any, Callable
 from uuid import UUID
 
 from app.application.case_intake import open_case
+from app.application.case_service import ActiveRunError
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
 from app.domains.travel_ops.components.actions.itinerary_actions import RECHECK_FAILED
@@ -67,6 +70,7 @@ RETRYABLE_GUARDRAILS = frozenset({"fatal_source_failure", "team_error", "action_
 @dataclass
 class CaseTickResult:
     checked: int = 0
+    unavailable: list[dict[str, Any]] = field(default_factory=list)
     opened: list[dict[str, Any]] = field(default_factory=list)
     existing: list[dict[str, Any]] = field(default_factory=list)
     ran: list[dict[str, Any]] = field(default_factory=list)
@@ -127,6 +131,11 @@ class TripWatchCaseOpener:
         self._contexts: dict[UUID, dict[str, Any]] = {}
         issues: list[Issue] = []
         for trip_id, item in due:
+            from app.domains.travel_ops.components.watch.trip_watch_batch import skipped_watch
+            skipped = skipped_watch(item.kind, trip_id=trip_id, item_id=item.item_id)
+            if skipped is not None:
+                result.unavailable.append(skipped)
+                continue
             if item.detail.get("customer_pinned"):
                 # ★`[2026-10-03 사용자 결정 — D-020]` 고정(「변경 안 할 일정」)은 **자동으로 바꾸지 않는다**는 뜻이지 점검에서 빼라는 뜻이 아니다 — 사용자 말:
                 #   「안 바꿔도 알림은 받게 해야 함. 바꾸지 않는 것과 알림을 끄는 것은 별개.」 전에는 여기서 `continue` 해 고정한 일정에는 재난문자 · 휴무 같은 위험 알림이
@@ -166,6 +175,19 @@ class TripWatchCaseOpener:
             for case_id in opened:
                 try:
                     outcome = self.run_case(tenant_id=self.store.tenant_id, case_id=case_id, actor_id=ACTOR)
+                except TeamUnavailable as exc:
+                    from app.core.service_bindings import current_bindings
+                    logger.warning("watch_case_team_unavailable team_id=%s reason=%s composition_revision=%s",
+                                   exc.team_id, exc.reason, getattr(current_bindings(), "revision", None))
+                    entry = {"case_id": str(case_id), "kind": exc.team_id, "reason": exc.reason}
+                    result.unavailable.append(entry)
+                    if exc.reason in {"engine_unavailable", "composition_unbound"}:
+                        result.fatal.append(entry)
+                    continue  # Controller가 보존한 상태를 일반 실행 실패로 다시 닫지 않는다.
+                except ActiveRunError:
+                    # 다른 회차가 먼저 시작했다. 그 활성 업무를 실패로 닫지 않는다.
+                    result.existing.append({"case_id": str(case_id), "reason": "active_run"})
+                    continue
                 except Exception as exc:                  # noqa: BLE001 — 한 Case 의 실패가 이 회차의 나머지를 끊지 않는다
                     logger.exception("watch: run_case failed case=%s", case_id)
                     result.failed.append({"case_id": str(case_id), "error": type(exc).__name__})
@@ -284,6 +306,9 @@ class TripWatchCaseOpener:
                     attempt, covered_by = self._attempt(conn, issue.base_id, issue.item.item_id)
                     if attempt is None:
                         result.existing.append({**issue.record(), "case_id": str(covered_by)})
+                    elif covered_by is not None:
+                        # 실행 실패로 멈춘 동일 사건이다. 새 Case/재시도 지문을 만들지 않는다.
+                        self._recover_existing(conn, issue, covered_by, group, result, opened)
                     else:
                         fresh.append((issue, attempt))
             if not batching or len(fresh) < 2:
@@ -292,14 +317,18 @@ class TripWatchCaseOpener:
                 continue
             for at in range(0, len(fresh), cap):
                 chunk = fresh[at:at + cap]
-                if len(chunk) < 2:
-                    self._open_single(*chunk[0], now, result, opened)
+                from app.domains.travel_ops.components.watch.trip_watch_batch import unavailable_reason
+                if len(chunk) < 2 or unavailable_reason("activity") is not None:
+                    for issue, attempt in chunk:
+                        self._open_single(issue, attempt, now, result, opened)
                 else:
                     self._open_batch(trip_id, chunk, now, result, opened)
+
 
     def _attempt(self, conn: Any, base_id: str, item_id: UUID) -> tuple[int | None, str | None]:
         """(몇 번째 시도인가, 덮은 Case). 이 문제(`base_id`)를 **덮은 Case** 가 단일이든 묶음이든 없으면 (0, None) — 새로 연다.
         있는데 **다시 열 만하면**(일시 실패로 닫혔다 · 묶음이 이 항목을 「다시 열 항목」으로 남겼다) 한도 안이고 식힘 시간이 지났을 때 (몇 번째 재시도, …) — 다시 연다.
+        실행 실패로 멈춘 running이면 (0, 기존 Case) — 새로 열지 않고 같은 Case를 실행한다.
         아니면 (None, 덮은 Case) — 열지 않는다(같은 사건에 두 번 안 연다).
 
         ★`[2026-10-03 적대 검토]` 묶음 Case 는 **끝난 상태가 구성원 전체의 상태가 아니다** — 하나가 `resolved` 여도 그 안의 점검 소스 실패 · 예외 · 시간 초과 항목은 아무도 풀지 않았다.
@@ -317,7 +346,11 @@ class TripWatchCaseOpener:
                 "       COALESCE(c.state_json->'applied_actions'->0->'summary'->'batch'->'retry', '[]'::jsonb), "
                 "       COALESCE((SELECT e.payload_json->'observed' FROM case_events e "
                 "         WHERE e.tenant_id=c.tenant_id AND e.case_id=c.case_id AND e.event_type='guardrail_escalated' "
-                "         ORDER BY e.aggregate_version DESC LIMIT 1), '[]'::jsonb) "
+                "         ORDER BY e.aggregate_version DESC LIMIT 1), '[]'::jsonb), "
+                "       (NOT EXISTS (SELECT 1 FROM agent_runs r WHERE r.tenant_id=c.tenant_id "
+                "          AND r.case_id=c.case_id AND r.status IN ('active','running','resuming')) "
+                "        AND (SELECT r.status FROM agent_runs r WHERE r.tenant_id=c.tenant_id AND r.case_id=c.case_id "
+                "             ORDER BY r.started_at DESC, r.run_id DESC LIMIT 1) = 'failed') "
                 "FROM customer_cases c WHERE c.tenant_id=%s "
                 "AND (c.state_json->>'request_id' = %s OR c.state_json->>'request_id' LIKE %s "
                 "     OR c.state_json->'trigger'->'batch' @> %s::jsonb) "
@@ -327,7 +360,10 @@ class TripWatchCaseOpener:
         if row is None:
             return 0, None
         case_id, status, quiet, guardrail, total = row[0], row[1], float(row[2]), row[3], int(row[4])
-        is_batch, retry_ids, observed = bool(row[5]), [str(x) for x in (row[6] or [])], " ".join(str(x) for x in (row[7] or []))
+        if str(status) == "running" and row[8]:
+            return 0, str(case_id)
+        is_batch, retry_ids = bool(row[5]), [str(x) for x in (row[6] or [])]
+        observed = (" ".join(str(x) for x in row[7]) if isinstance(row[7], list) else str(row[7] or ""))
         marked = is_batch and (str(item_id) in retry_ids or f"retry:{item_id}" in observed)
         guard = get_guardrails()
         eligible = (((str(status) == "escalated" and guardrail in RETRYABLE_GUARDRAILS) or marked)
@@ -426,6 +462,46 @@ class TripWatchCaseOpener:
             self.store.enqueue_message(conn, trip_id=context["trip_id"], key=f"watch-unresolved:batch:{guidance_key(payload)}", payload=payload)
         result.notified.append({"case_id": str(case_id), "trip_id": str(context["trip_id"]),
                                 "item": ", ".join(o.item.title for o in outcomes)})
+
+
+    def _recover_existing(self, conn: Any, issue: Issue, case_id: str, group: list[Issue],
+                          result: CaseTickResult, opened: list[UUID]) -> None:
+        """직전 실행이 실패한 watch Case를 같은 판의 실행 관문으로 다시 보낸다."""
+        from app.core.service_bindings import current_bindings
+
+        identifier = UUID(str(case_id))
+        if identifier in opened or self.run_case is None:
+            return
+        case = self.repository.get_case(conn, tenant_id=self.store.tenant_id, case_id=identifier)
+        if case is None or str(case["status"]) != "running":
+            return
+        state = case.get("state_json") or {}
+        table = current_bindings()
+        # 운영 회차는 항상 고정 판이 있다. 명시 standalone 재생은 Controller 관문을 쓴다.
+        if table is not None:
+            try:
+                registry = table.registry
+                if registry is None:
+                    raise TeamUnavailable(case["owner_team_id"], "composition_unbound")
+                entry = registry.require_runnable(case["owner_team_id"])
+                capability = registry.capability_for(entry, case.get("intent"),
+                    input_text=state.get("customer_input") or case.get("subject"),
+                    state={**state, "issue_code": case.get("issue_code")})
+                registry.require_runnable(case["owner_team_id"], capability)
+            except TeamUnavailable as exc:
+                logger.warning("watch_recovery_unavailable team_id=%s reason=%s composition_revision=%s",
+                               exc.team_id, exc.reason, table.revision)
+                result.unavailable.append({"case_id": str(identifier), "kind": exc.team_id, "reason": exc.reason})
+                return
+        opened.append(identifier)
+        result.retried.append({**issue.record(), "case_id": str(identifier), "same_case": True})
+        trigger = state.get("trigger") or {}
+        if "batch" in trigger:
+            members = {str(member["item_id"]) for member in trigger["batch"]}
+            self._contexts[identifier] = {"trip_id": issue.trip_id,
+                                          "batch": [member for member in group if str(member.item.item_id) in members]}
+        else:
+            self._contexts[identifier] = {"trip_id": issue.trip_id, "item": issue.item, "causes": issue.causes}
 
 
 __all__ = ["CaseTickResult", "DEFAULT_LOOKAHEAD", "RETRYABLE_GUARDRAILS", "TripWatchCaseOpener"]

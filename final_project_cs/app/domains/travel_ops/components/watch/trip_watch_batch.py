@@ -42,6 +42,8 @@ from typing import Any
 from app.core.contracts import ActionProposal, NextAction, TeamResult, TeamTask
 from app.core.idempotency import idempotency_key
 from app.core.settings import get_guardrails
+from app.core.service_bindings import current_bindings, read_binding
+from app.core.team_availability import TeamUnavailable
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item
 from app.domains.travel_ops.components.actions.itinerary_actions import ACTION_TYPE, change_arguments, introduced_violations
@@ -82,6 +84,34 @@ def _planner(kind: str):
     `None` 이고, 그 종류의 문제는 처리되지 않는다 — **다른 팀 계산으로 대신하지 않는다.**
     ☆전에는 세 팀 모듈이 `itinerary_team` 을 불러 순환이 생겨 함수 안에서 늦게 불러야 했다."""
     return watch_planners.planner(kind)
+
+
+def unavailable_reason(kind: str) -> str | None:
+    """고정된 조립 판에서 감시 종류의 소유자와 계산 연결을 함께 확인한다."""
+    table = current_bindings()
+    if kind not in ORDER:
+        return None
+    if table is None:
+        read_binding("watch_planners", kind, True, required_team=kind)
+        return None  # 명시적으로 조립한 단독 부품의 기존 호출 계약.
+    if table.registry is None:
+        return "not_installed"
+    try:
+        table.registry.require_runnable(kind)
+    except TeamUnavailable as exc:
+        return exc.reason
+    return None if table.values.get(("watch_planners", kind)) is not None else "not_installed"
+
+
+def skipped_watch(kind: str, *, trip_id, item_id) -> dict[str, Any] | None:
+    reason = unavailable_reason(kind)
+    if reason is None:
+        return None
+    table = current_bindings()
+    logger.warning("watch_kind_unavailable kind=%s reason=%s composition_revision=%s",
+                   kind, reason, table.revision)
+    return {"trip_id": str(trip_id), "item_id": str(item_id), "kind": kind,
+            "reason": reason, "verdict": "skipped"}
 
 
 # ── 고객에게 보일 문장 ─────────────────────────────────────────
@@ -206,11 +236,19 @@ class WatchBatch:
 
     # ── 항목 하나 ───────────────────────────────────────────────
     def _one(self, item: Item, trip: dict[str, Any], constraints: dict[str, Any]) -> Outcome:
+        reason = unavailable_reason(item.kind)
+        if reason is not None:
+            skipped_watch(item.kind, trip_id=trip.get("trip_id"), item_id=item.item_id)
+            return Outcome(item, "unavailable", reasons=[reason])
         planner = _planner(item.kind)
         if planner is None:
             return Outcome(item, "nothing", reasons=["unhandled_kind"])
         try:
             plan = planner(self.work, self.task, self.ctx, item)
+        except TeamUnavailable as exc:
+            logger.warning("watch_batch_team_unavailable kind=%s team_id=%s reason=%s composition_revision=%s",
+                           item.kind, exc.team_id, exc.reason, getattr(current_bindings(), "revision", None))
+            return Outcome(item, "unavailable", reasons=[exc.reason, exc.team_id])
         except Exception as exc:                # noqa: BLE001 — 한 항목의 예외가 묶음 전체(다른 항목 · 안전 사건 포함)를 막지 않는다. 세어서 남기고 그 항목만 다시 연다
             logger.exception("watch batch: item failed item=%s", item.item_id)
             return Outcome(item, "error", reasons=[type(exc).__name__])
@@ -269,12 +307,17 @@ class WatchBatch:
         consent = [o for o in outcomes if o.kind == "consent"]
         stuck = [o for o in outcomes if o.kind in _UNCHANGED]
         retry = [o for o in outcomes if o.kind in _RETRY]
+        unavailable = [o for o in outcomes if o.kind == "unavailable"]
         summary = {kind: [o.item.title for o in outcomes if o.kind == kind]
-                   for kind in ("applied", "asked", "consent", "no_alternate", "recheck_failed", "source_failed", "error", "retry", "nothing")}
+                   for kind in ("applied", "asked", "consent", "no_alternate", "recheck_failed", "source_failed", "error", "retry", "nothing", "unavailable")}
         summary = {kind: titles for kind, titles in summary.items() if titles}
         warnings = [f"다시 열 항목 — {o.item.title}: {o.kind}({', '.join(o.reasons[:2])})" for o in retry]
+        warnings += [f"미실행 항목 — {o.item.title}: team_unavailable({', '.join(o.reasons[:2])})" for o in unavailable]
 
         if not (applied or asked or consent):
+            if unavailable:
+                first = unavailable[0]
+                raise TeamUnavailable(first.reasons[1] if len(first.reasons) > 1 else first.item.kind, first.reasons[0])
             if stuck or retry:
                 # 아무것도 못 바꿨다 — 단일 Case 와 같게 escalate 하고, 항목별 결과를 표지로 남긴다(`outcome:` 못 푼 것 → 감시가 고객에게 한 번에 알린다 · `retry:` 다시 열 것).
                 #   다시 열 항목이 있으면 **다시 열 수 있는 사유**(`fatal_source_failure`)로 닫는다 — 그 항목이 영원히 막히지 않게

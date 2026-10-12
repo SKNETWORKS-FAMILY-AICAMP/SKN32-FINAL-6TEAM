@@ -22,13 +22,16 @@ RUN pip install -r requirements.txt
 
 # 실행에 필요한 것만 — 시험 · 평가 · 문서 · 옛 판(legacy)은 넣지 않는다.
 COPY app ./app
-# 이미지 자체에 제외 목록·원자적 실행기가 들어 있는지 DB 접속 없이 검사한다.
-RUN python -m app.infrastructure.db.migrate --check > /srv/migration-safety.json
 COPY config ./config
 COPY prompts ./prompts
+COPY knowledge/ingest.py ./knowledge/ingest.py
+COPY knowledge/travel ./knowledge/travel
 COPY scripts ./scripts
 COPY var/notice_phrasebook.json ./var/notice_phrasebook.json
 COPY deploy/worker.sh ./deploy/worker.sh
+
+# 현재 SQL 계획·제외 목록을 검증한다. DB에는 연결하지 않는다.
+RUN python -m app.infrastructure.db.migrate --check > /srv/migration-safety.json
 
 # 기록이 쌓이는 곳(`var/ops`) — 서버에서 볼륨으로 붙인다.
 RUN mkdir -p /srv/var/ops && chmod +x /srv/deploy/worker.sh

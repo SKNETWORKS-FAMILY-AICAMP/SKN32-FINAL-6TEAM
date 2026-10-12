@@ -45,7 +45,7 @@ def _client(tmp_path: Path, monkeypatch) -> tuple[TestClient, Path]:
     path.write_text(yaml.safe_dump(source, sort_keys=False), encoding="utf-8")
     host = composer_host()
     app = create_app(
-        classifier=lambda _: {"intent": "billing", "issue_code": "x", "sentiment": "neutral"},
+        classifier=lambda _: {"intent": "incident_report", "issue_code": "x", "sentiment": "neutral"},
         composer_write_router=create_composer_router(host),
         composer_auth_router=create_auth_router(host))
     app.state.project_config_path = path

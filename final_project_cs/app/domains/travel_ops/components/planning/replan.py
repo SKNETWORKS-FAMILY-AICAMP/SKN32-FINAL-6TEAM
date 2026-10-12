@@ -52,6 +52,8 @@
 """
 from __future__ import annotations
 
+from app.core.team_availability import TeamUnavailable
+
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta
 import math
@@ -573,6 +575,8 @@ class MealRoute:
                 got, why = self.leg(point(here), point(there), leave + timedelta(minutes=window), leave)
                 if got is not None or not (isinstance(why, dict) and why.get("code") == "arrive_late"):
                     break
+        except TeamUnavailable:
+            raise
         except Exception:   # noqa: BLE001 — 계산기 장애로 대체를 멈추지 않는다. 도보 어림 그대로 둔다
             return None
         return int(got["eta_min"]) if got and got.get("eta_min") is not None else None

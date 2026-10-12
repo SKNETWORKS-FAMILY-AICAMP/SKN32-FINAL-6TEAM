@@ -120,4 +120,36 @@ def open_case(conn: Any, *, repository: Any, tenant_id: str, customer_id: UUID, 
     return OpenedCase(case_id=case_id, created=True)
 
 
-__all__ = ["IdempotencyConflict", "OpenedCase", "SubjectNotFound", "SubjectUnsupported", "open_case"]
+__all__ = ["IdempotencyConflict", "OpenedCase", "SubjectNotFound", "SubjectUnsupported", "open_case", "create_case_once"]
+
+
+def create_case_once(conn: Any, *, repository: Any, tenant_id: str, customer_id: UUID,
+                     request_id: str, message: str, channel: str, actor_type: str, actor_id: str,
+                     idempotency_key: str, state_json: dict[str, Any] | None = None,
+                     created_payload: dict[str, Any] | None = None) -> OpenedCase:
+    """생성만 멱등하게 기록한다. 호출자는 읽기 트랜잭션을 종료한 뒤 짧게 호출한다.
+
+    분류·해석·Team 실행은 하지 않으며 기존 open_case의 즉시 분류 계약도 바꾸지 않는다.
+    모델이 만든 초기 상태는 먼저 생성한 요청의 것만 보존한다.
+    """
+    fingerprint = hashlib.sha256(f"{customer_id}:{message}:{channel}".encode("utf-8")).hexdigest()
+    with conn.transaction():
+        with conn.cursor() as cur:
+            cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (f"{tenant_id}:{idempotency_key}",))
+            cur.execute("SELECT case_id, arguments_json FROM action_requests "
+                        "WHERE tenant_id=%s AND idempotency_key=%s", (tenant_id, idempotency_key))
+            existing = cur.fetchone()
+        if existing:
+            if existing[1].get("body_sha256") != fingerprint:
+                raise IdempotencyConflict("same request key was used for a different body")
+            return OpenedCase(case_id=existing[0], created=False)
+        case_id = repository.create_case(conn, tenant_id=tenant_id, customer_id=customer_id,
+                                         subject=message, state_json=state_json)
+        transition_case(conn, tenant_id=tenant_id, case_id=case_id, expected_version=0,
+                        event_type=EventType.CREATED,
+                        payload={**(created_payload or {}), "channel": channel, "message": message},
+                        actor_type=actor_type, actor_id=actor_id)
+        repository.create_action_request(conn, tenant_id=tenant_id, case_id=case_id, action_type="case.create",
+                                         arguments={"request_id": request_id, "body_sha256": fingerprint},
+                                         idempotency_key=idempotency_key, status="succeeded")
+    return OpenedCase(case_id=case_id, created=True)

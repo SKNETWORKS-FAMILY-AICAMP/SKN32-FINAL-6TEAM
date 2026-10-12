@@ -327,7 +327,7 @@ def test_a_lunch_that_is_closed_today_is_replaced_before_the_day_starts(world):
     assert len(result.adjusted) == 1 and result.fatal == []
     trip, items = _latest(world)
     assert trip["version"] == 2
-    lunch = next(i for i in items if i.starts_at.hour == 13 and i.kind == "dining")
+    lunch = next(i for i in items if i.starts_at.astimezone(KST).hour == 13 and i.kind == "dining")
     assert lunch.place["name"] != LUNCH and lunch.starts_at == _at("13:00")    # ★계획한 시각 그대로
     # 판정만 남는다 — 영업시간 원문은 없다
     with get_connection() as conn, conn.cursor() as cur:
@@ -424,7 +424,7 @@ def test_a_dawn_replacement_that_fails_the_whole_recheck_is_counted_and_not_writ
     from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
 
     _, items = _latest(world)
-    lunch = next(i for i in items if i.starts_at.hour == 13 and i.kind == "dining")
+    lunch = next(i for i in items if i.starts_at.astimezone(KST).hour == 13 and i.kind == "dining")
     later = next(i for i in sorted(items, key=lambda i: (i.starts_at, i.seq)) if i.starts_at >= lunch.ends_at and i.kind != "mobility")
     overlapping = lunch.replaced_by(place=lunch.place, title=lunch.title + "(겹침)", ends_at=later.starts_at + timedelta(minutes=30))
     change = ItineraryChange(reason="auto_adjusted", causes=[{"category": "place_closed", "type": "closed_on_day", "detail": "임시 휴업"}],

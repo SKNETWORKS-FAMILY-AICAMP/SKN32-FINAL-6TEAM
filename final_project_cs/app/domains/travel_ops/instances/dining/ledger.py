@@ -88,6 +88,47 @@ def ledger_ready(conn) -> bool:
         return bool(cur.fetchone()[0])
 
 
+def catalog_state(conn, content_id, place, start, end, *, order_margin_min=DEFAULT_ORDER_MARGIN_MIN):
+    """등록 전 식당의 콘텐츠 번호·정확한 단일 이름으로 원장을 읽는다. 쓰지 않는다."""
+    uid = place.get("dining_place_uid")
+    if not content_id and not uid:
+        found = find_place_by_name(conn, str(place.get("name") or ""))
+        if not found or found.get("needs_review"):
+            return None
+        uid = found.get("dining_place_uid")
+        content_id = found.get("content_id")
+    if not content_id and not uid:
+        return None
+    with conn.cursor() as cur:
+        if uid:
+            cur.execute("SELECT place_uid::text FROM dining.dn_place WHERE place_uid=%s::uuid "
+                        "AND record_status <> 'closed'", (uid,))
+        else:
+            cur.execute("SELECT p.place_uid::text FROM dining.dn_place p WHERE p.record_status <> 'closed' AND p.place_uid IN "
+                        "(SELECT r.place_uid FROM dining.dn_source_record r WHERE r.source_code = 'tourapi_kor_food' "
+                        "AND r.external_id = %s AND r.match_status <> 'rejected') LIMIT 2", (content_id,))
+        rows = cur.fetchall()
+        if len(rows) != 1:
+            return None
+        uid = str(rows[0][0])
+        at = start if start.tzinfo else start.replace(tzinfo=KST)
+        until = end or at
+        if until.tzinfo is None:
+            until = until.replace(tzinfo=KST)
+        cur.execute("SELECT dining.open_at_slot(%s::uuid, %s, %s), dining.needs_last_order_check(%s::uuid, %s, %s), "
+                    "dining.holiday_context(%s::uuid, %s), "
+                    "dining.core_attributes(%s::uuid, (%s::timestamptz AT TIME ZONE 'Asia/Seoul')::date)",
+                    (uid, at, until, uid, at, until, uid, at, uid, at))
+        open_at, needs_check, holiday, attributes = cur.fetchone()
+        order_ok = None
+        if open_at is True:
+            cur.execute("SELECT dining.open_at_slot(%s::uuid, %s, %s)",
+                        (uid, at + timedelta(minutes=order_margin_min), until))
+            order_ok = cur.fetchone()[0]
+    return {"open_at_slot": open_at, "order_ok": order_ok, "needs_check": needs_check,
+            "attributes": attributes, "holiday_context": holiday}
+
+
 def _unavailable(place_id: str | None) -> dict[str, Any]:
     """원장이 없는 DB. 「영업 안 함」이 아니라 「원장에 물을 수 없음」이다."""
     return {"place_id": str(place_id) if place_id is not None else None, "linked": False,

@@ -65,7 +65,7 @@ def _engine(world, reports: dict[str, dict]):
 
 
 def _tick(engine):
-    return engine.opener.tick(lookahead=ALL_DAY)
+    return engine.tick(lookahead=ALL_DAY)
 
 
 def _versions(world):
