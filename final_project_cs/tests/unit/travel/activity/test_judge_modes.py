@@ -63,7 +63,9 @@ def test_shadow_answers_with_rule_and_logs_difference(caplog):
     caplog.set_level(logging.INFO, logger=SHADOW_LOGGER_NAME)
     text = "[종로구] 율곡로 일부 구간 교통통제 — 우회 바랍니다"
     llm = FakeJudgeLLM(out("no_effect", quotes=[text]))
-    judge = build_judge("shadow", llm, runner=InlineRunner())
+    from eval.activity_judge.run import shared_check_facts      # 공유 점검 목록은 만드는 쪽이 넘긴다(2026-10-12)
+
+    judge = build_judge("shadow", llm, runner=InlineRunner(), facts=shared_check_facts())
     # 규칙은 유형(교통통제 — 장소형)으로 막는다, LLM 은 이 장소와 무관하다고 본다
     # ★`[2026-10-09]` 규칙이 develop 판 기준이 됐다(D-CS-015) — 전의 「위급재난 호우」는 실내외를 모르면 규칙이 「모름」이다.
     messages = [{"step": "안전안내", "kind": "교통통제", "text": text, "regions": ["서울특별시 종로구"], "created_at": "t"}]

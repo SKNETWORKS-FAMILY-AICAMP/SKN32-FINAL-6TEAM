@@ -7,8 +7,13 @@
   운영 경로의 섀도는 이 클래스가 아니라 팀이 실제로 낸 값을 비교 기준으로 쓴다(`team._shadow`).
 ★규칙이 해석하지 않는 판정(운영시간 원문 · 실시간 운영 상태)은 `unknown` 이다 — 지금 코드도 판정에 넣지 않는다.
 ★import 는 함수 안에서 한다.
+★`[2026-10-12]` 공유 점검의 재난 유형 목록 · 낱말(`ports/data_sources/disaster_msg`)을 **직접 import 하지 않는다** — 팀은 바깥 데이터
+  코드를 부르지 않는다(`tests/contract/test_team_tool_discipline.py`). 만드는 쪽(평가 `eval/activity_judge`)이 읽어 `SharedCheckFacts`
+  로 넘긴다. 안 넘기면 재난 영향은 `unknown` 이다(지어내지 않는다).
 """
 from __future__ import annotations
+
+from dataclasses import dataclass
 
 from .types import (
     CLOSURE,
@@ -23,7 +28,19 @@ from .types import (
 )
 
 
+@dataclass(frozen=True)
+class SharedCheckFacts:
+    """코어 공유 점검이 재난문자를 가르는 사실 — `disaster_msg.PLACE_KINDS` · `WEATHER_KINDS` · `_safety_words()` 그대로."""
+    place_kinds: frozenset[str]
+    weather_kinds: frozenset[str]
+    severe_words: tuple[str, ...]
+    exclude_words: tuple[str, ...]
+
+
 class RuleJudge:
+    def __init__(self, facts: SharedCheckFacts | None = None) -> None:
+        self.facts = facts
+
     def judge(self, ctx: JudgeContext, request: JudgeRequest) -> Verdict:  # noqa: ARG002 — 규칙은 Case 를 보지 않는다
         handler = {
             CLOSURE: self._closure,
@@ -70,8 +87,7 @@ class RuleJudge:
             return Verdict(WEATHER_SENSITIVE, UNKNOWN, "rule", basis=None)
         return Verdict(WEATHER_SENSITIVE, "outdoor" if known else "indoor", "rule", basis="tour_class")
 
-    @staticmethod
-    def _disaster_effect(request: JudgeRequest) -> Verdict:
+    def _disaster_effect(self, request: JudgeRequest) -> Verdict:
         """develop 판 기준 — 공유 점검(`disaster_msg.judge` · `disruptions._disaster`)과 재난 정지(`safety.classify`).
 
         - 해제 · 훈련 문자는 막지 않는다.
@@ -80,19 +96,21 @@ class RuleJudge:
           (develop 판은 그때 바꾸라고 단정하지 않고 먼저 묻는다).
         """
         from app.domains.travel_ops.components.planning.safety import classify
-        from app.domains.travel_ops.ports.data_sources.disaster_msg import PLACE_KINDS, WEATHER_KINDS, _safety_words
 
-        severe, exclude = _safety_words()
+        if self.facts is None:
+            return Verdict(DISASTER_EFFECT, UNKNOWN, "rule", basis="shared_check_facts_missing")
+        place_kinds, weather_kinds = self.facts.place_kinds, self.facts.weather_kinds
+        severe, exclude = self.facts.severe_words, self.facts.exclude_words
         sensitive = request.inputs.get("weather_sensitive_raw")
         value = "no_effect"
         for message in request.inputs.get("messages") or []:
             text, kind = str(message.get("text") or ""), message.get("kind")
             if "해제" in text or any(word in text for word in exclude):
                 continue
-            if (kind in PLACE_KINDS or any(word in text for word in severe)
+            if (kind in place_kinds or any(word in text for word in severe)
                     or classify([{**message, "category": "disaster_msg"}]) is not None):
                 return Verdict(DISASTER_EFFECT, "blocks", "rule", basis="shared_check_and_safety_stop")
-            if kind in WEATHER_KINDS:
+            if kind in weather_kinds:
                 if sensitive is True:
                     return Verdict(DISASTER_EFFECT, "blocks", "rule", basis="weather_kind_outdoor")
                 if sensitive is None:

@@ -13,11 +13,11 @@ from __future__ import annotations
 from . import requests
 from .llm import LLMJudge, prompt_key, schema_for
 from .modes import SHADOW_LOGGER_NAME, ActivityJudge, BackgroundRunner, LLMFirstJudge, ShadowJudge, build_judge
-from .rule import RuleJudge
+from .rule import RuleJudge, SharedCheckFacts
 from .types import KINDS, UNKNOWN, VALUES, JudgeContext, JudgeRequest, Verdict
 
 __all__ = [
     "KINDS", "SHADOW_LOGGER_NAME", "UNKNOWN", "VALUES", "ActivityJudge", "BackgroundRunner",
-    "JudgeContext", "JudgeRequest", "LLMFirstJudge", "LLMJudge", "RuleJudge", "ShadowJudge",
+    "JudgeContext", "JudgeRequest", "LLMFirstJudge", "LLMJudge", "RuleJudge", "ShadowJudge", "SharedCheckFacts",
     "Verdict", "build_judge", "prompt_key", "requests", "schema_for",
 ]

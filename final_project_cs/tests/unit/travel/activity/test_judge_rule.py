@@ -72,8 +72,18 @@ def _msg(step, kind, text="본문"):
     ([], None, "no_effect"),
 ])
 def test_disaster_follows_the_shared_check_and_safety_stop(messages, sensitive, expected):
-    verdict = RuleJudge().judge(CTX, requests.disaster_effect("경복궁", "activity", messages, MONDAY, sensitive))
+    from eval.activity_judge.run import shared_check_facts
+
+    verdict = RuleJudge(shared_check_facts()).judge(
+        CTX, requests.disaster_effect("경복궁", "activity", messages, MONDAY, sensitive))
     assert verdict.value == expected
+
+
+def test_disaster_is_unknown_without_the_shared_check_facts():
+    """`[2026-10-12]` 팀은 공유 점검 목록을 직접 읽지 않는다 — 안 넘기면 막는다 · 영향 없다로 지어내지 않는다."""
+    verdict = RuleJudge().judge(CTX, requests.disaster_effect("경복궁", "activity", [_msg("안전안내", "교통통제")],
+                                                             MONDAY, None))
+    assert (verdict.value, verdict.basis) == ("unknown", "shared_check_facts_missing")
 
 
 def test_the_indoor_outdoor_hint_is_not_sent_to_the_model():

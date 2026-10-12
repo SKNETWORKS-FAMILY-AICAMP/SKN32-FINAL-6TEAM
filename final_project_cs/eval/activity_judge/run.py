@@ -21,13 +21,22 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from app.core.settings import get_settings
-from app.domains.travel_ops.instances.activity.judge import JudgeContext, LLMJudge, RuleJudge, requests
+from app.domains.travel_ops.instances.activity.judge import JudgeContext, LLMJudge, RuleJudge, SharedCheckFacts, requests
 from app.domains.travel_ops.instances.activity.judge.modes import _record
 
 from .build import DATASET, MANIFEST
 from .metrics import summarize
 
 REPORTS = Path(__file__).resolve().parents[1] / "reports" / "activity_judge"
+
+
+def shared_check_facts() -> SharedCheckFacts:
+    """코어 공유 점검의 재난 유형 목록 · 낱말 — 규칙 판정이 「지금 서비스」를 재도록 그대로 넘긴다.
+    ★팀 코드는 바깥 데이터 코드를 직접 부르지 못해(`test_team_tool_discipline`) 평가가 읽어 넘긴다. `[2026-10-12]`"""
+    from app.domains.travel_ops.ports.data_sources.disaster_msg import PLACE_KINDS, WEATHER_KINDS, _safety_words
+
+    severe, exclude = _safety_words()
+    return SharedCheckFacts(PLACE_KINDS, WEATHER_KINDS, severe, exclude)
 
 
 def load_cases() -> list[dict]:
@@ -60,7 +69,7 @@ async def run(cases: list[dict], *, repeats: int, concurrency: int, eval_run: st
     from app.infrastructure.llm.openai_responses import OpenAIResponsesJudgeLLM
 
     llm = LLMJudge(OpenAIResponsesJudgeLLM(connection_factory=get_connection))
-    rule = RuleJudge()
+    rule = RuleJudge(shared_check_facts())
     sink = build_activity_judge_shadow_sink() if write_db else None
     gate = asyncio.Semaphore(concurrency)
     rows: list[dict] = []
