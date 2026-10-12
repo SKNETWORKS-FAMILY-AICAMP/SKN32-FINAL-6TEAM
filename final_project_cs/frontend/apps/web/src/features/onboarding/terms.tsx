@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type KeyboardEvent } from "react";
-import { requiredAgreed, type ConsentCode, type ConsentMap } from "@/features/consent/consent-model";
+import { requiredAgreed, serverPending, type ConsentCode, type ConsentMap } from "@/features/consent/consent-model";
 import { TermsBody } from "@/features/consent/terms-body";
 import { plainTitle } from "@/features/consent/terms-text";
 import { DRAFT_NOTICE, TERMS_EFFECTIVE, TERMS_STATUS, type TermsDoc } from "@/features/consent/terms-content";
@@ -26,6 +26,8 @@ const tagOf = (doc: TermsDoc, t: Translate) => doc.required ? t("[필수]", "[Re
  * and the customer confirms being 14 or older when agreeing (terms 제7조 ④) - there is no other age check in the app.
  */
 const consentLine = (doc: TermsDoc, t: Translate) => `${tagOf(doc, t)} ${t(...plainTitle(doc.title))}${t("에 동의합니다.", " - I agree.")}${doc.code === "privacy" ? t(" 저는 만 14세 이상입니다.", " I am 14 or older.") : ""}`;
+/** `[2026-10-12 임시]` 서버가 아직 기록하지 못하는 항목(`serverPending`): 전문은 읽을 수 있지만 체크할 수 없다. */
+const PendingNote = ({ t }: { t: Translate }) => <p className={styles.consentHint}>{t("준비 중이에요 — 서버가 아직 이 동의를 기록하지 못해요. 동의하지 않아도 앱을 쓸 수 있어요.", "Coming soon - the server cannot record this consent yet. You can use the app without it.")}</p>;
 
 /** 「초안」 표시: 변호사 검토와 보관 기간 확정 전의 약관임을 숨기지 않는다(법령 조문은 확인함 — `terms-content.ts` 의 `DRAFT_NOTICE`). */
 function DraftNote({ t }: { t: Translate }) {
@@ -45,12 +47,14 @@ export function TermsCardBody({ t, choices, consentMotion, alertTyped = false, o
     <DraftNote t={t} />
     <ul className={styles.consentList} aria-label={t("동의 항목", "Consent items")}>
       {docs.map((doc) => {
-        return <li key={doc.code} className={styles.consentItem} data-doc={doc.code}>
+        const pending = serverPending(doc.code);
+        return <li key={doc.code} className={styles.consentItem} data-doc={doc.code} data-pending={pending || undefined}>
           <label className={styles.termsCheck}>
-            <input type="checkbox" id={`consent-${doc.code}`} checked={choices[doc.code]} onChange={(event) => onToggle(doc.code, event.target.checked)} />
-            <span className={`${styles.consentMark} ${consentMotion && choices[doc.code] ? styles.completionMotion : ""}`} aria-hidden="true"><DrawnCheck className={styles.drawnCheck} /></span>
+            <input type="checkbox" id={`consent-${doc.code}`} checked={!pending && choices[doc.code]} disabled={pending} onChange={(event) => onToggle(doc.code, event.target.checked)} />
+            <span className={`${styles.consentMark} ${consentMotion && !pending && choices[doc.code] ? styles.completionMotion : ""}`} aria-hidden="true"><DrawnCheck className={styles.drawnCheck} /></span>
             <span>{consentLine(doc, t)}</span>
           </label>
+          {pending && <PendingNote t={t} />}
           <p className={styles.consentSummary}>{t(doc.summary[0], doc.summary[1])}</p>
           {/* The whole text, right here, in a box that scrolls on its own (no need to open anything to read it). */}
           <div className={styles.consentText} role="region" tabIndex={0} aria-label={t(`${plainTitle(doc.title)[0]} 전문`, `${plainTitle(doc.title)[1]} - full text`)}><TermsBody doc={doc} t={t} /></div>
@@ -93,10 +97,11 @@ export function TermsReader({ t, doc, agreed, onAgree, onClose }: {
         ? t("필수 항목이에요. 동의 여부를 선택해 주세요.", "This is required. Please choose whether to agree.")
         : t("선택 항목이에요. 동의하지 않아도 앱을 쓸 수 있어요.", "This is optional. You can use the app without agreeing.")}</p>
       <label className={styles.termsCheck}>
-        <input type="checkbox" id="terms-full-check" checked={agreed} onChange={(event) => onAgree(event.target.checked)} />
+        <input type="checkbox" id="terms-full-check" checked={!serverPending(doc.code) && agreed} disabled={serverPending(doc.code)} onChange={(event) => onAgree(event.target.checked)} />
         <span className={styles.consentMark} aria-hidden="true"><DrawnCheck className={styles.drawnCheck} /></span>
         <span>{consentLine(doc, t)}</span>
       </label>
+      {serverPending(doc.code) && <PendingNote t={t} />}
     </footer>
   </div>;
 }

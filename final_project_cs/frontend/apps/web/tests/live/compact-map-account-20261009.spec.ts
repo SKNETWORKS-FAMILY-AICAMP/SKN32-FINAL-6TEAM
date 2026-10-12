@@ -102,7 +102,7 @@ for (const width of [375, 1280]) {
     const optional = dialog.locator("li[data-doc]");
     await expect(optional).toHaveCount(4);
     expect(await optional.evaluateAll(nodes => nodes.map(node => (node as HTMLElement).dataset.doc))).toEqual(["sensitive", "location", "alert_channel", "service_improvement"]);
-    await expect(dialog.locator('[data-doc="service_improvement"]')).toContainText("동의 안 함");
+    await expect(dialog.locator('[data-doc="service_improvement"]')).toContainText("준비 중");   // `[2026-10-12 임시]` 서버가 아직 기록하지 못한다
     await expect(dialog).toContainText("동의하지 않아도");
     await capture(page, `05-optional-dialog-${width}`);
     await close.focus(); await page.keyboard.press("Shift+Tab");
