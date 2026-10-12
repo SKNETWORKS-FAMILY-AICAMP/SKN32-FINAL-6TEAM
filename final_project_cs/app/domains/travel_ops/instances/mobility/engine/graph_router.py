@@ -134,7 +134,11 @@ class GraphRouter:
                 m = json.loads((self.dir / "MANIFEST.json").read_text(encoding="utf-8"))
                 self._graph_version = m.get("version") or "road_graph_v1"
                 day = str(m.get("osm_data_at") or "")[:10]
-                if day:
+                if str(m.get("version") or "").startswith("walk_graph_seoul"):
+                    # 서울시 도보 네트워크(원자료 갱신일) + 계단 표시에 쓴 OSM 기준일
+                    wd = (m.get("work_dates") or [""])[-1]
+                    got = f"seoul_walk_network@{wd}" + (f"+osm_steps@{day}" if day else "")
+                elif day:
                     got = f"osm_road_graph{'_v2' if m.get('version') == 'road_graph_v2' else ''}@{day}"
             except (OSError, ValueError, AttributeError, TypeError):
                 pass
@@ -158,6 +162,12 @@ class GraphRouter:
         base = Path(PROCESSED) / "mobility"
         # ☆`[2026-10-04]` v2(걸음 길 포함)가 있으면 그것, 없으면 v1(차도·자전거만 — 걸음은 차도 위로만 간다)
         d = (base / "road_graph_v2" if (base / "road_graph_v2" / "edges.jsonl.gz").exists() else base / "road_graph_v1").resolve()
+        return cls.shared(d)
+
+    @classmethod
+    def shared(cls, graph_dir):
+        """폴더마다 하나 — default() 와 같은 이유(읽기 전용 그래프를 판정기마다 새로 올리지 않는다). 서울시 도보 그래프도 이것으로 연다."""
+        d = Path(graph_dir).resolve()
         key = str(d)
         with _SHARED_LOCK:
             r = _SHARED.get(key)

@@ -27,6 +27,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import logging
 import threading
 from pathlib import Path
 
@@ -289,7 +290,13 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
             router_obj, router_kind = gr, "local"
     car = None
     if router_obj is not None:
-        bike_router = BikeRouter(router_obj, {}, (rules.get("bike") or {}).get("pbf_date") or "2026-09-18")
+        # ☆`[2026-10-13 사용자 결정]` 서울 안 걸음은 서울시 도보 네트워크 그래프로 — 자료 폴더가 있을 때만 감싼다.
+        #   자동차(택시)는 아래 _LazyCar 가 기존 라우터를 그대로 쓴다. 서울시 그래프가 길을 못 찾으면 OSM 으로 넘기지 않는다(walk_router).
+        from .walk_router import wrap_with_seoul_walk
+        walk_obj, why_not = wrap_with_seoul_walk(router_obj)
+        if why_not:
+            logging.getLogger(__name__).info("서울 걸음 그래프 안 씀: %s — 걸음도 기존 라우터", why_not)
+        bike_router = BikeRouter(walk_obj, {}, (rules.get("bike") or {}).get("pbf_date") or "2026-09-18")
         # ☆서비스 런타임은 전엔 택시 서비스(car)를 한 번도 끼우지 않았다 - 라우터가 떠 있어도 택시는 늘 「소요 근거없음」이었다.
         #   속도 프로파일 자료가 없으면 첫 호출에서 RouterDown(근거없음)으로 답한다(_LazyCar).
         car = _LazyCar(router_obj, rules, holidays)

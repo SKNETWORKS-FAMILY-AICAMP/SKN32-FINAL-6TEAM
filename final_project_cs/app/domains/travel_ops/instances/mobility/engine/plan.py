@@ -409,6 +409,10 @@ class Planner:
                 if evidence is not None:
                     evidence.update(source="walking_network", degraded=False,
                                     foot_timing=bool(r.get("foot_timing")))
+                    if r.get("source_id"):
+                        evidence["source_id"] = r["source_id"]
+                    if r.get("walk_candidates"):                    # 서울 안: 두 보행 자료 후보와 고른 쪽
+                        evidence["walk_candidates"] = r["walk_candidates"]
                 routed_m = float(r["distance_m"])
                 used_m = routed_m
                 seconds = used_m / self.speed
