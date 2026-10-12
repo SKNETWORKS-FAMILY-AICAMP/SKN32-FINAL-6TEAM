@@ -10,7 +10,9 @@ export function useTimeInset(boxRef: RefObject<HTMLElement | null>, sheetRef: Re
     const header = sheetRef.current?.querySelector<HTMLElement>("header[data-float]");
     const measure = () => {
       const css = getComputedStyle(box);
-      const overlayBottom = header ? header.getBoundingClientRect().bottom - parseFloat(getComputedStyle(header).paddingBottom) : box.getBoundingClientRect().top;
+      const dates = header?.querySelectorAll<HTMLElement>('[role="tablist"] button');
+      const overlayBottom = dates?.length ? Math.max(...Array.from(dates, date => date.getBoundingClientRect().bottom))
+        : header ? header.getBoundingClientRect().bottom - parseFloat(getComputedStyle(header).paddingBottom) : box.getBoundingClientRect().top;
       const hiddenAbove = Math.max(0, overlayBottom - box.getBoundingClientRect().top);
       const inset = hiddenAbove - parseFloat(css.paddingTop) - parseFloat(css.getPropertyValue("--stop-time-lead"));
       box.style.setProperty("--time-stick-inset", `${inset}px`);

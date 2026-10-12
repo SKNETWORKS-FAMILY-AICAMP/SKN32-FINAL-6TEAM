@@ -176,7 +176,8 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, readingExt
   const notified = useRef(new Set<string>());
   const noticeKey = notice ? JSON.stringify([notice.text, notice.sub, notice.note]) : null;
   useEffect(() => {
-    if (!notice || !noticeKey || notified.current.has(noticeKey)) return;
+    if (!notice || !noticeKey) { notified.current.clear(); return; }
+    if (notified.current.has(noticeKey)) return;
     notified.current.add(noticeKey);
     if (onReading) showNotice(notice);
     else pushToast(notice);

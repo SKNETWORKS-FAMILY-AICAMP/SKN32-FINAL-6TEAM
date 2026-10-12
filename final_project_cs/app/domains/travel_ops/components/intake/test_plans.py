@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 from app.core.settings import get_guardrails
 from app.domains.travel_ops.components.settings_hook import operator_setting
 
-CATALOG_VERSION = "seoul-text-v1"
+CATALOG_VERSION = "seoul-text-v2"
 CODE = re.compile(r"test([1-9][0-9]*)(rt)?", re.IGNORECASE | re.ASCII)
 
 # (이름, 확인할 내용, 날짜별 원문). 고정된 것은 입력뿐이며 결과는 실제 조회에 따른다.
@@ -44,7 +44,17 @@ PLANS = (
         "19:00~20:00 N서울타워 관람")),
     ("활동과 식사", "서울의 활동·식사·이동을 함께 확인합니다.", (
         "10:00~11:30 북촌한옥마을 산책\n12:00~13:00 광장시장 점심\n15:00~16:30 국립중앙박물관 관람\n19:00~20:00 N서울타워 관람",)),
+    ("여유 있는 도심 산책", "시간 겹침·장소 미정 없이 여유를 둔 기본안입니다.", (
+        "10:00~11:00 청계천 산책\n14:00~15:00 인사동 산책",)),
+    ("여유 있는 박물관 방문", "장소와 종료 시각을 정하고 이동 여유를 둔 기본안입니다.", (
+        "10:00~12:00 국립중앙박물관 관람\n16:00~17:00 N서울타워 관람",)),
+    ("하루 한 곳씩 서울 2일", "하루에 한 곳씩 방문해 날짜 전환을 확인하는 기본안입니다.", (
+        "10:00~11:00 청계천 산책", "10:00~12:00 국립중앙박물관 관람")),
 )
+
+# 시험 목적 분류이며 실제 검증 결과의 문제 분류를 대신하지 않는다.
+CATEGORIES = ("general", "time", "hours", "hours", "place", "mobility", "input",
+              "general", "general", "input", "general", "general", "normal", "normal", "normal")
 
 
 class TestPlanRejected(ValueError):
@@ -66,7 +76,8 @@ def prepared(number: int, today: date | None = None) -> dict:
     text = f"서울 {len(days)}일 여행 · 4명\n\n" + "\n\n".join(
         f"{i + 1}일차 · {(first + timedelta(days=i)).isoformat()}\n{body}" for i, body in enumerate(days))
     return {"code": f"test{number}", "mode": "prepared_text", "catalog_version": CATALOG_VERSION,
-            "name": name, "description": description, "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.", "text": text}
+            "name": name, "description": description, "category": CATEGORIES[number - 1],
+            "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.", "text": text}
 
 
 def catalog(tenant_id: str, today: date | None = None) -> dict:
@@ -79,16 +90,17 @@ def expand(text: str, *, tenant_id: str, has_files: bool, today: date | None = N
     match = CODE.fullmatch(text.strip())
     if not match:
         return text, None
+    available_codes = f"test1부터 test{len(PLANS)}까지"
     if len(match[1]) > len(str(len(PLANS))):
-        raise TestPlanRejected("unknown_test_scenario", "준비된 시험 코드는 test1부터 test12까지예요.")
+        raise TestPlanRejected("unknown_test_scenario", f"준비된 시험 코드는 {available_codes}예요.")
     number = int(match[1])
     if number > len(PLANS):
-        raise TestPlanRejected("unknown_test_scenario", "준비된 시험 코드는 test1부터 test12까지예요.")
+        raise TestPlanRejected("unknown_test_scenario", f"준비된 시험 코드는 {available_codes}예요.")
     if has_files:
         raise TestPlanRejected("test_scenario_with_files", "시험 코드와 파일은 함께 보낼 수 없어요. 하나만 선택해 주세요.")
     if not enabled(tenant_id):
         raise TestPlanRejected("test_scenarios_disabled", "시험 일정 입력이 꺼져 있어요. 준비된 일정 원문이나 직접 작성한 계획을 입력해 주세요.")
     if match[2]:
-        raise TestPlanRejected("live_test_not_ready", "실시간 경보 시험은 아직 연결되지 않았어요. test1부터 test12까지 준비된 계획을 사용할 수 있어요.")
+        raise TestPlanRejected("live_test_not_ready", f"실시간 경보 시험은 아직 연결되지 않았어요. {available_codes} 준비된 계획을 사용할 수 있어요.")
     entry = prepared(number, today)
     return entry["text"], {k: v for k, v in entry.items() if k != "text"}

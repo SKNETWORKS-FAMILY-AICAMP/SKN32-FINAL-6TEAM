@@ -27,6 +27,11 @@ class DockerSimulation:
         self.job_name = None
         self.manifest = {'contract_version': 2, 'historical': ['a','b','c','d'], 'sha256': {'x':'ok'}}
         self.observations = 0
+        self.live_environment = {s: {} for s in guard.SERVICES}
+
+    def config_hash(self, service, entry):
+        return ('hash-' + service + ':' + entry['image']
+                + json.dumps(entry.get('environment', {}), sort_keys=True, separators=(',', ':')))
 
     def run(self, args, timeout=60):
         self.calls.append((args, timeout))
@@ -35,7 +40,10 @@ class DockerSimulation:
         if 'config' in args:
             if '--hash' in args:
                 config = json.loads(Path(args[args.index('-f')+1]).read_text()) if '-f' in args else self.config
-                return '\n'.join(s + ' hash-' + s + ':' + config['services'][s]['image'] for s in guard.SERVICES)
+                service = args[args.index('--hash') + 1]
+                if self.failure == 'missing_hash':
+                    return ''
+                return service + ' ' + self.config_hash(service, config['services'][service])
             return json.dumps(self.config)
         if args[:2] == ['image', 'inspect']:
             return json.dumps([{'Id': args[-1] if args[-1].startswith('sha256:')
@@ -65,8 +73,11 @@ class DockerSimulation:
                 'RestartCount': int(self.failure == 'restart' and self.up_count == 1 and self.observations > 6),
                 'State': {'Status': 'running', 'Health': {'Status':
                     'unhealthy' if self.failure == 'health' and self.up_count == 1 else 'healthy'}},
-                'Config': {'Image':self.declared[service], 'Labels': {'com.docker.compose.config-hash':
-                    'drift' if self.failure == 'drift' else 'hash-' + service + ':' + self.declared[service]}}}])
+                'Config': {'Image':self.declared[service],
+                    'Env': [key + '=' + value for key,value in self.live_environment[service].items()],
+                    'Labels': {'com.docker.compose.config-hash':
+                    'drift' if self.failure == 'drift' else self.config_hash(service, {
+                        'image': self.declared[service], 'environment':self.live_environment[service]})}}}])
         if 'run' in args:
             if '--name' in args:
                 self.job_name = args[args.index('--name') + 1]
@@ -102,6 +113,45 @@ def test_config_drift_stops_before_snapshot_or_mutation(tmp_path):
     with pytest.raises(guard.DeployError, match='drift'):
         guard.snapshot(docker, guard.compose(), tmp_path)
     assert not (tmp_path/'baseline.json').exists() and docker.up_count == 0
+
+
+def test_tag_sync_metadata_uses_live_baseline_without_changing_candidate(tmp_path):
+    docker = DockerSimulation()
+    for service in guard.SERVICES[:2]:
+        docker.config['services'][service]['environment'] = {'TRIPILOT_TAG':'new-display', 'MODE':'stable'}
+        docker.live_environment[service] = {'TRIPILOT_TAG':'old-display', 'MODE':'stable'}
+    guard.snapshot(docker, guard.compose(), tmp_path)
+    recovery = json.loads((tmp_path/'recovery.compose.json').read_text())
+    for service in guard.SERVICES[:2]:
+        assert recovery['services'][service]['environment']['TRIPILOT_TAG'] == 'old-display'
+        assert docker.config['services'][service]['environment']['TRIPILOT_TAG'] == 'new-display'
+    guard.rollout(docker, guard.compose(), tmp_path, settle=0)
+    candidate = json.loads((tmp_path/'candidate.compose.json').read_text())
+    assert candidate['services']['tripilot-api']['environment']['TRIPILOT_TAG'] == 'new-display'
+
+
+@pytest.mark.parametrize('service', guard.SERVICES)
+def test_tag_reconstruction_does_not_hide_real_environment_drift(tmp_path, service):
+    docker = DockerSimulation()
+    docker.config['services'][service]['environment'] = {'TRIPILOT_TAG':'new-display', 'MODE':'changed'}
+    docker.live_environment[service] = {'TRIPILOT_TAG':'old-display', 'MODE':'stable'}
+    with pytest.raises(guard.DeployError, match='configuration drift'):
+        guard.snapshot(docker, guard.compose(), tmp_path)
+    assert not (tmp_path/'baseline.json').exists()
+    assert not any(args[0] == 'tag' or 'up' in args for args,_ in docker.calls)
+
+
+def test_snapshot_reads_each_service_hash_and_rejects_missing_hash(tmp_path):
+    docker = DockerSimulation()
+    guard.snapshot(docker, guard.compose(), tmp_path/'complete')
+    calls = [args for args,_ in docker.calls if '--hash' in args]
+    assert [args[-1] for args in calls] == list(guard.SERVICES)
+    assert all(args[args.index('--hash')+1:] == [args[-1]] for args in calls)
+    missing = DockerSimulation('missing_hash')
+    with pytest.raises(guard.DeployError, match='invalid Compose configuration hash'):
+        guard.snapshot(missing, guard.compose(), tmp_path/'missing')
+    assert not (tmp_path/'missing/baseline.json').exists()
+    assert not any(args[0] == 'tag' for args,_ in missing.calls)
 
 
 @pytest.mark.parametrize('failure', ['old_image', 'old_override'])
