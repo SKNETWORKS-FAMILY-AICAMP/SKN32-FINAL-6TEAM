@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, CircleAlert, FileText, Paperclip, X } from "lucide-react";
-import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
+import { Button, ButtonLink, Eyebrow, PageHeading, Panel } from "@/components/ui";
 import { decideGuardian, paceOf, readCriteria, setPace, useCriteria, withCriteria } from "@/features/guardian/criteria-store";
 import { GuardianCard } from "@/features/guardian/guardian-card";
 import { ReadingCriteria } from "@/features/guardian/reading-criteria";
@@ -17,11 +17,18 @@ import { beginIntake, clearIntakeFailure, intakeFailure, type PlanRequest } from
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { examplePlan } from "./example-plan";
+import { TestPlans } from "./test-plans";
 import { emptyAsk, paneOfSending, paneReason, seoulToday, type PlanAsk, type RegistrationPane } from "./model";
 import { PlanAskFields } from "./plan-ask-fields";
+import { clearLoginDraft, keepLoginDraft, takeLoginDraft } from "./login-draft";
 import styles from "./trip-registration.module.css";
 
 const draftKey = "tripilot.web.registration-draft.v1";
+
+function readDraft(): string {
+  try { return sessionStorage.getItem(draftKey) ?? ""; }
+  catch { return ""; }
+}
 
 function Preferences() {
   const t = useT();
@@ -59,13 +66,14 @@ function Pane({ id, title, active, onActivate, children }: { id: RegistrationPan
 // Today in Seoul is known only in the browser: the server render (and the first paint) has none, so no date check is shown before it.
 const never = () => () => undefined;
 
-export function TripRegistration() {
+export function TripRegistration({ onSending }: { onSending?: () => void } = {}) {
   const t = useT();
   const { language } = useSettings();
   const [onboarding] = useOnboarding();
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const [source, setSource] = useState<string>();
+  useEffect(() => { router.prefetch(routes.intakeStarting); }, [router]);
+  const [returned] = useState(intakeFailure);
+  const [source, setSource] = useState<string | undefined>(() => returned?.text);
   const [validation, setValidation] = useState("");
   // Raised on every press that is turned back, so the notice is brought into view again even when it says the same words.
   const [nudge, setNudge] = useState(0);
@@ -75,12 +83,20 @@ export function TripRegistration() {
   const [card, setCard] = useState(false);
   // ★A sending the server refused comes back here (`intake-starting.tsx`): its sentence is shown, the attached files and the planning
   //   conditions are given back, and the panel it came from is the chosen one again.
-  const [returned] = useState(intakeFailure);
   const [files, setFiles] = useState<File[]>(() => returned?.files ?? []);
   const [restored, setRestored] = useState(() => returned?.message ?? "");
   const [ask, setAsk] = useState<PlanAsk>(() => returned?.plan ? { start: returned.plan.start_date, days: returned.plan.days, party: returned.plan.party_size, wish: returned.plan.wish } : emptyAsk);
   // ★`[2026-10-03 사용자 결정]` The panel touched last is the one that is sent — and only that one .
   const [active, setActive] = useState<RegistrationPane>(() => returned ? paneOfSending(returned) : "text");
+  useEffect(() => {
+    let live = true;
+    void takeLoginDraft().then((saved) => {
+      if (!live || !saved) return;
+      setSource(saved.text); setFiles(saved.files); setAsk(saved.ask); setActive(saved.active);
+      void clearLoginDraft().catch(() => setDraftWarning(t("복구한 입력의 임시 사본을 지우지 못했어요. 이 브라우저에 보관되어 있어요.", "Could not remove the restored draft's temporary copy. It remains in this browser.")));
+    }).catch(() => { if (live) setDraftWarning(t("로그인 전에 보관한 입력을 불러오지 못했어요. 기존 글 임시 저장은 유지돼요.", "Could not restore the draft kept before sign-in. Your text draft is still available.")); });
+    return () => { live = false; };
+  }, [t]);
   const today = useSyncExternalStore(never, seoulToday, () => "");
   useEffect(() => { clearIntakeFailure(); }, []);
   // ★`[2026-10-06 사용자 지적]` A press turned back for an empty plan showed its notice far below the panels where nobody looks: it now stands under the input and is brought into view.
@@ -107,16 +123,18 @@ export function TripRegistration() {
     });
   }
   // The text box keeps what was typed while the customer moves around the app (this tab's session storage).
-  const draft = useQuery({
-    queryKey: ["registration-draft"],
-    queryFn: async () => {
-      try { return sessionStorage.getItem(draftKey) ?? ""; }
-      catch { return ""; }
-    },
-    retry: false,
-    staleTime: Infinity,
-  });
-  const value = source ?? draft.data ?? "";
+  // Browser-only restoration uses an empty server snapshot, then reads synchronously after hydration.
+  // It never waits for an API response or replaces the input form with a loading screen.
+  const draft = useSyncExternalStore(never, readDraft, () => "");
+  const value = source ?? draft;
+  async function continueWithAccount() {
+    try {
+      await keepLoginDraft({ text: value, files, ask, active });
+      router.push(`${routes.myPage}?returnTo=${encodeURIComponent(routes.newTrip)}#accounts`);
+    } catch {
+      setDraftWarning(t("로그인 전에 입력을 보관하지 못했어요. 파일을 다시 선택하지 않도록 이 화면에서 다시 시도해 주세요.", "Could not keep your input before sign-in. Try again here to avoid selecting your files again."));
+    }
+  }
   // ★글·파일·짜 달라는 조건을 — 글·파일을 계획 읽기로 보내고 확인 화면으로 간다. 등록은 확인 화면의 「등록하고 관리 시작」이 한다.
   //   `[2026-10-03 사용자 지시]` 누르면 곧바로 진행 화면으로 넘어간다: 보내기는 여기서 시작하고(`beginIntake`) 서버의 답은 그 화면이
   //   기다린다. 사람 확인 뒤의 새 고객만 여기서 기다린다 — 세션 시작에 쓴 확인이 한 번 소비되고, 계획은 새 확인으로 간다(두 확인 모두 이 화면에 있다).
@@ -133,6 +151,7 @@ export function TripRegistration() {
       beginIntake({ ...base, text: ask.wish.trim(), files: [], plan });
     } else if (active === "files") beginIntake({ ...base, text: "", files });
     else beginIntake({ ...base, text: value, files: [] });
+    onSending?.();
     router.push(routes.intakeStarting);
   }
   const signUp = useMutation({
@@ -165,7 +184,6 @@ export function TripRegistration() {
   function updateSource(next: string) {
     setActive("text");
     setSource(next);
-    queryClient.setQueryData(["registration-draft"], next);
     setValidation("");
     signUp.reset();
     setRestored("");
@@ -210,10 +228,11 @@ export function TripRegistration() {
     else send(humanToken);
   }
 
-  if (draft.isPending || draft.error) return <QueryState loading={draft.isPending} error={draft.error} retry={() => void draft.refetch()} />;
   const error = validation || signUp.error?.message || restored;
   // One notice, under the panel that is chosen (the input the customer is looking at) - never at the foot of the page.
-  const errorNode = error ? <p id="plan-error" className={styles.error} role="alert"><CircleAlert size={18} strokeWidth={1.8} aria-hidden="true" /><span>{error}</span></p> : null;
+  const errorNode = error ? <div id="plan-error" className={styles.error} role="alert"><CircleAlert size={18} strokeWidth={1.8} aria-hidden="true" /><span>{error}
+    {returned?.loginRequired && restored && <><br /><Button onClick={() => void continueWithAccount()}>{t("계정으로 계속하기", "Continue with an account")}</Button></>}
+  </span></div> : null;
 
   // The text box, the file picker and the planning conditions each sit in their own panel (`Pane`).
   const textBox = <>
@@ -225,6 +244,7 @@ export function TripRegistration() {
       placeholder={t("예시 — 이런 식으로 적어 주세요\n\n1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람", "Example — write it like this\n\nDAY 1 · 2026-09-15\n09:00 Hotel breakfast\n13:00 Lunch restaurant · reserved\n\nDAY 2 · 2026-09-16\n10:00 Museum visit")} />
     <div className={styles.inputMeta}><span id="plan-format">{t("날짜 · 시간 · 장소를 함께 적어 주세요.", "Include dates, times, and places.")}</span><span>{value.length.toLocaleString()} / 12,000</span></div>
     {active === "text" && errorNode}
+    <TestPlans value={value} onChoose={updateSource} disabled={pending} />
   </>;
   // 2026-09-30: file picker designed by Codex astra — the native input stays (hidden) for keyboard and screen readers.
   const filePicker = (

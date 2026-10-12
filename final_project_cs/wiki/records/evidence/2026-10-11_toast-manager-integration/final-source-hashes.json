@@ -1,0 +1,66 @@
+{
+  "manager_base": "5ded30ca3e1f1669276c4fcb768b6d408613ce1c",
+  "source_patch_sha256": "cf02be2c8255f65b4dd09b8ed5afcd2083d1f6a0fd3ee26fcaf004a0f81c859e",
+  "files": {
+    "final_project_cs/frontend/apps/web/src/features/intake-review/intake-review.tsx": {
+      "working_copy_sha256": "0dce9ef16ab4614d96f3257a97c91b3afa799e03971c7567bea63b2750334f18",
+      "text_lf_sha256": "a35146eab13b0849b4237ba50212472261a25f3432677972fe20fd9c4e0fce31"
+    },
+    "final_project_cs/frontend/apps/web/src/features/intake-review/intake-starting.tsx": {
+      "working_copy_sha256": "9d8649759a566f1a10cdb8185c6babc60a3429a120d578043a3d8ee65d798d44",
+      "text_lf_sha256": "ef194df20172de9b2964c90f27c266c827ab5ba5d546f895c855b97dad171fe1"
+    },
+    "final_project_cs/frontend/apps/web/src/features/plan-check/plan-check.module.css": {
+      "working_copy_sha256": "357c78daf4b04e86e25e94a72564bbc03b9a77ab3475ebebfb52175face8a969",
+      "text_lf_sha256": "d1f782bf5cd4942a3c282c1f90f4448e76e0f3b0cc792bfef1c9aec0bc3f574f"
+    },
+    "final_project_cs/frontend/apps/web/src/features/plan-check/plan-check.tsx": {
+      "working_copy_sha256": "1aeae4518228f9981a0dbeca07a3b480bdd3d3e665d005f4c197febf3e6bed8b",
+      "text_lf_sha256": "320ea12a5fb9a4f653ce54488d905d9ae26849c19d7f32a09de21eafd6830631"
+    },
+    "final_project_cs/frontend/apps/web/src/features/plan-check/use-insertion-point.ts": {
+      "working_copy_sha256": "6e01f42437ee718ac1daf0ffd9b7f4124f7732c63dbd6b4c75c49025fe7e1f6b",
+      "text_lf_sha256": "c67a66ee1f8c3325c7ce92cfd2038bd06a33d993c9138361225f2a450c7e9dc0"
+    },
+    "final_project_cs/frontend/apps/web/src/features/plan-check/use-reveal.test.ts": {
+      "working_copy_sha256": "02a7b806ef9c903a8e6fe4d19fe1b75e2dc35e3795b85234087922112f12a032",
+      "text_lf_sha256": "fe3f0a62dc16c9cbe452a07ac4de7f1a41bf1b905e137e79f2f07de9ca790fe3"
+    },
+    "final_project_cs/frontend/apps/web/src/features/plan-check/use-reveal.ts": {
+      "working_copy_sha256": "be9e7bd8e91495d91c4b3e35dc15456e69630353f7a0f5f6cca6a95ef8382b44",
+      "text_lf_sha256": "23d872cd2a26cd19c9a18a01473988cf2f90a16652394b1c10baff237db2c2fc"
+    },
+    "final_project_cs/frontend/apps/web/tests/live/prepared-test-plans-20261011.spec.ts": {
+      "working_copy_sha256": "9aa52dab5cb4f339061b5bef719f0c7eae1a20c1fcd756dbf7cef90e757ac715",
+      "text_lf_sha256": "1a626bb591192e6dce4700106b465edfaedd8777dae66d2b27fe8bbef5bca92c"
+    },
+    "final_project_cs/frontend/apps/web/tests/live/survey-release-20261011.spec.ts": {
+      "working_copy_sha256": "51e740aaf34003a83e0d6ab7d26e3b7230c8df9521553e1b3cca97b4710f27a2",
+      "text_lf_sha256": "98996ce0d03b3d5612cc4e1f5337169740877df7eef5b2356909e644df7421ab"
+    },
+    "final_project_cs/wiki/external/web-flow-2026-10-09.md": {
+      "working_copy_sha256": "2e4e2ec0ba217dc094a2cbf9d9535b34473faf51ab7d2de9b4ca7a5a9c776c41",
+      "text_lf_sha256": "5613df8470a6f951a00e0a3afec96322ce280820d67fc2396efedf8634342ce4"
+    },
+    "final_project_cs/frontend/apps/web/src/features/map/map.module.css": {
+      "working_copy_sha256": "84e75a5690f548323ddfb19bc3afe9975630933e866bed3e3b68564c91c2afa4",
+      "text_lf_sha256": "af5c7a457149465ff3a27771a76ac44a72e8ccde0dcf6486d52ce92965d0d508"
+    },
+    "final_project_cs/frontend/apps/web/src/features/plan-check/add-stop.module.css": {
+      "working_copy_sha256": "0918cb0aa9cd0f9a2ed8f4ccaa69a0d5490de6b0d2dd7b86ea01fa80e9d59aa0",
+      "text_lf_sha256": "bda7e3fd84dc192a489f305b9d29fb78dbd361ff2aa818d74d238aa3b1cea564"
+    },
+    "final_project_cs/frontend/apps/web/src/styles/tokens.css": {
+      "working_copy_sha256": "ccf9600dbd32c46c7e6b85ed5752b5a1f9ece95bdd1b51dee8c6c2dd028d415b",
+      "text_lf_sha256": "cc5785a428deeef4a962f9061d04780a666680eea5d5e80c649d9069e73eceba"
+    },
+    "final_project_cs/tests/integration/api/test_openapi_surface.py": {
+      "working_copy_sha256": "3f1651f423a512098b7acabb38889afc312f1d51c6e7c1ccc7ffed5e9c85cf4e",
+      "text_lf_sha256": "af365a13abfe3b7567d16a18acbbd2ea8369f1b77a7e95a6f67cd4ecca55234f"
+    },
+    "final_project_cs/frontend/apps/web/tests/live/intake-start.spec.ts": {
+      "working_copy_sha256": "5ff7c5559c3038b6af56b373a45a31a7a4b6c8cc9cbb502339ccb4aad26beff4",
+      "text_lf_sha256": "0a99657922a5f1da244d9b94b515aa63b3833662cfcbb3b79765be31f953ca6c"
+    }
+  }
+}

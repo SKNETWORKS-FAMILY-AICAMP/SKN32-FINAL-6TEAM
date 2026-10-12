@@ -14,6 +14,20 @@ import { docHash, sha256Hex } from "./terms-text";
  */
 export type SendResult = "recorded" | "local_only" | "outdated" | "failed";
 export type ReconcileResult = "ok" | "needs" | "local_only" | "outdated" | "failed";
+export const CONSENT_CHECK_STEPS = [
+  ["최신 약관 읽기", "Read current terms"], ["로그인 상태 확인", "Check session"],
+  ["동의 기록 읽기", "Read consent record"], ["약관 버전 확인", "Check terms version"],
+  ["필수 항목 확인", "Check required items"], ["이 브라우저에 반영", "Sync this browser"],
+] as const;
+export interface ConsentCheckProgress {
+  /** 이전 단계가 실제 끝났을 때만 늘어난다. 서버의 stage/beat도 그대로 따라간다. */
+  completed: number;
+  step: number;
+  slow: boolean;
+  lost: boolean;
+  recording: boolean;
+}
+type Report = (progress: ConsentCheckProgress) => void;
 
 const hashes = new Map<string, Promise<string>>();
 
@@ -92,31 +106,42 @@ export function saveConsents(next: ConsentMap, language: Language): Promise<Send
  *   - 서버에 **지금 버전의** 기록이 하나라도 있으면 서버가 이긴다(다른 기기에서 철회했을 수 있다).
  *   - 없으면 사본이 정한다: 필수가 모두 있으면 보낸다(오프라인에서 고르고 온 경우), 없으면 약관 화면이 필요하다.
  */
-export function reconcileConsents(language: Language): Promise<ReconcileResult> {
-  return serial(() => reconcileNow(language));
+export function reconcileConsents(language: Language, onProgress?: Report): Promise<ReconcileResult> {
+  return serial(() => reconcileNow(language, onProgress));
 }
 
-async function reconcileNow(language: Language): Promise<ReconcileResult> {
+async function reconcileNow(language: Language, onProgress?: Report): Promise<ReconcileResult> {
+  const report = (step: number, flags: Partial<ConsentCheckProgress> = {}) => onProgress?.({ completed: step, step, slow: false, lost: false, recording: false, ...flags });
+  report(0);
   await loadLiveTerms(language);
   const local = readConsents();
   const localAgreed = requiredAgreed(local);
   try {
+    report(1);
     if (!await hasSession(language)) return localAgreed ? "ok" : "needs";
-    const server = await getServerConsents(language);
+    report(2);
+    const server = await getServerConsents(language, (progress) => {
+      const step = ({ consent_records: 2, consent_version: 3, consent_required: 4 } as Record<string, number>)[progress.stage ?? ""] ?? 2;
+      report(step, { slow: progress.slow, lost: progress.lost });
+    });
     if (server.currentVersion && server.currentVersion !== termsVersion()) {
+      report(3);
       await loadLiveTerms(language, true);                                      // 버전이 바뀐 줄 모르고 있었다: 서버 약관을 다시 읽는다
       if (server.currentVersion !== termsVersion()) return "outdated";
     }
     if (server.items.some((item) => item.version === termsVersion())) {
+      report(5);
       adoptServer(server);
       return server.ok ? "ok" : "needs";
     }
     if (!localAgreed) return "needs";
+    report(5, { recording: true });
     const sent = await sendNow(language);
     return sent === "recorded" ? "ok" : sent === "local_only" ? "local_only" : sent === "outdated" ? "outdated" : "failed";
   } catch (error) {
     if (isConsentsUnsupported(error)) return localAgreed ? "local_only" : "needs";
-    return localAgreed ? "failed" : "needs";
+    // 연결 실패를 미동의로 단정하지 않는다. 기록은 남기고 같은 화면에서 다시 확인한다.
+    return "failed";
   }
 }
 

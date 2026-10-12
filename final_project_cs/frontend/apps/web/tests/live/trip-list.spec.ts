@@ -107,7 +107,7 @@ test("첫 장에는 등록 버튼과 소개 건너뛰기 없이 아래로 가는
   await page.locator("main > section").nth(1).getByRole("button", { name: "다음 화면" }).click();
   await expect(page.locator("#start-title")).toBeInViewport();
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
-  await expect(page).toHaveURL(/\/start$/);
+  await expect(page).toHaveURL(/\/start\?terms=required$/);
 });
 
 test("모든 로고는 홈 첫 장으로 돌아오고, 여정 화면 헤더에는 로고와 메뉴만 있다", async ({ page }) => {

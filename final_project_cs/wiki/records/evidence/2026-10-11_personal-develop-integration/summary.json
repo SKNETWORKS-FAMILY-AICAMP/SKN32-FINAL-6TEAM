@@ -1,0 +1,34 @@
+{
+  "base_develop": "180c56ae",
+  "manager": "d4895eef",
+  "tree_before_report": "daa6c1d8c116fc493f5f1113b2aa1c951db2a561",
+  "unit": {
+    "passed": 644,
+    "total": 644
+  },
+  "typecheck": 0,
+  "lint": 0,
+  "production_build": 0,
+  "contract": {
+    "passed": 267,
+    "total": 267
+  },
+  "security": {
+    "passed": 34,
+    "total": 34
+  },
+  "legacy_completion_checks": {
+    "passed": 26,
+    "total": 26,
+    "mvp_passed": 18,
+    "mvp_total": 18
+  },
+  "mock_browser": {
+    "passed": 49,
+    "total": 49,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "public_cs_response_checked": false,
+  "commit_push_performed_by_validation_agent": false
+}

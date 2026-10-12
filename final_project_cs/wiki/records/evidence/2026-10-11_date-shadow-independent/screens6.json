@@ -1,0 +1,326 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\full-release-20261008\\release\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.live.config.ts",
+      "tests/live/date-divider-motion-20261010.spec.ts",
+      "tests/live/edge-order-date-add-ideas-20261010.spec.ts",
+      "tests/live/forms-time-follow-20261010.spec.ts",
+      "--grep",
+      "날짜|하루 일정도 날짜|일정 추가는 검색",
+      "--workers=1",
+      "--trace",
+      "retain-on-failure",
+      "--output",
+      "WORKSPACE/.tmp/uiux-handoff-20261009-2300/frontend-check/date-shadow-final-20261011/screens6-results",
+      "--reporter=line,json"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\full-release-20261008\\release\\final_project_cs\\frontend\\apps\\web\\playwright.live.config.ts",
+    "rootDir": "WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "WORKSPACE/.tmp/uiux-handoff-20261009-2300/frontend-check/date-shadow-final-20261011/screens6-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "date-divider-motion-20261010.spec.ts",
+      "file": "date-divider-motion-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11699,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T18:30:21.150Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "date-clearance-375",
+                      "contentType": "application/json",
+                      "body": "W3sidGltZSI6NDg2MS41OTk5OTk5OTQwMzk1LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dfSx7InRpbWUiOjUwMDIuMTk5OTk5OTg4MDc5LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dfSx7InRpbWUiOjUxNjQsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV19LHsidGltZSI6NTMxOC4yOTk5OTk5OTcwMiwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XX0seyJ0aW1lIjo1NDc4LjE5OTk5OTk4ODA3OSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XX0seyJ0aW1lIjo1NTcyLjU5OTk5OTk5NDAzOTUsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV19LHsidGltZSI6NTY2Ny44OTk5OTk5OTEwNTksInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV19LHsidGltZSI6NTc2NS4yOTk5OTk5OTcwMiwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XX0seyJ0aW1lIjo1ODYyLjE5OTk5OTk4ODA3OSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XX0seyJ0aW1lIjo2MDA2LjM5OTk5OTk5MTA1OSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XX0seyJ0aW1lIjo2MTc5LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dfSx7InRpbWUiOjYzNDIuMjk5OTk5OTk3MDIsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV19LHsidGltZSI6NjQ4NC4zOTk5OTk5OTEwNTksInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV19LHsidGltZSI6NjYyNC44OTk5OTk5OTEwNTksInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV19LHsidGltZSI6Njc1OS4zOTk5OTk5OTEwNTksInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV19LHsidGltZSI6Njg3Ni44OTk5OTk5OTEwNTksInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV19LHsidGltZSI6Njk5MS4zOTk5OTk5OTEwNTksInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV19XQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "be372b7a749ce7575407-8f4d6609f5029f041312",
+          "file": "date-divider-motion-20261010.spec.ts",
+          "line": 33,
+          "column": 3
+        },
+        {
+          "title": "날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10598,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T18:30:33.163Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "date-clearance-1280",
+                      "contentType": "application/json",
+                      "body": "W3sidGltZSI6NDYxOS43MDAwMDAwMDI5OCwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XX0seyJ0aW1lIjo0NzIwLjIwMDAwMDAwMjk4LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dfSx7InRpbWUiOjQ4NTMuNDAwMDAwMDA1OTYwNSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XX0seyJ0aW1lIjo0OTc1LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dfSx7InRpbWUiOjUxMjEuMTAwMDAwMDA4OTQxLCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dfSx7InRpbWUiOjUyNTguNjAwMDAwMDA4OTQxLCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dfSx7InRpbWUiOjUzNzIuOTAwMDAwMDA1OTYwNSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XX0seyJ0aW1lIjo1NTQyLjkwMDAwMDAwNTk2MDUsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV19LHsidGltZSI6NTczNy43MDAwMDAwMDI5OCwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XX0seyJ0aW1lIjo1ODU0Ljc5OTk5OTk5NzAyLCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dfSx7InRpbWUiOjU5ODUuMjk5OTk5OTk3MDIsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV19LHsidGltZSI6NjA4NS45MDAwMDAwMDU5NjA1LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dfSx7InRpbWUiOjYyNDEuNSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XX0seyJ0aW1lIjo2Mzg0LjUsInRhYnMiOlt7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfSx7InRvcCI6MTIsImJvdHRvbSI6MTIsImhhbmRsZUdhcCI6MTAsInRvcEhpdCI6dHJ1ZSwiYm90dG9tSGl0Ijp0cnVlfV19LHsidGltZSI6NjUwNC4yMDAwMDAwMDI5OCwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XX0seyJ0aW1lIjo2NjMyLjcwMDAwMDAwMjk4LCJ0YWJzIjpbeyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX0seyJ0b3AiOjEyLCJib3R0b20iOjEyLCJoYW5kbGVHYXAiOjEwLCJ0b3BIaXQiOnRydWUsImJvdHRvbUhpdCI6dHJ1ZX1dfSx7InRpbWUiOjY3MTkuOTAwMDAwMDA1OTYwNSwidGFicyI6W3sidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9LHsidG9wIjoxMiwiYm90dG9tIjoxMiwiaGFuZGxlR2FwIjoxMCwidG9wSGl0Ijp0cnVlLCJib3R0b21IaXQiOnRydWV9XX1d"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "be372b7a749ce7575407-fe42346d7c8e89ae6bd0",
+          "file": "date-divider-motion-20261010.spec.ts",
+          "line": 33,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "edge-order-date-add-ideas-20261010.spec.ts",
+      "file": "edge-order-date-add-ideas-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "하루 일정도 날짜 표시·스크롤 중 숨김·정지 후 복귀·미선택 안내 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6322,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T18:30:43.793Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-4130e9821a90730c5aff",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 62,
+          "column": 3
+        },
+        {
+          "title": "하루 일정도 날짜 표시·스크롤 중 숨김·정지 후 복귀·미선택 안내 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6329,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T18:30:50.136Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "418c25bc9a6173590189-4d274c30e29dc1b200b1",
+          "file": "edge-order-date-add-ideas-20261010.spec.ts",
+          "line": 62,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "forms-time-follow-20261010.spec.ts",
+      "file": "forms-time-follow-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "일정 추가는 검색 초점으로 열고 검색·지우기·선택 후에도 초안을 보존한다 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7571,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T18:30:56.494Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "594da042d82c8d244e97-475bf25b6c276e80e771",
+          "file": "forms-time-follow-20261010.spec.ts",
+          "line": 79,
+          "column": 3
+        },
+        {
+          "title": "일정 추가는 검색 초점으로 열고 검색·지우기·선택 후에도 초안을 보존한다 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6540,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T18:31:04.082Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "594da042d82c8d244e97-06361131410ec0398b3c",
+          "file": "forms-time-follow-20261010.spec.ts",
+          "line": 79,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-10T18:30:17.085Z",
+    "duration": 54726.752,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

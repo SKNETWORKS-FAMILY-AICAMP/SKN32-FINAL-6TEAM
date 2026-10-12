@@ -8,23 +8,13 @@ import { getLinks, isSocialUnsupported, providerName, startSocial, unlinkSocial,
 import { LiveError } from "@/lib/live/client";
 import { useProfile } from "@/lib/profile";
 import { useSettings, useT } from "@/lib/settings";
-import { GoogleButton } from "./google-button";
+import { ProviderButton, ProviderIdentity } from "./provider-button";
 import { useAuthProviders } from "./use-auth-providers";
 import styles from "./account.module.css";
 
 const linksKey = (language: string) => ["auth-links", language] as const;
 
-/**
- * `[2026-10-03 사용자 지시]` Social sign-in on My page (`#accounts`): link a Google / Kakao / Naver / Discord account to the session this
- * browser has, or — with no session here, or only a guest one — sign in with an account that is already linked. The server does the
- * sign-in itself (`lib/live/auth.ts`); this card only starts it and sends the browser to the provider.
- *
- * ★`[2026-10-04]` The identity is the server's session cookie, not a token. Linking an account makes this session a member's: the trips
- *   are kept and no longer go away when the device is not used; a guest's limits end. Signing in with an account REPLACES the guest session
- *   this browser has — the server ends it and its trips with it — so that is asked first and 「연결」 is put before it.
- * ★Nothing is faked: the buttons exist only for providers the server says it has set up. Without them (an older server, or none set
- *   up) the card says the server is not ready and offers nothing to press.
- */
+/** 같은 소셜 버튼에서 로그인과 가입을 처리하고 현재 게스트 일정을 보관한다. */
 export function SocialAccounts() {
   const t = useT();
   const { language } = useSettings();
@@ -34,7 +24,6 @@ export function SocialAccounts() {
   const session = profile?.session ?? null;
   const hasSession = Boolean(session);
   const isGuest = session?.kind === "guest";
-  const [replacing, setReplacing] = useState(false);          // the 「로그인」 warning is open (a guest session is here)
   const [unlinking, setUnlinking] = useState<SocialProvider | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   // A login with no session may need a human check (`human_check_required`): the provider and mode wait for the token.
@@ -51,7 +40,7 @@ export function SocialAccounts() {
 
   const go = useMutation({
     mutationFn: async ({ provider, mode, humanToken }: { provider: SocialProvider; mode: SocialMode; humanToken?: string | null }) => {
-      const address = await startSocial(provider, mode, `${window.location.pathname}#accounts`, language, humanToken);
+      const address = await startSocial(provider, mode, new URLSearchParams(window.location.search).get("returnTo") ?? `${window.location.pathname}#accounts`, language, humanToken);
       window.location.assign(address);
     },
     onError: (error, { provider, mode }) => {
@@ -92,15 +81,14 @@ export function SocialAccounts() {
     }
     if (!providers.data.length) return <p className={styles.mutedNote}>{t("서버에 설정된 로그인 방법이 아직 없어요.", "The server has no sign-in method set up yet.")}</p>;
     return <>
-      {hasSession && <div className={styles.row}>
+      {session?.kind === "member" && <div className={styles.row}>
         <p className={styles.explain}>{isGuest
           ? t("계정을 연결해 두면 창을 닫아도 여행이 보관되고, 게스트 제한도 없어져요. 다른 기기에서도 그 계정으로 로그인해 여행을 열 수 있어요. 이메일은 받지 않아요.", "Link an account and your trips are kept even after you close the window, the guest limits end, and you can sign in with it on another device. We do not take your email.")
           : t("연결된 계정으로 어느 기기에서든 로그인해 여행을 열 수 있어요. 이메일은 받지 않아요.", "Sign in with a linked account on any device to open your trips. We do not take your email.")}</p>
-        <ul className={styles.providers} aria-label={t("연결할 계정", "Accounts to link")}>{providers.data.map((provider) => provider === "google" && !linked.has(provider)
-          // `[2026-10-05]` Google's own button (its rules: the brand button, not a plain one) - the row is the button.
-          ? <li key={provider} data-provider={provider} className={styles.brandRow}><GoogleButton mode="link" disabled={busy || links.isPending} onClick={() => start(provider, "link")} /></li>
+        <ul className={styles.providers} aria-label={t("연결할 계정", "Accounts to link")}>{providers.data.map((provider) => !linked.has(provider)
+          ? <li key={provider} data-provider={provider} className={styles.brandRow}><ProviderButton provider={provider} disabled={busy || links.isPending} onClick={() => start(provider, "link")} /></li>
           : <li key={provider} data-provider={provider}>
-          <span className={styles.providerName}>{t(...providerName(provider))}</span>
+          <ProviderIdentity provider={provider} />
           {linked.has(provider)
             ? (unlinking === provider
               ? <span className={styles.actions}>
@@ -114,21 +102,9 @@ export function SocialAccounts() {
       </div>}
 
       {session?.kind !== "member" && <div className={styles.row}>
-        <p className={styles.explain}>{isGuest
-          ? t("이미 계정을 연결해 둔 여행이 있나요?", "Do you have trips under an account you linked before?")
-          : t("계정으로 시작하거나, 이미 계정을 연결해 두었다면 그 계정으로 로그인해서 여행을 열 수 있어요.", "Start with an account, or — if you linked one before — sign in with it to open your trips.")}</p>
-        {isGuest && !replacing
-          ? <Button disabled={busy} onClick={() => setReplacing(true)}>{t("계정으로 로그인하기", "Sign in with an account")}</Button>
-          : <>
-            {isGuest && <p className={styles.warn} role="alert">{t("로그인하면 이 기기의 게스트 여행은 사라지고 그 계정의 여행이 열려요. 지금 여행을 계속 쓰려면 위의 「연결하기」를 쓰세요.", "Signing in ends this device's guest session and its trips, and opens the account's trips. To keep using these trips, use “Link” above.")}</p>}
-            <ul className={styles.providers} aria-label={t("로그인할 계정", "Accounts to sign in with")}>{providers.data.map((provider) => provider === "google"
-              ? <li key={provider} data-provider={provider} className={styles.brandRow}><GoogleButton mode="login" disabled={busy} onClick={() => start(provider, "login")} /></li>
-              : <li key={provider} data-provider={provider}>
-                <span className={styles.providerName}>{t(...providerName(provider))}</span>
-                <Button variant={isGuest ? "secondary" : "primary"} disabled={busy} onClick={() => start(provider, "login")}>{t("로그인", "Sign in")}</Button>
-              </li>)}</ul>
-            {isGuest && <Button variant="quiet" disabled={busy} onClick={() => setReplacing(false)}>{t("닫기", "Close")}</Button>}
-          </>}
+        <p className={styles.explain}>{t("계정으로 계속하면 기존 계정은 로그인되고, 처음이면 가입돼요. 지금 작성한 일정과 이 기기의 게스트 여행도 함께 보관돼요.", "Continue with an account to sign in or create one automatically. Your current plan and this device's guest trips will be kept together.")}</p>
+        <ul className={styles.providers} aria-label={t("계정으로 계속하기", "Continue with an account")}>{providers.data.map((provider) =>
+          <li key={provider} data-provider={provider} className={styles.brandRow}><ProviderButton provider={provider} disabled={busy} onClick={() => start(provider, "login")} /></li>)}</ul>
       </div>}
       {waiting && TURNSTILE_SITE_KEY && <HumanCheck onToken={setToken} resetKey={checkRound} />}
     </>;

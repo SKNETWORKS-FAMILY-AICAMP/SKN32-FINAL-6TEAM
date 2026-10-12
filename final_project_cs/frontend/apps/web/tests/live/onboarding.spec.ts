@@ -20,7 +20,7 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
   await expect(page.locator("#how-title")).toBeInViewport();
   await page.getByRole("button", { name: "3. 일정 시작" }).click();
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
-  await expect(page).toHaveURL(/\/start$/);
+  await expect(page).toHaveURL(/\/start\?terms=required$/);
 
   await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toBeDisabled();
   await page.getByRole("button", { name: /약관 동의/ }).click();
@@ -288,7 +288,7 @@ test("소개의 첫 단어는 「나의 계획」이고, 처음 동의하면 취
   await expect(page.getByText("나의 계획", { exact: true })).toBeVisible();
   await expect(page.getByText("나의 취향", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
-  await expect(page).toHaveURL(/\/start$/);                                    // 약관에 동의하지 않았으면 문이 약관 화면으로 보낸다
+  await expect(page).toHaveURL(/\/start\?terms=required$/);                                    // 약관에 동의하지 않았으면 문이 약관 화면으로 보낸다
   await page.getByRole("button", { name: /약관 동의/ }).click();
   for (const code of ["service_terms", "privacy"]) await page.locator(`li[data-doc="${code}"] label`).click();
   await page.getByRole("button", { name: "동의하고 다음으로" }).click();
@@ -306,10 +306,10 @@ test("약관에 동의하지 않았으면 소개 버튼은 시작 화면으로 �
   await page.getByRole("button", { name: "3. 일정 시작" }).click();
   await expect(page.getByText("약관 확인부터 함께할게요.")).toBeVisible();
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
-  await expect(page).toHaveURL(/\/start$/);
+  await expect(page).toHaveURL(/\/start\?terms=required$/);
   // ★`[2026-10-05 사용자 지시]` 필수 약관에 동의하지 않으면 앱을 쓸 수 없다: 마이페이지로 곧장 가도 약관 화면으로 돌아온다.
   await page.goto("/mypage");
-  await expect(page).toHaveURL(/\/start$/);
+  await expect(page).toHaveURL(/\/start\?terms=required$/);
   await agree(page);
   await page.goto("/mypage");
   await expect(page.getByText("아직 설정하지 않았어요. 설정하면 일정을 확인할 때 반영돼요.")).toBeVisible();

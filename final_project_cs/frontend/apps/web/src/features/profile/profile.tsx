@@ -87,7 +87,7 @@ export function MyPage() {
     {DATA_MODE === "live" && profile !== undefined && <Panel className={styles.card}><SessionCard profile={profile} /></Panel>}
     {/* ★`[2026-10-03 사용자 지시]` 소셜 계정으로 로그인·연결. 서버가 준비한 업체만 단추가 생기고, 아니면 「서버 준비 중」이라고만 말한다. */}
     {DATA_MODE === "live" && <Panel className={styles.card}><SocialAccounts /></Panel>}
-    {/* ★`[2026-10-05 사용자 지시]` 약관 동의 관리 - 무엇에 동의했는지 보고, 전문을 다시 읽고, 선택 항목을 켜고 끈다(필수 철회는 서비스 중단이라 한 번 더 확인). */}
+    {/* ★`[2026-10-09 사용자 지시]` 필수 약관은 전문으로 읽고, 선택 동의만 켜고 끈다. */}
     {DATA_MODE === "live" && <Panel className={styles.card}><ConsentManager /></Panel>}
     {/* ★`[2026-10-04 사용자 지시]` 에이전트 연결 — 로그인한 사용자(회원)만. 게스트에게는 「로그인하면 쓸 수 있어요」. */}
     {DATA_MODE === "live" && <Panel className={styles.card}><AgentKeys /></Panel>}

@@ -1,0 +1,44 @@
+[
+  {
+    "case": "375px 확대·축소하는 동안 보이는 마커를 숨기거나 거리 칩에 합치지 않는다",
+    "frames": 395,
+    "inside": 437,
+    "failures": [],
+    "stop": true
+  },
+  {
+    "case": "375px 로딩 중 새 일정의 자동 지도 이동에서도 보이는 마커를 거리 칩에 합치지 않는다",
+    "frames": 242,
+    "inside": 381,
+    "failures": [],
+    "stop": true
+  },
+  {
+    "case": "375px 지도 밖 묶음을 눌러 가운데로 들어오는 마커는 이동 중에도 거리 칩에서 빠진다",
+    "frames": 34,
+    "inside": 62,
+    "failures": [],
+    "stop": true
+  },
+  {
+    "case": "1280px 확대·축소하는 동안 보이는 마커를 숨기거나 거리 칩에 합치지 않는다",
+    "frames": 397,
+    "inside": 453,
+    "failures": [],
+    "stop": true
+  },
+  {
+    "case": "1280px 로딩 중 새 일정의 자동 지도 이동에서도 보이는 마커를 거리 칩에 합치지 않는다",
+    "frames": 242,
+    "inside": 384,
+    "failures": [],
+    "stop": true
+  },
+  {
+    "case": "1280px 지도 밖 묶음을 눌러 가운데로 들어오는 마커는 이동 중에도 거리 칩에서 빠진다",
+    "frames": 36,
+    "inside": 64,
+    "failures": [],
+    "stop": true
+  }
+]

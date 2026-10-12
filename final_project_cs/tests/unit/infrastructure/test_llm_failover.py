@@ -106,6 +106,31 @@ def test_switch_on_without_the_server_key_returns_the_plain_ollama_chat():
     assert type(from_settings(settings(openai_api_key_server="   "))) is OllamaChat
 
 
+def test_personal_key_does_not_enable_failover_without_a_server_key():
+    assert type(from_settings(settings(openai_api_key_server="", openai_api_key="personal-test-key"))) is OllamaChat
+
+
+def test_connection_reset_fails_over_to_luna_with_compatible_json_options():
+    api = Api('{"action": "answer_fact"}')
+    chat, _ = build(Server(httpx.ReadError("Connection reset by peer")), api, llm_failover_model="gpt-6-luna")
+    assert chat.json("JSON으로 답하라", "경복궁의 영업시간을 알려줘") == {"action": "answer_fact"}
+    request = api.calls[0]
+    assert request["model"] == "gpt-6-luna"
+    assert request["max_completion_tokens"] == 600
+    assert request["reasoning_effort"] == "none"
+    assert "max_tokens" not in request and "temperature" not in request
+    assert lf.current_path()["path"] == "api"
+
+
+def test_luna_structured_uses_the_callers_schema_and_output_budget():
+    api = Api('{"action": "answer_fact"}')
+    chat, _ = build(Server(CONNECT), api, llm_failover_model="gpt-6-luna")
+    schema = {"type": "object", "properties": {"action": {"type": "string"}}}
+    assert chat.structured("할 일을 고르라", "서울 여행 일정 확인", schema, num_predict=180) == {"action": "answer_fact"}
+    assert api.calls[0]["max_completion_tokens"] == 720
+    assert api.calls[0]["response_format"]["json_schema"]["schema"] == schema
+
+
 def test_switch_on_with_the_key_returns_the_failover_chat_with_the_same_surface():
     lf.reset_state()
     chat = from_settings(settings())

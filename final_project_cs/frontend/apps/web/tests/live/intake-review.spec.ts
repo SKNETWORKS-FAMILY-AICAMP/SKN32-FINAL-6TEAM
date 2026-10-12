@@ -4,9 +4,9 @@ import { mockServer, start, TRIP_ID } from "./helpers";
 /**
  * `[2026-10-03 사용자 결정]` 옛 목록형 확인 화면(카드를 펼쳐 고치는 화면, 「읽은 일정이 없어요 — 대신 짜 드릴까요?」 칸, 「읽은 원문 전체 보기」)은
  * 없앴고, 일정 짜기는 등록 화면의 세 번째 칸(「계획 짜 주기 (테스트)」)으로 옮겼다. 이 파일은 접수 화면(`/intakes/[id]`)에서
- * 「서버가 글을 읽었는데 일정이 하나도 없는」 경우가 짧은 안내 하나로 끝나는지, 그리고 그 안내가 일정을 모두 지운 경우와 섞이지 않는지 본다.
+ * 일정0개 완료 결과가 입력 화면으로 돌아가고, 등록된 여행·나중에 모두 삭제한 일정과 구분되는지 본다.
  * (옛 화면의 카드 편집 시험 6건은 옛 화면과 함께 지웠다 — 새 결과 화면의 수정·삭제는 `flow.spec.ts` 와 `plan-check-screen.spec.ts` 가 본다.)
- * 테스트용 모방 서버로 도는 자동 시험이다(실제 서버 아님).
+ * mock 서버의 화면 반응을 확인하는 자동 시험이다.
  */
 const ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 const path = `**/v1/web/trip-intakes/${ID}`;
@@ -26,30 +26,26 @@ async function patchIntake(page: Page, change: (view: Record<string, any>) => vo
   });
 }
 
-test("서버가 글을 읽었는데 일정이 없고 짜 달라는 말도 없으면, 짧은 안내와 등록 화면으로 가는 링크 하나만 나온다", async ({ page, request }) => {
+test("읽기가 끝나 일정이 없고 짜 달라는 말도 없으면 입력 화면으로 자동 복귀한다", async ({ page, request }) => {
   await mockServer(request).scenario({ intake: "empty_plan" });
   await patchIntake(page, (view) => { view.check.plan.requested = false; });
   await start(page);
   await page.goto(`/intakes/${ID}`);
-  await expect(page.getByRole("heading", { name: "이 글에서는 일정을 찾지 못했어요" })).toBeVisible();
-  await expect(page.getByText("읽은 일정이 없어요. 원문을 확인해 다시 올리거나, 등록 화면의 「계획 짜 주기」를 써 보세요.")).toBeVisible();
-  const main = page.locator("#main-content");
-  await expect(main.getByRole("link")).toHaveCount(1);
-  await expect(main.getByRole("link", { name: "등록 화면으로" })).toHaveAttribute("href", "/trips/new");
+  await expect(page).toHaveURL(/\/trips\/new$/);
+  await expect(page.locator("#plan-error")).toContainText("일정을 찾지 못했어요");
+  await expect(page.getByLabel("나의 여행 계획")).toHaveValue("10/1 09:00 경복궁 관람");
   // 옛 화면에 있던 것들은 없다
   await expect(page.getByRole("button", { name: /이 조건으로 짜서 등록|여행 등록|확인 결과 새로고침/ })).toHaveCount(0);
   await expect(page.getByText("읽은 원문 전체 보기")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "여행 계획 살펴보기" })).toHaveCount(0);
 });
 
-test("짜 달라는 요청은 읽었지만 일정이 없으면, 안내가 등록 화면의 「계획 짜 주기」로 첫날·일수·인원을 고르라고 말한다", async ({ page, request }) => {
-  await mockServer(request).scenario({ intake: "empty_plan" });            // 모방 서버의 이 시나리오는 plan.requested: true
+test("짜 달라는 요청을 읽었어도 일정0개 완료 결과는 입력 화면으로 자동 복귀한다", async ({ page, request }) => {
+  await mockServer(request).scenario({ intake: "empty_plan" });
   await start(page);
   await page.goto(`/intakes/${ID}`);
-  await expect(page.getByRole("heading", { name: "이 글에서는 일정을 찾지 못했어요" })).toBeVisible();
-  await expect(page.getByText("글에서 일정을 짜 달라는 요청은 읽었어요", { exact: false })).toContainText("등록 화면의 「계획 짜 주기」에서 첫날 · 일수 · 인원을 골라 짜 보세요");
-  await page.getByRole("link", { name: "등록 화면으로" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
+  await expect(page.locator("#plan-error")).toContainText("일정을 찾지 못했어요");
   await expect(page.getByRole("region", { name: "계획 짜 주기 (테스트)" })).toBeVisible();
 });
 
