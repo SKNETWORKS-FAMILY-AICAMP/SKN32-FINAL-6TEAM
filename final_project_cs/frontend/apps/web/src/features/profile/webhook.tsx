@@ -74,7 +74,7 @@ export function WebhookView({ hasSession, guest = false }: { hasSession: boolean
   });
   // ★`[2026-10-04]` 서버는 게스트의 여행을 감시·안내하지 않는다(외부 호출 비용) — 웹훅을 넣어도 알림은 로그인한 사용자만 받는다.
   const later = <span className={styles.note}>{guest
-    ? t("게스트는 일정 알림을 받지 않아요. 아래 소셜 계정을 연결하면 알림을 받을 수 있어요.", "Guests get no schedule alerts. Link a social account below to get them.")
+    ? t("게스트는 일정 알림을 받지 않아요. 「로그인 · 계정」에서 로그인하면 알림을 받을 수 있어요.", "Guests get no schedule alerts. Sign in under “Sign-in & accounts” to get them.")
     : t("일정이 바뀔 때 디스코드로 알림을 보내는 기능은 준비 중이에요.", "Alerts about plan changes through Discord are still being prepared.")}</span>;
   // ★`[2026-10-05 사용자 지시]` 「디스코드로 연결」: 서버가 연결할 수 있다고 말할 때만(`discord_connect.available`) 단추가 있다. 디스코드 창에서 서버·채널을 고르면 서버가 웹훅을 받아 저장한다.
   const [returned, setReturned] = useState<DiscordReturn | null>(null);
@@ -102,7 +102,7 @@ export function WebhookView({ hasSession, guest = false }: { hasSession: boolean
     {connect.isError && <span className={styles.failed} role="alert">{connect.error instanceof LiveError ? connect.error.message : t("연결을 시작하지 못했어요. 잠시 뒤 다시 해 보세요.", "Could not start connecting. Try again shortly.")}</span>}
   </>;
   const backLine = back && <span className={back.ok ? styles.note : styles.failed} role={back.ok ? "status" : "alert"}>{back.text}</span>;
-  const add = <ButtonLink href={routes.myPageEdit} variant="quiet">{connectable ? t("주소 직접 넣기", "Paste the address") : t("웹훅 등록하기", "Add a webhook")}</ButtonLink>;
+  const add = <ButtonLink href={`${routes.myPageAlerts}#webhook-address`} variant="quiet">{connectable ? t("주소 직접 넣기", "Paste the address") : t("웹훅 등록하기", "Add a webhook")}</ButtonLink>;
 
   if (DATA_MODE !== "live") return <span className={styles.muted}>{t("실제 서버에 연결됐을 때만 등록할 수 있어요.", "Can be added only when connected to the real server.")}</span>;
   if (!hasSession) return <>
@@ -171,7 +171,7 @@ export function WebhookField({ hasSession, value, remove, touched, onValue, onRe
         ? t("새 주소를 넣고 저장하면 바뀌어요. 비워 두면 등록된 웹훅을 그대로 둬요. 주소는 서버에만 있고 다시 보여 드리지 않아요.", "Enter a new address and save to replace it; leave it blank to keep the saved one. The address stays on the server and is not shown again.")
         : t("알림을 받을 디스코드 채널에서 만든 웹훅 주소를 붙여 넣어 주세요. 이 브라우저에는 남기지 않아요.", "Paste the webhook URL made in the Discord channel that should get the alerts. It is not kept in this browser.")}</p>
     {live && !alertConsent && <OptionalConsentPrompt code="alert_channel" why={t("디스코드 주소를 저장하려면 알림 채널 정보 수집·이용에 동의해야 해요.", "To save a Discord address, we need your agreement to the alert-channel item.")} onAgreed={() => {}} />}
-    {easier && <p className={styles.note}>{t("주소를 직접 만들기 어렵다면 마이페이지의 「디스코드로 연결」을 쓰면 디스코드 창에서 서버와 채널만 고르면 돼요.", "If making the address is hard, use “Connect with Discord” on My page - just pick the server and channel in Discord's window.")}</p>}
+    {easier && <p className={styles.note}>{t("주소를 직접 만들기 어렵다면 위의 「디스코드로 연결」을 쓰면 디스코드 창에서 서버와 채널만 고르면 돼요.", "If making the address is hard, use “Connect with Discord” above - just pick the server and channel in Discord's window.")}</p>}
     {error && <p id="profile-webhook-error" className={styles.failed}>{t("디스코드 웹훅 주소를 확인해 주세요. 예: https://discord.com/api/webhooks/…", "Please check the Discord webhook URL, e.g. https://discord.com/api/webhooks/…")}</p>}
     {live && saved && <label className={styles.check}><input type="checkbox" checked={remove} onChange={(event) => onRemove(event.target.checked)} />{t("등록된 웹훅 지우기", "Remove the saved webhook")}</label>}
   </div>;

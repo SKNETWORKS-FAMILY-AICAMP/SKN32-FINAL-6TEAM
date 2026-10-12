@@ -47,6 +47,8 @@ tags: [ui, api]
 
 [실측] 2026-10-03 · Claude. [REST 명세](rest-endpoints.md) 「고객 연락처」 기준.
 
+`[2026-10-13 마이페이지 A안]` 아래 웹훅 · 텔레그램 줄과 주소 직접 입력은 **`/mypage/alerts`** 로 옮겼다(마이페이지에는 「알림 받는 곳」 상태 줄만). 사용 API는 그대로다. 서버의 디스코드 콜백은 여전히 `/mypage?discord=…` 로 돌아오고(서버 설정), 마이페이지가 그 주소를 받아 `/mypage/alerts?discord=…` 로 넘긴다 — 서버 변경 없음. 약관 동의 관리는 `/mypage/consents`, 에이전트 키는 `/mypage/agents`, 로그인 상태 · 소셜 계정은 `/mypage/account`. 로컬 실서버(게스트, 로그인 방법 0개)에서 다섯 화면과 콜백 넘김(`?discord=cancelled`)만 확인했다.
+
 | 화면 동작 | 사용 API·데이터 | 연결·검증 |
 |---|---|---|
 | 등록 여부·가린 주소·상태 | `GET /v1/web/profile`의 `discord_webhook{set, masked, status}` — 키가 있을 때만 묻는다 | 모방 서버 시험 · 로컬 실서버 확인(리포트) |

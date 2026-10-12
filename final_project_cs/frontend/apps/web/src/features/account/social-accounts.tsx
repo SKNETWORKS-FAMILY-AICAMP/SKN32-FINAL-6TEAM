@@ -12,7 +12,7 @@ import { ProviderButton, ProviderIdentity } from "./provider-button";
 import { useAuthProviders } from "./use-auth-providers";
 import styles from "./account.module.css";
 
-const linksKey = (language: string) => ["auth-links", language] as const;
+export const linksKey = (language: string) => ["auth-links", language] as const;
 
 /** 같은 소셜 버튼에서 로그인과 가입을 처리하고 현재 게스트 일정을 보관한다. */
 export function SocialAccounts() {
