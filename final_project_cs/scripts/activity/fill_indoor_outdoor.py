@@ -2,11 +2,14 @@
 """activity_total_data.csv 의 `indoor_outdoor` 칸을 LLM 으로 판정해 채운다 — 실내 · 실외 · 복합 · 모름.
 
 사용(OpenAI 키를 가진 사람이 실행한다. 최종 실행 위치: final_project_cs):
-    python -m app.domains.travel_ops.instances.activity.data_processing.fill_indoor_outdoor --limit 40   # 시험
-    python -m app.domains.travel_ops.instances.activity.data_processing.fill_indoor_outdoor              # 전체
+    python scripts/activity/fill_indoor_outdoor.py --limit 40   # 시험
+    python scripts/activity/fill_indoor_outdoor.py              # 전체
     # 실패한 묶음만 다시 — 이번 프롬프트 버전으로 아직 판정하지 않은 행만, 작은 묶음으로
-    python -m app.domains.travel_ops.instances.activity.data_processing.fill_indoor_outdoor --pending --batch 5
+    python scripts/activity/fill_indoor_outdoor.py --pending --batch 5
 
+★`[2026-10-12]` `instances/activity/data_processing/` 에서 여기로 옮겼다 — 팀 폴더 안에서 `openai` 를 직접 import 해
+  팀 규율 시험(`tests/contract/test_team_tool_discipline.py`)에 걸렸다. 팀이 실행 중에 쓰는 코드가 아니라 한 번 돌려 CSV 를
+  채우는 스크립트라 `load_places.py` · `refresh_places.py` 옆이 제자리다. 동작은 같다.
 ★`[2026-10-10 사용자]` 관광공사 분류 코드 규칙(`csv_places.weather_sensitive_from_lclssystm2`)을 **쓰지 않는다.**
   모델에는 장소 이름 · 주소 · 개요(overview)만 준다. 개요가 빈 행은 이름과 모델의 기본 지식으로 판정한다.
 ★멘토 피드백(10-08) — 실내외는 처음 한 번만 LLM 으로 판정해 적재하고 그 뒤로는 저장된 값을 쓴다. 이 스크립트가 그 적재다.
@@ -33,7 +36,10 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-CSV_PATH = Path(__file__).resolve().parent / "activity_total_data.csv"
+ROOT = Path(__file__).resolve().parents[2]                          # final_project_cs
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+CSV_PATH = ROOT / "app" / "domains" / "travel_ops" / "instances" / "activity" / "data_processing" / "activity_total_data.csv"
 PROMPT_VERSION = "indoor_outdoor.v3"   # v2: 복합(mixed) 추가 · v3: 여행자 입장에서 판단
 BATCH = 20
 WORKERS = 3
