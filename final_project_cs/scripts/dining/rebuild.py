@@ -118,6 +118,7 @@ LOADS = [
     ("make_nopo_sql.py",      "nopo.sql"),        # 기존 가게에 속성을 붙이고, 검수 시트로 원장에 없던 노포 가게를 만든다
     ("make_closure_sql.py",   "closure.sql"),     # 가게가 다 들어온 뒤. 폐업 · 이전 확인분
     ("make_gap_sql.py",       "gaps.sql"),        # 빈칸 검수 확인분(영업시간 · 전화 · 좌표)
+    ("make_category_sql.py",  "category.sql"),    # 분류 검수 확인분(manual — 아래 대표 분류 규칙이 덮지 않는다)
     ("google_link.py --to-sql", "google_links.sql"),  # 구글 place_id 연결(구글_연결.csv)
 ]
 

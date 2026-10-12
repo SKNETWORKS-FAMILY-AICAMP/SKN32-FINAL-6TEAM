@@ -116,6 +116,28 @@ def test_branch_prefix_and_typo_are_found_for_review(conn, shop):
     assert prefix["match"] == "prefix" and prefix["needs_review"]
 
 
+def _three() -> str:
+    """원장에 없을 한글 세 글자 — 시험마다 새로."""
+    import random
+
+    return "".join(chr(random.randint(0xAC00, 0xD7A3)) for _ in range(3))
+
+
+def test_a_three_letter_name_is_found_by_its_head_only_when_one_shop_has_it(conn, shop):
+    # ★`[2026-10-10 사용자 결정]` 「편강율」 → 「편강 율 플래그십&티하우스」. 3글자는 앞부분이 맞는 가게가 하나뿐일 때만
+    head = _three()
+    uid, _ = shop(f"{head[:2]} {head[2]} 플래그십&티하우스")
+    found = find_place_by_name(conn, head)
+    assert found["match"] == "prefix" and found["dining_place_uid"] == uid and found["needs_review"]
+
+
+def test_a_three_letter_name_shared_by_two_shops_is_not_guessed(conn, shop):
+    head = _three()
+    shop(f"{head}플래그십티하우스")
+    shop(f"{head}두번째가게본관")
+    assert find_place_by_name(conn, head) is None
+
+
 def test_typo_is_found_for_review(conn, shop):
     shop("시험이문설농탕가게")
     found = find_place_by_name(conn, "시험이문설롱탕가게")                  # 농 → 롱
