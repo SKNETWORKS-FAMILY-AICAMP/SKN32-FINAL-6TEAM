@@ -15,7 +15,9 @@
 """
 from __future__ import annotations
 
+import asyncio
 import re
+import threading
 from datetime import date, datetime
 from functools import lru_cache
 from pathlib import Path
@@ -72,32 +74,86 @@ def file_instructions(kind: str) -> str | None:
     return files[-1].read_text(encoding="utf-8") if files else None
 
 
+#: 웹 검색 동시 호출 자리 — 프로세스에 하나(팀 인스턴스 · 섀도 스레드가 같이 쓴다). 크기는 처음 쓸 때 가드레일에서. `[2026-10-12]` 1.6
+_web_slots: threading.BoundedSemaphore | None = None
+_web_slots_lock = threading.Lock()
+
+
+def web_slots(size: int) -> threading.BoundedSemaphore:
+    global _web_slots
+    with _web_slots_lock:
+        if _web_slots is None:
+            _web_slots = threading.BoundedSemaphore(size)
+        return _web_slots
+
+
+def is_rate_limited(exc: BaseException) -> bool:
+    """429 인가 — SDK(`openai.RateLimitError`)를 import 하지 않고 모양으로 본다(이 모듈은 인프라를 import 하지 않는다)."""
+    return getattr(exc, "status_code", None) == 429 or type(exc).__name__ == "RateLimitError"
+
+
 class LLMJudge:
+    """★`[2026-10-12]` 구현 계획 1.6 — 웹 판정은 동시 호출 상한 · 응답 대기 상한을 두고, 429 는 잠깐 쉬었다 다시 부른다.
+    값은 `travel.activity_judge`(`web_max_concurrent` · `web_wait_seconds` · `web_answer_timeout_seconds` · `rate_limit_*`)."""
+
     def __init__(self, llm: Any, *, citation_max_age_days: int | None = None,
-                 today: date | None = None) -> None:
+                 today: date | None = None, reliability: dict[str, Any] | None = None,
+                 slots: threading.BoundedSemaphore | None = None, sleep: Any = None) -> None:
         self.llm = llm
-        if citation_max_age_days is None:
+        if citation_max_age_days is None or reliability is None:
             from app.core.settings import get_guardrails
-            citation_max_age_days = int(get_guardrails().get("travel.activity_judge.citation_max_age_days"))
+            g = get_guardrails()
+            if citation_max_age_days is None:
+                citation_max_age_days = int(g.get("travel.activity_judge.citation_max_age_days"))
+            if reliability is None:
+                reliability = {key: g.get(f"travel.activity_judge.{key}")
+                               for key in ("web_max_concurrent", "web_wait_seconds", "web_answer_timeout_seconds",
+                                           "rate_limit_retries", "rate_limit_backoff_seconds")}
         self.citation_max_age_days = citation_max_age_days
         self._today = today
+        self.reliability = reliability
+        self._slots = slots
+        self._sleep = sleep or asyncio.sleep
 
     async def judge(self, ctx: JudgeContext, request: JudgeRequest) -> Verdict:
         kind = request.kind
+        if kind not in WEB_KINDS:
+            return await self._judge_once(ctx, request)
+        slots = self._slots or web_slots(int(self.reliability["web_max_concurrent"]))
+        # ★자리는 스레드 단위로 잡는다 — 판정은 호출마다 새 이벤트 루프(`modes._run` · 섀도 스레드)에서 돈다
+        got = await asyncio.to_thread(slots.acquire, True, float(self.reliability["web_wait_seconds"]))
+        if not got:
+            return _failed(kind, fc.LLM_BUSY, basis="web_slots_full")
+        # ★응답 대기 상한(`web_answer_timeout_seconds`)은 여기서 걸지 않는다 — 어댑터가 스레드에서 돌아 끊어도 `asyncio.run` 이
+        #   스레드를 기다린다. 고객이 기다리는 자리(`modes.rule_first`)가 건다. 자리는 호출이 **실제로 끝날 때** 돌려준다.
         try:
-            call = await self.llm.judge(
-                prompt_key(kind), payload_for(request), schema=schema_for(kind),
-                schema_name=f"activity_{kind}",
-                # ★웹 판정은 설정을 따른다(None). 웹이 꺼져 있으면 출처가 없어 검증에서 `unknown` 이 된다.
-                web_search=None if kind in WEB_KINDS else False,
-                instructions=file_instructions(kind), run_id=ctx.run_id)
-        except TimeoutError:
-            return _failed(kind, fc.LLM_TIMEOUT)
-        except ValueError as exc:
-            return _failed(kind, fc.LLM_SCHEMA_INVALID, basis=type(exc).__name__)
-        except Exception as exc:  # 429 · 키 없음 · 네트워크 — 종류만 남기고 「모름」
-            return _failed(kind, fc.LLM_ERROR, basis=type(exc).__name__)
-        return self._validate(request, call)
+            return await self._judge_once(ctx, request)
+        finally:
+            slots.release()
+
+    async def _judge_once(self, ctx: JudgeContext, request: JudgeRequest) -> Verdict:
+        kind = request.kind
+        retries = int(self.reliability["rate_limit_retries"])
+        for attempt in range(retries + 1):
+            try:
+                call = await self.llm.judge(
+                    prompt_key(kind), payload_for(request), schema=schema_for(kind),
+                    schema_name=f"activity_{kind}",
+                    # ★웹 판정은 설정을 따른다(None). 웹이 꺼져 있으면 출처가 없어 검증에서 `unknown` 이 된다.
+                    web_search=None if kind in WEB_KINDS else False,
+                    instructions=file_instructions(kind), run_id=ctx.run_id)
+            except TimeoutError:
+                return _failed(kind, fc.LLM_TIMEOUT)
+            except ValueError as exc:
+                return _failed(kind, fc.LLM_SCHEMA_INVALID, basis=type(exc).__name__)
+            except Exception as exc:  # 429 · 키 없음 · 네트워크 — 종류만 남기고 「모름」
+                # ★`[2026-10-12]` 1.6 — 429 만 쉬었다 다시 부른다. 그 밖(키 없음 · 네트워크)은 다시 불러도 같다
+                if is_rate_limited(exc) and attempt < retries:
+                    await self._sleep(float(self.reliability["rate_limit_backoff_seconds"]))
+                    continue
+                return _failed(kind, fc.LLM_ERROR, basis=type(exc).__name__)
+            return self._validate(request, call)
+        raise AssertionError("unreachable")
 
     # ── 검증 ────────────────────────────────────────────────
     def _validate(self, request: JudgeRequest, call: Any) -> Verdict:

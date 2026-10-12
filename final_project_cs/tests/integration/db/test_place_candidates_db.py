@@ -24,14 +24,14 @@ from app.domains.travel_ops.instances.activity.db_search.place_candidates import
 def _reachable() -> str | None:
     try:
         with psycopg.connect(database_dsn(), connect_timeout=3) as conn, conn.cursor() as cur:
-            cur.execute("SELECT to_regclass('place_catalog'), "
-                        "(SELECT count(*) FROM information_schema.columns "
-                        " WHERE table_name='place_catalog' AND column_name='large_class_code')")
-            table, has_large = cur.fetchone()
+            # ★`[2026-10-12]` 전에는 `large_class_code` 칸이 없으면 건너뛰었다 — 그 칸은 마이그레이션에 없어 CI 에서는 늘 건너뛰었고,
+            #   조회가 그 칸 때문에 깨지는 것을 가렸다. 대분류는 `raw_json` 에서 읽으므로 표만 있으면 돈다.
+            cur.execute("SELECT to_regclass('place_catalog')")
+            table = cur.fetchone()[0]
     except Exception as exc:  # noqa: BLE001 — 어떤 이유든 못 붙으면 건너뛴다
         return f"DB 에 연결할 수 없다: {type(exc).__name__}"
-    if table is None or not has_large:
-        return "place_catalog(011·017) 가 없다 — `python -m app.infrastructure.db.migrate` 먼저"
+    if table is None:
+        return "place_catalog(011) 가 없다 — `python -m app.infrastructure.db.migrate` 먼저"
     return None
 
 
@@ -39,8 +39,8 @@ _SKIP = _reachable()
 pytestmark = pytest.mark.skipif(_SKIP is not None, reason=_SKIP or "")
 
 INSERT = ("INSERT INTO place_catalog (tenant_id, source, content_id, content_type_id, "
-          "area_code, title, latitude, longitude, large_class_code, raw_json) "
-          "VALUES (%s,%s,%s,'12','1',%s,%s,%s,%s,%s)")
+          "area_code, title, latitude, longitude, raw_json) "
+          "VALUES (%s,%s,%s,'12','1',%s,%s,%s,%s)")
 
 
 def _raw(cid, title, l1, sgg, closed):
@@ -67,7 +67,7 @@ def tenant():
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         for cid, title, lat, lon, l1, sgg, closed in rows:
             source = "oliveyoung" if cid.startswith("OY") else "tour_api"
-            cur.execute(INSERT, (tenant, source, cid, title, lat, lon, l1, _raw(cid, title, l1, sgg, closed)))
+            cur.execute(INSERT, (tenant, source, cid, title, lat, lon, _raw(cid, title, l1, sgg, closed)))
     try:
         yield tenant
     finally:
@@ -119,3 +119,20 @@ def test_loaded_demo_data_finds_alternatives_for_changgyeonggung():
                                           RADIUS_MAX_KM)
     assert all(lat0 <= float(c["mapy"]) <= lat1 and lng0 <= float(c["mapx"]) <= lng1
                for c in pool["candidates"])
+
+
+def test_delisted_places_are_not_candidates(tenant):
+    """`[2026-10-12]` 관광공사 목록에서 내려간 곳(끝난 축제 · 폐업)은 대체 후보로 내지 않는다(303)."""
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("INSERT INTO activity.ac_load_meta (source_file, file_sha256, row_count) VALUES ('t', %s, 1) "
+                    "RETURNING load_id", ("0" * 64,))
+        load_id = cur.fetchone()[0]
+        cur.execute("INSERT INTO activity.ac_place (content_id, content_type_id, name_ko, name_key, load_id, delisted_at) "
+                    "VALUES ('same_l1', '12', '같은 대분류', 'x', %s, now())", (load_id,))
+        try:
+            from contextlib import nullcontext
+
+            pool = find_place_candidates(lambda: nullcontext(conn), tenant, "o1")      # 같은 연결 — 넣은 행을 되돌릴 수 있게
+            assert "same_l1" not in [c["contentid"] for c in pool["candidates"]]
+        finally:
+            conn.rollback()

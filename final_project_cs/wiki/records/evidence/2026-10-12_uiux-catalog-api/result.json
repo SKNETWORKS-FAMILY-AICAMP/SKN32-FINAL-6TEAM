@@ -1,0 +1,10 @@
+{
+  "tests": 128,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "scope": "prepared plan unit/API intake paths and security on a new isolated database",
+  "source_changed": [],
+  "external_network_attempts": [],
+  "dedicated_database_stopped": true
+}

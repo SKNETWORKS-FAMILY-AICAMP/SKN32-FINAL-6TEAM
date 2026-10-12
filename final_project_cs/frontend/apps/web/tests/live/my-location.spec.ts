@@ -24,7 +24,7 @@ const LOCATION_POST = `/trips/${TRIP_ID}/location`;
 const mapPane = (page: Page) => page.getByRole("region", { name: "여행 지도", exact: true });
 const meDot = (scope: Page | Locator) => scope.getByRole("img", { name: "내 위치", exact: true });
 const tripPin = (page: Page, label: string) => mapPane(page).locator(`.leaflet-marker-icon[title^="${label}"]`);
-const notice = (page: Page) => page.locator("[data-my-location-notice]");
+const notice = (page: Page) => page.getByRole("alert").filter({ hasText: /내 위치/ });
 const posts = async (request: Parameters<typeof mockServer>[0]) => mockServer(request).received("POST", LOCATION_POST);
 type Fix = { lat: number; lng: number; accuracy_m?: number; at: string };
 const fixesOf = (entry: { body: Record<string, unknown> | null }) => (entry.body as { fixes: Fix[] }).fixes;
@@ -81,7 +81,7 @@ test("위치 동의가 없으면 브라우저에 위치를 묻지도, 점을 그
   await expect(notice(page)).toHaveCount(0);
 });
 
-test("브라우저 위치 권한이 꺼져 있으면 점 없이 지도 아래 안내줄에 한 줄로 알린다", async ({ page, context }) => {
+test("브라우저 위치 권한이 꺼져 있으면 점 없이 기존 오류 토스트로 알린다", async ({ page, context }) => {
   await context.clearPermissions();                                                                 // 허용하지 않은 위치 요청은 자동 화면 브라우저가 거절한다
   await openTripMap(page, true);
   await expect(notice(page)).toContainText("위치 권한이 꺼져 있어 내 위치를 못 보여 드려요");
@@ -90,7 +90,7 @@ test("브라우저 위치 권한이 꺼져 있으면 점 없이 지도 아래 �
   await expect(tripPin(page, "1. 아침 식당")).toBeVisible();                                         // 지도와 핀은 그대로
 });
 
-test("이미 거절된 권한이면 다시 묻지 않고(위치 호출 0번) 바로 안내줄로 알린다", async ({ page }) => {
+test("이미 거절된 권한이면 다시 묻지 않고(위치 호출 0번) 바로 오류 토스트로 알린다", async ({ page }) => {
   await page.addInitScript(() => {
     const query = navigator.permissions.query.bind(navigator.permissions);
     navigator.permissions.query = (descriptor: PermissionDescriptor) => descriptor.name === "geolocation"
@@ -219,7 +219,8 @@ test("「모든 일정 보기」는 핀만 맞춘다 — 멀리 있는 내 위�
   await expect(dot).toHaveCount(1);
   const map = page.getByRole("region", { name: "여행 지도", exact: true });
   const zoom = mapPane(page).getByRole("group", { name: "지도 단추" });
-  await map.hover({ position: { x: 200, y: 120 } });                                                 // 단추는 지도에 포인터가 있을 때 보인다
+  await map.hover({ position: { x: 200, y: 120 } });
+  const open = mapPane(page).getByRole("button", { name: "지도 단추 펼치기" }); if (await open.count()) await open.click();                                                 // 단추는 지도에 포인터가 있을 때 보인다
   await zoom.getByRole("button", { name: "축소" }).click();
   await zoom.getByRole("button", { name: "축소" }).click();
   await zoom.getByRole("button", { name: "모든 일정 보기" }).click();
@@ -230,13 +231,14 @@ test("「모든 일정 보기」는 핀만 맞춘다 — 멀리 있는 내 위�
   expect(Math.hypot(last.x - first.x, last.y - first.y)).toBeGreaterThan(40);                       // 핀이 한 점으로 쪼그라들지 않았다(부산까지 맞췄으면 몇 px 에 그친다 · 폰 틀의 시트 위 지도에서는 약 70px)
 });
 
-test("지도 단추의 「내 위치로」: 위치 동의가 있으면 보이고 누르면 지도가 내 위치로 가고, 동의가 없으면 단추도 말도 없다", async ({ page, context }) => {
+test("지도 단추의 「내 위치로」: 위치 동의가 있으면 누를 때 지도가 내 위치로 간다", async ({ page, context }) => {
   await allowLocation(context, { latitude: 37.5512, longitude: 126.9882 });                         // 일정에서 조금 떨어진 남산 쪽
   await openTripMap(page, true);
   const dot = meDot(mapPane(page));
   await expect(dot).toHaveCount(1);
   const map = page.getByRole("region", { name: "여행 지도", exact: true });
   await map.hover({ position: { x: 200, y: 120 } });
+  const open = mapPane(page).getByRole("button", { name: "지도 단추 펼치기" }); if (await open.count()) await open.click();
   const locate = mapPane(page).getByRole("group", { name: "지도 단추" }).getByRole("button", { name: "내 위치로" });
   await expect(locate).toBeVisible();
   await locate.click();
@@ -248,13 +250,14 @@ test("지도 단추의 「내 위치로」: 위치 동의가 있으면 보이고
   await expect(dot).toBeInViewport();
 });
 
-test("위치 동의가 없으면 지도 단추에 「내 위치로」가 없다", async ({ page }) => {
+test("위치 동의가 없어도 지도 단추에 「내 위치로」가 있다", async ({ page }) => {
   await openTripMap(page, false);
   const map = page.getByRole("region", { name: "여행 지도", exact: true });
   await map.hover({ position: { x: 200, y: 120 } });
+  const open = mapPane(page).getByRole("button", { name: "지도 단추 펼치기" }); if (await open.count()) await open.click();
   const buttons = mapPane(page).getByRole("group", { name: "지도 단추" });
   await expect(buttons.getByRole("button", { name: "확대" })).toBeVisible();
-  await expect(buttons.getByRole("button", { name: /내 위치/ })).toHaveCount(0);
+  await expect(buttons.getByRole("button", { name: /내 위치/ })).toBeVisible();
 });
 
 test("핀이 하나도 없는 날은 내 위치로 지도 가운데를 맞춘다", async ({ page, context, request }) => {

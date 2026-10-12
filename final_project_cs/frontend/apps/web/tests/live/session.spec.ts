@@ -148,11 +148,14 @@ test("게스트의 제한에 걸리면(403 guest_trip_limit · login_required) �
   const alert = page.getByRole("alert").filter({ hasText: "게스트는 여행을 1개까지" });
   await expect(alert).toBeVisible();
   await expect(alert).toContainText("로그인하면 더 만들 수 있어요");            // 서버의 문장 그대로
-  const way = alert.getByRole("link", { name: "마이페이지에서 계정을 연결하기" });
-  await expect(way).toHaveAttribute("href", "/mypage#accounts");
+  const way = alert.getByRole("link", { name: "계정으로 계속하기", exact: true });
+  const returnTo = new URL(page.url()).pathname;
+  const accountHref = `/mypage?returnTo=${encodeURIComponent(returnTo)}#accounts`;
+  const accountUrl = new URL(accountHref, page.url()).href;
+  await expect(way).toHaveAttribute("href", accountHref);
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();   // 읽은 계획은 그대로 보인다
   await way.click();
-  await expect(page).toHaveURL(/\/mypage#accounts$/);
+  await expect(page).toHaveURL(accountUrl);
   await expect(page.getByRole("group", { name: "소셜 계정" })).toBeVisible();
   // 다른 제한(시작이 너무 멀다 · 너무 길다)도 같은 모양이다
   await server.scenario({ guestLimit: "too_far" });

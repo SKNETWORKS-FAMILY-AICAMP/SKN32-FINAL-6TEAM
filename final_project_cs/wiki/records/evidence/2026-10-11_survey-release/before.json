@@ -1,0 +1,245 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      ".tmp/consent-progress.config.ts",
+      "tests/live/survey-release-20261011.spec.ts",
+      "--grep",
+      "수동 확인",
+      "--workers=1",
+      "--trace=off",
+      "--reporter=line,json",
+      "--output=.tmp/survey-release-before"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\consent-progress.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/.tmp/survey-release-before",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "survey-release-20261011.spec.ts",
+      "file": "survey-release-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "375px 질문 완료 이동",
+          "file": "survey-release-20261011.spec.ts",
+          "line": 51,
+          "column": 8,
+          "specs": [
+            {
+              "title": "수동 확인은 완료 결과로 바로 이동하고 진행 단계를 다시 재생하지 않는다",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3201,
+                      "error": {
+                        "message": "Error: received → reading → done → done → done → done → done → done\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: received → reading → done → done → done → done → done → done\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at completedResult (C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\survey-release-20261011.spec.ts:46:73)\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\survey-release-20261011.spec.ts:56:7",
+                        "location": {
+                          "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\survey-release-20261011.spec.ts",
+                          "column": 73,
+                          "line": 46
+                        },
+                        "snippet": "  44 |   const stages = await page.evaluate(() => (window as unknown as { __releasedStages: string[] }).__releasedStages);\n  45 |   expect(stages.length).toBeGreaterThan(0);\n> 46 |   expect(stages.every((stage) => stage === \"done\"), stages.join(\" → \")).toBe(true);\n     |                                                                         ^\n  47 |   await noHorizontalScroll(page);\n  48 | }\n  49 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\survey-release-20261011.spec.ts",
+                            "column": 73,
+                            "line": 46
+                          },
+                          "message": "Error: received → reading → done → done → done → done → done → done\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  44 |   const stages = await page.evaluate(() => (window as unknown as { __releasedStages: string[] }).__releasedStages);\n  45 |   expect(stages.length).toBeGreaterThan(0);\n> 46 |   expect(stages.every((stage) => stage === \"done\"), stages.join(\" → \")).toBe(true);\n     |                                                                         ^\n  47 |   await noHorizontalScroll(page);\n  48 | }\n  49 |\n    at completedResult (C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\survey-release-20261011.spec.ts:46:73)\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\survey-release-20261011.spec.ts:56:7"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-10T20:58:33.491Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\survey-release-before\\survey-release-20261011-37-cdc23--바로-이동하고-진행-단계를-다시-재생하지-않는다\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\survey-release-before\\survey-release-20261011-37-cdc23--바로-이동하고-진행-단계를-다시-재생하지-않는다\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\survey-release-20261011.spec.ts",
+                        "column": 73,
+                        "line": 46
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "d1680d661cbd3c77cd82-066c30d7b1b501fb5fc1",
+              "file": "survey-release-20261011.spec.ts",
+              "line": 53,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "1280px 질문 완료 이동",
+          "file": "survey-release-20261011.spec.ts",
+          "line": 51,
+          "column": 8,
+          "specs": [
+            {
+              "title": "수동 확인은 완료 결과로 바로 이동하고 진행 단계를 다시 재생하지 않는다",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3229,
+                      "error": {
+                        "message": "Error: received → reading → done → done → done → done → done → done → done → done → done → done → done\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: received → reading → done → done → done → done → done → done → done → done → done → done → done\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at completedResult (C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\survey-release-20261011.spec.ts:46:73)\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\survey-release-20261011.spec.ts:56:7",
+                        "location": {
+                          "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\survey-release-20261011.spec.ts",
+                          "column": 73,
+                          "line": 46
+                        },
+                        "snippet": "  44 |   const stages = await page.evaluate(() => (window as unknown as { __releasedStages: string[] }).__releasedStages);\n  45 |   expect(stages.length).toBeGreaterThan(0);\n> 46 |   expect(stages.every((stage) => stage === \"done\"), stages.join(\" → \")).toBe(true);\n     |                                                                         ^\n  47 |   await noHorizontalScroll(page);\n  48 | }\n  49 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\survey-release-20261011.spec.ts",
+                            "column": 73,
+                            "line": 46
+                          },
+                          "message": "Error: received → reading → done → done → done → done → done → done → done → done → done → done → done\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  44 |   const stages = await page.evaluate(() => (window as unknown as { __releasedStages: string[] }).__releasedStages);\n  45 |   expect(stages.length).toBeGreaterThan(0);\n> 46 |   expect(stages.every((stage) => stage === \"done\"), stages.join(\" → \")).toBe(true);\n     |                                                                         ^\n  47 |   await noHorizontalScroll(page);\n  48 | }\n  49 |\n    at completedResult (C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\survey-release-20261011.spec.ts:46:73)\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\survey-release-20261011.spec.ts:56:7"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-10T20:58:37.672Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\survey-release-before\\survey-release-20261011-12-dacab--바로-이동하고-진행-단계를-다시-재생하지-않는다\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\survey-release-before\\survey-release-20261011-12-dacab--바로-이동하고-진행-단계를-다시-재생하지-않는다\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\survey-release-20261011.spec.ts",
+                        "column": 73,
+                        "line": 46
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "d1680d661cbd3c77cd82-f4440148c87f6a314610",
+              "file": "survey-release-20261011.spec.ts",
+              "line": 53,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-10T20:58:31.837Z",
+    "duration": 10349.439,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

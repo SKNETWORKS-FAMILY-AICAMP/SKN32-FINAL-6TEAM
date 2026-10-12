@@ -144,17 +144,18 @@ def read_rows(path: Path, *, area_code: str,
     return rows, stats
 
 
+#: ★`[2026-10-12]` 코어 `place_catalog`(011) 칸에만 쓴다. 전에는 `large_class_code` · `large_class_name` 칸에도 쓰고 그 칸이
+#:  없으면 「017 을 돌려라」로 멈췄는데, 그 칸을 만드는 마이그레이션은 develop 에 없다(017 은 `supplier_tier`) — 손으로 칸을
+#:  더한 로컬 DB 에서만 돌았고 마이그레이션만 돈 DB(CI · 새 환경)에서는 적재 자체가 안 됐다. 대분류는 `raw_json.lclsSystm1`
+#:  에 원문 그대로 들어가고, 후보 조회(`db_search/place_candidates.py`)도 거기서 읽는다.
 UPSERT = (
     "INSERT INTO place_catalog (tenant_id, source, content_id, content_type_id, "
-    "area_code, title, address, latitude, longitude, large_class_code, "
-    "large_class_name, raw_json) "
-    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) "
+    "area_code, title, address, latitude, longitude, raw_json) "
+    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) "
     "ON CONFLICT (tenant_id, source, content_id) DO UPDATE SET "
     "content_type_id=EXCLUDED.content_type_id, area_code=EXCLUDED.area_code, "
     "title=EXCLUDED.title, address=EXCLUDED.address, latitude=EXCLUDED.latitude, "
-    "longitude=EXCLUDED.longitude, large_class_code=EXCLUDED.large_class_code, "
-    "large_class_name=EXCLUDED.large_class_name, raw_json=EXCLUDED.raw_json, "
-    "fetched_at=now()"
+    "longitude=EXCLUDED.longitude, raw_json=EXCLUDED.raw_json, fetched_at=now()"
 )
 
 
@@ -162,18 +163,11 @@ def load(rows: list[dict[str, Any]], *, tenant_id: str, source: str) -> int:
     from app.infrastructure.db.session import get_connection
 
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
-        cur.execute(
-            "SELECT count(*) FROM information_schema.columns WHERE table_name='place_catalog' "
-            "AND column_name IN ('large_class_code','large_class_name')")
-        if cur.fetchone()[0] != 2:
-            raise SystemExit("place_catalog 에 신분류 컬럼이 없다 — 먼저 "
-                             "`python -m app.infrastructure.db.migrate`(017) 를 돌린다")
         for row in rows:      # ★한 트랜잭션 — 중간에 실패하면 하나도 안 들어간다
             cur.execute(UPSERT, (
                 tenant_id, source, row["content_id"], row["content_type_id"],
                 row["area_code"], row["title"], row["address"], row["latitude"],
-                row["longitude"], row["large_class_code"], row["large_class_name"],
-                json.dumps(row["raw"], ensure_ascii=False)))
+                row["longitude"], json.dumps(row["raw"], ensure_ascii=False)))
         cur.execute("SELECT count(*) FROM place_catalog WHERE tenant_id=%s AND source=%s",
                     (tenant_id, source))
         return cur.fetchone()[0]

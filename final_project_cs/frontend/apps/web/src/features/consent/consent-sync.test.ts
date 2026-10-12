@@ -3,7 +3,7 @@ import { resetSessionState } from "@/lib/live/client";
 import { answeringSession } from "@/lib/live/session-kit";
 import { noConsents, requiredAgreed } from "./consent-model";
 import { consentsSynced, forgetConsents, readConsents, replaceConsents } from "./consent-store";
-import { adoptServer, reconcileConsents, saveConsents, sendConsents } from "./consent-sync";
+import { adoptServer, reconcileConsents, saveConsents, sendConsents, type ConsentCheckProgress } from "./consent-sync";
 import { TERMS_VERSION } from "./terms-content";
 import { resetLiveTerms, termsVersion } from "./terms-live";
 
@@ -37,6 +37,39 @@ describe("the browser's copy of the consents and the server's record", () => {
 
   const consentCalls = () => calls.filter((call) => new URL(call.url).pathname === "/v1/web/consents");
 
+  it("follows actual streamed phases without completing the browser sync until the result arrives", async () => {
+    let controller!: ReadableStreamDefaultController<Uint8Array>;
+    const encode = new TextEncoder();
+    const write = (event: string, data: unknown) => controller.enqueue(encode.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+    const body = new ReadableStream<Uint8Array>({ start: (next) => { controller = next; } });
+    replies.push(new Response(body, { headers: { "Content-Type": "text/event-stream" } }));
+    const seen: ConsentCheckProgress[] = [];
+    const checking = reconcileConsents("ko", (next) => seen.push(next));
+    await vi.waitFor(() => expect(consentCalls()).toHaveLength(1));
+    expect(consentCalls()[0].init.headers).toMatchObject({ Accept: "text/event-stream" });
+    write("stage", { stage: "consent_records", elapsed: .1 });
+    await vi.waitFor(() => expect(seen.at(-1)?.completed).toBe(2));
+    write("stage", { stage: "consent_version", elapsed: 2 });
+    await vi.waitFor(() => expect(seen.at(-1)?.completed).toBe(3));
+    write("beat", { stage: "consent_version", elapsed: 9, slow: true });
+    await vi.waitFor(() => expect(seen.at(-1)?.slow).toBe(true));
+    expect(seen.every((next) => next.completed < 5)).toBe(true);
+    expect(requiredAgreed(readConsents())).toBe(false);
+    write("stage", { stage: "consent_required", elapsed: 10 });
+    write("result", { current_version: TERMS_VERSION, required: ["service_terms", "privacy"], ok: true, items: requiredOn });
+    controller.close();
+    expect(await checking).toBe("ok");
+    expect(seen.at(-1)?.completed).toBe(5);
+    expect(requiredAgreed(readConsents())).toBe(true);
+  });
+
+  it("does not call a failed streamed lookup missing consent or overwrite the browser copy", async () => {
+    replies.push(new Response('event: error\ndata: {"code":"unavailable","message":"failed"}\n\n', { headers: { "Content-Type": "text/event-stream" } }));
+    expect(await reconcileConsents("ko")).toBe("failed");
+    expect(consentCalls()).toHaveLength(1);
+    expect(readConsents()).toEqual(noConsents());
+  });
+
   it("saves what the customer chose at once in the browser, and records it on the server with the fingerprint of every text shown", async () => {
     replies.push(json({ current_version: TERMS_VERSION, required: ["service_terms", "privacy"], ok: true, items: [...requiredOn, row("location", true)] }));
     const next = { ...noConsents(), service_terms: true, privacy: true, location: true };
@@ -47,7 +80,7 @@ describe("the browser's copy of the consents and the server's record", () => {
     expect(post.init.method).toBe("POST");
     const body = JSON.parse(String(post.init.body)) as { version: string; items: { code: string; agreed: boolean; text_sha256: string }[] };
     expect(body.version).toBe(TERMS_VERSION);
-    expect(body.items.map((item) => [item.code, item.agreed])).toEqual([["service_terms", true], ["privacy", true], ["sensitive", false], ["location", true], ["alert_channel", false]]);
+    expect(body.items.map((item) => [item.code, item.agreed])).toEqual([["service_terms", true], ["privacy", true], ["sensitive", false], ["location", true], ["alert_channel", false], ["service_improvement", false]]);
     for (const item of body.items) expect(item.text_sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(consentsSynced()).toBe(true);
   });

@@ -23,10 +23,12 @@ def test_rule_mode_blocks_a_closed_day(capsys):
 
 
 def test_rule_mode_runs_the_real_shared_check(capsys):
-    """교통통제(장소형 유형) 문자는 실제 공유 점검(`DisruptionCheck`)이 막는다."""
+    """교통통제(장소형 유형) 문자는 실제 공유 점검(`DisruptionCheck`)이 잡고, 팀이 `read.disaster` 로 다시 읽어 §8 분류로 막는다.
+    ★`[2026-10-12]` 10-11 재난 분류(D2-1) 뒤로 사유 이름이 공유 점검의 `disrupted` 에서 `disaster_blocks` 로 바뀌었다."""
     assert script.main(["--place", "경복궁", "--at", AT, "--weather-sensitive", "indoor", "--mode", "rule",
                         "--disaster", "안전안내|교통통제|[종로구] 율곡로 통제|서울특별시 종로구"]) == 0
-    assert "disrupted" in capsys.readouterr().out
+    printed = capsys.readouterr().out
+    assert "성립: False" in printed and "disaster_blocks" in printed
 
 
 def test_another_district_does_not_reach_the_place(capsys):

@@ -25,8 +25,9 @@ def _reachable() -> str | None:
 _SKIP = _reachable()
 pytestmark = pytest.mark.skipif(_SKIP is not None, reason=_SKIP or "")
 
+# ★`[2026-10-12]` 코어 `place_catalog`(011)에는 `large_class_code` 칸이 없다 — 대분류는 `raw_json` 에 둔다(CI 가 빈 DB 에서 잡았다)
 INSERT = ("INSERT INTO place_catalog (tenant_id, source, content_id, content_type_id, area_code, title, "
-          "latitude, longitude, large_class_code, raw_json) VALUES (%s,%s,%s,'12','1',%s,37.5,127.0,'HS','{}')")
+          "latitude, longitude, raw_json) VALUES (%s,%s,%s,'12','1',%s,37.5,127.0,'{\"lclsSystm1\": \"HS\"}')")
 
 
 @pytest.fixture()

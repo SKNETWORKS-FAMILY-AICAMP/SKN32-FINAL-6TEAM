@@ -180,3 +180,8 @@ applied_at         2026-08-18T13:13:26Z
 | `handoff/` · `history/` · `plans/` · `vision/` 등 | 동결된 기록. 현재 계약·계획·결정은 wiki 본문 |
 
 규칙은 허브 [governance/work-loop.md](../../wiki/governance/work-loop.md) 2026-09-08 절. 검사기는 `records/`를 면제한다.
+
+
+## 웹 CI 회귀 검증 기록
+
+기존 웹 CI 실패 54개의 원인과 최신 화면 기준 수정, 전체 첫 회귀 및 후속 재검증을 기록했습니다. [원인·조치·검증 보고](records/reports/2026-10-12_0239_web_CI_54_failures.md). 원격 CI 완료와 로컬 검사 결과를 구분합니다.

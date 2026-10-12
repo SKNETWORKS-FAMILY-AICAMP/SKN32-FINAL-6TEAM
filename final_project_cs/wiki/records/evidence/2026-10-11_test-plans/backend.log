@@ -1,0 +1,55 @@
+........................EEEE                                             [100%]
+=================================== ERRORS ====================================
+_ ERROR at setup of test_code_expands_before_reading_and_remains_scoped_through_recheck _
+file C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\e2e\test_intake_test_plans.py, line 9
+  def test_code_expands_before_reading_and_remains_scoped_through_recheck(rv):
+file C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\e2e\test_intake_review.py, line 103
+  @pytest.fixture()
+  def rv(api, monkeypatch):  # noqa: F811
+E       fixture 'api' not found
+>       available fixtures: _isolate_mobility_engine_state, _session_event_loop, _wire_domain_teams, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, rv, tests/e2e/test_intake_test_plans.py::<event_loop>, tests/unit/travel::<event_loop>, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\e2e\test_intake_review.py:103
+_ ERROR at setup of test_rejected_code_does_not_create_empty_intake[test13-unknown_test_scenario] _
+file C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\e2e\test_intake_test_plans.py, line 34
+  @pytest.mark.parametrize("text,code", (("test13", "unknown_test_scenario"), ("test1rt", "live_test_not_ready")))
+  def test_rejected_code_does_not_create_empty_intake(rv, text, code):
+file C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\e2e\test_intake_review.py, line 103
+  @pytest.fixture()
+  def rv(api, monkeypatch):  # noqa: F811
+E       fixture 'api' not found
+>       available fixtures: _isolate_mobility_engine_state, _session_event_loop, _wire_domain_teams, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, rv, tests/e2e/test_intake_test_plans.py::<event_loop>, tests/unit/travel::<event_loop>, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\e2e\test_intake_review.py:103
+_ ERROR at setup of test_rejected_code_does_not_create_empty_intake[test1rt-live_test_not_ready] _
+file C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\e2e\test_intake_test_plans.py, line 34
+  @pytest.mark.parametrize("text,code", (("test13", "unknown_test_scenario"), ("test1rt", "live_test_not_ready")))
+  def test_rejected_code_does_not_create_empty_intake(rv, text, code):
+file C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\e2e\test_intake_review.py, line 103
+  @pytest.fixture()
+  def rv(api, monkeypatch):  # noqa: F811
+E       fixture 'api' not found
+>       available fixtures: _isolate_mobility_engine_state, _session_event_loop, _wire_domain_teams, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, rv, tests/e2e/test_intake_test_plans.py::<event_loop>, tests/unit/travel::<event_loop>, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\e2e\test_intake_review.py:103
+_______ ERROR at setup of test_disabled_codes_and_file_mix_are_refused ________
+file C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\e2e\test_intake_test_plans.py, line 49
+  def test_disabled_codes_and_file_mix_are_refused(rv, monkeypatch):
+file C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\e2e\test_intake_review.py, line 103
+  @pytest.fixture()
+  def rv(api, monkeypatch):  # noqa: F811
+E       fixture 'api' not found
+>       available fixtures: _isolate_mobility_engine_state, _session_event_loop, _wire_domain_teams, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, rv, tests/e2e/test_intake_test_plans.py::<event_loop>, tests/unit/travel::<event_loop>, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\e2e\test_intake_review.py:103
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_test-plans\backend.xml -
+=========================== short test summary info ===========================
+ERROR tests/e2e/test_intake_test_plans.py::test_code_expands_before_reading_and_remains_scoped_through_recheck
+ERROR tests/e2e/test_intake_test_plans.py::test_rejected_code_does_not_create_empty_intake[test13-unknown_test_scenario]
+ERROR tests/e2e/test_intake_test_plans.py::test_rejected_code_does_not_create_empty_intake[test1rt-live_test_not_ready]
+ERROR tests/e2e/test_intake_test_plans.py::test_disabled_codes_and_file_mix_are_refused
+24 passed, 4 errors in 2.48s

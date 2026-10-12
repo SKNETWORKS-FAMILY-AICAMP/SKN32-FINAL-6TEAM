@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>선택한 일정·이동 시각 — 2026-10-10</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#edf1ed;color:#203b31;font-family:system-ui,sans-serif;line-height:1.6}main{max-width:1100px;margin:auto;padding:24px 16px 48px}h1{font-size:26px;margin:0 0 8px}h2{font-size:20px;margin:0 0 8px}p{margin:0 0 20px;color:#52675f}header{position:sticky;top:0;z-index:2;background:#edf1edf2;padding:12px 0;border-bottom:1px solid #cad7ce;margin-bottom:24px}label{display:flex;gap:16px;align-items:center}select{font:inherit;padding:10px 14px;border:1px solid #cad7ce;border-radius:12px;background:white;color:inherit}section{background:white;border:1px solid #d5dfd7;border-radius:24px;padding:24px;margin:24px 0}figure{margin:0;text-align:center}img{display:block;width:100%;max-width:375px;height:auto;margin:auto;border-radius:20px}figcaption{margin:16px 0 0;color:#52675f;font-size:14px}a{color:inherit}body[data-wide] img{max-width:100%}@media(max-width:500px){main{padding:16px 12px}section{padding:20px 14px}h1{font-size:23px}}
+</style>
+<main>
+<h1>선택한 일정과 이동의 시각</h1>
+<p>2026-10-10 수정본입니다. 일정은 위 시작·아래 마무리, 이동은 위 출발·아래 도착 시각을 표시합니다.</p>
+<header><label>촬영 화면 <select id="size"><option value="375">375px 휴대폰</option><option value="1280">1280px 넓은 화면</option></select></label></header>
+<section><h2>평소에는 일정 종류 아이콘</h2><p>숙박·식사·기차·비행기·버스·활동을 구분하고, 종류가 미정이면 물음표로 표시합니다.</p><figure><a href="01-kinds-375.png"><img src="01-kinds-375.png" data-name="01-kinds" alt="접힌 일정 카드의 종류 아이콘"></a><figcaption>상세를 열기 전에는 잠금 버튼이 나타나지 않습니다.</figcaption></figure></section>
+<section><h2>상세를 열면 잠금 버튼</h2><p>제목 앞 아이콘 자리에 잠금·해제 버튼이 나타납니다. 잠근 일정은 시간과 내용을 그대로 유지합니다.</p><figure><a href="02-lock-375.png"><img src="02-lock-375.png" data-name="02-lock" alt="펼친 일정의 잠금 버튼"></a></figure></section>
+<section><h2>선택한 일정만 두 줄 시각</h2><p>위에는 크게 굵은 시작 시각, 아래에는 작고 얇은 마무리 시각을 표시합니다. 선택을 바꾸면 부드럽게 사라집니다.</p><figure><a href="03-stop-range-375.png"><img src="03-stop-range-375.png" data-name="03-stop-range" alt="선택한 일정의 시작 시각과 마무리 시각"></a><figcaption>점선 양끝에 따로 붙어 있던 마무리·도착 시각은 제거했습니다.</figcaption></figure></section>
+<section><h2>이동도 선택하면 출발·도착 시각</h2><p>작은 출발 시각은 이동 설명과 같은 높이에 유지합니다. 해당 이동을 선택하면 아래에 도착 시각이 나타납니다.</p><figure><a href="04-move-range-375.png"><img src="04-move-range-375.png" data-name="04-move-range" alt="선택한 이동 구간의 출발 시각과 도착 시각"></a></figure></section>
+<p>로컬 mock 서버로 촬영한 화면입니다. 이미지를 누르면 원본 크기로 볼 수 있습니다.</p>
+</main>
+<script>document.querySelector('#size').addEventListener('change',e=>{const size=e.target.value;document.body.toggleAttribute('data-wide',size==='1280');document.querySelectorAll('img[data-name]').forEach(img=>{const file=img.dataset.name+'-'+size+'.png';img.src=file;img.parentElement.href=file})});</script>
+</html>

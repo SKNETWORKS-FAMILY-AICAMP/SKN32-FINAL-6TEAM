@@ -285,10 +285,11 @@ travel:
   #   ★전환 조건(계획 `wiki/records/plans/2026-09-29_1640_채팅_결정단위_실행계획.md`): 재생 시험에서 할 일+대상 95% 이상 ·
   #    엉뚱한 대상 변경 0건 · 지연 p95 5초 이하를 넘으면 on
   decision_unit:
+    focus_ttl_seconds: 1800
     # ★`[2026-09-29 Codex 3회차 합의]` 켠다 — 재생 129문장 95.3% · 엉뚱한 대상 0 · p95 4.5초. 옛 경로는 같은 실제 기록 66에서
     #  30건 안팎 오처리. 운영 설정 `chat.decision_mode` 로 재기동 없이 끈다. 오변경 의심(바꾼 뒤 15분 안 되돌림)이 1건이라도 나오면 shadow
     mode: "on"            # ★따옴표 필수 — YAML 은 맨 on 을 참(True)으로 읽는다(그래서 한 번 꺼진 채로 돌았다)
-    num_predict: 400     # 답 길이 상한(토큰). ★160 이면 되묻기 후보(choices)가 붙은 답이 중간에 잘려 JSON 이 깨졌다(재생 시험 2026-09-29) — 짧은 답은 일찍 끝나 지연이 거의 같다
+    num_predict: 1200     # 답 길이 상한(토큰). ★160 이면 되묻기 후보(choices)가 붙은 답이 중간에 잘려 JSON 이 깨졌다(재생 시험 2026-09-29) — 짧은 답은 일찍 끝나 지연이 거의 같다
   # -- 후보 이유 문장을 모델이 쓴다 (2026-10-07 사용자 결정, 마이그레이션 057 · `components/intake/reasons.py`) --
   # ★「이유 문장만 모델이 확인된 값으로 쓴다 — 보이는 후보 2~3개만, 결과 저장, 실패하면 지금의 틀 문장」. 모델은 **사실 목록만** 받고(이름 · 단 · 거리 · 영업 · 여유 · 일정의 장소),
   #   그 밖의 이름 · 숫자 · 평가를 쓴 문장은 검사(`guard`)가 버려 틀 문장으로 돌아간다. 출처: **우리가 고른 값**
@@ -372,6 +373,7 @@ travel:
       message: 90
       plan: 240
       intake: 600
+      consents: 60
     intake_poll_seconds: 1
     intake_stalled_seconds: 180
   # -- 고객 연락처 시험 발송 (2026-10-01 — `customer_profile.py`, `POST /v1/web/profile/discord/test`) --
@@ -644,6 +646,48 @@ travel:
     # 실시간 운영 상태(웹 검색)는 실외 활동이거나 시작까지 이 시간 안일 때만 본다. 그 밖은 부르지 않는다.
     # ★출처: **우리가 고른 값**이다(계획서 §6 4단계) — 임시휴무 공지는 대개 며칠 전에 나온다고 봤다. 측정 안 함.
     live_status_within_hours: 72
+    # ★`[2026-10-12]` 판정 종류별 섀도 켜기(구현 계획 1.4) — `rule`(LLM 안 부름) · `shadow`(백그라운드 비교만, 고객 답 그대로).
+    #   전역 `ACOP_ACTIVITY_JUDGE_MODE=rule` 이면 이 표와 상관없이 전부 꺼진다(조립이 판정 LLM 을 넣지 않는다).
+    #   `llm` = 규칙이 모를 때만 LLM, 조심하는 쪽 값만 받는다(D-CS-015 개정 2, 10-12). `off` 대신 `rule` 로 쓴다(YAML 이 off 를 false 로 읽는다).
+    #   운영시간은 develop 판에 섀도 지점이 없어 `rule` 이다(D-CS-015 「② 운영시간은 붙이지 않는다」).
+    # ★출처: 지금 동작 그대로가 기본값이다(10-12 전에는 전역 섀도면 아래 넷이 모두 돌았다).
+    kind_modes:
+      closure: shadow
+      operating_hours: rule
+      weather_sensitive: shadow
+      disaster_effect: shadow
+      # ★`[2026-10-12 사용자 결정]` DB 운영 정보로 규칙이 휴무 · 운영시간을 먼저 보고, 닫혔다고 못 정했을 때(연다 · 모름) 웹 검색으로
+      #   그 날짜의 운영 · 폐업을 본다 — 「닫혔다」면 대체 장소를 붙여 바꾸자고 제안한다.
+      #   전역 모드가 `rule` 이면 여전히 안 부른다(돈이 나가지 않는다). 켜려면 `ACOP_ACTIVITY_JUDGE_MODE=shadow`.
+      live_status: llm
+      # ★`[2026-10-12 사용자 결정]` 대체 후보 순서 — 코드가 찾고 검증한 후보 안에서 LLM 이 고객 취향에 맞춰 먼저 보여 줄 순서를 정한다
+      #   (`instances/activity/alternative_order.py`). 기본은 끔 — 프롬프트 허용 목록 · 모델 인자(코어)가 붙은 뒤 shadow → llm 으로.
+      alternative_order: rule
+    # ★`[2026-10-12]` 판정 LLM 호출 상한(구현 계획 4.6) — 일 · 월. 넘으면 그 판정은 부르지 않고 `skipped`(budget_exhausted)로 남긴다.
+    #   웹 검색(실시간 운영)은 따로 센다 — 호출당 약 $0.032(text 는 약 $0.0003, 10-06 측정 · 구현 계획 §1.2).
+    #   text 2,000/일 ≈ $0.6 · 30,000/월 ≈ $9, web 50/일 ≈ $1.6 · 1,000/월 ≈ $32 (추정 상한).
+    #   ★세는 곳은 DB(`external_call_budget` — `activity_judge` · `activity_judge_web` 줄)이고, 꽂는 것은 조립이다(코어 협의).
+    #   조립이 꽂기 전에는 웹 검색만 활동이 프로세스 안에서 센다(`judge/modes.py` `LocalWebBudget`, 10-12) — 재기동하면 0 부터다.
+    #   기본 모드가 `rule`(LLM 안 부름)이면 비용이 나가지 않는다.
+    # ★출처: **우리가 고른 값**이다. 섀도 표본을 모으기에 넉넉하게, 비용 폭주는 막게.
+    budget:
+      text: {day: 2000, month: 30000}
+      web: {day: 50, month: 1000}
+    # ★`[2026-10-12]` 구현 계획 1.6 — 웹 검색이 성립 판정 **맨 앞**에서 고객 응답을 기다리게 하면서(실시간 운영 `llm`) 정한 값.
+    #   측정(10-06 · 구현 계획 §1.2): 24회 중 8회 429, 동시 6이면 24/24 실패, p50 15.7초 · p95 40.7초.
+    #   - web_max_concurrent: 프로세스 안에서 동시에 부르는 웹 검색 수. 넘치면 `web_wait_seconds` 만큼 자리를 기다리고, 못 잡으면
+    #     부르지 않고 「모름」(`llm_busy`) — 아래 점검은 그대로 한다.
+    #   - web_answer_timeout_seconds: 고객 응답을 기다리게 하는 상한. 넘으면 「모름」(`llm_timeout`). ★어댑터의 호출은 끝까지 돌 수 있다
+    #     (스레드를 끊지 못한다) — 비용은 그대로 나가고 응답만 먼저 낸다. 어댑터 자체 상한은 `reliability.activity_judge_call_timeout_seconds`.
+    #   - rate_limit_retries · rate_limit_backoff_seconds: 429 만 쉬었다 다시 부른다(SDK 재시도는 0 그대로 — 시간 초과는 다시 부르지 않는다).
+    # ★출처: **우리가 고른 값**이다. 동시 2 는 측정(6 이면 전부 실패)에서 넉넉히 낮춘 값, 30초는 p50 의 두 배쯤 — 둘 다 다시 잴 것.
+    # ★`[2026-10-12]` 대체 후보 순서 LLM 이 고객을 기다리게 하는 상한(원문 해석급 호출 — 측정 p95 3.1초). 넘으면 코드 순서. 우리가 고른 값.
+    alternative_order_timeout_seconds: 8
+    web_max_concurrent: 2
+    web_wait_seconds: 5
+    web_answer_timeout_seconds: 30
+    rate_limit_retries: 1
+    rate_limit_backoff_seconds: 2
   reminders:
     # ★일정 안내(v11 §6-B ②·③) 시각. `app/domains/travel_ops/components/watch/trip_reminders.py`.
     # ★출처: 정해진 기준이 없어 **우리가 고른 값**이다. 측정에서 나오지 않았다.
@@ -725,6 +769,10 @@ travel:
 # -- 웹 남용 방어 (2026-09-28 사용자 지시 · 계획 `wiki/records/plans/2026-09-28_2130_웹_남용방어_실행계획.md`) --
 # 저장 `web_usage` · `runtime_limits`(마이그레이션 031). 코드 `app/domains/travel_ops/modules/web_account/web_guard.py`.
 # ★여기 값은 **기본값**이다. 운영 API(`/admin/limits`)로 바꾼 값이 있으면 그것이 이긴다(범위 = `bounds`).
+testing:
+  # 사용자 요청: 현재 시험 배포에서는 단축 입력을 바로 제공한다. 관리자에서 끌 수 있다.
+  intake_presets_enabled: true
+
 web_guard:
   # ★`[사용자 결정 2026-09-28]` 개발 단계라 **꺼 둔다.** 꺼져 있어도 세기는 한다(운영 API 의 오늘 사용량 · 실제 비용 산정 재료).
   limits_enabled: false

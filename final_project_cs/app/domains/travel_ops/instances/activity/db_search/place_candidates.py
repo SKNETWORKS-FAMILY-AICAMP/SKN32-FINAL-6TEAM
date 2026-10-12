@@ -39,14 +39,21 @@ from ..alternatives import RADIUS_MAX_KM, bounding_box
 #:  아직 적재하지 않은 출처는 행이 없을 뿐이라 넣어 둬도 해가 없다.
 DEFAULT_SOURCES = ("tour_api", "oliveyoung", "daiso", "artbox", "musinsa")
 
+#: ★`[2026-10-12]` 대분류는 `raw_json` 의 `lclsSystm1` 에서 읽는다. 코어 `place_catalog`(011)에는 `large_class_code` 칸이 없다
+#:  (`scripts/sync_place_catalog.py` 머리) — 그 칸은 예전 로컬 DB 에만 손으로 더해져 있었고, 마이그레이션만 돈 DB(CI)에서는
+#:  이 조회가 `UndefinedColumn` 으로 깨졌다(PR #38 CI). 이름은 `to_candidate` 가 읽는 그대로 둔다.
 _COLUMNS = ("content_id", "content_type_id", "title", "latitude", "longitude",
             "large_class_code", "raw_json", "fetched_at")
 _SELECT = ("SELECT content_id, content_type_id, title, latitude, longitude, "
-           "large_class_code, raw_json, fetched_at FROM place_catalog "
+           "raw_json->>'lclsSystm1' AS large_class_code, raw_json, fetched_at FROM place_catalog "
            "WHERE tenant_id=%s AND source = ANY(%s) ")
 
 ORIGIN_SQL = _SELECT + "AND content_id=%s ORDER BY source LIMIT 1"
+#: ★`[2026-10-12]` 관광공사 목록에서 내려간 장소(끝난 축제 · 폐업 · 비공개 — `activity.ac_place.delisted_at`, 303)는 후보로 내지 않는다.
+#:  원래 장소(ORIGIN)는 거르지 않는다 — 고객이 이미 고른 곳이다.
 POOL_SQL = (_SELECT + "AND content_id <> %s "
+            "AND NOT EXISTS (SELECT 1 FROM activity.ac_place a WHERE a.content_id = place_catalog.content_id "
+            "AND a.delisted_at IS NOT NULL) "
             "AND latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s "
             "ORDER BY content_id")
 

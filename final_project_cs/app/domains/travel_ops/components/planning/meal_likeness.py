@@ -8,22 +8,28 @@
 ★등급(작을수록 비슷하다) — `likeness(original, candidate)`
     0 BRAND     지점을 뗀 이름이 같다(「스타벅스 가나점」 → 「스타벅스 다라점」) — 사실상 같은 곳
     1 DISH      대표 메뉴 말이 같다(이름 · 세부 분류에서 — 「토속촌삼계탕」 · 「OO삼계탕」)
-    2 KIND      큰 종류가 같다(한식 · 중식 · 일식 · 양식 · 카페 …)
-    3 UNKNOWN   어느 한쪽 종류를 모른다 — 다르다고 단정하지 않는다
-    4 OTHER     종류가 다르다고 안다
+    2 STYLE     음식 결이 같다(고기구이 · 국물요리 · 면 …) — 큰 종류가 다르다고 알면 아니다(라멘 · 냉면은 둘 다 면) `[2026-10-12]`
+    3 KIND      큰 종류가 같다(한식 · 중식 · 일식 · 양식 · 카페 …)
+    4 UNKNOWN   어느 한쪽 종류를 모른다 — 다르다고 단정하지 않는다
+    5 OTHER     종류가 다르다고 안다
   원래 식당의 종류를 모르면 모든 후보가 같은 등급(UNKNOWN)이다 — 순서는 거리 · 동선이 정한다.
+  ★`[2026-10-12]` STYLE 을 더했다 — 이름에 메뉴 말이 없는 고깃집이 문을 닫으면 가까운 백반집이 같은 「한식」이라 먼저였다.
 
 ★종류를 읽는 곳(있는 것만) — 장소 `attributes`
     cuisine     [큰 종류, 세부] — 평가 시나리오 · 앞으로 채울 칸
     category    원장 `dn_place.category`(「한식」 · 「카페디저트」 · 「미상」) 또는 카카오 분류(「음식점 > 한식 > 삼계탕」)
-  원장에는 세부 종류 칸이 없다(`[실측 2026-10-07]` 영업 중 1,767곳 모두 큰 종류만). 세부는 이름의 메뉴 말로 짐작한다.
+    style       원장 `dn_place.style`(231 — 관광공사 대표메뉴 · 상호 · 취급메뉴로 붙인 결, 사람이 고칠 수 있다)
+  ★`[2026-10-12]` 원장 결은 영업 중 1,884곳 중 1,563곳에 있다. 이름의 메뉴 말로 아는 곳은 354곳이었다.
 """
 from __future__ import annotations
 
 import re
 from typing import Any, Mapping
 
-BRAND, DISH, KIND, UNKNOWN, OTHER = 0, 1, 2, 3, 4
+BRAND, DISH, STYLE, KIND, UNKNOWN, OTHER = 0, 1, 2, 3, 4, 5
+
+#: 장소 칸에서 종류를 읽는 키 — 요식 팀이 비교 직전에 원장 지금 값으로 맞춘다(`dining.nearby._with_profiles`)
+LIKENESS_KEYS = ("category", "style")
 
 #: 여러 출처의 큰 종류 이름을 하나로. 없는 이름(기타 · 미상)은 모름이다
 KINDS = {
@@ -88,6 +94,14 @@ def dish_of(place: Mapping[str, Any]) -> str | None:
     return None
 
 
+def style_of(place: Mapping[str, Any]) -> str | None:
+    """음식 결. 모르면 None."""
+    style = _attrs(place).get("style")
+    if not isinstance(style, str):
+        return None
+    return style.strip() or None
+
+
 def likeness(original: Mapping[str, Any], candidate: Mapping[str, Any]) -> int:
     """비슷한 정도(0 이 가장 비슷하다). 위 등급표."""
     a, b = brand_key(original.get("name")), brand_key(candidate.get("name"))
@@ -97,9 +111,13 @@ def likeness(original: Mapping[str, Any], candidate: Mapping[str, Any]) -> int:
     if dish_a and dish_a == dish_b:
         return DISH
     kind_a, kind_b = kind_of(original), kind_of(candidate)
+    style_a = style_of(original)
+    if style_a and style_a == style_of(candidate) and not (kind_a and kind_b and kind_a != kind_b):
+        return STYLE
     if kind_a is None or kind_b is None:
         return UNKNOWN
     return KIND if kind_a == kind_b else OTHER
 
 
-__all__ = ["BRAND", "DISH", "KIND", "OTHER", "UNKNOWN", "brand_key", "dish_of", "kind_of", "likeness"]
+__all__ = ["BRAND", "DISH", "KIND", "LIKENESS_KEYS", "OTHER", "STYLE", "UNKNOWN", "brand_key", "dish_of", "kind_of",
+           "likeness", "style_of"]

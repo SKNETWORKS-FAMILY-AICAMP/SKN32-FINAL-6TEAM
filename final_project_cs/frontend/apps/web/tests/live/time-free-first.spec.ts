@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockServer } from "./helpers";
-import { openFinished, toast } from "./plan-check-kit";
+import { head, openFinished, toast } from "./plan-check-kit";
 
 /**
  * `[2026-10-05 사용자 지시]` 시간을 끌 때 「여유부터 줄이고 · 여유를 다 쓰면 한 번 멈춰 안내하고 · 더 끌면 다음 일정이 하나씩 밀린다」, 이동 출발 시각도 같은 방식, 끄는 동안 하루 전체 미니맵.
@@ -121,6 +121,7 @@ test("이동의 「출발」 시각을 눌러 같은 방식으로 고친다: 늦
 
 test("고정한 일정에서 나서는 시각은 못 바꾸고 이유를 말한다", async ({ page, request }) => {
   await openFinished(page, request);
+  await head(page, "경복궁 관람").click();
   await page.getByRole("button", { name: "경복궁 관람 꼭 넣을 일정으로 고정" }).click();
   await expect(page.getByRole("button", { name: "경복궁 관람 고정 풀기" })).toBeVisible();
   await page.getByRole("button", { name: /^경복궁 관람에서 나서는 시각 고치기/ }).click({ force: true });          // 못 쓰는 단추(aria-disabled)라 눌러서 이유를 듣는다

@@ -1,0 +1,157 @@
+{
+  "enabled": true,
+  "realtime_enabled": false,
+  "catalog_version": "seoul-text-v2",
+  "scenarios": [
+    {
+      "code": "test1",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "서울 2일 기본 일정",
+      "description": "궁궐·시장·박물관과 다음 날 일정을 확인합니다.",
+      "category": "general",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 2일 여행 · 4명\n\n1일차 · 2026-10-18\n09:00~10:30 경복궁 관람\n12:30~13:30 광장시장 점심\n15:00~16:30 국립중앙박물관 관람\n\n2일차 · 2026-10-19\n10:00~11:00 북촌한옥마을 산책\n12:00~13:00 인사동 점심\n14:00~15:30 창덕궁 관람"
+    },
+    {
+      "code": "test2",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "겹치는 일정",
+      "description": "서로 겹치는 방문 시간을 확인합니다.",
+      "category": "time",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 1일 여행 · 4명\n\n1일차 · 2026-10-18\n09:00~11:00 경복궁 관람\n10:30~12:00 국립중앙박물관 관람\n12:30~13:30 광장시장 점심"
+    },
+    {
+      "code": "test3",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "늦은 궁궐 방문",
+      "description": "야간 방문이 실제 운영시간에 맞는지 확인합니다.",
+      "category": "hours",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 1일 여행 · 4명\n\n1일차 · 2026-10-18\n12:00~13:00 광장시장 점심\n21:00~22:00 경복궁 관람"
+    },
+    {
+      "code": "test4",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "화요일 궁궐 방문",
+      "description": "화요일의 휴무·운영 정보를 조회합니다.",
+      "category": "hours",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 1일 여행 · 4명\n\n1일차 · 2026-10-20\n10:00~11:30 경복궁 관람\n12:30~13:30 광장시장 점심"
+    },
+    {
+      "code": "test5",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "정해지지 않은 숙소",
+      "description": "호텔 이름을 정하지 않은 일정의 장소 확인을 살펴봅니다.",
+      "category": "place",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 1일 여행 · 4명\n\n1일차 · 2026-10-18\n09:00~09:30 호텔 조식\n10:30~12:00 경복궁 관람\n12:30~13:30 광장시장 점심"
+    },
+    {
+      "code": "test6",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "짧은 이동 간격",
+      "description": "멀리 떨어진 방문지 사이의 짧은 이동 간격을 확인합니다.",
+      "category": "mobility",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 1일 여행 · 4명\n\n1일차 · 2026-10-18\n10:00~11:00 국립중앙박물관 관람\n11:05~12:00 경복궁 관람\n12:30~13:30 광장시장 점심"
+    },
+    {
+      "code": "test7",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "종료 시각 생략",
+      "description": "종료 시각이 없는 일정의 확인·수정을 살펴봅니다.",
+      "category": "input",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 1일 여행 · 4명\n\n1일차 · 2026-10-18\n09:00 경복궁 관람\n12:30 광장시장 점심\n15:00 국립중앙박물관 관람"
+    },
+    {
+      "code": "test8",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "같은 장소 재방문",
+      "description": "같은 날 같은 장소를 두 번 방문하는 일정을 확인합니다.",
+      "category": "general",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 1일 여행 · 4명\n\n1일차 · 2026-10-18\n09:00~10:00 인사동 산책\n12:00~13:00 광장시장 점심\n16:00~17:00 인사동 산책"
+    },
+    {
+      "code": "test9",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "예약이 있는 방문",
+      "description": "예약 표시가 있는 일정의 보존·수정을 확인합니다.",
+      "category": "general",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 1일 여행 · 4명\n\n1일차 · 2026-10-18\n10:00~11:30 경복궁 관람\n12:30~13:30 광장시장 점심\n19:00~20:00 N서울타워 관람 · 예약 있음"
+    },
+    {
+      "code": "test10",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "원문 순서가 다른 일정",
+      "description": "입력 순서와 방문 시각이 다른 일정을 확인합니다.",
+      "category": "input",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 1일 여행 · 4명\n\n1일차 · 2026-10-18\n15:00~16:30 국립중앙박물관 관람\n09:00~10:30 경복궁 관람\n12:30~13:30 광장시장 점심"
+    },
+    {
+      "code": "test11",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "서울 7일 일정",
+      "description": "최대 7일 일정의 날짜 전환·목록을 확인합니다.",
+      "category": "general",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 7일 여행 · 4명\n\n1일차 · 2026-10-18\n10:00~11:30 경복궁 관람\n\n2일차 · 2026-10-19\n10:00~11:30 국립중앙박물관 관람\n\n3일차 · 2026-10-20\n10:00~11:30 북촌한옥마을 산책\n\n4일차 · 2026-10-21\n12:00~13:00 광장시장 점심\n\n5일차 · 2026-10-22\n10:00~11:30 창덕궁 관람\n\n6일차 · 2026-10-23\n10:00~11:00 청계천 산책\n\n7일차 · 2026-10-24\n19:00~20:00 N서울타워 관람"
+    },
+    {
+      "code": "test12",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "활동과 식사",
+      "description": "서울의 활동·식사·이동을 함께 확인합니다.",
+      "category": "general",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 1일 여행 · 4명\n\n1일차 · 2026-10-18\n10:00~11:30 북촌한옥마을 산책\n12:00~13:00 광장시장 점심\n15:00~16:30 국립중앙박물관 관람\n19:00~20:00 N서울타워 관람"
+    },
+    {
+      "code": "test13",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "여유 있는 도심 산책",
+      "description": "시간 겹침·장소 미정 없이 여유를 둔 기본안입니다.",
+      "category": "normal",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 1일 여행 · 4명\n\n1일차 · 2026-10-18\n10:00~11:00 청계천 산책\n14:00~15:00 인사동 산책"
+    },
+    {
+      "code": "test14",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "여유 있는 박물관 방문",
+      "description": "장소와 종료 시각을 정하고 이동 여유를 둔 기본안입니다.",
+      "category": "normal",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 1일 여행 · 4명\n\n1일차 · 2026-10-18\n10:00~12:00 국립중앙박물관 관람\n16:00~17:00 N서울타워 관람"
+    },
+    {
+      "code": "test15",
+      "mode": "prepared_text",
+      "catalog_version": "seoul-text-v2",
+      "name": "하루 한 곳씩 서울 2일",
+      "description": "하루에 한 곳씩 방문해 날짜 전환을 확인하는 기본안입니다.",
+      "category": "normal",
+      "expected": "입력은 시험용이며 검증 결과는 실제 조회에 따라 달라집니다.",
+      "text": "서울 2일 여행 · 4명\n\n1일차 · 2026-10-18\n10:00~11:00 청계천 산책\n\n2일차 · 2026-10-19\n10:00~12:00 국립중앙박물관 관람"
+    }
+  ]
+}

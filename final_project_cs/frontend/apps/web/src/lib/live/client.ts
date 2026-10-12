@@ -226,6 +226,7 @@ let probing: Promise<WebSession | null> | null = null;
 export function probeSession(language: Language, force = false): Promise<WebSession | null> {
   if (snapshot.probed && !snapshot.failed && !force) return Promise.resolve(snapshot.session);
   probing ??= (async () => {
+    const beganWith = snapshot;
     try {
       let session: WebSession | null;
       try {
@@ -234,12 +235,16 @@ export function probeSession(language: Language, force = false): Promise<WebSess
         if (!session) throw new LiveError("bad_session", translator(language)("서버가 세션 정보를 주지 않았어요.", "The server did not give the session details."));
         forgetLegacyKey();                                          // the cookie is who this is now
       } catch (error) {
+        if (snapshot !== beganWith) return snapshot.session;
         if (!(error instanceof LiveError) || error.code !== "unauthenticated") throw error;
         session = await adoptLegacyKey(language);
       }
+      // 로그인·로그아웃 이후 늦게 온 이전 조회는 새 인증 상태를 덮지 않는다.
+      if (snapshot !== beganWith) return snapshot.session;
       setSnapshot({ probed: true, failed: false, session });
       return session;
     } catch (error) {
+      if (snapshot !== beganWith) return snapshot.session;
       setSnapshot({ probed: true, failed: true, session: null });
       throw error;
     }

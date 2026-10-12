@@ -1,0 +1,35 @@
+{
+  "baseTeamCommit": "823610d01a546f920e5d6e89035d8d55c962735e",
+  "browser": "Chrome",
+  "viewports": [
+    375,
+    1280
+  ],
+  "beforeReproduced": {
+    "count": 1,
+    "total": 1
+  },
+  "uniqueBrowserCases": {
+    "passed": 15,
+    "total": 15,
+    "definition": "4 new cases plus 5 intake-review and 6 intake-start cases; repeated runs excluded"
+  },
+  "unit": {
+    "passed": 19,
+    "total": 19
+  },
+  "staticChecks": {
+    "tsc": 0,
+    "eslint": 0
+  },
+  "freshProductionBuild": true,
+  "buildId": "dpX20Ywwdf1TN480ByNh_",
+  "publicCsResponseVerified": false,
+  "productionDeploymentVerified": false,
+  "productHashes": {
+    "frontend/apps/web/src/features/intake-review/intake-review.tsx": "faccffc7b03821fe4579e7bc0fd71ec039b96bf562e429e0cf18764e8a14e16c",
+    "frontend/apps/web/src/features/intake-review/intake-starting.tsx": "0e461ed2491549d65eb8f078129ab0dbecd31010f32bb0747085d36993f93f6f",
+    "frontend/apps/web/src/lib/live/intake-start.ts": "6e1f6988d8b3747ffca89433be6ef8dec52122aec4f339c491356c399bc5c026",
+    "frontend/apps/web/src/features/trip-registration/trip-registration.tsx": "9a1cd003d44e39da3e827562222c1b2a75b9229d67d1c2bff872232d17d22435"
+  }
+}

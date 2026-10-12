@@ -284,15 +284,17 @@ def planner_shops(conn) -> list[dict[str, Any]]:
             "SELECT p.place_uid, p.name_ko, p.lat, p.lng, coalesce(p.road_address, p.jibun_address), "
             "       (SELECT min(r.external_id) FROM dining.dn_source_record r "
             "         WHERE r.place_uid = p.place_uid AND r.source_code = 'tourapi_kor_food' "
-            "           AND r.external_id IS NOT NULL) "
+            "           AND r.external_id IS NOT NULL), p.category, p.style "
             "FROM dining.dn_place p "
             "WHERE p.record_status <> 'closed' AND NOT p.is_synthetic AND p.lat IS NOT NULL AND p.lng IS NOT NULL "
             "ORDER BY p.name_ko, p.place_uid")
         rows = cur.fetchall()
         badges = shop_badges(cur)
+    # ★`[2026-10-12]` 큰 분류 · 음식 결을 싣는다 — 전에는 없어서 생성기가 고른 식당이 대체 순위에서 늘 종류 모름이었다
     return [{"place_uid": str(uid), "name": name, "lat": float(lat), "lng": float(lng),
-             "address": address, "content_id": content_id, "badges": badges.get(str(uid), [])}
-            for uid, name, lat, lng, address, content_id in rows]
+             "address": address, "content_id": content_id, "category": category, "style": style,
+             "badges": badges.get(str(uid), [])}
+            for uid, name, lat, lng, address, content_id, category, style in rows]
 
 
 #: 화면 · 일정 생성기가 쓰는 가게 표시. 순서가 곧 화면 순서다. `[2026-10-07]`
@@ -371,6 +373,7 @@ class PlannerLedger:
 #: ★`[2026-10-07]` 이름 찾기 단계 — 정확히 같은 이름 하나가 아니면 모두 확인 필요(`needs_review`)로 낸다
 NAME_TYPO_RATIO = 0.2               # 자모 거리 / 긴 쪽 길이 — 이 이하면 오타로 본다(`intake/places.TYPO_RATIO` 와 같다)
 NAME_PREFIX_MIN = 4                 # 앞부분 일치로 받는 최소 글자 수(「진옥화할매」 → 「진옥화할매원조닭한마리」)
+NAME_PREFIX_UNIQUE_MIN = 3          # ★`[2026-10-10 사용자 결정]` 이 글자 수부터는 앞부분이 맞는 가게가 **하나뿐일 때만** 받는다(「편강율」 → 「편강 율 플래그십&티하우스」)
 DISH_RADIUS_M = 800                 # 「근처 칼국수집」 · 「통인시장 기름떡볶이」 — 기준 좌표에서 이 안의 원장 가게
 _BRANCH_TAIL = re.compile(r"(본점|직영점|분점|별관|본관|신관|[가-힣a-z0-9]{1,8}점)")
 _NEAR_WORDS = ("근처", "주변", "가까운", "아무")
@@ -439,7 +442,8 @@ def find_place_by_name(conn, name: str | None, *, near: tuple[float, float] | No
     ★`[2026-10-07]` 넓혔다(장소 찾기 평가 v0 — 원장에 있는 가게를 못 꺼냈다). 단계 순서대로, 앞 단계에서 정해지면 멈춘다.
         1 exact   이름(공백 · 기호 뺀 것)이 같다 — 하나면 확정. 여럿이면 근처 기준으로 고르고 확인 필요
         2 branch  지점 표시를 뗀 이름이 같다(「소문난성수감자탕」 = 「소문난성수감자탕 별관」 · 「명동교자」 = 「명동교자 본점」)
-        3 prefix  원장 이름이 입력으로 시작한다(4자 이상 — 「진옥화할매」 → 「진옥화할매원조닭한마리」)
+        3 prefix  원장 이름이 입력으로 시작한다(4자 이상 — 「진옥화할매」 → 「진옥화할매원조닭한마리」.
+                  ★`[2026-10-10]` 3자는 그런 가게가 하나뿐일 때만 — 「편강율」 → 「편강 율 플래그십&티하우스」)
         4 typo    자모 거리 비율 0.2 이하인 이름이 하나(「이문설롱탕」 → 「이문설농탕」) — 둘이 똑같이 비슷하면 고르지 않는다
         5 dish    「근처 칼국수집」 · 「통인시장 기름떡볶이」 — 메뉴 말이 이름에 든 가게를 `near` 근처에서(`find_dish_near`)
       2~5 와 「여럿 중 고름」은 **확인 필요**다 — 정확히 같은 이름 하나만 확정한다.
@@ -468,8 +472,11 @@ def find_place_by_name(conn, name: str | None, *, near: tuple[float, float] | No
         return _found(shop, match="branch", review=True, others=len(branch) - 1,
                       note=(f"지점이 {len(branch)}곳 — 「{shop['name']}」을 골랐어요. 다르면 고쳐 주세요" if many
                             else f"원장의 「{shop['name']}」로 찾았어요"))
-    if len(base) >= NAME_PREFIX_MIN:
+    if len(base) >= NAME_PREFIX_UNIQUE_MIN:
         prefix = [s for s in shops if s["base"].startswith(base) or s["key"].startswith(base)]
+        # ★`[2026-10-10 사용자 결정]` 3글자(`NAME_PREFIX_MIN` 미만)는 앞부분이 맞는 가게가 하나뿐일 때만 — 짧은 말은 여러 가게의 앞머리가 되기 쉽다
+        if len(base) < NAME_PREFIX_MIN and len(prefix) != 1:
+            prefix = []
         if prefix:
             shop, many = _pick(prefix, near)
             return _found(shop, match="prefix", review=True, others=len(prefix) - 1,
@@ -612,7 +619,7 @@ def nearby_shops(conn, tenant_id: str, around: list[tuple[float, float]], *, rad
             "SELECT p.place_uid, p.name_ko, p.lat, p.lng, "
             "       (SELECT min(r.external_id) FROM dining.dn_source_record r "
             "         WHERE r.place_uid = p.place_uid AND r.source_code = 'tourapi_kor_food' "
-            "           AND r.external_id IS NOT NULL), p.category, "
+            "           AND r.external_id IS NOT NULL), p.category, p.style, "
             "       min(dining.distance_m(p.lat, p.lng, pts.lat, pts.lng)) AS d "
             "FROM dining.dn_place p CROSS JOIN pts "
             "WHERE p.record_status <> 'closed' AND NOT p.is_synthetic "
@@ -621,15 +628,30 @@ def nearby_shops(conn, tenant_id: str, around: list[tuple[float, float]], *, rad
             "  AND NOT EXISTS (SELECT 1 FROM dining.dn_core_place_link l "
             "                   WHERE l.tenant_id = %s AND l.place_uid = p.place_uid "
             "                     AND l.core_place_id::text = ANY(%s::text[])) "
-            "GROUP BY p.place_uid, p.name_ko, p.lat, p.lng, p.category "
+            "GROUP BY p.place_uid, p.name_ko, p.lat, p.lng, p.category, p.style "
             "ORDER BY d, p.place_uid LIMIT %s",
             ([float(a) for a, _ in around], [float(b) for _, b in around], radius_m,
              tenant_id, [str(i) for i in (visible_core_ids or [])], limit))
         rows = cur.fetchall()
     # ★`[2026-10-07]` 큰 종류(`category` — 한식 · 카페디저트 · 미상 …)를 싣는다 — 대체 순위의 「비슷한 곳」(`meal_likeness`)
+    # ★`[2026-10-12]` 음식 결(`style` — 고기구이 · 국물요리 …, 231)도 — 큰 종류만으로는 고깃집과 백반집이 같았다
     return [{"place_uid": str(uid), "name": name, "latitude": float(lat), "longitude": float(lng),
-             "content_id": content_id, "category": category, "distance_m": float(d)}
-            for uid, name, lat, lng, content_id, category, d in rows]
+             "content_id": content_id, "category": category, "style": style, "distance_m": float(d)}
+            for uid, name, lat, lng, content_id, category, style, d in rows]
+
+
+def shop_profiles(conn, place_uids: list[str]) -> dict[str, dict[str, str | None]]:
+    """원장 가게의 큰 분류 · 음식 결 {place_uid: {"category", "style"}}. 읽기만 한다. `[2026-10-12]`
+
+    ★대체 순위의 「비슷한 곳」은 장소 칸(`attributes`)에서 종류를 읽는데, 일정 생성기가 고른 식당에는 종류가 없었고
+      들여놓은 장소의 종류는 들여놓을 때 값 그대로였다. 비교 직전에 원장에서 다시 읽는다(`nearby.add_nearby`).
+    """
+    if not place_uids:
+        return {}
+    with conn.cursor() as cur:
+        cur.execute("SELECT place_uid, category, style FROM dining.dn_place WHERE place_uid::text = ANY(%s::text[])",
+                    ([str(u) for u in place_uids],))
+        return {str(uid): {"category": category, "style": style} for uid, category, style in cur.fetchall()}
 
 
 def link_core_place_to(conn, tenant_id: str, core_place_id: str, place_uid: str) -> None:

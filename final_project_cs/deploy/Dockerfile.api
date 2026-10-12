@@ -22,6 +22,8 @@ RUN pip install -r requirements.txt
 
 # 실행에 필요한 것만 — 시험 · 평가 · 문서 · 옛 판(legacy)은 넣지 않는다.
 COPY app ./app
+# 이미지 자체에 제외 목록·원자적 실행기가 들어 있는지 DB 접속 없이 검사한다.
+RUN python -m app.infrastructure.db.migrate --check > /srv/migration-safety.json
 COPY config ./config
 COPY prompts ./prompts
 COPY scripts ./scripts

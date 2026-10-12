@@ -1,0 +1,41 @@
+
+[WebServer] (node:27380) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:25760) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+[WebServer] (node:21040) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:7296) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 20 tests using 1 worker
+
+(node:5984) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/20] tests\live\bottom-pending-threshold-20261010.spec.ts:22:3 › 시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 375px
+[2/20] tests\live\bottom-pending-threshold-20261010.spec.ts:54:3 › 수정안 안내는 하단 공백 없이 붙고 보내기와 겹치지 않는다 375px
+[3/20] tests\live\bottom-pending-threshold-20261010.spec.ts:76:3 › 이동 시각은 둘 다 없으면 미정 하나·부분 누락은 알려진 값 유지 375px
+[4/20] tests\live\bottom-pending-threshold-20261010.spec.ts:22:3 › 시간은 보일 때 제목과 움직이고 가려지는 경계부터만 고정 1280px
+[5/20] tests\live\bottom-pending-threshold-20261010.spec.ts:54:3 › 수정안 안내는 하단 공백 없이 붙고 보내기와 겹치지 않는다 1280px
+[6/20] tests\live\bottom-pending-threshold-20261010.spec.ts:76:3 › 이동 시각은 둘 다 없으면 미정 하나·부분 누락은 알려진 값 유지 1280px
+[7/20] tests\live\compact-map-account-20261009.spec.ts:133:1 › 지도를 움직이는 동안 정보와 단추가 사라졌다가 멈추면 돌아온다
+[8/20] tests\live\compact-map-account-20261009.spec.ts:165:1 › 일정을 펼쳐 스크롤해도 왼쪽 시각은 해당 일정이 끝날 때까지 따라온다
+[9/20] tests\live\forms-time-follow-20261010.spec.ts:24:3 › 시각은 펼침·검토·되돌리기 상태에만 따라온다 375px
+[10/20] tests\live\forms-time-follow-20261010.spec.ts:54:3 › 직접 수정은 장소 입력 중복 없이 원래 장소와 거절된 초안을 유지한다 375px
+[11/20] tests\live\forms-time-follow-20261010.spec.ts:79:3 › 일정 추가는 입력부터 열고 검색·지우기·선택 후에도 초안을 보존한다 375px
+[12/20] tests\live\forms-time-follow-20261010.spec.ts:110:3 › 추가 입력 검증과 검색 초점·실제 선택 장소 저장 375px
+[13/20] tests\live\forms-time-follow-20261010.spec.ts:24:3 › 시각은 펼침·검토·되돌리기 상태에만 따라온다 1280px
+[14/20] tests\live\forms-time-follow-20261010.spec.ts:54:3 › 직접 수정은 장소 입력 중복 없이 원래 장소와 거절된 초안을 유지한다 1280px
+[15/20] tests\live\forms-time-follow-20261010.spec.ts:79:3 › 일정 추가는 입력부터 열고 검색·지우기·선택 후에도 초안을 보존한다 1280px
+[16/20] tests\live\forms-time-follow-20261010.spec.ts:110:3 › 추가 입력 검증과 검색 초점·실제 선택 장소 저장 1280px
+[17/20] tests\live\time-direct-drag.spec.ts:17:1 › 시간을 탭 없이 바로 잡고 아래로 끌면 늦춰지고, 끄는 동안 폼은 안 열리고 미니맵이 뜨며, 놓으면 한 번에 저장된다
+[18/20] tests\live\timeline-endpoints-20261009.spec.ts:33:3 › 추가 취소 후 바깥 화면 고정·마지막 카드 전체 표시 375px
+[19/20] tests\live\timeline-endpoints-20261009.spec.ts:33:3 › 추가 취소 후 바깥 화면 고정·마지막 카드 전체 표시 1280px
+[20/20] tests\live\timeline-endpoints-20261009.spec.ts:74:1 › 도착 시각이 없는 구간은 시각을 지어내지 않는다
+  20 passed (1.7m)
+

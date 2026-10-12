@@ -14,7 +14,7 @@
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import logging
 from typing import Any, Callable
@@ -304,7 +304,9 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         if existing:
             case = repository.get_case(conn, tenant_id=tenant, case_id=existing[0])
             before = (case.get("state_json") or {}).get("answer")
-            return {"status": "duplicate", "case_id": str(existing[0]),
+            saved_reply = (case.get("state_json") or {}).get("chat_reply") or {}
+            return {**{k: saved_reply[k] for k in ("choices", "choices_title", "more", "answer_web") if k in saved_reply},
+                    "status": "duplicate", "case_id": str(existing[0]),
                     "case_status": str(case["status"]),
                     "answer": f"같은 요청을 이미 받았어요.{chr(10) + str(before) if before else ''}"}
         # ★`[2026-09-29]` **사실 질문의 답은 분류 전에 규칙으로 만든다**(모델을 안 쓴다) — 그리고 Case 기록에 **처음부터**
@@ -501,6 +503,9 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         # ★`asked` — 「먼저 물어봐줘」·「변경 안 할 일정」이라 바꾸지 않고 물었다(D-020). 처리한 것이다 —
         #   답은 묻는 문장이고, 고객은 계획서 링크·웹에서 고른다. 사람에게 넘길 일이 아니다.
         answer = trip_replies.outcome_reply(outcome.get("status"), outcome, message)
+        chat_reply = {k: outcome[k] for k in ("choices", "choices_title", "more") if k in outcome}
+        if outcome.get("text_web"):
+            chat_reply["answer_web"] = outcome["text_web"]
         # ★`[2026-09-28]` 「바꿀 것 없음」(오늘 일정 없음 · 그 뒤 식사 없음 · 영향 없음 · 이미 바뀜)도 **답**이다 —
         #   `ANSWERS` 머리 주석이 그렇게 말하는데 여기 목록에 없어 사람 대기로 떨어졌다(ui 세션 실서버 시험).
         #   「바꿀 다른 안이 없음」(`no_alternate`)도 오류가 아니라 답이다 — 사람 대기는 버그·오류 리포트에만(사용자 결정)
@@ -513,7 +518,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             # ★`[2026-09-29 ui 세션 지적]` 무엇을 봤고 왜 안 됐는지(반경 · 떨어진 후보와 이유)도 남긴다 — 「없어요」만 남아
             #   기록으로 원인을 알 수 없었다
             kept = {k: outcome[k] for k in ("status", "reason", "radius_m", "seen", "rejected", "version") if k in outcome}
-            move2(EventType.COMPLETED, {"answer_ref": ref, "state_patch": {"answer": answer, "trip_outcome": kept}})
+            move2(EventType.COMPLETED, {"answer_ref": ref, "state_patch": {"answer": answer, "trip_outcome": kept, "chat_reply": chat_reply}})
         else:
             # ★`[2026-09-28]` 답을 남긴다 — 전에는 완료 전이에만 남겨, 「바꿀 것 없음」(`no_meal` 등) 뒤 같은 요청이 오면
             #   「같은 요청을 이미 받았어요」만 나가고 앞의 답이 빠졌다(시험을 조여서 찾았다)
@@ -641,6 +646,16 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         answer = ("지금 요청을 해석하지 못했어요(해석 모델 응답 오류) — 일정은 바꾸지 않았어요. 잠시 뒤 다시 말씀해 주세요.")
         return view({"status": "escalated", "reason": "decision_failed", "failure": failure, "answer": answer})
 
+    from . import chat_log, fact_context
+    context_now = datetime.now(timezone.utc)
+    context_trip, context_items = store.latest(conn, trip_id)
+    turns = chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id)
+    decision, focus, stale_selection = fact_context.resolve(
+        decision, items=context_items, message=message, selected=selected, turns=turns,
+        version=context_trip["version"], now=context_now,
+        ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")))
+    if decision.reads:
+        focus, stale_selection = None, False
     decision = fact_first(decision)      # 사실 질문이면 되묻지 않고 먼저 답한다(사용자 지시 2026-09-29)
     event = classify_case(conn, tenant_id=tenant, case_id=case_id, text=message,
                           classifier=lambda _text: labels(decision), actor_id=actor_id)
@@ -660,16 +675,34 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     basis: dict[str, Any] = {}
     outcome: dict[str, Any]
 
-    if action == "clarify":
+    if action == "answer_fact" and decision.reads:
+        from .read_requests import reply as read_reply
+        outcome, basis, focus = read_reply(
+            decision, items=now_items, message=message, selected=selected, turns=turns,
+            version=base, now=at, context_now=context_now,
+            ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")), place_source=place_source)
+    elif stale_selection:
+        outcome = {"status": "clarify", "text": "가리키는 일정을 최신 여행에서 확인하지 못했어요. 일정 이름을 알려 주시거나 다시 선택해 주세요."}
+    elif action == "clarify":
         outcome = _clarify_with_choices(decision, items, at=at, selected=selected)
     elif action == "other":
-        outcome = {"status": "answered", "text": trip_replies.other_reply(items, at)}
+        outcome = {"status": "answered", "text": decision.social or trip_replies.other_reply(items, at)}
+    elif action == "answer_fact" and decision.fact in ("schedule", "changeability"):
+        from . import schedule_query
+        text, basis = schedule_query.reply(decision.fact, decision.query, items=now_items, now=at)
+        outcome = {"status": "answered", "text": text}
     elif action == "answer_fact" and decision.fact in LOCATION_FACTS:
         # ★`[2026-09-30 사용자 지시]` 현재 위치가 필요한 질문 — 위치가 없으면 **일정을 바꾸지 않고** 위치를 부탁한다(`needs_location`)
         outcome = _answer_here(conn, kind=decision.fact, fix=here, trip=current, items=items, item=item, at=at,
                                store=store, desk=desk, trip_id=trip_id)
     elif action == "answer_fact":
         kind = decision.fact if decision.fact != "none" else "detail"
+        if item is None:
+            _, item = trip_facts.target(now_items, message, at)
+            if item is not None:
+                from dataclasses import replace
+                decision = replace(decision, item=item)
+                focus = {"item_id": str(item.item_id), "version": base, "at": context_now.isoformat(), "source": "fact_lookup"}
         text, basis = trip_facts.fact_reply(kind, message=message, items=items, now=at, place_source=place_source,
                                             item=item)
         # ★`[2026-09-29 ui 세션 요청]` 전체 설명은 핵심만 답으로, 나머지는 `more`(화면의 「더 보기」)로 나눈다
@@ -762,6 +795,11 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
 
     answer = trip_replies.outcome_reply(outcome.get("status"), outcome, message)
     status = outcome.get("status")
+    chat_reply = {k: outcome[k] for k in ("choices", "choices_title", "more") if k in outcome}
+    if outcome.get("text_web"):
+        chat_reply["answer_web"] = outcome["text_web"]
+    if focus and status == "answered":
+        chat_reply["focus"] = focus
     kept = {k: outcome[k] for k in ("status", "reason", "radius_m", "seen", "rejected", "version", "proposal_id",
                                     "choices") if k in outcome}
     if basis.get("suspect_wrong_change"):
@@ -771,10 +809,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         kept["basis"] = json.loads(json.dumps(basis, ensure_ascii=False, default=str))
     if status in _DONE:
         ref = f"trip:{trip_id}:" + (f"v{outcome['version']}" if outcome.get("version") else str(status))
-        move(EventType.COMPLETED, {"answer_ref": ref, "state_patch": {"answer": answer, "trip_outcome": kept}})
+        move(EventType.COMPLETED, {"answer_ref": ref, "state_patch": {"answer": answer, "trip_outcome": kept, "chat_reply": chat_reply}})
     else:
         move(EventType.GUARDRAIL_ESCALATED, {"guardrail": "trip_desk", "observed": str(status),
-                                             "state_patch": {"answer": answer, "trip_outcome": kept}})
+                                             "state_patch": {"answer": answer, "trip_outcome": kept, "chat_reply": chat_reply}})
     return view({"status": status, "reason": f"decision_{action}", "decision": decision.record(),
                  "outcome": outcome, "answer": answer, **({"choices": outcome["choices"]} if outcome.get("choices") else {}),
                  **({"more": outcome["more"]} if outcome.get("more") else {}),

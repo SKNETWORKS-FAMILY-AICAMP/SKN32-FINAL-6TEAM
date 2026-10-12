@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "historical_files": [
+    "002_domain_commerce.sql",
+    "006_products_catalog.sql",
+    "007_returns_order_item.sql",
+    "008_products_return_restriction.sql"
+  ],
+  "reason": "D-023: preserve historical SQL bytes; exclude retired commerce tables from current installation and reruns. No existing database tables are dropped."
+}

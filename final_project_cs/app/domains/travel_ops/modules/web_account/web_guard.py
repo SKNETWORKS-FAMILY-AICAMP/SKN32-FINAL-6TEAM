@@ -111,6 +111,9 @@ def specs() -> dict[str, LimitSpec]:
                                         str(guard.get("web_guard.map_provider.default")), choices=choices)
     # ★`[2026-09-29 사용자 지시]` 개발 모드 — 켜면 웹 채팅 응답에 근거(`basis`)를 싣는다. 고객 문장에는 늘 싣지 않는다
     out["web.dev_mode"] = LimitSpec("web.dev_mode", "개발 모드(근거 보이기)", "", "choice", "off", choices=("off", "on"))
+    out["testing.intake_presets_enabled"] = LimitSpec(
+        "testing.intake_presets_enabled", "준비된 시험 일정 입력(test1~test15)", "", "bool",
+        bool(guard.get("testing.intake_presets_enabled")))
     # ★`[2026-09-29 Codex 3회차 합의]` 채팅 결정 단위 — 재기동 없이 끄고 켠다(오변경이 보이면 곧바로 shadow 로)
     out["chat.decision_mode"] = LimitSpec("chat.decision_mode", "채팅 해석 방식(결정 단위)", "", "choice",
                                           _mode_text(guard.get("travel.decision_unit.mode")),

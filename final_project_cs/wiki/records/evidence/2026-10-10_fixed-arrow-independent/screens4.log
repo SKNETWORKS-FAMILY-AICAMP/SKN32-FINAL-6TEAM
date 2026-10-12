@@ -1,0 +1,24 @@
+
+[WebServer] (node:14964) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:28904) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+
+[WebServer] (node:5948) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:21324) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 4 tests using 1 worker
+
+(node:22696) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/4] tests\live\aligned-map-quiet-cards-20261010.spec.ts:32:3 › 메뉴 정렬·고정 거리 글자·화살표만 전환 375px
+[2/4] tests\live\aligned-map-quiet-cards-20261010.spec.ts:32:3 › 메뉴 정렬·고정 거리 글자·화살표만 전환 1280px
+[3/4] tests\live\compact-map-account-20261009.spec.ts:120:1 › 지도 도구는 5초 뒤 접히고 키보드 조작 중에는 유지된다
+[4/4] tests\live\compact-map-account-20261009.spec.ts:133:1 › 지도를 움직이는 동안 정보와 단추가 사라졌다가 멈추면 돌아온다
+  4 passed (40.6s)

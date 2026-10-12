@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from app.core.settings import get_guardrails
 from app.domains.travel_ops.instances.activity import ActivityTeam
 
 from ..helpers import FakeTools, pack, task
@@ -30,6 +31,17 @@ CLEAR = {"verdict": "clear", "disruptions": [], "advisories": [], "checks": [], 
 QUIET_MESSAGE = {"kind": "기타", "step": "안전안내", "text": "[종로구청] 세종대로 일대 집회로 교통 혼잡이 예상됩니다",
                  "created_at": "2026-11-10T09:00:00+09:00", "regions": ["서울특별시 종로구"], "serial": "7",
                  "weather": False}
+
+
+#: ★`[2026-10-12]` 이 파일은 **섀도**를 잰다 — 실시간 운영의 기본값이 `llm`(규칙 뒤 웹 확인, 사용자 결정)으로 바뀌어,
+#:  10-12 전 섀도 표를 여기서 고정한다. `llm` 경로는 `test_activity_live_status_first.py`.
+SHADOW_MODES = {"closure": "shadow", "operating_hours": "rule", "weather_sensitive": "shadow",
+                "disaster_effect": "shadow", "live_status": "shadow"}
+
+
+@pytest.fixture(autouse=True)
+def _shadow_kind_modes(monkeypatch):
+    _with_kind_modes(monkeypatch, **SHADOW_MODES)
 
 
 class ContraryJudgeLLM:
@@ -187,3 +199,102 @@ def test_shadow_records_carry_no_place_name_or_customer_text():
 
     for record in records.values():
         assert "경복궁" not in str(record) and "집회" not in str(record)
+
+
+# ── 종류별 모드(구현 계획 1.4) `[2026-10-12]` ─────────────────────────────
+
+def _with_kind_modes(monkeypatch, **modes):
+    """가드레일 대신 이 표로 — 나머지 종류는 `rule`."""
+    from app.domains.travel_ops.instances.activity import team as team_module
+    from app.domains.travel_ops.instances.activity.judge.modes import kind_mode
+
+    monkeypatch.setattr(team_module, "kind_mode", lambda kind, _modes=None: kind_mode(kind, modes))
+
+
+def test_the_configured_default_keeps_todays_shadows():
+    """기본 설정 — 휴무 · 실내외 · 재난은 섀도, 운영시간은 부르지 않는다. 실시간 운영은 `llm`(규칙 뒤 웹 확인, 10-12 사용자 결정)."""
+    from app.domains.travel_ops.instances.activity.judge.modes import kind_mode
+
+    modes = get_guardrails().get("travel.activity_judge.kind_modes")
+    assert [kind_mode(k, modes) for k in ("closure", "weather_sensitive", "disaster_effect")] == ["shadow"] * 3
+    assert kind_mode("operating_hours", modes) == "rule" and kind_mode("live_status", modes) == "llm"
+
+
+def test_a_kind_set_to_rule_is_not_called_and_the_others_still_are(monkeypatch):
+    _with_kind_modes(monkeypatch, closure="shadow", disaster_effect="rule", live_status="rule")
+    records, llm = _records("quiet_message_outdoor")
+
+    assert "disaster_effect" not in llm.kinds and "live_status" not in llm.kinds
+    assert set(records) <= {"closure", "weather_sensitive"}
+
+
+def test_turning_a_kind_off_never_changes_what_the_customer_gets(monkeypatch):
+    values = _values(**SCENARIOS["closed_by_text"])
+    request = _request()
+    with_all = _customer_view(_run(values, llm=ContraryJudgeLLM(), request=request))
+    _with_kind_modes(monkeypatch, closure="rule")
+
+    assert _customer_view(_run(values, llm=ContraryJudgeLLM(), request=request)) == with_all
+
+
+@pytest.mark.parametrize("bad", ["off", False, "Shadow"])      # `llm` 은 D-CS-015 개정 2 로 받는다(10-12)
+def test_an_unaccepted_kind_mode_stops_instead_of_guessing(bad):
+    from app.domains.travel_ops.instances.activity.judge.modes import kind_mode
+
+    with pytest.raises(ValueError):
+        kind_mode("closure", {"closure": bad})
+
+
+def test_over_budget_kinds_are_not_called_and_are_recorded_as_skipped():
+    """예산(4.6)이 웹 판정을 막으면 실시간은 부르지 않고 `skipped`(budget_exhausted)로 남는다 — 나머지는 그대로 부른다."""
+    asked: list[str] = []
+
+    def budget(kind):
+        asked.append(kind)
+        return kind != "live_status"
+
+    records: list[dict] = []
+    llm = ContraryJudgeLLM()
+    team = ActivityTeam(FakeTools(_values(**SCENARIOS["quiet_message_outdoor"])))
+    team.judge_llm, team.judge_runner, team.judge_shadow_sink, team.judge_budget = llm, Inline(), records.append, budget
+    asyncio.run(team.execute(_request()))
+
+    assert "live_status" in asked and "live_status" not in llm.kinds and "disaster_effect" in llm.kinds
+    [skipped] = [r for r in records if r["kind"] == "live_status"]
+    assert skipped["event"] == "activity_judge_shadow_skipped" and skipped["llm_error"] == "budget_exhausted"
+
+
+def test_an_unreadable_budget_skips_instead_of_calling():
+    def broken(_kind):
+        raise RuntimeError("db down")
+
+    llm = ContraryJudgeLLM()
+    team = ActivityTeam(FakeTools(_values(**SCENARIOS["closed_by_text"])))
+    team.judge_llm, team.judge_runner, team.judge_budget = llm, Inline(), broken
+    asyncio.run(team.execute(_request()))
+
+    assert llm.kinds == []
+
+
+def test_over_budget_never_changes_what_the_customer_gets():
+    values = _values(**SCENARIOS["closed_by_text"])
+    request = _request()
+    team = ActivityTeam(FakeTools(values))
+    team.judge_llm, team.judge_runner, team.judge_budget = ContraryJudgeLLM(), Inline(), lambda _k: False
+
+    assert _customer_view(asyncio.run(team.execute(request))) == _customer_view(_run(values, request=request))
+
+
+def test_budget_meters_and_caps_come_from_the_activity_settings():
+    from app.domains.travel_ops.instances.activity.judge.modes import budget_caps, budget_meter
+
+    assert budget_meter("live_status") == "activity_judge_web" and budget_meter("closure") == "activity_judge"
+    caps = budget_caps()
+    assert set(caps) == {"activity_judge", "activity_judge_web"}
+    assert caps["activity_judge_web"]["day"] < caps["activity_judge"]["day"]      # 웹은 비싸서 더 좁다
+
+
+def test_a_kind_missing_from_the_table_is_not_called():
+    from app.domains.travel_ops.instances.activity.judge.modes import kind_mode
+
+    assert kind_mode("operating_hours", {"closure": "shadow"}) == "rule"
