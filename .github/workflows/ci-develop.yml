@@ -5,13 +5,30 @@
 #   보안(scope · PII · 추적 파일)은 RULE.md §5 에 따라 같은 시험 DB 에서 검사한다 — `[2026-10-05]` 팀 저장소 develop 판에서 가져옴(우리 로컬에서 22개 통과 확인).
 #   통합·e2e 와 Docker 빌드는 main 관문(ci-main.yml)에서 본다.
 #   실제 LLM 호출 시험(live)은 pytest.ini 가 기본으로 빼 둔다.
+#
+# ★언제 도나 `[2026-10-12 정리]` — 한 커밋에 같은 시험이 두 번 돌지 않게 두 관문의 자리를 나눈다.
+#   빠른 관문(이 파일) : role-manager 에 push · role-manager 로 오는 PR  → 약 2분
+#   전체 관문(ci-main) : develop · main 에 push · develop · main 으로 오는 PR → 약 10분
+#   ☆10-08 통합 커밋이 두 파일 모두 role-manager · develop 에서 돌게 넓혀, 같은 커밋을 두 브랜치에 올리면
+#     4번(빠른 2 + 전체 2) 돌았다. 전체 관문이 빠른 관문의 시험을 전부 포함하므로 develop 에서 빠른 관문은 중복이다.
+#   ★저장소 맨 위 문서(wiki/ · program/ · 맨 위 *.md)만 바뀐 push 는 건너뛴다 — 파이썬 시험·린트가 읽지 않는 곳이다.
+#     final_project_cs/wiki 는 건너뛰지 않는다(계약 시험이 그 문서를 코드와 대조한다).
+#     PR 에는 이 필터를 걸지 않는다 — 필수 검사가 「대기」로 남아 병합이 막히는 것을 피한다.
 name: CI (develop)
 
 on:
   push:
-    branches: [role-manager, develop]
+    branches: [role-manager]
+    paths-ignore:
+      - "wiki/**"
+      - "program/**"
+      - "*.md"
   pull_request:
-    branches: [role-manager, develop]
+    branches: [role-manager]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-develop-${{ github.ref }}
@@ -21,6 +38,7 @@ jobs:
   lint:
     name: ruff (F·E9)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -33,6 +51,8 @@ jobs:
   test:
     name: architecture · contract · unit
     runs-on: ubuntu-latest
+    # 기본 제한은 6시간이다 — 멈춘 시험 하나가 러너를 6시간 붙잡지 않게 평소(약 2분)의 여러 배로 끊는다.
+    timeout-minutes: 20
     services:
       postgres:
         # pgvector 확장이 들어 있는 이미지. 기본 postgres 이미지로는 벡터 열을 만들지 못한다.

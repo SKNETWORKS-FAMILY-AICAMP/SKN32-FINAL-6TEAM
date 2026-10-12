@@ -170,6 +170,19 @@ python -m scripts.check_env
 | 전체(main 과 같음) | `python -m pytest -q` (실제 모델을 부르는 `live` 는 `pytest.ini` 가 뺀다) |
 | 환경값 | CI 와 같게 — `.github/workflows/ci-main.yml` 의 `env` 칸(시험용 가짜 값)과 위 `PYTHONPATH` |
 
+**GitHub 검사(파이썬)는 언제 무엇을 도나** `[2026-10-12 정리]` — 한 커밋에 같은 시험이 두 번 돌지 않게 자리를 나눴다.
+
+| 언제 | 도는 검사 | 걸리는 시간 `[실측 — 팀 저장소 10-12 실행 기록]` |
+|---|---|---|
+| `role-manager` 에 push · `role-manager` 로 오는 PR | 빠른 관문 `CI (develop)` — 린트 + 아키텍처·계약·단위·보안 | 약 1~2분 |
+| `develop` · `main` 에 push · `develop` · `main` 으로 오는 PR | 전체 관문 `CI (main)` — 린트 + 전체 시험(live · rag 제외) + 배포 이미지(`deploy/Dockerfile.api`) 빌드 | 약 7~10분 |
+| 저장소 맨 위 문서(`wiki/` · `program/` · 맨 위 `*.md`)만 바뀐 push | 건너뜀 (PR 은 건너뛰지 않는다) | 0 |
+
+- 같은 커밋을 `role-manager` → `develop` 순으로 올리면 빠른 관문 1번 + 전체 관문 1번이다(앞 판은 4번 — 10-08 통합 커밋이 두 관문을 두 브랜치 모두에서 돌게 넓혔다).
+- `final_project_cs/wiki/` 만 바뀐 push 는 건너뛰지 **않는다** — 계약 시험이 그 문서(상태 표 등)를 코드와 대조한다.
+- 각 job 에 제한 시간(빠른 20분 · 전체 40분)이 있다. 넘기면 멈춘 시험이 있다는 뜻이다 — 로그 끝의 `--durations` 표(오래 걸린 시험 25개)부터 본다.
+- 손으로 다시 돌리려면 GitHub 의 Actions 탭에서 워크플로를 고르고 **Run workflow** 를 누른다(`workflow_dispatch`).
+
 **이동을 거치는 시험을 새로 쓸 때** — 앱을 만든 직후 시험용 고정 구간을 명시한다. 안 하면 이동 팀이
 「엔진 미준비」로 거절해 503 `team_unavailable`(`reason: engine_unavailable`)이 난다([plugin-availability](../teams/team-contract/plugin-availability.md) — 직선거리 어림으로 대신하지 않는 것이 계약이다).
 
