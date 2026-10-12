@@ -35,6 +35,8 @@ context:
 
 # ── 신뢰성 가드레일 (v5 §11) ────────────────────────────────────────
 reliability:
+  a2a_cancel_timeout_seconds: 1
+  team_cleanup_grace_seconds: 0.1
   llm_call_timeout_seconds: 20
   # ★로컬 파인튜닝 추론은 원격 API 보다 느리다. 같은 20초를 물리면
   #   그 경로가 타임아웃난다 — 그래서 **키를 나눈다.** 값을 코드에
@@ -167,8 +169,6 @@ security:
   scopes:
     - case:read
     - case:write
-    - order:read
-    - return:read
     - action:approve
     - mcp:read
     - composer:read
@@ -274,10 +274,11 @@ travel:
   #   ★전환 조건(계획 `wiki/records/plans/2026-09-29_1640_채팅_결정단위_실행계획.md`): 재생 시험에서 할 일+대상 95% 이상 ·
   #    엉뚱한 대상 변경 0건 · 지연 p95 5초 이하를 넘으면 on
   decision_unit:
+    focus_ttl_seconds: 1800
     # ★`[2026-09-29 Codex 3회차 합의]` 켠다 — 재생 129문장 95.3% · 엉뚱한 대상 0 · p95 4.5초. 옛 경로는 같은 실제 기록 66에서
     #  30건 안팎 오처리. 운영 설정 `chat.decision_mode` 로 재기동 없이 끈다. 오변경 의심(바꾼 뒤 15분 안 되돌림)이 1건이라도 나오면 shadow
     mode: "on"            # ★따옴표 필수 — YAML 은 맨 on 을 참(True)으로 읽는다(그래서 한 번 꺼진 채로 돌았다)
-    num_predict: 400     # 답 길이 상한(토큰). ★160 이면 되묻기 후보(choices)가 붙은 답이 중간에 잘려 JSON 이 깨졌다(재생 시험 2026-09-29) — 짧은 답은 일찍 끝나 지연이 거의 같다
+    num_predict: 1200     # 답 길이 상한(토큰). ★160 이면 되묻기 후보(choices)가 붙은 답이 중간에 잘려 JSON 이 깨졌다(재생 시험 2026-09-29) — 짧은 답은 일찍 끝나 지연이 거의 같다
   # -- 후보 이유 문장을 모델이 쓴다 (2026-10-07 사용자 결정, 마이그레이션 057 · `components/intake/reasons.py`) --
   # ★「이유 문장만 모델이 확인된 값으로 쓴다 — 보이는 후보 2~3개만, 결과 저장, 실패하면 지금의 틀 문장」. 모델은 **사실 목록만** 받고(이름 · 단 · 거리 · 영업 · 여유 · 일정의 장소),
   #   그 밖의 이름 · 숫자 · 평가를 쓴 문장은 검사(`guard`)가 버려 틀 문장으로 돌아간다. 출처: **우리가 고른 값**
@@ -361,6 +362,7 @@ travel:
       message: 90
       plan: 240
       intake: 600
+      consents: 60
     intake_poll_seconds: 1
     intake_stalled_seconds: 180
   # -- 고객 연락처 시험 발송 (2026-10-01 — `customer_profile.py`, `POST /v1/web/profile/discord/test`) --
@@ -678,6 +680,10 @@ travel:
 # -- 웹 남용 방어 (2026-09-28 사용자 지시 · 계획 `wiki/records/plans/2026-09-28_2130_웹_남용방어_실행계획.md`) --
 # 저장 `web_usage` · `runtime_limits`(마이그레이션 031). 코드 `app/domains/travel_ops/modules/web_account/web_guard.py`.
 # ★여기 값은 **기본값**이다. 운영 API(`/admin/limits`)로 바꾼 값이 있으면 그것이 이긴다(범위 = `bounds`).
+testing:
+  # 사용자 요청: 현재 시험 배포에서는 단축 입력을 바로 제공한다. 관리자에서 끌 수 있다.
+  intake_presets_enabled: true
+
 web_guard:
   # ★`[사용자 결정 2026-09-28]` 개발 단계라 **꺼 둔다.** 꺼져 있어도 세기는 한다(운영 API 의 오늘 사용량 · 실제 비용 산정 재료).
   limits_enabled: false

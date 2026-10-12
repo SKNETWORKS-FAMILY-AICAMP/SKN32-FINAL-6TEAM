@@ -1,0 +1,320 @@
+<title>A-COP 파트별 진행 브리핑</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --bg:#f4f6fa; --surface:#fff; --surface-2:#f8fafc; --line:#e2e7f0;
+    --text:#111a2c; --text-dim:#5b6779; --accent:#2f5bd8; --accent-strong:#2247ab; --accent-weak:#e8effd;
+    --critical:#c0362c; --critical-bg:#fdecea; --warn:#9a6200; --warn-bg:#fff6e2;
+    --active:#1d63c7; --active-bg:#e8f1fd; --done:#0d7a4d; --done-bg:#e6f6ee;
+    --idle:#5b6779; --idle-bg:#eef1f6;
+    --mono:ui-monospace,SFMono-Regular,"Cascadia Mono",Consolas,monospace;
+    --radius:12px; --shadow:0 1px 2px #0f172a0f,0 8px 24px #0f172a0a;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#0d1219; --surface:#151c26; --surface-2:#1b232f; --line:#28323f;
+    --text:#e7ecf3; --text-dim:#93a1b4; --accent:#7aa2f7; --accent-strong:#9dbaf9; --accent-weak:#1b2740;
+    --critical:#ff8b80; --critical-bg:#3a1c1a; --warn:#f2bd5c; --warn-bg:#3a2c12;
+    --active:#7aa2f7; --active-bg:#182742; --done:#5bd6a0; --done-bg:#12332a;
+    --idle:#93a1b4; --idle-bg:#212a36;
+    --shadow:0 1px 2px #0006,0 8px 24px #0000004d;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#0d1219; --surface:#151c26; --surface-2:#1b232f; --line:#28323f;
+    --text:#e7ecf3; --text-dim:#93a1b4; --accent:#7aa2f7; --accent-strong:#9dbaf9; --accent-weak:#1b2740;
+    --critical:#ff8b80; --critical-bg:#3a1c1a; --warn:#f2bd5c; --warn-bg:#3a2c12;
+    --active:#7aa2f7; --active-bg:#182742; --done:#5bd6a0; --done-bg:#12332a;
+    --idle:#93a1b4; --idle-bg:#212a36;
+    --shadow:0 1px 2px #0006,0 8px 24px #0000004d;
+  }
+
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI","Noto Sans KR",sans-serif;
+    font-size:15.5px;line-height:1.62;-webkit-font-smoothing:antialiased;overflow-x:clip}
+  .shell{width:100%;max-width:820px;margin:0 auto;padding:3rem 1.5rem 5rem;min-width:0}
+
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--accent);font-weight:600}
+  h1{font-size:1.9rem;line-height:1.25;letter-spacing:-.015em;margin:.5rem 0 .4rem;text-wrap:balance;
+    font-weight:800}
+  .lede{color:var(--text-dim);margin:0 0 1.75rem;max-width:60ch;font-size:1rem}
+  .meta{font-family:var(--mono);font-size:.78rem;color:var(--text-dim);display:flex;gap:1.1rem;
+    flex-wrap:wrap;margin-bottom:2.25rem;padding-bottom:1.5rem;border-bottom:1px solid var(--line);
+    min-width:0;overflow-wrap:anywhere}
+  .meta b{color:var(--text);font-weight:600}
+
+  /* ── 요약 스트립 ── */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;margin-bottom:2.75rem}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:.85rem .9rem;box-shadow:var(--shadow);min-width:0;overflow-wrap:anywhere}
+  .stat__v{font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--text);
+    font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .stat__l{font-size:.72rem;color:var(--text-dim);margin-top:.2rem;line-height:1.35}
+
+  /* ── 파트 섹션 ── */
+  .part{margin-bottom:2.6rem}
+  .part__head{display:flex;align-items:baseline;gap:.6rem;margin-bottom:.15rem;flex-wrap:wrap}
+  .part__code{font-family:var(--mono);font-size:.72rem;font-weight:700;color:var(--accent);
+    background:var(--accent-weak);padding:.15rem .5rem;border-radius:99px;letter-spacing:.03em}
+  .part__title{font-size:1.28rem;font-weight:700;letter-spacing:-.01em;margin:0}
+  .part__scope{font-family:var(--mono);font-size:.78rem;color:var(--text-dim);margin:.35rem 0 1rem;
+    line-height:1.6;word-break:break-word;overflow-wrap:anywhere}
+
+  h3.sub{font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);
+    margin:1.1rem 0 .55rem;font-weight:700}
+
+  ul.flow{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:.5rem}
+  ul.flow li{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    padding:.65rem .8rem;font-size:.92rem;display:flex;gap:.6rem;align-items:flex-start;
+    min-width:0;overflow-wrap:anywhere}
+  ul.flow li .pill{flex:none;margin-top:.1rem}
+
+  .pill{display:inline-flex;align-items:center;font-family:var(--mono);font-size:.68rem;
+    font-weight:700;letter-spacing:.02em;padding:.16rem .48rem;border-radius:99px;white-space:nowrap}
+  .pill--done{background:var(--done-bg);color:var(--done)}
+  .pill--active{background:var(--active-bg);color:var(--active)}
+  .pill--warn{background:var(--warn-bg);color:var(--warn)}
+  .pill--idle{background:var(--idle-bg);color:var(--idle)}
+
+  .callout{margin-top:.9rem;border-left:3px solid var(--warn);background:var(--warn-bg);
+    border-radius:0 10px 10px 0;padding:.75rem .9rem;font-size:.88rem;color:var(--text);
+    min-width:0;overflow-wrap:anywhere}
+  .callout b{color:var(--warn)}
+  .callout--critical{border-left-color:var(--critical);background:var(--critical-bg)}
+  .callout--critical b{color:var(--critical)}
+
+  .teams{display:flex;flex-direction:column;gap:.9rem;margin-top:.9rem}
+  .team{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:.9rem 1rem;box-shadow:var(--shadow);min-width:0;overflow-wrap:anywhere}
+  .team__head{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;margin-bottom:.3rem;min-width:0}
+  .team__name{font-weight:700;font-size:.98rem;min-width:0}
+  .team__id{font-family:var(--mono);font-size:.7rem;color:var(--text-dim);min-width:0;
+    overflow-wrap:anywhere;text-align:right}
+  .team__body{font-size:.88rem;color:var(--text-dim);line-height:1.6}
+  .team__body b{color:var(--text);font-weight:600}
+
+  code.inl{font-family:var(--mono);font-size:.85em;background:var(--surface-2);
+    border:1px solid var(--line);border-radius:5px;padding:.05em .35em;overflow-wrap:anywhere}
+
+  footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--line);
+    font-size:.78rem;color:var(--text-dim);font-family:var(--mono)}
+
+  @media (max-width:600px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    h1{font-size:1.55rem}
+  }
+</style>
+
+<div class="shell">
+
+  <p class="eyebrow">A-COP · Progress Briefing</p>
+  <h1>파트별 진행 브리핑</h1>
+  <p class="lede">코어1(Case Runtime) / 코어2(Access &amp; Action) / Agent Team / 검증&amp;프론트
+    네 축 기준으로, 각 파트가 무엇을 조사·구현했고 지금 무엇이 진행 중인지 정리한다.
+    Agent Team 축은 v8 §8-B 의 실제 확정 Team 목록으로 8/19 재정정했다.</p>
+  <div class="meta">
+    <span>기준일 <b>2026-08-19</b></span>
+    <span>대상 저장소 <b>final_project_cs</b></span>
+    <span>기준선 <b>A-COP 구현계획서 v6/v8</b></span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat__v">315</div><div class="stat__l">pytest passed · 실패 0</div></div>
+    <div class="stat"><div class="stat__v">28 / 28</div><div class="stat__l">DoD evidence 확보 (통과 24 · 부분 4)</div></div>
+    <div class="stat"><div class="stat__v">2 / 2</div><div class="stat__l">CS Pack 확정 Team 코드 완료 (VOC&amp;SM·Response Review, 등록은 별도)</div></div>
+    <div class="stat"><div class="stat__v">2</div><div class="stat__l">이번 세션 실 브라우저로 찾은 안전 결함</div></div>
+  </div>
+
+  <!-- 코어 1 -->
+  <section class="part">
+    <div class="part__head">
+      <span class="part__code">CORE 1</span>
+      <h2 class="part__title">Case Runtime &amp; Coordination</h2>
+    </div>
+    <p class="part__scope"><code class="inl">app/core/**</code> · <code class="inl">app/application/controller.py</code>
+      · Registry · TeamExecutorPort · GraphStorePort · Context Broker</p>
+
+    <h3 class="sub">데이터셋 · 실측 조사</h3>
+    <ul class="flow">
+      <li><span class="pill pill--done">실측</span> Context Broker 토큰 예산 — tiktoken 으로 12,000 토큰 절삭을
+        실제 계산해 섹션별 예산·제거 순서를 정하고, 초과분은 <code class="inl">degraded</code>/<code class="inl">omissions</code>
+        로 남도록 강제했다.</li>
+      <li><span class="pill pill--done">실측</span> <code class="inl">SqlGraphAdapter</code> 재귀 CTE 로
+        관계 질의 3종(neighbors/path/subgraph)의 정확성을 fixture 대조로 확인했다.</li>
+    </ul>
+
+    <h3 class="sub">구현 현황</h3>
+    <ul class="flow">
+      <li><span class="pill pill--done">완료</span> 계약(21 이벤트 · 24 전이) · 순수 리듀서 ·
+        <code class="inl">transition_case()</code> 단일 진입점 — 테스트 57건</li>
+      <li><span class="pill pill--done">완료</span> Controller WAIT/RESUME/Outbox 통합테스트 8종</li>
+      <li><span class="pill pill--done">완료</span> A2A/Graph 7/7 — <code class="inl">TeamExecutorPort</code> ·
+        <code class="inl">LocalTeamExecutor</code>/<code class="inl">A2ATeamExecutor</code> · Agent Card ·
+        <code class="inl">GraphStorePort</code>/<code class="inl">SqlGraphAdapter</code></li>
+      <li><span class="pill pill--active">진행중</span> 프롬프트 감사추적 배선 — 설계 확정(Codex 교차검증 완료),
+        구현은 별도 계약으로 착수. Controller 의 업무 트랜잭션 경계는 건드리지 않는 것으로 확정했다
+        (LLM 호출·감사 기록은 분리된 짧은 트랜잭션을 쓴다).</li>
+    </ul>
+  </section>
+
+  <!-- 코어 2 -->
+  <section class="part">
+    <div class="part__head">
+      <span class="part__code">CORE 2</span>
+      <h2 class="part__title">Access &amp; Action Platform</h2>
+    </div>
+    <p class="part__scope"><code class="inl">app/presentation/api/**</code> · <code class="inl">app/presentation/security.py</code>
+      · MCP · approval/idempotency/audit</p>
+
+    <h3 class="sub">데이터셋 · 실측 조사</h3>
+    <ul class="flow">
+      <li><span class="pill pill--done">실측</span> scope matrix 6종 × REST/MCP 경로 조합 — 74건 테스트로
+        401/403/정상 응답을 전부 대조했다.</li>
+      <li><span class="pill pill--done">실측</span> 동일 요청 10회 반복 → <code class="inl">action_requests</code>
+        1행만 남는지를 10회 반복해 실제로 재현하고, idempotency 를 테스트로 확인했다.</li>
+    </ul>
+
+    <h3 class="sub">구현 현황</h3>
+    <ul class="flow">
+      <li><span class="pill pill--done">완료</span> REST 5 routes + <code class="inl">/health</code>,
+        MCP tool 3종 전부 <code class="inl">mcp:read</code> (쓰기는 REST + 승인 경로로만)</li>
+      <li><span class="pill pill--done">완료</span> scope 이름 정리 — <code class="inl">subscription:read</code>/
+        <code class="inl">technical:read</code> → <code class="inl">order:read</code>/<code class="inl">return:read</code></li>
+      <li><span class="pill pill--done">완료</span> 할루시네이션 방어(v7 §9-E) — 제안의 식별자·금액을
+        DB 와 2회 대조(제안 시점 + 승인 직전), 거부 시 hash 감사</li>
+    </ul>
+    <div class="callout"><b>이번 세션 실 브라우저 검증에서 결함 2건 발견·수정</b> — 승인 처리와 Case 생성
+      각각이 감사 기록을 <code class="inl">action_requests</code> 에 기본 상태(<code class="inl">proposed</code>)로
+      남겨, 승인 대기 큐에 근거 없는 유령 항목이 영구히 쌓이고 있었다. 둘 다 종결 상태를 명시하도록 고치고
+      회귀 테스트를 추가했다.</div>
+  </section>
+
+  <!-- Agent Team -->
+  <section class="part">
+    <div class="part__head">
+      <span class="part__code">TEAM</span>
+      <h2 class="part__title">Agent Team 구성</h2>
+    </div>
+    <p class="part__scope"><code class="inl">app/modules/customer_ops/**</code> ·
+      <code class="inl">config/project.yaml</code> · Registry</p>
+
+    <div class="callout callout--critical"><b>★8/19 정정 — 이전 버전의 이 섹션은 틀렸다</b>.
+      "코어1/코어2/Agent Team Module ×3/UX" 6인 분업 프레임으로 팀 구성을 설명했는데,
+      실제 기준 문서(<code class="inl">program/plan/A-COP_구현계획서_v8.md</code> §8-B)의
+      Team 목록은 그게 아니었다 — <b>VOC & Store Manager</b>와
+      <b>Response Generation & Review</b>가 이 프로젝트(CS Pack) 10주 착수로 확정된
+      Team이고, <code class="inl">order_shipping</code>/<code class="inl">return_exchange</code>는
+      이름·경계가 계획에 없던 자체 발명품이었다. 아래는 실제 계획 대비 현황이다.</div>
+
+    <h3 class="sub">확정 계획 — CS Pack(이 프로젝트 주제 자체, 10주 착수)</h3>
+    <div class="teams">
+      <div class="team">
+        <div class="team__head"><span class="team__name">VOC & Store Manager</span>
+          <span class="team__id">voc_store_manager</span></div>
+        <div class="team__body"><b>역할</b> Case event·반복 불만 집계 → alert·위임 제안
+          (v8 §8-B, §906행)<br>
+          <span class="pill pill--done" style="margin-top:.4rem">완료</span> Team 신설,
+          <code class="inl">config/project.yaml</code> 등록, <code class="inl">similar_cases</code>
+          ≥2 시 <code class="inl">voc.escalate</code> 제안(사람 승인) — 테스트 5건</div>
+      </div>
+      <div class="team">
+        <div class="team__head"><span class="team__name">Response Generation & Review</span>
+          <span class="team__id">response_generation_review</span></div>
+        <div class="team__body"><b>역할</b> 톤결정→GEN 초안→결정론 REV(금칙어·PII·사실대조)
+          →LLM 톤 REV, 최대 3회 재시도, PII 는 즉시 escalate (v8 §8-B)<br>
+          <span class="pill pill--done" style="margin-top:.4rem">완료</span> sample 의
+          기존 구현(DoD-29)을 커머스 도메인 어휘로 이식(Codex 구현, Claude 검증) —
+          테스트 6건. <code class="inl">accepted_case_types=[]</code> 유지(설계상
+          Controller 자동배선 범위 밖) — <code class="inl">config/project.yaml</code>
+          등록은 아직 사람 판단 몫으로 남겨 둠</div>
+      </div>
+    </div>
+
+    <h3 class="sub">검증 쇼핑몰 연계 — 일정 따라 조정, 아직 없음</h3>
+    <ul class="flow">
+      <li><span class="pill pill--idle">보류</span> Procurement + Order &amp; Payment,
+        Fulfillment &amp; Logistics — 검증 쇼핑몰 프로젝트 진행 범위에 따라 착수</li>
+      <li><span class="pill pill--idle">보류</span> Return &amp; Refund — Registry 계약 +
+        Mock 유지가 원래 계획(실 스마트스토어 반품 데이터로 사유코드 검증 전엔 LOCAL 승격 안 함)</li>
+      <li><span class="pill pill--idle">보류</span> Catalog &amp; Verification — <b>A2A Remote</b>.
+        <code class="inl">A2ATeamExecutor</code>/Agent Card 등 실행 경로는 이미 있지만
+        (<code class="inl">a2a_executor: enabled: false</code>), 이 자리에 걸릴 실제
+        원격 Team 이 아직 없다</li>
+    </ul>
+
+    <h3 class="sub">레거시로 격리 중</h3>
+    <ul class="flow">
+      <li><span class="pill pill--active">진행중</span> <code class="inl">order_shipping</code>/
+        <code class="inl">return_exchange</code>(계획에 없던 자체 발명 Team, 배송완료 미수령·
+        주문취소·반품·교환·배송지연 등 커버리지는 갖춤) — 삭제 대신
+        <code class="inl">legacy/final_project_cs/team_modules_v1/</code> 로 이동 중.
+        <code class="inl">config/project.yaml</code> 의 <code class="inl">teams:</code> 최소
+        1개 제약 때문에 VOC & Store Manager 를 먼저 등록해 자리를 채운 뒤 진행(순서 보장)</li>
+    </ul>
+
+    <h3 class="sub">데이터셋 · 실측 조사 (order_shipping/return_exchange 시기 자산 — 재활용 가능)</h3>
+    <ul class="flow">
+      <li><span class="pill pill--done">실측</span> RAG corpus — 쇼핑몰 도메인 정책 문서 25건 / 306청크.
+        1차 코덱스 재작성이 조사(助詞) 오류 3,401건을 냈던 이력이 있어, 최종 콘텐츠는 Claude 가 직접 작성했다.
+        <code class="inl">python -m scripts.check_corpus</code> 전 항목 통과.</li>
+      <li><span class="pill pill--done">실측</span> golden 60건(order/shipping/return/exchange 15건씩) /
+        holdout 20건 — 커머스 도메인으로 전량 재작성, doc_ref 를 실제 코퍼스 색인과 대조 검증했다.
+        ★VOC & Store Manager·Response Generation &amp; Review 배분(각 10·12건, v8 §1031행)으로
+        재구성이 필요하다 — 아직 진행하지 않음.</li>
+      <li><span class="pill pill--done">실측</span> 시나리오 질의 검색 정확도 — "배송완료인데 미수령"→doc_01,
+        "반품 수량 초과"→doc_14 가 top_k=8 안에서 검색됨을 확인.</li>
+    </ul>
+
+    <div class="callout callout--critical"><b>이번 세션 최고 심각도 결함 발견·수정</b> —
+      <code class="inl">feedback.py::INTENTS</code> 가 옛 구독·청구 도메인 어휘(<code class="inl">billing</code>/
+      <code class="inl">technical</code>)로 남아 있었는데, 이 함수가 <b>운영 REST API 의 기본 classifier</b>였다.
+      고쳐지지 않았다면 쇼핑몰 Case 는 전부 분류 실패로 떨어졌을 것이다.
+      <code class="inl">order</code>/<code class="inl">shipping</code>/<code class="inl">return</code>/
+      <code class="inl">exchange</code>/<code class="inl">other</code> 로 교체하고, 실 LLM 호출과 REST API
+      e2e 라이브 테스트로 재발 방지 회귀를 추가했다.</div>
+
+    <h3 class="sub">공통 진행중</h3>
+    <ul class="flow">
+      <li><span class="pill pill--done">완료</span> 프롬프트 감사추적 배선 — <code class="inl">register_prompts.py</code>
+        신설, <code class="inl">OpenAITeamLLM</code> 이 활성 프롬프트를 조회해 쓰고 <code class="inl">llm_calls</code>
+        에 <code class="inl">prompt_id</code>·<code class="inl">run_id</code> 를 남기도록 배선(Codex 구현, Claude 검증).
+        옛 프롬프트 12개는 <code class="inl">legacy/final_project_sample/prompts/</code> 로 이동</li>
+    </ul>
+  </section>
+
+  <!-- 검증 & 프론트 -->
+  <section class="part">
+    <div class="part__head">
+      <span class="part__code">UX</span>
+      <h2 class="part__title">검증 &amp; 프론트</h2>
+    </div>
+    <p class="part__scope">평가 harness · golden/holdout · 지표·통계 · 회귀/contract test ·
+      <code class="inl">app/presentation/ui/**</code> · observability</p>
+
+    <h3 class="sub">데이터셋 · 실측 조사</h3>
+    <ul class="flow">
+      <li><span class="pill pill--done">실측</span> golden 60 / holdout 20 을 3회 반복 실행(seed=7),
+        paired bootstrap 95% CI · McNemar 로 평균 대신 불확실성까지 함께 냈다.</li>
+      <li><span class="pill pill--warn">무효화</span> 옛 도메인(billing/technical) 기준으로 측정했던
+        3군×180행=540관측 평가 실행 수치는 도메인 전환 이후 재측정 전까지 참고용으로만 남겨 둔다.</li>
+    </ul>
+
+    <h3 class="sub">구현 현황</h3>
+    <ul class="flow">
+      <li><span class="pill pill--done">완료</span> 평가 하네스(runner 3종 · judge rubric · bootstrap/McNemar)</li>
+      <li><span class="pill pill--done">완료</span> 운영 UI 4화면(cases/approvals/voc/trace) ·
+        디자인 시스템(상태별 의미색 · 다크모드 · 375px 가로밀림 0)</li>
+      <li><span class="pill pill--done">완료</span> <code class="inl">scripts/verify_dod.py</code> — DoD + evidence 존재 검사</li>
+      <li><span class="pill pill--warn">부분</span> judge 와 사람 라벨의 agreement 미측정 — 사람이 holdout
+        20건을 직접 라벨링해야 판정이 바뀐다(도구는 준비돼 있다)</li>
+    </ul>
+    <div class="callout"><b>이번 세션 DoD-18 실 브라우저 재검증</b> — 시나리오 1(환불 승인 대기)을 실제로
+      열어 승인 버튼을 눌러 <code class="inl">waiting_approval → resuming</code> 종단까지 확인했고,
+      그 과정에서 코어 2 섹션의 결함 2건을 이 파트가 먼저 찾아냈다.</div>
+  </section>
+
+  <footer>
+    담당 매핑 · 데이터셋 실측 · 세션 내 발견 결함은 각 세션의 <code class="inl">docs/reports/</code>,
+    <code class="inl">docs/reports/debugs/</code>, <code class="inl">docs/history/</code> 원문을 근거로 정리했다.
+  </footer>
+
+</div>

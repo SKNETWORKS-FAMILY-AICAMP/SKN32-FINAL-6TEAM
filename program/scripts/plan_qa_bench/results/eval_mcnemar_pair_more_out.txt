@@ -1,0 +1,16 @@
+## 직접: gemma4:e2b-it-qat 대 gemma4:e2b
+  합계   둘 다 맞음 193 · A만 18 · B만 9 · 둘 다 틀림 44 → p=0.122
+## 종단: gemma4:e2b-it-qat 대 gemma4:e2b
+  합계   둘 다 맞음 231 · A만 9 · B만 5 · 둘 다 틀림 19 → p=0.424
+## 직접: gemma4:e4b-it-q8_0 대 gemma4:e4b
+  합계   둘 다 맞음 214 · A만 18 · B만 4 · 둘 다 틀림 28 → p=0.004
+## 종단: gemma4:e4b-it-q8_0 대 gemma4:e4b
+  합계   둘 다 맞음 244 · A만 5 · B만 1 · 둘 다 틀림 14 → p=0.219
+## 직접: gemma4:e4b-it-q8_0 대 gemma4:e4b-it-qat
+  합계   둘 다 맞음 221 · A만 11 · B만 5 · 둘 다 틀림 27 → p=0.210
+## 종단: gemma4:e4b-it-q8_0 대 gemma4:e4b-it-qat
+  합계   둘 다 맞음 246 · A만 3 · B만 2 · 둘 다 틀림 13 → p=1.000
+## 직접: var_gemma4:e2b|sfx 대 gemma4:e2b
+  합계   둘 다 맞음 197 · A만 18 · B만 5 · 둘 다 틀림 44 → p=0.011
+## 종단: var_gemma4:e2b|sfx 대 gemma4:e2b
+  합계   둘 다 맞음 235 · A만 9 · B만 1 · 둘 다 틀림 19 → p=0.021

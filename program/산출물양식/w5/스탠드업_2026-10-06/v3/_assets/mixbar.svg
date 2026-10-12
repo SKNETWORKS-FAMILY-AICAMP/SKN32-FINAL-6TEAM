@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 120" width="1180" height="120" font-family="Segoe UI, Malgun Gothic, sans-serif">
+<rect width="1180" height="120" fill="#f7f9f3"/>
+<rect x="2" y="10" width="356.2559414990859" height="100" rx="14" fill="#2e6047"/>
+<text x="180.12797074954295" y="54" text-anchor="middle" font-size="20" font-weight="700" fill="#ffffff">일정 질문</text>
+<text x="180.12797074954295" y="84" text-anchor="middle" font-size="18" fill="#ffffff">835</text>
+<rect x="362.2559414990859" y="10" width="254.86654478976232" height="100" rx="14" fill="#7fa38d"/>
+<text x="489.68921389396706" y="54" text-anchor="middle" font-size="20" font-weight="700" fill="#ffffff">관광지 질문</text>
+<text x="489.68921389396706" y="84" text-anchor="middle" font-size="18" fill="#ffffff">600</text>
+<rect x="621.1224862888482" y="10" width="427.44424131627056" height="100" rx="14" fill="#c9d1cb"/>
+<text x="834.8446069469835" y="54" text-anchor="middle" font-size="20" font-weight="700" fill="#24392f">일상 대화</text>
+<text x="834.8446069469835" y="84" text-anchor="middle" font-size="18" fill="#24392f">1,000</text>
+<rect x="1052.5667276051188" y="10" width="125.43327239488116" height="100" rx="14" fill="#e2e7e3"/>
+<text x="1115.2833638025593" y="54" text-anchor="middle" font-size="20" font-weight="700" fill="#24392f">구어체 문장</text>
+<text x="1115.2833638025593" y="84" text-anchor="middle" font-size="18" fill="#24392f">300</text>
+</svg>

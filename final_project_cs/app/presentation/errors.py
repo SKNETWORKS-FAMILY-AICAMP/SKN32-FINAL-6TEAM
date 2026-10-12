@@ -7,9 +7,19 @@ from __future__ import annotations
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from app.core.team_availability import TeamUnavailable, unavailable_payload
+
+
+def team_unavailable_error(exc: TeamUnavailable) -> HTTPException:
+    return HTTPException(503, unavailable_payload(exc))
 
 
 def install_error_handlers(app: FastAPI, *, origins: list[str] | tuple[str, ...] = ()) -> None:
+    @app.exception_handler(TeamUnavailable)
+    async def team_unavailable(_request: Request, exc: TeamUnavailable):
+        error = team_unavailable_error(exc)
+        return JSONResponse(status_code=error.status_code, content=error.detail)
+
     @app.exception_handler(HTTPException)
     async def http_error(_request: Request, exc: HTTPException):
         detail = exc.detail if isinstance(exc.detail, dict) else {

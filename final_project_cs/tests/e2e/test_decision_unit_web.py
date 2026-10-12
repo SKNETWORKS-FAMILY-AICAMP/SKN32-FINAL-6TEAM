@@ -13,6 +13,7 @@ from datetime import timedelta
 import pytest
 
 from app.infrastructure.db.session import get_connection
+from tests.helpers.plugin_bindings import publish_fixed_mobility, publish_test_services
 
 from .test_web_api import _fresh_limit_cache, _h, _session, _web_body, api  # noqa: F401 — 시험 준비물
 
@@ -89,9 +90,11 @@ def decided(api, monkeypatch):
                                                                                  "issue_code": "other",
                                                                                  "sentiment": "neutral"}),
                                           chat_factory=lambda: decider)]))
+    calculation_calls = publish_fixed_mobility(client.app, source="decision_unit_test")
     me = _session(api)
     trip = client.post("/v1/web/trips", json=_web_body(api, request_id="du-1"), headers=_h(me["user_key"])).json()
-    yield {"client": client, "key": me["user_key"], "trip": trip, "decider": decider}
+    yield {"client": client, "key": me["user_key"], "trip": trip, "decider": decider,
+           "calculation_calls": calculation_calls}
 
 
 def _say(decided, text, request_id, **extra):
@@ -202,7 +205,7 @@ def test_looking_for_options_never_offers_the_original_place(decided):
     decider.structured = original
     assert body["status"] == "asked", body
     names = [o["name"] for o in body["outcome"]["options"]]
-    assert names and "성수 점심 식당" not in names and "성수 점심 식당" not in body["answer"].split("—", 1)[1]
+    assert names and "성수 점심 식당" not in names and "성수 점심 식당" not in body["answer"].split("1)", 1)[-1]
     assert [o["rank"] for o in body["outcome"]["options"]] == list(range(1, len(names) + 1))
 
 
@@ -306,10 +309,8 @@ def test_a_location_question_without_a_location_asks_for_it_and_changes_nothing(
     assert _version(decided) == before
 
 
-def test_the_location_is_the_origin_of_the_route(decided, monkeypatch):
+def test_the_location_is_the_origin_of_the_route(decided):
     """②: 위치를 실으면 그 좌표가 이동 계산기의 출발지로 쓰인다."""
-    from app.domains.travel_ops.instances.mobility import wiring
-
     seen = []
 
     def fake_planner(party, constraints, **_):
@@ -320,16 +321,26 @@ def test_the_location_is_the_origin_of_the_route(decided, monkeypatch):
                     "eta_min": 17, "left_out": []}, None
         return leg
 
-    monkeypatch.setattr(wiring, "leg_planner", fake_planner)
+    publish_test_services(decided["client"].app, {("legs", "leg_planner"): fake_planner})
     body = _say(decided, "지금 위치에서 성수 점심 어떻게 가", "loc-route", at=NOON, location=HERE)
     assert body["status"] == "answered" and "needs_location" not in body, body
     assert seen and seen[0][0] == HERE["lat"] and seen[0][1] == HERE["lng"] and "성수 점심" in seen[0][2], seen
     assert "지하철 2호선" in body["answer"] and "17분" in body["answer"] and "시간표 기준" in body["answer"], body["answer"]
 
 
-def test_without_the_timetable_calculator_the_route_is_an_estimate_and_says_so(decided):
-    body = _say(decided, "지금 위치에서 성수 점심 어떻게 가", "loc-estimate", at=NOON, location=HERE)
-    assert "지금 위치에서 성수 점심" in body["answer"] and "[추정" in body["answer"], body["answer"]
+def test_without_the_timetable_calculator_the_route_is_refused_and_the_trip_is_unchanged(decided):
+    before = _version(decided)
+    calls = list(decided["calculation_calls"])
+    publish_test_services(decided["client"].app, {("legs", "leg_planner"): lambda *a, **k: None})
+    response = decided["client"].post(f"/v1/web/trips/{decided['trip']['trip_id']}/messages",
+                                      headers=_h(decided["key"]),
+                                      json={"request_id": "loc-no-engine", "message": "지금 위치에서 성수 점심 어떻게 가",
+                                            "at": NOON, "location": HERE})
+    assert response.status_code == 503, response.text
+    assert response.json()["error"]["code"] == "team_unavailable"
+    assert response.json()["error"]["reason"] == "engine_unavailable"
+    assert _version(decided) == before
+    assert decided["calculation_calls"] == calls
 
 
 def test_nearby_places_are_listed_from_the_location_without_changing_the_trip(decided):

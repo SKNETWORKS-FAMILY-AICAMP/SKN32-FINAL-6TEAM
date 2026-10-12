@@ -11,7 +11,7 @@ import type { CheckRow, PlanCandidate, PlanCheckView, PlanItem, PlanLine, TripIs
  */
 export function readingOf(intake: IntakeView): PlanCheckView {
   const lines: PlanLine[] = [];
-  for (const source of intake.sources) {
+  for (const [position, source] of intake.sources.entries()) {
     for (const line of source.lines) {
       const item = source.items.find((entry) => entry.line === line.no && entry.fields.removed?.value !== true);
       const title = item?.fields.title?.value;
@@ -20,7 +20,7 @@ export function readingOf(intake: IntakeView): PlanCheckView {
         // Numbered across sources: a photo's lines follow the typed text's.
         no: lines.length + 1, text: line.text, read: line.read,
         found: item && typeof title === "string" && title
-          ? { kind: "item", day: item.day, startsAt: typeof startsAt === "string" && startsAt ? startsAt : null, title }
+          ? { kind: "item", id: `${position}-${item.index}`, sourceKey: `${source.source_id}:${item.index}`, date: typeof item.fields.date?.value === "string" ? item.fields.date.value : item.date, day: item.day, startsAt: typeof startsAt === "string" && startsAt ? startsAt : null, title }
           : null,
       });
     }

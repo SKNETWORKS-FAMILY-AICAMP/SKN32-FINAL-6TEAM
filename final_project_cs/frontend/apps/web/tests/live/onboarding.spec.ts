@@ -20,10 +20,10 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
   await expect(page.locator("#how-title")).toBeInViewport();
   await page.getByRole("button", { name: "3. 일정 시작" }).click();
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
-  await expect(page).toHaveURL(/\/start$/);
+  await expect(page).toHaveURL(/\/start\?terms=required$/);
 
   await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toBeDisabled();
-  await page.getByRole("button", { name: /약관 동의/ }).click();
+  await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
   // ★`[2026-10-05]` 동의는 항목별이다: 필수(서비스 이용약관 · 개인정보 수집·이용)도 선택(민감정보 · 위치 · 알림 채널)도 바로 체크할 수 있다(`[사용자 지시]` 끝까지 읽기 잠금을 뺐다). 전문은 카드 안 상자에서 내려 읽고, 「전문 보기」는 크게 보여 줄 뿐이다.
   const serviceCheck = page.locator("#consent-service_terms");
   const privacyCheck = page.locator("#consent-privacy");
@@ -288,8 +288,8 @@ test("소개의 첫 단어는 「나의 계획」이고, 처음 동의하면 취
   await expect(page.getByText("나의 계획", { exact: true })).toBeVisible();
   await expect(page.getByText("나의 취향", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
-  await expect(page).toHaveURL(/\/start$/);                                    // 약관에 동의하지 않았으면 문이 약관 화면으로 보낸다
-  await page.getByRole("button", { name: /약관 동의/ }).click();
+  await expect(page).toHaveURL(/\/start\?terms=required$/);                     // 약관 미동의 진입은 필수 항목을 펼쳐 보여준다
+  await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
   for (const code of ["service_terms", "privacy"]) await page.locator(`li[data-doc="${code}"] label`).click();
   await page.getByRole("button", { name: "동의하고 다음으로" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);                              // 취향 설문이 아니라 계획 올리는 화면
@@ -306,10 +306,10 @@ test("약관에 동의하지 않았으면 소개 버튼은 시작 화면으로 �
   await page.getByRole("button", { name: "3. 일정 시작" }).click();
   await expect(page.getByText("약관 확인부터 함께할게요.")).toBeVisible();
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
-  await expect(page).toHaveURL(/\/start$/);
+  await expect(page).toHaveURL(/\/start\?terms=required$/);
   // ★`[2026-10-05 사용자 지시]` 필수 약관에 동의하지 않으면 앱을 쓸 수 없다: 마이페이지로 곧장 가도 약관 화면으로 돌아온다.
   await page.goto("/mypage");
-  await expect(page).toHaveURL(/\/start$/);
+  await expect(page).toHaveURL(/\/start\?terms=required$/);
   await agree(page);
   await page.goto("/mypage");
   await expect(page.getByText("아직 설정하지 않았어요. 설정하면 일정을 확인할 때 반영돼요.")).toBeVisible();

@@ -1,0 +1,28 @@
+{
+ "sets": {
+  "mix8": {
+   "n": 157,
+   "jev": 151,
+   "ft": 153,
+   "base": 142
+  },
+  "mix9": {
+   "n": 152,
+   "jev": 147,
+   "ft": 149,
+   "base": 138
+  }
+ },
+ "note": "요청 둘(compound_intent) 제외. Jev 는 확률이 가장 큰 선택지(none 포함)를 답으로 본다(eval_final_all.py 와 같은 방식).",
+ "total": {
+  "n": 309,
+  "jev": 298,
+  "ft": 302,
+  "base": 280,
+  "jev_only": 5,
+  "ft_only": 9,
+  "jev_wrong_item": 6,
+  "ft_wrong_item": 7,
+  "p_mcnemar": 0.4239501953125
+ }
+}

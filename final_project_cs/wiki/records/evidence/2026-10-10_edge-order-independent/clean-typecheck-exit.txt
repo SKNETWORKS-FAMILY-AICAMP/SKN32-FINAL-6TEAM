@@ -1,0 +1,2 @@
+clean-typecheck-before-v2 exit=2 (TS2307 x3); clean-typecheck-after exit=0
+

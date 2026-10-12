@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["files", "run", "notes"],
+  "properties": {
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "content"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "저장소 루트 기준 상대 경로. program/onboarding/trace/ 아래만 허용한다."
+          },
+          "content": {
+            "type": "string",
+            "description": "파일 전문. 줄임표나 생략 표시를 넣지 않는다."
+          }
+        }
+      }
+    },
+    "run": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string"},
+      "description": "저장소 루트에서 순서대로 실행할 명령. 이것만으로 영상이 나와야 한다."
+    },
+    "notes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["done", "skipped", "risks"],
+      "properties": {
+        "done": {"type": "array", "items": {"type": "string"}},
+        "skipped": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "요구했는데 안 넣은 것과 그 이유"
+        },
+        "risks": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "돌려 보지 못해 확신할 수 없는 지점"
+        }
+      }
+    }
+  }
+}

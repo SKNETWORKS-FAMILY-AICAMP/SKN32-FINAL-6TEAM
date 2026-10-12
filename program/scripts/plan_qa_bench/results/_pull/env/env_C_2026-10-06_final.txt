@@ -1,0 +1,38 @@
+# 환경 수집 — server — 2026-10-06T11:38:06Z
+## GPU
+NVIDIA RTX 4000 Ada Generation, 580.173.02, 20475 MiB
+CUDA Version: 13.0
+## CPU·메모리
+128
+ AMD EPYC 7702 64-Core Processor
+Mem:             503          78         243          26         211         424
+## OS
+PRETTY_NAME="Ubuntu 24.04.3 LTS"
+## 파이썬 환경별 라이브러리
+- /usr/bin/python3: 3.12.3
+    torch 2.8.0+cu128
+    numpy 2.1.2
+- /opt/venv/bin/python: 3.12.3
+    torch 2.11.0+cu128
+    transformers 5.18.0
+    peft 0.21.2
+    bitsandbytes 0.50.2
+    accelerate 1.15.0
+    sentence_transformers 6.1.0
+    huggingface_hub 1.33.0
+    safetensors 0.8.0
+    numpy 2.5.3
+    scikit-learn 1.9.1
+## 추론 엔진
+/opt/llama/bin/llama-server: /opt/llama/bin/llama-server: error while loading shared libraries: libllama-server-impl.so: cannot open shared object file: No such file or directory
+## 허깅페이스 캐시(수정판 해시 · 받은 시각)
+Qwen/Qwen3-Embedding-0.6B 97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3 2026-10-06 08:58
+intfloat/multilingual-e5-base d128750597153bb5987e10b1c3493a34e5a4502a 2026-10-06 09:02
+Qwen/Qwen3-Embedding-0.6B 97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3 2026-10-06 05:10
+intfloat/multilingual-e5-base d128750597153bb5987e10b1c3493a34e5a4502a 2026-10-06 07:31
+## 폴더로 받은 모델(수정판 해시 · 받은 시각 · 크기)
+/root/hf_models/winnow-e4b-hf 수정판=기록 없음 시각=2026-10-06 07:33 크기=15283MB
+## GGUF 파일(경로 · 크기 · 수정 시각)
+## LoRA 어댑터(기반 모델 · r · alpha · 수정 시각)
+/root/adapters/winnow_e4b /root/hf_models/winnow-e4b-hf r=16 alpha=32 2026-10-06 07:33
+## 끝

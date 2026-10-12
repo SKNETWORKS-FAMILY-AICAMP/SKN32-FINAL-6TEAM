@@ -1,0 +1,12 @@
+--- a/.gitignore
++++ b/.gitignore
+@@ -148,6 +148,9 @@
+ # 이 폴더 안의 작업은 그 폴더에서, 그 저장소에 커밋한다.
+ # 해제 직전 추적 목록: program/research/_sample_루트추적_해제전_목록_2026-08-31.txt
+ final_project_sample/
++# 단, program/ 아래의 sample wiki 사본은 이 저장소 소유다 (2026-09-06).
++# 위 규칙이 이름만 보고 program/final_project_sample/wiki/ 까지 무시하고 있었다.
++!program/final_project_sample/
+ 
+ # 학습용 추적 영상. 5MB 넘고 스크립트로 다시 만든다
+ program/onboarding/trace/*.mp4

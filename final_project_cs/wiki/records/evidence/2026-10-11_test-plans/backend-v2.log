@@ -1,0 +1,23 @@
+.........................FFF                                             [100%]
+================================== FAILURES ===================================
+_ test_rejected_code_does_not_create_empty_intake[test13-unknown_test_scenario] _
+tests\e2e\test_intake_test_plans.py:44: in test_rejected_code_does_not_create_empty_intake
+    assert response.json()["detail"]["code"] == code
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'detail'
+_ test_rejected_code_does_not_create_empty_intake[test1rt-live_test_not_ready] _
+tests\e2e\test_intake_test_plans.py:44: in test_rejected_code_does_not_create_empty_intake
+    assert response.json()["detail"]["code"] == code
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'detail'
+________________ test_disabled_codes_and_file_mix_are_refused _________________
+tests\e2e\test_intake_test_plans.py:55: in test_disabled_codes_and_file_mix_are_refused
+    assert mixed.json()["detail"]["code"] == "test_scenario_with_files"
+           ^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'detail'
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_test-plans\backend-v2.xml -
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_intake_test_plans.py::test_rejected_code_does_not_create_empty_intake[test13-unknown_test_scenario]
+FAILED tests/e2e/test_intake_test_plans.py::test_rejected_code_does_not_create_empty_intake[test1rt-live_test_not_ready]
+FAILED tests/e2e/test_intake_test_plans.py::test_disabled_codes_and_file_mix_are_refused
+3 failed, 25 passed in 9.33s

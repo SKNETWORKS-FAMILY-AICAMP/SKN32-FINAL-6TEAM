@@ -20,11 +20,12 @@ import { TermsCardBody, TermsReader, termsDoc } from "./terms";
 import styles from "./onboarding.module.css";
 
 /** Discord alerts, terms and travel preferences before the first plan. Everything stays in page state. */
-export function Onboarding() {
+export function Onboarding({ termsRequired = false }: { termsRequired?: boolean } = {}) {
   const t = useT();
   const { language } = useSettings();
   const router = useRouter();
-  const [state, setState] = useOnboarding();
+  const [storedState, setState] = useOnboarding();
+  const state = termsRequired && !storedState.agreed ? { ...storedState, open: 1 as const } : storedState;
   // ★「Continue my trip」 follows the server's list (newest first), not a value this page happened to see: another tab or device counts too.
   const latestTrip = useTrips().data?.[0];
   // The document whose full text is open (null = none). `termsOpen` is what the rest of the screen reacts to.
@@ -190,8 +191,8 @@ export function Onboarding() {
                 onWebhook={editWebhook} onContinue={() => openCard(1)} />)}
             {card(1, state.agreed,
               cardHead(1, t("약관 동의", "Terms & consent"), state.agreed ? t("필수 내용을 확인했어요.", "Required consent completed.") : t("시작하기 전에 확인해 주세요.", "A quick check before you begin."), false, state.agreed),
-              <TermsCardBody t={t} choices={state.choices} consentMotion={consentMotion} alertTyped={Boolean(state.webhook.trim())}
-                onReadDoc={setReaderCode} onToggle={toggle} onContinue={continueTerms} />)}
+              <>{termsRequired && !state.agreed && <p className={styles.termsIntro} role="status">{t("이용을 위해서는 필수 약관 동의가 필요해요.", "Please agree to the required terms to use the service.")}</p>}<TermsCardBody t={t} choices={state.choices} consentMotion={consentMotion} alertTyped={Boolean(state.webhook.trim())}
+                onReadDoc={setReaderCode} onToggle={toggle} onContinue={continueTerms} /></>)}
             {card(2, state.complete,
               cardHead(2, t("여행 취향 알아보기", "Your travel preferences"), state.complete ? t(`${questions.length}가지 질문을 모두 마쳤어요.`, `All ${questions.length} questions completed.`) : t(`${questions.length}가지 질문으로 더 나다운 여행.`, `${questions.length} questions for a trip that fits you.`), !state.agreed, state.complete),
               state.complete

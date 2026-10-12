@@ -87,7 +87,7 @@ export function MyPage() {
     {DATA_MODE === "live" && profile !== undefined && <Panel className={styles.card}><SessionCard profile={profile} /></Panel>}
     {/* ★`[2026-10-03 사용자 지시]` 소셜 계정으로 로그인·연결. 서버가 준비한 업체만 단추가 생기고, 아니면 「서버 준비 중」이라고만 말한다. */}
     {DATA_MODE === "live" && <Panel className={styles.card}><SocialAccounts /></Panel>}
-    {/* ★`[2026-10-05 사용자 지시]` 약관 동의 관리 - 무엇에 동의했는지 보고, 전문을 다시 읽고, 선택 항목을 켜고 끈다(필수 철회는 서비스 중단이라 한 번 더 확인). */}
+    {/* ★`[2026-10-09 사용자 지시]` 필수 약관은 전문으로 읽고, 선택 동의만 켜고 끈다. */}
     {DATA_MODE === "live" && <Panel className={styles.card}><ConsentManager /></Panel>}
     {/* ★`[2026-10-04 사용자 지시]` 에이전트 연결 — 로그인한 사용자(회원)만. 게스트에게는 「로그인하면 쓸 수 있어요」. */}
     {DATA_MODE === "live" && <Panel className={styles.card}><AgentKeys /></Panel>}
@@ -146,15 +146,22 @@ function ProfileForm({ profile }: { profile: Profile }) {
   const canSave = !saving && !webhookBad && webhookChanged;
   async function save() {
     if (!canSave) return;
+    const key = serverProfileKey(language);
+    const query = queryClient.getQueryCache().find({ queryKey: key, exact: true });
+    const sameProfile = () => Boolean(query && queryClient.getQueryCache().find({ queryKey: key, exact: true }) === query);
     setSaving(true);
     setSaveError("");
     try {
       if (webhookChanged) {
         const saved = await saveDiscordWebhook(removeWebhook ? null : webhook, language);
-        if (saved.where === "server") queryClient.setQueryData(serverProfileKey(language), saved.profile);
+        if (saved.where === "server") {
+          if (!sameProfile()) { setSaving(false); return; }
+          queryClient.setQueryData(key, saved.profile);
+        }
       }
       router.push(routes.myPage);
     } catch (error) {
+      if (query && !sameProfile()) { setSaving(false); return; }
       setSaveError(error instanceof LiveError ? error.message : t("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.", "Could not save. Please try again shortly."));
       setSaving(false);
     }

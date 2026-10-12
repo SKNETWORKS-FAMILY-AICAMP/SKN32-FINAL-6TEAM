@@ -1,0 +1,57 @@
+{
+  "status": "verified_before_push",
+  "unit": {
+    "passed": 643,
+    "total": 643,
+    "exit_code": 0
+  },
+  "typecheck": {
+    "exit_code": 0
+  },
+  "lint": {
+    "exit_code": 0
+  },
+  "production_build": {
+    "compiler": "webpack",
+    "exit_code": 0
+  },
+  "contract": {
+    "passed": 267,
+    "total": 267,
+    "exit_code": 0
+  },
+  "security_tests": {
+    "passed": 34,
+    "total": 34,
+    "exit_code": 0
+  },
+  "focused": {
+    "passed": 74,
+    "total": 74,
+    "exit_code": 0
+  },
+  "legacy_completion_checks": {
+    "passed": 26,
+    "total": 26,
+    "mvp_passed": 18,
+    "mvp_total": 18,
+    "exit_code": 0
+  },
+  "repository_scan": {
+    "text": 4299,
+    "binary_excluded": 364,
+    "blocked": 0
+  },
+  "mock_browser": {
+    "passed": 23,
+    "total": 23,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0,
+    "exit_code": 0
+  },
+  "public_service_checked": false,
+  "commit_push_performed_by_validation_agent": false,
+  "base_develop": "210b020067a1e42f2622262adeb60d1f3d371668",
+  "integrated_manager": "5ded30ca3e1f1669276c4fcb768b6d408613ce1c"
+}

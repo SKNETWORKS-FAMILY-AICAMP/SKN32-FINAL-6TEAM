@@ -132,6 +132,7 @@ export function useTimeEdit({ views, commit, onNotice }: {
     if (index === undefined || !limits) return { changes: [], range: { min: 0, max: 0 }, along: [], problem: "이 일정은 시작 시각이 없어서 시간을 고칠 수 없어요.", day: null, title: item.title };
     const range = edit.push ? limits.reach : limits.own;
     const none = (problem: string): TimePreview => ({ changes: [], range, along: [], problem, day: times, title: item.title });
+    if (item.locked || item.booked === true) return none("고정·예약 일정의 시간은 바꿀 수 없어요.");
     const wording = (min: number, max: number, what: string) => `${min === max ? `지금 ${what}(${formatHm(min)})에서 움직일 수 없어요` : `가능한 시각은 ${formatHm(min)} ~ ${formatHm(max)}이에요`}${edit.push ? "" : " · 앞뒤 일정도 함께 밀면 더 넓어져요"}.`;
     const alongOf = (changes: Retime[]) => changes.filter((change) => change.id !== item.id).map((change) => ({
       title: view.items.find((entry) => entry.id === change.id)?.title ?? change.id,
@@ -286,7 +287,7 @@ export function useTimeEdit({ views, commit, onNotice }: {
   const handle = (item: PlanItem, list: List, kind: TimeKind = "start"): Grab => ({
     onPointerDown: (event) => {
       swallow.current = false;
-      if (busy || (event.pointerType === "mouse" && event.button !== 0)) return;
+      if (busy || item.locked || item.booked === true || (event.pointerType === "mouse" && event.button !== 0)) return;
       const already = edit?.id === item.id && edit.list === list && edit.kind === kind;
       const origin = already ? valueMinutes() : parseHm(kind === "depart" ? build(item, list, kind).end : item.startsAt);
       if (origin === null) return;

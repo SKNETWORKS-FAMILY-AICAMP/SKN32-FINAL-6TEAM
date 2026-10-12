@@ -1,7 +1,7 @@
 import type { ConsentCode } from "./consent-model";
 
 /**
- * `[2026-10-05 사용자 지시]` 약관 전문의 정본(웹에 실리는 것). 항목별 동의 문서 다섯 개 — `consent-model.ts` 의 코드와 하나씩 짝이다.
+ * `[2026-10-05 사용자 지시]` 약관 전문의 정본(웹에 실리는 것). 항목별 동의 문서 여섯 개 — `consent-model.ts` 의 코드와 하나씩 짝이다.
  *
  * 규칙
  * - `TERMS_VERSION` 은 약관 내용이 바뀔 때마다 올린다. 사용자의 동의는 이 버전에 묶여 기록되고(서버 `consents`), 버전이 오르면 **다시 동의**를 받는다.
@@ -14,11 +14,11 @@ import type { ConsentCode } from "./consent-model";
  *   `wiki/records/plans/2026-10-05_약관_초안/00_법무확인_목록.md` 의 대조 표에 있다. 그 폴더의 01~05 는 이 파일의 한국어 본문 사본이다.
  * - ★정해지지 않은 값은 지어내지 않는다 — 본문에 「【확정 필요: …】」를 직접 쓰지 않고 `OPERATOR` · `RETENTION` 상수를 끼워 넣는다(시험이 지킨다).
  */
-export const TERMS_VERSION = "2026-10-07.1";   // `[2026-10-07 사용자 결정]` .1 = 보관 기간 5칸을 추천값으로 확정 · 「AI 작성 초안」 안내 뺌. 서버 `consent.terms_version` 과 같은 값(cs 구축 세션에 요청)
+export const TERMS_VERSION = "2026-10-10.1";   // 서비스 개선 선택 동의 추가. cs 프로젝트 서버 consent.terms_version과 함께 변경한다.
 // 이전 판 2026-10-05.1 = 운영 주체 · 문의 연락처 · 보호책임자를 채웠다(글이 바뀌었으니 버전을 올린다). 서버 `consent.terms_version` 과 같이 올린다
 export const TERMS_STATUS: "draft" | "reviewed" = "reviewed";   // `[2026-10-07 사용자 결정]` 보관 기간 확정 · 안내문(「AI 작성 초안 …」)을 더 띄우지 않는다. ★변호사 검토를 했다는 뜻이 아니다 — 안내를 내리기로 한 사용자 결정이다
 /** 시행일("YYYY-MM-DD"). 확정 전에는 초안 작성일. */
-export const TERMS_EFFECTIVE = "2026-10-05";
+export const TERMS_EFFECTIVE = "2026-10-10";
 
 /**
  * 운영 주체 정보. ★확정되기 전에는 지어내지 않고 「【확정 필요: …】」 자리표시를 그대로 둔다 - 약관 본문은 이 값을 끼워 넣는다.
@@ -135,7 +135,7 @@ const LANGUAGE_SECTION: TermsSection = {
 };
 
 /**
- * 문서 다섯 개를 보관 기간 문장으로 조립한다. `[2026-10-07 사용자 결정 · cs 구축 세션 요청]` 보관 기간은 관리자 화면에서 바뀔 수 있어, 웹은 cs 프로젝트 서버
+ * 문서 여섯 개를 보관 기간 문장으로 조립한다. `[2026-10-07 사용자 결정 · cs 구축 세션 요청]` 보관 기간은 관리자 화면에서 바뀔 수 있어, 웹은 cs 프로젝트 서버
  * (`GET /v1/web/legal/retention`)의 문장을 끼워 넣어 다시 조립한다(`terms-live.ts`). 서버를 못 읽으면 위 `RETENTION`(기본값)으로 조립한 `TERMS_DOCS` 를 쓴다.
  * ★매개변수 이름이 `RETENTION` 인 것은 일부러다 — 본문을 한 글자도 고치지 않고 서버 문장으로 바꿔 끼우려고 바깥 상수를 가린다.
  */
@@ -520,11 +520,11 @@ const privacy: TermsDoc = {
       body: [
         paras(
           `${OPERATOR.name}(이하 「운영자」)는 triPilot 서비스에서 이용자의 개인정보를 이 문서에 따라 처리합니다. 이 문서에서 쓰는 말의 뜻은 「triPilot 서비스 이용약관」 제2조(정의)와 같습니다.`,
-          "제2조와 제3조는 꼭 필요한 정보의 수집 · 이용에 대한 동의 내용이고, 제4조부터는 개인정보 처리방침입니다. 민감정보, 개인위치정보, 알림 채널 정보는 이 문서가 아니라 각각의 선택 동의 문서가 정합니다.",
+          "제2조와 제3조는 꼭 필요한 정보의 수집 · 이용에 대한 동의 내용이고, 제4조부터는 개인정보 처리방침입니다. 서비스 개선용 정보 이용, 민감정보, 개인위치정보, 알림 채널 정보는 이 문서가 아니라 각각의 선택 동의 문서가 정합니다.",
         ),
         paras(
           `${OPERATOR.name} (the "Operator") processes users' personal data in the triPilot service as described in this document. Words used here have the meanings given in Article 2 (Definitions) of the "triPilot Terms of Service".`,
-          "Articles 2 and 3 are the consent to collect and use the information the Service needs; Article 4 onwards is the privacy policy. Sensitive data, personal location data and alert channel data are governed not by this document but by their own optional consent documents.",
+          "Articles 2 and 3 are the consent to collect and use the information the Service needs; Article 4 onwards is the privacy policy. Service improvement processing, sensitive data, personal location data and alert channel data are governed not by this document but by their own optional consent documents.",
         ),
       ],
     },
@@ -562,8 +562,8 @@ const privacy: TermsDoc = {
     {
       heading: ["제3조 (동의를 거부할 권리와 불이익)", "Article 3 (Right to refuse and its effect)"],
       body: [
-        "이용자는 이 동의를 거부할 수 있습니다. 다만 제2조의 정보는 서비스를 제공하는 데 꼭 필요하므로, 거부하면 서비스를 이용할 수 없습니다. 선택 동의(민감정보, 개인위치정보, 알림 채널 정보)는 거부해도 서비스를 이용할 수 있습니다.",
-        "The user may refuse this consent. However, the information in Article 2 is necessary to provide the Service, so a user who refuses cannot use the Service. The optional consents (sensitive data, personal location data, alert channel data) may be refused without losing access to the Service.",
+        "이용자는 이 동의를 거부할 수 있습니다. 다만 제2조의 정보는 서비스를 제공하는 데 꼭 필요하므로, 거부하면 서비스를 이용할 수 없습니다. 선택 동의(서비스 개선용 정보 이용, 민감정보, 개인위치정보, 알림 채널 정보)는 거부해도 서비스를 이용할 수 있습니다.",
+        "The user may refuse this consent. However, the information in Article 2 is necessary to provide the Service, so a user who refuses cannot use the Service. The optional consents (service improvement processing, sensitive data, personal location data, alert channel data) may be refused without losing access to the Service.",
       ],
     },
     {
@@ -1122,7 +1122,40 @@ const alertChannel: TermsDoc = {
   ],
 };
 
-  return [serviceTerms, privacy, sensitive, location, alertChannel];
+const serviceImprovement: TermsDoc = {
+  code: "service_improvement",
+  required: false,
+  title: ["서비스 개선용 정보 이용 동의 (선택)", "Optional consent to use information for service improvement"],
+  summary: [
+    "여행 인원·일정 일수·하루 일정 개수로 합성 자료를 만들어 기능 개선과 모델 학습·평가에 이용합니다. 대화 원문·민감정보·정밀 위치는 쓰지 않습니다. 거부하거나 철회해도 서비스를 이용할 수 있습니다.",
+    "We create synthetic data from party size, scheduled days and items per day for feature improvement and model training/evaluation. We exclude raw chats, sensitive data and precise locations. Refusing or withdrawing does not limit access to the service.",
+  ],
+  sections: [
+    {
+      heading: ["제1조 (이용 목적과 항목)", "Article 1 (Purposes and fields)"],
+      body: [
+        "동의한 이용자의 현재 보유 중인 여행 중 최신 한 개에서 인원 수, 일정이 있는 날짜 수, 하루당 일정 개수를 구간 값으로 처리합니다. 목적은 일정 구조의 품질 평가, 기능 연구·개선, 합성 자료 생성과 그 자료를 이용한 모델 학습·평가입니다. 이용자·여행 번호는 대상 확인에만 쓰고 합성본에 남기지 않습니다. 질문·답변 원문, 여행 제목, 장소, 날짜 원값, 좌표, 예약번호, 건강·종교·식사 제한, 동행 설명은 이용하지 않습니다. 원본 정보를 외부에 제공하는 동의가 아닙니다.",
+        "From each consenting user's latest currently retained trip, we process bucketed party size, number of scheduled days and items per day. Purposes are schedule quality evaluation, feature research/improvement, synthetic generation and model training/evaluation using that data. User/trip identifiers are used only for eligibility and are not retained in synthetic data. We exclude raw chats, titles, places, exact dates, coordinates, booking numbers, health/religion/dietary information and companion descriptions. This consent does not authorize disclosure of original information to third parties.",
+      ],
+    },
+    {
+      heading: ["제2조 (기간과 합성 자료)", "Article 2 (Retention and synthetic data)"],
+      body: [
+        `원본은 기존 보유 기간을 연장하지 않습니다. 게스트: ${RETENTION.guestData[0]}. 회원: ${RETENTION.memberData[0]}. 원본 파기는 합성 작업의 성공 여부와 무관하게 진행합니다. 합성 후보는 생성 후 7일 이내 검토하고 미승인 후보는 폐기합니다. 재식별 위험·유용성·적법한 이용 근거를 검토하여 익명성이 확인된 합성본만 별도 보관·이용하며, 매년 목적 적합성을 재검토하고 생성일부터 최장 5년 안에 파기합니다. 합성 자료를 실제 고객의 일정이나 사실 근거로 사용하지 않습니다.`,
+        `Original retention is not extended. Guests: ${RETENTION.guestData[1]}. Members: ${RETENTION.memberData[1]}. Destruction of originals does not depend on synthetic generation succeeding. Candidates must be reviewed within 7 days or discarded. Only synthetic data reviewed for re-identification risk, usefulness and lawful basis and confirmed anonymous is retained/used separately, reviewed annually for purpose fit, and destroyed within at most 5 years of generation. Synthetic records are not actual customer schedules or factual evidence.`,
+      ],
+    },
+    {
+      heading: ["제3조 (거부·철회와 효과)", "Article 3 (Refusal and withdrawal)"],
+      body: [
+        "이 동의는 선택입니다. 거부하거나 철회해도 기본 서비스를 계속 이용할 수 있습니다. 마이페이지의 약관 동의 관리에서 철회하면 이후 추출에서 제외하고 검토 대기 합성 후보를 폐기합니다. 이미 익명성 검토를 마친 합성본에는 개인과 연결하는 표를 두지 않아 특정 이용자의 기여분을 찾아 개별 회수할 수 없습니다. 문의는 개인정보 보호 문의 창구로 할 수 있습니다.",
+        "This consent is optional. Refusal or withdrawal does not restrict the basic service. Withdraw through consent management in My Page; future extraction excludes you and pending synthetic candidates are discarded. Approved anonymous data has no table linking it to individuals, so a particular user's contribution cannot be individually located or recalled. Contact the privacy inquiry channel for questions.",
+      ],
+    },
+    LANGUAGE_SECTION,
+  ],
+};
+  return [serviceTerms, privacy, sensitive, location, alertChannel, serviceImprovement];
 }
 
 /** 순서 = 동의 화면에 보이는 순서(`CONSENT_CODES` 와 같다). 기본값(`RETENTION`)으로 조립한 판 — 서버 문장을 읽으면 `terms-live.ts` 가 바꿔 낸다. */

@@ -8,6 +8,7 @@ from uuid import uuid4
 from app.domains.travel_ops.components.itinerary.itinerary import Item
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, NoChange, plan_route_adjustment
 from app.domains.travel_ops.instances.mobility import wiring
+from app.domains.travel_ops.components.team_hooks import legs
 
 T = lambda hm: datetime.fromisoformat(f"2026-10-07T{hm}:00+09:00")  # noqa: E731
 
@@ -59,7 +60,7 @@ def test_38_blocked_everywhere_asks_engine_with_disruptions(monkeypatch):
             return {"route": new, "starts_at": arrive - timedelta(minutes=35), "ends_at": arrive - timedelta(minutes=10),
                     "eta_min": 25, "left_out": []}, None
         return leg
-    monkeypatch.setattr(wiring, "leg_planner", leg_planner)
+    monkeypatch.setattr(legs, "leg_planner", leg_planner)
     plan = plan_route_adjustment(item=move, following=b, route=route, events=EVENTS, now=T("10:30"), previous=a)
     assert isinstance(plan, ItineraryChange), plan
     assert seen["disruptions"][0]["kind"] == "station_skip" and seen["disruptions"][0]["line"] == "02호선"
@@ -72,6 +73,6 @@ def test_38_blocked_everywhere_asks_engine_with_disruptions(monkeypatch):
 
 def test_38_engine_off_keeps_old_unresolved(monkeypatch):
     a, move, b, route = _scene()
-    monkeypatch.setattr(wiring, "leg_planner", lambda *a, **k: None)
+    monkeypatch.setattr(legs, "leg_planner", lambda *a, **k: None)
     plan = plan_route_adjustment(item=move, following=b, route=route, events=EVENTS, now=T("10:30"), previous=a)
     assert isinstance(plan, NoChange) and plan.status == "unresolved"

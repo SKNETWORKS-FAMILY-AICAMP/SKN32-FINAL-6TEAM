@@ -13,7 +13,8 @@ from app.application.case_service import CaseService, ResumeTokenError
 from app.application.controller import Controller, ControllerError
 from app.core.contracts import ActionProposal, ContextPack, Evidence, InvalidTransition, NextAction, StateConflict, TeamManifest, TeamResult
 from app.core.idempotency import idempotency_key
-from app.core.registry import RegistryError, TeamRegistry
+from app.core.registry import TeamRegistry
+from app.core.team_availability import TeamUnavailable
 from app.core.transition import OutboxMessage, replay_case, transition_case
 from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db.repository import create_case, get_case, get_case_events
@@ -27,10 +28,10 @@ from app.tools.read_tools import ReadToolbox, ToolLoopExceeded
 
 class FakeTeam:
     manifest = TeamManifest(
-        team_id="fake_order", display_name="Fake Order", contract_name="a_cop.team_task",
-        supported_contract_versions=["1.0"], capabilities=["order.investigate"],
-        accepted_case_types=["billing"], required_context=["case_state", "policy", "db_facts", "history"],
-        allowed_tools=[], knowledge_scope=["billing"], implementation_revision="test",
+        team_id="test_activity", display_name="Test Activity", contract_name="a_cop.team_task",
+        supported_contract_versions=["1.0"], capabilities=["activity.inspect"],
+        accepted_case_types=["activity"], required_context=["case_state", "policy", "db_facts", "history"],
+        allowed_tools=[], knowledge_scope=["travel_activity"], implementation_revision="test",
     )
 
     def __init__(self, wait_first: bool = False):
@@ -40,7 +41,7 @@ class FakeTeam:
     async def execute(self, task):
         self.calls += 1
         if self.wait_first and self.calls == 1:
-            proposal = ActionProposal(action_type="refund.request", arguments={"reason": "post_cancel_charge"},
+            proposal = ActionProposal(action_type="refund.request", arguments={"reason": "activity_cancel_or_change"},
                                       idempotency_key="test-refund-" + uuid4().hex, approval_required=True,
                                       risk_level="high")
             return TeamResult(task_id=task.task_id, run_id=task.run_id, team_id=task.team_id, outcome="waiting",
@@ -53,11 +54,11 @@ class FakeTeam:
                           confidence=1, answer="resolved by fake team", evidence=evidence, next_action=NextAction.RESPOND)
 
 
-class FakeTechnicalTeam(FakeTeam):
+class MobilityTestDouble(FakeTeam):
     manifest = FakeTeam.manifest.model_copy(update={
-        "team_id": "fake_technical", "display_name": "Fake Technical",
-        "capabilities": ["return.diagnose"], "accepted_case_types": ["return"],
-        "knowledge_scope": ["return"],
+        "team_id": "test_mobility", "display_name": "Test Mobility",
+        "capabilities": ["mobility.inspect"], "accepted_case_types": ["mobility"],
+        "knowledge_scope": ["travel_mobility"],
     })
 
 
@@ -116,7 +117,7 @@ def db():
                     cur.execute("DELETE FROM tenants WHERE tenant_id=%s", (tenant,))
 
 
-def seed_case(conn, tenant, *, intent="billing", issue="billing_invoice"):
+def seed_case(conn, tenant, *, intent="incident_report", issue="activity_cancel_or_change"):
     """★`issue` 의 **접두가 `case_type`** 이다(v11 §5-B,
     `app/application/routing.py::case_type_of`). 전에는 `issue="invoice"`
     였는데, 그때는 Controller 가 `intent` 를 두 축 모두에 썼기 때문에
@@ -155,8 +156,10 @@ def test_inactive_team_is_not_resolved():
     team = DemoTeam()
     team.manifest = team.manifest.model_copy(update={"active": False})
     registry = TeamRegistry([team])
-    with pytest.raises(RegistryError):
+    with pytest.raises(TeamUnavailable) as exc:
         registry.resolve(case_type="demo", intent="demo")
+
+    assert exc.value.reason == "disabled"
 
 
 def test_e2e_cancelled_customer_post_charge_approval_flow(db, monkeypatch):
@@ -263,9 +266,15 @@ def test_run_persists_fixed_graph_revision_and_checkpoint_is_not_projection_stat
 def test_routing_failure_escalates_when_no_registered_team(db):
     conn, tenant = db
     case_id, _ = seed_case(conn, tenant, intent="unhandled", issue="unhandled_unknown")
+    diagnostics = []
     result = asyncio.run(Controller(TeamRegistry([]), policy_search=fake_policy,
-                                    context_broker=FakeContextBroker()).run_case(tenant_id=tenant, case_id=case_id))
+                                    context_broker=FakeContextBroker(),
+                                    diagnostic_recorder=lambda value: diagnostics.append(value) or {"status": "stored"}
+                                    ).run_case(tenant_id=tenant, case_id=case_id))
     assert result["status"] == "escalated"
+    assert len(diagnostics) == 1 and diagnostics[0]["code"] == "routing_failed"
+    assert diagnostics[0]["tenant_id"] == tenant and diagnostics[0]["case_id"] == case_id
+    assert "subject" not in diagnostics[0] and "error" not in diagnostics[0]
     with get_connection() as check:
         events = get_case_events(check, tenant_id=tenant, case_id=case_id)
         assert events[-1]["event_type"] == "routing_failed"
@@ -279,7 +288,7 @@ def test_e2e_status_inquiry_does_not_touch_the_booking(db):
     예약과 공급자 원장을 바꾸지 않는다.
     """
     conn, tenant = db
-    case_id, customer = seed_case(conn, tenant, intent="return", issue="return_status_inquiry")
+    case_id, customer = seed_case(conn, tenant, intent="confirm_request", issue="mobility_other")
     with conn.transaction():
         with conn.cursor() as cur:
             cur.execute("INSERT INTO bookings (tenant_id,customer_id,booking_no,kind,status,"
@@ -297,7 +306,7 @@ def test_e2e_status_inquiry_does_not_touch_the_booking(db):
                     "JOIN supplier_bookings sb ON sb.booking_id = b.booking_id "
                     "WHERE b.tenant_id=%s AND b.customer_id=%s", (tenant, customer))
         before = cur.fetchone()
-    team = FakeTechnicalTeam()
+    team = MobilityTestDouble()
     result = asyncio.run(Controller(TeamRegistry([team]), policy_search=fake_policy,
                                     context_broker=FakeContextBroker()).run_case(tenant_id=tenant, case_id=case_id))
     assert result["status"] == "resolved"
@@ -313,7 +322,7 @@ def test_replay_case_is_projection_equivalent(db):
     case_id, _ = seed_case(conn, tenant)
     with conn.transaction():
         transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=2, event_type=EventType.ROUTED,
-                        payload={"owner_team_id": "fake_order", "capability": "order.investigate"}, actor_type="test")
+                        payload={"owner_team_id": "test_activity", "capability": "activity.inspect"}, actor_type="test")
     original = get_case(conn, tenant_id=tenant, case_id=case_id)
     replay = replay_case(conn, tenant_id=tenant, case_id=case_id)
     assert (replay.status.value, replay.version) == (original["status"], original["version"])
@@ -326,7 +335,7 @@ def test_transition_exception_rolls_back_event_and_outbox(db):
     with pytest.raises(RuntimeError):
         with conn.transaction():
             transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=2, event_type=EventType.ROUTED,
-                            payload={"owner_team_id": "fake_order", "capability": "order.investigate"}, actor_type="test", outbox=[message])
+                            payload={"owner_team_id": "test_activity", "capability": "activity.inspect"}, actor_type="test", outbox=[message])
             raise RuntimeError("injected failure")
     with conn.cursor() as cur:
         cur.execute("SELECT count(*) FROM case_events WHERE tenant_id=%s AND case_id=%s AND aggregate_version=3", (tenant, case_id))
@@ -374,17 +383,17 @@ def test_expired_resume_escalation_survives_outer_rollback(db):
     with conn.transaction():
         transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=2,
                         event_type=EventType.ROUTED,
-                        payload={"owner_team_id": "fake_order", "capability": "order.investigate"}, actor_type="test")
+                        payload={"owner_team_id": "test_activity", "capability": "activity.inspect"}, actor_type="test")
         transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=3,
                         event_type=EventType.MISSING_INPUT,
-                        payload={"required_input_schema": {}, "state_patch": service.resume_metadata("valid", "customer_input")},
+                        payload={"required_input_schema": {}, "state_patch": {**service.resume_metadata("valid", "customer_input"), "resume_token_expires_at": (datetime.now(UTC)-timedelta(seconds=1)).isoformat()}},
                         actor_type="test")
     conn.commit()
 
     controller = Controller(TeamRegistry([FakeTeam()]), policy_search=fake_policy,
                             context_broker=FakeContextBroker())
     with pytest.raises(ControllerError, match="resume token"):
-        asyncio.run(controller.resume(tenant_id=tenant, case_id=case_id, token="expired"))
+        asyncio.run(controller.resume(tenant_id=tenant, case_id=case_id, token="valid"))
 
     with get_connection() as check:
         assert case_versions(check, tenant, case_id) == ("escalated", 5)
@@ -413,7 +422,7 @@ def test_valid_resume_race_invalid_transition_is_logged_and_ignored(db, monkeypa
     with conn.transaction():
         transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=2,
                         event_type=EventType.ROUTED,
-                        payload={"owner_team_id": "fake_order", "capability": "order.investigate"}, actor_type="test")
+                        payload={"owner_team_id": "test_activity", "capability": "activity.inspect"}, actor_type="test")
         transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=3,
                         event_type=EventType.MISSING_INPUT,
                         payload={"required_input_schema": {}, "state_patch": service.resume_metadata(token, "customer_input")},
@@ -426,7 +435,7 @@ def test_valid_resume_race_invalid_transition_is_logged_and_ignored(db, monkeypa
     def raise_invalid_transition(*args, **kwargs):
         raise InvalidTransition("case already transitioned")
 
-    monkeypatch.setattr(controller, "_transition_with_retry", raise_invalid_transition)
+    monkeypatch.setattr("app.application.controller.transition_case", raise_invalid_transition)
     outcome = asyncio.run(controller.resume(tenant_id=tenant, case_id=case_id, token=token))
 
     assert outcome["stale"] is True
@@ -436,7 +445,7 @@ def test_valid_resume_race_invalid_transition_is_logged_and_ignored(db, monkeypa
 
 def test_loop_guard_rejects_same_tool_and_arguments(db):
     toolbox = ReadToolbox(get_connection, policy_search=lambda *_: [])
-    context = type("Context", (), {"tenant_id": "test", "case_id": uuid4(), "knowledge_scope": ["billing"],
+    context = type("Context", (), {"tenant_id": "test", "case_id": uuid4(), "knowledge_scope": ["travel_activity"],
                                     "current_state": {"customer_id": str(uuid4())}})()
     seen = set()
     toolbox.call("read.policy", context, {"query": "same"}, ["read.policy"], seen)
@@ -454,7 +463,7 @@ def test_same_expected_version_has_one_success_and_one_state_conflict(db):
             try:
                 with conn.transaction():
                     transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=2, event_type=EventType.ROUTED,
-                                    payload={"owner_team_id": "fake_order", "capability": "order.investigate"}, actor_type="test")
+                                    payload={"owner_team_id": "test_activity", "capability": "activity.inspect"}, actor_type="test")
                 return "success"
             except StateConflict:
                 return "conflict"

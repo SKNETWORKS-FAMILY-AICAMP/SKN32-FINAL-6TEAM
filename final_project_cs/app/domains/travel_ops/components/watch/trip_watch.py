@@ -40,6 +40,7 @@ DEFAULT_LOOKAHEAD = timedelta(minutes=90)
 @dataclass
 class TripTickResult:
     checked: int = 0
+    unavailable: list[dict[str, Any]] = field(default_factory=list)
     adjusted: list[dict[str, Any]] = field(default_factory=list)
     fatal: list[dict[str, Any]] = field(default_factory=list)
     unhandled: list[dict[str, Any]] = field(default_factory=list)
@@ -75,6 +76,11 @@ class TripWatcher:
             due = self.store.due(conn, start=now, end=now + lookahead)
             places = self.store.places(conn, every_trip=True)
         for trip_id, item in due:
+            from app.domains.travel_ops.components.watch.trip_watch_batch import skipped_watch
+            skipped = skipped_watch(item.kind, trip_id=trip_id, item_id=item.item_id)
+            if skipped is not None:
+                result.unavailable.append(skipped)
+                continue
             if item.detail.get("customer_pinned"):
                 # ★`[2026-09-24]` 고객이 고정한 항목도 **점검은 한다** — 전에는 통째로 건너뛰어서 고정한
                 #   항목에는 안전 알림도 안 나갔다(코덱스 교차검토). 대신 **자동으로 바꾸지는 않는다** —

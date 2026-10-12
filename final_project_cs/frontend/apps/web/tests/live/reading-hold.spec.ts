@@ -18,7 +18,7 @@ async function watch(page: Page, ms: number) {
     let last = "";
     const id = setInterval(() => {
       const reading = Array.from(document.querySelectorAll("h1")).some((h) => !h.classList.contains("sr-only") && (h.textContent ?? "").includes("계획을 확인하고 있어요"));
-      const screen = document.querySelector('[class*="plan-check-module"][class*="__screen"]') as HTMLElement | null;
+      const screen = document.querySelector('#main-content[data-stage]') as HTMLElement | null;
       const now = `${reading ? "읽는 화면" : "확인 화면"}(${screen?.getAttribute("data-stage") ?? "-"})`;
       if (now !== last) { w.__screens.push(`${Math.round(performance.now() - t0)}ms ${now}`); last = now; }
     }, 50);
@@ -41,6 +41,7 @@ test("질문이 붙은 계획을 보내면 읽는 화면이 질문과 함께 그
   await watch(page, 16_000);
   await page.waitForTimeout(16_500);
   const log = await screens(page);
+  expect(log.every((entry) => !entry.includes("(-)"))).toBe(true);
   expect(log.length).toBeGreaterThan(0);
   expect(log[0]).toContain("읽는 화면");                                                                // 처음은 읽는 화면(질문이 있다)
   expect(backToReading(log)).toBe(0);                                                                  // 확인 화면이 한 번 뜬 뒤에는 읽는 화면으로 돌아가지 않는다
@@ -61,6 +62,8 @@ test("이미 읽은 계획을 뒤로 · 앞으로로 다시 열면 읽는 화면
   await watch(page, 8_000);
   await page.waitForTimeout(8_500);
   const log = await screens(page);
+  expect(log.length).toBeGreaterThan(0);
+  expect(log.every((entry) => !entry.includes("(-)"))).toBe(true);
   expect(log.some((entry) => entry.includes("읽는 화면"))).toBe(false);                                // 읽는 화면이 한 순간도 없다
   expect(log.every((entry) => entry.includes("확인 화면"))).toBe(true);
 });

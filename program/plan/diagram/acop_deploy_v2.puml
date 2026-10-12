@@ -1,0 +1,118 @@
+@startuml
+title A-COP deployment units and packaging boundary
+skinparam backgroundColor #faf9ff
+skinparam shadowing false
+skinparam linetype ortho
+skinparam ArrowColor #4b5563
+skinparam LineColor #4b5563
+skinparam packageStyle rectangle
+skinparam node {
+  BackgroundColor #f5f3ff
+  BorderColor #7c3aed
+  BackgroundColor<<release>> #dbeafe
+  BorderColor<<release>> #2563eb
+  BackgroundColor<<admin>> #fce7f3
+  BorderColor<<admin>> #db2777
+  BackgroundColor<<phase2>> #fef3c7
+  BorderColor<<phase2>> #d97706
+}
+skinparam artifact {
+  BackgroundColor #ede9fe
+  BorderColor #7c3aed
+}
+skinparam database {
+  BackgroundColor #cffafe
+  BorderColor #0891b2
+}
+
+together {
+node "개발 환경\nPhase 1 / 현재" as Dev {
+  artifact "소스 트리\napp/core · app/application\napp/domain · app/infrastructure" as Source
+  artifact "acop_basement wheel" as BasementDev
+  artifact "acop_composer wheel" as ComposerDev
+}
+
+node "고객용 릴리즈 빌드\n항상 설치 대상" <<release>> as CustomerBuild {
+  artifact "acop_basement\nCore / Team / Registry / Controller" as BasementRelease
+  node "A-COP Runtime" as CustomerRuntime
+  CustomerRuntime ..> BasementRelease : 설치
+}
+
+node "관리용 빌드\n선택 설치 대상" <<admin>> as AdminBuild {
+  artifact "acop_basement" as BasementAdmin
+  artifact "acop_composer\n토글 endpoint glue" as ComposerAdmin
+  node "A-COP Runtime +\nComposer endpoint" as AdminRuntime
+  AdminRuntime ..> BasementAdmin : 설치
+  AdminRuntime ..> ComposerAdmin : 선택 설치
+}
+
+AdminBuild -[hidden]down-> Dev
+}
+
+CustomerBuild -[hidden]down-> AdminBuild
+
+node "final_project_ui\n독립 서비스\n패키지 아님" as UI {
+  artifact "UI service" as UIArtifact
+}
+
+package "Shared infrastructure" as SharedInfra {
+  database "PostgreSQL\n+ pgvector" as PostgreSQL
+  database "Graph DB\n선택: Phase 2 / 채택 게이트" <<phase2>> as GraphDB
+  node "LLM provider" as LLM
+  node "A2A Remote\nCatalog & Verification" as A2A
+}
+
+UI -[hidden]right-> CustomerBuild
+CustomerBuild -[hidden]right-> SharedInfra
+
+Source ..> BasementDev : 빌드
+Source ..> ComposerDev : 빌드
+BasementDev ..> BasementRelease : 고객용 패키지
+BasementDev ..> BasementAdmin : 관리용 패키지
+ComposerDev ..> ComposerAdmin : 관리용 패키지
+
+UI --> CustomerRuntime : HTTP only
+UI --> AdminRuntime : HTTP only
+CustomerRuntime --> SharedInfra : shared services
+AdminRuntime --> SharedInfra : shared services
+
+note right of SharedInfra
+  데이터 접근 -> PostgreSQL
+  GraphStorePort -> Graph DB
+  LLMPort -> LLM provider
+  A2A Adapter -> A2A Remote
+end note
+
+note right of Dev
+현재 기준: 로컬 개발 환경에는 Docker가 없다.
+로컬은 PostgreSQL 직접 실행으로 진행한다.
+end note
+
+note bottom of CustomerBuild
+고객용 빌드에는 acop_composer가 존재하지 않는다.
+acop_basement는 컴포저 코드를 포함하지 않는다.
+end note
+
+note bottom of AdminBuild
+관리용 빌드만 acop_composer를 선택 설치한다.
+final_project_ui는 pip 패키지가 아니며
+대상 Python을 import하지 않는다.
+end note
+
+node "실제 배포\nPhase 2" <<phase2>> as DeployPhase
+artifact "컨테이너 이미지\n고객용 / 관리용" <<phase2>> as Images
+node "AWS 배포 대상\nPhase 2" <<phase2>> as AWS
+DeployPhase ..> Images : 컨테이너화
+Images ..> AWS : 배포
+CustomerBuild ..> DeployPhase : 배포
+AdminBuild ..> DeployPhase : 배포
+
+legend bottom right
+|색상|의미|
+|<#dbeafe>|고객용 릴리즈 단위|
+|<#fce7f3>|관리용 빌드 단위|
+|<#fef3c7>|Phase 2 선택 기술 / 실제 배포|
+|artifact|패키지·빌드 산출물|
+|database|데이터 저장소|
+endlegend
+@enduml

@@ -126,6 +126,10 @@ class ItineraryWork:
             return await self.handle_trigger(task, ctx)
 
         kind = request.get("type")
+        if kind == "conversation":
+            from .conversation_work import run_conversation
+
+            return await run_conversation(self, task, ctx)
         report: dict[str, Any] = {}
         reading = (state.get("interpretation") or {}).get("report")
         if not kind and isinstance(reading, dict) and reading.get("type"):
@@ -148,6 +152,11 @@ class ItineraryWork:
                 return self._escalate(task, "report_not_understood", ctx["evidence"],
                                       warnings=[str(report.get("error") or "일정을 바꿀 신고로 읽히지 않는다")])
         ctx["report"] = {**report, **request}
+        if kind == "delay" and not ctx["report"].get("minutes"):
+            from .conversation_work import run_conversation
+
+            ctx["request"] = {**ctx["report"], "type": "conversation", "action": "report_delay"}
+            return await run_conversation(self, task, ctx)
         if kind == "question":
             return self._answer_question(task, ctx)
         if kind == "change":

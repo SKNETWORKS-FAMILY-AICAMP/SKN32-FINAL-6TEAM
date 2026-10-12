@@ -9,7 +9,7 @@
  ②기본(`fresh=false`)은 **캐시만 읽는 점검기**만 부른다 — 바깥에 새로 묻는 점검기는 안 부르고, 횟수도 안 센다(하루 한도를 깎지 않는다).
  ③`fresh=true` 는 새로 묻는 점검기를 부르되 한 번에 `fresh_max_items` 개까지 · `risk_check` 로 센다(제한이 켜져 있으면 429). 점검기가 조립 안 된 서버는 503.
  ④확인 불가는 확인 불가로(`unknown`) · 문제는 원인과 함께(`problem`) — 지어내지 않는다. 확인 시각이 있다.
- ⑤이동 판정: 좌표 또는 일정 항목 · 서울 밖 `out_of_scope` · 판정기가 꺼져 있으면 `unavailable`(직선 어림만) · 두 시각을 같이 주면 422 · 횟수는 `move_judge` 로 센다.
+ ⑤이동 판정: 좌표 또는 일정 항목 · 서울 밖 `out_of_scope` · 필수 판정기가 꺼져 있으면 503(`team_unavailable`) · 두 시각을 같이 주면 422 · 횟수는 `move_judge` 로 센다.
  ⑥MCP 로 실제 접속해 같은 결과가 나오고, 남의 여행은 도구 오류다.
 
 재현:
@@ -21,14 +21,13 @@ from __future__ import annotations
 from typing import Any
 from uuid import uuid4
 
-import pytest
 from fastapi.testclient import TestClient
 
-from app.domains.travel_ops.components.team_hooks import legs
 from app.domains.travel_ops.entry.trip_api import build_trip_router
 from app.domains.travel_ops.modules.mcp import mcp_server
 from app.infrastructure.db.session import get_connection
 from app.presentation.api.app import create_app
+from tests.helpers.plugin_bindings import publish_test_services
 
 from .test_mcp_server import _data, _error_text, _run
 from .test_trip_api import _iso, api  # noqa: F401 — 픽스처를 그대로 쓴다
@@ -60,7 +59,11 @@ def _client(cached: FakeCheck | None, fresh: FakeCheck | None) -> TestClient:
     router = build_trip_router(check_factory=(lambda: fresh) if fresh else None, cached_check_factory=(lambda: cached) if cached else None,
                                fresh_check_factory=(lambda: fresh) if fresh else None,
                                classifier_factory=lambda: (lambda m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"}))
-    return TestClient(create_app(classifier=lambda m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"}, domain_routers=[router]))
+    client = TestClient(create_app(classifier=lambda m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"}, domain_routers=[router]))
+    # 이 파일은 읽기 도구 계약 시험이다. 성공 시험은 아래 명시 계산기를 넣고,
+    # 부재 시험은 조립 표의 계산기를 비워 운영 환경·전역 hook의 영향을 받지 않는다.
+    publish_test_services(client.app, {("legs", "leg_planner"): lambda *a, **kw: None})
+    return client
 
 
 def _trip(api, client, me, request_id="risk-1") -> dict[str, Any]:
@@ -73,19 +76,6 @@ def _usage(api, action) -> int:
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT COALESCE(sum(used), 0) FROM web_usage WHERE tenant_id=%s AND action=%s AND who_kind='all'", (api["tenant"], action))
         return int(cur.fetchone()[0])
-
-
-def _hook_state():
-    return legs._leg_planner, legs._disruptions_from_events, legs._walk_limit_m, legs._basis
-
-
-@pytest.fixture()
-def no_legs():
-    """이동 판정기 끼움 자리를 비워 두고 시작한다 — 끝나면 **원래 상태로** 되돌린다(전역이라 다른 시험에 새지 않게)."""
-    saved = _hook_state()
-    legs.clear()
-    yield
-    legs._leg_planner, legs._disruptions_from_events, legs._walk_limit_m, legs._basis = saved
 
 
 # ── 일정 위험 점검 ────────────────────────────────────────────────
@@ -210,7 +200,7 @@ def test_a_crowd_of_simultaneous_reads_is_turned_away_with_busy_and_the_slot_is_
     assert client.get(url, params={"at": AT}, headers=headers).status_code == 200                # 자리가 돌아왔다
 
 
-def test_absurd_times_are_422_not_a_server_error(api, no_legs):
+def test_absurd_times_are_422_not_a_server_error(api):
     client = _client(FakeCheck(), FakeCheck())
     me = _session(api)
     trip = _trip(api, client, me)
@@ -242,18 +232,21 @@ class FakeLeg:
         return {"route": route, "starts_at": arrive_dt - timedelta(minutes=15), "ends_at": arrive_dt - timedelta(minutes=3), "eta_min": 12, "left_out": []}, None
 
 
-def _register(leg):
-    legs.register(leg_planner=lambda *a, **kw: leg, disruptions_from_events=lambda e: ([], []), walk_limit_m=lambda: 1500.0,
-                  basis=lambda: {"mode": "enabled", "rules_version": "v-test", "timetable_stale": False, "timetable_built_at": "2026-10-01T00:00:00+09:00"})
+def _register(leg, client):
+    """정해진 12분 결과를 요청의 불변 계산 표에만 연결한다."""
+    publish_test_services(client.app, {("legs", "leg_planner"): lambda *a, **kw: leg,
+                   ("legs", "disruptions_from_events"): lambda e: ([], []),
+                   ("legs", "walk_limit_m"): lambda: 1500.0,
+                   ("legs", "basis"): lambda: {"mode":"enabled", "rules_version":"v-test", "timetable_stale":False, "timetable_built_at":"2026-10-01T00:00:00+09:00"}})
 
 
 COORDS = {"origin": {"name": "경복궁", "lat": 37.5796, "lon": 126.9770}, "destination": {"name": "시청", "lat": 37.5663, "lon": 126.9779}}
 
 
-def test_a_move_by_coordinates_is_judged_and_counted(api, no_legs):
+def test_a_move_by_coordinates_is_judged_and_counted(api):
     leg = FakeLeg()
     client = _client(FakeCheck(), FakeCheck())
-    _register(leg)                                                                              # ★앱을 만든 **뒤**에 꽂는다 — 앱 조립이 끼움 자리를 비우기도 한다
+    _register(leg, client)                                                                              # 앱의 고정 계산 표에 시험 제공자를 명시한다
     me = _session(api)
     body = client.post("/v1/web/moves/judge", json={**COORDS, "arrive_by": "2026-10-07T10:00:00"}, headers=_h(me["user_key"]))
     assert body.status_code == 200, body.text
@@ -264,10 +257,10 @@ def test_a_move_by_coordinates_is_judged_and_counted(api, no_legs):
     assert _usage(api, "move_judge") == 1 and leg.calls[0][2].utcoffset().total_seconds() == 9 * 3600
 
 
-def test_a_move_by_trip_items_uses_that_trips_places_and_only_my_trip(api, no_legs):
+def test_a_move_by_trip_items_uses_that_trips_places_and_only_my_trip(api):
     leg = FakeLeg()
     client = _client(FakeCheck(), FakeCheck())
-    _register(leg)                                                                              # ★앱을 만든 **뒤**에 꽂는다 — 앱 조립이 끼움 자리를 비우기도 한다
+    _register(leg, client)                                                                              # 앱의 고정 계산 표에 시험 제공자를 명시한다
     mine, other = _session(api), _session(api)
     trip = _trip(api, client, mine)
     placed = [i for i in trip["items"] if i["kind"] != "mobility" and i.get("place")]
@@ -283,10 +276,10 @@ def test_a_move_by_trip_items_uses_that_trips_places_and_only_my_trip(api, no_le
     assert ghost.status_code == 404
 
 
-def test_bad_move_requests_are_422_and_outside_seoul_is_not_judged(api, no_legs):
+def test_bad_move_requests_are_422_and_outside_seoul_is_not_judged(api):
     leg = FakeLeg()
     client = _client(FakeCheck(), FakeCheck())
-    _register(leg)                                                                              # ★앱을 만든 **뒤**에 꽂는다 — 앱 조립이 끼움 자리를 비우기도 한다
+    _register(leg, client)                                                                              # 앱의 고정 계산 표에 시험 제공자를 명시한다
     me = _session(api)
     headers = _h(me["user_key"])
     both = client.post("/v1/web/moves/judge", json={**COORDS, "depart_at": "2026-10-07T09:00:00+09:00", "arrive_by": "2026-10-07T10:00:00+09:00"}, headers=headers)
@@ -300,11 +293,14 @@ def test_bad_move_requests_are_422_and_outside_seoul_is_not_judged(api, no_legs)
     assert _usage(api, "move_judge") == 1                                                       # 422 는 세지 않고 서울 밖 판정 요청은 센다
 
 
-def test_a_server_without_the_judge_returns_a_straight_line_estimate_and_says_it(api, no_legs):
+def test_an_unavailable_required_move_engine_returns_503_without_an_estimate(api):
     client = _client(FakeCheck(), FakeCheck())
     me = _session(api)
-    out = client.post("/v1/web/moves/judge", json=COORDS, headers=_h(me["user_key"])).json()
-    assert out["status"] == "unavailable" and out["grade"] == "estimate" and out["estimate"]["straight_line_m"] > 0 and "route" not in out
+    response = client.post("/v1/web/moves/judge", json=COORDS, headers=_h(me["user_key"]))
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "team_unavailable"
+    assert response.json()["error"]["reason"] == "engine_unavailable"
+    assert "estimate" not in response.json()
 
 
 # ── MCP 로 실제 접속 ──────────────────────────────────────────────
@@ -312,7 +308,7 @@ def _surface(client):
     return mcp_server.build_surface(lambda: client.app, enabled=lambda: True, write_enabled=False)
 
 
-def test_both_tools_are_read_only_and_exist_even_with_the_write_switch_off(api, no_legs):
+def test_both_tools_are_read_only_and_exist_even_with_the_write_switch_off(api):
     client = _client(FakeCheck(), FakeCheck())
     me = _session(api)
 
@@ -325,7 +321,7 @@ def test_both_tools_are_read_only_and_exist_even_with_the_write_switch_off(api, 
         assert name in tools and tools[name].annotations.readOnlyHint is True and tools[name].annotations.destructiveHint is False
 
 
-def test_the_risk_tool_over_mcp_matches_the_web_and_a_stranger_gets_a_tool_error(api, no_legs):
+def test_the_risk_tool_over_mcp_matches_the_web_and_a_stranger_gets_a_tool_error(api):
     client = _client(FakeCheck(first_problem=True), FakeCheck())
     mine, other = _session(api), _session(api)
     trip = _trip(api, client, mine)
@@ -340,10 +336,10 @@ def test_the_risk_tool_over_mcp_matches_the_web_and_a_stranger_gets_a_tool_error
     assert "404" in _error_text(_run(_surface(client), other["user_key"], ask))                  # ① 남의 여행
 
 
-def test_the_move_tool_over_mcp_reports_the_grade_and_never_leaks_the_key(api, no_legs):
+def test_the_move_tool_over_mcp_reports_the_grade_and_never_leaks_the_key(api):
     leg = FakeLeg()
     client = _client(FakeCheck(), FakeCheck())
-    _register(leg)                                                                              # ★앱을 만든 **뒤**에 꽂는다 — 앱 조립이 끼움 자리를 비우기도 한다
+    _register(leg, client)                                                                              # 앱의 고정 계산 표에 시험 제공자를 명시한다
     me = _session(api)
 
     async def go(session):

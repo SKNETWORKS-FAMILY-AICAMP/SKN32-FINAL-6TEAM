@@ -1,0 +1,32 @@
+## A. 유형별 맞은 수 — heavy(8) + mix4(8) = 유형당 16문제 (26B 와 비교)
+유형                       26B   12B   E4B    구조   26B 대비: 12B / E4B / 구조
+context_pronoun           16    16    15    15   = / ▼1 / ▼1
+duplicate_place           16    15    14    15   ▼1 / ▼2 / ▼1
+confusable_name           16    16    16    15   = / = / ▼1
+compound_intent           10    12    10    16   ▲2 / = / ▲6
+negation                  15    15    13    13   = / ▼2 / ▼2
+typo_slang                16    16    16    16   = / = / =
+out_of_scope              14    12    14    16   ▼2 / = / ▲2
+nameless_description      16    16    14    15   = / ▼2 / ▼1
+ordinal_relative          15    13     7    15   ▼2 / ▼8 / =
+change_request            16    15    13    14   ▼1 / ▼3 / ▼2
+absent_but_plausible      16    14    15    15   ▼2 / ▼1 / ▼1
+
+합계(176문제): E4B 147 · 12B 160 · 26B 166 · 구조 165 · 소형 유형별 최선(사후 선택) 171
+유형 11개 중 26B 대비 (이김/비김/짐):
+  12B: 1/5/5
+  E4B: 0/4/7
+  구조: 2/2/7
+
+## B. heavy 판정 88 유형당 8 — Jev·Codex 솔(정의 명시, 천장) vs 26B
+  context_pronoun        26B 8 · Jev 8= · 솔 8=
+  duplicate_place        26B 8 · Jev 8= · 솔 8=
+  confusable_name        26B 8 · Jev 8= · 솔 8=
+  compound_intent        26B 5 · Jev 6▲1 · 솔 8▲3
+  negation               26B 8 · Jev 8= · 솔 8=
+  typo_slang             26B 8 · Jev 8= · 솔 8=
+  out_of_scope           26B 8 · Jev 8= · 솔 8=
+  nameless_description   26B 8 · Jev 8= · 솔 8=
+  ordinal_relative       26B 8 · Jev 1▼7 · 솔 8=
+  change_request         26B 8 · Jev 7▼1 · 솔 8=
+  absent_but_plausible   26B 8 · Jev 8= · 솔 8=

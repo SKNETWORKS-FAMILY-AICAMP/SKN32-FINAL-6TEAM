@@ -1,0 +1,10 @@
+# SQL 안전장치만 기존 실행 이미지에 추가하는 검토용 후보. 아직 빌드·배포하지 않았다.
+# BASE_IMAGE는 snapshot이 만든 전용 recovery_tag를 사용하고 해당 ID를 먼저 확인한다.
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+RUN python -m pip install --no-cache-dir pglast==7.20
+COPY app/infrastructure/db/migrate.py /srv/app/infrastructure/db/migrate.py
+COPY app/infrastructure/db/migration_plan.py /srv/app/infrastructure/db/migration_plan.py
+COPY app/infrastructure/db/migration_sql.py /srv/app/infrastructure/db/migration_sql.py
+COPY app/infrastructure/db/migrations/migration-plan.json /srv/app/infrastructure/db/migrations/migration-plan.json
+RUN python -m app.infrastructure.db.migrate --check > /srv/migration-safety.json

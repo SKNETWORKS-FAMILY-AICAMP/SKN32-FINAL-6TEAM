@@ -169,6 +169,7 @@ test("화면이 열려 있는 동안 안전 알림이 오면 「일정 정지 �
   const state = { paused: false, resumed: 0 };
   await stage(page, state);
   await openTrip(page);
+  await expect(page.getByRole("button", { name: "알림 센터 열기 · 읽지 않은 알림 2개", exact: true })).toBeVisible(); // 기존 알림 조회가 반영된 뒤 새 안전 알림을 보낸다
   await expect(page.getByRole("button", { name: "일정 정지 중 · 알림 센터 열기" })).toHaveCount(0);
   state.paused = true;
   await expect.poll(() => server.ring(["itinerary", "notice"])).toBeGreaterThan(0);

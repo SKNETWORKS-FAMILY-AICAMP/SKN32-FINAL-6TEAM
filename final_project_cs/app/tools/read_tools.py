@@ -290,12 +290,14 @@ class ReadToolbox:
         ★`open_at_slot` 이 NULL 이면 **모름**이다. 받는 쪽이 「아니다」로 읽으면
           안 된다 — 그 구분은 Team 이 한다.
         """
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+        dining_ledger.require_state_provider(registered_place=True)
         if not self.dining_ledger:
             return None
-        from app.domains.travel_ops.instances.dining.ledger import dining_state
         with self.connection_factory() as conn:
-            return dining_state(conn, scope.tenant_id, place_id, at, until,
-                                order_margin_min=order_margin_min)
+            return dining_ledger.state(conn, scope.tenant_id, place_id, at, until,
+                                       order_margin_min=order_margin_min)
 
     def dining_states(self, scope: ToolContext, *, slots: list[dict[str, Any]],
                       order_margin_min: int | None = None, **_: Any) -> dict[str, dict[str, Any] | None] | None:
@@ -304,14 +306,15 @@ class ReadToolbox:
         ★`[2026-10-05]` 라스트오더 주문 여유(`order_ok`)를 함께 낸다 — 기본은 대체 계산의 탈락 기준(20분, `replan.ORDER_MARGIN_MIN`).
         ★요식 원장을 쓰지 않는 조립(시나리오 모드 — `dining_ledger=False`)은 `None` — 계산은 장소 목록의 영업시간으로 돌아간다.
         """
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+        dining_ledger.state_lookup(None, scope.tenant_id)
         if not self.dining_ledger:
             return None
-        from app.domains.travel_ops.instances.dining.ledger import dining_states
-
         with self.connection_factory() as conn:
             if order_margin_min is None:
-                return dining_states(conn, scope.tenant_id, slots)
-            return dining_states(conn, scope.tenant_id, slots, order_margin_min=order_margin_min)
+                return dining_ledger.states(conn, scope.tenant_id, slots)
+            return dining_ledger.states(conn, scope.tenant_id, slots, order_margin_min=order_margin_min)
 
     def place_price(self, scope: ToolContext, *, place_ids: list[str] | None = None,
                     **_: Any) -> dict[str, dict[str, int | None] | None] | None:

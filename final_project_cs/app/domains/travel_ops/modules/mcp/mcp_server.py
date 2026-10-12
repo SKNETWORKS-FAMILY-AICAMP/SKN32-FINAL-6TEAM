@@ -76,7 +76,7 @@ class McpApiError(Exception):
         self.status, self.code, self.message, self.extra = status, code, message, extra or {}
 
     def text(self) -> str:
-        tail = {k: v for k, v in self.extra.items() if k in ("problems", "relax", "reasons", "items", "fields", "retry_after_seconds")}
+        tail = {k: v for k, v in self.extra.items() if k in ("problems", "relax", "reasons", "items", "fields", "retry_after_seconds", "team_id", "reason", "retryable")}
         return f"{self.message} ({self.code}, HTTP {self.status})" + (f" {json.dumps(tail, ensure_ascii=False)}" if tail else "")
 
 
@@ -85,6 +85,7 @@ class Caller:
     key: str
     ip: str | None = None
     forwarded_for: str | None = None
+    identity: Any = None
 
 
 class Backend(Protocol):
@@ -120,11 +121,15 @@ class _HttpxBackend:
 
     async def request(self, method: str, path: str, *, caller: Caller, json: Any = None,
                       params: dict[str, Any] | None = None, form: dict[str, str] | None = None) -> Any:
-        headers = {"X-User-Key": caller.key, "Accept": "application/json"}
+        headers = {"Accept": "application/json"}
+        if caller.identity is None:
+            headers["X-User-Key"] = caller.key
         if caller.forwarded_for:
             headers["X-Forwarded-For"] = caller.forwarded_for
-        async with self._client(caller) as http:
-            response = await http.request(method, path, headers=headers, json=json, params=params, data=form)
+        from app.domains.travel_ops.modules.web_account.personal_ai_context import delegated_identity
+        with delegated_identity(caller.identity):
+            async with self._client(caller) as http:
+                response = await http.request(method, path, headers=headers, json=json, params=params, data=form)
         if response.status_code >= 400:
             raise _error_of(response)
         return response.json()
@@ -169,6 +174,10 @@ def caller_of(ctx: Context | None, *, env_key: str | None = None) -> Caller:
     except Exception:                                      # noqa: BLE001 — 요청 맥락이 없는 전송(stdio · 메모리)
         request = None
     if request is not None:
+        identity = request.scope.get("tripilot.oauth_identity")
+        if identity is not None:
+            client = getattr(request, "client", None)
+            return Caller("", getattr(client, "host", None), request.headers.get("x-forwarded-for"), identity)
         key = key_from_headers(request.headers)
         client = getattr(request, "client", None)
         if key:
@@ -465,11 +474,27 @@ class McpGate:
             await self._reply(send, 404, "not_found", "resource not found")
             return
         headers = {k.decode("latin-1").lower(): v.decode("latin-1") for k, v in scope.get("headers", [])}
-        key = key_from_headers(headers)
-        if not key or not await asyncio.to_thread(self.authenticate, key):
-            await self._reply(send, 401, "unauthenticated", "사용자 키가 없거나 맞지 않는다",
-                              [(b"www-authenticate", b'Bearer realm="tripilot"')])
+        from app.domains.travel_ops.modules.web_account import web_cookie
+        auth = headers.get("authorization", "")
+        duplicate = any(sum(1 for k, _ in scope.get("headers", []) if k.lower() == name) > 1
+                        for name in (b"authorization", b"x-user-key"))
+        if (duplicate or (headers.get("x-user-key") and auth) or
+                any(name + "=" in headers.get("cookie", "") for name in (web_cookie.PLAIN_COOKIE, web_cookie.SECURE_COOKIE))):
+            await self._reply(send, 400, "ambiguous_credentials", "인증 수단은 하나만 보내 주세요.")
             return
+        key = key_from_headers(headers)
+        identity = await asyncio.to_thread(self.authenticate, key) if key else None
+        if not identity:
+            from app.core.settings import get_settings
+            metadata = get_settings().public_base_url.rstrip("/") + "/.well-known/oauth-protected-resource/mcp"
+            await self._reply(send, 401, "unauthenticated", "사용자 키가 없거나 맞지 않는다",
+                              [(b"www-authenticate", ('Bearer realm="tripilot", resource_metadata="' + metadata + '", scope="travel:read"').encode())])
+            return
+        if getattr(identity, "via", None) == "oauth":
+            if not auth.lower().startswith("bearer "):
+                await self._reply(send, 401, "unauthenticated", "OAuth 토큰은 Bearer 헤더로 보내 주세요.")
+                return
+            scope = {**scope, "tripilot.oauth_identity": identity}
         await self.inner(scope, receive, send)
 
 
@@ -507,7 +532,15 @@ def build_surface(app_getter: Callable[[], Any], *, enabled: Callable[[], bool],
 
     def authenticate(raw: str) -> bool:
         tenant = settings_module.get_settings().tenant_id
+        from app.domains.travel_ops.modules.web_account.personal_ai_oauth import ACCESS_PREFIX, configured_provider
+        from app.domains.travel_ops.modules.web_account import web_agent_keys
+        from app.domains.travel_ops.modules.web_account.web_cookie import Identity
+        if raw.startswith(ACCESS_PREFIX):
+            token = configured_provider().resolve(raw)
+            return Identity(tenant, uuid.UUID(token.subject), "oauth", scope="write" if "travel:write" in token.scopes else "read") if token else None
         with get_connection() as conn, conn.transaction():
+            if raw.startswith(web_agent_keys.PREFIX):
+                return web_agent_keys.resolve(conn, tenant_id=tenant, raw=raw) is not None
             return resolve(conn, tenant_id=tenant, raw=raw) is not None
 
     @asynccontextmanager

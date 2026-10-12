@@ -13,7 +13,8 @@ describe("customer support screen", () => {
     expect(html).toContain('for="support-title"');
     expect(html).toContain('for="support-body"');
     expect(html).toContain("여행 화면을 열어 주세요.");
-    expect(html).toContain("답변 완료");
+    expect(html).toContain("기록 완료");
+    expect(html).toContain("이전 안내 기록");
     expect(html).toContain("&lt;script&gt;");
     expect(html).not.toContain("<script>unsafe()");
   });

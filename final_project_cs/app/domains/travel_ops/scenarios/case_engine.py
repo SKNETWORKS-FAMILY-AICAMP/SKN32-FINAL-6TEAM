@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 from typing import Any, Callable
+from collections.abc import Mapping
 from uuid import UUID
 
 from app.application.case_intake import open_case
@@ -42,7 +43,8 @@ class CaseEngine:
                  classifier: Callable[[str], dict[str, str]] | None,
                  report_extractor: Callable[[str], dict[str, Any] | None] | None,
                  clock: Callable[[], datetime], routes: dict[str, Any] | None = None,
-                 policy_search: Callable[..., list[Any]] = _no_policy) -> None:
+                 policy_search: Callable[..., list[Any]] = _no_policy,
+                 service_overrides: Mapping[tuple[str, str], Callable[..., Any]] | None = None) -> None:
         from app import composition
         from app.core.project_config import load_project_config
 
@@ -59,6 +61,13 @@ class CaseEngine:
         registry = composition.build_registry(tools=tools, llm=None, config=config)
         self.controller = composition.build_controller(registry=registry, llm=None, config=config,
                                                        policy_search_fn=policy_search)
+        if service_overrides is not None:
+            # 재생 harness만 명시적으로 주입한다. 제품 입구·팀 등록 상태는 바꾸지 않는다.
+            from app.core.service_bindings import BindingTable
+
+            prior = self.controller.service_bindings
+            self.controller.service_bindings = BindingTable(
+                {**prior.values, **service_overrides}, prior.registry, prior.revision)
         self.opener = TripWatchCaseOpener(store=self.store, check=check, connection_factory=get_connection,
                                           clock=clock, repository=repository, run_case=self.run,
                                           route_events=route_events, routes=routes)
@@ -68,8 +77,11 @@ class CaseEngine:
         return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
                                                     case_id=case_id, actor_id=actor_id))
 
-    def tick(self):
-        return self.opener.tick()
+    def tick(self, **kwargs):
+        from app.core.service_bindings import bind_services
+
+        with bind_services(self.controller.service_bindings):
+            return self.opener.tick(**kwargs)
 
     def message(self, *, customer_id: UUID, trip_id: UUID, text: str, request_id: str,
                 request: dict[str, Any] | None = None, part_id: UUID | None = None,

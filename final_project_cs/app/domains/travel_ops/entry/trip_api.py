@@ -45,6 +45,10 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, ValidationError, 
 
 from app.core import settings as settings_module
 from app.core.idempotency import idempotency_key
+from app.core.contracts import StateConflict
+from app.application.controller import ControllerError
+from app.core.team_availability import TeamUnavailable
+from app.core.team_availability import unavailable_payload
 
 from app.infrastructure.db.session import get_connection
 from app.presentation.security import Principal, require_scope
@@ -97,7 +101,7 @@ def _dining_lookup(ctx: _PlaceCtx | None = None) -> Any:
 
     ctx 가 있으면 원장에서 찾은 식당 좌표도 다음 조회의 near 힌트로 넘긴다(액티비티 CSV · 카카오와 같은 힌트).
     """
-    from app.domains.travel_ops.instances.dining.place_lookup import LedgerPlaceLookup
+    from app.domains.travel_ops.components.team_hooks import dining_ledger
 
     def found(place: dict[str, Any]) -> None:
         if ctx is not None:
@@ -106,7 +110,30 @@ def _dining_lookup(ctx: _PlaceCtx | None = None) -> Any:
             except (KeyError, TypeError, ValueError):
                 pass
 
-    return LedgerPlaceLookup(get_connection, on_found=found, near=ctx.get_near if ctx is not None else None)
+    class DeferredDiningLookup:
+        # Activity-only intake does not acquire Dining until it actually queries Dining.
+        name = "dining_ledger"
+
+        def __init__(self):
+            self._lookup = None
+
+        def _provider(self):
+            if self._lookup is None:
+                self._lookup = dining_ledger.lookup_factory(
+                    get_connection, on_found=found, near=ctx.get_near if ctx is not None else None)
+            return self._lookup
+
+        @property
+        def misses(self):
+            return self._lookup.misses if self._lookup is not None else {}
+
+        def find(self, *args, **kwargs):
+            return self._provider().find(*args, **kwargs)
+
+        def find_dish_near(self, *args, **kwargs):
+            return self._provider().find_dish_near(*args, **kwargs)
+
+    return DeferredDiningLookup()
 
 
 #: ★대상 도시는 서울 하나다(v11 §1). 시간대 없이 온 시각은 서울 시각으로 읽는다.
@@ -190,7 +217,7 @@ class IntakeConfirmIn(BaseModel):
 class IntakeSurveyIn(BaseModel):
     """로딩 중 질문의 답 — `{문항: 선택지 번호}`. 한 개 이상 · 부분 답 · 같은 문항을 다시 보내면 덮어쓴다(`components/intake/survey_answers.py`)."""
     model_config = ConfigDict(extra="forbid")
-    answers: dict[str, str] = Field(min_length=1, max_length=8)
+    answers: dict[str, str | dict[str, str] | None] = Field(min_length=1, max_length=8)
 
 
 class MoveEndIn(BaseModel):
@@ -222,6 +249,13 @@ class IntakeRevisionIn(BaseModel):
 class IntakeModeIn(IntakeRevisionIn):
     """이동수단 고르기 — `mode` = `subway|bus|taxi|walk`(그 수단으로) · `recommended`(추천으로 되돌리기). `[2026-10-07]`"""
     mode: str = Field(min_length=1, max_length=16)
+
+
+
+
+class IntakeRestoreIn(IntakeRevisionIn):
+    """전체 되돌리기 — 현재 판과 같은 접수에서 복원할 완료된 과거 판."""
+    restore_revision: int = Field(ge=1)
 
 
 class IntakeAutofixIn(IntakeRevisionIn):
@@ -362,6 +396,9 @@ class MessageIn(BaseModel):
     item_id: UUID | None = None
     #: ★`[2026-09-30 사용자 지시]` 고객의 현재 위치(선택) — 「여기서 경복궁 어떻게 가」 같은 질문의 출발지. 없으면 지금과 같다
     location: LocationIn | None = None
+    case_id: UUID | None = None
+    resume_token: str | None = Field(default=None, min_length=1)
+    expected_version: int | None = Field(default=None, ge=0)
 
 
 class RollbackIn(BaseModel):
@@ -388,11 +425,13 @@ def _ledger_verdicts(slots: list[dict[str, Any]]) -> dict[int, dict[str, Any]]:
     ★못 읽으면 남기고 다시 던진다 — 받는 쪽(`with_ledger`)이 판정 없이(모름) 등록을 잇는다. 조용히 넘기면 원장이 죽어도
       아무도 모른 채 식당 판정이 꺼진다.
     """
-    from app.domains.travel_ops.instances.dining.ledger import slot_verdicts
+    from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+    dining_ledger.require_slot_verdicts()
 
     try:
         with get_connection() as conn:
-            return slot_verdicts(conn, slots)
+            return dining_ledger.slot_verdicts(conn, slots)
     except Exception:
         logger.warning("요식 원장 판정을 읽지 못해 식당 영업 판정 없이 등록을 판정한다", exc_info=True)
         raise
@@ -400,9 +439,9 @@ def _ledger_verdicts(slots: list[dict[str, Any]]) -> dict[int, dict[str, Any]]:
 
 def _planner_ledger(conn) -> Any:
     """일정 생성기의 식사 후보 · 판정은 요식 원장으로(`[2026-10-02]` 사용자 결정 — 식당은 관광공사를 실시간으로 부르지 않는다)."""
-    from app.domains.travel_ops.instances.dining.ledger import PlannerLedger
+    from app.domains.travel_ops.components.team_hooks import dining_ledger
 
-    return PlannerLedger(conn)
+    return dining_ledger.planner_factory(conn)
 
 
 # ★`status` 를 **위치 전용**(`/`)으로 받는다 — `**extra` 에 상세로 `status` 가 들어오면(예: 아직 등록할 수 없는 접수의 현재 상태
@@ -520,6 +559,7 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
                                and (safety["level"] == "trip" or _seoul(item.starts_at).date().isoformat() == safety["day"]))
     return {"trip_id": str(trip["trip_id"]), "customer_id": str(trip["customer_id"]),
             "title": trip["title"], "locale": trip["locale"], "party_size": trip["party_size"],
+            "simulation": trip.get("simulation"),
             "version": trip["version"],
             # ★`[2026-10-06]` 항로 지킴이(일정이 꼬이면 알아서 고치는 모드) 켜짐 여부 — 상단 아이콘이 읽는다(`components/planning/guardian.py`)
             "guardian": guardian_module.view(conn, tenant_id=store.tenant_id, trip_id=trip["trip_id"],
@@ -813,6 +853,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                          violations=[v.as_dict() for v in violations])
         key = idempotency_key(tenant_id=tenant, request_id=request.request_id,
                               action_type="trip.create", business_subject=str(request.customer_id))
+        if any(place.attributes.get("dining_place_uid") for place in request.places):
+            from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+            dining_ledger.require_link_core_place()
         body_sha = hashlib.sha256(request.model_dump_json().encode()).hexdigest()
         with get_connection() as conn:
             with conn.transaction():
@@ -878,9 +922,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 # ★`[2026-10-02]` 원장에서 고른 식당은 원장 가게와 바로 잇는다 — 새벽 확인 · 하루 점검이 코어 장소로
                 #   원장을 찾는다(`dining.ledger.resolve_place`). 관광공사 ID 가 없는 원장 가게는 이렇게만 이어진다
                 if place.attributes.get("dining_place_uid"):
-                    from app.domains.travel_ops.instances.dining.ledger import link_core_place_to
+                    from app.domains.travel_ops.components.team_hooks import dining_ledger
 
-                    link_core_place_to(conn, tenant, str(ids[place.key]), str(place.attributes["dining_place_uid"]))
+                    dining_ledger.link_core_place(conn, tenant, str(ids[place.key]), str(place.attributes["dining_place_uid"]))
         items = [Item(item_id=uuid4(), seq=it.seq, kind=it.kind, title=it.title,
                       place_id=ids.get(it.place) if it.place else None,
                       starts_at=_seoul(it.starts_at), ends_at=_seoul(it.ends_at),
@@ -925,6 +969,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             city=request.city, start_date=request.start_date, days=request.days,
             party_size=request.party_size, constraints=request.constraints,
             preferences=request.preferences, title=request.title, locale=request.locale)
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+        dining_ledger.require_planner_factory()
         try:
             with get_connection() as conn:
                 outcome = planner_module.plan_trip(conn=conn, tenant_id=tenant, request=ask,
@@ -977,7 +1024,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return _outcome(outcome)
 
     @router.post("/v1/trips/{trip_id}/messages")
-    def message(trip_id: UUID, request: MessageIn,
+    def message(trip_id: UUID, request: MessageIn, http: Request,
                 principal: Principal = Depends(require_scope("trip:write"))):
         """고객 자유 문장 → **Case → 분류 → 추출 → 여행 창구 → Case 닫기**(v11 §5 경로).
 
@@ -995,9 +1042,19 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 chat=_lazy("chat", chat_factory), desk=_desk(store), actor_id=principal.key_id,
                 policy_search=_lazy("policy", policy_search_factory),
                 place_source=_lazy("place", place_factory), selected_item_id=request.item_id,
-                location=request.location)
+                location=request.location, controller=http.app.state.runtime.controller,
+                resume_case_id=request.case_id, resume_token=request.resume_token,
+                expected_version=request.expected_version)
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
+        except TeamUnavailable as exc:
+            raise HTTPException(503, unavailable_payload(exc)) from exc
+        except ControllerError as exc:
+            raise _error(401, "invalid_resume_token", str(exc)) from None
+        except StateConflict:
+            raise _error(409, "state_conflict", "업무 상태가 바뀌었거나 답변할 업무를 지정해야 합니다") from None
+        except ValueError as exc:
+            raise _error(422, "invalid_customer_input", str(exc)) from None
         _log_turn(principal.tenant_id, trip_id, request.message, result)
         result.pop("answer_web", None)          # 웹 전용 판 — 에이전트는 목록이 든 문장(`answer`)을 읽는다
         return result
@@ -1198,6 +1255,13 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                             dining=_dining_lookup(_ctx))
         return {"intake_id": str(intake_id), "status": "reading", "stage": "received", "human_check": human}
 
+    @router.get("/v1/web/test-scenarios")
+    def web_test_scenarios():
+        """공개된 준비 계획 원문 목록만 읽는다. 고객 정보·조회 결과·경보를 반환하지 않는다."""
+        from app.domains.travel_ops.components.intake.test_plans import catalog
+
+        return catalog(settings_module.get_settings().tenant_id)
+
     @router.get("/v1/web/trip-intakes/{intake_id}")
     def web_intake_view(intake_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
         """진행 단계 · 원본별 줄 번호 글 · 읽은 항목(값마다 근거) · 확인 필요. ★남의 접수는 404."""
@@ -1226,9 +1290,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 raise _error(404, "not_found", "resource not found")
             status, revision = row
             stored = review_module.load(conn, tenant, intake_id, revision) if status in ("review", "confirmed") else None
-        from app.domains.travel_ops.instances.mobility.route_shape import shapes_for_review
+        from app.domains.travel_ops.components.team_hooks import mobility_shapes
         return {"intake_id": str(intake_id), "revision": revision, "detail": detail,
-                "shapes": shapes_for_review(stored, detail=detail),
+                "shapes": mobility_shapes.review(stored, detail=detail) if stored is not None else [],
                 "attribution": "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)"}
 
     @router.get("/v1/web/trip-intakes/{intake_id}/moves/{pair}/options")
@@ -1369,6 +1433,21 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(409, exc.code, exc.message, **exc.detail) from None
         except IntakeRejected as exc:
             raise _error(422, exc.code, exc.message) from None
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/restore")
+    def web_intake_restore(intake_id: UUID, request: IntakeRestoreIn, who: tuple[str, UUID] = Depends(_web_customer)):
+        """완료된 원판을 새 판으로 전체 복원한다. 현재 잠금·예약·판 충돌은 부분 저장 없이 거절한다."""
+        from app.domains.travel_ops.components.intake.pipeline import IntakeConflict, restore
+
+        tenant, customer = who
+        try:
+            with get_connection() as conn:
+                return restore(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                               revision=request.revision, restore_revision=request.restore_revision)
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
 
     # ── 확인 화면 수정 화면: 대체 후보 · 장소 검색 · 사진 · 전체 자동 추천 · 재검증 (2026-10-02, 계획 확인 시나리오 목업) ─────────
     def _review_call(intake_id: UUID, customer: UUID, tenant: str, revision: int | None, use):
@@ -1620,6 +1699,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             """생성 → (읽은 일정과 합치기) → 등록. JSON 입구와 SSE 입구가 **같은 것**을 쓴다. `progress` 는 단계 알림(없으면 안 한다)."""
             say = progress or (lambda name: None)
             say("planning")
+            from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+            dining_ledger.require_planner_factory()
             try:
                 with get_connection() as conn:
                     outcome = planner_module.plan_trip(
@@ -1868,11 +1950,14 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             return _sse_response(
                 tenant, customer, op="message", http=http,
                 work=lambda progress, defer: _web_message_result(
-                    tenant, customer, store, trip_id, request, defer=defer, progress=progress.stage))
-        return _web_message_result(tenant, customer, store, trip_id, request, defer=background.add_task)
+                    tenant, customer, store, trip_id, request, defer=defer, progress=progress.stage,
+                    controller=http.app.state.runtime.controller))
+        return _web_message_result(tenant, customer, store, trip_id, request, defer=background.add_task,
+                                   controller=http.app.state.runtime.controller)
 
     def _web_message_result(tenant: str, customer: UUID, store: TripStore, trip_id: UUID, request: MessageIn, *,
-                            defer: Callable[..., None], progress: Callable[[str], None] | None = None) -> dict[str, Any]:
+                            defer: Callable[..., None], progress: Callable[[str], None] | None = None,
+                            controller: Any = None) -> dict[str, Any]:
         """채팅 한 번의 처리 — JSON 입구와 SSE 입구가 **같은 것**을 쓴다(한 규칙이 두 벌로 갈라지지 않게)."""
         from app.domains.travel_ops.components.conversation.trip_messages import TripNotFound, handle_trip_message
 
@@ -1886,9 +1971,19 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 policy_search=_lazy("policy", policy_search_factory),
                 place_source=_lazy("place", place_factory),
                 # ★`[2026-09-29]` 사실 질문은 분류(모델)를 기다리지 않고 답한다 — 분류·완료 기록은 응답 뒤에서
-                defer=defer, selected_item_id=request.item_id, location=request.location, progress=progress)
+                defer=defer, selected_item_id=request.item_id, location=request.location, progress=progress,
+                controller=controller, resume_case_id=request.case_id, resume_token=request.resume_token,
+                expected_version=request.expected_version)
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
+        except TeamUnavailable as exc:
+            raise HTTPException(503, unavailable_payload(exc)) from exc
+        except ControllerError as exc:
+            raise _error(401, "invalid_resume_token", str(exc)) from None
+        except StateConflict:
+            raise _error(409, "state_conflict", "업무 상태가 바뀌었거나 답변할 업무를 지정해야 합니다") from None
+        except ValueError as exc:
+            raise _error(422, "invalid_customer_input", str(exc)) from None
         # ★`[2026-09-27]` 「바꾸지 않아도 되는 결과」는 사람에게 넘길 일이 아니라 답이다 — 대화 경로와 **같은 문장표**
         #   (`itinerary_team.ANSWERS`)를 웹에도 싣는다. 웹이 문장을 따로 지어내지 않게.
         if not result.get("answer") and result.get("status") in ANSWERS:
@@ -2362,8 +2457,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         with get_connection() as conn:
             _trip_or_404(conn, store, trip_id, customer)
             _trip, items = store.latest(conn, trip_id)
-        from app.domains.travel_ops.instances.mobility.route_shape import shapes_for_items
-        return {"trip_id": str(trip_id), "detail": detail, "shapes": shapes_for_items(items, detail=detail),
+        from app.domains.travel_ops.components.team_hooks import mobility_shapes
+        return {"trip_id": str(trip_id), "detail": detail, "shapes": mobility_shapes.items(items, detail=detail),
                 "attribution": "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)"}
 
     return router

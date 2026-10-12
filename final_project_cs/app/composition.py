@@ -7,13 +7,16 @@ from __future__ import annotations
 
 import importlib
 import inspect
+import logging
+import threading
 from pathlib import Path
 from typing import Any
 
 from app.application.controller import Controller
 from app.core.context import ContextBroker
-from app.core.project_config import ProjectConfig, load_project_config
+from app.core.project_config import ProjectConfig, load_project_config, config_revision
 from app.core.registry import TeamRegistry
+from app.core.service_bindings import BindingTable, collect_services, collect_registration, collecting_services
 from app.core.remote_team.a2a_executor import A2ATeamExecutor
 from app.core.remote_team.executor import LocalTeamExecutor, TeamExecutorPort
 from app.infrastructure.db import repository
@@ -214,6 +217,51 @@ def build_kakao_local() -> Any | None:
     return KakaoLocal(api_key=key, budget=CallBudget(connection_factory=get_connection, caps=kakao_caps()))
 
 
+_mobility_configuration_lock = threading.Lock()
+_mobility_configuration_key = None
+
+
+def _configure_mobility(settings):
+    """Engine configuration is process-scoped; reload never edits a live engine.
+
+    Changed engine settings require a process restart. Team enable/disable and
+    service-table reload remain independent of this engine lifecycle.
+    """
+    global _mobility_configuration_key
+    from app.domains.travel_ops.instances.mobility import wiring as mobility_wiring
+
+    key = tuple(getattr(settings, name, None) for name in (
+        "mobility_data_dir", "mobility_gh_url", "seoul_openapi_key",
+        "guardrails_path", "mobility_local_router"))
+    with _mobility_configuration_lock:
+        mode = mobility_wiring.mode()
+        initial_failure = mode == "broken" and _mobility_configuration_key is None
+        if mode != "unconfigured" and not initial_failure:
+            if key != _mobility_configuration_key:
+                raise CompositionError("live mobility engine settings require a process restart")
+            return {"mode": mobility_wiring.mode()}
+        result = _configure_mobility_once(settings)
+        _mobility_configuration_key = key
+        return result
+
+
+def _configure_mobility_once(settings):
+    """요청 조립과 출발 안내 단독 실행이 같은 이동 기동·호출 예산을 사용한다."""
+    from app.domains.travel_ops.instances.mobility import wiring as mobility_wiring
+    bike_gate = None
+    if getattr(settings, 'seoul_openapi_key', ''):
+        try:
+            from app.domains.travel_ops.ports.data_sources.source_budget import build_gate
+            bike_gate = build_gate(settings, ['seoul_bike'])
+        except Exception as exc:  # noqa: BLE001 — 문 없이는 따릉이 실시간을 끈다
+            import logging
+            logging.getLogger(__name__).warning('따릉이 실시간 한도 문 준비 실패: %s', type(exc).__name__)
+    return mobility_wiring.configure_from_settings(settings, bike_gate=bike_gate)
+
+
+
+
+
 def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
                    config_path: str | Path | None = None,
                    config: ProjectConfig | None = None) -> TeamRegistry:
@@ -235,33 +283,37 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
         # ☆`[2026-09-29 이동 계산기 문제목록 #24·#31·#34]` 이동 계산기를 설정대로 켜거나 끈다 — 켜면 자료를 확인하고
         #   (없거나 판 명세와 다르면 기동을 멈춘다, 결정 15) 적재까지 한다(첫 고객 요청이 약 33초를 기다리지 않게).
         #   설정 mobility_data_dir 가 비면 꺼짐. 도구를 주입한 조립(시험)은 건너뛴다.
-        from app.domains.travel_ops.instances.mobility import wiring as mobility_wiring
+    registry = TeamRegistry()
+    from app.domains.travel_ops.components.core_hooks.routing import KNOWN_TEAM_CASE_TYPES
 
-        # ★`[2026-10-05]` 따릉이 실시간 조회의 호출 한도 문(env 하루 한도 + DB 예산) — 이동 쪽은 infrastructure 를 import 하지 않으니 여기서 만들어 넘긴다.
-        #   못 만들면 문 없이 부르지 않고 실시간을 끈다(이동 쪽이 처리).
-        _bike_gate = None
-        # ★설정 객체에 그 칸이 없을 수 있다(시험이 넣는 일부 칸짜리 대역) — 칸이 없으면 키가 없는 것과 같다(`wiring.configure_from_settings` 와 같은 규칙)
-        if getattr(get_settings(), "seoul_openapi_key", ""):
-            try:
-                from app.domains.travel_ops.ports.data_sources.source_budget import build_gate
-
-                _bike_gate = build_gate(get_settings(), ["seoul_bike"])
-            except Exception as exc:  # noqa: BLE001 — 문을 못 만들면 실시간만 끈다(서비스는 계속)
-                import logging
-
-                logging.getLogger(__name__).warning("따릉이 실시간 한도 문을 못 만들었다: %s: %s", type(exc).__name__, exc)
-        mobility_wiring.configure_from_settings(get_settings(), bike_gate=_bike_gate)
+    for team_id, case_types in KNOWN_TEAM_CASE_TYPES.items():
+        registry.declare_case_types(team_id, case_types)
     teams = []
     capabilities: dict[str, str] = {}
     for declaration in config.teams:
-        implementation = _import_ref(declaration.implementation_ref, declaration.team_id)
-        team = _instantiate_team(implementation, tools, llm)
+        if not declaration.active:
+            registry.declare_unavailable(declaration.team_id, "disabled",
+                                         capabilities=declaration.capabilities)
+            continue
+        try:
+            implementation = _import_ref(declaration.implementation_ref, declaration.team_id)
+            team = _instantiate_team(implementation, tools, llm)
+        except Exception as exc:
+            if declaration.required:
+                raise
+            logging.getLogger(__name__).error("optional_team_load_failed team_id=%s error_type=%s",
+                                              declaration.team_id, type(exc).__name__)
+            registry.declare_unavailable(declaration.team_id, "load_failed",
+                                         capabilities=declaration.capabilities)
+            continue
         if not hasattr(team, "manifest") or not hasattr(team, "execute"):
             raise CompositionError(
                 f"team '{declaration.team_id}' implementation must provide manifest and execute"
             )
         team.manifest = team.manifest.model_copy(update={"active": declaration.active,
                                                          "team_id": declaration.team_id})
+        if declaration.capabilities is not None and set(declaration.capabilities) != set(team.manifest.capabilities):
+            raise CompositionError(f"declared capabilities do not match manifest: {declaration.team_id}")
         for capability in team.manifest.capabilities:
             previous = capabilities.get(capability)
             if previous is not None:
@@ -270,7 +322,8 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
                 )
             capabilities[capability] = declaration.team_id
         teams.append(team)
-    return TeamRegistry(teams)
+        registry.register(team)
+    return registry
 
 
 def build_team_executor(registry: TeamRegistry, *, config: ProjectConfig | None = None,
@@ -281,7 +334,7 @@ def build_team_executor(registry: TeamRegistry, *, config: ProjectConfig | None 
         return LocalTeamExecutor(registry)
     if transport is None or capability_resolver is None:
         raise CompositionError("port team_executor=a2a requires injected transport and capability_resolver")
-    return A2ATeamExecutor(transport, capability_resolver)
+    return A2ATeamExecutor(transport, capability_resolver, registry=registry)
 
 
 def build_google_places(*, limiter: Any = None) -> Any:
@@ -334,8 +387,6 @@ def build_controller(*, registry: TeamRegistry | None = None,
       가 성립해야 한다. 여기서 다시 읽으면 그 사이 바뀐 선언으로 조립해 놓고
       **읽었던 revision 을 실행 중인 것으로 잘못 적게** 된다.
     """
-    wire_optional_features()                      # 끌 수 있는 기능이 끼움 자리에 규칙을 꽂는다(2026-10-06)
-    wire_domain_teams()                           # 팀이 자기 계산을 부품의 끼움 자리에 꽂는다(동)
     config = config if config is not None else load_project_config(config_path)
     _validate_modules(config)
     if llm is None:
@@ -347,9 +398,11 @@ def build_controller(*, registry: TeamRegistry | None = None,
         else:
             llm = OpenAITeamLLM(connection_factory=get_connection)
     registry = registry or build_registry(tools=tools, llm=llm, config=config)
+    if config.response_review.enabled:
+        registry.require_runnable(config.response_review.owner_team_id)
     team_executor = team_executor or build_team_executor(registry, config=config)
     verification_policy, fact_queries = build_verification(config=config)
-    return Controller(
+    controller = Controller(
         registry,
         context_broker=ContextBroker(),
         policy_search=policy_search_fn,
@@ -365,6 +418,16 @@ def build_controller(*, registry: TeamRegistry | None = None,
         # ★`[2026-10-06]` 라우팅이 어긋났을 때 한 번 더 고르는 자리 — 어휘는 도메인이 갖는다.
         reroute=build_reroute(),
     )
+    with collect_services() as bindings:
+        wire_domain_teams(config=config, registry=registry)
+    if config.response_review.enabled:
+        registry.require_runnable(config.response_review.owner_team_id)
+    controller.composition_revision = config_revision(config)
+    controller.project_config = config.model_copy(deep=True)
+    controller.service_bindings = BindingTable(bindings, registry, controller.composition_revision)
+    if tools is None and ("legs", "leg_planner") in bindings:
+        _configure_mobility(get_settings())
+    return controller
 
 
 def build_mcp_surface(app_getter):
@@ -439,73 +502,126 @@ def wire_optional_features() -> list[str]:
             + (["item_pointer"] if pointer is not None else []))
 
 
-def wire_domain_teams() -> list[str]:
-    """**팀이 자기 계산을 부품의 끼움 자리에 꽂는 곳.** `[2026-10-06]` D-CS-013
+def wire_domain_teams(*, config: ProjectConfig | None = None, registry: TeamRegistry | None = None) -> list[str]:
+    from app.core.team_availability import TeamUnavailable
 
-    ★왜 여기인가. 감시 · 대화 · 계획 · 접수 부품이 요식 · 이동 · 활동 팀 **내부**를 직접 가져다
-      썼다(14곳). 그러면 「팀은 꽂고 뺄 수 있다」가 거짓이 된다 — 팀 하나를 빼면 부품이 import
-      단계에서 깨진다. 방향을 뒤집어 팀이 조립 때 등록하고, 부품은 자리만 본다.
-
-    ★꽂지 않으면 부품은 그 팀이 없을 때의 길로 간다 — 이동은 어림값, 요식 판정은 모름,
-      활동 유사도 없음, 그 종류의 감시는 건너뜀. **값을 지어내지 않는다**(`components/team_hooks/`).
-    """
-    from app.domains.travel_ops.components.team_hooks import dining_ledger, legs, lodging_ledger, similarity, watch_planners
-
-    # 이동 — 두 지점 사이 시간 · 노선 · 사고 반영. 도보 상한은 이동 팀의 가드레일에 있다.
-    from app.domains.travel_ops.instances.mobility import wiring as mobility_wiring
-    from app.domains.travel_ops.instances.mobility.engine import guardrails as mobility_guardrails
-
-    def walk_limit_m() -> float | None:
-        """`mobility.limits.walk_m.default`. 선언에 없으면 None — 부르는 쪽이 보수적으로 간다."""
+    config = config or load_project_config()
+    if registry is None or not collecting_services():
+        return _wire_domain_providers(config=config, registry=registry)
+    connected = []
+    for declaration in config.teams:
         try:
-            return float(mobility_guardrails.lookup("mobility.limits.walk_m.default"))
-        except mobility_guardrails.GuardrailMissing:
-            return None
+            registry.require_runnable(declaration.team_id)
+        except TeamUnavailable:
+            continue
+        try:
+            with collect_services() as staged:
+                names = _wire_domain_providers(config=config, active_ids={declaration.team_id})
+        except CompositionError:
+            raise
+        except Exception as exc:
+            if declaration.required:
+                raise
+            registry.declare_unavailable(declaration.team_id, "load_failed")
+            logging.getLogger(__name__).error("optional_team_hook_load_failed team_id=%s error_type=%s",
+                                              declaration.team_id, type(exc).__name__)
+            continue
+        for group in {key[0] for key in staged}:
+            collect_registration(group, {key: value for (kind, key), value in staged.items() if kind == group})
+        connected.extend(names)
+    return connected
 
-    # ★함수를 **그 자리에서 쥐지 않고** 부를 때 모듈에서 읽는다 — 이동 계산기는 켜짐/꺼짐이 실행 중에
-    #   바뀌고(`wiring.configure`), 시험이 팀 함수를 바꿔 끼우기도 한다. 객체를 쥐면 옛 것을 계속 쓴다.
-    legs.register(leg_planner=lambda *a, **kw: mobility_wiring.leg_planner(*a, **kw),
-                  disruptions_from_events=lambda events: mobility_wiring.disruptions_from_events(events),
-                  walk_limit_m=walk_limit_m,
-                  basis=lambda: mobility_wiring.basis())
 
-    # 요식 — 원장이 식당의 정본이다(근처 들여놓기 · 시간대 판정 · 이름으로 찾기).
-    from app.domains.travel_ops.instances.dining import ledger as dining_ledger_impl
-    from app.domains.travel_ops.instances.dining import nearby as dining_nearby
+def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> list[str]:
+    """Connect only active, loaded providers; collect_services isolates candidate assembly.
 
-    dining_ledger.register(add_nearby=lambda *a, **kw: dining_nearby.add_nearby(*a, **kw),
-                           states=lambda *a, **kw: dining_ledger_impl.dining_states(*a, **kw),
-                           state=lambda *a, **kw: dining_ledger_impl.dining_state(*a, **kw),
-                           find_by_name=lambda *a, **kw: dining_ledger_impl.find_place_by_name(*a, **kw))
+    Outside collection this remains the explicit standalone/unit-test assembly seam.
+    Production stores the returned registrations in a per-controller BindingTable.
+    """
+    from app.domains.travel_ops.components.team_hooks import dining_ledger, legs, lodging_ledger, mobility_shapes, similarity, watch_planners
 
-    # 활동 — 비슷한 곳 순서와 설문 선호.
-    from app.domains.travel_ops.instances.activity import similarity as activity_similarity
+    if active_ids is not None:
+        pass
+    elif registry is not None:
+        active_ids = {m.team_id for m in registry.manifests() if m.active}
+    else:
+        config = config or load_project_config()
+        active_ids = {declaration.team_id for declaration in config.teams if declaration.active}
+    if "mobility" in active_ids:
+        # 이동 — 두 지점 사이 시간 · 노선 · 사고 반영. 도보 상한은 이동 팀의 가드레일에 있다.
+        from app.domains.travel_ops.instances.mobility import wiring as mobility_wiring
+        from app.domains.travel_ops.instances.mobility import route_shape as mobility_route_shape
+        from app.domains.travel_ops.instances.mobility.engine import guardrails as mobility_guardrails
 
-    similarity.register(score=lambda *a, **kw: activity_similarity.score(*a, **kw),
-                        preference_of=lambda c: activity_similarity.preference_of(c),
-                        distance_first=lambda pref: activity_similarity.distance_first(pref))
+        def walk_limit_m() -> float | None:
+            """`mobility.limits.walk_m.default`. 선언에 없으면 None — 부르는 쪽이 보수적으로 간다."""
+            try:
+                return float(mobility_guardrails.lookup("mobility.limits.walk_m.default"))
+            except mobility_guardrails.GuardrailMissing:
+                return None
 
-    # 숙소 · 항공(확장) — 보여 준 후보 기억 · 고른 MCP 숙소를 그 여행 전용 장소로 들여놓기. `[2026-10-12]` 요식 원장과 같은 모양.
-    #   ★부르는 곳(대화 부품 · 고르기 처리)은 아직 없다 — `wiki/records/reports/2026-10-12_숙소항공_원장_연결안내.md`.
-    from app.domains.travel_ops.instances.lodging import ledger as lodging_ledger_impl
+        # 요청 판이 같은 함수 객체를 끝까지 사용한다. 엔진 설정은 프로세스 수명에 고정한다.
+        legs.register(leg_planner=mobility_wiring.leg_planner,
+                      disruptions_from_events=mobility_wiring.disruptions_from_events,
+                      walk_limit_m=walk_limit_m,
+                      basis=mobility_wiring.basis)
+        mobility_shapes.register(items=mobility_route_shape.shapes_for_items,
+                                 review=mobility_route_shape.shapes_for_review)
 
-    lodging_ledger.register(remember=lambda *a, **kw: lodging_ledger_impl.remember_shown(*a, **kw),
-                            shown=lambda *a, **kw: lodging_ledger_impl.shown_keys(*a, **kw),
-                            adopt=lambda *a, **kw: lodging_ledger_impl.adopt_option(*a, **kw),
-                            item_key=lambda kind, query: lodging_ledger_impl.item_key(kind, query))
+    if "dining" in active_ids:
+        # 요식 — 원장이 식당의 정본이다(근처 들여놓기 · 시간대 판정 · 이름으로 찾기).
+        from app.domains.travel_ops.instances.dining import ledger as dining_ledger_impl
+        from app.domains.travel_ops.instances.dining import nearby as dining_nearby
+        from app.domains.travel_ops.instances.dining.place_lookup import LedgerPlaceLookup
 
-    # 감시 묶음 — 항목 종류마다 그 팀의 점검 계산.
-    from app.domains.travel_ops.instances.activity import team as activity_team
-    from app.domains.travel_ops.instances.dining import team as dining_team
-    from app.domains.travel_ops.instances.mobility import team as mobility_team
+        dining_ledger.register(add_nearby=dining_nearby.add_nearby,
+                               states=dining_ledger_impl.dining_states,
+                               state=dining_ledger_impl.dining_state,
+                               find_by_name=dining_ledger_impl.find_place_by_name,
+                               catalog_state=dining_ledger_impl.catalog_state,
+                               lookup_factory=LedgerPlaceLookup,
+                               slot_verdicts=dining_ledger_impl.slot_verdicts,
+                               planner_factory=dining_ledger_impl.PlannerLedger,
+                               link_core_place=dining_ledger_impl.link_core_place_to)
 
-    watch_planners.register("activity", lambda *a, **kw: activity_team.plan_activity_trigger(*a, **kw))
-    watch_planners.register("dining", lambda *a, **kw: dining_team.plan_dining_trigger(*a, **kw))
-    watch_planners.register("mobility", lambda *a, **kw: mobility_team.plan_mobility_trigger(*a, **kw))
+    if "activity" in active_ids:
+        # 활동 — 비슷한 곳 순서와 설문 선호.
+        from app.domains.travel_ops.instances.activity import similarity as activity_similarity
 
-    return ([name for name, hook in (("legs", legs), ("dining_ledger", dining_ledger),
-                                     ("similarity", similarity), ("lodging_ledger", lodging_ledger)) if hook.is_registered()]
-            + [f"watch:{kind}" for kind in watch_planners.registered()])
+        similarity.register(score=activity_similarity.score,
+                            preference_of=activity_similarity.preference_of,
+                            distance_first=activity_similarity.distance_first)
+
+    if "activity" in active_ids:
+        from app.domains.travel_ops.instances.activity.team import plan_activity_trigger
+        watch_planners.register("activity", plan_activity_trigger)
+    if "dining" in active_ids:
+        from app.domains.travel_ops.instances.dining.team import plan_dining_trigger
+        watch_planners.register("dining", plan_dining_trigger)
+    if "mobility" in active_ids:
+        from app.domains.travel_ops.instances.mobility.team import plan_mobility_trigger
+        watch_planners.register("mobility", plan_mobility_trigger)
+    if "lodging" in active_ids:
+        # 숙소 · 항공(확장) — 보여 준 후보 기억 · 고른 MCP 숙소를 그 여행 전용 장소로 들여놓기. `[2026-10-12]` 요식 원장과 같은 모양.
+        #   ★부르는 곳(대화 부품 · 고르기 처리)은 아직 없다 — `wiki/records/reports/2026-10-12_숙소항공_원장_연결안내.md`.
+        from app.domains.travel_ops.instances.lodging import ledger as lodging_ledger_impl
+
+        lodging_ledger.register(remember=lodging_ledger_impl.remember_shown,
+                                shown=lodging_ledger_impl.shown_keys,
+                                adopt=lodging_ledger_impl.adopt_option,
+                                item_key=lodging_ledger_impl.item_key)
+    names = {"mobility": "legs", "dining": "dining_ledger", "activity": "similarity"}
+    # 숙소는 감시 없이 원장만 — 감시(`watch:`)는 `names` 의 팀만 센다
+    hook_names = {**names, "lodging": "lodging_ledger"}
+    connected = [name for owner, name in hook_names.items() if owner in active_ids]
+    connected += [f"watch:{kind}" for kind in sorted(active_ids & names.keys())]
+    for declaration in (config.teams if config else []):
+        if declaration.active and declaration.team_id in active_ids and declaration.hooks is not None:
+            actual = {name for name in connected if name == hook_names.get(declaration.team_id)
+                      or name == f"watch:{declaration.team_id}"}
+            if set(declaration.hooks) != actual:
+                raise CompositionError(f"declared hooks do not match provider: {declaration.team_id}")
+    return connected
 
 
 def build_domain_routers() -> list:
@@ -520,7 +636,6 @@ def build_domain_routers() -> list:
       바깥 소스(기상·교통·대기) 조립을 기다리지 않게.
     """
     wire_optional_features()                      # 동(고객 API 앱 경로)
-    wire_domain_teams()                           # 동
     from app.domains.travel_ops.entry.trip_api import build_trip_router
     from app.domains.travel_ops.modules.web_account.admin_customer_api import build_router as build_customer_support_router
 

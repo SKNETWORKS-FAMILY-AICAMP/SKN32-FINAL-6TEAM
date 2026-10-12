@@ -1,0 +1,10 @@
+
+ RUN  v5.0.1 WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  05:45:05
+   Duration  288ms (import 33%, transform 32%, tests 31%, worker 4%)
+
+

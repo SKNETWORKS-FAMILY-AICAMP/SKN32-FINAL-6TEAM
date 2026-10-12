@@ -33,6 +33,7 @@ import json
 import logging
 import threading
 import time
+from contextvars import copy_context
 from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import datetime
 from typing import Any
@@ -57,6 +58,9 @@ STAGES: dict[str, tuple[str, str | None]] = {
     "applying": ("일정에 반영하는 중이에요", None),
     "registering": ("여행으로 등록하는 중이에요", None),
     "writing": ("답을 정리하는 중이에요", None),
+    "consent_records": ("동의 기록을 읽는 중이에요", "database"),
+    "consent_version": ("동의한 약관 버전을 확인하는 중이에요", "database"),
+    "consent_required": ("필수 동의 항목을 확인하는 중이에요", None),
 }
 
 #: 열린 실시간 작업 수 — (테넌트, 고객) → 수. 자원 보호용이며 누가 받았는지의 기록이 아니다
@@ -104,6 +108,12 @@ def label_of(stage: str) -> tuple[str, str | None]:
 def error_payload(exc: BaseException) -> dict[str, Any]:
     """예외 → `error` 이벤트 몸통. HTTPException(`status_code` + `detail={"error": {...}}`)도 같은 모양으로 푼다
     (FastAPI 를 import 하지 않는다 — 속성으로 알아본다). 모르는 예외는 **원문을 싣지 않는다**(내부 사정 · 키가 샐 수 있다)."""
+    from app.core.team_availability import TeamUnavailable
+
+    if isinstance(exc, TeamUnavailable):
+        return {"code": exc.code, "team_id": exc.team_id, "reason": exc.reason,
+                "message": "담당 기능을 사용할 수 없어 업무를 실행하지 않았어요",
+                "status": 503, "retryable": exc.reason == "remote_unavailable"}
     status = getattr(exc, "status_code", None)
     detail = getattr(exc, "detail", None)
     if isinstance(status, int) and isinstance(detail, dict) and isinstance(detail.get("error"), dict):
@@ -150,7 +160,8 @@ class _Run:
     def defer(self, fn: Callable[..., None], *args: Any, **kwargs: Any) -> None:
         """`BackgroundTasks.add_task` 와 같은 모양 — 호출은 일꾼 스레드에서 온다."""
         with self.lock:
-            self._deferred.append(lambda: fn(*args, **kwargs))
+            context = copy_context()
+            self._deferred.append(lambda: context.run(fn, *args, **kwargs))
 
     def run_deferred(self) -> None:
         with self.lock:
@@ -202,7 +213,7 @@ async def run(work: Callable[[Progress, Callable[..., None]], dict[str, Any]], *
 
     started = clock()
     stage, stage_started = "received", started
-    future = loop.run_in_executor(None, job)
+    future = loop.run_in_executor(None, copy_context().run, job)
     try:
         yield sse("accepted", {"op": op, "at": datetime.now(KST).isoformat(timespec="seconds")})
         while True:

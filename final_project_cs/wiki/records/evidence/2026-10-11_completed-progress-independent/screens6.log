@@ -1,0 +1,26 @@
+
+[WebServer] (node:10500) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:24724) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+
+[WebServer] (node:21128) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:5024) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 6 tests using 1 worker
+
+
+(node:17068) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/6] tests\live\completed-progress-20261011.spec.ts:7:5 › 375px 완료 상태 › 질문이 남아 완료 화면을 붙잡아도 마지막 7/8 진행 문구는 사라지고 결과 화면에서도 되살아나지 않는다
+[2/6] tests\live\completed-progress-20261011.spec.ts:7:5 › 1280px 완료 상태 › 질문이 남아 완료 화면을 붙잡아도 마지막 7/8 진행 문구는 사라지고 결과 화면에서도 되살아나지 않는다
+[3/6] tests\live\progress.spec.ts:94:1 › 접수 읽기: 서버의 진행 스트림을 따라 다시 읽고(1.5초 조회 없음), 읽기가 끝나면 확인 화면으로 넘어간다
+[4/6] tests\live\progress.spec.ts:104:1 › 접수 읽기: 서버의 진행 알림(progress)이 오면 머리글 막대에 「3/14 · 광장시장 이동 확인 중」처럼 서버가 말한 대로 보인다
+[5/6] tests\live\progress.spec.ts:113:1 › 접수 읽기: 진행 알림을 안 보내는 서버면 막대는 지금처럼 움직이고 「x/y」 줄은 말하지 않는다
+[6/6] tests\live\progress.spec.ts:123:1 › 접수 읽기: 스트림이 없는 옛 서버(404)면 전처럼 1.5초마다 다시 읽어 확인 화면으로 넘어간다
+  6 passed (31.3s)

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>손잡이만 남기는 접힘 · 좌표 안내</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef2ef;color:#203d32;font-family:system-ui,sans-serif;line-height:1.6}main{max-width:1060px;margin:auto;padding:24px 16px 48px}h1{font-size:24px;line-height:1.35;margin:0 0 12px}h2{font-size:19px;margin:0 0 8px}p{margin:0 0 16px}label{display:flex;align-items:center;gap:12px;margin:20px 0}select{font:inherit;padding:8px 12px;background:white;border:1px solid #bccbc3;border-radius:10px}section{padding:20px;margin:20px 0;background:white;border-radius:18px}img{display:block;width:auto;max-width:100%;max-height:812px;margin:auto;border:1px solid #d5dfd9;border-radius:14px}a{color:inherit}figure{margin:0}figcaption{font-size:13px;text-align:center;margin-top:10px;color:#586d62}
+</style>
+<main>
+<h1>끝까지 내리면 손잡이만 남습니다</h1>
+<p>실제 화면을 촬영했습니다. 최소 접힘에서는 보내기 버튼도 숨기고, 다시 올리면 목록과 버튼을 복원합니다.</p>
+<label for="width">촬영 화면 <select id="width"><option value="375">375px 휴대폰</option><option value="1280">1280px 넓은 화면</option></select></label>
+<section><h2>최소 접힘</h2><p>빈 하단 영역 없이 높이 44px의 손잡이만 남습니다. 조작을 멈추거나 Tab 키를 눌러도 보내기 버튼은 나타나지 않습니다.</p><figure><a href="screenshots/collapsed-375.png"><img data-shot="collapsed" src="screenshots/collapsed-375.png" alt="지도 아래 손잡이만 보이고 보내기 버튼은 숨겨진 화면"></a></figure></section>
+<section><h2>다시 올린 뒤</h2><p>목록·날짜와 보내기 버튼이 돌아옵니다.</p><figure><a href="screenshots/restored-375.png"><img data-shot="restored" src="screenshots/restored-375.png" alt="손잡이를 올려 목록과 보내기 버튼이 복원된 화면"></a></figure></section>
+<section><h2>좌표 안내는 메뉴 아래</h2><p>좌표가 없다는 안내가 상단 메뉴와 오른쪽 지도 도구에 가리지 않습니다.</p><figure><a href="screenshots/empty-map-half-375.png"><img data-shot="empty-map-half" src="screenshots/empty-map-half-375.png" alt="좌표 없음 안내가 지도 메뉴 아래에 표시된 화면"></a></figure></section>
+<section><h2>목록을 크게 펼친 경우</h2><p>지도 공간이 좁아지면 안내를 목록 머리말로 옮깁니다. 스크롤해도 안내를 읽을 수 있습니다.</p><figure><a href="screenshots/empty-map-full-375.png"><img data-shot="empty-map-full" src="screenshots/empty-map-full-375.png" alt="펼친 목록 머리말에 좌표 안내와 장소 수정 안내가 보이는 화면"></a></figure></section>
+<section><h2>목록을 접어도 안내 유지</h2><p>목록을 끝까지 접으면 좌표 안내는 지도 위에서 읽을 수 있습니다. 좌표가 생기면 안내를 지웁니다.</p><figure><a href="screenshots/empty-map-collapsed-375.png"><img data-shot="empty-map-collapsed" src="screenshots/empty-map-collapsed-375.png" alt="목록을 접은 지도에서 좌표 안내가 가리지 않고 보이는 화면"></a></figure></section>
+<p>mock 서버 화면 검증 결과입니다. 운영 배포 결과와 구분합니다.</p>
+</main>
+<script>document.querySelector('#width').addEventListener('change',event=>{for(const img of document.querySelectorAll('[data-shot]')){const url=`screenshots/${img.dataset.shot}-${event.target.value}.png`;img.src=url;img.parentElement.href=url}})</script>
+</html>

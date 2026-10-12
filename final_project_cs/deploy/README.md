@@ -30,6 +30,13 @@
 6. **서버**: 기존 Caddyfile 을 백업 → `Caddyfile.tripilot` 의 `__TRIPILOT_HOST__` 를 바꿔 끝에 붙임 → `caddy validate` → `caddy reload`.
 7. 확인: `https://<공개 도메인>/health` 가 `ok`, 웹 첫 화면, 키 발급.
 
+## Cloudflare IP 갱신과 Caddy 복구 (오라클 ARM 서버)
+- 같은 Caddy 에 검사용 사이트를 `cloudflare_only` 로 함께 두는 서버(오라클 ARM)는 `update-cloudflare-ips.sh` 가 **매주** Cloudflare 대역을 갱신한다(systemd 타이머 `update-cloudflare-ips.timer`). CI/CD 가 아니라 root 로 손으로 설치한다: `sudo install -m 755 -o root -g root update-cloudflare-ips.sh /usr/local/bin/`
+- **2026-10-12 사고**: 갱신 뒤 `systemctl reload caddy` 에서 Caddy 2.6.2 가 `panic: missing cancel error` 로 죽어 서비스가 `failed` 로 멈췄고, 바깥에서는 Cloudflare 521 이 났다. 설정 파일은 `caddy validate` 를 통과한 상태였다. 같은 패닉을 수동 재실행(06:45)에서도 재현했다 — **이 Caddy 에서 reload 는 죽는다**, systemd 는 그래도 "reloaded" 라고 보고한다.
+- 그래서 스크립트는 (1) 대역이 **실제로 바뀐 때만** 적용하고(생성 시각 줄은 비교에서 뺀다) (2) 적용은 reload 대신 **restart** 로 하며 (3) 3초 뒤에도 caddy 가 살아 있을 때만 성공으로 본다. restart 때문에 적용 순간에는 몇 초 끊긴다(주 1회).
+- 확인: 서버에서 `systemctl is-active caddy` 가 `active`, 바깥에서 `/health` 가 `200`.
+- 수동 복구: 설정을 먼저 `sudo caddy validate --config /etc/caddy/Caddyfile` 로 검사한 뒤 `sudo systemctl restart caddy`.
+
 ## 환경 파일 둘 · 테넌트 이름
 - 이 PC 와 같은 구조다 — `.env`(앱 설정 · 서버에서 새로 만든 비밀 · 구글 로그인 값) · `.env.apikeys`(공공 데이터 · 지도 키만, 키만 따로 갈아 끼우려는 이유가 서버에도 같다). compose 가 둘 다 읽는다(뒤가 이긴다).
 - 서버의 테넌트 이름은 **`live`** 다(`ACOP_TENANT_ID`). 개발 PC 는 `demo`. 테넌트 이름이 들어간 값(여행 링크 토큰 등)은 이름이 다르면 서로 안 맞으니, 서버 DB 를 이 PC 의 덤프로 다시 만들 때는 위 `--as-tenant live` 로 떠야 한다.

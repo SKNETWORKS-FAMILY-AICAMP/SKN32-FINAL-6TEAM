@@ -1,0 +1,1951 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "<workspace>\\.tmp\\baseline-manager-20261012\\team\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.integrated-private.config.ts",
+      "guardian-card.spec.ts",
+      "server-slow.spec.ts",
+      "trip-center.spec.ts",
+      "plan-focus.spec.ts",
+      "map-status-bar.spec.ts",
+      "compact-edge-unlock-add",
+      "map-direct-pick",
+      "submit-end-registration-20261012.spec.ts",
+      "uiux-sonnet-map-reveal-20261012.spec.ts",
+      "uiux-sonnet-map-crowded-20261012.spec.ts"
+    ],
+    "configFile": "<workspace>\\.tmp\\baseline-manager-20261012\\team\\final_project_cs\\frontend\\apps\\web\\playwright.integrated-private.config.ts",
+    "rootDir": "<workspace>/.tmp/baseline-manager-20261012/team/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<workspace>/.tmp/baseline-manager-20261012/checks/uiux-final-browser-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "<workspace>/.tmp/baseline-manager-20261012/team/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../../../../../uiux-final-browser.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "compact-edge-unlock-add-20261010.spec.ts",
+      "file": "compact-edge-unlock-add-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "먼 일정 거리 숨김·좁은 마커·조작 후 복귀 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3833,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:17:39.679Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-846c871a48ec998487e2",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 12,
+          "column": 3
+        },
+        {
+          "title": "전체 잠금 해제는 목록 맨 위·한 요청·스크롤에 사라짐 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2128,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:17:44.295Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-67d0320ade800aecc0bb",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 35,
+          "column": 3
+        },
+        {
+          "title": "원형 추가 단추는 최상단 첫 일정 앞·취소 복귀 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2775,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:17:46.444Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-2eca594b807f3f098222",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 49,
+          "column": 3
+        },
+        {
+          "title": "먼 일정 거리 숨김·좁은 마커·조작 후 복귀 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3752,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:17:49.236Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-d384525f9baef704df1b",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 12,
+          "column": 3
+        },
+        {
+          "title": "전체 잠금 해제는 목록 맨 위·한 요청·스크롤에 사라짐 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2302,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:17:53.006Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-f92f72d0432de7d64943",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 35,
+          "column": 3
+        },
+        {
+          "title": "원형 추가 단추는 최상단 첫 일정 앞·취소 복귀 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2966,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:17:55.327Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f13b54c41f3ecae7a355-e62b1d7e47d8e72dd8de",
+          "file": "compact-edge-unlock-add-20261010.spec.ts",
+          "line": 49,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "guardian-card.spec.ts",
+      "file": "guardian-card.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "「계획 확인하기」를 누르면 읽기 전에 항로 지킴이 카드가 열리고, 초점은 단추가 아니라 제목에 있고, 서버로는 아직 아무것도 가지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1303,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:17:58.336Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a7eef6eb3c5956e5ff02-ef0d7bac57e45a6285f2",
+          "file": "guardian-card.spec.ts",
+          "line": 14,
+          "column": 1
+        },
+        {
+          "title": "Esc · 닫기 단추 · 바깥을 눌러 닫으면 아무것도 정해지지 않고, 초점이 「계획 확인하기」로 돌아온다. Tab 은 카드 안에서만 돈다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2594,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:17:59.659Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a7eef6eb3c5956e5ff02-b4dae55e6d0bc3a9bfbb",
+          "file": "guardian-card.spec.ts",
+          "line": 41,
+          "column": 1
+        },
+        {
+          "title": "좁은 화면(375×812)에서는 아래에서 올라오는 판으로 화면 안에 들어가고 단추는 44px 이상이다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1598,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:18:02.272Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a7eef6eb3c5956e5ff02-b5f620ee324170d190e5",
+          "file": "guardian-card.spec.ts",
+          "line": 74,
+          "column": 1
+        },
+        {
+          "title": "「켜고 진행」은 on_disruption=replace, 「건너뛰기 — 끄고 진행」은 ask_first 를 **직접** 보낸다(안 보내는 것이 아니다)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6747,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:18:03.890Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a7eef6eb3c5956e5ff02-6aaaf702afd188300a3e",
+          "file": "guardian-card.spec.ts",
+          "line": 92,
+          "column": 1
+        },
+        {
+          "title": "읽는 기준: 「적당히」가 처음부터 골라져 있고, 방향키로 옮기며(맨 끝에서 돌아 나온다), 고른 여유가 계획 짜기에 실려 간다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3735,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:18:10.661Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a7eef6eb3c5956e5ff02-3f29e1e330ca83066ecd",
+          "file": "guardian-card.spec.ts",
+          "line": 116,
+          "column": 1
+        },
+        {
+          "title": "머리줄 아이콘: 카드로 정한 뒤부터 보이고, 켜 둔 것을 누르면 바로 꺼지며 기존 알림 막대에 되돌리기가 뜨고 몇 초 뒤 사라지고, 꺼진 것을 누르면 카드(켜기 / 그대로 두기)가 열린다. 확정에는 마지막 선택이 간다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10401,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:18:14.416Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a7eef6eb3c5956e5ff02-00f43a086ac8d47c19c7",
+          "file": "guardian-card.spec.ts",
+          "line": 143,
+          "column": 1
+        },
+        {
+          "title": "영어 화면에서도 아이콘 이름 · 되돌리기 줄이 영어로 나온다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1776,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:18:24.835Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a7eef6eb3c5956e5ff02-4f725bca5ba90c4cf5ca",
+          "file": "guardian-card.spec.ts",
+          "line": 186,
+          "column": 1
+        },
+        {
+          "title": "시작 화면의 항로 지킴이 안내와 되돌리기가 접수 주소 교체 뒤에도 남는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2259,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:18:26.633Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a7eef6eb3c5956e5ff02-05183c4720539269dc7d",
+          "file": "guardian-card.spec.ts",
+          "line": 198,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "map-direct-pick-20261011.spec.ts",
+      "file": "map-direct-pick-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "검색에 없는 장소를 지도에서 지정하고 좌표 원값을 저장 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4521,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:18:28.936Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0c47625c65f673a7b4c6-5c4281b59592fd2333d5",
+          "file": "map-direct-pick-20261011.spec.ts",
+          "line": 22,
+          "column": 3
+        },
+        {
+          "title": "위치 지정 취소·중심 선택과 확장 도구 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5502,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:18:33.477Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0c47625c65f673a7b4c6-f4af95f9fef29eed8adb",
+          "file": "map-direct-pick-20261011.spec.ts",
+          "line": 66,
+          "column": 3
+        },
+        {
+          "title": "검색에 없는 장소를 지도에서 지정하고 좌표 원값을 저장 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4857,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:18:38.997Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0c47625c65f673a7b4c6-c798305cee5c7b727165",
+          "file": "map-direct-pick-20261011.spec.ts",
+          "line": 22,
+          "column": 3
+        },
+        {
+          "title": "위치 지정 취소·중심 선택과 확장 도구 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5726,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:18:43.872Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0c47625c65f673a7b4c6-2a75986a9013e57cbcd0",
+          "file": "map-direct-pick-20261011.spec.ts",
+          "line": 66,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "map-status-bar.spec.ts",
+      "file": "map-status-bar.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 시간 초기화는 변경 메뉴에서 동작한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6814,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:18:49.639Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "307ebc2271188419de72-970ccd3f13499ab04fb7",
+          "file": "map-status-bar.spec.ts",
+          "line": 10,
+          "column": 1
+        },
+        {
+          "title": "변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6262,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:18:56.483Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "307ebc2271188419de72-250ab22adb2fec48372f",
+          "file": "map-status-bar.spec.ts",
+          "line": 69,
+          "column": 1
+        },
+        {
+          "title": "확대한 경로선에 수단 이름이 붙고 지도 이동·축소에 따라 바뀌며 클릭은 선으로 통과한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 15783,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:19:02.769Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "307ebc2271188419de72-ad741c17739711349962",
+          "file": "map-status-bar.spec.ts",
+          "line": 103,
+          "column": 1
+        },
+        {
+          "title": "마커 선택은 일정만 열고 설명 알림을 띄우지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5125,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:19:18.575Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "307ebc2271188419de72-16da8cec12dadd708d76",
+          "file": "map-status-bar.spec.ts",
+          "line": 148,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "plan-focus.spec.ts",
+      "file": "plan-focus.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "마커로 연 일정의 윗부분은 전체·일차 줄 아래에 놓인다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 15524,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:19:23.741Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "58827e149c4e5b3b970f-6b8bb6f9162f23d19fe2",
+          "file": "plan-focus.spec.ts",
+          "line": 10,
+          "column": 1
+        },
+        {
+          "title": "검증 중 마지막 일정은 목록 가운데에 따라오고 지도 마커도 함께 보인다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5970,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:19:39.293Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "58827e149c4e5b3b970f-1cd8eb23d3ad9093f132",
+          "file": "plan-focus.spec.ts",
+          "line": 51,
+          "column": 1
+        },
+        {
+          "title": "목록을 접은 상태에서 마커를 다시 열어도 긴 제목은 일차 줄 아래에 보인다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10978,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:19:45.288Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "58827e149c4e5b3b970f-ae4d34ec138c21c67ade",
+          "file": "plan-focus.spec.ts",
+          "line": 72,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "server-slow.spec.ts",
+      "file": "server-slow.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "서버가 답을 안 주고 8초가 넘으면 맨 위에 안내가 뜨고(몇 초째인지 함께), 답이 오면 저절로 사라진다. 빨리 답하는 평소에는 아무것도 안 뜬다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 19401,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:19:56.308Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "73a1ffd6395cd7d4de85-d2aa5958e62812f7213a",
+          "file": "server-slow.spec.ts",
+          "line": 19,
+          "column": 1
+        },
+        {
+          "title": "30초가 넘으면 더 강한 문장으로 바뀌고, 닫기를 누르면 그 호출에는 다시 뜨지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 33952,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:20:15.730Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "73a1ffd6395cd7d4de85-e75dc6bce08c3a849295",
+          "file": "server-slow.spec.ts",
+          "line": 45,
+          "column": 1
+        },
+        {
+          "title": "계획을 읽는 동안 새 소식이 30초 없으면 읽는 화면이 「서버 소식이 한동안 없어요」라고 말하고, 읽기가 끝나면 사라진다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 45737,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('status').filter({ hasText: '서버 소식이 한동안 없어요' })\nExpected substring: \u001b[32m\"30초 이상 새 진행 소식이 없어요.\"\u001b[39m\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('status').filter({ hasText: '서버 소식이 한동안 없어요' }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('status').filter({ hasText: '서버 소식이 한동안 없어요' })\u001b[22m\n\u001b[2m    9 × locator resolved to <div role=\"status\" data-stacked=\"true\" data-in-frame=\"true\" class=\"toast-view_toast__DGw_1\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"서버 소식이 한동안 없어요조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.30초째\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('status').filter({ hasText: '서버 소식이 한동안 없어요' })\nExpected substring: \u001b[32m\"30초 이상 새 진행 소식이 없어요.\"\u001b[39m\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('status').filter({ hasText: '서버 소식이 한동안 없어요' }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('status').filter({ hasText: '서버 소식이 한동안 없어요' })\u001b[22m\n\u001b[2m    9 × locator resolved to <div role=\"status\" data-stacked=\"true\" data-in-frame=\"true\" class=\"toast-view_toast__DGw_1\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"서버 소식이 한동안 없어요조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.30초째\"\u001b[22m\n\n    at <workspace>\\.tmp\\baseline-manager-20261012\\team\\final_project_cs\\frontend\\apps\\web\\tests\\live\\server-slow.spec.ts:73:22",
+                    "location": {
+                      "file": "<workspace>\\.tmp\\baseline-manager-20261012\\team\\final_project_cs\\frontend\\apps\\web\\tests\\live\\server-slow.spec.ts",
+                      "column": 22,
+                      "line": 73
+                    },
+                    "snippet": "  71 |   await expect(note).toBeVisible({ timeout: 20_000 });\n  72 |   await expect(note).toContainText(\"조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.\");\n> 73 |   await expect(note).toContainText(\"30초 이상 새 진행 소식이 없어요.\");\n     |                      ^\n  74 |   await note.getByRole(\"button\", { name: \"닫기\", exact: true }).click();\n  75 |   await expect(note).toHaveCount(0);\n  76 |   await page.waitForTimeout(1200); // 다음 quiet 갱신이 닫은 토스트를 다시 띄우지 않습니다."
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<workspace>\\.tmp\\baseline-manager-20261012\\team\\final_project_cs\\frontend\\apps\\web\\tests\\live\\server-slow.spec.ts",
+                        "column": 22,
+                        "line": 73
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('status').filter({ hasText: '서버 소식이 한동안 없어요' })\nExpected substring: \u001b[32m\"30초 이상 새 진행 소식이 없어요.\"\u001b[39m\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('status').filter({ hasText: '서버 소식이 한동안 없어요' }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('status').filter({ hasText: '서버 소식이 한동안 없어요' })\u001b[22m\n\u001b[2m    9 × locator resolved to <div role=\"status\" data-stacked=\"true\" data-in-frame=\"true\" class=\"toast-view_toast__DGw_1\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"서버 소식이 한동안 없어요조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.30초째\"\u001b[22m\n\n\n  71 |   await expect(note).toBeVisible({ timeout: 20_000 });\n  72 |   await expect(note).toContainText(\"조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.\");\n> 73 |   await expect(note).toContainText(\"30초 이상 새 진행 소식이 없어요.\");\n     |                      ^\n  74 |   await note.getByRole(\"button\", { name: \"닫기\", exact: true }).click();\n  75 |   await expect(note).toHaveCount(0);\n  76 |   await page.waitForTimeout(1200); // 다음 quiet 갱신이 닫은 토스트를 다시 띄우지 않습니다.\n    at <workspace>\\.tmp\\baseline-manager-20261012\\team\\final_project_cs\\frontend\\apps\\web\\tests\\live\\server-slow.spec.ts:73:22"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:20:49.701Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "<workspace>\\.tmp\\baseline-manager-20261012\\checks\\uiux-final-browser-artifacts\\server-slow-계획을-읽는-동안-새-소식-64cc6-한동안-없어요」라고-말하고-읽기가-끝나면-사라진다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<workspace>\\.tmp\\baseline-manager-20261012\\checks\\uiux-final-browser-artifacts\\server-slow-계획을-읽는-동안-새-소식-64cc6-한동안-없어요」라고-말하고-읽기가-끝나면-사라진다\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "<workspace>\\.tmp\\baseline-manager-20261012\\checks\\uiux-final-browser-artifacts\\server-slow-계획을-읽는-동안-새-소식-64cc6-한동안-없어요」라고-말하고-읽기가-끝나면-사라진다\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "<workspace>\\.tmp\\baseline-manager-20261012\\team\\final_project_cs\\frontend\\apps\\web\\tests\\live\\server-slow.spec.ts",
+                    "column": 22,
+                    "line": 73
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "73a1ffd6395cd7d4de85-2a438a2e3d9b0889a915",
+          "file": "server-slow.spec.ts",
+          "line": 60,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "submit-end-registration-20261012.spec.ts",
+      "file": "submit-end-registration-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px 일반 ready: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5377,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:21:36.885Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-8cff631c78ffd1234cbb",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "375px 일반 recheck: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2574,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:21:42.616Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-bbdd6d6a0f7c182cf928",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "375px 동작 줄임 ready: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2209,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:21:45.212Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-92f29d60553cec2390c9",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "375px 동작 줄임 recheck: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2218,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:21:47.446Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-c94cc267c911bedf5de9",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "1280px 일반 ready: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5134,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:21:49.693Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-44758c7e797b56736184",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "1280px 일반 recheck: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4849,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:21:54.855Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-59931dba54b739b277f4",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "1280px 동작 줄임 ready: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2250,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:21:59.723Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-825f1ff2e0cf435da5fc",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "1280px 동작 줄임 recheck: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2395,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:22:01.993Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-b59555f742d9697008d6",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "등록 불가여도 끝에서는 안내를 표시하고 스크롤로는 전송하지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1589,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:22:04.408Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-0a3676c0988320b9cecc",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 61,
+          "column": 1
+        },
+        {
+          "title": "목록 끝에서도 최소 접힘 중에는 안내를 숨기고 펼치면 복귀한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2945,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:22:06.017Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-52d5ecc92c4d81cf77f5",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 73,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "trip-center.spec.ts",
+      "file": "trip-center.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "종은 안 본 알림 수를 말하고, 받은 알림 탭을 보면 읽음이 되어 새로고침 뒤에도 수가 없다 — 이번에 처음 본 알림에는 점이 남는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1875,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:22:09.016Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "16f7edee6c36443595c0-3215da9701fbfa528b9d",
+          "file": "trip-center.spec.ts",
+          "line": 17,
+          "column": 1
+        },
+        {
+          "title": "탭은 화살표 키로 옮겨 가고, 탭마다 서버가 준 수를 단다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1131,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:22:10.916Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "16f7edee6c36443595c0-01a70e1837dc92cb716e",
+          "file": "trip-center.spec.ts",
+          "line": 37,
+          "column": 1
+        },
+        {
+          "title": "화면이 열려 있는 동안 서버가 선택 요청을 보내면 그 일정의 번호 · 이름 · 「선택 요청」 막대가 뜨고, 「알림 보기」로 받은 알림 탭이 열린다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1606,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:22:12.065Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "16f7edee6c36443595c0-a0676a71821f26dc3dca",
+          "file": "trip-center.spec.ts",
+          "line": 49,
+          "column": 1
+        },
+        {
+          "title": "선택 요청의 「일정에서 보기」는 센터를 닫고 그 일정을 목록에서 펼친다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1612,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:22:13.689Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "16f7edee6c36443595c0-5beb49a4909eb86a53ca",
+          "file": "trip-center.spec.ts",
+          "line": 70,
+          "column": 1
+        },
+        {
+          "title": "알림 문장 속 https 주소는 채팅처럼 누를 수 있는 링크이고, https 가 아닌 주소는 글자 그대로다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1780,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:22:15.321Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "16f7edee6c36443595c0-08caedccdde7c54b5805",
+          "file": "trip-center.spec.ts",
+          "line": 80,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "uiux-sonnet-map-crowded-20261012.spec.ts",
+      "file": "uiux-sonnet-map-crowded-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "180px 지도에서 같은 방향의 이전 4개 일정 스택을 누를 수 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2423,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:22:17.141Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "crowded-number-hit-evidence",
+                      "contentType": "application/json",
+                      "body": "W3siaWQiOiIxIiwiYnV0dG9uIjp7IngiOi0zLjg5MDYyNSwieSI6MjY3LCJ3aWR0aCI6OTkuNzgxMjUsImhlaWdodCI6MzQsInRvcCI6MjY3LCJyaWdodCI6OTUuODkwNjI1LCJib3R0b20iOjMwMSwibGVmdCI6LTMuODkwNjI1fSwibnVtYmVyIjp7IngiOjQ4Ljg5MDYyNSwieSI6MjczLCJ3aWR0aCI6MjIsImhlaWdodCI6MjIsInRvcCI6MjczLCJyaWdodCI6NzAuODkwNjI1LCJib3R0b20iOjI5NSwibGVmdCI6NDguODkwNjI1fSwibnVtYmVyQ2VudHJlSGl0c093bkJ1dHRvbiI6dHJ1ZX1d"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1e040c3df919cbae9f80-11c786c17c4006295b4a",
+          "file": "uiux-sonnet-map-crowded-20261012.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "180px 지도에서 같은 방향의 이전 5개 일정 스택을 누를 수 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2195,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:22:19.582Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "crowded-number-hit-evidence",
+                      "contentType": "application/json",
+                      "body": "W3siaWQiOiIxIiwiYnV0dG9uIjp7IngiOi0zLjg5MDYyNSwieSI6MjY3LCJ3aWR0aCI6OTkuNzgxMjUsImhlaWdodCI6MzQsInRvcCI6MjY3LCJyaWdodCI6OTUuODkwNjI1LCJib3R0b20iOjMwMSwibGVmdCI6LTMuODkwNjI1fSwibnVtYmVyIjp7IngiOjQ4Ljg5MDYyNSwieSI6MjczLCJ3aWR0aCI6MjIsImhlaWdodCI6MjIsInRvcCI6MjczLCJyaWdodCI6NzAuODkwNjI1LCJib3R0b20iOjI5NSwibGVmdCI6NDguODkwNjI1fSwibnVtYmVyQ2VudHJlSGl0c093bkJ1dHRvbiI6dHJ1ZX1d"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1e040c3df919cbae9f80-cdc8b3927ad3b543ff80",
+          "file": "uiux-sonnet-map-crowded-20261012.spec.ts",
+          "line": 9,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "uiux-sonnet-map-reveal-20261012.spec.ts",
+      "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "세 번째 일정 공개 중 서쪽 두 일정은 실제 방향의 거리 스택으로 남는다 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11174,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:22:23.088Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "current-pin-body-center",
+                      "contentType": "application/json",
+                      "body": "eyJib2R5RGVsdGEiOlsxNi41LDE2LjQ0NTMxMjVdLCJleHBlY3RlZFNpZGVzIjpbImxlZnQiLCJsZWZ0Il19"
+                    },
+                    {
+                      "name": "previous-two-reveal-frame-evidence",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjMwMywidGhpcmRGcmFtZXMiOjg4LCJzZXBhcmF0ZVByZXZpb3VzRnJhbWVzIjo3MSwiY29tcGxldGVUaGlyZEZyYW1lIjp7ImNoaXBzIjpbWyIxIiwiMiJdXSwiY2VudGVyRGVsdGEiOlswLjUsMC41NTQ2ODc1XSwicHJldmlvdXNIaWRkZW4iOlt0cnVlLHRydWVdLCJwcmV2aW91c1JldGFpbmVkIjpbdHJ1ZSx0cnVlXX0sImZhaWx1cmVDb3VudCI6MCwiZmFpbHVyZXMiOltdLCJzdG9wIjp0cnVlfQ=="
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "<workspace>\\.tmp\\baseline-manager-20261012\\checks\\uiux-final-browser-artifacts\\uiux-sonnet-map-reveal-202-19c20-정은-실제-방향의-거리-스택으로-남는다-375px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "976bd6c8e64dbdfe3f65-382a0b3b80c423b13d4c",
+          "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+          "line": 29,
+          "column": 3
+        },
+        {
+          "title": "세 번째 일정 공개 중 서쪽 두 일정은 실제 방향의 거리 스택으로 남는다 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11335,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:22:34.634Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "current-pin-body-center",
+                      "contentType": "application/json",
+                      "body": "eyJib2R5RGVsdGEiOlsxNywxNi40NDUzMTI1XSwiZXhwZWN0ZWRTaWRlcyI6WyJsZWZ0IiwibGVmdCJdfQ=="
+                    },
+                    {
+                      "name": "previous-two-reveal-frame-evidence",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjI5OCwidGhpcmRGcmFtZXMiOjg3LCJzZXBhcmF0ZVByZXZpb3VzRnJhbWVzIjo3MiwiY29tcGxldGVUaGlyZEZyYW1lIjp7ImNoaXBzIjpbWyIxIiwiMiJdXSwiY2VudGVyRGVsdGEiOlswLDAuNTU0Njg3NV0sInByZXZpb3VzSGlkZGVuIjpbdHJ1ZSx0cnVlXSwicHJldmlvdXNSZXRhaW5lZCI6W3RydWUsdHJ1ZV19LCJmYWlsdXJlQ291bnQiOjAsImZhaWx1cmVzIjpbXSwic3RvcCI6dHJ1ZX0="
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "<workspace>\\.tmp\\baseline-manager-20261012\\checks\\uiux-final-browser-artifacts\\uiux-sonnet-map-reveal-202-3e0a1-은-실제-방향의-거리-스택으로-남는다-1280px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "976bd6c8e64dbdfe3f65-1e9bcd0543f011f62a2b",
+          "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+          "line": 29,
+          "column": 3
+        },
+        {
+          "title": "세 번째 일정 공개 중 서쪽 1번·동쪽 2번은 실제 방향의 거리 스택으로 남는다 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11532,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:22:46.005Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "current-pin-body-center",
+                      "contentType": "application/json",
+                      "body": "eyJib2R5RGVsdGEiOlsxNy41LDE2LjQ0NTMxMjVdLCJleHBlY3RlZFNpZGVzIjpbImxlZnQiLCJyaWdodCJdfQ=="
+                    },
+                    {
+                      "name": "previous-two-reveal-frame-evidence",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjI5OSwidGhpcmRGcmFtZXMiOjg3LCJzZXBhcmF0ZVByZXZpb3VzRnJhbWVzIjo3MCwiY29tcGxldGVUaGlyZEZyYW1lIjp7ImNoaXBzIjpbWyIyIl0sWyIxIl1dLCJjZW50ZXJEZWx0YSI6WzAuNSwwLjU1NDY4NzVdLCJwcmV2aW91c0hpZGRlbiI6W3RydWUsdHJ1ZV0sInByZXZpb3VzUmV0YWluZWQiOlt0cnVlLHRydWVdfSwiZmFpbHVyZUNvdW50IjowLCJmYWlsdXJlcyI6W10sInN0b3AiOnRydWV9"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "<workspace>\\.tmp\\baseline-manager-20261012\\checks\\uiux-final-browser-artifacts\\uiux-sonnet-map-reveal-202-688ed-번은-실제-방향의-거리-스택으로-남는다-375px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "976bd6c8e64dbdfe3f65-8ab18b739101f228ef44",
+          "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+          "line": 29,
+          "column": 3
+        },
+        {
+          "title": "세 번째 일정 공개 중 서쪽 1번·동쪽 2번은 실제 방향의 거리 스택으로 남는다 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11922,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:22:57.557Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "current-pin-body-center",
+                      "contentType": "application/json",
+                      "body": "eyJib2R5RGVsdGEiOlsxNywxNi40NDUzMTI1XSwiZXhwZWN0ZWRTaWRlcyI6WyJsZWZ0IiwicmlnaHQiXX0="
+                    },
+                    {
+                      "name": "previous-two-reveal-frame-evidence",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjI5MywidGhpcmRGcmFtZXMiOjg4LCJzZXBhcmF0ZVByZXZpb3VzRnJhbWVzIjo3MSwiY29tcGxldGVUaGlyZEZyYW1lIjp7ImNoaXBzIjpbWyIyIl0sWyIxIl1dLCJjZW50ZXJEZWx0YSI6WzAsMC41NTQ2ODc1XSwicHJldmlvdXNIaWRkZW4iOlt0cnVlLHRydWVdLCJwcmV2aW91c1JldGFpbmVkIjpbdHJ1ZSx0cnVlXX0sImZhaWx1cmVDb3VudCI6MCwiZmFpbHVyZXMiOltdLCJzdG9wIjp0cnVlfQ=="
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "<workspace>\\.tmp\\baseline-manager-20261012\\checks\\uiux-final-browser-artifacts\\uiux-sonnet-map-reveal-202-6122b-은-실제-방향의-거리-스택으로-남는다-1280px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "976bd6c8e64dbdfe3f65-93860ed861ea251a6adf",
+          "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+          "line": 29,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-12T03:17:35.955Z",
+    "duration": 335230.85599999997,
+    "expected": 48,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

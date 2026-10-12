@@ -11,6 +11,8 @@
 """
 from __future__ import annotations
 
+from app.core.team_availability import TeamUnavailable
+
 import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -125,6 +127,8 @@ def leg_between(engine: Any, a: dict[str, Any], b: dict[str, Any], a_end: dateti
                     got, verified = later, True
             elif walking:
                 verified = True
+    except TeamUnavailable:
+        raise
     except Exception as exc:                          # noqa: BLE001 — 계산기 하나의 오류가 확인 화면을 막지 않는다
         return _estimate(a, b, a_end, b_start, f"이동 계산기 오류({type(exc).__name__})")
     if got is None:

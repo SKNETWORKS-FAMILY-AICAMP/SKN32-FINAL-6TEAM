@@ -10,7 +10,7 @@ def inputs(**overrides):
         "case_id": uuid4(),
         "tenant_id": "test_context",
         "team_id": "test_team",
-        "knowledge_scope": ["billing"],
+        "knowledge_scope": ["travel_activity"],
         "system_instruction": "answer with evidence",
         "current_state": {"status": "routing", "version": 2},
     }
@@ -25,8 +25,8 @@ def test_context_broker_eviction_is_budgeted_and_ordered():
         similar_cases=[{"case_id": str(uuid4()), "body": "similar " * 2000}],
         history_entries=["history " * 500],
         policy_chunks=[
-            PolicyChunk("high", 1, "high policy " * 1000, 0.99, "billing"),
-            PolicyChunk("low", 1, "low policy " * 1000, 0.10, "billing"),
+            PolicyChunk("high", 1, "high policy " * 1000, 0.99, "travel_activity"),
+            PolicyChunk("low", 1, "low policy " * 1000, 0.10, "travel_activity"),
         ],
     ))
 

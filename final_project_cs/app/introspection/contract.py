@@ -45,6 +45,12 @@ def snapshot(*, config: Any | None = None, registry: Any | None = None,
 
     requested_config = config
     config = config or composition.load_project_config()
+    desired_revision = revision(config)
+    active_controller = getattr(runtime, "controller", None) if runtime is not None else None
+    if active_controller is not None and getattr(active_controller, "project_config", None) is not None:
+        config = active_controller.project_config
+        registry = registry or active_controller.registry
+        executor = executor or active_controller.team_executor
     if registry is None:
         registry = (composition.build_registry()
                     if requested_config is None
@@ -53,7 +59,6 @@ def snapshot(*, config: Any | None = None, registry: Any | None = None,
 
     settings = settings_module.get_settings()
     manifests = [_manifest(item) for item in registry.manifests()]
-    desired_revision = revision(config)
     active_revision = getattr(runtime, "active_revision", None) if runtime is not None else None
     reload_state = (runtime.state(desired_revision) if runtime is not None
                     else runtime_module.STATE_UNKNOWN)

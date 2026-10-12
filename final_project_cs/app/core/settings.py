@@ -291,6 +291,8 @@ class Settings(BaseSettings):
     #: 서울 열린데이터광장 「실시간 지하철 인증키」(일반 키와 **별개** · 하루 1,000건 · 활용사례 등록 심사 뒤 해제) — 실시간 도착정보
     #:  (`travel/seoul_subway.py`, `sources.subway_arrival`). ★설정에 없는 이름으로 넣으면 기동이 거부된다(`extra="forbid"` · 2026-10-05 실제로 났다).
     seoul_metro_api_key: str = ""
+    #: 서울 버스 도착정보 키. 비우면 승인된 공공데이터포털 공통 키를 쓴다.
+    seoul_bus_api_key: str = ""
     #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**
     #:  기록한다(dead_letter). 보낸 것처럼 `delivered` 로 찍지 않는다.
     discord_webhook_url: str = ""

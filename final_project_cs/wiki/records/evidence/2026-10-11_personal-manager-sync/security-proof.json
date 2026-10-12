@@ -1,0 +1,12 @@
+{
+  "personal_original_paths": 6328,
+  "latest_verified_paths": 4685,
+  "latest_security_text_files": 4307,
+  "latest_security_binary_excluded": 378,
+  "latest_security_blocked": 0,
+  "personal_only_original_blobs_retained": 3511,
+  "full_repository_grep_saved": true,
+  "full_repository_grep_bytes": 2539113,
+  "new_security_findings": 0,
+  "method": "Latest team blobs already independently scanned; personal-only blobs retained unchanged from existing remote; full repository grep retained privately."
+}

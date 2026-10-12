@@ -28,9 +28,11 @@ def _wire_domain_teams():
       팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
     """
     from app.composition import wire_domain_teams
+    from app.core.service_bindings import standalone_services
 
     wire_domain_teams()
-    yield
+    with standalone_services():
+        yield
 
 
 @pytest.fixture(autouse=True)

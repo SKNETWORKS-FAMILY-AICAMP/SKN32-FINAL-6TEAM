@@ -16,6 +16,7 @@ PyYAML==6.0.2
 # ── DB (PostgreSQL + pgvector) ───────────────────────────────
 sqlalchemy==2.0.41
 psycopg[binary]==3.3.4
+pglast==7.20              # PostgreSQL 문법으로 SQL 트랜잭션 경계 검사
 pgvector==0.5.0
 alembic==1.18.4
 

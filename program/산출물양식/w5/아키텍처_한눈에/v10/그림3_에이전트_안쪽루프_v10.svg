@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 820" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="tp-agent-title tp-agent-desc">
+<title id="tp-agent-title">에이전트 안쪽 루프 — 통과할 때까지 다음 후보를 다시 점검</title>
+<desc id="tp-agent-desc">에이전트는 지금 항목을 다시 점검해 문제 없음이면 그대로 두고, 확인이 안 되면 기록만 남기고, 깨졌으면 후보를 하나씩 점검한다. 더 볼 후보가 있으면 다시 돌아가고, 다 본 뒤 통과한 곳이 있으면 최선 1곳과 다른 안 최대 2곳을 변경 제안으로 낸다.</desc>
+<defs><style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;display=swap');</style><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b7488"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a8720c"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5bd8"/></marker><marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8599"/></marker><style>.name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#161c28;text-anchor:middle}.focal-name{fill:#a8720c}.sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#6b7488;text-anchor:middle}.io{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#161c28}.io-k{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;font-weight:600;fill:#7a8599}.tag{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;font-weight:500;letter-spacing:0.08em;text-anchor:middle}.lab{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:500;text-anchor:middle}.lab-mono{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;letter-spacing:0.14em;text-anchor:middle}.leg{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.hub-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#fbfcfd;text-anchor:middle}.hub-sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:rgba(251,252,253,0.78);text-anchor:middle}.layer-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#161c28}.layer-note{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.layer-tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28}</style></defs>
+<rect width="960" height="820" fill="#fbfcfd"/>
+<!-- 화살표 먼저 -->
+<path d="M480 96 L480 128" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M380 176 L280 176" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M580 176 L680 176" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M480 224 L480 272" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M480 352 L480 392" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M580 440 L712 440 A8 8 0 0 0 720 432 L720 320 A8 8 0 0 0 712 312 L640 312" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<path d="M480 488 L480 536" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M380 584 L280 584" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M480 632 L480 680" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<!-- 이름표 -->
+<rect x="300" y="152" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="332" y="164" class="lab" fill="#6b7488">문제 없음</text>
+<rect x="596" y="152" width="72" height="16" rx="2" fill="#fbfcfd"/><text x="632" y="164" class="lab" fill="#6b7488">확인 안 됨</text>
+<rect x="488" y="240" width="32" height="16" rx="2" fill="#fbfcfd"/><text x="504" y="252" class="lab" fill="#6b7488">깨짐</text>
+<rect x="728" y="368" width="112" height="16" rx="2" fill="#fbfcfd"/><text x="784" y="380" class="lab" fill="#a8720c">예 · 다음 후보로</text>
+<rect x="488" y="504" width="112" height="16" rx="2" fill="#fbfcfd"/><text x="544" y="516" class="lab" fill="#6b7488">아니오 · 다 봤음</text>
+<rect x="308" y="560" width="44" height="16" rx="2" fill="#fbfcfd"/><text x="330" y="572" class="lab" fill="#6b7488">아니오</text>
+<rect x="488" y="648" width="20" height="16" rx="2" fill="#fbfcfd"/><text x="498" y="660" class="lab" fill="#6b7488">예</text>
+<!-- 상자 -->
+<rect x="360" y="40" width="240" height="56" rx="28" fill="#fbfcfd"/>
+<rect x="360" y="40" width="240" height="56" rx="28" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="480" y="63" class="name">할 일 받음</text>
+<text x="480" y="81" class="sub">Case · 허용 툴 · 시간 제한 90초</text>
+<polygon points="480,128 580,176 480,224 380,176" fill="#fbfcfd"/>
+<polygon points="480,128 580,176 480,224 380,176" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="480" y="180" class="name">지금 상태?</text>
+<rect x="80" y="148" width="200" height="56" rx="28" fill="#fbfcfd"/>
+<rect x="80" y="148" width="200" height="56" rx="28" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="180" y="171" class="name">그대로 둔다</text>
+<text x="180" y="189" class="sub">일정 안 바뀜</text>
+<rect x="680" y="148" width="200" height="56" rx="28" fill="#fbfcfd"/>
+<rect x="680" y="148" width="200" height="56" rx="28" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="780" y="171" class="name">기록만 남김</text>
+<text x="780" y="189" class="sub">일정 그대로</text>
+<rect x="320" y="272" width="320" height="80" rx="6" fill="#fbfcfd"/>
+<rect x="320" y="272" width="320" height="80" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+<text x="480" y="298" class="name focal-name">다음 후보 1곳 점검</text>
+<text x="480" y="318" class="sub">영업 · 거리 · 조건 + 같은 외부 점검</text>
+<text x="480" y="336" class="sub">요식은 순위순 최대 3곳</text>
+<polygon points="480,392 580,440 480,488 380,440" fill="#fbfcfd"/>
+<polygon points="480,392 580,440 480,488 380,440" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="480" y="444" class="name">더 볼 후보?</text>
+<polygon points="480,536 580,584 480,632 380,584" fill="#fbfcfd"/>
+<polygon points="480,536 580,584 480,632 380,584" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="480" y="588" class="name">통과한 곳 있나?</text>
+<rect x="80" y="556" width="200" height="56" rx="28" fill="#fbfcfd"/>
+<rect x="80" y="556" width="200" height="56" rx="28" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="180" y="588" class="name">못 함 · 일정 유지</text>
+<rect x="320" y="680" width="320" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="320" y="680" width="320" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="480" y="707" class="name">변경 제안 → 검증으로</text>
+<text x="480" y="725" class="sub">최선 1곳 + 다른 안 최대 2곳</text>
+<line x1="32" y1="764" x2="928" y2="764" stroke="rgba(22,28,40,0.12)" stroke-width="0.8"/>
+<text x="32" y="784" class="lab-mono" fill="#6b7488" text-anchor="start">LEGEND</text>
+<rect x="104" y="772" width="28" height="16" rx="8" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="140" y="784" class="leg">시작 · 끝</text>
+<rect x="228" y="772" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="264" y="784" class="leg">단계</text>
+<polygon points="330,772 344,780 330,788 316,780" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="352" y="784" class="leg">판단</text>
+<line x1="404" y1="780" x2="432" y2="780" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<text x="440" y="784" class="leg">갈래</text>
+<line x1="492" y1="780" x2="520" y2="780" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<text x="528" y="784" class="leg">안쪽 루프</text>
+</svg>

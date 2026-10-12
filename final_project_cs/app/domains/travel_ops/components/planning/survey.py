@@ -51,6 +51,7 @@ class TripSurvey(BaseModel):
     indoor_outdoor: dict[Literal["dining", "activity"],
                          Literal["indoor", "outdoor", "any"]] = Field(default_factory=dict)
     theme_details: list[str] = Field(default_factory=list)     # 세부 테마 — 팀이 정할 값
+    custom_answers: dict[str, str] = Field(default_factory=dict)  # 직접 쓴 선호 원문 — 알아듣지 못한 말도 보존한다
 
 
 def _clock(text: str) -> time:

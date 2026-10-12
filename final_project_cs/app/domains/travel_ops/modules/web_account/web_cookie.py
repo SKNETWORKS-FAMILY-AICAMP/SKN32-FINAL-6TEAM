@@ -37,7 +37,7 @@ PLAIN_COOKIE = "tripilot_sid_dev"
 CSRF_HEADER = "x-csrf-token"
 UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 #: ★`[2026-10-04 D-CS-012]` 에이전트 키로는 **계정 관리 경로를 못 연다** — 로그인 · 연동 · 키 만들기 · 연락처는 브라우저 로그인에서만
-AGENT_FORBIDDEN_PREFIXES = ("/v1/web/auth", "/v1/web/session", "/v1/web/profile", "/v1/web/agent-keys", "/v1/web/consents")
+AGENT_FORBIDDEN_PREFIXES = ("/v1/web/auth", "/v1/web/session", "/v1/web/profile", "/v1/web/agent-keys", "/v1/web/consents", "/v1/web/agent-connections")
 #: 쿠키 원문 길이 상한(`token_urlsafe(32)` = 43자) — 터무니없이 긴 값은 해시하지 않고 버린다
 MAX_COOKIE_CHARS = 200
 
@@ -153,7 +153,7 @@ def lookup(conn, *, tenant_id: str, raw: str | None) -> Session | None:
 class Identity:
     tenant_id: str
     customer_id: UUID
-    via: Literal["cookie", "key", "agent"]
+    via: Literal["cookie", "key", "agent", "oauth"]
     session: Session | None = None
     scope: str | None = None                 # 에이전트 키의 권한 범위(read · write)
     key_id: UUID | None = None
@@ -164,6 +164,11 @@ def _allowed_origins() -> set[str]:
     found = {o.strip().rstrip("/") for o in settings.web_allowed_origins.split(",") if o.strip()}
     if (settings.web_origin or "").strip():
         found.add(settings.web_origin.strip().rstrip("/"))
+    # API 인증 HTML의 동의 폼도 허용한다. 설정된 공개 주소의 출처만 추가한다.
+    from urllib.parse import urlsplit
+    public = urlsplit(settings.public_base_url)
+    if public.scheme in ("http", "https") and public.netloc:
+        found.add(f"{public.scheme}://{public.netloc}")
     return found
 
 
@@ -188,7 +193,7 @@ def _presented_key(request: Request) -> str | None:
     auth = (request.headers.get("authorization") or "").strip()
     if auth[:7].lower() == "bearer ":
         token = auth[7:].strip()
-        if token.startswith((web_agent_keys.PREFIX, "acop_u_")):
+        if token.startswith((web_agent_keys.PREFIX, "acop_u_", "acop_o_")):
             return token
     return None
 
@@ -198,7 +203,7 @@ def _check_agent(request: Request, agent: web_agent_keys.AgentKey) -> None:
     path = request.url.path
     if any(path == prefix or path.startswith(prefix + "/") for prefix in AGENT_FORBIDDEN_PREFIXES):
         raise refuse(403, "agent_forbidden", "에이전트 키로는 계정 관리를 할 수 없다 — 브라우저에서 로그인해서 한다")
-    if request.method.upper() in UNSAFE_METHODS and agent.scope != "write":
+    if request.method.upper() in UNSAFE_METHODS and agent.scope != "write" and not (request.method == "POST" and path == "/v1/web/moves/judge"):
         raise refuse(403, "agent_scope", "이 키는 읽기 전용이다 — 쓰기 권한으로 만든 키가 필요하다")
 
 
@@ -223,7 +228,7 @@ def _admin_access(request: Request, identity: Identity) -> None:
     with get_connection() as conn:
         policy = access_policy(conn, tenant_id=identity.tenant_id, customer_id=identity.customer_id)
     if policy.get("blocked"):
-        raise refuse(403, "user_blocked", "이 계정은 이용이 제한되었습니다. 문의 화면에서 운영자에게 문의해 주세요.")
+        raise refuse(403, "user_blocked", "이 계정은 이용이 제한되었습니다. 문제 신고·건의 기록은 남길 수 있지만 개별 상담 답변이나 제한 해제를 약속하지 않습니다.")
     maintenance = policy.get("maintenance")
     if maintenance and maintenance.get("enabled"):
         raise refuse(503, "maintenance", str(maintenance.get("message") or "서비스 점검 중입니다."))
@@ -247,8 +252,17 @@ def _identify(request: Request, *, required: bool = True, csrf: bool = True) -> 
     tenant = settings_module.get_settings().tenant_id
     raw_cookie = request.cookies.get(cookie_name())
     raw_key = _presented_key(request)
+    from .personal_ai_context import current_identity
+    delegated = current_identity()
+    if delegated is not None:
+        if raw_cookie or raw_key or delegated.tenant_id != tenant or not request.url.path.startswith("/v1/web/"):
+            raise refuse(400, "ambiguous_credentials", "요청의 인증 범위가 맞지 않습니다.")
+        _check_agent(request, delegated)
+        return delegated
     if raw_cookie and raw_key:
         raise refuse(400, "ambiguous_credentials", "쿠키와 사용자 키가 함께 왔다 — 하나만 보낸다")
+    if raw_key and raw_key.startswith("acop_o_"):
+        raise refuse(401, "unauthenticated", "개인 AI 토큰은 MCP 입구에서만 사용할 수 있습니다.")
     if raw_cookie:
         with get_connection() as conn, conn.transaction():
             session = lookup(conn, tenant_id=tenant, raw=raw_cookie)

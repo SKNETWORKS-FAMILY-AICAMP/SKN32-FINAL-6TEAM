@@ -23,10 +23,10 @@ from .test_controller_integration import (db, seed_case, fake_policy,  # noqa: F
                                           case_versions, FakeContextBroker)
 
 MANIFEST = TeamManifest(
-    team_id="fake_order", display_name="Fake Order", contract_name="a_cop.team_task",
-    supported_contract_versions=["1.0"], capabilities=["order.investigate"],
-    accepted_case_types=["billing"], required_context=["case_state", "policy", "db_facts", "history"],
-    allowed_tools=[], knowledge_scope=["billing"], implementation_revision="test",
+    team_id="test_activity", display_name="Test Activity", contract_name="a_cop.team_task",
+    supported_contract_versions=["1.0"], capabilities=["activity.inspect"],
+    accepted_case_types=["activity"], required_context=["case_state", "policy", "db_facts", "history"],
+    allowed_tools=[], knowledge_scope=["travel_activity"], implementation_revision="test",
 )
 
 

@@ -187,8 +187,10 @@ class TourApiPlace(TravelSource):
                               "usetimeleports", "opentime")
         restdate = self._first(row, "restdate", "restdateculture", "restdatefood",
                                "restdateleports", "restdateshopping")
-        if not usetime and not restdate:
-            self._miss("no_hours_fields", content_id)
+        price = self._first(row, "usefee", "usefeeculture", "usefeeleports", "usetimefestival")
+        reservation = self._first(row, "reservation", "reservationfood", "reservationlodging")
+        if not any((usetime, restdate, price, reservation)):
+            self._miss("no_operating_fields", content_id)
             return None
 
         return self.stamp({
@@ -196,6 +198,8 @@ class TourApiPlace(TravelSource):
             # ★★원문이다. 우리가 해석한 값이 아니다.
             "usetime_text": usetime or None,
             "restdate_text": restdate or None,
+            "price_text": price or None,
+            "reservation_text": reservation or None,
             "parsed": False,
             # ★이 소스는 「그 시각에 여는가」를 boolean 으로 답하지 않는다.
             "answers_open_at_slot": False,
@@ -264,6 +268,8 @@ class TourApiPlace(TravelSource):
             "latitude": self._number(row, "mapy"),
             "longitude": self._number(row, "mapx"),
             "address": str(row.get("addr1") or ""),
+            "category": CONTENT_TYPE_NAMES.get(str(row.get("contenttypeid") or content_type_id)),
+            "homepage": re.sub(r"<[^>]+>", "", str(row.get("homepage") or "")).strip() or None,
         }, source=self.name)
 
     # ── 지역 단위 수집 (카탈로그 동기화용) ──────────────────────

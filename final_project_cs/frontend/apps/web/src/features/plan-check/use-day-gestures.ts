@@ -14,8 +14,6 @@ const RUBBER_MAX = 88;
 const SETTLE_MS = 240;
 /** Not moving for this long (ms) before the finger is lifted: it was not a flick. */
 const STOP_MS = 90;
-/** What a pinch may show while the fingers are down (the zoom of the list), and where it counts as 「as far out as it goes」 / 「as far in as it goes」. */
-export const PINCH_RANGE = { min: 0.55, max: 1.6 } as const;
 
 /** The pure rule of a sideways drag: how far the list moves for a finger that has moved `dx` px, and whether letting go there turns the day. Tested without a browser. */
 export function swipeStep(dx: number, width: number, neighbour: boolean): { shift: number; armed: boolean } {
@@ -42,11 +40,6 @@ export interface DayGestures {
   onProgress: (shift: number, width: number, armed: boolean) => void;
   /** The day turns (after the list has slid out). */
   onTurn: (delta: 1 | -1) => void;
-  /** Two fingers are pinching the list: the zoom they ask for now, while they are down; and once they are let go. */
-  pinch: boolean;
-  zoom: number;
-  onPinch: (zoom: number) => void;
-  onPinchEnd: (zoom: number) => void;
   /**
    * `[2026-10-07 사용자 지적 — 확대 · 축소를 하다 보면 좌우로 넘기기가 막힌다]` The overview of every day (pinched far enough in) has no neighbour to swipe to, and swipes used to do nothing there. Now a swipe past the
    * line leaves the overview for the day the customer is looking at (`onOverviewSwipe`).
@@ -57,20 +50,19 @@ export interface DayGestures {
 
 /**
  * `[2026-10-05 사용자 요청 — 날짜 전환 애니메이션 · 두 손가락 확대]` The gestures of the day list. ★The list FOLLOWS the finger sideways, with the neighbouring day moving along beside it
- * (`onPeek`); letting go past a line (`COMMIT_FRACTION`) or with a flick turns the day, otherwise the list springs back; at the first and last day it gives way like a rubber band. Two fingers
- * pinching the list ask for a zoom (`onPinch`, and `onPinchEnd` when let go). Pointer events, so a mouse drag does the same; presses that start on an input or on what drags a time are not swipes.
+ * (`onPeek`); letting go past a line (`COMMIT_FRACTION`) or with a flick turns the day, otherwise the list springs back; at the first and last day it gives way like a rubber band.
+ * Two fingers are left to the browser's page zoom. Pointer events also support a mouse drag; presses on inputs do not swipe.
  */
 export function useDayGestures(box: RefObject<HTMLElement | null>, options: DayGestures) {
   const latest = useRef(options);
   useEffect(() => { latest.current = options; });
-  const enabled = options.swipe || options.pinch;
+  const enabled = options.swipe;
 
   useEffect(() => {
     const element = box.current;
     if (!element || !enabled) return;
     const pointers = new Map<number, { x: number; y: number }>();
     let swipe: { id: number; x0: number; y0: number; lock: "none" | "h" | "v"; shift: number; speed: number; lastX: number; lastT: number; neighbour: boolean; armed: boolean; side: -1 | 1; peeked: boolean } | null = null;
-    let pinch: { d0: number; zoom0: number; zoom: number } | null = null;
     let settling: ReturnType<typeof setTimeout> | undefined;
     // What the settling timer will do when it rings (turn the day and/or tidy up). A new press while the list still slides runs it at once - the press is not lost and the turn is not cancelled.
     let pending: (() => void) | null = null;
@@ -92,10 +84,6 @@ export function useDayGestures(box: RefObject<HTMLElement | null>, options: DayG
       if (target) target.removeAttribute("data-armed");
       swipe = null;
     };
-    const distance = () => {
-      const [a, b] = [...pointers.values()];
-      return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
-    };
 
     const onDown = (event: PointerEvent) => {
       if (event.pointerType === "mouse" && event.button !== 0) return;
@@ -104,13 +92,15 @@ export function useDayGestures(box: RefObject<HTMLElement | null>, options: DayG
       //   (up and down first = not ours). Without this the left 44 px of the list - where a swipe back to the previous day often starts - could not be swiped from.
       if (target?.closest("input, textarea, select, [data-no-swipe]")) return;
       // ★The first finger of a new touch starts afresh: a finger whose lifting never reached the list (it left the screen elsewhere) must not stay counted - a second finger would then read as a pinch and no swipe could start.
-      if (event.pointerType === "touch" && event.isPrimary) { pointers.clear(); pinch = null; }
+      if (event.pointerType === "touch" && event.isPrimary) pointers.clear();
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-      if (pointers.size === 2 && latest.current.pinch) {
-        if (swipe?.lock === "h") { settleNow(); place(0, true); later(finish); }
-        swipe = null;
-        const d0 = distance();
-        pinch = d0 > 0 ? { d0, zoom0: latest.current.zoom, zoom: latest.current.zoom } : null;
+      if (pointers.size > 1) {
+        if (swipe) {
+          try { if (element.hasPointerCapture(swipe.id)) element.releasePointerCapture(swipe.id); } catch { /* 이미 브라우저가 가져간 접점 */ }
+        }
+        clearTimeout(settling);
+        pending = null;
+        finish();
         return;
       }
       if (pointers.size === 1 && latest.current.swipe && !swipe) {
@@ -122,12 +112,6 @@ export function useDayGestures(box: RefObject<HTMLElement | null>, options: DayG
     const onMove = (event: PointerEvent) => {
       if (!pointers.has(event.pointerId)) return;
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-      if (pinch) {
-        const zoom = Math.min(PINCH_RANGE.max, Math.max(PINCH_RANGE.min, pinch.zoom0 * (distance() / pinch.d0)));
-        pinch.zoom = zoom;
-        latest.current.onPinch(zoom);
-        return;
-      }
       if (!swipe || swipe.id !== event.pointerId || swipe.lock === "v") return;
       const dx = event.clientX - swipe.x0, dy = event.clientY - swipe.y0;
       if (swipe.lock === "none") {
@@ -171,10 +155,6 @@ export function useDayGestures(box: RefObject<HTMLElement | null>, options: DayG
     const onUp = (event: PointerEvent) => {
       if (!pointers.has(event.pointerId)) return;
       pointers.delete(event.pointerId);
-      if (pinch) {
-        if (pointers.size < 2) { const done = pinch.zoom; pinch = null; latest.current.onPinchEnd(done); }
-        return;
-      }
       if (!swipe || swipe.id !== event.pointerId) return;
       const taken = swipe;
       swipe = null;                                                        // ★the next press may start a swipe at once (it used to be ignored until the list had settled)

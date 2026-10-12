@@ -1,0 +1,112 @@
+# 출처: https://benchmarkheaven.com/api/jevbench/v1.5.6 (JevBench v1.5.6, 헤드라인 A, 순위 110개, 확인 2026-10-04 04:07 KST)
+순위	키	이름	분류	공개	라이선스	JevBench점수(A)	Intelligence	Calibration	Speed	Cost	저장소
+1	cygnet	Cygnet (blockbrain, frozen Gemma-4-12B-it)	system-one-open	yes	shim MIT; weights Apache-2.0 with Google's Gemma Prohibited Use Policy	73.7	71.1	87.0	91.0	56.4	https://github.com/blockbrain-ai/cygnet-recipe
+2	winnow-12b	Winnow-12B Q8	jev-rebuild	yes	Apache-2.0, including the applicable Gemma 4 base/derivative licence terms	73.23	74.4	84.1	86.1	56.6	https://huggingface.co/EldanRing/Winnow-12B
+3	jev-1.13.0	Jev 1.13.0 (TypeSafe AI)	jev	no	proprietary API	72.13	72.0	88.0	83.8	54.7	https://docs.typesafe.ai
+4	jevk5-v0.3-4b	JevK5 v0.3 (4B)	unclassified	unknown	not recorded	71.9	56.3	88.3	93.6	63.1	
+5	vansa-3.4	Vansa-3.4 (Vansa, hosted System One API)	decision-api	no	proprietary hosted API	71.59	58.0	87.6	91.3	61.4	https://vansa.org
+6	plumb-4b	Plumb-4B (crh225, JevK5 v0.2 + LoRA)	unclassified	unknown	not recorded	71.56	55.8	87.4	93.5	63.1	
+7	jev-omni	Jev-Omni (akhilaaa3, Gemma-4-12B merged)	jev-rebuild	yes	Apache-2.0, following Gemma 4; dataset rights stated separately by the author	71.5	70.5	82.6	84.7	56.1	https://huggingface.co/akhilaaa3/Jev-Omni
+8	decider-4b-v2	decider-4b v2 (Mapika)	system-one-open	yes	Apache-2.0 (package and weights)	71.28	55.8	85.6	90.9	64.5	https://github.com/Mapika/decider
+9	decision-4b-v12	Decision 4B v1.2 (FlyMyJev, Qwen3.5-4B + LoRA)	unclassified	unknown	not recorded	70.83	53.7	88.6	93.5	63.1	
+10	imajev-4b-rtx5090-a2	Imajev-4B (RTX 5090)	unclassified	unknown	not recorded	70.39	53.5	88.1	91.1	63.3	
+11	decision-4b-v11	Decision 4B v1.1 (FlyMyJev, Qwen3.5-4B + LoRA)	unclassified	unknown	not recorded	70.39	53.1	87.3	93.5	63.1	
+12	lev	lev (Interfaze AI, Qwen3.5-4B + LoRA r32, label-token readout + candidate-path head, per-bucket temperatures)	Jev-compatible decision model	open weights	apache-2.0	69.06	57.7	77.9	86.5	61.8	https://huggingface.co/interfaze-ai/lev
+13	manchego-v21-v15	Manchego v2.1	system-one-open	yes	Apache-2.0 (code and weights, author-declared)	68.81	51.2	84.9	88.6	64.3	https://github.com/nschlaepfer/manchego-serve
+14	semif-qwen3.5-4b	SemIf, formerly OpenJev (Qwen3.5-4B, TheoLeeCJ)	jev-rebuild	yes	MIT (code); Qwen3.5 weights Apache-2.0	68.66	51.3	84.0	90.9	63.1	https://github.com/TheoLeeCJ/openjev
+15	spark-s1-4b-v6	spark-s1-4b-v6 (Open Spark Jev, abhishek085)	jev-rebuild	yes	Apache-2.0 (code and weights); base Qwen/Qwen3.5-4B Apache-2.0	68.16	62.1	69.7	85.5	60.4	https://github.com/abhishek085/open-spark-jev
+16	metask-jev-4b	metask-jev-4b	jev-rebuild	yes	Apache-2.0	67.48	53.5	82.7	89.5	57.7	https://github.com/metask-ai/metask-jev
+17	hopper	Hopper	jev-rebuild	yes	Component-specific terms recorded in RESULT.md; submitted adapter release and Qwen base retain their respective terms	67.47	49.9	87.9	87.2	62.3	https://huggingface.co/HopitAI/hopper
+18	malkuth-4b	Malkuth-4B (newfull5, Kev post-train)	jev-rebuild	yes	CC-BY-NC-4.0, research use only (XNLI and RACE in the training mix)	66.77	54.5	83.2	86.2	55.8	https://github.com/newfull5/malkuth
+19	surogate-rune-26b-a4b-v3-rtxpro6000-a2	Surogate Rune 26B-A4B v3 (RTX PRO 6000)	unclassified	unknown	not recorded	66.47	69.7	88.3	86.0	49.0	
+20	reflex-4b	reflex 4B (kshetrajna12)	jev-rebuild	yes	MIT (code, adapter); Apache-2.0 (base)	65.24	51.5	86.8	68.8	63.1	https://github.com/kshetrajna12/reflex
+21	jev-local	jev-local (Qwen3.5-9B)	jev-rebuild	yes	no licence stated in the repository (public code); Apache-2.0 base weights	65.24	56.3	77.8	73.0	58.9	https://github.com/us/jev-local
+22	djev	djev (Maisa, diffusion-gemma)	jev-rebuild	yes	Apache-2.0 code; Google DiffusionGemma Apache-2.0 weights; no djev-specific weights	64.16	72.3	80.4	91.0	48.2	https://github.com/Davipar/djev-dev
+23	raw-qwen3-4b-instruct-2507	Raw Qwen3 4B Instruct 2507 direct logits	raw-logit-control	yes	Apache-2.0	62.14	54.1	52.9	89.2	63.4	https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507
+24	jqv	jqv (Qwen3-32B zero-shot)	jev-rebuild	yes	Apache-2.0 (Qwen3-32B weights); serving code public	60.77	49.1	86.8	83.4	51.2	https://github.com/Octalab-Inc/jqv
+25	jevk5-v02	JevK5 v0.2.0	jev-rebuild	unknown	Apache-2.0 (code/adapter); Apache-2.0 (Qwen3.5-4B base)	58.11	46.7	84.9	90.9	63.1	https://github.com/allebee/jevk5
+26	clef-flash	Clef-Flash (Cloudflare, Qwen3.5-9B post-train with a joint schema head, multimodal, measured on text)	Jev-compatible decision model	open weights	apache-2.0	55.11	53.1	87.6	83.6	46.8	https://huggingface.co/Cloudflare/clef-flash
+27	qwen35-9b-jev-data-mix-v2	Qwen3.5-9B Jev-like data-mix v2	jev-rebuild	unknown	Apache-2.0 (adapter code and weights; Qwen3.5-9B base is Apache-2.0)	53.02	60.4	80.9	82.0	45.7	https://huggingface.co/jsaurabh/qwen3.5-9b-jev-data-mix-v2
+28	standardone-8b	Standard One 8B (Standard Thinking)	jev-rebuild	yes	Apache-2.0 (jev-adapter server, LoRA and merged weights; base Ministral 3 8B Apache-2.0)	47.79	59.6	83.2	92.5	43.3	https://huggingface.co/StandardThinking/StandardOne-8B
+29	ninfer-qwen3.8-flash-next	NInfer Qwen3.8-Flash-Next mixed	native-logit	yes	Qwen Community License 1.0 (model); Apache-2.0 (engine)	47.47	67.2	88.5	88.6	42.5	https://github.com/igorls/ninfer
+30	instinct-dual-4b	Instinct Dual 4B	decision-api	no	Not independently recorded	46.97	43.1	88.3	82.0	60.2	https://github.com/fstandhartinger/jevbench/issues/123
+31	swanone	swanOne (blockbrain, Qwen3.8-Flash-Next NVFP4)	system-one-open	yes	patches Apache-2.0, shim MIT; weights under the Qwen licence (LICENSE-NOTICE.md)	46.56	71.2	87.1	84.7	42.2	https://github.com/blockbrain-ai/swanone-recipe
+32	raw-qwen3-8b	Raw Qwen3 8B direct logits	raw-logit-control	yes	Apache-2.0	45.22	51.1	49.2	86.8	45.5	https://huggingface.co/Qwen/Qwen3-8B
+33	decider-2b	decider-2b (Mapika)	jev-rebuild	yes	Apache-2.0	45.1	42.3	71.5	94.4	64.9	https://huggingface.co/Mapika/decider-2b
+34	system-one-sg	system-one (Qwen3-8B, Sean Goedecke)	jev-rebuild	yes	no licence file in the repository as of 19 Sep; Qwen3 weights Apache-2.0	44.14	50.5	49.4	90.9	45.0	https://github.com/sgoedecke/system-one
+35	system-one-open	system-one-open (Gemma 4 E2B LoRA on an L4)	jev-rebuild	yes	MIT (repository LICENSE; Gemma weights keep Google’s terms)	42.44	41.6	71.6	78.3	68.3	https://github.com/mithalouni/system-one-open
+36	kushal-gemma4-31b-it-autoloops	Autoloops – Gemma 4 31B IT	jev	no	Gemma terms of use (Google) for the base weights; hosted Autoloops service	40.53	76.7	85.8	83.9	39.6	
+37	gpt-6-luna-low	GPT-6 Luna (low reasoning effort)	llm-baseline	unknown	proprietary API	40.48	95.3	94.9	73.2	39.1	
+38	gpt-6-luna	GPT-6 Luna (default medium reasoning effort)	llm-baseline	unknown	proprietary API	38.75	96.2	95.6	73.2	38.3	
+39	jevone	JevOne	jev-rebuild	yes	Component-specific JevOne/Qwen/SGLang terms recorded in RESULT.md	38.25	54.1	84.9	90.4	39.8	https://huggingface.co/juspay/jev-one
+40	kev-4b	kev 4B (research preview)	jev-rebuild	True	Apache-2.0	38.07	39.9	67.6	85.5	65.8	https://github.com/jaredpalmer/kev
+41	kev-8b	kev 8B (research preview)	jev-rebuild	True	Apache-2.0	34.15	48.3	71.0	84.1	40.4	https://github.com/jaredpalmer/kev
+42	open-alternative-jev	open-alternative-jev (Qwen3.5-4B, IkerMoel)	jev-rebuild	yes	Apache-2.0 (code and weights)	33.56	37.4	76.9	91.3	63.3	https://github.com/ikermoel/open-alternative-jev
+43	nimble-9b	Bespoke Nimble 9B (Bespoke Labs)	jev-rebuild	yes	Apache-2.0 (weights); repository without a licence file as of 19 Sep	31.82	63.7	77.2	83.0	36.8	https://github.com/bespokelabsai/nimble
+44	malkuth-2b	Malkuth-2B (newfull5, Kev post-train)	jev-rebuild	yes	CC-BY-NC-4.0, research use only (XNLI and RACE in the training mix)	29.9	35.5	75.2	91.8	65.6	https://github.com/newfull5/malkuth
+45	openjev-sglang	openjev-sglang (Qwen3.6-35B-A3B on SGLang)	jev-rebuild	yes	no licence file in the repository as of 2026-09-19; Qwen3.6 weights keep their own terms	29.03	58.6	82.9	78.1	35.6	https://github.com/ekzhang/openjev-sglang
+46	decider-35b-a3b	decider-35b-a3b (Mapika)	jev-rebuild	yes	Apache-2.0	27.5	60.5	82.0	91.0	34.4	https://huggingface.co/Mapika/decider-35b-a3b
+47	localjev-qwen3.5-4b	local-jev Qwen3.5-4B	jev-rebuild	yes	MIT code; Apache-2.0 Qwen weights	25.82	33.7	82.4	83.7	59.3	https://github.com/amithgc/local-jev
+48	nemotron-diffusion-8b	Nemotron Diffusion 8B (pst2154, optimized vLLM)	system-one-open	yes	MIT (application code); modified vLLM runtime Apache-2.0; nvidia/Nemotron-Labs-Diffusion-8B keeps its upstream licence	25.68	33.8	76.2	93.7	55.5	https://github.com/pst2154/Nemotron_Jev
+49	open-jev-zefan-9b	Open-Jev 9B (Zefan Cai)	jev-rebuild	yes	MIT (loader); Apache-2.0 (adapter and pinned Qwen base); CC0-1.0 public training projection	24.36	63.8	81.5	73.6	33.1	https://github.com/Zefan-Cai/Open-Jev
+50	decision-2b	Decision 2B (FlyMy.AI, v59)	jev-rebuild	yes	Apache-2.0 notices on the included code and the pinned base; the weights are an evaluation preview under EVALUATION-PERMISSION.md, not a cleared commercial release	22.52	31.3	86.2	90.4	66.4	https://huggingface.co/flymy-ai/decision-2b-preview
+51	gpt-5.6-luna	GPT-5.6 Luna (low reasoning effort)	llm-baseline	no	proprietary API	22.37	94.3	94.7	74.1	30.7	
+52	typecastlm	typecastlm (Mikhail Gribov, Qwen3.5-4B computed head)	system-one-open	yes	Apache-2.0 (package and weights)	21.83	31.2	76.7	92.0	64.0	https://github.com/mihail-gribov/typecastlm
+53	jev-qwen3.5-9b-base-nvfp4	JEV Qwen3.5-9B Base NVFP4	jev-rebuild	yes	Apache-2.0 entrant and upstream checkpoint	20.07	32.2	80.9	93.5	47.6	https://huggingface.co/WIlfLin/JEV-Qwen3.5-9B-Base-NVFP4
+54	gemini-3.1-flash-lite	Gemini 3.1 Flash-Lite	llm-baseline	no	proprietary API	19.58	77.6	74.7	80.1	29.8	
+55	autojev-27b	AutoJev-27B (denis-pplx, Qwen3.8-27B)	unclassified	unknown	not recorded	19.54	72.8	87.7	87.6	29.4	
+56	autojev-27b-rtxpro6000-a2	AutoJev-27B (RTX PRO 6000)	unclassified	unknown	not recorded	19.48	72.8	86.7	87.1	29.4	
+57	ninfer-qwen3.8-27b	NInfer Qwen3.8-27B NVFP4	native-logit	yes	Apache-2.0 (engine and submitted 27B artifact/base)	18.74	65.5	85.9	89.9	29.1	https://github.com/igorls/ninfer
+58	eikos-27b	Eikos-27B (caiovicentino1, Qwen3.8-27B)	unclassified	unknown	not recorded	18.5	75.1	86.3	87.6	28.7	
+59	ninfer-qwen3.8-27b-t1.5	NInfer Qwen3.8-27B NVFP4 (T=1.5)	native-logit	yes	Apache-2.0 (engine and submitted 27B artifact/base)	18.48	61.1	86.5	89.9	29.1	https://github.com/igorls/ninfer
+60	instinct	Instinct (ZooWork, Qwen3.8-27B)	jev-rebuild	no	proprietary service over Apache-2.0 base weights (Qwen3.8-27B)	18.32	62.7	85.0	81.7	29.2	https://github.com/fstandhartinger/jevbench/issues/69
+61	openjev-thinking	OpenJev (thinking, BF16)	jev-rebuild	yes	Apache-2.0	17.94	84.2	83.1	73.9	28.5	https://github.com/razorback16/openjev
+62	djev-thinking	djev (thinking)	jev-rebuild	yes	Apache-2.0	17.4	77.3	95.7	72.3	28.1	https://github.com/Davipar/djev-dev
+63	clef	Clef (Cloudflare, Qwen3.8-27B post-train with a joint schema head, multimodal, measured on text)	Jev-compatible decision model	open weights	apache-2.0	16.99	67.9	86.7	79.9	28.1	https://huggingface.co/Cloudflare/clef
+64	litjev	LitJev (Qwen3.8-27B)	jev-rebuild	yes	Apache-2.0 (code); Apache-2.0 base weights	16.31	58.3	84.5	68.2	28.4	https://github.com/zhengxuyu/litjev
+65	bev-bonsai-27b	Bev / Bonsai 27B	system-one-open	yes	Not independently recorded	15.77	53.1	77.7	72.7	28.2	https://huggingface.co/Reza2kn/Bev
+66	raw-phi-4-mini	Raw Phi-4 mini direct logits	raw-logit-control	yes	MIT	15.22	27.6	71.4	89.2	53.2	https://huggingface.co/microsoft/Phi-4-mini-instruct
+67	opensourcejev-qwen35-4b-q4km	OpenSourceJev (Qwen3.5-4B Q4_K_M, native llama.cpp)	jev-rebuild	unknown	MIT (repository code); Apache-2.0 (Qwen/Qwen3.5-4B base and unsloth/Qwen3.5-4B-GGUF Q4_K_M conversion)	13.25	25.8	76.0	72.5	69.1	https://github.com/sabeel111/OpenSourceJev
+68	reflex-27b	reflex-27b (Qwen3.8-27B)	jev-rebuild	yes	MIT code; Apache-2.0 Qwen weights	13.19	62.8	85.9	69.2	25.8	https://github.com/kshetrajna12/reflex
+69	open-jev-zefan-2b	Open-Jev 2B (Zefan Cai)	jev-rebuild	yes	MIT (loader); Apache-2.0 (adapter and pinned Qwen base); CC0-1.0 public training projection	9.07	33.6	73.6	75.8	33.1	https://github.com/Zefan-Cai/Open-Jev
+70	gliner2-large	GLiNER2 large (Fastino)	classifier	yes	Apache-2.0	8.4	22.5	42.4	64.8	77.6	https://huggingface.co/fastino/gliner2-large-v1
+71	qwen3-reranker-4b	Qwen3-Reranker-4B	reranker	yes	Apache-2.0	7.06	21.0	76.3	79.6	48.4	https://huggingface.co/Qwen/Qwen3-Reranker-4B
+72	deepseek-flash	DeepSeek V4.1 Flash (thinking default)	llm-baseline	weights	open weights, proprietary API route	6.65	93.7	96.9	69.4	19.1	
+73	simplejev-qwen3.5-0.8b	SimpleJev (Qwen3.5-0.8B, CPU)	jev-rebuild	yes	Apache-2.0 server; Apache-2.0 Qwen3.5-0.8B checkpoint	4.0	16.7	46.7	59.1	70.3	https://github.com/featherless-ai/simple-jev
+74	simplejev-qwen3.8-27b	SimpleJev Qwen3.8-27B	jev-rebuild	yes	Apache-2.0 (Qwen weights); repository licence not stated	3.36	72.8	87.2	74.9	14.9	https://github.com/featherless-ai/simple-jev
+75	decision-machine-1	decision-machine-1 (milliseconds.ai)	decision-api	no	proprietary API, closed weights	3.24	14.8	81.2	92.8	56.3	https://www.milliseconds.ai
+76	gliner2.5-multi	GLiNER2.5 multi (Fastino, 287M)	classifier	yes	Apache-2.0	2.72	14.0	58.0	66.6	86.6	https://huggingface.co/fastino/gliner2.5-multi-v1
+77	bosun-v31-0.6b	Bosun v3.1 0.6B	system-one-open	yes	apache-2.0, not gated; LICENSE + NOTICE (Clause Logic Inc.) present at the pinned revision	2.5	13.6	65.2	61.8	77.5	https://huggingface.co/Hanno-Labs/bosun-v3.1-0.6b
+78	gliner2	GLiNER2 (Fastino, gliner2.5-base)	classifier	yes	Apache-2.0	2.27	13.5	35.6	70.3	86.6	https://github.com/fastino-ai/GLiNER2
+79	deem-0.8-v1	Deem 0.8B v1	system-one-open	yes	Not independently recorded	2.14	13.0	38.9	84.3	80.3	https://huggingface.co/LibertAIDAI/deem-0.8-v1
+80	jevact	JevAct (einptein, jev1-2b-v2)	jev-rebuild	no	not stated (the author published only an endpoint and the evaluation client)	1.52	11.2	62.5	76.4	68.6	https://github.com/fstandhartinger/jevbench/issues/66
+81	clm-8b	CLM-8B (Contrastive-LM, clm-latest)	system-one-open	yes	Apache-2.0 (code and CLM-v0.1-8B head); Qwen3-8B encoder Apache-2.0	1.51	11.4	48.5	93.3	50.5	https://github.com/Contrastive-LM/CLM
+82	kev-0.6b	kev 0.6B (research preview)	jev-rebuild	True	Apache-2.0	1.26	10.3	67.7	87.2	80.1	https://github.com/jaredpalmer/kev
+83	raw-qwen3-0.6b	Raw Qwen3 0.6B direct logits	raw-logit-control	yes	Apache-2.0	1.08	10.6	21.5	90.4	77.6	https://huggingface.co/Qwen/Qwen3-0.6B
+84	gliner2.5-small	GLiNER2.5 small (Fastino, 74M)	classifier	yes	Apache-2.0	0.89	9.2	55.9	77.4	86.6	https://huggingface.co/fastino/gliner2.5-small-v1
+85	raw-qwen3-1.7b	Raw Qwen3 1.7B direct logits	raw-logit-control	yes	Apache-2.0	0.85	9.7	21.6	90.2	68.5	https://huggingface.co/Qwen/Qwen3-1.7B
+86	mirror	Mirror	jev-rebuild	yes	Apache-2.0 wrapper and Mirror release; upstream DeBERTa/model assets retain their own terms	0.22	5.6	43.2	63.6	89.3	https://github.com/Bluusun/Decision-API
+87	zerank-2	ZeroEntropy zerank-2	reranker	yes	Apache-2.0	0.13	4.8	81.7	80.3	48.4	https://huggingface.co/zeroentropy/zerank-2-reranker
+88	jeff	jeff (Logan Markewich, GLiFormer 400M)	jev-rebuild	yes	MIT (code); GLiFormer weights per their model card	0.12	4.4	80.3	55.8	81.1	https://github.com/logan-markewich/jeff
+89	smalljev	smalljev semantic-v9	jev-rebuild	yes	Apache-2.0	0.07	3.7	73.1	86.5	60.8	https://github.com/isHeSatoshi/smalljev
+90	laya-multilingual	Laya multilingual	system-one-open	yes	apache-2.0, not gated	0.02	2.4	43.6	73.7	82.2	https://huggingface.co/convaiinnovations/laya/tree/1c5edc17a7acd8701df6fc341c0d179f1c62c982/multilingual
+91	opendecision	OpenDecision (ModernBERT-large zero-shot)	classifier	yes	Apache-2.0	0.01	2.1	72.5	86.6	79.1	https://github.com/deepanwadhwa/OpenDecision
+92	bge-reranker-v2-m3	BAAI bge-reranker-v2-m3	reranker	yes	Apache-2.0	0	0	83.3	90.5	59.3	https://huggingface.co/BAAI/bge-reranker-v2-m3
+93	certo	Certo v1 (AltSlate Labs)	jev-rebuild	yes	MIT	0	0	87.5	91.4	96.9	https://huggingface.co/altslate/certo-decision-model
+94	decision-fast	Decision Fast (FlyMy.AI, v53a)	jev-rebuild	yes	Apache-2.0 notices on the included code and the pinned base; the weights are an evaluation preview under EVALUATION-PERMISSION.md, not a cleared commercial release	0	0	76.1	91.4	80.1	https://huggingface.co/flymy-ai/decision-fast-preview
+95	gte-reranker-modernbert-base	Alibaba GTE Reranker ModernBERT-base	reranker	yes	Apache-2.0	0	0	75.2	91.5	69.3	https://huggingface.co/Alibaba-NLP/gte-reranker-modernbert-base
+96	kev-0.5b	kev 0.5B	jev-rebuild	True	Apache-2.0	0	0	65.0	88.5	80.1	https://github.com/jaredpalmer/kev
+97	laya	Laya (Convai Innovations, ModernBERT-large 421M)	jev-rebuild	yes	Apache-2.0	0	0	73.7	73.9	84.9	https://huggingface.co/convaiinnovations/laya
+98	lev-350m	lev-350m (Franck Verrot, LFM2.5-350M)	jev-rebuild	yes	Apache-2.0 (code); weights under LiquidAI's LFM1.0 licence, following the LFM2.5-350M base	0	0	77.7	93.6	80.0	https://github.com/franckverrot/lev
+99	mghafiri-qwen3.5-0.8b-decision-model	Qwen3.5-0.8B Decision Model (Mourad Ghafiri)	jev-rebuild	yes	MIT code and training data; Apache-2.0 model weights	0	0	73.6	71.8	79.5	https://huggingface.co/mghafiri/qwen3.5-0.8B-decision-model
+100	mxbai-rerank-base-v2	Mixedbread mxbai-rerank-base-v2	reranker	yes	Apache-2.0	0	0	86.6	89.3	60.3	https://huggingface.co/mixedbread-ai/mxbai-rerank-base-v2
+101	needle-3	Needle 3 (Cactus, 2-bit, local CPU)	small-tool-model	yes	Apache-2.0 (model and package)	0	0	0	34.1	61.6	https://github.com/cactus-compute/needle
+102	needle-3-tools	Needle 3, options as tools (post-hoc adapter mode)	small-tool-model	yes	Apache-2.0 (model and package)	0	0	0	41.0	61.6	https://github.com/cactus-compute/needle
+103	open-jev-deberta-v3-large	open-jev-deberta-v3-large (local CPU)	jev-rebuild	yes	Apache-2.0 (model card); DeBERTa-v3 keeps its own terms	0	0	77.1	68.3	77.6	https://github.com/kotoba-lang/typed-decisions
+104	open-jev-json-canvas-joshuasp	Open Jev JSON Canvas (JoshuaSP)	jev-rebuild	yes	MIT code; Apache-2.0 DiffusionGemma weights	0	77.1	0	85.6	49.3	https://github.com/JoshuaSP/open-jev
+105	openjev-verdict	openJev Verdict (heman10x, ModernBERT-base 151M)	jev-rebuild	yes	Apache-2.0	0	0	52.2	83.9	86.6	https://github.com/Heman10x-NGU/openJev-verdict-2.0
+106	openjev-verdict-1.4	openJev Verdict 1.4	jev-rebuild	yes	Apache-2.0	0	0	80.3	80.6	86.6	https://huggingface.co/heman10x/rlcd-modernbert-151m
+107	qwen3.8-27b	Qwen3.8 27B (Chutes TEE)	llm-baseline	weights	open weights	0	95.6	98.1	56.8	0	
+108	verdict-small	verdict-small (Manavarya09, multilingual-e5-small 118M)	jev-rebuild	yes	Apache-2.0 (verdictml code and the Manav2op/verdict-small checkpoint over intfloat/multilingual-e5-small)	0	0	59.5	82.1	100	https://github.com/Manavarya09/verdict
+109	von-395m	Von (wfzyx, Option-Marker 395M)	jev-rebuild	unknown	Apache-2.0 code; Apache-2.0 weights (answerdotai/ModernBERT-large base)	0	0	83.5	75.7	82.7	https://github.com/wfzyx/von
+110	laya-typed-decisions	Laya typed-decisions	system-one-open	yes	apache-2.0, not gated	0	0	83.3	63.4	82.5	https://huggingface.co/convaiinnovations/laya/tree/1c5edc17a7acd8701df6fc341c0d179f1c62c982/typed-decisions

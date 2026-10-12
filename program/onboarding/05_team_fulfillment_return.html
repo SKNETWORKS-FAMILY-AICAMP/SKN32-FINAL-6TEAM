@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>서유현 · 배송과 반품 · A-COP 학습 가이드</title>
+<style>:root{--accent:#6b3fa0}
+:root{--bg:#f6f7fa;--surface:#fff;--line:#dfe3ec;--text:#161c28;--dim:#5c667a;
+--code-bg:#eef1f6;--warn-bg:#fff8e8;--warn-line:#e3c26a;--ok-bg:#eefbf4;--ok-line:#7fcaa6}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+--bg:#12151c;--surface:#191d26;--line:#2b3240;--text:#e6e9f0;--dim:#98a2b8;
+--code-bg:#0f1219;--warn-bg:#2a2415;--warn-line:#7a6420;--ok-bg:#13251d;--ok-line:#2f6b50}}
+:root[data-theme=dark]{--bg:#12151c;--surface:#191d26;--line:#2b3240;--text:#e6e9f0;
+--dim:#98a2b8;--code-bg:#0f1219;--warn-bg:#2a2415;--warn-line:#7a6420;
+--ok-bg:#13251d;--ok-line:#2f6b50}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+font-family:"Malgun Gothic","\B9D1\C740 \ACE0\B515",system-ui,-apple-system,sans-serif;
+font-size:16px;line-height:1.75;-webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding:0 20px 80px}
+code,pre{font-family:"D2Coding",Consolas,"Courier New",monospace}
+.top{background:var(--accent);color:#fff;padding:32px 0 26px}
+.top .wrap{padding-bottom:0}
+.kicker{font-size:13px;letter-spacing:.06em;opacity:.85;margin:0 0 6px}
+h1{font-size:29px;line-height:1.3;margin:0 0 10px;font-weight:800;letter-spacing:-.02em}
+.top p.sub{margin:0;font-size:15.5px;opacity:.94;max-width:64ch}
+.who{margin-top:15px;font-size:13.5px;opacity:.9}
+nav.parts{background:var(--surface);border-bottom:1px solid var(--line);
+position:sticky;top:0;z-index:5;overflow-x:auto}
+nav.parts .wrap{display:flex;gap:2px;padding:0 20px;white-space:nowrap}
+nav.parts a{display:block;padding:11px 12px;font-size:13px;color:var(--dim);
+text-decoration:none;border-bottom:2px solid transparent}
+nav.parts a:hover{color:var(--text)}
+nav.parts a[aria-current=page]{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+h2{font-size:21px;margin:46px 0 4px;letter-spacing:-.01em;padding-left:13px;
+border-left:4px solid var(--accent)}
+h2+.lede{color:var(--dim);margin:0 0 16px;padding-left:17px;font-size:14.5px}
+h3{font-size:16.5px;margin:26px 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:22px}
+li{margin:5px 0}
+a{color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:11px;
+padding:15px 18px;margin:14px 0}
+.note{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:11px;
+padding:14px 18px;margin:16px 0}
+.note b{display:block;margin-bottom:4px}
+.good{background:var(--ok-bg);border:1px solid var(--ok-line);border-radius:11px;
+padding:14px 18px;margin:16px 0}
+.steps{list-style:none;padding:0;margin:16px 0;counter-reset:s}
+.steps>li{counter-increment:s;background:var(--surface);border:1px solid var(--line);
+border-radius:11px;padding:13px 18px 13px 56px;position:relative;margin:9px 0}
+.steps>li::before{content:counter(s);position:absolute;left:16px;top:14px;width:26px;
+height:26px;border-radius:50%;background:var(--accent);color:#fff;display:grid;
+place-items:center;font-size:13.5px;font-weight:700}
+.steps .path{font-family:"D2Coding",Consolas,monospace;font-size:13.5px;font-weight:700;
+display:block;margin-bottom:3px;word-break:break-all}
+.steps .why{color:var(--dim);font-size:14.5px}
+.tblwrap{overflow-x:auto;margin:14px 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--surface)}
+th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;color:var(--dim);font-weight:700;white-space:nowrap}
+td code{font-size:13px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:9px;
+padding:13px 15px;overflow-x:auto;font-size:13.5px;line-height:1.6;margin:12px 0}
+:not(pre)>code{background:var(--code-bg);border-radius:4px;padding:1px 5px;font-size:14px}
+.q{margin:16px 0;padding-left:20px;border-left:3px solid var(--line)}
+.q li{margin:9px 0}
+.foot{margin-top:52px;padding-top:18px;border-top:1px solid var(--line);
+color:var(--dim);font-size:13.5px}
+.flow{list-style:none;padding:0;margin:20px 0;counter-reset:f}
+.flow>li{counter-increment:f;position:relative;padding:0 0 26px 46px;border-left:2px solid var(--line);margin:0}
+.flow>li:last-child{border-left-color:transparent;padding-bottom:0}
+.flow>li::before{content:counter(f);position:absolute;left:-15px;top:0;width:28px;height:28px;
+border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;
+font-size:13.5px;font-weight:700}
+.flow h3{margin:1px 0 4px;font-size:17px}
+.flow .owner{display:inline-block;font-size:11.5px;font-weight:700;border-radius:5px;
+padding:1px 8px;margin-left:8px;background:var(--code-bg);color:var(--dim);vertical-align:2px}
+.flow .where{font-family:"D2Coding",Consolas,monospace;font-size:13px;color:var(--dim);
+display:block;margin:6px 0 0;word-break:break-all}
+.scope{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+.scope__col{border:1px solid var(--line);border-radius:11px;padding:13px 17px;background:var(--surface)}
+.scope__col h4{margin:0 0 7px;font-size:14px}
+.scope__col ul{margin:0;padding-left:19px;font-size:14.5px}
+.scope__col li{margin:4px 0}
+.scope__col--yes{border-left:4px solid var(--accent)}
+.scope__col--yes h4{color:var(--accent)}
+.scope__col--no{opacity:.82}
+.scope__col--no h4{color:var(--dim)}
+nav.parts a em{font-style:normal;display:block;font-size:11px;opacity:.72;margin-top:-3px}
+@media(max-width:640px){.scope{grid-template-columns:1fr}}
+@media(max-width:600px){h1{font-size:23px}body{font-size:15px}.steps>li{padding-left:50px}
+.flow>li{padding-left:34px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+<p class="kicker">A-COP 담당자별 학습 가이드 · Agent Team Module</p>
+<h1>배송과 반품</h1>
+<p class="sub">배송이 어디서 멈췄는지 보는 팀과, 반품이 되는지 판정하는 팀입니다. 주문이 나간 뒤를 맡습니다.</p>
+<p class="who">담당 서유현 · Team 2개 · 271줄 · 중심은 날짜 계산</p>
+</div></header>
+<nav class="parts"><div class="wrap"><a href="01_core1_case_runtime.html">1. 코어 1<em>최연우</em></a><a href="02_core2_access_action.html">2. 코어 2<em>정세환</em></a><a href="03_team_voc_response.html">3. VOC · 응대<em>송채영</em></a><a href="04_team_order_payment.html">4. 주문 · 결제<em>김지혜</em></a><a href="05_team_fulfillment_return.html" aria-current="page">5. 배송 · 반품<em>서유현</em></a><a href="06_eval_frontend.html">6. 검증 · 프론트<em>최상욱</em></a></div></nav>
+<main class="wrap">
+
+<h2>Agent Team 세 사람의 공통 기초</h2>
+<p class="lede">담당 Team이 달라도 지켜야 할 계약은 같습니다. 이 절은 세 장에 똑같이 들어 있습니다.</p>
+
+<div class="note">
+<b>가장 중요한 규칙 하나</b>
+<p style="margin:6px 0 0">Team은 <b>부수효과를 실행하지 않습니다.</b> 환불이 맞다고 100퍼센트
+확신해도 환불을 하는 게 아니라 "환불하자"는 제안(<code>ActionProposal</code>)을 돌려줍니다.
+실제 실행은 <a href="02_core2_access_action.html">코어 2</a>의 승인 경로에서 일어납니다.
+이 경계를 넘는 코드는 리뷰에서 되돌려집니다.</p>
+</div>
+
+<h3>Team 하나는 이렇게 생겼습니다</h3>
+<p>상속할 부모 클래스가 없습니다. <code>manifest</code> 속성과 <code>execute()</code> 메서드
+두 개만 있으면 Team입니다. Core는 그 둘만 씁니다.</p>
+<pre>class 내Team:
+    manifest = TeamManifest(
+        team_id="...",              # config/project.yaml 의 team_id 와 같아야 한다
+        capabilities=[...],         # 내가 할 수 있는 일. 다른 팀과 겹치면 조립이 실패한다
+        allowed_tools=[...],        # 내가 부를 수 있는 도구. 목록 밖은 도구함이 거부한다
+        knowledge_scope=[...],      # 내가 읽을 수 있는 지식 범위
+    )
+    async def execute(self, task: TeamTask) -> TeamResult: ...</pre>
+
+<h3>계약 네 개를 먼저 읽습니다</h3>
+<ol class="steps"><li><span class="path">app/core/contracts.py:303 <code>TeamManifest</code>, :321 <code>TeamModule</code></span><span class="why">자기소개서의 모양입니다. Registry는 이것만 보고 라우팅합니다.</span></li><li><span class="path">app/core/contracts.py:165 <code>TeamTask</code></span><span class="why">들어오는 것입니다. <code>context</code>(근거 꾸러미), <code>allowed_tools</code>, <code>deadline_at</code>, <code>resume</code>가 핵심 필드입니다.</span></li><li><span class="path">app/core/contracts.py:223 <code>TeamResult</code>, :201 <code>ActionProposal</code></span><span class="why">나가는 것입니다. <code>next_action</code>이 &#39;승인 받아라&#39;·&#39;고객에게 물어라&#39;·&#39;사람에게 넘겨라&#39;를 전부 표현합니다.</span></li><li><span class="path">app/core/contracts.py:94 <code>Evidence</code></span><span class="why">모든 주장에 붙는 출처입니다. <code>source_type</code>·<code>source_id</code>·<code>observed_at</code>. 근거 없는 문장은 답변에 넣지 않습니다.</span></li><li><span class="path">app/tools/read_tools.py:38 <code>ReadToolbox</code>, :146 <code>call()</code></span><span class="why">DB를 읽는 유일한 통로입니다. <code>call()</code>이 <code>allowed_tools</code>를 검사하고 같은 도구를 반복해 부르는 루프도 막습니다. 직접 SQL을 쓰면 안 됩니다.</span></li></ol>
+<h3>ContextPack — 받은 근거가 온전하지 않을 수 있습니다</h3>
+<p><code>task.context</code>에 근거가 실려 옵니다. 그런데 12,000 토큰 예산을 넘으면
+일부가 잘려 나갑니다. 그때 <code>degraded=true</code>가 붙고 <code>omissions</code>에
+무엇을 뺐는지가 적힙니다.</p>
+<p><b>이 깃발을 무시하면 안 됩니다.</b> 근거가 잘린 채로 확정 답변을 만들면
+그게 바로 이 프로젝트가 막으려는 상황입니다. 정책 근거를 못 대면
+<code>escalate</code>나 <code>wait_for_input</code>이 정답입니다.</p>
+
+<h3>세 사람의 Team 배분</h3>
+<div class="tblwrap"><table><thead><tr><th>담당</th><th>Team</th><th>파일</th></tr></thead><tbody><tr><td>송채영 (총괄)</td><td>VOC &amp; Store Manager · Response Generation &amp; Review</td><td><code>voc_store_manager.py</code>, <code>response_review.py</code></td></tr><tr><td>김지혜</td><td>Procurement + Order &amp; Payment</td><td><code>procurement_order_payment.py</code></td></tr><tr><td>서유현</td><td>Fulfillment &amp; Logistics · Return &amp; Refund</td><td><code>fulfillment_logistics.py</code>, <code>return_refund.py</code></td></tr><tr><td>셋이 함께 (총괄 송채영)</td><td>Catalog &amp; Verification (A2A Remote)</td><td><code>catalog_verification.py</code></td></tr></tbody></table></div>
+<p>Core나 검증 쪽에서 Agent Team Module에 연락할 일이 있으면 송채영에게 합니다.
+셋이 각자 받으면 같은 결정을 세 번 하게 됩니다.</p>
+
+<h2>내 Team 둘</h2>
+<p class="lede">배송이 어디서 멈췄는지 보는 팀과, 반품이 되는지 판정하는 팀입니다.</p>
+
+<p>둘 다 <b>주문이 나간 뒤</b>를 다룹니다. 김지혜의 팀이 배송 전을 맡고, 배송이 나간 순간부터
+이쪽으로 넘어옵니다. 그 경계선을 두 사람이 같은 기준으로 잡아야 문의가 사이에 빠지지 않습니다.</p>
+
+<h3>Fulfillment &amp; Logistics (110줄)</h3>
+<p>배송 추적, 배송 상태, 배송 예외를 다룹니다. 도구는 <code>read.order</code>,
+<code>read.shipment</code>, <code>read.policy</code> 셋입니다. 지식 범위에
+<code>delivery_exception</code>이 따로 있는 것을 눈여겨보세요 — 정상 배송보다
+<b>예외 상황이 이 팀의 본업</b>이라는 뜻입니다.</p>
+
+<h3>Return &amp; Refund (161줄)</h3>
+<p>반품 가능 여부, 반품 접수, 환불 금액 계산을 합니다. 이 팀의 중심은 <b>날짜 계산</b>입니다.
+반품 기한이 며칠인지가 사유마다 다르고, 그 값을 정책 문서에서 읽어 옵니다.
+지금은 Mock 단계이며 실제 반품 시스템 연동은 검증 쇼핑몰 일정에 따라 붙습니다.</p>
+
+<h2>이 두 팀의 공통 어려움 — 날짜와 시간</h2>
+<p>배송일, 수령일, 반품 기한, 환불 처리일이 전부 시간 계산입니다. 그리고 시간 계산은
+조용히 틀리기 쉽습니다. 하루 차이로 "반품 됩니다"가 "반품 안 됩니다"로 바뀌는데,
+고객에게 잘못 말하면 되돌리기 어렵습니다.</p>
+<p><code>return_refund.py:68</code>의 <code>_date()</code>가 값을 날짜로 바꾸는 유일한 자리입니다.
+파싱에 실패하면 <code>None</code>을 돌려주고, 그때 이 팀은 <b>추정하지 않고 사람에게 넘깁니다.</b></p>
+
+<h2>코드 읽는 순서</h2>
+<p class="lede">짧은 배송 팀부터 읽고 반품 팀으로 갑니다.</p>
+<ol class="steps"><li><span class="path">app/modules/customer_ops/voc_store_manager.py <b>(내 팀 아님, 먼저 읽기)</b></span><span class="why">★97줄짜리 가장 짧은 Team을 먼저 통째로 읽으세요. Team 하나의 뼈대를 잡은 다음 내 파일로 오면 훨씬 빠릅니다.</span></li><li><span class="path">app/modules/customer_ops/fulfillment_logistics.py:13~22 <code>manifest</code></span><span class="why">capability 셋, 도구 셋, 지식 범위 넷입니다. <code>delivery_exception</code>이 지식 범위에 있는 것을 확인하세요.</span></li><li><span class="path">fulfillment_logistics.py:33 <code>_read()</code>, :41 <code>_escalate()</code>, :46 <code>execute()</code></span><span class="why">110줄이라 한 번에 읽힙니다. 조회해서 → 없으면 넘기고 → 있으면 상태를 붙여 돌려주는 단순한 구조입니다. Team의 기본형에 가깝습니다.</span></li><li><span class="path">app/modules/customer_ops/return_refund.py:16~30 <code>manifest</code></span><span class="why">capability 셋(<code>check_eligibility</code>, <code>request</code>, <code>refund.calculate</code>)이 반품 흐름의 세 단계와 그대로 대응합니다.</span></li><li><span class="path">return_refund.py:54 <code>_policy_days()</code></span><span class="why">★이 팀의 핵심입니다. 반품 사유별 기한 일수를 정책에서 읽습니다. 정책을 못 읽었을 때 무슨 값이 나오는지 반드시 확인하세요 — 여기서 기본값을 함부로 두면 잘못된 확답이 나갑니다.</span></li><li><span class="path">return_refund.py:68 <code>_date()</code></span><span class="why">값을 날짜로 바꾸는 유일한 자리입니다. 실패하면 <code>None</code>입니다. &#39;모르면 추정하지 않는다&#39;가 코드에서 이렇게 생겼습니다.</span></li><li><span class="path">return_refund.py:40 <code>_evidence()</code>, :79 <code>execute()</code></span><span class="why">본체입니다. 주문·반품이력·정책 셋을 근거로 묶어 판정합니다. 기한 계산 결과가 근거에 같이 실리는지 확인하세요.</span></li><li><span class="path">app/tools/read_tools.py:64 <code>shipment()</code>, :126 <code>return_request()</code></span><span class="why">내가 쓰는 도구 둘의 실제 구현입니다. 어떤 컬럼이 오는지 알아야 판정에 쓸 수 있습니다.</span></li></ol>
+<h2>직접 돌려 보기</h2>
+<pre>python -m pytest tests/unit/teams/test_fulfillment_logistics.py -q
+python -m pytest tests/unit/teams/test_return_refund.py -q
+python -m pytest tests/unit/teams -q</pre>
+
+<div class="good">
+<b>추천 연습</b>
+<p style="margin:6px 0 0">반품 기한이 딱 경계인 주문을 만들어 보세요. 기한이 7일이고
+수령일로부터 정확히 7일째인 건입니다. 되는지 안 되는지, 그리고 그 판정 근거가
+<code>Evidence</code>에 어떻게 적히는지 보세요.</p>
+<p style="margin:8px 0 0">그다음 수령일이 <code>NULL</code>인 주문으로 같은 걸 해 보세요.
+<code>_date()</code>가 <code>None</code>을 돌려줄 때 이 팀이 확답을 만들지 않고
+넘기는 것을 확인할 수 있습니다.</p>
+</div>
+
+<h2>함정</h2>
+
+<div class="note">
+<b>기한 판정에 기본값을 함부로 두지 않습니다</b>
+<p style="margin:6px 0 0">정책을 못 읽었는데 "보통 7일이니까 7일로 하자"고 두면,
+그게 바로 <code>RULE.md</code> §3.2가 금지한 폴백입니다. 고객이 그 답을 믿고
+반품을 포기하거나 헛걸음합니다. 모르면 <code>escalate</code>가 정답입니다.</p>
+</div>
+
+<div class="note">
+<b>배송 전과 후의 경계는 김지혜와 같이 정합니다</b>
+<p style="margin:6px 0 0">같은 주문을 두고 &#39;배송 전&#39;이라고 보는 기준이 두 팀에서
+다르면 문의가 사이에 빠지거나 두 팀이 서로 다른 답을 냅니다.
+<code>procurement_order_payment.py:113</code>의 <code>_is_pre_shipment()</code>를
+한 번 같이 읽어 두세요.</p>
+</div>
+
+<div class="note">
+<b>Return &amp; Refund는 지금 Mock입니다</b>
+<p style="margin:6px 0 0">실제 반품 시스템 연동은 검증 쇼핑몰 일정에 달려 있습니다.
+"이미 연동됐다"고 발표에서 말하면 안 됩니다. 지금 검증된 것은 판정 로직까지입니다.</p>
+</div>
+
+<div class="note">
+<b>이 파트에서 실제로 났던 제일 큰 결함</b>
+<p style="margin:6px 0 0"><code>feedback.py</code>의 <code>INTENTS</code>가 옛 구독·청구
+도메인 어휘(<code>billing</code>, <code>technical</code>)로 남아 있었는데, 이 함수가 운영
+API의 기본 분류기였습니다. 쇼핑몰 문의는 <b>전부 분류 실패로 떨어졌을</b> 상태였습니다.
+지금은 <code>order</code>, <code>shipping</code>, <code>return</code>, <code>exchange</code>,
+<code>other</code>입니다.</p>
+<p style="margin:8px 0 0">재발 방지로 <b>INTENTS가 모든 Team의 <code>accepted_case_types</code>를
+덮는지</b> 검사하는 테스트가 있습니다. Team을 새로 만들면서 새 유형을 받겠다고 선언하면
+이 테스트가 먼저 붉어집니다 — <code>tests/unit/voc/test_feedback_intent_alignment.py</code>.</p>
+</div>
+
+<div class="note">
+<b>프롬프트를 쓰면 DB에 등록해야 합니다</b>
+<p style="margin:6px 0 0">프롬프트 파일만 만들어 두고 등록을 안 하면, 감사 기록 경로로 불릴 때마다
+<code>no active prompt registered</code>로 죽습니다. Response Review 팀이 실제로 이 상태로
+한동안 있었습니다. <code>python -m scripts.register_prompts</code>를 잊지 마세요.</p>
+</div>
+
+<div class="note">
+<b>Core를 import하면 테스트가 붉어집니다</b>
+<p style="margin:6px 0 0">Team은 <code>app/core/contracts.py</code>와 <code>app/tools/</code>만
+씁니다. Controller나 transition을 직접 부르면 <code>tests/contract/test_core_isolation.py</code>가
+import 검사로 잡습니다. 의도된 것이니 놀라지 마세요.</p>
+</div>
+
+<h2>확인 질문</h2>
+<ol class="q">
+<li>수령일이 DB에 없는 주문의 반품 가능 여부를 묻습니다. 무엇을 돌려줍니까?</li>
+<li>정책 문서 검색이 실패해서 반품 기한을 모릅니다. 7일로 가정해도 됩니까?</li>
+<li>배송이 나갔는지 아닌지 애매한 주문은 누가 받습니까? 그 기준은 어느 파일에 있습니까?</li>
+<li>Fulfillment 팀의 지식 범위에 <code>delivery_exception</code>이 따로 있는 이유는 무엇입니까?</li>
+</ol>
+
+<h2>옆 담당과 맞닿는 곳</h2>
+<div class="tblwrap"><table><thead><tr><th>담당</th><th>어디서 만나나</th></tr></thead><tbody><tr><td><a href='04_team_order_payment.html'>김지혜 · 주문과 결제</a></td><td>★제일 자주 부딪힙니다. 배송 전이면 김지혜, 배송 후면 나입니다. 경계 기준을 같이 잡으세요</td></tr><tr><td><a href='03_team_voc_response.html'>송채영 · VOC와 응대</a></td><td>내 판정 결과가 응대 문장으로 만들어집니다. 계약 변경은 송채영이 창구입니다</td></tr><tr><td><a href='02_core2_access_action.html'>정세환 · 코어 2</a></td><td>환불 제안이 거기서 검증되고 승인받아 실행됩니다</td></tr></tbody></table></div>
+<div class="foot">
+A-COP 담당자별 학습 가이드 · 기준 저장소 <code>final_project_cs</code> · 확인일 2026-08-31<br>
+담당 구분의 근거는 <code>A-COP_구현계획서_v8.md</code> §16 과 <code>A-COP_스프린트_에픽_설계.md</code> 입니다.<br>
+줄번호는 코드가 바뀌면 밀립니다. 안 맞으면 함께 적힌 이름으로 찾으세요.
+이 파일은 <code>program/onboarding/build_guides.py</code> 가 만듭니다.
+</div>
+</main>
+</body>
+</html>

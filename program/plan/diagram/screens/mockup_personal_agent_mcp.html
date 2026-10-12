@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>개인 AI 에이전트가 MCP 도구로 문의하는 목업</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Malgun Gothic", "맑은 고딕", sans-serif; background: #eef1f6;
+         color: #131a26; font-size: 14px; line-height: 1.55; }
+  .wrap { width: 1240px; padding: 22px; }
+  .lead { font-size: 13px; color: #5d6b7f; margin-bottom: 14px; }
+  .lead b { color: #131a26; }
+  .cols { display: grid; grid-template-columns: 1fr 372px; gap: 18px; align-items: start; }
+
+  .panel { background: #fff; border: 1px solid #dde3ec; border-radius: 12px; overflow: hidden; }
+  .panel__bar { padding: 11px 16px; border-bottom: 1px solid #eef1f6; display: flex;
+                align-items: center; gap: 9px; }
+  .panel__bar b { font-size: 14px; }
+  .panel__bar .sub { color: #5d6b7f; font-size: 12px; margin-left: auto; }
+  .body { padding: 16px; }
+
+  /* 개인 에이전트 대화 */
+  .chat { background: #fbfcfe; }
+  .turn { margin-bottom: 14px; }
+  .me { max-width: 78%; margin-left: auto; background: #2f5bd8; color: #fff;
+        padding: 9px 13px; border-radius: 13px; border-bottom-right-radius: 3px; font-size: 13.5px; }
+  .ai { max-width: 88%; background: #fff; border: 1px solid #e6eaf2; padding: 10px 13px;
+        border-radius: 13px; border-bottom-left-radius: 3px; font-size: 13.5px; }
+  .who { font-size: 11.5px; color: #98a2b3; margin-bottom: 4px; }
+  .who.right { text-align: right; }
+
+  /* 도구 호출 카드 */
+  .tool { border: 1px solid #cfe0ff; background: #f5f9ff; border-radius: 10px;
+          padding: 10px 12px; margin: 8px 0; font-size: 12.5px; }
+  .tool--deny { border-color: #f0c9c4; background: #fff6f5; }
+  .tool__h { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+  .badge { font-size: 10.5px; font-weight: 700; border-radius: 5px; padding: 1px 7px; }
+  .b-call { background: #2f5bd8; color: #fff; }
+  .b-ok { background: #e6f6ee; color: #0d7a4d; }
+  .b-deny { background: #fdecea; color: #c0362c; }
+  .tool__n { font-family: Consolas, monospace; font-weight: 700; font-size: 12.5px; }
+  .code { font-family: Consolas, monospace; font-size: 11.5px; color: #3f4a5a;
+          background: #fff; border: 1px solid #e6eaf2; border-radius: 7px;
+          padding: 7px 9px; margin-top: 5px; white-space: pre-wrap; line-height: 1.5; }
+  .tool__note { margin-top: 6px; color: #5d6b7f; font-size: 12px; }
+  .cite { margin-top: 8px; padding-top: 7px; border-top: 1px dashed #dde3ec;
+          font-size: 11.5px; color: #5d6b7f; }
+  .cite b { color: #0d7a4d; }
+
+  /* 오른쪽 연결 정보 */
+  .kv { display: flex; gap: 8px; font-size: 12.5px; padding: 6px 0;
+        border-bottom: 1px dashed #eef1f6; }
+  .kv b { min-width: 84px; color: #5d6b7f; font-weight: 600; }
+  .kv span { color: #131a26; font-family: Consolas, monospace; font-size: 12px; }
+  .grp { margin-top: 14px; }
+  .grp__t { font-size: 12px; font-weight: 700; color: #5d6b7f; margin-bottom: 6px; }
+  .row { display: flex; align-items: center; gap: 8px; padding: 6px 9px;
+         border: 1px solid #e6eaf2; border-radius: 8px; margin-bottom: 6px; font-size: 12.5px; }
+  .row .m { font-family: Consolas, monospace; font-size: 12px; }
+  .row .why { margin-left: auto; color: #98a2b3; font-size: 11.5px; }
+  .row--off { background: #fafbfd; color: #98a2b3; }
+  .row--off .m { text-decoration: line-through; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #0d7a4d; flex: none; }
+  .dot--off { background: #cbd3e0; }
+
+  /* 아래 경계 설명 */
+  .edge { margin-top: 18px; background: #fff; border: 1px solid #dde3ec;
+          border-radius: 12px; padding: 16px 18px; }
+  .h { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .edge__row { display: flex; gap: 10px; margin-top: 10px; }
+  .card { flex: 1; border: 1px solid #dde3ec; border-radius: 10px; padding: 11px 13px; }
+  .card--now { border-color: #0d7a4d; background: #f4fbf7; }
+  .card--later { border-color: #b8860b; background: #fffaf0; }
+  .card__t { font-weight: 700; font-size: 13px; margin-bottom: 5px; }
+  .card__d { font-size: 12.5px; color: #5d6b7f; }
+  .note { margin-top: 12px; font-size: 12.5px; color: #5d6b7f; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lead">
+    <b>고객의 개인 AI 에이전트가 MCP 도구로 문의하는 목업.</b>
+    왼쪽은 소비자가 평소 쓰는 자기 AI 비서다. 우리 화면이 아니다.
+    그 비서가 A-COP의 MCP Server에 붙어 도구를 부르고, 결과를 받아 사람 말로 답한다.
+    지금 열려 있는 범위는 문의와 조회뿐이고, 실행은 막혀 있다.
+    실제 화면이 아니라 경계를 확인하려고 만든 목업이다.
+  </div>
+
+  <div class="cols">
+    <div class="panel chat">
+      <div class="panel__bar">
+        <b>내 AI 비서</b>
+        <span class="sub">MCP 서버 acop-cs 연결됨</span>
+      </div>
+      <div class="body">
+
+        <div class="turn">
+          <div class="who right">나</div>
+          <div class="me">지난주에 산 이어팁 환불 어떻게 됐는지 확인해 줘.</div>
+        </div>
+
+        <div class="turn">
+          <div class="who">AI 비서</div>
+          <div class="ai">
+            확인해 볼게요. 연결된 고객센터 도구로 조회합니다.
+
+            <div class="tool">
+              <div class="tool__h">
+                <span class="badge b-call">도구 호출</span>
+                <span class="tool__n">get_case_status</span>
+                <span class="badge b-ok">허용</span>
+              </div>
+              <div class="code">{ "order_id": "16102433396441" }</div>
+              <div class="tool__note">결과</div>
+              <div class="code">{ "case_id": "CS-2026-0821-014",
+  "status": "waiting_approval",
+  "intent": "billing",
+  "issue_code": "refund_pending",
+  "summary": "반품 접수됨, 환불 승인 대기" }</div>
+            </div>
+
+            반품은 접수됐고 지금은 <b>담당자 승인을 기다리는 중</b>입니다.
+            환불 금액은 12,900원이고, 승인되면 카드사 확인 후 3영업일 안에 처리됩니다.
+            <div class="cite">근거 <b>환불 정책 v3 2조</b> 그리고 <b>Case CS-2026-0821-014 상태</b></div>
+          </div>
+        </div>
+
+        <div class="turn">
+          <div class="who right">나</div>
+          <div class="me">그럼 지금 바로 환불 처리해 줘.</div>
+        </div>
+
+        <div class="turn">
+          <div class="who">AI 비서</div>
+          <div class="ai">
+            <div class="tool tool--deny">
+              <div class="tool__h">
+                <span class="badge b-call">도구 호출</span>
+                <span class="tool__n">execute_refund</span>
+                <span class="badge b-deny">거부</span>
+              </div>
+              <div class="code">{ "error": "tool_not_available",
+  "message": "이 연결에 없는 도구입니다.",
+  "scope": "cs:read, cs:open_case" }</div>
+              <div class="tool__note">
+                환불 실행은 지금 연결에 열려 있지 않습니다. 금액이 나가는 작업이라
+                사람 승인 경로를 거칩니다.
+              </div>
+            </div>
+
+            제가 직접 환불을 실행할 수는 없습니다. 대신 담당자에게 빠른 확인을 요청해 두었습니다.
+
+            <div class="tool">
+              <div class="tool__h">
+                <span class="badge b-call">도구 호출</span>
+                <span class="tool__n">open_support_case</span>
+                <span class="badge b-ok">허용</span>
+              </div>
+              <div class="code">{ "order_id": "16102433396441",
+  "message": "환불 처리를 서둘러 주실 수 있을까요?",
+  "idempotency_key": "a41f-...-9c2" }</div>
+              <div class="tool__note">결과</div>
+              <div class="code">{ "case_id": "CS-2026-0829-207", "status": "new" }</div>
+            </div>
+
+            문의를 접수했습니다. 진행 상황이 바뀌면 다시 알려 드릴게요.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__bar"><b>MCP 연결</b><span class="sub">고객 AI가 보는 정보</span></div>
+      <div class="body">
+        <div class="kv"><b>서버</b><span>acop-cs</span></div>
+        <div class="kv"><b>인증</b><span>API Key + Scope</span></div>
+        <div class="kv"><b>범위</b><span>cs:read, cs:open_case</span></div>
+        <div class="kv"><b>테넌트</b><span>verify-shop</span></div>
+
+        <div class="grp">
+          <div class="grp__t">지금 열려 있는 Tool</div>
+          <div class="row"><span class="dot"></span><span class="m">open_support_case</span>
+            <span class="why">문의 열기</span></div>
+          <div class="row"><span class="dot"></span><span class="m">get_case_status</span>
+            <span class="why">상태 조회</span></div>
+          <div class="row"><span class="dot"></span><span class="m">list_my_cases</span>
+            <span class="why">내 문의 목록</span></div>
+        </div>
+
+        <div class="grp">
+          <div class="grp__t">지금 열려 있는 Resource</div>
+          <div class="row"><span class="dot"></span><span class="m">policy_docs</span>
+            <span class="why">읽기 전용</span></div>
+        </div>
+
+        <div class="grp">
+          <div class="grp__t">아직 열지 않은 것</div>
+          <div class="row row--off"><span class="dot dot--off"></span><span class="m">execute_refund</span>
+            <span class="why">확장 범위</span></div>
+          <div class="row row--off"><span class="dot dot--off"></span><span class="m">place_order</span>
+            <span class="why">확장 범위</span></div>
+          <div class="row row--off"><span class="dot dot--off"></span><span class="m">cancel_order</span>
+            <span class="why">확장 범위</span></div>
+          <div class="row row--off"><span class="dot dot--off"></span><span class="m">request_return</span>
+            <span class="why">확장 범위</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="edge">
+    <div class="h">왜 조회는 열고 실행은 막았나</div>
+    <div class="edge__row">
+      <div class="card card--now">
+        <div class="card__t">지금 여는 범위</div>
+        <div class="card__d">
+          문의를 열고 상태를 조회한다. 정책 문서를 읽는다.
+          틀려도 되돌릴 수 있는 일이라 자동으로 처리한다.
+        </div>
+      </div>
+      <div class="card card--later">
+        <div class="card__t">앞으로 열 범위</div>
+        <div class="card__d">
+          주문, 환불, 취소, 반품 실행. 돈과 재고가 움직이므로
+          승인 경계와 멱등성 검증을 먼저 세운 뒤에 연다.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card__t">거부도 답이다</div>
+        <div class="card__d">
+          없는 도구는 조용히 무시하지 않고 이유와 현재 범위를 돌려준다.
+          고객 AI가 사람에게 그대로 설명할 수 있어야 하기 때문이다.
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      도구 호출에는 멱등성 키가 함께 간다. 같은 요청이 여러 번 들어와도 문의는 한 번만 열린다.
+      모든 호출은 감사 로그에 남고, 어느 테넌트의 어느 고객이 무엇을 불렀는지 되짚을 수 있다.
+    </div>
+    <div class="note">
+      MCP는 외부 AI가 우리 기능을 도구처럼 불러 쓰게 하는 규약이다.
+      Tool은 실행 기능이고 Resource는 읽을 데이터다.
+    </div>
+  </div>
+</div>
+</body>
+</html>
