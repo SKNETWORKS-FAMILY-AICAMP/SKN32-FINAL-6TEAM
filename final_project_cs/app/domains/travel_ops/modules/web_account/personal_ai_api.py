@@ -32,6 +32,11 @@ def member(request, *, optional=False):
         return None
     if optional and who.via == "cookie" and who.session.kind == "guest":
         return None
+    return member_only(who)
+
+
+def member_only(who):
+    """브라우저 회원 세션만 통과시킨다 — 키 · 게스트는 403."""
     if who.via != "cookie" or who.session.kind != "member":
         raise HTTPException(403, {"error": {"code": "member_cookie_required", "message": "브라우저에서 로그인해 주세요."}})
     return who
@@ -40,8 +45,10 @@ def member(request, *, optional=False):
 def build_personal_ai_router(provider_factory=configured_provider):
     router = APIRouter()
 
-    async def require_member(request: Request):
-        return await asyncio.to_thread(member, request)
+    # 인증(쿠키 세션 · 쓰기 CSRF · 차단 · 동의)은 표준 의존성 `require_identity` 가 하고, 여기서는 회원인지만 본다.
+    # 정적 검사(tests/integration/api/test_openapi_surface.py)가 그 이름으로 「인증 있는 쓰기 경로」를 알아본다.
+    async def require_member(who=Depends(web_cookie.require_identity)):
+        return member_only(who)
 
     def provider():
         return provider_factory()
