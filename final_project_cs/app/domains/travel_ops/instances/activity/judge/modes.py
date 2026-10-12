@@ -76,6 +76,26 @@ def default_runner() -> BackgroundRunner:
         return _runner
 
 
+#: 종류별로 받는 값(`travel.activity_judge.kind_modes`). ★`llm` 은 아직 받지 않는다 — D-CS-015 개정 전. `[2026-10-12]`
+KIND_MODES = ("rule", "shadow")
+
+
+def kind_mode(kind: str, modes: Any = None) -> str:
+    """그 판정 종류를 섀도로 돌리나 — `rule` · `shadow`(구현 계획 1.4). `modes` 를 안 주면 가드레일에서 읽는다.
+    ★표에 없는 종류는 `rule`(부르지 않는다) — 새 종류가 설정 없이 몰래 LLM 을 부르지 않게.
+    ★받지 않는 값(`llm` · 오타 · YAML 이 `off` 를 읽은 `False`)은 **멈춘다**(`ValueError`) — 조용히 끄거나 켜지 않는다."""
+    if modes is None:
+        from app.core.settings import get_guardrails
+
+        modes = get_guardrails().get("travel.activity_judge.kind_modes")
+    if not isinstance(modes, dict):
+        raise ValueError(f"travel.activity_judge.kind_modes 는 표여야 한다: {modes!r}")
+    value = modes.get(kind, "rule")
+    if value not in KIND_MODES:
+        raise ValueError(f"travel.activity_judge.kind_modes.{kind} = {value!r} — {list(KIND_MODES)} 중 하나여야 한다")
+    return value
+
+
 def _run(coro) -> Any:
     """동기 코드에서 코루틴 하나를 끝까지 돌린다. ★Team 코드는 이벤트 루프 안에서 불리므로 새 스레드에서 돈다."""
     with ThreadPoolExecutor(max_workers=1, thread_name_prefix="activity-judge") as pool:

@@ -187,3 +187,52 @@ def test_shadow_records_carry_no_place_name_or_customer_text():
 
     for record in records.values():
         assert "경복궁" not in str(record) and "집회" not in str(record)
+
+
+# ── 종류별 모드(구현 계획 1.4) `[2026-10-12]` ─────────────────────────────
+
+def _with_kind_modes(monkeypatch, **modes):
+    """가드레일 대신 이 표로 — 나머지 종류는 `rule`."""
+    from app.domains.travel_ops.instances.activity import team as team_module
+    from app.domains.travel_ops.instances.activity.judge.modes import kind_mode
+
+    monkeypatch.setattr(team_module, "kind_mode", lambda kind, _modes=None: kind_mode(kind, modes))
+
+
+def test_the_configured_default_keeps_todays_shadows():
+    """기본 설정은 10-12 전 동작 그대로 — 휴무 · 실내외 · 재난 · 실시간은 섀도, 운영시간은 부르지 않는다."""
+    from app.domains.travel_ops.instances.activity.judge.modes import kind_mode
+
+    assert [kind_mode(k) for k in ("closure", "weather_sensitive", "disaster_effect", "live_status")] == ["shadow"] * 4
+    assert kind_mode("operating_hours") == "rule"
+
+
+def test_a_kind_set_to_rule_is_not_called_and_the_others_still_are(monkeypatch):
+    _with_kind_modes(monkeypatch, closure="shadow", disaster_effect="rule", live_status="rule")
+    records, llm = _records("quiet_message_outdoor")
+
+    assert "disaster_effect" not in llm.kinds and "live_status" not in llm.kinds
+    assert set(records) <= {"closure", "weather_sensitive"}
+
+
+def test_turning_a_kind_off_never_changes_what_the_customer_gets(monkeypatch):
+    values = _values(**SCENARIOS["closed_by_text"])
+    request = _request()
+    with_all = _customer_view(_run(values, llm=ContraryJudgeLLM(), request=request))
+    _with_kind_modes(monkeypatch, closure="rule")
+
+    assert _customer_view(_run(values, llm=ContraryJudgeLLM(), request=request)) == with_all
+
+
+@pytest.mark.parametrize("bad", ["llm", "off", False, "Shadow"])
+def test_an_unaccepted_kind_mode_stops_instead_of_guessing(bad):
+    from app.domains.travel_ops.instances.activity.judge.modes import kind_mode
+
+    with pytest.raises(ValueError):
+        kind_mode("closure", {"closure": bad})
+
+
+def test_a_kind_missing_from_the_table_is_not_called():
+    from app.domains.travel_ops.instances.activity.judge.modes import kind_mode
+
+    assert kind_mode("operating_hours", {"closure": "shadow"}) == "rule"

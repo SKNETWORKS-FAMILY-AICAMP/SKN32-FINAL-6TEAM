@@ -36,8 +36,8 @@ from .disaster_impact import Impact, ImpactRules, assess
 from .verdicts import holidays_needed, hours_verdict
 from .judge import requests as judge_requests
 from .judge.llm import LLMJudge
-from .judge.modes import ShadowJudge
-from .judge.types import JudgeContext, JudgeRequest, Verdict
+from .judge.modes import ShadowJudge, kind_mode
+from .judge.types import LIVE_STATUS, JudgeContext, JudgeRequest, Verdict
 from .replacement import ReplacementMixin
 from .similarity import distance_first, preference_of, score
 
@@ -557,7 +557,7 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
           `decisions` · 근거 · 실패 코드는 이 호출과 상관없다. 비교 기준은 role-activity 판 규칙(`RuleJudge`)이 아니라
           develop 판이 실제로 낸 값이다 — 섀도는 「지금 동작」과 비교해야 한다(D-CS-015 「지키는 것」).
         """
-        if self.judge_llm is None:
+        if self.judge_llm is None or kind_mode(request.kind) != "shadow":      # ★`[2026-10-12]` 종류별로 끈다(1.4)
             return
         current = Verdict(request.kind, value, "rule", basis=basis)
         ctx = JudgeContext(case_id=task.case_id, capability=task.capability, run_id=task.run_id,
@@ -570,6 +570,8 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         """⑤ 실시간 운영 상태(웹 검색) — 성립으로 답하는 자리에서, 실외이거나 시작까지 `live_status_within_hours` 안일 때만.
         develop 판은 웹 공지를 보지 않는다 — 비교 기준은 「모름」이다. 주소는 관광공사 목록(`read.place_class`)에서."""
         if self.judge_llm is None or not isinstance(place, dict) or not place.get("name"):
+            return
+        if kind_mode(LIVE_STATUS) != "shadow":       # ★`[2026-10-12]` 꺼져 있으면 주소를 읽으러 도구도 부르지 않는다
             return
         from app.core.settings import get_guardrails
 

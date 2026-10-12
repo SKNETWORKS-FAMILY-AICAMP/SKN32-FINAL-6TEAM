@@ -645,6 +645,17 @@ travel:
     # 실시간 운영 상태(웹 검색)는 실외 활동이거나 시작까지 이 시간 안일 때만 본다. 그 밖은 부르지 않는다.
     # ★출처: **우리가 고른 값**이다(계획서 §6 4단계) — 임시휴무 공지는 대개 며칠 전에 나온다고 봤다. 측정 안 함.
     live_status_within_hours: 72
+    # ★`[2026-10-12]` 판정 종류별 섀도 켜기(구현 계획 1.4) — `rule`(LLM 안 부름) · `shadow`(백그라운드 비교만, 고객 답 그대로).
+    #   전역 `ACOP_ACTIVITY_JUDGE_MODE=rule` 이면 이 표와 상관없이 전부 꺼진다(조립이 판정 LLM 을 넣지 않는다).
+    #   `llm`(LLM 이 고객 답을 정함)은 아직 받지 않는다 — D-CS-015 개정 전이다. `off` 대신 `rule` 로 쓴다(YAML 이 off 를 false 로 읽는다).
+    #   운영시간은 develop 판에 섀도 지점이 없어 `rule` 이다(D-CS-015 「② 운영시간은 붙이지 않는다」).
+    # ★출처: 지금 동작 그대로가 기본값이다(10-12 전에는 전역 섀도면 아래 넷이 모두 돌았다).
+    kind_modes:
+      closure: shadow
+      operating_hours: rule
+      weather_sensitive: shadow
+      disaster_effect: shadow
+      live_status: shadow
   reminders:
     # ★일정 안내(v11 §6-B ②·③) 시각. `app/domains/travel_ops/components/watch/trip_reminders.py`.
     # ★출처: 정해진 기준이 없어 **우리가 고른 값**이다. 측정에서 나오지 않았다.
