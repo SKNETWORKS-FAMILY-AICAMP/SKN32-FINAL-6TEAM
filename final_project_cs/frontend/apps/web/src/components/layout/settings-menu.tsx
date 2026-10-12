@@ -13,6 +13,7 @@ import { ThemePicker } from "@/components/ui/theme-picker";
 import { nicknameLabel, useProfile } from "@/lib/profile";
 import { updateSettings, useSettings, useT } from "@/lib/settings";
 import { routes } from "@/lib/routes";
+import { useListZoom, writeListZoom } from "@/features/plan-check/list-zoom";
 import { OverlayRoot } from "./overlay-root";
 import styles from "./settings-menu.module.css";
 
@@ -26,6 +27,7 @@ export const CloseMenu = createContext<() => void>(() => undefined);
 export function SettingsMenu({ className = "", tools }: { className?: string; tools?: ReactNode }) {
   const t = useT();
   const { skipAnimation } = useSettings();
+  const listZoom = useListZoom();
   const profile = useProfile();
   const [open, setOpen] = useState(false);
   // `[2026-10-03 사용자 지시]` 「계정 연결 · 로그인」 줄은 서버가 로그인 방법을 하나라도 설정했을 때만 있다(메뉴를 열 때 한 번 물어본다).
@@ -88,6 +90,14 @@ export function SettingsMenu({ className = "", tools }: { className?: string; to
         {/* The same card as the home intro, caption included. */}
         <LanguagePicker caption={<>LANGUAGE · <span lang="ko">언어</span></>} />
         <ThemePicker />
+        <div className={styles.listZoom} role="group" aria-label={t("일정 목록 크기", "Schedule list size")}>
+          <div className={styles.zoomHeading}><strong>{t("일정 목록 크기", "Schedule list size")}</strong><output aria-live="polite">{Math.round(listZoom * 100)}%</output></div>
+          <div className={styles.zoomButtons}>
+            <button type="button" aria-label={t("일정 목록 축소", "Reduce schedule list size")} disabled={listZoom <= 0.8} onClick={() => writeListZoom(listZoom - 0.1)}>−</button>
+            <button type="button" disabled={listZoom === 1} onClick={() => writeListZoom(1)}>{t("기본 크기", "Default size")}</button>
+            <button type="button" aria-label={t("일정 목록 확대", "Increase schedule list size")} disabled={listZoom >= 1.3} onClick={() => writeListZoom(listZoom + 0.1)}>+</button>
+          </div>
+        </div>
         {/* `[2026-10-03 사용자 결정]` 계획 확인 화면의 단계별 재생을 건너뛰고 서버 결과를 바로 본다. 시스템의 「동작 줄이기」가 아니라 이 스위치가 정한다. */}
         <label className={styles.switchRow}>
           <span className={styles.switchText}><strong id={`${id}-skip`}>{t("애니메이션 건너뛰기", "Skip animations")}</strong><small id={`${id}-skip-note`}>{t("켜면 계획 확인 화면이 단계별 재생 없이 바로 떠요.", "When on, the plan check appears at once, without the step-by-step replay.")}</small></span>

@@ -38,5 +38,12 @@ button.link:hover { background: var(--color-soft); }
 .switch:checked::after { content: "ON"; right: auto; left: 9px; color: var(--color-on-primary); }
 .switch:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
 .note { margin-top: auto; font-size: 10px; line-height: 1.7; color: var(--color-muted); }
+.listZoom { padding: 12px 15px; display: grid; gap: 10px; }
+.zoomHeading { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.zoomHeading output { color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.zoomButtons { display: flex; gap: 8px; }
+.zoomButtons button { min-width: 44px; min-height: 44px; border: 1px solid var(--color-border); border-radius: 10px; color: var(--color-primary); background: var(--color-surface); }
+.zoomButtons button:nth-child(2) { flex: 1; font-size: 13px; }
+.zoomButtons button:disabled { opacity: .45; cursor: default; }
 @keyframes fade { from { opacity: 0; } }
 @keyframes slide { from { transform: translateX(24px); opacity: .6; } }
