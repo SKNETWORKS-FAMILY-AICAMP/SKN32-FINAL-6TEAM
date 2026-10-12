@@ -137,7 +137,7 @@ export function ResultFooter({ view, registration, frozen, explain, previewing =
   if (registration?.error) {
     status = <div role="alert"><p>{registration.error}</p>{registration.problems.length > 0 && <ul>{registration.problems.map((problem, index) => <li key={index}>{problem}</li>)}</ul>}
       {registration.loginRequired && <p className={styles.loginHint}>
-        <Link href={registration.loginHref ?? `${routes.myPage}#accounts`}>{t("계정으로 계속하기", "Continue with an account")}</Link>
+        <Link href={registration.loginHref ?? routes.myPageAccount}>{t("계정으로 계속하기", "Continue with an account")}</Link>
         {t(" — 로그인하면 작성 중인 일정을 계정에 넣고 여기로 돌아와요.", " — sign in to keep this plan in your account and return here.")}</p>}
       </div>;
   }

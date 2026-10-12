@@ -49,3 +49,10 @@ button.link:hover { background: var(--color-soft); }
 .zoomButtons button:disabled { opacity: .45; cursor: default; }
 @keyframes fade { from { opacity: 0; } }
 @keyframes slide { from { transform: translateX(24px); opacity: .6; } }
+/* `[2026-10-13 메뉴 로그인 입구 후보 1]` 게스트: 프로필 줄과 「계정으로 계속하기」가 한 칸. 로그인한 사용자: 맨 아래 따로 놓인 「로그아웃」 줄. */
+.account { display: grid; gap: 10px; padding: 12px 15px 14px; }
+.account .profile { min-height: 0; padding: 0; }
+.account .profile:hover { background: none; }
+.signIn { width: 100%; }
+.signOut { color: var(--color-muted); }
+.signOutError { margin-top: -12px; font-size: 11px; line-height: 1.7; color: var(--color-error); }

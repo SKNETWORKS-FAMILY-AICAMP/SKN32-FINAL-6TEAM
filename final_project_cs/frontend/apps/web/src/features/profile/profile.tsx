@@ -142,7 +142,10 @@ export function MyPage() {
     </div>
     <Panel className={styles.card}>
       {/* The name line under the image is the nickname; there is no second nickname row. */}
-      <Identity><p className={styles.name}>{nicknameLabel(profile, t)}</p></Identity>
+      <Identity><p className={styles.name}>{nicknameLabel(profile, t)}</p>
+        {/* `[2026-10-13 사용자 결정]` 메뉴의 게스트 입구와 같은 단추 — 로그인 · 계정 화면에서 로그인한다. */}
+        {DATA_MODE === "live" && profile !== undefined && profile.session?.kind !== "member" && <ButtonLink href={routes.myPageAccount} variant="primary">{t("계정으로 계속하기", "Continue with an account")}</ButtonLink>}
+      </Identity>
     </Panel>
     <StatusRows profile={profile} />
   </>;
