@@ -1,0 +1,33 @@
+digraph UC {
+  graph [rankdir=LR, splines=ortho, nodesep=0.42, ranksep=0.95, pad=0.15, bgcolor="transparent", fontname="Malgun Gothic", forcelabels=true];
+  node [fontname="Malgun Gothic", fontsize=14];
+  edge [color="#606b7e", penwidth=1.15, arrowsize=0.7, fontname="NanumGothicCoding", fontsize=9];
+  subgraph cluster_g { label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="12" COLOR="#727d90">C · 일정 조율 — 전부 통과할 때까지 다시 맞춘다</FONT>>; labeljust=l; style="rounded,filled"; fillcolor="#f1f4f8"; color="#dbe0ea"; penwidth=1; margin=16;
+    c [shape=box, style="rounded,filled", fillcolor="#f8f3ea", color="#d6b680", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="11" COLOR="#a8720c">UC-12  </FONT><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">일정 조율</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">UC-07 · 08 · 10 · 11 이 반드시 부른다</FONT><BR ALIGN="LEFT"/>>];
+    e3 [shape=box, style="rounded,filled,dashed", fillcolor="#ffffff", color="#d6b680", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">못 맞춤 알리기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">후보 소진 · 조건 푼 안 제시</FONT><BR ALIGN="LEFT"/>>];
+    a1 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">영향받는 항목 추리기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">바로 다음 · 오늘 · 이후 전부</FONT><BR ALIGN="LEFT"/>>];
+    a2 [shape=box, style="rounded,filled", fillcolor="#f8f3ea", color="#d6b680", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">담당 에이전트 점검</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">액티비티 → 요식 → 이동 · 앞 초안을 넘김</FONT><BR ALIGN="LEFT"/>>];
+    a3 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">적용</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">근거 대조(기준 판 · 항목 · 장소) → 새 판 1번</FONT><BR ALIGN="LEFT"/>>];
+    a4 [shape=box, style="rounded,filled", fillcolor="#f8f3ea", color="#d6b680", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="11" COLOR="#a8720c">UC-14  </FONT><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">변경 알리기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">알림 1번 · 계획서 새 판</FONT><BR ALIGN="LEFT"/>>];
+    x1 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">액티비티 점검</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">운영일 · 시간 · 날씨 · 대기질</FONT><BR ALIGN="LEFT"/>>];
+    x2 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">요식 점검</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">영업 · 브레이크 · 라스트오더</FONT><BR ALIGN="LEFT"/>>];
+    x3 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">이동 재판정</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">시간표로 앞뒤 구간 제시간?</FONT><BR ALIGN="LEFT"/>>];
+    e1 [shape=box, style="rounded,filled,dashed", fillcolor="#ffffff", color="#d6b680", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">다음 후보로 다시</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">전부 통과 못 함 · 후보 남음</FONT><BR ALIGN="LEFT"/>>];
+    e2 [shape=box, style="rounded,filled,dashed", fillcolor="#ffffff", color="#d6b680", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="11" COLOR="#a8720c">UC-13  </FONT><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">바꾸기 전에 묻기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">「먼저 물어봐」 · 고정 · 안전 경보</FONT><BR ALIGN="LEFT"/>>];
+  }
+  { rank=max; info [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.10,0.06", label=<<TABLE BORDER="0" CELLPADDING="1" CELLSPACING="4"><TR><TD ROWSPAN="2"><IMG SRC="ic_db.png"/></TD><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">장소 · 영업 · 교통 정보</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">같은 행위자 · 관광공사 · 카카오 · Google · 시간표</FONT></TD></TR></TABLE>>]; discord [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.10,0.06", label=<<TABLE BORDER="0" CELLPADDING="1" CELLSPACING="4"><TR><TD ROWSPAN="2"><IMG SRC="ic_bell.png"/></TD><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">알림 채널</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">디스코드 — 지금은 팀 시연 채널 하나</FONT></TD></TR></TABLE>>]; }
+  c -> e3 [style=dashed, dir=back, arrowtail=vee, color="#d6b680"];
+  c -> a1 [style=dashed, arrowhead=vee];
+  c -> a2 [style=dashed, arrowhead=vee];
+  c -> a3 [style=dashed, arrowhead=vee];
+  c -> a4 [style=dashed, arrowhead=vee];
+  a2 -> x1 [dir=back, arrowtail=empty, arrowsize=1.1];
+  a2 -> x2 [dir=back, arrowtail=empty, arrowsize=1.1];
+  a2 -> x3 [dir=back, arrowtail=empty, arrowsize=1.1];
+  a2 -> e1 [style=dashed, dir=back, arrowtail=vee, color="#d6b680"];
+  a3 -> e2 [style=dashed, dir=back, arrowtail=vee, color="#d6b680"];
+  x1 -> info [arrowhead=none];
+  x2 -> info [arrowhead=none];
+  x3 -> info [arrowhead=none];
+  a4 -> discord [arrowhead=none];
+}

@@ -1,0 +1,10 @@
+## heavy (88문제)
+  이전            정답 84 · 엉뚱 1 · 못 찾음 3
+  LatWeave 반영   정답 84 · 엉뚱 1 · 못 찾음 3 · 되물음 0 (그중 정답 항목이 후보에 포함 0 · 정답이 「없음」인 문제에 되물음 0) · 구조가 모델 없이 「없음」 처리 0
+## mix4 (88문제)
+  이전            정답 81 · 엉뚱 4 · 못 찾음 3
+  LatWeave 반영   정답 81 · 엉뚱 4 · 못 찾음 3 · 되물음 0 (그중 정답 항목이 후보에 포함 0 · 정답이 「없음」인 문제에 되물음 0) · 구조가 모델 없이 「없음」 처리 0
+근거 기록 176 건 → results/trace_latweave.jsonl
+  예: {'job': 'mix4', 'q': '익선동 한옥거리 언제 가?', 'path': 'point', 'why': '구조 조건 없음', 'slots': {}, 'answer': None, 'gold': None, 'experts': ['gate:e4b', 'point:12b']}
+  예: {'job': 'mix4', 'q': '이화여대 앞 쇼핑 시간', 'path': 'point', 'why': '앞뒤 관계인데 기준 항목 불명(조건 후보 0개)', 'slots': {'rel': 'prev'}, 'answer': None, 'gold': None, 'experts': ['anchor:e4b', 'gate:e4b', 'point:12b']}
+  예: {'job': 'mix4', 'q': '가로수길 몇 시', 'path': 'point', 'why': '구조 조건 없음', 'slots': {}, 'answer': None, 'gold': None, 'experts': ['gate:e4b', 'point:12b']}

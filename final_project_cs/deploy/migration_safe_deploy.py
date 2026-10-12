@@ -88,11 +88,26 @@ def snapshot(docker, command, directory):
     # comparing config hashes; otherwise the next safe deployment rejects itself.
     for service, info in infos.items():
         config["services"][service]["image"] = info["Config"]["Image"]
+        # The tag-sync job updates display metadata after rollout, without
+        # recreating containers. Recover only that metadata from the live
+        # baseline; every other setting must still pass the strict hash check.
+        environment = config["services"][service].get("environment") or {}
+        live_environment = dict(value.split("=", 1) for value in
+                                (info["Config"].get("Env") or []) if "=" in value)
+        if "TRIPILOT_TAG" in environment and "TRIPILOT_TAG" in live_environment:
+            environment["TRIPILOT_TAG"] = live_environment["TRIPILOT_TAG"]
     with tempfile.TemporaryDirectory(prefix="tripilot-baseline-") as temporary:
         config_path = Path(temporary) / "baseline.compose.json"
         compose_json(config_path, config)
-        hashes = dict(line.split(maxsplit=1) for line in docker.run(
-            [*compose([config_path]), "config", "--hash", *SERVICES]).splitlines())
+        hashes = {}
+        # Compose accepts one service for --hash on deployed versions. Passing
+        # several names can silently return only the first service's hash.
+        for service in SERVICES:
+            rows = [line.split() for line in docker.run(
+                [*compose([config_path]), "config", "--hash", service]).splitlines()]
+            if len(rows) != 1 or len(rows[0]) != 2 or rows[0][0] != service:
+                raise DeployError(f"{service}: invalid Compose configuration hash response")
+            hashes[service] = rows[0][1]
     for service in SERVICES:
         info = infos[service]
         if not healthy(info):

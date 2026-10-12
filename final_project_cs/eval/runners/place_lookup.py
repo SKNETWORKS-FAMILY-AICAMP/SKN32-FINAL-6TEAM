@@ -51,7 +51,9 @@ HEADER = "2026-10-21 서울 하루"
 TODAY = date(2026, 10, 7)
 
 LABELS = ("correct_confirmed", "correct_review", "correct_abstain",
-          "wrong_review", "wrong_confirmed", "not_found", "blocked")
+          "wrong_review", "wrong_confirmed", "not_found", "blocked", "error")
+#: ★`[2026-10-08]` `error` — 접수 조립이 죽은 케이스. 전에는 not_found 로 셌다 — 부품 이름이 바뀌어 34건이 전부 죽었는데
+#:   「34건 못 찾음」으로 보였다(조용한 실패). 하나라도 있으면 실행이 실패로 끝난다(`main`).
 CORRECT = frozenset({"correct_confirmed", "correct_review", "correct_abstain"})
 
 
@@ -184,17 +186,23 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 # ── 판마다 조립 ────────────────────────────────────────────────
-def _develop_reader(kakao_mode: str) -> Callable[[str], list[dict[str, Any]]]:
-    """develop(2026-10-04 · `app/modules/travel_ops`) 의 접수 조립을 그대로 쓴다 — `trip_api` 의 읽기 경로와 같은 부품."""
+def _develop_reader(kakao_mode: str, tour_mode: str = "off") -> Callable[[str], list[dict[str, Any]]]:
+    """develop 의 접수 조립을 그대로 쓴다 — `trip_api` 의 읽기 경로와 같은 부품.
+    ★`[2026-10-08]` develop 이 `app/domains/travel_ops` 로 옮겼다(통합 0bf4331). 바뀐 조립 — `trip_api.web_intake_start` 와 같다:
+      관광지 CSV 대체(`_CsvFallbackTour`)가 빠지고 관광공사는 `place_factory`(실제 호출 — `--tour live` 일 때만),
+      카카오 근처 힌트 감싸개(`_KakaoNearHint`)가 빠지고 근처 기준은 접수가 직접 고른다(`pipeline._near_hint`),
+      이름 없는 줄 판정에 지명 사전(`areas`)을 넘긴다."""
     from app.core.settings import get_settings
     from app.infrastructure.db.session import get_connection
     from app.domains.travel_ops.entry import trip_api
+    from app.domains.travel_ops.components.intake.areas import areas_for
     from app.domains.travel_ops.components.intake.pipeline import _our_places, load_aliases, read_source
 
     tenant = get_settings().tenant_id
     with get_connection() as conn:
         our_places = _our_places(conn, tenant)
-        aliases = load_aliases(conn, tenant)
+        aliases = load_aliases(conn, tenant, None)          # 기본 별칭만 — 고객이 고친 별칭은 그 고객에게만 쓴다
+        areas = areas_for(conn, tenant)                     # 지명 사전 — 이름 없는 줄(「성수 식당」) 판정에 쓴다
     kakao_raw = None
     if kakao_mode == "live":
         from app.composition import build_kakao_local
@@ -202,23 +210,30 @@ def _develop_reader(kakao_mode: str) -> Callable[[str], list[dict[str, Any]]]:
         if kakao_raw is None:
             raise SystemExit("카카오 키가 없다 — --kakao off 로 재거나 .env.apikeys 를 확인한다")
 
+    tour = None
+    if tour_mode == "live":
+        from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+        tour = build_travel_sources(get_settings()).place
+        if tour is None:
+            raise SystemExit("관광공사 키가 없다 — --tour off 로 잰다")
+
     def read(text: str) -> list[dict[str, Any]]:
         ctx = trip_api._PlaceCtx()                         # 케이스마다 새로 — 앞 케이스의 좌표가 넘어오지 않게
-        return read_source(text, chat=None, today=TODAY, our_places=our_places, aliases=aliases,
-                           tour=trip_api._CsvFallbackTour(None, trip_api._csv_places, ctx),
-                           kakao=trip_api._KakaoNearHint(kakao_raw, ctx) if kakao_raw is not None else None,
-                           dining=trip_api._dining_lookup(ctx))
-    read.fingerprint = {"places": len(our_places), "aliases": len(aliases)}   # type: ignore[attr-defined]
+        return read_source(text, chat=None, today=TODAY, our_places=our_places, aliases=aliases, areas=areas,
+                           tour=tour, kakao=kakao_raw, dining=trip_api._dining_lookup(ctx))
+    read.fingerprint = {"tour": tour_mode, "places": len(our_places), "aliases": len(aliases),
+                        "areas": len(getattr(areas, "_by_key", {}))}   # type: ignore[attr-defined]
     return read
 
 
-ADAPTERS: dict[str, Callable[[str], Callable[[str], list[dict[str, Any]]]]] = {"develop": _develop_reader}
+ADAPTERS: dict[str, Callable[..., Callable[[str], list[dict[str, Any]]]]] = {"domains": _develop_reader}
 
 
 def _detect_layout() -> str:
-    if (ROOT / "app" / "modules" / "travel_ops" / "intake" / "pipeline.py").exists():
-        return "develop"
-    raise SystemExit("이 판의 접수 조립을 모른다 — ADAPTERS 에 판을 더한다(role-manager: app/domains/travel_ops)")
+    # ★`[2026-10-08]` 판 이름은 폴더 구조 — 10-07 보고서의 「develop」은 옛 구조(`app/modules/travel_ops`)다
+    if (ROOT / "app" / "domains" / "travel_ops" / "components" / "intake" / "pipeline.py").exists():
+        return "domains"
+    raise SystemExit("이 판의 접수 조립을 모른다 — ADAPTERS 에 판을 더한다")
 
 
 def _env(layout: str, kakao_mode: str, reader: Any) -> dict[str, Any]:
@@ -247,18 +262,18 @@ def _env(layout: str, kakao_mode: str, reader: Any) -> dict[str, Any]:
             **getattr(reader, "fingerprint", {})}
 
 
-def run(*, label: str, kakao_mode: str, dataset: Path = DATASET) -> dict[str, Any]:
+def run(*, label: str, kakao_mode: str, tour_mode: str = "off", dataset: Path = DATASET) -> dict[str, Any]:
     cases = load_cases(dataset)
     layout = _detect_layout()
-    reader = ADAPTERS[layout](kakao_mode)
+    reader = ADAPTERS[layout](kakao_mode, tour_mode)
     results = []
     for case in cases:
         try:
             rows = reader(case_text(case))
             results.append(score_case(case, items_from_rows(rows)))
-        except Exception as exc:   # noqa: BLE001 — 한 케이스가 죽어도 나머지는 잰다. 죽은 것은 not_found 로 센다
+        except Exception as exc:   # noqa: BLE001 — 한 케이스가 죽어도 나머지는 잰다. 죽은 것은 error 로 따로 센다
             results.append({"id": case["id"], "group": case["group"], "input": case["lines"][case["target"]],
-                            "label": "not_found", "error": f"{type(exc).__name__}: {exc}"[:200]})
+                            "label": "error", "error": f"{type(exc).__name__}: {exc}"[:200]})
         print(f"{results[-1]['id']} {results[-1]['label']:<18} {results[-1].get('input')} → {results[-1].get('place')}",
               file=sys.stderr)
     return {"eval": "place_lookup", "dataset": dataset.name, "dataset_sha": dataset_digest(dataset), "label": label,
@@ -269,14 +284,20 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--label", required=True, help="이 실행의 이름(예: v0-develop)")
     parser.add_argument("--kakao", choices=("live", "off"), default="live")
+    parser.add_argument("--tour", choices=("live", "off"), default="off",
+                        help="관광공사 실제 호출 — 운영과 같은 조립. 기본은 끔(호출 한도 · 같은 결과)")
     parser.add_argument("--dataset", type=Path, default=DATASET)
     parser.add_argument("--out", type=Path)
     args = parser.parse_args(argv)
-    report = run(label=args.label, kakao_mode=args.kakao, dataset=args.dataset)
+    report = run(label=args.label, kakao_mode=args.kakao, tour_mode=args.tour, dataset=args.dataset)
     text = json.dumps(report, ensure_ascii=False, indent=1)
     if args.out:
         args.out.write_text(text, encoding="utf-8")
     print(json.dumps(report["summary"], ensure_ascii=False, indent=1))
+    errors = report["summary"]["labels"].get("error", 0)
+    if errors:
+        print(f"조립이 죽은 케이스 {errors}건 — 점수로 쓰지 않는다(results[].error)", file=sys.stderr)
+        return 1
     return 0
 
 

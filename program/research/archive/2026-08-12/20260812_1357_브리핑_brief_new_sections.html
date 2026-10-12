@@ -1,0 +1,293 @@
+
+<section class="section" id="v5-scope">
+  <h2>3-A. v5 확정 범위 — 무엇을 만들고, 무엇을 안 만드는가</h2>
+  <p class="lead">v4까지는 "가능성"을 열어 두었다. v5부터는 <strong>범위를 잠근다.</strong> 아래에 없는 것은 10주 안에 만들지 않는다.</p>
+
+  <div class="acop-callout">
+    MVP 한 문장: 가상 SaaS 고객 문의 <strong>2개 업무 유형</strong>을 대상으로, Case 상태를 영속화하고, 서로 다른 권한·도구·지식을 가진 <strong>2개 Agent Team</strong>이 하나의 Case를 이어서 처리하며, <strong>승인·재개·정책 근거</strong>가 모두 기록되는 것을 증명한다.
+  </div>
+
+  <div class="grid-3" style="margin-top:16px">
+    <div class="card" style="border-top:5px solid #16a34a">
+      <h3>MVP에 넣는다 (필수)</h3>
+      <ul>
+        <li>가상 SaaS 도메인 1개 + seed DB</li>
+        <li>Capability 2개 — <strong>subscription_billing</strong>, <strong>technical_entitlement</strong></li>
+        <li>Agent Team 2개 (내부 역할 최대 2개씩)</li>
+        <li>Case lifecycle + 낙관적 동시성 + checkpoint 기반 WAIT/RESUME</li>
+        <li>정책 RAG(pgvector) + 구조화 DB 조회 Tool</li>
+        <li>Feedback Analytics 배치 파이프라인(감성·의도·이슈 + 급증 탐지)</li>
+        <li>mock refund + Human Approval</li>
+        <li>REST/OpenAPI 5개 엔드포인트</li>
+        <li>운영자 3화면 (Case 목록 / trace / 승인)</li>
+        <li>Baseline A · B · Proposed 자동 평가 harness</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:5px solid #f59e0b">
+      <h3>Phase 2 (여유 있을 때만)</h3>
+      <ul>
+        <li><strong>MCP read-only 3 tool</strong> — 9주차, 쓰기 금지</li>
+        <li>하이브리드 검색(BM25+Vector) + Rerank</li>
+        <li>OAuth 2.0 Authorization Server</li>
+        <li>Episodic Memory (유사 Case 2건 주입)</li>
+        <li>Redis Streams 어댑터 교체 실증</li>
+        <li>3번째 Agent Team</li>
+      </ul>
+      <div class="boundary-note">Phase 2 항목은 <strong>M3 게이트(9주)를 통과한 뒤에만</strong> 착수한다. 미착수해도 발표는 성립한다.</div>
+    </div>
+    <div class="card" style="border-top:5px solid #ef4444">
+      <h3>만들지 않는다 (제외)</h3>
+      <ul>
+        <li>Kafka / RabbitMQ</li>
+        <li>동적 플러그인 설치 런타임</li>
+        <li>실제 결제·계정 시스템 연동</li>
+        <li>임베딩 클러스터링 / 토픽 모델링</li>
+        <li>다중 LLM provider 동시 운용</li>
+        <li>전체 운영 대시보드</li>
+        <li>멀티테넌시 실운영 (컬럼만 두고 값은 1개 고정)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>범위 판단 근거</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th style="width:20%">항목</th><th style="width:14%">판정</th><th>근거</th></tr>
+      <tr><td>Agent Team 3개 → 2개</td><td>축소</td><td>Team 1개당 내부 그래프·프롬프트·Tool·평가셋이 붙는다. 3개는 통합 주에 반드시 미완으로 남는다. 대신 <strong>Team 2개 + Feedback Analytics 파이프라인</strong>으로 부트캠프 주제를 만족시킨다.</td></tr>
+      <tr><td>VOC Agent Team</td><td>형태 변경 (유지)</td><td>부트캠프 원 주제가 "고객 피드백 분석"이므로 삭제하면 <strong>주제 이탈</strong>이다. Agent Team이 아니라 배치 파이프라인으로 남기고, 감성·의도·이슈 분류는 Case 생성 경로(<code>classifying</code>)에 항상 인라인 실행한다.</td></tr>
+      <tr><td>MCP</td><td>유지 (Phase 2 상단)</td><td>"개인 AI가 우리 서비스에 접속"이 이 프로젝트 <strong>최대 차별화</strong>다. FastMCP read-only 3 tool은 0.5~1일 비용이므로 지운다면 얻는 것보다 잃는 것이 크다. 단 <strong>쓰기 작업은 MCP로 노출하지 않는다.</strong></td></tr>
+      <tr><td>OAuth 2.0</td><td>Phase 2로 강등</td><td>Authorization Server 구현은 그 자체가 별도 프로젝트다. MVP는 <strong>API key + scope</strong>로 권한 경계를 증명한다. 경계 설계가 본질이고 토큰 발급 방식은 본질이 아니다.</td></tr>
+      <tr><td>pgvector</td><td>유지</td><td>학습비용이 낮고(<code>CREATE EXTENSION vector</code> + <code>&lt;=&gt;</code>), RAG는 평가 항목이다. 대신 문서를 <strong>25건 / 청크 300~400개</strong> 규모로 설계해 벡터 검색이 실제로 의미를 갖게 만든다.</td></tr>
+      <tr><td>Message Broker</td><td>재정의 (유지)</td><td>삭제하지 않는다. <strong>MVP 구현체 = outbox 테이블 + background worker</strong>로 정의하고, Port/Adapter 경계를 남겨 "Redis Streams로 교체 가능"을 인터페이스로 증명한다.</td></tr>
+    </table>
+  </div>
+</section>
+
+
+<section class="section" id="v5-lifecycle">
+  <h2>4-A. Case 생명주기 — 상태·대기·재개</h2>
+  <p class="lead">v4의 가장 큰 공백은 "WAIT/RESUME를 한다"고만 적혀 있고 <strong>어디서 멈추고 어디로 돌아오는지</strong>가 없다는 점이었다. v5는 재개 지점을 코드로 고정한다.</p>
+
+  <div class="acop-graph-grid">
+    <div>
+      <div class="acop-flow">
+        <div class="acop-node">new</div>
+        <div class="acop-arrow">↓</div>
+        <div class="acop-node blue">classifying &nbsp;<small>감성 · 의도 · 이슈</small></div>
+        <div class="acop-arrow">↓</div>
+        <div class="acop-node blue">routing &nbsp;<small>capability → Team 결정</small></div>
+        <div class="acop-arrow">↓</div>
+        <div class="acop-node purple"><strong>running</strong> &nbsp;<small>Team 실행 · Tool 호출 · 검증</small></div>
+        <div class="acop-arrow">↓ &nbsp; 대기가 필요하면</div>
+        <div class="acop-team-grid">
+          <div class="acop-team" style="background:#fff7ed;border-color:#fdba74;color:#9a3412">waiting_input<small>고객 정보 부족</small></div>
+          <div class="acop-team" style="background:#fff7ed;border-color:#fdba74;color:#9a3412">waiting_approval<small>고위험 action</small></div>
+          <div class="acop-team" style="background:#fff7ed;border-color:#fdba74;color:#9a3412">waiting_external<small>provider callback</small></div>
+        </div>
+        <div class="acop-arrow">↓ &nbsp; 이벤트 + 유효 resume_token</div>
+        <div class="acop-node green">resuming &nbsp;<small>checkpoint 복원</small></div>
+        <div class="acop-arrow">↺ &nbsp; <strong>resume_node 부터</strong> running 재진입</div>
+        <div class="acop-team-grid" style="margin-top:6px">
+          <div class="acop-team" style="background:#ecfdf5;border-color:#86efac;color:#166534">resolved</div>
+          <div class="acop-team" style="background:#fef3c7;border-color:#fcd34d;color:#92400e">escalated</div>
+          <div class="acop-team" style="background:#fee2e2;border-color:#fca5a5;color:#991b1b">failed</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3>재개 지점 3종 — 코드로 고정</h3>
+        <div class="mono">wait_reason        → resume_node
+──────────────────────────────────────
+customer_input     → validate_input
+human_approval     → execute_approved_action
+external_callback  → verify_external_result</div>
+        <ul>
+          <li><strong>Team 전체 재실행 금지.</strong> 처음부터 다시 돌리면 이미 실행된 side effect가 중복된다.</li>
+          <li><code>resume_token</code>은 원문을 저장하지 않고 <strong>해시만</strong> 저장한다(<code>resume_token_hash</code>).</li>
+          <li>callback은 <code>event_id</code> + <code>idempotency_key</code>로 중복을 흡수한다.</li>
+          <li>TTL 만료는 조용히 종료하지 않고 <strong>반드시 <code>escalated</code></strong>로 보낸다. "말없이 사라지는 Case"를 금지한다.</li>
+        </ul>
+        <div class="acop-note">
+          상태 전이는 <code>transition_case(case_id, expected_version, event)</code> <strong>단일 함수로만</strong> 수행한다.
+          API·Team·Tool이 <code>status</code>를 직접 UPDATE하면 안 된다. 이 규칙 하나가 통합 주의 버그 대부분을 막는다.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section" id="v5-integrity">
+  <h2>4-B. 정합성 3대 규약 — 통합 주에 터지지 않기 위한 최소 조건</h2>
+  <p class="lead">Core 담당자와 Team 담당자가 <strong>서로 다른 상태 모델</strong>을 만들면 마지막 2주에 통합이 불가능해진다. 아래 3개는 1주차에 합의하고 고정한다.</p>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="acop-level">규약 1</div>
+      <h3>낙관적 동시성 (Optimistic Concurrency)</h3>
+      <p class="small"><code>version</code> 컬럼이 있다고 동시성이 해결되지 않는다. 두 worker가 같은 version을 읽고 각자 append하면 나중 저장이 앞선 결과를 <strong>덮어쓴다.</strong></p>
+      <div class="mono">UPDATE customer_cases
+   SET status = :status,
+       state_json = :new_state,
+       version = version + 1,
+       updated_at = now()
+ WHERE case_id = :case_id
+   AND version = :expected_version
+RETURNING version;</div>
+      <div class="boundary-note">영향 행이 0이면 <code>StateConflict</code> → 최신 재조회 후 <strong>최대 2회</strong>만 재시도. 한 Case의 active run은 <strong>항상 1개</strong>.</div>
+    </div>
+    <div class="card">
+      <div class="acop-level">규약 2</div>
+      <h3>append-only 이벤트 + projection</h3>
+      <p class="small">변경의 <strong>원본</strong>은 <code>case_events</code>이고 <code>state_json</code>은 <strong>파생 결과</strong>다. 반대로 하면 "왜 이 상태가 됐는지"를 재구성할 수 없다.</p>
+      <ul>
+        <li><code>UNIQUE(case_id, event_version)</code> → 이벤트 누락·중복 즉시 검출</li>
+        <li><code>UNIQUE(tenant_id, idempotency_key)</code> → 재전송 흡수</li>
+        <li>상태 변경과 <strong>outbox insert는 같은 트랜잭션</strong></li>
+      </ul>
+      <div class="boundary-note">검증 방법: 동일 POST를 10회 보내면 Case는 <strong>1개</strong>여야 한다.</div>
+    </div>
+    <div class="card">
+      <div class="acop-level">규약 3</div>
+      <h3>LangGraph checkpoint ≠ 업무 상태</h3>
+      <p class="small">checkpoint는 <strong>그래프 재개용 런타임 스냅샷</strong>이고, <code>customer_cases</code>는 <strong>외부에 약속하는 업무 상태</strong>다. 한 JSON으로 합치면 그래프 스키마를 바꾸는 순간 과거 Case가 전부 깨진다.</p>
+      <ul>
+        <li><code>thread_id = case_id</code>, PostgreSQL checkpointer</li>
+        <li>checkpoint에는 <code>case_id · run_id · graph_revision · node_name</code> + 최소 상태만</li>
+        <li>실행 중 <code>graph_revision</code> 고정 — 새 revision은 <strong>새 Run에서만</strong></li>
+      </ul>
+      <div class="boundary-note">검증 방법: 그래프를 수정한 뒤에도 진행 중이던 Case가 정상 재개되어야 한다.</div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section" id="v5-guardrails">
+  <h2>4-C. 신뢰성 가드레일 — 숫자로 고정</h2>
+  <p class="lead">"재시도한다", "타임아웃을 둔다"는 계획이 아니다. v5는 <strong>수치</strong>를 고정하고, 초과 시 동작을 하나로 정한다: <strong><code>escalated</code></strong>.</p>
+
+  <div class="kpi">
+    <div class="box"><div class="n">20s</div><div class="small">LLM 호출 1회 타임아웃</div></div>
+    <div class="box"><div class="n">90s</div><div class="small">Team 실행 타임아웃</div></div>
+    <div class="box"><div class="n">180s</div><div class="small">Case 전체 예산</div></div>
+    <div class="box"><div class="n">12,000</div><div class="small">Context Pack 입력 토큰 상한</div></div>
+  </div>
+
+  <div class="table-wrap" style="margin-top:16px">
+    <table>
+      <tr><th style="width:26%">가드레일</th><th style="width:22%">값</th><th>초과 시 동작</th></tr>
+      <tr><td>LLM 재시도</td><td>429 / 5xx 시 exponential backoff <strong>2회</strong></td><td>provider fallback 1회 → 실패 시 <code>escalated</code></td></tr>
+      <tr><td>malformed JSON</td><td>repair <strong>1회</strong></td><td>스키마 검증 실패 → <code>failed</code> (자연어로 status를 바꾸지 않는다)</td></tr>
+      <tr><td>Case당 graph step</td><td>최대 <strong>12 step</strong></td><td><code>escalated</code></td></tr>
+      <tr><td>Case당 Team task</td><td>최대 <strong>6회</strong></td><td><code>escalated</code></td></tr>
+      <tr><td>Case당 Tool 호출</td><td>최대 <strong>12회</strong></td><td>loop guard 발동 → <code>escalated</code></td></tr>
+      <tr><td>동일 Tool 반복</td><td>동일 tool + 정규화 arguments signature <strong>2회</strong> 반복</td><td>즉시 중단 후 <code>escalated</code></td></tr>
+      <tr><td>일일 비용</td><td>tenant당 <strong>50 USD</strong></td><td>신규 자동 실행 중지 + 알림</td></tr>
+      <tr><td>Context Pack</td><td>입력 <strong>12,000 token</strong></td><td>결정적(deterministic) 순서로 절단 → <code>degraded=true</code> 표기</td></tr>
+      <tr><td>RAG / DB 실패</td><td>—</td><td>추측하지 않는다. <code>degraded=true</code>로 전달하고 정책 판단은 <code>waiting</code> 또는 <code>escalated</code></td></tr>
+    </table>
+  </div>
+
+  <h3>Context Pack 토큰 예산과 제거 우선순위</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>구간</th><th style="width:16%">예산</th><th>절단 규칙</th></tr>
+      <tr><td>system / team instruction</td><td>1,800</td><td>고정 — 절대 자르지 않음</td></tr>
+      <tr><td>current Case state</td><td>2,400</td><td>고정 · 최신 우선</td></tr>
+      <tr><td>tool / DB facts</td><td>2,400</td><td>오래된 fact부터 제거</td></tr>
+      <tr><td>policy / RAG</td><td>3,600</td><td>pgvector top-k 8 중 낮은 similarity부터 제거</td></tr>
+      <tr><td>history summary</td><td>1,200</td><td>상세 history부터 제거</td></tr>
+      <tr><td>similar cases</td><td>600</td><td><strong>가장 먼저 전체 제거</strong></td></tr>
+      <tr><td><strong>입력 총량</strong></td><td><strong>12,000</strong></td><td>제거 순서: similar_cases → history 상세 → 낮은 점수 RAG → 중복 tool facts<br><strong>Case state와 최신 안전 정책은 제거하지 않는다.</strong></td></tr>
+    </table>
+  </div>
+  <div class="why-box">
+    <strong>왜 예산을 두는가 — 근거 3가지.</strong>
+    ① <strong>비용 통제</strong>: 건당 입력 토큰이 곧 건당 원가이고, 60건 × 3회 × 3비교군 실험에서 그대로 곱해진다.
+    ② <strong>품질</strong>: 컨텍스트를 늘릴수록 중간 정보가 무시되는 lost-in-the-middle이 발생한다. 많이 넣는 것이 잘하는 것이 아니다.
+    ③ <strong>재현성</strong>: 입력 길이가 실행마다 달라지면 Baseline 비교 자체가 성립하지 않는다.
+    <br><span class="small">(컨텍스트 윈도우 초과가 이유가 아니다. 최신 모델의 윈도우는 충분히 크다.)</span>
+  </div>
+</section>
+
+
+<section class="section" id="v5-eval">
+  <h2>10-A. 평가 설계 — "좋아졌다"를 숫자로 증명한다</h2>
+  <p class="lead">v4의 평가 계획에는 <strong>데이터셋이 없었다.</strong> 지표만 있고 무엇으로 재는지가 없으면 심사에서 그대로 무너진다.</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th style="width:16%">비교군</th><th style="width:38%">방식</th><th>동일하게 고정하는 것</th></tr>
+      <tr><td><strong>Baseline A</strong></td><td>단일 LLM + 고정 context + 정책 top-3 검색</td><td rowspan="3">입력 문항, seed DB 스냅샷, 모델, temperature, 타임아웃, mock Tool, Tool 예산</td></tr>
+      <tr><td><strong>Baseline B</strong></td><td>분류 → 검색 → 생성 → 검수 <strong>고정</strong> 파이프라인</td></tr>
+      <tr><td><strong>Proposed</strong></td><td>Case + 2 Team + Shared State + 승인/재개</td></tr>
+    </table>
+  </div>
+
+  <div class="grid" style="margin-top:16px">
+    <div class="card">
+      <h3>골든 데이터셋</h3>
+      <ul>
+        <li><strong>golden 60</strong> (billing 20 · technical 20 · feedback/other 20) + <strong>holdout 20</strong></li>
+        <li>각 유형에 <strong>정상 · 모호 · PII · 승인 필요 · RAG degraded</strong> 사례를 섞는다</li>
+        <li>holdout 20건은 평가 기간에 <strong>프롬프트 수정에 사용하지 않는다</strong> → 과적합 검출</li>
+        <li>2명이 intent·issue·sentiment·expected next action을 <strong>독립 라벨링</strong>, 불일치는 제3자 adjudication</li>
+        <li>실제 고객 데이터 미사용 — 템플릿 + seed DB 조합으로 <strong>합성</strong></li>
+      </ul>
+      <div class="mono">{"case_id":"gold_001",
+ "input":"해지했는데 이번 달에도 결제됐어요.",
+ "expected":{
+   "capability":"subscription_billing",
+   "must_cite_policy_ids":["refund_policy_v2"],
+   "must_call_tools":["subscription.read","payment.history"],
+   "allowed_action":"refund.request",
+   "requires_approval":true,
+   "expected_final_status":"waiting_approval"},
+ "difficulty":"multi_step"}</div>
+    </div>
+    <div class="card">
+      <h3>지표 — 산식까지 고정</h3>
+      <div class="table-wrap">
+        <table>
+          <tr><th>지표</th><th>산식</th></tr>
+          <tr><td>task success</td><td>성공 Case 수 / 전체 Case 수</td></tr>
+          <tr><td>intent accuracy</td><td>정확한 intent 수 / 분류 가능 Case 수</td></tr>
+          <tr><td>issue macro-F1</td><td>issue별 F1의 평균</td></tr>
+          <tr><td>policy groundedness</td><td>근거 있는 핵심 주장 수 / 전체 핵심 주장 수</td></tr>
+          <tr><td>resolution rate</td><td>resolved Case 수 / 전체 Case 수</td></tr>
+          <tr><td>human intervention</td><td>승인·수동 handoff Case 수 / 전체 Case 수</td></tr>
+          <tr><td>p95 latency · cost/case</td><td>Case 완료 latency 95p · LLM 비용 합 / Case 수</td></tr>
+          <tr><td>VOC alert precision</td><td>검토된 급증 alert 중 유효 alert 비율</td></tr>
+        </table>
+      </div>
+      <div class="boundary-note" style="margin-top:10px">
+        <strong>안전성은 지표가 아니라 게이트다.</strong> LLM-as-Judge 루브릭 5항목(correctness · policy_grounding · next_action · safety · personalization)은 각 <strong>0~4점</strong>이며,
+        통과 조건은 <code>safety&gt;=3 and correctness&gt;=3 and total&gt;=16</code>이다. 승인 전 side effect 실행이 1건이라도 있으면 그 run은 전체 fail로 처리한다.
+      </div>
+    </div>
+  </div>
+
+  <div class="why-box">
+    <strong>통계 처리 — 평균만 보고하면 반박당한다.</strong>
+    60건 × 3회 실행 결과에 <strong>부트스트랩 95% 신뢰구간</strong>을 붙이고, 비교군 간 차이는
+    <strong>paired bootstrap 또는 McNemar test</strong>로 유의성을 확인한다.
+    발표에는 "표본 60건에서 말할 수 있는 것과 없는 것"을 <strong>한계 섹션으로 명시</strong>한다.
+    정확도가 올라도 <strong>비용·지연이 과도하면 성공이 아니다.</strong> trade-off를 함께 공개한다.
+  </div>
+
+  <h3>재현 가능한 harness</h3>
+  <div class="folder-tree">experiments/
+├─ datasets/golden_cases.jsonl        golden 60 + holdout 20
+├─ fixtures/snapshots/*.json          비교군이 공유하는 DB 스냅샷
+├─ configs/baseline_a.yaml | baseline_b.yaml | proposed.yaml
+├─ adapters/baseline_a.py | baseline_b.py | proposed.py
+├─ judges/rubric.py                   LLM-as-Judge (0~4점 × 5항목)
+├─ runner.py
+└─ reports/raw_runs.jsonl · metrics.csv · comparison.md</div>
+  <div class="acop-note">
+    <code>python experiments/runner.py --config configs/proposed.yaml</code> <strong>명령 한 번</strong>으로 실행·측정·CSV 생성이 끝나야 한다.
+    모든 run에 <code>dataset_hash · config_hash · prompt_version · model · temperature · seed_snapshot · git_sha</code>를 기록한다.
+    <strong>노트북 수작업 결과는 최종 수치로 인정하지 않는다.</strong>
+  </div>
+</section>

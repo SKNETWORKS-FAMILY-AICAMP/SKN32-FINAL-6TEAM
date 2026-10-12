@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>triPilot 채팅 처리 내부 로직 브리핑</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #1f2937; --muted: #5b6474; --soft: #8b93a3;
+    --line: #d5d9e0; --hair: rgba(31,41,55,.12);
+    --accent: #d9541e; --accent-tint: #fdeee6;
+    --server-tint: #f0f2f5; --code: #f1f3f6; --link: #1d4ed8;
+    --good: #047857; --good-tint: #e7f6ef; --warn: #b45309; --warn-tint: #fdf3e2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1420; --card: #171e2d; --ink: #e6e9ef; --muted: #a3acbd; --soft: #7d879a;
+      --line: #2f394d; --hair: rgba(230,233,239,.14);
+      --accent: #ff8a5b; --accent-tint: #33201a;
+      --server-tint: #1d2536; --code: #1d2536; --link: #7ea6ff;
+      --good: #34d399; --good-tint: #0f2a22; --warn: #fbbf24; --warn-tint: #2c2410;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.7;
+         font-family: "Noto Sans KR", "Malgun Gothic", Arial, sans-serif; overflow-x: hidden; }
+  header { padding: 40px 24px 8px; max-width: 1000px; margin: 0 auto; }
+  .eyebrow { font: 600 12px/1 ui-monospace, Consolas, monospace; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+  h1 { margin: 12px 0 12px; font-size: 30px; line-height: 1.35; font-weight: 700; }
+  .lead { margin: 0; font-size: 17px; color: var(--muted); max-width: 46em; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 16px 24px 48px; }
+  section { margin: 28px 0; }
+  h2 { font-size: 20px; margin: 0 0 4px; }
+  .sub { margin: 0 0 14px; color: var(--muted); font-size: 14.5px; }
+  .card { background: var(--card); border: 1px solid var(--hair); border-radius: 8px; padding: 20px; }
+  .answer { display: grid; grid-template-columns: 1.15fr 1fr 0.9fr; gap: 12px; margin-top: 24px; }
+  .answer .card b { display: block; font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .answer .big { font-size: 20px; font-weight: 700; line-height: 1.4; }
+  .yes { border-color: var(--accent); background: var(--accent-tint); }
+  svg { display: block; width: 100%; height: auto; }
+  svg text { font-family: "Noto Sans KR", "Malgun Gothic", Arial, sans-serif; fill: var(--ink); }
+  svg .mono { font-family: ui-monospace, Consolas, monospace; }
+  .n-box { fill: var(--card); stroke: var(--ink); stroke-width: 1; }
+  .n-server { fill: var(--server-tint); stroke: var(--soft); stroke-width: 1; }
+  .n-focal { fill: var(--accent-tint); stroke: var(--accent); stroke-width: 1.4; }
+  .n-bar { fill: var(--card); stroke: var(--ink); stroke-width: 1; stroke-dasharray: 5 4; }
+  .tag { font-size: 11px; letter-spacing: .06em; fill: var(--muted); }
+  .tag.a { fill: var(--accent); font-weight: 700; }
+  .nm { font-size: 14px; font-weight: 700; }
+  .sb { font-size: 12px; fill: var(--muted); }
+  .ln { stroke: var(--muted); stroke-width: 1.2; fill: none; }
+  .ln.a { stroke: var(--accent); stroke-width: 1.6; }
+  .lbl { font-size: 12px; fill: var(--muted); }
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .compare h3 { margin: 0 0 8px; font-size: 15px; }
+  .compare ol { margin: 0; padding-left: 20px; font-size: 14.5px; }
+  .compare li { margin: 6px 0; }
+  .compare .no { border-color: var(--line); }
+  .why { margin: 12px 0 0; font-size: 14px; color: var(--muted); border-top: 1px solid var(--hair); padding-top: 10px; }
+  pre { margin: 0; background: var(--code); border: 1px solid var(--hair); border-radius: 6px; padding: 14px 16px;
+        font: 13px/1.65 ui-monospace, Consolas, "Noto Sans KR", monospace; overflow-x: auto; white-space: pre; }
+  pre .k { color: var(--muted); } pre .hl { background: var(--accent-tint); color: var(--accent); font-weight: 700; padding: 0 3px; border-radius: 3px; }
+  pre .out { color: var(--good); font-weight: 700; }
+  .two { display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; align-items: start; }
+  .note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 14px; }
+  .chip { font-size: 13px; border: 1px solid var(--line); border-radius: 4px; padding: 2px 8px; background: var(--card); }
+  .chip.on { border-color: var(--accent); background: var(--accent-tint); font-weight: 700; }
+  .guards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .guard { display: flex; gap: 10px; }
+  .guard .no { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--good-tint); color: var(--good);
+               font-weight: 700; font-size: 13px; display: grid; place-items: center; }
+  .guard p { margin: 0; font-size: 14.5px; }
+  .guard b { display: block; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .stat { background: var(--card); border: 1px solid var(--hair); border-radius: 8px; padding: 14px 16px; }
+  .stat .v { font-size: 26px; font-weight: 700; line-height: 1.2; }
+  .stat .l { font-size: 13px; color: var(--muted); }
+  .stat.w .v { color: var(--warn); }
+  .todo { background: var(--warn-tint); border: 1px solid var(--warn); border-radius: 8px; padding: 14px 18px; }
+  .todo ul { margin: 6px 0 0; padding-left: 20px; font-size: 14.5px; }
+  footer { max-width: 1000px; margin: 0 auto; padding: 0 24px 40px; color: var(--soft); font-size: 12.5px; }
+  @media (max-width: 760px) {
+    .answer, .compare, .two, .guards, .stats { grid-template-columns: 1fr; }
+    h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">triPilot · 여행 채팅 처리 · 2026-09-29 기준</div>
+  <h1>고객이 채팅을 보내면 서버 안에서 무슨 일이 일어나나</h1>
+  <p class="lead">「질문을 임베딩해서 LLM에 넣는 방식」이 아닙니다. 서버가 <b>이 여행의 일정 상태를 통째로 모델에게 보여 주고</b>, 모델이 <b>정해진 보기 중 하나를 고르면</b>, 서버가 확인한 뒤 <b>기존 코드로 실행</b>합니다.</p>
+</header>
+
+<div class="wrap">
+
+<div class="answer">
+  <div class="card yes"><b>임베딩(글을 숫자로 바꿔 비슷한 글을 찾는 방식)</b><div class="big">규정을 묻는 질문 한 갈래에서만 씁니다</div></div>
+  <div class="card"><b>질문을 알아듣는 일</b><div class="big">모델 1회 호출 — 일정 상태를 보고 보기에서 고름</div></div>
+  <div class="card"><b>답 문장</b><div class="big">서버가 만듭니다 (모델이 쓰지 않음)</div></div>
+</div>
+
+<section>
+  <h2>한 장으로 보기</h2>
+  <p class="sub">위에서 아래로 흐릅니다. 회색 칸은 서버 규칙, 주황 칸은 모델과 임베딩이 쓰이는 곳입니다.</p>
+  <div class="card">
+  <svg viewBox="0 0 928 588" role="img" aria-labelledby="flow-title flow-desc">
+    <title id="flow-title">채팅 한 문장의 처리 순서</title>
+    <desc id="flow-desc">고객 문장이 서버의 일정 읽기와 글 조립을 거쳐 모델이 보기에서 할 일을 고르고, 서버가 확인한 뒤 다섯 갈래로 나뉘어 실행되고, 서버가 만든 답 문장으로 돌아가는 흐름. 임베딩은 규정 질문 갈래에서만 쓰인다.</desc>
+    <defs>
+      <marker id="ar" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="var(--muted)"/></marker>
+      <marker id="ar-a" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="var(--accent)"/></marker>
+    </defs>
+
+    <!-- 연결선(상자보다 먼저) -->
+    <line class="ln" x1="216" y1="76" x2="262" y2="76" marker-end="url(#ar)"/>
+    <line class="ln" x1="440" y1="76" x2="486" y2="76" marker-end="url(#ar)"/>
+    <line class="ln" x1="664" y1="76" x2="710" y2="76" marker-end="url(#ar)"/>
+    <line class="ln a" x1="800" y1="120" x2="800" y2="174" marker-end="url(#ar-a)"/>
+    <rect x="808" y="136" width="64" height="18" rx="2" fill="var(--card)"/>
+    <text class="lbl mono" x="812" y="149">JSON 1개</text>
+    <line class="ln" x1="112" y1="232" x2="112" y2="294" marker-end="url(#ar)"/>
+    <line class="ln" x1="288" y1="232" x2="288" y2="294" marker-end="url(#ar)"/>
+    <line class="ln a" x1="464" y1="232" x2="464" y2="294" marker-end="url(#ar-a)"/>
+    <line class="ln" x1="640" y1="232" x2="640" y2="294" marker-end="url(#ar)"/>
+    <line class="ln" x1="816" y1="232" x2="816" y2="294" marker-end="url(#ar)"/>
+    <line class="ln" x1="112" y1="400" x2="112" y2="454" marker-end="url(#ar)"/>
+    <line class="ln" x1="288" y1="400" x2="288" y2="454" marker-end="url(#ar)"/>
+    <line class="ln" x1="464" y1="400" x2="464" y2="454" marker-end="url(#ar)"/>
+    <line class="ln" x1="640" y1="400" x2="640" y2="454" marker-end="url(#ar)"/>
+    <line class="ln" x1="816" y1="400" x2="816" y2="454" marker-end="url(#ar)"/>
+
+    <!-- 1행 : 준비와 모델 -->
+    <rect class="n-box" x="40" y="32" width="176" height="88" rx="6"/>
+    <text class="tag" x="52" y="52">고객</text>
+    <text class="nm" x="52" y="76">채팅 문장 1개</text>
+    <text class="sb" x="52" y="96">예: 「그건 어딧는거야」</text>
+
+    <rect class="n-server" x="264" y="32" width="176" height="88" rx="6"/>
+    <text class="tag" x="276" y="52">서버 · 규칙</text>
+    <text class="nm" x="276" y="76">① 일정 상태 읽기</text>
+    <text class="sb" x="276" y="96">일정 · 바뀐 이력 · 최근</text>
+    <text class="sb" x="276" y="112">대화 6턴 · 화면 선택</text>
+
+    <rect class="n-server" x="488" y="32" width="176" height="88" rx="6"/>
+    <text class="tag" x="500" y="52">서버 · 규칙</text>
+    <text class="nm" x="500" y="76">② 모델에 줄 글 조립</text>
+    <text class="sb" x="500" y="96">일정 줄마다 순번·끼니를</text>
+    <text class="sb" x="500" y="112">서버가 세어서 적음</text>
+
+    <rect class="n-focal" x="712" y="32" width="176" height="88" rx="6"/>
+    <text class="tag a" x="724" y="52">모델 1회</text>
+    <text class="nm" x="724" y="76">③ 보기에서 고르기</text>
+    <text class="sb mono" x="724" y="96">gemma4 12b · 약 2초</text>
+    <text class="sb" x="724" y="112">할 일 · 대상 · 질문 종류</text>
+
+    <!-- 2행 : 확인 -->
+    <rect class="n-bar" x="40" y="176" width="848" height="56" rx="6"/>
+    <text class="nm" x="56" y="199">④ 서버 확인</text>
+    <text class="sb" x="152" y="199">보기 밖 값 · 목록에 없는 일정 번호는 실패 · 늦는 분은 문장에 적힌 숫자만 인정</text>
+    <text class="sb" x="56" y="219">확인이 끝나면 고른 「할 일」에 따라 아래 다섯 갈래로 갑니다</text>
+
+    <!-- 3행 : 다섯 갈래 -->
+    <rect class="n-box" x="40" y="296" width="144" height="104" rx="6"/>
+    <text class="tag" x="52" y="316">서버 · 기존 코드</text>
+    <text class="nm" x="52" y="340">바꾸기 · 후보</text>
+    <text class="nm" x="52" y="358">되돌리기</text>
+    <text class="sb" x="52" y="384">일정 계산 함수</text>
+
+    <rect class="n-box" x="216" y="296" width="144" height="104" rx="6"/>
+    <text class="tag" x="228" y="316">서버 · 규칙</text>
+    <text class="nm" x="228" y="340">사실 질문</text>
+    <text class="sb" x="228" y="358">주소 · 시간 · 예약…</text>
+    <text class="sb" x="228" y="384">규칙으로 문장 생성</text>
+
+    <rect class="n-focal" x="392" y="296" width="144" height="104" rx="6"/>
+    <text class="tag a" x="404" y="316">임베딩은 여기만</text>
+    <text class="nm" x="404" y="340">규정 질문</text>
+    <text class="sb" x="404" y="358">취소 · 환불 · 날씨</text>
+    <text class="sb" x="404" y="384">비슷한 규정 3조각</text>
+
+    <rect class="n-box" x="568" y="296" width="144" height="104" rx="6"/>
+    <text class="tag" x="580" y="316">서버 · 기존 코드</text>
+    <text class="nm" x="580" y="340">늦음 · 휴무 신고</text>
+    <text class="sb" x="580" y="358">「30분 늦어요」</text>
+    <text class="sb" x="580" y="384">대체 안 계산</text>
+
+    <rect class="n-box" x="744" y="296" width="144" height="104" rx="6"/>
+    <text class="tag" x="756" y="316">서버 · 규칙</text>
+    <text class="nm" x="756" y="340">잘 모르겠음</text>
+    <text class="sb" x="756" y="358">보기 버튼으로 되묻기</text>
+    <text class="sb" x="756" y="384">「다음 중 하나인가요?」</text>
+
+    <!-- 4행 : 답 -->
+    <rect class="n-server" x="40" y="456" width="848" height="56" rx="6"/>
+    <text class="nm" x="56" y="480">고객에게 나가는 답</text>
+    <text class="sb" x="56" y="500">서버가 만든 문장입니다. 사실 질문의 답에는 「혹시 이런 뜻이었나요?」 선택 버튼이 함께 붙습니다.</text>
+
+    <!-- 범례 -->
+    <line x1="40" y1="536" x2="888" y2="536" stroke="var(--hair)" stroke-width="1"/>
+    <rect x="40" y="552" width="20" height="14" rx="3" class="n-server"/><text class="lbl" x="68" y="564">서버 규칙 · 기존 코드</text>
+    <rect x="240" y="552" width="20" height="14" rx="3" class="n-focal"/><text class="lbl" x="268" y="564">모델 또는 임베딩이 쓰이는 곳(2곳)</text>
+    <line x1="560" y1="559" x2="596" y2="559" stroke="var(--ink)" stroke-dasharray="5 4"/><text class="lbl" x="604" y="564">서버가 하는 확인</text>
+  </svg>
+  </div>
+</section>
+
+<section>
+  <h2>「임베딩 → LLM」 방식과 무엇이 다른가</h2>
+  <p class="sub">질문에 비슷한 글을 찾는 방식은 「그건 어디야」 같은 말을 풀지 못합니다. 무엇을 가리키는지는 문서가 아니라 이 여행의 상태에 있기 때문입니다.</p>
+  <div class="compare">
+    <div class="card no">
+      <h3>흔한 방식 (우리가 쓰지 않는 것)</h3>
+      <ol>
+        <li>질문을 임베딩(숫자 벡터)으로 바꿈</li>
+        <li>비슷한 문서 조각을 찾아 옴</li>
+        <li>LLM이 문서를 보고 <b>자유롭게 답을 씀</b></li>
+      </ol>
+      <p class="why">약점: 「그거 바꿔」 「거기 어디야」의 <b>거기·그거</b>는 문서에 없습니다. 일정을 바꾸는 일도 글로 답해서는 되지 않습니다.</p>
+    </div>
+    <div class="card yes">
+      <h3>지금 방식</h3>
+      <ol>
+        <li>서버가 <b>이 여행의 일정·이력·앞 대화</b>를 글로 조립</li>
+        <li>모델이 <b>보기 중 하나</b>(할 일·대상·질문 종류)를 고름</li>
+        <li>서버가 확인하고 <b>기존 코드로 실행</b>, 답 문장은 서버가 만듦</li>
+      </ol>
+      <p class="why">그래서 「그건 어딧는거야」는 앞 대화의 「세종이야기」를 가리키는 <b>주소 질문</b>으로 풀립니다.</p>
+    </div>
+  </div>
+  <p class="note">옛 낱말 규칙 경로는 실제 문장 66개 중 30개를 틀렸습니다(재생 시험 1회) — 그래서 이 방식으로 바꿨습니다.</p>
+</section>
+
+<section>
+  <h2>모델 앞에 실제로 놓이는 것</h2>
+  <p class="sub">아래 글이 모델에게 그대로 들어갑니다(시험용 여행 예시). 일정 줄의 「그날 활동 1번째」는 모델이 세다 틀려서 서버가 세어 적습니다.</p>
+  <div class="two">
+    <pre><span class="k">일정 목록:</span>
+i1 | 1일차(첫날) 10-14 08:00 | 식당 · 그날 식당 1번째 · 아침 | 삼거리 먼지막 순대국
+i2 | 1일차(첫날) 10-14 10:10 | 활동 · 그날 활동 1번째 | 경복궁 | (화면에서 고름)
+i3 | 1일차(첫날) 10-14 12:00 | 식당 · 그날 식당 2번째 · 점심 | 금용문
+<span class="k">…</span>
+
+<span class="k">바뀐 이력(아래가 최근):</span>
+c2 | 대상 i2 | 1일차 10:10 활동: 건청궁 → 경복궁 (고객 요청) (가장 최근)
+
+<span class="k">직전 대화:</span>
+고객: 첫 활동 알려줘
+triPilot: 경복궁 일정이에요 — 1일차 10:10 …
+
+<span class="k">화면에서 고른 일정:</span> i2
+
+<span class="k">고객 문장:</span> <span class="hl">그건 어딧는거야</span>
+
+<span class="k">↓ 모델의 답 (JSON, 보기 안에서만)</span>
+<span class="out">{"action":"answer_fact","target_item":"i2","fact":"address", …}</span></pre>
+    <div>
+      <div class="card">
+        <b>모델이 고르는 「할 일」 보기</b>
+        <div class="chips">
+          <span class="chip">바꾸기</span><span class="chip">후보 알아보기</span><span class="chip">되돌리기</span><span class="chip">다시 적용</span>
+          <span class="chip on">사실 질문</span><span class="chip">규정 질문</span><span class="chip">늦음 신고</span><span class="chip">휴무 신고</span><span class="chip">되묻기</span><span class="chip">그 밖</span>
+        </div>
+        <b>사실 질문일 때 「무엇을」 보기</b>
+        <div class="chips">
+          <span class="chip on">주소</span><span class="chip">전화</span><span class="chip">운영시간</span><span class="chip">몇 시에 가나</span><span class="chip">다음 일정</span><span class="chip">예약</span><span class="chip">하루 요약</span><span class="chip">가는 길</span><span class="chip">전반</span>
+        </div>
+        <p class="note" style="margin:0">「어디 있어·어딨어」는 주소, 「전반」은 무엇을 묻는지 특정하지 않을 때만 고릅니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>모델이 틀려도 일정이 망가지지 않게 하는 장치</h2>
+  <div class="card guards">
+    <div class="guard"><span class="no">1</span><p><b>보기 밖 값은 나올 수 없음</b>모델 출력이 정해진 형식(JSON 스키마)과 보기 목록에 묶입니다.</p></div>
+    <div class="guard"><span class="no">2</span><p><b>서버가 다시 검증</b>없는 일정 번호나 없는 변경 번호는 실패로 처리합니다.</p></div>
+    <div class="guard"><span class="no">3</span><p><b>숫자는 문장에서만</b>「30분 늦어요」의 분(分)은 고객 문장에 실제로 적힌 숫자일 때만 인정합니다.</p></div>
+    <div class="guard"><span class="no">4</span><p><b>모델이 실패하면 바꾸지 않음</b>옛 규칙 경로로 넘기지 않고, 일정은 그대로 둔 채 오류로 남깁니다.</p></div>
+    <div class="guard"><span class="no">5</span><p><b>바꾸기는 애매하면 되묻기</b>잘못 짚으면 일정이 바뀌기 때문입니다. 예: 「다음 중 하나인가요? 1) … 2) …」</p></div>
+    <div class="guard"><span class="no">6</span><p><b>사실 질문은 먼저 답하기</b>잘못 짚어도 잃는 것이 없어서, 답한 뒤 「혹시 이런 뜻이었나요?」 버튼을 붙입니다.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>지금까지 잰 값</h2>
+  <p class="sub">실제 모델로 정답 표기된 문장을 돌린 재생 시험입니다. 각 묶음 1회씩 잰 값이고 표본이 작아서 <b>방향</b>을 말할 뿐입니다.</p>
+  <div class="stats">
+    <div class="stat"><div class="v">151/157</div><div class="l">할 일 + 대상 동시 정답 (약 96%, 네 묶음 합)</div></div>
+    <div class="stat"><div class="v">73/73</div><div class="l">질문 종류(주소·운영시간 등)만 따로 본 정답</div></div>
+    <div class="stat"><div class="v">약 2초</div><div class="l">모델 판단 시간 중앙값 (p95 3.5~4.5초)</div></div>
+    <div class="stat w"><div class="v">3.7~13초</div><div class="l">실서버 관측 — 뒤에서 도는 다른 모델 작업과 겹치면 느려짐</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>아직 안 한 것</h2>
+  <div class="todo">
+    <b>질문 이해를 더 확실히 하려면 (사용자가 물으신 LAYA 같은 보조 판정)</b>
+    <ul>
+      <li>LAYA(질문 보기 고르기 전용 작은 모델)는 <b>아직 붙이지 않았습니다.</b> 지금의 판단은 gemma4 한 번입니다.</li>
+      <li>보조로 쓰려면 사람이 정답을 붙인 문장 <b>300개 이상</b>이 필요합니다(모델이 틀리는 지점을 배우게 하려면).</li>
+      <li>규정 검색이 자주 빗나가는 문제(「비 오면 창덕궁 취소돼요?」)는 <b>그대로 남아 있습니다.</b></li>
+    </ul>
+  </div>
+</section>
+
+</div>
+<footer>근거 코드: app/modules/travel_ops/trip_messages.py(처리 순서) · decision_unit.py(모델 입력·보기·검증) · trip_facts.py(사실 답) · trip_replies.py(규정 질문) · app/infrastructure/rag/retriever.py(임베딩 검색)</footer>
+</body>
+</html>

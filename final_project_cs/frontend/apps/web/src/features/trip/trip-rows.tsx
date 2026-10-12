@@ -55,7 +55,7 @@ export function StopRow({ stop, next, open, selected, onToggle, onDetail, detail
   const t = useT();
   const id = `trip-stop-${stop.id}`;
   const timeFocused = open || selected;
-  const hasTags = stop.booking === "booked" || stop.pinned || stop.paused;
+  const hasTags = stop.booking === "booked" || stop.pinned || stop.paused || !!stop.badges?.length;
   return <li className={`${pc.entry} ${styles.stopEntry}`} data-type="item" data-entry-id={stop.id} data-time-focused={timeFocused || undefined} data-time-follow={open || undefined} data-selected={selected || undefined} data-paused={stop.paused || undefined}>
     <span className={pc.time}><span className={pc.timeStack}><time data-stop-start>{stop.time}</time><time className={pc.rangeEnd} data-stop-end aria-hidden={!timeFocused}>~{stop.endTime || "—"}</time></span></span>
     <span className={pc.rail} aria-hidden="true"><span className={`${pc.dot} ${styles.stopDot}`} /></span>
@@ -68,6 +68,7 @@ export function StopRow({ stop, next, open, selected, onToggle, onDetail, detail
             {hasTags && <span className={styles.stopTags}>
               {stop.booking === "booked" && <span className={pc.pill} data-booked>{bookingLabel(stop, t)}</span>}
               {stop.pinned && <span className={pc.pill}>{t("고정한 일정", "Pinned")}</span>}
+              {stop.badges?.map((badge) => <span key={badge.code} className={pc.pill}>{badge.label}</span>)}
               {stop.paused && <span className={pc.pill} data-state="review">{t("일정 정지", "Paused")}</span>}
             </span>}
           </span>
@@ -94,6 +95,8 @@ export function StopRow({ stop, next, open, selected, onToggle, onDetail, detail
  */
 export function StopFacts({ stop, next, brief = false }: { stop: TripStop; next: TripStop | undefined; brief?: boolean }) {
   const t = useT();
+  // Michelin already has its own row from the place facts (`placeRows`) — the mark row does not repeat it.
+  const marks = (stop.badges ?? []).filter((badge) => !(badge.code === "michelin" && stop.placeInfo?.michelin));
   return <dl className={styles.details}>
     {!brief && <><dt>{t("날짜", "Date")}</dt><dd>{stop.date}</dd>
       <dt>{t("예정 시간", "Planned time")}</dt><dd>{stop.time}</dd></>}
@@ -101,6 +104,7 @@ export function StopFacts({ stop, next, brief = false }: { stop: TripStop; next:
     {stop.booking === "booked" && <><dt>{t("예약 표시", "Booking note")}</dt><dd>{bookingLabel(stop, t)}</dd></>}
     <dt>{t("다음 일정", "Next stop")}</dt><dd>{next ? `${next.time} · ${next.title}` : t("이날 마지막 일정", "Last stop of the day")}</dd>
     {stop.otherOptions && stop.otherOptions.length > 0 && <><dt>{t("다른 안", "Other options")}</dt><dd>{stop.otherOptions.map((option) => option.name).join(" · ")}</dd></>}
+    {marks.length > 0 && <><dt>{t("식당 표시", "Restaurant marks")}</dt><dd>{marks.map((badge) => badge.label).join(" · ")}</dd></>}
     <dt>{t("입력한 메모", "Your notes")}</dt><dd>{stop.notes || t("등록된 메모가 없어요.", "No notes added.")}</dd>
   </dl>;
 }

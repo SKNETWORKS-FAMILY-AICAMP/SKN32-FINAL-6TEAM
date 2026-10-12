@@ -97,7 +97,8 @@ def build(case: dict[str, Any], seed: int = 0) -> tuple[dict[str, Any], list[Any
         attributes: dict[str, Any] = {}
         if kind == "dining":
             attributes["hours"] = spec.get("hours", DEFAULT_HOURS)
-        for name in ("break", "payment", "cuisine", "price_krw"):
+        # ★`[2026-10-12]` category · style — 원장이 싣는 큰 분류 · 음식 결(`dn_place.category` · `style`)과 같은 칸
+        for name in ("break", "payment", "cuisine", "price_krw", "category", "style"):
             if name in spec:
                 attributes[name] = spec[name]
         places[spec["key"]] = {"place_id": str(uuid.uuid5(NS, f"{seed}:{case['id']}:{spec['key']}")), "name": spec["name"],

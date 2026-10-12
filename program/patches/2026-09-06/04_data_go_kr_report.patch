@@ -1,0 +1,8 @@
+--- a/datasets/voc/data_go_kr_consumer_complaints/REPORT.md
++++ b/datasets/voc/data_go_kr_consumer_complaints/REPORT.md
+@@ -51,4 +51,4 @@
+ - 압축 해제 불필요(이미 CSV/XML 원본)이지만 **CP949→UTF-8 재인코딩,
+   컬럼 정의서 대조, SALES_METHOD_CODE 코드값 매핑**은 안 함
+ - 15098320에서 온라인 쇼핑몰 관련 건만 필터링하는 작업 안 함
+-- `processed/`, `scripts/` 없음 — 전부 `raw/`만 있는 상태
++- ~~`processed/`, `scripts/` 없음 — 전부 `raw/`만 있는 상태~~ → 2026-08-21에 15090382(품목별 피해구제 사례 XML 678건)에서 Team 근거 사례 2종을 뽑아 `processed/`에 뒀다 (`fulfillment_logistics_relevant_cases.jsonl` 53건 · `return_refund_evidence_relevant_cases.jsonl` 89건, 중복 49). 추출·검증 스크립트 둘(`extract_item_relief_cases.py`·`verify_item_relief_extraction.py`)이 `scripts/`가 아니라 `processed/` 안에 있다 — 폴더 규칙(`datasets/README.md`)대로 `scripts/`로 옮기는 게 남았다. 나머지 6종 전처리는 여전히 안 했다

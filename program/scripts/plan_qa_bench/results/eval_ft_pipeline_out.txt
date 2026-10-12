@@ -1,0 +1,12 @@
+## ft/r16a — 개발용(heavy dev 44)으로 고른 문턱 lo=0.3 hi=0.5
+                                          정답   엉뚱   못찾음     LLM 호출 문제
+FT 구조 · heavy 판정 88                 79/88=90%    3     6      11/88=12%
+  26B 직접                            85/88=97%    3     0
+  12B 직접                            81/88=92%    7     0
+  기존 구조(E4B/E4B/12B)                84/88=95%    1     3
+FT 구조 · mix4 88(처음 보는 세트)           82/88=93%    4     2      12/88=14%
+  26B 직접                            81/88=92%    7     0
+  12B 직접                            79/88=90%    9     0
+  기존 구조(E4B/E4B/12B)                81/88=92%    4     3
+
+mix4 유형별(FT 구조, 유형당 8): {'context_pronoun': 8, 'duplicate_place': 6, 'confusable_name': 8, 'compound_intent': 8, 'negation': 7, 'typo_slang': 8, 'out_of_scope': 7, 'nameless_description': 7, 'ordinal_relative': 7, 'change_request': 8, 'absent_but_plausible': 8}

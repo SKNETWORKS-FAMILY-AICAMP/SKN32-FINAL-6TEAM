@@ -6,7 +6,7 @@ import { openFinished } from "./plan-check-kit";
 // 실제 화면이 만든 거리 단추의 DOM·제품 CSS를 재사용하는 배치 진단입니다.
 // SSE/React 상태 전이는 별도 map-reveal 시험이 담당하며 여기서는 번호가 실제로 눌리는지 봅니다.
 for (const count of [4, 5]) {
-  test(`180px 지도에서 이전 ${count}개 거리 단추의 번호 중심을 누를 수 있다`, async ({ page, request }) => {
+  test(`180px 지도에서 같은 방향의 이전 ${count}개 일정 스택을 누를 수 있다`, async ({ page, request }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     await mockServer(request).reset();
@@ -22,6 +22,8 @@ for (const count of [4, 5]) {
     const points = Array.from({ length: count + 1 }, (_, index) => ({ id: String(index + 1), title: "일정", date: "", time: "", order: index + 1,
       coordinates: { lat: index === count ? 37.5665 : 37.61, lng: 126.978 }, revealFocus: index === count }));
     const chips = edgeChips(view, points, { top: 64, bottom: 76 });
+    expect(chips).toHaveLength(1);
+    expect(chips[0].ids).toEqual(points.slice(0, count).map(point => point.id));
     const evidence = await map.locator("[data-edge-chip]").first().evaluate((template, chips) => {
       const harness = document.createElement("div");
       Object.assign(harness.style, { position: "fixed", left: "0", top: "200px", width: "360px", height: "180px", zIndex: "100000", background: "white" });

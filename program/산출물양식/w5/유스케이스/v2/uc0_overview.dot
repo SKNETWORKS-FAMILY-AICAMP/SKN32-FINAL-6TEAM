@@ -1,0 +1,28 @@
+digraph UC {
+  graph [rankdir=LR, splines=spline, nodesep=0.42, ranksep=0.9, pad=0.35, fontname="Malgun Gothic", bgcolor="#ffffff",         label=<<B>그림 0 · 전체 개요 — 무엇이 어디로 이어지나</B><BR/><FONT POINT-SIZE="12" COLOR="#5f6b64">액터와 유스케이스 묶음 4개 · 묶음 안은 그림 1~4</FONT>>, labelloc=t, fontsize=19, ordering=out];
+  node [fontname="Malgun Gothic", fontsize=13];
+  edge [fontname="Malgun Gothic", fontsize=11, color="#5f6b64", penwidth=1.4, arrowhead=none, arrowsize=0.9];
+  { rank=min; traveler [shape=none, margin=0, label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="2"><TR><TD><IMG SRC="actor.png"/></TD></TR><TR><TD><B>여행자</B></TD></TR></TABLE>>]; companion [shape=none, margin=0, label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="2"><TR><TD><IMG SRC="actor.png"/></TD></TR><TR><TD><B>동행자</B></TD></TR></TABLE>>]; aiapp [shape=box, style="rounded,filled", fillcolor="#f6ead4", color="#c8913a", penwidth=1.6, label=<<FONT POINT-SIZE="11" COLOR="#8a5f1c">«시스템»</FONT><BR/><B>개인 AI 비서 앱</B><BR/><FONT POINT-SIZE="11" COLOR="#5f6b64">우리 API로 연결</FONT>>]; }
+  subgraph cluster_sys { label=<<B>triPilot</B>>; fontsize=16; style="rounded"; color="#2d5f48"; penwidth=2.2; margin=20;
+    p1 [shape=tab, style=filled, fillcolor="#fffdf7", color="#2d5f48", penwidth=1.8, label=<<TABLE BORDER="0" CELLPADDING="2"><TR><TD><B>1 여행 준비</B></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-01 여행 시작하기(설문)</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-02 계획 올리기</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-03 읽힌 일정 확인 · 고치기</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-04 일정 짜 달라고 하기</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-05 여행계획서 보기</FONT></TD></TR></TABLE>>];
+    p2 [shape=tab, style=filled, fillcolor="#fffdf7", color="#2d5f48", penwidth=1.8, label=<<TABLE BORDER="0" CELLPADDING="2"><TR><TD><B>2 여행 중 요청</B></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-06 채팅으로 묻기</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-07 바꿔 달라고 하기</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-08 문제 알리기</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-09 다른 안 고르기 · 되돌리기</FONT></TD></TR></TABLE>>];
+    p4 [shape=tab, style=filled, fillcolor="#fffdf7", color="#2f6c9a", penwidth=1.8, label=<<TABLE BORDER="0" CELLPADDING="2"><TR><TD><B>4 자동 관리</B></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-10 외부 변화 감시(3분)</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-11 새벽 정기 점검(03:00)</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-15 일정 알림 보내기</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-16 오류 알림</FONT></TD></TR></TABLE>>];
+    p3 [shape=tab, style=filled, fillcolor="#fffdf7", color="#c8913a", penwidth=1.8, label=<<TABLE BORDER="0" CELLPADDING="2"><TR><TD><B>3 일정 조율</B></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-12 일정 조율(전부 통과할 때까지)</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-13 바꾸기 전에 묻기</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11">UC-14 변경 알리기</FONT></TD></TR></TABLE>>];
+  }
+  { rank=max; timer [shape=box, style="rounded,filled", fillcolor="#f6ead4", color="#c8913a", penwidth=1.6, label=<<FONT POINT-SIZE="11" COLOR="#8a5f1c">«시간»</FONT><BR/><B>시간</B><BR/><FONT POINT-SIZE="11" COLOR="#5f6b64">3분 · 03:00 · 알림 시각</FONT>>]; info [shape=box, style="rounded,filled", fillcolor="#f6ead4", color="#c8913a", penwidth=1.6, label=<<FONT POINT-SIZE="11" COLOR="#8a5f1c">«시스템»</FONT><BR/><B>장소 · 영업 · 교통 정보</B><BR/><FONT POINT-SIZE="11" COLOR="#5f6b64">관광공사 · 카카오 · Google · 시간표</FONT>>]; watch [shape=box, style="rounded,filled", fillcolor="#f6ead4", color="#c8913a", penwidth=1.6, label=<<FONT POINT-SIZE="11" COLOR="#8a5f1c">«시스템»</FONT><BR/><B>외부 데이터 6종</B><BR/><FONT POINT-SIZE="11" COLOR="#5f6b64">날씨 · 특보 · 예보 · 재난문자 · 교통 2</FONT>>]; discord [shape=box, style="rounded,filled", fillcolor="#f6ead4", color="#c8913a", penwidth=1.6, label=<<FONT POINT-SIZE="11" COLOR="#8a5f1c">«시스템»</FONT><BR/><B>디스코드</B><BR/><FONT POINT-SIZE="11" COLOR="#5f6b64">지금은 팀 시연 채널 하나</FONT>>]; operator [shape=none, margin=0, label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="2"><TR><TD><IMG SRC="actor.png"/></TD></TR><TR><TD><B>운영자</B></TD></TR></TABLE>>]; }
+  traveler -> companion [arrowhead=empty, arrowsize=1.3, penwidth=1.5, constraint=false];
+  traveler -> p1;
+  traveler -> p2;
+  companion -> p1;
+  aiapp -> p1;
+  aiapp -> p2;
+  p4 -> timer;
+  p2 -> p3 [style=dashed, arrowhead=vee, label="«include»", fontcolor="#2d5f48", color="#2d5f48"];
+  p3 -> p4 [style=invis];
+  p4 -> p3 [style=dashed, arrowhead=vee, constraint=false, label="«include»", fontcolor="#2d5f48", color="#2d5f48"];
+  p3 -> info;
+  p3 -> discord;
+  p4 -> watch;
+  p4 -> operator;
+  p1 -> p2 [style=invis];
+}

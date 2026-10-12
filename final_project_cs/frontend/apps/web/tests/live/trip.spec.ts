@@ -11,6 +11,23 @@ const openTrip = async (page: import("@playwright/test").Page) => {
   await expect(tripScreen(page)).toBeVisible();
 };
 
+test("예약·고정 표시가 없는 식당도 제공된 식당 뱃지를 표시한다", async ({ page }) => {
+  await page.route(url => url.pathname === `/v1/web/trips/${TRIP_ID}`, async route => {
+    const response = await route.fetch();
+    const body = await response.json();
+    Object.assign(body.items.find((item: { item_id: string }) => item.item_id === "i-a"), {
+      booked: false, customer_pinned: false, paused: false,
+      badges: [{ code: "nopo", label: "노포", source: "시험용 여행 자료" }],
+    });
+    await route.fulfill({ response, json: body });
+  });
+  await openTrip(page);
+  const card = page.locator("#stop-button-i-a");
+  await expect(card.getByText("노포", { exact: true })).toBeVisible();
+  await expect(card.getByText("예약", { exact: true })).toHaveCount(0);
+  await expect(card.getByText("고정한 일정", { exact: true })).toHaveCount(0);
+});
+
 test("여행 화면(지도 + 시트)은 서버가 준 일정·고정·다른 안을 하루씩 보이고, 이동 항목은 일정 사이의 이동 줄로, 알림·이력·경고·계획서 링크는 종 아래에 그대로 보인다", async ({ page, request }) => {
   await mockServer(request).scenario({ routeShapes: "on" });                                     // 수단 · 거리는 서버의 경로선에서 읽는다
   await openTrip(page);
@@ -341,20 +358,17 @@ test("주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 
   // And for the consent record (`consents: "on"`): an older server without it answers 404 and the browser logs that (the screen then keeps the browser's own copy).
   await server.scenario({ proposals: "open", bell: "on", routeShapes: "on", consents: "on", retention: "on" });
   const problems: string[] = [];
-  const failedResponses: string[] = [];
-  page.on("console", (message) => { if (message.type() === "error") problems.push(`console: ${message.text()} ${message.location().url}`); });
+  page.on("console", (message) => { if (message.type() === "error") problems.push(`console: ${message.text()}`); });
   page.on("pageerror", (error) => problems.push(`exception: ${error.message}`));
-  page.on("response", (response) => {
-    if (response.status() >= 400) failedResponses.push(`${response.status()} ${response.url()}`);
-    if (response.status() >= 400 && !response.url().includes("/v1/web/")) problems.push(`${response.status()} ${response.url()}`);
-  });
+  page.on("response", (response) => { if (response.status() >= 400) problems.push(`${response.status()} ${response.request().method()} ${response.url()}`); });
+  page.on("requestfailed", (request) => { if (request.failure()?.errorText !== "net::ERR_ABORTED") problems.push(`request failed: ${request.url()} ${request.failure()?.errorText}`); });
 
   for (const path of ["/", "/start", "/trips/new", `/trips/${TRIP_ID}`, `/trips/${TRIP_ID}/results`]) {
     // ★not "networkidle": the trip screen keeps the change bell open, so the network never goes idle there
     await page.goto(path, { waitUntil: "load" });
     await page.waitForTimeout(1_500);
   }
-  expect(problems, `실패 응답: ${JSON.stringify(failedResponses)}`).toEqual([]);
+  expect(problems).toEqual([]);
 });
 
 test("여행 화면을 열면 채팅 모델 예열을 서버에 한 번 청하고(사용자 키로), 키가 없는 첫 화면에서는 청하지 않는다", async ({ page, request }) => {
@@ -396,6 +410,7 @@ test("신호 연결이 끊겼다 다시 붙으면 그 사이 바뀐 것을 전�
   // changed while the line is down — no bell reaches the screen for this one
   await server.scenario({ proposals: "open" });
   expect(await server.hangup()).toBeGreaterThan(0);
+  await expect.poll(async () => (await server.received("GET", "/events")).length).toBeGreaterThan(1);
   await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toContainText("대체 식당 A", { timeout: 10_000 });
   expect((await server.received("GET", "/events")).length).toBeGreaterThan(1);
 });

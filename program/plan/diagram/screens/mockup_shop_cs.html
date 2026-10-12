@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>검증 쇼핑몰과 A-COP 연동 목업</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Malgun Gothic", "맑은 고딕", sans-serif; background: #eef1f6;
+         color: #131a26; font-size: 14px; line-height: 1.55; }
+  .wrap { width: 1240px; padding: 22px; }
+  .lead { font-size: 13px; color: #5d6b7f; margin-bottom: 14px; }
+  .lead b { color: #131a26; }
+  .cols { display: grid; grid-template-columns: 1fr 400px; gap: 18px; align-items: start; }
+
+  /* 쇼핑몰 */
+  .shop { background: #fff; border: 1px solid #dde3ec; border-radius: 12px; overflow: hidden; }
+  .shop__bar { display: flex; align-items: center; gap: 14px; padding: 12px 18px;
+               border-bottom: 1px solid #eef1f6; }
+  .logo { font-weight: 800; font-size: 17px; color: #2f5bd8; letter-spacing: -.02em; }
+  .nav { display: flex; gap: 16px; color: #5d6b7f; font-size: 13px; }
+  .nav .on { color: #131a26; font-weight: 700; }
+  .search { margin-left: auto; width: 240px; height: 30px; border: 1px solid #dde3ec;
+            border-radius: 15px; padding: 0 12px; color: #98a2b3; font-size: 12px;
+            display: flex; align-items: center; }
+  .shop__body { padding: 18px; }
+  .h { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .order { border: 1px solid #e6eaf2; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+  .order__top { display: flex; justify-content: space-between; align-items: center;
+                margin-bottom: 10px; }
+  .oid { font-family: Consolas, monospace; font-size: 12px; color: #5d6b7f; }
+  .pill { border-radius: 99px; padding: 2px 10px; font-size: 11.5px; font-weight: 700; }
+  .p-ship { background: #e6f0ff; color: #2f5bd8; }
+  .p-wait { background: #fff4e0; color: #9a6200; }
+  .item { display: flex; gap: 12px; align-items: center; }
+  .thumb { width: 54px; height: 54px; border-radius: 8px; background: #eef1f6;
+           display: grid; place-items: center; color: #98a2b3; font-size: 11px; }
+  .item__name { font-weight: 600; }
+  .item__meta { color: #5d6b7f; font-size: 12.5px; }
+  .btns { display: flex; gap: 8px; margin-top: 12px; }
+  .btn { border: 1px solid #dde3ec; background: #fff; border-radius: 8px;
+         padding: 6px 12px; font-size: 12.5px; color: #131a26; }
+  .btn--main { background: #2f5bd8; border-color: #2f5bd8; color: #fff; font-weight: 600; }
+
+  /* CS 위젯 */
+  .cs { background: #fff; border: 1px solid #dde3ec; border-radius: 12px; overflow: hidden;
+        display: flex; flex-direction: column; height: 560px; }
+  .cs__bar { background: #2f5bd8; color: #fff; padding: 11px 15px; display: flex;
+             align-items: center; gap: 9px; }
+  .cs__bar b { font-size: 14px; }
+  .cs__bar span { margin-left: auto; font-size: 11.5px; opacity: .9; }
+  .cs__body { flex: 1; padding: 14px; overflow: hidden; background: #f8fafd; }
+  .msg { max-width: 86%; margin-bottom: 10px; padding: 9px 12px; border-radius: 12px;
+         font-size: 13px; }
+  .me { margin-left: auto; background: #2f5bd8; color: #fff; border-bottom-right-radius: 3px; }
+  .bot { background: #fff; border: 1px solid #e6eaf2; border-bottom-left-radius: 3px; }
+  .cite { margin-top: 7px; padding-top: 7px; border-top: 1px dashed #dde3ec;
+          font-size: 11.5px; color: #5d6b7f; }
+  .cite b { color: #0d7a4d; }
+  .approve { background: #fff8e6; border: 1px solid #e5c87a; border-radius: 10px;
+             padding: 10px 12px; font-size: 12.5px; }
+  .approve b { color: #9a6200; }
+  .cs__foot { border-top: 1px solid #eef1f6; padding: 10px 14px; display: flex; gap: 8px;
+              align-items: center; }
+  .cs__input { flex: 1; height: 32px; border: 1px solid #dde3ec; border-radius: 16px;
+               padding: 0 12px; color: #98a2b3; font-size: 12.5px; display: flex;
+               align-items: center; }
+  .send { width: 32px; height: 32px; border-radius: 50%; background: #2f5bd8; color: #fff;
+          display: grid; place-items: center; font-size: 13px; }
+
+  /* 아래 연동 설명 */
+  .flow { margin-top: 18px; background: #fff; border: 1px solid #dde3ec; border-radius: 12px;
+          padding: 16px 18px; }
+  .flow__row { display: flex; align-items: stretch; gap: 10px; margin-top: 12px; }
+  .step { flex: 1; border: 1px solid #dde3ec; border-radius: 10px; padding: 10px 12px; }
+  .step__n { display: inline-grid; place-items: center; width: 20px; height: 20px;
+             border-radius: 50%; background: #2f5bd8; color: #fff; font-size: 11px;
+             font-weight: 700; margin-bottom: 6px; }
+  .step__t { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+  .step__d { font-size: 12px; color: #5d6b7f; }
+  .step--core2 { border-color: #c0362c; background: #fff6f5; }
+  .step--core1 { border-color: #2f5bd8; background: #f5f8ff; }
+  .note { margin-top: 12px; font-size: 12.5px; color: #5d6b7f; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 5px;
+         padding: 1px 7px; margin-right: 5px; }
+  .t1 { background: #e6f0ff; color: #2f5bd8; }
+  .t2 { background: #fdecea; color: #c0362c; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lead">
+    <b>검증 쇼핑몰과 A-COP 연동 목업.</b>
+    왼쪽은 고객이 보는 쇼핑몰 주문 내역이고 오른쪽은 그 자리에서 열리는 상담 위젯이다.
+    위젯이 보내는 문의는 A-COP의 Case가 되고, 답변에는 근거가 함께 붙는다.
+    실제 화면이 아니라 설계 확인을 위한 목업이다.
+  </div>
+
+  <div class="cols">
+    <div class="shop">
+      <div class="shop__bar">
+        <div class="logo">VERIFY SHOP</div>
+        <div class="nav"><span>홈</span><span>카테고리</span><span class="on">주문 내역</span><span>장바구니</span></div>
+        <div class="search">상품을 검색하세요</div>
+      </div>
+      <div class="shop__body">
+        <div class="h">주문 내역</div>
+
+        <div class="order">
+          <div class="order__top">
+            <div class="oid">주문번호 16102427880443 · 2026-08-21</div>
+            <div class="pill p-ship">배송중</div>
+          </div>
+          <div class="item">
+            <div class="thumb">상품</div>
+            <div>
+              <div class="item__name">도브 뷰티 크림 바 비누 90g 2개입</div>
+              <div class="item__meta">4,100원 · 로켓배송 · 송장 10327889211555</div>
+            </div>
+          </div>
+          <div class="btns">
+            <div class="btn">배송 조회</div>
+            <div class="btn btn--main">문의하기</div>
+          </div>
+        </div>
+
+        <div class="order">
+          <div class="order__top">
+            <div class="oid">주문번호 16102433396441 · 2026-08-19</div>
+            <div class="pill p-wait">환불 승인 대기</div>
+          </div>
+          <div class="item">
+            <div class="thumb">상품</div>
+            <div>
+              <div class="item__name">에어팟 프로 이어팁 4개입</div>
+              <div class="item__meta">12,900원 · 반품 접수됨 · 담당자 확인 중</div>
+            </div>
+          </div>
+          <div class="btns">
+            <div class="btn">반품 상태</div>
+            <div class="btn">문의하기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cs">
+      <div class="cs__bar"><b>고객 상담</b><span>Case CS-2026-0821-014</span></div>
+      <div class="cs__body">
+        <div class="msg me">결제는 취소했는데 이번 달에도 요금이 빠져나갔어요.</div>
+        <div class="msg bot">
+          주문번호 16102433396441의 반품이 접수된 것을 확인했습니다.
+          결제 취소는 접수되었고 환불은 카드사 확인 후 3영업일 안에 처리됩니다.
+          <div class="cite">근거 <b>환불 정책 v3 2조</b> · <b>주문 16102433396441 상태 반품접수</b></div>
+        </div>
+        <div class="msg bot approve">
+          <b>승인 대기</b><br>
+          환불 12,900원은 금액이 있는 작업이라 담당자 승인 후 실행됩니다.
+          승인되면 알림을 보내 드립니다.
+        </div>
+        <div class="msg me">언제쯤 처리되나요?</div>
+        <div class="msg bot">
+          담당자 확인 중입니다. 확인이 끝나면 이 대화창과 등록하신 연락처로 함께 알려 드립니다.
+        </div>
+      </div>
+      <div class="cs__foot">
+        <div class="cs__input">메시지를 입력하세요</div>
+        <div class="send">&gt;</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">
+    <div class="h">위젯에서 A-COP까지, 문의 한 건이 지나는 길</div>
+    <div class="flow__row">
+      <div class="step">
+        <div class="step__n">1</div>
+        <div class="step__t">쇼핑몰 위젯</div>
+        <div class="step__d">고객이 문의를 남긴다. 주문번호가 함께 실린다.</div>
+      </div>
+      <div class="step step--core2">
+        <div class="step__n">2</div>
+        <div class="step__t">Agent Gateway</div>
+        <div class="step__d">REST 또는 MCP로 들어온다. 인증과 권한 범위를 확인한다.</div>
+      </div>
+      <div class="step step--core1">
+        <div class="step__n">3</div>
+        <div class="step__t">Case 생성과 분류</div>
+        <div class="step__d">감성, 의도, 이슈를 분류하고 담당 Team을 고른다.</div>
+      </div>
+      <div class="step step--core1">
+        <div class="step__n">4</div>
+        <div class="step__t">근거 조합과 판단</div>
+        <div class="step__d">Context Broker가 정책과 주문 상태를 묶어 준다. Team은 제안만 낸다.</div>
+      </div>
+      <div class="step step--core2">
+        <div class="step__n">5</div>
+        <div class="step__t">승인과 실행</div>
+        <div class="step__d">환불처럼 금액이 있는 작업은 사람이 승인해야 실행된다.</div>
+      </div>
+      <div class="step">
+        <div class="step__n">6</div>
+        <div class="step__t">응답</div>
+        <div class="step__d">근거를 인용한 답변이 같은 위젯으로 돌아간다.</div>
+      </div>
+    </div>
+    <div class="note">
+      <span class="tag t1">코어 1</span>Case 생명주기와 근거 조합, Team 라우팅을 맡는다.
+      <span class="tag t2" style="margin-left:14px">코어 2</span>외부 진입과 실제 실행, 승인, 감사를 맡는다.
+      부수효과는 코어 2 한 곳에서만 일어난다.
+    </div>
+    <div class="note">
+      이번 기간에 여는 범위는 문의와 조회다. 주문과 반품 실행은 확장 범위이며
+      검증 쇼핑몰이 준비되는 대로 확인한다.
+    </div>
+  </div>
+</div>
+</body>
+</html>

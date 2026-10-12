@@ -1,0 +1,120 @@
+{
+ "by_persona": {
+  "p01": {
+   "questions": 176,
+   "answered": 176,
+   "missing": [],
+   "agree": 176,
+   "mismatch": []
+  },
+  "p02": {
+   "questions": 176,
+   "answered": 176,
+   "missing": [],
+   "agree": 176,
+   "mismatch": []
+  },
+  "p03": {
+   "questions": 176,
+   "answered": 176,
+   "missing": [],
+   "agree": 176,
+   "mismatch": []
+  },
+  "p04": {
+   "questions": 176,
+   "answered": 176,
+   "missing": [],
+   "agree": 176,
+   "mismatch": []
+  },
+  "p05": {
+   "questions": 176,
+   "answered": 176,
+   "missing": [],
+   "agree": 176,
+   "mismatch": []
+  },
+  "p06": {
+   "questions": 176,
+   "answered": 176,
+   "missing": [],
+   "agree": 176,
+   "mismatch": []
+  },
+  "p07": {
+   "questions": 176,
+   "answered": 176,
+   "missing": [],
+   "agree": 176,
+   "mismatch": []
+  },
+  "p08": {
+   "questions": 176,
+   "answered": 176,
+   "missing": [],
+   "agree": 176,
+   "mismatch": []
+  },
+  "p09": {
+   "questions": 176,
+   "answered": 176,
+   "missing": [],
+   "agree": 176,
+   "mismatch": []
+  },
+  "p10": {
+   "questions": 176,
+   "answered": 176,
+   "missing": [],
+   "agree": 176,
+   "mismatch": []
+  }
+ },
+ "by_type": {
+  "negation": [
+   160,
+   160
+  ],
+  "change_request": [
+   160,
+   160
+  ],
+  "out_of_scope": [
+   160,
+   160
+  ],
+  "absent_but_plausible": [
+   160,
+   160
+  ],
+  "duplicate_place": [
+   160,
+   160
+  ],
+  "compound_intent": [
+   160,
+   160
+  ],
+  "context_pronoun": [
+   160,
+   160
+  ],
+  "nameless_description": [
+   160,
+   160
+  ],
+  "confusable_name": [
+   160,
+   160
+  ],
+  "ordinal_relative": [
+   160,
+   160
+  ],
+  "typo_slang": [
+   160,
+   160
+  ]
+ }
+}

@@ -26,7 +26,7 @@ function spread(view: Json) {
 }
 
 for (const width of [375, 1280]) {
-  test(`세 번째 일정 공개 중 ${scene.name}은 실제 방향의 개별 거리 버튼으로 남는다 ${width}px`, async ({ page, request }) => {
+  test(`세 번째 일정 공개 중 ${scene.name}은 실제 방향의 거리 스택으로 남는다 ${width}px`, async ({ page, request }) => {
     test.setTimeout(60000);
     await page.setViewportSize({ width, height: 812 });
     await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -93,23 +93,24 @@ for (const width of [375, 1280]) {
           }
           if (pin("3")) {
             log.thirdFrames += 1;
-            if (chips.some(ids => ids.includes("1") && ids.includes("2"))) fail("previous 1 and 2 merged while revealing 3");
+            if (expectedSides[0] !== expectedSides[1] && chips.some(ids => ids.includes("1") && ids.includes("2"))) fail("opposite directions merged while revealing 3");
             if (chips.some(ids => ids.includes("3") && ids.length > 1)) fail("current 3 merged with a previous stop");
-            if (chips.some(ids => ids.length === 1 && ids[0] === "1") && chips.some(ids => ids.length === 1 && ids[0] === "2")) log.separatePreviousFrames += 1;
+            if (chips.some(ids => ids.includes("1")) && chips.some(ids => ids.includes("2"))) log.separatePreviousFrames += 1;
             const third = pin("3")!;
             const box = third.getBoundingClientRect();
             const centerDelta: [number, number] = [Math.abs(box.x + box.width / 2 - area.x - area.width / 2), Math.abs(box.y + box.height / 2 - area.y - area.height / 2)];
             const previousHidden = ["1", "2"].map(label => pin(label)?.dataset.edgeHidden === "true");
             const previousRetained = ["1", "2"].map((label, at) => pin(label)?.dataset.continuityProof === (at === 0 ? "first" : "second"));
             const separate = ["1", "2"].every(label => {
-              const matches = chipNodes.filter((_, at) => chips[at].length === 1 && chips[at][0] === label);
+              const matches = chipNodes.filter((_, at) => chips[at].includes(label));
               const chip = matches[0], style = chip && getComputedStyle(chip), bounds = chip?.getBoundingClientRect();
               return matches.length === 1 && style?.display !== "none" && style?.visibility !== "hidden" && !!bounds && bounds.width > 0 && bounds.height > 0;
             });
-            const sides = ["1", "2"].map(label => chipNodes.find((_, at) => chips[at].length === 1 && chips[at][0] === label)?.dataset.side);
+            const sides = ["1", "2"].map(label => chipNodes.find((_, at) => chips[at].includes(label))?.dataset.side);
             // 이동 완료, 두 이전 번호의 실제 방향, 현재 마커의 중심을 같은 공개 프레임에서 확인합니다.
             if (!map.hasAttribute("data-moving") && separate && previousHidden.every(Boolean) && previousRetained.every(Boolean)
               && third.dataset.edgeHidden !== "true" && centerDelta.every(delta => delta < 3)) {
+              if (expectedSides[0] === expectedSides[1] && !chips.some(ids => ids.includes("1") && ids.includes("2"))) fail("same direction not stacked");
               if (sides.some((side, at) => side !== expectedSides[at])) fail(`wrong geographic side: ${JSON.stringify(sides)}`);
               log.completeThirdFrame = { chips, centerDelta, previousHidden, previousRetained };
             }
@@ -135,6 +136,7 @@ for (const width of [375, 1280]) {
       });
       expect(bodyDelta.every(delta => delta < 23), JSON.stringify(bodyDelta)).toBe(true);
       await test.info().attach("current-pin-body-center", { body: JSON.stringify({ bodyDelta, expectedSides: scene.expectedSides }), contentType: "application/json" });
+      await noHorizontalScroll(page);
       await page.screenshot({ path: test.info().outputPath(`after-third-frame-observed-${width}.png`) });
       await expect(page.locator('[data-stage="done"]')).toBeVisible();
       await expect(map).not.toHaveAttribute("data-moving");

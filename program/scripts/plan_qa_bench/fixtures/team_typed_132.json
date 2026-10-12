@@ -1,0 +1,670 @@
+{
+ "설명": "2026-09-29 DB 에서 뽑은 팀 입력·자동 시험 문장(서로 다른 132개). 실제 고객이 아니다. 정답(어느 항목·무슨 유형)은 아직 없음 — 라벨링 재료.",
+ "출처": [
+  "case_events(created, 채널 trip_message) 서로 다른 문장 96개",
+  "trip_chat_turns(role=customer) 서로 다른 문장 77개",
+  "두 집합의 겹침 41개"
+ ],
+ "sentences": [
+  {
+   "q": "1번 일정으로 되돌려 주세요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "1일차 08:00 [백년가게] 장군숯불족발 다른 곳으로 바꿔 줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "1일차 10:10 경복궁 가는 길 알려 줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "1일차 저녁 식당 변경해",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-23 10:00 잠실 스카이타워 전망 관람 일정의 상세를 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-23 13:00 성수 점심 식사(예약) 다음 일정을 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-23 예약 표시를 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-23 하루 일정을 요약해 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-28 09:00 과학책방 갈다 다음 일정을 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-28 09:00 과학책방 갈다 일정의 상세를 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-28 13:22 세종이야기 충무공이야기 일정의 상세를 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-28 18:00 자하손만두 일정의 상세를 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-28 예약 표시를 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-28 하루 일정을 요약해 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-29 08:00 [백년가게] 장군숯불족발 일정의 상세를 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-29 08:00 먹고을전주콩나물국밥 묵동본점 다음 일정을 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-29 예약 표시를 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-29 하루 일정을 요약해 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-30 12:00 무구옥 다음 일정을 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-30 12:00 무구옥 일정의 상세를 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-30 18:00 금용문 식사 일정의 상세를 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-30 18:00 일품당프리미엄 일정의 상세를 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-30 예약 표시를 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-09-30 하루 일정을 요약해 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-10-05 09:00 경복궁 관람 다음 일정을 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-10-05 09:00 경복궁 관람 일정의 상세를 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-10-05 예약 표시를 알려 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2026-10-05 하루 일정을 요약해 주세요.",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "2일차 첫 식당 바꿔 줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "30분 늦을 것 같아",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "30분 늦을 것 같아요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "경복궁 몇 시에 가요?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "경복궁 알려줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "경복궁 어떻게 가요?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "경복궁 영업시간 알려 주세요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "경복궁 운영시간 알려 주세요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "경복궁 주소 알려 주세요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "경복궁 주소 알려줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "경복궁에 아이 데려가도 되나요?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "경복궁에서 창덕궁까지 어떻게 가요?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "경희궁 말고 다른 곳으로 바꿔줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "경희궁 몇 시에 닫아? 쉬는 날도 있어?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "고장 났을 때 점심 바꿔",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "광화문 세종클럽 알려줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "그 다음 활동도 바꿔줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "그 식당 세부정보",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "그 식당 어딨어",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "그 식당 전화번호 뭐야",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "그 식당 전화번호 알려줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "그건 어딧는거야",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "그냥 궁금한 게 있어요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "그럼 그 다음식당 바꿔",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "금용문 이전 식당으로 다시 되돌려",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "금용문 주소 알려줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "내일 서울 날씨 어때?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "네, 되돌려 줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "다른 데로 바꿔 줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "다시 다른 걸로 바꿔줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "다음 일정 알려 주세요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "대한민국 수도가 어디야?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "되돌려줘 원래대로",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "라면 선물세트랑 스팸 선물세트가 품절이에요. 이 근처에 이거 파는 다른 곳 없어?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "명동 호텔 되돌려 주세요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "명동사격장 알려줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "무구옥 시간정보 있는 다른 곳으로 바꿔줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "무구옥 운영시간 알려줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "무구옥 주소 알려줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "바꿀 수 있는 다른 활동은 없어 그러면?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "바꿔",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "바꿔 줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "반려견도 데려가도 돼요?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "방금 바꾼 금용문으로 바꾼 일정 원래대로 돌리라고",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "백년가게 바꿔",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "북한산 경복궁으로 바꿔",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "북한산 코스 바꿔줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "비 오면 창덕궁 취소돼요?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "서울에서 맛집 추천해줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "성수 점심 식당 알려줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "성수 점심 예약돼 있어요?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "세종이야기 저건 어딧는거야",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "식당에 30분 늦을 것 같아요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "식당에 늦을 것 같아요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "식당이 휴무예요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "아 안해 걍 다시 되돌려줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "아니 그 식당 세부정보 알려달라고",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "안녕하세요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "안녕하세요 반가워요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "없는 번호 바꿔",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "열시 일정 바꿔",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "예약 표시 알려 줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "오늘 비트코인 시세 알려줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "오늘 저녁 식당 휴무 아니에요?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "원래대로 돌려 줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "원래대로 되돌려 주세요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "음",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "이전에 변경요청 한거 다시 진행해줘봐",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "잠실 스카이타워 운영시간 알려 주세요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "잠실 스카이타워 주소 알려 주세요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "저녁 다른 데로 바꿔",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "저녁 먹으려던 식당이 오늘 임시휴무래요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "저녁 식당 다른 데 알아봐 줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "저녁 식당 바꿔 줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "저녁 식당 주소 알려 주세요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "점심 다른 데 알아봐 줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "점심 다른 데로 바꿔",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "점심 다른 데로 바꿔 줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "점심 식당 다른 걸로 바꿔",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "점심 식당 다른 데로 바꿔 줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "점심 식당 바꿔 줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "점심 식당 알려줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "점심 식당이 문을 안 열었어요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "지금 답하는 llm 은 뭐야?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "지금 해당 아침 식사 바꿔줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "창덕궁 운영시간 알려 주세요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "창덕궁 운영시간 알려줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "창덕궁 주소 알려 주세요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "처음 바꾼 거 되돌려",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "첫 식당 다른 걸로 바꿔",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "첫 식당 알려줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "첫 활동 다른 걸로 바꿔줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "첫날 아침 일정 바꿔",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "첫식당 바꿔",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "취소하면 위약금 있어요?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "토속촌 오늘 휴무래요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "파이썬 코드 짜줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "파이썬으로 정렬하는 코드 짜줘",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "팝업스토어 줄이 길어서 점심에 70분 늦을 것 같아요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "하루 일정 요약해 주세요",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "하루 일정 요약해 주세요 ",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "할 수 있는 게 뭐야?",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "할 수 있는게 뭐야",
+   "gold": null,
+   "type": null
+  },
+  {
+   "q": "호텔 조식 몇 시에 가요?",
+   "gold": null,
+   "type": null
+  }
+ ]
+}

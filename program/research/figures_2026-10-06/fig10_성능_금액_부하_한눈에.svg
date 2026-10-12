@@ -1,0 +1,56 @@
+<svg width="100%" viewBox="0 0 680 882" role="img"><title>성능·금액·부하 한눈에 비교</title><desc>세 규모(하루 1천·5천·10만 건)에서 자체 GPU와 외부 API의 성능·월 금액·부하를 나란히 비교한 표 모양 그림</desc>
+<g class="c-gray"><rect x="30" y="24" width="620" height="36" rx="4"/><text class="th" x="46" y="42" dominant-baseline="central">Astra 규모 · 하루 1,000건 (월 3만 건)</text></g>
+<rect x="30" y="70" width="300" height="150" rx="4" class="box"/><text class="th" x="44" y="92" dominant-baseline="central">자체 GPU (가르친 E4B 1대)</text>
+<text class="ts" x="44" y="123" dominant-baseline="central">성능</text>
+<g class="c-teal"><rect x="88" y="110" width="228" height="26" rx="4"/><text class="th" x="102" y="123" dominant-baseline="central">98.8% (판정 전)</text></g>
+<text class="ts" x="44" y="159" dominant-baseline="central">금액</text>
+<g class="c-teal"><rect x="88" y="146" width="228" height="26" rx="4"/><text class="th" x="102" y="159" dominant-baseline="central">월 24.5만원</text></g>
+<text class="ts" x="44" y="195" dominant-baseline="central">부하</text>
+<g class="c-teal"><rect x="88" y="182" width="228" height="26" rx="4"/><text class="th" x="102" y="195" dominant-baseline="central">가동 1.5% 여유</text></g>
+<rect x="350" y="70" width="300" height="150" rx="4" class="box"/><text class="th" x="364" y="92" dominant-baseline="central">외부 API (Astra)</text>
+<text class="ts" x="364" y="123" dominant-baseline="central">성능</text>
+<g class="c-gray"><rect x="408" y="110" width="228" height="26" rx="4"/><text class="th" x="422" y="123" dominant-baseline="central">미측정 (Claude 96%대)</text></g>
+<text class="ts" x="364" y="159" dominant-baseline="central">금액</text>
+<g class="c-amber"><rect x="408" y="146" width="228" height="26" rx="4"/><text class="th" x="422" y="159" dominant-baseline="central">월 73.9만 (캐시 17만)</text></g>
+<text class="ts" x="364" y="195" dominant-baseline="central">부하</text>
+<g class="c-gray"><rect x="408" y="182" width="228" height="26" rx="4"/><text class="th" x="422" y="195" dominant-baseline="central">한도 미확인</text></g>
+<g class="c-teal"><rect x="30" y="230" width="620" height="32" rx="4"/><text class="th" x="46" y="246" dominant-baseline="central">→ 이 규모는 자체 GPU 유리 (캐시 없는 API 대비 3배 저렴)</text></g>
+<g class="c-gray"><rect x="30" y="286" width="620" height="36" rx="4"/><text class="th" x="46" y="304" dominant-baseline="central">Sol 규모 · 하루 5,000건 (월 15만 건)</text></g>
+<rect x="30" y="332" width="300" height="150" rx="4" class="box"/><text class="th" x="44" y="354" dominant-baseline="central">자체 GPU (가르친 E4B 1대)</text>
+<text class="ts" x="44" y="385" dominant-baseline="central">성능</text>
+<g class="c-teal"><rect x="88" y="372" width="228" height="26" rx="4"/><text class="th" x="102" y="385" dominant-baseline="central">98.8% (판정 전)</text></g>
+<text class="ts" x="44" y="421" dominant-baseline="central">금액</text>
+<g class="c-teal"><rect x="88" y="408" width="228" height="26" rx="4"/><text class="th" x="102" y="421" dominant-baseline="central">월 24.5만원</text></g>
+<text class="ts" x="44" y="457" dominant-baseline="central">부하</text>
+<g class="c-teal"><rect x="88" y="444" width="228" height="26" rx="4"/><text class="th" x="102" y="457" dominant-baseline="central">가동 7.4% 여유</text></g>
+<rect x="350" y="332" width="300" height="150" rx="4" class="box"/><text class="th" x="364" y="354" dominant-baseline="central">외부 API (Sol)</text>
+<text class="ts" x="364" y="385" dominant-baseline="central">성능</text>
+<g class="c-gray"><rect x="408" y="372" width="228" height="26" rx="4"/><text class="th" x="422" y="385" dominant-baseline="central">미측정 (Claude 96%대)</text></g>
+<text class="ts" x="364" y="421" dominant-baseline="central">금액</text>
+<g class="c-amber"><rect x="408" y="408" width="228" height="26" rx="4"/><text class="th" x="422" y="421" dominant-baseline="central">월 73.9만 (캐시 17만)</text></g>
+<text class="ts" x="364" y="457" dominant-baseline="central">부하</text>
+<g class="c-gray"><rect x="408" y="444" width="228" height="26" rx="4"/><text class="th" x="422" y="457" dominant-baseline="central">한도 미확인</text></g>
+<g class="c-teal"><rect x="30" y="492" width="620" height="32" rx="4"/><text class="th" x="46" y="508" dominant-baseline="central">→ 이 규모도 자체 GPU 유리 (캐시 없는 API 대비 3배 저렴)</text></g>
+<g class="c-gray"><rect x="30" y="548" width="620" height="36" rx="4"/><text class="th" x="46" y="566" dominant-baseline="central">Luna 규모 · 하루 10만 건 (월 300만 건)</text></g>
+<rect x="30" y="594" width="300" height="150" rx="4" class="box"/><text class="th" x="44" y="616" dominant-baseline="central">자체 GPU (2~3대 필요)</text>
+<text class="ts" x="44" y="647" dominant-baseline="central">성능</text>
+<g class="c-teal"><rect x="88" y="634" width="228" height="26" rx="4"/><text class="th" x="102" y="647" dominant-baseline="central">98.8% (판정 전)</text></g>
+<text class="ts" x="44" y="683" dominant-baseline="central">금액</text>
+<g class="c-amber"><rect x="88" y="670" width="228" height="26" rx="4"/><text class="th" x="102" y="683" dominant-baseline="central">월 49~73.5만원</text></g>
+<text class="ts" x="44" y="719" dominant-baseline="central">부하</text>
+<g class="c-red"><rect x="88" y="706" width="228" height="26" rx="4"/><text class="th" x="102" y="719" dominant-baseline="central">가동 148% 불가</text></g>
+<rect x="350" y="594" width="300" height="150" rx="4" class="box"/><text class="th" x="364" y="616" dominant-baseline="central">외부 API (Luna)</text>
+<text class="ts" x="364" y="647" dominant-baseline="central">성능</text>
+<g class="c-gray"><rect x="408" y="634" width="228" height="26" rx="4"/><text class="th" x="422" y="647" dominant-baseline="central">미측정 (Claude 96%대)</text></g>
+<text class="ts" x="364" y="683" dominant-baseline="central">금액</text>
+<g class="c-amber"><rect x="408" y="670" width="228" height="26" rx="4"/><text class="th" x="422" y="683" dominant-baseline="central">월 73.9만 (캐시 17만)</text></g>
+<text class="ts" x="364" y="719" dominant-baseline="central">부하</text>
+<g class="c-gray"><rect x="408" y="706" width="228" height="26" rx="4"/><text class="th" x="422" y="719" dominant-baseline="central">한도 미확인</text></g>
+<g class="c-amber"><rect x="30" y="754" width="620" height="32" rx="4"/><text class="th" x="46" y="770" dominant-baseline="central">→ 이 규모는 외부 API 유리 (GPU 2~3대 필요, 캐시 걸리면 더 큰 차이)</text></g>
+<g class="c-teal"><rect x="30" y="802" width="14" height="14" rx="2"/></g><text class="ts" x="52" y="809" dominant-baseline="central">좋음</text>
+<g class="c-amber"><rect x="160" y="802" width="14" height="14" rx="2"/></g><text class="ts" x="182" y="809" dominant-baseline="central">주의</text>
+<g class="c-red"><rect x="290" y="802" width="14" height="14" rx="2"/></g><text class="ts" x="312" y="809" dominant-baseline="central">불가</text>
+<g class="c-gray"><rect x="420" y="802" width="14" height="14" rx="2"/></g><text class="ts" x="442" y="809" dominant-baseline="central">미측정·참고</text>
+<text class="ts" x="30" y="836">성능 = 시험지 mix10 160문제 정답률 (가르친 모델은 5세트 중 1세트, 판정 전)</text>
+<text class="ts" x="30" y="856">API 성능은 문제별로 재지 않음 — 참고로 Claude는 mix10에서 96~97%</text>
+</svg>

@@ -1,0 +1,12 @@
+## ft/emb_e16c · 넘김 모델 gemma4:e4b — 개발용(heavy dev 44)으로 고른 문턱 lo=0.25 hi=0.6
+FT 구조 · heavy 판정 88                 78/88=89%    7     3      31/88=35%
+FT 구조 · mix4 88           84/88=95%    2     2      33/88=38%
+mix4 유형별(FT 구조, 유형당 8): {'context_pronoun': 7, 'duplicate_place': 7, 'confusable_name': 8, 'compound_intent': 8, 'negation': 7, 'typo_slang': 8, 'out_of_scope': 7, 'nameless_description': 8, 'ordinal_relative': 8, 'change_request': 8, 'absent_but_plausible': 8}
+## ft/emb_e16c · 넘김 모델 gemma4:e2b — 개발용(heavy dev 44)으로 고른 문턱 lo=0.35 hi=0.6
+FT 구조 · heavy 판정 88                 78/88=89%    3     7      23/88=26%
+FT 구조 · mix4 88           79/88=90%    6     3      30/88=34%
+mix4 유형별(FT 구조, 유형당 8): {'context_pronoun': 7, 'duplicate_place': 6, 'confusable_name': 8, 'compound_intent': 7, 'negation': 6, 'typo_slang': 8, 'out_of_scope': 7, 'nameless_description': 6, 'ordinal_relative': 8, 'change_request': 8, 'absent_but_plausible': 8}
+## ft/emb_e16c · 넘김 모델 gemma4:12b — 개발용(heavy dev 44)으로 고른 문턱 lo=0.25 hi=0.6
+FT 구조 · heavy 판정 88                 79/88=90%    6     3      31/88=35%
+FT 구조 · mix4 88           85/88=97%    2     1      33/88=38%
+mix4 유형별(FT 구조, 유형당 8): {'context_pronoun': 8, 'duplicate_place': 7, 'confusable_name': 8, 'compound_intent': 8, 'negation': 7, 'typo_slang': 8, 'out_of_scope': 7, 'nameless_description': 8, 'ordinal_relative': 8, 'change_request': 8, 'absent_but_plausible': 8}

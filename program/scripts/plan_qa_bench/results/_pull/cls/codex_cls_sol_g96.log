@@ -1,0 +1,6 @@
+test_g96.jsonl gpt-6-sol 남은 96 / 96
+test_g96.jsonl 20 / 96 34 초
+test_g96.jsonl 40 / 96 59 초
+test_g96.jsonl 60 / 96 99 초
+test_g96.jsonl 80 / 96 128 초
+test_g96.jsonl 끝 gpt-6-sol 오류 4 157 초
