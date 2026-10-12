@@ -34,7 +34,7 @@ export const KNOWN_SESSION = "known-session";
 export const SESSION_COOKIE = "tripilot_sid_dev";
 
 export const CONSENT_STORAGE = "tripilot.web.consent.v1";
-export type ConsentSeed = Partial<Record<"service_terms" | "privacy" | "sensitive" | "location" | "alert_channel", boolean>>;
+export type ConsentSeed = Partial<Record<"service_terms" | "privacy" | "sensitive" | "location" | "alert_channel" | "service_improvement", boolean>>;
 
 /**
  * `[2026-10-05]` The customer has already agreed to the CURRENT terms in this browser: the required items (and `extra` ones, e.g. `{ location: true }`), recorded as the
@@ -43,7 +43,7 @@ export type ConsentSeed = Partial<Record<"service_terms" | "privacy" | "sensitiv
  */
 export async function agree(page: Page, extra: ConsentSeed = {}) {
   await page.addInitScript(([key, version, items]) => {
-    if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ version, items: { service_terms: true, privacy: true, sensitive: false, location: false, alert_channel: false, ...items }, at: "2026-10-05T09:00:00.000Z", synced: true }));
+    if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ version, items: { service_terms: true, privacy: true, sensitive: false, location: false, alert_channel: false, service_improvement: false, ...items }, at: "2026-10-05T09:00:00.000Z", synced: true }));
   }, [CONSENT_STORAGE, TERMS_VERSION, extra] as const);
 }
 
@@ -80,7 +80,7 @@ export async function startWithOldKey(page: Page, key = "acop_u_known") {
 }
 
 /** Finish the onboarding: agree to the terms, skip every question but the last, answer that one. Leaves the summary open. */
-export async function finishOnboarding(page: Page, beforeTerms?: () => Promise<void>, optional: Array<"sensitive" | "location" | "alert_channel"> = []) {
+export async function finishOnboarding(page: Page, beforeTerms?: () => Promise<void>, optional: Array<"sensitive" | "location" | "alert_channel" | "service_improvement"> = []) {
   await page.goto("/start");
   await beforeTerms?.();
   await page.getByRole("button", { name: /약관 동의/ }).click();
@@ -155,7 +155,7 @@ export async function noHorizontalScroll(page: Page) {
  *   start-screen tests that continue with the preferences keep their steps, this helper then opens the preferences from the menu, as a customer would (`openPreferencesFromMenu`).
  *   A customer who had already agreed and only changes their boxes stays on /start with the preferences card open, as before.
  */
-export async function agreeTerms(page: Page, optional: Array<"sensitive" | "location" | "alert_channel"> = []) {
+export async function agreeTerms(page: Page, optional: Array<"sensitive" | "location" | "alert_channel" | "service_improvement"> = []) {
   await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
   const alreadyAgreed = (await page.locator("#consent-service_terms").isChecked()) && (await page.locator("#consent-privacy").isChecked());
   for (const code of ["service_terms", "privacy"]) {

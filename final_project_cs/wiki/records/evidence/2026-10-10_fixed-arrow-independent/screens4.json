@@ -1,0 +1,236 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\full-release-20261008\\release\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.live.config.ts",
+      "tests/live/aligned-map-quiet-cards-20261010.spec.ts",
+      "tests/live/compact-map-account-20261009.spec.ts",
+      "--grep",
+      "메뉴 정렬|지도 도구는 5초|지도를 움직이는 동안",
+      "--trace",
+      "retain-on-failure",
+      "--output",
+      "WORKSPACE/.tmp/uiux-handoff-20261009-2300/frontend-check/fixed-arrow-final-20261010/screens4-results",
+      "--reporter=line,json"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\full-release-20261008\\release\\final_project_cs\\frontend\\apps\\web\\playwright.live.config.ts",
+    "rootDir": "WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "WORKSPACE/.tmp/uiux-handoff-20261009-2300/frontend-check/fixed-arrow-final-20261010/screens4-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "aligned-map-quiet-cards-20261010.spec.ts",
+      "file": "aligned-map-quiet-cards-20261010.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "메뉴 정렬·고정 거리 글자·화살표만 전환 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8664,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T21:38:03.451Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a846c10ffc2332119492-2f0b04fd464601111d03",
+          "file": "aligned-map-quiet-cards-20261010.spec.ts",
+          "line": 32,
+          "column": 3
+        },
+        {
+          "title": "메뉴 정렬·고정 거리 글자·화살표만 전환 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6092,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T21:38:12.466Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a846c10ffc2332119492-e436246d9c94f42c3d4d",
+          "file": "aligned-map-quiet-cards-20261010.spec.ts",
+          "line": 32,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "compact-map-account-20261009.spec.ts",
+      "file": "compact-map-account-20261009.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "지도 도구는 5초 뒤 접히고 키보드 조작 중에는 유지된다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 15059,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T21:38:18.589Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c081801b373e0abf6839-6ceff2267c638170019d",
+          "file": "compact-map-account-20261009.spec.ts",
+          "line": 120,
+          "column": 1
+        },
+        {
+          "title": "지도를 움직이는 동안 정보와 단추가 사라졌다가 멈추면 돌아온다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5211,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T21:38:33.665Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c081801b373e0abf6839-6012ea503320aa43fafb",
+          "file": "compact-map-account-20261009.spec.ts",
+          "line": 133,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T21:37:59.222Z",
+    "duration": 40612.63,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

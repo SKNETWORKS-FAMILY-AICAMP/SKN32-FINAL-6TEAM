@@ -65,6 +65,8 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
     """`exchange` — 코드를 사용자 고유 번호로 바꾸는 것(시험이 가짜 업체를 꽂는다). 없으면 업체에 실제로 묻는다.
     `human_verify` — 사람 확인(Turnstile)을 갈아 끼우는 자리(시험)."""
     router = APIRouter()
+    from .personal_ai_api import build_personal_ai_router
+    router.include_router(build_personal_ai_router())
     router.include_router(build_agent_keys_router())        # `[2026-10-04 D-CS-012]` 에이전트 키(쿠키 로그인한 회원만)
     router.include_router(build_consents_router())          # `[2026-10-05]` 약관 동의 기록 · 사용 조건(게이트는 `web_cookie.authenticate`)
     router.include_router(build_public_retention_router())  # `[2026-10-07]` 약관 보관 기간 공개 읽기(키 없음 · 개인 정보 없음)
@@ -135,7 +137,10 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
             raise _error(410, "ticket_invalid", "이 로그인 표를 쓸 수 없다 — 처음부터 다시 한다")
         tenant = _tenant()
         with get_connection() as conn, conn.transaction():
-            got = web_auth.exchange(conn, tenant_id=tenant, ticket=body.ticket, client_nonce=body.client_nonce)
+            try:
+                got = web_auth.exchange(conn, tenant_id=tenant, ticket=body.ticket, client_nonce=body.client_nonce)
+            except web_auth.GuestTransferRefused:
+                raise _error(409, "guest_transfer_changed", "로그인 도중 계정 상태가 바뀌었어요. 지금 일정을 그대로 두고 다시 로그인해 주세요.") from None
             if got is None:
                 raise _error(410, "ticket_invalid", "이 로그인 표를 쓸 수 없다 — 처음부터 다시 한다")
             out: dict[str, Any] = {"outcome": got["outcome"], "provider": got["provider"],
@@ -234,9 +239,15 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
         if body.mode == "link":
             customer = _customer(http)                          # 연결은 로그인 상태(쿠키 세션 또는 키)가 있어야 한다(없으면 401 `unauthenticated`)
         else:
-            # 로그인 시작은 인증 없이도 열린다 — 이미 로그인 상태가 있으면 사람 확인을 건너뛴다(CSRF 는 이 자리에서 안 본다: 상태를 안 바꾼다)
-            if web_cookie.authenticate(http, required=False, csrf=False) is None:
+            # 게스트 출처를 기록하는 쓰기이므로 쿠키의 Origin과 CSRF도 확인한다.
+            identity = web_cookie.authenticate(http, required=False)
+            if identity is None:
                 _human(body.turnstile_token or x_turnstile_token, http)
+            else:
+                from .guest_policy import is_guest
+                with get_connection() as conn:
+                    if is_guest(conn, tenant_id=_tenant(), customer_id=identity.customer_id):
+                        customer = identity.customer_id
         verifier = oauth.new_verifier()
         with get_connection() as conn, conn.transaction():
             state, nonce = web_auth.begin(conn, tenant_id=_tenant(), provider=provider, mode=body.mode, customer_id=customer,
@@ -295,6 +306,8 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
             remaining = web_auth.links(conn, tenant_id=tenant, customer_id=customer)
             if not remaining:        # ★마지막 연결을 풀면 게스트가 된다 — 복구 불가능한 계정에 강한 에이전트 키만 남지 않게 거둔다(D-CS-012)
                 web_agent_keys.revoke_all(conn, tenant_id=tenant, customer_id=customer)
+                from .personal_ai_store import revoke_customer
+                revoke_customer(conn, tenant, customer)
             return {"links": remaining}
 
     return router

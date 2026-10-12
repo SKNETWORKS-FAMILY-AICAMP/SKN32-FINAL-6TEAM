@@ -15,6 +15,7 @@ from app.domains.travel_ops.instances.activity import ActivityTeam
 from app.domains.travel_ops.instances.activity import failure_codes as fc
 
 from ..helpers import FakeTools, pack, task
+from ._disaster import disaster_from
 
 ALLOWED = ActivityTeam.manifest.allowed_tools
 KST = timezone(timedelta(hours=9))
@@ -38,7 +39,8 @@ def _run(report):
                                "party_size": 2, "capacity": 4},
               "read.policy": [],
               "read.place": {"place_id": "p1", "weather_sensitive": False, "latitude": 37.5, "longitude": 127.0},
-              "read.disruptions": report, "read.place_hours": OPEN_HOURS, "read.holiday": None}
+              "read.disruptions": report, "read.disaster": disaster_from(report),
+              "read.place_hours": OPEN_HOURS, "read.holiday": None}
     context = pack("activity", scope=["activity"])
     return asyncio.run(ActivityTeam(FakeTools(values)).execute(task("activity", "activity.check_feasible", context, ALLOWED)))
 
@@ -74,3 +76,10 @@ def test_a_drill_message_does_not_block():
 def test_nothing_unclassified_changes_nothing():
     result = _run(_report())
     assert result.decisions[0]["feasible"] is True and "safety" not in result.decisions[0]
+
+
+def test_the_answer_names_the_step_that_was_sent_not_a_stronger_one():
+    """구현 계획 2.1 — 「긴급재난」 문자를 「위급재난」으로 바꿔 말하지 않는다. `[2026-10-12]`"""
+    result = _run(_report(_message("원전", "긴급재난", "원전 사고, 반경 내 외출 자제")))
+    assert "원전(긴급재난)" in result.answer and "위급재난" not in result.answer
+    assert result.decisions[0]["safety"]["step"] == "긴급재난"

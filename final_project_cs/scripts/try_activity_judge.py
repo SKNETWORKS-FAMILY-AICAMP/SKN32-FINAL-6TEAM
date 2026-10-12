@@ -90,6 +90,14 @@ class ScriptDisaster:
         return {"mode": "script", "covered": True, "region": region, "district": district, "source": self.name,
                 "confirmed_at": now.isoformat(), "for_region": messages, "unclassified": unclassified}
 
+    def near(self, latitude: float, longitude: float, at: Any = None, *, address: str | None = None) -> dict[str, Any] | None:
+        """`read.disaster` 가 부르는 모양 — 실제 소스의 `near()` 와 같은 구 판정(`_near_by_district`). `[2026-10-12]`
+        ★10-11 부터 팀이 재난문자를 `read.disaster` 로 다시 읽는다(실내 장소의 날씨형 문자 · §8 분류). 이 도구가 없으면
+          팀은 「다시 읽지 못했다」로 운영 담당자에게 넘긴다."""
+        from app.domains.travel_ops.ports.data_sources.disaster_msg import _near_by_district
+
+        return _near_by_district(self, latitude, longitude, at if isinstance(at, datetime) else datetime.now(KST), address)
+
 
 class ScriptWeather:
     name = "try_activity_judge"
@@ -179,6 +187,25 @@ def build_values(args: argparse.Namespace, starts: datetime) -> tuple[dict[str, 
         return check.check(place=target, starts_at=parse_at(starts_at) if isinstance(starts_at, str) else starts_at,
                            region=region)
 
+    def read_disaster(*, latitude=None, longitude=None, at=None, address=None, **_: Any) -> dict[str, Any] | None:
+        """실제 `read.disaster` 처럼 — 소스가 없거나 좌표를 모르면 `None`(모름)."""
+        if disaster is None or latitude is None or longitude is None:
+            return None
+        return disaster.near(float(latitude), float(longitude), at, address=address)
+
+    def read_disaster_points(*, points=None, at=None, **_: Any) -> dict[str, Any] | None:
+        """실제 `read.disaster_points` 처럼 — 대체 후보 좌표마다 `read.disaster` 와 같은 모양(못 읽은 칸은 `None`)."""
+        if disaster is None or not isinstance(points, list):
+            return None
+        out: list[dict[str, Any] | None] = []
+        for point in points:
+            try:
+                lat, lon, *rest = point
+                out.append(disaster.near(float(lat), float(lon), at, address=rest[0] if rest else None))
+            except (TypeError, ValueError):
+                out.append(None)
+        return {"points": out}
+
     lcls1, lcls2 = (row or {}).get("lclsSystm1"), (row or {}).get("lclsSystm2")
     place_class = ({"content_id": found["content_id"], "lcls1": lcls1, "lcls2": lcls2,
                     "address": found.get("address"), "weather_sensitive": weather_from_class(lcls1, lcls2)}
@@ -189,6 +216,8 @@ def build_values(args: argparse.Namespace, starts: datetime) -> tuple[dict[str, 
         "read.policy": [{"note": "try_activity_judge"}],
         "read.place": place,
         "read.disruptions": read_disruptions,
+        "read.disaster": read_disaster,
+        "read.disaster_points": read_disaster_points,
         "read.place_hours": _hours(args.usetime, args.restdate),
         "read.place_class": place_class,
         "read.holiday": None,

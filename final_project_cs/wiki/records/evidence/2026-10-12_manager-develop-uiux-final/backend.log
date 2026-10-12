@@ -1,0 +1,31 @@
+<workspace>/.tmp/baseline-manager-20261012/checks/2026-10-12_115942_796527_isolated_integration
+등록: 39765998-6e85-4a95-9097-e2804a3d7443
+등록: 1930c7ea-9800-42c5-94cf-712a93a87fc9
+활성 프롬프트 2개 검증 완료 (등록/재사용 2개)
+{'places': 6, 'bookings': 8, 'supplier_bookings': 4, 'cancellation_terms': 3, 'status_mismatch': 1}
+........................................................................ [  9%]
+........................................................................ [ 18%]
+........................................................................ [ 28%]
+........................................................................ [ 37%]
+........................................................................ [ 46%]
+........................................................................ [ 56%]
+........................................................................ [ 65%]
+........................................................................ [ 74%]
+........................................................................ [ 84%]
+........................................................................ [ 93%]
+...................................................                      [100%]
+============================== warnings summary ===============================
+..\..\..\..\..\..\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290
+  C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; anyio
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+
+<unknown>:352
+tests/architecture/test_basement_layers.py::test_layer_directions_do_not_get_worse
+tests/architecture/test_composer_stays_out_of_this_repo.py::test_only_the_management_seam_knows_the_package
+tests/architecture/test_travel_ops_cells.py::test_cell_rules_do_not_get_worse
+tests/contract/test_team_tool_discipline.py::test_team_does_not_import_infrastructure_directly[devtools/judgment_log.py]
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: <workspace>\.tmp\baseline-manager-20261012\checks\2026-10-12_115942_796527_isolated_integration\junit.xml -
+771 passed, 6 warnings in 97.53s (0:01:37)

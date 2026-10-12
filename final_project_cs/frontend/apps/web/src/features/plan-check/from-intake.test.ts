@@ -28,8 +28,8 @@ describe("plan check reading, from the server's intake", () => {
       item(1, 2, null, { title: field("광장시장") }),
     ])]));
     expect(view.lines).toEqual([
-      { no: 1, text: "10/1 09:00 경복궁 관람", read: true, found: { kind: "item", day: 1, startsAt: "09:00", title: "경복궁 관람" } },
-      { no: 2, text: "점심은 광장시장", read: true, found: { kind: "item", day: null, startsAt: null, title: "광장시장" } },
+      { no: 1, text: "10/1 09:00 경복궁 관람", read: true, found: { kind: "item", id: "0-0", sourceKey: "s1:0", date: null, day: 1, startsAt: "09:00", title: "경복궁 관람" } },
+      { no: 2, text: "점심은 광장시장", read: true, found: { kind: "item", id: "0-1", sourceKey: "s1:1", date: null, day: null, startsAt: null, title: "광장시장" } },
       { no: 3, text: "메모: 우산", read: false, found: null },
     ]);
     expect(view.items).toEqual([]);                                                 // places and checks are not mapped yet

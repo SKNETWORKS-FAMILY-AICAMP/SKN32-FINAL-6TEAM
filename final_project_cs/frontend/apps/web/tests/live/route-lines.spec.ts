@@ -15,7 +15,10 @@ const caption = (page: Page) => tripScreen(page);                    // 목록 �
 /** The map's ＋ / －: the buttons show only while the pointer is on the map (`map-controls.spec.ts`), so the pointer goes there first. */
 async function zoom(page: Page, name: "확대" | "축소") {
   await page.getByRole("region", { name: "여행 지도", exact: true }).hover({ position: { x: 150, y: 120 } });
-  await page.getByRole("group", { name: "지도 단추" }).getByRole("button", { name }).click();
+  const group = page.getByRole("group", { name: "지도 단추" });
+  const expand = group.getByRole("button", { name: "지도 단추 펼치기", exact: true });
+  if (await expand.count()) await expand.click();
+  await group.getByRole("button", { name, exact: true }).click();
 }
 
 async function openMap(page: Page) {

@@ -17,20 +17,21 @@ import json
 import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeout
 from dataclasses import replace
 from typing import Any, Protocol
 
 from .. import failure_codes as fc
 from .llm import LLMJudge
 from .rule import RuleJudge
-from .types import JudgeContext, JudgeRequest, Verdict
+from .types import WEB_KINDS, JudgeContext, JudgeRequest, Verdict
 
 SHADOW_LOGGER_NAME = "acop.activity.judge_shadow"
 _shadow_log = logging.getLogger(SHADOW_LOGGER_NAME)
 
 #: LLM 모드에서 **호출 실패**면 규칙으로 답한다. 근거 검증 탈락(`llm_uncited`)은 실패가 아니라 「모름」이라
 #:  규칙으로 덮지 않는다 — LLM 모드를 켠다는 것은 「LLM 이 근거를 못 대면 모른다고 말한다」를 고른 것이다.
-_CALL_FAILURES = frozenset({fc.LLM_TIMEOUT, fc.LLM_SCHEMA_INVALID, fc.LLM_ERROR})
+_CALL_FAILURES = frozenset({fc.LLM_TIMEOUT, fc.LLM_SCHEMA_INVALID, fc.LLM_ERROR, fc.LLM_BUSY})
 
 
 class ActivityJudge(Protocol):
@@ -76,22 +77,178 @@ def default_runner() -> BackgroundRunner:
         return _runner
 
 
-def _run(coro) -> Any:
-    """동기 코드에서 코루틴 하나를 끝까지 돌린다. ★Team 코드는 이벤트 루프 안에서 불리므로 새 스레드에서 돈다."""
-    with ThreadPoolExecutor(max_workers=1, thread_name_prefix="activity-judge") as pool:
-        return pool.submit(asyncio.run, coro).result()
+#: 종류별로 받는 값(`travel.activity_judge.kind_modes`). `[2026-10-12]`
+#:  `llm` = **규칙이 모를 때만** LLM(`rule_first`) — D-CS-015 개정 2(2026-10-12 사용자 결정)로 받는다.
+#:  ★`[2026-10-12 사용자 결정]` 실시간 운영(웹 검색)도 `llm` 을 받는다 — DB 운영 정보로 규칙이 휴무 · 운영시간을 먼저 보고,
+#:  닫혔다고 못 정했을 때 웹 검색으로 그 날짜의 운영 · 폐업을 확인한다. 전에는 라벨이 없어 섀도만 받았다.
+KIND_MODES = ("rule", "shadow", "llm")
+#: `llm` 을 받지 않는 종류 — 지금은 없다(위 사용자 결정으로 실시간 운영을 뺐다)
+_NO_LLM_KINDS: frozenset[str] = frozenset()
+#: 조심하는 쪽 — 이 종류에서 LLM 이 **확정해도 되는** 값. 그 밖의 확정 값(풀어 주는 쪽 · 「휴무 아님」 「괜찮다」)은 모름으로 내린다.
+#:  10-12 재평가에서 LLM 의 오답 5건이 모두 풀어 주는 쪽이었다(closure-06 · disaster-04) — D-CS-015 개정 2 「지키는 것」.
+#:  ★실시간 운영은 라벨이 없다(정확도 미측정) — 「닫혔다(휴무 · 폐업)」만 받는다. 「연다」는 다른 점검을 건너뛸 이유가 아니다.
+CAUTIOUS_VALUES: dict[str, frozenset[str]] = {"closure": frozenset({"closed"}),
+                                              "disaster_effect": frozenset({"blocks"}),
+                                              "live_status": frozenset({"closed"})}
+
+
+def kind_mode(kind: str, modes: Any = None) -> str:
+    """그 판정 종류를 섀도로 돌리나 — `rule` · `shadow`(구현 계획 1.4). `modes` 를 안 주면 가드레일에서 읽는다.
+    ★표에 없는 종류는 `rule`(부르지 않는다) — 새 종류가 설정 없이 몰래 LLM 을 부르지 않게.
+    ★받지 않는 값(`llm` · 오타 · YAML 이 `off` 를 읽은 `False`)은 **멈춘다**(`ValueError`) — 조용히 끄거나 켜지 않는다."""
+    if modes is None:
+        from app.core.settings import get_guardrails
+
+        modes = get_guardrails().get("travel.activity_judge.kind_modes")
+    if not isinstance(modes, dict):
+        raise ValueError(f"travel.activity_judge.kind_modes 는 표여야 한다: {modes!r}")
+    value = modes.get(kind, "rule")
+    if value not in KIND_MODES:
+        raise ValueError(f"travel.activity_judge.kind_modes.{kind} = {value!r} — {list(KIND_MODES)} 중 하나여야 한다")
+    if value == "llm" and kind in _NO_LLM_KINDS:
+        raise ValueError(f"travel.activity_judge.kind_modes.{kind} 는 llm 을 받지 않는다(D-CS-015 개정 2 — 섀도만)")
+    return value
+
+
+def rule_first(ctx: JudgeContext, request: JudgeRequest, rule: Verdict, llm: LLMJudge, *,
+               budget: Any | None = None) -> Verdict:
+    """규칙이 답했으면 규칙. **규칙이 모를 때만** LLM — D-CS-015 개정 2. `[2026-10-12]`
+
+    ★휴무 · 재난은 조심하는 쪽 값(`CAUTIOUS_VALUES`)만 받는다 — LLM 이 「휴무 아님 · 괜찮다」로 확정하면 규칙의 「모름」을 돌려준다.
+    ★호출 실패 · 인용 검증 탈락 · 예산 초과는 규칙의 「모름」 그대로다(지어내지 않는다).
+    """
+    if rule.known:
+        return rule
+    if budget is not None:
+        try:
+            if not budget(request.kind):
+                return replace(rule, dropped=[*rule.dropped, "llm:budget_exhausted"])
+        except Exception:  # noqa: BLE001 — 세지 못하면 부르지 않는다(ShadowJudge 와 같다)
+            return replace(rule, dropped=[*rule.dropped, "llm:budget_unreadable"])
+    # ★`[2026-10-12]` 1.6 — 웹 판정은 고객이 기다리는 상한을 둔다. 넘으면 「모름」으로 답하고 호출은 뒤에서 끝난다(비용은 나간다)
+    timeout = (float(llm.reliability["web_answer_timeout_seconds"])
+               if request.kind in WEB_KINDS and getattr(llm, "reliability", None) else None)
+    try:
+        verdict = _run(llm.judge(ctx, request), timeout=timeout)
+    except FuturesTimeout:
+        verdict = Verdict(request.kind, "unknown", "llm", basis="web_answer_timeout", failure_code=fc.LLM_TIMEOUT)
+    if not verdict.known:
+        return replace(rule, dropped=[*rule.dropped, f"llm:{verdict.failure_code or 'unknown'}"])
+    allowed = CAUTIOUS_VALUES.get(request.kind)
+    if allowed is not None and verdict.value not in allowed:
+        return replace(rule, dropped=[*rule.dropped, f"llm_relaxing_not_accepted:{verdict.value}"])
+    return verdict
+
+
+def _run(coro, *, timeout: float | None = None) -> Any:
+    """동기 코드에서 코루틴 하나를 끝까지 돌린다. ★Team 코드는 이벤트 루프 안에서 불리므로 새 스레드에서 돈다.
+    ★`timeout` 을 넘으면 `concurrent.futures.TimeoutError` — 기다리기만 그만두고 스레드는 끝까지 둔다(끊을 수 없다)."""
+    pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="activity-judge")
+    try:
+        return pool.submit(asyncio.run, coro).result(timeout=timeout)
+    finally:
+        pool.shutdown(wait=timeout is None)
+
+
+#: 판정 LLM 호출 예산의 줄 이름 — 웹 검색(실시간 운영)은 호출당 약 $0.032, 나머지(원문 해석)는 약 $0.0003 이라 따로 센다.
+#:  ★조립이 `external_call_budget` 에 이 이름으로 줄을 만들어 `ActivityTeam.judge_budget` 에 꽂는다(코어 협의 — 협의 메모 요청 7).
+BUDGET_METER_TEXT = "activity_judge"
+BUDGET_METER_WEB = "activity_judge_web"
+
+
+def budget_meter(kind: str) -> str:
+    """판정 종류 → 예산 줄 이름. `[2026-10-12]`"""
+    return BUDGET_METER_WEB if kind == "live_status" else BUDGET_METER_TEXT
+
+
+class LocalWebBudget:
+    """조립이 예산(`judge_budget`)을 꽂지 않았을 때 **웹 검색만** 프로세스 안에서 세는 상한. `[2026-10-12]`
+
+    ★왜. 실시간 운영을 `llm` 으로 켜면 장소마다 웹 검색(호출당 약 $0.032)을 부른다. DB 예산 줄은 코어 조립 몫(협의 메모 요청 7)이라
+      아직 꽂히지 않았고, 그대로면 상한 없이 부른다. 그 전까지 `travel.activity_judge.budget.web` 의 일 · 월 상한을 여기서 센다.
+    ★프로세스마다 따로 세고 재기동하면 0 부터다 — DB 예산이 꽂히면 그쪽이 앞선다(`ActivityTeam._judge_budget`).
+    ★원문 해석(text)은 세지 않는다 — 지금까지와 같다.
+    """
+
+    def __init__(self, caps: dict[str, dict[str, int]] | None = None, *, today: Any = None) -> None:
+        self._caps = (caps or budget_caps())[BUDGET_METER_WEB]
+        self._today = today
+        self._day: Any = None
+        self._month: Any = None
+        self._day_count = 0
+        self._month_count = 0
+        self._lock = threading.Lock()
+
+    def __call__(self, kind: str) -> bool:
+        if budget_meter(kind) != BUDGET_METER_WEB:
+            return True
+        from datetime import date
+
+        today = self._today() if self._today is not None else date.today()
+        with self._lock:
+            if today != self._day:
+                self._day, self._day_count = today, 0
+            if (today.year, today.month) != self._month:
+                self._month, self._month_count = (today.year, today.month), 0
+            if self._day_count >= self._caps["day"] or self._month_count >= self._caps["month"]:
+                return False
+            self._day_count += 1
+            self._month_count += 1
+            return True
+
+
+_local_web_budget: LocalWebBudget | None = None
+
+
+def local_web_budget() -> LocalWebBudget:
+    """프로세스에 하나 — 팀 인스턴스가 여럿이어도 같이 센다."""
+    global _local_web_budget
+    with _runner_lock:
+        if _local_web_budget is None:
+            _local_web_budget = LocalWebBudget()
+        return _local_web_budget
+
+
+def budget_caps(guard: Any = None) -> dict[str, dict[str, int]]:
+    """예산 줄별 `{"day": n, "month": n}` — `travel.activity_judge.budget`. 조립이 `CallBudget(caps=…)` 에 그대로 넘긴다."""
+    if guard is None:
+        from app.core.settings import get_guardrails
+
+        guard = get_guardrails()
+    table = guard.get("travel.activity_judge.budget")
+    return {meter: {"day": int(table[name]["day"]), "month": int(table[name]["month"])}
+            for name, meter in (("text", BUDGET_METER_TEXT), ("web", BUDGET_METER_WEB))}
 
 
 class ShadowJudge:
     def __init__(self, rule: RuleJudge, llm: LLMJudge, *, runner: Any | None = None,
-                 sink: Any | None = None) -> None:
+                 sink: Any | None = None, budget: Any | None = None) -> None:
+        """`budget`: 판정 종류 → 「불러도 되나」(`True`/`False`). 부르기 **전에** 한 칸을 확보하는 함수다(조립이 넣는다).
+        `None` 이면 세지 않는다(지금까지와 같다)."""
         self.rule = rule
         self.llm = llm
         self._runner = runner
         self._sink = sink
+        self._budget = budget
+
+    def _within_budget(self, kind: str) -> bool:
+        """★세다가 실패하면 **부르지 않는다** — 섀도는 고객 답에 쓰이지 않아 안 불러도 손해가 없고, 비용 상한이 먼저다.
+        (모델 서버 넘김 장치는 반대로 부른다 — 그쪽은 고객 응답이 걸려 있다.)"""
+        if self._budget is None:
+            return True
+        try:
+            return bool(self._budget(kind))
+        except Exception as exc:  # noqa: BLE001 — 세는 일이 판정을 막지 않게, 대신 부르지 않는다
+            _shadow_log.warning("activity judge budget unreadable (%s) — skipping the LLM call", type(exc).__name__)
+            return False
 
     def judge(self, ctx: JudgeContext, request: JudgeRequest) -> Verdict:
         rule_verdict = self.rule.judge(ctx, request)
+        if not self._within_budget(request.kind):
+            # ★`[2026-10-12]` 예산 상한(구현 계획 4.6 · 전달사항 「비용 제한」) — 부르지 않고 건너뜀으로 남긴다
+            _emit(_record(ctx, request, event="activity_judge_shadow_skipped", rule=rule_verdict,
+                          error="budget_exhausted"), self._sink)
+            return rule_verdict
 
         def work() -> None:
             try:

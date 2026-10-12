@@ -14,6 +14,8 @@
   표현(「매월 둘째 주」 · 계절별 시간)을 일부러 넣었다.
 ★`live_status`(웹)는 **라벨을 달지 않는다**(`expected: null`). 실제 공지를 사람이 확인하지 않았다 —
   정확도 대신 근거 지표(확정 비율 · 출처 대조 · 회차 간 일관성)만 잰다.
+★`[2026-10-11]` 사람 검토 라벨(`labels_human.json`, `review.py apply` 가 쓴다)이 있으면 위 작성자 라벨 위에 덮어쓰고
+  매니페스트의 `labeler` 를 검토자로 바꾼다. 작성자 라벨과 다른 건수도 적는다(WS-1.1).
 ★날짜(2026년 달력): 10/9(금) 한글날 · 10/3(토) 개천절 · 추석 연휴 9/24~26 · 2027-01-01(금) 신정.
 """
 from __future__ import annotations
@@ -180,21 +182,53 @@ CASES = [
 ]
 
 
-def dataset_text() -> str:
-    return "".join(json.dumps(c, ensure_ascii=False, sort_keys=True) + "\n" for c in CASES)
+#: ★`[2026-10-11]` 사람 검토 라벨(WS-1.1) — `review.py apply` 가 쓴다. 있으면 위 작성자 라벨 위에 덮어쓴다.
+HUMAN_LABELS = HERE / "labels_human.json"
+
+
+def human_review() -> dict | None:
+    """사람 검토 라벨. 없으면 None — 작성자 라벨 그대로 간다."""
+    if not HUMAN_LABELS.exists():
+        return None
+    return json.loads(HUMAN_LABELS.read_text(encoding="utf-8"))
+
+
+def labeled_cases(review: dict | None) -> list[dict]:
+    """작성자 라벨 위에 사람 라벨을 덮는다. 사람이 안 본 건(live_status)은 그대로다."""
+    labels = (review or {}).get("labels", {})
+    out = []
+    for case in CASES:
+        human = labels.get(case["case_id"])
+        if human:
+            case = {**case, "expected": human["expected"], "acceptable": human["acceptable"],
+                    "note": human.get("note") or case["note"]}
+        out.append(case)
+    return out
+
+
+def dataset_text(cases: list[dict] | None = None) -> str:
+    return "".join(json.dumps(c, ensure_ascii=False, sort_keys=True) + "\n" for c in (cases or CASES))
 
 
 def main() -> None:
-    text = dataset_text()
+    review = human_review()
+    cases = labeled_cases(review)
+    text = dataset_text(cases)
     DATASET.write_text(text, encoding="utf-8")
     counts: dict[str, int] = {}
     for case in CASES:
         counts[case["kind"]] = counts.get(case["kind"], 0) + 1
-    MANIFEST.write_text(json.dumps({
+    manifest = {
         "built_on": BUILT_ON, "labeler": LABELER, "cases": len(CASES), "by_kind": counts,
-        "labeled": sum(1 for c in CASES if c["expected"] is not None),
+        "labeled": sum(1 for c in cases if c["expected"] is not None),
         "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
-    }, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    }
+    if review:
+        manifest["labeler"] = f"사람 검토 — {review['reviewer']} ({review['reviewed_on']})"
+        manifest["human_reviewed"] = len(review["labels"])
+        manifest["changed_from_author"] = sum(
+            1 for before, after in zip(CASES, cases) if before["expected"] != after["expected"])
+    MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(f"{len(CASES)}건 · {counts} · sha256={hashlib.sha256(text.encode('utf-8')).hexdigest()[:12]}")
 
 

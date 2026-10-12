@@ -29,6 +29,10 @@ CLOSED_WEEKDAY: Final = "closed_weekday"
 DISASTER_BLOCKS: Final = "disaster_blocks"
 PLACE_UNKNOWN: Final = "place_unknown"
 TIME_UNKNOWN: Final = "time_unknown"
+# ★`[2026-10-11]` 고객 확인(`waiting` · `customer_input`) 갈래 — 유스케이스 수정본 UC-A3 `3b2` · `4a`(D4).
+INDOOR_UNKNOWN: Final = "indoor_unknown"
+HOURS_UNKNOWN: Final = "hours_unknown"
+DISASTER_UNCONFIRMED: Final = "disaster_unconfirmed"
 PLACE_NOT_FOUND: Final = "place_not_found"
 PLACE_AMBIGUOUS: Final = "place_ambiguous"
 PLACE_EXISTS_UNREGISTERED: Final = "place_exists_unregistered"
@@ -47,6 +51,8 @@ LLM_SCHEMA_INVALID: Final = "llm_schema_invalid"
 LLM_UNCITED: Final = "llm_uncited"
 LLM_ERROR: Final = "llm_error"
 LLM_FALLBACK_RULE: Final = "llm_fallback_rule"
+# ★`[2026-10-12]` 구현 계획 1.6 — 웹 검색 동시 호출 자리를 못 잡았다(429 를 미리 막는 상한)
+LLM_BUSY: Final = "llm_busy"
 
 DESCRIPTIONS: Final[dict[str, str]] = {
     ALREADY_STARTED: "이미 시작됐거나 끝난 활동이다 — 성립을 다시 점검하지 않는다",
@@ -54,9 +60,12 @@ DESCRIPTIONS: Final[dict[str, str]] = {
     TOOL_ERROR: "읽기 도구(API·DB)가 예외를 냈다 — 삼키지 않고 다시 던졌다",
     # ── role-activity 판 ──
     CLOSED_WEEKDAY: "요청 요일이 정기휴무 요일이다(판정: 불가)",
-    DISASTER_BLOCKS: "위급재난이 확인돼 성립하지 않는다(판정: 불가)",
-    PLACE_UNKNOWN: "예약의 장소·운영 정보를 읽지 못했다(판정: 정보 부족)",
-    TIME_UNKNOWN: "예약 시각을 읽지 못해 성립 여부를 판정하지 않았다(판정: 정보 부족)",
+    DISASTER_BLOCKS: "재난이 확인돼 성립하지 않는다 — 수정본 §8 분류표(지역 위험형 · 야외 위험형+야외) 또는 재난 정지 대상(판정: 불가)",
+    PLACE_UNKNOWN: "예약의 장소·운영 정보를 읽지 못했다(운영 담당자에게 넘긴다 — 없음으로 단정하지 않는다)",
+    TIME_UNKNOWN: "예약 시각을 읽지 못해 성립 여부를 판정하지 않았다(고객에게 방문 시각을 묻는다)",
+    INDOOR_UNKNOWN: "실내외를 모르는 장소에 야외에만 영향을 주는 사건이 걸렸다(고객에게 야외인지 묻는다)",
+    HOURS_UNKNOWN: "운영 정보가 비어 휴무 · 운영시간을 판정하지 못했다(그대로 진행할지 고객에게 묻는다)",
+    DISASTER_UNCONFIRMED: "재난문자를 최신으로 확인하지 못했다(영향 없음으로 보지 않고 운영 담당자에게 넘긴다)",
     PLACE_NOT_FOUND: "고객이 말한 장소 이름을 카탈로그·TourAPI 에서 하나로 특정하지 못했다(고객에게 되묻는다)",
     PLACE_AMBIGUOUS: "고객이 말한 장소 이름이 카탈로그의 둘 이상을 가리킨다(고객에게 고르게 한다)",
     PLACE_EXISTS_UNREGISTERED: "장소는 실재하지만 우리 카탈로그에 없다(저장하지 않고 고객에게 되묻는다)",
@@ -74,4 +83,5 @@ DESCRIPTIONS: Final[dict[str, str]] = {
     LLM_UNCITED: "판정 LLM 이 근거를 대지 못했다 — 인용이 원문에 없거나 출처가 검색 목록에 없다(판정: 모름)",
     LLM_ERROR: "판정 LLM 호출이 그 밖의 이유로 실패했다 — 429·키 없음·네트워크(판정: 모름)",
     LLM_FALLBACK_RULE: "LLM 모드에서 LLM 판정이 실패해 규칙 판정으로 답했다",
+    LLM_BUSY: "웹 검색 판정이 동시 호출 상한에 걸려 자리를 기다리다 그만뒀다(부르지 않음, 판정: 모름)",
 }

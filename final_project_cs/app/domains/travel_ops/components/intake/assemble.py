@@ -280,6 +280,9 @@ def _place_in(key: str, place: dict[str, Any], kind: str) -> dict[str, Any]:
             attributes["pick_origin"] = str(place["origin"])
         if place.get("content_id"):
             attributes["source_content_id"] = str(place["content_id"])
+        if place.get("dining_place_uid"):
+            # ★`[2026-10-10]` 서버가 공용 원장 식당 행과 같은 곳으로 확인한 경우만 있다(`pipeline._linked_ledger_pick`) — 등록 판정 · 원장 연결이 이 번호로 간다
+            attributes["dining_place_uid"] = str(place["dining_place_uid"])
     return {"key": key, "name": place["name"], "kind": place.get("kind") or kind,
             "lat": float(place["latitude"]), "lon": float(place["longitude"]),
             "weather_sensitive": None, "attributes": attributes}   # ★`[2026-09-29]` 모름 — 확실한 분류로 채운다(`fill_weather_sensitive`)

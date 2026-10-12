@@ -295,8 +295,12 @@ def test_me_reports_the_session_and_401_without_one(cookies):
 
 
 def _login_with_cookie(env, browser, who="alice"):
+    headers = {"X-Forwarded-For": env["ip"]}
+    me = browser.get("/v1/web/auth/me")
+    if me.status_code == 200:
+        headers.update({"Origin": WEB, "X-CSRF-Token": me.json()["csrf_token"]})
     start = browser.post("/v1/web/auth/google/start", json={"mode": "login", "client_nonce": NONCE},
-                         headers={"X-Forwarded-For": env["ip"]})
+                         headers=headers)
     assert start.status_code == 200, start.text
     from urllib.parse import parse_qs, urlparse
     state = parse_qs(urlparse(start.json()["authorize_url"]).query)["state"][0]

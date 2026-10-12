@@ -14,6 +14,7 @@ from app.core.contracts import NextAction
 from app.domains.travel_ops.instances.activity import ActivityTeam
 
 from ..helpers import FakeTools, pack, task
+from ._disaster import disaster_from
 
 ALLOWED = ActivityTeam.manifest.allowed_tools
 KST = timezone(timedelta(hours=9))
@@ -46,7 +47,7 @@ POOL = {"origin": ORIGIN, "source": "place_catalog", "confirmed_at": "2026-10-09
 def _run(*, week=None, place=PLACE, pool=POOL, report=CLEAR):
     values = {"read.booking": {"booking_id": "b1", "place_id": "p1", "starts_at": TUESDAY,
                                "party_size": 2, "capacity": 4},
-              "read.policy": [], "read.place": place, "read.disruptions": report,
+              "read.policy": [], "read.place": place, "read.disruptions": report, "read.disaster": disaster_from(report),
               "read.place_hours": _hours(week or {**WEEK, "tue": "closed"}),
               "read.place_candidates": pool}
     tools = FakeTools(values)

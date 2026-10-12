@@ -20,7 +20,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from .ledger import link_core_place_to, nearby_shops, resolve_place
+from .ledger import link_core_place_to, nearby_shops, resolve_place, shop_profiles
 
 logger = logging.getLogger(__name__)
 
@@ -62,12 +62,13 @@ def add_nearby(conn, store: Any, trip_id: Any, items: list[Any], places: list[di
                      and s["place_uid"] not in known_uids
                      and (not s["content_id"] or str(s["content_id"]) not in known_content_ids)]
             if not shops:
-                return candidates
+                return _with_profiles(conn, candidates, resolved)
             adopted = store.adopt_places(conn, trip_id, [
                 {"name": s["name"], "kind": "dining", "latitude": s["latitude"], "longitude": s["longitude"],
                  "attributes": {"source": "dining_ledger", "dining_place_uid": s["place_uid"],
                                 **({"source_content_id": s["content_id"]} if s["content_id"] else {}),
-                                **({"category": s["category"]} if s.get("category") else {})}}
+                                **({"category": s["category"]} if s.get("category") else {}),
+                                **({"style": s["style"]} if s.get("style") else {})}}
                 for s in shops])
             requested_uids = {s["place_uid"] for s in shops}
             # 동명 식당은 (name, kind) 유일성 제약으로 첫 행이 남는다. 실제 저장된 행의 UID로만 연결한다.
@@ -75,10 +76,37 @@ def add_nearby(conn, store: Any, trip_id: Any, items: list[Any], places: list[di
                        and (p.get("attributes") or {}).get("dining_place_uid") in requested_uids]
             for place in adopted:
                 link_core_place_to(conn, store.tenant_id, place["place_id"], place["attributes"]["dining_place_uid"])
+            seen = {p["place_id"] for p in candidates}
+            return _with_profiles(conn, candidates + [p for p in adopted if p["place_id"] not in seen], resolved)
     except Exception as exc:   # noqa: BLE001 — 드라이버를 import 하지 않는다(Team 경계). 못 읽으면 예전 목록
         # ★`[2026-10-05]` 삼키되 흔적을 남긴다 — 전에는 조용히 예전 목록으로 돌아가, 원장이 안 읽혀 후보가 비어도 이유를 알 수 없었다
         #   (개인정보 없이 예외 종류와 짧은 설명만)
         logger.warning("dining nearby shops not adopted trip=%s reason=%s: %s", trip_id, type(exc).__name__, str(exc)[:200])
         return places
-    seen = {p["place_id"] for p in candidates}
-    return candidates + [p for p in adopted if p["place_id"] not in seen]
+
+
+#: 원장에서 다시 읽어 장소 칸에 싣는 종류 — 대체 순위의 「비슷한 곳」(`meal_likeness`)이 읽는다
+PROFILE_KEYS = ("category", "style")
+
+
+def _with_profiles(conn, places: list[dict[str, Any]], resolved: dict[str, str | None]) -> list[dict[str, Any]]:
+    """원장과 이어진 식당 장소마다 큰 분류 · 음식 결을 **원장 지금 값**으로 맞춘 새 목록. `[2026-10-12]`
+
+    ★일정 생성기가 고른 식당은 종류 칸이 없었고, 들여놓은 장소는 들여놓을 때 값 그대로였다(원장 확인 · 규칙 수정이 안 닿는다).
+      원래 식당도 이 목록에 있으면 같이 맞춰진다 — `replan.dining_candidates` 가 목록의 같은 장소에서 종류를 읽는다.
+    ★원장 값이 비면 장소 칸에서도 뺀다 — 옛 값을 남기면 모르는 것을 아는 것처럼 비교한다. 장소 표에는 쓰지 않는다(이번 계산만).
+    """
+    uid_of = {str(p["place_id"]): resolved.get(str(p["place_id"])) or (p.get("attributes") or {}).get("dining_place_uid")
+              for p in places if p.get("kind") == "dining"}
+    profiles = shop_profiles(conn, sorted({str(u) for u in uid_of.values() if u}))
+    out = []
+    for place in places:
+        profile = profiles.get(str(uid_of.get(str(place["place_id"])) or ""))
+        attributes = place.get("attributes") or {}
+        if profile is None or all(attributes.get(k) == profile[k] for k in PROFILE_KEYS):
+            out.append(place)
+            continue
+        fresh = {k: v for k, v in attributes.items() if k not in PROFILE_KEYS}
+        fresh.update({k: profile[k] for k in PROFILE_KEYS if profile[k]})
+        out.append({**place, "attributes": fresh})
+    return out

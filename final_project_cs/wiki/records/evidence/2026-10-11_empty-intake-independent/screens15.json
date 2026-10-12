@@ -1,0 +1,618 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "WORKSPACE\\.tmp\\full-release-20261008\\release\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.live.config.ts",
+      "tests/live/empty-intake-return-20261011.spec.ts",
+      "tests/live/intake-review.spec.ts",
+      "tests/live/intake-start.spec.ts",
+      "--workers=1",
+      "--trace",
+      "off",
+      "--output",
+      "WORKSPACE/.tmp/uiux-handoff-20261009-2300/frontend-check/empty-intake-final-20261011/screens15-results",
+      "--reporter=line,json"
+    ],
+    "configFile": "WORKSPACE\\.tmp\\full-release-20261008\\release\\final_project_cs\\frontend\\apps\\web\\playwright.live.config.ts",
+    "rootDir": "WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "WORKSPACE/.tmp/uiux-handoff-20261009-2300/frontend-check/empty-intake-final-20261011/screens15-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "empty-intake-return-20261011.spec.ts",
+      "file": "empty-intake-return-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px 읽는 중 0개는 기다리고 완료 0개는 질문 유지보다 먼저 입력으로 돌아가 글을 고쳐 다시 보낸다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6446,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:03.621Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "757b1c591c53433fa48f-a15aeccfb4db5853d515",
+          "file": "empty-intake-return-20261011.spec.ts",
+          "line": 8,
+          "column": 3
+        },
+        {
+          "title": "375px 파일에서 일정 0개면 입력 화면에 선택 파일을 복원하고 재전송하지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1481,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:10.352Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "757b1c591c53433fa48f-94619a04fa3eff8a48b4",
+          "file": "empty-intake-return-20261011.spec.ts",
+          "line": 46,
+          "column": 3
+        },
+        {
+          "title": "1280px 읽는 중 0개는 기다리고 완료 0개는 질문 유지보다 먼저 입력으로 돌아가 글을 고쳐 다시 보낸다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5714,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:11.850Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "757b1c591c53433fa48f-b8575c0a576a23df5d89",
+          "file": "empty-intake-return-20261011.spec.ts",
+          "line": 8,
+          "column": 3
+        },
+        {
+          "title": "1280px 파일에서 일정 0개면 입력 화면에 선택 파일을 복원하고 재전송하지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1527,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:17.589Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "757b1c591c53433fa48f-5ea626b58c8fb6450ffa",
+          "file": "empty-intake-return-20261011.spec.ts",
+          "line": 46,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "intake-review.spec.ts",
+      "file": "intake-review.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "읽기가 끝나 일정이 없고 짜 달라는 말도 없으면 입력 화면으로 자동 복귀한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 780,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:19.149Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2cea025ef9dfc9f115f0-5da829132dcd5cb2d496",
+          "file": "intake-review.spec.ts",
+          "line": 29,
+          "column": 1
+        },
+        {
+          "title": "짜 달라는 요청을 읽었어도 일정0개 완료 결과는 입력 화면으로 자동 복귀한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 750,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:19.944Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2cea025ef9dfc9f115f0-9f5dcef67f75251ff581",
+          "file": "intake-review.spec.ts",
+          "line": 43,
+          "column": 1
+        },
+        {
+          "title": "일정이 읽혔는데 글에 짜 달라는 말도 있었다면, 읽은 일정의 결과 화면에 그 사실을 한 줄로 알린다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 954,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:20.708Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2cea025ef9dfc9f115f0-8bf5cc7a3af7cd470bae",
+          "file": "intake-review.spec.ts",
+          "line": 52,
+          "column": 1
+        },
+        {
+          "title": "이미 여행으로 등록한 접수에 읽은 일정이 없으면(짜서 등록한 접수) 안내 대신 그 여행으로 가는 링크를 준다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 716,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:21.680Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2cea025ef9dfc9f115f0-4672f0155a796e0ace1b",
+          "file": "intake-review.spec.ts",
+          "line": 61,
+          "column": 1
+        },
+        {
+          "title": "고객이 일정을 모두 지워도 「읽은 일정이 없어요」 안내로 바뀌지 않는다 — 결과 화면이 「남은 일정이 없어요」를 말하고 그대로 남는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2959,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:22.411Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2cea025ef9dfc9f115f0-f105d2b6c2e380f4beb3",
+          "file": "intake-review.spec.ts",
+          "line": 70,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "intake-start.spec.ts",
+      "file": "intake-start.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "누르면 서버의 답을 기다리지 않고 곧바로 진행 화면으로 넘어가고(줄별 목록 없이 막대와 「보내는 중」), 서버가 받으면 그 접수의 실시간 진행으로 이어져 결과가 나온다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6284,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:25.418Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe88f1edd6db62eeb24e-3607f0da39f411466182",
+          "file": "intake-start.spec.ts",
+          "line": 36,
+          "column": 1
+        },
+        {
+          "title": "서버가 계획을 거절하면 등록 화면으로 돌아와 서버의 문장을 보이고, 쓴 글과 올리려던 파일이 그대로 있어 고쳐 다시 보낼 수 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3466,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:31.724Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe88f1edd6db62eeb24e-b2091dc4e8209189b11b",
+          "file": "intake-start.spec.ts",
+          "line": 62,
+          "column": 1
+        },
+        {
+          "title": "보내는 중에 뒤로 가기 화살표를 누르면 등록 화면으로 돌아가 글이 그대로 있고, 오류 문장은 뜨지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5331,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:35.208Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe88f1edd6db62eeb24e-7e0c44fa32932abee331",
+          "file": "intake-start.spec.ts",
+          "line": 85,
+          "column": 1
+        },
+        {
+          "title": "보내는 중에 새로고침하면(보내던 계획은 메모리에만 있어 사라진다) 등록 화면으로 돌아가고, 쓴 글은 그대로다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1038,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:40.559Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe88f1edd6db62eeb24e-3dbd7ee1a5404def79a4",
+          "file": "intake-start.spec.ts",
+          "line": 100,
+          "column": 1
+        },
+        {
+          "title": "세션이 없는 첫 방문도 누르는 순간 진행 화면으로 넘어가고, 게스트 세션은 그 사이에 만들어진다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5220,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:41.615Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe88f1edd6db62eeb24e-92e200a71ea1a8c7c299",
+          "file": "intake-start.spec.ts",
+          "line": 110,
+          "column": 1
+        },
+        {
+          "title": "서버가 몇 초 넘게 답이 없으면 진행 화면이 「서버가 답하는 데 시간이 걸리고 있어요」라고 알리고, 답이 오면 그대로 이어진다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10305,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T21:57:46.849Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe88f1edd6db62eeb24e-7264a1b754f525e3540e",
+          "file": "intake-start.spec.ts",
+          "line": 125,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-10T21:57:00.695Z",
+    "duration": 57455.147000000004,
+    "expected": 15,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

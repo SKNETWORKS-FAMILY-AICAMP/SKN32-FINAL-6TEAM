@@ -4,7 +4,7 @@ import { needsBadge } from "./plan-check-kit";
 
 /**
  * `[2026-10-05 사용자 선택 — 스크롤 끝 안 A]` 계획 확인 화면의 목록 맨 끝: 권장 수정안이 없으면 「계속 내리면 …」 표시는 꺼지고 이유를 말하고,
- * 더 밀어도 화면이 위로 튀지 않고 그 자리에서 흔들리며 알림은 한 번만 뜬다. 테스트용 모방 서버로 도는 자동 시험(실제 서버 아님).
+ * 더 밀어도 화면이 위로 튀지 않고 그 자리에서 흔들리며 알림은 한 번만 뜬다. mock 서버로 도는 화면 반응 자동 시험입니다. 실서버 응답은 따로 확인합니다.
  */
 const INTAKE = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 
@@ -25,7 +25,7 @@ test("권장 수정안이 없으면 맨 끝 표시는 처음부터 꺼져 있고
   const server = await openFinished(page, request, { autofix: "none" });
   await expect(hint(page)).toBeVisible();
   await expect(hint(page)).toHaveAttribute("aria-disabled", "true");
-  await expect(page.getByText("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "아래로 스크롤하면 권장 수정안이 나와요", exact: true })).toHaveCount(0);
   expect((await server.received("POST", "/autofix")).length).toBe(1);                  // 화면이 열릴 때 받아 둔 한 번뿐
 });
 
@@ -61,6 +61,10 @@ test("끝에서 더 밀어도 화면은 위로 튀지 않고 그 자리에서 �
 
 test("권장 수정안이 있으면 표시는 그대로이고 누르면 수정안이 열린다 (꺼지지 않는다)", async ({ page, request }) => {
   await openFinished(page, request);
-  await expect(page.getByText("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요")).toBeVisible();
+  const preview = page.getByRole("button", { name: "아래로 스크롤하면 권장 수정안이 나와요", exact: true });
+  await expect(preview).toBeVisible();
+  await expect(preview).not.toHaveAttribute("aria-disabled", "true");
   await expect(hint(page)).toHaveCount(0);
+  await preview.click();
+  await expect(page.getByRole("group", { name: "보는 일정", exact: true })).toBeVisible();
 });

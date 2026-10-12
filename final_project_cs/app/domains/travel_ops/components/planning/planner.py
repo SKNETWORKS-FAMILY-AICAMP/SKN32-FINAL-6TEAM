@@ -399,6 +399,11 @@ def ledger_candidates(shops: Iterable[Mapping[str, Any]]) -> list[Cand]:
             attributes["district"] = district
         if shop.get("address"):
             attributes["address"] = shop["address"]
+        # ★`[2026-10-12]` 큰 분류 · 음식 결 — 대체 순위의 「비슷한 곳」(`meal_likeness`)이 읽는다. 전에는 없어서
+        #   생성기가 고른 식당이 문을 닫으면 원래 식당의 종류를 몰라 후보가 모두 같은 등급이었다
+        for key in ("category", "style"):
+            if shop.get(key):
+                attributes[key] = shop[key]
         if shop.get("badges"):
             # ★`[2026-10-07]` 미쉐린 · 노포 표시 — 선호 순위(`rank_candidates`)와 화면(`_item_view`)이 쓴다. 등록 때 장소에 남는다
             attributes["badges"] = [dict(badge) for badge in shop["badges"]]

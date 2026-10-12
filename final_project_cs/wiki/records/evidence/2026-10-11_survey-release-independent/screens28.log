@@ -1,0 +1,48 @@
+
+[WebServer] (node:15716) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:27344) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+
+[WebServer] (node:26736) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:20444) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 28 tests using 1 worker
+
+
+(node:9764) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/28] tests\live\completed-progress-20261011.spec.ts:7:5 › 375px 완료 상태 › 질문이 남아 완료 화면을 붙잡아도 마지막 7/8 진행 문구는 사라지고 결과 화면에서도 되살아나지 않는다
+[2/28] tests\live\completed-progress-20261011.spec.ts:7:5 › 1280px 완료 상태 › 질문이 남아 완료 화면을 붙잡아도 마지막 7/8 진행 문구는 사라지고 결과 화면에서도 되살아나지 않는다
+[3/28] tests\live\survey-questions.spec.ts:30:1 › 읽는 동안 질문 카드가 서버의 문구 그대로 뜨고, 아래 단추는 꺼진 단추가 아니라 눌러 보면 이유를 말하는 「계획 읽는 중…」이다
+[4/28] tests\live\survey-questions.spec.ts:52:1 › 답하면 그 문항만 바로 저장되고(「저장했어요」), 잠시 뒤 다음 열린 질문으로 가며 초점이 그 제목에 간다. 앞 질문으로 돌아가 고치면 덮어쓴다
+[5/28] tests\live\survey-questions.spec.ts:74:1 › 건너뛰기 없이 방향키 · 마우스로 밀기 · ‹ › 단추로 같은 질문을 볼 수 있다
+[6/28] tests\live\survey-questions.spec.ts:105:1 › 답을 저장하지 못하면 고른 것은 그대로 두고 「다시 시도하기」를 보이며 다음으로 넘어가지 않는다. 다시 시도해 서버가 받으면 이어진다
+[7/28] tests\live\survey-questions.spec.ts:122:1 › 질문이 나오면 거기로 초점이 가고 시선을 끄는 움직임이 한 번 나온다
+[8/28] tests\live\survey-questions.spec.ts:130:1 › 한 번도 만지지 않았어도 읽기가 끝나는 대로 곧장 넘어가지 않는다 — 「계획을 다 읽었어요」 안내를 보이고 5초를 기다린 뒤 계획 확인 화면으로 간다
+[9/28] tests\live\survey-questions.spec.ts:143:1 › 5초 기다리는 동안 질문을 건드리면 저절로 넘어가지 않고 머문다
+[10/28] tests\live\survey-questions.spec.ts:154:1 › 만졌고 열린 질문이 남아 있으면 읽기가 끝나도 화면에 머물고, 「읽어 온 계획 확인하기」를 누르면 계획 확인으로 간다
+[11/28] tests\live\survey-questions.spec.ts:171:1 › 읽는 중에 다 답했으면 읽기가 끝난 뒤 5초 막대를 보이고 계획 확인으로 간다. 질문을 만지면 멈추고, 「자동으로 넘어가지 않기」를 누르면 더 이상 저절로 가지 않는다
+[12/28] tests\live\survey-questions.spec.ts:191:1 › 「자동으로 넘어가지 않기」를 누르면 다 답했어도 저절로 계획 확인으로 가지 않고 머문다
+[13/28] tests\live\survey-questions.spec.ts:204:1 › 다 답하고 읽기가 끝나면 5초 막대 뒤에 저절로 계획 확인으로 간다
+[14/28] tests\live\survey-questions.spec.ts:213:1 › 읽기가 끝난 뒤 30초 무응답 경고의 단일 「계속 답하기」로 자동 넘김을 멈추고 답변을 이어간다
+[15/28] tests\live\survey-questions.spec.ts:240:1 › 모르는 종류의 질문은 그 질문만 건너뛰고 나머지는 그린다
+[16/28] tests\live\survey-questions.spec.ts:246:1 › 질문 목록이 없는 옛 서버에서는 아무것도 묻지 않고 읽는 화면은 전과 같다
+[17/28] tests\live\survey-questions.spec.ts:254:1 › 영어 화면에서는 서버가 보낸 질문 번호로 영어 문구를 쓴다
+[18/28] tests\live\survey-questions.spec.ts:269:1 › 좁은 화면(375×812)에서도 머리 · 질문 · 읽는 줄 · 아래 단추가 화면 안에 들어가고 가로로 넘치지 않는다
+[19/28] tests\live\survey-release-20261011.spec.ts:56:5 › 375px 질문 완료 이동 › 수동 확인은 완료 결과로 바로 이동하고 진행 단계를 다시 재생하지 않는다
+[20/28] tests\live\survey-release-20261011.spec.ts:62:5 › 375px 질문 완료 이동 › 5초 자동 이동도 완료 결과로 바로 이동한다
+[21/28] tests\live\survey-release-20261011.spec.ts:67:5 › 375px 질문 완료 이동 › 무응답 경고가 끝나도 완료 결과를 재재생하지 않는다
+[22/28] tests\live\survey-release-20261011.spec.ts:75:7 › 375px 질문 완료 이동 › 계속 답하기 버튼는 자동 넘김을 멈추고 질문·초점을 유지한다
+[23/28] tests\live\survey-release-20261011.spec.ts:75:7 › 375px 질문 완료 이동 › 계속 답하기 Esc는 자동 넘김을 멈추고 질문·초점을 유지한다
+[24/28] tests\live\survey-release-20261011.spec.ts:56:5 › 1280px 질문 완료 이동 › 수동 확인은 완료 결과로 바로 이동하고 진행 단계를 다시 재생하지 않는다
+[25/28] tests\live\survey-release-20261011.spec.ts:62:5 › 1280px 질문 완료 이동 › 5초 자동 이동도 완료 결과로 바로 이동한다
+[26/28] tests\live\survey-release-20261011.spec.ts:67:5 › 1280px 질문 완료 이동 › 무응답 경고가 끝나도 완료 결과를 재재생하지 않는다
+[27/28] tests\live\survey-release-20261011.spec.ts:75:7 › 1280px 질문 완료 이동 › 계속 답하기 버튼는 자동 넘김을 멈추고 질문·초점을 유지한다
+[28/28] tests\live\survey-release-20261011.spec.ts:75:7 › 1280px 질문 완료 이동 › 계속 답하기 Esc는 자동 넘김을 멈추고 질문·초점을 유지한다
+  28 passed (2.0m)

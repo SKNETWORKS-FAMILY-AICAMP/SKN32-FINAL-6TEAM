@@ -1,0 +1,7 @@
+{
+  "code_seconds": 120,
+  "consent_seconds": 600,
+  "access_seconds": 900,
+  "refresh_idle_seconds": 2592000,
+  "refresh_max_seconds": 7776000
+}

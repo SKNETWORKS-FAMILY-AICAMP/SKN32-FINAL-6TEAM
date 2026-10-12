@@ -1,0 +1,159 @@
+{
+  "mock": {
+    "passed": 22,
+    "total": 22,
+    "same_production_build": true,
+    "final_run": 6,
+    "previous_unchanged_passed": 16
+  },
+  "cases": [
+    {
+      "name": "메뉴 정렬·고정 거리 글자·화살표만 전환 375px",
+      "file": "aligned-map-quiet-cards-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "일반 카드 무테·선택과 상태 테두리·잠금 재클릭 375px",
+      "file": "aligned-map-quiet-cards-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "밀린 지도 마커는 실제 좌표 방향으로 모서리와 선을 연결 375px",
+      "file": "aligned-map-quiet-cards-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "메뉴 정렬·고정 거리 글자·화살표만 전환 1280px",
+      "file": "aligned-map-quiet-cards-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "일반 카드 무테·선택과 상태 테두리·잠금 재클릭 1280px",
+      "file": "aligned-map-quiet-cards-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "밀린 지도 마커는 실제 좌표 방향으로 모서리와 선을 연결 1280px",
+      "file": "aligned-map-quiet-cards-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 375px",
+      "file": "date-divider-motion-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "날짜 그림자는 제자리에서 잘림 없이 변하고 추가 가로선·조작 정지 유지 1280px",
+      "file": "date-divider-motion-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "지도 안 밀집 마커는 개별 표시·점선 연결·밖으로 나갈 때만 칩 375px",
+      "file": "in-map-pins-fade-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "상단 내용 페이드와 날짜·손잡이·최소 접힘 유지 375px",
+      "file": "in-map-pins-fade-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "지도 안 밀집 마커는 개별 표시·점선 연결·밖으로 나갈 때만 칩 1280px",
+      "file": "in-map-pins-fade-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "상단 내용 페이드와 날짜·손잡이·최소 접힘 유지 1280px",
+      "file": "in-map-pins-fade-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "스택 아이콘 안 실제 개수·좌우 순서·지도 이동 중 개수 유지 375px",
+      "file": "stack-date-end-insert-20261011.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "일반 카드 무테와 선택·검토·수정 상태 테두리 375px",
+      "file": "stack-date-end-insert-20261011.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "날짜 여백·최상단 유지·스크롤 숨김·최상단 즉시 복귀 375px",
+      "file": "stack-date-end-insert-20261011.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "목록 끝은 마지막 일정 뒤 추가·종료 시각 초안·저장 375px",
+      "file": "stack-date-end-insert-20261011.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "스택 아이콘 안 실제 개수·좌우 순서·지도 이동 중 개수 유지 1280px",
+      "file": "stack-date-end-insert-20261011.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "일반 카드 무테와 선택·검토·수정 상태 테두리 1280px",
+      "file": "stack-date-end-insert-20261011.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "날짜 여백·최상단 유지·스크롤 숨김·최상단 즉시 복귀 1280px",
+      "file": "stack-date-end-insert-20261011.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "목록 끝은 마지막 일정 뒤 추가·종료 시각 초안·저장 1280px",
+      "file": "stack-date-end-insert-20261011.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "좌우 순서·검정 번호·조작 중 거리 숨김 375px",
+      "file": "edge-order-date-add-ideas-20261010.spec.ts",
+      "status": "passed"
+    },
+    {
+      "name": "좌우 순서·검정 번호·조작 중 거리 숨김 1280px",
+      "file": "edge-order-date-add-ideas-20261010.spec.ts",
+      "status": "passed"
+    }
+  ],
+  "unit": {
+    "passed": 25,
+    "total": 25
+  },
+  "checks": [
+    "TypeScript --noEmit",
+    "ESLint changed source and new test",
+    "standard Next.js production build"
+  ],
+  "screenshots": 8,
+  "real_response_checked": false,
+  "attempts": [
+    {
+      "result": "디스크 부족으로 중단",
+      "note": "디스크 여유0으로 시험 기록 저장 실패. 재생성 가능한 Next.js 캐시만 삭제했다."
+    },
+    {
+      "passed": 14,
+      "total": 16,
+      "note": "배지 측정 offsetWidth 반올림 때문에 양쪽 화면에서 오른쪽0.1953125px 이탈. 실제 소수 폭 측정으로 수정했다."
+    },
+    {
+      "passed": 18,
+      "total": 20,
+      "note": "제품 수정 후 기존 시험의 span 선택자가 개수 글자까지 잡았다. 배지 직계 span으로 보정했다."
+    },
+    {
+      "passed": 6,
+      "total": 6,
+      "note": "최종 생산 빌드 재사용, 소스 변경 없이 지도 회귀 재실행."
+    }
+  ],
+  "final_focus_scope": {
+    "change": "setFocused(false)를 listBox가 있는 날짜 탭으로 제한",
+    "root_chrome": "이 마지막 제한 전22/22",
+    "root_static_after_change": "TypeScript와 ESLint 통과",
+    "final_chrome": "커밋 담당 독립 검증 대기"
+  }
+}

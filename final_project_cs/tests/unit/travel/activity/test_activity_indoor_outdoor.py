@@ -83,9 +83,12 @@ def test_unknown_indoor_with_only_weather_asks_first_instead_of_proposing():
     result, _, _ = _run(report=_disrupted(RAIN))
     decision = result.decisions[0]
 
-    assert result.next_action is NextAction.RESPOND and not result.action_proposals
-    assert decision["status"] == "needs_confirmation" and decision["feasible"] is None
-    assert decision["reason"] == "indoor_unknown_weather"
+    # ★`[2026-10-11]` 고객 확인은 계약대로 `waiting` · `customer_input` 이다(D4 · 수정본 UC-A3 `3b2`)
+    assert result.outcome == "waiting" and result.next_action is NextAction.WAIT_FOR_INPUT
+    assert result.wait_reason == "customer_input" and not result.action_proposals
+    assert result.required_input_schema["required"] == ["outdoor"]
+    assert decision["feasible"] is None and "status" not in decision
+    assert decision["reason"] == "indoor_unknown_weather" and decision["failure_code"] == "indoor_unknown"
     assert "실내인지 확인하지 못해" in result.answer and "바꿔야 합니다" not in result.answer
 
 

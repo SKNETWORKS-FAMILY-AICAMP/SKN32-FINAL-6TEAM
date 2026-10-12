@@ -32,6 +32,7 @@ const TABS: readonly [CenterTab, string, string][] = [["warnings", "살펴볼 �
 /** Server contract (2026-09-29): a proposal with this reason and no options asks "change it?"; answering with this key makes
  *  the server compute options and fill the same proposal (reason becomes `indoor_unknown_options`). */
 const CONSENT_REASON = "indoor_unknown";
+const FORECAST_REASON = "forecast_advisory";
 const CONSENT_KEY = "change";
 
 /**
@@ -120,8 +121,10 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
           <p>{text ?? t(`서버가 이 일정에 대한 선택을 기다려요 (이유: ${proposal.reason}).`, `The server is waiting for your choice on this stop (reason: ${proposal.reason}).`)}</p>
           <div className={styles.options}>
             {/* 2026-09-29: "should we change it?" first (indoor/outdoor unknown). The server computes options only after "change". */}
-            {proposal.reason === CONSENT_REASON && proposal.options.length === 0 && <Button variant="primary" disabled={choose.isPending}
-              onClick={() => choose.mutate({ proposalId: proposal.id, key: CONSENT_KEY })}>{t("바꿔 줘 — 다른 곳 보기", "Change it — show other places")}</Button>}
+            {[CONSENT_REASON, FORECAST_REASON].includes(proposal.reason) && proposal.options.length === 0 && <Button variant="primary" disabled={choose.isPending}
+              onClick={() => choose.mutate({ proposalId: proposal.id, key: CONSENT_KEY })}>{proposal.reason === FORECAST_REASON
+                ? t("예보에 맞게 일정 변경", "Adjust the plan for the forecast")
+                : t("바꿔 줘 — 다른 곳 보기", "Change it — show other places")}</Button>}
             {proposal.options.map((option) => <Button key={option.key} variant="primary" disabled={choose.isPending}
               onClick={() => choose.mutate({ proposalId: proposal.id, key: option.key })}>{option.note ? `${option.note} · ` : ""}{option.startsAt ? `${seoul(option.startsAt).time} ` : ""}{option.name}
               {option.warnings.length > 0 && <small className={styles.optionWarning}>{option.warnings.join(" · ")}</small>}</Button>)}

@@ -94,7 +94,7 @@ test("첫 화면 카드·메뉴의 여행 목록 보기·전체 목록이 같은
   await expect(tripScreen(page)).toBeVisible();
 });
 
-test("첫 장에는 등록 버튼과 소개 건너뛰기 없이 아래로 가는 안내만 있고, 마지막 장의 시작 버튼은 약관·취향 설정으로 간다", async ({ page }) => {
+test("첫 장에는 등록 버튼과 소개 건너뛰기 없이 아래로 가는 안내만 있고, 마지막 장의 시작 버튼은 필수 약관 화면으로 간다", async ({ page }) => {
   await page.addInitScript(() => localStorage.removeItem("tripilot.web.consent.v1"));      // 약관에 아직 동의하지 않은 사람(앞서 심은 동의 사본을 지운다)
   await page.goto("/");
   const hero = page.locator("main > section").first();
@@ -107,7 +107,8 @@ test("첫 장에는 등록 버튼과 소개 건너뛰기 없이 아래로 가는
   await page.locator("main > section").nth(1).getByRole("button", { name: "다음 화면" }).click();
   await expect(page.locator("#start-title")).toBeInViewport();
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
-  await expect(page).toHaveURL(/\/start$/);
+  await expect(page).toHaveURL(/\/start\?terms=required$/);
+  await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
 });
 
 test("모든 로고는 홈 첫 장으로 돌아오고, 여정 화면 헤더에는 로고와 메뉴만 있다", async ({ page }) => {
