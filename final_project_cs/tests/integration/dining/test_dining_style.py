@@ -71,7 +71,14 @@ def stored(conn, place_uid: str) -> tuple[str | None, str | None]:
     ("공주밤팥빵", "베이커리·디저트"),
     ("봉골레", "이탈리안"),
     ("회관", None),                      # 「회」는 회관이 아니다
-    ("코스요리", None),                  # 모르는 것은 비운다
+    ("대인 뷔페", "뷔페"),
+    ("무한리필 샤부샤부", "국물요리"),   # 무한리필은 뷔페가 아니다
+    ("흑돼지 오겹살", "고기구이"),
+    ("세종정찬", "한상차림"),
+    ("에스프레소", "커피·차"),           # 「스프」를 넣지 않는다 — 에스프레소가 국물요리가 됐다(2026-10-12)
+    ("각시정식", None),                  # 「정식」은 결을 말하지 않는다
+    ("전통주 페어링", None),
+    ("코스요리", None),                  # 코스는 여기서 내지 않는다(course_of_text)
     ("", None),
     (None, None),
 ])
@@ -96,8 +103,24 @@ def test_대표메뉴가_안_걸리면_이름_다음_취급메뉴(conn, place, r
 
 def test_어디서도_안_걸리면_비운다(conn, place, record):
     uid = place("무명")
-    record(uid, {"firstmenu": "디너코스", "treatmenu": "런치코스"})
+    record(uid, {"firstmenu": "오감", "treatmenu": "따동 / 펑요우"})
     assert classify(conn, uid) is None
+
+
+def test_무엇의_코스인지_모르면_코스다이닝(conn, place, record):
+    uid = place("무명")
+    record(uid, {"firstmenu": "디너코스", "treatmenu": "런치코스"})
+    assert classify(conn, uid) == "코스·다이닝"
+
+
+def test_코스여도_결이_보이면_그_결이_먼저다(conn, place, record):
+    """대표메뉴가 「코스 메뉴」여도 취급메뉴에 초밥이 보이면 초밥 — 코스는 마지막 근거다."""
+    uid = place("무명")
+    record(uid, {"firstmenu": "코스 메뉴", "treatmenu": "오토로초밥 / 아카미초밥"})
+    assert classify(conn, uid) == "초밥"
+    named = place("삼호복집")
+    record(named, {"firstmenu": "코스요리"})
+    assert classify(conn, named) == "해산물"
 
 
 def test_다시_돌리면_채우고_두_번째는_아무것도_바꾸지_않는다(conn, place, record):
