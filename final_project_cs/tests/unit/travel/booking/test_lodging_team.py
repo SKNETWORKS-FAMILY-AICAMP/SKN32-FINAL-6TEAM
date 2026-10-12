@@ -574,12 +574,25 @@ def test_choosing_rechecks_the_nightly_price_and_says_it_is_the_same_or_changed(
     assert [a for name, a in tools.calls if name == "read.stay_detail"] == [
         {"gid": "12", "check_in": IN, "check_out": OUT, "adults": 2, "children": None}]
     assert same.answer.endswith(" 지금 가격도 1박 150,000원 그대로예요.")
-    assert same.action_proposals[0].arguments["summary"]["price_check"] == {"status": "same", "before": 150000, "now": 150000}
+    assert same.action_proposals[0].arguments["summary"]["price_check"] == {"status": "same", "before": 150000, "now": 150000, "basis": "list"}
     changed, _, _ = _choose("myrealtrip:12", {**DETAIL, "gid": 12, "price_per_night": 171000})
-    assert changed.answer.endswith(" 보여 드릴 때 1박 150,000원이던 가격이 지금 1박 171,000원이에요.")
+    assert changed.answer.endswith(" 목록에서는 1박 150,000원이었는데, 예약 화면 기준으로 지금 1박 171,000원이에요."), \
+        "보여 줄 때 상세를 못 읽어 목록 값이었다 — 「가격이 바뀌었다」가 아니라 기준이 다르다고 적는다(☆20:28)"
     new = changed.action_proposals[0].arguments["replacements"][0]["item"]
     assert new["detail"]["chosen"]["price_per_night"] == 171000 and new["title"] == "둘째 호텔"
     assert [o["name"] for o in new["detail"]["alternates"]] == ["가까운 호텔", "해밀톤 호텔", "기존 호텔"]
+
+
+def test_a_stay_whose_detail_was_read_shows_and_rechecks_the_detail_price():
+    """`[2026-10-12]` ☆20:28 playdata — 목록 257,044원 · 상세 251,993원. 상세를 읽은 곳은 상세 값으로 보이고, 재확인도 같은 기준이다."""
+    from app.domains.travel_ops.instances.lodging.team import _fresh_picks, _price_note
+
+    booked = {"myrealtrip": {"stays": [{"gid": 1, "name": "밀리오레 호텔 서울 명동", "price_per_night": 257044}]}, "google": {"stays": []}}
+    (pick,) = _fresh_picks(booked, set(), None, {"check_in": IN, "check_out": OUT}, {"adults": 2, "children": None},
+                           details={1: {"price_per_night": 251993}})
+    assert (pick["price_per_night"], pick["price_basis"]) == (251993, "detail")
+    assert _price_note({"status": "changed", "before": 251993, "now": 260000, "basis": "detail"}) == \
+        " 보여 드릴 때 1박 251,993원이던 가격이 지금 1박 260,000원이에요."
 
 
 def test_a_chosen_stay_without_rooms_now_is_not_applied():

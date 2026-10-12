@@ -227,8 +227,13 @@ def _fresh_picks(booked: dict[str, Any], exclude: set[str], anchor: dict[str, An
             continue                                # 그 날짜에 객실이 없다
         taken.add(_key(stay["name"]))
         where = _coords(detail)
+        # `[2026-10-12]` 상세를 읽은 곳은 상세 1박 평균(예약 화면 값)을 쓴다 — 고를 때 재확인도 상세라 같은 기준끼리 비교한다.
+        #   ☆20:28 playdata 밀리오레: 목록 257,044원 · 0.1초 뒤 상세 251,993원(18:22 · 18:40 에는 같았다) — 목록과 상세가 늘 같지는 않다
+        detail_price = (detail or {}).get("price_per_night")
+        use_detail = isinstance(detail_price, (int, float)) and detail_price > 0
         pool.append({"key": f"myrealtrip:{stay['gid']}", "name": stay["name"], "source": "마이리얼트립",
-                     "price_per_night": stay.get("price_per_night"), "rating": stay.get("rating") or None,
+                     "price_per_night": detail_price if use_detail else stay.get("price_per_night"),
+                     "price_basis": "detail" if use_detail else "list", "rating": stay.get("rating") or None,
                      "review_count": stay.get("review_count"), "distance_km": _distance(anchor, detail),
                      "latitude": where[0] if where else None, "longitude": where[1] if where else None,
                      "link": _list_link(stay["gid"], dates, party)})
@@ -270,6 +275,9 @@ def _fresh_picks(booked: dict[str, Any], exclude: set[str], anchor: dict[str, An
 def _price_note(check: dict[str, Any]) -> str:
     """고를 때 가격 재확인 결과 한 문장(앞에 빈칸). 1박 값을 모르면 아무것도 적지 않는다."""
     before, now = check.get("before"), check.get("now")
+    if check["status"] == "changed" and check.get("basis") == "list":
+        # 목록 값과 예약 화면(상세) 값이 다른 것일 수 있다 — 「가격이 바뀌었다」고 하지 않는다
+        return f" 목록에서는 1박 {_won(before)}이었는데, 예약 화면 기준으로 지금 1박 {_won(now)}이에요."
     if check["status"] == "changed":
         return f" 보여 드릴 때 1박 {_won(before)}이던 가격이 지금 1박 {_won(now)}이에요."
     if check["status"] == "same":
@@ -285,6 +293,7 @@ def _lodging_option(rank: int, pick: dict[str, Any], item: Any) -> dict[str, Any
     return {"key": pick["key"], "rank": rank, "name": pick["name"], "place_id": None, "option": None, "option_label": None,
             "starts_at": item.starts_at.isoformat(), "ends_at": item.ends_at.isoformat() if item.ends_at else None,
             "walk_min": None, "source": pick["source"], "price_per_night": pick.get("price_per_night"),
+            "price_basis": pick.get("price_basis"),
             "rating": pick.get("rating"), "review_count": pick.get("review_count"), "distance_km": pick.get("distance_km"),
             "latitude": pick.get("latitude"), "longitude": pick.get("longitude"), "link": pick["link"]}
 
@@ -669,7 +678,8 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         if not isinstance(now, (int, float)) or before is None:
             return pick, {"status": "unchecked", "before": before, "now": now, "reason": "no_price"}
         status = "same" if now == before else "changed"
-        return ({**pick, "price_per_night": now} if status == "changed" else pick), {"status": status, "before": before, "now": now}
+        check = {"status": status, "before": before, "now": now, "basis": pick.get("price_basis") or "list"}
+        return ({**pick, "price_per_night": now, "price_basis": "detail"} if status == "changed" else pick), check
 
     @staticmethod
     def _stay_query(item: Any, trip: dict[str, Any]) -> dict[str, Any] | None:
