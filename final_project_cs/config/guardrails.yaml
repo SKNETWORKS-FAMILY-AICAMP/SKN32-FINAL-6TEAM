@@ -660,6 +660,9 @@ travel:
       #   그 날짜의 운영 · 폐업을 본다 — 「닫혔다」면 대체 장소를 붙여 바꾸자고 제안한다.
       #   전역 모드가 `rule` 이면 여전히 안 부른다(돈이 나가지 않는다). 켜려면 `ACOP_ACTIVITY_JUDGE_MODE=shadow`.
       live_status: llm
+      # ★`[2026-10-12 사용자 결정]` 대체 후보 순서 — 코드가 찾고 검증한 후보 안에서 LLM 이 고객 취향에 맞춰 먼저 보여 줄 순서를 정한다
+      #   (`instances/activity/alternative_order.py`). 기본은 끔 — 프롬프트 허용 목록 · 모델 인자(코어)가 붙은 뒤 shadow → llm 으로.
+      alternative_order: rule
     # ★`[2026-10-12]` 판정 LLM 호출 상한(구현 계획 4.6) — 일 · 월. 넘으면 그 판정은 부르지 않고 `skipped`(budget_exhausted)로 남긴다.
     #   웹 검색(실시간 운영)은 따로 센다 — 호출당 약 $0.032(text 는 약 $0.0003, 10-06 측정 · 구현 계획 §1.2).
     #   text 2,000/일 ≈ $0.6 · 30,000/월 ≈ $9, web 50/일 ≈ $1.6 · 1,000/월 ≈ $32 (추정 상한).
@@ -678,6 +681,8 @@ travel:
     #     (스레드를 끊지 못한다) — 비용은 그대로 나가고 응답만 먼저 낸다. 어댑터 자체 상한은 `reliability.activity_judge_call_timeout_seconds`.
     #   - rate_limit_retries · rate_limit_backoff_seconds: 429 만 쉬었다 다시 부른다(SDK 재시도는 0 그대로 — 시간 초과는 다시 부르지 않는다).
     # ★출처: **우리가 고른 값**이다. 동시 2 는 측정(6 이면 전부 실패)에서 넉넉히 낮춘 값, 30초는 p50 의 두 배쯤 — 둘 다 다시 잴 것.
+    # ★`[2026-10-12]` 대체 후보 순서 LLM 이 고객을 기다리게 하는 상한(원문 해석급 호출 — 측정 p95 3.1초). 넘으면 코드 순서. 우리가 고른 값.
+    alternative_order_timeout_seconds: 8
     web_max_concurrent: 2
     web_wait_seconds: 5
     web_answer_timeout_seconds: 30
