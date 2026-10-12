@@ -656,6 +656,15 @@ travel:
       weather_sensitive: shadow
       disaster_effect: shadow
       live_status: shadow
+    # ★`[2026-10-12]` 판정 LLM 호출 상한(구현 계획 4.6) — 일 · 월. 넘으면 그 판정은 부르지 않고 `skipped`(budget_exhausted)로 남긴다.
+    #   웹 검색(실시간 운영)은 따로 센다 — 호출당 약 $0.032(text 는 약 $0.0003, 10-06 측정 · 구현 계획 §1.2).
+    #   text 2,000/일 ≈ $0.6 · 30,000/월 ≈ $9, web 50/일 ≈ $1.6 · 1,000/월 ≈ $32 (추정 상한).
+    #   ★세는 곳은 DB(`external_call_budget` — `activity_judge` · `activity_judge_web` 줄)이고, 꽂는 것은 조립이다(코어 협의).
+    #   조립이 꽂기 전에는 세지 않는다 — 기본 모드가 `rule`(LLM 안 부름)이라 지금은 비용이 나가지 않는다.
+    # ★출처: **우리가 고른 값**이다. 섀도 표본을 모으기에 넉넉하게, 비용 폭주는 막게.
+    budget:
+      text: {day: 2000, month: 30000}
+      web: {day: 50, month: 1000}
   reminders:
     # ★일정 안내(v11 §6-B ②·③) 시각. `app/domains/travel_ops/components/watch/trip_reminders.py`.
     # ★출처: 정해진 기준이 없어 **우리가 고른 값**이다. 측정에서 나오지 않았다.

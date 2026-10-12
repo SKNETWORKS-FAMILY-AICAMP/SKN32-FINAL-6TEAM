@@ -102,16 +102,57 @@ def _run(coro) -> Any:
         return pool.submit(asyncio.run, coro).result()
 
 
+#: 판정 LLM 호출 예산의 줄 이름 — 웹 검색(실시간 운영)은 호출당 약 $0.032, 나머지(원문 해석)는 약 $0.0003 이라 따로 센다.
+#:  ★조립이 `external_call_budget` 에 이 이름으로 줄을 만들어 `ActivityTeam.judge_budget` 에 꽂는다(코어 협의 — 협의 메모 요청 7).
+BUDGET_METER_TEXT = "activity_judge"
+BUDGET_METER_WEB = "activity_judge_web"
+
+
+def budget_meter(kind: str) -> str:
+    """판정 종류 → 예산 줄 이름. `[2026-10-12]`"""
+    return BUDGET_METER_WEB if kind == "live_status" else BUDGET_METER_TEXT
+
+
+def budget_caps(guard: Any = None) -> dict[str, dict[str, int]]:
+    """예산 줄별 `{"day": n, "month": n}` — `travel.activity_judge.budget`. 조립이 `CallBudget(caps=…)` 에 그대로 넘긴다."""
+    if guard is None:
+        from app.core.settings import get_guardrails
+
+        guard = get_guardrails()
+    table = guard.get("travel.activity_judge.budget")
+    return {meter: {"day": int(table[name]["day"]), "month": int(table[name]["month"])}
+            for name, meter in (("text", BUDGET_METER_TEXT), ("web", BUDGET_METER_WEB))}
+
+
 class ShadowJudge:
     def __init__(self, rule: RuleJudge, llm: LLMJudge, *, runner: Any | None = None,
-                 sink: Any | None = None) -> None:
+                 sink: Any | None = None, budget: Any | None = None) -> None:
+        """`budget`: 판정 종류 → 「불러도 되나」(`True`/`False`). 부르기 **전에** 한 칸을 확보하는 함수다(조립이 넣는다).
+        `None` 이면 세지 않는다(지금까지와 같다)."""
         self.rule = rule
         self.llm = llm
         self._runner = runner
         self._sink = sink
+        self._budget = budget
+
+    def _within_budget(self, kind: str) -> bool:
+        """★세다가 실패하면 **부르지 않는다** — 섀도는 고객 답에 쓰이지 않아 안 불러도 손해가 없고, 비용 상한이 먼저다.
+        (모델 서버 넘김 장치는 반대로 부른다 — 그쪽은 고객 응답이 걸려 있다.)"""
+        if self._budget is None:
+            return True
+        try:
+            return bool(self._budget(kind))
+        except Exception as exc:  # noqa: BLE001 — 세는 일이 판정을 막지 않게, 대신 부르지 않는다
+            _shadow_log.warning("activity judge budget unreadable (%s) — skipping the LLM call", type(exc).__name__)
+            return False
 
     def judge(self, ctx: JudgeContext, request: JudgeRequest) -> Verdict:
         rule_verdict = self.rule.judge(ctx, request)
+        if not self._within_budget(request.kind):
+            # ★`[2026-10-12]` 예산 상한(구현 계획 4.6 · 전달사항 「비용 제한」) — 부르지 않고 건너뜀으로 남긴다
+            _emit(_record(ctx, request, event="activity_judge_shadow_skipped", rule=rule_verdict,
+                          error="budget_exhausted"), self._sink)
+            return rule_verdict
 
         def work() -> None:
             try:

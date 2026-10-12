@@ -232,6 +232,55 @@ def test_an_unaccepted_kind_mode_stops_instead_of_guessing(bad):
         kind_mode("closure", {"closure": bad})
 
 
+def test_over_budget_kinds_are_not_called_and_are_recorded_as_skipped():
+    """예산(4.6)이 웹 판정을 막으면 실시간은 부르지 않고 `skipped`(budget_exhausted)로 남는다 — 나머지는 그대로 부른다."""
+    asked: list[str] = []
+
+    def budget(kind):
+        asked.append(kind)
+        return kind != "live_status"
+
+    records: list[dict] = []
+    llm = ContraryJudgeLLM()
+    team = ActivityTeam(FakeTools(_values(**SCENARIOS["quiet_message_outdoor"])))
+    team.judge_llm, team.judge_runner, team.judge_shadow_sink, team.judge_budget = llm, Inline(), records.append, budget
+    asyncio.run(team.execute(_request()))
+
+    assert "live_status" in asked and "live_status" not in llm.kinds and "disaster_effect" in llm.kinds
+    [skipped] = [r for r in records if r["kind"] == "live_status"]
+    assert skipped["event"] == "activity_judge_shadow_skipped" and skipped["llm_error"] == "budget_exhausted"
+
+
+def test_an_unreadable_budget_skips_instead_of_calling():
+    def broken(_kind):
+        raise RuntimeError("db down")
+
+    llm = ContraryJudgeLLM()
+    team = ActivityTeam(FakeTools(_values(**SCENARIOS["closed_by_text"])))
+    team.judge_llm, team.judge_runner, team.judge_budget = llm, Inline(), broken
+    asyncio.run(team.execute(_request()))
+
+    assert llm.kinds == []
+
+
+def test_over_budget_never_changes_what_the_customer_gets():
+    values = _values(**SCENARIOS["closed_by_text"])
+    request = _request()
+    team = ActivityTeam(FakeTools(values))
+    team.judge_llm, team.judge_runner, team.judge_budget = ContraryJudgeLLM(), Inline(), lambda _k: False
+
+    assert _customer_view(asyncio.run(team.execute(request))) == _customer_view(_run(values, request=request))
+
+
+def test_budget_meters_and_caps_come_from_the_activity_settings():
+    from app.domains.travel_ops.instances.activity.judge.modes import budget_caps, budget_meter
+
+    assert budget_meter("live_status") == "activity_judge_web" and budget_meter("closure") == "activity_judge"
+    caps = budget_caps()
+    assert set(caps) == {"activity_judge", "activity_judge_web"}
+    assert caps["activity_judge_web"]["day"] < caps["activity_judge"]["day"]      # 웹은 비싸서 더 좁다
+
+
 def test_a_kind_missing_from_the_table_is_not_called():
     from app.domains.travel_ops.instances.activity.judge.modes import kind_mode
 

@@ -123,6 +123,9 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
     judge_shadow_sink: Any | None = None
     #: 섀도 판정을 돌리는 실행기. `None` 이면 판정 계층의 기본 스레드 풀(시험은 바로 끝나는 실행기를 넣는다).
     judge_runner: Any | None = None
+    #: ★`[2026-10-12]` 판정 LLM 호출 예산 — 판정 종류 → 「불러도 되나」. 조립이 `external_call_budget` 으로 만들어 넣는다
+    #:  (`judge.modes.budget_meter` · `budget_caps`, 코어 협의). `None` 이면 세지 않는다(지금까지와 같다).
+    judge_budget: Any | None = None
     #: 이 팀이 받는 판정 LLM 모드. ★`llm` 은 D-CS-015 범위 밖이다 — 조립이 기동 때 막는다(조용히 섀도로 바꾸지 않는다).
     judge_modes = ("rule", "shadow")
 
@@ -563,7 +566,7 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         ctx = JudgeContext(case_id=task.case_id, capability=task.capability, run_id=task.run_id,
                            tenant_id=task.context.tenant_id)
         ShadowJudge(_CurrentVerdict(current), LLMJudge(self.judge_llm), runner=self.judge_runner,
-                    sink=self.judge_shadow_sink).judge(ctx, request)
+                    sink=self.judge_shadow_sink, budget=self.judge_budget).judge(ctx, request)
 
     def _shadow_live_status(self, task: TeamTask, booking: dict, place: Any, seen: set[str], indoor: dict[str, Any],
                             place_class: dict[str, Any] | None, remaining: float) -> None:
