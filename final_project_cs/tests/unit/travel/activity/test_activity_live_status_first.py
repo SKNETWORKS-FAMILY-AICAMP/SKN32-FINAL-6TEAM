@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-"""장소를 받으면 **맨 처음** 웹 검색 LLM 으로 운영 · 실존을 본다 — `kind_modes.live_status = llm`. `[2026-10-12 사용자 결정]`
+"""DB 운영 정보로 규칙이 먼저 보고, 닫혔다고 못 정했을 때 웹 검색 LLM 으로 운영 · 폐업을 본다 — `kind_modes.live_status = llm`.
+`[2026-10-12 사용자 결정]` (처음엔 웹을 맨 앞에 두었다가, 실측에서 정기휴무까지 웹이 먼저 정해 규칙 뒤로 옮겼다)
 
-★가짜 모델로(API 없음). 「닫혔다」면 아래 점검(공유 점검 · 휴무)을 하지 않고 대체 장소를 붙여 바꾸자고 제안한다.
-  「연다」 · 「모름」 · 실패 · 예산 초과는 전과 같은 판정을 그대로 한다.
+★가짜 모델로(API 없음). 규칙이 막으면 웹을 부르지 않는다. 웹이 「닫혔다」면 대체 장소를 붙여 바꾸자고 제안한다.
+  「연다」 · 「모름」 · 실패 · 예산 초과는 규칙 판정 그대로다.
 """
 from __future__ import annotations
 
@@ -33,14 +34,22 @@ def _run(monkeypatch, llm, *, values=None, budget=None):
     return asyncio.run(team.execute(_request())), tools
 
 
-def test_closed_on_the_web_proposes_a_change_before_any_other_check(monkeypatch):
+def test_a_closure_the_rules_already_found_never_calls_the_web(monkeypatch):
+    llm = FakeJudgeLLM(CLOSED, sources=[NOTICE])
+    result, _ = _run(monkeypatch, llm, values=_values(**SCENARIOS["closed_by_text"], place_class=CLASS))
+    assert llm.calls == []
+    assert result.decisions[0]["feasible"] is False and result.decisions[0]["reason"] != "live_closed"
+
+
+def test_closed_on_the_web_after_the_rules_proposes_a_change(monkeypatch):
     llm = FakeJudgeLLM(CLOSED, sources=[NOTICE])
     result, tools = _run(monkeypatch, llm)
 
     called = [name for name, _ in tools.calls]
     assert [c["payload"]["kind"] for c in llm.calls] == ["live_status"]
     assert llm.calls[0]["payload"]["address"] == CLASS["address"]          # 같은 이름의 다른 곳과 가른다
-    assert "read.disruptions" not in called and "read.place_hours" not in called
+    assert called.index("read.place_hours") < called.index("read.place_class")   # 규칙이 먼저, 웹은 뒤
+    assert called.count("read.place_class") == 1
     decision = result.decisions[0]
     assert decision["feasible"] is False and decision["reason"] == "live_closed"
     assert decision["failure_code"] == fc.LIVE_CLOSED
@@ -58,7 +67,7 @@ def test_open_or_unknown_continues_with_the_usual_checks_and_reads_the_class_onc
     result, tools = _run(monkeypatch, llm, values=values)
 
     called = [name for name, _ in tools.calls]
-    assert called.count("read.place_class") == 1             # 맨 처음 읽은 것을 실내외 판정이 다시 쓴다
+    assert called.count("read.place_class") == 1             # 실내외 판정이 읽은 것을 웹 확인이 다시 쓴다
     assert "read.disruptions" in called and "read.place_hours" in called
     decision = result.decisions[0]
     assert decision["feasible"] is True

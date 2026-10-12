@@ -33,7 +33,7 @@ QUIET_MESSAGE = {"kind": "기타", "step": "안전안내", "text": "[종로구�
                  "weather": False}
 
 
-#: ★`[2026-10-12]` 이 파일은 **섀도**를 잰다 — 실시간 운영의 기본값이 `llm`(맨 처음 확인, 사용자 결정)으로 바뀌어,
+#: ★`[2026-10-12]` 이 파일은 **섀도**를 잰다 — 실시간 운영의 기본값이 `llm`(규칙 뒤 웹 확인, 사용자 결정)으로 바뀌어,
 #:  10-12 전 섀도 표를 여기서 고정한다. `llm` 경로는 `test_activity_live_status_first.py`.
 SHADOW_MODES = {"closure": "shadow", "operating_hours": "rule", "weather_sensitive": "shadow",
                 "disaster_effect": "shadow", "live_status": "shadow"}
@@ -212,7 +212,7 @@ def _with_kind_modes(monkeypatch, **modes):
 
 
 def test_the_configured_default_keeps_todays_shadows():
-    """기본 설정 — 휴무 · 실내외 · 재난은 섀도, 운영시간은 부르지 않는다. 실시간 운영은 `llm`(맨 처음 확인, 10-12 사용자 결정)."""
+    """기본 설정 — 휴무 · 실내외 · 재난은 섀도, 운영시간은 부르지 않는다. 실시간 운영은 `llm`(규칙 뒤 웹 확인, 10-12 사용자 결정)."""
     from app.domains.travel_ops.instances.activity.judge.modes import kind_mode
 
     modes = get_guardrails().get("travel.activity_judge.kind_modes")

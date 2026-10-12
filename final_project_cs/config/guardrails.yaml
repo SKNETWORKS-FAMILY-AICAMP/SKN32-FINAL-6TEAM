@@ -656,7 +656,8 @@ travel:
       operating_hours: rule
       weather_sensitive: shadow
       disaster_effect: shadow
-      # ★`[2026-10-12 사용자 결정]` 장소를 받으면 맨 처음 웹 검색으로 운영 · 실존을 본다 — 「닫혔다(휴무 · 폐업)」면 바꾸자고 제안한다.
+      # ★`[2026-10-12 사용자 결정]` DB 운영 정보로 규칙이 휴무 · 운영시간을 먼저 보고, 닫혔다고 못 정했을 때(연다 · 모름) 웹 검색으로
+      #   그 날짜의 운영 · 폐업을 본다 — 「닫혔다」면 대체 장소를 붙여 바꾸자고 제안한다.
       #   전역 모드가 `rule` 이면 여전히 안 부른다(돈이 나가지 않는다). 켜려면 `ACOP_ACTIVITY_JUDGE_MODE=shadow`.
       live_status: llm
     # ★`[2026-10-12]` 판정 LLM 호출 상한(구현 계획 4.6) — 일 · 월. 넘으면 그 판정은 부르지 않고 `skipped`(budget_exhausted)로 남긴다.
