@@ -1,13 +1,26 @@
 # main 관문 — 내보내기 전에 전부 본다(2026-09-23 신설).
 #   develop 관문(ci-develop.yml)이 보는 것에 더해 integration·e2e·security 와 Docker 빌드를 본다.
 #   실제 LLM 호출 시험(live)은 pytest.ini 가 기본으로 뺀다 — 실제 키가 필요해서 CI 에 두지 않는다.
+#
+# ★언제 도나 `[2026-10-12 정리]` — develop · main 에 push 할 때와 develop · main 으로 오는 PR.
+#   role-manager 는 빠른 관문(ci-develop.yml)만 돈다. 두 관문의 자리를 나눈 이유는 ci-develop.yml 머리 주석 참고.
+#   ★main 의 필수 검사가 이 파일의 job 이름(「ruff (F·E9)」「전체 시험 (live 제외)」「Docker 빌드」)을 본다 — 이름을 바꾸지 않는다.
 name: CI (main)
 
 on:
   push:
-    branches: [role-manager, develop, main]
+    branches: [develop, main]
+    # 저장소 맨 위 문서만 바뀐 push 는 건너뛴다(PR 에는 걸지 않는다) — 이유는 ci-develop.yml 머리 주석 참고.
+    paths-ignore:
+      - "wiki/**"
+      - "program/**"
+      - "*.md"
   pull_request:
-    branches: [role-manager, develop, main]
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-main-${{ github.ref }}
@@ -17,6 +30,7 @@ jobs:
   lint:
     name: ruff (F·E9)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -28,6 +42,8 @@ jobs:
   test:
     name: 전체 시험 (live 제외)
     runs-on: ubuntu-latest
+    # 평소 약 7분. 기본 제한(6시간) 대신 여러 배 여유로 끊는다 — 이유는 ci-develop.yml 의 같은 줄 참고.
+    timeout-minutes: 40
     services:
       postgres:
         image: pgvector/pgvector:pg16
@@ -86,33 +102,34 @@ jobs:
       #     여행 12문서·130청크). 적재에는 실제 임베딩(OpenAI 키 · 로컬 1024칸 모델)이 필요해
       #     키·모델이 없는 CI 에서는 만들 수 없다. live 시험처럼 로컬·수동으로 돌린다.
       #   ☆test_deactivating_does_not_erase_history 는 2026-09-24 고쳐 다시 넣었다(ci-develop.yml 참고).
+      # --durations: 가장 오래 걸린 시험 25개를 로그 끝에 적는다 — 관문이 느려질 때 어디서 늘었는지 바로 보이게.
       - name: 전체 시험
         run: >-
           python -m pytest -q
           --ignore=tests/integration/rag
+          --durations=25
 
   docker:
     name: Docker 빌드
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      # ★릴리스 대상은 final_project_cs 인데 아직 Dockerfile 이 없다(2026-09-23 확인).
-      #   생기기 전까지는 참고 구현체(final_project_sample)의 것을 빌드해 빌드 경로만 지킨다.
-      #   cs 에 Dockerfile 이 생기면 이 단계가 자동으로 그쪽을 빌드한다.
-      - name: 빌드 대상 고르기
-        id: pick
+      # ★`[2026-10-12 정정]` cs 의 배포 이미지를 빌드한다 — x600 서버의 cs 프로젝트 서버(api · worker)가 쓰는
+      #   `final_project_cs/deploy/Dockerfile.api`(빌드 맥락 = final_project_cs/, docker-compose.yml 과 같다).
+      #   ☆앞 판은 `final_project_cs/Dockerfile` 이 없으면 참고 구현체(final_project_sample)를 빌드했다. cs 의 Dockerfile 은
+      #     처음부터 deploy/ 아래에 생겨 그 조건이 한 번도 참이 되지 않았고, 이 필수 검사는 배포와 무관한 이미지를 지키고 있었다.
+      # 알림 문구 저장 파일은 git 밖(var/)이라 새 checkout 에 없다. 배포 스크립트(deploy/auto_deploy.sh)처럼 없으면 빈 표로 만든다.
+      - name: 빌드에 필요한 git 밖 파일 채우기
+        working-directory: final_project_cs
         run: |
-          if [ -f final_project_cs/Dockerfile ]; then
-            echo "context=final_project_cs" >> "$GITHUB_OUTPUT"
-            echo "빌드 대상: final_project_cs"
-          else
-            echo "context=final_project_sample" >> "$GITHUB_OUTPUT"
-            echo "::warning::final_project_cs 에 Dockerfile 이 없어 final_project_sample 을 빌드한다"
-          fi
+          mkdir -p var
+          [ -f var/notice_phrasebook.json ] || echo '{}' > var/notice_phrasebook.json
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v6
         with:
-          context: ${{ steps.pick.outputs.context }}
+          context: final_project_cs
+          file: final_project_cs/deploy/Dockerfile.api
           push: false
           load: false
           cache-from: type=gha

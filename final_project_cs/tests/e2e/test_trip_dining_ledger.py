@@ -20,6 +20,7 @@ from app.domains.travel_ops.instances.dining.ledger import slot_verdicts
 from app.domains.travel_ops.entry.trip_api import build_trip_router
 from app.presentation import security
 from app.presentation.api.app import create_app
+from tests.helpers.plugin_bindings import publish_fixed_mobility
 
 START = date(2026, 10, 5)            # 월요일
 KST_OFFSET = "+09:00"

@@ -21,6 +21,7 @@ from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
 from app.presentation import security
 from app.presentation.api.app import create_app
 from app.tools.read_tools import ReadToolbox
+from tests.helpers.plugin_bindings import publish_fixed_mobility
 from tests.scenario.test_case_version_day import (REPORTS, Clock, _at, _classifier, _extractor, _seed,
                                                   _sources)
 from tests.helpers.plugin_bindings import publish_fixed_mobility

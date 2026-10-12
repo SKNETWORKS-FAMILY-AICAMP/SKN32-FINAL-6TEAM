@@ -554,8 +554,6 @@ def _assert_leave_rule(draft: dict) -> None:
     """★출발 = 다음 일정 시작 − 이동 시간 − 여유. 이동 알림은 이 출발 시각에 간다."""
     from datetime import datetime, timedelta
 
-    from app.domains.travel_ops.components.planning.planner import MOVE_BUFFER_MIN
-
     items = draft["items"]
     moves = [item for item in items if item["kind"] == "mobility"]
     assert moves

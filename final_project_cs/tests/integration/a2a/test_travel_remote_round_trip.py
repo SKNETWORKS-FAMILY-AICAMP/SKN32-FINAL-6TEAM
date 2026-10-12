@@ -64,6 +64,26 @@ def make_task(*, capability: str = "place.verify_hours", seconds: int = 30) -> T
                     deadline_at=datetime.now(UTC) + timedelta(seconds=seconds))
 
 
+class RemotePlaceTeam:
+    """등록부에 올리는 원격 팀 선언 — 실행은 A2A 가 하고 등록부는 「설치됐나 · 이 기능을 선언했나」만 본다.
+
+    ☆`[2026-10-12]` 실행기는 이제 등록부 없이 부르면 `not_installed` 로 거절한다(`a2a_executor.execute`,
+      wiki `teams/team-contract/plugin-availability.md`). 이 시험이 등록부를 안 넘겨서 6건이 같이 깨졌다.
+      선언은 원격 Card(`CARD`) 의 기능 목록을 그대로 옮긴다."""
+
+    manifest = TeamManifest(team_id=TEAM, display_name=CARD["capabilities"][0]["display_name"],
+                            contract_name="a_cop.team_task",
+                            supported_contract_versions=CARD["capabilities"][0]["contract_versions"],
+                            capabilities=CARD["capabilities"][0]["capabilities"],
+                            accepted_case_types=CARD["capabilities"][0]["accepted_case_types"],
+                            required_context=[], allowed_tools=[], knowledge_scope=["place"],
+                            implementation_revision="a2a-round-trip-test")
+
+
+def remote_executor(transport) -> A2ATeamExecutor:
+    return A2ATeamExecutor(transport, lambda _c: "/a2a/tasks", registry=TeamRegistry([RemotePlaceTeam()]))
+
+
 def client(app, *, token: str | None = REMOTE_TOKEN) -> tuple[httpx.AsyncClient, A2AHttpTransport]:
     http = httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=BASE)
     return http, A2AHttpTransport(http, token=token)
